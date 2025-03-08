@@ -41,8 +41,8 @@ OutputStream & operator << (OutputStream & os, const Result<auto, auto> & result
     // while(true);
 
 
-static __no_inline auto test_result(int x){
-    Result<int, const char *> result = Ok(x);
+static __no_inline auto test_result(int _x){
+    Result<int, const char *> result = Ok(_x);
 
     auto squared = result
         .transform([](auto && x){

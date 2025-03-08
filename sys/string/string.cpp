@@ -42,11 +42,11 @@ String::String(String &&rval)
 	init();
 	move(rval);
 }
-String::String(StringSumHelper &&rval)
-{
-	init();
-	move(rval);
-}
+// String::String(StringSumHelper &&rval)
+// {
+// 	init();
+// 	move(rval);
+// }
 #endif
 
 String::String(char c)
@@ -80,79 +80,6 @@ String::String(const char * c, const size_t size){
     *this = cop;
     delete cop;
 }
-
-String::String(uint8_t value, uint8_t base)
-{
-	init();
-	char buf[4] = {0};
-	StringUtils::itoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(int value, uint8_t base)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::itoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(size_t value, uint8_t base)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::itoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(long value, uint8_t base)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::itoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(unsigned long value, uint8_t base)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::itoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(long long value, uint8_t base)
-{
-	init();
-	char buf[24] = {0};
-	StringUtils::iltoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(unsigned long long value, uint8_t base)
-{
-	init();
-	char buf[24] = {0};
-	StringUtils::iutoa(value, buf, base);
-	*this = buf;
-}
-
-String::String(float value, uint8_t decimalPlaces)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::ftoa(value, buf, decimalPlaces);
-    *this = buf;
-}
-
-String::String(double value, uint8_t decimalPlaces)
-{
-	init();
-	char buf[12] = {0};
-	StringUtils::ftoa(value, buf, decimalPlaces);
-    *this = buf;
-}
-
 
 
 String::~String()
@@ -253,11 +180,11 @@ String & String::operator = (String &&rval)
 	return *this;
 }
 
-String & String::operator = (StringSumHelper &&rval)
-{
-	if (this != &rval) move(rval);
-	return *this;
-}
+// String & String::operator = (StringSumHelper &&rval)
+// {
+// 	if (this != &rval) move(rval);
+// 	return *this;
+// }
 #endif
 
 String & String::operator = (const char *cstr)
@@ -301,129 +228,6 @@ uint8_t String::concat(char c)
 	buf[0] = c;
 	buf[1] = 0;
 	return concat(buf, 1);
-}
-
-uint8_t String::concat(uint8_t num)
-{
-	char buf[12];
-	StringUtils::itoa(num, buf, 10);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(int num)
-{
-	char buf[12];
-	StringUtils::itoa(num, buf, 10);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(size_t num)
-{
-	char buf[12];
-	StringUtils::itoa(num, buf, 10);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(long num)
-{
-	char buf[12];
-	StringUtils::itoa(num, buf, 10);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(unsigned long num)
-{
-	char buf[12];
-	StringUtils::itoa(num, buf, 10);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(float num)
-{
-	char buf[12];
-	StringUtils::ftoa(num, buf, 6);
-	return concat(buf, strlen(buf));
-}
-
-uint8_t String::concat(double num)
-{
-	char buf[12];
-	StringUtils::ftoa(num, buf, 6);
-	return concat(buf, strlen(buf));
-}
-
-/*********************************************/
-/*  Concatenate                              */
-/*********************************************/
-
-StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(rhs.buffer, rhs.len)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!cstr || !a.concat(cstr, strlen(cstr))) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, char c)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(c)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, uint8_t num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, int num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, size_t num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, long num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, unsigned long num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, float num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, double num)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(num)) a.invalidate();
-	return a;
 }
 
 /*********************************************/

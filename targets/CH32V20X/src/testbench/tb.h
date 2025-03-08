@@ -124,3 +124,12 @@ void tca9548_main();
 void ads1115_main();
 
 void ina3221_main();
+void functional_main();
+
+void fmt_main();
+
+
+
+void enum_main();
+
+void hive_main();

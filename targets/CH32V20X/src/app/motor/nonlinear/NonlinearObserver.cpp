@@ -1,5 +1,6 @@
 #include "NonlinearObserver.hpp"
 
+using namespace ymd;
 using namespace ymd::foc;
 
 // scexpr __fast_inline iq_t<16> wrap_pm_pi(const iq_t<16> x){

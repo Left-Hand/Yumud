@@ -92,12 +92,12 @@ enum class AccessResult: uint8_t{
 
 
 //一个可以被检索的词条
-class Entry{
+class EntryIntf{
 protected:
     String name_;
 public:
-    Entry(const StringView & name):name_(name){;}
-    Entry(const StringView && name):name_(name){;}
+    EntryIntf(const StringView & name):name_(name){;}
+    EntryIntf(const StringView && name):name_(name){;}
     const StringView name(){
         return name_;
     }
@@ -143,12 +143,12 @@ using EntryProxy = pro::proxy<internal::EntryFacade>;
 
 //一个属性
 template<typename T>
-class Property:public Entry{
+class Property:public EntryIntf{
 protected:
     T * value_;
 public:
     Property(const StringView & name,T & value):
-        Entry(name),
+        EntryIntf(name),
         value_(&value){;}
 
     T & value(){
@@ -178,14 +178,16 @@ public:
     }
 };
 
+
+
 //一个方法的参数 描述了名称和默认值
 template<typename T>
-class MethodArgInfo:public Entry{
+class MethodArgInfo:public EntryIntf{
 protected:
     T preset_;
 public:
     MethodArgInfo(const StringView & name,T preset):
-        Entry(name),
+        EntryIntf(name),
         preset_(preset){;}
 
     T preset(){
@@ -198,7 +200,7 @@ public:
 
 
 
-class MethodConcept:public Entry{
+class MethodIntf:public EntryIntf{
 public:
 
 protected:
@@ -213,7 +215,7 @@ protected:
         return std::make_tuple(convert<typename std::tuple_element<Is, T>::type>(params[Is])...);
     }
 public:
-    MethodConcept(const StringView & name):Entry(name){;}
+    MethodIntf(const StringView & name):EntryIntf(name){;}
 
     virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;
 };
@@ -222,7 +224,7 @@ public:
 
 
 template<typename Ret, typename ... Args>
-class MethodByLambda : public MethodConcept {
+class MethodByLambda : public MethodIntf {
 protected:
     scexpr size_t N = std::tuple_size_v<std::tuple<Args...>>;
 
@@ -232,7 +234,7 @@ protected:
 
 public:
     MethodByLambda(const StringView name, const Callback && callback)
-        : MethodConcept(name), callback_(callback) {}
+        : MethodIntf(name), callback_(callback) {}
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
         if (ap.size() != N) {
             return AccessResult::Fail;
@@ -250,7 +252,7 @@ public:
 };
 
 template<typename Obj, typename Ret, typename ... Args>
-class MethodByMemFunc : public MethodConcept {
+class MethodByMemFunc : public MethodIntf {
 protected:
     scexpr size_t N = std::tuple_size_v<std::tuple<Args...>>;
 
@@ -263,7 +265,7 @@ public:
         const StringView name, 
         Obj * obj, 
         Callback callback
-    ) : MethodConcept(name), 
+    ) : MethodIntf(name), 
         obj_(obj),
         callback_(callback) {}
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
@@ -280,16 +282,16 @@ public:
 
 
 
-class EntryList:public Entry{
+class EntryList:public EntryIntf{
 protected:
     std::vector<EntryProxy> entries_;
 public:
-    EntryList(const StringView & name):Entry(name){;}
+    EntryList(const StringView & name):EntryIntf(name){;}
 
 
     // template<typename ... Args>
     // EntryList(const StringView name, Args&& ... entries) :
-    //     Entry(name)
+    //     EntryIntf(name)
     //     // entries_{std::move(entries)...}
     // {
     //     // (entries_.push_back(std::forward<Args>(entries)), ...);
@@ -301,7 +303,7 @@ public:
 
     template<typename ... Args>
     EntryList(const StringView name, Args& ... entries) :
-        Entry(name)
+        EntryIntf(name)
         // entries_{(std::forward<Args>(entries)...)}
     {
         (entries_.push_back(entries), ...);

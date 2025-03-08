@@ -10,13 +10,31 @@
 namespace ymd{
 
 
+namespace custom{
+    template <typename T, typename S> 
+    struct option_converter{};
+
+    // 非侵入式地添加隐式类型转换
+    // T为正确类型 S为源类型
+
+    // eg:
+    // template<>
+    // struct option_converter<BusError, BusError> {
+    //     static Option<BusError> convert(const BusError & res){
+    //         if(res.ok()) return Some(res);
+    //         else return None; 
+    //     }
+    // };
+}
+
+
 template<typename T>
 static constexpr bool is_option_v = false;
 
 template<typename T>
 static constexpr bool is_option_v<Option<T>> = true;
 
-
+namespace details{
 template<typename T>
 struct _option_type{
 };
@@ -26,8 +44,10 @@ struct _option_type<Option<T>>{
     using type = T;
 };
 
+}
+
 template<typename T>
-using option_type_t = _option_type<T>::type;
+using option_type_t = details::_option_type<T>::type;
 
 template<typename T>
 class Option{
@@ -35,33 +55,54 @@ private:
     bool exists_;
     T value_;
 public:
+    [[nodiscard]] 
     Option(_None_t):
         exists_(false)
     {}
 
-    constexpr Option(const Some<T> & value):
+    [[nodiscard]] constexpr 
+    Option(const Some<T> & value):
         exists_(true),
         value_(value){}
 
-    constexpr Option(Some<T> && value):
+    [[nodiscard]] constexpr 
+    Option(Some<T> && value):
         exists_(true),
         value_(std::move(*value)){}
 
-    constexpr bool is_some() const{ return exists_; }
-    constexpr bool is_none() const{ return !exists_; }
 
-    constexpr const T & value_or(const T & default_value) const{
+    template<typename S>
+    requires requires(S s) {
+        { custom::option_converter<T, S>::convert(s) } -> std::convertible_to<Option<T>>;
+    }
+    [[nodiscard]] __fast_inline constexpr 
+    Option(const S & other):Option(custom::option_converter<T, S>::convert(other)){}
+    [[nodiscard]] __fast_inline constexpr bool 
+    is_some() const{ return exists_; }
+    [[nodiscard]] __fast_inline constexpr bool 
+    is_none() const{ return !exists_; }
+
+    [[nodiscard]] __fast_inline constexpr const T & 
+    value_or(const T & default_value) const{
         return exists_ ? value_ : default_value;
     }
 
-    constexpr const T & unwrap(const std::source_location & loc = std::source_location::current()) const {
-        if(exists_ == false){
+    [[nodiscard]] __fast_inline constexpr const T & 
+    unwrap(const std::source_location & loc = std::source_location::current()) const {
+        if(unlikely(exists_ == false)){
             __PANIC_EXPLICIT_SOURCE(loc);
         }
         return value_;
     }
 
-    constexpr void unexpected() const {
+    [[nodiscard]] __fast_inline constexpr T 
+    operator +() const{
+        return unwrap();
+    }
+
+
+    __fast_inline constexpr void 
+    unexpected() const {
         return;
     }
 
@@ -165,7 +206,16 @@ template<
     else return None;
 }
 
-// Specialization for std::Option
+template<
+    typename T, 
+    typename Tdecay = std::decay_t<T>
+>
+[[nodiscard]] Option<Tdecay> optcond(bool cond, Some<T>&& value){
+    if(cond) return Some<Tdecay>(std::forward<Some<T>>(value));
+    else return None;
+}
+
+
 template <typename T>
 struct __unwrap_helper<Option<T>> {
     using Obj = Option<T>;

@@ -127,7 +127,7 @@ void AK8975::writeReg(const uint8_t addr, const uint8_t data){
 }
     
 void AK8975::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_) i2c_drv_->readReg((uint8_t)addr, data);
+    if(i2c_drv_) i2c_drv_->readReg(uint8_t(addr), data);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
         spi_drv_->readSingle(data);

@@ -54,25 +54,26 @@ protected:
 
         bool is_valid = false;
 
-        uint32_t begin_ms = millis();
-        while((millis() - begin_ms < timeout)){
-            if(!available()) continue;
-            char chr;
-            read(chr);
-            if(!chr) break;
-            recv += chr;
-            if(recv == "OK"){
-                // while((millis() - begin_ms < timeout)){
-                //     if(available() && !read()){
-                //         is_valid = true;
-                //         goto end_process;
-                //     }
-                // }
-                goto end_process;
-            }
-        }
+        // uint32_t begin_ms = millis();
 
-        end_process:
+        // while((millis() - begin_ms < timeout)){
+        //     if(!available()) continue;
+        //     char chr;
+        //     read(chr);
+        //     if(!chr) break;
+        //     recv += chr;
+        //     if(recv == "OK"){
+        //         // while((millis() - begin_ms < timeout)){
+        //         //     if(available() && !read()){
+        //         //         is_valid = true;
+        //         //         goto end_process;
+        //         //     }
+        //         // }
+        //         goto end_process;
+        //     }
+        // }
+
+        // end_process:
         delayMicroseconds(1);
         set_pin = true;
         return is_valid;
@@ -85,10 +86,10 @@ public:
 
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}
-    void setPower(const Power power){sendAtCommand("P" + String((uint8_t)power));}
-    void setPowerMode(const PowerMode power_mode){sendAtCommand("FU" + String((uint8_t)power_mode));}
-    void setChannel(const uint16_t _channel) override {sendAtCommand("C" + String((uint8_t)_channel));}
-    void setCommBaudRate(const uint16_t baudrate){sendAtCommand("B" + String(baudrate));}
+    // void setPower(const Power power){sendAtCommand("P" + String((uint8_t)power));}
+    // void setPowerMode(const PowerMode power_mode){sendAtCommand("FU" + String((uint8_t)power_mode));}
+    // void setChannel(const uint16_t _channel) override {sendAtCommand("C" + String((uint8_t)_channel));}
+    // void setCommBaudRate(const uint16_t baudrate){sendAtCommand("B" + String(baudrate));}
     bool isValid(){return sendAtCommand("");}
 };
 

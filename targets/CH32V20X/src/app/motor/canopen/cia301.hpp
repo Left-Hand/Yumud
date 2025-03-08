@@ -23,7 +23,7 @@ public:
 
     
 struct Cia301ObjectDict:public StaticObjectDictBase{
-    struct ControlWordReg:public RegC32{
+    struct ControlWordReg:public RegC32<>{
         //控制字寄存器 只读32位
         static constexpr Index idx = 0x1000;
         static constexpr SubIndex subidx = 0x00;
@@ -32,7 +32,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint16_t extra_msg;
     };
 
-    struct ErrorReg:public RegC8{
+    struct ErrorReg:public RegC8<>{
         //错误寄存器 只读8位
         static constexpr Index idx = 0x1001;
         static constexpr SubIndex subidx = 0x0;
@@ -45,7 +45,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint8_t :3;
     };
 
-    struct ManufacturerStatusReg:public RegC32{
+    struct ManufacturerStatusReg:public RegC32<>{
         //厂商信息 只读32位
         static constexpr Index idx = 0x1002;
         static constexpr SubIndex subidx = 0x0;
@@ -114,7 +114,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         Fifo_t<Error, max_cnt> error_fifo;
     };
 
-    struct CobidSyncMsgReg:public Reg32{
+    struct CobidSyncMsgReg:public Reg32<>{
         static constexpr Index idx = 0x1005;
         static constexpr SubIndex subidx = 0x0;
 
@@ -124,14 +124,14 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint32_t :1;
     };
 
-    struct CommCyclicPeriodReg:public Reg32{
+    struct CommCyclicPeriodReg:public Reg32<>{
         static constexpr Index idx = 0x1006;
         static constexpr SubIndex subidx = 0x0;
 
         uint32_t period_us;//单位us
     };
 
-    struct SyncWindowLengthReg:public Reg32{
+    struct SyncWindowLengthReg:public Reg32<>{
         static constexpr Index idx = 0x1007;
         static constexpr SubIndex subidx = 0x0;
 
@@ -185,7 +185,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         using CoStringObj::CoStringObj;
     };
 
-    struct NodeGuardingPeriodReg : public Reg8 {
+    struct NodeGuardingPeriodReg : public Reg8<> {
         // 节点守护时间寄存器 可读写 16位无符号整数
         static constexpr Index idx = 0x100C;
         static constexpr SubIndex subidx = 0x0;
@@ -193,7 +193,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint8_t val;
     };
 
-    struct NodeGuardingPeriodFracReg : public Reg16 {
+    struct NodeGuardingPeriodFracReg : public Reg16<> {
         // 节点守护时间寄存器 可读写 16位无符号整数
         static constexpr Index idx = 0x100D;
         static constexpr SubIndex subidx = 0x0;
@@ -211,7 +211,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
         ParamSaverIntf * saver = nullptr;
         
-        struct ReadStruct:public Reg32{
+        struct ReadStruct:public Reg32<>{
             #pragma pack(push, 1)
             uint32_t en:1;
             uint32_t auto_save:1;
@@ -269,7 +269,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
         ParamLoaderIntf * loader = nullptr;
         
-        struct ReadStruct:public Reg32{
+        struct ReadStruct:public Reg32<>{
             #pragma pack(push, 1)
             uint32_t en:1;
             uint32_t auto_save:1;
@@ -316,7 +316,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         }
     };
 
-    struct TimeStampReg : public Reg32 {
+    struct TimeStampReg : public Reg32<> {
         static constexpr Index idx = 0x1012;
         static constexpr SubIndex subidx = 0x0;
 
@@ -326,7 +326,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint32_t consume:1;
     };
 
-    struct GpTimeStampReg : public Reg32 {
+    struct GpTimeStampReg : public Reg32<> {
         static constexpr Index idx = 0x1013;
         static constexpr SubIndex subidx = 0x0;
 
@@ -334,7 +334,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
     };
 
 
-    struct EmcyCobidReg : public Reg16 {
+    struct EmcyCobidReg : public Reg16<> {
         static constexpr Index idx = 0x1014;
         static constexpr SubIndex subidx = 0x0;
 
@@ -345,14 +345,14 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
     };
 
 
-    struct EmcyDepressTimeReg : public Reg16 {
+    struct EmcyDepressTimeReg : public Reg16<> {
         static constexpr Index idx = 0x1015;
         static constexpr SubIndex subidx = 0x0;
 
         uint16_t time;
     };
 
-    struct ConsumerHeartbeatOverTimeReg : public Reg32 {
+    struct ConsumerHeartbeatOverTimeReg : public Reg32<> {
         //心跳时间寄存器 可读写 32位无符号整数
         static constexpr Index idx = 0x1016;
         static constexpr SubIndex subidx = 0x0;
@@ -362,7 +362,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         const uint8_t __resv__ = 0;
     };
 
-    struct ProducterHeartbeatOverTimeReg : public Reg16 {
+    struct ProducterHeartbeatOverTimeReg : public Reg16<> {
         //心跳时间寄存器 可读写 32位无符号整数
         static constexpr Index idx = 0x1016;
         static constexpr SubIndex subidx = 0x0;
@@ -370,14 +370,14 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint16_t time;
     };
 
-    struct IdentificationReg : public Reg32 {
+    struct IdentificationReg : public Reg32<> {
         static constexpr Index idx = 0x1023;
     };
 
     struct OsCommandRegSet{
     };
 
-    struct OsCommandModeReg:public Reg8{
+    struct OsCommandModeReg:public Reg8<>{
         static constexpr Index idx = 0x1024;
         enum class Mode{
 

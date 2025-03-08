@@ -4,6 +4,22 @@
 
 namespace ymd{
 
+namespace custom{
+    template <typename T, typename E, typename S> 
+    struct result_converter{};
+
+    // 非侵入式地添加隐式类型转换
+    // T为正确类型 E为错误类型 S为源类型
+
+    // eg:
+    // template<>
+    // struct result_converter<void, BusError, BusError> {
+    //     static Result<void, BusError> convert(const BusError & res){
+    //         if(res.ok()) return Ok();
+    //         else return Err(res); 
+    //     }
+    // };
+}
 
 template<typename T>
 static constexpr bool is_result_v = false;
@@ -12,13 +28,10 @@ template<typename T, typename E>
 static constexpr bool is_result_v<Result<T, E>> = true;
 
 template<typename T>
-using is_result_t = std::conditional_t<
-    is_result_v<T>, 
-    std::true_type, 
-    std::false_type
->;
+using is_result_t = std::conditional_t<is_result_v<T>, std::true_type, std::false_type>;
 
 
+namespace details{
 template<typename T>
 struct _result_type{
 };
@@ -29,14 +42,16 @@ struct _result_type<Result<T, E>>{
     using err_type = E;
 };
 
-template<typename TResult>
-using result_ok_type_t = _result_type<TResult>::ok_type;
+}
 
 template<typename TResult>
-using result_err_type_t = _result_type<TResult>::err_type;
+using result_ok_type_t = details::_result_type<TResult>::ok_type;
+
+template<typename TResult>
+using result_err_type_t = details::_result_type<TResult>::err_type;
 
 
-namespace __Result_details{
+namespace details{
     template<typename U, typename Fn>
     auto operator|(U&& val, Fn&& fn) {
         return std::forward<Fn>(fn)(std::forward<U>(val));
@@ -229,15 +244,14 @@ namespace __Result_details{
 }
 
 
-
-template<typename T, typename E>
+template <typename T, typename E>
 class Result{
 // private:
     // using Storage = std::variant<T, E>;
-    // using __Result_details::operator|;
-    // using _Storage = __Result_details::_Storage;
+    // using details::operator|;
+    // using _Storage = details::_Storage;
 public:
-    using Storage = __Result_details::storage_t<T, E>;
+    using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
 private:
@@ -269,33 +283,24 @@ private:
     }
     friend class _Loc;
 public:
-    __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
-    __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
 
-    __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
-    __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+    [[nodiscard]] __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
 
-    
-    // // 映射成功值
-    // template<typename F>
-    // constexpr auto map(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
-    //     if (is_ok()) return fn(unwrap());
-    //     else return unwrap_err();
-    // }
-
-    // // 链式处理
-    // template<typename F>
-    // constexpr auto and_then(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
-    //     if (is_ok()) return fn(unwrap());
-    //     else return unwrap_err();
-    // }
+    template<typename S>
+    requires requires(S s) {
+        { custom::result_converter<T, E, S>::convert(s) } -> std::convertible_to<Result<T, E>>;
+    }
+    [[nodiscard]] __fast_inline constexpr Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
 
         // 修改map方法
     template<
         typename F,
         typename TFReturn = std::invoke_result_t<F, T>
     >
-    __fast_inline constexpr auto map(F&& fn) const -> Result<TFReturn, E>{
+    [[nodiscard]] __fast_inline constexpr auto map(F&& fn) const -> Result<TFReturn, E>{
         if (is_ok()) return Ok<TFReturn>(std::forward<F>(fn)(result_.unwrap()));
         else return Err<E>(unwrap_err());
     }
@@ -312,7 +317,8 @@ public:
         >
         // 如果返回值本身是Result 那么返回它的解包类型，否则返回原类型
     >
-    [[nodiscard]] __fast_inline constexpr auto and_then(F&& fn) const 
+    [[nodiscard]] __fast_inline constexpr 
+    auto and_then(F&& fn) const 
         -> Result<TOk, E>
     {
         if (is_ok()){
@@ -330,7 +336,8 @@ public:
         typename Fn,//函数的类型
         typename E2
     >
-    [[nodiscard]] __fast_inline constexpr auto validate(Fn&& fn, E2 && err) const 
+    [[nodiscard]] __fast_inline constexpr 
+    auto validate(Fn&& fn, E2 && err) const 
         -> Result<T, E2>
     {
         
@@ -365,52 +372,75 @@ public:
     //     });
     // }
 
-    template<typename F>
-    __fast_inline constexpr void if_ok(F&& fn) const {
+    template<typename Fn>
+    __fast_inline constexpr 
+    void if_ok(Fn && fn) const {
         if (is_ok()) {
-            (fn)();
+            // std::forward<Fn>(fn)(unwrap());
+            std::forward<Fn>(fn)();
+        }
+    }
+
+    template<typename Fn>
+    __fast_inline constexpr 
+    void if_err(Fn && fn) const {
+        if (is_err()) {
+            std::forward<Fn>(fn)(unwrap_err());
         }
     }
 
 
-    [[nodiscard]] __fast_inline constexpr bool is_ok() const {
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_ok() const {
         return result_.is_ok();
     }
 
-    [[nodiscard]] __fast_inline constexpr bool is_err() const {
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_err() const {
         return result_.is_err();
     }
     
 
 
     template<typename ... Args>
-    constexpr T expect(Args && ... args) const{
+    constexpr 
+    T expect(Args && ... args) const{
         if (likely(is_ok())) {
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTS(std::forward<Args>(args)...);
+            PANIC_NSRC(std::forward<Args>(args)...);
             #endif
             exit(1);
         }
     }
     
     template<typename ... Args>
+    [[nodiscard]] constexpr
     const Result & check(Args && ... args) const{
         if(unlikely(is_err())){
             #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTS(unwrap_err(), std::forward<Args>(args)...);
+            DEBUG_PRINTLN(unwrap_err(), std::forward<Args>(args)...);
             #endif
-            exit(1);
         }
         return *this;
     } 
-
-    [[nodiscard]] constexpr _Loc loc(const std::source_location & loca = std::source_location::current()) const{
+    
+    template<bool en, typename ... Args>
+    [[nodiscard]] constexpr 
+    const Result & check_if(Args && ... args) const{
+        if constexpr (en) {
+            return check(std::forward<Args>(args)...);
+        }
+        return *this;
+    }
+    [[nodiscard]] constexpr 
+    _Loc loc(const std::source_location & loca = std::source_location::current()) const{
         return {*this, loca};
     }
 
-    __fast_inline constexpr T unwrap() const {
+    __fast_inline constexpr 
+    T unwrap() const {
         if (likely(is_ok())) {
             return result_.unwrap();
         } else {
@@ -418,7 +448,13 @@ public:
         }
     }
 
-    __fast_inline constexpr E unwrap_err() const {
+    __fast_inline constexpr 
+    T operator +() const{
+        return result_.unwrap();
+    }
+
+    __fast_inline constexpr 
+    E unwrap_err() const {
         if (likely(is_err())) {
             return result_.unwrap_err();
         } else {
@@ -426,7 +462,8 @@ public:
         }
     }
 
-    constexpr Option<T> ok() const{
+    constexpr Option<T> 
+    ok() const{
         if (likely(is_ok())) {
             return Some(result_.unwrap());
         } else {
@@ -434,7 +471,8 @@ public:
         }
     }
 
-    constexpr Option<E> err() const{
+    constexpr Option<E> 
+    err() const{
         if (likely(is_err())) {
             return Some(result_.unwrap_err());
         } else {
@@ -459,7 +497,7 @@ public:
     }
 
     template<typename U, typename Fn>
-    friend auto __Result_details::operator|(U&& val, Fn&& fn);
+    friend auto details::operator|(U&& val, Fn&& fn);
 
         // 添加隐式类型转换运算符
     template<typename U, typename V>

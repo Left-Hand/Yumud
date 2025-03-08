@@ -5,18 +5,20 @@ using namespace ymd::drivers;
 using namespace ymd;
 
 
-#define LT8920_DEBUG
-
 #ifdef LT8920_DEBUG
 #undef LT8920_DEBUG
-#define LT8920_DEBUG(...) DEBUG_PRINTLN(std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#define LT8920_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define LT8920_PANIC(...) PANIC{__VA_ARGS__}
+#define LT8920_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
 #else
 #define LT8920_DEBUG(...)
+#define LT8920_PANIC(...)  PANIC_NSRC()
+#define LT8920_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#define READ_REG(reg) (void)readReg(reg.address, reg);
+#define WRITE_REG(reg) (void)writeReg(reg.address, reg);
 #endif
-
-
-#define WRITE_REG16(reg) writeReg(reg.address, reg);
-#define READ_REG16(reg) readReg(reg.address, reg);
 
 
 // #define LT8920_REG_DEBUG(...) LT8920_DEBUG(__VA_ARGS__)
@@ -72,7 +74,7 @@ void LT8920::setRole(const Role _role) {
     }
 
     role = _role;
-    WRITE_REG16(rf_config_reg);
+    WRITE_REG(rf_config_reg);
 }
 
 void LT8920::setPaCurrent(const uint8_t current) {
@@ -115,7 +117,7 @@ void LT8920::clearFifoReadPtr() {
 void LT8920::clearFifoPtr() {
     fifo_ptr_reg.clearReadPtr = 1;
     fifo_ptr_reg.clearWritePtr = 1;
-    WRITE_REG16(fifo_ptr_reg);
+    WRITE_REG(fifo_ptr_reg);
     fifo_ptr_reg.clearReadPtr = 0;
     fifo_ptr_reg.clearWritePtr = 0;
 }
@@ -143,12 +145,12 @@ void LT8920::enableCrc(const bool en){
 void LT8920::setErrBitsTolerance(uint8_t errbits){
     errbits = MIN(errbits, 6);
     threshold_reg.errbits = errbits + 1;
-    WRITE_REG16(threshold_reg);
+    WRITE_REG(threshold_reg);
 }
 
 bool LT8920::receivedAck(){
     if(auto_ack_en){
-        READ_REG16(fifo_ptr_reg);
+        READ_REG(fifo_ptr_reg);
         return fifo_ptr_reg.fifoReadPtr == 0;
     }else{
         return false;
@@ -157,13 +159,14 @@ bool LT8920::receivedAck(){
 
 void LT8920::setDataRate(const DataRate dr){
     data_rate_reg.dataRate = (uint16_t)dr;
-    WRITE_REG16(data_rate_reg);
+    WRITE_REG(data_rate_reg);
 }
 
 void LT8920::setDataRate(const uint32_t dr){
     switch(dr){
         default:
-            LT8920_DEBUG("unknown data rate, default to 62.5kbps")
+            LT8920_PANIC("unknown data rate, default to 62.5kbps");
+            [[fallthrough]];
         case 62500:
             setDataRate(DataRate::Kbps62_5);
             break;
@@ -345,24 +348,24 @@ void LT8920::setSyncWord(const uint64_t syncword){
 
 
 void LT8920::writeReg(const RegAddress address, const uint16_t reg){
-    LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
+    LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), (uint8_t)address, CONT);
+        spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT);
         delayT3();
 
         spi_drv_->writeSingle((reg));
     }else if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)address, reg, MSB);
+        i2c_drv_->writeReg(uint8_t(address), reg, MSB);
     }
 }
 
 void LT8920::readReg(const RegAddress address, uint16_t & reg){
-    LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
+    LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT);
         spi_drv_->readSingle(reg);
     }else if(i2c_drv_){
-        i2c_drv_->readReg((uint8_t)address, reg, MSB);
+        i2c_drv_->readReg(uint8_t(address), reg, MSB);
     }
 }
 
@@ -390,7 +393,7 @@ void LT8920::readFifo(uint8_t * data, const size_t len){
 void LT8920::updateFifoStatus(){
     if(spi_drv_){
         // spi_drv->transferSingle((flag_reg), flag_reg.address);
-        READ_REG16(flag_reg);
+        READ_REG(flag_reg);
     } else if(i2c_drv_){
         i2c_drv_->readReg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
     }

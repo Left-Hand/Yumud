@@ -60,11 +60,13 @@ void BasicTimer::enableRcc(const bool en){
         #ifdef ENABLE_TIM3
         case TIM3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, en);
+            break;
         #endif
 
         #ifdef ENABLE_TIM4
         case TIM4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, en);
+            break;
         #endif
 
         #ifdef ENABLE_TIM5

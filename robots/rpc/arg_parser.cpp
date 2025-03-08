@@ -8,7 +8,7 @@ std::optional<const StringViews> ArgSplitter::update(hal::UartHw & is){
         char chr;
         is.read1(chr);
         if(chr == 0) continue;
-        temp += chr;
+        temp.concat(chr);
         if(chr == '\n'){
             temp.alphanum();
             auto args = temp.split(' ');

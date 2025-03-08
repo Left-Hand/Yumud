@@ -83,19 +83,19 @@ public:
     constexpr Vector2_t<T> abs() const;
 
 
-    static bool compare_x(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_x(const Vector2_t & a, const Vector2_t & b){
         return a.x < b.x;
     };
 
-    static bool compare_y(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_y(const Vector2_t & a, const Vector2_t & b){
         return a.y < b.y;
     };
 
-    static bool compare_length(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_length(const Vector2_t & a, const Vector2_t & b){
         return a.length_squared() < b.length_squared();
     };
 
-    static bool compare_angle(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_angle(const Vector2_t & a, const Vector2_t & b){
         return a.cross(b) > 0;
     };
 
@@ -110,15 +110,15 @@ public:
         return {x, y + v};
     }
 
-    template<arithmetic U>
-    constexpr T cos(const Vector2_t<U> & b) const{
-        return this->dot(b) / this->length() / b.length();
-    }
+    // template<arithmetic U>
+    // constexpr T cos(const Vector2_t<U> & b) const{
+    //     return this->dot(b) / this->length() / b.length();
+    // }
 
-    template<arithmetic U>
-    constexpr T sin(const Vector2_t<U> & b) const{
-        return this->cross(b) / this->length() / b.length();
-    }
+    // template<arithmetic U>
+    // constexpr T sin(const Vector2_t<U> & b) const{
+    //     return this->cross(b) / this->length() / b.length();
+    // }
 
     constexpr T angle() const {return atan2(y, x);}
 	constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
@@ -220,8 +220,9 @@ public:
 
     __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
         // using CommonType = typename std::common_type<T, decltype(n)>::type;
-        x = static_cast<T>(x / n);
-        y = static_cast<T>(y / n);
+        const T inv_n = static_cast<T>(1) / n;
+        x = static_cast<T>(x * inv_n);
+        y = static_cast<T>(y * inv_n);
         return *this;
     }
 
@@ -238,12 +239,12 @@ public:
         if constexpr(std::is_integral<T>::value){
             return x != 0 || y != 0;
         }else{
-            return !::is_equal_approx(x, T(0)) || !::is_equal_approx(y, T(0));
+            return !is_equal_approx(x, T(0)) || !is_equal_approx(y, T(0));
         }
     }
 
     __fast_inline static constexpr Vector2_t<T> from_angle(const T & len, const T & rad){
-        return {len * ::cos(rad), len * ::sin(rad)};
+        return {len * cos(rad), len * sin(rad)};
     }
 
     __fast_inline static constexpr Vector2_t<T> ones(const T & len){
@@ -270,11 +271,11 @@ using Vector2i = Vector2_t<int>;
 using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
-    return os << '(' << value.x << os.splitter() << value.y << ')';
+    return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }
 
 
-__fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto & t){
+__fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto t){
     return a + (b - a) * t;
 }
 

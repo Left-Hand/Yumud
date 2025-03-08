@@ -20,12 +20,16 @@ int main(){
     // qlz_main();
     // embd_main();
     // i2c_scanner_main();
-    ads1115_main();
+    // ads1115_main();
     // embd_main();
     // gui_main();
     // canopen_main();
     // bldc_main();
     // digipw_main();
+    // enum_main();
+    hive_main();
+    
+    // fmt_main();
     // sincos_pwm_main();
     // stepper_tb(uart1);
     // co_ab_main();

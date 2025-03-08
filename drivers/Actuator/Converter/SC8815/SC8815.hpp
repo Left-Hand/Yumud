@@ -9,10 +9,10 @@ namespace ymd::drivers{
 class SC8815{
 protected:
     using RegAddress = uint8_t;
-    uint bus_shunt_res_mohms_;
-    uint bat_shunt_res_mohms_;
-    real_t fb_up_res_kohms_;
-    real_t fb_down_res_kohms_;
+    uint bus_shunt_res_mohms_ = 0;
+    uint bat_shunt_res_mohms_ = 0;
+    real_t fb_up_res_kohms_ = 0;
+    real_t fb_down_res_kohms_ = 0;
 
     hal::I2cDrv i2c_drv_;
 
@@ -94,7 +94,7 @@ protected:
     };
     
 
-    struct VbatSetReg:public Reg8{
+    struct VbatSetReg:public Reg8<>{
         scexpr RegAddress address = 0x00;
 
         uint8_t vcell_set:3;
@@ -103,28 +103,28 @@ protected:
         uint8_t ircomp:2;
     };
 
-    struct VbusRefISetReg:public Reg16{
+    struct VbusRefISetReg:public Reg16<>{
         using Reg16::operator=;
         scexpr RegAddress address = 0x01;
 
         uint16_t :16;
     };
 
-    struct VbusRefESetReg:public Reg16{
+    struct VbusRefESetReg:public Reg16<>{
         using Reg16::operator=;
         scexpr RegAddress address = 0x03;
         
         uint16_t :16;
     };
     
-    struct IBusLimSetReg:public Reg8{
+    struct IBusLimSetReg:public Reg8<>{
         using Reg8::operator=;
         scexpr RegAddress address = 0x05;
         
         uint8_t :8;
     };
     
-    struct IBatLimSetReg:public Reg8{
+    struct IBatLimSetReg:public Reg8<>{
         using Reg8::operator=;
         scexpr RegAddress address = 0x06;
 
@@ -132,13 +132,13 @@ protected:
     };
 
     
-    struct VinSetReg:public Reg8{
+    struct VinSetReg:public Reg8<>{
         scexpr RegAddress address = 0x07;
 
         uint8_t :8;
     };
     
-    struct RatioReg:public Reg8{
+    struct RatioReg:public Reg8<>{
         scexpr RegAddress address = 0x08;
 
         uint8_t vbus_ratio:1;
@@ -155,7 +155,7 @@ protected:
         IBatRatio ibat_ratio;
     };
 
-    struct Ctrl0SetReg:public Reg8{
+    struct Ctrl0SetReg:public Reg8<>{
         scexpr RegAddress address = 0x09;
 
         uint8_t dt_set:2;
@@ -165,7 +165,7 @@ protected:
         uint8_t en_otg:1;
     };
 
-    struct Ctrl1SetReg:public Reg8{
+    struct Ctrl1SetReg:public Reg8<>{
         scexpr RegAddress address = 0x0A;
         
         uint8_t :2;
@@ -177,7 +177,7 @@ protected:
         uint8_t ichar_set:1;
     };
 
-    struct Ctrl2SetReg:public Reg8{
+    struct Ctrl2SetReg:public Reg8<>{
         scexpr RegAddress address = 0x0B;
         
         uint8_t slew_set:2;
@@ -186,7 +186,7 @@ protected:
         uint8_t :4;
     };
 
-    struct Ctrl3SetReg:public Reg8{
+    struct Ctrl3SetReg:public Reg8<>{
         scexpr RegAddress address = 0x0C;
         
         uint8_t en_pfm:1;
@@ -199,43 +199,43 @@ protected:
         uint8_t en_pgate:1;
     };
 
-    struct VbusFbValueReg:public Reg16{
+    struct VbusFbValueReg:public Reg16<>{
         scexpr RegAddress address = 0x0d;
 
         uint16_t value;
     };
 
-    struct VbatFbValueReg:public Reg16{
+    struct VbatFbValueReg:public Reg16<>{
         scexpr RegAddress address = 0x0f;
 
         uint16_t value;
     };
 
-    struct IBusValueReg:public Reg16{
+    struct IBusValueReg:public Reg16<>{
         scexpr RegAddress address = 0x11;
 
         uint16_t :16;
     };
 
-    struct IBatValueReg:public Reg16{
+    struct IBatValueReg:public Reg16<>{
         scexpr RegAddress address = 0x13;
 
         uint16_t :16;
     };
 
-    struct AdinValueReg:public Reg16{
+    struct AdinValueReg:public Reg16<>{
         scexpr RegAddress address = 0x03;
 
         uint16_t :16;
     };
 
-    struct StatusReg:public Reg8, public Interrupts{
+    struct StatusReg:public Reg8<>, public Interrupts{
         using Reg8::operator =;
 
         scexpr RegAddress address = 0x17;
     };
 
-    struct MaskReg:public Reg8, public Interrupts{
+    struct MaskReg:public Reg8<>, public Interrupts{
         using Reg8::operator =;
 
         scexpr RegAddress address = 0x19;
@@ -269,22 +269,22 @@ protected:
 
 
     BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg((uint8_t)address, reg);
+        return i2c_drv_.writeReg(uint8_t(address), reg);
     }
 
     BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg((uint8_t)address, reg);
+        return i2c_drv_.readReg(uint8_t(address), reg);
     }
 
     BusError writeReg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.writeReg((uint8_t)address, reg, LSB);
+        return i2c_drv_.writeReg(uint8_t(address), reg, LSB);
     }
 
     BusError readReg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.readReg((uint8_t)address, reg, LSB);
+        return i2c_drv_.readReg(uint8_t(address), reg, LSB);
     }
     BusError requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readMulti((uint8_t)addr, data, len);
+        return i2c_drv_.readMulti(uint8_t(addr), data, len);
     }
 
     SC8815 & powerUp();

@@ -122,6 +122,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
     switch(mode){
         case Mode::toMemCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+            [[fallthrough]];
         case Mode::toMem:
             DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
             DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
@@ -133,6 +134,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             break;
         case Mode::toPeriphCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+            [[fallthrough]];
         case Mode::toPeriph:
             DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
             DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
@@ -144,6 +146,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             break;
         case Mode::synergyCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+            [[fallthrough]];
         case Mode::synergy:
             DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
             DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;
@@ -155,6 +158,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             break;
         case Mode::distributeCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+            [[fallthrough]];
         case Mode::distribute:
             DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
             DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;

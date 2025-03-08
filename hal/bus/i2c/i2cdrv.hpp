@@ -137,7 +137,7 @@ public:
         const T cmd, 
         const Endian endian
     ){
-        return writeCommand_impl<T>(cmd, endian);
+        return writeCommand_impl(cmd, endian);
     }
 
     template<typename T>
@@ -146,7 +146,7 @@ public:
         const valid_i2c_regaddr auto addr, 
         const T & data
     ){
-        return this->writeMulti_impl<T>(addr, &data, 1, LSB);
+        return this->writeMulti_impl(addr, &data, 1, LSB);
     }
 
     template<typename T>
@@ -156,7 +156,7 @@ public:
         T & data, 
         Endian endian
     ){
-        return this->readMulti_impl<T>(addr, &data, 1, endian);
+        return this->readMulti_impl(addr, &data, 1, endian);
     }
 
     template<typename T>
@@ -165,7 +165,7 @@ public:
         const valid_i2c_regaddr auto addr,
         T & data
     ){
-        return this->readMulti_impl<T>(addr, &data, 1, LSB);
+        return this->readMulti_impl(addr, &data, 1, LSB);
     }
 
     BusError verify();

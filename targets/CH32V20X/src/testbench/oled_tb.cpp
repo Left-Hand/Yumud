@@ -68,7 +68,8 @@ public:
                 break;
         }
 
-        painter_.drawString({0,8}, "func:" + str);
+        // painter_.drawString({0,8}, "func:" + str);
+        painter_.drawString({0,8}, "func:");
         painter_.drawString({0,16}, send_str);
     }
 

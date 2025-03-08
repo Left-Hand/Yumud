@@ -2,11 +2,22 @@
 
 #include "drivers/device_defs.h"
 
+#include "sys/utils/rustlike/Optional.hpp"
+#include "sys/utils/rustlike/Result.hpp"
+
 
 namespace ymd::drivers{
 
 class INA3221{
 public:
+    using DeviceResult = Result<void, BusError>;
+private:
+    __inline DeviceResult make_result(const BusError res){
+        if(res.ok()) return Ok();
+        else return Err(res); 
+    }
+public:
+
     // Address Pins and Slave Addresses
     // A0   ADDRESS 0
     // GND  1000000 0
@@ -36,7 +47,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t shunt_measure_en :1;
@@ -45,24 +56,26 @@ protected:
         uint16_t shunt_conv_time:3;
         uint16_t bus_conv_time:3;
         uint16_t average_times:3;
-        uint16_t ch1_en:1;
-        uint16_t ch2_en:1;
         uint16_t ch3_en:1;
+        uint16_t ch2_en:1;
+        uint16_t ch1_en:1;
         uint16_t rst:1;
     };
 
-    struct ShuntVoltReg:public Reg16i{
-        scexpr RegAddress address1 = 0x01;
-        scexpr RegAddress address2 = 0x03;
-        scexpr RegAddress address3 = 0x05;
+    static_assert(sizeof(ConfigReg) == 2);
+
+    struct ShuntVoltReg:public Reg16i<>{
+
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return real_t((int16_t(*this) >> 3) * 40 / 100) / 1000;
+            return iq_t<24>(iq_t<16>(this->as_val() >> 3) / 25) / 1000;
+            // return real_t(this->as_val());
         }
 
         constexpr int to_uv() const {
-            return ((int16_t(*this) >> 3) * 40);
+            return ((this->as_val() >> 3) * 40);
+            // return (this->as_val());
         }
 
         static constexpr int16_t to_i16(const real_t volt){
@@ -70,10 +83,12 @@ protected:
         }
     };
 
-    struct BusVoltReg:public Reg16i{
-        scexpr RegAddress address1 = 0x02;
-        scexpr RegAddress address2 = 0x04;
-        scexpr RegAddress address3 = 0x06;
+    struct ShuntVolt1Reg:public ShuntVoltReg{scexpr RegAddress address = 0x01;};
+    struct ShuntVolt2Reg:public ShuntVoltReg{scexpr RegAddress address = 0x03;};
+    struct ShuntVolt3Reg:public ShuntVoltReg{scexpr RegAddress address = 0x05;};
+
+    struct BusVoltReg:public Reg16i<>{
+
         int16_t : 16;
 
         constexpr real_t to_volt() const {
@@ -89,7 +104,11 @@ protected:
         }
     };
 
-    struct InstantOVCReg:public Reg16i{
+    struct BusVolt1Reg:public BusVoltReg{scexpr RegAddress address = 0x02;};
+    struct BusVolt2Reg:public BusVoltReg{scexpr RegAddress address = 0x04;};
+    struct BusVolt3Reg:public BusVoltReg{scexpr RegAddress address = 0x06;};
+
+    struct InstantOVCReg:public Reg16i<>{
         scexpr RegAddress address1 = 0x07;
         scexpr RegAddress address2 = 0x09;
         scexpr RegAddress address3 = 0x0b;
@@ -97,7 +116,7 @@ protected:
         int16_t :16;
     };
 
-    struct ConstantOVCReg:public Reg16i{
+    struct ConstantOVCReg:public Reg16i<>{
         scexpr RegAddress address1 = 0x07;
         scexpr RegAddress address2 = 0x09;
         scexpr RegAddress address3 = 0x0b;
@@ -105,7 +124,7 @@ protected:
         int16_t :16;
     };
 
-    struct MaskReg:public Reg16{
+    struct MaskReg:public Reg16<>{
         uint16_t conv_ready:1;
         uint16_t timing_alert:1;
         uint16_t power_valid_alert:1;
@@ -122,42 +141,46 @@ protected:
         uint16_t :1;
     };
 
-    struct PowerHoReg:public Reg16i{
+    struct PowerHoReg:public Reg16i<>{
         scexpr RegAddress address = 0x10;
         int16_t :16;
     };
 
-    struct PowerLoReg:public Reg16i{
+    struct PowerLoReg:public Reg16i<>{
         scexpr RegAddress address = 0x11;
         int16_t :16;
     };
 
-    struct ManuIdReg:public Reg16{
-        scexpr uint16_t correct_id = 0x5449;
+    struct ManuIdReg:public Reg16<>{
+        scexpr uint16_t key = 0x5449;
         scexpr RegAddress address = 0xfe;
         uint16_t:16;
     };
 
-    struct ChipIdReg:public Reg16{
-        scexpr uint16_t correct_id = 0x3220;
+    struct ChipIdReg:public Reg16<>{
+        scexpr uint16_t key = 0x3220;
         scexpr RegAddress address = 0xff;
         uint16_t:16;
     };
 
-    __inline void readReg(const RegAddress addr, auto & data){
-        static_assert(sizeof(data) == 2);
-        // if constexpr(sizeof(data == 1)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint8_t *>(&data));
-        if constexpr(sizeof(data == 2)) i2c_drv.readReg(uint8_t(addr), reinterpret_cast<uint16_t &>(data), MSB);
+    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data){
+        return make_result(i2c_drv.readReg((addr), data, MSB));
     }
 
-    __inline void writeReg(const RegAddress addr, const auto & data){
-        static_assert(sizeof(data) == 2);
-        // if constexpr(sizeof(data == 1)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint8_t *>(&data));
-        if constexpr(sizeof(data == 2)) i2c_drv.writeReg(uint8_t(addr), reinterpret_cast<const uint16_t &>(data), MSB);
+    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data){
+        return make_result(i2c_drv.writeReg((addr), data, MSB));
+    }
+
+    [[nodiscard]] DeviceResult readReg(const RegAddress addr, int16_t & data){
+        return make_result(i2c_drv.readReg((addr), data, MSB));
+    }
+
+    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const int16_t data){
+        return make_result(i2c_drv.writeReg((addr), data, MSB));
     }
 
     void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
-        i2c_drv.readMulti((uint8_t)addr, (uint16_t *)data_ptr, len, LSB);
+        i2c_drv.readMulti(uint8_t(addr), (uint16_t *)data_ptr, len, LSB);
     }
 
     struct INA3221Channel:public hal::AnalogInIntf{
@@ -193,28 +216,28 @@ protected:
     
     hal::I2cDrv i2c_drv;
 
-    ConfigReg       config_reg;
-    ShuntVoltReg    shuntvolt1_reg;
-    BusVoltReg      busvolt1_reg;
-    ShuntVoltReg    shuntvolt2_reg;
-    BusVoltReg      busvolt2_reg;
-    ShuntVoltReg    shuntvolt3_reg;
-    BusVoltReg      busvolt3_reg;
-    InstantOVCReg   instant_ovc1_reg;
-    ConstantOVCReg  constant_ovc1_reg;
-    InstantOVCReg   instant_ovc2_reg;
-    ConstantOVCReg  constant_ovc2_reg;
-    InstantOVCReg   instant_ovc3_reg;
-    ConstantOVCReg  constant_ovc3_reg;
+    ConfigReg       config_reg = {};
+    ShuntVolt1Reg    shuntvolt1_reg = {};
+    BusVolt1Reg      busvolt1_reg = {};
+    ShuntVolt2Reg    shuntvolt2_reg = {};
+    BusVolt2Reg      busvolt2_reg = {};
+    ShuntVolt3Reg    shuntvolt3_reg = {};
+    BusVolt3Reg      busvolt3_reg = {};
+    InstantOVCReg   instant_ovc1_reg = {};
+    ConstantOVCReg  constant_ovc1_reg = {};
+    InstantOVCReg   instant_ovc2_reg = {};
+    ConstantOVCReg  constant_ovc2_reg = {};
+    InstantOVCReg   instant_ovc3_reg = {};
+    ConstantOVCReg  constant_ovc3_reg = {};
 
-    ShuntVoltReg    shuntvolt_reg;
-    ShuntVoltReg    shuntvolt_limit_reg;
-    MaskReg         mask_reg;
-    PowerHoReg      power_ho_reg;
-    PowerLoReg      power_lo_reg;
+    ShuntVoltReg    shuntvolt_reg = {};
+    ShuntVoltReg    shuntvolt_limit_reg = {};
+    MaskReg         mask_reg = {};
+    PowerHoReg      power_ho_reg = {};
+    PowerLoReg      power_lo_reg = {};
 
-    ManuIdReg       manu_id_reg;
-    ChipIdReg       chip_id_reg;
+    ManuIdReg       manu_id_reg = {};
+    ChipIdReg       chip_id_reg = {};
 
 
     std::array<INA3221Channel, 6> channels = {
@@ -239,17 +262,21 @@ public:
     bool verify();
     INA3221 & reset();
     INA3221 & setAverageTimes(const uint16_t times);
-    
+    void setAverageTimes(const AverageTimes times);
+    void enableMeasureBus(const bool en = true);
+    void enableMeasureShunt(const bool en = true);
+    void enableContinuous(const bool en = true);
+
     INA3221 & enableChannel(const size_t index, const bool en = true);
 
     INA3221 & setBusConversionTime(const ConversionTime time);
     INA3221 & setShuntConversionTime(const ConversionTime time);
 
-    int getShuntVoltuV(const size_t index);
-    int getBusVoltmV(const size_t index);
+    [[nodiscard]] int getShuntVoltuV(const size_t index);
+    [[nodiscard]] int getBusVoltmV(const size_t index);
 
-    real_t getShuntVolt(const size_t index);
-    real_t getBusVolt(const size_t index);
+    [[nodiscard]] real_t getShuntVolt(const size_t index);
+    [[nodiscard]] real_t getBusVolt(const size_t index);
 
     INA3221 & setInstantOVC(const size_t index, const real_t volt);
     INA3221 & setConstantOVC(const size_t index, const real_t volt);

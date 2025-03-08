@@ -12,9 +12,9 @@ scexpr uint foc_freq = 25000;
 using Current = real_t;
 
 struct UvwValue{
-    #pragma pack(push, 1)
-    real_t u, v, w;
-    #pragma pack(pop)
+    real_t u = {};
+    real_t v = {};
+    real_t w = {};
 
     real_t operator [](const size_t idx) const {
         return *(&u + idx);
@@ -51,9 +51,8 @@ struct DqCurrent: public DqValue{};
 struct DqVoltage: public DqValue{};
 
 struct AbValue{
-    #pragma pack(push, 1)
-    real_t a, b;
-    #pragma pack(pop)
+    real_t a = {};
+    real_t b = {};
 
     real_t operator [](const size_t idx) const {
         return *(&a + idx);
@@ -97,13 +96,21 @@ static __inline real_t smooth(const real_t x){
 
 namespace ymd{
     inline OutputStream & operator << (OutputStream & os, const foc::AbValue & ab){
-        return os << '(' << ab.a << os.splitter() << ab.b << ')';
+        return os << os.brackets<'('>() << 
+            ab.a << os.splitter() << 
+            ab.b << os.brackets<')'>();
     }
     
     inline OutputStream & operator << (OutputStream & os, const foc::DqValue & dq){
-        return os << '(' << dq.d << os.splitter() << dq.q << ')';
+        return os << os.brackets<'('>() << 
+            dq.d << os.splitter() << 
+            dq.q << os.brackets<')'>();
     }
+
     inline OutputStream & operator << (OutputStream & os, const foc::UvwValue & uvw){
-        return os << '(' << uvw.u << os.splitter() << uvw.v <<  os.splitter() << uvw.w << ')';
+        return os << os.brackets<'('>() << 
+            uvw.u << os.splitter() << 
+            uvw.v <<  os.splitter() << 
+            uvw.w << os.brackets<')'>();
     }
 }

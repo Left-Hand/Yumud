@@ -22,9 +22,12 @@ protected:
         instance_(instance)
 
         #if defined(CH32V20X) || defined(CH32V30X)
-        ,pin_(Pin(((instance == GPIOC) && 
-            (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
-            ) ? (((uint16_t)pin >> 13)) : (uint16_t)pin))
+        ,pin_(Pin(
+            (instance == GPIOC) && 
+            (
+                ((* reinterpret_cast<uint32_t *> (0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
+            ) ? uint16_t(uint16_t(pin) >> 13) : uint16_t(pin)
+        ))
         #elif defined(USE_STM32_HAL_LIB)
         ,pin_(pin)
         #endif
@@ -53,7 +56,7 @@ public:
         instance_->BCR = uint16_t(pin_);
     }
     __fast_inline void write(const bool val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
-    __fast_inline bool read() const {return (bool)(instance_->INDR & uint16_t(pin_));}
+    __fast_inline bool read() const {return bool(instance_->INDR & uint16_t(pin_));}
 
     void setMode(const GpioMode mode) ;
     __fast_inline GPIO_TypeDef * inst() const {return instance_;} 

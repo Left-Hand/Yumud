@@ -9,7 +9,7 @@ String InputStream::readString(const size_t len){
     for(uint8_t i = 0; i < len; i++){
         char _;
         read(_);
-        str += _;
+        str.concat(_);
     }
 
     return str;
@@ -28,7 +28,7 @@ String InputStream::readStringUntil(const char & chr) {
             break;
         }
 
-        str += _;
+        str.concat(_);
 
         if ((size_t)str.length() == cap) {
             cap *= 2;

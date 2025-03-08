@@ -94,20 +94,20 @@ protected:
     // #pragma pack(push, 1)
 
     #include "regs.ipp"
-    ChipIdReg chip_id_reg;
-    uint8_t __resv1__;
-    ErrReg err_reg;
-    PmuStatusReg pmu_status_reg;
-    StatusReg status_reg;
-    Vector3i16Reg mag_reg;
-    RhallReg rhall_reg;
+    ChipIdReg chip_id_reg = {};
+    uint8_t __resv1__ = {};
+    ErrReg err_reg = {};
+    PmuStatusReg pmu_status_reg = {};
+    StatusReg status_reg = {};
+    Vector3i16Reg mag_reg = {};
+    RhallReg rhall_reg = {};
 
-    Vector3i16Reg gyr_reg;
-    Vector3i16Reg acc_reg;
-    AccConfReg acc_conf_reg;
-    AccRangeReg acc_range_reg;
-    GyrConfReg gyr_conf_reg;
-    GyrRangeReg gyr_range_reg;
+    Vector3i16Reg gyr_reg = {};
+    Vector3i16Reg acc_reg = {};
+    AccConfReg acc_conf_reg = {};
+    AccRangeReg acc_range_reg = {};
+    GyrConfReg gyr_conf_reg = {};
+    GyrRangeReg gyr_range_reg = {};
     // #pragma pack(pop)
 
     void writeCommand(const uint8_t cmd){

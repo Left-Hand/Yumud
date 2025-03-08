@@ -20,7 +20,7 @@ protected:
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
-    struct CtlReg:Reg8{
+    struct CtlReg:Reg8<>{
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
@@ -45,19 +45,19 @@ protected:
     uint16_t ledMode;
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     };
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writePort(const uint16_t data) override{

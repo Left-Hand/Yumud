@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#define QKV4_REG_DEF(name) static inline volatile name##_Def * name = (name##_Def *)name##_Def::address;
+#define QKV4_REG_DEF(name) static inline volatile name##_Def * name = reinterpret_cast<name##_Def *>(name##_Def::address);
 namespace QingKeV4{
     struct PFIC_CFGR_Def{
         static constexpr uint32_t address = 0xE000E04C;

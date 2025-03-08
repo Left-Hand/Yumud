@@ -12,7 +12,7 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
-    struct Mode1Reg:public Reg8{
+    struct Mode1Reg:public Reg8<>{
         using Reg8::operator=;
         
         uint8_t allcall:1;
@@ -23,7 +23,7 @@ protected:
         uint8_t restart:1;
     };
 
-    struct Mode2Reg:public Reg8{
+    struct Mode2Reg:public Reg8<>{
         using Reg8::operator=;
 
         uint8_t outne:2;
@@ -33,7 +33,7 @@ protected:
         uint8_t __resv__:3;
     };
 
-    struct LedOnOffReg:public Reg16{
+    struct LedOnOffReg:public Reg16<>{
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
         const uint16_t __resv__:3 = 0;
@@ -55,13 +55,13 @@ protected:
         Prescale = 0xfe
     };
 
-    Mode1Reg mode1_reg;
-    Mode2Reg mode2_reg;
-    std::array<uint8_t,3> sub_addr_regs;
-    uint8_t all_addr_reg;
-    std::array<LedRegs,16> sub_channels;
-    LedRegs all_channel;
-    uint8_t prescale_reg;
+    Mode1Reg mode1_reg = {};
+    Mode2Reg mode2_reg = {};
+    std::array<uint8_t,3> sub_addr_regs = {};
+    uint8_t all_addr_reg = {};
+    std::array<LedRegs,16> sub_channels = {};
+    LedRegs all_channel = {};
+    uint8_t prescale_reg = {};
 
     class PCA8975Channel final:public hal::PwmIntf,  hal::GpioIntf{
     protected:
@@ -92,24 +92,24 @@ protected:
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)addr, reg);
+        i2c_drv_.writeReg(uint8_t(addr), reg);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
-        i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)addr, reg);
+        i2c_drv_.readReg(uint8_t(addr), reg);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
-        i2c_drv_.readReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.readReg(uint8_t(addr), reg, LSB);
     }
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
         return data;
     }
     void writePort(const uint16_t data) override{

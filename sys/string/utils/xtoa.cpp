@@ -124,7 +124,7 @@ size_t iltoa(int64_t value, char * str, uint8_t radix){
 size_t StringUtils::ftoa(float number,char *buf, uint8_t eps)
 {
     char str_int[12] = {0};
-    char str_float[eps+1] = {0};
+    char str_float[12] = {0};
 
     long int_part = (long)number;
     float float_part = number - (float)int_part;

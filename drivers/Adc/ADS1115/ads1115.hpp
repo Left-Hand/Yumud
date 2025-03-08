@@ -7,15 +7,18 @@
 
 namespace ymd::drivers{
 
-using BusResult = Result<void, BusError>;
-__inline Result<void, BusError> make_result(const BusError res){
-    if(res.ok()) return Ok();
-    else return Err(res); 
-}
 
 
 class ADS111X{
 public:
+
+    using DeviceResult = Result<void, BusError>;
+    __inline DeviceResult make_result(const BusError res){
+        if(res.ok()) return Ok();
+        else return Err(res); 
+    }
+
+
     enum class Package:uint8_t{
         ADS1113,
         ADS1114,
@@ -40,12 +43,12 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct ConversionReg:public Reg16{
+    struct ConversionReg:public Reg16<>{
         scexpr RegAddress address = 0b00; 
         int16_t data;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
@@ -61,24 +64,24 @@ protected:
         uint16_t busy:1;
     };
 
-    struct LowThreshReg:public Reg16i{
+    struct LowThreshReg:public Reg16i<>{
         scexpr RegAddress address = 0b10;
         int16_t data;
     };
 
-    struct HighThreshReg:public Reg16i{
+    struct HighThreshReg:public Reg16i<>{
         scexpr RegAddress address = 0b11; 
         int16_t data;
     };
 
-    ConversionReg conversion_reg;
-    ConfigReg config_reg;
-    LowThreshReg low_thresh_reg;
-    HighThreshReg high_thresh_reg;
+    ConversionReg conversion_reg = {};
+    ConfigReg config_reg = {};
+    LowThreshReg low_thresh_reg = {};
+    HighThreshReg high_thresh_reg = {};
 
 
-    [[nodiscard]] BusResult readReg(const RegAddress addr, uint16_t & data);
-    [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data); 
+    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data); 
     struct ConfigBuilder{
 
         // ADS111X & owner_;
@@ -86,7 +89,8 @@ protected:
         DataRate datarate_;
         PGA pga_;
             
-        [[nodiscard]] static constexpr Option<MUX> singleend(const size_t N){
+        __pure [[nodiscard]]
+        static constexpr Option<MUX> singleend(const size_t N){
             switch(N){
                 case 0: return Some(MUX::P0NG);
                 case 1: return Some(MUX::P1NG);
@@ -96,7 +100,8 @@ protected:
             return None;
         }
 
-        [[nodiscard]] static constexpr Option<MUX> differential(const size_t P, const size_t N){
+        __pure [[nodiscard]] 
+        static constexpr Option<MUX> differential(const size_t P, const size_t N){
 
             constexpr std::array mappings{
                 std::tuple{0UL,1UL,MUX::P0N1},
@@ -114,7 +119,8 @@ protected:
             return None;
         }
 
-        [[nodiscard]] static constexpr Option<DataRate> datarate(const size_t dr){
+        __pure [[nodiscard]] 
+        static constexpr Option<DataRate> datarate(const size_t dr){
             switch(dr){
                 case 8: return Some(DataRate::_8);
                 case 16: return Some(DataRate::_16);
@@ -162,7 +168,7 @@ public:
 
     Option<real_t> result();
 
-    BusResult verify();
+    DeviceResult verify();
 
     [[nodiscard]] constexpr auto builder(){return ConfigBuilder{};}
 

@@ -105,15 +105,15 @@ protected:
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
-                return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
+                return (uint32_t(_instance) - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
             #endif
 
             #ifdef ENABLE_DMA2
             case 2:
-                if((uint32_t)_instance < DMA2_Channel7_BASE){ 
-                    return ((uint32_t)_instance - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
+                if(uint32_t(_instance) < DMA2_Channel7_BASE){ 
+                    return (uint32_t(_instance) - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
                 }else{
-                    return ((uint32_t)_instance - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
+                    return (uint32_t(_instance) - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
                 }
             #endif
             default:
@@ -141,7 +141,7 @@ protected:
             #endif
             #ifdef ENABLE_DMA2
             case 2:
-                if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
+                if(uint32_t(_instance) <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
                 }else{
                     return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
@@ -164,7 +164,7 @@ protected:
             #endif
             #ifdef ENABLE_DMA2
             case 2:
-                if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
+                if(uint32_t(_instance) <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
                 }else{
                     return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
@@ -230,7 +230,10 @@ public:
     void start(T * dst, const T * src, size_t size){
         configDstMemDataBytes(sizeof(T));
         configSrcMemDataBytes(sizeof(T));
-        start((void *)dst, (const void *)src, size);
+        start(
+            reinterpret_cast<void *>(dst), 
+            reinterpret_cast<const void *>(src), 
+            size);
     }
 
     template <typename U, typename T>
@@ -238,7 +241,7 @@ public:
     void start(U * dst, const T & src){//TODO array can only be c-ctyle array
         configDstMemDataBytes(sizeof(U));
         configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        start((void *)dst, (const void *)&src[0], std::distance(std::begin(src), std::end(src)));
+        start(reinterpret_cast<void *>(dst), reinterpret_cast<const void *>(&src[0]) , std::distance(std::begin(src), std::end(src)));
     }
 
     template <typename U, typename T>
@@ -246,7 +249,11 @@ public:
     void start(U & dst, const T * src){
         configDstMemDataBytes(sizeof(U));
         configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        start((void *)&dst[0], (const void *)src, std::distance(std::begin(dst), std::end(dst)));
+        start(
+            reinterpret_cast<void *>(dst), 
+            reinterpret_cast<const void *>(src), 
+            std::distance(std::begin(dst), std::end(dst))
+        );
     }
 
     void configDataBytes(const size_t bytes){

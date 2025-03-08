@@ -8,8 +8,8 @@ using namespace ymd;
 
 #define AD9833_Delay __nopn(4)
 
-#define AD9833_SPI_WRITE(data)      spi_drv.writeSingle(data);
-#define AD9833_FSYNC(x)             fsync_gpio = x;
+#define AD9833_SPI_WRITE(data)      spi_drv_.writeSingle(data);
+#define AD9833_FSYNC(x)             fsync_gpio_ = x;
 
 
 // WaveMode

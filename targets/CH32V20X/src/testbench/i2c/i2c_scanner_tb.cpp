@@ -13,6 +13,8 @@
 
 using namespace ymd;
 
+#define UART uart2
+
 struct FoundInfo{
     uint8_t addr;
     uint max_bbaud;
@@ -23,10 +25,54 @@ Result<void, BusError> make_result(const BusError res){
     else return Err(res); 
 }
 
+#include <coroutine>
+
+// 协程任务模板
+template<typename T>
+
+struct [[nodiscard]] Task {
+    struct promise_type {
+        Result<T, BusError> result;
+        std::coroutine_handle<> continuation;
+
+        Task get_return_object() { return Task{Handle::from_promise(*this)}; }
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void return_value(Result<T, BusError> res) { result = res; }
+        void unhandled_exception() noexcept {}
+    };
+
+    using Handle = std::coroutine_handle<promise_type>;
+
+    explicit Task(Handle h) : handle(h) {}
+    ~Task() { if (handle) handle.destroy(); }
+
+    struct Awaiter {
+        Handle handle;
+        
+        bool await_ready() const noexcept { return false; }
+        void await_suspend(std::coroutine_handle<> cont) noexcept {
+            handle.promise().continuation = cont;
+            handle.resume();
+        }
+        Result<T, BusError> await_resume() noexcept {
+            return handle.promise().result;
+        }
+    };
+
+    Awaiter operator co_await() noexcept {
+        return Awaiter{handle};
+    }
+
+    Handle handle;
+};
+
 struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
-
+    
+    // __pure
+    // __attribute__((const))
     static Result<uint, BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, read_addr};
         // if(auto err = i2c_drv.verify(); err.wrong()){
@@ -46,6 +92,8 @@ struct I2cTester{
             return baud;
         }();
 
+        DEBUG_PRINTLN("??");
+        uart2.setRxMethod(CommMethod::Blocking);
 
         return Ok{max_baud};
     }
@@ -58,9 +106,8 @@ struct I2cTester{
 
 void i2c_scanner_functional(){
 
-    auto & logger = uart1;
-    logger.init(576_KHz);
-    DEBUGGER.retarget(&logger);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
 
     // log("i2c_scanner_main") | log("1");
     
@@ -137,9 +184,8 @@ void test_result(){
     while(true);
 }
 void i2c_scanner_main(){
-    auto & logger = uart1;
-    logger.init(576_KHz);
-    DEBUGGER.retarget(&logger);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
     DEBUGGER.forceSync();
     
     // test_result();
@@ -178,14 +224,41 @@ void i2c_scanner_main(){
         for(uint8_t i = 0; i < 128; i++){
             const uint8_t read_addr = i << 1;
             I2cTester::verify(i2c, read_addr)
-                .if_ok([&] {
+                .if_ok([&]{
                     const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
                     founded_devices.emplace_back(
                         read_addr, 
                         result.loc().expect("unknown bug")
                     );
-                }
-            );
+                });
+
+            // I2cTester::verify(i2c, read_addr)
+            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, BusError> {
+            //         return I2cTester::getMaxBaudRate(i2c, read_addr)
+            //             .map([read_addr](uint baud) {
+            //                 return FoundInfo{read_addr, baud};
+            //             });
+            //     })
+            //     .match(
+            //         [&founded_devices](FoundInfo info) { // 成功分支
+            //             founded_devices.emplace_back(info);
+            //         },
+            //         [](BusError err) { // 失败分支
+            //             PANIC("Address", read_addr, "failed:", err.code());
+            //         }
+            //     );
+
+
+            // I2cTester::verify(i2c, read_addr)
+            // .and_then([&i2c, read_addr] {
+            //     return I2cTester::getMaxBaudRate(i2c, read_addr)
+            //         .map([read_addr](uint max_baud) {
+            //             return FoundInfo{read_addr, max_baud};
+            //         });
+            // })
+            // .map([&founded_devices](auto&& info) {
+            //     founded_devices.push_back(std::forward<decltype(info)>(info));
+            // });
 
             delay(1);
         }
@@ -221,3 +294,19 @@ void i2c_scanner_main(){
 
     exit(0);
 }
+
+
+
+
+
+
+//     async_task<void> scan_devices() {
+//     for (uint8_t i : std::views::iota(0, 128)) {
+//         co_await i2c.acquire();
+//         auto result = co_await I2cTester::verify(i2c, i<<1);
+//         if (result) {
+//             auto baud = co_await I2cTester::getMaxBaudRate(i2c, i<<1);
+//             founded_devices.emplace_back(i<<1, baud);
+//         }
+//     }
+// }

@@ -87,7 +87,7 @@ protected:
 
     using RegAddress =uint8_t;
 
-    struct ConversionDataHighReg:public Reg16{
+    struct ConversionDataHighReg:public Reg16<>{
         scexpr RegAddress address =0x00;
         uint16_t data_msb:12;
         bool err_aw:1;
@@ -95,32 +95,32 @@ protected:
         uint16_t __resv__:2;
     };
 
-    struct ConversionDataLowReg:public Reg16{
+    struct ConversionDataLowReg:public Reg16<>{
         scexpr RegAddress address =0x01;
         uint16_t data_lsb:16;
     };
 
-    struct ConversionDataReg:public Reg16{
+    struct ConversionDataReg:public Reg16<>{
         ConversionDataHighReg high;
         ConversionDataLowReg low;
     };
 
-    struct ReferenceCountReg:public Reg16{
+    struct ReferenceCountReg:public Reg16<>{
         scexpr RegAddress address =0x08;
         uint8_t count;
     };
 
-    struct OffsetReg:public Reg16{
+    struct OffsetReg:public Reg16<>{
         scexpr RegAddress address =0x0C;
         uint8_t offset;
     };
 
-    struct SettleCountReg:public Reg16{
+    struct SettleCountReg:public Reg16<>{
         scexpr RegAddress address =0x10;
         uint8_t settle_count;
     };
 
-    struct ClockDividerReg:public Reg16{
+    struct ClockDividerReg:public Reg16<>{
         scexpr RegAddress address =0x14;
         uint16_t fref_divider:10;
         uint16_t __resv1__:2;
@@ -128,7 +128,7 @@ protected:
         uint16_t __resv2__:2;
     };
 
-    struct StatusReg:public Reg16{
+    struct StatusReg:public Reg16<>{
         scexpr RegAddress address =0x18;
         bool ch3_unread_conv:1;
         bool ch2_unread_conv:1;
@@ -143,7 +143,7 @@ protected:
         uint16_t channel_error:2;
     };
 
-    struct StatusConfigReg:public Reg16{
+    struct StatusConfigReg:public Reg16<>{
         scexpr RegAddress address =0x19;
         bool data_ready_to_int:1;
         uint16_t __resv__:4;
@@ -154,7 +154,7 @@ protected:
         uint16_t __resv2__:2;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address =0x1a;
         uint16_t __resv1__:6;
         bool high_current_drive:1;
@@ -167,7 +167,7 @@ protected:
     };
 
 
-    struct MuxConfigReg:public Reg16{
+    struct MuxConfigReg:public Reg16<>{
         scexpr RegAddress address =0x1b;
         BandWidth bandwidth:3;
         uint16_t __resv__:10;
@@ -176,7 +176,7 @@ protected:
 
     };
 
-    struct ResetDevReg:public Reg16{
+    struct ResetDevReg:public Reg16<>{
         scexpr RegAddress address =0x1c;
         uint16_t __resv1__:9;
         Gain gain:2;
@@ -184,37 +184,37 @@ protected:
         bool reset_dev:1;
     };
 
-    struct DriveCurrentReg:public Reg16{
+    struct DriveCurrentReg:public Reg16<>{
         scexpr RegAddress address =0x1e;
         uint16_t __resv__:11;
         DriveCurrent drive_current:5;
     };
 
-    struct ManufacturerIdReg:public Reg16{
+    struct ManufacturerIdReg:public Reg16<>{
         scexpr RegAddress address =0x7E;
         scexpr uint16_t correct = 0x5449;
         uint16_t id;
     };
 
-    struct DeviceIdReg:public Reg16{
+    struct DeviceIdReg:public Reg16<>{
         scexpr RegAddress address =0x7F;
         scexpr uint16_t correct = 03054;
         uint16_t id;
     };
 
-    ConversionDataReg conv_data_regs[4];
-    ReferenceCountReg ref_count_regs[4];
-    OffsetReg offset_regs[4];
-    SettleCountReg settle_count_regs[4];
-    ClockDividerReg clock_divider_regs[4];
-    StatusReg status_reg;
-    StatusConfigReg status_config_reg;
-    ConfigReg config_reg;
-    MuxConfigReg mux_config_reg;
-    ResetDevReg reset_dev_reg;
-    DriveCurrentReg drive_current_regs[4];
-    ManufacturerIdReg manufacturer_id_reg;
-    DeviceIdReg device_id_reg;
+    ConversionDataReg conv_data_regs[4] = {};
+    ReferenceCountReg ref_count_regs[4] = {};
+    OffsetReg offset_regs[4] = {};
+    SettleCountReg settle_count_regs[4] = {};
+    ClockDividerReg clock_divider_regs[4] = {};
+    StatusReg status_reg = {};
+    StatusConfigReg status_config_reg = {};
+    ConfigReg config_reg = {};
+    MuxConfigReg mux_config_reg = {};
+    ResetDevReg reset_dev_reg = {};
+    DriveCurrentReg drive_current_regs[4] = {};
+    ManufacturerIdReg manufacturer_id_reg = {};
+    DeviceIdReg device_id_reg = {};
 
     void readReg(const RegAddress addr, uint16_t & data){
         i2c_drv.readReg(uint8_t(addr), data, MSB);

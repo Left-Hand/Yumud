@@ -1,5 +1,6 @@
 #include "quadratic.hpp"
 
+using namespace ymd;
 using namespace ymd::intp;
 
 real_t QuadraticInterpolation::forward(const real_t x){

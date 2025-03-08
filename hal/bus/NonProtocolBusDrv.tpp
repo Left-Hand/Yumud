@@ -11,7 +11,7 @@ BusError NonProtocolBusDrv<BusType>::writeSingle(const T data, Continuous cont) 
         if (size != 1) this->setDataBits(size * 8);
 
         if constexpr (size == 1) {
-            bus_.write((uint8_t)data);
+            bus_.write(uint8_t(data));
         } else if constexpr (size == 2) {
             bus_.write(uint16_t(data));
         } else {

@@ -589,21 +589,21 @@ bool AD5933::calibrate(
 ){
     // auto real = (int16_t *)alloca(n*sizeof(int16_t));
     // auto imag = (int16_t *)alloca(n*sizeof(int16_t));
-    int16_t real[n];
-    int16_t imag[n];
+    // int16_t real[n];
+    // int16_t imag[n];
 
-    if (!frequencySweep(real, imag, n)) {
-        return false;
-    }
+    // if (!frequencySweep(real, imag, n)) {
+    //     return false;
+    // }
 
-    for (int i = 0; i < n; i++) {
-        // Calculate gain factor
-        TODO();
-        // gain[i] = (real_t(1) / ref) / sqrt(real_t(real[i]) * real_t(real[i]) + real_t(imag[i]) * real_t(imag[i]));
+    // for (int i = 0; i < n; i++) {
+    //     // Calculate gain factor
+    //     TODO();
+    //     // gain[i] = (real_t(1) / ref) / sqrt(real_t(real[i]) * real_t(real[i]) + real_t(imag[i]) * real_t(imag[i]));
 
-        // Calculate phase in degrees
-        // phase[i] = static_cast<int>(atan2(real_t(imag[i]), real_t(real[i])) * 180 / M_PI);
-    }
+    //     // Calculate phase in degrees
+    //     // phase[i] = static_cast<int>(atan2(real_t(imag[i]), real_t(real[i])) * 180 / M_PI);
+    // }
 
     return true;
 }

@@ -10,15 +10,15 @@ class Odometer{
 public:
     EncoderIntf & encoder;
 protected:
-    real_t rawLapPosition;
+    real_t rawLapPosition = 0;
 
-    real_t lapPosition;
-    real_t lapPositionLast;
-    real_t deltaLapPosition;
+    real_t lapPosition = 0;
+    real_t lapPositionLast = 0;
+    real_t deltaLapPosition = 0;
 
-    real_t accPosition;
-    real_t accPositionLast;
-    real_t speed;
+    real_t accPosition = 0;
+    real_t accPositionLast = 0;
+    real_t speed = 0;
 
     bool rsv = false;
 
@@ -34,6 +34,7 @@ public:
         reset();
     }
 
+    virtual ~Odometer() = default;
     real_t getRawLapPosition(){
         return rawLapPosition;
     }

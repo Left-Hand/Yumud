@@ -106,12 +106,12 @@ constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const arithme
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::posmod(const arithmetic auto & mod) const{
-    return Vector2_t<T>(::fmod(x, mod), ::fmod(y, mod));
+    return Vector2_t<T>( fmod(x, mod), fmod(y, mod));
 }
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::posmodv(const Vector2_t<T> & b) const{
-    return Vector2_t<T>(::fmod(x, b.x), ::fmod(y, b.y));
+    return Vector2_t<T>(fmod(x, b.x), fmod(y, b.y));
 }
 
 template<arithmetic T>
@@ -122,8 +122,8 @@ constexpr Vector2_t<T> Vector2_t<T>::project(const Vector2_t<T> & b) const{
 template<arithmetic T>
 constexpr T Vector2_t<T>::project(const T & rad) const{
     // return (this->rotated(-rad)).x;
-    // this->improduct(Vector2_t<T>(::cos(r), ::sin(r)));
-    return (this->x) * ::cos(rad) + (this->y) * ::sin(rad);
+    // this->improduct(Vector2_t<T>(::cos(r), sin(r)));
+    return (this->x) * cos(rad) + (this->y) * sin(rad);
 
 }
 
@@ -161,7 +161,7 @@ constexpr Vector2_t<T> Vector2_t<T>::slide(const Vector2_t<T> & n) const {
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::sign() const{
-    return Vector2_t<T>(::sign(x), ::sign(y));
+    return Vector2_t<T>(sign(x), sign(y));
 }
 
 template<arithmetic T>
@@ -192,7 +192,7 @@ constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> 
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotated(const T r) const{
-    return this->improduct(Vector2_t<T>(::cos(r), ::sin(r)));
+    return this->improduct(Vector2_t<T>( cos(r), sin(r)));
 }
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \

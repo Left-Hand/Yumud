@@ -145,7 +145,9 @@ using PlaneD = Plane_t<double>;
 
 template<arithmetic T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & value){
-    return os << '(' << value.normal << os.splitter() << value.d << ')';
+    return os << os.brackets<'('>() << 
+		value.normal << os.splitter() << 
+		value.d << os.brackets<')'>();
 }
 
 

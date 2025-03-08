@@ -39,6 +39,12 @@ struct __needprint_helper<std::_Setbase>{
 
 struct __Splitter{};
 
+
+template<char c>
+struct __Brackets{
+    static constexpr char chr = c;
+};
+
 template<>
 struct __needprint_helper<__Splitter>{
     static constexpr bool value = false;
@@ -140,6 +146,8 @@ public:
         reconf(default_config);
     }
 
+    virtual ~OutputStream() = default;
+
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 
@@ -234,7 +242,13 @@ public:
     
     OutputStream& operator<<(const std::nullopt_t){return *this << '/';}
     OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
+
+    template<char chr>
+    OutputStream& operator<<(const __Brackets<chr>){if(!config_.nobrackets){write(chr);} return *this;}
     OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
+
+    // template<typename T>
+    // OutputStream& operator<<(const __RegC_t<T> & reg){return *this << std::bitset<sizeof(T) * 8>(reg.as_val());}
     
     template<typename T>
     OutputStream& operator<<(const std::optional<T> v){
@@ -395,6 +409,9 @@ public:
 
 
     __Splitter splitter() const {return {};}
+
+    template<char chr>
+    __Brackets<chr> brackets() const {return {};}
 
     OutputStream & flush();
 
