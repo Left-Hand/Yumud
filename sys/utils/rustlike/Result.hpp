@@ -278,7 +278,7 @@ private:
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
             #endif
-            exit(1);
+            std::terminate();
         }
     }
     friend class _Loc;
@@ -288,6 +288,13 @@ public:
 
     [[nodiscard]] __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
     [[nodiscard]] __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+
+
+    [[nodiscard]] __fast_inline constexpr
+    Result<T, E> & operator |(Result<T, E> && rhs){
+        if(is_err()) return *this;
+        else return rhs;
+    }
 
     template<typename S>
     requires requires(S s) {
@@ -448,8 +455,27 @@ public:
         }
     }
 
+    struct _PanicWithOutUnlock{
+        ~_PanicWithOutUnlock(){
+            if (will_panic) {
+                PANIC("unsafe ignore without unlock");
+            }
+        }
+
+        void operator !(){
+            will_panic = false;
+        }
+    private:
+        bool will_panic = true;
+    };
+
     __fast_inline constexpr 
-    T operator +() const{
+    auto operator +() const{
+        return _PanicWithOutUnlock{};
+    }
+
+    __fast_inline constexpr 
+    T operator !() const{
         return result_.unwrap();
     }
 

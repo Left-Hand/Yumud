@@ -247,9 +247,11 @@ constexpr __fast_inline T __sign_tmpl(const T a){
 
 #ifndef INVLERP
 #ifdef __cplusplus
-    #define INVLERP(x,a,b) __invlerp_tmpl(x,a,b)
+    #define INVLERP(a,b, x) __invlerp_tmpl(a,b, x)
+
+
     template <typename T, typename U, typename V>
-    constexpr __fast_inline T __invlerp_tmpl(const T& t, const U & _a, const V & _b){
+    constexpr __fast_inline T __invlerp_tmpl(const U & _a, const V & _b, const T& t){
         T a = static_cast<T>(_a);
         T b = static_cast<T>(_b);
         return (t - a) / (b - a);

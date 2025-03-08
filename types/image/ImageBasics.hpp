@@ -48,7 +48,9 @@ public:
     }
 
     Vector2 pixel2uv(const Vector2i & pixel) const {
-        return Vector2(INVLERP((real_t)pixel.x, this->size().x / 2, this->size().x), INVLERP((real_t)pixel.y, this->size().y / 2, this->size().y));
+        return Vector2(
+            INVLERP(this->size().x / 2, this->size().x, real_t(pixel.x)), 
+            INVLERP(this->size().y / 2, this->size().y, real_t(pixel.y)));
     }
 
     Vector2 uvstep() const{

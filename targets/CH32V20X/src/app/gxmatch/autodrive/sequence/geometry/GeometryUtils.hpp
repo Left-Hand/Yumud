@@ -66,7 +66,7 @@ template<arithmetic T>
 ymd::Vector2_t<T> get_square_rounded_position(const ymd::Rect2_t<T> & rect, const T & rad){
     const auto squ_len = rect.size.x;
     const auto pos_center = rect.get_center();
-    const auto rad_90 = fmod(rad + pi_4, pi_2) - pi_4;
+    const auto rad_90 = fmod(rad + T(PI/4), T(PI/2)) - T(PI/4);
     const auto distance = (squ_len / 2) / cos(rad_90);
     return pos_center + ymd::Vector2_t<T>{-distance, 0}.rotated(rad);
 }
