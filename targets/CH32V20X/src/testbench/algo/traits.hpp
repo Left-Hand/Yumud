@@ -40,7 +40,11 @@ struct function_traits<Ret(Functor::*)(Args...) const> {
     using args_type = std::tuple<Args...>;
 };
 
+template<class, class = void>
+struct is_functor : false_type {};
 
+template<class T>
+struct is_functor<T, void_t<decltype(&T::operator())>> : true_type {};
 }
 
 // template<typename T>
@@ -53,6 +57,8 @@ static constexpr bool is_member_variable_v = details::_is_member_variable<declty
 template<typename T>
 static constexpr bool is_member_function_v = details::_is_member_function<decltype(&T::)>::value;
 
+template<typename T>
+static constexpr bool is_functor_v = details::_is_functor<>::value;
 
 // 只有在特化时才能够确定值 可用于constexpr排除分支下的static_assert
 template <typename T>
