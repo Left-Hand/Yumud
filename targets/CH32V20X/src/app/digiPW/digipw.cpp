@@ -29,9 +29,11 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "buck/buck.hpp"
-
-
 #include "sogi/spll.hpp"
+
+#include <sstream>
+#include <ctime>
+
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -120,6 +122,8 @@ void digipw_main(){
     
     INA226 ina226{i2csw};
     ina226.init(6, 1);
+
+
     
         // while(true){
         //     DEBUG_PRINTLN_IDLE(millis());

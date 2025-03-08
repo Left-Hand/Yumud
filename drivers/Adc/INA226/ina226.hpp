@@ -4,12 +4,23 @@
 #include "sys/utils/rustlike/Result.hpp"
 #include "sys/utils/rustlike/Optional.hpp"
 
+
+namespace ymd::custom{
+    template<>
+    struct result_converter<void, BusError, BusError> {
+        static Result<void, BusError> convert(const BusError & res){
+            if(res.ok()) return Ok();
+            else return Err(res); 
+        }
+    };
+}
+
 namespace ymd::drivers{
+
+
+
 class INA226 {
-    static __inline Result<void, BusError> make_result(const BusError res){
-        if(res.ok()) return Ok();
-        else return Err(res); 
-    }
+
 
     public:
     using BusResult = Result<void, BusError>;
@@ -50,8 +61,6 @@ protected:
         uint16_t rst:1;
     };
 
-
-
     struct ShuntVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x01;
         uint16_t :16;
@@ -70,6 +79,7 @@ protected:
         scexpr RegAddress address = 0x04;
         int16_t :16;
     };
+    
     struct CalibrationReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
         int16_t :16;

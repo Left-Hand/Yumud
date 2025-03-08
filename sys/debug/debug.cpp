@@ -66,3 +66,89 @@ void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
 // }
 
 }
+
+// https://github.com/esp8266/Arduino/blob/master/cores/esp8266/libc_replacements.cpp
+extern "C" {
+
+    int _open_r (struct _reent* unused, const char *ptr, int mode) {
+        (void)unused;
+        (void)ptr;
+        (void)mode;
+        return 0;
+    }
+    
+    int _close_r(struct _reent* unused, int file) {
+        (void)unused;
+        (void)file;
+        return 0;
+    }
+    
+    // int _fstat_r(struct _reent* unused, int file, struct stat *st) {
+    //     (void)unused;
+    //     (void)file;
+    //     st->st_mode = S_IFCHR;
+    //     return 0;
+    // }
+    
+    int _lseek_r(struct _reent* unused, int file, int ptr, int dir) {
+        (void)unused;
+        (void)file;
+        (void)ptr;
+        (void)dir;
+        return 0;
+    }
+    
+    int _read_r(struct _reent* unused, int file, char *ptr, int len) {
+        (void)unused;
+        (void)file;
+        (void)ptr;
+        (void)len;
+        return 0;
+    }
+    
+    // int _write_r(struct _reent* r, int file, char *ptr, int len) {
+    //     (void) r;
+    //     int pos = len;
+    //     if (file == STDOUT_FILENO) {
+    //         while(pos--) {
+    //             ets_putc(*ptr);
+    //             ++ptr;
+    //         }
+    //     }
+    //     return len;
+    // }
+    
+    int _putc_r(struct _reent* r, int c, FILE* file) __attribute__((weak));
+    
+    // int _putc_r(struct _reent* r, int c, FILE* file) {
+    //     (void) r;
+    //     if (file->_file == STDOUT_FILENO) {
+    //       ets_putc(c);
+    //       return c;
+    //     }
+    //     return EOF;
+    // }
+    
+    // int puts(const char * str) {
+    //     char c;
+    //     while((c = *str) != 0) {
+    //         ets_putc(c);
+    //         ++str;
+    //     }
+    //     ets_putc('\n');
+    //     return true;
+    // }
+    
+    // #undef putchar
+    // int putchar(int c) {
+    //     ets_putc(c);
+    //     return c;
+    // }
+    
+    int atexit(void (*func)()) __attribute__((weak));
+    int atexit(void (*func)()) {
+        (void) func;
+        return 0;
+    }
+    
+};

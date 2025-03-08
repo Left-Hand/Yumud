@@ -124,7 +124,7 @@ inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 {
-  T temp = ::sqrt(A.a);
+  T temp = sqrt(A.a);
 
   return Jet_t<T, N>(temp, T(1) / (T(2) * temp) * A.v);
 }
@@ -132,12 +132,12 @@ inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> cos(const Jet_t<T, N>& A)
 {
-  return Jet_t<T, N>(::cos(A.a), -::sin(A.a) * A.v);
+  return Jet_t<T, N>(cos(A.a), -sin(A.a) * A.v);
 }
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> sin(const Jet_t<T, N>& A)
 {
-  return Jet_t<T, N>(::sin(A.a), ::cos(A.a) * A.v);
+  return Jet_t<T, N>(sin(A.a), cos(A.a) * A.v);
 }
 template <arithmetic T, size_t N>
 inline bool operator>(const Jet_t<T, N>& f, const Jet_t<T, N>& g)

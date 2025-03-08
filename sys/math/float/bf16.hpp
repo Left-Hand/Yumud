@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <bit>
 
-
+namespace ymd{
 struct bf16 {
 	union {
 		uint16_t raw;
@@ -45,3 +45,5 @@ struct bf16 {
         return iq_t<Q>::from(float(*this));
     }
 };
+
+}

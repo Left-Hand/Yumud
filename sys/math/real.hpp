@@ -18,12 +18,14 @@
 #endif
 
 #ifdef USE_IQ
-using real_t = iq_t<IQ_DEFAULT_Q>;
+using real_t = ymd::iq_t<IQ_DEFAULT_Q>;
 #elif defined(USE_DOUBLE)
 using real_t = double;
 #else
 using real_t = float;
 #endif
+
+namespace ymd{
 
 scexpr real_t pi_4 = real_t(PI/4);
 scexpr real_t pi_2 = real_t(PI/2);
@@ -346,7 +348,5 @@ __fast_inline constexpr real_t distance(const real_t & a, const real_t & b){
 __fast_inline constexpr real_t normal(const real_t & a, const real_t & b){
     return SIGN(b - a);
 }
-
-
-#include "real.ipp"
+}
 

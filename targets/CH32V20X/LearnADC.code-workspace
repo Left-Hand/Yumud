@@ -111,7 +111,8 @@
             "coroutine": "cpp",
             "cassert": "cpp",
             "*.ipp": "cpp",
-            "source_location": "cpp"
+            "source_location": "cpp",
+            "expected": "c"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
