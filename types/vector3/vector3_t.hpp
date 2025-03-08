@@ -247,19 +247,19 @@ public:
         return bool(x) or bool(y) or bool(z);
     }
 
-    static bool compare_x(const Vector3_t & a, const Vector3_t & b){
+    static bool sort_by_x(const Vector3_t & a, const Vector3_t & b){
         return a.x < b.x;
     };
 
-    static bool compare_y(const Vector3_t & a, const Vector3_t & b){
+    static bool sort_by_y(const Vector3_t & a, const Vector3_t & b){
         return a.y < b.y;
     };
 
-    static bool compare_z(const Vector3_t & a, const Vector3_t & b){
+    static bool sort_by_z(const Vector3_t & a, const Vector3_t & b){
         return a.y < b.y;
     };
 
-    static bool compare_length(const Vector3_t & a, const Vector3_t & b){
+    static bool sort_by_length(const Vector3_t & a, const Vector3_t & b){
         return a.length_squared() < b.length_square();
     };
 
@@ -285,7 +285,7 @@ __fast_inline constexpr auto normal(const Vector3_t<arithmetic auto> & from, con
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){
-    return os << '(' << value.x << ',' << value.y << ',' << value.z << ')';
+    return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.splitter() << value.z << os.brackets<')'>();
 }
 
 

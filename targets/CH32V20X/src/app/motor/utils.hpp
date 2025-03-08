@@ -96,13 +96,21 @@ static __inline real_t smooth(const real_t x){
 
 namespace ymd{
     inline OutputStream & operator << (OutputStream & os, const foc::AbValue & ab){
-        return os << '(' << ab.a << os.splitter() << ab.b << ')';
+        return os << os.brackets<'('>() << 
+            ab.a << os.splitter() << 
+            ab.b << os.brackets<')'>();
     }
     
     inline OutputStream & operator << (OutputStream & os, const foc::DqValue & dq){
-        return os << '(' << dq.d << os.splitter() << dq.q << ')';
+        return os << os.brackets<'('>() << 
+            dq.d << os.splitter() << 
+            dq.q << os.brackets<')'>();
     }
+
     inline OutputStream & operator << (OutputStream & os, const foc::UvwValue & uvw){
-        return os << '(' << uvw.u << os.splitter() << uvw.v <<  os.splitter() << uvw.w << ')';
+        return os << os.brackets<'('>() << 
+            uvw.u << os.splitter() << 
+            uvw.v <<  os.splitter() << 
+            uvw.w << os.brackets<')'>();
     }
 }

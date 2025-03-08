@@ -26,7 +26,8 @@ int main(){
     // canopen_main();
     // bldc_main();
     // digipw_main();
-    enum_main();
+    // enum_main();
+    hive_main();
     
     // fmt_main();
     // sincos_pwm_main();

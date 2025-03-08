@@ -131,3 +131,5 @@ void fmt_main();
 
 
 void enum_main();
+
+void hive_main();

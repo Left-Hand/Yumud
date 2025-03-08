@@ -110,7 +110,9 @@ public:
 
 
 __inline OutputStream & operator <<(OutputStream & os, const Ray2D_t<auto> & ray){
-    return os << '(' << ray.org << os.splitter() << ray.rad << ')';
+    return os << os.brackets<'('>() << 
+        ray.org << os.splitter() << 
+        ray.rad << os.brackets<')'>();
 }
 
 }

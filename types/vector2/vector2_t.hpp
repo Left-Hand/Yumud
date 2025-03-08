@@ -83,19 +83,19 @@ public:
     constexpr Vector2_t<T> abs() const;
 
 
-    static bool compare_x(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_x(const Vector2_t & a, const Vector2_t & b){
         return a.x < b.x;
     };
 
-    static bool compare_y(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_y(const Vector2_t & a, const Vector2_t & b){
         return a.y < b.y;
     };
 
-    static bool compare_length(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_length(const Vector2_t & a, const Vector2_t & b){
         return a.length_squared() < b.length_squared();
     };
 
-    static bool compare_angle(const Vector2_t & a, const Vector2_t & b){
+    static bool sort_by_angle(const Vector2_t & a, const Vector2_t & b){
         return a.cross(b) > 0;
     };
 
@@ -220,8 +220,9 @@ public:
 
     __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
         // using CommonType = typename std::common_type<T, decltype(n)>::type;
-        x = static_cast<T>(x / n);
-        y = static_cast<T>(y / n);
+        const T inv_n = static_cast<T>(1) / n;
+        x = static_cast<T>(x * inv_n);
+        y = static_cast<T>(y * inv_n);
         return *this;
     }
 
@@ -270,11 +271,11 @@ using Vector2i = Vector2_t<int>;
 using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
-    return os << '(' << value.x << os.splitter() << value.y << ')';
+    return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }
 
 
-__fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto & t){
+__fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto t){
     return a + (b - a) * t;
 }
 

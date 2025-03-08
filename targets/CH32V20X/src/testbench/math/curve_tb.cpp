@@ -100,6 +100,7 @@ auto rasterization_points(const auto & functor, const size_t n){
     return ret;
 }
 
+
 void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN(std::setprecision(4));
@@ -114,7 +115,7 @@ void curve_tb() {
         {1,1},
     };
 
-    std::sort(points.begin(), points.end(), Vector2::compare_x);
+    std::sort(points.begin(), points.end(), Vector2::sort_by_x);
 
 
     class Ball{
