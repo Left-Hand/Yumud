@@ -361,7 +361,7 @@ template<
     typename ... Args,
     size_t N = total_bytes_v<std::decay_t<Args> ... >
 >
-constexpr
+__inline constexpr
 std::array<std::byte, N> make_bytes_from_args(Args && ... args){
     std::array<std::byte, N> result;
     size_t offset = 0;
@@ -381,7 +381,7 @@ template<
     typename Tup,
     size_t N = packed_tuple_total_bytes_v<std::decay_t<Tup>>
 >
-constexpr
+__inline constexpr
 std::array<std::byte, N> make_bytes_from_tuple(Tup && tup){
     std::array<std::byte, N> result;
     size_t offset = 0;
@@ -428,7 +428,7 @@ template<
     size_t TupSize = total_bytes_v<Tup>,
     size_t ArgSize = sizeof(Arg)
 >
-constexpr 
+__inline constexpr 
 Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
     // 静态断言确保元组元素索引有效
     static_assert(I < std::tuple_size_v<Tup>, "out of range");
@@ -445,7 +445,7 @@ Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
 
 
 template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
-constexpr 
+__inline constexpr 
 Tup make_tuple_from_bytes(const std::span<const std::byte, N> bytes) {
     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
 
@@ -465,11 +465,65 @@ template<
     typename ArgsTup,
     size_t N = packed_tuple_total_bytes_v<ArgsTup>
 >
-constexpr 
+__inline constexpr 
 Ret _invoke_func_by_bytes_impl(Fn && fn, const std::span<const std::byte, N> bytes){
     if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
     else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
 }
+
+// template<
+//     typename Obj
+//     typename Fn,
+//     typename Ret,
+//     typename ... Args,
+//     size_t N = packed_tuple_total_bytes_v<ArgsTup>
+// >
+// constexpr 
+// Ret _invoke_memfunc_by_bytes_impl(Obj & obj, Ret(Obj::*fn)(Args...), const std::span<const std::byte, N> bytes){
+//     if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+//     else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+// }
+
+template<
+    typename Obj,
+    typename Ret,
+    typename ... Args,
+    size_t N = packed_tuple_total_bytes_v<std::tuple<Args...>>
+>
+__inline constexpr 
+Ret _invoke_memfunc_by_bytes_impl(
+    Obj & obj,
+    Ret(std::decay_t<Obj>::*fn)(Args...),
+    const std::span<const std::byte, N>& bytes
+) {
+    auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
+    if constexpr (std::is_void_v<Ret>) {
+        std::apply([&](Args... args) { (obj.*fn)(args...); }, args_tuple);
+    } else {
+        return std::apply([&](Args... args) { return (obj.*fn)(args...); }, args_tuple);
+    }
+}
+
+template<
+    typename Obj,
+    typename Ret,
+    typename ... Args,
+    size_t N = packed_tuple_total_bytes_v<std::tuple<Args...>>
+>
+__inline constexpr 
+Ret _invoke_memfunc_by_bytes_impl(
+    const Obj & obj,
+    Ret(std::decay_t<Obj>::*fn)(Args...) const,
+    const std::span<const std::byte, N>& bytes
+) {
+    auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
+    if constexpr (std::is_void_v<Ret>) {
+        std::apply([&](Args... args) { (obj.*fn)(args...); }, args_tuple);
+    } else {
+        return std::apply([&](Args... args) { return (obj.*fn)(args...); }, args_tuple);
+    }
+}
+
 }
 
 template<
@@ -497,6 +551,41 @@ constexpr Ret invoke_func_by_bytes(Fn && fn, const std::span<const std::byte, N>
 }
 
 
+//成员函数版本
+template<
+    typename Ret, 
+    typename ... Args,
+    typename ArgsTup = std::tuple<Args...>,
+    size_t N = packed_tuple_total_bytes_v<ArgsTup>
+>
+__fast_inline constexpr Ret invoke_func_by_bytes(
+    auto & obj, 
+    Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...), 
+    const std::span<const std::byte, N> bytes
+){
+    if constexpr(std::is_void_v<Ret>) 
+        details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+    else 
+        return details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+}
+
+//常成员函数版本
+template<
+    typename Ret, 
+    typename ... Args,
+    typename ArgsTup = std::tuple<Args...>,
+    size_t N = packed_tuple_total_bytes_v<ArgsTup>
+>
+constexpr Ret invoke_func_by_bytes(
+    const auto & obj, 
+    Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...) const , 
+    const std::span<const std::byte, N> bytes
+){
+    if constexpr(std::is_void_v<Ret>) 
+        details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+    else 
+        return details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+}
 
 auto pfunc(const real_t a, const real_t b){
     return a * a + b * b;
@@ -508,12 +597,28 @@ auto pfunc(const int16_t a, const int16_t b){
     // return a;
 };
 
+class Ball{
+public:
+    int a;
+    iq_t<16> mset_xy(iq_t<16> x, iq_t<16> y){
+        return x * x + y * y;
+    }
+
+    iq_t<16> mset_xy2(iq_t<16> x, iq_t<16> y){
+        return x + y;
+    }
+};
+
 // static constexpr bool test_if = is_functor_v<decltype(pfunc)>;
 
 auto func = [](const iq_t<30> a, iq_t<30> b){
     return a * a + b * b;
     // return a;
 };
+
+auto runtime_true(){
+    return sys::Chip::getChipIdCrc();
+}
 
 void enum_main(){
 
@@ -522,28 +627,39 @@ void enum_main(){
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
+    Ball ball;
 
     while(true){
-
+        auto set_xy = [](iq_t<16> x, iq_t<16> y){
+            return x * x + y * y;
+        };
 
         const auto t = time();
 
         const auto begin_m = micros();
         // const auto s = sin<30>(t);
         // const auto c = cos<30>(t);
-        const auto s = int16_t(sin(t) * 300);
-        const auto c = int16_t(cos(t) * 300);
+        const auto s = sin(t);
+        const auto c = cos(t);
+        // const auto s = int16_t(sin(t) * 300);
+        // const auto c = int16_t(cos(t) * 300);
         
-        // real_t r = 0; 
-        int r = 0; 
+        real_t r = 0; 
+        // int r = 0; 
+
+        auto dyn_func = runtime_true() ? &Ball::mset_xy : &Ball::mset_xy2;
+        const auto bytes = make_bytes_from_args(s, c);
         for(size_t i = 0; i < 100000; i++){
-            const auto bytes = make_bytes_from_args(s, c);
-            // r = invoke_func_by_bytes<real_t>(pfunc, std::span(bytes));
+            // r = invoke_func_by_bytes(set_xy, std::span(bytes));
             // r = invoke_func_by_bytes<int, int16_t, int16_t>(pfunc, std::span(bytes));
-            r = invoke_func_by_bytes<int>(pfunc, std::span(bytes));
+            // r = invoke_func_by_bytes<int>(pfunc, std::span(bytes));
+            // r = invoke_func_by_bytes<int>(pfunc, std::span(bytes));
+            // r = invoke_func_by_bytes(ball, &Ball::mset_xy, std::span(bytes));
+            r = invoke_func_by_bytes(ball, dyn_func, std::span(bytes));
         }
         // DEBUG_PRINTLN(t);
         DEBUG_PRINTLN(s,c,r, uint32_t(micros() - begin_m));
+        delay(10);
         // delay(10);
     }
 
