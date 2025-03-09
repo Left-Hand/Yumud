@@ -23,6 +23,21 @@ namespace ymd::rmst{
 //     OVER_TEMPERATURE,
 // };
 
+class CanDrv{
+    public:
+        using CanMsg = hal::CanMsg; 
+
+        CanDrv(hal::Can & can):can_(can){;}
+    
+        void transmit(const CanMsg & msg){
+            can_.write(msg);
+        }
+    
+    private:
+        hal::Can & can_; 
+};
+
+
 struct CgFault{
 
     union{
@@ -120,21 +135,6 @@ public:
 
     using Feedback = details::Feedback;
 
-    class CanDrv{
-        public:
-            using CanMsg = hal::CanMsg; 
-
-            CanDrv(hal::Can & can):can_(can){;}
-        
-            void transmit(const CanMsg & msg){
-                can_.write(msg);
-            }
-        
-        private:
-            hal::Can & can_; 
-    };
-
-
     MotorCyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
         can_drv_(can), host_id_(host_id), node_id_(node_id){;}
 
@@ -161,7 +161,7 @@ public:
 
     [[nodiscard]] CgResult<void> requestWritePara(const uint16_t idx, const uint32_t data);
 
-    Option<uint64_t> getDeviceMcuId() const {return device_mcu_id_;}
+    [[nodiscard]] Option<uint64_t> getDeviceMcuId() const {return device_mcu_id_;}
 
     private:
     CanDrv can_drv_;

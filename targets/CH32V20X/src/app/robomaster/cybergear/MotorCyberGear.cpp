@@ -40,6 +40,7 @@ struct CgId{
 static __inline 
 uint32_t make_id(const CgCommand cmd, const uint16_t high, const uint8_t low) {
     CgId cgid;
+
     cgid.cmd() = cmd;
     cgid.high() = high;
     cgid.low() = low;
@@ -180,8 +181,6 @@ CgResult<void> MotorCyberGear::onReceive(const CanMsg & msg){
     const uint64_t data = msg.data64();
     const uint8_t dlc = msg.size();
 
-
-
     switch(cmd){
         case CgCommand::GET_DEVICE_ID:
             return onMcuIdFeedBack(id, data, dlc);
@@ -197,5 +196,6 @@ CgResult<void> MotorCyberGear::onReceive(const CanMsg & msg){
         default:
             return Err{CgError::RET_UNKOWN_CMD};
     }
+
     return Err{CgError::PRAGRAM_UNHANDLED};
 }
