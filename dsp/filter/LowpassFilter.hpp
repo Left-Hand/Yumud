@@ -9,7 +9,7 @@ template<arithmetic T>
 struct LowpassFilter_t{
 public: 
     struct Config{
-        uint fc;
+        T fc;
         uint fs;
     };
 
@@ -18,6 +18,7 @@ private:
     T last_;
     bool inited_;
 public:
+
     constexpr LowpassFilter_t(){
         reset();
     }

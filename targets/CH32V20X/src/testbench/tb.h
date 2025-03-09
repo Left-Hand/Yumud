@@ -135,3 +135,5 @@ void enum_main();
 void hive_main();
 
 void rmst_main();
+
+void dsp_main();
