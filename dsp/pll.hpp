@@ -40,7 +40,7 @@ struct Pll{
             return real_t();
         }
 
-        real_t uni_input = INVLERP(input, min_input, max_input) * 2 - 1;
+        real_t uni_input = INVLERP(min_input, max_input, input) * 2 - 1;
 
         if(is_equal_approx(uni_input, real_t(1))){
             lap_rad = real_t(PI / 2);

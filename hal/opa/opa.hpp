@@ -6,15 +6,7 @@
 #include "hal/gpio/GpioTag.hpp"
 #include "hal/gpio/port.hpp"
 
-#include "hwspec/ch32/ch32v203_opa_def.hpp"
-
-
-
-#pragma once
-
-#include "hal/gpio/GpioTag.hpp"
-#include <cstdint>
-#include <type_traits>
+#include "ral/ch32/ch32v203_opa_def.hpp"
 
 namespace ymd::hal{
 

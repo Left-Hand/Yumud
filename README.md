@@ -40,17 +40,17 @@
 8. （计划）使用模板元进行硬件平台的快速配置
 9. （计划）提供异步去中心分布通信框架
 
-固然承认，时至今日Arduino和HAL的设计占有相当大的话语权，但我还是与其对比，以更好地呈现本框架的优势。
+固然承认，时至今日Arduino和HAL这两个框架在如今得嵌入式开发中占有相当大的话语权，但与这两者相比，本库依然有不可替代得巨大优势，在此与其对比以更好地呈现本框架的优势。
 
 本库与主流开发框架的比较：
 
 vs arduino：
 
-1. 提供了对外设每一分细节的精细控制
-2. 提供了统一的设备管理层 不需要再用宏定义区分各个平台
-2. 提供了统一的抽象层 所有同类外设均有对应的抽象类
-3. 提供了对常用总线的原生支持，而不是全局单例
-4. C++化程度更高，减少Java风格C++的枯燥体验
+1. 提供了对外设每一分细节的精细控制，满足初级开发和高级开发的需求
+2. 提供了统一的设备管理层，不需要再用宏定义进一步区分各个平台
+2. 提供了对于外设统一的抽象层，外设不再依赖特定的硬件实现
+3. 提供了对常用总线的原生支持，总线类能够动态传递，而不是定死的全局单例
+4. C++化程度更高，减少Java或C风格C++的刻板写法，大大增加代码甜度
 5. 大量使用泛型，以实现代码的复用与泛化
 6. 大量使用stl(参考odrive)
 
@@ -61,11 +61,12 @@ vs HAL：
 3. 没有丑陋的HAL前缀表示函数的命名空间
 4. 用多态取或lambda取代函数指针的使用，减少了心智负担
 5. 所有外设通过用户自定义宏或是模板元裁剪而不是工程文件管理 提供了更高的自由度
-6. 将自动化生成代码与用户业务代码隔离
+6. 将自动化生成代码与用户业务代码隔离，无需危险地与自动生成得代码互作
+7. 无需刻意学习框架编写受限的代码，提供了开箱即用的外设
 
 
 
-下面是一些简单的演示(不一定与具体代码同步，具体请参考src/app或src/testbench下的文件)
+下面是一些简单的演示(不一定与实际开发中的代码同步，开发中的文件都在src文件夹下测试开发直到成熟才会合并入框架 具体例子请参考src/app或src/testbench下的文件)
 
 无需复杂的结构体配置点亮一盏led
    
@@ -185,7 +186,7 @@ int main(){
 
 ## ⚠️声明
 
-目前受到完整支持的芯片只有CH32V2/CH32V3系列，其他平台的MCU的支持计划在项目API稳定后加入支持，加入非SXX32风格的芯片乃至对于Linux的支持
+目前受到完整支持的芯片只有CH32V2/CH32V3系列，其他平台的MCU计划在项目API稳定后加入支持，加入非SXX32风格的芯片乃至对于Linux的支持
 
 使用C++20编写，请使用gcc12及以上的版本进行编译，否则可能出现编译错误
 使用Vscode下的eide搭建开发环境，计划将于项目成熟后逐步迁移到Cmake中
@@ -223,12 +224,13 @@ int main(){
 为了支持WCH-Link基于OPENOCD进行了定制化开发故需要安装WCH提供的OpenOCD(同样在MounRiver Studio的安装目录中可以找到)
 
 #### 编译选项
-请使用Os/O3/Ofast进行编译，以确保代码的尺寸和运行速度被尽可能优化, 否则FLASH占用不足以支持使用
+请使用Os/O3/Ofast进行编译，同时开启lto优化，以确保代码的尺寸和运行速度被尽可能优化, 否则可能导致FLASH占用过高无法使用。
 
 
 ## 🍴目录
 
-##### docu 文档
+##### examples 官方例程
+
 
 ##### algo 数据结构与算法
 - [x] random 伪随机数发生器
@@ -250,13 +252,14 @@ int main(){
 
 ##### dsp 信号处理
 
-- [x] 编译期超越函数计算
+- [x] constexprmath 编译期超越函数计算
 
 - [ ] 控制器
     - [x] PID 控制器
     - [ ] 模糊PID控制器
     - [ ] LQR 控制器
     - [ ] MPC 控制器
+    - [ ] ADRC 控制器
 - [ ] fft(未测试)
 
 - [x] 滤波器
@@ -271,13 +274,21 @@ int main(){
 - [x] cordic 三角运算单元
 
 - [x] 观测器
+    - [ ] 抗扰动观测器
     - [x] 一次观测器
+    - [x] pll 锁相环
+    - [ ] sogi 二阶广义积分器
+    - [ ] DeltaObserver 微分观测器
+    - [x] SmObserver 滑膜观测器
+    - [x] NlmObserver 非线性磁链观测器
+    - [x] LbgObserver 龙伯格观测器
 
-- [ ] 线性时不变系统
+- [ ] 检测器
+    - [ ] 抵达检测器 用于检测控制系统有没有到达目标量
+    - [ ] 癫狂检测器 用于检测控制系统是否处于抽搐状态
+
 - [x] 查找表
 - [ ] 振荡器
-- [x] pll 锁相环
-- [ ] sogi
 
 ##### types 各种类型
 - [x] aabb 三维包围盒(godot)
@@ -300,7 +311,7 @@ int main(){
     - [x] PackedImage 压缩二值化图片
     - [x] Painter 绘图算法驱动
 
-- [ ] Line2D 二维直线类
+- [x] Line2D 二维直线类
 - [ ] matrix 矩阵
     - [x] matrix_dynamic 动态矩阵
     - [ ] matrix_static 静态矩阵
@@ -310,7 +321,7 @@ int main(){
         - [ ] 方法库
 
 - [x] plane 三维平面类(godot)
-- [ ] Point2D 二维点类
+- [ ] PointCloud 点云类
 - [ ] polar 极坐标类
 - [x] quat 四元数类(godot)
 - [x] transform3d 三维位姿矩阵(godot)
@@ -354,10 +365,6 @@ int main(){
 ##### drivers 设备驱动
 
 - [x] 执行器
-    - [x] 线圈
-        - [x] 单端线圈
-        - [x] 双端线圈
-        - [x] 三端线圈
 
     - [x] Bridge 栅极驱动或电机驱动器
         - [x] AT8222
@@ -370,13 +377,13 @@ int main(){
         - [x] MP6540
         - [x] TB67H450
 
-    - [x] 变换器
+    - [x] converter 变换器
         - [x] DRV2605L
         - [x] SC8721
         - [x] SC8815
         - [x] MP5980
         - [x] MP2980
-        - [ ] SC6570
+        - [ ] MP6570
 
     - [x] SVPWM
         - [x] SVPWM
@@ -439,6 +446,7 @@ int main(){
 - [x] IMU
     - [ ] 三轴
         - [ ] LISDW12 
+
     - [x] 六轴
         - [x] ADXL345  
         - [x] BMI088  
@@ -447,6 +455,7 @@ int main(){
         - [x] ICM42605
         - [x] ICM42688
         - [x] MPU6050
+
     - [x] 地磁
         - [x] AK8975
         - [x] BMM150
@@ -512,13 +521,24 @@ int main(){
     - [ ] Si24R1
     - [ ] XL2400
 
-##### hwspec 硬件规格
+##### ral 寄存器访问层(Register Access Layer)
 
 - [ ] ch32
+    - [x] crc
+    - [x] dma
+    - [x] i2c
+    - [x] spi
+    - [x] tim
+    - [x] uart
+
     - [ ] ch32v003 寄存器布局
+        - [x] afio
     - [ ] ch32v203 寄存器布局
+        - [x] afio
     - [ ] ch32l103 寄存器布局
+        - [x] afio
     - [ ] ch32x035 寄存器布局
+        - [x] afio
 - [ ] py32
 - [ ] stm32
 - [ ] gd32
@@ -531,9 +551,15 @@ int main(){
     - [ ] arm
         - [ ] cm3
         - [ ] cm4
+            - [ ] traveo
+        - [ ] cm7
     - [ ] riscv
         - [ ] qingkeV3 
-        - [ ] qingkeV4 
+        - [ ] qingkeV4
+    - [ ] xtensa
+    - [ ] loongarch
+    - [ ] tricore
+        - [ ] aurix
 
 - [x] constants 编译期常量
     - [x] concepts c++20概念约束拓展 
@@ -544,7 +570,7 @@ int main(){
     - [x] 毫秒 微秒 纳秒级时间戳
     - [x] Systick回调函数
     - [x] 生成精确启动秒数
-    - [ ] chrono支持
+    - [ ] std::chrono支持
 
 
 - [x] debug
@@ -558,8 +584,7 @@ int main(){
     - [x] 寄存器
 - [ ] os 操作系统
     - [x] tasker 非抢占式任务驱动器
-- [ ] 错误处理
-    - [x] Result(rust)
+
 - [x] polymorphism 多态
     - [x] proxy3
     - [ ] metaclass
@@ -574,6 +599,7 @@ int main(){
         - [x] 添加对std::hex, std::setpos, std::setprecision等函数的支持
     - [x] StringStream(静态打印)
     - [x] snprintf
+    - [ ] fmt 支持类fmt格式化打印
 
 - [x] String 字符串类(arduino)
     - [x] string (字符串主体)
@@ -581,9 +607,14 @@ int main(){
     - [x] string_utils (字符串工具)
         - [x] 超轻量级xtoa(数字转换到字符串)
         - [x] 超轻量级atox(字符串转换到数字)
-- [ ] utils
-    - [x] setget 属性访问
+- [ ] utils 工具
+    - [x] setget 属性访问 
+    - [x] Bitfield 位域类 
+    - [x] PerUnit 标幺量
+    - [ ] BytesIterator 数据大小端遍历类
+    - [ ] Reg 寄存器类
     - [ ] any 类型擦除
+    - [x] hive c++23 std::hive
     - [x] rustlike
         - [x] result rust风格错误处理
         - [x] optional rust风格结果处理
@@ -618,7 +649,7 @@ int main(){
 + example/testbench
 + main文件
 
-##### hal 物理抽象层
+##### hal 硬件抽象层(Hardware Abstraction Layer)
 
 - [x] GPIO(IO相关代码)
     - [x] bitband(位带操作)
@@ -645,10 +676,10 @@ int main(){
     - [x] 一般数据收发
     - [ ] DMA数据收发
     - [ ] SMbus
+    - [ ] PMbus
 
 - [ ] I2S(以验证软件I2S只发)
     - [x] 软件I2S只发
-    - [x] TM8211
     - [ ] 硬件I2S
     - [ ] I2S读取
 
@@ -695,6 +726,7 @@ int main(){
 - [ ] TCP/UDP
 - [ ] USB
     - [x] USBFS USBFS虚拟串口驱动
+    - [ ] utils 
 - [ ] BLE
 
 
@@ -729,6 +761,9 @@ int main(){
 - [ ] 正逆解
     - [x] Scara正逆解
     - [x] 轮腿正逆解
+        - [ ] 串联腿动力学建模
+        - [ ] 并联腿动力学建模
+
     - [x] 交叉臂正逆解
     - [ ] 六轴正逆解
 

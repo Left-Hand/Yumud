@@ -1,5 +1,5 @@
 #include "dma.hpp"
-#include "hwspec/ch32/ch32_common_dma_def.hpp"
+#include "ral/ch32/ch32_common_dma_def.hpp"
 
 
 using namespace ymd::hal;

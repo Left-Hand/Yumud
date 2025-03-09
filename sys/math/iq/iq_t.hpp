@@ -558,6 +558,112 @@ template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> imag(const iq_t<P> a, const iq_t<P> b){
     return iq_t<Q>(__iqdetails::_IQNimag<P>(a.value, a.value));
 }
+
+
+
+consteval iq_t<IQ_DEFAULT_Q> operator"" _q(long double x){
+    return iq_t<IQ_DEFAULT_Q>(x);
+}
+
+consteval iq_t<IQ_DEFAULT_Q> operator"" _q(unsigned long long x){
+    return iq_t<IQ_DEFAULT_Q>(x);
+}
+
+consteval iq_t<1> operator"" _q1(long double x) { return iq_t<1>(x); }
+consteval iq_t<2> operator"" _q2(long double x) { return iq_t<2>(x); }
+consteval iq_t<3> operator"" _q3(long double x) { return iq_t<3>(x); }
+consteval iq_t<4> operator"" _q4(long double x) { return iq_t<4>(x); }
+consteval iq_t<5> operator"" _q5(long double x) { return iq_t<5>(x); }
+consteval iq_t<6> operator"" _q6(long double x) { return iq_t<6>(x); }
+consteval iq_t<7> operator"" _q7(long double x) { return iq_t<7>(x); }
+consteval iq_t<8> operator"" _q8(long double x) { return iq_t<8>(x); }
+consteval iq_t<9> operator"" _q9(long double x) { return iq_t<9>(x); }
+consteval iq_t<10> operator"" _q10(long double x) { return iq_t<10>(x); }
+consteval iq_t<11> operator"" _q11(long double x) { return iq_t<11>(x); }
+consteval iq_t<12> operator"" _q12(long double x) { return iq_t<12>(x); }
+consteval iq_t<13> operator"" _q13(long double x) { return iq_t<13>(x); }
+consteval iq_t<14> operator"" _q14(long double x) { return iq_t<14>(x); }
+consteval iq_t<15> operator"" _q15(long double x) { return iq_t<15>(x); }
+consteval iq_t<16> operator"" _q16(long double x) { return iq_t<16>(x); }
+consteval iq_t<17> operator"" _q17(long double x) { return iq_t<17>(x); }
+consteval iq_t<18> operator"" _q18(long double x) { return iq_t<18>(x); }
+consteval iq_t<19> operator"" _q19(long double x) { return iq_t<19>(x); }
+consteval iq_t<20> operator"" _q20(long double x) { return iq_t<20>(x); }
+consteval iq_t<21> operator"" _q21(long double x) { return iq_t<21>(x); }
+consteval iq_t<22> operator"" _q22(long double x) { return iq_t<22>(x); }
+consteval iq_t<23> operator"" _q23(long double x) { return iq_t<23>(x); }
+consteval iq_t<24> operator"" _q24(long double x) { return iq_t<24>(x); }
+consteval iq_t<25> operator"" _q25(long double x) { return iq_t<25>(x); }
+consteval iq_t<26> operator"" _q26(long double x) { return iq_t<26>(x); }
+consteval iq_t<27> operator"" _q27(long double x) { return iq_t<27>(x); }
+consteval iq_t<28> operator"" _q28(long double x) { return iq_t<28>(x); }
+consteval iq_t<29> operator"" _q29(long double x) { return iq_t<29>(x); }
+consteval iq_t<30> operator"" _q30(long double x) { return iq_t<30>(x); }
+consteval iq_t<31> operator"" _q31(long double x) { return iq_t<31>(x); }
+
+consteval iq_t<1> operator"" _q1(unsigned long long x) { return iq_t<1>(x); }
+consteval iq_t<2> operator"" _q2(unsigned long long x) { return iq_t<2>(x); }
+consteval iq_t<3> operator"" _q3(unsigned long long x) { return iq_t<3>(x); }
+consteval iq_t<4> operator"" _q4(unsigned long long x) { return iq_t<4>(x); }
+consteval iq_t<5> operator"" _q5(unsigned long long x) { return iq_t<5>(x); }
+consteval iq_t<6> operator"" _q6(unsigned long long x) { return iq_t<6>(x); }
+consteval iq_t<7> operator"" _q7(unsigned long long x) { return iq_t<7>(x); }
+consteval iq_t<8> operator"" _q8(unsigned long long x) { return iq_t<8>(x); }
+consteval iq_t<9> operator"" _q9(unsigned long long x) { return iq_t<9>(x); }
+consteval iq_t<10> operator"" _q10(unsigned long long x) { return iq_t<10>(x); }
+consteval iq_t<11> operator"" _q11(unsigned long long x) { return iq_t<11>(x); }
+consteval iq_t<12> operator"" _q12(unsigned long long x) { return iq_t<12>(x); }
+consteval iq_t<13> operator"" _q13(unsigned long long x) { return iq_t<13>(x); }
+consteval iq_t<14> operator"" _q14(unsigned long long x) { return iq_t<14>(x); }
+consteval iq_t<15> operator"" _q15(unsigned long long x) { return iq_t<15>(x); }
+consteval iq_t<16> operator"" _q16(unsigned long long x) { return iq_t<16>(x); }
+consteval iq_t<17> operator"" _q17(unsigned long long x) { return iq_t<17>(x); }
+consteval iq_t<18> operator"" _q18(unsigned long long x) { return iq_t<18>(x); }
+consteval iq_t<19> operator"" _q19(unsigned long long x) { return iq_t<19>(x); }
+consteval iq_t<20> operator"" _q20(unsigned long long x) { return iq_t<20>(x); }
+consteval iq_t<21> operator"" _q21(unsigned long long x) { return iq_t<21>(x); }
+consteval iq_t<22> operator"" _q22(unsigned long long x) { return iq_t<22>(x); }
+consteval iq_t<23> operator"" _q23(unsigned long long x) { return iq_t<23>(x); }
+consteval iq_t<24> operator"" _q24(unsigned long long x) { return iq_t<24>(x); }
+consteval iq_t<25> operator"" _q25(unsigned long long x) { return iq_t<25>(x); }
+consteval iq_t<26> operator"" _q26(unsigned long long x) { return iq_t<26>(x); }
+consteval iq_t<27> operator"" _q27(unsigned long long x) { return iq_t<27>(x); }
+consteval iq_t<28> operator"" _q28(unsigned long long x) { return iq_t<28>(x); }
+consteval iq_t<29> operator"" _q29(unsigned long long x) { return iq_t<29>(x); }
+consteval iq_t<30> operator"" _q30(unsigned long long x) { return iq_t<30>(x); }
+consteval iq_t<31> operator"" _q31(unsigned long long x) { return iq_t<31>(x); }
+
+using q1 = iq_t<1>;
+using q2 = iq_t<2>;
+using q3 = iq_t<3>;
+using q4 = iq_t<4>;
+using q5 = iq_t<5>;
+using q6 = iq_t<6>;
+using q7 = iq_t<7>;
+using q8 = iq_t<8>;
+using q9 = iq_t<9>;
+using q10 = iq_t<10>;
+using q11 = iq_t<11>;
+using q12 = iq_t<12>;
+using q13 = iq_t<13>;
+using q14 = iq_t<14>;
+using q15 = iq_t<15>;
+using q16 = iq_t<16>;
+using q17 = iq_t<17>;
+using q18 = iq_t<18>;
+using q19 = iq_t<19>;
+using q20 = iq_t<20>;
+using q21 = iq_t<21>;
+using q22 = iq_t<22>;
+using q23 = iq_t<23>;
+using q24 = iq_t<24>;
+using q25 = iq_t<25>;
+using q26 = iq_t<26>;
+using q27 = iq_t<27>;
+using q28 = iq_t<28>;
+using q29 = iq_t<29>;
+using q30 = iq_t<30>;
+using q31 = iq_t<31>;
 }
 
 namespace std{

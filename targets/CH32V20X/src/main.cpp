@@ -27,7 +27,8 @@ int main(){
     // bldc_main();
     // digipw_main();
     // enum_main();
-    hive_main();
+    // hive_main();
+    rmst_main();
     
     // fmt_main();
     // sincos_pwm_main();

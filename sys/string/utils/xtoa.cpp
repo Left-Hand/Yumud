@@ -8,7 +8,7 @@ scexpr uint32_t scale_map[] = {1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000
 
 
 template<typename T>
-__fast_inline constexpr size_t _get_scalar(T value, const size_t radix){
+__fast_inline constexpr size_t _get_scalar(T value, const uint8_t radix){
     if(value == 0) return 1;
 
     if(radix == 10){

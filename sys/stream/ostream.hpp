@@ -55,8 +55,8 @@ public:
     struct Config{
         char splitter[4];
 
-        uint8_t radix:4;
-        uint8_t eps:4;
+        uint8_t radix:5;
+        uint8_t eps:3;
         uint8_t indent;
         union{
             uint16_t flags;
