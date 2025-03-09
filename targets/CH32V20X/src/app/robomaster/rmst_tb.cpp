@@ -18,7 +18,6 @@ void rmst_main(){
     DEBUGGER.setSplitter(",");
 
     MotorCyberGear motor(can1, 0x01, 0x02);
-
     while(true){
         // !motor.changeCanId(0);
         

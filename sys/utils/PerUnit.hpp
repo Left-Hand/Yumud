@@ -18,6 +18,8 @@ struct _PerUnit{
         if(unlikely(value < get_min())) return -1;
         return 0;
     }
+
+    // operator <=>operator ymd::iq_t<16U>
 private:
     static constexpr real_t get_min() {return std::get<0>(T::get_range());}
     static constexpr real_t get_max() {return std::get<1>(T::get_range());}
