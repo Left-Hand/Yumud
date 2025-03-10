@@ -23,7 +23,7 @@ namespace ymd::dsp{
 
         const auto end_m = micros();
         
-        DEBUG_PRINTLN(real_t(uint32_t(end_m - begin_m)) / times, "us per call");
+        DEBUG_PRINTS(real_t(uint32_t(end_m - begin_m)) / times, "us per call");
         delay(20);
         std::terminate();
     }
@@ -90,10 +90,23 @@ void butterworth_bandpass_tb(auto && fn_in, const T fl, const T fh, const uint f
         .fs = fs,
     }};
 
-    // dsp::run_func(fs, fn_in, filter);
-    dsp::evaluate_func(fs, fn_in, filter);
+    dsp::run_func(fs, fn_in, filter);
+    // dsp::evaluate_func(fs, fn_in, filter);
 }
  
+template<typename T, size_t n>
+void butterworth_bandstop_tb(auto && fn_in, const T fl, const T fh, const uint fs){
+    using Filter = dsp::ButterBandstopFilter<T, n>;
+    using Config = Filter::Config;
+
+    Filter filter = {Config{
+        .fl = fl,
+        .fh = fh,
+        .fs = fs,
+    }};
+
+    dsp::run_func(fs, fn_in, filter);
+}
 
 
 void dsp_main(){
@@ -106,18 +119,23 @@ void dsp_main(){
     // using T = float; 
     using T = iq_t<16>; 
 
-    constexpr T fl = T(50);
-    constexpr T fh = T(200);
+    constexpr T fl = T(20);
+    constexpr T fh = T(50);
     constexpr uint fs = 2000;
 
-    constexpr size_t n = 12;
+    constexpr size_t n = 4;
 
     auto sig_in = [&]() {
-        const T t = 120 * T(TAU) * T(time());
-        return dsp::samples::sinwave(t);
+        // const T t = T(time());
+        const T rad = T(TAU) * T(time());
+
+        const T mf = 20;
+        const T f = 30;
+        return sin(f * rad + mf * sin(rad));
     };
 
-    butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
+    // butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
+    butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
 
 
     {
