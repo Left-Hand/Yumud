@@ -352,7 +352,7 @@ filter. The coefficients are returned as an array of integers.
 
 template<size_t n>
 constexpr 
-auto ccof_bwhp(){
+std::array<int, n + 1> ccof_bwhp(){
 
     auto ccof = ccof_bwlp<n>();
 
