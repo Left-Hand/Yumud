@@ -44,6 +44,8 @@ public:
         uint fs;
     };
 
+    ButterBandFilterBase() = default;
+
     ButterBandFilterBase(const Config & cfg){
         reconf(cfg);
         reset();
@@ -74,6 +76,8 @@ public:
         r_ = 4*a;
         s_ = 4*a2+2;
     }
+
+    T result() const{ return this->result_; }
 
     void reset(){
         for(auto & state:states_){
@@ -130,10 +134,13 @@ protected:
 
 template<arithmetic T, size_t N, typename Super = details::ButterBandFilterBase<T, N>>
 requires (N % 4 == 0)
-class ButterBandstopFilter:public Super{
+class ButterBandstopFilter:public details::ButterBandFilterBase<T, N>{
 public:
+
     using Config = Super::Config;
     using StateVector = Super::StateVector;
+
+    ButterBandstopFilter() = default;
 
     void update(T x){
         auto & self = *this;
@@ -155,6 +162,10 @@ public:
         self.result_ = x;
     }
 
+    void reconf(const Config & cfg){
+        Super::reconf(cfg);
+    }
+    
     T operator ()(const T x){
         update(x);
         return this->result_;
@@ -163,11 +174,13 @@ public:
 
 template<arithmetic T, size_t N, typename Super = details::ButterBandFilterBase<T, N>>
 requires (N % 4 == 0)
-class ButterBandpassFilter:public Super{
+class ButterBandpassFilter:public details::ButterBandFilterBase<T, N>{
 public:
     using Config = Super::Config;
     using StateVector = Super::StateVector;
 
+    ButterBandpassFilter() = default;
+    
     void update(T x){
         auto & self = *this;
 
@@ -184,6 +197,10 @@ public:
         }
 
         self.result_ = x;
+    }
+
+    void reconf(const Config & cfg){
+        Super::reconf(cfg);
     }
 
     T operator ()(const T x){

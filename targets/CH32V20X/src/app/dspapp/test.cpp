@@ -5,9 +5,11 @@
 #include "FFT.hpp"
 #include "liir.hpp"
 #include "sys/debug/debug.hpp"
-#include "ButterBandFilter.hpp"
+#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+#include "ButterSideFilter.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
+#include "dsp/filter/LowpassFilter.hpp"
 
 
 namespace ymd::dsp{
@@ -109,6 +111,182 @@ void butterworth_bandstop_tb(auto && fn_in, const T fl, const T fh, const uint f
 }
 
 
+
+template<arithmetic T>
+class EnvelopeFilter{
+public:
+    using Lpf = dsp::LowpassFilter_t<T>;
+    using Config = Lpf::Config;
+
+    EnvelopeFilter(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
+
+    void reconf(const Config & cfg){
+        lpf_.reconf(cfg);
+    }
+
+    void reset(){
+        lpf_.reset();
+    }
+
+    void update(const T in){
+        lpf_.update(in * in);
+    }
+
+    T result() const{
+        return std::sqrt(lpf_.result());
+    }
+
+    T operator ()(const T x){
+        update(x);
+        return result();
+    }
+private:
+    Lpf lpf_ = {};
+};
+
+template<arithmetic T, size_t N>
+class SumReducer{
+public:
+    using Config = std::array<T, N>;
+
+    void update(const std::span<T, N> in){
+        T result = 0;
+        for(size_t i = 0; i < N; ++i){
+            result += in[i] * cfg_[i];
+        }
+        result_ = result;
+    }
+
+    T result() const{
+        return result_;
+    }
+
+    T operator ()(const std::span<T, N> in){
+        update(in);
+        return result();
+    }
+private:
+    Config cfg_;
+    T result_;
+};
+
+template<arithmetic T, size_t N>
+class EvelopeBandpassFilter{
+public:
+    using Bpf = typename dsp::ButterBandpassFilter<T, N>;
+    using Lpf = typename dsp::LowpassFilter_t<T>;
+    Bpf bpf_;
+    Lpf lpf_;
+    struct Config{
+        T fc;
+        T fl;
+        T fh;
+        uint fs;
+    };
+
+    EvelopeBandpassFilter(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
+
+    void reconf(const Config & cfg){
+        bpf_.reconf(typename Bpf::Config{
+            .fl = cfg.fl,
+            .fh = cfg.fh,
+            .fs = cfg.fs
+        });
+
+        lpf_.reconf(typename Lpf::Config{
+            .fc = cfg.fc,
+            .fs = cfg.fs
+        });
+    }
+
+    void reset(){
+        bpf_.reset();
+    }
+
+    void update(const T x){
+        const auto h = bpf_(x);
+        lpf_.update(h * h);
+    }
+
+    T result() const{
+        return sqrt(lpf_.result());
+    }
+
+    T operator ()(const T x){
+        update(x);
+        return result();
+    }
+private:
+
+};
+
+template<typename T, size_t n>
+void bpsk_tb(auto && fn_in, const T fl, const T fh, const uint fs){
+    using Filter = EvelopeBandpassFilter<T, n>;
+    using Config = Filter::Config;
+
+    static constexpr auto Qbw = T(0.5);
+    static constexpr auto Qfc = T(0.2);
+
+    T side_bw = Qbw * (fh - fl) / 2;
+    T fc = Qfc * (fh + fl) / 2;
+
+    Filter l_filter = {Config{
+        .fc = fc,
+        .fl = fl - side_bw,
+        .fh = fl + side_bw,
+        .fs = fs,
+    }};
+
+    Filter h_filter = {Config{
+        .fc = fc,
+        .fl = fh - side_bw,
+        .fh = fh + side_bw,
+        .fs = fs,
+    }};
+
+    dsp::run_func(fs, fn_in, [&](auto && x){
+        l_filter.update(x);
+        h_filter.update(x);
+        return - l_filter.result() + h_filter.result();
+    });
+}
+
+
+template<typename T, size_t n>
+void butterworth_lowpass_tb(auto && fn_in, const T fc, const uint fs){
+    using Filter = dsp::ButterLowpassFilter<T, n>;
+    using Config = typename Filter::Config;
+
+    Filter filter = {Config{
+        .fc = fc,
+        .fs = fs,
+    }};
+
+    dsp::run_func(fs, fn_in, filter);
+    // dsp::evaluate_func(fs, fn_in, filter);
+}
+
+template<typename T, size_t n>
+void butterworth_highpass_tb(auto && fn_in, const T fc, const uint fs){
+    using Filter = dsp::ButterHighpassFilter<T, n>;
+    using Config = typename Filter::Config;
+
+    Filter filter = {Config{
+        .fc = fc,
+        .fs = fs,
+    }};
+
+    dsp::run_func(fs, fn_in, filter);
+    // dsp::evaluate_func(fs, fn_in, filter);
+}
+
 void dsp_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
@@ -119,24 +297,43 @@ void dsp_main(){
     // using T = float; 
     using T = iq_t<16>; 
 
-    constexpr T fl = T(20);
-    constexpr T fh = T(50);
-    constexpr uint fs = 2000;
+    constexpr T fl = T(200);
+    constexpr T fh = T(500);
+    constexpr uint fs = 4000;
 
-    constexpr size_t n = 4;
+    constexpr size_t n = 2;
 
     auto sig_in = [&]() {
         // const T t = T(time());
+        // const T rad = T(TAU) * T(time());
+
+        // const T mf = 20;
+        // const T f = 30;
+        // const bool out = int(rad) % 2;
+        // if(!out) return 0_r;
+        // return sin(f * rad + mf * sin(rad)) + sin(350 * rad) + 10_r;
+        // return + sin(500 * rad);
+        // return 10_r* sin(rad);
+        // return 0.002_r;
+
         const T rad = T(TAU) * T(time());
 
-        const T mf = 20;
-        const T f = 30;
-        return sin(f * rad + mf * sin(rad));
+        static constexpr uint8_t code = 0x12;
+        const auto index = int(10 * rad) % 8;
+        const bool out = (code >> index) & 1;
+        if(!out) return 8 * sin(fh * rad);
+        return 8 * sin(fl * rad);
+        // return 0.01_r * sin(20 * rad);
+        // return 0.0001_r;
     };
 
     // butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
-    butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
+    // butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
 
+    butterworth_highpass_tb<T, n>(sig_in, fh, fs);
+    // butterworth_lowpass_tb<T, n>(sig_in, fl, fs);
+    
+    // bpsk_tb<T, n>(sig_in, fl, fh, fs);
 
     {
         // /* calculate the d coefficients */
