@@ -287,6 +287,115 @@ void butterworth_highpass_tb(auto && fn_in, const T fc, const uint fs){
     // dsp::evaluate_func(fs, fn_in, filter);
 }
 
+
+class DoubleToneMultiFrequencySiggen{
+public:
+    struct Config{
+        std::array<uint16_t, 4> fl;
+        std::array<uint16_t, 4> fh;
+        uint fs;
+    };
+
+    DoubleToneMultiFrequencySiggen(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
+
+    void reconf(const Config & cfg){
+        fl_ = cfg.fl;
+        fh_ = cfg.fh;
+
+        delta_ = iq_t<24>(1) / cfg.fs;
+    }
+
+    void reset(){
+        fl_index_ = 0;
+        fh_index_ = 0;
+        time_ = 0;
+    }
+
+    void update(){
+        time_ += delta_;
+
+        const auto fl = fl_[fl_index_];
+        const auto fh = fh_[fh_index_];
+
+        result_ = sinpu(fl * time_) + sinpu(fh * time_);
+    }
+
+    auto result() const{
+        return result_;
+    }
+
+    auto operator ()() const{
+        return result();
+    }
+private:
+    uint8_t fl_index_ = 0;
+    uint8_t fh_index_ = 0;
+
+    std::array<uint16_t, 4> fl_;
+    std::array<uint16_t, 4> fh_;
+
+    iq_t<24> time_;
+    iq_t<24> delta_;
+    iq_t<30> result_;
+};
+
+void dtmf_tb(const uint fs){
+    using DTMF = DoubleToneMultiFrequencySiggen;
+    DTMF dtmf = {{
+        .fl = {70, 77, 85, 94}, 
+        .fh = {120, 133, 148, 163}, 
+        .fs = fs
+    }};
+
+    const real_t fl = 70;
+    const real_t fh = 120;
+    
+    using Filter = dsp::ButterBandpassFilter<real_t, 4>;
+    using Config = typename Filter::Config;
+
+    static constexpr auto Qbw = real_t(0.5);
+    static constexpr auto Qfc = real_t(0.2);
+
+    real_t side_bw = Qbw * (fh - fl) / 2;
+    real_t fc = Qfc * (fh + fl) / 2;
+
+    Filter l_filter {{
+        .fl = fl - side_bw,
+        .fh = fl + side_bw,
+        .fs = fs
+    }};
+
+    Filter h_filter = {{
+        .fl = fh - side_bw,
+        .fh = fh + side_bw,
+        .fs = fs
+    }};
+
+    {
+        dtmf.reset();
+        l_filter.reset();
+        h_filter.reset();
+    }
+
+    hal::timer1.init(fs);
+    hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
+        dtmf.update();
+        const auto wave = real_t(dtmf.result());
+
+        l_filter.update(wave);
+        h_filter.update(wave);
+
+        DEBUG_PRINTLN(
+            wave,
+            l_filter.result(), 
+            h_filter.result()
+        );
+    });
+}
+
 void dsp_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
@@ -299,7 +408,7 @@ void dsp_main(){
 
     constexpr T fl = T(200);
     constexpr T fh = T(500);
-    constexpr uint fs = 4000;
+    constexpr uint fs = 2000;
 
     constexpr size_t n = 2;
 
@@ -330,7 +439,8 @@ void dsp_main(){
     // butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
     // butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
 
-    butterworth_highpass_tb<T, n>(sig_in, fh, fs);
+    // butterworth_highpass_tb<T, n>(sig_in, fh, fs);
+    dtmf_tb(fs);
     // butterworth_lowpass_tb<T, n>(sig_in, fl, fs);
     
     // bpsk_tb<T, n>(sig_in, fl, fh, fs);

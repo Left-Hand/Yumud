@@ -132,16 +132,17 @@ protected:
 
 }
 
-template<arithmetic T, size_t N, typename Super = details::ButterBandFilterBase<T, N>>
+template<arithmetic T, size_t N>
 requires (N % 4 == 0)
 class ButterBandstopFilter:public details::ButterBandFilterBase<T, N>{
 public:
 
-    using Config = Super::Config;
-    using StateVector = Super::StateVector;
+    using Super = details::ButterBandFilterBase<T, N>;
+    using Config = typename Super::Config;
+    using StateVector = typename Super::StateVector;
 
     ButterBandstopFilter() = default;
-
+    ButterBandstopFilter(const Config & cfg):Super(cfg){}
     void update(T x){
         auto & self = *this;
 
@@ -172,14 +173,17 @@ public:
     }
 };
 
-template<arithmetic T, size_t N, typename Super = details::ButterBandFilterBase<T, N>>
+template<arithmetic T, size_t N>
 requires (N % 4 == 0)
 class ButterBandpassFilter:public details::ButterBandFilterBase<T, N>{
 public:
-    using Config = Super::Config;
-    using StateVector = Super::StateVector;
+
+    using Super = details::ButterBandFilterBase<T, N>;
+    using Config = typename Super::Config;
+    using StateVector = typename Super::StateVector;
 
     ButterBandpassFilter() = default;
+    ButterBandpassFilter(const Config & cfg):Super(cfg){}
     
     void update(T x){
         auto & self = *this;
