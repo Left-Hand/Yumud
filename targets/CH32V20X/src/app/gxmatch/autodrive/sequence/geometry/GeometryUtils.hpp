@@ -3,10 +3,10 @@
 #include "types/vector3/vector3.hpp"
 #include "types/vector2/vector2.hpp"
 #include "types/rect2/rect2.hpp"
-#include "types/Ray2/Ray2_t.hpp"
+#include "types/Ray2/Ray2.hpp"
 #include "types/quat/Quat.hpp"
-#include "types/basis/Basis_t.hpp"
-#include "types/Line2/Line2_t.hpp"
+#include "types/basis/Basis.hpp"
+#include "types/Line2/Line2.hpp"
 
 namespace geometry {
 

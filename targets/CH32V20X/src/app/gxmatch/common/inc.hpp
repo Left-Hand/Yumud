@@ -7,8 +7,8 @@
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Cross/CrossSolver_t.hpp"
 
-#include "types/Ray2/Ray2_t.hpp"
-#include "types/aabb/AABB_t.hpp"
+#include "types/Ray2/Ray2.hpp"
+#include "types/aabb/AABB.hpp"
 
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"

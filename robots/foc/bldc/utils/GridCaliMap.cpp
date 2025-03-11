@@ -1,7 +1,7 @@
 #include "GridCaliMap.hpp"
 
 #include "types/range/range.hpp"
-#include "types/Line2/Line2_t.hpp"
+#include "types/Line2/Line2.hpp"
 
 
 using namespace ymd::foc;

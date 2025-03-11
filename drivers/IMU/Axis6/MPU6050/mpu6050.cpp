@@ -14,8 +14,8 @@
 #define MPU6050_DEBUG(...)
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) +readReg(reg.address, reg);
-#define WRITE_REG(reg) +writeReg(reg.address, reg);
+#define READ_REG(reg) !+readReg(reg.address, reg);
+#define WRITE_REG(reg) !+writeReg(reg.address, reg);
 #endif
 
 
@@ -55,13 +55,13 @@ bool MPU6050::verify(){
 
 void MPU6050::init(){
     if(MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")){
-        +this->writeReg(0x6b, 0);
-        +this->writeReg(0x19, 0x00);
-        +this->writeReg(0x1a, 0x00);
-        +this->writeReg(0x13, 0);
-        +this->writeReg(0x15, 0);
-        +this->writeReg(0x17, 0);
-        +this->writeReg(0x38, 0x00);
+        !+this->writeReg(0x6b, 0);
+        !+this->writeReg(0x19, 0x00);
+        !+this->writeReg(0x1a, 0x00);
+        !+this->writeReg(0x13, 0);
+        !+this->writeReg(0x15, 0);
+        !+this->writeReg(0x17, 0);
+        !+this->writeReg(0x38, 0x00);
         this->setAccRange(AccRange::_2G);
         this->setGyrRange(GyrRange::_1000deg);
     }
