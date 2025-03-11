@@ -1,12 +1,11 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "../SensorlessObserverIntf.hpp"
 #include "Pll.hpp"
 
 
 namespace ymd::foc{
-class NonlinearObserver:public SensorlessObserverIntf{
+class NonlinearObserver{
 public:
     struct Config{
         iq_t<16> phase_inductance;

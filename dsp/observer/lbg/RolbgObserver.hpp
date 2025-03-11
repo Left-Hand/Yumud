@@ -1,9 +1,8 @@
 #include "sys/math/real.hpp"
-#include "../SensorlessObserverIntf.hpp"
 
 namespace ymd::foc {
 
-class RolbgObserver:public SensorlessObserverIntf{
+class RolbgObserver{
 public:
     // RolbgObserver(const iq_t<16> _h, const iq_t<16> _Ls, const iq_t<16> _Rs, const iq_t<16> _Tc, const iq_t<16> _omega);
     RolbgObserver(){;}

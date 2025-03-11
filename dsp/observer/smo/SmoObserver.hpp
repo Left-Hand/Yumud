@@ -1,11 +1,10 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "../SensorlessObserverIntf.hpp"
 
 namespace ymd::foc{
 
-class SmoObserver:public SensorlessObserverIntf{
+class SmoObserver{
 public:
     SmoObserver(const SmoObserver & other) = delete;
     SmoObserver(SmoObserver && other) = default;
