@@ -38,8 +38,8 @@ enum class VariantType{
     CIRCLE2D,
 
     SEGMENT2D,
-    RAY2D,
-    LINE2D,
+    Ray2,
+    Line2,
 
     BINA,
     GRAY,

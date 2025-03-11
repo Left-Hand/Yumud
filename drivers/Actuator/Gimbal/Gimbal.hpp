@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "vector2/vector2_t.hpp"
+#include "vector2/vector2.hpp"
 
 namespace ymd{
 

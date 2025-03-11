@@ -31,8 +31,8 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "types/Vector3/vector3_t.hpp"
-#include "types/quat/Quat_t.hpp"
+#include "types/Vector3/vector3.hpp"
+#include "types/quat/Quat.hpp"
 
 namespace ymd{
 
@@ -368,4 +368,4 @@ __inline OutputStream & operator<<(OutputStream & os, const Basis_t<T> & mat){
 
 }
 
-#include "Basis_t.tpp"
+#include "Basis.tpp"

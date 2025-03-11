@@ -332,7 +332,7 @@ int main(){
     - [x] PackedImage 压缩二值化图片
     - [x] Painter 绘图算法驱动
 
-- [x] Line2D 二维直线类
+- [x] Line2 二维直线类
 - [ ] matrix 矩阵
     - [x] matrix_dynamic 动态矩阵
     - [ ] matrix_static 静态矩阵
@@ -351,7 +351,7 @@ int main(){
 - [ ] dh 连接件DH参数
 
 - [x] range 区间类
-- [x] Ray2D 二维射线类
+- [x] Ray2 二维射线类
 - [x] rect2 矩形区域类
 
 - [x] Segment2D 二维线段类

@@ -31,7 +31,7 @@
 
 #pragma once
 
-#include "types/rect2/rect2_t.hpp"
+#include "types/rect2/rect2.hpp"
 
 
 namespace ymd{
@@ -130,4 +130,4 @@ struct Transform2D_t{
 }
 
 
-#include "transform2d_t.tpp"
+#include "transform2d.tpp"

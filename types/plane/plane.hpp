@@ -32,7 +32,7 @@
 /**************************************************************************/
 
 
-#include "types/vector3/vector3_t.hpp"
+#include "types/vector3/vector3.hpp"
 
 namespace ymd{
 
@@ -154,4 +154,4 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & va
 }
 
 
-#include "plane_t.tpp"
+#include "plane.tpp"

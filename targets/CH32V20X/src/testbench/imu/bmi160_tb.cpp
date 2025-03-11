@@ -6,7 +6,7 @@
 
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
-#include "types/quat/Quat_t.hpp"
+#include "types/quat/Quat.hpp"
 
 using namespace ymd::drivers;
 

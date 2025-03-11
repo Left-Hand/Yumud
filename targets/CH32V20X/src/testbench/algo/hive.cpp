@@ -7,7 +7,7 @@
 #include "sys/clock/clock.h"
 
 #include "sys/utils/hive.hpp"
-#include "types/vector2/vector2_t.hpp"
+#include "types/vector2/vector2.hpp"
 
 void hive_main(){
     uart2.init(576000);

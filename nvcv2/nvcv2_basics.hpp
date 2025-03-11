@@ -6,7 +6,7 @@
 #include "types/color/color_t.hpp"
 #include "types/image/Image.hpp"
 #include "types/image/PackedImage.hpp"
-#include "types/rect2/rect2_t.hpp"
+#include "types/rect2/rect2.hpp"
 
 #include "thirdparty/sstl/include/sstl/vector.h" 
 #include "thirdparty/sstl/include/sstl/function.h" 

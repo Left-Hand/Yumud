@@ -31,8 +31,8 @@
 
 #pragma once
 
-#include "types/plane/plane_t.hpp"
-#include "types/vector3/vector3_t.hpp"
+#include "types/plane/plane.hpp"
+#include "types/vector3/vector3.hpp"
 
 /**
  * AABB_t (Axis Aligned Bounding Box)
@@ -501,4 +501,4 @@ __inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
 }
 
 
-#include "aabb_t.tpp"
+#include "aabb.tpp"

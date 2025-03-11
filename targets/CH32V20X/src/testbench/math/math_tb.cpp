@@ -6,15 +6,15 @@
 
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
-#include "types/plane/plane_t.hpp"
-#include "types/aabb/aabb_t.hpp"
-#include "types/transform3d/transform3d_t.hpp"
-#include "types/transform2d/transform2d_t.hpp"
+#include "types/plane/plane.hpp"
+#include "types/aabb/aabb.hpp"
+#include "types/transform3d/transform3d.hpp"
+#include "types/transform2d/transform2d.hpp"
 
-#include "types/segment2d/Segment2d_t.hpp"
-#include "types/line2d/Line2D_t.hpp"
-#include "types/ray2d/Ray2D_t.hpp"
-#include "types/Circle2D/Circle2D_t.hpp"
+#include "types/segment2/Segment2.hpp"
+#include "types/Line2/Line2.hpp"
+#include "types/Ray2/Ray2.hpp"
+// #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Arc2D/Arc2D_t.hpp"
 #include "types/Bezier2D/Bezier2D_t.hpp"
 
@@ -188,7 +188,7 @@ void math_tb(){
     #define  LINE_TB
     #ifdef LINE_TB
 
-    using Line = Line2D_t<real_t>;
+    using Line = Line2_t<real_t>;
 
 
     auto line = Line{Vector2{1,0}, Vector2{0,1}};

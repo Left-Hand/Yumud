@@ -31,10 +31,10 @@
 
 #pragma once
 
-#include "types/aabb/AABB_t.hpp"
-#include "types/basis/Basis_t.hpp"
-#include "types/quat/Quat_t.hpp"
-#include "types/vector3/vector3_t.hpp"
+#include "types/aabb/AABB.hpp"
+#include "types/basis/Basis.hpp"
+#include "types/quat/Quat.hpp"
+#include "types/vector3/vector3.hpp"
 
 
 namespace ymd{
@@ -298,4 +298,4 @@ __inline OutputStream & operator<<(OutputStream & os, const Transform3D_t<T> & t
 
 }
 
-#include "transform3d_t.tpp"
+#include "transform3d.tpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "types/quat/quat_t.hpp"
+#include "types/quat/quat.hpp"
 
 
 namespace ymd{

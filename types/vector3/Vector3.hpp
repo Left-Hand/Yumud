@@ -31,7 +31,7 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "types/vector2/vector2_t.hpp"
+#include "types/vector2/vector2.hpp"
 
 namespace ymd{
 template <arithmetic T>
@@ -289,4 +289,4 @@ __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::
 }
 
 
-#include "vector3_t.tpp"
+#include "vector3.tpp"

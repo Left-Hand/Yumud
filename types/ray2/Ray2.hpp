@@ -1,51 +1,51 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "types/vector2/vector2_t.hpp"
-#include "types/line2d/Line2D_t.hpp"
+#include "types/vector2/vector2.hpp"
+#include "types/Line2/Line2.hpp"
 
 namespace ymd{
 
 template<arithmetic T>
-struct Ray2D_t{
+struct Ray2_t{
 public:
     Vector2_t<T> org;
     T rad;
 
 public:
-    __fast_inline constexpr Ray2D_t(){;}
+    __fast_inline constexpr Ray2_t(){;}
 
-    __fast_inline constexpr Ray2D_t(const Vector2_t<T> & _org, const T & _rad): 
+    __fast_inline constexpr Ray2_t(const Vector2_t<T> & _org, const T & _rad): 
             org(static_cast<Vector2_t<T>>(_org)), rad(static_cast<T>(_rad)){;}
 
-    __fast_inline constexpr Ray2D_t(const T & _x, const T & _y, const T & _rad): 
+    __fast_inline constexpr Ray2_t(const T & _x, const T & _y, const T & _rad): 
             org(Vector2_t<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
             
-    __fast_inline constexpr Ray2D_t(const Vector2_t<T> & _from, const Vector2_t<T> & _to): 
+    __fast_inline constexpr Ray2_t(const Vector2_t<T> & _from, const Vector2_t<T> & _to): 
             org(static_cast<Vector2_t<T>>(_from)), rad((_to - _from).angle()){;}
 
     template<arithmetic U = T>
-    __fast_inline constexpr Ray2D_t(const std::tuple<U, U, U> & tup) : 
+    __fast_inline constexpr Ray2_t(const std::tuple<U, U, U> & tup) : 
             org((Vector2_t<T>(std::get<0>(tup), std::get<1>(tup)))),
             rad(std::get<3>(tup)){;}
 
-	__fast_inline constexpr bool operator==(const Ray2D_t & other) const{
+	__fast_inline constexpr bool operator==(const Ray2_t & other) const{
         return is_equal_approx(this->org == other.org) and is_equal_appro(this->rad, other.rad);
     }
 
-	__fast_inline constexpr Ray2D_t operator + (const Ray2D_t & other) const{
-        return Ray2D_t{this->org + other.org, this->rad + other.rad}.regular();
+	__fast_inline constexpr Ray2_t operator + (const Ray2_t & other) const{
+        return Ray2_t{this->org + other.org, this->rad + other.rad}.regular();
     }
 
-	__fast_inline constexpr Ray2D_t operator - (const Ray2D_t & other) const{
-        return Ray2D_t{this->org - other.org, this->rad - other.rad}.regular();
+	__fast_inline constexpr Ray2_t operator - (const Ray2_t & other) const{
+        return Ray2_t{this->org - other.org, this->rad - other.rad}.regular();
     }
 
-    __fast_inline constexpr Ray2D_t regular() const{
-        return Ray2D_t{this->org, fposmodp(this->rad, T(TAU))};
+    __fast_inline constexpr Ray2_t regular() const{
+        return Ray2_t{this->org, fposmodp(this->rad, T(TAU))};
     }
 
-	__fast_inline constexpr bool operator!=(const Ray2D_t & other) const{
+	__fast_inline constexpr bool operator!=(const Ray2_t & other) const{
         return (*this == other) == false; 
     }
 
@@ -53,23 +53,23 @@ public:
         return is_equal_approx(distance_to(pt), 0);
     }
 
-    __fast_inline constexpr bool parallel_with(const Ray2D_t & other) const{
+    __fast_inline constexpr bool parallel_with(const Ray2_t & other) const{
         return is_equal_approx(this->rad, other.rad);
     }
 
-    __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Ray2D_t<T> & other) const{
+    __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Ray2_t<T> & other) const{
         // if(this->parallel_with(other)) return std::nullopt;
 
         // //TODO
         // // return {0,0};
-        return Line2D_t<T>(*this).intersection(Line2D_t<T>(other));
+        return Line2_t<T>(*this).intersection(Line2_t<T>(other));
     }
 
-    __fast_inline constexpr Line2D_t<T> normal() const{
-        return Line2D_t<T>(this->org, this->rad + T(PI/2));
+    __fast_inline constexpr Line2_t<T> normal() const{
+        return Line2_t<T>(this->org, this->rad + T(PI/2));
     }
 
-    __fast_inline constexpr Ray2D_t<T> rotated(const T & r) const{
+    __fast_inline constexpr Ray2_t<T> rotated(const T & r) const{
         return {this->org, this->rad + r};
     }
     
@@ -103,13 +103,13 @@ public:
         return {-s, c, - c * org.y + s * org.x};
     }
 
-    operator Line2D_t<T>() const{
-        return Line2D_t<T>(this->org, this->rad);
+    operator Line2_t<T>() const{
+        return Line2_t<T>(this->org, this->rad);
     }
 };
 
 
-__inline OutputStream & operator <<(OutputStream & os, const Ray2D_t<auto> & ray){
+__inline OutputStream & operator <<(OutputStream & os, const Ray2_t<auto> & ray){
     return os << os.brackets<'('>() << 
         ray.org << os.splitter() << 
         ray.rad << os.brackets<')'>();

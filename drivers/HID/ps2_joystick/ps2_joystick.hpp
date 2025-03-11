@@ -6,7 +6,7 @@
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
-#include "types/vector2/vector2_t.hpp"
+#include "types/vector2/vector2.hpp"
 
 
 namespace ymd::drivers{

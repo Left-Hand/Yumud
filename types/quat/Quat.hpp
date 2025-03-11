@@ -32,7 +32,7 @@
 /**************************************************************************/
 
 
-#include "vector3/vector3_t.hpp"
+#include "vector3/vector3.hpp"
 
 namespace ymd{
 
@@ -182,4 +182,4 @@ __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::
 
 
 
-#include "Quat_t.tpp"
+#include "Quat.tpp"

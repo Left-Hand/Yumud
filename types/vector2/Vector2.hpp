@@ -292,4 +292,4 @@ __fast_inline constexpr auto normal(const Vector2_t<arithmetic auto> & from, con
 
 
 
-#include "vector2_t.tpp"
+#include "vector2.tpp"
