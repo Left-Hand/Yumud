@@ -483,8 +483,9 @@ __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return iq
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
-    return iq_t<Q>(_iq<Q>::from_i32((iq.value) & ((1 << Q) - 1)));
+    return iq_t<Q>(_iq<Q>::from_i32((iq.value.to_i32()) & ((1 << P) - 1)));
 }
+
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){return int(iq);}
@@ -671,8 +672,8 @@ namespace std{
     template<size_t Q>
     class numeric_limits<iq_t<Q>> {
     public:
-        __fast_inline constexpr static iq_t<Q> infinity() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x80000000));}
-        __fast_inline constexpr static iq_t<Q> lowest() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x7FFFFFFF));}
+        __fast_inline constexpr static iq_t<Q> infinity() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x7FFFFFFF));}
+        __fast_inline constexpr static iq_t<Q> lowest() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x80000000));}
 
         __fast_inline constexpr static iq_t<Q> min() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x80000000));}
         __fast_inline constexpr static iq_t<Q> max() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x7FFFFFFF));}

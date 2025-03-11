@@ -1,13 +1,13 @@
 #pragma once
 
-#include <numbers>
 #include "sys/math/real.hpp"
-#include <cmath>
 
 namespace ymd::dsp{
 
 
 namespace details{
+
+
 template<arithmetic T, size_t N>
 requires (N % 2 == 0)
 class ButterSideFilterBase{
