@@ -70,6 +70,7 @@ enum class CgError:uint8_t{
     INPUT_OUT_OF_RANGE,
     INPUT_LOWER_THAN_LIMIT,
     INPUT_HIGHER_THAN_LIMIT,
+    MOTOR_NOT_INITED,
 };
 
 enum class CgCommand:uint8_t{
@@ -82,7 +83,7 @@ enum class CgCommand:uint8_t{
     SET_CAN_ID = 7,
     READ_PARA = 17,
     WRITE_PARA = 18,
-    FBK_FAULT = 21
+    FBK_FAULT = 21,
 };
 
 

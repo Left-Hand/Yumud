@@ -24,7 +24,6 @@ using CanMsg = hal::CanMsg;
 // using CgError = MotorCyberGear::CgError;
 
 
-
 struct CgId{
     uint32_t id;
 
@@ -72,12 +71,11 @@ CgResult<void> MotorCyberGear::ctrl(const real_t cmd_torque, const real_t cmd_ra
     Payload payload = {0};
 
     {
-        const auto res = 
-            CmdTorque::check(cmd_torque) |
-            CmdRad::check(cmd_rad) | 
-            CmdOmega::check(cmd_omega) |
-            CmdKp::check(cmd_kp) |
-            CmdKd::check(cmd_kd) 
+        const auto res = CmdTorque::check(cmd_torque) 
+            | CmdRad::check(cmd_rad) 
+            | CmdOmega::check(cmd_omega) 
+            | CmdKp::check(cmd_kp) 
+            | CmdKd::check(cmd_kd) 
         ;
 
         if(res) return Err(CgError::INPUT_OUT_OF_RANGE);

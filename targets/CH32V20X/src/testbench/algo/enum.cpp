@@ -633,9 +633,9 @@ void enum_main(){
     Ball ball;
 
     while(true){
-        auto set_xy = [](iq_t<16> x, iq_t<16> y){
-            return x * x + y * y;
-        };
+        // auto set_xy = [](iq_t<16> x, iq_t<16> y){
+        //     return x * x + y * y;
+        // };
 
         const auto t = time();
 
@@ -686,7 +686,7 @@ void enum_main(){
 
     // static constexpr size_t a = tuple_bytes_v<int, int, uint8_t>;
     {
-        using tup_t = std::tuple<int, uint16_t, uint8_t, iq_t<16>>;
+        // using tup_t = std::tuple<int, uint16_t, uint8_t, iq_t<16>>;
         
         // static constexpr size_t a1 = tuple_element_bytes_v<1, tup_t>;
         // static constexpr size_t a2 = tuple_element_bytes_v<2, tup_t>;

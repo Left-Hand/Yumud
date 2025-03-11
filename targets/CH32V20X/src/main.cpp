@@ -28,7 +28,8 @@ int main(){
     // digipw_main();
     // enum_main();
     // hive_main();
-    rmst_main();
+    // rmst_main();
+    dsp_main();
     
     // fmt_main();
     // sincos_pwm_main();

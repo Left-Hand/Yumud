@@ -24,12 +24,12 @@ public:
         reset();
     }
 
-    constexpr SecondOrderLowpassFilter_t(const Config &config) {
+    constexpr SecondOrderLowpassFilter_t(const Config & config) {
         reconf(config);
         reset();
     }
 
-    constexpr void reconf(const Config &config) {
+    constexpr void reconf(const Config & config) {
         scexpr T q_butterworth = T(0.7071);
 
         T b0, b1, b2, a0, a1, a2;

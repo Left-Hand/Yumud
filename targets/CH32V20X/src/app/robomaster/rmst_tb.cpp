@@ -6,16 +6,177 @@
 #include "sys/clock/time.hpp"
 #include "sys/clock/clock.h"
 
+#include "hal/timer/instance/timer_hw.hpp"
+
 #include "cybergear/MotorCyberGear.hpp"
+
+#include "detectors/ShockDetector.hpp"
+#include "detectors/SecondOrderTransferFunc.hpp"
 
 using namespace ymd;
 using namespace ymd::rmst;
+
+auto input(){
+    const auto t = time();
+
+    static constexpr auto w0 = real_t(TAU * 4); 
+    static constexpr auto w1 = real_t(TAU * 70); 
+
+    static constexpr auto a0 = 1_r; 
+    static constexpr auto a1 = 0.07_r; 
+    // static constexpr auto a1 = 0.0_r; 
+
+    return a0 * sin(w0 * t) + a1 * sin(w1 * t);
+};
+
+void lpf_tb(){
+    using Transfer = dsp::LowpassFilter_t<iq_t<20>>;
+
+    const uint fs = 2000;
+    const auto config = Transfer::Config{
+        .fc = 30,
+        .fs = 1000
+    };
+
+    Transfer lpf{config};
+
+    hal::timer1.init(fs);
+
+    hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
+        const auto x = input();
+        lpf.update(x);
+        DEBUG_PRINTLN(x, lpf.result());
+    });
+
+    while(true);
+}
+
+
+void hpf_tb(){
+    using Transfer = dsp::HighpassFilter_t<iq_t<20>>;
+
+    const uint fs = 2000;
+    const auto config = Transfer::Config{
+        .fc = 30,
+        .fs = 1000
+    };
+
+    Transfer hpf{config};
+
+    hal::timer1.init(fs);
+
+    hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
+        const auto x = input();
+        hpf.update(x);
+        DEBUG_PRINTLN(x, hpf.result());
+    });
+
+    while(true);
+}
+
+void bpf_tb(){
+    using Bpf = dsp::BandpassFilter<iq_t<16>>;
+
+    const uint fs = 2000;
+    const auto config = Bpf::Config{
+        .fl = 100,
+        .fh = 200,
+        .fs = 1000
+    };
+
+    Bpf bpf{config};
+
+    hal::timer1.init(fs);
+
+    hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
+        const auto x = input();
+        bpf.update(x);
+        DEBUG_PRINTLN(x, bpf.result());
+    });
+
+    while(true);
+}
+
+void shock_tb(){
+    using Transfer = dsp::LowpassFilter_t<iq_t<16>>;
+
+    const uint fs = 2000;
+    const auto config = Transfer::Config{
+        .fc = 30,
+        .fs = fs
+    };
+
+    Transfer lpf{config};
+    // dsp::HighpassFilter_t<iq_t<16>> hpf{{
+    //     .fc = 10,
+    //     .fs = fs
+    // }};
+    Transfer lpf2{config};
+
+    hal::timer1.init(fs);
+
+    hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
+        const auto x = input();
+        lpf.update(x);
+        lpf2.update(lpf.result());
+        // const auto err = x - lpf2.result();
+        const auto err = x - lpf.result();
+        DEBUG_PRINTLN(x, lpf.result(), err);
+    });
+
+    while(true);
+}
+
+template<typename Fn>
+void dsp_func_test(const uint fs, Fn && fn){
+
+    hal::timer1.init(fs);
+
+    hal::timer1.attach(TimerIT::Update, {0,0}, std::forward<Fn>(fn));
+
+    while(true);
+}
+
+
+void so_tb(){
+    // using Sof = dsp::SecondOrderTransferFunc<float>;
+    using Sof = dsp::SecondOrderTransferFunc<real_t>;
+
+    // constexpr auto config = Sof::make_butterworth_bpf({
+
+    static constexpr uint fs = 1000;
+    const auto config = Sof::make_butterworth_bpf({
+        .fl = 20,
+        .fh = 70,
+        .fs = fs
+    });
+
+    Sof sof = {config};
+    
+    // while(true);
+    dsp_func_test(fs, [&](){
+        // auto x = input();
+        auto x = time();
+        // auto r = 0.001_r;
+        sof.update(x);
+        // DEBUG_PRINTLN(config.a1, config.a2, config.b0, config.b1, config.b2);
+        DEBUG_PRINTLN(x, sof.result());
+    });
+}
+
+
 
 void rmst_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
+
+    // bpf_tb();
+    // hpf_tb();
+    so_tb();
+    // lpf_tb();
+    // shock_tb();
 
     MotorCyberGear motor(can1, 0x01, 0x02);
     while(true){
@@ -25,6 +186,9 @@ void rmst_main(){
         !motor.ctrl(0, 0, 0, 500, 5);
         delay(10);
     }
+
+
+
 
     std::terminate();
 }
