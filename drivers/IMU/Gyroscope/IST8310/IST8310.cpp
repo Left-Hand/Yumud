@@ -1,5 +1,6 @@
 #include "IST8310.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 #ifdef IST8310_DEBUG
@@ -73,16 +74,16 @@ void IST8310::setAverageTimes(bool is_x, AverageTimes times){
     WRITE_REG(reg)
 }
 
-std::tuple<real_t, real_t, real_t> IST8310::getMagnet(){
+Option<Vector3> IST8310::getMagnet(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return {
+    return Some{Vector3{
         conv(axis_x_reg),
         conv(axis_y_reg),
         conv(axis_z_reg)
-    };
+    }};
 }
 
 int IST8310::getTemperature(){

@@ -157,10 +157,10 @@ public:
     void setGain(const Gain gain);
     void setMode(const Mode mode);
 
-    std::tuple<real_t, real_t, real_t> getMagnet() override;
+    Option<Vector3> getMagnet() override;
 
     bool verify();
-    void update() override;
+    void update();
 
 
     bool busy();

@@ -1,893 +1,607 @@
-/* 
-   https://github.com/oktal/result/blob/master/result.h
-   Mathieu Stefani, 03 mai 2016
-   
-   This header provides a Result type that can be used to replace exceptions in code
-   that has to handle error.
-
-   Result<T, E> can be used to return and propagate an error to the caller. Result<T, E> is an algebraic
-   data type that can either Ok(T) to represent success or Err(E) to represent an error.
-*/
-
 #pragma once
 
-#include <concepts>
-#include <functional>
-#include <type_traits>
+#include "Option.hpp"
 
-namespace types {
-template<typename T>
-struct Ok {
-    Ok(const T& val)
-        : val(val) {}
-    Ok(T&& val)
-        : val(std::move(val)) {}
 
-    T val;
-};
 
-template<>
-struct Ok<void> {};
-
-template<typename E>
-struct Err {
-    Err(const E& val)
-        : val(val) {}
-    Err(E&& val)
-        : val(std::move(val)) {}
-
-    E val;
-};
-} // namespace types
-
-template<typename T, typename CleanT = typename std::decay<T>::type>
-types::Ok<CleanT> Ok(T&& val) {
-    return types::Ok<CleanT>(std::forward<T>(val));
-}
-
-inline types::Ok<void> Ok() {
-    return types::Ok<void>();
-}
-
-template<typename E, typename CleanE = typename std::decay<E>::type>
-types::Err<CleanE> Err(E&& val) {
-    return types::Err<CleanE>(std::forward<E>(val));
-}
-
-template<typename T, typename E>
-struct Result;
-
-namespace details {
-
-template<typename...>
-struct void_t {
-    typedef void type;
-};
-
-namespace impl {
-template<typename Func>
-struct result_of;
-
-template<typename Ret, typename Cls, typename... Args>
-struct result_of<Ret (Cls::*)(Args...)> : public result_of<Ret(Args...)> {};
-
-template<typename Ret, typename... Args>
-struct result_of<Ret(Args...)> {
-    typedef Ret type;
-};
-} // namespace impl
-
-template<typename Func>
-struct result_of : public impl::result_of<decltype(&Func::operator())> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct result_of<Ret (Cls::*)(Args...) const> {
-    typedef Ret type;
-};
-
-template<typename Ret, typename... Args>
-struct result_of<Ret (*)(Args...)> {
-    typedef Ret type;
-};
-
-template<typename R>
-struct ResultOkType {
-    typedef typename std::decay<R>::type type;
-};
-
-template<typename T, typename E>
-struct ResultOkType<Result<T, E>> {
-    typedef T type;
-};
-
-template<typename R>
-struct ResultErrType {
-    typedef R type;
-};
-
-template<typename T, typename E>
-struct ResultErrType<Result<T, E>> {
-    typedef typename std::remove_reference<E>::type type;
-};
-
-template<typename R>
-struct IsResult : public std::false_type {};
-template<typename T, typename E>
-struct IsResult<Result<T, E>> : public std::true_type {};
-
-namespace ok {
-
-namespace impl {
-
-template<typename T>
-struct Map;
-
-template<typename Ret, typename Cls, typename Arg>
-struct Map<Ret (Cls::*)(Arg) const> : public Map<Ret(Arg)> {};
-
-template<typename Ret, typename Cls, typename Arg>
-struct Map<Ret (Cls::*)(Arg)> : public Map<Ret(Arg)> {};
-
-// General implementation
-template<typename Ret, typename Arg>
-struct Map<Ret(Arg)> {
-    static_assert(!IsResult<Ret>::value,
-                  "Can not map a callback returning a Result, use andThen instead");
-
-    template<typename T, typename E, typename Func>
-    static Result<Ret, E> map(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, Arg>::value || std::is_convertible<T, Arg>::value,
-                      "Incompatible types detected");
-
-        if (result.isOk()) {
-            auto res = func(result.storage().template get<T>());
-            return types::Ok<Ret>(std::move(res));
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-// Specialization for callback returning void
-template<typename Arg>
-struct Map<void(Arg)> {
-    template<typename T, typename E, typename Func>
-    static Result<void, E> map(const Result<T, E>& result, Func func) {
-        if (result.isOk()) {
-            func(result.storage().template get<T>());
-            return types::Ok<void>();
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-// Specialization for a void Result
-template<typename Ret>
-struct Map<Ret(void)> {
-    template<typename T, typename E, typename Func>
-    static Result<Ret, E> map(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, void>::value,
-                      "Can not map a void callback on a non-void Result");
-
-        if (result.isOk()) {
-            auto ret = func();
-            return types::Ok<Ret>(std::move(ret));
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-// Specialization for callback returning void on a void Result
-template<>
-struct Map<void(void)> {
-    template<typename T, typename E, typename Func>
-    static Result<void, E> map(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, void>::value,
-                      "Can not map a void callback on a non-void Result");
-
-        if (result.isOk()) {
-            func();
-            return types::Ok<void>();
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-// General specialization for a callback returning a Result
-template<typename U, typename E, typename Arg>
-struct Map<Result<U, E>(Arg)> {
-    template<typename T, typename Func>
-    static Result<U, E> map(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, Arg>::value || std::is_convertible<T, Arg>::value,
-                      "Incompatible types detected");
-
-        if (result.isOk()) {
-            auto res = func(result.storage().template get<T>());
-            return res;
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-// Specialization for a void callback returning a Result
-template<typename U, typename E>
-struct Map<Result<U, E>(void)> {
-    template<typename T, typename Func>
-    static Result<U, E> map(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, void>::value,
-                      "Can not call a void-callback on a non-void Result");
-
-        if (result.isOk()) {
-            auto res = func();
-            return res;
-        }
-
-        return types::Err<E>(result.storage().template get<E>());
-    }
-};
-
-} // namespace impl
-
-template<typename Func>
-struct Map : public impl::Map<decltype(&Func::operator())> {};
-
-template<typename Ret, typename... Args>
-struct Map<Ret (*)(Args...)> : public impl::Map<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Map<Ret (Cls::*)(Args...)> : public impl::Map<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Map<Ret (Cls::*)(Args...) const> : public impl::Map<Ret(Args...)> {};
-
-template<typename Ret, typename... Args>
-struct Map<std::function<Ret(Args...)>> : public impl::Map<Ret(Args...)> {};
-
-} // namespace ok
-
-namespace err {
-
-namespace impl {
-
-template<typename T>
-struct Map;
-
-template<typename Ret, typename Cls, typename Arg>
-struct Map<Ret (Cls::*)(Arg) const> {
-    static_assert(!IsResult<Ret>::value,
-                  "Can not map a callback returning a Result, use orElse instead");
-
-    template<typename T, typename E, typename Func>
-    static Result<T, Ret> map(const Result<T, E>& result, Func func) {
-        if (result.isErr()) {
-            auto res = func(result.storage().template get<E>());
-            return types::Err<Ret>(res);
-        }
-
-        return types::Ok<T>(result.storage().template get<T>());
-    }
-
-    template<typename E, typename Func>
-    static Result<void, Ret> map(const Result<void, E>& result, Func func) {
-        if (result.isErr()) {
-            auto res = func(result.storage().template get<E>());
-            return types::Err<Ret>(res);
-        }
-
-        return types::Ok<void>();
-    }
-};
-
-} // namespace impl
-
-template<typename Func>
-struct Map : public impl::Map<decltype(&Func::operator())> {};
-
-} // namespace err
-
-namespace And {
-
-namespace impl {
-
-template<typename Func>
-struct Then;
-
-template<typename Ret, typename... Args>
-struct Then<Ret (*)(Args...)> : public Then<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Then<Ret (Cls::*)(Args...)> : public Then<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Then<Ret (Cls::*)(Args...) const> : public Then<Ret(Args...)> {};
-
-template<typename Ret, typename Arg>
-struct Then<Ret(Arg)> {
-    static_assert(std::is_same<Ret, void>::value,
-                  "then() should not return anything, use map() instead");
-
-    template<typename T, typename E, typename Func>
-    static Result<T, E> then(const Result<T, E>& result, Func func) {
-        if (result.isOk()) {
-            func(result.storage().template get<T>());
-        }
-        return result;
-    }
-};
-
-template<typename Ret>
-struct Then<Ret(void)> {
-    static_assert(std::is_same<Ret, void>::value,
-                  "then() should not return anything, use map() instead");
-
-    template<typename T, typename E, typename Func>
-    static Result<T, E> then(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, void>::value,
-                      "Can not call a void-callback on a non-void Result");
-
-        if (result.isOk()) {
-            func();
-        }
-
-        return result;
-    }
-};
-
-} // namespace impl
-
-template<typename Func>
-struct Then : public impl::Then<decltype(&Func::operator())> {};
-
-template<typename Ret, typename... Args>
-struct Then<Ret (*)(Args...)> : public impl::Then<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Then<Ret (Cls::*)(Args...)> : public impl::Then<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Then<Ret (Cls::*)(Args...) const> : public impl::Then<Ret(Args...)> {};
-
-} // namespace And
-
-namespace Or {
-
-namespace impl {
-
-template<typename Func>
-struct Else;
-
-template<typename Ret, typename... Args>
-struct Else<Ret (*)(Args...)> : public Else<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Else<Ret (Cls::*)(Args...)> : public Else<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Else<Ret (Cls::*)(Args...) const> : public Else<Ret(Args...)> {};
-
-template<typename T, typename F, typename Arg>
-struct Else<Result<T, F>(Arg)> {
-    template<typename E, typename Func>
-    static Result<T, F> orElse(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<E, Arg>::value || std::is_convertible<E, Arg>::value,
-                      "Incompatible types detected");
-
-        if (result.isErr()) {
-            auto res = func(result.storage().template get<E>());
-            return res;
-        }
-
-        return types::Ok<T>(result.storage().template get<T>());
-    }
-
-    template<typename E, typename Func>
-    static Result<void, F> orElse(const Result<void, E>& result, Func func) {
-        if (result.isErr()) {
-            auto res = func(result.storage().template get<E>());
-            return res;
-        }
-
-        return types::Ok<void>();
-    }
-};
-
-template<typename T, typename F>
-struct Else<Result<T, F>(void)> {
-    template<typename E, typename Func>
-    static Result<T, F> orElse(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<T, void>::value,
-                      "Can not call a void-callback on a non-void Result");
-
-        if (result.isErr()) {
-            auto res = func();
-            return res;
-        }
-
-        return types::Ok<T>(result.storage().template get<T>());
-    }
-
-    template<typename E, typename Func>
-    static Result<void, F> orElse(const Result<void, E>& result, Func func) {
-        if (result.isErr()) {
-            auto res = func();
-            return res;
-        }
-
-        return types::Ok<void>();
-    }
-};
-
-} // namespace impl
-
-template<typename Func>
-struct Else : public impl::Else<decltype(&Func::operator())> {};
-
-template<typename Ret, typename... Args>
-struct Else<Ret (*)(Args...)> : public impl::Else<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Else<Ret (Cls::*)(Args...)> : public impl::Else<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Else<Ret (Cls::*)(Args...) const> : public impl::Else<Ret(Args...)> {};
-
-} // namespace Or
-
-namespace Other {
-
-namespace impl {
-
-template<typename Func>
-struct Wise;
-
-template<typename Ret, typename... Args>
-struct Wise<Ret (*)(Args...)> : public Wise<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Wise<Ret (Cls::*)(Args...)> : public Wise<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Wise<Ret (Cls::*)(Args...) const> : public Wise<Ret(Args...)> {};
-
-template<typename Ret, typename Arg>
-struct Wise<Ret(Arg)> {
-    template<typename T, typename E, typename Func>
-    static Result<T, E> otherwise(const Result<T, E>& result, Func func) {
-        static_assert(std::is_same<E, Arg>::value || std::is_convertible<E, Arg>::value,
-                      "Incompatible types detected");
-
-        static_assert(std::is_same<Ret, void>::value,
-                      "callback should not return anything, use mapError() for that");
-
-        if (result.isErr()) {
-            func(result.storage().template get<E>());
-        }
-        return result;
-    }
-};
-
-} // namespace impl
-
-template<typename Func>
-struct Wise : public impl::Wise<decltype(&Func::operator())> {};
-
-template<typename Ret, typename... Args>
-struct Wise<Ret (*)(Args...)> : public impl::Wise<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Wise<Ret (Cls::*)(Args...)> : public impl::Wise<Ret(Args...)> {};
-
-template<typename Ret, typename Cls, typename... Args>
-struct Wise<Ret (Cls::*)(Args...) const> : public impl::Wise<Ret(Args...)> {};
-
-} // namespace Other
-
-template<typename T,
-         typename E,
-         typename Func,
-         typename Ret
-         = Result<typename details::ResultOkType<typename details::result_of<Func>::type>::type, E>>
-Ret map(const Result<T, E>& result, Func func) {
-    return ok::Map<Func>::map(result, func);
-}
-
-template<typename T,
-         typename E,
-         typename Func,
-         typename Ret
-         = Result<T, typename details::ResultErrType<typename details::result_of<Func>::type>::type>>
-Ret mapError(const Result<T, E>& result, Func func) {
-    return err::Map<Func>::map(result, func);
-}
-
-template<typename T, typename E, typename Func>
-Result<T, E> then(const Result<T, E>& result, Func func) {
-    return And::Then<Func>::then(result, func);
-}
-
-template<typename T, typename E, typename Func>
-Result<T, E> otherwise(const Result<T, E>& result, Func func) {
-    return Other::Wise<Func>::otherwise(result, func);
-}
-
-template<typename T,
-         typename E,
-         typename Func,
-         typename Ret
-         = Result<T, typename details::ResultErrType<typename details::result_of<Func>::type>::type>>
-Ret orElse(const Result<T, E>& result, Func func) {
-    return Or::Else<Func>::orElse(result, func);
-}
-
-struct ok_tag {};
-struct err_tag {};
-
-template<typename T, typename E>
-struct Storage {
-    static constexpr size_t Size = sizeof(T) > sizeof(E) ? sizeof(T) : sizeof(E);
-    static constexpr size_t Align = sizeof(T) > sizeof(E) ? alignof(T) : alignof(E);
-
-    typedef typename std::aligned_storage<Size, Align>::type type;
-
-    Storage()
-        : initialized_(false) {}
-
-    void construct(types::Ok<T> ok) {
-        new (&storage_) T(ok.val);
-        initialized_ = true;
-    }
-    void construct(types::Err<E> err) {
-        new (&storage_) E(err.val);
-        initialized_ = true;
-    }
-
-    template<typename U>
-    void rawConstruct(U&& val) {
-        typedef typename std::decay<U>::type CleanU;
-
-        new (&storage_) CleanU(std::forward<U>(val));
-        initialized_ = true;
-    }
-
-    template<typename U>
-    const U& get() const {
-        return *reinterpret_cast<const U*>(&storage_);
-    }
-
-    template<typename U>
-    U& get() {
-        return *reinterpret_cast<U*>(&storage_);
-    }
-
-    void destroy(ok_tag) {
-        if (initialized_) {
-            get<T>().~T();
-            initialized_ = false;
-        }
-    }
-
-    void destroy(err_tag) {
-        if (initialized_) {
-            get<E>().~E();
-            initialized_ = false;
-        }
-    }
-
-    type storage_;
-    bool initialized_;
-};
-
-template<typename E>
-struct Storage<void, E> {
-    typedef typename std::aligned_storage<sizeof(E), alignof(E)>::type type;
-
-    void construct(types::Ok<void>) { initialized_ = true; }
-
-    void construct(types::Err<E> err) {
-        new (&storage_) E(err.val);
-        initialized_ = true;
-    }
-
-    template<typename U>
-    void rawConstruct(U&& val) {
-        typedef typename std::decay<U>::type CleanU;
-
-        new (&storage_) CleanU(std::forward<U>(val));
-        initialized_ = true;
-    }
-
-    void destroy(ok_tag) { initialized_ = false; }
-    void destroy(err_tag) {
-        if (initialized_) {
-            get<E>().~E();
-            initialized_ = false;
-        }
-    }
-
-    template<typename U>
-    const U& get() const {
-        return *reinterpret_cast<const U*>(&storage_);
-    }
-
-    template<typename U>
-    U& get() {
-        return *reinterpret_cast<U*>(&storage_);
-    }
-
-    type storage_;
-    bool initialized_;
-};
-
-template<typename T, typename E>
-struct Constructor {
-    static void move(Storage<T, E>&& src, Storage<T, E>& dst, ok_tag) {
-        dst.rawConstruct(std::move(src.template get<T>()));
-        src.destroy(ok_tag());
-    }
-
-    static void copy(const Storage<T, E>& src, Storage<T, E>& dst, ok_tag) {
-        dst.rawConstruct(src.template get<T>());
-    }
-
-    static void move(Storage<T, E>&& src, Storage<T, E>& dst, err_tag) {
-        dst.rawConstruct(std::move(src.template get<E>()));
-        src.destroy(err_tag());
-    }
-
-    static void copy(const Storage<T, E>& src, Storage<T, E>& dst, err_tag) {
-        dst.rawConstruct(src.template get<E>());
-    }
-};
-
-template<typename E>
-struct Constructor<void, E> {
-    static void move(Storage<void, E>&& src, Storage<void, E>& dst, ok_tag) {}
-
-    static void copy(const Storage<void, E>& src, Storage<void, E>& dst, ok_tag) {}
-
-    static void move(Storage<void, E>&& src, Storage<void, E>& dst, err_tag) {
-        dst.rawConstruct(std::move(src.template get<E>()));
-        src.destroy(err_tag());
-    }
-
-    static void copy(const Storage<void, E>& src, Storage<void, E>& dst, err_tag) {
-        dst.rawConstruct(src.template get<E>());
-    }
-};
-
-} // namespace details
-
-namespace Concept {
-
-template<typename T, typename = void>
-struct EqualityComparable : std::false_type {};
-
-template<typename T>
-struct EqualityComparable<
-    T,
-    typename std::enable_if<
-        true,
-        typename details::void_t<decltype(std::declval<T>() == std::declval<T>())>::type>::type>
-    : std::true_type {};
-
-} // namespace Concept
-
-template<typename T, typename E>
-struct Result {
-    static_assert(!std::is_same<E, void>::value, "void error type is not allowed");
-
-    typedef details::Storage<T, E> storage_type;
-
-    Result()
-        : ok_(true) {
-        storage_.rawConstruct(T());
-    }
-
-    Result(types::Ok<T> ok)
-        : ok_(true) {
-        storage_.construct(std::move(ok));
-    }
-
-    Result(types::Err<E> err)
-        : ok_(false) {
-        storage_.construct(std::move(err));
-    }
-
-    Result(Result&& other) noexcept {
-        if (other.isOk()) {
-            details::Constructor<T, E>::move(std::move(other.storage_), storage_, details::ok_tag());
-            ok_ = true;
-        } else {
-            details::Constructor<T, E>::move(std::move(other.storage_),
-                                             storage_,
-                                             details::err_tag());
-            ok_ = false;
-        }
-    }
-
-    Result(const Result& other) {
-        if (other.isOk()) {
-            details::Constructor<T, E>::copy(other.storage_, storage_, details::ok_tag());
-            ok_ = true;
-        } else {
-            details::Constructor<T, E>::copy(other.storage_, storage_, details::err_tag());
-            ok_ = false;
-        }
-    }
-
-    ~Result() {
-        if (ok_)
-            storage_.destroy(details::ok_tag());
-        else
-            storage_.destroy(details::err_tag());
-    }
-
-    bool isOk() const { return ok_; }
-
-    bool isErr() const { return !ok_; }
-
-    T expect(const char* str) const {
-        if (!isOk()) {
-            std::terminate();
-        }
-        return expect_impl(std::is_same<T, void>());
-    }
-
-    template<
-        typename Func,
-        typename Ret
-        = Result<typename details::ResultOkType<typename details::result_of<Func>::type>::type, E>>
-    Ret map(Func func) const {
-        return details::map(*this, func);
-    }
-
-    template<
-        typename Func,
-        typename Ret
-        = Result<T, typename details::ResultErrType<typename details::result_of<Func>::type>::type>>
-    Ret mapError(Func func) const {
-        return details::mapError(*this, func);
-    }
-
-    template<typename Func>
-    Result<T, E> then(Func func) const {
-        return details::then(*this, func);
-    }
-
-    template<typename Func>
-    Result<T, E> otherwise(Func func) const {
-        return details::otherwise(*this, func);
-    }
-
-    template<
-        typename Func,
-        typename Ret
-        = Result<T, typename details::ResultErrType<typename details::result_of<Func>::type>::type>>
-    Ret orElse(Func func) const {
-        return details::orElse(*this, func);
-    }
-
-    storage_type& storage() { return storage_; }
-
-    const storage_type& storage() const { return storage_; }
-
-    template<typename U = T>
-    typename std::enable_if<!std::is_same<U, void>::value, U>::type unwrapOr(
-        const U& defaultValue) const {
-        if (isOk()) {
-            return storage().template get<U>();
-        }
-        return defaultValue;
-    }
-
-    template<typename U = T>
-    typename std::enable_if<!std::is_same<U, void>::value, U>::type unwrap() const {
-        if (isOk()) {
-            return storage().template get<U>();
-        }
-        std::terminate();
-    }
-
-    template<std::same_as<void> U = T>
-    void unwrap() const {
-        if (isOk()) {
-            return;
-        }
-        std::terminate();
-    }
-
-    E unwrapErr() const {
-        if (isErr()) {
-            return storage().template get<E>();
-        }
-        std::terminate();
-    }
-
-private:
-    T expect_impl(std::true_type) const {}
-    T expect_impl(std::false_type) const { return storage_.template get<T>(); }
-
-    bool ok_;
-    storage_type storage_;
-};
-
-template<typename T, typename E>
-bool operator==(const Result<T, E>& lhs, const Result<T, E>& rhs) {
-    static_assert(Concept::EqualityComparable<T>::value,
-                  "T must be EqualityComparable for Result to be comparable");
-    static_assert(Concept::EqualityComparable<E>::value,
-                  "E must be EqualityComparable for Result to be comparable");
-
-    if (lhs.isOk() && rhs.isOk()) {
-        return lhs.storage().template get<T>() == rhs.storage().template get<T>();
-    }
-    if (lhs.isErr() && rhs.isErr()) {
-        return lhs.storage().template get<E>() == rhs.storage().template get<E>();
-    }
-}
-
-template<typename T, typename E>
-bool operator==(const Result<T, E>& lhs, types::Ok<T> ok) {
-    static_assert(Concept::EqualityComparable<T>::value,
-                  "T must be EqualityComparable for Result to be comparable");
-
-    if (!lhs.isOk())
-        return false;
-
-    return lhs.storage().template get<T>() == ok.val;
-}
-
-template<typename E>
-bool operator==(const Result<void, E>& lhs, types::Ok<void>) {
-    return lhs.isOk();
-}
-
-template<typename T, typename E>
-bool operator==(const Result<T, E>& lhs, types::Err<E> err) {
-    static_assert(Concept::EqualityComparable<E>::value,
-                  "E must be EqualityComparable for Result to be comparable");
-    if (!lhs.isErr())
-        return false;
-
-    return lhs.storage().template get<E>() == err.val;
-}
-
-// !!!NOTE: DO NOT USE!!!
-// This is an extension of GCC and clang, not standard C++
-#define TRY(...) \
-    ({ \
-        auto res = __VA_ARGS__; \
-        if (!res.isOk()) { \
-            typedef details::ResultErrType<decltype(res)>::type E; \
-            return types::Err<E>(res.storage().get<E>()); \
-        } \
-        typedef details::ResultOkType<decltype(res)>::type T; \
-        res.storage().get<T>(); \
-    })
-
-// There is no extensions. Use with ease :)
-#define ASYNC_VOID_TRY(ARG) \
-    { \
-        auto res = co_await (ARG); \
-        if (res.isErr()) { \
-            co_return Err(res.unwrapErr()); \
-        } \
-    }
-
-// There is no extensions. Use with ease :)
-#define VOID_TRY(ARG) \
-    { \
-        auto res = (ARG); \
-        if (res.isErr()) { \
-            return Err(res.unwrapErr()); \
-        } \
-    }
 
 namespace ymd{
+
+namespace custom{
+    template <typename T, typename E, typename S> 
+    struct result_converter{};
+
+    // 非侵入式地添加隐式类型转换
+    // T为正确类型 E为错误类型 S为源类型
+
+    // eg:
+    // template<>
+    // struct result_converter<void, BusError, BusError> {
+    //     static Result<void, BusError> convert(const BusError & res){
+    //         if(res.ok()) return Ok();
+    //         else return Err(res); 
+    //     }
+    // };
+}
+
 template<typename T>
-using Result = Result<T, Error>;
+static constexpr bool is_result_v = false;
+
+template<typename T, typename E>
+static constexpr bool is_result_v<Result<T, E>> = true;
+
+template<typename T>
+using is_result_t = std::conditional_t<is_result_v<T>, std::true_type, std::false_type>;
+
+
+namespace details{
+template<typename T>
+struct _result_type{
 };
+
+template<typename T, typename E>
+struct _result_type<Result<T, E>>{
+    using ok_type = T;
+    using err_type = E;
+};
+
+}
+
+template<typename TResult>
+using result_ok_type_t = details::_result_type<TResult>::ok_type;
+
+template<typename TResult>
+using result_err_type_t = details::_result_type<TResult>::err_type;
+
+
+namespace details{
+    template<typename U, typename Fn>
+    auto operator|(U&& val, Fn&& fn) {
+        return std::forward<Fn>(fn)(std::forward<U>(val));
+    }
+
+
+    template<typename T, typename E>
+    struct _Storage_Diff{
+    public:
+        using Data = std::variant<T, E>;
+        using ok_type = T;
+        using err_type = E;
+    
+        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):
+            data_(T(val)){;}
+    
+    
+        __fast_inline constexpr _Storage_Diff(const Err<E> & val):
+            data_(E(val)){;}
+    
+        __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
+        __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return std::holds_alternative<T>(data_);}
+        __fast_inline constexpr bool is_err() const{return std::holds_alternative<E>(data_);}
+    
+        __fast_inline constexpr T unwrap() const{return std::get<T>(data_);}
+        __fast_inline constexpr E unwrap_err() const{return std::get<E>(data_);}
+    private:
+        Data data_;
+    };
+    
+    template<typename T, typename E>
+    struct _Storage_Uint{
+    private:
+        static constexpr size_t ok_size = sizeof(T);
+        static constexpr size_t err_size = sizeof(E);
+        static constexpr size_t max_size = std::max(ok_size,err_size);
+        using data_type = size_to_int_t<max_size>;
+
+    public:
+        using ok_type = T;
+        using err_type = E;
+    
+        __fast_inline constexpr _Storage_Uint(const Ok<T> & val):
+            data_(static_cast<data_type>(T(val))){;}
+        __fast_inline constexpr _Storage_Uint(const Err<E> & val):
+            data_(static_cast<data_type>(- E(val)) - 1){;}
+    
+        __fast_inline constexpr _Storage_Uint(const _Storage_Uint &) = default;
+        __fast_inline constexpr _Storage_Uint(_Storage_Uint &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return data_ >= 0;}
+        __fast_inline constexpr bool is_err() const{return data_ < 0;}
+    
+        __fast_inline constexpr T unwrap() const{return static_cast<T>(data_);}
+        __fast_inline constexpr E unwrap_err() const{return static_cast<E>(- data_ - 1);}
+    private:
+        data_type data_;
+    };
+
+    template<typename T>
+    struct _Storage_Same{
+    public:
+        using ok_type = T;
+        using err_type = T;
+        __fast_inline constexpr _Storage_Same(const Ok<T> & val):
+            ok_data_(T(val)), is_ok_(true){;}    
+        __fast_inline constexpr _Storage_Same(const Err<T> & val):
+            err_data_(T(val)), is_ok_(false){;}
+    
+        __fast_inline constexpr _Storage_Same(const _Storage_Same &) = default;
+        __fast_inline constexpr _Storage_Same(_Storage_Same &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return is_ok_;}
+        __fast_inline constexpr bool is_err() const{return !is_ok_;}
+    
+        __fast_inline constexpr T unwrap() const{return ok_data_;}
+        __fast_inline constexpr T unwrap_err() const{return err_data_;}
+    private:
+        union{
+            T ok_data_;
+            T err_data_;
+        };
+
+        bool is_ok_;
+    };
+    
+    template<typename E>
+    struct _Storage_ErrorOnly{
+        using ok_type = void;
+        using err_type = E;
+        using Data = std::optional<E>;
+        __fast_inline constexpr _Storage_ErrorOnly(Ok<void> &&):
+            data_(std::nullopt){;}
+    
+        __fast_inline constexpr _Storage_ErrorOnly(const Ok<void> &):
+            data_(std::nullopt){;}
+    
+        __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
+            data_(std::forward<E>(val)){;}
+    
+        __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
+        __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
+        __fast_inline constexpr bool is_err() const{return data_.has_value();}
+    
+        __fast_inline constexpr void unwrap() const{}
+        __fast_inline constexpr E unwrap_err() const{return (data_.value());}
+    private:
+        Data data_;
+    };
+
+    template<typename T>
+    struct _Storage_OkOnly{
+        using ok_type = T;
+        using err_type = void;
+        using Data = std::optional<T>;
+        __fast_inline constexpr _Storage_OkOnly(const Ok<void> & val):
+            data_(static_cast<T>(val)){;}
+    
+        __fast_inline constexpr _Storage_OkOnly(const Err<T> &):
+            data_(std::nullopt){;}
+    
+        __fast_inline constexpr _Storage_OkOnly(const _Storage_OkOnly &) = default;
+        __fast_inline constexpr _Storage_OkOnly(_Storage_OkOnly &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return data_.has_value();}
+        __fast_inline constexpr bool is_err() const{return !data_.has_value();}
+    
+        __fast_inline constexpr T unwrap() const{return (data_.value());}
+        __fast_inline constexpr void unwrap_err() const{return;}
+    private:
+        Data data_;
+    };
+    
+    struct _Storage_VoidOnly{
+        using ok_type = void;
+        using err_type = void;
+
+        __fast_inline constexpr _Storage_VoidOnly(const Ok<void> &):
+            is_ok_(true){}
+        __fast_inline constexpr _Storage_VoidOnly(const Err<void> &):
+            is_ok_(false){}
+    
+        __fast_inline constexpr _Storage_VoidOnly(const _Storage_VoidOnly &) = default;
+        __fast_inline constexpr _Storage_VoidOnly(_Storage_VoidOnly &&) = default;
+    
+        __fast_inline constexpr bool is_ok() const{return is_ok_;}
+        __fast_inline constexpr bool is_err() const{return !is_ok_;}
+        __fast_inline constexpr void unwrap() const{}
+        __fast_inline constexpr void unwrap_err() const{}
+    private:
+        bool is_ok_;
+    };
+    
+
+    template<typename T>
+    using storage_same_type_t = std::conditional_t<
+        std::is_same_v<T, void>,
+        _Storage_VoidOnly,
+        _Storage_Same<T>
+    >;
+
+    template<typename T, typename E>
+    using storage_diff_type_t = std::conditional_t<
+        std::is_same_v<T, void>,
+        _Storage_ErrorOnly<E>,
+        std::conditional_t<
+            std::is_same_v<E, void>,
+            _Storage_OkOnly<T>,
+            _Storage_Diff<T, E>
+        >
+    >;
+
+    template<typename T, typename E>
+    using storage_not_int_t = std::conditional_t<
+        std::is_same_v<T, E>,
+        storage_same_type_t<T>,
+        storage_diff_type_t<T, E>
+    >;
+
+    template<typename T, typename E>
+    using storage_t = std::conditional_t<
+        (std::is_unsigned_v<T> && std::is_unsigned_v<E>),
+        _Storage_Uint<T, E>,
+        storage_not_int_t<T, E>
+    >;
+}
+
+
+template <typename T, typename E>
+class Result{
+// private:
+    // using Storage = std::variant<T, E>;
+    // using details::operator|;
+    // using _Storage = details::_Storage;
+public:
+    using Storage = details::storage_t<T, E>;
+    using ok_type = Storage::ok_type;
+    using err_type = Storage::err_type;
+    using type = Result<T, E>;
+private:
+    Storage result_;
+
+    struct _Loc{
+        const Result<T, E> & owner_;
+        std::source_location loc_;
+
+        template<typename ... Args>
+        constexpr T expect(Args && ... args) const{
+            return owner_.except_impl(loc_, std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename ... Args>
+    constexpr T except_impl(
+        const std::source_location & loc,
+        Args && ... args
+    ) const {
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            #ifdef __DEBUG_INCLUDED
+            __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
+            #endif
+            std::terminate();
+        }
+    }
+    friend class _Loc;
+public:
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
+
+    [[nodiscard]] __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+
+
+    [[nodiscard]] __fast_inline constexpr
+    Result<T, E> & operator |(Result<T, E> && rhs){
+        if(is_err()) return *this;
+        else return rhs;
+    }
+
+    template<typename S>
+    requires requires(S s) {
+        { custom::result_converter<T, E, S>::convert(s) } -> std::convertible_to<Result<T, E>>;
+    }
+    [[nodiscard]] __fast_inline constexpr Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
+
+        // 修改map方法
+    template<
+        typename Fn,
+        typename FDecay = std::decay_t<Fn>,
+
+        typename TFReturn = std::invoke_result_t<FDecay, T>
+    >
+    [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
+        if (is_ok()) {
+            if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
+            else return Ok<TFReturn>(std::forward<Fn>(fn)(result_.unwrap()));
+        }
+        else return Err<E>(unwrap_err());
+    }
+    
+    // 修改and_then方法
+    template<
+        typename F,//函数的类型
+        // typename TFReturn = std::conditional_t<std::is_void_v<T>, std::invoke_result_t<typename F::operator()>, std::invoke_result_t<F>>,//函数返回值的类型
+        typename TFReturn = std::invoke_result_t<F, T>,//函数返回值的类型
+        typename TFReturnIsResult = is_result_t<TFReturn>,
+        typename TOk = std::conditional_t<
+            is_result_v<TFReturn>,
+            result_ok_type_t<TFReturn>, 
+            TFReturn
+        >
+        // 如果返回值本身是Result 那么返回它的解包类型，否则返回原类型
+    >
+    [[nodiscard]] __fast_inline constexpr 
+    auto and_then(F&& fn) const 
+        -> Result<TOk, E>
+    {
+        if (is_ok()){
+            if constexpr (is_result_v<TFReturn>){
+                if constexpr(std::is_void_v<T>) return (std::forward<F>(fn)());
+                else return (std::forward<F>(fn)(unwrap()));
+            }else{
+                if constexpr(std::is_void_v<T>)return Ok<TOk>(std::forward<F>(fn)());
+                else return Ok<TOk>(std::forward<F>(fn)(unwrap()));
+            }
+        }
+        return Err<E>(unwrap_err());
+    }
+
+
+    template<
+        typename Fn,//函数的类型
+        typename E2
+    >
+    [[nodiscard]] __fast_inline constexpr 
+    auto validate(Fn&& fn, E2 && err) const 
+        -> Result<T, E2>
+    {
+        
+        if(is_ok()){
+            if (false == std::forward<Fn>(fn)(unwrap())){
+                return Err<E2>(std::forward<E2>(err));
+            }else{
+                return Ok<T>(unwrap());
+            }
+        }else{
+            return Err<E2>(err);
+        }
+    }
+
+
+    template<typename Fn>
+    requires (!std::is_void_v<std::invoke_result_t<Fn, T>>)
+    [[nodiscard]]__fast_inline constexpr auto transform(Fn&& fn) const & {
+        // static_assert(>, "transform function must return a value");
+        return and_then([fn=std::forward<Fn>(fn)](auto&& val){
+            return fn(std::forward<decltype(val)>(val));
+        });
+    }
+
+    // template<typename Fn>
+    // __fast_inline constexpr auto transform(Fn&& fn) const & {
+    //     return and_then([fn=std::forward<Fn>(fn)](auto&& val) -> Result<
+    //         typename std::invoke_result_t<Fn, T>::ok_type,  // 推导新Ok类型
+    //         typename std::invoke_result_t<Fn, T>::err_type  // 推导新Err类型
+    //     > {
+    //         return fn(std::forward<decltype(val)>(val));
+    //     });
+    // }
+
+    template<typename Fn>
+    __fast_inline constexpr 
+    void if_ok(Fn && fn) const {
+        if (is_ok()) {
+            // std::forward<Fn>(fn)(unwrap());
+            std::forward<Fn>(fn)();
+        }
+    }
+
+    template<typename Fn>
+    __fast_inline constexpr 
+    void if_err(Fn && fn) const {
+        if (is_err()) {
+            std::forward<Fn>(fn)(unwrap_err());
+        }
+    }
+
+
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_ok() const {
+        return result_.is_ok();
+    }
+
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_err() const {
+        return result_.is_err();
+    }
+    
+
+
+    template<typename ... Args>
+    constexpr 
+    T expect(Args && ... args) const{
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            #ifdef __DEBUG_INCLUDED
+            PANIC_NSRC(std::forward<Args>(args)...);
+            #endif
+            exit(1);
+        }
+    }
+    
+    template<typename ... Args>
+    [[nodiscard]] constexpr
+    const Result & check(Args && ... args) const{
+        if(unlikely(is_err())){
+            #ifdef __DEBUG_INCLUDED
+            DEBUG_PRINTLN(unwrap_err(), std::forward<Args>(args)...);
+            #endif
+        }
+        return *this;
+    } 
+    
+    template<bool en, typename ... Args>
+    [[nodiscard]] constexpr 
+    const Result & check_if(Args && ... args) const{
+        if constexpr (en) {
+            return check(std::forward<Args>(args)...);
+        }
+        return *this;
+    }
+    [[nodiscard]] constexpr 
+    _Loc loc(const std::source_location & loca = std::source_location::current()) const{
+        return {*this, loca};
+    }
+
+    __fast_inline constexpr 
+    T unwrap() const {
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            exit(1);
+        }
+    }
+
+    struct _PanicWithOutUnlock{
+        ~_PanicWithOutUnlock(){
+            if (will_panic) {
+                PANIC("unsafe ignore without unlock");
+            }
+        }
+
+        void operator !(){
+            will_panic = false;
+        }
+    private:
+        bool will_panic = true;
+    };
+
+    __fast_inline constexpr 
+    auto operator +() const{
+        return _PanicWithOutUnlock{};
+    }
+
+    __fast_inline constexpr 
+    T operator !() const{
+        return result_.unwrap();
+    }
+
+    __fast_inline constexpr 
+    E unwrap_err() const {
+        if (likely(is_err())) {
+            return result_.unwrap_err();
+        } else {
+            exit(1);
+        }
+    }
+
+    constexpr Option<T> 
+    ok() const{
+        if (likely(is_ok())) {
+            return Some(result_.unwrap());
+        } else {
+            return None;
+        }
+    }
+
+    constexpr Option<E> 
+    err() const{
+        if (likely(is_err())) {
+            return Some(result_.unwrap_err());
+        } else {
+            return None;
+        }
+    }
+
+    constexpr bool contains(auto && val){
+        return is_ok() ? (unwrap() == static_cast<T>(val)) : false;
+    }
+
+    template<
+        typename FnOk,
+        typename FnErr,
+        typename TOkReturn = std::invoke_result_t<FnOk, T>,//函数返回值的类型
+        typename TErrReturn = std::invoke_result_t<FnErr, E>//函数返回值的类型
+    >
+    __fast_inline constexpr auto match(FnOk && fn_ok, FnErr && fn_err) const 
+    -> Result<TOkReturn, TErrReturn>{
+        if(is_ok()) return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
+        return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
+    }
+
+    template<typename U, typename Fn>
+    friend auto details::operator|(U&& val, Fn&& fn);
+
+        // 添加隐式类型转换运算符
+    template<typename U, typename V>
+    operator Result<U, V>() const {
+        if (is_ok()) {
+            return Ok<U>(unwrap());
+        } else {
+            return Err<V>(unwrap_err());
+        }
+    }
+};
+
+template<
+    typename T, 
+    typename E,
+    typename Tdecay = std::decay_t<T>,
+    typename Edecay = std::decay_t<E>
+>
+[[nodiscard]] Result<Tdecay, Edecay> rescond(bool cond, T&& ok, E&& err){
+    if(cond) return Ok<Tdecay>(std::forward<T>(ok));
+    else return Err<Edecay>(std::forward<E>(err));
+}
+
+// 特化版本处理Result类型
+template<typename T, typename E, typename Fn>
+auto operator|(const Result<T, E>& res, Fn&& fn) {
+    return res.and_then(std::forward<Fn>(fn));
+}
+
+template<typename T, typename E, typename Fn>
+auto operator|(Result<T, E>&& res, Fn&& fn) {
+    return std::move(res).and_then(std::forward<Fn>(fn));
+}
+
+template<typename E>
+Result(Err<E> && val) -> Result<void, E>;
+
+template<typename TDummy = void>
+Result() -> Result<void, void>;
+
+
+
+// Specialization for std::optional
+template <typename T, typename E>
+struct __unwrap_helper<Result<T, E>> {
+    using Obj = Result<T, E>;
+    // Unwrap a non-const rvalue optional
+    static constexpr bool is_ok(const Obj & obj) {
+        return obj.is_ok();
+    }
+    static constexpr T && unwrap(Obj && obj) {
+        return std::move(obj.unwrap());
+    }
+    
+    static constexpr T unwrap(const Obj & obj) {
+        return obj.unwrap();
+    }
+    
+    static constexpr E unexpected(Obj && obj) {
+        return std::move(obj.unwrap_err());
+    }
+
+    static constexpr E unexpected(const Obj & obj) {
+        return obj.unwrap_err();
+    }
+};
+
+
+}

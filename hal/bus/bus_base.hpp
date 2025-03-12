@@ -19,7 +19,9 @@ public:
         NO_ACK,
         NO_CS_PIN,
         ZERO_LENGTH,
-        VERIFY_FAILD
+        VERIFY_FAILD,
+
+        UNSPECIFIED = 0xff
     };
 
     ErrorType type = ErrorType::OK;

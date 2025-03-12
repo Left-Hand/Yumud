@@ -15,7 +15,7 @@ public:
         const T sr = N;
         const T fc = cfg.fc;
 
-        wc = std::tan(fc*M_PI/sr);
+        wc = std::tan(fc*T(PI)/sr);
         k1 = T(1.414)*wc;
         k2 = wc*wc;
         a = k2/(1 + k1 + k2);

@@ -1,5 +1,6 @@
 #include "bmm150.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 
@@ -19,6 +20,6 @@ void BMM150::reset(){
 
 }
 
-std::tuple<real_t, real_t, real_t> BMM150::getMagnet(){
-    return{0,0,0};
+Option<Vector3> BMM150::getMagnet(){
+    return Some{Vector3{0,0,0}};
 }

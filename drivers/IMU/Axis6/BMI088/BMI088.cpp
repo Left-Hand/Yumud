@@ -1,6 +1,7 @@
 #include "BMI088.hpp"
 #include "sys/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 
@@ -12,12 +13,12 @@ void BMI088::update(){
 
 }
 
-std::tuple<real_t, real_t, real_t> BMI088::getAcc(){
-    return {0,0,0};
+Option<Vector3> BMI088::getAcc(){
+    return Some{Vector3{0,0,0}};
 }
 
-std::tuple<real_t, real_t, real_t> BMI088::getGyr(){
-    return {0,0,0};
+Option<Vector3> BMI088::getGyr(){
+    return Some{Vector3{0,0,0}};
 }
 
 real_t BMI088::getTemperature(){

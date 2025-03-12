@@ -30,6 +30,8 @@
 #define ICM_MODE_GYR                        (1<<1)
 #define ICM_MODE_TEMP                        (1<<2)
 
+
+using namespace ymd;
 using namespace ymd::drivers;
 
 void ICM42605::init() {
@@ -97,10 +99,10 @@ void ICM42605::reset(){
 
 }
 
-std::tuple<real_t, real_t, real_t> ICM42605::getAcc(){
-    return {0,0,0};//TODO
+Option<Vector3> ICM42605::getAcc(){
+    return Some{Vector3{0,0,0}};//TODO
 }
 
-std::tuple<real_t, real_t, real_t> ICM42605::getGyr(){
-    return {0,0,0};//TODO
+Option<Vector3> ICM42605::getGyr(){
+    return Some{Vector3{0,0,0}};//TODO
 }

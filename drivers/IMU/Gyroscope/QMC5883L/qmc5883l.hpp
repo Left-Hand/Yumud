@@ -182,7 +182,7 @@ public:
 
     void update();
 
-    std::tuple<real_t, real_t, real_t> getMagnet() override;
+    Option<Vector3> getMagnet() override;
     
     bool verify();
 

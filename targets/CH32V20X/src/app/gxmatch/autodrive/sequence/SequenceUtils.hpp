@@ -4,8 +4,8 @@
 
 namespace gxm{
 
-using Ray = ymd::Ray2D_t<real_t>;
-using Line = ymd::Line2D_t<real_t>;
+using Ray = ymd::Ray2_t<real_t>;
+using Line = ymd::Line2_t<real_t>;
 using Vector2 = ymd::Vector2_t<real_t>;
 using Vector3 = ymd::Vector3_t<real_t>;
 using Quat = ymd::Quat_t<real_t>;

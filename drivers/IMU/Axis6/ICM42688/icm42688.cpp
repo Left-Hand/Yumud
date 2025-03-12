@@ -1,5 +1,6 @@
 #include "icm42688.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 scexpr real_t LSB_ACC_16G_x64 = real_t(64 *  0.0047856934);
@@ -102,7 +103,7 @@ void ICM42688::init(){
 
 void ICM42688::update(){
 	// requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 3);
-	requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 6);
+	requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
 
 
 	// requestData(uint8_t(RegAddress::GYR_DATA_X1), &gyr_data.x, 3);
@@ -117,21 +118,29 @@ void ICM42688::reset(){
 
 }
 
-std::tuple<real_t, real_t, real_t> ICM42688::getAcc(){
+Option<Vector3> ICM42688::getAcc(){
 
     auto conv = [this](const real_t x) -> real_t {
         return ((x * this -> lsb_acc_x64) >> 6);
     };
 
-    return {conv(acc_data.x), conv(acc_data.y),conv(acc_data.z)};
+    return Some{Vector3{
+		conv(acc_data_.x), 
+		conv(acc_data_.y),
+		conv(acc_data_.z)
+	}};
 }
 
 
-std::tuple<real_t, real_t, real_t> ICM42688::getGyr(){
+Option<Vector3> ICM42688::getGyr(){
 
     auto conv = [this](const real_t x) -> real_t {
         return ((x * this->lsb_gyr_x256) >> 8);
     };
 
-    return {conv(gyr_data.x), conv(gyr_data.y),conv(gyr_data.z)};
+    return Some{Vector3{
+		conv(gyr_data_.x), 
+		conv(gyr_data_.y),
+		conv(gyr_data_.z)
+	}};
 }

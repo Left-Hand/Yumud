@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class LIS2DW12:public Accerometer{
+class LIS2DW12:public Accelerometer{
 public:
 
     enum class DPS:uint8_t{
@@ -119,7 +119,7 @@ protected:
         uint8_t slp_mode_1:1;
         uint8_t slp_mode_sel:1;
         uint8_t :1;
-        uint8_t h_lactive:1;
+        uint8_t h_active:1;
         uint8_t lir:1;
         uint8_t pp_od:1;
         uint8_t selftest_mode:2;
@@ -217,7 +217,7 @@ public:
     
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    std::tuple<real_t, real_t, real_t> getAcc() override;
+    Option<Vector3> getAcc();
 };
 
 }

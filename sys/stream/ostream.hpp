@@ -309,14 +309,14 @@ private:
     void print_tuple(const std::tuple<Args...> & t){
         using TupleType = std::tuple<Args...>;
         constexpr size_t tupleSize = std::tuple_size<TupleType>::value;
-        *this << '(';
+        *this << brackets<'('>();
         std::apply(
             [&](const auto&... args) {
                 ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t) ? (*this << args << ',') : (*this << args)), ...);
             },
             t
         );
-        *this << ')';
+        *this << brackets<')'>();
     }
 public:
     template <typename T>

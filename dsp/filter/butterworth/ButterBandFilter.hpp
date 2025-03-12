@@ -1,8 +1,6 @@
 #pragma once
 
-#include <numbers>
 #include "sys/math/real.hpp"
-#include <cmath>
 
 namespace ymd::dsp{
 

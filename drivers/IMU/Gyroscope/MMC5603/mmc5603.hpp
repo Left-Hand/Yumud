@@ -52,7 +52,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    std::tuple<real_t, real_t, real_t> getMagnet() override;
+    Option<Vector3> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;

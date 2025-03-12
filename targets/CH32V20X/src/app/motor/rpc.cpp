@@ -3,7 +3,7 @@
 #include "sys/clock/time.hpp"
 
 #include "robots/rpc/arg_parser.hpp"
-#include "types/vector3/vector3_t.hpp"
+#include "types/vector3/vector3.hpp"
 
 #include "rpc.hpp"
 

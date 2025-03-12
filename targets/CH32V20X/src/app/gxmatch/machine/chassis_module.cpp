@@ -150,7 +150,7 @@ void ChassisModule::tick800(){
         // auto time = Sys::t;
         // auto delta = solver.inverse(Vector2{0, 0.00_r}, 0.7_r);
         // wheels.setCurrent(delta);
-        acc_gyr_sensor_.update();
+        // acc_gyr_sensor_.update();
         // mag_sensor_.update();
 
         // auto mag = Vector3(mag_sensor_.getMagnet());

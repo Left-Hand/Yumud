@@ -461,8 +461,8 @@ void pso_tb(){
         // return sin(p.x) / p.x;
     
         const auto x = p.x;
-        // return x * (2-x);
-        return -ABS(x);
+        return x * (2-x);
+        // return -ABS(x);
         // return sin(x);
         // return CLAMP(1200 * cos(x) + (120-x) * x, 0, 10000);
         // return p.x;
@@ -532,10 +532,10 @@ void dsp_main(){
         // return 0.0001_r;
     };
 
-    // butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
+    butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
     // butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
 
-    butterworth_highpass_tb<T, n>(sig_in, fh, fs);
+    // butterworth_highpass_tb<T, n>(sig_in, fh, fs);
     // butterworth_lowpass_tb<T, n>(sig_in, fl, fs);
     // dtmf_tb(fs);
     // pso_tb();

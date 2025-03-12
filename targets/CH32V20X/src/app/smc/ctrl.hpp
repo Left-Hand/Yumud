@@ -3,8 +3,8 @@
 #include "../sys/core/system.hpp"
 
 #include "sys/math/real.hpp"
-#include "../types/rect2/rect2_t.hpp"
-#include "../types/rgb.h"
+#include "types/rect2/rect2.hpp"
+#include "types/rgb.h"
 #include "body.hpp"
 
 

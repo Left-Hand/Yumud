@@ -21,9 +21,9 @@
  */
 
 #include "sys/core/platform.h"
-#include "types/vector3/vector3_t.hpp"
-#include "types/basis/Basis_t.hpp"
-#include "types/quat/Quat_t.hpp"
+#include "types/vector3/vector3.hpp"
+#include "types/basis/Basis.hpp"
+#include "types/quat/Quat.hpp"
 
 namespace ymd{
 

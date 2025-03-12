@@ -18,9 +18,12 @@
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 #include "drivers/Actuator/Bridge/DRV8301/DRV8301.hpp"
 
-#include "smo/SmoObserver.hpp"
-#include "lbg/RolbgObserver.hpp"
-#include "nonlinear/NonlinearObserver.hpp"
+#include "dsp/observer/smo/SmoObserver.hpp"
+#include "dsp/observer/lbg/RolbgObserver.hpp"
+#include "dsp/observer/nonlinear/NonlinearObserver.hpp"
+
+#include "sys/polymorphism/traits.hpp"
+
 #include "utils.hpp"
 #include "../digiPW/sogi/spll.hpp"
 #include "sogi/sogi.hpp"
@@ -59,13 +62,18 @@ __inline constexpr real_t degrees(const real_t deg){
     return deg * real_t(TAU / 180);
 }
 
+TRAIT_STRUCT(SensorlessObserverTrait,
+    TRAIT_METHOD(void, reset),
+	TRAIT_METHOD(void, update, iq_t<16>, iq_t<16>, iq_t<16>, iq_t<16>),
+    TRAIT_METHOD(iq_t<16>, theta)
+)
 
 class SensorlessEncoder:public EncoderIntf{
 protected:
-    SensorlessObserverIntf & ob_;
+    SensorlessObserverTrait & ob_;
 public:
     SensorlessEncoder(
-        SensorlessObserverIntf & ob
+        SensorlessObserverTrait & ob
     ):
         ob_(ob){;}
     real_t getLapPosition() = 0;

@@ -1,4 +1,5 @@
 #include "ImuFusion.hpp"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd;
 
@@ -54,6 +55,7 @@ void ImuFusion::update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 
     aeyInt += aey;
     aezInt += aez;
 
+//     DEBUG_PRINTLN(aex, aexInt);
     //磁力计矫正
     if (Mx != 0 && My != 0 && Mz != 0) {
 
@@ -104,10 +106,14 @@ void ImuFusion::update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 
     Gy += (aey * akp + aeyInt * aki) + (mey * mkp + meyInt * mki);
     Gz += (aez * akp + aezInt * aki) + (mez * mkp + mezInt * mki);
 
-    this->quat_.x += real_t(0.5f) * (-this->quat_.y * Gx - this->quat_.z * Gy - this->quat_.w * Gz) * this->delta;
-    this->quat_.y += real_t(0.5f) * (this->quat_.x * Gx + this->quat_.z * Gz - this->quat_.w * Gy) * this->delta;
-    this->quat_.z += real_t(0.5f) * (this->quat_.x * Gy - this->quat_.y * Gz + this->quat_.w * Gx) * this->delta;
-    this->quat_.w += real_t(0.5f) * (this->quat_.x * Gz + this->quat_.y * Gy - this->quat_.z * Gx) * this->delta;
+    auto quat = this->quat_;
+    const auto delta = this->delta; 
+    quat.x += real_t(0.5f) * (-quat.y * Gx - quat.z * Gy - quat.w * Gz) * delta;
+    quat.y += real_t(0.5f) * (quat.x * Gx + quat.z * Gz - quat.w * Gy) * delta;
+    quat.z += real_t(0.5f) * (quat.x * Gy - quat.y * Gz + quat.w * Gx) * delta;
+    quat.w += real_t(0.5f) * (quat.x * Gz + quat.y * Gy - quat.z * Gx) * delta;
 
-    this->quat_.normalize();
+    this->quat_ = quat.normalized();
+
+
 }

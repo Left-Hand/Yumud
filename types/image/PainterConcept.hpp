@@ -4,7 +4,7 @@
 #include "image.hpp"
 
 #include "sys/stream/stream.hpp"
-#include "types/rect2/rect2_t.hpp"
+#include "types/rect2/rect2.hpp"
 #include "types/color/color_t.hpp"
 #include "types/rgb.h"
 

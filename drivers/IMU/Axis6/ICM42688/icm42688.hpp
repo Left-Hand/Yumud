@@ -162,10 +162,8 @@ protected:
     real_t lsb_gyr_x256;
 
     
-    struct{
-        Vec3i16 acc_data;
-        Vec3i16 gyr_data;
-    };
+    Vector3_t<int16_t> acc_data_;
+    Vector3_t<int16_t> gyr_data_;
 
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);
@@ -182,8 +180,8 @@ public:
 
     void reset();
 
-    std::tuple<real_t, real_t, real_t> getAcc() override;
-    std::tuple<real_t, real_t, real_t> getGyr() override;
+    Option<Vector3> getAcc() override;
+    Option<Vector3> getGyr() override;
 };
 
 }

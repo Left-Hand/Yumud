@@ -10,6 +10,40 @@
 // https://taylorconor.com/blog/enum-reflection/
 
 
+
+
+// template<typename T>
+// struct function_traits;
+
+
+// template<typename Functor, typename Ret, typename... Args>
+// struct function_traits<Ret(Functor::*)(Args...) > {
+//     using return_type = Ret;
+//     using args_type = std::tuple<Args...>;
+// };
+
+// template<typename Functor, typename... Args>
+// struct function_traits<void(Functor::*)(Args...)> {
+//     using return_type = void;
+//     using args_type = std::tuple<Args...>;
+// };
+
+// template<typename Functor, typename Ret>
+// struct function_traits<Ret(Functor::*)(void)> {
+//     using return_type = Ret;
+//     using args_type = std::tuple<void>;
+// };
+
+// template<typename Functor>
+// struct function_traits<void(Functor::*)(void)> {
+//     using return_type = void;
+//     using args_type = std::tuple<void>;
+// };
+
+
+
+
+
 template <size_t Size>
 struct bytes_to_uint;
 

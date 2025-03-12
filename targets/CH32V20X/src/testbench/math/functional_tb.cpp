@@ -6,7 +6,7 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "utils/rustlike/Result.hpp"
+#include "utils/Result.hpp"
 #include <bitset>
 #include <ranges>
 

@@ -3,7 +3,7 @@
 #include "sys/core/platform.h"
 
 #include "sys/math/real.hpp"
-#include "types/vector2/vector2_t.hpp"
+#include "types/vector2/vector2.hpp"
 
 
 namespace ymd::intp{

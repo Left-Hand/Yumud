@@ -60,8 +60,8 @@ protected:
         bus_.setDataBits(_data_bits);
     }
     
-    void setBaudRate(const uint buad){
-        bus_.setBaudRate(buad);
+    void setBaudRate(const uint baud){
+        bus_.setBaudRate(baud);
     }
 };
 
@@ -103,11 +103,11 @@ public:
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_fulldup_bus<BusType>
-    BusError transferSingle(T & datarx, T datatx, Continuous cont = DISC);
+    BusError transferSingle(T & data_rx, T data_tx, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
-    T transferSingle(T datatx, Continuous cont = DISC);
+    T transferSingle(T data_tx, Continuous cont = DISC);
 };
 
 template <typename BusType>
