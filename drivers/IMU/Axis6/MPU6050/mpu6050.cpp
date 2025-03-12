@@ -5,6 +5,7 @@
 
 #ifdef MPU6050_DEBUG
 #undef MPU6050_DEBUG
+#define MPU6050_TODO(...) TODO()
 #define MPU6050_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MPU6050_PANIC(...) PANIC{__VA_ARGS__}
 #define MPU6050_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
@@ -12,6 +13,7 @@
 #define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
 #else
 #define MPU6050_DEBUG(...)
+#define MPU6050_TODO(...) PANIC_NSRC()
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #define READ_REG(reg) !+readReg(reg.address, reg);
@@ -25,21 +27,45 @@ using namespace ymd::drivers;
 using DeviceResult = MPU6050::DeviceResult;
 
 DeviceResult MPU6050::writeReg(const uint8_t addr, const uint8_t data){
-    auto err = i2c_drv_.writeReg(uint8_t(addr), data);
-    MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
-    return make_result(err);
+    if(p_i2c_drv_){
+        auto err = p_i2c_drv_->writeReg(uint8_t(addr), data);
+        MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
+        return make_result(err);
+    }else if(p_spi_drv_){
+        MPU6050_TODO();
+        __builtin_unreachable();
+    }else{
+        MPU6050_PANIC("no drv");
+        __builtin_unreachable();
+    }
 }
 
 DeviceResult MPU6050::readReg(const uint8_t addr, uint8_t & data){
-    auto err = i2c_drv_.readReg(uint8_t(addr), data);
-    MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err);
-    return make_result(err);
+    if(p_i2c_drv_){
+        auto err = p_i2c_drv_->readReg(uint8_t(addr), data);
+        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err);
+        return make_result(err);
+    }else if(p_spi_drv_){
+        MPU6050_TODO();
+        __builtin_unreachable();
+    }else{
+        MPU6050_PANIC("no drv");
+        __builtin_unreachable();
+    }
 }
 
 DeviceResult MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    auto err = i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB);
-    MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
-    return make_result(err);
+    if(p_i2c_drv_){
+        auto err = p_i2c_drv_->readMulti((uint8_t)reg_addr, datas, len, MSB);
+        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
+        return make_result(err);
+    }else if(p_spi_drv_){
+        MPU6050_TODO();
+        __builtin_unreachable();
+    }else{
+        MPU6050_PANIC("no drv");
+        __builtin_unreachable();
+    }
 }
 
 
@@ -47,9 +73,21 @@ bool MPU6050::verify(){
     //0x75 0x68
     uint8_t data = 0;
     auto err = readReg(0x75, data);
-    return 
-        MPU6050_ASSERT(err.is_ok(), "read who am I failed") and 
-        MPU6050_ASSERT(data == 0x68, "who am I data wrong");
+    
+    if(!MPU6050_ASSERT(err.is_ok(), "read who am I failed")) return false;
+
+    const auto correct_data = package2whoami(package_);
+    if(data != correct_data){
+        MPU6050_DEBUG("who am I data wrong");
+        switch(data){
+            case package2whoami(Package::MPU6050): MPU6050_PANIC("this is MPU6050 in fact"); break;
+            case package2whoami(Package::MPU6500): MPU6050_PANIC("this is MPU6500 in fact"); break;
+            case package2whoami(Package::MPU9250): MPU6050_PANIC("this is MPU9250 in fact"); break;
+        }
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -68,7 +106,7 @@ void MPU6050::init(){
 }
 
 void MPU6050::update(){
-    data_valid = this->requestData(RegAddress::AccX, &acc_x_reg, 7).is_ok();
+    data_valid = this->requestData(acc_x_reg.address, &acc_x_reg, 7).is_ok();
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getAcc(){

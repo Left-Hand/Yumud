@@ -3,13 +3,16 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-#include "sys/utils/Option.hpp"
-#include "sys/utils/Result.hpp"
-
 namespace ymd::drivers{
 
 class MPU6050:public Axis6{
 public:
+    enum class Package:uint8_t{
+        MPU6050 = 0x68,
+        MPU6500 = 0x70,
+        MPU9250 = 0x71
+    };
+
     using DeviceResult = Result<void, BusError>;
     __inline DeviceResult make_result(const BusError res){
         if(res.ok()) return Ok();
@@ -38,23 +41,14 @@ public:
     };
 
 protected:
-    hal::I2cDrv i2c_drv_;
+    using I2cDrvProxy = std::optional<hal::I2cDrv>;
+    using SpiDrvProxy = std::optional<hal::SpiDrv>;
+    I2cDrvProxy p_i2c_drv_ = std::nullopt;
+    SpiDrvProxy p_spi_drv_ = std::nullopt;
 
-
-    
-    #define REG16I_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16i<>{scexpr uint8_t address = addr; int16_t :16;} name = {};
-
-    #define REG16_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16<>{scexpr uint8_t address = addr; int16_t :16;} name = {};
-    
-    #define REG8_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16i<>{scexpr uint8_t address = addr; int16_t :16;} name = {};
-
-
-    
+    using RegAddress = uint8_t;    
     struct GyrConfReg:public Reg8<>{
-        scexpr uint8_t address = 0x1b;
+        scexpr RegAddress address = 0x1b;
 
         const uint8_t __resv__:3 = 0;
         uint8_t fs_sel:2;
@@ -65,7 +59,7 @@ protected:
     
 
     struct AccConfReg:public Reg8<>{
-        scexpr uint8_t address = 0x1c;
+        scexpr RegAddress address = 0x1c;
 
         const uint8_t __resv__:3 = 0;
         uint8_t afs_sel:2;
@@ -73,6 +67,15 @@ protected:
         uint8_t yg_st:1 = 0;
         uint8_t xg_st:1 = 0;
     } acc_conf_reg = {};
+
+    struct AccConf2Reg:public Reg8<>{
+        scexpr RegAddress address = 0x1c;
+
+        uint8_t a_dlpf_cfg: 3;
+        uint8_t accel_fs_hoice_b:1;
+        const uint8_t __resv__:3 = 0;
+
+    } acc_conf2_reg = {};
     
     REG16I_QUICK_DEF(0x3B, AccXReg, acc_x_reg);
     REG16I_QUICK_DEF(0x3D, AccYReg, acc_y_reg);
@@ -84,26 +87,23 @@ protected:
     REG16I_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
     REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
     
-
+    Package package_ = Package::MPU6050;
     real_t acc_scaler = 0;
     real_t gyr_scaler = 0;
 
+    [[nodiscard]] static constexpr 
+    uint8_t package2whoami(const Package package){return uint8_t(package);}
+
     bool data_valid = false;
 
-    enum RegAddress:uint8_t{
-        AccX = 0x3b,
-        AccY = 0x3d,
-        AccZ = 0x3f,
-        Temp = 0x41,
-        GyrX = 0x43,
-        GyrY = 0x45,
-        GyrZ = 0x47,
-    };
 
+    // [[nodiscard]] virtual DeviceResult writeReg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] DeviceResult writeReg(const uint8_t addr, const uint8_t data);
 
+    // [[nodiscard]] virtual DeviceResult readReg(const uint8_t addr, uint8_t & data);
     [[nodiscard]] DeviceResult readReg(const uint8_t addr, uint8_t & data);
 
+    // [[nodiscard]] virtual DeviceResult requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
     [[nodiscard]] DeviceResult requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculateAccScale(const AccRange range){
@@ -134,13 +134,21 @@ protected:
                 return real_t(ANGLE2RAD(2000));
         }
     }
+
+    MPU6050(const hal::I2cDrv & i2c_drv, const Package package):
+        p_i2c_drv_(i2c_drv),
+        package_(package){;}
+
 public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
 
-    MPU6050(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MPU6050(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(bus, i2c_addr){;}
+    MPU6050(const hal::I2cDrv & i2c_drv):
+        MPU6050(i2c_drv, Package::MPU6050){;}
+    MPU6050(hal::I2cDrv && i2c_drv):
+        MPU6050(std::move(i2c_drv), Package::MPU6050){;}
+    MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):
+        MPU6050(hal::I2cDrv(bus, i2c_addr), Package::MPU6050){;}
 
     bool verify();
 

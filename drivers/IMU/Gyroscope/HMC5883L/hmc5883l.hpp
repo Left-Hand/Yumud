@@ -160,7 +160,7 @@ public:
     std::tuple<real_t, real_t, real_t> getMagnet() override;
 
     bool verify();
-    void update() override;
+    void update();
 
 
     bool busy();

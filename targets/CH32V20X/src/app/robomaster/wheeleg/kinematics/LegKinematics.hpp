@@ -2,8 +2,20 @@
 
 #include "sys/math/real.hpp"
 #include "types/vector2/vector2.hpp"
+#include "sys/utils/Option.hpp"
 
 namespace ymd::rmst{
+
+
+template<arithmetic T>
+struct Radian_t{
+    __inline constexpr explicit 
+    Radian_t(const auto & rad):rad_(rad){}
+    __inline constexpr explicit 
+    operator T() const{return rad_;}
+private:
+    T rad_;
+};
 
 class LegKinematics{
     struct Config{
@@ -29,6 +41,9 @@ class LegKinematics{
         hipbone_length_ = cfg.hipbone_length;
         thigh_length_ = cfg.thigh_length;
         shank_length_ = cfg.shank_length;
+    }
+
+    Option<Vector2> forward(const real_t , const real_t knee_angle){
     }
 
     

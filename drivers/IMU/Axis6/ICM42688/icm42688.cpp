@@ -102,7 +102,7 @@ void ICM42688::init(){
 
 void ICM42688::update(){
 	// requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 3);
-	requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 6);
+	requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
 
 
 	// requestData(uint8_t(RegAddress::GYR_DATA_X1), &gyr_data.x, 3);
@@ -123,7 +123,11 @@ std::tuple<real_t, real_t, real_t> ICM42688::getAcc(){
         return ((x * this -> lsb_acc_x64) >> 6);
     };
 
-    return {conv(acc_data.x), conv(acc_data.y),conv(acc_data.z)};
+    return {
+		conv(acc_data_.x), 
+		conv(acc_data_.y),
+		conv(acc_data_.z)
+	};
 }
 
 
@@ -133,5 +137,9 @@ std::tuple<real_t, real_t, real_t> ICM42688::getGyr(){
         return ((x * this->lsb_gyr_x256) >> 8);
     };
 
-    return {conv(gyr_data.x), conv(gyr_data.y),conv(gyr_data.z)};
+    return {
+		conv(gyr_data_.x), 
+		conv(gyr_data_.y),
+		conv(gyr_data_.z)
+	};
 }
