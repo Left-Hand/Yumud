@@ -13,11 +13,13 @@ public:
         MPU9250 = 0x71
     };
 
-    using DeviceResult = Result<void, BusError>;
-    __inline DeviceResult make_result(const BusError res){
-        if(res.ok()) return Ok();
-        else return Err(res); 
-    }
+    using Error = BusError;
+
+    // using Result<void, BusError> = Result<void, BusError>;
+    // __inline Result<void, BusError> make_result(const BusError res){
+    //     if(res.ok()) return Ok();
+    //     else return Err(res); 
+    // }
 
 
     scexpr uint8_t default_i2c_addr = 0xd0;
@@ -47,6 +49,7 @@ protected:
     SpiDrvProxy p_spi_drv_ = std::nullopt;
 
     using RegAddress = uint8_t;    
+
     struct GyrConfReg:public Reg8<>{
         scexpr RegAddress address = 0x1b;
 
@@ -97,14 +100,14 @@ protected:
     bool data_valid = false;
 
 
-    // [[nodiscard]] virtual DeviceResult writeReg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] DeviceResult writeReg(const uint8_t addr, const uint8_t data);
+    // [[nodiscard]] virtual Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
 
-    // [[nodiscard]] virtual DeviceResult readReg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] DeviceResult readReg(const uint8_t addr, uint8_t & data);
+    // [[nodiscard]] virtual Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
 
-    // [[nodiscard]] virtual DeviceResult requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] DeviceResult requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculateAccScale(const AccRange range){
         constexpr double g = 9.806;
@@ -135,10 +138,7 @@ protected:
         }
     }
 
-    MPU6050(const hal::I2cDrv & i2c_drv, const Package package):
-        p_i2c_drv_(i2c_drv),
-        package_(package){;}
-
+    MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
@@ -156,23 +156,37 @@ public:
     
     void update();
 
-    [[nodiscard]] std::tuple<real_t, real_t, real_t> getAcc() override;
-    [[nodiscard]] std::tuple<real_t, real_t, real_t> getGyr() override;
-
-    [[nodiscard]] Option<std::tuple<real_t, real_t, real_t>> getAcc2(){
-        return Some{getAcc()};
-    }
-
-    [[nodiscard]] Option<std::tuple<real_t, real_t, real_t>> getGyr2(){
-        return Some{getGyr()};
-    }
-
-
+    [[nodiscard]] Option<Vector3> getAcc();
+    [[nodiscard]] Option<Vector3> getGyr();
     [[nodiscard]] Option<real_t> getTemperature();
 
     void setAccRange(const AccRange range);
     void setGyrRange(const GyrRange range);
+
+    void reset();
 };
 
-
 };
+
+namespace ymd::custom{
+    template<typename T>
+    struct result_converter<T, drivers::MPU6050::Error, BusError> {
+        static Result<T, drivers::MPU6050::Error> convert(const BusError berr){
+            using Error = drivers::MPU6050::Error;
+            using BusError = BusError;
+            
+            if(berr.ok()) return Ok();
+
+            Error err = [](const BusError berr_){
+                switch(berr_.type){
+                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+
+                    // case BusError::I2C_NOT_READY: return MPU6050::Error::I2C_NOT_READY;
+                    default: return Error::UNSPECIFIED;
+                }
+            }(berr);
+
+            return Err(err); 
+        }
+    };
+}

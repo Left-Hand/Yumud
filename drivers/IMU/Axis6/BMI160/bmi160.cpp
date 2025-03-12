@@ -1,8 +1,8 @@
 #include "bmi160.hpp"
 #include "sys/debug/debug.hpp"
 
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 #define BMI160_DEBUG
 
@@ -63,28 +63,28 @@ void BMI160::reset(){
     writeCommand(uint8_t(Command::SOFT_RESET));
 }
 
-std::tuple<real_t, real_t, real_t> BMI160::getAcc(){
+Option<Vector3> BMI160::getAcc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
-    return {
+    return Some{Vector3{
         conv(acc_reg.x),
         conv(acc_reg.y),
         conv(acc_reg.z)
-    };
+    }};
 }
 
-std::tuple<real_t, real_t, real_t> BMI160::getGyr(){
+Option<Vector3> BMI160::getGyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
-    return {
+    return Some{Vector3{
         conv(gyr_reg.x),
         conv(gyr_reg.y),
         conv(gyr_reg.z)
-    };
+    }};
 }
 
 void BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){

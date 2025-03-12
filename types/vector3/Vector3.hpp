@@ -283,9 +283,12 @@ __fast_inline constexpr auto normal(const Vector3_t<arithmetic auto> & from, con
     return (to - from).normalized();
 }
 
-}
-__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const Vector3_t<auto> & value){
     return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.splitter() << value.z << os.brackets<')'>();
+}
+
+
+using Vector3 = Vector3_t<real_t>;
 }
 
 

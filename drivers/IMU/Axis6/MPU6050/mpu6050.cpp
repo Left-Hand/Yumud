@@ -1,7 +1,7 @@
 #include "mpu6050.hpp"
 #include "sys/debug/debug.hpp"
 
-// #define MPU6050_DEBUG
+#define MPU6050_DEBUG
 
 #ifdef MPU6050_DEBUG
 #undef MPU6050_DEBUG
@@ -24,41 +24,41 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using DeviceResult = MPU6050::DeviceResult;
+using Error = MPU6050::Error;
 
-DeviceResult MPU6050::writeReg(const uint8_t addr, const uint8_t data){
-    if(p_i2c_drv_){
+Result<void, Error> MPU6050::writeReg(const uint8_t addr, const uint8_t data){
+    if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->writeReg(uint8_t(addr), data);
         MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
-        return make_result(err);
+        return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
         __builtin_unreachable();
     }else{
-        MPU6050_PANIC("no drv");
+        MPU6050_PANIC("no drv", p_i2c_drv_.has_value());
         __builtin_unreachable();
     }
 }
 
-DeviceResult MPU6050::readReg(const uint8_t addr, uint8_t & data){
-    if(p_i2c_drv_){
+Result<void, Error> MPU6050::readReg(const uint8_t addr, uint8_t & data){
+    if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->readReg(uint8_t(addr), data);
-        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err);
-        return make_result(err);
+        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err, addr);
+        return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
         __builtin_unreachable();
     }else{
-        MPU6050_PANIC("no drv");
+        MPU6050_PANIC("no drv", p_i2c_drv_.has_value());
         __builtin_unreachable();
     }
 }
 
-DeviceResult MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    if(p_i2c_drv_){
+Result<void, Error> MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
+    if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->readMulti((uint8_t)reg_addr, datas, len, MSB);
         MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
-        return make_result(err);
+        return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
         __builtin_unreachable();
@@ -68,18 +68,22 @@ DeviceResult MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const
     }
 }
 
-
+MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
+    p_i2c_drv_(i2c_drv),
+    package_(package){
+    }
+    
 bool MPU6050::verify(){
-    //0x75 0x68
-    uint8_t data = 0;
-    auto err = readReg(0x75, data);
+
+    reset();
+    uint8_t id = 0;
+    auto err = readReg(0x75, id);
     
     if(!MPU6050_ASSERT(err.is_ok(), "read who am I failed")) return false;
 
-    const auto correct_data = package2whoami(package_);
-    if(data != correct_data){
-        MPU6050_DEBUG("who am I data wrong");
-        switch(data){
+    const auto correct_id = package2whoami(package_);
+    if(id != correct_id){
+        switch(id){
             case package2whoami(Package::MPU6050): MPU6050_PANIC("this is MPU6050 in fact"); break;
             case package2whoami(Package::MPU6500): MPU6050_PANIC("this is MPU6500 in fact"); break;
             case package2whoami(Package::MPU9250): MPU6050_PANIC("this is MPU9250 in fact"); break;
@@ -109,19 +113,19 @@ void MPU6050::update(){
     data_valid = this->requestData(acc_x_reg.address, &acc_x_reg, 7).is_ok();
 }
 
-std::tuple<real_t, real_t, real_t> MPU6050::getAcc(){
+Option<Vector3> MPU6050::getAcc(){
     real_t x = uni(acc_x_reg) * acc_scaler;
     real_t y = uni(acc_y_reg) * acc_scaler;
     real_t z = uni(acc_z_reg) * acc_scaler;
-    return {x, y, z};
+    return  Some{Vector3{x, y, z}};
 }
 
-std::tuple<real_t, real_t, real_t> MPU6050::getGyr(){
+Option<Vector3> MPU6050::getGyr(){
     // if(!data_valid) return None;
     real_t x = uni(gyr_x_reg) * gyr_scaler;
     real_t y = uni(gyr_y_reg) * gyr_scaler;
     real_t z = uni(gyr_z_reg) * gyr_scaler;
-    return {x, y, z};
+    return Some{Vector3{x, y, z}};
 }
 
 Option<real_t> MPU6050::getTemperature(){
@@ -145,4 +149,11 @@ void MPU6050::setGyrRange(const GyrRange range){
     WRITE_REG(reg);
     
     this->gyr_scaler = this->calculateGyrScale(range);
+}
+
+
+void MPU6050::reset(){
+    if(p_i2c_drv_){
+        p_i2c_drv_->release();
+    }
 }

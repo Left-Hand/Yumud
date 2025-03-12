@@ -15,6 +15,7 @@
 #endif
 
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 void QMC5883L::init(){
@@ -64,15 +65,12 @@ void QMC5883L::update(){
     requestPool(RegAddress::MagX, &magXReg, 3);
 }
 
-std::tuple<real_t, real_t, real_t> QMC5883L::getMagnet(){
-    return {
+Option<Vector3> QMC5883L::getMagnet(){
+    return Some{Vector3{
         uni(int16_t(magXReg)) * fs,
         uni(int16_t(magYReg)) * fs,
         uni(int16_t(magZReg)) * fs
-        // int16_t(magXReg), int16_t(magYReg), int16_t(magZReg)
-        // 0,0,0
-        // 0, 0, 0
-    };
+    }};
 }
 
 bool QMC5883L::verify(){

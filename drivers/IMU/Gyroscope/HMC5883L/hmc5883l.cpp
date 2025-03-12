@@ -1,6 +1,7 @@
 #include "hmc5883l.hpp"
 #include "sys/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 // #define HMC5883L_DEBUG
@@ -57,12 +58,12 @@ void HMC5883L::setMode(const Mode mode){
     writeReg(RegAddress::Mode, modeReg);
 }
 
-std::tuple<real_t, real_t, real_t> HMC5883L::getMagnet(){
+Option<Vector3> HMC5883L::getMagnet(){
     real_t x = From12BitToGauss(magXReg);
     real_t y = From12BitToGauss(magYReg);
     real_t z = From12BitToGauss(magZReg);
 
-    return std::make_tuple(x,y,z);
+    return Some(Vector3(x,y,z));
 }
 
 bool HMC5883L::verify(){

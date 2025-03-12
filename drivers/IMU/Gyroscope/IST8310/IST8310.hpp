@@ -44,7 +44,7 @@ public:
 
     void sleep(const bool en = true);
 
-    std::tuple<real_t, real_t, real_t> getMagnet() override;
+    Option<Vector3> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;

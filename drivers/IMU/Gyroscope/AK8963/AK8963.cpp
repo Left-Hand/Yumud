@@ -78,6 +78,6 @@ Result<void, Error> AK8963::disableI2c(){
     return Ok();
 }
 
-std::tuple<real_t, real_t, real_t> AK8963::getMagnet(){
-    return {0,0,0};
+Option<Vector3> AK8963::getMagnet(){
+    return Some{Vector3{0,0,0}};
 }

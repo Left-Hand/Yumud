@@ -20,14 +20,16 @@ void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
 
     while(true){
         mpu.update();
-        // auto [x,y,z] = +(+mpu.getGyr2());
-        auto [x,y,z] = (+mpu.getGyr2());
         // auto [x,y,z] =/ mpu.getGyr();
-        // auto [x,y,z] = mpu.getAcc();
-        // const auto acc = mpu.getAcc();
-        // logger.noBrackets();
-        // logger.println(acc);
-        logger.println(x,y,z);
+
+        // DEBUG_PRINTLN(mpu.getGyr2().exists_);
+
+        // auto gyr = mpu.getGyr();
+        DEBUG_PRINTLN(mpu.getGyr().unwrap());
+
+        // auto [x,y,z] = (mpu.getGyr2().unwrap());
+
+        // logger.println(x,y,z);
         // delay(2);
     }
 }
@@ -35,7 +37,9 @@ void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
 void mpu6050_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    I2cSw i2c{portA[12], portA[15]};
+    DEBUGGER.noBrackets();
+    // I2cSw i2c{portA[12], portA[15]};
+    I2cSw i2c{portB[6], portB[7]};
     i2c.init(400_KHz);
     // i2c.init();
 

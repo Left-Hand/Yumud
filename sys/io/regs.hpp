@@ -9,7 +9,7 @@ namespace ymd{
 struct __RegBase{};
 
 template<typename T, typename D = T>
-struct __RegC_t:public __RegBase{
+struct alignas(sizeof(T)) __RegC_t:public __RegBase{
 protected:
     static constexpr bool is_crtp = std::is_same_v<T, D>;
     static constexpr bool is_non_crtp = !is_crtp;

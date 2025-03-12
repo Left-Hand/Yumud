@@ -173,8 +173,8 @@ public:
 
     void reset();
 
-    std::tuple<real_t, real_t, real_t> getAcc() override;
-    std::tuple<real_t, real_t, real_t> getGyr() override;
+    Option<Vector3> getAcc();
+    Option<Vector3> getGyr();
 };
 
 }

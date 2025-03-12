@@ -17,6 +17,13 @@ private:
     T rad_;
 };
 
+using Radian = Radian_t<real_t>;
+
+using RadianPair = std::tuple<Radian, Radian>;
+
+
+
+
 class LegKinematics{
     struct Config{
         real_t rotor_length;
@@ -43,15 +50,26 @@ class LegKinematics{
         shank_length_ = cfg.shank_length;
     }
 
-    Option<Vector2> forward(const real_t , const real_t knee_angle){
+    Option<Vector2> forward(const Radian l_rad, const Radian r_rad){
+        return _forward(l_rad, r_rad);
     }
 
-    
+    Option<RadianPair> inverse(Vector2 const pos){
+        return _inverse(pos);
+    }
 private:
     real_t rotor_length_;
     real_t hipbone_length_;
     real_t thigh_length_;
     real_t shank_length_;
+
+    Option<Vector2> _forward(const Radian l_rad, const Radian r_rad) const{
+        return Some(Vector2(0,0));
+    }
+    
+    Option<RadianPair> _inverse(Vector2 const pos) const {
+        return Some(RadianPair{Radian(0),Radian(0)});
+    }
 };
 // }
 

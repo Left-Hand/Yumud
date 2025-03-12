@@ -40,7 +40,7 @@ void bmi160_main(){
 
         delay(20);
         bmi.update();
-        Vector3_t<real_t> acc = bmi.getAcc();
+        Vector3_t<real_t> acc = bmi.getAcc().unwrap();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

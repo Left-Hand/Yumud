@@ -532,13 +532,13 @@ void dsp_main(){
         // return 0.0001_r;
     };
 
-    // butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
+    butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
     // butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
 
     // butterworth_highpass_tb<T, n>(sig_in, fh, fs);
     // butterworth_lowpass_tb<T, n>(sig_in, fl, fs);
     // dtmf_tb(fs);
-    pso_tb();
+    // pso_tb();
     
     // bpsk_tb<T, n>(sig_in, fl, fh, fs);
 

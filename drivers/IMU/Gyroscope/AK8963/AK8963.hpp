@@ -161,7 +161,7 @@ public:
     Result<void, Error> stable();
     Result<void, Error> setMode(const Mode mode);
     Result<void, Error> disableI2c();
-    std::tuple<real_t, real_t, real_t> getMagnet();
+    Option<Vector3> getMagnet();
 };
 };
 

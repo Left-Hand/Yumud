@@ -217,7 +217,7 @@ public:
     
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    std::tuple<real_t, real_t, real_t> getAcc() override;
+    Option<Vector3> getAcc();
 };
 
 }

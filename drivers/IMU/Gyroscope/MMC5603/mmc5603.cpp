@@ -1,5 +1,6 @@
 #include "mmc5603.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 #ifdef MMC5603_DEBUG
@@ -70,12 +71,12 @@ void MMC5603::enableContious(const bool en){
 }
 
 
-std::tuple<real_t, real_t, real_t> MMC5603::getMagnet(){
-    return {
+Option<Vector3> MMC5603::getMagnet(){
+    return Some{Vector3{
         s16_to_uni(int16_t(x_reg)),
         s16_to_uni(int16_t(y_reg)),
         s16_to_uni(int16_t(z_reg))
-    };
+    }};
 }
 
 void MMC5603::setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z){

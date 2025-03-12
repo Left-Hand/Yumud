@@ -1,5 +1,6 @@
 #include "ak8975.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 #ifdef AK8975_DEBUG
@@ -96,7 +97,10 @@ bool AK8975::stable(){
     if(stat != 0) return false;
     
     update();
-    auto [a,b,c] = getMagnet();
+    const auto mag = getMagnet();
+    if(mag.is_none()) return false;
+
+    auto [a, b, c] = getMagnet().unwrap();
     if(ABS(a) + ABS(b) + ABS(c) > real_t(2.4)) return false;
 
     return true;
@@ -111,10 +115,10 @@ void AK8975::disableI2c(){
     writeReg(0x0F, 0x01);
 }
 
-std::tuple<real_t, real_t, real_t> AK8975::getMagnet(){
+Option<Vector3> AK8975::getMagnet(){
     scexpr real_t max_mT = real_t(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
-    return {CONV(x), CONV(y), CONV(z)};
+    return Some{Vector3{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }
 
