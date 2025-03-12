@@ -90,6 +90,27 @@ protected:
     REG16I_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
     REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
     
+
+    struct IntPinCfgReg:public Reg8<>{
+        scexpr RegAddress address = 55;
+
+        const uint8_t __resv__:1 = 0;
+        uint8_t bypass_en:1 = 0;
+        uint8_t fsync_int_mode_en:1;
+        uint8_t actl_fsync:1;
+
+        uint8_t int_anyed_2clear:1;
+        uint8_t latch_int_en:1;
+        uint8_t open:1;
+        uint8_t actl:1;
+
+    } int_pin_cfg_reg = {};
+
+    struct WhoAmIReg:public Reg8<>{
+        scexpr RegAddress address = 0x75;
+        uint8_t data;
+    } whoami_reg = {};
+
     Package package_ = Package::MPU6050;
     real_t acc_scaler = 0;
     real_t gyr_scaler = 0;
@@ -164,6 +185,14 @@ public:
     void setGyrRange(const GyrRange range);
 
     void reset();
+
+    void setPackage(const Package package){
+        package_ = package;
+    }
+
+    Result<Package, Error> getPackage();
+
+    void enableDirectMode(const Enable en = EN);
 };
 
 };

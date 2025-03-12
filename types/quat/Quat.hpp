@@ -32,7 +32,8 @@
 /**************************************************************************/
 
 
-#include "vector3/vector3.hpp"
+// #include "vector3/vector3.hpp"
+#include "types/vector3/vector3.hpp"
 
 namespace ymd{
 
@@ -61,8 +62,8 @@ struct Quat_t{
     consteval size_t size() const {return 4;}
     __fast_inline constexpr T * begin(){return &x;}
     __fast_inline constexpr const T * begin() const {return &x;}
-    __fast_inline constexpr T * end(){return &x + size();}
-    __fast_inline constexpr const T * end() const {return &x + size();}
+    __fast_inline constexpr T * end(){return &x + 4;}
+    __fast_inline constexpr const T * end() const {return &x + 4;}
     __fast_inline constexpr  T & operator [](const size_t idx){return (&x)[idx];}
     __fast_inline constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
 
@@ -97,8 +98,13 @@ struct Quat_t{
         r_axis.z = z * r;
     }
 
-    void operator*=(const Quat_t &p_q);
-    Quat_t operator*(const Quat_t &p_q) const;
+    __fast_inline void operator*=(const Quat_t &p_q);
+
+    __fast_inline constexpr
+    Quat_t operator*(Quat_t && p_q) const;
+
+    __fast_inline constexpr
+    Quat_t operator*(const Quat_t & p_q) const;
 
     Quat_t operator*(const Vector3_t<T> &v) const {
         return Quat_t(w * v.x + y * v.z - z * v.y,
@@ -107,10 +113,24 @@ struct Quat_t{
                 -x * v.x - y * v.y - z * v.z);
     }
 
+    Quat_t operator*(const T v) const {
+        return Quat_t(v * x,  v * y,  v * z,  w * v);
+    }
+
+    __fast_inline constexpr 
     Vector3_t<T> xform(const Vector3_t<T> &v) const {
         Vector3_t<T> u(x, y, z);
         Vector3_t<T> uv = u.cross(v);
-        return v + ((uv * w) + u.cross(uv)) * ((T)2);
+        return v + ((uv * w) + u.cross(uv)) * 2;
+    }
+
+    __fast_inline constexpr 
+    Vector3_t<T> xform_top() const{
+        return Vector3_t<T>(
+            2 * (x * z - w * y),
+            2 * (w * x + y * z),
+            w * w - x * x - y * y + z * z
+        );
     }
 
 
@@ -169,8 +189,7 @@ __fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_
     return a.slerp(b, t);
 }
 
-}
-__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Quat_t<auto> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat_t<auto> & value){
     const auto splt = os.splitter();
     return os << os.brackets<'('>() << 
         value.x << splt << 
@@ -178,7 +197,7 @@ __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::
         value.z << splt << 
         value.w << os.brackets<')'>();
 }
-
+}
 
 
 

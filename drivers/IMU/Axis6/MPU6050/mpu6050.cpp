@@ -1,10 +1,9 @@
 #include "mpu6050.hpp"
 #include "sys/debug/debug.hpp"
 
-#define MPU6050_DEBUG
+// #define MPU6050_DEBUG_EN
 
-#ifdef MPU6050_DEBUG
-#undef MPU6050_DEBUG
+#ifdef MPU6050_DEBUG_EN
 #define MPU6050_TODO(...) TODO()
 #define MPU6050_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MPU6050_PANIC(...) PANIC{__VA_ARGS__}
@@ -76,19 +75,19 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
 bool MPU6050::verify(){
 
     reset();
-    uint8_t id = 0;
-    auto err = readReg(0x75, id);
+    const auto pkres = this->getPackage();
+    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return false;
     
-    if(!MPU6050_ASSERT(err.is_ok(), "read who am I failed")) return false;
+    const auto package = pkres.unwrap();
 
-    const auto correct_id = package2whoami(package_);
-    if(id != correct_id){
-        switch(id){
-            case package2whoami(Package::MPU6050): MPU6050_PANIC("this is MPU6050 in fact"); break;
-            case package2whoami(Package::MPU6500): MPU6050_PANIC("this is MPU6500 in fact"); break;
-            case package2whoami(Package::MPU9250): MPU6050_PANIC("this is MPU9250 in fact"); break;
+    if(package != package_){
+        switch(package){
+            case Package::MPU6050: MPU6050_DEBUG("this is MPU6050 in fact"); break;
+            case Package::MPU6500: MPU6050_DEBUG("this is MPU6500 in fact"); break;
+            case Package::MPU9250: MPU6050_DEBUG("this is MPU9250 in fact"); break;
+            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return false;
         }
-        return false;
+        return true;
     }
 
     return true;
@@ -96,6 +95,7 @@ bool MPU6050::verify(){
 
 
 void MPU6050::init(){
+    // this->setPackage(this->getPackage().);
     if(MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")){
         !+this->writeReg(0x6b, 0);
         !+this->writeReg(0x19, 0x00);
@@ -142,6 +142,12 @@ void MPU6050::setAccRange(const AccRange range){
     this->acc_scaler = this->calculateAccScale(range);
 }
 
+Result<MPU6050::Package, Error> MPU6050::getPackage(){
+    if(const auto err = readReg(whoami_reg.address, whoami_reg); err.is_err()){
+        MPU6050_PANIC("read who am I failed");
+    }
+    return Ok{Package(whoami_reg.data)};
+}
 
 void MPU6050::setGyrRange(const GyrRange range){
     auto & reg = gyr_conf_reg;
@@ -156,4 +162,11 @@ void MPU6050::reset(){
     if(p_i2c_drv_){
         p_i2c_drv_->release();
     }
+}
+
+void MPU6050::enableDirectMode(const Enable en){
+    // int_pin_cfg_reg.bypass_en = bool(en);
+    int_pin_cfg_reg.as_ref() = 0x22;
+    WRITE_REG(int_pin_cfg_reg);
+    !+writeReg(0x56, 0x01);
 }

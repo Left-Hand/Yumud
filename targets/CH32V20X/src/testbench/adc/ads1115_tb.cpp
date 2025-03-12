@@ -6,8 +6,6 @@
 
 #include "drivers/Adc/ADS1115/ads1115.hpp"
 
-#include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
-
 using namespace ymd;
 
 namespace ymd{

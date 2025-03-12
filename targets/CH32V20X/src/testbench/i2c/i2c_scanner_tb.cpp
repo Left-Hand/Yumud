@@ -92,7 +92,7 @@ struct I2cTester{
             return baud;
         }();
 
-        DEBUG_PRINTLN("??");
+        // DEBUG_PRINTLN("??");
         uart2.setRxMethod(CommMethod::Blocking);
 
         return Ok{max_baud};
@@ -189,7 +189,7 @@ void i2c_scanner_main(){
     DEBUGGER.forceSync();
     
     // test_result();
-    I2cSw i2c = {portA[12], portA[15]};
+    I2cSw i2c = {portB[6], portB[7]};
     i2c.init(100_KHz);
     
     // auto data = std::vector{1, 2, 3};

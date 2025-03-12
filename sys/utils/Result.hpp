@@ -2,6 +2,9 @@
 
 #include "Option.hpp"
 
+
+
+
 namespace ymd{
 
 namespace custom{
@@ -254,6 +257,7 @@ public:
     using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
+    using type = Result<T, E>;
 private:
     Storage result_;
 
@@ -304,17 +308,23 @@ public:
 
         // 修改map方法
     template<
-        typename F,
-        typename TFReturn = std::invoke_result_t<F, T>
+        typename Fn,
+        typename FDecay = std::decay_t<Fn>,
+
+        typename TFReturn = std::invoke_result_t<FDecay, T>
     >
-    [[nodiscard]] __fast_inline constexpr auto map(F&& fn) const -> Result<TFReturn, E>{
-        if (is_ok()) return Ok<TFReturn>(std::forward<F>(fn)(result_.unwrap()));
+    [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
+        if (is_ok()) {
+            if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
+            else return Ok<TFReturn>(std::forward<Fn>(fn)(result_.unwrap()));
+        }
         else return Err<E>(unwrap_err());
     }
     
     // 修改and_then方法
     template<
         typename F,//函数的类型
+        // typename TFReturn = std::conditional_t<std::is_void_v<T>, std::invoke_result_t<typename F::operator()>, std::invoke_result_t<F>>,//函数返回值的类型
         typename TFReturn = std::invoke_result_t<F, T>,//函数返回值的类型
         typename TFReturnIsResult = is_result_t<TFReturn>,
         typename TOk = std::conditional_t<
@@ -330,9 +340,11 @@ public:
     {
         if (is_ok()){
             if constexpr (is_result_v<TFReturn>){
-                return (std::forward<F>(fn)(unwrap()));
+                if constexpr(std::is_void_v<T>) return (std::forward<F>(fn)());
+                else return (std::forward<F>(fn)(unwrap()));
             }else{
-                return Ok<TOk>(std::forward<F>(fn)(unwrap()));
+                if constexpr(std::is_void_v<T>)return Ok<TOk>(std::forward<F>(fn)());
+                else return Ok<TOk>(std::forward<F>(fn)(unwrap()));
             }
         }
         return Err<E>(unwrap_err());

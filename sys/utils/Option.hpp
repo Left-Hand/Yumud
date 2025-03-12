@@ -87,9 +87,17 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
-    unwrap(const std::source_location & loc = std::source_location::current()) const {
+    unwrap_loc(const std::source_location & loc = std::source_location::current()) const {
         if(unlikely(exists_ == false)){
             __PANIC_EXPLICIT_SOURCE(loc);
+        }
+        return value_;
+    }
+
+    [[nodiscard]] __fast_inline constexpr const T & 
+    unwrap() const {
+        if(unlikely(exists_ == false)){
+            exit(1);
         }
         return value_;
     }

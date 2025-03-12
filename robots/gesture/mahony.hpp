@@ -10,18 +10,40 @@ public:
     using Quat = Quat_t<real_t>;
     using Vector3 = Vector3_t<real_t>;
 protected:
-    real_t invSampleFreq = real_t(0.005);
-    real_t twoKp = 2;											// 2 * proportional gain (Kp)
-    real_t twoKi = 2;											// 2 * integral gain (Ki)
-    real_t integralFBx = 0;
-    real_t integralFBy = 0; 
-    real_t integralFBz = 0;	// 积分误差
+    real_t inv_fs_;
 
+    real_t ki_;
+    real_t kp_;
+    // real_t fs;
+    Vector3 inte_;
 	Quat q;
 public:
+    struct Config{
+        real_t kp;
+        real_t ki;
+        uint fs;
+    };
 
-    [[nodiscard]] Quat update(const Vector3 & gyr,const Vector3 & acc);
-    [[nodiscard]] Quat update9(const Vector3 & gyr,const Vector3 & acc,const Vector3 & mag);
+    Mahony(const Config & cfg){
+        reconf(cfg);
+    }
+
+
+    void reconf(const Config & cfg){
+        ki_ = cfg.ki;
+        kp_ = cfg.kp;    
+        inv_fs_ = real_t(1) / cfg.fs;
+    }
+
+    void reset(){
+        inte_ = Vector3();
+    }
+
+
+    void update(const Vector3 & gyr,const Vector3 & acc);
+    void update(const Vector3 & gyr,const Vector3 & acc, const Vector3 & mag);
+
+    Quat result() const {return q;}
 };
 
 }

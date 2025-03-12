@@ -126,16 +126,28 @@ void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 // }
 template<typename T>
 void Quat_t<T>::operator*=(const Quat_t<T> &p_q) {
-	set(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y,
-			w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z,
-			w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x,
-			w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z);
+	// set(    w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y,
+	// 		w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z,
+	// 		w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x,
+	// 		w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z
+	// 	);
+
+	x = w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y;
+	y = w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z;
+	z = w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x;
+	w = w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z;
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::operator*(const Quat_t<T> &p_q) const {
+constexpr Quat_t<T> Quat_t<T>::operator*(const Quat_t<T> & p_q) const {
 	Quat_t<T> r = *this;
 	r *= p_q;
 	return r;
+}
+
+template<typename T>
+constexpr Quat_t<T> Quat_t<T>::operator*(Quat_t<T> && p_q) const {
+	p_q *= *this;
+	return p_q;
 }
 template<typename T>
 bool Quat_t<T>::is_equal_approx(const Quat_t<T> & other) const {
@@ -147,11 +159,11 @@ T Quat_t<T>::length() const {
 }
 template<typename T>
 void Quat_t<T>::normalize() {
-	*this /= length();
+	*this *= isqrt(length_squared());
 }
 template<typename T>
 Quat_t<T> Quat_t<T>::normalized() const {
-	return *this / length();
+	return *this * isqrt(length_squared());
 }
 template<typename T>
 bool Quat_t<T>::is_normalized() const {
@@ -159,7 +171,8 @@ bool Quat_t<T>::is_normalized() const {
 }
 template<typename T>
 Quat_t<T> Quat_t<T>::operator/(const T &s) const{
-    return Quat_t<T>(x/s, y/s, z/s, w/s);
+	const T inv_s = 1 / s;
+    return Quat_t<T>(x * inv_s, y * inv_s, z * inv_s, w * inv_s);
 }
 template<typename T>
 Quat_t<T> Quat_t<T>::inverse() const {

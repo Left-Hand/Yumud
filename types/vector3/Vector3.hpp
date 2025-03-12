@@ -75,14 +75,16 @@ public:
     };
 
     template<arithmetic U>
+    __fast_inline
     Vector3_t & operator += (const Vector3_t<U>& v) {
         x += static_cast<T>(v.x);
         y += static_cast<T>(v.y);
         z += static_cast<T>(v.z);
         return *this;
     }
-
+    
     template<arithmetic U>
+    __fast_inline
     Vector3_t & operator -= (const Vector3_t<U>& v) {
         x -= static_cast<T>(v.x);
         y -= static_cast<T>(v.y);
@@ -91,6 +93,7 @@ public:
     }
 
     template<arithmetic U>
+    __fast_inline
     Vector3_t & operator *= (const Vector3_t<U>& v) {
         x *= static_cast<T>(v.x);
         y *= static_cast<T>(v.y);
@@ -114,6 +117,7 @@ public:
     }
 
     template<arithmetic U>
+    __fast_inline
     constexpr Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
         x *= v;
@@ -210,10 +214,13 @@ public:
     }
 
     template<arithmetic U>
+    __fast_inline
     constexpr Vector3_t cross(const Vector3_t<U> &u) const{
-        return Vector3_t(y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
-                         z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
-                         x * static_cast<T>(u.y) - y * static_cast<T>(u.x));
+        return Vector3_t(
+            y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
+            z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
+            x * static_cast<T>(u.y) - y * static_cast<T>(u.x)
+        );
     }
 
 
@@ -221,19 +228,20 @@ public:
         return sqrt(x * x + y * y + z * z);
     }
 
+    __fast_inline
     constexpr T length_squared() const{
         return x * x + y * y + z * z;
     }
 
     constexpr void normalize() {
         T lengthsq = length_squared();
-        if (lengthsq == 0) {
+        if (unlikely(lengthsq == 0)) {
             x = y = z = 0;
-        } else if(not is_equal_approx(lengthsq, T(1))){
-            T length = sqrt(lengthsq);
-            x /= length;
-            y /= length;
-            z /= length;
+        } else{
+            T inv_len = isqrt(lengthsq);
+            x *= inv_len;
+            y *= inv_len;
+            z *= inv_len;
         }
     }
 

@@ -6,8 +6,6 @@
 
 #include "drivers/Adc/INA3221/ina3221.hpp"
 
-#include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
-
 using namespace ymd;
 using drivers::INA3221;
 

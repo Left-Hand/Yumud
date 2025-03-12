@@ -11,9 +11,20 @@
 namespace ymd::drivers{
 class AK8963:public Magnetometer{
 public:
+// "0000":  Power-down mode 
+// "0001":  Single measurement mode 
+// "0010":  Continuous measurement mode 1 
+// "0110":  Continuous measurement mode 2 
+// "0100":  External trigger measurement mode 
+// "1000": Self-test mode 
+// "1111": Fuse ROM access mode 
+
     enum class Mode:uint8_t{
         PowerDown = 0b0000,
         SingleMeasurement = 0b0001,
+        ContMode1 = 0b0010,
+        ContMode2 = 0b0110,
+        ExtTrigger = 0b0100,
         SelfTest = 0b1000,
         FuseRomAccess = 0b1111,
     };
@@ -28,15 +39,18 @@ public:
         I2C_NOT_TRANSFERED_BYTE = 0x06,
         I2C_NOT_TRANSFERED_BYTE_ACK = 0x07,
         
-        DATA_NOT_READY = 0x10,
+        DEVICE_NOT_FOUNDED = 0x10,
+        DEVICE_WHOAMI_FAILED,
+        SENS_OVERFLOW,
+        DATA_NOT_READY,
 
         UNSPECIFIED = 0xff
     };
 
 
 protected:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> p_i2c_drv_;
+    std::optional<hal::SpiDrv> p_spi_drv_;
 
     // [[nodiscard]] virtual Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
@@ -51,18 +65,8 @@ protected:
 
     scexpr uint8_t default_i2c_addr = 0b00011000;
 
-    struct{
-        int16_t x;
-        int16_t y;
-        int16_t z;
-
-        uint8_t x_adj;
-        uint8_t y_adj;
-        uint8_t z_adj;
-    };
-
     struct R8_WIA:public Reg8<>{
-        scexpr RegAddress address = 0x1b;
+        scexpr RegAddress address = 0x00;
         scexpr uint8_t correct = 0x48;
 
         uint8_t data;
@@ -87,7 +91,7 @@ protected:
 
     REG16I_QUICK_DEF(0x03, MagXReg, mag_x_reg);
     REG16I_QUICK_DEF(0x05, MagYReg, mag_y_reg);
-    REG16I_QUICK_DEF(0x06, MagZReg, mag_z_reg);
+    REG16I_QUICK_DEF(0x07, MagZReg, mag_z_reg);
 
     struct R8_ST2:public Reg8<>{
         scexpr RegAddress address = 0x09;
@@ -114,7 +118,7 @@ protected:
     } cntl2_reg = {};
 
     struct R8_ASTC:public Reg8<>{
-        scexpr RegAddress address = 0x0B;
+        scexpr RegAddress address = 0x0C;
 
         uint8_t :6;
         uint8_t self:1;
@@ -122,36 +126,50 @@ protected:
     } astc_reg = {};
 
     struct R8_I2CDIS:public Reg8<>{
-        scexpr RegAddress address = 0x0B;
+        scexpr RegAddress address = 0x0F;
 
         scexpr uint8_t key = 0b00011011;
         uint8_t data;
     } i2cdis_reg = {};
 
-    struct _R16_ASA:public Reg16i<>{
+    struct _R8_ASA:public Reg8<>{
         uint8_t data;
     };
 
-    struct R16_ASAX:public _R16_ASA{
+    struct R8_ASAX:public _R8_ASA{
         scexpr RegAddress address = 0x10;
     } asax_reg = {};
 
-    struct R16_ASAY:public _R16_ASA{
+    struct R8_ASAY:public _R8_ASA{
         scexpr RegAddress address = 0x11;
     } asay_reg = {};
 
-    struct R16_ASAZ:public _R16_ASA{
+    struct R8_ASAZ:public _R8_ASA{
         scexpr RegAddress address = 0x12;
     } asaz_reg = {};
 
+    bool data_valid_ = false;
+    bool data_is_16_bits_ = false;
+
+    Vector3 adj_scale;
+
+    Result<Vector3_t<uint8_t>, Error> getCoeff();
+
+    static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
+        if(is_16_bits){
+            return (data * iq_t<16>(0.15));
+        }else{
+            return (data * iq_t<16>(0.6));
+        }
+    }
 public:
 
-    AK8963(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AK8963(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AK8963(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
-    AK8963(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    AK8963(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    AK8963(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    AK8963(const hal::I2cDrv & i2c_drv):p_i2c_drv_(i2c_drv){;}
+    AK8963(hal::I2cDrv && i2c_drv):p_i2c_drv_(i2c_drv){;}
+    AK8963(hal::I2c & bus):p_i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
+    AK8963(const hal::SpiDrv & spi_drv):p_spi_drv_(spi_drv){;}
+    AK8963(hal::SpiDrv && spi_drv):p_spi_drv_(std::move(spi_drv)){;}
+    AK8963(hal::Spi & spi, const uint8_t index):p_spi_drv_(hal::SpiDrv(spi, index)){;}
 
     Result<void, Error> init();
     void update();
@@ -159,9 +177,10 @@ public:
     Result<void, Error> reset();
     Result<void, Error> busy();
     Result<void, Error> stable();
-    Result<void, Error> setMode(const Mode mode);
     Result<void, Error> disableI2c();
     Option<Vector3> getMagnet();
+    Result<void, Error> setDataBits(const uint8_t bits);
+    Result<void, Error> setMode(const Mode mode);
 };
 };
 
