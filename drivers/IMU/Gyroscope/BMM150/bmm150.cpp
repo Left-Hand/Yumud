@@ -20,6 +20,6 @@ void BMM150::reset(){
 
 }
 
-Option<Vector3> BMM150::getMagnet(){
-    return Some{Vector3{0,0,0}};
+Option<Vector3r> BMM150::getMagnet(){
+    return Some{Vector3r{0,0,0}};
 }

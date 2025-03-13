@@ -34,16 +34,17 @@
 
 // #include "vector3/vector3.hpp"
 #include "types/vector3/vector3.hpp"
+// #include "sys/math/fast/conv.hpp"
 
 namespace ymd{
 
 template <arithmetic T>
 
 struct Quat_t{
-    T x;
-    T y;
-    T z;
-    T w;                
+    T x = {};
+    T y = {};
+    T z = {};
+    T w = {};                
 
     __fast_inline constexpr Quat_t() :
             x(0),
@@ -68,6 +69,7 @@ struct Quat_t{
     __fast_inline constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
 
     T length_squared() const;
+    T inv_length() const;
     bool is_equal_approx(const Quat_t & other) const;
     T length() const;
     void normalize();
@@ -77,13 +79,9 @@ struct Quat_t{
     T dot(const Quat_t &p_q) const;
     T angle_to(const Quat_t &p_to) const;
 
-    void set_euler_xyz(const Vector3_t<T> &p_euler);
-    // Vector3_t<T> get_euler_xyz() const;
-    void set_euler_yxz(const Vector3_t<T> &p_euler);
-    // Vector3_t<T> get_euler_yxz() const;
-
+    __no_inline void set_euler_xyz(const Vector3_t<T> &p_euler);
+    __no_inline void set_euler_yxz(const Vector3_t<T> &p_euler);
     void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
-    // Vector3_t<T> get_euler() const { return get_euler_yxz(); };
 
     Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
     Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
@@ -125,11 +123,11 @@ struct Quat_t{
     }
 
     __fast_inline constexpr 
-    Vector3_t<T> xform_top() const{
+    auto xform_top() const{
         return Vector3_t<T>(
-            2 * (x * z - w * y),
-            2 * (w * x + y * z),
-            w * w - x * x - y * y + z * z
+            T(2 * (x * z - w * y)),
+            T(2 * (w * x + y * z)),
+            T(w * w - x * x - y * y + z * z)
         );
     }
 
@@ -197,6 +195,9 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat_t<aut
         value.z << splt << 
         value.w << os.brackets<')'>();
 }
+
+template<arithmetic T>
+Quat_t() -> Quat_t<T>;
 }
 
 

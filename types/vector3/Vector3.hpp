@@ -57,7 +57,7 @@ public:
 
     __fast_inline constexpr Vector3_t(const Vector2_t<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
 
-    __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+    __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x((_x)), y((_y)), z((_z)){;}
 
     template<arithmetic U = T>
     __fast_inline constexpr Vector3_t(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
@@ -77,9 +77,9 @@ public:
     template<arithmetic U>
     __fast_inline
     Vector3_t & operator += (const Vector3_t<U>& v) {
-        x += static_cast<T>(v.x);
-        y += static_cast<T>(v.y);
-        z += static_cast<T>(v.z);
+        x = static_cast<T>(x + static_cast<T>(v.x));
+        y = static_cast<T>(y + static_cast<T>(v.y));
+        z = static_cast<T>(z + static_cast<T>(v.z));
         return *this;
     }
     
@@ -120,9 +120,9 @@ public:
     __fast_inline
     constexpr Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
-        x *= v;
-        y *= v;
-        z *= v;
+        x = x * v;
+        y = y * v;
+        z = z * v;
         return *this;
     }
 
@@ -217,9 +217,9 @@ public:
     __fast_inline
     constexpr Vector3_t cross(const Vector3_t<U> &u) const{
         return Vector3_t(
-            y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
-            z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
-            x * static_cast<T>(u.y) - y * static_cast<T>(u.x)
+            static_cast<T>(y * static_cast<T>(u.z) - z * static_cast<T>(u.y)),
+            static_cast<T>(z * static_cast<T>(u.x) - x * static_cast<T>(u.z)), 
+            static_cast<T>(x * static_cast<T>(u.y) - y * static_cast<T>(u.x))
         );
     }
 
@@ -296,7 +296,10 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vector3_t<auto>
 }
 
 
-using Vector3 = Vector3_t<real_t>;
+using Vector3r = Vector3_t<real_t>;
+
+template<arithmetic T>
+Vector3_t() -> Vector3_t<T>;
 }
 
 

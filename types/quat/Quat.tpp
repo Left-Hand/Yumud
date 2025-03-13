@@ -32,10 +32,10 @@
 
 
 #define set(p_x, p_y, p_z, p_w)\
-	x = p_x;\
-	y = p_y;\
-	z = p_z;\
-	w = p_w;\
+	x = T(p_x);\
+	y = T(p_y);\
+	z = T(p_z);\
+	w = T(p_w);\
 
 namespace ymd{
 template<typename T>
@@ -46,12 +46,17 @@ T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 
 template<typename T>
 T Quat_t<T>::dot(const Quat_t<T> &p_q) const {
-	return x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w;
+	return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
 }
 
 template<typename T>
 T Quat_t<T>::length_squared() const{
     return dot(*this);
+}
+
+template<typename T>
+T Quat_t<T>::inv_length() const {
+	return T(isqrt(x * x + y * y + z * z + w * w));
 }
 // set_euler_xyz expects a vector containing the Euler angles in the format
 // (ax,ay,az), where ax is the angle of rotation around x axis,
@@ -64,7 +69,7 @@ void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	T half_a3 = p_euler.z / 2;
 
 	// R = X(a1).Y(a2).Z(a3) convention for Euler angles.
-	// Conversion to Quat_t<T>ernion as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
+	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
 	T cos_a1 = cosf(half_a1);
@@ -95,25 +100,52 @@ void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 // This implementation uses YXZ convention (Z is the first rotation).
 template<typename T>
 void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
-	T half_a1 = p_euler.y / 2;
-	T half_a2 = p_euler.x / 2;
-	T half_a3 = p_euler.z / 2;
-
+	
 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
-	// Conversion to Quat_t<T>ernion as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
+	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
-	T cos_a1 = cosf(half_a1);
-	T sin_a1 = sinf(half_a1);
-	T cos_a2 = cosf(half_a2);
-	T sin_a2 = sinf(half_a2);
-	T cos_a3 = cosf(half_a3);
-	T sin_a3 = sinf(half_a3);
+	if constexpr(is_fixed_point_v<T>){
+		q14 half_a1 = p_euler.y >> 1;
+		q14 half_a2 = p_euler.x >> 1;
+		q14 half_a3 = p_euler.z >> 1;
+	
+		q14 cos_a1 = cos<14>(half_a1);
+		q14 sin_a1 = sin<14>(half_a1);
+		q14 cos_a2 = cos<14>(half_a2);
+		q14 sin_a2 = sin<14>(half_a2);
+		q14 cos_a3 = cos<14>(half_a3);
+		q14 sin_a3 = sin<14>(half_a3);
 
-	set(sin_a1 * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
-			sin_a1 * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
+		static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
+			return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
+		};
+	
+		set(
+			mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
+			mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
+			mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
+			mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
+		);
+	}else{
+		T half_a1 = p_euler.y / 2;
+		T half_a2 = p_euler.x / 2;
+		T half_a3 = p_euler.z / 2;
+	
+		T cos_a1 = std::cos(half_a1);
+		T sin_a1 = std::sin(half_a1);
+		T cos_a2 = std::cos(half_a2);
+		T sin_a2 = std::sin(half_a2);
+		T cos_a3 = std::cos(half_a3);
+		T sin_a3 = std::sin(half_a3);
+	
+		set(
+			sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
+			sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
 			-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
-			sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3);
+			sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3);
+	}
+
 }
 
 // get_euler_yxz returns a vector containing the Euler angles in the format
@@ -132,10 +164,10 @@ void Quat_t<T>::operator*=(const Quat_t<T> &p_q) {
 	// 		w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z
 	// 	);
 
-	x = w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y;
-	y = w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z;
-	z = w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x;
-	w = w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z;
+	x = T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y);
+	y = T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z);
+	z = T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x);
+	w = T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z);
 }
 template<typename T>
 constexpr Quat_t<T> Quat_t<T>::operator*(const Quat_t<T> & p_q) const {
@@ -159,11 +191,11 @@ T Quat_t<T>::length() const {
 }
 template<typename T>
 void Quat_t<T>::normalize() {
-	*this *= isqrt(length_squared());
+	*this *= inv_length();
 }
 template<typename T>
 Quat_t<T> Quat_t<T>::normalized() const {
-	return *this * isqrt(length_squared());
+	return *this * inv_length();
 }
 template<typename T>
 bool Quat_t<T>::is_normalized() const {
@@ -177,7 +209,7 @@ Quat_t<T> Quat_t<T>::operator/(const T &s) const{
 template<typename T>
 Quat_t<T> Quat_t<T>::inverse() const {
 #ifdef MATH_CHECKS
-	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat_t<T>(), "The Quat_t<T>ernion must be normalized.");
+	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat_t<T>(), "The Quat_t<T> must be normalized.");
 #endif
 	return Quat_t<T>(-x, -y, -z, w);
 }
@@ -212,7 +244,7 @@ Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) const {
 		scale0 = sinf((1.0 - p_weight) * omega) / sinom;
 		scale1 = sinf(p_weight * omega) / sinom;
 	} else {
-		// "from" and "to" Quat_t<T>ernions are very close
+		// "from" and "to" Quat_t<T>s are very close
 		//  ... so we can do a linear interpolation
 		scale0 = 1.0 - p_weight;
 		scale1 = p_weight;

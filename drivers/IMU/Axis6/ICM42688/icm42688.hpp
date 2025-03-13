@@ -180,8 +180,8 @@ public:
 
     void reset();
 
-    Option<Vector3> getAcc() override;
-    Option<Vector3> getGyr() override;
+    Option<Vector3r> getAcc();
+    Option<Vector3r> getGyr();
 };
 
 }

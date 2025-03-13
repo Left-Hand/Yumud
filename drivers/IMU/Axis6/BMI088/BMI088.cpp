@@ -13,12 +13,12 @@ void BMI088::update(){
 
 }
 
-Option<Vector3> BMI088::getAcc(){
-    return Some{Vector3{0,0,0}};
+Option<Vector3r> BMI088::getAcc(){
+    return Some{Vector3r{0,0,0}};
 }
 
-Option<Vector3> BMI088::getGyr(){
-    return Some{Vector3{0,0,0}};
+Option<Vector3r> BMI088::getGyr(){
+    return Some{Vector3r{0,0,0}};
 }
 
 real_t BMI088::getTemperature(){

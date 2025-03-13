@@ -113,19 +113,19 @@ void MPU6050::update(){
     data_valid = this->requestData(acc_x_reg.address, &acc_x_reg, 7).is_ok();
 }
 
-Option<Vector3> MPU6050::getAcc(){
+Option<Vector3r> MPU6050::getAcc(){
     real_t x = uni(acc_x_reg) * acc_scaler;
     real_t y = uni(acc_y_reg) * acc_scaler;
     real_t z = uni(acc_z_reg) * acc_scaler;
-    return  Some{Vector3{x, y, z}};
+    return  Some{Vector3r{x, y, z}};
 }
 
-Option<Vector3> MPU6050::getGyr(){
+Option<Vector3r> MPU6050::getGyr(){
     // if(!data_valid) return None;
     real_t x = uni(gyr_x_reg) * gyr_scaler;
     real_t y = uni(gyr_y_reg) * gyr_scaler;
     real_t z = uni(gyr_z_reg) * gyr_scaler;
-    return Some{Vector3{x, y, z}};
+    return Some{Vector3r{x, y, z}};
 }
 
 Option<real_t> MPU6050::getTemperature(){

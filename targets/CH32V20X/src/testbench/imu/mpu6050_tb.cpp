@@ -2,6 +2,7 @@
 
 #include "sys/debug/debug.hpp"
 
+
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -14,11 +15,9 @@
 
 using namespace ymd::drivers;
 
+
 // #define UART uart2
 #define UART uart2
-
-
-
 
 void ak8963_tb(hal::I2c & i2c){
     AK8963 mpu{i2c};
@@ -63,8 +62,8 @@ void mpu6500_tb(hal::I2c & i2c){
 
     // ImuFusion fusion;
     Mahony mahony{{
-        .kp = 0.5_r,
-        .ki = 0.000_r,
+        .kp = 8.5_r,
+        .ki = 0._r,
         .fs = 200
     }};
 
@@ -87,25 +86,22 @@ void mpu6500_tb(hal::I2c & i2c){
 
         const uint32_t begin_m = micros();
 
-        mahony.update(
-            mpu.getGyr().unwrap(), 
-            // mpu.getAcc().unwrap()
-            aku.getMagnet().unwrap()
-        );
-        // fusion.update9(
-        //     mpu.getGyr().unwrap(), 
-        //     mpu.getAcc().unwrap(), 
-        //     aku.getMagnet().unwrap()
-        // );
-        
-        const uint32_t end_m = micros();
-        // mahony.update_ai(
+        // mahony.update(
         //     mpu.getGyr().unwrap(), 
         //     mpu.getAcc().unwrap()
+        //     // aku.getMagnet().unwrap()
         // );
 
+        
+        mahony.update(
+            mpu.getGyr().unwrap(), 
+            mpu.getAcc().unwrap()
+        );
+            
+        const uint32_t end_m = micros();
         // DEBUG_PRINTLN(fusion.quat());
-        DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
+        // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
+        DEBUG_PRINTLN(mahony.result(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
     });
 

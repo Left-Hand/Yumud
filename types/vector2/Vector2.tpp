@@ -171,7 +171,7 @@ constexpr Vector2_t<T> Vector2_t<T>::snapped(const Vector2_t<T> &by) const{
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::normalized() const{
-    return *this/this->length();
+    return *this * isqrt(this->length_squared());
 }
 
 template<arithmetic T>
@@ -250,5 +250,6 @@ constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<
     return final;
 }
 
-
+template<arithmetic T>
+Vector2_t() -> Vector2_t<T>;
 }
