@@ -95,10 +95,12 @@ Rect2_t<T> Transform2D_t<T>::xform(const Rect2_t<T> &p_rect) const {
 
 template<arithmetic T>
 void Transform2D_t<T>::set_rotation_and_scale(T p_rot, const Vector2_t<T> &p_scale) {
-	elements[0][0] = ::cos(p_rot) * p_scale.x;
-	elements[1][1] = ::cos(p_rot) * p_scale.y;
-	elements[1][0] = -::sin(p_rot) * p_scale.y;
-	elements[0][1] = ::sin(p_rot) * p_scale.x;
+	auto [sr, cr] = sincos(p_rot);
+	
+	elements[0][0] = cr * p_scale.x;
+	elements[1][1] = cr * p_scale.y;
+	elements[1][0] = -sr * p_scale.y;
+	elements[0][1] =  sr * p_scale.x;
 }
 
 
@@ -173,8 +175,8 @@ T Transform2D_t<T>::get_rotation() const {
 
 template<arithmetic T>
 void Transform2D_t<T>::set_rotation(T p_rot) {
-	T cr = ::cos(p_rot);
-	T sr = ::sin(p_rot);
+
+	auto [sr, cr] = sincos(p_rot);
 	elements[0][0] = cr;
 	elements[0][1] = sr;
 	elements[1][0] = -sr;
@@ -183,8 +185,7 @@ void Transform2D_t<T>::set_rotation(T p_rot) {
 
 template<arithmetic T>
 Transform2D_t<T>::Transform2D_t(T p_rot, const Vector2_t<T> &p_position) {
-	T cr = ::cos(p_rot);
-	T sr = ::sin(p_rot);
+	auto [sr, cr] = sincos(p_rot);
 	elements[0][0] = cr;
 	elements[0][1] = sr;
 	elements[1][0] = -sr;
@@ -341,8 +342,11 @@ Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_trans
 	Vector2_t<T> s2 = p_transform.get_scale();
 
 	//slerp rotation
-	Vector2_t<T> v1(::cos(r1), ::sin(r1));
-	Vector2_t<T> v2(::cos(r2), ::sin(r2));
+	auto [sin_r1, cos_r1] = sincos(r1);
+	auto [sin_r2, cos_r2] = sincos(r2);
+	
+	Vector2_t<T> v1(cos_r1, sin_r1);
+	Vector2_t<T> v2(cos_r2, sin_r2);
 
 	T dot = v1.dot(v2);
 
@@ -355,7 +359,9 @@ Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_trans
 	} else {
 		T angle = p_c * ::acos(dot);
 		Vector2_t<T> v3 = (v2 - v1 * dot).normalized();
-		v = v1 * ::cos(angle) + v3 * ::sin(angle);
+		
+		auto [sr, cr] = sincos(angle);
+		v = v1 * cr + v3 * sr;
 	}
 
 	//construct matrix

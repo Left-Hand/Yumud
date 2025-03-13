@@ -110,16 +110,6 @@ public:
         return {x, y + v};
     }
 
-    // template<arithmetic U>
-    // constexpr T cos(const Vector2_t<U> & b) const{
-    //     return this->dot(b) / this->length() / b.length();
-    // }
-
-    // template<arithmetic U>
-    // constexpr T sin(const Vector2_t<U> & b) const{
-    //     return this->cross(b) / this->length() / b.length();
-    // }
-
     constexpr T angle() const {return atan2(y, x);}
 	constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
 	constexpr T angle_to_point(const Vector2_t<T> & p_vector2) const {return atan2(y - p_vector2.y, x - p_vector2.x);}

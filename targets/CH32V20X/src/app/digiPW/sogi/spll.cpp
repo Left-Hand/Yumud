@@ -1,4 +1,5 @@
 #include "spll.hpp"
+#include <tuple>
 
 using namespace ymd::digipw;
 
@@ -100,9 +101,9 @@ void Spll::update(const real_t u0){
         _theta_x256 -= (real_t)(TAU * 256);
     }
 
-
-    sine=(real_t)sin(_theta_x256);
-    cosine=(real_t)cos(_theta_x256);
+    auto [sin_val, cos_val] = sincos(_theta_x256);
+    sine = sin_val;
+    cosine = cos_val;
 
     // return ;
 }

@@ -7,14 +7,12 @@ using namespace ymd::foc;
 using namespace ymd::hal;
 
 static __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const real_t rad){
-    const auto s = sin(rad);
-    const auto c = cos(rad);
+    auto [s,c] = sincos(rad);
     dq = {s * ab[1] + c * ab[0], c * ab[1] - s * ab[0]};
 };
 
 static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const real_t rad){
-    const auto s = sin(rad);
-    const auto c = cos(rad);
+    auto [s,c] = sincos(rad);
     ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
 };
 

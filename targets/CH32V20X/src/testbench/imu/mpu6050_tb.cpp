@@ -101,8 +101,8 @@ void mpu6500_tb(hal::I2c & i2c){
         const uint32_t end_m = micros();
         // DEBUG_PRINTLN(fusion.quat());
         // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
-        DEBUG_PRINTLN(mahony.result(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
+        DEBUG_PRINTLN(mahony.result(), end_m - begin_m);
     });
 
     while(true);

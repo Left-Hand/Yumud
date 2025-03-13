@@ -58,6 +58,7 @@ template<typename T>
 T Quat_t<T>::inv_length() const {
 	return T(isqrt(x * x + y * y + z * z + w * w));
 }
+
 // set_euler_xyz expects a vector containing the Euler angles in the format
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
@@ -72,12 +73,9 @@ void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
-	T cos_a1 = cosf(half_a1);
-	T sin_a1 = sinf(half_a1);
-	T cos_a2 = cosf(half_a2);
-	T sin_a2 = sinf(half_a2);
-	T cos_a3 = cosf(half_a3);
-	T sin_a3 = sinf(half_a3);
+	auto [sin_a1, cos_a1] = sincos(half_a1);
+	auto [sin_a2, cos_a2] = sincos(half_a2);
+	auto [sin_a3, cos_a3] = sincos(half_a3);
 
 	set(sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
 			-sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
@@ -105,17 +103,10 @@ void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
-	if constexpr(is_fixed_point_v<T>){
-		q14 half_a1 = p_euler.y >> 1;
-		q14 half_a2 = p_euler.x >> 1;
-		q14 half_a3 = p_euler.z >> 1;
-	
-		q14 cos_a1 = cos<14>(half_a1);
-		q14 sin_a1 = sin<14>(half_a1);
-		q14 cos_a2 = cos<14>(half_a2);
-		q14 sin_a2 = sin<14>(half_a2);
-		q14 cos_a3 = cos<14>(half_a3);
-		q14 sin_a3 = sin<14>(half_a3);
+	if constexpr(is_fixed_point_v<T>){	
+		auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
+		auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
+		auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
 
 		static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
 			return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
@@ -128,16 +119,9 @@ void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 			mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
 		);
 	}else{
-		T half_a1 = p_euler.y / 2;
-		T half_a2 = p_euler.x / 2;
-		T half_a3 = p_euler.z / 2;
-	
-		T cos_a1 = std::cos(half_a1);
-		T sin_a1 = std::sin(half_a1);
-		T cos_a2 = std::cos(half_a2);
-		T sin_a2 = std::sin(half_a2);
-		T cos_a3 = std::cos(half_a3);
-		T sin_a3 = std::sin(half_a3);
+		auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
+		auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
+		auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
 	
 		set(
 			sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
@@ -158,16 +142,16 @@ void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 // }
 template<typename T>
 void Quat_t<T>::operator*=(const Quat_t<T> &p_q) {
-	// set(    w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y,
-	// 		w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z,
-	// 		w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x,
-	// 		w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z
-	// 	);
+	set(    T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
+			T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
+			T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
+			T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z)
+		);
 
-	x = T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y);
-	y = T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z);
-	z = T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x);
-	w = T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z);
+	// x = T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y);
+	// y = T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z);
+	// z = T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x);
+	// w = T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z);
 }
 template<typename T>
 constexpr Quat_t<T> Quat_t<T>::operator*(const Quat_t<T> & p_q) const {
@@ -241,7 +225,7 @@ Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) const {
 		// standard case (slerp)
 		omega = acos(cosom);
 		sinom = sinf(omega);
-		scale0 = sinf((1.0 - p_weight) * omega) / sinom;
+		scale0 = sinf((1 - p_weight) * omega) / sinom;
 		scale1 = sinf(p_weight * omega) / sinom;
 	} else {
 		// "from" and "to" Quat_t<T>s are very close
@@ -267,7 +251,7 @@ Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
 	}
 
 	T theta = acos(dot),
-            sinT = 1.0 / sinf(theta),
+            sinT = 1 / sinf(theta),
 		    newFactor = sinf(p_weight * theta) * sinT,
 		    invFactor = sinf((1 - p_weight) * theta) * sinT;
 
