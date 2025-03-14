@@ -1,6 +1,9 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "types/matrix/matrix.hpp"
+#include "types/matrix/matrix_static.hpp"
+#include "types/matrix/ceres/ceres.hpp"
 
 template<arithmetic T, size_t N_X, size_t N_Y>
 class AdaptiveEKF {
@@ -16,17 +19,17 @@ public:
             : Xe(X0), P(MatrixXX::Identity()), Q(MatrixXX::Identity()), R(MatrixYY::Identity()) {}
 
 
-    template<typename Func>
-    VectorX predict(Func &&func) {
+    template<typename Fn>
+    VectorX predict(Fn && fn) {
         Jet_t<T, N_X> Xe_auto_jet[N_X];
-        for (int i = 0; i < N_X; i++) {
-            Xe_auto_jet[i].a = Xe[i];
-            Xe_auto_jet[i].v[i] = 1;
+        for (size_t i = 0; i < N_X; i++) {
+            Xe_auto_jet[i].a = Xe.at(0, i);
+            Xe_auto_jet[i].v.at(0, i) = 1;
         }
         Jet_t<T, N_X> Xp_auto_jet[N_X];
-        func(Xe_auto_jet, Xp_auto_jet);
-        for (int i = 0; i < N_X; i++) {
-            Xp[i] = Xp_auto_jet[i].a;
+        std::forward<Fn>(fn)(Xe_auto_jet, Xp_auto_jet);
+        for (size_t i = 0; i < N_X; i++) {
+            Xp.at(0, i) = Xp_auto_jet[i].a;
             F.block(i, 0, 1, N_X) = Xp_auto_jet[i].v.transpose();
         }
         P = F * P * F.transpose() + Q;
@@ -34,15 +37,15 @@ public:
     }
 
 
-    template<typename Func>
-    VectorX update(Func &&func, const VectorY &Y) {
+    template<typename Fn>
+    VectorX update(Fn && fn, const VectorY & Y) {
         Jet_t<T, N_X> Xp_auto_jet[N_X];
         for (size_t i = 0; i < N_X; i++) {
             Xp_auto_jet[i].a = Xp[i];
             Xp_auto_jet[i].v[i] = 1;
         }
         Jet_t<T, N_X> Yp_auto_jet[N_Y];
-        func(Xp_auto_jet, Yp_auto_jet);
+        std::forward<Fn>(fn)(Xp_auto_jet, Yp_auto_jet);
         for (size_t i = 0; i < N_Y; i++) {
             Yp[i] = Yp_auto_jet[i].a;
             H.block(i, 0, 1, N_X) = Yp_auto_jet[i].v.transpose();
