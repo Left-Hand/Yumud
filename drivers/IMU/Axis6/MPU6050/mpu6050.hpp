@@ -15,13 +15,6 @@ public:
 
     using Error = BusError;
 
-    // using Result<void, BusError> = Result<void, BusError>;
-    // __inline Result<void, BusError> make_result(const BusError res){
-    //     if(res.ok()) return Ok();
-    //     else return Err(res); 
-    // }
-
-
     scexpr uint8_t default_i2c_addr = 0xd0;
 
     enum class DPS:uint8_t{
@@ -124,8 +117,14 @@ protected:
     // [[nodiscard]] virtual Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
 
+    template<typename T>
+    [[nodiscard]] Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
+
     // [[nodiscard]] virtual Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
     [[nodiscard]] Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
+
+    template<typename T>
+    [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
 
     // [[nodiscard]] virtual Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
     [[nodiscard]] Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
@@ -171,28 +170,29 @@ public:
     MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):
         MPU6050(hal::I2cDrv(bus, i2c_addr), Package::MPU6050){;}
 
-    bool verify();
+    Result<void, Error> verify();
 
-    void init();
+    Result<void, Error> init();
     
-    void update();
+    Result<void, Error> update();
 
     [[nodiscard]] Option<Vector3R> getAcc();
     [[nodiscard]] Option<Vector3R> getGyr();
     [[nodiscard]] Option<real_t> getTemperature();
 
-    void setAccRange(const AccRange range);
-    void setGyrRange(const GyrRange range);
+    Result<void, Error> setAccRange(const AccRange range);
+    Result<void, Error> setGyrRange(const GyrRange range);
 
-    void reset();
+    Result<void, Error> reset();
 
-    void setPackage(const Package package){
+    Result<void, Error> setPackage(const Package package){
         package_ = package;
+        return Ok();
     }
 
     Result<Package, Error> getPackage();
 
-    void enableDirectMode(const Enable en = EN);
+    Result<void, Error> enableDirectMode(const Enable en = EN);
 };
 
 };

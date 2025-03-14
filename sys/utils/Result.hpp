@@ -350,6 +350,18 @@ public:
         return Err<E>(unwrap_err());
     }
 
+        // 修改and_then方法
+    template<typename Fn>
+    [[nodiscard]] __fast_inline constexpr 
+    auto then(Fn && fn) const 
+        -> Result<T, E>
+    {
+        if (is_ok()){
+            return (std::forward<Fn>(fn)());
+        }
+        return Err<E>(unwrap_err());
+    }
+
 
     template<
         typename Fn,//函数的类型

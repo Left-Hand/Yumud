@@ -5,25 +5,14 @@
 #include "sys/utils/Option.hpp"
 
 
-namespace ymd::custom{
-    template<>
-    struct result_converter<void, BusError, BusError> {
-        static Result<void, BusError> convert(const BusError & res){
-            if(res.ok()) return Ok();
-            else return Err(res); 
-        }
-    };
-}
-
 namespace ymd::drivers{
 
 
 
 class INA226 {
-
-
-    public:
-    using BusResult = Result<void, BusError>;
+public:
+    using Error = BusError;
+    using BusResult = Result<void, Error>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -242,4 +231,15 @@ public:
     void enableAlertLatch(const bool en = true);
 };
 
+
+}
+
+namespace ymd::custom{
+    template<>
+    struct result_converter<void, drivers::INA226::Error, BusError> {
+        static Result<void, drivers::INA226::Error> convert(const BusError & res){
+            if(res.ok()) return Ok();
+            else return Err(res); 
+        }
+    };
 }

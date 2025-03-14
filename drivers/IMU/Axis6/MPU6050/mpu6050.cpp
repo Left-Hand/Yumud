@@ -72,11 +72,11 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     package_(package){
     }
     
-bool MPU6050::verify(){
+Result<void, Error> MPU6050::verify(){
 
     reset();
     const auto pkres = this->getPackage();
-    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return false;
+    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
     
     const auto package = pkres.unwrap();
 
@@ -85,32 +85,35 @@ bool MPU6050::verify(){
             case Package::MPU6050: MPU6050_DEBUG("this is MPU6050 in fact"); break;
             case Package::MPU6500: MPU6050_DEBUG("this is MPU6500 in fact"); break;
             case Package::MPU9250: MPU6050_DEBUG("this is MPU9250 in fact"); break;
-            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return false;
+            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return Err(Error(Error::ALREADY));
         }
-        return true;
+        return Ok();
     }
 
-    return true;
+    return Ok();
 }
 
 
-void MPU6050::init(){
-    // this->setPackage(this->getPackage().);
-    if(MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")){
-        !+this->writeReg(0x6b, 0);
-        !+this->writeReg(0x19, 0x00);
-        !+this->writeReg(0x1a, 0x00);
-        !+this->writeReg(0x13, 0);
-        !+this->writeReg(0x15, 0);
-        !+this->writeReg(0x17, 0);
-        !+this->writeReg(0x38, 0x00);
-        this->setAccRange(AccRange::_2G);
-        this->setGyrRange(GyrRange::_1000deg);
-    }
+Result<void, Error> MPU6050::init(){
+
+    return Result<void, Error>(Ok())
+        .then([&](){return this->verify();})
+        .then([&](){return this->writeReg(0x6b, 0);})
+        .then([&](){return this->writeReg(0x19, 0x00);})
+        .then([&](){return this->writeReg(0x1a, 0x00);})
+        .then([&](){return this->writeReg(0x13, 0);})
+        .then([&](){return this->writeReg(0x15, 0);})
+        .then([&](){return this->writeReg(0x17, 0);})
+        .then([&](){return this->writeReg(0x38, 0x00);})
+        .then([&](){return this->setAccRange(AccRange::_2G);})
+        .then([&](){return this->setGyrRange(GyrRange::_1000deg);})
+    ;
 }
 
-void MPU6050::update(){
-    data_valid = this->requestData(acc_x_reg.address, &acc_x_reg, 7).is_ok();
+Result<void, Error> MPU6050::update(){
+    auto res = this->requestData(acc_x_reg.address, &acc_x_reg, 7);
+    data_valid = res.is_ok();
+    return res;
 }
 
 Option<Vector3R> MPU6050::getAcc(){
@@ -134,12 +137,12 @@ Option<real_t> MPU6050::getTemperature(){
 
 
 
-void MPU6050::setAccRange(const AccRange range){
+Result<void, Error> MPU6050::setAccRange(const AccRange range){
+    this->acc_scaler = this->calculateAccScale(range);
+
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
-    WRITE_REG(reg);
-    
-    this->acc_scaler = this->calculateAccScale(range);
+    return this->writeReg(reg);
 }
 
 Result<MPU6050::Package, Error> MPU6050::getPackage(){
@@ -149,24 +152,30 @@ Result<MPU6050::Package, Error> MPU6050::getPackage(){
     return Ok{Package(whoami_reg.data)};
 }
 
-void MPU6050::setGyrRange(const GyrRange range){
+Result<void, Error> MPU6050::setGyrRange(const GyrRange range){
+    this->gyr_scaler = this->calculateGyrScale(range);
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
-    WRITE_REG(reg);
-    
-    this->gyr_scaler = this->calculateGyrScale(range);
+
+    return writeReg(reg);
 }
 
 
-void MPU6050::reset(){
+Result<void, Error> MPU6050::reset(){
     if(p_i2c_drv_){
-        p_i2c_drv_->release();
+        return p_i2c_drv_->release();
     }
+
+    return Ok();
 }
 
-void MPU6050::enableDirectMode(const Enable en){
+Result<void, Error> MPU6050::enableDirectMode(const Enable en){
     // int_pin_cfg_reg.bypass_en = bool(en);
     int_pin_cfg_reg.as_ref() = 0x22;
     WRITE_REG(int_pin_cfg_reg);
-    !+writeReg(0x56, 0x01);
+
+    return Result<void, Error>(Ok())
+        .then([&](){return writeReg(int_pin_cfg_reg);})
+        .then([&](){return writeReg(0x56, 0x01);})
+    ;
 }
