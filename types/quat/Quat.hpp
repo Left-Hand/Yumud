@@ -60,6 +60,22 @@ struct Quat_t{
             w(static_cast<T>(p_w)) {
     }
 
+    Quat_t(const Vector3_t<T> &euler) { set_euler(euler); }
+    Quat_t(const Quat_t &p_q) :
+            x(p_q.x),
+            y(p_q.y),
+            z(p_q.z),
+            w(p_q.w) {
+    }
+
+    __fast_inline constexpr  Quat_t operator=(const Quat_t &p_q) {
+        x = p_q.x;
+        y = p_q.y;
+        z = p_q.z;
+        w = p_q.w;
+        return *this;
+    }
+
     consteval size_t size() const {return 4;}
     __fast_inline constexpr T * begin(){return &x;}
     __fast_inline constexpr const T * begin() const {return &x;}
@@ -82,6 +98,15 @@ struct Quat_t{
     __no_inline void set_euler_xyz(const Vector3_t<T> &p_euler);
     __no_inline void set_euler_yxz(const Vector3_t<T> &p_euler);
     void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
+
+    Quat_t integral(const Vector3_t<T> & p) const {
+        return Quat_t<T>(
+            x + real_t(0.5f) * (-y * p.z + z * p.y + w * p.x),
+            y + real_t(0.5f) * (x * p.z - z * p.x + w * p.y),
+            z + real_t(0.5f) * (-x * p.y + y * p.x + w * p.z),
+            w + real_t(0.5f) * (-x * p.x - y * p.y - z * p.z)
+        ).normalized();
+    }
 
     Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
     Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
@@ -139,21 +164,7 @@ struct Quat_t{
 
     Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
-    Quat_t(const Vector3_t<T> &euler) { set_euler(euler); }
-    Quat_t(const Quat_t &p_q) :
-            x(p_q.x),
-            y(p_q.y),
-            z(p_q.z),
-            w(p_q.w) {
-    }
 
-    __fast_inline constexpr  Quat_t operator=(const Quat_t &p_q) {
-        x = p_q.x;
-        y = p_q.y;
-        z = p_q.z;
-        w = p_q.w;
-        return *this;
-    }
 
     Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
     {

@@ -61,9 +61,11 @@ void mpu6500_tb(hal::I2c & i2c){
     aku.init().unwrap();
 
     // ImuFusion fusion;
+
+    // const real_t mahony_tau = 10.5_r;
     Mahony mahony{{
-        .kp = 8.5_r,
-        .ki = 0._r,
+        .kp = 2 * 10,
+        .ki = 0.3_r,
         .fs = 200
     }};
 
