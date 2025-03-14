@@ -151,7 +151,7 @@ protected:
     bool data_valid_ = false;
     bool data_is_16_bits_ = false;
 
-    Vector3r adj_scale;
+    Vector3R adj_scale;
 
     Result<Vector3_t<uint8_t>, Error> getCoeff();
 
@@ -178,7 +178,7 @@ public:
     Result<void, Error> busy();
     Result<void, Error> stable();
     Result<void, Error> disableI2c();
-    Option<Vector3r> getMagnet();
+    Option<Vector3R> getMagnet();
     Result<void, Error> setDataBits(const uint8_t bits);
     Result<void, Error> setMode(const Mode mode);
 };

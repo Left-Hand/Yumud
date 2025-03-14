@@ -26,13 +26,13 @@
  *      - Add NoInitMatZero for _outp matrix initialization in ForwardSubtitution.
  *      - Fixing bug in HouseholderTransformQR function where _outp & _vectTemp need to be initialized
  *          with zero.
- *      - Change comparison with zero in these functions using float_prec_ZERO_ECO:
+ *      - Change comparison with zero in these functions using 1e-5:
  *          -> operator ==
  *          -> operator /
  *          -> vRoundingElementToZero
  *          -> RoundingMatrixToZero
  *      - No need to check ABS(_normM) as non-zero in bNormVector().
- *      - Add operator != (checking with float_prec_ZERO_ECO).
+ *      - Add operator != (checking with 1e-5).
  *      - Add MatIdentity() function.
  * 
  *    v0.9 (2020-04-28), {PNb}:
@@ -105,7 +105,7 @@
  *      - Menambahkan fungsi QR Decomposition (via Householder Transformation).
  *      - Menambahkan fungsi Householder Transformation.
  *      - Menghilangkan warning 'implicit conversion' untuk operasi pembandingan
- *          dengan float_prec_ZERO.
+ *          dengan 1e-7.
  *      - Menambahkan function overloading operasi InsertSubMatrix, untuk
  *          operasi insert dari SubMatrix ke SubMatrix.
  *      - Saat inisialisasi, matrix diisi nol (melalui vIsiHomogen(T(0))).
@@ -130,9 +130,7 @@
 #pragma once
 
 
-
-#include "kconfig.h"
-#include "memory.h"
+// #include "memory.h"
 
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
@@ -273,6 +271,8 @@ private:
      */
     int16_t i16row;
     int16_t i16col;
+
+    static constexpr auto MATRIX_MAXIMUM_SIZE = 6;
     T floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
 
 };
@@ -450,7 +450,7 @@ inline bool MatrixX_t<T>::operator == (const MatrixX_t<T> & _compare) const {
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (ABS((*this)(_i,_j) - _compare(_i,_j)) > T(float_prec_ZERO_ECO)) {
+            if (ABS((*this)(_i,_j) - _compare(_i,_j)) > T(1e-5)) {
                 return false;
             }
         }
@@ -515,7 +515,7 @@ template<arithmetic T>
 inline MatrixX_t<T> MatrixX_t<T>::operator / (const T _scalar) const {
     MatrixX_t<T> _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
 
-    if (ABS(_scalar) < T(float_prec_ZERO_ECO)) {
+    if (ABS(_scalar) < T(1e-5)) {
         _outp.invalid();
         return _outp;
     }
@@ -620,7 +620,7 @@ inline MatrixX_t<T> MatrixX_t<T>::operator * (const MatrixX_t<T>& _matMul) const
 
 template<arithmetic T>
 inline void MatrixX_t<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
-    if (ABS((*this)(_i,_j)) < T(float_prec_ZERO_ECO)) {
+    if (ABS((*this)(_i,_j)) < T(1e-5)) {
         (*this)(_i,_j) = T(0);
     }
 }
@@ -629,7 +629,7 @@ template<arithmetic T>
 inline MatrixX_t<T> MatrixX_t<T>::RoundingMatrixToZero(void) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (ABS((*this)(_i,_j)) < T(float_prec_ZERO_ECO)) {
+            if (ABS((*this)(_i,_j)) < T(1e-5)) {
                 (*this)(_i,_j) = T(0);
             }
         }
@@ -709,7 +709,7 @@ inline bool MatrixX_t<T>::bNormVector(void) {
     }
 
     /* Rounding to zero to avoid case where sqrt(0-), and _normM always positive */
-    if (_normM < T(float_prec_ZERO)) {
+    if (_normM < T(1e-7)) {
         return false;
     }
     _normM = sqrt(_normM);
@@ -876,7 +876,7 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(1e-7)) {
                 /* MatrixX_t is non-invertible */
                 _outp.invalid();
                 return _outp;
@@ -910,7 +910,7 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
     /* Jordan... */
     for (int16_t _j = (_temp.i16row)-1; _j > 0; _j--) {
         for (int16_t _i = _j-1; _i >= 0; _i--) {
-            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(1e-7)) {
                 /* MatrixX_t is non-invertible */
                 _outp.invalid();
                 return _outp;
@@ -930,7 +930,7 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
 
     /* Normalization */
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (ABS(_temp(_i,_i)) < T(float_prec_ZERO)) {
+        if (ABS(_temp(_i,_i)) < T(1e-7)) {
             /* MatrixX_t is non-invertible */
             _outp.invalid();
             return _outp;
@@ -961,7 +961,7 @@ inline bool MatrixX_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefin
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(1e-7)) {
                 /* Q: Do we still need to check this?
                  * A: idk, it's 3 AM. I need sleep :<
                  * 
@@ -983,11 +983,11 @@ inline bool MatrixX_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefin
     _posDef = true;
     _posSemiDef = true;
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (_temp(_i,_i) < T(float_prec_ZERO)) {
+        if (_temp(_i,_i) < T(1e-7)) {
             /* false if less than 0+ (zero included) */
             _posDef = false;
         }
-        if (_temp(_i,_i) < -T(float_prec_ZERO)) {
+        if (_temp(_i,_i) < -T(1e-7)) {
             /* false if less than 0- (zero is not included) */
             _posSemiDef = false;
         }
@@ -1059,13 +1059,13 @@ inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_i,_k));
                 }
-                if (_tempFloat < -T(float_prec_ZERO)) {
+                if (_tempFloat < -T(1e-7)) {
                     /* MatrixX_t is not positif (semi)definit */
                     _outp.invalid();
                     return _outp;
                 }
                 /* Rounding to zero to avoid case where sqrt(0-) */
-                if (ABS(_tempFloat) < T(float_prec_ZERO)) {
+                if (ABS(_tempFloat) < T(1e-7)) {
                     _tempFloat = T(0);
                 }
                 _outp(_i,_i) = sqrt(_tempFloat);
@@ -1073,7 +1073,7 @@ inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_j,_k));
                 }
-                if (ABS(_outp(_j,_j)) < T(float_prec_ZERO)) {
+                if (ABS(_outp(_j,_j)) < T(1e-7)) {
                     /* MatrixX_t is not positif definit */
                     _outp.invalid();
                     return _outp;
@@ -1137,7 +1137,7 @@ inline MatrixX_t<T> MatrixX_t<T>::HouseholderTransformQR(const int16_t _rowTrans
     _vLen2 += (_u1*_u1);
     _vectTemp(_rowTransform,0) = _u1;
     
-    if (ABS(_vLen2) < T(float_prec_ZERO_ECO)) {
+    if (ABS(_vLen2) < T(1e-5)) {
         /* x vector is collinear with basis vector e, return result = I */
         _outp.vSetIdentity();
     } else {
@@ -1145,9 +1145,9 @@ inline MatrixX_t<T> MatrixX_t<T>::HouseholderTransformQR(const int16_t _rowTrans
         /* PR TODO: We need to investigate more on this */
         for (int16_t _i = 0; _i < this->i16row; _i++) {
             _tempFloat = _vectTemp(_i,0);
-            if (ABS(_tempFloat) > T(float_prec_ZERO)) {
+            if (ABS(_tempFloat) > T(1e-7)) {
                 for (int16_t _j = 0; _j < this->i16row; _j++) {
-                    if (ABS(_vectTemp(_j,0)) > T(float_prec_ZERO)) {
+                    if (ABS(_vectTemp(_j,0)) > T(1e-7)) {
                         _outp(_i,_j) = _vectTemp(_j,0);
                         _outp(_i,_j) = _outp(_i,_j) * _tempFloat;
                         _outp(_i,_j) = _outp(_i,_j) * (T(-2)/_vLen2);
@@ -1234,7 +1234,7 @@ inline MatrixX_t<T> MatrixX_t<T>::BackSubtitution(const MatrixX_t<T>& A, const M
         for (int16_t _j = _i + 1; _j < A.i16col; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (ABS(A(_i,_i)) < T(float_prec_ZERO)) {
+        if (ABS(A(_i,_i)) < T(1e-7)) {
             _outp.invalid();
             return _outp;
         }
@@ -1266,7 +1266,7 @@ inline MatrixX_t<T> MatrixX_t<T>::ForwardSubtitution(const MatrixX_t<T> & A, con
         for (int16_t _j = 0; _j < _i; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (ABS(A(_i,_i)) < T(float_prec_ZERO)) {
+        if (ABS(A(_i,_i)) < T(1e-7)) {
             _outp.invalid();
             return _outp;
         }

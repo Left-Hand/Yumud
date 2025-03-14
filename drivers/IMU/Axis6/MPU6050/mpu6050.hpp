@@ -177,8 +177,8 @@ public:
     
     void update();
 
-    [[nodiscard]] Option<Vector3r> getAcc();
-    [[nodiscard]] Option<Vector3r> getGyr();
+    [[nodiscard]] Option<Vector3R> getAcc();
+    [[nodiscard]] Option<Vector3R> getGyr();
     [[nodiscard]] Option<real_t> getTemperature();
 
     void setAccRange(const AccRange range);

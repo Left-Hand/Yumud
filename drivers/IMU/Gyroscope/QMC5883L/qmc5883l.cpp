@@ -65,8 +65,8 @@ void QMC5883L::update(){
     requestPool(RegAddress::MagX, &magXReg, 3);
 }
 
-Option<Vector3r> QMC5883L::getMagnet(){
-    return Some{Vector3r{
+Option<Vector3R> QMC5883L::getMagnet(){
+    return Some{Vector3R{
         uni(int16_t(magXReg)) * fs,
         uni(int16_t(magYReg)) * fs,
         uni(int16_t(magZReg)) * fs

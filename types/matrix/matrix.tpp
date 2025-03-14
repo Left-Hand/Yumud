@@ -1,15 +1,15 @@
 
 
 
-template <typename real>
-Matrix::Matrix(std::initializer_list<real> row) {
+template <typename T>
+Matrix::Matrix(std::initializer_list<T> row) {
     rows = 1;
     cols = row.size();
     data.push_back(std::vector<real_t>(row.begin(), row.end()));
 }
 
-template <typename real>
-Matrix::Matrix(std::initializer_list<std::initializer_list<real>> matrix) {
+template <typename T>
+Matrix::Matrix(std::initializer_list<std::initializer_list<T>> matrix) {
     rows = matrix.size();
     cols = 0;
     for (const auto& row : matrix) {

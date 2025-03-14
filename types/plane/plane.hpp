@@ -139,7 +139,7 @@ bool Plane_t<T>::operator!=(const Plane_t<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
-using Plane = Plane_t<real_t>;
+using PlaneR = Plane_t<real_t>;
 using PlaneF = Plane_t<float>;
 using PlaneD = Plane_t<double>;
 

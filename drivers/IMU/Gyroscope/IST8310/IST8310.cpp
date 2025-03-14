@@ -74,12 +74,12 @@ void IST8310::setAverageTimes(bool is_x, AverageTimes times){
     WRITE_REG(reg)
 }
 
-Option<Vector3r> IST8310::getMagnet(){
+Option<Vector3R> IST8310::getMagnet(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Some{Vector3r{
+    return Some{Vector3R{
         conv(axis_x_reg),
         conv(axis_y_reg),
         conv(axis_z_reg)
