@@ -1,58 +1,51 @@
-#pragma once
 
-#include "support.h"
-#include "_IQNtables.hpp"
+#include "sys/math/real.hpp"
+#include "sys/math/fast/conv.hpp"
+#include "sys/math/iq/iq_t.hpp"
 
 
-#ifndef PI
-#define PI (3.1415926536)
-#endif
+#include "types/vector3/Vector3.hpp"
+#include "types/quat/Quat.hpp"
 
-#ifndef TAU
-#define TAU (2 * 3.1415926536)
-#endif
+#include "sys/debug/debug.hpp"
+#include "sys/clock/time.hpp"
 
-namespace __iqdetails{
+#include "sys/utils/Reg.hpp"
 
-/**
- * @brief Computes the sine of an UIQ31 input.
- *
- * @param uiq31Input      UIQ31 type input.
- *
- * @return                UIQ31 type result of sine.
- */
-/*
- * Perform the calculation where the input is only in the first quadrant
- * using one of the following two functions.
- *
- * This algorithm is derived from the following trig identities:
- *     sin(k + x) = sin(k)*cos(x) + cos(k)*sin(x)
- *     cos(k + x) = cos(k)*cos(x) - sin(k)*sin(x)
- *
- * First we calculate an index k and the remainder x according to the following
- * formulas:
- *
- *     k = 0x3F & int32_t(Radian*64)
- *     x = fract(Radian*64)/64
- *
- * Two lookup tables store the values of sin(k) and cos(k) for all possible
- * indexes. The remainder, x, is calculated using second order Taylor series.
- *
- *     sin(x) = x - (x^3)/6     (~36.9 bits of accuracy)
- *     cos(x) = 1 - (x^2)/2     (~28.5 bits of accuracy)
- *
- * Combining the trig identities with the Taylor series approximiations gives
- * the following two functions:
- *
- *     cos(Radian) = C(k) + x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
- *     sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)))
- *
- *     where  S(k) = Sin table value at offset "k"
- *            C(k) = Cos table value at offset "k"
- *
- * Using a lookup table with a 64 bit index (52 indexes since the input range is
- * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
- */
+
+// static constexpr __fast_inline 
+// int32_t __UIQ32getSinCosResult(uint32_t iq31X, uint32_t iq31Sin, uint32_t iq31Cos){
+//     uint32_t iq31Res;
+
+//     /* 0.333*x*C(k) */
+//     iq31Res = __mpyf_l(0x2aaaaaab, iq31X);
+//     iq31Res = __mpyf_l(iq31Cos, iq31Res);
+
+//     /* -S(k) - 0.333*x*C(k) */
+//     iq31Res = -(iq31Sin + iq31Res);
+
+//     /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
+//     iq31Res = iq31Res >> 1;
+//     iq31Res = __mpyf_l(iq31X, iq31Res);
+
+//     /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
+//     iq31Res = iq31Cos + iq31Res;
+
+//     /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+//     iq31Res = __mpyf_l(iq31X, iq31Res);
+
+//     /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+//     iq31Res = iq31Sin + iq31Res;
+
+//     return iq31Res;
+// }
+
+
+
+using namespace ymd;
+using namespace ymd::hal;
+
+namespace expeprimental{
 static constexpr __fast_inline 
 int32_t __IQ31getSinCosResult(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
     int32_t iq31Res;
@@ -187,15 +180,103 @@ auto __IQ31getCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 
 __fast_inline constexpr 
 auto __IQ31getSinCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
-    struct SinCosResult{
-        _iq<31> sin;
-        _iq<31> cos;
-    };
-
-    return SinCosResult{
+    return std::array<_iq<31>, 2>{
         __IQ31getSinDispatcher(iq31_x, sect, lut_index),
         __IQ31getCosDispatcher(iq31_x, sect, lut_index)
     };
 }
 
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> mysin(const iq_t<P> iq_x){
+    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> mycos(const iq_t<P> iq_x){
+    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getCosDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr std::array<iq_t<Q>, 2> mysincos(const iq_t<P> iq_x){
+    auto res = (expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
+    return {res[0], res[1]};
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> mysinpu(const iq_t<P> iq_x){
+    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> mycospu(const iq_t<P> iq_x){
+    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getCosDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr std::array<iq_t<Q>, 2> mysincospu(const iq_t<P> iq_x){
+    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
+    return {res[0], res[1]};
+}
+
+
+
+template<typename Fn>
+__no_inline uint32_t eval_func(Fn && fn){
+    auto y = std::forward<Fn>(fn)(time());
+
+    static constexpr size_t times = 10000;
+
+    const auto begin_m = micros();
+    const auto t = time();
+    for(size_t i = 0; i < times; ++i){
+        __nop;
+        (y) = (std::forward<Fn>(fn)(t));
+        __nop;
+        // __nop;
+    }
+
+    const auto end_m = micros();
+    // DEBUG_PRINTLN(uint32_t(end_m - begin_m) / times);
+    return uint32_t((end_m - begin_m));
+}
+
+template<typename Fn>
+void test_func(Fn && fn, const uint32_t dur){
+    while(true){
+        const auto t = time();
+        const auto x = 2 * frac(t * 2) * real_t(TAU) -  1000 * real_t(TAU);
+        // const auto x = 6 * frac(t * 2) - 3;
+        auto y = std::forward<Fn>(fn)(x);
+        DEBUG_PRINTLN(x, y, dur);
+        delay(1);
+    }
+}
+
+#define UART uart2
+
+
+
+__no_inline auto func(const real_t x){
+    // return std::make_tuple(sin(x), cos(x));
+    // return mysin(x);
+    // return fposmodp(x, real_t(TAU));
+    // return dump_tau(iq_t<16>(x));
+    // return std::make_tuple(mysin(x), mycos(x));
+    // return mysincos(x);
+    return mysincospu(x);
+    // return mysinpu(x); 
+    // return mysinpu(x); 
+}
+void sincos_main(){
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
+    DEBUGGER.noBrackets();
+
+
+    delay(200);
+
+    const uint32_t dur = eval_func(func);
+    test_func(func, dur);
 }

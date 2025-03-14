@@ -121,9 +121,8 @@ constexpr Vector2_t<T> Vector2_t<T>::project(const Vector2_t<T> & b) const{
 
 template<arithmetic T>
 constexpr T Vector2_t<T>::project(const T & rad) const{
-    // return (this->rotated(-rad)).x;
-    // this->improduct(Vector2_t<T>(::cos(r), sin(r)));
-    return (this->x) * cos(rad) + (this->y) * sin(rad);
+    auto [s,c] = sincos(rad);
+    return (this->x) * c + (this->y) * s;
 
 }
 
@@ -171,7 +170,7 @@ constexpr Vector2_t<T> Vector2_t<T>::snapped(const Vector2_t<T> &by) const{
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::normalized() const{
-    return *this/this->length();
+    return *this * isqrt(this->length_squared());
 }
 
 template<arithmetic T>
@@ -192,7 +191,8 @@ constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> 
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotated(const T r) const{
-    return this->improduct(Vector2_t<T>( cos(r), sin(r)));
+    auto [s, c] = sincos(r);
+    return this->improduct(Vector2_t<T>(c, s));
 }
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
@@ -250,5 +250,6 @@ constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<
     return final;
 }
 
-
+template<arithmetic T>
+Vector2_t() -> Vector2_t<T>;
 }

@@ -58,12 +58,12 @@ void HMC5883L::setMode(const Mode mode){
     writeReg(RegAddress::Mode, modeReg);
 }
 
-Option<Vector3> HMC5883L::getMagnet(){
+Option<Vector3r> HMC5883L::getMagnet(){
     real_t x = From12BitToGauss(magXReg);
     real_t y = From12BitToGauss(magYReg);
     real_t z = From12BitToGauss(magZReg);
 
-    return Some(Vector3(x,y,z));
+    return Some(Vector3r(x,y,z));
 }
 
 bool HMC5883L::verify(){

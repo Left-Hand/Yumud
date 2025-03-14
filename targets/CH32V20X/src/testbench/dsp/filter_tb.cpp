@@ -1,11 +1,12 @@
 #include "src/testbench/tb.h"
 
 #include "sys/core/platform.h"
+#include "sys/math/real.hpp"
 
-#include "dsp/filter/BurrFilter.hpp"
-#include "dsp/filter/HighPassFilter.hpp"
-#include "dsp/filter/LowPassFilter.hpp"
-#include "dsp/filter/KalmanFilter.hpp"
+#include "dsp/filter/homebrew/BurrFilter.hpp"
+#include "dsp/filter/rc/HighPassFilter.hpp"
+#include "dsp/filter/rc/LowPassFilter.hpp"
+#include "dsp/filter/kalman/KalmanFilter.hpp"
 
 #include <iterator>
 

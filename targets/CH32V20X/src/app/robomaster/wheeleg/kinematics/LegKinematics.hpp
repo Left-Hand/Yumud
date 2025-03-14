@@ -67,9 +67,7 @@ private:
         return Some(Vector2(0,0));
     }
     
-    Option<RadianPair> _inverse(Vector2 const pos) const {
-        return Some(RadianPair{Radian(0),Radian(0)});
-    }
+    Option<RadianPair> _inverse(Vector2 const pos) const;
 };
 // }
 

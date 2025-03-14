@@ -57,8 +57,8 @@ public:
 
     void init();
     void update();
-    Option<Vector3> getAcc();
-    Option<Vector3> getGyr();
+    Option<Vector3r> getAcc();
+    Option<Vector3r> getGyr();
     real_t getTemperature();
 };
 

@@ -4,11 +4,14 @@
 #include "types/quat/quat.hpp"
 
 
+#include "sys/math/fast/conv.hpp"
+
 namespace ymd{
 class Mahony{
 public:
-    using Quat = Quat_t<real_t>;
-    using Vector3 = Vector3_t<real_t>;
+    // using Quat = Quat_t<Norm_t<q14>>;
+    using Quat = Quat_t<q14>;
+    using Vector3 = Vector3_t<q14>;
 protected:
     real_t inv_fs_;
 
@@ -39,11 +42,20 @@ public:
         inte_ = Vector3();
     }
 
-
+    __no_inline
     void update(const Vector3 & gyr,const Vector3 & acc);
-    void update(const Vector3 & gyr,const Vector3 & acc, const Vector3 & mag);
+
+    __no_inline
+    void update_v2(const Vector3 & gyr,const Vector3 & acc);
+    
+    // void update(const Vector3 & gyr,const Vector3 & acc, const Vector3 & mag);
 
     Quat result() const {return q;}
 };
+
+template<typename T>
+__fast_inline OutputStream & operator<<(OutputStream & os, const Norm_t<T> & value){
+    return os << T(value);
+}
 
 }

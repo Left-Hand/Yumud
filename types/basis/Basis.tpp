@@ -439,18 +439,16 @@ Vector3_t<T> Basis_t<T>::get_euler_xyz() const {
 // The current implementation uses XYZ convention (Z is the first rotation).
 template<arithmetic T>
 void Basis_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
+
 	T c, s;
 
-	c = cosf(p_euler.x);
-	s = sinf(p_euler.x);
+	std::tie(c,s) = sincos(p_euler.x);
 	Basis_t<T> xmat(1, 0, 0, 0, c, -s, 0, s, c);
 
-	c = cosf(p_euler.y);
-	s = sinf(p_euler.y);
+	std::tie(c,s) = sincos(p_euler.y);
 	Basis_t<T> ymat(c, 0, s, 0, 1, 0, -s, 0, c);
 
-	c = cosf(p_euler.z);
-	s = sinf(p_euler.z);
+	std::tie(c,s) = sincos(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
 	//optimizer will optimize away all this anyway
@@ -490,18 +488,14 @@ template<arithmetic T>
 void Basis_t<T>::set_euler_xzy(const Vector3_t<T> &p_euler) {
 	T c, s;
 
-	c = cosf(p_euler.x);
-	s = sinf(p_euler.x);
+	std::tie(c,s) = sincos(p_euler.x);
 	Basis_t<T> xmat(1, 0, 0, 0, c, -s, 0, s, c);
 
-	c = cosf(p_euler.y);
-	s = sinf(p_euler.y);
+	std::tie(c,s) = sincos(p_euler.y);
 	Basis_t<T> ymat(c, 0, s, 0, 1, 0, -s, 0, c);
 
-	c = cosf(p_euler.z);
-	s = sinf(p_euler.z);
+	std::tie(c,s) = sincos(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
-
 	(*this) = xmat * zmat * ymat;
 }
 template<arithmetic T>
@@ -538,18 +532,14 @@ template<arithmetic T>
 void Basis_t<T>::set_euler_yzx(const Vector3_t<T> &p_euler) {
 	T c, s;
 
-	c = cosf(p_euler.x);
-	s = sinf(p_euler.x);
+	std::tie(c,s) = sincos(p_euler.x);
 	Basis_t<T> xmat(1, 0, 0, 0, c, -s, 0, s, c);
 
-	c = cosf(p_euler.y);
-	s = sinf(p_euler.y);
+	std::tie(c,s) = sincos(p_euler.y);
 	Basis_t<T> ymat(c, 0, s, 0, 1, 0, -s, 0, c);
 
-	c = cosf(p_euler.z);
-	s = sinf(p_euler.z);
+	std::tie(c,s) = sincos(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
-
 	(*this) = ymat * zmat * xmat;
 }
 
@@ -604,16 +594,13 @@ template<arithmetic T>
 void Basis_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	T c, s;
 
-	c = cosf(p_euler.x);
-	s = sinf(p_euler.x);
+	std::tie(c,s) = sincos(p_euler.x);
 	Basis_t<T> xmat(1, 0, 0, 0, c, -s, 0, s, c);
 
-	c = cosf(p_euler.y);
-	s = sinf(p_euler.y);
+	std::tie(c,s) = sincos(p_euler.y);
 	Basis_t<T> ymat(c, 0, s, 0, 1, 0, -s, 0, c);
 
-	c = cosf(p_euler.z);
-	s = sinf(p_euler.z);
+	std::tie(c,s) = sincos(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
 	//optimizer will optimize away all this anyway
@@ -652,18 +639,14 @@ template<arithmetic T>
 void Basis_t<T>::set_euler_zxy(const Vector3_t<T> &p_euler) {
 	T c, s;
 
-	c = cosf(p_euler.x);
-	s = sinf(p_euler.x);
+	std::tie(c,s) = sincos(p_euler.x);
 	Basis_t<T> xmat(1, 0, 0, 0, c, -s, 0, s, c);
 
-	c = cosf(p_euler.y);
-	s = sinf(p_euler.y);
+	std::tie(c,s) = sincos(p_euler.y);
 	Basis_t<T> ymat(c, 0, s, 0, 1, 0, -s, 0, c);
 
-	c = cosf(p_euler.z);
-	s = sinf(p_euler.z);
+	std::tie(c,s) = sincos(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
-
 	(*this) = zmat * xmat * ymat;
 }
 template<arithmetic T>

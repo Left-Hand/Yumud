@@ -217,7 +217,7 @@ public:
     
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3> getAcc();
+    Option<Vector3r> getAcc();
 };
 
 }

@@ -18,7 +18,16 @@ public:
             begin()[i] = static_cast<T>(_data[i]);
         }
     }
-    
+
+    template<typename... Args>
+    explicit __fast_inline constexpr
+    Matrix_t(Args... args) requires (sizeof...(args) == R * C) {
+        static_assert(sizeof...(args) == R * C);
+        auto ptr = begin();
+        auto values = std::array<T, R * C>{{static_cast<T>(args)...}};
+        std::copy(values.begin(), values.end(), ptr);
+    }
+
     __fast_inline constexpr Matrix_t& operator = (const Matrix_t & other){
         for(size_t i = 0; i < size(); i++){
             begin()[i] = static_cast<T>(other.data_[i]);
@@ -43,18 +52,18 @@ public:
     __fast_inline constexpr size_t cols(void) const { return C;}
 
 
-    __fast_inline constexpr auto & row(const size_t row_){return data_[row_];}  
-    __fast_inline constexpr const auto & row(const size_t row_) const {return data_[row_];}
+    // __fast_inline constexpr auto row(const size_t row){return std::span<T>(&data_[row], R);}  
+    // __fast_inline constexpr const auto row(const size_t row) const {return data_[row];}
 
-    __fast_inline constexpr auto & operator[](const size_t row_){return data_[row_];}  
-    __fast_inline constexpr const auto & operator[](const size_t row_) const {return data_[row_];}
+    // __fast_inline constexpr auto & operator[](const size_t row){return data_[row];}  
+    // __fast_inline constexpr const auto & operator[](const size_t row) const {return data_[row];}
 
-    __fast_inline constexpr T & at(const size_t _row, const size_t _col) { return data_[_row][_col];}
-    __fast_inline constexpr const T & at(const size_t _row, const size_t _col) const { return data_[_row][_col];}
+    __fast_inline constexpr T & at(const size_t row, const size_t col) { return data_[row * C + col];}
+    __fast_inline constexpr const T & at(const size_t row, const size_t col) const { return data_[row * C + col];}
     __fast_inline constexpr size_t size() const { return R*C;}
 
-    __fast_inline constexpr T * begin() { return reinterpret_cast<T *>(&data_[0][0]);}
-    __fast_inline constexpr const T * begin() const { return reinterpret_cast<const T *>(&data_[0][0]);}
+    __fast_inline constexpr T * begin() { return static_cast<T *>(&data_[0]);}
+    __fast_inline constexpr const T * begin() const { return static_cast<const T *>(&data_[0][0]);}
     __fast_inline constexpr T * end() { return begin() + size();}
     __fast_inline constexpr const T * end() const { return begin() + size();}
 
@@ -263,7 +272,8 @@ public:
     }
 
 private:
-    std::array<std::array<T, C>, R> data_;
+    // std::array<std::array<T, C>, R> data_;
+    std::array<T, C * R> data_;
 };
 
 

@@ -11,10 +11,6 @@ struct Line2_t{
 public:
     T d;
     T rad; 
-    // x * -sin(rad) + y * cos(rad) + d = 0
-
-    // y = (x * sin(rad) - d) / cos(rad)
-    // x = (y * cos(rad) + d) / sin(rad)
 
 public:
     constexpr Line2_t(){;}
@@ -144,14 +140,6 @@ public:
 
     __fast_inline constexpr Line2_t<T> normal(const Vector2_t<T> & p){
         auto new_rad = this->rad + T(PI/2);
-        // x * -sin(rad') + y * cos(rad') + d' = 0
-
-        // considering rad' = rad + PI/2
-
-        // x * -cos(rad) + y * -sin(rad) + d' = 0
-        // => d' = sin(rad) * y + cos(rad) * x
-
-        // return {sin(this->rad) * p.y + cos(this->rad) * p.x, new_rad}
         return {sin(new_rad) * p.x - cos(new_rad) * p.x, new_rad};
     }
 
@@ -219,16 +207,15 @@ public:
 
         auto [x0, y0] = p;
 
-        auto A = -sin(rad);
-        auto B = cos(rad);
+        auto [s, c] = sincos(rad);
 
-        auto A2 = A * A;
-        auto B2 = B * B;
-        auto AB = A * B;
+        auto A2 = s * s;
+        auto B2 = c * c;
+        auto AB = -s * c;
 
         auto C = d;
 
-        return {B2 * x0 - AB * y0 - A * C, -AB * x0 + A2 * y0 - B * C};
+        return {B2 * x0 - AB * y0 + s * C, -AB * x0 + A2 * y0 - c * C};
     }
 
     __fast_inline constexpr Vector2_t<T> mirror(const Vector2_t<T> & p) const {

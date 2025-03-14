@@ -2,6 +2,7 @@
 
 
 #include "sys/core/platform.h"
+#include <array>
 
 //部分平台提供了预编译的lib文件 性能可能会更高
 #if defined(IQMATH_SPEC_RISCV)
@@ -373,14 +374,38 @@ __fast_inline constexpr bool operator !=(const cast_to_iq_v auto val, const iq_t
 	return iq_t<Q>(val) > iq_v;
 }
 
+
+
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> sinf(const iq_t<P> iq){
-    return iq_t<Q>(__iqdetails::_IQNsin<P>(iq.value));
+__fast_inline constexpr iq_t<Q> sinf(const iq_t<P> iq_x){
+    return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.value.to_i32(), __iqdetails::__IQ31getSinDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> cosf(const iq_t<P> iq){
-    return iq_t<Q>(__iqdetails::_IQNcos<P>(iq.value));
+__fast_inline constexpr iq_t<Q> cosf(const iq_t<P> iq_x){
+    return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.value.to_i32(), __iqdetails::__IQ31getCosDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr std::array<iq_t<Q>, 2> sincos(const iq_t<P> iq_x){
+    auto res = (__iqdetails::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), __iqdetails::__IQ31getSinCosDispatcher));
+    return {res.sin, res.cos};
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> sinpu(const iq_t<P> iq_x){
+    return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), __iqdetails::__IQ31getSinDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> cospu(const iq_t<P> iq_x){
+    return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), __iqdetails::__IQ31getCosDispatcher));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr std::array<iq_t<Q>, 2> sincospu(const iq_t<P> iq_x){
+    auto res = (__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), __iqdetails::__IQ31getSinCosDispatcher));
+    return {res.sin, res.cos};
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -534,16 +559,6 @@ __fast_inline constexpr iq_t<Q> pow(const iq_t<P> base, const integral auto time
 }
 
 #endif
-
-template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> sinpu(const iq_t<P> iq){
-    return iq_t<Q>(__iqdetails::_IQNsinPU<P>(iq.value));
-}
-
-template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> cospu(const iq_t<P> iq){
-    return iq_t<Q>(__iqdetails::_IQNcosPU<P>(iq.value));
-}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> isqrt(const iq_t<P> iq){

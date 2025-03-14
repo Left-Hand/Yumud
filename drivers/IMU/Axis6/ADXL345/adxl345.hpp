@@ -315,8 +315,8 @@ public:
         return deviceIDReg.data;
     }
 
-    Option<Vector3> getAcc();
-    Option<Vector3> getGyr();
+    Option<Vector3r> getAcc();
+    Option<Vector3r> getGyr();
 
 };
 

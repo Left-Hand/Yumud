@@ -34,12 +34,17 @@ void HfiObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<
     integral_IbetaError += IbetaError;
 
     // 状态估计更新
-    theta_hat += Kf * (IalphaError * sin(f_inj) + IbetaError * cos(f_inj)) + Ki * integral_IalphaError;
-    omega_hat += Kf * (IalphaError * cos(f_inj) - IbetaError * sin(f_inj)) + Ki * integral_IbetaError;
+
+    auto [s_inj, c_inj] = sincos(f_inj);
+    
+    theta_hat += Kf * (IalphaError * s_inj + IbetaError * c_inj) + Ki * integral_IalphaError;
+    omega_hat += Kf * (IalphaError * c_inj - IbetaError * s_inj) + Ki * integral_IbetaError;
+    
+    auto [s_theta_hat, c_theta_hat] = sincos(theta_hat);
 
     // 估计电流
-    EstIalpha = Kp * (Ld * omega_hat * sin(theta_hat) + Lq * omega_hat * cos(theta_hat)) + R * Ialpha;
-    EstIbeta = Kp * (Ld * omega_hat * cos(theta_hat) - Lq * omega_hat * sin(theta_hat)) + R * Ibeta;
+    EstIalpha = Kp * (Ld * omega_hat * s_theta_hat + Lq * omega_hat * c_theta_hat) + R * Ialpha;
+    EstIbeta = Kp * (Ld * omega_hat * c_theta_hat - Lq * omega_hat * s_theta_hat) + R * Ibeta;
 }
 
 iq_t<16> HfiObserver::getTheta() const {
