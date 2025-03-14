@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../lti.hpp"
-
 namespace ymd::dsp{
 template<arithmetic T>
 class HighpassFilter_t{

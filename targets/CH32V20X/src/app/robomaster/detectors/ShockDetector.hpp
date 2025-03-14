@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dsp/filter/LowpassFilter.hpp"
-#include "dsp/filter/HighpassFilter.hpp"
+#include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/filter/rc/HighpassFilter.hpp"
 
 namespace ymd::dsp{
 

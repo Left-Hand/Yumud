@@ -4,7 +4,7 @@
 #include "sys/clock/time.hpp"
 #include "sys/debug/debug.hpp"
 
-#include "dsp/filter/LowpassFilter.hpp"
+#include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/bus/uart/uarthw.hpp"

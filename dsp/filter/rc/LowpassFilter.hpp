@@ -1,8 +1,5 @@
 #pragma once
 
-#include "../lti.hpp"
-
-
 namespace ymd::dsp{
 //Z域低通滤波器
 template<arithmetic T>
