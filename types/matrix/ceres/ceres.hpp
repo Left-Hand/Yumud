@@ -5,16 +5,14 @@
 
 namespace ymd{
 template <arithmetic T, size_t N>
-struct Jet_t
-{
+struct Jet_t{
   Matrix_t<T, N, 1> v;
   T a;
-  Jet_t() : a(0.0) {}
+  Jet_t() : a(0) {}
   Jet_t(const T value) : a(value) { v.setZero(); }
+
   __fast_inline Jet_t(const T value, const Matrix_t<T, N, 1>& v_)
-      : a(value), v(v_)
-  {
-  }
+      : a(value), v(v_){}
 
   __fast_inline constexpr T & operator [](const size_t n){
     return v.at(n, 0);
@@ -23,14 +21,14 @@ struct Jet_t
   __fast_inline constexpr const T & operator [](const size_t n) const {
     return v.at(n, 0);
   } 
-  Jet_t(const T value, const int index)
-  {
+
+  Jet_t(const T value, const int index){
     v.setZero();
     a = value;
     v(index, 0) = T(1);
   }
-  void init(const T value, const int index)
-  {
+
+  void init(const T value, const int index){
     v.setZero();
     a = value;
     v(index, 0) = T(1);
@@ -41,8 +39,7 @@ struct Jet_t
 // number+jet -jet jet-number jet*jet number/jet jet/jet sqrt(jet) cos(jet)
 // sin(jet)  +=(jet) overload jet + jet
 template <arithmetic T, size_t N>
-inline Jet_t<T, N> operator+(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
-{
+inline Jet_t<T, N> operator+(const Jet_t<T, N>& A, const Jet_t<T, N>& B){
   return Jet_t<T, N>(A.a + B.a, A.v + B.v);
 }  // end jet+jet
 
@@ -122,16 +119,14 @@ inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 }
 // sqrt(jet)
 template <arithmetic T, size_t N>
-inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
-{
+inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A){
   T temp = sqrt(A.a);
 
   return Jet_t<T, N>(temp, T(1) / (T(2) * temp) * A.v);
 }
 // cos(jet)
 template <arithmetic T, size_t N>
-inline Jet_t<T, N> cos(const Jet_t<T, N>& A)
-{
+inline Jet_t<T, N> cos(const Jet_t<T, N>& A){
   return Jet_t<T, N>(cos(A.a), -sin(A.a) * A.v);
 }
 template <arithmetic T, size_t N>
@@ -147,13 +142,13 @@ inline bool operator>(const Jet_t<T, N>& f, const Jet_t<T, N>& g)
 
 template<arithmetic T, size_t N>
 __inline OutputStream & operator<<(OutputStream & os, const Jet_t<T, N> & jet){
-    os << "[ ";
+    os << os.brackets<'['>();
     for (size_t _j = 0; _j < N; _j++) {
         os << jet[_j];
         if(_j == N - 1) break;
         os << os.splitter();
     }
-    os << " ]";
+    os << os.brackets<']'>();
     return os;
 }
 

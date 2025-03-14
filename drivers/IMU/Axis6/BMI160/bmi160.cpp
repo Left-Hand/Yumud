@@ -63,24 +63,24 @@ void BMI160::reset(){
     writeCommand(uint8_t(Command::SOFT_RESET));
 }
 
-Option<Vector3r> BMI160::getAcc(){
+Option<Vector3R> BMI160::getAcc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
-    return Some{Vector3r{
+    return Some{Vector3R{
         conv(acc_reg.x),
         conv(acc_reg.y),
         conv(acc_reg.z)
     }};
 }
 
-Option<Vector3r> BMI160::getGyr(){
+Option<Vector3R> BMI160::getGyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
-    return Some{Vector3r{
+    return Some{Vector3R{
         conv(gyr_reg.x),
         conv(gyr_reg.y),
         conv(gyr_reg.z)

@@ -157,7 +157,7 @@ public:
     void setGain(const Gain gain);
     void setMode(const Mode mode);
 
-    Option<Vector3r> getMagnet() override;
+    Option<Vector3R> getMagnet() override;
 
     bool verify();
     void update();

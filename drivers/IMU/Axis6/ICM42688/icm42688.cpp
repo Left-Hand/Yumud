@@ -118,13 +118,13 @@ void ICM42688::reset(){
 
 }
 
-Option<Vector3r> ICM42688::getAcc(){
+Option<Vector3R> ICM42688::getAcc(){
 
     auto conv = [this](const real_t x) -> real_t {
         return ((x * this -> lsb_acc_x64) >> 6);
     };
 
-    return Some{Vector3r{
+    return Some{Vector3R{
 		conv(acc_data_.x), 
 		conv(acc_data_.y),
 		conv(acc_data_.z)
@@ -132,13 +132,13 @@ Option<Vector3r> ICM42688::getAcc(){
 }
 
 
-Option<Vector3r> ICM42688::getGyr(){
+Option<Vector3R> ICM42688::getGyr(){
 
     auto conv = [this](const real_t x) -> real_t {
         return ((x * this->lsb_gyr_x256) >> 8);
     };
 
-    return Some{Vector3r{
+    return Some{Vector3R{
 		conv(gyr_data_.x), 
 		conv(gyr_data_.y),
 		conv(gyr_data_.z)
