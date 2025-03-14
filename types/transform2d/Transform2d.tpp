@@ -30,12 +30,6 @@
 /**************************************************************************/
 
 
-
-// const Transform2D_t<T> Transform2D_t<T>::IDENTITY;
-// const Transform2D_t<T> Transform2D_t<T>::FLIP_X = Transform2D_t(-1, 0, 0, 1, 0, 0);
-// const Transform2D_t<T> Transform2D_t<T>::FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
-
-
 namespace ymd{
 template<arithmetic T>
 Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
@@ -46,6 +40,17 @@ Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
 	elements[2][0] = ox;
 	elements[2][1] = oy;
 }
+
+template<arithmetic T>
+Transform2D_t<T>::Transform2D_t(T p_rot, const Vector2_t<T> &p_position) {
+	auto [sr, cr] = sincos(p_rot);
+	elements[0][0] = cr;
+	elements[0][1] = sr;
+	elements[1][0] = -sr;
+	elements[1][1] = cr;
+	elements[2] = p_position;
+}
+
 
 template<arithmetic T>
 Vector2_t<T> Transform2D_t<T>::basis_xform(const Vector2_t<T> &v) const {
@@ -183,15 +188,6 @@ void Transform2D_t<T>::set_rotation(T p_rot) {
 	elements[1][1] = cr;
 }
 
-template<arithmetic T>
-Transform2D_t<T>::Transform2D_t(T p_rot, const Vector2_t<T> &p_position) {
-	auto [sr, cr] = sincos(p_rot);
-	elements[0][0] = cr;
-	elements[0][1] = sr;
-	elements[1][0] = -sr;
-	elements[1][1] = cr;
-	elements[2] = p_position;
-}
 
 template<arithmetic T>
 Vector2_t<T> Transform2D_t<T>::get_scale() const {
@@ -354,7 +350,7 @@ Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_trans
 
 	Vector2_t<T> v;
 
-	if (dot > 0.9995) {
+	if (dot > T(0.9995)) {
 		v = Vector2_t<T>::linear_interpolate(v1, v2, p_c).normalized(); //linearly interpolate to avoid numerical precision issues
 	} else {
 		T angle = p_c * ::acos(dot);

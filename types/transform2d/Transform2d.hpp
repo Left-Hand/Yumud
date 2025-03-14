@@ -55,6 +55,19 @@ struct Transform2D_t{
 
 	Vector2_t<T> elements[3];
 
+	__fast_inline Transform2D_t(const T xx, const T xy, const T yx, const T yy, const T ox, const T oy);
+
+	__fast_inline Transform2D_t(const T p_rot, const Vector2_t<T> &p_pos);
+	__fast_inline Transform2D_t() {
+		elements[0][0] = T(1);
+		elements[1][1] = T(1);
+	}
+	
+	static constexpr Transform2D_t<T> IDENTITY = Transform2D_t(1, 0, 0, 1, 0, 0);
+	static constexpr Transform2D_t<T> FLIP_X = Transform2D_t(-1, 0, 0, 1, 0, 0);
+	static constexpr Transform2D_t<T> FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
+
+
 	inline T tdotx(const Vector2_t<T> &v) const { return elements[0][0] * v.x + elements[1][0] * v.y; }
 	inline T tdoty(const Vector2_t<T> &v) const { return elements[0][1] * v.x + elements[1][1] * v.y; }
 
@@ -62,7 +75,6 @@ struct Transform2D_t{
 	inline Vector2_t<T> &operator[](int p_idx) { return elements[p_idx]; }
 
 	inline Vector2_t<T> get_axis(int p_axis) const {
-		ERR_FAIL_INDEX_V(p_axis, 3, Vector2_t<T>());
 		return elements[p_axis];
 	}
 	inline void set_axis(int p_axis, const Vector2_t<T> &p_vec) {
@@ -116,14 +128,6 @@ struct Transform2D_t{
 	Vector2_t<T> xform_inv(const Vector2_t<T> &p_vec) const;
 	Rect2_t<T> xform(const Rect2_t<T> &p_vec) const;
 	Rect2_t<T> xform_inv(const Rect2_t<T> &p_vec) const;
-
-	Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy);
-
-	Transform2D_t(T p_rot, const Vector2_t<T> &p_pos);
-	inline Transform2D_t() {
-		elements[0][0] = T(1);
-		elements[1][1] = T(1);
-	}
 };
 
 
