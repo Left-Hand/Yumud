@@ -107,14 +107,14 @@ void AD9959::setAmplitude(ChannelIndex chan, uint16_t amplitude){        // Maxi
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
     setChannels(chan);
-    spi_drv_.writeSingle(Register::ACR);                  // Amplitude control register
-    spi_drv_.writeSingle(0);                    // Time between ramp steps
+    spi_drv_.writeSingle(Register::ACR).unwrap();                  // Amplitude control register
+    spi_drv_.writeSingle(0).unwrap();                    // Time between ramp steps
     if (amplitude < 1024){               // Enable amplitude control with no ramping
         spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8);
     }else{
         spi_drv_.writeSingle(0);                  // Disable the amplitude multiplier
     }
-    spi_drv_.writeSingle(amplitude&0xFF);       // Bottom 8 bits of amplitude
+    spi_drv_.writeSingle(amplitude&0xFF).unwrap();       // Bottom 8 bits of amplitude
 }
 
 void AD9959::setPhase(ChannelIndex chan, uint16_t phase){                // Maximum phase value is 16383

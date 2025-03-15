@@ -135,7 +135,7 @@ void PAJ7620::selectBank(uint8_t bank) {
 
 void PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
-	i2c_drv_.verify();
+	i2c_drv_.verify().unwrap();
 }
 
 void PAJ7620::update(){

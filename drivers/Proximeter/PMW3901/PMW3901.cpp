@@ -37,22 +37,23 @@
 #endif
 
 
+using namespace ymd;
 using namespace ymd::drivers;
 
-void PMW3901::writeReg(const uint8_t command, const uint8_t data){
-    spi_drv_.writeSingle<uint8_t>(command | 0x80, CONT);
-    spi_drv_.writeSingle<uint8_t>(data);
+BusError PMW3901::writeReg(const uint8_t command, const uint8_t data){
+    spi_drv_.writeSingle<uint8_t>(command | 0x80, CONT).unwrap();
+    return spi_drv_.writeSingle<uint8_t>(data);
 }
 
 
-void PMW3901::readReg(const uint8_t command, uint8_t & data){
-    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
-    spi_drv_.readSingle<uint8_t>(data);
+BusError PMW3901::readReg(const uint8_t command, uint8_t & data){
+    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
+    return spi_drv_.readSingle<uint8_t>(data);
 }
 
-void PMW3901::readBurst(const uint8_t command, uint8_t * data, const size_t len){
-    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
-    spi_drv_.readBurst<uint8_t>(data, len);
+BusError PMW3901::readBurst(const uint8_t command, uint8_t * data, const size_t len){
+    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
+    return spi_drv_.readBurst<uint8_t>(data, len);
 }
 
 
@@ -152,7 +153,7 @@ bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
 }
 
 void PMW3901::init() {
-    spi_drv_.release();
+    spi_drv_.release().unwrap();
     writeReg(PMW3901_REG_Power_Up_Reset, 0x5A);
     delay(5);
 

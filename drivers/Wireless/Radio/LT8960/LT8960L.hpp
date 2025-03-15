@@ -11,6 +11,7 @@ static_assert(sizeof(T) == 2 and std::has_unique_object_representations_v<T>, "x
 T name = {};\
 
 
+
 template<typename T>
 class PtrLikeRef{
 public:
@@ -88,6 +89,9 @@ public:
         _1M = 0, _250K, _125K, _62_5K
     };
 
+    enum class Mode:uint8_t{
+        Rx, Tx, CarrierWave, Sleep
+    };
 protected:
     using RegAddress = uint8_t;
 
@@ -368,6 +372,8 @@ public:
     [[nodiscard]] Result<void, Error> setTxPower(const Power power);
 
     [[nodiscard]] Result<void, Error> trasmitRf(std::span<const std::byte> buf);
+
+    [[nodiscard]] Result<void, Error> setDataRate(DataRate rate);
 };
 }
 

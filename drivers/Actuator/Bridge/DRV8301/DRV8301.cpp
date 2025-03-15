@@ -91,7 +91,7 @@ void DRV8301::readReg(const RegAddress addr, uint16_t & reg){
         .write = 1
     };
 
-    spi_drv_.readSingle<uint16_t>((spi_format));
+    spi_drv_.readSingle<uint16_t>((spi_format)).unwrap();
 
     reg = spi_format.data;
 }

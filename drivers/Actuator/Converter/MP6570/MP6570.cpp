@@ -132,7 +132,7 @@ BusError MP6570::Phy::readReg(const uint8_t reg_addr, uint16_t & data){
         spi_drv_->writeBurst<uint8_t>(
             (frame.payload.begin())
             , (frame.payload.size()),
-            CONT);
+            CONT).unwrap();
 
         SpiReadResult rr;
 
@@ -140,7 +140,7 @@ BusError MP6570::Phy::readReg(const uint8_t reg_addr, uint16_t & data){
             (rr.payload.begin())
             , (rr.payload.size()),
             DISC
-        );
+        ).unwrap();
 
         const auto result_opt = rr.result();
         if(result_opt){

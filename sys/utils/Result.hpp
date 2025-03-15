@@ -158,7 +158,7 @@ namespace details{
             data_(std::forward<E>(val)){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
-        __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
+        // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
     
         __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
         __fast_inline constexpr bool is_err() const{return data_.has_value();}
@@ -258,6 +258,9 @@ public:
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
     using type = Result<T, E>;
+    constexpr Result & operator =(const Result<T, E> &) = default;
+    // constexpr Result & operator =(Result<T, E> &&) = default;
+
 private:
     Storage result_;
 

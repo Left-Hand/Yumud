@@ -160,16 +160,16 @@ protected:
     Status2Reg status2_reg = {};
 
     
-    auto writeReg(const RegAddress address, const uint8_t reg){
+    BusError writeReg(const RegAddress address, const uint8_t reg){
         return i2c_drv_.writeReg(uint8_t(address), reg).unwrap();
     }
 
-    auto readReg(const RegAddress address, uint8_t & reg){
+    BusError readReg(const RegAddress address, uint8_t & reg){
         return i2c_drv_.readReg(uint8_t(address), reg).unwrap();
     }
 
-    void readBurst(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
+    BusError readBurst(const RegAddress addr, uint8_t * data, size_t len){
+        i2c_drv_.readBurst(uint8_t(addr), std::span(data, len)).unwrap();
     }
 public:
 

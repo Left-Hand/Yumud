@@ -56,13 +56,13 @@ bool INA3221::verify(){
 }
 
 INA3221 & INA3221::update(){
-    readBurst(shuntvolt1_reg.address, &shuntvolt1_reg, 6);
+    readBurst(shuntvolt1_reg.address, &shuntvolt1_reg, 6).unwrap();
 
     return *this;
 }
- 
+
 INA3221 & INA3221::update(const size_t index){
-    readBurst(shuntvolt1_reg.address + ((index - 1) * 2), &shuntvolt1_reg + ((index - 1) * 2), 2);
+    readBurst(shuntvolt1_reg.address + ((index - 1) * 2), &shuntvolt1_reg + ((index - 1) * 2), 2).unwrap();
     // READ_REG(config_reg);
     // INA3221_DEBUG(config_reg.as_val());
     // switch(index){

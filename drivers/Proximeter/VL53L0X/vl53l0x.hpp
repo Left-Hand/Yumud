@@ -42,7 +42,7 @@ private:
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        i2c_drv_.writeReg(Reg, byte);
+        i2c_drv_.writeReg(Reg, byte).unwrap();
     }
 
     void flush();
@@ -50,13 +50,13 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        i2c_drv_.readReg(Reg, data);
+        i2c_drv_.readReg(Reg, data).unwrap();
         return data;
     }
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        i2c_drv_.readBurst(reg, std::span(data, len), MSB);
+        i2c_drv_.readBurst(reg, std::span(data, len), MSB).unwrap();
     }
 };
 

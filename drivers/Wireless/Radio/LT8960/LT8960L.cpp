@@ -21,10 +21,23 @@
 #endif
 
 
+static constexpr size_t packet_len = 64;
+
 using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = LT8960L::Error;
+
+
+template<typename Fn>
+Result<void, Error> retry(const size_t times, Fn && fn){
+    Result<void, Error> res = std::forward<Fn>(fn)();
+    for(size_t i = 0; i < times - 1; i++){
+        if(res.is_ok()) return Ok();
+        else res = std::forward<Fn>(fn)();
+    }
+    return res;
+}
 
 void LT8960L::delayT3(){delayMicroseconds(1);}
 void LT8960L::delayT5(){delayMicroseconds(1);}
@@ -35,35 +48,36 @@ Result<void, Error> LT8960L::DevDriver::writeReg(const LT8960L::RegAddress addre
 }
 
 Result<void, Error> LT8960L::DevDriver::readReg(const LT8960L::RegAddress address, uint16_t & reg){
-    LT8960L_DEBUG("read",reg, "at", uint8_t(address));
+    LT8960L_DEBUG("read", reg, "at", uint8_t(address));
     return i2c_drv_.readReg(uint8_t(address), reg, MSB);
 }
 
 Result<size_t, Error> LT8960L::DevDriver::writeBurst(const RegAddress address, std::span<const std::byte> buf){
     LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
 
-    const auto u8_size = std::byte(buf.size());
+    const auto u8_len = std::byte(buf.size());
 
     const auto err = i2c_drv_.writeBlocks<const std::byte, std::byte>(
-        R16_Fifo::address, std::span(&u8_size, 1), buf, LSB);
+        R16_Fifo::address, std::span(&u8_len, 1), buf, LSB);
 
-    return rescond(err.ok(), 0u, err);
+    return rescond(err.ok(), buf.size(), err);
 }
 
 Result<size_t, Error> LT8960L::DevDriver::readBurst(const RegAddress address, std::span<std::byte> buf){
     LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
 
-    const auto u8_size = std::byte(buf.size());
+    
+    if(buf.size() < packet_len) return Err(Error(Error::UNSPECIFIED));
+    
+    std::byte u8_len;
+    const auto err = i2c_drv_.operateBlocks<std::byte, std::byte>(
+        R16_Fifo::address, std::span(&u8_len, 1), buf, LSB);
 
-    const auto err = i2c_drv_.operateBlocks<const std::byte, std::byte>(
-        R16_Fifo::address, std::span(&u8_size, 1), buf, LSB);
-
-    return rescond(err.ok(), 0u, err);
+    return rescond(err.ok(), buf.size(), err);
 }
 
 Result<void, Error> LT8960L::DevDriver::verify(){
     return i2c_drv_.verify();
-    return Ok();
 }
 
 Result<bool, Error> LT8960L::isRfSynthLocked(){
@@ -139,7 +153,7 @@ Result<void, Error> LT8960L::reset(){
     // 第三步：写0x38寄存器0xBFFD//执行复位操作
 
     while(millis() < 20){delay(1);}
-    return intoWake();
+    return retry(3, [this](){return this -> intoWake();});
 }
 
 Result<void, Error> LT8960L::verify(){
@@ -249,7 +263,45 @@ Result<void, Error> LT8960L::setTxPower(const LT8960L::Power power){
     pa_config_reg.as_ref() = code;
     return writeReg(pa_config_reg);
 }
-
-[[nodiscard]] Result<void, Error> trasmitRf(const std::span<std::byte> buf){
+Result<void, Error> trasmitRf(const std::span<std::byte> buf){
     return Ok();
+}
+
+Result<void, Error> LT8960L::setDataRate(DataRate rate){
+    // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
+
+    switch(rate){
+        case DataRate::_1M:
+            return Result<void, Error>(Ok())
+                .then([&](){return this->writeReg(0x15, 0x65CC);})
+                .then([&](){return this->writeReg(0x17, 0x6000);})
+                .then([&](){return this->writeReg(0x08, 0x6c90);})
+                .then([&](){return this->writeReg(0x44, 0x0100);})
+                .then([&](){return this->writeReg(0x45, 0x0080);});
+
+
+        case DataRate::_250K:
+            return Result<void, Error>(Ok())
+                .then([&](){return this->writeReg(0x08, 0x6c90);})
+                .then([&](){return this->writeReg(0x44, 0x0400);})
+                .then([&](){return this->writeReg(0x45, 0x0552);});
+
+
+        case DataRate::_125K:
+            return Result<void, Error>(Ok())
+                .then([&](){return this->writeReg(0x15, 0x644C);})
+                .then([&](){return this->writeReg(0x17, 0x0000);})
+                .then([&](){return this->writeReg(0x08, 0x6c90);})
+                .then([&](){return this->writeReg(0x44, 0x0800);})
+                .then([&](){return this->writeReg(0x45, 0x0552);});
+                
+                
+        case DataRate::_62_5K :
+            return Result<void, Error>(Ok())
+                .then([&](){return this->writeReg(0x08, 0x6c50);})
+                .then([&](){return this->writeReg(0x44, 0x1000);})
+                .then([&](){return this->writeReg(0x45, 0x0552);});
+    }
+
+    __builtin_unreachable();
 }

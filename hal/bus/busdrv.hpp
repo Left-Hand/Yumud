@@ -78,6 +78,7 @@ public:
         if (auto err = bus_.begin(index_); err.ok()) {
             delay(1);
             bus_.end();
+            return BusError::OK;
         }else{
             return err;
         }

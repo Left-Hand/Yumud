@@ -209,8 +209,8 @@ protected:
     BusError readReg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT);
-        spi_drv.readBurst(&(value), sizeof(value));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
+        return spi_drv.readBurst(&(value), sizeof(value));
     }
 
     BusError readFifo(uint8_t *buffer, size_t size){
@@ -241,17 +241,17 @@ protected:
     }
 
     BusError clearTxFifo(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_TX)).unwrap();
     }
 
     BusError clearRxFifo(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_RX)).unwrap();
     }
 
     BusError updateStatus(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
     hal::SpiDrv spi_drv;
@@ -261,8 +261,8 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT);
-        spi_drv.readSingle((size));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT).unwrap();
+        spi_drv.readSingle((size)).unwrap();
         return size;
     }
 };
