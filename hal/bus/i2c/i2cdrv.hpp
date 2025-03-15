@@ -2,6 +2,7 @@
 
 #include "i2c.hpp"
 #include "hal/bus/busdrv.hpp"
+#include "utils/BytesIterator.hpp"
 
 #include <type_traits>
 #include <concepts>
@@ -113,6 +114,9 @@ public:
         return writeSame_impl(addr, data, length, LSB);
     }
 
+    template<typename T>
+    requires valid_i2c_data<T>
+    BusError writeBody(const T data, const Endian endian);
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)

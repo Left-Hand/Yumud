@@ -26,34 +26,6 @@ using namespace ymd::drivers;
 
 using Error = LT8960L::Error;
 
-
-template<typename T, typename Fn1, typename Fn2, typename Fn3>
-[[nodiscard]] __fast_inline
-auto iterate_bytes(std::span<T> pdata, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
-    constexpr size_t dsize = sizeof(T);
-
-    const auto bytes = std::span<std::byte>(
-        reinterpret_cast<const std::byte *>(pdata.begin()), 
-        pdata.size() * dsize
-    );
-
-    for(size_t i = 0; i < bytes.size(); i += dsize){
-        if(endian == MSB){
-            for(size_t j = dsize; j > 0; j--){
-                const auto err = std::forward<Fn1>(do_fn)(bytes[i + j - 1]);
-                if(std::forward<Fn2>(check_fn)(err)) return err;
-            }
-        }else{
-            for(size_t j = 0; j < dsize; j++){
-                const auto err = std::forward<Fn1>(do_fn)(bytes[i + j]);
-                if(std::forward<Fn2>(check_fn)(err)) return err;
-            }
-        }
-    }
-
-    return std::forward<Fn3>(ok_fn)();
-}
-
 void LT8960L::delayT3(){delayMicroseconds(1);}
 void LT8960L::delayT5(){delayMicroseconds(1);}
 
