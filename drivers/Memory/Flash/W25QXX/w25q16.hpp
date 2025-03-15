@@ -76,16 +76,16 @@ public:
     bool isWriteable();
 
 private:
-    void writeByte(const uint8_t data){
-        spi_drv.writeSingle(data);
+    BusError writeByte(const uint8_t data){
+        return spi_drv.writeSingle(data);
     }
 
-    void writeByte(const Commands & data){
-        spi_drv.writeSingle((uint8_t)data);
+    BusError writeByte(const Commands & data){
+        return spi_drv.writeSingle((uint8_t)data);
     }
 
-    void readByte(uint8_t & data){
-        spi_drv.readSingle(data);
+    BusError readByte(uint8_t & data){
+        return spi_drv.readSingle(data);
     }
 
 };

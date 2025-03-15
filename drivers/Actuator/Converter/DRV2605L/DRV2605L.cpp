@@ -13,8 +13,8 @@
 #define DRV2605_DEBUG(...)
 #define DRV2605_PANIC(...)  PANIC_NSRC()
 #define DRV2605_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void) readReg(reg.address, reg);
-#define WRITE_REG(reg) (void) writeReg(reg.address, reg);
+#define READ_REG(reg) (void) readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) (void) writeReg(reg.address, reg).unwrap();
 #endif
 
 

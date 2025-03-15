@@ -138,6 +138,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeBurst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata
@@ -147,6 +148,7 @@ public:
         
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeBurst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata,
@@ -157,6 +159,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError readBurst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata
@@ -167,6 +170,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError readBurst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata,
@@ -176,6 +180,7 @@ public:
     }
 
     template<typename ... Ts>
+    [[nodiscard]] __fast_inline
     BusError writeBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::add_const_t<Ts>> ... args,
@@ -188,6 +193,7 @@ public:
     }
 
     template<typename ... Ts>
+    [[nodiscard]] __fast_inline
     BusError readBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::remove_const_t<Ts>> ... args,
@@ -200,6 +206,7 @@ public:
     }
 
     template<typename ... Trest>
+    [[nodiscard]] __fast_inline
     BusError operateBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<Trest> ... rest,
@@ -213,6 +220,7 @@ public:
     
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeRepeat(
         const valid_i2c_regaddr auto addr,
         const T data, 
@@ -224,6 +232,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeRepeat(
         const valid_i2c_regaddr auto addr, 
         const T data, 
@@ -235,6 +244,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeReg(
         const valid_i2c_regaddr auto addr, 
         const T data, 
@@ -245,6 +255,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeReg(
         const valid_i2c_regaddr auto addr, 
         const T & data
@@ -254,6 +265,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError readReg(
         const valid_i2c_regaddr auto addr,
         T & data, 
@@ -264,6 +276,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError readReg(
         const valid_i2c_regaddr auto addr,
         T & data
@@ -271,7 +284,10 @@ public:
         return this->readBurst_impl(addr, std::span(&data, 1), LSB);
     }
 
+    [[nodiscard]]
     BusError verify();
+
+    [[nodiscard]]
     BusError release();
 };
 

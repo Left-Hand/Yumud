@@ -15,12 +15,12 @@
 
 using namespace ymd;
 
-void VL6180X::writeReg(const RegAddress command, const uint8_t data){
-    i2c_drv_.writeReg(command, data);
+BusError VL6180X::writeReg(const RegAddress command, const uint8_t data){
+    return i2c_drv_.writeReg(command, data);
 }
 
 
-void VL6180X::readReg(const RegAddress command, uint8_t & data){
-    i2c_drv_.writeReg(command, data);
+BusError VL6180X::readReg(const RegAddress command, uint8_t & data){
+    return i2c_drv_.writeReg(command, data);
 }
 

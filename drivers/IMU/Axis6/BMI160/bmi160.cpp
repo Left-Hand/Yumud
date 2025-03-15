@@ -17,8 +17,8 @@ using namespace ymd::drivers;
 #define BMI160_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg);
-#define READ_REG(reg) this->readReg(reg.address, reg);
+#define WRITE_REG(reg) this->writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg) this->readReg(reg.address, reg).unwrap();
 
 void BMI160::init(){
     reset();

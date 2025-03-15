@@ -24,34 +24,3 @@ Option<Vector3R> BMI088::getGyr(){
 real_t BMI088::getTemperature(){
     return 0;
 }
-
-void BMI088::writeReg(const RegAddress reg, const uint8_t data){
-    if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data);
-    }else if (spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
-}
-
-void BMI088::writeReg(const RegAddress reg, uint8_t & data){
-    if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data);
-    }else if (spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
-}
-
-void BMI088::requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-    if(i2c_drv_){
-        i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), MSB);
-    }else if(spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
-}
-

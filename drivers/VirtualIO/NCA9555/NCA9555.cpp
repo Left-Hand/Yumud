@@ -3,8 +3,8 @@
 
 using namespace ymd::drivers;
 
-#define WRITE_REG(reg) writeReg(reg.address, reg);
-#define READ_REG(reg) readReg(reg.address, reg);
+#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg) readReg(reg.address, reg).unwrap();
 
 void NCA9555::init(){
     setInversion(0);

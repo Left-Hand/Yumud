@@ -103,7 +103,7 @@ protected:
     }
 
 
-    void requestPool(const RegAddress addr, int16_t * pdata, size_t len){
+    void readBurst(const RegAddress addr, int16_t * pdata, size_t len){
         i2c_drv_.readBurst(uint8_t(addr), std::span(pdata, len), MSB);
     }
 

@@ -67,7 +67,7 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
 
 
 
-    spi_drv_.writeSingle(Register::FR1);
+    spi_drv_.writeSingle(Register::FR1).unwrap();
     // High VCO Gain is needed for a 255-500MHz master clock, and not up to 160Mhz
     // In-between is unspecified.
     spi_drv_.writeSingle(
@@ -79,8 +79,8 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
     spi_drv_.writeSingle(
         uint8_t(FR1_Bits::ModLevels2) |
         uint8_t(FR1_Bits::RampUpDownOff) |
-        uint8_t(FR1_Bits::Profile0));
-    spi_drv_.writeSingle(FR1_Bits::SyncClkDisable); // Don't output SYNC_CLK
+        uint8_t(FR1_Bits::Profile0)).unwrap();
+    spi_drv_.writeSingle(FR1_Bits::SyncClkDisable).unwrap(); // Don't output SYNC_CLK
 }
 
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta

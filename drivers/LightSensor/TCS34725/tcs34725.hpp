@@ -83,23 +83,23 @@ protected:
         return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg(convRegAddress(addr), (uint16_t)data, LSB);
+    BusError writeReg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.writeReg(convRegAddress(addr), (uint16_t)data, LSB);
     }
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg(convRegAddress(addr), (uint16_t &)data, LSB);
+    BusError readReg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.readReg(convRegAddress(addr), (uint16_t &)data, LSB);
     }
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data);
+    BusError writeReg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data);
+    BusError readReg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data);
     }
 
-    void requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    BusError requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
 public:
     scexpr uint8_t default_i2c_addr = 0x52;

@@ -43,7 +43,7 @@ void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
             reg.full = false;
             reg.cvr = off;
         // }
-        writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg);
+        writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg).unwrap();
     }
 }
 

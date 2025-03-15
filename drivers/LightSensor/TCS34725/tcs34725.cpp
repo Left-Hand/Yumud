@@ -1,6 +1,5 @@
 #include "tcs34725.hpp"
 
-using namespace ymd::drivers;
 
 #ifdef TCS34725_DEBUG
 #undef TCS34725_DEBUG
@@ -13,11 +12,15 @@ using namespace ymd::drivers;
 #define TCS34725_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-void TCS34725::requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len){
+
+using namespace ymd;
+using namespace ymd::drivers;
+
+BusError TCS34725::requestRegData(const TCS34725::RegAddress addr, uint16_t * data_ptr, const size_t len){
     uint8_t address = convRegAddress(addr);
     TCS34725_DEBUG("address", address)
 
-    i2c_drv_.readBurst(address, std::span(data_ptr, len), LSB);
+    return i2c_drv_.readBurst(address, std::span(data_ptr, len), LSB);
 }
 
 

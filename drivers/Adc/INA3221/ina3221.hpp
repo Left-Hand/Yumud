@@ -179,8 +179,8 @@ protected:
         return make_result(i2c_drv.writeReg((addr), data, MSB));
     }
 
-    void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
-        i2c_drv.readBurst(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB);
+    [[nodiscard]] DeviceResult readBurst(const RegAddress addr, void * data_ptr, const size_t len){
+        return make_result(i2c_drv.readBurst(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB));
     }
 
     struct INA3221Channel:public hal::AnalogInIntf{

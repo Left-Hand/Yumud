@@ -39,12 +39,12 @@ protected:
     ConfigReg config_reg;
 
 
-    void writeReg(const uint8_t addr, const uint16_t data){
-        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError writeReg(const uint8_t addr, const uint16_t data){
+        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
-    void readReg(const uint8_t addr, uint16_t & data){
-        i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError readReg(const uint8_t addr, uint16_t & data){
+        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
 public:

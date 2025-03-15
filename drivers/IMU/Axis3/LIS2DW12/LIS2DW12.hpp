@@ -2,10 +2,11 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
+#include "drivers/IMU/STMicroIMU.hpp"
 
 namespace ymd::drivers{
 
-class LIS2DW12:public Accelerometer{
+class LIS2DW12:public Accelerometer, public STMicroSensor{
 public:
 
     enum class DPS:uint8_t{
@@ -188,21 +189,19 @@ protected:
         uint8_t fifo_ovr:1;
         uint8_t fifo_fth:1;
     };
-    void writeReg(const uint8_t addr, const uint8_t data);
 
-    void readReg(const uint8_t addr, uint8_t & data);
 
 
     static real_t calculateAccScale(const AccRange range);
     static real_t calculateGyrScale(const GyrRange range);
 public:
 
-    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
-    LIS2DW12(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    LIS2DW12(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    LIS2DW12(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    LIS2DW12(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    LIS2DW12(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):STMicroSensor(hal::I2cDrv{i2c, i2c_addr}){;}
+    LIS2DW12(const hal::I2cDrv & i2c_drv):STMicroSensor(i2c_drv){;}
+    LIS2DW12(hal::I2cDrv && i2c_drv):STMicroSensor(std::move(i2c_drv)){;}
+    LIS2DW12(const hal::SpiDrv & spi_drv):STMicroSensor(spi_drv){;}
+    LIS2DW12(hal::SpiDrv && spi_drv):STMicroSensor(std::move(spi_drv)){;}
+    LIS2DW12(hal::Spi & spi, const uint8_t index):STMicroSensor(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();

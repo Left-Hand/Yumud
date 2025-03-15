@@ -15,8 +15,8 @@
 #define MPU6050_TODO(...) PANIC_NSRC()
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) !+readReg(reg.address, reg);
-#define WRITE_REG(reg) !+writeReg(reg.address, reg);
+#define READ_REG(reg) readReg(reg.address, reg).unwrap()
+#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap()
 #endif
 
 

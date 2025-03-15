@@ -2,13 +2,10 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
-
-#include "sys/utils/Option.hpp"
-#include "sys/utils/Result.hpp"
-
-
+#include "drivers/IMU/AsahiKaseiIMU.hpp"
 
 namespace ymd::drivers{
+// class AK8963:public Magnetometer, public AsahiKaseiSensor{
 class AK8963:public Magnetometer{
 public:
 // "0000":  Power-down mode 

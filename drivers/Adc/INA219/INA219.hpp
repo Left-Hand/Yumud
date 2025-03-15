@@ -82,7 +82,7 @@ protected:
     
     [[nodiscard]] Result<void, Error> readReg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] Result<void, Error> requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] Result<void, Error> readBurst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     // class CurrentChannel;
     // class VoltageChannel;

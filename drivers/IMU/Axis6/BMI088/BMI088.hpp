@@ -3,18 +3,16 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
-
+#include "drivers/IMU/BoschIMU.hpp"
 
 namespace ymd::drivers{
 
-class BMI088:public Axis6{
+class BMI088:public Axis6, public BoschSensor{
 public:
     scexpr uint8_t default_i2c_addr = 0xd0;
 
 
 protected:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
 
     using RegAddress = uint8_t;
 
@@ -38,21 +36,14 @@ protected:
         uint8_t drdy:1;
     };
 
-
-
-    void writeReg(const RegAddress reg, const uint8_t data);
-
-    void writeReg(const RegAddress reg, uint8_t & data);
-
-    void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len);
 public:
-    BMI088(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BMI088(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    BMI088(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088(const hal::I2cDrv & i2c_drv):BoschSensor(i2c_drv){;}
+    BMI088(hal::I2cDrv && i2c_drv):BoschSensor(std::move(i2c_drv)){;}
+    BMI088(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
-    BMI088(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    BMI088(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    BMI088(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    BMI088(const hal::SpiDrv & spi_drv):BoschSensor(spi_drv){;}
+    BMI088(hal::SpiDrv && spi_drv):BoschSensor(std::move(spi_drv)){;}
+    BMI088(hal::Spi & spi, const uint8_t index):BoschSensor(hal::SpiDrv{spi, index}){;}
 
 
     void init();

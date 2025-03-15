@@ -4,14 +4,14 @@
 
 namespace ymd::drivers{
 
-class BoschSensor{
+class STMicroSensor{
 protected:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 
     virtual BusError writeReg(const uint8_t addr, const uint8_t data) final{
         if(i2c_drv_){
-            return i2c_drv_->writeReg(addr, data);
+            return i2c_drv_->writeReg(uint8_t(addr), data);
         }else if(spi_drv_){
             spi_drv_->writeSingle(uint8_t(addr), CONT).unwrap();
             return spi_drv_->writeSingle(data);
@@ -31,7 +31,7 @@ protected:
         PANIC();
     }
 
-    virtual BusError requestData(const uint8_t addr, int16_t * datas, const size_t len) final{
+    virtual BusError requestData(const uint8_t addr, int16_t * datas, const size_t len)final{
         if(i2c_drv_){
             return i2c_drv_->readBurst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
@@ -42,14 +42,11 @@ protected:
         PANIC();
     }
 public:
-
-    BoschSensor(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    BoschSensor(hal::I2c & i2c, const uint8_t addr):
-        BoschSensor(hal::I2cDrv{i2c, addr}){;}
-    BoschSensor(const hal::SpiDrv & spi_drv):
-        i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    BoschSensor(hal::Spi & spi, const uint8_t index):
-        BoschSensor(hal::SpiDrv{spi, index}){;}
+    STMicroSensor(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    STMicroSensor(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    STMicroSensor(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    STMicroSensor(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    STMicroSensor(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    STMicroSensor(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

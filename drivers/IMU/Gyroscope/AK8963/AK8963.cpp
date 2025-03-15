@@ -79,7 +79,7 @@ Result<void, Error> AK8963::init(){
 
 
 Result<void, Error> AK8963::verify(){
-    p_i2c_drv_->release();
+    p_i2c_drv_->release().unwrap();
 
     if (!p_i2c_drv_->verify().ok()){
         AK8963_PANIC("AK8963 not founded");

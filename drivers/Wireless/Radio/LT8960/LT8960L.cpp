@@ -16,8 +16,8 @@
 #define LT8960L_TODO(...) PANIC_NSRC()
 #define LT8960L_PANIC(...)  PANIC_NSRC()
 #define LT8960L_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) readReg(reg.address, reg);
-#define WRITE_REG(reg) writeReg(reg.address, reg);
+#define READ_REG(reg) readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
 #endif
 
 
@@ -40,7 +40,7 @@ Result<void, Error> LT8960L::DevDriver::readReg(const LT8960L::RegAddress addres
 }
 
 Result<size_t, Error> LT8960L::DevDriver::writeBurst(const RegAddress address, std::span<const std::byte> buf){
-    LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
+    LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
 
     const auto u8_size = std::byte(buf.size());
 
@@ -51,7 +51,7 @@ Result<size_t, Error> LT8960L::DevDriver::writeBurst(const RegAddress address, s
 }
 
 Result<size_t, Error> LT8960L::DevDriver::readBurst(const RegAddress address, std::span<std::byte> buf){
-    LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
+    LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
 
     const auto u8_size = std::byte(buf.size());
 
@@ -62,6 +62,7 @@ Result<size_t, Error> LT8960L::DevDriver::readBurst(const RegAddress address, st
 }
 
 Result<void, Error> LT8960L::DevDriver::verify(){
+    return i2c_drv_.verify();
     return Ok();
 }
 

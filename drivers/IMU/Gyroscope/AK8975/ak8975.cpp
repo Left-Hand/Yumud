@@ -122,27 +122,3 @@ Option<Vector3R> AK8975::getMagnet(){
     return Some{Vector3R{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }
-
-void AK8975::writeReg(const uint8_t addr, const uint8_t data){
-    if(i2c_drv_) i2c_drv_->writeReg(addr, data);
-    if(spi_drv_){
-        spi_drv_->writeSingle(uint16_t(uint16_t(addr) << 8 | data));
-        // i2c_drv->writeBurst()
-    }
-}
-    
-void AK8975::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_) i2c_drv_->readReg(uint8_t(addr), data);
-    if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-        spi_drv_->readSingle(data);
-    }
-}
-
-void AK8975::readBurst(const RegAddress addr, void * datas, const size_t len){
-    if(i2c_drv_) i2c_drv_->readBurst(uint8_t(addr), std::span(reinterpret_cast<uint8_t *>(datas), len));
-    if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-        spi_drv_->readBurst((uint8_t *)(datas), len);
-    }
-}

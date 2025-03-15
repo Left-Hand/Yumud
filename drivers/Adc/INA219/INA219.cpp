@@ -46,7 +46,7 @@ Result<void, Error> INA219::readReg(const RegAddress addr, int16_t & data){
         .check_if<INA219_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
-Result<void, Error> INA219::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
+Result<void, Error> INA219::readBurst(const RegAddress addr, uint16_t * p_data, const size_t len){
     // return i2c_drv.readBurst(uint8_t(addr), p_std::span(data, len), LSB);
     return Ok();
 }

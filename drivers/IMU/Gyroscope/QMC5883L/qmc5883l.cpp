@@ -62,7 +62,7 @@ void QMC5883L::setOverSampleRatio(const OverSampleRatio ratio){
 // }
 
 void QMC5883L::update(){
-    requestPool(RegAddress::MagX, &magXReg, 3);
+    readBurst(RegAddress::MagX, &magXReg, 3);
 }
 
 Option<Vector3R> QMC5883L::getMagnet(){

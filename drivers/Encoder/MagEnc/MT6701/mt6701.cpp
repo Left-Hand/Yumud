@@ -1,6 +1,13 @@
 #include "mt6701.hpp"
 #include "sys/debug/debug.hpp"
 
+#ifdef MT6701_DEBUG
+#undef MT6701_DEBUG
+#define MT6701_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
+#else
+#define MT6701_DEBUG(...)
+#endif
+
 
 using namespace ymd::drivers;
 using namespace ymd;
@@ -12,29 +19,29 @@ using namespace ymd;
     PANIC()\
 
 
-void MT6701::writeReg(const RegAddress addr, const uint16_t data){
-    if(i2c_drv) i2c_drv->writeReg(uint8_t(addr), data, MSB);
+BusError MT6701::writeReg(const RegAddress addr, const uint16_t data){
+    if(i2c_drv) return i2c_drv->writeReg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::readReg(const RegAddress addr, uint16_t & data){
-    if(i2c_drv) i2c_drv->readReg(uint8_t(addr), data, MSB);
+BusError MT6701::readReg(const RegAddress addr, uint16_t & data){
+    if(i2c_drv) return i2c_drv->readReg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::writeReg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv) i2c_drv->writeReg(uint8_t(addr), data);
+BusError MT6701::writeReg(const RegAddress addr, const uint8_t data){
+    if(i2c_drv) return i2c_drv->writeReg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv) i2c_drv->readReg(uint8_t(addr), data);
+BusError MT6701::readReg(const RegAddress addr, uint8_t & data){
+    if(i2c_drv) return i2c_drv->readReg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
