@@ -110,34 +110,67 @@ protected:
     GyrRangeReg gyr_range_reg = {};
     // #pragma pack(pop)
 
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
-
     static real_t calculateAccScale(const AccRange range);
     static real_t calculateGyrScale(const GyrRange range);
 public:
     using BoschSensor::BoschSensor;
     BMI160(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(i2c, i2c_addr){;}
 
-    void init();
-    void update();
+    Result<void, Error> init();
+    Result<void, Error> update();
+    Result<void, Error> verify();
+    Result<void, Error> reset();
 
-    bool verify();
-
-    void reset();
-
-    void setAccOdr(const AccOdr odr);
-    real_t setAccOdr(const real_t odr);
-    void setAccRange(const AccRange range);
-    void setGyrOdr(const GyrOdr odr);
-    real_t setGyrOdr(const real_t odr);
-    void setGyrRange(const GyrRange range);
     
-    void setPmuMode(const PmuType pum, const PmuMode mode);
+    Result<void, Error> setAccOdr(const AccOdr odr);
+    Result<void, Error> setAccRange(const AccRange range);
+    Result<void, Error> setGyrOdr(const GyrOdr odr);
+    Result<void, Error> setGyrRange(const GyrRange range);
+    Result<void, Error> setPmuMode(const PmuType pum, const PmuMode mode);
+
     PmuMode getPmuMode(const PmuType pum);
     Option<Vector3R> getAcc();
     Option<Vector3R> getGyr();
+
+
+    [[nodiscard]] __fast_inline constexpr
+    Option<GyrOdr> getGyrOdr(const real_t odr){
+        constexpr std::array odr_map = {
+            25, 50, 100, 200, 400, 800, 1600, 3200
+        };
+    
+        auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+    
+        if (it != odr_map.end()) {
+            return Some(GyrOdr( std::distance(odr_map.begin(), it)));
+        }
+        return None;
+    }
+
+    [[nodiscard]] __fast_inline constexpr
+    Option<AccOdr> getAccOdr(const real_t odr){
+        constexpr std::array odr_map = {
+            real_t(25.0/32),
+            real_t(25.0/16),
+            real_t(25.0/8),
+            real_t(25.0/4),
+            real_t(25.0/2),
+            real_t(25), 
+            real_t(50), 
+            real_t(100), 
+            real_t(200), 
+            real_t(400), 
+            real_t(800),
+            real_t(1600)
+        };
+    
+        auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+    
+        if (it != odr_map.end()) {
+            return Some(AccOdr(std::distance(odr_map.begin(), it)));
+        }
+        return None;
+    }
 };
 
 }

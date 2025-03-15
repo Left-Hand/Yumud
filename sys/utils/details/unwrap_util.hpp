@@ -119,13 +119,15 @@ struct Err{
 public:
     template<typename E2>
     constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
+    
     template<typename E2>
     constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
 
     template<typename E2>
     constexpr Err(const E2 & err):val_(err){}
+
     template<typename E2>
-    constexpr Err(E2 && err):val_(std::forward<E>(err)){}
+    constexpr Err(E2 && err):val_(std::forward<E2>(err)){}
 
     constexpr operator E() const{
         return val_;

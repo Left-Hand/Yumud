@@ -74,7 +74,7 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     
 Result<void, Error> MPU6050::verify(){
 
-    reset();
+    reset().unwrap();
     const auto pkres = this->getPackage();
     if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
     

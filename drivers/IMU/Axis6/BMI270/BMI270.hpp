@@ -64,10 +64,6 @@ protected:
     IntStatus0Reg int_status0_reg = {};
     IntStatus1Reg int_status1_reg = {};
 
-
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
 public:
     using BoschSensor::BoschSensor;
     BMI270(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(hal::I2cDrv{i2c, default_i2c_addr}){;}
