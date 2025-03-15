@@ -50,9 +50,9 @@ void PMW3901::readReg(const uint8_t command, uint8_t & data){
     spi_drv_.readSingle<uint8_t>(data);
 }
 
-void PMW3901::readMulti(const uint8_t command, uint8_t * data, const size_t len){
+void PMW3901::readBurst(const uint8_t command, uint8_t * data, const size_t len){
     spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
-    spi_drv_.readMulti<uint8_t>(data, len);
+    spi_drv_.readBurst<uint8_t>(data, len);
 }
 
 
@@ -122,7 +122,7 @@ void PMW3901::readDataSlow(){
 }
 
 void PMW3901::readDataBurst(){
-    readMulti(0x16, &motion, 6);
+    readBurst(0x16, &motion, 6);
 }
 
 

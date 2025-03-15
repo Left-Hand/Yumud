@@ -29,10 +29,10 @@ protected:
 
     void requestData(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
-            i2c_drv_->readMulti<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
+            i2c_drv_->readBurst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
             spi_drv_->writeSingle<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv_->readMulti<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
+            spi_drv_->readBurst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
         }
     }
 public:

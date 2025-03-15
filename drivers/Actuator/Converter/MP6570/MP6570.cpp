@@ -109,7 +109,7 @@ BusError MP6570::Phy::writeReg(const uint8_t reg_addr, const uint16_t data){
             .data = data,
         }};
 
-        return spi_drv_->writeMulti<uint8_t>(
+        return spi_drv_->writeBurst<uint8_t>(
             (frame.payload.begin())
             , (frame.payload.size()),
             DISC);
@@ -129,14 +129,14 @@ BusError MP6570::Phy::readReg(const uint8_t reg_addr, uint16_t & data){
             .pen = true,
         }};
 
-        spi_drv_->writeMulti<uint8_t>(
+        spi_drv_->writeBurst<uint8_t>(
             (frame.payload.begin())
             , (frame.payload.size()),
             CONT);
 
         SpiReadResult rr;
 
-        spi_drv_->readMulti<uint8_t>(
+        spi_drv_->readBurst<uint8_t>(
             (rr.payload.begin())
             , (rr.payload.size()),
             DISC

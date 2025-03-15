@@ -125,7 +125,7 @@
         _data
     };
 
-     spi_drv_.writeMulti<uint8_t>(static_cast<const uint8_t *>(buf), sizeof(buf), DISC);
+     spi_drv_.writeBurst<uint8_t>(static_cast<const uint8_t *>(buf), sizeof(buf), DISC);
     //  SPI.transfer(_addr >> 8);
     //  SPI.transfer(_addr & 0xFF);
     //  SPI.transfer(_cb);
@@ -155,8 +155,8 @@
         _cb,
     };
 
-     spi_drv_.writeMulti<uint8_t>(static_cast<const uint8_t *>(buf), sizeof(buf), DISC);
-     spi_drv_.writeMulti<uint8_t>(_buf, _len, CONT);
+     spi_drv_.writeBurst<uint8_t>(static_cast<const uint8_t *>(buf), sizeof(buf), DISC);
+     spi_drv_.writeBurst<uint8_t>(_buf, _len, CONT);
 
      return _len;
  }

@@ -120,7 +120,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, int16_t * datas, const size_t len){
-        i2c_drv_.readMulti(uint8_t(addr), std::span(datas, len), LSB);
+        i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len), LSB);
     }
 
     real_t From16BitToGauss(const int16_t data);

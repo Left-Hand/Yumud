@@ -17,7 +17,7 @@ void TCS34725::requestRegData(const RegAddress addr, uint16_t * data_ptr, const 
     uint8_t address = convRegAddress(addr);
     TCS34725_DEBUG("address", address)
 
-    i2c_drv_.readMulti(address, std::span(data_ptr, len), LSB);
+    i2c_drv_.readBurst(address, std::span(data_ptr, len), LSB);
 }
 
 

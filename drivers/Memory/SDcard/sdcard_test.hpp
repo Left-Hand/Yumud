@@ -44,10 +44,10 @@
 
 // 	if (Status == SD_RESPONSE_NO_ERROR) {
 
-// 		/*single block ¶ÁÐ´²âÊÔ*/
+// 		/*single block ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½*/
 // 		SD_SingleBlockTest();
 
-// 		/*muti block ¶ÁÐ´²âÊÔ*/
+// 		/*muti block ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½*/
 // 		SD_MultiBlockTest();
 // 	}
 // }
@@ -109,7 +109,7 @@
 // 	if (Status == SD_RESPONSE_NO_ERROR)
 // 	{
 // 		/* Write multiple block of many bytes on address 0 */
-// 		Status = SD_WriteMultiBlocks(Buffer_MultiBlock_Tx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
+// 		Status = SD_writeBurstBlocks(Buffer_MultiBlock_Tx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
 // 		kprintf("Good\n");
 
 // 		/* Check if the Transfer is finished */
@@ -118,7 +118,7 @@
 // 	if (Status == SD_RESPONSE_NO_ERROR)
 // 	{
 // 		/* Read block of many bytes from address 0 */
-// 		Status = SD_ReadMultiBlocks(Buffer_MultiBlock_Rx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
+// 		Status = SD_readBurstBlocks(Buffer_MultiBlock_Rx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
 // 		kprintf("Good\n");
 
 // 		/* Check if the Transfer is finished */

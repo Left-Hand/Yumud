@@ -131,7 +131,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.readMulti(uint8_t(addr), std::span(datas, len));
+        i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len));
     }
 
     uint32_t getPressureData(){

@@ -69,7 +69,7 @@ public:
 
     void putTexture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
-        interface.writeMulti<RGB565>(color_ptr, int(rect));
+        interface.writeBurst<RGB565>(color_ptr, int(rect));
     }
 
     void setDisplayOffset(const Vector2i & _offset){offset = _offset;}

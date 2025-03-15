@@ -42,7 +42,7 @@ Result<void, Error> LT8960L::DevDriver::readReg(const LT8960L::RegAddress addres
 Result<size_t, Error> LT8960L::DevDriver::writeBurst(const RegAddress address, std::span<const std::byte> buf){
     LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
     i2c_drv_.writeCommand(uint8_t(buf.size()));
-    // i2c_drv_.writeMulti();
+    // i2c_drv_.writeBurst();
 
     return Ok(0u);
 }

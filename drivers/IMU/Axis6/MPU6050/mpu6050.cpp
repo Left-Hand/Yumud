@@ -55,7 +55,7 @@ Result<void, Error> MPU6050::readReg(const uint8_t addr, uint8_t & data){
 
 Result<void, Error> MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
     if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->readMulti((uint8_t)reg_addr, std::span(datas, len), MSB);
+        auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), MSB);
         MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
         return err;
     }else if(p_spi_drv_){
