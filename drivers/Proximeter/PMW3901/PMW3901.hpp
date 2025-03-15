@@ -44,7 +44,7 @@ protected:
     bool assertReg(const uint8_t command, const uint8_t data);
     void writeReg(const uint8_t command, const uint8_t data);
     void readReg(const uint8_t command, uint8_t & data);
-    void readMulti(const uint8_t commnad, uint8_t * data, const size_t len);
+    void readBurst(const uint8_t commnad, uint8_t * data, const size_t len);
 
     void readDataSlow();
     void readDataBurst();

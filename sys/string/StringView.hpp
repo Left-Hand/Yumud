@@ -64,8 +64,8 @@ public:
 
 	std::vector<StringView> split(const char chr, const size_t max_pieces = 0) const;
 
-	__fast_inline constexpr StringView substring(size_t left) const {return substring(left, size_ - left);};
-	__fast_inline constexpr StringView substring(size_t left, size_t right) const {
+	__fast_inline constexpr StringView substr(size_t left) const {return substr(left, size_ - left);};
+	__fast_inline constexpr StringView substr(size_t left, size_t right) const {
         if (left > right) std::swap(left, right);
         
         if (left >= size_) return StringView(this->data_, 0);

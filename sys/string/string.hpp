@@ -187,8 +187,8 @@ public:
 	int lastIndexOf( char ch, size_t fromIndex ) const;
 	int lastIndexOf( const String &str ) const;
 	int lastIndexOf( const String &str, size_t fromIndex ) const;
-	StringView substring( size_t beginIndex ) const { return substring(beginIndex, len); };
-	StringView substring( size_t beginIndex, size_t endIndex ) const;
+	StringView substr( size_t beginIndex ) const { return substr(beginIndex, len); };
+	StringView substr( size_t beginIndex, size_t endIndex ) const;
 
 	std::vector<StringView> split(const char chr, const size_t times = 0) const;
     constexpr const char * begin() const {return buffer;}

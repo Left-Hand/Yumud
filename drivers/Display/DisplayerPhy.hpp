@@ -97,26 +97,26 @@ public:
     }
 
     template<typename U>
-    void writeMulti(const auto * data, size_t len){
+    void writeBurst(const auto * data, size_t len){
         dc_gpio = data_level;
-        spi_drv_.writeMulti<U>(data, len);
+        spi_drv_.writeBurst<U>(data, len);
     }
 
     template<typename U>
-    void writeMulti(const auto & data, size_t len){
+    void writeBurst(const auto & data, size_t len){
         dc_gpio = data_level;
-        spi_drv_.writeMulti<U>(data, len);
+        spi_drv_.writeBurst<U>(data, len);
     }
 
 
     void writeU8(const uint8_t data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv_.writeMulti<uint8_t>(data, len);
+        spi_drv_.writeBurst<uint8_t>(data, len);
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv_.writeMulti<uint8_t>(data, len);
+        spi_drv_.writeBurst<uint8_t>(data, len);
     }
 };
 
@@ -142,28 +142,28 @@ public:
         i2c_drv_.writeReg(data_token, data, LSB);
     }
 
-    void writeMulti(const is_stdlayout auto * pdata, size_t len){
+    void writeBurst(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
-            i2c_drv_.writeMulti(data_token, pdata, len, LSB);
+            i2c_drv_.writeBurst(data_token, std::span(pdata, len), LSB);
         }else {
-            i2c_drv_.writeMulti(data_token, pdata, len);
+            i2c_drv_.writeBurst(data_token, std::span(pdata, len));
         }
     }
 
-    void writeMulti(const is_stdlayout auto data, size_t len){
+    void writeBurst(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
-            i2c_drv_.writeSame(data_token, data, len, LSB);
+            i2c_drv_.writeRepeat(data_token, std::span(data, len), LSB);
         }else {
-            i2c_drv_.writeSame(data_token, data, len);
+            i2c_drv_.writeRepeat(data_token, data, len);
         }
     }
 
     void writeU8(const uint8_t data, size_t len) override{
-        writeMulti<uint8_t>(data, len);
+        writeBurst<uint8_t>(data, len);
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
-        writeMulti<uint8_t>(data, len);
+        writeBurst<uint8_t>(data, len);
     }
 };
 

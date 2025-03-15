@@ -21,7 +21,7 @@ public:
 
     // uint8_t read(){
     //     uint16_t ret = 0;
-    //     i2c_drv_.readMulti();
+    //     i2c_drv_.readBurst();
     //     return ret;
     // }
 

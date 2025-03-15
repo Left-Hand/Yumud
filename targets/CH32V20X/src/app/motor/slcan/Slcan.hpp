@@ -50,9 +50,9 @@ protected:
 
     }
 
-    auto devSendMsg(const uint id, bool is_remote, const std::span<const uint8_t> buf){
+    auto devSendMsg(const uint id, bool is_remote, const std::span<const std::byte> buf){
         if(is_remote)devSendMsg(Msg(id));
-        else devSendMsg(Msg(id, buf.data(), buf.size()));
+        else devSendMsg(Msg(id, buf));
     }
 
     auto devSetBaud(const uint baud){
@@ -77,7 +77,7 @@ private:
     Error handleRecvString(const StringView str){
         if(!str.size()) return Error::NoArg;
         if(str.size() < 1) return Error::InvalidFormat;
-        const auto cmd_str = str.substring(1, str.size());
+        const auto cmd_str = str.substr(1, str.size());
         switch(str[0]){
             default:return Error::InvalidFormat;
             case 'S':return handleSetBaud(cmd_str);
@@ -141,13 +141,13 @@ private:
         if(!str.size()) return Error::NoArg;
         if(str.size() < 4) return Error::InvalidDataLength;
 
-        const auto id = UNWRAP(parseStdId(str.substring(0, 3)));
-        const auto dlc = UNWRAP(parseLen(str.substring(3, 4)));
-        const StringView data_str = str.substring(4, str.size());
+        const auto id = UNWRAP(parseStdId(str.substr(0, 3)));
+        const auto dlc = UNWRAP(parseLen(str.substr(3, 4)));
+        const StringView data_str = str.substr(4, str.size());
         
         if(is_rmt){
             const auto data = UNWRAP(parseData(data_str, dlc));
-            devSendMsg(id, false, data);
+            devSendMsg(id, false, std::span(data));
         }else{
             if(data_str.size()) return Error::InvalidData;
             devSendMsg(id, true, {});
@@ -193,14 +193,14 @@ private:
             });
     }
 
-    static constexpr MyResult<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
+    static constexpr MyResult<std::array<std::byte, 8>> parseData(const StringView str, const uint8_t dlc){
         using enum Error;
         if(str.size() != dlc * 2) return Err(InvalidDataLength);
 
-        std::array<uint8_t, 8> buf;
+        std::array<std::byte, 8> buf;
 
         for(int i = 0; i < dlc; i++){
-            buf[i] = int(str.substring(i * 2, i * 2 + 2));
+            buf[i] = std::byte(int(str.substr(i * 2, i * 2 + 2)));
         }
 
         return Ok{buf};
@@ -235,7 +235,7 @@ private:
 
     }
 
-    void devSetFilter(const uint8_t fidx, const std::span<const uint8_t> buf){
+    void devSetFilter(const uint8_t fidx, const std::span<const std::byte> buf){
 
     }
 

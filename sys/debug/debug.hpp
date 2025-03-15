@@ -40,6 +40,7 @@ __fast_inline void DEBUG_PRINT(Args&& ... args) {
 
 
 template<typename ... Args>
+__attribute__((noreturn))
 __fast_inline void PANIC_NSRC(Args&& ... args) {
     ymd::DEBUGGER.setIndent(0);
     DEBUG_PRINTLN();
@@ -144,10 +145,11 @@ template <typename... Args>
 PANIC(Args &&...) -> PANIC<Args ...>;
 
 template <typename... Args>
+__attribute__((noreturn))
 PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
     const std::source_location& loc = std::source_location::current(), 
     Args &&... args){
-    return PANIC<Args ...>(std::forward<Args>(args)..., loc);
+    PANIC<Args ...>(std::forward<Args>(args)..., loc);
 }
 
 

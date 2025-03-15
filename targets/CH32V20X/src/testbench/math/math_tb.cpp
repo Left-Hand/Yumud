@@ -216,10 +216,6 @@ void math_tb(){
 
     #define MATRIX_TB
 
-    #ifdef MATRIX_TB
-    static constexpr Matrix_t<real_t, 3, 3> m = Matrix_t<real_t, 3, 3>{
-        1, 2, 3, 4, 5, 6, 7, 8, 9};
-    print(m);
-    #endif
+
     while(true);
 }

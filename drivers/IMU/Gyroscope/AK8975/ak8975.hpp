@@ -36,7 +36,7 @@ protected:
     void writeReg(const uint8_t addr, const uint8_t data);
     void readReg(const RegAddress addr, uint8_t & data);
 
-    void readMulti(const RegAddress addr, void * datas, const size_t len);
+    void readBurst(const RegAddress addr, void * datas, const size_t len);
     void readAdj();
 public:
 

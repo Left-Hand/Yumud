@@ -139,9 +139,9 @@ protected:
     // struct 
 protected:
     void writeReg(const uint8_t address, const uint8_t data);
-    void writeMulti(const uint8_t address, const uint8_t * data, const size_t len);
+    void writeBurst(const uint8_t address, const uint8_t * data, const size_t len);
     void readReg(const uint8_t address, uint8_t & data);
-    void readMulti(const uint8_t address, uint8_t * data, const size_t len);
+    void readBurst(const uint8_t address, uint8_t * data, const size_t len);
 public:
     Si5351C(const hal::I2cDrv & i2c_drv):
         _i2c_drv(i2c_drv){};

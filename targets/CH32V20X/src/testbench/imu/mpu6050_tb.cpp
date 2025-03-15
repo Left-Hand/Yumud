@@ -19,6 +19,8 @@ using namespace ymd::drivers;
 // #define UART uart2
 #define UART uart2
 
+#define MAG_ACTIVATED
+
 void ak8963_tb(hal::I2c & i2c){
     AK8963 mpu{i2c};
 
@@ -50,21 +52,27 @@ void mpu6050_tb(hal::I2c & i2c){
 
 void mpu6500_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
-    mpu.setPackage(MPU6050::Package::MPU9250);
+
+    #ifdef MAG_ACTIVATED
+        AK8963 aku{i2c};
+        mpu.setPackage(MPU6050::Package::MPU9250);
+    #else
+        mpu.setPackage(MPU6050::Package::MPU6050);
+    #endif
 
     mpu.init();
     mpu.setAccRange(MPU6050::AccRange::_2G);
     mpu.enableDirectMode(EN);
 
-    AK8963 aku{i2c};
-
-    aku.init().unwrap();
+    #ifdef MAG_ACTIVATED
+        aku.init().unwrap();
+    #endif
 
     // ImuFusion fusion;
 
     // const real_t mahony_tau = 10.5_r;
     Mahony mahony{{
-        .kp = 2 * 10,
+        .kp = 2,
         .ki = 0.3_r,
         .fs = 200
     }};
@@ -72,7 +80,10 @@ void mpu6500_tb(hal::I2c & i2c){
     hal::timer1.init(200);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
         mpu.update();
+
+        #ifdef MAG_ACTIVATED
         aku.update();
+        #endif
 
         // mahony.update9(
             // mpu.getGyr().unwrap(), 
@@ -104,7 +115,7 @@ void mpu6500_tb(hal::I2c & i2c){
         // DEBUG_PRINTLN(fusion.quat());
         // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
-        DEBUG_PRINTLN(mahony.result(), end_m - begin_m);
+        DEBUG_PRINTLN(mahony.result(), Quat_t<q14>(Vector3R(0,0,1), aku.getMagnet().unwrap().normalized()), end_m - begin_m);
     });
 
     while(true);

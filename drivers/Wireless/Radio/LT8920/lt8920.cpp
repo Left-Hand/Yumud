@@ -374,9 +374,9 @@ void LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(50), CONT);
-        spi_drv_->writeMulti<uint8_t>(data, len);
+        spi_drv_->writeBurst<uint8_t>(data, len);
     }else if(i2c_drv_){
-        i2c_drv_->writeMulti(uint8_t(50) , data, len);
+        i2c_drv_->writeBurst(uint8_t(50) , std::span(data, len));
     }
 }
 
@@ -384,9 +384,9 @@ void LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(50 | 0x80), CONT);
-        spi_drv_->readMulti(data, len);
+        spi_drv_->readBurst(data, len);
     }else if(i2c_drv_){
-        i2c_drv_->readMulti(uint8_t(50), data, len);
+        i2c_drv_->readBurst(uint8_t(50), std::span(data, len));
     }
 }
 

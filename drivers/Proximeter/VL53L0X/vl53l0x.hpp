@@ -56,7 +56,7 @@ private:
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        i2c_drv_.readMulti(reg, data, len, MSB);
+        i2c_drv_.readBurst(reg, std::span(data, len), MSB);
     }
 };
 

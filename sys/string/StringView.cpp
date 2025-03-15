@@ -20,7 +20,7 @@ std::vector<StringView> StringView::split(const char delimiter, const size_t max
         }
 
         if(data_[i] != delimiter and (i + 1 == length() or data_[i + 1] == delimiter or data_[i + 1] == '\0')){
-            strs.push_back(this->substring(from, i+1));
+            strs.push_back(this->substr(from, i+1));
         }
 
         if((max_pieces != 0) and (strs.size() == max_pieces)) break;

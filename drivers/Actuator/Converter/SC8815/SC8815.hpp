@@ -284,7 +284,7 @@ protected:
         return i2c_drv_.readReg(uint8_t(address), reg, LSB);
     }
     BusError requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readMulti(uint8_t(addr), data, len);
+        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
     }
 
     SC8815 & powerUp();

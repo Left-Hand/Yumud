@@ -5,7 +5,7 @@
 using namespace ymd::canopen;
 using namespace ymd;
 
-SdoAbortCode StaticObjectDictBase::write(const std::span<const uint8_t> pdata, const Didx didx){
+SdoAbortCode StaticObjectDictBase::write(const std::span<const std::byte> pdata, const Didx didx){
     auto se_opt = find(didx);
 
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
@@ -15,7 +15,7 @@ SdoAbortCode StaticObjectDictBase::write(const std::span<const uint8_t> pdata, c
     return se.write(pdata);
 }
 
-SdoAbortCode StaticObjectDictBase::read(const std::span<uint8_t> pdata, const Didx didx) const{
+SdoAbortCode StaticObjectDictBase::read(const std::span<std::byte> pdata, const Didx didx) const{
     auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
     
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;

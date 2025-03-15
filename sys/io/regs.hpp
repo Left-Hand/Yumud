@@ -19,7 +19,7 @@ protected:
     using TReg = T;
     __RegC_t() = default;
 public:
-    __RegC_t(const std::span<const uint8_t> pdata){
+    __RegC_t(const std::span<const std::byte> pdata){
         *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pdata.data()));
     };
     using value_type = T;
@@ -29,14 +29,13 @@ public:
     T operator &(const T data) const {return T(*this) & data;}
     T operator |(const T data) const {return T(*this) | data;}
     constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
-    [[deprecated("use to_bytes instead")]] constexpr operator std::span<const uint8_t>() const {return {reinterpret_cast<const uint8_t *>(this), sizeof(T)};}
-    [[deprecated("use to_bytes instead")]] constexpr uint8_t operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 
     
-    constexpr std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
+    constexpr std::span<const std::byte> as_bytes() const {
+        return std::span<const std::byte>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
     
     constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
     constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
+    constexpr std::span<const T, 1> as_span() const {return std::span(reinterpret_cast<const T *>(*this), 1);}
 };
 
 
@@ -52,7 +51,6 @@ public:
     using value_type = T;
     
     using __RegC_t<T>::__RegC_t;
-    using __RegC_t<T>::operator [];
     using __RegC_t<T>::as_bytes;
     using TReg = __RegC_t<T>::TReg;
     
@@ -60,14 +58,10 @@ public:
     constexpr __Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
     constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
     constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
-    [[deprecated("use to_bytes instead")]] constexpr uint8_t & operator [](const size_t idx){return (*(reinterpret_cast<uint8_t *>(this) + idx));} 
-    [[deprecated("use clr_bits instead")]] constexpr __Reg_t<T> & operator &=(const T data) {static_cast<T &>(*this) = static_cast<T>(*this) & static_cast<T>(data); return *this;}
-    [[deprecated("use set_bits instead")]] constexpr __Reg_t<T> & operator |=(const T data) {static_cast<T &>(*this) = static_cast<T>(*this) | static_cast<T>(data); return *this;}
-    
-    constexpr std::span<uint8_t> as_bytes() {
-        return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(TReg));}
-    constexpr std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
+    constexpr std::span<std::byte> as_bytes() {
+        return std::span<std::byte>(reinterpret_cast<std::byte *>(this), sizeof(TReg));}
+    constexpr std::span<const std::byte> as_bytes() const {
+        return std::span<const std::byte>(reinterpret_cast<const std::byte *>(this), sizeof(TReg));}
     
     constexpr __Reg_t<T> & set_bits(const T data) {
         static_cast<T &>(*this) = static_cast<T>(*this) | static_cast<T>(data); return *this;}
@@ -79,6 +73,7 @@ public:
     constexpr T & as_ref() {return (reinterpret_cast<T &>(*this));}
     constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
     constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
+    constexpr std::span<T, 1> as_span() {return std::span(reinterpret_cast<T *>(*this), 1);}
 };
 
 #define REG_TEMPLATE(name, T)\

@@ -79,7 +79,7 @@ class SmcCli{
 
         while (endPos != -1) {
             if(not(endPos - startPos <= 1 and input[startPos] == delimiter)){
-                String token = input.substring(startPos, endPos);
+                String token = input.substr(startPos, endPos);
                 result.push_back(token.c_str());
             }
             startPos = endPos + 1;
@@ -87,7 +87,7 @@ class SmcCli{
         }
 
         if (startPos < (int)input.length()) {
-            String lastToken = input.substring(startPos);
+            String lastToken = input.substr(startPos);
             result.push_back(lastToken.c_str());
         }
 

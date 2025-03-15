@@ -127,11 +127,10 @@ public:
         is_remote_ = false;
     }
 
-    constexpr CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
-        resize(MIN(len, 8));
-        // memcpy(data_, buf, dlc_);
+    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id) {
+        resize(MIN(pdata.size(), 8));
         for(uint8_t i = 0; i < dlc_; i++){
-            data_[i] = buf[i];
+            data_[i] = uint8_t(pdata[i]);
         }
         is_remote_ = false;
     }
@@ -146,8 +145,8 @@ public:
     constexpr uint64_t data64() const{ return data64_;}
     constexpr uint64_t & data64() {return data64_;}
 
-    std::span<const uint8_t> span() const{
-        return std::span<const uint8_t>(begin(), size());
+    std::span<const std::byte> span() const{
+        return std::span(reinterpret_cast<const std::byte *>(begin()), size());
     }
 
     constexpr bool isStd() const {return is_ext_ == false;}

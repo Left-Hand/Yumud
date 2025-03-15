@@ -37,9 +37,9 @@ void AT24CXX::writePool(const size_t addr, const uint8_t * data, const size_t le
     AT24CXX_DEBUG("write", len, "bytes to", addr);
     // DEBUGGER.print_arr(data, len);
     if (is_small_chip()){
-        i2c_drv_.writeMulti(uint8_t(addr), data, len);
+        i2c_drv_.writeBurst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.writeMulti((uint16_t)addr, data, len);
+        i2c_drv_.writeBurst((uint16_t)addr, std::span(data, len));
 
     }
 }
@@ -47,9 +47,9 @@ void AT24CXX::writePool(const size_t addr, const uint8_t * data, const size_t le
 void AT24CXX::readPool(const size_t addr, uint8_t * data, const size_t len){
     AT24CXX_DEBUG("read", len, "bytes to", addr);
     if (is_small_chip()){
-        i2c_drv_.readMulti(uint8_t(addr), data, len);
+        i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.readMulti((uint16_t)addr, data, len);
+        i2c_drv_.readBurst((uint16_t)addr, std::span(data, len));
     }
 }
 

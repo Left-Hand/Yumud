@@ -622,6 +622,31 @@ constexpr Ret invoke_func_by_bytes(
         return details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
 }
 
+
+
+// // template<std::span<const std::byte> ... Ts>
+// void apply_serval_bytes(const int ... pieces) {
+//     auto handler = [](const auto& piece) {  // 使用auto兼容不同参数类型
+//         DEBUG_PRINTLN(piece);
+//     };
+//     (handler(pieces), ...);  // 折叠表达式展开调用
+// }
+
+// C++20 修复方案（假设参数类型为 std::span<const std::byte>）
+
+template<typename ... Ts>
+void apply_serval_bytes(Ts && ... pieces) {
+    (DEBUG_PRINTLN(pieces), ...);  // 直接展开参数包
+}
+
+// // 修正后代码：
+// void apply_serval_bytes(const std::span<const std::byte>&... pieces) {
+//     auto handler = [](const std::span<const std::byte>& piece) {
+//         DEBUG_PRINTLN(piece);
+//     };
+//     (handler(pieces), ...);
+// }
+
 auto pfunc(const real_t a, const real_t b){
     return a * a + b * b;
     // return a;

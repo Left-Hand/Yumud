@@ -43,7 +43,7 @@ Result<void, Error> AK8963::readReg(const uint8_t addr, uint8_t & data){
 }
 
 Result<void, Error> AK8963::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    auto err = p_i2c_drv_->readMulti((uint8_t)reg_addr, datas, len, LSB);
+    auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), LSB);
     AK8963_ASSERT(err.ok(), "AK8963 read reg failed");
     return err;
 }

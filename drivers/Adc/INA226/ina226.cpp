@@ -52,7 +52,7 @@ BusResult INA226::readReg(const RegAddress addr, int16_t & data){
 }
 
 BusResult INA226::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
-    return i2c_drv.readMulti(uint8_t(addr), p_data, len, LSB);
+    return i2c_drv.readBurst(uint8_t(addr), std::span(p_data, len), LSB);
 }
 
 

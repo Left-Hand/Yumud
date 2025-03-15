@@ -1438,8 +1438,8 @@ void Si5351::set_ref_freq(uint32_t ref_freq, enum si5351_pll_input ref_osc)
 	//si5351_write(SI5351_PLL_INPUT_SOURCE, reg_val);
 }
 
-uint8_t Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, uint8_t *data){
-	i2c_drv.writeMulti(addr, data, bytes);
+uint8_t Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
+	i2c_drv.writeBurst(addr, std::span(data, bytes));
     return 0;
 }
 

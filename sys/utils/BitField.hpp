@@ -32,14 +32,6 @@ public:
         return *this;
     }
 
-    // __inline constexpr 
-    // I operator =(I && in){
-    //     static_assert(!std::is_const_v<D>, "cannot assign to const");
-    //     data_ = (static_cast<D>(in) << b_bits) | (data_ & ~mask);
-    //     return *this;
-    //     // return in;
-    // }
-
     template<typename T>
     requires std::is_constructible_v<T, I>
     [[nodiscard]] __inline explicit 
@@ -99,36 +91,9 @@ template<typename T>
 struct _bitfield_data_type{};
 }
 
-
-template<size_t b_bits, size_t e_bits>
-[[nodiscard]] __inline static constexpr 
-auto make_bitfield(auto & data){
-    using D = typename std::remove_reference_t<decltype(data)>;
-    return details::_make_bitfield<b_bits, e_bits, D>(data);
-}
-
-
-template<size_t b_bits, size_t e_bits, typename I>
-[[nodiscard]] __inline static constexpr 
-auto make_bitfield(auto & data){
-    // using D = typename std::decay_t<decltype(data)>;
-    return details::_make_bitfield<b_bits, e_bits, I>(data);
-}
-
-
-
-
-// template<typename T>
-// struct _bitfield_data_type<BitField<T, auto, auto, auto>>{using type = T};
-
-// template<typename T>
-// struct _bitfield_data_type<const BitField<T, auto, auto>>{using type = T};
-
 template<typename T>
 using bitfield_data_type_t = typename T::data_type;
 
-// template<typename T>
-// struct BitFieldArray{};
 
 template<typename T, size_t b_bits, size_t e_bits, size_t cnt>
 struct BitFieldArray{
@@ -162,10 +127,104 @@ public:
 
 
 
+template<size_t b_bits, size_t e_bits>
+[[nodiscard]] __fast_inline static constexpr 
+auto make_bitfield(auto & data){
+    using D = typename std::remove_reference_t<decltype(data)>;
+    return details::_make_bitfield<b_bits, e_bits, D>(data);
+}
+
+
+template<size_t b_bits, size_t e_bits, typename I>
+[[nodiscard]] __fast_inline static constexpr 
+auto make_bitfield(auto & data){
+    // using D = typename std::decay_t<decltype(data)>;
+    return details::_make_bitfield<b_bits, e_bits, I>(data);
+}
+
+
 template<size_t b_bits, size_t per_len, size_t cnt, typename D>
-[[nodiscard]] __inline static constexpr 
+[[nodiscard]] __fast_inline static constexpr
 BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
     return BitFieldArray<D, b_bits, per_len, cnt>(data);
 }
 
+
+
+
+// template<typename T>
+// struct reg_data_type<Reg>{using type = T;};
+
+
+// template<typename T>
+// struct BitFieldCrtp{
+//     __inline constexpr
+//     T as_mask() const{
+//         return static_cast<T *>(this)->as_mask();
+//     }
+
+//     __inline constexpr 
+//     T as_unshifted() const{
+//         return static_cast<T *>(this)->as_unshifted();
+//     }
+//     __inline constexpr 
+//     T as_val() const{
+//         return static_cast<T *>(this)->as_unshifted();
+//     }
+// };
+
+// template<typename TDummy>
+// struct BitField{};
+
+
+
+
+
+// template<auto ... Args>
+// using BitField_u16 = BitField<const uint16_t, Args...>;
+
+// template<auto ... Args>
+// using BitField_mu16 = BitField<uint16_t, Args...>;
+
+
+
+
+// static_assert(std::is_same_v<uint16_t, reg_data_type_t<uint16_t>>, "reg_data_type_t is not uint16_t");
+
+// template<size_t b_bits, size_t e_bits, typename T>
+// __inline static constexpr
+// auto make_mut_bitfield(T * obj){
+//     // using T = std::remove_pointer_t<decltype(obj)>;
+//     using D = typename std::remove_const_t<reg_data_type_t<T>>;
+    
+//     return BitField<D, b_bits, e_bits>(*reinterpret_cast<D *>(obj));
+// }
+
+
+// template<size_t b_bits, size_t e_bits, typename I>
+// BitField(auto && data) -> BitField<decltype(data), b_bits, e_bits, I>;
+
+
+
+
+// template<size_t b_bits, size_t e_bits, typename D, typename I = D>
+// __inline static constexpr
+// auto make_mut_bitfield(D & data){
+//     return BitField<D, b_bits, e_bits, I>(data);
+// }
+
+
+
+// template<size_t b_bits, size_t e_bits>
+// __inline static constexpr
+// auto make_bitfield(auto * obj){
+//     using T = std::remove_pointer_t<decltype(obj)>;
+//     using reg_data_type = std::conditional_t<
+//         std::is_const_v<T>,
+//         const reg_data_type_t<T>,
+//         reg_data_type_t<T>
+//     >;
+    
+//     return BitField<reg_data_type, b_bits, e_bits>(reinterpret_cast<reg_data_type &>(*obj));
+// }
 }

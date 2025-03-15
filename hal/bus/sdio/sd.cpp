@@ -864,7 +864,7 @@ SD_Error SD::ReadBlock( uint8_t *buf, uint64_t addr, uint16_t blksize )
 
 __attribute__( ( aligned( 4 ) ) ) uint32_t *g_tempbuff;
 
-SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
+SD_Error SD::readBurstBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
 {
     SD_Error err = SD_OK;
     uint8_t power;
@@ -1245,7 +1245,7 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
 }
 
 
-SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
+SD_Error SD::writeBurstBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
 {
     SD_Error err = SD_OK;
     uint8_t  power = 0, cardstate = 0;
@@ -2019,7 +2019,7 @@ SD_Error SD::ReadDisk( uint8_t *buf, uint32_t sector, uint8_t cnt )
         }
         else
         {
-            sta = ReadMultiBlocks( buf, lsector, 512, cnt );
+            sta = readBurstBlocks( buf, lsector, 512, cnt );
         }
     }
     return sta;
@@ -2041,7 +2041,7 @@ SD_Error SD::WriteDisk(const uint8_t *buf, uint32_t sector, uint8_t cnt ){
         if(cnt == 1){
             sta = WriteBlock(buf, lsector, 512);
         }else{
-            sta = WriteMultiBlocks(buf, lsector, 512, cnt);
+            sta = writeBurstBlocks(buf, lsector, 512, cnt);
         }
     }
     return sta;

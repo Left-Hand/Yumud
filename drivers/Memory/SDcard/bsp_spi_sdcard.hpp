@@ -46,9 +46,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_spi_sdcard.h"
 
-//¼ÇÂ¼¿¨µÄÀàÐÍ
-uint8_t SD_Type = SD_TYPE_NOT_SD; //´æ´¢¿¨µÄÀàÐÍ
-SD_CardInfo SDCardInfo;           //ÓÃÓÚ´æ´¢¿¨µÄÐÅÏ¢
+//ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+uint8_t SD_Type = SD_TYPE_NOT_SD; //ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+SD_CardInfo SDCardInfo;           //ï¿½ï¿½ï¿½Ú´æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
 /**
   * @brief  DeInitializes the SD/SD communication.
@@ -172,7 +172,7 @@ SD_Error SD_Init(void)
 		SD_WriteByte(SD_DUMMY_BYTE);
 	}
 
-	//»ñÈ¡¿¨µÄÀàÐÍ,×î¶à³¢ÊÔ10´Î
+	//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½à³¢ï¿½ï¿½10ï¿½ï¿½
 	i = 0;
 	do
 	{
@@ -185,7 +185,7 @@ SD_Error SD_Init(void)
 
 	} while (SD_Type == SD_TYPE_NOT_SD && i++ > 1000);
 
-	//²»Ö§³ÖµÄ¿¨
+	//ï¿½ï¿½Ö§ï¿½ÖµÄ¿ï¿½
 	if (SD_Type == SD_TYPE_NOT_SD)
 		return SD_RESPONSE_FAILURE;
 
@@ -257,7 +257,7 @@ SD_Error SD_ReadBlock(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize)
 	uint32_t i      = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;
 
-	//SDHC¿¨¿é´óÐ¡¹Ì¶¨Îª512£¬ÇÒ¶ÁÃüÁîÖÐµÄµØÖ·µÄµ¥Î»ÊÇsector
+	//SDHCï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ì¶ï¿½Îª512ï¿½ï¿½ï¿½Ò¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½Ö·ï¿½Äµï¿½Î»ï¿½ï¿½sector
 	if (SD_Type == SD_TYPE_V2HC)
 	{
 		BlockSize = 512;
@@ -313,12 +313,12 @@ SD_Error SD_ReadBlock(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize)
   *         - SD_RESPONSE_FAILURE: Sequence failed
   *         - SD_RESPONSE_NO_ERROR: Sequence succeed
   */
-SD_Error SD_ReadMultiBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
+SD_Error SD_readBurstBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
 	uint32_t i = 0, Offset = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;
 
-	//SDHC¿¨¿é´óÐ¡¹Ì¶¨Îª512£¬ÇÒ¶ÁÃüÁîÖÐµÄµØÖ·µÄµ¥Î»ÊÇsector
+	//SDHCï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ì¶ï¿½Îª512ï¿½ï¿½ï¿½Ò¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½Ö·ï¿½Äµï¿½Î»ï¿½ï¿½sector
 	if (SD_Type == SD_TYPE_V2HC)
 	{
 		BlockSize = 512;
@@ -362,7 +362,7 @@ SD_Error SD_ReadMultiBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockS
 			rvalue = SD_RESPONSE_FAILURE;
 		}
 
-		/* Ìí¼Ó Send dummy byte ·ÀÖ¹¶Á²Ù×÷Ê§°Ü */
+		/* ï¿½ï¿½ï¿½ï¿½ Send dummy byte ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½ */
 		SD_WriteByte(SD_DUMMY_BYTE);
 	}
 	/*!< SD chip select high */
@@ -388,7 +388,7 @@ SD_Error SD_WriteBlock(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize)
 	uint32_t i      = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;
 
-	//SDHC¿¨¿é´óÐ¡¹Ì¶¨Îª512£¬ÇÒÐ´ÃüÁîÖÐµÄµØÖ·µÄµ¥Î»ÊÇsector
+	//SDHCï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ì¶ï¿½Îª512ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½Ö·ï¿½Äµï¿½Î»ï¿½ï¿½sector
 	if (SD_Type == SD_TYPE_V2HC)
 	{
 		BlockSize = 512;
@@ -448,12 +448,12 @@ SD_Error SD_WriteBlock(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize)
   *         - SD_RESPONSE_FAILURE: Sequence failed
   *         - SD_RESPONSE_NO_ERROR: Sequence succeed
   */
-SD_Error SD_WriteMultiBlocks(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
+SD_Error SD_writeBurstBlocks(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
 	uint32_t i = 0, Offset = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;
 
-	//SDHC¿¨¿é´óÐ¡¹Ì¶¨Îª512£¬ÇÒÐ´ÃüÁîÖÐµÄµØÖ·µÄµ¥Î»ÊÇsector
+	//SDHCï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ì¶ï¿½Îª512ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½Ö·ï¿½Äµï¿½Î»ï¿½ï¿½sector
 	if (SD_Type == SD_TYPE_V2HC)
 	{
 		BlockSize = 512;
@@ -580,7 +580,7 @@ SD_Error SD_GetCSDRegister(SD_CSD* SD_csd)
 
 	SD_csd->DeviceSize = (CSD_Tab[6] & 0x03) << 10;
 
-	//V1¿¨ÓëSDSC¿¨µÄÐÅÏ¢
+	//V1ï¿½ï¿½ï¿½ï¿½SDSCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	if ((SD_Type == SD_TYPE_V1) || (SD_Type == SD_TYPE_V2))
 	{
 		/*!< Byte 7 */
@@ -599,7 +599,7 @@ SD_Error SD_GetCSDRegister(SD_CSD* SD_csd)
 		/*!< Byte 10 */
 		SD_csd->DeviceSizeMul |= (CSD_Tab[10] & 0x80) >> 7;
 	}
-	//SDHC¿¨µÄÐÅÏ¢
+	//SDHCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	else if (SD_Type == SD_TYPE_V2HC)
 	{
 		SD_csd->DeviceSize = (CSD_Tab[7] & 0x3F) << 16;
@@ -878,8 +878,8 @@ uint16_t SD_GetStatus(void)
 }
 
 /**
-  * @brief  »ñÈ¡SD¿¨µÄ°æ±¾ÀàÐÍ£¬²¢Çø·ÖSDSCºÍSDHC
-  * @param  ÎÞ
+  * @brief  ï¿½ï¿½È¡SDï¿½ï¿½ï¿½Ä°æ±¾ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SDSCï¿½ï¿½SDHC
+  * @param  ï¿½ï¿½
   * @retval The SD Response: 
   *         - SD_RESPONSE_FAILURE: Sequence failed
   *         - SD_RESPONSE_NO_ERROR: Sequence succeed
@@ -914,7 +914,7 @@ SD_Error SD_GetCardType(void)
 		return SD_RESPONSE_FAILURE;
 	}
 
-	//ÏìÓ¦ = 0x05   ·ÇV2.0µÄ¿¨
+	//ï¿½ï¿½Ó¦ = 0x05   ï¿½ï¿½V2.0ï¿½Ä¿ï¿½
 	if (R1_Resp == (SD_IN_IDLE_STATE | SD_ILLEGAL_COMMAND))
 	{
 		/*----------Activates the card initialization process-----------*/
@@ -929,22 +929,22 @@ SD_Error SD_GetCardType(void)
 			/*!< SD chip select low */
 			SD_CS_LOW();
 
-			/*!< ·¢ËÍCMD1Íê³ÉV1 °æ±¾¿¨µÄ³õÊ¼»¯ */
+			/*!< ï¿½ï¿½ï¿½ï¿½CMD1ï¿½ï¿½ï¿½V1 ï¿½æ±¾ï¿½ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½ */
 			SD_SendCmd(SD_CMD_SEND_OP_COND, 0, 0xFF);
 			/*!< Wait for no error Response (R1 Format) equal to 0x00 */
 		} while (SD_GetResponse(SD_RESPONSE_NO_ERROR));
-		//V1°æ±¾µÄ¿¨Íê³É³õÊ¼»¯
+		//V1ï¿½æ±¾ï¿½Ä¿ï¿½ï¿½ï¿½É³ï¿½Ê¼ï¿½ï¿½
 
 		SD_Type = SD_TYPE_V1;
 
-		//²»´¦ÀíMMC¿¨
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MMCï¿½ï¿½
 
-		//³õÊ¼»¯Õý³£
+		//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	}
-	//ÏìÓ¦ 0x01   V2.0µÄ¿¨
+	//ï¿½ï¿½Ó¦ 0x01   V2.0ï¿½Ä¿ï¿½
 	else if (R1_Resp == SD_IN_IDLE_STATE)
 	{
-		/*!< ¶ÁÈ¡CMD8 µÄR7ÏìÓ¦ */
+		/*!< ï¿½ï¿½È¡CMD8 ï¿½ï¿½R7ï¿½ï¿½Ó¦ */
 		for (i = 0; i < 4; i++)
 		{
 			R7R3_Resp[i] = SD_ReadByte();
@@ -959,29 +959,29 @@ SD_Error SD_GetCardType(void)
 		/*!< SD chip select low */
 		SD_CS_LOW();
 
-		//ÅÐ¶Ï¸Ã¿¨ÊÇ·ñÖ§³Ö2.7-3.6VµçÑ¹
+		//ï¿½Ð¶Ï¸Ã¿ï¿½ï¿½Ç·ï¿½Ö§ï¿½ï¿½2.7-3.6Vï¿½ï¿½Ñ¹
 		if (R7R3_Resp[2] == 0x01 && R7R3_Resp[3] == 0xAA)
 		{
-			//Ö§³ÖµçÑ¹·¶Î§£¬¿ÉÒÔ²Ù×÷
+			//Ö§ï¿½Öµï¿½Ñ¹ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½
 			Count = 200;
-			//·¢¿¨³õÊ¼»¯Ö¸ÁîCMD55+ACMD41
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö¸ï¿½ï¿½CMD55+ACMD41
 			do
 			{
-				//CMD55£¬ÒÔÇ¿µ÷ÏÂÃæµÄÊÇACMDÃüÁî
+				//CMD55ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ACMDï¿½ï¿½ï¿½ï¿½
 				SD_SendCmd(SD_CMD_APP_CMD, 0, 0xFF);
 				if (!SD_GetResponse(SD_RESPONSE_NO_ERROR)) // SD_IN_IDLE_STATE
-					return SD_RESPONSE_FAILURE;            //³¬Ê±·µ»Ø
+					return SD_RESPONSE_FAILURE;            //ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 
-				//ACMD41ÃüÁî´øHCS¼ì²éÎ»
+				//ACMD41ï¿½ï¿½ï¿½ï¿½ï¿½HCSï¿½ï¿½ï¿½Î»
 				SD_SendCmd(SD_ACMD_SD_SEND_OP_COND, 0x40000000, 0xFF);
 
 				if (Count-- == 0)
-					return SD_RESPONSE_FAILURE; //ÖØÊÔ´ÎÊý³¬Ê±
+					return SD_RESPONSE_FAILURE; //ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
 			} while (SD_GetResponse(SD_RESPONSE_NO_ERROR));
 
-			//³õÊ¼»¯Ö¸ÁîÍê³É£¬¶ÁÈ¡OCRÐÅÏ¢£¬CMD58
+			//ï¿½ï¿½Ê¼ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½È¡OCRï¿½ï¿½Ï¢ï¿½ï¿½CMD58
 
-			//-----------¼ø±ðSDSC SDHC¿¨ÀàÐÍ¿ªÊ¼-----------
+			//-----------ï¿½ï¿½ï¿½ï¿½SDSC SDHCï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½Ê¼-----------
 
 			Count = 200;
 			do
@@ -995,24 +995,24 @@ SD_Error SD_GetCardType(void)
 				/*!< SD chip select low */
 				SD_CS_LOW();
 
-				/*!< ·¢ËÍCMD58 ¶ÁÈ¡OCR¼Ä´æÆ÷ */
+				/*!< ï¿½ï¿½ï¿½ï¿½CMD58 ï¿½ï¿½È¡OCRï¿½Ä´ï¿½ï¿½ï¿½ */
 				SD_SendCmd(SD_CMD_READ_OCR, 0, 0xFF);
 			} while (SD_GetResponse(SD_RESPONSE_NO_ERROR) || Count-- == 0);
 
 			if (Count == 0)
-				return SD_RESPONSE_FAILURE; //ÖØÊÔ´ÎÊý³¬Ê±
+				return SD_RESPONSE_FAILURE; //ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
 
-			//ÏìÓ¦Õý³££¬¶ÁÈ¡R3ÏìÓ¦
+			//ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡R3ï¿½ï¿½Ó¦
 
-			/*!< ¶ÁÈ¡CMD58µÄR3ÏìÓ¦ */
+			/*!< ï¿½ï¿½È¡CMD58ï¿½ï¿½R3ï¿½ï¿½Ó¦ */
 			for (i = 0; i < 4; i++)
 			{
 				R7R3_Resp[i] = SD_ReadByte();
 			}
 
-			//¼ì²é½ÓÊÕµ½OCRÖÐµÄbit30(CCS)
+			//ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½OCRï¿½Ðµï¿½bit30(CCS)
 			//CCS = 0:SDSC			 CCS = 1:SDHC
-			if (R7R3_Resp[0] & 0x40) //¼ì²éCCS±êÖ¾
+			if (R7R3_Resp[0] & 0x40) //ï¿½ï¿½ï¿½CCSï¿½ï¿½Ö¾
 			{
 				SD_Type = SD_TYPE_V2HC;
 			}
@@ -1020,7 +1020,7 @@ SD_Error SD_GetCardType(void)
 			{
 				SD_Type = SD_TYPE_V2;
 			}
-			//-----------¼ø±ðSDSC SDHC°æ±¾¿¨µÄÁ÷³Ì½áÊø-----------
+			//-----------ï¿½ï¿½ï¿½ï¿½SDSC SDHCï¿½æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½-----------
 		}
 	}
 
@@ -1029,7 +1029,7 @@ SD_Error SD_GetCardType(void)
 	/*!< Send dummy byte: 8 Clock pulses of delay */
 	SD_WriteByte(SD_DUMMY_BYTE);
 
-	//³õÊ¼»¯Õý³£·µ»Ø
+	//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	return SD_RESPONSE_NO_ERROR;
 }
 
@@ -1060,7 +1060,7 @@ SD_Error SD_GoIdleState(void)
 	/*!< Send Dummy byte 0xFF */
 	SD_WriteByte(SD_DUMMY_BYTE);
 
-	//Õý³£·µ»Ø
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	return SD_RESPONSE_NO_ERROR;
 }
 

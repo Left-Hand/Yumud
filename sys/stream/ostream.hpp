@@ -215,6 +215,7 @@ public:
     __inline OutputStream & operator<<(const std::string_view str){checked_write(str.data(),str.length()); return *this;}
     __inline OutputStream & operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}
     __inline OutputStream & operator<<(const StringView str){checked_write(str.data(), str.length()); return * this;}
+    __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
