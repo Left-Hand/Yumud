@@ -173,12 +173,12 @@ protected:
 
     struct R16_SyncWord0:public Reg16<>{
         static constexpr RegAddress address = 0x24;
-        uint16_t syncword;
+        uint8_t word[2];
     };DEF_R16(R16_SyncWord0, sync_word0_reg);
 
     struct R16_SyncWord1:public Reg16<>{
         static constexpr RegAddress address = 0x27;
-        uint16_t syncword;
+        uint8_t word[2];
     };DEF_R16(R16_SyncWord1, sync_word1_reg);
 
     struct R16_Threshold:public Reg16<>{
@@ -297,17 +297,25 @@ protected:
         return dev_drv_.writeReg(address, reg);
     }
 
+
     [[nodiscard]] __fast_inline
     Result<void, Error> readReg(const RegAddress address, uint16_t & reg){
         return dev_drv_.readReg(address, reg);
     }
 
-    template<typename T>
+
+    template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeReg(const T & reg){
-        return dev_drv_.writeReg(reg.address, reg);
+    Result<void, Error> writeRegs(Ts const & ... reg) {
+        return (dev_drv_.writeReg(reg.address, reg.as_val()) | ...);
     }
-    
+
+    template<typename ... Ts>
+    [[nodiscard]] __fast_inline
+    Result<void, Error> readRegs(Ts & ... reg) {
+        return (dev_drv_.readReg(reg.address, reg.as_ref()) | ...);
+    }
+
     template<typename T>
     [[nodiscard]] __fast_inline
     Result<void, Error> readReg(T & reg){
@@ -349,13 +357,15 @@ public:
 
     [[nodiscard]] Result<void, Error> clearFifoReadPtr();
 
-    [[nodiscard]] Result<void, Error> setSyncWordBitsgth(const SyncWordBits len);
+    [[nodiscard]] Result<void, Error> setSyncWordBits(const SyncWordBits len);
+
+    [[nodiscard]] Result<void, Error> setSyncWord(const uint32_t syncword);
 
     [[nodiscard]] Result<void, Error> setRetransTime(const uint8_t times);
 
     [[nodiscard]] Result<void, Error> enableAutoAck(const bool en = true);
 
-    [[nodiscard]] Result<void, Error> init();
+    [[nodiscard]] Result<void, Error> init(const Power power, uint32_t syncword);
 
     [[nodiscard]] Result<void, Error> initRf();
 
