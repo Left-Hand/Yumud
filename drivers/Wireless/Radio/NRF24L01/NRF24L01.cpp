@@ -23,3 +23,25 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+
+using Error = NRF24L01::Error;
+
+Result<void, Error> NRF24L01::writeCommand(const NRF24L01::Command cmd){
+    return p_spi_drv_->writeSingle(uint8_t(cmd));
+}
+
+Result<void, Error> NRF24L01::writeReg(const uint8_t addr, const uint8_t data){
+    return Ok();
+}
+
+Result<void, Error> NRF24L01::readReg(const uint8_t addr, uint8_t & data){
+    return Ok();
+}
+
+Result<size_t, Error> NRF24L01::transmit(std::span<std::byte> buf){
+    return Ok(0u);
+}
+
+Result<size_t, Error> NRF24L01::receive(std::span<std::byte> buf){
+    return Ok(0u);
+}
