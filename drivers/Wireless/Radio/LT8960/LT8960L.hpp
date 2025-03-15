@@ -1,3 +1,5 @@
+//这个驱动还在推进状态
+
 #pragma once
 
 #include "drivers/device_defs.h"
@@ -11,7 +13,7 @@ T name = {};\
 
 namespace ymd::drivers{
 
-class LT8960{
+class LT8960L{
 public:
     static constexpr uint8_t default_i2c_addr = 0x1A;
     using Error = BusError;
@@ -160,7 +162,7 @@ protected:
         uint16_t __resv1__ :2;
         uint16_t pktFifoPolarity:1; //PKT flag, FIFO flag 低有效.
         uint16_t autoAck:1;//当接收到数据，自动回 ACK 或者 NACK
-        uint16_t fwTermTx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8960 将关闭发射。
+        uint16_t fwTermTx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8960L 将关闭发射。
         uint16_t packLengthEN:1;//1: 第一字节表示 payload 的长度 如要写 8 个 byte 有效字节，那第一个字节应写 8，总长 9
         uint16_t __resv2__ :1;
         uint16_t crcOn:1;//开启 CRC
@@ -191,6 +193,7 @@ protected:
         uint16_t chi_index:6;//透传速率
         uint16_t __resv2__ :2;
     };DEF_R16(R16_ChiIndex, chi_index_reg)
+
     struct R16_Flag:public Reg16<>{
         static constexpr RegAddress address = 0x30;
         uint16_t __resv__ :5;
@@ -230,9 +233,8 @@ protected:
         uint16_t __resv__:14;
     };DEF_R16(R16_I2cOper, i2c_oper_reg)
 
-    std::optional<hal::SpiDrv> spi_drv_;
-    std::optional<hal::I2cDrv> i2c_drv_;
-
+    std::optional<hal::SpiDrv> p_spi_drv_;
+    std::optional<hal::I2cDrv> p_i2c_drv_;
 
     hal::GpioIntf * p_packet_status_gpio = nullptr;
     hal::GpioIntf * p_fifo_status_gpio = nullptr;
@@ -245,14 +247,12 @@ protected:
     [[nodiscard]] Result<void, Error> readReg(const RegAddress address, uint16_t & reg);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
+    [[nodiscard]] __fast_inline
+    Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
     
     template<typename T>
-    [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
-
-    // [[nodiscard]] Result<void, Error> writeByte(const RegAddress address, const uint8_t data);
-
-    // [[nodiscard]] Result<void, Error> readByte(const RegAddress address, uint8_t & data);
+    [[nodiscard]] __fast_inline
+    Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
 
     [[nodiscard]] Result<size_t, Error> writeBurst(std::span<const std::byte> buf);
 
@@ -262,12 +262,12 @@ protected:
 
     [[nodiscard]] Result<void, Error> setPaGain(const uint8_t gain);
 public:
-    LT8960(const hal::SpiDrv & spi_drv) : spi_drv_(spi_drv) {;}
-    LT8960(hal::SpiDrv && spi_drv) : spi_drv_(spi_drv) {;}
-    LT8960(hal::Spi & spi, const uint8_t index) : spi_drv_(hal::SpiDrv(spi, index)) {;}
-    LT8960(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    LT8960(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    LT8960(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(bus, i2c_addr)){;}
+    LT8960L(const hal::SpiDrv & spi_drv) : p_spi_drv_(spi_drv) {;}
+    LT8960L(hal::SpiDrv && spi_drv) : p_spi_drv_(spi_drv) {;}
+    LT8960L(hal::Spi & spi, const uint8_t index) : p_spi_drv_(hal::SpiDrv(spi, index)) {;}
+    LT8960L(const hal::I2cDrv & i2c_drv):p_i2c_drv_(i2c_drv){;}
+    LT8960L(hal::I2cDrv && i2c_drv):p_i2c_drv_(std::move(i2c_drv)){;}
+    LT8960L(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):p_i2c_drv_(hal::I2cDrv(bus, i2c_addr)){;}
 
     [[nodiscard]] Result<bool, Error> isRfSynthLocked();
 
@@ -311,9 +311,9 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::LT8960::Error, BusError> {
-        static Result<T, drivers::LT8960::Error> convert(const BusError berr){
-            using Error = drivers::LT8960::Error;
+    struct result_converter<T, drivers::LT8960L::Error, BusError> {
+        static Result<T, drivers::LT8960L::Error> convert(const BusError berr){
+            using Error = drivers::LT8960L::Error;
             using BusError = BusError;
             
             if(berr.ok()) return Ok();
@@ -322,7 +322,7 @@ namespace ymd::custom{
                 switch(berr_.type){
                     // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
-                    // case BusError::I2C_NOT_READY: return LT8960::Error::I2C_NOT_READY;
+                    // case BusError::I2C_NOT_READY: return LT8960L::Error::I2C_NOT_READY;
                     default: return Error::UNSPECIFIED;
                 }
             }(berr);

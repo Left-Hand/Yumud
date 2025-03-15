@@ -1,21 +1,21 @@
-#include "lt8960.hpp"
+#include "LT8960L.hpp"
 #include "sys/debug/debug.hpp"
 
-// #define LT8960_DEBUG_EN
-#define LT8960_CHEAT_EN
+// #define LT8960L_DEBUG_EN
+#define LT8960L_CHEAT_EN
 
-#ifdef LT8960_DEBUG_EN
-#define LT8960_TODO(...) TODO()
-#define LT8960_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define LT8960_PANIC(...) PANIC{__VA_ARGS__}
-#define LT8960_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+#ifdef LT8960L_DEBUG_EN
+#define LT8960L_TODO(...) TODO()
+#define LT8960L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define LT8960L_PANIC(...) PANIC{__VA_ARGS__}
+#define LT8960L_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #define READ_REG(reg) readReg(reg.address, reg).loc().expect();
 #define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
 #else
-#define LT8960_DEBUG(...)
-#define LT8960_TODO(...) PANIC_NSRC()
-#define LT8960_PANIC(...)  PANIC_NSRC()
-#define LT8960_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#define LT8960L_DEBUG(...)
+#define LT8960L_TODO(...) PANIC_NSRC()
+#define LT8960L_PANIC(...)  PANIC_NSRC()
+#define LT8960L_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #define READ_REG(reg) readReg(reg.address, reg);
 #define WRITE_REG(reg) writeReg(reg.address, reg);
 #endif
@@ -24,38 +24,38 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = LT8960::Error;
+using Error = LT8960L::Error;
 
-void LT8960::delayT3(){delayMicroseconds(1);}
-void LT8960::delayT5(){delayMicroseconds(1);}
+void LT8960L::delayT3(){delayMicroseconds(1);}
+void LT8960L::delayT5(){delayMicroseconds(1);}
 
-Result<void, Error> LT8960::writeReg(const LT8960::RegAddress address, const uint16_t reg){
-    LT8960_DEBUG("write", reg, "at", uint8_t(address));
-    if(i2c_drv_){
-        return i2c_drv_->writeReg(uint8_t(address), reg, MSB);
-    }else if(spi_drv_){
+Result<void, Error> LT8960L::writeReg(const LT8960L::RegAddress address, const uint16_t reg){
+    LT8960L_DEBUG("write", reg, "at", uint8_t(address));
+    if(p_i2c_drv_){
+        return p_i2c_drv_->writeReg(uint8_t(address), reg, MSB);
+    }else if(p_spi_drv_){
         TODO("not implemented yet");
         while(true);
     }
     PANIC();
 }
 
-Result<void, Error> LT8960::readReg(const LT8960::RegAddress address, uint16_t & reg){
-    LT8960_DEBUG("read",reg, "at", uint8_t(address));
-    if(i2c_drv_){
-        return i2c_drv_->readReg(uint8_t(address), reg, MSB);
-    }else if(spi_drv_){
+Result<void, Error> LT8960L::readReg(const LT8960L::RegAddress address, uint16_t & reg){
+    LT8960L_DEBUG("read",reg, "at", uint8_t(address));
+    if(p_i2c_drv_){
+        return p_i2c_drv_->readReg(uint8_t(address), reg, MSB);
+    }else if(p_spi_drv_){
         TODO("not implemented yet");
         while(true);
     }
     PANIC();
 }
 
-[[nodiscard]] Result<size_t, Error> LT8960::writeBurst(std::span<const std::byte> buf){
-    if(i2c_drv_){
-        // return i2c_drv_->writeBurst(buf);
-        // i2c_drv_-
-    }else if(spi_drv_){
+[[nodiscard]] Result<size_t, Error> LT8960L::writeBurst(std::span<const std::byte> buf){
+    if(p_i2c_drv_){
+        // return p_i2c_drv_->writeBurst(buf);
+        // p_i2c_drv_-
+    }else if(p_spi_drv_){
         TODO("not implemented yet");
         while(true);
     }else{
@@ -63,48 +63,48 @@ Result<void, Error> LT8960::readReg(const LT8960::RegAddress address, uint16_t &
     }
 }
 
-[[nodiscard]] Result<size_t, Error> LT8960::readBurst(std::span<std::byte> buf){
+[[nodiscard]] Result<size_t, Error> LT8960L::readBurst(std::span<std::byte> buf){
     return Ok(0u);
 }
 
-// Result<void, Error> LT8960::writeByte(const RegAddress address, const uint8_t data){
-//     if(i2c_drv_){
-//         return i2c_drv_->writeReg(uint8_t(address), data);
-//     }else if(spi_drv_){
+// Result<void, Error> LT8960L::writeByte(const RegAddress address, const uint8_t data){
+//     if(p_i2c_drv_){
+//         return p_i2c_drv_->writeReg(uint8_t(address), data);
+//     }else if(p_spi_drv_){
 //         TODO("not implemented yet");
 //         while(true);
 //     }
 //     PANIC();
 // }
 
-// Result<void, Error> LT8960::readByte(const LT8960::RegAddress address, uint8_t & data){
-//     if(spi_drv_){
-//         spi_drv_->writeSingle((uint8_t)(uint8_t(address) & 0x80), CONT);
+// Result<void, Error> LT8960L::readByte(const LT8960L::RegAddress address, uint8_t & data){
+//     if(p_spi_drv_){
+//         p_spi_drv_->writeSingle((uint8_t)(uint8_t(address) & 0x80), CONT);
 //         delayT3();
-//         return spi_drv_->readSingle(data);
-//     }else if(i2c_drv_){
-//         return i2c_drv_->readReg(uint8_t(address), data);
+//         return p_spi_drv_->readSingle(data);
+//     }else if(p_i2c_drv_){
+//         return p_i2c_drv_->readReg(uint8_t(address), data);
 //     }
 //     PANIC();
 // }
 
-Result<bool, Error> LT8960::isRfSynthLocked(){
+Result<bool, Error> LT8960L::isRfSynthLocked(){
     auto res = readReg(rf_synthlock_reg);
     return rescond(res.is_ok(), bool(rf_synthlock_reg.synthLocked), res.unwrap_err());
 }
 
 
-Result<void, Error> LT8960::setRfChannel(const uint8_t ch){
+Result<void, Error> LT8960L::setRfChannel(const uint8_t ch){
     rf_config_reg.rfChannelNo = ch;
     return writeReg(rf_config_reg);
 }
 
-Result<void, Error> LT8960::setRfFreqMHz(const uint freq){
+Result<void, Error> LT8960L::setRfFreqMHz(const uint freq){
     
     return Ok();
 }
 
-Result<void, Error> LT8960::setRadioMode(const bool isRx){
+Result<void, Error> LT8960L::setRadioMode(const bool isRx){
     if(isRx){
         rf_config_reg.txEn = false;
         rf_config_reg.rxEn = true;
@@ -115,47 +115,47 @@ Result<void, Error> LT8960::setRadioMode(const bool isRx){
     return writeReg(rf_config_reg);
 }
 
-Result<void, Error> LT8960::setPaCurrent(const uint8_t current){
+Result<void, Error> LT8960L::setPaCurrent(const uint8_t current){
     pa_config_reg.paCurrent = current;
     return writeReg((pa_config_reg));
 }
 
-Result<void, Error> LT8960::setPaGain(const uint8_t gain){
+Result<void, Error> LT8960L::setPaGain(const uint8_t gain){
     pa_config_reg.paGain = gain;
     return writeReg((pa_config_reg));
 }
-Result<void, Error> LT8960::setBrclkSel(const BrclkSel brclkSel){
+Result<void, Error> LT8960L::setBrclkSel(const BrclkSel brclkSel){
     config1_reg.brclkSel = brclkSel;
     return writeReg((config1_reg));
 }
 
-Result<void, Error> LT8960::clearFifoWritePtr(){
+Result<void, Error> LT8960L::clearFifoWritePtr(){
     fifo_ptr_reg.clearWritePtr = 1;
     return writeReg((fifo_ptr_reg));
 }
 
-Result<void, Error> LT8960::clearFifoReadPtr(){
+Result<void, Error> LT8960L::clearFifoReadPtr(){
     fifo_ptr_reg.clearReadPtr = 1;
     return writeReg((fifo_ptr_reg));
 }
 
-Result<void, Error> LT8960::setSyncWordBitsgth(const SyncWordBits len){
+Result<void, Error> LT8960L::setSyncWordBitsgth(const SyncWordBits len){
     config1_reg.syncWordLen= len;
     return writeReg((config1_reg));
 }
 
-Result<void, Error> LT8960::setRetransTime(const uint8_t times){
+Result<void, Error> LT8960L::setRetransTime(const uint8_t times){
     config2_reg.retransTimes = times - 1;
     return writeReg((config2_reg));
 }
 
-Result<void, Error> LT8960::enableAutoAck(const bool en){
+Result<void, Error> LT8960L::enableAutoAck(const bool en){
     config3_reg.autoAck = en;
     return writeReg((config3_reg));
 }
 
-Result<void, Error> LT8960::reset(){
-    // LT8960 Datasheet v1.1 Page16
+Result<void, Error> LT8960L::reset(){
+    // LT8960L Datasheet v1.1 Page16
     // 第一步：延时20ms//保证初次上电,电路稳定。
     // 第二步：写0x38寄存器0xBFFE//唤醒射频防止射频正处在SLEEP状态。
     // 第三步：写0x38寄存器0xBFFD//执行复位操作
@@ -164,15 +164,15 @@ Result<void, Error> LT8960::reset(){
     return intoWake();
 }
 
-Result<void, Error> LT8960::verify(){
-    return i2c_drv_->verify();
+Result<void, Error> LT8960L::verify(){
+    return p_i2c_drv_->verify();
 }
 
-Result<void, Error> LT8960::init(){
+Result<void, Error> LT8960L::init(){
     return Ok();
 }
 
-Result<void, Error> LT8960::initRf(){
+Result<void, Error> LT8960L::initRf(){
     return Result<void, Error>(Ok())
         // REG 0x01 写0x5781,
         .then([&](){return this->writeReg(0x01, 0x5781);})
@@ -194,8 +194,8 @@ Result<void, Error> LT8960::initRf(){
 }
 
 
-Result<void, Error> LT8960::initBle(){
-    // LT8960 Datasheet v1.1 Page17
+Result<void, Error> LT8960L::initBle(){
+    // LT8960L Datasheet v1.1 Page17
 
     return Result<void, Error>(Ok())
 
@@ -238,20 +238,20 @@ Result<void, Error> LT8960::initBle(){
 }
 
 
-Result<void, Error> LT8960::intoSleep(){
+Result<void, Error> LT8960L::intoSleep(){
     TODO();
     return Ok();
 }
 
-Result<void, Error> LT8960::intoWake(){
+Result<void, Error> LT8960L::intoWake(){
     return Result<void, Error>(Ok())
         .then([&](){return this->writeReg(0x38, 0xBFFE);})
         .then([&](){return this->writeReg(0x38, 0xBFFD);})
     ;
 }
 
-Result<void, Error> LT8960::setTxPower(const LT8960::Power power){
-    const uint16_t code = [](const LT8960::Power power_){
+Result<void, Error> LT8960L::setTxPower(const LT8960L::Power power){
+    const uint16_t code = [](const LT8960L::Power power_){
         switch(power_){
             case Power::_8_Db :return 0x7830;
             case Power::_6_Db :return 0x7930;
@@ -264,7 +264,7 @@ Result<void, Error> LT8960::setTxPower(const LT8960::Power power){
             case Power::_n9_Db :return 0x3f30;
             case Power::_n13_Db :return 0x3fb0;
             case Power::_n19_Db :return 0x3fc0;
-            default: LT8960_PANIC("Invalid power"); while(true);
+            default: LT8960L_PANIC("Invalid power"); while(true);
         }
     }(power);
 

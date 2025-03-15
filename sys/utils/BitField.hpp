@@ -32,14 +32,6 @@ public:
         return *this;
     }
 
-    // __inline constexpr 
-    // I operator =(I && in){
-    //     static_assert(!std::is_const_v<D>, "cannot assign to const");
-    //     data_ = (static_cast<D>(in) << b_bits) | (data_ & ~mask);
-    //     return *this;
-    //     // return in;
-    // }
-
     template<typename T>
     requires std::is_constructible_v<T, I>
     [[nodiscard]] __inline explicit 
@@ -99,36 +91,9 @@ template<typename T>
 struct _bitfield_data_type{};
 }
 
-
-template<size_t b_bits, size_t e_bits>
-[[nodiscard]] __inline static constexpr 
-auto make_bitfield(auto & data){
-    using D = typename std::remove_reference_t<decltype(data)>;
-    return details::_make_bitfield<b_bits, e_bits, D>(data);
-}
-
-
-template<size_t b_bits, size_t e_bits, typename I>
-[[nodiscard]] __inline static constexpr 
-auto make_bitfield(auto & data){
-    // using D = typename std::decay_t<decltype(data)>;
-    return details::_make_bitfield<b_bits, e_bits, I>(data);
-}
-
-
-
-
-// template<typename T>
-// struct _bitfield_data_type<BitField<T, auto, auto, auto>>{using type = T};
-
-// template<typename T>
-// struct _bitfield_data_type<const BitField<T, auto, auto>>{using type = T};
-
 template<typename T>
 using bitfield_data_type_t = typename T::data_type;
 
-// template<typename T>
-// struct BitFieldArray{};
 
 template<typename T, size_t b_bits, size_t e_bits, size_t cnt>
 struct BitFieldArray{
@@ -162,8 +127,24 @@ public:
 
 
 
+template<size_t b_bits, size_t e_bits>
+[[nodiscard]] __fast_inline static constexpr 
+auto make_bitfield(auto & data){
+    using D = typename std::remove_reference_t<decltype(data)>;
+    return details::_make_bitfield<b_bits, e_bits, D>(data);
+}
+
+
+template<size_t b_bits, size_t e_bits, typename I>
+[[nodiscard]] __fast_inline static constexpr 
+auto make_bitfield(auto & data){
+    // using D = typename std::decay_t<decltype(data)>;
+    return details::_make_bitfield<b_bits, e_bits, I>(data);
+}
+
+
 template<size_t b_bits, size_t per_len, size_t cnt, typename D>
-[[nodiscard]] __inline static constexpr 
+[[nodiscard]] __fast_inline static constexpr
 BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
     return BitFieldArray<D, b_bits, per_len, cnt>(data);
 }
