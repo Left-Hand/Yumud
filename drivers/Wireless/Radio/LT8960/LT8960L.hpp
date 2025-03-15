@@ -92,6 +92,18 @@ public:
     enum class Mode:uint8_t{
         Rx, Tx, CarrierWave, Sleep
     };
+
+    class Channel{
+    public:
+        Channel (const uint8_t ch):
+            ch_(ch){;}
+
+        auto as_code() const {
+            return ch_;
+        }
+    private:    
+        const uint8_t ch_;
+    };
 protected:
     using RegAddress = uint8_t;
 
@@ -327,6 +339,9 @@ protected:
         return dev_drv_.writeBurst(R16_Fifo::address, buf);
     }
 
+    [[nodiscard]] Result<void, Error> fillFifo(const uint16_t data, const size_t len);
+
+
     [[nodiscard]] __fast_inline
     Result<size_t, Error> readBurst(std::span<std::byte> buf){
         return dev_drv_.readBurst(R16_Fifo::address, buf);
@@ -337,15 +352,28 @@ protected:
 
     [[nodiscard]]
     Result<void, Error> setPaGain(const uint8_t gain);
+
+    [[nodiscard]] Result<void, Error> change0x38();
+    [[nodiscard]] Result<void, Error> enableAnalog(bool en = true);
+    [[nodiscard]] Result<void, Error> changeCarrier(const Channel ch);
+
+    [[nodiscard]] Result<void, Error> setRfChannel(const Channel ch, const bool tx, const bool rx);
+    [[nodiscard]] Result<void, Error> setRfChannelAndIntoTx(const Channel ch){return setRfChannel(ch, 1, 0);}
+    [[nodiscard]] Result<void, Error> setRfChannelAndIntoRx(const Channel ch){return setRfChannel(ch, 0, 1);}
+
+    
 public:
+
+
     LT8960L(const hal::I2cDrv & i2c_drv):dev_drv_(i2c_drv){;}
     LT8960L(hal::I2cDrv && i2c_drv):dev_drv_(std::move(i2c_drv)){;}
     LT8960L(hal::I2c * bus, const uint8_t i2c_addr = default_i2c_addr):
         dev_drv_(hal::I2cDrv(*bus, i2c_addr)){;}
 
-    [[nodiscard]] Result<bool, Error> isRfSynthLocked();
 
-    [[nodiscard]] Result<void, Error> setRfChannel(const uint8_t ch);
+    [[nodiscard]] Result<bool, Error> getPktStatus();
+
+    [[nodiscard]] Result<bool, Error> isRfSynthLocked();
 
     [[nodiscard]] Result<void, Error> setRfFreqMHz(const uint freq);
 
@@ -373,18 +401,29 @@ public:
 
     [[nodiscard]] Result<void, Error> intoWake();
 
-    [[nodiscard]] Result<void, Error> initBle();
+    [[nodiscard]] Result<void, Error> initBle(const Power power);
 
     [[nodiscard]] Result<void, Error> reset();
+    [[nodiscard]] Result<void, Error> wakup(){return reset();}
+
+    [[nodiscard]] Result<void, Error> sleep();
 
     [[nodiscard]] Result<void, Error> verify();
 
     [[nodiscard]] Result<void, Error> setTxPower(const Power power);
 
-    [[nodiscard]] Result<void, Error> trasmitRf(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmitRf(std::span<const std::byte> buf);
 
-    [[nodiscard]] Result<void, Error> setDataRate(DataRate rate);
+    [[nodiscard]] Result<size_t, Error> receiveRf(std::span<std::byte> buf);
+
+    [[nodiscard]] Result<size_t, Error> transmitBle(std::span<const std::byte> buf);
+    
+    [[nodiscard]] Result<size_t, Error> receiveBle(std::span<std::byte> buf);
+
+    [[nodiscard]] Result<void, Error> setDataRate(LT8960L::DataRate rate);
+
 };
+
 }
 
 namespace ymd::custom{
