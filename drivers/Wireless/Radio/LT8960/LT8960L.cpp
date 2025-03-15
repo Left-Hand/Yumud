@@ -29,12 +29,19 @@ using namespace ymd::drivers;
 using Error = LT8960L::Error;
 
 
-template<typename Fn>
-Result<void, Error> retry(const size_t times, Fn && fn){
+template<typename Fn, typename Fn_Dur>
+Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
+    if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
     Result<void, Error> res = std::forward<Fn>(fn)();
     if(!times) return res;
-    else return retry(times - 1, std::forward<Fn>(fn));
+    else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
 }
+
+template<typename Fn>
+Result<void, Error> retry(const size_t times, Fn && fn){
+    return retry(times, std::forward<Fn>(fn), nullptr);
+}
+
 
 void LT8960L::delayT3(){delayMicroseconds(1);}
 void LT8960L::delayT5(){delayMicroseconds(1);}

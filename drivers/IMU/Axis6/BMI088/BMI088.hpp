@@ -96,6 +96,8 @@ class BMI088_Acc:public BoschSensor, public _BMI088_Base, public Accelerometer{
 public:
     using Error = BoschSensor::Error;
 protected:
+    real_t acc_scaler_ = 0;
+
 
     REG8_QUICK_DEF(0x01, AccChipId, acc_chipid_reg);
 
@@ -170,7 +172,31 @@ protected:
     REG8_QUICK_DEF(0x6D, R8_AccSelfTest, acc_selftest_reg);
     REG8_QUICK_DEF(0x7c, R8_AccPwrConf, acc_pwrconf_reg);
     REG8_QUICK_DEF(0x7d, R8_AccPwrCtrl, acc_pwrctrl_reg);
-    REG8_QUICK_DEF(0x7e, R8_AccSoftReset, acc_softreset_reg);
+
+    Result<void, Error> verifyChipId();
+
+    class InterruptChannel{
+    protected:
+        using Error = BMI088_Acc::Error;
+    public:
+        InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
+            bmi_(bmi), ctrl_(ctrl), address_(address){;}
+
+        Result<void, Error> enableOutput(const bool en = true){
+            ctrl_.int_out = en;
+            return bmi_.writeReg(address_, ctrl_.as_val());
+        }
+    protected:
+        BMI088_Acc & bmi_;
+        _R8_IoCtrl & ctrl_;
+        uint8_t address_;
+    };
+
+    friend InterruptChannel;
+    std::array<InterruptChannel, 2> interrupts = {
+        InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
+        InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
+    };
 public:
     BMI088_Acc(const hal::I2cDrv & i2c_drv):BoschSensor(i2c_drv){;}
     BMI088_Acc(hal::I2cDrv && i2c_drv):BoschSensor(std::move(i2c_drv)){;}
@@ -182,11 +208,14 @@ public:
 
 
     Result<void, Error> init();
+    Result<void, Error> reset();
+    Result<void, Error> verify();
     Result<void, Error> update();
+
     Option<Vector3R> getAcc();
     Option<real_t> getTemperature();
 
-    Result<void, Error> setAccRange(const GyrRange range);
+    Result<void, Error> setAccRange(const AccRange range);
     Result<void, Error> setAccBwp(const AccBwp bwp);
     Result<void, Error> setAccOdr(const AccOdr odr);
 };
@@ -196,11 +225,12 @@ class BMI088_Gyr:public BoschSensor, public _BMI088_Base, public Accelerometer{
 public:
     using Error = BoschSensor::Error;
 protected:
+    real_t gyr_scaler_ = 0;
 
     REG8_QUICK_DEF(0x00, R8_GyroChipID, gyro_chip_id);
-    REG16_QUICK_DEF(0x02, R8_AccXReg, gyr_x_reg);
-    REG16_QUICK_DEF(0x04, R8_AccYReg, gyr_y_reg);
-    REG16_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
+    REG16I_QUICK_DEF(0x02, R8_AccXReg, gyr_x_reg);
+    REG16I_QUICK_DEF(0x04, R8_AccYReg, gyr_y_reg);
+    REG16I_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
     
     struct R8_GyroIntStatus1:public Reg8<>{
         scexpr RegAddress address = 0x0A;
@@ -234,6 +264,8 @@ protected:
         uint8_t rate_ok:1;
         uint8_t :3;
     }DEF_R8(gyro_selftest_reg)
+
+    Result<void, Error> verifyChipId();
 public:
     BMI088_Gyr(const hal::I2cDrv & i2c_drv):BoschSensor(i2c_drv){;}
     BMI088_Gyr(hal::I2cDrv && i2c_drv):BoschSensor(std::move(i2c_drv)){;}
@@ -245,6 +277,8 @@ public:
 
 
     Result<void, Error> init();
+    Result<void, Error> reset();
+    Result<void, Error> verify();
     Result<void, Error> update();
     Option<Vector3R> getGyr();
 

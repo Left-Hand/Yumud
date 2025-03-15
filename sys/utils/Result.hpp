@@ -574,6 +574,17 @@ template<
     else return Err<Edecay>(std::forward<E>(err));
 }
 
+template<
+    typename T, 
+    typename E,
+    typename Tdecay = std::decay_t<T>,
+    typename Edecay = std::decay_t<E>
+>
+[[nodiscard]] Result<Tdecay, Edecay> rescond(bool cond, Ok<T>&& ok, Err<E>&& err){
+    if(cond) return Ok<Tdecay>((ok));
+    else return Err<Edecay>((err));
+}
+
 // 特化版本处理Result类型
 template<typename T, typename E, typename Fn>
 auto operator|(const Result<T, E>& res, Fn&& fn) {
