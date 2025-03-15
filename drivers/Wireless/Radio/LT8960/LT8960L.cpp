@@ -26,67 +26,62 @@ using namespace ymd::drivers;
 
 using Error = LT8960L::Error;
 
+
+template<typename T, typename Fn1, typename Fn2, typename Fn3>
+[[nodiscard]] __fast_inline
+auto iterate_bytes(std::span<T> pdata, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
+    constexpr size_t dsize = sizeof(T);
+
+    const auto bytes = std::span<std::byte>(
+        reinterpret_cast<const std::byte *>(pdata.begin()), 
+        pdata.size() * dsize
+    );
+
+    for(size_t i = 0; i < bytes.size(); i += dsize){
+        if(endian == MSB){
+            for(size_t j = dsize; j > 0; j--){
+                const auto err = std::forward<Fn1>(do_fn)(bytes[i + j - 1]);
+                if(std::forward<Fn2>(check_fn)(err)) return err;
+            }
+        }else{
+            for(size_t j = 0; j < dsize; j++){
+                const auto err = std::forward<Fn1>(do_fn)(bytes[i + j]);
+                if(std::forward<Fn2>(check_fn)(err)) return err;
+            }
+        }
+    }
+
+    return std::forward<Fn3>(ok_fn)();
+}
+
 void LT8960L::delayT3(){delayMicroseconds(1);}
 void LT8960L::delayT5(){delayMicroseconds(1);}
 
-Result<void, Error> LT8960L::writeReg(const LT8960L::RegAddress address, const uint16_t reg){
+Result<void, Error> LT8960L::DevDriver::writeReg(const LT8960L::RegAddress address, const uint16_t reg){
     LT8960L_DEBUG("write", reg, "at", uint8_t(address));
-    if(p_i2c_drv_){
-        return p_i2c_drv_->writeReg(uint8_t(address), reg, MSB);
-    }else if(p_spi_drv_){
-        TODO("not implemented yet");
-        while(true);
-    }
-    PANIC();
+    return i2c_drv_.writeReg(uint8_t(address), reg, MSB);
 }
 
-Result<void, Error> LT8960L::readReg(const LT8960L::RegAddress address, uint16_t & reg){
+Result<void, Error> LT8960L::DevDriver::readReg(const LT8960L::RegAddress address, uint16_t & reg){
     LT8960L_DEBUG("read",reg, "at", uint8_t(address));
-    if(p_i2c_drv_){
-        return p_i2c_drv_->readReg(uint8_t(address), reg, MSB);
-    }else if(p_spi_drv_){
-        TODO("not implemented yet");
-        while(true);
-    }
-    PANIC();
+    return i2c_drv_.readReg(uint8_t(address), reg, MSB);
 }
 
-[[nodiscard]] Result<size_t, Error> LT8960L::writeBurst(std::span<const std::byte> buf){
-    if(p_i2c_drv_){
-        // return p_i2c_drv_->writeBurst(buf);
-        // p_i2c_drv_-
-    }else if(p_spi_drv_){
-        TODO("not implemented yet");
-        while(true);
-    }else{
-        PANIC();
-    }
-}
+Result<size_t, Error> LT8960L::DevDriver::writeBurst(std::span<const std::byte> buf){
+    LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
+    i2c_drv_.writeCommand(uint8_t(buf.size()));
+    // i2c_drv_.writeMulti();
 
-[[nodiscard]] Result<size_t, Error> LT8960L::readBurst(std::span<std::byte> buf){
     return Ok(0u);
 }
 
-// Result<void, Error> LT8960L::writeByte(const RegAddress address, const uint8_t data){
-//     if(p_i2c_drv_){
-//         return p_i2c_drv_->writeReg(uint8_t(address), data);
-//     }else if(p_spi_drv_){
-//         TODO("not implemented yet");
-//         while(true);
-//     }
-//     PANIC();
-// }
+Result<size_t, Error> LT8960L::DevDriver::readBurst(std::span<std::byte> buf){
+    return Ok(0u);
+}
 
-// Result<void, Error> LT8960L::readByte(const LT8960L::RegAddress address, uint8_t & data){
-//     if(p_spi_drv_){
-//         p_spi_drv_->writeSingle((uint8_t)(uint8_t(address) & 0x80), CONT);
-//         delayT3();
-//         return p_spi_drv_->readSingle(data);
-//     }else if(p_i2c_drv_){
-//         return p_i2c_drv_->readReg(uint8_t(address), data);
-//     }
-//     PANIC();
-// }
+Result<void, Error> LT8960L::DevDriver::verify(){
+    return Ok();
+}
 
 Result<bool, Error> LT8960L::isRfSynthLocked(){
     auto res = readReg(rf_synthlock_reg);
@@ -165,7 +160,7 @@ Result<void, Error> LT8960L::reset(){
 }
 
 Result<void, Error> LT8960L::verify(){
-    return p_i2c_drv_->verify();
+    return dev_drv_.verify();
 }
 
 Result<void, Error> LT8960L::init(){

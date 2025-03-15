@@ -14,7 +14,7 @@
     if constexpr(size == 0){\
         return BusError::ZERO_LENGTH;\
     }\
-    if(len == 0) {\
+    if(unlikely(len == 0)) {\
         return BusError::ZERO_LENGTH;\
     }\
 
@@ -33,8 +33,13 @@ BusError I2cDrv::writeRegAddress(
             err.emplace(bus_.write(uint8_t(addr)));
             break;
         case 2:
+            if(endian == MSB){
                 err.emplace(bus_.write(uint8_t(addr >> 8)));
                 err.emplace(bus_.write(uint8_t(addr)));
+            }else{
+                err.emplace(bus_.write(uint8_t(addr)));
+                err.emplace(bus_.write(uint8_t(addr >> 8)));
+            }
             break;
         default:
             break;
@@ -140,6 +145,46 @@ BusError I2cDrv::writeSame_impl(
             }else{
                 for(size_t j = 0; j < size; j++){
                     const auto err = bus_.write(u8_ptr[j]);
+                    if(err.wrong()) return err;
+                }
+            }
+        }
+
+
+        return BusError::OK;
+    }else{
+        return begin_err;
+    }
+}
+
+
+
+BusError I2cDrv::writeBurst_impl(
+    const valid_i2c_regaddr auto addr,
+    std::span<const valid_i2c_data auto> pdata,
+    const Endian endian
+){
+    constexpr size_t dsize = sizeof(std::decay_t<decltype(pdata)>);
+
+    const auto bytes = std::span<std::byte>(
+        reinterpret_cast<const std::byte *>(pdata.begin()), 
+        pdata.size() * dsize);
+
+    
+    if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
+        const auto guard = createGuard();
+        if(const auto err = writeRegAddress(addr, endian); err.wrong()){
+            return err;
+        }
+        for(size_t i = 0; i < bytes.size(); i += dsize){
+            if(endian == MSB){
+                for(size_t j = dsize; j > 0; j--){
+                    const auto err = bus_.write(static_cast<uint32_t>(bytes[j-1]));
+                    if(err.wrong()) return err;
+                }
+            }else{
+                for(size_t j = 0; j < dsize; j++){
+                    const auto err = bus_.write(static_cast<uint32_t>(bytes[j]));
                     if(err.wrong()) return err;
                 }
             }

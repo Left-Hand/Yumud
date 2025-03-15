@@ -11,6 +11,34 @@ static_assert(sizeof(T) == 2 and std::has_unique_object_representations_v<T>, "x
 T name = {};\
 
 
+template<typename T>
+class PtrLikeRef{
+public:
+    PtrLikeRef(T * pobj):obj_(*pobj) {}
+    PtrLikeRef(std::nullptr_t) = delete;
+    PtrLikeRef(PtrLikeRef &&) = default;
+    T * operator ->() {return &obj_;}
+    T * operator &() {return &obj_;}
+    T & operator *() {return obj_;}
+private:
+    T & obj_;
+};
+
+template<typename T>
+class PtrLikeVase{
+
+public:
+    PtrLikeVase(const T & obj):obj_(obj) {}
+    PtrLikeVase(T && obj):obj_(std::move(obj)) {}
+    PtrLikeVase(PtrLikeRef<T> ref):obj_(*ref) {}
+
+    PtrLikeVase(const PtrLikeVase &) = delete;
+    PtrLikeVase(PtrLikeVase &&) = default;
+    T * operator ->() {return &obj_;}
+private:
+    T obj_;
+};
+
 namespace ymd::drivers{
 
 class LT8960L{
@@ -233,8 +261,25 @@ protected:
         uint16_t __resv__:14;
     };DEF_R16(R16_I2cOper, i2c_oper_reg)
 
-    std::optional<hal::SpiDrv> p_spi_drv_;
-    std::optional<hal::I2cDrv> p_i2c_drv_;
+    struct DevDriver{
+    public:
+        DevDriver(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}
+        DevDriver(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){}
+
+        [[nodiscard]] Result<size_t, Error> writeBurst(std::span<const std::byte> buf);
+
+        [[nodiscard]] Result<size_t, Error> readBurst(std::span<std::byte> buf);
+
+        [[nodiscard]] Result<void, Error> writeReg(const RegAddress address, const uint16_t reg);
+
+        [[nodiscard]] Result<void, Error> readReg(const RegAddress address, uint16_t & reg);
+        
+        [[nodiscard]] Result<void, Error> verify();
+    private:
+        hal::I2cDrv i2c_drv_;
+    };
+
+    DevDriver dev_drv_;
 
     hal::GpioIntf * p_packet_status_gpio = nullptr;
     hal::GpioIntf * p_fifo_status_gpio = nullptr;
@@ -242,32 +287,49 @@ protected:
     __no_inline void delayT3();
     __no_inline void delayT5();
 
-    [[nodiscard]] Result<void, Error> writeReg(const RegAddress address, const uint16_t reg);
 
-    [[nodiscard]] Result<void, Error> readReg(const RegAddress address, uint16_t & reg);
+    [[nodiscard]] __fast_inline
+    Result<void, Error> writeReg(const RegAddress address, const uint16_t reg){
+        return dev_drv_.writeReg(address, reg);
+    }
+
+    [[nodiscard]] __fast_inline
+    Result<void, Error> readReg(const RegAddress address, uint16_t & reg){
+        return dev_drv_.readReg(address, reg);
+    }
 
     template<typename T>
     [[nodiscard]] __fast_inline
-    Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
+    Result<void, Error> writeReg(const T & reg){
+        return dev_drv_.writeReg(reg.address, reg);
+    }
     
     template<typename T>
     [[nodiscard]] __fast_inline
-    Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
+    Result<void, Error> readReg(T & reg){
+        return dev_drv_.readReg(reg.address, reg);
+    }
 
-    [[nodiscard]] Result<size_t, Error> writeBurst(std::span<const std::byte> buf);
+    [[nodiscard]] __fast_inline
+    Result<size_t, Error> writeBurst(std::span<const std::byte> buf){
+        return dev_drv_.writeBurst(buf);
+    }
 
-    [[nodiscard]] Result<size_t, Error> readBurst(std::span<std::byte> buf);
+    [[nodiscard]] __fast_inline
+    Result<size_t, Error> readBurst(std::span<std::byte> buf){
+        return dev_drv_.readBurst(buf);
+    }
 
-    [[nodiscard]] Result<void, Error> setPaCurrent(const uint8_t current);
+    [[nodiscard]]
+    Result<void, Error> setPaCurrent(const uint8_t current);
 
-    [[nodiscard]] Result<void, Error> setPaGain(const uint8_t gain);
+    [[nodiscard]]
+    Result<void, Error> setPaGain(const uint8_t gain);
 public:
-    LT8960L(const hal::SpiDrv & spi_drv) : p_spi_drv_(spi_drv) {;}
-    LT8960L(hal::SpiDrv && spi_drv) : p_spi_drv_(spi_drv) {;}
-    LT8960L(hal::Spi & spi, const uint8_t index) : p_spi_drv_(hal::SpiDrv(spi, index)) {;}
-    LT8960L(const hal::I2cDrv & i2c_drv):p_i2c_drv_(i2c_drv){;}
-    LT8960L(hal::I2cDrv && i2c_drv):p_i2c_drv_(std::move(i2c_drv)){;}
-    LT8960L(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):p_i2c_drv_(hal::I2cDrv(bus, i2c_addr)){;}
+    LT8960L(const hal::I2cDrv & i2c_drv):dev_drv_(i2c_drv){;}
+    LT8960L(hal::I2cDrv && i2c_drv):dev_drv_(std::move(i2c_drv)){;}
+    LT8960L(hal::I2c * bus, const uint8_t i2c_addr = default_i2c_addr):
+        dev_drv_(hal::I2cDrv(*bus, i2c_addr)){;}
 
     [[nodiscard]] Result<bool, Error> isRfSynthLocked();
 

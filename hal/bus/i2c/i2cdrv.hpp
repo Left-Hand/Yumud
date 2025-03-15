@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
+#include <span>
 
 
 namespace ymd::hal{
@@ -43,6 +44,16 @@ protected:
         const size_t length, 
         const Endian endian);
 
+    BusError writeBurst_impl(
+        const valid_i2c_regaddr auto addr, 
+        std::span<const valid_i2c_data auto> pdata,
+        const Endian endian);
+
+    BusError readBurst_impl(
+        const valid_i2c_regaddr auto addr, 
+        std::span<valid_i2c_data auto> pdata,
+        const Endian endian);
+
     BusError writeCommand_impl(
         const valid_i2c_regaddr auto cmd, 
         const Endian endian);
@@ -71,6 +82,15 @@ public:
         return writeMulti_impl(addr, data_ptr, length, LSB);
     }
 
+    template<typename T>
+    requires valid_i2c_data<T> and (sizeof(T) == 1)
+    BusError writeBurst(
+        const valid_i2c_regaddr auto addr, 
+        const T * data_ptr, 
+        const size_t length
+    ){
+        return writeMulti_impl(addr, data_ptr, length, LSB);
+    }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
