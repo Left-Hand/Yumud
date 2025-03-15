@@ -41,31 +41,24 @@ Result<void, Error> LT8960L::DevDriver::readReg(const LT8960L::RegAddress addres
 
 Result<size_t, Error> LT8960L::DevDriver::writeBurst(const RegAddress address, std::span<const std::byte> buf){
     LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
-    i2c_drv_.writeCommand(uint8_t(buf.size()));
-    // i2c_drv_.writeBurst();
 
-    return Ok(0u);
+    const auto u8_size = std::byte(buf.size());
+
+    const auto err = i2c_drv_.writeBlocks<const std::byte, std::byte>(
+        R16_Fifo::address, std::span(&u8_size, 1), buf, LSB);
+
+    return rescond(err.ok(), 0u, err);
 }
 
 Result<size_t, Error> LT8960L::DevDriver::readBurst(const RegAddress address, std::span<std::byte> buf){
-    // const auto guard = i2c_drv_.createGuard();
-    // Result<size_t, Error>(Ok())
-    //     .then([&](){i2c_drv_.writeRegAddress(address);})
-    //     .then([&](){return i2c_drv_.writeBody(buf.size());})
-    //     .then([&](){
-    //         for(size_t i = 0; i < buf.size(); ++i){
-    //             const auto err = i2c_drv_.writeBody(buf[i]);
-    //             if(err.wrong()) return err;
-    //         }
-    //     })
+    LT8960L_ASSERT(buf.size() < 256 , "address overload", uint8_t(address));
 
-    // if(const auto err = i2c_drv_.writeCommand(buf.size()); err.is_ok()){
-    //     for(size_t i = 0; i < buf.size(); ++i){
+    const auto u8_size = std::byte(buf.size());
 
-    //         const auto err = 
-    //     }
-    // }
-    return Ok(0u);
+    const auto err = i2c_drv_.operateBlocks<const std::byte, std::byte>(
+        R16_Fifo::address, std::span(&u8_size, 1), buf, LSB);
+
+    return rescond(err.ok(), 0u, err);
 }
 
 Result<void, Error> LT8960L::DevDriver::verify(){
