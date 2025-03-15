@@ -1,6 +1,5 @@
 #include "DRV8301.hpp"
 
-using namespace ymd::drivers;
 
 #define DRV8301_DEBUG
 
@@ -15,6 +14,8 @@ using namespace ymd::drivers;
 #define DRV8301_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
+using namespace ymd;
+using namespace ymd::drivers;
 
 #define WRITE_REG(reg) writeReg(reg.address, reg.as_val());
 #define READ_REG(reg) readReg(reg.address, reg.as_ref());
@@ -74,24 +75,26 @@ struct SpiFormat{
     }
 };
 
-void DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
+BusError DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
         .write = 0
     };
 
-    spi_drv_.writeSingle<uint16_t>((spi_format));
+    return spi_drv_.writeSingle<uint16_t>((spi_format));
 }
 
-void DRV8301::readReg(const RegAddress addr, uint16_t & reg){
+BusError DRV8301::readReg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
         .write = 1
     };
 
-    spi_drv_.readSingle<uint16_t>((spi_format)).unwrap();
+    const auto err = spi_drv_.readSingle<uint16_t>((spi_format)).unwrap();
 
     reg = spi_format.data;
+
+    return err;
 }

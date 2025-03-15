@@ -61,7 +61,7 @@ void AD9910::writeReg(const uint8_t addr, const uint8_t * data, const size_t len
 }
 
 void AD9910::writeData(const uint8_t txdat){
-    spi_drv.writeSingle(txdat);
+    spi_drv.writeSingle(txdat).unwrap();
 }  
 
     

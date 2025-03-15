@@ -74,7 +74,7 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
         (core_clock > 200 ? uint8_t(FR1_Bits::VCOGain) : uint8_t(0)) |
         (mult*uint8_t(FR1_Bits::PllDivider)) | 
         uint8_t(FR1_Bits::ChargePump3)         // Lock fast
-    );
+    ).unwrap();
     // Profile0 means each channel is modulated by a different profile pin:
     spi_drv_.writeSingle(
         uint8_t(FR1_Bits::ModLevels2) |
@@ -110,9 +110,9 @@ void AD9959::setAmplitude(ChannelIndex chan, uint16_t amplitude){        // Maxi
     spi_drv_.writeSingle(Register::ACR).unwrap();                  // Amplitude control register
     spi_drv_.writeSingle(0).unwrap();                    // Time between ramp steps
     if (amplitude < 1024){               // Enable amplitude control with no ramping
-        spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8);
+        spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8).unwrap();
     }else{
-        spi_drv_.writeSingle(0);                  // Disable the amplitude multiplier
+        spi_drv_.writeSingle(0).unwrap();// Disable the amplitude multiplier
     }
     spi_drv_.writeSingle(amplitude&0xFF).unwrap();       // Bottom 8 bits of amplitude
 }

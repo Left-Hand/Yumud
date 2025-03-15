@@ -169,7 +169,7 @@ protected:
     }
 
     BusError readBurst(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readBurst(uint8_t(addr), std::span(data, len)).unwrap();
+        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len)).unwrap();
     }
 public:
 

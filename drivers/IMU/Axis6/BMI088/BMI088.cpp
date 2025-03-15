@@ -24,3 +24,4 @@ Option<Vector3R> BMI088::getGyr(){
 real_t BMI088::getTemperature(){
     return 0;
 }
+
