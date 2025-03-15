@@ -180,7 +180,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
-        i2c_drv.readMulti(uint8_t(addr), (uint16_t *)data_ptr, len, LSB);
+        i2c_drv.readMulti(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB);
     }
 
     struct INA3221Channel:public hal::AnalogInIntf{

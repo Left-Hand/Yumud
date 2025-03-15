@@ -104,7 +104,7 @@ protected:
 
 
     void requestPool(const RegAddress addr, int16_t * pdata, size_t len){
-        i2c_drv_.readMulti(uint8_t(addr), pdata, len, MSB);
+        i2c_drv_.readMulti(uint8_t(addr), std::span(pdata, len), MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){

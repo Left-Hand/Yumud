@@ -10,11 +10,6 @@
 #endif
 
 
-#define __I2CDRV_LENGTH_GUARD\
-    if(unlikely(len == 0)) {\
-        return BusError::ZERO_LENGTH;\
-    }\
-
 #define __I2CDRV_ITER_WRITE_BYTES(pdata, endian)\
 return iterate_bytes(\
     pdata, endian, \
@@ -44,29 +39,58 @@ return iterate_bytes(\
 namespace ymd::hal{
 
 
-template<typename T>
-requires valid_i2c_data<T>
 BusError I2cDrv::writeBody(
-    const T data,
+    const valid_i2c_data auto data,
     const Endian endian
 ){
     constexpr size_t size = sizeof(std::decay_t<decltype(data)>);
 
-    switch(size){
-        case 1:
-            return (bus_.write(uint8_t(data)));
-        case 2:
-            if(endian == MSB){
-                if(auto err = (bus_.write(uint8_t(data >> 8)));    err.wrong()) return err;
-                if(auto err = (bus_.write(uint8_t(data)));         err.wrong()) return err;
-            }else{
-                if(auto err = (bus_.write(uint8_t(data)));         err.wrong()) return err;
-                if(auto err = (bus_.write(uint8_t(data >> 8)));    err.wrong()) return err;
-            }
-        default:
-            return BusError::UNSPECIFIED;
+    if constexpr (size == 1){
+        return (bus_.write(uint8_t(data)));
+    }else if constexpr(size == 2){
+        if(endian == MSB){
+            if(auto err = (bus_.write(uint8_t(data >> 8)));    err.wrong()) return err;
+            if(auto err = (bus_.write(uint8_t(data)));         err.wrong()) return err;
+        }else{
+            if(auto err = (bus_.write(uint8_t(data)));         err.wrong()) return err;
+            if(auto err = (bus_.write(uint8_t(data >> 8)));    err.wrong()) return err;
+        }
+        return BusError::OK;
+    }else{
+        return BusError::UNSPECIFIED;
     }
 }
+
+BusError I2cDrv::readBody(
+    const valid_i2c_data auto data,
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(data)>);
+
+    if constexpr (size == 1){
+        uint32_t dummy;
+        dummy = uint8_t(data);
+        return (bus_.read(dummy, NACK));
+    }else if constexpr(size == 2){
+        if(endian == MSB){
+            uint32_t dummy;
+            dummy = uint8_t(data >> 8);
+            if(auto err = (bus_.read(dummy, ACK));    err.wrong()) return err;
+            dummy = uint8_t(data);
+            if(auto err = (bus_.read(dummy, NACK));         err.wrong()) return err;
+        }else{
+            uint32_t dummy;
+            dummy = uint8_t(data);
+            if(auto err = (bus_.read(dummy, ACK));    err.wrong()) return err;
+            dummy = uint8_t(data >> 8);
+            if(auto err = (bus_.read(dummy, NACK));         err.wrong()) return err;
+        }
+        return BusError::OK;
+    }else{
+        return BusError::UNSPECIFIED;
+    }
+}
+
 
 BusError I2cDrv::writeRegAddress(
     const valid_i2c_regaddr auto addr,
@@ -94,19 +118,16 @@ BusError I2cDrv::writeCommand_impl(
 
 BusError I2cDrv::writeMulti_impl(
     const valid_i2c_regaddr auto addr, 
-    const valid_i2c_data auto * pdata, 
-    const size_t len, 
+    std::span<const valid_i2c_data auto> pdata, 
     const Endian endian
 ){
-    __I2CDRV_LENGTH_GUARD;
-    
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
         const auto guard = createGuard();
         if(const auto err = writeRegAddress(addr, endian); err.wrong()){
             return err;
         }
 
-        __I2CDRV_ITER_WRITE_BYTES((std::span(pdata, len)), endian);
+        __I2CDRV_ITER_WRITE_BYTES(pdata, endian);
     }else{
         return begin_err;
     }
@@ -114,11 +135,9 @@ BusError I2cDrv::writeMulti_impl(
 
 BusError I2cDrv::readMulti_impl(
     const valid_i2c_regaddr auto addr, 
-    valid_i2c_data auto * pdata, 
-    const size_t len, 
+    std::span<valid_i2c_data auto> pdata, 
     const Endian endian
 ){
-    __I2CDRV_LENGTH_GUARD;
 
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
         const auto guard = createGuard();
@@ -126,7 +145,7 @@ BusError I2cDrv::readMulti_impl(
             return err;
         }
         if(const auto reset_err = bus_.begin(index_ | 0x01); reset_err.ok()){
-            __I2CDRV_ITER_READ_BYTES((std::span(pdata, len)), endian);
+            __I2CDRV_ITER_READ_BYTES(pdata, endian);
         }else{
             return reset_err;
         }
@@ -140,9 +159,7 @@ BusError I2cDrv::writeSame_impl(
     const valid_i2c_data auto data,
     const size_t len,
     const Endian endian
-){
-    __I2CDRV_LENGTH_GUARD;
-    
+){    
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
         const auto guard = createGuard();
         if(const auto err = writeRegAddress(addr, endian); err.wrong()){
@@ -196,8 +213,6 @@ BusError I2cDrv::readBurst_impl(
 
 }
 
-
-#undef __I2CDRV_LENGTH_GUARD
 #undef __I2CDRV_ITER_WRITE_BYTES
 #undef __I2CDRV_ITER_READ_BYTES
 #undef __I2CDRV_ITER_WRITE_SAME_BYTES

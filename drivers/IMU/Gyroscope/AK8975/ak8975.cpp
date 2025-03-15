@@ -140,7 +140,7 @@ void AK8975::readReg(const RegAddress addr, uint8_t & data){
 }
 
 void AK8975::readMulti(const RegAddress addr, void * datas, const size_t len){
-    if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), reinterpret_cast<uint8_t *>(datas), len);
+    if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), std::span(reinterpret_cast<uint8_t *>(datas), len));
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
         spi_drv_->readMulti((uint8_t *)(datas), len);

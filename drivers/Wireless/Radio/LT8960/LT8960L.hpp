@@ -266,14 +266,14 @@ protected:
         DevDriver(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}
         DevDriver(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){}
 
-        [[nodiscard]] Result<size_t, Error> writeBurst(std::span<const std::byte> buf);
+        [[nodiscard]] Result<size_t, Error> writeBurst(const RegAddress address, std::span<const std::byte> buf);
 
-        [[nodiscard]] Result<size_t, Error> readBurst(std::span<std::byte> buf);
+        [[nodiscard]] Result<size_t, Error> readBurst(const RegAddress address, std::span<std::byte> buf);
 
         [[nodiscard]] Result<void, Error> writeReg(const RegAddress address, const uint16_t reg);
 
         [[nodiscard]] Result<void, Error> readReg(const RegAddress address, uint16_t & reg);
-        
+
         [[nodiscard]] Result<void, Error> verify();
     private:
         hal::I2cDrv i2c_drv_;
@@ -311,13 +311,13 @@ protected:
     }
 
     [[nodiscard]] __fast_inline
-    Result<size_t, Error> writeBurst(std::span<const std::byte> buf){
-        return dev_drv_.writeBurst(buf);
+    Result<size_t, Error> writeFifo(std::span<const std::byte> buf){
+        return dev_drv_.writeBurst(R16_Fifo::address, buf);
     }
 
     [[nodiscard]] __fast_inline
     Result<size_t, Error> readBurst(std::span<std::byte> buf){
-        return dev_drv_.readBurst(buf);
+        return dev_drv_.readBurst(R16_Fifo::address, buf);
     }
 
     [[nodiscard]]

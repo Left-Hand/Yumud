@@ -22,7 +22,7 @@ std::optional<SubEntry> Cia301ObjectDict::find(const Didx didx) {
     return std::nullopt;
 }
 
-SdoAbortCode Cia301ObjectDict::write(const std::span<const uint8_t> pdata, const Didx didx){
+SdoAbortCode Cia301ObjectDict::write(const std::span<const std::byte> pdata, const Didx didx){
     const auto [idx, subidx] = didx;
     switch (idx) {
         case 0x1003:
@@ -34,7 +34,7 @@ SdoAbortCode Cia301ObjectDict::write(const std::span<const uint8_t> pdata, const
     return SdoAbortCode::None;
 }
     
-SdoAbortCode Cia301ObjectDict::read(const std::span<uint8_t> pdata, const Didx didx) const {
+SdoAbortCode Cia301ObjectDict::read(const std::span<std::byte> pdata, const Didx didx) const {
     const auto [idx, subidx] = didx;
     switch (idx) {
         case 0x1003:

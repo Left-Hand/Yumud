@@ -47,7 +47,7 @@ Result<void, Error> INA219::readReg(const RegAddress addr, int16_t & data){
 }
 
 Result<void, Error> INA219::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
-    // return i2c_drv.readMulti(uint8_t(addr), p_data, len, LSB);
+    // return i2c_drv.readMulti(uint8_t(addr), p_std::span(data, len), LSB);
     return Ok();
 }
 
@@ -59,8 +59,8 @@ Result<void, Error> INA219::update(){
 
 
 Result<void, Error> INA219::verify(){
-    scexpr uint16_t valid_manu_id = 0x5449;
-    scexpr uint16_t valid_chip_id = 0x2260;
+    // scexpr uint16_t valid_manu_id = 0x5449;
+    // scexpr uint16_t valid_chip_id = 0x2260;
     
     INA219_ASSERT(i2c_drv.verify().ok(), "INA219 i2c lost");
 

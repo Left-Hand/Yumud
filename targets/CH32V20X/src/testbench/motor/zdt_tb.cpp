@@ -27,52 +27,52 @@ protected:
     };
     VerifyType verify_type = VerifyType::X6B;
     
-    using Buf = sstl::vector<uint8_t, 16>;
+    using Buf = sstl::vector<std::byte, 16>;
 
-    static inline uint8_t get_verify_code(const VerifyType type, const uint8_t * src, const size_t len){
+    static inline std::byte get_verify_code(const VerifyType type, std::span<const std::byte> pdata ){
         switch(type){
             default:
                 PANIC();
             case VerifyType::X6B:
-                return 0x6b;
+                return std::byte{0x6b};
             case VerifyType::XOR:{
-                uint8_t code = 0;
-                for(size_t i = 0; i < len; i++){
-                    code ^= src[i];
+                std::byte code{0};
+                for(size_t i = 0; i < pdata.size(); i++){
+                    code ^= pdata[i];
                 };
                 return code;
             }
             case VerifyType::CRC8:{
                 uint16_t crc = 0xffff;
-                for(size_t i = 0; i < len; i++){
-                    crc ^= (uint16_t)(src[i]) << 8;
+                for(size_t i = 0; i < pdata.size(); i++){
+                    crc ^= (uint16_t)(pdata[i]) << 8;
                     for(uint8_t j = 0; j < 8; j++){
                         if(crc & 0x8000) crc ^= 0x1021;
                         crc <<= 1;
                     }
                 }
-                return (uint8_t)(crc >> 8);
+                return std::byte(crc >> 8);
             }
         }
     }
 
-    static inline void array_append(Buf & dst, const uint8_t * src, const size_t len){
-        for(size_t i = 0; i < len; i++){
-            dst.push_back(src[i]);
+    static inline void array_append(Buf & dst, std::span<const std::byte> pdata){
+        for(size_t i = 0; i < pdata.size(); i++){
+            dst.push_back(pdata[i]);
         }
     }
     
-    static inline void array_append(Buf & dst, const uint8_t data){
-        array_append(dst, &data, 1);
+    static inline void array_append(Buf & dst, const std::byte data){
+        dst.push_back(data);
     }
 
     template<typename T>
     void write_data(const T & obj){
 
         Buf buf;
-        array_append(buf, reinterpret_cast<const uint8_t *>(&obj), sizeof(T));
+        array_append(buf, std::span(reinterpret_cast<const std::byte *>(&obj), sizeof(T)));
         // array_append(buf, sync_flag);
-        array_append(buf, get_verify_code(verify_type, reinterpret_cast<const uint8_t *>(&obj), sizeof(T)));
+        array_append(buf, get_verify_code(verify_type, std::span(reinterpret_cast<const std::byte *>(&obj), sizeof(T))));
 
         if(uart_){
             uart_->write1((char)id);
@@ -87,7 +87,7 @@ protected:
                 op_window = store_window.grid_forward(op_window, 8);
                 if(op_window){
                     CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), 
-                                        buf.begin() + op_window.from, op_window.length()};
+                                        std::span(buf.begin() + op_window.from, op_window.length())};
                     msg.setExt(b_extid);
                     DEBUG_PRINTLN(msg);
                     if(can_)can_->write(msg);

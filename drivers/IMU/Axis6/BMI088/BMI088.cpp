@@ -47,7 +47,7 @@ void BMI088::writeReg(const RegAddress reg, uint8_t & data){
 
 void BMI088::requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
     if(i2c_drv_){
-        i2c_drv_->readMulti((uint8_t)reg_addr, datas, len, MSB);
+        i2c_drv_->readMulti((uint8_t)reg_addr, std::span(datas, len), MSB);
     }else if(spi_drv_){
         TODO("not implemented yet");
     }else{

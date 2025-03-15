@@ -17,7 +17,7 @@ protected:
         return P0 | P1 | id;
     }
 
-    static constexpr uint8_t checksum(uint8_t id , const std::span<uint8_t, 8> data){
+    static constexpr uint8_t checksum(uint8_t id , const std::span<std::byte, 8> data){
         uint16_t sum ;
 
         sum = data[0];
@@ -76,14 +76,14 @@ public:
         inst->wait_transmit_complete();
     }
 
-    void sendData(const std::span<uint8_t, 8> data){
+    void sendData(const std::span<std::byte, 8> data){
         for(size_t t=0;t<8;t++){
             send(data[t]);
             inst->wait_transmit_complete();
         }
     }
 
-    void sendAnswer(const uint8_t id, const std::span<uint8_t, 8> data){
+    void sendAnswer(const uint8_t id, const std::span<std::byte, 8> data){
         sendData(data);
         send(checksum(id, data));
         inst->wait_transmit_complete();

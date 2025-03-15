@@ -169,7 +169,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti(uint8_t(addr), data, len);
+        i2c_drv_.readMulti(uint8_t(addr), std::span(data, len));
     }
 public:
 

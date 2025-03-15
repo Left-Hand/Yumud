@@ -198,7 +198,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti(uint8_t(addr), data, len);
+        i2c_drv_.readMulti(uint8_t(addr), std::span(data, len));
     }
 
     void setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z);

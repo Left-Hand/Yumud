@@ -222,9 +222,9 @@ public:
     }
 
 
-    SdoAbortCode read(std::span<uint8_t> pdata) const;
+    SdoAbortCode read(std::span<std::byte> pdata) const;
 
-    SdoAbortCode write(const std::span<const uint8_t> pdata);
+    SdoAbortCode write(const std::span<const std::byte> pdata);
 
     SdoAbortCode read_any(void * pdata);
 

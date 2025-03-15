@@ -158,7 +158,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, int16_t * data, const size_t len){
-        i2c_drv_.readMulti(uint8_t(addr), data, len, LSB);
+        i2c_drv_.readMulti(uint8_t(addr), std::span(data, len), LSB);
     }
 
     void setAverageTimes(bool is_x, AverageTimes times);

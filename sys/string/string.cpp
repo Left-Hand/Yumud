@@ -414,8 +414,8 @@ int String::lastIndexOf(const String &s2, size_t fromIndex) const
 	return found;
 }
 
-StringView String::substring(size_t left, size_t right) const{
-	return StringView(*this).substring(left, right);
+StringView String::substr(size_t left, size_t right) const{
+	return StringView(*this).substr(left, right);
 
 }
 

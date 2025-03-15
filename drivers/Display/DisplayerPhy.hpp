@@ -144,15 +144,15 @@ public:
 
     void writeMulti(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
-            i2c_drv_.writeMulti(data_token, pdata, len, LSB);
+            i2c_drv_.writeMulti(data_token, std::span(pdata, len), LSB);
         }else {
-            i2c_drv_.writeMulti(data_token, pdata, len);
+            i2c_drv_.writeMulti(data_token, std::span(pdata, len));
         }
     }
 
     void writeMulti(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
-            i2c_drv_.writeSame(data_token, data, len, LSB);
+            i2c_drv_.writeSame(data_token, std::span(data, len), LSB);
         }else {
             i2c_drv_.writeSame(data_token, data, len);
         }
