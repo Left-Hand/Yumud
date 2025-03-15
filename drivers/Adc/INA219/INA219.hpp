@@ -5,10 +5,6 @@
 #include "sys/utils/Option.hpp"
 
 
-#define DEF_R16(T, name)\
-static_assert(sizeof(T) == 2 and std::has_unique_object_representations_v<T>, "x must be 16bit register");\
-T name = {};\
-
 namespace ymd::drivers{
 
 class INA219 {
@@ -49,31 +45,31 @@ protected:
         uint16_t brng:1;
         uint16_t __resv__:1;
         uint16_t rst:1;
-    };DEF_R16(R16_Config, config_reg)
+    }DEF_R16(config_reg)
 
     struct R16_ShuntVolt:public Reg16<>{
         scexpr RegAddress address = 0x01;
         uint16_t :16;
-    };DEF_R16(R16_ShuntVolt, shunt_volt_reg)
+    }DEF_R16(shunt_volt_reg)
 
     struct R16_BusVolt:public Reg16<>{
         scexpr RegAddress address = 0x02;
         uint16_t :16;
-    };DEF_R16(R16_BusVolt, bus_volt_reg)
+    }DEF_R16(bus_volt_reg)
 
     struct R16_Power:public Reg16i<>{
         scexpr RegAddress address = 0x03;
         int16_t :16;
-    };DEF_R16(R16_Power, power_reg)
+    }DEF_R16(power_reg)
     struct R16_Current:public Reg16i<>{
         scexpr RegAddress address = 0x04;
         int16_t :16;
-    };DEF_R16(R16_Current, current_reg)
+    }DEF_R16(current_reg)
     
     struct R16_Calibration:public Reg16i<>{
         scexpr RegAddress address = 0x05;
         int16_t :16;
-    };DEF_R16(R16_Calibration, calibration_reg)
+    }DEF_R16(calibration_reg)
     
 
     [[nodiscard]] Result<void, Error> writeReg(const RegAddress addr, const uint16_t data);

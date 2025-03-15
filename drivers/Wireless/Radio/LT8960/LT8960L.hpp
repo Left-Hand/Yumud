@@ -6,12 +6,6 @@
 #include "sys/utils/Result.hpp"
 
 
-#define DEF_R16(T, name)\
-static_assert(sizeof(T) == 2 and std::has_unique_object_representations_v<T>, "x must be 16bit register");\
-T name = {};\
-
-
-
 template<typename T>
 class PtrLikeRef{
 public:
@@ -117,7 +111,7 @@ protected:
         uint16_t synthLocked:1;//RF 频率综合器锁定标志位
         uint16_t pkt_flag_txrx:1;//包状态指示
         uint16_t __resv3__ :2;
-    };DEF_R16(R16_RfSynthLock, rf_synthlock_reg)
+    }DEF_R16(rf_synthlock_reg)
 
     struct R16_RfConfig:public Reg16<>{
         static constexpr RegAddress address = 7;
@@ -126,7 +120,7 @@ protected:
         uint16_t rxEn:1;//使芯片进入 TX状态，1 有效
         uint16_t txEn:1;//使芯片进入 RX 状态，1 有效
         uint16_t __resv__ :7;
-    };DEF_R16(R16_RfConfig, rf_config_reg)
+    }DEF_R16(rf_config_reg)
     
     struct R16_PaConfig:public Reg16<>{
         static constexpr RegAddress address = 9;
@@ -135,7 +129,7 @@ protected:
         uint16_t paGain:4;//PA增益控制
         uint16_t __resv2__ :1;
         uint16_t paCurrent:4;//PA电流控制
-    };DEF_R16(R16_PaConfig, pa_config_reg)
+    }DEF_R16(pa_config_reg)
     
     struct R16_FuncConf:public Reg16<>{
         static constexpr RegAddress address = 15;
@@ -148,14 +142,14 @@ protected:
         uint16_t ble_mode_set:1;
         uint16_t miss_byte:3;
         uint16_t ble_mode:1;
-    };DEF_R16(R16_FuncConf, func_conf_reg)
+    }DEF_R16(func_conf_reg)
     
     struct R16_FreqOffs:public Reg16<>{
         static constexpr RegAddress address = 0x1c;
 
         uint16_t offs:14;
         uint16_t __resv__:2;
-    };DEF_R16(R16_FreqOffs, freq_offs_reg)
+    }DEF_R16(freq_offs_reg)
 
 
     struct R16_Config1:public Reg16<>{
@@ -168,7 +162,7 @@ protected:
         uint16_t trailerLen:3;//尾缀码长度
         SyncWordBits syncWordLen :2;//同步字比特数
         uint16_t preambleLen :3;//数据载荷长度
-    };DEF_R16(R16_Config1, config1_reg)
+    }DEF_R16(config1_reg)
 
 
     struct R16_Config2:public Reg16<>{
@@ -181,24 +175,24 @@ protected:
         uint16_t __resv__ :1;
         uint16_t sleepMode:1;//进入 sleep mode，晶体关闭，保持 LDO 工作（寄存器值将保留）当 SPI_SS 为低时，芯片将重新工作
         uint16_t powerDown:1;//先关闭晶体振荡器，再关闭 LDO。（寄存器值将丢失）
-    };DEF_R16(R16_Config2, config2_reg)
+    }DEF_R16(config2_reg)
 
     struct R16_SyncWord0:public Reg16<>{
         static constexpr RegAddress address = 0x24;
         uint8_t word[2];
-    };DEF_R16(R16_SyncWord0, sync_word0_reg);
+    }DEF_R16(sync_word0_reg);
 
     struct R16_SyncWord1:public Reg16<>{
         static constexpr RegAddress address = 0x27;
         uint8_t word[2];
-    };DEF_R16(R16_SyncWord1, sync_word1_reg);
+    }DEF_R16(sync_word1_reg);
 
     struct R16_Threshold:public Reg16<>{
         static constexpr RegAddress address = 0x28;
         uint16_t syncWordThreshold:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
         uint16_t fifoFullThreshold:5;//认为 FIFO 为满的阈值
         uint16_t fifoEmptyThreshold:5;//认为 FIFO 为空的阈值
-    };DEF_R16(R16_Threshold, threshold_reg)
+    }DEF_R16(threshold_reg)
     
     struct R16_Config3:public Reg16<>{
         static constexpr RegAddress address = 0x29;
@@ -210,33 +204,33 @@ protected:
         uint16_t packLengthEN:1;//1: 第一字节表示 payload 的长度 如要写 8 个 byte 有效字节，那第一个字节应写 8，总长 9
         uint16_t __resv2__ :1;
         uint16_t crcOn:1;//开启 CRC
-    };DEF_R16(R16_Config3, config3_reg)
+    }DEF_R16(config3_reg)
 
     struct R16_RxConfig:public Reg16<>{
         static constexpr RegAddress address = 0x2A;
         uint16_t auot_rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t wakeup_tim :2;
         uint16_t scanRssiChNo:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
-    };DEF_R16(R16_RxConfig, rx_config_reg)
+    }DEF_R16(rx_config_reg)
 
     struct R16_DataRate:public Reg16<>{
         static constexpr RegAddress address = 0x2C;
         uint16_t __resv__ :8;
         uint16_t dataRate:8;//透传速率
-    };DEF_R16(R16_DataRate, data_rate_reg)
+    }DEF_R16(data_rate_reg)
 
     struct R16_ModemOption:public Reg16<>{
         static constexpr RegAddress address = 0x2D;
         uint16_t __resv__ :8;
         uint16_t dataRate:8;//透传速率
-    };DEF_R16(R16_ModemOption, modem_option_reg)
+    }DEF_R16(modem_option_reg)
 
     struct R16_ChiIndex:public Reg16<>{
         static constexpr RegAddress address = 0x2E;
         uint16_t __resv__ :8;
         uint16_t chi_index:6;//透传速率
         uint16_t __resv2__ :2;
-    };DEF_R16(R16_ChiIndex, chi_index_reg)
+    }DEF_R16(chi_index_reg)
 
     struct R16_Flag:public Reg16<>{
         static constexpr RegAddress address = 0x30;
@@ -247,12 +241,12 @@ protected:
         uint16_t framerFlag:6;//Framer 状态
         uint16_t __resv2__:1;//FEC23 错误标志位
         uint16_t crcErrorFlag:1;//CRC 错误标志位
-    };DEF_R16(R16_Flag, flag_reg)
+    }DEF_R16(flag_reg)
 
     struct R16_Fifo:public Reg16<>{
         static constexpr RegAddress address = 0x32;
         uint16_t data;
-    };DEF_R16(R16_Fifo, fifo_reg)
+    }DEF_R16(fifo_reg)
 
     struct R16_FifoPtr:public Reg16<>{
         static constexpr RegAddress address = 0x34;
@@ -267,7 +261,7 @@ protected:
         uint16_t fifoWritePtr:6;//FIFO 写指针
         uint16_t __resv2__:1;
         uint16_t clearWritePtr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
-    };DEF_R16(R16_FifoPtr, fifo_ptr_reg)
+    }DEF_R16(fifo_ptr_reg)
 
 
     struct R16_I2cOper:public Reg16<>{
@@ -275,7 +269,7 @@ protected:
         uint16_t wakeup_i2c:1;
         uint16_t soft_rst:1;
         uint16_t __resv__:14;
-    };DEF_R16(R16_I2cOper, i2c_oper_reg)
+    }DEF_R16(i2c_oper_reg)
 
     struct DevDriver{
     public:

@@ -46,8 +46,8 @@ void BMI160::init(){
 }
 
 void BMI160::update(){
-    requestData(acc_reg.acc_address, &acc_reg.x, 3);
-    requestData(gyr_reg.gyr_address, &gyr_reg.x, 3);
+    readBurst(acc_reg.acc_address, &acc_reg.x, 3);
+    readBurst(gyr_reg.gyr_address, &gyr_reg.x, 3);
 }
 
 bool BMI160::verify(){

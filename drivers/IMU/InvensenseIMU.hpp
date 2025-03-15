@@ -31,7 +31,7 @@ protected:
         PANIC();
     }
 
-    virtual BusError requestData(const uint8_t addr, int16_t * datas, const size_t len)final{
+    virtual BusError readBurst(const uint8_t addr, int16_t * datas, const size_t len)final{
         if(i2c_drv_){
             return i2c_drv_->readBurst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){

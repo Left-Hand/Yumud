@@ -126,8 +126,8 @@ protected:
     template<typename T>
     [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculateAccScale(const AccRange range){
         constexpr double g = 9.806;
