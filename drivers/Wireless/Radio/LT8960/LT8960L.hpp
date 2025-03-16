@@ -111,6 +111,8 @@ struct _LT8960L_Regs{
         uint16_t tx_en:1;//使芯片进入 RX 状态，1 有效
         uint16_t __resv__ :7;
     }DEF_R16(rf_config_reg)
+
+    REG16_QUICK_DEF(8, R16_Lambda8, reg8)
     
     struct R16_PaConfig:public Reg16<>{
         scexpr RegAddress address = 9;
@@ -288,14 +290,18 @@ public:
 
     class Channel{
     public:
-        constexpr Channel (const uint8_t ch):
-            ch_(ch){;}
+        constexpr Channel (const uint8_t ch):ch_(ch){;}
+
+        constexpr Channel (const Channel & other) = default;
+        constexpr Channel (Channel && other) = default;
+        constexpr Channel & operator = (const Channel & other) = default;
+        constexpr Channel & operator = (Channel && other) = default;
 
         constexpr auto into_code() const {
             return ch_;
         }
     private:    
-        const uint8_t ch_;
+        uint8_t ch_;
     };
 
     class LT8960L_Phy:public hal::ProtocolBusDrv<hal::I2c> {
@@ -303,40 +309,37 @@ public:
         hal::I2cSw bus_inst_;
     public:
         LT8960L_Phy(hal::GpioIntf * scl, hal::GpioIntf * sda):
-            hal::ProtocolBusDrv<hal::I2c>(bus_inst_, default_i2c_addr), bus_inst_(hal::I2cSw(*scl, *sda)){;};
+            hal::ProtocolBusDrv<hal::I2c>(bus_inst_, default_i2c_addr), bus_inst_(hal::I2cSw(*scl, *sda)){};
     
-        [[nodiscard]] 
-        Result<void, Error> write_reg(
-            uint8_t address, 
-            uint16_t data
-        );
+        [[nodiscard]] Result<void, Error> init();
+
+        [[nodiscard]] Result<void, Error> write_reg(uint8_t address, uint16_t data);
     
-        [[nodiscard]] 
-        Result<void, Error> read_reg(
-            uint8_t address, 
-            uint16_t & data
-        );
+        [[nodiscard]] Result<void, Error> read_reg(uint8_t address, uint16_t & data);
 
-        [[nodiscard]] 
-        Result<size_t, Error> read_burst(uint8_t address, std::span<std::byte> pbuf);
+        [[nodiscard]] Result<size_t, Error> read_burst(uint8_t address, std::span<std::byte> pbuf);
 
-        [[nodiscard]] 
-        Result<size_t, Error> write_burst(uint8_t address, std::span<const std::byte> pbuf);
+        [[nodiscard]] Result<size_t, Error> write_burst(uint8_t address, std::span<const std::byte> pbuf);
+
+        [[nodiscard]] Result<void, Error> start_hw_listen_pkt(){
+            bus_inst_.scl().clr(); 
+            bus_inst_.sda().set(); 
+            bus_inst_.sda().inpu();  
+            return Ok();
+        }
+
+        [[nodiscard]] Result<bool, Error> check_and_skip_hw_listen_pkt(){
+            return Result<bool, Error>(Ok(bool(bus_inst_.sda()) == true))
+                .if_ok([&]{bus_inst_.sda().set();});
+        }
     
     private:
-        [[nodiscard]] 
-        Result<void, Error> _write_reg(
-            uint8_t address, 
-            uint16_t data
-        );
+        [[nodiscard]] Result<void, Error> _write_reg(uint8_t address, uint16_t data);
 
-        [[nodiscard]] 
-        Result<void, Error> _read_reg(
-            uint8_t address, 
-            uint16_t & data
-        );
+        [[nodiscard]] Result<void, Error> _read_reg(uint8_t address, uint16_t & data);
     };
     
+
 protected:
 
 
@@ -352,7 +355,10 @@ protected:
     DataRate datarate_;
     bool on_ble_ = false;
     bool is_receiving_ = false;
+    bool is_transmiting_ = false;
     uint8_t recv_timecnt_ = 0;
+
+    Channel curr_channel_ = Channel(0);
 
 
     __no_inline void delay_t3();
@@ -395,16 +401,7 @@ protected:
         return dev_drv_.write_burst(Regs::R16_Fifo::address, buf);
     }
 
-    // [[nodiscard]] Result<void, Error> fill_fifo(
-    //     const uint16_t data, const size_t len){
-
-    //     }
-
-
-    [[nodiscard]] __fast_inline
-    Result<size_t, Error> read_fifo(std::span<std::byte> buf){
-        return dev_drv_.read_burst(Regs::R16_Fifo::address, buf);
-    }
+    [[nodiscard]]Result<size_t, Error> read_fifo(std::span<std::byte> buf);
 
     [[nodiscard]] Result<void, Error> set_pa_current(const uint8_t current);
 
@@ -415,22 +412,23 @@ protected:
     [[nodiscard]] Result<void, Error> change_carrier(const Channel ch);
 
     [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] Result<void, Error> set_rf_channel_and_into_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
-    [[nodiscard]] Result<void, Error> set_rf_channel_and_into_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
-    [[nodiscard]] Result<void, Error> set_rf_channel_no_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
+    [[nodiscard]] Result<void, Error> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
+    [[nodiscard]] Result<void, Error> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
+    [[nodiscard]] Result<void, Error> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
+
+    [[nodiscard]] Result<void, Error> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
+    [[nodiscard]] Result<void, Error> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
+    [[nodiscard]] Result<void, Error> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
 
     [[nodiscard]] Result<void, Error> clear_fifo_write_and_read_ptr();
 
     [[nodiscard]] Result<void, Error> ensure_correct_0x08();
-public:
 
-    LT8960L(hal::GpioIntf * scl, hal::GpioIntf * sda):
-        dev_drv_(scl, sda){;}
+    [[nodiscard]] Result<size_t, Error> begin_receive();
 
+    [[nodiscard]] Result<size_t, Error> begin_transmit();
 
-    [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
-
-    [[nodiscard]] Result<void, Error> set_rf_freq_mhz(const uint freq);
+    [[nodiscard]] Result<void, Error> start_listen_pkt();
 
     [[nodiscard]] Result<void, Error> set_radio_mode(const bool isRx);
 
@@ -439,6 +437,21 @@ public:
     [[nodiscard]] Result<void, Error> clear_fifo_write_ptr();
 
     [[nodiscard]] Result<void, Error> clear_fifo_read_ptr();
+
+    [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
+
+    [[nodiscard]] Result<void, Error> set_preamble_bytes(const uint bytes);
+
+    [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
+    
+    [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
+public:
+
+    LT8960L(hal::GpioIntf * scl, hal::GpioIntf * sda):
+        dev_drv_(scl, sda){;}
+
+
+    [[nodiscard]] Result<void, Error> set_rf_freq_mhz(const uint freq);
 
     [[nodiscard]] Result<void, Error> set_syncword_bits(const SyncWordBits len);
 
@@ -467,9 +480,9 @@ public:
 
     [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
 
-    [[nodiscard]] Result<size_t, Error> transmit_rf(Channel ch, std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const std::byte> buf);
 
-    [[nodiscard]] Result<size_t, Error> receive_rf(Channel ch, std::span<std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> receive_rf(std::span<std::byte> buf);
 
     [[nodiscard]] Result<size_t, Error> transmit_ble(std::span<const std::byte> buf);
     
@@ -488,12 +501,8 @@ public:
     [[nodiscard]] Result<void, Error> wait_pkt_ready(const uint timeout);
 
     [[nodiscard]] Result<void, Error> wait_rst_done(const uint timeout);
-
-    [[nodiscard]] Result<void, Error> set_preamble_bytes(const uint bytes);
-
-    [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
-    
-    [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
+    [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch){curr_channel_ = ch; return Ok();}
+    [[nodiscard]] Result<void, Error> enable_use_hw_pkt(const bool en){use_hw_pkt_ = en; return Ok();}
     
 };
 

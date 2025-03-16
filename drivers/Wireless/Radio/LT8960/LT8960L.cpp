@@ -31,7 +31,7 @@ Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
     if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
     Result<void, Error> res = std::forward<Fn>(fn)();
     if(res.is_ok()) return Ok();
-    LT8960L_DEBUG("retry", times);
+    // LT8960L_DEBUG("retry", times);
     if(!times) return res;
     else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
 }
@@ -135,8 +135,6 @@ Result<void, Error> LT8960L::reset(){
     // 第一步：延时20ms//保证初次上电,电路稳定。
 
     while(millis() < 20){delay(4);}
-
-    LT8960L_DEBUG("reset");
     return retry(3, [this](){return this -> into_wake();});
     // return retry(3, [this]() -> Result<void, Error>{return Err(Error::PacketOverlength);});
 }
@@ -157,7 +155,8 @@ Result<void, Error> LT8960L::verify(){
 Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
-    return verify()
+    return dev_drv_.init() 
+    | verify()
     | write_reg(1, 0x5781)
     | write_reg(26, 0x3A00)
 
@@ -392,7 +391,7 @@ Result<void, Error> LT8960L::change_carrier(const Channel ch){
     | write_reg(52, 0x8080)
     // | fill_fifo(0, 16)
     | write_reg(8,0x6C90)
-    | set_rf_channel_and_into_tx(ch)  
+    | set_rf_channel_and_enter_tx(ch)  
     ;
 }
 
@@ -403,34 +402,43 @@ Result<void, Error> LT8960L::clear_fifo_write_and_read_ptr(){
     return write_regs(reg);
 }
 
-Result<size_t, Error> LT8960L::transmit_rf(Channel ch, std::span<const std::byte> buf){
-    auto res1 = set_rf_channel_no_tx_rx(ch)
-
-    | clear_fifo_write_and_read_ptr()
-    ;
-
-    if(res1.is_err()) return Err(res1.unwrap_err());
-
-    auto write_res = write_fifo(buf);
-
-
-    if(write_res.is_err()) return Err(write_res.unwrap_err());
+Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
+    if(!is_transmiting_){
+        auto res1 = exit_tx_rx()
+        | clear_fifo_write_and_read_ptr()
+        ;
     
-    auto last_res = [&](size_t len) -> Result<size_t, Error> {
-        return ([this] -> Result<void, Error> {
-            switch(datarate_){
-                case DataRate::_62_5K: return write_reg(8,0x6c50);
-                default: return write_reg(8,0x6c90);
-            }
-        }()
-        | set_rf_channel_and_into_tx(ch))
-        .to(len);
-    }(buf.size());
+        if(res1.is_err()) return Err(res1.unwrap_err());
+    
+        auto write_res = write_fifo(buf);
+    
+        if(write_res.is_err()) return Err(write_res.unwrap_err());
+        
+        auto last_res = [&](size_t len) -> Result<size_t, Error> {
+            return (ensure_correct_0x08()
+            | enter_tx())
+            .to(len);
+        }(buf.size());
+    
+    
+        if(last_res.is_err()) return Err(last_res.unwrap_err());
 
+        is_transmiting_ = true;
 
-    if(last_res.is_err()) return Err(last_res.unwrap_err());
+        auto lis_err = start_listen_pkt();
+        if(lis_err.is_err()) return Err(lis_err.unwrap_err());
 
-    return write_res;
+        return write_res;
+    }else{
+        return(is_pkt_ready())
+            .and_then([&](const bool ready) -> Result<void, Error>{
+                if (ready)is_transmiting_ = false;
+                return Ok();
+            })
+            .to(0u)
+        ;
+    }
+
 }
 
 Result<bool, Error> LT8960L::is_receiving(){
@@ -438,22 +446,33 @@ Result<bool, Error> LT8960L::is_receiving(){
     return read_regs(reg).to<bool>(reg.rev_sync);
 }
 
-Result<size_t, Error> LT8960L::receive_rf(Channel ch, std::span<std::byte> buf){
-    // DEBUG_PRINTLN("fun", is_receiving_);
-    if(is_receiving_ == false){
-        // DEBUG_PRINTLN("why");
+Result<size_t, Error> LT8960L::begin_receive(){
+    return (exit_tx_rx()
+    | ensure_correct_0x08()
+    | clear_fifo_write_and_read_ptr()
+    | enter_rx()
+    | start_listen_pkt())
+    .to(0u)
+    .if_ok([&]{is_receiving_ = true;})
+    ;
+}
 
-        return (set_rf_channel_no_tx_rx(ch)
-        | ensure_correct_0x08()
-        | clear_fifo_write_and_read_ptr()
-        | set_rf_channel_and_into_rx(ch))
-        .to(0u)
-        .if_ok([&]{is_receiving_ = true;})
-        ;
+Result<size_t, Error> LT8960L::begin_transmit(){
+    // return (set_rf_channel_and_exit_tx_rx(ch)
+    // | ensure_correct_0x08()
+    // | clear_fifo_write_and_read_ptr()
+    // | set_rf_channel_and_enter_rx(ch))
+    // .to(0u)
+    // .if_ok([&]{is_receiving_ = true;})
+    // ;
+    return Ok(0u);
+}
+Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
+    if(is_receiving_ == false){
+        return begin_receive();
     }else{
         recv_timecnt_++;
-        if(recv_timecnt_ > 10){
-            DEBUG_PRINTLN("timeout");
+        if(recv_timecnt_ > 2){
             is_receiving_ = false;
             recv_timecnt_ = 0;
         }
@@ -463,8 +482,7 @@ Result<size_t, Error> LT8960L::receive_rf(Channel ch, std::span<std::byte> buf){
             if(res.is_err()) return Err(res.unwrap_err());
             if(res.unwrap() == true) return Ok(0u);
         }
-        
-        DEBUG_PRINTLN("what");
+
         {
             auto res = is_receiving();
             if(res.is_err()) return Err(res.unwrap_err());
@@ -556,9 +574,17 @@ Result<size_t, Error> LT8960L::receive_ble(std::span<std::byte> buf){
     return Ok(0u);
 }
 
+
+[[nodiscard]] Result<void, Error> LT8960L::start_listen_pkt(){
+    if(use_hw_pkt_){
+        return dev_drv_.start_hw_listen_pkt();
+    }
+    return Ok();
+}
+
 Result<bool, Error> LT8960L::is_pkt_ready(){
     if(use_hw_pkt_){
-        TODO();
+        return dev_drv_.check_and_skip_hw_listen_pkt();
     }else{
         auto & reg = regs_.rf_synthlock_reg;
         return read_reg(reg).to<bool>(reg.pkt_flag_txrx);
@@ -601,10 +627,13 @@ Result<void, Error> LT8960L::enable_gain_weaken(const bool en){
 }
 
 Result<void, Error> LT8960L::ensure_correct_0x08(){
+    auto & reg = regs_.reg8;
     if((!on_ble_) and datarate_ == DataRate::_62_5K){
-        return write_reg(0x08, 0x6c50);
+        if(reg.as_val() != 0x6c50) reg.as_ref() = 0x6c50;
+        return write_regs(reg);
     }else{
-        return write_reg(0x08, 0x6c90);
+        if(reg.as_val() != 0x6c90) reg.as_ref() = 0x6c90;
+        return write_regs(reg);
     }
 }
 
@@ -696,8 +725,11 @@ Result<void, Error> LT8960L_Phy::_read_reg(
 
 [[nodiscard]] 
 Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
+
+
     auto guard = createGuard();
     uint32_t len = 0;
+    bool invalid = false;
 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
@@ -706,12 +738,18 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
             const auto err = bus_.read(len, ACK);
             if(err.wrong()) return err;
-            if(len > k_LT8960L_PACKET_SIZE) return BusError::LengthOverflow;
+            if(len > k_LT8960L_PACKET_SIZE) {
+                // LT8960L_PANIC("read buf length too long", len);
+                // return BusError::LengthOverflow;
+                invalid = true;
+                // len = k_LT8960L_PACKET_SIZE;
+            }
             return BusError::OK;
             }
         )
 
         .then([&]() -> BusError{
+            if(invalid) return BusError::OK;
             for(size_t i = 0; i < pbuf.size(); i++){
                 uint32_t dummy = 0;
                 const auto err = bus_.read(dummy, (i == pbuf.size()-1 ? NACK : ACK));
@@ -724,11 +762,14 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
     LT8960L_ASSERT(res.ok(), "error while read burst", res);
 
-    return rescond(res.ok(), len, res);
+    return rescond(res.ok(), invalid ? 0 : len, res);
 }
 
+Result<void, Error> LT8960L_Phy::init(){
+    bus_inst_.init(800'000);
+    return Ok();
+}
 
-[[nodiscard]] 
 Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
     
     auto guard = createGuard();
@@ -751,4 +792,10 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
     LT8960L_ASSERT(res.ok(), "error while write burst", res);
 
     return rescond(res.ok(), pbuf.size(), res);
+}
+
+Result<size_t, Error> LT8960L::read_fifo(std::span<std::byte> buf){
+    return dev_drv_.read_burst(Regs::R16_Fifo::address, buf)
+        // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
+    ;
 }

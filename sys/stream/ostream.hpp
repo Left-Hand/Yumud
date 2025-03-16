@@ -296,14 +296,14 @@ private:
     //#region print vased containers
     template<typename T>
     void print_arr(const T * _begin, const size_t _size){
-        *this << '[';
+        *this << this->brackets<'['>();
         if(_size > 0){
             for(size_t i = 0; i < size_t(_size - 1); ++i) *this << _begin[i] << ',';
             *this << _begin[_size - 1];
         }else{
             *this << '\\';
         }
-        *this << ']';
+        *this << this->brackets<']'>();
     }
 
     template <typename... Args>
