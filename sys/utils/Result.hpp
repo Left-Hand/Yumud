@@ -323,6 +323,16 @@ public:
         }
         else return Err<E>(unwrap_err());
     }
+
+        // 修改map方法
+    template<typename Tok>
+    [[nodiscard]] __fast_inline constexpr 
+    auto to(Tok && ok) const -> Result<std::decay_t<Tok>, E>{
+        if (is_ok()) {
+            return Ok<std::decay_t<Tok>>(ok);
+        }
+        else return Err<E>(unwrap_err());
+    }
     
     // 修改and_then方法
     template<

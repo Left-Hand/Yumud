@@ -7,17 +7,9 @@
 
 namespace ymd::drivers{
 
-class NRF24L01{
-public:
-    using Error = BusError;
 
-    enum class Package{
-        NRF24L01,
-    };
-protected:
-    using SpiDrvProxy = std::optional<hal::SpiDrv>;
-    SpiDrvProxy p_spi_drv_ = std::nullopt;
-    
+struct _NRF24L01_Regs{
+
     using RegAddress = uint8_t;    
 
     struct R8_Config:public Reg8<>{
@@ -121,7 +113,25 @@ protected:
         uint8_t tx_reuse:1;
         uint8_t __resv2__:1;
     }DEF_R8(fifo_status_reg);
+};
 
+// constexpr auto a = sizeof(_NRF24L01_Regs)
+
+
+class NRF24L01{
+public:
+    using Error = BusError;
+
+    enum class Package{
+        NRF24L01,
+    };
+protected:
+    using SpiDrvProxy = std::optional<hal::SpiDrv>;
+    SpiDrvProxy p_spi_drv_ = std::nullopt;
+
+    using Regs = _NRF24L01_Regs;
+    Regs regs_;
+    
     class Command{
     public:
         enum Type:uint8_t{
@@ -177,10 +187,12 @@ public:
     Result<void, Error> init();
     
     Result<void, Error> update();
+
     Result<size_t, Error> transmit(std::span<std::byte> buf);
+
     Result<size_t, Error> receive(std::span<std::byte> buf);
 
-
+    // Result<Regs, Error> dump();
 };
 
 };

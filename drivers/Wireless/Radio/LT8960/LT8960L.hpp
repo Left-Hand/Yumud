@@ -36,11 +36,9 @@ private:
 
 namespace ymd::drivers{
 
-class LT8960L{
-public:
-    static constexpr uint8_t default_i2c_addr = 0x1A;
-    using Error = BusError;
-    
+struct _LT8960L_Regs{
+    using RegAddress = uint8_t;
+
     enum class PacketType:uint8_t{
         NRZLaw = 0, 
         Manchester,
@@ -87,28 +85,14 @@ public:
         Rx, Tx, CarrierWave, Sleep
     };
 
-    class Channel{
-    public:
-        Channel (const uint8_t ch):
-            ch_(ch){;}
-
-        auto as_code() const {
-            return ch_;
-        }
-    private:    
-        const uint8_t ch_;
-    };
-protected:
-    using RegAddress = uint8_t;
-
-
+    
     struct R16_RfSynthLock:public Reg16<>{
         static constexpr RegAddress address = 0x03;
         uint16_t i2c_soft_rstn:1;//软件复位标志
         uint16_t __resv1__ :8;
         uint16_t fifo_flag_txrx:1;//fifo状态指示
         uint16_t __resv2__ :2;
-        uint16_t synthLocked:1;//RF 频率综合器锁定标志位
+        uint16_t synth_locked:1;//RF 频率综合器锁定标志位
         uint16_t pkt_flag_txrx:1;//包状态指示
         uint16_t __resv3__ :2;
     }DEF_R16(rf_synthlock_reg)
@@ -180,12 +164,12 @@ protected:
     struct R16_SyncWord0:public Reg16<>{
         static constexpr RegAddress address = 0x24;
         uint8_t word[2];
-    }DEF_R16(sync_word0_reg);
+    }DEF_R16(sync_word0_reg)
 
     struct R16_SyncWord1:public Reg16<>{
         static constexpr RegAddress address = 0x27;
         uint8_t word[2];
-    }DEF_R16(sync_word1_reg);
+    }DEF_R16(sync_word1_reg)
 
     struct R16_Threshold:public Reg16<>{
         static constexpr RegAddress address = 0x28;
@@ -221,8 +205,7 @@ protected:
 
     struct R16_ModemOption:public Reg16<>{
         static constexpr RegAddress address = 0x2D;
-        uint16_t __resv__ :8;
-        uint16_t dataRate:8;//透传速率
+        uint16_t option;//透传速率
     }DEF_R16(modem_option_reg)
 
     struct R16_ChiIndex:public Reg16<>{
@@ -235,12 +218,12 @@ protected:
     struct R16_Flag:public Reg16<>{
         static constexpr RegAddress address = 0x30;
         uint16_t __resv__ :5;
-        uint16_t fifoFlag:1;
-        uint16_t pktFlag:1;
-        uint16_t syncWordRecved:1;//表示收到 syncword，只在接收时有效。跳出接收状态时，为 0
-        uint16_t framerFlag:6;//Framer 状态
+        uint16_t fifo_flag:1;
+        uint16_t pkt_flag:1;
+        uint16_t syncword_received:1;//表示收到 syncword，只在接收时有效。跳出接收状态时，为 0
+        uint16_t framer_flag:6;//Framer 状态
         uint16_t __resv2__:1;//FEC23 错误标志位
-        uint16_t crcErrorFlag:1;//CRC 错误标志位
+        uint16_t crcerr_flag:1;//CRC 错误标志位
     }DEF_R16(flag_reg)
 
     struct R16_Fifo:public Reg16<>{
@@ -270,19 +253,54 @@ protected:
         uint16_t soft_rst:1;
         uint16_t __resv__:14;
     }DEF_R16(i2c_oper_reg)
+};
+
+class LT8960L{
+public:
+    static constexpr uint8_t default_i2c_addr = 0x1A;
+    using Error = BusError;
+    
+
+    class Channel{
+    public:
+        Channel (const uint8_t ch):
+            ch_(ch){;}
+
+        auto into_code() const {
+            return ch_;
+        }
+    private:    
+        const uint8_t ch_;
+    };
+protected:
+
+    using Regs = _LT8960L_Regs;
+
+    using RegAddress = Regs::RegAddress;
+    using PacketType = Regs::PacketType;
+    using Power = Regs::Power;
+    using TrailerBits = Regs::TrailerBits;
+
+    using  SyncWordBits = Regs::SyncWordBits;
+    using  PreambleBits = Regs::PreambleBits;
+    using  BrclkSel = Regs::BrclkSel;
+    using  DataRate = Regs::DataRate;
+    using  Mode = Regs::Mode;
+    
+    Regs regs_ = {};
 
     struct DevDriver{
     public:
         DevDriver(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}
         DevDriver(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){}
 
-        [[nodiscard]] Result<size_t, Error> writeBurst(const RegAddress address, std::span<const std::byte> buf);
+        [[nodiscard]] Result<size_t, Error> write_burst(const RegAddress address, std::span<const std::byte> buf);
 
-        [[nodiscard]] Result<size_t, Error> readBurst(const RegAddress address, std::span<std::byte> buf);
+        [[nodiscard]] Result<size_t, Error> read_burst(const RegAddress address, std::span<std::byte> buf);
 
-        [[nodiscard]] Result<void, Error> writeReg(const RegAddress address, const uint16_t reg);
+        [[nodiscard]] Result<void, Error> write_reg(const RegAddress address, const uint16_t reg);
 
-        [[nodiscard]] Result<void, Error> readReg(const RegAddress address, uint16_t & reg);
+        [[nodiscard]] Result<void, Error> read_reg(const RegAddress address, uint16_t & reg);
 
         [[nodiscard]] Result<void, Error> verify();
     private:
@@ -294,68 +312,73 @@ protected:
     hal::GpioIntf * p_packet_status_gpio = nullptr;
     hal::GpioIntf * p_fifo_status_gpio = nullptr;
 
-    __no_inline void delayT3();
-    __no_inline void delayT5();
+    bool use_hw_pkt_ = false;//使能通过监听引脚判断数据是否发送完成
+
+    DataRate datarate_;
+
+
+    __no_inline void delay_t3();
+    __no_inline void delay_t5();
 
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeReg(const RegAddress address, const uint16_t reg){
-        return dev_drv_.writeReg(address, reg);
+    Result<void, Error> write_reg(const RegAddress address, const uint16_t reg){
+        return dev_drv_.write_reg(address, reg);
     }
 
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> readReg(const RegAddress address, uint16_t & reg){
-        return dev_drv_.readReg(address, reg);
+    Result<void, Error> read_reg(const RegAddress address, uint16_t & reg){
+        return dev_drv_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeRegs(Ts const & ... reg) {
-        return (dev_drv_.writeReg(reg.address, reg.as_val()) | ...);
+    Result<void, Error> write_regs(Ts const & ... reg) {
+        return (dev_drv_.write_reg(reg.address, reg.as_val()) | ...);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> readRegs(Ts & ... reg) {
-        return (dev_drv_.readReg(reg.address, reg.as_ref()) | ...);
+    Result<void, Error> read_regs(Ts & ... reg) {
+        return (dev_drv_.read_reg(reg.address, reg.as_ref()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
-    Result<void, Error> readReg(T & reg){
-        return dev_drv_.readReg(reg.address, reg);
+    Result<void, Error> read_reg(T & reg){
+        return dev_drv_.read_reg(reg.address, reg);
     }
 
     [[nodiscard]] __fast_inline
-    Result<size_t, Error> writeFifo(std::span<const std::byte> buf){
-        return dev_drv_.writeBurst(R16_Fifo::address, buf);
+    Result<size_t, Error> write_fifo(std::span<const std::byte> buf){
+        return dev_drv_.write_burst(Regs::R16_Fifo::address, buf);
     }
 
-    [[nodiscard]] Result<void, Error> fillFifo(const uint16_t data, const size_t len);
+    [[nodiscard]] Result<void, Error> fill_fifo(const uint16_t data, const size_t len);
 
 
     [[nodiscard]] __fast_inline
-    Result<size_t, Error> readBurst(std::span<std::byte> buf){
-        return dev_drv_.readBurst(R16_Fifo::address, buf);
+    Result<size_t, Error> read_burst(std::span<std::byte> buf){
+        return dev_drv_.read_burst(Regs::R16_Fifo::address, buf);
     }
 
     [[nodiscard]]
-    Result<void, Error> setPaCurrent(const uint8_t current);
+    Result<void, Error> set_pa_current(const uint8_t current);
 
     [[nodiscard]]
-    Result<void, Error> setPaGain(const uint8_t gain);
+    Result<void, Error> set_pa_gain(const uint8_t gain);
 
-    [[nodiscard]] Result<void, Error> change0x38();
-    [[nodiscard]] Result<void, Error> enableAnalog(bool en = true);
-    [[nodiscard]] Result<void, Error> changeCarrier(const Channel ch);
+    [[nodiscard]] Result<void, Error> enable_analog(bool en = true);
+    [[nodiscard]] Result<void, Error> change_carrier(const Channel ch);
 
-    [[nodiscard]] Result<void, Error> setRfChannel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] Result<void, Error> setRfChannelAndIntoTx(const Channel ch){return setRfChannel(ch, 1, 0);}
-    [[nodiscard]] Result<void, Error> setRfChannelAndIntoRx(const Channel ch){return setRfChannel(ch, 0, 1);}
+    [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch, const bool tx, const bool rx);
+    [[nodiscard]] Result<void, Error> set_rf_channel_and_into_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
+    [[nodiscard]] Result<void, Error> set_rf_channel_and_into_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
 
-    
+    [[nodiscard]] Result<bool, Error> is_pkt_ready();
+    [[nodiscard]] Result<bool, Error> is_rst_done();
 public:
 
 
@@ -365,56 +388,56 @@ public:
         dev_drv_(hal::I2cDrv(*bus, i2c_addr)){;}
 
 
-    [[nodiscard]] Result<bool, Error> getPktStatus();
+    [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
 
-    [[nodiscard]] Result<bool, Error> isRfSynthLocked();
+    [[nodiscard]] Result<void, Error> set_rffreq_mhz(const uint freq);
 
-    [[nodiscard]] Result<void, Error> setRfFreqMHz(const uint freq);
+    [[nodiscard]] Result<void, Error> set_radio_mode(const bool isRx);
 
-    [[nodiscard]] Result<void, Error> setRadioMode(const bool isRx);
+    [[nodiscard]] Result<void, Error> set_brclk_sel(const BrclkSel brclkSel);
 
-    [[nodiscard]] Result<void, Error> setBrclkSel(const BrclkSel brclkSel);
+    [[nodiscard]] Result<void, Error> clear_fifo_write_ptr();
 
-    [[nodiscard]] Result<void, Error> clearFifoWritePtr();
+    [[nodiscard]] Result<void, Error> clear_fifo_read_ptr();
 
-    [[nodiscard]] Result<void, Error> clearFifoReadPtr();
+    [[nodiscard]] Result<void, Error> set_syncword_bits(const SyncWordBits len);
 
-    [[nodiscard]] Result<void, Error> setSyncWordBits(const SyncWordBits len);
+    [[nodiscard]] Result<void, Error> set_syncword(const uint32_t syncword);
 
-    [[nodiscard]] Result<void, Error> setSyncWord(const uint32_t syncword);
+    [[nodiscard]] Result<void, Error> set_retrans_time(const uint8_t times);
 
-    [[nodiscard]] Result<void, Error> setRetransTime(const uint8_t times);
-
-    [[nodiscard]] Result<void, Error> enableAutoAck(const bool en = true);
+    [[nodiscard]] Result<void, Error> enable_autoack(const bool en = true);
 
     [[nodiscard]] Result<void, Error> init(const Power power, uint32_t syncword);
 
-    [[nodiscard]] Result<void, Error> initRf();
+    [[nodiscard]] Result<void, Error> init_rf();
+    
+    [[nodiscard]] Result<void, Error> init_ble(const Power power);
 
-    [[nodiscard]] Result<void, Error> intoSleep();
+    [[nodiscard]] Result<void, Error> into_sleep();
 
-    [[nodiscard]] Result<void, Error> intoWake();
+    [[nodiscard]] Result<void, Error> into_wake();
 
-    [[nodiscard]] Result<void, Error> initBle(const Power power);
 
     [[nodiscard]] Result<void, Error> reset();
+
     [[nodiscard]] Result<void, Error> wakup(){return reset();}
 
     [[nodiscard]] Result<void, Error> sleep();
 
     [[nodiscard]] Result<void, Error> verify();
 
-    [[nodiscard]] Result<void, Error> setTxPower(const Power power);
+    [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
 
-    [[nodiscard]] Result<size_t, Error> transmitRf(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const std::byte> buf);
 
-    [[nodiscard]] Result<size_t, Error> receiveRf(std::span<std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> receive_rf(std::span<std::byte> buf);
 
-    [[nodiscard]] Result<size_t, Error> transmitBle(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_ble(std::span<const std::byte> buf);
     
-    [[nodiscard]] Result<size_t, Error> receiveBle(std::span<std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> receive_ble(std::span<std::byte> buf);
 
-    [[nodiscard]] Result<void, Error> setDataRate(LT8960L::DataRate rate);
+    [[nodiscard]] Result<void, Error> set_datarate(LT8960L::DataRate rate);
 
 };
 

@@ -39,9 +39,18 @@ Result<void, Error> NRF24L01::readReg(const uint8_t addr, uint8_t & data){
 }
 
 Result<size_t, Error> NRF24L01::transmit(std::span<std::byte> buf){
+
     return Ok(0u);
 }
 
 Result<size_t, Error> NRF24L01::receive(std::span<std::byte> buf){
     return Ok(0u);
 }
+
+// Result<_NRF24L01_Regs, Error> NRF24L01::dump(){
+//     Regs regs = {
+        
+//     };
+
+//     return Ok(regs);
+// }
