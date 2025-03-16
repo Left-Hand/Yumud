@@ -31,7 +31,7 @@ Error start(const uint8_t _address) {
     occupied = _address & 0b1;
     ws.outpp();
 
-    return ErrorType::OK;
+    return Error::OK;
 }
 
 void stop() {
@@ -84,15 +84,15 @@ public:
         }
 
         ws = false;
-        return ErrorType::OK;
+        return Error::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {
-        return ErrorType::OK;
+        return Error::OK;
     }
 
     Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
-        return ErrorType::OK;
+        return Error::OK;
     }
 
     void init(const uint32_t baudRate){

@@ -16,21 +16,53 @@ using namespace ymd::drivers;
 
 #define MAG_ACTIVATED
 
-void lt8960_tb(hal::I2c & i2c){
+#define let const auto
+void lt8960_tb(){
 
     auto & led = portC[13];
     led.outpp();
 
-    LT8960L ltr{&i2c};
 
-    // ltr.verify().unwrap();
+    LT8960L rx_ltr{&portB[6], &portB[7]};
+    
+        rx_ltr.verify().unwrap();
+    rx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).unwrap();
+    
+    DEBUG_PRINTLN("RX LT8960L init ok!");
+    
+    LT8960L tx_ltr{&portB[0], &portB[1]};
 
-    while(true){
-        DEBUG_PRINTLN("verify status", ltr.verify().is_ok());
+    tx_ltr.verify().unwrap();
+    tx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).unwrap();
+
+    DEBUG_PRINTLN("TX LT8960L init ok!");
+    
+    scexpr auto ch = LT8960L::Channel(76);
+    auto tx_task = [&]{
+        constexpr std::array data = {std::byte(0x12), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
+
+        tx_ltr.transmit_rf(ch, std::span(data)).unwrap();
         
-        delay(50);
+        DEBUG_PRINTS("tx:", tx_ltr.is_pkt_ready().unwrap());
         led.toggle();
-    }
+    };
+
+    [[maybe_unused]] auto rx_task = [&]{
+        static std::array<std::byte, 64> data;
+        auto len = rx_ltr.receive_rf(ch, data).unwrap();
+        DEBUG_PRINTS("rx:", len);
+    };
+    
+
+    hal::timer1.init(10);
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
+
+    delay(50);
+
+    // hal::timer2.init(10);
+    // hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
+
+    while(true);
 }
 
 void lt8960_main(){
@@ -38,12 +70,7 @@ void lt8960_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.noBrackets();
 
-
-
-    I2cSw i2c{portB[6], portB[7]};
-    i2c.init(400_KHz);
-
     delay(200);
 
-    lt8960_tb(i2c);
+    lt8960_tb();
 }

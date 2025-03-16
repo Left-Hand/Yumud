@@ -327,7 +327,7 @@ public:
         // 修改map方法
     template<typename Tok>
     [[nodiscard]] __fast_inline constexpr 
-    auto to(Tok && ok) const -> Result<std::decay_t<Tok>, E>{
+    Result<std::decay_t<Tok>, E> to(Tok && ok) const{
         if (is_ok()) {
             return Ok<std::decay_t<Tok>>(ok);
         }
@@ -437,11 +437,13 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    void if_ok(Fn && fn) const {
+    Result<T, E> if_ok(Fn && fn) const {
         if (is_ok()) {
             // std::forward<Fn>(fn)(unwrap());
             std::forward<Fn>(fn)();
         }
+
+        return *this;
     }
 
     template<typename Fn>

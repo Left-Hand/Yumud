@@ -17,8 +17,8 @@
 #endif
 
 
-static constexpr size_t packet_len = 64;
-static constexpr size_t LT8960L_PACKET_SIZE = 12;
+scexpr size_t packet_len = 64;
+scexpr size_t k_LT8960L_PACKET_SIZE = 12;
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -68,8 +68,8 @@ Result<void, Error> LT8960L::set_rf_freq_mhz(const uint freq){
     return Ok();
 }
 
-Result<void, Error> LT8960L::set_radio_mode(const bool isRx){
-    if(isRx){
+Result<void, Error> LT8960L::set_radio_mode(const bool is_rx){
+    if(is_rx){
         regs_.rf_config_reg.tx_en = false;
         regs_.rf_config_reg.rx_en = true;
     }else{
@@ -88,8 +88,8 @@ Result<void, Error> LT8960L::set_pa_gain(const uint8_t gain){
     regs_.pa_config_reg.pa_gain = gain;
     return write_regs((regs_.pa_config_reg));
 }
-Result<void, Error> LT8960L::set_brclk_sel(const BrclkSel brclkSel){
-    regs_.config1_reg.brclkSel = brclkSel;
+Result<void, Error> LT8960L::set_brclk_sel(const BrclkSel brclk_sel){
+    regs_.config1_reg.brclkSel = uint16_t(brclk_sel);
     return write_regs((regs_.config1_reg));
 }
 
@@ -104,7 +104,7 @@ Result<void, Error> LT8960L::clear_fifo_read_ptr(){
 }
 
 Result<void, Error> LT8960L::set_syncword_bits(const SyncWordBits len){
-    regs_.config1_reg.syncword_len= len;
+    regs_.config1_reg.syncword_len = uint16_t(len);
     return write_regs((regs_.config1_reg));
 }
 
@@ -180,8 +180,9 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // 打开CRC校验 FIFO首字节是长度信息
     | write_reg(41, 0xB000)
     | write_reg(42, 0xFDB0) 
-    | set_datarate(DataRate::_1M)
-    | write_reg(52, 0x8080)
+    | set_datarate(DataRate::_62_5K)
+    | clear_fifo_write_and_read_ptr()
+    | enable_gain_weaken(true)
     ;
 }
 
@@ -389,7 +390,7 @@ Result<void, Error> LT8960L::change_carrier(const Channel ch){
     | write_reg(45,0x0080)            
     | write_reg(41,0x0000)
     | write_reg(52, 0x8080)
-    | fill_fifo(0, 16)
+    // | fill_fifo(0, 16)
     | write_reg(8,0x6C90)
     | set_rf_channel_and_into_tx(ch)  
     ;
@@ -403,61 +404,77 @@ Result<void, Error> LT8960L::clear_fifo_write_and_read_ptr(){
 }
 
 Result<size_t, Error> LT8960L::transmit_rf(Channel ch, std::span<const std::byte> buf){
-    // return set_rf_channel_no_tx_rx(ch);
+    auto res1 = set_rf_channel_no_tx_rx(ch)
 
-    // auto res2 = clear_fifo_write_and_read_ptr();
-    return write_fifo(buf);
+    | clear_fifo_write_and_read_ptr()
+    ;
+
+    if(res1.is_err()) return Err(res1.unwrap_err());
+
+    auto write_res = write_fifo(buf);
+
+
+    if(write_res.is_err()) return Err(write_res.unwrap_err());
     
-    // | [&](size_t len) -> Result<size_t, Error> {
-    //     return [this] -> Result<size_t, Error> {
-    //         switch(datarate_){
-    //             case DataRate::_62_5K: return write_reg(8,0x6c50);
-    //             default: return write_reg(8,0x6c90);
-    //         }
-    //     }()
-    //     | set_rf_channel_and_into_tx(ch)
-    //     .to(len);
-    // }
-    // return res3;
+    auto last_res = [&](size_t len) -> Result<size_t, Error> {
+        return ([this] -> Result<void, Error> {
+            switch(datarate_){
+                case DataRate::_62_5K: return write_reg(8,0x6c50);
+                default: return write_reg(8,0x6c90);
+            }
+        }()
+        | set_rf_channel_and_into_tx(ch))
+        .to(len);
+    }(buf.size());
+
+
+    if(last_res.is_err()) return Err(last_res.unwrap_err());
+
+    return write_res;
 }
 
-Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
-// //1mS
-// uint8_t Status=0,len;
-// if(RXBusy==0)
-// {
-//     RXBusy=1;
-//     LT8960L_WriteReg(7,0,FreqChannel);
-//     //LT8960L_Change_0x38();
-    
-//     #ifdef Air_rate_62K5    
-//     LT8960L_WriteReg( 8, 0x6c, 0x50);
-//     #else
-//     LT8960L_WriteReg( 8, 0x6c, 0x90);
-//     #endif
-    
-//     LT8960L_WriteReg(52, 0x80, 0x80);
-//     LT8960L_WriteReg(7,0,FreqChannel|0X80); 
-//     return Status;
-// }
-// if(LT8960L_GetPKT() && RXBusy)
-// {
-//     LT8960L_ReadReg(48);
-//     RXBusy=0; 
-//     Rx_TimeOUT=0;
-//     if((regs_.LT8960L_regH&0x80)==0)
-//     {
-//         len = LT8960L_ReadBUF(50,pBuf);
-//         return len;
-//     }
-// }
-// Rx_TimeOUT++;            //1mS++ / 或者放在定时器中断+1
-// if(Rx_TimeOUT>100)
-// {
-//     Rx_TimeOUT=0;
-//     RXBusy=0;
-// }            
-// return Status;  
+Result<bool, Error> LT8960L::is_receiving(){
+    auto & reg = regs_.flag_reg;
+    return read_regs(reg).to<bool>(reg.rev_sync);
+}
+
+Result<size_t, Error> LT8960L::receive_rf(Channel ch, std::span<std::byte> buf){
+    // DEBUG_PRINTLN("fun", is_receiving_);
+    if(is_receiving_ == false){
+        // DEBUG_PRINTLN("why");
+
+        return (set_rf_channel_no_tx_rx(ch)
+        | ensure_correct_0x08()
+        | clear_fifo_write_and_read_ptr()
+        | set_rf_channel_and_into_rx(ch))
+        .to(0u)
+        .if_ok([&]{is_receiving_ = true;})
+        ;
+    }else{
+        recv_timecnt_++;
+        if(recv_timecnt_ > 10){
+            DEBUG_PRINTLN("timeout");
+            is_receiving_ = false;
+            recv_timecnt_ = 0;
+        }
+
+        {
+            auto res = is_pkt_ready();
+            if(res.is_err()) return Err(res.unwrap_err());
+            if(res.unwrap() == true) return Ok(0u);
+        }
+        
+        DEBUG_PRINTLN("what");
+        {
+            auto res = is_receiving();
+            if(res.is_err()) return Err(res.unwrap_err());
+            if(res.unwrap() == true) return Ok(0u);
+        }
+
+        return read_fifo(buf).if_ok([&]{is_receiving_ = false;});
+    }
+
+
     return Ok(0u);
 }
 
@@ -568,13 +585,73 @@ Result<void, Error> LT8960L::wait_rst_done(const uint timeout){
     return Ok();
 }
 
+Result<void, Error> LT8960L::enable_gain_weaken(const bool en){
+    // 1Mbps数据率传输近距离存在阻塞死区（收发相距15cm内增益过强导致
+    // 通讯变差），推荐用户使用62.5Kbps传输距离更远且不存在死区。也可
+    // 通过降低接收灵敏度减少死区范围，具体操作: 0x38寄存器写0xBCDF
+    // 0x0F 寄存器写0x643C 降低接收灵敏度缩小死区。如需恢复灵敏度，用户
+    // 可0x38寄存器写0XBFFF，0x0F寄存器写0x644C恢复灵敏度。
+    if(en){
+        return write_reg(0x38, 0xbcdf)
+            | write_reg(0x0f, 0x643c);
+    }else{
+        return write_reg(0x38, 0xBFFF)
+            | write_reg(0x0f, 0x644C);
+    }
+}
 
-
-
+Result<void, Error> LT8960L::ensure_correct_0x08(){
+    if((!on_ble_) and datarate_ == DataRate::_62_5K){
+        return write_reg(0x08, 0x6c50);
+    }else{
+        return write_reg(0x08, 0x6c90);
+    }
+}
 
 using LT8960L_Phy = LT8960L::LT8960L_Phy;
 
+
 Result<void, Error> LT8960L_Phy::write_reg(
+    uint8_t address, 
+    uint16_t data
+){
+    return retry(2, [&]{return this->_write_reg(address, data);});
+}
+
+Result<void, Error> LT8960L_Phy::read_reg(
+    uint8_t address, 
+    uint16_t & data
+){
+    return retry(2, [&]{return this->_read_reg(address, data);});
+}
+
+
+
+Result<void, Error> LT8960L::set_preamble_bytes(const uint bytes){
+    LT8960L_ASSERT(bytes <= 0x0f, "preamble bytes must be less than 0x0f");
+
+    auto & reg = regs_.config1_reg;
+    reg.preamble_len = bytes - 1;
+    return write_reg(0x01, reg);
+}
+
+Result<void, Error> LT8960L::set_syncword_bytes(const uint bytes){
+    LT8960L_ASSERT(bytes <= 0x0f, "preamble bytes must be less than 0x0f");
+    
+    auto & reg = regs_.config1_reg;
+    reg.syncword_len = (bytes / 2) - 1;
+    return write_reg(0x01, reg);
+}
+
+Result<void, Error> LT8960L::set_trailer_bits(const uint bits){
+    LT8960L_ASSERT(bits <= 18, "preamble bytes must be less than 0x0f");
+    
+    auto & reg = regs_.config1_reg;
+    reg.trailer_len = (bits - 4) >> 1;
+    return write_reg(0x01, reg);
+}
+
+Result<void, Error> LT8960L_Phy::_write_reg(
     uint8_t address, 
     uint16_t data
 ){
@@ -588,29 +665,90 @@ Result<void, Error> LT8960L_Phy::write_reg(
     return Result<void, Error>(res);
 }
 
-Result<void, Error> LT8960L_Phy::read_reg(
+Result<void, Error> LT8960L_Phy::_read_reg(
     uint8_t address, 
     uint16_t & data
 ){
     auto guard = createGuard();
     
 
-    auto res = bus_.begin(address | 0x80);
-    [&](){
+    auto res = bus_.begin(address | 0x80)
+    .then([&](){
         uint32_t dummy = 0; 
         const auto err = bus_.read(dummy, ACK); 
         data = (dummy & 0xff)<< 8;
         return err;
-    }();
+    })
 
-    [&](){
+    .then([&](){
         uint32_t dummy = 0; 
         const auto err = bus_.read(dummy, NACK); 
         data |= (dummy & 0xff);
         return err;
-    }();
+    })
+
+    ;
 
 
     return Result<void, Error>(res);
 
+}
+
+[[nodiscard]] 
+Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
+    auto guard = createGuard();
+    uint32_t len = 0;
+
+    LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
+
+    auto res = bus_.begin(address | 0x80)
+        .then([&]() -> BusError{
+
+            const auto err = bus_.read(len, ACK);
+            if(err.wrong()) return err;
+            if(len > k_LT8960L_PACKET_SIZE) return BusError::LengthOverflow;
+            return BusError::OK;
+            }
+        )
+
+        .then([&]() -> BusError{
+            for(size_t i = 0; i < pbuf.size(); i++){
+                uint32_t dummy = 0;
+                const auto err = bus_.read(dummy, (i == pbuf.size()-1 ? NACK : ACK));
+                if(err.wrong()) return err;
+                pbuf[i] = std::byte(dummy);
+            }
+            return BusError::OK;
+        })
+    ;
+
+    LT8960L_ASSERT(res.ok(), "error while read burst", res);
+
+    return rescond(res.ok(), len, res);
+}
+
+
+[[nodiscard]] 
+Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
+    
+    auto guard = createGuard();
+    
+    LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
+
+    auto res = bus_.begin(address)
+        .then([&](){return bus_.write(pbuf.size());})
+
+        .then([&]() -> BusError{
+
+            for(const auto data : pbuf){
+                auto err = bus_.write(uint32_t(data));
+                if (err.wrong()) return err;
+            }
+            return BusError::OK;
+        })
+    ;
+
+    LT8960L_ASSERT(res.ok(), "error while write burst", res);
+
+    return rescond(res.ok(), pbuf.size(), res);
 }

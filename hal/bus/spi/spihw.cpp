@@ -275,7 +275,7 @@ BusError SpiHw::write(const uint32_t data){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     instance->DATAR;
     // }
-    // return ErrorType::OK;
+    // return Error::OK;
     uint32_t dummy;
     return transfer(dummy, data);
 }
@@ -291,7 +291,7 @@ BusError SpiHw::read(uint32_t & data){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     data = instance->DATAR;
     // }
-    // return ErrorType::OK;
+    // return Error::OK;
     return transfer(data, 0);
 }
 

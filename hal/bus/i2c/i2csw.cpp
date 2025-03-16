@@ -4,11 +4,15 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+#define SCL_PP
+
 void I2cSw::delayDur(){
-    delayMicroseconds(delays_);
+    if(delays_) delayMicroseconds(delays_);
+    // else __nopn(7);
 }
 
 BusError I2cSw::wait_ack(){
+    delayDur();
     sda_gpio.set();
     sda_gpio.inflt();
     delayDur();
@@ -36,7 +40,11 @@ BusError I2cSw::wait_ack(){
 }
 
 BusError I2cSw::lead(const uint8_t address){
+    #ifdef SCL_PP
+    scl_gpio.outpp();
+    #else
     scl_gpio.outod();
+    #endif
     sda_gpio.outod();
     sda_gpio.set();
     scl_gpio.set();
@@ -95,6 +103,7 @@ BusError I2cSw::read(uint32_t & data, const Ack ack){
     sda_gpio.outod();
     scl_gpio.set();
     delayDur();
+
     scl_gpio.clr();
     sda_gpio.inpu();
 
@@ -107,7 +116,12 @@ void I2cSw::init(const uint32_t baudRate){
     sda_gpio.set();
     sda_gpio.outod();
     scl_gpio.set();
+
+    #ifdef SCL_PP
+    scl_gpio.outpp();
+    #else
     scl_gpio.outod();
+    #endif
 
     setBaudRate(baudRate);
 }
