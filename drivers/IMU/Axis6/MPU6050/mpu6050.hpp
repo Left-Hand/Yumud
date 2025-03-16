@@ -126,8 +126,8 @@ protected:
     template<typename T>
     [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, BusError> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculateAccScale(const AccRange range){
         constexpr double g = 9.806;
@@ -170,29 +170,29 @@ public:
     MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):
         MPU6050(hal::I2cDrv(bus, i2c_addr), Package::MPU6050){;}
 
-    Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> verify();
 
-    Result<void, Error> init();
+    [[nodiscard]] Result<void, Error> init();
     
-    Result<void, Error> update();
+    [[nodiscard]] Result<void, Error> update();
 
     [[nodiscard]] Option<Vector3R> getAcc();
     [[nodiscard]] Option<Vector3R> getGyr();
     [[nodiscard]] Option<real_t> getTemperature();
 
-    Result<void, Error> setAccRange(const AccRange range);
-    Result<void, Error> setGyrRange(const GyrRange range);
+    [[nodiscard]] Result<void, Error> setAccRange(const AccRange range);
+    [[nodiscard]] Result<void, Error> setGyrRange(const GyrRange range);
 
-    Result<void, Error> reset();
+    [[nodiscard]] Result<void, Error> reset();
 
-    Result<void, Error> setPackage(const Package package){
+    [[nodiscard]] Result<void, Error> setPackage(const Package package){
         package_ = package;
         return Ok();
     }
 
-    Result<Package, Error> getPackage();
+    [[nodiscard]] Result<Package, Error> getPackage();
 
-    Result<void, Error> enableDirectMode(const Enable en = EN);
+    [[nodiscard]] Result<void, Error> enableDirectMode(const Enable en = EN);
 };
 
 };

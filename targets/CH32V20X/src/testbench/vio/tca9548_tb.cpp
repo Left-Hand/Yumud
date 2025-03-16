@@ -33,11 +33,11 @@ void tca9548_main()
 
     auto mpu = drivers::MPU6050{act_i2c};
     
-    mpu.init();
+    !+mpu.init();
 
 
     while(true){
-        mpu.update();
+        !+mpu.update();
         DEBUG_PRINTLN(millis(), mpu.getAcc().unwrap());
         DEBUG_PRINTLN(millis(), tca.verify());
         delay(20);

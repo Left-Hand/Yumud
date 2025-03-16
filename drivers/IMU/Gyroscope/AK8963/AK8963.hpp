@@ -2,13 +2,10 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
-
-#include "sys/utils/Option.hpp"
-#include "sys/utils/Result.hpp"
-
-
+#include "drivers/IMU/AsahiKaseiIMU.hpp"
 
 namespace ymd::drivers{
+// class AK8963:public Magnetometer, public AsahiKaseiSensor{
 class AK8963:public Magnetometer{
 public:
 // "0000":  Power-down mode 
@@ -58,8 +55,8 @@ protected:
     // [[nodiscard]] virtual Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
     [[nodiscard]] Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
 
-    // [[nodiscard]] virtual Result<void, Error> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, Error> requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
 
     using RegAddress = uint8_t;
 

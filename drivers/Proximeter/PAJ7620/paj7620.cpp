@@ -18,8 +18,8 @@ using namespace ymd::drivers;
 #define PAJ7620_ASSERT(cond, ...) ASSERT(cond, ##__VA_ARGS__)
 #endif
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg);
-#define READ_REG(reg) this->readReg(reg.address, reg);
+#define WRITE_REG(reg) this->writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg) this->readReg(reg.address, reg).unwrap();
 
 
 
@@ -135,7 +135,7 @@ void PAJ7620::selectBank(uint8_t bank) {
 
 void PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
-	i2c_drv_.verify();
+	i2c_drv_.verify().unwrap();
 }
 
 void PAJ7620::update(){

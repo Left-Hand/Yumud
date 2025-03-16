@@ -158,7 +158,7 @@ namespace details{
             data_(std::forward<E>(val)){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
-        __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
+        // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
     
         __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
         __fast_inline constexpr bool is_err() const{return data_.has_value();}
@@ -258,6 +258,9 @@ public:
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
     using type = Result<T, E>;
+    constexpr Result & operator =(const Result<T, E> &) = default;
+    // constexpr Result & operator =(Result<T, E> &&) = default;
+
 private:
     Storage result_;
 
@@ -317,6 +320,16 @@ public:
         if (is_ok()) {
             if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
             else return Ok<TFReturn>(std::forward<Fn>(fn)(result_.unwrap()));
+        }
+        else return Err<E>(unwrap_err());
+    }
+
+        // 修改map方法
+    template<typename Tok>
+    [[nodiscard]] __fast_inline constexpr 
+    Result<std::decay_t<Tok>, E> to(Tok && ok) const{
+        if (is_ok()) {
+            return Ok<std::decay_t<Tok>>(ok);
         }
         else return Err<E>(unwrap_err());
     }
@@ -383,6 +396,25 @@ public:
         }
     }
 
+    template<
+        typename E2
+    >
+    [[nodiscard]] __fast_inline constexpr 
+    auto validate(bool valid, E2 && err) const 
+        -> Result<T, E2>
+    {
+        
+        if(is_ok()){
+            if (false == valid){
+                return Err<E2>(std::forward<E2>(err));
+            }else{
+                if constexpr(std::is_void_v<T>) return Ok();
+                else return Ok<T>(unwrap());
+            }
+        }else{
+            return Err<E2>(err);
+        }
+    }
 
     template<typename Fn>
     requires (!std::is_void_v<std::invoke_result_t<Fn, T>>)
@@ -405,19 +437,22 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    void if_ok(Fn && fn) const {
+    Result<T, E> if_ok(Fn && fn) const {
         if (is_ok()) {
             // std::forward<Fn>(fn)(unwrap());
             std::forward<Fn>(fn)();
         }
+
+        return *this;
     }
 
     template<typename Fn>
     __fast_inline constexpr 
-    void if_err(Fn && fn) const {
+    const Result<T, E> & if_err(Fn && fn) const {
         if (is_err()) {
             std::forward<Fn>(fn)(unwrap_err());
         }
+        return *this;
     }
 
 
@@ -553,9 +588,11 @@ public:
     template<typename U, typename V>
     operator Result<U, V>() const {
         if (is_ok()) {
-            return Ok<U>(unwrap());
+            if constexpr(std::is_void_v<U>) return Ok();
+            if constexpr(std::is_void_v<T>) return Ok();
+            else return Ok<U>(unwrap());
         } else {
-            return Err<V>(unwrap_err());
+            return Result<U, V>(unwrap_err());
         }
     }
 };
@@ -571,15 +608,32 @@ template<
     else return Err<Edecay>(std::forward<E>(err));
 }
 
+template<
+    typename T, 
+    typename E,
+    typename Tdecay = std::decay_t<T>,
+    typename Edecay = std::decay_t<E>
+>
+[[nodiscard]] Result<Tdecay, Edecay> rescond(bool cond, Ok<T>&& ok, Err<E>&& err){
+    if(cond) return Ok<Tdecay>((ok));
+    else return Err<Edecay>((err));
+}
+
 // 特化版本处理Result类型
 template<typename T, typename E, typename Fn>
 auto operator|(const Result<T, E>& res, Fn&& fn) {
-    return res.and_then(std::forward<Fn>(fn));
+    res.and_then(std::forward<Fn>(fn));
 }
 
 template<typename T, typename E, typename Fn>
 auto operator|(Result<T, E>&& res, Fn&& fn) {
     return std::move(res).and_then(std::forward<Fn>(fn));
+}
+
+template<typename T, typename E, typename T2>
+Result<T2, E> operator|(const Result<T, E>& res, const Result<T2, E>& res2) {
+    if(res.is_ok()) Ok<T2>(res2.unwrap());
+    else return Err<E>(res.unwrap_err());
 }
 
 template<typename E>

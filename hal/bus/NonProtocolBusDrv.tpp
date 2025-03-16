@@ -98,21 +98,21 @@ BusError NonProtocolBusDrv<BusType>::transferSingle(T & datarx, T datatx, Contin
     return BusError::OK;
 }
 
-template <typename BusType>
-template<typename T>
-requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
-T NonProtocolBusDrv<BusType>::transferSingle(T datatx, Continuous cont) {
-    if (BusError::OK == bus_.begin(index_) ) {
-        if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
-        T datarx;
-        uint32_t ret = 0;
-        bus_.transfer(ret, datatx);
-        datarx = ret;
-        if (sizeof(T) != 1) this->setDataBits(8);
-        if (cont == DISC) bus_.end();
-        return datarx;
-    }
-    return T(0);
-}
+// template <typename BusType>
+// template<typename T>
+// requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
+// T NonProtocolBusDrv<BusType>::transferSingle(T datatx, Continuous cont) {
+//     if (BusError::OK == bus_.begin(index_) ) {
+//         if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
+//         T datarx;
+//         uint32_t ret = 0;
+//         bus_.transfer(ret, datatx);
+//         datarx = ret;
+//         if (sizeof(T) != 1) this->setDataBits(8);
+//         if (cont == DISC) bus_.end();
+//         return datarx;
+//     }
+//     return T(0);
+// }
 
 }

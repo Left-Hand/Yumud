@@ -183,12 +183,12 @@ protected:
 
     void delayT5(){delayMicroseconds(1);}
 
-    void writeReg(const RegAddress address, const uint16_t reg);
-    void readReg(const RegAddress address, uint16_t & reg);
-    void writeFifo(const uint8_t * data, const size_t len);
-    void readFifo(uint8_t * data, const size_t len);
+    BusError writeReg(const RegAddress address, const uint16_t reg);
+    BusError readReg(const RegAddress address, uint16_t & reg);
+    BusError writeFifo(const uint8_t * data, const size_t len);
+    BusError readFifo(uint8_t * data, const size_t len);
 
-    void updateFifoStatus();
+    BusError updateFifoStatus();
 };
 
 }

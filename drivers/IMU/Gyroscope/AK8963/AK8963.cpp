@@ -42,7 +42,7 @@ Result<void, Error> AK8963::readReg(const uint8_t addr, uint8_t & data){
     return err;
 }
 
-Result<void, Error> AK8963::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
+Result<void, Error> AK8963::readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len){
     auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), LSB);
     AK8963_ASSERT(err.ok(), "AK8963 read reg failed");
     return err;
@@ -79,7 +79,7 @@ Result<void, Error> AK8963::init(){
 
 
 Result<void, Error> AK8963::verify(){
-    p_i2c_drv_->release();
+    p_i2c_drv_->release().unwrap();
 
     if (!p_i2c_drv_->verify().ok()){
         AK8963_PANIC("AK8963 not founded");
@@ -134,7 +134,7 @@ void AK8963::update(){
     // using Fn = std::decay_t<decltype(lam2)>;
     // using Ret = function_traits<Fn>::return_type;
     // using t = std::invoke_result_t<decltype(lam2)>>;
-    data_valid_ = this->requestData(mag_x_reg.address, &mag_x_reg, 3).is_ok();
+    data_valid_ = this->readBurst(mag_x_reg.address, &mag_x_reg, 3).is_ok();
     READ_REG(st2_reg);
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
     data_valid_ &= !st2_reg.hofl;

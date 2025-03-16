@@ -4,54 +4,119 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+using Error = BoschSensor::Error;
 
-void BMI088::init(){
 
+template<typename Fn, typename Fn_Dur>
+Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
+    if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
+    Result<void, Error> res = std::forward<Fn>(fn)();
+    if(!times) return res;
+    else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
 }
 
-void BMI088::update(){
-
+template<typename Fn>
+Result<void, Error> retry(const size_t times, Fn && fn){
+    return retry(times, std::forward<Fn>(fn), nullptr);
 }
 
-Option<Vector3R> BMI088::getAcc(){
-    return Some{Vector3R{0,0,0}};
+static constexpr auto BMI088_TEMP_FACTOR = 0_r;
+static constexpr auto BMI088_TEMP_OFFSET = 0_r;
+static constexpr auto RETRY_TIMES = 3u;
+
+static constexpr uint8_t ACC_CHIP_ID = 0;
+static constexpr uint8_t GYR_CHIP_ID = 0;
+
+
+Result<void, Error> BMI088_Acc::init(){
+    
+    return Ok();
 }
 
-Option<Vector3R> BMI088::getGyr(){
-    return Some{Vector3R{0,0,0}};
+
+Result<void, Error> BMI088_Acc::reset(){
+    return writeCommand(0xb6);
 }
 
-real_t BMI088::getTemperature(){
-    return 0;
+Result<void, Error> BMI088_Acc::verifyChipId(){
+    auto err = readRegs(acc_chipid_reg);
+    return err | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error::UNSPECIFIED));
 }
 
-void BMI088::writeReg(const RegAddress reg, const uint8_t data){
-    if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data);
-    }else if (spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
+Result<void, Error> BMI088_Acc::verify(){
+    return reset()
+        | Result<void, Error>(i2c_drv_->verify())
+        | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){delay(1);})
+        | setAccOdr(AccOdr::_200Hz)
+        | setAccBwp(AccBwp::Normal)
+        | interrupts[0].enableOutput(true)
+        | interrupts[1].enableOutput(true)
+        // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){delay(1);})
+    ;
 }
 
-void BMI088::writeReg(const RegAddress reg, uint8_t & data){
-    if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data);
-    }else if (spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
+Result<void, Error> BMI088_Acc::update(){
+    return readBurst(acc_x_reg.address, 
+        // std::span(&(acc_x_reg.as_ref()), 3),
+        // LSB
+        &(acc_x_reg.as_ref()), 3
+    );
 }
 
-void BMI088::requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-    if(i2c_drv_){
-        i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), MSB);
-    }else if(spi_drv_){
-        TODO("not implemented yet");
-    }else{
-        PANIC();
-    }
+Result<void, Error> BMI088_Gyr::update(){
+    return readBurst(gyr_x_reg.address, 
+        // std::span(&(gyr_x_reg.as_ref()), 3),
+        &(gyr_x_reg.as_ref()), 3
+    );
 }
 
+
+Option<Vector3R> BMI088_Acc::getAcc(){
+    return Some(Vector3R(
+        acc_x_reg.as_val() * acc_scaler_,
+        acc_y_reg.as_val() * acc_scaler_,
+        acc_z_reg.as_val() * acc_scaler_
+    ));
+}
+Option<real_t> BMI088_Acc::getTemperature(){
+	auto bmi088_raw_temp = int16_t((temp_reg.as_bytes()[0] << 3) | (temp_reg.as_bytes()[1] >> 5));
+	if (bmi088_raw_temp > 1023) bmi088_raw_temp -= 2048;
+    return Some(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
+}
+
+Option<Vector3R> BMI088_Gyr::getGyr(){
+    return Some(Vector3R(
+        gyr_x_reg.as_val() * gyr_scaler_,
+        gyr_y_reg.as_val() * gyr_scaler_,
+        gyr_z_reg.as_val() * gyr_scaler_
+    ));
+}
+
+Result<void, Error> BMI088_Acc::setAccRange(const AccRange range){
+    acc_scaler_ = calculateAccScale(range).unwrap();
+    acc_range_reg.acc_range = uint8_t(range);
+    return writeRegs(acc_range_reg);
+}
+
+
+Result<void, Error> BMI088_Acc::setAccBwp(const AccBwp bwp){
+    acc_conf_reg.acc_bwp = uint8_t(bwp);
+    return writeRegs(acc_conf_reg);
+}
+
+
+Result<void, Error> BMI088_Acc::setAccOdr(const AccOdr odr){
+    acc_conf_reg.acc_odr = uint8_t(odr);
+    return writeRegs(acc_conf_reg);
+}
+
+Result<void, Error> BMI088_Gyr::setGyrRange(const GyrRange range){
+    gyr_scaler_ = calculateGyrScale(range).unwrap();
+    gyro_range_reg.data = uint8_t(range);
+    return writeRegs(gyro_range_reg);
+}
+
+Result<void, Error> BMI088_Gyr::setGyrOdr(const GyrOdr odr){
+    gyro_bw_reg.data = uint8_t(odr);
+    return writeRegs(gyro_range_reg);
+}

@@ -199,54 +199,59 @@ protected:
     FeatureReg feature_reg;
 
 
-    void writeReg(RegAddress addr, const auto & value){
+    BusError writeReg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
-        spi_drv.writeBurst(&(value), sizeof(value));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
+        return spi_drv.writeBurst(&(value), sizeof(value));
     }
 
-    void readReg(RegAddress addr, auto & value){
+    BusError readReg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT);
-        spi_drv.readBurst(&(value), sizeof(value));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
+        return spi_drv.readBurst(&(value), sizeof(value));
     }
 
-    void readFifo(uint8_t *buffer, size_t size){
+    BusError readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PAYLOAD), CONT);
-            spi_drv.readBurst(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::R_RX_PAYLOAD), CONT).unwrap();
+            return spi_drv.readBurst(buffer, size);
         }
     }
 
-    void writeFifo(const uint8_t *buffer, size_t size){
+    BusError writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD), CONT);
-            spi_drv.writeBurst<uint8_t>(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::W_TX_PAYLOAD), CONT).unwrap();
+            return spi_drv.writeBurst<uint8_t>(buffer, size);
         }
     }
 
-    void writeFifoNoAck(const uint8_t *buffer, size_t size){
+    BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT);
-            spi_drv.writeBurst<uint8_t>(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT).unwrap();
+            return spi_drv.writeBurst<uint8_t>(buffer, size);
         }
     }
 
-    void clearTxFifo(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_TX));
+    BusError clearTxFifo(){
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+            uint8_t(Command::FLUSH_TX)).unwrap();
     }
 
-    void clearRxFifo(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_RX));
+    BusError clearRxFifo(){
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+            uint8_t(Command::FLUSH_RX)).unwrap();
     }
 
-    void updateStatus(){
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
+    BusError updateStatus(){
+        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
     hal::SpiDrv spi_drv;
@@ -256,8 +261,8 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT);
-        spi_drv.readSingle((size));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT).unwrap();
+        spi_drv.readSingle((size)).unwrap();
         return size;
     }
 };

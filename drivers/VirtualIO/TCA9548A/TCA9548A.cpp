@@ -6,7 +6,7 @@ using namespace ymd::drivers;
 void TCA9548A::switch_vbus(const uint8_t ch){
     if(last_ch_ == ch) return;
     const uint8_t temp = 1 << ch;
-    self_i2c_drv_.writeBlocks<>(temp, LSB);
+    self_i2c_drv_.writeBlocks<>(temp, LSB).unwrap();
 }
 
 BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){

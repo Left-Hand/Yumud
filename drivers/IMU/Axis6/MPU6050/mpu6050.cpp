@@ -15,8 +15,8 @@
 #define MPU6050_TODO(...) PANIC_NSRC()
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) !+readReg(reg.address, reg);
-#define WRITE_REG(reg) !+writeReg(reg.address, reg);
+#define READ_REG(reg) readReg(reg.address, reg).unwrap()
+#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap()
 #endif
 
 
@@ -53,7 +53,7 @@ Result<void, Error> MPU6050::readReg(const uint8_t addr, uint8_t & data){
     }
 }
 
-Result<void, Error> MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
+Result<void, Error> MPU6050::readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len){
     if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), MSB);
         MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
@@ -74,7 +74,7 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     
 Result<void, Error> MPU6050::verify(){
 
-    reset();
+    reset().unwrap();
     const auto pkres = this->getPackage();
     if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
     
@@ -111,7 +111,7 @@ Result<void, Error> MPU6050::init(){
 }
 
 Result<void, Error> MPU6050::update(){
-    auto res = this->requestData(acc_x_reg.address, &acc_x_reg, 7);
+    auto res = this->readBurst(acc_x_reg.address, &acc_x_reg, 7);
     data_valid = res.is_ok();
     return res;
 }

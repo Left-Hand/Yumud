@@ -10,24 +10,24 @@ OutputStream & ymd::operator << (OutputStream & os, const BusError & err){
     return os << err.type;
 }
 
-OutputStream & ymd::operator << (OutputStream & os, const BusError::ErrorType & err){
-    using ErrorType = BusError::ErrorType;
+OutputStream & ymd::operator << (OutputStream & os, const BusError::Kind & err){
+    using Kind = BusError::Kind;
 
     switch(err){
-        case ErrorType::OK:
+        case Kind::OK:
             return os << "OK";
-        case ErrorType::OCCUPIED:
+        case Kind::OCCUPIED:
             return os << "OCCUPIED";
-        case ErrorType::ALREADY:
+        case Kind::ALREADY:
             return os << "ALREADY";
-        case ErrorType::TIMEOUT:
+        case Kind::TIMEOUT:
             return os << "TIMEOUT";
-        case ErrorType::NO_CS_PIN:
+        case Kind::NO_CS_PIN:
             return os << "NO_CS_PIN";
-        case ErrorType::NO_ACK:
+        case Kind::NO_ACK:
             return os << "NO_ACK";
         default:
-            return os << "UNKNOWN";
+            return os << "UNKNOWN" << uint8_t(err);
     }
 }
 

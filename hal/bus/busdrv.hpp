@@ -73,41 +73,47 @@ protected:
 
 public:
     NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
-    void release(){
-        if (BusError::OK == bus_.begin(index_) ) {
+    [[nodiscard]]
+    BusError release(){
+        if (auto err = bus_.begin(index_); err.ok()) {
             delay(1);
             bus_.end();
+            return BusError::OK;
+        }else{
+            return err;
         }
     }
     void end(){bus_.end();}
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_writable_bus<BusType>
+    [[nodiscard]]
     BusError writeSingle(const T data, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
+    [[nodiscard]]
     BusError writeBurst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
+    [[nodiscard]]
     BusError writeBurst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
+    [[nodiscard]]
     BusError readBurst(T * data_ptr, const size_t len, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
+    [[nodiscard]]
     BusError readSingle(T & data, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_fulldup_bus<BusType>
+    [[nodiscard]]
     BusError transferSingle(T & data_rx, T data_tx, Continuous cont = DISC);
-
-    template<typename T>
-    requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
-    T transferSingle(T data_tx, Continuous cont = DISC);
 };
 
 template <typename BusType>

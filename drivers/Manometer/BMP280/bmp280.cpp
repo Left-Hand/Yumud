@@ -100,7 +100,7 @@ void BMP280::init(){
     // writeReg(RegAddress::Config, (uint8_t)0x00);
 
     // memset(&digT1, 0, 2 * 12);
-    requestPool(RegAddress::DigT1, (uint8_t *)&digT1, 2, 2*12);
+    readBurst(RegAddress::DigT1, (uint8_t *)&digT1, 2, 2*12);
 
     // for(uint16_t * ptr = &digT1; ptr <= (uint16_t *)&digP9; ptr++)
     //     BMP280_DEBUG(String(*ptr, 16));

@@ -63,7 +63,7 @@ bool VL53L0X::busy(){
 }
 
 void VL53L0X::flush(){
-	requestData(VL53L0X_REG_RESULT_RANGE_STATUS + 6, &result.ambientCount, 3);
+	readBurst(VL53L0X_REG_RESULT_RANGE_STATUS + 6, &result.ambientCount, 3);
 }
 
 void VL53L0X::enableHighPrecision(const bool _highPrec){

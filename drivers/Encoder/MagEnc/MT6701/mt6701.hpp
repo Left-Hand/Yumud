@@ -5,15 +5,6 @@
 
 #include "drivers/Encoder/MagEncoder.hpp"
 
-#ifdef MT6701_DEBUG
-#undef MT6701_DEBUG
-#define MT6701_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
-#else
-#define MT6701_DEBUG(...)
-#endif
-
-
-
 namespace ymd::drivers{
 class MT6701:public MagEncoderIntf{
 public:
@@ -149,10 +140,10 @@ protected:
 
 
     
-    void writeReg(const RegAddress addr, const uint16_t data);
-    void readReg(const RegAddress addr, uint16_t & data);
-    void writeReg(const RegAddress addr, const uint8_t data);
-    void readReg(const RegAddress addr, uint8_t & data);
+    BusError writeReg(const RegAddress addr, const uint16_t data);
+    BusError readReg(const RegAddress addr, uint16_t & data);
+    BusError writeReg(const RegAddress addr, const uint8_t data);
+    BusError readReg(const RegAddress addr, uint8_t & data);
     // MT6701(hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
 public:
     MT6701(const hal::I2cDrv & _i2c_drv):

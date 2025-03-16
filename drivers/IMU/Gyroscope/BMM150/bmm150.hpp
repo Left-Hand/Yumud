@@ -23,10 +23,6 @@ protected:
     };
 
 
-
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
 public:
     using BoschSensor::BoschSensor;
     BMM150(hal::I2c & bus, const uint8_t addr = default_i2c_addr):BoschSensor(hal::I2cDrv(bus, addr)){;}

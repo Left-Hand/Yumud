@@ -102,11 +102,11 @@ void ICM42688::init(){
 }
 
 void ICM42688::update(){
-	// requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 3);
-	requestData(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
+	// readBurst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 3);
+	readBurst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
 
 
-	// requestData(uint8_t(RegAddress::GYR_DATA_X1), &gyr_data.x, 3);
+	// readBurst(uint8_t(RegAddress::GYR_DATA_X1), &gyr_data.x, 3);
 }
 
 

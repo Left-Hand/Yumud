@@ -39,7 +39,9 @@ int main(){
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
-    mpu6050_main();
+    // mpu6050_main();
+    // i2c_scanner_main();
+    lt8960_main();
     // sincos_main();
     // i2c_scanner_main();
     // ina3221_main();

@@ -10,7 +10,7 @@ namespace ymd{
 
 struct BusError{
 public:
-    enum ErrorType:uint8_t{
+    enum Kind:uint8_t{
         OK,
         ALREADY,
         OCCUPIED,
@@ -21,26 +21,29 @@ public:
         ZERO_LENGTH,
         VERIFY_FAILD,
 
+        LengthOverflow,
+
         UNSPECIFIED = 0xff
     };
 
-    ErrorType type = ErrorType::OK;
+    Kind type = Kind::OK;
 
-    BusError(const ErrorType & _type):type(_type){;}
-    BusError(ErrorType && _type):type(_type){;}
+    BusError(const Kind & _type):type(_type){;}
+    BusError(Kind && _type):type(_type){;}
     BusError(const BusError & other):type(other.type){;}
     BusError(BusError && other):type(other.type){;}
-    BusError & operator = (const BusError & other) = delete;
-    BusError & operator = (BusError && other) = delete;
+    BusError & operator = (const BusError & other) = default;
+    BusError & operator = (BusError && other) = default;
     __fast_inline BusError & emplace(const BusError & other){type = other.type; return *this;}
     __fast_inline BusError & emplace(BusError && other){type = other.type; return *this;}
 
-    bool operator ==(const ErrorType & _type){return type == _type;}
-    bool operator !=(const ErrorType & _type){return type != _type;}
+    bool operator ==(const Kind & _type){return type == _type;}
+    bool operator !=(const Kind & _type){return type != _type;}
 
-    __fast_inline bool wrong() const {return unlikely(type != ErrorType::OK);}
-    __fast_inline bool ok() const {return likely(type == ErrorType::OK);}
+    __fast_inline bool wrong() const {return unlikely(type != Kind::OK);}
+    __fast_inline bool ok() const {return likely(type == Kind::OK);}
 
+    auto unwrap() const {return type;}
 
     // template<typename F>
     // auto map(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
@@ -48,14 +51,14 @@ public:
     //     else return err();
     // }
 
-    // // 链式处理
-    // template<typename F>
-    // auto and_then(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
-    //     if (ok()) return fn(unwrap());
-    //     else return err();
-    // }
+    // 链式处理
+    template<typename Fn>
+    BusError then(Fn && fn){
+        if (ok()) return std::forward<Fn>(fn)();
+        return *this;
+    }
 
-    explicit operator ErrorType() {return type;}
+    explicit operator Kind() {return type;}
 };
 
 
@@ -114,6 +117,6 @@ public:
 
 OutputStream & operator << (OutputStream & os, const BusError & err);
 
-OutputStream & operator << (OutputStream & os, const BusError::ErrorType & err);
+OutputStream & operator << (OutputStream & os, const BusError::Kind & err);
 
 };

@@ -103,24 +103,24 @@ protected:
     ResetPeriodReg resetPeriodReg;
     ChipIDReg chipIDReg;
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError writeReg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError readReg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError writeReg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg(uint8_t(addr), data);
+    BusError readReg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.readReg(uint8_t(addr), data);
     }
 
-    void requestPool(const RegAddress addr, int16_t * datas, const size_t len){
-        i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len), LSB);
+    BusError readBurst(const RegAddress addr, int16_t * datas, const size_t len){
+        return i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len), LSB);
     }
 
     real_t From16BitToGauss(const int16_t data);

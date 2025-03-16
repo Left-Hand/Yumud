@@ -4,17 +4,6 @@
 
 #include "drivers/device_defs.h"
 
-#define DEF_R8(T, name)\
-static_assert(sizeof(T) == 1, "x must be 8bit register");\
-static_assert(std::has_unique_object_representations_v<T>, "x must has unique bitfield");\
-T name = {};\
-
-#define DEF_R16(T, name)\
-static_assert(sizeof(T) == 16, "x must be 16bit register");\
-static_assert(std::has_unique_object_representations_v<T>, "x must has unique bitfield");\
-T name = {};\
-
-
 
 namespace ymd::drivers{
 

@@ -67,20 +67,20 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
 
 
 
-    spi_drv_.writeSingle(Register::FR1);
+    spi_drv_.writeSingle(Register::FR1).unwrap();
     // High VCO Gain is needed for a 255-500MHz master clock, and not up to 160Mhz
     // In-between is unspecified.
     spi_drv_.writeSingle(
         (core_clock > 200 ? uint8_t(FR1_Bits::VCOGain) : uint8_t(0)) |
         (mult*uint8_t(FR1_Bits::PllDivider)) | 
         uint8_t(FR1_Bits::ChargePump3)         // Lock fast
-    );
+    ).unwrap();
     // Profile0 means each channel is modulated by a different profile pin:
     spi_drv_.writeSingle(
         uint8_t(FR1_Bits::ModLevels2) |
         uint8_t(FR1_Bits::RampUpDownOff) |
-        uint8_t(FR1_Bits::Profile0));
-    spi_drv_.writeSingle(FR1_Bits::SyncClkDisable); // Don't output SYNC_CLK
+        uint8_t(FR1_Bits::Profile0)).unwrap();
+    spi_drv_.writeSingle(FR1_Bits::SyncClkDisable).unwrap(); // Don't output SYNC_CLK
 }
 
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta
@@ -107,14 +107,14 @@ void AD9959::setAmplitude(ChannelIndex chan, uint16_t amplitude){        // Maxi
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
     setChannels(chan);
-    spi_drv_.writeSingle(Register::ACR);                  // Amplitude control register
-    spi_drv_.writeSingle(0);                    // Time between ramp steps
+    spi_drv_.writeSingle(Register::ACR).unwrap();                  // Amplitude control register
+    spi_drv_.writeSingle(0).unwrap();                    // Time between ramp steps
     if (amplitude < 1024){               // Enable amplitude control with no ramping
-        spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8);
+        spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8).unwrap();
     }else{
-        spi_drv_.writeSingle(0);                  // Disable the amplitude multiplier
+        spi_drv_.writeSingle(0).unwrap();// Disable the amplitude multiplier
     }
-    spi_drv_.writeSingle(amplitude&0xFF);       // Bottom 8 bits of amplitude
+    spi_drv_.writeSingle(amplitude&0xFF).unwrap();       // Bottom 8 bits of amplitude
 }
 
 void AD9959::setPhase(ChannelIndex chan, uint16_t phase){                // Maximum phase value is 16383

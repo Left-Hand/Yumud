@@ -42,9 +42,9 @@ protected:
     real_t y_cm = {};
 
     bool assertReg(const uint8_t command, const uint8_t data);
-    void writeReg(const uint8_t command, const uint8_t data);
-    void readReg(const uint8_t command, uint8_t & data);
-    void readBurst(const uint8_t commnad, uint8_t * data, const size_t len);
+    BusError writeReg(const uint8_t command, const uint8_t data);
+    BusError readReg(const uint8_t command, uint8_t & data);
+    BusError readBurst(const uint8_t commnad, uint8_t * data, const size_t len);
 
     void readDataSlow();
     void readDataBurst();
@@ -61,9 +61,6 @@ public:
     void init();
     void update();
     void update(const real_t rad);
-    // auto getMotion(){
-    //     return std::make_tuple(int16_t(dx), int16_t(dy));
-    // }
 
     std::tuple<real_t, real_t> getPosition() override{
         return std::make_tuple(x_cm * real_t(0.01), y_cm * real_t(0.01));

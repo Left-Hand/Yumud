@@ -77,7 +77,7 @@ bool HMC5883L::verify(){
 }
 
 void HMC5883L::update(){
-    requestPool(RegAddress::MagX, &magXReg, 3);
+    readBurst(RegAddress::MagX, &magXReg, 3);
 }
 
 

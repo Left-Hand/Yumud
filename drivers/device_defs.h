@@ -18,4 +18,22 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/adc/analog_channel.hpp"
 
-// using namespace ymd::hal;
+
+#define DEF_R16(name)\
+name{};\
+static_assert(sizeof(std::decay_t<decltype(name)>) == 2, "x must be 16bit register");\
+static_assert(std::has_unique_object_representations_v<std::decay_t<decltype(name)>>, "x must has unique bitfield");\
+
+#define DEF_R8(name)\
+name{};\
+static_assert(sizeof(std::decay_t<decltype(name)>) == 1, "x must be 8bit register");\
+static_assert(std::has_unique_object_representations_v<std::decay_t<decltype(name)>>, "x must has unique bitfield");\
+
+#define REG16I_QUICK_DEF(addr, type, name)\
+struct type :public Reg16i<>{scexpr uint8_t address = addr; int16_t data;} DEF_R16(name)
+
+#define REG16_QUICK_DEF(addr, type, name)\
+struct type :public Reg16<>{scexpr RegAddress address = addr; uint16_t data;} DEF_R16(name)
+
+#define REG8_QUICK_DEF(addr, type, name)\
+struct type :public Reg8<>{scexpr RegAddress address = addr; uint8_t data;} DEF_R8(name)

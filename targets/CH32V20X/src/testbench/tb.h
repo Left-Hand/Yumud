@@ -138,3 +138,5 @@ void rmst_main();
 
 void dsp_main();
 void sincos_main();
+
+void lt8960_main();

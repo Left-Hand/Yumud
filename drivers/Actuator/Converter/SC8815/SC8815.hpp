@@ -283,7 +283,7 @@ protected:
     BusError readReg(const RegAddress address, uint16_t & reg){
         return i2c_drv_.readReg(uint8_t(address), reg, LSB);
     }
-    BusError requestPool(const RegAddress addr, uint8_t * data, size_t len){
+    BusError readBurst(const RegAddress addr, uint8_t * data, size_t len){
         return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
     }
 

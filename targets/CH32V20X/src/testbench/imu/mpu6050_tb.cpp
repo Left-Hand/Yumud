@@ -37,15 +37,14 @@ void ak8963_tb(hal::I2c & i2c){
 
 void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
-    mpu.setPackage(MPU6050::Package::MPU9250);
-
-    mpu.init();
-    mpu.setAccRange(MPU6050::AccRange::_2G);
-    mpu.enableDirectMode(EN);
+    !+mpu.setPackage(MPU6050::Package::MPU9250);
+    !+mpu.init();
+    !+mpu.setAccRange(MPU6050::AccRange::_2G);
+    !+mpu.enableDirectMode(EN);
 
     ak8963_tb(i2c);
     while(true){
-        mpu.update();
+        !+mpu.update();
         DEBUG_PRINTLN_IDLE(mpu.getGyr().unwrap());
     }
 }
@@ -55,14 +54,14 @@ void mpu6500_tb(hal::I2c & i2c){
 
     #ifdef MAG_ACTIVATED
         AK8963 aku{i2c};
-        mpu.setPackage(MPU6050::Package::MPU9250);
+        !+mpu.setPackage(MPU6050::Package::MPU9250);
     #else
         mpu.setPackage(MPU6050::Package::MPU6050);
     #endif
 
-    mpu.init();
-    mpu.setAccRange(MPU6050::AccRange::_2G);
-    mpu.enableDirectMode(EN);
+    !+mpu.init();
+    !+mpu.setAccRange(MPU6050::AccRange::_2G);
+    !+mpu.enableDirectMode(EN);
 
     #ifdef MAG_ACTIVATED
         aku.init().unwrap();
@@ -79,7 +78,7 @@ void mpu6500_tb(hal::I2c & i2c){
 
     hal::timer1.init(200);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
-        mpu.update();
+        !+mpu.update();
 
         #ifdef MAG_ACTIVATED
         aku.update();

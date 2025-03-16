@@ -91,26 +91,20 @@ protected:
         void setMode(const hal::GpioMode mode) override{}
     };
 
-    __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        i2c_drv_.writeReg(uint8_t(addr), reg);
+    BusError writeReg(const RegAddress addr, const uint8_t reg){
+        return i2c_drv_.writeReg(uint8_t(addr), reg).unwrap();
     };
 
-    __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
-        i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
+    BusError writeReg(const RegAddress addr, const uint16_t reg){
+        return i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
     }
 
-    __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        i2c_drv_.readReg(uint8_t(addr), reg);
+    BusError readReg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.readReg(uint8_t(addr), reg).unwrap();
     }
 
-    __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
-        i2c_drv_.readReg(uint8_t(addr), reg, LSB);
-    }
-
-    uint8_t readReg(const RegAddress addr){
-        uint8_t data;
-        i2c_drv_.readReg(uint8_t(addr), data);
-        return data;
+    BusError readReg(const RegAddress addr, uint16_t & reg){
+        return i2c_drv_.readReg(uint8_t(addr), reg, LSB);
     }
     void writePort(const uint16_t data) override{
     }

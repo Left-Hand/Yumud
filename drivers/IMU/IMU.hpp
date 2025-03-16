@@ -5,14 +5,6 @@
 #include "sys/utils/Option.hpp"
 #include "sys/utils/Result.hpp"
 
-#define REG16I_QUICK_DEF(addr, type, name)\
-struct type :public Reg16i<>{scexpr uint8_t address = addr; int16_t :16;} name = {};
-
-#define REG16_QUICK_DEF(addr, type, name)\
-struct type :public Reg16<>{scexpr RegAddress address = addr; int16_t :16;} name = {};
-
-#define REG8_QUICK_DEF(addr, type, name)\
-struct type :public Reg16i<>{scexpr RegAddress address = addr; int16_t :16;} name = {};
 
 
 

@@ -11,8 +11,8 @@ class DisplayerPhy{
 public:
     virtual void init() = 0;
 
-    virtual void writeCommand(const uint32_t cmd) = 0;
-    virtual void writeData(const uint32_t data) = 0;
+    virtual BusError writeCommand(const uint32_t cmd) = 0;
+    virtual BusError writeData(const uint32_t data) = 0;
 
     virtual void writeU8(const uint8_t data, size_t len) = 0;
     virtual void writeU8(const uint8_t * data, size_t len) = 0;
@@ -76,47 +76,47 @@ public:
 
     }
 
-    void writeCommand(const uint32_t cmd) override{
+    BusError writeCommand(const uint32_t cmd) override{
         dc_gpio = command_level;
-        spi_drv_.writeSingle<uint8_t>(cmd);
+        return spi_drv_.writeSingle<uint8_t>(cmd);
     }
 
-    void writeData(const uint32_t data) override{
+    BusError writeData(const uint32_t data) override{
         dc_gpio = data_level;
-        spi_drv_.writeSingle<uint8_t>(data);
+        return spi_drv_.writeSingle<uint8_t>(data);
     }
 
     void writeData16(const uint32_t data){
         dc_gpio = data_level;
-        spi_drv_.writeSingle<uint16_t>(data);
+        spi_drv_.writeSingle<uint16_t>(data).unwrap();
     }
 
     void writeSingle(const auto & data){
         dc_gpio = data_level;
-        spi_drv_.writeSingle(data);
+        spi_drv_.writeSingle(data).unwrap();
     }
 
     template<typename U>
     void writeBurst(const auto * data, size_t len){
         dc_gpio = data_level;
-        spi_drv_.writeBurst<U>(data, len);
+        spi_drv_.writeBurst<U>(data, len).unwrap();
     }
 
     template<typename U>
     void writeBurst(const auto & data, size_t len){
         dc_gpio = data_level;
-        spi_drv_.writeBurst<U>(data, len);
+        spi_drv_.writeBurst<U>(data, len).unwrap();
     }
 
 
     void writeU8(const uint8_t data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv_.writeBurst<uint8_t>(data, len);
+        spi_drv_.writeBurst<uint8_t>(data, len).unwrap();
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv_.writeBurst<uint8_t>(data, len);
+        spi_drv_.writeBurst<uint8_t>(data, len).unwrap();
     }
 };
 
@@ -134,27 +134,27 @@ public:
 
     void init()override{;}
 
-    void writeCommand(const uint32_t cmd) override{
-        i2c_drv_.writeReg(cmd_token, cmd, LSB);
+    BusError writeCommand(const uint32_t cmd){
+        return i2c_drv_.writeReg(cmd_token, cmd, LSB);
     }
 
-    void writeData(const uint32_t data) override{
-        i2c_drv_.writeReg(data_token, data, LSB);
+    BusError writeData(const uint32_t data){
+        return i2c_drv_.writeReg(data_token, data, LSB);
     }
 
-    void writeBurst(const is_stdlayout auto * pdata, size_t len){
+    BusError writeBurst(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
-            i2c_drv_.writeBurst(data_token, std::span(pdata, len), LSB);
+            return i2c_drv_.writeBurst(data_token, std::span(pdata, len), LSB);
         }else {
-            i2c_drv_.writeBurst(data_token, std::span(pdata, len));
+            return i2c_drv_.writeBurst(data_token, std::span(pdata, len));
         }
     }
 
-    void writeBurst(const is_stdlayout auto data, size_t len){
+    BusError writeBurst(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
-            i2c_drv_.writeRepeat(data_token, std::span(data, len), LSB);
+            return i2c_drv_.writeRepeat(data_token, std::span(data, len), LSB);
         }else {
-            i2c_drv_.writeRepeat(data_token, data, len);
+            return i2c_drv_.writeRepeat(data_token, data, len);
         }
     }
 

@@ -123,7 +123,7 @@ protected:
     
     [[nodiscard]] BusResult readReg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] BusResult requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] BusResult readBurst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     class CurrentChannel;
     class VoltageChannel;

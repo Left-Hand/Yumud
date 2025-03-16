@@ -2,11 +2,13 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
+#include "drivers/IMU/AsahiKaseiIMU.hpp"
 
 
 namespace ymd::drivers{
+// class AK8975:public Magnetometer, public AsahiKaseiSensor{
 class AK8975:public Magnetometer{
-public:
+    public:
     enum class Mode:uint8_t{
         PowerDown = 0b0000,
         SingleMeasurement = 0b0001,
@@ -33,10 +35,10 @@ protected:
     };
 
 
-    void writeReg(const uint8_t addr, const uint8_t data);
-    void readReg(const RegAddress addr, uint8_t & data);
+    BusError writeReg(const uint8_t addr, const uint8_t data);
+    BusError readReg(const RegAddress addr, uint8_t & data);
 
-    void readBurst(const RegAddress addr, void * datas, const size_t len);
+    BusError readBurst(const RegAddress addr, void * datas, const size_t len);
     void readAdj();
 public:
 

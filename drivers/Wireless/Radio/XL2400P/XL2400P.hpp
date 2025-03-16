@@ -5,15 +5,6 @@
 #include "drivers/device_defs.h"
 #include "sys/utils/BitField.hpp"
 
-#define DEF_R8(T, name)\
-static_assert(sizeof(T) == 1 and std::has_unique_object_representations_v<T>, "x must be 8bit register");\
-T name = {};\
-
-#define DEF_R16(T, name)\
-static_assert(sizeof(T) == 2 and std::has_unique_object_representations_v<T>, "x must be 16bit register");\
-T name = {};\
-
-
 namespace ymd::drivers{
 
 class XL2400P{

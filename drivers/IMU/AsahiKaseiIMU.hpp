@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class InvensenseSensor{
+class AsahiKaseiSensor{
 protected:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
@@ -42,11 +42,11 @@ protected:
         PANIC();
     }
 public:
-    InvensenseSensor(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-    InvensenseSensor(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    InvensenseSensor(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    InvensenseSensor(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    AsahiKaseiSensor(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AsahiKaseiSensor(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AsahiKaseiSensor(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    AsahiKaseiSensor(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    AsahiKaseiSensor(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    AsahiKaseiSensor(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

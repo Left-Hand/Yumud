@@ -21,6 +21,7 @@ concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
+    uint8_t index_r_ = 0;
     BusError writeRepeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 
@@ -124,7 +125,7 @@ protected:
         Fn && fn
     ){
         return writeTemplate(addr, endian, [&]() -> BusError{
-            if(const auto reset_err = bus_.begin(index_ | 0x01); reset_err.ok()){
+            if(const auto reset_err = bus_.begin(index_r_); reset_err.ok()){
                 return std::forward<Fn>(fn)();
             }else{
                 return reset_err;
@@ -133,11 +134,15 @@ protected:
     }
 
 public:
-    I2cDrv(hal::I2c & _bus, const uint8_t _index):
-        ProtocolBusDrv<I2c>(_bus, _index){};
+    I2cDrv(hal::I2c & i2c, const uint8_t index):
+        I2cDrv(i2c, index, index | 0x01){;};
+
+    I2cDrv(hal::I2c & i2c, const uint8_t index, const uint8_t index_r):
+        ProtocolBusDrv<I2c>(i2c, index), index_r_(index_r){;};
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeBurst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata
@@ -147,6 +152,7 @@ public:
         
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeBurst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata,
@@ -157,6 +163,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError readBurst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata
@@ -167,6 +174,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError readBurst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata,
@@ -176,6 +184,7 @@ public:
     }
 
     template<typename ... Ts>
+    [[nodiscard]] __fast_inline
     BusError writeBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::add_const_t<Ts>> ... args,
@@ -188,6 +197,7 @@ public:
     }
 
     template<typename ... Ts>
+    [[nodiscard]] __fast_inline
     BusError readBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::remove_const_t<Ts>> ... args,
@@ -200,6 +210,7 @@ public:
     }
 
     template<typename ... Trest>
+    [[nodiscard]] __fast_inline
     BusError operateBlocks(
         const valid_i2c_regaddr auto addr, 
         std::span<Trest> ... rest,
@@ -213,6 +224,7 @@ public:
     
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeRepeat(
         const valid_i2c_regaddr auto addr,
         const T data, 
@@ -224,6 +236,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeRepeat(
         const valid_i2c_regaddr auto addr, 
         const T data, 
@@ -235,6 +248,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError writeReg(
         const valid_i2c_regaddr auto addr, 
         const T data, 
@@ -245,6 +259,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError writeReg(
         const valid_i2c_regaddr auto addr, 
         const T & data
@@ -254,6 +269,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
+    [[nodiscard]] __fast_inline
     BusError readReg(
         const valid_i2c_regaddr auto addr,
         T & data, 
@@ -264,6 +280,7 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
+    [[nodiscard]] __fast_inline
     BusError readReg(
         const valid_i2c_regaddr auto addr,
         T & data
@@ -271,7 +288,10 @@ public:
         return this->readBurst_impl(addr, std::span(&data, 1), LSB);
     }
 
+    [[nodiscard]]
     BusError verify();
+
+    [[nodiscard]]
     BusError release();
 };
 

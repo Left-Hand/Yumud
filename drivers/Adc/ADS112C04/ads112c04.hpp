@@ -158,16 +158,16 @@ protected:
 
 
 
-    void readData(uint16_t & data){
-        i2c_drv.readReg(uint8_t(Command::READ_DATA), data, LSB);
+    auto readData(uint16_t & data){
+        return i2c_drv.readReg(uint8_t(Command::READ_DATA), data, LSB);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv.readReg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
+    auto readReg(const RegAddress addr, uint8_t & data){
+        return i2c_drv.readReg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
     }
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv.writeReg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
+    auto writeReg(const RegAddress addr, const uint8_t data){
+        return i2c_drv.writeReg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
     }
 public:
 

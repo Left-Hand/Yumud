@@ -55,13 +55,13 @@ void AD9910::init(void)
 
 void AD9910::writeReg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
-    spi_drv.writeSingle(addr);
-    spi_drv.writeBurst<uint8_t>(data, len);
+    spi_drv.writeSingle(addr).unwrap();
+    spi_drv.writeBurst<uint8_t>(data, len).unwrap();
     __nopn(4);
 }
 
 void AD9910::writeData(const uint8_t txdat){
-    spi_drv.writeSingle(txdat);
+    spi_drv.writeSingle(txdat).unwrap();
 }  
 
     

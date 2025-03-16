@@ -138,10 +138,20 @@ protected:
 
     // struct 
 protected:
-    void writeReg(const uint8_t address, const uint8_t data);
-    void writeBurst(const uint8_t address, const uint8_t * data, const size_t len);
-    void readReg(const uint8_t address, uint8_t & data);
-    void readBurst(const uint8_t address, uint8_t * data, const size_t len);
+    auto writeReg(const uint8_t address, const uint8_t data){
+        return _i2c_drv.writeReg(address, data);
+    }
+    auto writeBurst(const uint8_t address, const uint8_t * data, const size_t len){
+        return _i2c_drv.writeBurst(address, std::span(data, len));
+    }
+
+    auto readReg(const uint8_t address, uint8_t & data){
+        return _i2c_drv.readReg(address, data);
+    }
+
+    auto readBurst(const uint8_t address, uint8_t * data, const size_t len){
+        return _i2c_drv.readBurst(address, std::span(data, len));
+    }
 public:
     Si5351C(const hal::I2cDrv & i2c_drv):
         _i2c_drv(i2c_drv){};

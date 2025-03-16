@@ -44,20 +44,20 @@ protected:
     CtlReg ctl;
     uint16_t ledMode;
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError writeReg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.writeReg(uint8_t(addr), data);
     };
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError writeReg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg(uint8_t(addr), data);
+    BusError readReg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.readReg(uint8_t(addr), data);
     }
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError readReg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writePort(const uint16_t data) override{

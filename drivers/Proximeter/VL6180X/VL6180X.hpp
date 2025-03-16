@@ -9,8 +9,8 @@ protected:
     hal::I2cDrv i2c_drv_;
     using RegAddress = uint16_t;
 
-    void writeReg(const RegAddress command, const uint8_t data);
-    void readReg(const RegAddress command, uint8_t & data);
+    BusError writeReg(const RegAddress command, const uint8_t data);
+    BusError readReg(const RegAddress command, uint8_t & data);
 public:
     scexpr uint8_t default_i2c_addr = 0;
     VL6180X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
