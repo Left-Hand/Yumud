@@ -503,7 +503,22 @@ public:
     [[nodiscard]] Result<void, Error> wait_rst_done(const uint timeout);
     [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch){curr_channel_ = ch; return Ok();}
     [[nodiscard]] Result<void, Error> enable_use_hw_pkt(const bool en){use_hw_pkt_ = en; return Ok();}
+
+    [[nodiscard]] Result<void, Error> tick();
     
+
+    [[nodiscard]] Result<void, Error> write(const std::span<const std::byte> pdata);
+
+    [[nodiscard]] Result<void, Error> read(const std::span<std::byte> pdata);
+
+    [[nodiscard]] size_t available() const;
+
+    [[nodiscard]] size_t pending() const;
+
+    [[nodiscard]] Result<void, Error> on_interrupt();
+
+
+
 };
 
 }

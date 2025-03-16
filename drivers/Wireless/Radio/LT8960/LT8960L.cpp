@@ -1,6 +1,8 @@
 #include "LT8960L.hpp"
 #include "sys/debug/debug.hpp"
 
+#include "types/buffer/ringbuf/Fifo_t.hpp"
+
 #define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
 
@@ -19,11 +21,40 @@
 
 scexpr size_t packet_len = 64;
 scexpr size_t k_LT8960L_PACKET_SIZE = 12;
+scexpr size_t k_LT8960L_BUFFER_SIZE = 12;
 
 using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = LT8960L::Error;
+
+
+class Tx{
+    Fifo_t<std::byte, k_LT8960L_BUFFER_SIZE> fifo_;
+
+    size_t write(std::span<const std::byte> pdata){
+        fifo_.push(pdata);
+        return pdata.size();
+    }
+
+    size_t pending() const {
+        return fifo_.available();
+    }
+};
+
+
+class Rx{
+    Fifo_t<std::byte, k_LT8960L_BUFFER_SIZE> fifo_;
+
+    size_t read(std::span<std::byte> pdata){
+        fifo_.pop(pdata);
+        return pdata.size();
+    }
+
+    size_t awailable() const {
+        return fifo_.available();
+    }
+};
 
 
 template<typename Fn, typename Fn_Dur>
@@ -766,7 +797,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 }
 
 Result<void, Error> LT8960L_Phy::init(){
-    bus_inst_.init(800'000);
+    bus_inst_.init(1800'000);
     return Ok();
 }
 
@@ -798,4 +829,25 @@ Result<size_t, Error> LT8960L::read_fifo(std::span<std::byte> buf){
     return dev_drv_.read_burst(Regs::R16_Fifo::address, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
+}
+
+[[nodiscard]] Result<void, Error> LT8960L::write(const std::span<const std::byte> pdata){
+    return Ok();
+}
+
+[[nodiscard]] Result<void, Error> LT8960L::read(const std::span<std::byte> pdata){
+    return Ok();
+}
+
+[[nodiscard]] size_t LT8960L::available() const{
+    return 0;
+}
+
+[[nodiscard]] size_t LT8960L::pending() const{
+    return 0;
+}
+
+
+[[nodiscard]] Result<void, Error> on_interrupt(){
+    return Ok();
 }

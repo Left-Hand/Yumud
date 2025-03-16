@@ -53,7 +53,8 @@ void lt8960_tb(){
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)
         | ltr.enable_use_hw_pkt(true)
-        | ltr.set_datarate(LT8960L::DataRate::_62_5K)
+        // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
+        | ltr.set_datarate(LT8960L::DataRate::_250K)
         | ltr.enable_gain_weaken(true)
         ).unwrap();
     };
@@ -70,25 +71,25 @@ void lt8960_tb(){
 
     DEBUG_PRINTLN("LT8960L init done");
     
-
     auto tx_task = [&]{
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {std::byte(uint8_t(64 + 64 * sin(time() * 20))), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
-        const auto t = time() * 20;
-        const auto [s, c] = sincos(t);
+        const auto t = time();
+        const auto [s, c] = sincos(t * 20);
         auto [u, v, w] = SVM(s,c);
-        const auto payload = make_bytes_from_args(u, v, w);
+        const auto payload = make_bytes_from_args(u, v, t);
 
         tx_ltr.transmit_rf(std::span(payload)).unwrap();
         led.toggle();
     };
     
     [[maybe_unused]] auto rx_task = [&]{
-        static std::array<std::byte, 12> data;
+        static std::array<std::byte, 16> data;
         auto len = rx_ltr.receive_rf(data).unwrap();
         if(len){
             auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(data));
-            DEBUG_PRINTLN(u, v, w);
+            // DEBUG_PRINTLN(u, v, w, time() - tt);
+            DEBUG_PRINTLN(u, v, time() - w);
         }
         led.toggle();
     };

@@ -29,27 +29,16 @@ public:
         return N;
     }
 
-    __fast_inline void push(auto && data){
-        T * porg = write_ptr;
-        write_ptr = advance(write_ptr, 1);
-        new (porg) T(data);
-        // if(write_ptr == read_ptr){
-        //     read_ptr = advance(read_ptr, 1);
-        // }
-    }
-
     template <typename ... Args>
-    __fast_inline void emplace(Args&&... args){
+    void emplace(Args&&... args){
         T * porg = write_ptr;
         write_ptr = advance(write_ptr, 1);
         new (porg) T(std::forward<Args>(args)...);
-        // if (write_ptr == read_ptr) {
-        //     read_ptr = advance(read_ptr, 1);
-        // }
     }
 
-    __fast_inline void push(const T * pdata,const size_t len){
+    size_t push(std::span<const T> pdata){
         T * p_org = write_ptr;
+        const size_t len = pdata.size();
         const int over = (write_ptr + len - N - this->buf);
         if(over >= 0){
             write_ptr = this->buf + over;
@@ -61,7 +50,7 @@ public:
                 new (p_org + i) T(pdata[i]);
             }
 
-            const T * last_data = pdata + len1;
+            const T * last_data = &pdata[len1];
             for(size_t i = 0; i < len2; i++){
                 new (this->buf + i) T(last_data[i]);
             }
@@ -71,10 +60,13 @@ public:
                 new (p_org + i) T(pdata[i]);
             }
         }
+
+        return len;
     }
 
-    void pop(T * pdata, const size_t len){
+    size_t pop(std::span<T> pdata){
         T * p_org = (read_ptr);
+        const size_t len = pdata.size();
         const int over = (read_ptr + len - N - this->buf);
         if(over >= 0){
             read_ptr = this->buf + over;
@@ -82,20 +74,28 @@ public:
             const size_t len1 = N - (p_org - this->buf);
             const size_t len2 = over;
 
-            T * last_data = pdata + len1;
+            T * last_data = &pdata[len1];
 
-            for(size_t i = 0; i < len1; i++) new (pdata + i) T(p_org[i]);
+            for(size_t i = 0; i < len1; i++) new (&pdata[i]) T(p_org[i]);
             for(size_t i = 0; i < len2; i++) new (last_data + i) T(this->buf[i]);
         }else{
             read_ptr = read_ptr + len;
-            for(size_t i = 0; i < len; i++) new (pdata + i) T(p_org[i]);
+            for(size_t i = 0; i < len; i++) new (&pdata[i]) T(p_org[i]);
         }
+
+        return len;
     }
 
     __fast_inline const T && pop(){
         const T * ret_ptr = read_ptr;
         read_ptr = advance(read_ptr, 1);
         return std::move(*ret_ptr);
+    }
+
+    __fast_inline void push(const T & data){
+        T * porg = write_ptr;
+        write_ptr = advance(write_ptr, 1);
+        new (porg) T(data);
     }
 
     __fast_inline const T & front() {
