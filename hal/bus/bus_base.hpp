@@ -21,6 +21,8 @@ public:
         ZERO_LENGTH,
         VERIFY_FAILD,
 
+        LengthOverflow,
+
         UNSPECIFIED = 0xff
     };
 
@@ -49,12 +51,12 @@ public:
     //     else return err();
     // }
 
-    // // 链式处理
-    // template<typename F>
-    // auto and_then(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
-    //     if (ok()) return fn(unwrap());
-    //     else return err();
-    // }
+    // 链式处理
+    template<typename Fn>
+    BusError then(Fn && fn){
+        if (ok()) return std::forward<Fn>(fn)();
+        return *this;
+    }
 
     explicit operator ErrorType() {return type;}
 };

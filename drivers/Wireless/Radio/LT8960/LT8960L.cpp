@@ -1,12 +1,12 @@
 #include "LT8960L.hpp"
 #include "sys/debug/debug.hpp"
 
-// #define LT8960L_DEBUG_EN
+#define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
 
 #ifdef LT8960L_DEBUG_EN
 #define LT8960L_TODO(...) TODO()
-#define LT8960L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define LT8960L_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__);
 #define LT8960L_PANIC(...) PANIC{__VA_ARGS__}
 #define LT8960L_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else
@@ -18,6 +18,7 @@
 
 
 static constexpr size_t packet_len = 64;
+static constexpr size_t LT8960L_PACKET_SIZE = 12;
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -29,66 +30,26 @@ template<typename Fn, typename Fn_Dur>
 Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
     if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
     Result<void, Error> res = std::forward<Fn>(fn)();
+    if(res.is_ok()) return Ok();
+    LT8960L_DEBUG("retry", times);
     if(!times) return res;
     else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
 }
+
 
 template<typename Fn>
 Result<void, Error> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
 
+template<typename Fn>
+Result<void, Error> wait(const size_t timeout, Fn && fn){
+    return retry(timeout, std::forward<Fn>(fn), [](){delay(1);});
+}
 
 void LT8960L::delay_t3(){delayMicroseconds(1);}
 void LT8960L::delay_t5(){delayMicroseconds(1);}
 
-Result<void, Error> LT8960L::DevDriver::write_reg(const LT8960L::RegAddress address, const uint16_t reg){
-    LT8960L_DEBUG("write", reg, "at", uint8_t(address));
-    return i2c_drv_.writeReg(uint8_t(address), reg, MSB);
-}
-
-Result<void, Error> LT8960L::DevDriver::read_reg(const LT8960L::RegAddress address, uint16_t & reg){
-    LT8960L_DEBUG("read", reg, "at", uint8_t(address));
-    return i2c_drv_.readReg(uint8_t(address), reg, MSB);
-}
-
-
-Result<void, Error> LT8960L::fill_fifo(const uint16_t data, const size_t len){
-    for(size_t i = 0; i < len; i++){
-        auto res = write_reg(Regs::R16_Fifo::address, data);
-        if(res.is_err()) return res;
-    }
-
-    return Ok();
-}
-
-Result<size_t, Error> LT8960L::DevDriver::write_burst(const RegAddress address, std::span<const std::byte> buf){
-    LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
-
-    const auto u8_len = std::byte(buf.size());
-
-    const auto err = i2c_drv_.writeBlocks<const std::byte, std::byte>(
-        Regs::R16_Fifo::address, std::span(&u8_len, 1), buf, LSB);
-
-    return rescond(err.ok(), buf.size(), err);
-}
-
-Result<size_t, Error> LT8960L::DevDriver::read_burst(const RegAddress address, std::span<std::byte> buf){
-    LT8960L_ASSERT(buf.size() < 256 , "data length overload", buf.size());
-
-    
-    if(buf.size() < packet_len) return Err(Error(Error::UNSPECIFIED));
-    
-    std::byte u8_len;
-    const auto err = i2c_drv_.operateBlocks<std::byte, std::byte>(
-        Regs::R16_Fifo::address, std::span(&u8_len, 1), buf, LSB);
-
-    return rescond(err.ok(), buf.size(), err);
-}
-
-Result<void, Error> LT8960L::DevDriver::verify(){
-    return i2c_drv_.verify();
-}
 
 Result<bool, Error> LT8960L::is_rfsynth_locked(){
     auto & reg = regs_.rf_synthlock_reg;
@@ -97,35 +58,34 @@ Result<bool, Error> LT8960L::is_rfsynth_locked(){
 
 
 Result<void, Error> LT8960L::set_rf_channel(const Channel ch, const bool tx, const bool rx){
-    regs_.rf_config_reg.txEn = tx;
-    regs_.rf_config_reg.rxEn = rx;
-    regs_.rf_config_reg.rfChannelNo = ch.into_code();
+    regs_.rf_config_reg.tx_en = tx;
+    regs_.rf_config_reg.rx_en = rx;
+    regs_.rf_config_reg.rf_channel_no = ch.into_code();
     return write_regs(regs_.rf_config_reg);
 }
 
-Result<void, Error> LT8960L::set_rffreq_mhz(const uint freq){
-    
+Result<void, Error> LT8960L::set_rf_freq_mhz(const uint freq){
     return Ok();
 }
 
 Result<void, Error> LT8960L::set_radio_mode(const bool isRx){
     if(isRx){
-        regs_.rf_config_reg.txEn = false;
-        regs_.rf_config_reg.rxEn = true;
+        regs_.rf_config_reg.tx_en = false;
+        regs_.rf_config_reg.rx_en = true;
     }else{
-        regs_.rf_config_reg.rxEn = false;
-        regs_.rf_config_reg.txEn = true;
+        regs_.rf_config_reg.rx_en = false;
+        regs_.rf_config_reg.tx_en = true;
     }
     return write_regs(regs_.rf_config_reg);
 }
 
 Result<void, Error> LT8960L::set_pa_current(const uint8_t current){
-    regs_.pa_config_reg.paCurrent = current;
+    regs_.pa_config_reg.pa_current = current;
     return write_regs((regs_.pa_config_reg));
 }
 
 Result<void, Error> LT8960L::set_pa_gain(const uint8_t gain){
-    regs_.pa_config_reg.paGain = gain;
+    regs_.pa_config_reg.pa_gain = gain;
     return write_regs((regs_.pa_config_reg));
 }
 Result<void, Error> LT8960L::set_brclk_sel(const BrclkSel brclkSel){
@@ -134,17 +94,17 @@ Result<void, Error> LT8960L::set_brclk_sel(const BrclkSel brclkSel){
 }
 
 Result<void, Error> LT8960L::clear_fifo_write_ptr(){
-    regs_.fifo_ptr_reg.clearWritePtr = 1;
+    regs_.fifo_ptr_reg.clear_write_ptr = 1;
     return write_regs((regs_.fifo_ptr_reg));
 }
 
 Result<void, Error> LT8960L::clear_fifo_read_ptr(){
-    regs_.fifo_ptr_reg.clearReadPtr = 1;
+    regs_.fifo_ptr_reg.clear_read_ptr = 1;
     return write_regs((regs_.fifo_ptr_reg));
 }
 
 Result<void, Error> LT8960L::set_syncword_bits(const SyncWordBits len){
-    regs_.config1_reg.syncWordLen= len;
+    regs_.config1_reg.syncword_len= len;
     return write_regs((regs_.config1_reg));
 }
 
@@ -161,12 +121,12 @@ Result<void, Error> LT8960L::set_syncword(const uint32_t syncword){
 }
 
 Result<void, Error> LT8960L::set_retrans_time(const uint8_t times){
-    regs_.config2_reg.retransTimes = times - 1;
+    regs_.config2_reg.retrans_times = times - 1;
     return write_regs((regs_.config2_reg));
 }
 
 Result<void, Error> LT8960L::enable_autoack(const bool en){
-    regs_.config3_reg.autoAck = en;
+    regs_.config3_reg.autoack_en = en;
     return write_regs((regs_.config3_reg));
 }
 
@@ -175,11 +135,23 @@ Result<void, Error> LT8960L::reset(){
     // 第一步：延时20ms//保证初次上电,电路稳定。
 
     while(millis() < 20){delay(4);}
+
+    LT8960L_DEBUG("reset");
     return retry(3, [this](){return this -> into_wake();});
+    // return retry(3, [this]() -> Result<void, Error>{return Err(Error::PacketOverlength);});
 }
 
 Result<void, Error> LT8960L::verify(){
-    return reset() | dev_drv_.verify();
+    uint16_t buf = 0;
+
+    return reset() 
+        | read_reg(Regs::R16_ChipId::address, buf)
+        .validate(buf == Regs::R16_ChipId::key, Error::ChipIdMismatch)
+    // | dev_drv_.verify()
+    // .if_err([](auto && e){
+    //     LT8960L_DEBUG("verify failed");
+    // })
+    ;
 }
 
 Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
@@ -423,13 +395,35 @@ Result<void, Error> LT8960L::change_carrier(const Channel ch){
     ;
 }
 
-Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
+Result<void, Error> LT8960L::clear_fifo_write_and_read_ptr(){
+    auto & reg = regs_.fifo_ptr_reg;
+    reg.clear_read_ptr = 1;
+    reg.clear_write_ptr = 1;
+    return write_regs(reg);
+}
+
+Result<size_t, Error> LT8960L::transmit_rf(Channel ch, std::span<const std::byte> buf){
+    // return set_rf_channel_no_tx_rx(ch);
+
+    // auto res2 = clear_fifo_write_and_read_ptr();
     return write_fifo(buf);
+    
+    // | [&](size_t len) -> Result<size_t, Error> {
+    //     return [this] -> Result<size_t, Error> {
+    //         switch(datarate_){
+    //             case DataRate::_62_5K: return write_reg(8,0x6c50);
+    //             default: return write_reg(8,0x6c90);
+    //         }
+    //     }()
+    //     | set_rf_channel_and_into_tx(ch)
+    //     .to(len);
+    // }
+    // return res3;
 }
 
 Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
 // //1mS
-// unsigned char Status=0,len;
+// uint8_t Status=0,len;
 // if(RXBusy==0)
 // {
 //     RXBusy=1;
@@ -514,7 +508,7 @@ Result<size_t, Error> LT8960L::transmit_ble(std::span<const std::byte> buf){
 }
 
 Result<size_t, Error> LT8960L::receive_ble(std::span<std::byte> buf){
-    // unsigned char i, len;
+    // uint8_t i, len;
     // LT8960L_start();
     // LT8960L_Send_Byte(50 | 0x80);
     // LT8960L_ack(); // Register address
@@ -557,4 +551,66 @@ Result<bool, Error> LT8960L::is_pkt_ready(){
 Result<bool, Error> LT8960L::is_rst_done(){
     auto & reg = regs_.rf_synthlock_reg;
     return read_reg(reg).to<bool>(reg.i2c_soft_rstn);
+}
+
+Result<void, Error> LT8960L::wait_pkt_ready(const uint timeout){
+    return 
+    wait(timeout, 
+        [this]{return is_pkt_ready()
+        .and_then([](bool rdy) -> Result<void, Error>{
+            if (rdy) return Ok();
+            else return Err(Error::TransmitTimeout);
+        });}
+    );
+}
+
+Result<void, Error> LT8960L::wait_rst_done(const uint timeout){
+    return Ok();
+}
+
+
+
+
+
+using LT8960L_Phy = LT8960L::LT8960L_Phy;
+
+Result<void, Error> LT8960L_Phy::write_reg(
+    uint8_t address, 
+    uint16_t data
+){
+    auto guard = createGuard();
+    
+    auto res = bus_.begin(address)
+        .then([&]{return bus_.write(data >> 8);})
+        .then([&]{return bus_.write(data);})
+    ;
+
+    return Result<void, Error>(res);
+}
+
+Result<void, Error> LT8960L_Phy::read_reg(
+    uint8_t address, 
+    uint16_t & data
+){
+    auto guard = createGuard();
+    
+
+    auto res = bus_.begin(address | 0x80);
+    [&](){
+        uint32_t dummy = 0; 
+        const auto err = bus_.read(dummy, ACK); 
+        data = (dummy & 0xff)<< 8;
+        return err;
+    }();
+
+    [&](){
+        uint32_t dummy = 0; 
+        const auto err = bus_.read(dummy, NACK); 
+        data |= (dummy & 0xff);
+        return err;
+    }();
+
+
+    return Result<void, Error>(res);
+
 }

@@ -21,6 +21,7 @@ concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
+    uint8_t index_r_ = 0;
     BusError writeRepeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 
@@ -124,7 +125,7 @@ protected:
         Fn && fn
     ){
         return writeTemplate(addr, endian, [&]() -> BusError{
-            if(const auto reset_err = bus_.begin(index_ | 0x01); reset_err.ok()){
+            if(const auto reset_err = bus_.begin(index_r_); reset_err.ok()){
                 return std::forward<Fn>(fn)();
             }else{
                 return reset_err;
@@ -133,8 +134,11 @@ protected:
     }
 
 public:
-    I2cDrv(hal::I2c & _bus, const uint8_t _index):
-        ProtocolBusDrv<I2c>(_bus, _index){};
+    I2cDrv(hal::I2c & i2c, const uint8_t index):
+        I2cDrv(i2c, index, index | 0x01){;};
+
+    I2cDrv(hal::I2c & i2c, const uint8_t index, const uint8_t index_r):
+        ProtocolBusDrv<I2c>(i2c, index), index_r_(index_r){;};
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)

@@ -7,11 +7,11 @@
 
 
 template<typename T>
-class PtrLikeRef{
+class PtrlikeRef{
 public:
-    PtrLikeRef(T * pobj):obj_(*pobj) {}
-    PtrLikeRef(std::nullptr_t) = delete;
-    PtrLikeRef(PtrLikeRef &&) = default;
+    PtrlikeRef(T * pobj):obj_(*pobj) {}
+    PtrlikeRef(std::nullptr_t) = delete;
+    PtrlikeRef(PtrlikeRef &&) = default;
     T * operator ->() {return &obj_;}
     T * operator &() {return &obj_;}
     T & operator *() {return obj_;}
@@ -20,15 +20,15 @@ private:
 };
 
 template<typename T>
-class PtrLikeVase{
+class PtrlikeVase{
 
 public:
-    PtrLikeVase(const T & obj):obj_(obj) {}
-    PtrLikeVase(T && obj):obj_(std::move(obj)) {}
-    PtrLikeVase(PtrLikeRef<T> ref):obj_(*ref) {}
+    PtrlikeVase(const T & obj):obj_(obj) {}
+    PtrlikeVase(T && obj):obj_(std::move(obj)) {}
+    PtrlikeVase(PtrlikeRef<T> ref):obj_(*ref) {}
 
-    PtrLikeVase(const PtrLikeVase &) = delete;
-    PtrLikeVase(PtrLikeVase &&) = default;
+    PtrlikeVase(const PtrlikeVase &) = delete;
+    PtrlikeVase(PtrlikeVase &&) = default;
     T * operator ->() {return &obj_;}
 private:
     T obj_;
@@ -40,7 +40,7 @@ struct _LT8960L_Regs{
     using RegAddress = uint8_t;
 
     enum class PacketType:uint8_t{
-        NRZLaw = 0, 
+        NrzLaw = 0, 
         Manchester,
         Line8_10,
         Interleave
@@ -85,6 +85,11 @@ struct _LT8960L_Regs{
         Rx, Tx, CarrierWave, Sleep
     };
 
+    struct R16_ChipId:public Reg16<>{
+        static constexpr RegAddress address = 0x00;
+        static constexpr uint16_t key = 0x6fe0;
+        uint16_t chip_id;
+    }DEF_R16(chip_id_reg)
     
     struct R16_RfSynthLock:public Reg16<>{
         static constexpr RegAddress address = 0x03;
@@ -100,9 +105,9 @@ struct _LT8960L_Regs{
     struct R16_RfConfig:public Reg16<>{
         static constexpr RegAddress address = 7;
         
-        uint16_t rfChannelNo :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
-        uint16_t rxEn:1;//使芯片进入 TX状态，1 有效
-        uint16_t txEn:1;//使芯片进入 RX 状态，1 有效
+        uint16_t rf_channel_no :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
+        uint16_t rx_en:1;//使芯片进入 TX状态，1 有效
+        uint16_t tx_en:1;//使芯片进入 RX 状态，1 有效
         uint16_t __resv__ :7;
     }DEF_R16(rf_config_reg)
     
@@ -110,9 +115,9 @@ struct _LT8960L_Regs{
         static constexpr RegAddress address = 9;
 
         uint16_t __resv1__ :7;
-        uint16_t paGain:4;//PA增益控制
+        uint16_t pa_gain:4;//PA增益控制
         uint16_t __resv2__ :1;
-        uint16_t paCurrent:4;//PA电流控制
+        uint16_t pa_current:4;//PA电流控制
     }DEF_R16(pa_config_reg)
     
     struct R16_FuncConf:public Reg16<>{
@@ -142,23 +147,23 @@ struct _LT8960L_Regs{
         uint16_t __resv1__ :1;
         BrclkSel brclkSel:3;//时钟选择
         uint16_t __resv2__ :2;
-        PacketType packetType:2;//包类型
-        uint16_t trailerLen:3;//尾缀码长度
-        SyncWordBits syncWordLen :2;//同步字比特数
-        uint16_t preambleLen :3;//数据载荷长度
+        PacketType packet_type:2;//包类型
+        uint16_t trailer_len:3;//尾缀码长度
+        SyncWordBits syncword_len :2;//同步字比特数
+        uint16_t preamble_len :3;//数据载荷长度
     }DEF_R16(config1_reg)
 
 
     struct R16_Config2:public Reg16<>{
         static constexpr RegAddress address = 0x23;
 
-        uint16_t scramableData :7;//Scramble data 的种子，收发两边必须一致
+        uint16_t scramable_data :7;//Scramble data 的种子，收发两边必须一致
         uint16_t misoTri :1; //当 SPI_SS=1 时，MISO 保持三态/低阻
-        uint16_t retransTimes:4;//在 auto-ack 功能开启时，最多的重发次数。设为 3 时，为重发 2 次
-        uint16_t brclkOnSleep:1;//在 sleep mode 开启晶体振荡器耗电但能快速启动
+        uint16_t retrans_times:4;//在 auto-ack 功能开启时，最多的重发次数。设为 3 时，为重发 2 次
+        uint16_t brclk_on_sleep:1;//在 sleep mode 开启晶体振荡器耗电但能快速启动
         uint16_t __resv__ :1;
-        uint16_t sleepMode:1;//进入 sleep mode，晶体关闭，保持 LDO 工作（寄存器值将保留）当 SPI_SS 为低时，芯片将重新工作
-        uint16_t powerDown:1;//先关闭晶体振荡器，再关闭 LDO。（寄存器值将丢失）
+        uint16_t sleep_mode:1;//进入 sleep mode，晶体关闭，保持 LDO 工作（寄存器值将保留）当 SPI_SS 为低时，芯片将重新工作
+        uint16_t power_down:1;//先关闭晶体振荡器，再关闭 LDO。（寄存器值将丢失）
     }DEF_R16(config2_reg)
 
     struct R16_SyncWord0:public Reg16<>{
@@ -173,34 +178,34 @@ struct _LT8960L_Regs{
 
     struct R16_Threshold:public Reg16<>{
         static constexpr RegAddress address = 0x28;
-        uint16_t syncWordThreshold:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
-        uint16_t fifoFullThreshold:5;//认为 FIFO 为满的阈值
-        uint16_t fifoEmptyThreshold:5;//认为 FIFO 为空的阈值
+        uint16_t syncword_threshold:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
+        uint16_t fifo_full_threshold:5;//认为 FIFO 为满的阈值
+        uint16_t fifo_empty_threshold:5;//认为 FIFO 为空的阈值
     }DEF_R16(threshold_reg)
     
     struct R16_Config3:public Reg16<>{
         static constexpr RegAddress address = 0x29;
-        uint16_t crcInitalData:8;//CRC 计算初始值。
+        uint16_t crc_inital_data:8;//CRC 计算初始值。
         uint16_t __resv1__ :2;
-        uint16_t pktFifoPolarity:1; //PKT flag, FIFO flag 低有效.
-        uint16_t autoAck:1;//当接收到数据，自动回 ACK 或者 NACK
-        uint16_t fwTermTx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8960L 将关闭发射。
-        uint16_t packLengthEN:1;//1: 第一字节表示 payload 的长度 如要写 8 个 byte 有效字节，那第一个字节应写 8，总长 9
+        uint16_t pkt_fifo_polarity:1; //PKT flag, FIFO flag 低有效.
+        uint16_t autoack_en:1;//当接收到数据，自动回 ACK 或者 NACK
+        uint16_t fw_term_tx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8960L 将关闭发射。
+        uint16_t pack_length_en:1;//1: 第一字节表示 payload 的长度 如要写 8 个 byte 有效字节，那第一个字节应写 8，总长 9
         uint16_t __resv2__ :1;
-        uint16_t crcOn:1;//开启 CRC
+        uint16_t crc_on:1;//开启 CRC
     }DEF_R16(config3_reg)
 
     struct R16_RxConfig:public Reg16<>{
         static constexpr RegAddress address = 0x2A;
         uint16_t auot_rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t wakeup_tim :2;
-        uint16_t scanRssiChNo:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
+        uint16_t scan_rssi_ch_no:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
     }DEF_R16(rx_config_reg)
 
     struct R16_DataRate:public Reg16<>{
         static constexpr RegAddress address = 0x2C;
         uint16_t __resv__ :8;
-        uint16_t dataRate:8;//透传速率
+        uint16_t data_rate:8;//透传速率
     }DEF_R16(data_rate_reg)
 
     struct R16_ModemOption:public Reg16<>{
@@ -232,20 +237,19 @@ struct _LT8960L_Regs{
     }DEF_R16(fifo_reg)
 
     struct R16_FifoPtr:public Reg16<>{
-        static constexpr RegAddress address = 0x34;
+        static constexpr RegAddress address = 52;
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。
         //当 PKT 拉高后，读此寄存器，如果为 0，即收到 ack。
         //如果不为 0，而是发射总 byte 数+1，即没收到 ack。
-        uint16_t fifoReadPtr:6;
+        uint16_t fifo_read_ptr:6;
         uint16_t __resv1__:1;
 
-        uint16_t clearReadPtr:1;//清空 RX FIFO 指针为 0..但不清空 RX FIFO 中的数据
-        uint16_t fifoWritePtr:6;//FIFO 写指针
+        uint16_t clear_read_ptr:1;//清空 RX FIFO 指针为 0..但不清空 RX FIFO 中的数据
+        uint16_t fifo_write_ptr:6;//FIFO 写指针
         uint16_t __resv2__:1;
-        uint16_t clearWritePtr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
+        uint16_t clear_write_ptr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
     }DEF_R16(fifo_ptr_reg)
-
 
     struct R16_I2cOper:public Reg16<>{
         static constexpr RegAddress address = 0x38;
@@ -258,7 +262,13 @@ struct _LT8960L_Regs{
 class LT8960L{
 public:
     static constexpr uint8_t default_i2c_addr = 0x1A;
-    using Error = BusError;
+
+    enum class Error:uint8_t{
+        TransmitTimeout,
+        PacketOverlength,
+        ChipIdMismatch,
+        Unspecified = 0xff
+    };
     
 
     class Channel{
@@ -272,6 +282,39 @@ public:
     private:    
         const uint8_t ch_;
     };
+
+    class LT8960L_Phy:public hal::ProtocolBusDrv<hal::I2c> {
+    protected:
+        uint8_t index_r_ = 0;
+    public:
+        LT8960L_Phy(hal::I2c & i2c, const uint8_t index, const uint8_t index_r):
+            hal::ProtocolBusDrv<hal::I2c>(i2c, index), index_r_(index_r){;};
+    
+        [[nodiscard]] 
+        Result<void, Error> write_reg(
+            uint8_t address, 
+            uint16_t data
+        );
+    
+        [[nodiscard]] 
+        Result<void, Error> read_reg(
+            uint8_t address, 
+            uint16_t & data
+        );
+
+        [[nodiscard]] 
+        Result<size_t, Error> read_burst(uint8_t address, std::span<std::byte> pbuf);
+
+        [[nodiscard]] 
+        Result<size_t, Error> write_burst(uint8_t address, std::span<const std::byte> pbuf);
+    
+        [[nodiscard]]
+        BusError verify();
+    
+        [[nodiscard]]
+        BusError release();
+    };
+    
 protected:
 
     using Regs = _LT8960L_Regs;
@@ -289,25 +332,27 @@ protected:
     
     Regs regs_ = {};
 
-    struct DevDriver{
-    public:
-        DevDriver(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}
-        DevDriver(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){}
+    // struct DevDriver{
+    // public:
+    //     DevDriver(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}
+    //     DevDriver(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){}
 
-        [[nodiscard]] Result<size_t, Error> write_burst(const RegAddress address, std::span<const std::byte> buf);
+    //     [[nodiscard]] Result<size_t, Error> write_burst(const RegAddress address, std::span<const std::byte> buf);
 
-        [[nodiscard]] Result<size_t, Error> read_burst(const RegAddress address, std::span<std::byte> buf);
+    //     [[nodiscard]] Result<size_t, Error> read_burst(const RegAddress address, std::span<std::byte> buf);
 
-        [[nodiscard]] Result<void, Error> write_reg(const RegAddress address, const uint16_t reg);
+    //     [[nodiscard]] Result<void, Error> write_reg(const RegAddress address, const uint16_t reg);
 
-        [[nodiscard]] Result<void, Error> read_reg(const RegAddress address, uint16_t & reg);
+    //     [[nodiscard]] Result<void, Error> read_reg(const RegAddress address, uint16_t & reg);
 
-        [[nodiscard]] Result<void, Error> verify();
-    private:
-        hal::I2cDrv i2c_drv_;
-    };
+    //     [[nodiscard]] Result<void, Error> verify();
+    // private:
+    //     hal::I2cDrv i2c_drv_;
+    // };
 
-    DevDriver dev_drv_;
+    
+
+    LT8960L_Phy dev_drv_;
 
     hal::GpioIntf * p_packet_status_gpio = nullptr;
     hal::GpioIntf * p_fifo_status_gpio = nullptr;
@@ -351,6 +396,7 @@ protected:
         return dev_drv_.read_reg(reg.address, reg);
     }
 
+
     [[nodiscard]] __fast_inline
     Result<size_t, Error> write_fifo(std::span<const std::byte> buf){
         return dev_drv_.write_burst(Regs::R16_Fifo::address, buf);
@@ -376,21 +422,28 @@ protected:
     [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch, const bool tx, const bool rx);
     [[nodiscard]] Result<void, Error> set_rf_channel_and_into_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
     [[nodiscard]] Result<void, Error> set_rf_channel_and_into_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
+    [[nodiscard]] Result<void, Error> set_rf_channel_no_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
 
     [[nodiscard]] Result<bool, Error> is_pkt_ready();
+
     [[nodiscard]] Result<bool, Error> is_rst_done();
+
+    [[nodiscard]] Result<void, Error> wait_pkt_ready(const uint timeout);
+
+    [[nodiscard]] Result<void, Error> wait_rst_done(const uint timeout);
+
+    [[nodiscard]] Result<void, Error> clear_fifo_write_and_read_ptr();
+
+    [[nodiscard]] Result<void, Error> verify_chipid();
 public:
 
-
-    LT8960L(const hal::I2cDrv & i2c_drv):dev_drv_(i2c_drv){;}
-    LT8960L(hal::I2cDrv && i2c_drv):dev_drv_(std::move(i2c_drv)){;}
     LT8960L(hal::I2c * bus, const uint8_t i2c_addr = default_i2c_addr):
-        dev_drv_(hal::I2cDrv(*bus, i2c_addr)){;}
+        dev_drv_(*bus, i2c_addr, i2c_addr | 0x80){;}
 
 
     [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
 
-    [[nodiscard]] Result<void, Error> set_rffreq_mhz(const uint freq);
+    [[nodiscard]] Result<void, Error> set_rf_freq_mhz(const uint freq);
 
     [[nodiscard]] Result<void, Error> set_radio_mode(const bool isRx);
 
@@ -429,7 +482,7 @@ public:
 
     [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
 
-    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_rf(Channel ch, std::span<const std::byte> buf);
 
     [[nodiscard]] Result<size_t, Error> receive_rf(std::span<std::byte> buf);
 
@@ -450,14 +503,15 @@ namespace ymd::custom{
             using Error = drivers::LT8960L::Error;
             using BusError = BusError;
             
-            if(berr.ok()) return Ok();
-
+            if constexpr(std::is_void_v<T>)
+                if(berr.ok()) return Ok();
+            
             Error err = [](const BusError berr_){
                 switch(berr_.type){
                     // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
                     // case BusError::I2C_NOT_READY: return LT8960L::Error::I2C_NOT_READY;
-                    default: return Error::UNSPECIFIED;
+                    default: return Error::Unspecified;
                 }
             }(berr);
 
