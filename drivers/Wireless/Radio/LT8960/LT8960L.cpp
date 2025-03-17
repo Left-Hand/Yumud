@@ -1,7 +1,7 @@
 #include "LT8960L.hpp"
 #include "sys/debug/debug.hpp"
 
-#include "types/buffer/ringbuf/Fifo_t.hpp"
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
 
 // #define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN

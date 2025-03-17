@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "types/buffer/buffer.hpp"
+#include "sys/buffer/buffer.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
 
 #include <bits/ios_base.h>
