@@ -1,7 +1,9 @@
 #include "LT8960L.hpp"
 #include "sys/debug/debug.hpp"
 
-#define LT8960L_DEBUG_EN
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
+
+// #define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
 
 #ifdef LT8960L_DEBUG_EN
@@ -19,11 +21,40 @@
 
 scexpr size_t packet_len = 64;
 scexpr size_t k_LT8960L_PACKET_SIZE = 12;
+scexpr size_t k_LT8960L_BUFFER_SIZE = 12;
 
 using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = LT8960L::Error;
+
+
+class Tx{
+    Fifo_t<std::byte, k_LT8960L_BUFFER_SIZE> fifo_;
+
+    size_t write(std::span<const std::byte> pdata){
+        fifo_.push(pdata);
+        return pdata.size();
+    }
+
+    size_t pending() const {
+        return fifo_.available();
+    }
+};
+
+
+class Rx{
+    Fifo_t<std::byte, k_LT8960L_BUFFER_SIZE> fifo_;
+
+    size_t read(std::span<std::byte> pdata){
+        fifo_.pop(pdata);
+        return pdata.size();
+    }
+
+    size_t awailable() const {
+        return fifo_.available();
+    }
+};
 
 
 template<typename Fn, typename Fn_Dur>
@@ -46,10 +77,6 @@ template<typename Fn>
 Result<void, Error> wait(const size_t timeout, Fn && fn){
     return retry(timeout, std::forward<Fn>(fn), [](){delay(1);});
 }
-
-void LT8960L::delay_t3(){delayMicroseconds(1);}
-void LT8960L::delay_t5(){delayMicroseconds(1);}
-
 
 Result<bool, Error> LT8960L::is_rfsynth_locked(){
     auto & reg = regs_.rf_synthlock_reg;
@@ -103,12 +130,6 @@ Result<void, Error> LT8960L::clear_fifo_read_ptr(){
     return write_regs((regs_.fifo_ptr_reg));
 }
 
-Result<void, Error> LT8960L::set_syncword_bits(const SyncWordBits len){
-    regs_.config1_reg.syncword_len = uint16_t(len);
-    return write_regs((regs_.config1_reg));
-}
-
-
 Result<void, Error> LT8960L::set_syncword(const uint32_t syncword){
     regs_.sync_word0_reg.word[0] = uint8_t(syncword & 0xff);
     regs_.sync_word0_reg.word[1] = uint8_t(syncword >> 8);
@@ -116,8 +137,6 @@ Result<void, Error> LT8960L::set_syncword(const uint32_t syncword){
     regs_.sync_word1_reg.word[3] = uint8_t(syncword >> 24);
 
     return write_regs(regs_.sync_word0_reg, regs_.sync_word1_reg);
-    // return write_reg(regs_.sync_word0_reg);
-    // return write_reg(regs_.sync_word1_reg);
 }
 
 Result<void, Error> LT8960L::set_retrans_time(const uint8_t times){
@@ -135,7 +154,7 @@ Result<void, Error> LT8960L::reset(){
     // 第一步：延时20ms//保证初次上电,电路稳定。
 
     while(millis() < 20){delay(4);}
-    return retry(3, [this](){return this -> into_wake();});
+    return retry(3, [this](){return this -> wake();});
     // return retry(3, [this]() -> Result<void, Error>{return Err(Error::PacketOverlength);});
 }
 
@@ -145,7 +164,7 @@ Result<void, Error> LT8960L::verify(){
     return reset() 
         | read_reg(Regs::R16_ChipId::address, buf)
         .validate(buf == Regs::R16_ChipId::key, Error::ChipIdMismatch)
-    // | dev_drv_.verify()
+    // | phy_.verify()
     // .if_err([](auto && e){
     //     LT8960L_DEBUG("verify failed");
     // })
@@ -155,9 +174,13 @@ Result<void, Error> LT8960L::verify(){
 Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
-    return dev_drv_.init() 
+    return phy_.init() 
     | verify()
+
+    // 无具体寄存器说明 直接参考手册
     | write_reg(1, 0x5781)
+
+    // 无具体寄存器说明 直接参考手册
     | write_reg(26, 0x3A00)
 
     | set_tx_power(power)
@@ -166,19 +189,27 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     | write_reg(28, 0x1800)
 
     // 数据包配置3Byte前导 32bits同步字 NRZ格式
-    | write_reg(32, 0x4800)
+    // | write_reg(32, 0x4800)
+    // 数据包配置3Byte前导 32bits同步字 NRZ格式
+    | set_preamble_bytes(3)
+    | set_syncword_bytes(4)
+    | set_pack_type(PacketType::NrzLaw)
 
     // 重发3次=发1包 重发2包  最大15包
-    | write_reg(35, 0x0300) 
+    | set_retrans_time(3) 
 
     | set_syncword(syncword)
 
     // 允错1位
-    | write_reg(40, 0x4402)
+    | set_fifo_empty_threshold(8)
+    | set_fifo_full_threshold(16)
+    | set_syncword_tolerance_bits(1)
 
     // 打开CRC校验 FIFO首字节是长度信息
     | write_reg(41, 0xB000)
     | write_reg(42, 0xFDB0) 
+
+
     | set_datarate(DataRate::_62_5K)
     | clear_fifo_write_and_read_ptr()
     | enable_gain_weaken(true)
@@ -271,12 +302,7 @@ Result<void, Error> LT8960L::init_ble(const Power power){
 }
 
 
-Result<void, Error> LT8960L::into_sleep(){
-    TODO();
-    return Ok();
-}
-
-Result<void, Error> LT8960L::into_wake(){
+Result<void, Error> LT8960L::wake(){
     // 第二步：写0x38寄存器0xBFFE//唤醒射频防止射频正处在SLEEP状态。
     // 第三步：写0x38寄存器0xBFFD//执行复位操作
     regs_.i2c_oper_reg.as_ref() = 0xBFFE;
@@ -307,6 +333,7 @@ Result<void, Error> LT8960L::set_tx_power(const LT8960L::Power power){
     regs_.pa_config_reg.as_ref() = code;
     return write_regs(regs_.pa_config_reg);
 }
+
 Result<void, Error> trasmit_rf(const std::span<std::byte> buf){
     return Ok();
 }
@@ -575,16 +602,16 @@ Result<size_t, Error> LT8960L::receive_ble(std::span<std::byte> buf){
 }
 
 
-[[nodiscard]] Result<void, Error> LT8960L::start_listen_pkt(){
+Result<void, Error> LT8960L::start_listen_pkt(){
     if(use_hw_pkt_){
-        return dev_drv_.start_hw_listen_pkt();
+        return phy_.start_hw_listen_pkt();
     }
     return Ok();
 }
 
 Result<bool, Error> LT8960L::is_pkt_ready(){
     if(use_hw_pkt_){
-        return dev_drv_.check_and_skip_hw_listen_pkt();
+        return phy_.check_and_skip_hw_listen_pkt();
     }else{
         auto & reg = regs_.rf_synthlock_reg;
         return read_reg(reg).to<bool>(reg.pkt_flag_txrx);
@@ -661,7 +688,7 @@ Result<void, Error> LT8960L::set_preamble_bytes(const uint bytes){
 
     auto & reg = regs_.config1_reg;
     reg.preamble_len = bytes - 1;
-    return write_reg(0x01, reg);
+    return write_regs(reg);
 }
 
 Result<void, Error> LT8960L::set_syncword_bytes(const uint bytes){
@@ -669,7 +696,7 @@ Result<void, Error> LT8960L::set_syncword_bytes(const uint bytes){
     
     auto & reg = regs_.config1_reg;
     reg.syncword_len = (bytes / 2) - 1;
-    return write_reg(0x01, reg);
+    return write_regs(reg);
 }
 
 Result<void, Error> LT8960L::set_trailer_bits(const uint bits){
@@ -677,7 +704,7 @@ Result<void, Error> LT8960L::set_trailer_bits(const uint bits){
     
     auto & reg = regs_.config1_reg;
     reg.trailer_len = (bits - 4) >> 1;
-    return write_reg(0x01, reg);
+    return write_regs(reg);
 }
 
 Result<void, Error> LT8960L_Phy::_write_reg(
@@ -723,7 +750,7 @@ Result<void, Error> LT8960L_Phy::_read_reg(
 
 }
 
-[[nodiscard]] 
+
 Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
 
 
@@ -766,7 +793,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 }
 
 Result<void, Error> LT8960L_Phy::init(){
-    bus_inst_.init(800'000);
+    bus_inst_.init(400'000);
     return Ok();
 }
 
@@ -795,7 +822,60 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
 }
 
 Result<size_t, Error> LT8960L::read_fifo(std::span<std::byte> buf){
-    return dev_drv_.read_burst(Regs::R16_Fifo::address, buf)
+    return phy_.read_burst(Regs::R16_Fifo::address, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
+}
+
+Result<void, Error> LT8960L::set_pack_type(const PacketType ptype){
+    auto & reg = regs_.config1_reg;
+    reg.packet_type = uint8_t(ptype);
+    return write_regs(reg);
+}
+
+Result<void, Error> LT8960L::set_fifo_full_threshold(const uint thd){
+    auto & reg = regs_.threshold_reg;
+    reg.fifo_full_threshold = thd;
+    return write_regs(reg);
+}
+
+
+Result<void, Error> LT8960L::set_fifo_empty_threshold(const uint thd){
+    auto & reg = regs_.threshold_reg;
+    reg.fifo_empty_threshold = thd;
+    return write_regs(reg);
+}
+
+
+Result<void, Error> LT8960L::set_syncword_tolerance_bits(const uint bits){
+    // 认为SYNCWORD为正确的阈值
+    // 07H表示可以错6bits，01H表示0bit可以错0bits
+    auto & reg = regs_.threshold_reg;
+    reg.syncword_threshold = bits == 0 ? 0 : bits + 1;
+    return write_regs(reg);
+}
+
+Result<void, Error> LT8960L::write(const std::span<const std::byte> pdata){
+    return Ok();
+}
+
+Result<void, Error> LT8960L::read(const std::span<std::byte> pdata){
+    return Ok();
+}
+
+size_t LT8960L::available() const{
+    return 0;
+}
+
+size_t LT8960L::pending() const{
+    return 0;
+}
+
+
+Result<void, Error> LT8960L::on_interrupt(){
+    return Ok();
+}
+
+Result<void, Error> LT8960L::tick(){
+    return Ok();
 }

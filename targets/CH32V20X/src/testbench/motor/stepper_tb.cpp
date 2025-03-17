@@ -98,7 +98,7 @@ real_t demo2(const real_t x){
 uint8_t get_default_id(){
 
     auto node_id = [](){
-        auto chip_id = sys::Chip::getChipIdCrc();
+        auto chip_id = sys::chip::get_chip_id_crc();
         // DEBUG_PRINTLN("myididididdid", chip_id)
         switch(chip_id){
             case 3273134334:

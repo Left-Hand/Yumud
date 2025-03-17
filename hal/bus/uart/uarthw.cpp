@@ -202,7 +202,7 @@ void UartHw::onIdleInterrupt(){
         size_t index = UART_RX_DMA_BUF_SIZE - rx_dma.pending();
         if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
             // for(size_t i = rx_dma_buf_index; i < index; i++) this->rx_fifo.push(rx_dma_buf[i]); 
-            this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (index - rx_dma_buf_index)); 
+            this->rx_fifo.push(std::span(&rx_dma_buf[rx_dma_buf_index], (index - rx_dma_buf_index))); 
         }
         rx_dma_buf_index = index;
         callPostRxCallback();
@@ -376,13 +376,13 @@ void UartHw::onRxDmaDone(){
     //将数据从当前索引填充至末尾
     rx_dma.start();
     // for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rx_fifo.push(rx_dma_buf[i]); 
-    this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], UART_RX_DMA_BUF_SIZE - rx_dma_buf_index); 
+    this->rx_fifo.push(std::span(&rx_dma_buf[rx_dma_buf_index], UART_RX_DMA_BUF_SIZE - rx_dma_buf_index)); 
     rx_dma_buf_index = 0;
 }
 
 void UartHw::onRxDmaHalf(){
     //将数据从当前索引填充至半满
-    this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index); 
+    this->rx_fifo.push(std::span(&rx_dma_buf[rx_dma_buf_index], (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index)); 
     rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
 }
 
@@ -411,7 +411,7 @@ void UartHw::invokeTxDma(){
     if(tx_dma.pending() == 0){
         if(tx_fifo.available()){
             const size_t tx_amount = tx_fifo.available();
-            tx_fifo.pop(tx_dma_buf.begin(), tx_amount);
+            tx_fifo.pop(std::span(tx_dma_buf.begin(), tx_amount));
             tx_dma.start((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf.begin(), tx_amount);
         }else{
             callPostTxCallback();
@@ -523,7 +523,7 @@ void UartHw::writeN(const char * pdata, const size_t len){
         case CommMethod::Blocking:
             instance->DATAR;
 
-            tx_fifo.push(pdata, len);
+            tx_fifo.push(std::span(pdata, len));
             while(tx_fifo.available()){
                 instance->DATAR = tx_fifo.pop();
                 while((instance->STATR & USART_FLAG_TXE) == RESET);
@@ -532,12 +532,12 @@ void UartHw::writeN(const char * pdata, const size_t len){
             
             break;
         case CommMethod::Interrupt:
-            tx_fifo.push(pdata, len);
+            tx_fifo.push(std::span(pdata, len));
             invokeTxIt();
 
             break;
         case CommMethod::Dma:
-            tx_fifo.push(pdata, len);
+            tx_fifo.push(std::span(pdata, len));
             invokeTxDma();
             break;
         default:

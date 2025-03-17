@@ -8,7 +8,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "drivers/IMU/Gyroscope/AK8963/AK8963.hpp"
+#include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 
 #include "robots/gesture/ImuFusion.hpp"
 #include "robots/gesture/mahony.hpp"

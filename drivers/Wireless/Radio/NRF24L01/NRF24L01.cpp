@@ -26,15 +26,15 @@ using namespace ymd::drivers;
 
 using Error = NRF24L01::Error;
 
-Result<void, Error> NRF24L01::writeCommand(const NRF24L01::Command cmd){
+Result<void, Error> NRF24L01::write_command(const NRF24L01::Command cmd){
     return p_spi_drv_->writeSingle(uint8_t(cmd));
 }
 
-Result<void, Error> NRF24L01::writeReg(const uint8_t addr, const uint8_t data){
+Result<void, Error> NRF24L01::write_reg(const uint8_t addr, const uint8_t data){
     return Ok();
 }
 
-Result<void, Error> NRF24L01::readReg(const uint8_t addr, uint8_t & data){
+Result<void, Error> NRF24L01::read_reg(const uint8_t addr, uint8_t & data){
     return Ok();
 }
 

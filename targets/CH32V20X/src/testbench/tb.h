@@ -95,7 +95,7 @@ void math_tb(hal::UartHw & logger);
 
 void zdt_main(hal::UartHw & logger);
 
-void coro_tb();
+void coro_main();
 void pmw3901_main();
 
 void can_ring_main();

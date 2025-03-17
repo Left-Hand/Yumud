@@ -1,4 +1,4 @@
-//这个驱动还在推进状态
+//这个驱动已经在初级试用阶段
 
 #pragma once
 
@@ -308,7 +308,7 @@ public:
     protected:
         hal::I2cSw bus_inst_;
     public:
-        LT8960L_Phy(hal::GpioIntf * scl, hal::GpioIntf * sda):
+        LT8960L_Phy(hal::Gpio * scl, hal::Gpio * sda):
             hal::ProtocolBusDrv<hal::I2c>(bus_inst_, default_i2c_addr), bus_inst_(hal::I2cSw(*scl, *sda)){};
     
         [[nodiscard]] Result<void, Error> init();
@@ -345,7 +345,7 @@ protected:
 
     Regs regs_ = {};
 
-    LT8960L_Phy dev_drv_;
+    LT8960L_Phy phy_;
 
     hal::GpioIntf * p_packet_status_gpio = nullptr;
     hal::GpioIntf * p_fifo_status_gpio = nullptr;
@@ -360,45 +360,40 @@ protected:
 
     Channel curr_channel_ = Channel(0);
 
-
-    __no_inline void delay_t3();
-    __no_inline void delay_t5();
-
-
     [[nodiscard]] __fast_inline
     Result<void, Error> write_reg(const RegAddress address, const uint16_t reg){
-        return dev_drv_.write_reg(address, reg);
+        return phy_.write_reg(address, reg);
     }
 
 
     [[nodiscard]] __fast_inline
     Result<void, Error> read_reg(const RegAddress address, uint16_t & reg){
-        return dev_drv_.read_reg(address, reg);
+        return phy_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     Result<void, Error> write_regs(Ts const & ... reg) {
-        return (dev_drv_.write_reg(reg.address, reg.as_val()) | ...);
+        return (phy_.write_reg(reg.address, reg.as_val()) | ...);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     Result<void, Error> read_regs(Ts & ... reg) {
-        return (dev_drv_.read_reg(reg.address, reg.as_ref()) | ...);
+        return (phy_.read_reg(reg.address, reg.as_ref()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
     Result<void, Error> read_reg(T & reg){
-        return dev_drv_.read_reg(reg.address, reg);
+        return phy_.read_reg(reg.address, reg);
     }
 
 
     [[nodiscard]] __fast_inline
     Result<size_t, Error> write_fifo(std::span<const std::byte> buf){
-        return dev_drv_.write_burst(Regs::R16_Fifo::address, buf);
+        return phy_.write_burst(Regs::R16_Fifo::address, buf);
     }
 
     [[nodiscard]]Result<size_t, Error> read_fifo(std::span<std::byte> buf);
@@ -445,15 +440,23 @@ protected:
     [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
     
     [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
+
+    [[nodiscard]] Result<void, Error> set_pack_type(const PacketType ptype);
+
+    [[nodiscard]] Result<void, Error> set_fifo_full_threshold(const uint thd);
+
+    [[nodiscard]] Result<void, Error> set_fifo_empty_threshold(const uint thd);
+
+    [[nodiscard]] Result<void, Error> set_syncword_tolerance_bits(const uint bits);
+
+    
 public:
 
-    LT8960L(hal::GpioIntf * scl, hal::GpioIntf * sda):
-        dev_drv_(scl, sda){;}
+    LT8960L(hal::Gpio * scl, hal::Gpio * sda):
+        phy_(scl, sda){;}
 
 
     [[nodiscard]] Result<void, Error> set_rf_freq_mhz(const uint freq);
-
-    [[nodiscard]] Result<void, Error> set_syncword_bits(const SyncWordBits len);
 
     [[nodiscard]] Result<void, Error> set_syncword(const uint32_t syncword);
 
@@ -467,9 +470,8 @@ public:
     
     [[nodiscard]] Result<void, Error> init_ble(const Power power);
 
-    [[nodiscard]] Result<void, Error> into_sleep();
 
-    [[nodiscard]] Result<void, Error> into_wake();
+    [[nodiscard]] Result<void, Error> wake();
 
     [[nodiscard]] Result<void, Error> reset();
     [[nodiscard]] Result<void, Error> wakup(){return reset();}
@@ -503,7 +505,19 @@ public:
     [[nodiscard]] Result<void, Error> wait_rst_done(const uint timeout);
     [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch){curr_channel_ = ch; return Ok();}
     [[nodiscard]] Result<void, Error> enable_use_hw_pkt(const bool en){use_hw_pkt_ = en; return Ok();}
+
+    [[nodiscard]] Result<void, Error> tick();
     
+
+    [[nodiscard]] Result<void, Error> write(const std::span<const std::byte> pdata);
+
+    [[nodiscard]] Result<void, Error> read(const std::span<std::byte> pdata);
+
+    [[nodiscard]] size_t available() const;
+
+    [[nodiscard]] size_t pending() const;
+
+    [[nodiscard]] Result<void, Error> on_interrupt();
 };
 
 }

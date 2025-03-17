@@ -110,31 +110,30 @@ Gpio & SpiHw::getHwCsGpio(){
 
 uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
 
-	uint32_t busFreq = 0;
+	uint32_t busFreq = [](const uint32_t base){
+        switch(base) {
+            #ifdef ENABLE_SPI1
+            case SPI1_BASE:
+                return sys::clock::get_apb1_freq();
+                break;
+            #endif
 
-    switch((uint32_t)instance){
-        #ifdef ENABLE_SPI1
-        case SPI1_BASE:
-            busFreq = sys::Clock::getAPB1Freq();
-            break;
-        #endif
+            #ifdef ENABLE_SPI2
+            case SPI2_BASE:
+                return sys::clock::get_apb2_freq();
+                break;
+            #endif
 
-        #ifdef ENABLE_SPI2
-        case SPI2_BASE:
-            busFreq = sys::Clock::getAPB2Freq();
-            break;
-        #endif
-
-        #ifdef ENABLE_SPI3
-        case SPI3_BASE:
-            busFreq = Sys::Clock::getAPB2Freq();
-            break;
-        #endif
-    
-        default:
-            return SPI_BaudRatePrescaler_256;
-    }
-
+            #ifdef ENABLE_SPI3
+            case SPI3_BASE:
+                return Sys::clock::get_apb2_freq();
+                break;
+            #endif
+        
+            default:
+                __builtin_unreachable();
+        }
+    }(uint32_t(instance));
 	uint32_t real_div = 2;
     uint8_t i = 0;
 

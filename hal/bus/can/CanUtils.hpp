@@ -2,7 +2,7 @@
 
 #include "sys/core/platform.h"
 #include "hal/gpio/port.hpp"
-#include "types/buffer/ringbuf/Fifo_t.hpp"
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
 
 #include <memory>
 #include <functional>

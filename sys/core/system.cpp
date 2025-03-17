@@ -42,11 +42,11 @@
 
 using namespace ymd;
 
-void sys::Clock::delayMs(const uint32_t ms){
+void sys::clock::delay_ms(const uint32_t ms){
     delay(ms);
 }
 
-void sys::Clock::delayUs(const uint32_t us){
+void sys::clock::delay_us(const uint32_t us){
     delayMicroseconds(us);
 }
 
@@ -119,7 +119,7 @@ void sys::reset(){
     NVIC_SystemReset();
 }
 
-uint64_t sys::Chip::getChipId(){
+uint64_t sys::chip::get_chip_id(){
     static uint32_t chip_id[2] = {
         *(volatile uint32_t *)0x1FFFF7E8,
         *(volatile uint32_t *)0x1FFFF7EC
@@ -127,26 +127,26 @@ uint64_t sys::Chip::getChipId(){
     return ((uint64_t)chip_id[1] << 32) | chip_id[0];
 }
 
-uint32_t sys::Chip::getFlashSize(){
+uint32_t sys::chip::get_flash_size(){
     static uint32_t chip_flash_size = operator"" _KB(*(volatile uint16_t *)0x1FFFF7E0);
     return chip_flash_size;
 }
 
-uint32_t sys::Chip::getChipIdCrc(){
+uint32_t sys::chip::get_chip_id_crc(){
 
     using ymd::hal::crc;
     
     static const uint32_t chip_id_crc = [&](){
         crc.init();
         crc.clear();
-        uint64_t chip_id = getChipId();
+        uint64_t chip_id = get_chip_id();
         return crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
     }();
     
     return chip_id_crc;
 }
 
-uint64_t sys::Chip::getMacAddress(){
+uint64_t sys::chip::get_mac_address(){
     uint64_t ret = 0;
     #ifdef CHIP_HAS_RF
     FLASH_GetMACAddress(reinterpret_cast<uint8_t *>(&ret));
@@ -173,21 +173,21 @@ uint64_t sys::Chip::getMacAddress(){
 
 
 
-uint32_t sys::Clock::getSystemFreq(){
+uint32_t sys::clock::get_system_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_SYSCLK(RCC_CLK);
 }
 
 
-uint32_t sys::Clock::getAPB1Freq(){
+uint32_t sys::clock::get_apb1_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK1(RCC_CLK);
 }
 
 
-void sys::Clock::setAHBDiv(const uint8_t _div){
+void sys::clock::set_ahb_div(const uint8_t _div){
 
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
@@ -203,7 +203,7 @@ void sys::Clock::setAHBDiv(const uint8_t _div){
 
 }
 
-void sys::Clock::setAPB1Div(const uint8_t _div){
+void sys::clock::set_apb1_div(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
@@ -224,7 +224,7 @@ void sys::Clock::setAPB1Div(const uint8_t _div){
     }
 }
 
-void sys::Clock::setAPB2Div(const uint8_t _div){
+void sys::clock::set_apb2_div(const uint8_t _div){
 
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
@@ -246,33 +246,40 @@ void sys::Clock::setAPB2Div(const uint8_t _div){
     }
 }
 
+uint32_t sys::chip::get_dev_id(){
+    return DBGMCU_GetDEVID();
+}
 
-uint32_t sys::Clock::getAPB2Freq(){
+uint32_t sys::chip::get_rev_id(){
+    return DBGMCU_GetREVID();
+}
+
+uint32_t sys::clock::get_apb2_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK2(RCC_CLK);
 }
 
-uint32_t sys::Clock::getAHBFreq(){
+uint32_t sys::clock::get_ahb_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_HCLK(RCC_CLK);
 }
 
-void sys::Clock::setAHBFreq(const uint32_t freq){
-    setAHBDiv(getAHBFreq() / freq);
+void sys::clock::set_ahb_freq(const uint32_t freq){
+    set_ahb_div(get_ahb_freq() / freq);
 }
 
-void sys::Clock::setAPB1Freq(const uint32_t freq){
-    setAPB1Div(getAPB1Freq() / freq);
+void sys::clock::set_apb1_freq(const uint32_t freq){
+    set_apb1_div(get_apb1_freq() / freq);
 }
 
-void sys::Clock::setAPB2Freq(const uint32_t freq){
-    setAPB2Div(getAPB2Freq() / freq);
+void sys::clock::set_apb2_freq(const uint32_t freq){
+    set_apb2_div(get_apb2_freq() / freq);
 }
 
 
-bool sys::Exception::isInterruptPending(){
+bool sys::exception::is_interrupt_pending(){
     #ifdef ARCH_QKV4
     return QingKeV4::isInterruptPending();
     #else
@@ -280,7 +287,7 @@ bool sys::Exception::isInterruptPending(){
     #endif
 }
 
-bool sys::Exception::isIntrruptActing(){
+bool sys::exception::is_intrrupt_acting(){
     #ifdef ARCH_QKV4
     return QingKeV4::isIntrruptActing();
     #else
@@ -288,7 +295,7 @@ bool sys::Exception::isIntrruptActing(){
     #endif
 }
 
-uint8_t sys::Exception::getInterruptDepth(){
+uint8_t sys::exception::get_interrupt_depth(){
     #ifdef ARCH_QKV4
     return QingKeV4::getInterruptDepth();
     #else
@@ -296,11 +303,11 @@ uint8_t sys::Exception::getInterruptDepth(){
     #endif
 }
 
-void sys::Exception::disableInterrupt(){
+void sys::exception::disable_interrupt(){
     __disable_irq();
 }
 
-void sys::Exception::enableInterrupt(){
+void sys::exception::enable_interrupt(){
     __enable_irq();
 }
 

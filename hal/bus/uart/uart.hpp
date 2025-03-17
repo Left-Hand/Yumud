@@ -8,7 +8,7 @@
 #include "hal/bus/bus.hpp"
 #include "hal/gpio/port.hpp"
 
-#include "types/buffer/ringbuf/Fifo_t.hpp"
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
 
 
 namespace ymd::hal{

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/buffer/ringbuf/Fifo_t.hpp"
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
 #include <vector>
 #include <functional>
 

@@ -169,7 +169,7 @@ void BasicTimer::remap(const uint8_t rm){
 }
 
 uint BasicTimer::getClk(){
-    return internal::isAdvancedTimer(instance) ? sys::Clock::getAPB2Freq() : sys::Clock::getAPB1Freq();
+    return internal::isAdvancedTimer(instance) ? sys::clock::get_apb2_freq() : sys::clock::get_apb1_freq();
 }
 
 
