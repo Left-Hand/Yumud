@@ -1,4 +1,4 @@
-//这个驱动还在推进状态
+//这个驱动已经在初级试用阶段
 
 #pragma once
 
@@ -308,7 +308,7 @@ public:
     protected:
         hal::I2cSw bus_inst_;
     public:
-        LT8960L_Phy(hal::GpioIntf * scl, hal::GpioIntf * sda):
+        LT8960L_Phy(hal::Gpio * scl, hal::Gpio * sda):
             hal::ProtocolBusDrv<hal::I2c>(bus_inst_, default_i2c_addr), bus_inst_(hal::I2cSw(*scl, *sda)){};
     
         [[nodiscard]] Result<void, Error> init();
@@ -447,7 +447,7 @@ protected:
     [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
 public:
 
-    LT8960L(hal::GpioIntf * scl, hal::GpioIntf * sda):
+    LT8960L(hal::Gpio * scl, hal::Gpio * sda):
         dev_drv_(scl, sda){;}
 
 
@@ -516,9 +516,6 @@ public:
     [[nodiscard]] size_t pending() const;
 
     [[nodiscard]] Result<void, Error> on_interrupt();
-
-
-
 };
 
 }

@@ -164,16 +164,16 @@ protected:
         uint8_t cmd_;
     };
 
-    [[nodiscard]] Result<void, BusError> writeCommand(const Command cmd);
-    [[nodiscard]] Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, BusError> write_command(const Command cmd);
+    [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return writeReg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return readReg(reg.address, reg);}
 
     
 

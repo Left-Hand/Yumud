@@ -3,7 +3,7 @@
 
 #include "types/buffer/ringbuf/Fifo_t.hpp"
 
-#define LT8960L_DEBUG_EN
+// #define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
 
 #ifdef LT8960L_DEBUG_EN
@@ -797,7 +797,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 }
 
 Result<void, Error> LT8960L_Phy::init(){
-    bus_inst_.init(1800'000);
+    bus_inst_.init(400'000);
     return Ok();
 }
 
@@ -848,6 +848,10 @@ Result<size_t, Error> LT8960L::read_fifo(std::span<std::byte> buf){
 }
 
 
-[[nodiscard]] Result<void, Error> on_interrupt(){
+[[nodiscard]] Result<void, Error> LT8960L::on_interrupt(){
+    return Ok();
+}
+
+[[nodiscard]] Result<void, Error> LT8960L::tick(){
     return Ok();
 }
