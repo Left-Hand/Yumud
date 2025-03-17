@@ -38,7 +38,7 @@ auto func = [](const iq_t<30> a, iq_t<30> b){
 };
 
 auto runtime_true(){
-    return sys::Chip::getChipIdCrc();
+    return sys::chip::get_chip_id_crc();
 }
 
 

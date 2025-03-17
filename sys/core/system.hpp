@@ -1,8 +1,9 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "chipname.hpp"
 
-namespace sys{
+namespace ymd::sys{
     void preinit();
     void reset();
 
@@ -10,39 +11,39 @@ namespace sys{
     void halt();
     void jumpto(const uint32_t addr);
 
-    namespace Chip{
-        uint64_t getChipId();
-        uint32_t getChipIdCrc();
-        uint32_t getFlashSize();
-        uint64_t getMacAddress();
+    namespace chip{
+        uint64_t get_chip_id();
+        uint32_t get_chip_id_crc();
+        uint32_t get_flash_size();
+        uint64_t get_mac_address();
+
+        uint32_t get_dev_id();
+        uint32_t get_rev_id();
     };
 
-    namespace Exception{
-        void disableInterrupt();
-        void enableInterrupt();
-        bool isInterruptPending();
-        bool isIntrruptActing();
-        uint8_t getInterruptDepth();
+    namespace exception{
+        void disable_interrupt();
+        void enable_interrupt();
+        bool is_interrupt_pending();
+        bool is_intrrupt_acting();
+        uint8_t get_interrupt_depth();
     }
 
-    namespace Clock{
-        void delayMs(const uint32_t ms);
-        void delayUs(const uint32_t us);
+    namespace clock{
+        void delay_ms(const uint32_t ms);
+        void delay_us(const uint32_t us);
 
-        uint32_t getSystemFreq();
-        uint32_t getAPB1Freq();
-        void setAPB1Freq(const uint32_t ferq);
-        uint32_t getAPB2Freq();
-        void setAPB2Freq(const uint32_t ferq);
-        uint32_t getAHBFreq();
-        void setAHBFreq(const uint32_t ferq);
+        uint32_t get_system_freq();
+        uint32_t get_apb1_freq();
+        void set_apb1_freq(const uint32_t ferq);
+        uint32_t get_apb2_freq();
+        void set_apb2_freq(const uint32_t ferq);
+        uint32_t get_ahb_freq();
+        void set_ahb_freq(const uint32_t ferq);
 
-        void setAPB1Div(const uint8_t div);
-        void setAPB2Div(const uint8_t div);
-        void setAHBDiv(const uint8_t div);
-
-        // void reCalculateTime();
-        // void reCalculateTimeMs();
+        void set_apb1_div(const uint8_t div);
+        void set_apb2_div(const uint8_t div);
+        void set_ahb_div(const uint8_t div);;
     };
 };
 

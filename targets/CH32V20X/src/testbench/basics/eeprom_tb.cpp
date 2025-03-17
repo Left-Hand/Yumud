@@ -64,7 +64,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     #ifdef MEMORY_TB_SEVERLBYTES
     {
-        auto before = sys::Chip::getChipIdCrc();
+        auto before = sys::chip::get_chip_id_crc();
         mem.store(0,before);
 
         decltype(before) after;

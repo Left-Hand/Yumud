@@ -32,15 +32,15 @@ OutputStream & ymd::operator << (OutputStream & os, const BusError::Kind & err){
 }
 
 void BusBase::Locker::lock(const uint8_t index){
-    sys::Exception::disableInterrupt();
-    oninterrupt_ = sys::Exception::isIntrruptActing();
+    sys::exception::disable_interrupt();
+    oninterrupt_ = sys::exception::is_intrrupt_acting();
     req = index >> 1;
     locked_ = true;
-    sys::Exception::enableInterrupt();
+    sys::exception::enable_interrupt();
 }
 
 bool BusBase::Locker::owned_by(const uint8_t index) const {
-    return (req == index >> 1) and (sys::Exception::isIntrruptActing() == oninterrupt_);
+    return (req == index >> 1) and (sys::exception::is_intrrupt_acting() == oninterrupt_);
 }
 
 

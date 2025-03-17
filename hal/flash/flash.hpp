@@ -50,7 +50,7 @@ public:
     ~Flash(){}
 
     static size_t getMaxPages(){
-        return sys::Chip::getFlashSize() / page_size;
+        return sys::chip::get_flash_size() / page_size;
     }
     void init() override{
 

@@ -29,7 +29,7 @@ static constexpr uint32_t master_id = 65536;
 
 uint32_t get_id(){
     // const auto id = uint32_t(sys::Chip::getChipId());
-    const auto size = sys::Chip::getFlashSize();
+    const auto size = sys::chip::get_flash_size();
     return size;
 }
 
@@ -116,6 +116,7 @@ void lt8960_main(){
     DEBUGGER.noBrackets();
 
     delay(200);
-
+    DEBUG_PRINTT( std::hex, sys::chip::get_dev_id(), sys::chip::get_rev_id());
+    while(true);
     lt8960_tb();
 }
