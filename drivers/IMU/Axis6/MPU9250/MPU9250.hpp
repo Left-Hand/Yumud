@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "drivers/IMU/Gyroscope/AK8963/AK8963.hpp"
+#include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 
 namespace ymd::drivers{
 
