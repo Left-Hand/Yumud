@@ -115,8 +115,5 @@ void lt8960_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.noBrackets();
 
-    delay(200);
-    DEBUG_PRINTT( std::hex, sys::chip::get_dev_id(), sys::chip::get_rev_id());
-    while(true);
     lt8960_tb();
 }
