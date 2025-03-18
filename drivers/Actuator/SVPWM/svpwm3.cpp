@@ -4,7 +4,7 @@ namespace ymd::drivers{
 
 std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
 
-    enum Sector:uint8_t{
+    enum class Sector:uint8_t{
         _1 = 0b010,
         _2 = 0b000,
         _3 = 0b100,
@@ -13,24 +13,18 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         _6 = 0b011
     };
 
-    scexpr real_t one_by_sqrt3 = real_t(1.0 / 1.7320508075688772);
-    scexpr real_t half = real_t(0.5);
+    static constexpr real_t one_by_sqrt3 = 1 / sqrt(3_r);
+    static constexpr real_t half_one = real_t(0.5);
 
     const auto beta_by_sqrt3 = beta * one_by_sqrt3;
 
-    const auto p1 = std::signbit(beta);
-    const auto p2 = std::signbit(beta_by_sqrt3 - alpha);
-    const auto p3 = std::signbit(beta_by_sqrt3 + alpha);
-
-    // const auto a = beta_by_sqrt3 + alpha;
-    Sector sector = Sector(
-        p1 | (p2 << 1) | (p3 << 2)
-    );
+    Sector sector {uint8_t(
+        (std::signbit(beta_by_sqrt3 + alpha) << 2)
+        | (std::signbit(beta_by_sqrt3 - alpha) << 1)
+        | (std::signbit(beta))
+    )};
 
     switch(sector){
-        default:
-            //will not reach here
-            // return {0,0,0};
         case Sector::_1:
         case Sector::_4:
         {
@@ -47,9 +41,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         case Sector::_2:
         case Sector::_5:
         {
-            const real_t u = half + alpha;
-            const real_t v = half + beta_by_sqrt3;
-            const real_t w = half - beta_by_sqrt3;
+            const real_t u = half_one + alpha;
+            const real_t v = half_one + beta_by_sqrt3;
+            const real_t w = half_one - beta_by_sqrt3;
 
             return {u, v, w};
         }
@@ -66,6 +60,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
 
             return {u, v, w};
         }
+
+        default:
+            __builtin_unreachable();
     }
 }
 

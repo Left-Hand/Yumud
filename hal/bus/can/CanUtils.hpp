@@ -2,7 +2,7 @@
 
 #include "sys/core/platform.h"
 #include "hal/gpio/port.hpp"
-#include "sys/buffer/ringbuf/Fifo_t.hpp"
+
 
 #include <memory>
 #include <functional>
@@ -33,20 +33,20 @@ namespace ymd::hal::CanUtils{
         SOFTWARE_SET_ERR = CAN_ErrorCode_SoftwareSetErr
     };
 
-    enum class RemoteType:uint8_t{
+    enum class RemoteSpec:uint8_t{
         Data = 0,
         Any = 0,
         Remote = 1,
         Specified = 1
     };  
 
-    using CanMode = CanUtils::Mode;
-    using CanErrCode = CanUtils::ErrCode;
-    using CanRemoteType = CanUtils::RemoteType;
 };
 
+namespace ymd::hal{
+    using CanBaudrate = hal::CanUtils::BaudRate;
+    using CanMode = hal::CanUtils::Mode;
+    using CanErrCode = hal::CanUtils::ErrCode;
+    using CanRemote = hal::CanUtils::RemoteSpec;
+}
 
 
-#ifndef CAN_SOFTFIFO_SIZE
-#define CAN_SOFTFIFO_SIZE 8
-#endif

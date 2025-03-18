@@ -5,7 +5,7 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using RemoteType = CanUtils::RemoteType; 
+using RemoteType = CanRemote; 
 
 struct bits_queue{
 protected:

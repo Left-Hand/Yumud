@@ -700,7 +700,7 @@ Result<void, Error> LT8960L::set_syncword_bytes(const uint bytes){
 }
 
 Result<void, Error> LT8960L::set_trailer_bits(const uint bits){
-    LT8960L_ASSERT(bits <= 18, "preamble bytes must be less than 0x0f");
+    LT8960L_ASSERT(bits <= 0X0f, "preamble bytes must be less than 0x0f");
     
     auto & reg = regs_.config1_reg;
     reg.trailer_len = (bits - 4) >> 1;

@@ -16,7 +16,7 @@ namespace ymd::hal{
 class Can;
 
 struct CanID16{
-    using RemoteType = CanUtils::RemoteType;
+    using RemoteType = CanRemote;
 
     #pragma pack(push, 1)
     const uint16_t __resv1__:3 = 0;
@@ -61,7 +61,7 @@ struct CanID16{
 };
 
 struct CanID32{
-    using RemoteType = CanUtils::RemoteType;
+    using RemoteType = CanRemote;
 
 
     #pragma pack(push, 1)
@@ -112,7 +112,7 @@ class CanFilter{
 protected:
     using ID16 = CanID16;
     using ID32 = CanID32;
-    using RemoteType = CanUtils::RemoteType;
+    using RemoteType = CanRemote;
 
     CAN_TypeDef * can;
     

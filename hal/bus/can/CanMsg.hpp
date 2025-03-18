@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "CanUtils.hpp"
 
 #include <span>
 #include <memory.h>
@@ -91,10 +91,10 @@ public:
         return *this;
     }
 
-    constexpr CanMsg(const uint32_t id, const bool remote = true){
+    constexpr CanMsg(const uint32_t id, const CanRemote remote = CanRemote::Remote){
         id_ = id;
         is_ext_ = (id > 0x7FF ? true : false);
-        is_remote_ = remote ? true : false;
+        is_remote_ = (remote == CanRemote::Remote)? true : false;
         dlc_ = 0;
     }
 
@@ -112,7 +112,7 @@ public:
 
     template <typename... Args>
     requires CanUtils::valid_args<Args...>
-    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id) {
+    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id, CanRemote::Data){
         // std::apply(
         //     [&](auto&&... args) {
         //         ((*this << args), ...);
@@ -127,7 +127,7 @@ public:
         is_remote_ = false;
     }
 
-    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id) {
+    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id, CanRemote::Data) {
         resize(MIN(pdata.size(), 8));
         for(uint8_t i = 0; i < dlc_; i++){
             data_[i] = uint8_t(pdata[i]);
@@ -140,7 +140,7 @@ public:
     constexpr uint8_t * data() {return data_;}
     constexpr const uint8_t * begin() const {return data_;}
     constexpr const uint8_t * end() const {return data_ + size();}
-    constexpr size_t size() const {return MIN(dlc_, 8);}
+    constexpr size_t size() const {return dlc_ & 0b111;}
 
     constexpr uint64_t data64() const{ return data64_;}
     constexpr uint64_t & data64() {return data64_;}

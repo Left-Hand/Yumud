@@ -16,7 +16,7 @@ void m2006_main(){
     DEBUGGER_INST.init(576000, CommMethod::Blocking);
     auto & can = can1;
     can.init(1_MHz);
-    can[0].mask(CanID16{0x201, Can::RemoteType::Data}, CanID16{0xffff, Can::RemoteType::Remote});
+    can[0].mask(CanID16{0x201, CanRemote::Data}, CanID16{0xffff, CanRemote::Remote});
     while(true){
         auto s = real_t(0.07) * sin(4 * time());
         auto c = real_t(0.07) * cos(4 * time());

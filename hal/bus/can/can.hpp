@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus.hpp"
+#include "sys/buffer/ringbuf/Fifo_t.hpp"
 
 #include "CanUtils.hpp"
 #include "CanMsg.hpp"
@@ -46,15 +47,18 @@ namespace ymd::hal{
 struct CanFilter;
 class Can: public PackedBus<CanMsg>{
 public:
-    using BaudRate = CanUtils::BaudRate;
-    using Mode = CanUtils::Mode;
-    using ErrCode = CanUtils::ErrCode;
-    using RemoteType = CanUtils::RemoteType;
+    using BaudRate = CanBaudrate;
+    using Mode = CanMode;
+    using ErrCode = CanErrCode;
+    using Remote = CanRemote;
 
-    using Packet = CanMsg;
     using Callback = std::function<void(void)>;
 protected:
     CAN_TypeDef * instance;
+    
+    #ifndef CAN_SOFTFIFO_SIZE
+    #define CAN_SOFTFIFO_SIZE 8
+    #endif
 
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
@@ -65,27 +69,28 @@ protected:
 
     bool sync_ = true;
 
-    Gpio & getTxGpio();
-    Gpio & getRxGpio();
-    BusError lead(const uint8_t index) override{return BusError::OK;};
-    void trail() override{};
+    Gpio & get_tx_gpio();
+    Gpio & get_rx_gpio();
+    BusError lead(const uint8_t index){return BusError::OK;};
+    void trail(){};
 
-    void installGpio();
-    void enableRcc();
-    bool isMailBoxDone(const uint8_t mbox);
-    void clearMailbox(const uint8_t mbox);
-    void initIt();
+    void install_gpio();
+    void enable_rcc();
+    bool is_mail_box_done(const uint8_t mbox);
+    void clear_mailbox(const uint8_t mbox);
+    void init_it();
     
-    void onTxInterrupt();
-    void onRxMsgInterrupt(const uint8_t fifo_num);
-    void onRxOverrunInterrupt(){;}
-    void onRxFullInterrupt(){;}
-    void onSceInterrupt();
+    void on_tx_interrupt();
+    void on_rx_msg_interrupt(const uint8_t fifo_num);
+    void on_rx_overrun_interrupt(){;}
+    void on_rx_full_interrupt(){;}
+    void on_sce_interrupt();
 
 
     void init(const BaudRate baudRate, const Mode mode);
     uint8_t transmit(const CanMsg & msg);
     CanMsg receive(const uint8_t fifo_num);
+
     friend class CanFilter;
 
     #ifdef ENABLE_CAN1
@@ -116,8 +121,8 @@ public:
 
     void init(const uint baudRate, const Mode mode = Mode::Normal);
 
-    bool write(const CanMsg & msg) override;
-    const CanMsg && read() override;
+    bool write(const CanMsg & msg);
+    const CanMsg && read();
     const CanMsg & front();
     size_t pending();
     size_t available();

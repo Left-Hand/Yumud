@@ -183,7 +183,7 @@ public:
     template<size_t P>
     __fast_inline constexpr iq_t & operator/=(const iq_t<P> other) {
         if (std::is_constant_evaluated()) {
-            return *this = iq_t(_iq<Q>::from_i32(int32_t((value.to_i32() * int(1 << Q)) / (other.value.to_i32() * int(1 << P))) / int(1 << Q)));
+            return *this = iq_t<Q>::from(float(*this) / float(other));
         }else{
             return *this = iq_t(__iqdetails::_IQNdiv<Q>(value, _iq<Q>(other.value)));
         }
