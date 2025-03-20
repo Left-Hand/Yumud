@@ -2,6 +2,25 @@
 
 using namespace ymd::drivers;
 
+
+#define MP2980_DEBUG
+
+#ifdef MP2980_DEBUG
+#undef MP2980_DEBUG
+#define MP2980_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MP2980_PANIC(...) PANIC(__VA_ARGS__)
+#define MP2980_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define MP2980_DEBUG(...)
+#define MP2980_PANIC(...)  PANIC()
+#define MP2980_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
+
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
+
+
 MP2980 & MP2980::setFeedBackVref(const real_t vref){
     setFeedBackVrefMv(int(vref * 1000));
     return *this;

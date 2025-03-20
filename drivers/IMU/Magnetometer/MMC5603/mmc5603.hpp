@@ -1,17 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 
 
-// #define MMC5603_DEBUG
-
-#ifdef MMC5603_DEBUG
-#undef MMC5603_DEBUG
-#define MMC5603_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define MMC5603_DEBUG(...)
-#endif
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 

@@ -1,8 +1,11 @@
 #pragma once
 
+#include "core/io/regs.hpp"
+
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
-#include "drivers/device_defs.h"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 class PCA9685 final: public hal::VGpioPortIntf<16>{

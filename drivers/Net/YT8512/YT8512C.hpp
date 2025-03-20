@@ -2,7 +2,7 @@
 
 #include "core/debug/debug.hpp"
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
 
 namespace ymd::drivers{

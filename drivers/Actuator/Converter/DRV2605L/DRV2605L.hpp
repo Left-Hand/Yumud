@@ -1,8 +1,7 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-
-// #define DRV2605L_DEBUG
+#include "core/io/regs.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 

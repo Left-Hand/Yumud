@@ -1,9 +1,13 @@
 #pragma once
 
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "concept/storage.hpp"
 #include "concept/jedec.hpp"
+
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 
 

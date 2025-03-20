@@ -1,12 +1,14 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "../CoilDriver.hpp"
-#include "types/range/range.hpp"
-#include "hal/adc/analog_channel.hpp"
-
 #include <optional>
 #include <array>
+
+#include "hal/adc/analog_channel.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+
+#include "../CoilDriver.hpp"
+#include "types/range/range.hpp"
+
 
 
 namespace ymd::drivers{

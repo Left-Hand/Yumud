@@ -1,10 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "core/math/real.hpp"
 
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 

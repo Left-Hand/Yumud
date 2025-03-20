@@ -1,6 +1,8 @@
 #include "mt6701.hpp"
 #include "core/debug/debug.hpp"
 
+
+
 #ifdef MT6701_DEBUG
 #undef MT6701_DEBUG
 #define MT6701_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)

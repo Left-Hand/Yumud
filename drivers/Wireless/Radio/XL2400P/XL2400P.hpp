@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "core/utils/BitField.hpp"
 
 namespace ymd::drivers{

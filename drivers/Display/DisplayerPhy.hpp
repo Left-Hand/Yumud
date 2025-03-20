@@ -1,7 +1,10 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "types/rgb.h"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 #include <optional>
 
@@ -43,19 +46,19 @@ public:
     // 拷贝构造函数
     DisplayerPhySpi(
         const hal::SpiDrv & spi_drv, 
-        hal::GpioIntf & _dc_gpio, 
-        hal::GpioIntf & _res_gpio = hal::NullGpio,
-        hal::GpioIntf & _blk_gpio = hal::NullGpio
-    ) : spi_drv_(spi_drv), dc_gpio_(_dc_gpio), res_gpio_(_res_gpio), blk_gpio_(_blk_gpio){}
+        hal::GpioIntf & dc_gpio, 
+        hal::GpioIntf & res_gpio = hal::NullGpio,
+        hal::GpioIntf & blk_gpio = hal::NullGpio
+    ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
 
 
     DisplayerPhySpi(
-            hal::Spi & _bus,
+            hal::Spi & bus,
             const uint8_t index,
-            hal::GpioIntf & _dc_gpio, 
-            hal::GpioIntf & _res_gpio = hal::NullGpio,
-            hal::GpioIntf & _blk_gpio = hal::NullGpio
-            ):DisplayerPhySpi(hal::SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
+            hal::GpioIntf & dc_gpio, 
+            hal::GpioIntf & res_gpio = hal::NullGpio,
+            hal::GpioIntf & blk_gpio = hal::NullGpio
+            ):DisplayerPhySpi(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
 
     void init(){
         dc_gpio_.outpp();

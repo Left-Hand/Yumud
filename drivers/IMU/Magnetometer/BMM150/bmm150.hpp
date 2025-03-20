@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/BoschIMU.hpp"
 
 

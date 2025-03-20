@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 

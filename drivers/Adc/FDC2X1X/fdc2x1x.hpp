@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #ifdef FDC2X1X_DEBUG

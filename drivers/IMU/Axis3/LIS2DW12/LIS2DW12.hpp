@@ -1,9 +1,12 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/STMicroIMU.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{

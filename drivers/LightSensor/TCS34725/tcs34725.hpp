@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
 #include "core/math/real.hpp"
 

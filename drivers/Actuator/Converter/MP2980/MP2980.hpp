@@ -1,25 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/adc/analog_channel.hpp"
 
-#define MP2980_DEBUG
+#include "hal/bus/i2c/i2cdrv.hpp"
 
-#ifdef MP2980_DEBUG
-#undef MP2980_DEBUG
-#define MP2980_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define MP2980_PANIC(...) PANIC(__VA_ARGS__)
-#define MP2980_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
-#else
-#define MP2980_DEBUG(...)
-#define MP2980_PANIC(...)  PANIC()
-#define MP2980_ASSERT(cond, ...) ASSERT(cond)
-#endif
-
-
-#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
-#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
 
 namespace ymd::drivers{
 

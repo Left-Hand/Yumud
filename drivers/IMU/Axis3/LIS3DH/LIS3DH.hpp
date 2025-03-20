@@ -2,7 +2,7 @@
 
 //这个驱动还在推进
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/STMicroIMU.hpp"
 

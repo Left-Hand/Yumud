@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "types/vector3/Vector3.hpp"
 
 #include "core/utils/Option.hpp"

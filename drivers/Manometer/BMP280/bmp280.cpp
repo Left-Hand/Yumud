@@ -2,6 +2,8 @@
 
 using namespace ymd::drivers;
 
+#define BMP280_DEBUG(...)
+
 bool BMP280::isChipValid(){
     read_reg(RegAddress::ChipID, chipIDReg);
     BMP280_DEBUG("CHIP code: ", uint8_t(chipIDReg));

@@ -2,6 +2,8 @@
 
 #include "IMU.hpp"
 
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::details{
     enum class BoschSensorError:uint8_t{

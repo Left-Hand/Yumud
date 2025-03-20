@@ -1,6 +1,8 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+
+#include "hal/bus/spi/spidrv.hpp"
 
 //http://www.baiheee.com/Documents/091203/091203224635.htm
 

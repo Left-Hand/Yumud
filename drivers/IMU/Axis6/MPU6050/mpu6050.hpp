@@ -2,8 +2,11 @@
 
 //这个驱动已经完成了基础使用
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 

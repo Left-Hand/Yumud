@@ -2,6 +2,11 @@
 
 using namespace ymd::drivers;
 
+#ifndef SGM58031_DEBUG
+#define SGM58031_DEBUG(...) DEBUG_LOG(...)
+#endif
+
+
 void SGM58031::init(){
     read_reg(RegAddress::Config, configReg);
     read_reg(RegAddress::LowThr, lowThrReg);

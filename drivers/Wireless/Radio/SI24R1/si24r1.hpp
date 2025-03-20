@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
-#ifdef Si24R1_DEBUG
-#define Si24R1_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define Si24R1_DEBUG(...)
-#endif
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+
 
 
 

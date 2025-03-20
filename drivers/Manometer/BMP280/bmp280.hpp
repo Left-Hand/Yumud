@@ -1,11 +1,10 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "core/math/real.hpp"
 
-// #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#define BMP280_DEBUG(...)
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
