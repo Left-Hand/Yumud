@@ -1,5 +1,5 @@
 #include "i2chw.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio.hpp"
 
 using namespace ymd::hal;
 using namespace ymd;

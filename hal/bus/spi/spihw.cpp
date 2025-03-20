@@ -1,5 +1,6 @@
 #include "spihw.hpp"
 #include "core/system.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

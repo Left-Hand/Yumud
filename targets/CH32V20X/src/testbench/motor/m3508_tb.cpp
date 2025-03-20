@@ -9,6 +9,7 @@
 
 #include "robots/DJI/M3508/m3508.hpp"
 #include "robots/DJI/DR16/DR16.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 

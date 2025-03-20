@@ -6,6 +6,7 @@
 
 #include "hal/bus/spi/spihw.hpp"
 #include "types/quat/Quat.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 

@@ -4,27 +4,37 @@
 #include "core/clock/clock.hpp"
 #include <array>
 
+namespace ymd::hal{
+    class GpioIntf;
+    
+}
 namespace ymd::drivers{
 
-class WS2812: public RgbLedConcept{
-protected:
-    hal::Gpio & gpio;
+
+class WS2812_Phy{
+public:
+    WS2812_Phy(hal::GpioIntf & gpio):gpio_(gpio){;}
 
     __no_inline void delayLong();
     __no_inline void delayShort();
 
     void sendCode(const bool state);
     void sendByte(const uint8_t data);
-
     void sendReset();
+    void init();
+private:
+    hal::GpioIntf & gpio_;
+};
 
 
+class WS2812: public RgbLedConcept{
+protected:
+
+    WS2812_Phy phy_;
     void _update(const Color &color);
 public:
-    WS2812(hal::Gpio & _gpio):gpio(_gpio){;}
-    void init(){
-        gpio.outpp();
-    }
+    WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
+    void init();
     WS2812 & operator = (const Color & color) override{
         _update(color);
         return *this;
@@ -34,8 +44,6 @@ public:
 class WS2812Single: public RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
-
-
     void _update(const Color & _color){
         color = _color;
     }
@@ -54,49 +62,14 @@ template<size_t N>
 class WS2812Chain{
 protected:
     using Color = Color_t<real_t>;
-    hal::Gpio & gpio;
+    WS2812_Phy phy_;
     std::array<WS2812Single, N> leds;
 
-    void delayLong(){
-        __nopn(120);
-    }
-
-    void delayShort(){
-        __nopn(32);
-    }
-    void sendCode(const bool state){
-        __disable_irq();
-        if(state){
-            gpio.set();
-            delayLong();
-            gpio.clr();
-            delayShort();
-        }else{
-            gpio.set();
-            delayShort();
-            gpio.clr();
-            delayLong();
-        }
-        __enable_irq();
-        __nopn(4);
-    }
-
-    void sendReset(){
-        gpio.clr();
-        delayMicroseconds(60);
-    }
-
-    void sendByte(const uint8_t data){
-        for(uint8_t mask = 0x80; mask; mask >>= 1){
-            sendCode(data & mask);
-        }
-    }
-
 public:
-    WS2812Chain(hal::Gpio & _gpio):gpio(_gpio){;}
+    WS2812Chain(hal::GpioIntf & gpio):phy_(gpio){;}
     void init(){
         for(auto & led : leds) led = Color(0,0,0);
-        gpio.outpp();
+        phy_.init();
     }
 
     WS2812Single & operator[](const int index){
@@ -106,7 +79,7 @@ public:
 
     void refresh(){
 
-        sendReset();
+        phy_.sendReset();
 
         for(auto & led : leds){
             uint16_t r,g,b;
@@ -115,9 +88,9 @@ public:
             uni_to_u16(led.color.g, g);
             uni_to_u16(led.color.b, b);
 
-            sendByte(g >> 8);
-            sendByte(r >> 8);
-            sendByte(b >> 8);
+            phy_.sendByte(g >> 8);
+            phy_.sendByte(r >> 8);
+            phy_.sendByte(b >> 8);
 
         }
 

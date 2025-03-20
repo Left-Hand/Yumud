@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/realmath.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::hal{
 

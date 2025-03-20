@@ -1,13 +1,15 @@
 #pragma once
 
-#include "i2c.hpp"
-#include "hal/bus/busdrv.hpp"
-#include "core/utils/BytesIterator.hpp"
-
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
 #include <span>
+
+
+#include "i2c.hpp"
+#include "hal/bus/busdrv.hpp"
+#include "core/utils/BytesIterator.hpp"
+
 
 
 namespace ymd::hal{

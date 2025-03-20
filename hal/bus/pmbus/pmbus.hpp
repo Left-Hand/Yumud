@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus.hpp"
-#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 namespace ymd::hal{
 class Pmbus:public ProtocolBus{

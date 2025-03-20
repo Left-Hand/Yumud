@@ -1,4 +1,5 @@
 #include "sgm58031.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::drivers;
 

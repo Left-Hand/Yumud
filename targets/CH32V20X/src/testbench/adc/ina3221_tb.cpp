@@ -7,6 +7,7 @@
 #include "drivers/Adc/INA3221/ina3221.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 using drivers::INA3221;

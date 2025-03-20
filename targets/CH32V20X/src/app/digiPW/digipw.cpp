@@ -34,6 +34,8 @@
 #include <sstream>
 #include <ctime>
 
+#include "core/math/realmath.hpp"
+
 
 using namespace ymd;
 using namespace ymd::hal;

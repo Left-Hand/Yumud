@@ -1,7 +1,12 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
+
 #include "core/math/real.hpp"
+
+
+namespace ymd::hal{
+    class GpioIntf;
+};
 
 namespace ymd::drivers{
 
@@ -11,8 +16,8 @@ public:
         A128 = 1, B32, A64
     };
 protected:
-    hal::Gpio & sck_gpio_;
-    hal::Gpio & sdo_gpio_;
+    hal::GpioIntf & sck_gpio_;
+    hal::GpioIntf & sdo_gpio_;
     ConvType conv_type = ConvType::A128;
 
     uint32_t last_data;
@@ -27,18 +32,11 @@ protected:
 
     };
 public:
-    HX711(hal::Gpio & sck_gpio, hal::Gpio & sdo_gpio):
+    HX711(hal::GpioIntf & sck_gpio, hal::GpioIntf & sdo_gpio):
         sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
     ~HX711(){;}
-    void init(){
-        sck_gpio_.outpp();
-        sdo_gpio_.inpu();
-        read_data();
-    }
-
-    bool isIdle(){
-        return sdo_gpio_ == false;
-    }
+    void init();
+    bool isIdle();
 
     void update(){
         if(isIdle()) last_data = read_data();

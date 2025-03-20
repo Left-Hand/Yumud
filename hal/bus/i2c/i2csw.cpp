@@ -1,5 +1,6 @@
 #include "i2csw.hpp"
 #include "core/clock/time_stamp.hpp"
+#include "hal/gpio/gpio.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

@@ -325,17 +325,9 @@ public:
 
         [[nodiscard]] Result<size_t, Error> write_burst(uint8_t address, std::span<const std::byte> pbuf);
 
-        [[nodiscard]] Result<void, Error> start_hw_listen_pkt(){
-            bus_inst_.scl().clr(); 
-            bus_inst_.sda().set(); 
-            bus_inst_.sda().inpu();  
-            return Ok();
-        }
+        [[nodiscard]] Result<void, Error> start_hw_listen_pkt();
 
-        [[nodiscard]] Result<bool, Error> check_and_skip_hw_listen_pkt(){
-            return Result<bool, Error>(Ok(bool(bus_inst_.sda()) == true))
-                .if_ok([&]{bus_inst_.sda().set();});
-        }
+        [[nodiscard]] Result<bool, Error> check_and_skip_hw_listen_pkt();
     
     private:
         [[nodiscard]] Result<void, Error> _write_reg(uint8_t address, uint16_t data);

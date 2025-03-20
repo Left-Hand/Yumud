@@ -1,6 +1,7 @@
 #pragma once
 
 #include "i2c.hpp"
+#include "core/sdk.hpp"
 
 namespace ymd::hal{
 

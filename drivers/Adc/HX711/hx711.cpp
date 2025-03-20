@@ -1,4 +1,5 @@
 #include "hx711.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 
 using namespace ymd::drivers;
@@ -22,4 +23,14 @@ uint32_t HX711::read_data(void){
 
     data ^= 0x800000;
     return(data);
+}
+
+void HX711::init(){
+    sck_gpio_.outpp();
+    sdo_gpio_.inpu();
+    read_data();
+}
+
+bool HX711::isIdle(){
+    return sdo_gpio_ == false;
 }

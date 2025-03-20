@@ -8,6 +8,9 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
+#include "core/math/realmath.hpp"
+#include "hal/gpio/port.hpp"
+
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
 // 可以配置不同的串口输出和定时器（在下方以宏给出）

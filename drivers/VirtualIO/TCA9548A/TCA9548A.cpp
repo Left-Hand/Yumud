@@ -25,3 +25,7 @@ void TCA9548A::trail(const uint8_t ch){
         return ;
     }
 }
+
+// TCA9548A::VirtualI2c(TCA9548A & host, const uint8_t ch):
+//     hal::I2c(hal::NullGpio, hal::NullGpio),
+//     host_(host), ch_(ch){;}

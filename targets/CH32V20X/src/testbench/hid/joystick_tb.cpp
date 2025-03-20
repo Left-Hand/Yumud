@@ -2,7 +2,7 @@
 
 #include "hal/bus/spi/spisw.hpp"
 #include "drivers/HID/ps2_joystick/ps2_joystick.hpp"
-
+#include "hal/gpio/port.hpp"
 
 #define JOYSTICK_TB
 

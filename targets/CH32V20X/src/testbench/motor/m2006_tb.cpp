@@ -7,6 +7,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "core/math/realmath.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace hal;
 void m2006_main(){

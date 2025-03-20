@@ -3,7 +3,6 @@
 #include "core/sdk.hpp"
 
 #include "core/math/real.hpp"
-#include "hal/gpio/port.hpp"
 
 #include <functional>
 

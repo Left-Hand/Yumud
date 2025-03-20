@@ -4,7 +4,7 @@
 #include "../CoilDriver.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/adc/analog_channel.hpp"
-
+#include "hal/gpio/gpio_intf.hpp"
 namespace ymd::drivers{
 
 class DRV8801:public Coil2DriverIntf{

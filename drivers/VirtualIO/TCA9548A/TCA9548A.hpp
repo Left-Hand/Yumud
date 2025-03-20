@@ -6,11 +6,29 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+// #include "hal/gpio/port.hpp"
+
 namespace ymd::drivers{
 
 
 
 class TCA9548A{
+public:
+class VirtualI2c: public hal::I2c{
+    protected:
+        TCA9548A & host_;
+        const uint8_t ch_;
+        BusError lead(const uint8_t address){return host_.lead(address, ch_);}
+        void trail(){return host_.trail(ch_);}
+    public:
+        VirtualI2c(TCA9548A & host, const uint8_t ch);
+
+        BusError write(const uint32_t data) override final {return host_.write(data);}
+        BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
+
+        void set_baudrate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
+    };
+
 protected:
     hal::I2c & i2c_;
     hal::I2cDrv self_i2c_drv_;
@@ -32,22 +50,6 @@ protected:
         return i2c_.read(data, ack);
     }
 
-    class VirtualI2c: public hal::I2c{
-    protected:
-        TCA9548A & host_;
-        const uint8_t ch_;
-        BusError lead(const uint8_t address){return host_.lead(address, ch_);}
-        void trail(){return host_.trail(ch_);}
-    public:
-        VirtualI2c(TCA9548A & host, const uint8_t ch):
-            hal::I2c(hal::NullGpio, hal::NullGpio),
-            host_(host), ch_(ch){;}
-
-        BusError write(const uint32_t data) override final {return host_.write(data);}
-        BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
-
-        void set_baudrate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
-    };
 
     friend class VirtualI2c;
 

@@ -3,12 +3,12 @@
 #include "core/platform.hpp"
 #include "core/sdk.hpp"
 
-#include "hal/gpio/port.hpp"
-#include "hal/nvic/nvic.hpp"
 #include <functional>
 
 
 namespace ymd::hal{
+    class Gpio;
+
     enum class TimerMode:uint8_t{
         Up                      = TIM_CounterMode_Up,
         Down                    = TIM_CounterMode_Down,

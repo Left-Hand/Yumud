@@ -6,6 +6,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+#include "hal/gpio/port.hpp"
+
 
 using namespace ymd::drivers;
 using namespace ymd;

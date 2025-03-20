@@ -9,6 +9,7 @@
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 

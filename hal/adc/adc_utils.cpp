@@ -1,4 +1,5 @@
 #include "adc_utils.hpp"
+#include "hal/gpio/port.hpp"
 
 namespace ymd::hal::__adc_internal{
 

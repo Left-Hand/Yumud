@@ -18,7 +18,7 @@ public:
     AD7607(
         hal::SpiDrv && _spi_drv, 
         hal::TimerOC & _trgger, 
-        hal::GpioIntf & _rst_gpio = hal::NullGpio
+        hal::GpioIntf & _rst_gpio
     ):
         spi_drv(std::move(_spi_drv)), 
         trigger(_trgger), 
@@ -27,7 +27,7 @@ public:
     AD7607(
         const hal::SpiDrv & _spi_drv, 
         hal::TimerOC & _trgger, 
-        hal::GpioIntf & _rst_gpio = hal::NullGpio
+        hal::GpioIntf & _rst_gpio
     ):
         spi_drv(_spi_drv), 
         trigger(_trgger), 

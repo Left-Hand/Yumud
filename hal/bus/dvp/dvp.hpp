@@ -2,8 +2,6 @@
 
 #include "core/platform.hpp"
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
 
 
 namespace ymd::hal{

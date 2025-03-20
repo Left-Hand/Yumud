@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "hal/gpio/gpio.hpp"
+
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-
+namespace ymd::hal{
+    class GpioIntf;
+}
 namespace ymd::drivers{
 class JQ8900{
 private:
@@ -26,8 +28,6 @@ public:
     JQ8900(hal::GpioIntf & _ser):ser(_ser){};
 
     void init(){;}
-
-
     void setVol(const uint8_t value){sendLine(value, CMD::SET_VOL);}
     void setDisc(const uint8_t value){sendLine(value, CMD::SET_DISC);}
 

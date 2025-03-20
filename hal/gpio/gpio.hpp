@@ -13,9 +13,7 @@ class Gpio final: public GpioIntf{
 protected:
     GPIO_TypeDef * instance_;
     const Pin pin_;
-    // const uint32_t pin_mask_;
 
-    // volatile uint32_t & pin_cfg;
 
     Gpio(GPIO_TypeDef * instance, const Pin pin):
         instance_(instance)

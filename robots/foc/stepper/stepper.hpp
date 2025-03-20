@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal/timer/pwm/gpio_pwm.hpp"
+#include "hal/gpio/port.hpp"
 
 #include "robots/foc/focmotor.hpp"
 

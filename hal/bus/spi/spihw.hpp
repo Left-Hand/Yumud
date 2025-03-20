@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spi.hpp"
+#include "core/sdk.hpp"
 
 
 extern"C"{
@@ -14,6 +15,8 @@ __interrupt void SPI2_IRQHandler(void);
 }
 
 namespace ymd::hal{
+
+class Gpio;
 
 class SpiHw:public Spi{
 protected:

@@ -8,6 +8,7 @@
 #include "hal/bus/spi/spisw.hpp"
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 

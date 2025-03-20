@@ -1,10 +1,11 @@
 #pragma once
 
 #include "hal/bus/bus.hpp"
-#include "hal/gpio/gpio.hpp"
 #include "i2c_trait.hpp"
 
 namespace ymd::hal{
+class Gpio;
+
 class I2c:public HalfDuplexBus{
 protected:
     hal::Gpio & scl_gpio;

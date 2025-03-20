@@ -5,7 +5,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
-
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 

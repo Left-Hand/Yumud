@@ -2,7 +2,7 @@
 
 #include "../CoilDriver.hpp"
 #include "types/range/range.hpp"
-
+#include "hal/gpio/gpio_intf.hpp"
 #include <optional>
 
 namespace ymd::hal{

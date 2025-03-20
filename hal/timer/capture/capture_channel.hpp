@@ -4,7 +4,7 @@
 #include "core/clock/time_stamp.hpp"
 #include "hal/exti/exti.hpp"
 #include "core/math/real.hpp"
-
+#include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
 

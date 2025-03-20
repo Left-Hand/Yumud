@@ -4,6 +4,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
+#include "hal/gpio/port.hpp"
 
 #if     defined(DDS_MAX_PRECISION)
 #if     !defined(MAX_U64)

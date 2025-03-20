@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CoilDriver.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 namespace ymd::drivers{
 
