@@ -1,7 +1,10 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -78,9 +81,9 @@ protected:
     DirectionReg directionReg = {};
     MagnitudeReg magnitudeReg = {};
 
-    BusError writeReg(const RegAddress reg_addr, uint8_t data);
+    BusError write_reg(const RegAddress reg_addr, uint8_t data);
 
-    BusError readReg(const RegAddress reg_addr, uint8_t & reg);
+    BusError read_reg(const RegAddress reg_addr, uint8_t & reg);
 
     BusError directRead(uint16_t & data);
 

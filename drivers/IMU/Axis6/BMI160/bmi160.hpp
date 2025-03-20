@@ -1,12 +1,13 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "drivers/IMU/BoschIMU.hpp"
+#include "core/io/regs.hpp"
+#include "drivers/IMU/details/BoschIMU.hpp"
 
 namespace ymd::drivers{
 
-class BMI160:public Axis6, public BoschSensor{
+class BMI160:public Axis6{
 public:
+    using Error = details::BoschSensorError;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -84,9 +85,10 @@ public:
     };
 
 protected:
+
+    BoschSensor_Phy phy_;
+
     scexpr uint8_t default_i2c_addr = 0b11010010;
-    // scexpr uint8_t default_i2c_addr = 0b11010000;
-    // scexpr uint8_t default_i2c_addr = 0x69;
 
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
@@ -113,8 +115,7 @@ protected:
     static real_t calculateAccScale(const AccRange range);
     static real_t calculateGyrScale(const GyrRange range);
 public:
-    using BoschSensor::BoschSensor;
-    BMI160(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(i2c, i2c_addr){;}
+    BMI160(BoschSensor_Phy && phy):phy_(phy){;}
 
     Result<void, Error> init();
     Result<void, Error> update();
@@ -129,8 +130,8 @@ public:
     Result<void, Error> setPmuMode(const PmuType pum, const PmuMode mode);
 
     PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3R> getAcc();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getAcc();
+    Option<Vector3_t<real_t>> getGyr();
 
 
     [[nodiscard]] __fast_inline constexpr

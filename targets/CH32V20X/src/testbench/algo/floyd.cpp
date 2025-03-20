@@ -1,6 +1,6 @@
 #include "../tb.h"
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 struct Node{
 	size_t idx;

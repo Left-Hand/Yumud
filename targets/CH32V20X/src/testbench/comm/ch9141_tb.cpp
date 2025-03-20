@@ -1,6 +1,8 @@
 #include "src/testbench/tb.h"
 #include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
 
+#include "hal/gpio/port.hpp"
+
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;

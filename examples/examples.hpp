@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sys/core/system.hpp>
-#include <sys/debug/debug.hpp>
+#include <core/system.hpp>
+#include <core/debug/debug.hpp>
 
 // #include "hal/bus/spi/spi.hpp>
 // #include "hal/bus/uart/uarthw.hpp>

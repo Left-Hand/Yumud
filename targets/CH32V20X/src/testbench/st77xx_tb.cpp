@@ -207,7 +207,7 @@ void st77xx_tb(hal::Spi & spi){
     // }
 
     // mnist_tb();
-    uart7.init(1000000, CommMethod::Blocking);
+    uart7.init(1000000, CommStrategy::Blocking);
 
     CH9141 ch9141{uart7, portC[1], portD[3]};
     ch9141.init();

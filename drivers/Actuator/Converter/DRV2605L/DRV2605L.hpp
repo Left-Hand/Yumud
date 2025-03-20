@@ -1,8 +1,7 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-
-// #define DRV2605L_DEBUG
+#include "core/io/regs.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
@@ -348,16 +347,16 @@ protected:
     Control1Reg control1_reg = {};
     Control2Reg control2_reg = {};
 
-    auto writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg<uint8_t>(uint8_t(address), reg);
+    auto write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
     }
 
-    auto readReg(const RegAddress addr, uint8_t & reg){
-        return i2c_drv_.readReg<uint8_t>(uint8_t(addr), reg);
+    auto read_reg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
     }
 
     auto requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }
 
 

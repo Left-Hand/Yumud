@@ -1,13 +1,9 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
-
-#ifdef ADS112C04_DEBUG
-#define ADS112C04_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define ADS112C04_DEBUG(...)
-#endif
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 class ADS112C04{
@@ -159,15 +155,15 @@ protected:
 
 
     auto readData(uint16_t & data){
-        return i2c_drv.readReg(uint8_t(Command::READ_DATA), data, LSB);
+        return i2c_drv.read_reg(uint8_t(Command::READ_DATA), data, LSB);
     }
 
-    auto readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv.readReg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
+    auto read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
     }
 
-    auto writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv.writeReg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
+    auto write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
     }
 public:
 
@@ -180,32 +176,32 @@ public:
     }
     void setMux(const MUX mux){
         config0_reg.mux = uint8_t(mux);
-        writeReg(config0_reg.address, config0_reg);
+        write_reg(config0_reg.address, config0_reg);
     }
 
     void setGain(const GAIN gain){
         config0_reg.gain = uint8_t(gain);
-        writeReg(config0_reg.address, config0_reg);
+        write_reg(config0_reg.address, config0_reg);
     }
 
     void enableTurbo(const bool en = true){
         config1_reg.turbo_mode = en;
-        writeReg(config1_reg.address, (config1_reg));
+        write_reg(config1_reg.address, (config1_reg));
     }
 
     bool isDone(){
-        readReg(config2_reg.address, (config2_reg));
+        read_reg(config2_reg.address, (config2_reg));
         return config2_reg.conv_done;
     }
 
     void setIDAC(const IDAC idac){
         config2_reg.idac = uint8_t(idac);
-        writeReg(config2_reg.address, (config2_reg));
+        write_reg(config2_reg.address, (config2_reg));
     }
 
     void setDataRate(const DataRate data_rate){
         config1_reg.data_rate = uint8_t(data_rate);
-        writeReg(config1_reg.address, (config1_reg));
+        write_reg(config1_reg.address, (config1_reg));
     }
 };
 

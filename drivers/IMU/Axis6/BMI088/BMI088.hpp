@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/BoschIMU.hpp"
+#include "drivers/IMU/details/BoschIMU.hpp"
 
 // https://blog.csdn.net/weixin_44080304/article/details/125065724
 
@@ -55,7 +55,7 @@ public:
         _100Hz,
     };
 
-    static constexpr Option<real_t> calculateAccScale(const AccRange range){
+    static constexpr Option<real_t> calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
         switch(range){
             default:
@@ -71,7 +71,7 @@ public:
         }
     }
 
-    static constexpr Option<real_t> calculateGyrScale(const GyrRange range){
+    static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
         switch(range){
             default:
                 return None;
@@ -89,15 +89,14 @@ public:
     }
 protected:
     using RegAddress = uint8_t;
-
 };
 
-class BMI088_Acc:public BoschSensor, public _BMI088_Base, public Accelerometer{
+class BMI088_Acc: public _BMI088_Base, public Accelerometer{
 public:
-    using Error = BoschSensor::Error;
+    using Error = details::BoschSensorError;
 protected:
     real_t acc_scaler_ = 0;
-
+    BoschSensor_Phy phy_;
 
     REG8_QUICK_DEF(0x01, AccChipId, acc_chipid_reg);
 
@@ -173,7 +172,7 @@ protected:
     REG8_QUICK_DEF(0x7c, R8_AccPwrConf, acc_pwrconf_reg);
     REG8_QUICK_DEF(0x7d, R8_AccPwrCtrl, acc_pwrctrl_reg);
 
-    Result<void, Error> verifyChipId();
+    Result<void, Error> verify_chip_id();
 
     class InterruptChannel{
     protected:
@@ -182,9 +181,9 @@ protected:
         InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
             bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-        Result<void, Error> enableOutput(const bool en = true){
+        Result<void, Error> enable_output(const bool en = true){
             ctrl_.int_out = en;
-            return bmi_.writeReg(address_, ctrl_.as_val());
+            return bmi_.phy_.write_reg(address_, ctrl_);
         }
     protected:
         BMI088_Acc & bmi_;
@@ -198,13 +197,13 @@ protected:
         InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
     };
 public:
-    BMI088_Acc(const hal::I2cDrv & i2c_drv):BoschSensor(i2c_drv){;}
-    BMI088_Acc(hal::I2cDrv && i2c_drv):BoschSensor(std::move(i2c_drv)){;}
-    BMI088_Acc(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    BMI088_Acc(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
-    BMI088_Acc(const hal::SpiDrv & spi_drv):BoschSensor(spi_drv){;}
-    BMI088_Acc(hal::SpiDrv && spi_drv):BoschSensor(std::move(spi_drv)){;}
-    BMI088_Acc(hal::Spi & spi, const uint8_t index):BoschSensor(hal::SpiDrv{spi, index}){;}
+    BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
+    BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
+    BMI088_Acc(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();
@@ -212,19 +211,20 @@ public:
     Result<void, Error> verify();
     Result<void, Error> update();
 
-    Option<Vector3R> getAcc();
-    Option<real_t> getTemperature();
+    Option<Vector3_t<real_t>> get_acc();
+    Option<real_t> get_temperature();
 
-    Result<void, Error> setAccRange(const AccRange range);
-    Result<void, Error> setAccBwp(const AccBwp bwp);
-    Result<void, Error> setAccOdr(const AccOdr odr);
+    Result<void, Error> set_acc_range(const AccRange range);
+    Result<void, Error> set_acc_bwp(const AccBwp bwp);
+    Result<void, Error> set_acc_odr(const AccOdr odr);
 };
 
 
-class BMI088_Gyr:public BoschSensor, public _BMI088_Base, public Accelerometer{
+class BMI088_Gyr:public _BMI088_Base, public Accelerometer{
 public:
-    using Error = BoschSensor::Error;
+    using Error = details::BoschSensorError;
 protected:
+    BoschSensor_Phy phy_;
     real_t gyr_scaler_ = 0;
 
     REG8_QUICK_DEF(0x00, R8_GyroChipID, gyro_chip_id);
@@ -265,26 +265,26 @@ protected:
         uint8_t :3;
     }DEF_R8(gyro_selftest_reg)
 
-    Result<void, Error> verifyChipId();
+    Result<void, Error> verify_chip_id();
 public:
-    BMI088_Gyr(const hal::I2cDrv & i2c_drv):BoschSensor(i2c_drv){;}
-    BMI088_Gyr(hal::I2cDrv && i2c_drv):BoschSensor(std::move(i2c_drv)){;}
-    BMI088_Gyr(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    BMI088_Gyr(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
-    BMI088_Gyr(const hal::SpiDrv & spi_drv):BoschSensor(spi_drv){;}
-    BMI088_Gyr(hal::SpiDrv && spi_drv):BoschSensor(std::move(spi_drv)){;}
-    BMI088_Gyr(hal::Spi & spi, const uint8_t index):BoschSensor(hal::SpiDrv{spi, index}){;}
+    BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
+    BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
+    BMI088_Gyr(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();
     Result<void, Error> reset();
     Result<void, Error> verify();
     Result<void, Error> update();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> get_gyr();
 
 
-    Result<void, Error> setGyrRange(const GyrRange range);
-    Result<void, Error> setGyrOdr(const GyrOdr odr);
+    Result<void, Error> set_gyr_range(const GyrRange range);
+    Result<void, Error> set_gyr_odr(const GyrOdr odr);
 };
     
 

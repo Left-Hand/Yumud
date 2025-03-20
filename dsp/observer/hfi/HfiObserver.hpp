@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"  // 假设 iq_t<16> 类型定义在这个头文件中
+#include "core/math/real.hpp"  // 假设 iq_t<16> 类型定义在这个头文件中
 
 namespace ymd::foc {
 

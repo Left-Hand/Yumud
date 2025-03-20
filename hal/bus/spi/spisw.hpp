@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spi.hpp"
-#include "sys/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 
 namespace ymd::hal{
@@ -40,10 +40,15 @@ public:
                 mosi_gpio(_mosi_pin), miso_gpio(_miso_pin){;}
     SpiSw(hal::GpioIntf & _sclk_pin,hal::GpioIntf & _mosi_pin,
             hal::GpioIntf & _miso_pin,hal::GpioIntf & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
-                bindCsPin(_cs_pin, 0);
+                bind_cs_pin(_cs_pin, 0);
             }
 
     DELETE_COPY_AND_MOVE(SpiSw);
+
+    void init(const uint32_t baudrate, 
+        const CommStrategy tx_strategy = CommStrategy::Blocking, 
+        const CommStrategy rx_strategy = CommStrategy::Blocking) override;
+
 
     BusError write(const uint32_t data) {
         uint32_t dummy;
@@ -60,22 +65,20 @@ public:
 
     BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
 
-    void setBaudRate(const uint32_t baudRate) {
-        if(baudRate == 0){
+    void set_baudrate(const uint32_t baudrate) {
+        if(baudrate == 0){
             delays = 0;
         }else{
-            uint32_t b = baudRate / 1000;
+            uint32_t b = baudrate / 1000;
             delays = 200 / b;
         }
     }
 
-    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override;
-
-    void setDataBits(const uint8_t bits) override {
+    void set_data_width(const uint8_t bits) override {
         data_bits = bits;
     }
 
-    void setBitOrder(const Endian endian) override {
+    void set_bitorder(const Endian endian) override {
         m_msb = (endian == MSB);
     }
 };

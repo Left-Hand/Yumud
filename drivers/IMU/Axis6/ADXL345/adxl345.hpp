@@ -1,14 +1,14 @@
 #pragma once
 
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/AnalogDeviceIMU.hpp"
+#include "drivers/IMU/details/AnalogDeviceIMU.hpp"
 
 
 namespace ymd::drivers{
 
-class ADXL345:public Axis6, public AnalogDeviceIMU{
+class ADXL345:public Axis6{
 public:
     enum class DataRate:uint8_t{
         HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,
@@ -292,32 +292,29 @@ protected:
     FifoStatusReg fifoStatusReg = {};
 
 protected:
-    std::optional<hal::I2cDrv> i2c_drv;
-    std::optional<hal::SpiDrv> spi_drv;
+    AnalogDeviceIMU_Phy phy_;
 
+    void write_reg(const RegAddress reg_address, const uint8_t reg_data);
 
-
-    void writeReg(const RegAddress reg_address, const uint8_t reg_data);
-
-    void readReg(const RegAddress reg_address, uint8_t & reg_data);
+    void read_reg(const RegAddress reg_address, uint8_t & reg_data);
 public:
     scexpr uint8_t defualt_i2c_addr = 0x1D << 1;
 
-    ADXL345(const hal::I2cDrv & _i2c_drv): AnalogDeviceIMU(_i2c_drv){;}
-    ADXL345(hal::I2cDrv && _i2c_drv): AnalogDeviceIMU(_i2c_drv){;}
-    ADXL345(hal::I2c & _i2c, const uint8_t addr = defualt_i2c_addr): AnalogDeviceIMU(hal::I2cDrv(_i2c, addr)){;}
+    ADXL345(const hal::I2cDrv & _i2c_drv): phy_(_i2c_drv){;}
+    ADXL345(hal::I2cDrv && _i2c_drv): phy_(_i2c_drv){;}
+    ADXL345(hal::I2c & _i2c, const uint8_t addr = defualt_i2c_addr): phy_(hal::I2cDrv(_i2c, addr)){;}
 
-    ADXL345(const hal::SpiDrv & _spi_drv): AnalogDeviceIMU(_spi_drv){;}
-    ADXL345(hal::SpiDrv && _spi_drv): AnalogDeviceIMU(_spi_drv){;}
+    ADXL345(const hal::SpiDrv & _spi_drv): phy_(_spi_drv){;}
+    ADXL345(hal::SpiDrv && _spi_drv): phy_(_spi_drv){;}
 
-    ADXL345(hal::Spi & _spi, const uint8_t index): AnalogDeviceIMU(hal::SpiDrv(_spi, index)){;}
+    ADXL345(hal::Spi & _spi, const uint8_t index): phy_(hal::SpiDrv(_spi, index)){;}
     uint8_t getDeviceID(){
-        readReg(RegAddress::DeviceID, deviceIDReg);
+        read_reg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;
     }
 
-    Option<Vector3R> getAcc();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getAcc();
+    Option<Vector3_t<real_t>> getGyr();
 
 };
 

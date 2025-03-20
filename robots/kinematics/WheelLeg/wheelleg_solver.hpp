@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "types/vector2/vector2.hpp"
 #include "types/vector3/vector3.hpp"
 #include "types/plane/plane.hpp"

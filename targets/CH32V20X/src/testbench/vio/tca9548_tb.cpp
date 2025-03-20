@@ -1,12 +1,15 @@
 #include "../tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 
 #include "drivers/VirtualIO/TCA9548A/TCA9548A.hpp"
 
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 

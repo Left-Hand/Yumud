@@ -1,6 +1,8 @@
 #include "can.hpp"
 #include "CanFilter.hpp"
+
 #include "hal/nvic/nvic.hpp"
+#include "hal/gpio/port.hpp"
 
 //#region switches
 
@@ -71,7 +73,7 @@ void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
         CANx->STATR = CAN_STATR_ERRI; 
 	}
 }
-void Can::initIt(){
+void Can::init_it(){
     uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
@@ -130,18 +132,18 @@ void Can::initIt(){
 
 
 
-bool Can::isMailBoxDone(const uint8_t mbox){
+bool Can::is_mail_box_done(const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     return ((instance->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
 }
 
-void Can::clearMailbox(const uint8_t mbox){
+void Can::clear_mailbox(const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     instance->TSTATR = TSTATR_FLAG;
 }
 
 
-Gpio & Can::getTxGpio(){
+Gpio & Can::get_tx_gpio(){
     switch((uint32_t)instance){
         default:
             HALT;
@@ -160,7 +162,7 @@ Gpio & Can::getTxGpio(){
     }
 }
 
-Gpio & Can::getRxGpio(){
+Gpio & Can::get_rx_gpio(){
     switch((uint32_t)instance){
         default:
             HALT
@@ -177,16 +179,16 @@ Gpio & Can::getRxGpio(){
     }
 }
 
-void Can::installGpio(){
-    auto & txGpio = getTxGpio();
-    auto & rxGpio = getRxGpio();
+void Can::install_gpio(){
+    auto & txGpio = get_tx_gpio();
+    auto & rxGpio = get_rx_gpio();
 
     txGpio.afpp();
     rxGpio.afpp();
 }
 
 
-void Can::enableRcc(){
+void Can::enable_rcc(){
     switch((uint32_t)instance){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
@@ -228,9 +230,9 @@ void Can::enableRcc(){
     }
 }
 
-void Can::init(const uint baudRate, const Mode _mode){
+void Can::init(const uint baudrate, const Mode _mode){
     BaudRate baud;
-    switch(baudRate){
+    switch(baudrate){
         default:
             while(true);
         case 125_KHz:
@@ -250,17 +252,17 @@ void Can::init(const uint baudRate, const Mode _mode){
     init(baud, _mode);
 }
 
-void Can::init(const BaudRate baudRate, const Mode _mode){
-    installGpio();
-    enableRcc();
+void Can::init(const BaudRate baudrate, const Mode _mode){
+    install_gpio();
+    enable_rcc();
 
 
     scexpr uint8_t swj = CAN_SJW_2tq;
     scexpr uint8_t bs1 = CAN_BS1_6tq;
     scexpr uint8_t bs2 = CAN_BS2_5tq;
 
-    const uint8_t prescale = [baudRate]()->uint8_t{
-        switch(baudRate){
+    const uint8_t prescale = [baudrate]()->uint8_t{
+        switch(baudrate){
             default:
             case BaudRate::_125K:
                 return 96;
@@ -289,7 +291,7 @@ void Can::init(const BaudRate baudRate, const Mode _mode){
     };
 
     CAN_Init(instance, &config);
-    initIt();
+    init_it();
 }
 
 size_t Can::pending(){
@@ -331,16 +333,16 @@ uint8_t Can::transmit(const CanMsg & msg){
         uint32_t tempmir;
         uint32_t tempdtr = instance->sTxMailBox[transmit_mailbox].TXMDTR;
 
-        if(msg.isStd()){
-            tempmir = ((msg.id() << 21) | (msg.isRemote() << 1) | 0x01);
+        if(msg.is_std()){
+            tempmir = ((msg.id() << 21) | (msg.is_remote() << 1) | 0x01);
         }else{
-            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.isRemote() << 1) | 0x01);
+            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.is_remote() << 1) | 0x01);
         }
 
         tempdtr &= (uint32_t)0xFFFFFFF0;
         tempdtr |= msg.size() & 0x0F;
 
-        if(msg.size() && (!msg.isRemote())){
+        if(msg.size() && (!msg.is_remote())){
 
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wuninitialized"
@@ -360,7 +362,7 @@ uint8_t Can::transmit(const CanMsg & msg){
 }
 
 
-void Can::enableHwReTransmit(const bool en){
+void Can::enable_hw_retransmit(const bool en){
     if(en)  instance->CTLR &= ~CAN_CTLR_NART;
     else    instance->CTLR |=  CAN_CTLR_NART;
 }
@@ -399,62 +401,60 @@ size_t Can::available(){
     return rx_fifo_.available();
 }
 
-uint8_t Can::getRxErrCnt(){
+uint8_t Can::get_rx_errcnt(){
     return instance->ERRSR >> 24;
 }
 
-uint8_t Can::getTxErrCnt(){
+uint8_t Can::get_tx_errcnt(){
     return instance->ERRSR >> 16;
 }
-Can::ErrCode Can::getErrCode(){
+Can::ErrCode Can::error(){
     return (ErrCode)CAN_GetLastErrorCode(instance);
 }
 
-bool Can::isTranmitting(){
+bool Can::is_tranmitting(){
     return bool(instance->STATR & CAN_STATR_TXM);
 }
 
-bool Can::isReceiving(){
+bool Can::is_receiving(){
     return bool(instance->STATR & CAN_STATR_RXM);
 }
 
-bool Can::isBusOff(){
+bool Can::is_busoff(){
     return instance->ERRSR & CAN_ERRSR_BOFF;
 }
 
-void Can::cancelTransmit(const uint8_t mbox){
+void Can::cancel_transmit(const uint8_t mbox){
     CAN_CancelTransmit(instance, mbox);
 }
 
-void Can::cancelAllTransmit(){
+void Can::cancel_all_transmits(){
     for(uint8_t i = 0; i < 3; i++)    CAN_CancelTransmit(instance, i);
     instance->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
-void Can::enableFifoLock(const bool en){
+void Can::enable_fifo_lock(const bool en){
     if(en) instance->CTLR |= CAN_CTLR_RFLM;
     else instance->CTLR &= ~CAN_CTLR_RFLM;
 }
 
-void Can::enableIndexPriority(const bool en){
+void Can::enable_index_priority(const bool en){
     if(en) instance->CTLR |= CAN_CTLR_TXFP;
     else instance->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-void Can::setBaudRate(const uint32_t baudRate){
+void Can::set_baudrate(const uint32_t baudrate){
     //TODO
 }
 
 CanMsg Can::receive(const uint8_t fifo_num){
-    uint32_t rxmir = instance->sFIFOMailBox[fifo_num].RXMIR;
-    uint32_t rxmdtr = instance->sFIFOMailBox[fifo_num].RXMDTR;
+    const uint32_t rxmir = instance->sFIFOMailBox[fifo_num].RXMIR;
+    const uint32_t rxmdtr = instance->sFIFOMailBox[fifo_num].RXMDTR;
 
-    bool ext = (uint8_t)0x04 & rxmir;
-    uint32_t id = ext ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
-    // uint32_t id = (rxmir >> 21);
-    bool is_remote = (uint8_t)0x02 & rxmir;
-    uint8_t dlc = (uint8_t)0x0F & rxmdtr;
-    // uint8_t fmi = (uint8_t)0xFF & (rxmdtr >> 8);
+    const bool ext = (uint8_t)0x04 & rxmir;
+    const uint32_t id = ext ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
+    const bool is_remote = (uint8_t)0x02 & rxmir;
+    const uint8_t dlc = (uint8_t)0x0F & rxmdtr;
 
     uint64_t data = instance->sFIFOMailBox[fifo_num].RXMDLR | (uint64_t(instance->sFIFOMailBox[fifo_num].RXMDHR) << 32);
 
@@ -465,7 +465,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
     }
 
     if(is_remote){
-        return CanMsg(id);
+        return CanMsg(id, CanRemoteSpec::Remote);
     }else{
         return CanMsg(id, data, dlc);
     }
@@ -477,9 +477,9 @@ CanFilter Can::operator[](const size_t idx) const {
     return CanFilter(this->instance, idx);
 }
 
-void Can::onTxInterrupt(){
+void Can::on_tx_interrupt(){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(isMailBoxDone(mbox)){ // if existing message done
+        if(is_mail_box_done(mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(instance, mbox);
 
             switch (tx_status){
@@ -493,7 +493,7 @@ void Can::onTxInterrupt(){
                     break;
             }
 
-            clearMailbox(mbox);
+            clear_mailbox(mbox);
 
             if(tx_fifo_.available()){
                 transmit(tx_fifo_.pop());
@@ -502,7 +502,7 @@ void Can::onTxInterrupt(){
     }
 }
 
-void Can::onRxMsgInterrupt(const uint8_t fifo_num){
+void Can::on_rx_msg_interrupt(const uint8_t fifo_num){
     //process rx pending
     do{
         //如果没有接收到 直接返回
@@ -516,7 +516,7 @@ void Can::onRxMsgInterrupt(const uint8_t fifo_num){
     }while(false);
 }
 
-void Can::onSceInterrupt(){
+void Can::on_sce_interrupt(){
     // if (MY_CAN_GetITStatus(instance, CAN_IT_WKU)) {
     //     // Handle Wake-up interrupt
     //     MY_CAN_ClearITPendingBit(instance, CAN_IT_WKU);
@@ -548,7 +548,7 @@ void Can::onSceInterrupt(){
 #ifdef ENABLE_CAN1
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
-    can1.onTxInterrupt();
+    can1.on_tx_interrupt();
 }
 
 
@@ -558,13 +558,13 @@ static constexpr auto ff_mask = CAN_IT_FF1;\
 static constexpr auto fov_mask = CAN_IT_FOV1;\
 static constexpr auto fifo_num = nfifo;\
 if (MY_CAN_GetITStatus<fmp_mask>(uinst)){\
-    inst.onRxMsgInterrupt(fifo_num);\
+    inst.on_rx_msg_interrupt(fifo_num);\
     MY_CAN_ClearITPendingBit<fmp_mask>(uinst);\
 }else if(MY_CAN_GetITStatus<ff_mask>(uinst)){\
-    inst.onRxFullInterrupt();\
+    inst.on_rx_full_interrupt();\
     MY_CAN_ClearITPendingBit<ff_mask>(uinst);\
 }else if(MY_CAN_GetITStatus<fov_mask>(uinst)){\
-    inst.onRxOverrunInterrupt();\
+    inst.on_rx_overrun_interrupt();\
     MY_CAN_ClearITPendingBit<fov_mask>(uinst);\
 }\
 
@@ -590,7 +590,7 @@ void CAN1_SCE_IRQHandler(void){
 #ifdef ENABLE_CAN2
 __interrupt
 void CAN2_TX_IRQHandler(void){
-    can2.onTxInterrupt();
+    can2.on_tx_interrupt();
 }
 
 __interrupt

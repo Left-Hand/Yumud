@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
 
 namespace ymd::hal{
@@ -70,7 +70,7 @@ public:
     }
     void init();
 
-    static void writeData(const uint8_t index,const uint16_t data);
+    static void write_data(const uint8_t index,const uint16_t data);
 
     static uint16_t readData(const uint8_t index);
 

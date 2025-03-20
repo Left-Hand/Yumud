@@ -42,7 +42,7 @@ struct TurnSolver{
 TurnSolver turnSolver;
 
 real_t demo(uint milliseconds, uint microseconds = 0){
-    // using Vector2 = CubicInterpolation::Vector2;
+    // using Ve_tctor2 = CubicInterpolation::V_tector2;
     
     uint32_t turnCnt = milliseconds % 2667;
     uint32_t turns = milliseconds / 2667;
@@ -81,7 +81,10 @@ real_t demo(uint milliseconds, uint microseconds = 0){
     real_t yt = 0;
 
     if((i == 0) || (i == 2) || (i == 4))
-        yt = CubicInterpolation::forward(Vector2{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, Vector2(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+        yt = CubicInterpolation::forward(
+            Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+            Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+
     else
         yt = _t;
 
@@ -122,7 +125,7 @@ uint8_t get_default_id(){
     return node_id;
 };
 void stepper_tb(UartHw & logger_inst){
-    logger_inst.init(576000, CommMethod::Dma);
+    logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
     DEBUGGER.setEps(4);
 
@@ -192,7 +195,7 @@ void stepper_tb(UartHw & logger_inst){
     svpwm.enable();
 
     spi1.init(18_M);
-    spi1.bindCsPin(portA[15], 0);
+    spi1.bind_cs_pin(portA[15], 0);
 
     MT6816 encoder{{spi1, 0}};
     // MT6701 encoder{{spi1, 0}};
@@ -208,8 +211,11 @@ void stepper_tb(UartHw & logger_inst){
     // can.enableHwReTransmit();
     
     can[0].mask(
-        CanID16{uint16_t(uint16_t(node_id) << 7), Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any),
-        CanID16{0x000, Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any));
+        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteSpec::Any},
+        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),
+        
+        CanID16{0x000, CanRemoteSpec::Any}, 
+        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any));
 
     FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger_inst, stp};

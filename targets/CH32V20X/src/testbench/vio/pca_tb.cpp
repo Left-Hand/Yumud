@@ -1,12 +1,14 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 

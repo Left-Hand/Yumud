@@ -1,20 +1,19 @@
 #pragma once
 
 #include "drivers/Actuator/Actuator.hpp"
-#include "types/range/range.hpp"
 
 namespace ymd::drivers{
 
 class RadianServo{
 private:
-    Range rad_range_ = {0, real_t(PI)};
+    Range_t<real_t> rad_range_ = {0, real_t(PI)};
     // real_t basis_ = 0;
 protected:
     
     virtual void setGLobalRadian(const real_t rad) = 0;
     virtual real_t getGlobalRadian() = 0;
 public:
-    void setRange(const Range & range){
+    void setRange(const Range_t<real_t> & range){
         rad_range_ = range;
     }
     

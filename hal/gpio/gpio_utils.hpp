@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
 namespace ymd::hal{
 enum class Pin:uint16_t{

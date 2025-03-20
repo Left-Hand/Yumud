@@ -1,4 +1,5 @@
 #include "exti.hpp"
+#include "gpio/gpio.hpp"
 
 using namespace ymd::hal;
 

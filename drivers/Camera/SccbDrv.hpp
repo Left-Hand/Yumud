@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/i2c/i2c.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 #include "hal/bus/busdrv.hpp"
 
 #include <type_traits>
@@ -21,8 +21,8 @@ public:
     SccbDrv(SccbDrv && other) = default;
 
 
-    void writeReg(const uint8_t reg_address, const uint16_t reg_data);
-    void readReg(const uint8_t reg_address, uint16_t & reg_data);
+    void write_reg(const uint8_t reg_address, const uint16_t reg_data);
+    void read_reg(const uint8_t reg_address, uint16_t & reg_data);
 };
 
 }

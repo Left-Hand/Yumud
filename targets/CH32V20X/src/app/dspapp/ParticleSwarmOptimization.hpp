@@ -3,10 +3,10 @@
 
 #include <cstdlib>
 #include <span>
-#include "sys/utils/hive.hpp"
+#include "core/utils/hive.hpp"
 
-#include "sys/math/real.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/math/real.hpp"
+#include "core/debug/debug.hpp"
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include <random>
 

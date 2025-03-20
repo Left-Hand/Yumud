@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 
 class FaultGpio{
     using OptionlGpio = std::optional<hal::GpioIntf &>;

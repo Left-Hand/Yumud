@@ -1,4 +1,5 @@
 #include "ma730.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;
@@ -20,12 +21,12 @@ void MA730::init(){
     getLapPosition();
 }
 
-BusError MA730::writeReg(const RegAddress reg_addr, uint8_t data){
+BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
     const auto err = spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     return err;
 }
 
-BusError MA730::readReg(const RegAddress reg_addr, uint8_t & reg){
+BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
     uint16_t dummy;
     spi_drv_.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))).unwrap();
     const auto err = spi_drv_.readSingle(dummy);
@@ -51,8 +52,8 @@ uint16_t MA730::getRawData(){
 
 void MA730::setZeroData(const uint16_t data){
     zeroDataReg = data & 0xff;
-    writeReg(RegAddress::ZeroDataLow, zeroDataReg & 0xff);
-    writeReg(RegAddress::ZeroDataHigh, zeroDataReg >> 8);
+    write_reg(RegAddress::ZeroDataLow, zeroDataReg & 0xff);
+    write_reg(RegAddress::ZeroDataHigh, zeroDataReg >> 8);
 }
 
 
@@ -71,18 +72,18 @@ void MA730::update(){
 
 void MA730::setTrimX(const real_t k){
     trimReg = (uint8_t)((real_t(1) - real_t(1) / k) * 258);
-    writeReg(RegAddress::Trim, trimReg);
+    write_reg(RegAddress::Trim, trimReg);
     trimConfigReg.enableX = true;
     trimConfigReg.enableY = false;
-    writeReg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
+    write_reg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
 }
 
 void MA730::setTrimY(const real_t k){
     trimReg = (uint8_t)((real_t(1) - k) * 258);
-    writeReg(RegAddress::Trim, trimReg);
+    write_reg(RegAddress::Trim, trimReg);
     trimConfigReg.enableX = false;
     trimConfigReg.enableY = true;
-    writeReg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
+    write_reg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
 }
 
 
@@ -94,32 +95,32 @@ void MA730::setTrim(const real_t am, const real_t e){
 
 void MA730::setMagThresholdLow(const MagThreshold threshold){
     thresholdReg.thresholdLow = (uint8_t)threshold;
-    writeReg(RegAddress::Threshold, uint8_t(thresholdReg));
+    write_reg(RegAddress::Threshold, uint8_t(thresholdReg));
 }
 
 void MA730::setMagThresholdHigh(const MagThreshold threshold){
     thresholdReg.thresholdHigh = (uint8_t)threshold;
-    writeReg(RegAddress::Threshold, uint8_t(thresholdReg));
+    write_reg(RegAddress::Threshold, uint8_t(thresholdReg));
 }
 
 void MA730::setDirection(const bool direction){
     directionReg.direction = direction;
-    writeReg(RegAddress::Direction, uint8_t(directionReg));
+    write_reg(RegAddress::Direction, uint8_t(directionReg));
 }
 
 bool MA730::isMagnitudeLow(){
-    readReg(RegAddress::Magnitude, magnitudeReg);
+    read_reg(RegAddress::Magnitude, magnitudeReg);
     bool correctMgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
     return correctMgl;
 }
 
 bool MA730::isMagnitudeHigh(){
-    readReg(RegAddress::Magnitude, magnitudeReg);
+    read_reg(RegAddress::Magnitude, magnitudeReg);
     return magnitudeReg.magnitudeHigh;
 }
 
 bool MA730::isMagnitudeProper(){
-    readReg(RegAddress::Magnitude, magnitudeReg);
+    read_reg(RegAddress::Magnitude, magnitudeReg);
     bool proper = !((!(magnitudeReg.mgl1 | magnitudeReg.mgl2)) | magnitudeReg.magnitudeHigh);
     return proper;
 }
@@ -127,7 +128,7 @@ bool MA730::isMagnitudeProper(){
 void MA730::setZparameters(const Width width, const Phase phase){
     zParametersReg.zWidth = (uint8_t)width;
     zParametersReg.zPhase = (uint8_t)phase;
-    writeReg(RegAddress::ZParameters, uint8_t(zParametersReg));
+    write_reg(RegAddress::ZParameters, uint8_t(zParametersReg));
 }
 
 void MA730::setPulsePerTurn(const uint16_t _ppt){
@@ -138,6 +139,6 @@ void MA730::setPulsePerTurn(const uint16_t _ppt){
     zParametersReg.ppt = ppt_l;
     pulsePerTurnReg = ppt_h;
 
-    writeReg(RegAddress::ZParameters, uint8_t(zParametersReg));
-    writeReg(RegAddress::PulsePerTurn, pulsePerTurnReg);
+    write_reg(RegAddress::ZParameters, uint8_t(zParametersReg));
+    write_reg(RegAddress::PulsePerTurn, pulsePerTurnReg);
 }

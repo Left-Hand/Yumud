@@ -1,23 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
 
-#define MP2980_DEBUG
+#include "hal/bus/i2c/i2cdrv.hpp"
 
-#ifdef MP2980_DEBUG
-#undef MP2980_DEBUG
-#define MP2980_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define MP2980_PANIC(...) PANIC(__VA_ARGS__)
-#define MP2980_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
-#else
-#define MP2980_DEBUG(...)
-#define MP2980_PANIC(...)  PANIC()
-#define MP2980_ASSERT(cond, ...) ASSERT(cond)
-#endif
-
-
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
-#define READ_REG(reg) readReg(reg.address, reg).unwrap();
 
 namespace ymd::drivers{
 
@@ -144,20 +132,20 @@ protected:
     MaskReg mask_reg = {};
     StatusReg status_reg = {};
 
-    BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg).unwrap();
+    BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg).unwrap();
     }
 
-    BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg).unwrap();
+    BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg).unwrap();
     }
 
-    BusError writeReg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg, LSB);
+    BusError write_reg(const RegAddress address, const uint16_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
     }
 
-    BusError readReg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg, LSB);
+    BusError read_reg(const RegAddress address, uint16_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
     }
 
 public:

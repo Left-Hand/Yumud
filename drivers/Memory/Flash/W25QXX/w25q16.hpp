@@ -1,15 +1,12 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "concept/memory.hpp"
+
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd{
 
-#ifdef W25Q16_DEBUG
-#define W25Q16_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define W25Q16_DEBUG(...)
-#endif
 
 class W25Q16:public StoragePaged{
 protected:

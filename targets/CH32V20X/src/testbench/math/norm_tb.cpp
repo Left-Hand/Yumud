@@ -1,6 +1,6 @@
-#include "sys/math/real.hpp"
-#include "sys/math/fast/conv.hpp"
-#include "sys/math/iq/iq_t.hpp"
+#include "core/math/real.hpp"
+#include "core/math/fast/conv.hpp"
+#include "core/math/iq/iq_t.hpp"
 
 
 #include "types/vector3/Vector3.hpp"

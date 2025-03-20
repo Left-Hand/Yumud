@@ -2,17 +2,18 @@
 
 #include "drivers/Actuator/servo/servo.hpp"
 #include "types/range/range.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 
 namespace ymd::drivers{
 
 class ScaledPwm:public hal::PwmIntf{
 protected:
     hal::PwmIntf & instance_;
-    Range duty_range_;
+    Range_t<real_t> duty_range_;
     bool enabled = true;
 public:
-    ScaledPwm(hal::PwmIntf & _instance, const Range & _duty_range
-            ):instance_(_instance), duty_range_(_duty_range){;}
+    ScaledPwm(hal::PwmIntf & instance, const Range_t<real_t> & duty_range
+            ):instance_(instance), duty_range_(duty_range){;}
 
     void enable(const bool en = true){
         enabled = en;

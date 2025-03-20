@@ -1,10 +1,13 @@
 #include "../tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 
 #include "drivers/Adc/INA3221/ina3221.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 using drivers::INA3221;

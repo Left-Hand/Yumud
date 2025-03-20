@@ -1,5 +1,5 @@
 #include "ssd1306.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;
@@ -18,10 +18,10 @@ void SSD13XX::init(){
 }
 
 void SSD13XX::update(){
-    auto & frame = fetchFrame();
+    auto & frame = fetch_frame();
     for(int i = 0; i < size().y;i += 8){
         setFlushPos(Vector2i(0, i));
-        interface.writeU8(&frame[(i / 8) * size_t(size().x)], size().x);
+        interface.write_u8(&frame[(i / 8) * size_t(size().x)], size().x);
     }
 }
 
@@ -34,7 +34,7 @@ void SSD13XX_72X40::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }
 
@@ -62,7 +62,7 @@ void SSD13XX_128X64::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }
 
@@ -72,7 +72,7 @@ void SSD13XX_128X32::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }
 
@@ -82,7 +82,7 @@ void SSD13XX_88X48::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }
 
@@ -92,7 +92,7 @@ void SSD13XX_64X48::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }
 
@@ -102,6 +102,6 @@ void SSD13XX_128X80::preinitByCmds(){
     };
 
     for(auto & cmd:initCmds){
-        interface.writeCommand(cmd);
+        interface.write_command(cmd);
     }
 }

@@ -3,7 +3,7 @@
 #include <initializer_list>
 #include <bitset>
 
-#include "sys/io/regs.hpp"
+#include "core/io/regs.hpp"
 #include "CanUtils.hpp"
 
 
@@ -16,8 +16,6 @@ namespace ymd::hal{
 class Can;
 
 struct CanID16{
-    using RemoteType = CanUtils::RemoteType;
-
     #pragma pack(push, 1)
     const uint16_t __resv1__:3 = 0;
     const uint16_t ide:1 = 0;
@@ -26,25 +24,25 @@ struct CanID16{
     #pragma pack(pop)
 
     scexpr CanID16 ACCEPT_ALL(){
-        return {0, RemoteType::Data};
+        return {0, CanRemoteSpec::Data};
     }
 
     scexpr  CanID16 REJETC_ALL(){
-        return {0xffff, RemoteType::Remote};
+        return {0xffff, CanRemoteSpec::Remote};
     }
 
-    scexpr CanID16 IGNORE_HIGH(const size_t len, const RemoteType rmt){
+    scexpr CanID16 IGNORE_HIGH(const size_t len, const CanRemoteSpec rmt){
         return {uint16_t((1 << len) - 1), rmt};
     }
 
-    scexpr CanID16 IGNORE_LOW(const size_t len, const RemoteType rmt){
+    scexpr CanID16 IGNORE_LOW(const size_t len, const CanRemoteSpec rmt){
         return {uint16_t(~(uint16_t(1 << len) - 1)), rmt};
     }
 
-    constexpr CanID16(const uint16_t _id, const RemoteType rmt):
+    constexpr CanID16(const uint16_t _id, const CanRemoteSpec rmt):
         rtr(uint8_t(rmt)), id(_id){;}
 
-    CanID16(const std::bitset<11> & bits, const RemoteType rmt):
+    CanID16(const std::bitset<11> & bits, const CanRemoteSpec rmt):
         rtr(uint8_t(rmt)), 
         id(uint16_t(bits.to_ulong()))
     {;}
@@ -61,9 +59,6 @@ struct CanID16{
 };
 
 struct CanID32{
-    using RemoteType = CanUtils::RemoteType;
-
-
     #pragma pack(push, 1)
     const uint32_t __resv1__:1 = 0;
     uint32_t rtr:1;
@@ -72,28 +67,28 @@ struct CanID32{
     #pragma pack(pop)
 
     scexpr CanID32 ACCEPT_ALL(){
-        return {0, RemoteType::Data};
+        return {0, CanRemoteSpec::Data};
     }
 
     scexpr  CanID32 REJETC_ALL(){
-        return {0xffffffff, RemoteType::Remote};
+        return {0xffffffff, CanRemoteSpec::Remote};
     }
 
-    scexpr CanID32 IGNORE_HIGH(const size_t len, const RemoteType rmt){
+    scexpr CanID32 IGNORE_HIGH(const size_t len, const CanRemoteSpec rmt){
         return {uint32_t((1 << len) - 1), rmt};
     }
 
-    scexpr CanID32 IGNORE_LOW(const size_t len, const RemoteType rmt){
+    scexpr CanID32 IGNORE_LOW(const size_t len, const CanRemoteSpec rmt){
         return {~uint32_t(uint32_t(1 << len) - 1), rmt};
     }
 
 
-    constexpr CanID32(const uint32_t _id, const RemoteType rmt):
+    constexpr CanID32(const uint32_t _id, const CanRemoteSpec rmt):
         rtr(uint8_t(rmt)), id(_id){;}
 
     CanID32(
         const std::bitset<29> & bits,
-        const RemoteType rmt):
+        const CanRemoteSpec rmt):
         
         rtr(uint8_t(rmt)), 
         id(uint32_t(bits.to_ulong())){}
@@ -112,7 +107,6 @@ class CanFilter{
 protected:
     using ID16 = CanID16;
     using ID32 = CanID32;
-    using RemoteType = CanUtils::RemoteType;
 
     CAN_TypeDef * can;
     
@@ -140,7 +134,7 @@ protected:
     friend class Can;
 public:
     void mask(const ID16 & id, const ID16 & mask){
-        this->mask(id, mask, ID16{0xffff,RemoteType::Remote}, ID16{0xffff,RemoteType::Remote});
+        this->mask(id, mask, ID16{0xffff,CanRemoteSpec::Remote}, ID16{0xffff,CanRemoteSpec::Remote});
     }
     void mask(const ID16 & id1, const ID16 & mask1, const ID16 & id2, const ID16 & mask2);
     void list(const std::initializer_list<ID16> & list);

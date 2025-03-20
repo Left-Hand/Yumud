@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real_t.hpp"
+#include "core/math/real_t.hpp"
 
 template<arithmetic T>
 class SchmittFilter_t{

@@ -1,8 +1,9 @@
 #include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "src/app/gui/coro_task.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd::coro;
 // using Task = coro::Task;
@@ -68,7 +69,7 @@ Future<void> coro_tb() {
 }
 
 void coro_main(){
-    UART.init(576000, CommMethod::Dma);
+    UART.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&UART);
     DEBUGGER.setEps(4);
     DEBUGGER << "Coroutine test bench started.\n";

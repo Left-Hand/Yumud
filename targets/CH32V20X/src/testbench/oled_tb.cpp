@@ -1,6 +1,7 @@
 #include "tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
+#include "core/string/string.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -9,6 +10,7 @@
 #include "drivers/CommonIO/Key/Key.hpp"
 
 #include "types/image/painter.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 
 using namespace GpioUtils;
@@ -127,11 +129,11 @@ static void oled_tb(){
     DisplayerPhyI2c oled_phy{i2c};
 
     SSD13XX_72X40 oled{oled_phy};
-    auto & frame = oled.fetchFrame();
+    auto & frame = oled.fetch_frame();
     
     oled.init();
-    oled.enableFlipX(false);
-    oled.enableFlipY(false);
+    oled.enable_flip_x(false);
+    oled.enable_flip_y(false);
 
     Menu menu {frame, DEBUGGER};
     while(true){

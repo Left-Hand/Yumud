@@ -2,18 +2,18 @@
 
 #include <optional>
 
-#include "drivers/device_defs.h"
-#include "drivers/IMU/BoschIMU.hpp"
+#include "core/io/regs.hpp"
+#include "drivers/IMU/details/BoschIMU.hpp"
 
 
 namespace ymd::drivers{
 
-class BMM150:public Magnetometer, public BoschSensor{
+class BMM150:public Magnetometer{
 public:
-
+    using Error = details::BoschSensorError;
 
 protected:
-
+    BoschSensor_Phy phy_;
     using RegAddress = uint8_t;
 
     scexpr uint8_t default_i2c_addr = 0x68;
@@ -24,8 +24,7 @@ protected:
 
 
 public:
-    using BoschSensor::BoschSensor;
-    BMM150(hal::I2c & bus, const uint8_t addr = default_i2c_addr):BoschSensor(hal::I2cDrv(bus, addr)){;}
+    BMM150(hal::I2c & bus, const uint8_t addr = default_i2c_addr):phy_(hal::I2cDrv(bus, addr)){;}
 
 
     void init();
@@ -35,7 +34,7 @@ public:
 
     void reset();
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 };
 
 

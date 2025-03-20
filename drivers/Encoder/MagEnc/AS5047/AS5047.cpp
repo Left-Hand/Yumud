@@ -55,7 +55,7 @@ public:
     // ReadFrame()
 };
 
-void AS5047::writeReg(const RegAddress addr, const uint8_t data){
+void AS5047::write_reg(const RegAddress addr, const uint8_t data){
 
     // WRFormat format = {
     //     .addr = addr,
@@ -67,7 +67,7 @@ void AS5047::writeReg(const RegAddress addr, const uint8_t data){
 }
 
 
-void AS5047::readReg(const RegAddress addr, uint8_t & data){
+void AS5047::read_reg(const RegAddress addr, uint8_t & data){
 
     // WRFormat format = {
     //     .addr = addr,

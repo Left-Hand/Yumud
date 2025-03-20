@@ -1,7 +1,8 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
+#include "hal/bus/uart/uart.hpp"
 
 namespace ymd::drivers{
 

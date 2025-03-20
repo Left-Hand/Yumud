@@ -1,5 +1,5 @@
 #include "ina3221.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 
@@ -10,14 +10,14 @@ using namespace ymd::drivers;
 #define INA3221_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define INA3221_PANIC(...) PANIC{__VA_ARGS__}
 #define INA3221_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) readReg(reg.address, reg.as_ref()).loc().expect();
-#define WRITE_REG(reg) writeReg(reg.address, reg.as_val()).loc().expect();
+#define READ_REG(reg) read_reg(reg.address, reg.as_ref()).loc().expect();
+#define WRITE_REG(reg) write_reg(reg.address, reg.as_val()).loc().expect();
 #else
 #define INA3221_DEBUG(...)
 #define INA3221_PANIC(...)  PANIC_NSRC()
 #define INA3221_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) +readReg(reg.address, reg.as_ref());
-#define WRITE_REG(reg) +writeReg(reg.address, reg.as_val());
+#define READ_REG(reg) read_reg(reg.address, reg.as_ref()).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg.as_val()).unwrap();
 #endif
 
 
@@ -56,13 +56,13 @@ bool INA3221::verify(){
 }
 
 INA3221 & INA3221::update(){
-    readBurst(shuntvolt1_reg.address, &shuntvolt1_reg, 6).unwrap();
+    read_burst(shuntvolt1_reg.address, &shuntvolt1_reg, 6).unwrap();
 
     return *this;
 }
 
 INA3221 & INA3221::update(const size_t index){
-    readBurst(shuntvolt1_reg.address + ((index - 1) * 2), &shuntvolt1_reg + ((index - 1) * 2), 2).unwrap();
+    read_burst(shuntvolt1_reg.address + ((index - 1) * 2), &shuntvolt1_reg + ((index - 1) * 2), 2).unwrap();
     // READ_REG(config_reg);
     // INA3221_DEBUG(config_reg.as_val());
     // switch(index){
@@ -156,7 +156,7 @@ int INA3221::getShuntVoltuV(const size_t index){
         }
     }();
 
-    +readReg(addr, reg.as_ref());
+    read_reg(addr, reg.as_ref()).unwrap();
 
     return reg.to_uv();
 }
@@ -180,7 +180,7 @@ int INA3221::getBusVoltmV(const size_t index){
         }
     }();
 
-    +readReg(addr, reg.as_ref());
+    read_reg(addr, reg.as_ref()).unwrap();
 
     return reg.to_mv();
 }
@@ -211,7 +211,7 @@ INA3221 & INA3221::setInstantOVC(const size_t index, const real_t volt){
             break;
     }
 
-    +writeReg(addr, ShuntVoltReg::to_i16(volt));
+    write_reg(addr, ShuntVoltReg::to_i16(volt)).unwrap();
 
     return *this;
 }
@@ -232,7 +232,7 @@ INA3221 & INA3221::setConstantOVC(const size_t index, const real_t volt){
             break;
     }
 
-    +writeReg(addr, ShuntVoltReg::to_i16(volt));
+    write_reg(addr, ShuntVoltReg::to_i16(volt)).unwrap();
 
     return *this;
 }

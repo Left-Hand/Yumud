@@ -1,6 +1,9 @@
 #include "PMW3901.hpp"
 #include "types/image/image.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
+
+#include "core/math/realmath.hpp"
+
 
 #define PMW3901_REG_Product_ID      0x00
 #define PMW3901_REG_Revision_ID     0x01
@@ -40,20 +43,20 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-BusError PMW3901::writeReg(const uint8_t command, const uint8_t data){
+BusError PMW3901::write_reg(const uint8_t command, const uint8_t data){
     spi_drv_.writeSingle<uint8_t>(command | 0x80, CONT).unwrap();
     return spi_drv_.writeSingle<uint8_t>(data);
 }
 
 
-BusError PMW3901::readReg(const uint8_t command, uint8_t & data){
+BusError PMW3901::read_reg(const uint8_t command, uint8_t & data){
     spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
     return spi_drv_.readSingle<uint8_t>(data);
 }
 
-BusError PMW3901::readBurst(const uint8_t command, uint8_t * data, const size_t len){
+BusError PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
     spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
-    return spi_drv_.readBurst<uint8_t>(data, len);
+    return spi_drv_.read_burst<uint8_t>(data, len);
 }
 
 
@@ -69,12 +72,12 @@ void PMW3901::readImage(ImageWritable<Grayscale> & img){
         //if 01 move upper 6 bits into temp value
         //if 00 or 11, reread
         //else lower 2 bits into temp value
-        readReg(0x58,a); //read register
+        read_reg(0x58,a); //read register
         hold = a >> 6; //right shift to leave top two bits for ease of check.
         } while((hold == 0x03) || (hold == 0x00));
         
         if (hold == 0x01) { //if data is upper 6 bits
-        readReg(0x58, b); //read next set to get lower 2 bits
+        read_reg(0x58, b); //read next set to get lower 2 bits
         uint8_t pixel = a; //set pixel to a
         pixel = pixel << 2; //push left to 7:2
         pixel += (b & mask); //set lower 2 from b to 1:0
@@ -83,13 +86,13 @@ void PMW3901::readImage(ImageWritable<Grayscale> & img){
         }
     }
 
-    writeReg(0x70, 0x00);   //More magic? 
-    writeReg(0x58, 0xFF);
+    write_reg(0x70, 0x00);   //More magic? 
+    write_reg(0x58, 0xFF);
 
     uint8_t temp, check; 
 
     do { //keep reading and testing
-        readReg(0x58, temp); //read status register
+        read_reg(0x58, temp); //read status register
         check = temp>>6; //rightshift 6 bits so only top two stay 
     } while(check == 0x03); //while bits aren't set denoting ready state
 }
@@ -102,9 +105,9 @@ bool PMW3901::verify(){
 }
 
 void PMW3901::setLed(bool ledOn){
-    writeReg(0x7f, 0x14);
-    writeReg(0x6f, ledOn ? 0x1c : 0x00);
-    writeReg(0x7f, 0x00);
+    write_reg(0x7f, 0x14);
+    write_reg(0x6f, ledOn ? 0x1c : 0x00);
+    write_reg(0x7f, 0x00);
 }
 void PMW3901::readData(){
     // readDataSlow();
@@ -114,7 +117,7 @@ void PMW3901::readDataSlow(){
     uint8_t data[5];
 
     for(uint8_t i = 0; i < 5; i++){
-        readReg(0x02 + i, data[i]);
+        read_reg(0x02 + i, data[i]);
     }
 
     motion = data[0];
@@ -123,7 +126,7 @@ void PMW3901::readDataSlow(){
 }
 
 void PMW3901::readDataBurst(){
-    readBurst(0x16, &motion, 6);
+    read_burst(0x16, &motion, 6);
 }
 
 
@@ -138,7 +141,7 @@ void PMW3901::update(){
 void PMW3901::update(const real_t rad){
     readData();
     
-    Vector2 delta = Vector2(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
+    auto delta = Vector2_t<real_t>(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
     x_cm += delta.x;
     y_cm += delta.y;
 }
@@ -146,7 +149,7 @@ void PMW3901::update(const real_t rad){
 
 bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
     uint8_t temp = 0;
-    readReg(command, temp);
+    read_reg(command, temp);
     // PMW3901_DEBUG(command, data, temp);
     // return PMW3901_ASSERT(temp == data, "reg:", command, "is not equal to", data, "fact is", temp);
     return (temp == data);
@@ -154,88 +157,88 @@ bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
 
 void PMW3901::init() {
     spi_drv_.release().unwrap();
-    writeReg(PMW3901_REG_Power_Up_Reset, 0x5A);
+    write_reg(PMW3901_REG_Power_Up_Reset, 0x5A);
     delay(5);
 
     PMW3901_ASSERT(verify(), "PMW3901 not found!");
     PMW3901_DEBUG("PMW3901 founded!");
     update();
 
-    writeReg(0x7F, 0x00);
-    writeReg(0x61, 0xAD);
-    writeReg(0x7F, 0x03);
-    writeReg(0x40, 0x00);
-    writeReg(0x7F, 0x05);
-    writeReg(0x41, 0xB3);
-    writeReg(0x43, 0xF1);
-    writeReg(0x45, 0x14);
-    writeReg(0x5B, 0x32);
-    writeReg(0x5F, 0x34);
-    writeReg(0x7B, 0x08);
-    writeReg(0x7F, 0x06);
-    writeReg(0x44, 0x1B);
-    writeReg(0x40, 0xBF);
-    writeReg(0x4E, 0x3F);
-    writeReg(0x7F, 0x08);
-    writeReg(0x65, 0x20);
-    writeReg(0x6A, 0x18);
-    writeReg(0x7F, 0x09);
-    writeReg(0x4F, 0xAF);
-    writeReg(0x5F, 0x40);
-    writeReg(0x48, 0x80);
-    writeReg(0x49, 0x80);
-    writeReg(0x57, 0x77);
-    writeReg(0x60, 0x78);
-    writeReg(0x61, 0x78);
-    writeReg(0x62, 0x08);
-    writeReg(0x63, 0x50);
-    writeReg(0x7F, 0x0A);
-    writeReg(0x45, 0x60);
-    writeReg(0x7F, 0x00);
-    writeReg(0x4D, 0x11);
-    writeReg(0x55, 0x80);
-    writeReg(0x74, 0x1F);
-    writeReg(0x75, 0x1F);
-    writeReg(0x4A, 0x78);
-    writeReg(0x4B, 0x78);
-    writeReg(0x44, 0x08);
-    writeReg(0x45, 0x50);
-    writeReg(0x64, 0xFF);
-    writeReg(0x65, 0x1F);
-    writeReg(0x7F, 0x14);
-    writeReg(0x65, 0x60);
-    writeReg(0x66, 0x08);
-    writeReg(0x63, 0x78);
-    writeReg(0x7F, 0x15);
-    writeReg(0x48, 0x58);
-    writeReg(0x7F, 0x07);
-    writeReg(0x41, 0x0D);
-    writeReg(0x43, 0x14);
-    writeReg(0x4B, 0x0E);
-    writeReg(0x45, 0x0F);
-    writeReg(0x44, 0x42);
-    writeReg(0x4C, 0x80);
-    writeReg(0x7F, 0x10);
-    writeReg(0x5B, 0x02);
-    writeReg(0x7F, 0x07);
-    writeReg(0x40, 0x41);
-    writeReg(0x70, 0x00);
+    write_reg(0x7F, 0x00);
+    write_reg(0x61, 0xAD);
+    write_reg(0x7F, 0x03);
+    write_reg(0x40, 0x00);
+    write_reg(0x7F, 0x05);
+    write_reg(0x41, 0xB3);
+    write_reg(0x43, 0xF1);
+    write_reg(0x45, 0x14);
+    write_reg(0x5B, 0x32);
+    write_reg(0x5F, 0x34);
+    write_reg(0x7B, 0x08);
+    write_reg(0x7F, 0x06);
+    write_reg(0x44, 0x1B);
+    write_reg(0x40, 0xBF);
+    write_reg(0x4E, 0x3F);
+    write_reg(0x7F, 0x08);
+    write_reg(0x65, 0x20);
+    write_reg(0x6A, 0x18);
+    write_reg(0x7F, 0x09);
+    write_reg(0x4F, 0xAF);
+    write_reg(0x5F, 0x40);
+    write_reg(0x48, 0x80);
+    write_reg(0x49, 0x80);
+    write_reg(0x57, 0x77);
+    write_reg(0x60, 0x78);
+    write_reg(0x61, 0x78);
+    write_reg(0x62, 0x08);
+    write_reg(0x63, 0x50);
+    write_reg(0x7F, 0x0A);
+    write_reg(0x45, 0x60);
+    write_reg(0x7F, 0x00);
+    write_reg(0x4D, 0x11);
+    write_reg(0x55, 0x80);
+    write_reg(0x74, 0x1F);
+    write_reg(0x75, 0x1F);
+    write_reg(0x4A, 0x78);
+    write_reg(0x4B, 0x78);
+    write_reg(0x44, 0x08);
+    write_reg(0x45, 0x50);
+    write_reg(0x64, 0xFF);
+    write_reg(0x65, 0x1F);
+    write_reg(0x7F, 0x14);
+    write_reg(0x65, 0x60);
+    write_reg(0x66, 0x08);
+    write_reg(0x63, 0x78);
+    write_reg(0x7F, 0x15);
+    write_reg(0x48, 0x58);
+    write_reg(0x7F, 0x07);
+    write_reg(0x41, 0x0D);
+    write_reg(0x43, 0x14);
+    write_reg(0x4B, 0x0E);
+    write_reg(0x45, 0x0F);
+    write_reg(0x44, 0x42);
+    write_reg(0x4C, 0x80);
+    write_reg(0x7F, 0x10);
+    write_reg(0x5B, 0x02);
+    write_reg(0x7F, 0x07);
+    write_reg(0x40, 0x41);
+    write_reg(0x70, 0x00);
 
     delay(10);
     
-    writeReg(0x32, 0x44);
-    writeReg(0x7F, 0x07);
-    writeReg(0x40, 0x40);
-    writeReg(0x7F, 0x06);
-    writeReg(0x62, 0xf0);
-    writeReg(0x63, 0x00);
-    writeReg(0x7F, 0x0D);
-    writeReg(0x48, 0xC0);
-    writeReg(0x6F, 0xd5);
-    writeReg(0x7F, 0x00);
-    writeReg(0x5B, 0xa0);
-    writeReg(0x4E, 0xA8);
-    writeReg(0x5A, 0x50);
-    writeReg(0x40, 0x80);
+    write_reg(0x32, 0x44);
+    write_reg(0x7F, 0x07);
+    write_reg(0x40, 0x40);
+    write_reg(0x7F, 0x06);
+    write_reg(0x62, 0xf0);
+    write_reg(0x63, 0x00);
+    write_reg(0x7F, 0x0D);
+    write_reg(0x48, 0xC0);
+    write_reg(0x6F, 0xd5);
+    write_reg(0x7F, 0x00);
+    write_reg(0x5B, 0xa0);
+    write_reg(0x4E, 0xA8);
+    write_reg(0x5A, 0x50);
+    write_reg(0x40, 0x80);
 
 }

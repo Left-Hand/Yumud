@@ -1,7 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "types/rgb.h"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+#include "hal/gpio/port.hpp"
 
 #include <optional>
 
@@ -11,20 +15,20 @@ class DisplayerPhy{
 public:
     virtual void init() = 0;
 
-    virtual BusError writeCommand(const uint32_t cmd) = 0;
-    virtual BusError writeData(const uint32_t data) = 0;
+    virtual BusError write_command(const uint32_t cmd) = 0;
+    virtual BusError write_data(const uint32_t data) = 0;
 
-    virtual void writeU8(const uint8_t data, size_t len) = 0;
-    virtual void writeU8(const uint8_t * data, size_t len) = 0;
+    virtual void write_u8(const uint8_t data, size_t len) = 0;
+    virtual void write_u8(const uint8_t * data, size_t len) = 0;
 };
 
 class DisplayerPhySpi:public DisplayerPhy{
 protected:
 // public:
     hal::SpiDrv spi_drv_;
-    hal::GpioIntf & dc_gpio;
-    hal::GpioIntf & res_gpio;
-    hal::GpioIntf & blk_gpio;
+    hal::GpioIntf & dc_gpio_;
+    hal::GpioIntf & res_gpio_;
+    hal::GpioIntf & blk_gpio_;
 
     static constexpr bool command_level = false;
     static constexpr bool data_level = true;
@@ -35,88 +39,88 @@ public:
 
     DisplayerPhySpi(
             hal::SpiDrv && spi_drv, 
-            hal::GpioIntf & _dc_gpio, 
-            hal::GpioIntf & _res_gpio = hal::NullGpio,
-            hal::GpioIntf & _blk_gpio = hal::NullGpio
-        ) :spi_drv_(std::move(spi_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+            hal::GpioIntf & dc_gpio, 
+            hal::GpioIntf & res_gpio = hal::NullGpio,
+            hal::GpioIntf & blk_gpio = hal::NullGpio
+        ) :spi_drv_(std::move(spi_drv)), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
 
     // 拷贝构造函数
     DisplayerPhySpi(
         const hal::SpiDrv & spi_drv, 
-        hal::GpioIntf & _dc_gpio, 
-        hal::GpioIntf & _res_gpio = hal::NullGpio,
-        hal::GpioIntf & _blk_gpio = hal::NullGpio
-    ) : spi_drv_(spi_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+        hal::GpioIntf & dc_gpio, 
+        hal::GpioIntf & res_gpio = hal::NullGpio,
+        hal::GpioIntf & blk_gpio = hal::NullGpio
+    ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
 
 
     DisplayerPhySpi(
-            hal::Spi & _bus,
+            hal::Spi & bus,
             const uint8_t index,
-            hal::GpioIntf & _dc_gpio, 
-            hal::GpioIntf & _res_gpio = hal::NullGpio,
-            hal::GpioIntf & _blk_gpio = hal::NullGpio
-            ):DisplayerPhySpi(hal::SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
+            hal::GpioIntf & dc_gpio, 
+            hal::GpioIntf & res_gpio = hal::NullGpio,
+            hal::GpioIntf & blk_gpio = hal::NullGpio
+            ):DisplayerPhySpi(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
 
-    void init() override{
-        dc_gpio.outpp();
-        res_gpio.outpp(HIGH);
-        blk_gpio.outpp(HIGH);
+    void init(){
+        dc_gpio_.outpp();
+        res_gpio_.outpp(HIGH);
+        blk_gpio_.outpp(HIGH);
 
         reset();
     }
 
     void reset(){
         delay(10);
-        res_gpio.clr();
+        res_gpio_.clr();
         delay(10);
-        res_gpio.set();
+        res_gpio_.set();
     }
 
     void setBackLight(const uint8_t brightness){
 
     }
 
-    BusError writeCommand(const uint32_t cmd) override{
-        dc_gpio = command_level;
+    BusError write_command(const uint32_t cmd){
+        dc_gpio_ = command_level;
         return spi_drv_.writeSingle<uint8_t>(cmd);
     }
 
-    BusError writeData(const uint32_t data) override{
-        dc_gpio = data_level;
+    BusError write_data(const uint32_t data){
+        dc_gpio_ = data_level;
         return spi_drv_.writeSingle<uint8_t>(data);
     }
 
-    void writeData16(const uint32_t data){
-        dc_gpio = data_level;
+    void write_data16(const uint32_t data){
+        dc_gpio_ = data_level;
         spi_drv_.writeSingle<uint16_t>(data).unwrap();
     }
 
-    void writeSingle(const auto & data){
-        dc_gpio = data_level;
+    void write_single(const auto & data){
+        dc_gpio_ = data_level;
         spi_drv_.writeSingle(data).unwrap();
     }
 
     template<typename U>
-    void writeBurst(const auto * data, size_t len){
-        dc_gpio = data_level;
-        spi_drv_.writeBurst<U>(data, len).unwrap();
+    void write_burst(const auto * data, size_t len){
+        dc_gpio_ = data_level;
+        spi_drv_.write_burst<U>(data, len).unwrap();
     }
 
     template<typename U>
-    void writeBurst(const auto & data, size_t len){
-        dc_gpio = data_level;
-        spi_drv_.writeBurst<U>(data, len).unwrap();
+    void write_burst(const auto & data, size_t len){
+        dc_gpio_ = data_level;
+        spi_drv_.write_burst<U>(data, len).unwrap();
     }
 
 
-    void writeU8(const uint8_t data, size_t len) override{
-        dc_gpio = data_level;
-        spi_drv_.writeBurst<uint8_t>(data, len).unwrap();
+    void write_u8(const uint8_t data, size_t len){
+        dc_gpio_ = data_level;
+        spi_drv_.write_burst<uint8_t>(data, len).unwrap();
     }
 
-    void writeU8(const uint8_t * data, size_t len) override{
-        dc_gpio = data_level;
-        spi_drv_.writeBurst<uint8_t>(data, len).unwrap();
+    void write_u8(const uint8_t * data, size_t len){
+        dc_gpio_ = data_level;
+        spi_drv_.write_burst<uint8_t>(data, len).unwrap();
     }
 };
 
@@ -132,38 +136,38 @@ public:
     DisplayerPhyI2c(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
     DisplayerPhyI2c(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){};
 
-    void init()override{;}
+    void init(){;}
 
-    BusError writeCommand(const uint32_t cmd){
-        return i2c_drv_.writeReg(cmd_token, cmd, LSB);
+    BusError write_command(const uint32_t cmd){
+        return i2c_drv_.write_reg(cmd_token, cmd, LSB);
     }
 
-    BusError writeData(const uint32_t data){
-        return i2c_drv_.writeReg(data_token, data, LSB);
+    BusError write_data(const uint32_t data){
+        return i2c_drv_.write_reg(data_token, data, LSB);
     }
 
-    BusError writeBurst(const is_stdlayout auto * pdata, size_t len){
+    BusError write_burst(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
-            return i2c_drv_.writeBurst(data_token, std::span(pdata, len), LSB);
+            return i2c_drv_.write_burst(data_token, std::span(pdata, len), LSB);
         }else {
-            return i2c_drv_.writeBurst(data_token, std::span(pdata, len));
+            return i2c_drv_.write_burst(data_token, std::span(pdata, len));
         }
     }
 
-    BusError writeBurst(const is_stdlayout auto data, size_t len){
+    BusError write_burst(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
-            return i2c_drv_.writeRepeat(data_token, std::span(data, len), LSB);
+            return i2c_drv_.write_repeat(data_token, std::span(data, len), LSB);
         }else {
-            return i2c_drv_.writeRepeat(data_token, data, len);
+            return i2c_drv_.write_repeat(data_token, data, len);
         }
     }
 
-    void writeU8(const uint8_t data, size_t len) override{
-        writeBurst<uint8_t>(data, len);
+    void write_u8(const uint8_t data, size_t len) {
+        write_burst<uint8_t>(data, len);
     }
 
-    void writeU8(const uint8_t * data, size_t len) override{
-        writeBurst<uint8_t>(data, len);
+    void write_u8(const uint8_t * data, size_t len) {
+        write_burst<uint8_t>(data, len);
     }
 };
 

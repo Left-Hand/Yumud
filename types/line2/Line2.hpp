@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "types/vector2/vector2.hpp"
 #include "types/segment2/Segment2.hpp"
 
@@ -125,7 +125,7 @@ public:
         auto den = a1 * b2 - a2 * b1;
         auto inv_den = T(1) / den;
 
-        return Vector2{num1 * inv_den, num2 * inv_den};
+        return Vector2_t<real_t>{num1 * inv_den, num2 * inv_den};
     }
 
     __fast_inline constexpr Line2_t<T> rotated(const Vector2_t<T> & p, const T & delta){

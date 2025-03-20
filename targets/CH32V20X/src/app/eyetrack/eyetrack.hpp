@@ -8,11 +8,11 @@ namespace etk{
 using namespace ymd::drivers;
 
 struct EyeInfo{
-    Vector2 pos;
+    Vector2_t<real_t> pos;
 };
 
 struct EyelidInfo{
-    Range range;
+    Range_t<real_t> range;
 };
 
 class Eyes;

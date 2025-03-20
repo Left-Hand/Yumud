@@ -1,9 +1,7 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
-#include "hal/gpio/port.hpp"
-#include "hal/nvic/nvic.hpp"
 #include "hal/dma/dma.hpp"
 
 #include "regular_channel.hpp"

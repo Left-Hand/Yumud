@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../constexprmath/ConstexprMath.hpp"
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 
 template<typename real, int size>

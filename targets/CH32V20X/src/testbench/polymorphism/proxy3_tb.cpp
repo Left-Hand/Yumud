@@ -1,12 +1,12 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/stream/StringStream.hpp"
+#include "core/debug/debug.hpp"
+#include "core/stream/StringStream.hpp"
 
-#include "sys/polymorphism/proxy.hpp"
-#include "sys/math/real.hpp"
+#include "core/polymorphism/proxy.hpp"
+#include "core/math/real.hpp"
 
-#include "sys/clock/time.hpp"
+#include "core/clock/time.hpp"
 
 
 using namespace ymd;
@@ -130,7 +130,7 @@ using DrawableProxy = pro::proxy<Drawable>;
 // }
 // using np = std::nullptr;
 void proxy_tb(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
     StringStream ss;
     uint32_t dur;
@@ -179,7 +179,7 @@ void proxy_tb(){
         char buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            StringUtils::qtoa(time(), buf, 4);
+            qtoa(time(), buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

@@ -31,7 +31,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
 
     #define GETTER_BIND(cmd, ...)\
     case cmd:\
-        if(msg.isRemote()){\
+        if(msg.is_remote()){\
             can_.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
         }\
         break;\

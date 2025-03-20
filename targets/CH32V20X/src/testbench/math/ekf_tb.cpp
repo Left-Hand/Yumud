@@ -1,13 +1,14 @@
 #include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
-#include "sys/math/float/bf16.hpp"
+#include "core/math/float/bf16.hpp"
 #include "dsp/filter/EKF.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 // #include "kalman/kalman3.hpp"
 
 // #define UART uart2
-#define UART uart2
+#define UART hal::uart2
 void ekf_main(){
 
     

@@ -1,10 +1,10 @@
 #include "../tb.h"
 
-#include "sys/math/int/int_t.hpp"
-#include "sys/math/iq/universal/support.h"
-#include "sys/math/iq/universal/_IQNtables.hpp"
+#include "core/math/int/int_t.hpp"
+#include "core/math/iq/universal/support.hpp"
+#include "core/math/iq/universal/_IQNtables.hpp"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 

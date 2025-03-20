@@ -1,6 +1,7 @@
-#include "port_concept.hpp"
-#include "Gpio.hpp"
-#include "sys/core/sdk.h"
+#include "port_intf.hpp"
+#include "gpio.hpp"
+
+#include "core/sdk.hpp"
 
 using namespace ymd::hal;
 

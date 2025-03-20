@@ -20,7 +20,7 @@ BusError TCS34725::requestRegData(const TCS34725::RegAddress addr, uint16_t * da
     uint8_t address = convRegAddress(addr);
     TCS34725_DEBUG("address", address)
 
-    return i2c_drv_.readBurst(address, std::span(data_ptr, len), LSB);
+    return i2c_drv_.read_burst(address, std::span(data_ptr, len), LSB);
 }
 
 
@@ -46,5 +46,5 @@ void TCS34725::setIntPersistence(const uint8_t times){
         intPersistenceReg = (uint8_t)MIN(times, 3);
     }
 
-    writeReg(RegAddress::Integration, integrationReg);
+    write_reg(RegAddress::Integration, integrationReg);
 }

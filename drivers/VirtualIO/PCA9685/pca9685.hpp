@@ -1,8 +1,11 @@
 #pragma once
 
-#include "hal/gpio/port_virtual.hpp"
+#include "core/io/regs.hpp"
+
+#include "hal/gpio/vport.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
-#include "drivers/device_defs.h"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 class PCA9685 final: public hal::VGpioPortIntf<16>{
@@ -91,20 +94,20 @@ protected:
         void setMode(const hal::GpioMode mode) override{}
     };
 
-    BusError writeReg(const RegAddress addr, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(addr), reg).unwrap();
+    BusError write_reg(const RegAddress addr, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(addr), reg).unwrap();
     };
 
-    BusError writeReg(const RegAddress addr, const uint16_t reg){
-        return i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t reg){
+        return i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(addr), reg).unwrap();
+    BusError read_reg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(addr), reg).unwrap();
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & reg){
-        return i2c_drv_.readReg(uint8_t(addr), reg, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & reg){
+        return i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
     }
     void writePort(const uint16_t data) override{
     }

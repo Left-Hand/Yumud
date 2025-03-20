@@ -1,5 +1,5 @@
 #include "rng.hpp"
-#include "sys/core/sdk.h"
+#include "core/sdk.hpp"
 
 using namespace ymd::hal;
 

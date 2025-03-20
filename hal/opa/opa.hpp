@@ -1,9 +1,9 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/gpio/GpioTag.hpp"
+#include "hal/gpio/gpio_tag.hpp"
 #include "hal/gpio/port.hpp"
 
 #include "ral/ch32/ch32v203_opa_def.hpp"

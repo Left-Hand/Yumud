@@ -1,9 +1,13 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
+#include "core/math/realmath.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
+
 
 class TimerOCTwins:public PwmIntf{
 protected:

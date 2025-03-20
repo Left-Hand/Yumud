@@ -32,8 +32,7 @@
 /**************************************************************************/
 
 
-#include "sys/stream/ostream.hpp"
-#include "sys/math/real.hpp"
+#include "core/stream/ostream.hpp"
 
 namespace ymd{
 
@@ -62,7 +61,7 @@ public:
 
     scexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
     scexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
-    scexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
+    scexpr Vector2_t<T> INF = Vector2_t<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
 
     scexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
     scexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
@@ -258,8 +257,6 @@ __fast_inline constexpr Vector2_t<T> operator*(const arithmetic auto & n, const 
 
 
 using Vector2i = Vector2_t<int>;
-using Vector2 = Vector2_t<real_t>;
-
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }

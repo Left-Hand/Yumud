@@ -1,12 +1,14 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "hal/gpio/gpio_utils.hpp"
+
 #include "hal/nvic/nvic.hpp"
-#include "hal/gpio/gpio.hpp"
 
 #include <functional>
 
 namespace ymd::hal{
+
+class Gpio;
 class Exti{
 
 };

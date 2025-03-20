@@ -1,12 +1,14 @@
 #include "src/testbench/tb.h"
 
-#include "sys/clock/clock.h"
-#include "sys/debug/debug.hpp"
+#include "core/clock/clock.hpp"
+#include "core/debug/debug.hpp"
+#include "core/string/string.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/spi/spisw.hpp"
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 
@@ -23,7 +25,7 @@ bool isInInterruptContext() {
 }
 
 void lt8920_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
@@ -33,7 +35,7 @@ void lt8920_main(){
 
 
     spi.init(2_MHz);
-    spi.bindCsPin(portA[0], 0);
+    spi.bind_cs_pin(portA[0], 0);
 
     LT8920 lt{spi, 0};
     bindSystickCb([&](){

@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "hal/bus/usb/usbfs/usbfs.hpp"
 
-#include "sys/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 void usbcdc_tb(UsbFS & fs){
     fs.init();

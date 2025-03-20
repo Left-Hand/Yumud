@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "drivers/IMU/InvensenseIMU.hpp"
+#include "drivers/IMU/details/InvensenseIMU.hpp"
 
 
 #ifdef ICM42688_DEBUG
@@ -14,7 +14,7 @@
 
 namespace ymd::drivers{
 
-class ICM42688:public Axis6, public InvensenseSensor{
+class ICM42688:public Axis6{
 public:
 
     enum class AFS:uint8_t{
@@ -158,19 +158,16 @@ protected:
 
     scexpr uint8_t default_i2c_addr = 0x68;
 
+    InvensenseSensor_Phy phy_;
+
     real_t lsb_acc_x64;
     real_t lsb_gyr_x256;
 
     
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
-
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
 public:
-    using InvensenseSensor::InvensenseSensor;
-    ICM42688(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(i2c, default_i2c_addr){;}
+    ICM42688(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(i2c, default_i2c_addr){;}
 
     void init();
     
@@ -180,8 +177,8 @@ public:
 
     void reset();
 
-    Option<Vector3R> getAcc();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getAcc();
+    Option<Vector3_t<real_t>> getGyr();
 };
 
 }

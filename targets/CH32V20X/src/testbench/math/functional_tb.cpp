@@ -1,14 +1,17 @@
-#include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
+#include <bitset>
+#include <ranges>
 
-#include "sys/math/real.hpp"
+
+#include "src/testbench/tb.h"
+
+#include "core/debug/debug.hpp"
+#include "core/math/real.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "utils/Result.hpp"
-#include <bitset>
-#include <ranges>
+#include "hal/bus/uart/uarthw.hpp"
 
 
 using namespace ymd;

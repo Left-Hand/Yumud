@@ -2,49 +2,51 @@
 
 using namespace ymd::drivers;
 
+#define BMP280_DEBUG(...)
+
 bool BMP280::isChipValid(){
-    readReg(RegAddress::ChipID, chipIDReg);
+    read_reg(RegAddress::ChipID, chipIDReg);
     BMP280_DEBUG("CHIP code: ", uint8_t(chipIDReg));
     return (chipIDReg == valid_chipid);
 }
 
 void BMP280::setTempratureSampleMode(const TempratureSampleMode tempMode){
     ctrlReg.osrs_t = (uint8_t)tempMode;
-    writeReg(RegAddress::Ctrl, ctrlReg);
+    write_reg(RegAddress::Ctrl, ctrlReg);
 }
 
 void BMP280::setPressureSampleMode(const PressureSampleMode pressureMode){
     ctrlReg.osrs_p = (uint8_t)pressureMode;
-    writeReg(RegAddress::Ctrl, ctrlReg);
+    write_reg(RegAddress::Ctrl, ctrlReg);
 }
 
 void BMP280::setMode(const Mode mode){
     ctrlReg.mode = (uint8_t)mode;
-    writeReg(RegAddress::Ctrl, ctrlReg);
+    write_reg(RegAddress::Ctrl, ctrlReg);
 }
 
 void BMP280::setDataRate(const DataRate dataRate){
     configReg.t_sb = (uint8_t)dataRate;
-    writeReg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config, configReg);
 }
 
 void BMP280::setFilterCoefficient(const FilterCoefficient filterCoeff){
     configReg.filter = (uint8_t)filterCoeff;
-    writeReg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config, configReg);
 }
 
 void BMP280::reset(){
-    writeReg(RegAddress::Reset, reset_key);
+    write_reg(RegAddress::Reset, reset_key);
 }
 
 bool BMP280::isIdle(){
-    readReg(RegAddress::Status, statusReg);
+    read_reg(RegAddress::Status, statusReg);
     return (statusReg.busy == 0);
 }
 
 void BMP280::enableSpi3(const bool en){
     configReg.spi3_en = en;
-    writeReg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config, configReg);
 }
 
 void BMP280::getPressure(int32_t & pressure){
@@ -91,16 +93,16 @@ void BMP280::init(){
     // setMode(Mode::Cont);
     // setTempratureSampleMode(TempratureSampleMode::Bit20);
     // setPressureSampleMode(PressureSampleMode::Bit20);
-    writeReg(RegAddress::Ctrl, (uint8_t)0xFFU);
+    write_reg(RegAddress::Ctrl, (uint8_t)0xFFU);
 
     setDataRate(DataRate::HZ200);
     setFilterCoefficient(FilterCoefficient::OFF);
     enableSpi3(false);
 
-    // writeReg(RegAddress::Config, (uint8_t)0x00);
+    // write_reg(RegAddress::Config, (uint8_t)0x00);
 
     // memset(&digT1, 0, 2 * 12);
-    readBurst(RegAddress::DigT1, (uint8_t *)&digT1, 2, 2*12);
+    read_burst(RegAddress::DigT1, (uint8_t *)&digT1, 2, 2*12);
 
     // for(uint16_t * ptr = &digT1; ptr <= (uint16_t *)&digP9; ptr++)
     //     BMP280_DEBUG(String(*ptr, 16));

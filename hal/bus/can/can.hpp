@@ -1,6 +1,8 @@
 #pragma once
 
 #include "hal/bus/bus.hpp"
+#include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/sdk.hpp"
 
 #include "CanUtils.hpp"
 #include "CanMsg.hpp"
@@ -43,18 +45,22 @@ void CAN2_SCE_IRQHandler(void);
 
 namespace ymd::hal{
 
+class Gpio;
+
 struct CanFilter;
 class Can: public PackedBus<CanMsg>{
 public:
-    using BaudRate = CanUtils::BaudRate;
-    using Mode = CanUtils::Mode;
-    using ErrCode = CanUtils::ErrCode;
-    using RemoteType = CanUtils::RemoteType;
+    using BaudRate = CanBaudrate;
+    using Mode = CanMode;
+    using ErrCode = CanError;
 
-    using Packet = CanMsg;
     using Callback = std::function<void(void)>;
 protected:
     CAN_TypeDef * instance;
+    
+    #ifndef CAN_SOFTFIFO_SIZE
+    #define CAN_SOFTFIFO_SIZE 8
+    #endif
 
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
@@ -65,27 +71,28 @@ protected:
 
     bool sync_ = true;
 
-    Gpio & getTxGpio();
-    Gpio & getRxGpio();
-    BusError lead(const uint8_t index) override{return BusError::OK;};
-    void trail() override{};
+    Gpio & get_tx_gpio();
+    Gpio & get_rx_gpio();
+    BusError lead(const uint8_t index){return BusError::OK;};
+    void trail(){};
 
-    void installGpio();
-    void enableRcc();
-    bool isMailBoxDone(const uint8_t mbox);
-    void clearMailbox(const uint8_t mbox);
-    void initIt();
+    void install_gpio();
+    void enable_rcc();
+    bool is_mail_box_done(const uint8_t mbox);
+    void clear_mailbox(const uint8_t mbox);
+    void init_it();
     
-    void onTxInterrupt();
-    void onRxMsgInterrupt(const uint8_t fifo_num);
-    void onRxOverrunInterrupt(){;}
-    void onRxFullInterrupt(){;}
-    void onSceInterrupt();
+    void on_tx_interrupt();
+    void on_rx_msg_interrupt(const uint8_t fifo_num);
+    void on_rx_overrun_interrupt(){;}
+    void on_rx_full_interrupt(){;}
+    void on_sce_interrupt();
 
 
-    void init(const BaudRate baudRate, const Mode mode);
+    void init(const BaudRate baudrate, const Mode mode);
     uint8_t transmit(const CanMsg & msg);
     CanMsg receive(const uint8_t fifo_num);
+
     friend class CanFilter;
 
     #ifdef ENABLE_CAN1
@@ -112,39 +119,36 @@ public:
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
-    void setBaudRate(const uint32_t baudRate);
+    void set_baudrate(const uint32_t baudrate);
 
-    void init(const uint baudRate, const Mode mode = Mode::Normal);
+    void init(const uint baudrate, const Mode mode = Mode::Normal);
 
-    bool write(const CanMsg & msg) override;
-    const CanMsg && read() override;
+    bool write(const CanMsg & msg);
+    const CanMsg && read();
     const CanMsg & front();
     size_t pending();
     size_t available();
 
     void clear(){while(this->available()){this->read();}}
-    void setSync(const bool en){sync_ = en;}
-    bool isTranmitting();
-    bool isReceiving();
-    void enableHwReTransmit(const bool en = true);
-    void cancelTransmit(const uint8_t mbox);
-    void cancelAllTransmit();
-    void enableFifoLock(const bool en = true);
-    void enableIndexPriority(const bool en = true);
-    uint8_t getTxErrCnt();
-    uint8_t getRxErrCnt();
-    ErrCode getErrCode();
+    void set_sync(const bool en){sync_ = en;}
+    bool is_tranmitting();
+    bool is_receiving();
+    void enable_hw_retransmit(const bool en = true);
+    void cancel_transmit(const uint8_t mbox);
+    void cancel_all_transmits();
+    void enable_fifo_lock(const bool en = true);
+    void enable_index_priority(const bool en = true);
+    uint8_t get_tx_errcnt();
+    uint8_t get_rx_errcnt();
+    CanError error();
 
-    bool isBusOff();
+    bool is_busoff();
 
     void bindTxOkCb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
     void bindTxFailCb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
     void bindRxCb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
-
-
-
 };
 
 #ifdef ENABLE_CAN1

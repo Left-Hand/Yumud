@@ -1,10 +1,10 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "types/quat/quat.hpp"
 
 
-#include "sys/math/fast/conv.hpp"
+#include "core/math/fast/conv.hpp"
 
 namespace ymd{
 class Mahony{

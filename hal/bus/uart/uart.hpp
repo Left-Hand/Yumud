@@ -2,16 +2,17 @@
 
 #include <functional>
 
-#include "sys/core/sdk.h"
-#include "sys/stream/stream.hpp"
+#include "core/sdk.hpp"
+#include "core/stream/stream.hpp"
 
 #include "hal/bus/bus.hpp"
-#include "hal/gpio/port.hpp"
 
-#include "sys/buffer/ringbuf/Fifo_t.hpp"
+#include "core/buffer/ringbuf/Fifo_t.hpp"
 
 
 namespace ymd::hal{
+
+class Gpio;
 
 enum class UartParity{
     None = USART_Parity_No,
@@ -22,7 +23,7 @@ enum class UartParity{
 class Uart:public FullDuplexBus{
 
 public:
-    using Mode = CommMode;
+    using Mode = CommDirection;
     using Callback = std::function<void(void)>;
     using Parity = UartParity;
 
@@ -31,15 +32,15 @@ private:
     Callback postrx_cb_;
 
 protected:
-    CommMethod tx_method_;
-    CommMethod rx_method_;
+    CommStrategy tx_strategy_;
+    CommStrategy rx_strategy_;
 
     #ifndef UART_FIFO_BUF_SIZE
     #define UART_FIFO_BUF_SIZE 256
     #endif
 
-    Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo;
-    Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo_;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo_;
 
     Uart(){;}
 
@@ -65,16 +66,16 @@ public:
     virtual Gpio & rxio() = 0;
 
     virtual void init(
-        const uint32_t baudRate, 
-        const CommMethod _rxMethod = CommMethod::Interrupt,
-        const CommMethod _txMethod = CommMethod::Blocking) = 0;
+        const uint32_t baudrate, 
+        const CommStrategy rx_strategy = CommStrategy::Interrupt,
+        const CommStrategy tx_strategy = CommStrategy::Blocking) = 0;
 
-    size_t available() const {return rx_fifo.available();}
-    size_t pending() const {return tx_fifo.available();}
-    size_t remain() const {return tx_fifo.size() - tx_fifo.available();}
+    size_t available() const {return rx_fifo_.available();}
+    size_t pending() const {return tx_fifo_.available();}
+    size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
 
-    virtual void setTxMethod(const CommMethod _txMethod) = 0;
-    virtual void setRxMethod(const CommMethod _rxMethod) = 0;
+    virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
+    virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
     void bindPostTxCb(auto && cb){posttx_cb_ = std::move(cb);}
     void bindPosRxCb(auto && cb){postrx_cb_ = std::move(cb);}
 };

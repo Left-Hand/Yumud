@@ -1,9 +1,9 @@
 #include "misc.hpp"
 #include "config.hpp"
 #include "async/CanMaster.hpp"
-#include "sys/core/system.hpp"
-#include "sys/clock/clock.h"
-#include "sys/clock/time.hpp"
+#include "core/system.hpp"
+#include "core/clock/clock.hpp"
+#include "core/clock/time.hpp"
 
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 #include "nvcv2/geometry/geometry.hpp"
@@ -12,7 +12,7 @@
 
 #include "machine/chassis_actions.hpp"
 #include "common/enum.hpp"
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
 
 
 using namespace nvcv2;
@@ -967,7 +967,7 @@ void host_main(){
 
         Map map{};
         auto & vuart = uart2;
-        vuart.init(576000, CommMethod::Blocking);
+        vuart.init(576000, CommStrategy::Blocking);
         VisionModule vision{vuart};
 
         Planner planner{chassis_module, map};

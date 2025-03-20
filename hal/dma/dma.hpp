@@ -1,19 +1,19 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/core/sdk.h"
-
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
-#include "hal/nvic/nvic.hpp"
-
-#include "dma_utils.hpp"
-
 #include <stddef.h>
 #include <initializer_list>
 #include <functional>
 #include <type_traits>
 #include <array>
+
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
+
+#include "hal/nvic/nvic.hpp"
+
+#include "dma_utils.hpp"
+
+
 
 extern"C"{
 #ifdef ENABLE_DMA1

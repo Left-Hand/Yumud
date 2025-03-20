@@ -1,6 +1,9 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+
+
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd{
 
@@ -9,8 +12,8 @@ protected:
     hal::I2cDrv i2c_drv_;
     using RegAddress = uint16_t;
 
-    BusError writeReg(const RegAddress command, const uint8_t data);
-    BusError readReg(const RegAddress command, uint8_t & data);
+    BusError write_reg(const RegAddress command, const uint8_t data);
+    BusError read_reg(const RegAddress command, uint8_t & data);
 public:
     scexpr uint8_t default_i2c_addr = 0;
     VL6180X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

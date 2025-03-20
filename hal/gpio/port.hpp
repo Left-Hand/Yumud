@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gpio.hpp"
-#include "port_concept.hpp"
+#include "port_intf.hpp"
 
 namespace ymd::hal{
 class GpioPort : public GpioPortIntf{

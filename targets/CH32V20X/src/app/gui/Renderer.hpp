@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/stream/stream.hpp"
+#include "core/stream/stream.hpp"
 
 #include "types/image/image.hpp"
 #include "types/rect2/rect2.hpp"

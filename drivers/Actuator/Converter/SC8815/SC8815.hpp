@@ -1,8 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
 
-
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -268,23 +271,23 @@ protected:
     MaskReg mask_reg = {};
 
 
-    BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg);
+    BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg);
+    BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    BusError writeReg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg, LSB);
+    BusError write_reg(const RegAddress address, const uint16_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
     }
 
-    BusError readReg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg, LSB);
+    BusError read_reg(const RegAddress address, uint16_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
     }
-    BusError readBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
+    BusError read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }
 
     SC8815 & powerUp();

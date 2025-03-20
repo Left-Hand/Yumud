@@ -1,8 +1,8 @@
 #include "../tb.h"
 
-#include "sys/utils/typetraits/size_traits.hpp"
-#include "sys/utils/BitField.hpp"
-#include "sys/utils/Reg.hpp"
+#include "core/utils/typetraits/size_traits.hpp"
+#include "core/utils/BitField.hpp"
+#include "core/utils/Reg.hpp"
 
 using namespace ymd;
 

@@ -14,8 +14,8 @@ using namespace ymd::drivers;
 #define IST8310_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
-#define READ_REG(reg) readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
 
 
 void IST8310::init(){
@@ -31,7 +31,7 @@ void IST8310::init(){
     update();
 }
 void IST8310::update(){
-    readBurst(axis_x_reg.address, &axis_x_reg, 3);
+    read_burst(axis_x_reg.address, &axis_x_reg, 3);
 }
 
 bool IST8310::verify(){
@@ -74,12 +74,12 @@ void IST8310::setAverageTimes(bool is_x, AverageTimes times){
     WRITE_REG(reg)
 }
 
-Option<Vector3R> IST8310::getMagnet(){
+Option<Vector3_t<real_t>> IST8310::getMagnet(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Some{Vector3R{
+    return Some{Vector3_t<real_t>{
         conv(axis_x_reg),
         conv(axis_y_reg),
         conv(axis_z_reg)

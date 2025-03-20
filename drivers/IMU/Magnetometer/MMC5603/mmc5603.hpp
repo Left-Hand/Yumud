@@ -1,17 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 
 
-// #define MMC5603_DEBUG
-
-#ifdef MMC5603_DEBUG
-#undef MMC5603_DEBUG
-#define MMC5603_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define MMC5603_DEBUG(...)
-#endif
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -52,7 +46,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;
@@ -189,16 +183,16 @@ protected:
 
     hal::I2cDrv i2c_drv_;
 
-    BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg);
+    BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg);
+    BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    BusError readBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len));
+    BusError read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }
 
     void setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z);

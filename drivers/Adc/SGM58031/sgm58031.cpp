@@ -1,21 +1,27 @@
 #include "sgm58031.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::drivers;
 
+#ifndef SGM58031_DEBUG
+#define SGM58031_DEBUG(...) DEBUG_LOG(...)
+#endif
+
+
 void SGM58031::init(){
-    readReg(RegAddress::Config, configReg);
-    readReg(RegAddress::LowThr, lowThrReg);
-    readReg(RegAddress::HighThr, highThrReg);
-    readReg(RegAddress::Trim, trimReg);
-    readReg(RegAddress::DeviceID, deviceIdReg);
+    read_reg(RegAddress::Config, configReg);
+    read_reg(RegAddress::LowThr, lowThrReg);
+    read_reg(RegAddress::HighThr, highThrReg);
+    read_reg(RegAddress::Trim, trimReg);
+    read_reg(RegAddress::DeviceID, deviceIdReg);
 }
 
 void SGM58031::setDataRate(const DataRate _dr){
     uint8_t dr = (uint8_t)_dr;
     configReg.dataRate = dr & 0b111;
     config1Reg.drSel = dr >> 3;
-    writeReg(RegAddress::Config, configReg);
-    writeReg(RegAddress::Config1, config1Reg);
+    write_reg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config1, config1Reg);
 }
 
 void SGM58031::setFS(const FS fs){
@@ -42,7 +48,7 @@ void SGM58031::setFS(const FS fs){
         default:
             break;
     }
-    writeReg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config, configReg);
 }
 
 void SGM58031::setFS(const real_t _fs, const real_t _vref){
@@ -62,7 +68,7 @@ void SGM58031::setFS(const real_t _fs, const real_t _vref){
         pga = PGA::RT16;
     }
     configReg.pga = (uint8_t)pga;
-    writeReg(RegAddress::Config, configReg);
+    write_reg(RegAddress::Config, configReg);
 }
 
 
@@ -70,5 +76,5 @@ void SGM58031::setTrim(const real_t _trim){
     real_t trim = _trim * real_t(4.0f / 3.0f);
     real_t offset = trim - real_t(1.30225f);
     trimReg.gn = (int)(offset * 0b01111111010);
-    writeReg(RegAddress::Trim, trimReg);
+    write_reg(RegAddress::Trim, trimReg);
 }

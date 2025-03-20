@@ -1,10 +1,13 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
+
+#include "core/math/realmath.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace hal;
 void m2006_main(){
@@ -13,10 +16,10 @@ void m2006_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommMethod::Blocking);
+    // DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
     can.init(1_MHz);
-    can[0].mask(CanID16{0x201, Can::RemoteType::Data}, CanID16{0xffff, Can::RemoteType::Remote});
+    can[0].mask(CanID16{0x201, CanRemoteSpec::Data}, CanID16{0xffff, CanRemoteSpec::Remote});
     while(true){
         auto s = real_t(0.07) * sin(4 * time());
         auto c = real_t(0.07) * cos(4 * time());

@@ -1,7 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include <optional>
+
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{
@@ -183,8 +187,8 @@ protected:
 
     void delayT5(){delayMicroseconds(1);}
 
-    BusError writeReg(const RegAddress address, const uint16_t reg);
-    BusError readReg(const RegAddress address, uint16_t & reg);
+    BusError write_reg(const RegAddress address, const uint16_t reg);
+    BusError read_reg(const RegAddress address, uint16_t & reg);
     BusError writeFifo(const uint8_t * data, const size_t len);
     BusError readFifo(uint8_t * data, const size_t len);
 

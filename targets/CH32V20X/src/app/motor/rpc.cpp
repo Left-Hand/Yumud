@@ -1,11 +1,13 @@
 #include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "robots/rpc/arg_parser.hpp"
 #include "types/vector3/vector3.hpp"
-
+#include "core/math/realmath.hpp"
 #include "rpc.hpp"
+
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 

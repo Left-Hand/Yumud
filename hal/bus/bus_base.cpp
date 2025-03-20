@@ -1,7 +1,7 @@
 #include "bus_base.hpp"
 
-#include "sys/stream/ostream.hpp"
-#include "sys/core/system.hpp"
+#include "core/stream/ostream.hpp"
+#include "core/system.hpp"
 
 using namespace ymd;
 

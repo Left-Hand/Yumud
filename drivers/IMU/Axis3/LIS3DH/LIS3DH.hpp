@@ -2,9 +2,9 @@
 
 //这个驱动还在推进
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/STMicroIMU.hpp"
+#include "drivers/IMU/details/STMicroIMU.hpp"
 
 enum FormerLatter:bool{
     Former,
@@ -159,7 +159,7 @@ public:
 
     Result<void> clear_flag();
 
-    Option<Vector3R> get_acc();
+    Option<Vector3_t<real_t>> get_acc();
 
     Result<void> sleep()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = false; return write_reg(reg);}

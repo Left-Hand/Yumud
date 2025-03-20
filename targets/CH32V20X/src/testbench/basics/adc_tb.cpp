@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "hal/adc/adcs/adc1.hpp"
-
+#include "hal/bus/uart/uarthw.hpp"
 // #define ADC_TB_MAIN
 // #define ADC_TB_REGULAR_BLOCKING
 #define ADC_TB_REGULAR_DMA

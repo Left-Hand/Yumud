@@ -14,12 +14,12 @@ using namespace ymd::drivers;
 #define MMC5603_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg)     writeReg(reg.address, reg);
-#define READ_REG(reg)     readReg(reg.address, reg);
+#define WRITE_REG(reg)     write_reg(reg.address, reg);
+#define READ_REG(reg)     read_reg(reg.address, reg);
 
 void MMC5603::update(){
     auto & reg = x_reg;
-    readBurst(reg.address_x, &reg.data_h, 6);
+    read_burst(reg.address_x, &reg.data_h, 6);
 }
 
 void MMC5603::reset(){
@@ -71,8 +71,8 @@ void MMC5603::enableContious(const bool en){
 }
 
 
-Option<Vector3R> MMC5603::getMagnet(){
-    return Some{Vector3R{
+Option<Vector3_t<real_t>> MMC5603::getMagnet(){
+    return Some{Vector3_t<real_t>{
         s16_to_uni(int16_t(x_reg)),
         s16_to_uni(int16_t(y_reg)),
         s16_to_uni(int16_t(z_reg))

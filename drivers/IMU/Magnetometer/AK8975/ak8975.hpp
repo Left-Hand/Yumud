@@ -1,8 +1,8 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/AsahiKaseiIMU.hpp"
+#include "drivers/IMU/details/AsahiKaseiIMU.hpp"
 
 
 namespace ymd::drivers{
@@ -35,10 +35,10 @@ protected:
     };
 
 
-    BusError writeReg(const uint8_t addr, const uint8_t data);
-    BusError readReg(const RegAddress addr, uint8_t & data);
+    BusError write_reg(const uint8_t addr, const uint8_t data);
+    BusError read_reg(const RegAddress addr, uint8_t & data);
 
-    BusError readBurst(const RegAddress addr, void * datas, const size_t len);
+    BusError read_burst(const RegAddress addr, void * datas, const size_t len);
     void readAdj();
 public:
 
@@ -56,7 +56,7 @@ public:
     bool stable();
     void setMode(const Mode mode);
     void disableI2c();
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 };
 
 };

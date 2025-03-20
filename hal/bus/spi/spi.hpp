@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/bus/bus.hpp"
 
 
@@ -17,8 +17,8 @@ public:
     #undef SPI_MAX_PINS
     #endif
 protected:
-    CommMethod tx_method_;
-    CommMethod rx_method_;
+    CommStrategy tx_strategy_;
+    CommStrategy rx_strategy_;
     uint8_t last_index;
 
     BusError lead(const uint8_t index) override{
@@ -35,19 +35,18 @@ public:
     Spi(const hal::Spi &) = delete;
     Spi(hal::Spi &&) = delete;
 
-    virtual void setDataBits(const uint8_t len) = 0;
-    virtual void setBaudRate(const uint32_t baud) = 0;
-    virtual void setBitOrder(const Endian endian) = 0;
+    virtual void set_data_width(const uint8_t len) = 0;
+    virtual void set_baudrate(const uint32_t baud) = 0;
+    virtual void set_bitorder(const Endian endian) = 0;
 
     virtual void init(
-        const uint32_t baudRate, 
-        const CommMethod tx_method = CommMethod::Blocking, 
-        const CommMethod rx_method = CommMethod::Blocking) = 0;
-    void bindCsPin(hal::GpioIntf & gpio, const uint8_t index){
+        const uint32_t baudrate, 
+        const CommStrategy tx_strategy = CommStrategy::Blocking, 
+        const CommStrategy rx_strategy = CommStrategy::Blocking) = 0;
+    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
         gpio.outpp(HIGH);
         cs_port.bindPin(gpio, index);
     }
 };
-
 
 }

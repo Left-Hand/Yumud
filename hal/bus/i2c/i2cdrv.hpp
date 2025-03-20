@@ -1,13 +1,15 @@
 #pragma once
 
-#include "i2c.hpp"
-#include "hal/bus/busdrv.hpp"
-#include "utils/BytesIterator.hpp"
-
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
 #include <span>
+
+
+#include "i2c.hpp"
+#include "hal/bus/busdrv.hpp"
+#include "core/utils/BytesIterator.hpp"
+
 
 
 namespace ymd::hal{
@@ -22,43 +24,43 @@ concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
     uint8_t index_r_ = 0;
-    BusError writeRepeat_impl(
+    BusError write_repeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 
         const size_t len, 
         const Endian endian){
-            return writeTemplate(addr, endian, [&]() -> BusError{return this->writeHomoPayload(data, len, endian);});
+            return write_template(addr, endian, [&]() -> BusError{return this->write_homo_payload(data, len, endian);});
         }
 
-    BusError writeBurst_impl(
+    BusError write_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<const valid_i2c_data auto> pdata, 
         const Endian endian){
-            return writeTemplate(addr, endian, [&]() -> BusError{return this->writePayload(pdata, endian);});}
+            return write_template(addr, endian, [&]() -> BusError{return this->write_payload(pdata, endian);});}
 
-    BusError readBurst_impl(
+    BusError read_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<valid_i2c_data auto> pdata,
         const Endian endian){
-            return readTemplate(addr, endian, [&]() -> BusError{return this->readPayload(pdata, endian);});}
+            return read_template(addr, endian, [&]() -> BusError{return this->read_payload(pdata, endian);});}
 
     template<typename T, typename... Ts>    //TODO 改写为Y组合子
     __fast_inline
-    BusError writePayloads(Endian endian, std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
+    BusError write_payloads(Endian endian, std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return BusError::OK;
-        else{BusError err = writePayload(first, endian);
-            return err.wrong() ? err : writePayloads<Ts...>(endian, rest...);}
+        else{BusError err = write_payload(first, endian);
+            return err.wrong() ? err : write_payloads<Ts...>(endian, rest...);}
     }
 
     template<typename T, typename... Ts>   //TODO 改写为Y组合子
     __fast_inline
-    BusError readPayloads(Endian endian, std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
+    BusError read_payloads(Endian endian, std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return BusError::OK;
-        else{BusError err = readPayload(first, endian);
-            return err.wrong() ? err : readPayloads<Ts...>(endian, rest...);}
+        else{BusError err = read_payload(first, endian);
+            return err.wrong() ? err : read_payloads<Ts...>(endian, rest...);}
     }
 
-    BusError writePayload(std::span<const valid_i2c_data auto> pdata,const Endian endian){
+    BusError write_payload(std::span<const valid_i2c_data auto> pdata,const Endian endian){
         return iterate_bytes(
             pdata, endian, 
             [&](const std::byte byte, const bool is_end) -> BusError{ return bus_.write(uint32_t(byte)); },
@@ -68,17 +70,17 @@ protected:
     }
 
     template<valid_i2c_data Tfirst, valid_i2c_data ... Trest>
-    BusError operatePayloads(std::span<Tfirst> pfirst, std::span<Trest>... prest, const Endian endian){
+    BusError operate_payloads(std::span<Tfirst> pfirst, std::span<Trest>... prest, const Endian endian){
         if constexpr(std::is_const_v<Tfirst>) {
-            if(const auto err = this->writePayload(pfirst, endian); err.wrong()) return err;}
-        else {if(const auto err = this->readPayload(pfirst, endian); err.wrong()) return err;}
+            if(const auto err = this->write_payload(pfirst, endian); err.wrong()) return err;}
+        else {if(const auto err = this->read_payload(pfirst, endian); err.wrong()) return err;}
 
-        if constexpr(sizeof...(Trest)) return this->operatePayloads<Trest...>(prest..., endian);
+        if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(prest..., endian);
         else return BusError::OK;
 
     }
     
-    BusError writeHomoPayload(const valid_i2c_data auto data, const size_t len, const Endian endian){
+    BusError write_homo_payload(const valid_i2c_data auto data, const size_t len, const Endian endian){
         return iterate_bytes(
             data, len, endian, 
             [&](const std::byte byte, const bool is_end) -> BusError{ return bus_.write(uint32_t(byte)); },
@@ -87,7 +89,7 @@ protected:
         );
     }
     
-    BusError readPayload(
+    BusError read_payload(
         std::span<valid_i2c_data auto> pdata,
         const Endian endian
     ){
@@ -102,14 +104,14 @@ protected:
     }
 
     template<typename Fn>
-    BusError writeTemplate(
+    BusError write_template(
         const valid_i2c_regaddr auto addr,
         const Endian endian,
         Fn && fn
     ){
         const auto guard = createGuard();
         if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
-            if(const auto err = writePayload(std::span(&addr, 1), endian); err.wrong()){
+            if(const auto err = write_payload(std::span(&addr, 1), endian); err.wrong()){
                 return err;
             }
             return std::forward<Fn>(fn)();
@@ -119,12 +121,12 @@ protected:
     }
 
     template<typename Fn>
-    BusError readTemplate(
+    BusError read_template(
         const valid_i2c_regaddr auto addr,
         const Endian endian,
         Fn && fn
     ){
-        return writeTemplate(addr, endian, [&]() -> BusError{
+        return write_template(addr, endian, [&]() -> BusError{
             if(const auto reset_err = bus_.begin(index_r_); reset_err.ok()){
                 return std::forward<Fn>(fn)();
             }else{
@@ -143,81 +145,81 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    BusError writeBurst(
+    BusError write_burst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata
     ){
-        return writeBurst_impl(addr, pdata, LSB);
+        return write_burst_impl(addr, pdata, LSB);
     }
         
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    BusError writeBurst(
+    BusError write_burst(
         const valid_i2c_regaddr auto addr, 
         std::span<const T> pdata,
         const Endian endian
     ){
-        return writeBurst_impl(addr, pdata, endian);
+        return write_burst_impl(addr, pdata, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    BusError readBurst(
+    BusError read_burst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata
     ){
-        return this->readBurst_impl(addr, pdata, LSB);
+        return this->read_burst_impl(addr, pdata, LSB);
 
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    BusError readBurst(
+    BusError read_burst(
         const valid_i2c_regaddr auto addr,
         std::span<T> pdata,
         const Endian endian
     ){
-        return this->readBurst_impl(addr, pdata, endian);
+        return this->read_burst_impl(addr, pdata, endian);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    BusError writeBlocks(
+    BusError write_blocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::add_const_t<Ts>> ... args,
         const Endian endian
     ){
-        return writeTemplate(addr, endian, [&]() -> BusError{
-            if constexpr(sizeof...(args)) return this->writePayloads<Ts...>(endian, args...);
+        return write_template(addr, endian, [&]() -> BusError{
+            if constexpr(sizeof...(args)) return this->write_payloads<Ts...>(endian, args...);
             else return BusError::OK;
         });
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    BusError readBlocks(
+    BusError read_blocks(
         const valid_i2c_regaddr auto addr, 
         std::span<std::remove_const_t<Ts>> ... args,
         const Endian endian
     ){
-        return readTemplate(addr, endian, [&]() -> BusError{
-            if constexpr(sizeof...(args)) return this->readPayloads<Ts...>(endian, args...);
+        return read_template(addr, endian, [&]() -> BusError{
+            if constexpr(sizeof...(args)) return this->read_payloads<Ts...>(endian, args...);
             else return BusError::OK;
         });
     }
 
     template<typename ... Trest>
     [[nodiscard]] __fast_inline
-    BusError operateBlocks(
+    BusError operate_blocks(
         const valid_i2c_regaddr auto addr, 
         std::span<Trest> ... rest,
         const Endian endian
     ){
-        return readTemplate(addr, endian, [&]() -> BusError{
-            if constexpr(sizeof...(Trest)) return this->operatePayloads<Trest...>(rest..., endian);
+        return read_template(addr, endian, [&]() -> BusError{
+            if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(rest..., endian);
             else return BusError::OK;
         });
     }
@@ -225,67 +227,67 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    BusError writeRepeat(
+    BusError write_repeat(
         const valid_i2c_regaddr auto addr,
         const T data, 
         const size_t len, 
         const Endian endian
     ){
-        return writeRepeat_impl(addr, data, len, endian);
+        return write_repeat_impl(addr, data, len, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    BusError writeRepeat(
+    BusError write_repeat(
         const valid_i2c_regaddr auto addr, 
         const T data, 
         const size_t len
     ){
-        return writeRepeat_impl(addr, data, len, LSB);
+        return write_repeat_impl(addr, data, len, LSB);
     }
 
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    BusError writeReg(
+    BusError write_reg(
         const valid_i2c_regaddr auto addr, 
         const T data, 
         const Endian endian
     ){
-        return this->writeBurst_impl(addr, std::span(&data, 1), endian);
+        return this->write_burst_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    BusError writeReg(
+    BusError write_reg(
         const valid_i2c_regaddr auto addr, 
         const T & data
     ){
-        return this->writeBurst_impl(addr, std::span(&data, 1), LSB);
+        return this->write_burst_impl(addr, std::span(&data, 1), LSB);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    BusError readReg(
+    BusError read_reg(
         const valid_i2c_regaddr auto addr,
         T & data, 
         Endian endian
     ){
-        return this->readBurst_impl(addr, std::span(&data, 1), endian);
+        return this->read_burst_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    BusError readReg(
+    BusError read_reg(
         const valid_i2c_regaddr auto addr,
         T & data
     ){
-        return this->readBurst_impl(addr, std::span(&data, 1), LSB);
+        return this->read_burst_impl(addr, std::span(&data, 1), LSB);
     }
 
     [[nodiscard]]

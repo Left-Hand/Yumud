@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "drivers/IMU/InvensenseIMU.hpp"
+#include "drivers/IMU/details/InvensenseIMU.hpp"
 
 namespace ymd::drivers{
 
-class ICM42605:public Axis6, public InvensenseSensor{
+class ICM42605:public Axis6{
 public:
+    scexpr uint8_t default_i2c_addr = 0x68;
 
     enum class AFS:uint8_t{
         _16G,// default
@@ -146,10 +147,8 @@ public:
         INTF_CONFIG6              = 0x7C
     };
 protected:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+    InvensenseSensor_Phy phy_;
 
-    scexpr uint8_t default_i2c_addr = 0x68;
 
     real_t lsb_acc_x64;
     real_t lsb_gyr_x256;
@@ -157,13 +156,8 @@ protected:
     
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
-
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
 public:
-    using InvensenseSensor::InvensenseSensor;
-    ICM42605(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(hal::I2cDrv(i2c, default_i2c_addr)){;}
+    ICM42605(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv(i2c, default_i2c_addr)){;}
 
     void init();
     
@@ -173,8 +167,8 @@ public:
 
     void reset();
 
-    Option<Vector3R> getAcc();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getAcc();
+    Option<Vector3_t<real_t>> getGyr();
 };
 
 }

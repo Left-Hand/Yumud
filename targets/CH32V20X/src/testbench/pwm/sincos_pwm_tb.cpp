@@ -1,10 +1,15 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
+
+#include "core/math/realmath.hpp"
+#include "hal/gpio/port.hpp"
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -18,7 +23,7 @@
 // #define FREQ 200
 
 // #define UART uart1
-#define UART uart2
+#define UART hal::uart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2

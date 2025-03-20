@@ -1,8 +1,10 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -44,7 +46,7 @@ public:
 
     void sleep(const bool en = true);
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;
@@ -149,16 +151,16 @@ protected:
     SelfTestReg selftest_reg;
     TempReg temp_reg; 
     AverageReg average_reg;
-    BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg);
+    BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg);
+    BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    BusError readBurst(const RegAddress addr, int16_t * data, const size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(data, len), LSB);
+    BusError read_burst(const RegAddress addr, int16_t * data, const size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len), LSB);
     }
 
     void setAverageTimes(bool is_x, AverageTimes times);

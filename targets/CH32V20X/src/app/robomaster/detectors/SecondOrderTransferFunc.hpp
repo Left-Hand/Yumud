@@ -1,8 +1,7 @@
 #pragma once
 
 // #include "dsp/constexprmath/ConstexprMath.hpp"
-#include <cmath>
-
+#include "core/math/realmath.hpp"
 namespace ymd::dsp{
 
 

@@ -2,13 +2,17 @@
 
 // #include <string>
 
-#include "sys/clock/clock.h"
-#include "sys/debug/debug.hpp"
+#include "core/clock/clock.hpp"
+#include "core/debug/debug.hpp"
+#include "core/string/string.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
+#include "hal/gpio/port.hpp"
 
 #define UART_TB_ECHO
 using std::string;
 
-#define TARG_UART uart2            
+#define TARG_UART hal::uart2
 
 [[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;
@@ -79,8 +83,8 @@ void uart_main(){
     //uart6 passed
     //uart8 passed
 
-    TARG_UART.init(576000, CommMethod::Dma, CommMethod::Interrupt);
+    TARG_UART.init(576000, CommStrategy::Dma, CommStrategy::Interrupt);
     DEBUGGER.retarget(&TARG_UART);
-    // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::None);
+    // DEBUGGER.init(DEBUG_UART_BAUD, CommStrategy::Dma, CommStrategy::None);
     uart_tb(TARG_UART);
 }

@@ -12,14 +12,14 @@ public:
 
     };
 
-    // [[nodiscard]] virtual Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
+    // [[nodiscard]] virtual Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
-    // [[nodiscard]] virtual Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
+    // [[nodiscard]] virtual Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
 
-    // [[nodiscard]] virtual Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, Error> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, Error> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
 private:
 
 public:

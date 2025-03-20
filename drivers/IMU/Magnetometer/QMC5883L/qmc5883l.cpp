@@ -1,5 +1,5 @@
 #include "qmc5883l.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #define QMC5883L_DEBUG
 
@@ -30,23 +30,23 @@ void QMC5883L::init(){
 
 void QMC5883L::enableContMode(const bool en){
     configAReg.measureMode = (uint8_t)(en);
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
 }
 
 void QMC5883L::setDataRate(const DataRate rate){
     configAReg.dataRate = (uint8_t)rate;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
 }
 
 void QMC5883L::setFullScale(const FullScale fullscale){
     configAReg.fullScale = (uint8_t)fullscale;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
     setFs(fullscale);
 }
 
 void QMC5883L::setOverSampleRatio(const OverSampleRatio ratio){
     configAReg.OverSampleRatio = (uint8_t)ratio;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
     setOvsfix(ratio);
 }
 
@@ -62,11 +62,11 @@ void QMC5883L::setOverSampleRatio(const OverSampleRatio ratio){
 // }
 
 void QMC5883L::update(){
-    readBurst(RegAddress::MagX, &magXReg, 3);
+    read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
-Option<Vector3R> QMC5883L::getMagnet(){
-    return Some{Vector3R{
+Option<Vector3_t<real_t>> QMC5883L::getMagnet(){
+    return Some{Vector3_t<real_t>{
         uni(int16_t(magXReg)) * fs,
         uni(int16_t(magYReg)) * fs,
         uni(int16_t(magZReg)) * fs
@@ -74,28 +74,28 @@ Option<Vector3R> QMC5883L::getMagnet(){
 }
 
 bool QMC5883L::verify(){
-    readReg(RegAddress::ChipID, chipIDReg);
+    read_reg(RegAddress::ChipID, chipIDReg);
     return QMC5883L_ASSERT(chipIDReg == 0xFF, "QMC5883L not found");
 }
 
 void QMC5883L::setResetPeriod(const uint8_t resetPeriod){
     resetPeriodReg = resetPeriod;
-    writeReg(RegAddress::ResetPeriod, resetPeriodReg);
+    write_reg(RegAddress::ResetPeriod, resetPeriodReg);
 }
 
 void QMC5883L::reset(){
     configBReg.srst = true;
-    writeReg(RegAddress::ConfigB, resetPeriodReg);
+    write_reg(RegAddress::ConfigB, resetPeriodReg);
     configBReg.srst = false;
-    writeReg(RegAddress::ConfigB, resetPeriodReg);
+    write_reg(RegAddress::ConfigB, resetPeriodReg);
 }
 
 void QMC5883L::enableInterrupt(const bool en){
     configBReg.intEn = (uint8_t)(en);
-    writeReg(RegAddress::ConfigB, configBReg);
+    write_reg(RegAddress::ConfigB, configBReg);
 }
 
 bool QMC5883L::isOverflow(){
-    readReg(RegAddress::Status, statusReg);
+    read_reg(RegAddress::Status, statusReg);
     return statusReg.ovl;
 }

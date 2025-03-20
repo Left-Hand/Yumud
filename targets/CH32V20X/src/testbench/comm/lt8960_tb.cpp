@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 
 #include "hal/bus/i2c/i2csw.hpp"
@@ -11,12 +11,14 @@
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 #include "src/testbench/algo/utils.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "hal/gpio/port.hpp"
 using namespace ymd::drivers;
 
 
-#define UART uart2
+#define UART hal::uart2
 
 #define MAG_ACTIVATED
 

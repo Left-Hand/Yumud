@@ -1,7 +1,8 @@
 #include "template.hpp"
 #include <bits/stl_numeric.h>
-#include "../dsp/fastmath/sqrt.hpp"
-#include "../dsp/fastmath/square.hpp"
+#include "dsp/fastmath/sqrt.hpp"
+#include "dsp/fastmath/square.hpp"
+#include "core/math/realmath.hpp"
 
 template<iterable T>
 using Itpair = std::pair<T, T>;

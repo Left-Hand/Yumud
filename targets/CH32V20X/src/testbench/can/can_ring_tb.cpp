@@ -1,6 +1,6 @@
 #include "../tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -13,7 +13,7 @@ void can_ring_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommMethod::Blocking);
+    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
     can.init(1_MHz, Can::Mode::Internal);
 

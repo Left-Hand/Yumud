@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port_virtual.hpp"
+#include "../hal/gpio/vport.hpp"
 #include <array>
 #include <initializer_list>
 

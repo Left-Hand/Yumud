@@ -1,13 +1,13 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/debug/debug.hpp"
+#include "core/platform.hpp"
+#include "core/debug/debug.hpp"
 
 #include <functional>
 #include <queue>
 
-#include "sys/math/real.hpp"
-#include "sys/stream/StringStream.hpp"
+#include "core/math/real.hpp"
+#include "core/stream/StringStream.hpp"
 
 
 namespace ymd{

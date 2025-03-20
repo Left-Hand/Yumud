@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
 template<arithmetic T>
 class KalmanFilter_t{

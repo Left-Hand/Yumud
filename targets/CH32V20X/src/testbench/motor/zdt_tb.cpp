@@ -1,11 +1,14 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/bus/can/can.hpp"
 
 #include "types/range/range.hpp"
+#include "core/math/realmath.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 
 class ZdtMotor{
 protected:
@@ -88,7 +91,7 @@ protected:
                 if(op_window){
                     CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), 
                                         std::span(buf.begin() + op_window.from, op_window.length())};
-                    msg.setExt(b_extid);
+                    msg.set_ext(b_extid);
                     DEBUG_PRINTLN(msg);
                     if(can_)can_->write(msg);
                 }
@@ -182,7 +185,7 @@ public:
 
 
 void zdt_main(UartHw & logger){
-    logger.init(576000, CommMethod::Blocking);
+    logger.init(576000, CommStrategy::Blocking);
     DEBUGGER.retarget(&logger);
     DEBUGGER.setEps(4);
     

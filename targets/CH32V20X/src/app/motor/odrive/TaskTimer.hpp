@@ -1,7 +1,8 @@
 #pragma once
 
-#include "clock/clock.h"
+#include "core/clock/clock.hpp"
 
+namespace ymd{
 class TaskTimer {
 public:
     // enum MeasureType{
@@ -56,6 +57,7 @@ public:
     const auto & context() const{return context_;}
 };
 
+
 struct __TaskTimerGuard{
     __TaskTimerGuard(const __TaskTimerGuard&) = delete;
     __TaskTimerGuard(const __TaskTimerGuard&&) = delete;
@@ -69,4 +71,5 @@ struct __TaskTimerGuard{
     bool exit_ = false;
 };
 
+}
 #define MEASURE_TIME(timer) for (__TaskTimerGuard __task_timer_guard{timer}; !__task_timer_guard.exit_; __task_timer_guard.exit_ = true)

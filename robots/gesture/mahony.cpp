@@ -1,6 +1,6 @@
 #include "mahony.hpp"
-#include "sys/debug/debug.hpp"
-
+#include "core/debug/debug.hpp"
+#include "core/math/realmath.hpp"
 
 
 using namespace ymd;

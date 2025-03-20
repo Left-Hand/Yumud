@@ -1,6 +1,7 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+#include "types/range/range.hpp"
 
 namespace ymd::drivers{
 class ActuatorIntf{

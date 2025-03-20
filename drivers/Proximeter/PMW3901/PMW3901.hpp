@@ -1,12 +1,14 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "drivers/Proximeter/FlowSensor.hpp"
 #include "types/image/image.hpp"
 
+#include "hal/bus/spi/spidrv.hpp"
+
 namespace ymd::drivers{
 
-namespace internal{
+namespace details{
 #pragma pack(push, 1)
 
 struct MotionReg:public Reg8<>{
@@ -35,16 +37,16 @@ DeltaReg dy = {};
 #pragma pack(pop)
 }
 
-class PMW3901:public internal::PMW3901_Data, public FlowSensor{
+class PMW3901:public details::PMW3901_Data, public FlowSensorIntf{
 protected:
     hal::SpiDrv spi_drv_;
     real_t x_cm = {};
     real_t y_cm = {};
 
     bool assertReg(const uint8_t command, const uint8_t data);
-    BusError writeReg(const uint8_t command, const uint8_t data);
-    BusError readReg(const uint8_t command, uint8_t & data);
-    BusError readBurst(const uint8_t commnad, uint8_t * data, const size_t len);
+    BusError write_reg(const uint8_t command, const uint8_t data);
+    BusError read_reg(const uint8_t command, uint8_t & data);
+    BusError read_burst(const uint8_t commnad, uint8_t * data, const size_t len);
 
     void readDataSlow();
     void readDataBurst();
@@ -62,8 +64,8 @@ public:
     void update();
     void update(const real_t rad);
 
-    std::tuple<real_t, real_t> getPosition() override{
-        return std::make_tuple(x_cm * real_t(0.01), y_cm * real_t(0.01));
+    Vector2_t<real_t> getPosition() override{
+        return {x_cm * real_t(0.01), y_cm * real_t(0.01)};
     }
 
     void setLed(bool on);

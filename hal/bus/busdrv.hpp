@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bus.hpp"
-#include "sys/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include <type_traits>
 #include <initializer_list>
 
@@ -56,12 +56,12 @@ protected:
     public:
     BusType & bus() const {return bus_;}
     auto index() const {return index_;}
-    void setDataBits(const size_t _data_bits){
-        bus_.setDataBits(_data_bits);
+    void set_data_width(const size_t data_bits){
+        bus_.set_data_width(data_bits);
     }
     
-    void setBaudRate(const uint baud){
-        bus_.setBaudRate(baud);
+    void set_baudrate(const uint baud){
+        bus_.set_baudrate(baud);
     }
 };
 
@@ -93,17 +93,17 @@ public:
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
     [[nodiscard]]
-    BusError writeBurst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
+    BusError write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
     [[nodiscard]]
-    BusError writeBurst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
+    BusError write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
     [[nodiscard]]
-    BusError readBurst(T * data_ptr, const size_t len, const Continuous cont = DISC);
+    BusError read_burst(T * data_ptr, const size_t len, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>

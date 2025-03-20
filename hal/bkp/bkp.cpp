@@ -1,5 +1,5 @@
 #include "bkp.hpp"
-#include "sys/core/sdk.h"
+#include "core/sdk.hpp"
 
 using namespace ymd::hal;
 
@@ -23,7 +23,7 @@ void Bkp::init(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
 }
 
-void Bkp::writeData(uint8_t index, uint16_t data){
+void Bkp::write_data(uint8_t index, uint16_t data){
     BKP_CHECK
     PWR_BackupAccessCmd(ENABLE);
     BKP_WriteBackupRegister(index << 2, data);
@@ -42,7 +42,7 @@ BkpItem & Bkp::operator [] (uint8_t index) {
 
 
 void BkpItem::store(const uint16_t data){
-    bkp.writeData(index, data);
+    bkp.write_data(index, data);
 }
 uint16_t BkpItem::load(){
     return bkp.readData(index);

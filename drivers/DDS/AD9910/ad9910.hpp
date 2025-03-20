@@ -18,7 +18,10 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -50,8 +53,8 @@ protected:
 
     scexpr uint8_t ramprofile0[8] = {0};
 
-    void writeReg(const uint8_t, const uint8_t *, const size_t);
-    void writeData(const uint8_t);
+    void write_reg(const uint8_t, const uint8_t *, const size_t);
+    void write_data(const uint8_t);
 
     void writeProfile(const Profile & profile);
     void writeRamprofile();

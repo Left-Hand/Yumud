@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "sys/clock/clock.h"
-#include "sys/debug/debug.hpp"
+#include "core/clock/clock.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/timer/timer_oc.hpp"
@@ -88,8 +88,8 @@ using namespace ymd;
 
 void dshot_main(){
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    DEBUGGER.retarget(&DEBUGGER_INST);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    // DEBUGGER.retarget(&DEBUGGER_INST);
 
     DEBUGGER.setRadix(10);
     DEBUGGER.setEps(4);

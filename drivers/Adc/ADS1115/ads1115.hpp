@@ -1,9 +1,14 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "sys/utils/Result.hpp"
-#include "sys/utils/Option.hpp"
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Option.hpp"
 
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -80,8 +85,8 @@ protected:
     HighThreshReg high_thresh_reg = {};
 
 
-    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);
-    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data); 
+    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const uint16_t data); 
     struct ConfigBuilder{
 
         // ADS111X & owner_;

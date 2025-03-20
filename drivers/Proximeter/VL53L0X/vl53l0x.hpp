@@ -1,8 +1,10 @@
 #pragma once
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+
 #include "../DistanceSensor.hpp"
 
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 
@@ -42,7 +44,7 @@ private:
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        i2c_drv_.writeReg(Reg, byte).unwrap();
+        i2c_drv_.write_reg(Reg, byte).unwrap();
     }
 
     void flush();
@@ -50,13 +52,13 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        i2c_drv_.readReg(Reg, data).unwrap();
+        i2c_drv_.read_reg(Reg, data).unwrap();
         return data;
     }
 
-    void readBurst(const uint8_t reg, uint16_t * data, const size_t len){
+    void read_burst(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        i2c_drv_.readBurst(reg, std::span(data, len), MSB).unwrap();
+        i2c_drv_.read_burst(reg, std::span(data, len), MSB).unwrap();
     }
 };
 

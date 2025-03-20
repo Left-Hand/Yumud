@@ -2,7 +2,7 @@
 
 using namespace ymd::hal;
 
-void SccbDrv::writeReg(const uint8_t reg_address, const uint16_t reg_data){
+void SccbDrv::write_reg(const uint8_t reg_address, const uint16_t reg_data){
     if(bus_.begin(index_).ok()){
         
         //#region 写入地址字节和第一个字节
@@ -19,7 +19,7 @@ void SccbDrv::writeReg(const uint8_t reg_address, const uint16_t reg_data){
     }
 }
 
-void SccbDrv::readReg(const uint8_t reg_address, uint16_t & reg_data){
+void SccbDrv::read_reg(const uint8_t reg_address, uint16_t & reg_data){
     if(bus_.begin(index_).ok()){
         uint32_t data_l, data_h;
 

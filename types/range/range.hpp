@@ -1,8 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
-#include "sys/core/platform.h"
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 
 #include "type_traits"
 #include <algorithm>
@@ -313,13 +311,10 @@ constexpr bool operator>=(const arithmetic auto & value, const Range_t<auto> & r
 
 
 using Rangei = Range_t<int>;
-using Range = Range_t<real_t>;
 
-// namespace ymd{
 __inline OutputStream & operator<<(OutputStream & os, const Range_t<auto> & value){
     return os << os.brackets<'['>() << value.from << os.splitter() << value.to << os.brackets<')'>();
 }
 
-// };
 
 };

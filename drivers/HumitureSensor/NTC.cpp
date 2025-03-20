@@ -1,5 +1,5 @@
 #include "NTC.hpp"
-
+#include "core/math/realmath.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;

@@ -1,5 +1,9 @@
 #include "dvp.hpp"
 
+
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
+
 using namespace ymd::hal;
 #ifdef ENABLE_DVP
 

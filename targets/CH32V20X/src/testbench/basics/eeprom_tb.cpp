@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/flash/flash.hpp"
 #include "hal/bkp/bkp.hpp"
@@ -12,6 +12,9 @@
 
 #include "algo/random/random_generator.hpp"
 
+#include "core/math/real.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 
@@ -298,7 +301,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    uart2.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    uart2.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(2);
     DEBUGGER.setRadix(10);
@@ -313,7 +316,7 @@ void eeprom_main(){
 }
 
 void flash_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUGGER.retarget(&DEBUGGER_INST);

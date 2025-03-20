@@ -1,4 +1,5 @@
 #include "TTP229.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 using namespace ymd::drivers;
 
@@ -23,3 +24,5 @@ void TTP229::scan(){
     }
     num = new_num;
 }
+
+bool TTP229::isIdle(){return bool(sdo_gpio_) == false;}

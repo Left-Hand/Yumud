@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../drivers/device_defs.h"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "core/math/fraction.hpp"
 
 namespace ymd::drivers{
 

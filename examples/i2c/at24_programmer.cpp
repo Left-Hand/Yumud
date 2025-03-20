@@ -1,4 +1,4 @@
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/flash/flash.hpp"
 #include "hal/bkp/bkp.hpp"
@@ -169,7 +169,7 @@ static constexpr auto eeprom_data = std::to_array<uint8_t>({
 
 
 void programmer_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     auto & logger = DEBUGGER;
     logger.setEps(2);
     logger.setRadix(10);

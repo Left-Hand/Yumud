@@ -1,7 +1,8 @@
 #pragma once
 
 #include "drivers/Actuator/Bridge/CoilDriver.hpp"
-#include "types/vector2/vector2.hpp"
+
+#include "core/math/realmath.hpp"
 
 
 namespace ymd::drivers{

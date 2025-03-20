@@ -1,10 +1,11 @@
 #include "spihw.hpp"
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
-void SpiHw::enableRcc(const bool en){
+void SpiHw::enable_rcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
@@ -108,7 +109,7 @@ Gpio & SpiHw::getHwCsGpio(){
     }
 }
 
-uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
+uint16_t SpiHw::calculate_prescaler(const uint32_t baudrate){
 
 	uint32_t busFreq = [](const uint32_t base){
         switch(base) {
@@ -146,12 +147,12 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
 }
 
 void SpiHw::installGpios(){
-    if(tx_method_ != CommMethod::None){
+    if(tx_strategy_ != CommStrategy::None){
         Gpio & mosi_pin = getMosiGpio();
         mosi_pin.afpp();
     }
 
-    if(rx_method_ != CommMethod::None){
+    if(rx_strategy_ != CommStrategy::None){
         Gpio & miso_pin = getMisoGpio();
         miso_pin.inflt();
     }
@@ -170,7 +171,7 @@ void SpiHw::installGpios(){
         }else{
             cs_pin.outpp();
         }
-        bindCsPin(cs_pin, 0);
+        bind_cs_pin(cs_pin, 0);
     }
 
     // for(auto & cs_gpio : cs_port){
@@ -184,7 +185,7 @@ void SpiHw::installGpios(){
     }
 }
 
-void SpiHw::enableHwCs(const bool en){
+void SpiHw::enable_hw_cs(const bool en){
     Gpio & _cs_pin = getHwCsGpio();
     _cs_pin.set();
 
@@ -200,11 +201,11 @@ void SpiHw::enableHwCs(const bool en){
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
+void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const CommStrategy rx_strategy){
 
-    tx_method_ = tx_method;
-    rx_method_ = rx_method;
-	enableRcc();
+    tx_strategy_ = tx_strategy;
+    rx_strategy_ = rx_strategy;
+	enable_rcc();
     installGpios();
 
     const SPI_InitTypeDef SPI_InitStructure = {
@@ -214,7 +215,7 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
         .SPI_CPOL = SPI_CPOL_High,
         .SPI_CPHA = SPI_CPHA_2Edge,
         .SPI_NSS = SPI_NSS_Soft,
-        .SPI_BaudRatePrescaler = calculatePrescaler(baudrate),
+        .SPI_BaudRatePrescaler = calculate_prescaler(baudrate),
         .SPI_FirstBit = SPI_FirstBit_MSB,
         .SPI_CRCPolynomial = 7
     };
@@ -232,7 +233,7 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 
 
 
-void SpiHw::setDataBits(const uint8_t bits){
+void SpiHw::set_data_width(const uint8_t bits){
     uint16_t tempreg =  instance->CTLR1;
 
     switch(bits){
@@ -249,14 +250,14 @@ void SpiHw::setDataBits(const uint8_t bits){
     instance->CTLR1 = tempreg;
 }
 
-void SpiHw::setBaudRate(const uint32_t baudRate){
+void SpiHw::set_baudrate(const uint32_t baudrate){
     uint32_t tempreg = instance -> CTLR1;
     tempreg &= ~SPI_BaudRatePrescaler_256;
-    tempreg |= calculatePrescaler(baudRate);
+    tempreg |= calculate_prescaler(baudrate);
     instance -> CTLR1 = tempreg;
 }
 
-void SpiHw::setBitOrder(const Endian endian){
+void SpiHw::set_bitorder(const Endian endian){
     uint32_t tempreg = instance -> CTLR1;
     tempreg &= ~SPI_FirstBit_LSB;
     tempreg |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
@@ -265,12 +266,12 @@ void SpiHw::setBitOrder(const Endian endian){
 
 
 BusError SpiHw::write(const uint32_t data){
-    // if(tx_method_ != CommMethod::None){
+    // if(tx_strategy_ != CommStrategy::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
     //     instance->DATAR = data;
     // }
 
-    // if(rx_method_ != CommMethod::None){
+    // if(rx_strategy_ != CommStrategy::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     instance->DATAR;
     // }
@@ -281,12 +282,12 @@ BusError SpiHw::write(const uint32_t data){
 
 
 BusError SpiHw::read(uint32_t & data){
-    // if(tx_method_ != CommMethod::None){
+    // if(tx_strategy_ != CommStrategy::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
     //     instance->DATAR = 0;
     // }
 
-    // if(rx_method_ != CommMethod::None){
+    // if(rx_strategy_ != CommStrategy::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     data = instance->DATAR;
     // }
@@ -296,12 +297,12 @@ BusError SpiHw::read(uint32_t & data){
 
 
 BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
-    if(tx_method_ != CommMethod::None){
+    if(tx_strategy_ != CommStrategy::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
 
-    if(rx_method_ != CommMethod::None){
+    if(rx_strategy_ != CommStrategy::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;
     }

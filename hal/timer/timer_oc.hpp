@@ -2,9 +2,11 @@
 
 #include "hal/timer/timer_channel.hpp"
 #include "hal/timer/timer_utils.hpp"
-#include "hal/gpio/gpio.hpp"
+
 
 namespace ymd::hal{
+class Gpio;
+
 class TimerOut: public TimerChannel{
 protected:
     TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}

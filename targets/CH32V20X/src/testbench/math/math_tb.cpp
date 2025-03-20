@@ -1,6 +1,8 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
+#include "core/math/int/int_t.hpp"
+#include "core/math/realmath.hpp"
 
 #include "hal/bus/sdi/sdi.hpp"
 
@@ -14,7 +16,6 @@
 #include "types/segment2/Segment2.hpp"
 #include "types/Line2/Line2.hpp"
 #include "types/Ray2/Ray2.hpp"
-// #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Arc2D/Arc2D_t.hpp"
 #include "types/Bezier2D/Bezier2D_t.hpp"
 
@@ -23,7 +24,8 @@
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
 
-#include "sys/math/int/int_t.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -48,7 +50,7 @@ logger.println(__VA_ARGS__);\
 
 void math_tb(){
     auto & logger = DEBUGGER;
-    DEBUGGER_INST.init(576000, CommMethod::Dma);
+    DEBUGGER_INST.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.setEps(4);
     
@@ -191,8 +193,8 @@ void math_tb(){
     using Line = Line2_t<real_t>;
 
 
-    auto line = Line{Vector2{1,0}, Vector2{0,1}};
-    auto other = Line{Vector2{0,0}, real_t(PI/4)};
+    auto line = Line{Vector2_t<real_t>{1,0}, Vector2_t<real_t>{0,1}};
+    auto other = Line{Vector2_t<real_t>{0,0}, real_t(PI/4)};
     print("line", line);
     print("other",other);
 
@@ -201,17 +203,17 @@ void math_tb(){
     print("abc:", line.abc());
     print("angle:", line.angle());
     print("abs", line.abs());
-    print("dist", line.distance_to(Vector2{0.5_r, 0.5_r}));
-    print("dist", line.distance_to(Vector2{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line{Vector2{0,0}, atan(real_t(0.3333_r))}));
-    print("foot", line.foot(Vector2{0, 0.5_r}));
-    print("mirror", line.mirror(Vector2{0, 0.5_r}));
-    print("perpendicular", line.perpendicular(Vector2{0, 0.5_r}));
-    print("orthogonal_with", line.orthogonal_with(Line{Vector2{0,0}, real_t(PI/4)}));
+    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line{Vector2_t<real_t>{0,0}, atan(real_t(0.3333_r))}));
+    print("foot", line.foot(Vector2_t<real_t>{0, 0.5_r}));
+    print("mirror", line.mirror(Vector2_t<real_t>{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vector2_t<real_t>{0, 0.5_r}));
+    print("orthogonal_with", line.orthogonal_with(Line{Vector2_t<real_t>{0,0}, real_t(PI/4)}));
     print("unit", line.unit());
-    print("rebase", line.rebase(Vector2{-1,0}));
-    print("rotated", line.rotated(Vector2{-1,0}, real_t(PI/4)));
-    print("normal", line.normal(Vector2{-1,0}));
+    print("rebase", line.rebase(Vector2_t<real_t>{-1,0}));
+    print("rotated", line.rotated(Vector2_t<real_t>{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vector2_t<real_t>{-1,0}));
     #endif
 
     #define MATRIX_TB

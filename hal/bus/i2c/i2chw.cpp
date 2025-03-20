@@ -1,10 +1,10 @@
 #include "i2chw.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio.hpp"
 
 using namespace ymd::hal;
 using namespace ymd;
 
-void I2cHw::enableRcc(const bool en){
+void I2cHw::enable_rcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:
@@ -27,7 +27,7 @@ void I2cHw::enableRcc(const bool en){
 }
 
 
-hal::Gpio & I2cHw::getScl(const I2C_TypeDef * _instance){
+hal::Gpio & I2cHw::get_scl(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:
@@ -44,7 +44,7 @@ hal::Gpio & I2cHw::getScl(const I2C_TypeDef * _instance){
     }
 }
 
-hal::Gpio & I2cHw::getSda(const I2C_TypeDef * _instance){
+hal::Gpio & I2cHw::get_sda(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:
@@ -65,9 +65,9 @@ bool I2cHw::locked(){
     return (bool)(instance->STAR2 & I2C_STAR2_BUSY) & (bool)(!(instance->STAR1 & I2C_STAR1_STOPF));
 }
 
-void I2cHw::init(const uint32_t baudRate){
+void I2cHw::init(const uint32_t baudrate){
     // preinit();
-    enableRcc();
+    enable_rcc();
 
     scl_gpio.afod();
     sda_gpio.afod();
@@ -78,11 +78,11 @@ void I2cHw::init(const uint32_t baudRate){
     I2C_InitStructure.I2C_OwnAddress1 = 0x80;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed = baudRate;
+    I2C_InitStructure.I2C_ClockSpeed = baudrate;
     I2C_Init(instance, &I2C_InitStructure);
     I2C_Cmd(instance, ENABLE);
 
-    enableHwTimeout(true);
+    enable_hw_timeout(true);
 }
 
 void I2cHw::reset(){
@@ -95,7 +95,7 @@ void I2cHw::reset(){
     instance->CTLR1 &= ~I2C_CTLR1_SWRST;
 }
 
-void I2cHw::enableHwTimeout(const bool en){
+void I2cHw::enable_hw_timeout(const bool en){
     if(en) instance->STAR1 |= I2C_STAR1_TIMEOUT;
     else instance->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }

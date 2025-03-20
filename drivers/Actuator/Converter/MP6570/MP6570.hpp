@@ -1,6 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include <optional>
+
+#include "core/io/regs.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 
 struct RS485Drv{
@@ -24,9 +29,9 @@ public:
              : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
 
         
-        BusError writeReg(const uint8_t reg_addr, const uint16_t data);
+        BusError write_reg(const uint8_t reg_addr, const uint16_t data);
         
-        BusError readReg(const uint8_t reg_addr, uint16_t & data);
+        BusError read_reg(const uint8_t reg_addr, uint16_t & data);
     private:
         std::optional<hal::I2cDrv> i2c_drv_;
         SlaveAddress spi_slave_addr_ = 0;

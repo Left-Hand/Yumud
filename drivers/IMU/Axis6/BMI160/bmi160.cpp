@@ -1,5 +1,5 @@
 #include "bmi160.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -26,7 +26,7 @@ Result<void, Error> BMI160::init(){
     | setAccRange(AccRange::_8G)
     | setGyrOdr(GyrOdr::_800)
     | setGyrRange(GyrRange::_1000deg)
-	| writeReg(0x47, 0xfe)		//enable
+	| phy_.write_reg(0x47, 0xfe)		//enable
 	| setPmuMode(PmuType::ACC, PmuMode::NORMAL)		//Acc normal mode
 	| setPmuMode(PmuType::GYR, PmuMode::NORMAL)		//Gro normal mode
 	//check the PMU_status	Register(0x03) 
@@ -39,14 +39,14 @@ Result<void, Error> BMI160::init(){
 }
 
 Result<void, Error> BMI160::update(){
-    return readBurst(acc_reg.acc_address, &acc_reg.x, 3) 
-        | readBurst(gyr_reg.gyr_address, &gyr_reg.x, 3);
+    return phy_.read_burst(acc_reg.acc_address, &acc_reg.x, 3) 
+        | phy_.read_burst(gyr_reg.gyr_address, &gyr_reg.x, 3);
 }
 
 Result<void, Error> BMI160::verify(){
     uint8_t dummy;
-    const auto err = readReg(0x7f, dummy) 
-        | readReg(chip_id_reg.address, chip_id_reg.data);
+    const auto err = phy_.read_reg(0x7f, dummy) 
+        | phy_.read_reg(chip_id_reg.address, chip_id_reg.data);
     bool passed = chip_id_reg.data == chip_id_reg.correct;
     BMI160_ASSERT(passed, "chip id verify failed");
     if(passed or err.is_err()) return Ok();
@@ -54,27 +54,27 @@ Result<void, Error> BMI160::verify(){
 }
 
 Result<void, Error> BMI160::reset(){
-    return writeCommand(uint8_t(Command::SOFT_RESET));
+    return phy_.write_command(uint8_t(Command::SOFT_RESET));
 }
 
-Option<Vector3R> BMI160::getAcc(){
+Option<Vector3_t<real_t>> BMI160::getAcc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
-    return Some{Vector3R{
+    return Some{Vector3_t<real_t>{
         conv(acc_reg.x),
         conv(acc_reg.y),
         conv(acc_reg.z)
     }};
 }
 
-Option<Vector3R> BMI160::getGyr(){
+Option<Vector3_t<real_t>> BMI160::getGyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
-    return Some{Vector3R{
+    return Some{Vector3_t<real_t>{
         conv(gyr_reg.x),
         conv(gyr_reg.y),
         conv(gyr_reg.z)
@@ -84,11 +84,11 @@ Option<Vector3R> BMI160::getGyr(){
 Result<void, Error> BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){
     switch(pmu){
         case PmuType::ACC:
-            return writeCommand(uint8_t(Command::ACC_SET_PMU) | uint8_t(mode));
+            return phy_.write_command(uint8_t(Command::ACC_SET_PMU) | uint8_t(mode));
         case PmuType::GYR:
-            return writeCommand(uint8_t(Command::GYR_SET_PMU) | uint8_t(mode));
+            return phy_.write_command(uint8_t(Command::GYR_SET_PMU) | uint8_t(mode));
         case PmuType::MAG:
-            return writeCommand(uint8_t(Command::MAG_SET_PMU) | uint8_t(mode));
+            return phy_.write_command(uint8_t(Command::MAG_SET_PMU) | uint8_t(mode));
     }
 
     __builtin_unreachable();
@@ -96,7 +96,7 @@ Result<void, Error> BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){
 
 BMI160::PmuMode BMI160::getPmuMode(const PmuType type){
     auto & reg = pmu_status_reg;
-    readRegs(reg).unwrap();
+    phy_.read_regs(reg).unwrap();
 
     switch(type){
         default:
@@ -110,28 +110,28 @@ Result<void, Error> BMI160::setAccOdr(const AccOdr odr){
     auto & reg = acc_conf_reg;
     reg.acc_odr = uint8_t(odr);
     reg.acc_bwp = 0b010;
-    return writeRegs(reg);
+    return phy_.write_regs(reg);
 }
 
 Result<void, Error> BMI160::setAccRange(const AccRange range){
     this->acc_scale = this->calculateAccScale(range);
     auto & reg = acc_range_reg;
     reg.acc_range = uint8_t(range);
-    return writeRegs(reg);
+    return phy_.write_regs(reg);
 }
 
 Result<void, Error> BMI160::setGyrOdr(const GyrOdr odr){
     auto & reg =  gyr_conf_reg;
     reg.gyr_odr = uint8_t(odr);
     reg.gyr_bwp = 0b010;
-    return writeRegs(reg);
+    return phy_.write_regs(reg);
 
 }
 Result<void, Error> BMI160::setGyrRange(const GyrRange range){
     this->gyr_scale = this->calculateGyrScale(range);
     auto & reg = gyr_range_reg;
     reg.gyr_range = uint8_t(range);
-    return writeRegs(reg);
+    return phy_.write_regs(reg);
 }
 
 

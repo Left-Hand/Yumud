@@ -1,7 +1,7 @@
 #pragma once
 
 #include "I2s.hpp"
-#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 namespace ymd::hal{
 
@@ -95,12 +95,12 @@ public:
         return Error::OK;
     }
 
-    void init(const uint32_t baudRate){
+    void init(const uint32_t baudrate){
         sck.outpp();
         sda.outpp();
         ws.outpp();
     }
-    void setBaudRate(const uint32_t baudRate) override {;}
+    void setBaudRate(const uint32_t baudrate) override {;}
 };
 
 };

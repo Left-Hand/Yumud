@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #ifdef FDC2X1X_DEBUG
@@ -216,12 +216,12 @@ protected:
     ManufacturerIdReg manufacturer_id_reg = {};
     DeviceIdReg device_id_reg = {};
 
-    auto readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv.readReg(uint8_t(addr), data, MSB);
+    auto read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv.read_reg(uint8_t(addr), data, MSB);
     }
 
-    auto writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv.writeReg(uint8_t(addr), data, MSB);
+    auto write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv.write_reg(uint8_t(addr), data, MSB);
     }
 public:
     scexpr uint8_t default_i2c_addr = 0x54;
@@ -233,13 +233,13 @@ public:
     void init();
 
     bool isConvDone(){
-        readReg(StatusReg::address, status_reg);
+        read_reg(StatusReg::address, status_reg);
         return status_reg.data_ready;
     }
 
     bool isConvDone(uint8_t channel){
         channel = MIN(channel, 3);
-        readReg(StatusReg::address, status_reg);
+        read_reg(StatusReg::address, status_reg);
         switch(channel){
             case 0: return status_reg.ch0_unread_conv;
             case 1: return status_reg.ch1_unread_conv;
@@ -251,7 +251,7 @@ public:
 
     void reset(){
         reset_dev_reg.reset_dev = true;
-        writeReg(ResetDevReg::address,(reset_dev_reg));
+        write_reg(ResetDevReg::address,(reset_dev_reg));
         reset_dev_reg.reset_dev = false;
     }
 
@@ -261,9 +261,9 @@ public:
         auto & highreg = conv_data_regs[channel].high;
         auto & lowreg = conv_data_regs[channel].low;
 
-        readReg(highreg.address, (highreg));
+        read_reg(highreg.address, (highreg));
         ret |= (highreg.data_msb << 16);
-        readReg(lowreg.address, (lowreg));
+        read_reg(lowreg.address, (lowreg));
         ret |= lowreg.data_lsb;
 
         return ret;

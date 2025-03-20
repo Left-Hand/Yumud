@@ -1,8 +1,8 @@
 #include "gui.hpp"
 
-#include "sys/debug/debug.hpp"
-#include "sys/core/system.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/system.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -22,6 +22,8 @@
 
 #include "Renderer.hpp"
 #include "elements.hpp"
+
+#include "core/math/realmath.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -121,9 +123,9 @@ void gui_main(){
     
 
 
-    spi.bindCsPin(lcd_cs, 0);
-    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
-    // spi.init(36_MHz, CommMethod::Blocking, CommMethod::None);
+    spi.bind_cs_pin(lcd_cs, 0);
+    spi.init(144_MHz, CommStrategy::Blocking, CommStrategy::None);
+    // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});

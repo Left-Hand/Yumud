@@ -54,12 +54,12 @@ protected:
     };
 
 
-    void writeReg(const uint8_t addr, const uint16_t reg_data){
-        sccb_drv_.writeReg(addr, reg_data);
+    void write_reg(const uint8_t addr, const uint16_t reg_data){
+        sccb_drv_.write_reg(addr, reg_data);
     }
 
-    void readReg(const uint8_t addr, uint16_t & pData){
-        sccb_drv_.readReg(addr, pData);
+    void read_reg(const uint8_t addr, uint16_t & pData){
+        sccb_drv_.read_reg(addr, pData);
     }
 
     void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{

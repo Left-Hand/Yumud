@@ -1,8 +1,9 @@
 #pragma once
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 
@@ -83,20 +84,20 @@ protected:
         return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
-    BusError writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(convRegAddress(addr), (uint16_t)data, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(convRegAddress(addr), (uint16_t)data, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(convRegAddress(addr), (uint16_t &)data, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(convRegAddress(addr), (uint16_t &)data, LSB);
     }
 
-    BusError writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data);
+    BusError write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.write_reg(convRegAddress(addr, false), (uint8_t)data);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data);
+    BusError read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.read_reg(convRegAddress(addr, false), (uint8_t &)data);
     }
 
     BusError requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
@@ -112,7 +113,7 @@ public:
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);
         uint8_t temp = 256 - cycles;
         integrationReg = temp;
-        writeReg(RegAddress::Integration, integrationReg);
+        write_reg(RegAddress::Integration, integrationReg);
     }
 
     void setWaitTime(const uint16_t ms){
@@ -128,48 +129,48 @@ public:
         }
 
         waitTimeReg = value;
-        writeReg(RegAddress::WaitTime, waitTimeReg);
+        write_reg(RegAddress::WaitTime, waitTimeReg);
         if(long_waitFlag){
             longWaitReg.waitLong = true;
-            writeReg(RegAddress::LongWait, longWaitReg);
+            write_reg(RegAddress::LongWait, longWaitReg);
         }
     }
 
     void setIntThrLow(const uint16_t thr){
         lowThrReg = thr;
-        writeReg(RegAddress::LowThr, lowThrReg);
+        write_reg(RegAddress::LowThr, lowThrReg);
     }
 
     void setIntThrHigh(const uint16_t thr){
         highThrReg = thr;
-        writeReg(RegAddress::HighThr, highThrReg);
+        write_reg(RegAddress::HighThr, highThrReg);
     }
 
     void setIntPersistence(const uint8_t times);
 
     void setGain(const Gain gain){
         gainReg = (uint8_t)gain;
-        writeReg(RegAddress::Gain, gainReg);
+        write_reg(RegAddress::Gain, gainReg);
     }
 
     uint8_t getId(){
-        readReg(RegAddress::DeviceId, deviceIdReg);
+        read_reg(RegAddress::DeviceId, deviceIdReg);
         return deviceIdReg;
     }
 
     bool isIdle(){
-        readReg(RegAddress::Status, statusReg);
+        read_reg(RegAddress::Status, statusReg);
         return statusReg.done_flag;
     }
 
     void setPower(const bool on){
         enableReg.powerOn = on;
-        writeReg(RegAddress::Enable, enableReg);
+        write_reg(RegAddress::Enable, enableReg);
     }
 
     void startConv(){
         enableReg.adcEn = true;
-        writeReg(RegAddress::Enable, enableReg);
+        write_reg(RegAddress::Enable, enableReg);
     }
 
     void update();

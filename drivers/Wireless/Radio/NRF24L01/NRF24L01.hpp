@@ -1,9 +1,10 @@
 //这个驱动还在推进状态
 
 
-#include "drivers/device_defs.h"
-#include "sys/utils/result.hpp"
+#include "core/io/regs.hpp"
+#include "core/utils/result.hpp"
 
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -168,12 +169,12 @@ protected:
     [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return writeReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
     [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return readReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
 
     
 

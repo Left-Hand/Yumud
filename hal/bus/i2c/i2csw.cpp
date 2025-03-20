@@ -1,35 +1,36 @@
 #include "i2csw.hpp"
-#include "sys/clock/time_stamp.hpp"
+#include "core/clock/time_stamp.hpp"
+#include "hal/gpio/gpio.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
 #define SCL_PP
 
-void I2cSw::delayDur(){
+void I2cSw::delay_dur(){
     if(delays_) delayMicroseconds(delays_);
     // else __nopn(7);
 }
 
 BusError I2cSw::wait_ack(){
-    delayDur();
+    delay_dur();
     sda_gpio.set();
     sda_gpio.inflt();
-    delayDur();
+    delay_dur();
     scl_gpio.set();
     TimeStamp delta;
 
     bool ovt = false;
     while(sda_gpio.read()){
-        if(delta >= timeout_){
+        if(delta.duration() >= timeout_){
             ovt = true;
             break;
         }
     }
 
-    delayDur();
+    delay_dur();
     scl_gpio.clr();
-    delayDur();
+    delay_dur();
     
     if(ovt){
         return BusError::NO_ACK;
@@ -48,11 +49,11 @@ BusError I2cSw::lead(const uint8_t address){
     sda_gpio.outod();
     sda_gpio.set();
     scl_gpio.set();
-    delayDur();
+    delay_dur();
     sda_gpio.clr();
-    delayDur();
+    delay_dur();
     scl_gpio.clr();
-    delayDur();
+    delay_dur();
     return write(address);
 }
 
@@ -60,11 +61,11 @@ void I2cSw::trail(){
     scl_gpio.clr();
     sda_gpio.outod();
     sda_gpio.clr();
-    delayDur();
+    delay_dur();
     scl_gpio.set();
-    delayDur();
+    delay_dur();
     sda_gpio.set();
-    delayDur();
+    delay_dur();
 }
 
 
@@ -75,9 +76,9 @@ BusError I2cSw::write(const uint32_t data){
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
         sda_gpio.write(mask & data);
-        delayDur();
+        delay_dur();
         scl_gpio.set();
-        delayDur();
+        delay_dur();
         scl_gpio.clr();
     }
 
@@ -89,20 +90,20 @@ BusError I2cSw::read(uint32_t & data, const Ack ack){
 
     sda_gpio.set();
     sda_gpio.inpu();
-    delayDur();
+    delay_dur();
 
     for(uint8_t i = 0; i < 8; i++){
         scl_gpio.set();
         ret <<= 1; ret |= sda_gpio.read();
-        delayDur();
+        delay_dur();
         scl_gpio.clr();
-        delayDur();
+        delay_dur();
     }
 
     sda_gpio.write(!bool(ack));
     sda_gpio.outod();
     scl_gpio.set();
-    delayDur();
+    delay_dur();
 
     scl_gpio.clr();
     sda_gpio.inpu();
@@ -111,7 +112,7 @@ BusError I2cSw::read(uint32_t & data, const Ack ack){
     return BusError::OK;
 }
 
-void I2cSw::init(const uint32_t baudRate){
+void I2cSw::init(const uint32_t baudrate){
 
     sda_gpio.set();
     sda_gpio.outod();
@@ -123,14 +124,14 @@ void I2cSw::init(const uint32_t baudRate){
     scl_gpio.outod();
     #endif
 
-    setBaudRate(baudRate);
+    set_baudrate(baudrate);
 }
 
-void I2cSw::setBaudRate(const uint32_t baudRate) {
-    if(baudRate == 0){
+void I2cSw::set_baudrate(const uint32_t baudrate) {
+    if(baudrate == 0){
         delays_ = 0;
     }else{
-        uint32_t b = baudRate / 1000;
+        uint32_t b = baudrate / 1000;
         delays_ = 400 / b;
     }
 }

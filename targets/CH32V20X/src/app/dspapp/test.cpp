@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
-#include "sys/clock/time.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 
@@ -12,7 +12,9 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "ParticleSwarmOptimization.hpp"
+#include "core/math/realmath.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 
 namespace ymd::dsp{
@@ -493,7 +495,7 @@ void pso_tb(){
 }
 
 void dsp_main(){
-    // uart2.init(576000, CommMethod::Blocking);
+    // uart2.init(576000, CommStrategy::Blocking);
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);

@@ -1,7 +1,7 @@
 #include "etk.hpp"
 
-#include "sys/core/system.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/system.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -57,8 +57,8 @@ void etk_main(){
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    spi.bindCsPin(lcd_cs, 0);
-    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    spi.bind_cs_pin(lcd_cs, 0);
+    spi.init(144_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
 
@@ -147,14 +147,14 @@ void etk_main(){
             }
 
             eye.update(
-                {Vector2(Vector2i(tk).flipy())}, 
+                {Vector2_t<real_t>(Vector2i(tk).flipy())}, 
                 std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
             );
 
             eye.move();
 
-            auto vec = Vector2(eye.eyeInfo().pos) * real_t(0.2);
-            vec = Vector2(real_t(PI/2), real_t(PI - 0.2)) + Vector2(-vec.x, vec.y);
+            auto vec = Vector2_t<real_t>(eye.eyeInfo().pos) * real_t(0.2);
+            vec = Vector2_t<real_t>(real_t(PI/2), real_t(PI - 0.2)) + Vector2_t<real_t>(-vec.x, vec.y);
                                                                                                                                                                                                                                                                                     
             servo_x.setRadian(+vec.x);
             servo_y.setRadian(+vec.y);

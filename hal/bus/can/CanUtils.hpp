@@ -1,28 +1,27 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "hal/gpio/port.hpp"
-#include "sys/buffer/ringbuf/Fifo_t.hpp"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
 
 #include <memory>
 #include <functional>
 
-namespace ymd::hal::CanUtils{
-    enum class BaudRate:uint8_t{
+namespace ymd::hal{
+    enum class CanBaudrate:uint8_t{
         _125K,
         _250K,
         _500K,
         _1M
     };
 
-    enum class Mode:uint8_t{
+    enum class CanMode:uint8_t{
         Normal = CAN_Mode_Normal,
         Silent = CAN_Mode_Silent,
         Internal = CAN_Mode_Silent_LoopBack,
         Loopback = CAN_Mode_LoopBack
     };
 
-    enum class ErrCode:uint8_t{
+    enum class CanError:uint8_t{
         OK = CAN_ErrorCode_NoErr,
         STUFF_ERR = CAN_ErrorCode_StuffErr,
         FORM_ERR = CAN_ErrorCode_FormErr,
@@ -33,20 +32,12 @@ namespace ymd::hal::CanUtils{
         SOFTWARE_SET_ERR = CAN_ErrorCode_SoftwareSetErr
     };
 
-    enum class RemoteType:uint8_t{
+    enum class CanRemoteSpec:uint8_t{
         Data = 0,
         Any = 0,
         Remote = 1,
         Specified = 1
     };  
 
-    using CanMode = CanUtils::Mode;
-    using CanErrCode = CanUtils::ErrCode;
-    using CanRemoteType = CanUtils::RemoteType;
 };
 
-
-
-#ifndef CAN_SOFTFIFO_SIZE
-#define CAN_SOFTFIFO_SIZE 8
-#endif

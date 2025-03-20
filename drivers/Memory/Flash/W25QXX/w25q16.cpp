@@ -1,5 +1,12 @@
 #include "w25q16.hpp"
 
+#ifdef W25Q16_DEBUG
+#define W25Q16_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#else
+#define W25Q16_DEBUG(...)
+#endif
+
+
 using namespace ymd;
 void W25Q16::writePage(const size_t addr, const void * _data, Address len){
     enableWrite();

@@ -1,13 +1,16 @@
 #include "../tb.h"
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
-#include "sys/clock/clock.h"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/clock/clock.hpp"
 
-#include "sys/utils/hive.hpp"
+#include "core/utils/hive.hpp"
 #include "types/vector2/vector2.hpp"
+
+
+#include "hal/bus/uart/uarthw.hpp"
 
 void hive_main(){
     uart2.init(576000);

@@ -3,7 +3,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 
@@ -47,8 +47,8 @@ protected:
     uint16_t getPositionData();
 
 
-    void writeReg(const RegAddress addr, const uint8_t data);
-    void readReg(const RegAddress addr, uint8_t & data);
+    void write_reg(const RegAddress addr, const uint8_t data);
+    void read_reg(const RegAddress addr, uint8_t & data);
 
 
 

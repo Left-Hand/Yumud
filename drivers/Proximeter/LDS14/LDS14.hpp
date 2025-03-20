@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/bus/uart/uart.hpp"
 
 namespace ymd::drivers{
@@ -49,7 +49,7 @@ public:
 
     void init(){
         m_uart.init(115200);
-        m_uart.setRxMethod(CommMethod::Dma);
+        m_uart.set_rx_strategy(CommStrategy::Dma);
     }
 
     void run();

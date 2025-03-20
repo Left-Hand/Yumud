@@ -1,19 +1,22 @@
 #pragma once
 
-#include "sys/core/system.hpp"
-
-#include "hal/bus/spi/spi.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2c.hpp"
+#include "core/system.hpp"
 
 namespace ymd{
 
     class OutputStream;
+    class InputStream;
+    class IOStream;
 }
 
 namespace ymd::hal{
     class Can;
     class UartHw;
+    class Spi;
+    class GpioIntf;
+    class I2c;
+    class Uart;
+    class DmaChannel;
 }
 
 using namespace ymd;

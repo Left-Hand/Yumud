@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sys/io/regs.hpp>
+#include <core/io/regs.hpp>
 
 namespace hwspec::CH32L103::USBPD_Defs{
 

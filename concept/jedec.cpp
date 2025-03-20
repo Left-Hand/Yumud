@@ -1,5 +1,5 @@
 #include "jedec.hpp"
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 
 
 using namespace ymd;

@@ -1,4 +1,5 @@
 #include "JQ8900.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 using namespace ymd::drivers;
 

@@ -1,6 +1,10 @@
 #pragma once
-#include "drivers/device_defs.h"
-#include "hal/gpio/port_virtual.hpp"
+#include "core/io/regs.hpp"
+#include "hal/gpio/vport.hpp"
+
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{ 
 class NCA9555: public hal::VGpioPortIntf<16>{
@@ -39,12 +43,12 @@ protected:
     ConfigReg config_reg;
 
 
-    BusError writeReg(const uint8_t addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError write_reg(const uint8_t addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError readReg(const uint8_t addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError read_reg(const uint8_t addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
 public:

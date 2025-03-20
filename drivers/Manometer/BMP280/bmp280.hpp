@@ -1,11 +1,10 @@
 
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "core/io/regs.hpp"
+#include "core/math/real.hpp"
 
-// #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#define BMP280_DEBUG(...)
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
@@ -113,32 +112,32 @@ protected:
     TemperatureReg temperatureReg;
     TemperatureXReg temperatureXReg;
 
-    BusError writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data);
+    BusError read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data);
         // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }
 
-    void readBurst(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len)).unwrap();
+    void read_burst(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
+        i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len)).unwrap();
     }
 
     uint32_t getPressureData(){
         uint32_t pressureData = 0;
-        readReg(RegAddress::Pressure, pressureReg);
+        read_reg(RegAddress::Pressure, pressureReg);
         pressureData = pressureReg << 4;
-        readReg(RegAddress::PressureX, pressureXReg);
+        read_reg(RegAddress::PressureX, pressureXReg);
         pressureData |= pressureXReg >> 4;
         // BMP280_DEBUG("PressureData:", pressureData);
         return pressureData;
@@ -146,9 +145,9 @@ protected:
 
     uint32_t getTemperatureData(){
         uint32_t temperatureData = 0;
-        readReg(RegAddress::Temperature, temperatureReg);
+        read_reg(RegAddress::Temperature, temperatureReg);
         temperatureData = temperatureReg << 4;
-        readReg(RegAddress::TemperatureX, temperatureXReg);
+        read_reg(RegAddress::TemperatureX, temperatureXReg);
         temperatureData |= temperatureXReg >> 4;
         // BMP280_DEBUG("TempratureData:", temperatureData);
         return temperatureData;

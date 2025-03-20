@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "types/vector2/vector2.hpp"
 
 

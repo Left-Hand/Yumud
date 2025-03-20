@@ -1,87 +1,62 @@
-#include "sys/debug/debug.hpp"
-#include "sys/stream/StringStream.hpp"
+#include "core/debug/debug.hpp"
+#include "core/stream/StringStream.hpp"
 
-#include "sys/math/real.hpp"
-#include "sys/clock/time.hpp"
+#include "core/math/real.hpp"
+#include "core/clock/time.hpp"
 
-#include "sys/polymorphism/traits.hpp"
+#include "core/polymorphism/traits.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
 
-// TRAIT_STRUCT(AddTrait,
-// 	TRAIT_METHOD(void, add, int),
-// 	// TRAIT_METHOD(void, add, real_t),
-// 	TRAIT_METHOD(void, sub, int)
-// )
 
-// TRAIT_STRUCT(AreaTrait,
-// 	TRAIT_METHOD(real_t, area)
-// )
-// template<typename T> 
-// struct AreaTrait_Vtable_T {
-//     using Self = AreaTrait_Vtable_T<T>;
-//     real_t (* area) (void* self ) = &Self::static_area;
-//     static real_t static_area (void* self ) {
-//          return ((T*)self)->area ( ); 
-//     }; 
-// }; 
-
-// struct AreaTrait_Vtable{
-//     real_t (* area) (void* self );
-// }; 
-
-// struct AreaTrait{
-//     void* self = nullptr; 
-//     AreaTrait() = delete;
-//     inline real_t area ( ) {
-//         return vtable_-> area (_get_self() );
-//     } 
-    
-//     template<typename T>
-//     AreaTrait(T& t) : self(&t) { 
-//         static AreaTrait_Vtable_T<T> impl;
-//         vtable_ = (AreaTrait_Vtable*)(void*)&impl;
-//     } 
-    
-//     private: inline void* _get_self() {
-//             return self;
-//         } 
-//     AreaTrait_Vtable* vtable_;
-// };
-
-template<typename T> 
-struct AreaTrait_Vtable_T {
-    using Self = AreaTrait_Vtable_T<T>;
-    real_t (* area) (const void* self ) = &Self::static_area;
-    static real_t static_area (const void* self ) {
-         return ((const T*)self)->area ( ); 
-    };
-}; 
-
-struct AreaTrait_Vtable{
-    real_t (* area) (const void* self );
-}; 
 
 struct AreaTrait{
+private: 
+    template<typename T> 
+    struct vtable_t {
+        using Self = vtable_t<T>;
+        static real_t area_dispatcher (const void* self ) {
+            return (reinterpret_cast<const T *>(self))->area ( ); 
+        };
+
+        static constexpr real_t (* area) (const void* self ) = &Self::area_dispatcher;
+    }; 
+
+    struct vtable{
+        real_t (* area) (const void* self );
+    }; 
+
+    struct body{
+        public:
+        inline real_t area ( ) const{
+            return vtable_-> area (self_);
+        } 
+
+        body(const void * self, vtable * table):
+            self_(self), vtable_(table){}
+    private:
+        const void * self_;
+        vtable * vtable_;
+    };
+
+    body body_;
+
 public:
     AreaTrait() = delete;
-    inline real_t area ( ) const{
-        return vtable_-> area (_get_self() );
-    } 
-    
-    template<typename T>
-    AreaTrait(T * t) : self(&t) { 
-        static AreaTrait_Vtable_T<T> impl;
-        vtable_ = reinterpret_cast<AreaTrait_Vtable*>(&impl);
+
+    body * operator ->(){
+        return &body_;
     }
     
-private: 
-    inline const void* _get_self() const{
-        return self;
-    } 
-
-    const void* self = nullptr; 
-    AreaTrait_Vtable* vtable_;
+    template<typename T>
+    AreaTrait(T * obj):
+        body_(
+            reinterpret_cast<void *>(obj), 
+            {[]{static vtable_t<T> impl; return reinterpret_cast<vtable*>(&impl);}()}
+        ){}
+    
 };
 
 class Rectangle {
@@ -130,7 +105,7 @@ private:
 
 
 void area(AreaTrait obj){
-    DEBUG_PRINTLN(obj.area());
+    DEBUG_PRINTLN(obj->area());
 
     // constexpr auto a = sizeof(AreaTrait);
     // constexpr auto b = sizeof(AddTrait);

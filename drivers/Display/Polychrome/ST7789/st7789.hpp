@@ -17,16 +17,16 @@ private:
     bool area_locked = false;
     uint8_t scr_ctrl = 0;
 
-    __fast_inline void writeCommand(const uint8_t cmd){
-        interface.writeCommand(cmd);
+    __fast_inline void write_command(const uint8_t cmd){
+        interface.write_command(cmd);
     }
 
-    __fast_inline void writeData(const uint8_t data){
-        interface.writeData(data);
+    __fast_inline void write_data(const uint8_t data){
+        interface.write_data(data);
     }
 
-    __fast_inline void writeData16(const uint16_t data){
-        interface.writeData16(data);
+    __fast_inline void write_data16(const uint16_t data){
+        interface.write_data16(data);
     }
 
     void modifyCtrl(const bool yes,const uint8_t pos){
@@ -34,8 +34,8 @@ private:
         if (yes) scr_ctrl |= temp;
         else scr_ctrl &= ~temp;
 
-        writeCommand(0x36);
-        writeData(scr_ctrl);
+        write_command(0x36);
+        write_data(scr_ctrl);
     }
 
 
@@ -51,7 +51,7 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
         setpos_unsafe(pos);
-        interface.writeData16(uint16_t(color));
+        interface.write_data16(uint16_t(color));
     }
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 color) override;
@@ -69,7 +69,7 @@ public:
 
     void putTexture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
-        interface.writeBurst<RGB565>(color_ptr, int(rect));
+        interface.write_burst<RGB565>(color_ptr, int(rect));
     }
 
     void setDisplayOffset(const Vector2i & _offset){offset = _offset;}
@@ -80,7 +80,7 @@ public:
     void setFormatRGB(const bool is_rgb){modifyCtrl(!is_rgb, 3);}
     void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
-    void setInversion(const bool inv){writeCommand(0x20 + inv);}
+    void setInversion(const bool inv){write_command(0x20 + inv);}
 };
 
 };

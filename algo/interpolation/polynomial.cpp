@@ -1,4 +1,5 @@
 #include "polynomial.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::intp;
 

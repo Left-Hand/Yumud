@@ -1,7 +1,9 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "core/io/regs.hpp"
+#include "core/math/real.hpp"
+
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -16,7 +18,7 @@ public:
 protected:
     hal::SpiDrv spi_drv_;
     hal::GpioIntf & fsync_gpio_;
-    void writeData(uint16_t data); 
+    void write_data(uint16_t data); 
 public:
     AD9833(
         const hal::SpiDrv & spi_drv,

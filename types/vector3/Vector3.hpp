@@ -296,7 +296,7 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vector3_t<auto>
 }
 
 
-using Vector3R = Vector3_t<real_t>;
+// using Vector3_t<real_t> = Vector3_t<real_t>;
 
 template<arithmetic T>
 Vector3_t() -> Vector3_t<T>;

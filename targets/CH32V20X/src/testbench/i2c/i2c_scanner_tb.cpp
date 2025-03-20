@@ -1,19 +1,22 @@
 #include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
 
-#include "sys/math/real.hpp"
+#include "core/debug/debug.hpp"
+#include "core/math/real.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "utils/Result.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
+
 #include <bitset>
 #include <ranges>
 
 
 using namespace ymd;
 
-#define UART uart2
+#define UART hal::uart2
 
 struct FoundInfo{
     uint8_t addr;
@@ -81,7 +84,8 @@ struct I2cTester{
         const uint max_baud = [&]{
             uint baud = start_freq;
             while(baud < 10_MHz){
-                i2c_drv.setBaudRate(uint(baud * grow_scale));
+                // i2c_drv.set_baudrate(uint(baud * grow_scale));
+                i2c.set_baudrate(uint(baud * grow_scale));
                 const auto err = i2c_drv.verify();
                 if(err.wrong()) break;
 
@@ -93,7 +97,7 @@ struct I2cTester{
         }();
 
         // DEBUG_PRINTLN("??");
-        uart2.setRxMethod(CommMethod::Blocking);
+        uart2.set_rx_strategy(CommStrategy::Blocking);
 
         return Ok{max_baud};
     }

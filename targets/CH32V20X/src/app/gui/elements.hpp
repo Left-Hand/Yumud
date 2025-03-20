@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types/rgb.h"
-#include "sys/string/string.hpp"
+#include "core/string/string.hpp"
 
 
 class Node{
@@ -104,7 +104,7 @@ class Slider:public Control{
 public:
     PASS_THEME(Slider, Control)
 
-    Range range;
+    Range_t<real_t> range;
     
     void render(PainterConcept & painter) override{
         painter.setColor(theme_.bg_color);

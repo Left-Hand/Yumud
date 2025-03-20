@@ -1,10 +1,11 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -17,7 +18,7 @@ public:
     AD7607(
         hal::SpiDrv && _spi_drv, 
         hal::TimerOC & _trgger, 
-        hal::GpioIntf & _rst_gpio = hal::NullGpio
+        hal::GpioIntf & _rst_gpio
     ):
         spi_drv(std::move(_spi_drv)), 
         trigger(_trgger), 
@@ -26,7 +27,7 @@ public:
     AD7607(
         const hal::SpiDrv & _spi_drv, 
         hal::TimerOC & _trgger, 
-        hal::GpioIntf & _rst_gpio = hal::NullGpio
+        hal::GpioIntf & _rst_gpio
     ):
         spi_drv(_spi_drv), 
         trigger(_trgger), 

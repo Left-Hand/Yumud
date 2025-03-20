@@ -1,9 +1,13 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include <optional>
 
+#include "core/io/regs.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 class MT6701:public MagEncoderIntf{
@@ -140,10 +144,10 @@ protected:
 
 
     
-    BusError writeReg(const RegAddress addr, const uint16_t data);
-    BusError readReg(const RegAddress addr, uint16_t & data);
-    BusError writeReg(const RegAddress addr, const uint8_t data);
-    BusError readReg(const RegAddress addr, uint8_t & data);
+    BusError write_reg(const RegAddress addr, const uint16_t data);
+    BusError read_reg(const RegAddress addr, uint16_t & data);
+    BusError write_reg(const RegAddress addr, const uint8_t data);
+    BusError read_reg(const RegAddress addr, uint8_t & data);
     // MT6701(hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
 public:
     MT6701(const hal::I2cDrv & _i2c_drv):
@@ -169,44 +173,44 @@ public:
 
     void enableUVWMUX(const bool enable = true){
         uvwMuxReg.uvwMux = enable;
-        writeReg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
+        write_reg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
     }
 
     void enableABZMUX(const bool enable = true){
         abzMuxReg.abzMux = enable;
-        writeReg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
+        write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
     void setDirection(const bool clockwise){
         abzMuxReg.clockwise = clockwise;
-        writeReg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
+        write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
     void setPoles(const uint8_t _poles){
         resolutionReg.poles = _poles;
-        writeReg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
+        write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
     void setABZResolution(const uint16_t abzResolution){
         resolutionReg.abzResolution = abzResolution;
-        writeReg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
+        write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
     void setZeroPosition(const uint16_t zeroPosition){
         zeroConfigReg.zeroPosition = zeroPosition;
-        writeReg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void setZeroPulseWidth(const ZeroPulseWidth zeroPulseWidth){
         zeroConfigReg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
-        writeReg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void setHysteresis(const Hysteresis hysteresis){
         hystersisReg.hysteresis = (uint8_t)hysteresis & 0b11;
         zeroConfigReg.hysteresis = (uint8_t)hysteresis >> 2;
-        writeReg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
-        writeReg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        write_reg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
+        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void enableFastMode(const bool en = true){
@@ -214,17 +218,17 @@ public:
     }
     void enablePwm(const bool enable = true){
         wireConfigReg.isPwm = enable;
-        writeReg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void setPwmPolarity(const bool polarity){
         wireConfigReg.pwmPolarityLow = !polarity;
-        writeReg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void setPwmFreq(const PwmFreq pwmFreq){
         wireConfigReg.pwmFreq = (uint8_t)pwmFreq;
-        writeReg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void setStart(const real_t start){
@@ -232,8 +236,8 @@ public:
         _startData >>= 4;
         startData = _startData;
         startStopReg.start = _startData >> 8;
-        writeReg(RegAddress::Start, startData);
-        writeReg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
+        write_reg(RegAddress::Start, startData);
+        write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
 
     void setStop(const real_t stop){
@@ -241,8 +245,8 @@ public:
         _stopData >>= 4;
         stopData = _stopData;
         startStopReg.stop = _stopData >> 8;
-        writeReg(RegAddress::Stop, stopData);
-        writeReg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
+        write_reg(RegAddress::Stop, stopData);
+        write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
 };
 

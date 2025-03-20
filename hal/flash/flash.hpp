@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
 #include "concept/storage.hpp"
 #include "concept/memory.hpp"
 

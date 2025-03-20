@@ -1,19 +1,19 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 #include "pwm_channel.hpp"
 
 
 namespace ymd::hal{
 class GpioPwm:public PwmIntf, public Countable<uint16_t>{
 protected:
-    Gpio & gpio_;
+    GpioIntf & gpio_;
     volatile uint16_t cnt_ = 0;
     volatile uint16_t cvr_ = 0;
     volatile uint16_t arr_ = 1;
 public:
 
-    GpioPwm(Gpio & gpio):gpio_(gpio){;}
+    GpioPwm(GpioIntf & gpio):gpio_(gpio){;}
 
 
     void init(const uint16_t _arr){

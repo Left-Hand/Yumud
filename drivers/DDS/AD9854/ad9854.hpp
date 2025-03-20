@@ -1,7 +1,7 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "core/io/regs.hpp"
+#include "core/math/real.hpp"
 
 #define AD9854_DEBUG
 

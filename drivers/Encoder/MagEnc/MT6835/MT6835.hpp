@@ -3,7 +3,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 
@@ -125,8 +125,8 @@ protected:
     uint16_t getPositionData();
 
 
-    BusError writeReg(const RegAddress addr, const uint8_t data);
-    BusError readReg(const RegAddress addr, uint8_t & data);
+    BusError write_reg(const RegAddress addr, const uint8_t data);
+    BusError read_reg(const RegAddress addr, uint8_t & data);
 public:
     MT6835(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6835(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}

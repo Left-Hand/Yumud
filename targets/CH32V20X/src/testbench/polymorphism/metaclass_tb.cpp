@@ -1,10 +1,12 @@
-#include "sys/debug/debug.hpp"
-#include "sys/stream/StringStream.hpp"
+#include "core/debug/debug.hpp"
+#include "core/stream/StringStream.hpp"
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
-#include "sys/clock/time.hpp"
-#include "sys/polymorphism/metaclass.hpp"
+#include "core/clock/time.hpp"
+#include "core/polymorphism/metaclass.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
 

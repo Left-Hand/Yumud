@@ -12,8 +12,11 @@
 
 
 
-#include "drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "core/io/regs.hpp"
+#include "core/math/real.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -49,7 +52,8 @@ public:
     bool setRange(uint8_t);
 
     // Read registers
-    uint8_t readRegister(uint8_t);
+    uint8_t read_register(uint8_t);
+    uint8_t write_register(uint8_t);
     uint8_t readStatusRegister(void);
     int readControlRegister(void);
 

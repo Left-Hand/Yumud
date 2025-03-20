@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/core/sdk.h"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
 
 namespace ymd::hal::DacUtils{
 

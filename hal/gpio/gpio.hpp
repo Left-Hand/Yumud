@@ -1,10 +1,9 @@
 #pragma once
 
-#include "GpioConcept.hpp"
-#include "gpio_utils.hpp"
-#include "GpioTag.hpp"
+#include "gpio_intf.hpp"
+#include "gpio_tag.hpp"
 
-#include "sys/core/sdk.h"
+#include "core/sdk.hpp"
 
 namespace ymd::hal{
 
@@ -14,9 +13,7 @@ class Gpio final: public GpioIntf{
 protected:
     GPIO_TypeDef * instance_;
     const Pin pin_;
-    // const uint32_t pin_mask_;
 
-    // volatile uint32_t & pin_cfg;
 
     Gpio(GPIO_TypeDef * instance, const Pin pin):
         instance_(instance)
@@ -31,8 +28,7 @@ protected:
         #elif defined(USE_STM32_HAL_LIB)
         ,pin_(pin)
         #endif
-        {
-    }
+        {}
 
     friend class VGpio;
     friend class ExtiChannel;

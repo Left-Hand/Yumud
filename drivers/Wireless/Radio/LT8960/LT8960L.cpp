@@ -1,7 +1,7 @@
 #include "LT8960L.hpp"
-#include "sys/debug/debug.hpp"
-
-#include "sys/buffer/ringbuf/Fifo_t.hpp"
+#include "core/debug/debug.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "core/buffer/ringbuf/Fifo_t.hpp"
 
 // #define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
@@ -700,7 +700,7 @@ Result<void, Error> LT8960L::set_syncword_bytes(const uint bytes){
 }
 
 Result<void, Error> LT8960L::set_trailer_bits(const uint bits){
-    LT8960L_ASSERT(bits <= 18, "preamble bytes must be less than 0x0f");
+    LT8960L_ASSERT(bits <= 0X0f, "preamble bytes must be less than 0x0f");
     
     auto & reg = regs_.config1_reg;
     reg.trailer_len = (bits - 4) >> 1;
@@ -877,5 +877,17 @@ Result<void, Error> LT8960L::on_interrupt(){
 }
 
 Result<void, Error> LT8960L::tick(){
+    return Ok();
+}
+
+Result<bool, Error> LT8960L::LT8960L_Phy::check_and_skip_hw_listen_pkt(){
+    return Result<bool, Error>(Ok(bool(bus_inst_.sda()) == true))
+        .if_ok([&]{bus_inst_.sda().set();});
+}
+
+Result<void, Error> LT8960L::LT8960L_Phy::start_hw_listen_pkt(){
+    bus_inst_.scl().clr(); 
+    bus_inst_.sda().set(); 
+    bus_inst_.sda().inpu();  
     return Ok();
 }

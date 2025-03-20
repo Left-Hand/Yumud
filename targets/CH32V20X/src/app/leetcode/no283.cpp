@@ -1,7 +1,9 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/core/system.hpp"
+#include "core/debug/debug.hpp"
+#include "core/system.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 class Solution283{
 public:
@@ -124,8 +126,8 @@ void leetcode_no11(){
 
 
 void leetcode_main(){
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

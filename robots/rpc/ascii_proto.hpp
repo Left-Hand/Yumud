@@ -1,8 +1,8 @@
 #pragma once
 
 #include "arg_parser.hpp"
-#include "sys/string/string.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/string/string.hpp"
+#include "core/debug/debug.hpp"
 
 #include <vector>
 

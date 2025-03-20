@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.hpp"
 
 //对当前量与目标量进行7段S曲线位置求解
 //未实现

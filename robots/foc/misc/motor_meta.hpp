@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "types/vector2/vector2.hpp"
 #include "types/range/range.hpp"
 
@@ -21,7 +21,7 @@ struct MetaData{
 
     real_t openloop_curr;
 
-    Range pos_limit = Range::INF;
+    Range_t<real_t> pos_limit = Range_t<real_t>::INF;
     real_t max_curr = real_t(0.7);
     real_t max_spd = 30;
     real_t max_acc = 30;

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "core/io/regs.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 class PCF8575{
@@ -21,7 +23,7 @@ public:
 
     // uint8_t read(){
     //     uint16_t ret = 0;
-    //     i2c_drv_.readBurst();
+    //     i2c_drv_.read_burst();
     //     return ret;
     // }
 

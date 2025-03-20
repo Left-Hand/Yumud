@@ -88,7 +88,7 @@ void SmartCar::printRecordedRunStatus(){
 
 
 void SmartCar::init_debugger(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER.setEps(4);
     DEBUGGER.setRadix(10);
 

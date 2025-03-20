@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "CanUtils.hpp"
 
 #include <span>
 #include <memory.h>
@@ -50,34 +50,7 @@ protected:
     value between 0 to 0xFF */
     #pragma pack(pop)
 private:
-    // template<typename T>
-    // requires CanUtils::valid_arg<T>
-    // constexpr CanMsg & operator << (const T & val){ 
-    //     for(size_t i = 0; i < sizeof(T) and dlc_ < 8; i++){
-    //         data_[dlc_++] = ((const uint8_t *)&val)[i];
-    //     }
-    //     is_remote_ = false;
-    //     return *this;
-    // }
 
-
-    // // 输入流运算符重载
-    // template<typename T>
-    // requires CanUtils::valid_arg<T>
-    // constexpr CanMsg & operator>>(T && val) {
-    //     if (dlc_ < sizeof(T)-1) {
-    //         return *this;
-    //     }
-    //     for (size_t i = 0; i < sizeof(T); i++) {
-    //         ((uint8_t *)&val)[i] = data_[i];
-    //     }
-    //     // 更新 DLC，假设读取后清空数据
-    //     dlc_ -= sizeof(T);
-    //     for (size_t i = 0; i < dlc_; i++) {
-    //         data_[i] = data_[i + sizeof(T)];  // 移动剩余数据
-    //     }
-    //     return *this;
-    // }
 public:
     constexpr CanMsg() = default;
 
@@ -91,10 +64,10 @@ public:
         return *this;
     }
 
-    constexpr CanMsg(const uint32_t id, const bool remote = true){
+    constexpr CanMsg(const uint32_t id, const CanRemoteSpec remote = CanRemoteSpec::Remote){
         id_ = id;
         is_ext_ = (id > 0x7FF ? true : false);
-        is_remote_ = remote ? true : false;
+        is_remote_ = (remote == CanRemoteSpec::Remote)? true : false;
         dlc_ = 0;
     }
 
@@ -112,7 +85,7 @@ public:
 
     template <typename... Args>
     requires CanUtils::valid_args<Args...>
-    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id) {
+    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id, CanRemoteSpec::Data){
         // std::apply(
         //     [&](auto&&... args) {
         //         ((*this << args), ...);
@@ -127,7 +100,7 @@ public:
         is_remote_ = false;
     }
 
-    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id) {
+    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id, CanRemoteSpec::Data) {
         resize(MIN(pdata.size(), 8));
         for(uint8_t i = 0; i < dlc_; i++){
             data_[i] = uint8_t(pdata[i]);
@@ -140,7 +113,7 @@ public:
     constexpr uint8_t * data() {return data_;}
     constexpr const uint8_t * begin() const {return data_;}
     constexpr const uint8_t * end() const {return data_ + size();}
-    constexpr size_t size() const {return MIN(dlc_, 8);}
+    constexpr size_t size() const {return dlc_ & 0b111;}
 
     constexpr uint64_t data64() const{ return data64_;}
     constexpr uint64_t & data64() {return data64_;}
@@ -149,9 +122,9 @@ public:
         return std::span(reinterpret_cast<const std::byte *>(begin()), size());
     }
 
-    constexpr bool isStd() const {return is_ext_ == false;}
-    constexpr bool isExt() const {return is_ext_ == true;}
-    constexpr bool isRemote() const {return (is_remote_ == true);}
+    constexpr bool is_std() const {return is_ext_ == false;}
+    constexpr bool is_ext() const {return is_ext_ == true;}
+    constexpr bool is_remote() const {return (is_remote_ == true);}
     constexpr uint8_t mailbox() const {return mbox_;}
     void read(uint8_t * buf, size_t len){
         if(is_remote_ == true) return;
@@ -180,7 +153,7 @@ public:
     }
 
     
-    void setExt(const bool en){
+    void set_ext(const bool en){
         is_ext_ = (en ? true : false);
     }
     

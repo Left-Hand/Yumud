@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 
@@ -9,6 +9,7 @@
 
 #include "robots/DJI/M3508/m3508.hpp"
 #include "robots/DJI/DR16/DR16.hpp"
+#include "hal/gpio/port.hpp"
 
 using namespace ymd::drivers;
 
@@ -18,7 +19,7 @@ void m3508_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     can1.init(1_M, Can::Mode::Normal);
 

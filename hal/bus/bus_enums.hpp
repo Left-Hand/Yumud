@@ -4,14 +4,15 @@
 
 namespace ymd{
 
-enum class CommMethod:unsigned char{
+enum class CommStrategy:unsigned char{
     None = 0,
     Blocking,
+    Sync = Blocking,
     Interrupt,
-    Dma,
+    Dma
 };
 
-enum class CommMode:unsigned char{
+enum class CommDirection:unsigned char{
     RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
 };
 
