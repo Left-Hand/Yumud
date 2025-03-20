@@ -1,5 +1,5 @@
 #include "mpu6050.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 // #define MPU6050_DEBUG_EN
 

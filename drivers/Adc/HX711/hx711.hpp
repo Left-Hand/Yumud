@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/gpio/gpio.hpp"
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 

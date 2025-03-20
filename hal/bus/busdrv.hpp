@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bus.hpp"
-#include "sys/clock/clock.h"
+#include "core/clock/clock.h"
 #include <type_traits>
 #include <initializer_list>
 
@@ -56,12 +56,12 @@ protected:
     public:
     BusType & bus() const {return bus_;}
     auto index() const {return index_;}
-    void set_data_width(const size_t _data_bits){
-        bus_.set_data_width(_data_bits);
+    void set_data_width(const size_t data_bits){
+        bus_.set_data_width(data_bits);
     }
     
-    void setBaudRate(const uint baud){
-        bus_.setBaudRate(baud);
+    void set_baudrate(const uint baud){
+        bus_.set_baudrate(baud);
     }
 };
 

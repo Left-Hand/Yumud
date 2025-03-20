@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/string/string.hpp"
+#include "core/string/string.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd{

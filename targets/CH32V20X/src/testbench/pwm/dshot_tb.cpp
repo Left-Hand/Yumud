@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "sys/clock/clock.h"
-#include "sys/debug/debug.hpp"
+#include "core/clock/clock.h"
+#include "core/debug/debug.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/timer/timer_oc.hpp"

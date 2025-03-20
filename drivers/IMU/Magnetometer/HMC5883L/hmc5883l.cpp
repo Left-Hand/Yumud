@@ -1,5 +1,5 @@
 #include "hmc5883l.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

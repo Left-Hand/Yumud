@@ -1,5 +1,5 @@
 #include "NCA9555.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 

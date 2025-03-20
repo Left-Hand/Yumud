@@ -1,6 +1,6 @@
 #include "DRV2605L.hpp"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #ifdef DRV2605_DEBUG
 #undef DRV2605_DEBUG

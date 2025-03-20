@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::digipw{
 class Spll{

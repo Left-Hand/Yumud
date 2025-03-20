@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.h"
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/matrix_static.hpp"
 #include "types/matrix/ceres/ceres.hpp"

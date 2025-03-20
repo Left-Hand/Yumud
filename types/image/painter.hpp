@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PainterConcept.hpp"
-#include "sys/string/encoding/gbk.hpp"
+#include "core/string/encoding/gbk.hpp"
 
 
 namespace ymd{

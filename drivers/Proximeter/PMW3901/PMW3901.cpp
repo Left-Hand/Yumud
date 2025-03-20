@@ -1,6 +1,6 @@
 #include "PMW3901.hpp"
 #include "types/image/image.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #define PMW3901_REG_Product_ID      0x00
 #define PMW3901_REG_Revision_ID     0x01

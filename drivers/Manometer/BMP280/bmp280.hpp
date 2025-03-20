@@ -2,7 +2,7 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 // #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
 #define BMP280_DEBUG(...)

@@ -2,8 +2,8 @@
 
 // #include <string>
 
-#include "sys/clock/clock.h"
-#include "sys/debug/debug.hpp"
+#include "core/clock/clock.h"
+#include "core/debug/debug.hpp"
 
 #define UART_TB_ECHO
 using std::string;

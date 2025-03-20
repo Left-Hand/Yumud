@@ -1,5 +1,5 @@
 #include "trajectory.hpp"
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 
 
 namespace ymd{

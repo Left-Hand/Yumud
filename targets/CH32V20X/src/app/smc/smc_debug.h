@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bkp/bkp.hpp"
 #include "thirdparty/enums/enum.h"

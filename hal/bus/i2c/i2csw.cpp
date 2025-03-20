@@ -1,5 +1,5 @@
 #include "i2csw.hpp"
-#include "sys/clock/time_stamp.hpp"
+#include "core/clock/time_stamp.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

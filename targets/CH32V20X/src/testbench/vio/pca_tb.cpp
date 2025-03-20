@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 

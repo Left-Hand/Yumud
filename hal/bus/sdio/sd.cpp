@@ -10,7 +10,7 @@
 * microcontroller manufactured by Nanjing Qinheng Microelectronics.
 *******************************************************************************/
 #include "sd.hpp"
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 #include "hal/gpio/port.hpp"
 
 #ifdef ENABLE_SDIO

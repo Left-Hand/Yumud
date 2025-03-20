@@ -1,5 +1,5 @@
 #include "qmc5883l.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #define QMC5883L_DEBUG
 

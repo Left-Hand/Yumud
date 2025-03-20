@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 
 #include "hal/bus/bus.hpp"
 #include "hal/gpio/gpio.hpp"

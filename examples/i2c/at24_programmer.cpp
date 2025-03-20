@@ -1,4 +1,4 @@
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/flash/flash.hpp"
 #include "hal/bkp/bkp.hpp"

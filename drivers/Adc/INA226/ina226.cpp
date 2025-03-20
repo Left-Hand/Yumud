@@ -1,6 +1,6 @@
 #include "ina226.hpp"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd::hal;

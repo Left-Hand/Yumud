@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/sdi/sdi.hpp"
 
@@ -23,7 +23,7 @@
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
 
-#include "sys/math/int/int_t.hpp"
+#include "core/math/int/int_t.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\

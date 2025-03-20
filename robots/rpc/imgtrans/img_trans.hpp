@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "sys/stream/ostream.hpp"
+#include "core/stream/ostream.hpp"
 #include "types/image/image.hpp"
 
 namespace ymd{

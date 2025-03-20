@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/math/real.hpp"
-#include "sys/core/platform.h"
-#include "sys/stream/ostream.hpp"
+#include "core/math/real.hpp"
+#include "core/platform.h"
+#include "core/stream/ostream.hpp"
 
 #include "type_traits"
 #include <algorithm>

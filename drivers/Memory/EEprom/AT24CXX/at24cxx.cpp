@@ -1,5 +1,5 @@
 #include "at24cxx.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 

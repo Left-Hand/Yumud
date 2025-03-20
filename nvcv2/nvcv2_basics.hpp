@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/debug/debug.hpp"
+#include "core/platform.h"
+#include "core/debug/debug.hpp"
 
 #include "types/color/color_t.hpp"
 #include "types/image/Image.hpp"

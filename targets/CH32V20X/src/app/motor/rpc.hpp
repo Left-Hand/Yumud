@@ -8,14 +8,14 @@
 #include <utility>
 #include <type_traits>
 
-#include "sys/string/string.hpp"
-#include "sys/stream/ostream.hpp"
-#include "sys/stream/BufStream.hpp"
-#include "sys/polymorphism/proxy.hpp"
+#include "core/string/string.hpp"
+#include "core/stream/ostream.hpp"
+#include "core/stream/BufStream.hpp"
+#include "core/polymorphism/proxy.hpp"
 
 namespace ymd::rpc{
 
-//ÐèËÍÈëº¯ÊýÖÐÖ´ÐÐµÄ²ÎÊý °üº¬ÁË¶ÔÓ¦µÄ×Ö¶ÎºÍ¿ÉÄÜµÄÖ¸¶¨²ÎÊýÃû
+//ï¿½ï¿½ï¿½ï¿½ï¿½ëº¯ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ÐµÄ²ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½Ó¦ï¿½ï¿½ï¿½Ö¶ÎºÍ¿ï¿½ï¿½Üµï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 class CallParam{
 protected:
     StringView value_;
@@ -91,7 +91,7 @@ enum class AccessResult: uint8_t{
 
 
 
-//Ò»¸ö¿ÉÒÔ±»¼ìË÷µÄ´ÊÌõ
+//Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
 class EntryIntf{
 protected:
     String name_;
@@ -114,7 +114,7 @@ enum class EntryType:uint8_t{
 
 // template<typename... Args>
 // size_t mysprintf(char *str, Args &&... params) {
-//     // Ê¹ÓÃ snprintf ½øÐÐ¸ñÊ½»¯Êä³ö
+//     // Ê¹ï¿½ï¿½ snprintf ï¿½ï¿½ï¿½Ð¸ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½
 //     return snprintf(str, std::numeric_limits<size_t>::max(), std::forward<Args>(params)...);
 // }
 
@@ -141,7 +141,7 @@ namespace internal{
 using EntryProxy = pro::proxy<internal::EntryFacade>;
 
 
-//Ò»¸öÊôÐÔ
+//Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 template<typename T>
 class Property:public EntryIntf{
 protected:
@@ -180,7 +180,7 @@ public:
 
 
 
-//Ò»¸ö·½·¨µÄ²ÎÊý ÃèÊöÁËÃû³ÆºÍÄ¬ÈÏÖµ
+//Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½Ä¬ï¿½ï¿½Öµ
 template<typename T>
 class MethodArgInfo:public EntryIntf{
 protected:
@@ -378,7 +378,7 @@ protected:
 };
 
 
-//Ò»¸ö°ïÖú½âÎö±ä²Î°üµÄ¸¨ÖúÔªº¯Êý
+//Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½
 namespace internal{
 template<typename Ret, typename ArgsTuple, template<typename, typename...> class MethodByLambda, typename Lambda>
 struct make_method_by_lambda_impl;
@@ -395,17 +395,17 @@ struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lamb
 
 }
 
-// make_lambda ÊµÏÖ
+// make_lambda Êµï¿½ï¿½
 template<typename Lambda>
 auto make_function(const StringView name, Lambda&& lambda) {
-    // Ê¹ÓÃ std::decay À´ÒÆ³ý Lambda ÀàÐÍµÄÒýÓÃºÍ const ÐÞÊÎ·û
+    // Ê¹ï¿½ï¿½ std::decay ï¿½ï¿½ï¿½Æ³ï¿½ Lambda ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Ãºï¿½ const ï¿½ï¿½ï¿½Î·ï¿½
     using DecayedLambda = typename std::decay<Lambda>::type;
 
-    // ÌáÈ¡ Lambda µÄ·µ»ØÀàÐÍºÍ²ÎÊýÀàÐÍ
+    // ï¿½ï¿½È¡ Lambda ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍºÍ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     using Ret = typename function_traits<DecayedLambda>::return_type;
     using ArgsTuple = typename function_traits<DecayedLambda>::args_type;
 
-    // ½« ArgsTuple »¹Ô­Îª²ÎÊý°ü£¬²¢µ÷ÓÃ make_proxy
+    // ï¿½ï¿½ ArgsTuple ï¿½ï¿½Ô­Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ make_proxy
     return internal::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
         name,
         std::forward<Lambda>(lambda)

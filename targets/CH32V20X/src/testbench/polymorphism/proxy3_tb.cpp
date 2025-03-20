@@ -1,12 +1,12 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/stream/StringStream.hpp"
+#include "core/debug/debug.hpp"
+#include "core/stream/StringStream.hpp"
 
-#include "sys/polymorphism/proxy.hpp"
-#include "sys/math/real.hpp"
+#include "core/polymorphism/proxy.hpp"
+#include "core/math/real.hpp"
 
-#include "sys/clock/time.hpp"
+#include "core/clock/time.hpp"
 
 
 using namespace ymd;

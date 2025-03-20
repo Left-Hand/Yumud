@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "sys/core/platform.h"
-#include "sys/core/sdk.h"
+#include "core/platform.h"
+#include "core/sdk.h"
 
 #include "adc_utils.hpp"
 

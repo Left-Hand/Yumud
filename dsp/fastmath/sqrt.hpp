@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../sys/core/platform.h"
+#include "../../core/platform.h"
 
 template<integral T>
 __inline T fast_sqrt_i(const T n) {

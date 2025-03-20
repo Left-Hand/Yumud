@@ -32,8 +32,8 @@
 /**************************************************************************/
 
 
-#include "sys/stream/ostream.hpp"
-#include "sys/math/real.hpp"
+#include "core/stream/ostream.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd{
 

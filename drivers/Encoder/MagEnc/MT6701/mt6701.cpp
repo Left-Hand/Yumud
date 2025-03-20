@@ -1,5 +1,5 @@
 #include "mt6701.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #ifdef MT6701_DEBUG
 #undef MT6701_DEBUG

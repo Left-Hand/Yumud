@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../sys/core/platform.h"
+#include "../core/platform.h"
 
 #define F_CPU 144000000
 

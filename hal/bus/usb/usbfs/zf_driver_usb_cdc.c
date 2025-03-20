@@ -1,6 +1,6 @@
-#include "sys/core/platform.h"
-#include "sys/core/sdk.h"
-#include "sys/clock/clock.h"
+#include "core/platform.h"
+#include "core/sdk.h"
+#include "core/clock/clock.h"
 
 #include "ch32v30x_usbotg_device.h"
 #include "zf_driver_usb_cdc.h"

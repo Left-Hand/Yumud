@@ -8,8 +8,8 @@
 #include <algorithm>
 
 #include "algo/random/random_generator.hpp"
-#include "sys/math/real.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/math/real.hpp"
+#include "core/debug/debug.hpp"
 
 // using namespace std;
 using std::stack;

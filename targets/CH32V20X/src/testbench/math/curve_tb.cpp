@@ -1,11 +1,11 @@
 #include "../tb.h"
 
 
-#include "sys/utils/setget/Getter.hpp"
-#include "sys/utils/setget/Setter.hpp"
-#include "sys/debug/debug.hpp"
-#include "sys/polymorphism/proxy.hpp"
-#include "sys/clock/time.hpp"
+#include "core/utils/setget/Getter.hpp"
+#include "core/utils/setget/Setter.hpp"
+#include "core/debug/debug.hpp"
+#include "core/polymorphism/proxy.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "algo/interpolation/Polynomial.hpp"

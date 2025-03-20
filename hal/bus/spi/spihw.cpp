@@ -1,5 +1,5 @@
 #include "spihw.hpp"
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

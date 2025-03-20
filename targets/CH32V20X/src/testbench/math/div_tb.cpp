@@ -4,8 +4,8 @@
 
 #include "../tb.h"
 
-#include "sys/math/int/int_t.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/math/int/int_t.hpp"
+#include "core/debug/debug.hpp"
 
 
 #include "hal/bus/uart/uarthw.hpp"

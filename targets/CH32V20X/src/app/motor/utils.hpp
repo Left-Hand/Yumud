@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sys/math/real.hpp"
-#include "sys/stream/ostream.hpp"
+#include "core/math/real.hpp"
+#include "core/stream/ostream.hpp"
 
 namespace ymd::foc{
 

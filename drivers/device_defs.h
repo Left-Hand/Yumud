@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <optional>
 
-#include "sys/io/regs.hpp"
-#include "sys/math/fraction.hpp"
+#include "core/io/regs.hpp"
+#include "core/math/fraction.hpp"
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"

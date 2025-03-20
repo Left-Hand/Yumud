@@ -1,6 +1,6 @@
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
-#include "sys/core/system.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/system.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -22,7 +22,7 @@
 #include "dsp/observer/lbg/RolbgObserver.hpp"
 #include "dsp/observer/nonlinear/NonlinearObserver.hpp"
 
-#include "sys/polymorphism/traits.hpp"
+#include "core/polymorphism/traits.hpp"
 
 #include "utils.hpp"
 #include "../digiPW/sogi/spll.hpp"

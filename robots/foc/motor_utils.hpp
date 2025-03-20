@@ -5,9 +5,9 @@
 #include "misc/motor_enums.hpp"
 #include "misc/motor_scexpr.hpp"
 
-#include "sys/debug/debug.hpp"
-#include "sys/utils/hash_func.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/utils/hash_func.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 

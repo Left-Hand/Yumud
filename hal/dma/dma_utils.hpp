@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "sys/core/sdk.h"
+#include "core/sdk.h"
 
 namespace ymd::DmaUtils{
     enum class Mode:uint8_t{

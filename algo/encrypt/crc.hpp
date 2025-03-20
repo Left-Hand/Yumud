@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.h"
 
 // Calculates an arbitrary CRC for one byte.
 // Adapted from https://barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code

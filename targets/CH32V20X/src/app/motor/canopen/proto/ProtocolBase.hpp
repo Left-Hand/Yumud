@@ -2,7 +2,7 @@
 
 #include "canopen/ObjectDict.hpp"
 #include "canopen/utils.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 namespace ymd::canopen {
     

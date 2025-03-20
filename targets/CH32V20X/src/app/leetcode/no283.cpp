@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/core/system.hpp"
+#include "core/debug/debug.hpp"
+#include "core/system.hpp"
 
 class Solution283{
 public:

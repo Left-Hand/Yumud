@@ -1,5 +1,5 @@
 #include "src/testbench/tb.h"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "src/app/gui/coro_task.hpp"
 

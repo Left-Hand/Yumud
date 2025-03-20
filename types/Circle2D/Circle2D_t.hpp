@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
+#include "core/platform.h"
 #include "types/vector2/vector2.hpp"
 
 namespace ymd{

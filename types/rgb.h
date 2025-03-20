@@ -1,14 +1,14 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/math/uint24_t.h"
+#include "core/platform.h"
+#include "core/math/uint24_t.h"
 
 #include <tuple>
 
 
 
 #ifdef __cplusplus
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd{
 enum class ColorEnum:uint32_t{

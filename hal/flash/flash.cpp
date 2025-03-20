@@ -1,5 +1,5 @@
 #include "flash.hpp"
-#include "sys/core/sdk.h"
+#include "core/sdk.h"
 
 using namespace ymd;
 

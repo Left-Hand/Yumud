@@ -20,7 +20,7 @@
  *                 \/__/         \/__/                       \/__/         \/__/                     \/__/         \/__/
  */
 
-#include "sys/core/platform.h"
+#include "core/platform.h"
 #include "types/vector3/vector3.hpp"
 #include "types/basis/Basis.hpp"
 #include "types/quat/Quat.hpp"

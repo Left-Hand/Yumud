@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sys/string/String.hpp"
-#include "sys/utils/Result.hpp"
+#include "core/string/String.hpp"
+#include "core/utils/Result.hpp"
 #include "hal/bus/can/CanMsg.hpp"
 
 #include <variant>

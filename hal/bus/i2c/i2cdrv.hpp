@@ -2,7 +2,7 @@
 
 #include "i2c.hpp"
 #include "hal/bus/busdrv.hpp"
-#include "utils/BytesIterator.hpp"
+#include "core/utils/BytesIterator.hpp"
 
 #include <type_traits>
 #include <concepts>

@@ -1,5 +1,5 @@
 #include "ina3221.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 

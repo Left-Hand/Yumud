@@ -1,7 +1,7 @@
 #include "../tb.h"
 
-#include "sys/debug/debug.hpp"
-#include "sys/math/real.hpp"
+#include "core/debug/debug.hpp"
+#include "core/math/real.hpp"
 
 #include "hal/bus/can/can.hpp"
 

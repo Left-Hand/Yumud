@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
 
 #include "hal/bus/spi/spi.hpp"
 #include "hal/bus/uart/uarthw.hpp"

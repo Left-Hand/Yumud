@@ -1,5 +1,5 @@
 #include "ssd1306.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;
@@ -18,7 +18,7 @@ void SSD13XX::init(){
 }
 
 void SSD13XX::update(){
-    auto & frame = fetchFrame();
+    auto & frame = fetch_frame();
     for(int i = 0; i < size().y;i += 8){
         setFlushPos(Vector2i(0, i));
         interface.write_u8(&frame[(i / 8) * size_t(size().x)], size().x);

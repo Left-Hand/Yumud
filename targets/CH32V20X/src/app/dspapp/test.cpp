@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
-#include "sys/clock/time.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/debug/debug.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 

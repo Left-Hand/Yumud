@@ -4,7 +4,7 @@
 #include "gpio_utils.hpp"
 #include "GpioTag.hpp"
 
-#include "sys/core/sdk.h"
+#include "core/sdk.h"
 
 namespace ymd::hal{
 

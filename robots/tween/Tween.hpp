@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/utils/setget/Setter.hpp"
+#include "core/utils/setget/Setter.hpp"
 #include "robots/curve/CurveConcept_t.hpp"
 
 

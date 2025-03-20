@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 
 namespace ymd::drivers{

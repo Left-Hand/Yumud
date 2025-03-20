@@ -1,4 +1,4 @@
-#include "../../sys/core/platform.h"
+#include "../../core/platform.h"
 
 template<arithmetic T>
 struct Line_t{

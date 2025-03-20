@@ -34,7 +34,7 @@
 
 // #include "vector3/vector3.hpp"
 #include "types/vector3/vector3.hpp"
-// #include "sys/math/fast/conv.hpp"
+// #include "core/math/fast/conv.hpp"
 
 namespace ymd{
 

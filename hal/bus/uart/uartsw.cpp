@@ -1,5 +1,5 @@
 #include "uartsw.hpp"
-#include "sys/stream/CharOpTraits.hpp"
+#include "core/stream/CharOpTraits.hpp"
 
 using namespace ymd::hal;
 

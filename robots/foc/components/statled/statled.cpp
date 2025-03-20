@@ -1,6 +1,6 @@
 #include "statled.hpp"
-#include "sys/core/system.hpp"
-#include "sys/clock/time.hpp"
+#include "core/system.hpp"
+#include "core/clock/time.hpp"
 
 using namespace ymd;
 using namespace ymd::foc::StepperComponents;

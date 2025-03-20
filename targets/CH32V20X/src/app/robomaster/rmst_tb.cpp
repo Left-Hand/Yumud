@@ -1,10 +1,10 @@
 #include "src/testbench/tb.h"
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
-#include "sys/debug/debug.hpp"
-#include "sys/clock/time.hpp"
-#include "sys/clock/clock.h"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/clock/clock.h"
 
 #include "hal/timer/instance/timer_hw.hpp"
 

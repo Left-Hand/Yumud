@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/float/bf16.hpp"
+#include "core/math/float/bf16.hpp"
 #include "hal/bus/can/can.hpp"
 
 #include <tuple>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "i2c.hpp"
-#include "sys/clock/clock.h"
+#include "core/clock/clock.h"
 
 namespace ymd::hal{
 class I2cSw: public I2c{

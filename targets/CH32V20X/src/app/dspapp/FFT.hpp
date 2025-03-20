@@ -1,7 +1,7 @@
 #pragma once
 
 #include <span>
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::dsp{
 /**********************************************************************

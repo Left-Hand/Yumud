@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "Encoder.hpp"
 #include <array>
 #include "thirdparty/sstl/include/sstl/vector.h"
@@ -53,12 +53,12 @@ public:
     }
 
     virtual void reset();
-    //½«µ±Ç°µÄÎ»ÖÃÊÓÎªÄ³Æ«ÒÆ
+    //ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ÎªÄ³Æ«ï¿½ï¿½
     void locateRelatively(const real_t offset){
         locate(offset);
     }
 
-    //È¦ÄÚÑ°Ö· Éè¶¨Æ«ÒÆ
+    //È¦ï¿½ï¿½Ñ°Ö· ï¿½è¶¨Æ«ï¿½ï¿½
     void locateAbsolutely(const real_t offset){
         locate(getLapPosition() + offset);
     }

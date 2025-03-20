@@ -1,8 +1,8 @@
-#include "sys/core/system.hpp"
+#include "core/system.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"

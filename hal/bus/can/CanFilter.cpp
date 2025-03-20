@@ -1,7 +1,7 @@
 #include "CanFilter.hpp"
 
-#include "sys/core/platform.h"
-#include "sys/string/StringView.hpp"
+#include "core/platform.h"
+#include "core/string/StringView.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

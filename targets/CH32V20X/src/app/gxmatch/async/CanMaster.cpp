@@ -1,5 +1,5 @@
 #include "CanMaster.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 using namespace gxm;
 using namespace ymd;

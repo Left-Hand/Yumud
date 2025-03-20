@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/core/sdk.h"
+#include "core/sdk.h"
 
-#include "sys/math/real.hpp"
+#include "core/math/real.hpp"
 #include "hal/gpio/port.hpp"
 
 #include <functional>

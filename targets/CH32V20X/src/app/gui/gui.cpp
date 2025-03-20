@@ -1,8 +1,8 @@
 #include "gui.hpp"
 
-#include "sys/debug/debug.hpp"
-#include "sys/core/system.hpp"
-#include "sys/clock/time.hpp"
+#include "core/debug/debug.hpp"
+#include "core/system.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"

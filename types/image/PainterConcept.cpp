@@ -1,7 +1,7 @@
 #include "PainterConcept.hpp"
 
-#include "sys/string/String.hpp"
-#include "sys/string/StringView.hpp"
+#include "core/string/String.hpp"
+#include "core/string/StringView.hpp"
 
 using namespace ymd;
 

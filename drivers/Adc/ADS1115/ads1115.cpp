@@ -1,5 +1,5 @@
 #include "ads1115.hpp"
-#include "sys/debug/debug.hpp"
+#include "core/debug/debug.hpp"
 
 
 // #define ADS1115_DEBUG

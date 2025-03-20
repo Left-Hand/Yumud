@@ -2,13 +2,13 @@
 
 #include <functional>
 
-#include "sys/core/sdk.h"
-#include "sys/stream/stream.hpp"
+#include "core/sdk.h"
+#include "core/stream/stream.hpp"
 
 #include "hal/bus/bus.hpp"
 #include "hal/gpio/port.hpp"
 
-#include "sys/buffer/ringbuf/Fifo_t.hpp"
+#include "core/buffer/ringbuf/Fifo_t.hpp"
 
 
 namespace ymd::hal{
