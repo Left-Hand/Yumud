@@ -2,10 +2,10 @@
 
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/AsahiKaseiIMU.hpp"
+#include "drivers/IMU/details/AsahiKaseiIMU.hpp"
 
 namespace ymd::drivers{
-// class AK8963:public Magnetometer, public AsahiKaseiSensor{
+
 class AK8963:public Magnetometer{
 public:
 // "0000":  Power-down mode 
@@ -46,8 +46,7 @@ public:
 
 
 protected:
-    std::optional<hal::I2cDrv> p_i2c_drv_;
-    std::optional<hal::SpiDrv> p_spi_drv_;
+    AsahiKaseiSensor_Phy phy_;
 
     // [[nodiscard]] virtual Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
@@ -161,12 +160,12 @@ protected:
     }
 public:
 
-    AK8963(const hal::I2cDrv & i2c_drv):p_i2c_drv_(i2c_drv){;}
-    AK8963(hal::I2cDrv && i2c_drv):p_i2c_drv_(i2c_drv){;}
-    AK8963(hal::I2c & bus):p_i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
-    AK8963(const hal::SpiDrv & spi_drv):p_spi_drv_(spi_drv){;}
-    AK8963(hal::SpiDrv && spi_drv):p_spi_drv_(std::move(spi_drv)){;}
-    AK8963(hal::Spi & spi, const uint8_t index):p_spi_drv_(hal::SpiDrv(spi, index)){;}
+    AK8963(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    AK8963(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
+    AK8963(hal::I2c & bus):phy_(hal::I2cDrv(bus, default_i2c_addr)){;}
+    AK8963(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
+    AK8963(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
+    AK8963(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv(spi, index)){;}
 
     Result<void, Error> init();
     void update();

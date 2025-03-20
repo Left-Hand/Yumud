@@ -4,7 +4,7 @@
 
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/STMicroIMU.hpp"
+#include "drivers/IMU/details/STMicroIMU.hpp"
 
 enum FormerLatter:bool{
     Former,

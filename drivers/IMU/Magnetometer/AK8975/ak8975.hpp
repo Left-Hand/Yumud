@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/AsahiKaseiIMU.hpp"
+#include "drivers/IMU/details/AsahiKaseiIMU.hpp"
 
 
 namespace ymd::drivers{

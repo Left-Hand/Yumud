@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IMU.hpp"
+#include "drivers/IMU/IMU.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
@@ -37,12 +37,11 @@ namespace ymd::custom{
 
 namespace ymd::drivers{
 
-class BoschSensor{
-public:
-    using Error = details::BoschSensorError;
-protected:
+class BoschSensor_Phy{
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
+public:
+    using Error = details::BoschSensorError;
 
     [[nodiscard]] __fast_inline
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
@@ -97,16 +96,21 @@ protected:
     Result<void, Error> read_regs(Ts & ... reg) {
         return (read_reg(reg.address, reg.as_ref()) | ...);
     }
+
+    [[nodiscard]] __fast_inline
+    Result<void, Error> verify() {
+        return Ok();
+    }
 public:
 
-    BoschSensor(const hal::I2cDrv & i2c_drv):
+    BoschSensor_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    BoschSensor(hal::I2c & i2c, const uint8_t addr):
-        BoschSensor(hal::I2cDrv{i2c, addr}){;}
-    BoschSensor(const hal::SpiDrv & spi_drv):
+    BoschSensor_Phy(hal::I2c & i2c, const uint8_t addr):
+        BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
+    BoschSensor_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    BoschSensor(hal::Spi & spi, const uint8_t index):
-        BoschSensor(hal::SpiDrv{spi, index}){;}
+    BoschSensor_Phy(hal::Spi & spi, const uint8_t index):
+        BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
 };
 }
 

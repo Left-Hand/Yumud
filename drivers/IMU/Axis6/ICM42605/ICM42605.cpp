@@ -35,19 +35,19 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 void ICM42605::init() {
-    write_reg(ICM42605_BANK_SEL, 0);
-    write_reg(ICM42605_BANK_SEL, 1);
-    write_reg(ICM42605_INTF_CONFIG4, 0x02);
-    write_reg(ICM42605_BANK_SEL, 0);
-    write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
-    write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
-    write_reg(ICM42605_PWR_MGMT0, 0b00011111);
+    phy_.write_reg(ICM42605_BANK_SEL, 0);
+    phy_.write_reg(ICM42605_BANK_SEL, 1);
+    phy_.write_reg(ICM42605_INTF_CONFIG4, 0x02);
+    phy_.write_reg(ICM42605_BANK_SEL, 0);
+    phy_.write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
+    phy_.write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
+    phy_.write_reg(ICM42605_PWR_MGMT0, 0b00011111);
 }
 
 bool ICM42605::verify(){
-    write_reg(ICM42605_BANK_SEL, 0);
+    phy_.write_reg(ICM42605_BANK_SEL, 0);
     uint8_t id = 0;
-    read_reg(ICM42605_WHO_AM_I, id);
+    phy_.read_reg(ICM42605_WHO_AM_I, id);
     return (id == 0);//FIXME
 }
 

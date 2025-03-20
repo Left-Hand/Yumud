@@ -1,12 +1,13 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "drivers/IMU/BoschIMU.hpp"
+#include "drivers/IMU/details/BoschIMU.hpp"
 
 namespace ymd::drivers{
 
-class BMI270:public Axis6, BoschSensor{
+class BMI270:public Axis6{
 public:
+    using Error = details::BoschSensorError;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -41,9 +42,7 @@ public:
     };
 
 protected:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
-
+    BoschSensor_Phy phy_;
 
     scexpr uint8_t default_i2c_addr = 0x68;
 
@@ -65,8 +64,8 @@ protected:
     IntStatus1Reg int_status1_reg = {};
 
 public:
-    using BoschSensor::BoschSensor;
-    BMI270(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI270(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):
+        phy_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
 
     void init();

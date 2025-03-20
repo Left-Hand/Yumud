@@ -1,13 +1,13 @@
 #pragma once
 
-#include "IMU.hpp"
+#include "drivers/IMU/IMU.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
-class AnalogDeviceIMU{
+class AnalogDeviceIMU_Phy{
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
@@ -28,11 +28,11 @@ protected:
         }
     }
 public:
-    AnalogDeviceIMU(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AnalogDeviceIMU(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AnalogDeviceIMU(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-    AnalogDeviceIMU(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    AnalogDeviceIMU(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    AnalogDeviceIMU(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    AnalogDeviceIMU_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AnalogDeviceIMU_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AnalogDeviceIMU_Phy(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    AnalogDeviceIMU_Phy(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    AnalogDeviceIMU_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    AnalogDeviceIMU_Phy(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

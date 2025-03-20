@@ -18,7 +18,7 @@ void bmi160_main(){
 
     using Quat = Quat_t<real_t>;
     
-    BMI160 bmi{spi1, 0};
+    BMI160 bmi{{spi1, 0}};
     bmi.init();
 
     auto & ledr = portC[13];
