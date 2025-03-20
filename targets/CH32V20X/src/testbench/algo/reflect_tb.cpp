@@ -1,6 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
+#include "core/math/real.hpp"
 
 
 #define REFLECT_FOREACH_1(f, _1) f(_1)

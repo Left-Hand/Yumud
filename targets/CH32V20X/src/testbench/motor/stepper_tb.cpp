@@ -42,7 +42,7 @@ struct TurnSolver{
 TurnSolver turnSolver;
 
 real_t demo(uint milliseconds, uint microseconds = 0){
-    // using Vector2 = CubicInterpolation::Vector2;
+    // using Ve_tctor2 = CubicInterpolation::V_tector2;
     
     uint32_t turnCnt = milliseconds % 2667;
     uint32_t turns = milliseconds / 2667;
@@ -81,7 +81,10 @@ real_t demo(uint milliseconds, uint microseconds = 0){
     real_t yt = 0;
 
     if((i == 0) || (i == 2) || (i == 4))
-        yt = CubicInterpolation::forward(Vector2{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, Vector2(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+        yt = CubicInterpolation::forward(
+            Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+            Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+
     else
         yt = _t;
 

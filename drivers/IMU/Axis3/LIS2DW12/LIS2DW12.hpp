@@ -1,8 +1,10 @@
 #pragma once
 
 #include "drivers/device_defs.h"
+
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/STMicroIMU.hpp"
+
 
 namespace ymd::drivers{
 
@@ -216,7 +218,7 @@ public:
     
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3R> getAcc();
+    Option<Vector3_t<real_t>> getAcc();
 };
 
 }

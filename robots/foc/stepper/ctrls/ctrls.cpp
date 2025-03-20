@@ -8,7 +8,7 @@ using MetaData = MotorUtils::MetaData;
 #define ERR_LIMIT 100
 
 void MetaData::reset(){
-    pos_limit = Range::INF;
+    pos_limit = Range_t<real_t>::INF;
     max_curr = real_t(1.4);
     max_spd = 30;
     max_acc = 30;

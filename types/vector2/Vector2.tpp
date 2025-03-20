@@ -252,4 +252,5 @@ constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<
 
 template<arithmetic T>
 Vector2_t() -> Vector2_t<T>;
+
 }

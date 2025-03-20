@@ -18,7 +18,7 @@ void SelfCheckTasker::run(){
             }else{
                 odo_.reset();
                 odo_.update();
-                move_range = Range::from_center(odo_.getPosition(), 0);
+                move_range = Range_t<real_t>::from_center(odo_.getPosition(), 0);
                 sw_state(SubState::TEST_A);
             }
             break;
@@ -34,7 +34,7 @@ void SelfCheckTasker::run(){
                     // THROW_ERROR(ErrorCode::COIL_A_DISCONNECTED, ("coil a connection failed" + String(move_range)).c_str());
                     // return RunStatus::ERROR;
                 }else{
-                    move_range = Range::from_center(odo_.getPosition(), 0);
+                    move_range = Range_t<real_t>::from_center(odo_.getPosition(), 0);
                     sw_state(SubState::TEST_B);
                 }
             }

@@ -71,8 +71,8 @@ Result<void, Error> BMI088_Gyr::update(){
 }
 
 
-Option<Vector3R> BMI088_Acc::getAcc(){
-    return Some(Vector3R(
+Option<Vector3_t<real_t>> BMI088_Acc::getAcc(){
+    return Some(Vector3_t<real_t>(
         acc_x_reg.as_val() * acc_scaler_,
         acc_y_reg.as_val() * acc_scaler_,
         acc_z_reg.as_val() * acc_scaler_
@@ -84,8 +84,8 @@ Option<real_t> BMI088_Acc::getTemperature(){
     return Some(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
 }
 
-Option<Vector3R> BMI088_Gyr::getGyr(){
-    return Some(Vector3R(
+Option<Vector3_t<real_t>> BMI088_Gyr::getGyr(){
+    return Some(Vector3_t<real_t>(
         gyr_x_reg.as_val() * gyr_scaler_,
         gyr_y_reg.as_val() * gyr_scaler_,
         gyr_z_reg.as_val() * gyr_scaler_

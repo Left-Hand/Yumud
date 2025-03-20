@@ -15,9 +15,6 @@
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/bus/uart/uart.hpp"
 
-#include "hal/timer/pwm/pwm_channel.hpp"
-#include "hal/adc/analog_channel.hpp"
-
 
 #define DEF_R16(name)\
 name{};\

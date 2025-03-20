@@ -82,7 +82,7 @@ public:
 	explicit String(const iq_t<Q> value, uint8_t decimalPlaces){
 		init();
 		char str[12] = {0};
-		StringUtils::qtoa<Q>(value, str, decimalPlaces);
+		qtoa<Q>(value, str, decimalPlaces);
 		*this = str;
 	}
 

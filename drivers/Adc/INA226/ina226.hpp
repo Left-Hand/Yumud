@@ -4,6 +4,8 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Option.hpp"
 
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
 
 namespace ymd::drivers{
 

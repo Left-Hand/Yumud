@@ -52,7 +52,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;

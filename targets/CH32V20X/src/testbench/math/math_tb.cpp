@@ -191,8 +191,8 @@ void math_tb(){
     using Line = Line2_t<real_t>;
 
 
-    auto line = Line{Vector2{1,0}, Vector2{0,1}};
-    auto other = Line{Vector2{0,0}, real_t(PI/4)};
+    auto line = Line{Vector2_t<real_t>{1,0}, Vector2_t<real_t>{0,1}};
+    auto other = Line{Vector2_t<real_t>{0,0}, real_t(PI/4)};
     print("line", line);
     print("other",other);
 
@@ -201,17 +201,17 @@ void math_tb(){
     print("abc:", line.abc());
     print("angle:", line.angle());
     print("abs", line.abs());
-    print("dist", line.distance_to(Vector2{0.5_r, 0.5_r}));
-    print("dist", line.distance_to(Vector2{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line{Vector2{0,0}, atan(real_t(0.3333_r))}));
-    print("foot", line.foot(Vector2{0, 0.5_r}));
-    print("mirror", line.mirror(Vector2{0, 0.5_r}));
-    print("perpendicular", line.perpendicular(Vector2{0, 0.5_r}));
-    print("orthogonal_with", line.orthogonal_with(Line{Vector2{0,0}, real_t(PI/4)}));
+    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line{Vector2_t<real_t>{0,0}, atan(real_t(0.3333_r))}));
+    print("foot", line.foot(Vector2_t<real_t>{0, 0.5_r}));
+    print("mirror", line.mirror(Vector2_t<real_t>{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vector2_t<real_t>{0, 0.5_r}));
+    print("orthogonal_with", line.orthogonal_with(Line{Vector2_t<real_t>{0,0}, real_t(PI/4)}));
     print("unit", line.unit());
-    print("rebase", line.rebase(Vector2{-1,0}));
-    print("rotated", line.rotated(Vector2{-1,0}, real_t(PI/4)));
-    print("normal", line.normal(Vector2{-1,0}));
+    print("rebase", line.rebase(Vector2_t<real_t>{-1,0}));
+    print("rotated", line.rotated(Vector2_t<real_t>{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vector2_t<real_t>{-1,0}));
     #endif
 
     #define MATRIX_TB

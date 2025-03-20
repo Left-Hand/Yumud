@@ -138,7 +138,7 @@ void PMW3901::update(){
 void PMW3901::update(const real_t rad){
     readData();
     
-    Vector2 delta = Vector2(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
+    auto delta = Vector2_t<real_t>(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
     x_cm += delta.x;
     y_cm += delta.y;
 }

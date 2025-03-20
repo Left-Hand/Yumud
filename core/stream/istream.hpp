@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stream_base.hpp"
-#include "core/string/string.hpp"
 
 namespace ymd{
 class InputStream:virtual public BasicStream{
@@ -14,9 +13,9 @@ public:
 
     char read(){char data; read(data); return data;};
 
-    String readString(const size_t len);
-    String readStringUntil(const char & chr);
-    String readString(){return readString(available());}
+    // String readString(const size_t len);
+    // String readStringUntil(const char & chr);
+    // String readString(){return readString(available());}
     virtual size_t available() const = 0;
 };
 

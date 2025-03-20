@@ -1,4 +1,5 @@
 #include "circular.hpp"
+#include "core/math/real.hpp"
 
 using namespace ymd;
 using namespace ymd::intp;

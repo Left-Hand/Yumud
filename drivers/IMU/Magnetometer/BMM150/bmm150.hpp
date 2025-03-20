@@ -35,7 +35,7 @@ public:
 
     void reset();
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 };
 
 

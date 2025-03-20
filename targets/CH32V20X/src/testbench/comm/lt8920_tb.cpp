@@ -2,6 +2,7 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
+#include "core/string/string.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/spi/spisw.hpp"

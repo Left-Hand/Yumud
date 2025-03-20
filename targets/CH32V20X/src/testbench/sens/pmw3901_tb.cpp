@@ -32,7 +32,7 @@ void pmw3901_main(){
 
         auto begin = micros();
         pmw.update();
-        auto pos = Vector2(pmw.getPosition());
+        auto pos = pmw.getPosition();
         auto [x,y] = pos;
         DEBUG_PRINTLN(x,y, micros() - begin);
         // delayMicroseconds(5000);

@@ -2,6 +2,8 @@
 
 
 #include "../CoilDriver.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
 
 namespace ymd::drivers{
 

@@ -212,7 +212,7 @@ public:
     Result<void, Error> verify();
     Result<void, Error> update();
 
-    Option<Vector3R> getAcc();
+    Option<Vector3_t<real_t>> getAcc();
     Option<real_t> getTemperature();
 
     Result<void, Error> setAccRange(const AccRange range);
@@ -280,7 +280,7 @@ public:
     Result<void, Error> reset();
     Result<void, Error> verify();
     Result<void, Error> update();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getGyr();
 
 
     Result<void, Error> setGyrRange(const GyrRange range);

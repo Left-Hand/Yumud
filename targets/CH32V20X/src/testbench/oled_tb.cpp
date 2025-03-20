@@ -1,6 +1,7 @@
 #include "tb.h"
 
 #include "core/debug/debug.hpp"
+#include "core/string/string.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"

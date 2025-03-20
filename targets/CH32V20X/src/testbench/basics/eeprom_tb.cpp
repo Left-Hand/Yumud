@@ -12,6 +12,8 @@
 
 #include "algo/random/random_generator.hpp"
 
+#include "core/math/real.hpp"
+
 
 using namespace ymd::drivers;
 

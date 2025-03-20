@@ -3,6 +3,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "drivers/device_defs.h"
 
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 

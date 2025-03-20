@@ -25,13 +25,7 @@ public:
 
     NTC(hal::AdcChannelConcept & channel, const uint B = 3950):channel_(channel), B_(B){;}
 
-    void init() override{
-
-    };
-
-    void  update() override;
-
-
+    void update();
 
     real_t getRes(){
         real_t VR = get_uniV();

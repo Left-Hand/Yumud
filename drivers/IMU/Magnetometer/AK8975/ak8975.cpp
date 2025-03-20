@@ -116,9 +116,9 @@ void AK8975::disableI2c(){
     write_reg(0x0F, 0x01);
 }
 
-Option<Vector3R> AK8975::getMagnet(){
+Option<Vector3_t<real_t>> AK8975::getMagnet(){
     scexpr real_t max_mT = real_t(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
-    return Some{Vector3R{CONV(x), CONV(y), CONV(z)}};
+    return Some{Vector3_t<real_t>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

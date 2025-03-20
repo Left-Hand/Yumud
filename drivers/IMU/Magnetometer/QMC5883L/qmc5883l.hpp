@@ -182,7 +182,7 @@ public:
 
     void update();
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
     
     bool verify();
 

@@ -44,7 +44,7 @@ public:
 
     void sleep(const bool en = true);
 
-    Option<Vector3R> getMagnet() override;
+    Option<Vector3_t<real_t>> getMagnet() override;
 
 protected:
     using RegAddress = uint8_t;

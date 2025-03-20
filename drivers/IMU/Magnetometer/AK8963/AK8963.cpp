@@ -63,7 +63,7 @@ Result<void, Error> AK8963::init(){
             return ((iq_t<16>(coeff - 128) >> 8) + 1);
         };
 
-        adj_scale = Vector3R(
+        adj_scale = Vector3_t<real_t>(
             coeff2adj(coeff.x), coeff2adj(coeff.y), coeff2adj(coeff.z)
         );
     }
@@ -142,8 +142,8 @@ void AK8963::update(){
     // READ_REG(mag_z_reg);
     // data_valid_ = true;
 }
-Option<Vector3R> AK8963::getMagnet(){
-    return optcond(data_valid_, Vector3R{
+Option<Vector3_t<real_t>> AK8963::getMagnet(){
+    return optcond(data_valid_, Vector3_t<real_t>{
         conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale.x,
         conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale.y,
         conv_data_to_ut(mag_z_reg.as_val(), data_is_16_bits_) * adj_scale.z}

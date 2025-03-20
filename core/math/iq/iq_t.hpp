@@ -667,6 +667,14 @@ using q28 = iq_t<28>;
 using q29 = iq_t<29>;
 using q30 = iq_t<30>;
 using q31 = iq_t<31>;
+
+size_t _qtoa_impl(const int32_t value, char * str, uint8_t eps, const uint8_t _Q);
+
+template<size_t Q>
+size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
+    return _qtoa_impl(qv.value.to_i32(), str, eps, Q);
+}
+
 }
 
 namespace std{
@@ -773,3 +781,4 @@ namespace std{
     __fast_inline constexpr iq_t<Q> log(const iq_t<P> iq){return ymd::log(iq);}
 
 }
+

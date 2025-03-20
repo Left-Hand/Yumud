@@ -2,6 +2,9 @@
 
 #include "drivers/device_defs.h"
 
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
+
 #ifndef SGM58031_DEBUG
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif

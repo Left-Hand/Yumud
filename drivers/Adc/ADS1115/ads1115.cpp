@@ -1,6 +1,7 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
-
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
 
 // #define ADS1115_DEBUG
 

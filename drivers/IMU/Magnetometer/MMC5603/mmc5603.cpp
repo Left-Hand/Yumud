@@ -71,8 +71,8 @@ void MMC5603::enableContious(const bool en){
 }
 
 
-Option<Vector3R> MMC5603::getMagnet(){
-    return Some{Vector3R{
+Option<Vector3_t<real_t>> MMC5603::getMagnet(){
+    return Some{Vector3_t<real_t>{
         s16_to_uni(int16_t(x_reg)),
         s16_to_uni(int16_t(y_reg)),
         s16_to_uni(int16_t(z_reg))

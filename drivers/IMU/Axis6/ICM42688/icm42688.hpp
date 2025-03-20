@@ -180,8 +180,8 @@ public:
 
     void reset();
 
-    Option<Vector3R> getAcc();
-    Option<Vector3R> getGyr();
+    Option<Vector3_t<real_t>> getAcc();
+    Option<Vector3_t<real_t>> getGyr();
 };
 
 }

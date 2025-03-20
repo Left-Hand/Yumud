@@ -92,7 +92,7 @@ struct TurnSolver{
 };
 
 [[maybe_unused]] static real_t demo(uint milliseconds){
-    // using Vector2 = CubicInterpolation::Vector2;
+    // using Vector2_t<real_t> = CubicInterpolation::Vector2_t<real_t>;
     static TurnSolver turnSolver;
     
     uint32_t turnCnt = milliseconds % 2667;
@@ -132,7 +132,9 @@ struct TurnSolver{
     real_t yt = 0;
 
     if((i == 0) || (i == 2) || (i == 4))
-        yt = CubicInterpolation::forward(Vector2{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, Vector2(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+        yt = CubicInterpolation::forward(
+            Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+            Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
     else
         yt = _t;
 
@@ -1102,14 +1104,14 @@ void bldc_main(){
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
         // delay(2);
         // DEBUGGER.noBrackets(true);
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2(1,1));
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2_t<real_t>(1,1));
         // delay(2);
 
         // DEBUGGER.forceSync();
         // if(false){
         //     const auto guard = DEBUGGER.createGuard();
         //     DEBUGGER.noBrackets(false);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }
 
@@ -1117,7 +1119,7 @@ void bldc_main(){
         //     const auto guard = DEBUGGER.createGuard();
         //     // DEBUGGER.setSplitter('|');
         //     DEBUGGER.noBrackets(true);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
@@ -1138,7 +1140,7 @@ void bldc_main(){
         // delay(5);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), s_lpf_u_curr);
-        // auto [a,b] = Vector2{real_t(0), real_t(0.2)}.rotated(open_rad);
+        // auto [a,b] = Vector2_t<real_t>{real_t(0), real_t(0.2)}.rotated(open_rad);
         // DEBUG_PRINTLN(a,b);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;

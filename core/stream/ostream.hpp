@@ -2,7 +2,6 @@
 
 
 #include "stream_base.hpp"
-#include "core/string/string.hpp"
 #include <ostream>
 #include <span>
 #include <ranges>
@@ -14,7 +13,11 @@ namespace std{
 namespace ymd{
 
 class String;
+class StringView;
 class StringStream;
+
+template<size_t Q>
+struct iq_t;
 
 template <typename T>
 struct __needprint_helper {
@@ -213,22 +216,12 @@ public:
     __inline OutputStream & operator<<(const char* str){if(str) checked_write(str, strlen(str)); return *this;}
     __inline OutputStream & operator<<(const std::string & str){checked_write(str.c_str(),str.length()); return *this;}
     __inline OutputStream & operator<<(const std::string_view str){checked_write(str.data(),str.length()); return *this;}
-    __inline OutputStream & operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}
-    __inline OutputStream & operator<<(const StringView str){checked_write(str.data(), str.length()); return * this;}
+    OutputStream & operator<<(const String & str);
+    OutputStream & operator<<(const StringView & str);
     __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
-
-    template<size_t Q>
-    OutputStream & operator<<(const iq_t<Q> val){
-        char str[12] = {0};
-        const auto len = StringUtils::qtoa<Q>(val, str, this->eps());
-        if(config_.showpos and val >= 0) *this << '+';
-        this->write(str, len);
-        return *this;
-    }
-
     OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
         if (manipulator == static_cast<std::ostream& (*)(std::ostream&)>(std::endl)) {
             *this << "\r\n";
@@ -273,8 +266,20 @@ private:
     void print_int(const int val);
     void print_int(const uint64_t val);
     void print_int(const int64_t val);
+    
+    __inline void print_numeric(const char * str, const size_t len, const bool pos){
+        if(config_.showpos and pos) *this << '+';
+        this->write(str, len);
+    }
 public:
 
+    template<size_t Q>
+    OutputStream & operator<<(const iq_t<Q> & val){
+        char str[12] = {0};
+        const auto len = qtoa<Q>(val, str, this->eps());
+        print_numeric(str, len, val >= 0);
+        return *this;
+    }
 
     template<typename T>
     requires std::is_integral_v<T>

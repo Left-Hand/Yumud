@@ -219,3 +219,6 @@ OutputStream & OutputStream::flush(){
     while(pending()){__nopn(1);};
     return *this;
 }
+
+OutputStream & OutputStream::operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}
+OutputStream & OutputStream::operator<<(const StringView & str){checked_write(str.data(), str.length()); return * this;}

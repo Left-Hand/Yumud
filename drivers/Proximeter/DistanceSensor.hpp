@@ -2,6 +2,8 @@
 
 #include "../drivers/device_defs.h"
 
+#include "core/math/real.hpp"
+
 namespace ymd::drivers{
 class DistanceSensor{
 public:

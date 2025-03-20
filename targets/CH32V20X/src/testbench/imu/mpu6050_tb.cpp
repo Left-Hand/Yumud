@@ -10,11 +10,9 @@
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 
-#include "robots/gesture/ImuFusion.hpp"
 #include "robots/gesture/mahony.hpp"
 
 using namespace ymd::drivers;
-
 
 // #define UART uart2
 #define UART uart2
@@ -114,7 +112,7 @@ void mpu6500_tb(hal::I2c & i2c){
         // DEBUG_PRINTLN(fusion.quat());
         // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
-        DEBUG_PRINTLN(mahony.result(), Quat_t<q14>(Vector3R(0,0,1), aku.getMagnet().unwrap().normalized()), end_m - begin_m);
+        DEBUG_PRINTLN(mahony.result(), Quat_t<q14>(Vector3_t<real_t>(0,0,1), aku.getMagnet().unwrap().normalized()), end_m - begin_m);
     });
 
     while(true);

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+
 #include "../DistanceSensor.hpp"
 
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 

@@ -178,8 +178,8 @@ public:
     
     [[nodiscard]] Result<void, Error> update();
 
-    [[nodiscard]] Option<Vector3R> getAcc();
-    [[nodiscard]] Option<Vector3R> getGyr();
+    [[nodiscard]] Option<Vector3_t<real_t>> getAcc();
+    [[nodiscard]] Option<Vector3_t<real_t>> getGyr();
     [[nodiscard]] Option<real_t> getTemperature();
 
     [[nodiscard]] Result<void, Error> setAccRange(const AccRange range);

@@ -2,6 +2,9 @@
 
 #include "core/debug/debug.hpp"
 
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/analog_channel.hpp"
+
 using namespace ymd::drivers;
 using namespace ymd::hal;
 using namespace ymd;

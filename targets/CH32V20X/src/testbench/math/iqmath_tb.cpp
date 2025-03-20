@@ -3,6 +3,8 @@
 #include "core/math/int/int_t.hpp"
 #include "core/debug/debug.hpp"
 
+#include "core/math/real.hpp"
+
 #include "hal/bus/uart/uarthw.hpp"
 
 
