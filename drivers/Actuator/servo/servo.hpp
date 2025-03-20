@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drivers/Actuator/Actuator.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::drivers{
 

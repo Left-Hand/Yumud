@@ -1,12 +1,14 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 #include "canopen/Entry.hpp"
 #include "canopen/ObjectDict.hpp"
 #include "canopen/cia402.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::canopen;
 
 void canopen_main(){

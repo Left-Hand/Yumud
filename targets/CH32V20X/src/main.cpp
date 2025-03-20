@@ -97,7 +97,7 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     // embd_main();
-    gxm::host_main();
+    // gxm::host_main();
 
     // pca_main();
     // w25qxx_main();

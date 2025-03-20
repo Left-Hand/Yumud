@@ -95,11 +95,11 @@ bool is_equal_approx(const iq_t<Q> a, const iq_t<Q> b) {
         return true;
     }
     // Then check for approximate equality.
-    iq_t<Q> tolerance = iq_t<Q>(CMP_EPSILON) * abs(a);
+    iq_t<Q> tolerance = iq_t<Q>(CMP_EPSILON) * ABS(a);
     if (tolerance < iq_t<Q>(CMP_EPSILON)) {
         tolerance = iq_t<Q>(CMP_EPSILON);
     }
-    return abs(a - b) < tolerance;
+    return ABS(a - b) < tolerance;
 }
 
 template<size_t Q>

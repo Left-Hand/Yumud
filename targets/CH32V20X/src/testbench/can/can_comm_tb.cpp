@@ -4,21 +4,23 @@
 #include "core/math/real.hpp"
 
 #include "hal/bus/can/can.hpp"
+#include "hal/gpio/port.hpp"
 
-void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
+void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     can.init(1_MHz, hal::Can::Mode::Normal);
 
     portC[13].outpp();
     portC[14].outpp();
 
     {
-        auto data = std::to_array<uint8_t>({3,4}); 
+        auto data = std::to_array<std::byte>({std::byte(3),std::byte(4)}); 
         uint32_t id = 0x1314;
-        CanMsg msg{id, data.begin(), data.size()};
+        CanMsg msg{id, data};
 
         // constexpr auto a = sizeof(msg);
         auto read = msg.span();
         logger.println(id, data, read);
+
     }
 
     {
@@ -48,7 +50,7 @@ void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
             can.write(msg_v);
 
             while(can.pending()){
-                logger.println("err", can.getTxErrCnt(), can.getRxErrCnt(), can.isBusOff(), (int)can.getErrCode());
+                logger.println("err", can.get_tx_errcnt(), can.get_rx_errcnt(), can.is_busoff(), (int)can.error());
                 delay(2);
             }
 

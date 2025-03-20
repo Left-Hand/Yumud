@@ -15,19 +15,19 @@ protected:
     virtual SdoAbortCode _read_any(void * pdata, const Didx didx) const = 0;
 public:
 
-    template<typename T>
-    requires ((sizeof(T) <= 4))
-    SdoAbortCode write(const auto data, const Didx didx){
-        static_assert(std::is_convertible_v<T, decltype(data)>, "type mismatch");
-        return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
-    }
+    // template<typename T>
+    // requires ((sizeof(T) <= 4))
+    // SdoAbortCode write(const auto data, const Didx didx){
+    //     static_assert(std::is_convertible_v<T, decltype(data)>, "type mismatch");
+    //     return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
+    // }
 
-    template<typename T, typename U>
-    requires (sizeof(T) <= 4)
-    SdoAbortCode read(U & data, const Didx didx) const {
-        static_assert(std::is_same_v<T, U>, "type mismatch");
-        return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
-    }
+    // template<typename T, typename U>
+    // requires (sizeof(T) <= 4)
+    // SdoAbortCode read(U & data, const Didx didx) const {
+    //     static_assert(std::is_same_v<T, U>, "type mismatch");
+    //     return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
+    // }
 
 
     virtual SdoAbortCode write(const std::span<const std::byte> pdata, const Didx didx) = 0;

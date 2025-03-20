@@ -3,6 +3,7 @@
 #include "geometry/GeometryUtils.hpp"
 
 namespace gxm{
+using namespace ymd;
 
 using Ray = ymd::Ray2_t<real_t>;
 using Line = ymd::Line2_t<real_t>;
@@ -46,7 +47,7 @@ public:
 
 
     constexpr operator Ray() const{
-        return Ray(ymd::Vector2(real_t(x_) >> xy_shift_bits, real_t(y_) >> xy_shift_bits), rad_ * inv_rad_scale);
+        return Ray(Vector2_t<real_t>(real_t(x_) >> xy_shift_bits, real_t(y_) >> xy_shift_bits), rad_ * inv_rad_scale);
     }
 };
 

@@ -2,7 +2,7 @@
 
 #include "chassis_ctrl.hpp"
 #include "drivers/IMU/IMU.hpp"
-#include "dsp/filter/KalmanFilter.hpp"
+#include "dsp/filter/kalman/KalmanFilter.hpp"
 
 namespace gxm{
 

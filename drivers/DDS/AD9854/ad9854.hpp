@@ -2,16 +2,11 @@
 
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
-#define AD9854_DEBUG
-
-#ifdef AD9854_DEBUG
-#undef AD9854_DEBUG
-#define AD9854_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define AD9854_DEBUG(...)
-#endif
-
+namespace ymd::hal{
+    class GpioIntf;
+}
 
 namespace ymd::drivers{
 

@@ -13,13 +13,16 @@ struct R16_STATR{
     uint16_t FE:1;
     uint16_t NE:1;
     uint16_t ORE:1;
+
     uint16_t IDLE:1;
     uint16_t RXNE:1;
     uint16_t TC:1;
     uint16_t TXE:1;
+
     uint16_t LBD:1;
     uint16_t CTS:1;
-    uint16_t :6;
+
+    uint16_t __RESV__:6;
 };   
 
 struct R16_DATAR{
@@ -203,9 +206,11 @@ struct USART_Def{
         return std::bit_cast<R16_STATR>(STATR);
     }
 
-    void clear_events(const R16_STATR events){
+    constexpr void clear_events(const R16_STATR events){
         // STATR =  BIT_CAST(R16_STATR, uint16_t(BIT_CAST(uint16_t, STATR) & (~BIT_CAST(uint16_t, events))));
-        (R16_STATR &)STATR =  BIT_CAST(R16_STATR, uint16_t(BIT_CAST(uint16_t, STATR) & (~BIT_CAST(uint16_t, events))));
+        const_cast<R16_STATR &>(this->STATR) = std::bit_cast<R16_STATR>(
+            uint16_t(std::bit_cast<uint16_t>(STATR) & (~std::bit_cast<uint16_t> (events)))
+        );
     }
 };
 

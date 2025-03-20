@@ -1,16 +1,14 @@
 #include "usbfs.hpp"
 
 #ifdef CH32V30X
-#include "../hal/bus/usb/usbfs/ch32v30x_usbotg_device.h"
-#include "../hal/bus/usb/usbfs/zf_driver_usb_cdc.h"
 
 using namespace ymd;
 
 void UsbFS::init(){
-    usb_cdc_init();
+    // usb_cdc_init();
 }
 void UsbFS::write(const char data){
-    usb_cdc_send_pack((const uint8_t *)&data, 1);
+    // usb_cdc_send_pack((const uint8_t *)&data, 1);
 }
 
 void UsbFS::write(const char * data_ptr, const size_t len){
@@ -18,12 +16,12 @@ void UsbFS::write(const char * data_ptr, const size_t len){
     size_t length = len;
     while(length){
         if(length >= 63){
-            usb_cdc_send_pack((const uint8_t *)data_ptr + i, 63);
+            // usb_cdc_send_pack((const uint8_t *)data_ptr + i, 63);
             i += 63;
             length -= 63;
         }
         else{
-            usb_cdc_send_pack((const uint8_t *)data_ptr + i, length);
+            // usb_cdc_send_pack((const uint8_t *)data_ptr + i, length);
             length = 0;
         }
     }

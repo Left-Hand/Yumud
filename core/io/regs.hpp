@@ -119,15 +119,32 @@ REGC_TEMPLATE(RegC64i, int64_t)
 #undef REG_TEMPLATE
 #undef REGC_TEMPLATE
 
+
+#define CHECK_R32(type)\
+static_assert(sizeof(type) == 4, "x must be 32bit register");\
+static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
+
+#define CHECK_R16(type)\
+static_assert(sizeof(type) == 2, "x must be 16bit register");\
+static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
+
+#define CHECK_R8(type)\
+static_assert(sizeof(type) == 1, "x must be 8bit register");\
+static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
+
+
+#define DEF_R32(name)\
+name{};\
+CHECK_R32(std::decay_t<decltype(name)>)\
+
+
 #define DEF_R16(name)\
 name{};\
-static_assert(sizeof(std::decay_t<decltype(name)>) == 2, "x must be 16bit register");\
-static_assert(std::has_unique_object_representations_v<std::decay_t<decltype(name)>>, "x must has unique bitfield");\
+CHECK_R16(std::decay_t<decltype(name)>)\
 
 #define DEF_R8(name)\
 name{};\
-static_assert(sizeof(std::decay_t<decltype(name)>) == 1, "x must be 8bit register");\
-static_assert(std::has_unique_object_representations_v<std::decay_t<decltype(name)>>, "x must has unique bitfield");\
+CHECK_R8(std::decay_t<decltype(name)>)\
 
 #define REG16I_QUICK_DEF(addr, type, name)\
 struct type :public Reg16i<>{scexpr uint8_t address = addr; int16_t data;} DEF_R16(name)

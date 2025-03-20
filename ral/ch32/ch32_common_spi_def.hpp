@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "core/io/regs.hpp"
 
 #ifndef BIT_CAST
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
@@ -23,7 +24,7 @@ namespace CH32V20x{
         uint16_t CRCEN:1;
         uint16_t BIDIOE:1;
         uint16_t BIDIMODE:1;
-    };
+    };CHECK_R16(R16_SPI_CTLR1);
 
 
     struct R16_SPI_CTLR2{
@@ -35,7 +36,7 @@ namespace CH32V20x{
         uint16_t RXNEIE:1;
         uint16_t TXEIE:1;
         uint16_t :8;
-    };
+    };CHECK_R16(R16_SPI_CTLR2);
 
 
 
@@ -45,27 +46,29 @@ namespace CH32V20x{
         uint16_t TXE:1;
         uint16_t CHSIDE:1;
         uint16_t UDR:1;
+
         uint16_t CRCEER:1;
         uint16_t MODF:1;
         uint16_t OVR:1;
         uint16_t BSY:1;
+
         uint16_t :8;
-    };
+    };CHECK_R16(R16_SPI_STATR);
 
     struct R16_SPI_DATAR{
-        uint16_t DR:16;
+        uint16_t DR;
     };
 
     struct R16_SPI_CRCR{
-        uint16_t CRCPOLY:16;
+        uint16_t CRCPOLY;
     };
 
     struct R16_SPI_RCRCR{
-        uint16_t RXCRC:16;
+        uint16_t RXCRC;
     };
 
     struct R16_SPI_TCRCR{
-        uint16_t TXCRC:16;
+        uint16_t TXCRC;
     };
 
     //SPI 时钟寄存器
@@ -137,7 +140,7 @@ namespace CH32V20x{
             CTLR1.SPE = en;
         }
 
-        constexpr void enable_i2c(const bool en){
+        constexpr void enable_i2s(const bool en){
             CFGR.ISSE = en;
         }
 
@@ -154,7 +157,7 @@ namespace CH32V20x{
         }
 
         constexpr uint16_t receive(){
-            return DATAR.DR;
+            return std::bit_cast<uint16_t>(DATAR.DR);
         }
 
         constexpr void enable_soft_cs(const bool en){
@@ -178,15 +181,15 @@ namespace CH32V20x{
         }
 
         constexpr uint16_t get_rx_crc(){
-            return RCRCR.RXCRC;
+            return std::bit_cast<uint16_t>(RCRCR.RXCRC);
         }
 
         constexpr uint16_t get_tx_crc(){
-            return TCRCR.TXCRC;
+            return std::bit_cast<uint16_t>(TCRCR.TXCRC);
         }
 
         constexpr uint16_t get_crc_polynomial(){
-            return CRCR.CRCPOLY;
+            return std::bit_cast<uint16_t>(CRCR.CRCPOLY);
         }
 
         constexpr void switch_bidi_to_txonly(){
@@ -202,21 +205,21 @@ namespace CH32V20x{
         }
 
         constexpr Events get_events(){
-            return BIT_CAST(Events, uint8_t(BIT_CAST(uint16_t, STATR)));
+            return BIT_CAST(Events, uint8_t(std::bit_cast<uint16_t>(STATR)));
         }
 
         constexpr void clear_events(const Events events){
             uint16_t mask = BIT_CAST(uint8_t, events);
             const_cast<R16_SPI_STATR &>(STATR) = 
                 BIT_CAST(R16_SPI_STATR, 
-                    uint16_t((~mask) & BIT_CAST(uint16_t, STATR))
+                    uint16_t((~mask) & std::bit_cast<uint16_t>(STATR))
                 );
         }
     };
 
 
-    static inline SPI_Def * SPI1 = (SPI_Def *)(0x40013000);
-    static inline SPI_Def * SPI2 = (SPI_Def *)(0x40003800);
-    static inline SPI_Def * SPI3 = (SPI_Def *)(0x40003C00);
+[[maybe_unused]]static inline SPI_Def * SPI1_Inst = (SPI_Def *)(0x40013000);
+[[maybe_unused]]static inline SPI_Def * SPI2_Inst = (SPI_Def *)(0x40003800);
+[[maybe_unused]]static inline SPI_Def * SPI3_Inst = (SPI_Def *)(0x40003C00);
 
 }

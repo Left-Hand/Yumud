@@ -6,7 +6,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void SpiHw::enable_rcc(const bool en){
-    switch((uint32_t)instance){
+    switch((uint32_t)instance_){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
@@ -26,7 +26,7 @@ void SpiHw::enable_rcc(const bool en){
 }
 
 Gpio & SpiHw::get_mosi_gpio(){
-    switch((uint32_t)instance){
+    switch((uint32_t)instance_){
         default:
             return NullGpio;
         #ifdef ENABLE_SPI1
@@ -47,7 +47,7 @@ Gpio & SpiHw::get_mosi_gpio(){
 }
 
 Gpio & SpiHw::get_miso_gpio(){
-    switch((uint32_t)instance){
+    switch((uint32_t)instance_){
         default:
             return NullGpio;
         #ifdef ENABLE_SPI1
@@ -68,7 +68,7 @@ Gpio & SpiHw::get_miso_gpio(){
 }
 
 Gpio & SpiHw::get_sclk_gpio(){
-    switch((uint32_t)instance){
+    switch((uint32_t)instance_){
         default:
             return NullGpio;
         #ifdef ENABLE_SPI1
@@ -89,7 +89,7 @@ Gpio & SpiHw::get_sclk_gpio(){
 }
 
 Gpio & SpiHw::get_hw_cs_gpio(){
-    switch((uint32_t)instance){
+    switch((uint32_t)instance_){
         default:
             return NullGpio;
         #ifdef ENABLE_SPI1
@@ -127,14 +127,14 @@ uint16_t SpiHw::calculate_prescaler(const uint32_t baudrate){
 
             #ifdef ENABLE_SPI3
             case SPI3_BASE:
-                return Sys::clock::get_apb2_freq();
+                return sys::clock::get_apb2_freq();
                 break;
             #endif
         
             default:
                 __builtin_unreachable();
         }
-    }(uint32_t(instance));
+    }(uint32_t(instance_));
 	uint32_t real_div = 2;
     uint8_t i = 0;
 
@@ -143,16 +143,16 @@ uint16_t SpiHw::calculate_prescaler(const uint32_t baudrate){
         i++;
     }
 
-    return MIN(i << 3, SPI_BaudRatePrescaler_256);
+    return i & 0b111;
 }
 
 void SpiHw::install_gpios(){
-    if(tx_strategy_ != CommStrategy::None){
+    if(bool(tx_strategy_)){
         Gpio & mosi_pin = get_mosi_gpio();
         mosi_pin.afpp();
     }
 
-    if(rx_strategy_ != CommStrategy::None){
+    if(bool(rx_strategy_)){
         Gpio & miso_pin = get_miso_gpio();
         miso_pin.inflt();
     }
@@ -166,7 +166,7 @@ void SpiHw::install_gpios(){
     if(false == cs_port.is_index_valid(0)){
         Gpio & cs_pin = get_hw_cs_gpio();
         cs_pin.set();
-        if(hw_cs_enabled){
+        if(hw_cs_enabled_){
             cs_pin.afpp();
         }else{
             cs_pin.outpp();
@@ -174,31 +174,27 @@ void SpiHw::install_gpios(){
         bind_cs_pin(cs_pin, 0);
     }
 
-    // for(auto & cs_gpio : cs_port){
-        // if(cs_gpio.isValid()){
-        //     cs_gpio.outpp(1);
-        // }
-    // }
-
     for(size_t i = 0; i < cs_port.size(); i++){
-        cs_port[i].outpp();
+        if(cs_port.is_index_valid(0)){
+            cs_port[i].outpp();
+        }
     }
 }
 
 void SpiHw::enable_hw_cs(const bool en){
-    Gpio & _cs_pin = get_hw_cs_gpio();
-    _cs_pin.set();
+    Gpio & cs_gpio = get_hw_cs_gpio();
+    cs_gpio.set();
 
     if(en){
-        _cs_pin.afpp();
+        cs_gpio.afpp();
     }else{
-        _cs_pin.outpp();
+        cs_gpio.outpp();
     }
 
-    hw_cs_enabled = en;
+    instance_->enable_soft_cs(!en);
 }
 
-void SpiHw::enableRxIt(const bool en){
+void SpiHw::enable_rx_it(const bool en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const CommStrategy rx_strategy){
@@ -221,90 +217,55 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
     };
 
 
-	SPI_Init(instance, &SPI_InitStructure);
+	SPI_Init((SPI_TypeDef *)instance_, &SPI_InitStructure);
 
-	SPI_Cmd(instance, ENABLE);
+	// SPI_Cmd(instance_, ENABLE);
+    instance_->enable_spi(true);
 
-    while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_TXE) == RESET);
-    instance->DATAR = 0;
-    while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_RXNE) == RESET);
-    instance->DATAR;
+    while ((instance_->STATR.TXE) == RESET);
+    instance_->DATAR.DR = 0;
+
+    while ((instance_->STATR.RXNE) == RESET);
+    instance_->DATAR.DR;
 }
 
 
 
 void SpiHw::set_data_width(const uint8_t bits){
-    uint16_t tempreg =  instance->CTLR1;
+    instance_->enable_dualbyte(bits == 16);
 
-    switch(bits){
-        default:
-        case 16:
-            if(tempreg & SPI_DataSize_16b) return;
-            tempreg |= SPI_DataSize_16b;
-            break;
-        case 8:
-            tempreg &= ~SPI_DataSize_16b;
-            break;
-    }
-
-    instance->CTLR1 = tempreg;
 }
 
 void SpiHw::set_baudrate(const uint32_t baudrate){
-    uint32_t tempreg = instance -> CTLR1;
-    tempreg &= ~SPI_BaudRatePrescaler_256;
-    tempreg |= calculate_prescaler(baudrate);
-    instance -> CTLR1 = tempreg;
+    instance_ -> CTLR1.BR = calculate_prescaler(baudrate);
+
 }
 
 void SpiHw::set_bitorder(const Endian endian){
-    uint32_t tempreg = instance -> CTLR1;
-    tempreg &= ~SPI_FirstBit_LSB;
-    tempreg |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
-    instance -> CTLR1 = tempreg;
+    instance_ -> CTLR1.LSB = (endian == MSB) ? 0 : 1;
 }
 
 
 BusError SpiHw::write(const uint32_t data){
-    // if(tx_strategy_ != CommStrategy::None){
-    //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
-    //     instance->DATAR = data;
-    // }
-
-    // if(rx_strategy_ != CommStrategy::None){
-    //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
-    //     instance->DATAR;
-    // }
-    // return Error::OK;
     uint32_t dummy;
     return transfer(dummy, data);
 }
 
 
 BusError SpiHw::read(uint32_t & data){
-    // if(tx_strategy_ != CommStrategy::None){
-    //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
-    //     instance->DATAR = 0;
-    // }
-
-    // if(rx_strategy_ != CommStrategy::None){
-    //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
-    //     data = instance->DATAR;
-    // }
-    // return Error::OK;
     return transfer(data, 0);
 }
 
 
 BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
-    if(tx_strategy_ != CommStrategy::None){
-        while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
-        instance->DATAR = data_tx;
+    if(bool(tx_strategy_)){
+        while ((instance_->STATR.TXE) == RESET);
+        instance_->DATAR.DR = data_tx;
     }
 
-    if(rx_strategy_ != CommStrategy::None){
-        while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
-        data_rx = instance->DATAR;
+    if(bool(rx_strategy_)){
+        while ((instance_->STATR.RXNE) == RESET);
+        data_rx = instance_->DATAR.DR;
     }
 
     return BusError::OK;
@@ -312,11 +273,11 @@ BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
 
 namespace ymd::hal{
 #ifdef ENABLE_SPI1
-SpiHw spi1{SPI1};
+SpiHw spi1{chip::SPI1_Inst};
 #endif
 
 #ifdef ENABLE_SPI2
-SpiHw spi2{SPI2};
+SpiHw spi2{chip::SPI2_Inst};
 #endif
 }
 

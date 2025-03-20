@@ -443,7 +443,7 @@ protected:
 
     [[nodiscard]] Result<void, Error> set_fifo_empty_threshold(const uint thd);
 
-    [[nodiscard]] Result<void, Error> set_syncword_tolerance_bits(const uint bits);
+
 
     
 public:
@@ -514,6 +514,8 @@ public:
     [[nodiscard]] size_t pending() const;
 
     [[nodiscard]] Result<void, Error> on_interrupt();
+
+    [[nodiscard]] Result<void, Error> set_syncword_tolerance_bits(const uint bits);
 };
 
 }

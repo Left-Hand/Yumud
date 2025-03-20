@@ -437,7 +437,7 @@ void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ != tx_strategy){
 
         Gpio & tx_pin = txio();
-        if(tx_strategy != CommStrategy::None){
+        if(bool(tx_strategy)){
             tx_pin.afpp();
         }else{
             // tx_pin.inflt();
@@ -465,7 +465,7 @@ void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ != rx_strategy){
         
         Gpio & rx_pin = rxio();
-        if(rx_strategy != CommStrategy::None){
+        if(bool(rx_strategy)){
             rx_pin.inpu();
         }else{
             // rx_pin.inflt();
@@ -499,8 +499,8 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
         .USART_WordLength = USART_WordLength_8b,
         .USART_StopBits = USART_StopBits_1,
         .USART_Parity = USART_Parity_No,
-        .USART_Mode =   uint16_t(((tx_strategy != CommStrategy::None) ? uint16_t(USART_Mode_Tx) : 0u) |
-                        ((rx_strategy != CommStrategy::None) ? uint16_t(USART_Mode_Rx) : 0u)),
+        .USART_Mode =   uint16_t(((bool(tx_strategy)) ? uint16_t(USART_Mode_Tx) : 0u) |
+                        ((bool(rx_strategy)) ? uint16_t(USART_Mode_Rx) : 0u)),
         .USART_HardwareFlowControl = USART_HardwareFlowControl_None
     };
 

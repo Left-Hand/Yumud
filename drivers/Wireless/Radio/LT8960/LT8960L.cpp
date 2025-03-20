@@ -851,7 +851,8 @@ Result<void, Error> LT8960L::set_syncword_tolerance_bits(const uint bits){
     // 认为SYNCWORD为正确的阈值
     // 07H表示可以错6bits，01H表示0bit可以错0bits
     auto & reg = regs_.threshold_reg;
-    reg.syncword_threshold = bits == 0 ? 0 : bits + 1;
+    // reg.syncword_threshold = (bits == 0 ? 0 : bits + 1);
+    reg.syncword_threshold = (bits + 1);
     return write_regs(reg);
 }
 

@@ -58,6 +58,8 @@ void lt8960_tb(){
         // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
         | ltr.set_datarate(LT8960L::DataRate::_1M)
         | ltr.enable_gain_weaken(true)
+        // | ltr.set_syncword_tolerance_bits(1)
+        | ltr.set_syncword_tolerance_bits(0)
         // | ltr.set_retrans_time(3)
         // | ltr.enable_autoack(false)
 
@@ -80,7 +82,7 @@ void lt8960_tb(){
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {std::byte(uint8_t(64 + 64 * sin(time() * 20))), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
         const auto t = time();
-        const auto [s, c] = sincos(t * 20);
+        const auto [s, c] = sincos(t * 10);
         auto [u, v, w] = SVM(s,c);
         const auto payload = make_bytes_from_args(u, v, t);
 
@@ -102,16 +104,17 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init(150);
+        hal::timer1.init(180);
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
     }
 
     delay(5);
 
     if (has_rx_authority()) {
-        hal::timer2.init(150);
+        hal::timer2.init(180);
         hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
     }
+
     while(true);
 }
 
