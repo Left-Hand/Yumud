@@ -52,8 +52,8 @@
 // bool SDIO_CmdOperCond();
 // bool SDIO_CmdSendCSD(uint32_t argument);
 // bool SDIO_CmdSendStatus(uint32_t argument);
-// bool SDIO_CmdReadSingleBlock(uint32_t address);
-// bool SDIO_CmdWriteSingleBlock(uint32_t address);
+// bool SDIO_Cmdread_singleBlock(uint32_t address);
+// bool SDIO_Cmdwrite_singleBlock(uint32_t address);
 // bool SDIO_CmdAppCommand(uint32_t rsa);
 
 // bool SDIO_CmdAppSetBusWidth(uint32_t rsa, uint32_t argument);

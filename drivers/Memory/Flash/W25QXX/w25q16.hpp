@@ -74,15 +74,15 @@ public:
 
 private:
     BusError writeByte(const uint8_t data){
-        return spi_drv.writeSingle(data);
+        return spi_drv.write_single(data);
     }
 
     BusError writeByte(const Commands & data){
-        return spi_drv.writeSingle((uint8_t)data);
+        return spi_drv.write_single((uint8_t)data);
     }
 
     BusError readByte(uint8_t & data){
-        return spi_drv.readSingle(data);
+        return spi_drv.read_single(data);
     }
 
 };

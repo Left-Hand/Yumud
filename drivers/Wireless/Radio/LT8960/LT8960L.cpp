@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 
-// #define LT8960L_DEBUG_EN
+#define LT8960L_DEBUG_EN
 #define LT8960L_CHEAT_EN
 
 #ifdef LT8960L_DEBUG_EN
@@ -711,7 +711,7 @@ Result<void, Error> LT8960L_Phy::_write_reg(
     uint8_t address, 
     uint16_t data
 ){
-    auto guard = createGuard();
+    auto guard = create_guard();
     
     auto res = bus_.begin(address)
         .then([&]{return bus_.write(data >> 8);})
@@ -725,7 +725,7 @@ Result<void, Error> LT8960L_Phy::_read_reg(
     uint8_t address, 
     uint16_t & data
 ){
-    auto guard = createGuard();
+    auto guard = create_guard();
     
 
     auto res = bus_.begin(address | 0x80)
@@ -754,7 +754,7 @@ Result<void, Error> LT8960L_Phy::_read_reg(
 Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
 
 
-    auto guard = createGuard();
+    auto guard = create_guard();
     uint32_t len = 0;
     bool invalid = false;
 
@@ -799,7 +799,7 @@ Result<void, Error> LT8960L_Phy::init(){
 
 Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
     
-    auto guard = createGuard();
+    auto guard = create_guard();
     
     LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
 
@@ -888,6 +888,7 @@ Result<bool, Error> LT8960L::LT8960L_Phy::check_and_skip_hw_listen_pkt(){
 Result<void, Error> LT8960L::LT8960L_Phy::start_hw_listen_pkt(){
     bus_inst_.scl().clr(); 
     bus_inst_.sda().set(); 
-    bus_inst_.sda().inpu();  
+    bus_inst_.sda().inpu();
+
     return Ok();
 }

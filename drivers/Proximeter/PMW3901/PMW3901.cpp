@@ -44,18 +44,18 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 BusError PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    spi_drv_.writeSingle<uint8_t>(command | 0x80, CONT).unwrap();
-    return spi_drv_.writeSingle<uint8_t>(data);
+    spi_drv_.write_single<uint8_t>(command | 0x80, CONT).unwrap();
+    return spi_drv_.write_single<uint8_t>(data);
 }
 
 
 BusError PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
-    return spi_drv_.readSingle<uint8_t>(data);
+    spi_drv_.write_single<uint8_t>(command & 0x7f, CONT).unwrap();
+    return spi_drv_.read_single<uint8_t>(data);
 }
 
 BusError PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
-    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT).unwrap();
+    spi_drv_.write_single<uint8_t>(command & 0x7f, CONT).unwrap();
     return spi_drv_.read_burst<uint8_t>(data, len);
 }
 

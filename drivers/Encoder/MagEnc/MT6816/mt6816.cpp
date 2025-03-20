@@ -19,8 +19,8 @@ uint16_t MT6816::getPositionData(){
     dataTx[0] = (0x80 | 0x03) << 8;
     dataTx[1] = (0x80 | 0x04) << 8;
 
-    if(const auto err = spi_drv_.transferSingle(dataRx[1], dataTx[1]); err.ok()) return 0;
-    if(const auto err = spi_drv_.transferSingle(dataRx[0], dataTx[0]); err.ok()) return 0;
+    if(const auto err = spi_drv_.transfer_single(dataRx[1], dataTx[1]); err.ok()) return 0;
+    if(const auto err = spi_drv_.transfer_single(dataRx[0], dataTx[0]); err.ok()) return 0;
 
     return((dataRx[0] & 0x00FF) << 8) | (dataRx[1]);
 }

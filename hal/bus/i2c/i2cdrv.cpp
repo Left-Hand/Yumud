@@ -16,7 +16,7 @@ BusError I2cDrv::release(){
 
 BusError I2cDrv::verify(){
     {
-        const auto guard = createGuard();
+        const auto guard = create_guard();
         if(const auto err = bus_.begin(index_ | 0x00); err.wrong()) return err;
     }
 

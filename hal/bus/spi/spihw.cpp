@@ -25,7 +25,7 @@ void SpiHw::enable_rcc(const bool en){
     }
 }
 
-Gpio & SpiHw::getMosiGpio(){
+Gpio & SpiHw::get_mosi_gpio(){
     switch((uint32_t)instance){
         default:
             return NullGpio;
@@ -46,7 +46,7 @@ Gpio & SpiHw::getMosiGpio(){
     }
 }
 
-Gpio & SpiHw::getMisoGpio(){
+Gpio & SpiHw::get_miso_gpio(){
     switch((uint32_t)instance){
         default:
             return NullGpio;
@@ -67,7 +67,7 @@ Gpio & SpiHw::getMisoGpio(){
     }
 }
 
-Gpio & SpiHw::getSclkGpio(){
+Gpio & SpiHw::get_sclk_gpio(){
     switch((uint32_t)instance){
         default:
             return NullGpio;
@@ -88,7 +88,7 @@ Gpio & SpiHw::getSclkGpio(){
     }
 }
 
-Gpio & SpiHw::getHwCsGpio(){
+Gpio & SpiHw::get_hw_cs_gpio(){
     switch((uint32_t)instance){
         default:
             return NullGpio;
@@ -146,25 +146,25 @@ uint16_t SpiHw::calculate_prescaler(const uint32_t baudrate){
     return MIN(i << 3, SPI_BaudRatePrescaler_256);
 }
 
-void SpiHw::installGpios(){
+void SpiHw::install_gpios(){
     if(tx_strategy_ != CommStrategy::None){
-        Gpio & mosi_pin = getMosiGpio();
+        Gpio & mosi_pin = get_mosi_gpio();
         mosi_pin.afpp();
     }
 
     if(rx_strategy_ != CommStrategy::None){
-        Gpio & miso_pin = getMisoGpio();
+        Gpio & miso_pin = get_miso_gpio();
         miso_pin.inflt();
     }
 
     {
-        Gpio & sclk_pin = getSclkGpio();
+        Gpio & sclk_pin = get_sclk_gpio();
         sclk_pin.afpp();
     }
 
 
     if(false == cs_port.is_index_valid(0)){
-        Gpio & cs_pin = getHwCsGpio();
+        Gpio & cs_pin = get_hw_cs_gpio();
         cs_pin.set();
         if(hw_cs_enabled){
             cs_pin.afpp();
@@ -186,7 +186,7 @@ void SpiHw::installGpios(){
 }
 
 void SpiHw::enable_hw_cs(const bool en){
-    Gpio & _cs_pin = getHwCsGpio();
+    Gpio & _cs_pin = get_hw_cs_gpio();
     _cs_pin.set();
 
     if(en){
@@ -206,7 +206,7 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
     tx_strategy_ = tx_strategy;
     rx_strategy_ = rx_strategy;
 	enable_rcc();
-    installGpios();
+    install_gpios();
 
     const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,

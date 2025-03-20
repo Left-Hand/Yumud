@@ -62,8 +62,8 @@ void AS5047::write_reg(const RegAddress addr, const uint8_t data){
     //     .type = 0b0110
     // };
 
-    // spi_drv_.writeSingle(format, CONT);
-    // spi_drv_.writeSingle(data);
+    // spi_drv_.write_single(format, CONT);
+    // spi_drv_.write_single(data);
 }
 
 
@@ -74,6 +74,6 @@ void AS5047::read_reg(const RegAddress addr, uint8_t & data){
     //     .type = 0b0011
     // };
 
-    // spi_drv_.writeSingle(format, CONT);
-    // spi_drv_.readSingle(data);
+    // spi_drv_.write_single(format, CONT);
+    // spi_drv_.read_single(data);
 }

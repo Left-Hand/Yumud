@@ -48,8 +48,8 @@ public:
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->write_reg(addr, data));
         }else if(spi_drv_){
-            spi_drv_->writeSingle(uint8_t(addr), CONT).unwrap();
-            return Result<void, Error>(spi_drv_->writeSingle(data));
+            spi_drv_->write_single(uint8_t(addr), CONT).unwrap();
+            return Result<void, Error>(spi_drv_->write_single(data));
         }
 
         PANIC();
@@ -60,8 +60,8 @@ public:
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
-            spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
-            return Result<void, Error>(spi_drv_->readSingle(data));
+            spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
+            return Result<void, Error>(spi_drv_->read_single(data));
         }
 
         PANIC();
@@ -72,7 +72,7 @@ public:
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
         }else if(spi_drv_){
-            spi_drv_->writeSingle<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
+            spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
             return Result<void, Error>(spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)));
         }
 

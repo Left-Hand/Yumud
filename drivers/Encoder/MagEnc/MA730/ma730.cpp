@@ -22,14 +22,14 @@ void MA730::init(){
 }
 
 BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
-    const auto err = spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
+    const auto err = spi_drv_.write_single((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     return err;
 }
 
 BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
     uint16_t dummy;
-    spi_drv_.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))).unwrap();
-    const auto err = spi_drv_.readSingle(dummy);
+    spi_drv_.write_single((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))).unwrap();
+    const auto err = spi_drv_.read_single(dummy);
     reg = dummy >> 8;
     // ASSERT(BusError::OK);
     // PANIC("???");
@@ -37,7 +37,7 @@ BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
 }
 
 BusError MA730::directRead(uint16_t & data){
-    const auto err = spi_drv_.readSingle(data);
+    const auto err = spi_drv_.read_single(data);
     // ASSERT(BusError::OK);
     return err;
 }
@@ -88,7 +88,7 @@ void MA730::setTrimY(const real_t k){
 
 
 void MA730::setTrim(const real_t am, const real_t e){
-    real_t k = ::tan(am + e) / ::tan(am);
+    real_t k = std::tan(am + e) / std::tan(am);
     if(k > real_t(1)) setTrimX(k);
     else setTrimY(k);
 }

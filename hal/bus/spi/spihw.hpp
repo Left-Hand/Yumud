@@ -23,14 +23,14 @@ protected:
     SPI_TypeDef * instance;
     bool hw_cs_enabled = false;
 
-    Gpio & getMosiGpio();
-    Gpio & getMisoGpio();
-    Gpio & getSclkGpio();
-    Gpio & getHwCsGpio();
+    Gpio & get_mosi_gpio();
+    Gpio & get_miso_gpio();
+    Gpio & get_sclk_gpio();
+    Gpio & get_hw_cs_gpio();
 
     void enable_rcc(const bool en = true);
     uint16_t calculate_prescaler(const uint32_t baudrate);
-    void installGpios();
+    void install_gpios();
 
 public:
     DELETE_COPY_AND_MOVE(SpiHw)

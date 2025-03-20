@@ -148,7 +148,7 @@
 
 //   sdio_setup_transfer(SDIO_DATA_TIMEOUT * (F_CPU / 1000U), 512, SDIO_BLOCKSIZE_512 | SDIO_DCTRL_DMAEN | SDIO_DCTRL_DTEN | SDIO_DIR_RX);
 
-//   if (!SDIO_CmdReadSingleBlock(blockAddress)) {
+//   if (!SDIO_Cmdread_singleBlock(blockAddress)) {
 //     SDIO_CLEAR_FLAG(SDIO_ICR_CMD_FLAGS);
 //     dma_disable(SDIO_DMA_DEV, SDIO_DMA_CHANNEL);
 //     return false;
@@ -208,7 +208,7 @@
 //   dma_clear_isr_bits(SDIO_DMA_DEV, SDIO_DMA_CHANNEL);
 //   dma_enable(SDIO_DMA_DEV, SDIO_DMA_CHANNEL);
 
-//   if (!SDIO_CmdWriteSingleBlock(blockAddress)) {
+//   if (!SDIO_Cmdwrite_singleBlock(blockAddress)) {
 //     dma_disable(SDIO_DMA_DEV, SDIO_DMA_CHANNEL);
 //     return false;
 //   }
@@ -256,8 +256,8 @@
 // bool SDIO_CmdOperCond() { SDIO_SendCommand(CMD8_HS_SEND_EXT_CSD, SDMMC_CHECK_PATTERN); return SDIO_GetCmdResp7(); }
 // bool SDIO_CmdSendCSD(uint32_t argument) { SDIO_SendCommand(CMD9_SEND_CSD, argument); return SDIO_GetCmdResp2(); }
 // bool SDIO_CmdSendStatus(uint32_t argument) { SDIO_SendCommand(CMD13_SEND_STATUS, argument); return SDIO_GetCmdResp1(SDMMC_CMD_SEND_STATUS); }
-// bool SDIO_CmdReadSingleBlock(uint32_t address) { SDIO_SendCommand(CMD17_READ_SINGLE_BLOCK, address); return SDIO_GetCmdResp1(SDMMC_CMD_READ_SINGLE_BLOCK); }
-// bool SDIO_CmdWriteSingleBlock(uint32_t address) { SDIO_SendCommand(CMD24_WRITE_SINGLE_BLOCK, address); return SDIO_GetCmdResp1(SDMMC_CMD_WRITE_SINGLE_BLOCK); }
+// bool SDIO_Cmdread_singleBlock(uint32_t address) { SDIO_SendCommand(CMD17_READ_SINGLE_BLOCK, address); return SDIO_GetCmdResp1(SDMMC_CMD_READ_SINGLE_BLOCK); }
+// bool SDIO_Cmdwrite_singleBlock(uint32_t address) { SDIO_SendCommand(CMD24_WRITE_SINGLE_BLOCK, address); return SDIO_GetCmdResp1(SDMMC_CMD_WRITE_SINGLE_BLOCK); }
 // bool SDIO_CmdAppCommand(uint32_t rsa) { SDIO_SendCommand(CMD55_APP_CMD, rsa); return SDIO_GetCmdResp1(SDMMC_CMD_APP_CMD); }
 
 // bool SDIO_CmdAppSetBusWidth(uint32_t rsa, uint32_t argument) {

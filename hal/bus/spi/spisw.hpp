@@ -16,20 +16,18 @@ protected:
     uint8_t data_bits = 8;
     bool m_msb = true;
 
-    void delayDur(){
+    __no_inline void delay_dur(){
         delayMicroseconds(delays);
     }
-
-
     BusError lead(const uint8_t index) override{
         auto ret = Spi::lead(index);
-        delayDur();
+        delay_dur();
         return ret;
     }
 
     void trail() override{
         sclk_gpio.set();
-        delayDur();
+        delay_dur();
         Spi::trail();
     }
 protected :

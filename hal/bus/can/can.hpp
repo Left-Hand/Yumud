@@ -144,9 +144,9 @@ public:
 
     bool is_busoff();
 
-    void bindTxOkCb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
-    void bindTxFailCb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
-    void bindRxCb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
+    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
+    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
 };

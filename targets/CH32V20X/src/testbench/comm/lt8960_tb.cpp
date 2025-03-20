@@ -55,9 +55,12 @@ void lt8960_tb(){
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)
         | ltr.enable_use_hw_pkt(true)
-        | ltr.set_datarate(LT8960L::DataRate::_62_5K)
-        // | ltr.set_datarate(LT8960L::DataRate::_250K)
-        // | ltr.enable_gain_weaken(true)
+        // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
+        | ltr.set_datarate(LT8960L::DataRate::_1M)
+        | ltr.enable_gain_weaken(true)
+        // | ltr.set_retrans_time(3)
+        // | ltr.enable_autoack(false)
+
         ).unwrap();
     };
 
@@ -66,7 +69,7 @@ void lt8960_tb(){
         common_settings(rx_ltr);
     }
     if(has_tx_authority()){
-        tx_ltr.init(LT8960L::Power::_n4_Db, 0x12345678).loc().expect("TX init failed!");
+        tx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).loc().expect("TX init failed!");
 
         common_settings(tx_ltr);
     }

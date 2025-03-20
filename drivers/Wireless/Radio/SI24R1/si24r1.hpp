@@ -201,21 +201,21 @@ protected:
     BusError write_reg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
+        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
         return spi_drv.write_burst(&(value), sizeof(value));
     }
 
     BusError read_reg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
+        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
         return spi_drv.read_burst(&(value), sizeof(value));
     }
 
     BusError readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::R_RX_PAYLOAD), CONT).unwrap();
             return spi_drv.read_burst(buffer, size);
         }
@@ -224,7 +224,7 @@ protected:
     BusError writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD), CONT).unwrap();
             return spi_drv.write_burst<uint8_t>(buffer, size);
         }
@@ -233,24 +233,24 @@ protected:
     BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT).unwrap();
             return spi_drv.write_burst<uint8_t>(buffer, size);
         }
     }
 
     BusError clearTxFifo(){
-        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_TX)).unwrap();
     }
 
     BusError clearRxFifo(){
-        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
+        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_RX)).unwrap();
     }
 
     BusError updateStatus(){
-        return spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
+        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
     hal::SpiDrv spi_drv;
@@ -260,8 +260,8 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT).unwrap();
-        spi_drv.readSingle((size)).unwrap();
+        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT).unwrap();
+        spi_drv.read_single((size)).unwrap();
         return size;
     }
 };

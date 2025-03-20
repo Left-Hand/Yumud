@@ -350,10 +350,10 @@ void LT8920::setSyncWord(const uint64_t syncword){
 BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT).unwrap();
+        spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT).unwrap();
         delayT3();
 
-        return spi_drv_->writeSingle((reg));
+        return spi_drv_->write_single((reg));
     }else if(i2c_drv_){
         return i2c_drv_->write_reg(uint8_t(address), reg, MSB);
     }
@@ -364,8 +364,8 @@ BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
 BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT).unwrap();
-        return spi_drv_->readSingle(reg);
+        spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT).unwrap();
+        return spi_drv_->read_single(reg);
     }else if(i2c_drv_){
         return i2c_drv_->read_reg(uint8_t(address), reg, MSB);
     }
@@ -377,7 +377,7 @@ BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
 BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(50), CONT).unwrap();
+        spi_drv_->write_single(uint8_t(50), CONT).unwrap();
         return spi_drv_->write_burst<uint8_t>(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
@@ -389,7 +389,7 @@ BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
 BusError LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(50 | 0x80), CONT).unwrap();
+        spi_drv_->write_single(uint8_t(50 | 0x80), CONT).unwrap();
         return spi_drv_->read_burst(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
@@ -400,7 +400,7 @@ BusError LT8920::readFifo(uint8_t * data, const size_t len){
 
 BusError LT8920::updateFifoStatus(){
     if(spi_drv_){
-        // return spi_drv_->transferSingle(flag_reg.as_ref(), flag_reg.address);
+        // return spi_drv_->transfer_single(flag_reg.as_ref(), flag_reg.address);
     } else if(i2c_drv_){
         return i2c_drv_->read_reg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
     }

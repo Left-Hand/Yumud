@@ -240,10 +240,10 @@ public:
 
         uint32_t    rval = 0;
         int         len = (uint8_t(reg)&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[uint8_t(reg)&0x07] : 4;
-        spi_drv_.writeSingle(uint8_t(reg)).unwrap();
+        spi_drv_.write_single(uint8_t(reg)).unwrap();
         while (len-- > 0){
             uint8_t ret = 0;
-            auto err = spi_drv_.transferSingle<uint8_t>(ret, (value>>len*8) & 0xFF);
+            auto err = spi_drv_.transfer_single<uint8_t>(ret, (value>>len*8) & 0xFF);
             if(err.wrong()) return 0;
             rval = (rval<<8) | ret; 
         }
