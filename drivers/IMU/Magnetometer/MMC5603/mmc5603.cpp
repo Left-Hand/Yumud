@@ -14,12 +14,12 @@ using namespace ymd::drivers;
 #define MMC5603_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg)     writeReg(reg.address, reg);
-#define READ_REG(reg)     readReg(reg.address, reg);
+#define WRITE_REG(reg)     write_reg(reg.address, reg);
+#define READ_REG(reg)     read_reg(reg.address, reg);
 
 void MMC5603::update(){
     auto & reg = x_reg;
-    readBurst(reg.address_x, &reg.data_h, 6);
+    read_burst(reg.address_x, &reg.data_h, 6);
 }
 
 void MMC5603::reset(){

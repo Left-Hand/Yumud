@@ -35,10 +35,10 @@ protected:
     };
 
 
-    BusError writeReg(const uint8_t addr, const uint8_t data);
-    BusError readReg(const RegAddress addr, uint8_t & data);
+    BusError write_reg(const uint8_t addr, const uint8_t data);
+    BusError read_reg(const RegAddress addr, uint8_t & data);
 
-    BusError readBurst(const RegAddress addr, void * datas, const size_t len);
+    BusError read_burst(const RegAddress addr, void * datas, const size_t len);
     void readAdj();
 public:
 

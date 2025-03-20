@@ -7,28 +7,28 @@ using namespace ymd::drivers;
 
 
 void PCA9685::setFrequency(uint freq, real_t trim){
-        readReg(RegAddress::Mode1, mode1_reg);
+        read_reg(RegAddress::Mode1, mode1_reg);
         
         prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
         // prescale_reg = 121;
         // enableSleep();
         mode1_reg.sleep = true;
-        writeReg(RegAddress::Mode1, mode1_reg);
-        writeReg(RegAddress::Prescale, prescale_reg);
+        write_reg(RegAddress::Mode1, mode1_reg);
+        write_reg(RegAddress::Prescale, prescale_reg);
         mode1_reg.sleep = false;
         
-        writeReg(RegAddress::Mode1, mode1_reg);
+        write_reg(RegAddress::Mode1, mode1_reg);
         // enableSleep(false);
         delay(5);
         mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
-        writeReg(RegAddress::Mode1, mode1_reg);
+        write_reg(RegAddress::Mode1, mode1_reg);
     }
 
 void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
     if(channel > 15) PANIC();
     
     if(sub_channels[channel].on.cvr != on){
-        writeReg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);
+        write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);
         sub_channels[channel].on.cvr = on;
     }
 
@@ -43,13 +43,13 @@ void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
             reg.full = false;
             reg.cvr = off;
         // }
-        writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg).unwrap();
+        write_reg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg).unwrap();
     }
 }
 
 void PCA9685::init(){
     mode1_reg = 0;
-    writeReg(RegAddress::Mode1, mode1_reg);
+    write_reg(RegAddress::Mode1, mode1_reg);
     for(size_t i = 0; i < 16; i++){
         setPwm(i, 0, 0);
     }
@@ -58,25 +58,25 @@ void PCA9685::init(){
 
 
 void PCA9685::reset(){
-    readReg(RegAddress::Mode1, mode1_reg);
+    read_reg(RegAddress::Mode1, mode1_reg);
     if(1 == mode1_reg.restart){
         mode1_reg.sleep = 0;
-        writeReg(RegAddress::Mode1, mode1_reg);
+        write_reg(RegAddress::Mode1, mode1_reg);
     }
     delayMicroseconds(500);
     mode1_reg.restart = 1;
-    writeReg(RegAddress::Mode1, mode1_reg);
+    write_reg(RegAddress::Mode1, mode1_reg);
     mode1_reg.restart = 0;
 }
 
 void PCA9685::enableExtClk(const bool en){
     mode1_reg.extclk = en;
-    writeReg(RegAddress::Mode1, mode1_reg);
+    write_reg(RegAddress::Mode1, mode1_reg);
 }
 
 void PCA9685::enableSleep(const bool en){
     mode1_reg.sleep = en;
-    writeReg(RegAddress::Mode1, mode1_reg);
+    write_reg(RegAddress::Mode1, mode1_reg);
     mode1_reg.sleep = 0;
 }
 
@@ -109,15 +109,15 @@ void PCA9685::setMode(const int index, const hal::GpioMode mode){
 //     uint16_t mask = 1 << index;
 //     if(GpioMode::isIn(mode)) dir |= mask;
 //     else dir &= ~mask;
-//     writeReg(RegAddress::dir, dir);
+//     write_reg(RegAddress::dir, dir);
 
 //     if(index < 8){
 //         ctl.p0mod = GpioMode::isPP(mode);
-//         writeReg(RegAddress::ctl, ctl.data);
+//         write_reg(RegAddress::ctl, ctl.data);
 //     }
 }
 
 void PCA9685::setSubAddr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
-    writeReg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
+    write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
 }

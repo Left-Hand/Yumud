@@ -9,15 +9,15 @@
 #define NRF24L01_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define NRF24L01_PANIC(...) PANIC{__VA_ARGS__}
 #define NRF24L01_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
+#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define NRF24L01_DEBUG(...)
 #define NRF24L01_TODO(...) PANIC_NSRC()
 #define NRF24L01_PANIC(...)  PANIC_NSRC()
 #define NRF24L01_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) readReg(reg.address, reg).unwrap()
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap()
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap()
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap()
 #endif
 
 using namespace ymd;

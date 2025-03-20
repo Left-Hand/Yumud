@@ -21,8 +21,8 @@ public:
     SccbDrv(SccbDrv && other) = default;
 
 
-    void writeReg(const uint8_t reg_address, const uint16_t reg_data);
-    void readReg(const uint8_t reg_address, uint16_t & reg_data);
+    void write_reg(const uint8_t reg_address, const uint16_t reg_data);
+    void read_reg(const uint8_t reg_address, uint16_t & reg_data);
 };
 
 }

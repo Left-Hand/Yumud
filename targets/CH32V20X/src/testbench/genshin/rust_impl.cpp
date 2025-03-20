@@ -53,9 +53,9 @@ struct ImplFor<real_t, MyStruct> {
     }
 };
 
-template<typename T, typename U>
-void my_method(U& obj) {
-    ImplFor<T, U>::method(obj);
+template<typename T>
+void my_method(MyStruct & obj) {
+    ImplFor<T, MyStruct>::method(obj);
 }
 
 void genshin_main() {

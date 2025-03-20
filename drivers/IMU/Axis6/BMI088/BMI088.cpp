@@ -35,11 +35,11 @@ Result<void, Error> BMI088_Acc::init(){
 
 
 Result<void, Error> BMI088_Acc::reset(){
-    return writeCommand(0xb6);
+    return write_command(0xb6);
 }
 
 Result<void, Error> BMI088_Acc::verifyChipId(){
-    auto err = readRegs(acc_chipid_reg);
+    auto err = read_regs(acc_chipid_reg);
     return err | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error::UNSPECIFIED));
 }
 
@@ -56,7 +56,7 @@ Result<void, Error> BMI088_Acc::verify(){
 }
 
 Result<void, Error> BMI088_Acc::update(){
-    return readBurst(acc_x_reg.address, 
+    return read_burst(acc_x_reg.address, 
         // std::span(&(acc_x_reg.as_ref()), 3),
         // LSB
         &(acc_x_reg.as_ref()), 3
@@ -64,7 +64,7 @@ Result<void, Error> BMI088_Acc::update(){
 }
 
 Result<void, Error> BMI088_Gyr::update(){
-    return readBurst(gyr_x_reg.address, 
+    return read_burst(gyr_x_reg.address, 
         // std::span(&(gyr_x_reg.as_ref()), 3),
         &(gyr_x_reg.as_ref()), 3
     );
@@ -95,28 +95,28 @@ Option<Vector3R> BMI088_Gyr::getGyr(){
 Result<void, Error> BMI088_Acc::setAccRange(const AccRange range){
     acc_scaler_ = calculateAccScale(range).unwrap();
     acc_range_reg.acc_range = uint8_t(range);
-    return writeRegs(acc_range_reg);
+    return write_regs(acc_range_reg);
 }
 
 
 Result<void, Error> BMI088_Acc::setAccBwp(const AccBwp bwp){
     acc_conf_reg.acc_bwp = uint8_t(bwp);
-    return writeRegs(acc_conf_reg);
+    return write_regs(acc_conf_reg);
 }
 
 
 Result<void, Error> BMI088_Acc::setAccOdr(const AccOdr odr){
     acc_conf_reg.acc_odr = uint8_t(odr);
-    return writeRegs(acc_conf_reg);
+    return write_regs(acc_conf_reg);
 }
 
 Result<void, Error> BMI088_Gyr::setGyrRange(const GyrRange range){
     gyr_scaler_ = calculateGyrScale(range).unwrap();
     gyro_range_reg.data = uint8_t(range);
-    return writeRegs(gyro_range_reg);
+    return write_regs(gyro_range_reg);
 }
 
 Result<void, Error> BMI088_Gyr::setGyrOdr(const GyrOdr odr){
     gyro_bw_reg.data = uint8_t(odr);
-    return writeRegs(gyro_range_reg);
+    return write_regs(gyro_range_reg);
 }

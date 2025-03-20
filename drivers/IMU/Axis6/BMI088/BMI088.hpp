@@ -184,7 +184,7 @@ protected:
 
         Result<void, Error> enableOutput(const bool en = true){
             ctrl_.int_out = en;
-            return bmi_.writeReg(address_, ctrl_.as_val());
+            return bmi_.write_reg(address_, ctrl_.as_val());
         }
     protected:
         BMI088_Acc & bmi_;

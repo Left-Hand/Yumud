@@ -60,30 +60,30 @@ protected:
     }
 
 public:
-    void sendBreak(){
+    void send_break(){
         inst->send_break();
     }
 
-    void sendSync(){
+    void send_sync(){
         inst->send(0x55);
         inst->wait_transmit_complete();
     }
 
-    void sendHead(const uint8_t id){
+    void send_head(const uint8_t id){
         sendBreak();
         sendSync();
         send(calculate_pid(id));
         inst->wait_transmit_complete();
     }
 
-    void sendData(const std::span<std::byte, 8> data){
+    void send_data(const std::span<std::byte, 8> data){
         for(size_t t=0;t<8;t++){
             send(data[t]);
             inst->wait_transmit_complete();
         }
     }
 
-    void sendAnswer(const uint8_t id, const std::span<std::byte, 8> data){
+    void send_answer(const uint8_t id, const std::span<std::byte, 8> data){
         sendData(data);
         send(checksum(id, data));
         inst->wait_transmit_complete();

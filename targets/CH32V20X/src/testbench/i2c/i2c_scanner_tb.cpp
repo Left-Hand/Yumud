@@ -81,7 +81,8 @@ struct I2cTester{
         const uint max_baud = [&]{
             uint baud = start_freq;
             while(baud < 10_MHz){
-                i2c_drv.setBaudRate(uint(baud * grow_scale));
+                // i2c_drv.set_baudrate(uint(baud * grow_scale));
+                i2c.set_baudrate(uint(baud * grow_scale));
                 const auto err = i2c_drv.verify();
                 if(err.wrong()) break;
 
@@ -93,7 +94,7 @@ struct I2cTester{
         }();
 
         // DEBUG_PRINTLN("??");
-        uart2.setRxMethod(CommMethod::Blocking);
+        uart2.set_rx_strategy(CommStrategy::Blocking);
 
         return Ok{max_baud};
     }

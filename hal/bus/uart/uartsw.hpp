@@ -5,8 +5,8 @@
 namespace ymd::hal{
 class UartSw : public Uart{
 protected:
-    Gpio & m_tx_gpio;
-    Gpio & m_rx_gpio;
+    Gpio & tx_gpio_;
+    Gpio & rx_gpio_;
 
     enum class ByteProg: int8_t{
         D0 = 0,D1,D2,D3,D4,D5,D6,D7,
@@ -14,32 +14,29 @@ protected:
         STOP
     };
 
-    char current_char;
     ByteProg byteProg = ByteProg::STOP;
-    
-    // void write(const char data) override{
-    //     tx_fifo.push(data);
-    // }
 
-    char fetch_next(){return tx_fifo.pop();}
-    BusError lead(const uint8_t _address) override;
+    char current_char;
+    char fetch_next(){return tx_fifo_.pop();}
+    BusError lead(const uint8_t address) override;
     void trail() override{;}
 public:
 
-    UartSw(Gpio & _m_tx_gpio, Gpio & _m_rx_gpio): m_tx_gpio(_m_tx_gpio), m_rx_gpio(_m_rx_gpio){;}
+    UartSw(Gpio & tx_gpio, Gpio & rx_gpio): tx_gpio_(tx_gpio), rx_gpio_(rx_gpio){;}
 
     void init(
-        const uint32_t baudRate, 
-        const CommMethod _rxMethod = CommMethod::Interrupt,
-        const CommMethod _txMethod = CommMethod::Blocking) override;
+        uint32_t baudrate, 
+        CommStrategy tx_strategy = CommStrategy::Interrupt,
+        CommStrategy rx_strategy = CommStrategy::Interrupt);
+
     void tick();
 
-    void setTxMethod(const CommMethod _txMethod) override;
+    void set_tx_strategy(const CommStrategy tx_strategy);
 
-    void setRxMethod(const CommMethod _rxMethod) override;
+    void set_rx_strategy(const CommStrategy rx_strategy);
 
     Gpio & txio(){return Gpio::null();}
     Gpio & rxio(){return Gpio::null();}
-    void setParity(const Parity parity){;}
+    void set_parity(const Parity parity){;}
 };
 }

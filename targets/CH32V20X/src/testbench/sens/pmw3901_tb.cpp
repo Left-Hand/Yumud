@@ -10,7 +10,7 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     DEBUG_PRINTLN(std::setprecision(4));
 
@@ -18,7 +18,7 @@ void pmw3901_main(){
 
 
     spi.init(9_MHz);
-    spi.bindCsPin(portD[5], 0);
+    spi.bind_cs_pin(portD[5], 0);
 
     PMW3901 pmw{spi, 0};
     pmw.init();

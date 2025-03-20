@@ -15,15 +15,15 @@ using namespace ymd;
 #define INA226_PANIC(...) PANIC(__VA_ARGS__)
 #define INA226_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg.as_val()).loc().expect();
-#define READ_REG(reg) this->readReg(reg.address, reg.as_ref()).loc().expect();
+#define WRITE_REG(reg) this->write_reg(reg.address, reg.as_val()).loc().expect();
+#define READ_REG(reg) this->read_reg(reg.address, reg.as_ref()).loc().expect();
 #else
 #define INA226_DEBUG(...)
 #define INA226_PANIC(...)  PANIC_NSRC()
 #define INA226_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define WRITE_REG(reg) +this->writeReg(reg.address, reg.as_val());
-#define READ_REG(reg) +this->readReg(reg.address, reg.as_ref());
+#define WRITE_REG(reg) this->write_reg(reg.address, reg.as_val()).unwrap();
+#define READ_REG(reg) this->read_reg(reg.address, reg.as_ref()).unwrap();
 #endif
 
 
@@ -36,23 +36,23 @@ void INA226::update(){
 }
 
 
-BusResult INA226::writeReg(const RegAddress addr, const uint16_t data){
-    return BusResult(i2c_drv.writeReg(uint8_t(addr), data, MSB))
+BusResult INA226::write_reg(const RegAddress addr, const uint16_t data){
+    return BusResult(i2c_drv.write_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("write error", uint8_t(addr), data);
 }
 
-BusResult INA226::readReg(const RegAddress addr, uint16_t & data){
-    return BusResult(i2c_drv.readReg(uint8_t(addr), data, MSB))
+BusResult INA226::read_reg(const RegAddress addr, uint16_t & data){
+    return BusResult(i2c_drv.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
-BusResult INA226::readReg(const RegAddress addr, int16_t & data){
-    return BusResult(i2c_drv.readReg(uint8_t(addr), data, MSB))
+BusResult INA226::read_reg(const RegAddress addr, int16_t & data){
+    return BusResult(i2c_drv.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
-BusResult INA226::readBurst(const RegAddress addr, uint16_t * p_data, const size_t len){
-    return i2c_drv.readBurst(uint8_t(addr), std::span(p_data, len), LSB);
+BusResult INA226::read_burst(const RegAddress addr, uint16_t * p_data, const size_t len){
+    return i2c_drv.read_burst(uint8_t(addr), std::span(p_data, len), LSB);
 }
 
 

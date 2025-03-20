@@ -16,7 +16,7 @@ public:
 protected:
     hal::SpiDrv spi_drv_;
     hal::GpioIntf & fsync_gpio_;
-    void writeData(uint16_t data); 
+    void write_data(uint16_t data); 
 public:
     AD9833(
         const hal::SpiDrv & spi_drv,

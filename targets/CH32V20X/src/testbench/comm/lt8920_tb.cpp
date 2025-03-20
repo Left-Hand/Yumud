@@ -23,7 +23,7 @@ bool isInInterruptContext() {
 }
 
 void lt8920_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
@@ -33,7 +33,7 @@ void lt8920_main(){
 
 
     spi.init(2_MHz);
-    spi.bindCsPin(portA[0], 0);
+    spi.bind_cs_pin(portA[0], 0);
 
     LT8920 lt{spi, 0};
     bindSystickCb([&](){

@@ -199,18 +199,18 @@ protected:
     FeatureReg feature_reg;
 
 
-    BusError writeReg(RegAddress addr, const auto & value){
+    BusError write_reg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
         spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
-        return spi_drv.writeBurst(&(value), sizeof(value));
+        return spi_drv.write_burst(&(value), sizeof(value));
     }
 
-    BusError readReg(RegAddress addr, auto & value){
+    BusError read_reg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
         spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
-        return spi_drv.readBurst(&(value), sizeof(value));
+        return spi_drv.read_burst(&(value), sizeof(value));
     }
 
     BusError readFifo(uint8_t *buffer, size_t size){
@@ -218,7 +218,7 @@ protected:
             size = MIN(size, 32);
             spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::R_RX_PAYLOAD), CONT).unwrap();
-            return spi_drv.readBurst(buffer, size);
+            return spi_drv.read_burst(buffer, size);
         }
     }
 
@@ -227,7 +227,7 @@ protected:
             size = MIN(size, 32);
             spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD), CONT).unwrap();
-            return spi_drv.writeBurst<uint8_t>(buffer, size);
+            return spi_drv.write_burst<uint8_t>(buffer, size);
         }
     }
 
@@ -236,7 +236,7 @@ protected:
             size = MIN(size, 32);
             spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT).unwrap();
-            return spi_drv.writeBurst<uint8_t>(buffer, size);
+            return spi_drv.write_burst<uint8_t>(buffer, size);
         }
     }
 

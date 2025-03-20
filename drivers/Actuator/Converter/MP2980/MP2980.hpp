@@ -16,8 +16,8 @@
 #endif
 
 
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
-#define READ_REG(reg) readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
 
 namespace ymd::drivers{
 
@@ -144,20 +144,20 @@ protected:
     MaskReg mask_reg = {};
     StatusReg status_reg = {};
 
-    BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg).unwrap();
+    BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg).unwrap();
     }
 
-    BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg).unwrap();
+    BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg).unwrap();
     }
 
-    BusError writeReg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.writeReg(uint8_t(address), reg, LSB);
+    BusError write_reg(const RegAddress address, const uint16_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
     }
 
-    BusError readReg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.readReg(uint8_t(address), reg, LSB);
+    BusError read_reg(const RegAddress address, uint16_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
     }
 
 public:

@@ -10,14 +10,14 @@ using namespace ymd;
 #define LT8920_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define LT8920_PANIC(...) PANIC{__VA_ARGS__}
 #define LT8920_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
+#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define LT8920_DEBUG(...)
 #define LT8920_PANIC(...)  PANIC_NSRC()
 #define LT8920_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void)readReg(reg.address, reg).unwrap();
-#define WRITE_REG(reg) (void)writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg) (void)read_reg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) (void)write_reg(reg.address, reg).unwrap();
 #endif
 
 
@@ -33,23 +33,23 @@ using namespace ymd;
 
 bool LT8920::verify(){
     uint16_t reg;
-    readReg(30, reg).unwrap();
+    read_reg(30, reg).unwrap();
     return (reg == 0xf413);
 }
 
 uint16_t LT8920::isRfSynthLocked() {
-    readReg(rf_synth_lock_reg.address, (rf_synth_lock_reg));
+    read_reg(rf_synth_lock_reg.address, (rf_synth_lock_reg));
     return rf_synth_lock_reg.synthLocked;
 }
 
 uint8_t LT8920::getRssi() {
-    readReg(raw_rssi_reg.address, (raw_rssi_reg));
+    read_reg(raw_rssi_reg.address, (raw_rssi_reg));
     return raw_rssi_reg.rawRssi;
 }
 
 void LT8920::setRfChannel(const uint8_t ch) {
     rf_config_reg.rfChannelNo = ch;
-    writeReg(rf_config_reg.address, (rf_config_reg));
+    write_reg(rf_config_reg.address, (rf_config_reg));
 }
 
 void LT8920::setRfFreqMHz(const uint freq) {
@@ -79,38 +79,38 @@ void LT8920::setRole(const Role _role) {
 
 void LT8920::setPaCurrent(const uint8_t current) {
     pa_config_reg.paCurrent = current;
-    writeReg(pa_config_reg.address, (pa_config_reg));
+    write_reg(pa_config_reg.address, (pa_config_reg));
 }
 
 void LT8920::setPaGain(const uint8_t gain) {
     pa_config_reg.paGain = gain;
-    writeReg(pa_config_reg.address, (pa_config_reg));
+    write_reg(pa_config_reg.address, (pa_config_reg));
 }
 
 void LT8920::enableRssi(const uint16_t open) {
     rssi_pdn_reg.rssiPdn = open;
-    writeReg(rssi_pdn_reg.address, (rssi_pdn_reg));
+    write_reg(rssi_pdn_reg.address, (rssi_pdn_reg));
 }
 
 void LT8920::enableAutoCali(const uint16_t open) {
     auto_cali_reg.autoCali = open;
-    writeReg(auto_cali_reg.address, (auto_cali_reg));
+    write_reg(auto_cali_reg.address, (auto_cali_reg));
 }
 
 void LT8920::setBrclkSel(const BrclkSel brclkSel) {
     config1_reg.brclkSel = (uint16_t)brclkSel;
-    writeReg(config1_reg.address, (config1_reg));
+    write_reg(config1_reg.address, (config1_reg));
 }
 
 void LT8920::clearFifoWritePtr() {
     fifo_ptr_reg.clearWritePtr = 1;
-    writeReg(fifo_ptr_reg.address, (fifo_ptr_reg));
+    write_reg(fifo_ptr_reg.address, (fifo_ptr_reg));
     fifo_ptr_reg.clearWritePtr = 0;
 }
 
 void LT8920::clearFifoReadPtr() {
     fifo_ptr_reg.clearReadPtr = 1;
-    writeReg(fifo_ptr_reg.address, (fifo_ptr_reg));
+    write_reg(fifo_ptr_reg.address, (fifo_ptr_reg));
     fifo_ptr_reg.clearReadPtr = 0;
 }
 
@@ -124,22 +124,22 @@ void LT8920::clearFifoPtr() {
 
 void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
     config1_reg.syncWordLen = (uint16_t)len;
-    writeReg(config1_reg.address, (config1_reg));
+    write_reg(config1_reg.address, (config1_reg));
 }
 
 void LT8920::setRetransTime(const uint8_t times) {
     config2_reg.retransTimes = times - 1;
-    writeReg(config2_reg.address, (config2_reg));
+    write_reg(config2_reg.address, (config2_reg));
 }
 
 void LT8920::enableAutoAck(const bool en) {
     config3_reg.autoAck = en;
-    writeReg(config3_reg.address, (config3_reg));
+    write_reg(config3_reg.address, (config3_reg));
 }
 
 void LT8920::enableCrc(const bool en){
     config3_reg.crcEn = en;
-    writeReg(config3_reg.address, (config3_reg));
+    write_reg(config3_reg.address, (config3_reg));
 }
 
 void LT8920::setErrBitsTolerance(uint8_t errbits){
@@ -291,34 +291,34 @@ void LT8920::init(){
     // setSyncWordBitsgth(SyncWordBits::_32);
 
 
-    writeReg(0, 0x6fe0);    //masked
-    writeReg(1, 0x5681);    //masked
-    writeReg(2, 0x6617);    //masked
+    write_reg(0, 0x6fe0);    //masked
+    write_reg(1, 0x5681);    //masked
+    write_reg(2, 0x6617);    //masked
 
-    writeReg(4, 0x9cc9);    //masked
-    writeReg(5, 0x6637);    //masked
+    write_reg(4, 0x9cc9);    //masked
+    write_reg(5, 0x6637);    //masked
 
-    writeReg(8, 0x6c90);    //masked
-    writeReg(9, 0x4840);    //power (default 71af) UNDOCUMENTED
+    write_reg(8, 0x6c90);    //masked
+    write_reg(9, 0x4840);    //power (default 71af) UNDOCUMENTED
 
-    writeReg(10, 0x7ffd);   //bit 0: XTAL OSC enable
-    writeReg(11, 0x0008);   //bit 8: Power down RSSI (0=  RSSI operates normal)
-    writeReg(12, 0x0000);
-    writeReg(13, 0x48bd);   //(default 4855)
+    write_reg(10, 0x7ffd);   //bit 0: XTAL OSC enable
+    write_reg(11, 0x0008);   //bit 8: Power down RSSI (0=  RSSI operates normal)
+    write_reg(12, 0x0000);
+    write_reg(13, 0x48bd);   //(default 4855)
 
-    writeReg(22, 0x00ff);
-    writeReg(23, 0x8005);  //bit 2: Calibrate VCO before each Rx/Tx enable
-    writeReg(24, 0x0067);
-    writeReg(25, 0x1659);
-    writeReg(26, 0x19e0);
-    writeReg(27, 0x1300);  //bits 5:0, Crystal Frequency adjust
-    writeReg(28, 0x1800);
+    write_reg(22, 0x00ff);
+    write_reg(23, 0x8005);  //bit 2: Calibrate VCO before each Rx/Tx enable
+    write_reg(24, 0x0067);
+    write_reg(25, 0x1659);
+    write_reg(26, 0x19e0);
+    write_reg(27, 0x1300);  //bits 5:0, Crystal Frequency adjust
+    write_reg(28, 0x1800);
 
-    writeReg(32, 0x4800);
+    write_reg(32, 0x4800);
     //0x5000 = 0101 0000 0000 0000 = preamble 010 (3 bytes), B 10 (48 bits)
-    writeReg(33, 0x3fc7);
-    writeReg(34, 0x2000);  //
-    writeReg(35, 0x0300);  //POWER mode,  bit 8/9 on = retransmit = 3x (default)
+    write_reg(33, 0x3fc7);
+    write_reg(34, 0x2000);  //
+    write_reg(35, 0x0300);  //POWER mode,  bit 8/9 on = retransmit = 3x (default)
 
     setSyncWord(0x0380'5a5a'0380'0380);
     setErrBitsTolerance(1);
@@ -326,13 +326,13 @@ void LT8920::init(){
     // enableAutoAck();
     // enableCrc();
 
-    writeReg(41, 0xb800);
-    writeReg(42, 0xfdb0);
-    writeReg(43, 0x000f);
-    writeReg(44, 0x0400);
-    writeReg(45, 0x0552);
-    writeReg(52, 0x8080);
-    writeReg(50, 0x0000);
+    write_reg(41, 0xb800);
+    write_reg(42, 0xfdb0);
+    write_reg(43, 0x000f);
+    write_reg(44, 0x0400);
+    write_reg(45, 0x0552);
+    write_reg(52, 0x8080);
+    write_reg(50, 0x0000);
 
     CHANGE_STATE(State::IDLE);
 }
@@ -342,12 +342,12 @@ void LT8920::setSyncWord(const uint64_t syncword){
     memcpy(words, &syncword, 8);
     for(uint8_t i = 0; i < 4; i++){
         sync_word_regs[i].data = words[i];
-        writeReg(sync_word_regs[i].head_address + i, (sync_word_regs[i]));
+        write_reg(sync_word_regs[i].head_address + i, (sync_word_regs[i]));
     }
 }
 
 
-BusError LT8920::writeReg(const RegAddress address, const uint16_t reg){
+BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT).unwrap();
@@ -355,19 +355,19 @@ BusError LT8920::writeReg(const RegAddress address, const uint16_t reg){
 
         return spi_drv_->writeSingle((reg));
     }else if(i2c_drv_){
-        return i2c_drv_->writeReg(uint8_t(address), reg, MSB);
+        return i2c_drv_->write_reg(uint8_t(address), reg, MSB);
     }
 
     PANIC();
 }
 
-BusError LT8920::readReg(const RegAddress address, uint16_t & reg){
+BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         spi_drv_->transferSingle(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT).unwrap();
         return spi_drv_->readSingle(reg);
     }else if(i2c_drv_){
-        return i2c_drv_->readReg(uint8_t(address), reg, MSB);
+        return i2c_drv_->read_reg(uint8_t(address), reg, MSB);
     }
 
     PANIC();
@@ -378,9 +378,9 @@ BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(50), CONT).unwrap();
-        return spi_drv_->writeBurst<uint8_t>(data, len);
+        return spi_drv_->write_burst<uint8_t>(data, len);
     }else if(i2c_drv_){
-        return i2c_drv_->writeBurst(uint8_t(50) , std::span(data, len));
+        return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
     }
 
     PANIC();
@@ -390,9 +390,9 @@ BusError LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(50 | 0x80), CONT).unwrap();
-        return spi_drv_->readBurst(data, len);
+        return spi_drv_->read_burst(data, len);
     }else if(i2c_drv_){
-        return i2c_drv_->readBurst(uint8_t(50), std::span(data, len));
+        return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
     }
 
     PANIC();
@@ -402,7 +402,7 @@ BusError LT8920::updateFifoStatus(){
     if(spi_drv_){
         // return spi_drv_->transferSingle(flag_reg.as_ref(), flag_reg.address);
     } else if(i2c_drv_){
-        return i2c_drv_->readReg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
+        return i2c_drv_->read_reg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
     }
 
     PANIC();

@@ -123,7 +123,7 @@ ST7789 create_displayer(){
     auto & lcd_spi = spi1;
     #endif
     
-    lcd_spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    lcd_spi.init(144_MHz, CommStrategy::Blocking, CommStrategy::None);
     lcd_spi.bindCsPin(lcd_cs, 0);
 
     return {{{lcd_spi, 0}, lcd_dc, dev_rst}, {240, 135}};

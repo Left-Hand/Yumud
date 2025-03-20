@@ -13,10 +13,10 @@ void m2006_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommMethod::Blocking);
+    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
     can.init(1_MHz);
-    can[0].mask(CanID16{0x201, CanRemote::Data}, CanID16{0xffff, CanRemote::Remote});
+    can[0].mask(CanID16{0x201, CanRemoteSpec::Data}, CanID16{0xffff, CanRemoteSpec::Remote});
     while(true){
         auto s = real_t(0.07) * sin(4 * time());
         auto c = real_t(0.07) * cos(4 * time());

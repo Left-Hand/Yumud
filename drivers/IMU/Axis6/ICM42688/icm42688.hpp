@@ -165,8 +165,8 @@ protected:
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
 
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
+    void write_command(const uint8_t cmd){
+        write_reg(0x7e, cmd);
     }
 public:
     using InvensenseSensor::InvensenseSensor;

@@ -48,7 +48,7 @@ using namespace ymd;
 #define AD9833_MODE         1   // 0: sin, 1: triangle
 
 
-void AD9833::writeData(uint16_t data) {
+void AD9833::write_data(uint16_t data) {
     AD9833_FSYNC(1);
     AD9833_FSYNC(0);
     AD9833_SPI_WRITE(data);
@@ -57,7 +57,7 @@ void AD9833::writeData(uint16_t data) {
 
 
 void AD9833::reset() {
-    writeData(AD9833_REG_CMD | (1<<AD9833_RESET)); // 复位AD9833，即RESET位为1，0x0100
+    write_data(AD9833_REG_CMD | (1<<AD9833_RESET)); // 复位AD9833，即RESET位为1，0x0100
 }
 
 
@@ -79,18 +79,18 @@ void AD9833::setFreq(uint16_t freq_reg, real_t freq, bool reset) {
     freq_MSB |= freq_reg;
 
     if (reset) {
-        writeData(AD9833_REG_CMD | (1<<AD9833_B28) | (1<<AD9833_RESET)); // 选择数据一次写入，B28位和RESET位为1，0x2100
+        write_data(AD9833_REG_CMD | (1<<AD9833_B28) | (1<<AD9833_RESET)); // 选择数据一次写入，B28位和RESET位为1，0x2100
     } else {
-        writeData(AD9833_REG_CMD | (1<<AD9833_B28)); // 选择数据一次写入，B28位为1。0x2000
+        write_data(AD9833_REG_CMD | (1<<AD9833_B28)); // 选择数据一次写入，B28位为1。0x2000
     }
-    writeData(freq_LSB);
-    writeData(freq_MSB);
+    write_data(freq_LSB);
+    write_data(freq_MSB);
 }
 
 
 void AD9833::setPhase(uint16_t phase_reg, uint16_t phase) {
     uint16_t data = phase_reg | phase;
-    writeData(data);
+    write_data(data);
 }
 
 
@@ -109,7 +109,7 @@ void AD9833::setWave(WaveMode wave_mode, uint16_t freq_reg, uint16_t phase_reg) 
     }
 
     uint16_t data = AD9833_REG_CMD | uint8_t(wave_mode) | freq_sel | phase_sel;
-    writeData(data);
+    write_data(data);
 }
 
 

@@ -29,7 +29,7 @@ struct WRFormat{
 
 
 
-BusError MT6835::writeReg(const RegAddress addr, const uint8_t data){
+BusError MT6835::write_reg(const RegAddress addr, const uint8_t data){
 
     WRFormat format = {
         .addr = addr,
@@ -41,7 +41,7 @@ BusError MT6835::writeReg(const RegAddress addr, const uint8_t data){
 }
 
 
-BusError MT6835::readReg(const RegAddress addr, uint8_t & data){
+BusError MT6835::read_reg(const RegAddress addr, uint8_t & data){
 
     WRFormat format = {
         .addr = addr,

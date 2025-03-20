@@ -3,26 +3,30 @@
 
 using namespace ymd::hal;
 
-void UartSw::init(const uint32_t baudRate, const CommMethod _rxMethod,const CommMethod _txMethod){
-    setTxMethod(_txMethod);
-    setRxMethod(_rxMethod);
+void UartSw::init(
+    uint32_t baudrate, 
+    CommStrategy rx_strategy,
+    CommStrategy tx_strategy
+){
+    set_rx_strategy(rx_strategy);
+    set_tx_strategy(tx_strategy);
 }
 
 void UartSw::tick(){
     switch(byteProg){
         case ByteProg::START:
-            m_tx_gpio.clr();
+            tx_gpio_.clr();
             byteProg = ByteProg::D0;
             break;
 
         case ByteProg::D0 ... ByteProg::D7:
-            m_tx_gpio.write(current_char & (1 << (uint8_t)byteProg));
+            tx_gpio_.write(current_char & (1 << (uint8_t)byteProg));
             byteProg = ByteProg((int8_t)byteProg + 1);
             break;
 
         case ByteProg::STOP:
-            m_tx_gpio.set();
-            if(tx_fifo.available()){
+            tx_gpio_.set();
+            if(tx_fifo_.available()){
                 current_char = fetch_next();
                 byteProg = ByteProg::START;
             }
@@ -31,14 +35,15 @@ void UartSw::tick(){
 
 }
 
-void UartSw::setTxMethod(const CommMethod _txMethod){
-    if(_txMethod != CommMethod::None){
-        m_tx_gpio.outpp(HIGH);
+void UartSw::set_tx_strategy(const CommStrategy tx_strategy){
+    if(tx_strategy != CommStrategy::None){
+        tx_gpio_.outpp(HIGH);
+        // tx_strategy
     }
 }
 
-void UartSw::setRxMethod(const CommMethod _rxMethod){
-    if(_rxMethod != CommMethod::None){
-        m_rx_gpio.inpu();
+void UartSw::set_rx_strategy(const CommStrategy rx_strategy){
+    if(rx_strategy != CommStrategy::None){
+        rx_gpio_.inpu();
     }
 }

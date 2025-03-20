@@ -14,12 +14,12 @@ protected:
 
     I2c(hal::Gpio & _scl_gpio, hal::Gpio & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
 public:
-    void setTimeout(const uint32_t timeout){timeout_ = timeout;}
+    void set_timeout(const uint32_t timeout){timeout_ = timeout;}
 
     hal::Gpio & scl(){return scl_gpio;};
     hal::Gpio & sda(){return sda_gpio;};
 
-    virtual void setBaudRate(const uint32_t baudrate) = 0;
+    virtual void set_baudrate(const uint32_t baudrate) = 0;
 };
 
 

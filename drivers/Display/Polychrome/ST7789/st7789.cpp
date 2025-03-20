@@ -8,18 +8,18 @@ using namespace ymd;
 void ST7789::init(){
     interface.init();
     
-    writeCommand(0x01);
+    write_command(0x01);
 
     delayMicroseconds(50);
-	writeCommand(0x11);
+	write_command(0x11);
     delayMicroseconds(50);
-	writeCommand(0x3A);
-	writeData(0x55);
-	writeCommand(0x36);
-	writeData(0x00);
-	writeCommand(0x21);
-	writeCommand(0x13);
-	writeCommand(0x29);
+	write_command(0x3A);
+	write_data(0x55);
+	write_command(0x36);
+	write_data(0x00);
+	write_command(0x21);
+	write_command(0x13);
+	write_command(0x29);
 }
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
@@ -29,15 +29,15 @@ void ST7789::setarea_unsafe(const Rect2i & rect){
     Vector2_t<uint16_t> p1 = offset + rect.position;
     Vector2_t<uint16_t> p2 = offset + rect.get_end() - Vector2i(1,1);
 
-    writeCommand(0x2a);
-    writeData16(p1.x);
-    writeData16(p2.x);
+    write_command(0x2a);
+    write_data16(p1.x);
+    write_data16(p2.x);
 
-    writeCommand(0x2b);
-    writeData16(p1.y);
-    writeData16(p2.y);
+    write_command(0x2b);
+    write_data16(p1.y);
+    write_data16(p2.y);
 
-    writeCommand(0x2c);
+    write_command(0x2c);
     area_locked = true;
 }
 
@@ -50,13 +50,13 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
         return;
     }
 
-    writeCommand(0x2a);
-    writeData16(pos.x + offset.x);
+    write_command(0x2a);
+    write_data16(pos.x + offset.x);
 
-    writeCommand(0x2b);
-    writeData16(pos.y + offset.y);
+    write_command(0x2b);
+    write_data16(pos.y + offset.y);
 
-    writeCommand(0x2c);
+    write_command(0x2c);
     area_locked = false;
 }
 
@@ -64,12 +64,12 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
-    interface.writeBurst<RGB565>(color, size_t(rect));
+    interface.write_burst<RGB565>(color, size_t(rect));
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    interface.writeBurst<RGB565>(color_ptr, size_t(rect));
+    interface.write_burst<RGB565>(color_ptr, size_t(rect));
 }
 
 void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){

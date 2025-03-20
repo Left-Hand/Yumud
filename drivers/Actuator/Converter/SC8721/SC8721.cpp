@@ -15,8 +15,8 @@ using namespace ymd::drivers;
 #define SC8721_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) writeReg(reg.address, reg);
-#define READ_REG(reg) readReg(reg.address, reg);
+#define WRITE_REG(reg) write_reg(reg.address, reg);
+#define READ_REG(reg) read_reg(reg.address, reg);
 
 void SC8721::update(){
 

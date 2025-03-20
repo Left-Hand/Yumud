@@ -15,15 +15,15 @@ using namespace ymd;
 #define INA219_PANIC(...) PANIC(__VA_ARGS__)
 #define INA219_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg.as_val()).loc().expect();
-#define READ_REG(reg) this->readReg(reg.address, reg.as_ref()).loc().expect();
+#define WRITE_REG(reg) this->write_reg(reg.address, reg.as_val()).loc().expect();
+#define READ_REG(reg) this->read_reg(reg.address, reg.as_ref()).loc().expect();
 #else
 #define INA219_DEBUG(...)
 #define INA219_PANIC(...)  PANIC_NSRC()
 #define INA219_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define WRITE_REG(reg) +this->writeReg(reg.address, reg.as_val());
-#define READ_REG(reg) +this->readReg(reg.address, reg.as_ref());
+#define WRITE_REG(reg) +this->write_reg(reg.address, reg.as_val());
+#define READ_REG(reg) +this->read_reg(reg.address, reg.as_ref());
 #endif
 
 
@@ -31,23 +31,23 @@ using Error = INA219::Error;
 // using BusResult = INA219::BusResult;
 
 
-Result<void, Error> INA219::writeReg(const RegAddress addr, const uint16_t data){
-    return Result<void, Error>(i2c_drv.writeReg(uint8_t(addr), data, MSB))
+Result<void, Error> INA219::write_reg(const RegAddress addr, const uint16_t data){
+    return Result<void, Error>(i2c_drv.write_reg(uint8_t(addr), data, MSB))
         .check_if<INA219_DEBUG_ON>("write error", uint8_t(addr), data);
 }
 
-Result<void, Error> INA219::readReg(const RegAddress addr, uint16_t & data){
-    return Result<void, Error>(i2c_drv.readReg(uint8_t(addr), data, MSB))
+Result<void, Error> INA219::read_reg(const RegAddress addr, uint16_t & data){
+    return Result<void, Error>(i2c_drv.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA219_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
-Result<void, Error> INA219::readReg(const RegAddress addr, int16_t & data){
-    return Result<void, Error>(i2c_drv.readReg(uint8_t(addr), data, MSB))
+Result<void, Error> INA219::read_reg(const RegAddress addr, int16_t & data){
+    return Result<void, Error>(i2c_drv.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA219_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
-Result<void, Error> INA219::readBurst(const RegAddress addr, uint16_t * p_data, const size_t len){
-    // return i2c_drv.readBurst(uint8_t(addr), p_std::span(data, len), LSB);
+Result<void, Error> INA219::read_burst(const RegAddress addr, uint16_t * p_data, const size_t len){
+    // return i2c_drv.read_burst(uint8_t(addr), p_std::span(data, len), LSB);
     return Ok();
 }
 

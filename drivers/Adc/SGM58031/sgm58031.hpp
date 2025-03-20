@@ -101,12 +101,12 @@ protected:
     };
 
     real_t fullScale;
-    auto writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, MSB);
+    auto write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
     }
 
-    auto readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, MSB);
+    auto read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
     }
 
 public:
@@ -120,23 +120,23 @@ public:
     void init();
 
     void getDeviceId(){
-        readReg(RegAddress::DeviceID, deviceIdReg);
+        read_reg(RegAddress::DeviceID, deviceIdReg);
     }
 
     bool isIdle(){
-        readReg(RegAddress::Config, configReg);
+        read_reg(RegAddress::Config, configReg);
         return configReg.os;
     }
 
     void startConv(){
         config1Reg.pd = true;
-        writeReg(RegAddress::Config1, config1Reg);
+        write_reg(RegAddress::Config1, config1Reg);
         configReg.os = true;
-        writeReg(RegAddress::Config, configReg);
+        write_reg(RegAddress::Config, configReg);
     }
 
     int16_t getConvData(){
-        readReg(RegAddress::Conv, convReg);
+        read_reg(RegAddress::Conv, convReg);
         return *(int16_t *)&convReg;
     }
 
@@ -147,14 +147,14 @@ public:
     }
     void setContMode(const bool continuous){
         configReg.mode = continuous;
-        writeReg(RegAddress::Config, configReg);
+        write_reg(RegAddress::Config, configReg);
     }
 
     void setDataRate(const DataRate _dr);
 
     void setMux(const MUX _mux){
         configReg.mux = (uint8_t)_mux;
-        writeReg(RegAddress::Config, configReg);
+        write_reg(RegAddress::Config, configReg);
     }
 
     void setFS(const FS fs);
@@ -164,7 +164,7 @@ public:
     void setTrim(const real_t _trim);
     void enableCh3AsRef(bool yes){
         config1Reg.extRef = yes;
-        writeReg(RegAddress::Config1, config1Reg);
+        write_reg(RegAddress::Config1, config1Reg);
     }
 };
 

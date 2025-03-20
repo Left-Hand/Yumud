@@ -45,57 +45,58 @@ namespace ymd::hal{
 class UartHw:public Uart{
 public:
 protected:
-    USART_TypeDef * instance;
+    USART_TypeDef * instance_;
 
-    void enableRcc(const bool en);
-    void enableIt(const bool en);
-    void enableRxneIt(const bool en);
-    void enableIdleIt(const bool en);
-    void invokeTxIt();
+    void enable_rcc(const bool en);
+    void enable_it(const bool en);
+    void enable_rxne_it(const bool en);
+    void enable_idle_it(const bool en);
+    void invoke_tx_it();
 
-    void enableRxDma(const bool en);
-    void enableTxDma(const bool en);
+    void enable_rx_dma(const bool en);
+    void enable_tx_dma(const bool en);
 
-    void onRxDmaDone();
-    void onRxDmaHalf();
+    void on_rx_dma_done();
+    void on_rx_dma_half();
 
-    void invokeTxDma();
+    void invoke_tx_dma();
 
-    void onRxneInterrupt();
-    void onTxeInterrupt();
-    void onIdleInterrupt();
+    void on_rxne_interrupt();
+    void on_txe_interrupt();
+    void on_idle_interrupt();
 
-    size_t rx_dma_buf_index;
-    size_t tx_dma_buf_index;
+    size_t rx_dma_buf_index_;
+    size_t tx_dma_buf_index_;
 
     #ifndef UART_DMA_BUF_SIZE
     #define UART_DMA_BUF_SIZE 64
     #endif
 
-    std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf;
-    std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf;
+    std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf_;
+    std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf_;
 
-    DmaChannel & tx_dma;
-    DmaChannel & rx_dma;
+    DmaChannel & tx_dma_;
+    DmaChannel & rx_dma_;
 
-    BusError lead(const uint8_t _address) override;
+    BusError lead(const uint8_t address) override;
     void trail() override;
 public:
     void writeN(const char * data_ptr, const size_t len) override;
 
     void write1(const char data) override;
 
-    UartHw(USART_TypeDef * _instance, DmaChannel & _tx_dma, DmaChannel & _rx_dma):
-            instance(_instance), tx_dma(_tx_dma), rx_dma(_rx_dma){;}
+    UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):
+            instance_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}
 
     void init(
-        const uint32_t baudRate, 
-        const CommMethod _txMethod = CommMethod::Dma,
-        const CommMethod _rxMethod = CommMethod::Dma) override;
+        const uint32_t baudrate, 
+        const CommStrategy rx_strategy = CommStrategy::Dma,
+        const CommStrategy tx_strategy = CommStrategy::Dma
+    );
 
-    void setTxMethod(const CommMethod _txMethod) override;
+    void set_tx_strategy(const CommStrategy tx_strategy);
 
-    void setRxMethod(const CommMethod _rxMethod) override;
+    void set_rx_strategy(const CommStrategy rx_strategy);
 
     Gpio & txio() override;
     Gpio & rxio() override;

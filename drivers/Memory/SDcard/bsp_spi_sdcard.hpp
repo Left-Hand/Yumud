@@ -313,7 +313,7 @@ SD_Error SD_ReadBlock(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize)
   *         - SD_RESPONSE_FAILURE: Sequence failed
   *         - SD_RESPONSE_NO_ERROR: Sequence succeed
   */
-SD_Error SD_readBurstBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
+SD_Error SD_read_burstBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
 	uint32_t i = 0, Offset = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;
@@ -448,7 +448,7 @@ SD_Error SD_WriteBlock(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize)
   *         - SD_RESPONSE_FAILURE: Sequence failed
   *         - SD_RESPONSE_NO_ERROR: Sequence succeed
   */
-SD_Error SD_writeBurstBlocks(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
+SD_Error SD_write_burstBlocks(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks)
 {
 	uint32_t i = 0, Offset = 0;
 	SD_Error rvalue = SD_RESPONSE_FAILURE;

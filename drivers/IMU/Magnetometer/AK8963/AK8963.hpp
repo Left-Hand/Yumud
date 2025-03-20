@@ -49,14 +49,14 @@ protected:
     std::optional<hal::I2cDrv> p_i2c_drv_;
     std::optional<hal::SpiDrv> p_spi_drv_;
 
-    // [[nodiscard]] virtual Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] Result<void, Error> writeReg(const uint8_t addr, const uint8_t data);
+    // [[nodiscard]] virtual Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
-    // [[nodiscard]] virtual Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] Result<void, Error> readReg(const uint8_t addr, uint8_t & data);
+    // [[nodiscard]] virtual Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
 
-    // [[nodiscard]] virtual Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, Error> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, Error> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, Error> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
 
     using RegAddress = uint8_t;
 
@@ -176,7 +176,7 @@ public:
     Result<void, Error> stable();
     Result<void, Error> disableI2c();
     Option<Vector3R> getMagnet();
-    Result<void, Error> setDataBits(const uint8_t bits);
+    Result<void, Error> set_data_width(const uint8_t bits);
     Result<void, Error> setMode(const Mode mode);
 };
 };

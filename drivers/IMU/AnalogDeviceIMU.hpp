@@ -9,17 +9,17 @@ private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 protected:
-    BusError writeReg(const uint8_t reg_address, const uint8_t reg_data){
+    BusError write_reg(const uint8_t reg_address, const uint8_t reg_data){
         if(i2c_drv_){
-            return i2c_drv_->writeReg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data);
+            return i2c_drv_->write_reg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data);
         } else if (spi_drv_) {
             TODO("spi is not support yet");
         }
     }
     
-    BusError readReg(const uint8_t reg_address, uint8_t & reg_data){
+    BusError read_reg(const uint8_t reg_address, uint8_t & reg_data){
         if(i2c_drv_){
-            return i2c_drv_->readReg(uint8_t(reg_address), reg_data);
+            return i2c_drv_->read_reg(uint8_t(reg_address), reg_data);
         }else if(spi_drv_){
             TODO("spi is not support yet");
         }

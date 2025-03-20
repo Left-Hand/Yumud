@@ -122,7 +122,7 @@ uint8_t get_default_id(){
     return node_id;
 };
 void stepper_tb(UartHw & logger_inst){
-    logger_inst.init(576000, CommMethod::Dma);
+    logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
     DEBUGGER.setEps(4);
 
@@ -192,7 +192,7 @@ void stepper_tb(UartHw & logger_inst){
     svpwm.enable();
 
     spi1.init(18_M);
-    spi1.bindCsPin(portA[15], 0);
+    spi1.bind_cs_pin(portA[15], 0);
 
     MT6816 encoder{{spi1, 0}};
     // MT6701 encoder{{spi1, 0}};
@@ -208,11 +208,11 @@ void stepper_tb(UartHw & logger_inst){
     // can.enableHwReTransmit();
     
     can[0].mask(
-        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemote::Any},
-        CanID16::IGNORE_LOW(7, CanRemote::Any),
+        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteSpec::Any},
+        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),
         
-        CanID16{0x000, CanRemote::Any}, 
-        CanID16::IGNORE_LOW(7, CanRemote::Any));
+        CanID16{0x000, CanRemoteSpec::Any}, 
+        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any));
 
     FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger_inst, stp};

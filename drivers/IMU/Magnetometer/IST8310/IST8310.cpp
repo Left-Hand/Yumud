@@ -14,8 +14,8 @@ using namespace ymd::drivers;
 #define IST8310_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap();
-#define READ_REG(reg) readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
 
 
 void IST8310::init(){
@@ -31,7 +31,7 @@ void IST8310::init(){
     update();
 }
 void IST8310::update(){
-    readBurst(axis_x_reg.address, &axis_x_reg, 3);
+    read_burst(axis_x_reg.address, &axis_x_reg, 3);
 }
 
 bool IST8310::verify(){

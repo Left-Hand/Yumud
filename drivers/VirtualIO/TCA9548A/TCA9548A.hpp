@@ -18,7 +18,7 @@ protected:
 
     void trail(const uint8_t ch);
 
-    void setBaudRate(const uint32_t baud){i2c_.setBaudRate(baud);}
+    void setBaudRate(const uint32_t baud){i2c_.set_baudrate(baud);}
 
     BusError write(const uint32_t data){
         return i2c_.write(data);
@@ -42,7 +42,7 @@ protected:
         BusError write(const uint32_t data) override final {return host_.write(data);}
         BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
 
-        void setBaudRate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
+        void set_baudrate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
     };
 
     friend class VirtualI2c;

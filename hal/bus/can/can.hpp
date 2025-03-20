@@ -49,8 +49,7 @@ class Can: public PackedBus<CanMsg>{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
-    using ErrCode = CanErrCode;
-    using Remote = CanRemote;
+    using ErrCode = CanError;
 
     using Callback = std::function<void(void)>;
 protected:
@@ -87,7 +86,7 @@ protected:
     void on_sce_interrupt();
 
 
-    void init(const BaudRate baudRate, const Mode mode);
+    void init(const BaudRate baudrate, const Mode mode);
     uint8_t transmit(const CanMsg & msg);
     CanMsg receive(const uint8_t fifo_num);
 
@@ -117,9 +116,9 @@ public:
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
-    void setBaudRate(const uint32_t baudRate);
+    void set_baudrate(const uint32_t baudrate);
 
-    void init(const uint baudRate, const Mode mode = Mode::Normal);
+    void init(const uint baudrate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg);
     const CanMsg && read();
@@ -128,28 +127,25 @@ public:
     size_t available();
 
     void clear(){while(this->available()){this->read();}}
-    void setSync(const bool en){sync_ = en;}
-    bool isTranmitting();
-    bool isReceiving();
-    void enableHwReTransmit(const bool en = true);
-    void cancelTransmit(const uint8_t mbox);
-    void cancelAllTransmit();
-    void enableFifoLock(const bool en = true);
-    void enableIndexPriority(const bool en = true);
-    uint8_t getTxErrCnt();
-    uint8_t getRxErrCnt();
-    ErrCode getErrCode();
+    void set_sync(const bool en){sync_ = en;}
+    bool is_tranmitting();
+    bool is_receiving();
+    void enable_hw_retransmit(const bool en = true);
+    void cancel_transmit(const uint8_t mbox);
+    void cancel_all_transmits();
+    void enable_fifo_lock(const bool en = true);
+    void enable_index_priority(const bool en = true);
+    uint8_t get_tx_errcnt();
+    uint8_t get_rx_errcnt();
+    CanError error();
 
-    bool isBusOff();
+    bool is_busoff();
 
     void bindTxOkCb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
     void bindTxFailCb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
     void bindRxCb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
-
-
-
 };
 
 #ifdef ENABLE_CAN1

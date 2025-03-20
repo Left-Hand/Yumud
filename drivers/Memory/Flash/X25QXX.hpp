@@ -70,7 +70,7 @@ protected:
     }
 
     BusError writeBytes(const void * data, const size_t len){
-        return spi_drv_.writeBurst<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
+        return spi_drv_.write_burst<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
     BusError readByte(uint8_t & data, const Continuous cont = DISC){
@@ -81,7 +81,7 @@ protected:
         // DEBUGGER.print("nr");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("nr!");
-        return spi_drv_.readBurst<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
+        return spi_drv_.read_burst<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.print("ar");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("ar!");

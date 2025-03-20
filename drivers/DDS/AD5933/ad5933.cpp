@@ -14,7 +14,9 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
-
+// void write_register(const uint8_t ){
+//     TODO();
+// }
 
 /**
  * AD5933 Register Map
@@ -114,7 +116,7 @@ using namespace ymd;
  * @return Success or failure
  */
 bool AD5933::getByte(uint8_t address, uint8_t *value) {
-    _i2c_drv.readReg(address, *value).unwrap();
+    _i2c_drv.write_reg(address, *value).unwrap();
     return true;
 }
 
@@ -126,7 +128,7 @@ bool AD5933::getByte(uint8_t address, uint8_t *value) {
  * @return Success or failure of transmission
  */
 bool AD5933::sendByte(uint8_t address, uint8_t value) {
-    _i2c_drv.writeReg(address, value).unwrap();
+    _i2c_drv.write_reg(address, value).unwrap();
     return true;
 }
 
@@ -404,7 +406,7 @@ bool AD5933::setPGAGain(uint8_t gain) {
  * @param reg The address of the register to read.
  * @return The value of the register. Returns 0xFF if can't read it.
  */
-uint8_t AD5933::readRegister(uint8_t reg) {
+uint8_t AD5933::write_register(uint8_t reg) {
     // Read status register and return it's value. If fail, return 0xFF.
     uint8_t val;
     if (getByte(reg, &val)) {
@@ -468,7 +470,7 @@ bool AD5933::setRange(uint8_t range)
  * @return The value of the status register. Returns 0xFF if can't read it.
  */
 uint8_t AD5933::readStatusRegister() {
-    return readRegister(STATUS_REG);
+    return write_register(STATUS_REG);
 }
 
 /**
@@ -477,7 +479,7 @@ uint8_t AD5933::readStatusRegister() {
  * @return The value of the control register. Returns 0xFFFF if can't read it.
  */
 int AD5933::readControlRegister() {
-    return ((readRegister(CTRL_REG1) << 8) | readRegister(CTRL_REG2)) & 0xFFFF;
+    return ((write_register(CTRL_REG1) << 8) | write_register(CTRL_REG2)) & 0xFFFF;
 }
 
 /**

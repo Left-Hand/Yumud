@@ -103,24 +103,24 @@ protected:
     ResetPeriodReg resetPeriodReg;
     ChipIDReg chipIDReg;
 
-    BusError writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data);
+    BusError read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data);
     }
 
-    BusError readBurst(const RegAddress addr, int16_t * datas, const size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(datas, len), LSB);
+    BusError read_burst(const RegAddress addr, int16_t * datas, const size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len), LSB);
     }
 
     real_t From16BitToGauss(const int16_t data);
@@ -158,7 +158,7 @@ protected:
     }
 
     bool busy(){
-        readReg(RegAddress::Status, statusReg);
+        read_reg(RegAddress::Status, statusReg);
         return statusReg.ready == false;
     }
 public:

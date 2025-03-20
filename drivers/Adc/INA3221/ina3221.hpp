@@ -163,24 +163,24 @@ protected:
         uint16_t:16;
     };
 
-    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data){
-        return make_result(i2c_drv.readReg((addr), data, MSB));
+    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, uint16_t & data){
+        return make_result(i2c_drv.read_reg((addr), data, MSB));
     }
 
-    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data){
-        return make_result(i2c_drv.writeReg((addr), data, MSB));
+    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const uint16_t data){
+        return make_result(i2c_drv.write_reg((addr), data, MSB));
     }
 
-    [[nodiscard]] DeviceResult readReg(const RegAddress addr, int16_t & data){
-        return make_result(i2c_drv.readReg((addr), data, MSB));
+    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, int16_t & data){
+        return make_result(i2c_drv.read_reg((addr), data, MSB));
     }
 
-    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const int16_t data){
-        return make_result(i2c_drv.writeReg((addr), data, MSB));
+    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const int16_t data){
+        return make_result(i2c_drv.write_reg((addr), data, MSB));
     }
 
-    [[nodiscard]] DeviceResult readBurst(const RegAddress addr, void * data_ptr, const size_t len){
-        return make_result(i2c_drv.readBurst(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB));
+    [[nodiscard]] DeviceResult read_burst(const RegAddress addr, void * data_ptr, const size_t len){
+        return make_result(i2c_drv.read_burst(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB));
     }
 
     struct INA3221Channel:public hal::AnalogInIntf{

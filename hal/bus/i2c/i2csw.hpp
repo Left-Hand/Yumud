@@ -10,7 +10,7 @@ private:
 
     uint16_t delays_ = 10;
 
-    __no_inline void delayDur();
+    __no_inline void delay_dur();
 
     BusError wait_ack();
     BusError lead(const uint8_t address) final override;
@@ -23,8 +23,8 @@ public:
     I2cSw(hal::Gpio & scl,hal::Gpio & sda):I2c(scl, sda){;}
     BusError write(const uint32_t data) final override;
     BusError read(uint32_t & data, const Ack ack) final override;
-    void init(const uint32_t baudRate);
-    void setBaudRate(const uint32_t baudRate);
+    void init(const uint32_t baudrate);
+    void set_baudrate(const uint32_t baudrate);
 };
 
 }

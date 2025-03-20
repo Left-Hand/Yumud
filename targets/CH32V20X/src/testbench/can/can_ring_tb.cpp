@@ -13,7 +13,7 @@ void can_ring_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommMethod::Blocking);
+    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
     can.init(1_MHz, Can::Mode::Internal);
 

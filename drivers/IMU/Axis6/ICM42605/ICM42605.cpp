@@ -35,19 +35,19 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 void ICM42605::init() {
-    writeReg(ICM42605_BANK_SEL, 0);
-    writeReg(ICM42605_BANK_SEL, 1);
-    writeReg(ICM42605_INTF_CONFIG4, 0x02);
-    writeReg(ICM42605_BANK_SEL, 0);
-    writeReg(ICM42605_GYR_CONFIG0, 0b00000110);
-    writeReg(ICM42605_ACC_CONFIG0, 0b00000011);
-    writeReg(ICM42605_PWR_MGMT0, 0b00011111);
+    write_reg(ICM42605_BANK_SEL, 0);
+    write_reg(ICM42605_BANK_SEL, 1);
+    write_reg(ICM42605_INTF_CONFIG4, 0x02);
+    write_reg(ICM42605_BANK_SEL, 0);
+    write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
+    write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
+    write_reg(ICM42605_PWR_MGMT0, 0b00011111);
 }
 
 bool ICM42605::verify(){
-    writeReg(ICM42605_BANK_SEL, 0);
+    write_reg(ICM42605_BANK_SEL, 0);
     uint8_t id = 0;
-    readReg(ICM42605_WHO_AM_I, id);
+    read_reg(ICM42605_WHO_AM_I, id);
     return (id == 0);//FIXME
 }
 
@@ -57,7 +57,7 @@ bool ICM42605::verify(){
 
 //     //加速度计
 //     if (MODE & ICM_MODE_ACC) {
-//         if (readRegs(ICM42605_ACC_DATA_X1, data, 6) == 0)
+//         if (read_regs(ICM42605_ACC_DATA_X1, data, 6) == 0)
 //             return 1;
 //         out = (int16_t) (data[0] << 8 | data[1]);
 //         icm->ax = (float) out * 16 / 32768.0f;
@@ -69,7 +69,7 @@ bool ICM42605::verify(){
 
 //     //角速度计
 //     if (MODE & ICM_MODE_GYR) {
-//         if (readRegs(ICM42605_GYR_DATA_X1, data, 6) == 0)
+//         if (read_regs(ICM42605_GYR_DATA_X1, data, 6) == 0)
 //             return 2;
 //         out = (int16_t) (data[0] << 8 | data[1]);
 //         icm->gx = (float) out * 2000.0f / 32768.0f;
@@ -81,7 +81,7 @@ bool ICM42605::verify(){
 
 //     //温度计
 //     if (MODE & ICM_MODE_TEMP) {
-//         if (readRegs(ICM42605_TEMP_DATA0, data, 2) == 0)
+//         if (read_regs(ICM42605_TEMP_DATA0, data, 2) == 0)
 //             return 3;
 //         out = (int16_t) (data[0] << 8 | data[1]);
 //         icm->temp = 25.0f + (float) out * 1.0f / 132.48f;

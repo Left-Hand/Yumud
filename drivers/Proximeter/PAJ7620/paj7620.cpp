@@ -18,8 +18,8 @@ using namespace ymd::drivers;
 #define PAJ7620_ASSERT(cond, ...) ASSERT(cond, ##__VA_ARGS__)
 #endif
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg).unwrap();
-#define READ_REG(reg) this->readReg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) this->write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) this->read_reg(reg.address, reg).unwrap();
 
 
 
@@ -94,15 +94,15 @@ scexpr uint8_t GES_COUNT_CLOCKWISE_FLAG		 = (1<<7);
 scexpr uint8_t GES_WAVE_FLAG				 = (1<<0);
 
 
-void PAJ7620::readReg(uint8_t addr, uint8_t & data){
-	const auto err = i2c_drv_.readReg<uint8_t>(addr, data);
+void PAJ7620::read_reg(uint8_t addr, uint8_t & data){
+	const auto err = i2c_drv_.read_reg<uint8_t>(addr, data);
 	if(err.wrong()){
 		PAJ7620_DEBUG(err);
 	}
 };
 
-void PAJ7620::writeReg(uint8_t cmd, uint8_t data){
-	const auto err = i2c_drv_.writeReg<uint8_t>(cmd, data);
+void PAJ7620::write_reg(uint8_t cmd, uint8_t data){
+	const auto err = i2c_drv_.write_reg<uint8_t>(cmd, data);
 	// PAJ7620_DEBUG(cmd, data);
 	if(err.wrong()){
 		PAJ7620_DEBUG(err);
@@ -112,10 +112,10 @@ void PAJ7620::writeReg(uint8_t cmd, uint8_t data){
 void PAJ7620::selectBank(uint8_t bank) {
 	switch(bank){
 		case 9:
-			writeReg(PAJ7620_REGITER_BANK_SEL, 0);
+			write_reg(PAJ7620_REGITER_BANK_SEL, 0);
 			break;
 		case 1:
-			writeReg(PAJ7620_REGITER_BANK_SEL, 1);
+			write_reg(PAJ7620_REGITER_BANK_SEL, 1);
 			break;
 		default:
 			break;
@@ -139,7 +139,7 @@ void PAJ7620::unlock_i2c(){
 }
 
 void PAJ7620::update(){
-	readReg(0x43, flags);
+	read_reg(0x43, flags);
 	unlock_i2c();
 }
 
@@ -158,8 +158,8 @@ bool PAJ7620::verify(){
 	// // selectBank(0);
 
 	uint8_t data0 = 0, data1 = 0;
-	readReg(0, data0);
-	readReg(1, data1);
+	read_reg(0, data0);
+	read_reg(1, data1);
 
 	PAJ7620_DEBUG(data0, data1);
 	return (data0 == 0x20) and (data1 == 0x76);
@@ -396,15 +396,15 @@ void PAJ7620::init(){
 
 	// uint8_t temp;
 
-	// readReg(0xef, temp);
+	// read_reg(0xef, temp);
 	selectBank(0);
 	for(const auto & [cmd, data] : initRegisterArray){
-		writeReg(cmd, data);
+		write_reg(cmd, data);
 	}
 
 	selectBank(0);
-	// readReg(0xef, temp);
-	// readReg(0x32, temp);
+	// read_reg(0xef, temp);
+	// read_reg(0x32, temp);
 	// PAJ7620_ASSERT(temp == 0x29, "init falied", temp);
 
 	/**
@@ -429,7 +429,7 @@ void PAJ7620::init(){
 	 */
 	// selectBank(1);
 	//paj7620WriteReg(0x65, 0xB7); // far mode 120 fps
-	// writeReg(0x65, 0x12);  // near mode 240 fps
+	// write_reg(0x65, 0x12);  // near mode 240 fps
 
 	// selectBank(0);
 };

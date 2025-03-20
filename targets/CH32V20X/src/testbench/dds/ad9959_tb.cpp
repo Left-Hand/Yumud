@@ -13,9 +13,9 @@ void ad9959_main(){
 
     SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
     auto & spi = spisw;
-    spi.init(100000);//maxium buad
-    spi.setBitOrder(LSB);
-    spi.bindCsPin(cs_gpio, 0);
+    spi.init(100000);//maxium baud
+    spi.set_bitorder(LSB);
+    spi.bind_cs_pin(cs_gpio, 0);
 
     // timer1.init(1);
     // SpiDrv ad9959_drv{spi, 0};

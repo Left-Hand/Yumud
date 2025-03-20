@@ -29,33 +29,33 @@ void HMC5883L::init(){
 
 void HMC5883L::enableHighSpeed(const bool en){
     modeReg.hs = true;
-    writeReg(RegAddress::Mode, modeReg);
+    write_reg(RegAddress::Mode, modeReg);
 }
 
 void HMC5883L::setMeasurementMode(const MeasurementMode mode){
     configAReg.measureMode = (uint8_t)mode;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
 }
 
 void HMC5883L::setDataRate(const DataRate rate){
     configAReg.dataRate = (uint8_t)rate;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
 }
 
 void HMC5883L::setSampleNumber(const SampleNumber number){
     configAReg.sampleNumber = (uint8_t)number;
-    writeReg(RegAddress::ConfigA, configAReg);
+    write_reg(RegAddress::ConfigA, configAReg);
 }
 
 void HMC5883L::setGain(const Gain gain){
     configBReg.gain = (uint8_t)gain;
-    writeReg(RegAddress::ConfigB, configBReg);
+    write_reg(RegAddress::ConfigB, configBReg);
     setLsb(gain);
 }
 
 void HMC5883L::setMode(const Mode mode){
     modeReg.mode = (uint8_t)mode;
-    writeReg(RegAddress::Mode, modeReg);
+    write_reg(RegAddress::Mode, modeReg);
 }
 
 Option<Vector3R> HMC5883L::getMagnet(){
@@ -68,25 +68,25 @@ Option<Vector3R> HMC5883L::getMagnet(){
 
 bool HMC5883L::verify(){
     uint8_t id[3] = {0};
-    readReg(RegAddress::IDA, id[0]);
-    readReg(RegAddress::IDB, id[1]);
-    readReg(RegAddress::IDC, id[2]);
+    read_reg(RegAddress::IDA, id[0]);
+    read_reg(RegAddress::IDB, id[1]);
+    read_reg(RegAddress::IDC, id[2]);
     bool passed = (id[0] == 'H' && id[1] == '4' && id[2] == '3');
     HMC5883L_ASSERT(passed, "HMC5883L not found!", id);
     return passed;
 }
 
 void HMC5883L::update(){
-    readBurst(RegAddress::MagX, &magXReg, 3);
+    read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
 
 bool HMC5883L::busy(){
-    readReg(RegAddress::Status, statusReg);
+    read_reg(RegAddress::Status, statusReg);
     return statusReg.ready == false;
 }
 
 void HMC5883L::enableContMode(const bool en){
     modeReg.mode = (uint8_t)(en ? Mode::Continuous : Mode::Single);
-    writeReg(RegAddress::Mode, modeReg);
+    write_reg(RegAddress::Mode, modeReg);
 }

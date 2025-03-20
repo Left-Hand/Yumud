@@ -298,7 +298,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    uart2.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    uart2.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(2);
     DEBUGGER.setRadix(10);
@@ -313,7 +313,7 @@ void eeprom_main(){
 }
 
 void flash_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUGGER.retarget(&DEBUGGER_INST);

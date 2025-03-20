@@ -25,8 +25,8 @@ protected:
     Gpio & getSclkGpio();
     Gpio & getHwCsGpio();
 
-    void enableRcc(const bool en = true);
-    uint16_t calculatePrescaler(const uint32_t baudRate);
+    void enable_rcc(const bool en = true);
+    uint16_t calculate_prescaler(const uint32_t baudrate);
     void installGpios();
 
 public:
@@ -34,20 +34,20 @@ public:
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
 
     void init(
-        const uint32_t baudRate, 
-        const CommMethod tx_method = CommMethod::Blocking, 
-        const CommMethod rx_method = CommMethod::Blocking) override;
+        const uint32_t baudrate, 
+        const CommStrategy tx_strategy = CommStrategy::Blocking, 
+        const CommStrategy rx_strategy = CommStrategy::Blocking) override;
 
-    void enableHwCs(const bool en = true);
+    void enable_hw_cs(const bool en = true);
 
     void enableRxIt(const bool en = true);
 
     BusError write(const uint32_t data) override;
     BusError read(uint32_t & data) override;
     BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override;
-    void setDataBits(const uint8_t len) override;
-    void setBaudRate(const uint32_t baudRate) override;
-    void setBitOrder(const Endian endian) override;
+    void set_data_width(const uint8_t len) override;
+    void set_baudrate(const uint32_t baudrate) override;
+    void set_bitorder(const Endian endian) override;
 
     #ifdef ENABLE_SPI1
     friend void ::SPI1_IRQHandler(void);

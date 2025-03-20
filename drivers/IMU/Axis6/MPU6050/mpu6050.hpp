@@ -116,20 +116,20 @@ protected:
     bool data_valid = false;
 
 
-    // [[nodiscard]] virtual Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] Result<void, BusError> writeReg(const uint8_t addr, const uint8_t data);
+    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> writeReg(const T & reg){return writeReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] Result<void, BusError> readReg(const uint8_t addr, uint8_t & data);
+    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> readReg(T & reg){return readReg(reg.address, reg);}
+    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, BusError> readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculateAccScale(const AccRange range){
         constexpr double g = 9.806;

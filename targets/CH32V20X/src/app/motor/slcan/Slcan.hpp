@@ -122,8 +122,8 @@ private:
 
     Error handleSetBaud(const StringView str){
         if(!str.size()) return Error::NoArg;
-        const char buad = str[0];
-        switch(buad){
+        const char baud = str[0];
+        switch(baud){
             default:return Error::InvalidBaud;
             case '0': devSetBaud(10_KHz);
             case '1': devSetBaud(20_KHz);
@@ -249,8 +249,8 @@ private:
 
     Error handleSetBaud(const StringView str){
         if(!str.size()) return Error::NoArg;
-        const char buad = str[0];
-        switch(buad){
+        const char baud = str[0];
+        switch(baud){
             default:return Error::InvalidBaud;
             case '0': devSetBaud(10_KHz);
             case '1': devSetBaud(20_KHz);

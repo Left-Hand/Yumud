@@ -42,9 +42,9 @@ protected:
     real_t y_cm = {};
 
     bool assertReg(const uint8_t command, const uint8_t data);
-    BusError writeReg(const uint8_t command, const uint8_t data);
-    BusError readReg(const uint8_t command, uint8_t & data);
-    BusError readBurst(const uint8_t commnad, uint8_t * data, const size_t len);
+    BusError write_reg(const uint8_t command, const uint8_t data);
+    BusError read_reg(const uint8_t command, uint8_t & data);
+    BusError read_burst(const uint8_t commnad, uint8_t * data, const size_t len);
 
     void readDataSlow();
     void readDataBurst();

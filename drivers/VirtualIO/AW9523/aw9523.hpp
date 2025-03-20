@@ -44,29 +44,29 @@ protected:
     CtlReg ctl;
     uint16_t ledMode;
 
-    BusError writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data);
     };
 
-    BusError writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data);
+    BusError read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data);
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
     void writePort(const uint16_t data) override{
         buf = data;
-        writeReg(RegAddress::out, buf);
+        write_reg(RegAddress::out, buf);
     }
 
     uint16_t readPort() override{
-        readReg(RegAddress::in, buf);
+        read_reg(RegAddress::in, buf);
         return buf;
     }
 
@@ -100,7 +100,7 @@ public:
 
     void init();
     void reset(){
-        writeReg(RegAddress::swRst, (uint8_t)0x00);
+        write_reg(RegAddress::swRst, (uint8_t)0x00);
     }
     
 

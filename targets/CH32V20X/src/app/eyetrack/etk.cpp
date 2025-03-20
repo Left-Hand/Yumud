@@ -57,8 +57,8 @@ void etk_main(){
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    spi.bindCsPin(lcd_cs, 0);
-    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    spi.bind_cs_pin(lcd_cs, 0);
+    spi.init(144_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
 

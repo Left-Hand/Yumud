@@ -43,9 +43,9 @@ protected:
     std::optional<hal::SpiDrv> spi_drv_;
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeReg(const uint8_t addr, const uint8_t data){
+    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->writeReg(addr, data));
+            return Result<void, Error>(i2c_drv_->write_reg(addr, data));
         }else if(spi_drv_){
             spi_drv_->writeSingle(uint8_t(addr), CONT).unwrap();
             return Result<void, Error>(spi_drv_->writeSingle(data));
@@ -55,9 +55,9 @@ protected:
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> readReg(const uint8_t addr, uint8_t & data){
+    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->readReg(uint8_t(addr), data));
+            return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
             spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
             return Result<void, Error>(spi_drv_->readSingle(data));
@@ -67,12 +67,12 @@ protected:
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> readBurst(const uint8_t addr, int16_t * datas, const size_t len){
+    Result<void, Error> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->readBurst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
+            return Result<void, Error>(i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
         }else if(spi_drv_){
             spi_drv_->writeSingle<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
-            return Result<void, Error>(spi_drv_->readBurst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)));
+            return Result<void, Error>(spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)));
         }
 
         PANIC();
@@ -80,20 +80,20 @@ protected:
 
     
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeCommand(const uint8_t cmd){
-        return writeReg(0x7e, cmd);
+    Result<void, Error> write_command(const uint8_t cmd){
+        return write_reg(0x7e, cmd);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> writeRegs(Ts const & ... reg) {
-        return (writeReg(reg.address, reg.as_val()) | ...);
+    Result<void, Error> write_regs(Ts const & ... reg) {
+        return (write_reg(reg.address, reg.as_val()) | ...);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> readRegs(Ts & ... reg) {
-        return (readReg(reg.address, reg.as_ref()) | ...);
+    Result<void, Error> read_regs(Ts & ... reg) {
+        return (read_reg(reg.address, reg.as_ref()) | ...);
     }
 public:
 

@@ -20,7 +20,7 @@ public:
     template<typename T>
     void forceWrite(const T data) {
         constexpr size_t size = sizeof(T);
-        if (size != 1) this->setDataBits(size * 8);
+        if (size != 1) this->set_data_width(size * 8);
 
         if constexpr (size == 1) {
             bus_.write(uint8_t(data));
@@ -30,7 +30,7 @@ public:
             bus_.write(uint32_t(data));
         }
 
-        if (size != 1) this->setDataBits(8);
+        if (size != 1) this->set_data_width(8);
     }
     
     void setEndian(const Endian _endian){m_endian = _endian;}

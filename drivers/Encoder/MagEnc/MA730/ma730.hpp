@@ -78,9 +78,9 @@ protected:
     DirectionReg directionReg = {};
     MagnitudeReg magnitudeReg = {};
 
-    BusError writeReg(const RegAddress reg_addr, uint8_t data);
+    BusError write_reg(const RegAddress reg_addr, uint8_t data);
 
-    BusError readReg(const RegAddress reg_addr, uint8_t & reg);
+    BusError read_reg(const RegAddress reg_addr, uint8_t & reg);
 
     BusError directRead(uint16_t & data);
 

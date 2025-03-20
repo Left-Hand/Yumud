@@ -9,10 +9,10 @@
 
 using namespace ymd::drivers;
 void ma730_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     spi1.init(9000000);
-    spi1.bindCsPin(portA[15], 2);
+    spi1.bind_cs_pin(portA[15], 2);
 
 
     MA730 ma730{spi1, 2};

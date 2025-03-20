@@ -86,25 +86,25 @@ protected:
     int16_t magZReg = {};
     StatusReg statusReg = {};
 
-    BusError writeReg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data, MSB);
+    BusError write_reg(const RegAddress addr, const uint16_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data, MSB);
+    BusError read_reg(const RegAddress addr, uint16_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
     }
 
-    BusError writeReg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.writeReg(uint8_t(addr), data);
+    BusError write_reg(const RegAddress addr, const uint8_t data){
+        return i2c_drv_.write_reg(uint8_t(addr), data);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.readReg(uint8_t(addr), data);
+    BusError read_reg(const RegAddress addr, uint8_t & data){
+        return i2c_drv_.read_reg(uint8_t(addr), data);
     }
 
 
-    BusError readBurst(const RegAddress addr, int16_t * pdata, size_t len){
-        return i2c_drv_.readBurst(uint8_t(addr), std::span(pdata, len), MSB);
+    BusError read_burst(const RegAddress addr, int16_t * pdata, size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(pdata, len), MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){

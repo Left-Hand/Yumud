@@ -13,37 +13,37 @@ using Error = AK8963::Error;
 #define AK8963_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define AK8963_PANIC(...) PANIC{__VA_ARGS__}
 #define AK8963_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg, ...) readReg(reg.address, reg).loc().expect(__VA_ARGS__);
-#define WRITE_REG(reg, ...) writeReg(reg.address, reg).loc().expect(__VA_ARGS__);
+#define READ_REG(reg, ...) read_reg(reg.address, reg).loc().expect(__VA_ARGS__);
+#define WRITE_REG(reg, ...) write_reg(reg.address, reg).loc().expect(__VA_ARGS__);
 #else
 #define AK8963_DEBUG(...)
 #define AK8963_PANIC(...)  PANIC_NSRC()
 #define AK8963_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
 #ifdef AK8963_NOTHROW_EN
-#define READ_REG(reg, ...) readReg(reg.address, reg).unwrap();
-#define WRITE_REG(reg, ...) writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg, ...) read_reg(reg.address, reg).unwrap();
+#define WRITE_REG(reg, ...) write_reg(reg.address, reg).unwrap();
 #else
-#define READ_REG(reg, ...) if(const auto res = readReg(reg.address, reg); res.is_err()) return res;
-#define WRITE_REG(reg, ...) if(const auto res = writeReg(reg.address, reg); res.is_err()) return res;
+#define READ_REG(reg, ...) if(const auto res = read_reg(reg.address, reg); res.is_err()) return res;
+#define WRITE_REG(reg, ...) if(const auto res = write_reg(reg.address, reg); res.is_err()) return res;
 #endif
 
 #endif
 
-Result<void, Error> AK8963::writeReg(const uint8_t addr, const uint8_t data){
-    auto err = p_i2c_drv_->writeReg(uint8_t(addr), data);
+Result<void, Error> AK8963::write_reg(const uint8_t addr, const uint8_t data){
+    auto err = p_i2c_drv_->write_reg(uint8_t(addr), data);
     AK8963_ASSERT(err.ok(), "AK8963 write reg failed", err);
     return err;
 }
 
-Result<void, Error> AK8963::readReg(const uint8_t addr, uint8_t & data){
-    auto err = p_i2c_drv_->readReg(uint8_t(addr), data);
+Result<void, Error> AK8963::read_reg(const uint8_t addr, uint8_t & data){
+    auto err = p_i2c_drv_->read_reg(uint8_t(addr), data);
     AK8963_ASSERT(err.ok(), "AK8963 read reg failed", err);
     return err;
 }
 
-Result<void, Error> AK8963::readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), LSB);
+Result<void, Error> AK8963::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
+    auto err = p_i2c_drv_->read_burst((uint8_t)reg_addr, std::span(datas, len), LSB);
     AK8963_ASSERT(err.ok(), "AK8963 read reg failed");
     return err;
 }
@@ -71,7 +71,7 @@ Result<void, Error> AK8963::init(){
     delay(10);
 
     setMode(Mode::ContMode2).unwrap();
-    setDataBits(16);
+    set_data_width(16);
 
     AK8963_DEBUG("AK8963 init successfully!!");
     return Ok();
@@ -86,7 +86,7 @@ Result<void, Error> AK8963::verify(){
         return Err{Error::DEVICE_NOT_FOUNDED};
     }
 
-    readReg(wia_reg.address, wia_reg.data).unwrap();
+    read_reg(wia_reg.address, wia_reg.data).unwrap();
 
     if (wia_reg.data != wia_reg.correct){
         if(wia_reg.data == 63){
@@ -99,7 +99,7 @@ Result<void, Error> AK8963::verify(){
 }
 Result<Vector3_t<uint8_t>, Error> AK8963::getCoeff(){
     // Vector3_t coeff = {};
-    writeReg(0x0a, 0x0f).unwrap();
+    write_reg(0x0a, 0x0f).unwrap();
     READ_REG(asax_reg);
     READ_REG(asay_reg);
     READ_REG(asaz_reg);
@@ -108,7 +108,7 @@ Result<Vector3_t<uint8_t>, Error> AK8963::getCoeff(){
 
 Result<void, Error> AK8963::reset(){
     cntl2_reg.srst = 1;
-    const auto res = writeReg(cntl2_reg.address, cntl2_reg);
+    const auto res = write_reg(cntl2_reg.address, cntl2_reg);
     cntl2_reg.srst = 0;
     delay(1);
     return res;
@@ -130,11 +130,11 @@ void AK8963::update(){
     // ak8963c-datasheet 8.3.5
     // when any of measurement data is read, be sure to read 
     // ST2 register at the end. 
-    // auto lam2 = [&](){return readReg(st2_reg.address, st2_reg);};
+    // auto lam2 = [&](){return read_reg(st2_reg.address, st2_reg);};
     // using Fn = std::decay_t<decltype(lam2)>;
     // using Ret = function_traits<Fn>::return_type;
     // using t = std::invoke_result_t<decltype(lam2)>>;
-    data_valid_ = this->readBurst(mag_x_reg.address, &mag_x_reg, 3).is_ok();
+    data_valid_ = this->read_burst(mag_x_reg.address, &mag_x_reg, 3).is_ok();
     READ_REG(st2_reg);
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
     data_valid_ &= !st2_reg.hofl;
@@ -150,7 +150,7 @@ Option<Vector3R> AK8963::getMagnet(){
     );
 }
 
-Result<void, Error> AK8963::setDataBits(const uint8_t bits){
+Result<void, Error> AK8963::set_data_width(const uint8_t bits){
     auto & reg = st2_reg;
     data_is_16_bits_ = [](const uint8_t bits_){
         switch(bits_){
@@ -161,10 +161,10 @@ Result<void, Error> AK8963::setDataBits(const uint8_t bits){
     }(bits);
 
     reg.bitm = data_is_16_bits_;
-    return writeReg(reg.address, reg);
+    return write_reg(reg.address, reg);
 }
 
 Result<void, Error> AK8963::setMode(const AK8963::Mode mode){
     cntl1_reg.mode = uint8_t(mode);
-    return writeReg(cntl1_reg.address, cntl1_reg);
+    return write_reg(cntl1_reg.address, cntl1_reg);
 }

@@ -8,8 +8,8 @@ class PAJ7620{
 protected:
     hal::I2cDrv i2c_drv_;
 
-    void writeReg(uint8_t addr, uint8_t cmd); /* Write to addressed register */
-    void readReg(uint8_t addr, uint8_t & data); /* Read data from addressed register */
+    void write_reg(uint8_t addr, uint8_t cmd); /* Write to addressed register */
+    void read_reg(uint8_t addr, uint8_t & data); /* Read data from addressed register */
     void selectBank(uint8_t bank);
 
     struct Flags{

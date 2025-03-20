@@ -72,57 +72,15 @@ protected:
     }DEF_R16(calibration_reg)
     
 
-    [[nodiscard]] Result<void, Error> writeReg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint16_t data);
 
-    [[nodiscard]] Result<void, Error> readReg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint16_t & data);
     
-    [[nodiscard]] Result<void, Error> readReg(const RegAddress addr, int16_t & data);
+    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] Result<void, Error> readBurst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] Result<void, Error> read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
-    // class CurrentChannel;
-    // class VoltageChannel;
-
-    // friend class CurrentChannel;
-    // friend class VoltageChannel;
-
-    // class INA219Channel:public hal::AnalogInIntf{
-    // public:
-    //     enum class Index:uint8_t{
-    //         SHUNT_VOLT,
-    //         BUS_VOLT,
-    //         CURRENT,
-    //         POWER
-    //     };
-
-    // protected:
-    //     INA219 & parent_;
-    //     Index ch_;
-    // public:
-    //     INA219Channel(INA219 & _parent, const Index _ch):parent_(_parent), ch_(_ch){}
-
-    //     INA219Channel(const INA219Channel & other) = delete;
-    //     INA219Channel(INA219Channel && other) = delete;
-    //     operator real_t() override{
-    //         switch(ch_){
-    //             case Index::SHUNT_VOLT:
-    //                 return parent_.getShuntVoltage();
-    //             case Index::BUS_VOLT:
-    //                 return parent_.getVoltage();
-    //             case Index::CURRENT:
-    //                 return parent_.getCurrent();
-    //             case Index::POWER:
-    //                 return parent_.getPower();
-    //             default:
-    //                 return real_t(0);
-    //         }
-    //     }
-    // };
-
-
-    // std::array<INA219Channel, 4> channels;
 public:
-    // using Index = INA219Channel::Index;
     
     scexpr uint8_t default_i2c_addr = 0x80;
 

@@ -30,15 +30,15 @@ protected:
 
     virtual void setFlushPos(const Vector2i & pos){
         auto [x, y] = pos + getOffset();
-        interface.writeCommand(0xb0 | size_t(y / 8));
-        interface.writeCommand(((x & 0xf0 )>>4) |0x10);
-        interface.writeCommand((x & 0x0f));
+        interface.write_command(0xb0 | size_t(y / 8));
+        interface.write_command(((x & 0xf0 )>>4) |0x10);
+        interface.write_command((x & 0x0f));
     }
 
 
     void setOffset(){
-        interface.writeCommand(0xD3); 
-        interface.writeCommand(getOffset().y);
+        interface.write_command(0xD3); 
+        interface.write_command(getOffset().y);
     }
 public:
     scexpr uint8_t default_id = 0x78;
@@ -49,24 +49,24 @@ public:
 
     void enable(const bool en = true){
         if(en){
-            interface.writeCommand(0x8D);
-            interface.writeCommand(0x14);
-            interface.writeCommand(0xAF);
+            interface.write_command(0x8D);
+            interface.write_command(0x14);
+            interface.write_command(0xAF);
         }else{
-            interface.writeCommand(0x8D);
-            interface.writeCommand(0x10);
-            interface.writeCommand(0xAE);
+            interface.write_command(0x8D);
+            interface.write_command(0x10);
+            interface.write_command(0xAE);
         }
     }
 
     void turnDisplay(const bool i){
-        interface.writeCommand(0xC8 - 8*uint8_t(i));//正常显示
-        interface.writeCommand(0xA1 - uint8_t(i));
+        interface.write_command(0xC8 - 8*uint8_t(i));//正常显示
+        interface.write_command(0xA1 - uint8_t(i));
     }
 
-    void enableFlipY(const bool flip = true){interface.writeCommand(0xA0 | flip);}
-    void enableFlipX(const bool flip = true){interface.writeCommand(0xC0 | (flip << 3));}
-    void enableInversion(const bool inv = true){interface.writeCommand(0xA7 - inv);}  
+    void enableFlipY(const bool flip = true){interface.write_command(0xA0 | flip);}
+    void enableFlipX(const bool flip = true){interface.write_command(0xC0 | (flip << 3));}
+    void enableInversion(const bool inv = true){interface.write_command(0xA7 - inv);}  
 
     virtual VerticalBinaryImage & fetchFrame() = 0;
 
@@ -122,9 +122,9 @@ protected:
     void preinitByCmds() override;
     void setFlushPos(const Vector2i & pos) override{
         auto [x, y] = pos + getOffset();
-        interface.writeCommand(0xb0 | (y / 8));
-        interface.writeCommand(((x & 0xf0 )>>4) |0x10);
-        interface.writeCommand((x & 0x0f));
+        interface.write_command(0xb0 | (y / 8));
+        interface.write_command(((x & 0xf0 )>>4) |0x10);
+        interface.write_command((x & 0x0f));
     }
 
     Vector2i getOffset() const override{

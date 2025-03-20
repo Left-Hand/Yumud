@@ -7,22 +7,22 @@
 #include <memory>
 #include <functional>
 
-namespace ymd::hal::CanUtils{
-    enum class BaudRate:uint8_t{
+namespace ymd::hal{
+    enum class CanBaudrate:uint8_t{
         _125K,
         _250K,
         _500K,
         _1M
     };
 
-    enum class Mode:uint8_t{
+    enum class CanMode:uint8_t{
         Normal = CAN_Mode_Normal,
         Silent = CAN_Mode_Silent,
         Internal = CAN_Mode_Silent_LoopBack,
         Loopback = CAN_Mode_LoopBack
     };
 
-    enum class ErrCode:uint8_t{
+    enum class CanError:uint8_t{
         OK = CAN_ErrorCode_NoErr,
         STUFF_ERR = CAN_ErrorCode_StuffErr,
         FORM_ERR = CAN_ErrorCode_FormErr,
@@ -33,7 +33,7 @@ namespace ymd::hal::CanUtils{
         SOFTWARE_SET_ERR = CAN_ErrorCode_SoftwareSetErr
     };
 
-    enum class RemoteSpec:uint8_t{
+    enum class CanRemoteSpec:uint8_t{
         Data = 0,
         Any = 0,
         Remote = 1,
@@ -41,12 +41,4 @@ namespace ymd::hal::CanUtils{
     };  
 
 };
-
-namespace ymd::hal{
-    using CanBaudrate = hal::CanUtils::BaudRate;
-    using CanMode = hal::CanUtils::Mode;
-    using CanErrCode = hal::CanUtils::ErrCode;
-    using CanRemote = hal::CanUtils::RemoteSpec;
-}
-
 

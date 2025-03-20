@@ -68,7 +68,7 @@ Future<void> coro_tb() {
 }
 
 void coro_main(){
-    UART.init(576000, CommMethod::Dma);
+    UART.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&UART);
     DEBUGGER.setEps(4);
     DEBUGGER << "Coroutine test bench started.\n";

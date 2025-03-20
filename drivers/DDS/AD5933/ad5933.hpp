@@ -49,7 +49,8 @@ public:
     bool setRange(uint8_t);
 
     // Read registers
-    uint8_t readRegister(uint8_t);
+    uint8_t read_register(uint8_t);
+    uint8_t write_register(uint8_t);
     uint8_t readStatusRegister(void);
     int readControlRegister(void);
 

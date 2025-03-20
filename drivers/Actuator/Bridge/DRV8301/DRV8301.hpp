@@ -138,8 +138,8 @@ protected:
     Ctrl1Reg ctrl1_reg = {};
     Ctrl2Reg ctrl2_reg = {};
 
-    BusError writeReg(const RegAddress addr, const uint16_t reg);
-    BusError readReg(const RegAddress addr, uint16_t & reg);
+    BusError write_reg(const RegAddress addr, const uint16_t reg);
+    BusError read_reg(const RegAddress addr, uint16_t & reg);
 
 public:
     DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}

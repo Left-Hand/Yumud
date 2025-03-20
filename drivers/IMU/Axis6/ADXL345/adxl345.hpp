@@ -297,9 +297,9 @@ protected:
 
 
 
-    void writeReg(const RegAddress reg_address, const uint8_t reg_data);
+    void write_reg(const RegAddress reg_address, const uint8_t reg_data);
 
-    void readReg(const RegAddress reg_address, uint8_t & reg_data);
+    void read_reg(const RegAddress reg_address, uint8_t & reg_data);
 public:
     scexpr uint8_t defualt_i2c_addr = 0x1D << 1;
 
@@ -312,7 +312,7 @@ public:
 
     ADXL345(hal::Spi & _spi, const uint8_t index): AnalogDeviceIMU(hal::SpiDrv(_spi, index)){;}
     uint8_t getDeviceID(){
-        readReg(RegAddress::DeviceID, deviceIDReg);
+        read_reg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;
     }
 

@@ -382,8 +382,8 @@ void bldc_main(){
     pwm_w.init();
 
     spi1.init(18_MHz);
-    spi1.bindCsPin(portA[15], 2);
-    spi1.bindCsPin(portA[0], 0);
+    spi1.bind_cs_pin(portA[15], 2);
+    spi1.bind_cs_pin(portA[0], 0);
 
 
     can1.init(1_MHz);

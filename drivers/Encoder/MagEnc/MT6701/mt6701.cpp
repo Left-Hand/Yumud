@@ -19,29 +19,29 @@ using namespace ymd;
     PANIC()\
 
 
-BusError MT6701::writeReg(const RegAddress addr, const uint16_t data){
-    if(i2c_drv) return i2c_drv->writeReg(uint8_t(addr), data, MSB);
+BusError MT6701::write_reg(const RegAddress addr, const uint16_t data){
+    if(i2c_drv) return i2c_drv->write_reg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::readReg(const RegAddress addr, uint16_t & data){
-    if(i2c_drv) return i2c_drv->readReg(uint8_t(addr), data, MSB);
+BusError MT6701::read_reg(const RegAddress addr, uint16_t & data){
+    if(i2c_drv) return i2c_drv->read_reg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::writeReg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv) return i2c_drv->writeReg(uint8_t(addr), data);
+BusError MT6701::write_reg(const RegAddress addr, const uint8_t data){
+    if(i2c_drv) return i2c_drv->write_reg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv) return i2c_drv->readReg(uint8_t(addr), data);
+BusError MT6701::read_reg(const RegAddress addr, uint8_t & data){
+    if(i2c_drv) return i2c_drv->read_reg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
@@ -56,7 +56,7 @@ void MT6701::init(){
 
 void MT6701::update(){
     if(i2c_drv){
-        readReg(RegAddress::RawAngle, rawAngleData);
+        read_reg(RegAddress::RawAngle, rawAngleData);
         lap_position = u16_to_uni(rawAngleData);
     }else if(spi_drv){
 

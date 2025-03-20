@@ -5,7 +5,7 @@
 #include "sys/math/float/bf16.hpp"
 
 void float_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     while(true){
         bf16 i = sin(time());

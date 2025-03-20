@@ -3,8 +3,8 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const CommMethod rx_method ){
-    setBaudRate(baudRate);
+void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const CommStrategy rx_strategy ){
+    set_baudrate(baudrate);
 
     mosi_gpio.outpp();
     sclk_gpio.outpp(HIGH);

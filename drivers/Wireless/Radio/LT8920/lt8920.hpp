@@ -183,8 +183,8 @@ protected:
 
     void delayT5(){delayMicroseconds(1);}
 
-    BusError writeReg(const RegAddress address, const uint16_t reg);
-    BusError readReg(const RegAddress address, uint16_t & reg);
+    BusError write_reg(const RegAddress address, const uint16_t reg);
+    BusError read_reg(const RegAddress address, uint16_t & reg);
     BusError writeFifo(const uint8_t * data, const size_t len);
     BusError readFifo(uint8_t * data, const size_t len);
 

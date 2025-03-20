@@ -109,7 +109,7 @@
 // 	if (Status == SD_RESPONSE_NO_ERROR)
 // 	{
 // 		/* Write multiple block of many bytes on address 0 */
-// 		Status = SD_writeBurstBlocks(Buffer_MultiBlock_Tx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
+// 		Status = SD_write_burstBlocks(Buffer_MultiBlock_Tx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
 // 		kprintf("Good\n");
 
 // 		/* Check if the Transfer is finished */
@@ -118,7 +118,7 @@
 // 	if (Status == SD_RESPONSE_NO_ERROR)
 // 	{
 // 		/* Read block of many bytes from address 0 */
-// 		Status = SD_readBurstBlocks(Buffer_MultiBlock_Rx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
+// 		Status = SD_read_burstBlocks(Buffer_MultiBlock_Rx, 0x00, BLOCK_SIZE, NUMBER_OF_BLOCKS);
 // 		kprintf("Good\n");
 
 // 		/* Check if the Transfer is finished */

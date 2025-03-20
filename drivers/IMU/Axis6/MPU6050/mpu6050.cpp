@@ -8,15 +8,15 @@
 #define MPU6050_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MPU6050_PANIC(...) PANIC{__VA_ARGS__}
 #define MPU6050_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
+#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define MPU6050_DEBUG(...)
 #define MPU6050_TODO(...) PANIC_NSRC()
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) readReg(reg.address, reg).unwrap()
-#define WRITE_REG(reg) writeReg(reg.address, reg).unwrap()
+#define READ_REG(reg) read_reg(reg.address, reg).unwrap()
+#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap()
 #endif
 
 
@@ -25,9 +25,9 @@ using namespace ymd::drivers;
 
 using Error = MPU6050::Error;
 
-Result<void, Error> MPU6050::writeReg(const uint8_t addr, const uint8_t data){
+Result<void, Error> MPU6050::write_reg(const uint8_t addr, const uint8_t data){
     if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->writeReg(uint8_t(addr), data);
+        auto err = p_i2c_drv_->write_reg(uint8_t(addr), data);
         MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
         return err;
     }else if(p_spi_drv_){
@@ -39,9 +39,9 @@ Result<void, Error> MPU6050::writeReg(const uint8_t addr, const uint8_t data){
     }
 }
 
-Result<void, Error> MPU6050::readReg(const uint8_t addr, uint8_t & data){
+Result<void, Error> MPU6050::read_reg(const uint8_t addr, uint8_t & data){
     if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->readReg(uint8_t(addr), data);
+        auto err = p_i2c_drv_->read_reg(uint8_t(addr), data);
         MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err, addr);
         return err;
     }else if(p_spi_drv_){
@@ -53,9 +53,9 @@ Result<void, Error> MPU6050::readReg(const uint8_t addr, uint8_t & data){
     }
 }
 
-Result<void, Error> MPU6050::readBurst(const uint8_t reg_addr, int16_t * datas, const size_t len){
+Result<void, Error> MPU6050::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
     if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->readBurst((uint8_t)reg_addr, std::span(datas, len), MSB);
+        auto err = p_i2c_drv_->read_burst((uint8_t)reg_addr, std::span(datas, len), MSB);
         MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
         return err;
     }else if(p_spi_drv_){
@@ -98,20 +98,20 @@ Result<void, Error> MPU6050::init(){
 
     return Result<void, Error>(Ok())
         .then([&](){return this->verify();})
-        .then([&](){return this->writeReg(0x6b, 0);})
-        .then([&](){return this->writeReg(0x19, 0x00);})
-        .then([&](){return this->writeReg(0x1a, 0x00);})
-        .then([&](){return this->writeReg(0x13, 0);})
-        .then([&](){return this->writeReg(0x15, 0);})
-        .then([&](){return this->writeReg(0x17, 0);})
-        .then([&](){return this->writeReg(0x38, 0x00);})
+        .then([&](){return this->write_reg(0x6b, 0);})
+        .then([&](){return this->write_reg(0x19, 0x00);})
+        .then([&](){return this->write_reg(0x1a, 0x00);})
+        .then([&](){return this->write_reg(0x13, 0);})
+        .then([&](){return this->write_reg(0x15, 0);})
+        .then([&](){return this->write_reg(0x17, 0);})
+        .then([&](){return this->write_reg(0x38, 0x00);})
         .then([&](){return this->setAccRange(AccRange::_2G);})
         .then([&](){return this->setGyrRange(GyrRange::_1000deg);})
     ;
 }
 
 Result<void, Error> MPU6050::update(){
-    auto res = this->readBurst(acc_x_reg.address, &acc_x_reg, 7);
+    auto res = this->read_burst(acc_x_reg.address, &acc_x_reg, 7);
     data_valid = res.is_ok();
     return res;
 }
@@ -142,11 +142,11 @@ Result<void, Error> MPU6050::setAccRange(const AccRange range){
 
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
-    return this->writeReg(reg);
+    return this->write_reg(reg);
 }
 
 Result<MPU6050::Package, Error> MPU6050::getPackage(){
-    if(const auto err = readReg(whoami_reg.address, whoami_reg); err.is_err()){
+    if(const auto err = read_reg(whoami_reg.address, whoami_reg); err.is_err()){
         MPU6050_PANIC("read who am I failed");
     }
     return Ok{Package(whoami_reg.data)};
@@ -157,7 +157,7 @@ Result<void, Error> MPU6050::setGyrRange(const GyrRange range){
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
 
-    return writeReg(reg);
+    return write_reg(reg);
 }
 
 
@@ -175,7 +175,7 @@ Result<void, Error> MPU6050::enableDirectMode(const Enable en){
     WRITE_REG(int_pin_cfg_reg);
 
     return Result<void, Error>(Ok())
-        .then([&](){return writeReg(int_pin_cfg_reg);})
-        .then([&](){return writeReg(0x56, 0x01);})
+        .then([&](){return write_reg(int_pin_cfg_reg);})
+        .then([&](){return write_reg(0x56, 0x01);})
     ;
 }

@@ -7,14 +7,14 @@
 #define DRV2605_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define DRV2605_PANIC(...) PANIC{__VA_ARGS__}
 #define DRV2605_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
+#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define DRV2605_DEBUG(...)
 #define DRV2605_PANIC(...)  PANIC_NSRC()
 #define DRV2605_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void) readReg(reg.address, reg).unwrap();
-#define WRITE_REG(reg) (void) writeReg(reg.address, reg).unwrap();
+#define READ_REG(reg) (void) read_reg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) (void) write_reg(reg.address, reg).unwrap();
 #endif
 
 
@@ -105,22 +105,22 @@ bool DRV2605L::init(){
     // // feedback_control_reg.
     // // mode_reg = 0;
     // WRITE_REG(mode_reg);
-	if (! writeReg(RATED_VOLTAGE_Reg, 0x50).ok()) return 1;
+	if (! write_reg(RATED_VOLTAGE_Reg, 0x50).ok()) return 1;
 
 	/* Set overdrive voltage */
-	if (! writeReg(OD_CLAMP_Reg, 0x89).ok()) return 1;
+	if (! write_reg(OD_CLAMP_Reg, 0x89).ok()) return 1;
 	
 	/* Setup feedback control and control registers */
-	if (! writeReg(FB_CON_Reg, 0xB6).ok()) return 1;
-	if (! writeReg(CONTRL1_Reg, 0x13).ok()) return 1;
-	if (! writeReg(CONTRL2_Reg, 0xF5).ok()) return 1;
-	if (! writeReg(CONTRL3_Reg, 0x80).ok()) return 1;
+	if (! write_reg(FB_CON_Reg, 0xB6).ok()) return 1;
+	if (! write_reg(CONTRL1_Reg, 0x13).ok()) return 1;
+	if (! write_reg(CONTRL2_Reg, 0xF5).ok()) return 1;
+	if (! write_reg(CONTRL3_Reg, 0x80).ok()) return 1;
 	
 	/* Select the LRA Library */
-	if (! writeReg(LIB_SEL_Reg, 0x06).ok()) return 1;
+	if (! write_reg(LIB_SEL_Reg, 0x06).ok()) return 1;
 
 	/* Put the DRV2605 device in active mode */
-	if (! writeReg(MODE_Reg, 0x00).ok()) return 1;
+	if (! write_reg(MODE_Reg, 0x00).ok()) return 1;
 
     return 0;
 
@@ -133,10 +133,10 @@ void DRV2605L::reset(){
 }
 
 void DRV2605L::play(const uint8_t idx){
-    writeReg(0x01, 0x00);
-    writeReg(0x04, idx);
-    writeReg(0x05, 0x00);
-    writeReg(0x0c, 0x01);
+    write_reg(0x01, 0x00);
+    write_reg(0x04, idx);
+    write_reg(0x05, 0x00);
+    write_reg(0x0c, 0x01);
 }
 
 bool DRV2605L::autocal(){
@@ -144,44 +144,44 @@ bool DRV2605L::autocal(){
     uint8_t ACalComp, ACalBEMF, BEMFGain;
 
 	/* Set rate voltage */
-	if (writeReg(RATED_VOLTAGE_Reg, 0x50).ok() != 0) return 1;
+	if (write_reg(RATED_VOLTAGE_Reg, 0x50).ok() != 0) return 1;
 
 	/* Set overdrive voltage */
-	if (writeReg(OD_CLAMP_Reg, 0x89).ok() != 0) return 1;
+	if (write_reg(OD_CLAMP_Reg, 0x89).ok() != 0) return 1;
 	
 	/* Setup feedback control and control registers */
-	if (writeReg(FB_CON_Reg, 0xB6).ok() != 0) return 1;
-	if (writeReg(CONTRL1_Reg, 0x93).ok() != 0) return 1;
-	if (writeReg(CONTRL2_Reg, 0xF5).ok() != 0) return 1;
-	if (writeReg(CONTRL3_Reg, 0x80).ok() != 0) return 1;
+	if (write_reg(FB_CON_Reg, 0xB6).ok() != 0) return 1;
+	if (write_reg(CONTRL1_Reg, 0x93).ok() != 0) return 1;
+	if (write_reg(CONTRL2_Reg, 0xF5).ok() != 0) return 1;
+	if (write_reg(CONTRL3_Reg, 0x80).ok() != 0) return 1;
 	
 	/* Put the DRV2605 device in auto calibration mode */
-	if (writeReg(MODE_Reg, 0x07).ok() != 0) return 1;
+	if (write_reg(MODE_Reg, 0x07).ok() != 0) return 1;
     
-    if (writeReg(CONTRL4_Reg, 0x20).ok() != 0) return 1;
+    if (write_reg(CONTRL4_Reg, 0x20).ok() != 0) return 1;
 	
 	/* Begin auto calibration */
-    if (writeReg(GO_Reg, 0x01).ok() != 0) return 1;
+    if (write_reg(GO_Reg, 0x01).ok() != 0) return 1;
 	
 	/* Poll the GO register until least significant bit is set */
 	while ((temp & 0x01) != 0x01)
 	{
-		if (readReg(GO_Reg, temp).ok() != 0) return 1;
+		if (read_reg(GO_Reg, temp).ok() != 0) return 1;
 	}
 	
 	/* Read the result of the auto calibration */
-	if (readReg(STATUS_Reg, temp).ok() != 0) return 1;
+	if (read_reg(STATUS_Reg, temp).ok() != 0) return 1;
 
     
 	/* Read the compensation result of the auto calibration */
-	if (readReg(A_CAL_COMP_Reg, ACalComp).ok() != 0) return 1;
+	if (read_reg(A_CAL_COMP_Reg, ACalComp).ok() != 0) return 1;
 
 	/* Read the Back-EMF result of the auto calibration */
-	if (readReg(A_CAL_BEMF_Reg, ACalBEMF).ok() != 0) return 1;
+	if (read_reg(A_CAL_BEMF_Reg, ACalBEMF).ok() != 0) return 1;
 
 
 	/* Read the feedback control */
-	if (readReg(FB_CON_Reg, BEMFGain).ok() != 0) return 1;
+	if (read_reg(FB_CON_Reg, BEMFGain).ok() != 0) return 1;
 	
 	return 0;
 }

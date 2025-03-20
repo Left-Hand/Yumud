@@ -17,8 +17,8 @@ void joystick_tb(OutputStream & logger){
 
     SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
     auto & spi = spisw;
-    spi.init(100000);//maxium buad
-    spi.setBitOrder(LSB);
+    spi.init(100000);//maxium baud
+    spi.set_bitorder(LSB);
 
     SpiDrv ps2_drv{spi, 0};
     Ps2Joystick joystick{ps2_drv};

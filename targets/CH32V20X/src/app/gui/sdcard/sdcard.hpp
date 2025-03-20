@@ -45,7 +45,7 @@ protected:
 
     hal::SpiDrv spi_drv_;
 
-    void writeCommand(const Command & command){
+    void write_command(const Command & command){
         spi_drv_.end();
         spi_drv_.forceWrite<uint8_t>(0xFF);
         

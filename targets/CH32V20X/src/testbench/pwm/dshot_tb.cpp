@@ -88,7 +88,7 @@ using namespace ymd;
 
 void dshot_main(){
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER.retarget(&DEBUGGER_INST);
 
     DEBUGGER.setRadix(10);

@@ -18,7 +18,7 @@ void m3508_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     can1.init(1_M, Can::Mode::Normal);
 

@@ -196,9 +196,9 @@ public:
 
 
     SD_Error ReadBlock(uint8_t *buf,uint64_t addr,uint16_t blksize);  
-    SD_Error readBurstBlocks(uint8_t *buf,uint64_t  addr,uint16_t blksize,uint32_t nblks);  
+    SD_Error read_burstBlocks(uint8_t *buf,uint64_t  addr,uint16_t blksize,uint32_t nblks);  
     SD_Error WriteBlock(const uint8_t *buf,uint64_t addr,  uint16_t blksize);
-    SD_Error writeBurstBlocks(const uint8_t *buf,uint64_t addr,uint16_t blksize,uint32_t nblks);
+    SD_Error write_burstBlocks(const uint8_t *buf,uint64_t addr,uint16_t blksize,uint32_t nblks);
     SD_Error ProcessIRQSrc(void);
 
     SD_Error ReadDisk(uint8_t * buf,uint32_t sector,uint8_t cnt);

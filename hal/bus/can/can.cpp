@@ -228,9 +228,9 @@ void Can::enable_rcc(){
     }
 }
 
-void Can::init(const uint baudRate, const Mode _mode){
+void Can::init(const uint baudrate, const Mode _mode){
     BaudRate baud;
-    switch(baudRate){
+    switch(baudrate){
         default:
             while(true);
         case 125_KHz:
@@ -250,7 +250,7 @@ void Can::init(const uint baudRate, const Mode _mode){
     init(baud, _mode);
 }
 
-void Can::init(const BaudRate baudRate, const Mode _mode){
+void Can::init(const BaudRate baudrate, const Mode _mode){
     install_gpio();
     enable_rcc();
 
@@ -259,8 +259,8 @@ void Can::init(const BaudRate baudRate, const Mode _mode){
     scexpr uint8_t bs1 = CAN_BS1_6tq;
     scexpr uint8_t bs2 = CAN_BS2_5tq;
 
-    const uint8_t prescale = [baudRate]()->uint8_t{
-        switch(baudRate){
+    const uint8_t prescale = [baudrate]()->uint8_t{
+        switch(baudrate){
             default:
             case BaudRate::_125K:
                 return 96;
@@ -331,16 +331,16 @@ uint8_t Can::transmit(const CanMsg & msg){
         uint32_t tempmir;
         uint32_t tempdtr = instance->sTxMailBox[transmit_mailbox].TXMDTR;
 
-        if(msg.isStd()){
-            tempmir = ((msg.id() << 21) | (msg.isRemote() << 1) | 0x01);
+        if(msg.is_std()){
+            tempmir = ((msg.id() << 21) | (msg.is_remote() << 1) | 0x01);
         }else{
-            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.isRemote() << 1) | 0x01);
+            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.is_remote() << 1) | 0x01);
         }
 
         tempdtr &= (uint32_t)0xFFFFFFF0;
         tempdtr |= msg.size() & 0x0F;
 
-        if(msg.size() && (!msg.isRemote())){
+        if(msg.size() && (!msg.is_remote())){
 
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wuninitialized"
@@ -360,7 +360,7 @@ uint8_t Can::transmit(const CanMsg & msg){
 }
 
 
-void Can::enableHwReTransmit(const bool en){
+void Can::enable_hw_retransmit(const bool en){
     if(en)  instance->CTLR &= ~CAN_CTLR_NART;
     else    instance->CTLR |=  CAN_CTLR_NART;
 }
@@ -399,49 +399,49 @@ size_t Can::available(){
     return rx_fifo_.available();
 }
 
-uint8_t Can::getRxErrCnt(){
+uint8_t Can::get_rx_errcnt(){
     return instance->ERRSR >> 24;
 }
 
-uint8_t Can::getTxErrCnt(){
+uint8_t Can::get_tx_errcnt(){
     return instance->ERRSR >> 16;
 }
-Can::ErrCode Can::getErrCode(){
+Can::ErrCode Can::error(){
     return (ErrCode)CAN_GetLastErrorCode(instance);
 }
 
-bool Can::isTranmitting(){
+bool Can::is_tranmitting(){
     return bool(instance->STATR & CAN_STATR_TXM);
 }
 
-bool Can::isReceiving(){
+bool Can::is_receiving(){
     return bool(instance->STATR & CAN_STATR_RXM);
 }
 
-bool Can::isBusOff(){
+bool Can::is_busoff(){
     return instance->ERRSR & CAN_ERRSR_BOFF;
 }
 
-void Can::cancelTransmit(const uint8_t mbox){
+void Can::cancel_transmit(const uint8_t mbox){
     CAN_CancelTransmit(instance, mbox);
 }
 
-void Can::cancelAllTransmit(){
+void Can::cancel_all_transmits(){
     for(uint8_t i = 0; i < 3; i++)    CAN_CancelTransmit(instance, i);
     instance->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
-void Can::enableFifoLock(const bool en){
+void Can::enable_fifo_lock(const bool en){
     if(en) instance->CTLR |= CAN_CTLR_RFLM;
     else instance->CTLR &= ~CAN_CTLR_RFLM;
 }
 
-void Can::enableIndexPriority(const bool en){
+void Can::enable_index_priority(const bool en){
     if(en) instance->CTLR |= CAN_CTLR_TXFP;
     else instance->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-void Can::setBaudRate(const uint32_t baudRate){
+void Can::set_baudrate(const uint32_t baudrate){
     //TODO
 }
 
@@ -463,7 +463,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
     }
 
     if(is_remote){
-        return CanMsg(id, CanRemote::Remote);
+        return CanMsg(id, CanRemoteSpec::Remote);
     }else{
         return CanMsg(id, data, dlc);
     }

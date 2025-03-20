@@ -17,8 +17,8 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define WRITE_REG(reg) writeReg(reg.address, reg.as_val());
-#define READ_REG(reg) readReg(reg.address, reg.as_ref());
+#define WRITE_REG(reg) write_reg(reg.address, reg.as_val());
+#define READ_REG(reg) read_reg(reg.address, reg.as_ref());
 
 void DRV8301::init(){
 
@@ -75,7 +75,7 @@ struct SpiFormat{
     }
 };
 
-BusError DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
+BusError DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -85,7 +85,7 @@ BusError DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
     return spi_drv_.writeSingle<uint16_t>((spi_format));
 }
 
-BusError DRV8301::readReg(const RegAddress addr, uint16_t & reg){
+BusError DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),

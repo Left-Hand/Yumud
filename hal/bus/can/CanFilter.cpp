@@ -5,7 +5,6 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using RemoteType = CanRemote; 
 
 struct bits_queue{
 protected:
@@ -132,18 +131,18 @@ std::tuple<T, T> id_and_mask(const code_parser::parse_result & result){
         default:
         case remote_selection::any:
             return {
-                T(result.id, RemoteType::Any), 
-                T(result.mask, RemoteType::Any)
+                T(result.id, CanRemoteSpec::Any), 
+                T(result.mask, CanRemoteSpec::Any)
             };
         case remote_selection::data:
             return {
-                T(result.id, RemoteType::Data), 
-                T(result.mask, RemoteType::Specified)
+                T(result.id, CanRemoteSpec::Data), 
+                T(result.mask, CanRemoteSpec::Specified)
             };
         case remote_selection::remote:
             return {
-                T(result.id, RemoteType::Remote), 
-                T(result.mask, RemoteType::Specified)
+                T(result.id, CanRemoteSpec::Remote), 
+                T(result.mask, CanRemoteSpec::Specified)
             };
     }
 };

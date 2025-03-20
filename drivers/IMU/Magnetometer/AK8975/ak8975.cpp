@@ -25,12 +25,12 @@ void AK8975::init(){
 
 
 void AK8975::readAdj(){
-    readBurst(0x10, &x_adj, 3);
+    read_burst(0x10, &x_adj, 3);
 }
 
 
 void AK8975::update(){
-    readBurst(0x03, &x, 2 * 3);
+    read_burst(0x03, &x, 2 * 3);
 }
 
 
@@ -51,7 +51,7 @@ bool AK8975::verify(){
     
     {
         uint8_t id = 0;
-        readReg(0x00, id);
+        read_reg(0x00, id);
         if(id != 0x48) return false;
         //id not correct
     }
@@ -60,7 +60,7 @@ bool AK8975::verify(){
     setMode(Mode::SelfTest);
 
     //2
-    writeReg(0x0c, 0x40);
+    write_reg(0x0c, 0x40);
 
     //3
     setMode(Mode::PowerDown);
@@ -81,20 +81,20 @@ bool AK8975::verify(){
     update();
 
     //6
-    writeReg(0x0c, 0x00);
+    write_reg(0x0c, 0x00);
     
     return stable();
 }
 
 bool AK8975::busy(){
     uint8_t stat;
-    readReg(0x00, stat);
+    read_reg(0x00, stat);
     return stat == 0;
 }
 
 bool AK8975::stable(){
     uint8_t stat;
-    readReg(0x09, stat);
+    read_reg(0x09, stat);
     if(stat != 0) return false;
     
     update();
@@ -109,11 +109,11 @@ bool AK8975::stable(){
 
 
 void AK8975::setMode(const Mode mode){
-    writeReg(0x0A, (uint8_t)mode);
+    write_reg(0x0A, (uint8_t)mode);
 }
 
 void AK8975::disableI2c(){
-    writeReg(0x0F, 0x01);
+    write_reg(0x0F, 0x01);
 }
 
 Option<Vector3R> AK8975::getMagnet(){

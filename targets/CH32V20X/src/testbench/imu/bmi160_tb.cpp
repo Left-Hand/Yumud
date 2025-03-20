@@ -11,10 +11,10 @@
 using namespace ymd::drivers;
 
 void bmi160_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     spi1.init(18000000);
-    spi1.bindCsPin(portA[0], 0);
+    spi1.bind_cs_pin(portA[0], 0);
 
     using Quat = Quat_t<real_t>;
     

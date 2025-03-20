@@ -44,30 +44,30 @@ void AD9910::init(void)
     delay(5);
 	MAS_REST=0; 
 
-    writeReg(0x00, cfr1, 4);
-    writeReg(0x01, cfr2, 4);
-    writeReg(0x02, cfr3, 4);
+    write_reg(0x00, cfr1, 4);
+    write_reg(0x01, cfr2, 4);
+    write_reg(0x02, cfr3, 4);
 
 	delay(1);
 }      
 
 
 
-void AD9910::writeReg(const uint8_t addr, const uint8_t * data, const size_t len){
+void AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
     spi_drv.writeSingle(addr).unwrap();
-    spi_drv.writeBurst<uint8_t>(data, len).unwrap();
+    spi_drv.write_burst<uint8_t>(data, len).unwrap();
     __nopn(4);
 }
 
-void AD9910::writeData(const uint8_t txdat){
+void AD9910::write_data(const uint8_t txdat){
     spi_drv.writeSingle(txdat).unwrap();
 }  
 
     
 void AD9910::writeProfile(const Profile & profile){
 
-    writeReg(0x0e, profile.cbegin(), 8);
+    write_reg(0x0e, profile.cbegin(), 8);
 
 	delay(1);
 }         
@@ -106,9 +106,9 @@ void AD9910::setAmplitude(uint32_t Amp)
 }
 
 void AD9910::writeDrg(const DrgParamenter & drgparameter){
-    writeReg(0x0b, drgparameter.cbegin(), 8);
-    writeReg(0x0c, drgparameter.cbegin() + 8, 4);
-    writeReg(0x0d, drgparameter.cbegin() + 16, 4);
+    write_reg(0x0b, drgparameter.cbegin(), 8);
+    write_reg(0x0c, drgparameter.cbegin() + 8, 4);
+    write_reg(0x0d, drgparameter.cbegin() + 16, 4);
 	
 	delay(1);
 }         
@@ -164,13 +164,13 @@ void AD9910::freqSweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t Swee
 
 void AD9910::writeRamprofile(void)
 {
-    writeReg(0x0e, ramprofile0, 8);
+    write_reg(0x0e, ramprofile0, 8);
 	delay(1);
 }         
 
 void AD9910::sendSample(const uint8_t * data, const size_t len)
 {
-    writeReg(0x16, data, len);
+    write_reg(0x16, data, len);
 	delay(1);
 }         
 

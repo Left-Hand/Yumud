@@ -117,13 +117,13 @@ protected:
     ManufactureReg manufactureIDReg = {};
     ChipIdReg chipIDReg = {};
 
-    [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] BusResult write_reg(const RegAddress addr, const uint16_t data);
 
-    [[nodiscard]] BusResult readReg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] BusResult read_reg(const RegAddress addr, uint16_t & data);
     
-    [[nodiscard]] BusResult readReg(const RegAddress addr, int16_t & data);
+    [[nodiscard]] BusResult read_reg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] BusResult readBurst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] BusResult read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     class CurrentChannel;
     class VoltageChannel;

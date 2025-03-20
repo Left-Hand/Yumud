@@ -967,7 +967,7 @@ void host_main(){
 
         Map map{};
         auto & vuart = uart2;
-        vuart.init(576000, CommMethod::Blocking);
+        vuart.init(576000, CommStrategy::Blocking);
         VisionModule vision{vuart};
 
         Planner planner{chassis_module, map};

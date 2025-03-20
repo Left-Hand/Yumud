@@ -91,20 +91,20 @@ protected:
         void setMode(const hal::GpioMode mode) override{}
     };
 
-    BusError writeReg(const RegAddress addr, const uint8_t reg){
-        return i2c_drv_.writeReg(uint8_t(addr), reg).unwrap();
+    BusError write_reg(const RegAddress addr, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(addr), reg).unwrap();
     };
 
-    BusError writeReg(const RegAddress addr, const uint16_t reg){
-        return i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
+    BusError write_reg(const RegAddress addr, const uint16_t reg){
+        return i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
     }
 
-    BusError readReg(const RegAddress addr, uint8_t & reg){
-        return i2c_drv_.readReg(uint8_t(addr), reg).unwrap();
+    BusError read_reg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(addr), reg).unwrap();
     }
 
-    BusError readReg(const RegAddress addr, uint16_t & reg){
-        return i2c_drv_.readReg(uint8_t(addr), reg, LSB);
+    BusError read_reg(const RegAddress addr, uint16_t & reg){
+        return i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
     }
     void writePort(const uint16_t data) override{
     }

@@ -80,8 +80,8 @@ protected:
     HighThreshReg high_thresh_reg = {};
 
 
-    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);
-    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data); 
+    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const uint16_t data); 
     struct ConfigBuilder{
 
         // ADS111X & owner_;
