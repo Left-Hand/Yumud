@@ -3,9 +3,9 @@
 
 using namespace ymd::hal;
 
-void GpioPort::setMode(const int index, const GpioMode mode){
+void GpioPort::set_mode(const int index, const GpioMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
-    gpio.setMode(mode);
+    gpio.set_mode(mode);
 }
 
 void GpioPort::enableRcc(const bool en){

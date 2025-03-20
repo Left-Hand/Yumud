@@ -45,7 +45,7 @@ public:
         const CommStrategy rx_strategy = CommStrategy::Blocking) = 0;
     void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
         gpio.outpp(HIGH);
-        cs_port.bindPin(gpio, index);
+        cs_port.bind_pin(gpio, index);
     }
 };
 

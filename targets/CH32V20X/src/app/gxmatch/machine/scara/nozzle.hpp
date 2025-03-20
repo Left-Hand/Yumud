@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 
 namespace gxm{
     

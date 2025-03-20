@@ -1,7 +1,7 @@
 #include "gpio_or_pwm.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 
 using namespace ymd::hal;
 

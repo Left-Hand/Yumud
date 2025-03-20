@@ -3,7 +3,7 @@
 #include <optional>
 #include <array>
 
-#include "hal/adc/analog_channel.hpp"
+#include "concept/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "../CoilDriver.hpp"

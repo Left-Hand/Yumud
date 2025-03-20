@@ -11,7 +11,7 @@
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
 

@@ -18,24 +18,24 @@ public:
     virtual bool read() const = 0;
     bool toggle() {bool val = !this->read(); write(val); return val;}
 
-    hal::GpioIntf & outpp(){setMode(GpioMode::OutPP);return *this;}
-    hal::GpioIntf & outod(){setMode(GpioMode::OutOD);return *this;}
-    hal::GpioIntf & afpp(){setMode(GpioMode::OutAfPP);return *this;}
-    hal::GpioIntf & afod(){setMode(GpioMode::OutAfOD);return *this;}
+    hal::GpioIntf & outpp(){set_mode(GpioMode::OutPP);return *this;}
+    hal::GpioIntf & outod(){set_mode(GpioMode::OutOD);return *this;}
+    hal::GpioIntf & afpp(){set_mode(GpioMode::OutAfPP);return *this;}
+    hal::GpioIntf & afod(){set_mode(GpioMode::OutAfOD);return *this;}
 
-    hal::GpioIntf & outpp(const BoolLevel initial_state){setMode(GpioMode::OutPP);write(bool(initial_state));return *this;}
-    hal::GpioIntf & outod(const BoolLevel initial_state){setMode(GpioMode::OutOD);write(bool(initial_state));return *this;}
-    hal::GpioIntf & afpp(const BoolLevel initial_state){setMode(GpioMode::OutAfPP);write(bool(initial_state));return *this;}
-    hal::GpioIntf & afod(const BoolLevel initial_state){setMode(GpioMode::OutAfOD);write(bool(initial_state));return *this;}
+    hal::GpioIntf & outpp(const BoolLevel initial_state){set_mode(GpioMode::OutPP);write(bool(initial_state));return *this;}
+    hal::GpioIntf & outod(const BoolLevel initial_state){set_mode(GpioMode::OutOD);write(bool(initial_state));return *this;}
+    hal::GpioIntf & afpp(const BoolLevel initial_state){set_mode(GpioMode::OutAfPP);write(bool(initial_state));return *this;}
+    hal::GpioIntf & afod(const BoolLevel initial_state){set_mode(GpioMode::OutAfOD);write(bool(initial_state));return *this;}
 
-    hal::GpioIntf & inana(){setMode(GpioMode::InAnalog);return *this;}
-    hal::GpioIntf & inflt(){setMode(GpioMode::InFloating);return *this;}
-    hal::GpioIntf & inpu(){setMode(GpioMode::InPullUP);return *this;}
-    hal::GpioIntf & inpd(){setMode(GpioMode::InPullDN);return *this;}
+    hal::GpioIntf & inana(){set_mode(GpioMode::InAnalog);return *this;}
+    hal::GpioIntf & inflt(){set_mode(GpioMode::InFloating);return *this;}
+    hal::GpioIntf & inpu(){set_mode(GpioMode::InPullUP);return *this;}
+    hal::GpioIntf & inpd(){set_mode(GpioMode::InPullDN);return *this;}
 
     bool valid() const{return (index() >= 0);}
     virtual int8_t index() const = 0;
-    virtual void setMode(const GpioMode mode) = 0;
+    virtual void set_mode(const GpioMode mode) = 0;
     
     hal::GpioIntf & operator = (const bool val){
         write(val);

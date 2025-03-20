@@ -54,7 +54,7 @@ public:
     __fast_inline void write(const bool val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
     __fast_inline bool read() const {return bool(instance_->INDR & uint16_t(pin_));}
 
-    void setMode(const GpioMode mode) ;
+    void set_mode(const GpioMode mode) ;
     __fast_inline GPIO_TypeDef * inst() const {return instance_;} 
     __fast_inline int8_t index() const {
         if(likely(uint16_t(pin_)))

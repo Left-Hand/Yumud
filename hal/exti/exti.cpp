@@ -80,7 +80,7 @@ IRQn ExtiChannel::from_line_to_irqn(const Line line){
 
 void ExtiChannel::init(){
     if(gpio){
-        gpio->setMode(gpio_mode);
+        gpio->set_mode(gpio_mode);
         if(gpio->index() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->index());
     }
 

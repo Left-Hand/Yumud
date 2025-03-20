@@ -163,7 +163,7 @@ void SpiHw::installGpios(){
     }
 
 
-    if(false == cs_port.isIndexValid(0)){
+    if(false == cs_port.is_index_valid(0)){
         Gpio & cs_pin = getHwCsGpio();
         cs_pin.set();
         if(hw_cs_enabled){

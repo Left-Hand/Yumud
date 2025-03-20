@@ -11,11 +11,11 @@ void AD9959::init(){
     // Ensure that the SPI device is initialised
     // "setting SCK, MOSI, and SS to outputs, pulling SCK and MOSI low, and SS high"
 
-    // digitalWrite(ResetPin, 0);
+    // digitalWrite(Reset_pin, 0);
 
-    // ResetPin = false;
+    // Reset_pin = false;
     reset_gpio.outpp(LOW);
-    // pinMode(ResetPin, OUTPUT);          // Ensure we can reset the AD9959
+    // pinMode(Reset_pin, OUTPUT);          // Ensure we can reset the AD9959
     // digitalWrite(ChipEnablePin, 1);
 
     // pinMode(ChipEnablePin, OUTPUT);     // This control signal applies the loaded values

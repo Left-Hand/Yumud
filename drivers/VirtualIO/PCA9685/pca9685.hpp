@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -91,7 +91,7 @@ protected:
 
         __fast_inline int8_t index() const {return channel;}
 
-        void setMode(const hal::GpioMode mode) override{}
+        void set_mode(const hal::GpioMode mode) override{}
     };
 
     BusError write_reg(const RegAddress addr, const uint8_t reg){
@@ -109,10 +109,10 @@ protected:
     BusError read_reg(const RegAddress addr, uint16_t & reg){
         return i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
     }
-    void writePort(const uint16_t data) override{
+    void write_port(const uint16_t data) override{
     }
 
-    uint16_t readPort() override{
+    uint16_t read_port() override{
         return true;
     }
 
@@ -144,17 +144,17 @@ public:
 
     void reset();
 
-    void setPin(const uint16_t data) override;
+    void set_pin(const uint16_t data) override;
 
-    void clrPin(const uint16_t data) override;
+    void clr_pin(const uint16_t data) override;
     
-    void writeByIndex(const int index, const bool data) override;
+    void write_by_index(const int index, const bool data) override;
 
-    bool readByIndex(const int index) override;
+    bool read_by_index(const int index) override;
 
-    void setMode(const int index, const hal::GpioMode mode) override;
+    void set_mode(const int index, const hal::GpioMode mode) override;
 
-    PCA9685 & operator = (const uint16_t data) override {writePort(data); return *this;}
+    PCA9685 & operator = (const uint16_t data) override {write_port(data); return *this;}
 
     std::array<PCA8975Channel, 16> channels ={
         PCA8975Channel{*this, 0},

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 
 #include <variant>
 

@@ -6,7 +6,7 @@ using namespace ymd::drivers;
 void AW9523::init(){
     reset();
     delay(10);
-    setLedCurrentLimit(CurrentLimit::Low);
+    set_led_current_limit(CurrentLimit::Low);
     for(uint8_t i = 0; i< 16; i++){
         write_reg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);
     }
@@ -14,21 +14,21 @@ void AW9523::init(){
 }
 
 
-void AW9523::writeByIndex(const int index, const bool data){
-    if(!isIndexValid(index))return;
+void AW9523::write_by_index(const int index, const bool data){
+    if(!is_index_valid(index))return;
     if(data) buf |= 1 << index;
     else buf &= ~(1 << index);
-    writePort(buf);
+    write_port(buf);
 }
 
-bool AW9523::readByIndex(const int index){
-    if(!isIndexValid(index)) return false;
-    readPort();
+bool AW9523::read_by_index(const int index){
+    if(!is_index_valid(index)) return false;
+    read_port();
     return (buf & (1 << index));
 }
 
-void AW9523::setMode(const int index, const hal::GpioMode mode){
-    if(false == isIndexValid(index))return;
+void AW9523::set_mode(const int index, const hal::GpioMode mode){
+    if(false == is_index_valid(index))return;
     uint16_t mask = 1 << index;
     if(hal::GpioUtils::isIn(mode)) dir |= mask;
     else dir &= ~mask;
@@ -40,24 +40,24 @@ void AW9523::setMode(const int index, const hal::GpioMode mode){
     }
 }
 
-void AW9523::enableIrqByIndex(const int index, const bool en ){
-    if(false == isIndexValid(index))return;
+void AW9523::enable_irq_by_index(const int index, const bool en ){
+    if(false == is_index_valid(index))return;
     write_reg(RegAddress::inten, (uint8_t)(en << index));
 }
 
-void AW9523::enableLedMode(const hal::Pin pin, const bool en){
+void AW9523::enable_led_mode(const hal::Pin pin, const bool en){
     uint index = CTZ((uint16_t)pin);
     if(en) ledMode &= ~(1 << index);
     else ledMode |= (1 << index);
     write_reg(RegAddress::ledMode, ledMode);
 }
 
-void AW9523::setLedCurrentLimit(const CurrentLimit limit){
+void AW9523::set_led_current_limit(const CurrentLimit limit){
     ctl.isel = (uint8_t)limit;
     write_reg(RegAddress::ctl, ctl);
 }
 
-void AW9523::setLedCurrent(const hal::Pin pin, const uint8_t current){
+void AW9523::set_led_current(const hal::Pin pin, const uint8_t current){
     uint index = CTZ((uint16_t)pin);
     if(index < 8) index += 4;
     else if(index < 12) index -= 8;

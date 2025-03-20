@@ -7,30 +7,30 @@ using namespace ymd::drivers;
 #define READ_REG(reg) read_reg(reg.address, reg).unwrap();
 
 void NCA9555::init(){
-    setInversion(0);
+    set_inversion(0);
 }
 
-void NCA9555::setInversion(const uint16_t mask){
+void NCA9555::set_inversion(const uint16_t mask){
     auto & reg = inversion_reg;
     if(mask == reg) return;
     reg = mask;
     WRITE_REG(reg);
 }
 
-void NCA9555::writePort(const uint16_t data){
+void NCA9555::write_port(const uint16_t data){
     auto & reg = output_reg;
     if(data == reg) return;
     reg = data;
     WRITE_REG(reg);
 }
 
-uint16_t NCA9555::readPort(){
+uint16_t NCA9555::read_port(){
     auto & reg = input_reg;
     READ_REG(reg);
     return reg;
 }
 
-void NCA9555::setMode(const int index, const hal::GpioMode mode){
+void NCA9555::set_mode(const int index, const hal::GpioMode mode){
     if(index > 15) PANIC();
 
     auto & reg = config_reg;

@@ -4,7 +4,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/vport.hpp"
 #include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "core/io/regs.hpp"
 #include "types/vector2/vector2.hpp"
 
