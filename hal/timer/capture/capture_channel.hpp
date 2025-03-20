@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include "core/clock/time_stamp.hpp"
 #include "hal/exti/exti.hpp"
 #include "core/math/real.hpp"

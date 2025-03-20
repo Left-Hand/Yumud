@@ -1,5 +1,5 @@
 #include "src/testbench/tb.h"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();

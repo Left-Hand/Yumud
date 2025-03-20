@@ -23,7 +23,7 @@
 
 
 #include <ctype.h>
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 
 #include "StringView.hpp"

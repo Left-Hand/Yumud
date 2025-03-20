@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/platform.h"
-#include "core/math/uint24_t.h"
+#include "core/platform.hpp"
+#include "core/math/uint24_t.hpp"
 
 #include <tuple>
 

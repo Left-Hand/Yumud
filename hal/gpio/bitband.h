@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 #ifdef PLAT_SUPPORT_BITBAND
 

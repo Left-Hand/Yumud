@@ -1,6 +1,6 @@
 #include "ostream.hpp"
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include "core/string/String.hpp"
 #include "core/string/StringView.hpp"
 

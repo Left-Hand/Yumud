@@ -1,5 +1,6 @@
 #include "circular.hpp"
 
+using namespace ymd;
 using namespace ymd::intp;
 
 template<typename T>

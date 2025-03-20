@@ -13,7 +13,7 @@ limitations under the License.
 #ifndef __TM_PORT_H
 #define __TM_PORT_H
 
-#include "../core/platform.h"
+#include "../core/platform.hpp"
 #include "../core/debug/debug.hpp"
 #include "core/math/real.hpp"
 

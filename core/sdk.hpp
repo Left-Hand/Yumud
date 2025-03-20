@@ -1,7 +1,7 @@
 #pragma once
 
-//#region sdk
-#include "arch.h"
+
+#include "arch.hpp"
 
 #ifdef N32G45X
 
@@ -23,4 +23,3 @@
 #include "sdk/ch32v203/system_ch32v20x.h"
 #include "sdk/ch32v203/Core/core_riscv.h"
 #endif
-//#endregion

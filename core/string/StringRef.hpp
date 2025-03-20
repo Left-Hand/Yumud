@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/string/utils/StringUtils.hpp"
 
 #include <cstdint>

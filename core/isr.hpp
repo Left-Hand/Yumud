@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "core/sys_defs.hpp"
 
 #ifdef HDW_SXX32
 

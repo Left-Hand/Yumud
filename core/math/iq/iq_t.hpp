@@ -1,15 +1,14 @@
 #pragma once
 
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include <array>
 
-//部分平台提供了预编译的lib文件 性能可能会更高
-#if defined(IQMATH_SPEC_RISCV)
-#include "riscv/IQmath_RV32.h"
-#elif defined(IQMATH_SPEC_ARM)
-#include "arm/IQmath_ARM.h"
-#else
+#ifdef YUMUD_FRAMEWORK
+//引入浮点的结构模型 以方便进行和浮点数转换
+#include "core/math/float/fp32.hpp"
+#include "core/math/float/fp64.hpp"
+#endif
 
 #include "universal/_IQNdiv.hpp"
 #include "universal/_IQNatan2.hpp"
@@ -29,14 +28,6 @@
 #ifndef IQ_DEFAULT_Q
 #define IQ_DEFAULT_Q 16
 #endif
-
-#endif
-
-
-//引入浮点的结构模型 以方便进行和浮点数转换
-#include "core/math/float/fp32.hpp"
-#include "core/math/float/fp64.hpp"
-
 namespace ymd{
 template<size_t Q>
 struct iq_t;
@@ -521,9 +512,6 @@ __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return (iq > int(iq)) ? i
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>(int(iq + iq_t<Q>::from(0.5)));}
 
-
-#ifdef IQ_USE_LOG
-
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> log10(const iq_t<P> iq) {
     #ifdef IQ_CH32_LOG
@@ -558,7 +546,6 @@ __fast_inline constexpr iq_t<Q> pow(const iq_t<P> base, const integral auto time
     return exp(times * log(base));
 }
 
-#endif
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> isqrt(const iq_t<P> iq){
@@ -779,12 +766,10 @@ namespace std{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return ymd::ceil(iq);}
 
-    #ifdef IQ_USE_LOG
-
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log10(const iq_t<P> iq){return ymd::log10(iq);}
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log(const iq_t<P> iq){return ymd::log(iq);}
-    #endif
+
 }

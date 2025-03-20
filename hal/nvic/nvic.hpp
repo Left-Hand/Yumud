@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/platform.h"
-#include "core/sdk.h"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
 
 #if defined(WCH) && defined(RISCV)
 #define SUPPORT_VTF

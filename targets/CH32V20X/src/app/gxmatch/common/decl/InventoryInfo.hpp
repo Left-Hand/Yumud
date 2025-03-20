@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "../enum.hpp"
 
 namespace gxm{

@@ -2,7 +2,7 @@
 
 #include <type_traits>
 #include <cstdint>
-#include "core/sys_defs.h"
+#include "core/sys_defs.hpp"
 
 #define MAKE_BINA_ENUM(name, u, l)\
 struct name {\

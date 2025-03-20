@@ -21,7 +21,7 @@ BusError I2cSw::wait_ack(){
 
     bool ovt = false;
     while(sda_gpio.read()){
-        if(delta >= timeout_){
+        if(delta.duration() >= timeout_){
             ovt = true;
             break;
         }

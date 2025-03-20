@@ -1,7 +1,7 @@
 #include "../tb.h"
 
 #include "core/math/int/int_t.hpp"
-#include "core/math/iq/universal/support.h"
+#include "core/math/iq/universal/support.hpp"
 #include "core/math/iq/universal/_IQNtables.hpp"
 
 #include "core/debug/debug.hpp"

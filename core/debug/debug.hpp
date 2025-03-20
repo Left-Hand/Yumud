@@ -2,7 +2,7 @@
 
 #define __DEBUG_INCLUDED
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include "debugger.hpp"
 #include <source_location>
 

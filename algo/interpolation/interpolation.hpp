@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 #include "core/math/real.hpp"
 #include "types/vector2/vector2.hpp"

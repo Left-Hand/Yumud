@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/uint24_t.h"
+#include "core/math/uint24_t.hpp"
 #include <span>
 
 namespace ymd{

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 namespace ymd::drivers{
 class RzEncoder{

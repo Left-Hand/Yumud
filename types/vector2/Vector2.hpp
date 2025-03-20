@@ -62,7 +62,7 @@ public:
 
     scexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
     scexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
-    scexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
+    scexpr Vector2_t<T> INF = Vector2_t<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
 
     scexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
     scexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);

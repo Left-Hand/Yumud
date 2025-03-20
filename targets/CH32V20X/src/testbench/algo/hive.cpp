@@ -4,7 +4,7 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 #include "core/utils/hive.hpp"
 #include "types/vector2/vector2.hpp"

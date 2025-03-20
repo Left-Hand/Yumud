@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/buffer/buffer.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
 

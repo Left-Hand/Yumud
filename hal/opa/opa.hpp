@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/GpioTag.hpp"

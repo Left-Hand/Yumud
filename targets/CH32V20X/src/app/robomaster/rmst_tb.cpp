@@ -4,7 +4,7 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 

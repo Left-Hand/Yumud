@@ -7,7 +7,7 @@
 
 #include "hal/bus/uart/uart.hpp"
 #include "core/string/string.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include "../Radio.hpp"
 
 

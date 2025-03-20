@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rts_support.h"
+#include "rts_support.hpp"
 
 template<size_t Q>
 requires (Q < 64)

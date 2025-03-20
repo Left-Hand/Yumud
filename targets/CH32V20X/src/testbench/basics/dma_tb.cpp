@@ -1,5 +1,5 @@
 #include "src/testbench/tb.h"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 #define DMA_TB_STRING
 

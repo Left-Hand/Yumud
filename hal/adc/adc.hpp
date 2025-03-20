@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 #include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"

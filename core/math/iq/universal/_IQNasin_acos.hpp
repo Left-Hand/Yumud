@@ -1,6 +1,6 @@
 #pragma once
 
-#include "support.h"
+#include "support.hpp"
 #include "_IQNtables.hpp"
 
 #include "_IQNsqrt.hpp"

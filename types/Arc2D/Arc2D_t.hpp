@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Range/range.hpp"
 

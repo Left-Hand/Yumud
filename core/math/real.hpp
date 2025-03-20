@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
+#include "core/math_defs.hpp"
 
 #if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
 #define USE_STD_MATH

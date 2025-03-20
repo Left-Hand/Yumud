@@ -1,9 +1,9 @@
-#include "core/platform.h"
-#include "core/sdk.h"
-#include "core/clock/clock.h"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
+#include "core/clock/clock.hpp"
 
-#include "ch32v30x_usbotg_device.h"
-#include "zf_driver_usb_cdc.h"
+#include "ch32v30x_usbotg_device.hpp"
+#include "zf_driver_usb_cdc.hpp"
 
 
 #ifdef CH32V30X

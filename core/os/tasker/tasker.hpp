@@ -1,11 +1,11 @@
-#ifndef __TASKER_HPP__
-#define __TASKER_HPP__
+#pragma once
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include <cstdint>
 #include <functional>
 #include <vector>
 
+namespace ymd{
 enum class TaskerStatus:uint8_t {
     OK,
     Error
@@ -61,5 +61,4 @@ class Tasker{
         TaskerStatus delay(uint32_t ms);
 
 };
-
-#endif //__TASKER_HPP__
+}

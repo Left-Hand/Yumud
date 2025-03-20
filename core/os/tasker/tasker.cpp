@@ -1,6 +1,8 @@
 
 #include "Tasker.hpp"
 
+using namespace ymd;
+
 uint32_t Tasker::getTick(void) {
     return millis();
 }

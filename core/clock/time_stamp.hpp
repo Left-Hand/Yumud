@@ -1,7 +1,8 @@
 #pragma once
 
-#include "clock.h"
+#include "clock.hpp"
 
+namespace ymd{
 
 class TimeStamp{
 protected:
@@ -9,8 +10,10 @@ protected:
 public:
     TimeStamp():begin(micros()){;}
     TimeStamp(const TimeStamp& other) = default;
-    operator uint32_t() const {
+    uint32_t duration() const {
         uint32_t time_current = micros();
         return (time_current + ((time_current ^ begin) & 0x8000? begin : - begin));
     }
 };
+
+}

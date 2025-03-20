@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 #include "details/unwrap_util.hpp"
 #include <variant>

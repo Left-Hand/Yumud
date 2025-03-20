@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/stream/ostream.hpp"
 
 #include "type_traits"

@@ -1,4 +1,4 @@
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "ral/ch32/ch32_common_uart_def.hpp"
 
 #include "uarthw.hpp"

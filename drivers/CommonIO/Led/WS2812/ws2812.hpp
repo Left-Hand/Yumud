@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../RgbLed.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include <array>
 
 namespace ymd::drivers{

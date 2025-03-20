@@ -1,12 +1,12 @@
 #include "system.hpp"
 
-#include "core/platform.h"
-#include "core/sdk.h"
-#include "core/arch.h"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
+#include "core/arch.hpp"
 
 #include "hal/crc/crc.hpp"
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 #include "core/debug/debug.hpp"
 

@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/math/real.hpp"
 
 #include "dsp/filter/homebrew/BurrFilter.hpp"

@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
 #include "hal/bus/spi/spihw.hpp"

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "stdint.h"
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 
 struct uint24_t{
     uint32_t data : 24;
-
-#ifdef __cplusplus
 
     __fast_inline constexpr uint24_t() {
         data = 0;
@@ -29,7 +27,6 @@ struct uint24_t{
         return data;
     }
 
-#endif
 };
 
 typedef struct uint24_t uint24_t;

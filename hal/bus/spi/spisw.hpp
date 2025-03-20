@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spi.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 
 
 namespace ymd::hal{

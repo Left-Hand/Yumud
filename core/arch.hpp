@@ -1,7 +1,5 @@
 #pragma once
 
-//#region arch
-#ifdef __cplusplus 
 
 
 #ifdef CH32V20X
@@ -15,8 +13,7 @@
 #ifdef ARCH_QKV4
 #include "arch/riscv/qkv4.hpp"
 #endif
-#endif
-//#endregion
+
 
 
 #if defined(CH32V203)

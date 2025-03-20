@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../core/platform.h"
-
 #define F_CPU 144000000
 
 #define USE_IQ

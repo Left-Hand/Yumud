@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bus.hpp"
-#include "core/clock/clock.h"
+#include "core/clock/clock.hpp"
 #include <type_traits>
 #include <initializer_list>
 

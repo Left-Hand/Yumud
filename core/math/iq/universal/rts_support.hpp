@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/math_defs.hpp"
 #include <cstdint>
 
 #ifndef __fast_inline

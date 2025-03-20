@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 #include "BusTrait.hpp"
 #include "bus_enums.hpp"

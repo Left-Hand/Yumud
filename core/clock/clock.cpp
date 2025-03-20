@@ -1,12 +1,10 @@
-#include "clock.h"
+#include "clock.hpp"
 #include "time.hpp"
 
 #include "core/math/iq/iq_t.hpp"
 #include <functional>
 
-#include "core/sdk.h"
-
-using namespace ymd;
+#include "core/sdk.hpp"
 
 #define TICKS_PER_MS (F_CPU / 1000)
 #define TICKS_PER_US (TICKS_PER_MS / 1000)
@@ -32,7 +30,7 @@ using namespace ymd;
 volatile uint32_t msTick = 0;
 volatile uint64_t micros_base = 0;
 
-
+namespace ymd{
 uint32_t millis(void){
   return msTick;
 }
@@ -118,16 +116,6 @@ void delayNanoseconds(uint32_t ns) {
     } while (nbTicks > elapsedTicks);
 }
 
-void Systick_Init(){
-    SysTick->SR  = 0;
-    SysTick->CTLR= 0;
-    SysTick->CNT = 0;
-    SysTick->CMP = TICKS_PER_MS - 1;
-    SysTick->CTLR= 0xF;
-
-    NVIC_SetPriority(SysTicK_IRQn,0xFF);
-    NVIC_EnableIRQ(SysTicK_IRQn);
-}
 
 
 static std::function<void(void)> systick_cb;
@@ -137,13 +125,6 @@ void bindSystickCb(std::function<void(void)> && _cb){
 }
 
 
-void SysTick_Handler(void){
-    msTick += 1;
-    micros_base += 1000;
-
-    SysTick->SR = 0;
-    EXECUTE(systick_cb);
-}
 
 static consteval double sepow(const double base, const size_t times){
     double ret = 1;
@@ -153,7 +134,7 @@ static consteval double sepow(const double base, const size_t times){
     return ret;
 }
 
-real_t ymd::time(){
+real_t time(){
     if constexpr(is_fixed_point_v<real_t>){
         union Depart{
             uint64_t res64;
@@ -179,6 +160,30 @@ real_t ymd::time(){
     }
 
 }
+
+}
+
+
+
+void Systick_Init(){
+    SysTick->SR  = 0;
+    SysTick->CTLR= 0;
+    SysTick->CNT = 0;
+    SysTick->CMP = TICKS_PER_MS - 1;
+    SysTick->CTLR= 0xF;
+
+    NVIC_SetPriority(SysTicK_IRQn,0xFF);
+    NVIC_EnableIRQ(SysTicK_IRQn);
+}
+
+void SysTick_Handler(void){
+    msTick += 1;
+    micros_base += 1000;
+
+    SysTick->SR = 0;
+    EXECUTE(ymd::systick_cb);
+}
+
 
 #undef TICKS_PER_MS
 #undef TICKS_PER_US

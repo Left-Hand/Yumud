@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 
 #include "types/color/color_t.hpp"

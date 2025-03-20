@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/platform.hpp"
 
 template<typename T, unsigned int N>
 class AverageFilter {

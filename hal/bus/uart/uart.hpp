@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "core/sdk.h"
+#include "core/sdk.hpp"
 #include "core/stream/stream.hpp"
 
 #include "hal/bus/bus.hpp"

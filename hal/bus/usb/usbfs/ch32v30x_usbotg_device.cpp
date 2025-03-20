@@ -7,9 +7,9 @@
 *******************************************************************************/
 
 
-#include "core/platform.h"
-#include "core/sdk.h"
-#include "ch32v30x_usbotg_device.h"
+#include "core/platform.hpp"
+#include "core/sdk.hpp"
+#include "ch32v30x_usbotg_device.hpp"
 
 #ifdef CH32V30X
 /* Global define */
