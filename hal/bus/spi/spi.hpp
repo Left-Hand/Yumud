@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/bus/bus.hpp"
 
 
@@ -48,6 +48,5 @@ public:
         cs_port.bindPin(gpio, index);
     }
 };
-
 
 }

@@ -3,10 +3,9 @@
 
 #include <ostream>
 
-#include "core/system.hpp"
 #include "src/testbench/tb.h"
 #include "core/debug/debug.hpp"
-
+#include "core/sdk.hpp"
 
 namespace RiscvCpu{
     struct sp{};

@@ -23,6 +23,8 @@
 #include "Renderer.hpp"
 #include "elements.hpp"
 
+#include "core/math/realmath.hpp"
+
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::nvcv2;

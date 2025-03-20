@@ -4,6 +4,10 @@
 #include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
+#include "core/math/realmath.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
+
 
 class TimerOCTwins:public PwmIntf{
 protected:

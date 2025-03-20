@@ -12,6 +12,7 @@ limitations under the License.
 
 #include "tinymaix.h"
 #include "float.h"
+#include "core/math/realmath.hpp"
 
 /*************************** TML_CONV2D **********************************/
 static uint32_t k_oft[TM_MAX_KSIZE]; 

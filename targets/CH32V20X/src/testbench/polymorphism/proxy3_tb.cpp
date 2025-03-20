@@ -130,7 +130,7 @@ using DrawableProxy = pro::proxy<Drawable>;
 // }
 // using np = std::nullptr;
 void proxy_tb(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
     StringStream ss;
     uint32_t dur;

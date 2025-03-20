@@ -6,6 +6,8 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
+#include "core/math/realmath.hpp"
+
 using namespace hal;
 void m2006_main(){
     // scexpr size_t cb_freq = 200;
@@ -13,7 +15,7 @@ void m2006_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
+    // DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
     can.init(1_MHz);
     can[0].mask(CanID16{0x201, CanRemoteSpec::Data}, CanID16{0xffff, CanRemoteSpec::Remote});

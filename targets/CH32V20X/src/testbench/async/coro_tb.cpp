@@ -3,6 +3,7 @@
 
 #include "src/app/gui/coro_task.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd::coro;
 // using Task = coro::Task;

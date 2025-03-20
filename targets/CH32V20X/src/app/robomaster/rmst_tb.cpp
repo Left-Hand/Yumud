@@ -13,6 +13,8 @@
 #include "detectors/ShockDetector.hpp"
 #include "detectors/SecondOrderTransferFunc.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 using namespace ymd::rmst;
 

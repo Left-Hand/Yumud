@@ -2,7 +2,7 @@
 
 #include "gxmatch.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 

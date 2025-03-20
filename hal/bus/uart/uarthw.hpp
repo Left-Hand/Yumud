@@ -2,9 +2,6 @@
 
 #include "uart.hpp"
 
-#include "hal/dma/dma.hpp"
-
-
 
 #ifdef ENABLE_UART1
 extern "C" __interrupt void USART1_IRQHandler(void);
@@ -41,6 +38,7 @@ extern "C" __interrupt void UART8_IRQHandler(void);
 
 namespace ymd::hal{
 
+class DmaChannel;
 
 class UartHw:public Uart{
 public:

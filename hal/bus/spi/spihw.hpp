@@ -59,7 +59,6 @@ public:
 };
 
 
-
 #ifdef ENABLE_SPI1
 extern SpiHw spi1;
 #endif

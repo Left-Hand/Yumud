@@ -2,6 +2,7 @@
 #include "core/debug/debug.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
 

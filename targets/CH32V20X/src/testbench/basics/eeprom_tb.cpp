@@ -13,7 +13,7 @@
 #include "algo/random/random_generator.hpp"
 
 #include "core/math/real.hpp"
-
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd::drivers;
 

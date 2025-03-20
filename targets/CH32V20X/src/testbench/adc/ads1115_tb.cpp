@@ -6,6 +6,8 @@
 
 #include "drivers/Adc/ADS1115/ads1115.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 
 namespace ymd{

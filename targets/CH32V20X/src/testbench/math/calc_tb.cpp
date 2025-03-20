@@ -10,7 +10,9 @@
 #include "algo/random/random_generator.hpp"
 #include "core/math/real.hpp"
 #include "core/debug/debug.hpp"
+#include "core/math/realmath.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 // using namespace std;
 using std::stack;
 using std::string;

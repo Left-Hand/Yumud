@@ -1,8 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "hal/gpio/port.hpp"
-
+#include "core/sdk.hpp"
 
 #include <memory>
 #include <functional>

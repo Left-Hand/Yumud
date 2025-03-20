@@ -6,6 +6,8 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
 // 可以配置不同的串口输出和定时器（在下方以宏给出）
@@ -18,7 +20,7 @@
 // #define FREQ 200
 
 // #define UART uart1
-#define UART uart2
+#define UART hal::uart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2

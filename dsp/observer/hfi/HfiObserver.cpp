@@ -1,4 +1,5 @@
 #include "HfiObserver.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::foc {
 

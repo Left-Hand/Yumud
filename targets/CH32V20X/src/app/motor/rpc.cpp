@@ -4,8 +4,10 @@
 
 #include "robots/rpc/arg_parser.hpp"
 #include "types/vector3/vector3.hpp"
-
+#include "core/math/realmath.hpp"
 #include "rpc.hpp"
+
+#include "hal/gpio/port.hpp"
 
 using namespace ymd;
 

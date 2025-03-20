@@ -1,5 +1,6 @@
 #include "spll.hpp"
 #include <tuple>
+#include "core/math/realmath.hpp"
 
 using namespace ymd::digipw;
 

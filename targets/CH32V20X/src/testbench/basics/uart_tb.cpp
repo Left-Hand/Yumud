@@ -5,12 +5,14 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/string/string.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
+#include "hal/gpio/port.hpp"
 
 #define UART_TB_ECHO
 using std::string;
 
-#define TARG_UART uart2            
+#define TARG_UART hal::uart2
 
 [[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;

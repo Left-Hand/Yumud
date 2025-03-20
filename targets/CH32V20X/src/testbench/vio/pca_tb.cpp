@@ -7,6 +7,7 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd::drivers;
 

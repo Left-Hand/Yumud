@@ -4,10 +4,11 @@
 
 #include "core/math/float/bf16.hpp"
 #include "dsp/filter/EKF.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 // #include "kalman/kalman3.hpp"
 
 // #define UART uart2
-#define UART uart2
+#define UART hal::uart2
 void ekf_main(){
 
     

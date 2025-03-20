@@ -1,6 +1,8 @@
 #include "src/testbench/tb.h"
 #include "core/clock/clock.hpp"
 
+#include "hal/gpio/port.hpp"
+
 void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();
     while(true){

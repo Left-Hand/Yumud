@@ -11,6 +11,8 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 
 using namespace ymd;
 

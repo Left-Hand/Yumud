@@ -5,6 +5,9 @@
 #include "hal/timer/pwm/gpio_pwm.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
+#include "core/math/realmath.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 #define PWM_TB_GPIO
 // #define PWM_TB_TIMEROC
 // #define PWM_TB_CO

@@ -11,12 +11,14 @@
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 #include "src/testbench/algo/utils.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 using namespace ymd::drivers;
 
 
-#define UART uart2
+#define UART hal::uart2
 
 #define MAG_ACTIVATED
 

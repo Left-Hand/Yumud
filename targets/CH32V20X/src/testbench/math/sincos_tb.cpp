@@ -12,6 +12,7 @@
 
 #include "core/utils/Reg.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 // static constexpr __fast_inline 
 // int32_t __UIQ32getSinCosResult(uint32_t iq31X, uint32_t iq31Sin, uint32_t iq31Cos){
@@ -254,7 +255,7 @@ void test_func(Fn && fn, const uint32_t dur){
     }
 }
 
-#define UART uart2
+#define UART hal::uart2
 
 
 

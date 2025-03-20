@@ -6,6 +6,9 @@
 #include "hal/bus/can/can.hpp"
 
 #include "types/range/range.hpp"
+#include "core/math/realmath.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 
 class ZdtMotor{
 protected:

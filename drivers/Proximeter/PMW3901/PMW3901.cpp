@@ -2,6 +2,9 @@
 #include "types/image/image.hpp"
 #include "core/debug/debug.hpp"
 
+#include "core/math/realmath.hpp"
+
+
 #define PMW3901_REG_Product_ID      0x00
 #define PMW3901_REG_Revision_ID     0x01
 #define PMW3901_REG_Motion          0x02

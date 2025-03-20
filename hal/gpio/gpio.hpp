@@ -1,8 +1,7 @@
 #pragma once
 
-#include "GpioConcept.hpp"
-#include "gpio_utils.hpp"
-#include "GpioTag.hpp"
+#include "gpio_intf.hpp"
+#include "gpio_tag.hpp"
 
 #include "core/sdk.hpp"
 
@@ -31,8 +30,7 @@ protected:
         #elif defined(USE_STM32_HAL_LIB)
         ,pin_(pin)
         #endif
-        {
-    }
+        {}
 
     friend class VGpio;
     friend class ExtiChannel;

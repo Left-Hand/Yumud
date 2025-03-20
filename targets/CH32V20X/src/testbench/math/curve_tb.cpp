@@ -17,7 +17,7 @@
 #include "robots/curve/CurveTrapezoid_t.hpp"
 
 #include "robots/tween/Tween.hpp"
-
+#include "core/math/realmath.hpp"
 
 
 using Point = Vector2_t<real_t>;

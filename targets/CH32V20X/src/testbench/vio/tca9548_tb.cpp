@@ -8,6 +8,8 @@
 
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 
 #define UART uart2

@@ -30,6 +30,7 @@ public:
     void enable_hw_timeout(const bool en = true);
 };
 
+
 #ifdef ENABLE_I2C1
 extern I2cHw i2c1;
 #endif

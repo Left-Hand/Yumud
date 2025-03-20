@@ -2,7 +2,6 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/stream/CharOpTraits.hpp"
-#include "debug_inst.hpp"
 
 namespace ymd{
 
@@ -20,7 +19,7 @@ private:
 public:
     static __Debugger & singleton();
 
-    template<typename T = DebuggerType, typename ... Args>
+    template<typename T, typename ... Args>
     constexpr __Debugger & init(T & route, Args && ... args){
         route.init(args...);
 

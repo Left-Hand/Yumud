@@ -1,4 +1,4 @@
-#include "gpiovirtual.hpp"
+#include "vgpio.hpp"
 #include "gpio.hpp"
 #include "port.hpp"
 

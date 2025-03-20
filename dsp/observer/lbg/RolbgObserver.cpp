@@ -1,4 +1,5 @@
 #include "RolbgObserver.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::foc{
 // RolbgObserver::RolbgObserver(const iq_t<16> _h, const iq_t<16> _Ls, const iq_t<16> _Rs, const iq_t<16> _Tc, const iq_t<16> _omega)

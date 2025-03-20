@@ -1,5 +1,6 @@
 #include "rgb.h"
 #include "core/stream/ostream.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd;
 

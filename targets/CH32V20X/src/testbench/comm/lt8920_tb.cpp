@@ -24,7 +24,7 @@ bool isInInterruptContext() {
 }
 
 void lt8920_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};

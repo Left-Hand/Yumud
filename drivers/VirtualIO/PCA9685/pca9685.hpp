@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"

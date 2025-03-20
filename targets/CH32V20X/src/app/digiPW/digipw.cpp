@@ -6,7 +6,7 @@
 
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"

@@ -1,8 +1,8 @@
 #include "shape.hpp"
-#include "../pixels/pixels.hpp"
-#include "../dsp/fastmath/sqrt.hpp"
-#include "../dsp/fastmath/square.hpp"
-
+#include "nvcv2/pixels/pixels.hpp"
+#include "dsp/fastmath/sqrt.hpp"
+#include "dsp/fastmath/square.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::nvcv2::Shape{
     using Vector2 = Vector2_t<real_t>;

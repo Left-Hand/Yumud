@@ -7,13 +7,16 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/port.hpp"
+
 #include <bitset>
 #include <ranges>
 
 
 using namespace ymd;
 
-#define UART uart2
+#define UART hal::uart2
 
 struct FoundInfo{
     uint8_t addr;

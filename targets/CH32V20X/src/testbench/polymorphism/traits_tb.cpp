@@ -6,6 +6,8 @@
 
 #include "core/polymorphism/traits.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 
 

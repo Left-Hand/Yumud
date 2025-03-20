@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CurveConcept_t.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::curve{
 

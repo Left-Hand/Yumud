@@ -1,6 +1,9 @@
 #include "src/testbench/tb.h"
 #include "core/clock/clock.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/dma/dma.hpp"
+
 #define DMA_TB_STRING
 
 using namespace ymd;

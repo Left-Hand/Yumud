@@ -2,6 +2,7 @@
 
 #include "hal/bus/bus.hpp"
 #include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/sdk.hpp"
 
 #include "CanUtils.hpp"
 #include "CanMsg.hpp"
@@ -43,6 +44,8 @@ void CAN2_SCE_IRQHandler(void);
 #endif
 
 namespace ymd::hal{
+
+class Gpio;
 
 struct CanFilter;
 class Can: public PackedBus<CanMsg>{

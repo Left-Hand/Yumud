@@ -1,4 +1,5 @@
 #include "SmoObserver.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::foc{
 

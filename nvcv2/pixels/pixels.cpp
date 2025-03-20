@@ -1,5 +1,5 @@
 #include "pixels.hpp"
-
+#include "core/math/realmath.hpp"
 
 namespace ymd::nvcv2::Pixels{
 

@@ -1,5 +1,6 @@
 #include "uartsw.hpp"
 #include "core/stream/CharOpTraits.hpp"
+#include "hal/gpio/gpio.hpp"
 
 using namespace ymd::hal;
 

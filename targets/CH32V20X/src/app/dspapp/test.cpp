@@ -12,7 +12,9 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "ParticleSwarmOptimization.hpp"
+#include "core/math/realmath.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 
 
 namespace ymd::dsp{

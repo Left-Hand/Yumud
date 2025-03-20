@@ -1,17 +1,16 @@
 #include "src/testbench/tb.h"
-
-#include "core/debug/debug.hpp"
-
-#include "hal/bus/spi/spihw.hpp"
-
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
+#include "core/debug/debug.hpp"
+#include "core/math/realmath.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
 #include "types/quat/Quat.hpp"
 
 using namespace ymd::drivers;
 
 void bmi160_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     spi1.init(18000000);
     spi1.bind_cs_pin(portA[0], 0);

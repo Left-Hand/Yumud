@@ -9,6 +9,9 @@
 #include "core/utils/hive.hpp"
 #include "types/vector2/vector2.hpp"
 
+
+#include "hal/bus/uart/uarthw.hpp"
+
 void hive_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);

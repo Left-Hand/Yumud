@@ -6,6 +6,8 @@
 #include "core/clock/time.hpp"
 #include "core/polymorphism/metaclass.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 
 

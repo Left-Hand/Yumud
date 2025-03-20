@@ -6,12 +6,13 @@
 #include "core/stream/stream.hpp"
 
 #include "hal/bus/bus.hpp"
-#include "hal/gpio/port.hpp"
 
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 
 
 namespace ymd::hal{
+
+class Gpio;
 
 enum class UartParity{
     None = USART_Parity_No,

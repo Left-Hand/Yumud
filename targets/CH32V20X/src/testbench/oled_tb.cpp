@@ -10,6 +10,7 @@
 #include "drivers/CommonIO/Key/Key.hpp"
 
 #include "types/image/painter.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 
 using namespace GpioUtils;

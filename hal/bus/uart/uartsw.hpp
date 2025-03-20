@@ -35,8 +35,8 @@ public:
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    Gpio & txio(){return Gpio::null();}
-    Gpio & rxio(){return Gpio::null();}
+    Gpio & txio(){return tx_gpio_;}
+    Gpio & rxio(){return rx_gpio_;}
     void set_parity(const Parity parity){;}
 };
 }

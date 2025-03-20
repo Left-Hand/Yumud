@@ -1,13 +1,7 @@
 #include "utils.hpp"
+#include "core/math/realmath.hpp"
 
-// // 修正后代码：
-// void apply_serval_bytes(const std::span<const std::byte>&... pieces) {
-//     auto handler = [](const std::span<const std::byte>& piece) {
-//         DEBUG_PRINTLN(piece);
-//     };
-//     (handler(pieces), ...);
-// }
-
+#include "hal/bus/uart/uarthw.hpp"
 auto pfunc(const real_t a, const real_t b){
     return a * a + b * b;
     // return a;

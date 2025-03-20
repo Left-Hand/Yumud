@@ -1,6 +1,8 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
+#include "core/math/int/int_t.hpp"
+#include "core/math/realmath.hpp"
 
 #include "hal/bus/sdi/sdi.hpp"
 
@@ -14,7 +16,6 @@
 #include "types/segment2/Segment2.hpp"
 #include "types/Line2/Line2.hpp"
 #include "types/Ray2/Ray2.hpp"
-// #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Arc2D/Arc2D_t.hpp"
 #include "types/Bezier2D/Bezier2D_t.hpp"
 
@@ -23,7 +24,8 @@
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
 
-#include "core/math/int/int_t.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\

@@ -1,6 +1,9 @@
 #include "core/platform.hpp"
 #include "ral/ch32/ch32_common_uart_def.hpp"
 
+#include "hal/dma/dma.hpp"
+#include "hal/gpio/port.hpp"
+
 #include "uarthw.hpp"
 
 using namespace ymd;

@@ -1,6 +1,7 @@
 #include "CanFilter.hpp"
 
 #include "core/platform.hpp"
+#include "core/sdk.hpp"
 #include "core/string/StringView.hpp"
 
 using namespace ymd;

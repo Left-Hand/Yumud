@@ -2,16 +2,16 @@
 #include "core/math/real.hpp"
 #include "core/math/fast/conv.hpp"
 #include "core/math/iq/iq_t.hpp"
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/utils/Reg.hpp"
 
+#include "hal/bus/uart/uart.hpp"
 
 #include "types/vector3/Vector3.hpp"
 #include "types/quat/Quat.hpp"
 
-#include "core/debug/debug.hpp"
-#include "core/clock/time.hpp"
-
-#include "core/utils/Reg.hpp"
-
+#include "hal/bus/uart/uarthw.hpp"
 
 #define UART hal::uart2
 

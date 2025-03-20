@@ -3,6 +3,9 @@
 #include "core/clock/time.hpp"
 
 #include "core/math/float/bf16.hpp"
+#include "core/math/realmath.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 void float_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
