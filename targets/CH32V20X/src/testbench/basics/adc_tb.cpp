@@ -124,14 +124,14 @@ void adc_tb(OutputStream & logger){
     // bled.outpp();
     // auto fn = [&logger](){logger.println("Hi");};
     // void (* fn2)(void) = fn;
-    uint16_t adc_dma_buf[16];
-    dma1Ch1.init(DmaUtils::Mode::toMemCircular);
-    dma1Ch1.start((void *)adc_dma_buf, (void *)(ADC1->RDATAR), ARRSIZE(adc_dma_buf));
-    dma1Ch1.configDataBytes(2);
+    std::array<uint16_t, 16> adc_dma_buf;
+    dma1Ch1.init(DmaMode::toMemCircular);
+    dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
+    dma1Ch1.config_data_bytes(2);
 
     // adc1.enableContinous();
-    adc1.enableDma();
-    adc1.swStartRegular(true);
+    adc1.enable_dma();
+    adc1.sw_start_regular(true);
     while(true){
         logger.println(adc_dma_buf[0], dma1Ch1.pending());
     }

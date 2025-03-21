@@ -21,11 +21,11 @@ public:
     AdcInjectedChannel(const AdcInjectedChannel & other) = delete;
     AdcInjectedChannel(AdcInjectedChannel && other) = delete;
 
-    void setSampleCycles(const AdcSampleCycles cycles) override;
+    void set_sample_cycles(const AdcSampleCycles cycles);
     
 
-    uint16_t data() override;
-    real_t uni() override;
+    uint16_t data();
+    real_t uni();
 };
 
 };

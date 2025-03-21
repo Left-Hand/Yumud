@@ -65,9 +65,9 @@ void init_adc(){
     );
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-    adc1.setInjectedTrigger(AdcInjectedTrigger::T1CC4);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
     // adc1.enableContinous();
-    adc1.enableAutoInject(false);
+    adc1.enable_auto_inject(false);
 }
 
 }

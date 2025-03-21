@@ -3,8 +3,8 @@
 #include <cstdint>
 #include "core/sdk.hpp"
 
-namespace ymd::DmaUtils{
-    enum class Mode:uint8_t{
+namespace ymd::hal{
+    enum class DmaMode:uint8_t{
         toMem = DMA_DIR_PeripheralSRC,
         toPeriph = DMA_DIR_PeripheralDST,
         synergy,
@@ -17,7 +17,7 @@ namespace ymd::DmaUtils{
         automatic
     };
 
-    enum class Priority:uint16_t{
+    enum class DmaPriority:uint16_t{
         low = DMA_Priority_Low,
         medium = DMA_Priority_Medium,
         high = DMA_Priority_High,

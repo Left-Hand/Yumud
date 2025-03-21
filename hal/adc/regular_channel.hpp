@@ -22,7 +22,7 @@ public:
         return u16_to_uni(data_cache);
     }
 
-    void setSampleCycles(const SampleCycles cycles) override{
+    void set_sample_cycles(const SampleCycles cycles) override{
         ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
     }
 

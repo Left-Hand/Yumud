@@ -115,7 +115,9 @@ void lt8960_tb(){
         hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
     }
 
-    while(true);
+    while(true){
+        __WFI();
+    }
 }
 
 void lt8960_main(){

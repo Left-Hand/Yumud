@@ -128,23 +128,23 @@ protected:
     AdcInjectedChannel injected_channels[4];
 
 
-    uint32_t getMaxValue() const {
+    uint32_t get_max_value() const {
         return ((1 << 12) - 1) << (right_align ? 0 : 4);
     }
 
-    void setRegularCount(const uint8_t cnt){
+    void set_regular_count(const uint8_t cnt){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCNUM = cnt;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
         regular_cnt = cnt;
     }
 
-    void setInjectedCount(const uint8_t cnt){
+    void set_injected_count(const uint8_t cnt){
         ADC_InjectedSequencerLengthConfig(instance, cnt);
         injected_cnt = cnt;
     }
 
-    void setRegularSampleTime(const ChannelIndex channel,  const SampleCycles _sample_time){
+    void set_regular_sample_time(const ChannelIndex channel,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
         uint8_t ch = (uint8_t)channel;
         uint8_t offset = ch % 10;
@@ -163,19 +163,19 @@ protected:
         }
     }
 
-    void enableSingleshot(const bool en){
+    void enable_singleshot(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCEN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableScan(const bool en){
+    void enable_scan(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.SCAN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableTempVref(const bool en){
+    void enable_temp_vref(const bool en){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.TSVREFE = en;
@@ -186,15 +186,15 @@ protected:
     friend void ::ADC1_2_IRQHandler(void);
     #endif
 
-    __fast_inline void onJeocInterrupt(){
+    __fast_inline void on_jeoc_interrupt(){
         EXECUTE(jeoc_cb);
     }
 
-    __fast_inline void onEocInterrupt(){
+    __fast_inline void on_eoc_interrupt(){
         EXECUTE(eoc_cb);
     }
 
-    __fast_inline void onAwdInterrupt(){
+    __fast_inline void on_awd_interrupt(){
         EXECUTE(awd_cb);
     }
 public:
@@ -212,7 +212,7 @@ public:
 
     AdcInjectedChannel & inj(const size_t index);
 
-    void bindCb(const IT it,auto && cb){
+    void bind_cb(const IT it,auto && cb){
         switch(it){
             case IT::JEOC:
                 jeoc_cb = std::forward<decltype(cb)>(cb);
@@ -228,43 +228,43 @@ public:
         }
     }
 
-    void enableIT(const IT it, const NvicPriority & priority, const bool en = true){
+    void enable_it(const IT it, const NvicPriority priority, const bool en = true){
         ADC_ITConfig(instance, (uint16_t)it, en);
         priority.enable(ADC_IRQn);
     }
 
-    void attach(const IT it, const NvicPriority & priority, auto && cb, const bool en = true){
-        bindCb(it, std::forward<decltype(cb)>(cb));
-        enableIT(it, priority, en);
+    void attach(const IT it, const NvicPriority priority, auto && cb, const bool en = true){
+        bind_cb(it, std::forward<decltype(cb)>(cb));
+        enable_it(it, priority, en);
     }
 
-    void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
+    void attach(const IT it, const NvicPriority priority, std::nullptr_t cb){
         attach(it, priority, nullptr, false);
     }
 
-    void setMode(const Mode mode){
+    void set_mode(const Mode mode){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DUALMOD = (uint8_t)mode;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     };
 
-    void setPga(const Pga pga){
+    void set_pga(const Pga pga){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.PGA = (uint8_t)pga;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableContinous(const bool en = true){
+    void enable_continous(const bool en = true){
         auto tempreg = std::bit_cast<CTLR2>(instance->CTLR2);
         tempreg.CONT = en;
         instance->CTLR2 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableAutoInject(const bool en = true){
+    void enable_auto_inject(const bool en = true){
         ADC_AutoInjectedConvCmd(instance, en);
     }
 
-    void enableRightAlign(const bool en = true){
+    void enable_right_align(const bool en = true){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.ALIGN = !en;
@@ -272,7 +272,7 @@ public:
         right_align = en;
     }
 
-    void setRegularTrigger(const RegularTrigger trigger){
+    void set_regular_trigger(const RegularTrigger trigger){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.EXTSEL = static_cast<uint8_t>(trigger);
@@ -280,7 +280,7 @@ public:
         instance->CTLR2 = tempreg.data;
     }
 
-    void setInjectedTrigger(const InjectedTrigger trigger){
+    void set_injected_trigger(const InjectedTrigger trigger){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
@@ -288,47 +288,47 @@ public:
         instance->CTLR2 = tempreg.data;
     }
 
-    void setWdtThreshold(const int low,const int high){
-        instance->WDHTR = CLAMP(low, 0, getMaxValue());
-        instance->WDLTR = CLAMP(high, 0, getMaxValue());
+    void set_wdt_threshold(const int low,const int high){
+        instance->WDHTR = CLAMP(low, 0, get_max_value());
+        instance->WDLTR = CLAMP(high, 0, get_max_value());
     }
 
-    void bindWdtIt(Callback && cb){
+    void bind_wdt_it(Callback && cb){
         //TODO
     }
 
-    void setTrigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
-        setRegularTrigger(_rtrigger);
-        setInjectedTrigger(_jtrigger);
+    void set_trigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
+        set_regular_trigger(_rtrigger);
+        set_injected_trigger(_jtrigger);
     }
 
-    void swStartRegular(const bool force = false){
-        if(force) setRegularTrigger(RegularTrigger::SW);
+    void sw_start_regular(const bool force = false){
+        if(force) set_regular_trigger(RegularTrigger::SW);
         ADC_SoftwareStartConvCmd(instance, true);
     }
 
-    void swStartInjected(const bool force = false){
-        if(force) setInjectedTrigger(InjectedTrigger::SW);
+    void sw_start_injected(const bool force = false){
+        if(force) set_injected_trigger(InjectedTrigger::SW);
         ADC_SoftwareStartInjectedConvCmd(instance, true);
     }
 
-    bool isRegularIdle(){
+    bool is_regular_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
     }
 
-    bool isInjectedIdle(){
+    bool is_injected_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
     }
 
-    bool isIdle(){
-        return (isRegularIdle() && isInjectedIdle());
+    bool is_idle(){
+        return (is_regular_idle() && is_injected_idle());
     }
 
-    void enableDma(const bool en = true){
+    void enable_dma(const bool en = true){
         ADC_DMACmd(instance, en);
     }
 
-    uint16_t getConvResult(){
+    uint16_t get_conv_result(){
         return instance->RDATAR;
     }
 
@@ -350,11 +350,11 @@ public:
     //     return InjectedChannel(instance, channel, sample_time);
     // }
 
-    virtual void refreshRegularData() = 0;
-    virtual void refreshInjectedData() = 0;
+    virtual void refresh_regular_data() = 0;
+    virtual void refresh_injected_data() = 0;
 
-    virtual uint16_t getRegularDataByRank(const uint8_t rank) = 0;
-    virtual uint16_t getInjectedDataByRank(const uint8_t rank) = 0;
+    virtual uint16_t get_regular_data_by_rank(const uint8_t rank) = 0;
+    virtual uint16_t get_injected_data_by_rank(const uint8_t rank) = 0;
 };
 
 

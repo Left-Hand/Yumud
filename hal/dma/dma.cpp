@@ -39,10 +39,10 @@ DmaChannel dma2Ch11{DMA2_Channel11};
 #define DMA1_IT_TEMPLATE(y)\
 __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     if(DMA1_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(1,y).onTransferDoneInterrupt();\
+        NAME_OF_DMA_XY(1,y).on_transfer_done_interrupt();\
         DMA1_Inst->clear_transfer_done_flag(y);\
     }else if(DMA1_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(1,y).onTransferHalfInterrupt();\
+        NAME_OF_DMA_XY(1,y).on_transfer_half_interrupt();\
         DMA1_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
@@ -83,7 +83,7 @@ DMA2_IT_TEMPLATE(11);
 #endif
 
 
-void DmaChannel::enableRcc(bool en){
+void DmaChannel::enable_rcc(bool en){
     #ifdef ENABLE_DMA2
     if(instance < DMA2_Channel1){
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
@@ -99,7 +99,7 @@ void DmaChannel::enableRcc(bool en){
 
 void DmaChannel::start(void * dst, const void * src, const size_t size){
 
-    if(dstIsPeriph(mode_)){
+    if(dst_is_periph(mode_)){
         instance -> PADDR = (uint32_t)dst;
         instance -> MADDR = (uint32_t)src;
     }else{
@@ -107,12 +107,12 @@ void DmaChannel::start(void * dst, const void * src, const size_t size){
         instance -> MADDR = (uint32_t)dst;
     }
     instance -> CNTR = size;
-    start();
+    resume();
 }
 
 
 void DmaChannel::init(const Mode mode,const Priority priority){
-    enableRcc(true);
+    enable_rcc(true);
     mode_ = mode;
     DMA_InitTypeDef DMA_InitStructure = {0};
     // DMA_DeInit(instance);
@@ -180,7 +180,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
     DMA_Init(instance, &DMA_InitStructure);
 }
 
-void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
+void DmaChannel::enable_it(const NvicPriority _priority, const bool en){
     IRQn irq = IRQn_Type::Software_IRQn;
     switch(dma_index){
         case 1:
@@ -200,10 +200,10 @@ void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
     NvicPriority::enable(_priority, IRQn(irq), en);
 }
 
-void DmaChannel::onTransferHalfInterrupt(){
+void DmaChannel::on_transfer_half_interrupt(){
     EXECUTE(half_cb_);
 }
 
-void DmaChannel::onTransferDoneInterrupt(){
+void DmaChannel::on_transfer_done_interrupt(){
     EXECUTE(done_cb_);
 }

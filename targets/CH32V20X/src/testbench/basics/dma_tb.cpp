@@ -26,22 +26,22 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
     logger.println("DMA init done");
 
 
-    channel.bindHalfCb([&](){
+    channel.bind_half_cb([&](){
         logger.println("h", channel.pending());
     });
 
-    channel.bindDoneCb([&](){
+    channel.bind_done_cb([&](){
         logger.println("d", channel.pending());
     });
 
 
 
     logger.println("DMA it bind done");
-    channel.enableDoneIt();
-    channel.enableHalfIt();
-    channel.enableIt({0,0});
+    channel.enable_done_it();
+    channel.enable_half_it();
+    channel.enable_it({0,0});
     logger.println("DMA begin");
-    channel.start(dst, src, sizeof(src));
+    channel.transfer_mem2mem<char>(dst, src, sizeof(src));
     while(channel.pending()){
         logger.println(channel.pending());
         delay(200);

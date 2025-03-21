@@ -22,12 +22,12 @@ DShotChannel::DShotChannel(TimerOC & _oc):
         {;}
 
 void DShotChannel::invoke(){
-    dma_channel.start((void *)(uint32_t)(&oc.cvr()), buf, 40);
+    dma_channel.transfer_mem2pph<uint16_t>((&oc.cvr()), buf, 40);
 }
 
 void DShotChannel::init(){
     dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
-    dma_channel.configDataBytes(2);
+    dma_channel.config_data_bytes(2);
     oc.init().sync().enableDma();
 
     high_cnt = (234 * 2 / 3);
