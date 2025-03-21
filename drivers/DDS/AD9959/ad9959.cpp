@@ -7,7 +7,7 @@ using namespace ymd;
 
 void AD9959::init(){
     core_clock = 0;
-    last_channels = ChannelIndex::ChannelAll;
+    last_channels = ChannelIndex::All;
     // Ensure that the SPI device is initialised
     // "setting SCK, MOSI, and SS to outputs, pulling SCK and MOSI low, and SS high"
 
@@ -37,11 +37,11 @@ void AD9959::reset(CFR_Bits cfr){
     pulse(update_gpio);
 
     // Apply the requested CFR bits
-    last_channels = ChannelIndex::ChannelNone;        // Ensure channels get set, not optimised out
-    set_channels(ChannelIndex::ChannelAll);
+    last_channels = ChannelIndex::Nil;        // Ensure channels get set, not optimised out
+    set_channels(ChannelIndex::All);
     write(Register::CFR, uint8_t(cfr));
 
-    set_channels(ChannelIndex::ChannelNone);           // Disable all channels, set 3-wire MSB mode:
+    set_channels(ChannelIndex::Nil);           // Disable all channels, set 3-wire MSB mode:
     pulse(update_gpio);                   // Apply the changes
     set_clock();                         // Set the PLL going
     // It will take up to a millisecond before the PLL locks and stabilises.

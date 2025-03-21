@@ -6,25 +6,18 @@
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#if     defined(DDS_MAX_PRECISION)
-#if     !defined(MAX_U64)
-#define MAX_U64 ((uint64_t)~0LL)
-#endif
-#endif
-
 namespace ymd::drivers{
 
 
 class AD9959{
-// protected:
-public:
+protected:
     enum class ChannelIndex:uint8_t{
-        ChannelNone = 0x00,
-        Channel0    = 0x10,
-        Channel1    = 0x20,
-        Channel2    = 0x40,
-        Channel3    = 0x80,
-        ChannelAll  = 0xF0,
+        Nil = 0,
+        _0    = 0x10,
+        _1    = 0x20,
+        _2    = 0x40,
+        _3    = 0x80,
+        All  = 0xF0,
     } ;
 
     // See register_length[] in write() before re-ordering these.
