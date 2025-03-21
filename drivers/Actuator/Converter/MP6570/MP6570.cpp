@@ -10,7 +10,6 @@ scexpr size_t count_ones(const uint16_t val){
 }
 
 scexpr bool is_odd(const uint16_t val){
-    // return count_ones(val) % 2;
     return count_ones(val) & 0b1;
 }
 
@@ -97,7 +96,7 @@ struct SpiReadResult{
     }
 };
 
-BusError MP6570::Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
+BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     if(i2c_drv_){
         return i2c_drv_->write_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
@@ -119,7 +118,7 @@ BusError MP6570::Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     }
 }
 
-BusError MP6570::Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
+BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
     if(i2c_drv_){
         return i2c_drv_->read_reg(reg_addr, data, MSB);
     }else if(spi_drv_){

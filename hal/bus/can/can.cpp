@@ -1,5 +1,5 @@
 #include "can.hpp"
-#include "CanFilter.hpp"
+#include "can_filter.hpp"
 
 #include "hal/nvic/nvic.hpp"
 #include "hal/gpio/port.hpp"
@@ -343,15 +343,9 @@ uint8_t Can::transmit(const CanMsg & msg){
         tempdtr |= msg.size() & 0x0F;
 
         if(msg.size() && (!msg.is_remote())){
-
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wuninitialized"
-
-            uint64_t data = msg.data64();
+            const uint64_t data = msg.as_u64();
             instance->sTxMailBox[transmit_mailbox].TXMDLR = data & UINT32_MAX;
             instance->sTxMailBox[transmit_mailbox].TXMDHR = data >> 32;
-
-            #pragma GCC diagnostic pop
         }
 
         instance->sTxMailBox[transmit_mailbox].TXMDTR = tempdtr;
@@ -451,8 +445,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
     const uint32_t rxmir = instance->sFIFOMailBox[fifo_num].RXMIR;
     const uint32_t rxmdtr = instance->sFIFOMailBox[fifo_num].RXMDTR;
 
-    const bool ext = (uint8_t)0x04 & rxmir;
-    const uint32_t id = ext ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
+    const uint32_t id = ((uint8_t)0x04 & rxmir) ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
     const bool is_remote = (uint8_t)0x02 & rxmir;
     const uint8_t dlc = (uint8_t)0x0F & rxmdtr;
 
@@ -465,9 +458,9 @@ CanMsg Can::receive(const uint8_t fifo_num){
     }
 
     if(is_remote){
-        return CanMsg(id, CanRemoteSpec::Remote);
+        return CanMsg::from_regs(id, 0, 0);
     }else{
-        return CanMsg(id, data, dlc);
+        return CanMsg::from_regs(id, data, dlc);
     }
 }
 

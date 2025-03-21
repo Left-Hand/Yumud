@@ -4,11 +4,11 @@
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 #include "core/sdk.hpp"
 
-#include "CanUtils.hpp"
-#include "CanMsg.hpp"
+#include "can_utils.hpp"
+#include "can_msg.hpp"
 
-#include "CanTrait.hpp"
-#include "CanFilter.hpp"
+#include "can_trait.hpp"
+#include "can_filter.hpp"
 
 
 #ifdef ENABLE_CAN1

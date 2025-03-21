@@ -167,7 +167,7 @@ CgResult<void> MotorCyberGear::requestWritePara(const uint16_t idx, const uint32
 
 CgResult<void> MotorCyberGear::transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc){
     if (dlc > 8) return CgResult<void>(CgError::RET_DLC_LONGER);
-    const auto msg = CanMsg(id, payload, dlc);
+    const auto msg = CanMsg::from_regs(id, payload, dlc);
     return this->transmit(msg);
 }
 
@@ -176,7 +176,7 @@ CgResult<void> MotorCyberGear::onReceive(const CanMsg & msg){
     const auto cgid = CgId{id};
     const auto cmd = cgid.cmd().as_val();
 
-    const uint64_t data = msg.data64();
+    const uint64_t data = msg.as_u64();
     const uint8_t dlc = msg.size();
 
     switch(cmd){

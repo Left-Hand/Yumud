@@ -55,8 +55,8 @@ void lt8960_tb(){
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)
         | ltr.enable_use_hw_pkt(true)
-        // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
-        | ltr.set_datarate(LT8960L::DataRate::_1M)
+        | ltr.set_datarate(LT8960L::DataRate::_62_5K)
+        // | ltr.set_datarate(LT8960L::DataRate::_1M)
         | ltr.enable_gain_weaken(true)
         // | ltr.set_syncword_tolerance_bits(1)
         | ltr.set_syncword_tolerance_bits(0)
@@ -119,7 +119,9 @@ void lt8960_tb(){
 }
 
 void lt8960_main(){
-    UART.init(576_KHz);
+    // UART.init(576_KHz);
+    // UART.init(1152_KHz);
+    UART.init(6_MHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.noBrackets();
 
