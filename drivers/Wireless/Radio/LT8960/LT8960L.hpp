@@ -50,9 +50,6 @@ public:
     private:
         Kind status_ = Kind::Idle;
     public:
-        operator Kind() const {
-            return status_;
-        }
 
         States & operator = (const Kind status) {
             transition_to(status);

@@ -2,46 +2,45 @@
 
 void LT8960L::States::transition_to(const Kind status){
     status_ = status;
-    LT8960L_DEBUG(uint8_t(status));
+    // LT8960L_DEBUG(uint8_t(status));
 };
 
 Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
     switch(states_.kind()){
         default:
+            LT8960L_PANIC("Invalid state while tx");
             return Err(Error::InvalidState);
+
+        case States::TransmitFailed:
+            DEBUG_PRINTLN("transmit failed");
+
+        case States::TransmitSucceed:
+            states_ = States::Idle;
+            [[fallthrough]];
+
         case States::Idle:{
-            return(is_pkt_ready())
-            .and_then([&](const bool ready) -> Result<void, Error>{
-                if (ready){ states_ = States::Idle;}
-                return Ok();
-            })
-            .to(0u);
+            return (exit_tx_rx()
+            | clear_fifo_write_and_read_ptr()
+            | start_listen_pkt()
+            | ensure_correct_0x08()
+            | enter_tx())
+            .to(0u)
+            .if_ok(
+                [&]{states_ = States::Transmitting;}
+            )
+            ;
         }
 
         case States::Transmitting:{
-            auto res1 = exit_tx_rx()
-            | clear_fifo_write_and_read_ptr()
-            ;
-        
-            if(res1.is_err()) return Err(res1.unwrap_err());
-        
+
+            const auto pkt_res = is_pkt_ready();
+            if (pkt_res.is_err()) return Err(pkt_res.unwrap_err());
+            if (pkt_res.unwrap() == false) return Ok(0u);
+
             auto write_res = write_fifo(buf);
-        
             if(write_res.is_err()) return Err(write_res.unwrap_err());
-            
-            auto last_res = [&](size_t len) -> Result<size_t, Error> {
-                return (ensure_correct_0x08()
-                | enter_tx())
-                .to(len);
-            }(buf.size());
-        
-        
-            if(last_res.is_err()) return Err(last_res.unwrap_err());
-    
-            states_ = States::Transmitting;
-    
-            auto lis_err = start_listen_pkt();
-            if(lis_err.is_err()) return Err(lis_err.unwrap_err());
+
+            states_ = States::TransmitSucceed;
     
             return write_res;
         }
@@ -51,10 +50,22 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
 Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
     switch(states_.kind()){
         default:
+            LT8960L_PANIC("Invalid state while rx", uint8_t(states_.kind()));
             return Err(Error::InvalidState);
+
+        case States::ReceiveFailed:
+            DEBUG_PRINTLN("receive failed");
+            [[fallthrough]];
+        case States::ReceiveSucceed:
+            states_ = States::Idle;
+            [[fallthrough]];
+
         case States::Idle:{
-            return begin_receive().to(0u);
+            return begin_receive().to(0u).if_ok(
+                [&]{states_ = States::Receiving;}
+            );
         }
+
         case States::Receiving:{
             recv_timecnt_++;
             if(recv_timecnt_ > 2){
@@ -78,7 +89,6 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
                 .if_ok([&]{states_ = States::ReceiveSucceed;});
         }
     }
-    return Ok(0u);
 }
 
 
@@ -290,4 +300,26 @@ Result<void, Error> LT8960L::init_rf(){
         // REG 0x24 写0x8080, //重置FIFO
         | write_reg(0x24, 0x8080)
     ;
+}
+
+
+Result<void, Error> LT8960L::begin_receive(){
+    return (exit_tx_rx()
+    | ensure_correct_0x08()
+    | clear_fifo_write_and_read_ptr()
+    | enter_rx()
+    | start_listen_pkt())
+    .if_ok([&]{states_ = States::Receiving;})
+    ;
+}
+
+Result<void, Error> LT8960L::begin_transmit(){
+    // return (set_rf_channel_and_exit_tx_rx(ch)
+    // | ensure_correct_0x08()
+    // | clear_fifo_write_and_read_ptr()
+    // | set_rf_channel_and_enter_rx(ch))
+    // .to(0u)
+    // .if_ok([&]{is_receiving_ = true;})
+    // ;
+    return Ok();
 }

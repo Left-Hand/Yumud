@@ -501,24 +501,3 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
     return rescond(res.ok(), pbuf.size(), res);
 }
 
-
-Result<void, Error> LT8960L::begin_receive(){
-    return (exit_tx_rx()
-    | ensure_correct_0x08()
-    | clear_fifo_write_and_read_ptr()
-    | enter_rx()
-    | start_listen_pkt())
-    .if_ok([&]{states_ = States::Receiving;})
-    ;
-}
-
-Result<void, Error> LT8960L::begin_transmit(){
-    // return (set_rf_channel_and_exit_tx_rx(ch)
-    // | ensure_correct_0x08()
-    // | clear_fifo_write_and_read_ptr()
-    // | set_rf_channel_and_enter_rx(ch))
-    // .to(0u)
-    // .if_ok([&]{is_receiving_ = true;})
-    // ;
-    return Ok();
-}
