@@ -1,6 +1,6 @@
 #pragma once
 
-#include "port_intf.hpp"
+#include "gpio_port_intf.hpp"
 #include "gpio_intf.hpp"
 
 #include <array>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../adc.hpp"
+#include "hal/adc/adc.hpp"
 
 
 namespace ymd::hal{

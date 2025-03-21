@@ -18,9 +18,9 @@ namespace ymd::hal{
     };
 
     enum class DmaPriority:uint16_t{
-        low = DMA_Priority_Low,
-        medium = DMA_Priority_Medium,
-        high = DMA_Priority_High,
-        ultra = DMA_Priority_VeryHigh
+        Low = DMA_Priority_Low,
+        Medium = DMA_Priority_Medium,
+        High = DMA_Priority_High,
+        Ultra = DMA_Priority_VeryHigh
     };
 }

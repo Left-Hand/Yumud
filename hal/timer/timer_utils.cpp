@@ -1,5 +1,5 @@
 #include "timer_utils.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

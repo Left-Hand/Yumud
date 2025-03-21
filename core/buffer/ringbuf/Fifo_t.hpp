@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include <span>
 
 template<typename T, size_t N>
 class Fifo_t{

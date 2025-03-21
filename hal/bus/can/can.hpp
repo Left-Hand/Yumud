@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 #include "core/sdk.hpp"
 
@@ -48,7 +48,7 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
-class Can: public PackedBus<CanMsg>{
+class Can: public BusBase{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;

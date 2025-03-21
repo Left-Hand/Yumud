@@ -62,33 +62,33 @@ protected:
     Mode mode_;
 
     void enable_rcc(const bool en);
-    void config_periph_data_bytes(const size_t bytes){
+    __fast_inline void set_periph_width(const size_t width){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11u << 8)));
-        tmpreg |= (bytes - 1) << 8;
+        tmpreg |= ((width >> 3) - 1) << 8;
         instance->CFGR = tmpreg;
     }
 
-    void config_mem_data_bytes(const size_t bytes){
+    __fast_inline void set_mem_width(const size_t width){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11u << 10)));
-        tmpreg |= (bytes - 1) << 10;
+        tmpreg |= ((width >> 3) - 1) << 10;
         instance->CFGR = tmpreg;
     }
 
-    void config_dst_mem_data_bytes(const size_t bytes){
+    __fast_inline void set_dst_width(const size_t width){
         if(dst_is_periph(mode_)){
-            config_periph_data_bytes(bytes);
+            set_periph_width(width);
         }else{
-            config_mem_data_bytes(bytes);
+            set_mem_width(width);
         }
     }
 
-    void config_src_mem_data_bytes(const size_t bytes){
+    __fast_inline void set_src_width(const size_t width){
         if(!dst_is_periph(mode_)){
-            config_periph_data_bytes(bytes);
+            set_periph_width(width);
         }else{
-            config_mem_data_bytes(bytes);
+            set_mem_width(width);
         }
     }
 
@@ -207,15 +207,7 @@ protected:
 
     void start(void * dst, const void * src, size_t size);
     
-    // template <typename T>
-    // void start(T * dst, const T * src, size_t size){
-    //     config_dst_mem_data_bytes(sizeof(T));
-    //     config_src_mem_data_bytes(sizeof(T));
-    //     start(
-    //         reinterpret_cast<void *>(dst), 
-    //         reinterpret_cast<const void *>(src), 
-    //         size);
-    // }
+
 public:
 
     DmaChannel() = delete;
@@ -230,7 +222,7 @@ public:
         dma_index(calculate_dma_index(_instance)),
         channel_index(calculate_channel_index(_instance)){;}
 
-    void init(const Mode mode,const Priority priority = Priority::medium);
+    void init(const Mode mode,const Priority priority);
 
     void resume(){
         DMA_ClearFlag(done_mask);
@@ -241,8 +233,8 @@ public:
 
     template <typename T>
     void transfer_pph2mem(auto * dst, const volatile auto * src, size_t size){
-        config_dst_mem_data_bytes(sizeof(T));
-        config_src_mem_data_bytes(sizeof(T));
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
 
         start(
             reinterpret_cast<void *>(dst), 
@@ -254,8 +246,8 @@ public:
 
     template <typename T>
     void transfer_mem2pph(volatile auto * dst, const auto * src, size_t size){
-        config_dst_mem_data_bytes(sizeof(T));
-        config_src_mem_data_bytes(sizeof(T));
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
 
         start(
             reinterpret_cast<void *>(const_cast<T *>(reinterpret_cast<volatile T *>(dst))), 
@@ -266,40 +258,14 @@ public:
 
     template<typename T>
     void transfer_mem2mem(auto * dst, const auto * src, size_t size){
-        config_dst_mem_data_bytes(sizeof(T));
-        config_src_mem_data_bytes(sizeof(T));
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
 
         start(
             reinterpret_cast<void *>(const_cast<T *>((dst))), 
             reinterpret_cast<const void *>(src), 
             size
         );
-    }
-
-
-    // template <typename U, typename T>
-    // requires std::is_array_v<T>
-    // void start(U * dst, const T & src){//TODO array can only be c-ctyle array
-    //     config_dst_mem_data_bytes(sizeof(U));
-    //     config_src_mem_data_bytes(sizeof(std::remove_extent_t<T>));
-    //     start(reinterpret_cast<void *>(dst), reinterpret_cast<const void *>(&src[0]) , std::distance(std::begin(src), std::end(src)));
-    // }
-
-    // template <typename U, typename T>
-    // requires std::is_array_v<U>
-    // void start(U & dst, const T * src){
-    //     config_dst_mem_data_bytes(sizeof(U));
-    //     config_src_mem_data_bytes(sizeof(std::remove_extent_t<T>));
-    //     start(
-    //         reinterpret_cast<void *>(dst), 
-    //         reinterpret_cast<const void *>(src), 
-    //         std::distance(std::begin(dst), std::end(dst))
-    //     );
-    // }
-
-    void config_data_bytes(const size_t bytes){
-        config_mem_data_bytes(bytes);
-        config_periph_data_bytes(bytes);
     }
 
     size_t pending(){
@@ -327,7 +293,7 @@ public:
         half_cb_ = std::move(cb);
     }
 
-    bool done(){
+    bool is_done(){
         return DMA_GetFlagStatus(done_mask);
     }
 };

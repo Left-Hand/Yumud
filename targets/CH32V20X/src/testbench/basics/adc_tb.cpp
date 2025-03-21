@@ -1,7 +1,10 @@
 #include "src/testbench/tb.h"
-
+#include "core/stream/ostream.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uarthw.hpp"
+#include "hal/dma/dma.hpp"
+
+
 // #define ADC_TB_MAIN
 // #define ADC_TB_REGULAR_BLOCKING
 #define ADC_TB_REGULAR_DMA
@@ -125,9 +128,8 @@ void adc_tb(OutputStream & logger){
     // auto fn = [&logger](){logger.println("Hi");};
     // void (* fn2)(void) = fn;
     std::array<uint16_t, 16> adc_dma_buf;
-    dma1Ch1.init(DmaMode::toMemCircular);
+    dma1Ch1.init(DmaMode::toMemCircular, DmaPriority::High);
     dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
-    dma1Ch1.config_data_bytes(2);
 
     // adc1.enableContinous();
     adc1.enable_dma();

@@ -14,7 +14,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 using namespace ymd::drivers;
 
 
@@ -71,7 +71,7 @@ void lt8960_tb(){
         common_settings(rx_ltr);
     }
     if(has_tx_authority()){
-        tx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).loc().expect("TX init failed!");
+        tx_ltr.init(LT8960L::Power::_3_4_Db, 0x12345678).loc().expect("TX init failed!");
 
         common_settings(tx_ltr);
     }

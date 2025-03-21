@@ -1,5 +1,5 @@
 #include "Dac.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd::hal;
 using namespace ymd::hal::DacUtils;

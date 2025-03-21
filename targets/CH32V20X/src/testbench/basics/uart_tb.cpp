@@ -1,18 +1,22 @@
 #include "src/testbench/tb.h"
 
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/gpio_port.hpp"
+
 // #include <string>
+// #include "core/stream/ostream.hpp"
+#include "core/stream/stream.hpp"
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/string/string.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-
-#include "hal/gpio/port.hpp"
 
 #define UART_TB_ECHO
 using std::string;
 
 #define TARG_UART hal::uart2
+
+using namespace ymd;
 
 [[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;

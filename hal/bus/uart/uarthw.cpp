@@ -2,7 +2,7 @@
 #include "ral/ch32/ch32_common_uart_def.hpp"
 
 #include "hal/dma/dma.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "uarthw.hpp"
 
@@ -367,10 +367,9 @@ void UartHw::enable_tx_dma(const bool en){
     USART_DMACmd(instance_, USART_DMAReq_Tx, en);
 
     if(en){
-        tx_dma_.init(DmaChannel::Mode::toPeriph);
+        tx_dma_.init(DmaMode::toPeriph, DmaPriority::Medium);
         tx_dma_.enable_it({1,1});
         tx_dma_.enable_done_it();
-        tx_dma_.config_data_bytes(1);
         tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
     }
 }
@@ -392,11 +391,10 @@ void UartHw::on_rx_dma_half(){
 void UartHw::enable_rx_dma(const bool en){
     USART_DMACmd(instance_, USART_DMAReq_Rx, en);
     if(en){
-        rx_dma_.init(DmaChannel::Mode::toMemCircular);
+        rx_dma_.init(DmaMode::toMemCircular, DmaPriority::Medium);
         rx_dma_.enable_it({1,1});
         rx_dma_.enable_done_it();
         rx_dma_.enable_half_it();
-        rx_dma_.config_data_bytes(1);
         rx_dma_.bind_done_cb([this](){this->on_rx_dma_done();});
         rx_dma_.bind_half_cb([this](){this->on_rx_dma_half();});
         rx_dma_.transfer_pph2mem<char>(rx_dma_buf_.begin(), (&instance_->DATAR), UART_RX_DMA_BUF_SIZE);

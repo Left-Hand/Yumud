@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bus.hpp"
+#include "bus_base.hpp"
 #include "core/clock/clock.hpp"
 #include <type_traits>
 #include <initializer_list>
@@ -22,8 +22,7 @@ concept is_readable_bus = requires(TBus bus, uint32_t & data, Ack need_ack) {
 };
 
 template<typename TBus>
-concept is_fulldup_bus = std::is_base_of_v<FullDuplexBus, TBus>;
-
+concept is_fulldup_bus = is_writable_bus<TBus> && is_readable_bus<TBus>;
 
 template <typename TBus>
 struct driver_of_bus {

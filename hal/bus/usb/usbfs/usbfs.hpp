@@ -2,7 +2,7 @@
 
 #include "core/stream/ostream.hpp"
 
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
 
 #include <functional>
 

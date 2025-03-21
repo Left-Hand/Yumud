@@ -7,7 +7,7 @@
 
 
 namespace ymd::drivers{
-class HC12:public IOStream, public Radio{
+class HC12: public Radio{
 public:
     enum class PowerMode{
         Low,
@@ -26,13 +26,13 @@ protected:
     hal::GpioIntf & set_pin;
     uint16_t timeout = 5;
 
-    void write(const char data) override{
+    void write(const char data){
         uart.write(data);
     }
-    void read(char & data) override{
+    void read(char & data){
         uart.read1(data);
     }
-    size_t available() const override{
+    size_t available() const{
         return uart.available();
     }
     bool sendAtCommand(const char * token){
@@ -42,12 +42,12 @@ protected:
     bool sendAtCommand(const String & token){
         set_pin = false;
         delayMicroseconds(1);
-        print("AT");
+        uart.writeN("AT", 2);
         if(token.length()){
-            print('+');
-            print(token);
+            uart.write1('+');
+            // uart.write1(token);
         }
-        println();
+        uart.writeN("\r\n", 2);
 
         String recv = "";
         recv.reserve(3);
@@ -88,7 +88,7 @@ public:
     void sleep(){sendAtCommand("SLEEP");}
     // void setPower(const Power power){sendAtCommand("P" + String((uint8_t)power));}
     // void setPowerMode(const PowerMode power_mode){sendAtCommand("FU" + String((uint8_t)power_mode));}
-    // void setChannel(const uint16_t _channel) override {sendAtCommand("C" + String((uint8_t)_channel));}
+    // void setChannel(const uint16_t _channel) {sendAtCommand("C" + String((uint8_t)_channel));}
     // void setCommBaudRate(const uint16_t baudrate){sendAtCommand("B" + String(baudrate));}
     bool isValid(){return sendAtCommand("");}
 };

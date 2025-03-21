@@ -1,4 +1,4 @@
-#include "port_intf.hpp"
+#include "gpio_port_intf.hpp"
 #include "gpio.hpp"
 
 #include "core/sdk.hpp"

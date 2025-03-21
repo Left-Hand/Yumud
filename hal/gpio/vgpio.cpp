@@ -1,6 +1,6 @@
 #include "vgpio.hpp"
 #include "gpio.hpp"
-#include "port.hpp"
+#include "gpio_port.hpp"
 
 using namespace ymd::hal;
 VGpio::VGpio(const Gpio & gpio):

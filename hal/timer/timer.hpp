@@ -2,6 +2,7 @@
 
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
+#include "hal/nvic/nvic.hpp"
 
 #ifdef HDW_SXX32
 

@@ -26,8 +26,7 @@ void DShotChannel::invoke(){
 }
 
 void DShotChannel::init(){
-    dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
-    dma_channel.config_data_bytes(2);
+    dma_channel.init(DmaMode::toPeriph, DmaPriority::Ultra);
     oc.init().sync().enableDma();
 
     high_cnt = (234 * 2 / 3);

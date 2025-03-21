@@ -4,7 +4,7 @@
 #include "core/math/real.hpp"
 
 #include "hal/bus/can/can.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     can.init(1_MHz, hal::Can::Mode::Normal);

@@ -3,9 +3,11 @@
 
 #include "hal/timer/timer_utils.hpp"
 #include "concept/pwm_channel.hpp"
-#include "hal/dma/dma.hpp"
+
 
 namespace ymd::hal{
+
+class DmaChannel;
 
 class TimerChannel{
 public:

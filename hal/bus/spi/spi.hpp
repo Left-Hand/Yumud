@@ -1,12 +1,12 @@
 #pragma once
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
 
 
 namespace ymd::hal{
 
-class Spi:public FullDuplexBus{
+class Spi:public BusBase{
 public:
     #ifndef SPI_MAX_PINS
     #define SPI_MAX_PINS 4
@@ -34,6 +34,11 @@ public:
     Spi(){;}
     Spi(const hal::Spi &) = delete;
     Spi(hal::Spi &&) = delete;
+
+    
+    virtual BusError read(uint32_t & data) = 0;
+    virtual BusError write(const uint32_t data) = 0;
+    virtual BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
     virtual void set_data_width(const uint8_t len) = 0;
     virtual void set_baudrate(const uint32_t baud) = 0;

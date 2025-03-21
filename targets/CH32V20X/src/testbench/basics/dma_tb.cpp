@@ -4,6 +4,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/dma/dma.hpp"
 
+#include "core/stream/ostream.hpp"
+
 #define DMA_TB_STRING
 
 using namespace ymd;
@@ -22,7 +24,7 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
     logger.println("dst:", dst);
     logger.println("======");
 
-    channel.init(DmaChannel::Mode::synergy);
+    channel.init(DmaChannel::Mode::synergy, DmaPriority::High);
     logger.println("DMA init done");
 
 

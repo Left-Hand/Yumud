@@ -7,7 +7,7 @@
 #include "core/math/realmath.hpp"
 #include "rpc.hpp"
 
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "core/platform.hpp"
-
-#include "hal/dma/dma.hpp"
-
+#include <initializer_list>
+#include "hal/nvic/nvic.hpp"
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
 #include "adc_utils.hpp"
-#include <initializer_list>
 
 #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
 extern "C"{
@@ -17,6 +15,9 @@ __interrupt void ADC1_2_IRQHandler(void);
 
 
 namespace ymd::hal{
+
+class DmaChannel;
+
 class AdcConcept{
 protected:
 public:

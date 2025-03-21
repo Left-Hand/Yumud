@@ -4,7 +4,7 @@
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/LightSensor/TCS34725/tcs34725.hpp"
 #include "hal/bus/uart/uarthw.hpp"

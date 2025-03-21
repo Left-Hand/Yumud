@@ -1,12 +1,12 @@
 #pragma once
 
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
 #include "i2c_trait.hpp"
 
 namespace ymd::hal{
 class Gpio;
 
-class I2c:public HalfDuplexBus{
+class I2c:public BusBase{
 protected:
     hal::Gpio & scl_gpio;
     hal::Gpio & sda_gpio;
@@ -16,6 +16,9 @@ protected:
     I2c(hal::Gpio & _scl_gpio, hal::Gpio & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
 public:
     void set_timeout(const uint32_t timeout){timeout_ = timeout;}
+
+    virtual BusError read(uint32_t & data, const Ack ack) = 0;
+    virtual BusError write(const uint32_t data) = 0;
 
     hal::Gpio & scl(){return scl_gpio;};
     hal::Gpio & sda(){return sda_gpio;};

@@ -5,7 +5,7 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace hal;
