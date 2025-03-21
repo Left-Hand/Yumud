@@ -189,7 +189,7 @@ void zdt_main(UartHw & logger){
     DEBUGGER.retarget(&logger);
     DEBUGGER.setEps(4);
     
-    can1.init(1_M);
+    can1.init(1_MHz);
 
     ZdtMotor motor{can1};
     

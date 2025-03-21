@@ -89,7 +89,7 @@ void sincos_pwm_main(){
 
 
     timer.init(FREQ, TimerMode::CenterAlignedDualTrig);
-    timer.enableArrSync();
+    timer.enable_arr_sync();
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
@@ -103,7 +103,7 @@ void sincos_pwm_main(){
     // trig_oc.cvr() = 10;
     #else
     //重要!!!!
-    timer.setTrgoSource(TimerTrgoSource::Update);
+    timer.set_trgo_source(TimerTrgoSource::Update);
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
@@ -131,8 +131,8 @@ void sincos_pwm_main(){
     pwm_bn.init();
     pwm_bn.sync();
 
-    pwm_bp.setPolarity(false);
-    pwm_bn.setPolarity(false);
+    pwm_bp.set_polarity(false);
+    pwm_bn.set_polarity(false);
 
     TimerOCPair pwm_a = {pwm_ap, pwm_an};
     TimerOCPair pwm_b = {pwm_bp, pwm_bn};

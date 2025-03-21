@@ -24,8 +24,8 @@ void pwm_tb(OutputStream & logger){
     GpioPwm pwm{portA[8]};
     pwm.init(32);
 
-    timer1.enableIt(TimerIT::Update, {0,0});
-    timer1.bindCb(TimerIT::Update, [&](){pwm.tick();});
+    timer1.enable_it(TimerIT::Update, {0,0});
+    timer1.bind_cb(TimerIT::Update, [&](){pwm.tick();});
 
     #endif
 

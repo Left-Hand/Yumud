@@ -7,30 +7,30 @@ using IT = TimerIT;
 
 #define ADVANCED_TIMER_IT_TEMPLATE(x)\
 void TIM##x##_BRK_IRQHandler(void){\
-    timer##x.onBreakInterrupt();\
+    timer##x.on_break_interrupt();\
     TIM_ClearFlag(TIM##x, TIM_IT_Break);\
 }\
 void TIM##x##_UP_IRQHandler(void){\
-    timer##x.onUpdateInterrupt();\
+    timer##x.on_update_interrupt();\
     TIM_ClearFlag(TIM##x, TIM_IT_Update);\
 }\
 void TIM##x##_TRG_COM_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Trigger)){\
-        timer##x.onTriggerInterrupt();\
+        timer##x.on_trigger_interrupt();\
         TIM_ClearFlag(TIM##x, TIM_IT_Trigger);\
     }else if(TIM_GetITStatus(TIM##x, TIM_IT_COM)){\
-        timer##x.onComInterrupt();\
+        timer##x.on_com_interrupt();\
         TIM_ClearFlag(TIM##x, TIM_IT_COM);\
     }\
 }\
 void TIM##x##_CC_IRQHandler(void){\
-    timer##x.onCCInterrupt();\
+    timer##x.on_cc_interrupt();\
 }\
 
 
 #define GENERIC_TIMER_IT_TEMPLATE(x)\
 void TIM##x##_IRQHandler(void){\
-    timer##x.onItInterrupt();\
+    timer##x.on_it_interrupt();\
 }\
 
 

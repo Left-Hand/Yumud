@@ -6,7 +6,7 @@ using namespace ymd::hal;
 using namespace ymd::hal::internal;
 
 namespace ymd::hal::internal{
-bool isBasicTimer(const TIM_TypeDef * instance){
+bool is_basic_timer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM6
         case TIM6_BASE: return true;
@@ -20,7 +20,7 @@ bool isBasicTimer(const TIM_TypeDef * instance){
     }
 }
 
-bool isGenericTimer(const TIM_TypeDef * instance){
+bool is_generic_timer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM2
         case TIM2_BASE: return true;
@@ -43,7 +43,7 @@ bool isGenericTimer(const TIM_TypeDef * instance){
     }
 }
 
-bool isAdvancedTimer(const TIM_TypeDef * instance){
+bool is_advanced_timer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM1
         case TIM1_BASE: return true;
@@ -66,7 +66,7 @@ bool isAdvancedTimer(const TIM_TypeDef * instance){
     }
 }
 
-IRQn ItToIrq(const TIM_TypeDef * instance, const TimerIT it){
+IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it){
     using enum TimerChannelIndex;
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
@@ -142,7 +142,7 @@ IRQn ItToIrq(const TIM_TypeDef * instance, const TimerIT it){
 }
 
 
-Gpio & getPin(const TIM_TypeDef * instance, const TimerChannelIndex channel){    
+Gpio & get_pin(const TIM_TypeDef * instance, const TimerChannelIndex channel){    
     using enum TimerChannelIndex;
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
