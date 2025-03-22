@@ -314,8 +314,6 @@ Result<void, Error> LT8960L_Phy::_read_reg(
     })
 
     ;
-
-
     return Result<void, Error>(res);
 
 }
@@ -410,7 +408,7 @@ Result<void, Error> LT8960L::verify(){
 }
 
 Result<bool, Error> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
-    return Result<bool, Error>(Ok(bool(bus_inst_.sda()) == true))
+    return Result<bool, Error>(Ok((bus_inst_.sda().read())))
         .if_ok([&]{bus_inst_.sda().set();});
 }
 
@@ -430,6 +428,10 @@ Result<bool, Error> LT8960L::is_receiving(){
 
 
 
+Result<void, Error> LT8960L_Phy::init(){
+    bus_inst_.init(600'000);
+    return Ok();
+}
 
 Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
 
@@ -442,14 +444,12 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
     auto res = bus_.begin(address | 0x80)
         .then([&]() -> BusError{
-
             const auto err = bus_.read(len, ACK);
             if(err.wrong()) return err;
             if(len > LT8960L_PACKET_SIZE) {
                 // LT8960L_PANIC("read buf length too long", len);
                 // return BusError::LengthOverflow;
                 invalid = true;
-                // len = k_LT8960L_PACKET_SIZE;
             }
             return BusError::OK;
             }
@@ -457,7 +457,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
         .then([&]() -> BusError{
             if(invalid) return BusError::OK;
-            for(size_t i = 0; i < pbuf.size(); i++){
+            for(size_t i = 0; i < 2; i++){
                 uint32_t dummy = 0;
                 const auto err = bus_.read(dummy, (i == pbuf.size()-1 ? NACK : ACK));
                 if(err.wrong()) return err;
@@ -472,10 +472,6 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
     return rescond(res.ok(), invalid ? 0 : len, res);
 }
 
-Result<void, Error> LT8960L_Phy::init(){
-    bus_inst_.init(400'000);
-    return Ok();
-}
 
 Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
     
@@ -484,10 +480,11 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
 
     auto res = bus_.begin(address)
-        .then([&](){return bus_.write(pbuf.size());})
+        .then([&](){
+            return bus_.write(pbuf.size());
+        })
 
         .then([&]() -> BusError{
-
             for(const auto data : pbuf){
                 auto err = bus_.write(uint32_t(data));
                 if (err.wrong()) return err;

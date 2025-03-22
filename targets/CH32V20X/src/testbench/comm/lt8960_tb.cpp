@@ -83,20 +83,35 @@ void lt8960_tb(){
         // std::array data = {std::byte(uint8_t(64 + 64 * sin(time() * 20))), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
         const auto t = time();
         const auto [s, c] = sincos(t * 10);
-        auto [u, v, w] = SVM(s,c);
-        const auto payload = make_bytes_from_args(u, v, t);
+        // auto [u, v, w] = SVM(s,c);
+        // const auto payload = make_bytes_from_args(u, v, t);
+        const auto payload = make_bytes_from_args(
+            uint8_t(0x12),
+            uint8_t(0x34)
+            // uint8_t(0x56),
+            // uint8_t(0x78)
+        );
 
         tx_ltr.transmit_rf(std::span(payload)).unwrap();
         led.toggle();
     };
     
+    // real_t mdur;
     [[maybe_unused]] auto rx_task = [&]{
-        static std::array<std::byte, 16> data;
-        auto len = rx_ltr.receive_rf(data).unwrap();
+        static std::array<std::byte, 16> buf;
+
+        const real_t mbegin = micros();
+        auto len = rx_ltr.receive_rf(buf).unwrap();
+        auto data = std::span(buf).subspan(0, len);
         if(len){
-            auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(data));
+            auto mend = micros();
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(buf));
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(buf));
+            // auto [u] = make_tuple_from_bytes<std::tuple<real_t>>(std::span<const std::byte>(data));
+            auto [u] = make_tuple_from_bytes<std::tuple<uint32_t>>(std::span<const std::byte>(data));
             // DEBUG_PRINTLN(u, v, w, time() - tt);
-            DEBUG_PRINTLN(u, v, time() - w);
+            // DEBUG_PRINTLN(u, v, time() - w, mend -  mbegin);
+            DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, data);
         }
         led.toggle();
     };
@@ -104,19 +119,24 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init(180);
+        hal::timer1.init(250);
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
     }
 
     delay(5);
 
     if (has_rx_authority()) {
-        hal::timer2.init(180);
+        hal::timer2.init(250);
         hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
     }
 
     while(true){
         __WFI();
+        // DEBUG_PRINT(".");
+        // for(auto i : std::views::iota(0, 2)){
+        //     DEBUG_PRINTLN(i);
+        // }
+            // DEBUG_PRINTLN(micros());
     }
 }
 

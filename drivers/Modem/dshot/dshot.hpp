@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
+#include <span>
 
 namespace ymd::hal{
     class TimerOC;
@@ -9,8 +10,74 @@ namespace ymd::hal{
 
 namespace ymd::drivers{
 
+
+class BurstChannelIntf{
+public:
+    virtual void borrow(std::span<const uint16_t> pdata);
+    virtual void invoke();
+    virtual void install();
+};
+
+class BurstPwmIntf:public BurstChannelIntf{
+public:
+    virtual uint32_t calc_cvr_from_duty(const q31 duty) const;
+    virtual q8 get_period_us() const;
+
+    uint32_t calc_cvr_from_us(const q8 us){
+        return calc_cvr_from_duty(us / get_period_us());
+    }
+};
+
+class BurstDmaPwm final:public BurstPwmIntf{
+public:
+    BurstDmaPwm(hal::TimerOC & timer_oc);
+
+    void borrow(std::span<const uint16_t> pdata);
+    void invoke();
+    void install();
+    bool is_done();
+    uint32_t calc_cvr_from_duty(const q31 duty) const;
+    q8 get_period_us() const;
+private:
+    hal::TimerOC & timer_oc_;
+    hal::DmaChannel & dma_channel_;
+    std::span<const uint16_t> pdata_;
+};
+
+class WS2812_PhyIntf{
+
+};
+
+class WS2812_Phy_of_BurstPwm:public WS2812_PhyIntf{
+public:
+    WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm);
+    void borrow(std::span<const uint16_t> pdata){
+        return burst_dma_pwm_.borrow(pdata);
+    }
+
+    void set_color(std::array<uint8_t, 3> color){
+        // apply_color_to_buf()
+    }
+
+    bool is_done(){
+        return burst_dma_pwm_.is_done();
+    }
+private:
+    std::array<uint16_t, 24> buf_;
+    //pure function
+    void apply_color_to_buf(std::span<uint16_t, 24> buf, std::array<uint8_t, 3> color) const;
+    
+    //pure function
+    void apply_mono_to_buf(std::span<uint16_t, 8> buf, uint8_t mono) const;
+
+    BurstDmaPwm burst_dma_pwm_;
+};
+
+
 class DShotChannel{
 public:
+    static constexpr size_t DSHOT_LEN = 40;
+
     enum class Command : uint8_t {
         MOTOR_STOP = 0, // not currently implemented
         BEEP1 = 1, // Wait at least the length of the beep before the next command (260 milliseconds)
@@ -44,24 +111,25 @@ public:
         SIGNAL_LINE_TELEMETRY_ENABLE = 33, // Required 6 times. Enable commands 42 through
     };
 
-    uint16_t buf[40] = {0};
 protected:
-    uint16_t high_cnt;
-    uint16_t low_cnt;
-    hal::TimerOC & oc;
-    hal::DmaChannel & dma_channel;
-    scexpr uint16_t m_crc(uint16_t data_in){
-        uint16_t speed_data;
-        speed_data = data_in << 5;
-        data_in = data_in << 1;
-        data_in = (data_in ^ (data_in >> 4) ^ (data_in >> 8)) & 0x0f;
-        return speed_data | data_in;
-    }
-    
-    void update(uint16_t data);
+
+    static constexpr uint16_t HIGH_CVR = (234 * 2 / 3);
+    static constexpr uint16_t LOW_CVR = (234 * 1 / 3);
+
+
+    std::array<uint16_t, DSHOT_LEN> buf_ = {0};
+    BurstDmaPwm burst_dma_pwm_;
+
+    __pure
+    static uint16_t calculate_crc(uint16_t data_in);
+
+    static void update(std::span<uint16_t, DSHOT_LEN> buf, uint16_t data);
+
+    static void clear(std::span<uint16_t, DSHOT_LEN> buf);
+
     void invoke();
 public:
-    DShotChannel(hal::TimerOC & _oc);
+    DShotChannel(hal::TimerOC & oc);
     DShotChannel(const DShotChannel & other) = delete;
     DShotChannel(DShotChannel && other) = delete;
 

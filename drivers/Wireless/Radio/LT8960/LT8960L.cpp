@@ -12,7 +12,9 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
             return Err(Error::InvalidState);
 
         case States::TransmitFailed:
-            DEBUG_PRINTLN("transmit failed");
+            // DEBUG_PRINTLN("transmit failed");
+            LT8960L_PANIC("transmit failed");
+            [[fallthrough]];
 
         case States::TransmitSucceed:
             states_ = States::Idle;
@@ -35,7 +37,7 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
 
             const auto pkt_res = is_pkt_ready();
             if (pkt_res.is_err()) return Err(pkt_res.unwrap_err());
-            if (pkt_res.unwrap() == false) return Ok(0u);
+            if (false == pkt_res.unwrap()) return Ok(0u);
 
             auto write_res = write_fifo(buf);
             if(write_res.is_err()) return Err(write_res.unwrap_err());
@@ -55,6 +57,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
 
         case States::ReceiveFailed:
             DEBUG_PRINTLN("receive failed");
+            // LT8960L_PANIC("receive failed");
             [[fallthrough]];
         case States::ReceiveSucceed:
             states_ = States::Idle;
@@ -67,16 +70,10 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
         }
 
         case States::Receiving:{
-            recv_timecnt_++;
-            if(recv_timecnt_ > 2){
-                states_ = States::ReceiveFailed;
-                recv_timecnt_ = 0;
-            }
-    
             {
                 auto res = is_pkt_ready();
                 if(res.is_err()) return Err(res.unwrap_err());
-                if(res.unwrap() == true) return Ok(0u);
+                if(false == res.unwrap()) return Ok(0u);
             }
     
             {
@@ -85,8 +82,22 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
                 if(res.unwrap() == true) return Ok(0u);
             }
     
-            return read_fifo(buf)
-                .if_ok([&]{states_ = States::ReceiveSucceed;});
+            auto read_res =  read_fifo(buf);
+            
+            if (read_res.is_ok()){
+                states_ = States::ReceiveSucceed;
+                // states_ = States::Receiving;
+                // delayMicroseconds(100);
+                // begin_receive();
+            }else{            
+                states_.timeout()++;
+                if(states_.timeout() > MAX_RX_RETRY){
+                    states_ = States::ReceiveFailed;
+                    states_.timeout() = 0;
+                }
+            }
+
+            return read_res;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace ymd::drivers{
 class LT8960L{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = LT8960L_Phy::DEFAULT_I2C_ADDR;
+    static constexpr auto MAX_RX_RETRY = 2;
 
     using Error = LT8960L_Error;
     using Regs = _LT8960L_Regs;
@@ -49,6 +50,8 @@ public:
         
     private:
         Kind status_ = Kind::Idle;
+
+        uint8_t timeout_ = 0;
     public:
 
         States & operator = (const Kind status) {
@@ -58,6 +61,7 @@ public:
 
         auto kind() const {return status_;}
 
+        auto & timeout() {return timeout_;}
         void transition_to(const Kind status);
     };
 
@@ -84,14 +88,10 @@ protected:
 
     LT8960L_Phy phy_;
 
-    hal::GpioIntf * p_packet_status_gpio = nullptr;
-    hal::GpioIntf * p_fifo_status_gpio = nullptr;
-
     bool use_hw_pkt_ = false;//使能通过监听引脚判断数据是否发送完成
 
     DataRate datarate_;
     bool on_ble_ = false;
-    uint8_t recv_timecnt_ = 0;
 
     Channel curr_channel_ = Channel(0);
 
@@ -149,6 +149,8 @@ protected:
     [[nodiscard]] Result<void, Error> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
     [[nodiscard]] Result<void, Error> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
     [[nodiscard]] Result<void, Error> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
+
+    
 
     [[nodiscard]] Result<void, Error> clear_fifo_write_and_read_ptr();
 
