@@ -11,6 +11,7 @@ enum class LT8960L_Error:uint8_t{
     TransmitTimeout,
     PacketOverlength,
     ChipIdMismatch,
+    ReceiveTimeout,
     InvalidState,
     Unspecified = 0xff
 };

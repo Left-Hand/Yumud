@@ -172,14 +172,6 @@ protected:
 
     [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
 
-    [[nodiscard]] Result<void, Error> set_preamble_bytes(const uint bytes);
-
-    [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
-    
-    [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
-
-    [[nodiscard]] Result<void, Error> set_pack_type(const PacketType ptype);
-
     [[nodiscard]] Result<void, Error> set_fifo_full_threshold(const uint thd);
 
     [[nodiscard]] Result<void, Error> set_fifo_empty_threshold(const uint thd);
@@ -207,6 +199,13 @@ public:
     
     [[nodiscard]] Result<void, Error> init_ble(const Power power);
 
+    [[nodiscard]] Result<void, Error> set_preamble_bytes(const uint bytes);
+
+    [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
+    
+    [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
+
+    [[nodiscard]] Result<void, Error> set_pack_type(const PacketType ptype);
 
     [[nodiscard]] Result<void, Error> wake();
 

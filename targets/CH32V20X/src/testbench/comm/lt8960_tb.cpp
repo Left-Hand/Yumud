@@ -28,6 +28,10 @@ using namespace ymd::drivers;
 
 scexpr auto ch = LT8960L::Channel(76);
 static constexpr uint32_t master_id = 65536;
+// static constexpr size_t TX_FREQ = 500;
+static constexpr size_t TX_FREQ = 1000;
+static constexpr size_t RX_FREQ = TX_FREQ;
+
 
 uint32_t get_id(){
     // const auto id = uint32_t(sys::Chip::getChipId());
@@ -55,8 +59,9 @@ void lt8960_tb(){
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)
         | ltr.enable_use_hw_pkt(true)
-        | ltr.set_datarate(LT8960L::DataRate::_62_5K)
-        // | ltr.set_datarate(LT8960L::DataRate::_1M)
+        // | ltr.set_datarate(LT8960L::DataRate::_250K)
+        // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
+        | ltr.set_datarate(LT8960L::DataRate::_1M)
         | ltr.enable_gain_weaken(true)
         // | ltr.set_syncword_tolerance_bits(1)
         | ltr.set_syncword_tolerance_bits(0)
@@ -82,12 +87,12 @@ void lt8960_tb(){
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {std::byte(uint8_t(64 + 64 * sin(time() * 20))), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
         const auto t = time();
-        const auto [s, c] = sincos(t * 10);
+        const auto [s, c] = sincos(frac(t) * tau);
         // auto [u, v, w] = SVM(s,c);
         // const auto payload = make_bytes_from_args(u, v, t);
         const auto payload = make_bytes_from_args(
-            uint8_t(0x12),
-            uint8_t(0x34)
+            uint8_t(s * 50 + 50),
+            uint8_t(c * 50 + 50)
             // uint8_t(0x56),
             // uint8_t(0x78)
         );
@@ -111,7 +116,8 @@ void lt8960_tb(){
             auto [u] = make_tuple_from_bytes<std::tuple<uint32_t>>(std::span<const std::byte>(data));
             // DEBUG_PRINTLN(u, v, w, time() - tt);
             // DEBUG_PRINTLN(u, v, time() - w, mend -  mbegin);
-            DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, data);
+            // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, std::showbase, data);
+            DEBUG_PRINTLN(std::dec, u, mend -  mbegin, data);
         }
         led.toggle();
     };
@@ -119,14 +125,14 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init(250);
+        hal::timer1.init(TX_FREQ);
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
     }
 
     delay(5);
 
     if (has_rx_authority()) {
-        hal::timer2.init(250);
+        hal::timer2.init(RX_FREQ);
         hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
     }
 

@@ -42,7 +42,12 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
             auto write_res = write_fifo(buf);
             if(write_res.is_err()) return Err(write_res.unwrap_err());
 
-            states_ = States::TransmitSucceed;
+
+            {
+                // auto cont_res = clear_fifo_write_ptr() | enter_tx() | start_listen_pkt();
+                auto cont_res = clear_fifo_write_ptr() | enter_tx() | start_listen_pkt();
+                if(cont_res.is_err()) return Err(cont_res.unwrap_err());
+            }
     
             return write_res;
         }
@@ -76,24 +81,27 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
                 if(false == res.unwrap()) return Ok(0u);
             }
     
-            {
-                auto res = is_receiving();
-                if(res.is_err()) return Err(res.unwrap_err());
-                if(res.unwrap() == true) return Ok(0u);
-            }
+            // {
+            //     auto res = is_receiving();
+            //     if(res.is_err()) return Err(res.unwrap_err());
+            //     if(res.unwrap() == true) return Ok(0u);
+            // }
     
             auto read_res =  read_fifo(buf);
             
             if (read_res.is_ok()){
-                states_ = States::ReceiveSucceed;
-                // states_ = States::Receiving;
-                // delayMicroseconds(100);
-                // begin_receive();
+                auto continue_rx_res = 
+                        enter_rx() 
+                    | start_listen_pkt();
+
+                if(continue_rx_res.is_err()) return Err(continue_rx_res.unwrap_err());
             }else{            
                 states_.timeout()++;
                 if(states_.timeout() > MAX_RX_RETRY){
                     states_ = States::ReceiveFailed;
                     states_.timeout() = 0;
+
+                    return Err(Error::ReceiveTimeout);
                 }
             }
 
@@ -269,7 +277,7 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // 数据包配置3Byte前导 32bits同步字 NRZ格式
     | set_preamble_bytes(3)
     | set_syncword_bytes(4)
-    | set_pack_type(PacketType::NrzLaw)
+    | set_pack_type(PacketType::Manchester)
 
     // 重发3次=发1包 重发2包  最大15包
     | set_retrans_time(3) 

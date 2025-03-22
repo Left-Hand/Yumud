@@ -446,7 +446,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
         .then([&]() -> BusError{
             const auto err = bus_.read(len, ACK);
             if(err.wrong()) return err;
-            if(len > LT8960L_PACKET_SIZE) {
+            if(len > LT8960L_PACKET_SIZE || len > pbuf.size()) {
                 // LT8960L_PANIC("read buf length too long", len);
                 // return BusError::LengthOverflow;
                 invalid = true;
@@ -457,9 +457,9 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
         .then([&]() -> BusError{
             if(invalid) return BusError::OK;
-            for(size_t i = 0; i < 2; i++){
+            for(size_t i = 0; i < len; i++){
                 uint32_t dummy = 0;
-                const auto err = bus_.read(dummy, (i == pbuf.size()-1 ? NACK : ACK));
+                const auto err = bus_.read(dummy, (i == len - 1 ? NACK : ACK));
                 if(err.wrong()) return err;
                 pbuf[i] = std::byte(dummy);
             }
