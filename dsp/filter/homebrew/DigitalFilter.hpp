@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+namespace ymd::dsp{
 class DigitalFilter{
 protected:
 	uint32_t data = 0;
@@ -22,7 +23,7 @@ public:
 			const bool _polarity = true):size(_size), threshold(_threshold), polarity(_polarity){
 	}
 
-	bool update(const bool input){
+	void update(const bool input){
 		bool valid = (input == polarity);
 		bool shift_out = bool(data & (1 << (size - 1)));
 
@@ -44,7 +45,12 @@ public:
 		default:
 			break;
 		}
-		bool ret = (uint8_t)state & 0x01;
-		return ret;
+		// resu = (uint8_t)state & 0x01;
+	}
+
+	bool result(){
+		return (uint8_t)state & 0x01;
 	}
 };
+
+}

@@ -41,7 +41,8 @@ int main(){
     // co_ab_main();
     // mpu6050_main();
     // i2c_scanner_main();
-    lt8960_main();
+    // lt8960_main();
+    ws2812_main();
     // coro_main();
     // sincos_main();
     // i2c_scanner_main();

@@ -130,7 +130,7 @@ void ina3221_main();
 void functional_main();
 
 void fmt_main();
-
+void ws2812_main();
 
 
 void enum_main();

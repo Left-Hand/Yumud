@@ -15,12 +15,12 @@ class WS2812_Phy{
 public:
     WS2812_Phy(hal::GpioIntf & gpio):gpio_(gpio){;}
 
-    __no_inline void delayLong();
-    __no_inline void delayShort();
+    __no_inline void delay_long();
+    __no_inline void delay_short();
 
-    void sendCode(const bool state);
-    void sendByte(const uint8_t data);
-    void sendReset();
+    void send_code(const bool state);
+    void send_byte(const uint8_t data);
+    void send_reset();
     void init();
 private:
     hal::GpioIntf & gpio_;
@@ -79,7 +79,7 @@ public:
 
     void refresh(){
 
-        phy_.sendReset();
+        phy_.send_reset();
 
         for(auto & led : leds){
             uint16_t r,g,b;
@@ -88,9 +88,9 @@ public:
             uni_to_u16(led.color.g, g);
             uni_to_u16(led.color.b, b);
 
-            phy_.sendByte(g >> 8);
-            phy_.sendByte(r >> 8);
-            phy_.sendByte(b >> 8);
+            phy_.send_byte(CLAMP(uint8_t(r * 256), 0, 255));
+            phy_.send_byte(CLAMP(uint8_t(g * 256), 0, 255));
+            phy_.send_byte(CLAMP(uint8_t(b * 256), 0, 255));
 
         }
 
