@@ -14,22 +14,28 @@ void UartSw::init(
 }
 
 void UartSw::tick(){
-    switch(byteProg){
+    // tx_gpio_.toggle();
+    switch(prog_){
         case ByteProg::START:
             tx_gpio_.clr();
-            byteProg = ByteProg::D0;
+            prog_ = ByteProg::D0;
             break;
 
         case ByteProg::D0 ... ByteProg::D7:
-            tx_gpio_.write(current_char & (1 << (uint8_t)byteProg));
-            byteProg = ByteProg((int8_t)byteProg + 1);
+            tx_gpio_.write(current_char & (1 << (uint8_t)prog_));
+            prog_ = (prog_ == ByteProg::D7) ? ByteProg::STOP : ByteProg((int8_t)prog_ + 1);
             break;
-
+            
         case ByteProg::STOP:
+            tx_gpio_.set();
+            prog_ = ByteProg::IDLE;
+            break;
+        case ByteProg::IDLE:
             tx_gpio_.set();
             if(tx_fifo_.available()){
                 current_char = fetch_next();
-                byteProg = ByteProg::START;
+                // current_char = 0x55;
+                prog_ = ByteProg::START;
             }
             break;
     }
@@ -37,14 +43,9 @@ void UartSw::tick(){
 }
 
 void UartSw::set_tx_strategy(const CommStrategy tx_strategy){
-    if(bool(tx_strategy)){
-        tx_gpio_.outpp(HIGH);
-        // tx_strategy
-    }
+    tx_gpio_.outpp(HIGH);
 }
 
 void UartSw::set_rx_strategy(const CommStrategy rx_strategy){
-    if(bool(rx_strategy)){
-        rx_gpio_.inpu();
-    }
+    rx_gpio_.inpu();
 }

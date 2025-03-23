@@ -112,55 +112,8 @@ namespace ymd{
         return sqrtf(iq);
     }
     
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> abs(const iq_t<P> iq){
-        if(iq > 0){
-            return iq;
-        }else{
-            return -iq;
-        }
-    }
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr bool isnormal(const iq_t<P> iq){return bool(iq.value);}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr bool signbit(const iq_t<P> iq){return std::bit_cast<int32_t>(iq.value) & (1 << 31);}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
-        if(likely(long(iq.value))){
-            if(long(iq.value) > 0){
-                return iq_t<Q>(1);
-            }else{
-                return iq_t<Q>(-1);
-            }
-        }else return iq_t<Q>(0);
-    }
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32(a.value.to_i32() % b.value.to_i32()));}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){return a * (1 - x) + b * x;}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32((a.value.to_i32() + b.value.to_i32()) >> 1));}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
-        return iq_t<Q>(_iq<Q>::from_i32((iq.value.to_i32()) & ((1 << P) - 1)));
-    }
-    
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){return int(iq);}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
-    
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>(int(iq + iq_t<Q>::from(0.5)));}
+
+
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log10(const iq_t<P> iq) {
@@ -275,9 +228,6 @@ namespace std{
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return ymd::mean(a, b);}
-
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){return ymd::frac(iq);}
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){return ymd::floor(iq);}

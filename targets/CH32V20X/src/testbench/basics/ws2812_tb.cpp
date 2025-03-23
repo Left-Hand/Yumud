@@ -10,6 +10,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/adc/adcs/adc1.hpp"
+#include "hal/bus/uart/uartsw.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
 #include "drivers/Modem/dshot/dshot.hpp"
@@ -24,7 +25,9 @@ using namespace ymd::hal;
 
 #define TARG_UART hal::uart2
 
-static constexpr size_t ISR_FREQ = 20000;
+
+
+static constexpr size_t ISR_FREQ = 19200;
 static constexpr real_t SAMPLE_RES = 0.1_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
@@ -129,6 +132,7 @@ public:
     void update(const real_t position){
         auto this_spd = update_raw(position);
         vars.last_speed = (vars.last_speed * 127 + this_spd) >> 7;
+        // vars.last_speed = (vars.last_speed * 63 + this_spd) >> 6;
     }
     real_t get() const {return vars.last_speed;} 
 };
@@ -166,11 +170,15 @@ public:
         out_min_ = cfg.out_min;
         out_max_ = cfg.out_max;
     }
+
+    static q24 calc_forward_feedback(const q24 targ){
+        return sqrt((targ + 5.3_q24) * q24(1.0 / 18));
+    }
     
     void update(const q24 targ, const q24 meas){
         const q24 err = targ - meas;
 
-        const q24 p_out = kp_ * err;
+        // const q24 p_out = kp_ * err;
 
         // if(unlikely(p_out >= out_max_)){
         //     i_out_ = 0;
@@ -184,62 +192,122 @@ public:
             // i_out_ = CLAMP(i_out_ + err * ki_by_fs_, (out_min_ - p_out), (out_max_- p_out));
             i_out_ = CLAMP(i_out_ + err * ki_by_fs_, -1, 1);
             // output_ = CLAMP(p_out + i_out_, out_min_, out_max_);
-            output_ = CLAMP(i_out_, out_min_, out_max_);
+            output_ = CLAMP(i_out_ + calc_forward_feedback(targ), out_min_, out_max_);
             // output_ = CLAMP(i_out_, out_min_, out_max_);
             return;
         // }
     }
 
-    real_t output() const {
+    real_t get() const {
         return output_;
     }
 };
 
 class IController{
-    public:
-        struct Config{
-            q24 ki;
-            q24 out_min;
-            q24 out_max;
-            uint fs;
-        };
-    protected:
-        q24 ki_by_fs_;
-        q24 out_min_;
-        q24 out_max_;
-        q24 output_;
-    public:
-        IController(const Config & cfg){
-            reconf(cfg);
-            reset();
-        }
-
-
-        void reset(){
-            output_ = out_min_;
-        }
-
-        void reconf(const Config & cfg){
-            ki_by_fs_ = cfg.ki / cfg.fs;
-            out_min_ = cfg.out_min;
-            out_max_ = cfg.out_max;
-        }
-    
-        void update(const q24 targ, const q24 meas){
-            const q24 err = targ - meas;
-    
-            const auto temp_output = output_ + ki_by_fs_ * err;
-            output_ = CLAMP(temp_output, out_min_, out_max_);
-        }
-    
-        q24 output() const {
-            return output_;
-        }
+public:
+    struct Config{
+        q24 ki;
+        q24 out_min;
+        q24 out_max;
+        uint fs;
     };
+protected:
+    q24 ki_by_fs_;
+    q24 out_min_;
+    q24 out_max_;
+    q24 output_;
+public:
+    IController(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
+
+
+    void reset(){
+        output_ = out_min_;
+    }
+
+    void reconf(const Config & cfg){
+        ki_by_fs_ = cfg.ki / cfg.fs;
+        out_min_ = cfg.out_min;
+        out_max_ = cfg.out_max;
+    }
+
+    void update(const q24 targ, const q24 meas){
+        const q24 err = targ - meas;
+
+        const auto temp_output = output_ + ki_by_fs_ * err;
+        output_ = CLAMP(temp_output, out_min_, out_max_);
+    }
+
+    q24 output() const {
+        return output_;
+    }
+};
+
+template<typename T>
+class immutable_t{
+public:
+    constexpr immutable_t(const auto & value):
+        value_(static_cast<T>(value)){;}
+
+    constexpr immutable_t(auto && value):
+        value_(static_cast<T>(value)){;}
+
+    constexpr operator const T () const {
+        return value_;
+    }
+
+    constexpr const T & get() const {
+        return value_;
+    }
+
+    constexpr T & borrow_mut(){
+        return value_;
+    }
+private:
+    T value_;
+};
+
+class SlidingModeController {
+public:
+    SlidingModeController(){}
+    void update(const q24 targ,const q24 meas) {
+        static constexpr q24 c = 0.06_q24;
+        static constexpr q24 q = 0.0006_q24;
+
+        const q24 x1 = targ - meas;
+        const q24 x2 = x1 - err_prev_.get();
+        err_prev_.borrow_mut() = x1;
+
+        const q24 s = c * x1 + x2;
+        const q24 delta = c * x2 + q * s; 
+
+        output_.borrow_mut() = CLAMP(output_.get() + delta, out_min_.get(), out_max_.get());
+    }
+
+    auto get() const {return output_.get();}
+
+private:
+    immutable_t<q24> output_  = 0;
+    
+    immutable_t<q24> out_min_ = 0.7_q24;
+    immutable_t<q24> out_max_ = 0.9_q24;
+
+    immutable_t<q24> err_prev_ = 0;
+};
+
 
 [[maybe_unused]] static void at8222_tb(){
+    // hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
+    // DEBUGGER.retarget(&uart);
+
+    // TARG_UART.init(6_MHz);
+
     auto & timer = hal::timer3;
-    timer.init(ISR_FREQ, TimerMode::CenterAlignedDualTrig);
+
+    //因为是中心对齐的顶部触发 所以频率翻倍
+    timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedDualTrig);
 
     auto & pwm_pos = timer.oc(1);
     auto & pwm_neg = timer.oc(2);
@@ -283,9 +351,10 @@ class IController{
     }};
 
     BandpassFilter bpf{BandpassFilter::Config{
-        .fl = 500,
-        // .fh = 2500,
-        .fh = 1200,
+        // .fl = 300,
+        // .fh = 800,
+        .fl = 150,
+        .fh = 400,
         .fs = ISR_FREQ
     }};
 
@@ -305,15 +374,17 @@ class IController{
     //     }
     // };
 
-    myPIController pi_ctrl{
-        myPIController::Config{
-            .kp = 0.8_r,
-            .ki = 0.4_r,
-            .out_min = 0.7_r,
-            .out_max = 0.97_r,
-            .fs = ISR_FREQ
-        }
-    };
+    // myPIController pi_ctrl{
+    //     myPIController::Config{
+    //         .kp = 0.0_r,
+    //         .ki = 0.2_r,
+    //         .out_min = 0.7_r,
+    //         .out_max = 0.97_r,
+    //         .fs = ISR_FREQ
+    //     }
+    // };
+
+    SlidingModeController pi_ctrl;
 
 
     volatile uint32_t exe_micros = 0;
@@ -333,8 +404,10 @@ class IController{
         ect.update(bool(bpf.result() > 0));
         spe.update(ect.count() * 0.01_r);
         pi_ctrl.update(spd_targ, spe.get());
-        pwm_pos = pi_ctrl.output();
+        pwm_pos = pi_ctrl.get();
         exe_micros = micros() - begin_micros;
+
+        // uart.tick();
     });
 
 
@@ -351,11 +424,15 @@ class IController{
         // pwm_neg = 0.5_r;
         // pwm_pos = ABS(duty);
 
-
         // pwm_pos = 0.9_r + 0.1_r * sin(5 * time());
-        // spd_targ = 10.0_r + 6 * sin(2 * time());
-        spd_targ = 16.57_r;
-        DEBUG_PRINTLN_IDLE(curr * 10, curr_mid * 10, pi_ctrl.output(), bpf.result() * 10, spe.get(), bool(bpf.result() > 0), exe_micros);
+        // spd_targ = 7.0_r + 3 * sin(5 * time());
+        // spd_targ = 8.0_r + 1.0_r * ((sin(2.0_r * time())) > 0 ? 1 : -1);
+        spd_targ = 8.0_r + 1.0_r * sinpu(2.0_r * time());
+        // spd_targ = 7.0_r + 1.0_r * sign(sin(2.0_r * time()));
+        // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
+        // spd_targ = 9.0_r + 1.0_r * -1;
+        // spd_targ = 16.57_r;
+        DEBUG_PRINTLN_IDLE(spd_targ, curr * 10, curr_mid * 10, pi_ctrl.get(), bpf.result() * 10, spe.get(), bool(bpf.result() > 0), exe_micros);
         // DEBUG_PRINTLN(duty, bool(pwm_pos.io()), bool(pwm_neg.io()));
         
     }
