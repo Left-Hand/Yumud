@@ -2,7 +2,7 @@
 
 #include "core/string/String.hpp"
 #include "core/utils/Result.hpp"
-#include "hal/bus/can/CanMsg.hpp"
+#include "hal/bus/can/can_msg.hpp"
 
 #include <variant>
 
@@ -51,8 +51,8 @@ protected:
     }
 
     auto devSendMsg(const uint id, bool is_remote, const std::span<const std::byte> buf){
-        if(is_remote)devSendMsg(Msg(id));
-        else devSendMsg(Msg(id, buf));
+        if(is_remote) devSendMsg(Msg::empty(hal::CanStdId(id)));
+        else devSendMsg(Msg::from_bytes(hal::CanStdId(id), buf));
     }
 
     auto devSetBaud(const uint baud){

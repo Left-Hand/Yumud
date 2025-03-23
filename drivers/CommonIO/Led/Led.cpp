@@ -1,7 +1,7 @@
 #include "Led.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

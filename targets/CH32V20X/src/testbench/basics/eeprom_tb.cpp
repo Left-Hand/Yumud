@@ -14,7 +14,7 @@
 
 #include "core/math/real.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd::drivers;
 

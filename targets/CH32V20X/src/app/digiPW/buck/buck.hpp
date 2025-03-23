@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "hal/adc/analog_channel.hpp"
+#include "concept/analog_channel.hpp"
 #include "drivers/Actuator/Bridge/CoilDriver.hpp"
 #include <bit>
 

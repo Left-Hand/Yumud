@@ -1,11 +1,11 @@
-#include "port_intf.hpp"
+#include "gpio_port_intf.hpp"
 #include "gpio.hpp"
 
 #include "core/sdk.hpp"
 
 using namespace ymd::hal;
 
-void Gpio::setMode(const GpioMode mode){
+void Gpio::set_mode(const GpioMode mode){
     if(!valid()) return;
     const auto ctz_pin = CTZ(uint16_t(pin_));
     auto & pin_cfg = (ctz_pin >= 8 ? ((instance_ -> CFGHR)) : ((instance_ -> CFGLR)));

@@ -83,7 +83,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             if(unlikely(sidx) != 0) return SdoAbortCode::InvalidValue;
             if(unlikely(pdata.size() < 1)) return SdoAbortCode::InvalidValue;
 
-            if(likely(pdata[0] == 0)){
+            if(likely(!bool(pdata[0]))){
                 error_fifo.vent(error_fifo.available());
                 return SdoAbortCode::None;
             }else{
@@ -95,7 +95,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             static constexpr SubIndex base_idx = 1;
 
             if(unlikely(sidx) < 1){
-                pdata[0] = getErrorCnt();
+                pdata[0] = std::byte(getErrorCnt());
                 return SdoAbortCode::None;
             }
 

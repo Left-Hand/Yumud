@@ -5,7 +5,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include <optional>
 
@@ -82,22 +82,22 @@ public:
 
     BusError write_command(const uint32_t cmd){
         dc_gpio_ = command_level;
-        return spi_drv_.writeSingle<uint8_t>(cmd);
+        return spi_drv_.write_single<uint8_t>(cmd);
     }
 
     BusError write_data(const uint32_t data){
         dc_gpio_ = data_level;
-        return spi_drv_.writeSingle<uint8_t>(data);
+        return spi_drv_.write_single<uint8_t>(data);
     }
 
     void write_data16(const uint32_t data){
         dc_gpio_ = data_level;
-        spi_drv_.writeSingle<uint16_t>(data).unwrap();
+        spi_drv_.write_single<uint16_t>(data).unwrap();
     }
 
     void write_single(const auto & data){
         dc_gpio_ = data_level;
-        spi_drv_.writeSingle(data).unwrap();
+        spi_drv_.write_single(data).unwrap();
     }
 
     template<typename U>

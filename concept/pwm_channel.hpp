@@ -4,6 +4,9 @@
 namespace ymd::hal{
 class PwmIntf{
 public:
+    void set_duty(const real_t duty){
+        *this = duty;
+    }
     virtual PwmIntf & operator = (const real_t duty) = 0;
 };
 

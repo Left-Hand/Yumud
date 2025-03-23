@@ -10,7 +10,7 @@ protected:
     using Level = BoolLevel;
     hal::GpioIntf & m_gpio;
 
-    DigitalFilter filter;
+    dsp::DigitalFilter filter;
     const Level level_= LOW;
 
     bool last_state = false;
@@ -32,7 +32,8 @@ public:
 
     void update() override {
         last_state = now_state;
-        now_state = filter.update(bool(*this));
+        filter.update(bool(*this));
+        now_state = filter.result();
     }
 
     bool pressed() override{

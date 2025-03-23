@@ -2,8 +2,8 @@
 
 #include "core/io/regs.hpp"
 
-#include "hal/timer/pwm/pwm_channel.hpp"
-#include "hal/adc/analog_channel.hpp"
+#include "concept/pwm_channel.hpp"
+#include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"

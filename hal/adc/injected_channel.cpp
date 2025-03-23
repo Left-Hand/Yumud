@@ -6,7 +6,7 @@ AdcInjectedChannel::AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannel
         AdcChannelOnChip(_instance, _channel, _rank),
         mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
 
-void AdcInjectedChannel::setSampleCycles(const AdcSampleCycles cycles){
+void AdcInjectedChannel::set_sample_cycles(const AdcSampleCycles cycles){
     ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
 }
 

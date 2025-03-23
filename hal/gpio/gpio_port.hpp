@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gpio.hpp"
-#include "port_intf.hpp"
+#include "gpio_port_intf.hpp"
 
 namespace ymd::hal{
 class GpioPort : public GpioPortIntf{
@@ -35,9 +35,9 @@ public:
     void enableRcc(const bool en = true);
 
 
-    __inline void writeByIndex(const int index, const bool data) override;
-    __inline void setPin(const uint16_t data) override;
-    __inline void clrPin(const uint16_t data) override;
+    __inline void write_by_index(const int index, const bool data) override;
+    __inline void set_pin(const uint16_t data) override;
+    __inline void clr_pin(const uint16_t data) override;
     GpioPort & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
     explicit operator uint16_t(){return instance->INDR;}
@@ -52,24 +52,24 @@ public:
         else return Gpio::null();
     };
 
-    void setMode(const int index, const GpioMode mode) override;
+    void set_mode(const int index, const GpioMode mode) override;
 };
 
-__inline void GpioPort::writeByIndex(const int index, const bool data){
+__inline void GpioPort::write_by_index(const int index, const bool data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
-        setPin(mask);
+        set_pin(mask);
     }else{
-        clrPin(mask);
+        clr_pin(mask);
     }
 }
 
-__inline void GpioPort::setPin(const uint16_t data){
+__inline void GpioPort::set_pin(const uint16_t data){
     instance->BSHR = data;
 }
 
-__inline void GpioPort::clrPin(const uint16_t data){
+__inline void GpioPort::clr_pin(const uint16_t data){
     instance->BCR = data;
 }
 

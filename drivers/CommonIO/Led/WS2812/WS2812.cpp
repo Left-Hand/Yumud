@@ -2,39 +2,45 @@
 #include "core/clock/clock.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
+#include "core/debug/debug.hpp"
+
 using namespace ymd::drivers;
 
-void WS2812_Phy::delayLong(){
-    __nopn(120);
+void WS2812_Phy::delay_long(){
+    for(size_t i = 0; i < 8; i++){
+        __nopn(3);
+    }
 }
 
-void WS2812_Phy::delayShort(){
-    __nopn(32);
+void WS2812_Phy::delay_short(){
+    for(size_t i = 0; i < 2; i++){
+        __nopn(3);
+    }
 }
 
-void WS2812_Phy::sendCode(const bool state){
+void WS2812_Phy::send_code(const bool state){
     // __disable_irq();
     if(state){
         gpio_.set();
-        delayLong();
+        delay_long();
         gpio_.clr();
-        delayShort();
+        delay_short();
     }else{
         gpio_.set();
-        delayShort();
+        delay_short();
         gpio_.clr();
-        delayLong();
+        delay_long();
     }
     // __enable_irq();
 }
 
-void WS2812_Phy::sendByte(const uint8_t data){
+void WS2812_Phy::send_byte(const uint8_t data){
     for(uint8_t mask = 0x80; mask; mask >>= 1){
-        sendCode(data & mask);
+        send_code(data & mask);
     }
 }
 
-void WS2812_Phy::sendReset(){
+void WS2812_Phy::send_reset(){
     gpio_.clr();
     delayMicroseconds(60);
 }
@@ -44,14 +50,17 @@ void WS2812_Phy::init(){
 }
 
 void WS2812::_update(const Color &color){
-    auto r = uni_to_u16(color.r);
-    auto g = uni_to_u16(color.g);
-    auto b = uni_to_u16(color.b);
+    uint8_t g = uint8_t(CLAMP(int(color.g * color.a * 256), 0, 255));
+    uint8_t r = uint8_t(CLAMP(int(color.r * color.a * 256), 0, 255));
+    uint8_t b = uint8_t(CLAMP(int(color.b * color.a * 256), 0, 255));
+    
 
-    phy_.sendReset();
-    phy_.sendByte(g >> 8);
-    phy_.sendByte(r >> 8);
-    phy_.sendByte(b >> 8);
+    phy_.send_reset();
+    phy_.send_byte(g);
+    phy_.send_byte(r);
+    phy_.send_byte(b);
+
+    // DEBUG_PRINTLN(g,r,b, color);
 }
 
 void WS2812::init(){

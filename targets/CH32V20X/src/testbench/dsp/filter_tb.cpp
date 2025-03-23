@@ -1,5 +1,6 @@
 #include "src/testbench/tb.h"
 
+#include "core/stream/stream.hpp"
 #include "core/platform.hpp"
 #include "core/math/real.hpp"
 

@@ -3,42 +3,104 @@
 #include "hal/timer/timer_oc.hpp"
 #include "hal/dma/dma.hpp"
 
+#include <ranges>
+
 
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-void DShotChannel::update(uint16_t data){
+static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
 
+void BurstDmaPwm::borrow(std::span<const uint16_t> pdata){
+    dma_channel_.init(DmaMode::toPeriph, DmaPriority::Medium);
+    pdata_ = pdata;
+}
+void BurstDmaPwm::invoke(){
+    dma_channel_.transfer_mem2pph<uint16_t>(
+        &timer_oc_.cvr(), pdata_.data(), pdata_.size()
+    );
+}
+
+void BurstDmaPwm::install(){
+    dma_channel_.init(DmaMode::toPeriph, DmaPriority::Ultra);
+    timer_oc_.init().sync().enableDma();
+}
+
+bool BurstDmaPwm::is_done(){
+    return dma_channel_.pending() == 0;
+}
+
+uint32_t BurstDmaPwm::calc_cvr_from_duty(const q31 duty) const {
+    return uint32_t(uint32_t(timer_oc_.arr()) * duty);
+}
+
+q8 BurstDmaPwm::get_period_us() const{
+    // return q8(timer_oc_.arr() / 1000);
+    
+    return 0;
+}
+
+DShotChannel::DShotChannel(hal::TimerOC & oc):
+    burst_dma_pwm_(oc){;}
+
+BurstDmaPwm::BurstDmaPwm(hal::TimerOC & timer_oc):
+    timer_oc_(timer_oc), dma_channel_(timer_oc.dma()){;}
+void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16_t data){
+    uint16_t tempdata = data;
     for(size_t i = 0; i < 16; i++){
-        buf[i] = (data & 0x8000) ? high_cnt : low_cnt;
-        data = data << 1;
+        buf[i] = (tempdata & 0x8000) ? HIGH_CVR : LOW_CVR;
+        tempdata = tempdata << 1;
     }
 }
 
-DShotChannel::DShotChannel(TimerOC & _oc):
-        oc(_oc),
-        dma_channel(_oc.dma())
-        {;}
+WS2812_Phy_of_BurstPwm::WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
+    : burst_dma_pwm_(burst_dma_pwm){}
+
+void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(const std::span<uint16_t, 8> buf, uint8_t mono) const{
+    uint16_t HIGH_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.85 / 1.25));
+    uint16_t LOW_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.4 / 1.25));
+
+    for(size_t i = 0; i < 8; i++){
+        buf[i] = (mono & 0x80) ? HIGH_CVR : LOW_CVR;
+        mono = mono << 1;
+    }
+}
+
+void WS2812_Phy_of_BurstPwm::apply_color_to_buf(std::span<uint16_t, 24> buf, std::array<uint8_t, 3> color) const{
+    apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 0, 8), color[0]);
+    apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 8, 8), color[1]);
+    apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 16, 8), color[2]);
+}
+
+void DShotChannel::clear(const std::span<uint16_t, DSHOT_LEN> buf){
+    for(auto & item : buf) item = 0;
+}
+
+uint16_t DShotChannel::calculate_crc(uint16_t data_in){
+    uint16_t speed_data;
+    speed_data = data_in << 5;
+    data_in = data_in << 1;
+    data_in = (data_in ^ (data_in >> 4) ^ (data_in >> 8)) & 0x0f;
+    return speed_data | data_in;
+}
 
 void DShotChannel::invoke(){
-    dma_channel.start((void *)(uint32_t)(&oc.cvr()), buf, 40);
+    burst_dma_pwm_.invoke();
 }
 
 void DShotChannel::init(){
-    dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
-    dma_channel.configDataBytes(2);
-    oc.init().sync().enableDma();
-
-    high_cnt = (234 * 2 / 3);
-    low_cnt = (234 * 1 / 3);
+    burst_dma_pwm_.install();
 }
 
 DShotChannel & DShotChannel::operator = (const real_t duty){
-    // DEBUG_PRINTLN(duty);
-    if(duty) update(m_crc(MAX(int(duty * 2047), 48)));
-    else update(0);
-    // DEBUG_PRINTLN(buf);
+    if(duty){
+        auto crc = calculate_crc(MAX(int(duty * 2047), 48));
+        update(std::span(buf_), crc);
+    }else{
+        clear(std::span(buf_));
+    }
+
     invoke();
     return *this;
 }

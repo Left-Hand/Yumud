@@ -12,13 +12,13 @@ namespace ymd::hal{
 
 class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:
-    Endian m_endian = LSB;  
-    uint32_t m_baudrate = 1000000;
+    Endian endian_ = LSB;  
+    uint32_t baudrate_ = 1000000;
 public:
-    SpiDrv(hal::Spi & _bus, const uint8_t _index):NonProtocolBusDrv<Spi>(_bus, _index){;}
+    SpiDrv(hal::Spi & bus, const uint8_t index):NonProtocolBusDrv<Spi>(bus, index){;}
 
     template<typename T>
-    void forceWrite(const T data) {
+    void force_write(const T data) {
         constexpr size_t size = sizeof(T);
         if (size != 1) this->set_data_width(size * 8);
 
@@ -33,8 +33,8 @@ public:
         if (size != 1) this->set_data_width(8);
     }
     
-    void setEndian(const Endian _endian){m_endian = _endian;}
-    void setBaud(const uint32_t baud){m_baudrate = baud;}
+    void set_endian(const Endian _endian){endian_ = _endian;}
+    void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 };
 
 

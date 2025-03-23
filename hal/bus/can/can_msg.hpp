@@ -1,11 +1,15 @@
 #pragma once
 
-#include "CanUtils.hpp"
+#include "can_utils.hpp"
+#include "can_id.hpp"
 
 #include <span>
 #include <memory.h>
 #include <tuple>
 
+namespace ymd{
+class OutputStream;
+}
 namespace ymd::hal{
 
 namespace CanUtils{
@@ -25,15 +29,22 @@ namespace CanUtils{
 struct CanMsg{
 protected:
     #pragma pack(push, 1)
-    uint32_t :1;
-    
-    //是否为远程帧
-    uint32_t is_remote_:1;
-    
-    //是否为扩展帧
-    uint32_t is_ext_:1;
-    uint32_t id_:29;
-    
+
+    union{
+        struct{
+            uint32_t :1;
+            
+            //是否为远程帧
+            uint32_t is_remote_:1;
+            
+            //是否为扩展帧
+            uint32_t is_ext_:1;
+            uint32_t id_:29;
+        };
+
+        uint32_t raw_;
+    };
+
     union alignas(4){
         uint8_t data_[8];
         uint64_t data64_;
@@ -50,42 +61,39 @@ protected:
     value between 0 to 0xFF */
     #pragma pack(pop)
 private:
-
-public:
-    constexpr CanMsg() = default;
-
-    constexpr CanMsg(const CanMsg & other) = default;
-    constexpr CanMsg(CanMsg && other) = default;
-
-    constexpr CanMsg & operator = (const CanMsg & other) = default;
-    constexpr CanMsg & operator = (CanMsg && other) = default;
-
-    constexpr CanMsg copy(){
-        return *this;
-    }
-
-    constexpr CanMsg(const uint32_t id, const CanRemoteSpec remote = CanRemoteSpec::Remote){
-        id_ = id;
-        is_ext_ = (id > 0x7FF ? true : false);
+    constexpr CanMsg(const CanStdId id, const CanRemoteSpec remote){
+        id_ = id.as_raw();
+        is_ext_ = false;
         is_remote_ = (remote == CanRemoteSpec::Remote)? true : false;
         dlc_ = 0;
     }
 
-    explicit constexpr CanMsg(const uint32_t id, const uint64_t data, const uint8_t dlc){
-        id_ = id;
-        is_ext_ = (id > 0x7FF ? true : false);
+    // constexpr CanMsg(const CanExtId id, const CanRemoteSpec remote){
+    //     id_ = id.as_raw();
+    //     is_ext_ = true;
+    //     is_remote_ = (remote == CanRemoteSpec::Remote)? true : false;
+    //     dlc_ = 0;
+    // }
+
+    template<typename T>
+    constexpr CanMsg(const details::CanId_t<T> id, const std::span<const std::byte> pdata) : CanMsg(id, CanRemoteSpec::Data){
         is_remote_ = false;
+        resize(MIN(pdata.size(), 8));
+        for(uint8_t i = 0; i < dlc_; i++){
+            data_[i] = uint8_t(pdata[i]);
+        }
+    }
+    
+    constexpr CanMsg(const uint32_t raw, const uint64_t data, const uint8_t dlc){
+        raw_ = raw;
         data64_ = data;
         dlc_ = dlc;
     }
 
 
-
-
-
-    template <typename... Args>
+    template <typename T, typename... Args>
     requires CanUtils::valid_args<Args...>
-    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id, CanRemoteSpec::Data){
+    constexpr CanMsg(const details::CanId_t<T> id, const std::tuple<Args...>& tup):CanMsg(id, CanRemoteSpec::Data){
         // std::apply(
         //     [&](auto&&... args) {
         //         ((*this << args), ...);
@@ -100,13 +108,33 @@ public:
         is_remote_ = false;
     }
 
-    constexpr CanMsg(const uint32_t id, const std::span<const std::byte> pdata) : CanMsg(id, CanRemoteSpec::Data) {
-        resize(MIN(pdata.size(), 8));
-        for(uint8_t i = 0; i < dlc_; i++){
-            data_[i] = uint8_t(pdata[i]);
-        }
-        is_remote_ = false;
+public:
+    constexpr CanMsg() = default;
+
+    constexpr CanMsg(const CanMsg & other) = default;
+    constexpr CanMsg(CanMsg && other) = default;
+
+    constexpr CanMsg & operator = (const CanMsg & other) = default;
+    constexpr CanMsg & operator = (CanMsg && other) = default;
+
+    constexpr CanMsg copy(){
+        return *this;
     }
+
+    static constexpr CanMsg empty(CanStdId id){return CanMsg(id, CanRemoteSpec::Data);}
+
+    static constexpr CanMsg from_remote(CanStdId id){return CanMsg(id, CanRemoteSpec::Remote);}
+    // static constexpr CanMsg from_remote(CanExtId id){return CanMsg(id, CanRemoteSpec::Remote);}
+    static constexpr CanMsg from_bytes(CanStdId id, std::span<const std::byte> pdata){return CanMsg(id, pdata);}
+    // static constexpr CanMsg from_bytes(CanExtId id, std::span<const std::byte> pdata){return CanMsg(id, pdata);}
+
+    static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){return CanMsg(raw, data, len);}
+
+    template<typename ... Ts>
+    static constexpr CanMsg from_tuple(CanStdId id, const std::tuple<Ts...>& tup){return CanMsg(id, tup);}
+
+    // template<typename ... Ts>
+    // static constexpr CanMsg from_tuple(CanExtId id, const std::tuple<Ts...>& tup){return CanMsg(id, tup);}
 
     constexpr uint8_t * begin(){return data_;}
     constexpr uint8_t * end(){return data_ + size();}
@@ -114,11 +142,12 @@ public:
     constexpr const uint8_t * begin() const {return data_;}
     constexpr const uint8_t * end() const {return data_ + size();}
     constexpr size_t size() const {return dlc_ & 0b111;}
+    constexpr size_t dlc() const {return dlc_;}
 
-    constexpr uint64_t data64() const{ return data64_;}
-    constexpr uint64_t & data64() {return data64_;}
+    constexpr uint64_t as_u64() const{ return data64_;}
+    constexpr uint64_t & as_u64() {return data64_;}
 
-    std::span<const std::byte> span() const{
+    std::span<const std::byte> to_span() const{
         return std::span(reinterpret_cast<const std::byte *>(begin()), size());
     }
 
@@ -159,6 +188,8 @@ public:
     
     constexpr void resize(const size_t size) {dlc_ = size;}
 };
+
+static_assert(sizeof(CanMsg) == 16);
 
 }
 

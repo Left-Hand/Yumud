@@ -2,7 +2,6 @@
 
 #include "buzzer.hpp"
 #include "keys.hpp"
-#include "lcd.hpp"
 
 namespace gxm{
 

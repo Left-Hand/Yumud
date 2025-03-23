@@ -3,7 +3,7 @@
 
 
 namespace ymd::dsp{
-template<>
+template<typename T>
 class ComplementaryFilter_t{
 public:
     struct Config{
@@ -20,10 +20,13 @@ protected:
     T rot_unfiltered;
     T last_rot;
     T last_gyr;
+    // T last_time;
+
+    uint delta_t;
     
     bool inited;
 public:
-    ComplementaryFilter(const Config & config){
+    ComplementaryFilter_t(const Config & config){
         reconf(config);
         reset();
     }
@@ -42,7 +45,6 @@ public:
             rot_unfiltered = rot;
             inited = true;
         }else{
-            const T delta_t = (time - last_time);
             rot_unfiltered += gyr * delta_t;
             rot_unfiltered = kq_ * rot_ + (1-kq_) * rot;
             rot_ = ko_ * rot_ + (1-ko_) * rot_unfiltered;
@@ -52,12 +54,11 @@ public:
         last_gyr = gyr;
     }
 
-    void reset(const T time = 0){
+    void reset(){
         rot_ = 0;
         rot_unfiltered = 0;
         last_rot = 0;
         last_gyr = 0;
-        last_time = time;
         inited = false;
     }
 

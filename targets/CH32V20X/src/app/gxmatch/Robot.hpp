@@ -21,7 +21,7 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
-#include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "drivers/IMU/Magnetometer/HMC5883L/hmc5883l.hpp"
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
 
 

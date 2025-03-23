@@ -15,7 +15,7 @@ void CaliMap::reserve(const size_t size){
     samples_.reserve(size);
 }
 
-void CaliMap::addSample(const ymd::Vector2 & vec){
+void CaliMap::addSample(const Vector2_t<real_t> & vec){
     samples_.push_back(vec);
-    std::sort(samples_.begin(), samples_.end(), [](const ymd::Vector2 & a, const ymd::Vector2 & b){return a.x < b.x;});
+    std::sort(samples_.begin(), samples_.end(), Vector2_t<real_t>::sort_by_x);
 }

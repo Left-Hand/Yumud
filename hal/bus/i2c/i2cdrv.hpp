@@ -109,7 +109,7 @@ protected:
         const Endian endian,
         Fn && fn
     ){
-        const auto guard = createGuard();
+        const auto guard = create_guard();
         if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
             if(const auto err = write_payload(std::span(&addr, 1), endian); err.wrong()){
                 return err;

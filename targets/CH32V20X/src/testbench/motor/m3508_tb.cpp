@@ -9,7 +9,7 @@
 
 #include "robots/DJI/M3508/m3508.hpp"
 #include "robots/DJI/DR16/DR16.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd::drivers;
 
@@ -21,16 +21,16 @@ void m3508_main(){
 
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    can1.init(1_M, Can::Mode::Normal);
+    can1.init(1_MHz, CanMode::Normal);
 
     M3508Port port{can1};
     
     timer3.init(cb_freq);
 
-    timer3.bindCb(TimerIT::Update, [&](){
+    timer3.bind_cb(TimerIT::Update, [&](){
         port.tick();
     });
-    timer3.enableIt(TimerIT::Update, {0,0});
+    timer3.enable_it(TimerIT::Update, {0,0});
 
     auto & motor = port[4];
     auto & motor2 = port[1];

@@ -9,7 +9,7 @@ using namespace ymd::hal;
 
 void I2cSw::delay_dur(){
     if(delays_) delayMicroseconds(delays_);
-    // else __nopn(7);
+    else for(size_t i = 0; i < 3; i++)__nopn(5);
 }
 
 BusError I2cSw::wait_ack(){
@@ -21,7 +21,7 @@ BusError I2cSw::wait_ack(){
     TimeStamp delta;
 
     bool ovt = false;
-    while(sda_gpio.read()){
+    while(BoolLevel::from(sda_gpio.read()) == HIGH){
         if(delta.duration() >= timeout_){
             ovt = true;
             break;

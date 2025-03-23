@@ -49,7 +49,7 @@ protected:
 
     void write_command(const Command & command){
         spi_drv_.end();
-        spi_drv_.forceWrite<uint8_t>(0xFF);
+        spi_drv_.force_write<uint8_t>(0xFF);
         
     }
     

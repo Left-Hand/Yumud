@@ -1,9 +1,9 @@
 #include "adc_utils.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 namespace ymd::hal::__adc_internal{
 
-    void installPin(const AdcChannelIndex channel, const bool en){
+    void install_pin(const AdcChannelIndex channel, const bool en){
         uint8_t ch_index = (uint8_t)channel;
 
         if(ch_index > 15) return;
@@ -27,7 +27,7 @@ namespace ymd::hal::__adc_internal{
         else io.inflt();
     }
 
-    real_t getTemperature(){
+    real_t get_temperature(){
         return 25;
     }
 }

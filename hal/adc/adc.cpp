@@ -29,12 +29,12 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     bool temp_verf_activation = false;
 
     { 
-        setRegularCount(regular_list.size());
+        set_regular_count(regular_list.size());
         uint8_t i = 0;
         for(auto config : regular_list){
             i++;
             ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
-            __adc_internal::installPin(config.channel);
+            __adc_internal::install_pin(config.channel);
 
             temp_verf_activation |= (config.channel == ChannelIndex::TEMP || config.channel == ChannelIndex::VREF);
 
@@ -43,14 +43,14 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     }
 
     {
-        setInjectedCount(injected_list.size());
+        set_injected_count(injected_list.size());
         uint8_t i = 0;
         for(auto config : injected_list){
             i++;
 
             ADC_InjectedChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
             ADC_SetInjectedOffset(instance, ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); // offset can`t be negative
-            __adc_internal::installPin(config.channel);
+            __adc_internal::install_pin(config.channel);
 
             temp_verf_activation |= (
                 config.channel == ChannelIndex::TEMP || 
@@ -61,12 +61,12 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
         }
     }
 
-    if(temp_verf_activation) enableTempVref(true);
+    if(temp_verf_activation) enable_temp_vref(true);
 
     if(MAX(injected_list.size(), regular_list.size()) > 1){
-        enableScan(true);  
+        enable_scan(true);  
     }else{
-        enableSingleshot(true);
+        enable_singleshot(true);
     }
 
 

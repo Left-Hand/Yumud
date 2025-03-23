@@ -161,16 +161,16 @@ void stepper_tb(UartHw & logger_inst){
     svpwm.inverse(false);
     
     timer1.init(chopper_freq, TimerMode::CenterAlignedDownTrig);
-    timer1.enableArrSync();
+    timer1.enable_arr_sync();
     timer1.oc(1).init();
     timer1.oc(2).init();
     timer1.oc(3).init();
     timer1.oc(4).init();
 
-    timer1.oc(1).setPolarity(false);
-    timer1.oc(2).setPolarity(false);
-    timer1.oc(3).setPolarity(false);
-    timer1.oc(4).setPolarity(false);
+    timer1.oc(1).set_polarity(false);
+    timer1.oc(2).set_polarity(false);
+    timer1.oc(3).set_polarity(false);
+    timer1.oc(4).set_polarity(false);
     
     // using AdcChannelEnum = AdcChannelIndex;
     // using AdcCycleEnum = AdcSampleCycles;
@@ -194,7 +194,7 @@ void stepper_tb(UartHw & logger_inst){
 
     svpwm.enable();
 
-    spi1.init(18_M);
+    spi1.init(18_MHz);
     spi1.bind_cs_pin(portA[15], 0);
 
     MT6816 encoder{{spi1, 0}};
@@ -225,12 +225,12 @@ void stepper_tb(UartHw & logger_inst){
     stp.bindProtocol(can_p);
 
     timer3.init(foc_freq, TimerMode::CenterAlignedDownTrig);
-    timer3.enableArrSync();
-    timer3.bindCb(TimerIT::Update, [&](){
+    timer3.enable_arr_sync();
+    timer3.bind_cb(TimerIT::Update, [&](){
         stp.tick();
     });
 
-    timer3.enableIt(TimerIT::Update,{0,0});
+    timer3.enable_it(TimerIT::Update,{0,0});
 
  
     stp.init();

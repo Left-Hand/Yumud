@@ -22,14 +22,13 @@ namespace ymd::hal{
     };
 
     enum class CanError:uint8_t{
-        OK = CAN_ErrorCode_NoErr,
-        STUFF_ERR = CAN_ErrorCode_StuffErr,
-        FORM_ERR = CAN_ErrorCode_FormErr,
-        ACK_ERR = CAN_ErrorCode_ACKErr,
-        BIT_RECESSIVE_ERR = CAN_ErrorCode_BitRecessiveErr,
-        BIT_DOMINANT_ERR = CAN_ErrorCode_BitDominantErr,
-        CRC_ERR = CAN_ErrorCode_CRCErr,
-        SOFTWARE_SET_ERR = CAN_ErrorCode_SoftwareSetErr
+        Overrun,
+        Bit,
+        Stuff,
+        Crc,
+        Form,
+        Acknowledge,
+        Other,
     };
 
     enum class CanRemoteSpec:uint8_t{

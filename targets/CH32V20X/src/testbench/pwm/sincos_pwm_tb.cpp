@@ -9,7 +9,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "core/math/realmath.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -89,7 +89,7 @@ void sincos_pwm_main(){
 
 
     timer.init(FREQ, TimerMode::CenterAlignedDualTrig);
-    timer.enableArrSync();
+    timer.enable_arr_sync();
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
@@ -103,7 +103,7 @@ void sincos_pwm_main(){
     // trig_oc.cvr() = 10;
     #else
     //重要!!!!
-    timer.setTrgoSource(TimerTrgoSource::Update);
+    timer.set_trgo_source(TimerTrgoSource::Update);
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
@@ -131,8 +131,8 @@ void sincos_pwm_main(){
     pwm_bn.init();
     pwm_bn.sync();
 
-    pwm_bp.setPolarity(false);
-    pwm_bn.setPolarity(false);
+    pwm_bp.set_polarity(false);
+    pwm_bn.set_polarity(false);
 
     TimerOCPair pwm_a = {pwm_ap, pwm_an};
     TimerOCPair pwm_b = {pwm_bp, pwm_bn};
@@ -149,19 +149,19 @@ void sincos_pwm_main(){
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1CC4);
+    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T1CC4);
     #else
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
+    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T1TRGO);
     #endif
     #elif TIM_INDEX == 2
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T2TRGO);
+    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T2TRGO);
     #elif TIM_INDEX == 3
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
+    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T3CC4);
     #elif TIM_INDEX == 4
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T4TRGO);
+    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T4TRGO);
     #endif
 
-    adc1.enableAutoInject(false);
+    adc1.enable_auto_inject(false);
 
     auto & inj = adc1.inj(1);
 

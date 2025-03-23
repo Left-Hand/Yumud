@@ -11,7 +11,7 @@
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
 
@@ -93,13 +93,13 @@ void test_sogi(){
     }
 
     uint32_t dm = 0;
-    timer1.bindCb(TimerIT::Update, [&](){
+    timer1.bind_cb(TimerIT::Update, [&](){
         auto m = micros();
         run_sogi();
         dm = micros() - m;
     });
 
-    timer1.enableIt(TimerIT::Update, {0,0});
+    timer1.enable_it(TimerIT::Update, {0,0});
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
@@ -138,7 +138,7 @@ void digipw_main(){
     /*-----------------------*/
 
     timer1.init(300'000);
-    timer1.initBdtr(40);
+    timer1.init_bdtr(40);
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);

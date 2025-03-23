@@ -1,4 +1,4 @@
-#include "CanFilter.hpp"
+#include "can_filter.hpp"
 
 #include "core/platform.hpp"
 #include "core/sdk.hpp"

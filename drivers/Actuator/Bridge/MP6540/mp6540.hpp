@@ -3,7 +3,7 @@
 #include "../CoilDriver.hpp"
 #include "types/range/range.hpp"
 
-#include "hal/adc/analog_channel.hpp"
+#include "concept/analog_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
 #include <optional>

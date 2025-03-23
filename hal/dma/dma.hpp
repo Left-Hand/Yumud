@@ -46,8 +46,8 @@ namespace ymd::hal{
 class DmaChannel{
 public:
     using Callback = std::function<void(void)>;
-    using Mode = DmaUtils::Mode;
-    using Priority = DmaUtils::Priority;
+    using Mode = DmaMode;
+    using Priority = DmaPriority;
 protected:
     DMA_Channel_TypeDef * instance;
     
@@ -61,38 +61,38 @@ protected:
     Callback half_cb_;
     Mode mode_;
 
-    void enableRcc(const bool en);
-    void configPeriphDataBytes(const size_t bytes){
+    void enable_rcc(const bool en);
+    __fast_inline void set_periph_width(const size_t width){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11u << 8)));
-        tmpreg |= (bytes - 1) << 8;
+        tmpreg |= ((width >> 3) - 1) << 8;
         instance->CFGR = tmpreg;
     }
 
-    void configMemDataBytes(const size_t bytes){
+    __fast_inline void set_mem_width(const size_t width){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11u << 10)));
-        tmpreg |= (bytes - 1) << 10;
+        tmpreg |= ((width >> 3) - 1) << 10;
         instance->CFGR = tmpreg;
     }
 
-    void configDstMemDataBytes(const size_t bytes){
-        if(dstIsPeriph(mode_)){
-            configPeriphDataBytes(bytes);
+    __fast_inline void set_dst_width(const size_t width){
+        if(dst_is_periph(mode_)){
+            set_periph_width(width);
         }else{
-            configMemDataBytes(bytes);
+            set_mem_width(width);
         }
     }
 
-    void configSrcMemDataBytes(const size_t bytes){
-        if(!dstIsPeriph(mode_)){
-            configPeriphDataBytes(bytes);
+    __fast_inline void set_src_width(const size_t width){
+        if(!dst_is_periph(mode_)){
+            set_periph_width(width);
         }else{
-            configMemDataBytes(bytes);
+            set_mem_width(width);
         }
     }
 
-    static constexpr uint8_t calculateDmaIndex(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t calculate_dma_index(const DMA_Channel_TypeDef * _instance){
         #ifdef ENABLE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -100,8 +100,8 @@ protected:
         #endif
     }
 
-    static constexpr uint8_t calculateChannelIndex(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = calculateDmaIndex(_instance);
+    static constexpr uint8_t calculate_channel_index(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculate_dma_index(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -121,7 +121,7 @@ protected:
         }
     }
 
-    static constexpr bool dstIsPeriph(const Mode mode){
+    static constexpr bool dst_is_periph(const Mode mode){
         switch(mode){
             case Mode::toPeriph:
             case Mode::toPeriphCircular:
@@ -131,9 +131,9 @@ protected:
         }
     }
 
-    static constexpr uint32_t calculateDoneMask(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = calculateDmaIndex(_instance);
-        uint8_t channel_index = calculateChannelIndex(_instance);
+    static constexpr uint32_t calculate_done_mask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculate_dma_index(_instance);
+        uint8_t channel_index = calculate_channel_index(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -154,9 +154,9 @@ protected:
     }
 
 
-    static constexpr uint32_t calculateHalfMask(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = calculateDmaIndex(_instance);
-        uint8_t channel_index = calculateChannelIndex(_instance);
+    static constexpr uint32_t calculate_half_mask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculate_dma_index(_instance);
+        uint8_t channel_index = calculate_channel_index(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -176,8 +176,8 @@ protected:
         return 0;
     }
 
-    void onTransferHalfInterrupt();
-    void onTransferDoneInterrupt();
+    void on_transfer_half_interrupt();
+    void on_transfer_done_interrupt();
 
     #ifdef ENABLE_DMA1
         friend void ::DMA1_Channel1_IRQHandler(void);
@@ -202,6 +202,12 @@ protected:
         friend void ::DMA2_Channel10_IRQHandler(void);
         friend void ::DMA2_Channel11_IRQHandler(void);
     #endif
+
+
+
+    void start(void * dst, const void * src, size_t size);
+    
+
 public:
 
     DmaChannel() = delete;
@@ -211,82 +217,83 @@ public:
 
     DmaChannel(DMA_Channel_TypeDef * _instance):
         instance(_instance), 
-        done_mask(calculateDoneMask(instance)),
-        half_mask(calculateHalfMask(instance)),
-        dma_index(calculateDmaIndex(_instance)),
-        channel_index(calculateChannelIndex(_instance)){;}
+        done_mask(calculate_done_mask(instance)),
+        half_mask(calculate_half_mask(instance)),
+        dma_index(calculate_dma_index(_instance)),
+        channel_index(calculate_channel_index(_instance)){;}
 
-    void init(const Mode mode,const Priority priority = Priority::medium);
+    void init(const Mode mode,const Priority priority);
 
-    void start(){
+    void resume(){
         DMA_ClearFlag(done_mask);
         DMA_ClearFlag(half_mask);
 
         DMA_Cmd(instance, ENABLE);
     }
 
-    void start(void * dst, const void * src, size_t size);
     template <typename T>
-    void start(T * dst, const T * src, size_t size){
-        configDstMemDataBytes(sizeof(T));
-        configSrcMemDataBytes(sizeof(T));
+    void transfer_pph2mem(auto * dst, const volatile auto * src, size_t size){
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
+
         start(
             reinterpret_cast<void *>(dst), 
-            reinterpret_cast<const void *>(src), 
-            size);
-    }
-
-    template <typename U, typename T>
-    requires std::is_array_v<T>
-    void start(U * dst, const T & src){//TODO array can only be c-ctyle array
-        configDstMemDataBytes(sizeof(U));
-        configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        start(reinterpret_cast<void *>(dst), reinterpret_cast<const void *>(&src[0]) , std::distance(std::begin(src), std::end(src)));
-    }
-
-    template <typename U, typename T>
-    requires std::is_array_v<U>
-    void start(U & dst, const T * src){
-        configDstMemDataBytes(sizeof(U));
-        configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        start(
-            reinterpret_cast<void *>(dst), 
-            reinterpret_cast<const void *>(src), 
-            std::distance(std::begin(dst), std::end(dst))
+            reinterpret_cast<const void *>(const_cast<const T *>(
+                reinterpret_cast<const volatile T *>(src))), 
+            size
         );
     }
 
-    void configDataBytes(const size_t bytes){
-        configMemDataBytes(bytes);
-        configPeriphDataBytes(bytes);
+    template <typename T>
+    void transfer_mem2pph(volatile auto * dst, const auto * src, size_t size){
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
+
+        start(
+            reinterpret_cast<void *>(const_cast<T *>(reinterpret_cast<volatile T *>(dst))), 
+            reinterpret_cast<const void *>(src), 
+            size
+        );
+    }
+
+    template<typename T>
+    void transfer_mem2mem(auto * dst, const auto * src, size_t size){
+        set_dst_width(sizeof(T) << 3);
+        set_src_width(sizeof(T) << 3);
+
+        start(
+            reinterpret_cast<void *>(const_cast<T *>((dst))), 
+            reinterpret_cast<const void *>(src), 
+            size
+        );
     }
 
     size_t pending(){
         return instance -> CNTR;
     }
 
-    void enableIt(const NvicPriority _priority, const bool en = true);
+    void enable_it(const NvicPriority _priority, const bool en = true);
 
-    void enableDoneIt(const bool en = true){
+    void enable_done_it(const bool en = true){
         DMA_ClearITPendingBit(done_mask);
         DMA_ITConfig(instance, DMA_IT_TC, en);
     }
 
-    void enableHalfIt(const bool en = true){
+    void enable_half_it(const bool en = true){
         DMA_ClearITPendingBit(half_mask);
         DMA_ITConfig(instance, DMA_IT_HT, en);
     }
 
 
-    void bindDoneCb(auto && cb){
+    void bind_done_cb(auto && cb){
         done_cb_ = std::move(cb);
     }
 
-    void bindHalfCb(auto && cb){
+    void bind_half_cb(auto && cb){
         half_cb_ = std::move(cb);
     }
 
-    bool done(){
+    bool is_done(){
         return DMA_GetFlagStatus(done_mask);
     }
 };

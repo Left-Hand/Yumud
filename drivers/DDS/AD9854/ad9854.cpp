@@ -1,8 +1,19 @@
 #include "ad9854.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
+#include "core/clock/clock.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;
+
+#define AD9854_DEBUG
+
+#ifdef AD9854_DEBUG
+#undef AD9854_DEBUG
+#define AD9854_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#else
+#define AD9854_DEBUG(...)
+#endif
 
 
 
@@ -20,7 +31,6 @@ using namespace ymd;
 #define QDAC			0x0B
 
 #define Freq_mult 1876499.84473770
-
 
 
 void AD9854::Init(void){
@@ -57,7 +67,7 @@ void AD9854::Init(void){
 }
 
 void AD9854::SendOneByte(uint8_t data){
-	spi_drv_.writeSingle(data);
+	spi_drv_.write_single(data);
 }
 
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){

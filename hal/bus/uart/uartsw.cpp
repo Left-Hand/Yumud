@@ -37,14 +37,14 @@ void UartSw::tick(){
 }
 
 void UartSw::set_tx_strategy(const CommStrategy tx_strategy){
-    if(tx_strategy != CommStrategy::None){
+    if(bool(tx_strategy)){
         tx_gpio_.outpp(HIGH);
         // tx_strategy
     }
 }
 
 void UartSw::set_rx_strategy(const CommStrategy rx_strategy){
-    if(rx_strategy != CommStrategy::None){
+    if(bool(rx_strategy)){
         rx_gpio_.inpu();
     }
 }

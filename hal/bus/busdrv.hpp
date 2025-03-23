@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bus.hpp"
+#include "bus_base.hpp"
 #include "core/clock/clock.hpp"
 #include <type_traits>
 #include <initializer_list>
@@ -8,53 +8,52 @@
 
 namespace ymd::hal{
 
-template<typename BusType>
-concept is_bus = std::is_base_of_v<BusBase, BusType>;
+template<typename TBus>
+concept is_bus = std::is_base_of_v<BusBase, TBus>;
 
-template<typename BusType>
-concept is_writable_bus = requires(BusType bus, const uint32_t data) {
+template<typename TBus>
+concept is_writable_bus = requires(TBus bus, const uint32_t data) {
     bus.write(data);
 };
 
-template<typename BusType>
-concept is_readable_bus = requires(BusType bus, uint32_t & data, Ack need_ack) {
+template<typename TBus>
+concept is_readable_bus = requires(TBus bus, uint32_t & data, Ack need_ack) {
     bus.read(data);
 };
 
-template<typename BusType>
-concept is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
+template<typename TBus>
+concept is_fulldup_bus = is_writable_bus<TBus> && is_readable_bus<TBus>;
 
-
-template <typename BusType>
+template <typename TBus>
 struct driver_of_bus {
     using driver_type = void;
 };
 
 
-template<typename BusType>
+template<typename TBus>
 class BusDrv{
 protected:
-    BusType & bus_;
+    TBus & bus_;
     uint8_t index_;
-    uint8_t data_bits = 8;
-    uint16_t wait_time = 10;
+    uint8_t data_width_ = 8;
+    uint16_t timeout_ = 10;
 
     
-    BusDrv(BusType & bus, const uint8_t index):bus_(bus), index_(index){;}
+    BusDrv(TBus & bus, const uint8_t index):bus_(bus), index_(index){;}
     
     struct _Guard{
-        BusType & bus_;
+        TBus & bus_;
         
-        _Guard(BusType & bus):
+        _Guard(TBus & bus):
         bus_(bus){;}
         ~_Guard(){
             bus_.end();
         }
     };
     
-    [[nodiscard]] _Guard createGuard(){return _Guard{bus_};}
+    [[nodiscard]] _Guard create_guard(){return _Guard{bus_};}
     public:
-    BusType & bus() const {return bus_;}
+    TBus & bus() const {return bus_;}
     auto index() const {return index_;}
     void set_data_width(const size_t data_bits){
         bus_.set_data_width(data_bits);
@@ -65,14 +64,14 @@ protected:
     }
 };
 
-template <typename BusType>
-class NonProtocolBusDrv : public BusDrv<BusType> {
+template <typename TBus>
+class NonProtocolBusDrv : public BusDrv<TBus> {
 protected:
-    using BusDrv<BusType>::index_;
-    using BusDrv<BusType>::bus_;
+    using BusDrv<TBus>::index_;
+    using BusDrv<TBus>::bus_;
 
 public:
-    NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
+    NonProtocolBusDrv(TBus & _bus, const uint8_t _index) : BusDrv<TBus>(_bus, _index) {}
     [[nodiscard]]
     BusError release(){
         if (auto err = bus_.begin(index_); err.ok()) {
@@ -86,43 +85,43 @@ public:
     void end(){bus_.end();}
 
     template<typename T>
-    requires std::is_standard_layout_v<T> and is_writable_bus<BusType>
+    requires std::is_standard_layout_v<T> and is_writable_bus<TBus>
     [[nodiscard]]
-    BusError writeSingle(const T data, Continuous cont = DISC);
+    BusError write_single(const T data, Continuous cont = DISC);
 
     template<typename U>
-    requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
+    requires std::is_standard_layout_v<U> and is_writable_bus<TBus>
     [[nodiscard]]
     BusError write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
-    requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
+    requires std::is_standard_layout_v<U> and is_writable_bus<TBus>
     [[nodiscard]]
     BusError write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
-    requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
+    requires std::is_standard_layout_v<T> and is_readable_bus<TBus>
     [[nodiscard]]
     BusError read_burst(T * data_ptr, const size_t len, const Continuous cont = DISC);
 
     template<typename T>
-    requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
+    requires std::is_standard_layout_v<T> and is_readable_bus<TBus>
     [[nodiscard]]
-    BusError readSingle(T & data, const Continuous cont = DISC);
+    BusError read_single(T & data, const Continuous cont = DISC);
 
     template<typename T>
-    requires std::is_standard_layout_v<T> and is_fulldup_bus<BusType>
+    requires std::is_standard_layout_v<T> and is_fulldup_bus<TBus>
     [[nodiscard]]
-    BusError transferSingle(T & data_rx, T data_tx, Continuous cont = DISC);
+    BusError transfer_single(T & data_rx, T data_tx, Continuous cont = DISC);
 };
 
-template <typename BusType>
-class ProtocolBusDrv : public BusDrv<BusType> {
+template <typename TBus>
+class ProtocolBusDrv : public BusDrv<TBus> {
 protected:
-    using BusDrv<BusType>::index_;
-    using BusDrv<BusType>::bus_;
-    ProtocolBusDrv(BusType & _bus, const uint8_t _index):
-        BusDrv<BusType>(_bus, _index){};
+    using BusDrv<TBus>::index_;
+    using BusDrv<TBus>::bus_;
+    ProtocolBusDrv(TBus & _bus, const uint8_t _index):
+        BusDrv<TBus>(_bus, _index){};
 
 public:
 };

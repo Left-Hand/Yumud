@@ -58,7 +58,7 @@ CanMsg PdoTxSession::buildMessage() const {
 
     numBytes = std::min(numBytes, 8);
 
-    return CanMsg(cobId, data.data(), numBytes);
+    return CanMsg(hal::CanStdId(cobId), data);
 }
 
 //将收到的pdo报文写入字典

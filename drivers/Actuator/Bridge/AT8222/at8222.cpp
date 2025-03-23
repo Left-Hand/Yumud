@@ -10,10 +10,10 @@ void AT8222::init(){
 }
 
 void AT8222::enable(const bool en){
-    if(p_enable_gpio) p_enable_gpio->write(en);
+    enable_gpio_.write(en);
     if(!en){
-        forward_pwm = real_t(1);
-        backward_pwm = real_t(1);
+        forward_pwm_ = real_t(1);
+        backward_pwm_ = real_t(1);
     }
 }
 

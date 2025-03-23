@@ -2,6 +2,7 @@
 
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
+#include "hal/nvic/nvic.hpp"
 
 #ifdef HDW_SXX32
 
@@ -101,11 +102,11 @@ private:
 protected:
     TIM_TypeDef * instance;
 
-    uint getClk();
-    void enableRcc(const bool en);
+    uint get_clk();
+    void enable_rcc(const bool en);
     void remap(const uint8_t rm);
     
-    Callback & getCallback(const IT it){
+    Callback & get_callback(const IT it){
         switch(it){
             default:
             case IT::Update: return cbs_[0];
@@ -119,8 +120,8 @@ protected:
         }
     }
 
-    __inline void invokeCallback(const IT it){
-        auto & cb = getCallback(it);
+    __inline void invoke_callback(const IT it){
+        auto & cb = get_callback(it);
         EXECUTE(cb);
     }
 public:
@@ -131,8 +132,8 @@ public:
     void init(const uint16_t period, const uint16_t cycle, const Mode mode = Mode::Up, const bool en = true);
     void enable(const bool en = true);
 
-    void enableIt(const IT it,const NvicPriority request, const bool en = true);
-    void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, FunctionalState(_sync));}
+    void enable_it(const IT it,const NvicPriority request, const bool en = true);
+    void enable_arr_sync(const bool _sync = true){TIM_ARRPreloadConfig(instance, FunctionalState(_sync));}
 
     auto & inst() {return instance;}
 
@@ -140,16 +141,16 @@ public:
     volatile uint16_t & arr(){return instance->ATRLR;}
 
     void attach(const IT it, const NvicPriority & priority, auto && cb, const bool en = true){
-        bindCb(it, std::forward<decltype(cb)>(cb));
-        enableIt(it, priority, en);
+        bind_cb(it, std::forward<decltype(cb)>(cb));
+        enable_it(it, priority, en);
     }
 
     void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
         attach(it, priority, nullptr, false);
     }
 
-    void bindCb(const IT ch, auto && cb){
-        getCallback(ch) = std::forward<decltype(cb)>(cb);
+    void bind_cb(const IT ch, auto && cb){
+        get_callback(ch) = std::forward<decltype(cb)>(cb);
     }
 
     BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
@@ -167,9 +168,9 @@ class GenericTimer:public BasicTimer{
 protected:
     TimerOC channels[4];
 
-    void onCCInterrupt();
+    void on_cc_interrupt();
 private:
-    void onItInterrupt();
+    void on_it_interrupt();
 public:
     GenericTimer(TIM_TypeDef * _base):
             BasicTimer(_base),
@@ -180,9 +181,9 @@ public:
                 TimerOC(instance, TimerChannel::ChannelIndex::CH4)
             }{;}
 
-    void initAsEncoder(const Mode mode = Mode::Up);
-    void enableSingle(const bool _single = true);
-    void setTrgoSource(const TrgoSource source);
+    void init_as_encoder(const Mode mode = Mode::Up);
+    void enable_single(const bool _single = true);
+    void set_trgo_source(const TrgoSource source);
     
     TimerOC & oc(const size_t index);
 
@@ -211,14 +212,14 @@ public:
 
 class AdvancedTimer:public GenericTimer{
 protected:
-    uint8_t calculateDeadzone(const uint deadzone_ns);
+    uint8_t calculate_deadzone(const uint deadzone_ns);
 
     TimerOCN n_channels[3];
 
-    __fast_inline void onUpdateInterrupt(){invokeCallback(IT::Update);}
-    __fast_inline void onBreakInterrupt(){invokeCallback(IT::Break);}
-    __fast_inline void onTriggerInterrupt(){invokeCallback(IT::Trigger);}
-    __fast_inline void onComInterrupt(){invokeCallback(IT::COM);}
+    __fast_inline void on_update_interrupt(){invoke_callback(IT::Update);}
+    __fast_inline void on_break_interrupt(){invoke_callback(IT::Break);}
+    __fast_inline void on_trigger_interrupt(){invoke_callback(IT::Trigger);}
+    __fast_inline void on_com_interrupt(){invoke_callback(IT::COM);}
 
 public:
     using LockLevel = TimerBdtrLockLevel;
@@ -231,11 +232,11 @@ public:
                 TimerOCN(instance, TimerChannel::ChannelIndex::CH3N),
             }{;}
 
-    void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
-    void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, FunctionalState(_sync));}
+    void init_bdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
+    void enable_cvr_sync(const bool _sync = true){TIM_CCPreloadControl(instance, FunctionalState(_sync));}
 
-    void setDeadZone(const uint32_t ns);
-    void setRepeatTimes(const uint8_t rep){instance->RPTCR = rep;}
+    void set_dead_zone(const uint32_t ns);
+    void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
 
     TimerChannel & operator [](const int index);
 

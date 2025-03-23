@@ -2,6 +2,7 @@
 
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/Proximeter/FlowSensor.hpp"
+#include "dsp/filter/homebrew/ComplementaryFilter.hpp"
 
 namespace gxm{
 
@@ -54,6 +55,7 @@ public:
 
 class RotationObserver{
 public:
+    using ComplementaryFilter = dsp::ComplementaryFilter_t<real_t>;
     using Config = ComplementaryFilter::Config;
 protected:
     TauWrapper tau_wrapper_;
@@ -67,7 +69,7 @@ public:
     real_t update(const real_t rot, const real_t gyr, const real_t time){
         return comp_filter_.update(
             tau_wrapper_.update(rot)
-            , gyr, time);
+            , gyr);
     }
 
     void reset(const real_t time = 0){

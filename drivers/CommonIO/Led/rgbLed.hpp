@@ -2,7 +2,7 @@
 
 #include "Led.hpp"
 #include "types/color/color_t.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
 class GpioIntf;

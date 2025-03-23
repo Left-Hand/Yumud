@@ -26,20 +26,20 @@ BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
 
     for(uint8_t i = 0; i < data_bits; i++){
         sclk_gpio.set();
-        delayDur();
+        delay_dur();
         mosi_gpio = bool(data_tx & (1 << (i)));
-        delayDur();
+        delay_dur();
         sclk_gpio.clr();
-        delayDur();
+        delay_dur();
 
         if(m_msb){
             mosi_gpio = bool(data_tx & (1 << (data_bits - 2 - i)));
             ret <<= 1; ret |= miso_gpio.read();
-            delayDur();
+            delay_dur();
         }else{
             mosi_gpio = bool(data_tx & (1 << (i)));
             ret >>= 1; ret |= (miso_gpio.read() << (data_bits - 1)) ;
-            delayDur();
+            delay_dur();
         }
     }
 

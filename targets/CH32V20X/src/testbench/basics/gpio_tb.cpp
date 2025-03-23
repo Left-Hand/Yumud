@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "core/clock/clock.hpp"
 
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();

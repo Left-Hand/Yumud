@@ -4,7 +4,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/vport.hpp"
 #include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "core/io/regs.hpp"
 #include "types/vector2/vector2.hpp"
 
@@ -85,17 +85,17 @@ public:
         // Update the 'frame' struct with the new data
 
         DataFrame new_frame;
-        spi_drv_.writeSingle((uint8_t)0x01).unwrap();
+        spi_drv_.write_single((uint8_t)0x01).unwrap();
 
-        spi_drv_.transferSingle(*(uint8_t *)&frame.dev_id, (uint8_t)0x42).unwrap();
+        spi_drv_.transfer_single(*(uint8_t *)&frame.dev_id, (uint8_t)0x42).unwrap();
         new_frame.dev_id = frame.dev_id;
 
         uint8_t permit;
-        spi_drv_.transferSingle(permit, (uint8_t)0x00).unwrap();
+        spi_drv_.transfer_single(permit, (uint8_t)0x00).unwrap();
 
 
         for(uint8_t i = 0; i < 6; i++){
-            spi_drv_.transferSingle(new_frame.data[i], (uint8_t)0x00, Continuous::from(i == 5)).unwrap();
+            spi_drv_.transfer_single(new_frame.data[i], (uint8_t)0x00, Continuous::from(i == 5)).unwrap();
         }
 
         if(permit == 0x5a){

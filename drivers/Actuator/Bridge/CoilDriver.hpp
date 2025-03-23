@@ -2,7 +2,7 @@
 
 #include "../Actuator.hpp"
 
-#include "hal/timer/pwm/pwm_channel.hpp"
+#include "concept/pwm_channel.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
 

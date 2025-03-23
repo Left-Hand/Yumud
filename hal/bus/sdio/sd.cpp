@@ -11,7 +11,7 @@
 *******************************************************************************/
 #include "sd.hpp"
 #include "core/stream/ostream.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #ifdef ENABLE_SDIO
 

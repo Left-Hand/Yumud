@@ -374,8 +374,8 @@ void bldc_main(){
     auto & pwm_w = timer1.oc(3); 
 
     timer1.oc(4).init(TimerOcMode::UpValid, false)
-                .setOutputState(true)
-                .setIdleState(false);
+                .set_output_state(true)
+                .set_idle_state(false);
     
     timer1.oc(4).cvr() = timer1.arr() - 1;
 
@@ -415,7 +415,7 @@ void bldc_main(){
     };
 
     mp6540.init();
-    mp6540.setSoRes(1_K);
+    mp6540.setSoRes(1000);
     
     SVPWM3 svpwm {mp6540};
     
@@ -1007,8 +1007,8 @@ void bldc_main(){
     // adc1.bindCb(AdcIT::JEOC, cb_openloop);
     // adc1.bindCb(AdcIT::JEOC, cb_hfi);
 
-    adc1.bindCb(AdcIT::JEOC, measure_bias);
-    adc1.enableIT(AdcIT::JEOC, {0,0});
+    adc1.bind_cb(AdcIT::JEOC, measure_bias);
+    adc1.enable_it(AdcIT::JEOC, {0,0});
 
     
     while(true){

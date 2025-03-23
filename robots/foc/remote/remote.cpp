@@ -7,7 +7,9 @@ using namespace ymd::foc;
 using Command = MotorUtils::Command;
 using RunStatus = MotorUtils::RunStatus;
 
-#define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
+#define MSG(cmd, payload) CanMsg::from_tuple(\
+    CanStdId(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), \
+    payload);\
 
 #define DEBUG_MSG(msg)
 

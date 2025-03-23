@@ -4,27 +4,20 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
-#include "hal/gpio/port.hpp"
-
-#if     defined(DDS_MAX_PRECISION)
-#if     !defined(MAX_U64)
-#define MAX_U64 ((uint64_t)~0LL)
-#endif
-#endif
+#include "hal/gpio/gpio_port.hpp"
 
 namespace ymd::drivers{
 
 
 class AD9959{
-// protected:
-public:
+protected:
     enum class ChannelIndex:uint8_t{
-        ChannelNone = 0x00,
-        Channel0    = 0x10,
-        Channel1    = 0x20,
-        Channel2    = 0x40,
-        Channel3    = 0x80,
-        ChannelAll  = 0xF0,
+        Nil = 0,
+        _0    = 0x10,
+        _1    = 0x20,
+        _2    = 0x40,
+        _3    = 0x80,
+        All  = 0xF0,
     } ;
 
     // See register_length[] in write() before re-ordering these.
@@ -192,32 +185,32 @@ public:
             uint8_t(CFR_Bits::MatchPipeDelay) |
             uint8_t(CFR_Bits::OutputSineWave)));
 
-    void setClock( int mult = 20,const int32_t calibration = 0); // Mult must be 0 or in range 4..20
+    void set_clock( int mult = 20,const int32_t calibration = 0); // Mult must be 0 or in range 4..20
 
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta
-    uint32_t frequencyDelta(uint32_t freq) const;
+    uint32_t frequency_delta(uint32_t freq) const;
 
-    void setFrequency(ChannelIndex chan, uint32_t freq);
+    void set_frequency(ChannelIndex chan, uint32_t freq);
 
-    void setDelta(ChannelIndex chan, uint32_t delta);
+    void set_delta(ChannelIndex chan, uint32_t delta);
 
-    void setAmplitude(ChannelIndex chan, uint16_t amplitude);        // Maximum amplitude value is 1024
+    void set_amplitude(ChannelIndex chan, uint16_t amplitude);        // Maximum amplitude value is 1024
 
-    void setPhase(ChannelIndex chan, uint16_t phase);                // Maximum phase value is 16383
+    void set_phase(ChannelIndex chan, uint16_t phase);                // Maximum phase value is 16383
 
     void update();
 
-    void sweepFrequency(ChannelIndex chan, uint32_t freq, bool follow = true);      // Target frequency
+    void sweep_frequency(ChannelIndex chan, uint32_t freq, bool follow = true);      // Target frequency
 
-    void sweepDelta(ChannelIndex chan, uint32_t delta, bool follow = true);
+    void sweep_delta(ChannelIndex chan, uint32_t delta, bool follow = true);
 
-    void sweepAmplitude(ChannelIndex chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
+    void sweep_amplitude(ChannelIndex chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
 
-    void sweepPhase(ChannelIndex chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
+    void sweep_phase(ChannelIndex chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
 
-    void sweepRates(ChannelIndex chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
+    void sweep_rates(ChannelIndex chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
 
-    void setChannels(ChannelIndex chan);
+    void set_channels(ChannelIndex chan);
     // To read channel registers, you must first use setChannels to select exactly one channel!
     uint32_t read(Register reg);
     protected:
@@ -240,10 +233,10 @@ public:
 
         uint32_t    rval = 0;
         int         len = (uint8_t(reg)&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[uint8_t(reg)&0x07] : 4;
-        spi_drv_.writeSingle(uint8_t(reg)).unwrap();
+        spi_drv_.write_single(uint8_t(reg)).unwrap();
         while (len-- > 0){
             uint8_t ret = 0;
-            auto err = spi_drv_.transferSingle<uint8_t>(ret, (value>>len*8) & 0xFF);
+            auto err = spi_drv_.transfer_single<uint8_t>(ret, (value>>len*8) & 0xFF);
             if(err.wrong()) return 0;
             rval = (rval<<8) | ret; 
         }

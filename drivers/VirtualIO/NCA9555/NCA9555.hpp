@@ -58,9 +58,9 @@ public:
     NCA9555(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
     void init();
-    void setInversion(const uint16_t mask);
-    void writePort(const uint16_t data) override;
-    uint16_t readPort() override;
-    void setMode(const int index, const hal::GpioMode mode)override;
+    void set_inversion(const uint16_t mask);
+    void write_port(const uint16_t data) override;
+    uint16_t read_port() override;
+    void set_mode(const int index, const hal::GpioMode mode)override;
 };
 }

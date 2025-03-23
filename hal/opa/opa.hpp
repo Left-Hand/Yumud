@@ -4,7 +4,7 @@
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/gpio_tag.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "ral/ch32/ch32v203_opa_def.hpp"
 

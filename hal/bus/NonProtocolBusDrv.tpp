@@ -5,7 +5,7 @@ namespace ymd::hal{
 template <typename BusType>
 template<typename T>
 requires std::is_standard_layout_v<T> and is_writable_bus<BusType>
-BusError NonProtocolBusDrv<BusType>::writeSingle(const T data, Continuous cont) {
+BusError NonProtocolBusDrv<BusType>::write_single(const T data, Continuous cont) {
     constexpr size_t size = sizeof(T);
     if (BusError::OK == bus_.begin(index_)) {
         if (size != 1) this->set_data_width(size * 8);
@@ -71,7 +71,7 @@ BusError NonProtocolBusDrv<BusType>::read_burst(T * data_ptr, const size_t len, 
 template <typename BusType>
 template<typename T>
 requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
-BusError NonProtocolBusDrv<BusType>::readSingle(T & data, const Continuous cont) {
+BusError NonProtocolBusDrv<BusType>::read_single(T & data, const Continuous cont) {
     if (BusError::OK == bus_.begin(index_) ) {
         if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t temp = 0;
@@ -86,7 +86,7 @@ BusError NonProtocolBusDrv<BusType>::readSingle(T & data, const Continuous cont)
 template <typename BusType>
 template<typename T>
 requires std::is_standard_layout_v<T> and is_fulldup_bus<BusType>
-BusError NonProtocolBusDrv<BusType>::transferSingle(T & datarx, T datatx, Continuous cont) {
+BusError NonProtocolBusDrv<BusType>::transfer_single(T & datarx, T datatx, Continuous cont) {
     if (BusError::OK == bus_.begin(index_) ) {
         if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t ret = 0;
@@ -101,7 +101,7 @@ BusError NonProtocolBusDrv<BusType>::transferSingle(T & datarx, T datatx, Contin
 // template <typename BusType>
 // template<typename T>
 // requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
-// T NonProtocolBusDrv<BusType>::transferSingle(T datatx, Continuous cont) {
+// T NonProtocolBusDrv<BusType>::transfer_single(T datatx, Continuous cont) {
 //     if (BusError::OK == bus_.begin(index_) ) {
 //         if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
 //         T datarx;

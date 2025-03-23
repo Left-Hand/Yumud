@@ -66,7 +66,7 @@ protected:
 
 
     BusError writeByte(const uint8_t data, const Continuous cont = DISC){
-        return spi_drv_.writeSingle<uint8_t>(data, cont);
+        return spi_drv_.write_single<uint8_t>(data, cont);
     }
 
     BusError writeByte(const Command cmd, const Continuous cont = DISC){
@@ -78,7 +78,7 @@ protected:
     }
 
     BusError readByte(uint8_t & data, const Continuous cont = DISC){
-        return spi_drv_.readSingle<uint8_t>(data, cont);
+        return spi_drv_.read_single<uint8_t>(data, cont);
     }
 
     BusError readBytes(void * data, const size_t len){

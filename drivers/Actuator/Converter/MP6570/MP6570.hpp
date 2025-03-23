@@ -12,33 +12,42 @@ struct RS485Drv{
 
 };
 
+
 namespace ymd::drivers{
+
+
+class MP6570_Phy{
+public: 
+    using SlaveAddress = uint8_t;
+
+    MP6570_Phy(const hal::I2cDrv & i2c_drv) : i2c_drv_(i2c_drv) {}
+    MP6570_Phy(hal::I2cDrv && i2c_drv) : i2c_drv_(std::move(i2c_drv)) {}
+
+    MP6570_Phy(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
+            : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
+    MP6570_Phy(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
+            : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
+
+    
+    BusError write_reg(const uint8_t reg_addr, const uint16_t data);
+    
+    BusError read_reg(const uint8_t reg_addr, uint16_t & data);
+private:
+    std::optional<hal::I2cDrv> i2c_drv_;
+    SlaveAddress spi_slave_addr_ = 0;
+    std::optional<hal::SpiDrv> spi_drv_;
+};
+
+
+
+
 class MP6570 {
 public:
 
-    class Phy{
-    public: 
-        using SlaveAddress = uint8_t;
 
-        Phy(const hal::I2cDrv & i2c_drv) : i2c_drv_(i2c_drv) {}
-        Phy(hal::I2cDrv && i2c_drv) : i2c_drv_(std::move(i2c_drv)) {}
-
-        Phy(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
-             : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
-        Phy(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
-             : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
-
-        
-        BusError write_reg(const uint8_t reg_addr, const uint16_t data);
-        
-        BusError read_reg(const uint8_t reg_addr, uint16_t & data);
-    private:
-        std::optional<hal::I2cDrv> i2c_drv_;
-        SlaveAddress spi_slave_addr_ = 0;
-        std::optional<hal::SpiDrv> spi_drv_;
-    };
 
 private:
+    using Phy = MP6570_Phy;
     Phy phy_;
 
 public:
@@ -69,7 +78,7 @@ public:
         uint8_t cycle_p;
     };
 
-    struct Ctrl1Reg:public Reg16<>{
+    struct R16_Ctrl1:public Reg16<>{
         scexpr RegAddress address = 0x05;
         uint16_t nstep:9;
         uint16_t fgsel:5;

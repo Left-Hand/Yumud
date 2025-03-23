@@ -5,6 +5,9 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
+#include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace hal;
 using Can = hal::Can;
 void can_ring_main(){
@@ -18,8 +21,8 @@ void can_ring_main(){
     can.init(1_MHz, Can::Mode::Internal);
 
     can[0].mask(
-        CanID16{0x200, Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any),
-        CanID16{0x000, Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any));
+        CanID16{0x200, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),
+        CanID16{0x000, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any));
 
     while(true){
 

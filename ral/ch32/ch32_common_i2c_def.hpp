@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "core/io/regs.hpp"
 
 #ifndef BIT_CAST
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
@@ -61,8 +62,8 @@ struct R16_I2C_OADDR2{
 
 //I2C 数据寄存器
 struct R16_I2C_DATAR{
-    uint16_t DR:8;
-    uint16_t :8;
+    uint8_t DR;
+    uint8_t __resv__;
 };
 
 //I2C 状态寄存器1
@@ -87,17 +88,17 @@ struct R16_I2C_STAR1{
 
 //I2C 状态寄存器2
 struct R16_I2C_STAR2{
-    uint16_t MSL:1;
-    uint16_t BUSY:1;
-    uint16_t TRA:1;
-    uint16_t :1;
+    uint8_t MSL:1;
+    uint8_t BUSY:1;
+    uint8_t TRA:1;
+    uint8_t :1;
 
-    uint16_t GENCALL:1;
-    uint16_t SMBDEFAULT:1;
-    uint16_t SMBHOST:1;
-    uint16_t DYAKF:1;
+    uint8_t GENCALL:1;
+    uint8_t SMBDEFAULT:1;
+    uint8_t SMBHOST:1;
+    uint8_t DYAKF:1;
 
-    uint16_t PEC:8;
+    uint8_t PEC;
 
 };
 
@@ -195,7 +196,7 @@ struct I2C_Def{
     }
 
     constexpr uint8_t receive(){
-        return uint8_t(DATAR.DR);
+        return std::bit_cast<uint8_t>(DATAR.DR);
     }
 
     constexpr void master_send_7bit_addr(const uint8_t addr){
@@ -235,7 +236,7 @@ struct I2C_Def{
     }
 
     constexpr uint8_t get_pec(){
-        return STAR2.PEC;
+        return std::bit_cast<uint8_t>(STAR2.PEC);
     }
 
     constexpr void enable_arp(const bool en){
@@ -277,26 +278,26 @@ struct I2C_Def{
         uint32_t SMBHOST:1;
         uint32_t DYAKF:1;
 
-        bool check(const Events eve){
+        constexpr bool check(const Events eve){
             return( 
                 BIT_CAST(uint32_t, *this)
                 & BIT_CAST(uint32_t, eve)
             );
         }
 
-        uint16_t low16() const{
-            return uint16_t(BIT_CAST(uint32_t, *this));
+        constexpr uint16_t low16() const{
+            return uint16_t(std::bit_cast<uint32_t> (*this));
         }
 
-        uint8_t high8() const{
-            return uint8_t(BIT_CAST(uint32_t, *this) >> 16);
+        constexpr uint8_t high8() const{
+            return uint8_t(std::bit_cast<uint32_t> (*this) >> 16);
         }
     };
 
     constexpr auto get_events(){
         return BIT_CAST(Events,
-            uint32_t(BIT_CAST(uint16_t, STAR1))
-            | (BIT_CAST(uint16_t, STAR2) << 16)
+            uint32_t(std::bit_cast<uint16_t>(STAR1))
+            | (std::bit_cast<uint16_t>(STAR2) << 16)
         );
     }
 
@@ -317,7 +318,7 @@ struct I2C_Def{
 };
 
 
-static inline I2C_Def * I2C1_Inst = (I2C_Def *)(0x40005400);
-static inline I2C_Def * I2C2_Inst = (I2C_Def *)(0x40005800);
+[[maybe_unused]] static inline I2C_Def * I2C1_Inst = (I2C_Def *)(0x40005400);
+[[maybe_unused]] static inline I2C_Def * I2C2_Inst = (I2C_Def *)(0x40005800);
 
 }

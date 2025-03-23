@@ -5,8 +5,7 @@
 namespace ymd{
 
 enum class CommStrategy:unsigned char{
-    None = 0,
-    Blocking,
+    Blocking = 1,
     Sync = Blocking,
     Interrupt,
     Dma

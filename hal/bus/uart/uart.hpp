@@ -3,24 +3,17 @@
 #include <functional>
 
 #include "core/sdk.hpp"
-#include "core/stream/stream.hpp"
 
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
+#include "uart_utils.hpp"
 
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 
 
 namespace ymd::hal{
 
-class Gpio;
 
-enum class UartParity{
-    None = USART_Parity_No,
-    Even = USART_Parity_Even,
-    Odd = USART_Parity_Odd
-};
-
-class Uart:public FullDuplexBus{
+class Uart:public BusBase{
 
 public:
     using Mode = CommDirection;
@@ -28,8 +21,8 @@ public:
     using Parity = UartParity;
 
 private:
-    Callback posttx_cb_;
-    Callback postrx_cb_;
+    Callback post_tx_cb_;
+    Callback post_rx_cb_;
 
 protected:
     CommStrategy tx_strategy_;
@@ -44,13 +37,13 @@ protected:
 
     Uart(){;}
 
-    void callPostTxCallback(){EXECUTE(posttx_cb_);}
-    void callPostRxCallback(){EXECUTE(postrx_cb_);}
+    __fast_inline void call_post_tx_callback(){EXECUTE(post_tx_cb_);}
+    __fast_inline void call_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
-    BusError read(uint32_t & data) override {char _;read1(_);data = _;return BusError::OK;};
-    BusError write(const uint32_t data) override {write1(char(data)); return BusError::OK;};
+    BusError read(uint32_t & data) {char _;read1(_);data = _;return BusError::OK;};
+    BusError write(const uint32_t data) {write1(char(data)); return BusError::OK;};
 
-    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override {write1(char(data_tx)); return BusError::OK;};
+    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return BusError::OK;};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 
@@ -76,8 +69,8 @@ public:
 
     virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
-    void bindPostTxCb(auto && cb){posttx_cb_ = std::move(cb);}
-    void bindPosRxCb(auto && cb){postrx_cb_ = std::move(cb);}
+    void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
+    void bind_pos_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
 };
 
 

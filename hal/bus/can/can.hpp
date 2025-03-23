@@ -1,14 +1,14 @@
 #pragma once
 
-#include "hal/bus/bus.hpp"
+#include "hal/bus/bus_base.hpp"
 #include "core/buffer/ringbuf/Fifo_t.hpp"
 #include "core/sdk.hpp"
 
-#include "CanUtils.hpp"
-#include "CanMsg.hpp"
+#include "can_utils.hpp"
+#include "can_msg.hpp"
 
-#include "CanTrait.hpp"
-#include "CanFilter.hpp"
+#include "can_trait.hpp"
+#include "can_filter.hpp"
 
 
 #ifdef ENABLE_CAN1
@@ -48,7 +48,7 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
-class Can: public PackedBus<CanMsg>{
+class Can: public BusBase{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
@@ -144,9 +144,9 @@ public:
 
     bool is_busoff();
 
-    void bindTxOkCb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
-    void bindTxFailCb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
-    void bindRxCb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
+    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
+    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
 };

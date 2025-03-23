@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../adc.hpp"
+#include "hal/adc/adc.hpp"
 
 
 namespace ymd::hal{
@@ -14,11 +14,11 @@ protected:
 public:
     Adc1():AdcPrimary(ADC1){;}
 
-    void refreshRegularData() override;
-    void refreshInjectedData() override;
+    void refresh_regular_data();
+    void refresh_injected_data();
 
-    uint16_t getRegularDataByRank(const uint8_t rank) override;
-    uint16_t getInjectedDataByRank(const uint8_t rank) override;
+    uint16_t get_regular_data_by_rank(const uint8_t rank);
+    uint16_t get_injected_data_by_rank(const uint8_t rank);
 
     #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
     friend void ::ADC1_2_IRQHandler(void);

@@ -28,11 +28,11 @@ public:
             last_polar = polar;
 
             if(polar){
-                oc_.setOutputState(true);
-                ocn_.setOutputState(false);
+                oc_.set_output_state(true);
+                ocn_.set_output_state(false);
             }else{
-                oc_.setOutputState(false);
-                ocn_.setOutputState(true);
+                oc_.set_output_state(false);
+                ocn_.set_output_state(true);
             }
         }
         oc_ = abs(value);
@@ -53,8 +53,8 @@ void co_ab_main(){
     pwm_p.init();
     pwm_n.init();
 
-    pwm_p.setIdleState(true);
-    pwm_n.setIdleState(true);
+    pwm_p.set_idle_state(true);
+    pwm_n.set_idle_state(true);
     TimerOCTwins pwm_pair{pwm_p, pwm_n};
 
     while(true){

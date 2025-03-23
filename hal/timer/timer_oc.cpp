@@ -1,5 +1,5 @@
 #include "timer_oc.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -10,10 +10,10 @@ using namespace ymd::hal::internal;
 TimerOC & TimerOC::init(const TimerOC::Mode mode, const bool install){
     // sync();
 
-    setMode(mode);
+    set_mode(mode);
 
     if(install){
-        installToPin();
+        install_to_pin();
     }
 
     enable();
@@ -21,7 +21,7 @@ TimerOC & TimerOC::init(const TimerOC::Mode mode, const bool install){
     return *this;
 }
 
-TimerOC & TimerOC::setMode(const TimerOC::Mode mode){
+TimerOC & TimerOC::set_mode(const TimerOC::Mode mode){
     using enum ChannelIndex;
 
     uint16_t m_code;
@@ -81,8 +81,8 @@ TimerOC & TimerOC::setMode(const TimerOC::Mode mode){
     return *this;
 }
 
-void TimerOut::installToPin(const bool en){
-    Gpio & io = getPin(instance, idx_);
+void TimerOut::install_to_pin(const bool en){
+    Gpio & io = get_pin(instance, idx_);
     if(en)io.afpp();
     else io.inflt();
     enable(en);
@@ -96,14 +96,14 @@ TimerOut & TimerOut::enable(const bool en){
 }
 
 
-TimerOut & TimerOut::setPolarity(const bool pol){
+TimerOut & TimerOut::set_polarity(const bool pol){
     if(!pol) instance->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
 
     return *this;
 }
 
-TimerOut & TimerOut::setOutputState(const bool s){
+TimerOut & TimerOut::set_output_state(const bool s){
     if(s) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
 
@@ -134,8 +134,8 @@ TimerOut & TimerOut::sync(const bool _sync){
 }
 
 
-TimerOut & TimerOut::setIdleState(const bool state){
-    if(isAdvancedTimer(instance)){
+TimerOut & TimerOut::set_idle_state(const bool state){
+    if(is_advanced_timer(instance)){
         auto tmpcr2 = instance->CTLR2;
         const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)idx_);
         tmpcr2 &= (uint16_t)(~mask);
@@ -147,9 +147,9 @@ TimerOut & TimerOut::setIdleState(const bool state){
 }
 
 Gpio & TimerOC::io(){
-    return getPin(instance, idx_);
+    return get_pin(instance, idx_);
 }
 
 Gpio & TimerOCN::io(){
-    return getPin(instance, idx_);
+    return get_pin(instance, idx_);
 }

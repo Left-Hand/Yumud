@@ -7,7 +7,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "core/math/realmath.hpp"
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace hal;
 void m2006_main(){
@@ -27,7 +27,7 @@ void m2006_main(){
         // real_t c = real_t(0.07);
         int16_t d = int16_t(s * 32768 * real_t(0.2));
         int16_t d2 = int16_t(c * 32768 * real_t(0.2));
-        CanMsg msg = {0x200, std::make_tuple(BSWAP_16(d), BSWAP_16(d2))};
+        CanMsg msg = CanMsg::from_tuple(CanStdId(0x200), std::make_tuple(BSWAP_16(d), BSWAP_16(d2)));
         DEBUG_PRINTLN(can1.read());
         can1.write(msg);
         delay(10);

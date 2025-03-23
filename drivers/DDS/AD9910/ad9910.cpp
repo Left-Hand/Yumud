@@ -1,12 +1,12 @@
 #include "ad9910.hpp"
 
-#include "hal/timer/pwm/pwm_channel.hpp"
-#include "hal/adc/analog_channel.hpp"
+#include "concept/pwm_channel.hpp"
+#include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "hal/gpio/port.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 
 using namespace ymd::drivers;
@@ -63,13 +63,13 @@ void AD9910::init(void)
 
 void AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
-    spi_drv.writeSingle(addr).unwrap();
+    spi_drv.write_single(addr).unwrap();
     spi_drv.write_burst<uint8_t>(data, len).unwrap();
     __nopn(4);
 }
 
 void AD9910::write_data(const uint8_t txdat){
-    spi_drv.writeSingle(txdat).unwrap();
+    spi_drv.write_single(txdat).unwrap();
 }  
 
     

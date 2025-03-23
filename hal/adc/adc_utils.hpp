@@ -57,7 +57,7 @@ namespace ymd::hal{
     };
 
     namespace __adc_internal{
-        void installPin(const AdcChannelIndex channel, const bool en = true);
-        real_t getTemperature();
+        void install_pin(const AdcChannelIndex channel, const bool en = true);
+        real_t get_temperature();
     }
 }

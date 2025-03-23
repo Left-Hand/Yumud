@@ -3,20 +3,21 @@
 #include "core/debug/debug.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/spi/spisw.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 #include "drivers/Memory/Flash/X25QXX.hpp"
 
+#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd::drivers;
 
 void w25qxx_main(){
-    DEBUGGER_INST.init(576000);
+    hal::uart2.init(576000);
 
     auto & spi = spi1;
     auto & w25_cs = portD[5];
 
-    spi.bindCsPin(w25_cs, 0);
+    spi.bind_cs_pin(w25_cs, 0);
     spi.init(36_MHz);
     X25QXX w25{SpiDrv{spi, 0}, 1_MB};
     std::array<uint8_t, 8> arr;

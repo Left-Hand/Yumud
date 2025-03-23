@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils.hpp"
-#include "hal/adc/analog_channel.hpp"
+#include "concept/analog_channel.hpp"
 
 namespace ymd::foc{
 

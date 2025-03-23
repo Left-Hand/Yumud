@@ -82,7 +82,7 @@ BusError DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
         .write = 0
     };
 
-    return spi_drv_.writeSingle<uint16_t>((spi_format));
+    return spi_drv_.write_single<uint16_t>((spi_format));
 }
 
 BusError DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
@@ -92,7 +92,7 @@ BusError DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
         .write = 1
     };
 
-    const auto err = spi_drv_.readSingle<uint16_t>((spi_format)).unwrap();
+    const auto err = spi_drv_.read_single<uint16_t>((spi_format)).unwrap();
 
     reg = spi_format.data;
 

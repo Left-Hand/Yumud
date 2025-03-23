@@ -43,7 +43,7 @@ __inline void TIM_ASSERT(bool x){
 #define TIM_ASSERT(x)
 #endif
 
-void BasicTimer::enableRcc(const bool en){
+void BasicTimer::enable_rcc(const bool en){
     switch(uint32_t(instance)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
@@ -168,14 +168,14 @@ void BasicTimer::remap(const uint8_t rm){
     }
 }
 
-uint BasicTimer::getClk(){
-    return internal::isAdvancedTimer(instance) ? sys::clock::get_apb2_freq() : sys::clock::get_apb1_freq();
+uint BasicTimer::get_clk(){
+    return internal::is_advanced_timer(instance) ? sys::clock::get_apb2_freq() : sys::clock::get_apb1_freq();
 }
 
 
 void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
-    this->enableRcc(true);
-    uint32_t raw_period = this->getClk() / freq;
+    this->enable_rcc(true);
+    uint32_t raw_period = this->get_clk() / freq;
 
     // TIM_Get_BusFreq(instance);
     // uint32_t raw_period = 144000000 / freq;
@@ -194,7 +194,7 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
 }
 
 void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mode, const bool en){
-    this->enableRcc(true);
+    this->enable_rcc(true);
 
     TIM_InternalClockConfig(instance);
 
@@ -209,7 +209,7 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
     TIM_TimeBaseInit(instance, &TIM_TimeBaseStructure);
 
     //令人困惑的是 删除这行将无法正常工作
-    this->getClk();
+    this->get_clk();
 
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
@@ -220,13 +220,13 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 void BasicTimer::enable(const bool en){
     TIM_Cmd(instance, en);
     
-    if(en and internal::isAdvancedTimer(instance)){
+    if(en and internal::is_advanced_timer(instance)){
         TIM_CtrlPWMOutputs(instance, en);
     }
 }
 
-void GenericTimer::initAsEncoder(const Mode mode){
-    this->enableRcc(true);
+void GenericTimer::init_as_encoder(const Mode mode){
+    this->enable_rcc(true);
 
     {
         const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
@@ -265,21 +265,21 @@ void GenericTimer::initAsEncoder(const Mode mode){
     TIM_Cmd(instance, ENABLE);
 }
 
-void GenericTimer::enableSingle(const bool _single){
+void GenericTimer::enable_single(const bool _single){
     TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
-void GenericTimer::setTrgoSource(const TrgoSource source){
+void GenericTimer::set_trgo_source(const TrgoSource source){
     TIM_SelectOutputTrigger(instance, (uint8_t)source);
 }
 
-void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
+void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
 
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
         .TIM_OSSIState = TIM_OSSIState_Disable,
         .TIM_LOCKLevel = (uint16_t)level,
-        .TIM_DeadTime = this->calculateDeadzone(ns),
+        .TIM_DeadTime = this->calculate_deadzone(ns),
         .TIM_Break = TIM_Break_Disable,
         .TIM_BreakPolarity = TIM_BreakPolarity_Low,
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
@@ -288,8 +288,8 @@ void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::setDeadZone(const uint32_t ns){
-    uint8_t dead = this->calculateDeadzone(ns);
+void AdvancedTimer::set_dead_zone(const uint32_t ns){
+    uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance->BDTR;
     tempreg &= 0xff00;
@@ -297,8 +297,8 @@ void AdvancedTimer::setDeadZone(const uint32_t ns){
     instance->BDTR = tempreg;
 }
 
-uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
-	const uint64_t busFreq = this->getClk();
+uint8_t AdvancedTimer::calculate_deadzone(const uint ns){
+	const uint64_t busFreq = this->get_clk();
 
     uint8_t dead = (ns * (busFreq / 1000000) / 1000);
 
@@ -335,8 +335,8 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
     return dead;
 }
 
-void BasicTimer::enableIt(const IT it,const NvicPriority request, const bool en){
-    NvicPriority::enable(request, internal::ItToIrq(instance, it), en);
+void BasicTimer::enable_it(const IT it,const NvicPriority request, const bool en){
+    NvicPriority::enable(request, internal::it_to_irq(instance, it), en);
     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
 }
 
@@ -375,9 +375,9 @@ TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
 }
 
 
-#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invokeCallback(it); TIM_ClearITPendingBit(instance, uint8_t(it)); return;}
+#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invoke_callback(it); TIM_ClearITPendingBit(instance, uint8_t(it)); return;}
 
-void GenericTimer::onCCInterrupt(){
+void GenericTimer::on_cc_interrupt(){
     const uint16_t itstatus = instance->INTFR;
 
     TRY_HANDLE_IT(IT::CC1);
@@ -386,7 +386,7 @@ void GenericTimer::onCCInterrupt(){
     TRY_HANDLE_IT(IT::CC4);
 }
 
-void GenericTimer::onItInterrupt(){
+void GenericTimer::on_it_interrupt(){
     const uint16_t itstatus = instance->INTFR;
 
     TRY_HANDLE_IT(IT::Update);

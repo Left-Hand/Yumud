@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include "core/math/realmath.hpp"
 
 namespace gxm{
     
