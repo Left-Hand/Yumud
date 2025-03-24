@@ -133,7 +133,7 @@ public:
     //#region addsub
     template<size_t P>
     __fast_inline constexpr iq_t & operator +=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() + other.value.to_i32()));
+        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() + _iq<Q>(other.value).to_i32()));
     }
 
     __fast_inline constexpr iq_t & operator +=(const integral auto other) {
@@ -142,7 +142,7 @@ public:
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator -=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() - other.value.to_i32()));
+        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() - _iq<Q>(other.value).to_i32()));
     }
 
     __fast_inline constexpr iq_t & operator -=(const integral auto other) {

@@ -20,6 +20,10 @@
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 
 #include "dsp/filter/homebrew/DigitalFilter.hpp"
+#include "dsp/controller/adrc/tracking_differentiator.hpp"
+#include "dsp/controller/pi_ctrl.hpp"
+#include "dsp/homebrew/edge_counter.hpp"
+#include "dsp/controller/sliding_mode_ctrl.hpp"
 
 using namespace ymd::hal;
 
@@ -31,6 +35,11 @@ static constexpr size_t ISR_FREQ = 19200;
 static constexpr real_t SAMPLE_RES = 0.1_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
+
+template<size_t Q>
+static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
+    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
+}
 
 real_t volt_2_current(real_t volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
@@ -53,545 +62,31 @@ using HighpassFilter = dsp::ButterHighpassFilter<q16, 2>;
 using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 
-class EdgeCounter{
-public:
-    void update(bool state){
-        if(state != state_){
-            count_ ++;
-        }
-        state_ = state;
-    }
 
-    auto count() const{
-        return count_;
-    }
-private:
-    size_t count_ = 0;
-    bool state_ = false;
-};
 
-struct SpeedEstimator{
-public:
-    struct Config{
-        real_t err_threshold = 0.02_r;
-        size_t est_freq = ISR_FREQ;
-        size_t max_cycles = ISR_FREQ >> 7;
-    };
 
-    Config config = Config();
-protected:
 
-    struct Vars{
-        real_t last_position;
-        real_t last_raw_speed;
-        real_t last_speed;
-        size_t cycles;
-        void reset(){
-            last_position = 0;
-            last_raw_speed = 0;
-            last_speed = 0;
-            cycles = 1;
-        }
-    };
 
-    Vars vars;
 
 
-    real_t update_raw(const real_t position){
-        real_t delta_pos = position - vars.last_position;
-        real_t abs_delta_pos = ABS(delta_pos);
-        real_t this_speed = (delta_pos * int(config.est_freq) / int(vars.cycles));
-    
-        if(abs_delta_pos > config.err_threshold){
-        
-            vars.cycles = 1;
-            vars.last_position = position;
-            return vars.last_raw_speed = this_speed;
-        }else{
-            vars.cycles++;
-            if(vars.cycles > config.max_cycles){
-                
-                vars.cycles = 1;
-                vars.last_position = position;
-                return vars.last_raw_speed = this_speed;
-            }
-        }
-    
-        return vars.last_raw_speed;
-    }
-    
-public:
-    SpeedEstimator(){
-        reset();
-    }
+// class ExtendedStateObserver{
 
-    void reset(){
-        vars.reset();
-    }
+//     void update(const real_t u, const real_t y){
+//         const real_t e = z1 - y;
 
-    void update(const real_t position){
-        auto this_spd = update_raw(position);
-        vars.last_speed = (vars.last_speed * 127 + this_spd) >> 7;
-        // vars.last_speed = (vars.last_speed * 63 + this_spd) >> 6;
-    }
-    real_t get() const {return vars.last_speed;} 
-};
 
-class myPIController{
-public:
-    struct Config{
-        q24 kp;
-        q24 ki;
-        q24 out_min;
-        q24 out_max;
-        uint fs;
-    };
-protected:
-    q24 kp_;
-    q24 ki_by_fs_;
-    q24 out_min_;
-    q24 out_max_;
+//         const real_t z1  = state_[0];
+//         const real_t z2  = state_[1];
+//         const real_t z3  = state_[2];
 
-    q24 i_out_;
-    q24 output_;
-public:
-    myPIController(const Config & cfg){
-        reconf(cfg);
-        reset();    
-    }
-
-    void reset(){
-        i_out_ = 0;
-        output_ = out_min_;
-    }
-    void reconf(const Config & cfg){
-        kp_ = cfg.kp;
-        ki_by_fs_ = cfg.ki / cfg.fs;
-        out_min_ = cfg.out_min;
-        out_max_ = cfg.out_max;
-    }
-
-    static q24 calc_forward_feedback(const q24 targ){
-        return sqrt((targ + 5.3_q24) * q24(1.0 / 18));
-    }
-    
-    void update(const q24 targ, const q24 meas){
-        const q24 err = targ - meas;
-
-        // const q24 p_out = kp_ * err;
-
-        // if(unlikely(p_out >= out_max_)){
-        //     i_out_ = 0;
-        //     output_ = out_max_;
-        //     return;
-        // }else if(unlikely(p_out <= out_min_)){
-        //     i_out_ = 0;
-        //     output_ = out_min_;
-        //     return;
-        // }else{
-            // i_out_ = CLAMP(i_out_ + err * ki_by_fs_, (out_min_ - p_out), (out_max_- p_out));
-            i_out_ = CLAMP(i_out_ + err * ki_by_fs_, -1, 1);
-            // output_ = CLAMP(p_out + i_out_, out_min_, out_max_);
-            output_ = CLAMP(i_out_ + calc_forward_feedback(targ), out_min_, out_max_);
-            // output_ = CLAMP(i_out_, out_min_, out_max_);
-            return;
-        // }
-    }
-
-    real_t get() const {
-        return output_;
-    }
-};
-
-class IController{
-public:
-    struct Config{
-        q24 ki;
-        q24 out_min;
-        q24 out_max;
-        uint fs;
-    };
-protected:
-    q24 ki_by_fs_;
-    q24 out_min_;
-    q24 out_max_;
-    q24 output_;
-public:
-    IController(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-
-    void reset(){
-        output_ = out_min_;
-    }
-
-    void reconf(const Config & cfg){
-        ki_by_fs_ = cfg.ki / cfg.fs;
-        out_min_ = cfg.out_min;
-        out_max_ = cfg.out_max;
-    }
-
-    void update(const q24 targ, const q24 meas){
-        const q24 err = targ - meas;
-
-        const auto temp_output = output_ + ki_by_fs_ * err;
-        output_ = CLAMP(temp_output, out_min_, out_max_);
-    }
-
-    q24 output() const {
-        return output_;
-    }
-};
-
-template<typename T>
-class immutable_t{
-public:
-    constexpr immutable_t(const auto & value):
-        value_(static_cast<T>(value)){;}
-
-    constexpr immutable_t(auto && value):
-        value_(static_cast<T>(value)){;}
-
-    constexpr operator const T () const {
-        return value_;
-    }
-
-    constexpr const T & get() const {
-        return value_;
-    }
-
-    constexpr T & borrow_mut(){
-        return value_;
-    }
-private:
-    T value_;
-};
-
-class SlidingModeController {
-public:
-    SlidingModeController(){}
-    void update(const q24 targ,const q24 meas) {
-        static constexpr q24 c = 0.12_q24;
-        static constexpr q24 q = 0.0004_q24;
-        static constexpr q24 e = 0.000027_q24;
-
-        const q24 x1 = targ - meas;
-        const q24 x2 = x1 - err_prev_.get();
-        err_prev_.borrow_mut() = x1;
-
-        const q24 s = c * x1 + x2;
-        const q24 delta = c * x2 + q * s + e * sign(s); 
-
-        output_.borrow_mut() = CLAMP(output_.get() + delta, out_min_.get(), out_max_.get());
-    }
-
-    auto get() const {return output_.get();}
-
-private:
-    immutable_t<q24> output_  = 0;
-    
-    immutable_t<q24> out_min_ = 0.7_q24;
-    immutable_t<q24> out_max_ = 0.9_q24;
-
-    immutable_t<q24> err_prev_ = 0;
-};
-
-static constexpr real_t ssqrt(real_t x){
-    return sign(x) * sqrt(ABS(x));
-}
-
-
-
-real_t fal(const real_t e, const real_t alpha, const real_t delta){
-
-    const auto fabsf_e = abs(e);
-    
-    if(delta>=fabsf_e)
-        return e/pow(delta,1-alpha);
-    else
-        return pow(fabsf_e,alpha)*sign(e);
-}
-
-
-template<typename T, size_t N>
-class StateVector{
-public:
-    StateVector(){
-        reset();
-    }
-
-    void reset(){
-        // data_.fill(T(0));
-        for(size_t i=0;i<N;i++) data_[i] = 0;
-    }
-
-    StateVector(const std::initializer_list<T> list){
-        std::copy(list.begin(), list.end(), data_.begin());
-    }
-
-    const T & operator [](const size_t idx){
-        return data_[idx];
-    }
-
-    StateVector & operator += (const StateVector & other){
-        for(size_t i=0;i<N;i++)
-            data_[i] += other.data_[i];
-        return *this;
-    }
-
-    const auto & get() const{return data_;}
-    const T & back() const{return data_.back();}
-private:    
-    std::array<T, N> data_;
-};
-
-class TrackingDifferentiator{
-public:
-    struct Config{
-        q24 h;
-        q24 r;
-        uint fs;
-    };
-
-    TrackingDifferentiator(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-    void reset(){
-        state_.reset();
-    }
-
-
-    void update(const q24 v){
-        const auto h = h_.get();
-        const auto r = r_.get();
-
-        const auto x1 = state_[0];
-        const auto x2 = state_[1];
-
-        state_ += {
-            h * x2, h * fhan(x1 - v,x2,r, h)
-        };
-    }
-
-    void update2(const q24 v){
-        const auto h = h_.get();
-
-        const auto x1 = state_[0];
-        const auto x2 = state_[1];
-
-        state_ += {
-            h * x2, h * fhan2(x1 - v,x2)
-        };
-    }
-    
-    static constexpr q24 fhan(q24 x1,q24 x2,q24 r,q24 h){
-
-        const auto deltaa = r*h;
-        const auto deltaa0 = deltaa*h;
-        const auto y = x1 + (x2*h);
-        const auto a0 = sqrt(deltaa*deltaa+8*r*abs(y));
-        const auto a = ((abs(y)<=deltaa0) ? (x2+y/h) : (x2+0.5_r*(a0-deltaa)*sign(y)));
-    
-        if(abs(a)<=deltaa)
-            return -r*a/deltaa;
-        else
-            return -r*sign(a);
-    }
-
-    __fast_inline
-    constexpr q24 fhan2(q24 x1,q24 x2) const{
-        const auto deltaa_squ = square(deltaa_.get());
-        const auto r = r_.get();
-        const auto inv_h = inv_h_.get();
-
-        const auto y = x1 + x2 * h_.get();
-        const auto a0 = sqrt(deltaa_squ + 8 * r * abs(y));
-        const auto a = ((abs(y)<=deltaa0_.get()) ? 
-            (x2+y * inv_h) : 
-            (x2+0.5_r*(a0-deltaa_.get())*sign(y)));
-    
-        if(abs(a)<=deltaa_.get())
-            return -a * inv_h;
-        else
-            return -r*sign(a);
-    }
-
-    const auto & get() const {return state_.get();}
-
-
-    void reconf(const Config & cfg){
-        h_.borrow_mut() = cfg.h;
-        r_.borrow_mut() = cfg.r;
-
-        deltaa_.borrow_mut() = cfg.r*cfg.h;
-        deltaa0_.borrow_mut() = cfg.r*cfg.h*cfg.h;
-        inv_h_.borrow_mut() = 1/cfg.h;
-        // d_lmt_.borrow_mut() = - cfg.r 
-    }
-private:
-    immutable_t<q24> h_ = 0;
-    immutable_t<q24> r_ = 0;
-    
-    immutable_t<q24> deltaa_ = 0;
-    immutable_t<q24> deltaa0_ = 0;
-    immutable_t<q24> inv_h_ = 0;
-    // immutable_t<q24> d_lmt_ = 0;
-
-    using State = StateVector<q24, 2>;
-    State state_;
-};
-
-
-template<size_t N>
-class TrackingDifferentiatorByOrders;
-
-template<>
-class TrackingDifferentiatorByOrders<2>{
-public:
-    struct Config{
-        q24 r;
-        uint fs;
-    };
-
-    TrackingDifferentiatorByOrders(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-    void reset(){
-        state_.reset();
-    }
-
-
-    void update(const q24 u){
-        const auto r = r_.get();
-        const auto r_squ = r * r;
-        const auto inv_fs = inv_fs_.get();
-
-        const auto x1 = state_[0];
-        const auto x2 = state_[1];
-
-        state_ += {
-            x2 * inv_fs, 
-            (- 2 * r * x2 - r_squ * (x1 - u)) * inv_fs
-        };
-    }
-
-
-    void reconf(const Config & cfg){
-        r_.borrow_mut() = cfg.r;
-        inv_fs_.borrow_mut() = 1_q24 / cfg.fs;
-    }
-private:
-    immutable_t<q24> r_ = 0;
-    immutable_t<q24> inv_fs_ = 0;
-
-    using State = StateVector<q24, 2>;
-    State state_;
-};
-
-template<>
-class TrackingDifferentiatorByOrders<3>{
-public:
-    struct Config{
-        q24 r;
-        uint fs;
-    };
-
-    TrackingDifferentiatorByOrders(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-    void reset(){
-        state_.reset();
-    }
-
-
-    void update(const q24 u){
-        const auto r = r_.get();
-        const auto r_squ = r * r;
-        const auto inv_fs = inv_fs_.get();
-
-        const auto x1 = state_[0];
-        const auto x2 = state_[1];
-        const auto x3 = state_[2];
-
-        state_ += {
-            x2 * inv_fs, 
-            x3 * inv_fs,
-            (- 3 * x3 - 3 * r * x2 - r_squ * (x1 - u)) * r * inv_fs
-        };
-    }
-
-
-    void reconf(const Config & cfg){
-        r_.borrow_mut() = cfg.r;
-        inv_fs_.borrow_mut() = 1_q24 / cfg.fs;
-    }
-private:
-    immutable_t<q24> r_ = 0;
-    immutable_t<q24> inv_fs_ = 0;
-
-    using State = StateVector<q24, 3>;
-    State state_;
-};
-
-
-template<>
-class TrackingDifferentiatorByOrders<4>{
-public:
-    struct Config{
-        q24 r;
-        uint fs;
-    };
-
-    TrackingDifferentiatorByOrders(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-    void reset(){
-        state_.reset();
-    }
-
-
-    void update(const q24 u){
-        const auto r = r_.get();
-        const auto r_squ = r * r;
-        const auto inv_fs = inv_fs_.get();
-
-        const auto x1 = state_[0];
-        const auto x2 = state_[1];
-        const auto x3 = state_[2];
-        const auto x4 = state_[3];
-
-        state_ += {
-            x2 * inv_fs, 
-            x3 * inv_fs,
-            x3 * inv_fs,
-            (-4 * x4 - 6 * x3 - 4 * r * x2 - r_squ * r * (x1 - u)) * r * inv_fs
-        };
-    }
-
-
-    void reconf(const Config & cfg){
-        r_.borrow_mut() = cfg.r;
-        inv_fs_.borrow_mut() = 1_q24 / cfg.fs;
-    }
-
-    const auto & back() const {return state_.back();}
-private:
-    immutable_t<q24> r_ = 0;
-    immutable_t<q24> inv_fs_ = 0;
-
-    using State = StateVector<q24, 4>;
-    State state_;
-};
+//         state_[0] = z1 + h *(z2-belta01*e);
+//         state_[1] = z2 + h *(z3-belta02*fal(e,0.5,delta)+b*u);
+//         state_[2] = z3 + h *(-belta03*fal(e,0.25,delta));
+//     }
+// private:
+//     using State = StateVector<q20, 3>;
+//     State state_;
+// }
 
 
 
@@ -657,9 +152,8 @@ private:
         .fs = ISR_FREQ
     }};
 
-    SpeedEstimator spe = SpeedEstimator();
 
-    EdgeCounter ect;
+    dsp::EdgeCounter ect;
     
     real_t curr = 0;
     real_t curr_mid = 0;
@@ -683,44 +177,63 @@ private:
     //     }
     // };
 
-    SlidingModeController pi_ctrl;
-    TrackingDifferentiator td{{
-        .h = 0.002_q24,
-        .r = 5.96_r
+    dsp::SlidingModeController pi_ctrl{{
+        .c = 0.16_q24,
+        .q = 0.0005_q24,
+
+        .out_min = 0.7_r,
+        .out_max = 0.97_r,
+
+        .fs = ISR_FREQ
+    }};
+
+    dsp::TrackingDifferentiatorByOrders<2> td{{
+        // .r = 14.96_r,
+        // .r = 7.9_r,
+        // .r = 7.99_r,
+        // .r = 48.00_r,
+        // .r = 38.00_r,
+        .r = 125.5_r,
+        // .r = 6.5_r,
+        .fs = ISR_FREQ
     }};
 
     volatile uint32_t exe_micros = 0;
     real_t spd_targ = 0;
     real_t pos_targ = 0;
 
+    real_t trackin_sig = 0;
+    real_t volt = 0;
     adc1.attach(AdcIT::JEOC, {0,0}, [&](){
         const auto begin_micros = micros();
-        const auto volt = adc1.inj(1).get_voltage();
+        volt = adc1.inj(1).get_voltage();
         const auto curr_raw = volt_2_current(volt);
 
         lpf.update(curr_raw);
         // lpf_mid.update(curr_raw);
-        curr = lpf.result();
+        curr = lpf.get();
+        // bpf.update(curr_raw);
 
-        bpf.update(curr);
-        curr_mid = lpf_mid.result();
+        bpf.update(curr_raw);
+        // curr_mid = lpf_mid.get();
 
-        ect.update(bool(bpf.result() > 0));
+        ect.update(bool(bpf.get() > 0));
 
         const auto pos = ect.count() * 0.01_r;
-        spe.update(pos);
-        const auto spd = spe.get();
+        td.update(pos);
+        const auto spd = td.get()[1];
 
-        static constexpr auto kp = 87.0_r;
+        static constexpr auto kp = 267.0_r;
         static constexpr auto kd = 0.0_r;
-        const auto spd_cmd = kp * ssqrt(pos_targ - pos) + kd * (spd_targ - spd);
-        pi_ctrl.update(spd_cmd, spd);
+        // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
+        // pi_ctrl.update(spd_targ, spd);
+        pi_ctrl.update(spd_targ, spd);
         pwm_pos = pi_ctrl.get();
+        // pwm_pos = 0.92_r;
         exe_micros = micros() - begin_micros;
 
-        const auto t = time();
-        const auto s = sin(t * 10);
-        td.update(s);
+
+
         // uart.tick();
     });
 
@@ -744,22 +257,30 @@ private:
         // spd_targ = 8.0_r + 1.0_r * sinpu(2.0_r * time());
         const auto t = time();
 
-        #define TEST_MODE 0
+        #define TEST_MODE 1
 
         #if TEST_MODE == 0
         spd_targ = 12;
         pos_targ = 10.0_r * t + 2*frac(t);
         #elif TEST_MODE == 1
-        spd_targ = 7.0_r + 1.0_r * sin(6 * t);
-        pos_targ = 7.0_r * t + real_t(-1.0/6) * cos(6 * t);
+        spd_targ = 7.0_r + 1.0_r * sinpu(1.3_r * t);
+        pos_targ = 7.0_r * t + real_t(-1.0/6) * cospu(1.3_r * t);
         #endif
         // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
         // spd_targ = 9.0_r + 1.0_r * -1;
         // spd_targ = 16.57_r;
-        // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, curr * 10,  pi_ctrl.get(), bpf.result(), spe.get(), ect.count() * 0.01_r, exe_micros);
-
-
-        DEBUG_PRINTLN_IDLE(td.get());
+        // trackin_sig = sign(sin(t * 3));
+        // trackin_sig = real_t(int(sin(t * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * sin(t * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * t * 32)) / 32;
+        // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * t)));
+        trackin_sig = 10 * CLAMP2(sinpu(7 * t), 0.5_r);
+        // trackin_sig = tpzpu(t);
+        
+        // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);
+        DEBUG_PRINTLN_IDLE(td.get(), spd_targ, exe_micros);
+        // DEBUG_PRINTLN_IDLE(curr, bpf.get(), volt);
+        // DEBUG_PRINTLN_IDLE(trackin_sig, td.get());
         // DEBUG_PRINTLN(duty, bool(pwm_pos.io()), bool(pwm_neg.io()));
         
     }
@@ -767,6 +288,7 @@ private:
 
 void ws2812_main(){
     TARG_UART.init(6_MHz);
+    // TARG_UART.init(576000);
     DEBUGGER.retarget(&TARG_UART);
     // ws2812_tb(hal::portB[1]);
     at8222_tb();

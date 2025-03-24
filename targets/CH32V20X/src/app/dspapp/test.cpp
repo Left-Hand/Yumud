@@ -416,8 +416,8 @@ void dtmf_tb(const uint fs){
             // CLAMP(wave,0,1),
             t,
             wave,
-            h_filter.result(),
-            l_filter.result() 
+            h_filter.get(),
+            l_filter.get() 
         );
     });
 }

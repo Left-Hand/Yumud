@@ -75,7 +75,7 @@ public:
         s_ = 4*a2+2;
     }
 
-    T result() const{ return this->result_; }
+    const T & get() const{ return this->result_; }
 
     void reset(){
         for(auto & state:states_){
@@ -169,6 +169,8 @@ public:
         update(x);
         return this->result_;
     }
+
+    const T & get() const{ return this->result_; }
 };
 
 template<arithmetic T, size_t N>
@@ -209,6 +211,8 @@ public:
         update(x);
         return this->result_;
     }
+    
+    const T & get() const{ return this->result_; }
 };
 
 }
