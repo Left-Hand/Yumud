@@ -19,18 +19,34 @@
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"
 
-using ST = real_t;
 
-// template<typename T = real_t>
+
+
+
+scexpr RGB Reflectance(int8_t i)
+{
+    if (i == 8 || i == 9){
+        return RGB(0.05_r, 0.65_r, 0.05_r);
+    }
+    else if (i == 10 || i == 11){
+        return RGB(0.65_r, 0.05_r, 0.05_r);
+    }
+    else{
+        return RGB{0.65_r, 0.65_r, 0.65_r};
+    }
+}
+
+
 [[nodiscard]]
 static std::tuple<interaction_t<real_t>, mat4_t<real_t>> makeInteraction(const intersection_t<real_t> & intersection, const ray_t<real_t> & ray){
-    interaction_t<real_t> interaction;
+    interaction_t<real_t> interaction{
+        intersection.i,
+        intersection.t,
+        triangles[intersection.i],
+        ray.start + ray.direction * intersection.t,
+        interaction.surface.normal
+    };
 
-    interaction.i = intersection.i;
-    interaction.t = intersection.t;
-    interaction.surface = &((const triangle_t*)triangles)[intersection.i];
-    interaction.position =  ray.start + ray.direction * intersection.t;
-    interaction.normal = interaction.surface->normal;
 
     if (ray.direction.dot(interaction.normal) > 0){
         interaction.normal = -interaction.normal;
@@ -39,6 +55,35 @@ static std::tuple<interaction_t<real_t>, mat4_t<real_t>> makeInteraction(const i
     return {interaction, orthonormalBasis(interaction.normal)};
 }
 
+
+
+
+[[nodiscard]]
+static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triangle_t & s){
+    const auto P = ray.direction.cross(s.E2);
+    const auto determinant = P.dot(s.E1);
+    if (determinant < EPSILON && determinant > -EPSILON) return 0;
+
+    const auto inv_determinant = 1 / determinant;
+
+    const auto transform = ray.start - s.v0;
+    const auto u = P.dot(transform) * inv_determinant;
+    if (u > 1 or u < 0) return 0;
+
+    const auto Q = transform.cross(s.E1);
+    const auto v = Q.dot(ray.direction) * inv_determinant;
+    if (v > 1 or v < 0 or u + v > 1) return 0;
+
+    return Q.dot(s.E2) * inv_determinant;
+};
+
+[[nodiscard]]
+static __fast_inline bool bb_intersect(const ray_t<real_t> & ray){
+    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
+    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
+
+    return vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0);;
+};
 
 [[nodiscard]]
 static __fast_inline bool tb_intersect (const ray_t<real_t> & ray){
@@ -50,34 +95,6 @@ static __fast_inline bool tb_intersect (const ray_t<real_t> & ray){
 
 
 [[nodiscard]]
-static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triangle_t * s){
-    const auto P = ray.direction.cross(s->E2);
-    const auto determinant = P.dot(s->E1);
-    if (determinant < EPSILON && determinant > -EPSILON) return 0;
-
-    const auto inv_determinant = 1 / determinant;
-
-    const auto transform = ray.start - s->v0;
-    const auto u = P.dot(transform) * inv_determinant;
-    if (u > 1 || u < 0) return 0;
-
-    const auto Q = transform.cross(s->E1);
-    const auto v = Q.dot(ray.direction) * inv_determinant;
-    if (v > 1 || v < 0 || u + v > 1) return 0;
-
-    return Q.dot(s->E2) * inv_determinant;
-};
-
-[[nodiscard]]
-static __fast_inline bool bb_intersect(const ray_t<real_t> & ray){
-    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
-    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
-
-    return vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0);;
-};
-
-// template<typename T>
-[[nodiscard]]
 static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
     intersection_t<real_t> intersection;
 
@@ -85,11 +102,11 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
     intersection.i = -1;
 
     if (bb_intersect(ray)){
-        for (size_t k = 0; k < 32; ++k)
+        for (size_t k = 0; k < triangles.size(); ++k)
         {
             if (!tb_intersect(ray_t<real_t>(ray)))
                 continue;
-            const auto isct = tt_intersect(ray, &((const struct triangle_t*)triangles)[k]);
+            const auto isct = tt_intersect(ray, triangles[k]);
             if (isct > 0)
             {
                 if (isct < intersection.t)
@@ -106,8 +123,9 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
 
 
 [[nodiscard]]
-static std::optional<std::tuple<Vector3_t<real_t>, real_t>> sampleBSDF(const interaction_t<real_t> & interaction, const ray_t<real_t> & ray, const mat4_t<real_t> & transform){
-    const auto z = Vector3_t(transform.m[2][0], transform.m[2][1], transform.m[2][2]);
+__fast_inline
+static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const interaction_t<real_t> & interaction, const ray_t<real_t> & ray, const mat4_t<real_t> & transform){
+    const auto z = Vector3_t(transform[2][0], transform[2][1], transform[2][2]);
     const auto wi_z = z.dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
@@ -117,12 +135,11 @@ static std::optional<std::tuple<Vector3_t<real_t>, real_t>> sampleBSDF(const int
     if(bsdf_pdf == 0) return std::nullopt;
 
     return std::make_tuple(
-        Reflectance(interaction.i) *(INV_PI * std::abs(wi_z)),
+        Reflectance(interaction.i) * (INV_PI * std::abs(wi_z)),
         bsdf_pdf
     );
 }
 
-// template<typename T>
 [[nodiscard]]
 static ray_t<real_t> cosWeightedHemi(const interaction_t<real_t> & interaction, const mat4_t<real_t> & transform)
 {
@@ -142,14 +159,14 @@ static ray_t<real_t> cosWeightedHemi(const interaction_t<real_t> & interaction, 
     return ray_t{
         interaction.position + interaction.normal * EPSILON,
     
-        {Vector3_t(transform.m[0][0], transform.m[1][0], transform.m[2][0]).dot(v),
-        Vector3_t(transform.m[0][1], transform.m[1][1], transform.m[2][1]).dot(v),
-        Vector3_t(transform.m[0][2], transform.m[1][2], transform.m[2][2]).dot(v)}
+        {Vector3_t(transform[0][0], transform[1][0], transform[2][0]).dot(v),
+        Vector3_t(transform[0][1], transform[1][1], transform[2][1]).dot(v),
+        Vector3_t(transform[0][2], transform[1][2], transform[2][2]).dot(v)}
     };
 }
 
 [[nodiscard]]
-static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> & interaction, const mat4_t<real_t> & transform){
+static std::optional<RGB> sampleLight(const interaction_t<real_t> & interaction, const mat4_t<real_t> & transform){
     const auto u1 = real_t(rand01());
     const auto u0 = real_t(rand01());
 
@@ -157,7 +174,7 @@ static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> 
 
     const real_t su = sqrtf(u0);
 
-    const struct triangle_t* light = &((const triangle_t*)triangles)[lightIdx];
+    const triangle_t & light = triangles[lightIdx];
 
     const auto linear_t = Vector3_t(
         (1 - su),
@@ -166,9 +183,9 @@ static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> 
     );
 
     const auto light_pos = Vector3_t{
-        Vector3_t(light->v0.x, light->v1.x, light->v2.x).dot(linear_t),
-        Vector3_t(light->v0.y, light->v1.y, light->v2.y).dot(linear_t),
-        Vector3_t(light->v0.z, light->v1.z, light->v2.z).dot(linear_t)
+        Vector3_t(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
+        Vector3_t(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
+        Vector3_t(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
     ray_t<real_t> ray;
@@ -176,7 +193,7 @@ static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> 
     ray.direction = (light_pos - ray.start).normalized();
     ray.inv_direction = Vector3_t<real_t>::from_rcp(ray.direction);
 
-    const real_t cos_light_theta = -ray.direction.dot(light->normal);
+    const real_t cos_light_theta = -ray.direction.dot(light.normal);
     if (cos_light_theta <= 0) return std::nullopt;
 
     const real_t cos_theta = ray.direction.dot(interaction.normal);
@@ -194,12 +211,10 @@ static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> 
     return (sample * lightColor * mis_weight * 2) / light_pdf;
 }
 
-static Vector3_t<real_t> sampleRay(Vector3_t<real_t> sample, ray_t<real_t> ray)
-{
-    auto throughput = Vector3_t<real_t>::from_ones(1);
+static RGB sampleRay(RGB sample, ray_t<real_t> ray){
+    auto throughput = RGB{1,1,1};
     uint16_t depth = 0;
-    while (1)
-    {
+    while (1){
         const auto intersection = intersect(ray);
         if (intersection.i == -1){
             return sample + throughput;
@@ -215,7 +230,7 @@ static Vector3_t<real_t> sampleRay(Vector3_t<real_t> sample, ray_t<real_t> ray)
         const auto [interaction, transform] = makeInteraction(intersection, ray);
 
         const auto light_opt = sampleLight(interaction, transform);
-        const auto radiance = light_opt.value_or(Vector3_t<real_t>::from_ones(0));
+        const auto radiance = light_opt.value_or(RGB(0, 0, 0));
         sample += radiance * throughput;
 
         depth++;
@@ -225,7 +240,7 @@ static Vector3_t<real_t> sampleRay(Vector3_t<real_t> sample, ray_t<real_t> ray)
         if (!sample_opt) return sample;
 
         const auto & [bsdf, bsdf_pdf] = sample_opt.value();
-        throughput *= bsdf / bsdf_pdf;
+        throughput *= (bsdf / bsdf_pdf);
 
         if (depth == max_depth) return sample;
     }
@@ -233,21 +248,17 @@ static Vector3_t<real_t> sampleRay(Vector3_t<real_t> sample, ray_t<real_t> ray)
 
 
 
-static Vector3_t<real_t> samplePixel(const uint X, const uint Y)
+static RGB samplePixel(const uint X, const uint Y)
 {
-    auto sample = Vector3_t<real_t>::from_ones(0);
+    auto sample = RGB();
 
-    static constexpr auto Zc = -LCD_H * real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
+    // static constexpr auto Zc = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
+    static constexpr auto Zc = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
-    for (size_t i = 0; i < spp; i++)
-    {
-        const auto u0 = rand01();
-        const auto u1 = rand01();
+    for (size_t i = 0; i < spp; i++){
 
-        const real_t Xw = X + u0;
-        const real_t Yw = LCD_H - 1 - Y + u1;
-        const real_t Xc = Xw - LCD_W * real_t(0.5);
-        const real_t Yc = Yw - LCD_H * real_t(0.5);
+        const real_t Xc = (X - (LCD_W >> 1)) * INV_LCD_H;
+        const real_t Yc = (LCD_H - 1 - Y - (LCD_H >> 1)) * INV_LCD_H;
 
 
         // const auto linear_t = 
@@ -262,23 +273,27 @@ static Vector3_t<real_t> samplePixel(const uint X, const uint Y)
             sample,
             ray_t<real_t>{
                 eye,
-                Vector3_t<q8>(Xc, Yc, Zc)
+                Vector3_t<q16>(Xc, Yc, Zc)
                 // temp_direction
             }
         ) * inv_spp;
     }
 
-    return sample / (sample + Vector3_t<real_t>::ONE);
+    return RGB{
+        real_t(sample.r / (1 + sample.r)),
+        real_t(sample.g / (1 + sample.g)),
+        real_t(sample.b / (1 + sample.b))
+    };
     // return sample;
 }
 
 static RGB565 draw3drt(const uint X, const uint Y){
     const auto sample = samplePixel(X, Y);
-    return RGB565(uint8_t(sample.x * 255), uint8_t(sample.y * 255), uint8_t(sample.z * 255));
+    return RGB565(uint8_t(sample.r * 255), uint8_t(sample.g * 255), uint8_t(sample.b * 255));
 }
 
 static void render_row(const std::span<RGB565> row, const uint y){
-    // ASSERT(row.size() == LCD_W);
+    ASSERT(row.size() == LCD_W);
 
     for (uint x = 0; x < LCD_W; x++){
         row[x] = draw3drt(x, y);
@@ -289,11 +304,43 @@ static void render_row(const std::span<RGB565> row, const uint y){
 #define UART hal::uart2
 using drivers::ST7789;
 
+// void print_vec3(OutputStream & os, const Vector3_t<real_t> & vec){
+//     os << "{\t" << vec.x << "_r,\t" << vec.y << "_r,\t" << vec.z << "_r}";
+// }
+// void print_triangle(OutputStream & os, const triangle_t & tri){
+//     // Vector3_t<real_t> bbmin, bbmax;
+//     // Vector3_t<real_t> v0, v1, v2;
+//     // Vector3_t<real_t> E1, E2, normal;
+
+//     #define PRINT_VEC3_AND_COMMA(vec) print_vec3(os, vec); os << ",\t"; delay(5);
+
+//     os << '{';
+//     PRINT_VEC3_AND_COMMA(tri.bbmin);
+//     PRINT_VEC3_AND_COMMA(tri.bbmax);
+//     PRINT_VEC3_AND_COMMA(tri.v0);
+//     PRINT_VEC3_AND_COMMA(tri.v1);
+//     PRINT_VEC3_AND_COMMA(tri.v2);
+//     PRINT_VEC3_AND_COMMA(tri.E1);
+//     PRINT_VEC3_AND_COMMA(tri.E2);
+//     print_vec3(os, tri.normal);
+//     os << '}';
+// }
+// void print_triangles(OutputStream & os){
+//     const size_t size = sizeof(triangles) / sizeof(triangle_t);
+//     const auto * ptr = reinterpret_cast<const triangle_t *>(triangles);
+//     for(size_t i = 0; i < size; i++){
+//         print_triangle(os, ptr[i]);
+//         os << ",\r\n";
+//         delay(5);
+//     }
+// }
+
 void light_tracking_main(void){
 
     UART.init(576000);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.setEps(4);
+    // DEBUGGER.noBrackets();
 
     DEBUG_PRINTLN(micros());
     DEBUG_PRINTLN(view_x, view_y, view_z);
@@ -328,6 +375,7 @@ void light_tracking_main(void){
 
     // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    DEBUG_PRINTLN("--------------");
 
     {
         tftDisplayer.init();

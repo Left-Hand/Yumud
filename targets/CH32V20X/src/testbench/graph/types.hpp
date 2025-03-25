@@ -12,6 +12,100 @@ struct triangle_t
     Vector3_t<real_t> E1, E2, normal;
 };
 
+struct RGB{
+    real_t r, g, b;
+
+    RGB & operator *= (const real_t val){
+        r *= val;
+        g *= val;
+        b *= val;
+
+        return *this;
+    }
+
+    RGB & operator *= (const RGB & val){
+        r *= val.r;
+        g *= val.g;
+        b *= val.b;
+
+        return *this;
+    }
+
+    RGB & operator /= (const real_t val){
+        const auto inv_val = 1 / val;
+        r *= inv_val;
+        g *= inv_val;
+        b *= inv_val;
+
+        return *this;
+    }
+
+    RGB & operator /= (const RGB & val){
+        r /= val.r;
+        g /= val.g;
+        b /= val.b;
+
+        return *this;
+    }
+
+    RGB operator * (const real_t val) const {
+        auto ret = RGB(*this);
+        ret *= val;
+        return ret;
+    }
+
+    RGB operator * (const RGB & val) const {
+        auto ret = RGB(*this);
+        ret *= val;
+        return ret;
+    }
+
+
+    RGB operator / (const real_t val) const {
+        auto ret = RGB(*this);
+        ret /= val;
+        return ret;
+    }
+
+    // RGB operator / (const RGB & val){
+    //     auto ret = RGB(*this);
+    //     ret /= val;
+    //     return ret;
+    // }
+
+    RGB & operator += (const RGB & val){
+        r += val.r;
+        g += val.g;
+        b += val.b;
+
+        return *this;
+    }
+
+    RGB operator + (const RGB & val) const {
+        auto ret = RGB(*this);
+        ret += val;
+        return ret;
+    }
+
+    RGB & operator -= (const RGB & val){
+        r -= val.r;
+        g -= val.g;
+        b -= val.b;
+
+        return *this;
+    }
+
+    RGB operator - (const RGB & val) const {
+        auto ret = RGB(*this);
+        ret -= val;
+        return ret;
+    }
+
+    RGB operator - () const {
+        return RGB(-r,-g,-b);
+    }
+};
+
 
 template<typename T>
 struct ray_t{
@@ -20,13 +114,6 @@ struct ray_t{
     Vector3_t<T> inv_direction;
 
     ray_t(){;}
-
-    // ray_t(const ray_t<auto> & other):
-
-    //     start(other.start),
-    //     direction(other.direction),
-    //     inv_direction(other.inv_direction)
-    // {}
 
     ray_t(const ray_t<T> & other):
 
@@ -43,28 +130,26 @@ struct ray_t{
 };
 
 template<typename T>
-struct intersection_t
-{
-    int8_t i;
+struct intersection_t{
+    int i;
     T t;
-
-    intersection_t(){}
-    intersection_t(const intersection_t<T> & other) = default;
-    // intersection_t(const intersection_t<auto> & other):
-    //     i(other.i),
-    //     t(static_cast<T>(other.t)){}
-
 };
 
 template<typename T>
-struct interaction_t: public intersection_t<T>{
-    const struct triangle_t * surface;
+struct interaction_t{
+    int i;
+    T t;
+    const struct triangle_t & surface;
     Vector3_t<T> position;
     Vector3_t<T> normal;
 };
 
 
 template<typename T>
-struct mat4_t{
-    T m[4][4];
-};
+using mat4_t = std::array<std::array<T,4>,4>;
+
+
+// template<typename T>
+// struct mat4_t{
+
+// }

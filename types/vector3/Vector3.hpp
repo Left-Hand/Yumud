@@ -232,11 +232,11 @@ public:
     }
 
 
-    constexpr T dot(const Vector3_t<arithmetic auto > &v) const{
+    constexpr __fast_inline T dot(const Vector3_t<arithmetic auto > &v) const{
         return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
     }
 
-    constexpr Vector3_t max_with(const Vector3_t<arithmetic auto> &v) const{
+    constexpr __fast_inline Vector3_t max_with(const Vector3_t<arithmetic auto> &v) const{
         return {
             std::max(x, static_cast<T>(v.x)),
             std::max(y, static_cast<T>(v.y)),
@@ -244,7 +244,7 @@ public:
         };
     }
 
-    constexpr Vector3_t min_with(const Vector3_t<arithmetic auto> &v) const{
+    constexpr __fast_inline Vector3_t min_with(const Vector3_t<arithmetic auto> &v) const{
         return {
             std::min(x, static_cast<T>(v.x)),
             std::min(y, static_cast<T>(v.y)),
