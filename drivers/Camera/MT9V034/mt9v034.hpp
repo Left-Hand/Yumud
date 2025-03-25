@@ -63,16 +63,16 @@ protected:
     }
 
     void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{
-        color = data[pos.x + pos.y * size_.x];
+        color = data[pos.x + pos.y * size().x];
     };
 
 public:
-    scexpr uint8_t default_addr = 0x5c << 1;
-    scexpr Vector2i camera_size = {188, 120};
+    scexpr uint8_t DEFAULT_I2C_ADDR = 0x5c << 1;
+    scexpr Vector2i CAMERA_SIZE = {188, 120};
 public:
-    MT9V034(const hal::SccbDrv & sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(sccb_drv, camera_size){;}
-    MT9V034(hal::SccbDrv && sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(std::move(sccb_drv), camera_size){;}
-    MT9V034(hal::I2c & _i2c):ImageBasics(camera_size), CameraWithSccb<Grayscale>({_i2c, default_addr}, camera_size){;}
+    MT9V034(const hal::SccbDrv & sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(sccb_drv, CAMERA_SIZE){;}
+    MT9V034(hal::SccbDrv && sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(std::move(sccb_drv), CAMERA_SIZE){;}
+    MT9V034(hal::I2c & _i2c):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>({_i2c, DEFAULT_I2C_ADDR}, CAMERA_SIZE){;}
 
     bool init();
 

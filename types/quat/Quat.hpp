@@ -60,6 +60,32 @@ struct Quat_t{
             w(static_cast<T>(p_w)) {
     }
 
+
+    Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
+
+
+
+    Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
+    {
+        Vector3_t<T> c = v0.cross(v1);
+        T d = v0.dot(v1);
+
+        if (d < T(-1) + T(CMP_EPSILON)) {
+            x = 0;
+            y = 1;
+            z = 0;
+            w = 0;
+        } else {
+            T s = isqrt((T(1) + d) * T(2));
+            T rs = T(1) / s;
+
+            x = c.x * rs;
+            y = c.y * rs;
+            z = c.z * rs;
+            w = s / 2;
+        }
+    }
+
     Quat_t(const Vector3_t<T> &euler) { set_euler(euler); }
     Quat_t(const Quat_t &p_q) :
             x(p_q.x),
@@ -148,6 +174,16 @@ struct Quat_t{
     }
 
     __fast_inline constexpr 
+    Vector3_t<T> xform_up() const {
+        // 假设输入 v = (0, 0, 1)
+        return Vector3_t<T>(
+            2 * (w * y + z * x),      // x 分量
+            2 * (-w * x + z * y),     // y 分量
+            2 * (z * z + w * w) - 1   // z 分量
+        );
+    }
+
+    __fast_inline constexpr 
     auto xform_top() const{
         return Vector3_t<T>(
             T(2 * (x * z - w * y)),
@@ -162,30 +198,7 @@ struct Quat_t{
     Quat_t operator/(const T &s) const;
 
 
-    Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
-
-
-    Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
-    {
-        Vector3_t<T> c = v0.cross(v1);
-        T d = v0.dot(v1);
-
-        if (d < T(-1) + T(CMP_EPSILON)) {
-            x = 0;
-            y = 1;
-            z = 0;
-            w = 0;
-        } else {
-            T s = sqrt((T(1) + d) * T(2));
-            T rs = T(1) / s;
-
-            x = c.x * rs;
-            y = c.y * rs;
-            z = c.z * rs;
-            w = s / 2;
-        }
-    }
 
 };
 

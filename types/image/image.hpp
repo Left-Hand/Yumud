@@ -24,7 +24,7 @@ public:
  
     Image & operator=(Image && other) noexcept {
         if (this != &other) {
-            this->size_ = std::move(other.size());
+            this->size_mut() = std::move(other.size());
             this->select_area = std::move(other.select_area);
             this->data = std::move(other.data);
         }
@@ -39,7 +39,7 @@ public:
 
     Image<ColorType> & clone(const Image<ColorType> & other){
         const auto _size = (Rect2i(ImageBasics::size())).intersection(Rect2i(other.size())).size;
-        this->size_ = _size;
+        this->size_mut() = _size;
         this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
         memcpy(this->data.get(), other.data.get(), _size.x * _size.y * sizeof(ColorType));
         return *this;

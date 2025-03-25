@@ -148,10 +148,10 @@ public:
 
     template<arithmetic U>
     constexpr Vector3_t & operator /= (const U & _v){
-        T v = static_cast<T>(_v);
-        x /= v;
-        y /= v;
-        z /= v;
+        T inv_v = 1 / static_cast<T>(_v);
+        x *= inv_v;
+        y *= inv_v;
+        z *= inv_v;
         return *this;
     }
 

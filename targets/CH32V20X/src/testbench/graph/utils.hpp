@@ -3,10 +3,10 @@
 #include <cmath>
 #include "core/math/realmath.hpp"
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
-// #include "dsp/siggen/noise/GaussianNoiseSiggen.hpp"
+
 #include "types.hpp"
 #include "core/clock/time.hpp"
-
+#include "types/quat/Quat.hpp"
 
 scexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
 scexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
@@ -46,21 +46,25 @@ scexpr mat4_t<T> orthonormalBasis(Vector3_t<T> N){
 static real_t rand01(){
     static dsp::LCGNoiseSiggen ng;
     ng.update();
-    return real_t(frac(real_t(ng.get()) >> 16));
+    // return real_t(frac(real_t(ng.get()) >> 16));
+    return real_t(std::bit_cast<_iq<16>>(ng.get() & 0xffff));
+}
+
+
+static std::tuple<real_t, real_t> rand01_2(){
+    static dsp::LCGNoiseSiggen ng;
+    ng.update();
+    const uint32_t temp = ng.get();
+    const uint32_t u0 = temp >> 16;
+    const uint32_t u1 = temp & 0xffff;
+    return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
 }
 
 
 
 scexpr auto eye     = Vector3_t<real_t>(0.0_r, 1.0_r, 3.5_r);
-scexpr auto center  = Vector3_t<real_t>(0.0_r, 1.0_r, 0.0_r);
-scexpr auto up      = Vector3_t<real_t>(0.0_r, 1.0_r, 0.0_r);
-scexpr mat4_t view = lookat<real_t>(eye, center, up);;
 
-scexpr auto view_x = Vector3_t<real_t>(view[0][0], view[0][1], view[0][2]);
-scexpr auto view_y = Vector3_t<real_t>(view[1][0], view[1][1], view[1][2]);
-scexpr auto view_z = Vector3_t<real_t>(view[2][0], view[2][1], view[2][2]);
-
-scexpr auto lightColor = RGB{50, 50, 50};
+scexpr auto lightColor = RGB{74, 74, 74};
 
 scexpr auto bbmin = Vector3_t<real_t>(-1, 0, -1);
 scexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
@@ -68,6 +72,9 @@ scexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
 
 scexpr size_t LCD_W = 240;
 scexpr size_t LCD_H = 135;
+
+// scexpr size_t LCD_W = 160;
+// scexpr size_t LCD_H = 80;
 
 scexpr real_t INV_LCD_W = real_t(1) / LCD_W;
 scexpr real_t INV_LCD_H = real_t(1) / LCD_H;
@@ -79,6 +86,6 @@ scexpr real_t inv_spp  = 1.0_r/spp;
 
 scexpr real_t INV_PI       = 0.318310_r;
 scexpr real_t EPSILON      = 0.001_r;
-scexpr real_t light_area   = 0.0393_r;
+scexpr real_t light_area   = 0.0193_r;
 scexpr uint alpha       = 45;
 

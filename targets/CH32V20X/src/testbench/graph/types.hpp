@@ -39,14 +39,6 @@ struct RGB{
         return *this;
     }
 
-    RGB & operator /= (const RGB & val){
-        r /= val.r;
-        g /= val.g;
-        b /= val.b;
-
-        return *this;
-    }
-
     RGB operator * (const real_t val) const {
         auto ret = RGB(*this);
         ret *= val;

@@ -25,16 +25,13 @@ class ImageBasics{
 public:
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
+
+private:
+    Vector2i size_;
 protected:
-
-    union{
-        Vector2i size_;
-        struct{
-            int width_;
-            int height_;
-        };
-    };
-
+    __fast_inline Vector2i & size_mut() {
+        return this->size_;
+    }
 public:
 
     ImageBasics(const Vector2i & size):size_(size){;}
@@ -64,6 +61,8 @@ public:
     __fast_inline Vector2i size() const{
         return this->size_;
     }
+
+
 };
 
 template<typename ColorType>
@@ -174,7 +173,7 @@ public:
     // }}
 
     void fill(const ColorType color){
-        putrect_unsafe(Rect2i{Vector2i{}, ImageBasics::size()}, color);
+        putrect_unsafe(Rect2i{Vector2i{0,0}, this->size()}, color);
     }
 
     void put_rect(const Rect2i & rect, const ColorType color){
@@ -261,16 +260,16 @@ public:
 
 
     __fast_inline const DataType& operator[](const size_t index) const { return data[index]; }
-    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * this->width_]; }
+    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * this->size().x]; }
 
     __fast_inline DataType& operator[](const size_t index) { return data[index]; }
-    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * this->width_]; }
+    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * this->size().x]; }
 
 
     template<typename ToColorType>
-    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * this->width_]; }
+    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * this->size().x]; }
 
-    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * this->width_]; }
+    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * this->size().x]; }
 
 
     bool operator == (const ImageWithData<auto, auto> & other) const {
