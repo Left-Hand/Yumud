@@ -789,7 +789,7 @@ static void render_row(const std::span<RGB565> row, const uint y){
 #define UART hal::uart2
 using drivers::ST7789;
 
-void light_tracking_main(void){
+void light_tracking_main2(void){
 
     UART.init(576000);
     DEBUGGER.retarget(&UART);
