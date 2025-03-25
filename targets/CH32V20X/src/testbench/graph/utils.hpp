@@ -2,21 +2,14 @@
 
 #include <cmath>
 #include "core/math/realmath.hpp"
-#include "core/math/real.hpp"
-#include "float.h"
 
-#include "types/vector3/vector3.hpp"
+#include "types.hpp"
 
 template<size_t Q>
 float operator * (const float lhs, const iq_t<Q> rhs){
     return float(real_t(lhs) * rhs);
 }
 
-
-struct mat4_t
-{
-    float m[4][4];
-};
 
 
 #define vec3_compMax(v) (std::max(v.x, std::max(v.y, v.z)))
@@ -76,3 +69,71 @@ static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  
     T.m[2][3] = 0; \
 }
 
+// static real_t rand01(){
+//     static dsp::LCGNoiseSiggen noise;
+//     iq_t<16> temp;
+//     temp.value.from_i32(noise.update());
+//     return frac(temp);
+// }
+
+#define rand01() (float(rand()) / RAND_MAX)
+#define balanceHeuristic(a, b) ((a) / ((a) + (b)))
+
+#define abs(x) ((x) > 0 ? x : -x)
+// static Vector3_t<float> bsdf_absIdotN;
+// static float bsdf_pdf;
+static const struct triangle_t* s;
+
+
+
+static constexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
+static constexpr auto center  = Vector3_t(0.0f, 1.0f, 0.0f);
+static constexpr auto up      = Vector3_t(0.0f, 1.0f, 0.0f);
+static constexpr mat4_t view = lookat(eye, center, up);;
+
+static constexpr auto view_x = Vector3_t(view.m[0][0], view.m[0][1], view.m[0][2]);
+static constexpr auto view_y = Vector3_t(view.m[1][0], view.m[1][1], view.m[1][2]);
+static constexpr auto view_z = Vector3_t(view.m[2][0], view.m[2][1], view.m[2][2]);
+
+static constexpr auto lightColor = Vector3_t<float>::from_ones(200);
+
+static constexpr auto bbmin = Vector3_t<float>(-1, 0, -1);
+static constexpr auto bbmax = Vector3_t<float>(1, 2, 1);
+
+
+#define LCD_W 160
+#define LCD_H 80
+
+#define alpha 45
+
+#define spp 1
+#define max_depth 2
+
+
+#define INV_PI 0.318310f
+#define EPSILON 0.001f
+#define light_area 0.0893f
+
+static Vector3_t<float> Reflectance(int8_t i)
+{
+    if (i == 8 || i == 9){
+        return Vector3_t(0.05f, 0.65f, 0.05f);
+    }
+    else if (i == 10 || i == 11){
+        return Vector3_t(0.65f, 0.05f, 0.05f);
+    }
+    else{
+        return Vector3_t<float>::from_ones(0.65f);
+    }
+}
+
+static constexpr uint8_t bb_intersect(const ray_t & ray){
+    const auto t0 = (bbmin - ray.start) * ray.inv_direction;
+    const auto t1 = (bbmax - ray.start) * ray.inv_direction;
+
+    auto temp = t0.min_with(t1);
+    auto t = MAX(vec3_compMax(temp), 0);
+
+    temp = t0.max_with(t1);
+    return vec3_compMin(temp) >= t ? 1 : 0;
+}
