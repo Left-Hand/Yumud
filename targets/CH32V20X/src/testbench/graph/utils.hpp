@@ -19,116 +19,38 @@ struct mat4_t
 };
 
 
-#define vec3_mul_assign_s(v, a) \
-{ \
-    v.x *= a; \
-    v.y *= a; \
-    v.z *= a; \
-}
-#define vec3_div_assign(v1, v2) \
-{ \
-    v1.x /= v2.x; \
-    v1.y /= v2.y; \
-    v1.z /= v2.z; \
-}
-
-#define vec3_add_assign(v1, v2) \
-{ \
-    v1.x += v2.x; \
-    v1.y += v2.y; \
-    v1.z += v2.z; \
-}
-
-#define vec3_mad(r, v1, v2, v3) \
-{ \
-    r.x = v1.x * v2.x + v3.x; \
-    r.y = v1.y * v2.y + v3.y; \
-    r.z = v1.z * v2.z + v3.z; \
-}
-
-#define vec3_mul(r, v1, v2) \
-{ \
-    r.x = v1.x * v2.x; \
-    r.y = v1.y * v2.y; \
-    r.z = v1.z * v2.z; \
-}
-#define vec3_mul_s(r, v, a) \
-{ \
-    r.x = v.x * a; \
-    r.y = v.y * a; \
-    r.z = v.z * a; \
-}
-#define vec3_mul_assign_s(v, a) \
-{ \
-    v.x *= a; \
-    v.y *= a; \
-    v.z *= a; \
-}
-
-#define vec3_rcp(r, v) \
-{ \
-    r.x = 1.0 / v.x; \
-    r.y = 1.0 / v.y; \
-    r.z = 1.0 / v.z; \
-}
-
-
-#define vec3_min(r, v1, v2) \
-{ \
-    r.x = std::min(v1.x, v2.x); \
-    r.y = std::min(v1.y, v2.y); \
-    r.z = std::min(v1.z, v2.z); \
-}
-#define vec3_max(r, v1, v2) \
-{ \
-    r.x = std::max(v1.x, v2.x); \
-    r.y = std::max(v1.y, v2.y); \
-    r.z = std::max(v1.z, v2.z); \
-}
-
 #define vec3_compMax(v) (std::max(v.x, std::max(v.y, v.z)))
 #define vec3_compMin(v) (std::min(v.x, std::min(v.y, v.z)))
 
 
-#define normalize(v) \
-{ \
-	const real_t inv_r = isqrt(real_t(v.dot(v))); \
-	if (inv_r > 0) \
-	{ \
-		v.x = v.x * inv_r; \
-		v.y = v.y * inv_r; \
-		v.z = v.z * inv_r; \
-	} \
-}
+static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,const Vector3_t<auto>  up){
+    const auto zaxis = (eye - center).normalized();
+	const auto xaxis = up.cross(zaxis).normalized();
+	const auto yaxis = zaxis.cross(xaxis);
 
+    mat4_t view;
 
-#define lookat(view, eye, center, up) \
-{ \
-    const auto zaxis = (eye - center).normalized(); \
- \
-	const auto xaxis = up.cross(zaxis).normalized(); \
- \
-	const auto yaxis = zaxis.cross(xaxis); \
- \
-	view.m[0][0] = xaxis.x; \
-	view.m[0][1] = yaxis.x; \
-	view.m[0][2] = zaxis.x; \
-	view.m[0][3] = 0; \
- \
-	view.m[1][0] = xaxis.y; \
-	view.m[1][1] = yaxis.y; \
-	view.m[1][2] = zaxis.y; \
-	view.m[1][3] = 0; \
- \
-	view.m[2][0] = xaxis.z; \
-	view.m[2][1] = yaxis.z; \
-	view.m[2][2] = zaxis.z; \
-	view.m[2][3] = 0; \
- \
-	view.m[3][0] = -xaxis.dot(eye); \
-	view.m[3][1] = -yaxis.dot(eye); \
-	view.m[3][2] = -zaxis.dot(eye); \
-	view.m[3][3] = 1; \
+	view.m[0][0] = xaxis.x;
+	view.m[0][1] = yaxis.x;
+	view.m[0][2] = zaxis.x;
+	view.m[0][3] = 0;
+
+	view.m[1][0] = xaxis.y;
+	view.m[1][1] = yaxis.y;
+	view.m[1][2] = zaxis.y;
+	view.m[1][3] = 0;
+
+	view.m[2][0] = xaxis.z;
+	view.m[2][1] = yaxis.z;
+	view.m[2][2] = zaxis.z;
+	view.m[2][3] = 0;
+
+	view.m[3][0] = -xaxis.dot(eye);
+	view.m[3][1] = -yaxis.dot(eye);
+	view.m[3][2] = -zaxis.dot(eye);
+	view.m[3][3] = 1;
+
+    return view;
 }
 
 

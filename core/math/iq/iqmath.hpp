@@ -112,9 +112,6 @@ namespace ymd{
         return sqrtf(iq);
     }
     
-
-
-    
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log10(const iq_t<P> iq) {
         #ifdef IQ_CH32_LOG
