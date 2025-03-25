@@ -18,25 +18,7 @@ struct mat4_t
     float m[4][4];
 };
 
-#define vec3_assign(r, v) \
-{ \
-    r.x = v.x; \
-    r.y = v.y; \
-    r.z = v.z; \
-}
-#define vec3_assign_s(v, a) \
-{ \
-    v.x = a; \
-    v.y = a; \
-    v.z = a; \
-}
 
-#define vec3_div_assign_s(v, a) \
-{ \
-    v.x /= a; \
-    v.y /= a; \
-    v.z /= a; \
-}
 #define vec3_mul_assign_s(v, a) \
 { \
     v.x *= a; \
@@ -56,30 +38,14 @@ struct mat4_t
     v1.y += v2.y; \
     v1.z += v2.z; \
 }
-#define vec3_mad_assign(v1, v2, v3) \
-{ \
-    v1.x += v2.x * v3.x; \
-    v1.y += v2.y * v3.y; \
-    v1.z += v2.z * v3.z; \
-}
+
 #define vec3_mad(r, v1, v2, v3) \
 { \
     r.x = v1.x * v2.x + v3.x; \
     r.y = v1.y * v2.y + v3.y; \
     r.z = v1.z * v2.z + v3.z; \
 }
-#define vec3_mad_s(r, v1, v2, a) \
-{ \
-    r.x = v1.x + v2.x * a; \
-    r.y = v1.y + v2.y * a; \
-    r.z = v1.z + v2.z * a; \
-}
-#define vec3_add(r, v1, v2) \
-{ \
-    r.x = v1.x + v2.x; \
-    r.y = v1.y + v2.y; \
-    r.z = v1.z + v2.z; \
-}
+
 #define vec3_mul(r, v1, v2) \
 { \
     r.x = v1.x * v2.x; \
@@ -107,12 +73,6 @@ struct mat4_t
 }
 
 
-#define vec3_sub(r, v1, v2) \
-{ \
-	r.x = v1.x - v2.x; \
-	r.y = v1.y - v2.y; \
-	r.z = v1.z - v2.z; \
-}
 #define vec3_min(r, v1, v2) \
 { \
     r.x = std::min(v1.x, v2.x); \
@@ -129,13 +89,10 @@ struct mat4_t
 #define vec3_compMax(v) (std::max(v.x, std::max(v.y, v.z)))
 #define vec3_compMin(v) (std::min(v.x, std::min(v.y, v.z)))
 
-#define dot(v1, v2) (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z)
-#define dot_m(v1, v2) (-v1.x * v2.x + -v1.y * v2.y + -v1.z * v2.z)
-
 
 #define normalize(v) \
 { \
-	const real_t inv_r = isqrt(real_t(dot(v, v))); \
+	const real_t inv_r = isqrt(real_t(v.dot(v))); \
 	if (inv_r > 0) \
 	{ \
 		v.x = v.x * inv_r; \
@@ -144,12 +101,6 @@ struct mat4_t
 	} \
 }
 
-#define vec3_minus(r, v) \
-{ \
-    r.x = -v.x; \
-    r.y = -v.y; \
-    r.z = -v.z; \
-}
 
 #define lookat(view, eye, center, up) \
 { \
@@ -174,9 +125,9 @@ struct mat4_t
 	view.m[2][2] = zaxis.z; \
 	view.m[2][3] = 0; \
  \
-	view.m[3][0] = -dot(xaxis, eye); \
-	view.m[3][1] = -dot(yaxis, eye); \
-	view.m[3][2] = -dot(zaxis, eye); \
+	view.m[3][0] = -xaxis.dot(eye); \
+	view.m[3][1] = -yaxis.dot(eye); \
+	view.m[3][2] = -zaxis.dot(eye); \
 	view.m[3][3] = 1; \
 }
 

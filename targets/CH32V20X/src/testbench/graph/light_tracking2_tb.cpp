@@ -79,12 +79,12 @@ static void makeInteraction(void)
     interaction.i = intersection.i;
     interaction.t = intersection.t;
     interaction.surface = &((const struct triangle_t*)triangles)[intersection.i];
-    vec3_mad_s(interaction.position, ray.start, ray.direction, intersection.t);
-    vec3_assign(interaction.normal, interaction.surface->normal);
+    interaction.position =  ray.start + ray.direction * intersection.t;
+    interaction.normal = interaction.surface->normal;
 
-    if (dot_m(ray.direction, interaction.normal) < 0)
+    if (ray.direction.dot(interaction.normal) > 0)
     {
-        vec3_minus(interaction.normal, interaction.normal);
+        interaction.normal = -interaction.normal;
     }
 
     orthonormalBasis(interaction.normal);
@@ -99,10 +99,10 @@ static Vector3_t<float> t1;
 static Vector3_t<float> temp;
 static uint8_t bb_intersect(void)
 {
-    vec3_sub(t0, bbmin, ray.start);
+    t0 = bbmin - ray.start;
     t0 *= ray.inv_direction;
 
-    vec3_sub(t1, bbmax, ray.start);
+    t1 = bbmax - ray.start;
     t1 *= ray.inv_direction;
 
     vec3_min(temp, t0, t1);
@@ -117,7 +117,7 @@ static uint8_t tt_intersect(void)
 {
     Vector3_t<float> P;
     P = ray.direction.cross(s->E2);
-    const float determinant = dot(P, s->E1);
+    const float determinant = P.dot(s->E1);
     if (determinant < EPSILON && determinant > -EPSILON)
     {
         return 0;
@@ -126,8 +126,8 @@ static uint8_t tt_intersect(void)
     const float inv_determinant = 1 / determinant;
 
     Vector3_t<float> T;
-    vec3_sub(T, ray.start, s->v0);
-    const float u = dot(P, T) * inv_determinant;
+    T = ray.start - s->v0;
+    const float u = P.dot(T) * inv_determinant;
     if (u > 1 || u < 0)
     {
         return 0;
@@ -135,13 +135,13 @@ static uint8_t tt_intersect(void)
 
     Vector3_t<float> Q;
     Q = T.cross(s->E1);
-    const float v = dot(Q, ray.direction) * inv_determinant;
+    const float v = Q.dot(ray.direction) * inv_determinant;
     if (v > 1 || v < 0 || u + v > 1)
     {
         return 0;
     }
 
-    t = dot(Q, s->E2) * inv_determinant;
+    t = Q.dot(s->E2) * inv_determinant;
     if (t <= 0)
     {
         return 0;
@@ -152,10 +152,10 @@ static uint8_t tt_intersect(void)
 
 static uint8_t tb_intersect(void)
 {
-    vec3_sub(t0, s->bbmin, ray.start);
+    t0 = s->bbmin - ray.start;
     t0 *= ray.inv_direction;
 
-    vec3_sub(t1, s->bbmax, ray.start);
+    t1 = s->bbmax - ray.start;
     t1 *= ray.inv_direction;
 
     vec3_min(temp, t0, t1);
@@ -202,7 +202,7 @@ static void Reflectance(int8_t i)
     }
     else
     {
-        vec3_assign_s(reflectance, 0.65f);
+        reflectance = Vector3_t<float>::from_ones(0.65f);
     }
 }
 
@@ -215,7 +215,7 @@ static uint8_t sampleBSDF(void)
     Vector3_t<float> wi;
     Vector3_t<float> z;
     z = Vector3_t(T.m[2][0], T.m[2][1], T.m[2][2]);
-    wi.z = dot(z, ray.direction);
+    wi.z = z.dot(ray.direction);
 
     if (wi.z <= 0)
     {
@@ -242,9 +242,9 @@ static Vector3_t<float> linear_z;
 static Vector3_t<float> linear_t;
 static void linearCombination(void)
 {
-    linear_r.x = dot(linear_x, linear_t);
-    linear_r.y = dot(linear_y, linear_t);
-    linear_r.z = dot(linear_z, linear_t);
+    linear_r.x = linear_x.dot(linear_t);
+    linear_r.y = linear_y.dot(linear_t);
+    linear_r.z = linear_z.dot(linear_t);
 }
 static int8_t lightIdx;
 static Vector3_t<float> light_pos;
@@ -260,7 +260,7 @@ static void lightPoint(void)
     linear_y = Vector3_t(light->v0.y, light->v1.y, light->v2.y);
     linear_z = Vector3_t(light->v0.z, light->v1.z, light->v2.z);
     linearCombination();
-    vec3_assign(light_pos, linear_r);
+    light_pos = linear_r;
 }
 
 static void cosWeightedHemi(void)
@@ -274,7 +274,7 @@ static void cosWeightedHemi(void)
     Vector3_t<float> v;
     v = Vector3_t(r * cosf(azimuth), r * sinf(azimuth), sqrtf(1 - u0));
 
-    vec3_mad_s(ray.start, interaction.position, interaction.normal, EPSILON);
+    ray.start =  interaction.position + interaction.normal * EPSILON;
 
     Vector3_t<float> x;
     Vector3_t<float> y;
@@ -282,9 +282,9 @@ static void cosWeightedHemi(void)
     x = Vector3_t(T.m[0][0], T.m[1][0], T.m[2][0]);
     y = Vector3_t(T.m[0][1], T.m[1][1], T.m[2][1]);
     z = Vector3_t(T.m[0][2], T.m[1][2], T.m[2][2]);
-    ray.direction.x = dot(x, v);
-    ray.direction.y = dot(y, v);
-    ray.direction.z = dot(z, v);
+    ray.direction.x = x.dot(v);
+    ray.direction.y = y.dot(v);
+    ray.direction.z = z.dot(v);
 
     vec3_rcp(ray.inv_direction, ray.direction);
 }
@@ -295,7 +295,7 @@ static Vector3_t<float> lightColor;
 #define light_area 0.0893f
 static void sampleLight(void)
 {
-    vec3_assign_s(radiance, 0);
+    radiance = Vector3_t<float>::from_ones(0);
 
     u1 = float(rand01());
     u0 = float(rand01());
@@ -304,19 +304,19 @@ static void sampleLight(void)
     lightIdx = u0 < 0.5f ? 0 : 1;
 
     lightPoint();
-    vec3_mad_s(ray.start, interaction.position, interaction.normal, EPSILON);
-    vec3_sub(ray.direction, light_pos, ray.start);
+    ray.start = interaction.position + interaction.normal * EPSILON;
+    ray.direction = light_pos - ray.start;
     normalize(ray.direction);
     vec3_rcp(ray.inv_direction, ray.direction);
 
     const struct triangle_t* light = &((const struct triangle_t*)triangles)[lightIdx];
-    const float cos_light_theta = dot_m(ray.direction, light->normal);
-    if (cos_light_theta <= 0.0)
+    const float cos_light_theta = -ray.direction.dot(light->normal);
+    if (cos_light_theta <= 0)
     {
         return;
     }
 
-    const float cos_theta = dot(ray.direction, interaction.normal);
+    const float cos_theta = ray.direction.dot(interaction.normal);
     if (cos_theta <= 0)
     {
         return;
@@ -337,15 +337,15 @@ static void sampleLight(void)
     const float mis_weight = balanceHeuristic(light_pdf, bsdf_pdf);
     vec3_mul(radiance, bsdf_absIdotN, lightColor);
     vec3_mul_assign_s(radiance, mis_weight);
-    vec3_div_assign_s(radiance, light_pdf);
-    vec3_div_assign_s(radiance, 0.5f);
+    radiance /= light_pdf;
+    radiance /= 0.5f;
 }
 static uint16_t depth;
 static Vector3_t<float> sample;
 static void sampleRay(void)
 {
     Vector3_t<float> throughput;
-    vec3_assign_s(throughput, 1);
+    throughput = Vector3_t<float>::from_ones(1);
 
     depth = 0;
     while (1)
@@ -369,7 +369,7 @@ static void sampleRay(void)
         makeInteraction();
 
         sampleLight();
-        vec3_mad_assign(sample, radiance, throughput);
+        sample += radiance * throughput;
 
         depth++;
         cosWeightedHemi();
@@ -379,7 +379,7 @@ static void sampleRay(void)
         }
 
         throughput *= bsdf_absIdotN;
-        vec3_div_assign_s(throughput, bsdf_pdf);
+        throughput /= bsdf_pdf;
 
         if (depth == max_depth)
         {
@@ -419,7 +419,7 @@ void precompute_rt(void)
 #define alpha 45
 static void samplePixel(const uint X, const uint Y)
 {
-    vec3_assign_s(sample, 0);
+    sample = Vector3_t<float>::from_ones(0);
 
     constexpr auto Zc = -LCD_H * real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
@@ -439,22 +439,22 @@ static void samplePixel(const uint X, const uint Y)
         linear_y = Vector3_t(view_x.y, view_y.y, view_z.y);
         linear_z = Vector3_t(view_x.z, view_y.z, view_z.z);
         linearCombination();
-        vec3_assign(ray.direction, linear_r);
+        ray.direction = linear_r;
 
-        vec3_assign(ray.start, eye);
+        ray.start = eye;
         normalize(ray.direction);
         vec3_rcp(ray.inv_direction, ray.direction);
 
         sampleRay();
     }
 
-    vec3_div_assign_s(sample, spp);
+    sample /= spp;
 
     Vector3_t<float> one;
-    vec3_assign_s(one, 1);
+    one = Vector3_t<float>::from_ones(1);
 
     Vector3_t<float> sample_one;
-    vec3_add(sample_one, sample, one);
+    sample_one = sample + one;
 
     vec3_div_assign(sample, sample_one);
 }

@@ -59,6 +59,8 @@ public:
 
     __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x((_x)), y((_y)), z((_z)){;}
 
+    __fast_inline static constexpr Vector3_t from_ones(const T & _x){return Vector3_t<T>(_x, _x, _x);}
+
     template<arithmetic U = T>
     __fast_inline constexpr Vector3_t(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
 
@@ -150,8 +152,20 @@ public:
         return other;
     }
 
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator *(const Vector3_t<arithmetic auto> & _v) const{
+        Vector3_t other = *this;
+        other *= _v;
+        return other;
+    }
+
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const U & _v) const{
+        Vector3_t other = *this;
+        other /= _v;
+        return other;
+    }
+
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const Vector3_t<arithmetic auto> & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
