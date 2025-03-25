@@ -7,19 +7,13 @@
 #include "types.hpp"
 #include "core/clock/time.hpp"
 
-template<size_t Q>
-float operator * (const float lhs, const iq_t<Q> rhs){
-    return float(real_t(lhs) * rhs);
-}
-
-
 
 scexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
 scexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
 
 
 template<typename T>
-scexpr mat4_t<T> lookat(const Vector3_t<T> eye,const Vector3_t<T>  center,const Vector3_t<T>  up){
+scexpr mat4_t<T> lookat(const Vector3_t<auto> & eye,const Vector3_t<auto> & center,const Vector3_t<auto> & up){
     const auto zaxis = (eye - center).normalized();
 	const auto xaxis = up.cross(zaxis).normalized();
 	const auto yaxis = zaxis.cross(xaxis);
@@ -86,47 +80,44 @@ static real_t rand01(){
 
 
 
-scexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
-scexpr auto center  = Vector3_t(0.0f, 1.0f, 0.0f);
-scexpr auto up      = Vector3_t(0.0f, 1.0f, 0.0f);
-scexpr mat4_t view = lookat(eye, center, up);;
+scexpr auto eye     = Vector3_t<real_t>(0.0_r, 1.0_r, 3.5_r);
+scexpr auto center  = Vector3_t<real_t>(0.0_r, 1.0_r, 0.0_r);
+scexpr auto up      = Vector3_t<real_t>(0.0_r, 1.0_r, 0.0_r);
+scexpr mat4_t view = lookat<real_t>(eye, center, up);;
 
-scexpr auto view_x = Vector3_t(view.m[0][0], view.m[0][1], view.m[0][2]);
-scexpr auto view_y = Vector3_t(view.m[1][0], view.m[1][1], view.m[1][2]);
-scexpr auto view_z = Vector3_t(view.m[2][0], view.m[2][1], view.m[2][2]);
+scexpr auto view_x = Vector3_t<real_t>(view.m[0][0], view.m[0][1], view.m[0][2]);
+scexpr auto view_y = Vector3_t<real_t>(view.m[1][0], view.m[1][1], view.m[1][2]);
+scexpr auto view_z = Vector3_t<real_t>(view.m[2][0], view.m[2][1], view.m[2][2]);
 
-// scexpr auto lightColor = Vector3_t<float>::from_ones(16);
-scexpr auto lightColor = Vector3_t<float>::from_ones(50);
+scexpr auto lightColor = Vector3_t<real_t>::from_ones(50);
 
-scexpr auto bbmin = Vector3_t<float>(-1, 0, -1);
-scexpr auto bbmax = Vector3_t<float>(1, 2, 1);
+scexpr auto bbmin = Vector3_t<real_t>(-1, 0, -1);
+scexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
 
 
-scexpr size_t LCD_W = 240;
-scexpr size_t LCD_H = 135;
+scexpr size_t LCD_W = 160;
+scexpr size_t LCD_H = 80;
 
 scexpr size_t max_depth = 2;
 scexpr size_t spp  = 1;
-scexpr float inv_spp  = float(1)/spp;
+scexpr real_t inv_spp  = 1.0_r/spp;
 
 
-scexpr float INV_PI       = 0.318310f;
-scexpr float EPSILON      = 0.001f;
-scexpr float light_area   = 0.0393f;
-scexpr float alpha       = 45;
+scexpr real_t INV_PI       = 0.318310_r;
+scexpr real_t EPSILON      = 0.001_r;
+scexpr real_t light_area   = 0.0393_r;
+scexpr uint alpha       = 45;
 
-// static float bsdf_pdf;
-
-scexpr Vector3_t<float> Reflectance(int8_t i)
+scexpr Vector3_t<real_t> Reflectance(int8_t i)
 {
     if (i == 8 || i == 9){
-        return Vector3_t(0.05f, 0.65f, 0.05f);
+        return Vector3_t(0.05_r, 0.65_r, 0.05_r);
     }
     else if (i == 10 || i == 11){
-        return Vector3_t(0.65f, 0.05f, 0.05f);
+        return Vector3_t(0.65_r, 0.05_r, 0.05_r);
     }
     else{
-        return Vector3_t<float>::from_ones(0.65f);
+        return Vector3_t<real_t>::from_ones(0.65_r);
     }
 }
 

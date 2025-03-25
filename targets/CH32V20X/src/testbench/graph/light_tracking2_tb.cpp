@@ -19,14 +19,16 @@
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"
 
-template<typename T>
+using ST = real_t;
+
+// template<typename T = real_t>
 [[nodiscard]]
-static std::tuple<interaction_t<T>, mat4_t<T>> makeInteraction(const intersection_t<T> & intersection, const ray_t<T> & ray){
-    interaction_t<T> interaction;
+static std::tuple<interaction_t<real_t>, mat4_t<real_t>> makeInteraction(const intersection_t<real_t> & intersection, const ray_t<real_t> & ray){
+    interaction_t<real_t> interaction;
 
     interaction.i = intersection.i;
     interaction.t = intersection.t;
-    interaction.surface = &((const triangle_t<T>*)triangles)[intersection.i];
+    interaction.surface = &((const triangle_t*)triangles)[intersection.i];
     interaction.position =  ray.start + ray.direction * intersection.t;
     interaction.normal = interaction.surface->normal;
 
@@ -37,59 +39,57 @@ static std::tuple<interaction_t<T>, mat4_t<T>> makeInteraction(const intersectio
     return {interaction, orthonormalBasis(interaction.normal)};
 }
 
-template<typename T>
+
 [[nodiscard]]
-static __fast_inline bool tb_intersect (const ray_t<T> & ray){
-    const auto t0 = (bbmin - ray.start) * ray.inv_direction;
-    const auto t1 = (bbmax - ray.start) * ray.inv_direction;
+static __fast_inline bool tb_intersect (const ray_t<real_t> & ray){
+    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
+    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
 
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 
-template<typename T>
 [[nodiscard]]
-static __fast_inline T tt_intersect(const ray_t<T> & ray, const triangle_t<T> * s){
+static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triangle_t * s){
     const auto P = ray.direction.cross(s->E2);
-    const T determinant = P.dot(s->E1);
+    const auto determinant = P.dot(s->E1);
     if (determinant < EPSILON && determinant > -EPSILON) return 0;
 
-    const T inv_determinant = 1 / determinant;
+    const auto inv_determinant = 1 / determinant;
 
     const auto transform = ray.start - s->v0;
-    const T u = P.dot(transform) * inv_determinant;
+    const auto u = P.dot(transform) * inv_determinant;
     if (u > 1 || u < 0) return 0;
 
     const auto Q = transform.cross(s->E1);
-    const T v = Q.dot(ray.direction) * inv_determinant;
+    const auto v = Q.dot(ray.direction) * inv_determinant;
     if (v > 1 || v < 0 || u + v > 1) return 0;
 
     return Q.dot(s->E2) * inv_determinant;
 };
 
-template<typename T>
 [[nodiscard]]
-static __fast_inline bool bb_intersect(const ray_t<T> & ray){
-    const auto t0 = (bbmin - ray.start) * ray.inv_direction;
-    const auto t1 = (bbmax - ray.start) * ray.inv_direction;
+static __fast_inline bool bb_intersect(const ray_t<real_t> & ray){
+    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
+    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
 
     return vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0);;
 };
 
-template<typename T>
+// template<typename T>
 [[nodiscard]]
-static intersection_t<T> intersect(const ray_t<T> & ray){
-    intersection_t<T> intersection;
+static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
+    intersection_t<real_t> intersection;
 
-    intersection.t = FLT_MAX;
+    intersection.t = std::numeric_limits<real_t>::max();
     intersection.i = -1;
 
     if (bb_intersect(ray)){
-        for (auto k = 0; k < 32; ++k)
+        for (size_t k = 0; k < 32; ++k)
         {
-            if (!tb_intersect(ray))
+            if (!tb_intersect(ray_t<real_t>(ray)))
                 continue;
-            const auto isct = tt_intersect(ray, &((const struct triangle_t<T>*)triangles)[k]);
+            const auto isct = tt_intersect(ray, &((const struct triangle_t*)triangles)[k]);
             if (isct > 0)
             {
                 if (isct < intersection.t)
@@ -105,15 +105,15 @@ static intersection_t<T> intersect(const ray_t<T> & ray){
 }
 
 
-template<typename T>
 [[nodiscard]]
-static std::optional<std::tuple<Vector3_t<T>, T>> sampleBSDF(const interaction_t<T> & interaction, const ray_t<T> & ray, const mat4_t<T> & transform){
+static std::optional<std::tuple<Vector3_t<real_t>, real_t>> sampleBSDF(const interaction_t<real_t> & interaction, const ray_t<real_t> & ray, const mat4_t<real_t> & transform){
     const auto z = Vector3_t(transform.m[2][0], transform.m[2][1], transform.m[2][2]);
     const auto wi_z = z.dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
 
-    const auto bsdf_pdf = wi_z * T(INV_PI);
+    static constexpr auto inv_pi = real_t(INV_PI);
+    const auto bsdf_pdf = wi_z * inv_pi;
     if(bsdf_pdf == 0) return std::nullopt;
 
     return std::make_tuple(
@@ -122,9 +122,9 @@ static std::optional<std::tuple<Vector3_t<T>, T>> sampleBSDF(const interaction_t
     );
 }
 
-template<typename T>
+// template<typename T>
 [[nodiscard]]
-static ray_t<T> cosWeightedHemi(const interaction_t<T> & interaction, const mat4_t<T> & transform)
+static ray_t<real_t> cosWeightedHemi(const interaction_t<real_t> & interaction, const mat4_t<real_t> & transform)
 {
     const auto u0 = real_t(rand01());
     const auto u1 = real_t(rand01());
@@ -133,34 +133,31 @@ static ray_t<T> cosWeightedHemi(const interaction_t<T> & interaction, const mat4
     const auto azimuth = u1 * real_t(TAU);
     const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vector3_t<T>(
-        T((r * cos_a)     ), 
-        T((r * sin_a)     ), 
-        T((sqrtf(1 - u0)))
+    const auto v = Vector3_t<real_t>(
+        real_t((r * cos_a)     ), 
+        real_t((r * sin_a)     ), 
+        real_t((sqrtf(1 - u0)))
     );
 
-    ray_t<T> ray;
-    ray.start =  interaction.position + interaction.normal * EPSILON;
-
-    ray.direction.x = Vector3_t(transform.m[0][0], transform.m[1][0], transform.m[2][0]).dot(v);
-    ray.direction.y = Vector3_t(transform.m[0][1], transform.m[1][1], transform.m[2][1]).dot(v);
-    ray.direction.z = Vector3_t(transform.m[0][2], transform.m[1][2], transform.m[2][2]).dot(v);
-
-    ray.inv_direction = Vector3_t<T>::from_rcp(ray.direction);
-    return ray;
+    return ray_t{
+        interaction.position + interaction.normal * EPSILON,
+    
+        {Vector3_t(transform.m[0][0], transform.m[1][0], transform.m[2][0]).dot(v),
+        Vector3_t(transform.m[0][1], transform.m[1][1], transform.m[2][1]).dot(v),
+        Vector3_t(transform.m[0][2], transform.m[1][2], transform.m[2][2]).dot(v)}
+    };
 }
 
-template<typename T>
 [[nodiscard]]
-static std::optional<Vector3_t<float>> sampleLight(const interaction_t<T> & interaction, const mat4_t<T> & transform){
-    const auto u1 = T(rand01());
-    const auto u0 = T(rand01());
+static std::optional<Vector3_t<real_t>> sampleLight(const interaction_t<real_t> & interaction, const mat4_t<real_t> & transform){
+    const auto u1 = real_t(rand01());
+    const auto u0 = real_t(rand01());
 
-    const auto lightIdx = u0 < 0.5f ? 0 : 1;
+    const auto lightIdx = u0 < 0.5_r ? 0 : 1;
 
-    const float su = sqrtf(u0);
+    const real_t su = sqrtf(u0);
 
-    const struct triangle_t<T>* light = &((const triangle_t<T>*)triangles)[lightIdx];
+    const struct triangle_t* light = &((const triangle_t*)triangles)[lightIdx];
 
     const auto linear_t = Vector3_t(
         (1 - su),
@@ -174,15 +171,15 @@ static std::optional<Vector3_t<float>> sampleLight(const interaction_t<T> & inte
         Vector3_t(light->v0.z, light->v1.z, light->v2.z).dot(linear_t)
     };
 
-    ray_t<float> ray;
+    ray_t<real_t> ray;
     ray.start = interaction.position + interaction.normal * EPSILON;
     ray.direction = (light_pos - ray.start).normalized();
-    ray.inv_direction = Vector3_t<float>::from_rcp(ray.direction);
+    ray.inv_direction = Vector3_t<real_t>::from_rcp(ray.direction);
 
-    const float cos_light_theta = -ray.direction.dot(light->normal);
+    const real_t cos_light_theta = -ray.direction.dot(light->normal);
     if (cos_light_theta <= 0) return std::nullopt;
 
-    const float cos_theta = ray.direction.dot(interaction.normal);
+    const real_t cos_theta = ray.direction.dot(interaction.normal);
     if (cos_theta <= 0) return std::nullopt;
 
     const auto intersection = intersect(ray);
@@ -192,14 +189,14 @@ static std::optional<Vector3_t<float>> sampleLight(const interaction_t<T> & inte
     if (!sample_opt) return std::nullopt;
     const auto & [sample, bsdf_pdf] = sample_opt.value();
 
-    const float light_pdf = (intersection.t * intersection.t) / (light_area * cos_light_theta);
-    const float mis_weight = light_pdf / (light_pdf + bsdf_pdf);
+    const real_t light_pdf = (intersection.t * intersection.t) / (real_t(light_area) * cos_light_theta);
+    const real_t mis_weight = light_pdf / (light_pdf + bsdf_pdf);
     return (sample * lightColor * mis_weight * 2) / light_pdf;
 }
 
-static Vector3_t<float> sampleRay(Vector3_t<float> sample, ray_t<float> ray)
+static Vector3_t<real_t> sampleRay(Vector3_t<real_t> sample, ray_t<real_t> ray)
 {
-    auto throughput = Vector3_t<float>::from_ones(1);
+    auto throughput = Vector3_t<real_t>::from_ones(1);
     uint16_t depth = 0;
     while (1)
     {
@@ -218,7 +215,7 @@ static Vector3_t<float> sampleRay(Vector3_t<float> sample, ray_t<float> ray)
         const auto [interaction, transform] = makeInteraction(intersection, ray);
 
         const auto light_opt = sampleLight(interaction, transform);
-        const auto radiance = light_opt.value_or(Vector3_t<float>::from_ones(0));
+        const auto radiance = light_opt.value_or(Vector3_t<real_t>::from_ones(0));
         sample += radiance * throughput;
 
         depth++;
@@ -236,7 +233,7 @@ static Vector3_t<float> sampleRay(Vector3_t<float> sample, ray_t<float> ray)
 
 
 
-static Vector3_t<float> samplePixel(const uint X, const uint Y)
+static Vector3_t<real_t> samplePixel(const uint X, const uint Y)
 {
     auto sample = Vector3_t<real_t>::from_ones(0);
 
@@ -253,20 +250,20 @@ static Vector3_t<float> samplePixel(const uint X, const uint Y)
         const real_t Yc = Yw - LCD_H * real_t(0.5);
 
 
-        const auto linear_t = Vector3_t(Xc, Yc, Zc);
+        // const auto linear_t = 
 
-        const auto temp_direction = Vector3_t{
-            Vector3_t(view_x.x, view_y.x, view_z.x).dot(linear_t),
-            Vector3_t(view_x.y, view_y.y, view_z.y).dot(linear_t),
-            Vector3_t(view_x.z, view_y.z, view_z.z).dot(linear_t)
-        }.normalized();
+        // const auto temp_direction = Vector3_t<q8>{
+        //     Vector3_t<float>(1, 0, 0).dot(linear_t),
+        //     Vector3_t<float>(0, 1, 0).dot(linear_t),
+        //     Vector3_t<float>(0, 0, 1).dot(linear_t)
+        // }.normalized();
 
         sample += sampleRay(
             sample,
-            ray_t<float>{
-                .start = eye,
-                .direction = temp_direction,
-                .inv_direction = Vector3_t<real_t>::from_rcp(temp_direction)
+            ray_t<real_t>{
+                eye,
+                Vector3_t<q8>(Xc, Yc, Zc)
+                // temp_direction
             }
         ) * inv_spp;
     }
@@ -299,6 +296,7 @@ void light_tracking_main(void){
     DEBUGGER.noBrackets();
 
     DEBUG_PRINTLN(micros());
+    DEBUG_PRINTLN(view_x, view_y, view_z);
 
 
     #ifdef CH32V30X
