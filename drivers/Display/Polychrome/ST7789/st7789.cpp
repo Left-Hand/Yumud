@@ -24,7 +24,7 @@ void ST7789::init(){
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
 
-    last_point_index = getPointIndex(rect.get_end().x-1, rect.get_end().y-1);
+    last_point_index = get_point_index(rect.get_end().x-1, rect.get_end().y-1);
 
     Vector2_t<uint16_t> p1 = offset + rect.position;
     Vector2_t<uint16_t> p2 = offset + rect.get_end() - Vector2i(1,1);
@@ -42,7 +42,7 @@ void ST7789::setarea_unsafe(const Rect2i & rect){
 }
 
 void ST7789::setpos_unsafe(const Vector2i & pos){
-    uint32_t this_point_index = getPointIndex(pos.x, pos.y);
+    uint32_t this_point_index = get_point_index(pos.x, pos.y);
     uint32_t last_point_index_temp = last_point_index;
     last_point_index = this_point_index;
 

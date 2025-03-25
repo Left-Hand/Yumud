@@ -177,12 +177,12 @@ public:
         putrect_unsafe(Rect2i{Vector2i{}, ImageBasics::size()}, color);
     }
 
-    void putRect(const Rect2i & rect, const ColorType color){
+    void put_rect(const Rect2i & rect, const ColorType color){
         auto area = rect.intersection(this->get_view());
         putrect_unsafe(area, color);
     }
 
-    virtual void putTexture(const Rect2i & rect, const ColorType * color_ptr){
+    virtual void put_texture(const Rect2i & rect, const ColorType * color_ptr){
         if(rect.inside(this->rect())){
             puttexture_unsafe(rect, color_ptr);
         }else{

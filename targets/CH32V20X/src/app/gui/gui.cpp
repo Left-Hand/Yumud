@@ -136,20 +136,20 @@ void gui_main(){
 
         if(true ){
         // if(false){
-            tftDisplayer.setFlipX(false);
-            tftDisplayer.setFlipY(true);
-            tftDisplayer.setSwapXY(true);
-            tftDisplayer.setDisplayOffset({40, 52}); 
+            tftDisplayer.set_flip_x(false);
+            tftDisplayer.set_flip_y(true);
+            tftDisplayer.set_swap_xy(true);
+            tftDisplayer.set_display_offset({40, 52}); 
         }else{
-            tftDisplayer.setFlipX(true);
-            tftDisplayer.setFlipY(true);
-            tftDisplayer.setSwapXY(false);
-            tftDisplayer.setDisplayOffset({52, 40}); 
+            tftDisplayer.set_flip_x(true);
+            tftDisplayer.set_flip_y(true);
+            tftDisplayer.set_swap_xy(false);
+            tftDisplayer.set_display_offset({52, 40}); 
         }
-        tftDisplayer.setFormatRGB(true);
-        tftDisplayer.setFlushDirH(false);
-        tftDisplayer.setFlushDirV(false);
-        tftDisplayer.setInversion(true);
+        tftDisplayer.set_format_rgb(true);
+        tftDisplayer.set_flush_dir_h(false);
+        tftDisplayer.set_flush_dir_v(false);
+        tftDisplayer.set_inversion(true);
     }
 
     // Painter<RGB565> painter = Painter<RGB565>();
@@ -187,33 +187,33 @@ void gui_main(){
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.putTexture(area, src.get_data());
+        tftDisplayer.put_texture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.putTexture(area, src.get_data());
+        tftDisplayer.put_texture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.putTexture(area, src.get_data());
+        tftDisplayer.put_texture(area, src.get_data());
     };
 
     Image<RGB565> img{{tftDisplayer.rect().w, 4}};
 
     Renderer renderer = {};
     renderer.bind(tftDisplayer);
-    renderer.setColor(ColorEnum::BLACK);
-    renderer.drawRect(tftDisplayer.rect());
+    renderer.set_color(ColorEnum::BLACK);
+    renderer.draw_rect(tftDisplayer.rect());
 
     while(true){
         renderer.bind(img);
-        renderer.setColor(HSV888{0, int(100 + 100 * sinpu(time())), 255});
-        renderer.drawPixel(Vector2i(0, 0));
-        renderer.drawRect(Rect2i(20, 0, 20, 40));
+        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
+        renderer.draw_pixel(Vector2i(0, 0));
+        renderer.draw_rect(Rect2i(20, 0, 20, 40));
 
-        tftDisplayer.putTexture(img.rect(), img.get_data());
+        tftDisplayer.put_texture(img.rect(), img.get_data());
         DEBUG_PRINTLN(millis());
     }
 }

@@ -29,7 +29,7 @@ private:
         interface.write_data16(data);
     }
 
-    void modifyCtrl(const bool yes,const uint8_t pos){
+    void modify_ctrl(const bool yes,const uint8_t pos){
         uint8_t temp = 0x01 << pos;
         if (yes) scr_ctrl |= temp;
         else scr_ctrl &= ~temp;
@@ -42,7 +42,7 @@ private:
 
 protected:
 
-    __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
+    __fast_inline uint32_t get_point_index(const uint16_t x, const uint16_t y){
         return (x + y * size_t(size().x));
     }
 
@@ -67,20 +67,20 @@ public:
 
     void init();
 
-    void putTexture(const Rect2i & rect, const is_color auto * color_ptr){
+    void put_texture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
         interface.write_burst<RGB565>(color_ptr, int(rect));
     }
 
-    void setDisplayOffset(const Vector2i & _offset){offset = _offset;}
-    void setFlipY(const bool flip){modifyCtrl(flip, 7);}
-    void setFlipX(const bool flip){modifyCtrl(flip, 6);}
-    void setSwapXY(const bool flip){modifyCtrl(flip, 5);}
-    void setFlushDirV(const bool dir){modifyCtrl(dir, 4);}
-    void setFormatRGB(const bool is_rgb){modifyCtrl(!is_rgb, 3);}
-    void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
+    void set_display_offset(const Vector2i & _offset){offset = _offset;}
+    void set_flip_y(const bool flip){modify_ctrl(flip, 7);}
+    void set_flip_x(const bool flip){modify_ctrl(flip, 6);}
+    void set_swap_xy(const bool flip){modify_ctrl(flip, 5);}
+    void set_flush_dir_v(const bool dir){modify_ctrl(dir, 4);}
+    void set_format_rgb(const bool is_rgb){modify_ctrl(!is_rgb, 3);}
+    void set_flush_dir_h(const bool dir){modify_ctrl(dir, 2);}
 
-    void setInversion(const bool inv){write_command(0x20 + inv);}
+    void set_inversion(const bool inv){write_command(0x20 + inv);}
 };
 
 };
