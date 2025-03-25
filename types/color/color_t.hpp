@@ -240,7 +240,14 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> &
 	const auto splt = os.splitter();
     return os << '(' << value.r << splt << value.g << splt << value.b << splt << value.a << ')';
 }
+
+
+template<arithmetic T>
+Color_t() -> Color_t<T>;
+
 }
+
+
 
 
 #include "color_t.tpp"

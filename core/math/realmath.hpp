@@ -64,6 +64,11 @@ namespace ymd{
     __fast_inline constexpr  T mag(const T a, const T b){
         return sqrt(a * a + b * b);
     }
+
+    template<floating T>
+    __fast_inline std::array<T, 2> sincos(const T x){
+        return {std::sin(x), std::cos(x)};
+    }
     
     template<arithmetic T>
     __fast_inline constexpr T square(const T x) {

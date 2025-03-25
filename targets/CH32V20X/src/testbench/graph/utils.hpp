@@ -18,12 +18,13 @@ scexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
 scexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
 
 
-scexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,const Vector3_t<auto>  up){
+template<typename T>
+scexpr mat4_t<T> lookat(const Vector3_t<T> eye,const Vector3_t<T>  center,const Vector3_t<T>  up){
     const auto zaxis = (eye - center).normalized();
 	const auto xaxis = up.cross(zaxis).normalized();
 	const auto yaxis = zaxis.cross(xaxis);
 
-    mat4_t view;
+    mat4_t<T> view;
 
 	view.m[0][0] = xaxis.x;
 	view.m[0][1] = yaxis.x;
@@ -49,45 +50,40 @@ scexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,con
 }
 
 
-scexpr mat4_t orthonormalBasis(Vector3_t<float> N){
-    const float sign = N.z > 0 ? 1.0f : -1.0f;
-    const float a = -1.0f / (sign + N.z);
-    const float b = N.x * N.y * a;
+template<typename T>
+scexpr mat4_t<T> orthonormalBasis(Vector3_t<T> N){
+    const T sign = N.z > 0 ? 1 : -1;
+    const T a = -1 / (sign + N.z);
+    const T b = N.x * N.y * a;
 
-    mat4_t T;
+    mat4_t<T> transform;
 
-    T.m[0][0] = 1.0f + sign * N.x * N.x * a;
-    T.m[0][1] = sign * b;
-    T.m[0][2] = -sign * N.x;
-    T.m[0][3] = 0;
+    transform.m[0][0] = 1 + sign * N.x * N.x * a;
+    transform.m[0][1] = sign * b;
+    transform.m[0][2] = -sign * N.x;
+    transform.m[0][3] = 0;
 
-    T.m[1][0] = b;
-    T.m[1][1] = sign + N.y * N.y * a;
-    T.m[1][2] = -N.y;
-    T.m[1][3] = 0;
+    transform.m[1][0] = b;
+    transform.m[1][1] = sign + N.y * N.y * a;
+    transform.m[1][2] = -N.y;
+    transform.m[1][3] = 0;
 
-    T.m[2][0] = N.x;
-    T.m[2][1] = N.y;
-    T.m[2][2] = N.z;
-    T.m[2][3] = 0;
+    transform.m[2][0] = N.x;
+    transform.m[2][1] = N.y;
+    transform.m[2][2] = N.z;
+    transform.m[2][3] = 0;
 
-    return T;
+    return transform;
 }
 
 static real_t rand01(){
     static dsp::LCGNoiseSiggen ng;
     ng.update();
-    return real_t(frac(float(ng.get()) / 65536));
+    return real_t(frac(real_t(ng.get()) >> 16));
 }
-// static real_t rand01(){
-//     return sinpu(80 * time()) * 0.5_r + 0.5_r;
-// }
-
-// #define rand01() (float(rand()) / RAND_MAX)
-// #define rand01() (0.01_r)
 
 
-static float bsdf_pdf;
+
 
 
 scexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
@@ -119,12 +115,9 @@ scexpr float EPSILON      = 0.001f;
 scexpr float light_area   = 0.0393f;
 scexpr float alpha       = 45;
 
-static struct intersection_t intersection;
-static const struct triangle_t* s;
-// static const mat4_t T;
-// static struct ray_t ray;
+// static float bsdf_pdf;
 
-static Vector3_t<float> Reflectance(int8_t i)
+scexpr Vector3_t<float> Reflectance(int8_t i)
 {
     if (i == 8 || i == 9){
         return Vector3_t(0.05f, 0.65f, 0.05f);
