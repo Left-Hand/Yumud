@@ -3,19 +3,17 @@
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/bus_base.hpp"
 
-
 namespace ymd::hal{
+
+#ifndef SPI_MAX_PINS
+static constexpr size_t SPI_MAX_PINS = 4;
+#endif
+
 
 class Spi:public BusBase{
 public:
-    #ifndef SPI_MAX_PINS
-    #define SPI_MAX_PINS 4
-    #endif
-    VGpioPort <SPI_MAX_PINS> cs_port = VGpioPort<SPI_MAX_PINS>();
 
-    #ifdef SPI_MAX_PINS
-    #undef SPI_MAX_PINS
-    #endif
+    VGpioPort <SPI_MAX_PINS> cs_port = VGpioPort<SPI_MAX_PINS>();
 protected:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;

@@ -158,6 +158,7 @@ struct DMA1_Def{
     constexpr bool get_global_flag(const uint8_t index){
         return  std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 4));
     }
+
     constexpr void clear_transfer_done_flag(const uint8_t index){
         INTFCR.DATA = (1 << (index * 4 - 3));
     }
@@ -186,35 +187,45 @@ struct DMA2_Def{
     volatile R32_DMA_INTFR INTFR;
     volatile R32_DMA_INTFCR INTFCR;
     volatile DMA_CH_Def CH[12];
+    volatile R32_DMA_INTFR EXTEM_INTFR;
+    volatile R32_DMA_INTFCR EXTEM_INTFCR;
 
     constexpr void clear_global_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 4));
+        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
+        reg.DATA = (1 << ((index & 0b111) * 4 - 4));
     }
 
     constexpr bool get_global_flag(const uint8_t index){
-        return  std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 4));
+        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
+        return  std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 4));
     }
     constexpr void clear_transfer_done_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 3));
+        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
+        reg.DATA = (1 << ((index & 0b111) * 4 - 3));
     }
 
     constexpr bool get_transfer_done_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 3));
+        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
+        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 3));
     }
 
     constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 2));
+        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
+        reg.DATA = (1 << ((index & 0b111) * 4 - 2));
     }
 
     constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 2));
+        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
+        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 2));
     }
 
     constexpr void clear_transfer_error_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 1));
+        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
+        reg.DATA = (1 << ((index & 0b111) * 4 - 1));
     }
     constexpr bool get_transfer_error_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 1));
+        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
+        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 1));
     }
 };
 

@@ -10,8 +10,8 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace CH32;
 
-#define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
-#define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 
 
 #define UART_IT_TEMPLATE(name, uname, fname)\
@@ -492,8 +492,8 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
         .USART_WordLength = USART_WordLength_8b,
         .USART_StopBits = USART_StopBits_1,
         .USART_Parity = USART_Parity_No,
-        .USART_Mode =   uint16_t((tx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Tx) : 0u) |
-                        uint16_t((rx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Rx) : 0u),
+        .USART_Mode =   uint16_t(uint16_t((tx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Tx) : uint16_t(0)) |
+                        uint16_t((rx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Rx) : uint16_t(0))),
         .USART_HardwareFlowControl = USART_HardwareFlowControl_None
     };
 

@@ -12,6 +12,10 @@
 
 namespace ymd::hal{
 
+#ifndef UART_FIFO_BUF_SIZE
+static constexpr size_t UART_FIFO_BUF_SIZE = 256;
+#endif
+
 
 class Uart:public BusBase{
 
@@ -28,9 +32,6 @@ protected:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;
 
-    #ifndef UART_FIFO_BUF_SIZE
-    #define UART_FIFO_BUF_SIZE 256
-    #endif
 
     Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo_;

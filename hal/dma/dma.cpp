@@ -6,6 +6,8 @@ using namespace ymd::hal;
 using namespace CH32;
 
 namespace ymd::hal{
+
+
 #ifdef ENABLE_DMA1
 DmaChannel dma1Ch1{DMA1_Channel1};
 DmaChannel dma1Ch2{DMA1_Channel2};
@@ -65,7 +67,7 @@ __interrupt void DMA2##_Channel##y##_IRQHandler(void){\
         DMA2_Inst->clear_transfer_done_flag(y);\
     }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
         NAME_OF_DMA_XY(2,y).on_transfer_half_interrupt();\
-        DMA2_Inst->clear_transfer_onhalf_flag(y);\ 
+        DMA2_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
 
