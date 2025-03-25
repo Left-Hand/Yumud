@@ -169,7 +169,7 @@ private:
     T gbest_ = std::numeric_limits<T>::lowest();
     T geval_ = std::numeric_limits<T>::lowest();
 
-    LCGNoiseSiggen lcg_;
+    LcgNoiseSiggen lcg_;
 };
 
 }

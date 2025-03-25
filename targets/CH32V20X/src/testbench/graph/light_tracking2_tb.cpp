@@ -20,25 +20,31 @@
 #include "data.hpp"
 
 
+static auto rand01_2(){
+    static dsp::LcgNoiseSiggen noise;
+    noise.update();
+    return noise.get_as_01_2();
+}
 
 [[nodiscard]]
 scexpr RGB get_relect_color(const int8_t i){
-    if (i == 8 || i == 9){
-        return RGB(0.05_r, 0.65_r, 0.05_r);
-    }
-    else if (i == 10 || i == 11){
-        return RGB(0.65_r, 0.05_r, 0.05_r);
-    }
-    else{
-        return RGB{0.65_r, 0.65_r, 0.65_r};
+    switch(i){
+        case 8:
+        case 9:
+            return RGB(0.05_r, 0.65_r, 0.05_r);
+        case 10:
+        case 11:
+            return RGB(0.65_r, 0.05_r, 0.05_r);
+        default:
+            return RGB{0.65_r, 0.65_r, 0.65_r};
     }
 }
 
 
 [[nodiscard]]
-static interaction_t<real_t> makeInteraction(const intersection_t<real_t> & intersection, const ray_t<real_t> & ray){
+static Interaction_t<real_t> makeInteraction(const Intersection_t<real_t> & intersection, const Ray3_t<real_t> & ray){
     const auto & surface = triangles[intersection.i];
-    return interaction_t<real_t>{
+    return Interaction_t<real_t>{
         intersection.i,
         intersection.t,
         surface,
@@ -54,7 +60,7 @@ __fast_inline scexpr bool not_in_one(const iq_t<Q> x){
 
 
 [[nodiscard]]
-static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triangle_t & s){
+static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const TriangleSurface_t<real_t> & s){
     const auto & E1 = s.E1;
     const auto & E2 = s.E2;
     
@@ -104,8 +110,8 @@ static __fast_inline bool tb_intersect (const Vector3_t<real_t> & start, const V
 
 
 [[nodiscard]] __pure
-static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
-    intersection_t<real_t> intersection = {
+static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray){
+    Intersection_t<real_t> intersection = {
         -1,
         std::numeric_limits<real_t>::max()
     };
@@ -116,7 +122,7 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
     const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
     const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
 
-    if (bb_intersect_impl(t0, t1) and tb_intersect_impl(t0, t1)){
+    if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
         for (size_t k = 0; k < triangles.size(); k++){
             const auto isct = tt_intersect(ray, triangles[k]);
             if (isct > 0 and isct < intersection.t){
@@ -132,7 +138,7 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const interaction_t<real_t> & interaction, const ray_t<real_t> & ray, const Quat_t<real_t> & transform){
+static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & transform){
     const auto wi_z = transform.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
@@ -148,10 +154,9 @@ static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const interaction_t<rea
 }
 
 [[nodiscard]] __pure
-static ray_t<real_t> cosWeightedHemi(const __restrict interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform)
+static Ray3_t<real_t> cosWeightedHemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform)
 {
-    const auto u0 = real_t(rand01());
-    const auto u1 = real_t(rand01());
+    const auto [u0, u1] = rand01_2();
 
     const auto r = sqrtf(u0);
     const auto azimuth = u1 * real_t(TAU);
@@ -163,14 +168,14 @@ static ray_t<real_t> cosWeightedHemi(const __restrict interaction_t<real_t> & in
         real_t((sqrtf(1 - u0)))
     );
 
-    return ray_t<real_t>::from_start_and_dir(
+    return Ray3_t<real_t>::from_start_and_dir(
         interaction.position + interaction.normal * EPSILON,
         transform.xform(v)
     );
 }
 
 [[nodiscard]]
-static std::optional<RGB> sampleLight(const __restrict interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform){
+static std::optional<RGB> sampleLight(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform){
     const auto [u0, u1] = rand01_2();
 
     const auto lightIdx = u0 < 0.5_r ? 0 : 1;
@@ -191,7 +196,7 @@ static std::optional<RGB> sampleLight(const __restrict interaction_t<real_t> & i
         Vector3_t(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
-    const auto ray = ray_t<real_t>::from_start_and_stop(
+    const auto ray = Ray3_t<real_t>::from_start_and_stop(
         interaction.position + interaction.normal * EPSILON,
         light_pos
     );
@@ -203,7 +208,7 @@ static std::optional<RGB> sampleLight(const __restrict interaction_t<real_t> & i
     if (cos_theta <= 0) return std::nullopt;
 
     const auto intersection = intersect(ray);
-    if (intersection.i == -1 || intersection.i != lightIdx) return std::nullopt;
+    if (intersection.i < 0 || intersection.i != lightIdx) return std::nullopt;
 
     const auto sample_opt = sampleBSDF(interaction, ray, transform);
     if (!sample_opt) return std::nullopt;
@@ -226,12 +231,12 @@ static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
     ) * ilen; // 最后一步归一化（可合并到后续操作中）
 }
 
-static RGB sampleRay(RGB sample, ray_t<real_t> ray){
+static RGB sampleRay(RGB sample, Ray3_t<real_t> ray){
     auto throughput = RGB{1,1,1};
     uint16_t depth = 0;
     while (1){
         const auto intersection = intersect(ray);
-        if (intersection.i == -1){
+        if (intersection.i < 0){
             return sample + throughput;
         }
 
@@ -264,19 +269,19 @@ static RGB sampleRay(RGB sample, ray_t<real_t> ray){
 
 
 
-static RGB samplePixel(const uint X, const uint Y){
+static RGB samplePixel(const uint x, const uint y){
     auto sample = RGB();
 
     static constexpr auto Zc = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
     for (size_t i = 0; i < spp; i++){
 
-        const real_t Xc = (X - (LCD_W >> 1)) * INV_LCD_H;
-        const real_t Yc = (LCD_H - 1 - Y - (LCD_H >> 1)) * INV_LCD_H;
+        const real_t Xc = (x - (LCD_W >> 1)) * INV_LCD_H;
+        const real_t Yc = (LCD_H - 1 - y - (LCD_H >> 1)) * INV_LCD_H;
 
         sample += sampleRay(
             sample,
-            ray_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(Xc, Yc, Zc))
+            Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(Xc, Yc, Zc))
         ) * inv_spp;
     }
 
@@ -288,14 +293,14 @@ static RGB samplePixel(const uint X, const uint Y){
 }
 
 __fast_inline
-static RGB565 draw3drt(const uint X, const uint Y){
-    const auto sample = samplePixel(X, Y);
+static RGB565 draw3drt(const uint x, const uint y){
+    const auto sample = samplePixel(x, y);
     return RGB565(uint8_t(sample.r * 255), uint8_t(sample.g * 255), uint8_t(sample.b * 255));
 }
 
 [[maybe_unused]]
 static void filter(const std::span<RGB565> row) {
-    static constexpr size_t WINDOW_SIZE = 5; // 3x3 中值滤波窗口
+    static constexpr size_t WINDOW_SIZE = 3; // 3x3 中值滤波窗口
     static constexpr size_t HALF_WINDOW = WINDOW_SIZE / 2;
 
 
@@ -335,6 +340,19 @@ static void render_row(const __restrict std::span<RGB565> row, const uint y){
     }
 
     // filter(row);
+}
+
+[[maybe_unused]]
+static std::vector<RGB565> render_row_v2(const uint w, const uint y){
+    std::vector<RGB565> row(w);
+
+    for (uint x = 0; x < LCD_W; x++){
+        row[x] = draw3drt(x, y);
+    }
+
+    filter(row);
+
+    return row;
 }
 
 
@@ -415,8 +433,11 @@ void light_tracking_main(void){
     }
 
     for (uint y = 0; y < LCD_H; y++){
+
         std::array<RGB565, LCD_W> row;
         render_row(row, y);
+
+        // const auto row = render_row_v2(LCD_W, y);
         // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
         tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
         // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);

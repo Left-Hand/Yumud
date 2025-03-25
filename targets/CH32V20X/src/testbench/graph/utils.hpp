@@ -8,57 +8,40 @@
 #include "core/clock/time.hpp"
 #include "types/quat/Quat.hpp"
 
-scexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
-scexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
+scexpr auto vec3_compMax(auto v) {return MAX(v.x,v.y,v.z);}
+scexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
 
 
+// template<typename T>
+// scexpr mat4_t<T> lookat(const Vector3_t<auto> & eye,const Vector3_t<auto> & center,const Vector3_t<auto> & up){
+//     const auto zaxis = (eye - center).normalized();
+// 	const auto xaxis = up.cross(zaxis).normalized();
+// 	const auto yaxis = zaxis.cross(xaxis);
+
+//     return mat4_t<T>{
+//         std::array<real_t, 4>{xaxis.x, yaxis.x, zaxis.z, 0},
+//         std::array<real_t, 4>{xaxis.y, yaxis.y, zaxis.y, 0},
+//         std::array<real_t, 4>{xaxis.z, yaxis.z, zaxis.z, 0},
+//         std::array<real_t, 4>{xaxis.dot(eye), yaxis.dot(eye), zaxis.dot(eye), 0}
+//     };
+// }
 
 
-template<typename T>
-scexpr mat4_t<T> lookat(const Vector3_t<auto> & eye,const Vector3_t<auto> & center,const Vector3_t<auto> & up){
-    const auto zaxis = (eye - center).normalized();
-	const auto xaxis = up.cross(zaxis).normalized();
-	const auto yaxis = zaxis.cross(xaxis);
+// template<typename T>
+// scexpr mat4_t<T> orthonormalBasis(Vector3_t<T> N){
+//     const T sign = N.z > 0 ? 1 : -1;
+//     const T a = -1 / (sign + N.z);
+//     const T b = N.x * N.y * a;
 
-    return mat4_t<T>{
-        std::array<real_t, 4>{xaxis.x, yaxis.x, zaxis.z, 0},
-        std::array<real_t, 4>{xaxis.y, yaxis.y, zaxis.y, 0},
-        std::array<real_t, 4>{xaxis.z, yaxis.z, zaxis.z, 0},
-        std::array<real_t, 4>{xaxis.dot(eye), yaxis.dot(eye), zaxis.dot(eye), 0}
-    };
-}
-
-
-template<typename T>
-scexpr mat4_t<T> orthonormalBasis(Vector3_t<T> N){
-    const T sign = N.z > 0 ? 1 : -1;
-    const T a = -1 / (sign + N.z);
-    const T b = N.x * N.y * a;
-
-    return mat4_t<T>{
-        std::array<real_t, 4>{1 + sign * N.x * N.x * a, sign * b, -sign * N.x, 0},
-        std::array<real_t, 4>{b, sign + N.y * N.y * a, -N.y, 0},
-        std::array<real_t, 4>{N.x, N.y, N.z, 0},
-        std::array<real_t, 4>{0, 0, 0, 0}
-    };
-}
-
-static real_t rand01(){
-    static dsp::LCGNoiseSiggen ng;
-    ng.update();
-    // return real_t(frac(real_t(ng.get()) >> 16));
-    return real_t(std::bit_cast<_iq<16>>(ng.get() & 0xffff));
-}
+//     return mat4_t<T>{
+//         std::array<real_t, 4>{1 + sign * N.x * N.x * a, sign * b, -sign * N.x, 0},
+//         std::array<real_t, 4>{b, sign + N.y * N.y * a, -N.y, 0},
+//         std::array<real_t, 4>{N.x, N.y, N.z, 0},
+//         std::array<real_t, 4>{0, 0, 0, 0}
+//     };
+// }
 
 
-static std::tuple<real_t, real_t> rand01_2(){
-    static dsp::LCGNoiseSiggen ng;
-    ng.update();
-    const uint32_t temp = ng.get();
-    const uint32_t u0 = temp >> 16;
-    const uint32_t u1 = temp & 0xffff;
-    return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
-}
 
 
 

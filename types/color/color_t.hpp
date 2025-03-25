@@ -245,6 +245,88 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> &
 template<arithmetic T>
 Color_t() -> Color_t<T>;
 
+template<typename T>
+struct RGB_t{
+    T r, g, b;
+
+    RGB_t & operator *= (const T val){
+        r *= val;
+        g *= val;
+        b *= val;
+
+        return *this;
+    }
+
+    RGB_t & operator *= (const RGB_t & val){
+        r *= val.r;
+        g *= val.g;
+        b *= val.b;
+
+        return *this;
+    }
+
+    RGB_t & operator /= (const T val){
+        const auto inv_val = 1 / val;
+        r *= inv_val;
+        g *= inv_val;
+        b *= inv_val;
+
+        return *this;
+    }
+
+    RGB_t operator * (const T val) const {
+        auto ret = RGB_t(*this);
+        ret *= val;
+        return ret;
+    }
+
+    RGB_t operator * (const RGB_t & val) const {
+        auto ret = RGB_t(*this);
+        ret *= val;
+        return ret;
+    }
+
+
+    RGB_t operator / (const T val) const {
+        auto ret = RGB_t(*this);
+        ret /= val;
+        return ret;
+    }
+
+    RGB_t & operator += (const RGB_t & val){
+        r += val.r;
+        g += val.g;
+        b += val.b;
+
+        return *this;
+    }
+
+    RGB_t operator + (const RGB_t & val) const {
+        auto ret = RGB_t(*this);
+        ret += val;
+        return ret;
+    }
+
+    RGB_t & operator -= (const RGB_t & val){
+        r -= val.r;
+        g -= val.g;
+        b -= val.b;
+
+        return *this;
+    }
+
+    RGB_t operator - (const RGB_t & val) const {
+        auto ret = RGB_t(*this);
+        ret -= val;
+        return ret;
+    }
+
+    RGB_t operator - () const {
+        return RGB_t(-r,-g,-b);
+    }
+};
+
+
 }
 
 
