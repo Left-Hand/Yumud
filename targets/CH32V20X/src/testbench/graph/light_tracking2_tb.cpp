@@ -66,11 +66,11 @@ static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triang
 
     const auto inv_determinant = 1 / determinant;
 
-    const auto transform = ray.start - s.v0;
-    const auto u = P.dot(transform) * inv_determinant;
+    const auto vec = ray.start - s.v0;
+    const auto u = P.dot(vec) * inv_determinant;
     if (u > 1 or u < 0) return 0;
 
-    const auto Q = transform.cross(s.E1);
+    const auto Q = vec.cross(s.E1);
     const auto v = Q.dot(ray.direction) * inv_determinant;
     if (v > 1 or v < 0 or u + v > 1) return 0;
 
@@ -78,17 +78,17 @@ static __fast_inline real_t tt_intersect(const ray_t<real_t> & ray, const triang
 };
 
 [[nodiscard]]
-static __fast_inline bool bb_intersect(const ray_t<real_t> & ray){
-    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
-    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
+static __fast_inline bool bb_intersect(const Vector3_t<real_t> & start, const Vector3_t<real_t> & inv_dir){
+    const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
+    const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
 
     return vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0);;
 };
 
 [[nodiscard]]
-static __fast_inline bool tb_intersect (const ray_t<real_t> & ray){
-    const Vector3_t<real_t> t0 = (bbmin - ray.start) * ray.inv_direction;
-    const Vector3_t<real_t> t1 = (bbmax - ray.start) * ray.inv_direction;
+static __fast_inline bool tb_intersect (const Vector3_t<real_t> & start, const Vector3_t<real_t> & inv_dir){
+    const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
+    const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
 
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
@@ -101,10 +101,12 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
     intersection.t = std::numeric_limits<real_t>::max();
     intersection.i = -1;
 
-    if (bb_intersect(ray)){
+    const auto & start = ray.start;
+    const auto inv_dir = Vector3_t<real_t>::from_rcp(ray.direction);
+    if (bb_intersect(start, inv_dir)){
         for (size_t k = 0; k < triangles.size(); ++k)
         {
-            if (!tb_intersect(ray_t<real_t>(ray)))
+            if (!tb_intersect(start, inv_dir))
                 continue;
             const auto isct = tt_intersect(ray, triangles[k]);
             if (isct > 0)
@@ -125,8 +127,7 @@ static intersection_t<real_t> intersect(const ray_t<real_t> & ray){
 [[nodiscard]]
 __fast_inline
 static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const interaction_t<real_t> & interaction, const ray_t<real_t> & ray, const mat4_t<real_t> & transform){
-    const auto z = Vector3_t(transform[2][0], transform[2][1], transform[2][2]);
-    const auto wi_z = z.dot(ray.direction);
+    const auto wi_z = transform.vz().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
 
@@ -151,18 +152,20 @@ static ray_t<real_t> cosWeightedHemi(const interaction_t<real_t> & interaction, 
     const auto [sin_a, cos_a] = sincos(azimuth);
 
     const auto v = Vector3_t<real_t>(
-        real_t((r * cos_a)     ), 
-        real_t((r * sin_a)     ), 
+        real_t((r * cos_a)), 
+        real_t((r * sin_a)), 
         real_t((sqrtf(1 - u0)))
     );
 
-    return ray_t{
+    return ray_t<real_t>::from_start_and_dir(
         interaction.position + interaction.normal * EPSILON,
     
-        {Vector3_t(transform[0][0], transform[1][0], transform[2][0]).dot(v),
-        Vector3_t(transform[0][1], transform[1][1], transform[2][1]).dot(v),
-        Vector3_t(transform[0][2], transform[1][2], transform[2][2]).dot(v)}
-    };
+        Vector3_t<real_t>{
+            transform.vx().dot(v),
+            transform.vy().dot(v),
+            transform.vz().dot(v)
+        }
+    );
 }
 
 [[nodiscard]]
@@ -188,10 +191,10 @@ static std::optional<RGB> sampleLight(const interaction_t<real_t> & interaction,
         Vector3_t(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
-    ray_t<real_t> ray;
-    ray.start = interaction.position + interaction.normal * EPSILON;
-    ray.direction = (light_pos - ray.start).normalized();
-    ray.inv_direction = Vector3_t<real_t>::from_rcp(ray.direction);
+    const auto ray = ray_t<real_t>::from_start_and_stop(
+        interaction.position + interaction.normal * EPSILON,
+        light_pos
+    );
 
     const real_t cos_light_theta = -ray.direction.dot(light.normal);
     if (cos_light_theta <= 0) return std::nullopt;
@@ -271,11 +274,11 @@ static RGB samplePixel(const uint X, const uint Y)
 
         sample += sampleRay(
             sample,
-            ray_t<real_t>{
+            ray_t<real_t>::from_start_and_dir(
                 eye,
                 Vector3_t<q16>(Xc, Yc, Zc)
                 // temp_direction
-            }
+            )
         ) * inv_spp;
     }
 
@@ -303,37 +306,6 @@ static void render_row(const std::span<RGB565> row, const uint y){
 
 #define UART hal::uart2
 using drivers::ST7789;
-
-// void print_vec3(OutputStream & os, const Vector3_t<real_t> & vec){
-//     os << "{\t" << vec.x << "_r,\t" << vec.y << "_r,\t" << vec.z << "_r}";
-// }
-// void print_triangle(OutputStream & os, const triangle_t & tri){
-//     // Vector3_t<real_t> bbmin, bbmax;
-//     // Vector3_t<real_t> v0, v1, v2;
-//     // Vector3_t<real_t> E1, E2, normal;
-
-//     #define PRINT_VEC3_AND_COMMA(vec) print_vec3(os, vec); os << ",\t"; delay(5);
-
-//     os << '{';
-//     PRINT_VEC3_AND_COMMA(tri.bbmin);
-//     PRINT_VEC3_AND_COMMA(tri.bbmax);
-//     PRINT_VEC3_AND_COMMA(tri.v0);
-//     PRINT_VEC3_AND_COMMA(tri.v1);
-//     PRINT_VEC3_AND_COMMA(tri.v2);
-//     PRINT_VEC3_AND_COMMA(tri.E1);
-//     PRINT_VEC3_AND_COMMA(tri.E2);
-//     print_vec3(os, tri.normal);
-//     os << '}';
-// }
-// void print_triangles(OutputStream & os){
-//     const size_t size = sizeof(triangles) / sizeof(triangle_t);
-//     const auto * ptr = reinterpret_cast<const triangle_t *>(triangles);
-//     for(size_t i = 0; i < size; i++){
-//         print_triangle(os, ptr[i]);
-//         os << ",\r\n";
-//         delay(5);
-//     }
-// }
 
 void light_tracking_main(void){
 
