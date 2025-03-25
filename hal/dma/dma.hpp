@@ -7,7 +7,6 @@
 #include <array>
 
 #include "core/platform.hpp"
-#include "core/sdk.hpp"
 
 #include "hal/nvic/nvic.hpp"
 
@@ -49,7 +48,7 @@ public:
     using Mode = DmaMode;
     using Priority = DmaPriority;
 protected:
-    DMA_Channel_TypeDef * instance;
+    void * instance;
     
     const uint32_t done_mask;
     const uint32_t half_mask;
@@ -62,19 +61,10 @@ protected:
     Mode mode_;
 
     void enable_rcc(const bool en);
-    __fast_inline void set_periph_width(const size_t width){
-        uint32_t tmpreg = instance->CFGR;
-        tmpreg &= ((~(0b11u << 8)));
-        tmpreg |= ((width >> 3) - 1) << 8;
-        instance->CFGR = tmpreg;
-    }
 
-    __fast_inline void set_mem_width(const size_t width){
-        uint32_t tmpreg = instance->CFGR;
-        tmpreg &= ((~(0b11u << 10)));
-        tmpreg |= ((width >> 3) - 1) << 10;
-        instance->CFGR = tmpreg;
-    }
+    void set_periph_width(const size_t width);
+
+    void set_mem_width(const size_t width);
 
     __fast_inline void set_dst_width(const size_t width){
         if(dst_is_periph(mode_)){
@@ -92,7 +82,7 @@ protected:
         }
     }
 
-    static constexpr uint8_t calculate_dma_index(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t calculate_dma_index(const void * _instance){
         #ifdef ENABLE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -100,7 +90,7 @@ protected:
         #endif
     }
 
-    static constexpr uint8_t calculate_channel_index(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t calculate_channel_index(const void * _instance){
         uint8_t dma_index = calculate_dma_index(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
@@ -131,7 +121,7 @@ protected:
         }
     }
 
-    static constexpr uint32_t calculate_done_mask(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint32_t calculate_done_mask(const void * _instance){
         uint8_t dma_index = calculate_dma_index(_instance);
         uint8_t channel_index = calculate_channel_index(_instance);
         switch(dma_index){
@@ -154,7 +144,7 @@ protected:
     }
 
 
-    static constexpr uint32_t calculate_half_mask(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint32_t calculate_half_mask(const void * _instance){
         uint8_t dma_index = calculate_dma_index(_instance);
         uint8_t channel_index = calculate_channel_index(_instance);
         switch(dma_index){
@@ -224,12 +214,7 @@ public:
 
     void init(const Mode mode,const Priority priority);
 
-    void resume(){
-        DMA_ClearFlag(done_mask);
-        DMA_ClearFlag(half_mask);
-
-        DMA_Cmd(instance, ENABLE);
-    }
+    void resume();
 
     template <typename T>
     void transfer_pph2mem(auto * dst, const volatile auto * src, size_t size){
@@ -268,22 +253,12 @@ public:
         );
     }
 
-    size_t pending(){
-        return instance -> CNTR;
-    }
+    size_t pending();
 
     void enable_it(const NvicPriority _priority, const bool en = true);
 
-    void enable_done_it(const bool en = true){
-        DMA_ClearITPendingBit(done_mask);
-        DMA_ITConfig(instance, DMA_IT_TC, en);
-    }
-
-    void enable_half_it(const bool en = true){
-        DMA_ClearITPendingBit(half_mask);
-        DMA_ITConfig(instance, DMA_IT_HT, en);
-    }
-
+    void enable_done_it(const bool en = true);
+    void enable_half_it(const bool en = true);
 
     void bind_done_cb(auto && cb){
         done_cb_ = std::move(cb);

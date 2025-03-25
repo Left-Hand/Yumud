@@ -1,6 +1,6 @@
 #include "dma.hpp"
 #include "ral/ch32/ch32_common_dma_def.hpp"
-
+#include "core/sdk.hpp"
 
 using namespace ymd::hal;
 using namespace CH32;
@@ -84,6 +84,13 @@ DMA2_IT_TEMPLATE(10);
 DMA2_IT_TEMPLATE(11);
 #endif
 
+#define COPY_CONST(a,b) std::conditional_t<\
+    std::is_const_v<std::decay_t<decltype(a)>>,\
+    std::add_const_t<b *>,\
+    std::remove_const_t<b *>>\
+
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(instance,DMA_Channel_TypeDef)>(x))
+
 
 void DmaChannel::enable_rcc(bool en){
     #ifdef ENABLE_DMA2
@@ -102,13 +109,13 @@ void DmaChannel::enable_rcc(bool en){
 void DmaChannel::start(void * dst, const void * src, const size_t size){
 
     if(dst_is_periph(mode_)){
-        instance -> PADDR = (uint32_t)dst;
-        instance -> MADDR = (uint32_t)src;
+        SDK_INST(instance) -> PADDR = (uint32_t)dst;
+        SDK_INST(instance) -> MADDR = (uint32_t)src;
     }else{
-        instance -> PADDR = (uint32_t)src;
-        instance -> MADDR = (uint32_t)dst;
+        SDK_INST(instance) -> PADDR = (uint32_t)src;
+        SDK_INST(instance) -> MADDR = (uint32_t)dst;
     }
-    instance -> CNTR = size;
+    SDK_INST(instance) -> CNTR = size;
     resume();
 }
 
@@ -177,9 +184,9 @@ void DmaChannel::init(const Mode mode,const Priority priority){
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 
-    DMA_InitStructure.DMA_Priority = (uint32_t)priority;
+    DMA_InitStructure.DMA_Priority = ((uint32_t)priority) << 12;
 
-    DMA_Init(instance, &DMA_InitStructure);
+    DMA_Init(SDK_INST(instance), &DMA_InitStructure);
 }
 
 void DmaChannel::enable_it(const NvicPriority _priority, const bool en){
@@ -209,3 +216,41 @@ void DmaChannel::on_transfer_half_interrupt(){
 void DmaChannel::on_transfer_done_interrupt(){
     EXECUTE(done_cb_);
 }
+
+
+void DmaChannel::set_periph_width(const size_t width){
+    uint32_t tmpreg = SDK_INST(instance)->CFGR;
+    tmpreg &= ((~(0b11u << 8)));
+    tmpreg |= ((width >> 3) - 1) << 8;
+    SDK_INST(instance)->CFGR = tmpreg;
+}
+
+void DmaChannel::set_mem_width(const size_t width){
+    uint32_t tmpreg = SDK_INST(instance)->CFGR;
+    tmpreg &= ((~(0b11u << 10)));
+    tmpreg |= ((width >> 3) - 1) << 10;
+    SDK_INST(instance)->CFGR = tmpreg;
+}
+
+
+void DmaChannel::resume(){
+    DMA_ClearFlag(done_mask);
+    DMA_ClearFlag(half_mask);
+
+    DMA_Cmd(SDK_INST(instance), ENABLE);
+}
+
+size_t DmaChannel::pending(){
+    return SDK_INST(instance) -> CNTR;
+}
+
+void DmaChannel::enable_done_it(const bool en){
+    DMA_ClearITPendingBit(done_mask);
+    DMA_ITConfig(SDK_INST(instance), DMA_IT_TC, en);
+}
+
+void DmaChannel::enable_half_it(const bool en){
+    DMA_ClearITPendingBit(half_mask);
+    DMA_ITConfig(SDK_INST(instance), DMA_IT_HT, en);
+}
+
