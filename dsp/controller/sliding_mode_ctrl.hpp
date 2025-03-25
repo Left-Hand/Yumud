@@ -39,9 +39,10 @@ public:
     void update(const q20 targ,const q20 meas) {
         const auto c = c_.get();
         const auto q = q_.get();
+        const auto fs = fs_.get();
 
         const q20 x1 = targ - meas;
-        const q20 x2 = x1 - err_prev_.get();
+        const q20 x2 = (x1 - err_prev_.get());
         err_prev_.borrow_mut() = x1;
 
         const q20 s = c * x1 + x2;
@@ -56,10 +57,9 @@ private:
 
     immutable_t<q20> c_ = 0;
     immutable_t<q20> q_ = 0;
-    // immutable_t<q20> c_  = 0;
     
-    immutable_t<q20> out_min_ = 0.7_q24;
-    immutable_t<q20> out_max_ = 0.9_q24;
+    immutable_t<q20> out_min_ = 0;
+    immutable_t<q20> out_max_ = 0;
 
     immutable_t<unsigned int> fs_ = 0;
 

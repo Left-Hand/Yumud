@@ -63,12 +63,6 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 
 
-
-
-
-
-
-
 // class ExtendedStateObserver{
 
 //     void update(const real_t u, const real_t y){
@@ -101,7 +95,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻倍
-    timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedDualTrig);
+    timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
 
     auto & pwm_pos = timer.oc(1);
     auto & pwm_neg = timer.oc(2);
@@ -112,17 +106,22 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
     pwm_pos.sync();
     pwm_neg.sync();
+
+    pwm_pos.set_polarity(true);
+    pwm_neg.set_polarity(true);
     
     adc1.init(
         {
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
+            // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
             {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
         }
     );
 
     adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
     adc1.enable_auto_inject(false);
+    adc1.set_pga(AdcPga::X16);
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);
 
@@ -130,19 +129,20 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         .set_output_state(true)
         .set_idle_state(false);
 
-    timer.oc(4).cvr() = timer.arr() - 1;
+    // timer.oc(4).cvr() = timer.arr() - 1; 
+    // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 
+    timer.oc(4).cvr() = int(1); 
     
     LowpassFilter lpf{LowpassFilter::Config{
-        // .fc = 220,
-        .fc = 2000,
+        .fc = 140,
         .fs = ISR_FREQ
     }};
 
     
-    LowpassFilter lpf_mid{LowpassFilter::Config{
-        .fc = 140,
-        .fs = ISR_FREQ
-    }};
+    // LowpassFilter lpf_mid{LowpassFilter::Config{
+    //     .fc = 140,
+    //     .fs = ISR_FREQ
+    // }};
 
     BandpassFilter bpf{BandpassFilter::Config{
         // .fl = 300,
@@ -177,9 +177,21 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     //     }
     // };
 
-    dsp::SlidingModeController pi_ctrl{{
-        .c = 0.16_q24,
-        .q = 0.0005_q24,
+    // dsp::SlidingModeController pi_ctrl{{
+    //     .c = 0.16_q24,
+    //     .q = 0.0005_q24,
+    //     // .c = 01.6_q24,
+    //     // .q = 0.0000005_q24,
+
+    //     .out_min = 0.7_r,
+    //     .out_max = 0.97_r,
+
+    //     .fs = ISR_FREQ
+    // }};
+    
+    dsp::DeltaPdController pi_ctrl{{
+        .kp = 0.8_r,
+        .kd = 0.00_r,
 
         .out_min = 0.7_r,
         .out_max = 0.97_r,
@@ -204,14 +216,18 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
     real_t trackin_sig = 0;
     real_t volt = 0;
+
+    auto & watch_gpio = portA[3];
+    watch_gpio.outpp();
+
     adc1.attach(AdcIT::JEOC, {0,0}, [&](){
-        const auto begin_micros = micros();
+        watch_gpio.toggle();
         volt = adc1.inj(1).get_voltage();
         const auto curr_raw = volt_2_current(volt);
 
         lpf.update(curr_raw);
-        // lpf_mid.update(curr_raw);
         curr = lpf.get();
+        watch_gpio.toggle();
         // bpf.update(curr_raw);
 
         bpf.update(curr_raw);
@@ -223,14 +239,16 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         td.update(pos);
         const auto spd = td.get()[1];
 
-        static constexpr auto kp = 267.0_r;
-        static constexpr auto kd = 0.0_r;
+        // static constexpr auto kp = 267.0_r;
+        // static constexpr auto kd = 0.0_r;
         // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
-        // pi_ctrl.update(spd_targ, spd);
         pi_ctrl.update(spd_targ, spd);
-        pwm_pos = pi_ctrl.get();
-        // pwm_pos = 0.92_r;
-        exe_micros = micros() - begin_micros;
+        // pwm_pos = pi_ctrl.get();
+        // pwm_pos = 0.87_r * abs(sinpu(time()));
+        // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
+        // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
+        pwm_pos = 0.8_r;
+        pwm_neg = 0_r;
 
 
 
@@ -278,16 +296,16 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         // trackin_sig = tpzpu(t);
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);
-        DEBUG_PRINTLN_IDLE(td.get(), spd_targ, exe_micros);
-        // DEBUG_PRINTLN_IDLE(curr, bpf.get(), volt);
+        // DEBUG_PRINTLN_IDLE(td.get(), lpf.get() * 90 ,volt,spd_targ, exe_micros);
+        DEBUG_PRINTLN_IDLE(curr * 100, bpf.get(), volt);
         // DEBUG_PRINTLN_IDLE(trackin_sig, td.get());
-        // DEBUG_PRINTLN(duty, bool(pwm_pos.io()), bool(pwm_neg.io()));
+        // DEBUG_PRINTLN(bool(pwm_pos.io()), bool(pwm_neg.io()));
         
     }
 }
 
 void ws2812_main(){
-    TARG_UART.init(6_MHz);
+    TARG_UART.init(6_MHz, CommStrategy::Nil);
     // TARG_UART.init(576000);
     DEBUGGER.retarget(&TARG_UART);
     // ws2812_tb(hal::portB[1]);

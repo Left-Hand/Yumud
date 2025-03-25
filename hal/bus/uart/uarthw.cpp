@@ -492,8 +492,8 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
         .USART_WordLength = USART_WordLength_8b,
         .USART_StopBits = USART_StopBits_1,
         .USART_Parity = USART_Parity_No,
-        .USART_Mode =   uint16_t(((bool(tx_strategy)) ? uint16_t(USART_Mode_Tx) : 0u) |
-                        ((bool(rx_strategy)) ? uint16_t(USART_Mode_Rx) : 0u)),
+        .USART_Mode =   uint16_t((tx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Tx) : 0u) |
+                        uint16_t((rx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Rx) : 0u),
         .USART_HardwareFlowControl = USART_HardwareFlowControl_None
     };
 
