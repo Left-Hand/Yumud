@@ -13,10 +13,12 @@ public:
 
     // 生成0到2^32-1的无符号数
     constexpr __fast_inline
-    uint32_t update() {
+    void update() {
         state_ = (a_ * state_ + c_) & mask_;
-        return state_;
     }
+
+    [[nodiscard]] constexpr __fast_inline
+    uint32_t get() const { return state_; }
 
 private:
     uint32_t state_;

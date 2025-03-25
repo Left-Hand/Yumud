@@ -2,8 +2,10 @@
 
 #include <cmath>
 #include "core/math/realmath.hpp"
-
+#include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
+// #include "dsp/siggen/noise/GaussianNoiseSiggen.hpp"
 #include "types.hpp"
+#include "core/clock/time.hpp"
 
 template<size_t Q>
 float operator * (const float lhs, const iq_t<Q> rhs){
@@ -12,11 +14,11 @@ float operator * (const float lhs, const iq_t<Q> rhs){
 
 
 
-static constexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
-static constexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
+scexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
+scexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
 
 
-static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,const Vector3_t<auto>  up){
+scexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,const Vector3_t<auto>  up){
     const auto zaxis = (eye - center).normalized();
 	const auto xaxis = up.cross(zaxis).normalized();
 	const auto yaxis = zaxis.cross(xaxis);
@@ -47,7 +49,7 @@ static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  
 }
 
 
-static constexpr mat4_t orthonormalBasis(Vector3_t<float> N){
+scexpr mat4_t orthonormalBasis(Vector3_t<float> N){
     const float sign = N.z > 0 ? 1.0f : -1.0f;
     const float a = -1.0f / (sign + N.z);
     const float b = N.x * N.y * a;
@@ -72,54 +74,54 @@ static constexpr mat4_t orthonormalBasis(Vector3_t<float> N){
     return T;
 }
 
+static real_t rand01(){
+    static dsp::LCGNoiseSiggen ng;
+    ng.update();
+    return real_t(frac(float(ng.get()) / 65536));
+}
 // static real_t rand01(){
-//     static dsp::LCGNoiseSiggen noise;
-//     iq_t<16> temp;
-//     temp.value.from_i32(noise.update());
-//     return frac(temp);
+//     return sinpu(80 * time()) * 0.5_r + 0.5_r;
 // }
 
-#define rand01() (float(rand()) / RAND_MAX)
-#define balanceHeuristic(a, b) ((a) / ((a) + (b)))
+// #define rand01() (float(rand()) / RAND_MAX)
+// #define rand01() (0.01_r)
 
-// #define abs(x) ((x) > 0 ? x : -x)
-// static Vector3_t<float> bsdf_absIdotN;
-// static float bsdf_pdf;
-static const struct triangle_t* s;
+
 static float bsdf_pdf;
 
 
-static constexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
-static constexpr auto center  = Vector3_t(0.0f, 1.0f, 0.0f);
-static constexpr auto up      = Vector3_t(0.0f, 1.0f, 0.0f);
-static constexpr mat4_t view = lookat(eye, center, up);;
+scexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
+scexpr auto center  = Vector3_t(0.0f, 1.0f, 0.0f);
+scexpr auto up      = Vector3_t(0.0f, 1.0f, 0.0f);
+scexpr mat4_t view = lookat(eye, center, up);;
 
-static constexpr auto view_x = Vector3_t(view.m[0][0], view.m[0][1], view.m[0][2]);
-static constexpr auto view_y = Vector3_t(view.m[1][0], view.m[1][1], view.m[1][2]);
-static constexpr auto view_z = Vector3_t(view.m[2][0], view.m[2][1], view.m[2][2]);
+scexpr auto view_x = Vector3_t(view.m[0][0], view.m[0][1], view.m[0][2]);
+scexpr auto view_y = Vector3_t(view.m[1][0], view.m[1][1], view.m[1][2]);
+scexpr auto view_z = Vector3_t(view.m[2][0], view.m[2][1], view.m[2][2]);
 
-static constexpr auto lightColor = Vector3_t<float>::from_ones(200);
+// scexpr auto lightColor = Vector3_t<float>::from_ones(16);
+scexpr auto lightColor = Vector3_t<float>::from_ones(50);
 
-static constexpr auto bbmin = Vector3_t<float>(-1, 0, -1);
-static constexpr auto bbmax = Vector3_t<float>(1, 2, 1);
-
-
-#define LCD_W 160
-#define LCD_H 80
-
-#define alpha 45
-
-#define spp 1
-#define max_depth 2
+scexpr auto bbmin = Vector3_t<float>(-1, 0, -1);
+scexpr auto bbmax = Vector3_t<float>(1, 2, 1);
 
 
-#define INV_PI 0.318310f
-#define EPSILON 0.001f
-#define light_area 0.0893f
+scexpr size_t LCD_W = 240;
+scexpr size_t LCD_H = 135;
+
+scexpr size_t max_depth = 2;
+scexpr size_t spp  = 1;
+scexpr float inv_spp  = float(1)/spp;
+
+
+scexpr float INV_PI       = 0.318310f;
+scexpr float EPSILON      = 0.001f;
+scexpr float light_area   = 0.0393f;
+scexpr float alpha       = 45;
 
 static struct intersection_t intersection;
-
-static mat4_t T;
+static const struct triangle_t* s;
+// static const mat4_t T;
 // static struct ray_t ray;
 
 static Vector3_t<float> Reflectance(int8_t i)

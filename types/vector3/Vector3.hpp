@@ -53,11 +53,16 @@ public:
     
     __fast_inline constexpr Vector3_t(){;}
 
-    __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
+    __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) :
+        x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) {;}
 
     __fast_inline constexpr Vector3_t(const Vector2_t<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
 
-    __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x((_x)), y((_y)), z((_z)){;}
+    __fast_inline constexpr Vector3_t(const auto & _x, const auto & _y, const auto & _z): 
+        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+
+    __fast_inline constexpr Vector3_t(const T _x, const T _y, const T _z): 
+        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
 
     __fast_inline static constexpr Vector3_t from_ones(const T & _x){
         return Vector3_t<T>(_x, _x, _x);}

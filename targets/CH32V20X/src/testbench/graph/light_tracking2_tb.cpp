@@ -21,7 +21,7 @@
 
 [[nodiscard]]
 
-static interaction_t makeInteraction(const intersection_t & intersection, const ray_t & ray){
+static std::tuple<interaction_t, mat4_t> makeInteraction(const intersection_t & intersection, const ray_t & ray){
     interaction_t interaction;
 
     interaction.i = intersection.i;
@@ -34,8 +34,7 @@ static interaction_t makeInteraction(const intersection_t & intersection, const 
         interaction.normal = -interaction.normal;
     }
 
-    T = orthonormalBasis(interaction.normal);
-    return interaction;
+    return {interaction, orthonormalBasis(interaction.normal)};
 }
 
 static __fast_inline bool tb_intersect (const ray_t & ray){
@@ -98,7 +97,7 @@ static void intersect(const ray_t & ray){
 
 
 
-static std::optional<Vector3_t<float>> sampleBSDF(const interaction_t & interaction, const ray_t & ray){
+static std::optional<Vector3_t<float>> sampleBSDF(const interaction_t & interaction, const ray_t & ray, const mat4_t & T){
     const auto z = Vector3_t(T.m[2][0], T.m[2][1], T.m[2][2]);
     const float wi_z = z.dot(ray.direction);
 
@@ -111,15 +110,20 @@ static std::optional<Vector3_t<float>> sampleBSDF(const interaction_t & interact
 }
 
 [[nodiscard]]
-static ray_t cosWeightedHemi(const interaction_t & interaction)
+static ray_t cosWeightedHemi(const interaction_t & interaction, const mat4_t & T)
 {
-    const auto u0 = float(rand01());
-    const auto u1 = float(rand01());
+    const auto u0 = real_t(rand01());
+    const auto u1 = real_t(rand01());
 
-    const float r = sqrtf(u0);
-    const float azimuth = u1 * float(TAU);
+    const auto r = sqrtf(u0);
+    const auto azimuth = u1 * real_t(TAU);
+    const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vector3_t(r * cosf(azimuth), r * sinf(azimuth), sqrtf(1 - u0));
+    const auto v = Vector3_t<float>(
+        float((r * cos_a)     ), 
+        float((r * sin_a)     ), 
+        float((sqrtf(1 - u0)))
+    );
 
     ray_t ray;
     ray.start =  interaction.position + interaction.normal * EPSILON;
@@ -133,7 +137,7 @@ static ray_t cosWeightedHemi(const interaction_t & interaction)
 }
 
 
-static std::optional<Vector3_t<float>> sampleLight(const interaction_t & interaction){
+static std::optional<Vector3_t<float>> sampleLight(const interaction_t & interaction, const mat4_t & T){
     const auto u1 = float(rand01());
     const auto u0 = float(rand01());
 
@@ -177,13 +181,13 @@ static std::optional<Vector3_t<float>> sampleLight(const interaction_t & interac
         return std::nullopt;
     }
 
-    const auto sample_opt = sampleBSDF(interaction, ray);
+    const auto sample_opt = sampleBSDF(interaction, ray, T);
     if (!sample_opt){
         return std::nullopt;
     }
 
     const float light_pdf = (intersection.t * intersection.t) / (light_area * cos_light_theta);
-    const float mis_weight = balanceHeuristic(light_pdf, bsdf_pdf);
+    const float mis_weight = light_pdf / (light_pdf + bsdf_pdf);
     return (sample_opt.value() * lightColor * mis_weight * 2) / light_pdf;
 }
 
@@ -210,15 +214,15 @@ static void sampleRay(Vector3_t<float> & sample, ray_t ray)
             return;
         }
 
-        const auto interaction = makeInteraction(intersection, ray);
+        const auto [interaction, T] = makeInteraction(intersection, ray);
 
-        const auto radiance = sampleLight(interaction).value_or(Vector3_t<float>::from_ones(0));
+        const auto radiance = sampleLight(interaction, T).value_or(Vector3_t<float>::from_ones(0));
         sample += radiance * throughput;
 
         depth++;
-        ray =cosWeightedHemi(interaction);
+        ray =cosWeightedHemi(interaction, T);
 
-        const auto sample_opt = sampleBSDF(interaction, ray);
+        const auto sample_opt = sampleBSDF(interaction, ray, T);
         if (!sample_opt)
         {
             return;
@@ -241,7 +245,7 @@ static Vector3_t<float> samplePixel(const uint X, const uint Y)
 
     static constexpr auto Zc = -LCD_H * real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
-    for (auto i = 0; i < spp; i++)
+    for (size_t i = 0; i < spp; i++)
     {
         const auto u0 = float(rand01());
         const auto u1 = float(rand01());
@@ -270,7 +274,7 @@ static Vector3_t<float> samplePixel(const uint X, const uint Y)
         );
     }
 
-    sample /= spp;
+    sample *= inv_spp;
 
     return sample / (sample + Vector3_t<float>::ONE);
 }
@@ -297,6 +301,7 @@ void light_tracking_main(void){
     DEBUGGER.noBrackets();
 
     DEBUG_PRINTLN(micros());
+
 
     #ifdef CH32V30X
     auto & spi = spi2;
@@ -372,4 +377,5 @@ void light_tracking_main(void){
     }
 
     DEBUG_PRINTLN(millis());
+
 }
