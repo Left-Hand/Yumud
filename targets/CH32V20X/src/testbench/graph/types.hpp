@@ -17,7 +17,7 @@ struct intersection_t
     int8_t i;
     float t;
 };
-static struct intersection_t intersection;
+
 
 struct ray_t
 {
@@ -25,7 +25,7 @@ struct ray_t
     Vector3_t<float> direction;
     Vector3_t<float> inv_direction;
 };
-static struct ray_t ray;
+
 
 struct interaction_t
 {

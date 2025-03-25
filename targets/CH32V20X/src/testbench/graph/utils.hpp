@@ -12,8 +12,8 @@ float operator * (const float lhs, const iq_t<Q> rhs){
 
 
 
-#define vec3_compMax(v) (std::max(v.x, std::max(v.y, v.z)))
-#define vec3_compMin(v) (std::min(v.x, std::min(v.y, v.z)))
+static constexpr auto vec3_compMax(auto v) {return (std::max(v.x, std::max(v.y, v.z)));}
+static constexpr auto vec3_compMin(auto v) {return (std::min(v.x, std::min(v.y, v.z)));}
 
 
 static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  center,const Vector3_t<auto>  up){
@@ -47,26 +47,29 @@ static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  
 }
 
 
-#define orthonormalBasis(N) \
-{ \
-    const float sign = N.z > 0 ? 1.0f : -1.0f; \
-    const float a = -1.0f / (sign + N.z); \
-    const float b = N.x * N.y * a; \
- \
-    T.m[0][0] = 1.0f + sign * N.x * N.x * a; \
-    T.m[0][1] = sign * b; \
-    T.m[0][2] = -sign * N.x; \
-    T.m[0][3] = 0; \
- \
-    T.m[1][0] = b; \
-    T.m[1][1] = sign + N.y * N.y * a; \
-    T.m[1][2] = -N.y; \
-    T.m[1][3] = 0; \
- \
-    T.m[2][0] = N.x; \
-    T.m[2][1] = N.y; \
-    T.m[2][2] = N.z; \
-    T.m[2][3] = 0; \
+static constexpr mat4_t orthonormalBasis(Vector3_t<float> N){
+    const float sign = N.z > 0 ? 1.0f : -1.0f;
+    const float a = -1.0f / (sign + N.z);
+    const float b = N.x * N.y * a;
+
+    mat4_t T;
+
+    T.m[0][0] = 1.0f + sign * N.x * N.x * a;
+    T.m[0][1] = sign * b;
+    T.m[0][2] = -sign * N.x;
+    T.m[0][3] = 0;
+
+    T.m[1][0] = b;
+    T.m[1][1] = sign + N.y * N.y * a;
+    T.m[1][2] = -N.y;
+    T.m[1][3] = 0;
+
+    T.m[2][0] = N.x;
+    T.m[2][1] = N.y;
+    T.m[2][2] = N.z;
+    T.m[2][3] = 0;
+
+    return T;
 }
 
 // static real_t rand01(){
@@ -79,11 +82,11 @@ static constexpr mat4_t lookat(const Vector3_t<auto> eye,const Vector3_t<auto>  
 #define rand01() (float(rand()) / RAND_MAX)
 #define balanceHeuristic(a, b) ((a) / ((a) + (b)))
 
-#define abs(x) ((x) > 0 ? x : -x)
+// #define abs(x) ((x) > 0 ? x : -x)
 // static Vector3_t<float> bsdf_absIdotN;
 // static float bsdf_pdf;
 static const struct triangle_t* s;
-
+static float bsdf_pdf;
 
 
 static constexpr auto eye     = Vector3_t(0.0f, 1.0f, 3.5f);
@@ -114,6 +117,11 @@ static constexpr auto bbmax = Vector3_t<float>(1, 2, 1);
 #define EPSILON 0.001f
 #define light_area 0.0893f
 
+static struct intersection_t intersection;
+
+static mat4_t T;
+// static struct ray_t ray;
+
 static Vector3_t<float> Reflectance(int8_t i)
 {
     if (i == 8 || i == 9){
@@ -127,13 +135,3 @@ static Vector3_t<float> Reflectance(int8_t i)
     }
 }
 
-static constexpr uint8_t bb_intersect(const ray_t & ray){
-    const auto t0 = (bbmin - ray.start) * ray.inv_direction;
-    const auto t1 = (bbmax - ray.start) * ray.inv_direction;
-
-    auto temp = t0.min_with(t1);
-    auto t = MAX(vec3_compMax(temp), 0);
-
-    temp = t0.max_with(t1);
-    return vec3_compMin(temp) >= t ? 1 : 0;
-}
