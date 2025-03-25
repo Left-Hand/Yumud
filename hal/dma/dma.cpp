@@ -61,11 +61,11 @@ DMA1_IT_TEMPLATE(7);
 #define DMA2_IT_TEMPLATE(y)\
 __interrupt void DMA2##_Channel##y##_IRQHandler(void){\
     if(DMA2_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(2,y).onTransferDoneInterrupt();\
+        NAME_OF_DMA_XY(2,y).on_transfer_done_interrupt();\
         DMA2_Inst->clear_transfer_done_flag(y);\
     }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(2,y).onTransferHalfInterrupt();\
-        DMA2_Inst->clear_transfer_onhalf_flag(y);\
+        NAME_OF_DMA_XY(2,y).on_transfer_half_interrupt();\
+        DMA2_Inst->clear_transfer_onhalf_flag(y);\ 
     }\
 }\
 

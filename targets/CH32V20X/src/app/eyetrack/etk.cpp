@@ -66,19 +66,19 @@ void etk_main(){
         tftDisplayer.init();
         // tftDisplayer.setDisplayOffset({51, 40}); 
 
-        tftDisplayer.setFlipX(false);
-        tftDisplayer.setFlipY(true);
+        tftDisplayer.set_flip_x(false);
+        tftDisplayer.set_flip_y(true);
         if(true){
-            tftDisplayer.setSwapXY(true);
-            tftDisplayer.setDisplayOffset({40, 52}); 
+            tftDisplayer.set_swap_xy(true);
+            tftDisplayer.set_display_offset({40, 52}); 
         }else{
-            tftDisplayer.setSwapXY(false);
-            tftDisplayer.setDisplayOffset({52, 40}); 
+            tftDisplayer.set_swap_xy(false);
+            tftDisplayer.set_display_offset({52, 40}); 
         }
-        tftDisplayer.setFormatRGB(true);
-        tftDisplayer.setFlushDirH(false);
-        tftDisplayer.setFlushDirV(false);
-        tftDisplayer.setInversion(true);
+        tftDisplayer.set_format_rgb(true);
+        tftDisplayer.set_flush_dir_h(false);
+        tftDisplayer.set_flush_dir_v(false);
+        tftDisplayer.set_inversion(true);
     }
 
     Painter<RGB565> painter = Painter<RGB565>();

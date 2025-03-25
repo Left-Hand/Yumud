@@ -27,16 +27,16 @@ protected:
 public:
     Renderer(){;}
     void bind(Canvas & _source);
-    void setClip(const Rect2i clip){clip_ = clip;}
-    void setColor(const ColorType color){color_ = color;}
+    void set_clip(const Rect2i clip){clip_ = clip;}
+    void set_color(const ColorType color){color_ = color;}
 
-    void drawRect(const Rect2i rect);
-    void drawPixel(const Vector2i pos);
-    void drawLine(const Vector2i from, const Vector2i to);
-    void drawHriLine(const Vector2i pos,const int l);
-    void drawVerLine(const Vector2i pos,const int l);
-    void drawVerLine(const Rangei y_range, const int x);
-    void drawHriLine(const Rangei x_range, const int y);
+    void draw_rect(const Rect2i rect);
+    void draw_pixel(const Vector2i pos);
+    void draw_line(const Vector2i from, const Vector2i to);
+    void draw_hri_line(const Vector2i pos,const int l);
+    void draw_ver_line(const Vector2i pos,const int l);
+    void draw_ver_line(const Rangei y_range, const int x);
+    void draw_hri_line(const Rangei x_range, const int y);
 };
 
 }

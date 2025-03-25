@@ -416,8 +416,8 @@ void dtmf_tb(const uint fs){
             // CLAMP(wave,0,1),
             t,
             wave,
-            h_filter.result(),
-            l_filter.result() 
+            h_filter.get(),
+            l_filter.get() 
         );
     });
 }
@@ -428,7 +428,6 @@ using Particle = dsp::Particle<real_t, real_t>;
 void pso_tb() __attribute((optimize(3,"Ofast","inline")));
 
 void pso_tb(){
-    using Particle = dsp::Particle<real_t, real_t>;
     using Pso = dsp::ParticleSwarmOptimization<Particle, real_t>;
     using Config = typename Pso::Config;
 

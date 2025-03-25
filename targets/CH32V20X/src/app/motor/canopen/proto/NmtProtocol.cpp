@@ -18,8 +18,8 @@ using namespace ymd::canopen;
 
 void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd cmd){
     sendMessage(
-        CanMsg(
-            0x000,
+        CanMsg::from_tuple(
+            hal::CanStdId(0x000),
             std::make_tuple<uint8_t, uint8_t>(uint8_t(cmd), uint8_t(node_id))
         )
     );
@@ -76,17 +76,19 @@ bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
 void NmtSlaveProtocol::sendBootUp() {
     const auto cobid = 0x700 | dev_.NMT_getNodeId();
     sendMessage(
-    CanMsg{
-        uint32_t(cobid),
-        std::make_tuple<uint8_t>(0)
-    });
+        CanMsg::from_tuple(
+            hal::CanStdId(cobid),
+            std::make_tuple<uint8_t>(0)
+        )
+    );
 }
 
 void NmtSlaveProtocol::sendHeartBeat() {
     const auto cobid = 0x700 | dev_.NMT_getNodeId();
     sendMessage(
-    CanMsg{
-        uint32_t(cobid),
-        std::make_tuple<uint8_t>(std::bit_cast<uint8_t>(dev_.NMT_getState()))
-    });
+        CanMsg::from_tuple(
+            hal::CanStdId(cobid),
+            std::make_tuple<uint8_t>(std::bit_cast<uint8_t>(dev_.NMT_getState()))
+        )
+    );
 }

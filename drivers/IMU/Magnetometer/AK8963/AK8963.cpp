@@ -59,8 +59,8 @@ Result<void, Error> AK8963::init(){
     {
         const auto coeff = getCoeff().unwrap();
 
-        auto coeff2adj = [&](const uint8_t coeff) -> real_t{
-            return ((iq_t<16>(coeff - 128) >> 8) + 1);
+        auto coeff2adj = [&](const uint8_t _coeff) -> real_t{
+            return ((iq_t<16>(_coeff - 128) >> 8) + 1);
         };
 
         adj_scale = Vector3_t<real_t>(

@@ -128,7 +128,7 @@ static void oled_tb(){
 
     DisplayerPhyI2c oled_phy{i2c};
 
-    SSD13XX_72X40 oled{oled_phy};
+    auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
     auto & frame = oled.fetch_frame();
     
     oled.init();

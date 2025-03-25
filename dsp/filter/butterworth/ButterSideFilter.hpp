@@ -93,12 +93,12 @@ public:
         this->result_ = x;
     }
 
-    T result() const {
+    const T & get() const {
         return this->result_;
     }
     T operator()(const T x){
         update(x);
-        return result();
+        return get();
     }
 };
 
@@ -124,12 +124,12 @@ public:
         this->result_ = x;
     }
 
-    T result() const {
+    const T & get() const {
         return this->result_;
     }
     T operator()(const T x){
         update(x);
-        return result();
+        return get();
     }
 };
 

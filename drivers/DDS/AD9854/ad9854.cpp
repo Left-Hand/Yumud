@@ -67,7 +67,7 @@ void AD9854::Init(void){
 }
 
 void AD9854::SendOneByte(uint8_t data){
-	spi_drv_.write_single(data);
+	spi_drv_.write_single(data).unwrap();
 }
 
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){

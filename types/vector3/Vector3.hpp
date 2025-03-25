@@ -53,11 +53,23 @@ public:
     
     __fast_inline constexpr Vector3_t(){;}
 
-    __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
+    __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) :
+        x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) {;}
 
     __fast_inline constexpr Vector3_t(const Vector2_t<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
 
-    __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x((_x)), y((_y)), z((_z)){;}
+    __fast_inline constexpr Vector3_t(const auto & _x, const auto & _y, const auto & _z): 
+        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+
+    __fast_inline constexpr Vector3_t(const T _x, const T _y, const T _z): 
+        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+
+    __fast_inline static constexpr Vector3_t from_ones(const T & _x){
+        return Vector3_t<T>(_x, _x, _x);}
+    __fast_inline static constexpr Vector3_t from_rcp(const T & _x, const T & _y, const T & _z){
+        return Vector3_t<T>(1/_x, 1/_y, 1/_z);}
+    __fast_inline static constexpr Vector3_t from_rcp(const Vector3_t<arithmetic auto>& v){
+        return Vector3_t<T>(1/v.x, 1/v.y, 1/v.z);}
 
     template<arithmetic U = T>
     __fast_inline constexpr Vector3_t(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
@@ -136,10 +148,10 @@ public:
 
     template<arithmetic U>
     constexpr Vector3_t & operator /= (const U & _v){
-        T v = static_cast<T>(_v);
-        x /= v;
-        y /= v;
-        z /= v;
+        T inv_v = 1 / static_cast<T>(_v);
+        x *= inv_v;
+        y *= inv_v;
+        z *= inv_v;
         return *this;
     }
 
@@ -150,8 +162,20 @@ public:
         return other;
     }
 
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator *(const Vector3_t<arithmetic auto> & _v) const{
+        Vector3_t other = *this;
+        other *= _v;
+        return other;
+    }
+
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const U & _v) const{
+        Vector3_t other = *this;
+        other /= _v;
+        return other;
+    }
+
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const Vector3_t<arithmetic auto> & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
@@ -208,9 +232,24 @@ public:
     }
 
 
-    template<arithmetic U>
-    constexpr T dot(const Vector3_t<U> &v) const{
+    constexpr __fast_inline T dot(const Vector3_t<arithmetic auto > &v) const{
         return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
+    }
+
+    constexpr __fast_inline Vector3_t max_with(const Vector3_t<arithmetic auto> &v) const{
+        return {
+            std::max(x, static_cast<T>(v.x)),
+            std::max(y, static_cast<T>(v.y)),
+            std::max(z, static_cast<T>(v.z)),
+        };
+    }
+
+    constexpr __fast_inline Vector3_t min_with(const Vector3_t<arithmetic auto> &v) const{
+        return {
+            std::min(x, static_cast<T>(v.x)),
+            std::min(y, static_cast<T>(v.y)),
+            std::min(z, static_cast<T>(v.z)),
+        };
     }
 
     template<arithmetic U>

@@ -7,23 +7,23 @@ using namespace ymd;
 
 void Renderer::bind(Canvas & _source){
     src_ = &_source;
-    setClip(clip_.intersection(_source.rect()));
+    set_clip(clip_.intersection(_source.rect()));
 }
 
-void Renderer::drawRect(const Rect2i rect) {
+void Renderer::draw_rect(const Rect2i rect) {
     Rect2i ints = clip_.intersection(rect);
     if(!ints) return;
 
     PUT_RECT(ints, color_);
 }
 
-void Renderer::drawPixel(const Vector2i pos) {
+void Renderer::draw_pixel(const Vector2i pos) {
     if(!clip_.has_point(pos));
 
     PUT_PIXEL(pos, color_);
 }
 
-void Renderer::drawLine(const Vector2i from, const Vector2i to) {
+void Renderer::draw_line(const Vector2i from, const Vector2i to) {
     if(!src_->size().has_point(from)){
         return;
     }else if(!src_->size().has_point(to)){
@@ -33,8 +33,8 @@ void Renderer::drawLine(const Vector2i from, const Vector2i to) {
     auto [x0, y0] = from;
     auto [x1, y1] = to;
 
-    if(y0 == y1) return drawHriLine(from, x1 - x0);
-    if(x0 == x1) return drawVerLine(from, y1 - y0);
+    if(y0 == y1) return draw_hri_line(from, x1 - x0);
+    if(x0 == x1) return draw_ver_line(from, y1 - y0);
     bool steep = false;
 
     if (ABS(x1 - x0) < ABS(y1 - y0)) {
@@ -55,10 +55,10 @@ void Renderer::drawLine(const Vector2i from, const Vector2i to) {
     int y = y0;
     for (int x = x0; x <= x1; ++x) {
         if (steep) {
-            drawPixel({y,x});
+            draw_pixel({y,x});
         }
         else {
-            drawPixel({x,y});
+            draw_pixel({x,y});
         }
         deltaY += ABS(dy << 1);
         if (deltaY >= middle) {
@@ -69,26 +69,26 @@ void Renderer::drawLine(const Vector2i from, const Vector2i to) {
 }
 
 //绘制一条水平线
-void Renderer::drawHriLine(const Vector2i pos,const int l){
+void Renderer::draw_hri_line(const Vector2i pos,const int l){
     auto rect = Rect2i(pos, Vector2i(l, 1));
     if(bool(rect) == false) return;
-    drawRect(rect);
+    draw_rect(rect);
 }
 
 //绘制一条水平线
-void Renderer::drawHriLine(const Rangei x_range, const int y){
-    drawHriLine(Vector2i(x_range.from, y), x_range.length());
+void Renderer::draw_hri_line(const Rangei x_range, const int y){
+    draw_hri_line(Vector2i(x_range.from, y), x_range.length());
 }
 
 //绘制一条垂直线
-void Renderer::drawVerLine(const Vector2i pos,const int l){
+void Renderer::draw_ver_line(const Vector2i pos,const int l){
     auto rect = Rect2i(pos, Vector2i(1, l));
     if(bool(rect) == false) return;
     PUT_RECT(pos, color_)
 }
 
 //绘制一条垂直线
-void Renderer::drawVerLine(const Rangei y_range, const int x){
-    drawVerLine(Vector2i(x, y_range.from), y_range.length());
+void Renderer::draw_ver_line(const Rangei y_range, const int x){
+    draw_ver_line(Vector2i(x, y_range.from), y_range.length());
 }
 

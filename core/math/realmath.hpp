@@ -8,6 +8,8 @@
 #include "iq/iqmath.hpp"
 #endif
 
+#include <cmath>
+#include "dsp/constexprmath/ConstexprMath.hpp"
 
 namespace ymd{
 
@@ -39,28 +41,33 @@ namespace ymd{
     }
     
     template<floating T>
-    __fast_inline T sinpu(const T val){
+    __fast_inline constexpr T sinpu(const T val){
         return sin(val * (1 / TAU));
     }
     
     template<floating T>
-    __fast_inline T cospu(const T val){
+    __fast_inline constexpr T cospu(const T val){
         return cos(val * (1 / TAU));
     }
     
-    template<floating T>
-    __fast_inline T isqrt(const T val){
-        return 1.0 / sqrt(val);
+    __fast_inline constexpr float isqrt(const float val){
+        if(std::is_constant_evaluated()) return 1 /ConstexprMath::sqrt(val);
+        else return 1 / std::sqrt(val);
     }
     
     template<floating T>
-    __fast_inline T imag(const T a, const T b){
+    __fast_inline constexpr T imag(const T a, const T b){
         return 1 / mag(a,b);
     }
     
     template<floating T>
-    __fast_inline T mag(const T a, const T b){
+    __fast_inline constexpr  T mag(const T a, const T b){
         return sqrt(a * a + b * b);
+    }
+
+    template<floating T>
+    __fast_inline std::array<T, 2> sincos(const T x){
+        return {std::sin(x), std::cos(x)};
     }
     
     template<arithmetic T>

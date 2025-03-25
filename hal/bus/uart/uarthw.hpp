@@ -79,10 +79,6 @@ protected:
     BusError lead(const uint8_t address) override;
     void trail() override;
 public:
-    void writeN(const char * data_ptr, const size_t len) override;
-
-    void write1(const char data) override;
-
     UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):
             instance_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}
 
@@ -92,6 +88,10 @@ public:
         const CommStrategy tx_strategy = CommStrategy::Dma
     );
 
+    void writeN(const char * data_ptr, const size_t len) override;
+
+    void write1(const char data) override;
+    
     void set_tx_strategy(const CommStrategy tx_strategy);
 
     void set_rx_strategy(const CommStrategy rx_strategy);

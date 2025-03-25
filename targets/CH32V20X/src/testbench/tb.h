@@ -143,3 +143,5 @@ void dsp_main();
 void sincos_main();
 
 void lt8960_main();
+
+void light_tracking_main();
