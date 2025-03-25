@@ -156,7 +156,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     dsp::EdgeCounter ect;
     
     real_t curr = 0;
-    real_t curr_mid = 0;
+    [[maybe_unused]]real_t curr_mid = 0;
 
     // IController pi_ctrl{
     //     IController::Config{
@@ -210,7 +210,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         .fs = ISR_FREQ
     }};
 
-    volatile uint32_t exe_micros = 0;
+    // volatile uint32_t exe_micros = 0;
     real_t spd_targ = 0;
     real_t pos_targ = 0;
 

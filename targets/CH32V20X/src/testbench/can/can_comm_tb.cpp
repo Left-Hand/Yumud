@@ -14,11 +14,11 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
 
     {
         auto data = std::to_array<std::byte>({std::byte(3),std::byte(4)}); 
-        uint32_t id = 0x1314;
-        CanMsg msg{id, data};
+        const uint32_t id = 0x1314;
+        CanMsg msg = CanMsg::from_bytes(hal::CanStdId(id), std::span(data));
 
         // constexpr auto a = sizeof(msg);
-        auto read = msg.span();
+        auto read = msg.to_span();
         logger.println(id, data, read);
 
     }
@@ -27,15 +27,15 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         real_t data = 0.09_r;
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
-        CanMsg msg{id, std::make_tuple(data)};
+        CanMsg msg = CanMsg::from_tuple(CanExtId(id), std::make_tuple(data));
         // msg.load(data);
         // auto read = msg.to_vector();
-        logger.println(id, msg.size(), msg.span(), real_t(msg));
+        logger.println(id, msg.size(), msg.to_span(), real_t(msg));
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
-        msg = {id, std::make_tuple(data2)};
-        logger.println(id, msg.size(), msg.span(), real_t(msg));
+        msg = CanMsg::from_tuple(CanStdId(id), std::make_tuple(data2));
+        logger.println(id, msg.size(), msg.to_span(), real_t(msg));
         for(uint8_t i = 0; i < msg.size(); i++){
             logger.println(msg[i]);
         }
@@ -46,7 +46,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     while(1){
         if(tx_role){
             static uint8_t cnt = 0;
-            CanMsg msg_v = CanMsg(1, std::make_tuple(0x34, 0x37));
+            const auto msg_v = CanMsg::from_tuple(CanStdId(1), std::make_tuple(0x34, 0x37));
             can.write(msg_v);
 
             while(can.pending()){
@@ -69,7 +69,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
                 logger.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
             }
 
-            CanMsg msg_v = CanMsg(0, std::make_tuple(0x13,0x14));
+            const auto msg_v = CanMsg::from_tuple(CanStdId(0), std::make_tuple(0x13,0x14));
             can.write(msg_v);
 
             delay(200);

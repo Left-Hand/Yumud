@@ -209,11 +209,12 @@ void gui_main(){
 
     while(true){
         renderer.bind(img);
-        renderer.setColor(HSV888{0, int(100 + 100 * sin(time())), 255});
+        renderer.setColor(HSV888{0, int(100 + 100 * sinpu(time())), 255});
         renderer.drawPixel(Vector2i(0, 0));
         renderer.drawRect(Rect2i(20, 0, 20, 40));
 
         tftDisplayer.putTexture(img.rect(), img.get_data());
+        DEBUG_PRINTLN(millis());
     }
 }
 

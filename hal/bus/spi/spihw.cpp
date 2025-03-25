@@ -175,7 +175,7 @@ void SpiHw::install_gpios(){
     }
 
     for(size_t i = 0; i < cs_port.size(); i++){
-        if(cs_port.is_index_valid(0)){
+        if(cs_port.is_index_valid(i)){
             cs_port[i].outpp();
         }
     }

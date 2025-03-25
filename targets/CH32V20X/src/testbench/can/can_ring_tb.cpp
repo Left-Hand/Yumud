@@ -29,12 +29,12 @@ void can_ring_main(){
         constexpr auto ids = std::to_array<uint16_t>({0x200, 0x201, 0x401, 0x402, 0x120});
 
         for(auto i : ids){
-            CanMsg tx_msg = {i, std::make_tuple(0x12345678)};
+            CanMsg tx_msg = CanMsg::from_tuple(CanStdId(i), std::make_tuple(0x12345678));
             can.write(tx_msg);
         }
 
         {
-            CanMsg tx_msg = {0x201};
+            CanMsg tx_msg = CanMsg::from_remote(CanStdId(0x201));
             can.write(tx_msg);
             // DEBUG_PRINTLN(tx_msg);
         }

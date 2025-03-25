@@ -39,7 +39,7 @@ public:
     void update(const q20 targ,const q20 meas) {
         const auto c = c_.get();
         const auto q = q_.get();
-        const auto fs = fs_.get();
+        // const auto fs = fs_.get();
 
         const q20 x1 = targ - meas;
         const q20 x2 = (x1 - err_prev_.get());

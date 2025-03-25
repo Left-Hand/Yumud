@@ -428,7 +428,6 @@ using Particle = dsp::Particle<real_t, real_t>;
 void pso_tb() __attribute((optimize(3,"Ofast","inline")));
 
 void pso_tb(){
-    using Particle = dsp::Particle<real_t, real_t>;
     using Pso = dsp::ParticleSwarmOptimization<Particle, real_t>;
     using Config = typename Pso::Config;
 
