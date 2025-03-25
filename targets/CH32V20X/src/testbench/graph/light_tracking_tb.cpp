@@ -6,18 +6,23 @@
 */
 
 #include "src/testbench/tb.h"
+
 #include "core/math/realmath.hpp"
 #include "core/math/real.hpp"
 #include "core/debug/debug.hpp"
-#include <stdint.h>
+
 #include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/spihw.hpp"
+
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
 
 using namespace ymd;
 
 
-static constexpr size_t spp = 1;
-static constexpr size_t max_depth = 2;
+static constexpr size_t spp = 5;
+static constexpr size_t max_depth = 20;
 
 
 
@@ -764,16 +769,16 @@ static void samplePixel(const uint X, const uint Y)
 void drawpixel(const uint x, const uint y, const uint16_t color){
 
 }
-static uint16_t draw3drt(const uint X, const uint Y){
+static RGB565 draw3drt(const uint X, const uint Y){
     samplePixel(X, Y);
-    const uint16_t r = uint16_t(sample.x * 0.1_r);
-    const uint16_t g = uint16_t(sample.y * 0.3_r);
-    const uint16_t b = uint16_t(sample.z * 0.1_r);
-    const uint16_t c16 = (r << 11) | (g << 5) | b;
-    return c16;
+    // const uint16_t r = uint16_t(sample.x * 0.1_r);
+    // const uint16_t g = uint16_t(sample.y * 0.3_r);
+    // const uint16_t b = uint16_t(sample.z * 0.1_r);
+    // const uint16_t c16 = (r << 11) | (g << 5) | b;
+    return RGB565(uint8_t(sample.x * 255), uint8_t(sample.y * 255), uint8_t(sample.z * 255));
 }
 
-static void render_row(const std::span<uint16_t> row, const uint y){
+static void render_row(const std::span<RGB565> row, const uint y){
     // ASSERT(row.size() == LCD_W);
 
     for (uint x = 0; x < LCD_W; x++){
@@ -782,18 +787,79 @@ static void render_row(const std::span<uint16_t> row, const uint y){
 }
 
 #define UART hal::uart2
+using drivers::ST7789;
+
 void light_tracking_main(void){
 
-    UART.init(6_MHz);
+    UART.init(576000);
     DEBUGGER.retarget(&UART);
     DEBUGGER.noBrackets();
 
     DEBUG_PRINTLN(micros());
+
+    #ifdef CH32V30X
+    auto & spi = spi2;
+    auto & lcd_blk = portC[7];
+    
+    lcd_blk.outpp(HIGH);
+
+    auto & lcd_cs = portD[6];
+    auto & lcd_dc = portD[7];
+    auto & dev_rst = portB[7];
+    #else
+    auto & spi = spi1;
+    auto & lcd_blk = portA[10];
+    auto & lcd_cs = portA[15];
+    auto & lcd_dc = portA[11];
+    auto & dev_rst = portA[12];
+    
+    
+    lcd_blk.outpp(HIGH);
+    #endif
+
+    
+
+
+    spi.bind_cs_pin(lcd_cs, 0);
+    spi.init(144_MHz, CommStrategy::Blocking);
+    // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
+
+    // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+
+    {
+        tftDisplayer.init();
+
+
+        if(true ){
+        // if(false){
+            tftDisplayer.set_flip_x(false);
+            tftDisplayer.set_flip_y(true);
+            tftDisplayer.set_swap_xy(true);
+            tftDisplayer.set_display_offset({40, 52}); 
+        }else{
+            tftDisplayer.set_flip_x(true);
+            tftDisplayer.set_flip_y(true);
+            tftDisplayer.set_swap_xy(false);
+            tftDisplayer.set_display_offset({52, 40}); 
+        }
+        tftDisplayer.set_format_rgb(true);
+        tftDisplayer.set_flush_dir_h(false);
+        tftDisplayer.set_flush_dir_v(false);
+        tftDisplayer.set_inversion(true);
+    }
+
+    tftDisplayer.fill(ColorEnum::BLACK);
+
 	precompute_rt();
 
     for (uint y = 0; y < LCD_H; y++){
-        std::array<uint16_t, LCD_W> row;
+        std::array<RGB565, LCD_W> row;
         render_row(row, y);
+        // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
+        tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+        // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+        // renderer.draw_rect(Rect2i(20, 0, 20, 40));
     }
 
     DEBUG_PRINTLN(micros());

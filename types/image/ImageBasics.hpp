@@ -178,7 +178,7 @@ public:
     }
 
     void put_rect(const Rect2i & rect, const ColorType color){
-        auto area = rect.intersection(this->get_view());
+        auto area = rect.intersection(this->rect());
         putrect_unsafe(area, color);
     }
 
