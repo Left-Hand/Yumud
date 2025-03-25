@@ -194,11 +194,11 @@ static void Reflectance(int8_t i)
 {
     if (i == 8 || i == 9)
     {
-        vec3_assign_s3(reflectance, 0.05f, 0.65f, 0.05f);
+        reflectance = Vector3_t(0.05f, 0.65f, 0.05f);
     }
     else if (i == 10 || i == 11)
     {
-        vec3_assign_s3(reflectance, 0.65f, 0.05f, 0.05f);
+        reflectance = Vector3_t(0.65f, 0.05f, 0.05f);
     }
     else
     {
@@ -214,7 +214,7 @@ static uint8_t sampleBSDF(void)
 {
     Vector3_t<float> wi;
     Vector3_t<float> z;
-    vec3_assign_s3(z, T.m[2][0], T.m[2][1], T.m[2][2]);
+    z = Vector3_t(T.m[2][0], T.m[2][1], T.m[2][2]);
     wi.z = dot(z, ray.direction);
 
     if (wi.z <= 0)
@@ -255,10 +255,10 @@ static void lightPoint(void)
     const float y = (1 - u1) * su;
     const float z = u1 * su;
     const struct triangle_t* light = &((const struct triangle_t*)triangles)[lightIdx];
-    vec3_assign_s3(linear_t, x, y, z);
-    vec3_assign_s3(linear_x, light->v0.x, light->v1.x, light->v2.x);
-    vec3_assign_s3(linear_y, light->v0.y, light->v1.y, light->v2.y);
-    vec3_assign_s3(linear_z, light->v0.z, light->v1.z, light->v2.z);
+    linear_t = Vector3_t(x, y, z);
+    linear_x = Vector3_t(light->v0.x, light->v1.x, light->v2.x);
+    linear_y = Vector3_t(light->v0.y, light->v1.y, light->v2.y);
+    linear_z = Vector3_t(light->v0.z, light->v1.z, light->v2.z);
     linearCombination();
     vec3_assign(light_pos, linear_r);
 }
@@ -272,16 +272,16 @@ static void cosWeightedHemi(void)
     const float azimuth = u1 * TAU;
 
     Vector3_t<float> v;
-    vec3_assign_s3(v, r * cosf(azimuth), r * sinf(azimuth), sqrtf(1 - u0));
+    v = Vector3_t(r * cosf(azimuth), r * sinf(azimuth), sqrtf(1 - u0));
 
     vec3_mad_s(ray.start, interaction.position, interaction.normal, EPSILON);
 
     Vector3_t<float> x;
     Vector3_t<float> y;
     Vector3_t<float> z;
-    vec3_assign_s3(x, T.m[0][0], T.m[1][0], T.m[2][0]);
-    vec3_assign_s3(y, T.m[0][1], T.m[1][1], T.m[2][1]);
-    vec3_assign_s3(z, T.m[0][2], T.m[1][2], T.m[2][2]);
+    x = Vector3_t(T.m[0][0], T.m[1][0], T.m[2][0]);
+    y = Vector3_t(T.m[0][1], T.m[1][1], T.m[2][1]);
+    z = Vector3_t(T.m[0][2], T.m[1][2], T.m[2][2]);
     ray.direction.x = dot(x, v);
     ray.direction.y = dot(y, v);
     ray.direction.z = dot(z, v);
@@ -398,19 +398,19 @@ static Vector3_t<float> view_z;
 static struct mat4_t view;
 void precompute_rt(void)
 {
-    vec3_assign_s3(eye, 0, 1, 3.5f);
-    vec3_assign_s3(center, 0, 1, 0);
-    vec3_assign_s3(up, 0, 1, 0);
+    eye = Vector3_t<float>(0, 1, 3.5f);
+    center = Vector3_t(0, 1, 0);
+    up = Vector3_t(0, 1, 0);
 
     lookat(view, eye, center, up);
 
-    vec3_assign_s3(view_x, view.m[0][0], view.m[0][1], view.m[0][2]);
-    vec3_assign_s3(view_y, view.m[1][0], view.m[1][1], view.m[1][2]);
-    vec3_assign_s3(view_z, view.m[2][0], view.m[2][1], view.m[2][2]);
+    view_x = Vector3_t(view.m[0][0], view.m[0][1], view.m[0][2]);
+    view_y = Vector3_t(view.m[1][0], view.m[1][1], view.m[1][2]);
+    view_z = Vector3_t(view.m[2][0], view.m[2][1], view.m[2][2]);
 
-    vec3_assign_s3(lightColor, 200, 200, 200);
-    vec3_assign_s3(bbmin, -1, 0, -1);
-    vec3_assign_s3(bbmax, 1, 2.0f, 1);
+    lightColor = Vector3_t(200, 200, 200);
+    bbmin = Vector3_t(-1, 0, -1);
+    bbmax = Vector3_t(1, 2, 1);
 }
 
 #define LCD_W 160
@@ -434,10 +434,10 @@ static void samplePixel(const uint X, const uint Y)
         const real_t Yc = Yw - LCD_H * real_t(0.5);
 
 
-        vec3_assign_s3(linear_t, float(Xc), float(Yc), float(Zc));
-        vec3_assign_s3(linear_x, view_x.x, view_y.x, view_z.x);
-        vec3_assign_s3(linear_y, view_x.y, view_y.y, view_z.y);
-        vec3_assign_s3(linear_z, view_x.z, view_y.z, view_z.z);
+        linear_t = Vector3_t(float(Xc), float(Yc), float(Zc));
+        linear_x = Vector3_t(view_x.x, view_y.x, view_z.x);
+        linear_y = Vector3_t(view_x.y, view_y.y, view_z.y);
+        linear_z = Vector3_t(view_x.z, view_y.z, view_z.z);
         linearCombination();
         vec3_assign(ray.direction, linear_r);
 

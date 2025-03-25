@@ -30,12 +30,7 @@ struct mat4_t
     v.y = a; \
     v.z = a; \
 }
-#define vec3_assign_s3(v, a, b, c) \
-{ \
-    v.x = a; \
-    v.y = b; \
-    v.z = c; \
-}
+
 #define vec3_div_assign_s(v, a) \
 { \
     v.x /= a; \
