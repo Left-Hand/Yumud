@@ -54,12 +54,7 @@ struct mat4_t
     v1.y /= v2.y; \
     v1.z /= v2.z; \
 }
-#define vec3_mul_assign(v1, v2) \
-{ \
-    v1.x *= v2.x; \
-    v1.y *= v2.y; \
-    v1.z *= v2.z; \
-}
+
 #define vec3_add_assign(v1, v2) \
 { \
     v1.x += v2.x; \
@@ -163,16 +158,11 @@ struct mat4_t
 
 #define lookat(view, eye, center, up) \
 { \
-	Vector3_t<float> zaxis; \
-	vec3_sub(zaxis, eye, center); \
-	normalize(zaxis); \
+    const auto zaxis = (eye - center).normalized(); \
  \
-	Vector3_t<float> xaxis; \
-	xaxis = up.cross(zaxis); \
-	normalize(xaxis); \
+	const auto xaxis = up.cross(zaxis).normalized(); \
  \
-	Vector3_t<float> yaxis; \
-	yaxis = zaxis.cross(xaxis); \
+	const auto yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
 	view.m[0][1] = yaxis.x; \

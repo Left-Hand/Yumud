@@ -8,6 +8,7 @@
 #include "iq/iqmath.hpp"
 #endif
 
+#include <cmath>
 
 namespace ymd{
 
@@ -48,9 +49,8 @@ namespace ymd{
         return cos(val * (1 / TAU));
     }
     
-    template<floating T>
-    __fast_inline T isqrt(const T val){
-        return 1.0 / sqrt(val);
+    __fast_inline float isqrt(const float val){
+        return 1 / std::sqrt(val);
     }
     
     template<floating T>

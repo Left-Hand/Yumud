@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+
 namespace ymd::dsp{
 
 class LCGNoiseSiggen {
