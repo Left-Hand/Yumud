@@ -4,37 +4,33 @@
 using namespace ymd;
 using namespace ymd::StringUtils;
 
-scexpr uint32_t scale_map[] = {1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL};
+scexpr uint32_t scale_map[] = {
+    1UL, 
+    10UL, 
+    100UL, 
+    1000UL, 
+
+    10000UL, 
+    100000UL, 
+    // 1000000UL, 
+    // 10000000UL, 
+    
+    // 100000000UL,
+    // 1000000000UL
+};
 
 
 template<typename T>
 __fast_inline constexpr size_t _get_scalar(T value, const uint8_t radix){
     if(value == 0) return 1;
 
-    if(radix == 10){
-        value = ABS(value);
-        
-        size_t scalar = 0;
-        while(value > 1000000){
-            value /= 1000000;
-
-            //TODO 替换这个不太精确的实现
-            // value = (int64_t(value) * 4295) >> 32;
-            scalar += 6;
-        }
-        
-        size_t i = scalar;
-        while(uint32_t(value) >= scale_map[i]) i++;
-        return i;
-    }else{
-        size_t i = 0;
-        size_t sum = 1;
-        while(size_t(value) > sum){
-            sum *= radix;
-            i++;
-        }
-        return MAX(i, 1);
+    size_t i = 0;
+    size_t sum = 1;
+    while(size_t(value) > sum){
+        sum *= radix;
+        i++;
     }
+    return MAX(i, 1);
 }
 
 

@@ -2,6 +2,11 @@
 
 using namespace ymd;
 
+
+namespace ymd{
+    OutputStreamByRoute DEBUGGER;
+}
+
 int _write(int file, char *buf, int len){
     DEBUGGER.write(buf, len);
     return len;

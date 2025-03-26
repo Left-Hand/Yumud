@@ -3,12 +3,12 @@
 #define __DEBUG_INCLUDED
 
 #include "core/clock/clock.hpp"
-#include "debugger.hpp"
 #include <source_location>
 
+#include "core/stream/ostream.hpp"
+
 namespace ymd{
-// extern ymd::OutputStream & LOGGER;
-extern ymd::__Debugger & DEBUGGER;
+extern OutputStreamByRoute DEBUGGER;
 
 
 template<typename ... Args>

@@ -2,13 +2,8 @@
 
 #include "core/platform.hpp"
 #include "core/math/uint24_t.hpp"
-
-#include <tuple>
-
-
-
-#ifdef __cplusplus
 #include "core/math/real.hpp"
+#include <tuple>
 
 namespace ymd{
 enum class ColorEnum:uint32_t{
@@ -38,7 +33,6 @@ enum class RgbType:uint8_t{
 };
 
 
-#endif
 
 struct RGB332;
 struct RGB565;
@@ -57,7 +51,6 @@ struct RGB888 {
     uint8_t g;
     uint8_t b;
 
-#ifdef __cplusplus
 public:
     __fast_inline constexpr RGB888() = default;
 
@@ -80,7 +73,6 @@ public:
     __fast_inline constexpr RGB888(const uint8_t _r, const uint8_t _g, const uint8_t _b):r(_r), g(_g), b(_b){;}
 
     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(r | (g << 8) | (b << 16));}
-#endif
 };
 
 
@@ -104,7 +96,7 @@ public:
 
 //     __fast_inline constexpr XYZ888(const uint8_t _x, const uint8_t _y, const uint8_t _z):x(_x), y(_y), z(_z){;}
 //     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(x | (y << 8) | (z << 16));}
-// #endif
+//
 // };
 
 struct LAB888 {
@@ -113,7 +105,6 @@ struct LAB888 {
     int8_t a;
     int8_t b;
 
-#ifdef __cplusplus
 public:
     __fast_inline constexpr LAB888() = default;
     
@@ -129,7 +120,6 @@ public:
     
     __fast_inline constexpr LAB888(const uint8_t _l, const int8_t _a, const int8_t _b):l(_l), a(_a), b(_b){;}
     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(l | (a << 8) | (b << 16));}
-#endif
 };
 
 
@@ -145,7 +135,6 @@ struct RGB332{
         uint8_t data;
     };
 
-#ifdef __cplusplus
 
     __fast_inline constexpr RGB332() : data(0){;}
 
@@ -157,7 +146,6 @@ struct RGB332{
 
     __fast_inline constexpr explicit operator uint8_t() const {return data;}
 
-#endif
 };
 
 
@@ -167,7 +155,6 @@ struct RGB565{
     uint16_t g : 6;
     uint16_t r : 5;
 
-#ifdef __cplusplus
 
     __fast_inline constexpr RGB565() = default;
 
@@ -181,24 +168,32 @@ struct RGB565{
     
     __fast_inline constexpr RGB565(const Binary & bn);
 
-    __fast_inline constexpr RGB565(const uint8_t _r, const uint8_t _g, const uint8_t _b): b(_b & 0b11111), g(_g & 0b111111), r(_r & 0b11111){;}
-
+    __fast_inline static constexpr 
+    RGB565 from_565(const uint8_t _r, const uint8_t _g, const uint8_t _b){
+        RGB565 ret;
+        ret.b = _b & 0b11111; 
+        ret.g = _g & 0b111111; 
+        ret.r = _r & 0b1111;
+        return ret;
+    }
     __fast_inline constexpr operator RGB888() const {
         return RGB888(r << 3, g << 2, b << 3);
     }
 
 
-    __fast_inline constexpr explicit RGB565(const uint16_t data):
-        b(data & 0x1f),
-        g((data >> 5) & 0x3f),
-        r((data >> 11) & 0x1f)
-    {;}
+    __fast_inline static constexpr 
+    RGB565 from_raw(const uint16_t data){
+        const auto b(data & 0x1f);
+        const auto g((data >> 5) & 0x3f);
+        const auto r((data >> 11) & 0x1f);
+        return RGB565(r, g, b);
+    }
 
     __fast_inline constexpr operator uint16_t() const {return uni(r,g,b);}
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t data){
         uint8_t _r, _g, _b;
-        ::std::tie(_r, _g, _b) = seprate(data);
+        std::tie(_r, _g, _b) = seprate(data);
         r = _r;
         g = _g;
         b = _b;
@@ -212,8 +207,10 @@ struct RGB565{
 private:
     static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
     static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
-    
-#endif
+
+    __fast_inline constexpr RGB565(const uint8_t _r, const uint8_t _g, const uint8_t _b): b(_b & 0b11111), g(_g & 0b111111), r(_r & 0b11111){;}
+
+
 };
 
 
@@ -225,7 +222,6 @@ struct HSV888 {
     uint8_t s;
     uint8_t v;
 
-#ifdef __cplusplus
 public:
     __fast_inline constexpr HSV888() = default;
 
@@ -247,7 +243,6 @@ public:
         uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v)
     );}
 
-#endif
 };
 
 
@@ -259,7 +254,6 @@ struct ARGB32{
     uint8_t g;
     uint8_t b;
 
-#ifdef __cplusplus
 
     __fast_inline constexpr ARGB32() : ARGB32(0){;}
 
@@ -275,7 +269,6 @@ struct ARGB32{
 
     __fast_inline constexpr explicit operator uint32_t() const {return *reinterpret_cast<const uint32_t *>(this);}
 
-#endif
 };
 
 
@@ -287,7 +280,6 @@ struct Binary{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
-#ifdef __cplusplus
     __fast_inline constexpr Binary() : data(0){;}
     __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
 
@@ -298,7 +290,6 @@ struct Binary{
     __fast_inline constexpr operator bool() const {return data;}
 
     __fast_inline constexpr operator RGB888() const {return RGB888{data, data, data};}
-#endif
 };
 
 
@@ -310,7 +301,6 @@ struct Grayscale{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
-#ifdef __cplusplus
     __fast_inline constexpr Grayscale() : data(0){;}
 
     __fast_inline constexpr Grayscale(const uint8_t & _data): data(_data){;}
@@ -335,7 +325,6 @@ struct Grayscale{
     __fast_inline constexpr bool operator <= (const Grayscale & other){return data <= other.data;}
 
     __fast_inline constexpr Binary to_bina(const Grayscale & threshold = Grayscale(128)){return Binary(data > (uint8_t)threshold);}
-#endif
 };
 
 
@@ -346,7 +335,6 @@ struct sGrayscale{
         WHITE   = 127,  // White color
         BLACK   = 0x00   // Black color
     };
-#ifdef __cplusplus
     __fast_inline constexpr sGrayscale() : data(0){;}
 
     __fast_inline constexpr sGrayscale(const int8_t & _data): data(_data){;}
@@ -370,27 +358,17 @@ struct sGrayscale{
     __fast_inline constexpr Binary to_bina(const int8_t & threshold){return Binary(ABS(data) > threshold);}
 
     __fast_inline constexpr Binary to_bina_signed(const int8_t & threshold){return Binary(data > threshold);}
-#endif
 };
 
 
-typedef struct Binary Binary;
-typedef struct Grayscale Grayscale;
-typedef struct RGB565 RGB565;
-typedef struct ARGB32 ARGB32;
-typedef struct RGB888 RGB888;
-typedef RGB888 RGB24;
+using RGB24 = RGB888;
 
-typedef struct Grayscale Grayscale;
-typedef struct sGrayscale sGrayscale;
-typedef struct RGB332 RGB332;
 
-#ifdef __cplusplus
 __fast_inline constexpr Grayscale::Grayscale(const RGB565 & rgb):data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
 
 __fast_inline constexpr RGB565::RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
 
-__fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
+__fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565(RGB565::from_raw((bool)bn ? 0xffff : 0)){;}
 
 
 class OutputStream;
@@ -423,4 +401,3 @@ template<typename T>
 concept is_color = is_monochrome<T> or is_polychrome<T> or ::std::is_same_v<T, ColorEnum>;
 
 }
-#endif

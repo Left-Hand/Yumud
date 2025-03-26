@@ -59,13 +59,13 @@ static void filter(const std::span<RGB565> row) {
 
 static std::tuple<real_t, real_t> rand01_2(){
     static dsp::LcgNoiseSiggen noise;
-    // noise.update();
+    noise.update();
     // hal::rng.update();
-    // return noise.get_as_01_2();
-    const uint32_t temp = rng.update();
-    const uint32_t u0 = temp >> 16;
-    const uint32_t u1 = temp & 0xffff;
-    return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
+    return noise.get_as_01_2();
+    // const uint32_t temp = rng.update();
+    // const uint32_t u0 = temp >> 16;
+    // const uint32_t u1 = temp & 0xffff;
+    // return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
     // return {0,0};
 }
 
@@ -281,6 +281,7 @@ static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
     ) * ilen; // 最后一步归一化（可合并到后续操作中）
 }
 
+[[maybe_unused]]
 static RGB sampleRay(RGB sample, Ray3_t<real_t> ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     auto throughput = RGB{1,1,1};
     uint16_t depth = 0;
@@ -317,11 +318,11 @@ static RGB sampleRay(RGB sample, Ray3_t<real_t> ray, std::span<const TriangleSur
 }
 
 
-
+[[maybe_unused]]
 static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     auto sample = RGB();
 
-    static constexpr auto uz = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
+    [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
     for (size_t i = 0; i < spp; i++){
 
@@ -355,7 +356,7 @@ static RGB565 draw3drt(const uint x, const uint y, std::span<const TriangleSurfa
     const real_t uy = y * INV_LCD_H;
     const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
 
-    return RGB565(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
+    return RGB565::from_565(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
 }
 
 

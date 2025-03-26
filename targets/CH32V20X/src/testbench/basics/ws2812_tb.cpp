@@ -308,6 +308,10 @@ void ws2812_main(){
     TARG_UART.init(6_MHz, CommStrategy::Nil);
     // TARG_UART.init(576000);
     DEBUGGER.retarget(&TARG_UART);
+    while(true){
+        DEBUG_PRINTLN(millis(), uint32_t(micros()));
+        delay(1);
+    }
     // ws2812_tb(hal::portB[1]);
     at8222_tb();
 }

@@ -110,11 +110,6 @@ void OutputStream::checked_write(const char data){
 }
 
 void OutputStream::print_source_loc(const std::source_location & loc){
-    // *this << loc.file_name() << '(' << loc.line() << ':' << loc.column() << ')'
-    // << loc.function_name() << ':';
-    // *this <<  loc.function_name() ;
-    
-    // this->prints("loc");
     const auto guard = this->createGuard();
     this->println();
 
@@ -123,12 +118,6 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     
     this->println(loc.function_name());
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
-    // this->prints("locend");
-    // delay(1000);
-    // *this << loc.file_name();
-    // delay(1000);
-    // *this <<<< ':';
-    // delay(1000);
 }
 
 struct Buf{

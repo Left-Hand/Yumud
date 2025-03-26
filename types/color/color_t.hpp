@@ -222,7 +222,7 @@ public:
 
 
     __fast_inline constexpr operator RGB565() const {
-        return RGB565(
+        return RGB565::from_565(
             (uint8_t)(r * 31),
             (uint8_t)(g * 63),
             (uint8_t)(b * 31));
