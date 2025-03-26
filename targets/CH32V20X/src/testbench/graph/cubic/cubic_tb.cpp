@@ -14,6 +14,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
+#include "types/vector3/Vector3.hpp"
+
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
@@ -21,32 +23,28 @@
 
 using namespace ymd;
 
-#define WIRE 0
-#define DEPTH 0
-
-static constexpr size_t LCD_W = 96;
-static constexpr size_t LCD_H = 80;
-
-
 #define RADIANS(x) ((3.1415926f / 180) * (x))
 
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif			 
+static constexpr size_t LCD_W = 96*2;
+static constexpr size_t LCD_H = 112;
+static constexpr float fovy = RADIANS(45.0f);
+static constexpr float aspect = (float)LCD_W / LCD_H;
+static constexpr float znear = 0.1f;
+static constexpr float zfar = 10.0f;
+static constexpr Vector3_t<float> eye = {2.5, 2.5, 2.5};
+static constexpr Vector3_t<float> center = {0,0,0};
+static constexpr Vector3_t<float> up = {0,1,0};
 
-#ifndef min		 
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
 
-static uint8_t k, l, n;
+
 #define mat4_mul_mat4(r, a, b) \
 { \
-	for (k = 0; k < 4; ++k) \
+	for (size_t k = 0; k < 4; ++k) \
 	{ \
-		for (l = 0; l < 4; ++l) \
+		for (size_t l = 0; l < 4; ++l) \
 		{ \
 			r.m[k][l] = 0; \
-			for (n = 0; n < 4; ++n) \
+			for (size_t n = 0; n < 4; ++n) \
 			{ \
 				r.m[k][l] += a.m[n][l] * b.m[k][n]; \
 			} \
@@ -68,12 +66,12 @@ static uint8_t k, l, n;
 
 #define mat4_mul_vec3_h(r, a, b) \
 { \
-	for (k = 0; k < 4; ++k) \
+	for (size_t k = 0; k < 4; ++k) \
 	{ \
 		r.v[k] = a.m[3][k]; \
-		for (l = 0; l < 3; ++l) \
+		for (size_t l = 0; l < 3; ++l) \
 		{ \
-			r.v[k] += a.m[l][k] * b.v[l]; \
+			r.v[k] += a.m[l][k] * b[l]; \
 		} \
 	} \
 }
@@ -85,37 +83,11 @@ static uint8_t k, l, n;
 		r.v[k] = 0; \
 		for (l = 0; l < 3; ++l) \
 		{ \
-			r.v[k] += a.m[l][k] * b.v[l]; \
+			r.v[k] += a.m[l][k] * b[l]; \
 		} \
 	} \
 }
 
-#define dot(a, b) (a.x * b.x + a.y * b.y + a.z * b.z)
-
-#define cross(r, a, b) \
-{ \
-	r.x = a.y * b.z - a.z * b.y; \
-	r.y = a.z * b.x - a.x * b.z; \
-	r.z = a.x * b.y - a.y * b.x; \
-}
-
-#define normalize(v) \
-{ \
-	const float r = sqrtf(dot(v, v)); \
-	if (r > 0.0f) \
-	{ \
-		v.x /= r; \
-		v.y /= r; \
-		v.z /= r; \
-	} \
-}
-
-#define vec3_sub(r, a, b) \
-{ \
-	r.x = a.x - b.x; \
-	r.y = a.y - b.y; \
-	r.z = a.z - b.z; \
-}
 
 #define perspective(proj, fovy, aspect, znear, zfar) \
 { \
@@ -146,16 +118,16 @@ static uint8_t k, l, n;
 
 #define lookat(view, eye, center, up) \
 { \
-	struct vec3_t zaxis; \
-	vec3_sub(zaxis, eye, center); \
-	normalize(zaxis); \
+	Vector3_t<float> zaxis; \
+	zaxis = (eye - center); \
+	zaxis.normalize(); \
  \
-	struct vec3_t xaxis; \
-	cross(xaxis, up, zaxis); \
-	normalize(xaxis); \
+	Vector3_t<float> xaxis; \
+	xaxis = up.cross(zaxis); \
+	xaxis.normalize(); \
  \
-	struct vec3_t yaxis; \
-	cross(yaxis, zaxis, xaxis); \
+	Vector3_t<float> yaxis; \
+	yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
 	view.m[0][1] = yaxis.x; \
@@ -172,9 +144,9 @@ static uint8_t k, l, n;
 	view.m[2][2] = zaxis.z; \
 	view.m[2][3] = 0.0f; \
  \
-	view.m[3][0] = -dot(xaxis, eye); \
-	view.m[3][1] = -dot(yaxis, eye); \
-	view.m[3][2] = -dot(zaxis, eye); \
+	view.m[3][0] = -xaxis.dot(eye); \
+	view.m[3][1] = -yaxis.dot(eye); \
+	view.m[3][2] = -zaxis.dot(eye); \
 	view.m[3][3] = 1.0f; \
 }
 
@@ -205,372 +177,38 @@ static uint8_t k, l, n;
 	r.m[3][3] = 1.0f; \
 }
 
-// #define TILE_W 32
-// #define TILE_H 16
-// // struct buffer_t
-// // {
-// // 	uint16_t buffer[TILE_H][TILE_W];
-// // 	uint16_t clear;
-// // };
+#define perpdot0(a, b) ((0 - a.x) * (b.y - a.y) - (0 - a.y) * (b.x - a.x))
 
-// using buffer_t = std::array<std::array<uint16_t, TILE_W>, TILE_H>;
+#define bbox(v) \
+		{xmin = MAX(0, MIN(xmin, v.x));} \
+		{xmax = MIN((uint8_t)(LCD_W - 1), MAX(xmax, v.x));} \
+		{ymin = MAX(0, MIN(triangle.ymin, v.y));} \
+		{ymax = MIN((uint8_t)(LCD_H - 1), MAX(ymax, v.y));}
 
-// // static struct buffer_t colorbuffer[2];
-// #if DEPTH
-// static struct buffer_t depthbuffer;
-// #endif
+static constexpr size_t TILE_W = 32;
+static constexpr size_t TILE_H = 16;
+
+
+using buffer_t = std::array<std::array<RGB565, TILE_W>, TILE_H>;
+static buffer_t colorbuffer;
 // static uint8_t clipX0;
 // static uint8_t clipY0;
-// static uint8_t clipW;
-// static uint8_t clipH;
-
-// struct vertex_t
-// {
-// 	float rhw;
-// 	struct vec2i_t point;
-// #if DEPTH
-// 	float point_z;
-// #endif
-// };
-// struct triangle_t
-// {
-// 	uint8_t v0;
-// 	uint8_t v1;
-// 	uint8_t v2;
-// 	struct vec2_t texcoord0;
-// 	struct vec2_t texcoord1;
-// 	struct vec2_t texcoord2;
-// 	int16_t W12;
-// 	int16_t W20;
-// 	int16_t W01;
-// 	float area_r;
-// 	int8_t I12;
-// 	int8_t I20;
-// 	int8_t I01;
-// 	int8_t J12;
-// 	int8_t J20;
-// 	int8_t J01;
-// 	uint8_t xmin;
-// 	uint8_t xmax;
-// 	uint8_t ymin;
-// 	uint8_t ymax;
-// };
-// static std::array<vertex_t, vertex.size()> vVertex;
-// static struct triangle_t vTriangle[cubic_index.size() / 3];
-// static uint8_t triangleIdx;
-
-// #define triangle vTriangle[triangleIdx]
-
-// static uint8_t x;
-// static uint8_t y;
-// static struct mat4_t mvp;
-// static float rhw;
-// static struct vec4_t position;
-// static float point_x;
-// static float point_y;
-// static uint8_t v0;
-// static uint8_t v1;
-// static uint8_t v2;
-// static int16_t area;
-// static uint8_t xmin;
-// static uint8_t xmax;
-// static uint8_t ymin;
-// static uint8_t ymax;
-// [[maybe_unused]] static void makeTriangle(void)
-// {
-// 	for (auto i = 0u; i < vertex.size(); i++)
-// 	// for (auto i = 0u; i < 8; i++)
-// 	{
-// 		mat4_mul_vec3_h(position, mvp, ((const struct vec3_t*)vertex.begin())[i]);
-// 		rhw = 1.0f / position.w;
-// 		point_x = (position.x * rhw + 1.0f) * LCD_W * 0.5f;
-// 		point_y = (1.0f - position.y * rhw) * LCD_H * 0.5f;
-// #if DEPTH
-// 		vVertex[i].point_z = (1.0f - position.z * rhw) * 0.5f;
-// #endif
-// 		vVertex[i].point.x = (int16_t)(point_x + 0.5f);
-// 		vVertex[i].point.y = (int16_t)(point_y + 0.5f);
-// 		vVertex[i].rhw = rhw;
-// 	}
-
-// 	triangleIdx = 0;
-// 	for (auto i = 0u; i < cubic_index.size(); i += 3)
-// 	{
-// 		v0 = cubic_index[i + 0];
-// 		v1 = cubic_index[i + 1];
-// 		v2 = cubic_index[i + 2];
-// #define perpdot0(a, b) ((0 - a.x) * (b.y - a.y) - (0 - a.y) * (b.x - a.x))
-// 		triangle.W12 = perpdot0(vVertex[v1].point, vVertex[v2].point);
-// 		triangle.W20 = perpdot0(vVertex[v2].point, vVertex[v0].point);
-// 		triangle.W01 = perpdot0(vVertex[v0].point, vVertex[v1].point);
-// 		area = triangle.W12 + triangle.W20 + triangle.W01;
-// 		if (area <= 0)
-// 			continue;
-// 		triangle.area_r = 1.0f / area;
-// 		triangle.v0 = v0;
-// 		triangle.v1 = v1;
-// 		triangle.v2 = v2;
-// 		triangle.I12 = vVertex[v2].point.y - vVertex[v1].point.y;
-// 		triangle.I20 = vVertex[v0].point.y - vVertex[v2].point.y;
-// 		triangle.I01 = vVertex[v1].point.y - vVertex[v0].point.y;
-// 		triangle.J12 = -(vVertex[v2].point.x - vVertex[v1].point.x);
-// 		triangle.J20 = -(vVertex[v0].point.x - vVertex[v2].point.x);
-// 		triangle.J01 = -(vVertex[v1].point.x - vVertex[v0].point.x);
-// 		xmin = (uint8_t)(LCD_W - 1);
-// 		xmax = 0;
-// 		ymin = (uint8_t)(LCD_H - 1);
-// 		ymax = 0;
-// #define bbox(v) \
-// 		{xmin = max(0, min(xmin, v.x));} \
-// 		{xmax = min((uint8_t)(LCD_W - 1), max(xmax, v.x));} \
-// 		{ymin = max(0, min(triangle.ymin, v.y));} \
-// 		{ymax = min((uint8_t)(LCD_H - 1), max(ymax, v.y));}
-// 		bbox(vVertex[v0].point);
-// 		bbox(vVertex[v1].point);
-// 		bbox(vVertex[v2].point);
-// 		triangle.xmin = xmin;
-// 		triangle.xmax = xmax;
-// 		triangle.ymin = ymin;
-// 		triangle.ymax = ymax;
-// 		triangle.texcoord0.x = ((const struct vec2_t*)texcoord.begin())[i + 0].x * vVertex[v0].rhw;
-// 		triangle.texcoord0.y = ((const struct vec2_t*)texcoord.begin())[i + 0].y * vVertex[v0].rhw;
-// 		triangle.texcoord1.x = ((const struct vec2_t*)texcoord.begin())[i + 1].x * vVertex[v1].rhw;
-// 		triangle.texcoord1.y = ((const struct vec2_t*)texcoord.begin())[i + 1].y * vVertex[v1].rhw;
-// 		triangle.texcoord2.x = ((const struct vec2_t*)texcoord.begin())[i + 2].x * vVertex[v2].rhw;
-// 		triangle.texcoord2.y = ((const struct vec2_t*)texcoord.begin())[i + 2].y * vVertex[v2].rhw;
-// 		triangleIdx++;
-// 	}
-// }
-// static struct vec3_t uv;
-// static float u, v;
-// static int16_t I12offset;
-// static int16_t I20offset;
-// static int16_t I01offset;
-// static int16_t J12offset;
-// static int16_t J20offset;
-// static int16_t J01offset;
-// static int16_t wy12;
-// static int16_t wy20;
-// static int16_t wy01;
-// static int16_t w12;
-// static int16_t w20;
-// static int16_t w01;
-// #if WIRE
-// static void setPixel(int16_t x, int16_t y)
-// {
-// 	if (x < clipX0 || x >= clipW || y < clipY0 || y >= clipH)
-// 		return;
-// 	colorbuffer[bufferID].buffer[y - clipY0][x - clipX0] = 0xffff;
-// }
-// static inline int16_t abs(int16_t x) { return x > 0 ? x : -x; }
-// static void plotLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1)
-// {
-// 	int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-// 	int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-// 	int16_t err = dx + dy, e2; /* error value e_xy */
-
-// 	for (;;) {  /* loop */
-// 		setPixel(x0, y0);
-// 		if (x0 == x1 && y0 == y1) break;
-// 		e2 = 2 * err;
-// 		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
-// 		if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
-// 	}
-// }
-// #endif
-// [[maybe_unused]] static void drawTriangle(buffer_t & buffer)
-// {
-// 	for (k = 0; k < triangleIdx; k++)
-// 	{
-// #undef triangle
-// #define triangle vTriangle[k]
-// #if WIRE
-// 		v0 = triangle.v0;
-// 		v1 = triangle.v1;
-// 		v2 = triangle.v2;
-// 		plotLine(vVertex[v0].point.x, vVertex[v0].point.y, vVertex[v1].point.x, vVertex[v1].point.y);
-// 		plotLine(vVertex[v0].point.x, vVertex[v0].point.y, vVertex[v2].point.x, vVertex[v2].point.y);
-// 		plotLine(vVertex[v1].point.x, vVertex[v1].point.y, vVertex[v2].point.x, vVertex[v2].point.y);
-// #else
-// 		xmin = triangle.xmin;
-// 		xmax = triangle.xmax;
-// 		ymin = triangle.ymin;
-// 		ymax = triangle.ymax;
-// 		if (xmin < clipX0) xmin = clipX0;
-// 		if (xmin >= clipW) continue;
-// 		if (xmax < clipX0) continue;
-// 		if (xmax >= clipW) xmax = clipW - 1;
-// 		if (ymin < clipY0) ymin = clipY0;
-// 		if (ymin >= clipH) continue;
-// 		if (ymax < clipY0) continue;
-// 		if (ymax >= clipH) ymax = clipH - 1;
-
-// 		v0 = triangle.v0;
-// 		v1 = triangle.v1;
-// 		v2 = triangle.v2;
-
-// 		I12offset = triangle.I12 * xmin;
-// 		I20offset = triangle.I20 * xmin;
-// 		I01offset = triangle.I01 * xmin;
-
-// 		J12offset = triangle.J12 * ymin;
-// 		J20offset = triangle.J20 * ymin;
-// 		J01offset = triangle.J01 * ymin;
-
-// 		wy12 = triangle.W12 + J12offset;
-// 		wy20 = triangle.W20 + J20offset;
-// 		wy01 = triangle.W01 + J01offset;
-
-// 		for (y = ymin; y <= ymax; y++)
-// 		{
-// 			w12 = wy12 + I12offset;
-// 			w20 = wy20 + I20offset;
-// 			w01 = wy01 + I01offset;
-
-// 			for (x = xmin; x <= xmax; x++)
-// 			{
-// 				do
-// 				{
-// 					if ((w12 < 0) || (w20 < 0) || (w01 < 0))
-// 						break;
-
-// 					uv.x = w12 * triangle.area_r;
-// 					uv.y = w20 * triangle.area_r;
-// 					uv.z = w01 * triangle.area_r;
-
-// 					struct vec3_t vertex_rhw;
-// 					vertex_rhw.x = vVertex[v0].rhw;
-// 					vertex_rhw.y = vVertex[v1].rhw;
-// 					vertex_rhw.z = vVertex[v2].rhw;
-// 					const float rhw_r = 1.0f / dot(vertex_rhw, uv);
-// 					struct vec3_t uv_rhw;
-// 					uv_rhw.x = uv.x * rhw_r;
-// 					uv_rhw.y = uv.y * rhw_r;
-// 					uv_rhw.z = uv.z * rhw_r;
-// #if DEPTH
-// 					struct vec3_t point_z;
-// 					point_z.x = vVertex[v0].point_z;
-// 					point_z.y = vVertex[v1].point_z;
-// 					point_z.z = vVertex[v2].point_z;
-// 					const float pointz = dot(point_z, uv_rhw);
-// 					const uint16_t depth = pointz * 0xffff;
-// 					if (depth < depthbuffer.buffer[y - clipY0][x - clipX0])
-// 						break;
-// 					depthbuffer.buffer[y - clipY0][x - clipX0] = depth;
-// #endif
-// 					struct vec3_t texcoordU;
-// 					texcoordU.x = triangle.texcoord0.x;
-// 					texcoordU.y = triangle.texcoord1.x;
-// 					texcoordU.z = triangle.texcoord2.x;
-// 					u = dot(texcoordU, uv_rhw);
-// 					struct vec3_t texcoordV;
-// 					texcoordV.x = triangle.texcoord0.y;
-// 					texcoordV.y = triangle.texcoord1.y;
-// 					texcoordV.z = triangle.texcoord2.y;
-// 					v = dot(texcoordV, uv_rhw);
-// 					{
-// 						const uint16_t texcolor = doge[(uint8_t)(u * 31 + 0.5f)][(uint8_t)(v * 31 + 0.5f)];
-// 						buffer[y - clipY0][x - clipX0] = texcolor;
-// 					}
-
-// 				} while (0);
-
-// 				w12 += triangle.I12;
-// 				w20 += triangle.I20;
-// 				w01 += triangle.I01;
-// 			}
-
-// 			wy12 += triangle.J12;
-// 			wy20 += triangle.J20;
-// 			wy01 += triangle.J01;
-// 		}
-// #endif
-// 	}
-// }
-
-// static struct mat4_t vp;
-// [[maybe_unused]] static void precompute_1(void)
-// {
-// 	struct mat4_t proj;
-// 	{
-// 		const float fovy = RADIANS(45.0f);
-// 		const float aspect = (float)LCD_W / LCD_H;
-// 		const float znear = 0.1f;
-// 		const float zfar = 10.0f;
-// 		perspective(proj, fovy, aspect, znear, zfar);
-// 	}
-
-// 	struct mat4_t view;
-// 	{
-// 		struct vec3_t eye;
-// 		eye.x = 2.5f;
-// 		eye.y = 2.5f;
-// 		eye.z = 2.5f;
-// 		struct vec3_t center;
-// 		center.x = 0.0f;
-// 		center.y = 0.0f;
-// 		center.z = 0.0f;
-// 		struct vec3_t up;
-// 		up.x = 0.0f;
-// 		up.y = 1.0f;
-// 		up.z = 0.0f;
-// 		lookat(view, eye, center, up);
-// 	}
-
-// 	mat4_mul_mat4(vp, proj, view);
-// }
-
-
-// static float angle;
-// [[maybe_unused]] static void precompute_2(void)
-// {
-// 	struct mat4_t r;
-// 	{
-// 		const float a = RADIANS(angle);
-// 		// const float x = 0.0f;
-// 		// const float y = 1.0f;
-// 		// const float z = 0.0f;
-// 		rotate(r, a, 0, 1, 0);
-// 	}
-
-// 	mat4_mul_mat4(mvp, vp, r);
-// }
-
-
-
-#define TILE_W 32
-#define TILE_H 16
-struct buffer_t
-{
-	uint16_t buffer[TILE_H][TILE_W];
-	uint16_t clear;
-};
-static struct buffer_t colorbuffer[2];
-static uint8_t bufferID;
-#if DEPTH
-static struct buffer_t depthbuffer;
-#endif
-static uint8_t clipX0;
-static uint8_t clipY0;
-static uint8_t clipW;
-static uint8_t clipH;
+// static uint8_t clipX1;
+// static uint8_t clipY1;
 
 struct vertex_t
 {
 	float rhw;
-	struct vec2i_t point;
-#if DEPTH
-	float point_z;
-#endif
+	Vector2_t<int> point;
 };
 struct triangle_t
 {
 	uint8_t v0;
 	uint8_t v1;
 	uint8_t v2;
-	struct vec2_t texcoord0;
-	struct vec2_t texcoord1;
-	struct vec2_t texcoord2;
+	Vector2_t<float> texcoord0;
+	Vector2_t<float> texcoord1;
+	Vector2_t<float> texcoord2;
 	int16_t W12;
 	int16_t W20;
 	int16_t W01;
@@ -586,57 +224,51 @@ struct triangle_t
 	uint8_t ymin;
 	uint8_t ymax;
 };
-static struct vertex_t vVertex[sizeof(vertex) / sizeof(struct vec3_t)];
-static struct triangle_t vTriangle[sizeof(cubic_index) / 3];
-static uint8_t triangleIdx;
-#define triangle vTriangle[triangleIdx]
 
-static uint8_t i;
-static uint8_t j;
-static uint8_t x;
-static uint8_t y;
+static std::array<vertex_t, vertex.size()> vVertex;
+static std::array<triangle_t, cubic_index.size() / 3> vTriangle;
+static uint8_t triangleIdx;
+
 static struct mat4_t mvp;
-static float rhw;
-static struct vec4_t position;
-static float point_x;
-static float point_y;
-static uint8_t v0;
-static uint8_t v1;
-static uint8_t v2;
-static int16_t area;
-static uint8_t xmin;
-static uint8_t xmax;
-static uint8_t ymin;
-static uint8_t ymax;
+static struct mat4_t vp;
+// static int16_t area;
+
 static void makeTriangle(void)
 {
-	for (i = 0; i < sizeof(vertex) / sizeof(struct vec3_t); i++)
+	for (size_t i = 0; i < vertex.size(); i++)
 	{
-		mat4_mul_vec3_h(position, mvp, ((const struct vec3_t*)vertex)[i]);
-		rhw = 1.0f / position.w;
-		point_x = (position.x * rhw + 1.0f) * LCD_W * 0.5f;
-		point_y = (1.0f - position.y * rhw) * LCD_H * 0.5f;
-#if DEPTH
-		vVertex[i].point_z = (1.0f - position.z * rhw) * 0.5f;
-#endif
+		std::array<float, 4> position;
+
+		for (size_t k = 0; k < 4; ++k) { 
+			position[k] = mvp.m[3][k]; 
+			for (size_t l = 0; l < 3; ++l) { 
+				position[k] += mvp.m[l][k] * vertex[i][l]; 
+			} 
+		} 
+
+		const auto rhw = 1.0f / position[3];
+		const auto point_x = (position[0] * rhw + 1.0f) * LCD_W * 0.5f;
+		const auto point_y = (1.0f - position[1] * rhw) * LCD_H * 0.5f;
 		vVertex[i].point.x = (int16_t)(point_x + 0.5f);
 		vVertex[i].point.y = (int16_t)(point_y + 0.5f);
 		vVertex[i].rhw = rhw;
 	}
 
 	triangleIdx = 0;
-	for (i = 0; i < sizeof(cubic_index); i += 3)
+	for (size_t i = 0; i < cubic_index.size(); i += 3)
 	{
-		v0 = cubic_index[i + 0];
-		v1 = cubic_index[i + 1];
-		v2 = cubic_index[i + 2];
-#define perpdot0(a, b) ((0 - a.x) * (b.y - a.y) - (0 - a.y) * (b.x - a.x))
+		auto & triangle = vTriangle[triangleIdx];
+		const auto v0 = cubic_index[i + 0];
+		const auto v1 = cubic_index[i + 1];
+		const auto v2 = cubic_index[i + 2];
+
 		triangle.W12 = perpdot0(vVertex[v1].point, vVertex[v2].point);
 		triangle.W20 = perpdot0(vVertex[v2].point, vVertex[v0].point);
 		triangle.W01 = perpdot0(vVertex[v0].point, vVertex[v1].point);
-		area = triangle.W12 + triangle.W20 + triangle.W01;
+		const auto area = triangle.W12 + triangle.W20 + triangle.W01;
 		if (area <= 0)
 			continue;
+
 		triangle.area_r = 1.0f / area;
 		triangle.v0 = v0;
 		triangle.v1 = v1;
@@ -647,164 +279,96 @@ static void makeTriangle(void)
 		triangle.J12 = -(vVertex[v2].point.x - vVertex[v1].point.x);
 		triangle.J20 = -(vVertex[v0].point.x - vVertex[v2].point.x);
 		triangle.J01 = -(vVertex[v1].point.x - vVertex[v0].point.x);
-		xmin = (uint8_t)(LCD_W - 1);
-		xmax = 0;
-		ymin = (uint8_t)(LCD_H - 1);
-		ymax = 0;
-#define bbox(v) \
-		{xmin = max(0, min(xmin, v.x));} \
-		{xmax = min((uint8_t)(LCD_W - 1), max(xmax, v.x));} \
-		{ymin = max(0, min(triangle.ymin, v.y));} \
-		{ymax = min((uint8_t)(LCD_H - 1), max(ymax, v.y));}
+		auto xmin = (uint8_t)(LCD_W - 1);
+		auto xmax = 0;
+		auto ymin = (uint8_t)(LCD_H - 1);
+		auto ymax = 0;
+
 		bbox(vVertex[v0].point);
 		bbox(vVertex[v1].point);
 		bbox(vVertex[v2].point);
+
 		triangle.xmin = xmin;
 		triangle.xmax = xmax;
 		triangle.ymin = ymin;
 		triangle.ymax = ymax;
-		triangle.texcoord0.x = ((const struct vec2_t*)texcoord)[i + 0].x * vVertex[v0].rhw;
-		triangle.texcoord0.y = ((const struct vec2_t*)texcoord)[i + 0].y * vVertex[v0].rhw;
-		triangle.texcoord1.x = ((const struct vec2_t*)texcoord)[i + 1].x * vVertex[v1].rhw;
-		triangle.texcoord1.y = ((const struct vec2_t*)texcoord)[i + 1].y * vVertex[v1].rhw;
-		triangle.texcoord2.x = ((const struct vec2_t*)texcoord)[i + 2].x * vVertex[v2].rhw;
-		triangle.texcoord2.y = ((const struct vec2_t*)texcoord)[i + 2].y * vVertex[v2].rhw;
+		triangle.texcoord0.x = texcoord[i + 0].x * vVertex[v0].rhw;
+		triangle.texcoord0.y = texcoord[i + 0].y * vVertex[v0].rhw;
+		triangle.texcoord1.x = texcoord[i + 1].x * vVertex[v1].rhw;
+		triangle.texcoord1.y = texcoord[i + 1].y * vVertex[v1].rhw;
+		triangle.texcoord2.x = texcoord[i + 2].x * vVertex[v2].rhw;
+		triangle.texcoord2.y = texcoord[i + 2].y * vVertex[v2].rhw;
 		triangleIdx++;
 	}
 }
-static struct vec3_t uv;
-static float u, v;
-static int16_t I12offset;
-static int16_t I20offset;
-static int16_t I01offset;
-static int16_t J12offset;
-static int16_t J20offset;
-static int16_t J01offset;
-static int16_t wy12;
-static int16_t wy20;
-static int16_t wy01;
-static int16_t w12;
-static int16_t w20;
-static int16_t w01;
-#if WIRE
-static void setPixel(int16_t x, int16_t y)
-{
-	if (x < clipX0 || x >= clipW || y < clipY0 || y >= clipH)
-		return;
-	colorbuffer[bufferID].buffer[y - clipY0][x - clipX0] = 0xffff;
-}
-static inline int16_t abs(int16_t x) { return x > 0 ? x : -x; }
-static void plotLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1)
-{
-	int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-	int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-	int16_t err = dx + dy, e2; /* error value e_xy */
 
-	for (;;) {  /* loop */
-		setPixel(x0, y0);
-		if (x0 == x1 && y0 == y1) break;
-		e2 = 2 * err;
-		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
-		if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
-	}
-}
-#endif
-static void drawTriangle(void)
+static void drawTriangle(const Rect2i & clip)
 {
-	for (k = 0; k < triangleIdx; k++)
+	for (size_t k = 0; k < triangleIdx; k++)
 	{
-#undef triangle
-#define triangle vTriangle[k]
-#if WIRE
-		v0 = triangle.v0;
-		v1 = triangle.v1;
-		v2 = triangle.v2;
-		plotLine(vVertex[v0].point.x, vVertex[v0].point.y, vVertex[v1].point.x, vVertex[v1].point.y);
-		plotLine(vVertex[v0].point.x, vVertex[v0].point.y, vVertex[v2].point.x, vVertex[v2].point.y);
-		plotLine(vVertex[v1].point.x, vVertex[v1].point.y, vVertex[v2].point.x, vVertex[v2].point.y);
-#else
-		xmin = triangle.xmin;
-		xmax = triangle.xmax;
-		ymin = triangle.ymin;
-		ymax = triangle.ymax;
+		const auto & triangle = vTriangle[k];
+		auto xmin = triangle.xmin;
+		auto xmax = triangle.xmax;
+		auto ymin = triangle.ymin;
+		auto ymax = triangle.ymax;
+
+		const auto clipX0 = clip.x;
+		const auto clipY0 = clip.y;
+		const auto clipX1 = clip.x + clip.w;
+		const auto clipY1 = clip.y + clip.h;
+
 		if (xmin < clipX0) xmin = clipX0;
-		if (xmin >= clipW) continue;
+		if (xmin >= clipX1) continue;
 		if (xmax < clipX0) continue;
-		if (xmax >= clipW) xmax = clipW - 1;
+		if (xmax >= clipX1) xmax = clipX1 - 1;
 		if (ymin < clipY0) ymin = clipY0;
-		if (ymin >= clipH) continue;
+		if (ymin >= clipY1) continue;
 		if (ymax < clipY0) continue;
-		if (ymax >= clipH) ymax = clipH - 1;
+		if (ymax >= clipY1) ymax = clipY1 - 1;
 
-		v0 = triangle.v0;
-		v1 = triangle.v1;
-		v2 = triangle.v2;
+		const auto v0 = triangle.v0;
+		const auto v1 = triangle.v1;
+		const auto v2 = triangle.v2;
 
-		I12offset = triangle.I12 * xmin;
-		I20offset = triangle.I20 * xmin;
-		I01offset = triangle.I01 * xmin;
+		const auto I12offset = triangle.I12 * xmin;
+		const auto I20offset = triangle.I20 * xmin;
+		const auto I01offset = triangle.I01 * xmin;
+		const auto J12offset = triangle.J12 * ymin;
+		const auto J20offset = triangle.J20 * ymin;
+		const auto J01offset = triangle.J01 * ymin;
 
-		J12offset = triangle.J12 * ymin;
-		J20offset = triangle.J20 * ymin;
-		J01offset = triangle.J01 * ymin;
+		auto wy12 = triangle.W12 + J12offset;
+		auto wy20 = triangle.W20 + J20offset;
+		auto wy01 = triangle.W01 + J01offset;
 
-		wy12 = triangle.W12 + J12offset;
-		wy20 = triangle.W20 + J20offset;
-		wy01 = triangle.W01 + J01offset;
-
-		for (y = ymin; y <= ymax; y++)
+		for (size_t y = ymin; y <= ymax; y++)
 		{
-			w12 = wy12 + I12offset;
-			w20 = wy20 + I20offset;
-			w01 = wy01 + I01offset;
+			auto w12 = wy12 + I12offset;
+			auto w20 = wy20 + I20offset;
+			auto w01 = wy01 + I01offset;
 
-			for (x = xmin; x <= xmax; x++)
+			for (size_t x = xmin; x <= xmax; x++)
 			{
-				do
-				{
-					if ((w12 < 0) || (w20 < 0) || (w01 < 0))
-						break;
+				if ((w12 >= 0) and (w20 >= 0) and (w01 >= 0)){
+					const auto uv = Vector3_t{
+						w12 * triangle.area_r,
+						w20 * triangle.area_r,
+						w01 * triangle.area_r,
+					};
 
-					uv.x = w12 * triangle.area_r;
-					uv.y = w20 * triangle.area_r;
-					uv.z = w01 * triangle.area_r;
+					Vector3_t<float> vertex_rhw = {
+						vVertex[v0].rhw,
+						vVertex[v1].rhw,
+						vVertex[v2].rhw,
+					};
 
-					struct vec3_t vertex_rhw;
-					vertex_rhw.x = vVertex[v0].rhw;
-					vertex_rhw.y = vVertex[v1].rhw;
-					vertex_rhw.z = vVertex[v2].rhw;
-					const float rhw_r = 1.0f / dot(vertex_rhw, uv);
-					struct vec3_t uv_rhw;
-					uv_rhw.x = uv.x * rhw_r;
-					uv_rhw.y = uv.y * rhw_r;
-					uv_rhw.z = uv.z * rhw_r;
-#if DEPTH
-					struct vec3_t point_z;
-					point_z.x = vVertex[v0].point_z;
-					point_z.y = vVertex[v1].point_z;
-					point_z.z = vVertex[v2].point_z;
-					const float pointz = dot(point_z, uv_rhw);
-					const uint16_t depth = pointz * 0xffff;
-					if (depth < depthbuffer.buffer[y - clipY0][x - clipX0])
-						break;
-					depthbuffer.buffer[y - clipY0][x - clipX0] = depth;
-#endif
-					struct vec3_t texcoordU;
-					texcoordU.x = triangle.texcoord0.x;
-					texcoordU.y = triangle.texcoord1.x;
-					texcoordU.z = triangle.texcoord2.x;
-					u = dot(texcoordU, uv_rhw);
-					struct vec3_t texcoordV;
-					texcoordV.x = triangle.texcoord0.y;
-					texcoordV.y = triangle.texcoord1.y;
-					texcoordV.z = triangle.texcoord2.y;
-					v = dot(texcoordV, uv_rhw);
-					{
-						const uint16_t texcolor = doge[(uint8_t)(u * 31 + 0.5f)][(uint8_t)(v * 31 + 0.5f)];
-						colorbuffer[bufferID].buffer[y - clipY0][x - clipX0] = texcolor;
-					}
-
-				} while (0);
+					const auto uv_rhw = uv / vertex_rhw.dot(uv);
+					const auto u = Vector3_t(triangle.texcoord0.x, triangle.texcoord1.x, triangle.texcoord2.x).dot(uv_rhw);
+					const auto texcoordV = Vector3_t(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
+					const auto v = texcoordV.dot(uv_rhw);
+					const auto texcolor = doge[uint(u * 31 + 0.5f)][uint(v * 31 + 0.5f)];
+					colorbuffer[y - clipY0][x - clipX0] = texcolor;
+				}
 
 				w12 += triangle.I12;
 				w20 += triangle.I20;
@@ -815,51 +379,35 @@ static void drawTriangle(void)
 			wy20 += triangle.J20;
 			wy01 += triangle.J01;
 		}
-#endif
 	}
 }
 
-static struct mat4_t vp;
+
+
+
+
 static void precompute_1(void)
 {
 	struct mat4_t proj;
 	{
-		const float fovy = RADIANS(45.0f);
-		const float aspect = (float)LCD_W / LCD_H;
-		const float znear = 0.1f;
-		const float zfar = 10.0f;
+
 		perspective(proj, fovy, aspect, znear, zfar);
 	}
 
 	struct mat4_t view;
 	{
-		struct vec3_t eye;
-		eye.x = 2.5f;
-		eye.y = 2.5f;
-		eye.z = 2.5f;
-		struct vec3_t center;
-		center.x = 0.0f;
-		center.y = 0.0f;
-		center.z = 0.0f;
-		struct vec3_t up;
-		up.x = 0.0f;
-		up.y = 1.0f;
-		up.z = 0.0f;
+
 		lookat(view, eye, center, up);
 	}
 
 	mat4_mul_mat4(vp, proj, view);
 }
-static float angle;
-static void precompute_2(void)
+static void precompute_2(const float angle)
 {
 	struct mat4_t r;
 	{
 		const float a = RADIANS(angle);
-		const float x = 0.0f;
-		const float y = 1.0f;
-		const float z = 0.0f;
-		rotate(r, a, x, y, z);
+		rotate(r, a, 0, 1, 0);
 	}
 
 	mat4_mul_mat4(mvp, vp, r);
@@ -926,16 +474,19 @@ void cubic_main(void){
         tftDisplayer.set_flush_dir_h(false);
         tftDisplayer.set_flush_dir_v(false);
         tftDisplayer.set_inversion(true);
+		// tftDisplayer.set
     }
 
     tftDisplayer.fill(ColorEnum::PINK);
     delay(200);
 	precompute_1();
-	// buffer_t buffer;
+
+	float angle = 0;
+
 	while (1){
-		precompute_2();
+		auto m = millis();
+		precompute_2(angle += 4);
 		makeTriangle();
-		angle += 2;
 
 		static constexpr auto M = (LCD_W/TILE_W);
 		static constexpr auto N = (LCD_H/TILE_H);
@@ -943,29 +494,32 @@ void cubic_main(void){
 		{
 			for (size_t j = 0; j < N; ++j)
 			{
-				clipX0 = LCD_W * i / M;
-				clipY0 = LCD_H * j / N;
-				clipW = clipX0 + LCD_W / M;
-				clipH = clipY0 + LCD_H / N;
+
 				// drawTriangle(buffer);
 				for (uint8_t x = 0; x < TILE_W; x++)
 				{
 					for (uint8_t y = 0; y < TILE_H; y++)
 					{
-						colorbuffer[bufferID].buffer[y][x] = colorbuffer[bufferID].clear;
+						colorbuffer[y][x] = 0;
 					}
 				}
-				drawTriangle();
 
-				tftDisplayer.put_texture(Rect2i::from_cross(Vector2_t<uint16_t>(32 + clipX0, clipY0), Vector2_t<uint16_t>(32 + clipW, clipH)), 
-				// tftDisplayer.put_texture(Rect2i::from_cross(Vector2_t<uint16_t>(32 + clipX0, clipY0), Vector2_t<uint16_t>(32, 16)), 
-					reinterpret_cast<const RGB565 *>(&colorbuffer[bufferID].buffer[0][0]));
 
-				bufferID = 1 - bufferID;
+				const auto clip = Rect2i(
+					LCD_W * i / M,
+					LCD_H * j / N,
+					LCD_W / M,
+					LCD_H / N
+				);
+
+				// DEBUG_PRINTLN(clip);
+
+				drawTriangle(clip);
+
+				tftDisplayer.put_texture(clip, &colorbuffer[0][0]);
+
 			}
 		}
-
-
-		DEBUG_PRINTLN("frame");
+		DEBUG_PRINTLN(millis() - m);
 	}
 }
