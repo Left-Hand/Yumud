@@ -1,7 +1,7 @@
 #include "rng.hpp"
 #include "core/sdk.hpp"
 
-using namespace ymd::hal;
+namespace ymd::hal{
 
 void Rng::init(){
 
@@ -14,9 +14,14 @@ void Rng::init(){
 int Rng::update(){
 
     #ifdef ENABLE_RNG
-    while(RNG_GetFlagStatus(RNG_FLAG_DRDY)==RESET);
+    while(RNG_GetFlagStatus(RNG_FLAG_DRDY)==RESET){
+        if(!inited_) init();
+    }
     return RNG_GetRandomNumber();
     #else
     return 0;
     #endif
+}
+
+Rng rng;
 }

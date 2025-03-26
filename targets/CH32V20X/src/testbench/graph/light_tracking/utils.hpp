@@ -47,17 +47,17 @@ scexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
 
 scexpr auto eye     = Vector3_t<real_t>(0.0_r, 1.0_r, 3.5_r);
 
-scexpr auto lightColor = RGB{74, 74, 74};
+scexpr auto lightColor = RGB{80, 80, 80};
 
 scexpr auto bbmin = Vector3_t<real_t>(-1, 0, -1);
 scexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
 
 
-scexpr size_t LCD_W = 240;
-scexpr size_t LCD_H = 135;
+// scexpr size_t LCD_W = 240;
+// scexpr size_t LCD_H = 135;
 
-// scexpr size_t LCD_W = 160;
-// scexpr size_t LCD_H = 80;
+scexpr size_t LCD_W = 160;
+scexpr size_t LCD_H = 80;
 
 scexpr real_t INV_LCD_W = real_t(1) / LCD_W;
 scexpr real_t INV_LCD_H = real_t(1) / LCD_H;
@@ -69,6 +69,6 @@ scexpr real_t inv_spp  = 1.0_r/spp;
 
 scexpr real_t INV_PI       = 0.318310_r;
 scexpr real_t EPSILON      = 0.001_r;
-scexpr real_t light_area   = 0.0193_r;
+scexpr real_t light_area   = 0.1893_r;
 scexpr uint alpha       = 45;
 
