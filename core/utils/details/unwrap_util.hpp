@@ -54,7 +54,8 @@ class Option;
 struct _None_t{
 };
 
-static inline _None_t None = {};
+[[maybe_unused]] static inline _None_t None = {};
+[[maybe_unused]] static inline _None_t _ = {};
 
 template<typename T>
 struct Some{
@@ -89,20 +90,20 @@ struct Ok{
 public:
     using TDecay = std::decay_t<T>;
 
-    constexpr Ok(auto val):val_((val)){}
+    constexpr Ok(auto val):val_(static_cast<T>(val)){}
 
-    constexpr operator T() const{
+    constexpr explicit operator T() const{
         return val_;
     }
 
-    constexpr const T & operator *(){
+    constexpr const T & operator *() const{
         return val_;
     }
 
-    template <typename E>
-    operator Result<T, E>() const {
-        return Result<T, E>(Ok<T>(val_));
-    }
+    // template <typename E>
+    // operator Result<T, E>() const {
+    //     return Result<T, E>(Ok<T>(val_));
+    // }
 
 private:
     TDecay val_;
@@ -129,11 +130,11 @@ public:
     template<typename E2>
     constexpr Err(E2 && err):val_(std::forward<E2>(err)){}
 
-    constexpr operator E() const{
+    constexpr explicit operator E() const{
         return val_;
     }
 
-    constexpr const E & operator *(){
+    constexpr const E & operator *() const{
         return val_;
     }
 
@@ -166,6 +167,28 @@ Err(E && val) -> Err<std::decay_t<E>>;
 template<typename TDummy = void>
 Err() -> Err<void>;
 
+
+template<typename T>
+class match{
+public:
+    template<typename Fn, typename ... Args>
+    constexpr void operator ()(const T kase, Fn && fn, Args && ...args){
+        if(val_ == static_cast<T>(kase))return std::forward<Fn>(fn)();    
+        else if constexpr(sizeof...(Args)) return this->operator()(std::forward<Args>(args)...);
+    }
+
+    template<typename Fn, typename ... Args>
+    constexpr void operator ()(const _None_t, Fn && fn, Args && ...args){
+        return std::forward<Fn>(fn)();    
+    }
+
+    match(const T & val):val_(val){;}
+private:    
+    const T & val_;
+};
+
+template<typename T>
+match() -> match<T>;
 
 template<std::size_t Size>
 struct size_to_int;

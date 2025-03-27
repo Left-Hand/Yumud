@@ -71,7 +71,7 @@ public:
     virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
     void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
-    void bind_pos_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
+    void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
 };
 
 

@@ -56,7 +56,7 @@ using namespace ymd;
         tx_led.clr();
     });
 
-    uart.bind_pos_rx_cb([&](){
+    uart.bind_post_rx_cb([&](){
         rx_led.set();
         delay(1);
         rx_led.clr();

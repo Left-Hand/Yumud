@@ -24,8 +24,9 @@ public:
         return ret;
     }
 
-
-    __inline scexpr uint32_t hash_djb(char const* str , size_t size){
+    template<typename T>
+    requires (std::is_integral_v<T> and (sizeof(T) == 1))
+    __inline scexpr uint32_t hash_djb(const T * str , size_t size){
         uint32_t hash = 5381;
 
         for (size_t i = 0; i < size; i++) {

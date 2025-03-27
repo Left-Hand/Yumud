@@ -304,14 +304,244 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     }
 }
 
-void ws2812_main(){
+#include "drivers/Audio/JQ8900/JQ8900.hpp"
+#include "drivers/Recognition/U13T/U13T.hpp"
+#include "core/utils/hash_func.hpp"
+
+namespace gxm{
+    struct StationData{
+        enum Kind:uint8_t {
+            RuiJin = 0,
+            FengSuoXian = 1,
+            XiangJiang = 2,
+            WuJiang = 3,
+            
+            ZunYi = 4,
+            ChiShui = 5,
+            JinShaJiang = 6,
+            DaDuHe = 7,
+            
+            LuDingQiao = 8,
+            XueShang = 9,
+            MaoGong = 10,
+            CaoDi = 11,
+            
+            LaZiKou = 12,
+            HuiNing = 13,
+            WuQiZhen = 14,
+            YanAn = 15,
+
+            __END
+        };
+
+        static constexpr size_t STAT_COUNT = __END;
+        static constexpr size_t STR_LEN = 16;
+
+        // bool match_line(const )
+        using GbkLine = std::array<uint8_t, STR_LEN>;
+        using GbkData = std::array<GbkLine, STAT_COUNT>;
+        using HashTable = std::array<uint32_t, STAT_COUNT>;
+
+        static constexpr const GbkData DATA = {
+            std::to_array<uint8_t>({0xc8,0xf0,0xbd,0xf0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xcd,0xbb,0xc6,0xc6,0xb5,0xda,0xc8,0xfd,0xb5,0xc0,0xb7,0xe2,0xcb,0xf8,0xcf,0xdf}),
+            std::to_array<uint8_t>({0xd1,0xaa,0xd5,0xbd,0xcf,0xe6,0xbd,0xad,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xc7,0xbf,0xb6,0xc9,0xce,0xda,0xbd,0xad,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xd5,0xbc,0xc1,0xec,0xd7,0xf1,0xd2,0xe5,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xcb,0xc4,0xb6,0xc9,0xb3,0xe0,0xcb,0xae,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xc7,0xc9,0xb6,0xc9,0xbd,0xf0,0xc9,0xb3,0xbd,0xad,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xc7,0xbf,0xb6,0xc9,0xb4,0xf3,0xb6,0xc9,0xba,0xd3,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xb7,0xc9,0xb6,0xe1,0xe3,0xf2,0xb6,0xa8,0xc7,0xc5,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xc5,0xc0,0xd1,0xa9,0xc9,0xbd,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xed,0xae,0xb9,0xa6,0xbb,0xe1,0xca,0xa6,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xb9,0xfd,0xb2,0xdd,0xb5,0xd8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xbc,0xa4,0xd5,0xbd,0xc0,0xb0,0xd7,0xd3,0xbf,0xda,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xbb,0xe1,0xc4,0xfe,0xb4,0xf3,0xbb,0xe1,0xca,0xa6,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xce,0xe2,0xc6,0xf0,0xd5,0xf2,0xbb,0xe1,0xd2,0xe9,0x00,0x00,0x00,0x00,0x00,0x00}),
+            std::to_array<uint8_t>({0xd1,0xd3,0xb0,0xb2,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}),
+        };
+
+        static constexpr uint32_t calc_hash_of_line(std::span<const uint8_t, STR_LEN> line){
+            return Hasher::hash_djb(
+                (&line[0]), 
+                line.size()
+            );
+        }
+
+        static constexpr std::array<uint32_t, STAT_COUNT> calc_hash_table(const GbkData & data){
+            using Ret = std::array<uint32_t, STAT_COUNT>;
+
+            Ret ret;
+            for(size_t i = 0; i < STAT_COUNT; ++i){
+                const auto & line = data[i];
+                ret[i] = calc_hash_of_line(line);
+            }
+            return ret;
+        }
+    };
+
+    class Station final:public StationData{
+    public:
+        constexpr Station(Kind name):name_(name){;}
+
+        constexpr size_t to_index() const {
+            return size_t(name_);
+        }
+
+        constexpr std::span<const uint8_t, STR_LEN> to_gbk() const{
+            return std::span<const uint8_t, STR_LEN>(DATA[to_index()]);
+        }
+
+        static constexpr
+        std::optional<Station> from_gbk(std::span<const uint8_t, STR_LEN> code){
+            constexpr auto TABLE = StationData::calc_hash_table(StationData::DATA);
+            const auto code_hash = StationData::calc_hash_of_line(code);
+
+            for(size_t i = 0; i < TABLE.size(); i++)
+                if(TABLE[i] == code_hash) return Station(static_cast<Kind>(i));
+            return std::nullopt;
+        }
+    public:
+        const Kind name_;
+    };
+    
+    class SatationBoardcaster final{
+    public:
+        using Inst = drivers::JQ8900;
+        SatationBoardcaster(Inst & inst):
+            inst_(inst){
+        };
+
+        void play(const Station & sta){
+            inst_.set_disc(sta.to_index());
+        }
+    private:
+        Inst & inst_;
+    };
+
+    class StationDetector final{
+    private:
+        using Inst = drivers::U13T;
+        Inst & inst_;
+    public: 
+        StationDetector(Inst & inst):
+            inst_(inst){
+        }
+
+        void init(){
+
+        }
+    };
+}
+namespace ymd{
+    OutputStream & operator << (OutputStream & os, const gxm::Station & sta){
+        return os << sta.to_index();
+    }
+}
+
+void jq8900_tb(){
+
     TARG_UART.init(6_MHz, CommStrategy::Nil);
     // TARG_UART.init(576000);
     DEBUGGER.retarget(&TARG_UART);
+
+    auto & tx = portB[1];
+
+    // auto & tx = portA[1];
+    drivers::JQ8900 jq{tx};
+    // auto & pwm_timer = timer4;
+    // pwm_timer.init(1000);
+    // pwm_timer.oc(3).init();
+    // pwm_timer.oc(3) = 0.3_r;
+    // while(true){
+    //     DEBUG_PRINTLN(millis());
+    // }
+
+    tx.outpp(HIGH);
+    // tx.outod(HIGH);
+
+    // timer1.init(20000);
+    // timer1.attach(TimerIT::Update, {0,0}, [&]{
+    //     DEBUG_PRINTLN(bool(tx));
+    // });
+
+    jq.init();
+    jq.set_vol(3);
+    jq.set_disc(1);
+    drivers::WS2812 led{tx};
+    led.init();
+    uint8_t i = 0;
     while(true){
-        DEBUG_PRINTLN(millis(), uint32_t(micros()));
-        delay(1);
+        // delay(2000);
+        led = Color_t<real_t>::from_hsv(0.5_r + 0.5_r * sin(time()),1,1,0.2_r);
+        tx.set();
+        delay(80);
+        jq.set_disc(i = (i+ 1) % 14);
     }
+}
+
+void u13t_tb(){
+    hal::uart2.init(9600);
+
+    hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
+    DEBUGGER.retarget(&uart);
+    DEBUGGER.noBrackets();
+    
+    Color_t<real_t> color;
+    drivers::WS2812 led{portB[1]};
+    led.init();
+
+    timer1.init(9600);
+    timer1.attach(TimerIT::Update, {0,0}, [&](){
+        uart.tick();
+    });
+    bool cmd_en = false;
+    hal::uart2.bind_post_rx_cb([&]{
+        led = Color_t<real_t>::from_hsv(0.5_r + 0.5_r * sin(time()),1,1,0.2_r);
+
+        std::vector<uint8_t> ret;
+        while(uart2.available()){
+            char chr;
+            uart2.read1(chr);
+            ret.push_back(chr);
+        }
+        DEBUG_PRINTS(std::hex, std::showbase, ret);
+        // 0xd1,0xd3,0xb0,0xb2
+        std::fill(ret.begin(),ret.end(),0);
+        ret[0] = 0xd1;
+        ret[1] = 0xd3;
+        ret[2] = 0xb0;
+        ret[3] = 0xb2;
+        if(ret.size() > 6)cmd_en = true;
+        if(ret.size() > 16){
+            const auto data = std::span<const uint8_t, 16>(std::span<const uint8_t>(ret).subspan(11,16));
+            DEBUG_PRINTS("station is: ", gxm::Station::from_gbk(data));
+        }
+    });
+
+    while(true){
+        // delay(2000);
+        // tx.set();
+        delay(400);
+        if(cmd_en){
+            static constexpr auto cmds = std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
+            uart2.writeN(cmds.begin(), cmds.size());
+            cmd_en = false;
+        }
+        // DEBUG_PRINTLN(millis());
+        // jq.set_disc(i = (i+ 1) % 14);
+    }
+}
+
+void ws2812_main(){
+
+
+    // while(true){
+    //     DEBUG_PRINTLN(1243550000,1243550000);
+    //     delay(1);
+    // }
     // ws2812_tb(hal::portB[1]);
-    at8222_tb();
+    // at8222_tb();
+    // jq8900_tb();
+    u13t_tb();
 }

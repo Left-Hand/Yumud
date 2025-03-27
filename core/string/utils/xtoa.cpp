@@ -20,13 +20,12 @@ scexpr uint32_t scale_map[] = {
 };
 
 
-template<typename T>
-__fast_inline constexpr size_t _get_scalar(T value, const uint8_t radix){
+__fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
     if(value == 0) return 1;
 
     size_t i = 0;
-    size_t sum = 1;
-    while(size_t(value) > sum){
+    uint64_t sum = 1;
+    while(value > sum){
         sum *= radix;
         i++;
     }
@@ -38,8 +37,7 @@ __fast_inline constexpr size_t _get_scalar(T value, const uint8_t radix){
 template<integral T>
 size_t _itoa_impl(T value, char * str, uint8_t radix){
     const bool minus = value < 0;
-
-    value = ABS(value);
+    if(minus) value = -value;
 
     const size_t len = _get_scalar(value, radix) + minus;
     str[len] = 0;

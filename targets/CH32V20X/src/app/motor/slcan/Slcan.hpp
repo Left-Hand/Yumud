@@ -172,7 +172,7 @@ private:
 
     static constexpr MyResult<int> parseStdId(const StringView str){
         using enum Error;
-        return Result<StringView, void>{str}
+        return Result<StringView, void>{Ok(str)}
             .validate([](auto&& s){ return s.size() != 0; }, NoArg)
             .validate([](auto&& s){ return s.size() == 3; }, InvalidDataLength)
             .transform([](auto&& s){ 
@@ -184,7 +184,7 @@ private:
     static constexpr MyResult<int> parseExtId(const StringView str){
         using enum Error;
 
-        return Result<StringView, void>{str}
+        return Result<StringView, void>{Ok(str)}
             .validate([](auto&& s) -> bool{ return s.size() != 0; }, NoArg)
             .validate([](auto&& s)-> bool{ return s.size() == 3; }, InvalidDataLength)
             .transform([](auto&& s){ 
@@ -210,7 +210,7 @@ private:
 
         using enum Error;
 
-        return Result<StringView, void>{str}
+        return Result<StringView, void>{Ok(str)}
             .validate([](auto&& s){ return s.size() != 0; }, NoArg)
             .validate([](auto&& s){ return s.size() == 1; }, InvalidDataLength)
             .transform([](auto&& s){ 
