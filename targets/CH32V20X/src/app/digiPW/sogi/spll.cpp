@@ -63,38 +63,44 @@ void Spll::update(const real_t u0){
     //
     // Orthogonal Signal Generator
     //
-    osg_u[0]=(coeff.osg_b0 * (u[0]-u[2])) +
-                    (coeff.osg_a1 * osg_u[1]) +
-                    (coeff.osg_a2 * osg_u[2]);
+    osg_u[0] = 
+        (coeff.osg_b0 * (u[0]-u[2])) +
+        (coeff.osg_a1 * osg_u[1]) +
+        (coeff.osg_a2 * osg_u[2]);
 
-    osg_u[2]=osg_u[1];
-    osg_u[1]=osg_u[0];
+    osg_u[2] = osg_u[1];
+    osg_u[1] = osg_u[0];
 
-    osg_qu[0]=(coeff.osg_qb0 * u[0]) +
-                        (coeff.osg_qb1 * u[1]) +
-                        (coeff.osg_qb2 * u[2]) +
-                        (coeff.osg_a1 * osg_qu[1]) +
-                        (coeff.osg_a2 * osg_qu[2]);
+    osg_qu[0]=
+        (coeff.osg_qb0 * u[0]) +
+        (coeff.osg_qb1 * u[1]) +
+        (coeff.osg_qb2 * u[2]) +
+        (coeff.osg_a1 * osg_qu[1]) +
+        (coeff.osg_a2 * osg_qu[2]);
 
-    osg_qu[2]=osg_qu[1];
-    osg_qu[1]=osg_qu[0];
+    osg_qu[2] = osg_qu[1];
+    osg_qu[1] = osg_qu[0];
 
-    u[2]=u[1];
-    u[1]=u[0];
+    u[2] = u[1];
+    u[1] = u[0];
 
-    u_Q[0]=(cosine * osg_u[0]) +
-                    (sine * osg_qu[0]);
-    u_D[0]=(cosine * osg_qu[0]) -
-                    (sine * osg_u[0]);
+    u_Q[0] = 
+        (cosine * osg_u[0]) +
+        (sine * osg_qu[0]);
 
-    ylf[0]=ylf[1] +
-                    (coeff.b0 * u_Q[0]) +
-                    (coeff.b1 * u_Q[1]);
-    ylf[1]=ylf[0];
+    u_D[0] = 
+        (cosine * osg_qu[0]) -
+        (sine * osg_u[0]);
 
-    u_Q[1]=u_Q[0];
+    ylf[0] = 
+        ylf[1] +
+        (coeff.b0 * u_Q[0]) +
+        (coeff.b1 * u_Q[1]);
+    ylf[1] = ylf[0];
 
-    fo=fn+ylf[0];
+    u_Q[1] = u_Q[0];
+
+    fo = fn + ylf[0];
 
     _theta_x256 =_theta_x256 + (fo*(delta_t_x256*(real_t)(TAU)));
 
@@ -105,6 +111,4 @@ void Spll::update(const real_t u0){
     auto [sin_val, cos_val] = sincos(_theta_x256);
     sine = sin_val;
     cosine = cos_val;
-
-    // return ;
 }

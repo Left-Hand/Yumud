@@ -69,8 +69,8 @@ struct AbCurrent: public AbValue{};
 struct AbVoltage: public AbValue{};
 
 
-__inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
-    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * q20(2.0/3), (uvw.v - uvw.w) * q20(1.731 / 3)};
+__fast_inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
+    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * q16(2.0/3), (uvw.v - uvw.w) * q16(1.731 / 3)};
 };
 
 DqCurrent ab_to_dq(const AbCurrent & ab, const q16 rad);
@@ -78,6 +78,12 @@ DqVoltage ab_to_dq(const AbVoltage & ab, const q16 rad);
 
 AbCurrent dq_to_ab(const DqCurrent & dq, const q16 rad);
 AbVoltage dq_to_ab(const DqVoltage & dq, const q16 rad);
+
+DqCurrent ab_to_dq(const AbCurrent & ab, const q16 s, const q16 c);
+DqVoltage ab_to_dq(const AbVoltage & ab, const q16 s, const q16 c);
+
+AbCurrent dq_to_ab(const DqCurrent & dq, const q16 s, const q16 c);
+AbVoltage dq_to_ab(const DqVoltage & dq, const q16 s, const q16 c);
 
 void init_adc();
 static __inline real_t sign_sqrt(const real_t x){

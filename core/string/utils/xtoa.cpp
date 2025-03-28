@@ -25,7 +25,7 @@ __fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
 
     size_t i = 0;
     uint64_t sum = 1;
-    while(value > sum){
+    while(value >= sum){
         sum *= radix;
         i++;
     }

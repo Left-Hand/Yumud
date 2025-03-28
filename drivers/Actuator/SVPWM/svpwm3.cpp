@@ -13,8 +13,8 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         _6 = 0b011
     };
 
-    static constexpr real_t one_by_sqrt3 = 1 / sqrt(3_r);
-    static constexpr real_t half_one = real_t(0.5);
+    static constexpr q16 one_by_sqrt3 = 1 / sqrt(3_r);
+    static constexpr q16 half_one = q16(0.5);
 
     const auto beta_by_sqrt3 = beta * one_by_sqrt3;
 
@@ -28,12 +28,19 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         case Sector::_1:
         case Sector::_4:
         {
-            const real_t a = alpha - beta_by_sqrt3;
-            const real_t b = beta_by_sqrt3 << 1;
+            // const q16 a = alpha - beta_by_sqrt3;
+            // const q16 b = beta_by_sqrt3 << 1;
 
-            const real_t u = (1 + a + b) >> 1;
-            const real_t v = (1 - a + b) >> 1;
-            const real_t w = (1 - a - b) >> 1;
+            // const q16 u = (1 + a + b) >> 1;
+            // const q16 v = (1 - a + b) >> 1;
+            // const q16 w = (1 - a - b) >> 1;
+
+            const q16 a = (alpha - beta_by_sqrt3) >> 1;
+            const q16 b = beta_by_sqrt3;
+
+            const q16 u = (half_one + a + b);
+            const q16 v = (half_one - a + b);
+            const q16 w = (half_one - a - b);
 
             return {u, v, w};
         }
@@ -41,9 +48,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         case Sector::_2:
         case Sector::_5:
         {
-            const real_t u = half_one + alpha;
-            const real_t v = half_one + beta_by_sqrt3;
-            const real_t w = half_one - beta_by_sqrt3;
+            const q16 u = half_one + alpha;
+            const q16 v = half_one + beta_by_sqrt3;
+            const q16 w = half_one - beta_by_sqrt3;
 
             return {u, v, w};
         }
@@ -51,12 +58,12 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         case Sector::_3:
         case Sector::_6:
         {
-            const real_t a = beta_by_sqrt3 << 1;
-            const real_t b = - alpha - beta_by_sqrt3;
+            const q16 a = beta_by_sqrt3;
+            const q16 b = (- alpha - beta_by_sqrt3) >> 1;
 
-            const real_t u = (1 - a - b) >> 1;
-            const real_t v = (1 + a + b) >> 1;
-            const real_t w = (1 - a + b) >> 1;
+            const q16 u = (half_one - a - b);
+            const q16 v = (half_one + a + b);
+            const q16 w = (half_one - a + b);
 
             return {u, v, w};
         }
@@ -66,7 +73,7 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
     }
 }
 
-void SVPWM3::setAbDuty(const real_t alaph, const real_t beta){
+void SVPWM3::set_ab_duty(const real_t alaph, const real_t beta){
     driver_ = SVM(real_t(alaph), real_t(beta));
 }
 

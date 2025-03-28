@@ -19,17 +19,17 @@ public:
 
     SVPWM3(Driver & _driver):driver_(_driver){;}
 
-    void setDqVolt(const real_t dv, const real_t qv, const real_t rad){
+    void set_dq_volt(const real_t dv, const real_t qv, const real_t rad){
         const auto c = cos(rad);
         const auto s = sin(rad);
-        setAbVolt(dv * c - qv * s, dv * c + qv * s);
+        set_ab_volt(dv * c - qv * s, dv * c + qv * s);
     }
 
-    void setAbVolt(const real_t av, const real_t bv){
-        setAbDuty(av * inv_scale, bv * inv_scale);
+    void set_ab_volt(const real_t av, const real_t bv){
+        set_ab_duty(av * inv_scale, bv * inv_scale);
     }
 
-    void setAbDuty(const real_t x, const real_t y) final override;
+    void set_ab_duty(const real_t x, const real_t y) final override;
 
     void enable(const bool en = true) final override{
         driver_.enable(en);

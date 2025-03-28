@@ -36,8 +36,8 @@ uint64_t micros(void){
     const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
-    // return (base + (ticks / TICKS_PER_US));
-    return base * 10;
+    return (base + (ticks / TICKS_PER_US));
+    // return base * 10;
 }
 
 uint64_t nanos(void){

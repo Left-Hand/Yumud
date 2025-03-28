@@ -27,14 +27,14 @@ namespace ymd::hal{
 
 
     enum class AdcSampleCycles:uint8_t{
-        T1_5 = ADC_SampleTime_1Cycles5,
-        T7_5 = ADC_SampleTime_7Cycles5,
-        T13_5 = ADC_SampleTime_13Cycles5,
-        T28_5 = ADC_SampleTime_28Cycles5,
-        T41_5 = ADC_SampleTime_41Cycles5,
-        T55_5 = ADC_SampleTime_55Cycles5,
-        T71_5 = ADC_SampleTime_71Cycles5,
-        T239_5 = ADC_SampleTime_239Cycles5
+        T1_5,
+        T7_5,
+        T13_5,
+        T28_5,
+        T41_5,
+        T55_5,
+        T71_5,
+        T239_5
     };
 
     enum class AdcPga:uint8_t{

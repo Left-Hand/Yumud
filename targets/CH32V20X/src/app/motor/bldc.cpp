@@ -202,7 +202,7 @@ public:
 
         const auto cmd_ab_volt = dq_to_ab(cmd_dq_volt, meas_rad);
 
-        svpwm_.setAbVolt(cmd_ab_volt[0], cmd_ab_volt[1]);
+        svpwm_.set_ab_volt(cmd_ab_volt[0], cmd_ab_volt[1]);
     }
 private:
 
@@ -618,7 +618,7 @@ void bldc_main(){
 
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
 
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
 
 
@@ -697,7 +697,7 @@ void bldc_main(){
 
         const auto __res = omega * cnt;
         ab_volt = {test_volt * sin(__res),0};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
     [[maybe_unused]] auto cb_sensorless = [&]{
@@ -705,7 +705,7 @@ void bldc_main(){
         // targ_pos = real_t(6.0) * sin(2 * t);
         targ_pos = real_t(1.0) * time();
 
-        const auto ab_curr = curr_sens.ab();
+        const auto & ab_curr = curr_sens.ab();
         // const auto dq_curr = curr_sens.dq();
 
         // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
@@ -732,7 +732,7 @@ void bldc_main(){
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 2.0_r);
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
     [[maybe_unused]] auto cb_hfi = [&]{
@@ -762,7 +762,7 @@ void bldc_main(){
         // real_t s = sin(hfi_rad);
 
         ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
         // curr_sens.updatUVW();
         // curr_sens.updateAB();
@@ -818,32 +818,30 @@ void bldc_main(){
 
 
         ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
         curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_sing = [&]{
         
-        static iq_t<16> sing_t = 0;
-        sing_t += iq_t<16>(_iq<16>::from_i32(1));
+        // static q20 mt = 0;
+        // mt += q20(1.0 / foc_freq);
 
-        real_t sing_rad = 0;
+        // const auto [s,c] = sincos(mt);
 
-        real_t sing_s = sin(sing_rad);
-        real_t sing_c = cos(sing_rad);
+        // real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
 
-        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
+        // ab_volt = {sing_out * sing_c, sing_out * sing_s};
+        // svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        ab_volt = {sing_out * sing_c, sing_out * sing_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
-
-        curr_sens.update(0);
+        // curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_openloop = [&]{
         scexpr auto omega = real_t(6 * TAU);
-        const auto amp = real_t(8.7);
+        const auto amp = real_t(6.7);
+        // const auto amp = real_t(8.7);
 
         const auto begin_m = uint32_t(micros());
         // const auto amp = real_t(2.8) + sin(t);
@@ -855,39 +853,35 @@ void bldc_main(){
         mt += q20(1.0 / foc_freq);
 
         mg_meas_rad = mt * omega;
-        const auto rad = (mt < 0.2_r) ? q16(mg_meas_rad) : 
+        const auto rad = 
+        // (mt < 0.2_r) ? q16(mg_meas_rad) : 
         // q20(lbg_ob.theta()) + q20(PI/2);
-        q16(lbg_ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.7_r));
+        q16(lbg_ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.5_r));
         // q16(mg_meas_rad);
         // sl_meas_rad + ;
         // const auto [s,c] = sincos(mt * omega);
         const auto [s,c] = sincos(rad);
         ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
-
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
+        curr_sens.update(s, c);
         // odo.update();
         // const real_t meas_lap = odo.getLapPosition();
 
         // const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
         // mg_meas_rad = meas_rad;
 
-        const auto ab_curr = curr_sens.ab();
+        const auto & ab_curr = curr_sens.ab();
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        pll.update(lbg_ob.theta());
+        // pll.update(lbg_ob.theta());
         // sl_meas_rad = pll.theta() + 0.3_r;
         sl_meas_rad = lbg_ob.theta();
 
         // curr_sens.capture();
-        curr_sens.update(lbg_ob.theta());
+
         // exe_micros  = uint32_t(micros()) - begin_m;
         exe_micros = uint32_t(micros()) - begin_m;
-        // exe_micros = 10;
-
-
-        // sogi.update(curr_sens.ab()[0]);
-        // spll.update(curr_sens.ab()[0] * 10);
     };
 
 
@@ -939,7 +933,7 @@ void bldc_main(){
     auto measure_bias = [&]{
         
         // mp6540.enable(false);
-        curr_sens.capture();
+        // curr_sens.capture();
         calibrater.update(curr_sens.raw(), curr_sens.mid());
 
         // odo.update();
@@ -970,11 +964,13 @@ void bldc_main(){
 
     
     while(true){
+        const auto t = time();
+
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
         DEBUG_PRINTLN_IDLE(
-            // real_t(adc1.inj(1)),
-            // real_t(adc1.inj(2)),
-            // real_t(adc1.inj(3)),
+            real_t(adc1.inj(1)),
+            real_t(adc1.inj(2)),
+            real_t(adc1.inj(3)),
             // lbg_ob.theta(),
             // s,c,
             // t,
@@ -989,8 +985,10 @@ void bldc_main(){
             lbg_ob.theta(),
             // fmod(mg_meas_rad, q16(TAU)),
             sl_meas_rad,
-            pll.theta(),
-            real_t(exe_micros)
+            exe_micros
+            // pll.theta(),
+            // micros() * 0.001_r
+            // real_t(exe_micros)
             // curr_sens.mid()
         );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
@@ -1039,7 +1037,7 @@ void bldc_main(){
 
 
         // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
+        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob.e_alpha_, lbg_ob.e_beta_,  dt > 100 ? 1000 + dt : dt);
         // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
 
         // DEBUG_PRINTLN_IDLE(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));

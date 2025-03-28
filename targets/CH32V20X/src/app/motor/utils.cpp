@@ -17,6 +17,14 @@ static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const q16
     ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
 };
 
+static __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const q16 s, const q16 c){
+    dq = {s * ab[1] + c * ab[0], c * ab[1] - s * ab[0]};
+};
+
+static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const q16 s, const q16 c){
+    ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
+};
+
 namespace ymd::foc{
 
 DqCurrent ab_to_dq(const AbCurrent & ab, const q16 rad){
@@ -44,6 +52,31 @@ AbVoltage dq_to_ab(const DqVoltage & dq, const q16 rad){
     return ab;
 }
 
+DqCurrent ab_to_dq(const AbCurrent & ab, const q16 s, const q16 c){
+    DqCurrent dq;
+    __ab_to_dq(dq, ab, s, c);
+    return dq;
+}
+
+
+DqVoltage ab_to_dq(const AbVoltage & ab, const q16 s, const q16 c){
+    DqVoltage dq;
+    __ab_to_dq(dq, ab, s, c);
+    return dq;
+}
+
+AbCurrent dq_to_ab(const DqCurrent & dq, const q16 s, const q16 c){
+    AbCurrent ab;
+    __dq_to_ab(ab, dq, s, c);
+    return ab;
+}
+
+AbVoltage dq_to_ab(const DqVoltage & dq, const q16 s, const q16 c){
+    AbVoltage ab;
+    __dq_to_ab(ab, dq, s, c);
+    return ab;
+}
+
 void init_adc(){
 
 
@@ -51,13 +84,13 @@ void init_adc(){
         {
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
-            {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
+            // {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
+            // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+            // {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
 
-            // {AdcChannelIndex::CH1, AdcCycles::T7_5},
-            // {AdcChannelIndex::CH4, AdcCycles::T7_5},
-            // {AdcChannelIndex::CH5, AdcCycles::T7_5},
+            {AdcChannelIndex::CH5, AdcSampleCycles::T7_5},
+            {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
+            {AdcChannelIndex::CH1, AdcSampleCycles::T7_5},
             // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T7_5},
             // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T28_5},
             // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T28_5},
