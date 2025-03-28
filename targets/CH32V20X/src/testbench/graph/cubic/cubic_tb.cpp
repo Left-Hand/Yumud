@@ -419,8 +419,8 @@ void cubic_main(void){
 
     UART.init(576000);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.setEps(4);
-    // DEBUGGER.noBrackets();
+    DEBUGGER.set_eps(4);
+    // DEBUGGER.no_brackets();
 
 
     #ifdef CH32V30X

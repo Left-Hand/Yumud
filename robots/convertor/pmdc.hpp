@@ -11,7 +11,7 @@
 //     uart2.init(115200 * 8, Uart::Mode::TxRx);
 //     IOStream & logger = uart2;
 //     logger.setSpace(",");
-//     logger.setEps(4);
+//     logger.set_eps(4);
 
 //     timer3.init(36000);
 //     timer3[1].setPolarity(true);

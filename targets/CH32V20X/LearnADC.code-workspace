@@ -142,7 +142,8 @@
         "C_Cpp.default.enableConfigurationSquiggles": false,
         "C_Cpp.default.cppStandard": "gnu++23",
         "cortex-debug.variableUseNaturalFormat": false,
-        "hide-files.files": []
+        "hide-files.files": [],
+        "files.encoding": "utf8"
     },
     "extensions": {
         "recommendations": [

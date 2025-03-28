@@ -62,7 +62,7 @@
 //     uart1.init(115200 * 8, Uart::Mode::TxRx);
 //     IOStream & logger = uart1;
 //     logger.setSpace(",");
-//     logger.setEps(4);
+//     logger.set_eps(4);
 
 //     timer1.init(36000);
 //     timer1.enableArrSync();

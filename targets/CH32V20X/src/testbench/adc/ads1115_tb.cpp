@@ -61,9 +61,9 @@ void ads1115_main()
 
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
-    // DEBUGGER.noBrackets();
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    // DEBUGGER.no_brackets();
 
     // DEBUG_PRINTLN(test_result(4));
     DEBUG_PRINTLN(test_result(4).loc().expect("no"));

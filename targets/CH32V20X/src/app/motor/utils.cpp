@@ -3,39 +3,42 @@
 #include "rpc.hpp"
 
 
+using namespace ymd;
 using namespace ymd::foc;
 using namespace ymd::hal;
 
-static __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const real_t rad){
+static __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const q16 rad){
     auto [s,c] = sincos(rad);
     dq = {s * ab[1] + c * ab[0], c * ab[1] - s * ab[0]};
 };
 
-static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const real_t rad){
+static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const q16 rad){
     auto [s,c] = sincos(rad);
     ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
 };
 
 namespace ymd::foc{
 
-DqCurrent ab_to_dq(const AbCurrent & ab, const real_t rad){
+DqCurrent ab_to_dq(const AbCurrent & ab, const q16 rad){
     DqCurrent dq;
     __ab_to_dq(dq, ab, rad);
     return dq;
 }
-DqVoltage ab_to_dq(const AbVoltage & ab, const real_t rad){
+
+
+DqVoltage ab_to_dq(const AbVoltage & ab, const q16 rad){
     DqVoltage dq;
     __ab_to_dq(dq, ab, rad);
     return dq;
 }
 
-AbCurrent dq_to_ab(const DqCurrent & dq, const real_t rad){
+AbCurrent dq_to_ab(const DqCurrent & dq, const q16 rad){
     AbCurrent ab;
     __dq_to_ab(ab, dq, rad);
     return ab;
 }
 
-AbVoltage dq_to_ab(const DqVoltage & dq, const real_t rad){
+AbVoltage dq_to_ab(const DqVoltage & dq, const q16 rad){
     AbVoltage ab;
     __dq_to_ab(ab, dq, rad);
     return ab;

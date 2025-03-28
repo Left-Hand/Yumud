@@ -158,7 +158,7 @@
 //     uart1.init(115200 * 4);
 //     IOStream & logger = uart1;
 //     logger.setSpace(",");
-//     logger.setEps(4);
+//     logger.set_eps(4);
 
 //     adc1.init(
 //         {

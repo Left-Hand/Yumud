@@ -42,7 +42,7 @@ __fast_inline void DEBUG_PRINT(Args&& ... args) {
 template<typename ... Args>
 __attribute__((noreturn))
 __fast_inline void PANIC_NSRC(Args&& ... args) {
-    ymd::DEBUGGER.setIndent(0);
+    ymd::DEBUGGER.set_indent(0);
     DEBUG_PRINTLN();
     DEBUG_PRINTLN("panicked: ");
     delay(10);
@@ -54,7 +54,7 @@ __fast_inline void PANIC_NSRC(Args&& ... args) {
 template<typename Expr, typename ... Args>
 __fast_inline bool ASSERT_NSRC(Expr &&expr, Args&& ... args) {
     if(false == bool(std::forward<Expr>(expr))){
-        ymd::DEBUGGER.setIndent(0);
+        ymd::DEBUGGER.set_indent(0);
         DEBUG_PRINTLN();
         DEBUG_PRINTLN("assert failed: ");
         delay(10);
@@ -79,7 +79,7 @@ struct DEBUG_SRC
         delay(10);
         
         {
-            const auto guard = ymd::DEBUGGER.createGuard();
+            const auto guard = ymd::DEBUGGER.create_guard();
             ymd::DEBUGGER.reconf({
                 .splitter = ", ",
                 .radix = 10,
@@ -127,10 +127,10 @@ template <typename... Args>
 struct PANIC
 {    
 	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        ymd::DEBUGGER.setIndent(0);
+        ymd::DEBUGGER.set_indent(0);
         DEBUG_PRINTLN();
         DEBUG_PRINTLN("panicked: ");
-        ymd::DEBUGGER.setIndent(1);
+        ymd::DEBUGGER.set_indent(1);
         DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
         delay(10);
 

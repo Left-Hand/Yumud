@@ -97,8 +97,8 @@ void gui_main(){
 
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     #ifdef CH32V30X
     auto & spi = spi2;

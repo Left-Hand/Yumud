@@ -171,8 +171,8 @@ void so_tb(){
 void rmst_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     // bpf_tb();
     // hpf_tb();
@@ -180,7 +180,7 @@ void rmst_main(){
     // lpf_tb();
     // shock_tb();
 
-    MotorCyberGear motor(can1, 0x01, 0x02);
+    CyberGear motor(can1, 0x01, 0x02);
     while(true){
         // !motor.changeCanId(0);
         

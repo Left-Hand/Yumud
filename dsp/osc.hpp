@@ -5,7 +5,7 @@
 //     uart2.init(115200 * 8, Uart::Mode::TxRx);
 //     IOStream & logger = uart2;
 //     logger.setSpace(",");
-//     logger.setEps(4);
+//     logger.set_eps(4);
 //     Gpio & i2sSck = portA[1];
 //     Gpio & i2sSda = portA[0];
 //     Gpio & i2sWs = portA[4];

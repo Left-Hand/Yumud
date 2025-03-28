@@ -446,12 +446,15 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    Result<T, E> if_ok(Fn && fn) const {
-        if (is_ok()) {
-            // std::forward<Fn>(fn)(unwrap());
-            std::forward<Fn>(fn)();
-        }
+    Result<T, E> inspect(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)(unwrap());
+        return *this;
+    }
 
+    template<typename Fn>
+    __fast_inline constexpr 
+    Result<T, E> if_ok(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)();
         return *this;
     }
 

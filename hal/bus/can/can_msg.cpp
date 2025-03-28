@@ -5,11 +5,11 @@
 namespace ymd{
 
 OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
-    const auto guard = os.createGuard();
+    const auto guard = os.create_guard();
     
     os << os.brackets<'{'>();
 
-    os.setRadix(16);
+    os.set_radix(16);
     os << uint32_t(msg.id());
         
     os << '<'

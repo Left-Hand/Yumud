@@ -88,13 +88,13 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 [[maybe_unused]] static void at8222_tb(){
     // hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
     // DEBUGGER.retarget(&uart);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
 
     // TARG_UART.init(6_MHz);
 
     auto & timer = hal::timer3;
 
-    //因为是中心对齐的顶部触发 所以频率翻倍
+    //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
 
     auto & pwm_pos = timer.oc(1);
@@ -485,7 +485,7 @@ void u13t_tb(){
 
     hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
     DEBUGGER.retarget(&uart);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
     
     Color_t<real_t> color;
     drivers::WS2812 led{portB[1]};

@@ -124,7 +124,7 @@ void mpu6500_tb(hal::I2c & i2c){
 void mpu6050_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{portB[6], portB[7]};
     // i2c.init(400_KHz);

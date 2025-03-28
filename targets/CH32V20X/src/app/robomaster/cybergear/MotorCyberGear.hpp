@@ -1,44 +1,10 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
-
-#include "core/utils/Option.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/PerUnit.hpp"
-
-#include "core/math/real.hpp"
+#include "../utils.hpp"
 
 namespace ymd::rmst{
 
-
-// enum class CgFault:uint8_t{
-//     COIL_A_OVERLOAD,
-//     OVERLOAD,
-//     ENC_NOT_CALI,
-//     COIL_C_OVERLOAD,
-//     COIL_B_OVERLOAD,
-//     OVER_VOLTAGE,
-//     UNDER_VOLTAGE,
-//     DRIVER_FAULT,
-//     OVER_TEMPERATURE,
-// };
-
-class CanDrv{
-    public:
-        using CanMsg = hal::CanMsg; 
-
-        CanDrv(hal::Can & can):can_(can){;}
-    
-        void transmit(const CanMsg & msg){
-            can_.write(msg);
-        }
-    
-    private:
-        hal::Can & can_; 
-};
-
-
-struct CgFault{
+struct CyberGear_Fault{
 
     union{
         uint16_t raw;
@@ -58,10 +24,10 @@ struct CgFault{
     bool is_running(){return mode == 2;}
     bool is_reset(){return mode == 0;}
     bool is_calibrating(){return mode == 1;}
-};static_assert(sizeof(CgFault) == 2);
+};static_assert(sizeof(CyberGear_Fault) == 2);
 
 
-enum class CgError:uint8_t{
+enum class CyberGear_Error:uint8_t{
     PRAGRAM_UNHANDLED,
     PRAGRAM_TODO,
     RET_DLC_SHORTER,
@@ -73,7 +39,7 @@ enum class CgError:uint8_t{
     MOTOR_NOT_INITED,
 };
 
-enum class CgCommand:uint8_t{
+enum class CyberGear_Command:uint8_t{
     GET_DEVICE_ID = 0,
     SEND_CTRL1 = 1,
     FBK_CTRL1 = 2,
@@ -88,17 +54,11 @@ enum class CgCommand:uint8_t{
 
 
 template<typename T = void>
-using CgResult = Result<T, CgError>;
+using CyberGear_Result = Result<T, CyberGear_Error>;
 
 namespace details{
-    // enum class CgError:uint8_t{
 
-    // };
-
-    // template<typename T = void>
-    // using CgResult = Result<T, CgError>;
-
-    struct Temperature{
+    struct CyberGear_Temperature{
         uint16_t data;
         
         operator real_t() const {
@@ -106,61 +66,66 @@ namespace details{
         }
     };
 
-    DEF_PER_UNIT(CmdRad, uint16_t, -2 * TAU, 2 * TAU)
-    DEF_PER_UNIT(CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
-    DEF_PER_UNIT(CmdTorque, uint16_t, -12, 12)
-    DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
-    DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)
+    DEF_PER_UNIT(CyberGear_CmdRad, uint16_t, -2 * TAU, 2 * TAU)
+    DEF_PER_UNIT(CyberGear_CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
+    DEF_PER_UNIT(CyberGear_CmdTorque, uint16_t, -12, 12)
+    DEF_PER_UNIT(CyberGear_CmdKp, uint16_t, 0, 500)
+    DEF_PER_UNIT(CyberGear_CmdKd, uint16_t, 0, 5)
     
 
-    struct Feedback{
+    struct CyberGear_Feedback{
         real_t rad = {};
         real_t omega = {};
         real_t torque = {};
-        // real_t current = {};
-        // real_t voltage = {};
         real_t temperature = {};
     };
 }
 
 
 
-class MotorCyberGear{
+class CyberGear{
 public:
 
 
-    // using CgError = details::CgError;
-    // using CgResult = details::CgResult;
+    // using CyberGear_Error = details::CyberGear_Error;
+    // using CyberGear_Result = details::CyberGear_Result;
 
     using CanMsg = hal::CanMsg; 
 
-    using Feedback = details::Feedback;
+    using Feedback = details::CyberGear_Feedback;
+    using Temperature = details::CyberGear_Temperature;
+    using CmdRad = details::CyberGear_CmdRad;
+    using CmdOmega = details::CyberGear_CmdOmega;
+    using CmdTorque = details::CyberGear_CmdTorque;
+    using CmdKp = details::CyberGear_CmdKp;
+    using CmdKd = details::CyberGear_CmdKd;
 
-    MotorCyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
+
+    CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
         can_drv_(can), host_id_(host_id), node_id_(node_id){;}
 
-    [[nodiscard]]CgResult<void> init();
+    [[nodiscard]]CyberGear_Result<void> init();
 
-    [[nodiscard]] CgResult<void> transmit(const CanMsg & msg);
+    [[nodiscard]] CyberGear_Result<void> transmit(const CanMsg & msg);
 
-    [[nodiscard]] CgResult<void> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<void> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
 
-    [[nodiscard]] CgResult<void> requestMcuId();
+    [[nodiscard]] CyberGear_Result<void> requestMcuId();
 
-    [[nodiscard]] CgResult<void> ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd);
+    [[nodiscard]] CyberGear_Result<void> ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd);
 
     
-    [[nodiscard]] CgResult<void> onReceive(const CanMsg & msg);
+    [[nodiscard]] CyberGear_Result<void> onReceive(const CanMsg & msg);
 
-    [[nodiscard]] CgResult<void> enable(const bool en = true, const bool clear_fault = true);
+    [[nodiscard]] CyberGear_Result<void> enable(const bool en = true, const bool clear_fault = true);
 
-    [[nodiscard]] CgResult<void> setCurrentAsMachineHome();
+    [[nodiscard]] CyberGear_Result<void> setCurrentAsMachineHome();
 
-    [[nodiscard]] CgResult<void> changeCanId(const uint8_t id);
+    [[nodiscard]] CyberGear_Result<void> changeCanId(const uint8_t id);
 
-    [[nodiscard]] CgResult<void> requestReadPara(const uint16_t idx);
+    [[nodiscard]] CyberGear_Result<void> requestReadPara(const uint16_t idx);
 
-    [[nodiscard]] CgResult<void> requestWritePara(const uint16_t idx, const uint32_t data);
+    [[nodiscard]] CyberGear_Result<void> requestWritePara(const uint16_t idx, const uint32_t data);
 
     [[nodiscard]] Option<uint64_t> getDeviceMcuId() const {return device_mcu_id_;}
 
@@ -169,15 +134,15 @@ public:
     const uint8_t host_id_;
     uint8_t node_id_;
     
-    CgFault fault_ = {};
+    CyberGear_Fault fault_ = {};
     Option<uint64_t> device_mcu_id_ = None;
 
 
     Feedback feedback_ = {};
 
-    [[nodiscard]] CgResult<void> onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CgResult<void> onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CgResult<void> onReadParaFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<void> onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<void> onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<void> onReadParaFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
 };
 
 }

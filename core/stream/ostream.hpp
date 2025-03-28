@@ -68,9 +68,9 @@ public:
                 uint16_t boolalpha:1;
                 uint16_t showpos:1;
                 uint16_t showbase:1;
-                uint16_t nobrackets:1;
+                uint16_t no_brackets:1;
                 uint16_t nospace:1;
-                uint16_t forcesync:1;
+                uint16_t force_sync:1;
             };
         };
     };
@@ -108,7 +108,7 @@ private:
     }
 
     __fast_inline void print_end(){
-        if(unlikely(config_.forcesync)) flush();
+        if(unlikely(config_.force_sync)) flush();
     }
 
     __fast_inline void print_indent(){
@@ -166,25 +166,25 @@ public:
     virtual size_t pending() const = 0;
 
 
-    OutputStream & setSplitter(const char * splitter){
+    OutputStream & set_splitter(const char * splitter){
         strcpy(config_.splitter, splitter);
         sp_len = strlen(splitter);
         return *this;
     }
     
-    OutputStream & setSplitter(const char splitter){
+    OutputStream & set_splitter(const char splitter){
         config_.splitter[0] = splitter;
         config_.splitter[1] = 0;
         sp_len = 1;
         return *this;
     }
 
-    OutputStream & setRadix(const uint8_t radix){
+    OutputStream & set_radix(const uint8_t radix){
         config_.radix = radix;
         return *this;
     }
 
-    OutputStream & setIndent(const uint8_t indent){
+    OutputStream & set_indent(const uint8_t indent){
         config_.indent = indent;
         return *this;
     }
@@ -193,22 +193,21 @@ public:
         return config_.indent;
     }
 
-    OutputStream & setEps(const uint8_t eps){
+    OutputStream & set_eps(const uint8_t eps){
         config_.eps = eps;
         return *this;
     }
 
-    OutputStream & noBrackets(const bool disen = true){
-        config_.nobrackets = disen;
+    OutputStream & no_brackets(const bool disen = true){
+        config_.no_brackets = disen;
+        return *this;
+    }
+    OutputStream & force_sync(const bool en = true){
+        config_.force_sync = en;
         return *this;
     }
 
-    OutputStream & forceSync(const bool en = true){
-        config_.forcesync = en;
-        return *this;
-    }
-
-    OutputStream & noSpace(const bool disen = true){
+    OutputStream & no_space(const bool disen = true){
         config_.nospace = disen;
         return *this;
     }
@@ -243,7 +242,7 @@ public:
     OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
 
     template<char chr>
-    OutputStream& operator<<(const __Brackets<chr>){if(!config_.nobrackets){write(chr);} return *this;}
+    OutputStream& operator<<(const __Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
     OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
     template<typename T>
@@ -442,7 +441,7 @@ public:
         }
     };
 
-    [[nodiscard]] __Guard createGuard(){
+    [[nodiscard]] __Guard create_guard(){
         return __Guard(*this);
     }
 };

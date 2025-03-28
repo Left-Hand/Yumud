@@ -110,8 +110,8 @@ void test_sogi(){
 void digipw_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     /*-----------------------*/
 

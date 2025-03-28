@@ -11,7 +11,8 @@ protected:
     using Driver = Coil3DriverIntf;
 
     Driver & driver_;
-    const int bus_volt = 12;
+    // const int bus_volt = 12;
+    const real_t inv_scale = real_t(1.0 / 12);
     // const real_t inv_scale = real_t(1.0 / 12 * 1.15);
 
 public:
@@ -25,7 +26,7 @@ public:
     }
 
     void setAbVolt(const real_t av, const real_t bv){
-        setAbDuty(av / bus_volt, bv / bus_volt);
+        setAbDuty(av * inv_scale, bv * inv_scale);
     }
 
     void setAbDuty(const real_t x, const real_t y) final override;

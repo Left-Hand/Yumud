@@ -19,9 +19,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
     const auto beta_by_sqrt3 = beta * one_by_sqrt3;
 
     Sector sector {uint8_t(
-        (std::signbit(beta_by_sqrt3 + alpha) << 2)
-        | (std::signbit(beta_by_sqrt3 - alpha) << 1)
-        | (std::signbit(beta))
+        (  uint8_t(std::signbit(beta_by_sqrt3 + alpha)) << 2)
+        | (uint8_t(std::signbit(beta_by_sqrt3 - alpha)) << 1)
+        | (uint8_t(std::signbit(beta)))
     )};
 
     switch(sector){

@@ -17,7 +17,7 @@ protected:
 public:
     TJC(Uart & _uart):uart(_uart){;}
     void init(){
-        uart.setSplitter("");
+        uart.set_splitter("");
     }
 
 

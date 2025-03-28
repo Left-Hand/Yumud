@@ -50,8 +50,8 @@
 // void can_actor_main(){
 //     DBG_UART.init(576000);
 //     DEBUGGER.retarget(&DBG_UART);
-//     DEBUGGER.setEps(4);
-//     DEBUGGER.setSplitter(",");
+//     DEBUGGER.set_eps(4);
+//     DEBUGGER.set_splitter(",");
 
 //     auto & can = hal::can1;
 

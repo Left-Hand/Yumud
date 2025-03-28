@@ -171,9 +171,9 @@ static constexpr auto eeprom_data = std::to_array<uint8_t>({
 void programmer_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     auto & logger = DEBUGGER;
-    logger.setEps(2);
-    logger.setRadix(10);
-    logger.setSplitter("\t\t");
+    logger.set_eps(2);
+    logger.set_radix(10);
+    logger.set_splitter("\t\t");
 
     
     I2cSw       i2c{portD[2], portC[12]};

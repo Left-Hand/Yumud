@@ -10,7 +10,7 @@ class SVPWM{
 protected:
     bool rsv = false;
 public:
-    virtual ~SVPWM() = 0;
+    virtual ~SVPWM(){;}
 
     virtual void setDuty(const real_t duty, const real_t _elecrad) final{
         real_t elecrad = rsv ? -_elecrad : _elecrad;

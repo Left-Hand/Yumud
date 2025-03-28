@@ -187,7 +187,7 @@ public:
 void zdt_main(UartHw & logger){
     logger.init(576000, CommStrategy::Blocking);
     DEBUGGER.retarget(&logger);
-    DEBUGGER.setEps(4);
+    DEBUGGER.set_eps(4);
     
     can1.init(1_MHz);
 

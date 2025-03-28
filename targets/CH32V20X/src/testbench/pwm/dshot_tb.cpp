@@ -91,8 +91,8 @@ void dshot_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     // DEBUGGER.retarget(&DEBUGGER_INST);
 
-    DEBUGGER.setRadix(10);
-    DEBUGGER.setEps(4);
+    DEBUGGER.set_radix(10);
+    DEBUGGER.set_eps(4);
     AdvancedTimer & timer = timer1;
 
     // timer.enableArrSync();

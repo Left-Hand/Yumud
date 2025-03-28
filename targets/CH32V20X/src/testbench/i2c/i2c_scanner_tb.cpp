@@ -190,16 +190,16 @@ void test_result(){
 void i2c_scanner_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.forceSync();
+    DEBUGGER.force_sync();
     
     // test_result();
     I2cSw i2c = {portB[6], portB[7]};
     i2c.init(100_KHz);
     
     // auto data = std::vector{1, 2, 3};
-    // 遍历时打印每个元素
+    // 遍历时打印每个元�?
     // for (int n : data | log("Value: ")) { /* ... */ }
-    // 输出：
+    // 输出�?
     // Value: 1
     // Value: 2
     // Value: 3
@@ -273,8 +273,8 @@ void i2c_scanner_main(){
             DEBUG_PRINTS("Found", founded_devices.size(), " devices" );
             DEBUG_PRINTLN("---------");
             {
-                const auto guard = DEBUGGER.createGuard();
-                DEBUGGER.setIndent(1);
+                const auto guard = DEBUGGER.create_guard();
+                DEBUGGER.set_indent(1);
                 for(auto & [read_addr, baud] : founded_devices){
                     DEBUG_PRINTS(
                         std::bitset<8>(read_addr), '\t',
