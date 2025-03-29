@@ -411,10 +411,10 @@ void bldc_main(){
     [[maybe_unused]] NonlinearObserver nlr_ob = {
         {
             .phase_inductance = 1.45E-3_r,
-            .phase_resistance = 7.1_r,
-            .observer_gain = 0.1_r,
+            .phase_resistance = 1.2_r,
+            .observer_gain = 0.2_r,
             .pm_flux_linkage = 3.58e-4_r,
-            .freq = chopper_freq/2,
+            .freq = foc_freq,
         }
     };
 
@@ -840,7 +840,9 @@ void bldc_main(){
 
     [[maybe_unused]] auto cb_openloop = [&]{
         scexpr auto omega = real_t(6 * TAU);
-        const auto amp = real_t(6.7);
+        const auto amp = real_t(5.7);
+        auto & ob = lbg_ob;
+        // auto & ob = nlr_ob;
         // const auto amp = real_t(8.7);
 
         const auto begin_m = uint32_t(micros());
@@ -856,7 +858,7 @@ void bldc_main(){
         const auto rad = 
         // (mt < 0.2_r) ? q16(mg_meas_rad) : 
         // q20(lbg_ob.theta()) + q20(PI/2);
-        q16(lbg_ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.5_r));
+        q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.4_r));
         // q16(mg_meas_rad);
         // sl_meas_rad + ;
         // const auto [s,c] = sincos(mt * omega);
@@ -872,11 +874,12 @@ void bldc_main(){
         // mg_meas_rad = meas_rad;
 
         const auto & ab_curr = curr_sens.ab();
-        lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // pll.update(lbg_ob.theta());
+        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        // pll.update(ob.theta());
         // sl_meas_rad = pll.theta() + 0.3_r;
-        sl_meas_rad = lbg_ob.theta();
+        sl_meas_rad = ob.theta();
 
         // curr_sens.capture();
 
@@ -983,6 +986,7 @@ void bldc_main(){
             curr_sens.ab(),
             curr_sens.dq(),
             lbg_ob.theta(),
+            nlr_ob.theta(),
             // fmod(mg_meas_rad, q16(TAU)),
             sl_meas_rad,
             exe_micros

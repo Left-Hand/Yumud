@@ -5,9 +5,9 @@ namespace ymd::foc {
 class RolbgObserver{
 public:
     // RolbgObserver(const q16 _h, const q16 _Ls, const q16 _Rs, const q16 _Tc, const q16 _omega);
-    RolbgObserver(){;}
-
-    void init();
+    RolbgObserver(){
+        reset();
+    }
 
     void reset();
     
@@ -18,13 +18,13 @@ public:
 
 public:
 
-    q16 i_alpha_;
-    q16 i_beta_;
+    q16 i_alpha_ = {};
+    q16 i_beta_ = {};
 
-    q16 e_alpha_;
-    q16 e_beta_;
+    q16 e_alpha_ = {};
+    q16 e_beta_ = {};
 
-    q16 theta_;
+    q16 theta_ = {};
 };
 
 

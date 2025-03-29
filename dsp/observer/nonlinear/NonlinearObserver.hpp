@@ -8,17 +8,17 @@ namespace ymd::foc{
 class NonlinearObserver{
 public:
     struct Config{
-        iq_t<16> phase_inductance;
-        iq_t<16> phase_resistance;
-        iq_t<16> observer_gain; // [rad/s]
-        iq_t<16> pm_flux_linkage; // [V / (rad/s)]
+        q16 phase_inductance;
+        q16 phase_resistance;
+        q16 observer_gain; // [rad/s]
+        q16 pm_flux_linkage; // [V / (rad/s)]
         size_t freq;
     };
 protected:
     Config config_;
-    iq_t<16> flux_state_mf_[2];        // [Vs * Fs]
-    iq_t<16> V_alpha_beta_last_[2]; // [V]
-    iq_t<16> phase_;                   // [rad]
+    q16 flux_state_mf_[2];        // [Vs * Fs]
+    q16 V_alpha_beta_last_[2]; // [V]
+    q16 phase_;                   // [rad]
 public:
     NonlinearObserver(const Config & config):
         config_(config)
@@ -27,11 +27,10 @@ public:
     }
 
     void reset();
-    void reconfig(const Config & config){config_ = config;}
-    void init();
-    void update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta);
+    void reconf(const Config & config){config_ = config;}
+    void update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta);
 
-    iq_t<16> theta() const {return phase_;}
+    q16 theta() const {return phase_;}
 };
 
 
