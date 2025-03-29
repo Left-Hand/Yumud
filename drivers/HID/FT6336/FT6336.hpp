@@ -1,14 +1,17 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 class FT6336 {
-protected:
+public: 
+    enum class Error{
 
+    };
+protected:
 
     using RegAddress = uint8_t;
 
@@ -154,13 +157,35 @@ protected:
     // };
 
 protected:
-    hal::SpiDrv spi_drv_;
-public:
-    static constexpr uint8_t default_spi_addr = 0x38;
+    hal::I2cDrv i2c_drv_;
 
-    FT6336(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    FT6336(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    FT6336(hal::Spi & spi, const uint8_t spi_addr = default_spi_addr):spi_drv_(hal::SpiDrv{spi, spi_addr}){;}
+    
+    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
+
+    template<typename T>
+    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
+
+    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
+
+    template<typename T>
+    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
+
+    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    
+public:
+    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x38;
+    static constexpr uint8_t PANEL_ID = 0x11;
+
+    FT6336(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    FT6336(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    FT6336(hal::I2c & i2c, const uint8_t i2c_addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
+
+    Result<size_t, Error> get_touch_cnt();
+
+    Result<GestureID, Error> get_gesture_id();
 };
 
 }
