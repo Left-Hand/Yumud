@@ -44,7 +44,7 @@ public:
         // return last_;
     }
 
-    constexpr T result() const {
+    constexpr const T & get() const {
         return last_;
     }
 

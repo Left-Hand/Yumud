@@ -34,7 +34,7 @@ public:
 
     void update(const T x){
         lpf_.update(x);
-        hpf_.update(lpf_.result());
+        hpf_.update(lpf_.get());
     }
 
     T result() const{

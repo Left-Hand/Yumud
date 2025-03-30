@@ -47,7 +47,7 @@ void lpf_tb(){
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
         lpf.update(x);
-        DEBUG_PRINTLN(x, lpf.result());
+        DEBUG_PRINTLN(x, lpf.get());
     });
 
     while(true);
@@ -120,10 +120,10 @@ void shock_tb(){
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
         lpf.update(x);
-        lpf2.update(lpf.result());
-        // const auto err = x - lpf2.result();
-        const auto err = x - lpf.result();
-        DEBUG_PRINTLN(x, lpf.result(), err);
+        lpf2.update(lpf.get());
+        // const auto err = x - lpf2.get();
+        const auto err = x - lpf.get();
+        DEBUG_PRINTLN(x, lpf.get(), err);
     });
 
     while(true);
