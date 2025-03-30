@@ -41,6 +41,7 @@
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "CurrentSensor.hpp"
 #include "GradeCounter.hpp"
+#include "core/polymorphism/reflect.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -840,13 +841,13 @@ void bldc_main(){
 
     [[maybe_unused]] auto cb_openloop = [&]{
         scexpr auto omega = real_t(6 * TAU);
-        const auto amp = real_t(5.7);
+        const auto max_amp = real_t(6.7);
         auto & ob = lbg_ob;
         // auto & ob = nlr_ob;
-        // const auto amp = real_t(8.7);
+        // const auto max_amp = real_t(8.7);
 
         const auto begin_m = uint32_t(micros());
-        // const auto amp = real_t(2.8) + sin(t);
+        // const auto max_amp = real_t(2.8) + sin(t);
         // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
         // auto theta = omega * time();
         // const auto theta = 0;
@@ -863,6 +864,7 @@ void bldc_main(){
         // sl_meas_rad + ;
         // const auto [s,c] = sincos(mt * omega);
         const auto [s,c] = sincos(rad);
+        const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
         ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
@@ -986,6 +988,8 @@ void bldc_main(){
             curr_sens.ab(),
             curr_sens.dq(),
             lbg_ob.theta(),
+            lbg_ob.e_alpha_,
+            lbg_ob.e_beta_,
             nlr_ob.theta(),
             // fmod(mg_meas_rad, q16(TAU)),
             sl_meas_rad,

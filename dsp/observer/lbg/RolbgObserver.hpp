@@ -11,20 +11,18 @@ public:
 
     void reset();
     
-    void update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta);
-    q16 theta() const {
+    void update(q20 Valpha, q20 Vbeta, q20 Ialpha, q20 Ibeta);
+    q20 theta() const {
         return theta_;
     }
 
 public:
 
-    q16 i_alpha_ = {};
-    q16 i_beta_ = {};
-
-    q16 e_alpha_ = {};
-    q16 e_beta_ = {};
-
-    q16 theta_ = {};
+    q20 i_alpha_ = {};
+    q20 i_beta_ = {};
+    q20 e_alpha_ = {};
+    q20 e_beta_ = {};
+    q20 theta_ = {};
 };
 
 
