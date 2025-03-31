@@ -817,8 +817,11 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto cb_openloop = [&]{
+        static q20 mt = 0;
+        mt += q20(1.0 / foc_freq);
+
         scexpr auto omega = real_t(6 * TAU);
-        const auto max_amp = real_t(6.7);
+        const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
         auto & ob = lbg_ob;
         // auto & ob = nlr_ob;
         // const auto max_amp = real_t(8.7);
@@ -829,18 +832,18 @@ void bldc_main(){
         // auto theta = omega * time();
         // const auto theta = 0;
         // const auto t = time();
-        static q20 mt = 0;
-        mt += q20(1.0 / foc_freq);
+
 
         mg_meas_rad = mt * omega;
         const auto rad = 
         // (mt < 0.2_r) ? q16(mg_meas_rad) : 
         // q20(lbg_ob.theta()) + q20(PI/2);
-        q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.4_r));
+        q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.07_r));
         // q16(mg_meas_rad);
         // sl_meas_rad + ;
-        // const auto [s,c] = sincos(mt * omega);
+        // const auto [s,c] = sincos(mt);
         const auto [s,c] = sincos(rad);
+        // const auto [s,c] = sincos(mt);
         const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
         ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
@@ -1015,6 +1018,7 @@ void bldc_main(){
             // real_t(adc1.inj(1)),
             // real_t(adc1.inj(2)),
             // real_t(adc1.inj(3)),
+            // real_t(adc1.inj(4)),
             // hfi_result * 10,
             // hfi_mid_result * 10,
             // phase_ind * 100,
@@ -1025,10 +1029,19 @@ void bldc_main(){
             // sin(t * 10),
             // SVM(c,s),
             // real_t(pwm_u), 
-            // real_t(pwm_v), real_t(pwm_w),
+            // real_t(pwm_v),
+            // real_t(pwm_w),
+            // bool(pwm_u.io()),
+            // bool(pwm_v.io()),
+            // bool(pwm_w.io()),
             // curr_sens.uvw(),
+            
             curr_sens.ab(),
             curr_sens.dq(),
+            lbg_ob.e_alpha_,
+            lbg_ob.e_beta_,
+
+            square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
             // lbg_ob.theta(),
             // lbg_ob.e_alpha_,
             // lbg_ob.e_beta_,

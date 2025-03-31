@@ -10,8 +10,8 @@ namespace ymd::foc{
 
 scexpr double freq = 25000;
 scexpr double T = 1.0 / freq;
-scexpr double R = 1.2;
-scexpr double L = 1.25E-3;
+scexpr double R = 1.8;
+scexpr double L = 1.45E-3;
 
 scexpr double l1 = -20000;
 scexpr double l2 = 210000;
