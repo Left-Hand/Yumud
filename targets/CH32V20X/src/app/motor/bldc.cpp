@@ -821,7 +821,8 @@ void bldc_main(){
         mt += q20(1.0 / foc_freq);
 
         scexpr auto omega = real_t(6 * TAU);
-        const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
+        // const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
+        const auto max_amp = real_t(2.5);
         auto & ob = lbg_ob;
         // auto & ob = nlr_ob;
         // const auto max_amp = real_t(8.7);
@@ -843,7 +844,7 @@ void bldc_main(){
         // sl_meas_rad + ;
         // const auto [s,c] = sincos(mt);
         const auto [s,c] = sincos(rad);
-        // const auto [s,c] = sincos(mt);
+        // const auto [s,c] = sincos(mt *8);
         const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
         ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
