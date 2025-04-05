@@ -108,7 +108,7 @@ void test_sogi(){
     }
 }
 void digipw_main(){
-    UART.init(576000);
+    UART.init(6_MHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -123,7 +123,8 @@ void digipw_main(){
     i2csw.init(1000000);
     
     INA226 ina226{i2csw};
-    ina226.init(6, 1);
+    // ina226.init(10, 5);
+    ina226.init(100, 5);
 
 
     
@@ -131,13 +132,13 @@ void digipw_main(){
         //     DEBUG_PRINTLN_IDLE(millis());
         // }
 
-    auto & curr_ch = ina226.getCurrChannel();
-    auto & volt_ch = ina226.getBusVoltChannel();
-    auto & power_ch = ina226.getPowerChannel();
+    auto & curr_ch = ina226.get_curr_channel();
+    auto & volt_ch = ina226.get_bus_volt_channel();
+    // auto & power_ch = ina226.get_power_channel();
 
     /*-----------------------*/
 
-    timer1.init(300'000);
+    timer1.init(200'000);
     timer1.init_bdtr(40);
 
     auto & ch = timer1.oc(1);
@@ -159,7 +160,7 @@ void digipw_main(){
     // BuckConverter buck{curr_ch, volt_ch, mp1907};
     // buck.init();
 
-    iq_t<24> duty = 0.5_r;
+    // iq_t<24> duty = 0.5_r;
 
     // int a;
     // DEBUG_PRINTLN(a);
@@ -173,15 +174,17 @@ void digipw_main(){
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch));
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
 
-        const auto curr_meas = iq_t<24>(real_t(curr_ch));
-        const auto curr_targ = 0.04_q24;
-        const auto curr_err = curr_targ - curr_meas;
-        const auto delta = (curr_err * 0.007_r);
-        duty = duty + delta;
-        DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, ch.cvr());
+        // const auto curr_meas = iq_t<24>(real_t(curr_ch));
+        // const auto curr_targ = 0.04_q24;
+        // const auto curr_err = curr_targ - curr_meas;
+        // const auto delta = (curr_err * 0.007_r);
+        // duty = duty + delta;
+        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, ch.cvr());
+        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch));
+        DEBUG_PRINTLN_IDLE(real_t(volt_ch), real_t(curr_ch));
 
         // mp1907 = real_t(0.5) + real_t(0.4) * sin(t);
-        mp1907 = real_t(0.1);
+        mp1907 = real_t(0.3) + 0.1_r * sinpu(10 * time());
         //  + real_t(0.4) * sin(t);
         // mp1907 = duty;
         led.toggle();

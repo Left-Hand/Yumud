@@ -31,8 +31,8 @@ using namespace ymd::hal;
 
 
 
-static constexpr size_t ISR_FREQ = 19200;
-static constexpr real_t SAMPLE_RES = 0.1_r;
+static constexpr size_t ISR_FREQ = 19200 * 2;
+static constexpr real_t SAMPLE_RES = 0.008_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
 
@@ -48,11 +48,12 @@ real_t volt_2_current(real_t volt){
 
 
 [[maybe_unused]] static void ws2812_tb(hal::GpioIntf & gpio){
+    gpio.outpp();
     drivers::WS2812 led{gpio};
     led.init();
     while(true){
         led = Color_t<real_t>::from_hsv(0.5_r + 0.5_r * sin(time()),1,1,0.2_r);
-        DEBUG_PRINTLN(millis());
+        // DEBUG_PRINTLN(millis());
         delay(10);
     }
 }
@@ -86,15 +87,26 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 
 [[maybe_unused]] static void at8222_tb(){
-    // hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
+    hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
     // DEBUGGER.retarget(&uart);
+
+    uart2.init(4000000, CommStrategy::Nil);
+    // uart2.init(921600);
+    // while(true){
+    //     // uart2.write1(0x55);
+    // }
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.no_brackets();
+
+    // while(true){
+    //     DEBUG_PRINTLN('/');
+    // }
 
     // TARG_UART.init(6_MHz);
 
     auto & timer = hal::timer3;
 
-    //因为是中心对齐的顶部触发 所以频率翻�?
+    //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
 
     auto & pwm_pos = timer.oc(1);
@@ -121,7 +133,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
     adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
     adc1.enable_auto_inject(false);
-    adc1.set_pga(AdcPga::X16);
+    // adc1.set_pga(AdcPga::X16);
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);
 
@@ -134,15 +146,15 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     timer.oc(4).cvr() = int(1); 
     
     LowpassFilter lpf{LowpassFilter::Config{
-        .fc = 140,
+        .fc = 640,
         .fs = ISR_FREQ
     }};
 
     
-    // LowpassFilter lpf_mid{LowpassFilter::Config{
-    //     .fc = 140,
-    //     .fs = ISR_FREQ
-    // }};
+    LowpassFilter lpf_mid{LowpassFilter::Config{
+        .fc = 200,
+        .fs = ISR_FREQ
+    }};
 
     BandpassFilter bpf{BandpassFilter::Config{
         // .fl = 300,
@@ -220,18 +232,30 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     auto & watch_gpio = portA[3];
     watch_gpio.outpp();
 
+    
+    // while(true){
+    //     DEBUG_PRINTLN('/');
+    //     static bool i = 0;
+    //     i = !i;
+    //     // delayMicroseconds(2);
+    //     // __nopn(60);
+    //     // delay(1);
+    //     watch_gpio.write(i);
+    // }
+
     adc1.attach(AdcIT::JEOC, {0,0}, [&](){
         watch_gpio.toggle();
         volt = adc1.inj(1).get_voltage();
         const auto curr_raw = volt_2_current(volt);
 
         lpf.update(curr_raw);
+        lpf_mid.update(curr_raw);
         curr = lpf.get();
         watch_gpio.toggle();
         // bpf.update(curr_raw);
 
         bpf.update(curr_raw);
-        // curr_mid = lpf_mid.get();
+        curr_mid = lpf_mid.get();
 
         ect.update(bool(bpf.get() > 0));
 
@@ -247,8 +271,10 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         // pwm_pos = 0.87_r * abs(sinpu(time()));
         // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
         // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
-        pwm_pos = 0.8_r;
-        pwm_neg = 0_r;
+        pwm_pos = 0_r;
+        // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
+        // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
+        pwm_neg = 0.9_r;
 
 
 
@@ -261,6 +287,8 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
     };
 
     motdrv.init();
+
+    
 
 
     while(true){
@@ -297,7 +325,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);
         // DEBUG_PRINTLN_IDLE(td.get(), lpf.get() * 90 ,volt,spd_targ, exe_micros);
-        DEBUG_PRINTLN_IDLE(curr * 100, bpf.get(), volt);
+        DEBUG_PRINTLN_IDLE(curr * 1000,curr_mid * 1000, volt, curr > curr_mid);
         // DEBUG_PRINTLN_IDLE(trackin_sig, td.get());
         // DEBUG_PRINTLN(bool(pwm_pos.io()), bool(pwm_neg.io()));
         
@@ -541,7 +569,7 @@ void ws2812_main(){
     //     delay(1);
     // }
     // ws2812_tb(hal::portB[1]);
-    // at8222_tb();
+    at8222_tb();
     // jq8900_tb();
-    u13t_tb();
+    // u13t_tb();
 }

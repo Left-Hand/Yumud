@@ -24,7 +24,8 @@ int main(){
     // embd_main();
     // gui_main();
     // canopen_main();
-    bldc_main();
+    // bldc_main();
+    ws2812_main();
     // digipw_main();
     // enum_main();
     // hive_main();

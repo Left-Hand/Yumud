@@ -61,10 +61,10 @@ protected:
 
     void on_rxne_interrupt();
     void on_txe_interrupt();
-    void on_idle_interrupt();
+    void on_rxidle_interrupt();
 
     size_t rx_dma_buf_index_;
-    size_t tx_dma_buf_index_;
+    // size_t tx_dma_buf_index_;
 
     #ifndef UART_DMA_BUF_SIZE
     #define UART_DMA_BUF_SIZE 64
