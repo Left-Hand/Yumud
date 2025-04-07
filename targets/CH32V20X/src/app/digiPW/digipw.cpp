@@ -122,9 +122,9 @@ void digipw_main(){
     I2cSw i2csw{scl_gpio, sda_gpio};
     i2csw.init(1000000);
     
-    INA226 ina226{i2csw};
-    // ina226.init(10, 5);
-    ina226.init(100, 5);
+    // INA226 ina226{i2csw};
+    // // ina226.init(10, 5);
+    // ina226.init(100, 5);
 
 
     
@@ -132,17 +132,19 @@ void digipw_main(){
         //     DEBUG_PRINTLN_IDLE(millis());
         // }
 
-    auto & curr_ch = ina226.get_curr_channel();
-    auto & volt_ch = ina226.get_bus_volt_channel();
+    // auto & curr_ch = ina226.get_curr_channel();
+    // auto & volt_ch = ina226.get_bus_volt_channel();
     // auto & power_ch = ina226.get_power_channel();
 
     /*-----------------------*/
 
-    timer1.init(200'000);
-    timer1.init_bdtr(40);
+    constexpr auto CHOPPER_FREQ = 100'000;
+    timer1.init(CHOPPER_FREQ);
+    timer1.init_bdtr(10);
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
+    ch.sync(true);
     auto & en_gpio = portB[0];
     auto & led = portA[7];
 
@@ -165,9 +167,21 @@ void digipw_main(){
     // int a;
     // DEBUG_PRINTLN(a);
 
+    timer1.bind_cb(TimerIT::Update, [&](){
+        static q20 mt = 0;
+        static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
+        mt += dt;
+        // mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * time());
+        mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt));
+        // const auto duty = 0.3_r;
+        // mp1907 = CLAMP(duty, 0, 0.4_r);
+    });
+
+    timer1.enable_it(TimerIT::Update, {0,0});
+
     while(true){
         
-        ina226.update();
+        // ina226.update();
         
         // const auto t = 6 * time();
         // const auto s = sinpu<31>(t);
@@ -181,10 +195,10 @@ void digipw_main(){
         // duty = duty + delta;
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, ch.cvr());
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch));
-        DEBUG_PRINTLN_IDLE(real_t(volt_ch), real_t(curr_ch));
+        // DEBUG_PRINTLN_IDLE(real_t(volt_ch), real_t(curr_ch));
 
         // mp1907 = real_t(0.5) + real_t(0.4) * sin(t);
-        mp1907 = real_t(0.3) + 0.1_r * sinpu(10 * time());
+
         //  + real_t(0.4) * sin(t);
         // mp1907 = duty;
         led.toggle();

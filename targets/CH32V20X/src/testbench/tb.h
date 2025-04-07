@@ -146,3 +146,4 @@ void lt8960_main();
 
 void light_tracking_main();
 void cubic_main();
+void gxm_new_energy_main();

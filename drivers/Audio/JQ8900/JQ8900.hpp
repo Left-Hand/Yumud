@@ -11,6 +11,10 @@ public:
         void tick();
         bool pending();
         void write(const uint8_t data);
+
+        void init(){
+            ser_.outpp();
+        }
     private:
         hal::GpioIntf & ser_;
     };
@@ -29,7 +33,9 @@ private:
 public:
     JQ8900(hal::GpioIntf & ser):phy_(ser){};
 
-    void init(){;}
+    void init(){
+        phy_.init();
+    }
     void set_vol(const uint8_t value){send_line(value, Command::SetVolume);}
     void set_disc(const uint8_t value){send_line(value, Command::SetDisc);}
 

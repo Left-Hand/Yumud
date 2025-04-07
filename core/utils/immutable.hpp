@@ -6,11 +6,12 @@ template<typename T>
 class immutable_t{
 public:
     constexpr immutable_t(const auto & value):
-        value_(static_cast<T>(value)){;}
-
+    value_(static_cast<T>(value)){;}
+    
     constexpr immutable_t(auto && value):
-        value_(static_cast<T>(value)){;}
-
+    value_(static_cast<T>(value)){;}
+    
+    constexpr immutable_t & operator = (const auto & value) = delete;
     constexpr operator const T () const {
         return value_;
     }
