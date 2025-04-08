@@ -158,15 +158,7 @@ T Color_t<T>::get_v() const {
 }
 
 template <typename T>
-constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const auto & _p_v, const auto & _p_alpha) {
-
-    T p_h = static_cast<T>(_p_h);
-    T p_s = static_cast<T>(_p_s);
-    T p_v = static_cast<T>(_p_v);
-    T p_alpha = static_cast<T>(_p_alpha);
-
-	int i;
-	T f, p, q, _t;
+constexpr void Color_t<T>::set_hsv(const T p_h, const T p_s, const T p_v, const T p_alpha) {
 	a = p_alpha;
 
 	if (p_s == 0) {
@@ -174,14 +166,13 @@ constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const a
 		return;
 	}
 
-	p_h *= 6;
-	p_h = fmod(p_h, T(6));
-	i = (int)floor(p_h);
+	const auto p_h_temp = frac(p_h) * 6;
+	const int i = int(p_h_temp);
 
-	f = p_h - i;
-	p = p_v * (1 - p_s);
-	q = p_v * (1 - p_s * f);
-	_t = p_v * (1 - p_s * (1 - f));
+	const T f = p_h_temp - i;
+	const T p = p_v * (1 - p_s);
+	const T q = p_v * (1 - p_s * f);
+	const T _t = p_v * (1 - p_s * (1 - f));
 
 	switch (i) {
 		case 0: // Red is the dominant Color_t<T>
@@ -277,7 +268,7 @@ Color_t<T> Color_t<T>::contrasted() const {
 }
 
 template<typename T>
-constexpr Color_t<T> Color_t<T>::from_hsv(const auto & p_h, const auto & p_s, const auto & p_v, const auto & p_a){
+constexpr Color_t<T> Color_t<T>::from_hsv(const T p_h, const T p_s, const T p_v, const T p_a){
 	Color_t<T> c;
 	c.set_hsv(p_h, p_s, p_v, p_a);
 	return c;

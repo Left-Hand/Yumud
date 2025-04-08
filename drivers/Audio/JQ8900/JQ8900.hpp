@@ -37,7 +37,7 @@ public:
         phy_.init();
     }
     void set_vol(const uint8_t value){send_line(value, Command::SetVolume);}
-    void set_disc(const uint8_t value){send_line(value, Command::SetDisc);}
+    void play_disc(const uint8_t value){send_line(value, Command::SetDisc);}
 
 };
 

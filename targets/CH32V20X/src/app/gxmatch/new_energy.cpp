@@ -85,6 +85,11 @@ namespace gxm{
         StationName(const Kind kind):
             kind_(kind){;}
 
+        StationName(const StationName & other) = default;
+        StationName(StationName && other) = default;
+        StationName & operator = (const StationName & other) = default;
+        StationName & operator = (StationName && other) = default;
+
         static constexpr size_t STAT_COUNT = __END;
         static constexpr size_t STR_LEN = 16;
         constexpr size_t to_index() const {
@@ -101,7 +106,7 @@ namespace gxm{
         static constexpr
         std::optional<StationName> from_gbk(std::span<const uint8_t, STR_LEN> code);
     private:
-        const Kind kind_;
+        Kind kind_;
     };
 
     struct StationData final{
@@ -270,11 +275,14 @@ namespace gxm{
         void init(){
             inst_.init();
             inst_.set_vol(3);
-            // inst_.set_disc(1);
+            // inst_.play_disc(1);
+            // play(StationName::FengSuoXian);
+            // play(StationName::ChiShui);
+            // play(StationName::CaoDi);
         }
 
         void play(const StationName & sta){
-            inst_.set_disc(sta.to_index());
+            inst_.play_disc(sta.to_index());
             // DEBUG_PRINTS("play:", sta);
         }
     private:
@@ -286,8 +294,60 @@ namespace gxm{
         using Inst = drivers::U13T;
         hal::UartHw & uart_;
         Inst inst_ = Inst{uart_};
+        std::optional<StationName> last_sta_ = std::nullopt;
 
+        static constexpr uint32_t DEAD_ZONE_MS = 1500;
+        uint32_t last_detected_ms_ = 0;
 
+        class FrameDecoder final{
+        public:
+            enum class State{
+                Idle,
+                Len,
+                Payload
+            };
+
+            static constexpr uint8_t HEADER = 0x7f;
+            static constexpr size_t MAX_LEN = 32;
+
+            FrameDecoder(){;}
+            void feed(const char chr){
+                switch(state_){
+                    case State::Idle:
+                        if(chr == HEADER){
+                            state_ = State::Len;
+                        }
+                        break;
+                    case State::Len:{
+                        const size_t len = chr;
+                        ASSERT(len <= MAX_LEN, "FrameDecoder: len too large");
+                        len_ = len;
+                        payload_buffer_.clear();
+                        state_ = State::Payload;
+                        break;
+                    }
+                    case State::Payload:
+                        payload_buffer_.push_back(chr);
+                        if(payload_buffer_.size() >= len_){
+                            state_ = State::Idle;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            std::optional<std::span<const uint8_t>> get_payload() const{
+                if(payload_buffer_.size() < len_) return {};
+                return std::span(payload_buffer_.begin(), payload_buffer_.size());
+            }
+        private:
+            State state_ = State::Idle;
+            sstl::vector<uint8_t, MAX_LEN> payload_buffer_{};
+            uint8_t len_ = 0;
+        };
+
+        FrameDecoder frame_decoder_{};
         DelayedSemphr semphr_{50};
 
         std::optional<StationName> match_context(std::span<const uint8_t, 16> data) const {
@@ -295,44 +355,28 @@ namespace gxm{
             return StationName::from_gbk(data);
         }
 
-        static constexpr auto is_pkt_response(const std::span<const uint8_t> pdata){
-            return pdata.size() == 12;
+        static constexpr auto is_pkt_payload(const std::span<const uint8_t> pdata){
+            return pdata.size() == 10;
         }
 
-        static constexpr auto is_payload_response(const std::span<const uint8_t> pdata){
-            return pdata.size() == 28;
+        static constexpr auto is_identity_payload(const std::span<const uint8_t> pdata){
+            return pdata.size() == 26;
         }
 
+        void update_decoder(){
+            while(uart_.available()){
+                char chr;
+                uart_.read1(chr);
+                frame_decoder_.feed(chr);
+            }
+        }
     public: 
         DetectTask(UartHw & uart):
             uart_(uart){
         }
 
         void init(){
-            Color_t<real_t> color;
-            drivers::WS2812 led{portB[1]};
-            led.init();
         }
-
-        void rx_callback(){
-
-            std::vector<uint8_t> line;
-            while(uart_.available()){
-                char chr;
-                uart_.read1(chr);
-                line.push_back(chr);
-            }
-
-            if(is_pkt_response(line)){
-                semphr_.give();
-            }else if(is_payload_response(line)){
-                const auto payload = std::span<const uint8_t, 16>(std::span(line).subspan(11,16));
-                
-                DEBUG_PRINTLN(match_context(payload), payload);
-                // match_context(std::span(StationData::DATA[1]));
-            }
-
-        };
 
         void test(){
             std::array<uint8_t, 16> ret;
@@ -355,7 +399,55 @@ namespace gxm{
                 static constexpr auto cmds = std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
                 uart_.writeN(cmds.begin(), cmds.size());
             }
+
+
+            if(!uart_.available()) return;
+            update_decoder();
+            
+            const auto payload_opt = frame_decoder_.get_payload();
+            if(!payload_opt) return;
+            const auto & payload = payload_opt.value();
+
+            if(is_pkt_payload(payload)){
+                semphr_.give();
+            }else if(is_identity_payload(payload)){
+                const auto line = (std::span(payload).subspan<9,16>());
+                
+                // DEBUG_PRINTLN(match_context(line), std::hex, std::showbase, line);
+                // DEBUG_PRINTLN(match_context(line), std::hex, std::showbase, line);
+                // const auto last_sta = match_context(line);
+                // ASSERT(last_sta.has_value(), "no match");
+                if(millis() > last_detected_ms_ + DEAD_ZONE_MS){
+                    last_sta_ = match_context(line);
+                    last_detected_ms_ = millis();
+                }
+            }
         }
+
+        bool any() const {return last_sta_.has_value();}
+        StationName take() {
+            ASSERT(any(), "no match");
+            const auto value = last_sta_.value();
+            last_sta_.reset();
+            return value;
+        }
+    };
+
+    class StatLed{
+    public:
+        StatLed(hal::GpioIntf & gpio):gpio_(gpio){;}
+
+        void init(){
+            gpio_.outpp();
+        }
+
+        StatLed & operator =(const Color_t<real_t> & color){
+            if(bool(color)) gpio_.set();
+            else gpio_.clr();
+            return *this;
+        }
+    private:
+        hal::GpioIntf & gpio_;
     };
 }
 namespace ymd{
@@ -435,9 +527,6 @@ void detect_tb(){
     drivers::U13T u13t{uarthw};
     gxm::DetectTask detect_task{uarthw};
     
-    uarthw.bind_post_rx_cb([&]{
-        detect_task.rx_callback();
-    });
 
     detect_task.init();
 
@@ -494,7 +583,7 @@ void app(){
         .accelrate_time = 3.0_r, // S
 
         //缓启动最终恒定输出的力
-        .final_force = 0.6_r, // N / m 
+        .final_force = 0.8_r, // N / m 
     }};
     motor_task.init();
 
@@ -506,19 +595,43 @@ void app(){
     gxm::DetectTask detect_task{uarthw};
     detect_task.init();
 
-    uarthw.bind_post_rx_cb([&]{
-        detect_task.rx_callback();
-    });
-
     gxm::BoardcastTask boardcast_task{portB[1]};
     boardcast_task.init();
 
-    // boardcast_task.play(gxm::StationName::ChiShui);
-    while(true){
+    gxm::StatLed led{portB[8]};
+    led.init();
+
+    delay(10);
+
+    bindSystickCb([&]{
         const auto t = time();
         motor_task.process(t);
+    });
+
+    while(true){
+        const auto t = time();
+
         detect_task.process(t);
+
+        if(detect_task.any()){
+            led = Color_t<real_t>(1, 1, 1, 1);
+
+            const auto stat_name = detect_task.take();
+            boardcast_task.play(stat_name);
+            DEBUG_PRINTLN(stat_name);
+
+            delay(500);
+            led = Color_t<real_t>(0, 0, 0, 0);
+        }
+
         delay(1);
+        // delay(30);
+        // led = Color_t<real_t>(1, 1, 1, 1);
+        // portB[8].set();
+        // // DEBUG_PRINTLN(millis());
+        // delay(30);
+        // portB[8].clr();
+        // led = Color_t<real_t>(0, 0, 0, 0);
     }
 }
 

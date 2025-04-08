@@ -80,7 +80,7 @@ public:
 	constexpr T get_v() const;
     
     // template<typename U>
-    constexpr void set_hsv(const auto & _p_h, const auto & _p_s, const auto & _p_v, const auto & _p_alpha = decltype(_p_alpha)(1));
+    constexpr void set_hsv(const T _p_h, const T _p_s, const T _p_v, const T _p_alpha = T(1));
 
 	__fast_inline constexpr T &operator[](const uint8_t idx) {
         static T default_value = T();
@@ -218,9 +218,11 @@ public:
 	constexpr Color_t hex(uint32_t p_hex);
 	constexpr Color_t hex64(uint64_t p_hex);
 
-	constexpr static Color_t<T> from_hsv(const auto & p_h, const auto & p_s = 1, const auto & p_v = 1, const auto & p_a = 1);
+	constexpr static Color_t<T> from_hsv(const T p_h, const T p_s = 1, const T p_v = 1, const T p_a = 1);
 
-
+    __fast_inline constexpr operator bool() const{
+        return !((a == T(0)) or (r == T(0) and g == T(0) and b == T(0)));
+    }
     __fast_inline constexpr operator RGB565() const {
         return RGB565::from_565(
             (uint8_t)(r * 31),
@@ -238,7 +240,7 @@ public:
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> & value){
 	const auto splt = os.splitter();
-    return os << '(' << value.r << splt << value.g << splt << value.b << splt << value.a << ')';
+    return os << os.brackets<'('>() << value.r << splt << value.g << splt << value.b << splt << value.a << os.brackets<')'>();
 }
 
 
