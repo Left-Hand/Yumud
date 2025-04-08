@@ -6,14 +6,11 @@
 
 #include "core/sdk.hpp"
 
-#define TICKS_PER_MS (F_CPU / 1000)
-#define TICKS_PER_US (TICKS_PER_MS / 1000)
+static constexpr size_t TICKS_PER_MS = (F_CPU / 1000);
+static constexpr size_t TICKS_PER_US = (TICKS_PER_MS / 1000);
 
-#define MICRO_TRIM 0
-#define NANO_TRIM 300
-
-#define TICKS_PER_MS (F_CPU / 1000)
-#define TICKS_PER_US (TICKS_PER_MS / 1000)
+static constexpr size_t MICRO_TRIM = 0;
+static constexpr size_t NANO_TRIM = 300;
 
 #ifdef N32G45X
 #define M_SYSTICK_CNT SysTick->VAL
@@ -25,36 +22,22 @@
 
 #define NANO_MUT(x) (((x) * 1000) / TICKS_PER_US)
 
-// extern volatile uint32_t msTick;
 
-volatile uint32_t msTick = 0;
-volatile uint64_t micros_base = 0;
+static volatile uint32_t msTick = 0;
+static volatile uint64_t micros_base = 0;
 
 namespace ymd{
 uint32_t millis(void){
-  return msTick;
+    return msTick;
 }
 uint64_t micros(void){
-    // M_SYSTICK_DISER;
-    // static uint64_t last_m = 0;
-    // uint32_t m = msTick;
-    // uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
-    // M_SYSTICK_ENER;
-
-    // uint64_t new_m(m * 1000 + ticks / TICKS_PER_US);
-    // if(new_m < last_m){
-    //     return last_m = new_m + 1000;
-    // }else{
-    //     return last_m = new_m;
-    // }
-
     M_SYSTICK_DISER;
-    // const uint32_t m = msTick;
     const uint32_t base = micros_base;
     const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
-    return (base + ticks / TICKS_PER_US);
+    return (base + (ticks / TICKS_PER_US));
+    // return base * 10;
 }
 
 uint64_t nanos(void){

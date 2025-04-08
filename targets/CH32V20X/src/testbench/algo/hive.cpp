@@ -15,9 +15,9 @@
 void hive_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
-    DEBUGGER.noBrackets();
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets();
 
     using num_type = int;
     std::hive<num_type> i_hive;

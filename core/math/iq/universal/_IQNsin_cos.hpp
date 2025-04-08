@@ -82,7 +82,6 @@ int32_t __IQ31getSinCosResult(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
 
 
 template<size_t Q, typename Fn>
-// requires (Q <= 16)
 constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
     constexpr int32_t iqn_tau = (1 << Q) * (TAU);
 
@@ -117,9 +116,9 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
 
 
 
-template<size_t Q, typename Fn>
-requires (Q <= 16)
+template<size_t Qraw, typename Fn, size_t Q = MIN(Qraw, 16)>
 constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
+    if constexpr (Qraw > 16) iqn_x = iqn_x >> (Qraw - 16);
     constexpr int32_t iqn_tau = (1 << Q) * (TAU);
     constexpr uint32_t uiqn_inv_tau = (1 << Q) / (TAU);
 

@@ -39,7 +39,7 @@ real_t RemoteFOCMotor::getPosition() const{
     POST(Command::GET_POS); 
     return readPosition();
 }
-real_t RemoteFOCMotor::getAcc() const{POST(Command::GET_ACC); return readAcc();}
+real_t RemoteFOCMotor::get_acc() const{POST(Command::GET_ACC); return readAcc();}
 void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){

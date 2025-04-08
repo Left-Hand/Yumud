@@ -56,7 +56,7 @@ struct Future {
         std::suspend_never initial_suspend() { return {}; }
         std::suspend_never final_suspend() noexcept { return {}; }
         void unhandled_exception() { std::terminate(); }
-        void return_value(T value) { this->value = std::move(value); }
+        void return_value(T _value) { this->value = std::move(_value); }
         T value;
     };
 

@@ -10,9 +10,9 @@ using namespace ymd;
 
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
-        if (func == &std::oct) {setRadix(8);break;}
-        if (func == &std::dec) {setRadix(10);break;}
-        if (func == &std::hex) {setRadix(16);break;}
+        if (func == &std::oct) {set_radix(8);break;}
+        if (func == &std::dec) {set_radix(10);break;}
+        if (func == &std::hex) {set_radix(16);break;}
         if (func == &std::fixed) {
             //TODO
             break;
@@ -85,7 +85,7 @@ int OutputStream::transform_char(const char chr) const{
     if(likely(!config_.flags)) return chr;
 
     if(unlikely(config_.nospace) and unlikely(chr == ' ')) return -1;
-    if(unlikely(config_.nobrackets)){
+    if(unlikely(config_.no_brackets)){
         switch(chr){
             case '(':
             case ')':
@@ -110,25 +110,14 @@ void OutputStream::checked_write(const char data){
 }
 
 void OutputStream::print_source_loc(const std::source_location & loc){
-    // *this << loc.file_name() << '(' << loc.line() << ':' << loc.column() << ')'
-    // << loc.function_name() << ':';
-    // *this <<  loc.function_name() ;
-    
-    // this->prints("loc");
-    const auto guard = this->createGuard();
+    const auto guard = this->create_guard();
     this->println();
 
-    this->setSplitter('\0');
-    this->setIndent(this->indent());
+    this->set_splitter('\0');
+    this->set_indent(this->indent());
     
     this->println(loc.function_name());
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
-    // this->prints("locend");
-    // delay(1000);
-    // *this << loc.file_name();
-    // delay(1000);
-    // *this <<<< ':';
-    // delay(1000);
 }
 
 struct Buf{

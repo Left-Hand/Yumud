@@ -56,7 +56,7 @@ public:
     bool stable();
     void setMode(const Mode mode);
     void disableI2c();
-    Option<Vector3_t<real_t>> getMagnet() override;
+    Option<Vector3_t<real_t>> get_magnet() override;
 };
 
 };

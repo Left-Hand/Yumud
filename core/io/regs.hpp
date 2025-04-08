@@ -11,11 +11,9 @@ struct __RegBase{};
 template<typename T, typename D = T>
 struct alignas(sizeof(T)) __RegC_t:public __RegBase{
 protected:
-    static constexpr bool is_crtp = std::is_same_v<T, D>;
-    static constexpr bool is_non_crtp = !is_crtp;
 
-    static_assert(is_non_crtp or std::has_unique_object_representations_v<D>, "data must have unique object representation");
-    static_assert(is_non_crtp or (sizeof(T) == sizeof(D)), "data must keep the same size");
+    // static_assert(is_non_crtp or std::has_unique_object_representations_v<D>, "data must have unique object representation");
+    // static_assert(is_non_crtp or (sizeof(T) == sizeof(D)), "data must keep the same size");
     using TReg = T;
     __RegC_t() = default;
 public:

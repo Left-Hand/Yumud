@@ -32,8 +32,8 @@ iq_t<16> add2(const iq_t<16> x, const iq_t<16> y){
 void rpc_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     Ball ball;
 

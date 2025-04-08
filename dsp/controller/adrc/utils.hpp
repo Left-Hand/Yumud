@@ -7,6 +7,7 @@
 #include "dsp/state_vector.hpp"
 
 namespace ymd::dsp{
+static constexpr 
 real_t fal(const real_t e, const real_t alpha, const real_t delta){
 
     const auto fabsf_e = abs(e);
@@ -17,7 +18,8 @@ real_t fal(const real_t e, const real_t alpha, const real_t delta){
         return pow(fabsf_e,alpha)*sign(e);
 }
 
-static constexpr real_t ssqrt(real_t x){
+static constexpr 
+real_t ssqrt(real_t x){
     return sign(x) * sqrt(ABS(x));
 }
 

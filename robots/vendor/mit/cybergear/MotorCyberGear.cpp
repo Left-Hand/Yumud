@@ -19,16 +19,20 @@ using namespace ymd::rmst;
 using namespace ymd::rmst::details;
 
 using CanMsg = hal::CanMsg;
+using Temperature = CyberGear_Temperature;
+using CmdRad = CyberGear_CmdRad;
+using CmdOmega = CyberGear_CmdOmega;
+using CmdTorque = CyberGear_CmdTorque;
+using CmdKp = CyberGear_CmdKp;
+using CmdKd = CyberGear_CmdKd;
 
-// using CgResult = MotorCyberGear::CgResult;  
-// using CgError = MotorCyberGear::CgError;
 
 
 struct CgId{
     uint32_t id;
 
-    auto cmd() {return make_bitfield<24, 29, CgCommand>(id);}
-    auto cmd() const {return make_bitfield<24, 29, CgCommand>(id);}
+    auto cmd() {return make_bitfield<24, 29, CyberGear_Command>(id);}
+    auto cmd() const {return make_bitfield<24, 29, CyberGear_Command>(id);}
     auto high() {return make_bitfield<8, 24, uint16_t>(id);}
     auto fault() {return make_bitfield<8, 24, uint16_t>(id);}
     auto low() {return make_bitfield<0, 8, uint8_t>(id);}
@@ -37,7 +41,7 @@ struct CgId{
 
 
 static __inline 
-uint32_t make_id(const CgCommand cmd, const uint16_t high, const uint8_t low) {
+uint32_t make_id(const CyberGear_Command cmd, const uint16_t high, const uint8_t low) {
     CgId cgid;
 
     cgid.cmd() = cmd;
@@ -49,16 +53,16 @@ uint32_t make_id(const CgCommand cmd, const uint16_t high, const uint8_t low) {
 
 
 
-CgResult<void> MotorCyberGear::init(){
+CyberGear_Result<void> CyberGear::init(){
     return Ok{};
 }
 
-CgResult<void> MotorCyberGear::requestMcuId(){
-    const auto id = make_id(CgCommand::GET_DEVICE_ID, host_id_, node_id_);
+CyberGear_Result<void> CyberGear::requestMcuId(){
+    const auto id = make_id(CyberGear_Command::GET_DEVICE_ID, host_id_, node_id_);
     return this->transmit(id, 0, 0);
 }
 
-CgResult<void> MotorCyberGear::ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd){
+CyberGear_Result<void> CyberGear::ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd){
 
     struct Payload{
         uint64_t data;
@@ -78,7 +82,7 @@ CgResult<void> MotorCyberGear::ctrl(const real_t cmd_torque, const real_t cmd_ra
             | CmdKd::check(cmd_kd) 
         ;
 
-        if(res) return Err(CgError::INPUT_OUT_OF_RANGE);
+        if(res) return Err(CyberGear_Error::INPUT_OUT_OF_RANGE);
     }
 
     payload.cmd_rad() = CmdRad(cmd_rad);
@@ -87,21 +91,21 @@ CgResult<void> MotorCyberGear::ctrl(const real_t cmd_torque, const real_t cmd_ra
     payload.cmd_kp() = CmdKp(cmd_kp);
 
     return this->transmit(
-        make_id(CgCommand::SEND_CTRL1, CmdTorque(cmd_torque).data, node_id_),
+        make_id(CyberGear_Command::SEND_CTRL1, CmdTorque(cmd_torque).data, node_id_),
         payload.data, sizeof(payload)
     );
 }
 
-CgResult<void> MotorCyberGear::onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
+CyberGear_Result<void> CyberGear::onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
     if (dlc != 8){
-        return Err(CgError::RET_DLC_SHORTER);
+        return Err(CyberGear_Error::RET_DLC_SHORTER);
     }
 
     device_mcu_id_ = Some(data);
     return Ok();
 }
 
-CgResult<void> MotorCyberGear::onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
+CyberGear_Result<void> CyberGear::onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
     struct Payload{
         uint64_t data;
         auto rad() {return make_bitfield<0, 16, CmdRad>(data);}
@@ -112,7 +116,7 @@ CgResult<void> MotorCyberGear::onCtrl2FeedBack(const uint32_t id, const uint64_t
 
 
     if(dlc != sizeof(Payload)){
-        return Err(CgError::RET_DLC_SHORTER);
+        return Err(CyberGear_Error::RET_DLC_SHORTER);
     }
 
     Payload payload = {data};
@@ -125,53 +129,53 @@ CgResult<void> MotorCyberGear::onCtrl2FeedBack(const uint32_t id, const uint64_t
     return Ok();
 }
 
-CgResult<void> MotorCyberGear::enable(const bool en, const bool clear_fault){
+CyberGear_Result<void> CyberGear::enable(const bool en, const bool clear_fault){
     if(en){
         return this->transmit(
-            make_id(CgCommand::EN_MOT, host_id_, node_id_), 0, 0);
+            make_id(CyberGear_Command::EN_MOT, host_id_, node_id_), 0, 0);
     }else{
         // 正常运行时，data区需清0；
         // byte[0]=1 时：清故障；
         return this->transmit(
-            make_id(CgCommand::DISEN_MOT, host_id_, node_id_), uint64_t(clear_fault), 8);
+            make_id(CyberGear_Command::DISEN_MOT, host_id_, node_id_), uint64_t(clear_fault), 8);
     }
 }
 
 
-CgResult<void> MotorCyberGear::setCurrentAsMachineHome(){
+CyberGear_Result<void> CyberGear::setCurrentAsMachineHome(){
     return this->transmit(
-        make_id(CgCommand::SET_MACHINE_HOME, host_id_, node_id_), 1, 0);
+        make_id(CyberGear_Command::SET_MACHINE_HOME, host_id_, node_id_), 1, 0);
 }
 
-CgResult<void> MotorCyberGear::transmit(const CanMsg & msg){
+CyberGear_Result<void> CyberGear::transmit(const CanMsg & msg){
     MOTOR_DEBUG("write_msg", msg);
     // can_drv_.transmit(msg);
     return Ok{};
 }
 
-CgResult<void> MotorCyberGear::changeCanId(const uint8_t can_id){
+CyberGear_Result<void> CyberGear::changeCanId(const uint8_t can_id){
     node_id_ = can_id;
     return this->transmit(
-        make_id(CgCommand::SET_CAN_ID, host_id_, node_id_), 0, 0);
+        make_id(CyberGear_Command::SET_CAN_ID, host_id_, node_id_), 0, 0);
 }
 
-CgResult<void> MotorCyberGear::requestReadPara(const uint16_t idx){
+CyberGear_Result<void> CyberGear::requestReadPara(const uint16_t idx){
     return this->transmit(
-        make_id(CgCommand::READ_PARA, host_id_, node_id_), uint64_t(idx), 8);
+        make_id(CyberGear_Command::READ_PARA, host_id_, node_id_), uint64_t(idx), 8);
 }
 
-CgResult<void> MotorCyberGear::requestWritePara(const uint16_t idx, const uint32_t data){
+CyberGear_Result<void> CyberGear::requestWritePara(const uint16_t idx, const uint32_t data){
     return this->transmit(
-        make_id(CgCommand::WRITE_PARA, host_id_, node_id_), uint64_t(idx) | (uint64_t(data) << 32), 8);
+        make_id(CyberGear_Command::WRITE_PARA, host_id_, node_id_), uint64_t(idx) | (uint64_t(data) << 32), 8);
 }
 
-CgResult<void> MotorCyberGear::transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc){
-    if (dlc > 8) return CgResult<void>(CgError::RET_DLC_LONGER);
+CyberGear_Result<void> CyberGear::transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc){
+    if (dlc > 8) return CyberGear_Result<void>(Err(CyberGear_Error::RET_DLC_LONGER));
     const auto msg = CanMsg::from_regs(id, payload, dlc);
     return this->transmit(msg);
 }
 
-CgResult<void> MotorCyberGear::onReceive(const CanMsg & msg){
+CyberGear_Result<void> CyberGear::onReceive(const CanMsg & msg){
     const auto id = msg.id();
     const auto cgid = CgId{id};
     const auto cmd = cgid.cmd().as_val();
@@ -180,20 +184,20 @@ CgResult<void> MotorCyberGear::onReceive(const CanMsg & msg){
     const uint8_t dlc = msg.size();
 
     switch(cmd){
-        case CgCommand::GET_DEVICE_ID:
+        case CyberGear_Command::GET_DEVICE_ID:
             return onMcuIdFeedBack(id, data, dlc);
-        case CgCommand::FBK_CTRL1:
+        case CyberGear_Command::FBK_CTRL1:
             return onReadParaFeedBack(id, data, dlc);
-        case CgCommand::READ_PARA:
-            return Err{CgError::PRAGRAM_TODO};
+        case CyberGear_Command::READ_PARA:
+            return Err{CyberGear_Error::PRAGRAM_TODO};
             break;
-        case CgCommand::FBK_FAULT:
-            return Err{CgError::PRAGRAM_TODO};
+        case CyberGear_Command::FBK_FAULT:
+            return Err{CyberGear_Error::PRAGRAM_TODO};
             break;
 
         default:
-            return Err{CgError::RET_UNKOWN_CMD};
+            return Err{CyberGear_Error::RET_UNKOWN_CMD};
     }
 
-    return Err{CgError::PRAGRAM_UNHANDLED};
+    return Err{CyberGear_Error::PRAGRAM_UNHANDLED};
 }

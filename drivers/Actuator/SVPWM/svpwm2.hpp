@@ -15,7 +15,7 @@ public:
     SVPWM2(Driver & coil_a, Driver & coil_b):coil_a_(coil_a), coil_b_(coil_b){;}
 
 
-    __fast_inline void setAbDuty(const real_t duty_a, const real_t duty_b) final override{
+    __fast_inline void set_ab_duty(const real_t duty_a, const real_t duty_b) final override{
         coil_a_ = duty_a;
         coil_b_ = duty_b;
     }

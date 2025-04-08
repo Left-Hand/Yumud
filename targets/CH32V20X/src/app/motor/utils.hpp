@@ -6,22 +6,19 @@
 
 namespace ymd::foc{
 
-// scexpr uint chopper_freq = 32768;
 scexpr uint chopper_freq = 50000;
-scexpr uint foc_freq = 25000;
-
-using Current = real_t;
+scexpr uint foc_freq = chopper_freq / 2;
 
 struct UvwValue{
-    real_t u = {};
-    real_t v = {};
-    real_t w = {};
+    q20 u = {};
+    q20 v = {};
+    q20 w = {};
 
-    real_t operator [](const size_t idx) const {
+    q20 operator [](const size_t idx) const {
         return *(&u + idx);
     }
 
-    real_t & operator [](const size_t idx){
+    q20 & operator [](const size_t idx){
         return *(&u + idx);
     }
 };
@@ -32,18 +29,18 @@ struct UvwVoltage: public UvwValue{};
 
 struct DqValue{
     #pragma pack(push, 1)
-    real_t d, q;
+    q20 d, q;
     #pragma pack(pop)
 
-    real_t operator [](const size_t idx) const {
+    q20 operator [](const size_t idx) const {
         return *(&d + idx);
     }
 
-    real_t & operator [](const size_t idx){
+    q20 & operator [](const size_t idx){
         return *(&d + idx);
     }
 
-    real_t length() const {
+    q20 length() const {
         return sqrt(d*d + q*q);
     }
 };
@@ -52,18 +49,18 @@ struct DqCurrent: public DqValue{};
 struct DqVoltage: public DqValue{};
 
 struct AbValue{
-    real_t a = {};
-    real_t b = {};
+    q20 a = {};
+    q20 b = {};
 
-    real_t operator [](const size_t idx) const {
+    q20 operator [](const size_t idx) const {
         return *(&a + idx);
     }
 
-    real_t & operator [](const size_t idx){
+    q20 & operator [](const size_t idx){
         return *(&a + idx);
     }
 
-    real_t length() const {
+    q20 length() const {
         return sqrt(a*a + b*b);
     }
 };
@@ -72,15 +69,23 @@ struct AbCurrent: public AbValue{};
 struct AbVoltage: public AbValue{};
 
 
-__inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
-    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * real_t(2.0/3), (uvw.v - uvw.w) * real_t(1.731 / 3)};
+__fast_inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
+    static constexpr auto _2_by_3 = q20(2.0/3);
+    static constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
+    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
 };
 
-DqCurrent ab_to_dq(const AbCurrent & ab, const real_t rad);
-DqVoltage ab_to_dq(const AbVoltage & ab, const real_t rad);
+DqCurrent ab_to_dq(const AbCurrent & ab, const q16 rad);
+DqVoltage ab_to_dq(const AbVoltage & ab, const q16 rad);
 
-AbCurrent dq_to_ab(const DqCurrent & dq, const real_t rad);
-AbVoltage dq_to_ab(const DqVoltage & dq, const real_t rad);
+AbCurrent dq_to_ab(const DqCurrent & dq, const q16 rad);
+AbVoltage dq_to_ab(const DqVoltage & dq, const q16 rad);
+
+DqCurrent ab_to_dq(const AbCurrent & ab, const q16 s, const q16 c);
+DqVoltage ab_to_dq(const AbVoltage & ab, const q16 s, const q16 c);
+
+AbCurrent dq_to_ab(const DqCurrent & dq, const q16 s, const q16 c);
+AbVoltage dq_to_ab(const DqVoltage & dq, const q16 s, const q16 c);
 
 void init_adc();
 static __inline real_t sign_sqrt(const real_t x){
@@ -115,3 +120,64 @@ namespace ymd{
             uvw.w << os.brackets<')'>();
     }
 }
+
+// struct TurnSolver{
+//     uint16_t ta = 0;
+//     uint16_t tb = 0;
+//     real_t pa = 0;
+//     real_t pb = 0;
+//     real_t va = 0;
+//     real_t vb = 0;
+// };
+
+// [[maybe_unused]] static real_t demo(uint milliseconds){
+//     // using Vector2_t<real_t> = CubicInterpolation::Vector2_t<real_t>;
+//     static TurnSolver turnSolver;
+    
+//     uint32_t turnCnt = milliseconds % 2667;
+//     uint32_t turns = milliseconds / 2667;
+    
+//     scexpr real_t velPoints[7] = {
+//         real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
+//     };
+    
+//     scexpr real_t posPoints[7] = {
+//         real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
+//     };
+
+//     scexpr uint tickPoints[7] = {
+//         0, 300, 400, 500, 2210, 2567, 2667 
+//     };
+
+//     int8_t i = 6;
+
+//     while((turnCnt < tickPoints[i]) && (i > -1))
+//         i--;
+    
+//     turnSolver.ta = tickPoints[i];
+//     turnSolver.tb = tickPoints[i + 1];
+//     auto dt = turnSolver.tb - turnSolver.ta;
+
+//     turnSolver.va = velPoints[i];
+//     turnSolver.vb = velPoints[i + 1];
+    
+//     turnSolver.pa = posPoints[i];
+//     turnSolver.pb = posPoints[i + 1];
+//     real_t dp = turnSolver.pb - turnSolver.pa;
+
+//     real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / dt);
+//     real_t temp = (real_t)dt / 1000 / dp; 
+
+//     real_t yt = 0;
+
+//     if((i == 0) || (i == 2) || (i == 4))
+//         yt = CubicInterpolation::forward(
+//             Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+//             Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+//     else
+//         yt = _t;
+
+//     real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
+
+//     return new_pos;
+// }

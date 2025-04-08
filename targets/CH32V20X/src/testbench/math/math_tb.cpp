@@ -52,7 +52,7 @@ void math_tb(){
     auto & logger = DEBUGGER;
     DEBUGGER_INST.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.setEps(4);
+    DEBUGGER.set_eps(4);
     
 
     // using Vector3 = Vector3_t<real_t>;

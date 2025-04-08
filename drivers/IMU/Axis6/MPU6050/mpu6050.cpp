@@ -116,14 +116,14 @@ Result<void, Error> MPU6050::update(){
     return res;
 }
 
-Option<Vector3_t<real_t>> MPU6050::getAcc(){
+Option<Vector3_t<real_t>> MPU6050::get_acc(){
     real_t x = uni(acc_x_reg) * acc_scaler;
     real_t y = uni(acc_y_reg) * acc_scaler;
     real_t z = uni(acc_z_reg) * acc_scaler;
     return  Some{Vector3_t<real_t>{x, y, z}};
 }
 
-Option<Vector3_t<real_t>> MPU6050::getGyr(){
+Option<Vector3_t<real_t>> MPU6050::get_gyr(){
     // if(!data_valid) return None;
     real_t x = uni(gyr_x_reg) * gyr_scaler;
     real_t y = uni(gyr_y_reg) * gyr_scaler;

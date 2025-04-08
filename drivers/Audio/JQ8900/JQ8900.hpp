@@ -1,35 +1,43 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
-
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
-
-namespace ymd::hal{
-    class GpioIntf;
-}
 namespace ymd::drivers{
 class JQ8900{
-private:
-    hal::GpioIntf & ser;
+public: 
+    class Phy{
+    public:
+        Phy(hal::GpioIntf & ser):ser_(ser){}
+        void tick();
+        bool pending();
+        void write(const uint8_t data);
 
-    enum class CMD:uint8_t{
-        CLR = 0x0A,
-        SET_DISC = 0x0B,
-        SET_VOL = 0x0C,
-        SET_EQ = 0x0D,
+        void init(){
+            ser_.outpp();
+        }
+    private:
+        hal::GpioIntf & ser_;
+    };
+private:
+    Phy phy_;
+
+    enum class Command:uint8_t{
+        Clear = 0x0A,
+        SetDisc = 0x0B,
+        SetVolume = 0x0C,
+        SetEQ = 0x0D,
     };
 
-    void send(const uint8_t data);
-    void sendLine(const uint8_t value, const CMD cmd);
-    void sendNum(const int value);
+    void send_line(const uint8_t value, const Command cmd);
+    void send_num(const int value);
 public:
-    JQ8900(hal::GpioIntf & _ser):ser(_ser){};
+    JQ8900(hal::GpioIntf & ser):phy_(ser){};
 
-    void init(){;}
-    void setVol(const uint8_t value){sendLine(value, CMD::SET_VOL);}
-    void setDisc(const uint8_t value){sendLine(value, CMD::SET_DISC);}
+    void init(){
+        phy_.init();
+    }
+    void set_vol(const uint8_t value){send_line(value, Command::SetVolume);}
+    void play_disc(const uint8_t value){send_line(value, Command::SetDisc);}
 
 };
 

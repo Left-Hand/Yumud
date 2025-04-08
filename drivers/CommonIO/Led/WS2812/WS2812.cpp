@@ -6,15 +6,22 @@
 
 using namespace ymd::drivers;
 
+//short 0.4us	±150ns
+//long 0.85us	±150ns
+
+//144mhz
+
+// #define DELAY_CELL __nopn(4)
+#define DELAY_CELL delayMicroseconds(1);
 void WS2812_Phy::delay_long(){
-    for(size_t i = 0; i < 8; i++){
-        __nopn(3);
+    for(size_t i = 0; i < 13; i++){
+        DELAY_CELL;
     }
 }
 
 void WS2812_Phy::delay_short(){
-    for(size_t i = 0; i < 2; i++){
-        __nopn(3);
+    for(size_t i = 0; i < 4; i++){
+        DELAY_CELL;
     }
 }
 

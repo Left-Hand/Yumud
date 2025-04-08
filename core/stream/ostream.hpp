@@ -5,6 +5,7 @@
 #include <ostream>
 #include <span>
 #include <ranges>
+#include "core/stream/CharOpTraits.hpp"
 
 namespace std{
     class source_location;
@@ -53,7 +54,7 @@ struct __needprint_helper<__Splitter>{
     static constexpr bool value = false;
 };
 
-class OutputStream: virtual public BasicStream{
+class OutputStream{
 public:
     struct Config{
         char splitter[4];
@@ -67,17 +68,17 @@ public:
                 uint16_t boolalpha:1;
                 uint16_t showpos:1;
                 uint16_t showbase:1;
-                uint16_t nobrackets:1;
+                uint16_t no_brackets:1;
                 uint16_t nospace:1;
-                uint16_t forcesync:1;
+                uint16_t force_sync:1;
             };
         };
     };
 private:
+
     uint8_t sp_len;
 
-
-    scexpr Config default_config = {
+    scexpr Config DEFAULT_CONFIG = {
         .splitter = ", ",
         .radix = 10,
         .eps = 3,
@@ -107,7 +108,7 @@ private:
     }
 
     __fast_inline void print_end(){
-        if(unlikely(config_.forcesync)) flush();
+        if(unlikely(config_.force_sync)) flush();
     }
 
     __fast_inline void print_indent(){
@@ -146,7 +147,7 @@ private:
     void print_source_loc(const std::source_location & loc);
 public:
     OutputStream(){
-        reconf(default_config);
+        reconf(DEFAULT_CONFIG);
     }
 
     virtual ~OutputStream() = default;
@@ -154,6 +155,9 @@ public:
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 
+
+
+    
     virtual void write(const char data) = 0;
     virtual void write(const char * pdata, const size_t len){
         for(size_t i = 0; i<len; i++) write(pdata[i]);
@@ -161,25 +165,26 @@ public:
 
     virtual size_t pending() const = 0;
 
-    OutputStream & setSplitter(const char * splitter){
+
+    OutputStream & set_splitter(const char * splitter){
         strcpy(config_.splitter, splitter);
         sp_len = strlen(splitter);
         return *this;
     }
     
-    OutputStream & setSplitter(const char splitter){
+    OutputStream & set_splitter(const char splitter){
         config_.splitter[0] = splitter;
         config_.splitter[1] = 0;
         sp_len = 1;
         return *this;
     }
 
-    OutputStream & setRadix(const uint8_t radix){
+    OutputStream & set_radix(const uint8_t radix){
         config_.radix = radix;
         return *this;
     }
 
-    OutputStream & setIndent(const uint8_t indent){
+    OutputStream & set_indent(const uint8_t indent){
         config_.indent = indent;
         return *this;
     }
@@ -188,22 +193,21 @@ public:
         return config_.indent;
     }
 
-    OutputStream & setEps(const uint8_t eps){
+    OutputStream & set_eps(const uint8_t eps){
         config_.eps = eps;
         return *this;
     }
 
-    OutputStream & noBrackets(const bool disen = true){
-        config_.nobrackets = disen;
+    OutputStream & no_brackets(const bool disen = true){
+        config_.no_brackets = disen;
+        return *this;
+    }
+    OutputStream & force_sync(const bool en = true){
+        config_.force_sync = en;
         return *this;
     }
 
-    OutputStream & forceSync(const bool en = true){
-        config_.forcesync = en;
-        return *this;
-    }
-
-    OutputStream & noSpace(const bool disen = true){
+    OutputStream & no_space(const bool disen = true){
         config_.nospace = disen;
         return *this;
     }
@@ -238,12 +242,9 @@ public:
     OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
 
     template<char chr>
-    OutputStream& operator<<(const __Brackets<chr>){if(!config_.nobrackets){write(chr);} return *this;}
+    OutputStream& operator<<(const __Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
     OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
-    // template<typename T>
-    // OutputStream& operator<<(const __RegC_t<T> & reg){return *this << std::bitset<sizeof(T) * 8>(reg.as_val());}
-    
     template<typename T>
     OutputStream& operator<<(const std::optional<T> v){
         if(v.has_value()) return *this << v.value();
@@ -440,9 +441,42 @@ public:
         }
     };
 
-    [[nodiscard]] __Guard createGuard(){
+    [[nodiscard]] __Guard create_guard(){
         return __Guard(*this);
     }
 };
 
+
+class OutputStreamByRoute : public OutputStream{
+private:
+    using Traits = WriteCharTraits;
+    using Route = pro::proxy<Traits>;
+    Route p_route_;
+
+public:
+    OutputStreamByRoute(){;}
+    void write(const char data){
+        if(unlikely(!p_route_)) while(true);
+        p_route_->write1(data);
+    }
+    void write(const char * pdata, const size_t len){
+        if(unlikely(!p_route_)) while(true);
+        p_route_->writeN(pdata, len);
+	}
+
+    size_t pending() const {
+        if(unlikely(!p_route_)) while(true);
+        return p_route_->pending();
+    }
+
+    void retarget(Route p_route){
+        p_route_ = p_route;
+    }
+
+    Route & route() {
+        if(unlikely(!p_route_)) while(true);
+        return p_route_;
+    }
 };
+
+}

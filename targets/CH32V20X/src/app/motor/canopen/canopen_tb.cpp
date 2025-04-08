@@ -14,8 +14,8 @@ using namespace ymd::canopen;
 void canopen_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     // SdoObjectDict od;
     Cia402ObjectDict od;

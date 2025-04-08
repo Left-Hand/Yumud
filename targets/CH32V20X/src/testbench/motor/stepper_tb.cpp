@@ -127,7 +127,7 @@ uint8_t get_default_id(){
 void stepper_tb(UartHw & logger_inst){
     logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
-    DEBUGGER.setEps(4);
+    DEBUGGER.set_eps(4);
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
 

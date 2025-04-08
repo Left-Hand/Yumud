@@ -199,8 +199,8 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
 
 [[maybe_unused]] static void flash_tb(OutputStream & logger){
-    logger.setSplitter(" ");
-    logger.setRadix(10);
+    logger.set_splitter(" ");
+    logger.set_radix(10);
 
     // logger.prints("Flash Size:", Sys::Chip::getFlashSize());
     // logger.prints("SYS Clock:", Sys::Clock::getSystemFreq());
@@ -209,7 +209,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     // logger.prints("APB1 Clock:", Sys::Clock::getAPB1Freq());
     // logger.prints("APB2 Clock:", Sys::Clock::getAPB2Freq());
 
-    // logger.setRadix(16);
+    // logger.set_radix(16);
     // while(true);
     // logger.prints(Flash::getMaxPages());
     // while(true);
@@ -303,9 +303,9 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 void eeprom_main(){
     uart2.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(2);
-    DEBUGGER.setRadix(10);
-    DEBUGGER.setSplitter("\t\t");
+    DEBUGGER.set_eps(2);
+    DEBUGGER.set_radix(10);
+    DEBUGGER.set_splitter("\t\t");
 
     I2cSw i2csw = I2cSw(portB[13], portB[12]);
     i2csw.init(400000);

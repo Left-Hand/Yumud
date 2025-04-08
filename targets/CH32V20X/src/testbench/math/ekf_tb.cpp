@@ -14,7 +14,7 @@ void ekf_main(){
     
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
     
     delay(200);
 

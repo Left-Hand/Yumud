@@ -41,6 +41,9 @@
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "CurrentSensor.hpp"
 #include "GradeCounter.hpp"
+#include "core/polymorphism/reflect.hpp"
+#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+#include "dsp/filter/rc/LowpassFilter.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -82,66 +85,6 @@ public:
     bool stable() = 0;
 };
 
-struct TurnSolver{
-    uint16_t ta = 0;
-    uint16_t tb = 0;
-    real_t pa = 0;
-    real_t pb = 0;
-    real_t va = 0;
-    real_t vb = 0;
-};
-
-[[maybe_unused]] static real_t demo(uint milliseconds){
-    // using Vector2_t<real_t> = CubicInterpolation::Vector2_t<real_t>;
-    static TurnSolver turnSolver;
-    
-    uint32_t turnCnt = milliseconds % 2667;
-    uint32_t turns = milliseconds / 2667;
-    
-    scexpr real_t velPoints[7] = {
-        real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
-    };
-    
-    scexpr real_t posPoints[7] = {
-        real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
-    };
-
-    scexpr uint tickPoints[7] = {
-        0, 300, 400, 500, 2210, 2567, 2667 
-    };
-
-    int8_t i = 6;
-
-    while((turnCnt < tickPoints[i]) && (i > -1))
-        i--;
-    
-    turnSolver.ta = tickPoints[i];
-    turnSolver.tb = tickPoints[i + 1];
-    auto dt = turnSolver.tb - turnSolver.ta;
-
-    turnSolver.va = velPoints[i];
-    turnSolver.vb = velPoints[i + 1];
-    
-    turnSolver.pa = posPoints[i];
-    turnSolver.pb = posPoints[i + 1];
-    real_t dp = turnSolver.pb - turnSolver.pa;
-
-    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / dt);
-    real_t temp = (real_t)dt / 1000 / dp; 
-
-    real_t yt = 0;
-
-    if((i == 0) || (i == 2) || (i == 4))
-        yt = CubicInterpolation::forward(
-            Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
-            Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
-    else
-        yt = _t;
-
-    real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
-
-    return new_pos;
-}
 
 
 class BldcMotor{
@@ -262,7 +205,7 @@ public:
 
         const auto cmd_ab_volt = dq_to_ab(cmd_dq_volt, meas_rad);
 
-        svpwm_.setAbVolt(cmd_ab_volt[0], cmd_ab_volt[1]);
+        svpwm_.set_ab_volt(cmd_ab_volt[0], cmd_ab_volt[1]);
     }
 private:
 
@@ -336,9 +279,9 @@ public:
 
     UvwCurrent result() const{
         return {
-            lpfs_[0].result(),
-            lpfs_[1].result(),
-            lpfs_[2].result(),
+            lpfs_[0].get(),
+            lpfs_[1].get(),
+            lpfs_[2].get(),
         };
     }
 };
@@ -356,10 +299,11 @@ __no_inline void init_opa(){
 // }
 
 void bldc_main(){
-    uart2.init(576000);
+    uart2.init(6_MHz);
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets();
     delay(200);
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
@@ -399,8 +343,8 @@ void bldc_main(){
 
     // for(size_t i = 0; i < 1000; ++i) {
     //     bmi.update();
-    //     // auto [x,y,z] = bmi.getAcc();
-    //     auto [x,y,z] = bmi.getGyr();
+    //     // auto [x,y,z] = bmi.get_acc();
+    //     auto [x,y,z] = bmi.get_gyr();
     //     DEBUG_PRINTLN(x,y,z);
     //     delay(2);
     //     // DEBUGGER << std::endl;
@@ -415,7 +359,7 @@ void bldc_main(){
     };
 
     mp6540.init();
-    mp6540.setSoRes(1000);
+    mp6540.setSoRes(10_KHz);
     
     SVPWM3 svpwm {mp6540};
     
@@ -470,15 +414,16 @@ void bldc_main(){
     [[maybe_unused]] NonlinearObserver nlr_ob = {
         {
             .phase_inductance = 1.45E-3_r,
-            .phase_resistance = 7.1_r,
-            .observer_gain = 0.1_r,
+            .phase_resistance = 1.2_r,
+            .observer_gain = 0.2_r,
             .pm_flux_linkage = 3.58e-4_r,
-            .freq = chopper_freq/2,
+            .freq = foc_freq,
         }
     };
 
 
     real_t hfi_result;
+    real_t hfi_mid_result;
     static int sector_cnt = 0;
 
 
@@ -560,9 +505,8 @@ void bldc_main(){
     }};
 
     AbVoltage ab_volt;
-    uint32_t exe_micros;
+    volatile uint32_t exe_micros;
     [[maybe_unused]] auto cb = [&]{
-        auto m = micros();
         odo.update();
 
         // targ_spd = 0;
@@ -678,9 +622,8 @@ void bldc_main(){
 
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
 
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        exe_micros = micros() - m;
 
 
         // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
@@ -705,21 +648,36 @@ void bldc_main(){
     // size_t measure_times = 0;
     real_t phase_diff = 0;
 
-    real_t phase_res = 7;
+    real_t phase_res = 0.65_r;
     real_t phase_ind;
 
-    [[maybe_unused]] auto cb_measure = [&]{
+    [[maybe_unused]] auto cb_measure_res = [&]{
 
         targ_pos = 0;
 
         curr_sens.update(0);
 
+        // scexpr int fs = chopper_freq / 2;
+        // scexpr int test_freq = 200;
+        // scexpr int test_freq = 500;
+        scexpr real_t test_volt = 0.9_r;
+        // scexpr int test_freq = 1000;
+        svpwm.set_ab_volt(test_volt, 0);
+        // phase_res = test_volt / curr_sens.ab().a;
+        // phase_res = test_volt  * 0.66_r / curr_sens.uvw().u;
+        phase_res = test_volt / curr_sens.ab().a;
+    };
 
+    [[maybe_unused]] auto cb_measure_ind = [&]{
+
+        targ_pos = 0;
+
+        curr_sens.update(0);
 
         scexpr int fs = chopper_freq / 2;
         // scexpr int test_freq = 200;
         scexpr int test_freq = 500;
-        scexpr real_t test_volt = 0.2_r;
+        scexpr real_t test_volt = 0.6_r;
         // scexpr int test_freq = 1000;
         static int cnt = 0; 
         scexpr int div = fs / test_freq;
@@ -740,8 +698,12 @@ void bldc_main(){
 
             if(upedge_captured == false and last_curr < 0 and this_curr > 0){                
                 auto phase_diff_pu = (real_t(cnt) / div);
-                if(phase_diff_pu < real_t(0.25)){// 1/4
-                    phase_diff = LPFN<8>(phase_diff, phase_diff_pu * real_t(TAU));
+                if(
+                    phase_diff_pu < real_t(0.25) // RL网络最大滞后90度 即1/4圆
+                    // and phase_diff_pu > real_t(0.03) // 滤除噪声
+                ){
+                    phase_diff = LPFN<4>(phase_diff, phase_diff_pu * real_t(TAU));
+                    // phase_diff = phase_diff_pu * real_t(TAU);
                 }
                 // phase_ind = tan(phase_diff) * phase_res / (real_t(TAU) * test_freq);
                 phase_ind = tan(phase_diff) * phase_res * real_t(1/TAU)/ test_freq;
@@ -758,7 +720,7 @@ void bldc_main(){
 
         const auto __res = omega * cnt;
         ab_volt = {test_volt * sin(__res),0};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
     [[maybe_unused]] auto cb_sensorless = [&]{
@@ -766,7 +728,7 @@ void bldc_main(){
         // targ_pos = real_t(6.0) * sin(2 * t);
         targ_pos = real_t(1.0) * time();
 
-        const auto ab_curr = curr_sens.ab();
+        const auto & ab_curr = curr_sens.ab();
         // const auto dq_curr = curr_sens.dq();
 
         // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
@@ -793,55 +755,10 @@ void bldc_main(){
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 2.0_r);
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
-    [[maybe_unused]] auto cb_hfi = [&]{
 
-        static int cnt = 0;
-        // scexpr int hfi_freq = 4096;
-        // scexpr int hfi_freq = 2500;
-        // scexpr int hfi_freq = 1024;
-        // scexpr int hfi_freq = 512;
-        // scexpr int hfi_freq = 256;
-        // scexpr int divider = chopper_freq / 2 / hfi_freq;
-        scexpr int divider = 8;
-        cnt = (cnt + 1) % divider;
-
-
-
-
-        real_t hfi_base_volt = 3.2_r;
-        real_t hfi_rad = real_t(TAU) * real_t(cnt) / divider;
-        real_t hfi_c = cos(hfi_rad);
-        real_t hfi_out = hfi_base_volt * hfi_c;
-
-        real_t openloop_base_volt = 6.0_r;
-        real_t openloop_rad = -frac(13.1_r * time())*real_t(TAU);
-        real_t openloop_c = cos(openloop_rad);
-        real_t openloop_s = sin(openloop_rad);
-        // real_t s = sin(hfi_rad);
-
-        ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
-
-        // curr_sens.updatUVW();
-        // curr_sens.updateAB();
-        // curr_sens.updateDQ(0);
-        curr_sens.update(0);
-        // real_t mul = curr_sens.ab()[1] * s;
-        real_t mul = curr_sens.ab()[1] * hfi_c;
-        // real_t last_hfi_result = hfi_result;
-        // hfi_result = LPF(last_hfi_result, mul);
-        static LowpassFilter_t<real_t> hfi_filter{{.fc = 10, .fs = 10000}};
-        hfi_filter.update(mul);
-        hfi_result = hfi_filter.result();
-        // hfi_result = LPFN<9>(hfi_result, mul);
-
-        // hfi_result = mul;
-        
-        // dt = micros() - m;
-    };
 
 
     [[maybe_unused]] auto cb_pulse = [&]{
@@ -879,57 +796,78 @@ void bldc_main(){
 
 
         ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
         curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_sing = [&]{
         
-        static iq_t<16> sing_t = 0;
-        sing_t += iq_t<16>(_iq<16>::from_i32(1));
+        // static q20 mt = 0;
+        // mt += q20(1.0 / foc_freq);
 
-        real_t sing_rad = 0;
+        // const auto [s,c] = sincos(mt);
 
-        real_t sing_s = sin(sing_rad);
-        real_t sing_c = cos(sing_rad);
+        // real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
 
-        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
+        // ab_volt = {sing_out * sing_c, sing_out * sing_s};
+        // svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        ab_volt = {sing_out * sing_c, sing_out * sing_s};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
-
-        curr_sens.update(0);
+        // curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_openloop = [&]{
-        scexpr auto omega = real_t(22 * TAU);
-        const auto amp = real_t(2.2);
-        // const auto amp = real_t(2.8) + sin(t);
+        static q20 mt = 0;
+        mt += q20(1.0 / foc_freq);
+
+        scexpr auto omega = real_t(6 * TAU);
+        // const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
+        const auto max_amp = real_t(2.5);
+        auto & ob = lbg_ob;
+        // auto & ob = nlr_ob;
+        // const auto max_amp = real_t(8.7);
+
+        const auto begin_m = uint32_t(micros());
+        // const auto max_amp = real_t(2.8) + sin(t);
         // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        auto theta = omega * time();
+        // auto theta = omega * time();
         // const auto theta = 0;
-        ab_volt = {amp * cos(theta), amp * sin(theta)};
+        // const auto t = time();
+
+
+        mg_meas_rad = mt * omega;
+        const auto rad = 
+        // (mt < 0.2_r) ? q16(mg_meas_rad) : 
+        // q20(lbg_ob.theta()) + q20(PI/2);
+        q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.07_r));
+        // q16(mg_meas_rad);
+        // sl_meas_rad + ;
+        // const auto [s,c] = sincos(mt);
+        const auto [s,c] = sincos(rad);
+        // const auto [s,c] = sincos(mt *8);
+        const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
+        ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
-        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
+        curr_sens.update(s, c);
+        // odo.update();
+        // const real_t meas_lap = odo.getLapPosition();
 
-        odo.update();
-        const real_t meas_lap = odo.getLapPosition();
+        // const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
+        // mg_meas_rad = meas_rad;
 
-        const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
-        mg_meas_rad = meas_rad;
-
-        const auto ab_curr = curr_sens.ab();
-        lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        const auto & ab_curr = curr_sens.ab();
+        ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        pll.update(lbg_ob.theta());
+        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        // pll.update(ob.theta());
         // sl_meas_rad = pll.theta() + 0.3_r;
-        sl_meas_rad = pll.theta();
+        sl_meas_rad = ob.theta();
 
-        curr_sens.update(meas_rad);
+        // curr_sens.capture();
 
-        // sogi.update(curr_sens.ab()[0]);
-        // spll.update(curr_sens.ab()[0] * 10);
+        // exe_micros  = uint32_t(micros()) - begin_m;
+        exe_micros = uint32_t(micros()) - begin_m;
     };
 
 
@@ -956,8 +894,8 @@ void bldc_main(){
 
     ArgSplitter splitter;
 
-    DEBUGGER.setSplitter(',');
-    DEBUGGER.noBrackets();
+    DEBUGGER.set_splitter(',');
+    DEBUGGER.no_brackets();
 
     
     // OutputStream::Config
@@ -971,26 +909,26 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    LowpassFilterD_t<iq_t<14>> speed_measurer = {
+    [[maybe_unused]] LowpassFilterD_t<iq_t<14>> speed_measurer = {
         {
             .fc = 10, 
             .fs = foc_freq
         }
     };
 
-    auto measure_bias = [&]{
+    [[maybe_unused]] auto measure_bias = [&]{
         
         // mp6540.enable(false);
-        curr_sens.capture();
+        // curr_sens.capture();
         calibrater.update(curr_sens.raw(), curr_sens.mid());
 
-        odo.update();
-        speed_measurer.update(odo.getPosition());
+        // odo.update();
+        // speed_measurer.update(odo.getPosition());
 
         // mp6540.enable(true);
         if(calibrater.done()) {
             // const auto guard = DEBUGGER.createGuard();
-            // DEBUGGER.forceSync();
+            // DEBUGGER.force_sync();
             // DEBUG_PRINTLN("Done Current Bias Measure!!");
             // DEBUG_PRINTLN(calibrater.result());
             // delay(100);
@@ -999,22 +937,125 @@ void bldc_main(){
         }
     };
 
+    [[maybe_unused]] auto cb_hfi = [&]{
+
+        static int cnt = 0;
+        // scexpr int hfi_freq = 4096;
+        // scexpr int hfi_freq = 2500;
+        // scexpr int hfi_freq = 1024;
+        // scexpr int hfi_freq = 512;
+        // scexpr int hfi_freq = 256;
+        // scexpr int divider = chopper_freq / 2 / hfi_freq;
+        scexpr int divider = 16;
+        scexpr size_t hfi_freq = foc_freq / divider;
+        scexpr real_t hfi_base_volt = 1.2_r;
+        scexpr real_t openloop_base_volt = 0.0_r;
+        cnt = (cnt + 1) % divider;
+
+
+        real_t hfi_rad = real_t(TAU) * real_t(cnt) / divider;
+        real_t hfi_c = cos(hfi_rad);
+        real_t hfi_out = hfi_base_volt * hfi_c;
+
+        real_t openloop_rad = -frac(2.1_r * time())*real_t(TAU);
+        const auto [openloop_s, openloop_c] = sincos(openloop_rad);
+        // real_t s = sin(hfi_rad);
+
+        ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
+
+        // curr_sens.updatUVW();
+        // curr_sens.updateAB();
+        // curr_sens.updateDQ(0);
+        curr_sens.update(0);
+        // real_t mul = curr_sens.ab()[1] * s;
+        [[maybe_unused]] const real_t mul = curr_sens.ab()[1] * hfi_c;
+        // real_t last_hfi_result = hfi_result;
+        // hfi_result = LPF(last_hfi_result, mul);
+        // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = foc_freq}};
+        // static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
+        // static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = foc_freq}};
+        static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = foc_freq}};
+        static dsp::LowpassFilter_t<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = foc_freq}};
+        // static dsp::Highpa<q24> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
+        // static dsp::ButterLowpassFilter<q20,  2> hfi_filter_lpf{{.fc = 20, .fs = foc_freq}};
+        // static dsp::ButterHighpassFilter<q20, 2> hfi_filter_hpf{{.fc = 600, .fs = foc_freq}};
+        hfi_filter_lpf.update(curr_sens.ab()[1]);
+        hfi_filter_mid_lpf.update(hfi_filter_lpf.get());
+        // hfi_filter_hpf.update(hfi_filter_lpf.get());
+        // hfi_filter_hpf.update(mul);
+        [[maybe_unused]] const auto temp = hfi_filter_lpf.get();
+        // hfi_result = temp;
+        hfi_result = hfi_filter_lpf.get();
+        hfi_mid_result = hfi_filter_mid_lpf.get();
+        // hfi_result = curr_sens.ab()[1] * hfi_c;
+        // hfi_result = hfi_filter_hpf.get();
+        // hfi_result = LPFN<9>(hfi_result, mul);
+
+        // hfi_result = mul;
+        
+        // dt = micros() - m;
+    };
+
     // adc1.bindCb(AdcIT::JEOC, cb_pulse);
     // adc1.bindCb(AdcIT::JEOC, cb_sing);
     // adc1.bindCb(AdcIT::JEOC, cb_sensorless);
     // adc1.bindCb(AdcIT::JEOC, cb);
-    // adc1.bindCb(AdcIT::JEOC, cb_measure);
     // adc1.bindCb(AdcIT::JEOC, cb_openloop);
-    // adc1.bindCb(AdcIT::JEOC, cb_hfi);
-
-    adc1.bind_cb(AdcIT::JEOC, measure_bias);
-    adc1.enable_it(AdcIT::JEOC, {0,0});
+    // adc1.attach(AdcIT::JEOC, {0,0}, cb_hfi);
+    
+    // adc1.attach(AdcIT::JEOC, {0,0}, cb_measure_ind);
+    // adc1.attach(AdcIT::JEOC, {0,0}, cb_measure_res);
+    // adc1.bind_cb(AdcIT::JEOC, measure_bias);
+    adc1.attach(AdcIT::JEOC, {0,0}, cb_openloop);
 
     
     while(true){
+        [[maybe_unused]] const auto t = time();
+
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
-        const auto t = time();
-        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
+        DEBUG_PRINTLN_IDLE(
+            // phase_res,
+            // real_t(adc1.inj(1)),
+            // real_t(adc1.inj(2)),
+            // real_t(adc1.inj(3)),
+            // real_t(adc1.inj(4)),
+            // hfi_result * 10,
+            // hfi_mid_result * 10,
+            // phase_ind * 100,
+            // lbg_ob.theta(),
+            // s,c,
+            // t,
+            // frac(t),
+            // sin(t * 10),
+            // SVM(c,s),
+            // real_t(pwm_u), 
+            // real_t(pwm_v),
+            // real_t(pwm_w),
+            // bool(pwm_u.io()),
+            // bool(pwm_v.io()),
+            // bool(pwm_w.io()),
+            // curr_sens.uvw(),
+            
+            curr_sens.ab(),
+            curr_sens.dq(),
+            lbg_ob.e_alpha_,
+            lbg_ob.e_beta_,
+
+            square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
+            // lbg_ob.theta(),
+            // lbg_ob.e_alpha_,
+            // lbg_ob.e_beta_,
+            // nlr_ob.theta(),
+            // fmod(mg_meas_rad, q16(TAU)),
+            sl_meas_rad,
+            exe_micros
+            // pll.theta(),
+            // micros() * 0.001_r
+            // real_t(exe_micros)
+            // curr_sens.mid()
+        );
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);
@@ -1060,14 +1101,13 @@ void bldc_main(){
 
 
         // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
+        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob.e_alpha_, lbg_ob.e_beta_,  dt > 100 ? 1000 + dt : dt);
         // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
 
         // DEBUG_PRINTLN_IDLE(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
         // DEBUG_PRINTLN_IDLE(ab_volt[0], ab_volt[1]);
         // DEBUG_PRINTLN_IDLE(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // DEBUG_PRINTLN_IDLE(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-        // DEBUG_PRINTLN_IDLE(meas_pos, meas_spd, dq_curr[0], dq_curr[1], exe_micros);
         // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1]);
         // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, uvw_curr.u, uvw_curr.v, uvw_curr.w);
         // DEBUG_PRINTLN_IDLE(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
@@ -1103,22 +1143,22 @@ void bldc_main(){
             // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
         // delay(2);
-        // DEBUGGER.noBrackets(true);
+        // DEBUGGER.no_brackets(true);
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2_t<real_t>(1,1));
         // delay(2);
 
-        // DEBUGGER.forceSync();
+        // DEBUGGER.force_sync();
         // if(false){
         //     const auto guard = DEBUGGER.createGuard();
-        //     DEBUGGER.noBrackets(false);
+        //     DEBUGGER.no_brackets(false);
         //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }
 
         // if(true){
         //     const auto guard = DEBUGGER.createGuard();
-        //     // DEBUGGER.setSplitter('|');
-        //     DEBUGGER.noBrackets(true);
+        //     // DEBUGGER.set_splitter('|');
+        //     DEBUGGER.no_brackets(true);
         //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }

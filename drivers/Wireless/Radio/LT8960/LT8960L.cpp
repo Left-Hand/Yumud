@@ -12,7 +12,6 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
             return Err(Error::InvalidState);
 
         case States::TransmitFailed:
-            // DEBUG_PRINTLN("transmit failed");
             LT8960L_PANIC("transmit failed");
             [[fallthrough]];
 
@@ -61,7 +60,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
             return Err(Error::InvalidState);
 
         case States::ReceiveFailed:
-            DEBUG_PRINTLN("receive failed");
+            LT8960L_DEBUG("receive failed");
             // LT8960L_PANIC("receive failed");
             [[fallthrough]];
         case States::ReceiveSucceed:
@@ -176,8 +175,40 @@ Result<void, Error> LT8960L::init_ble(const Power power){
 }
 
 
-Result<size_t, Error> LT8960L::transmit_ble(std::span<const std::byte> buf){
-    TODO();
+template<typename First, typename ... Ts>
+constexpr std::array<First, sizeof...(Ts)> make_array(
+    Ts && ... args
+){
+    using Arr = std::array<First, sizeof...(Ts)>;
+    return Arr{std::forward<Ts>(args)...};
+}
+
+auto LT8960L::transmit_ble(std::span<const std::byte> buf) -> Result<size_t, Error>{
+    using RP = std::pair<uint8_t, uint16_t>;
+    static constexpr auto CMDS = make_array<RP>(
+        RP{7 , 0x0000},
+        RP{52, 0x8080}
+    );
+
+    for(auto && [reg, data] : CMDS)
+        if(auto res = write_reg(reg, data); res.is_err()) 
+            return Err(res.unwrap_err());
+
+    return write_fifo(buf)
+        .and_then([](auto && res) -> Result<size_t, Error>{
+            LT8960L_DEBUG("transmit successfully");
+            return Ok(res);})
+        .inspect_err([](Error err){
+            match{err}
+            (
+                Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},
+                Error::PacketOverlength, []{LT8960L_PANIC("ble overlen");},
+                _ , []{LT8960L_PANIC("unknown");}
+            );
+        })
+    ;
+    
+    // write_reg()
     // LT8960L_WriteReg(7,0x00,0x00);  //IDLE 
     // LT8960L_WriteReg(52,0x80,0x80);  //Clean fifo
     // LT8960L_WriteBUF_BLE(50,pBuf,length);                

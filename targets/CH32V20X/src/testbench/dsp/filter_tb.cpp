@@ -15,14 +15,14 @@
 
 
 void filter_tb(OutputStream & logger){
-    logger.setEps(4);
+    logger.set_eps(4);
 
     // real_t fi = 2;
     // real_t fc = 2;
     // real_t fs = 1000;
 
-    // const real_t mean = 0.0_r;//均值
-    // const real_t stddev = 1.0_r;//标准差
+    // const real_t mean = 0.0_r;//均�?
+    // const real_t stddev = 1.0_r;//标准�?
     // // std::default_random_engine generator;
     // // std::normal_distribution<real_t> dist(mean, stddev);
 

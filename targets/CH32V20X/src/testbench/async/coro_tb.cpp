@@ -47,12 +47,12 @@ Future<void> coro_tb() {
     //     }
     // }
 
-    // 链式调用：hello → world → 完成处理
+    // 链式调用：hello �? world �? 完成处理
     // auto task = hello(3).then([](auto) {
     //     return world(3);
     // }).then([](auto) {
     //     DEBUGGER << "All tasks completed!\n";
-    //     return Future<void>{}; // 终止链
+    //     return Future<void>{}; // 终止�?
     // });
 
     // 使用协程链式调用
@@ -71,7 +71,7 @@ Future<void> coro_tb() {
 void coro_main(){
     UART.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.setEps(4);
+    DEBUGGER.set_eps(4);
     DEBUGGER << "Coroutine test bench started.\n";
 
     auto tb_coro = coro_tb();  // 获取协程句柄

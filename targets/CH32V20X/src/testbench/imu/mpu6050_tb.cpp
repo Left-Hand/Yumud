@@ -30,7 +30,7 @@ void ak8963_tb(hal::I2c & i2c){
     while(true){
         mpu.update();
         delay(5);
-        DEBUG_PRINTLN_IDLE(mpu.getMagnet().unwrap());
+        DEBUG_PRINTLN_IDLE(mpu.get_magnet().unwrap());
     }
     while(true);
 }
@@ -45,7 +45,7 @@ void mpu6050_tb(hal::I2c & i2c){
     ak8963_tb(i2c);
     while(true){
         !+mpu.update();
-        DEBUG_PRINTLN_IDLE(mpu.getGyr().unwrap());
+        DEBUG_PRINTLN_IDLE(mpu.get_gyr().unwrap());
     }
 }
 
@@ -85,36 +85,36 @@ void mpu6500_tb(hal::I2c & i2c){
         #endif
 
         // mahony.update9(
-            // mpu.getGyr().unwrap(), 
-            // mpu.getAcc().unwrap(), 
-            // aku.getMagnet().unwrap()
+            // mpu.get_gyr().unwrap(), 
+            // mpu.get_acc().unwrap(), 
+            // aku.get_magnet().unwrap()
         // );
 
         // mahony.update(
-        //     mpu.getGyr().unwrap(), 
-        //     mpu.getAcc().unwrap(),
-        //     aku.getMagnet().unwrap()
+        //     mpu.get_gyr().unwrap(), 
+        //     mpu.get_acc().unwrap(),
+        //     aku.get_magnet().unwrap()
         // );
 
         const uint32_t begin_m = micros();
 
         // mahony.update(
-        //     mpu.getGyr().unwrap(), 
-        //     mpu.getAcc().unwrap()
-        //     // aku.getMagnet().unwrap()
+        //     mpu.get_gyr().unwrap(), 
+        //     mpu.get_acc().unwrap()
+        //     // aku.get_magnet().unwrap()
         // );
 
         
         mahony.update(
-            mpu.getGyr().unwrap(), 
-            mpu.getAcc().unwrap()
+            mpu.get_gyr().unwrap(), 
+            mpu.get_acc().unwrap()
         );
             
         const uint32_t end_m = micros();
         // DEBUG_PRINTLN(fusion.quat());
         // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
-        DEBUG_PRINTLN(mahony.result(), Quat_t<q14>(Vector3_t<real_t>(0,0,1), aku.getMagnet().unwrap().normalized()), end_m - begin_m);
+        DEBUG_PRINTLN(mahony.result(), Quat_t<q14>(Vector3_t<real_t>(0,0,1), aku.get_magnet().unwrap().normalized()), end_m - begin_m);
     });
 
     while(true);
@@ -124,7 +124,7 @@ void mpu6500_tb(hal::I2c & i2c){
 void mpu6050_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{portB[6], portB[7]};
     // i2c.init(400_KHz);

@@ -12,6 +12,10 @@
 
 namespace ymd::hal{
 
+#ifndef UART_FIFO_BUF_SIZE
+static constexpr size_t UART_FIFO_BUF_SIZE = 256;
+#endif
+
 
 class Uart:public BusBase{
 
@@ -28,9 +32,6 @@ protected:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;
 
-    #ifndef UART_FIFO_BUF_SIZE
-    #define UART_FIFO_BUF_SIZE 256
-    #endif
 
     Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo_;
@@ -70,7 +71,7 @@ public:
     virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
     void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
-    void bind_pos_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
+    void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
 };
 
 

@@ -1,12 +1,31 @@
 #include "st7789.hpp"
+#include "types/range/range.hpp"
 #include "core/debug/debug.hpp"
 
 
 using namespace ymd::drivers;
 using namespace ymd;
 
+// #define ST7789_EXPRIMENTAL_SKIP
+
+
+//判断刷新命令符必要性判断算法 以提高spi dma的吞吐率
+bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
+    const auto curr_pt_range = get_point_index(curr_area_);
+    const auto desired_pt_range = get_point_index(rect);
+
+    if(desired_pt_range.inside(curr_pt_range) and rect.inside(curr_area_)){
+        last_point_ += desired_pt_range.length();
+        return false;
+    }else{
+        curr_area_ = rect;
+        last_point_ = desired_pt_range.from;
+        return true;
+    }
+} 
+
 void ST7789::init(){
-    interface.init();
+    interface_.init();
     
     write_command(0x01);
 
@@ -24,10 +43,13 @@ void ST7789::init(){
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
 
-    last_point_index = get_point_index(rect.get_end().x-1, rect.get_end().y-1);
+    #ifdef ST7789_EXPRIMENTAL_SKIP
+    bool need = algo_.update(rect);
+    if(!need) return;
+    #endif
 
-    Vector2_t<uint16_t> p1 = offset + rect.position;
-    Vector2_t<uint16_t> p2 = offset + rect.get_end() - Vector2i(1,1);
+    const Vector2_t<uint16_t> p1 = offset_ + rect.position;
+    const Vector2_t<uint16_t> p2 = offset_ + rect.get_end() - Vector2i(1,1);
 
     write_command(0x2a);
     write_data16(p1.x);
@@ -38,38 +60,34 @@ void ST7789::setarea_unsafe(const Rect2i & rect){
     write_data16(p2.y);
 
     write_command(0x2c);
-    area_locked = true;
 }
 
 void ST7789::setpos_unsafe(const Vector2i & pos){
-    uint32_t this_point_index = get_point_index(pos.x, pos.y);
-    uint32_t last_point_index_temp = last_point_index;
-    last_point_index = this_point_index;
 
-    if((this_point_index == last_point_index_temp + 1) && (!area_locked)){
-        return;
-    }
+    #ifdef ST7789_EXPRIMENTAL_SKIP
+    bool need = algo_.update(rect);
+    if(!need) return;
+    #endif
 
     write_command(0x2a);
-    write_data16(pos.x + offset.x);
+    write_data16(pos.x + offset_.x);
 
     write_command(0x2b);
-    write_data16(pos.y + offset.y);
+    write_data16(pos.y + offset_.y);
 
     write_command(0x2c);
-    area_locked = false;
 }
 
 
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
-    interface.write_burst<RGB565>(color, size_t(rect));
+    interface_.write_burst<RGB565>(color, size_t(rect));
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    interface.write_burst<RGB565>(color_ptr, size_t(rect));
+    interface_.write_burst<RGB565>(color_ptr, size_t(rect));
 }
 
 void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){

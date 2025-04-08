@@ -25,6 +25,7 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
+    // ws2812_main();
     // digipw_main();
     // enum_main();
     // hive_main();
@@ -43,7 +44,8 @@ int main(){
     // i2c_scanner_main();
     // lt8960_main();
     // ws2812_main();
-    light_tracking_main();
+    gxm_new_energy_main();
+    // light_tracking_main();
     // coro_main();
     // sincos_main();
     // i2c_scanner_main();
@@ -116,7 +118,8 @@ int main(){
     // embd_main();
     // mpu6050_main();
     // gui_main();
-    light_tracking_main();
+    // light_tracking_main();
+    cubic_main();
     // sdc_main();
     // proxy_tb();
     // paj7620_main();

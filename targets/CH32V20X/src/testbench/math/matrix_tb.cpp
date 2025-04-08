@@ -20,7 +20,7 @@ using namespace ymd;
 void matrix_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
     delay(200);
 
 

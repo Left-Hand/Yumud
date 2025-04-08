@@ -93,7 +93,7 @@ namespace ymd{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atan2f(const iq_t<P> a, const iq_t<P> b) {
-        return iq_t<Q>(_iq<Q>(__iqdetails::_IQNatan2<Q>(a.value,b.value)));
+        return iq_t<Q>(_iq<Q>(__iqdetails::_IQNatan2<P>(a.value,b.value)));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>

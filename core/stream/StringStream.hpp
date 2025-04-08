@@ -12,9 +12,9 @@ protected:
 public:
     StringStream(){;}
 
-    void write(const char data) override;
-    void write(const char * data_ptr, const size_t len) override;
-    size_t pending() const override;
+    void write(const char data);
+    void write(const char * data_ptr, const size_t len);
+    size_t pending() const;
 
     String && move_str() && {
         return std::move(str_);

@@ -21,9 +21,9 @@ public:
         buf_(buf),
         max_len_(max_len){;}
 
-    void write(const char data) override;
-    void write(const char * data_ptr, const size_t len) override;
-    size_t pending() const override {return 0;}
+    void write(const char data);
+    void write(const char * data_ptr, const size_t len);
+    size_t pending() const {return 0;}
 
 
     operator String() const;

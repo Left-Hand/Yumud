@@ -17,9 +17,9 @@
 //     // acc_gyr_sensor_.update();
 //     // mag_sensor_.update();
 
-//     // acc3_ = bias_.acc.xform(Vector3(acc_gyr_sensor_.getAcc()));
-//     // gyr3_ = Vector3(acc_gyr_sensor_.getGyr()) - bias_.gyr;
-//     // mag3_ = bias_.mag.xform(Vector3(mag_sensor_.getMagnet()));
+//     // acc3_ = bias_.acc.xform(Vector3(acc_gyr_sensor_.get_acc()));
+//     // gyr3_ = Vector3(acc_gyr_sensor_.get_gyr()) - bias_.gyr;
+//     // mag3_ = bias_.mag.xform(Vector3(mag_sensor_.get_magnet()));
 
 //     // quat_ = mahony_.update9(gyr3_, acc3_, mag3_);
 //     // euler_ = Basis(quat_).get_euler_xyz();
@@ -27,9 +27,9 @@
 //     acc_gyr_sensor_.update();
 //     mag_sensor_.update();
 
-//     acc3_raw = Vector3{acc_gyr_sensor_.getAcc()};
-//     gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
-//     mag3_raw = Vector3{mag_sensor_.getMagnet()};
+//     acc3_raw = Vector3{acc_gyr_sensor_.get_acc()};
+//     gyr3_raw = Vector3{acc_gyr_sensor_.get_gyr()};
+//     mag3_raw = Vector3{mag_sensor_.get_magnet()};
 //     // mag3_raw = Vector3{};
 //     const auto rot_raw = calculate_raw_dir(mag3_raw);
 //     gyr_ = gyr3_raw.z;
@@ -74,7 +74,7 @@
     
 //     for(size_t i = 0; i < config_.calibrate_times; i++){
 //         acc_gyr_sensor_.update();
-//         acc_bias_sum += Vector3(acc_gyr_sensor_.getAcc());
+//         acc_bias_sum += Vector3(acc_gyr_sensor_.get_acc());
 //     }
 
 //     const auto acc_vec3 = acc_bias_sum / config_.calibrate_times;
@@ -86,7 +86,7 @@
     
 //     for(size_t i = 0; i < config_.calibrate_times; i++){
 //         acc_gyr_sensor_.update();
-//         gyr_bias_sum += Vector3(acc_gyr_sensor_.getGyr());
+//         gyr_bias_sum += Vector3(acc_gyr_sensor_.get_gyr());
 //     }
 
 //     return gyr_bias_sum / config_.calibrate_times;
@@ -98,7 +98,7 @@
     
 //     for(size_t i = 0; i < config_.calibrate_times; i++){
 //         mag_sensor_.update();
-//         mag_bias_sum += Vector3(mag_sensor_.getMagnet());
+//         mag_bias_sum += Vector3(mag_sensor_.get_magnet());
 //     }
 
 //     const auto mag_vec3 =  mag_bias_sum / config_.calibrate_times;
@@ -112,7 +112,7 @@
 //     // bias_.gyr = calculateGyrBias();
 //     bias_.gyr = Vector3();
 //     // bias_.mag = calculateMagBias();
-//     bias_.rot = calculate_raw_dir(Vector3{mag_sensor_.getMagnet()});
+//     bias_.rot = calculate_raw_dir(Vector3{mag_sensor_.get_magnet()});
 //     // DEBUG_PRINTLN(bias_.acc, bias_.gyr, bias_.mag)
 // }
 

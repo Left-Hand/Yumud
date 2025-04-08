@@ -1,0 +1,31 @@
+#this is a reg map definition for CH32
+# uint16_t (\w+):(\d+);
+
+[config]
+headers = ["<cstdint>", "core/io/regs.hpp"]
+file_name = "ch32l103_usbfs.hpp"
+namespace_name = "CH32VL103::USBFS"
+frontend_type = 1.0
+backend_type = 1.0
+
+[CTRL]
+width = 8
+[CTRL1.CPHA]
+
+[CTRL1.DMA_EN]
+width = 1
+[CTRL1.CLR_ALL]
+width = 1
+[CTRL1.RST_SIE]
+width = 1
+[CTRL1.INT_BUSY]
+width = 1
+[CTRL1.SYS_CTRL]
+width = 2
+[CTRL1.DEV_PU_EN]
+width = 2
+[CTRL1.LOW_SPEED]
+width = 2
+[CTRL1.HOST_MODE]
+width = 2
+

@@ -7,16 +7,27 @@
 
 namespace ymd::drivers{
 
-enum class LT8960L_Error:uint8_t{
-    TransmitTimeout,
-    PacketOverlength,
-    ChipIdMismatch,
-    ReceiveTimeout,
-    InvalidState,
-    Unspecified = 0xff
+class LT8960L_Error{
+public:
+    enum Kind:uint8_t{
+        TransmitTimeout,
+        PacketOverlength,
+        ChipIdMismatch,
+        ReceiveTimeout,
+        InvalidState,
+        Unspecified = 0xff
+    };
+
+    constexpr LT8960L_Error(const Kind kind):
+        kind_(kind){;}
+
+    constexpr bool operator ==(const LT8960L_Error & rhs) const {return kind_ == rhs.kind_;}
+private:
+    Kind kind_;
 };
 
-    
+
+
 
 class LT8960L_Phy:public hal::ProtocolBusDrv<hal::I2c> {
 public:

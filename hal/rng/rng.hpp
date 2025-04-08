@@ -7,12 +7,15 @@ struct Rng{
 public:
     Rng(){};
 
-    static void init();
-    static int update();
+    void init();
+    int update();
+private:
+    bool inited_ = false;
 };
+
+#ifdef ENABLE_RNG
+extern Rng rng;
+#endif
 
 }
 
-#ifdef ENABLE_RNG
-extern Rng rng
-#endif

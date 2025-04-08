@@ -24,7 +24,7 @@ void SelfCheckTasker::run(){
             break;
 
         case SubState::TEST_A:
-            // svpwm.setABCurrent(sin(cnt * real_t((PI / subdivide_micros))) * check_current, idle_current);
+            // svpwm.set_ab_current(sin(cnt * real_t((PI / subdivide_micros))) * check_current, idle_current);
 
             odo_.update();
             move_range = move_range.merge(odo_.getPosition());
@@ -41,7 +41,7 @@ void SelfCheckTasker::run(){
             break;
 
         case SubState::TEST_B:
-            // svpwm.setABCurrent(idle_current, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
+            // svpwm.set_ab_current(idle_current, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
 
             odo_.update();
             move_range = move_range.merge(odo_.getPosition());

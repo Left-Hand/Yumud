@@ -2,12 +2,131 @@
 
 #include "core/io/regs.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 namespace ymd::drivers{
 
+// REG_TEMPLATE(Reg24, uint24_t)
+struct AD9959_Regs{
+    using RegAddress = uint8_t;
+    struct R8_ChannelSelect:public Reg8<>{
+        scexpr RegAddress address = 0x00;
+
+        uint8_t lsb_first:1;
+        uint8_t serial_io_mode:2;
+        uint8_t __resv__:1;
+        uint8_t channel0_en:1;
+        uint8_t channel1_en:1;
+        uint8_t channel2_en:1;
+        uint8_t channel3_en:1;
+    } DEF_R8(channel_select)
+
+    // struct R32_Funtion1:public Reg32<>{
+    //     scexpr RegAddress address = 0x01;
+
+    //     uint8_t manual_software_sync:1;
+    //     uint8_t manual_hardware_sync:1;
+    //     uint8_t open:2;
+    //     uint8_t dac_rederence_power_down:1;
+    //     uint8_t sync_clk_disen:1;
+    //     uint8_t external_power_down_mode:1;
+    //     uint8_t ref_clock_power_down:1;
+    //     uint8_t modu_level:1;
+    //     uint8_t ru_rd:1;
+    //     uint8_t pin_conf:3;
+    //     uint8_t open2:1;
+    //     uint8_t charge_pump_ctrl:2;
+    //     uint8_t pll_divider_ratio:5;
+    //     uint8_t vco_gain_ctrl:1;
+    //     uint8_t __resv__;
+    // } DEF_R32(function1);
+
+    struct R16_Funtion2:public Reg16<>{
+        scexpr RegAddress address = 0x02;
+
+        uint8_t system_clock_offset:2;
+        uint8_t open:2;
+        uint8_t multidev_sync_mask:1;
+        uint8_t multidev_sync_stat:1;
+        uint8_t multidev_master_en:1;
+        uint8_t auto_sync_en:1;
+        uint8_t open2:2;
+        uint8_t open3:2;
+        uint8_t all_channel_clr_phase_accu:1;
+        uint8_t all_channel_autoclr_phase_accu:1;
+        uint8_t all_channel_clr_sweep_accu:1;
+        uint8_t all_channel_autoclr_sweep_accu:1;
+    } DEF_R16(function2);
+
+    struct R32_ChannelFunction:public Reg32<>{
+        scexpr RegAddress address = 0x03;
+
+        uint8_t sinewave_output_en:1;
+        uint8_t clr_phase_accu:1;
+        uint8_t autoclr_phase_accu:1;
+        uint8_t clear_sweep_accu:1;
+        uint8_t autoclr_sweep_accu:1;
+        uint8_t matched_pipe_delays_active:1;
+        uint8_t dac_pwdn:1;
+        uint8_t digital_pwdn:1;
+        uint8_t dac_fs_current:2;
+        uint8_t __zero__:1 = 0;
+        uint8_t open:2;
+        uint8_t load_ssr_at_io_update:1;
+        uint8_t linear_sweep_en:1;
+        uint8_t linear_sweep_nodwell:1;
+        uint8_t open2:6;
+        uint8_t afp_sel:2;
+    };
+
+    struct R32_ChannelFreqencyTuning:public Reg32<>{
+        scexpr RegAddress address = 0x04;
+        uint32_t data;
+    };
+
+    struct R32_AmplitudeControl:public Reg32<>{
+        scexpr RegAddress address = 0x06;
+
+        uint32_t factor:10;
+        uint32_t load_addr_at_io_update:1;
+        uint32_t rurd_en:1;
+        uint8_t amp_multiplier_en:1;
+        uint32_t open:1;
+        uint32_t inc_dev_step_size:1;
+        uint32_t ramp_rate:8;
+        uint32_t :8;
+    };
+
+
+
+    struct R32_RisingDeltaWord:public Reg32<>{
+        scexpr RegAddress address = 0x04;
+
+        uint16_t data;
+    };
+
+
+
+    struct R16_LinearSweepRate:public Reg16<>{
+        scexpr RegAddress address = 0x07;
+
+        uint16_t data;
+    };
+
+    struct R32_FallingDeltaWord:public Reg32<>{
+        scexpr RegAddress address = 0x08;
+
+        uint32_t data;
+    };
+
+    struct R32_ChannelWord:public Reg32<>{
+        scexpr RegAddress address = 0x09;
+        uint32_t data;
+    };
+
+    std::array<R32_ChannelWord, 16> channel_words;
+};
 
 class AD9959{
 protected:

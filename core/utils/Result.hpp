@@ -3,8 +3,6 @@
 #include "Option.hpp"
 
 
-
-
 namespace ymd{
 
 namespace custom{
@@ -155,7 +153,7 @@ namespace details{
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
-            data_(std::forward<E>(val)){;}
+            data_(std::forward<E>(static_cast<E>(val))){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
         // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
@@ -290,11 +288,18 @@ private:
     }
     friend class _Loc;
 public:
-    [[nodiscard]] __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
 
-    [[nodiscard]] __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
-    [[nodiscard]] __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+    template<typename U>
+    requires (!std::is_void_v<U>)
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<U> & value) : result_(Ok<T>(*value)){}
+    
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : result_((value)){}
+    
+    // [[nodiscard]] __fast_inline constexpr Result(Err<E> && error) : result_(Err<E>(*error)){}
+    template<typename U>
+    requires (!std::is_void_v<U>)
+    [[nodiscard]] __fast_inline constexpr Result(const Err<U> & error) : result_(Err<E>(
+        static_cast<E>(*error))){}
 
 
     [[nodiscard]] __fast_inline constexpr
@@ -397,10 +402,14 @@ public:
     }
 
     template<
-        typename E2
+        typename ERaw,
+        typename E2 = std::conditional_t<
+            std::is_convertible_v<ERaw, E>,
+            E, ERaw
+            >
     >
     [[nodiscard]] __fast_inline constexpr 
-    auto validate(bool valid, E2 && err) const 
+    auto validate(bool valid, ERaw && err) const 
         -> Result<T, E2>
     {
         
@@ -437,18 +446,21 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    Result<T, E> if_ok(Fn && fn) const {
-        if (is_ok()) {
-            // std::forward<Fn>(fn)(unwrap());
-            std::forward<Fn>(fn)();
-        }
-
+    Result<T, E> inspect(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)(unwrap());
         return *this;
     }
 
     template<typename Fn>
     __fast_inline constexpr 
-    const Result<T, E> & if_err(Fn && fn) const {
+    Result<T, E> if_ok(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)();
+        return *this;
+    }
+
+    template<typename Fn>
+    __fast_inline constexpr 
+    const Result<T, E> & inspect_err(Fn && fn) const {
         if (is_err()) {
             std::forward<Fn>(fn)(unwrap_err());
         }

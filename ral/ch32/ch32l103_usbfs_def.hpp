@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-
+namespace ymd::CH32L103::USBFS{
 struct R8_USB_CTRL{
     uint8_t DMA_EN:1;
     uint8_t CLR_ALL:1;
@@ -130,3 +130,5 @@ struct R16_UEP_0_1_T_LEN{
     uint16_t T_LEN:7;
     uint16_t :9;
 };
+
+}

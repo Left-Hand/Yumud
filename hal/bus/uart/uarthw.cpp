@@ -10,8 +10,8 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace CH32;
 
-#define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
-#define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 
 
 #define UART_IT_TEMPLATE(name, uname, fname)\
@@ -21,7 +21,7 @@ __interrupt void fname(void){\
         name.on_rxne_interrupt();\
         uname##_Inst->clear_events({.RXNE = 1});\
     }else if(events.IDLE){\
-        name.on_idle_interrupt();\
+        name.on_rxidle_interrupt();\
         uname##_Inst->STATR;\
         uname##_Inst->DATAR;\
     }else if(events.TXE){\
@@ -200,15 +200,21 @@ void UartHw::on_txe_interrupt(){
 
 }
 
-void UartHw::on_idle_interrupt(){
-    if(rx_strategy_ == CommStrategy::Dma){
-        size_t index = UART_RX_DMA_BUF_SIZE - rx_dma_.pending();
-        if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
-            // for(size_t i = rx_dma_buf_index_; i < index; i++) this->rx_fifo_.push(rx_dma_buf_[i]); 
-            this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], (index - rx_dma_buf_index_))); 
-        }
-        rx_dma_buf_index_ = index;
-        call_post_rx_callback();
+void UartHw::on_rxidle_interrupt(){
+    switch(rx_strategy_){
+        case CommStrategy::Dma:{
+            const size_t index = UART_RX_DMA_BUF_SIZE - rx_dma_.pending();
+            if(unlikely(index >= UART_RX_DMA_BUF_SIZE)) while(true);
+            if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
+                this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], (index - rx_dma_buf_index_))); 
+            }
+            rx_dma_buf_index_ = index;
+            call_post_rx_callback();
+        }; 
+            break;
+
+        default:
+            while(true);
     }
 }
 
@@ -363,21 +369,9 @@ void UartHw::invoke_tx_it(){
     USART_ITConfig(instance_, USART_IT_TXE, ENABLE);
 }
 
-void UartHw::enable_tx_dma(const bool en){
-    USART_DMACmd(instance_, USART_DMAReq_Tx, en);
-
-    if(en){
-        tx_dma_.init(DmaMode::toPeriph, DmaPriority::Medium);
-        tx_dma_.enable_it({1,1});
-        tx_dma_.enable_done_it();
-        tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
-    }
-}
-
 void UartHw::on_rx_dma_done(){
     //将数据从当前索引填充至末尾
-    rx_dma_.resume();
-    // for(size_t i = rx_dma_buf_index_; i < UART_RX_DMA_BUF_SIZE; i++) this->rx_fifo_.push(rx_dma_buf_[i]); 
+    // rx_dma_.resume();
     this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_)); 
     rx_dma_buf_index_ = 0;
 }
@@ -388,21 +382,7 @@ void UartHw::on_rx_dma_half(){
     rx_dma_buf_index_ = UART_RX_DMA_BUF_SIZE / 2;
 }
 
-void UartHw::enable_rx_dma(const bool en){
-    USART_DMACmd(instance_, USART_DMAReq_Rx, en);
-    if(en){
-        rx_dma_.init(DmaMode::toMemCircular, DmaPriority::Medium);
-        rx_dma_.enable_it({1,1});
-        rx_dma_.enable_done_it();
-        rx_dma_.enable_half_it();
-        rx_dma_.bind_done_cb([this](){this->on_rx_dma_done();});
-        rx_dma_.bind_half_cb([this](){this->on_rx_dma_half();});
-        rx_dma_.transfer_pph2mem<char>(rx_dma_buf_.begin(), (&instance_->DATAR), UART_RX_DMA_BUF_SIZE);
-    }else{
-        rx_dma_.bind_done_cb(nullptr);
-        rx_dma_.bind_half_cb(nullptr);
-    }
-}
+
 
 void UartHw::invoke_tx_dma(){
     if(tx_dma_.pending() == 0){
@@ -417,15 +397,6 @@ void UartHw::invoke_tx_dma(){
 }
 
 
-void UartHw::enable_rxne_it(const bool en){
-    USART_ClearITPendingBit(instance_, USART_IT_RXNE);
-    USART_ITConfig(instance_, USART_IT_RXNE, en);
-}
-
-void UartHw::enable_idle_it(const bool en){
-    USART_ClearITPendingBit(instance_, USART_IT_IDLE);
-    USART_ITConfig(instance_, USART_IT_IDLE, en);
-}
 
 void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ == tx_strategy) return;
@@ -492,8 +463,8 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
         .USART_WordLength = USART_WordLength_8b,
         .USART_StopBits = USART_StopBits_1,
         .USART_Parity = USART_Parity_No,
-        .USART_Mode =   uint16_t((tx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Tx) : 0u) |
-                        uint16_t((rx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Rx) : 0u),
+        .USART_Mode =   uint16_t(uint16_t((tx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Tx) : uint16_t(0)) |
+                        uint16_t((rx_strategy != CommStrategy::Nil) ? uint16_t(USART_Mode_Rx) : uint16_t(0))),
         .USART_HardwareFlowControl = USART_HardwareFlowControl_None
     };
 
@@ -599,3 +570,39 @@ namespace ymd::hal{
     #endif
 }
     
+
+void UartHw::enable_tx_dma(const bool en){
+    USART_DMACmd(instance_, USART_DMAReq_Tx, en);
+
+    if(en){
+        tx_dma_.init(DmaMode::toPeriph, DmaPriority::Medium);
+        tx_dma_.enable_it({1,1});
+        tx_dma_.enable_done_it();
+        tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
+    }
+}
+void UartHw::enable_rx_dma(const bool en){
+    USART_DMACmd(instance_, USART_DMAReq_Rx, en);
+    if(en){
+        rx_dma_.init(DmaMode::toMemCircular, DmaPriority::Medium);
+        rx_dma_.enable_it({1,1});
+        rx_dma_.enable_done_it();
+        rx_dma_.enable_half_it();
+        rx_dma_.bind_done_cb([this](){this->on_rx_dma_done();});
+        rx_dma_.bind_half_cb([this](){this->on_rx_dma_half();});
+        rx_dma_.transfer_pph2mem<char>(rx_dma_buf_.begin(), (&instance_->DATAR), UART_RX_DMA_BUF_SIZE);
+    }else{
+        rx_dma_.bind_done_cb(nullptr);
+        rx_dma_.bind_half_cb(nullptr);
+    }
+}
+
+void UartHw::enable_rxne_it(const bool en){
+    USART_ClearITPendingBit(instance_, USART_IT_RXNE);
+    USART_ITConfig(instance_, USART_IT_RXNE, en);
+}
+
+void UartHw::enable_idle_it(const bool en){
+    USART_ClearITPendingBit(instance_, USART_IT_IDLE);
+    USART_ITConfig(instance_, USART_IT_IDLE, en);
+}

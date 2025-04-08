@@ -54,30 +54,31 @@ protected:
         uint16_t averageMode:3;
         uint16_t __resv__:3;
         uint16_t rst:1;
-    };
+    }DEF_R16(configReg);
 
     struct ShuntVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x01;
-        uint16_t :16;
+        uint16_t data;
     };
 
     struct BusVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x02;
-        uint16_t :16;
+        uint16_t data;
     };
 
     struct PowerReg:public Reg16i<>{
         scexpr RegAddress address = 0x03;
-        int16_t :16;
+        int16_t data;
     };
+
     struct CurrentReg:public Reg16i<>{
         scexpr RegAddress address = 0x04;
-        int16_t :16;
+        int16_t data;
     };
     
     struct CalibrationReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
-        int16_t :16;
+        int16_t data;
     };
     
     struct MaskReg:public Reg16<>{
@@ -112,7 +113,6 @@ protected:
         uint16_t :16;
     };
 
-    ConfigReg configReg = {};
     ShuntVoltReg shuntVoltageReg = {};
     BusVoltReg busVoltageReg = {};
     PowerReg powerReg = {};
@@ -157,13 +157,13 @@ protected:
         operator real_t() override{
             switch(ch_){
                 case Index::SHUNT_VOLT:
-                    return parent_.getShuntVoltage();
+                    return parent_.get_shunt_voltage();
                 case Index::BUS_VOLT:
-                    return parent_.getVoltage();
+                    return parent_.get_voltage();
                 case Index::CURRENT:
-                    return parent_.getCurrent();
+                    return parent_.get_current();
                 case Index::POWER:
-                    return parent_.getPower();
+                    return parent_.get_power();
                 default:
                     return real_t(0);
             }
@@ -196,7 +196,7 @@ public:
 
     void config(const uint mohms, const uint max_current_a);
 
-    void setAverageTimes(const uint16_t times);
+    void set_average_times(const uint16_t times);
 
     bool verify();
 
@@ -204,37 +204,37 @@ public:
         return channels[uint8_t(index)];
     }
 
-    auto & getCurrChannel(){return ch(INA226Channel::Index::CURRENT);}
-    auto & getBusVoltChannel(){return ch(INA226Channel::Index::BUS_VOLT); }
-    auto & getShuntVoltChannel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
-    auto & getPowerChannel(){return ch(INA226Channel::Index::POWER); }
+    auto & get_curr_channel(){return ch(INA226Channel::Index::CURRENT);}
+    auto & get_bus_volt_channel(){return ch(INA226Channel::Index::BUS_VOLT); }
+    auto & get_shunt_volt_channel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
+    auto & get_power_channel(){return ch(INA226Channel::Index::POWER); }
 
 
-    real_t getVoltage();
+    real_t get_voltage();
 
-    int getShuntVoltageuV();
+    int get_shunt_voltage_uv();
 
-    real_t getShuntVoltage();
+    real_t get_shunt_voltage();
 
-    real_t getCurrent();
+    real_t get_current();
 
-    real_t getPower();
+    real_t get_power();
 
-    void setAverageTimes(const AverageTimes times);
+    void set_average_times(const AverageTimes times);
 
-    void setBusConversionTime(const ConversionTime time);
+    void set_bus_conversion_time(const ConversionTime time);
 
-    void setShuntConversionTime(const ConversionTime time);
+    void set_shunt_conversion_time(const ConversionTime time);
 
     void reset();
 
-    void enableShuntVoltageMeasure(const bool en = true);
+    void enable_shunt_voltage_measure(const bool en = true);
 
-    void enableBusVoltageMeasure(const bool en = true);
+    void enable_bus_voltage_measure(const bool en = true);
 
-    void enableContinuousMeasure(const bool en = true);
+    void enable_continuous_measure(const bool en = true);
 
-    void enableAlertLatch(const bool en = true);
+    void enable_alert_latch(const bool en = true);
 };
 
 

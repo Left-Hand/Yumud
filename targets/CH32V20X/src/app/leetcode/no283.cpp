@@ -128,8 +128,8 @@ void leetcode_no11(){
 void leetcode_main(){
     hal::uart2.init(576000);
     DEBUGGER.retarget(&hal::uart2);
-    DEBUGGER.setEps(4);
-    DEBUGGER.setSplitter(",");
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
 
     auto m = micros();
 

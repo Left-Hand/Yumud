@@ -49,7 +49,7 @@ bool has_rx_authority(){
 }
 
 
-// 伪随机序列生成器（简单线性反馈移位寄存器）
+// 伪随机序列生成器（简单线性反馈移位寄存器�?
 class LFSR {
 public:
     LFSR(uint32_t seed = 0xACE12345) : state(seed) {}
@@ -74,7 +74,7 @@ void scramble(std::span<std::byte> data) {
     }
 }
 
-// 反扰码函数
+// 反扰码函�?
 void descramble(std::span<std::byte> data) {
     LFSR lfsr;
     for (auto& byte : data) {
@@ -230,7 +230,7 @@ void lt8960_main(){
     // UART.init(1152_KHz);
     UART.init(6_MHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
 
     lt8960_tb();
 }

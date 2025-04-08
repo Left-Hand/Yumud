@@ -59,7 +59,6 @@ namespace __iqdetails{
 template<const int Q, const int32_t type>
 constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
     uint8_t ui8Index;
-    uint8_t ui8Loops;
     int16_t i16Exponent;
     uint32_t uiq30Guess;
     uint32_t uiq30Result;
@@ -163,29 +162,39 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
      *     iq1 <= Q < 24 - 2 loops
      *     iq22 <= Q <= 31 - 3 loops
      */
-    if (Q < 24) {
-        ui8Loops = 2;
+
+    #define IQNSQRT_ITER\
+    uiq31Result = __mpyf_ul(uiq32Input, uiq30Guess);\
+    uiq30Result = __mpyf_ul(uiq31Result, uiq30Guess);\
+    uiq30Result = -(uiq30Result - 0xC0000000);\
+    uiq30Guess = __mpyf_ul(uiq30Guess, uiq30Result);\
+    
+    if constexpr(Q < 24) {
+        IQNSQRT_ITER;
+        IQNSQRT_ITER;
     } else {
-        ui8Loops = 3;
+        IQNSQRT_ITER;
+        IQNSQRT_ITER;
+        IQNSQRT_ITER;
     }
 
     /* Iterate through Newton-Raphson algorithm. */
-    while (ui8Loops--) {
-        /* x*g */
-        uiq31Result = __mpyf_ul(uiq32Input, uiq30Guess);
+    // while (ui8Loops--) {
+    //     /* x*g */
+    //     uiq31Result = __mpyf_ul(uiq32Input, uiq30Guess);
 
-        /* x*g*g */
-        uiq30Result = __mpyf_ul(uiq31Result, uiq30Guess);
+    //     /* x*g*g */
+    //     uiq30Result = __mpyf_ul(uiq31Result, uiq30Guess);
 
-        /* 3 - x*g*g */
-        uiq30Result = -(uiq30Result - 0xC0000000);
+    //     /* 3 - x*g*g */
+    //     uiq30Result = -(uiq30Result - 0xC0000000);
 
-        /*
-         * g/2*(3 - x*g*g)
-         * uiq30Guess = uiq31Guess/2
-         */
-        uiq30Guess = __mpyf_ul(uiq30Guess, uiq30Result);
-    }
+    //     /*
+    //      * g/2*(3 - x*g*g)
+    //      * uiq30Guess = uiq31Guess/2
+    //      */
+    //     uiq30Guess = __mpyf_ul(uiq30Guess, uiq30Result);
+    // }
 
     /* Calculate sqrt(x) for both sqrt and mag */
     if constexpr(type == TYPE_SQRT || type == TYPE_MAG) {

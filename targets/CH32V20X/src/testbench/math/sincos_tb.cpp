@@ -96,13 +96,13 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
     constexpr uint32_t uiq31_quatpi = uint32_t(uint64_t(1 << 29) * (PI));
 
     const uint32_t uiq31_flip_x = (sect & 0b1) ? (uiq31_quatpi - uiq31_eeq_x) : uiq31_eeq_x;
-    //将x由锯齿波变为三角波
+    //将x由锯齿波变为三角�?
 
     const int32_t iq31_x = uiq31_flip_x & 0x01ffffff;
-    //获取每个扇区的偏移值
+    //获取每个扇区的偏移�?
 
     const uint8_t lut_index = (uint16_t)(uiq31_flip_x >> 25) & 0x003f;
-    //计算查找表索引
+    //计算查找表索�?
 
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
@@ -119,15 +119,15 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
 
     return __IQNgetCosSinPUTemplate<Q>(
         (uint32_t(iqn_x) * uiqn_inv_tau) >> Q, std::forward<Fn>(fn));
-    //现在直接缩到原来1/pi 调用pu版本 这样减少了一次取余(复杂度与除法相同) 性能提高20%
-    //这个函数后面的不用看了
+    //现在直接缩到原来1/pi 调用pu版本 这样减少了一次取�?(复杂度与除法相同) 性能提高20%
+    //这个函数后面的不用看�?
 
     iqn_x = iqn_x % iqn_tau;
     if(iqn_x < 0) iqn_x += iqn_tau;
     //将x取余到[0, 2 * pi)之间
 
     const uint32_t uiqn_norm_x = (uint32_t(iqn_x) * uiqn_inv_tau >> Q);
-    //计算x / tau的值 即为[0, 2pi) 之间到[0, 1)之前的锯齿波 以方便提取区块索引
+    //计算x / tau的�? 即为[0, 2pi) 之间到[0, 1)之前的锯齿波 以方便提取区块索�?
 
     constexpr uint32_t eeq_mask = ((1 << (Q-3)) - 1);
     const uint8_t sect = uiqn_norm_x >> (Q - 3);
@@ -142,13 +142,13 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
     constexpr uint32_t uiq31_quatpi = uint32_t(uint64_t(1 << 29) * (PI));
 
     const uint32_t uiq31_flip_x = (sect & 0b1) ? (uiq31_quatpi - uiq31_eeq_x) : uiq31_eeq_x;
-    //将x由锯齿波变为三角波
+    //将x由锯齿波变为三角�?
 
     const int32_t iq31_x = uiq31_flip_x & 0x01ffffff;
-    //获取每个扇区的偏移值
+    //获取每个扇区的偏移�?
 
     const uint8_t lut_index = (uint16_t)(uiq31_flip_x >> 25) & 0x003f;
-    //计算查找表索引
+    //计算查找表索�?
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
 }
@@ -159,7 +159,7 @@ auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 
     const int32_t iq31_sin = __iqdetails::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos = __iqdetails::_IQ31CosLookup[lut_index];
-    //获取查找表的校准值
+    //获取查找表的校准�?
 
     switch(sect){
         case 0: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
@@ -273,7 +273,7 @@ __no_inline auto func(const real_t x){
 void sincos_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.noBrackets();
+    DEBUGGER.no_brackets();
 
 
     delay(200);

@@ -19,11 +19,54 @@
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"
 
+#include "hal/rng/rng.hpp"
 
-static auto rand01_2(){
+
+[[maybe_unused]] __no_inline
+static void filter(const std::span<RGB565> row) {
+    static constexpr size_t WINDOW_SIZE = 3; // 3x3 中值滤波窗口
+    static constexpr size_t HALF_WINDOW = WINDOW_SIZE / 2;
+
+
+    if (row.size() < WINDOW_SIZE) {
+        // 如果行长度小于3，无法进行中值滤波
+        return;
+    }
+
+
+    std::array<RGB565, WINDOW_SIZE> window;
+
+    for (size_t i = 0; i < row.size(); ++i) {
+        // 收集窗口内的像素
+        for (size_t j = 0; j < WINDOW_SIZE; ++j) {
+            size_t index = i + j - HALF_WINDOW;
+            if (index < 0) {
+                index = 0;
+            } else if (index >= row.size()) {
+                index = row.size() - 1;
+            }
+            window[j] = row[index];
+        }
+
+        // 对窗口内的像素进行排序
+        std::sort(window.begin(), window.end());
+
+        // 取中值
+        row[i] = window[HALF_WINDOW];
+    }
+}
+
+
+static std::tuple<real_t, real_t> rand01_2(){
     static dsp::LcgNoiseSiggen noise;
     noise.update();
+    // hal::rng.update();
     return noise.get_as_01_2();
+    // const uint32_t temp = rng.update();
+    // const uint32_t u0 = temp >> 16;
+    // const uint32_t u1 = temp & 0xffff;
+    // return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
+    // return {0,0};
 }
 
 [[nodiscard]]
@@ -42,8 +85,12 @@ scexpr RGB get_relect_color(const int8_t i){
 
 
 [[nodiscard]]
-static Interaction_t<real_t> makeInteraction(const Intersection_t<real_t> & intersection, const Ray3_t<real_t> & ray){
-    const auto & surface = triangles[intersection.i];
+static Interaction_t<real_t> make_interaction(
+    const Intersection_t<real_t> & intersection, 
+    const Ray3_t<real_t> & ray, 
+    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles)
+{
+    const auto & surface = co_triangles[intersection.i];
     return Interaction_t<real_t>{
         intersection.i,
         intersection.t,
@@ -60,16 +107,18 @@ __fast_inline scexpr bool not_in_one(const iq_t<Q> x){
 
 
 [[nodiscard]]
-static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const TriangleSurface_t<real_t> & s){
-    const auto & E1 = s.E1;
-    const auto & E2 = s.E2;
-    
+static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const TriangleSurfaceCache_t<real_t> & surface){
+    const auto & E1 = surface.v1 - surface.v0;  // E1 = v1 - v0
+    const auto & E2 = surface.v2 - surface.v0;  // E2 = v2 - v0
+
     const auto P = ray.direction.cross(E2);
     const auto determinant = P.dot(E1);
 
+    if (std::abs(determinant) < EPSILON) return 0;
+
     const auto inv_determinant = 1 / determinant;
 
-    const auto vec = ray.start - s.v0;
+    const auto vec = ray.start - surface.v0;
     const auto u = P.dot(vec) * inv_determinant;
     if (unlikely(not_in_one(u))) return 0;
 
@@ -110,7 +159,7 @@ static __fast_inline bool tb_intersect (const Vector3_t<real_t> & start, const V
 
 
 [[nodiscard]] __pure
-static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray){
+static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     Intersection_t<real_t> intersection = {
         -1,
         std::numeric_limits<real_t>::max()
@@ -122,9 +171,10 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray){
     const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
     const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
 
+    
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
-        for (size_t k = 0; k < triangles.size(); k++){
-            const auto isct = tt_intersect(ray, triangles[k]);
+        for (size_t k = 0; k < co_triangles.size(); k++){
+            const auto isct = tt_intersect(ray, co_triangles[k]);
             if (isct > 0 and isct < intersection.t){
                 intersection.t = isct;
                 intersection.i = k;
@@ -138,8 +188,8 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray){
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & transform){
-    const auto wi_z = transform.xform_up().dot(ray.direction);
+static std::optional<std::tuple<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & rotation){
+    const auto wi_z = rotation.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
 
@@ -154,7 +204,7 @@ static std::optional<std::tuple<RGB, real_t>> sampleBSDF(const Interaction_t<rea
 }
 
 [[nodiscard]] __pure
-static Ray3_t<real_t> cosWeightedHemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform)
+static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & rotation)
 {
     const auto [u0, u1] = rand01_2();
 
@@ -170,19 +220,19 @@ static Ray3_t<real_t> cosWeightedHemi(const __restrict Interaction_t<real_t> & i
 
     return Ray3_t<real_t>::from_start_and_dir(
         interaction.position + interaction.normal * EPSILON,
-        transform.xform(v)
+        rotation.xform(v)
     );
 }
 
 [[nodiscard]]
-static std::optional<RGB> sampleLight(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & transform){
+static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & rotation, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     const auto [u0, u1] = rand01_2();
 
-    const auto lightIdx = u0 < 0.5_r ? 0 : 1;
+    const auto light_idx = u0 < 0.5_r ? 0 : 1;
 
     const auto su = sqrtf(u0);
 
-    const auto & light = triangles[lightIdx];
+    const auto & light = co_triangles[light_idx];
 
     const auto linear_t = Vector3_t(
         (1 - su),
@@ -207,10 +257,10 @@ static std::optional<RGB> sampleLight(const __restrict Interaction_t<real_t> & i
     const real_t cos_theta = ray.direction.dot(interaction.normal);
     if (cos_theta <= 0) return std::nullopt;
 
-    const auto intersection = intersect(ray);
-    if (intersection.i < 0 || intersection.i != lightIdx) return std::nullopt;
+    const auto intersection = intersect(ray, co_triangles);
+    if (intersection.i < 0 || intersection.i != light_idx) return std::nullopt;
 
-    const auto sample_opt = sampleBSDF(interaction, ray, transform);
+    const auto sample_opt = sample_bsdf(interaction, ray, rotation);
     if (!sample_opt) return std::nullopt;
     const auto & [sample, bsdf_pdf] = sample_opt.value();
 
@@ -231,11 +281,12 @@ static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
     ) * ilen; // 最后一步归一化（可合并到后续操作中）
 }
 
-static RGB sampleRay(RGB sample, Ray3_t<real_t> ray){
+[[maybe_unused]]
+static RGB sampleRay(RGB sample, Ray3_t<real_t> ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     auto throughput = RGB{1,1,1};
     uint16_t depth = 0;
     while (1){
-        const auto intersection = intersect(ray);
+        const auto intersection = intersect(ray, co_triangles);
         if (intersection.i < 0){
             return sample + throughput;
         }
@@ -247,17 +298,16 @@ static RGB sampleRay(RGB sample, Ray3_t<real_t> ray){
             return sample;
         }
 
-        const auto interaction = makeInteraction(intersection, ray);
-        const auto transform = quat_from_normal(interaction.normal);
+        const auto interaction = make_interaction(intersection, ray, co_triangles);
+        const auto rotation = quat_from_normal(interaction.normal);
 
-        const auto light_opt = sampleLight(interaction, transform);
-        const auto radiance = light_opt.value_or(RGB(0, 0, 0));
-        sample += radiance * throughput;
+        const auto light_opt = sample_light(interaction, rotation, co_triangles);
+        if(light_opt) sample += light_opt.value() * throughput;
 
         depth++;
-        ray = cosWeightedHemi(interaction, transform);
+        ray = cos_weighted_hemi(interaction, rotation);
 
-        const auto sample_opt = sampleBSDF(interaction, ray, transform);
+        const auto sample_opt = sample_bsdf(interaction, ray, rotation);
         if (!sample_opt) return sample;
 
         const auto & [bsdf, bsdf_pdf] = sample_opt.value();
@@ -268,23 +318,29 @@ static RGB sampleRay(RGB sample, Ray3_t<real_t> ray){
 }
 
 
-
-static RGB samplePixel(const uint x, const uint y){
+[[maybe_unused]]
+static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     auto sample = RGB();
 
-    static constexpr auto Zc = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
+    [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
 
     for (size_t i = 0; i < spp; i++){
 
-        const real_t Xc = (x - (LCD_W >> 1)) * INV_LCD_H;
-        const real_t Yc = (LCD_H - 1 - y - (LCD_H >> 1)) * INV_LCD_H;
+        const real_t ux = x * INV_LCD_H;
+        const real_t uy = y * INV_LCD_H;
 
-        sample += sampleRay(
-            sample,
-            Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(Xc, Yc, Zc))
-        ) * inv_spp;
+        sample += 
+        // sampleRay(
+        //     sample,
+        //     Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+        //     co_triangles
+        // )
+        RGB(ux, uy, CLAMP(ux + uy, 0, 1))
+        * inv_spp;
+
     }
 
+    return sample;
     return RGB{
         real_t(sample.r / (1 + sample.r)),
         real_t(sample.g / (1 + sample.g)),
@@ -292,68 +348,41 @@ static RGB samplePixel(const uint x, const uint y){
     };
 }
 
-__fast_inline
-static RGB565 draw3drt(const uint x, const uint y){
-    const auto sample = samplePixel(x, y);
-    return RGB565(uint8_t(sample.r * 255), uint8_t(sample.g * 255), uint8_t(sample.b * 255));
+__no_inline
+static RGB565 draw3drt(const uint x, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles, const auto param){
+    // const auto sample = samplePixel(x, y, co_triangles);
+
+    const real_t ux = x * INV_LCD_H;
+    const real_t uy = y * INV_LCD_H;
+    const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
+
+    return RGB565::from_565(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
 }
 
-[[maybe_unused]]
-static void filter(const std::span<RGB565> row) {
-    static constexpr size_t WINDOW_SIZE = 3; // 3x3 中值滤波窗口
-    static constexpr size_t HALF_WINDOW = WINDOW_SIZE / 2;
 
-
-    if (row.size() < WINDOW_SIZE) {
-        // 如果行长度小于3，无法进行中值滤波
-        return;
-    }
-
-
-    std::array<RGB565, WINDOW_SIZE> window;
-
-    for (size_t i = 0; i < row.size(); ++i) {
-        // 收集窗口内的像素
-        for (size_t j = 0; j < WINDOW_SIZE; ++j) {
-            size_t index = i + j - HALF_WINDOW;
-            if (index < 0) {
-                index = 0;
-            } else if (index >= row.size()) {
-                index = row.size() - 1;
-            }
-            window[j] = row[index];
-        }
-
-        // 对窗口内的像素进行排序
-        std::sort(window.begin(), window.end());
-
-        // 取中值
-        row[i] = window[HALF_WINDOW];
-    }
-}
-
-static void render_row(const __restrict std::span<RGB565> row, const uint y){
-    ASSERT(row.size() == LCD_W);
-
-    for (uint x = 0; x < LCD_W; x++){
-        row[x] = draw3drt(x, y);
+__no_inline
+static void render_row(const __restrict std::span<RGB565> row, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+    // ASSERT(row.size() == LCD_W);
+    const auto s = sin(8 * time());
+    for (size_t x = 0; x < LCD_W; x++){
+        row[x] = draw3drt(x, y, co_triangles, s);
     }
 
     // filter(row);
 }
 
-[[maybe_unused]]
-static std::vector<RGB565> render_row_v2(const uint w, const uint y){
-    std::vector<RGB565> row(w);
+// [[maybe_unused]]
+// static std::vector<RGB565> render_row_v2(const uint w, const uint y){
+//     std::vector<RGB565> row(w);
 
-    for (uint x = 0; x < LCD_W; x++){
-        row[x] = draw3drt(x, y);
-    }
+//     for (uint x = 0; x < LCD_W; x++){
+//         row[x] = draw3drt(x, y);
+//     }
 
-    filter(row);
+//     // filter(row);
 
-    return row;
-}
+//     return row;
+// }
 
 
 #define UART hal::uart2
@@ -363,8 +392,8 @@ void light_tracking_main(void){
 
     UART.init(576000);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.setEps(4);
-    // DEBUGGER.noBrackets();
+    DEBUGGER.set_eps(4);
+    // DEBUGGER.no_brackets();
 
 
     #ifdef CH32V30X
@@ -432,17 +461,29 @@ void light_tracking_main(void){
         // renderer.draw_rect(Rect2i(20, 0, 20, 40));
     }
 
-    for (uint y = 0; y < LCD_H; y++){
 
-        std::array<RGB565, LCD_W> row;
-        render_row(row, y);
+    std::vector<TriangleSurfaceCache_t<real_t>> co_triangles(triangles.begin(), triangles.end());
+    // for(uint i = 0; i < co_triangles.size(); i++) 
+    //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
+    DEBUG_PRINTLN(millis());
+    auto render = [&](){
+        for (uint y = 0; y < LCD_H; y++){
 
-        // const auto row = render_row_v2(LCD_W, y);
-        // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-        tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
-        // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-        // renderer.draw_rect(Rect2i(20, 0, 20, 40));
-    }
+            std::array<RGB565, LCD_W> row;
+            render_row(row, y, co_triangles);
+
+            // const auto row = render_row_v2(LCD_W, y);
+            // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
+            tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            // DEBUG_PRINTLN(uint8_t(row[50].b));
+
+            // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+        }
+    };
+
+    // for(size_t i = 0; i < 100; i++) render();
+    while(true) render();
 
     DEBUG_PRINTLN(millis());
 

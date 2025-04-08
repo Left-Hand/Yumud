@@ -99,10 +99,10 @@ void ICM42605::reset(){
 
 }
 
-Option<Vector3_t<real_t>> ICM42605::getAcc(){
+Option<Vector3_t<real_t>> ICM42605::get_acc(){
     return Some{Vector3_t<real_t>{0,0,0}};//TODO
 }
 
-Option<Vector3_t<real_t>> ICM42605::getGyr(){
+Option<Vector3_t<real_t>> ICM42605::get_gyr(){
     return Some{Vector3_t<real_t>{0,0,0}};//TODO
 }
