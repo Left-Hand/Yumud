@@ -24,7 +24,7 @@ void BurstDmaPwm::invoke(){
 
 void BurstDmaPwm::install(){
     dma_channel_.init(DmaMode::toPeriph, DmaPriority::Ultra);
-    timer_oc_.init().sync().enableDma();
+    timer_oc_.init().set_sync().enableDma();
 }
 
 bool BurstDmaPwm::is_done(){

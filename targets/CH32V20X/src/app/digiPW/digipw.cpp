@@ -144,7 +144,7 @@ void digipw_main(){
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
-    ch.sync(true);
+    ch.set_sync(true);
     auto & en_gpio = portB[0];
     auto & led = portA[7];
 

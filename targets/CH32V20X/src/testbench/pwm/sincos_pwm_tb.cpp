@@ -122,14 +122,14 @@ void sincos_pwm_main(){
     #endif
 
     pwm_ap.init();
-    pwm_ap.sync();
+    pwm_ap.set_sync();
     pwm_an.init();
-    pwm_an.sync();
+    pwm_an.set_sync();
 
     pwm_bp.init();
-    pwm_bp.sync();
+    pwm_bp.set_sync();
     pwm_bn.init();
-    pwm_bn.sync();
+    pwm_bn.set_sync();
 
     pwm_bp.set_polarity(false);
     pwm_bn.set_polarity(false);

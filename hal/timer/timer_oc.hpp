@@ -14,7 +14,7 @@ protected:
 public:
 
 
-    TimerOut & sync(const bool _sync = true);
+    TimerOut & set_sync(const bool _sync = true);
     TimerOut & set_polarity(const bool pol);
     TimerOut & set_output_state(const bool s);
     TimerOut & set_idle_state(const bool state);
