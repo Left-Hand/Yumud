@@ -51,23 +51,26 @@ using option_type_t = details::_option_type<T>::type;
 template<typename T>
 class Option{
 private:
-    bool exists_;
+    using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
     T value_;
+    bool exists_;
 public:
-    [[nodiscard]] 
+    [[nodiscard]] constexpr 
     Option(_None_t):
         exists_(false)
     {}
 
     [[nodiscard]] constexpr 
     Option(const Some<T> & value):
-        exists_(true),
-        value_(value){}
+        value_(value),
+        exists_(true)
+        {}
 
     [[nodiscard]] constexpr 
     Option(Some<T> && value):
-        exists_(true),
-        value_(std::move(*value)){}
+        value_(std::move(*value)),
+        exists_(true)
+        {}
 
 
     template<typename S>
@@ -179,6 +182,12 @@ public:
     // template<typename U, typename Fn>
     // friend auto operator|(const Option<U>& opt, Fn&& fn);
 
+    template<typename Fn>
+    __fast_inline constexpr 
+    const Option<T> & inspect(Fn && fn) const {
+        if (is_some()) std::forward<Fn>(fn)(unwrap());
+        return *this;
+    }
 };
 
 

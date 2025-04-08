@@ -8,27 +8,18 @@
 #include "core/clock/time.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
-#include "hal/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
-#include "drivers/Modem/dshot/dshot.hpp"
-
 #include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-
-#include "dsp/filter/homebrew/DigitalFilter.hpp"
-#include "dsp/controller/adrc/tracking_differentiator.hpp"
-#include "dsp/controller/pi_ctrl.hpp"
-#include "dsp/homebrew/edge_counter.hpp"
-#include "dsp/controller/sliding_mode_ctrl.hpp"
-
 #include "drivers/Audio/JQ8900/JQ8900.hpp"
 #include "drivers/Recognition/U13T/U13T.hpp"
+
 #include "core/utils/hash_func.hpp"
+#include "core/utils/immutable.hpp"
+#include "core/utils/Option.hpp"
 
 scexpr auto UARTSW_BAUD = 38400; 
 scexpr auto U13T_BAUD = 9600; 
@@ -82,13 +73,13 @@ namespace gxm{
             __END
         };
 
-        StationName(const Kind kind):
+        constexpr StationName(const Kind kind = __END):
             kind_(kind){;}
 
-        StationName(const StationName & other) = default;
-        StationName(StationName && other) = default;
-        StationName & operator = (const StationName & other) = default;
-        StationName & operator = (StationName && other) = default;
+        constexpr StationName(const StationName & other) = default;
+        constexpr StationName(StationName && other) = default;
+        constexpr StationName & operator = (const StationName & other) = default;
+        constexpr StationName & operator = (StationName && other) = default;
 
         static constexpr size_t STAT_COUNT = __END;
         static constexpr size_t STR_LEN = 16;
@@ -100,11 +91,8 @@ namespace gxm{
             return kind_;
         }
 
-        constexpr 
-        std::span<const uint8_t, STR_LEN> to_gbk() const;
-    
         static constexpr
-        std::optional<StationName> from_gbk(std::span<const uint8_t, STR_LEN> code);
+        Option<StationName> from_gbk(std::span<const uint8_t, STR_LEN> code);
     private:
         Kind kind_;
     };
@@ -157,21 +145,15 @@ namespace gxm{
         }
     };
 
-
-
-    constexpr 
-    std::span<const uint8_t, StationName::STR_LEN> StationName::to_gbk() const{
-        return std::span<const uint8_t, STR_LEN>(StationData::DATA[to_index()]);
-    }
+    static constexpr auto TABLE = StationData::calc_hash_table(StationData::DATA);
 
     constexpr
-    std::optional<StationName> StationName::from_gbk(std::span<const uint8_t, STR_LEN> code){
-        constexpr auto TABLE = StationData::calc_hash_table(StationData::DATA);
+    Option<StationName> StationName::from_gbk(std::span<const uint8_t, STR_LEN> code){
         const auto code_hash = StationData::calc_hash_of_line(code);
 
         for(size_t i = 0; i < TABLE.size(); i++)
-            if(TABLE[i] == code_hash) return StationName(static_cast<Kind>(i));
-        return std::nullopt;
+            if(TABLE[i] == code_hash) return Some(StationName(static_cast<Kind>(i)));
+        return None;
     }
     
 
@@ -207,22 +189,16 @@ namespace gxm{
         }
     
         void reconf(const Config & cfg){
-            //开始缓启动的时间
             start_time_ = cfg.start_time; // S
-    
-            //缓启动加速的时间
             accelrate_time_ = cfg.accelrate_time; // S
-    
-            //缓启动最终恒定输出的力
             final_force_ = cfg.final_force; // N / m 
         }
     
         void init(){
     
-            //因为是中心对齐的顶部触发 所以频率翻�?
+            //因为是中心对齐的顶部触发 所以频率翻倍
             timer.init(20'000, TimerMode::CenterAlignedUpTrig);
     
-            
             pwm_pos.init();
             pwm_neg.init();
         
@@ -274,16 +250,11 @@ namespace gxm{
 
         void init(){
             inst_.init();
-            inst_.set_vol(3);
-            // inst_.play_disc(1);
-            // play(StationName::FengSuoXian);
-            // play(StationName::ChiShui);
-            // play(StationName::CaoDi);
+            inst_.set_vol(13);
         }
 
         void play(const StationName & sta){
             inst_.play_disc(sta.to_index());
-            // DEBUG_PRINTS("play:", sta);
         }
     private:
         Inst inst_;
@@ -294,9 +265,12 @@ namespace gxm{
         using Inst = drivers::U13T;
         hal::UartHw & uart_;
         Inst inst_ = Inst{uart_};
-        std::optional<StationName> last_sta_ = std::nullopt;
+        Option<StationName> last_sta_ = None;
 
+        //防止短期内多次触发 设定最小死区时间
         static constexpr uint32_t DEAD_ZONE_MS = 1500;
+
+        //上次播放的时间 提供死区参考
         uint32_t last_detected_ms_ = 0;
 
         class FrameDecoder final{
@@ -307,20 +281,20 @@ namespace gxm{
                 Payload
             };
 
-            static constexpr uint8_t HEADER = 0x7f;
-            static constexpr size_t MAX_LEN = 32;
+            static constexpr uint8_t HEADER_TOKEN = 0x7f;
+            static constexpr size_t MAX_PAYLOAD_SIZE = 32;
 
             FrameDecoder(){;}
             void feed(const char chr){
                 switch(state_){
                     case State::Idle:
-                        if(chr == HEADER){
+                        if(chr == HEADER_TOKEN){
                             state_ = State::Len;
                         }
                         break;
                     case State::Len:{
                         const size_t len = chr;
-                        ASSERT(len <= MAX_LEN, "FrameDecoder: len too large");
+                        ASSERT(len <= MAX_PAYLOAD_SIZE, "FrameDecoder: len too large");
                         len_ = len;
                         payload_buffer_.clear();
                         state_ = State::Payload;
@@ -343,15 +317,14 @@ namespace gxm{
             }
         private:
             State state_ = State::Idle;
-            sstl::vector<uint8_t, MAX_LEN> payload_buffer_{};
+            sstl::vector<uint8_t, MAX_PAYLOAD_SIZE> payload_buffer_{};
             uint8_t len_ = 0;
         };
 
         FrameDecoder frame_decoder_{};
         DelayedSemphr semphr_{50};
 
-        std::optional<StationName> match_context(std::span<const uint8_t, 16> data) const {
-            // DEBUG_PRINTS("station is: ", gxm::StationName::from_gbk(data));
+        Option<StationName> match_context(std::span<const uint8_t, 16> data) const {
             return StationName::from_gbk(data);
         }
 
@@ -370,28 +343,25 @@ namespace gxm{
                 frame_decoder_.feed(chr);
             }
         }
+
+        void on_payload(const std::span<const uint8_t> payload){
+            if(is_pkt_payload(payload)){
+                semphr_.give();
+            }else if(is_identity_payload(payload)){
+                const auto line = (std::span(payload).subspan<9,16>());
+
+                if(millis() > last_detected_ms_ + DEAD_ZONE_MS){
+                    last_detected_ms_ = millis();
+                    last_sta_ = match_context(line);
+                }
+            }
+        }
     public: 
         DetectTask(UartHw & uart):
             uart_(uart){
         }
 
         void init(){
-        }
-
-        void test(){
-            std::array<uint8_t, 16> ret;
-            if(true){//mock data
-            // if(false){//mock data
-                std::fill(ret.begin(),ret.end(),0);
-                const auto & data = StationData::DATA[1];
-                std::copy(data.begin(),data.end(), ret.begin());
-                // ret[0] = 0xd1;
-                // ret[1] = 0xd3;
-                // ret[2] = 0xb0;
-                // ret[3] = 0xb2;
-            }
-
-            match_context(std::span(ret));
         }
 
         void process(const real_t t){
@@ -406,30 +376,11 @@ namespace gxm{
             
             const auto payload_opt = frame_decoder_.get_payload();
             if(!payload_opt) return;
-            const auto & payload = payload_opt.value();
-
-            if(is_pkt_payload(payload)){
-                semphr_.give();
-            }else if(is_identity_payload(payload)){
-                const auto line = (std::span(payload).subspan<9,16>());
-                
-                // DEBUG_PRINTLN(match_context(line), std::hex, std::showbase, line);
-                // DEBUG_PRINTLN(match_context(line), std::hex, std::showbase, line);
-                // const auto last_sta = match_context(line);
-                // ASSERT(last_sta.has_value(), "no match");
-                if(millis() > last_detected_ms_ + DEAD_ZONE_MS){
-                    last_sta_ = match_context(line);
-                    last_detected_ms_ = millis();
-                }
-            }
+            on_payload(payload_opt.value());
         }
 
-        bool any() const {return last_sta_.has_value();}
-        StationName take() {
-            ASSERT(any(), "no match");
-            const auto value = last_sta_.value();
-            last_sta_.reset();
-            return value;
+        Option<StationName> get_station() {
+            return last_sta_;
         }
     };
 
@@ -522,10 +473,10 @@ void detect_tb(){
         uart.tick();
     });
 
-    auto & uarthw = uart2;
+    auto & UARTHW = uart2;
     uart2.init(U13T_BAUD);
-    drivers::U13T u13t{uarthw};
-    gxm::DetectTask detect_task{uarthw};
+    drivers::U13T u13t{UARTHW};
+    gxm::DetectTask detect_task{UARTHW};
     
 
     detect_task.init();
@@ -560,9 +511,10 @@ void boardcast_tb(){
 
 [[maybe_unused]] static
 void app(){
-    scexpr auto UARTSW_BAUD = 38400; 
+    auto & UARTSW_GPIO = portA[5];
+    auto & UARTHW = uart2;
 
-    hal::UartSw uart{portA[5], NullGpio}; 
+    hal::UartSw uart{UARTSW_GPIO, NullGpio}; 
     uart.init(UARTSW_BAUD);
 
     DEBUGGER.retarget(&uart);
@@ -589,10 +541,9 @@ void app(){
 
 
 
-    auto & uarthw = uart2;
-    uart2.init(U13T_BAUD);
-    drivers::U13T u13t{uarthw};
-    gxm::DetectTask detect_task{uarthw};
+    UARTHW.init(U13T_BAUD);
+    drivers::U13T u13t{UARTHW};
+    gxm::DetectTask detect_task{UARTHW};
     detect_task.init();
 
     gxm::BoardcastTask boardcast_task{portB[1]};
@@ -613,41 +564,20 @@ void app(){
 
         detect_task.process(t);
 
-        if(detect_task.any()){
+        detect_task.get_station().inspect([&](auto && station_name){
             led = Color_t<real_t>(1, 1, 1, 1);
 
-            const auto stat_name = detect_task.take();
-            boardcast_task.play(stat_name);
-            DEBUG_PRINTLN(stat_name);
+            boardcast_task.play(station_name);
+            DEBUG_PRINTLN(station_name);
 
             delay(500);
             led = Color_t<real_t>(0, 0, 0, 0);
-        }
+        });
 
         delay(1);
-        // delay(30);
-        // led = Color_t<real_t>(1, 1, 1, 1);
-        // portB[8].set();
-        // // DEBUG_PRINTLN(millis());
-        // delay(30);
-        // portB[8].clr();
-        // led = Color_t<real_t>(0, 0, 0, 0);
     }
 }
 
 void gxm_new_energy_main(){
-
-
-    // while(true){
-    //     DEBUG_PRINTLN(1243550000,1243550000);
-    //     delay(1);
-    // }
-    // ws2812_tb(hal::portB[1]);
-    // at8222_tb();
-    // motor_tb();
-    // detect_tb();
-    // boardcast_tb();
     app();
-    // jq8900_tb();
-    // u13t_tb();
 }
