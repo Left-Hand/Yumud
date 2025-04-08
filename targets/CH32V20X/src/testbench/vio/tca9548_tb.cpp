@@ -41,7 +41,7 @@ void tca9548_main()
 
     while(true){
         !+mpu.update();
-        DEBUG_PRINTLN(millis(), mpu.getAcc().unwrap());
+        DEBUG_PRINTLN(millis(), mpu.get_acc().unwrap());
         DEBUG_PRINTLN(millis(), tca.verify());
         delay(20);
     }

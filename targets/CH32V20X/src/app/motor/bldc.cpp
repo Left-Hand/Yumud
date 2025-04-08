@@ -343,8 +343,8 @@ void bldc_main(){
 
     // for(size_t i = 0; i < 1000; ++i) {
     //     bmi.update();
-    //     // auto [x,y,z] = bmi.getAcc();
-    //     auto [x,y,z] = bmi.getGyr();
+    //     // auto [x,y,z] = bmi.get_acc();
+    //     auto [x,y,z] = bmi.get_gyr();
     //     DEBUG_PRINTLN(x,y,z);
     //     delay(2);
     //     // DEBUGGER << std::endl;
@@ -909,14 +909,14 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    LowpassFilterD_t<iq_t<14>> speed_measurer = {
+    [[maybe_unused]] LowpassFilterD_t<iq_t<14>> speed_measurer = {
         {
             .fc = 10, 
             .fs = foc_freq
         }
     };
 
-    auto measure_bias = [&]{
+    [[maybe_unused]] auto measure_bias = [&]{
         
         // mp6540.enable(false);
         // curr_sens.capture();
@@ -969,7 +969,7 @@ void bldc_main(){
         // curr_sens.updateDQ(0);
         curr_sens.update(0);
         // real_t mul = curr_sens.ab()[1] * s;
-        const real_t mul = curr_sens.ab()[1] * hfi_c;
+        [[maybe_unused]] const real_t mul = curr_sens.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
         // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = foc_freq}};
@@ -984,7 +984,7 @@ void bldc_main(){
         hfi_filter_mid_lpf.update(hfi_filter_lpf.get());
         // hfi_filter_hpf.update(hfi_filter_lpf.get());
         // hfi_filter_hpf.update(mul);
-        const auto temp = hfi_filter_lpf.get();
+        [[maybe_unused]] const auto temp = hfi_filter_lpf.get();
         // hfi_result = temp;
         hfi_result = hfi_filter_lpf.get();
         hfi_mid_result = hfi_filter_mid_lpf.get();
@@ -1011,7 +1011,7 @@ void bldc_main(){
 
     
     while(true){
-        const auto t = time();
+        [[maybe_unused]] const auto t = time();
 
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
         DEBUG_PRINTLN_IDLE(

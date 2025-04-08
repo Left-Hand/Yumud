@@ -56,7 +56,6 @@ void Mahony::update_v2(const Vector3 & gyr,const Vector3 & acc) {
 void Mahony::update(const Vector3 & gyr,const Vector3 & acc) {
 	const auto v = q.xform_top();
 	const auto err = acc.normalized().cross(v);
-	inte_ += err * inv_fs_;
-	const auto delta = gyr + kp_ * err + ki_ * inte_;
+	const auto delta = gyr + kp_ * err + ki_ * (inte_ += err * inv_fs_);
 	q = q.integral((delta) * (inv_fs_));
 }

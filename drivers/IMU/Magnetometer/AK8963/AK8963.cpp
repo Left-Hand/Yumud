@@ -142,7 +142,7 @@ void AK8963::update(){
     // READ_REG(mag_z_reg);
     // data_valid_ = true;
 }
-Option<Vector3_t<real_t>> AK8963::getMagnet(){
+Option<Vector3_t<real_t>> AK8963::get_magnet(){
     return optcond(data_valid_, Vector3_t<real_t>{
         conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale.x,
         conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale.y,

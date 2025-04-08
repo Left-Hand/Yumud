@@ -8,7 +8,7 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "cybergear/MotorCyberGear.hpp"
+#include "robots/vendor/mit/cybergear/MotorCyberGear.hpp"
 
 #include "detectors/ShockDetector.hpp"
 #include "detectors/SecondOrderTransferFunc.hpp"

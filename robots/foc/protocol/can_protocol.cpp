@@ -59,7 +59,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         GETTER_BIND(        Command::GET_SPD,        E(motor.getSpeed()))
         GETTER_BIND(        Command::GET_ACC,        E(0))//TODO
         GETTER_BIND(        Command::GET_CURR,       E(motor.getCurrent()))
-        GETTER_BIND(        Command::GET_ALL,        E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAcc()))
+        GETTER_BIND(        Command::GET_ALL,        E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.get_acc()))
 
         EXECUTER_BIND(Command::TRIG_CALI,      motor.triggerCali)
 

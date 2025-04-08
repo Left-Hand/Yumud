@@ -65,7 +65,7 @@ public:
     virtual real_t getPosition() const {return meta.pos;}
     virtual real_t getTargetEstSpeed() const {return meta.targ_est_spd;}
     virtual real_t getCurrent() const {return meta.curr;}
-    virtual real_t getAcc() const{return meta.acc;}
+    virtual real_t get_acc() const{return meta.acc;}
 
     virtual void setCurrentLimit(const real_t max_current) = 0;
     virtual void setPositionLimit(const Range & clamp) = 0;

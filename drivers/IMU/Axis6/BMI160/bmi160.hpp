@@ -112,8 +112,8 @@ protected:
     GyrRangeReg gyr_range_reg = {};
     // #pragma pack(pop)
 
-    static real_t calculateAccScale(const AccRange range);
-    static real_t calculateGyrScale(const GyrRange range);
+    static real_t calculate_acc_scale(const AccRange range);
+    static real_t calculate_gyr_scale(const GyrRange range);
 public:
     BMI160(BoschSensor_Phy && phy):phy_(phy){;}
 
@@ -123,19 +123,19 @@ public:
     Result<void, Error> reset();
 
     
-    Result<void, Error> setAccOdr(const AccOdr odr);
-    Result<void, Error> setAccRange(const AccRange range);
-    Result<void, Error> setGyrOdr(const GyrOdr odr);
-    Result<void, Error> setGyrRange(const GyrRange range);
-    Result<void, Error> setPmuMode(const PmuType pum, const PmuMode mode);
+    Result<void, Error> set_acc_odr(const AccOdr odr);
+    Result<void, Error> set_acc_range(const AccRange range);
+    Result<void, Error> set_gyr_odr(const GyrOdr odr);
+    Result<void, Error> set_gyr_range(const GyrRange range);
+    Result<void, Error> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
-    PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3_t<real_t>> getAcc();
-    Option<Vector3_t<real_t>> getGyr();
+    PmuMode get_pmu_mode(const PmuType pum);
+    Option<Vector3_t<real_t>> get_acc();
+    Option<Vector3_t<real_t>> get_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr
-    Option<GyrOdr> getGyrOdr(const real_t odr){
+    Option<GyrOdr> get_gyr_odr(const real_t odr){
         constexpr std::array odr_map = {
             25, 50, 100, 200, 400, 800, 1600, 3200
         };
@@ -149,7 +149,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<AccOdr> getAccOdr(const real_t odr){
+    Option<AccOdr> get_acc_odr(const real_t odr){
         constexpr std::array odr_map = {
             real_t(25.0/32),
             real_t(25.0/16),

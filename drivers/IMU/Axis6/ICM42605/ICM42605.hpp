@@ -167,8 +167,8 @@ public:
 
     void reset();
 
-    Option<Vector3_t<real_t>> getAcc();
-    Option<Vector3_t<real_t>> getGyr();
+    Option<Vector3_t<real_t>> get_acc();
+    Option<Vector3_t<real_t>> get_gyr();
 };
 
 }

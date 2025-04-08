@@ -174,7 +174,7 @@ public:
     Result<void, Error> busy();
     Result<void, Error> stable();
     Result<void, Error> disableI2c();
-    Option<Vector3_t<real_t>> getMagnet();
+    Option<Vector3_t<real_t>> get_magnet();
     Result<void, Error> set_data_width(const uint8_t bits);
     Result<void, Error> setMode(const Mode mode);
 };

@@ -75,8 +75,8 @@ public:
 
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3_t<real_t>> getAcc();
-    Option<Vector3_t<real_t>> getGyr();
+    Option<Vector3_t<real_t>> get_acc();
+    Option<Vector3_t<real_t>> get_gyr();
 };
 
 }

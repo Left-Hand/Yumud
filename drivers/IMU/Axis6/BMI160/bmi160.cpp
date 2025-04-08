@@ -22,18 +22,18 @@ using Error = BMI160::Error;
 Result<void, Error> BMI160::init(){
     const auto res = reset()
     | verify()
-    | setAccOdr(AccOdr::_800)
-    | setAccRange(AccRange::_8G)
-    | setGyrOdr(GyrOdr::_800)
-    | setGyrRange(GyrRange::_1000deg)
+    | set_acc_odr(AccOdr::_800)
+    | set_acc_range(AccRange::_8G)
+    | set_gyr_odr(GyrOdr::_800)
+    | set_gyr_range(GyrRange::_1000deg)
 	| phy_.write_reg(0x47, 0xfe)		//enable
-	| setPmuMode(PmuType::ACC, PmuMode::NORMAL)		//Acc normal mode
-	| setPmuMode(PmuType::GYR, PmuMode::NORMAL)		//Gro normal mode
+	| set_pmu_mode(PmuType::ACC, PmuMode::NORMAL)		//Acc normal mode
+	| set_pmu_mode(PmuType::GYR, PmuMode::NORMAL)		//Gro normal mode
 	//check the PMU_status	Register(0x03) 
     ;
     delay(1);
-	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "acc pmu mode verify failed");
-    BMI160_ASSERT(getPmuMode(PmuType::GYR) == PmuMode::NORMAL, "gyr pmu mode verify failed");
+	BMI160_ASSERT(get_pmu_mode(PmuType::ACC) == PmuMode::NORMAL, "acc pmu mode verify failed");
+    BMI160_ASSERT(get_pmu_mode(PmuType::GYR) == PmuMode::NORMAL, "gyr pmu mode verify failed");
 
     return res;
 }
@@ -57,7 +57,7 @@ Result<void, Error> BMI160::reset(){
     return phy_.write_command(uint8_t(Command::SOFT_RESET));
 }
 
-Option<Vector3_t<real_t>> BMI160::getAcc(){
+Option<Vector3_t<real_t>> BMI160::get_acc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
@@ -69,7 +69,7 @@ Option<Vector3_t<real_t>> BMI160::getAcc(){
     }};
 }
 
-Option<Vector3_t<real_t>> BMI160::getGyr(){
+Option<Vector3_t<real_t>> BMI160::get_gyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
@@ -81,7 +81,7 @@ Option<Vector3_t<real_t>> BMI160::getGyr(){
     }};
 }
 
-Result<void, Error> BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){
+Result<void, Error> BMI160::set_pmu_mode(const PmuType pmu, const PmuMode mode){
     switch(pmu){
         case PmuType::ACC:
             return phy_.write_command(uint8_t(Command::ACC_SET_PMU) | uint8_t(mode));
@@ -94,7 +94,7 @@ Result<void, Error> BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){
     __builtin_unreachable();
 }
 
-BMI160::PmuMode BMI160::getPmuMode(const PmuType type){
+BMI160::PmuMode BMI160::get_pmu_mode(const PmuType type){
     auto & reg = pmu_status_reg;
     phy_.read_regs(reg).unwrap();
 
@@ -106,29 +106,29 @@ BMI160::PmuMode BMI160::getPmuMode(const PmuType type){
     }
 }
 
-Result<void, Error> BMI160::setAccOdr(const AccOdr odr){
+Result<void, Error> BMI160::set_acc_odr(const AccOdr odr){
     auto & reg = acc_conf_reg;
     reg.acc_odr = uint8_t(odr);
     reg.acc_bwp = 0b010;
     return phy_.write_regs(reg);
 }
 
-Result<void, Error> BMI160::setAccRange(const AccRange range){
-    this->acc_scale = this->calculateAccScale(range);
+Result<void, Error> BMI160::set_acc_range(const AccRange range){
+    this->acc_scale = this->calculate_acc_scale(range);
     auto & reg = acc_range_reg;
     reg.acc_range = uint8_t(range);
     return phy_.write_regs(reg);
 }
 
-Result<void, Error> BMI160::setGyrOdr(const GyrOdr odr){
+Result<void, Error> BMI160::set_gyr_odr(const GyrOdr odr){
     auto & reg =  gyr_conf_reg;
     reg.gyr_odr = uint8_t(odr);
     reg.gyr_bwp = 0b010;
     return phy_.write_regs(reg);
 
 }
-Result<void, Error> BMI160::setGyrRange(const GyrRange range){
-    this->gyr_scale = this->calculateGyrScale(range);
+Result<void, Error> BMI160::set_gyr_range(const GyrRange range){
+    this->gyr_scale = this->calculate_gyr_scale(range);
     auto & reg = gyr_range_reg;
     reg.gyr_range = uint8_t(range);
     return phy_.write_regs(reg);
@@ -136,7 +136,7 @@ Result<void, Error> BMI160::setGyrRange(const GyrRange range){
 
 
 
-real_t BMI160::calculateAccScale(const AccRange range){
+real_t BMI160::calculate_acc_scale(const AccRange range){
     scexpr auto g = real_t(9.806);
     switch(range){
         default:
@@ -151,7 +151,7 @@ real_t BMI160::calculateAccScale(const AccRange range){
     }
 }
 
-real_t BMI160::calculateGyrScale(const GyrRange range){
+real_t BMI160::calculate_gyr_scale(const GyrRange range){
     scexpr auto base125 = real_t(ANGLE2RAD(125.0));
     switch(range){
         default:
