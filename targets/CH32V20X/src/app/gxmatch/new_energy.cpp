@@ -1,4 +1,3 @@
-
 #include "src/testbench/tb.h"
 
 #include "core/math/realmath.hpp"
@@ -52,24 +51,24 @@ public:
 struct StationName final{
     enum Kind:uint8_t {
         RuiJin = 0,
-        FengSuoXian = 1,
-        XiangJiang = 2,
-        WuJiang = 3,
+        FengSuoXian,
+        XiangJiang,
+        WuJiang,
         
-        ZunYi = 4,
-        ChiShui = 5,
-        JinShaJiang = 6,
-        DaDuHe = 7,
+        ZunYi,
+        ChiShui,
+        JinShaJiang,
+        DaDuHe,
         
-        LuDingQiao = 8,
-        XueShang = 9,
-        MaoGong = 10,
-        CaoDi = 11,
+        LuDingQiao,
+        XueShang,
+        MaoGong,
+        CaoDi,
         
-        LaZiKou = 12,
-        HuiNing = 13,
-        WuQiZhen = 14,
-        YanAn = 15,
+        LaZiKou,
+        HuiNing,
+        WuQiZhen,
+        YanAn,
 
         __END
     };
@@ -229,7 +228,7 @@ public:
     void init(){
 
         //因为是中心对齐的顶部触发 所以频率翻倍
-        timer.init(20'000, TimerMode::CenterAlignedUpTrig);
+        timer.init(10'000, TimerMode::CenterAlignedUpTrig);
 
         pwm_pos.init();
         pwm_neg.init();
@@ -286,11 +285,11 @@ public:
 
     void init(){
         inst_.init();
-        inst_.set_vol(13);
+        inst_.set_vol(23);
     }
 
     void play(const StationName & sta){
-        inst_.play_disc(sta.to_index());
+        inst_.play_disc(sta.to_index() + 1);
     }
 private:
     Inst inst_;
@@ -417,6 +416,10 @@ public:
 
     Option<StationName> get_station() {
         return last_sta_;
+    }
+
+    void clear(){
+        last_sta_ = None;
     }
 };
 
@@ -571,7 +574,7 @@ void app(){
         .accelrate_time = 3.0_r, // S
 
         //缓启动最终恒定输出的力
-        .final_torque = 0.8_r, // N / m 
+        .final_torque = 1.0_r, // N / m 
     }};
     motor_task.init();
 
@@ -608,7 +611,11 @@ void app(){
 
             delay(500);
             led = Color_t<real_t>(0, 0, 0, 0);
+
+            detect_task.clear();
         });
+
+        // DEBUG_PRINTLN(millis());
 
         delay(1);
     }

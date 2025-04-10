@@ -66,8 +66,8 @@ public:
     using Setter = TweenerConcept_t<T>::Setter;
     using Curve = TweenerConcept_t<T>::Curve;
 
-    using SetterWrapper = std::shared_ptr<Setter>;
-    using CurveWrapper = std::shared_ptr<Curve>;
+    using SetterWrapper = std::unique_ptr<Setter>;
+    using CurveWrapper = std::unique_ptr<Curve>;
 protected:
     SetterWrapper _setter;
     CurveWrapper _curve; 
@@ -75,8 +75,8 @@ public:
 
     template<typename SetterType, typename CurveType>
     Tweener_t(const SetterType & setter, const CurveType & curve)
-        : _setter(std::make_shared<SetterType>((setter))),
-          _curve(std::make_shared<CurveType>((curve))) {}
+        : _setter(std::make_unique<SetterType>((setter))),
+          _curve(std::make_unique<CurveType>((curve))) {}
 
     Tweener_t(const SetterWrapper setter, const CurveWrapper curve)
         : _setter(setter),
