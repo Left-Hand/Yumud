@@ -53,12 +53,6 @@ using result_err_type_t = details::_result_type<TResult>::err_type;
 
 
 namespace details{
-    template<typename U, typename Fn>
-    auto operator|(U&& val, Fn&& fn) {
-        return std::forward<Fn>(fn)(std::forward<U>(val));
-    }
-
-
     template<typename T, typename E>
     struct _Storage_Diff{
     public:
@@ -303,10 +297,17 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr
-    Result<T, E> & operator |(Result<T, E> && rhs){
+    Result<T, E> operator |(const Result<T, E> && rhs) const {
         if(is_err()) return *this;
         else return rhs;
     }
+
+    // [[nodiscard]] __fast_inline constexpr
+    // template<typename Fn>
+    // Result<T, E> operator | (Fn && fn){
+    //     if(is_ok()) std::forward<Fn>(fn)();
+    //     return *this;
+    // }
 
     template<typename S>
     requires requires(S s) {
@@ -593,8 +594,6 @@ public:
         return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
     }
 
-    template<typename U, typename Fn>
-    friend auto details::operator|(U&& val, Fn&& fn);
 
         // 添加隐式类型转换运算符
     template<typename U, typename V>
@@ -633,12 +632,14 @@ template<
 
 // 特化版本处理Result类型
 template<typename T, typename E, typename Fn>
-auto operator|(const Result<T, E>& res, Fn&& fn) {
-    res.and_then(std::forward<Fn>(fn));
+requires (std::is_function_v<std::decay_t<Fn>>)
+Result<T, E> operator|(const Result<T, E>& res, Fn&& fn) {
+    return res.and_then(std::forward<Fn>(fn));
 }
 
 template<typename T, typename E, typename Fn>
-auto operator|(Result<T, E>&& res, Fn&& fn) {
+requires (std::is_function_v<std::decay_t<Fn>>)
+Result<T, E> operator|(Result<T, E>&& res, Fn&& fn) {
     return std::move(res).and_then(std::forward<Fn>(fn));
 }
 

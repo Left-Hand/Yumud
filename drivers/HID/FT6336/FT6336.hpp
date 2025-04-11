@@ -9,7 +9,7 @@ namespace ymd::drivers{
 class FT6336 {
 public: 
     enum class Error{
-
+        Unspecified
     };
 protected:
 

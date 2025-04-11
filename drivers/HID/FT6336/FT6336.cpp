@@ -55,7 +55,7 @@ Result<size_t, Error> FT6336::get_touch_cnt(){
     // {
     //     // read number of touch points 
     //     ft6336_RdReg(FT_REG_NUM_FINGER,&pointNub,1);
-         
+
     //     pointNub= pointNub&0x0f;
     //     if( pointNub && (pointNub < 3) )
     //     {
@@ -119,4 +119,6 @@ Result<size_t, Error> FT6336::get_touch_cnt(){
     //    cnt=10;
     
     // return set;
+
+    return Err(Error::Unspecified);
 };
