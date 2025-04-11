@@ -5,38 +5,37 @@
 #include "core/math/realmath.hpp"
 
 
-#define PMW3901_REG_Product_ID      0x00
-#define PMW3901_REG_Revision_ID     0x01
-#define PMW3901_REG_Motion          0x02
-#define PMW3901_REG_Delta_X_L       0x03
-#define PMW3901_REG_Delta_X_H       0x04
-#define PMW3901_REG_Delta_Y_L       0x05
-#define PMW3901_REG_Delta_Y_H       0x06
-#define PMW3901_REG_Squal           0x07
-#define PMW3901_REG_RawData_Sum     0x08
-#define PMW3901_REG_RawData_Max     0x09
-#define PMW3901_REG_RawData_Min_    0x0A
-#define PMW3901_REG_Shutter_Lower   0x0B
-#define PMW3901_REG_Shutter_Upper   0x0C
-#define PMW3901_REG_Observation     0x15
-#define PMW3901_REG_Motion_Burst    0x16
-#define PMW3901_REG_Power_Up_Reset  0x3A
-#define PMW3901_REG_Shutdown        0x3B
-#define PMW3901_REG_RawData_Grab    0x58
-#define PMW3901_REG_RawData_Grab_Status     0x59
-#define PMW3901_REG_Inverse_Product_ID      0x5F
+static constexpr uint8_t PMW3901_REG_Product_ID              = 0x00;
+static constexpr uint8_t PMW3901_REG_Revision_ID             = 0x01;
+static constexpr uint8_t PMW3901_REG_Motion                  = 0x02;
+static constexpr uint8_t PMW3901_REG_Delta_X_L               = 0x03;
+static constexpr uint8_t PMW3901_REG_Delta_X_H               = 0x04;
+static constexpr uint8_t PMW3901_REG_Delta_Y_L               = 0x05;
+static constexpr uint8_t PMW3901_REG_Delta_Y_H               = 0x06;
+static constexpr uint8_t PMW3901_REG_Squal                   = 0x07;
+static constexpr uint8_t PMW3901_REG_RawData_Sum             = 0x08;
+static constexpr uint8_t PMW3901_REG_RawData_Max             = 0x09;
+static constexpr uint8_t PMW3901_REG_RawData_Min_            = 0x0A;
+static constexpr uint8_t PMW3901_REG_Shutter_Lower           = 0x0B;
+static constexpr uint8_t PMW3901_REG_Shutter_Upper           = 0x0C;
+static constexpr uint8_t PMW3901_REG_Observation             = 0x15;
+static constexpr uint8_t PMW3901_REG_Motion_Burst            = 0x16;
+static constexpr uint8_t PMW3901_REG_Power_Up_Reset          = 0x3A;
+static constexpr uint8_t PMW3901_REG_Shutdown                = 0x3B;
+static constexpr uint8_t PMW3901_REG_RawData_Grab            = 0x58;
+static constexpr uint8_t PMW3901_REG_RawData_Grab_Status     = 0x59;
+static constexpr uint8_t PMW3901_REG_Inverse_Product_ID      = 0x5F;
 
-#define PMW3901_DEBUG
+// #define PMW3901_DEBUG_EN
 
-#ifdef PMW3901_DEBUG
-#undef PMW3901_DEBUG
+#ifdef PMW3901_DEBUG_EN
 #define PMW3901_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define PMW3901_PANIC(...) PANIC(__VA_ARGS__)
 #define PMW3901_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define PMW3901_DEBUG(...)
-#define PMW3901_PANIC(...)  PANIC()
-#define PMW3901_ASSERT(cond, ...) ASSERT(cond)
+#define PMW3901_PANIC(...)  PANIC_NSRC()
+#define PMW3901_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 
@@ -44,23 +43,23 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 BusError PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    spi_drv_.write_single<uint8_t>(command | 0x80, CONT).unwrap();
-    return spi_drv_.write_single<uint8_t>(data);
+    return spi_drv_.write_single<uint8_t>(command | 0x80, CONT)
+    | spi_drv_.write_single<uint8_t>(data);
 }
 
 
 BusError PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    spi_drv_.write_single<uint8_t>(command & 0x7f, CONT).unwrap();
-    return spi_drv_.read_single<uint8_t>(data);
+    return spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
+    | spi_drv_.read_single<uint8_t>(data);
 }
 
 BusError PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
-    spi_drv_.write_single<uint8_t>(command & 0x7f, CONT).unwrap();
-    return spi_drv_.read_burst<uint8_t>(data, len);
+    return spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
+    | spi_drv_.read_burst<uint8_t>(data, len);
 }
 
 
-void PMW3901::readImage(ImageWritable<Grayscale> & img){
+void PMW3901::read_image(ImageWritable<Grayscale> & img){
     int count = 0;
     scexpr uint8_t mask = 0x0c; //mask to take bits 2 and 3 from b
 
@@ -98,22 +97,23 @@ void PMW3901::readImage(ImageWritable<Grayscale> & img){
 }
 
 bool PMW3901::verify(){
-    if(!assertReg(PMW3901_REG_Inverse_Product_ID, 0xB6)) return false;
-    if(!assertReg(PMW3901_REG_Product_ID, 0x49)) return false;
+    if(!assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)) return false;
+    if(!assert_reg(PMW3901_REG_Product_ID, 0x49)) return false;
 
     return true;
 }
 
-void PMW3901::setLed(bool ledOn){
+void PMW3901::set_led(bool ledOn){
     write_reg(0x7f, 0x14);
     write_reg(0x6f, ledOn ? 0x1c : 0x00);
     write_reg(0x7f, 0x00);
 }
-void PMW3901::readData(){
-    // readDataSlow();
-    readDataBurst();
+
+void PMW3901::read_data(){
+    read_data_burst();
 }
-void PMW3901::readDataSlow(){
+
+void PMW3901::read_data_slow(){
     uint8_t data[5];
 
     for(uint8_t i = 0; i < 5; i++){
@@ -125,21 +125,21 @@ void PMW3901::readDataSlow(){
     dy = (data[4] << 8) | data[3];
 }
 
-void PMW3901::readDataBurst(){
+void PMW3901::read_data_burst(){
     read_burst(0x16, &motion, 6);
 }
 
 
 scexpr real_t scale = real_t(13.0/2000);
 void PMW3901::update(){
-    readData();
+    read_data();
 
     x_cm += int16_t(dx) * scale;
     y_cm += int16_t(dy) * scale;
 }
 
 void PMW3901::update(const real_t rad){
-    readData();
+    read_data();
     
     auto delta = Vector2_t<real_t>(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
     x_cm += delta.x;
@@ -147,11 +147,9 @@ void PMW3901::update(const real_t rad){
 }
 
 
-bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
+bool PMW3901::assert_reg(const uint8_t command, const uint8_t data){
     uint8_t temp = 0;
     read_reg(command, temp);
-    // PMW3901_DEBUG(command, data, temp);
-    // return PMW3901_ASSERT(temp == data, "reg:", command, "is not equal to", data, "fact is", temp);
     return (temp == data);
 }
 
@@ -224,7 +222,7 @@ void PMW3901::init() {
     write_reg(0x40, 0x41);
     write_reg(0x70, 0x00);
 
-    delay(10);
+    delay(1);
     
     write_reg(0x32, 0x44);
     write_reg(0x7F, 0x07);

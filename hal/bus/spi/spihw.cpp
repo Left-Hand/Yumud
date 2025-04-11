@@ -211,7 +211,7 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
         .SPI_CPOL = SPI_CPOL_High,
         .SPI_CPHA = SPI_CPHA_2Edge,
         .SPI_NSS = SPI_NSS_Soft,
-        .SPI_BaudRatePrescaler = calculate_prescaler(baudrate),
+        .SPI_BaudRatePrescaler = uint16_t(calculate_prescaler(baudrate) << 3),
         .SPI_FirstBit = SPI_FirstBit_MSB,
         .SPI_CRCPolynomial = 7
     };
@@ -219,7 +219,7 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
 
 	SPI_Init((SPI_TypeDef *)instance_, &SPI_InitStructure);
 
-	// SPI_Cmd(instance_, ENABLE);
+	// SPI_Cmd((SPI_TypeDef *)instance_, ENABLE);
     instance_->enable_spi(true);
 
     while ((instance_->STATR.TXE) == RESET);
