@@ -37,7 +37,7 @@ namespace ymd::custom{
 
 namespace ymd::drivers{
 
-class BoschSensor_Phy{
+class BoschSensor_Phy final{
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 public:

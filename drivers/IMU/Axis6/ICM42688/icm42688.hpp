@@ -5,12 +5,7 @@
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 
 
-#ifdef ICM42688_DEBUG
-#undef ICM42688_DEBUG
-#define ICM42688_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define ICM42688_DEBUG(...)
-#endif
+
 
 namespace ymd::drivers{
 

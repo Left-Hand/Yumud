@@ -26,7 +26,7 @@ static constexpr uint8_t PMW3901_REG_RawData_Grab            = 0x58;
 static constexpr uint8_t PMW3901_REG_RawData_Grab_Status     = 0x59;
 static constexpr uint8_t PMW3901_REG_Inverse_Product_ID      = 0x5F;
 
-#define PMW3901_DEBUG_EN
+// #define PMW3901_DEBUG_EN
 
 #ifdef PMW3901_DEBUG_EN
 #define PMW3901_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);

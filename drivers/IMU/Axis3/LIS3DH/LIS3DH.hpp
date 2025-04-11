@@ -117,10 +117,10 @@ struct _LIS3DH_Regs{
     }DEF_R8(fifo_src_reg)
 };
 
-class LIS3DH:public Accelerometer{
+class LIS3DH:public AccelerometerIntf{
 public:
     using Regs      =  _LIS3DH_Regs;
-    using Phy       = ImuPhyStmicro;
+    using Phy       = StmicroImu_Phy;
     using SelfTestMode = Regs::SelfTestMode;
     using FifoMode     = Regs::FifoMode;
 

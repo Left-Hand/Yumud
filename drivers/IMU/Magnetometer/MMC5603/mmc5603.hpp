@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-class MMC5603:public Magnetometer{
+class MMC5603:public MagnetometerIntf{
 public:
     scexpr uint8_t default_i2c_addr = 0b01100000;
 

@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-class QMC5883L:public Magnetometer{
+class QMC5883L:public MagnetometerIntf{
 public:
     enum class DataRate:uint8_t{
         DR10, DR50, DR100, DR200

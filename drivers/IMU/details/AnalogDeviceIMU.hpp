@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class AnalogDeviceIMU_Phy{
+class AnalogDeviceIMU_Phy final{
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;

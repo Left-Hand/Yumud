@@ -6,15 +6,15 @@
 
 namespace ymd::drivers{
 
-class AK8963:public Magnetometer{
+class AK8963:public MagnetometerIntf{
 public:
-// "0000":  Power-down mode 
-// "0001":  Single measurement mode 
-// "0010":  Continuous measurement mode 1 
-// "0110":  Continuous measurement mode 2 
-// "0100":  External trigger measurement mode 
-// "1000": Self-test mode 
-// "1111": Fuse ROM access mode 
+    // "0000":  Power-down mode 
+    // "0001":  Single measurement mode 
+    // "0010":  Continuous measurement mode 1 
+    // "0110":  Continuous measurement mode 2 
+    // "0100":  External trigger measurement mode 
+    // "1000": Self-test mode 
+    // "1111": Fuse ROM access mode 
 
     enum class Mode:uint8_t{
         PowerDown = 0b0000,

@@ -6,8 +6,8 @@
 
 
 namespace ymd::drivers{
-// class AK8975:public Magnetometer, public AsahiKaseiSensor{
-class AK8975:public Magnetometer{
+// class AK8975:public MagnetometerIntf, public AsahiKaseiSensor{
+class AK8975:public MagnetometerIntf{
     public:
     enum class Mode:uint8_t{
         PowerDown = 0b0000,

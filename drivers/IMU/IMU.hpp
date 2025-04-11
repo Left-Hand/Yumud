@@ -12,27 +12,27 @@
 
 namespace ymd::drivers{
 
-class Accelerometer{
+class AccelerometerIntf{
 public:
     virtual Option<Vector3_t<real_t>> get_acc() = 0;
 };
 
-class Gyroscope{
+class GyroscopeIntf{
 public:
     virtual Option<Vector3_t<real_t>> get_gyr() = 0;
 };
 
-class Magnetometer{
+class MagnetometerIntf{
 public:
 
     virtual Option<Vector3_t<real_t>> get_magnet() = 0;
 };
 
-class Axis6:public Accelerometer, public Gyroscope{
+class Axis6:public AccelerometerIntf, public GyroscopeIntf{
 public:
 };
 
-class Axis9:public Axis6, public Magnetometer{
+class Axis9:public Axis6, public MagnetometerIntf{
 
 };
 
