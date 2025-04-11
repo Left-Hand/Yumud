@@ -39,18 +39,22 @@ DeltaReg dy = {};
 
 class PMW3901:public details::PMW3901_Data, public FlowSensorIntf{
 protected:
+    enum class Error{
+        
+    };
+
     hal::SpiDrv spi_drv_;
     real_t x_cm = {};
     real_t y_cm = {};
 
-    bool assertReg(const uint8_t command, const uint8_t data);
+    bool assert_reg(const uint8_t command, const uint8_t data);
     BusError write_reg(const uint8_t command, const uint8_t data);
     BusError read_reg(const uint8_t command, uint8_t & data);
     BusError read_burst(const uint8_t commnad, uint8_t * data, const size_t len);
 
-    void readDataSlow();
-    void readDataBurst();
-    void readData();
+    void read_data_slow();
+    void read_data_burst();
+    void read_data();
 public:
     PMW3901(const PMW3901 & other) = delete;
     PMW3901(PMW3901 && other) = delete;
@@ -64,12 +68,12 @@ public:
     void update();
     void update(const real_t rad);
 
-    Vector2_t<real_t> getPosition() override{
+    Vector2_t<real_t> get_position(){
         return {x_cm * real_t(0.01), y_cm * real_t(0.01)};
     }
 
-    void setLed(bool on);
-    void readImage(ImageWritable<Grayscale> & img);
+    void set_led(bool on);
+    void read_image(ImageWritable<Grayscale> & img);
 };
 
 }

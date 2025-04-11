@@ -21,7 +21,7 @@
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/homebrew/edge_counter.hpp"
-#include "dsp/controller/sliding_mode_ctrl.hpp"
+#include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
@@ -47,24 +47,6 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 
 
-// class ExtendedStateObserver{
-
-//     void update(const real_t u, const real_t y){
-//         const real_t e = z1 - y;
-
-
-//         const real_t z1  = state_[0];
-//         const real_t z2  = state_[1];
-//         const real_t z3  = state_[2];
-
-//         state_[0] = z1 + h *(z2-belta01*e);
-        // state_[1] = z2 + h *(z3-belta02*fal(e,0.5,delta)+b*u);
-//         state_[2] = z3 + h *(-belta03*fal(e,0.25,delta));
-//     }
-// private:
-//     using State = StateVector<q20, 3>;
-//     State state_;
-// }
 
 
 
@@ -101,8 +83,8 @@ void at8222_tb(){
     pwm_pos.init();
     pwm_neg.init();
 
-    pwm_pos.sync();
-    pwm_neg.sync();
+    pwm_pos.set_sync();
+    pwm_neg.set_sync();
 
     pwm_pos.set_polarity(true);
     pwm_neg.set_polarity(true);

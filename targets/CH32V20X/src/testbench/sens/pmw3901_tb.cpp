@@ -11,32 +11,26 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
-
+    uart2.init(921600, CommStrategy::Blocking);
+    DEBUGGER.retarget(&uart2);
+    DEBUGGER.no_brackets();
     DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = spi1;
 
+    spi.init(4_MHz);
+    spi.bind_cs_pin(portA[15], 0);
 
-    spi.init(9_MHz);
-    spi.bind_cs_pin(portD[5], 0);
 
     PMW3901 pmw{spi, 0};
     pmw.init();
-    // pmw.update();
-    
-    // Vector2_t<int16_t> pos;
+
     while(true){
 
-        // pos += Vector2(pmw.getPosition());
-        // auto pos = Vector2(pmw.getMotion());
-
-        auto begin = micros();
+        const auto begin = micros();
         pmw.update();
-        auto pos = pmw.getPosition();
-        auto [x,y] = pos;
-        DEBUG_PRINTLN(x,y, micros() - begin);
-        // delayMicroseconds(5000);
-        delay(5);
+        const auto pos = pmw.get_position();
+        DEBUG_PRINTLN(pos, micros() - begin);
+        delay(1);
     }
 }

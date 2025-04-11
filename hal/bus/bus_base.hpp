@@ -58,6 +58,11 @@ public:
         return *this;
     }
 
+    BusError operator | (const BusError rhs) const{
+        if(wrong()) return *this;
+        else return rhs;
+    }
+
     explicit operator Kind() {return type;}
 };
 

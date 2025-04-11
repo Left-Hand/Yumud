@@ -8,8 +8,6 @@ using namespace ymd::hal::internal;
 
 
 TimerOC & TimerOC::init(const TimerOC::Mode mode, const bool install){
-    // sync();
-
     set_mode(mode);
 
     if(install){
@@ -110,7 +108,7 @@ TimerOut & TimerOut::set_output_state(const bool s){
     return *this;
 }
 
-TimerOut & TimerOut::sync(const bool _sync){
+TimerOut & TimerOut::set_sync(const bool _sync){
     using enum ChannelIndex;
 
     switch(idx_){
