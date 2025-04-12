@@ -53,7 +53,7 @@ void AD9854::Init(void){
 	delay(10);
 	ports.UD_CLK = 0;
 	ports.MRESET = 1;
-	delayMicroseconds(10);
+	udelay(10);
 	ports.MRESET = 0;
 	
 	AD9854::SendData(CTRL, data, 4);
@@ -73,7 +73,7 @@ void AD9854::SendOneByte(uint8_t data){
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){
 	int i;
 	ports.IO_RESET = 1;
-	delayMicroseconds(1);
+	udelay(1);
 	ports.IO_RESET = 0;
 	SendOneByte(_register);
 	for(i = 0; i < ByteNum; i++)	SendOneByte(data[i]);

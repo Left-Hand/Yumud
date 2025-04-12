@@ -50,10 +50,10 @@ uint64_t nanos(void){
 }
 
 void delay(const uint32_t ms){
-  delayMicroseconds(ms * 1000);
+  udelay(ms * 1000);
 }
 
-void delayMicroseconds(const uint32_t us)
+void udelay(const uint32_t us)
 {
   uint32_t currentTicks = SysTick->CNT;
   /* Number of ticks per millisecond */

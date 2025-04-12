@@ -17,7 +17,7 @@ protected:
     bool m_msb = true;
 
     __no_inline void delay_dur(){
-        delayMicroseconds(delays);
+        udelay(delays);
     }
     BusError lead(const uint8_t index) override{
         auto ret = Spi::lead(index);

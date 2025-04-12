@@ -8,97 +8,97 @@
 
 namespace ymd::drivers{
 
-class ABEncoderConcept:public AbsoluteEncoder{
-protected:
-    // real_t scale;
-    uint16_t cnt = 0;
-public:
-    // virtual uint16_t update() = 0;
-//     virtual real_t getLapPositionPerUnit() = 0;
+// class ABEncoderConcept:public AbsoluteEncoder{
+// protected:
+//     // real_t scale;
+//     uint16_t cnt = 0;
 // public:
-//     constexpr ABEncoder(const uint16_t lines):
-//         scale(4.0 * lines / 65536){;}
+//     // virtual uint16_t update() = 0;
+// //     virtual real_t getLapPositionPerUnit() = 0;
+// // public:
+// //     constexpr ABEncoder(const uint16_t lines):
+// //         scale(4.0 * lines / 65536){;}
 
-//     real_t getLapPosition(){
-//         return getLapPositionPerUnit() * scale;
+// //     real_t getLapPosition(){
+// //         return getLapPositionPerUnit() * scale;
+// //     }
+// };
+
+// class ABEncoderTimer:public ABEncoderConcept{
+// protected:
+//     GenericTimer & inst;
+//     const uint lines = 1 << 4;
+// public:
+//     ABEncoderTimer(GenericTimer & _inst):inst(_inst){;}
+//     void init() override{
+//         inst.initAsEncoder();
 //     }
-};
 
-class ABEncoderTimer:public ABEncoderConcept{
-protected:
-    GenericTimer & inst;
-    const uint lines = 1 << 4;
-public:
-    ABEncoderTimer(GenericTimer & _inst):inst(_inst){;}
-    void init() override{
-        inst.initAsEncoder();
-    }
+//     real_t getLapPosition() override {
+//         real_t ret;
+//         u16_to_uni(inst.cnt() * lines, ret);
+//         return ret;
+//     }
 
-    real_t getLapPosition() override {
-        real_t ret;
-        u16_to_uni(inst.cnt() * lines, ret);
-        return ret;
-    }
+//     bool stable() const override{
+//         return true;
+//     }
+// };
 
-    bool stable() const override{
-        return true;
-    }
-};
+// class ABEncoderExti:public ABEncoderConcept{
+// protected:
+//     Gpio & trigGpioA;
+//     Gpio & trigGpioB;
 
-class ABEncoderExti:public ABEncoderConcept{
-protected:
-    Gpio & trigGpioA;
-    Gpio & trigGpioB;
+//     ExtiChannel trigExtiCHA;
+//     ExtiChannel trigExtiCHB;
 
-    ExtiChannel trigExtiCHA;
-    ExtiChannel trigExtiCHB;
+//     void a_pulse(){
+//         if(bool(trigGpioA)){
+//             if(bool(trigGpioB)) cnt--;
+//             else cnt++;
+//         }else{
+//             if(bool(trigGpioB)) cnt++;
+//             else cnt--;
+//         }
+//     };
 
-    void a_pulse(){
-        if(bool(trigGpioA)){
-            if(bool(trigGpioB)) cnt--;
-            else cnt++;
-        }else{
-            if(bool(trigGpioB)) cnt++;
-            else cnt--;
-        }
-    };
+//     void b_pulse(){
+//         if(bool(trigGpioB)){
+//             if(bool(trigGpioA)) cnt++;
+//             else cnt--;
+//         }else{
+//             if(bool(trigGpioA)) cnt--;
+//             else cnt++;
+//         }
+//     }
+// public:
+//     ABEncoderExti(Gpio & _trigGpioA, Gpio & _trigGpioB, const NvicPriority & _priority):
+//         trigGpioA(_trigGpioA),
+//         trigGpioB(_trigGpioB),
+//         trigExtiCHA(trigGpioA, _priority, ExtiChannel::Trigger::RisingFalling),
+//         trigExtiCHB(trigGpioB, _priority, ExtiChannel::Trigger::RisingFalling){;}
 
-    void b_pulse(){
-        if(bool(trigGpioB)){
-            if(bool(trigGpioA)) cnt++;
-            else cnt--;
-        }else{
-            if(bool(trigGpioA)) cnt--;
-            else cnt++;
-        }
-    }
-public:
-    ABEncoderExti(Gpio & _trigGpioA, Gpio & _trigGpioB, const NvicPriority & _priority):
-        trigGpioA(_trigGpioA),
-        trigGpioB(_trigGpioB),
-        trigExtiCHA(trigGpioA, _priority, ExtiChannel::Trigger::RisingFalling),
-        trigExtiCHB(trigGpioB, _priority, ExtiChannel::Trigger::RisingFalling){;}
+//     void init() override{
+//         trigGpioA.inpu();
+//         trigGpioB.inpu();
+//         trigExtiCHA.bindCb(std::bind(&ABEncoderExti::a_pulse, this));
+//         trigExtiCHB.bindCb(std::bind(&ABEncoderExti::b_pulse, this));
+//         trigExtiCHA.init();
+//         trigExtiCHB.init();
+//     }
+//     real_t getLapPosition() override{
+//         real_t ret;
+//         s16_to_uni(cnt, ret);
+//         return ret;
+//     }
 
-    void init() override{
-        trigGpioA.inpu();
-        trigGpioB.inpu();
-        trigExtiCHA.bindCb(std::bind(&ABEncoderExti::a_pulse, this));
-        trigExtiCHB.bindCb(std::bind(&ABEncoderExti::b_pulse, this));
-        trigExtiCHA.init();
-        trigExtiCHB.init();
-    }
-    real_t getLapPosition() override{
-        real_t ret;
-        s16_to_uni(cnt, ret);
-        return ret;
-    }
-
-};
+// };
 
 
-class ABZEncoder:public ABEncoderConcept{
+// class ABZEncoder:public ABEncoderConcept{
 
-};
+// };
 
 
 
@@ -131,5 +131,78 @@ class ABZEncoder:public ABEncoderConcept{
 
     // trigExtiCHA.init();
     // trigExtiCHB.init();
+
+class AbEncoderByGpio final{
+public: 
+
+    struct Config{
+        hal::Gpio & a_gpio; 
+        hal::Gpio & b_gpio;
+    };
+
+    AbEncoderByGpio(hal::Gpio & a_gpio, hal::Gpio & b_gpio):
+        a_gpio_(a_gpio), b_gpio_(b_gpio){;}
+
+    void init(){
+        portA[0].inpu();
+        portA[1].inpu();    
+    }
+
+    uint8_t get_code() const {
+        
+        // const auto m = millis();
+        // const auto a = (m % 100) > 50; 
+        // const auto b = ((m+25) % 100) > 50; 
+
+        const auto a = a_gpio_.read(); 
+        const auto b = b_gpio_.read(); 
+
+        return uint8_t(uint8_t(b) << 1) | uint8_t(a);
+    }
+
+    const auto & get_cnt() const{
+        return cnt_;
+    }
+
+    const auto & get_err_cnt() const{
+        return err_cnt_;
+    }
+
+    void update(){
+        static constexpr std::array<uint8_t, 4> INC_MAP = {
+            0b01,//00
+            0b11,//01
+            0b00,//10
+            0b10 //11
+        };
+
+        static constexpr std::array<uint8_t, 4> DEC_MAP = {
+            0b10,//00
+            0b00,//01
+            0b11,//10
+            0b01 //11
+        };
+
+        const auto this_code = get_code();
+        if(last_code_ == UNSET){
+            last_code_ = this_code;
+            return;
+        }
+        const auto inc_code = INC_MAP[last_code_];
+        const auto dec_code = DEC_MAP[last_code_];
+
+        if(this_code == inc_code) {cnt_++;}
+        else if(this_code == dec_code) {cnt_--;}
+        else if(this_code != last_code_){err_cnt_++;}
+        last_code_ = this_code;
+    }
+private:
+    static constexpr uint8_t UNSET = 0xFF;
+    hal::Gpio & a_gpio_;
+    hal::Gpio & b_gpio_;
+    uint8_t last_code_ = UNSET;
+    int32_t cnt_ = 0;
+    uint32_t err_cnt_ = 0;
+};
 
 }

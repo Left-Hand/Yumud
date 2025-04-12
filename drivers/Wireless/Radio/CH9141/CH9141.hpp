@@ -109,7 +109,7 @@ protected:
         // }
 
 
-        delayMicroseconds(1);
+        udelay(1);
         at_gpio_ = true;
         return is_valid;
     }

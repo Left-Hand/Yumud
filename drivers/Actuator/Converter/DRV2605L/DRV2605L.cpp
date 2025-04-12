@@ -94,7 +94,7 @@ bool DRV2605L::init(){
     mode_reg = 0x40;
     WRITE_REG(mode_reg);
 
-    delayMicroseconds(250);
+    udelay(250);
 
     // // rated_voltage_reg = 0X50;
     // WRITE_REG(rated_voltage_reg);

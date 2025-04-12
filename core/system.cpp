@@ -47,7 +47,7 @@ void sys::clock::delay_ms(const uint32_t ms){
 }
 
 void sys::clock::delay_us(const uint32_t us){
-    delayMicroseconds(us);
+    udelay(us);
 }
 
 void sys::preinit(){

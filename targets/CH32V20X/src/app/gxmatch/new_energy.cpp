@@ -16,6 +16,7 @@
 #include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
 #include "drivers/Audio/JQ8900/JQ8900.hpp"
 #include "drivers/Recognition/U13T/U13T.hpp"
+#include "drivers/Encoder/ABEncoder.hpp"
 
 #include "core/utils/hash_func.hpp"
 #include "core/utils/immutable.hpp"
@@ -23,6 +24,8 @@
 
 scexpr auto UARTSW_BAUD = 38400; 
 scexpr auto U13T_BAUD = 9600; 
+
+
 
 
 namespace gxm{
@@ -547,7 +550,6 @@ void boardcast_tb(){
         delay(1);
     }
 }
-
 [[maybe_unused]] static
 void app(){
     auto & UARTSW_GPIO = portA[5];
@@ -558,12 +560,16 @@ void app(){
 
     DEBUGGER.retarget(&uart);
     DEBUGGER.no_brackets();
+    DEBUGGER.force_sync();
+    DEBUGGER.set_splitter(',');
+
+    drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
 
     timer1.init(UARTSW_BAUD);
     timer1.attach(TimerIT::Update, {0,0}, [&]{
         uart.tick();
+        ab_enc.update();
     });
-
 
     
     gxm::MotorTask motor_task{{
@@ -574,7 +580,7 @@ void app(){
         .accelrate_time = 3.0_r, // S
 
         //缓启动最终恒定输出的力
-        .final_torque = 1.0_r, // N / m 
+        .final_torque = 0.97_r, // N / m 
     }};
     motor_task.init();
 
@@ -591,12 +597,15 @@ void app(){
     gxm::StatLed led{portB[8]};
     led.init();
 
+
     delay(10);
 
     bindSystickCb([&]{
         const auto t = time();
         motor_task.process(t);
     });
+
+
 
     while(true){
         const auto t = time();
@@ -615,8 +624,7 @@ void app(){
             detect_task.clear();
         });
 
-        // DEBUG_PRINTLN(millis());
-
+        DEBUG_PRINTLN(ab_enc.get_cnt(), millis(), ab_enc.get_err_cnt(), ab_enc.get_code());
         delay(1);
     }
 }

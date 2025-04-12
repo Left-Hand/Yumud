@@ -13,7 +13,7 @@ namespace ymd{
     uint64_t nanos(void);
 
     void delay(uint32_t ms);
-    void delayMicroseconds(const uint32_t us);
+    void udelay(const uint32_t us);
     void delayNanoseconds(const uint32_t ns);
 }
 

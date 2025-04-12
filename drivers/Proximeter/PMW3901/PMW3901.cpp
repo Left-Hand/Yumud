@@ -83,7 +83,7 @@ Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, c
 //         pixel = pixel << 2; //push left to 7:2
 //         pixel += (b & MASK); //set lower 2 from b to 1:0
 //         img[count++] = Grayscale(pixel); //put temp value in fbuffer array
-//         //delayMicroseconds(100);
+//         //udelay(100);
 //         }
 //     }
 

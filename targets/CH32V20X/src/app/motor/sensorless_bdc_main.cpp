@@ -50,7 +50,6 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 
 
-
 [[maybe_unused]] static 
 void at8222_tb(){
     hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
@@ -204,7 +203,7 @@ void at8222_tb(){
     //     DEBUG_PRINTLN('/');
     //     static bool i = 0;
     //     i = !i;
-    //     // delayMicroseconds(2);
+    //     // udelay(2);
     //     // __nopn(60);
     //     // delay(1);
     //     watch_gpio.write(i);

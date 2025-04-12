@@ -49,7 +49,7 @@ void pwm_tb(OutputStream & logger){
         const auto t = time();
         logger.println(t, pwm.cnt(), pwm.cvr());
         pwm = 0.5_q * sin(4 * t) + 0.5_q;
-        delayMicroseconds(100);
+        udelay(100);
     }
 
 }

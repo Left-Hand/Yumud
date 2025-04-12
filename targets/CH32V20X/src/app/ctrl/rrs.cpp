@@ -1,0 +1,1 @@
+#include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
