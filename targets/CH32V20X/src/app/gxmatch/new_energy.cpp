@@ -23,6 +23,9 @@
 #include "core/utils/immutable.hpp"
 #include "core/utils/Option.hpp"
 
+#include "dsp/controller/pi_ctrl.hpp"
+#include "dsp/filter/rc/LowpassFilter.hpp"
+
 static constexpr auto DBG_UARTSW_BAUD = 38400; 
 static constexpr auto TTS_UARTSW_BAUD = 9600; 
 static constexpr auto U13T_BAUD = 9600; 
@@ -39,6 +42,107 @@ static constexpr size_t MAX_PAYLOAD_SIZE = 32;
 
 static constexpr size_t BLINK_DUR_MS = 80;
 static constexpr size_t POWERON_BLINK_TIMES = 2;
+
+
+static constexpr size_t ISR_FREQ = DBG_UARTSW_BAUD;
+static constexpr real_t SAMPLE_RES = 0.008_r;
+static constexpr real_t INA240_BETA = 100;
+static constexpr real_t VOLT_BAIS = 1.65_r;
+
+static constexpr real_t MIN_DUTY = 0.1_r;
+static constexpr real_t MAX_DUTY = 0.7_r;
+static constexpr real_t PI_KP = 0.1_r;
+
+static constexpr uint CURRENT_LPF_CUTOFF_FREQ_HZ = 10;
+
+
+namespace motorctl{
+
+template<size_t Q>
+static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
+    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
+}
+
+real_t volt_2_current(real_t volt){
+    static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
+    return (volt - VOLT_BAIS) *INV_SCALE;
+}
+
+class CurrentSensor final{
+public:
+    using Filter = dsp::LowpassFilter_t<real_t>;
+    using Config = Filter::Config;
+    CurrentSensor(
+        AnalogInIntf & a_sense
+    ):  
+        a_sense_(a_sense){;}
+
+    void update(){
+        current_ = volt_2_current(real_t(a_sense_));
+    };
+
+    const real_t & get() const{
+        return current_;
+    }
+private:
+    AnalogInIntf & a_sense_;
+    real_t current_ = 0;
+
+    static constexpr Config CFG = {
+        .fc = CURRENT_LPF_CUTOFF_FREQ_HZ,
+        .fs = ISR_FREQ
+    };
+};
+
+class Motor final{
+public:
+public:
+    using Chopper = drivers::AT8222;
+
+    Motor(Chopper & drv, AnalogInIntf & a_sense):
+        drv_(drv),
+        cs_(a_sense)
+        {;}
+
+    void set_torque(const real_t torque){
+        static constexpr auto TORQUE_2_CURRENT_RATIO = 1.0_r;
+        set_current(torque * TORQUE_2_CURRENT_RATIO);
+    }
+
+    void set_current(const real_t current){
+        targ_current_ = current;
+    }
+    
+    void update(){
+        cs_.update();
+        const auto meas_current = cs_.get();
+        ctrl_.update(targ_current_, meas_current);
+        drv_ = ctrl_.get();
+    }
+
+private:
+    void set_duty(const real_t duty){
+        drv_ = CLAMP(duty, MIN_DUTY, MAX_DUTY);
+    }
+
+    using Ctrl = dsp::DeltaPController;
+    using CtrlCfg = Ctrl::Config;
+
+    static constexpr CtrlCfg PI_CFG = {
+        .kp = PI_KP,
+        .out_min = MIN_DUTY,
+        .out_max = MAX_DUTY,
+        .fs = ISR_FREQ
+    };
+
+    Chopper & drv_;
+    CurrentSensor cs_;
+
+    real_t targ_current_ = 0;
+    Ctrl ctrl_{PI_CFG};
+};
+
+}
 
 namespace gxm{
 
@@ -194,7 +298,8 @@ Option<StationName> StationName::from_gbk(std::span<const uint8_t, STR_LEN> code
 
 class MotorTask final{
 public:
-    using Chopper = drivers::AT8222;
+    using Motor = motorctl::Motor;
+    using Chopper = Motor::Chopper;
 
     struct Config{
         //开始缓启动的时间
@@ -207,48 +312,7 @@ public:
         real_t final_torque; // N / m 
     };
 
-    class CurrentSensor final{
-    public:
-        CurrentSensor(
-            AnalogInIntf & a_sense
-        ):  
-            a_sense_(a_sense){;}
 
-        void update(){
-
-        };
-    private:
-        AnalogInIntf & a_sense_;
-    };
-
-    class Motor final{
-    public:
-        Motor(Chopper & drv, AnalogInIntf & a_sense):
-            drv_(drv),
-            cs_(a_sense)
-            {;}
-
-        void set_torque(const real_t torque){
-            static constexpr auto TORQUE_2_CURRENT_RATIO = 1.0_r;
-            set_current(torque * TORQUE_2_CURRENT_RATIO);
-        }
-
-        void set_current(const real_t current){
-            static constexpr auto CURRENT_2_DUTY_RATIO = 1.0_r;
-            set_duty(current * CURRENT_2_DUTY_RATIO);
-        }
-        
-        void set_duty(const real_t duty){
-            drv_ = CLAMP(duty, 0, 1);
-        }
-
-        void tick(){
-
-        }
-    private:
-        Chopper & drv_;
-        CurrentSensor cs_;
-    };
 
     MotorTask(const Config & cfg){
         reconf(cfg);
@@ -284,7 +348,7 @@ public:
     }
 
     void tick(){
-        motor_.tick();
+        motor_.update();
     }
     
 private:
@@ -530,17 +594,7 @@ void app(){
 
     drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
 
-    timer1.init(DBG_UARTSW_BAUD);
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        dbg_uart.tick();
 
-        ab_enc.update();
-    });
-
-    timer2.init(TTS_UARTSW_BAUD);
-    timer2.attach(TimerIT::Update, {0,0}, [&]{
-        tts_uart.tick();
-    });
 
     
     gxm::MotorTask motor_task{{
@@ -548,15 +602,13 @@ void app(){
         .start_time = 0.3_r, // S
 
         //缓启动加速的时间
-        .accelrate_time = 3.0_r, // S
+        .accelrate_time = 1.0_r, // S
 
         //缓启动最终恒定输出的力
-        .final_torque = 0.76_r, // N / m 
+        .final_torque = 0.06_r, // N / m 
     }};
+
     motor_task.init();
-
-
-
 
     drivers::U13T u13t{UARTHW};
     gxm::DetectTask detect_task{UARTHW};
@@ -568,6 +620,18 @@ void app(){
     gxm::StatLed led{LED_GPIO};
     led.init();
     led.blink(POWERON_BLINK_TIMES);
+
+    timer1.init(DBG_UARTSW_BAUD);
+    timer1.attach(TimerIT::Update, {0,0}, [&]{
+        motor_task.tick();
+        dbg_uart.tick();
+        ab_enc.update();
+    });
+
+    timer2.init(TTS_UARTSW_BAUD);
+    timer2.attach(TimerIT::Update, {0,0}, [&]{
+        tts_uart.tick();
+    });
 
     delay(10);
 

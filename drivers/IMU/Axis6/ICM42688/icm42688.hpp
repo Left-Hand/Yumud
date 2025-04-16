@@ -4,13 +4,11 @@
 
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 
-
-
-
 namespace ymd::drivers{
 
 class ICM42688:public Axis6{
 public:
+    static constexpr auto DEFAULT_I2C_ADDR = I2cSlaveAddr<7>(0x68); 
 
     enum class AFS:uint8_t{
         _16G,// default
@@ -150,9 +148,6 @@ public:
     };
 protected:
 
-
-    scexpr uint8_t default_i2c_addr = 0x68;
-
     InvensenseSensor_Phy phy_;
 
     real_t lsb_acc_x64;
@@ -162,7 +157,7 @@ protected:
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
 public:
-    ICM42688(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(i2c, default_i2c_addr){;}
+    ICM42688(hal::I2c & i2c, const I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
 
     void init();
     

@@ -63,5 +63,51 @@ private:
     q20 last_err;
 };
 
+class DeltaPController{
+    public:
+        struct Config{
+            q20 kp;
+            q20 out_min;
+            q20 out_max;
+            unsigned int fs;
+        };
+    
+    public:
+        DeltaPController(const Config & cfg){
+            reconf(cfg);
+            reset();    
+        }
+    
+        void reset(){
+            output_ = out_min_;
+        }
+        void reconf(const Config & cfg){
+            kp_ = cfg.kp;
+            out_min_ = cfg.out_min;
+            out_max_ = cfg.out_max;
+            inv_fs_ = 1_q20 / cfg.fs;
+        }
+        
+        void update(const q20 targ, const q20 meas){
+            const auto x1 = targ - meas;
+            last_err = x1;
+    
+            output_ = CLAMP(output_ + (x1 * kp_) * inv_fs_, out_min_, out_max_);
+        }
+    
+        const auto & get() const {
+            return output_;
+        }
+    private:
+        q20 kp_;
+        q20 inv_fs_;
+        q20 out_min_;
+        q20 out_max_;
+
+        q20 output_;
+    
+        q20 last_err;
+    };
+
 
 }
