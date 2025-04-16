@@ -5,6 +5,7 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/string/StringView.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/timer.hpp"
@@ -22,11 +23,22 @@
 #include "core/utils/immutable.hpp"
 #include "core/utils/Option.hpp"
 
-scexpr auto UARTSW_BAUD = 38400; 
-scexpr auto U13T_BAUD = 9600; 
+static constexpr auto DBG_UARTSW_BAUD = 38400; 
+static constexpr auto TTS_UARTSW_BAUD = 9600; 
+static constexpr auto U13T_BAUD = 9600; 
 
+static constexpr size_t STAT_COUNT = 16;
+static constexpr size_t STR_LEN = 16;
 
+//防止短期内多次触发 设定最小死区时间
+static constexpr uint32_t DETECT_DEAD_ZONE_MS = 1500;
+static constexpr size_t RESPONSE_DELAY_MS = 25;
 
+static constexpr uint8_t HEADER_TOKEN = 0x7f;
+static constexpr size_t MAX_PAYLOAD_SIZE = 32;
+
+static constexpr size_t BLINK_DUR_MS = 80;
+static constexpr size_t POWERON_BLINK_TIMES = 2;
 
 namespace gxm{
 
@@ -84,11 +96,12 @@ struct StationName final{
     constexpr StationName & operator = (const StationName & other) = default;
     constexpr StationName & operator = (StationName && other) = default;
 
-    static constexpr size_t STAT_COUNT = __END;
-    static constexpr size_t STR_LEN = 16;
+
     constexpr size_t to_index() const {
         return size_t(kind_);
     }
+
+    StringView to_gbk_str() const;
 
     constexpr Kind kind() const {
         return kind_;
@@ -101,8 +114,6 @@ private:
 };
 
 struct StationData final{
-    static constexpr size_t STAT_COUNT = StationName::STAT_COUNT;
-    static constexpr size_t STR_LEN = StationName::STR_LEN;
 
     using GbkLine = std::array<uint8_t, STR_LEN>;
     using GbkData = std::array<GbkLine, STAT_COUNT>;
@@ -148,8 +159,29 @@ struct StationData final{
     }
 };
 
-static constexpr auto TABLE = StationData::calc_hash_table(StationData::DATA);
+template<typename T>
+struct StationDict{
 
+    using Data = std::array<T, STAT_COUNT>;
+
+    T & operator [](const StationName & name){
+        return data_[name.to_index()];
+    }
+
+    const T & operator [](const StationName & name) const {
+        return data_[name.to_index()];
+    }
+private:
+    Data data_ = {0};
+};
+
+static constexpr auto TABLE = StationData::calc_hash_table(StationData::DATA);
+StringView StationName::to_gbk_str() const {
+    const auto idx = this->to_index();
+    const auto line = reinterpret_cast<const char *>(static_cast<const uint8_t *>(StationData::DATA[idx].data()));
+    const auto line_len = strnlen(line, StationData::DATA[idx].size());
+    return StringView(line, line_len);
+}
 constexpr
 Option<StationName> StationName::from_gbk(std::span<const uint8_t, STR_LEN> code){
     const auto code_hash = StationData::calc_hash_of_line(code);
@@ -277,22 +309,47 @@ private:
     real_t final_torque_; // N / m 
 };
 
-
-class BoardcastTask final{
+class CnTTS final{
 public:
-    using Inst = drivers::JQ8900;
+    CnTTS(hal::Uart & uart):uart_(uart){;}
 
-    BoardcastTask(Gpio & gpio):
-        inst_(gpio){
-    };
-
-    void init(){
-        inst_.init();
-        inst_.set_vol(23);
+    void play_disc(const StationName sta){
+        const auto str = sta.to_gbk_str();
+        // DEBUG_PRINTLN(std::span(str.data(), str.size()));
+        uart_.writeN(str.data(), str.size());
     }
 
+    void set_volume(const size_t vol){
+        //pass
+    }
+private:
+    hal::Uart & uart_;
+
+    void play_gbk_str(const StringView str){
+        uart_.writeN(str.data(), str.size());
+    }
+};
+class BoardcastTask final{
+public:
+    // using Inst = drivers::JQ8900;
+    using Inst = CnTTS;
+
+    // BoardcastTask(Gpio & gpio):
+    //     inst_(gpio){
+    // };
+
+    BoardcastTask(Inst & inst):
+        inst_(inst){
+    };
+
+    // void init(){
+    //     inst_.init();
+    //     inst_.set_volume(43);
+    // }
+
     void play(const StationName & sta){
-        inst_.play_disc(sta.to_index() + 1);
+        // inst_.play_disc(sta.to_index() + 1);
+        inst_.play_disc(sta);
     }
 private:
     Inst inst_;
@@ -305,9 +362,6 @@ private:
     Inst inst_ = Inst{uart_};
     Option<StationName> last_sta_ = None;
 
-    //防止短期内多次触发 设定最小死区时间
-    static constexpr uint32_t DEAD_ZONE_MS = 1500;
-
     //上次播放的时间 提供死区参考
     uint32_t last_detected_ms_ = 0;
 
@@ -318,9 +372,6 @@ private:
             Len,
             Payload
         };
-
-        static constexpr uint8_t HEADER_TOKEN = 0x7f;
-        static constexpr size_t MAX_PAYLOAD_SIZE = 32;
 
         FrameDecoder(){;}
         void feed(const char chr){
@@ -360,7 +411,7 @@ private:
     };
 
     FrameDecoder frame_decoder_{};
-    DelayedSemphr semphr_{50};
+    DelayedSemphr semphr_{RESPONSE_DELAY_MS};
 
     Option<StationName> match_context(std::span<const uint8_t, 16> data) const {
         return StationName::from_gbk(data);
@@ -388,7 +439,7 @@ private:
         }else if(is_identity_payload(payload)){
             const auto line = (std::span(payload).subspan<9,16>());
 
-            if(millis() > last_detected_ms_ + DEAD_ZONE_MS){
+            if(millis() > last_detected_ms_ + DETECT_DEAD_ZONE_MS){
                 last_detected_ms_ = millis();
                 last_sta_ = match_context(line);
             }
@@ -428,10 +479,20 @@ public:
 
 class StatLed{
 public:
+
     StatLed(hal::GpioIntf & gpio):gpio_(gpio){;}
 
     void init(){
         gpio_.outpp();
+    }
+
+    void blink(const size_t times){
+        for(size_t i = 0; i < times; i++){
+            gpio_.set();
+            delay(BLINK_DUR_MS);
+            gpio_.clr();
+            delay(BLINK_DUR_MS);
+        }
     }
 
     StatLed & operator =(const Color_t<real_t> & color){
@@ -443,6 +504,115 @@ private:
     hal::GpioIntf & gpio_;
 };
 }
+
+
+
+[[maybe_unused]] static
+void app(){
+    auto & DBG_UARTSW_GPIO = portA[5];
+    auto & TTS_UARTSW_GPIO = portB[1];
+    auto & LED_GPIO = portB[8];
+    auto & UARTHW = uart2;
+
+    hal::UartSw dbg_uart{DBG_UARTSW_GPIO, NullGpio}; 
+    hal::UartSw tts_uart{TTS_UARTSW_GPIO, NullGpio}; 
+
+    UARTHW.init(U13T_BAUD);
+    dbg_uart.init(DBG_UARTSW_BAUD);
+    tts_uart.init(TTS_UARTSW_BAUD);
+
+    gxm::CnTTS tts{tts_uart};
+
+    DEBUGGER.retarget(&dbg_uart);
+    DEBUGGER.no_brackets();
+    DEBUGGER.force_sync();
+    DEBUGGER.set_splitter(',');
+
+    drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
+
+    timer1.init(DBG_UARTSW_BAUD);
+    timer1.attach(TimerIT::Update, {0,0}, [&]{
+        dbg_uart.tick();
+
+        ab_enc.update();
+    });
+
+    timer2.init(TTS_UARTSW_BAUD);
+    timer2.attach(TimerIT::Update, {0,0}, [&]{
+        tts_uart.tick();
+    });
+
+    
+    gxm::MotorTask motor_task{{
+        //开始缓启动的时间
+        .start_time = 0.3_r, // S
+
+        //缓启动加速的时间
+        .accelrate_time = 3.0_r, // S
+
+        //缓启动最终恒定输出的力
+        .final_torque = 0.76_r, // N / m 
+    }};
+    motor_task.init();
+
+
+
+
+    drivers::U13T u13t{UARTHW};
+    gxm::DetectTask detect_task{UARTHW};
+    detect_task.init();
+
+    gxm::BoardcastTask boardcast_task{tts};
+    // boardcast_task.init();
+
+    gxm::StatLed led{LED_GPIO};
+    led.init();
+    led.blink(POWERON_BLINK_TIMES);
+
+    delay(10);
+
+    bindSystickCb([&]{
+        const auto t = time();
+        motor_task.process(t);
+    });
+
+    // boardcast_task.play(gxm::StationName::CaoDi);
+    // boardcast_task.play(gxm::StationName::LaZiKou);
+    // boardcast_task.play(gxm::StationName::CaoDi);
+    gxm::StationDict<bool> played{};
+
+    while(true){
+        const auto t = time();
+
+        detect_task.process(t);
+
+        detect_task.get_station().inspect([&](const gxm::StationName name){
+            if(played[name] == false){
+                played[name] = true;
+                return;
+            }
+            led = Color_t<real_t>(1, 1, 1, 1);
+
+            boardcast_task.play(name);
+            DEBUG_PRINTLN(name);
+
+            delay(500);
+            led = Color_t<real_t>(0, 0, 0, 0);
+
+            detect_task.clear();
+        });
+
+        // DEBUG_PRINTLN(ab_enc.get_cnt(), millis(), ab_enc.get_err_cnt(), ab_enc.get_code());
+        delay(1);
+    }
+}
+
+void gxm_new_energy_main(){
+    app();
+}
+
+
+
 namespace ymd{
     OutputStream & operator << (OutputStream & os, const gxm::StationName & sta){
         switch(sta.kind()){
@@ -465,170 +635,4 @@ namespace ymd{
             default: __builtin_unreachable();
         }
     }
-}
-
-
-[[maybe_unused]] static 
-void motor_tb(){
-    hal::UartSw uart{portA[5], NullGpio}; 
-    uart.init(UARTSW_BAUD);
-
-    DEBUGGER.retarget(&uart);
-    DEBUGGER.no_brackets();
-
-    timer1.init(UARTSW_BAUD);
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        uart.tick();
-    });
-
-    gxm::MotorTask motor_task{{
-        //开始缓启动的时间
-        .start_time = 0.3_r, // S
-
-        //缓启动加速的时间
-        .accelrate_time = 3.0_r, // S
-
-        //缓启动最终恒定输出的力
-        .final_torque = 0.6_r, // N / m 
-    }};
-
-    motor_task.init();
-
-    while(true){
-        motor_task.process(time());
-        delay(1);
-    }
-}
-
-
-[[maybe_unused]] static
-void detect_tb(){
-
-    hal::UartSw uart{portA[5], NullGpio}; 
-    uart.init(UARTSW_BAUD);
-
-    DEBUGGER.retarget(&uart);
-    DEBUGGER.no_brackets();
-
-    timer1.init(UARTSW_BAUD);
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        uart.tick();
-    });
-
-    auto & UARTHW = uart2;
-    uart2.init(U13T_BAUD);
-    drivers::U13T u13t{UARTHW};
-    gxm::DetectTask detect_task{UARTHW};
-    
-
-    detect_task.init();
-
-    while(true){
-        detect_task.process(time());
-        delay(1);
-    }
-}
-
-[[maybe_unused]] static
-void boardcast_tb(){
-    hal::UartSw uart{portA[5], NullGpio}; 
-    uart.init(UARTSW_BAUD);
-
-    DEBUGGER.retarget(&uart);
-    DEBUGGER.no_brackets();
-
-    timer1.init(UARTSW_BAUD);
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        uart.tick();
-    });
-
-    gxm::BoardcastTask boardcast_task{portB[1]};
-    boardcast_task.init();
-
-    while(true){
-        boardcast_task.play(gxm::StationName::ChiShui);
-        delay(1);
-    }
-}
-[[maybe_unused]] static
-void app(){
-    auto & UARTSW_GPIO = portA[5];
-    auto & UARTHW = uart2;
-
-    hal::UartSw uart{UARTSW_GPIO, NullGpio}; 
-    uart.init(UARTSW_BAUD);
-
-    DEBUGGER.retarget(&uart);
-    DEBUGGER.no_brackets();
-    DEBUGGER.force_sync();
-    DEBUGGER.set_splitter(',');
-
-    drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
-
-    timer1.init(UARTSW_BAUD);
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        uart.tick();
-        ab_enc.update();
-    });
-
-    
-    gxm::MotorTask motor_task{{
-        //开始缓启动的时间
-        .start_time = 0.3_r, // S
-
-        //缓启动加速的时间
-        .accelrate_time = 3.0_r, // S
-
-        //缓启动最终恒定输出的力
-        .final_torque = 0.97_r, // N / m 
-    }};
-    motor_task.init();
-
-
-
-    UARTHW.init(U13T_BAUD);
-    drivers::U13T u13t{UARTHW};
-    gxm::DetectTask detect_task{UARTHW};
-    detect_task.init();
-
-    gxm::BoardcastTask boardcast_task{portB[1]};
-    boardcast_task.init();
-
-    gxm::StatLed led{portB[8]};
-    led.init();
-
-
-    delay(10);
-
-    bindSystickCb([&]{
-        const auto t = time();
-        motor_task.process(t);
-    });
-
-
-
-    while(true){
-        const auto t = time();
-
-        detect_task.process(t);
-
-        detect_task.get_station().inspect([&](auto && station_name){
-            led = Color_t<real_t>(1, 1, 1, 1);
-
-            boardcast_task.play(station_name);
-            DEBUG_PRINTLN(station_name);
-
-            delay(500);
-            led = Color_t<real_t>(0, 0, 0, 0);
-
-            detect_task.clear();
-        });
-
-        DEBUG_PRINTLN(ab_enc.get_cnt(), millis(), ab_enc.get_err_cnt(), ab_enc.get_code());
-        delay(1);
-    }
-}
-
-void gxm_new_energy_main(){
-    app();
 }

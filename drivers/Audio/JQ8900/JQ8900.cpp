@@ -9,21 +9,7 @@ void JQ8900::Phy::write(const uint8_t data){
     udelay(1000);
     ser_ = false;
     udelay(3200);
-    // DEBUG_PRINTLN(data);
 
-    // for(size_t i = 0; i < 8; i++){
-    //     if((1 << i) & data){
-    //         ser_ = true;
-    //         udelay(600);
-    //         ser_ = false;
-    //         udelay(200);
-    //     }else{
-    //         ser_ = true;
-    //         udelay(200);
-    //         ser_ = false;
-    //         udelay(600);  
-    //     }
-    // }
     for(uint8_t i = 1; bool(i); i <<= 1){
         ser_ = true;
         if(i & data){
