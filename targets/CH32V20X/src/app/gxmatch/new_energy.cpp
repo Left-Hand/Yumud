@@ -28,21 +28,22 @@
 
 static constexpr auto DBG_UARTSW_BAUD = 38400; 
 static constexpr auto TTS_UARTSW_BAUD = 9600; 
-static constexpr auto U13T_BAUD = 9600; 
+static constexpr auto U13T_BAUD = 115200; 
 
 static constexpr size_t STAT_COUNT = 16;
 static constexpr size_t STR_LEN = 16;
 
 //防止短期内多次触发 设定最小死区时间
-static constexpr uint32_t DETECT_DEAD_ZONE_MS = 1500;
-static constexpr size_t RESPONSE_DELAY_MS = 25;
+static constexpr uint32_t DETECT_DEAD_ZONE_MS = 300;
+static constexpr size_t RESPONSE_DELAY_MS = 0;
 
-static constexpr uint8_t HEADER_TOKEN = 0x7f;
-static constexpr size_t MAX_PAYLOAD_SIZE = 32;
+static constexpr uint8_t U13T_HEADER_TOKEN = 0x7f;
+static constexpr size_t U13T_MAX_PAYLOAD_SIZE = 32;
 
-static constexpr size_t BLINK_DUR_MS = 80;
+static constexpr size_t BLINK_DUR_MS = 60;
 static constexpr size_t POWERON_BLINK_TIMES = 2;
-
+static constexpr real_t LED_SUSTAIN_TIME_S = 0.5_r;
+static constexpr real_t LED_BLANKING_TIME_S = 0.1_r;
 
 static constexpr size_t ISR_FREQ = DBG_UARTSW_BAUD;
 static constexpr real_t SAMPLE_RES = 0.008_r;
@@ -98,10 +99,11 @@ class Motor final{
 public:
 public:
     using Chopper = drivers::AT8222;
+    using Sensor = CurrentSensor;
 
-    Motor(Chopper & drv, AnalogInIntf & a_sense):
+    Motor(Chopper & drv, CurrentSensor & cs):
         drv_(drv),
-        cs_(a_sense)
+        cs_(cs)
         {;}
 
     void set_torque(const real_t torque){
@@ -120,6 +122,10 @@ public:
         drv_ = ctrl_.get();
     }
 
+    const auto & get_duty() const {
+        return ctrl_.get();
+    }
+
 private:
     void set_duty(const real_t duty){
         drv_ = CLAMP(duty, MIN_DUTY, MAX_DUTY);
@@ -136,7 +142,7 @@ private:
     };
 
     Chopper & drv_;
-    CurrentSensor cs_;
+    CurrentSensor & cs_;
 
     real_t targ_current_ = 0;
     Ctrl ctrl_{PI_CFG};
@@ -300,6 +306,7 @@ class MotorTask final{
 public:
     using Motor = motorctl::Motor;
     using Chopper = Motor::Chopper;
+    using Sensor = Motor::Sensor;
 
     struct Config{
         //开始缓启动的时间
@@ -357,11 +364,13 @@ private:
     hal::TimerOC & pwm_pos = timer.oc(1);
     hal::TimerOC & pwm_neg = timer.oc(2);
 
-    Chopper motdrv{
+    Chopper chopper_{
         pwm_pos, pwm_neg, hal::NullGpio
     };
 
-    Motor motor_{motdrv, hal::adc1.inj(1)};
+    Sensor sensor_{hal::adc1.inj(1)};
+
+    Motor motor_{chopper_, sensor_};
 
     //开始缓启动的时间
     real_t start_time_; // S
@@ -379,7 +388,6 @@ public:
 
     void play_disc(const StationName sta){
         const auto str = sta.to_gbk_str();
-        // DEBUG_PRINTLN(std::span(str.data(), str.size()));
         uart_.writeN(str.data(), str.size());
     }
 
@@ -423,7 +431,7 @@ class DetectTask final{
 private:
     using Inst = drivers::U13T;
     hal::UartHw & uart_;
-    Inst inst_ = Inst{uart_};
+    // Inst inst_ = Inst{uart_};
     Option<StationName> last_sta_ = None;
 
     //上次播放的时间 提供死区参考
@@ -441,13 +449,13 @@ private:
         void feed(const char chr){
             switch(state_){
                 case State::Idle:
-                    if(chr == HEADER_TOKEN){
+                    if(chr == U13T_HEADER_TOKEN){
                         state_ = State::Len;
                     }
                     break;
                 case State::Len:{
                     const size_t len = chr;
-                    ASSERT(len <= MAX_PAYLOAD_SIZE, "FrameDecoder: len too large");
+                    ASSERT(len <= U13T_MAX_PAYLOAD_SIZE, "FrameDecoder: len too large");
                     len_ = len;
                     payload_buffer_.clear();
                     state_ = State::Payload;
@@ -470,7 +478,7 @@ private:
         }
     private:
         State state_ = State::Idle;
-        sstl::vector<uint8_t, MAX_PAYLOAD_SIZE> payload_buffer_{};
+        sstl::vector<uint8_t, U13T_MAX_PAYLOAD_SIZE> payload_buffer_{};
         uint8_t len_ = 0;
     };
 
@@ -552,20 +560,43 @@ public:
 
     void blink(const size_t times){
         for(size_t i = 0; i < times; i++){
-            gpio_.set();
+            on();
             delay(BLINK_DUR_MS);
-            gpio_.clr();
+            off();
             delay(BLINK_DUR_MS);
         }
     }
 
-    StatLed & operator =(const Color_t<real_t> & color){
-        if(bool(color)) gpio_.set();
-        else gpio_.clr();
-        return *this;
+    void on(){
+        gpio_.set();
     }
+
+    void off(){
+        gpio_.clr();
+    }
+
 private:
     hal::GpioIntf & gpio_;
+};
+
+class LedTask{
+public:
+    LedTask(StatLed & led):
+        led_(led){;}
+
+    void invoke(const real_t t){
+        invoke_t_ = t;
+    }
+
+    void process(const real_t t){
+        const auto dt = t - invoke_t_;
+        if(dt < LED_BLANKING_TIME_S) led_.off();
+        else if(dt > LED_SUSTAIN_TIME_S) led_.off();
+        else led_.on();
+    }
+private:
+    StatLed & led_;
+    real_t invoke_t_ = 0;
 };
 }
 
@@ -620,6 +651,7 @@ void app(){
     gxm::StatLed led{LED_GPIO};
     led.init();
     led.blink(POWERON_BLINK_TIMES);
+    gxm::LedTask led_task{led};
 
     timer1.init(DBG_UARTSW_BAUD);
     timer1.attach(TimerIT::Update, {0,0}, [&]{
@@ -640,33 +672,25 @@ void app(){
         motor_task.process(t);
     });
 
-    // boardcast_task.play(gxm::StationName::CaoDi);
-    // boardcast_task.play(gxm::StationName::LaZiKou);
-    // boardcast_task.play(gxm::StationName::CaoDi);
     gxm::StationDict<bool> played{};
+    DEBUG_PRINTLN("app start");
 
     while(true){
         const auto t = time();
 
         detect_task.process(t);
+        led_task.process(t);
 
         detect_task.get_station().inspect([&](const gxm::StationName name){
-            if(played[name] == false){
-                played[name] = true;
+            if(played[name] == true){
                 return;
             }
-            led = Color_t<real_t>(1, 1, 1, 1);
-
+            played[name] = true;
             boardcast_task.play(name);
-            DEBUG_PRINTLN(name);
-
-            delay(500);
-            led = Color_t<real_t>(0, 0, 0, 0);
-
+            led_task.invoke(t);
             detect_task.clear();
         });
 
-        // DEBUG_PRINTLN(ab_enc.get_cnt(), millis(), ab_enc.get_err_cnt(), ab_enc.get_code());
         delay(1);
     }
 }
