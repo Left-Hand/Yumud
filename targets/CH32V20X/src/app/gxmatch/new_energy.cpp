@@ -45,14 +45,14 @@ static constexpr size_t POWERON_BLINK_TIMES = 2;
 static constexpr real_t LED_SUSTAIN_TIME_S = 0.5_r;
 static constexpr real_t LED_BLANKING_TIME_S = 0.1_r;
 
-static constexpr size_t ISR_FREQ = DBG_UARTSW_BAUD;
-static constexpr real_t SAMPLE_RES = 0.008_r;
+static constexpr size_t MOTOR_ISR_FREQ = 5000;
+static constexpr real_t SAMPLE_RES = 0.005_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
 
 static constexpr real_t MIN_DUTY = 0.1_r;
-static constexpr real_t MAX_DUTY = 0.7_r;
-static constexpr real_t PI_KP = 0.1_r;
+static constexpr real_t MAX_DUTY = 0.94_r;
+static constexpr real_t PI_KP = 10.6_r;
 
 static constexpr uint CURRENT_LPF_CUTOFF_FREQ_HZ = 10;
 
@@ -71,7 +71,7 @@ real_t volt_2_current(real_t volt){
 
 class CurrentSensor final{
 public:
-    using Filter = dsp::LowpassFilter_t<real_t>;
+    using Filter = dsp::LowpassFilter_t<q20>;
     using Config = Filter::Config;
     CurrentSensor(
         AnalogInIntf & a_sense
@@ -79,7 +79,8 @@ public:
         a_sense_(a_sense){;}
 
     void update(){
-        current_ = volt_2_current(real_t(a_sense_));
+        lpf_.update(volt_2_current(real_t(a_sense_)));
+        current_ = lpf_.get();
     };
 
     const real_t & get() const{
@@ -91,8 +92,10 @@ private:
 
     static constexpr Config CFG = {
         .fc = CURRENT_LPF_CUTOFF_FREQ_HZ,
-        .fs = ISR_FREQ
+        .fs = MOTOR_ISR_FREQ
     };
+
+    Filter lpf_{CFG};
 };
 
 class Motor final{
@@ -119,7 +122,8 @@ public:
         cs_.update();
         const auto meas_current = cs_.get();
         ctrl_.update(targ_current_, meas_current);
-        drv_ = ctrl_.get();
+        // set_duty(ctrl_.get());
+        set_duty(0.5_r);
     }
 
     const auto & get_duty() const {
@@ -138,7 +142,7 @@ private:
         .kp = PI_KP,
         .out_min = MIN_DUTY,
         .out_max = MAX_DUTY,
-        .fs = ISR_FREQ
+        .fs = MOTOR_ISR_FREQ
     };
 
     Chopper & drv_;
@@ -325,6 +329,14 @@ public:
         reconf(cfg);
     }
 
+    const auto & get_duty() const {
+        return motor_.get_duty();
+    }
+
+    const auto & get_current() const {
+        return sensor_.get();
+    }
+
     void reconf(const Config & cfg){
         start_time_ = cfg.start_time; // S
         accelrate_time_ = cfg.accelrate_time; // S
@@ -334,7 +346,7 @@ public:
     void init(){
 
         //因为是中心对齐的顶部触发 所以频率翻倍
-        timer.init(10'000, TimerMode::CenterAlignedUpTrig);
+        timer.init(MOTOR_ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
 
         pwm_pos.init();
         pwm_neg.init();
@@ -342,8 +354,28 @@ public:
         pwm_pos.set_sync();
         pwm_neg.set_sync();
     
-        pwm_pos.set_polarity(true);
-        pwm_neg.set_polarity(true);
+        pwm_pos.set_polarity(false);
+        pwm_neg.set_polarity(false);
+
+        
+        adc1.init(
+            {
+                {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            },{
+                {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+            }
+        );
+
+        adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
+        adc1.enable_auto_inject(false);
+
+        timer3.set_trgo_source(TimerTrgoSource::OC4R);
+
+        timer3.oc(4).init(TimerOcMode::UpValid, false)
+            .set_output_state(true)
+            .set_idle_state(false);
+
+        timer3.oc(4).cvr() = int(1);
     }
 
     void process(const real_t t){
@@ -585,18 +617,19 @@ public:
         led_(led){;}
 
     void invoke(const real_t t){
-        invoke_t_ = t;
+        invoke_t_ = Some(t);
     }
 
     void process(const real_t t){
-        const auto dt = t - invoke_t_;
+        if(!invoke_t_.is_some()) return;
+        const auto dt = t - invoke_t_.unwrap();
         if(dt < LED_BLANKING_TIME_S) led_.off();
         else if(dt > LED_SUSTAIN_TIME_S) led_.off();
         else led_.on();
     }
 private:
     StatLed & led_;
-    real_t invoke_t_ = 0;
+    Option<real_t> invoke_t_ = None;
 };
 }
 
@@ -625,8 +658,6 @@ void app(){
 
     drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
 
-
-
     
     gxm::MotorTask motor_task{{
         //开始缓启动的时间
@@ -636,7 +667,7 @@ void app(){
         .accelrate_time = 1.0_r, // S
 
         //缓启动最终恒定输出的力
-        .final_torque = 0.06_r, // N / m 
+        .final_torque = 0.07_r, // N / m 
     }};
 
     motor_task.init();
@@ -665,15 +696,19 @@ void app(){
         tts_uart.tick();
     });
 
-    delay(10);
+    adc1.attach(AdcIT::JEOC, {0,0}, [&](){
+        motor_task.tick();
+    });
 
+    
     bindSystickCb([&]{
         const auto t = time();
         motor_task.process(t);
     });
-
+    
     gxm::StationDict<bool> played{};
     DEBUG_PRINTLN("app start");
+    delay(10);
 
     while(true){
         const auto t = time();
@@ -690,6 +725,8 @@ void app(){
             led_task.invoke(t);
             detect_task.clear();
         });
+
+        DEBUG_PRINTLN(motor_task.get_current(), motor_task.get_duty());
 
         delay(1);
     }
