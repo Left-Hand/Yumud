@@ -1,5 +1,7 @@
 #include "src/testbench/tb.h"
 
+#include <queue>
+
 #include "core/math/realmath.hpp"
 #include "core/system.hpp"
 #include "core/clock/clock.hpp"
@@ -55,6 +57,8 @@ static constexpr real_t MAX_DUTY = 0.94_r;
 static constexpr real_t PI_KP = 10.6_r;
 
 static constexpr uint CURRENT_LPF_CUTOFF_FREQ_HZ = 10;
+
+static constexpr auto PERIOD_PER_CHAR = 0.2_r;
 
 
 namespace motorctl{
@@ -123,7 +127,7 @@ public:
         const auto meas_current = cs_.get();
         ctrl_.update(targ_current_, meas_current);
         // set_duty(ctrl_.get());
-        set_duty(0.5_r);
+        set_duty(0.7_r);
     }
 
     const auto & get_duty() const {
@@ -317,7 +321,7 @@ public:
         real_t start_time; // S
 
         //缓启动加速的时间
-        real_t accelrate_time; // S
+        real_t accelerate_time; // S
 
         //缓启动最终恒定输出的力
         real_t final_torque; // N / m 
@@ -339,7 +343,7 @@ public:
 
     void reconf(const Config & cfg){
         start_time_ = cfg.start_time; // S
-        accelrate_time_ = cfg.accelrate_time; // S
+        accelerate_time_ = cfg.accelerate_time; // S
         final_torque_ = cfg.final_torque; // N / m 
     }
 
@@ -380,7 +384,7 @@ public:
 
     void process(const real_t t){
         const auto torque = CLAMP(
-            (t - start_time_) * final_torque_ / accelrate_time_, 
+            (t - start_time_) * final_torque_ / accelerate_time_, 
             0, final_torque_);
 
         motor_.set_torque(torque);
@@ -408,7 +412,7 @@ private:
     real_t start_time_; // S
 
     //缓启动加速的时间
-    real_t accelrate_time_; // S
+    real_t accelerate_time_; // S
 
     //缓启动最终恒定输出的力
     real_t final_torque_; // N / m 
@@ -437,26 +441,60 @@ class BoardcastTask final{
 public:
     // using Inst = drivers::JQ8900;
     using Inst = CnTTS;
-
-    // BoardcastTask(Gpio & gpio):
-    //     inst_(gpio){
-    // };
+    using Item = std::pair<StationName, real_t>;
+    using StationQueue = std::queue<Item>;
 
     BoardcastTask(Inst & inst):
         inst_(inst){
     };
 
-    // void init(){
-    //     inst_.init();
-    //     inst_.set_volume(43);
-    // }
+    void add_play(const StationName & sta){
+        play_list_.push(name_2_item(sta));
+    }
 
-    void play(const StationName & sta){
-        // inst_.play_disc(sta.to_index() + 1);
-        inst_.play_disc(sta);
+    void process(const real_t t){
+        if(playing_.is_none()){
+            push_next(t);
+        }else{
+            if(playing_.unwrap().is_timeout(t)){
+                push_next(t);
+            }
+        }
     }
 private:
     Inst inst_;
+
+    static Item name_2_item(const StationName name){
+        const auto str_len = name.to_gbk_str().size();
+        const auto time = str_len * PERIOD_PER_CHAR;
+        return {name, time}; 
+    }
+
+    void push_next(const real_t t){
+        if(play_list_.empty()) return;
+        const auto front = play_list_.front();
+        playing_ = Some(Playing{
+            front.first, front.second, t
+        });
+        inst_.play_disc(playing_.unwrap().name);
+        play_list_.pop();
+    }
+
+    StationQueue play_list_;
+    struct Playing{
+        StationName name;
+        real_t sustain;
+        real_t start_time;
+        real_t has_been_played(const real_t t) const {
+            return t - start_time;
+        }
+
+        bool is_timeout(const real_t t) const {
+            return has_been_played(t) > sustain;
+        }
+    };
+
+    Option<Playing> playing_ = None;
 };
 
 class DetectTask final{
@@ -563,7 +601,6 @@ public:
             uart_.writeN(cmds.begin(), cmds.size());
         }
 
-
         if(!uart_.available()) return;
         update_decoder();
         
@@ -616,7 +653,7 @@ public:
     LedTask(StatLed & led):
         led_(led){;}
 
-    void invoke(const real_t t){
+    void add_point(const real_t t){
         invoke_t_ = Some(t);
     }
 
@@ -664,7 +701,7 @@ void app(){
         .start_time = 0.3_r, // S
 
         //缓启动加速的时间
-        .accelrate_time = 1.0_r, // S
+        .accelerate_time = 1.0_r, // S
 
         //缓启动最终恒定输出的力
         .final_torque = 0.07_r, // N / m 
@@ -713,16 +750,15 @@ void app(){
     while(true){
         const auto t = time();
 
+        boardcast_task.process(t);
         detect_task.process(t);
         led_task.process(t);
 
         detect_task.get_station().inspect([&](const gxm::StationName name){
-            if(played[name] == true){
-                return;
-            }
+            if(played[name] == true) return;
             played[name] = true;
-            boardcast_task.play(name);
-            led_task.invoke(t);
+            boardcast_task.add_play(name);
+            led_task.add_point(t);
             detect_task.clear();
         });
 
