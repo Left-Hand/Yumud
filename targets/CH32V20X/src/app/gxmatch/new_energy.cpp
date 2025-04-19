@@ -166,19 +166,19 @@ public:
     DelayedSemphr(const uint32_t delay_ms):
         delay_ms_(delay_ms){;}
     void give(){
-        last_millis_ = millis();
+        last_millis_ = Some(millis());
     }
 
     bool take(){
-        if(last_millis_ and last_millis_.value() + delay_ms_ < millis()){
-            last_millis_ = std::nullopt;
+        if(last_millis_.is_some() and last_millis_.unwrap() + delay_ms_ < millis()){
+            last_millis_ = None;
             return true;
         }
         return false;
     }
     private:
         immutable_t<uint32_t> delay_ms_ = 0;
-        std::optional<uint32_t> last_millis_ = std::nullopt;
+        Option<uint32_t> last_millis_ = None;
 };
 
 struct StationName final{
