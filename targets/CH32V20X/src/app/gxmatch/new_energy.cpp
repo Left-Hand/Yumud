@@ -225,6 +225,10 @@ struct StationName final{
         return kind_;
     }
 
+    bool operator ==(const Kind kind) const {
+        return kind_ == kind;
+    }
+
     static constexpr
     Option<StationName> from_gbk(std::span<const uint8_t, STR_LEN> code);
 private:
@@ -525,21 +529,28 @@ private:
                     break;
                 case State::Len:{
                     const size_t len = chr;
-                    ASSERT(len <= U13T_MAX_PAYLOAD_SIZE, "FrameDecoder: len too large");
-                    len_ = len;
-                    payload_buffer_.clear();
-                    state_ = State::Payload;
+                    if(len > U13T_MAX_PAYLOAD_SIZE){
+                        end_packet();
+                    }else{
+                        len_ = len;
+                        payload_buffer_.clear();
+                        state_ = State::Payload;
+                    }
                     break;
                 }
                 case State::Payload:
                     payload_buffer_.push_back(chr);
                     if(payload_buffer_.size() >= len_){
-                        state_ = State::Idle;
+                        end_packet();
                     }
                     break;
                 default:
                     break;
             }
+        }
+
+        void end_packet(){
+            state_ = State::Idle;
         }
 
         std::optional<std::span<const uint8_t>> get_payload() const{
@@ -587,6 +598,8 @@ private:
             }
         }
     }
+
+
 public: 
     DetectTask(UartHw & uart):
         uart_(uart){
@@ -615,6 +628,10 @@ public:
 
     void clear(){
         last_sta_ = None;
+    }
+
+    void end_packet(){
+        frame_decoder_.end_packet();
     }
 };
 
@@ -709,8 +726,13 @@ void app(){
 
     motor_task.init();
 
-    drivers::U13T u13t{UARTHW};
+
+    // drivers::U13T u13t{UARTHW};
     gxm::DetectTask detect_task{UARTHW};
+    UARTHW.bind_post_rx_cb([&](){
+        detect_task.end_packet();
+    });
+
     detect_task.init();
 
     gxm::BoardcastTask boardcast_task{tts};
@@ -757,7 +779,10 @@ void app(){
         detect_task.get_station().inspect([&](const gxm::StationName name){
             if(played[name] == true) return;
             played[name] = true;
-            boardcast_task.add_play(name);
+
+            if(name == gxm::StationName::ChiShui || name == gxm::StationName::HuiNing){
+                boardcast_task.add_play(name);
+            }
             led_task.add_point(t);
             detect_task.clear();
         });
