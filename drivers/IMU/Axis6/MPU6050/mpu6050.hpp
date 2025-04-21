@@ -134,7 +134,7 @@ protected:
     // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
-    static constexpr real_t calculateAccScale(const AccRange range){
+    static constexpr real_t calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
         switch(range){
             default:
@@ -149,7 +149,7 @@ protected:
         }
     }
 
-    static constexpr real_t calculateGyrScale(const GyrRange range){
+    static constexpr real_t calculate_gyr_scale(const GyrRange range){
         switch(range){
             default:
             case GyrRange::_250deg:
@@ -183,21 +183,21 @@ public:
 
     [[nodiscard]] Option<Vector3_t<real_t>> get_acc();
     [[nodiscard]] Option<Vector3_t<real_t>> get_gyr();
-    [[nodiscard]] Option<real_t> getTemperature();
+    [[nodiscard]] Option<real_t> get_temperature();
 
-    [[nodiscard]] Result<void, Error> setAccRange(const AccRange range);
-    [[nodiscard]] Result<void, Error> setGyrRange(const GyrRange range);
+    [[nodiscard]] Result<void, Error> set_acc_range(const AccRange range);
+    [[nodiscard]] Result<void, Error> set_gyr_range(const GyrRange range);
 
     [[nodiscard]] Result<void, Error> reset();
 
-    [[nodiscard]] Result<void, Error> setPackage(const Package package){
+    [[nodiscard]] Result<void, Error> set_package(const Package package){
         package_ = package;
         return Ok();
     }
 
-    [[nodiscard]] Result<Package, Error> getPackage();
+    [[nodiscard]] Result<Package, Error> get_package();
 
-    [[nodiscard]] Result<void, Error> enableDirectMode(const Enable en = EN);
+    [[nodiscard]] Result<void, Error> enable_direct_mode(const Enable en = EN);
 };
 
 };

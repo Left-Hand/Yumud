@@ -5,6 +5,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+#include "core/utils/result.hpp"
+
 namespace ymd::drivers{
 
 template<size_t N>
@@ -19,6 +21,21 @@ public:
     uint8_t as_u8() const {return i2c_addr_.to_ulong();}
 private:
     std::bitset<N> i2c_addr_;
+};
+
+
+class InvensenseSensorError{
+public:
+    enum Kind:uint8_t{
+        BusError,
+        WrongWhoAmI,
+        Unspecified = 0xff,
+    };
+
+    constexpr InvensenseSensorError(Kind kind):kind_(kind){;} 
+    constexpr bool operator==(const InvensenseSensorError & rhs) const{return kind_ == rhs.kind_;}
+private:
+    Kind kind_;
 };
 
 
@@ -71,4 +88,28 @@ public:
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
+}
+
+
+namespace ymd::custom{
+    template<typename T>
+    struct result_converter<T, drivers::InvensenseSensorError, BusError> {
+        static Result<T, drivers::InvensenseSensorError> convert(const BusError berr){
+            using Error = drivers::InvensenseSensorError;
+            using BusError = BusError;
+            
+            if(berr.ok()) return Ok();
+
+            Error err = [](const BusError berr_){
+                switch(berr_.type){
+                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+
+                    // case BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;
+                    default: return Error::Unspecified;
+                }
+            }(berr);
+
+            return Err(err); 
+        }
+    };
 }
