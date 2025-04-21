@@ -89,7 +89,7 @@ using namespace ymd::drivers;
 //     const Config & config_;
 
 //     Axis6 & acc_gyr_sensor_;//加速度与角速度计
-//     Magnetometer & mag_sensor_;//地磁计
+//     MagnetometerIntf & mag_sensor_;//地磁计
 //     FlowSensor & flow_sensor_;
 
 //     // ComplementaryFilter rot_obs_{config_.rot_obs_config};
@@ -124,7 +124,7 @@ using namespace ymd::drivers;
 
 //     Estimator(const Config & config, 
 //             Axis6 & acc_gyr_sensor, 
-//             Magnetometer & mag_sensor,
+//             MagnetometerIntf & mag_sensor,
 //             FlowSensor & flow_sensor):
 
 //         config_(config), 

@@ -183,9 +183,9 @@ protected:
     // REG52
     FifoPtrReg fifo_ptr_reg = {};
 
-    void delayT3(){delayMicroseconds(1);}
+    void delayT3(){udelay(1);}
 
-    void delayT5(){delayMicroseconds(1);}
+    void delayT5(){udelay(1);}
 
     BusError write_reg(const RegAddress address, const uint16_t reg);
     BusError read_reg(const RegAddress address, uint16_t & reg);

@@ -258,12 +258,12 @@ void gui_main(){
         // // DEBUG_PRINTLN(millis(), micros(), t);
         // // uart2.println(millis(), micros(), t, nanos());
         // // delay(1);
-        // // delayMicroseconds(180);
-        // // delayMicroseconds(380);
+        // // udelay(180);
+        // // udelay(380);
         // // delay(1);
         // // if(millis() > 10000) Sys::Misc::reset();
         // // while(uart7.pending());
-        // // delayMicroseconds(500);
+        // // udelay(500);
 
         // #define GUI_TB
         // #ifdef GUI_TB

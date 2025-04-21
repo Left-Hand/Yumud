@@ -23,12 +23,12 @@ void pmw3901_main(){
 
 
     PMW3901 pmw{spi, 0};
-    pmw.init();
+    pmw.init().unwrap();
 
     while(true){
 
         const auto begin = micros();
-        pmw.update();
+        pmw.update().unwrap();
         const auto pos = pmw.get_position();
         DEBUG_PRINTLN(pos, micros() - begin);
         delay(1);

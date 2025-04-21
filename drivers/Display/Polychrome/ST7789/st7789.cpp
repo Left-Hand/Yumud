@@ -9,7 +9,7 @@ using namespace ymd;
 // #define ST7789_EXPRIMENTAL_SKIP
 
 
-//ÅĞ¶ÏË¢ĞÂÃüÁî·û±ØÒªĞÔÅĞ¶ÏËã·¨ ÒÔÌá¸ßspi dmaµÄÍÌÍÂÂÊ
+//åˆ¤æ–­åˆ·æ–°å‘½ä»¤ç¬¦å¿…è¦æ€§åˆ¤æ–­ç®—æ³• ä»¥æé«˜spi dmaçš„ååç‡
 bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
     const auto curr_pt_range = get_point_index(curr_area_);
     const auto desired_pt_range = get_point_index(rect);
@@ -29,9 +29,9 @@ void ST7789::init(){
     
     write_command(0x01);
 
-    delayMicroseconds(50);
+    udelay(50);
 	write_command(0x11);
-    delayMicroseconds(50);
+    udelay(50);
 	write_command(0x3A);
 	write_data(0x55);
 	write_command(0x36);

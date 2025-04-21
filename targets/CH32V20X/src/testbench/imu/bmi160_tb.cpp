@@ -45,7 +45,7 @@ void bmi160_main(){
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;
         acc.normalize();
-        Quat gest = {{0,0,1}, acc};
+        Quat gest = Quat::from_shortest_arc({0,0,1}, acc);
         DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
     }
 }

@@ -3,6 +3,13 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+#ifdef ICM42688_DEBUG
+#undef ICM42688_DEBUG
+#define ICM42688_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#else
+#define ICM42688_DEBUG(...)
+#endif
+
 scexpr real_t LSB_ACC_16G_x64 = real_t(64 *  0.0047856934);
 scexpr real_t  LSB_ACC_8G_x64 = real_t(64 *  0.0023928467);
 scexpr real_t  LSB_ACC_4G_x64 = real_t(64 *  0.0011964233);

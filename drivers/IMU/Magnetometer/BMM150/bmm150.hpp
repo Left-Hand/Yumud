@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class BMM150:public Magnetometer{
+class BMM150:public MagnetometerIntf{
 public:
     using Error = details::BoschSensorError;
 

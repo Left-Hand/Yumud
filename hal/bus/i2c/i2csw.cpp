@@ -8,7 +8,7 @@ using namespace ymd::hal;
 #define SCL_PP
 
 void I2cSw::delay_dur(){
-    if(delays_) delayMicroseconds(delays_);
+    if(delays_) udelay(delays_);
     else for(size_t i = 0; i < 3; i++)__nopn(5);
 }
 

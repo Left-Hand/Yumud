@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-class LIS2DW12:public Accelerometer, public STMicroSensor{
+class LIS2DW12:public AccelerometerIntf{
 public:
 
     enum class DPS:uint8_t{
@@ -92,8 +92,8 @@ public:
 protected:
     scexpr uint8_t default_i2c_addr = 0b11010010;
 
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+    using Phy = StmicroImu_Phy;
+    Phy phy_;
 
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
@@ -197,16 +197,16 @@ protected:
 
 
 
-    static real_t calculateAccScale(const AccRange range);
-    static real_t calculateGyrScale(const GyrRange range);
+    static real_t calculate_acc_scale(const AccRange range);
+    static real_t calculate_gyr_scale(const GyrRange range);
 public:
 
-    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):STMicroSensor(hal::I2cDrv{i2c, i2c_addr}){;}
-    LIS2DW12(const hal::I2cDrv & i2c_drv):STMicroSensor(i2c_drv){;}
-    LIS2DW12(hal::I2cDrv && i2c_drv):STMicroSensor(std::move(i2c_drv)){;}
-    LIS2DW12(const hal::SpiDrv & spi_drv):STMicroSensor(spi_drv){;}
-    LIS2DW12(hal::SpiDrv && spi_drv):STMicroSensor(std::move(spi_drv)){;}
-    LIS2DW12(hal::Spi & spi, const uint8_t index):STMicroSensor(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, i2c_addr}){;}
+    LIS2DW12(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
+    LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
+    LIS2DW12(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();
@@ -215,12 +215,12 @@ public:
 
     void reset();
 
-    void setAccOdr(const AccOdr odr);
-    void setAccRange(const AccRange range);
-    real_t setGyrOdr(const real_t odr);
+    void set_acc_odr(const AccOdr odr);
+    void set_acc_range(const AccRange range);
+    real_t set_gyr_odr(const real_t odr);
     
-    void setPmuMode(const PmuType pum, const PmuMode mode);
-    PmuMode getPmuMode(const PmuType pum);
+    void set_pmu_mode(const PmuType pum, const PmuMode mode);
+    PmuMode get_pmu_mode(const PmuType pum);
     Option<Vector3_t<real_t>> get_acc();
 };
 

@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class IST8310:public Magnetometer{
+class IST8310:public MagnetometerIntf{
 public:
     scexpr uint8_t default_i2c_addr =  0x0E << 1;
 

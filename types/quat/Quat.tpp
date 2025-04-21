@@ -39,23 +39,23 @@
 
 namespace ymd{
 template<typename T>
-T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
+constexpr T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);
 	return acosf(CLAMP(d * d * 2.0f - 1.0f, -1.0f, 1.0f));
 }
 
 template<typename T>
-T Quat_t<T>::dot(const Quat_t<T> &p_q) const {
+constexpr T Quat_t<T>::dot(const Quat_t<T> &p_q) const {
 	return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
 }
 
 template<typename T>
-T Quat_t<T>::length_squared() const{
+constexpr T Quat_t<T>::length_squared() const{
     return dot(*this);
 }
 
 template<typename T>
-T Quat_t<T>::inv_length() const {
+constexpr T Quat_t<T>::inv_length() const {
 	return T(isqrt(x * x + y * y + z * z + w * w));
 }
 
@@ -64,7 +64,7 @@ T Quat_t<T>::inv_length() const {
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
+constexpr void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	T half_a1 = p_euler.x / 2;
 	T half_a2 = p_euler.y / 2;
 	T half_a3 = p_euler.z / 2;
@@ -97,38 +97,39 @@ void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
+constexpr void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	
 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
-	if constexpr(is_fixed_point_v<T>){	
-		auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
-		auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
-		auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
+	// if constexpr(is_fixed_point_v<T>){	
+	// 	auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
+	// 	auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
+	// 	auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
 
-		static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
-			return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
-		};
+	// 	static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
+	// 		return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
+	// 	};
 	
-		set(
-			mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
-			mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
-			mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
-			mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
-		);
-	}else{
-		auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
-		auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
-		auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
-	
-		set(
-			sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
-			sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
-			-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
-			sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3);
-	}
+	// 	set(
+	// 		mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
+	// 		mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
+	// 		mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
+	// 		mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
+	// 	);
+	// }else{
+	auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
+	auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
+	auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
+
+	set(
+		sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
+		sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
+		-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
+		sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
+	);
+	// }
 
 }
 
@@ -141,7 +142,7 @@ void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 // 	return m.get_euler_yxz();
 // }
 template<typename T>
-void Quat_t<T>::operator*=(const Quat_t<T> &p_q) {
+constexpr void Quat_t<T>::operator*=(const Quat_t<T> &p_q) {
 	set(    T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
 			T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
 			T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
@@ -166,39 +167,39 @@ constexpr Quat_t<T> Quat_t<T>::operator*(Quat_t<T> && p_q) const {
 	return p_q;
 }
 template<typename T>
-bool Quat_t<T>::is_equal_approx(const Quat_t<T> & other) const {
+constexpr bool Quat_t<T>::is_equal_approx(const Quat_t<T> & other) const {
 	return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
 }
 template<typename T>
-T Quat_t<T>::length() const {
+constexpr T Quat_t<T>::length() const {
 	return sqrt(length_squared());
 }
 template<typename T>
-void Quat_t<T>::normalize() {
+constexpr void Quat_t<T>::normalize() {
 	*this *= inv_length();
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::normalized() const {
+constexpr Quat_t<T> Quat_t<T>::normalized() const {
 	return *this * inv_length();
 }
 template<typename T>
-bool Quat_t<T>::is_normalized() const {
+constexpr bool Quat_t<T>::is_normalized() const {
 	return is_equal_approx(length_squared(), T(1)); //use less epsilon
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::operator/(const T &s) const{
+constexpr Quat_t<T> Quat_t<T>::operator/(const T &s) const{
 	const T inv_s = 1 / s;
     return Quat_t<T>(x * inv_s, y * inv_s, z * inv_s, w * inv_s);
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::inverse() const {
+constexpr Quat_t<T> Quat_t<T>::inverse() const {
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat_t<T>(), "The Quat_t<T> must be normalized.");
 #endif
 	return Quat_t<T>(-x, -y, -z, w);
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) const {
+constexpr Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) const {
 	Quat_t<T> to1;
 	T omega, cosom, sinom, scale0, scale1;
 
@@ -241,7 +242,7 @@ Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) const {
 			scale0 * w + scale1 * to1.w);
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
+constexpr Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
 	const Quat_t<T> &from = *this;
 
 	T dot = from.dot(p_to);
@@ -261,7 +262,7 @@ Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
 			invFactor * from.w + newFactor * p_to.w);
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a, const Quat_t<T> &p_post_b, const T &p_weight) const {
+constexpr Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a, const Quat_t<T> &p_post_b, const T &p_weight) const {
 
 	T t2 = (1.0 - p_weight) * p_weight * 2;
 	Quat_t<T> sp = this->slerp(p_b, p_weight);
@@ -269,7 +270,7 @@ Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a,
 	return sp.slerpni(sq, t2);
 }
 template<typename T>
-void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
+constexpr void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
 
 	T d = axis.length();
 	if (d == 0) {

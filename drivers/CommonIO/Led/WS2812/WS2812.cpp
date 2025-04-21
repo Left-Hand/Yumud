@@ -12,7 +12,7 @@ using namespace ymd::drivers;
 //144mhz
 
 // #define DELAY_CELL __nopn(4)
-#define DELAY_CELL delayMicroseconds(1);
+#define DELAY_CELL udelay(1);
 void WS2812_Phy::delay_long(){
     for(size_t i = 0; i < 13; i++){
         DELAY_CELL;
@@ -49,7 +49,7 @@ void WS2812_Phy::send_byte(const uint8_t data){
 
 void WS2812_Phy::send_reset(){
     gpio_.clr();
-    delayMicroseconds(60);
+    udelay(60);
 }
 
 void WS2812_Phy::init(){

@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class HMC5883L:public Magnetometer{
+class HMC5883L:public MagnetometerIntf{
 public:
     enum class DataRate:uint8_t{
         DR0_75, DR1_5, DR3, DR7_5, DR15, DR30, DR75

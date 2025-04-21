@@ -39,7 +39,7 @@ Result<void, Error> BMI088_Acc::reset(){
 }
 
 Result<void, Error> BMI088_Acc::verify_chip_id(){
-    auto err = phy_.read_regs(acc_chipid_reg);
+    const auto err = phy_.read_regs(acc_chipid_reg);
     return err | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error::UNSPECIFIED));
 }
 

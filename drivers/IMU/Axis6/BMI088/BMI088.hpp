@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-class _BMI088_Base{
+class _BMI088_Collections{
 public:
     scexpr uint8_t default_i2c_addr = 0xd0;
 
@@ -55,43 +55,12 @@ public:
         _100Hz,
     };
 
-    static constexpr Option<real_t> calculate_acc_scale(const AccRange range){
-        constexpr double g = 9.806;
-        switch(range){
-            default:
-                return None;
-            case AccRange::_3G:
-                return Some(real_t(g * 3));
-            case AccRange::_6G:
-                return Some(real_t(g * 6));
-            case AccRange::_12G:
-                return Some(real_t(g * 12));
-            case AccRange::_24G:
-                return Some(real_t(g * 24));
-        }
-    }
 
-    static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
-        switch(range){
-            default:
-                return None;
-            case GyrRange::_125deg:
-                return Some(real_t(ANGLE2RAD(150)));
-            case GyrRange::_250deg:
-                return Some(real_t(ANGLE2RAD(250)));
-            case GyrRange::_500deg:
-                return Some(real_t(ANGLE2RAD(500)));
-            case GyrRange::_1000deg:
-                return Some(real_t(ANGLE2RAD(1000)));
-            case GyrRange::_2000deg:
-                return Some(real_t(ANGLE2RAD(2000)));
-        }
-    }
 protected:
     using RegAddress = uint8_t;
 };
 
-class BMI088_Acc: public _BMI088_Base, public Accelerometer{
+class BMI088_Acc: public _BMI088_Collections, public AccelerometerIntf{
 public:
     using Error = details::BoschSensorError;
 protected:
@@ -196,6 +165,22 @@ protected:
         InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
         InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
     };
+
+    static constexpr Option<real_t> calculate_acc_scale(const AccRange range){
+        constexpr double g = 9.806;
+        switch(range){
+            default:
+                return None;
+            case AccRange::_3G:
+                return Some(real_t(g * 3));
+            case AccRange::_6G:
+                return Some(real_t(g * 6));
+            case AccRange::_12G:
+                return Some(real_t(g * 12));
+            case AccRange::_24G:
+                return Some(real_t(g * 24));
+        }
+    }
 public:
     BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
@@ -220,7 +205,7 @@ public:
 };
 
 
-class BMI088_Gyr:public _BMI088_Base, public Accelerometer{
+class BMI088_Gyr:public _BMI088_Collections, public AccelerometerIntf{
 public:
     using Error = details::BoschSensorError;
 protected:
@@ -266,6 +251,23 @@ protected:
     }DEF_R8(gyro_selftest_reg)
 
     Result<void, Error> verify_chip_id();
+
+    static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
+        switch(range){
+            default:
+                return None;
+            case GyrRange::_125deg:
+                return Some(real_t(ANGLE2RAD(150)));
+            case GyrRange::_250deg:
+                return Some(real_t(ANGLE2RAD(250)));
+            case GyrRange::_500deg:
+                return Some(real_t(ANGLE2RAD(500)));
+            case GyrRange::_1000deg:
+                return Some(real_t(ANGLE2RAD(1000)));
+            case GyrRange::_2000deg:
+                return Some(real_t(ANGLE2RAD(2000)));
+        }
+    }
 public:
     BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}

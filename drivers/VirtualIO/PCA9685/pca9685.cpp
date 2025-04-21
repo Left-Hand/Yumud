@@ -63,7 +63,7 @@ void PCA9685::reset(){
         mode1_reg.sleep = 0;
         write_reg(RegAddress::Mode1, mode1_reg);
     }
-    delayMicroseconds(500);
+    udelay(500);
     mode1_reg.restart = 1;
     write_reg(RegAddress::Mode1, mode1_reg);
     mode1_reg.restart = 0;

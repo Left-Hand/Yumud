@@ -59,7 +59,7 @@ protected:
     Mecanum4Solver solver_{config_.solver_config};
 
     Axis6 & acc_gyr_sensor_;
-    Magnetometer & mag_sensor_;
+    MagnetometerIntf & mag_sensor_;
 
     Ray current_jny_;
     real_t gyr_;
@@ -84,7 +84,7 @@ public:
     ChassisModule(const Config & config, 
             const Wheels & wheels,
             Axis6 & acc_gyr_sensor,
-            Magnetometer & mag_sensor
+            MagnetometerIntf & mag_sensor
         ):
         config_(config), 
         wheels_(wheels),
