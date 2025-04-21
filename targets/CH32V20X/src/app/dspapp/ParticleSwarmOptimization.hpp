@@ -1,7 +1,6 @@
 #pragma once
 // #pragma GCC optimize(3,"Ofast","inline")
 
-#include <cstdlib>
 #include <span>
 #include "core/utils/hive.hpp"
 

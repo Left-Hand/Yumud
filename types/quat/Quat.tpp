@@ -39,23 +39,23 @@
 
 namespace ymd{
 template<typename T>
-T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
+constexpr T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);
 	return acosf(CLAMP(d * d * 2.0f - 1.0f, -1.0f, 1.0f));
 }
 
 template<typename T>
-T Quat_t<T>::dot(const Quat_t<T> &p_q) const {
+constexpr T Quat_t<T>::dot(const Quat_t<T> &p_q) const {
 	return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
 }
 
 template<typename T>
-T Quat_t<T>::length_squared() const{
+constexpr T Quat_t<T>::length_squared() const{
     return dot(*this);
 }
 
 template<typename T>
-T Quat_t<T>::inv_length() const {
+constexpr T Quat_t<T>::inv_length() const {
 	return T(isqrt(x * x + y * y + z * z + w * w));
 }
 
@@ -167,32 +167,32 @@ constexpr Quat_t<T> Quat_t<T>::operator*(Quat_t<T> && p_q) const {
 	return p_q;
 }
 template<typename T>
-bool Quat_t<T>::is_equal_approx(const Quat_t<T> & other) const {
+constexpr bool Quat_t<T>::is_equal_approx(const Quat_t<T> & other) const {
 	return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
 }
 template<typename T>
-T Quat_t<T>::length() const {
+constexpr T Quat_t<T>::length() const {
 	return sqrt(length_squared());
 }
 template<typename T>
-void Quat_t<T>::normalize() {
+constexpr void Quat_t<T>::normalize() {
 	*this *= inv_length();
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::normalized() const {
+constexpr Quat_t<T> Quat_t<T>::normalized() const {
 	return *this * inv_length();
 }
 template<typename T>
-bool Quat_t<T>::is_normalized() const {
+constexpr bool Quat_t<T>::is_normalized() const {
 	return is_equal_approx(length_squared(), T(1)); //use less epsilon
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::operator/(const T &s) const{
+constexpr Quat_t<T> Quat_t<T>::operator/(const T &s) const{
 	const T inv_s = 1 / s;
     return Quat_t<T>(x * inv_s, y * inv_s, z * inv_s, w * inv_s);
 }
 template<typename T>
-Quat_t<T> Quat_t<T>::inverse() const {
+constexpr Quat_t<T> Quat_t<T>::inverse() const {
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat_t<T>(), "The Quat_t<T> must be normalized.");
 #endif

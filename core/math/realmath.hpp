@@ -66,7 +66,7 @@ namespace ymd{
     }
 
     template<floating T>
-    __fast_inline std::array<T, 2> sincos(const T x){
+    __fast_inline constexpr std::array<T, 2> sincos(const T x){
         return {std::sin(x), std::cos(x)};
     }
     
