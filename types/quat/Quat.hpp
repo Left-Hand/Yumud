@@ -61,11 +61,9 @@ struct Quat_t{
     }
 
 
-    Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
+    constexpr Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
-
-
-    Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
+    constexpr Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
     {
         Vector3_t<T> c = v0.cross(v1);
         T d = v0.dot(v1);
@@ -86,8 +84,13 @@ struct Quat_t{
         }
     }
 
-    Quat_t(const Vector3_t<T> &euler) { set_euler(euler); }
-    Quat_t(const Quat_t &p_q) :
+    static constexpr Quat_t<T> from_euler(const Vector3_t<T> &euler) {
+        Quat_t<T> ret;
+        ret.set_euler(euler);
+        return ret;
+    }
+
+    constexpr Quat_t(const Quat_t &p_q) :
             x(p_q.x),
             y(p_q.y),
             z(p_q.z),
@@ -121,11 +124,11 @@ struct Quat_t{
     T dot(const Quat_t &p_q) const;
     T angle_to(const Quat_t &p_to) const;
 
-    __no_inline void set_euler_xyz(const Vector3_t<T> &p_euler);
-    __no_inline void set_euler_yxz(const Vector3_t<T> &p_euler);
-    void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
+    constexpr void set_euler_xyz(const Vector3_t<T> &p_euler);
+    constexpr void set_euler_yxz(const Vector3_t<T> &p_euler);
+    constexpr void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
 
-    Quat_t integral(const Vector3_t<T> & p) const {
+    constexpr Quat_t integral(const Vector3_t<T> & p) const {
         return Quat_t<T>(
             x + real_t(0.5f) * (-y * p.z + z * p.y + w * p.x),
             y + real_t(0.5f) * (x * p.z - z * p.x + w * p.y),
@@ -134,12 +137,12 @@ struct Quat_t{
         ).normalized();
     }
 
-    Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
-    Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
-    Quat_t cubic_slerp(const Quat_t &p_b, const Quat_t &p_pre_a, const Quat_t &p_post_b, const T &p_weight) const;
+    constexpr Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
+    constexpr Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
+    constexpr Quat_t cubic_slerp(const Quat_t &p_b, const Quat_t &p_pre_a, const Quat_t &p_post_b, const T &p_weight) const;
 
-    void set_axis_angle(const Vector3_t<T> &axis, const T &angle);
-    void get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
+    constexpr void set_axis_angle(const Vector3_t<T> &axis, const T &angle);
+    constexpr void get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
         r_angle = 2.0f * acos(w);
         T r = (1.0f) / sqrt(1 - w * w);
         r_axis.x = x * r;
@@ -147,7 +150,8 @@ struct Quat_t{
         r_axis.z = z * r;
     }
 
-    __fast_inline void operator*=(const Quat_t &p_q);
+    __fast_inline constexpr 
+    void operator*=(const Quat_t &p_q);
 
     __fast_inline constexpr
     Quat_t operator*(Quat_t && p_q) const;

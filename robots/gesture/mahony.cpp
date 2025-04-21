@@ -48,8 +48,8 @@ void Mahony::update_v2(const Vector3 & gyr,const Vector3 & acc) {
 	const auto a_norm = build_norm_vec3_from_vec3(acc);
 	const auto e = build_norm_vec3_from_cross_of_vec3(a_norm, v);
 
-	Quat delta_q = q.xform((gyr + kp_ * e) * (inv_fs_));
-	q = (q * delta_q).normalized();
+	const auto delta = q.xform((gyr + kp_ * e) * (inv_fs_));
+	q = (q * Quat::from_euler(delta)).normalized();
 }
 
 

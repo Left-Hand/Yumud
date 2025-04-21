@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
+#include "core/utils/option.hpp"
 
 namespace ymd::robots{
 

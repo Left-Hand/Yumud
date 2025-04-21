@@ -2,7 +2,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include <memory>
-#include <stdlib.h>
 
 #include "protocol.hpp"
 #include "crc.hpp"

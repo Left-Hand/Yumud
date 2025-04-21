@@ -76,10 +76,10 @@ public:
 
     T & operator [](const size_t idx) { return (&x)[idx];}
 
-    const T & operator [](const size_t idx) const {return (&x)[idx];}
+    constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
 
     template<arithmetic U>
-    Vector3_t& operator=(const Vector3_t<U>& v) {
+    constexpr Vector3_t& operator=(const Vector3_t<U>& v) {
         x = static_cast<T>(v.x);
         y = static_cast<T>(v.y);
         z = static_cast<T>(v.z);
@@ -87,7 +87,7 @@ public:
     };
 
     template<arithmetic U>
-    __fast_inline
+    __fast_inline constexpr 
     Vector3_t & operator += (const Vector3_t<U>& v) {
         x = static_cast<T>(x + static_cast<T>(v.x));
         y = static_cast<T>(y + static_cast<T>(v.y));
@@ -96,7 +96,7 @@ public:
     }
     
     template<arithmetic U>
-    __fast_inline
+    __fast_inline constexpr 
     Vector3_t & operator -= (const Vector3_t<U>& v) {
         x -= static_cast<T>(v.x);
         y -= static_cast<T>(v.y);
@@ -105,7 +105,7 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline
+    __fast_inline constexpr 
     Vector3_t & operator *= (const Vector3_t<U>& v) {
         x *= static_cast<T>(v.x);
         y *= static_cast<T>(v.y);
@@ -114,23 +114,26 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t<T> increase_x(const U & v){
+    __fast_inline constexpr 
+    Vector3_t<T> increase_x(const U & v){
         return {x + v, y, z};
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t<T> increase_y(const U & v){
+    __fast_inline constexpr 
+    Vector3_t<T> increase_y(const U & v){
         return {x, y + v, z};
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t<T> increase_z(const U & v){
+    __fast_inline constexpr 
+    Vector3_t<T> increase_z(const U & v){
         return {x, y, z + v};
     }
 
     template<arithmetic U>
-    __fast_inline
-    constexpr Vector3_t & operator *= (const U & _v){
+    __fast_inline constexpr 
+    Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
         x = x * v;
         y = y * v;
@@ -139,7 +142,8 @@ public:
     }
 
     template<arithmetic U>
-    constexpr Vector3_t & operator /= (const Vector3_t<U>& v) {
+    __fast_inline constexpr 
+    Vector3_t & operator /= (const Vector3_t<U>& v) {
         x /= static_cast<T>(v.x);
         y /= static_cast<T>(v.y);
         z /= static_cast<T>(v.z);
@@ -147,7 +151,8 @@ public:
     }
 
     template<arithmetic U>
-    constexpr Vector3_t & operator /= (const U & _v){
+    __fast_inline constexpr 
+    Vector3_t & operator /= (const U & _v){
         T inv_v = 1 / static_cast<T>(_v);
         x *= inv_v;
         y *= inv_v;
@@ -156,33 +161,38 @@ public:
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Vector3_t operator *(const U & _v) const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3_t operator *(const U & _v) const{
         Vector3_t other = *this;
         other *= _v;
         return other;
     }
 
-    [[nodiscard]] __fast_inline constexpr Vector3_t operator *(const Vector3_t<arithmetic auto> & _v) const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3_t operator *(const Vector3_t<arithmetic auto> & _v) const{
         Vector3_t other = *this;
         other *= _v;
         return other;
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const U & _v) const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3_t operator /(const U & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
     }
 
-    [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const Vector3_t<arithmetic auto> & _v) const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3_t operator /(const Vector3_t<arithmetic auto> & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3_t operator +(const Vector3_t<U>& other) const {
         Vector3_t ret = other;
         return ret += *this;
     }

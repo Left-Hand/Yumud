@@ -112,7 +112,8 @@
             "cassert": "cpp",
             "*.ipp": "cpp",
             "source_location": "cpp",
-            "expected": "c"
+            "expected": "c",
+            "format": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
