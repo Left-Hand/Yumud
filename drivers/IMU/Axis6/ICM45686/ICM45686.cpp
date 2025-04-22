@@ -58,6 +58,6 @@ Result<void, Error> ICM45686::verify(){
     return Ok();
 }
 
-[[nodiscard]] Result<void, Error> set_mode(Mode mode){
-    return 
-}
+// [[nodiscard]] Result<void, Error> set_mode(Mode mode){
+//     return 
+// }
