@@ -36,7 +36,8 @@
 namespace ymd::drivers{
 class Si5351{
 public:
-    scexpr uint8_t default_addr = 0x60;
+    // scexpr uint8_t default_addr = 0x60;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x60); 
 
     enum si5351_clock {SI5351_CLK0, SI5351_CLK1, SI5351_CLK2, SI5351_CLK3,
         SI5351_CLK4, SI5351_CLK5, SI5351_CLK6, SI5351_CLK7};
@@ -81,16 +82,17 @@ public:
 private:
 	int32_t ref_correction[2];
     uint8_t clkin_div;
-    hal::I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv_;
     bool clk_first_set[8];
 
 	uint8_t si5351_write_bulk(uint8_t, uint8_t, const uint8_t *);
 	uint8_t si5351_write(uint8_t, uint8_t);
 	uint8_t si5351_read(uint8_t);
 public:
-    Si5351(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    Si5351(hal::I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
-    Si5351(hal::I2c & bus):i2c_drv(bus, default_addr){;}
+    Si5351(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    Si5351(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    Si5351(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
 	bool init(uint8_t, uint32_t, int32_t);
 	void reset(void);

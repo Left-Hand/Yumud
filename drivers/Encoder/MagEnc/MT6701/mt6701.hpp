@@ -65,7 +65,7 @@ protected:
         }
     };
     
-    scexpr uint8_t default_i2c_addr = 0b000'110'0;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
 
     std::optional<hal::I2cDrv> i2c_drv;
     std::optional<hal::SpiDrv> spi_drv;
@@ -154,7 +154,7 @@ public:
         i2c_drv(_i2c_drv), spi_drv(std::nullopt){};
     // MT6701(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
     MT6701(hal::I2c & _i2c):
-        MT6701(hal::I2cDrv(_i2c, default_i2c_addr)){};
+        MT6701(hal::I2cDrv(_i2c, DEFAULT_I2C_ADDR)){};
 
     MT6701(const hal::SpiDrv & _spi_drv):
         i2c_drv(std::nullopt), spi_drv(_spi_drv){};

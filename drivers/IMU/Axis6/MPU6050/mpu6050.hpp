@@ -20,7 +20,7 @@ public:
 
     using Error = BusError;
 
-    scexpr uint8_t default_i2c_addr = 0xd0;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -172,8 +172,8 @@ public:
         MPU6050(i2c_drv, Package::MPU6050){;}
     MPU6050(hal::I2cDrv && i2c_drv):
         MPU6050(std::move(i2c_drv), Package::MPU6050){;}
-    MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):
-        MPU6050(hal::I2cDrv(bus, i2c_addr), Package::MPU6050){;}
+    MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
 
     [[nodiscard]] Result<void, Error> verify();
 

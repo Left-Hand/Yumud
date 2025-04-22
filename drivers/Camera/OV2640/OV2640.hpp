@@ -8,12 +8,14 @@ namespace ymd::drivers{
 class OV2640:public CameraWithSccb<RGB565>{
 
 public:
-    scexpr uint8_t default_addr = 0x5c << 1;
-    scexpr Vector2i camera_size = {160, 120};
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
+    scexpr Vector2i CAMERA_SIZE = {160, 120};
 public:
-    OV2640(hal::SccbDrv & sccb_drv):ImageBasics(camera_size), CameraWithSccb<RGB565>(sccb_drv, camera_size){;}
-    OV2640(hal::SccbDrv && sccb_drv):ImageBasics(camera_size), CameraWithSccb<RGB565>(sccb_drv, camera_size){;}
-    OV2640(hal::I2c & _i2c):ImageBasics(camera_size), CameraWithSccb<RGB565>(hal::SccbDrv(_i2c, default_addr), camera_size){;}
+    OV2640(hal::SccbDrv & sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<RGB565>(sccb_drv, CAMERA_SIZE){;}
+    OV2640(hal::SccbDrv && sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<RGB565>(sccb_drv, CAMERA_SIZE){;}
+    OV2640(hal::I2c & i2c):
+        ImageBasics(CAMERA_SIZE), 
+        CameraWithSccb<RGB565>(hal::SccbDrv(i2c, DEFAULT_I2C_ADDR), CAMERA_SIZE){;}
 
     bool init();
 

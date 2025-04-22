@@ -176,12 +176,13 @@ protected:
     [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
 public:
-    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x38;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
     static constexpr uint8_t PANEL_ID = 0x11;
 
     FT6336(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     FT6336(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    FT6336(hal::I2c & i2c, const uint8_t i2c_addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
+    FT6336(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
     Result<size_t, Error> get_touch_cnt();
 

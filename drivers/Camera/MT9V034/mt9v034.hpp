@@ -2,6 +2,7 @@
 
 #include "drivers/Camera/Camera.hpp" 
 
+
 namespace ymd::drivers{
 
 class MT9V034:public CameraWithSccb<Grayscale>{
@@ -67,12 +68,15 @@ protected:
     };
 
 public:
-    scexpr uint8_t DEFAULT_I2C_ADDR = 0x5c << 1;
-    scexpr Vector2i CAMERA_SIZE = {188, 120};
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
+    static constexpr Vector2i CAMERA_SIZE = {188, 120};
 public:
-    MT9V034(const hal::SccbDrv & sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(sccb_drv, CAMERA_SIZE){;}
-    MT9V034(hal::SccbDrv && sccb_drv):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(std::move(sccb_drv), CAMERA_SIZE){;}
-    MT9V034(hal::I2c & _i2c):ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>({_i2c, DEFAULT_I2C_ADDR}, CAMERA_SIZE){;}
+    MT9V034(const hal::SccbDrv & sccb_drv):
+        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(sccb_drv, CAMERA_SIZE){;}
+    MT9V034(hal::SccbDrv && sccb_drv):
+        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(std::move(sccb_drv), CAMERA_SIZE){;}
+    MT9V034(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(hal::SccbDrv{i2c, addr}, CAMERA_SIZE){;}
 
     bool init();
 

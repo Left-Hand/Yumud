@@ -193,7 +193,7 @@ void st77xx_tb(hal::Spi & spi){
 
     camera.init();
 
-    I2cDrv              vl_drv(SccbSw, VL53L0X::default_i2c_addr);
+    I2cDrv              vl_drv(SccbSw, VL53L0X::DEFAULT_I2C_ADDR);
     VL53L0X             vl(vl_drv);
     vl.init();
     vl.enableContMode();

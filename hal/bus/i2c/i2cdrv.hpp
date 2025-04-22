@@ -20,33 +20,38 @@ concept valid_i2c_regaddr = std::integral<T> and (sizeof(T) <= 2) and std::is_un
 template <typename T>
 concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
+enum class I2cRole:uint8_t{
+    Master,
+    Slave
+};
 
-
-template<size_t N>
+template<size_t N, I2cRole R>
 class _I2cAddr{
 public:
-    explicit constexpr _I2cAddr(const std::bitset<N> i2c_addr):
-        i2c_addr_(i2c_addr){}
 
-    explicit constexpr _I2cAddr(const uint16_t i2c_addr):
-        i2c_addr_(i2c_addr){}
+    static constexpr _I2cAddr<N, R> from_u8(const uint8_t i2c_addr){
+        return {std::bitset<N>(i2c_addr >> 1)};
+    }
 
-    uint8_t as_u8() const {return i2c_addr_.to_ulong();}
+    static constexpr _I2cAddr<N, R> from_u7(const uint8_t i2c_addr){
+        return {std::bitset<N>(i2c_addr)};
+    }
+
+    constexpr uint8_t as_u8() const {return i2c_addr_.to_ulong() << 1;}
+
+    constexpr _I2cAddr(const _I2cAddr<N, R> & other) = default;
+    constexpr _I2cAddr(_I2cAddr<N, R> && other) = default;
 private:
+    constexpr _I2cAddr(const std::bitset<N> i2c_addr):i2c_addr_(i2c_addr){;}
+
     std::bitset<N> i2c_addr_;
 };
 
 template<size_t N>
-class I2cSlaveAddr:public _I2cAddr<N>{
-public:
-    using _I2cAddr<N>::_I2cAddr;
-};
+using I2cSlaveAddr = _I2cAddr<N, I2cRole::Slave>;
 
 template<size_t N>
-class I2cMasterAddr:public _I2cAddr<N>{
-public:
-    using _I2cAddr<N>::_I2cAddr;
-};
+using I2cMasterAddr = _I2cAddr<N, I2cRole::Master>;
 
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
@@ -162,12 +167,13 @@ protected:
         });
     }
 
-public:
-    I2cDrv(hal::I2c & i2c, const uint8_t index):
-        I2cDrv(i2c, index, index | 0x01){;};
-
     I2cDrv(hal::I2c & i2c, const uint8_t index, const uint8_t index_r):
         ProtocolBusDrv<I2c>(i2c, index), index_r_(index_r){;};
+
+public:
+    I2cDrv(hal::I2c & i2c, const I2cSlaveAddr<7> addr):
+        I2cDrv(i2c, addr.as_u8(), addr.as_u8() | 0x01){;};
+
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)

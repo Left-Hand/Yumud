@@ -150,11 +150,11 @@ protected:
 
 public:
 
-    scexpr uint8_t default_i2c_addr = 0b01100000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
 
     MP2980(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     MP2980(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MP2980(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    MP2980(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     MP2980 & setFeedBackVref(const real_t vref);
     MP2980 & setFeedBackVrefMv(const uint vref_mv);

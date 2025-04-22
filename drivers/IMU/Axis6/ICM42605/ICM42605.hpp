@@ -8,7 +8,7 @@ namespace ymd::drivers{
 
 class ICM42605:public Axis6{
 public:
-    scexpr uint8_t default_i2c_addr = 0x68;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
     enum class AFS:uint8_t{
         _16G,// default
@@ -157,7 +157,7 @@ protected:
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
 public:
-    ICM42605(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv(i2c, default_i2c_addr)){;}
+    ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     void init();
     

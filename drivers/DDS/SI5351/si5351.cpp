@@ -1439,18 +1439,18 @@ void Si5351::set_ref_freq(uint32_t ref_freq, enum si5351_pll_input ref_osc)
 }
 
 uint8_t Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
-	i2c_drv.write_burst(addr, std::span(data, bytes)).unwrap();
+	i2c_drv_.write_burst(addr, std::span(data, bytes)).unwrap();
     return 0;
 }
 
 uint8_t Si5351::si5351_write(uint8_t addr, uint8_t data){
-    i2c_drv.write_reg(addr, data).unwrap();
+    i2c_drv_.write_reg(addr, data).unwrap();
     return 0;
 }
 
 uint8_t Si5351::si5351_read(uint8_t addr){
 	uint8_t ret;
-    i2c_drv.read_reg(addr, ret).unwrap();
+    i2c_drv_.read_reg(addr, ret).unwrap();
 	return ret;
 }
 

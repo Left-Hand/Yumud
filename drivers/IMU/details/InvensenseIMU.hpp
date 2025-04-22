@@ -70,7 +70,8 @@ public:
 public:
     InvensenseSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     InvensenseSensor_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):i2c_drv_(hal::I2cDrv{i2c, addr.as_u8()}){;}
+    InvensenseSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
     InvensenseSensor_Phy(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}

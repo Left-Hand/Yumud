@@ -16,7 +16,7 @@ protected:
     BoschSensor_Phy phy_;
     using RegAddress = uint8_t;
 
-    scexpr uint8_t default_i2c_addr = 0x68;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
     struct{
 
@@ -24,7 +24,7 @@ protected:
 
 
 public:
-    BMM150(hal::I2c & bus, const uint8_t addr = default_i2c_addr):phy_(hal::I2cDrv(bus, addr)){;}
+    BMM150(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(bus, addr)){;}
 
 
     void init();

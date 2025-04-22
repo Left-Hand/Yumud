@@ -34,7 +34,7 @@ public:
     };
 
 protected:
-    hal::I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv_;
     
     real_t current_lsb_ma = real_t(0.2);
     scexpr real_t voltage_lsb_mv = real_t(1.25);
@@ -88,7 +88,7 @@ protected:
 
 public:
     
-    scexpr uint8_t default_i2c_addr = 0x80;
+scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
 
     #define CHANNEL_CONTENT\
         INA219Channel{*this, INA219Channel::Index::SHUNT_VOLT},\
@@ -96,9 +96,10 @@ public:
         INA219Channel{*this, INA219Channel::Index::CURRENT},\
         INA219Channel{*this, INA219Channel::Index::POWER}\
 
-    INA219(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA219(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA219(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){;}
+    INA219(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    INA219(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    INA219(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
     #undef CHANNEL_CONTENT
 

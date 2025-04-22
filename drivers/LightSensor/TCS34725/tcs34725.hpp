@@ -103,11 +103,12 @@ protected:
     BusError requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
 public:
-    scexpr uint8_t default_i2c_addr = 0x52;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
 
     TCS34725(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     TCS34725(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(hal::I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
+    TCS34725(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(bus, addr){;}
 
     void setIntegration(const uint16_t ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);

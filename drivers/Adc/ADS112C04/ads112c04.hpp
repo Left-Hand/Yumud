@@ -60,7 +60,7 @@ public:
         __RESV__ = 0b11 // 11 : CRC 24-bit
     };
 protected:
-    hal::I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv_;
 
     // [A1]     [A0]    [I2C ADDRESS]
     // DGND     DGND    100 0000
@@ -80,7 +80,7 @@ protected:
     // SCL      SDA     100 1110
     // SCL      SCL     100 1111
 
-    scexpr uint8_t default_i2c_addr = 0b10000000;
+scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
 
     enum class Command:uint8_t{
         RST =         0b0000'0110,
@@ -152,24 +152,23 @@ protected:
     Config2Reg config2_reg = {};
     Config3Reg config3_reg = {};
 
-
-
     auto readData(uint16_t & data){
-        return i2c_drv.read_reg(uint8_t(Command::READ_DATA), data, LSB);
+        return i2c_drv_.read_reg(uint8_t(Command::READ_DATA), data, LSB);
     }
 
     auto read_reg(const RegAddress addr, uint8_t & data){
-        return i2c_drv.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
+        return i2c_drv_.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
     }
 
     auto write_reg(const RegAddress addr, const uint8_t data){
-        return i2c_drv.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
+        return i2c_drv_.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
     }
 public:
 
-    ADS112C04(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS112C04(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS112C04(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
+    ADS112C04(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS112C04(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS112C04(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
     void init(){
         config3_reg.__resv__ = 0;

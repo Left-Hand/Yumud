@@ -83,7 +83,7 @@ public:
         _1571uA  = 0b11111  // 11111: 1.571 mA
     };
 protected:
-    hal::I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv_;
 
     using RegAddress =uint8_t;
 
@@ -217,19 +217,19 @@ protected:
     DeviceIdReg device_id_reg = {};
 
     auto read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv.read_reg(uint8_t(addr), data, MSB);
+        return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
     }
 
     auto write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv.write_reg(uint8_t(addr), data, MSB);
+        return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
     }
 public:
-    scexpr uint8_t default_i2c_addr = 0x54;
+scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x54);
 
-    FDC2X1X(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    FDC2X1X(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    FDC2X1X(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
-
+    FDC2X1X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    FDC2X1X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    FDC2X1X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
     void init();
 
     bool isConvDone(){

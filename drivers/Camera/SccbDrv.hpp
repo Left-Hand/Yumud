@@ -1,12 +1,11 @@
 #pragma once
 
-#include "hal/bus/i2c/i2c.hpp"
-#include "core/debug/debug.hpp"
-#include "hal/bus/busdrv.hpp"
-
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+
 
 
 namespace ymd::hal{
@@ -16,7 +15,8 @@ protected:
     using BusDrv<I2c>::index;
     using BusDrv<I2c>::bus;
 public:
-    SccbDrv(hal::I2c & i2c, const uint8_t addr):BusDrv(i2c, addr){};
+    SccbDrv(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        BusDrv(i2c, addr.as_u8()){};
     SccbDrv(const SccbDrv & other) = default;
     SccbDrv(SccbDrv && other) = default;
 

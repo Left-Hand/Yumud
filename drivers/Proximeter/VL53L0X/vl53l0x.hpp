@@ -12,10 +12,11 @@ class VL53L0X:public DistanceSensor{
 protected:
     hal::I2cDrv i2c_drv_;
 public:
-    scexpr uint8_t default_i2c_addr = 0x52;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
     VL53L0X(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    VL53L0X(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(i2c, i2c_addr){;}
+    VL53L0X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, addr){;}
     ~VL53L0X(){;}
 
     void startConv();
