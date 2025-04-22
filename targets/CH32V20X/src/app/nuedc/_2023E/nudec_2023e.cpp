@@ -1,8 +1,5 @@
 #include "src/testbench/tb.h"
 
-#include "core/stream/stream.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/rpc/arg_parser.hpp"
 
 
 #include "threads.hpp"
@@ -50,46 +47,7 @@ static constexpr auto make_cfg(){
     };
 }
 
-
-class ReplThread{
-public:
-    ReplThread(Uart & uart, rpc::EntryProxy && root) :
-        uart_(uart), root_(std::move(root)){
-            os_.retarget(&uart_);
-        }
-    void process(const real_t t){
-        // if(uart_.available())DEBUG_PRINTLN(uart_.available());
-        auto strs_opt = splitter_.update(uart_);
-        if(strs_opt.has_value()){
-            auto & strs = strs_opt.value();
-
-            os_.println("------");
-            os_.prints("Inputs:", strs);
-
-            {
-                std::vector<rpc::CallParam> params;
-                params.reserve(strs.size());
-                for(const auto & str : strs){
-                    params.push_back(rpc::CallParam(str));
-                }
-                os_.print("->");
-                auto res = root_ ->call(DEBUGGER, params);
-                os_.prints("\r\n^^Function exited with return code", uint8_t(res));
-                os_.println("------");
-            }
-
-            splitter_.clear();
-        }
-    }
-private:
-    Uart & uart_;
-    OutputStreamByRoute os_;
-    rpc::EntryProxy root_;
-    ArgSplitter splitter_;
-};
-
 }
-
 
 void nuedc_2023e_main(){
     using namespace nudec::_2023E;
@@ -141,8 +99,9 @@ void nuedc_2023e_main(){
         DBG_UART, 
         rpc::EntryProxy{rpc::make_list(
             "list",
-            rpc::make_function("rst", [](){sys::reset();})
-            // rpc::make_function("rst", [](){sys::reset();})
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
+            rpc::make_function("outdis", [&](){repl_thread.set_outen(false);})
         )}
     );
 
