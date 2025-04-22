@@ -1,6 +1,5 @@
 #include "utils.hpp"
 #include "hal/adc/adcs/adc1.hpp"
-#include "rpc.hpp"
 
 
 using namespace ymd;

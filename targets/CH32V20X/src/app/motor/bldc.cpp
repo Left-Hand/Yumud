@@ -32,7 +32,7 @@
 
 #include "algo/interpolation/cubic.hpp"
 
-#include "rpc.hpp"
+#include "robots/rpc/rpc.hpp"
 #include "src/testbench/tb.h"
 
 #include "robots/rpc/arg_parser.hpp"

@@ -28,6 +28,16 @@ struct ServoConfig{
     real_t max_radian;
 };
 
+struct MotorCmd{
+    real_t ref_pos;
+    real_t ref_spd;
+};
+
+template<typename T, typename Trait>
+struct ImplFor{
+
+};
+
 class PwmServo final{
 public:
     using Config = ServoConfig;
@@ -42,6 +52,9 @@ public:
         max_radian_ = cfg.max_radian;
     }
 
+    void set_motorcmd(const MotorCmd & cmd){
+        set_radian(cmd.ref_pos * real_t(PI));
+    }
     void set_radian(const real_t radian){
         ASSERT(min_radian_ <= radian, "radian out of range");
         ASSERT(radian <= max_radian_, "radian out of range");
@@ -62,4 +75,8 @@ private:
     real_t max_radian_;
     ymd::hal::PwmIntf & pwm_;
 };
+
+
+
+
 }

@@ -33,7 +33,7 @@ public:
 
 class GimbalActuatorByLambda  final :public GimbalActuatorIntf {
 public:
-    using Setter = std::function<void(real_t)>;
+    using Setter = std::function<void(MotorCmd)>;
 
     struct Params{
         Setter yaw_setter;
@@ -47,8 +47,8 @@ public:
     {}
 
     void set_gest(const GimbalSolution solu){
-        yaw_setter_     (solu.yaw_rad);
-        pitch_setter_   (solu.pitch_rad);
+        yaw_setter_     ({solu.yaw_rad, 0});
+        pitch_setter_   ({solu.pitch_rad, 0});
     }
 private:
     Setter yaw_setter_;
@@ -102,12 +102,14 @@ private:
     TdVec2 td_;
     GimbalSolution targ_;
     GimbalSolution ref_;
-
 };
 
 //运动学 用于求解目标关节角
 class GimbalKinematics final{
 public:
+    using Gesture = ymd::Vector2_t<real_t>;
+    using Solution = GimbalSolution;
+
     struct Config{
         real_t gimbal_base_height;
         real_t gimbal_dist_to_screen;
@@ -115,23 +117,20 @@ public:
         real_t screen_height;
     };
 
-    void reconf(const Config & cfg){
-        cfg_ = cfg;
+    constexpr GimbalKinematics(const Config & cfg){
+        reconf(cfg);
     }
-private:
-    GimbalKinematics(const Config & cfg){
+
+    constexpr void reconf(const Config & cfg){
         cfg_ = cfg;
     }
 
-    Config cfg_;
-    using Gesture = ymd::Vector2_t<real_t>;
-    using Solution = GimbalSolution;
-    static constexpr Solution inverse(const Config & cfg, const Gesture & gesture){
+    constexpr Solution inverse(const Gesture & gesture) const {
         const auto x = gesture.x;
-        const auto y = gesture.y - cfg.gimbal_base_height;
+        const auto y = gesture.y - cfg_.gimbal_base_height;
 
-        const auto yaw_rad = std::atan2(x, cfg.gimbal_dist_to_screen);
-        const auto dist = cfg.gimbal_dist_to_screen / std::cos(yaw_rad);
+        const auto yaw_rad = std::atan2(x, cfg_.gimbal_dist_to_screen);
+        const auto dist = cfg_.gimbal_dist_to_screen / std::cos(yaw_rad);
         const auto pitch_rad = std::atan2(y, dist);
         
         return Solution{
@@ -139,13 +138,16 @@ private:
             .pitch_rad = pitch_rad
         };
     }
+private:
+    Config cfg_;
 };
 
 //规划器 顺序执行需要途径的曲线
 class GimbalPlanner final{
+public:
     struct Config{
-        GimbalKinematics    kine_cfg;
-        GimbalDynamics      dyna_cfg;
+        GimbalDynamics::Config      dyna_cfg;
+        GimbalKinematics::Config    kine_cfg;
     };
 
     struct LineAction{
@@ -161,9 +163,30 @@ class GimbalPlanner final{
         TODO();
         return 0;
     }
-private:
 
-    Config cfg_;
+public:
+    GimbalPlanner(const Config & cfg, GimbalActuatorIntf & actuator):
+        actuator_(actuator),
+        dynamics_(cfg.dyna_cfg, actuator), 
+        kinematics_(cfg.kine_cfg)
+    {
+        reconf(cfg);
+    }
+
+    void reconf(const Config & cfg){
+        // cfg_ = cfg;
+        dynamics_.reconf(cfg.dyna_cfg);
+        kinematics_.reconf(cfg.kine_cfg);
+    }
+
+    void tick(){
+        //pass
+        ;
+    }
+private:
+    GimbalActuatorIntf & actuator_;
+    GimbalDynamics dynamics_;
+    GimbalKinematics kinematics_;
 };
 
 }
