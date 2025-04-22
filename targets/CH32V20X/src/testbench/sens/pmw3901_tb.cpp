@@ -22,7 +22,7 @@ void pmw3901_main(){
     spi.bind_cs_pin(portA[15], 0);
 
 
-    PMW3901 pmw{spi, 0};
+    PMW3901 pmw{spi, SpiSlaveIndex(0)};
     pmw.init().unwrap();
 
     while(true){

@@ -64,7 +64,7 @@ protected:
 public:
     AD9910(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
     AD9910(hal::SpiDrv && _spi_drv):spi_drv(std::move(_spi_drv)){;}
-    AD9910(hal::Spi & _spi, const uint8_t index):spi_drv(hal::SpiDrv(_spi, index)){;}
+    AD9910(hal::Spi & _spi, const hal::SpiSlaveIndex index):spi_drv(hal::SpiDrv(_spi, index)){;}
     void init(void);
     void freqConvert(uint32_t Freq);
 

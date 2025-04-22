@@ -323,7 +323,7 @@ protected:
 public:
     DRV832X(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     DRV832X(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV832X(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    DRV832X(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
     void init();

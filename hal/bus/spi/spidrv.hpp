@@ -10,12 +10,24 @@
 
 namespace ymd::hal{
 
+class SpiSlaveIndex{
+public:
+    explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
+        spi_idx_(spi_idx){}
+
+    uint8_t as_u8() const {return spi_idx_;}
+private:
+    uint8_t spi_idx_;
+};
+
+
 class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:
     Endian endian_ = LSB;  
     uint32_t baudrate_ = 1000000;
 public:
-    SpiDrv(hal::Spi & bus, const uint8_t index):NonProtocolBusDrv<Spi>(bus, index){;}
+    SpiDrv(hal::Spi & bus, const SpiSlaveIndex idx):
+        NonProtocolBusDrv<Spi>(bus, idx.as_u8()){;}
 
     template<typename T>
     void force_write(const T data) {

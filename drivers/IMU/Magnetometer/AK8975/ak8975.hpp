@@ -47,7 +47,7 @@ public:
     AK8975(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
     AK8975(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     AK8975(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    AK8975(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    AK8975(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
     void init();
     void update();

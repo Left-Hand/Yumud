@@ -58,7 +58,7 @@ protected:
 
 public:
     W25Q16(hal::SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
-    W25Q16(hal::Spi & _spi, const uint8_t index = 0):StoragePaged(_m_size, _pagesize), spi_drv(hal::SpiDrv(_spi, index)){;}
+    W25Q16(hal::Spi & _spi, const hal::SpiSlaveIndex index):StoragePaged(_m_size, _pagesize), spi_drv(hal::SpiDrv(_spi, index)){;}
 
     void enableWrite(const bool en = true);
     uint8_t getDeviceManufacturer();

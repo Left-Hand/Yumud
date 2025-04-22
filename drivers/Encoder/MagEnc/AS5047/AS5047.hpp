@@ -55,7 +55,7 @@ protected:
 public:
     AS5047(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     AS5047(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    AS5047(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
     void init() override;
 

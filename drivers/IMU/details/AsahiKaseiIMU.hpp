@@ -53,6 +53,6 @@ public:
     AsahiKaseiSensor_Phy(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
     AsahiKaseiSensor_Phy(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     AsahiKaseiSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    AsahiKaseiSensor_Phy(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    AsahiKaseiSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

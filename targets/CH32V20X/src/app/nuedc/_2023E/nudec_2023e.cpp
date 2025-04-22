@@ -57,11 +57,9 @@ void nuedc_2023e_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets();
     DEBUGGER.force_sync();
-
-    DEBUG_PRINTLN(std::setprecision(4));
+    DEBUGGER.set_eps(4);
 
     constexpr auto cfg = make_cfg();
-
 
     SERVO_PWMGEN_TIMER.init(50);
     hal::TimerOC & pwm_yaw = SERVO_PWMGEN_TIMER.oc(1);

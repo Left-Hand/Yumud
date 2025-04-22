@@ -28,7 +28,7 @@ protected:
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MT6816(hal::Spi & _bus, const uint8_t index):spi_drv_(hal::SpiDrv{_bus, index}){;}
+    MT6816(hal::Spi & _bus, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{_bus, index}){;}
 
     void init() override;
 

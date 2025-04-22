@@ -188,7 +188,7 @@ public:
 
     BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Acc(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();
@@ -275,7 +275,7 @@ public:
 
     BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Gyr(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Gyr(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();

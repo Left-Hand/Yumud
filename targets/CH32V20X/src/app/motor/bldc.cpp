@@ -338,7 +338,7 @@ void bldc_main(){
 
     // bmi.init();
 
-    MA730 ma730{spi1, 2};
+    MA730 ma730{spi1, SpiSlaveIndex(2)};
     ma730.init();
 
     // for(size_t i = 0; i < 1000; ++i) {

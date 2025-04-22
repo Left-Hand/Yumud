@@ -150,7 +150,7 @@ public:
     LIS3DH(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS3DH(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS3DH(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS3DH(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS3DH(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
     Result<void> init();
     Result<void> update();

@@ -55,7 +55,7 @@ public:
 
     DisplayerPhySpi(
             hal::Spi & bus,
-            const uint8_t index,
+            const hal::SpiSlaveIndex index,
             hal::GpioIntf & dc_gpio, 
             hal::GpioIntf & res_gpio = hal::NullGpio,
             hal::GpioIntf & blk_gpio = hal::NullGpio

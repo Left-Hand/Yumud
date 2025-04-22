@@ -15,7 +15,7 @@ void ma730_main(){
     spi1.bind_cs_pin(portA[15], 2);
 
 
-    MA730 ma730{spi1, 2};
+    MA730 ma730{spi1, SpiSlaveIndex(2)};
     ma730.init();
 
     while(true){

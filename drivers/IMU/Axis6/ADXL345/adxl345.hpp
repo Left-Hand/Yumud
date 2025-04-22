@@ -307,7 +307,7 @@ public:
     ADXL345(const hal::SpiDrv & _spi_drv): phy_(_spi_drv){;}
     ADXL345(hal::SpiDrv && _spi_drv): phy_(_spi_drv){;}
 
-    ADXL345(hal::Spi & _spi, const uint8_t index): phy_(hal::SpiDrv(_spi, index)){;}
+    ADXL345(hal::Spi & spi, const hal::SpiSlaveIndex index): phy_(hal::SpiDrv(spi, index)){;}
     uint8_t getDeviceID(){
         read_reg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;

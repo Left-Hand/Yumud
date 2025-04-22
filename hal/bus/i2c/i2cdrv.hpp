@@ -21,6 +21,33 @@ template <typename T>
 concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
 
+
+template<size_t N>
+class _I2cAddr{
+public:
+    explicit constexpr _I2cAddr(const std::bitset<N> i2c_addr):
+        i2c_addr_(i2c_addr){}
+
+    explicit constexpr _I2cAddr(const uint16_t i2c_addr):
+        i2c_addr_(i2c_addr){}
+
+    uint8_t as_u8() const {return i2c_addr_.to_ulong();}
+private:
+    std::bitset<N> i2c_addr_;
+};
+
+template<size_t N>
+class I2cSlaveAddr:public _I2cAddr<N>{
+public:
+    using _I2cAddr<N>::_I2cAddr;
+};
+
+template<size_t N>
+class I2cMasterAddr:public _I2cAddr<N>{
+public:
+    using _I2cAddr<N>::_I2cAddr;
+};
+
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
     uint8_t index_r_ = 0;

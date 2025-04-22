@@ -451,7 +451,7 @@ void cubic_main(void){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    drivers::ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    drivers::ST7789 tftDisplayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
 
     {

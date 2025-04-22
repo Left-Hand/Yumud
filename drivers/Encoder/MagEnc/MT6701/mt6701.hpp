@@ -159,7 +159,7 @@ public:
     MT6701(const hal::SpiDrv & _spi_drv):
         i2c_drv(std::nullopt), spi_drv(_spi_drv){};
     // MT6701(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){};
-    MT6701(hal::Spi & _spi, const uint8_t spi_index):
+    MT6701(hal::Spi & _spi, const hal::SpiSlaveIndex spi_index):
         MT6701(hal::SpiDrv(_spi, spi_index)){};
     ~MT6701(){};
 

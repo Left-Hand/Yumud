@@ -27,7 +27,7 @@ class ICM45686:public Axis6{
 public:
     using Error = InvensenseSensorError;
 
-    static constexpr I2cSlaveAddr<7> DEFAULT_I2C_ADDR = I2cSlaveAddr<7>{0x68};
+    static constexpr hal::I2cSlaveAddr<7> DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>{0x68};
 
 
     using RegAddr = RegAddr_t<8>;
@@ -141,7 +141,7 @@ protected:
     [[nodiscard]] Result<void, Error> read_reg(T & reg){return read_reg(reg.address, reg);}
 
 public:
-    ICM45686(hal::I2c & i2c, const I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
+    ICM45686(hal::I2c & i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
 
     void init();
     
