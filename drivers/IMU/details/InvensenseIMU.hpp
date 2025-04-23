@@ -5,27 +5,28 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+#include "core/utils/result.hpp"
+
 namespace ymd::drivers{
 
-template<size_t N>
-class I2cSlaveAddr{
+
+
+class InvensenseSensorError{
 public:
-    explicit constexpr I2cSlaveAddr(const std::bitset<N> i2c_addr):
-        i2c_addr_(i2c_addr){}
+    enum Kind:uint8_t{
+        BusError,
+        WrongWhoAmI,
+        Unspecified = 0xff,
+    };
 
-    explicit constexpr I2cSlaveAddr(const uint16_t i2c_addr):
-        i2c_addr_(i2c_addr){}
-
-    uint8_t as_u8() const {return i2c_addr_.to_ulong();}
+    constexpr InvensenseSensorError(Kind kind):kind_(kind){;} 
+    constexpr bool operator==(const InvensenseSensorError & rhs) const{return kind_ == rhs.kind_;}
 private:
-    std::bitset<N> i2c_addr_;
+    Kind kind_;
 };
 
 
 class InvensenseSensor_Phy final{
-
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
 public:
     BusError write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
@@ -66,9 +67,38 @@ public:
 public:
     InvensenseSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     InvensenseSensor_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor_Phy(hal::I2c & i2c, const I2cSlaveAddr<7> addr):i2c_drv_(hal::I2cDrv{i2c, addr.as_u8()}){;}
+    InvensenseSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
     InvensenseSensor_Phy(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    InvensenseSensor_Phy(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    InvensenseSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
+
+private:
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 };
+}
+
+
+namespace ymd::custom{
+    template<typename T>
+    struct result_converter<T, drivers::InvensenseSensorError, BusError> {
+        static Result<T, drivers::InvensenseSensorError> convert(const BusError berr){
+            using Error = drivers::InvensenseSensorError;
+            using BusError = BusError;
+            
+            if(berr.ok()) return Ok();
+
+            Error err = [](const BusError berr_){
+                switch(berr_.type){
+                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+
+                    // case BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;
+                    default: return Error::Unspecified;
+                }
+            }(berr);
+
+            return Err(err); 
+        }
+    };
 }

@@ -7,11 +7,12 @@ namespace ymd{
 
 class ArgSplitter{
 private:
-    String temp = "";
+    String temp_ = "";
+    std::vector<StringView> args_;
 public:
     ArgSplitter(){;}
-    std::optional<const StringViews> update(hal::UartHw & _input);
-    void clear(){temp = "";}
+    std::optional<const StringViews> update(hal::Uart & input);
+    void clear(){temp_ = "";}
 };
 
 }

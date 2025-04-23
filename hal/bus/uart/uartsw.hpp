@@ -3,7 +3,7 @@
 #include "uart.hpp"
 
 namespace ymd::hal{
-class UartSw : public Uart{
+class UartSw final: public Uart{
 protected:
     Gpio & tx_gpio_;
     Gpio & rx_gpio_;

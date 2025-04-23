@@ -32,37 +32,38 @@ protected:
 
     Mode currentMode = Mode::LMode;
     bool continuous = false;
-    void sendCommand(const uint8_t cmd);
+
+    void send_command(const uint8_t cmd);
 
 public:
     BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
-    void powerOn(){
-        sendCommand(Command::PowerOn);
+    void power_on(){
+        send_command(Command::PowerOn);
     }
 
-    void powerDown(){
-        sendCommand(Command::PowerDown);
+    void power_down(){
+        send_command(Command::PowerDown);
     }
 
     void reset(){
-        sendCommand(Command::Reset);
+        send_command(Command::Reset);
     }
 
-    void setMode(const Mode & mode){
+    void set_mode(const Mode & mode){
         currentMode = mode;
     }
 
-    void enableContinuous(const bool enabled = true){
+    void enable_continuous(const bool enabled = true){
         continuous = enabled;
     }
 
-    void startConv();
+    void start_conv();
 
-    void changeMeasureTime(const uint16_t ms);
+    void change_measure_time(const uint16_t ms);
 
-    int getLx();
+    int get_lx();
 };
 
 };

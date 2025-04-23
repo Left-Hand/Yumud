@@ -20,7 +20,7 @@ void joystick_tb(OutputStream & logger){
     spi.init(100000);//maxium baud
     spi.set_bitorder(LSB);
 
-    SpiDrv ps2_drv{spi, 0};
+    SpiDrv ps2_drv{spi, SpiSlaveIndex(0)};
     Ps2Joystick joystick{ps2_drv};
     joystick.init();
 

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "core/io/regs.hpp"
-
 #include "core/math/real.hpp"
 
+#include "hal/bus/i2c/i2cdrv.hpp"
 namespace ymd::drivers{
 
 class TCS34725{
@@ -80,43 +79,44 @@ protected:
         BlueData = 0x1A
     };
 
-    uint8_t convRegAddress(const RegAddress addr, bool repeat = true){
+    uint8_t conv_reg_address(const RegAddress addr, bool repeat = true){
         return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
     BusError write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.write_reg(convRegAddress(addr), (uint16_t)data, LSB);
+        return i2c_drv_.write_reg(conv_reg_address(addr), (uint16_t)data, LSB);
     }
 
     BusError read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.read_reg(convRegAddress(addr), (uint16_t &)data, LSB);
+        return i2c_drv_.read_reg(conv_reg_address(addr), (uint16_t &)data, LSB);
     }
 
     BusError write_reg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.write_reg(convRegAddress(addr, false), (uint8_t)data);
+        return i2c_drv_.write_reg(conv_reg_address(addr, false), (uint8_t)data);
     }
 
     BusError read_reg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.read_reg(convRegAddress(addr, false), (uint8_t &)data);
+        return i2c_drv_.read_reg(conv_reg_address(addr, false), (uint8_t &)data);
     }
 
-    BusError requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    BusError request_reg_data(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
 public:
-    scexpr uint8_t default_i2c_addr = 0x52;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
 
     TCS34725(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     TCS34725(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(hal::I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
+    TCS34725(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(bus, addr){;}
 
-    void setIntegration(const uint16_t ms){
+    void set_integration(const uint16_t ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);
         uint8_t temp = 256 - cycles;
         integrationReg = temp;
         write_reg(RegAddress::Integration, integrationReg);
     }
 
-    void setWaitTime(const uint16_t ms){
+    void set_wait_time(const uint16_t ms){
         uint16_t ms_l = MAX(ms * 10 / 24,1);
         uint16_t value;
         bool long_waitFlag = false;
@@ -136,51 +136,51 @@ public:
         }
     }
 
-    void setIntThrLow(const uint16_t thr){
+    void set_int_thr_low(const uint16_t thr){
         lowThrReg = thr;
         write_reg(RegAddress::LowThr, lowThrReg);
     }
 
-    void setIntThrHigh(const uint16_t thr){
+    void set_int_thr_high(const uint16_t thr){
         highThrReg = thr;
         write_reg(RegAddress::HighThr, highThrReg);
     }
 
-    void setIntPersistence(const uint8_t times);
+    void set_int_persistence(const uint8_t times);
 
-    void setGain(const Gain gain){
+    void set_gain(const Gain gain){
         gainReg = (uint8_t)gain;
         write_reg(RegAddress::Gain, gainReg);
     }
 
-    uint8_t getId(){
+    uint8_t get_id(){
         read_reg(RegAddress::DeviceId, deviceIdReg);
         return deviceIdReg;
     }
 
-    bool isIdle(){
+    bool is_idle(){
         read_reg(RegAddress::Status, statusReg);
         return statusReg.done_flag;
     }
 
-    void setPower(const bool on){
+    void set_power(const bool on){
         enableReg.powerOn = on;
         write_reg(RegAddress::Enable, enableReg);
     }
 
-    void startConv(){
+    void start_conv(){
         enableReg.adcEn = true;
         write_reg(RegAddress::Enable, enableReg);
     }
 
     void update();
 
-    std::tuple<real_t, real_t, real_t, real_t> getCRGB();
+    std::tuple<real_t, real_t, real_t, real_t> get_crgb();
 
     void init(){
-        setPower(true);
-        setIntegration(240);
-        setGain(Gain::X1);
+        set_power(true);
+        set_integration(240);
+        set_gain(Gain::X1);
     }
 };
 

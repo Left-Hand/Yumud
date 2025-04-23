@@ -6,7 +6,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-void PCA9685::setFrequency(uint freq, real_t trim){
+void PCA9685::set_frequency(uint freq, real_t trim){
         read_reg(RegAddress::Mode1, mode1_reg);
         
         prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
@@ -24,7 +24,7 @@ void PCA9685::setFrequency(uint freq, real_t trim){
         write_reg(RegAddress::Mode1, mode1_reg);
     }
 
-void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
+void PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off){
     if(channel > 15) PANIC();
     
     if(sub_channels[channel].on.cvr != on){
@@ -51,7 +51,7 @@ void PCA9685::init(){
     mode1_reg = 0;
     write_reg(RegAddress::Mode1, mode1_reg);
     for(size_t i = 0; i < 16; i++){
-        setPwm(i, 0, 0);
+        set_pwm(i, 0, 0);
     }
     delay(10);
 }
@@ -69,12 +69,12 @@ void PCA9685::reset(){
     mode1_reg.restart = 0;
 }
 
-void PCA9685::enableExtClk(const bool en){
+void PCA9685::enable_ext_clk(const bool en){
     mode1_reg.extclk = en;
     write_reg(RegAddress::Mode1, mode1_reg);
 }
 
-void PCA9685::enableSleep(const bool en){
+void PCA9685::enable_sleep(const bool en){
     mode1_reg.sleep = en;
     write_reg(RegAddress::Mode1, mode1_reg);
     mode1_reg.sleep = 0;
@@ -117,7 +117,7 @@ void PCA9685::set_mode(const int index, const hal::GpioMode mode){
 //     }
 }
 
-void PCA9685::setSubAddr(const uint8_t index, const uint8_t addr){
+void PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
     write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
 }

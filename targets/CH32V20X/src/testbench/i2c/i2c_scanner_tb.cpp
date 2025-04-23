@@ -77,7 +77,7 @@ struct I2cTester{
     // __pure
     // __attribute__((const))
     static Result<uint, BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
-        auto i2c_drv = hal::I2cDrv{i2c, read_addr};
+        auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
         // if(auto err = i2c_drv.verify(); err.wrong()){
         //     return err; 
         // }
@@ -102,7 +102,7 @@ struct I2cTester{
         return Ok{max_baud};
     }
     static Result<void, BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        return make_result(hal::I2cDrv{i2c, read_addr}.verify());
+        return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.verify());
     }
 
 };

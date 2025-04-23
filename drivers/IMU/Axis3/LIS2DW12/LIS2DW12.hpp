@@ -90,7 +90,7 @@ public:
     };
 
 protected:
-    scexpr uint8_t default_i2c_addr = 0b11010010;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
     using Phy = StmicroImu_Phy;
     Phy phy_;
@@ -201,12 +201,13 @@ protected:
     static real_t calculate_gyr_scale(const GyrRange range);
 public:
 
-    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, i2c_addr}){;}
+    LIS2DW12(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, addr}){;}
     LIS2DW12(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS2DW12(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();

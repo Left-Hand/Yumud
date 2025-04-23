@@ -88,7 +88,7 @@ protected:
 
     BoschSensor_Phy phy_;
 
-    scexpr uint8_t default_i2c_addr = 0b11010010;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
     real_t acc_scale = 0;
     real_t gyr_scale = 0;

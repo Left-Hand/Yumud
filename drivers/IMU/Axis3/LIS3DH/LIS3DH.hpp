@@ -132,7 +132,7 @@ public:
     template<typename T>
     using Result = Result<T, Error>; 
 protected:
-    scexpr uint8_t default_i2c_addr = 0b11010010;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
     Result<void> write_reg(const auto & reg);
 
@@ -145,12 +145,13 @@ protected:
     Phy phy_;
 public:
 
-    LIS3DH(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, i2c_addr}){;}
+    LIS3DH(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, addr}){;}
     LIS3DH(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     LIS3DH(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS3DH(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS3DH(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS3DH(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS3DH(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
     Result<void> init();
     Result<void> update();

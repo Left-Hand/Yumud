@@ -59,7 +59,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    scexpr uint8_t default_i2c_addr = 0b00011000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b00011000);
 
     struct R8_WIA:public Reg8<>{
         scexpr RegAddress address = 0x00;
@@ -162,10 +162,10 @@ public:
 
     AK8963(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     AK8963(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
-    AK8963(hal::I2c & bus):phy_(hal::I2cDrv(bus, default_i2c_addr)){;}
+    AK8963(hal::I2c & bus):phy_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
     AK8963(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     AK8963(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    AK8963(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv(spi, index)){;}
+    AK8963(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
     Result<void, Error> init();
     void update();

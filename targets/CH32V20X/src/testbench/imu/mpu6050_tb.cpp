@@ -37,10 +37,10 @@ void ak8963_tb(hal::I2c & i2c){
 
 void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
-    !+mpu.setPackage(MPU6050::Package::MPU9250);
+    !+mpu.set_package(MPU6050::Package::MPU9250);
     !+mpu.init();
-    !+mpu.setAccRange(MPU6050::AccRange::_2G);
-    !+mpu.enableDirectMode(EN);
+    !+mpu.set_acc_range(MPU6050::AccRange::_2G);
+    !+mpu.enable_direct_mode(EN);
 
     ak8963_tb(i2c);
     while(true){
@@ -54,14 +54,14 @@ void mpu6500_tb(hal::I2c & i2c){
 
     #ifdef MAG_ACTIVATED
         AK8963 aku{i2c};
-        !+mpu.setPackage(MPU6050::Package::MPU9250);
+        !+mpu.set_package(MPU6050::Package::MPU9250);
     #else
         mpu.setPackage(MPU6050::Package::MPU6050);
     #endif
 
     !+mpu.init();
-    !+mpu.setAccRange(MPU6050::AccRange::_2G);
-    !+mpu.enableDirectMode(EN);
+    !+mpu.set_acc_range(MPU6050::AccRange::_2G);
+    !+mpu.enable_direct_mode(EN);
 
     #ifdef MAG_ACTIVATED
         aku.init().unwrap();

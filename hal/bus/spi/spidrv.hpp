@@ -10,12 +10,15 @@
 
 namespace ymd::hal{
 
+
+
 class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:
     Endian endian_ = LSB;  
     uint32_t baudrate_ = 1000000;
 public:
-    SpiDrv(hal::Spi & bus, const uint8_t index):NonProtocolBusDrv<Spi>(bus, index){;}
+    SpiDrv(hal::Spi & bus, const SpiSlaveIndex idx):
+        NonProtocolBusDrv<Spi>(bus, idx.as_u8()){;}
 
     template<typename T>
     void force_write(const T data) {

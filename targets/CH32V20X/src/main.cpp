@@ -45,7 +45,8 @@ int main(){
     // lt8960_main();
     // ws2812_main();
     // gxm_new_energy_main();
-    rrs3_main();
+    // rrs3_main();
+    nuedc_2023e_main();
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();

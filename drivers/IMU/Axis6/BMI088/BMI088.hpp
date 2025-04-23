@@ -11,7 +11,7 @@ namespace ymd::drivers{
 
 class _BMI088_Collections{
 public:
-    scexpr uint8_t default_i2c_addr = 0xd0;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
     enum class AccRange:uint8_t{
         _3G,
@@ -184,11 +184,11 @@ protected:
 public:
     BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Acc(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088_Acc(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Acc(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();
@@ -271,11 +271,11 @@ protected:
 public:
     BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Gyr(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):phy_(hal::I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088_Gyr(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Gyr(hal::Spi & spi, const uint8_t index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Gyr(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     Result<void, Error> init();

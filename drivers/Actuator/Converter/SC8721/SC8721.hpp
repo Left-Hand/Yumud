@@ -12,7 +12,7 @@ namespace ymd::drivers{
 
 class SC8721{
 public:
-    scexpr uint8_t default_i2c_addr = 0b01100000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
 
     enum class DeadZone:uint8_t{
         _20ns,
@@ -52,7 +52,7 @@ public:
 
     SC8721(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     SC8721(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8721(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    SC8721(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     void update();
 

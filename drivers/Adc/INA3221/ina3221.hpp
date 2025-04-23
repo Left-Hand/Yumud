@@ -30,7 +30,7 @@ public:
     // SDA  1000010 0
     // SCL  1000011 0
 
-    scexpr uint8_t default_i2c_addr = 0b10000000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -256,7 +256,7 @@ protected:
 public:
     INA3221(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     INA3221(hal::I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
-    INA3221(hal::I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, addr)){;}
+    INA3221(hal::I2c & _i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv(hal::I2cDrv(_i2c, addr)){;}
     ~INA3221(){;}
     
     bool ready();

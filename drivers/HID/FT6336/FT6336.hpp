@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 class FT6336 {
-public: 
+public:
     enum class Error{
         Unspecified
     };
@@ -160,28 +160,26 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     
-    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
     [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
     [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
     [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
 public:
-    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x38;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
     static constexpr uint8_t PANEL_ID = 0x11;
 
     FT6336(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     FT6336(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    FT6336(hal::I2c & i2c, const uint8_t i2c_addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
+    FT6336(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
     Result<size_t, Error> get_touch_cnt();
 

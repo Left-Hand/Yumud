@@ -2,7 +2,6 @@
 
 #include "core/io/regs.hpp"
 #include "drivers/Proximeter/FlowSensor.hpp"
-// #include "types/image/image.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -67,7 +66,7 @@ public:
 
     PMW3901(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     PMW3901(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    PMW3901(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] Result<bool, Error> verify();
     [[nodiscard]] Result<void, Error> init();

@@ -3,11 +3,10 @@
 #include <span>
 #include <utility>
 #include <functional>
-#include "utils.hpp"
-#include "function_traits.hpp"
 #include <utility>
 #include <type_traits>
 
+#include "core/utils/typetraits/function_traits.hpp"
 #include "core/string/string.hpp"
 #include "core/stream/ostream.hpp"
 #include "core/stream/BufStream.hpp"
@@ -15,7 +14,7 @@
 
 namespace ymd::rpc{
 
-//�����뺯����ִ�еĲ��� �����˶�Ӧ���ֶκͿ��ܵ�ָ��������
+//????????????��???? ????????????��??????????????
 class CallParam{
 protected:
     StringView value_;
@@ -91,7 +90,7 @@ enum class AccessResult: uint8_t{
 
 
 
-//һ�����Ա������Ĵ���
+//?????????????????
 class EntryIntf{
 protected:
     String name_;
@@ -114,7 +113,7 @@ enum class EntryType:uint8_t{
 
 // template<typename... Args>
 // size_t mysprintf(char *str, Args &&... params) {
-//     // ʹ�� snprintf ���и�ʽ�����
+//     // ??? snprintf ???��???????
 //     return snprintf(str, std::numeric_limits<size_t>::max(), std::forward<Args>(params)...);
 // }
 
@@ -141,7 +140,7 @@ namespace internal{
 using EntryProxy = pro::proxy<internal::EntryFacade>;
 
 
-//һ������
+//???????
 template<typename T>
 class Property:public EntryIntf{
 protected:
@@ -180,7 +179,7 @@ public:
 
 
 
-//һ�������Ĳ��� ���������ƺ�Ĭ��ֵ
+//???????????? ???????????????
 template<typename T>
 class MethodArgInfo:public EntryIntf{
 protected:
@@ -378,7 +377,7 @@ protected:
 };
 
 
-//һ������������ΰ��ĸ���Ԫ����
+//?????????????????????????
 namespace internal{
 template<typename Ret, typename ArgsTuple, template<typename, typename...> class MethodByLambda, typename Lambda>
 struct make_method_by_lambda_impl;
@@ -395,17 +394,17 @@ struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lamb
 
 }
 
-// make_lambda ʵ��
+// make_lambda ???
 template<typename Lambda>
 auto make_function(const StringView name, Lambda&& lambda) {
-    // ʹ�� std::decay ���Ƴ� Lambda ���͵����ú� const ���η�
+    // ??? std::decay ????? Lambda ????????��? const ???��?
     using DecayedLambda = typename std::decay<Lambda>::type;
 
-    // ��ȡ Lambda �ķ������ͺͲ�������
+    // ??? Lambda ?????????????????
     using Ret = typename function_traits<DecayedLambda>::return_type;
     using ArgsTuple = typename function_traits<DecayedLambda>::args_type;
 
-    // �� ArgsTuple ��ԭΪ�������������� make_proxy
+    // ?? ArgsTuple ?????????????????? make_proxy
     return internal::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
         name,
         std::forward<Lambda>(lambda)
@@ -448,7 +447,7 @@ auto make_ro_property(const StringView name, const T & val){
 
 
 template<typename ... Args>
-auto make_list(const StringView name, const Args & ... entries){
+auto make_list(const StringView name, Args && ... entries){
     return pro::make_proxy<internal::EntryFacade, EntryList>(
         name, 
         (entries)...

@@ -16,15 +16,15 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-BusError TCS34725::requestRegData(const TCS34725::RegAddress addr, uint16_t * data_ptr, const size_t len){
-    uint8_t address = convRegAddress(addr);
+BusError TCS34725::request_reg_data(const TCS34725::RegAddress addr, uint16_t * data_ptr, const size_t len){
+    uint8_t address = conv_reg_address(addr);
     TCS34725_DEBUG("address", address)
 
     return i2c_drv_.read_burst(address, std::span(data_ptr, len), LSB);
 }
 
 
-std::tuple<real_t, real_t, real_t, real_t> TCS34725::getCRGB(){
+std::tuple<real_t, real_t, real_t, real_t> TCS34725::get_crgb(){
     return {
         s16_to_uni(crgb[0]),
         s16_to_uni(crgb[1]),
@@ -34,11 +34,11 @@ std::tuple<real_t, real_t, real_t, real_t> TCS34725::getCRGB(){
 }
 
 void TCS34725::update(){
-    requestRegData(RegAddress::ClearData, crgb, 4);
+    request_reg_data(RegAddress::ClearData, crgb, 4);
 }
 
 
-void TCS34725::setIntPersistence(const uint8_t times){
+void TCS34725::set_int_persistence(const uint8_t times){
     if(times >= 5){
         uint8_t value = 0b0100 + (times / 5) - 1;
         intPersistenceReg = value;

@@ -45,22 +45,22 @@ void INA226::update(){
 
 
 BusResult INA226::write_reg(const RegAddress addr, const uint16_t data){
-    return BusResult(i2c_drv.write_reg(uint8_t(addr), data, MSB))
+    return BusResult(i2c_drv_.write_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("write error", uint8_t(addr), data);
 }
 
 BusResult INA226::read_reg(const RegAddress addr, uint16_t & data){
-    return BusResult(i2c_drv.read_reg(uint8_t(addr), data, MSB))
+    return BusResult(i2c_drv_.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
 BusResult INA226::read_reg(const RegAddress addr, int16_t & data){
-    return BusResult(i2c_drv.read_reg(uint8_t(addr), data, MSB))
+    return BusResult(i2c_drv_.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
 BusResult INA226::read_burst(const RegAddress addr, uint16_t * p_data, const size_t len){
-    return i2c_drv.read_burst(uint8_t(addr), std::span(p_data, len), LSB);
+    return i2c_drv_.read_burst(uint8_t(addr), std::span(p_data, len), LSB);
 }
 
 
@@ -182,7 +182,7 @@ bool INA226::verify(){
     scexpr uint16_t valid_manu_id = 0x5449;
     scexpr uint16_t valid_chip_id = 0x2260;
     
-    INA226_ASSERT(i2c_drv.verify().ok(), "INA226 i2c lost");
+    INA226_ASSERT(i2c_drv_.verify().ok(), "INA226 i2c lost");
 
     READ_REG(chipIDReg);
     READ_REG(manufactureIDReg);

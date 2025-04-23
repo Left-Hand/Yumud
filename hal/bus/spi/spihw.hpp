@@ -28,7 +28,7 @@ enum class SpiMode:uint8_t{
     _3
 };
 
-class SpiHw:public Spi{
+class SpiHw final:public Spi{
 protected:
     // SPI_TypeDef * instance_ = nullptr;
     chip::SPI_Def * instance_ = nullptr;

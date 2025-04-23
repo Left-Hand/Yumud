@@ -298,16 +298,17 @@ protected:
 
     void read_reg(const RegAddress reg_address, uint8_t & reg_data);
 public:
-    scexpr uint8_t defualt_i2c_addr = 0x1D << 1;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
 
     ADXL345(const hal::I2cDrv & _i2c_drv): phy_(_i2c_drv){;}
     ADXL345(hal::I2cDrv && _i2c_drv): phy_(_i2c_drv){;}
-    ADXL345(hal::I2c & _i2c, const uint8_t addr = defualt_i2c_addr): phy_(hal::I2cDrv(_i2c, addr)){;}
+    ADXL345(hal::I2c & _i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv(_i2c, addr)){;}
 
     ADXL345(const hal::SpiDrv & _spi_drv): phy_(_spi_drv){;}
     ADXL345(hal::SpiDrv && _spi_drv): phy_(_spi_drv){;}
 
-    ADXL345(hal::Spi & _spi, const uint8_t index): phy_(hal::SpiDrv(_spi, index)){;}
+    ADXL345(hal::Spi & spi, const hal::SpiSlaveIndex index): phy_(hal::SpiDrv(spi, index)){;}
     uint8_t getDeviceID(){
         read_reg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;

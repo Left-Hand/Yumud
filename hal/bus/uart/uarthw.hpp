@@ -40,7 +40,7 @@ namespace ymd::hal{
 
 class DmaChannel;
 
-class UartHw:public Uart{
+class UartHw final:public Uart{
 public:
 protected:
     USART_TypeDef * instance_;

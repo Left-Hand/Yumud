@@ -197,7 +197,7 @@ void stepper_tb(UartHw & logger_inst){
     spi1.init(18_MHz);
     spi1.bind_cs_pin(portA[15], 0);
 
-    MT6816 encoder{{spi1, 0}};
+    MT6816 encoder{{spi1, SpiSlaveIndex(0)}};
     // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{portD[1], portD[0]};

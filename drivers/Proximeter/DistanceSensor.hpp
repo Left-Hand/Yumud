@@ -6,7 +6,7 @@
 namespace ymd::drivers{
 class DistanceSensor{
 public:
-    virtual real_t getDistance();
+    virtual real_t get_distance();
     virtual void update();
 };
 

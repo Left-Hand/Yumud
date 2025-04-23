@@ -68,7 +68,7 @@ public:
         cmds_(_oled_preset<T>::get_cmds()),
         frame_instance(_oled_preset<T>::size){;}
 
-    scexpr uint8_t DEFAULT_I2C_ADDR = 0x78;
+scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
 
     void init();
 

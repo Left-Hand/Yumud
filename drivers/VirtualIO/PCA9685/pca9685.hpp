@@ -3,14 +3,14 @@
 #include "core/io/regs.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "concept/pwm_channel.hpp"
-
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "concept/pwm_channel.hpp"
 
 namespace ymd::drivers{
 class PCA9685 final: public hal::VGpioPortIntf<16>{
 public:
-    scexpr uint8_t default_i2c_addr = 0b10000000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
 protected:
     hal::I2cDrv i2c_drv_;
 
@@ -80,7 +80,7 @@ protected:
     public:
 
         PCA8975Channel & operator = (const real_t duty) override{
-            pca.setPwm(channel, 0, (uint16_t)(duty << 12));
+            pca.set_pwm(channel, 0, (uint16_t)(duty << 12));
             return *this;
         }
 
@@ -123,21 +123,22 @@ protected:
 public:
     PCA9685(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     PCA9685(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    PCA9685(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_{i2c, i2c_addr}{;}
+    PCA9685(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_{i2c, addr}{;}
 
-    void setFrequency(const uint freq, const real_t trim = real_t(1));
+    void set_frequency(const uint freq, const real_t trim = real_t(1));
 
-    void setPwm(const uint8_t channel, const uint16_t on, const uint16_t off);
+    void set_pwm(const uint8_t channel, const uint16_t on, const uint16_t off);
 
-    void setSubAddr(const uint8_t index, const uint8_t addr);
+    void set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    void enableExtClk(const bool en = true);
+    void enable_ext_clk(const bool en = true);
 
-    void enableSleep(const bool en = true);
+    void enable_sleep(const bool en = true);
 
     void init(const uint freq, const real_t trim){
         init();
-        setFrequency(freq, trim);
+        set_frequency(freq, trim);
     }
 
     void init();

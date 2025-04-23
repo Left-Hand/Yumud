@@ -22,7 +22,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    scexpr uint8_t default_i2c_addr = 0x68;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
     struct{
         int16_t x;
@@ -44,10 +44,10 @@ public:
 
     AK8975(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     AK8975(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AK8975(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
+    AK8975(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
     AK8975(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     AK8975(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    AK8975(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    AK8975(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
     void init();
     void update();

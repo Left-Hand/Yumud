@@ -1,13 +1,15 @@
+//这个驱动已经完成
+//这个驱动已经测试
+
 #pragma once
 
 #include "core/io/regs.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "concept/pwm_channel.hpp"
-
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+#include "concept/pwm_channel.hpp"
 
 namespace ymd::drivers{
 
@@ -17,7 +19,7 @@ public:
         Max, High, Medium, Low
     };
 
-    scexpr uint8_t default_i2c_addr = 0b10110000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10110000);
 protected:
     hal::I2cDrv i2c_drv_;
     uint16_t buf;
@@ -99,7 +101,7 @@ protected:
 public:
     AW9523(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
+    AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
 
     void init();
     void reset(){

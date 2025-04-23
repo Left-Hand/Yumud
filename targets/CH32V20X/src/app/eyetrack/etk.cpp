@@ -60,7 +60,7 @@ void etk_main(){
     spi.bind_cs_pin(lcd_cs, 0);
     spi.init(144_MHz, CommStrategy::Blocking);
 
-    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tftDisplayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
 
     {//init tft
         tftDisplayer.init();
@@ -95,7 +95,7 @@ void etk_main(){
     PCA9685 pca{i2c};
     pca.init();
     
-    pca.setFrequency(50, real_t(1.09));
+    pca.set_frequency(50, real_t(1.09));
 
 
     auto eye_conf =         Eyes::Config{

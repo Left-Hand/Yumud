@@ -2,6 +2,9 @@
 
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 
+
+// https://github.com/NOKOLat/STM32_ICM45686/blob/master/ICM45686.h
+
 namespace ymd::drivers{
 
     
@@ -19,11 +22,12 @@ private:
     std::bitset<N> i2c_addr_;
 };
 
+
 class ICM45686:public Axis6{
 public:
-    static constexpr I2cSlaveAddr<7> DEFAULT_I2C_ADDR = I2cSlaveAddr<7>{0x68};
+    using Error = InvensenseSensorError;
 
-
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
     using RegAddr = RegAddr_t<8>;
 
 protected:
@@ -61,14 +65,88 @@ protected:
     
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
+
+    enum class REGISTER: uint8_t{
+        ACCEL_DATA_X1_UI = 0x00,
+        PWR_MGMT0        = 0x10,
+        ACCEL_CONFIG     = 0x1B,
+        GYRO_CONFIG 	 = 0x1C,
+        WHO_AM_I   		 = 0x72
+    };
+
+    enum class Mode: uint8_t{
+
+        Off = 0x00,
+        Standby,
+        LowPower,
+        LowNoise
+    };
+
+    enum class AccelScale: uint8_t{
+
+        _32G = 0x00,
+        _16G,
+        _08G,
+        _04G,
+        _02G
+    };
+
+    enum class GyroScale: uint8_t{
+
+        _4000_Dps = 0x00,
+        _2000_Dps,
+        _1000_Dps,
+        _0500_Dps,
+        _0250_Dps,
+        _0125_Dps,
+        _0062_Dps,
+        _0031_Dps,
+        _0015_Dps,
+        _0006_Dps
+
+    };
+
+    enum class ODR: uint8_t{
+
+        _6400_Hz = 3,
+        _3200_Hz,
+        _1600_Hz,
+        _800_Hz,
+        _400_Hz,
+        _200_Hz,
+        _100_Hz,
+        _50_Hz,
+        _25_Hz,
+        _12_Hz,
+        _6_Hz,
+        _3_Hz,
+        _1_Hz
+    };
+
+    
+    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+        return phy_.write_reg(addr, data);
+    }
+
+    template<typename T>
+    [[nodiscard]] Result<void, Error> write_reg(const T & reg){return write_reg(reg.address, reg);}
+
+    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+        return phy_.read_reg(addr, data);
+    }
+
+    template<typename T>
+    [[nodiscard]] Result<void, Error> read_reg(T & reg){return read_reg(reg.address, reg);}
+
 public:
-    ICM45686(hal::I2c & i2c, const I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
+    ICM45686(hal::I2c & i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
 
     void init();
     
     void update();
 
-    bool verify();
+    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> set_mode(Mode mode);
 
     void reset();
 

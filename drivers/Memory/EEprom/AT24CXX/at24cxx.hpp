@@ -45,7 +45,7 @@ protected:
         update_entry_ms();
     };
 
-    AT24CXX(hal::I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_i2c_addr}{;}
+    AT24CXX(hal::I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, DEFAULT_I2C_ADDR}{;}
     AT24CXX(hal::I2cDrv && i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
     AT24CXX(hal::I2cDrv & i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
 
@@ -54,7 +54,7 @@ public:
 
     bool busy() override{return last_entry_ms + min_duration_ms - millis() > 0;}
 
-    scexpr uint8_t default_i2c_addr = 0b10100000; 
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
 private:
     void wait_for_free();
 

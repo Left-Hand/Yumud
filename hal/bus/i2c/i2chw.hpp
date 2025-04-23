@@ -5,7 +5,7 @@
 
 namespace ymd::hal{
 
-class I2cHw: public I2c{
+class I2cHw final: public I2c{
 private:
     void enable_rcc(const bool enable = true);
     BusError lead(const uint8_t _address) override final;

@@ -75,7 +75,7 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
 Result<void, Error> MPU6050::verify(){
 
     reset().unwrap();
-    const auto pkres = this->getPackage();
+    const auto pkres = this->get_package();
     if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
     
     const auto package = pkres.unwrap();
@@ -105,8 +105,8 @@ Result<void, Error> MPU6050::init(){
         .then([&](){return this->write_reg(0x15, 0);})
         .then([&](){return this->write_reg(0x17, 0);})
         .then([&](){return this->write_reg(0x38, 0x00);})
-        .then([&](){return this->setAccRange(AccRange::_2G);})
-        .then([&](){return this->setGyrRange(GyrRange::_1000deg);})
+        .then([&](){return this->set_acc_range(AccRange::_2G);})
+        .then([&](){return this->set_gyr_range(GyrRange::_1000deg);})
     ;
 }
 
@@ -131,29 +131,29 @@ Option<Vector3_t<real_t>> MPU6050::get_gyr(){
     return Some{Vector3_t<real_t>{x, y, z}};
 }
 
-Option<real_t> MPU6050::getTemperature(){
+Option<real_t> MPU6050::get_temperature(){
     return optcond(data_valid, Some(real_t(36.65f) + uni(temperature_reg) / 340));
 }
 
 
 
-Result<void, Error> MPU6050::setAccRange(const AccRange range){
-    this->acc_scaler = this->calculateAccScale(range);
+Result<void, Error> MPU6050::set_acc_range(const AccRange range){
+    this->acc_scaler = this->calculate_acc_scale(range);
 
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
     return this->write_reg(reg);
 }
 
-Result<MPU6050::Package, Error> MPU6050::getPackage(){
+Result<MPU6050::Package, Error> MPU6050::get_package(){
     if(const auto err = read_reg(whoami_reg.address, whoami_reg); err.is_err()){
         MPU6050_PANIC("read who am I failed");
     }
     return Ok{Package(whoami_reg.data)};
 }
 
-Result<void, Error> MPU6050::setGyrRange(const GyrRange range){
-    this->gyr_scaler = this->calculateGyrScale(range);
+Result<void, Error> MPU6050::set_gyr_range(const GyrRange range){
+    this->gyr_scaler = this->calculate_gyr_scale(range);
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
 
@@ -169,7 +169,7 @@ Result<void, Error> MPU6050::reset(){
     return Ok();
 }
 
-Result<void, Error> MPU6050::enableDirectMode(const Enable en){
+Result<void, Error> MPU6050::enable_direct_mode(const Enable en){
     // int_pin_cfg_reg.bypass_en = bool(en);
     int_pin_cfg_reg.as_ref() = 0x22;
     WRITE_REG(int_pin_cfg_reg);

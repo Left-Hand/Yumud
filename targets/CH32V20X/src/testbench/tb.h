@@ -148,3 +148,5 @@ void light_tracking_main();
 void cubic_main();
 void gxm_new_energy_main();
 void rrs3_main();
+
+void nuedc_2023e_main();

@@ -113,12 +113,12 @@ protected:
     }
 
 public:
-    scexpr uint8_t default_i2c_addr = 0b0100000;
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
 
     SGM58031(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-
-    SGM58031(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
+    SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    SGM58031(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
     void init();
 
