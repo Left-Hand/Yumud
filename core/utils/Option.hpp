@@ -52,6 +52,7 @@ template<typename T>
 class Option{
 private:
     using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+    
     T value_;
     bool exists_;
 public:

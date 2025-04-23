@@ -47,10 +47,10 @@ protected:
     StatusReg statusReg = {};
 
 
-    void writePage(const size_t addr, const void * data, const Address len);
+    void write_page(const size_t addr, const void * data, const Address len);
 
-    void storeBytes(const Address loc, const void * data, const Address len) override;
-    void loadBytes(const Address loc, void * data, const Address len) override;
+    void store_bytes(const Address loc, const void * data, const Address len) override;
+    void load_bytes(const Address loc, void * data, const Address len) override;
     void entry_store() override;
     void exit_store() override;
     void entry_load() override;
@@ -60,28 +60,28 @@ public:
     W25Q16(hal::SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
     W25Q16(hal::Spi & _spi, const hal::SpiSlaveIndex index):StoragePaged(_m_size, _pagesize), spi_drv(hal::SpiDrv(_spi, index)){;}
 
-    void enableWrite(const bool en = true);
-    uint8_t getDeviceManufacturer();
-    uint8_t getDeviceStorageType();
-    uint8_t getDeviceCapacity();
+    void enable_write(const bool en = true);
+    uint8_t get_device_manufacturer();
+    uint8_t get_device_storage_type();
+    uint8_t get_device_capacity();
 
-    void eraseBlock(const Address addr);
-    void eraseSector(const Address addr);
-    void eraseChip();
+    void erase_block(const Address addr);
+    void erase_sector(const Address addr);
+    void erase_chip();
 
-    bool isIdle();
-    bool isWriteable();
+    bool is_idle();
+    bool is_writeable();
 
 private:
-    BusError writeByte(const uint8_t data){
+    BusError write_byte(const uint8_t data){
         return spi_drv.write_single(data);
     }
 
-    BusError writeByte(const Commands & data){
+    BusError write_byte(const Commands & data){
         return spi_drv.write_single((uint8_t)data);
     }
 
-    BusError readByte(uint8_t & data){
+    BusError read_byte(uint8_t & data){
         return spi_drv.read_single(data);
     }
 

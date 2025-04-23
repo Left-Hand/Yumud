@@ -17,13 +17,13 @@ protected:
     hal::I2cDrv i2c_drv_;
     uint32_t last_entry_ms = 0;
 
-    void storeBytes(const Address loc, const void * data, const Address len) override;
+    void store_bytes(const Address loc, const void * data, const Address len) override;
 
-    void loadBytes(const Address loc, void * data, const Address len) override;
+    void load_bytes(const Address loc, void * data, const Address len) override;
 
-    void writePool(const size_t addr, const uint8_t * data, const size_t len);
+    void write_pool(const size_t addr, const uint8_t * data, const size_t len);
 
-    void readPool(const size_t addr, uint8_t * data, const size_t len);
+    void read_pool(const size_t addr, uint8_t * data, const size_t len);
 
     void entry_store() override{
         update_entry_ms();

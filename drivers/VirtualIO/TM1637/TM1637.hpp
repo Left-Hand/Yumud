@@ -3,6 +3,8 @@
 #include "core/utils/Result.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+#include "core/string/StringView.hpp"
+
 namespace ymd::drivers{
 
 class TM1637_Phy final{
@@ -150,11 +152,12 @@ class TM1637_SegDisplayer final{
             case 'U': return SEG_TABLE[18];
             case 'Y': return SEG_TABLE[19];
             case 'L': return SEG_TABLE[20];
+            default: __builtin_unreachable();
         }
     }
 
     [[nodiscard]] static constexpr 
-    Result<void, void> render_str(const std::span<const uint8_t> context, const StringView str){
+    Result<void, void> render_str(const std::span<uint8_t> context, const StringView str){
         if(str.size() > context.size()) return Err();
         for(uint8_t i = 0; i < context.size(); ++i){
             if(i >= str.size()) break;
@@ -165,7 +168,7 @@ class TM1637_SegDisplayer final{
 
     [[nodiscard]] static constexpr 
     Result<void, void> render_digit(const std::span<const uint8_t> context, const int num){
-        
+        return Ok();
     }
 };
 

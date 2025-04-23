@@ -28,22 +28,26 @@ public:
 
     Kind type = Kind::OK;
 
-    BusError(const Kind & _type):type(_type){;}
-    BusError(Kind && _type):type(_type){;}
-    BusError(const BusError & other):type(other.type){;}
-    BusError(BusError && other):type(other.type){;}
-    BusError & operator = (const BusError & other) = default;
-    BusError & operator = (BusError && other) = default;
-    __fast_inline BusError & emplace(const BusError & other){type = other.type; return *this;}
-    __fast_inline BusError & emplace(BusError && other){type = other.type; return *this;}
+    constexpr BusError(const Kind & _type):type(_type){;}
+    constexpr BusError(Kind && _type):type(_type){;}
+    constexpr BusError(const BusError & other):type(other.type){;}
+    constexpr BusError(BusError && other):type(other.type){;}
+    constexpr BusError & operator = (const BusError & other) = default;
+    constexpr BusError & operator = (BusError && other) = default;
+    __fast_inline constexpr BusError & emplace(const BusError & other){type = other.type; return *this;}
+    __fast_inline constexpr BusError & emplace(BusError && other){type = other.type; return *this;}
 
-    bool operator ==(const Kind & _type){return type == _type;}
-    bool operator !=(const Kind & _type){return type != _type;}
+    constexpr bool operator ==(const Kind & _type){return type == _type;}
+    constexpr bool operator !=(const Kind & _type){return type != _type;}
 
-    __fast_inline bool wrong() const {return unlikely(type != Kind::OK);}
-    __fast_inline bool ok() const {return likely(type == Kind::OK);}
+    __fast_inline constexpr bool wrong() const {return unlikely(type != Kind::OK);}
+    __fast_inline constexpr bool ok() const {return likely(type == Kind::OK);}
 
-    auto unwrap() const {return type;}
+
+    __fast_inline constexpr bool is_err() const {return unlikely(type != Kind::OK);}
+    __fast_inline constexpr bool is_ok() const {return likely(type == Kind::OK);}
+
+    constexpr auto unwrap() const {return type;}
 
     // template<typename F>
     // auto map(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
@@ -63,7 +67,7 @@ public:
         else return rhs;
     }
 
-    explicit operator Kind() {return type;}
+    constexpr explicit operator Kind() {return type;}
 };
 
 

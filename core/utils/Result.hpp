@@ -60,12 +60,12 @@ namespace details{
         using ok_type = T;
         using err_type = E;
     
-        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):
-            data_(T(val)){;}
+        __fast_inline constexpr _Storage_Diff(const T & val):data_(val){;}
+        __fast_inline constexpr _Storage_Diff(T && val):data_(std::move(val)){;}
     
     
-        __fast_inline constexpr _Storage_Diff(const Err<E> & val):
-            data_(E(val)){;}
+        __fast_inline constexpr _Storage_Diff(const E & val):data_(val){;}
+        __fast_inline constexpr _Storage_Diff(E && val):data_(std::move(val)){;}
     
         __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
         __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
@@ -254,7 +254,7 @@ public:
     // constexpr Result & operator =(Result<T, E> &&) = default;
 
 private:
-    Storage result_;
+    Storage storage_;
 
     struct _Loc{
         const Result<T, E> & owner_;
@@ -272,7 +272,7 @@ private:
         Args && ... args
     ) const {
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
@@ -285,16 +285,16 @@ public:
 
     template<typename U>
     requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<U> & value) : result_(Ok<T>(*value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<U> & value) : storage_(*value){}
     
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : storage_(Ok<void>()){}
     
-    // [[nodiscard]] __fast_inline constexpr Result(Err<E> && error) : result_(Err<E>(*error)){}
     template<typename U>
     requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Err<U> & error) : result_(Err<E>(
-        static_cast<E>(*error))){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<U> & error) : storage_(*error){}
 
+        
+    [[nodiscard]] __fast_inline constexpr Result(const Err<void> & value) : storage_(Err<void>()){}
 
     [[nodiscard]] __fast_inline constexpr
     Result<T, E> operator |(const Result<T, E> && rhs) const {
@@ -325,7 +325,7 @@ public:
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
             if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
-            else return Ok<TFReturn>(std::forward<Fn>(fn)(result_.unwrap()));
+            else return Ok<TFReturn>(std::forward<Fn>(fn)(storage_.unwrap()));
         }
         else return Err<E>(unwrap_err());
     }
@@ -471,12 +471,12 @@ public:
 
     [[nodiscard]] __fast_inline constexpr 
     bool is_ok() const {
-        return result_.is_ok();
+        return storage_.is_ok();
     }
 
     [[nodiscard]] __fast_inline constexpr 
     bool is_err() const {
-        return result_.is_err();
+        return storage_.is_err();
     }
     
 
@@ -485,7 +485,7 @@ public:
     constexpr 
     T expect(Args && ... args) const{
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             PANIC_NSRC(std::forward<Args>(args)...);
@@ -521,7 +521,7 @@ public:
     __fast_inline constexpr 
     T unwrap() const {
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
             exit(1);
         }
@@ -548,13 +548,13 @@ public:
 
     __fast_inline constexpr 
     T operator !() const{
-        return result_.unwrap();
+        return storage_.unwrap();
     }
 
     __fast_inline constexpr 
     E unwrap_err() const {
         if (likely(is_err())) {
-            return result_.unwrap_err();
+            return storage_.unwrap_err();
         } else {
             exit(1);
         }
@@ -563,7 +563,7 @@ public:
     constexpr Option<T> 
     ok() const{
         if (likely(is_ok())) {
-            return Some(result_.unwrap());
+            return Some(storage_.unwrap());
         } else {
             return None;
         }
@@ -572,7 +572,7 @@ public:
     constexpr Option<E> 
     err() const{
         if (likely(is_err())) {
-            return Some(result_.unwrap_err());
+            return Some(storage_.unwrap_err());
         } else {
             return None;
         }

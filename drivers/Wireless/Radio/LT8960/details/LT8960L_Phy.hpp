@@ -29,7 +29,7 @@ private:
 
 
 
-class LT8960L_Phy:public hal::ProtocolBusDrv<hal::I2c> {
+class LT8960L_Phy:private hal::ProtocolBusDrv<hal::I2c> {
 public:
     static constexpr uint8_t DEFAULT_I2C_ADDR = 0x1A;
     using Error = LT8960L_Error;

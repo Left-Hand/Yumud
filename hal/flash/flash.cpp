@@ -18,12 +18,12 @@ using namespace ymd;
 
 #define FAULT_IF(x) 
 
-void Flash::storeBytes(const Address vaddr, const void * data, const Address len){
+void Flash::store_bytes(const Address vaddr, const void * data, const Address len){
 
     unlock();
     // DEBUG_PRINTLN("store");
-    erasePage(vaddr);  
-    programPage(vaddr, reinterpret_cast<const uint8_t*>(data));
+    erase_page(vaddr);  
+    program_page(vaddr, reinterpret_cast<const uint8_t*>(data));
 
     // uint8_t buf[page_size] = {0};
 
@@ -79,14 +79,14 @@ void Flash::storeBytes(const Address vaddr, const void * data, const Address len
     lock();
 };
 
-void Flash::loadBytes(const Address vaddr, void * data, const Address len){
+void Flash::load_bytes(const Address vaddr, void * data, const Address len){
     FAULT_IF(!ISALIGNED(data))
     const auto phyaddr = base_address + vaddr;
     // DEBUG_VALUE(phyaddr, "load")
     memcpy(data, (void *)(phyaddr), len);
 };
 
-void Flash::erasePage(const Address vaddr){
+void Flash::erase_page(const Address vaddr){
     const auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     // BREAKPOINT
@@ -112,7 +112,7 @@ void Flash::unlock(){
     FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
 }
 
-void Flash::programPage(const Address vaddr, const void * buf){
+void Flash::program_page(const Address vaddr, const void * buf){
     auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     // DEBUG_VALUE(std::hex, phyaddr, "prog")
@@ -129,7 +129,7 @@ void Flash::programPage(const Address vaddr, const void * buf){
     }
 }
 
-void Flash::configClock(){
+void Flash::config_clock(){
     #if (CLOCK_CONFIG == CLOCK_CONFIG_BY_AHB)
 
     orginal_clock = Sys::Clock::getAHBFreq();
@@ -142,7 +142,7 @@ void Flash::configClock(){
     #endif
 }
 
-void Flash::revertClock(){
+void Flash::revert_clock(){
 
     #if (CLOCK_CONFIG == CLOCK_CONFIG_BY_AHB)
 
@@ -156,13 +156,13 @@ void Flash::revertClock(){
 }
 
 void Flash::entry_store(){
-    configClock();
+    config_clock();
     // Systick_Init();
     // delay(1);
 }
 
 void Flash::exit_store(){
-    revertClock();
+    revert_clock();
 }
 
 void Flash::entry_load(){
@@ -170,5 +170,5 @@ void Flash::entry_load(){
 }
 
 void Flash::exit_load(){
-    revertClock();
+    revert_clock();
 }

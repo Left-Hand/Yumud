@@ -3,6 +3,7 @@
 
 using namespace ymd::drivers;
 
+#define self (*this)
 #define X25QXX_DEBUG
 
 #ifdef X25QXX_DEBUG
@@ -27,31 +28,31 @@ public:
     }
 };
 
-void X25QXX::updateDeviceId(){
-    writeByte(0x90, CONT);
-    skipByte();
-    skipByte();
-    skipByte();
+void X25QXX::update_device_id(){
+    write_byte(0x90, CONT);
+    skip_byte();
+    skip_byte();
+    skip_byte();
 
-    readByte(jedec_id.manufacturer_id, CONT);
-    readByte(jedec_id.capacity);
+    read_byte(jedec_id.manufacturer_id, CONT);
+    read_byte(jedec_id.capacity);
 }
 
-void X25QXX::updateJedecId(){
-    writeByte(0x9F, CONT);
+void X25QXX::update_jedec_id(){
+    write_byte(0x9F, CONT);
 
-    readByte(jedec_id.manufacturer_id, CONT);
-    readByte(jedec_id.memory_type, CONT);
-    readByte(jedec_id.capacity);
+    read_byte(jedec_id.manufacturer_id, CONT);
+    read_byte(jedec_id.memory_type, CONT);
+    read_byte(jedec_id.capacity);
 }
 
-bool X25QXX::waitForFree(size_t timeout){
-    writeByte(Command::ReadStatusRegister, CONT);
+bool X25QXX::wait_for_free(size_t timeout){
+    write_byte(Command::ReadStatusRegister, CONT);
 
     size_t begin = millis();
 
     while(millis() - begin < timeout){
-        readByte(statusReg, CONT);
+        read_byte(statusReg, CONT);
         if(statusReg.busy == false){
             break;
         }
@@ -62,39 +63,35 @@ bool X25QXX::waitForFree(size_t timeout){
     return statusReg.busy;
 }
 
-void X25QXX::updateStatus(){
-    writeByte(Command::ReadStatusRegister, CONT);
-    readByte(statusReg);
+void X25QXX::update_status(){
+    write_byte(Command::ReadStatusRegister, CONT);
+    read_byte(statusReg);
 };
 
 bool X25QXX::busy(){
-    updateStatus();
+    update_status();
     return statusReg.busy;
 }
 
-void X25QXX::writePage(const Address addr, const uint8_t * data, size_t len){
-    auto & self = *this;
-
+void X25QXX::write_page(const Address addr, const uint8_t * data, size_t len){
     if(len > 256){
         X25QXX_DEBUG("page too large", len);
         HALT;
     }
 
-    self.writeByte(Command::PageProgram, CONT);
-    self.writeAddr(addr, CONT);
-    self.writeBytes(data, len);
+    self.write_byte(Command::PageProgram, CONT);
+    self.write_addr(addr, CONT);
+    self.write_bytes(data, len);
 }
 
 
 void X25QXX::entry_store(){
-    auto & self = *this;
-
-    self.waitForFree(UINT32_MAX);
-    self.enableWrite();
+    self.wait_for_free(UINT32_MAX);
+    // self.enable_write();
 }
     
 void X25QXX::exit_store(){
-    this->enableWrite(false);
+    // this->enable_write(false);
 }
     
 void X25QXX::entry_load(){
@@ -106,51 +103,51 @@ void X25QXX::exit_load(){
 }
 
 
-void X25QXX::enablePowerDown(const bool en){
-    writeByte(en ? Command::PowerDown : Command::ReleasePowerDown);
+void X25QXX::enable_power_down(const bool en){
+    write_byte(en ? Command::PowerDown : Command::ReleasePowerDown);
 }
 
 
 //4kb
-void X25QXX::eraseSector(const Address addr){
-    auto & self = *this;
+void X25QXX::erase_sector(const Address addr){
 
-    self.writeByte(Command::SectorErase, CONT);
-    self.writeAddr(addr);
+
+    self.write_byte(Command::SectorErase, CONT);
+    self.write_addr(addr);
 }
 
 //64kb
-void X25QXX::eraseBlock(const Address addr){
-    auto & self = *this;
+void X25QXX::erase_block(const Address addr){
 
-    self.writeByte(Command::BlockErase, CONT);
-    self.writeAddr(addr);
+
+    self.write_byte(Command::BlockErase, CONT);
+    self.write_addr(addr);
 }
 
 
-void X25QXX::eraseWholeChip(){
-    auto & self = *this;
+void X25QXX::erase_whole_chip(){
+
     
-    self.writeByte(Command::ChipErase);
+    self.write_byte(Command::ChipErase);
 }
 
 
-bool X25QXX::isWriteable(){
-    writeByte(Command::ReadStatusRegister);
-    readByte(statusReg);
+bool X25QXX::is_writeable(){
+    write_byte(Command::ReadStatusRegister);
+    read_byte(statusReg);
     return statusReg.write_enable_latch;
 }
 
-void X25QXX::loadBytes(const Address loc , void * data, const Address len){
-    auto & self = *this;
+void X25QXX::load_bytes(const Address loc , void * data, const Address len){
 
-    self.writeByte(Command::ReadData, CONT);
-    self.writeAddr(loc, CONT);
-    self.readBytes(data, len);
+
+    self.write_byte(Command::ReadData, CONT);
+    self.write_addr(loc, CONT);
+    self.read_bytes(data, len);
 }
 
-void X25QXX::storeBytes(const Address loc, const void * data, const Address len){
-    auto & self = *this;
+void X25QXX::store_bytes(const Address loc, const void * data, const Address len){
+
 
     // size_t addr = _addr;
     // const uint8_t * data = reinterpret_cast<const uint8_t *>(_data);
@@ -170,24 +167,24 @@ void X25QXX::storeBytes(const Address loc, const void * data, const Address len)
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
         if(op_window){
-            self.waitForFree(UINT32_MAX);
+            self.wait_for_free(UINT32_MAX);
             auto * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
-            self.writePage(op_window.from, ptr, op_window.length());
+            self.write_page(op_window.from, ptr, op_window.length());
         }
     }while(op_window);
 }
 
-void X25QXX::writeAddr(const Address addr, const Continuous cont){
-    if(isLargeChip()){
+void X25QXX::write_addr(const Address addr, const Continuous cont){
+    if(is_large_chip()){
         PANIC("large chip is under develop");
-        writeByte(addr >> 24, CONT);
+        write_byte(addr >> 24, CONT);
     }
 
-    writeByte(addr >> 16, CONT);
-    writeByte(addr >> 8, CONT);
-    writeByte(addr, cont);
+    write_byte(addr >> 16, CONT);
+    write_byte(addr >> 8, CONT);
+    write_byte(addr, cont);
 }
-void X25QXX::eraseBytes(const Address loc, const size_t len){
+void X25QXX::erase_bytes(const Address loc, const size_t len){
     //FIXME
-    eraseSector(loc);
+    erase_sector(loc);
 }
