@@ -133,7 +133,7 @@ protected:
         i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len)).unwrap();
     }
 
-    uint32_t getPressureData(){
+    uint32_t get_pressure_data(){
         uint32_t pressureData = 0;
         read_reg(RegAddress::Pressure, pressureReg);
         pressureData = pressureReg << 4;
@@ -143,7 +143,7 @@ protected:
         return pressureData;
     }
 
-    uint32_t getTemperatureData(){
+    uint32_t get_temperature_data(){
         uint32_t temperatureData = 0;
         read_reg(RegAddress::Temperature, temperatureReg);
         temperatureData = temperatureReg << 4;
@@ -161,22 +161,23 @@ public:
 
     bool isChipValid();
 
-    void setTempratureSampleMode(const TempratureSampleMode tempMode);
+    void set_temprature_sample_mode(const TempratureSampleMode tempMode);
 
-    void setPressureSampleMode(const PressureSampleMode pressureMode);
-    void setMode(const Mode mode);
+    void set_pressure_sample_mode(const PressureSampleMode pressureMode);
 
-    void setDataRate(const DataRate dataRate);
+    void set_mode(const Mode mode);
 
-    void setFilterCoefficient(const FilterCoefficient filterCoeff);
+    void set_datarate(const DataRate dataRate);
+
+    void set_filter_coefficient(const FilterCoefficient filterCoeff);
 
     void reset();
 
-    bool isIdle();
+    bool is_idle();
 
-    void enableSpi3(const bool en = true);
+    void enable_spi3(const bool en = true);
 
-    void getPressure(int32_t & pressure);
+    int32_t get_pressure();
 
     void init();
 };

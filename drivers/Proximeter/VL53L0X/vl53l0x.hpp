@@ -22,13 +22,13 @@ public:
     void startConv();
     void init();
     void stop();
-    real_t getDistance() override {return getDistanceMM() * real_t(0.001);};
-    uint16_t getDistanceMM();
-    uint16_t getAmbientCount();
-    uint16_t getSignalCount();
+    real_t get_distance() override {return get_distance_mm() * real_t(0.001);};
+    uint16_t get_distance_mm();
+    uint16_t get_ambient_count();
+    uint16_t get_signal_count();
 
-	void enableHighPrecision(const bool _highPrec = true);
-    void enableContMode(const bool _continuous = true);
+	void enable_high_precision(const bool _highPrec = true);
+    void enable_cont_mode(const bool _continuous = true);
     void update() override;
 
 private:
@@ -41,17 +41,15 @@ private:
         uint16_t distance;
     };
 
-    
-
     Result result, last_result;
-	void writeByteData(const uint8_t Reg, const uint8_t byte){
+	void write_byte_data(const uint8_t Reg, const uint8_t byte){
         i2c_drv_.write_reg(Reg, byte).unwrap();
     }
 
     void flush();
     bool busy();
 
-	uint8_t readByteData(const uint8_t Reg){
+	uint8_t read_byte_data(const uint8_t Reg){
         uint8_t data;
         i2c_drv_.read_reg(Reg, data).unwrap();
         return data;

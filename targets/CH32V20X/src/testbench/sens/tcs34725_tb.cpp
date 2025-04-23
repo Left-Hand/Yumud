@@ -14,9 +14,9 @@ using namespace ymd::drivers;
 void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
     TCS34725 tcs{i2c};
     tcs.init();
-    tcs.startConv();
+    tcs.start_conv();
     while(true){
-        logger.println(tcs.getCRGB());
+        logger.println(tcs.get_crgb());
         delay(30);
     }
 }

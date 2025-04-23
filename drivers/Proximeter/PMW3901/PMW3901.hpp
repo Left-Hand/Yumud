@@ -2,7 +2,6 @@
 
 #include "core/io/regs.hpp"
 #include "drivers/Proximeter/FlowSensor.hpp"
-// #include "types/image/image.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 

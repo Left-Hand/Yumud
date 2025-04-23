@@ -69,29 +69,17 @@ using namespace ymd::drivers;
 #define GEST_ENTR_T 600 /* Both can be adjusted to needs */
 #define GEST_QUIT_T 1000
 
-
-#define GESTURE_Value(Value, maskbit) (Value << maskbit)
-
-#define GestureRight GESTURE_Value(1,0)
-#define GestureLeft GESTURE_Value(1,1)
-#define GestureDown GESTURE_Value(1,2)
-#define GestureUp GESTURE_Value(1,3)
-#define GestureForward GESTURE_Value(1,4)
-#define GestureBackwards GESTURE_Value(1,5)
-#define GestureCW GESTURE_Value(1,6)
-#define GestureACW GESTURE_Value(1,7)
-
 #define PAJ7620_REGITER_BANK_SEL 0xEF
 
-scexpr uint8_t GES_RIGHT_FLAG				 = (1<<0);
-scexpr uint8_t GES_LEFT_FLAG				 = (1<<1);
-scexpr uint8_t GES_UP_FLAG					 = (1<<2);
-scexpr uint8_t GES_DOWN_FLAG				 = (1<<3);
-scexpr uint8_t GES_FORWARD_FLAG				 = (1<<4);
-scexpr uint8_t GES_BACKWARD_FLAG			 = (1<<5);
-scexpr uint8_t GES_CLOCKWISE_FLAG			 = (1<<6);
-scexpr uint8_t GES_COUNT_CLOCKWISE_FLAG		 = (1<<7);
-scexpr uint8_t GES_WAVE_FLAG				 = (1<<0);
+scexpr uint8_t GES_RIGHT_FLAG				          = (1<<0);
+scexpr uint8_t GES_LEFT_FLAG				          = (1<<1);
+scexpr uint8_t GES_UP_FLAG					          = (1<<2);
+scexpr uint8_t GES_DOWN_FLAG				          = (1<<3);
+scexpr uint8_t GES_FORWARD_FLAG				        = (1<<4);
+scexpr uint8_t GES_BACKWARD_FLAG			        = (1<<5);
+scexpr uint8_t GES_CLOCKWISE_FLAG			        = (1<<6);
+scexpr uint8_t GES_COUNT_CLOCKWISE_FLAG		    = (1<<7);
+scexpr uint8_t GES_WAVE_FLAG				          = (1<<0);
 
 
 void PAJ7620::read_reg(uint8_t addr, uint8_t & data){
@@ -109,7 +97,7 @@ void PAJ7620::write_reg(uint8_t cmd, uint8_t data){
 	}
 };
 
-void PAJ7620::selectBank(uint8_t bank) {
+void PAJ7620::select_bank(uint8_t bank) {
 	switch(bank){
 		case 9:
 			write_reg(PAJ7620_REGITER_BANK_SEL, 0);
@@ -154,7 +142,7 @@ bool PAJ7620::verify(){
 	}
 
 	delay(20);
-	selectBank(0);
+	select_bank(0);
 	// // selectBank(0);
 
 	uint8_t data0 = 0, data1 = 0;
@@ -397,12 +385,12 @@ void PAJ7620::init(){
 	// uint8_t temp;
 
 	// read_reg(0xef, temp);
-	selectBank(0);
+	select_bank(0);
 	for(const auto & [cmd, data] : initRegisterArray){
 		write_reg(cmd, data);
 	}
 
-	selectBank(0);
+	select_bank(0);
 	// read_reg(0xef, temp);
 	// read_reg(0x32, temp);
 	// PAJ7620_ASSERT(temp == 0x29, "init falied", temp);

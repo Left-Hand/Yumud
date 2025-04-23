@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include "core/utils/Option.hpp"
 
 namespace ymd::hal{
     class GpioIntf;
@@ -9,8 +10,8 @@ namespace ymd::hal{
 namespace ymd::drivers{
 class TTP229{
 protected:
-    int8_t num = -1;
-    uint16_t map = 0;
+    Option<uint8_t> num_ = None;
+    uint16_t map_ = 0;
     hal::GpioIntf & sck_gpio_;
     hal::GpioIntf & sdo_gpio_;
 
@@ -19,12 +20,9 @@ public:
         :sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
     ~TTP229(){;}
 
-    void scan();
-    bool hasKey(){return (bool)(num >= 0);}
-    bool isIdle();
-    int8_t getNum(){return num+1;}
-    int8_t getONum(){return num;}
-    void getMapData(uint16_t & _map){_map = map;}
+    void update();
+    bool is_idle();
+    Option<uint8_t> get_num(){return num_;}
 };
 
 };

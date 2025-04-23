@@ -95,7 +95,7 @@ void etk_main(){
     PCA9685 pca{i2c};
     pca.init();
     
-    pca.setFrequency(50, real_t(1.09));
+    pca.set_frequency(50, real_t(1.09));
 
 
     auto eye_conf =         Eyes::Config{

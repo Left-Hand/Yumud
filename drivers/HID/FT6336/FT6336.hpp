@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 class FT6336 {
-public: 
+public:
     enum class Error{
         Unspecified
     };
@@ -160,19 +160,16 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     
-    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
     [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
     [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
     [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
     [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
 public:

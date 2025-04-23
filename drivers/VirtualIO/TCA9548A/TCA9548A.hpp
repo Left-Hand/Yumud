@@ -1,12 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-
-
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
-
-// #include "hal/gpio/gpio_port.hpp"
 
 namespace ymd::drivers{
 
@@ -26,7 +21,7 @@ class VirtualI2c: public hal::I2c{
         BusError write(const uint32_t data) override final {return host_.write(data);}
         BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
 
-        void set_baudrate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
+        void set_baudrate(const uint32_t baud) override final{return host_.set_baudrate(baud);}
     };
 
 protected:
@@ -40,7 +35,7 @@ protected:
 
     void trail(const uint8_t ch);
 
-    void setBaudRate(const uint32_t baud){i2c_.set_baudrate(baud);}
+    void set_baudrate(const uint32_t baud){i2c_.set_baudrate(baud);}
 
     BusError write(const uint32_t data){
         return i2c_.write(data);
