@@ -4,7 +4,7 @@
 #include "core/clock/clock.hpp"
 
 namespace ymd::hal{
-class I2cSw: public I2c{
+class I2cSw final: public I2c{
 private:
     volatile int8_t occupied_ = -1;
 

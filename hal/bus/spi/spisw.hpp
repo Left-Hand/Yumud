@@ -5,7 +5,7 @@
 
 
 namespace ymd::hal{
-class SpiSw: public Spi{
+class SpiSw final: public Spi{
 protected:
     volatile int8_t occupied = -1;
     hal::GpioIntf & sclk_gpio;

@@ -27,9 +27,6 @@ private:
 
 
 class InvensenseSensor_Phy final{
-
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
 public:
     BusError write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
@@ -75,6 +72,10 @@ public:
     InvensenseSensor_Phy(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
+
+private:
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 };
 }
 

@@ -5,13 +5,25 @@
 
 namespace ymd::hal{
 
-#ifndef SPI_MAX_PINS
-static constexpr size_t SPI_MAX_PINS = 4;
-#endif
+
+class SpiSlaveIndex{
+    public:
+        explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
+            spi_idx_(spi_idx){}
+    
+        uint8_t as_u8() const {return spi_idx_;}
+    private:
+        uint8_t spi_idx_;
+    };
 
 
 class Spi:public BusBase{
 public:
+
+    #ifndef SPI_MAX_PINS
+    static constexpr size_t SPI_MAX_PINS = 4;
+    #endif
+
 
     VGpioPort <SPI_MAX_PINS> cs_port = VGpioPort<SPI_MAX_PINS>();
 protected:

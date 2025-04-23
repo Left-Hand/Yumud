@@ -10,15 +10,6 @@
 
 namespace ymd::hal{
 
-class SpiSlaveIndex{
-public:
-    explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
-        spi_idx_(spi_idx){}
-
-    uint8_t as_u8() const {return spi_idx_;}
-private:
-    uint8_t spi_idx_;
-};
 
 
 class SpiDrv:public NonProtocolBusDrv<Spi>{
