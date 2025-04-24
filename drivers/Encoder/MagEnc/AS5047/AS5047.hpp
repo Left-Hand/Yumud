@@ -30,12 +30,6 @@ protected:
         uint8_t :4;
     };
 
-    // struct DiaagcReg:public Reg8<>{
-    //     scexpr RegAddress address = 0x3ffc;
-
-    //     uint8_t 
-    // };
-
 
     hal::SpiDrv spi_drv_;
 
@@ -43,14 +37,10 @@ protected:
     size_t errcnt = 0;
     bool fast_mode = true;
 
-
     uint16_t getPositionData();
-
 
     void write_reg(const RegAddress addr, const uint8_t data);
     void read_reg(const RegAddress addr, uint8_t & data);
-
-
 
 public:
     AS5047(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
@@ -60,8 +50,8 @@ public:
     void init() override;
 
     void update() override;
-    real_t getLapPosition() override{return lap_position;}
-    uint32_t getErrCnt() const {return errcnt;}
+    real_t get_lap_position() override{return lap_position;}
+    uint32_t get_err_cnt() const {return errcnt;}
 
 };
 

@@ -79,7 +79,7 @@ public:
         SensorlessObserverTrait & ob
     ):
         ob_(ob){;}
-    real_t getLapPosition() = 0;
+    real_t get_lap_position() = 0;
     void update() = 0;
     void init() = 0;
     bool stable() = 0;

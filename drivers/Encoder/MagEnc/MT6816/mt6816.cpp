@@ -9,10 +9,10 @@ using namespace ymd;
 void MT6816::init() {
     last_semantic = 0;
     lap_position = real_t(-1); // not possible before init done;
-    while(getLapPosition() < 0){this->update();} // while reading before get correct position
+    while(get_lap_position() < 0){this->update();} // while reading before get correct position
 }
 
-uint16_t MT6816::getPositionData(){
+uint16_t MT6816::get_position_data(){
     uint16_t dataTx[2];
     uint16_t dataRx[2] = {0, 0};
 
@@ -26,7 +26,7 @@ uint16_t MT6816::getPositionData(){
 }
 
 void MT6816::update() {
-    uint16_t raw = getPositionData();
+    uint16_t raw = get_position_data();
     if(fast_mode == false){
         last_semantic = raw;
 

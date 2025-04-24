@@ -24,21 +24,16 @@ protected:
 
     Semantic last_semantic;
 
-    uint16_t getPositionData();
+    uint16_t get_position_data();
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::Spi & _bus, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{_bus, index}){;}
 
     void init() override;
-
-
     void update() override;
-
-
-    real_t getLapPosition() override{return lap_position;}
-
-    uint32_t getErrCnt() const {return errcnt;}
+    real_t get_lap_position() override{return lap_position;}
+    uint32_t get_err_cnt() const {return errcnt;}
 
     bool stable() override {return last_semantic.no_mag == false;}
 };

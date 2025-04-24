@@ -11,7 +11,7 @@ void SSD13XX::setpos_unsafe(const Vector2i & pos){
 }
 
 void SSD13XX::init(){   
-    interface.init(); 
+    interface_.init(); 
     preinit_by_cmds();
     enable();
     set_offset();
@@ -21,12 +21,12 @@ void SSD13XX::update(){
     auto & frame = fetch_frame();
     for(int i = 0; i < size().y;i += 8){
         set_flush_pos(Vector2i(0, i));
-        interface.write_u8(&frame[(i / 8) * size_t(size().x)], size().x);
+        interface_.write_u8(&frame[(i / 8) * size_t(size().x)], size().x);
     }
 }
 
 void SSD13XX::preinit_by_cmds(){
     for(const auto cmd:cmds_){
-        interface.write_command(cmd);
+        interface_.write_command(cmd);
     }
 }

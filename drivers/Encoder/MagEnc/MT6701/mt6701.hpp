@@ -167,71 +167,71 @@ public:
     void init() override;
 
     void update();
-    real_t getLapPosition() override;
+    real_t get_lap_position() override;
     
     bool stable() override;
 
-    void enableUVWMUX(const bool enable = true){
+    void enable_uvwmux(const bool enable = true){
         uvwMuxReg.uvwMux = enable;
         write_reg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
     }
 
-    void enableABZMUX(const bool enable = true){
+    void enable_abzmux(const bool enable = true){
         abzMuxReg.abzMux = enable;
         write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
-    void setDirection(const bool clockwise){
+    void set_direction(const bool clockwise){
         abzMuxReg.clockwise = clockwise;
         write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
-    void setPoles(const uint8_t _poles){
+    void set_poles(const uint8_t _poles){
         resolutionReg.poles = _poles;
         write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
-    void setABZResolution(const uint16_t abzResolution){
+    void set_abz_resolution(const uint16_t abzResolution){
         resolutionReg.abzResolution = abzResolution;
         write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
-    void setZeroPosition(const uint16_t zeroPosition){
+    void set_zero_position(const uint16_t zeroPosition){
         zeroConfigReg.zeroPosition = zeroPosition;
         write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
-    void setZeroPulseWidth(const ZeroPulseWidth zeroPulseWidth){
+    void set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth){
         zeroConfigReg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
         write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
-    void setHysteresis(const Hysteresis hysteresis){
+    void set_hysteresis(const Hysteresis hysteresis){
         hystersisReg.hysteresis = (uint8_t)hysteresis & 0b11;
         zeroConfigReg.hysteresis = (uint8_t)hysteresis >> 2;
         write_reg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
         write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
-    void enableFastMode(const bool en = true){
+    void enable_fast_mode(const bool en = true){
         fast_mode = en;
     }
-    void enablePwm(const bool enable = true){
+    void enable_pwm(const bool enable = true){
         wireConfigReg.isPwm = enable;
         write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
-    void setPwmPolarity(const bool polarity){
+    void set_pwm_polarity(const bool polarity){
         wireConfigReg.pwmPolarityLow = !polarity;
         write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
-    void setPwmFreq(const PwmFreq pwmFreq){
+    void set_pwm_freq(const PwmFreq pwmFreq){
         wireConfigReg.pwmFreq = (uint8_t)pwmFreq;
         write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
-    void setStart(const real_t start){
+    void set_start(const real_t start){
         uint16_t _startData = uni_to_u16(start);
         _startData >>= 4;
         startData = _startData;
@@ -240,7 +240,7 @@ public:
         write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
 
-    void setStop(const real_t stop){
+    void set_stop(const real_t stop){
         uint16_t _stopData = uni_to_u16(stop);
         _stopData >>= 4;
         stopData = _stopData;

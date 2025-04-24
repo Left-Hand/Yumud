@@ -135,8 +135,8 @@ public:
     void init() override;
 
     void update() override;
-    real_t getLapPosition() override{return lap_position;}
-    uint32_t getErrCnt() const {return errcnt;}
+    real_t get_lap_position() override{return lap_position;}
+    uint32_t get_err_cnt() const {return errcnt;}
 
 };
 

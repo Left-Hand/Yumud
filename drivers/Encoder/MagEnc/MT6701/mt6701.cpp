@@ -50,9 +50,9 @@ BusError MT6701::read_reg(const RegAddress addr, uint8_t & data){
 }
 
 void MT6701::init(){
-    enablePwm();
-    setPwmPolarity(true);
-    setPwmFreq(PwmFreq::HZ497_2);
+    enable_pwm();
+    set_pwm_polarity(true);
+    set_pwm_freq(PwmFreq::HZ497_2);
     update();
 }
 
@@ -80,7 +80,7 @@ void MT6701::update(){
     }
 }
 
-real_t MT6701::getLapPosition(){
+real_t MT6701::get_lap_position(){
     update();
     return lap_position;
 }

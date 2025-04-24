@@ -3,13 +3,6 @@
 #include "core/io/regs.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#ifdef FDC2X1X_DEBUG
-#define FDC2X1X_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define FDC2X1X_DEBUG(...)
-#endif
-
-
 namespace ymd::drivers{
 
 class FDC2X1X{

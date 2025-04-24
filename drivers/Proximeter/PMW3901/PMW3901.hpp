@@ -1,11 +1,13 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "drivers/Proximeter/FlowSensor.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "core/utils/Result.hpp"
+#include "drivers/Proximeter/FlowSensor.hpp"
+
+
 
 namespace ymd::drivers{
 

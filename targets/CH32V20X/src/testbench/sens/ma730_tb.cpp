@@ -20,6 +20,6 @@ void ma730_main(){
 
     while(true){
         ma730.update();
-        DEBUG_PRINTLN(ma730.getLapPosition());
+        DEBUG_PRINTLN(ma730.get_lap_position());
     }
 }

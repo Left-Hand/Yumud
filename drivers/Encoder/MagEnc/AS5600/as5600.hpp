@@ -5,7 +5,6 @@
 #include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 class AS5600{
@@ -161,39 +160,39 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
     AS5600(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    void setPowerMode(const PowerMode _power_mode);
+    void set_power_mode(const PowerMode _power_mode);
 
-    void setFastFilter(const FastFilter _fast_filter);
+    void set_fast_filter(const FastFilter _fast_filter);
 
-    void setSlowFilter(const SlowFilter _slow_filter);
+    void set_slow_filter(const SlowFilter _slow_filter);
 
-    void setPwmFrequency(const PwmFrequency _pwm_frequency);
+    void set_pwm_frequency(const PwmFrequency _pwm_frequency);
 
-    void setOuputStage(const OutputStage _output_stage);
+    void set_ouput_stage(const OutputStage _output_stage);
 
-    void setHysteresis(const Hysteresis _hysteresis);
+    void set_hysteresis(const Hysteresis _hysteresis);
 
-    int8_t getMagStatus();
+    int8_t get_mag_status();
 
-    uint8_t getGain();
+    uint8_t get_gain();
 
-    uint16_t getMagnitude();
+    uint16_t get_magnitude();
 
-    real_t getRawAngle();
+    real_t get_raw_angle();
 
-    real_t getAngle();
+    real_t get_angle();
 
-    void setStartAngle(const real_t angle);
+    void set_start_angle(const real_t angle);
 
-    void setEndAngle(const real_t angle);
+    void set_end_angle(const real_t angle);
 
-    void setAmountAngle(const real_t angle);
+    void set_amount_angle(const real_t angle);
 
-    uint8_t getProgramTimes();
+    uint8_t get_program_times();
 
-    void burnAngle();
+    void burn_angle();
 
-    void burnSetting();
+    void burn_setting();
 
     void init();
 };

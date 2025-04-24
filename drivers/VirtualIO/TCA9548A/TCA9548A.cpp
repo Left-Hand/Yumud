@@ -4,14 +4,18 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 void TCA9548A::switch_vbus(const uint8_t ch){
-    if(last_ch_ == ch) return;
+    if((last_ch_.is_some()) and (last_ch_.unwrap() == ch)) return;
     const uint8_t temp = 1 << ch;
     self_i2c_drv_.write_blocks<>(temp, LSB).unwrap();
 }
 
 BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){
-    if((last_ch_ < 0) or (last_ch_ == ch)){
-        last_ch_ = ch;//lock
+    if((last_ch_.is_none()) 
+        or (
+            (last_ch_.is_some()) 
+            and (last_ch_.unwrap() == ch)
+        )){
+        last_ch_ = Some(ch);//lock
         return i2c_.begin(address);
     }else{
         return BusError::OCCUPIED;
@@ -19,13 +23,9 @@ BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){
 }
 
 void TCA9548A::trail(const uint8_t ch){
-    if((last_ch_ >= 0) and (last_ch_ == ch)){
+    if((last_ch_.is_some()) and (last_ch_.unwrap() == ch)){
         i2c_.end();
-        last_ch_ = -1;
+        last_ch_ = None;
         return ;
     }
 }
-
-// TCA9548A::VirtualI2c(TCA9548A & host, const uint8_t ch):
-//     hal::I2c(hal::NullGpio, hal::NullGpio),
-//     host_(host), ch_(ch){;}

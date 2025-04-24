@@ -18,7 +18,7 @@ using namespace ymd;
 #endif
 
 void MA730::init(){
-    getLapPosition();
+    get_lap_position();
 }
 
 BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
@@ -36,41 +36,41 @@ BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
     return err;
 }
 
-BusError MA730::directRead(uint16_t & data){
+BusError MA730::direct_read(uint16_t & data){
     const auto err = spi_drv_.read_single(data);
     // ASSERT(BusError::OK);
     return err;
 }
 
 
-uint16_t MA730::getRawData(){
+uint16_t MA730::get_raw_data(){
     uint16_t data = 0;
-    directRead(data);
+    direct_read(data);
     return data;
 }
 
 
-void MA730::setZeroData(const uint16_t data){
+void MA730::set_zero_data(const uint16_t data){
     zeroDataReg = data & 0xff;
     write_reg(RegAddress::ZeroDataLow, zeroDataReg & 0xff);
     write_reg(RegAddress::ZeroDataHigh, zeroDataReg >> 8);
 }
 
 
-void MA730::setZeroPosition(const real_t position){
+void MA730::set_zero_position(const real_t position){
     auto data = uni_to_u16(frac(position));
-    setZeroData(data);
+    set_zero_data(data);
 }
 
 
 void MA730::update(){
     uint16_t data = 0;
-    directRead(data);
+    direct_read(data);
     lap_position = u16_to_uni(data);
 }
 
 
-void MA730::setTrimX(const real_t k){
+void MA730::set_trim_x(const real_t k){
     trimReg = (uint8_t)((real_t(1) - real_t(1) / k) * 258);
     write_reg(RegAddress::Trim, trimReg);
     trimConfigReg.enableX = true;
@@ -78,7 +78,7 @@ void MA730::setTrimX(const real_t k){
     write_reg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
 }
 
-void MA730::setTrimY(const real_t k){
+void MA730::set_trim_y(const real_t k){
     trimReg = (uint8_t)((real_t(1) - k) * 258);
     write_reg(RegAddress::Trim, trimReg);
     trimConfigReg.enableX = false;
@@ -87,51 +87,51 @@ void MA730::setTrimY(const real_t k){
 }
 
 
-void MA730::setTrim(const real_t am, const real_t e){
+void MA730::set_trim(const real_t am, const real_t e){
     real_t k = std::tan(am + e) / std::tan(am);
-    if(k > real_t(1)) setTrimX(k);
-    else setTrimY(k);
+    if(k > real_t(1)) set_trim_x(k);
+    else set_trim_y(k);
 }
 
-void MA730::setMagThresholdLow(const MagThreshold threshold){
+void MA730::set_mag_threshold_low(const MagThreshold threshold){
     thresholdReg.thresholdLow = (uint8_t)threshold;
     write_reg(RegAddress::Threshold, uint8_t(thresholdReg));
 }
 
-void MA730::setMagThresholdHigh(const MagThreshold threshold){
+void MA730::set_mag_threshold_high(const MagThreshold threshold){
     thresholdReg.thresholdHigh = (uint8_t)threshold;
     write_reg(RegAddress::Threshold, uint8_t(thresholdReg));
 }
 
-void MA730::setDirection(const bool direction){
+void MA730::set_direction(const bool direction){
     directionReg.direction = direction;
     write_reg(RegAddress::Direction, uint8_t(directionReg));
 }
 
-bool MA730::isMagnitudeLow(){
+bool MA730::is_magnitude_low(){
     read_reg(RegAddress::Magnitude, magnitudeReg);
     bool correctMgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
     return correctMgl;
 }
 
-bool MA730::isMagnitudeHigh(){
+bool MA730::is_magnitude_high(){
     read_reg(RegAddress::Magnitude, magnitudeReg);
     return magnitudeReg.magnitudeHigh;
 }
 
-bool MA730::isMagnitudeProper(){
+bool MA730::is_magnitude_proper(){
     read_reg(RegAddress::Magnitude, magnitudeReg);
     bool proper = !((!(magnitudeReg.mgl1 | magnitudeReg.mgl2)) | magnitudeReg.magnitudeHigh);
     return proper;
 }
 
-void MA730::setZparameters(const Width width, const Phase phase){
+void MA730::set_zparameters(const Width width, const Phase phase){
     zParametersReg.zWidth = (uint8_t)width;
     zParametersReg.zPhase = (uint8_t)phase;
     write_reg(RegAddress::ZParameters, uint8_t(zParametersReg));
 }
 
-void MA730::setPulsePerTurn(const uint16_t _ppt){
+void MA730::set_pulse_per_turn(const uint16_t _ppt){
     uint16_t ppt = CLAMP(_ppt - 1, 0, 1023);
     uint8_t ppt_l = ppt & 0b11;
     uint8_t ppt_h = ppt >> 2;

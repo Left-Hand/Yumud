@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-class DisplayerPhy{
+class DisplayerPhyIntf{
 public:
     virtual void init() = 0;
 
@@ -22,7 +22,7 @@ public:
     virtual void write_u8(const uint8_t * data, size_t len) = 0;
 };
 
-class DisplayerPhySpi:public DisplayerPhy{
+class DisplayerPhySpi final:public DisplayerPhyIntf{
 protected:
 // public:
     hal::SpiDrv spi_drv_;
@@ -54,12 +54,12 @@ public:
 
 
     DisplayerPhySpi(
-            hal::Spi & bus,
-            const hal::SpiSlaveIndex index,
-            hal::GpioIntf & dc_gpio, 
-            hal::GpioIntf & res_gpio = hal::NullGpio,
-            hal::GpioIntf & blk_gpio = hal::NullGpio
-            ):DisplayerPhySpi(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
+        hal::Spi & bus,
+        const hal::SpiSlaveIndex index,
+        hal::GpioIntf & dc_gpio, 
+        hal::GpioIntf & res_gpio = hal::NullGpio,
+        hal::GpioIntf & blk_gpio = hal::NullGpio
+    ):DisplayerPhySpi(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
 
     void init(){
         dc_gpio_.outpp();
@@ -76,7 +76,7 @@ public:
         res_gpio_.set();
     }
 
-    void setBackLight(const uint8_t brightness){
+    void set_back_light(const uint8_t brightness){
 
     }
 
@@ -125,11 +125,11 @@ public:
 };
 
 
-class DisplayerPhyI2c:public DisplayerPhy{
+class DisplayerPhyI2c final:public DisplayerPhyIntf{
 protected:
     hal::I2cDrv i2c_drv_;
-    static constexpr uint8_t cmd_token = 0x00;
-    static constexpr uint8_t data_token = 0x40;
+    static constexpr uint8_t CMD_TOKEN = 0x00;
+    static constexpr uint8_t DATA_TOKEN = 0x40;
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
 public:
     DisplayerPhyI2c(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
@@ -140,26 +140,26 @@ public:
     void init(){;}
 
     BusError write_command(const uint32_t cmd){
-        return i2c_drv_.write_reg(cmd_token, cmd, LSB);
+        return i2c_drv_.write_reg(CMD_TOKEN, cmd, LSB);
     }
 
     BusError write_data(const uint32_t data){
-        return i2c_drv_.write_reg(data_token, data, LSB);
+        return i2c_drv_.write_reg(DATA_TOKEN, data, LSB);
     }
 
     BusError write_burst(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
-            return i2c_drv_.write_burst(data_token, std::span(pdata, len), LSB);
+            return i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len), LSB);
         }else {
-            return i2c_drv_.write_burst(data_token, std::span(pdata, len));
+            return i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len));
         }
     }
 
     BusError write_burst(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
-            return i2c_drv_.write_repeat(data_token, std::span(data, len), LSB);
+            return i2c_drv_.write_repeat(DATA_TOKEN, std::span(data, len), LSB);
         }else {
-            return i2c_drv_.write_repeat(data_token, data, len);
+            return i2c_drv_.write_repeat(DATA_TOKEN, data, len);
         }
     }
 

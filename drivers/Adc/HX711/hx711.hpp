@@ -2,6 +2,7 @@
 
 
 #include "core/math/real.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 
 namespace ymd::hal{

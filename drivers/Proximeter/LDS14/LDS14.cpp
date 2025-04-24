@@ -2,7 +2,9 @@
 
 using namespace ymd::drivers;
 
-scexpr uint8_t crc8_table[256] = {
+using Self = LDS14;
+
+static constexpr std::array<uint8_t, 256> CRC8_TABLE = {
     0x00, 0x4d, 0x9a, 0xd7, 0x79, 0x34, 0xe3,
     0xae, 0xf2, 0xbf, 0x68, 0x25, 0x8b, 0xc6, 0x11, 0x5c, 0xa9, 0xe4, 0x33,
     0x7e, 0xd0, 0x9d, 0x4a, 0x07, 0x5b, 0x16, 0xc1, 0x8c, 0x22, 0x6f, 0xb8,
@@ -28,14 +30,19 @@ scexpr uint8_t crc8_table[256] = {
 };
 
 uint8_t LDS14::LidarFrame::calc_crc() const {
-    static constexpr size_t len = sizeof(*this) - sizeof(crc8);
-    auto * p = reinterpret_cast<const uint8_t *>(this);
+    static constexpr size_t len = sizeof(Self) - CRC8_TABLE.size();
+    const uint8_t * p = reinterpret_cast<const uint8_t *>(this);
+    return s_calc_crc(std::span<const uint8_t>(p, len));
+}
+
+uint8_t LDS14::LidarFrame::s_calc_crc(const std::span<const uint8_t> pbuf){
     uint8_t crc = 0;
-    for (size_t i = 0; i < len; i++){
-        crc = crc8_table[(crc ^ *p++) & 0xff];
+    for (size_t i = 0; i < pbuf.size(); i++){
+        crc = CRC8_TABLE[(crc ^ pbuf[i]) & 0xff];
     }
     return crc;
 }
+
 
 void LDS14::run(){
     while(m_uart.available()){
@@ -44,10 +51,10 @@ void LDS14::run(){
         switch(m_data_cnt){
             
             case 0:
-                if(data == header_token) m_data_cnt++;
+                if(data == HEADER_TOKEN) m_data_cnt++;
                 break;
             case 1:
-                if(data == verlen_token) m_data_cnt++;
+                if(data == VERLEN_TOKEN) m_data_cnt++;
                 break;
             case (sizeof(LidarFrame) - sizeof(LidarFrame::crc8)):
                 break;

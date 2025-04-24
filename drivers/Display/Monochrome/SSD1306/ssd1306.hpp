@@ -20,7 +20,7 @@ public:
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 protected:
-    DisplayerPhy & interface;
+    DisplayerPhyIntf & interface_;
 
 
     void setarea_unsafe(const Rect2i & area) {
@@ -35,38 +35,33 @@ protected:
     void setpos_unsafe(const Vector2i & pos) ;
     void set_flush_pos(const Vector2i & pos){
         auto [x, y] = pos + offset_;
-        interface.write_command(0xb0 | size_t(y / 8));
-        interface.write_command(((x & 0xf0 )>>4) |0x10);
-        interface.write_command((x & 0x0f));
-
-        // auto [x, y] = pos + get_offset();
-        // interface.write_command(0xb0 | (y / 8));
-        // interface.write_command(((x & 0xf0 )>>4) |0x10);
-        // interface.write_command((x & 0x0f));
+        interface_.write_command(0xb0 | size_t(y / 8));
+        interface_.write_command(((x & 0xf0 )>>4) |0x10);
+        interface_.write_command((x & 0x0f));
     }
 
 
     void set_offset(){
-        interface.write_command(0xD3); 
-        interface.write_command(offset_.y);
+        interface_.write_command(0xD3); 
+        interface_.write_command(offset_.y);
     }
 
     const Vector2i offset_;
     const std::span<const uint8_t> cmds_;
-    VerticalBinaryImage frame_instance;
+    VerticalBinaryImage frame_;
 
 
     void preinit_by_cmds();
 public:
 
     template<typename T>
-    SSD13XX(DisplayerPhy & _interface, const T && tag):
+    SSD13XX(DisplayerPhyIntf & interface, const T && tag):
         ImageBasics(_oled_preset<T>::size),
         Displayer(_oled_preset<T>::size), 
-        interface(_interface),
+        interface_(interface),
         offset_(_oled_preset<T>::offset), 
         cmds_(_oled_preset<T>::get_cmds()),
-        frame_instance(_oled_preset<T>::size){;}
+        frame_(_oled_preset<T>::size){;}
 
 scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
 
@@ -76,31 +71,31 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
 
     void enable(const bool en = true){
         if(en){
-            interface.write_command(0x8D);
-            interface.write_command(0x14);
-            interface.write_command(0xAF);
+            interface_.write_command(0x8D);
+            interface_.write_command(0x14);
+            interface_.write_command(0xAF);
         }else{
-            interface.write_command(0x8D);
-            interface.write_command(0x10);
-            interface.write_command(0xAE);
+            interface_.write_command(0x8D);
+            interface_.write_command(0x10);
+            interface_.write_command(0xAE);
         }
     }
 
     void turn_display(const bool i){
-        interface.write_command(0xC8 - 8*uint8_t(i));//正常显示
-        interface.write_command(0xA1 - uint8_t(i));
+        interface_.write_command(0xC8 - 8*uint8_t(i));//正常显示
+        interface_.write_command(0xA1 - uint8_t(i));
     }
 
-    void enable_flip_y(const bool flip = true){interface.write_command(0xA0 | flip);}
-    void enable_flip_x(const bool flip = true){interface.write_command(0xC0 | (flip << 3));}
-    void enable_inversion(const bool inv = true){interface.write_command(0xA7 - inv);}  
+    void enable_flip_y(const bool flip = true){interface_.write_command(0xA0 | flip);}
+    void enable_flip_x(const bool flip = true){interface_.write_command(0xC0 | (flip << 3));}
+    void enable_inversion(const bool inv = true){interface_.write_command(0xA7 - inv);}  
 
-    VerticalBinaryImage & fetch_frame() {return frame_instance;};
+    VerticalBinaryImage & fetch_frame() {return frame_;};
 };
 
 
 
-
+namespace details{
 template<typename T>
 static constexpr Vector2i oled_display_size_v = _oled_preset<T>::size;
 
@@ -109,7 +104,7 @@ static constexpr Vector2i oled_display_offset_v = _oled_preset<T>::size;
 
 template<typename T>
 static constexpr Vector2i oled_initcmd_v = _oled_preset<T>::initcmd;
-
+}
 
 template<>
 struct _oled_preset<SSD13XX_72X40_Config>{

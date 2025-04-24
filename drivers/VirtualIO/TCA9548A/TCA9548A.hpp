@@ -1,6 +1,9 @@
+
+
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Option.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
@@ -27,7 +30,7 @@ class VirtualI2c: public hal::I2c{
 protected:
     hal::I2c & i2c_;
     hal::I2cDrv self_i2c_drv_;
-    uint8_t last_ch_ = -1;
+    Option<uint8_t> last_ch_ = None;
 
     void switch_vbus(const uint8_t ch);
 

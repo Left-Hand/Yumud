@@ -71,7 +71,7 @@ public:
             M3508Encoder(M3508 & _owner):owner(_owner){;}
             void init() override {}
             void update() override{}
-            real_t getLapPosition() override {return owner.lap_position;}
+            real_t get_lap_position() override {return owner.lap_position;}
             bool stable() override {return true;}
         };
 
@@ -83,7 +83,6 @@ public:
 
         auto & operator = (const M3508 & other) = delete;
         auto & operator = (M3508 && other) = delete;
-
 
 
         friend class M3508Port;

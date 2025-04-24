@@ -1,6 +1,5 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
-#include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 // #define ADS1115_DEBUG

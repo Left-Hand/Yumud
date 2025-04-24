@@ -4,11 +4,9 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Option.hpp"
 
-#include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
