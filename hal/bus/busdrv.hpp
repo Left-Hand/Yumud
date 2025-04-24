@@ -42,17 +42,7 @@ protected:
     
     BusDrv(TBus & bus, const uint8_t index):bus_(bus), index_(index){;}
     
-    struct _Guard{
-        TBus & bus_;
-        
-        _Guard(TBus & bus):
-        bus_(bus){;}
-        ~_Guard(){
-            bus_.end();
-        }
-    };
-    
-    [[nodiscard]] _Guard create_guard(){return _Guard{bus_};}
+    [[nodiscard]] auto create_guard(){return bus_.create_guard();}
     public:
     TBus & bus() const {return bus_;}
     auto index() const {return index_;}

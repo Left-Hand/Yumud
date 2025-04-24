@@ -107,6 +107,16 @@ private:
 
     virtual BusError lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
+
+    struct _Guard{
+        BusBase & bus_;
+        
+        _Guard(BusBase & bus):
+        bus_(bus){;}
+        ~_Guard(){
+            bus_.end();
+        }
+    };
 public:
     BusBase():locker(__own_locker__){;}
 
@@ -118,6 +128,8 @@ public:
     BusError begin(const uint8_t index);
 
     BusError end();
+
+    _Guard create_guard(){return _Guard{*this};}
 
     bool occupied(){return locker.locked();}
 };
