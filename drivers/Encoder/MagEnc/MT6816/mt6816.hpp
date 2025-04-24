@@ -1,19 +1,16 @@
 #pragma once
 
+#include "core/io/regs.hpp"
+
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
-#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 
 class MT6816:public MagEncoderIntf{
 protected:
-    hal::SpiDrv spi_drv_;
 
-    real_t lap_position;
-    size_t errcnt = 0;
-    bool fast_mode = true;
 
     struct Semantic:public Reg16<>{
         using Reg16::operator=;
@@ -22,7 +19,12 @@ protected:
         uint16_t data_14bit:14;
     };
 
-    Semantic last_semantic;
+    hal::SpiDrv spi_drv_;
+
+    real_t lap_position_;
+    size_t err_cnt_ = 0;
+    bool fast_mode_ = true;
+    Semantic last_semantic_;
 
     uint16_t get_position_data();
 public:
@@ -32,10 +34,10 @@ public:
 
     void init() override;
     void update() override;
-    real_t get_lap_position() override{return lap_position;}
-    uint32_t get_err_cnt() const {return errcnt;}
+    Option<real_t> get_lap_position() override { return Some(lap_position_);}
+    uint32_t get_err_cnt() const {return err_cnt_;}
 
-    bool stable() override {return last_semantic.no_mag == false;}
+    bool stable() override {return last_semantic_.no_mag == false;}
 };
 
 };

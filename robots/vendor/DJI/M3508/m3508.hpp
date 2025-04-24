@@ -71,7 +71,7 @@ public:
             M3508Encoder(M3508 & _owner):owner(_owner){;}
             void init() override {}
             void update() override{}
-            real_t get_lap_position() override {return owner.lap_position;}
+            Option<real_t> get_lap_position() override {return Some(owner.lap_position);}
             bool stable() override {return true;}
         };
 
@@ -88,21 +88,21 @@ public:
         friend class M3508Port;
         friend class M3508Encoder;
 
-        void applyTargetCurrent(const real_t _curr){port.setTargetCurrent(_curr, index);}
+        void apply_target_current(const real_t _curr){port.set_target_current(_curr, index);}
 
-        void updateMeasurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t _temp);
+        void update_measurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t _temp);
     public:
         void init();
         void tick();
         void reset();
-        void setTargetCurrent(const real_t curr);
-        void setTargetSpeed(const real_t spd);
-        void setTargetPosition(const real_t pos);
+        void set_target_current(const real_t curr);
+        void set_target_speed(const real_t spd);
+        void set_target_position(const real_t pos);
 
-        real_t getPosition() {return odo_.getPosition() / reduction_ratio;}
-        real_t getCurrent() const {return curr;}
-        real_t getSpeed() const {return speed / reduction_ratio * real_t(2.5);}
-        real_t getTemperature() const {return temperature;}
+        real_t get_position() {return odo_.getPosition() / reduction_ratio;}
+        real_t get_current() const {return curr;}
+        real_t get_speed() const {return speed / reduction_ratio * real_t(2.5);}
+        real_t get_temperature() const {return temperature;}
         uint32_t delta(){return micros_delta;}
         auto & enc() {return enc_;}
         auto & odo() {return odo_;}
@@ -159,17 +159,17 @@ protected:
         };
     };
     
-    void setTargetCurrent(const real_t curr, const size_t index){
+    void set_target_current(const real_t curr, const size_t index){
         M3508_CHECK_INDEX
         curr_cache[index - 1] = curr_to_currdata(curr);
     }
 
-    void updateInst(const hal::CanMsg & msg, const size_t index){
+    void update_inst(const hal::CanMsg & msg, const size_t index){
         M3508_CHECK_INDEX
         auto rx_data = RxData(msg);
         auto & inst = inst_[index - 1];
 
-        inst.updateMeasurements(
+        inst.update_measurements(
             (real_t(uint16_t(BSWAP_16(rx_data.angle_8192_msb))) >> 13),
             currdata_to_curr(rx_data.curr_data_msb),
             real_t(int16_t(BSWAP_16(rx_data.speed_rpm_msb))) / 60,

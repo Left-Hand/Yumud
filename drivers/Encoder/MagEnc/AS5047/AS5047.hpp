@@ -50,7 +50,7 @@ public:
     void init() override;
 
     void update() override;
-    real_t get_lap_position() override{return lap_position;}
+    Option<real_t> get_lap_position() override{return Some(lap_position);}
     uint32_t get_err_cnt() const {return errcnt;}
 
 };

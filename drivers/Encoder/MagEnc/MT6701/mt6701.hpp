@@ -10,6 +10,51 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
+
+class MT6701_Phy{
+public:
+
+    enum class RegAddress:uint8_t{
+        RawAngle = 0x03,
+        UVWMux = 0x25,
+        ABZMux = 0x29,
+        Resolution = 0x30,
+        ZeroConfig = 0x32,
+        Hystersis = 0x34,
+        WireConfig = 0x38,
+        StartStop = 0x3e,
+        Start = 0x3f,
+        Stop = 0x40
+    };
+
+
+    MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
+        MT6701_Phy(std::nullopt, std::make_optional<hal::SpiDrv>(spi, idx)){;}
+
+    MT6701_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        MT6701_Phy(std::make_optional<hal::I2cDrv>(i2c, addr), std::nullopt){;}
+
+
+    BusError write_reg(const RegAddress addr, const uint16_t data);
+    
+    BusError read_reg(const RegAddress addr, uint16_t & data);
+    
+    BusError write_reg(const RegAddress addr, const uint8_t data);
+    
+    BusError read_reg(const RegAddress addr, uint8_t & data);
+private:
+    MT6701_Phy(
+        std::optional<hal::I2cDrv> && i2c_drv, 
+        std::optional<hal::SpiDrv> && spi_drv
+    ):
+        i2c_drv_(std::move(i2c_drv)),
+        spi_drv_(std::move(spi_drv)){;}
+
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
+};
+
+
 class MT6701:public MagEncoderIntf{
 public:
     enum class Hysteresis:uint8_t{
@@ -67,9 +112,7 @@ protected:
     
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
 
-    std::optional<hal::I2cDrv> i2c_drv;
-    std::optional<hal::SpiDrv> spi_drv;
-
+    MT6701_Phy phy_;
     Semantic semantic = {0, 0};
     real_t lap_position = real_t(0);
     bool fast_mode = true;
@@ -116,19 +159,6 @@ protected:
         uint8_t stop:4;
     };
 
-    enum class RegAddress:uint8_t{
-        RawAngle = 0x03,
-        UVWMux = 0x25,
-        ABZMux = 0x29,
-        Resolution = 0x30,
-        ZeroConfig = 0x32,
-        Hystersis = 0x34,
-        WireConfig = 0x38,
-        StartStop = 0x3e,
-        Start = 0x3f,
-        Stop = 0x40
-    };
-
     struct{
         uint16_t rawAngleData;
         UVWMuxReg uvwMuxReg;
@@ -142,75 +172,65 @@ protected:
         uint8_t stopData;
     };
 
-
-    
-    BusError write_reg(const RegAddress addr, const uint16_t data);
-    BusError read_reg(const RegAddress addr, uint16_t & data);
-    BusError write_reg(const RegAddress addr, const uint8_t data);
-    BusError read_reg(const RegAddress addr, uint8_t & data);
-    // MT6701(hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
+    using RegAddress = MT6701_Phy::RegAddress;
 public:
-    MT6701(const hal::I2cDrv & _i2c_drv):
-        i2c_drv(_i2c_drv), spi_drv(std::nullopt){};
-    // MT6701(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
-    MT6701(hal::I2c & _i2c):
-        MT6701(hal::I2cDrv(_i2c, DEFAULT_I2C_ADDR)){};
+    MT6701(MT6701_Phy && phy):
+        phy_(std::move(phy)){;}
 
-    MT6701(const hal::SpiDrv & _spi_drv):
-        i2c_drv(std::nullopt), spi_drv(_spi_drv){};
-    // MT6701(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){};
-    MT6701(hal::Spi & _spi, const hal::SpiSlaveIndex spi_index):
-        MT6701(hal::SpiDrv(_spi, spi_index)){};
+    MT6701(hal::I2c & i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(MT6701_Phy(i2c, addr)){;}
+
+
     ~MT6701(){};
 
 
     void init() override;
 
     void update();
-    real_t get_lap_position() override;
+    Option<real_t> get_lap_position() override;
     
     bool stable() override;
 
     void enable_uvwmux(const bool enable = true){
         uvwMuxReg.uvwMux = enable;
-        write_reg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
+        phy_.write_reg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
     }
 
     void enable_abzmux(const bool enable = true){
         abzMuxReg.abzMux = enable;
-        write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
+        phy_.write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
     void set_direction(const bool clockwise){
         abzMuxReg.clockwise = clockwise;
-        write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
+        phy_.write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
     }
 
     void set_poles(const uint8_t _poles){
         resolutionReg.poles = _poles;
-        write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
+        phy_.write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
     void set_abz_resolution(const uint16_t abzResolution){
         resolutionReg.abzResolution = abzResolution;
-        write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
+        phy_.write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
     }
 
     void set_zero_position(const uint16_t zeroPosition){
         zeroConfigReg.zeroPosition = zeroPosition;
-        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth){
         zeroConfigReg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
-        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void set_hysteresis(const Hysteresis hysteresis){
         hystersisReg.hysteresis = (uint8_t)hysteresis & 0b11;
         zeroConfigReg.hysteresis = (uint8_t)hysteresis >> 2;
-        write_reg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
-        write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
+        phy_.write_reg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
+        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
     }
 
     void enable_fast_mode(const bool en = true){
@@ -218,17 +238,17 @@ public:
     }
     void enable_pwm(const bool enable = true){
         wireConfigReg.isPwm = enable;
-        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void set_pwm_polarity(const bool polarity){
         wireConfigReg.pwmPolarityLow = !polarity;
-        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void set_pwm_freq(const PwmFreq pwmFreq){
         wireConfigReg.pwmFreq = (uint8_t)pwmFreq;
-        write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
+        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
     }
 
     void set_start(const real_t start){
@@ -236,8 +256,8 @@ public:
         _startData >>= 4;
         startData = _startData;
         startStopReg.start = _startData >> 8;
-        write_reg(RegAddress::Start, startData);
-        write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
+        phy_.write_reg(RegAddress::Start, startData);
+        phy_.write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
 
     void set_stop(const real_t stop){
@@ -245,8 +265,8 @@ public:
         _stopData >>= 4;
         stopData = _stopData;
         startStopReg.stop = _stopData >> 8;
-        write_reg(RegAddress::Stop, stopData);
-        write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
+        phy_.write_reg(RegAddress::Stop, stopData);
+        phy_.write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
 };
 

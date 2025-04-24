@@ -9,6 +9,24 @@
 
 namespace ymd::drivers{
 
+class SGM58031_Error{
+public:
+    enum Kind:uint8_t {
+        Unspecified = 0xff
+    };
+
+    constexpr SGM58031_Error(Kind kind):kind_(kind){}
+    constexpr bool operator ==(const SGM58031_Error other) const {
+        return kind_ == other.kind_;
+    }
+
+    constexpr bool operator ==(const Kind kind) const {
+        return kind_ == kind;
+    }
+private:
+    Kind kind_;
+};
+
 class SGM58031{
 public:
     enum class DataRate:uint8_t{

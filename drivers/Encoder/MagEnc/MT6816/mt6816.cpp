@@ -7,9 +7,11 @@ using namespace ymd;
 
 
 void MT6816::init() {
-    last_semantic = 0;
-    lap_position = real_t(-1); // not possible before init done;
-    while(get_lap_position() < 0){this->update();} // while reading before get correct position
+    last_semantic_ = 0;
+    lap_position_ = -1; // not possible before init done;
+    while(get_lap_position().is_none()){
+        this->update();
+    } // while reading before get correct position
 }
 
 uint16_t MT6816::get_position_data(){
@@ -27,23 +29,23 @@ uint16_t MT6816::get_position_data(){
 
 void MT6816::update() {
     uint16_t raw = get_position_data();
-    if(fast_mode == false){
-        last_semantic = raw;
+    if(fast_mode_ == false){
+        last_semantic_ = raw;
 
         uint8_t count = 0;
 
-        raw -= last_semantic.pc;
+        raw -= last_semantic_.pc;
         while(raw){//Brian Kernighan algorithm
             raw &= raw - 1;
             ++count;
         }
 
-        if(count % 2 == last_semantic.pc){
-            lap_position = u16_to_uni(last_semantic.data_14bit << 2);
+        if(count % 2 == last_semantic_.pc){
+            lap_position_ = u16_to_uni(last_semantic_.data_14bit << 2);
         }else{
-            errcnt++;
+            err_cnt_++;
         }
     }else{
-        lap_position = u16_to_uni(raw);
+        lap_position_ = u16_to_uni(raw);
     }
 }

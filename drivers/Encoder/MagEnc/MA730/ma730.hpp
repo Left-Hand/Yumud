@@ -101,8 +101,8 @@ public:
 
 
     void set_zero_position(const real_t position);
-    real_t get_lap_position() override{
-        return lap_position;
+    Option<real_t> get_lap_position() override{
+        return Some(lap_position);
     }
 
     void set_trim_x(const real_t k);

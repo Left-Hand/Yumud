@@ -21,34 +21,34 @@ using namespace ymd;
     PANIC()\
 
 
-BusError MT6701::write_reg(const RegAddress addr, const uint16_t data){
-    if(i2c_drv) return i2c_drv->write_reg(uint8_t(addr), data, MSB);
+
+BusError MT6701_Phy::write_reg(const RegAddress addr, const uint16_t data){
+    if(i2c_drv_) return i2c_drv_->write_reg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::read_reg(const RegAddress addr, uint16_t & data){
-    if(i2c_drv) return i2c_drv->read_reg(uint8_t(addr), data, MSB);
+BusError MT6701_Phy::read_reg(const RegAddress addr, uint16_t & data){
+    if(i2c_drv_) return i2c_drv_->read_reg(uint8_t(addr), data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::write_reg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv) return i2c_drv->write_reg(uint8_t(addr), data);
+BusError MT6701_Phy::write_reg(const RegAddress addr, const uint8_t data){
+    if(i2c_drv_) return i2c_drv_->write_reg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-BusError MT6701::read_reg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv) return i2c_drv->read_reg(uint8_t(addr), data);
+BusError MT6701_Phy::read_reg(const RegAddress addr, uint8_t & data){
+    if(i2c_drv_) return i2c_drv_->read_reg(uint8_t(addr), data);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
-
 void MT6701::init(){
     enable_pwm();
     set_pwm_polarity(true);
@@ -57,32 +57,32 @@ void MT6701::init(){
 }
 
 void MT6701::update(){
-    if(i2c_drv){
-        read_reg(RegAddress::RawAngle, rawAngleData);
-        lap_position = u16_to_uni(rawAngleData);
-    }else if(spi_drv){
+    phy_.read_reg(RegAddress::RawAngle, rawAngleData);
+    lap_position = u16_to_uni(rawAngleData);
 
-        uint16_t data16;
-        spi_drv->read_single(data16).unwrap();
+    // else if(spi_drv){
 
-        uint8_t data8 = 0;
-        if(fast_mode == false){
-            spi_drv->read_single(data8).unwrap();
-        }
+    //     uint16_t data16;
+    //     spi_drv->read_single(data16).unwrap();
 
-        semantic = Semantic{data8, data16};
-        if(semantic.valid(fast_mode)){
-            lap_position = real_t(iq_t<16>(semantic.data_14bit << 2) >> 16);
-        } 
-    }else{
-        MT6701_DEBUG("no drv!!");
-        PANIC();
-    }
+    //     uint8_t data8 = 0;
+    //     if(fast_mode == false){
+    //         spi_drv->read_single(data8).unwrap();
+    //     }
+
+    //     semantic = Semantic{data8, data16};
+    //     if(semantic.valid(fast_mode)){
+    //         lap_position = real_t(iq_t<16>(semantic.data_14bit << 2) >> 16);
+    //     } 
+    // }
+    // else{
+    //     MT6701_DEBUG("no drv!!");
+    //     PANIC();
+    // }
 }
 
-real_t MT6701::get_lap_position(){
-    update();
-    return lap_position;
+Option<real_t> MT6701::get_lap_position(){
+    return Some(lap_position);
 }
 
 bool MT6701::stable(){

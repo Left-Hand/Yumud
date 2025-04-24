@@ -46,8 +46,8 @@ void m3508_main(){
         // real_t targ_curr = 4 * sin( t*real_t(1.7));
         // real_t targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);
-        motor.setTargetPosition(target);   
-        motor2.setTargetPosition(target);   
+        motor.set_target_position(target);   
+        motor2.set_target_position(target);   
         // motor.setTargetCurrent(0);   
         // port[2].setTargetCurrent(max_curr * cos(t));   
         // port[3].setTargetCurrent(max_curr * -sin(t));   
