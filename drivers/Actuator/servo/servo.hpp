@@ -11,20 +11,16 @@ private:
     // real_t basis_ = 0;
 protected:
     
-    virtual void setGLobalRadian(const real_t rad) = 0;
-    virtual real_t getGlobalRadian() = 0;
+    virtual void set_global_radian(const real_t rad) = 0;
+    virtual real_t get_global_radian() = 0;
 public:
-    void setRange(const Range_t<real_t> & range){
+    void set_range(const Range_t<real_t> & range){
         rad_range_ = range;
     }
     
-    // void setBasis(const real_t rad){
-    //     basis_ = rad;
-    // }
-    
-    void setRadian(const real_t rad){
+    void set_radian(const real_t rad){
         // setGLobalRadian(rad_range_.clamp(rad + basis_));
-        setGLobalRadian(rad_range_.clamp(rad));
+        set_global_radian(rad_range_.clamp(rad));
         // if(rad_range_.has(rad) == false){
             // DEBUG_PRINTLN());
         //     HALT;
@@ -34,23 +30,21 @@ public:
         // setGLobalRadian(rad);
     }
 
-    real_t getRadian(){
-        return getGlobalRadian();
+    real_t get_radian(){
+        return get_global_radian();
     }
-
-    virtual void idle();
 
 };
 
 
 class SpeedServo{
-    virtual void setSpeedDirectly(const real_t rad) = 0;
+    virtual void set_speed_directly(const real_t rad) = 0;
 public:
-    void setSpeed(const real_t rad){
-        setSpeedDirectly(rad);    
+    void set_speed(const real_t rad){
+        set_speed_directly(rad);    
     }
 
-    virtual real_t getSpeed() = 0;
+    virtual real_t get_speed() = 0;
 };
 
 };
