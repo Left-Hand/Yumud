@@ -129,8 +129,8 @@ protected:
         // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }
 
-    void read_burst(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len)).unwrap();
+    hal::BusError read_burst(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len));
     }
 
     uint32_t get_pressure_data(){

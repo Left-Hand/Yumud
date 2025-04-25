@@ -19,8 +19,8 @@ protected:
     __no_inline void delay_dur(){
         udelay(delays);
     }
-    hal::BusError lead(const uint8_t index) override{
-        auto ret = Spi::lead(index);
+    hal::BusError lead(const LockRequest req) override{
+        auto ret = Spi::lead(req);
         delay_dur();
         return ret;
     }
@@ -51,14 +51,14 @@ public:
     hal::BusError write(const uint32_t data) {
         uint32_t dummy;
         transfer(dummy, data);
-        return hal::BusError::OK;
+        return hal::BusError::Ok();
     }
 
     hal::BusError read(uint32_t & data) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
         transfer(ret, dummy); 
-        return hal::BusError::OK;
+        return hal::BusError::Ok();
     }
 
     hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;

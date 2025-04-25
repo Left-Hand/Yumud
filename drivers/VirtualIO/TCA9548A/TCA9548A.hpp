@@ -16,7 +16,7 @@ class VirtualI2c: public hal::I2c{
     protected:
         TCA9548A & host_;
         const uint8_t ch_;
-        hal::BusError lead(const uint8_t address){return host_.lead(address, ch_);}
+        hal::BusError lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
         void trail(){return host_.trail(ch_);}
     public:
         VirtualI2c(TCA9548A & host, const uint8_t ch);
@@ -32,7 +32,7 @@ protected:
     hal::I2cDrv self_i2c_drv_;
     Option<uint8_t> last_ch_ = None;
 
-    void switch_vbus(const uint8_t ch);
+    hal::BusError switch_vbus(const uint8_t ch);
 
     hal::BusError lead(const uint8_t address, const uint8_t ch);
 
@@ -62,8 +62,6 @@ protected:
         VirtualI2c(*this, 7),
     };
 public:
-    TCA9548A(const hal::I2cDrv & i2c_drv):
-        i2c_(i2c_drv.bus()), self_i2c_drv_(i2c_drv){;}
     TCA9548A(hal::I2cDrv && i2c_drv):
         i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
     TCA9548A(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):

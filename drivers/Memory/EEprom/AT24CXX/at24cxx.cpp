@@ -1,6 +1,7 @@
 #include "at24cxx.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 // #define AT24CXX_DEBUG
@@ -33,23 +34,22 @@ if(loc > m_capacity){\
 #endif
 
     
-void AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
+hal::BusError AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
     AT24CXX_DEBUG("write", len, "bytes to", addr);
     // DEBUGGER.print_arr(data, len);
     if (is_small_chip()){
-        i2c_drv_.write_burst(uint8_t(addr), std::span(data, len)).unwrap();
+        return i2c_drv_.write_burst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.write_burst((uint16_t)addr, std::span(data, len)).unwrap();
-
+        return i2c_drv_.write_burst((uint16_t)addr, std::span(data, len));
     }
 }
 
-void AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
+hal::BusError AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
     AT24CXX_DEBUG("read", len, "bytes to", addr);
     if (is_small_chip()){
-        i2c_drv_.read_burst(uint8_t(addr), std::span(data, len)).unwrap();
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.read_burst((uint16_t)addr, std::span(data, len)).unwrap();
+        return i2c_drv_.read_burst((uint16_t)addr, std::span(data, len));
     }
 }
 

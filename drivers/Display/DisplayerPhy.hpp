@@ -1,13 +1,15 @@
 #pragma once
 
+#include <optional>
+
 #include "core/io/regs.hpp"
-#include "types/rgb.h"
+#include "core/clock/clock.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include <optional>
+#include "types/rgb.h"
 
 namespace ymd::drivers{
 
@@ -18,8 +20,8 @@ public:
     virtual hal::BusError write_command(const uint32_t cmd) = 0;
     virtual hal::BusError write_data(const uint32_t data) = 0;
 
-    virtual void write_u8(const uint8_t data, size_t len) = 0;
-    virtual void write_u8(const uint8_t * data, size_t len) = 0;
+    virtual hal::BusError write_u8(const uint8_t data, size_t len) = 0;
+    virtual hal::BusError write_u8(const uint8_t * data, size_t len) = 0;
 };
 
 class DisplayerPhySpi final:public DisplayerPhyIntf{
@@ -30,11 +32,8 @@ protected:
     hal::GpioIntf & res_gpio_;
     hal::GpioIntf & blk_gpio_;
 
-    static constexpr bool command_level = false;
-    static constexpr bool data_level = true;
-
-    // DisplayerPhySpi(const DisplayerPhyhal::Spi & other) = default;
-    // DisplayerPhySpi(DisplayerPhyhal::Spi && other) = default;
+    static constexpr auto COMMAND_LEVEL = LOW;
+    static constexpr auto DATA_LEVEL = HIGH;
 public:
 
     DisplayerPhySpi(
@@ -66,7 +65,7 @@ public:
         res_gpio_.outpp(HIGH);
         blk_gpio_.outpp(HIGH);
 
-        reset();
+        return reset();
     }
 
     void reset(){
@@ -81,46 +80,46 @@ public:
     }
 
     hal::BusError write_command(const uint32_t cmd){
-        dc_gpio_ = command_level;
+        dc_gpio_ = COMMAND_LEVEL;
         return spi_drv_.write_single<uint8_t>(cmd);
     }
 
     hal::BusError write_data(const uint32_t data){
-        dc_gpio_ = data_level;
+        dc_gpio_ = DATA_LEVEL;
         return spi_drv_.write_single<uint8_t>(data);
     }
 
-    void write_data16(const uint32_t data){
-        dc_gpio_ = data_level;
-        spi_drv_.write_single<uint16_t>(data).unwrap();
+    hal::BusError write_data16(const uint32_t data){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_single<uint16_t>(data);
     }
 
-    void write_single(const auto & data){
-        dc_gpio_ = data_level;
-        spi_drv_.write_single(data).unwrap();
-    }
-
-    template<typename U>
-    void write_burst(const auto * data, size_t len){
-        dc_gpio_ = data_level;
-        spi_drv_.write_burst<U>(data, len).unwrap();
+    hal::BusError write_single(const auto & data){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_single(data);
     }
 
     template<typename U>
-    void write_burst(const auto & data, size_t len){
-        dc_gpio_ = data_level;
-        spi_drv_.write_burst<U>(data, len).unwrap();
+    hal::BusError write_burst(const auto * data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_burst<U>(data, len);
+    }
+
+    template<typename U>
+    hal::BusError write_burst(const auto & data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_burst<U>(data, len);
     }
 
 
-    void write_u8(const uint8_t data, size_t len){
-        dc_gpio_ = data_level;
-        spi_drv_.write_burst<uint8_t>(data, len).unwrap();
+    hal::BusError write_u8(const uint8_t data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_burst<uint8_t>(data, len);
     }
 
-    void write_u8(const uint8_t * data, size_t len){
-        dc_gpio_ = data_level;
-        spi_drv_.write_burst<uint8_t>(data, len).unwrap();
+    hal::BusError write_u8(const uint8_t * data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return spi_drv_.write_burst<uint8_t>(data, len);
     }
 };
 
@@ -163,12 +162,12 @@ public:
         }
     }
 
-    void write_u8(const uint8_t data, size_t len) {
-        write_burst<uint8_t>(data, len);
+    hal::BusError write_u8(const uint8_t data, size_t len) {
+        return write_burst<uint8_t>(data, len);
     }
 
-    void write_u8(const uint8_t * data, size_t len) {
-        write_burst<uint8_t>(data, len);
+    hal::BusError write_u8(const uint8_t * data, size_t len) {
+        return write_burst<uint8_t>(data, len);
     }
 };
 

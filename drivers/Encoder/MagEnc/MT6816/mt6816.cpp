@@ -14,21 +14,21 @@ void MT6816::init() {
     } // while reading before get correct position
 }
 
-uint16_t MT6816::get_position_data(){
+Result<uint16_t, hal::BusError> MT6816::get_position_data(){
     uint16_t dataTx[2];
     uint16_t dataRx[2] = {0, 0};
 
     dataTx[0] = (0x80 | 0x03) << 8;
     dataTx[1] = (0x80 | 0x04) << 8;
 
-    if(const auto err = spi_drv_.transfer_single(dataRx[1], dataTx[1]); err.ok()) return 0;
-    if(const auto err = spi_drv_.transfer_single(dataRx[0], dataTx[0]); err.ok()) return 0;
+    if(const auto err = spi_drv_.transfer_single(dataRx[1], dataTx[1]); err.is_err()) return Err(err);
+    if(const auto err = spi_drv_.transfer_single(dataRx[0], dataTx[0]); err.is_err()) return Err(err);
 
-    return((dataRx[0] & 0x00FF) << 8) | (dataRx[1]);
+    return Ok<uint16_t>(((dataRx[0] & 0x00FF) << 8) | (dataRx[1]));
 }
 
 void MT6816::update() {
-    uint16_t raw = get_position_data();
+    uint16_t raw = get_position_data().unwrap();
     if(fast_mode_ == false){
         last_semantic_ = raw;
 

@@ -2,8 +2,10 @@
 
 #include "core/debug/debug.hpp"
 
-#ifdef DRV2605_DEBUG
-#undef DRV2605_DEBUG
+#define DRV2605_DEBUG_EN 0
+
+#if DRV2605_DEBUG_EN
+
 #define DRV2605_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define DRV2605_PANIC(...) PANIC{__VA_ARGS__}
 #define DRV2605_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
@@ -13,49 +15,51 @@
 #define DRV2605_DEBUG(...)
 #define DRV2605_PANIC(...)  PANIC_NSRC()
 #define DRV2605_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void) read_reg(reg.address, reg).unwrap();
-#define WRITE_REG(reg) (void) write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) (void) read_reg(reg.address, reg);
+#define WRITE_REG(reg) (void) write_reg(reg.address, reg);
 #endif
 
 
-#define STATUS_Reg          0x00
-#define MODE_Reg            0x01
-#define RTP_INPUT_Reg       0x02
-#define LIB_SEL_Reg         0x03
-#define WAV_SEQ1_Reg        0x04
-#define WAV_SEQ2_Reg        0x05
-#define WAV_SEQ3_Reg        0x06
-#define WAV_SEQ4_Reg        0x07
-#define WAV_SEQ5_Reg        0x08
-#define WAV_SEQ6_Reg        0x09
-#define WAV_SEQ7_Reg        0x0A
-#define WAV_SEQ8_Reg        0x0B
-#define GO_Reg              0x0C
-#define ODT_OFFSET_Reg      0x0D
-#define SPT_Reg             0x0E
-#define SNT_Reg             0x0F
-#define BRT_Reg             0x10
-#define ATV_CON_Reg         0x11
-#define ATV_MIN_IN_Reg      0x12
-#define ATV_MAX_IN_Reg      0x13
-#define ATV_MIN_OUT_Reg     0x14
-#define ATV_MAX_OUT_Reg     0x15
-#define RATED_VOLTAGE_Reg   0x16
-#define OD_CLAMP_Reg        0x17
-#define A_CAL_COMP_Reg      0x18
-#define A_CAL_BEMF_Reg      0x19
-#define FB_CON_Reg          0x1A
-#define CONTRL1_Reg         0x1B
-#define CONTRL2_Reg         0x1C
-#define CONTRL3_Reg         0x1D
-#define CONTRL4_Reg         0x1E
-#define VBAT_MON_Reg        0x21
-#define LRA_RESON_Reg       0x22
+static constexpr uint8_t STATUS_Reg          = 0x00;
+static constexpr uint8_t MODE_Reg            = 0x01;
+static constexpr uint8_t RTP_INPUT_Reg       = 0x02;
+static constexpr uint8_t LIB_SEL_Reg         = 0x03;
+static constexpr uint8_t WAV_SEQ1_Reg        = 0x04;
+static constexpr uint8_t WAV_SEQ2_Reg        = 0x05;
+static constexpr uint8_t WAV_SEQ3_Reg        = 0x06;
+static constexpr uint8_t WAV_SEQ4_Reg        = 0x07;
+static constexpr uint8_t WAV_SEQ5_Reg        = 0x08;
+static constexpr uint8_t WAV_SEQ6_Reg        = 0x09;
+static constexpr uint8_t WAV_SEQ7_Reg        = 0x0A;
+static constexpr uint8_t WAV_SEQ8_Reg        = 0x0B;
+static constexpr uint8_t GO_Reg              = 0x0C;
+static constexpr uint8_t ODT_OFFSET_Reg      = 0x0D;
+static constexpr uint8_t SPT_Reg             = 0x0E;
+static constexpr uint8_t SNT_Reg             = 0x0F;
+static constexpr uint8_t BRT_Reg             = 0x10;
+static constexpr uint8_t ATV_CON_Reg         = 0x11;
+static constexpr uint8_t ATV_MIN_IN_Reg      = 0x12;
+static constexpr uint8_t ATV_MAX_IN_Reg      = 0x13;
+static constexpr uint8_t ATV_MIN_OUT_Reg     = 0x14;
+static constexpr uint8_t ATV_MAX_OUT_Reg     = 0x15;
+static constexpr uint8_t RATED_VOLTAGE_Reg   = 0x16;
+static constexpr uint8_t OD_CLAMP_Reg        = 0x17;
+static constexpr uint8_t A_CAL_COMP_Reg      = 0x18;
+static constexpr uint8_t A_CAL_BEMF_Reg      = 0x19;
+static constexpr uint8_t FB_CON_Reg          = 0x1A;
+static constexpr uint8_t CONTRL1_Reg         = 0x1B;
+static constexpr uint8_t CONTRL2_Reg         = 0x1C;
+static constexpr uint8_t CONTRL3_Reg         = 0x1D;
+static constexpr uint8_t CONTRL4_Reg         = 0x1E;
+static constexpr uint8_t VBAT_MON_Reg        = 0x21;
+static constexpr uint8_t LRA_RESON_Reg       = 0x22;
 
 
 
+using namespace ymd;
 using namespace ymd::drivers;
 
+using Error = DRV2605L::Error;
 
 void DRV2605L::setFbBrakeFactor(const FbBrakeFactor factor){
     feedback_control_reg.fb_brake_factor = uint8_t(factor);
@@ -86,7 +90,7 @@ void DRV2605L::setLoopGain(const LoopGain gain){
     WRITE_REG(feedback_control_reg);
 }
 
-bool DRV2605L::init(){
+Result<void, Error> DRV2605L::init(){
     // 1. After powerup, wait at least 250 µs before the DRV2605 device accepts I
     // 2C commands.
     // 2. Assert the EN pin (logic high). The EN pin can be asserted any time during or after the 250-µs wait period.
@@ -105,24 +109,24 @@ bool DRV2605L::init(){
     // // feedback_control_reg.
     // // mode_reg = 0;
     // WRITE_REG(mode_reg);
-	if (! write_reg(RATED_VOLTAGE_Reg, 0x50).ok()) return 1;
+	if (write_reg(RATED_VOLTAGE_Reg, 0x50).is_err()) return Err(Error(Error::BusFault));
 
 	/* Set overdrive voltage */
-	if (! write_reg(OD_CLAMP_Reg, 0x89).ok()) return 1;
+	if (write_reg(OD_CLAMP_Reg, 0x89).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Setup feedback control and control registers */
-	if (! write_reg(FB_CON_Reg, 0xB6).ok()) return 1;
-	if (! write_reg(CONTRL1_Reg, 0x13).ok()) return 1;
-	if (! write_reg(CONTRL2_Reg, 0xF5).ok()) return 1;
-	if (! write_reg(CONTRL3_Reg, 0x80).ok()) return 1;
+	if (write_reg(FB_CON_Reg, 0xB6).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL1_Reg, 0x13).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL2_Reg, 0xF5).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL3_Reg, 0x80).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Select the LRA Library */
-	if (! write_reg(LIB_SEL_Reg, 0x06).ok()) return 1;
+	if (write_reg(LIB_SEL_Reg, 0x06).is_err()) return Err(Error(Error::BusFault));
 
 	/* Put the DRV2605 device in active mode */
-	if (! write_reg(MODE_Reg, 0x00).ok()) return 1;
+	if (write_reg(MODE_Reg, 0x00).is_err()) return Err(Error(Error::BusFault));
 
-    return 0;
+    return Ok();
 
 }
 
@@ -139,49 +143,48 @@ void DRV2605L::play(const uint8_t idx){
     write_reg(0x0c, 0x01);
 }
 
-bool DRV2605L::autocal(){
+Result<void, Error> DRV2605L::autocal(){
     uint8_t temp = 0x00;
     uint8_t ACalComp, ACalBEMF, BEMFGain;
 
 	/* Set rate voltage */
-	if (write_reg(RATED_VOLTAGE_Reg, 0x50).ok() != 0) return 1;
+	if (write_reg(RATED_VOLTAGE_Reg, 0x50).is_err()) return Err(Error(Error::BusFault));
 
 	/* Set overdrive voltage */
-	if (write_reg(OD_CLAMP_Reg, 0x89).ok() != 0) return 1;
+	if (write_reg(OD_CLAMP_Reg, 0x89).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Setup feedback control and control registers */
-	if (write_reg(FB_CON_Reg, 0xB6).ok() != 0) return 1;
-	if (write_reg(CONTRL1_Reg, 0x93).ok() != 0) return 1;
-	if (write_reg(CONTRL2_Reg, 0xF5).ok() != 0) return 1;
-	if (write_reg(CONTRL3_Reg, 0x80).ok() != 0) return 1;
+	if (write_reg(FB_CON_Reg, 0xB6).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL1_Reg, 0x93).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL2_Reg, 0xF5).is_err()) return Err(Error(Error::BusFault));
+	if (write_reg(CONTRL3_Reg, 0x80).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Put the DRV2605 device in auto calibration mode */
-	if (write_reg(MODE_Reg, 0x07).ok() != 0) return 1;
+	if (write_reg(MODE_Reg, 0x07).is_err()) return Err(Error(Error::BusFault));
     
-    if (write_reg(CONTRL4_Reg, 0x20).ok() != 0) return 1;
+    if (write_reg(CONTRL4_Reg, 0x20).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Begin auto calibration */
-    if (write_reg(GO_Reg, 0x01).ok() != 0) return 1;
+    if (write_reg(GO_Reg, 0x01).is_err()) return Err(Error(Error::BusFault));
 	
 	/* Poll the GO register until least significant bit is set */
-	while ((temp & 0x01) != 0x01)
-	{
-		if (read_reg(GO_Reg, temp).ok() != 0) return 1;
+	while (((temp & 0x01) != 0x01)){
+		if (read_reg(GO_Reg, temp).is_err()) return Err(Error(Error::BusFault));
 	}
 	
 	/* Read the result of the auto calibration */
-	if (read_reg(STATUS_Reg, temp).ok() != 0) return 1;
+	if (read_reg(STATUS_Reg, temp).is_err()) return Err(Error(Error::BusFault));
 
     
 	/* Read the compensation result of the auto calibration */
-	if (read_reg(A_CAL_COMP_Reg, ACalComp).ok() != 0) return 1;
+	if (read_reg(A_CAL_COMP_Reg, ACalComp).is_err()) return Err(Error(Error::BusFault));
 
 	/* Read the Back-EMF result of the auto calibration */
-	if (read_reg(A_CAL_BEMF_Reg, ACalBEMF).ok() != 0) return 1;
+	if (read_reg(A_CAL_BEMF_Reg, ACalBEMF).is_err()) return Err(Error(Error::BusFault));
 
 
 	/* Read the feedback control */
-	if (read_reg(FB_CON_Reg, BEMFGain).ok() != 0) return 1;
+	if (read_reg(FB_CON_Reg, BEMFGain).is_err()) return Err(Error(Error::BusFault));
 	
-	return 0;
+	return Ok();
 }

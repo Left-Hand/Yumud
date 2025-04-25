@@ -182,7 +182,7 @@ bool INA226::verify(){
     scexpr uint16_t valid_manu_id = 0x5449;
     scexpr uint16_t valid_chip_id = 0x2260;
     
-    INA226_ASSERT(i2c_drv_.verify().ok(), "INA226 i2c lost");
+    INA226_ASSERT(i2c_drv_.verify().is_ok(), "INA226 i2c lost");
 
     READ_REG(chipIDReg);
     READ_REG(manufactureIDReg);

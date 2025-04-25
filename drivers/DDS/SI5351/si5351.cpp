@@ -210,7 +210,7 @@ bool Si5351::init(uint8_t xtal_load_c, uint32_t xo_freq, int32_t corr){
     uint8_t status_reg = 0;
     do
     {
-        status_reg = si5351_read(SI5351_DEVICE_STATUS);
+        si5351_read(SI5351_DEVICE_STATUS, status_reg);
     } while (status_reg >> 7 == 1);
 
     // Set crystal load capacitance
@@ -730,7 +730,7 @@ void Si5351::set_ms(enum si5351_clock clk, struct Si5351RegSet ms_reg, uint8_t i
 		params[i++] = temp;
 
 		// Register 44 for CLK0
-		reg_val = si5351_read((SI5351_CLK0_PARAMETERS + 2) + (clk * 8));
+		si5351_read((SI5351_CLK0_PARAMETERS + 2) + (clk * 8), reg_val);
 		reg_val &= ~(0x03);
 		temp = reg_val | ((uint8_t)((ms_reg.p1 >> 16) & 0x03));
 		params[i++] = temp;
@@ -818,7 +818,7 @@ void Si5351::output_enable(enum si5351_clock clk, uint8_t enable)
 {
   uint8_t reg_val;
 
-  reg_val = si5351_read(SI5351_OUTPUT_ENABLE_CTRL);
+  si5351_read(SI5351_OUTPUT_ENABLE_CTRL, reg_val);
 
   if(enable == 1)
   {
@@ -847,7 +847,7 @@ void Si5351::drive_strength(enum si5351_clock clk, enum si5351_drive drive)
   uint8_t reg_val;
   const uint8_t mask = 0x03;
 
-  reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+  si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
   reg_val &= ~(mask);
 
   switch(drive)
@@ -991,7 +991,7 @@ void Si5351::set_ms_source(enum si5351_clock clk, enum si5351_pll pll)
 {
 	uint8_t reg_val;
 
-	reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+	si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
 	if(pll == SI5351_PLLA)
 	{
@@ -1019,7 +1019,7 @@ void Si5351::set_ms_source(enum si5351_clock clk, enum si5351_pll pll)
 void Si5351::set_int(enum si5351_clock clk, uint8_t enable)
 {
 	uint8_t reg_val;
-	reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+	si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
 	if(enable == 1)
 	{
@@ -1064,7 +1064,7 @@ void Si5351::set_int(enum si5351_clock clk, uint8_t enable)
 void Si5351::set_clock_pwr(enum si5351_clock clk, uint8_t pwr)
 {
 	uint8_t reg_val; //, reg;
-	reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+	si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
 	if(pwr == 1)
 	{
@@ -1090,7 +1090,7 @@ void Si5351::set_clock_pwr(enum si5351_clock clk, uint8_t pwr)
 void Si5351::set_clock_invert(enum si5351_clock clk, uint8_t inv)
 {
 	uint8_t reg_val;
-	reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+	si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
 	if(inv == 1)
 	{
@@ -1120,7 +1120,7 @@ void Si5351::set_clock_invert(enum si5351_clock clk, uint8_t inv)
 void Si5351::set_clock_source(enum si5351_clock clk, enum si5351_clock_source src)
 {
 	uint8_t reg_val;
-	reg_val = si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk);
+	si5351_read(SI5351_CLK0_CTRL + (uint8_t)clk, reg_val);
 
 	// Clear the bits first
 	reg_val &= ~(SI5351_CLK_INPUT_MASK);
@@ -1177,7 +1177,7 @@ void Si5351::set_clock_disable(enum si5351_clock clk, enum si5351_clock_disable 
 	}
 	else return;
 
-	reg_val = si5351_read(reg);
+	si5351_read(reg, reg_val);
 
 	if (clk >= SI5351_CLK0 && clk <= SI5351_CLK3)
 	{
@@ -1209,7 +1209,7 @@ void Si5351::set_clock_disable(enum si5351_clock clk, enum si5351_clock_disable 
 void Si5351::set_clock_fanout(enum si5351_clock_fanout fanout, uint8_t enable)
 {
 	uint8_t reg_val;
-	reg_val = si5351_read(SI5351_FANOUT_ENABLE);
+	si5351_read(SI5351_FANOUT_ENABLE, reg_val);
 
 	switch(fanout)
 	{
@@ -1261,7 +1261,7 @@ void Si5351::set_clock_fanout(enum si5351_clock_fanout fanout, uint8_t enable)
 void Si5351::set_pll_input(enum si5351_pll pll, enum si5351_pll_input input)
 {
 	uint8_t reg_val;
-	reg_val = si5351_read(SI5351_PLL_INPUT_SOURCE);
+	si5351_read(SI5351_PLL_INPUT_SOURCE, reg_val);
 
 	// Clear the bits first
 	//reg_val &= ~(SI5351_CLKIN_DIV_MASK);
@@ -1438,20 +1438,16 @@ void Si5351::set_ref_freq(uint32_t ref_freq, enum si5351_pll_input ref_osc)
 	//si5351_write(SI5351_PLL_INPUT_SOURCE, reg_val);
 }
 
-uint8_t Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
-	i2c_drv_.write_burst(addr, std::span(data, bytes)).unwrap();
-    return 0;
+hal::BusError Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
+	return i2c_drv_.write_burst(addr, std::span(data, bytes));
 }
 
-uint8_t Si5351::si5351_write(uint8_t addr, uint8_t data){
-    i2c_drv_.write_reg(addr, data).unwrap();
-    return 0;
+hal::BusError Si5351::si5351_write(uint8_t addr, uint8_t data){
+    return i2c_drv_.write_reg(addr, data);
 }
 
-uint8_t Si5351::si5351_read(uint8_t addr){
-	uint8_t ret;
-    i2c_drv_.read_reg(addr, ret).unwrap();
-	return ret;
+hal::BusError Si5351::si5351_read(uint8_t addr, uint8_t &data){
+    return i2c_drv_.read_reg(addr, data);
 }
 
 /*********************/
@@ -1735,7 +1731,7 @@ void Si5351::update_sys_status(struct Si5351Status *status)
 {
   uint8_t reg_val = 0;
 
-  reg_val = si5351_read(SI5351_DEVICE_STATUS);
+  si5351_read(SI5351_DEVICE_STATUS, reg_val);
 
   // Parse the register
   status->SYS_INIT = (reg_val >> 7) & 0x01;
@@ -1749,7 +1745,7 @@ void Si5351::update_int_status(struct Si5351IntStatus *int_status)
 {
   uint8_t reg_val = 0;
 
-  reg_val = si5351_read(SI5351_INTERRUPT_STATUS);
+  si5351_read(SI5351_INTERRUPT_STATUS, reg_val);
 
   // Parse the register
   int_status->SYS_INIT_STKY = (reg_val >> 7) & 0x01;
@@ -1791,7 +1787,7 @@ void Si5351::ms_div(enum si5351_clock clk, uint8_t r_div, uint8_t div_by_4)
 			break;
 	}
 
-	reg_val = si5351_read(reg_addr);
+	si5351_read(reg_addr, reg_val);
 
 	if(clk <= (uint8_t)SI5351_CLK5)
 	{

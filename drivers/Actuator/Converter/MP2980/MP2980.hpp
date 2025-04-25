@@ -133,11 +133,11 @@ protected:
     StatusReg status_reg = {};
 
     hal::BusError write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg).unwrap();
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
     hal::BusError read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg).unwrap();
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
     hal::BusError write_reg(const RegAddress address, const uint16_t reg){

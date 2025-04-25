@@ -1,9 +1,9 @@
 #include "ad9910.hpp"
+#include "core/clock/clock.hpp"
 
-#include "concept/pwm_channel.hpp"
+
 #include "concept/analog_channel.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
@@ -29,6 +29,8 @@ scexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40
 #define PROFILE0 		hal::portA[6]  
 #define PROFILE1 		hal::portB[12] 
 #define PROFILE2 		hal::portA[7]  
+
+#define UNWRAP_OR_RETURN(x) if(const auto err = x; err.is_err()) return err;
 
 #define DLY __nopn(10);
 #define UDT()\
@@ -61,15 +63,17 @@ void AD9910::init(void)
 
 
 
-void AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
+hal::BusError AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
-    spi_drv.write_single(addr).unwrap();
-    spi_drv.write_burst<uint8_t>(data, len).unwrap();
+
+    UNWRAP_OR_RETURN(spi_drv.write_single(addr));
+    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(data, len));
+
     __nopn(4);
 }
 
-void AD9910::write_data(const uint8_t txdat){
-    spi_drv.write_single(txdat).unwrap();
+hal::BusError AD9910::write_data(const uint8_t txdat){
+    return spi_drv.write_single(txdat);
 }  
 
     

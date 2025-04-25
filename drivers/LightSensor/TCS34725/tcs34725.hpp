@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
 

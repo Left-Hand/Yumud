@@ -42,6 +42,11 @@ public:
         return *this;
     }
 
+    hal::GpioIntf & operator = (const BoolLevel level){
+        write(bool(level));
+        return *this;
+    }
+
     hal::GpioIntf & operator = (const hal::GpioIntf & other){
         write(other.read());
         return *this;

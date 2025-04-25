@@ -105,6 +105,10 @@ public:
         return (likely(index < N) and likely(pin_ptrs[size_t(index)]));
     }
 
+    bool is_index_empty(const size_t index){
+        return (likely(index < N) and likely(pin_ptrs[size_t(index)] == nullptr));
+    }
+
     E & operator [](const size_t index){
         if(is_index_valid(size_t(index))) return *pin_ptrs[size_t(index)];
         while(true);

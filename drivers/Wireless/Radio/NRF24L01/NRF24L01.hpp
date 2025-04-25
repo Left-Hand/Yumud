@@ -204,14 +204,14 @@ namespace ymd::custom{
         static Result<T, drivers::NRF24L01::Error> convert(const hal::BusError berr){
             using Error = drivers::NRF24L01::Error;
             
-            if(berr.ok()) return Ok();
+            if(berr.is_ok()) return Ok();
 
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
                     // case hal::BusError::I2C_NOT_READY: return NRF24L01::Error::I2C_NOT_READY;
-                    default: return Error::UNSPECIFIED;
+                    default: return Error::Unspecified;
                 }
             }(berr);
 

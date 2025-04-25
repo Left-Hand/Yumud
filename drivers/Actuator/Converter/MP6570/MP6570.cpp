@@ -128,25 +128,25 @@ hal::BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
             .pen = true,
         }};
 
-        spi_drv_->write_burst<uint8_t>(
+        if(const auto err = spi_drv_->write_burst<uint8_t>(
             (frame.payload.begin())
             , (frame.payload.size()),
-            CONT).unwrap();
+            CONT); err.is_err()) return err;
 
         SpiReadResult rr;
 
-        spi_drv_->read_burst<uint8_t>(
+        if(const auto err = spi_drv_->read_burst<uint8_t>(
             (rr.payload.begin())
             , (rr.payload.size()),
             DISC
-        ).unwrap();
+        ); err.is_err()) return err;
 
         const auto result_opt = rr.result();
         if(result_opt){
             data = *result_opt;
-            return hal::BusError::OVERLOAD;
+            return hal::BusError::BusOverload;
         }else{
-            return hal::BusError::OK;
+            return hal::BusError::Ok();
         }
         
     }else{

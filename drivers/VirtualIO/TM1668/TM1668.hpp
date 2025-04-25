@@ -38,10 +38,10 @@ namespace ymd::custom{
             using Error = drivers::TM1668_Error;
             
             if constexpr(std::is_void_v<T>)
-                if(berr.ok()) return Ok();
+                if(berr.is_ok()) return Ok();
             
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     default: return Error::Unspecified;
                 }
             }(berr);
@@ -170,7 +170,7 @@ private:
         const auto guard = i2c_.create_guard();
 
         auto res = i2c_
-            .begin(payload1)
+            .begin(hal::LockRequest{payload1, 0})
             .then([&](){return i2c_.write(payload2);})
         ;
 

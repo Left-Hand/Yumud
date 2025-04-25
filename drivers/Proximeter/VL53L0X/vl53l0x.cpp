@@ -28,7 +28,7 @@ static constexpr uint8_t VL53L0X_REG_SYSRANGE_MODE_TIMED                      	=
 void VL53L0X::init(){
 	uint8_t data;
 #ifdef ESD_2V8
-	data = read_byte_data(VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV);
+	read_byte_data(VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, data);
 	data = (data & 0xFE) | 0x01;
 	write_byte_data(VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, data);
 #endif
@@ -36,7 +36,7 @@ void VL53L0X::init(){
 	write_byte_data(0x80, 0x01);
 	write_byte_data(0xFF, 0x01);
 	write_byte_data(0x00, 0x00);
-	read_byte_data(0x91);
+	read_byte_data(0x91, data);
 	write_byte_data(0x91, 0x3c);
 	write_byte_data(0x00, 0x01);
 	write_byte_data(0xFF, 0x00);
@@ -59,7 +59,9 @@ void VL53L0X::startConv(){
 }
 
 bool VL53L0X::busy(){
-    return bool(read_byte_data(VL53L0X_REG_SYSRANGE_START) & 0x01);
+	uint8_t data;
+    read_byte_data(VL53L0X_REG_SYSRANGE_START, data);
+	return (data & 0x01);
 }
 
 void VL53L0X::flush(){

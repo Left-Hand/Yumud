@@ -10,19 +10,18 @@
 
 namespace ymd::hal{
 
-class SccbDrv:public BusDrv<I2c> {
-protected:
-    using BusDrv<I2c>::index;
-    using BusDrv<I2c>::bus;
+class SccbDrv final {
+private:
+    hal::I2c & i2c_;
+    hal::I2cSlaveAddr<7> slave_addr_;
 public:
     SccbDrv(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        BusDrv(i2c, addr.as_u8()){};
+        i2c_(i2c), slave_addr_(addr){};
     SccbDrv(const SccbDrv & other) = default;
     SccbDrv(SccbDrv && other) = default;
 
-
-    void write_reg(const uint8_t addr, const uint16_t data);
-    void read_reg(const uint8_t addr, uint16_t & data);
+    hal::BusError write_reg(const uint8_t addr, const uint16_t data);
+    hal::BusError read_reg(const uint8_t addr, uint16_t & data);
 };
 
 }

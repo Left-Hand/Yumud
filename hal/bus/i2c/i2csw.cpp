@@ -5,7 +5,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-#define SCL_PP
+#define I2CSW_SCL_USE_PP_THAN_OD
 
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
@@ -33,15 +33,15 @@ hal::BusError I2cSw::wait_ack(){
     delay_dur();
     
     if(ovt){
-        return hal::BusError::NO_ACK;
+        return hal::BusError::AckTimeout;
     }else{
-        return hal::BusError::OK;
+        return hal::BusError::Ok();
     }
 
 }
 
-hal::BusError I2cSw::lead(const uint8_t address){
-    #ifdef SCL_PP
+hal::BusError I2cSw::lead(const LockRequest req){
+    #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl_gpio.outpp();
     #else
     scl_gpio.outod();
@@ -54,7 +54,7 @@ hal::BusError I2cSw::lead(const uint8_t address){
     delay_dur();
     scl_gpio.clr();
     delay_dur();
-    return write(address);
+    return write(req.id() << 1 | req.custom());
 }
 
 void I2cSw::trail(){
@@ -109,7 +109,7 @@ hal::BusError I2cSw::read(uint32_t & data, const Ack ack){
     sda_gpio.inpu();
 
     data = ret;
-    return hal::BusError::OK;
+    return hal::BusError::Ok();
 }
 
 void I2cSw::init(const uint32_t baudrate){
@@ -118,7 +118,7 @@ void I2cSw::init(const uint32_t baudrate){
     sda_gpio.outod();
     scl_gpio.set();
 
-    #ifdef SCL_PP
+    #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl_gpio.outpp();
     #else
     scl_gpio.outod();
@@ -137,9 +137,9 @@ void I2cSw::set_baudrate(const uint32_t baudrate) {
 }
 
 hal::BusError I2cSw::reset(){
-    return hal::BusError::OK;
+    return hal::BusError::Ok();
 }
 
 hal::BusError I2cSw::unlock_bus(){
-    return hal::BusError::OK;
+    return hal::BusError::Ok();
 }

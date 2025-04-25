@@ -17,7 +17,7 @@ public:
 
     using DeviceResult = Result<void, hal::BusError>;
     __inline DeviceResult make_result(const hal::BusError res){
-        if(res.ok()) return Ok();
+        if(res.is_ok()) return Ok();
         else return Err(res); 
     }
 

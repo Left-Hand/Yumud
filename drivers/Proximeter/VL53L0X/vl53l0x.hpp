@@ -42,22 +42,21 @@ private:
     };
 
     Result result, last_result;
-	void write_byte_data(const uint8_t Reg, const uint8_t byte){
-        i2c_drv_.write_reg(Reg, byte).unwrap();
+	hal::BusError write_byte_data(const uint8_t reg, const uint8_t byte){
+        return i2c_drv_.write_reg(reg, byte);
     }
 
     void flush();
     bool busy();
 
-	uint8_t read_byte_data(const uint8_t Reg){
-        uint8_t data;
-        i2c_drv_.read_reg(Reg, data).unwrap();
-        return data;
+	hal::BusError read_byte_data(const uint8_t reg, uint8_t & data){
+        if(const auto err = i2c_drv_.read_reg(reg, data);
+            err.is_err()) return err;
+        return hal::BusError::Ok();
     }
 
-    void read_burst(const uint8_t reg, uint16_t * data, const size_t len){
-        // sizeof(Result);
-        i2c_drv_.read_burst(reg, std::span(data, len), MSB).unwrap();
+    hal::BusError read_burst(const uint8_t reg, uint16_t * data, const size_t len){
+        return i2c_drv_.read_burst(reg, std::span(data, len), MSB);
     }
 };
 

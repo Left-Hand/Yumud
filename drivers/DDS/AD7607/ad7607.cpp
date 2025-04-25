@@ -1,5 +1,5 @@
 #include "ad7607.hpp"
-
+#include "core/clock/clock.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;

@@ -210,10 +210,10 @@ namespace ymd::custom{
         static Result<T, drivers::LIS3DH::Error> convert(const hal::BusError berr){
             using Error = drivers::LIS3DH::Error;
             
-            if(berr.ok()) return Ok();
+            if(berr.is_ok()) return Ok();
 
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     default: return Error::Unspecified;
                 }
             }(berr);

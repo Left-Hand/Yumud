@@ -25,7 +25,7 @@ using namespace ymd::drivers;
 
 void PAJ7620::read_reg(uint8_t addr, uint8_t & data){
 	const auto err = i2c_drv_.read_reg<uint8_t>(addr, data);
-	if(err.wrong()){
+	if(err.is_err()){
 		PAJ7620_DEBUG(err);
 	}
 };
@@ -33,7 +33,7 @@ void PAJ7620::read_reg(uint8_t addr, uint8_t & data){
 void PAJ7620::write_reg(uint8_t cmd, uint8_t data){
 	const auto err = i2c_drv_.write_reg<uint8_t>(cmd, data);
 	// PAJ7620_DEBUG(cmd, data);
-	if(err.wrong()){
+	if(err.is_err()){
 		PAJ7620_DEBUG(err);
 	}
 };
@@ -64,7 +64,7 @@ void PAJ7620::select_bank(uint8_t bank) {
 
 void PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
-	i2c_drv_.verify().unwrap();
+	i2c_drv_.verify();
 }
 
 void PAJ7620::update(){
@@ -77,7 +77,7 @@ PAJ7620::Flags PAJ7620::detect(){
 }
 
 bool PAJ7620::verify(){
-	if(auto passed = i2c_drv_.verify().ok(); !passed){
+	if(auto passed = i2c_drv_.verify().is_ok(); !passed){
 		PAJ7620_DEBUG("PAJ7620 not found");
 		return false;
 	}

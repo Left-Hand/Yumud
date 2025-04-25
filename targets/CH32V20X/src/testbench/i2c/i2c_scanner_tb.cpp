@@ -24,7 +24,7 @@ struct FoundInfo{
 };
 
 Result<void, hal::BusError> make_result(const hal::BusError res){
-    if(res.ok()) return Ok();
+    if(res.is_ok()) return Ok();
     else return Err(res); 
 }
 
@@ -87,7 +87,7 @@ struct I2cTester{
                 // i2c_drv.set_baudrate(uint(baud * grow_scale));
                 i2c.set_baudrate(uint(baud * grow_scale));
                 const auto err = i2c_drv.verify();
-                if(err.wrong()) break;
+                if(err.is_err()) break;
 
                 baud = baud + (baud >> 1);
                 delay(2);

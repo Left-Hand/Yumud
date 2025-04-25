@@ -32,8 +32,8 @@ public:
         if(i2c_drv_){
             return i2c_drv_->write_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            spi_drv_->write_single(uint8_t(addr), CONT).unwrap();
-            return spi_drv_->write_single(data);
+            return spi_drv_->write_single(uint8_t(addr), CONT)
+            | spi_drv_->write_single(data);
         }
 
         PANIC();
@@ -43,8 +43,8 @@ public:
         if(i2c_drv_){
             return i2c_drv_->read_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
-            return spi_drv_->read_single(data);
+            return spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT)
+            | spi_drv_->read_single(data);
         }
 
         PANIC();
@@ -54,8 +54,8 @@ public:
         if(i2c_drv_){
             return i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
-            spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT).unwrap();
-            return spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
+            return spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
+            | spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
         }
 
         PANIC();
@@ -86,10 +86,10 @@ namespace ymd::custom{
         static Result<T, drivers::InvensenseSensorError> convert(const hal::BusError berr){
             using Error = drivers::InvensenseSensorError;
             
-            if(berr.ok()) return Ok();
+            if(berr.is_ok()) return Ok();
 
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
                     // case hal::BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;

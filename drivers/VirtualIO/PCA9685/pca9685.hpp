@@ -95,7 +95,7 @@ protected:
     };
 
     hal::BusError write_reg(const RegAddress addr, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(addr), reg).unwrap();
+        return i2c_drv_.write_reg(uint8_t(addr), reg);
     };
 
     hal::BusError write_reg(const RegAddress addr, const uint16_t reg){
@@ -103,7 +103,7 @@ protected:
     }
 
     hal::BusError read_reg(const RegAddress addr, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(addr), reg).unwrap();
+        return i2c_drv_.read_reg(uint8_t(addr), reg);
     }
 
     hal::BusError read_reg(const RegAddress addr, uint16_t & reg){

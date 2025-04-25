@@ -49,7 +49,7 @@ bool has_rx_authority(){
 }
 
 
-// 伪随机序列生成器（简单线性反馈移位寄存器�?
+// 伪隝机庝列生戝器（简坕线性坝馈移佝寄存器�?
 class LFSR {
 public:
     LFSR(uint32_t seed = 0xACE12345) : state(seed) {}
@@ -64,7 +64,7 @@ private:
     uint32_t state;
 };
 
-// 扰码函数
+// 扰砝函数
 void scramble(std::span<std::byte> data) {
     LFSR lfsr;
     for (auto& byte : data) {
@@ -74,7 +74,7 @@ void scramble(std::span<std::byte> data) {
     }
 }
 
-// 反扰码函�?
+// 坝扰砝函�?
 void descramble(std::span<std::byte> data) {
     LFSR lfsr;
     for (auto& byte : data) {
@@ -122,8 +122,8 @@ void lt8960_tb(){
     led.outpp();
 
 
-    LT8960L tx_ltr{&portB[6], &portB[7]};
-    LT8960L rx_ltr{&portA[9], &portA[10]};
+    LT8960L tx_ltr{portB[6], portB[7]};
+    LT8960L rx_ltr{portA[9], portA[10]};
     
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)

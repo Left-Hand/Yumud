@@ -183,9 +183,8 @@ protected:
     // REG52
     FifoPtrReg fifo_ptr_reg = {};
 
-    void delayT3(){udelay(1);}
-
-    void delayT5(){udelay(1);}
+    __no_inline void delayT3();
+    __no_inline void delayT5();
 
     hal::BusError write_reg(const RegAddress address, const uint16_t reg);
     hal::BusError read_reg(const RegAddress address, uint16_t & reg);

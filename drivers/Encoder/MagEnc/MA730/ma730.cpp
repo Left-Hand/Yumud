@@ -28,12 +28,10 @@ hal::BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
 
 hal::BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
     uint16_t dummy;
-    spi_drv_.write_single((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))).unwrap();
-    const auto err = spi_drv_.read_single(dummy);
+    if(const auto err = spi_drv_.write_single((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))); err.is_err()) return err;
+    if(const auto err = spi_drv_.read_single(dummy); err.is_err()) return err;
     reg = dummy >> 8;
-    // ASSERT(hal::BusError::OK);
-    // PANIC("???");
-    return err;
+    return hal::BusError::Ok();
 }
 
 hal::BusError MA730::direct_read(uint16_t & data){

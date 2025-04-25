@@ -181,7 +181,7 @@ protected:
     
 public:
 
-    LT8960L(hal::Gpio * scl, hal::Gpio * sda):
+    LT8960L(hal::Gpio & scl, hal::Gpio & sda):
         phy_(scl, sda){;}
 
 
@@ -269,10 +269,10 @@ namespace ymd::custom{
             using Error = drivers::LT8960L::Error;
             
             if constexpr(std::is_void_v<T>)
-                if(berr.ok()) return Ok();
+                if(berr.is_ok()) return Ok();
             
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
                     // case hal::BusError::I2C_NOT_READY: return LT8960L::Error::I2C_NOT_READY;

@@ -7,7 +7,11 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+
+#include "hal/gpio/gpio_intf.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "hal/bus/i2c/i2csw.hpp"
 
 namespace ymd::drivers{
 class TM1650_Error{
@@ -36,10 +40,10 @@ namespace ymd::custom{
             using Error = drivers::TM1650_Error;
             
             if constexpr(std::is_void_v<T>)
-                if(berr.ok()) return Ok();
+                if(berr.is_ok()) return Ok();
             
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
+                switch(berr_.unwrap_err()){
                     default: return Error::Unspecified;
                 }
             }(berr);
@@ -51,9 +55,14 @@ namespace ymd::custom{
     
 
 namespace ymd::drivers{
-class TM1650_Phy final:private hal::ProtocolBusDrv<hal::I2c> {
+class TM1650_Phy final{
+private:
+    hal::I2cSw i2c_;
 public:
     using Error = TM1650_Error;
+
+    TM1650_Phy(hal::Gpio & scl_io, hal::Gpio & sda_io):
+        i2c_{scl_io, sda_io}{;}
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -150,17 +159,20 @@ public:
     }
 
     Result<KeyEvent, Error> read_key(){
-        const auto guard = create_guard();
-        uint32_t buf;
-        auto res = bus_.begin(uint8_t(DataCommand::READ_KEY))
-            .then([&](){
-                return bus_.read(buf, ACK);
-            })
-        ;
+        // const auto guard = bus_.create_guard();
+        // uint32_t buf;
+        // auto res = bus_.begin(uint8_t(DataCommand::READ_KEY))
+        //     .then([&](){
+        //         return bus_.read(buf, ACK);
+        //     })
+        // ;
         
-        if (res.wrong()) return Err(Error(res));
+        // if (res.wrong()) return Err(Error(res));
 
-        return Ok<KeyEvent>(KeyEvent::from_u8(buf));
+        // return Ok<KeyEvent>(KeyEvent::from_u8(buf));
+
+        TODO();
+        return Ok(KeyEvent::from_u8(0));
     }
 private:
     Result<void, Error> write_display_cmd(const DisplayCommand cmd){
@@ -168,15 +180,15 @@ private:
     }
 
     Result<void, Error> write_u8x2(const uint8_t payload1, const uint8_t payload2){
-        const auto guard = create_guard();
+        const auto guard = i2c_.create_guard();
 
-        auto res = bus_.begin(payload1)
-            .then([&](){
-                return bus_.write(payload2);
-            })
-        ;
+        TODO();
+        // auto res = i2c_.begin(I2cs payload1)
+        //     .then([&](){return bus_.write(payload2);})
+        // ;
 
-        return Result<void, Error>(res);
+        // return Result<void, Error>(res);
+        return Ok();
     }
 };
 
@@ -188,8 +200,8 @@ public:
 
     static constexpr auto NAME = "TM1650";
 
-    TM1650(TM1650_Phy phy):
-        phy_(phy){;}
+    TM1650(hal::Gpio & scl_io, hal::Gpio & sda_io):
+        phy_(scl_io, sda_io){;}
 
     class Display final{
     public:

@@ -242,7 +242,7 @@ namespace ymd::custom{
     template<>
     struct result_converter<void, drivers::INA226::Error, hal::BusError> {
         static Result<void, drivers::INA226::Error> convert(const hal::BusError & res){
-            if(res.ok()) return Ok();
+            if(res.is_ok()) return Ok();
             else return Err(res); 
         }
     };

@@ -186,11 +186,11 @@ namespace ymd::custom{
         static Result<T, drivers::AK8963::Error> convert(const hal::BusError berr){
             using Error = drivers::AK8963::Error;
             
-            if(berr.ok()) return Ok();
+            if(berr.is_ok()) return Ok();
 
             Error err = [](const hal::BusError berr_){
-                switch(berr_.type){
-                    case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
+                switch(berr_.unwrap_err()){
+                    case hal::BusError::AckTimeout : return Error::I2C_NOT_ACK;
 
                     // case hal::BusError::I2C_NOT_READY: return AK8963::Error::I2C_NOT_READY;
                     default: return Error::UNSPECIFIED;

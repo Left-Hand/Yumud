@@ -9,9 +9,9 @@ void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const
     mosi_gpio.outpp();
     sclk_gpio.outpp(HIGH);
 
-    for(auto & cs_gpio : cs_port){
-        if(cs_gpio.valid()){
-            cs_gpio.outpp(HIGH);
+    for(size_t i = 0; i < cs_port_.size(); i++){
+        if(cs_port_.is_index_valid(i)){
+            cs_port_[i].outpp(HIGH);
         }
     }
 
@@ -46,5 +46,5 @@ hal::BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     sclk_gpio.set();
 
     data_rx = ret;
-    return hal::BusError::OK;
+    return hal::BusError::Ok();
 }

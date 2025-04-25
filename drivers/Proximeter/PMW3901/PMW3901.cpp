@@ -250,7 +250,7 @@ Result<void, Error> PMW3901::init() {
     });static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-    spi_drv_.release().unwrap();
+    if(const auto err = spi_drv_.release(); err.is_err()) return err;
     return write_reg(PMW3901_REG_Power_Up_Reset, 0x5A)
     .if_ok([this]{
         delay(5);

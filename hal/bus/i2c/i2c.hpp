@@ -15,6 +15,8 @@ protected:
 
     I2c(hal::Gpio & _scl_gpio, hal::Gpio & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
 public:
+    I2c(I2c && other) = default;
+
     void set_timeout(const uint32_t timeout){timeout_ = timeout;}
 
     virtual hal::BusError read(uint32_t & data, const Ack ack) = 0;

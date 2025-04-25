@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/clock/clock.hpp"
+
 #include "concept/memory.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -11,6 +13,10 @@ namespace ymd::drivers{
 class AT24CXX:public StoragePaged{
 private:
     constexpr bool is_small_chip(){return capacity_ <= 256;}
+
+    hal::BusError write_pool(const size_t addr, const uint8_t * data, const size_t len);
+
+    hal::BusError read_pool(const size_t addr, uint8_t * data, const size_t len);
 protected:
     scexpr uint32_t min_duration_ms = 6;
 
@@ -21,9 +27,6 @@ protected:
 
     void load_bytes(const Address loc, void * data, const Address len) override;
 
-    void write_pool(const size_t addr, const uint8_t * data, const size_t len);
-
-    void read_pool(const size_t addr, uint8_t * data, const size_t len);
 
     void entry_store() override{
         update_entry_ms();

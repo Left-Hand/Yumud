@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -46,7 +47,7 @@ protected:
     bool fast_mode_ = true;
     Semantic last_semantic_;
 
-    uint16_t get_position_data();
+    Result<uint16_t, hal::BusError> get_position_data();
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}

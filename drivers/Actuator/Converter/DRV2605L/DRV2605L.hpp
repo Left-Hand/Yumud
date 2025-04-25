@@ -1,12 +1,39 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+
 #include "hal/bus/i2c/i2cdrv.hpp"
+
 
 namespace ymd::drivers{
 
+class DRV2605L_Error{
+public:
+    enum Kind:uint8_t{
+        BusFault,
+        Unspecified
+    };
+
+    DRV2605L_Error(Kind kind):kind_(kind){;}
+
+    bool operator == (const DRV2605L_Error other) const{
+        return kind_ == other.kind_;
+    }
+
+    bool operator == (const Kind other) const{
+        return kind_ == other;
+    }
+private:
+    Kind kind_;
+};
+
 class DRV2605L{
 public:
+    using RegAddress = uint8_t;
+    using Error = DRV2605L_Error;
+
+
     enum class Package:uint8_t{
         _2605,
         _2604,
@@ -23,7 +50,6 @@ public:
 
 
 protected:
-    using RegAddress = uint8_t;
 
     hal::I2cDrv i2c_drv_;
 
@@ -366,12 +392,13 @@ public:
     void reset();
     void update();
     bool verify();
-    bool init();
+
+    Result<void, Error> init();
     Package getPackage();
     void setBemfGain(const BemfGain gain);
     void setLoopGain(const LoopGain gain);
     void play(const uint8_t idx);
-    bool autocal();
+    Result<void, Error> autocal();
 };
 
 }

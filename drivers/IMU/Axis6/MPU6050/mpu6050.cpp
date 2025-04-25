@@ -28,7 +28,7 @@ using Error = MPU6050::Error;
 Result<void, Error> MPU6050::write_reg(const uint8_t addr, const uint8_t data){
     if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->write_reg(uint8_t(addr), data);
-        MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
+        MPU6050_ASSERT(err.is_ok(), "MPU6050 write reg failed", err);
         return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
@@ -42,7 +42,7 @@ Result<void, Error> MPU6050::write_reg(const uint8_t addr, const uint8_t data){
 Result<void, Error> MPU6050::read_reg(const uint8_t addr, uint8_t & data){
     if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->read_reg(uint8_t(addr), data);
-        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err, addr);
+        MPU6050_ASSERT(err.is_ok(), "MPU6050 read reg failed", err, addr);
         return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
@@ -56,7 +56,7 @@ Result<void, Error> MPU6050::read_reg(const uint8_t addr, uint8_t & data){
 Result<void, Error> MPU6050::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
     if(p_i2c_drv_.has_value()){
         auto err = p_i2c_drv_->read_burst((uint8_t)reg_addr, std::span(datas, len), MSB);
-        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
+        MPU6050_ASSERT(err.is_ok(), "MPU6050 read reg failed");
         return err;
     }else if(p_spi_drv_){
         MPU6050_TODO();
@@ -76,7 +76,7 @@ Result<void, Error> MPU6050::verify(){
 
     reset().unwrap();
     const auto pkres = this->get_package();
-    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
+    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error::AlreadyUnderUse);
     
     const auto package = pkres.unwrap();
 
@@ -85,7 +85,7 @@ Result<void, Error> MPU6050::verify(){
             case Package::MPU6050: MPU6050_DEBUG("this is MPU6050 in fact"); break;
             case Package::MPU6500: MPU6050_DEBUG("this is MPU6500 in fact"); break;
             case Package::MPU9250: MPU6050_DEBUG("this is MPU9250 in fact"); break;
-            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return Err(Error(Error::ALREADY));
+            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return Err(Error::AlreadyUnderUse);
         }
         return Ok();
     }

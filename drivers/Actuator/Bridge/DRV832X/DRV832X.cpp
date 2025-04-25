@@ -49,11 +49,11 @@ hal::BusError DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
         .write = 1
     };
 
-    const auto err = spi_drv_.read_single<uint16_t>((spi_format)).unwrap();
-
+    const auto err = spi_drv_.read_single<uint16_t>((spi_format));
+    if(err.is_err()) return err;
     reg = spi_format.data;
 
-    return err;
+    return hal::BusError::Ok();
 }
 
 
