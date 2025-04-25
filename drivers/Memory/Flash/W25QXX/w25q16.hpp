@@ -73,15 +73,15 @@ public:
     bool is_writeable();
 
 private:
-    BusError write_byte(const uint8_t data){
+    hal::BusError write_byte(const uint8_t data){
         return spi_drv.write_single(data);
     }
 
-    BusError write_byte(const Commands & data){
+    hal::BusError write_byte(const Commands & data){
         return spi_drv.write_single((uint8_t)data);
     }
 
-    BusError read_byte(uint8_t & data){
+    hal::BusError read_byte(uint8_t & data){
         return spi_drv.read_single(data);
     }
 

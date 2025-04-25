@@ -19,7 +19,7 @@ void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const
 }
 
 
-BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
+hal::BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     uint32_t ret = 0;
 
     sclk_gpio.set();
@@ -46,5 +46,5 @@ BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     sclk_gpio.set();
 
     data_rx = ret;
-    return BusError::OK;
+    return hal::BusError::OK;
 }

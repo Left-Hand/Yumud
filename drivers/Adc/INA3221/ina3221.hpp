@@ -13,9 +13,9 @@ namespace ymd::drivers{
 
 class INA3221{
 public:
-    using DeviceResult = Result<void, BusError>;
+    using DeviceResult = Result<void, hal::BusError>;
 private:
-    __inline DeviceResult make_result(const BusError res){
+    __inline DeviceResult make_result(const hal::BusError res){
         if(res.ok()) return Ok();
         else return Err(res); 
     }

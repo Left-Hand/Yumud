@@ -198,21 +198,21 @@ protected:
     FeatureReg feature_reg;
 
 
-    BusError write_reg(RegAddress addr, const auto & value){
+    hal::BusError write_reg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
         spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
         return spi_drv.write_burst(&(value), sizeof(value));
     }
 
-    BusError read_reg(RegAddress addr, auto & value){
+    hal::BusError read_reg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
         spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
         return spi_drv.read_burst(&(value), sizeof(value));
     }
 
-    BusError readFifo(uint8_t *buffer, size_t size){
+    hal::BusError readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -221,7 +221,7 @@ protected:
         }
     }
 
-    BusError writeFifo(const uint8_t *buffer, size_t size){
+    hal::BusError writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -230,7 +230,7 @@ protected:
         }
     }
 
-    BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
+    hal::BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -239,17 +239,17 @@ protected:
         }
     }
 
-    BusError clearTxFifo(){
+    hal::BusError clearTxFifo(){
         return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_TX)).unwrap();
     }
 
-    BusError clearRxFifo(){
+    hal::BusError clearRxFifo(){
         return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_RX)).unwrap();
     }
 
-    BusError updateStatus(){
+    hal::BusError updateStatus(){
         return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:

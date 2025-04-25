@@ -17,7 +17,7 @@ class TM1650_Error{
             Unspecified = 0xff,
         };
         constexpr TM1650_Error(const Kind kind): kind_(kind){;}
-        constexpr TM1650_Error(const BusError err)
+        constexpr TM1650_Error(const hal::BusError err)
             {
 
             }
@@ -31,15 +31,14 @@ class TM1650_Error{
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::TM1650_Error, BusError> {
-        scexpr Result<T, drivers::TM1650_Error> convert(const BusError berr){
+    struct result_converter<T, drivers::TM1650_Error, hal::BusError> {
+        scexpr Result<T, drivers::TM1650_Error> convert(const hal::BusError berr){
             using Error = drivers::TM1650_Error;
-            using BusError = BusError;
             
             if constexpr(std::is_void_v<T>)
                 if(berr.ok()) return Ok();
             
-            Error err = [](const BusError berr_){
+            Error err = [](const hal::BusError berr_){
                 switch(berr_.type){
                     default: return Error::Unspecified;
                 }

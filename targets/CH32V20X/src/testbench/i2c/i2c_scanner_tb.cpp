@@ -23,7 +23,7 @@ struct FoundInfo{
     uint max_bbaud;
 };
 
-Result<void, BusError> make_result(const BusError res){
+Result<void, hal::BusError> make_result(const hal::BusError res){
     if(res.ok()) return Ok();
     else return Err(res); 
 }
@@ -35,13 +35,13 @@ template<typename T>
 
 struct [[nodiscard]] Task {
     struct promise_type {
-        Result<T, BusError> result;
+        Result<T, hal::BusError> result;
         std::coroutine_handle<> continuation;
 
         Task get_return_object() { return Task{Handle::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
-        void return_value(Result<T, BusError> res) { result = res; }
+        void return_value(Result<T, hal::BusError> res) { result = res; }
         void unhandled_exception() noexcept {}
     };
 
@@ -58,7 +58,7 @@ struct [[nodiscard]] Task {
             handle.promise().continuation = cont;
             handle.resume();
         }
-        Result<T, BusError> await_resume() noexcept {
+        Result<T, hal::BusError> await_resume() noexcept {
             return handle.promise().result;
         }
     };
@@ -76,7 +76,7 @@ struct I2cTester{
     
     // __pure
     // __attribute__((const))
-    static Result<uint, BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint, hal::BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
         // if(auto err = i2c_drv.verify(); err.wrong()){
         //     return err; 
@@ -101,7 +101,7 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+    static Result<void, hal::BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
         return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.verify());
     }
 
@@ -122,9 +122,9 @@ void i2c_scanner_functional(){
 
     
     // I2cTester::getMaxBaudRate(i2c, read_addr)
-    //     .then([](uint baud) -> Result<uint, BusError>{ 
+    //     .then([](uint baud) -> Result<uint, hal::BusError>{ 
     //         if (baud > 100_KHz) return Ok(baud);
-    //         else return Err(BusError::OCCUPIED); 
+    //         else return Err(hal::BusError::OCCUPIED); 
     //     })
         ;
 }
@@ -167,12 +167,12 @@ auto log(Args && ... args) {
 void test_result(){
     // DEBUG_SOURCE("hahah");
     // while(1);
-    // using MyResult = Result<void, BusError>;
+    // using MyResult = Result<void, hal::BusError>;
     // auto ok = Ok<void>{};
     // auto ok = Ok();
     // MyResult res = {ok};
     // DEBUG_PRINTLN("before");
-    // auto res = Result<uint, BusError>(Err(BusError(BusError::NO_ACK)));
+    // auto res = Result<uint, hal::BusError>(Err(hal::BusError(hal::BusError::NO_ACK)));
     // res.loc().expect("Device is not responding", "nmd");
     // DEBUG_PRINTLN("after");
 
@@ -237,7 +237,7 @@ void i2c_scanner_main(){
                 });
 
             // I2cTester::verify(i2c, read_addr)
-            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, BusError> {
+            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, hal::BusError> {
             //         return I2cTester::getMaxBaudRate(i2c, read_addr)
             //             .map([read_addr](uint baud) {
             //                 return FoundInfo{read_addr, baud};
@@ -247,7 +247,7 @@ void i2c_scanner_main(){
             //         [&founded_devices](FoundInfo info) { // 成功分支
             //             founded_devices.emplace_back(info);
             //         },
-            //         [](BusError err) { // 失败分支
+            //         [](hal::BusError err) { // 失败分支
             //             PANIC("Address", read_addr, "failed:", err.code());
             //         }
             //     );

@@ -31,10 +31,10 @@ protected:
     CommStrategy rx_strategy_;
     uint8_t last_index;
 
-    BusError lead(const uint8_t index) override{
+    hal::BusError lead(const uint8_t index) override{
         last_index = index;
         cs_port[last_index].clr();
-        return BusError::OK;
+        return hal::BusError::OK;
     }
 
     void trail() override{
@@ -46,9 +46,9 @@ public:
     Spi(hal::Spi &&) = delete;
 
     
-    virtual BusError read(uint32_t & data) = 0;
-    virtual BusError write(const uint32_t data) = 0;
-    virtual BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    virtual hal::BusError read(uint32_t & data) = 0;
+    virtual hal::BusError write(const uint32_t data) = 0;
+    virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
     virtual void set_data_width(const uint8_t len) = 0;
     virtual void set_baudrate(const uint32_t baud) = 0;

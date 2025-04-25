@@ -80,11 +80,11 @@ protected:
     DirectionReg directionReg = {};
     MagnitudeReg magnitudeReg = {};
 
-    BusError write_reg(const RegAddress reg_addr, uint8_t data);
+    hal::BusError write_reg(const RegAddress reg_addr, uint8_t data);
 
-    BusError read_reg(const RegAddress reg_addr, uint8_t & reg);
+    hal::BusError read_reg(const RegAddress reg_addr, uint8_t & reg);
 
-    BusError direct_read(uint16_t & data);
+    hal::BusError direct_read(uint16_t & data);
 
     uint16_t get_raw_data();
 

@@ -9,7 +9,7 @@ void TCA9548A::switch_vbus(const uint8_t ch){
     self_i2c_drv_.write_blocks<>(temp, LSB).unwrap();
 }
 
-BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){
+hal::BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){
     if((last_ch_.is_none()) 
         or (
             (last_ch_.is_some()) 
@@ -18,7 +18,7 @@ BusError TCA9548A::lead(const uint8_t address, const uint8_t ch){
         last_ch_ = Some(ch);//lock
         return i2c_.begin(address);
     }else{
-        return BusError::OCCUPIED;
+        return hal::BusError::OCCUPIED;
     }
 }
 

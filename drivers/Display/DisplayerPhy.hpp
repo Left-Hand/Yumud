@@ -15,8 +15,8 @@ class DisplayerPhyIntf{
 public:
     virtual void init() = 0;
 
-    virtual BusError write_command(const uint32_t cmd) = 0;
-    virtual BusError write_data(const uint32_t data) = 0;
+    virtual hal::BusError write_command(const uint32_t cmd) = 0;
+    virtual hal::BusError write_data(const uint32_t data) = 0;
 
     virtual void write_u8(const uint8_t data, size_t len) = 0;
     virtual void write_u8(const uint8_t * data, size_t len) = 0;
@@ -80,12 +80,12 @@ public:
 
     }
 
-    BusError write_command(const uint32_t cmd){
+    hal::BusError write_command(const uint32_t cmd){
         dc_gpio_ = command_level;
         return spi_drv_.write_single<uint8_t>(cmd);
     }
 
-    BusError write_data(const uint32_t data){
+    hal::BusError write_data(const uint32_t data){
         dc_gpio_ = data_level;
         return spi_drv_.write_single<uint8_t>(data);
     }
@@ -139,15 +139,15 @@ public:
 
     void init(){;}
 
-    BusError write_command(const uint32_t cmd){
+    hal::BusError write_command(const uint32_t cmd){
         return i2c_drv_.write_reg(CMD_TOKEN, cmd, LSB);
     }
 
-    BusError write_data(const uint32_t data){
+    hal::BusError write_data(const uint32_t data){
         return i2c_drv_.write_reg(DATA_TOKEN, data, LSB);
     }
 
-    BusError write_burst(const is_stdlayout auto * pdata, size_t len){
+    hal::BusError write_burst(const is_stdlayout auto * pdata, size_t len){
         if constexpr(sizeof(*pdata) != 1){
             return i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len), LSB);
         }else {
@@ -155,7 +155,7 @@ public:
         }
     }
 
-    BusError write_burst(const is_stdlayout auto data, size_t len){
+    hal::BusError write_burst(const is_stdlayout auto data, size_t len){
         if constexpr(sizeof(data) != 1){
             return i2c_drv_.write_repeat(DATA_TOKEN, std::span(data, len), LSB);
         }else {

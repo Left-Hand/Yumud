@@ -125,8 +125,8 @@ protected:
     uint16_t getPositionData();
 
 
-    BusError write_reg(const RegAddress addr, const uint8_t data);
-    BusError read_reg(const RegAddress addr, uint8_t & data);
+    hal::BusError write_reg(const RegAddress addr, const uint8_t data);
+    hal::BusError read_reg(const RegAddress addr, uint8_t & data);
 public:
     MT6835(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6835(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}

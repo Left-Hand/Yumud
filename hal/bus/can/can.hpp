@@ -73,7 +73,7 @@ protected:
 
     Gpio & get_tx_gpio();
     Gpio & get_rx_gpio();
-    BusError lead(const uint8_t index){return BusError::OK;};
+    hal::BusError lead(const uint8_t index){return hal::BusError::OK;};
     void trail(){};
 
     void install_gpio();

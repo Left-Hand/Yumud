@@ -443,27 +443,27 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
     auto res = bus_.begin(address | 0x80)
-        .then([&]() -> BusError{
+        .then([&]() -> hal::BusError{
             const auto err = bus_.read(len, ACK);
             if(err.wrong()) return err;
             if(len > LT8960L_PACKET_SIZE || len > pbuf.size()) {
                 // LT8960L_PANIC("read buf length too long", len);
-                // return BusError::LengthOverflow;
+                // return hal::BusError::LengthOverflow;
                 invalid = true;
             }
-            return BusError::OK;
+            return hal::BusError::OK;
             }
         )
 
-        .then([&]() -> BusError{
-            if(invalid) return BusError::OK;
+        .then([&]() -> hal::BusError{
+            if(invalid) return hal::BusError::OK;
             for(size_t i = 0; i < len; i++){
                 uint32_t dummy = 0;
                 const auto err = bus_.read(dummy, (i == len - 1 ? NACK : ACK));
                 if(err.wrong()) return err;
                 pbuf[i] = std::byte(dummy);
             }
-            return BusError::OK;
+            return hal::BusError::OK;
         })
     ;
 
@@ -484,12 +484,12 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
             return bus_.write(pbuf.size());
         })
 
-        .then([&]() -> BusError{
+        .then([&]() -> hal::BusError{
             for(const auto data : pbuf){
                 auto err = bus_.write(uint32_t(data));
                 if (err.wrong()) return err;
             }
-            return BusError::OK;
+            return hal::BusError::OK;
         })
     ;
 

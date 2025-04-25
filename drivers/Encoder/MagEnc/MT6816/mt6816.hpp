@@ -10,7 +10,27 @@ namespace ymd::drivers{
 
 class MT6816:public MagEncoderIntf{
 protected:
+    class Error{
+        enum Kind:uint8_t{
+            BusError,
+            Unspecified,
+        };
 
+        constexpr Error(const Kind kind):
+            kind_(kind){;}
+
+        constexpr Error(const hal::BusError):
+            kind_(Kind::BusError){;}
+        constexpr bool operator == (const Error other) const {
+            return kind_ == other.kind_;
+        }
+
+        constexpr bool operator == (const Kind kind) const {
+            return kind_ == kind;
+        }
+    private:
+        Kind kind_;
+    };
 
     struct Semantic:public Reg16<>{
         using Reg16::operator=;

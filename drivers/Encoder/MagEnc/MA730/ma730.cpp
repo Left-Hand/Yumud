@@ -21,24 +21,24 @@ void MA730::init(){
     get_lap_position();
 }
 
-BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
+hal::BusError MA730::write_reg(const RegAddress reg_addr, uint8_t data){
     const auto err = spi_drv_.write_single((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     return err;
 }
 
-BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
+hal::BusError MA730::read_reg(const RegAddress reg_addr, uint8_t & reg){
     uint16_t dummy;
     spi_drv_.write_single((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8))).unwrap();
     const auto err = spi_drv_.read_single(dummy);
     reg = dummy >> 8;
-    // ASSERT(BusError::OK);
+    // ASSERT(hal::BusError::OK);
     // PANIC("???");
     return err;
 }
 
-BusError MA730::direct_read(uint16_t & data){
+hal::BusError MA730::direct_read(uint16_t & data){
     const auto err = spi_drv_.read_single(data);
-    // ASSERT(BusError::OK);
+    // ASSERT(hal::BusError::OK);
     return err;
 }
 

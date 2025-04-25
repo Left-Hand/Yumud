@@ -187,12 +187,12 @@ protected:
 
     void delayT5(){udelay(1);}
 
-    BusError write_reg(const RegAddress address, const uint16_t reg);
-    BusError read_reg(const RegAddress address, uint16_t & reg);
-    BusError writeFifo(const uint8_t * data, const size_t len);
-    BusError readFifo(uint8_t * data, const size_t len);
+    hal::BusError write_reg(const RegAddress address, const uint16_t reg);
+    hal::BusError read_reg(const RegAddress address, uint16_t & reg);
+    hal::BusError writeFifo(const uint8_t * data, const size_t len);
+    hal::BusError readFifo(uint8_t * data, const size_t len);
 
-    BusError updateFifoStatus();
+    hal::BusError updateFifoStatus();
 };
 
 }

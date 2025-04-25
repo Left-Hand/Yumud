@@ -19,7 +19,7 @@ protected:
     __no_inline void delay_dur(){
         udelay(delays);
     }
-    BusError lead(const uint8_t index) override{
+    hal::BusError lead(const uint8_t index) override{
         auto ret = Spi::lead(index);
         delay_dur();
         return ret;
@@ -48,20 +48,20 @@ public:
         const CommStrategy rx_strategy = CommStrategy::Blocking) override;
 
 
-    BusError write(const uint32_t data) {
+    hal::BusError write(const uint32_t data) {
         uint32_t dummy;
         transfer(dummy, data);
-        return BusError::OK;
+        return hal::BusError::OK;
     }
 
-    BusError read(uint32_t & data) {
+    hal::BusError read(uint32_t & data) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
         transfer(ret, dummy); 
-        return BusError::OK;
+        return hal::BusError::OK;
     }
 
-    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
+    hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
 
     void set_baudrate(const uint32_t baudrate) {
         if(baudrate == 0){

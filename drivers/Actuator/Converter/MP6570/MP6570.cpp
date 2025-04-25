@@ -1,9 +1,9 @@
 #include "MP6570.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
-using ymd::BusError;  
 
 scexpr size_t count_ones(const uint16_t val){
     return __builtin_popcount(val);
@@ -96,7 +96,7 @@ struct SpiReadResult{
     }
 };
 
-BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
+hal::BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     if(i2c_drv_){
         return i2c_drv_->write_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
@@ -118,7 +118,7 @@ BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     }
 }
 
-BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
+hal::BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
     if(i2c_drv_){
         return i2c_drv_->read_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
@@ -144,9 +144,9 @@ BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
         const auto result_opt = rr.result();
         if(result_opt){
             data = *result_opt;
-            return BusError::OVERLOAD;
+            return hal::BusError::OVERLOAD;
         }else{
-            return BusError::OK;
+            return hal::BusError::OK;
         }
         
     }else{

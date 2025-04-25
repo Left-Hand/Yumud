@@ -35,13 +35,13 @@ public:
         MT6701_Phy(std::make_optional<hal::I2cDrv>(i2c, addr), std::nullopt){;}
 
 
-    BusError write_reg(const RegAddress addr, const uint16_t data);
+    hal::BusError write_reg(const RegAddress addr, const uint16_t data);
     
-    BusError read_reg(const RegAddress addr, uint16_t & data);
+    hal::BusError read_reg(const RegAddress addr, uint16_t & data);
     
-    BusError write_reg(const RegAddress addr, const uint8_t data);
+    hal::BusError write_reg(const RegAddress addr, const uint8_t data);
     
-    BusError read_reg(const RegAddress addr, uint8_t & data);
+    hal::BusError read_reg(const RegAddress addr, uint8_t & data);
 private:
     MT6701_Phy(
         std::optional<hal::I2cDrv> && i2c_drv, 

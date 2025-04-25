@@ -1,7 +1,7 @@
 #include "i2cdrv.hpp"
 
 namespace ymd::hal{
-BusError I2cDrv::release(){
+hal::BusError I2cDrv::release(){
     //避免上次总线的错误时序影响本次
     //例如使用软i2c时 传输到一半被强行关闭 此时总线有可能被钳位
     
@@ -14,13 +14,13 @@ BusError I2cDrv::release(){
 }
 
 
-BusError I2cDrv::verify(){
+hal::BusError I2cDrv::verify(){
     {
         const auto guard = create_guard();
         if(const auto err = bus_.begin(index_ | 0x00); err.wrong()) return err;
     }
     
-    return BusError::OK;
+    return hal::BusError::OK;
 }
 
 }

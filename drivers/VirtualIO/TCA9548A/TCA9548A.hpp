@@ -16,13 +16,13 @@ class VirtualI2c: public hal::I2c{
     protected:
         TCA9548A & host_;
         const uint8_t ch_;
-        BusError lead(const uint8_t address){return host_.lead(address, ch_);}
+        hal::BusError lead(const uint8_t address){return host_.lead(address, ch_);}
         void trail(){return host_.trail(ch_);}
     public:
         VirtualI2c(TCA9548A & host, const uint8_t ch);
 
-        BusError write(const uint32_t data) override final {return host_.write(data);}
-        BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
+        hal::BusError write(const uint32_t data) override final {return host_.write(data);}
+        hal::BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
 
         void set_baudrate(const uint32_t baud) override final{return host_.set_baudrate(baud);}
     };
@@ -34,17 +34,17 @@ protected:
 
     void switch_vbus(const uint8_t ch);
 
-    BusError lead(const uint8_t address, const uint8_t ch);
+    hal::BusError lead(const uint8_t address, const uint8_t ch);
 
     void trail(const uint8_t ch);
 
     void set_baudrate(const uint32_t baud){i2c_.set_baudrate(baud);}
 
-    BusError write(const uint32_t data){
+    hal::BusError write(const uint32_t data){
         return i2c_.write(data);
     }
 
-    BusError read(uint32_t & data, const Ack ack){
+    hal::BusError read(uint32_t & data, const Ack ack){
         return i2c_.read(data, ack);
     }
 
@@ -76,7 +76,7 @@ public:
 
     auto which() const {return last_ch_;}
 
-    BusError verify() {
+    hal::BusError verify() {
         return self_i2c_drv_.verify();
     }
 };

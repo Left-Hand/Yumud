@@ -15,8 +15,8 @@ namespace ymd::drivers{
 class ADS111X{
 public:
 
-    using DeviceResult = Result<void, BusError>;
-    __inline DeviceResult make_result(const BusError res){
+    using DeviceResult = Result<void, hal::BusError>;
+    __inline DeviceResult make_result(const hal::BusError res){
         if(res.ok()) return Ok();
         else return Err(res); 
     }
@@ -153,19 +153,19 @@ public:
     ADS111X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     ADS111X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    void startConv();
+    void start_conv();
 
-    bool isBusy();
+    bool is_busy();
 
-    void setThreshold(int16_t low, int16_t high);
+    void set_threshold(int16_t low, int16_t high);
 
-    void enableContMode(bool en = true);
+    void enable_cont_mode(bool en = true);
 
-    void setPga(const PGA pga);
+    void set_pga(const PGA pga);
 
-    void setMux(const MUX mux);
+    void set_mux(const MUX mux);
 
-    void setDataRate(const DataRate data_rate);
+    void set_data_rate(const DataRate data_rate);
 
     bool ready();
 

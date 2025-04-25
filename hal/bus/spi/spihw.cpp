@@ -246,18 +246,18 @@ void SpiHw::set_bitorder(const Endian endian){
 }
 
 
-BusError SpiHw::write(const uint32_t data){
+hal::BusError SpiHw::write(const uint32_t data){
     uint32_t dummy;
     return transfer(dummy, data);
 }
 
 
-BusError SpiHw::read(uint32_t & data){
+hal::BusError SpiHw::read(uint32_t & data){
     return transfer(data, 0);
 }
 
 
-BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
+hal::BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     if(bool(tx_strategy_)){
         while ((instance_->STATR.TXE) == RESET);
         instance_->DATAR.DR = data_tx;
@@ -268,7 +268,7 @@ BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
         data_rx = instance_->DATAR.DR;
     }
 
-    return BusError::OK;
+    return hal::BusError::OK;
 }
 
 namespace ymd::hal{

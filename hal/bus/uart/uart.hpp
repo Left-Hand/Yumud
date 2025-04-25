@@ -41,10 +41,10 @@ protected:
     __fast_inline void call_post_tx_callback(){EXECUTE(post_tx_cb_);}
     __fast_inline void call_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
-    BusError read(uint32_t & data) {char _;read1(_);data = _;return BusError::OK;};
-    BusError write(const uint32_t data) {write1(char(data)); return BusError::OK;};
+    hal::BusError read(uint32_t & data) {char _;read1(_);data = _;return hal::BusError::OK;};
+    hal::BusError write(const uint32_t data) {write1(char(data)); return hal::BusError::OK;};
 
-    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return BusError::OK;};
+    hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::BusError::OK;};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 

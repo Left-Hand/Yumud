@@ -11,7 +11,7 @@ class AsahiKaseiSensor_Phy final{
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 public:
-    BusError write_reg(const uint8_t addr, const uint8_t data){
+    hal::BusError write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
             return i2c_drv_->write_reg(uint8_t(addr), data);
         }else if(spi_drv_){
@@ -22,7 +22,7 @@ public:
         PANIC();
     }
 
-    BusError read_reg(const uint8_t addr, uint8_t & data){
+    hal::BusError read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
             return i2c_drv_->read_reg(uint8_t(addr), data);
         }else if(spi_drv_){
@@ -33,7 +33,7 @@ public:
         PANIC();
     }
 
-    BusError read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    hal::BusError read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
             return i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
@@ -44,8 +44,8 @@ public:
         PANIC();
     }
 
-    BusError verify(){
-        return BusError::OK;
+    hal::BusError verify(){
+        return hal::BusError::OK;
     }
 public:
     AsahiKaseiSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

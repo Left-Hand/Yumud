@@ -46,7 +46,7 @@ static constexpr uint8_t SENSOR_TYPE_CONTROL_ADDR = 0x0F;
 static constexpr uint8_t SENSOR_TYPE_CONTROL_VALUE = 0x00; // Linear opeartion & mono sensor
 
 static constexpr uint8_t ADC_COMPANDING_MODE_ADDR = 0x1C;
-static constexpr uint8_t ADC_COMPANDING_MODE_VALUE = 0x202;
+static constexpr uint16_t ADC_COMPANDING_MODE_VALUE = 0x202;
 
 static constexpr uint8_t AEC_AGC_DESIRED_BIN_ADDR = 0xA5;
 static constexpr uint8_t AEC_AGC_DESIRED_BIN_VALUE = 0x3A;

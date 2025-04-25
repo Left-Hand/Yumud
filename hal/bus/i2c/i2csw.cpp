@@ -12,7 +12,7 @@ void I2cSw::delay_dur(){
     else for(size_t i = 0; i < 3; i++)__nopn(5);
 }
 
-BusError I2cSw::wait_ack(){
+hal::BusError I2cSw::wait_ack(){
     delay_dur();
     sda_gpio.set();
     sda_gpio.inflt();
@@ -33,14 +33,14 @@ BusError I2cSw::wait_ack(){
     delay_dur();
     
     if(ovt){
-        return BusError::NO_ACK;
+        return hal::BusError::NO_ACK;
     }else{
-        return BusError::OK;
+        return hal::BusError::OK;
     }
 
 }
 
-BusError I2cSw::lead(const uint8_t address){
+hal::BusError I2cSw::lead(const uint8_t address){
     #ifdef SCL_PP
     scl_gpio.outpp();
     #else
@@ -70,7 +70,7 @@ void I2cSw::trail(){
 
 
 
-BusError I2cSw::write(const uint32_t data){
+hal::BusError I2cSw::write(const uint32_t data){
 
     sda_gpio.outod();
 
@@ -85,7 +85,7 @@ BusError I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-BusError I2cSw::read(uint32_t & data, const Ack ack){
+hal::BusError I2cSw::read(uint32_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda_gpio.set();
@@ -109,7 +109,7 @@ BusError I2cSw::read(uint32_t & data, const Ack ack){
     sda_gpio.inpu();
 
     data = ret;
-    return BusError::OK;
+    return hal::BusError::OK;
 }
 
 void I2cSw::init(const uint32_t baudrate){
@@ -136,10 +136,10 @@ void I2cSw::set_baudrate(const uint32_t baudrate) {
     }
 }
 
-BusError I2cSw::reset(){
-    return BusError::OK;
+hal::BusError I2cSw::reset(){
+    return hal::BusError::OK;
 }
 
-BusError I2cSw::unlock_bus(){
-    return BusError::OK;
+hal::BusError I2cSw::unlock_bus(){
+    return hal::BusError::OK;
 }

@@ -14,8 +14,8 @@ namespace custom{
 
     // eg:
     // template<>
-    // struct result_converter<void, BusError, BusError> {
-    //     static Result<void, BusError> convert(const BusError & res){
+    // struct result_converter<void, hal::BusError, hal::BusError> {
+    //     static Result<void, hal::BusError> convert(const hal::BusError & res){
     //         if(res.ok()) return Ok();
     //         else return Err(res); 
     //     }

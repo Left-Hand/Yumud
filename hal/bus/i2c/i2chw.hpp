@@ -8,7 +8,7 @@ namespace ymd::hal{
 class I2cHw final: public I2c{
 private:
     void enable_rcc(const bool enable = true);
-    BusError lead(const uint8_t _address) override final;
+    hal::BusError lead(const uint8_t _address) override final;
     void trail() override final;
 
 protected:
@@ -22,8 +22,8 @@ public:
             instance(_instance){;}
     
 
-    BusError write(const uint32_t data) override final;
-    BusError read(uint32_t & data, const Ack ack) override final;
+    hal::BusError write(const uint32_t data) override final;
+    hal::BusError read(uint32_t & data, const Ack ack) override final;
     void init(const uint32_t baudrate);
     void reset();
     bool locked();

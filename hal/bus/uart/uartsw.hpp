@@ -19,7 +19,7 @@ protected:
 
     uint16_t current_char = '\0';
     uint16_t fetch_next(){return tx_fifo_.pop();}
-    BusError lead(const uint8_t address){return BusError::OK;}
+    hal::BusError lead(const uint8_t address){return hal::BusError::OK;}
     void trail(){;}
 public:
 

@@ -32,7 +32,7 @@ struct SpiFormat{
     }
 };
 
-BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
+hal::BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -42,7 +42,7 @@ BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     return spi_drv_.write_single<uint16_t>((spi_format));
 }
 
-BusError DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
+hal::BusError DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),

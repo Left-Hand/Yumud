@@ -112,19 +112,19 @@ protected:
     TemperatureReg temperatureReg;
     TemperatureXReg temperatureXReg;
 
-    BusError write_reg(const RegAddress addr, const uint16_t data){
+    hal::BusError write_reg(const RegAddress addr, const uint16_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError read_reg(const RegAddress addr, uint16_t & data){
+    hal::BusError read_reg(const RegAddress addr, uint16_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError write_reg(const RegAddress addr, const uint8_t data){
+    hal::BusError write_reg(const RegAddress addr, const uint8_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data);
     }
 
-    BusError read_reg(const RegAddress addr, uint8_t & data){
+    hal::BusError read_reg(const RegAddress addr, uint8_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data);
         // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }

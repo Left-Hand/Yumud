@@ -64,11 +64,11 @@ protected:
 public:
     NonProtocolBusDrv(TBus & _bus, const uint8_t _index) : BusDrv<TBus>(_bus, _index) {}
     [[nodiscard]]
-    BusError release(){
+    hal::BusError release(){
         if (auto err = bus_.begin(index_); err.ok()) {
             delay(1);
             bus_.end();
-            return BusError::OK;
+            return hal::BusError::OK;
         }else{
             return err;
         }
@@ -78,32 +78,32 @@ public:
     template<typename T>
     requires std::is_standard_layout_v<T> and is_writable_bus<TBus>
     [[nodiscard]]
-    BusError write_single(const T data, Continuous cont = DISC);
+    hal::BusError write_single(const T data, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<TBus>
     [[nodiscard]]
-    BusError write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
+    hal::BusError write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<TBus>
     [[nodiscard]]
-    BusError write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
+    hal::BusError write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<TBus>
     [[nodiscard]]
-    BusError read_burst(T * data_ptr, const size_t len, const Continuous cont = DISC);
+    hal::BusError read_burst(T * data_ptr, const size_t len, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<TBus>
     [[nodiscard]]
-    BusError read_single(T & data, const Continuous cont = DISC);
+    hal::BusError read_single(T & data, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_fulldup_bus<TBus>
     [[nodiscard]]
-    BusError transfer_single(T & data_rx, T data_tx, Continuous cont = DISC);
+    hal::BusError transfer_single(T & data_rx, T data_tx, Continuous cont = DISC);
 };
 
 template <typename TBus>

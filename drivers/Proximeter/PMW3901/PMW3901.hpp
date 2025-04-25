@@ -88,18 +88,17 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::PMW3901::Error, BusError> {
-        static Result<T, drivers::PMW3901::Error> convert(const BusError berr){
+    struct result_converter<T, drivers::PMW3901::Error, hal::BusError> {
+        static Result<T, drivers::PMW3901::Error> convert(const hal::BusError berr){
             using Error = drivers::PMW3901::Error;
-            using BusError = BusError;
             
             if(berr.ok()) return Ok();
 
-            Error err = [](const BusError berr_){
+            Error err = [](const hal::BusError berr_){
                 switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
-                    // case BusError::I2C_NOT_READY: return PMW3901::Error::I2C_NOT_READY;
+                    // case hal::BusError::I2C_NOT_READY: return PMW3901::Error::I2C_NOT_READY;
                     default: return Error::Unspecified;
                 }
             }(berr);

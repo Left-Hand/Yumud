@@ -28,7 +28,7 @@ private:
 
 class InvensenseSensor_Phy final{
 public:
-    BusError write_reg(const uint8_t addr, const uint8_t data) {
+    hal::BusError write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
             return i2c_drv_->write_reg(uint8_t(addr), data);
         }else if(spi_drv_){
@@ -39,7 +39,7 @@ public:
         PANIC();
     }
 
-    BusError read_reg(const uint8_t addr, uint8_t & data) {
+    hal::BusError read_reg(const uint8_t addr, uint8_t & data) {
         if(i2c_drv_){
             return i2c_drv_->read_reg(uint8_t(addr), data);
         }else if(spi_drv_){
@@ -50,7 +50,7 @@ public:
         PANIC();
     }
 
-    BusError read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    hal::BusError read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
             return i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
@@ -61,7 +61,7 @@ public:
         PANIC();
     }
 
-    BusError write_command(const uint8_t command){
+    hal::BusError write_command(const uint8_t command){
         return this->write_reg(0x7e, command);
     }
 public:
@@ -82,18 +82,17 @@ private:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::InvensenseSensorError, BusError> {
-        static Result<T, drivers::InvensenseSensorError> convert(const BusError berr){
+    struct result_converter<T, drivers::InvensenseSensorError, hal::BusError> {
+        static Result<T, drivers::InvensenseSensorError> convert(const hal::BusError berr){
             using Error = drivers::InvensenseSensorError;
-            using BusError = BusError;
             
             if(berr.ok()) return Ok();
 
-            Error err = [](const BusError berr_){
+            Error err = [](const hal::BusError berr_){
                 switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
-                    // case BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;
+                    // case hal::BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;
                     default: return Error::Unspecified;
                 }
             }(berr);

@@ -18,7 +18,7 @@ public:
         MPU9250 = 0x71
     };
 
-    using Error = BusError;
+    using Error = hal::BusError;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
@@ -119,20 +119,20 @@ protected:
     bool data_valid = false;
 
 
-    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
+    // [[nodiscard]] virtual Result<void, hal::BusError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, hal::BusError> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
+    // [[nodiscard]] virtual Result<void, hal::BusError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, hal::BusError> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    // [[nodiscard]] virtual Result<void, hal::BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, hal::BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
     static constexpr real_t calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
@@ -204,18 +204,17 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::MPU6050::Error, BusError> {
-        static Result<T, drivers::MPU6050::Error> convert(const BusError berr){
+    struct result_converter<T, drivers::MPU6050::Error, hal::BusError> {
+        static Result<T, drivers::MPU6050::Error> convert(const hal::BusError berr){
             using Error = drivers::MPU6050::Error;
-            using BusError = BusError;
             
             if(berr.ok()) return Ok();
 
-            Error err = [](const BusError berr_){
+            Error err = [](const hal::BusError berr_){
                 switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
-                    // case BusError::I2C_NOT_READY: return MPU6050::Error::I2C_NOT_READY;
+                    // case hal::BusError::I2C_NOT_READY: return MPU6050::Error::I2C_NOT_READY;
                     default: return Error::UNSPECIFIED;
                 }
             }(berr);

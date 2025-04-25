@@ -5,7 +5,7 @@
 #include "BusTrait.hpp"
 #include "bus_enums.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 
 struct BusError{
@@ -134,10 +134,10 @@ public:
     bool occupied(){return locker.locked();}
 };
 
-
-
-OutputStream & operator << (OutputStream & os, const BusError & err);
-
-OutputStream & operator << (OutputStream & os, const BusError::Kind & err);
-
 };
+
+namespace ymd{
+    OutputStream & operator << (OutputStream & os, const hal::BusError & err);
+
+    OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err);
+}

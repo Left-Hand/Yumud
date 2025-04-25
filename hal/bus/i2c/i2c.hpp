@@ -17,8 +17,8 @@ protected:
 public:
     void set_timeout(const uint32_t timeout){timeout_ = timeout;}
 
-    virtual BusError read(uint32_t & data, const Ack ack) = 0;
-    virtual BusError write(const uint32_t data) = 0;
+    virtual hal::BusError read(uint32_t & data, const Ack ack) = 0;
+    virtual hal::BusError write(const uint32_t data) = 0;
 
     hal::Gpio & scl(){return scl_gpio;};
     hal::Gpio & sda(){return sda_gpio;};
