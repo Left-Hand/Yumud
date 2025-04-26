@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/Option.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "concept/analog_channel.hpp"
 
@@ -14,8 +14,19 @@ namespace ymd::drivers{
 
 class INA226 {
 public:
-    using Error = hal::BusError;
-    using BusResult = Result<void, Error>;
+    static constexpr uint16_t VALID_MANU_ID = 0x5449;
+    static constexpr uint16_t VALID_CHIP_ID = 0x2260;
+
+    enum class Error_Kind{
+        ChipIdVerifyFailed,
+        ManuIdVerifyFailed,
+        ResTooBig
+    };
+
+    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -120,13 +131,21 @@ protected:
     ManufactureReg manufactureIDReg = {};
     ChipIdReg chipIDReg = {};
 
-    [[nodiscard]] BusResult write_reg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
 
-    [[nodiscard]] BusResult read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
     
-    [[nodiscard]] BusResult read_reg(const RegAddress addr, int16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] BusResult read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return IResult<>(read_reg(reg.address, reg.as_ref()));
+    }
+
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return IResult<>(write_reg(reg.address, reg.as_val()));
+    }
+    
+    // [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     class CurrentChannel;
     class VoltageChannel;
@@ -154,13 +173,13 @@ protected:
         operator real_t() override{
             switch(ch_){
                 case Index::SHUNT_VOLT:
-                    return parent_.get_shunt_voltage();
+                    return parent_.get_shunt_voltage().unwrap();
                 case Index::BUS_VOLT:
-                    return parent_.get_voltage();
+                    return parent_.get_voltage().unwrap();
                 case Index::CURRENT:
-                    return parent_.get_current();
+                    return parent_.get_current().unwrap();
                 case Index::POWER:
-                    return parent_.get_power();
+                    return parent_.get_power().unwrap();
                 default:
                     return real_t(0);
             }
@@ -178,7 +197,7 @@ protected:
 public:
     using Index = INA226Channel::Index;
     
-scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
 
     INA226(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     INA226(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
@@ -188,51 +207,51 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
     #undef CHANNEL_CONTENT
 
 
-    void update();
+    IResult<> update();
 
-    void init(const uint mohms, const uint max_current_a);
+    IResult<> init(const uint mohms, const uint max_current_a);
 
-    void config(const uint mohms, const uint max_current_a);
+    IResult<> config(const uint mohms, const uint max_current_a);
 
-    void set_average_times(const uint16_t times);
+    IResult<> set_average_times(const uint16_t times);
 
-    bool verify();
+    IResult<> verify();
 
-    auto & ch(const Index index){
+    [[nodiscard]] auto & ch(const Index index){
         return channels[uint8_t(index)];
     }
 
-    auto & get_curr_channel(){return ch(INA226Channel::Index::CURRENT);}
-    auto & get_bus_volt_channel(){return ch(INA226Channel::Index::BUS_VOLT); }
-    auto & get_shunt_volt_channel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
-    auto & get_power_channel(){return ch(INA226Channel::Index::POWER); }
+    [[nodiscard]] auto & get_curr_channel(){return ch(INA226Channel::Index::CURRENT);}
+    [[nodiscard]] auto & get_bus_volt_channel(){return ch(INA226Channel::Index::BUS_VOLT); }
+    [[nodiscard]] auto & get_shunt_volt_channel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
+    [[nodiscard]] auto & get_power_channel(){return ch(INA226Channel::Index::POWER); }
 
 
-    real_t get_voltage();
+    [[nodiscard]] IResult<real_t> get_voltage();
 
-    int get_shunt_voltage_uv();
+    [[nodiscard]] IResult<int> get_shunt_voltage_uv();
 
-    real_t get_shunt_voltage();
+    [[nodiscard]] IResult<real_t> get_shunt_voltage();
 
-    real_t get_current();
+    [[nodiscard]] IResult<real_t> get_current();
 
-    real_t get_power();
+    [[nodiscard]] IResult<real_t> get_power();
 
-    void set_average_times(const AverageTimes times);
+    [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
 
-    void set_bus_conversion_time(const ConversionTime time);
+    [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
 
-    void set_shunt_conversion_time(const ConversionTime time);
+    [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    void reset();
+    [[nodiscard]] IResult<> reset();
 
-    void enable_shunt_voltage_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const bool en = true);
 
-    void enable_bus_voltage_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_bus_voltage_measure(const bool en = true);
 
-    void enable_continuous_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_continuous_measure(const bool en = true);
 
-    void enable_alert_latch(const bool en = true);
+    [[nodiscard]] IResult<> enable_alert_latch(const bool en = true);
 };
 
 

@@ -66,8 +66,8 @@ protected:
 
         RefReg & set(const uint16_t data){
             auto & self = *this;
-            self.as_bytes()[0] = std::byte(data & 0b111);
-            self.as_bytes()[1] = std::byte(data >> 3);
+            self.as_bytes()[0] = uint8_t(data & 0b111);
+            self.as_bytes()[1] = uint8_t(data >> 3);
 
             return *this;
         }

@@ -82,6 +82,11 @@ public:
     constexpr bool operator !=(const Raw &rhs) const {
         return !(this->operator ==(rhs));
     }
+
+    friend OutputStream & operator <<(OutputStream & os,const SumtypeError & self){
+        TODO();
+        return os << "";
+    }
 private:
     std::variant<Ts...> value_;
 
@@ -106,7 +111,10 @@ public:\
     using Super = SumtypeError<Kind, hal::BusError>;\
     using Super::Super;\
     using enum Kind;\
-};
+    static constexpr name BusError(const hal::BusError & err){\
+        return name(err);\
+    }\
+};\
 
 // DEF_ERROR_SUMWITH_BUSERROR(MyError, details::MyError_Kind)
 

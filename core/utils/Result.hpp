@@ -276,7 +276,7 @@ private:
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
             #endif
-            std::terminate();
+            __builtin_abort();
         }
     }
     friend class _Loc;
@@ -305,7 +305,8 @@ public:
     requires requires(S s) {
         { custom::result_converter<T, E, S>::convert(s) } -> std::convertible_to<Result<T, E>>;
     }
-    [[nodiscard]] __fast_inline constexpr Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
+    [[nodiscard]] __fast_inline constexpr explicit 
+    Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
 
         // 修改map方法
     template<
@@ -316,7 +317,7 @@ public:
     >
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
-            if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
+            if constexpr(std::is_void_v<TFReturn>) return Ok<TFReturn>(std::forward<Fn>(fn)());
             else return Ok<TFReturn>(std::forward<Fn>(fn)(storage_.unwrap()));
         }
         else return Err<E>(unwrap_err());

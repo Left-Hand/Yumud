@@ -11,15 +11,16 @@
 
 namespace ymd::drivers{
 
-namespace details{
-enum class VL53L0X_Error_Kind:uint8_t{
-};
-}
-
-class VL53L0X{
+class VL53L0X final{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
-    DEF_ERROR_SUMWITH_BUSERROR(Error, details::VL53L0X_Error_Kind)
+
+    enum class Error_Kind:uint8_t{
+        VerifyFailed,
+        LightTooWeak
+    };
+
+    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
 
     VL53L0X(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
@@ -59,29 +60,11 @@ private:
     Result<void, Error> flush();
     Result<bool, Error> is_busy();
 
-	Result<void, Error> read_byte_data(const uint8_t reg, uint8_t & data){
-        const auto berr = [&]{
-            if(const auto err = i2c_drv_.read_reg(reg, data);
-                err.is_err()) return err;
-            return hal::BusError::Ok();
-        }();
+	Result<void, Error> read_byte_data(const uint8_t reg, uint8_t & data);
 
-        if(berr.is_err()) return Err(Error(berr));
-        return Ok();
-    }
+    Result<void, Error> read_burst(const uint8_t reg, uint16_t * data, const size_t len);
 
-    Result<void, Error> read_burst(const uint8_t reg, uint16_t * data, const size_t len){
-        const auto berr = i2c_drv_.read_burst(reg, std::span<uint16_t>(data, len), MSB);
-
-        if(berr.is_err()) return Err(Error(berr));
-        return Ok();
-    }
-
-    Result<void, Error> write_byte_data(const uint8_t reg, const uint8_t byte){
-        if(const auto berr = i2c_drv_.write_reg(reg, byte); berr.is_err())
-            return Err(Error(berr));
-        return Ok();
-    }
+    Result<void, Error> write_byte_data(const uint8_t reg, const uint8_t byte);
 
 };
 

@@ -11,7 +11,7 @@
 
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+// #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
@@ -79,10 +79,6 @@ public:
         SensorlessObserverTrait & ob
     ):
         ob_(ob){;}
-    Option<real_t> get_lap_position() = 0;
-    void update() = 0;
-    void init() = 0;
-    bool stable() = 0;
 };
 
 

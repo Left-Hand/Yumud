@@ -63,16 +63,24 @@ public:
         uint32_t micros_delta;
 
 
-        class M3508Encoder : public EncoderIntf{
-        protected:
-            M3508 & owner;
-
+        class M3508Encoder final: public EncoderIntf{
         public:
+            using Error = EncoderError;
+
             M3508Encoder(M3508 & _owner):owner(_owner){;}
-            void init() override {}
-            void update() override{}
-            Option<real_t> get_lap_position() override {return Some(owner.lap_position);}
-            bool stable() override {return true;}
+            void init() {}
+            Result<void, Error> update(){
+                //pass
+                return Ok();
+            }
+            Result<real_t, Error> get_lap_position() {
+                return Ok(owner.lap_position);
+            }
+            Result<bool, Error> is_stable() {return Ok(true);}
+
+        
+        private:
+            M3508 & owner;
         };
 
         M3508Encoder enc_{*this};

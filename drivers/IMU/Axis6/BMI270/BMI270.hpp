@@ -5,9 +5,9 @@
 
 namespace ymd::drivers{
 
-class BMI270:public Axis6{
+class BMI270 final:public Axis6{
 public:
-    using Error = details::BoschSensorError;
+    using Error = ImuError;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000

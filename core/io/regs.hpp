@@ -17,22 +17,22 @@ protected:
     using TReg = T;
     __RegC_t() = default;
 public:
-    __RegC_t(const std::span<const std::byte> pdata){
+    __RegC_t(const std::span<const uint8_t> pdata){
         *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pdata.data()));
     };
     using value_type = T;
-    __RegC_t<T> copy() const{return *this;}
-    constexpr operator T() const {return (*reinterpret_cast<const T *>(this));}
+    constexpr T copy() const{return std::bit_cast<T>(*this);}
+    constexpr operator T() const {return std::bit_cast<T>(*this);}
     
-    T operator &(const T data) const {return T(*this) & data;}
-    T operator |(const T data) const {return T(*this) | data;}
+    constexpr T operator &(const T data) const {return T(*this) & data;}
+    constexpr T operator |(const T data) const {return T(*this) | data;}
     constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
     
-    constexpr std::span<const std::byte> as_bytes() const {
-        return std::span<const std::byte>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
+    constexpr std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
     
     constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
-    constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
+    constexpr T as_val() const {return (std::bit_cast<T>(*this));}
     constexpr std::span<const T, 1> as_span() const {return std::span(reinterpret_cast<const T *>(*this), 1);}
 };
 
@@ -40,8 +40,8 @@ public:
 template<typename T, typename D = T>
 struct __Reg_t:public __RegC_t<T, D>{
 protected:
-    __Reg_t<T> & operator = (const __Reg_t<T, D> & other) = default;
-    __Reg_t<T> & operator = (__Reg_t<T, D> && other) = default;
+    constexpr __Reg_t<T> & operator = (const __Reg_t<T, D> & other) = default;
+    constexpr __Reg_t<T> & operator = (__Reg_t<T, D> && other) = default;
     __Reg_t(const T & data){*this = data;};
     __Reg_t(T && data){*this = data;};
     
@@ -52,14 +52,14 @@ public:
     using __RegC_t<T>::as_bytes;
     using TReg = __RegC_t<T>::TReg;
     
-    __Reg_t<T> copy() const{return *this;}
+    constexpr T copy() const{return std::bit_cast<T>(*this);}
     constexpr __Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
     constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
     constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
-    constexpr std::span<std::byte> as_bytes() {
-        return std::span<std::byte>(reinterpret_cast<std::byte *>(this), sizeof(TReg));}
-    constexpr std::span<const std::byte> as_bytes() const {
-        return std::span<const std::byte>(reinterpret_cast<const std::byte *>(this), sizeof(TReg));}
+    constexpr std::span<uint8_t> as_bytes() {
+        return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(TReg));}
+    constexpr std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
     
     constexpr __Reg_t<T> & set_bits(const T data) {
         static_cast<T &>(*this) = static_cast<T>(*this) | static_cast<T>(data); return *this;}
@@ -74,48 +74,50 @@ public:
     constexpr std::span<T, 1> as_span() {return std::span(reinterpret_cast<T *>(*this), 1);}
 };
 
-#define REG_TEMPLATE(name, T)\
+#define DEF_REG_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
 struct name:public __Reg_t<T, D>{\
 using __Reg_t<T, D>::__Reg_t;\
 using __Reg_t<T, D>::operator T;\
 using __Reg_t<T, D>::operator T &;\
 using __Reg_t<T, D>::operator =;\
+constexpr T as_fn() const {return T(*this);}\
 };\
 
-#define REGC_TEMPLATE(name, T)\
+#define DEF_REGC_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
 struct name:public __RegC_t<T, D>{\
 using __RegC_t<T, D>::__RegC_t;\
 using __RegC_t<T, D>::operator T;\
 using __RegC_t<T, D>::operator =;\
+constexpr T as_fn() const {return T(*this);}\
 };\
 
 
-REG_TEMPLATE(Reg8, uint8_t)
-REG_TEMPLATE(Reg16, uint16_t)
-// REG_TEMPLATE(Reg24, uint24_t)
-REG_TEMPLATE(Reg32, uint32_t)
-REG_TEMPLATE(Reg64, uint64_t)
+DEF_REG_TEMPLATE(Reg8, uint8_t, as_u8)
+DEF_REG_TEMPLATE(Reg16, uint16_t, as_u16)
+// DEF_REG_TEMPLATE(Reg24, uint24_t)
+DEF_REG_TEMPLATE(Reg32, uint32_t, as_u32)
+DEF_REG_TEMPLATE(Reg64, uint64_t, as_u64)
 
-REG_TEMPLATE(Reg8i, int8_t)
-REG_TEMPLATE(Reg16i, int16_t)
-REG_TEMPLATE(Reg32i, int32_t)
-REG_TEMPLATE(Reg64i, int64_t)
+DEF_REG_TEMPLATE(Reg8i, int8_t, as_i8)
+DEF_REG_TEMPLATE(Reg16i, int16_t, as_i16)
+DEF_REG_TEMPLATE(Reg32i, int32_t, as_i32)
+DEF_REG_TEMPLATE(Reg64i, int64_t, as_i64)
 
-REGC_TEMPLATE(RegC8, uint8_t)
-REGC_TEMPLATE(RegC16, uint16_t)
-// REGC_TEMPLATE(RegC24, uint24_t)
-REGC_TEMPLATE(RegC32, uint32_t)
-REGC_TEMPLATE(RegC64, uint64_t)
+DEF_REGC_TEMPLATE(RegC8, uint8_t, as_u8)
+DEF_REGC_TEMPLATE(RegC16, uint16_t, as_u16)
+// DEF_REGC_TEMPLATE(RegC24, uint24_t)
+DEF_REGC_TEMPLATE(RegC32, uint32_t, as_u32)
+DEF_REGC_TEMPLATE(RegC64, uint64_t, as_u64)
 
-REGC_TEMPLATE(RegC8i, int8_t)
-REGC_TEMPLATE(RegC16i, int16_t)
-REGC_TEMPLATE(RegC32i, int32_t)
-REGC_TEMPLATE(RegC64i, int64_t)
+DEF_REGC_TEMPLATE(RegC8i, int8_t, as_i8)
+DEF_REGC_TEMPLATE(RegC16i, int16_t, as_i16)
+DEF_REGC_TEMPLATE(RegC32i, int32_t, as_i32)
+DEF_REGC_TEMPLATE(RegC64i, int64_t, as_i64)
 
-#undef REG_TEMPLATE
-#undef REGC_TEMPLATE
+#undef DEF_REG_TEMPLATE
+#undef DEF_REGC_TEMPLATE
 
 
 #define CHECK_R32(type)\

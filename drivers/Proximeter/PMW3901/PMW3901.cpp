@@ -45,19 +45,19 @@ using namespace ymd::drivers;
 using Error = PMW3901::Error;
 
 Result<void, Error> PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    return spi_drv_.write_single<uint8_t>(command | 0x80, CONT)
-    | spi_drv_.write_single<uint8_t>(data);
+    return Result<void, Error>(spi_drv_.write_single<uint8_t>(command | 0x80, CONT)
+    | spi_drv_.write_single<uint8_t>(data));
 }
 
 
 Result<void, Error> PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    return spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
-    | spi_drv_.read_single<uint8_t>(data);
+    return Result<void, Error>(spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
+    | spi_drv_.read_single<uint8_t>(data));
 }
 
 Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
-    return spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
-    | spi_drv_.read_burst<uint8_t>(data, len);
+    return Result<void, Error>(spi_drv_.write_single<uint8_t>(command & 0x7f, CONT)
+    | spi_drv_.read_burst<uint8_t>(data, len));
 }
 
 
@@ -250,7 +250,7 @@ Result<void, Error> PMW3901::init() {
     });static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-    if(const auto err = spi_drv_.release(); err.is_err()) return err;
+    if(const auto err = spi_drv_.release(); err.is_err()) return Result<void, Error>(err);
     return write_reg(PMW3901_REG_Power_Up_Reset, 0x5A)
     .if_ok([this]{
         delay(5);

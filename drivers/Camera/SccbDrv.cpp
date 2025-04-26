@@ -23,6 +23,8 @@ hal::BusError SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
         //#endregion
             | i2c_.end();
     }
+
+    return hal::BusError::Ok();
 }
 
 hal::BusError SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
@@ -47,4 +49,6 @@ hal::BusError SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
 
         data = ((uint8_t)data_h << 8) | (uint8_t)data_l;
     }
+
+    return hal::BusError::Ok();
 }

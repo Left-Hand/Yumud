@@ -1,4 +1,5 @@
-
+//这个驱动尚未完成
+//这个驱动尚未测试
 
 #pragma once
 
@@ -6,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class ICM42605:public Axis6{
+class ICM42605 final:public Axis6{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
@@ -157,7 +158,8 @@ protected:
     Vector3_t<int16_t> acc_data_;
     Vector3_t<int16_t> gyr_data_;
 public:
-    ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+    ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     void init();
     

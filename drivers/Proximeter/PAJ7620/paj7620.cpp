@@ -5,6 +5,7 @@
 
 #include <utility>
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 // #define PAJ7620_DEBUG
@@ -62,9 +63,9 @@ void PAJ7620::select_bank(uint8_t bank) {
 // 	verify();
 // }
 
-void PAJ7620::unlock_i2c(){
+hal::BusError PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
-	i2c_drv_.verify();
+	return i2c_drv_.verify();
 }
 
 void PAJ7620::update(){

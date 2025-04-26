@@ -5,42 +5,15 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-namespace ymd::details{
-    enum class BoschSensorError:uint8_t{
-        UNSPECIFIED = 255,
-    };
-}
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, details::BoschSensorError, hal::BusError> {
-        static Result<T, details::BoschSensorError> convert(const hal::BusError berr){
-            using Error = details::BoschSensorError;
-            
-            if(berr.is_ok()) return Ok();
-
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case hal::BusError::I2C_NOT_READY: return _BMI088_Base::Error::I2C_NOT_READY;
-                    default: return Error::UNSPECIFIED;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
-}
-
 
 namespace ymd::drivers{
 
 class BoschSensor_Phy final{
+private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 public:
-    using Error = details::BoschSensorError;
+    using Error = ImuError;
 
     [[nodiscard]] __fast_inline
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){

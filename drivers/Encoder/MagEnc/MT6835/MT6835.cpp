@@ -4,6 +4,10 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
+using Error = MT6835::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
 
 
 void MT6835::init() {
@@ -14,8 +18,8 @@ uint16_t MT6835::getPositionData(){
     return 0;
 }
 
-void MT6835::update() {
-
+IResult<> MT6835::update() {
+    return Ok();
 }
 
 

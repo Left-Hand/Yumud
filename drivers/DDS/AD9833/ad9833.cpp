@@ -8,7 +8,6 @@ using namespace ymd;
 
 #define AD9833_Delay __nopn(4)
 
-#define AD9833_SPI_WRITE(data)      spi_drv_.write_single(data);
 #define AD9833_FSYNC(x)             fsync_gpio_ = x;
 
 
@@ -51,7 +50,7 @@ using namespace ymd;
 void AD9833::write_data(uint16_t data) {
     AD9833_FSYNC(1);
     AD9833_FSYNC(0);
-    AD9833_SPI_WRITE(data);
+    spi_drv_.write_single(data).is_ok();
     AD9833_FSYNC(1);
 }
 

@@ -62,7 +62,7 @@ Result<void, Error> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN nd
     reg.idrive_p_hs = uint8_t(pdrive);
     reg.idrive_n_hs = uint8_t(ndrive);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }
 
 Result<void, Error> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
@@ -70,12 +70,12 @@ Result<void, Error> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN nd
     reg.idrive_p_ls = uint8_t(pdrive);
     reg.idrive_n_ls = uint8_t(ndrive);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }
 
 Result<void, Error> DRV832X::set_drive_time(const PeakDriveTime ptime){
     auto & reg = regs_.gate_drv_ls;
     reg.tdrive = uint8_t(ptime);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }

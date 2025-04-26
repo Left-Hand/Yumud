@@ -11,7 +11,7 @@ void SelfCheckTasker::run(){
         case SubState::TEST_MAG:
             odo_.update();
 
-            if(not odo_.encoder.stable()){
+            if(not odo_.encoder.is_stable()){
                 // throw_error(ErrorCode::ODO_NO_SIGNAL, ("odometer is not stable"));
                 // return RunStatus::ERROR;
                 

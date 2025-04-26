@@ -116,8 +116,7 @@ using namespace ymd;
  * @return Success or failure
  */
 bool AD5933::getByte(uint8_t address, uint8_t *value) {
-    i2c_drv_.write_reg(address, *value);
-    return true;
+    return i2c_drv_.write_reg(address, *value).is_ok();
 }
 
 /**
@@ -128,8 +127,7 @@ bool AD5933::getByte(uint8_t address, uint8_t *value) {
  * @return Success or failure of transmission
  */
 bool AD5933::sendByte(uint8_t address, uint8_t value) {
-    i2c_drv_.write_reg(address, value);
-    return true;
+    return i2c_drv_.write_reg(address, value).is_ok();
 }
 
 /**

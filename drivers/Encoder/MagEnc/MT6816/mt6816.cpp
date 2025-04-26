@@ -4,14 +4,24 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
+using Error = MT6816::Error;
+
+template<typename T = void>
+using IResult = MT6816::IResult<T>;
 
 
-void MT6816::init() {
-    last_semantic_ = 0;
+Result<void, Error> MT6816::init() {
     lap_position_ = -1; // not possible before init done;
-    while(get_lap_position().is_none()){
+
+    
+    for(size_t i = 0; i < MAX_INIT_RETRY_TIMES; i++){
         this->update();
+        if(this->get_lap_position().is_ok()){
+            return Ok();
+        }
     } // while reading before get correct position
+
+    return Err(Error::CantSetup);
 }
 
 Result<uint16_t, hal::BusError> MT6816::get_position_data(){
@@ -27,25 +37,33 @@ Result<uint16_t, hal::BusError> MT6816::get_position_data(){
     return Ok<uint16_t>(((dataRx[0] & 0x00FF) << 8) | (dataRx[1]));
 }
 
-void MT6816::update() {
-    uint16_t raw = get_position_data().unwrap();
+IResult<> MT6816::update(){
+    uint16_t raw_16 = get_position_data().unwrap();
     if(fast_mode_ == false){
-        last_semantic_ = raw;
+        Semantic semantic;
+        semantic = raw_16;
+        last_sema_ = semantic;
+
+        if(semantic.no_mag) return Err(Error::MagnetLost);
 
         uint8_t count = 0;
 
-        raw -= last_semantic_.pc;
-        while(raw){//Brian Kernighan algorithm
-            raw &= raw - 1;
+        raw_16 -= semantic.pc;
+        while(raw_16){//Brian Kernighan algorithm
+            raw_16 &= raw_16 - 1;
             ++count;
         }
 
-        if(count % 2 == last_semantic_.pc){
-            lap_position_ = u16_to_uni(last_semantic_.data_14bit << 2);
+        if(count % 2 == semantic.pc){
+            lap_position_ = u16_to_uni(semantic.data_14bit << 2);
         }else{
             err_cnt_++;
+            return Err(Error::WrongPc);
         }
+
     }else{
-        lap_position_ = u16_to_uni(raw);
+        lap_position_ = u16_to_uni(raw_16 & (0xfffc));
     }
+
+    return Ok();
 }

@@ -60,9 +60,9 @@ protected:
     using RegAddress = uint8_t;
 };
 
-class BMI088_Acc: public _BMI088_Collections, public AccelerometerIntf{
+class BMI088_Acc final: public _BMI088_Collections, public AccelerometerIntf{
 public:
-    using Error = details::BoschSensorError;
+    using Error = ImuError;
 protected:
     real_t acc_scaler_ = 0;
     BoschSensor_Phy phy_;
@@ -205,9 +205,9 @@ public:
 };
 
 
-class BMI088_Gyr:public _BMI088_Collections, public AccelerometerIntf{
+class BMI088_Gyr final:public _BMI088_Collections, public AccelerometerIntf{
 public:
-    using Error = details::BoschSensorError;
+    using Error = ImuError;
 protected:
     BoschSensor_Phy phy_;
     real_t gyr_scaler_ = 0;

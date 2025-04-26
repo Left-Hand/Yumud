@@ -1,96 +1,107 @@
 #include "as5600.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
+using Error = AS5600::Error;
 
-void AS5600::set_power_mode(const PowerMode _power_mode){
-    configReg.powerMode = (uint8_t)_power_mode;
-    write_reg(RegAddress::Config, configReg);
+template<typename T = void>
+using IResult = AS5600::IResult<T>;
+IResult<> AS5600::set_power_mode(const PowerMode _power_mode){
+    configReg.powerMode = uint8_t(_power_mode);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-void AS5600::set_fast_filter(const FastFilter _fast_filter){
-    configReg.fastFilter = (uint8_t)_fast_filter;
-    write_reg(RegAddress::Config, configReg);
+IResult<> AS5600::set_fast_filter(const FastFilter _fast_filter){
+    configReg.fastFilter = uint8_t(_fast_filter);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-void AS5600::set_slow_filter(const SlowFilter _slow_filter){
-    configReg.slowFilter = (uint8_t)_slow_filter;
-    write_reg(RegAddress::Config, configReg);
+IResult<> AS5600::set_slow_filter(const SlowFilter _slow_filter){
+    configReg.slowFilter = uint8_t(_slow_filter);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-void AS5600::set_pwm_frequency(const PwmFrequency _pwm_frequency){
-    configReg.pwmFrequency = (uint8_t)_pwm_frequency;
-    write_reg(RegAddress::Config, configReg);
+IResult<> AS5600::set_pwm_frequency(const PwmFrequency _pwm_frequency){
+    configReg.pwmFrequency = uint8_t(_pwm_frequency);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-void AS5600::set_ouput_stage(const OutputStage _output_stage){
-    configReg.outputStage = (uint8_t)_output_stage;
-    write_reg(RegAddress::Config, configReg);
+IResult<> AS5600::set_ouput_stage(const OutputStage _output_stage){
+    configReg.outputStage = uint8_t(_output_stage);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-void AS5600::set_hysteresis(const Hysteresis _hysteresis){
-    configReg.hysteresis = (uint8_t)_hysteresis;
-    write_reg(RegAddress::Config, configReg);
+IResult<> AS5600::set_hysteresis(const Hysteresis _hysteresis){
+    configReg.hysteresis = uint8_t(_hysteresis);
+    return write_reg(RegAddress::Config, configReg);
 }
 
-int8_t AS5600::get_mag_status(){
-    read_reg(RegAddress::Status, statusReg);
-    if(statusReg.magProper) return 0;
-    else if(statusReg.magHigh) return 1;
-    else return -1;
+IResult<int8_t> AS5600::get_mag_status(){
+    // UNWRAP_OR_RETURN_ERR(read_reg(RegAddress::Status, statusReg));
+    if(const auto res = read_reg(RegAddress::Status, statusReg); res.is_err())
+        return Err(res.unwrap_err());
+    if(statusReg.magProper) return Ok(0);
+    else if(statusReg.magHigh) return Ok(1);
+    else return Ok(-1);
 }
 
-uint8_t AS5600::get_gain(){
-    read_reg(RegAddress::AutoGain, autoGainReg.data);
-    return autoGainReg.data;
+IResult<uint8_t> AS5600::get_gain(){
+    if(const auto res = read_reg(RegAddress::AutoGain, autoGainReg.data); res.is_err())
+        return Err(res.unwrap_err());
+    return Ok(autoGainReg.data);
 }
 
-uint16_t AS5600::get_magnitude(){
-    read_reg(RegAddress::Magnitude, magnitudeReg.data);
-    return (magnitudeReg.data) & 0xFFF;
+IResult<uint16_t> AS5600::get_magnitude(){
+    if(const auto res = read_reg(RegAddress::Magnitude, magnitudeReg.data); res.is_err())
+        return Err(res.unwrap_err());
+    return Ok((magnitudeReg.data) & 0xFFF);
 }
 
-real_t AS5600::get_raw_angle(){
-    read_reg(RegAddress::RawAngle, rawAngleReg.data);
-    return From12BitTo360Degrees(rawAngleReg.data);
-    // return (real_t)(int)rawAngleReg.data;
+IResult<real_t> AS5600::get_raw_angle(){
+    if(const auto res = read_reg(RegAddress::RawAngle, rawAngleReg.data); res.is_err())
+        return Err(res.unwrap_err());
+    return Ok(From12BitTo360Degrees(rawAngleReg.data));
 }
 
-real_t AS5600::get_angle(){
-    read_reg(RegAddress::Angle, angleReg.data);
-    return From12BitTo360Degrees(angleReg.data);
+IResult<real_t> AS5600::get_angle(){
+    if(const auto res = read_reg(RegAddress::Angle, angleReg.data); res.is_err())
+        return Err(res.unwrap_err());
+    return Ok(From12BitTo360Degrees(angleReg.data));
 }
 
-void AS5600::set_start_angle(const real_t angle){
+IResult<> AS5600::set_start_angle(const real_t angle){
     startAngleReg.data = From360DegreesTo12Bit(angle);
-    write_reg(RegAddress::StartAngle, startAngleReg.data);
+    return write_reg(RegAddress::StartAngle, startAngleReg.data);
 }
 
-void AS5600::set_end_angle(const real_t angle){
+IResult<> AS5600::set_end_angle(const real_t angle){
     endAngleReg.data = From360DegreesTo12Bit(angle);
-    write_reg(RegAddress::EndAngle, endAngleReg.data);
+    return write_reg(RegAddress::EndAngle, endAngleReg.data);
 }
 
-void AS5600::set_amount_angle(const real_t angle){
+IResult<> AS5600::set_amount_angle(const real_t angle){
     amountAngleReg.data = From360DegreesTo12Bit(angle);
-    write_reg(RegAddress::AmountAngle, amountAngleReg.data);
+    return write_reg(RegAddress::AmountAngle, amountAngleReg.data);
 }
 
-uint8_t AS5600::get_program_times(){
-    read_reg(RegAddress::ProgramTimes, programTimesReg);
-    return programTimesReg.times;
+IResult<uint8_t> AS5600::get_program_times(){
+    if(const auto res = read_reg(RegAddress::ProgramTimes, programTimesReg); res.is_err())
+        return Err(res.unwrap_err());
+
+    return Ok(uint8_t(programTimesReg.times));
 }
 
-void AS5600::burn_angle(){
+IResult<> AS5600::burn_angle(){
     burnReg.data = 0x80;
-    write_reg(RegAddress::Burn, burnReg.data);
+    return write_reg(RegAddress::Burn, burnReg.data);
 }
 
-void AS5600::burn_setting(){
+IResult<> AS5600::burn_setting(){
     burnReg.data = 0x80;
-    write_reg(RegAddress::Burn, burnReg.data);
+    return write_reg(RegAddress::Burn, burnReg.data);
 }
 
-void AS5600::init(){
-    set_power_mode(PowerMode::Norm);
+IResult<> AS5600::init(){
+    return set_power_mode(PowerMode::Norm);
 }

@@ -25,7 +25,7 @@ private:
 
 class ICM45686:public Axis6{
 public:
-    using Error = InvensenseSensorError;
+    using Error = ImuError;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
     using RegAddr = RegAddr_t<8>;

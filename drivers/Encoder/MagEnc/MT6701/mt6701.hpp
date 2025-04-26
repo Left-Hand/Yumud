@@ -13,6 +13,9 @@ namespace ymd::drivers{
 
 class MT6701_Phy{
 public:
+    using Error = EncoderError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class RegAddress:uint8_t{
         RawAngle = 0x03,
@@ -35,13 +38,13 @@ public:
         MT6701_Phy(std::make_optional<hal::I2cDrv>(i2c, addr), std::nullopt){;}
 
 
-    hal::BusError write_reg(const RegAddress addr, const uint16_t data);
+    IResult<> write_reg(const RegAddress addr, const uint16_t data);
     
-    hal::BusError read_reg(const RegAddress addr, uint16_t & data);
+    IResult<> read_reg(const RegAddress addr, uint16_t & data);
     
-    hal::BusError write_reg(const RegAddress addr, const uint8_t data);
+    IResult<> write_reg(const RegAddress addr, const uint8_t data);
     
-    hal::BusError read_reg(const RegAddress addr, uint8_t & data);
+    IResult<> read_reg(const RegAddress addr, uint8_t & data);
 private:
     MT6701_Phy(
         std::optional<hal::I2cDrv> && i2c_drv, 
@@ -55,8 +58,13 @@ private:
 };
 
 
-class MT6701:public MagEncoderIntf{
+class MT6701 final :public MagEncoderIntf{
 public:
+    using Error = EncoderError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class Hysteresis:uint8_t{
         LSB1, LSB2, LSB4, LSB8,
         LSB0, LSB0_25, LSB00_5
@@ -117,12 +125,12 @@ protected:
     real_t lap_position = real_t(0);
     bool fast_mode = true;
 
-    struct UVWMuxReg{
+    struct UVWMuxReg : public Reg8<>{
         uint8_t __resv__:7;
         uint8_t uvwMux:1;
     };
 
-    struct ABZMuxReg{
+    struct ABZMuxReg : public Reg8<>{
         uint8_t __resv1__:1;
         uint8_t clockwise:1;
         uint8_t __resv2__:4;
@@ -130,47 +138,45 @@ protected:
         uint8_t __resv3__:1;
     };
 
-    struct ResolutionReg{
+    struct ResolutionReg : public Reg16<>{
         uint16_t abzResolution:10;
         uint16_t __resv__:2;
         uint16_t poles:4;
     };
 
-    struct ZeroConfigReg{
+    struct ZeroConfigReg : public Reg16<>{
         uint16_t zeroPosition:12;
         uint16_t zeroPulseWidth:3;
         uint16_t hysteresis:1;
     };
 
-    struct HystersisReg{
+    struct HystersisReg : public Reg8<>{
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
-    struct WireConfigReg{
+    struct WireConfigReg : public Reg8<>{
         uint8_t __resv__:5;
         uint8_t isPwm:1;
         uint8_t pwmPolarityLow:1;
         uint8_t pwmFreq:1;
     };
 
-    struct StartStopReg{
+    struct StartStopReg : public Reg8<>{
         uint8_t start:4;
         uint8_t stop:4;
     };
 
-    struct{
-        uint16_t rawAngleData;
-        UVWMuxReg uvwMuxReg;
-        ABZMuxReg abzMuxReg;
-        ResolutionReg resolutionReg;
-        ZeroConfigReg zeroConfigReg;
-        HystersisReg hystersisReg;
-        WireConfigReg wireConfigReg;
-        StartStopReg startStopReg;
-        uint8_t startData;
-        uint8_t stopData;
-    };
+    uint16_t rawAngleData = {};
+    UVWMuxReg uvwMuxReg = {};
+    ABZMuxReg abzMuxReg = {};
+    ResolutionReg resolutionReg = {};
+    ZeroConfigReg zeroConfigReg = {};
+    HystersisReg hystersisReg = {};
+    WireConfigReg wireConfigReg = {};
+    StartStopReg startStopReg = {};
+    uint8_t startData = {};
+    uint8_t stopData = {};
 
     using RegAddress = MT6701_Phy::RegAddress;
 public:
@@ -184,90 +190,40 @@ public:
     ~MT6701(){};
 
 
-    void init() override;
+    void init();
 
-    void update();
-    Option<real_t> get_lap_position() override;
+    IResult<> update();
+    IResult<real_t> get_lap_position();
     
-    bool stable() override;
+    IResult<bool> is_stable();
 
-    void enable_uvwmux(const bool enable = true){
-        uvwMuxReg.uvwMux = enable;
-        phy_.write_reg(RegAddress::UVWMux, std::bit_cast<uint8_t>(uvwMuxReg));
-    }
+    IResult<> enable_uvwmux(const bool enable = true);
 
-    void enable_abzmux(const bool enable = true){
-        abzMuxReg.abzMux = enable;
-        phy_.write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
-    }
+    IResult<> enable_abzmux(const bool enable = true);
 
-    void set_direction(const bool clockwise){
-        abzMuxReg.clockwise = clockwise;
-        phy_.write_reg(RegAddress::ABZMux, std::bit_cast<uint8_t>(abzMuxReg));
-    }
+    IResult<> set_direction(const bool clockwise);
 
-    void set_poles(const uint8_t _poles){
-        resolutionReg.poles = _poles;
-        phy_.write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
-    }
+    IResult<> set_poles(const uint8_t _poles);
 
-    void set_abz_resolution(const uint16_t abzResolution){
-        resolutionReg.abzResolution = abzResolution;
-        phy_.write_reg(RegAddress::Resolution, std::bit_cast<uint16_t>(resolutionReg));
-    }
+    IResult<> set_abz_resolution(const uint16_t abzResolution);
 
-    void set_zero_position(const uint16_t zeroPosition){
-        zeroConfigReg.zeroPosition = zeroPosition;
-        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
-    }
+    IResult<> set_zero_position(const uint16_t zeroPosition);
 
-    void set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth){
-        zeroConfigReg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
-        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
-    }
+    IResult<> set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth);
 
-    void set_hysteresis(const Hysteresis hysteresis){
-        hystersisReg.hysteresis = (uint8_t)hysteresis & 0b11;
-        zeroConfigReg.hysteresis = (uint8_t)hysteresis >> 2;
-        phy_.write_reg(RegAddress::Hystersis, std::bit_cast<uint8_t>(hystersisReg));
-        phy_.write_reg(RegAddress::ZeroConfig, std::bit_cast<uint16_t>(zeroConfigReg));
-    }
+    IResult<> set_hysteresis(const Hysteresis hysteresis);
 
-    void enable_fast_mode(const bool en = true){
-        fast_mode = en;
-    }
-    void enable_pwm(const bool enable = true){
-        wireConfigReg.isPwm = enable;
-        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
-    }
+    IResult<> enable_fast_mode(const bool en = true);
 
-    void set_pwm_polarity(const bool polarity){
-        wireConfigReg.pwmPolarityLow = !polarity;
-        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
-    }
+    IResult<> enable_pwm(const bool enable = true);
 
-    void set_pwm_freq(const PwmFreq pwmFreq){
-        wireConfigReg.pwmFreq = (uint8_t)pwmFreq;
-        phy_.write_reg(RegAddress::WireConfig, std::bit_cast<uint8_t>(wireConfigReg));
-    }
+    IResult<> set_pwm_polarity(const bool polarity);
 
-    void set_start(const real_t start){
-        uint16_t _startData = uni_to_u16(start);
-        _startData >>= 4;
-        startData = _startData;
-        startStopReg.start = _startData >> 8;
-        phy_.write_reg(RegAddress::Start, startData);
-        phy_.write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
-    }
+    IResult<> set_pwm_freq(const PwmFreq pwmFreq);
 
-    void set_stop(const real_t stop){
-        uint16_t _stopData = uni_to_u16(stop);
-        _stopData >>= 4;
-        stopData = _stopData;
-        startStopReg.stop = _stopData >> 8;
-        phy_.write_reg(RegAddress::Stop, stopData);
-        phy_.write_reg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
-    }
+    IResult<> set_start(const real_t start);
+
+    IResult<> set_stop(const real_t stop);
 };
 
 }

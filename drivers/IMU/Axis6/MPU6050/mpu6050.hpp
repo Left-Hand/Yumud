@@ -12,21 +12,14 @@ namespace ymd::drivers{
 
 class MPU6050:public Axis6{
 public:
+    using Error = ImuError;
+    
     enum class Package:uint8_t{
         MPU6050 = 0x68,
         MPU6500 = 0x70,
         MPU9250 = 0x71
     };
 
-
-    enum class Error_Kind:uint8_t{
-        WrongWhoAmI,
-        UnknownDevice,
-        Unspecified = 0xff
-    };
-
-
-    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
@@ -157,23 +150,26 @@ protected:
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 
     [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
-        return Err(Error(phy_.write_reg(addr, data)));
+        return phy_.write_reg(addr, data);
     }
 
     template<typename T>
     [[nodiscard]] Result<void, Error> write_reg(const T & reg){
-        return write_reg(reg.address, reg);}
+        return write_reg(reg.address, reg);
+    }
 
     [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
-        return Err(Error(phy_.read_reg(addr, data)));
+        return phy_.read_reg(addr, data);
     }
 
     [[nodiscard]] Result<void, Error> read_burst(const uint8_t addr, int16_t * data, const size_t len){
-        return Err(Error(phy_.read_burst(addr, data, len)));
+        return phy_.read_burst(addr, data, len);
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, Error> read_reg(T & reg){
+        return read_reg(reg.address, reg);
+    }
 public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
