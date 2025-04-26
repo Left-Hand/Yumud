@@ -261,26 +261,3 @@ public:
 };
 
 }
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::LT8960L::Error, hal::BusError> {
-        scexpr Result<T, drivers::LT8960L::Error> convert(const hal::BusError berr){
-            using Error = drivers::LT8960L::Error;
-            
-            if constexpr(std::is_void_v<T>)
-                if(berr.is_ok()) return Ok();
-            
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case hal::BusError::I2C_NOT_READY: return LT8960L::Error::I2C_NOT_READY;
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
-}

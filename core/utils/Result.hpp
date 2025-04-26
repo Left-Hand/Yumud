@@ -64,12 +64,12 @@ namespace details{
         using ok_type = T;
         using err_type = E;
     
-        __fast_inline constexpr _Storage_Diff(const T & val):data_(val){;}
-        __fast_inline constexpr _Storage_Diff(T && val):data_(std::move(val)){;}
+        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):data_(val.unwrap()){;}
+        __fast_inline constexpr _Storage_Diff(Ok<T> && val):data_(std::move(val.unwrap())){;}
     
     
-        __fast_inline constexpr _Storage_Diff(const E & val):data_(val){;}
-        __fast_inline constexpr _Storage_Diff(E && val):data_(std::move(val)){;}
+        __fast_inline constexpr _Storage_Diff(const Err<E> & val):data_(val.unwrap()){;}
+        __fast_inline constexpr _Storage_Diff(Err<E> && val):data_(std::move(val.unwrap())){;}
     
         __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
         __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
@@ -151,7 +151,7 @@ namespace details{
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
-            data_(std::forward<E>(static_cast<E>(val))){;}
+            data_(val.unwrap()){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
         // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
@@ -170,10 +170,10 @@ namespace details{
         using ok_type = T;
         using err_type = void;
         using Data = std::optional<T>;
-        __fast_inline constexpr _Storage_OkOnly(const Ok<void> & val):
-            data_(static_cast<T>(val)){;}
+        __fast_inline constexpr _Storage_OkOnly(const Ok<T> & val):
+            data_(val.unwrap()){;}
     
-        __fast_inline constexpr _Storage_OkOnly(const Err<T> &):
+        __fast_inline constexpr _Storage_OkOnly(const Err<void> &):
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_OkOnly(const _Storage_OkOnly &) = default;
@@ -245,17 +245,12 @@ namespace details{
 
 template <typename T, typename E>
 class Result{
-// private:
-    // using Storage = std::variant<T, E>;
-    // using details::operator|;
-    // using _Storage = details::_Storage;
 public:
     using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
     using type = Result<T, E>;
     constexpr Result & operator =(const Result<T, E> &) = default;
-    // constexpr Result & operator =(Result<T, E> &&) = default;
 
 private:
     Storage storage_;
@@ -287,15 +282,15 @@ private:
     friend class _Loc;
 public:
 
-    template<typename U>
-    requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<U> & value) : storage_(*value){}
+    template<typename T2>
+    requires (std::is_convertible_v<Ok<T2>, Ok<T>>)
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(value){}
     
     [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : storage_(Ok<void>()){}
     
-    template<typename U>
-    requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Err<U> & error) : storage_(*error){}
+    template<typename E2>
+    requires (std::is_convertible_v<Err<E2>, Err<E>>)
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : storage_(error){}
 
         
     [[nodiscard]] __fast_inline constexpr Result(const Err<void> & value) : storage_(Err<void>()){}
@@ -592,18 +587,6 @@ public:
         return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
     }
 
-
-        // 添加隐式类型转换运算符
-    template<typename U, typename V>
-    operator Result<U, V>() const {
-        if (is_ok()) {
-            if constexpr(std::is_void_v<U>) return Ok();
-            if constexpr(std::is_void_v<T>) return Ok();
-            else return Ok<U>(unwrap());
-        } else {
-            return Result<U, V>(unwrap_err());
-        }
-    }
 };
 
 template<

@@ -201,7 +201,7 @@ Result<void, Error> LT8960L::wait_pkt_ready(const uint timeout){
         [this]{return is_pkt_ready()
         .and_then([](bool rdy) -> Result<void, Error>{
             if (rdy) return Ok();
-            else return Err(Error::TransmitTimeout);
+            else return Err(Error(Error::TransmitTimeout));
         });}
     );
 }
@@ -288,7 +288,8 @@ Result<void, Error> LT8960L_Phy::_write_reg(
         .then([&]{return i2c_.write(data);})
     ;
 
-    return Result<void, Error>(res);
+    if(res.is_ok()) return Ok();
+    else return Err(Error(res.unwrap_err()));
 }
 
 Result<void, Error> LT8960L_Phy::_read_reg(
@@ -314,7 +315,9 @@ Result<void, Error> LT8960L_Phy::_read_reg(
     })
 
     ;
-    return Result<void, Error>(res);
+
+    if(res.is_ok()) return Ok();
+    else return Err(Error(res.unwrap_err()));
 
 }
 
@@ -469,7 +472,8 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 
     LT8960L_ASSERT(res.is_ok(), "error while read burst", res);
 
-    return rescond(res.is_ok(), invalid ? 0 : len, res);
+    if(res.is_ok()) return Ok(invalid ? 0 : len);
+    else return Err(Error(res.unwrap_err()));
 }
 
 
@@ -495,6 +499,7 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
 
     LT8960L_ASSERT(res.is_ok(), "error while write burst", res);
 
-    return rescond(res.is_ok(), pbuf.size(), res);
+    if(res.is_ok()) return Ok(pbuf.size());
+    else return Err(Error(res));
 }
 

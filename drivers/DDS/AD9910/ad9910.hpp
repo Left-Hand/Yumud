@@ -19,8 +19,8 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{

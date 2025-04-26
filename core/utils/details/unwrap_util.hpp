@@ -105,20 +105,18 @@ struct Ok{
 public:
     using TDecay = std::decay_t<T>;
 
-    constexpr Ok(auto val):val_(static_cast<T>(val)){}
+    template<typename T2>
+    requires (std::is_convertible_v<T2, TDecay>)
+    constexpr Ok(T2 && val):val_(static_cast<TDecay>(val)){}
+    
+    
+    template<typename T2>
+    requires (std::is_convertible_v<T2, TDecay>)
+    constexpr Ok(const Ok<T2> & ok_val):val_(static_cast<TDecay>(ok_val.unwrap())){;}
 
-    constexpr explicit operator T() const{
+    constexpr const TDecay & unwrap() const{
         return val_;
     }
-
-    constexpr const T & operator *() const{
-        return val_;
-    }
-
-    // template <typename E>
-    // operator Result<T, E>() const {
-    //     return Result<T, E>(Ok<T>(val_));
-    // }
 
 private:
     TDecay val_;
@@ -142,42 +140,31 @@ namespace custom{
 template<typename E>
 struct Err{
 public:
+    using EDecay = std::decay_t<E>;
 
     template<typename From>
     requires requires(From raw) {
-        { custom::err_converter<From, E>::convert(raw) } -> std::convertible_to<E>;
+        { custom::err_converter<Err<From>, Err<EDecay>>::convert(raw) } -> std::convertible_to<EDecay>;
     }
-    [[nodiscard]] __fast_inline constexpr Err(const From raw):
-        val_(custom::err_converter<From, E>::convert(raw)){}
+    [[nodiscard]] __fast_inline constexpr Err(const Err<From> & raw):
+        val_(custom::err_converter<Err<From>, Err<EDecay>>::convert(raw)){}
 
 
     template<typename E2>
-    constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
+    requires (std::is_convertible_v<E2, EDecay>)
+    constexpr Err(const Err<E2> & err):val_(static_cast<EDecay>(err.unwrap())){}
+    
+
     
     template<typename E2>
-    constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
+    requires (std::is_convertible_v<E2, EDecay>)
+    constexpr Err(E2 && err):val_(static_cast<EDecay>(err)){}
 
-    template<typename E2>
-    constexpr Err(const E2 & err):val_(err){}
-
-    template<typename E2>
-    constexpr Err(E2 && err):val_(std::forward<E2>(err)){}
-
-    constexpr explicit operator E() const{
+    constexpr const EDecay & unwrap() const{
         return val_;
     }
-
-    constexpr const E & operator *() const{
-        return val_;
-    }
-
-    
-    // template <typename T>
-    // operator Result<T, E>() const {
-    //     return Result<T, E>(Err<E>(val_));
-    // }
 private:
-    E val_;
+    EDecay val_;
 };
 
 
@@ -202,11 +189,11 @@ Err() -> Err<void>;
 
 
 template<typename T>
-class match{
+class MATCH{
 public:
     template<typename Fn, typename ... Args>
     constexpr void operator ()(const T kase, Fn && fn, Args && ...args){
-        if(val_ == static_cast<T>(kase))return std::forward<Fn>(fn)();    
+        if(val_ == kase)return std::forward<Fn>(fn)();    
         else if constexpr(sizeof...(Args)) return this->operator()(std::forward<Args>(args)...);
     }
 
@@ -215,12 +202,16 @@ public:
         return std::forward<Fn>(fn)();    
     }
 
-    match(const T & val):val_(val){;}
+    MATCH(const T & val):val_(val){;}
 private:    
     const T & val_;
 };
 
 template<typename T>
-match() -> match<T>;
+MATCH() -> MATCH<T>;
+
+
+#define UNWRAP_OR_RETURN(x) if(const auto err = x; err.is_err()) return err;
+#define UNWRAP_OR_RETURN_ERR(x) if(const auto err = x; err.is_err()) return Err(Error(err));
 
 } // namespace ymd

@@ -3,6 +3,9 @@
 #include <variant>
 #include <type_traits>
 
+#include "Option.hpp"
+// #include "hal/bus/bus_error.hpp"
+
 namespace ymd{
 namespace details{
 template<typename T, typename... Ts>
@@ -32,6 +35,8 @@ using first_convertible_t = typename details::first_convertible<T, Ts...>::type;
 template<typename ... Ts>
 class SumtypeError{
 public:
+    using Self = SumtypeError<Ts...>;
+
     template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
     constexpr SumtypeError(Raw && val):
@@ -58,6 +63,13 @@ public:
         return Some<const T *>(&std::get<T>(value_)); 
     }
 
+
+    constexpr bool operator ==(const Self & other) const {
+        // if(this->var_index() != other.var_index()) return false;
+        // return 
+        return this->value_ == other.value_;
+    }
+
     template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
     constexpr bool operator ==(const Raw &rhs) const {
@@ -72,6 +84,11 @@ public:
     }
 private:
     std::variant<Ts...> value_;
+
+    constexpr size_t var_index() const {
+        return value_.index();
+    }
+
 };
 
 namespace details{

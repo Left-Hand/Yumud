@@ -5,29 +5,21 @@
 
 #include "hal/gpio/gpio_intf.hpp"
 
+#include "core/utils/Errno.hpp"
+
 namespace ymd::drivers{
 
-class LT8960L_Error{
-public:
-    enum Kind:uint8_t{
-        TransmitTimeout,
-        PacketOverlength,
-        ChipIdMismatch,
-        ReceiveTimeout,
-        InvalidState,
-        Unspecified = 0xff
-    };
 
-    constexpr LT8960L_Error(const Kind kind):
-        kind_(kind){;}
-
-    constexpr bool operator ==(const LT8960L_Error & rhs) const {return kind_ == rhs.kind_;}
-private:
-    Kind kind_;
+enum LT8960L_Error_Kind:uint8_t{
+    TransmitTimeout,
+    PacketOverlength,
+    ChipIdMismatch,
+    ReceiveTimeout,
+    InvalidState,
+    Unspecified = 0xff
 };
 
-
-
+DEF_ERROR_SUMWITH_BUSERROR(LT8960L_Error, LT8960L_Error_Kind)
 
 class LT8960L_Phy final{
 public:

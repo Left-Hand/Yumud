@@ -73,6 +73,13 @@ public:
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
+    hal::BusError reset(){
+        if(i2c_drv_){
+            return i2c_drv_->release();
+        }
+
+        return hal::BusError::Ok();
+    }
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
