@@ -1,0 +1,115 @@
+#pragma once
+
+#include <variant>
+#include <type_traits>
+
+namespace ymd{
+namespace details{
+template<typename T, typename... Ts>
+struct first_convertible;
+
+template<typename T>
+struct first_convertible<T> {
+    using type = void;
+
+    // static_assert(std::void_t<T>::value, "T must be a valid type");
+};
+
+template<typename T, typename U, typename... Ts>
+struct first_convertible<T, U, Ts...> {
+    using type = typename std::conditional<
+        std::is_convertible<T, U>::value,
+        U,
+        typename first_convertible<T, Ts...>::type
+    >::type;
+};
+}
+
+//尝试将T逐一转换为Ts中的一个 如果都无法转换返回void
+template<typename T, typename... Ts>
+using first_convertible_t = typename details::first_convertible<T, Ts...>::type;
+
+template<typename ... Ts>
+class SumtypeError{
+public:
+    template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
+    requires (!std::is_void_v<T>)
+    constexpr SumtypeError(Raw && val):
+        value_(std::in_place_type<T>, static_cast<T>(val)) { // Add std::in_place_type<Raw> to specify variant type
+    }
+
+    
+    template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
+    requires (!std::is_void_v<T>)
+
+    constexpr bool is() const{
+        return std::holds_alternative<T>(value_);
+    }
+
+    template<typename T>
+    constexpr Option<T *> as() {
+        if(! this->is<T>()) return None;
+        return Some<T *>(&std::get<T>(value_)); 
+    }
+
+    template<typename T>
+    constexpr Option<const T *> as() const {
+        if(! this->is<T>()) return None;
+        return Some<const T *>(&std::get<T>(value_)); 
+    }
+
+    template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
+    requires (!std::is_void_v<T>)
+    constexpr bool operator ==(const Raw &rhs) const {
+        if(not this->is<T>()) return false;
+        return this->as<T>().unwrap() == static_cast<T>(rhs);
+    }
+
+    template<typename Raw, typename T = first_convertible_t<Raw, Ts...>>
+    requires (!std::is_void_v<T>)
+    constexpr bool operator !=(const Raw &rhs) const {
+        return !(this->operator ==(rhs));
+    }
+private:
+    std::variant<Ts...> value_;
+};
+
+namespace details{
+    enum class MyError_Kind:uint8_t{
+        I2cError,
+        Unspecified = 0xff,
+    };
+}
+
+
+#define DEF_ERROR_SUMWITH_BUSERROR(name, kind)\
+class name:public SumtypeError<kind, hal::BusError>{\
+public:\
+    using Kind = kind;\
+    using Super = SumtypeError<Kind, hal::BusError>;\
+    using Super::Super;\
+    using enum Kind;\
+};
+
+// DEF_ERROR_SUMWITH_BUSERROR(MyError, details::MyError_Kind)
+
+// __inline void test_err(){
+//     // static constexpr MyError err{MyError::I2cError};
+//     {
+//         // using t1 = err_enum_t<typename hal::BusError::Kind>;
+//         // using t2 = err_enum_t<hal::BusError>;
+//         // using t = first_convertible_t<typename hal::BusError::Kind, hal::BusError>;
+//         // static constexpr bool ok = std::is_convertible_v<typename hal::BusError::Kind, hal::BusError>;
+//         static constexpr SumtypeError<hal::BusError> err0{hal::BusError::Ok()};
+//         static constexpr SumtypeError<hal::BusError> err{hal::BusError::AckTimeout};
+//         // static constexpr MyError err2(hal::BusError::AckTimeout);
+//         // static constexpr MyError err2(MyError::I2cError);
+
+//         static constexpr MyError err2 = MyError::I2cError;
+//         static constexpr MyError err3(hal::BusError::AckTimeout);
+//         static constexpr auto err4 = err2.as<MyError::Kind>().unwrap();
+
+//         // static constexpr auto err5 = err2.as<hal::BusError>().unwrap();
+//     }
+// }
+}

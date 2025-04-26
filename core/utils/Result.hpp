@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Option.hpp"
+#include "typetraits/size_traits.hpp"
 
 
 namespace ymd{
@@ -8,6 +9,8 @@ namespace ymd{
 namespace custom{
     template <typename T, typename E, typename S> 
     struct result_converter{};
+
+
 
     // 非侵入式地添加隐式类型转换
     // T为正确类型 E为错误类型 S为源类型
@@ -20,6 +23,7 @@ namespace custom{
     //         else return Err(res); 
     //     }
     // };
+
 }
 
 template<typename T>
@@ -302,13 +306,6 @@ public:
         else return rhs;
     }
 
-    // [[nodiscard]] __fast_inline constexpr
-    // template<typename Fn>
-    // Result<T, E> operator | (Fn && fn){
-    //     if(is_ok()) std::forward<Fn>(fn)();
-    //     return *this;
-    // }
-
     template<typename S>
     requires requires(S s) {
         { custom::result_converter<T, E, S>::convert(s) } -> std::convertible_to<Result<T, E>>;
@@ -452,12 +449,7 @@ public:
         return *this;
     }
 
-    template<typename Fn>
-    __fast_inline constexpr 
-    Result<T, E> if_ok(Fn && fn) const {
-        if (is_ok()) std::forward<Fn>(fn)();
-        return *this;
-    }
+
 
     template<typename Fn>
     __fast_inline constexpr 
@@ -468,6 +460,12 @@ public:
         return *this;
     }
 
+    template<typename Fn>
+    __fast_inline constexpr 
+    Result<T, E> if_ok(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)();
+        return *this;
+    }
 
     [[nodiscard]] __fast_inline constexpr 
     bool is_ok() const {
@@ -490,7 +488,7 @@ public:
             #ifdef __DEBUG_INCLUDED
             PANIC_NSRC(std::forward<Args>(args)...);
             #endif
-            exit(1);
+            __builtin_abort();
         }
     }
     
@@ -523,7 +521,7 @@ public:
         if (likely(is_ok())) {
             return storage_.unwrap();
         } else {
-            exit(1);
+            __builtin_abort();
         }
     }
 
@@ -556,7 +554,7 @@ public:
         if (likely(is_err())) {
             return storage_.unwrap_err();
         } else {
-            exit(1);
+            __builtin_abort();
         }
     }
 

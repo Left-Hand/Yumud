@@ -7,54 +7,27 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 
-namespace ymd::drivers{
-class TM1650_Error{
-    public:
-        enum Kind:uint8_t{
-            I2cError,
-            Unspecified = 0xff,
-        };
-        constexpr TM1650_Error(const Kind kind): kind_(kind){;}
-        constexpr TM1650_Error(const hal::BusError err)
-            {
 
-            }
-        constexpr Kind kind() const {return kind_;}
-        constexpr bool operator ==(const TM1650_Error &rhs) const {return kind_ == rhs.kind_;}
-    private:
-        Kind kind_ = Kind::Unspecified;
+
+namespace ymd::drivers{
+
+namespace details{
+    enum class TM1650_Error_Kind:uint8_t{
+        I2cError,
+        PayloadOverlength,
+        Unspecified = 0xff,
     };
 }
 
+DEF_ERROR_SUMWITH_BUSERROR(TM1650_Error, details::TM1650_Error_Kind)
 
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::TM1650_Error, hal::BusError> {
-        scexpr Result<T, drivers::TM1650_Error> convert(const hal::BusError berr){
-            using Error = drivers::TM1650_Error;
-            
-            if constexpr(std::is_void_v<T>)
-                if(berr.is_ok()) return Ok();
-            
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
-}
-    
-
-namespace ymd::drivers{
 class TM1650_Phy final{
 private:
     hal::I2cSw i2c_;
@@ -75,20 +48,6 @@ public:
         _14_16,
     };
 
-    // template<typename Dummy = void>
-    // class DataCommand{
-    // public:
-    //     static constexpr DataCommand<Dummy> MODE_CMD = DataCommand<Dummy>(0b0100'1000); 
-    //     static constexpr DataCommand<Dummy> READ_KEY = DataCommand<Dummy>(0b0100'1001); 
-
-    //     constexpr uint8_t as_u8() const {return data_;}
-    // private:    
-    //     constexpr DataCommand(const uint8_t data): data_(data){;}
-
-    //     uint8_t data_;
-    // };
-
-    // static_assert(sizeof(DataCommand<void>) == 1);
 
     enum class DataCommand:uint8_t{
         MODE_CMD = 0b0100'1000,

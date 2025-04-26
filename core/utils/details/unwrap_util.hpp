@@ -77,6 +77,19 @@ struct Some<void>{
 public:
 };
 
+template<typename T>
+struct Some<T *>{
+public:
+    constexpr Some(std::nullptr_t) = delete;
+    constexpr Some(T * val):val_(val){;}
+
+    constexpr T * operator*(){
+        return val_;
+    }
+private:
+    T * val_;
+};
+
 //CTAD
 template<typename T>
 Some(T && val) -> Some<std::decay_t<T>>;
@@ -117,9 +130,27 @@ public:
     constexpr Ok() = default;
 };
 
+
+namespace custom{
+    
+    // 非侵入式地添加隐式错误·类型转换
+    template <typename From, typename To> 
+    struct err_converter{};
+}
+
+
 template<typename E>
 struct Err{
 public:
+
+    template<typename From>
+    requires requires(From raw) {
+        { custom::err_converter<From, E>::convert(raw) } -> std::convertible_to<E>;
+    }
+    [[nodiscard]] __fast_inline constexpr Err(const From raw):
+        val_(custom::err_converter<From, E>::convert(raw)){}
+
+
     template<typename E2>
     constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
     
@@ -191,57 +222,5 @@ private:
 
 template<typename T>
 match() -> match<T>;
-
-template<std::size_t Size>
-struct size_to_int;
-
-template<>
-struct size_to_int<1> {
-    using type = int8_t;
-};
-
-template<>
-struct size_to_int<2> {
-    using type = int16_t;
-};
-
-template<>
-struct size_to_int<4> {
-    using type = int32_t;
-};
-
-template<>
-struct size_to_int<8> {
-    using type = int64_t;
-};
-
-template<std::size_t Size>
-struct size_to_uint;
-
-template<>
-struct size_to_uint<1> {
-    using type = int8_t;
-};
-
-template<>
-struct size_to_uint<2> {
-    using type = int16_t;
-};
-
-template<>
-struct size_to_uint<4> {
-    using type = int32_t;
-};
-
-template<>
-struct size_to_uint<8> {
-    using type = int64_t;
-};
-
-template<size_t Size>
-using size_to_int_t = typename size_to_int<Size>::type;
-
-template<size_t Size>
-using size_to_uint_t = typename size_to_uint<Size>::type;
 
 } // namespace ymd

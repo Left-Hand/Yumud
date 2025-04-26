@@ -8,7 +8,8 @@
 #include "core/clock/time.hpp"
 #include "core/clock/clock.hpp"
 
-// #include 
+#include "core/utils/typetraits/size_traits.hpp"
+
 // https://taylorconor.com/blog/enum-reflection/
 
 
@@ -45,37 +46,6 @@
 
 
 namespace ymd{
-
-template <size_t Size>
-struct bytes_to_uint;
-
-template <>
-struct bytes_to_uint<1> {
-    using type = uint8_t;
-};
-
-template <>
-struct bytes_to_uint<2> {
-    using type = uint16_t;
-};
-
-template <>
-struct bytes_to_uint<4> {
-    using type = uint32_t;
-};
-
-template<size_t Bytes>
-using bytes_to_uint_t = typename bytes_to_uint<Bytes>::type;
-
-template<size_t Bits>
-using bits_to_uint_t = typename bytes_to_uint<(Bits + 7) / 8>::type;
-
-template<typename T>
-static constexpr size_t type_to_bits_v = sizeof(T) * 8;
-
-template<typename T>
-static constexpr size_t type_to_bytes_v = sizeof(T) * 8;
-
 
 template<char...args>
 struct __static_string

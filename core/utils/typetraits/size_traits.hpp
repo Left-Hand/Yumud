@@ -62,6 +62,61 @@ template<typename T>
 static constexpr size_t type_to_bytes_v = sizeof(T);
 
 
+namespace details{
+    template<std::size_t Size>
+    struct size_to_int;
+
+    template<>
+    struct size_to_int<1> {
+        using type = int8_t;
+    };
+
+    template<>
+    struct size_to_int<2> {
+        using type = int16_t;
+    };
+
+    template<>
+    struct size_to_int<4> {
+        using type = int32_t;
+    };
+
+    template<>
+    struct size_to_int<8> {
+        using type = int64_t;
+    };
+
+    template<std::size_t Size>
+    struct size_to_uint;
+
+    template<>
+    struct size_to_uint<1> {
+        using type = int8_t;
+    };
+
+    template<>
+    struct size_to_uint<2> {
+        using type = int16_t;
+    };
+
+    template<>
+    struct size_to_uint<4> {
+        using type = int32_t;
+    };
+
+    template<>
+    struct size_to_uint<8> {
+        using type = int64_t;
+    };
+}
+
+template<size_t Size>
+using size_to_int_t = typename details::size_to_int<Size>::type;
+
+// template<size_t Size>
+// using size_to_uint_t = typename details::size_to_uint<Size>::type;
+
+
 
 template<typename T>
 __inline static constexpr 
