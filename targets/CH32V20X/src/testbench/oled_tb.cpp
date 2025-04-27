@@ -2,6 +2,8 @@
 
 #include "core/debug/debug.hpp"
 #include "core/stream/StringStream.hpp"
+#include "core/math/realmath.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -10,7 +12,6 @@
 
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
-
 
 #include "types/image/painter.hpp"
 #include "types/image/font/instance.hpp"
@@ -44,13 +45,13 @@ protected:
     real_t para = 0;
 public:
     Menu(VerticalBinaryImage & _frame, OutputStream & _os):frame_(_frame), os_(_os){
-        painter_.bindImage(frame_);
-        painter_.setColor(Binary(true));
+        painter_.bind_image(frame_);
+        painter_.set_color(Binary(true));
     }
 
     void render(){
         frame_.fill(0);
-        painter_.drawString({0,0}, String(millis())).unwrap();
+        painter_.draw_string({0,0}, String(millis())).unwrap();
 
         String str;
 
@@ -75,9 +76,9 @@ public:
                 break;
         }
 
-        // painter_.drawString({0,8}, "func:" + str);
-        painter_.drawString({0,8}, "func:").unwrap();
-        painter_.drawString({0,16}, send_str).unwrap();
+        // painter_.draw_string{0,8}, "func:" + str);
+        painter_.draw_string({0,8}, "func:").unwrap();
+        painter_.draw_string({0,16}, send_str).unwrap();
     }
 
     void next(){
@@ -162,9 +163,9 @@ static void oled_tb(){
 
     Painter<Binary> painter;
     
-    painter.setEnFont(font).unwrap();
-    painter.bindImage(oled.fetch_frame());
-    painter.setColor(Binary(Binary::WHITE));
+    painter.set_en_font(font).unwrap();
+    painter.bind_image(oled.fetch_frame());
+    painter.set_color(Binary(Binary::WHITE));
 
 
     // DEBUG_PRINTLN("app started");
@@ -172,15 +173,28 @@ static void oled_tb(){
         // painter.drawLine({0, 0}, {20,2});
         // painter.drawLine({0, 0}, {20,0}).unwrap();   
         painter.fill(Binary(Binary::BLACK)).unwrap();
-        painter.setColor(Binary(Binary::WHITE));
+        painter.set_color(Binary(Binary::WHITE));
 
-        StringStream ss;
         // ss << "Hello World!" ;
         // ss << millis() << BusError::Ok();
-        ss << millis() << "I love cpp and embedded!";
-        for(size_t i = 0; i < 64; i += 8){ 
-            painter.drawString({0,i}, std::move(ss).move_str()).unwrap();
-        }
+
+        // for(size_t i = 0; i < 128; i ++){
+        //     const auto y = int(sinpu(10 * i * real_t(1.0 / 128)) * 21 + 32);
+        //     painter.draw_pixel({int(i), y});
+        // }
+        const Rect2i view = {0,0,128,48};
+
+        painter.draw_hollow_rect(view).unwrap();
+        painter.draw_fx(view.shrink(6), [&](const real_t x){
+            return sinpu(4 * x + time()) * 0.5_r + 0.5_r;
+        }).unwrap();
+
+        painter.draw_args({0, 52}, millis()).unwrap();
+        // for(size_t i = 0; i < 64; i += 8){ 
+        //     painter.draw_args({0,i}, millis(), "ok").unwrap();
+        //     // painter.draw_roi({50,i, 6,6}).unwrap();
+        //     painter.draw_hollow_rect({50,i, 6,6}).unwrap();
+        // }
         // oled.turn_display(i).unwrap();
         // menu.render();
         if(const auto res = oled.update(); res.is_err()){

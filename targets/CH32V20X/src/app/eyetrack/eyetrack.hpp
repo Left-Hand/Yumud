@@ -120,14 +120,14 @@ public:
             auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
             auto center_p = center + eye_info_.pos * config_.eye_radius * real_t(0.5);
 
-            painter.setColor(ColorEnum::WHITE);
-            painter.drawFilledCircle(center, config_.eye_radius).unwrap();
+            painter.set_color(ColorEnum::WHITE);
+            painter.draw_filled_circle(center, config_.eye_radius).unwrap();
 
-            painter.setColor(ColorEnum::BROWN);
-            painter.drawFilledCircle(center_p, config_.iris_radius).unwrap();
+            painter.set_color(ColorEnum::BROWN);
+            painter.draw_filled_circle(center_p, config_.iris_radius).unwrap();
 
-            painter.setColor(ColorEnum::BLACK);
-            painter.drawFilledCircle(center_p, config_.pupil_radius).unwrap();
+            painter.set_color(ColorEnum::BLACK);
+            painter.draw_filled_circle(center_p, config_.pupil_radius).unwrap();
         };
 
         render_eye(LR::LEFT);

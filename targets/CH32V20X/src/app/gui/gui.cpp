@@ -48,8 +48,8 @@ public:
     Icon() = default;
 
     void render(PainterConcept & painter) override{
-        painter.setColor(ColorEnum::WHITE);
-        painter.drawFilledRect(rect_);
+        painter.set_color(ColorEnum::WHITE);
+        painter.draw_filled_rect(rect_);
         // painter.drawString(rect_ + Vector2i{0, -10}, name_);
     }
 };
@@ -64,7 +64,7 @@ protected:
     Vector2i item_org_ = {10,10};
 
     void draw_otherwides(PainterConcept & painter){
-        painter.setColor(ColorEnum::WHITE);
+        painter.set_color(ColorEnum::WHITE);
     }
 public:
     Menu() = default;
@@ -73,7 +73,7 @@ public:
         // auto item_org = item_org_;
         // for(auto it = items_.begin(); it != items_.end(); ++it){
         // for(auto item : items_){
-            // painter.drawFilledRect(item_org, it);
+            // painter.draw_filled_rect(item_org, it);
         // };
 
         // draw_otherwids(painter);
@@ -219,25 +219,25 @@ void gui_main(){
 }
 
         // #ifdef DRAW_TB
-        // painter.setColor(ColorEnum::WHITE);
+        // painter.set_color(ColorEnum::WHITE);
         
         // painter.drawString({20,20 + 10 * sin(t)}, String(millis()));
         // painter.drawString({20,20}, String(millis()));
 
-        // painter.setColor(ColorEnum::RED);
-        // painter.drawFilledRect({60,60 + 10 * sin(t),20,20});
+        // painter.set_color(ColorEnum::RED);
+        // painter.draw_filled_rect({60,60 + 10 * sin(t),20,20});
         // Rect2i rect = {30,40,80,50};
-        // painter.drawFilledRect(rect);
+        // painter.draw_filled_rect(rect);
         // painter.drawHollowRect(rect);
         // painter.drawPixel(rect.position);
         // painter.drawLine(rect.position, rect.get_end());
-        // painter.setColor(ColorEnum::BLUE);
+        // painter.set_color(ColorEnum::BLUE);
         // painter.drawHollowRect(rect);
-        // painter.drawFilledRect(rect);
+        // painter.draw_filled_rect(rect);
         // painter.drawFilledCircle(rect.position, 15);
 
         // painter.drawString({0,0}, "hello");
-        // painter.drawFilledRect(rect);
+        // painter.draw_filled_rect(rect);
         // logger.println(rect, tftDisplayer.get_view().intersection(rect));
 
         // painter.println(millis());
@@ -268,8 +268,8 @@ void gui_main(){
         // #define GUI_TB
         // #ifdef GUI_TB
 
-        // painter.setColor(ColorEnum::BLACK);
-        // painter.drawFilledRect(painter.getClipWindow());
+        // painter.set_color(ColorEnum::BLACK);
+        // painter.draw_filled_rect(painter.getClipWindow());
 
         // // label.rect = Rect2i{15 + 10 * sin(4 * t),20,100,20};
         // // label2.rect = Rect2i{15,80 + 20 * sin(4 * t),100,20};
@@ -297,7 +297,7 @@ void gui_main(){
 
         // // #define DRAW_TB
         // #ifdef DRAW_TB
-        // painter.setColor(ColorEnum::WHITE);
+        // painter.set_color(ColorEnum::WHITE);
         // // painter.drawString({0,0}, "what");
         // painter.drawFilledCircle({20,20}, 17);
         // painter.drawFilledTriangle({80,80}, {100,110}, {70,100});

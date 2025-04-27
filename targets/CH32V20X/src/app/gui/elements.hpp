@@ -84,14 +84,14 @@ public:
     PASS_THEME(Label, Control)
 
     void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
+        painter.set_color(theme_.bg_color);
+        painter.draw_filled_rect(rect);
 
-        painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect).unwrap();
+        painter.set_color(theme_.stroke_color);
+        painter.draw_hollow_rect(rect).unwrap();
 
-        painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(10,7), text).unwrap();
+        painter.set_color(theme_.text_color);
+        painter.draw_string(rect.position + Vector2i(10,7), text).unwrap();
     }
 };
 
@@ -107,23 +107,23 @@ public:
     Range_t<real_t> range;
     
     void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
+        painter.set_color(theme_.bg_color);
+        painter.draw_filled_rect(rect);
 
-        painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect).unwrap();
+        painter.set_color(theme_.stroke_color);
+        painter.draw_hollow_rect(rect).unwrap();
         
         scexpr auto sp = 3;
         auto sb = rect.position + Vector2i{sp, rect.size.y/2};
         auto sw = rect.size.x - 2 * sp;
 
-        painter.setColor(theme_.stroke_color);
-        painter.drawFilledRect(Rect2i{sb, Vector2i{sw, 2}});
+        painter.set_color(theme_.stroke_color);
+        painter.draw_filled_rect(Rect2i{sb, Vector2i{sw, 2}});
 
         scexpr auto h = 6;
         scexpr auto w = 6;
-        painter.setColor(theme_.text_color);
-        painter.drawFilledRect(Rect2i{sb + Vector2i{5, - h / 2}, Vector2i{w, h}});
+        painter.set_color(theme_.text_color);
+        painter.draw_filled_rect(Rect2i{sb + Vector2i{5, - h / 2}, Vector2i{w, h}});
     }
 };
 
@@ -133,20 +133,20 @@ public:
     PASS_THEME(OptionButton, Control)
     
     void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
+        painter.set_color(theme_.bg_color);
+        painter.draw_filled_rect(rect);
 
-        painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect).unwrap();
+        painter.set_color(theme_.stroke_color);
+        painter.draw_hollow_rect(rect).unwrap();
 
-        painter.setColor(theme_.stroke_color);
-        painter.drawFilledRect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
+        painter.set_color(theme_.stroke_color);
+        painter.draw_filled_rect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
 
-        painter.setColor(theme_.text_color);
-        painter.drawFilledCircle(rect.position + Vector2i(10,10), 5).unwrap();
+        painter.set_color(theme_.text_color);
+        painter.draw_filled_circle(rect.position + Vector2i(10,10), 5).unwrap();
 
-        painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(30,7), "选择").unwrap();
+        painter.set_color(theme_.text_color);
+        painter.draw_string(rect.position + Vector2i(30,7), "选择").unwrap();
 
         
     }

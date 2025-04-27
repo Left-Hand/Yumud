@@ -76,6 +76,13 @@ public:
     constexpr Vector2_t<T> get_size() const {return(size);}
     constexpr Vector2_t<T> get_end() const {return(position + size);}
     
+    constexpr Rect2_t<T> expand(const T val) const {
+        return {position - Vector2_t<T>{val, val}, size + Vector2_t<T>{2 * val, 2 * val}};
+    }
+
+    constexpr Rect2_t<T> shrink(const T val) const {
+        return {position + Vector2_t<T>{val, val}, size - Vector2_t<T>{2 * val, 2 * val}};
+    }
     constexpr Vector2_t<T> get_point(const size_t idx) const {
         switch(idx % 4){
             default:
