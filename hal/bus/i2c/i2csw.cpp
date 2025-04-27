@@ -10,7 +10,7 @@ using namespace ymd::hal;
 
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
-    else for(size_t i = 0; i < 3; i++)__nopn(5);
+    else for(size_t i = 0; i < 3; i++) __nopn(5);
 }
 
 hal::BusError I2cSw::wait_ack(){
@@ -36,7 +36,7 @@ hal::BusError I2cSw::wait_ack(){
     scl().clr();
     delay_dur();
     
-    if(ovt){
+    if(ovt and (discard_ack_ == false)){
         return hal::BusError::AckTimeout;
     }else{
         return hal::BusError::Ok();
@@ -75,10 +75,6 @@ void I2cSw::trail(){
 
 
 hal::BusError I2cSw::write(const uint32_t data){
-    // if(data == 0){
-    //     __nopn(3);
-    // }
-    // DEBUG_PRINTLN("d", uint8_t(data));
     sda().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){

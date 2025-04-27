@@ -1,8 +1,9 @@
 #include "tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/string/string.hpp"
+#include "core/stream/StringStream.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -12,7 +13,7 @@
 
 
 #include "types/image/painter.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "types/image/font/instance.hpp"
 
 
 using namespace GpioUtils;
@@ -49,7 +50,7 @@ public:
 
     void render(){
         frame_.fill(0);
-        painter_.drawString({0,0}, String(millis()));
+        painter_.drawString({0,0}, String(millis())).unwrap();
 
         String str;
 
@@ -75,8 +76,8 @@ public:
         }
 
         // painter_.drawString({0,8}, "func:" + str);
-        painter_.drawString({0,8}, "func:");
-        painter_.drawString({0,16}, send_str);
+        painter_.drawString({0,8}, "func:").unwrap();
+        painter_.drawString({0,16}, send_str).unwrap();
     }
 
     void next(){
@@ -116,8 +117,8 @@ public:
 static void oled_tb(){
     auto & SCL_GPIO = portB[6];
     auto & SDA_GPIO = portB[7];
-    static constexpr auto I2C_BAUD = 1000;
-    static constexpr auto MONITOR_HZ = 5000;
+    static constexpr auto I2C_BAUD = 2'000'000;
+    // static constexpr auto MONITOR_HZ = 5000;
 
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
@@ -125,6 +126,8 @@ static void oled_tb(){
 
     Key key_left{portB[2], LOW};
     Key key_right{portB[1], LOW};
+
+    Font8x5 font;
 
     key_left.init();
     key_right.init();
@@ -138,32 +141,61 @@ static void oled_tb(){
     DisplayerPhyI2c oled_phy{i2c};
 
     // auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
-    constexpr auto cfg = SSD13XX_128X64_Config();
+    constexpr auto cfg = SSD13XX_Presets::_128X64{{
+        .flip_x = true,
+        .flip_y = true
+    }};
 
     auto oled = SSD13XX(oled_phy, cfg);
     auto & frame = oled.fetch_frame();
     
     // DEBUG_PRINTLN("init started");
 
-    hal::timer1.init(MONITOR_HZ);
-    hal::timer1.attach(TimerIT::Update,{0,0},[&]{
-        DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
-    });
+    // hal::timer1.init(MONITOR_HZ);
+    // hal::timer1.attach(TimerIT::Update,{0,0},[&]{
+    //     DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
+    // });
 
     oled.init().unwrap();
-    oled.enable_flip_x(false).unwrap();
-    oled.enable_flip_y(false).unwrap();
 
     Menu menu {frame, DEBUGGER};
 
+    Painter<Binary> painter;
+    
+    painter.setEnFont(font).unwrap();
+    painter.bindImage(oled.fetch_frame());
+    painter.setColor(Binary(Binary::WHITE));
+
+
     // DEBUG_PRINTLN("app started");
     while(true){
-        bool i = false;
-        i = !i;
-        oled.turn_display(i).unwrap();
-        delay(1);
-        menu.render();
-        // oled.update().unwrap();
+        // painter.drawLine({0, 0}, {20,2});
+        // painter.drawLine({0, 0}, {20,0}).unwrap();   
+        painter.fill(Binary(Binary::BLACK)).unwrap();
+        painter.setColor(Binary(Binary::WHITE));
+
+        StringStream ss;
+        // ss << "Hello World!" ;
+        // ss << millis() << BusError::Ok();
+        ss << millis() << "I love cpp and embedded!";
+        for(size_t i = 0; i < 64; i += 8){ 
+            painter.drawString({0,i}, std::move(ss).move_str()).unwrap();
+        }
+        // oled.turn_display(i).unwrap();
+        // menu.render();
+        if(const auto res = oled.update(); res.is_err()){
+            while(true){
+                DEBUG_PRINTLN(res.unwrap_err().as<BusError>().unwrap());
+                delay(1);
+            }
+        }
+        // DEBUG_PRINTLN(millis());
+        // delay(20);
+
+        // for(size_t i = 0; i < 64; i++){
+        //     // frame.putpixel_unsafe({i,i}, Binary(Binary::WHITE));
+        //     painter.drawPixel({i,i});
+        // }
         
         // oled.fill(Binary::WHITE);
         // if(res.is_err()) DEBUG_PRINTLN("err: ", res.unwrap_err().as<hal::BusError>().unwrap());
@@ -174,11 +206,11 @@ static void oled_tb(){
         key_left.update();
         key_right.update();
 
-        if(key_right.pressed()){
+        if(key_right.just_pressed()){
             menu.invoke();
         }
 
-        if(key_left.pressed()){
+        if(key_left.just_pressed()){
             menu.next();
         }
     }

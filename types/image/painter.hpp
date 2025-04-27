@@ -13,27 +13,43 @@ protected:
     using Vector2i = Image<ColorType>::Vector2i;
 
     ImageWritable<ColorType> * src_image = nullptr;
+    
+    using Error = typename PainterConcept::Error;
 
+    template<typename T = void>
+    using IResult = PainterConcept::IResult<T>;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
-    void drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
+    __no_inline Result<void, Error> drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
         GBKIterator iterator(str_ptr);
 
-        for(int x = pos.x; x < src_image->size().x;){
+        for(int x = pos.x;;){
+            if(x >= src_image->size().x){
+                // FIXME: in tsubst_copy, at cp/pt.cc:17004
+                // return Err(Error::StringLengthTooLong);
+                return Ok();
+            }
+
             if(iterator){
                 auto chr = iterator.next();
                 drawChar(Vector2i(x, pos.y), chr);
                 auto font = chr > 0x80 ? chfont : enfont;
                 if(font){
                     x += font->getSize().x + padding;
+                }else{
+                    //FIXME: in tsubst_copy, at cp/pt.cc:17004
+                    // return Err(Error::NoFontFounded);
+                    return Ok();
                 }
             }else{
                 break;
             }
         }
+
+        return Ok();
     }
 public:
     Painter():PainterConcept(){;}
@@ -69,26 +85,30 @@ public:
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
 
-    void drawFilledRect(const Rect2i & rect) override {
+    IResult<> drawFilledRect(const Rect2i & rect) override {
         Rect2i rect_area = src_image->rect().intersection(rect);
-        if(!rect_area) return;
+        if(!rect_area) return Ok();
         
         //FIXME use rect_area rather than rect will cause crash 
         src_image -> putrect_unsafe(rect, m_color);
+
+        return Ok();
     }
 
     void drawPixel(const Vector2i & pos) override {
+        // src_image -> putpixel(pos, Binary(Binary::WHITE));
         src_image -> putpixel(pos, m_color);
     }
 
-    void drawLine(const Vector2i & from, const Vector2i & to) override{
-        if(!src_image->size().has_point(from)){
-            // ASSERT_WITH_HALT(false, "start point lost: ", from);
-            return;
-        }else if(!src_image->size().has_point(to)){
-            // ASSERT_WITH_HALT(false, "end point lost: ", to);
-            return;
-        }
+    [[nodiscard]]
+    IResult<> drawLine(const Vector2i & from, const Vector2i & to) override{
+        // if(!src_image->size().has_point(from)){
+        //     return Err(Error(Error::StartPointOutOfBound));
+        // }
+        
+        // if(!src_image->size().has_point(to)){
+        //     return Err(Error(Error::EndPointOutOfBound));
+        // }
 
         auto [x0, y0] = from;
         auto [x1, y1] = to;
@@ -126,17 +146,23 @@ public:
                 middle += ABS(dx << 1);
             }
         }
+
+        return Ok();
     }
     
-    void drawChar(const Vector2i & pos,const wchar_t chr) override {
+    IResult<> drawChar(const Vector2i & pos,const wchar_t chr) override {
         const Font * font = chr > 0x80 ? chfont : enfont;
-        if(font == nullptr) return;
+        // if(font == nullptr){
+        //     return Err(Error::NoChineseFontFounded);
+        // } 
         
+        if(font == nullptr) return Ok();
+
         Rect2i image_area = Rect2i{Vector2i{0,0}, src_image->size()};
         const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 
-        if(!char_area) return;
+        if(!char_area) return Ok();
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
             uint8_t mask = 0;
@@ -156,10 +182,9 @@ public:
                 }
             }
         }
+
+        return Ok();
     }
-
-
-
 };
 
 }

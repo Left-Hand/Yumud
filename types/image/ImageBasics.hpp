@@ -270,6 +270,7 @@ public:
     __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * this->size().x]; }
 
     __fast_inline ColorType & at(const int y, const int x){ return data[x + y * this->size().x]; }
+    __fast_inline const ColorType & at(const int y, const int x)const{ return data[x + y * this->size().x]; }
 
 
     bool operator == (const ImageWithData<auto, auto> & other) const {

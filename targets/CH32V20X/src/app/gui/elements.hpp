@@ -88,10 +88,10 @@ public:
         painter.drawFilledRect(rect);
 
         painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect);
+        painter.drawHollowRect(rect).unwrap();
 
         painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(10,7), text);
+        painter.drawString(rect.position + Vector2i(10,7), text).unwrap();
     }
 };
 
@@ -111,7 +111,7 @@ public:
         painter.drawFilledRect(rect);
 
         painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect);
+        painter.drawHollowRect(rect).unwrap();
         
         scexpr auto sp = 3;
         auto sb = rect.position + Vector2i{sp, rect.size.y/2};
@@ -137,16 +137,16 @@ public:
         painter.drawFilledRect(rect);
 
         painter.setColor(theme_.stroke_color);
-        painter.drawHollowRect(rect);
+        painter.drawHollowRect(rect).unwrap();
 
         painter.setColor(theme_.stroke_color);
         painter.drawFilledRect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
 
         painter.setColor(theme_.text_color);
-        painter.drawFilledCircle(rect.position + Vector2i(10,10), 5);
+        painter.drawFilledCircle(rect.position + Vector2i(10,10), 5).unwrap();
 
         painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(30,7), "选择");
+        painter.drawString(rect.position + Vector2i(30,7), "选择").unwrap();
 
         
     }

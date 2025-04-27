@@ -36,7 +36,7 @@ protected:
     CommStrategy rx_strategy_;
     std::optional<uint8_t> last_index;
 
-    hal::BusError lead(const LockRequest req);
+    [[nodiscard]] hal::BusError lead(const LockRequest req);
     void trail(){
         cs_port_[last_index.value()].set();
         last_index.reset();
@@ -47,9 +47,9 @@ public:
     Spi(hal::Spi &&) = delete;
 
     
-    virtual hal::BusError read(uint32_t & data) = 0;
-    virtual hal::BusError write(const uint32_t data) = 0;
-    virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    [[nodiscard]] virtual hal::BusError read(uint32_t & data) = 0;
+    [[nodiscard]] virtual hal::BusError write(const uint32_t data) = 0;
+    [[nodiscard]] virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
     virtual void set_data_width(const uint8_t len) = 0;
     virtual void set_baudrate(const uint32_t baud) = 0;

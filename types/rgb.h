@@ -276,13 +276,20 @@ struct ARGB32{
 struct Binary{
     uint8_t data;
 
-    enum{
+    enum Kind:uint8_t{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
-    __fast_inline constexpr Binary() : data(0){;}
-    __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
 
+    __fast_inline constexpr Binary() : data(0){;}
+    __fast_inline constexpr Binary(const Kind kind) : data(kind){;}
+    __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
+    
+    __fast_inline constexpr Binary(const Binary & other) = default;
+    __fast_inline constexpr Binary(Binary && other) = default;
+
+    __fast_inline constexpr Binary & operator = (const Binary & other) = default;
+    __fast_inline constexpr Binary & operator = (Binary && other) = default;
     __fast_inline constexpr Binary(const RGB888 & rgb): data((rgb.r + rgb.g + rgb.b) > 128 * 3 ? 255 : 0){;}
 
     __fast_inline constexpr explicit operator uint8_t() const {return data;}

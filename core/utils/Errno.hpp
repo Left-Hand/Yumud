@@ -103,6 +103,15 @@ namespace details{
     };
 }
 
+#define DEF_ERROR_WITH_KIND(name, kind)\
+class name:public SumtypeError<kind>{\
+public:\
+    using Kind = kind;\
+    using Super = SumtypeError<Kind>;\
+    using Super::Super;\
+    using enum Kind;\
+};\
+
 
 #define DEF_ERROR_SUMWITH_BUSERROR(name, kind)\
 class name:public SumtypeError<kind, hal::BusError>{\

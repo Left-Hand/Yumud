@@ -121,13 +121,13 @@ public:
             auto center_p = center + eye_info_.pos * config_.eye_radius * real_t(0.5);
 
             painter.setColor(ColorEnum::WHITE);
-            painter.drawFilledCircle(center, config_.eye_radius);
+            painter.drawFilledCircle(center, config_.eye_radius).unwrap();
 
             painter.setColor(ColorEnum::BROWN);
-            painter.drawFilledCircle(center_p, config_.iris_radius);
+            painter.drawFilledCircle(center_p, config_.iris_radius).unwrap();
 
             painter.setColor(ColorEnum::BLACK);
-            painter.drawFilledCircle(center_p, config_.pupil_radius);
+            painter.drawFilledCircle(center_p, config_.pupil_radius).unwrap();
         };
 
         render_eye(LR::LEFT);

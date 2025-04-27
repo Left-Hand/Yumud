@@ -13,11 +13,14 @@ private:
     
 protected:
     uint32_t timeout_ = 10;
+    bool discard_ack_ = false;
+
     I2c(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):scl_gpio_(scl_gpio),sda_gpio_(sda_gpio){}
 public:
     I2c(I2c && other) = default;
 
     void set_timeout(const uint32_t timeout){timeout_ = timeout;}
+    void discard_ack(const bool en){discard_ack_ = en;}
 
     virtual hal::BusError read(uint32_t & data, const Ack ack) = 0;
     virtual hal::BusError write(const uint32_t data) = 0;
