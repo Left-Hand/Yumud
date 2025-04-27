@@ -135,8 +135,7 @@ protected:
     }
 
     virtual void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType color){
-        Rect2i area(pos, Vector2i(1, 8));
-        // if(Rect2i(this->size, Vector2i()).contains(area)){
+        // Rect2i area(pos, Vector2i(1, 8));
         if(true){
             for(size_t i = 0; i < 8; i++){
                 if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i{0,i}, color);
@@ -149,8 +148,7 @@ protected:
     }
 
     virtual void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType color){
-        Rect2i area(pos, Vector2i(8, 1));
-        // if(Rect2i(this->size, Vector2i()).contains(area)){
+        // Rect2i area(pos, Vector2i(8, 1));
         if(true){
             for(size_t i = 0; i < 8; i++){
                 if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i{i,0}, color);
@@ -167,11 +165,6 @@ protected:
     friend class PixelProxy<ColorType>;
 public:
     ImageWritable(const Vector2i & _size):ImageBasics(_size){;}
-
-    // void setpos(const Vector2i & pos){if(this->size().has_point(pos)){
-    //     setpos_unsafe(pos);
-    // }}
-
     void fill(const ColorType color){
         putrect_unsafe(Rect2i{Vector2i{0,0}, this->size()}, color);
     }
@@ -201,7 +194,10 @@ public:
     }
 
     __fast_inline PixelProxy<ColorType> operator[](const size_t index){
-        return PixelProxy<ColorType>(*this,Vector2i(index % ImageBasics::size().x, index / ImageBasics::size().x));
+        return PixelProxy<ColorType>(*this,Vector2i(
+            index % ImageBasics::size().x, 
+            index / ImageBasics::size().x)
+        );
     }
 };
 

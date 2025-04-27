@@ -167,21 +167,10 @@ static void oled_tb(){
     painter.bind_image(oled.fetch_frame());
     painter.set_color(Binary(Binary::WHITE));
 
-
-    // DEBUG_PRINTLN("app started");
     while(true){
-        // painter.drawLine({0, 0}, {20,2});
-        // painter.drawLine({0, 0}, {20,0}).unwrap();   
         painter.fill(Binary(Binary::BLACK)).unwrap();
         painter.set_color(Binary(Binary::WHITE));
 
-        // ss << "Hello World!" ;
-        // ss << millis() << BusError::Ok();
-
-        // for(size_t i = 0; i < 128; i ++){
-        //     const auto y = int(sinpu(10 * i * real_t(1.0 / 128)) * 21 + 32);
-        //     painter.draw_pixel({int(i), y});
-        // }
         const Rect2i view = {0,0,128,48};
 
         painter.draw_hollow_rect(view).unwrap();
@@ -190,32 +179,10 @@ static void oled_tb(){
         }).unwrap();
 
         painter.draw_args({0, 52}, millis()).unwrap();
-        // for(size_t i = 0; i < 64; i += 8){ 
-        //     painter.draw_args({0,i}, millis(), "ok").unwrap();
-        //     // painter.draw_roi({50,i, 6,6}).unwrap();
-        //     painter.draw_hollow_rect({50,i, 6,6}).unwrap();
-        // }
-        // oled.turn_display(i).unwrap();
-        // menu.render();
-        if(const auto res = oled.update(); res.is_err()){
-            while(true){
-                DEBUG_PRINTLN(res.unwrap_err().as<BusError>().unwrap());
-                delay(1);
-            }
-        }
-        // DEBUG_PRINTLN(millis());
-        // delay(20);
 
-        // for(size_t i = 0; i < 64; i++){
-        //     // frame.putpixel_unsafe({i,i}, Binary(Binary::WHITE));
-        //     painter.drawPixel({i,i});
-        // }
-        
-        // oled.fill(Binary::WHITE);
-        // if(res.is_err()) DEBUG_PRINTLN("err: ", res.unwrap_err().as<hal::BusError>().unwrap());
-        // DEBUG_PRINTLN(millis());
-        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::AckTimeout));
-        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::Ok()));
+        if(const auto res = oled.update(); res.is_err())
+            DEBUG_PRINTLN(res.unwrap_err().as<BusError>().unwrap());
+
 
         key_left.update();
         key_right.update();

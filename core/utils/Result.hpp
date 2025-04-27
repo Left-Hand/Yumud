@@ -283,23 +283,22 @@ private:
 public:
 
     template<typename T2>
-    requires (std::is_convertible_v<Ok<T2>, Ok<T>>)
+    requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
     [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(value){}
-    
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : storage_(Ok<void>()){}
+
+    template<typename T2 = T>
+    requires (std::is_void_v<T2>)
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(Ok<void>()){}
     
     template<typename E2>
-    requires (std::is_convertible_v<Err<E2>, Err<E>>)
+    requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
     [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : storage_(error){}
 
-        
-    [[nodiscard]] __fast_inline constexpr Result(const Err<void> & value) : storage_(Err<void>()){}
+    template<typename E2 = E>
+    requires (std::is_void_v<E2>)
 
-    [[nodiscard]] __fast_inline constexpr
-    Result<T, E> operator |(const Result<T, E> && rhs) const {
-        if(is_err()) return *this;
-        else return rhs;
-    }
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & value) : storage_(Err<void>()){}
+
 
     template<typename S>
     requires requires(S s) {
@@ -308,7 +307,21 @@ public:
     [[nodiscard]] __fast_inline constexpr explicit 
     Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
 
-        // 修改map方法
+
+    template<typename T2>
+    [[nodiscard]] __fast_inline constexpr
+    Result<T2, E> operator |(Result<T2, E> && rhs) const {
+        if(is_ok()) return rhs;
+        else return Err(this->unwrap_err());
+    }
+
+    template<typename T2>
+    [[nodiscard]] __fast_inline constexpr
+    Result<T2, E> operator |(const Result<T2, E> & rhs) const {
+        if(is_ok()) return rhs;
+        else return Err(this->unwrap_err());
+    }
+
     template<
         typename Fn,
         typename FDecay = std::decay_t<Fn>,
@@ -323,7 +336,6 @@ public:
         else return Err<E>(unwrap_err());
     }
 
-        // 修改map方法
     template<typename Tok>
     [[nodiscard]] __fast_inline constexpr 
     Result<std::decay_t<Tok>, E> to(Tok && ok) const{
@@ -333,7 +345,7 @@ public:
         else return Err<E>(unwrap_err());
     }
     
-    // 修改and_then方法
+
     template<
         typename F,//函数的类型
         // typename TFReturn = std::conditional_t<std::is_void_v<T>, std::invoke_result_t<typename F::operator()>, std::invoke_result_t<F>>,//函数返回值的类型
@@ -362,7 +374,6 @@ public:
         return Err<E>(unwrap_err());
     }
 
-        // 修改and_then方法
     template<typename Fn>
     [[nodiscard]] __fast_inline constexpr 
     auto then(Fn && fn) const 
@@ -615,24 +626,6 @@ template<
     else return Err<Edecay>((err));
 }
 
-// 特化版本处理Result类型
-template<typename T, typename E, typename Fn>
-requires (std::is_function_v<std::decay_t<Fn>>)
-Result<T, E> operator|(const Result<T, E>& res, Fn&& fn) {
-    return res.and_then(std::forward<Fn>(fn));
-}
-
-template<typename T, typename E, typename Fn>
-requires (std::is_function_v<std::decay_t<Fn>>)
-Result<T, E> operator|(Result<T, E>&& res, Fn&& fn) {
-    return std::move(res).and_then(std::forward<Fn>(fn));
-}
-
-template<typename T, typename E, typename T2>
-Result<T2, E> operator|(const Result<T, E>& res, const Result<T2, E>& res2) {
-    if(res.is_ok()) Ok<T2>(res2.unwrap());
-    else return Err<E>(res.unwrap_err());
-}
 
 template<typename E>
 Result(Err<E> && val) -> Result<void, E>;

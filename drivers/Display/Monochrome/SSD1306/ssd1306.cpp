@@ -10,6 +10,13 @@ void SSD13XX::setpos_unsafe(const Vector2i & pos){
     TODO("not implemented");
 }
 
+Result<void, DisplayerError> SSD13XX::set_offset(){
+    if(const auto res = phy_.write_command(0xD3); res.is_err()) return res; 
+    if(const auto res = phy_.write_command(offset_.y); res.is_err()) return res;
+    return Ok();
+}
+
+
 Result<void, DisplayerError> SSD13XX::set_flush_pos(const Vector2i & pos){
     const auto [x, y] = pos + offset_;
     if(const auto res = phy_.write_command(0xb0 | size_t(y / 8));
@@ -22,12 +29,32 @@ Result<void, DisplayerError> SSD13XX::set_flush_pos(const Vector2i & pos){
 }
 Result<void, DisplayerError> SSD13XX::init(){   
     // DEBUG_PRINTLN(std::showbase, std::hex, cmds_);
-    if(const auto res = phy_.init() ; res.is_err()) return res;
-    if(const auto res = preinit_by_cmds(); res.is_err()) return res;
-    if(const auto res = enable(); res.is_err()) return res;
-    if(const auto res = set_offset() ; res.is_err()) return res;
-    if(const auto res = enable_flip_x(config_.flip_x); res.is_err()) return res;
-    if(const auto res = enable_flip_y(config_.flip_y); res.is_err()) return res;
+    if(const auto res = phy_.init() ; 
+        res.is_err()) return res;
+    if(const auto res = preinit_by_cmds(); 
+        res.is_err()) return res;
+    if(const auto res = enable(); 
+        res.is_err()) return res;
+    if(const auto res = set_offset() ; 
+        res.is_err()) return res;
+    if(const auto res = enable_flip_x(config_.flip_x); 
+        res.is_err()) return res;
+    if(const auto res = enable_flip_y(config_.flip_y); 
+        res.is_err()) return res;
+    return Ok();
+}
+Result<void, DisplayerError> SSD13XX::enable(const bool en){
+    
+    if(en){
+        if(const auto res = phy_.write_command(0x8D); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x14); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0xAF); res.is_err()) return res;
+    }else{
+        if(const auto res = phy_.write_command(0x8D); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x10); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0xAE); res.is_err()) return res;
+    }
+
     return Ok();
 }
 

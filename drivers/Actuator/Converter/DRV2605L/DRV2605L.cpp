@@ -9,14 +9,10 @@
 #define DRV2605_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define DRV2605_PANIC(...) PANIC{__VA_ARGS__}
 #define DRV2605_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define DRV2605_DEBUG(...)
 #define DRV2605_PANIC(...)  PANIC_NSRC()
 #define DRV2605_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void) read_reg(reg.address, reg);
-#define WRITE_REG(reg) (void) write_reg(reg.address, reg);
 #endif
 
 
@@ -61,33 +57,36 @@ using namespace ymd::drivers;
 
 using Error = DRV2605L::Error;
 
-void DRV2605L::setFbBrakeFactor(const FbBrakeFactor factor){
+Result<void, Error> DRV2605L::set_fb_brake_factor(const FbBrakeFactor factor){
     feedback_control_reg.fb_brake_factor = uint8_t(factor);
-    WRITE_REG(feedback_control_reg);
+    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
+    return Ok();
 }
 
-void DRV2605L::setFbBrakeFactor(const int fractor){
+Result<void, Error> DRV2605L::set_fb_brake_factor(const int fractor){
     switch(fractor){
-        case 1:setFbBrakeFactor(FbBrakeFactor::_1x);break;
-        case 2:setFbBrakeFactor(FbBrakeFactor::_2x);break;
-        case 3:setFbBrakeFactor(FbBrakeFactor::_3x);break;
-        case 4:setFbBrakeFactor(FbBrakeFactor::_4x);break;
-        case 6:setFbBrakeFactor(FbBrakeFactor::_6x);break;
-        case 8:setFbBrakeFactor(FbBrakeFactor::_8x);break;
-        case 16:setFbBrakeFactor(FbBrakeFactor::_16x);break;
+        case 1:     return set_fb_brake_factor(FbBrakeFactor::_1x);
+        case 2:     return set_fb_brake_factor(FbBrakeFactor::_2x);
+        case 3:     return set_fb_brake_factor(FbBrakeFactor::_3x);
+        case 4:     return set_fb_brake_factor(FbBrakeFactor::_4x);
+        case 6:     return set_fb_brake_factor(FbBrakeFactor::_6x);
+        case 8:     return set_fb_brake_factor(FbBrakeFactor::_8x);
+        case 16:    return set_fb_brake_factor(FbBrakeFactor::_16x);
         default:
             DRV2605_PANIC("invalid brake factor");
     }
 }
 
-void DRV2605L::setBemfGain(const BemfGain gain){
+Result<void, Error> DRV2605L::set_bemf_gain(const BemfGain gain){
     feedback_control_reg.bemf_gain = uint8_t(gain);
-    WRITE_REG(feedback_control_reg);
+    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
+    return Ok();
 }
 
-void DRV2605L::setLoopGain(const LoopGain gain){
+Result<void, Error> DRV2605L::set_loop_gain(const LoopGain gain){
     feedback_control_reg.loop_gain = uint8_t(gain);
-    WRITE_REG(feedback_control_reg);
+    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
+    return Ok();
 }
 
 Result<void, Error> DRV2605L::init(){
@@ -96,7 +95,7 @@ Result<void, Error> DRV2605L::init(){
     // 2. Assert the EN pin (logic high). The EN pin can be asserted any time during or after the 250-µs wait period.
     
     mode_reg = 0x40;
-    WRITE_REG(mode_reg);
+    if(const auto res = write_reg(mode_reg); res.is_err()) return res;
 
     udelay(250);
 
@@ -109,38 +108,40 @@ Result<void, Error> DRV2605L::init(){
     // // feedback_control_reg.
     // // mode_reg = 0;
     // WRITE_REG(mode_reg);
-	if (write_reg(RATED_VOLTAGE_Reg, 0x50).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(RATED_VOLTAGE_Reg, 0x50); res.is_err()) return res;
 
 	/* Set overdrive voltage */
-	if (write_reg(OD_CLAMP_Reg, 0x89).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(OD_CLAMP_Reg, 0x89); res.is_err()) return res;
 	
 	/* Setup feedback control and control registers */
-	if (write_reg(FB_CON_Reg, 0xB6).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL1_Reg, 0x13).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL2_Reg, 0xF5).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL3_Reg, 0x80).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(FB_CON_Reg, 0xB6); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL1_Reg, 0x13); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL2_Reg, 0xF5); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL3_Reg, 0x80); res.is_err()) return res;
 	
 	/* Select the LRA Library */
-	if (write_reg(LIB_SEL_Reg, 0x06).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(LIB_SEL_Reg, 0x06); res.is_err()) return res;
 
 	/* Put the DRV2605 device in active mode */
-	if (write_reg(MODE_Reg, 0x00).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(MODE_Reg, 0x00); res.is_err()) return res;
 
     return Ok();
 
 }
 
-void DRV2605L::reset(){
+Result<void, Error> DRV2605L::reset(){
     mode_reg.dev_reset = 1;
-    WRITE_REG(mode_reg);
+    if(const auto res = write_reg(mode_reg); res.is_err()) return res;
     mode_reg.dev_reset = 0;
+    return Ok();
 }
 
-void DRV2605L::play(const uint8_t idx){
-    write_reg(0x01, 0x00);
-    write_reg(0x04, idx);
-    write_reg(0x05, 0x00);
-    write_reg(0x0c, 0x01);
+Result<void, Error> DRV2605L::play(const uint8_t idx){
+    if(const auto res = write_reg(0x01, 0x00); res.is_err()) return res;
+    if(const auto res = write_reg(0x04, idx); res.is_err()) return res;
+    if(const auto res = write_reg(0x05, 0x00); res.is_err()) return res;
+    if(const auto res = write_reg(0x0c, 0x01); res.is_err()) return res;
+    return Ok();
 }
 
 Result<void, Error> DRV2605L::autocal(){
@@ -148,43 +149,43 @@ Result<void, Error> DRV2605L::autocal(){
     uint8_t ACalComp, ACalBEMF, BEMFGain;
 
 	/* Set rate voltage */
-	if (write_reg(RATED_VOLTAGE_Reg, 0x50).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(RATED_VOLTAGE_Reg, 0x50); res.is_err()) return res;
 
 	/* Set overdrive voltage */
-	if (write_reg(OD_CLAMP_Reg, 0x89).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(OD_CLAMP_Reg, 0x89); res.is_err()) return res;
 	
 	/* Setup feedback control and control registers */
-	if (write_reg(FB_CON_Reg, 0xB6).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL1_Reg, 0x93).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL2_Reg, 0xF5).is_err()) return Err(Error(Error::BusFault));
-	if (write_reg(CONTRL3_Reg, 0x80).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(FB_CON_Reg, 0xB6); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL1_Reg, 0x93); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL2_Reg, 0xF5); res.is_err()) return res;
+	if (const auto res = write_reg(CONTRL3_Reg, 0x80); res.is_err()) return res;
 	
 	/* Put the DRV2605 device in auto calibration mode */
-	if (write_reg(MODE_Reg, 0x07).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = write_reg(MODE_Reg, 0x07); res.is_err()) return res;
     
-    if (write_reg(CONTRL4_Reg, 0x20).is_err()) return Err(Error(Error::BusFault));
+    if (const auto res = write_reg(CONTRL4_Reg, 0x20); res.is_err()) return res;
 	
 	/* Begin auto calibration */
-    if (write_reg(GO_Reg, 0x01).is_err()) return Err(Error(Error::BusFault));
+    if (const auto res = write_reg(GO_Reg, 0x01); res.is_err()) return res;
 	
 	/* Poll the GO register until least significant bit is set */
 	while (((temp & 0x01) != 0x01)){
-		if (read_reg(GO_Reg, temp).is_err()) return Err(Error(Error::BusFault));
+		if (const auto res = read_reg(GO_Reg, temp); res.is_err()) return res;
 	}
 	
 	/* Read the result of the auto calibration */
-	if (read_reg(STATUS_Reg, temp).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = read_reg(STATUS_Reg, temp); res.is_err()) return res;
 
     
 	/* Read the compensation result of the auto calibration */
-	if (read_reg(A_CAL_COMP_Reg, ACalComp).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = read_reg(A_CAL_COMP_Reg, ACalComp); res.is_err()) return res;
 
 	/* Read the Back-EMF result of the auto calibration */
-	if (read_reg(A_CAL_BEMF_Reg, ACalBEMF).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = read_reg(A_CAL_BEMF_Reg, ACalBEMF); res.is_err()) return res;
 
 
 	/* Read the feedback control */
-	if (read_reg(FB_CON_Reg, BEMFGain).is_err()) return Err(Error(Error::BusFault));
+	if (const auto res = read_reg(FB_CON_Reg, BEMFGain); res.is_err()) return res;
 	
 	return Ok();
 }

@@ -117,7 +117,7 @@ public:
     void render(PainterConcept & painter) {
         auto render_eye = [&](const LR side){
 
-            auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
+            auto center = (side == LEFT) ? config_.l_center : config_.r_center;
             auto center_p = center + eye_info_.pos * config_.eye_radius * real_t(0.5);
 
             painter.set_color(ColorEnum::WHITE);
@@ -130,8 +130,8 @@ public:
             painter.draw_filled_circle(center_p, config_.pupil_radius).unwrap();
         };
 
-        render_eye(LR::LEFT);
-        render_eye(LR::RIGHT);
+        render_eye(LEFT);
+        render_eye(RIGHT);
     }
 };
 

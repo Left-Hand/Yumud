@@ -48,10 +48,7 @@ protected:
     void setpos_unsafe(const Vector2i & pos) ;
 
     [[nodiscard]] IResult<> set_flush_pos(const Vector2i & pos);
-    [[nodiscard]] IResult<> set_offset(){
-        return phy_.write_command(0xD3) |  
-        phy_.write_command(offset_.y);
-    }
+    [[nodiscard]] IResult<> set_offset();
 
     const Vector2i offset_;
     const std::span<const uint8_t> cmds_;
@@ -79,17 +76,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> enable(const bool en = true){
-        if(en){
-            return phy_.write_command(0x8D) | 
-            phy_.write_command(0x14) | 
-            phy_.write_command(0xAF);
-        }else{
-            return phy_.write_command(0x8D) | 
-            phy_.write_command(0x10) | 
-            phy_.write_command(0xAE);
-        }
-    }
+    [[nodiscard]] IResult<> enable(const bool en = true);
 
     [[nodiscard]] IResult<> turn_display(const bool i);
 

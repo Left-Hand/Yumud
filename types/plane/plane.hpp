@@ -52,8 +52,8 @@ struct Plane_t {
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane_t(const Vector3_t<auto> &p_point1, const Vector3_t<auto> &p_point2, const Vector3_t<auto> &p_point3,const ClockDirection p_dir = CLOCKWISE) {
-		if (p_dir == CLOCKWISE) {
+	__fast_inline constexpr Plane_t(const Vector3_t<auto> &p_point1, const Vector3_t<auto> &p_point2, const Vector3_t<auto> &p_point3,const ClockDirection p_dir = CW) {
+		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {
 			normal = (p_point1 - p_point2).cross(p_point1 - p_point3);

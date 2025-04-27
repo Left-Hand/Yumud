@@ -1,4 +1,4 @@
-//这个驱动已经完成
+//这个驱动还未完成
 //这个驱动还未测试
 
 //TM1637是天微半导体的一款LED矩阵驱动/按键矩阵扫描芯片
@@ -6,18 +6,20 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 #include "core/string/StringView.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-
 
 namespace ymd::drivers{
 
 class TM1637_Phy final{
 public:
-    enum class Error{
+    enum class Error_Kind{
 
     };
+
+    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -99,19 +101,13 @@ public:
         Option<uint8_t> col_;
     };
 
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
-        return Ok();
-    }
+    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
-    Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf){
-        return Ok();
-    }
+    Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
 
-    Result<void, Error> write_screen(const uint8_t addr, const std::span<const uint8_t, 6> pbuf){
-        return Ok();
-    }
-private:
-    
+    Result<void, Error> write_screen(const uint8_t addr, const std::span<const uint8_t, 6> pbuf);
+
+    // Result<KeyEvent, Error> read_key();
 };
 
 class TM1637 final{
