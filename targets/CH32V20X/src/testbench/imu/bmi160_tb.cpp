@@ -34,9 +34,9 @@ void bmi160_main(){
     while(true){
         // auto pos = ma730.getLapPosition();
 
-        ledr = (millis() % 200) > 100;
-        ledb = (millis() % 400) > 200;
-        ledg = (millis() % 800) > 400;
+        ledr = BoolLevel::from((millis() % 200) > 100);
+        ledb = BoolLevel::from((millis() % 400) > 200);
+        ledg = BoolLevel::from((millis() % 800) > 400);
 
         delay(20);
         bmi.update();

@@ -22,7 +22,7 @@ void UartSw::tick(){
             break;
 
         case ByteProg::D0 ... ByteProg::D7:
-            tx_gpio_.write(current_char & (1 << (uint8_t)prog_));
+            tx_gpio_.write(BoolLevel::from(current_char & (1 << (uint8_t)prog_)));
             prog_ = (prog_ == ByteProg::D7) ? ByteProg::STOP : ByteProg((int8_t)prog_ + 1);
             break;
             

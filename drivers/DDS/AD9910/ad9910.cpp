@@ -38,16 +38,16 @@ scexpr real_t magic_2 = real_t(25.20615385);	   //将输入幅度因子分为两
 
 void AD9910::init(void)
 {	
-	AD9910_PWR = 0;//软件拉低
+	AD9910_PWR.clr();//软件拉低
 	
-	PROFILE2 = 0;
-    PROFILE1 = 0;
-    PROFILE0 = 0;
-	DRCTL=0;
-    DRHOLD=0;
-	MAS_REST=1; 
+	PROFILE2.clr();
+    PROFILE1.clr();
+    PROFILE0.clr();
+	DRCTL.clr();
+    DRHOLD.clr();
+	MAS_REST.set(); 
     delay(5);
-	MAS_REST=0; 
+	MAS_REST.clr(); 
 
     write_reg(0x00, cfr1, 4);
     write_reg(0x01, cfr2, 4);

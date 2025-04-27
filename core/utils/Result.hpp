@@ -441,7 +441,10 @@ public:
     template<typename Fn>
     __fast_inline constexpr 
     Result<T, E> inspect(Fn && fn) const {
-        if (is_ok()) std::forward<Fn>(fn)(unwrap());
+        if (is_ok()){
+            if constexpr(!std::is_void_v<T>) std::forward<Fn>(fn)(unwrap());
+            else std::forward<Fn>(fn)();
+        }
         return *this;
     }
 

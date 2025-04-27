@@ -42,12 +42,8 @@ hal::BusError BusBase::end(){
 }
 
 namespace ymd{
-OutputStream & operator << (OutputStream & os, const hal::BusError & err){
-    if(err.is_ok()) return os << "Ok";
-    else return os << err.unwrap_err();
-}
 
-OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err){
+OutputStream & print_buserr_kind(OutputStream & os, const hal::BusError::Kind err){
     using Kind = hal::BusError::Kind;
     #define PRINT_CASE(x) case Kind::x: return os << #x;
     switch(err){
@@ -63,5 +59,14 @@ OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err){
         PRINT_CASE(Unspecified);
         default: return os << "Unknown";
     }
+}
+
+OutputStream & operator << (OutputStream & os, const hal::BusError & err){
+    if(err.is_ok()) return os << "Ok";
+    else return print_buserr_kind(os, err.unwrap_err());
+}
+
+OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err){
+    return print_buserr_kind(os, err);
 }
 }

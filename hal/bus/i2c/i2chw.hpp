@@ -27,7 +27,7 @@ public:
     void init(const uint32_t baudrate);
     void reset();
     bool locked();
-    void unlock_bus();
+    hal::BusError unlock_bus();
     void enable_hw_timeout(const bool en = true);
 };
 

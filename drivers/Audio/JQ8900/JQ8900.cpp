@@ -5,24 +5,24 @@
 using namespace ymd::drivers;
 
 void JQ8900::Phy::write(const uint8_t data){
-    ser_ = true;
+    ser_.set();
     udelay(1000);
-    ser_ = false;
+    ser_.clr();
     udelay(3200);
 
     for(uint8_t i = 1; bool(i); i <<= 1){
-        ser_ = true;
+        ser_.set();
         if(i & data){
             udelay(600);
-            ser_ = false;
+            ser_.clr();
             udelay(200);
         }else{
             udelay(200);
-            ser_ = false;
+            ser_.clr();
             udelay(600);  
         }
     }
-    ser_ = true;
+    ser_.set();
 }
 
 void JQ8900::send_num(const int value){

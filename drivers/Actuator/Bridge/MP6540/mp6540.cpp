@@ -62,7 +62,7 @@ void MP6540::enable(const bool en){
         const auto & item = ens_[i]; 
         if(item == nullptr){
         }else{
-            item->write(en);
+            item->write(BoolLevel::from(en));
         }
     }
 

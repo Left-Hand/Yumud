@@ -18,6 +18,13 @@ using namespace ymd;
 
 #define UART hal::uart2
 
+#if 0
+#define SCL_GPIO hal::portD[1]
+#define SDA_GPIO hal::portD[0]
+#else
+#define SCL_GPIO hal::portB[6]
+#define SDA_GPIO hal::portB[7]
+#endif
 struct FoundInfo{
     uint8_t addr;
     uint max_bbaud;
@@ -74,13 +81,9 @@ struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    // __pure
-    // __attribute__((const))
     static Result<uint, hal::BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
-        // if(auto err = i2c_drv.verify(); err.wrong()){
-        //     return err; 
-        // }
+
         const uint max_baud = [&]{
             uint baud = start_freq;
             while(baud < 10_MHz){
@@ -90,7 +93,7 @@ struct I2cTester{
                 if(err.is_err()) break;
 
                 baud = baud + (baud >> 1);
-                delay(2);
+                delay(1);
             }
 
             return baud;
@@ -107,8 +110,8 @@ struct I2cTester{
 
 };
 
-
-void i2c_scanner_functional(){
+[[maybe_unused]]
+static void i2c_scanner_functional(){
 
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
@@ -131,7 +134,7 @@ void i2c_scanner_functional(){
 
 
 template<typename ... Args>
-auto log(Args && ... args) {
+static auto log(Args && ... args) {
     return std::views::transform(
         [&args...](auto&& value) {
             DEBUG_PRINTS(std::forward<Args>(args)..., value);
@@ -140,30 +143,6 @@ auto log(Args && ... args) {
     );
 }
 
-// template<typename T>
-// struct A;
-
-// template<typename T>
-// struct B;
-
-// template<typename T, typename U>
-// struct C{
-//     std::variant<A<T>, B<U>> value;
-// };
-
-// template<typename T>
-// struct A{
-//     T value;
-// };
-
-// template<typename T>
-// struct B{
-//     T value;
-// };
-
-// C<int, int> test(int v){
-//     return v > 0 ? A<int>{v} : B<int>{v};
-// }
 void test_result(){
     // DEBUG_SOURCE("hahah");
     // while(1);
@@ -193,7 +172,7 @@ void i2c_scanner_main(){
     DEBUGGER.force_sync();
     
     // test_result();
-    I2cSw i2c = {portB[6], portB[7]};
+    I2cSw i2c = {SCL_GPIO, SDA_GPIO};
     i2c.init(100_KHz);
     
     // auto data = std::vector{1, 2, 3};
@@ -265,6 +244,7 @@ void i2c_scanner_main(){
             // });
 
             delay(1);
+            // udelay(100);
         }
 
         delay(10);
@@ -296,7 +276,7 @@ void i2c_scanner_main(){
 
     DEBUG_PRINTLN("Scan done, Click reset to restart");
 
-    exit(0);
+    while(true);
 }
 
 

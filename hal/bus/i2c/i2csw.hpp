@@ -26,7 +26,7 @@ public:
     hal::BusError write(const uint32_t data) final;
     hal::BusError read(uint32_t & data, const Ack ack) final;
     void init(const uint32_t baudrate);
-    void set_baudrate(const uint32_t baudrate);
+    hal::BusError set_baudrate(const uint32_t baudrate);
 };
 
 }

@@ -8,6 +8,9 @@ namespace ymd::drivers{
 
 class ST7789:public Displayer<RGB565>{
 public:
+    template<typename T = void>
+    using IResult = Result<void, DisplayerError>;
+
     class ST7789_ReflashAlgo{
     public:
 
@@ -45,24 +48,24 @@ private:
     Vector2_t<uint16_t> offset_;
     uint8_t scr_ctrl_ = 0;
 
-    __fast_inline void write_command(const uint8_t cmd){
-        interface_.write_command(cmd);
+    __fast_inline IResult<> write_command(const uint8_t cmd){
+        return interface_.write_command(cmd);
     }
 
-    __fast_inline void write_data(const uint8_t data){
-        interface_.write_data(data);
+    __fast_inline IResult<> write_data(const uint8_t data){
+        return interface_.write_data(data);
     }
 
-    __fast_inline void write_data16(const uint16_t data){
-        interface_.write_data16(data);
+    __fast_inline IResult<> write_data16(const uint16_t data){
+        return interface_.write_data16(data);
     }
 
-    void modify_ctrl(const bool yes,const uint8_t pos){
+    IResult<> modify_ctrl(const bool yes,const uint8_t pos){
         uint8_t temp = 0x01 << pos;
         if (yes) scr_ctrl_ |= temp;
         else scr_ctrl_ &= ~temp;
 
-        write_command(0x36);
+        return write_command(0x36) | 
         write_data(scr_ctrl_);
     }
 
@@ -73,7 +76,7 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
         setpos_unsafe(pos);
-        interface_.write_data16(uint16_t(color));
+        interface_.write_data16(uint16_t(color)).unwrap();
     }
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 color);
@@ -87,22 +90,46 @@ public:
             interface_(interface),
             algo_(size){;}
 
-    void init();
+    IResult<> init();
 
     void put_texture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
-        interface_.write_burst<RGB565>(color_ptr, int(rect));
+        interface_.write_burst<RGB565>(color_ptr, int(rect)).unwrap();
     }
 
-    void set_display_offset(const Vector2i & _offset){offset_ = _offset;}
-    void set_flip_y(const bool flip){modify_ctrl(flip, 7);}
-    void set_flip_x(const bool flip){modify_ctrl(flip, 6);}
-    void set_swap_xy(const bool flip){modify_ctrl(flip, 5);}
-    void set_flush_dir_v(const bool dir){modify_ctrl(dir, 4);}
-    void set_format_rgb(const bool is_rgb){modify_ctrl(!is_rgb, 3);}
-    void set_flush_dir_h(const bool dir){modify_ctrl(dir, 2);}
+    IResult<> set_display_offset(const Vector2i & _offset){
+        offset_ = _offset;
+        return Ok();
+    }
+    
+    IResult<> set_flip_y(const bool flip){
+        return modify_ctrl(flip, 7);
+    }
 
-    void set_inversion(const bool inv){write_command(0x20 + inv);}
+    IResult<> set_flip_x(const bool flip){
+        return modify_ctrl(flip, 6);
+    }
+
+    IResult<> set_swap_xy(const bool flip){
+        return modify_ctrl(flip, 5);
+    }
+
+    IResult<> set_flush_dir_v(const bool dir){
+        return modify_ctrl(dir, 4);
+    }
+
+    IResult<> set_format_rgb(const bool is_rgb){
+        return modify_ctrl(!is_rgb, 3);
+    }
+
+    IResult<> set_flush_dir_h(const bool dir){
+        return modify_ctrl(dir, 2);
+    }
+
+
+    IResult<> set_inversion(const bool inv){
+        return write_command(0x20 + inv);
+    }
 };
 
 };

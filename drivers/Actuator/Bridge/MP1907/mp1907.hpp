@@ -32,7 +32,7 @@ public:
     void setDutyRange(const Range_t<real_t> & _range){duty_range = _range;}
 
     void enable(bool en = true){
-        en_gpio_.write(en);
+        en_gpio_.write(BoolLevel::from(en));
     }
     MP1907 & operator=(const real_t duty) override;
 };

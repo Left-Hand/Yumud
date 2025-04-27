@@ -4,7 +4,7 @@
 #include "gpio_port_intf.hpp"
 
 namespace ymd::hal{
-class GpioPort : public GpioPortIntf{
+class GpioPort final: public GpioPortIntf{
 protected:
     GPIO_TypeDef * instance;
     Gpio channels[16];
@@ -35,16 +35,16 @@ public:
     void enableRcc(const bool en = true);
 
 
-    __inline void write_by_index(const int index, const bool data) override;
-    __inline void set_pin(const uint16_t data) override;
-    __inline void clr_pin(const uint16_t data) override;
-    GpioPort & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
+    __inline void write_by_index(const size_t index, const BoolLevel data) override;
+    __inline void set_by_mask(const uint16_t data) override;
+    __inline void clr_by_mask(const uint16_t data) override;
+    __inline void write_by_mask(const uint16_t data){
+        instance->OUTDR = data;}
 
-    explicit operator uint16_t(){return instance->INDR;}
+    __inline uint16_t read_mask(){return instance->INDR;}
 
-    Gpio & operator [](const int index){
-        if(index < 0) return Gpio::null();
-        else return channels[index & 0b1111];
+    Gpio & operator [](const size_t index){
+        return channels[index & 0b1111];
     };
 
     Gpio & operator [](const Pin pin){
@@ -52,24 +52,23 @@ public:
         else return Gpio::null();
     };
 
-    void set_mode(const int index, const GpioMode mode) override;
+    void set_mode(const size_t index, const GpioMode mode) override;
 };
 
-__inline void GpioPort::write_by_index(const int index, const bool data){
-    if(index < 0) return;
-    uint16_t mask = 1 << index;
+__inline void GpioPort::write_by_index(const size_t index, const BoolLevel data){
+    uint16_t mask = 1 << bool(index);
     if(data){
-        set_pin(mask);
+        set_by_mask(mask);
     }else{
-        clr_pin(mask);
+        clr_by_mask(mask);
     }
 }
 
-__inline void GpioPort::set_pin(const uint16_t data){
+__inline void GpioPort::set_by_mask(const uint16_t data){
     instance->BSHR = data;
 }
 
-__inline void GpioPort::clr_pin(const uint16_t data){
+__inline void GpioPort::clr_by_mask(const uint16_t data){
     instance->BCR = data;
 }
 

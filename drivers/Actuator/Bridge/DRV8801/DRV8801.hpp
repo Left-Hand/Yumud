@@ -30,10 +30,10 @@ protected:
 DRV8801 & DRV8801::operator = (const real_t duty){
     if(duty >= 0){
         pwm_ = MIN(duty, 1);
-        dir_ = 1;
+        dir_.set();
     }else{
         pwm_ = MAX(-duty, -1);
-        dir_ = 0;
+        dir_.clr();
     }
     return *this;
 }

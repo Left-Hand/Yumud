@@ -69,8 +69,8 @@ void I2cHw::init(const uint32_t baudrate){
     // preinit();
     enable_rcc();
 
-    scl_gpio.afod();
-    sda_gpio.afod();
+    scl().afod();
+    sda().afod();
 
     I2C_InitTypeDef I2C_InitStructure;
     I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
@@ -100,33 +100,37 @@ void I2cHw::enable_hw_timeout(const bool en){
     else instance->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
-void I2cHw::unlock_bus(){
+hal::BusError I2cHw::unlock_bus(){
     if(locked()){
         I2C_Cmd(instance, DISABLE);
 
-        scl_gpio.outpp();
-        sda_gpio.outpp();
+        scl().outpp();
+        sda().outpp();
 
         volatile uint32_t _;
 
         for(uint8_t i = 0; i < 9; i++){
 
-            scl_gpio = true;
+            scl().set();
             _ = 32;
             while(_ --);
 
-            scl_gpio = false;
+            scl().clr();
 
             _ = 32;
             while(_ --);
         }
 
-        scl_gpio.afod();
-        sda_gpio.afod();
+        scl().afod();
+        sda().afod();
 
         I2C_Cmd(instance, ENABLE);
         reset();
+
+        return hal::BusError::Ok();
     }
+
+    return hal::BusError::Ok();
 }
 
 void I2cHw::trail(){

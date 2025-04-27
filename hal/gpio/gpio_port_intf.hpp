@@ -7,46 +7,45 @@
 namespace ymd::hal{
 class GpioPortIntf{
 public:
-    virtual void write_by_index(const int index, const bool data);
-    virtual bool read_by_index(const int index);
-    virtual void set_by_index(const int index);
-    virtual void clr_by_index(const int index);
+    virtual void write_by_index(const size_t index, const BoolLevel data);
+    virtual BoolLevel read_by_index(const size_t index);
+    virtual void set_by_index(const size_t index);
+    virtual void clr_by_index(const size_t index);
 
-    void set_pin(const Pin pin){set_pin(uint16_t(pin));}
-    void clr_pin(const Pin pin){clr_pin(uint16_t(pin));}
+    void set_pin(const Pin pin){set_by_mask(uint16_t(pin));}
+    void clr_pin(const Pin pin){clr_by_mask(uint16_t(pin));}
 
-    virtual void set_pin(const uint16_t mask) = 0;
-    virtual void clr_pin(const uint16_t mask) = 0;
+    virtual void set_by_mask(const uint16_t mask) = 0;
+    virtual void clr_by_mask(const uint16_t mask) = 0;
+    virtual void write_by_mask(const uint16_t mask) = 0;
+    virtual uint16_t read_mask() = 0;
     
-    virtual void set_mode(const int index, const GpioMode mode) = 0;
-
-    virtual GpioPortIntf & operator = (const uint16_t data) = 0;
-    virtual explicit operator uint16_t() = 0;
+    virtual void set_mode(const size_t index, const GpioMode mode) = 0;
 };
 
-__fast_inline void GpioPortIntf::set_by_index(const int index){
+__fast_inline void GpioPortIntf::set_by_index(const size_t index){
     if(index < 0) return;
-    set_pin(1 << index);
+    set_by_mask(1 << index);
 }
 
-__fast_inline void GpioPortIntf::clr_by_index(const int index){
+__fast_inline void GpioPortIntf::clr_by_index(const size_t index){
     if(index < 0) return;
-    clr_pin(1 << index);
+    clr_by_mask(1 << index);
 }
 
-__fast_inline void GpioPortIntf::write_by_index(const int index, const bool data){
+__fast_inline void GpioPortIntf::write_by_index(const size_t index, const BoolLevel data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
-        set_pin(mask);
+        set_by_mask(mask);
     }else{
-        clr_pin(mask);
+        clr_by_mask(mask);
     }
 }
 
-__fast_inline bool GpioPortIntf::read_by_index(const int index){
-    if(index < 0) return false;
-    return uint16_t(*this) & (1 << index);
+__fast_inline BoolLevel GpioPortIntf::read_by_index(const size_t index){
+    if(index < 0) return LOW;
+    return BoolLevel::from(this->read_mask() & (1 << index));
 };
 
 };

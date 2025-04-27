@@ -65,8 +65,8 @@ void rpc_main(){
         rpc::make_ro_property("ba", ball.a),
         rpc::make_function("setm", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty);}),
         rpc::make_function("xyz", [](){DEBUG_PRINTLN(Vector3_t<real_t>(0,0,0));}),
-        rpc::make_function("crc", [](){DEBUG_PRINTS(sys::chip::get_chip_id_crc());}),
-        rpc::make_function("led", [](const int i){portA[8].write(i);})
+        rpc::make_function("crc", [](){DEBUG_PRINTS(sys::chip::get_chip_id_crc());})
+        // rpc::make_function("led", [](const int i){portA[8].write(i);})
     );
 
     ArgSplitter splitter;

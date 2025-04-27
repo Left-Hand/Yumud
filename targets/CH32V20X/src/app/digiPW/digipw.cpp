@@ -155,7 +155,7 @@ void digipw_main(){
 
     mp1907.init();
     // mp1907.enable();
-    en_gpio = 0;
+    en_gpio.clr();
 
     /*-----------------------*/
 

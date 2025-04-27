@@ -65,12 +65,12 @@ protected:
         return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
-    void write_port(const uint16_t data) override{
+    void write_by_mask(const uint16_t data) override{
         buf = data;
         write_reg(RegAddress::out, buf);
     }
 
-    uint16_t read_port() override{
+    uint16_t read_mask() override{
         read_reg(RegAddress::in, buf);
         return buf;
     }
@@ -109,23 +109,23 @@ public:
     }
     
 
-    void set_pin(const uint16_t data) override{
+    void set_by_mask(const uint16_t data) override{
         buf |= data;
-        write_port(buf);
+        write_by_mask(buf);
     }
 
-    void clr_pin(const uint16_t data) override{
+    void clr_by_mask(const uint16_t data) override{
         buf &= ~data;
-        write_port(buf);
+        write_by_mask(buf);
     }
 
-    void write_by_index(const int index, const bool data) override;
+    void write_by_index(const size_t index, const BoolLevel data) override;
     
-    bool read_by_index(const int index) override;
+    BoolLevel read_by_index(const size_t index) override;
 
-    void set_mode(const int index, const hal::GpioMode mode) override;
+    void set_mode(const size_t index, const hal::GpioMode mode) override;
 
-    void enable_irq_by_index(const int index, const bool en = true);
+    void enable_irq_by_index(const size_t index, const bool en = true);
 
     void enable_led_mode(const hal::Pin pin, const bool en = true);
 
@@ -134,7 +134,6 @@ public:
     void set_led_current(const hal::Pin pin, const uint8_t current);
     
     bool verify();
-    AW9523 & operator = (const uint16_t data) override {write_port(data); return *this;}
 
     AW9523Pwm operator [](const size_t index){
         return AW9523Pwm(*this, hal::Pin(1 << index));

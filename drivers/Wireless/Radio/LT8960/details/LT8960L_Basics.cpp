@@ -411,7 +411,8 @@ Result<void, Error> LT8960L::verify(){
 }
 
 Result<bool, Error> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
-    return Result<bool, Error>(Ok((i2c_.sda().read())))
+    return Result<bool, Error>(Ok(
+        (bool(i2c_.sda().read()))))
         .if_ok([&]{i2c_.sda().set();});
 }
 

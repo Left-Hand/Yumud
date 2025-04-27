@@ -27,18 +27,18 @@ hal::BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     for(uint8_t i = 0; i < data_bits; i++){
         sclk_gpio.set();
         delay_dur();
-        mosi_gpio = bool(data_tx & (1 << (i)));
+        mosi_gpio = BoolLevel::from(data_tx & (1 << (i)));
         delay_dur();
         sclk_gpio.clr();
         delay_dur();
 
         if(m_msb){
-            mosi_gpio = bool(data_tx & (1 << (data_bits - 2 - i)));
-            ret <<= 1; ret |= miso_gpio.read();
+            mosi_gpio = BoolLevel::from(data_tx & (1 << (data_bits - 2 - i)));
+            ret <<= 1; ret |= bool(miso_gpio.read());
             delay_dur();
         }else{
-            mosi_gpio = bool(data_tx & (1 << (i)));
-            ret >>= 1; ret |= (miso_gpio.read() << (data_bits - 1)) ;
+            mosi_gpio = BoolLevel::from(data_tx & (1 << i));
+            ret >>= 1; ret |= (uint32_t(bool(miso_gpio.read())) << (data_bits - 1)) ;
             delay_dur();
         }
     }

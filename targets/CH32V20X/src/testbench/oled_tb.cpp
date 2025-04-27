@@ -5,9 +5,11 @@
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
+
 
 #include "types/image/painter.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -17,6 +19,8 @@ using namespace GpioUtils;
 using namespace ymd::drivers;
 using namespace ymd;
 
+
+#define UART hal::uart2
 
 class Menu{
 protected:
@@ -110,36 +114,62 @@ public:
 };
 
 static void oled_tb(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    DEBUGGER.retarget(&DEBUGGER_INST);
+    auto & SCL_GPIO = portB[6];
+    auto & SDA_GPIO = portB[7];
+    static constexpr auto I2C_BAUD = 1000;
+    static constexpr auto MONITOR_HZ = 5000;
 
-    auto & printer = uart2;
-    printer.init(DEBUG_UART_BAUD);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
+    DEBUGGER.set_splitter(' ');
 
     Key key_left{portB[2], LOW};
     Key key_right{portB[1], LOW};
 
     key_left.init();
     key_right.init();
-    delay(200);
+    delay(100);
 
-    I2cSw i2c{portB[13], portB[15]};
-    i2c.init(0);
+    // I2cSw i2c{portB[13], portB[15]};
+    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    // i2c.init(0);
+    i2c.init(I2C_BAUD);
 
     DisplayerPhyI2c oled_phy{i2c};
 
-    auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
+    // auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
+    constexpr auto cfg = SSD13XX_128X64_Config();
+
+    auto oled = SSD13XX(oled_phy, cfg);
     auto & frame = oled.fetch_frame();
     
-    oled.init();
-    oled.enable_flip_x(false);
-    oled.enable_flip_y(false);
+    // DEBUG_PRINTLN("init started");
+
+    hal::timer1.init(MONITOR_HZ);
+    hal::timer1.attach(TimerIT::Update,{0,0},[&]{
+        DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
+    });
+
+    oled.init().unwrap();
+    oled.enable_flip_x(false).unwrap();
+    oled.enable_flip_y(false).unwrap();
 
     Menu menu {frame, DEBUGGER};
-    while(true){
 
+    // DEBUG_PRINTLN("app started");
+    while(true){
+        bool i = false;
+        i = !i;
+        oled.turn_display(i).unwrap();
+        delay(1);
         menu.render();
-        oled.update();
+        // oled.update().unwrap();
+        
+        // oled.fill(Binary::WHITE);
+        // if(res.is_err()) DEBUG_PRINTLN("err: ", res.unwrap_err().as<hal::BusError>().unwrap());
+        // DEBUG_PRINTLN(millis());
+        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::AckTimeout));
+        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::Ok()));
 
         key_left.update();
         key_right.update();

@@ -40,9 +40,9 @@ public:
     }
 
     RgbLedDigital & operator = (const Color & color) override{
-        red_gpio_ = (color.r > real_t(0.5));
-        green_gpio_ = (color.g > real_t(0.5));
-        blue_gpio_ = (color.b > real_t(0.5));
+        red_gpio_ = BoolLevel::from(color.r > real_t(0.5));
+        green_gpio_ = BoolLevel::from(color.g > real_t(0.5));
+        blue_gpio_ = BoolLevel::from(color.b > real_t(0.5));
         return *this;
     }
 };

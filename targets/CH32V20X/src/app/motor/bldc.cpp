@@ -396,8 +396,8 @@ void bldc_main(){
 
 
 
-    en_gpio = true;
-    slp_gpio = true;
+    en_gpio.set();
+    slp_gpio.set();
     // uint32_t dt;
 
     // std::array<real_t, 2> ab_volt;
@@ -1077,9 +1077,9 @@ void bldc_main(){
             }
         }
 
-        ledr = (millis() % 200) > 100;
-        ledb = (millis() % 400) > 200;
-        ledg = (millis() % 800) > 400;
+        ledr = BoolLevel::from((millis() % 200) > 100);
+        ledb = BoolLevel::from((millis() % 400) > 200);
+        ledg = BoolLevel::from((millis() % 800) > 400);
 
         // auto _t = real_t(0);
 

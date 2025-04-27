@@ -16,20 +16,20 @@ void AW9523::init(){
 }
 
 
-void AW9523::write_by_index(const int index, const bool data){
+void AW9523::write_by_index(const size_t index, const BoolLevel data){
     if(!is_index_valid(index))return;
     if(data) buf |= 1 << index;
     else buf &= ~(1 << index);
-    write_port(buf);
+    write_by_mask(buf);
 }
 
-bool AW9523::read_by_index(const int index){
-    if(!is_index_valid(index)) return false;
-    read_port();
-    return (buf & (1 << index));
+BoolLevel AW9523::read_by_index(const size_t index){
+    if(!is_index_valid(index)) return LOW;
+    read_mask();
+    return BoolLevel::from(buf & (1 << index));
 }
 
-void AW9523::set_mode(const int index, const hal::GpioMode mode){
+void AW9523::set_mode(const size_t index, const hal::GpioMode mode){
     if(false == is_index_valid(index))return;
     uint16_t mask = 1 << index;
     if(hal::GpioUtils::isIn(mode)) dir |= mask;
@@ -42,7 +42,7 @@ void AW9523::set_mode(const int index, const hal::GpioMode mode){
     }
 }
 
-void AW9523::enable_irq_by_index(const int index, const bool en ){
+void AW9523::enable_irq_by_index(const size_t index, const bool en ){
     if(false == is_index_valid(index))return;
     write_reg(RegAddress::inten, (uint8_t)(en << index));
 }

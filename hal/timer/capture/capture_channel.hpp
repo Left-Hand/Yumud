@@ -65,7 +65,7 @@ protected:
     void update(){
         if(double_edge){
             if(instance.gpio == nullptr) return;
-            bool val = instance.gpio->read();
+            bool val = bool(instance.gpio->read());
 
             if(val == false){
                 uint32_t current_t = micros();

@@ -10,8 +10,40 @@
 namespace ymd::drivers{
 class PCA9685 final: public hal::VGpioPortIntf<16>{
 public:
+
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
-protected:
+
+
+    class PCA9685Channel final:public hal::PwmIntf,  hal::GpioIntf{
+    protected:
+        PCA9685 & pca;
+        uint8_t channel;
+
+        PCA9685Channel(PCA9685 & _pca, const uint8_t _channel):
+            pca(_pca), channel(_channel){;}
+        
+        DELETE_COPY_AND_MOVE(PCA9685Channel)
+        
+        friend class PCA9685;
+    public:
+
+        PCA9685Channel & operator = (const real_t duty) override{
+            pca.set_pwm(channel, 0, (uint16_t)(duty << 12));
+            return *this;
+        }
+
+        __fast_inline void set() override {*this = real_t(1);}
+        __fast_inline void clr() override {*this = real_t(0);}
+        __fast_inline void write(const BoolLevel val){
+            this->set_duty(real_t(bool(val)));
+        }
+        BoolLevel read() const override;
+
+        __fast_inline int8_t index() const {return channel;}
+
+        void set_mode(const hal::GpioMode mode) override{}
+    };
+private:
     hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
@@ -66,34 +98,6 @@ protected:
     LedRegs all_channel = {};
     uint8_t prescale_reg = {};
 
-    class PCA8975Channel final:public hal::PwmIntf,  hal::GpioIntf{
-    protected:
-        PCA9685 & pca;
-        uint8_t channel;
-
-        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):
-            pca(_pca), channel(_channel){;}
-        
-        DELETE_COPY_AND_MOVE(PCA8975Channel)
-        
-        friend class PCA9685;
-    public:
-
-        PCA8975Channel & operator = (const real_t duty) override{
-            pca.set_pwm(channel, 0, (uint16_t)(duty << 12));
-            return *this;
-        }
-
-        __fast_inline void set() override {*this = real_t(1);}
-        __fast_inline void clr() override {*this = real_t(0);}
-        __fast_inline void write(const bool val){*this = real_t(val);}
-        __fast_inline bool read() const override {return 0;}
-
-        __fast_inline int8_t index() const {return channel;}
-
-        void set_mode(const hal::GpioMode mode) override{}
-    };
-
     hal::BusError write_reg(const RegAddress addr, const uint8_t reg){
         return i2c_drv_.write_reg(uint8_t(addr), reg);
     };
@@ -109,12 +113,8 @@ protected:
     hal::BusError read_reg(const RegAddress addr, uint16_t & reg){
         return i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
     }
-    void write_port(const uint16_t data) override{
-    }
-
-    uint16_t read_port() override{
-        return true;
-    }
+    void write_mask(const uint16_t data);
+    uint16_t read_mask();
 
     void test(){
         static_assert(sizeof(mode1_reg) == 1);
@@ -145,38 +145,36 @@ public:
 
     void reset();
 
-    void set_pin(const uint16_t data) override;
+    void set_by_mask(const uint16_t data) override;
 
-    void clr_pin(const uint16_t data) override;
+    void clr_by_mask(const uint16_t data) override;
     
-    void write_by_index(const int index, const bool data) override;
+    void write_by_index(const size_t index, const BoolLevel data) override;
 
-    bool read_by_index(const int index) override;
+    BoolLevel read_by_index(const size_t index) override;
 
-    void set_mode(const int index, const hal::GpioMode mode) override;
+    void set_mode(const size_t index, const hal::GpioMode mode) override;
 
-    PCA9685 & operator = (const uint16_t data) override {write_port(data); return *this;}
-
-    std::array<PCA8975Channel, 16> channels ={
-        PCA8975Channel{*this, 0},
-        PCA8975Channel{*this, 1},
-        PCA8975Channel{*this, 2},
-        PCA8975Channel{*this, 3},
-        PCA8975Channel{*this, 4},
-        PCA8975Channel{*this, 5},
-        PCA8975Channel{*this, 6},
-        PCA8975Channel{*this, 7},
-        PCA8975Channel{*this, 8},
-        PCA8975Channel{*this, 9},
-        PCA8975Channel{*this, 10},
-        PCA8975Channel{*this, 11},
-        PCA8975Channel{*this, 12},
-        PCA8975Channel{*this, 13},
-        PCA8975Channel{*this, 14},
-        PCA8975Channel{*this, 15},
+    std::array<PCA9685Channel, 16> channels ={
+        PCA9685Channel{*this, 0},
+        PCA9685Channel{*this, 1},
+        PCA9685Channel{*this, 2},
+        PCA9685Channel{*this, 3},
+        PCA9685Channel{*this, 4},
+        PCA9685Channel{*this, 5},
+        PCA9685Channel{*this, 6},
+        PCA9685Channel{*this, 7},
+        PCA9685Channel{*this, 8},
+        PCA9685Channel{*this, 9},
+        PCA9685Channel{*this, 10},
+        PCA9685Channel{*this, 11},
+        PCA9685Channel{*this, 12},
+        PCA9685Channel{*this, 13},
+        PCA9685Channel{*this, 14},
+        PCA9685Channel{*this, 15},
     };
     
-    PCA8975Channel & operator [](const size_t index){
+    PCA9685Channel & operator [](const size_t index){
 
         if(index >= 16) HALT;
         return channels[index];

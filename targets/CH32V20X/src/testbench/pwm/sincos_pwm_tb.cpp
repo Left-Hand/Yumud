@@ -170,7 +170,7 @@ void sincos_pwm_main(){
 
     
     adc1.attach(AdcIT::JEOC, {0,0}, [&]{
-        trig_gpio = !trig_gpio;
+        trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
     });
     

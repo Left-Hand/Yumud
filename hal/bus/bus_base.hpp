@@ -14,19 +14,19 @@ public:
         payload_(payload), 
         custom_len_(custom_len){}
 
-    uint32_t custom() const {
+    constexpr uint32_t custom() const {
         return ((1 << custom_len_) - 1) & payload_; 
     }
 
-    uint32_t id() const {
+    constexpr uint32_t id() const {
         return (payload_ >> custom_len_);
     }
 
-    size_t custom_len() const {
+    constexpr size_t custom_len() const {
         return custom_len_;
     }
 
-    uint32_t as_u32() const {
+    constexpr uint32_t as_u32() const {
         return std::bit_cast<uint32_t>(*this);
     }
 private:
@@ -46,21 +46,21 @@ private:
     public:
         Locker(const Locker & other) = delete;
         Locker(Locker && other) = delete;
-        Locker(){;}
+        __fast_inline Locker(){;}
 
-        ~Locker(){
+        __fast_inline ~Locker(){
             unlock();
         }
 
         void lock(const LockRequest req);
 
-        void unlock(){
+        __fast_inline void unlock(){
             locked_ = false;
         }
 
         bool is_owned_by(const LockRequest req) const;
 
-        bool is_locked() const {
+        __fast_inline bool is_locked() const {
             return locked_;
         }
     };
@@ -74,9 +74,9 @@ private:
     struct _Guard{
         BusBase & bus_;
         
-        _Guard(BusBase & bus):
-        bus_(bus){;}
-        ~_Guard(){
+        __fast_inline _Guard(BusBase & bus):
+            bus_(bus){;}
+        __fast_inline ~_Guard(){
             bus_.end();
         }
     };
