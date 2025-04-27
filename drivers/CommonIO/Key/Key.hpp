@@ -30,21 +30,21 @@ public:
         }
     }
 
-    void update() override {
+    void update() {
         last_state = now_state;
         filter.update(bool(*this));
         now_state = filter.result();
     }
 
-    bool pressed() override{
+    bool pressed(){
         return last_state == false and now_state == true;
     }
 
     operator bool() const {
-        return m_gpio.read() == bool(level_);
+        return m_gpio.read() == level_;
     }
 
-    hal::GpioIntf & io() override{
+    hal::GpioIntf & io(){
         return m_gpio;
     }
 };

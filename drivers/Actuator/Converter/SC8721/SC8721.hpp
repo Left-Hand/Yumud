@@ -165,16 +165,16 @@ protected:
     Status2Reg status2_reg = {};
 
     
-    BusError write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg).unwrap();
+    hal::BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    BusError read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg).unwrap();
+    hal::BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    BusError read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len)).unwrap();
+    hal::BusError read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }
 public:
 

@@ -20,9 +20,9 @@ protected:
     const Page page_count;
     uint32_t orginal_clock;
 
-    void configClock();
+    void config_clock();
 
-    void revertClock();
+    void revert_clock();
 
     void entry_store() override;
     void exit_store() override;
@@ -33,23 +33,23 @@ protected:
 
     void unlock();
 
-    void storeBytes(const Address loc, const void * data, const Address len) override;
+    void store_bytes(const Address loc, const void * data, const Address len) override;
 
-    void loadBytes(const Address loc, void * data, const Address len) override;
+    void load_bytes(const Address loc, void * data, const Address len) override;
 
-    void erasePage(const Address vaddr);
-    void programPage(const Address vaddr, const void * buf);
+    void erase_page(const Address vaddr);
+    void program_page(const Address vaddr, const void * buf);
 public:
     Flash(Address _page_begin, Address _page_end):
         Storage((_page_end - _page_begin) * page_size),
         page_count(_page_end - _page_begin){;}
             
     Flash(int _page_begin = 0):
-        Flash(_page_begin < 0 ? (getMaxPages() + _page_begin) : _page_begin, getMaxPages()){;}
+        Flash(_page_begin < 0 ? (get_max_pages() + _page_begin) : _page_begin, get_max_pages()){;}
 
     ~Flash(){}
 
-    static size_t getMaxPages(){
+    static size_t get_max_pages(){
         return sys::chip::get_flash_size() / page_size;
     }
     void init() override{
@@ -60,11 +60,11 @@ public:
         return false;
     }
 
-    Memory slicePages(const int page_from){
-        return slicePages(page_from < 0 ? getMaxPages() + page_from : page_from, getMaxPages()); 
+    Memory slice_pages(const int page_from){
+        return slice_pages(page_from < 0 ? get_max_pages() + page_from : page_from, get_max_pages()); 
     }
 
-    Memory slicePages(const size_t page_from, const size_t page_to){
+    Memory slice_pages(const size_t page_from, const size_t page_to){
         // DEBUG_PRINTLN(page_from, page_to);
         return slice(page_from * page_size, page_to * page_size); 
     }

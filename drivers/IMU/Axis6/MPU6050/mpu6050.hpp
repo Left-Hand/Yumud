@@ -3,22 +3,23 @@
 //这个驱动已经完成了基础使用
 
 #include "core/io/regs.hpp"
+#include "core/utils/Errno.hpp"
 #include "drivers/IMU/IMU.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "drivers/IMU/details/InvensenseIMU.hpp"
 
 namespace ymd::drivers{
 
 class MPU6050:public Axis6{
 public:
+    using Error = ImuError;
+    
     enum class Package:uint8_t{
         MPU6050 = 0x68,
         MPU6500 = 0x70,
         MPU9250 = 0x71
     };
 
-    using Error = BusError;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
@@ -41,12 +42,11 @@ public:
     };
 
 protected:
-    using I2cDrvProxy = std::optional<hal::I2cDrv>;
-    using SpiDrvProxy = std::optional<hal::SpiDrv>;
-    I2cDrvProxy p_i2c_drv_ = std::nullopt;
-    SpiDrvProxy p_spi_drv_ = std::nullopt;
+    using Phy = InvensenseSensor_Phy;
 
     using RegAddress = uint8_t;    
+
+    Phy phy_;
 
     struct GyrConfReg:public Reg8<>{
         scexpr RegAddress address = 0x1b;
@@ -110,30 +110,14 @@ protected:
     } whoami_reg = {};
 
     Package package_ = Package::MPU6050;
-    real_t acc_scaler = 0;
-    real_t gyr_scaler = 0;
+    real_t acc_scaler_ = 0;
+    real_t gyr_scaler_ = 0;
 
     [[nodiscard]] static constexpr 
     uint8_t package2whoami(const Package package){return uint8_t(package);}
 
     bool data_valid = false;
 
-
-    // [[nodiscard]] virtual Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
-    [[nodiscard]] Result<void, BusError> write_reg(const uint8_t addr, const uint8_t data);
-
-    template<typename T>
-    [[nodiscard]] Result<void, BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
-
-    // [[nodiscard]] virtual Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
-    [[nodiscard]] Result<void, BusError> read_reg(const uint8_t addr, uint8_t & data);
-
-    template<typename T>
-    [[nodiscard]] Result<void, BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
-
-    // [[nodiscard]] virtual Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    [[nodiscard]] Result<void, BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
-    
     static constexpr real_t calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
         switch(range){
@@ -164,6 +148,28 @@ protected:
     }
 
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
+
+    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+        return phy_.write_reg(addr, data);
+    }
+
+    template<typename T>
+    [[nodiscard]] Result<void, Error> write_reg(const T & reg){
+        return write_reg(reg.address, reg);
+    }
+
+    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+        return phy_.read_reg(addr, data);
+    }
+
+    [[nodiscard]] Result<void, Error> read_burst(const uint8_t addr, int16_t * data, const size_t len){
+        return phy_.read_burst(addr, data, len);
+    }
+
+    template<typename T>
+    [[nodiscard]] Result<void, Error> read_reg(T & reg){
+        return read_reg(reg.address, reg);
+    }
 public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
@@ -201,26 +207,3 @@ public:
 };
 
 };
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::MPU6050::Error, BusError> {
-        static Result<T, drivers::MPU6050::Error> convert(const BusError berr){
-            using Error = drivers::MPU6050::Error;
-            using BusError = BusError;
-            
-            if(berr.ok()) return Ok();
-
-            Error err = [](const BusError berr_){
-                switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case BusError::I2C_NOT_READY: return MPU6050::Error::I2C_NOT_READY;
-                    default: return Error::UNSPECIFIED;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
-}

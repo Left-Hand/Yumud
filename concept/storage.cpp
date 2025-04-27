@@ -16,7 +16,7 @@ Memory Storage::slice(const Storage::Address from, const Storage::Address to){
 void Storage::store(const Address loc, const void * data, const Address len){
     if(view().has(loc)){
         entry_store();
-        storeBytes(loc, data, len);
+        store_bytes(loc, data, len);
         exit_store();
     }
 }
@@ -24,7 +24,7 @@ void Storage::store(const Address loc, const void * data, const Address len){
 void Storage::load(const Address loc, void * data, const Address len){
     if(view().has(loc)){
         entry_load();
-        loadBytes(loc, data, len);
+        load_bytes(loc, data, len);
         exit_load();
     }
 }
@@ -33,7 +33,7 @@ void Storage::load(const Address loc, void * data, const Address len){
 void Storage::erase(const Address loc, const size_t len){
     if(view().has(loc)){
         entry_store();
-        eraseBytes(loc, len);
+        erase_bytes(loc, len);
         exit_store();
     }
 }

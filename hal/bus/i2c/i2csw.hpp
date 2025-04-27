@@ -12,19 +12,21 @@ private:
 
     __no_inline void delay_dur();
 
-    BusError wait_ack();
-    BusError lead(const uint8_t address) final override;
-    void trail() override;
+    hal::BusError wait_ack();
+    hal::BusError lead(const hal::LockRequest req) final;
+    void trail();
 protected :
-    BusError reset();
-    BusError unlock_bus();
+    hal::BusError reset();
+    hal::BusError unlock_bus();
 public:
 
-    I2cSw(hal::Gpio & scl,hal::Gpio & sda):I2c(scl, sda){;}
-    BusError write(const uint32_t data) final override;
-    BusError read(uint32_t & data, const Ack ack) final override;
+    I2cSw(hal::Gpio & scl, hal::Gpio & sda):I2c(scl, sda){;}
+    I2cSw(I2cSw && other) = default;
+    
+    hal::BusError write(const uint32_t data) final;
+    hal::BusError read(uint32_t & data, const Ack ack) final;
     void init(const uint32_t baudrate);
-    void set_baudrate(const uint32_t baudrate);
+    hal::BusError set_baudrate(const uint32_t baudrate);
 };
 
 }

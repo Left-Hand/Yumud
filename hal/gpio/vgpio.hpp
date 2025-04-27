@@ -23,8 +23,8 @@ public:
     VGpio(GpioPortIntf & port, const Pin pin);
     __fast_inline void set() {port_.set_by_index(pin_index_);}
     __fast_inline void clr() {port_.clr_by_index(pin_index_);}
-    __fast_inline void write(const bool val){port_.write_by_index(pin_index_, val);}
-    __fast_inline bool read() const {return port_.read_by_index(pin_index_);}
+    __fast_inline void write(const BoolLevel val){port_.write_by_index(pin_index_, val);}
+    __fast_inline BoolLevel read() const {return port_.read_by_index(pin_index_);}
     __fast_inline int8_t index() const {return pin_index_;}
     void set_mode(const GpioMode mode) { port_.set_mode(pin_index_, mode);}
 };

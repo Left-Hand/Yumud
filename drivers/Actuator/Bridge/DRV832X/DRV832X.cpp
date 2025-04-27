@@ -32,7 +32,7 @@ struct SpiFormat{
     }
 };
 
-BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
+hal::BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -42,18 +42,18 @@ BusError DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     return spi_drv_.write_single<uint16_t>((spi_format));
 }
 
-BusError DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
+hal::BusError DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
         .write = 1
     };
 
-    const auto err = spi_drv_.read_single<uint16_t>((spi_format)).unwrap();
-
+    const auto err = spi_drv_.read_single<uint16_t>((spi_format));
+    if(err.is_err()) return err;
     reg = spi_format.data;
 
-    return err;
+    return hal::BusError::Ok();
 }
 
 
@@ -62,7 +62,7 @@ Result<void, Error> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN nd
     reg.idrive_p_hs = uint8_t(pdrive);
     reg.idrive_n_hs = uint8_t(ndrive);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }
 
 Result<void, Error> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
@@ -70,12 +70,12 @@ Result<void, Error> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN nd
     reg.idrive_p_ls = uint8_t(pdrive);
     reg.idrive_n_ls = uint8_t(ndrive);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }
 
 Result<void, Error> DRV832X::set_drive_time(const PeakDriveTime ptime){
     auto & reg = regs_.gate_drv_ls;
     reg.tdrive = uint8_t(ptime);
 
-    return write_reg(reg);
+    return Result<void, Error>(write_reg(reg));
 }

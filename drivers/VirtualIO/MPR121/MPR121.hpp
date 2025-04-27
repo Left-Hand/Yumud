@@ -13,7 +13,7 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x5A);
-    static constexpr uint8_t channels = 12;
+    static constexpr size_t CHANNELS_CNT = 12;
 
 
     struct Threshold:public Reg16<>{
@@ -83,18 +83,18 @@ protected:
     struct {
         TouchStatus touch_status;
         OORStatus oor_status;
-        FiltteredData filtered_datas[channels];
+        FiltteredData filtered_datas[CHANNELS_CNT];
         Misc misc;
         Misc elep_misc;
     
-        uint8_t bassline_values[channels];
-        Threshold thresholds[channels];
+        uint8_t bassline_values[CHANNELS_CNT];
+        Threshold thresholds[CHANNELS_CNT];
         uint8_t cdc_conf;
         uint8_t cdt_conf;
         uint8_t electrode_conf;
 
-        uint8_t electrode_current[channels];
-        ChargeTime charge_times[channels/2];
+        uint8_t electrode_current[CHANNELS_CNT];
+        ChargeTime charge_times[CHANNELS_CNT/2];
         GpioCtrl gpio_ctrl;
         AutoConfig auto_config;
     } Regs;

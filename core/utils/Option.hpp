@@ -18,8 +18,8 @@ namespace custom{
 
     // eg:
     // template<>
-    // struct option_converter<BusError, BusError> {
-    //     static Option<BusError> convert(const BusError & res){
+    // struct option_converter<hal::BusError, hal::BusError> {
+    //     static Option<hal::BusError> convert(const hal::BusError & res){
     //         if(res.ok()) return Some(res);
     //         else return None; 
     //     }
@@ -52,6 +52,7 @@ template<typename T>
 class Option{
 private:
     using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+    
     T value_;
     bool exists_;
 public:
@@ -99,15 +100,8 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap() const {
-        if(unlikely(exists_ == false)){
-            exit(1);
-        }
+        if(unlikely(exists_ == false)) __builtin_trap();
         return value_;
-    }
-
-    [[nodiscard]] __fast_inline constexpr T 
-    operator +() const{
-        return unwrap();
     }
 
 
@@ -116,16 +110,6 @@ public:
         return;
     }
 
-    // // 逻辑组合运算符
-    // template<typename U>
-    // Option<T> operator||(Option<U> lhs, Option<T> rhs) {
-    //     return lhs.is_some() ? lhs : rhs;
-    // }
-
-    // template<typename U>
-    // Option<T> operator&&(Option<U> lhs, Option<T> rhs) {
-    //     return lhs.is_some() ? rhs : lhs;
-    // }
 
     template<typename FnSome, typename FnNone>
     constexpr auto match(FnSome&& some_fn, FnNone&& none_fn) const& {
@@ -188,6 +172,30 @@ public:
         if (is_some()) std::forward<Fn>(fn)(unwrap());
         return *this;
     }
+};
+
+template<typename T>
+class Option<T *>{
+public:
+    [[nodiscard]] constexpr 
+    Option(Some<T *> && value):
+        value_(*value){;}
+
+    [[nodiscard]] constexpr 
+    Option(_None_t): value_(nullptr){;}
+
+    [[nodiscard]] constexpr 
+    bool is_some() const {return value_ != nullptr;}
+    [[nodiscard]] constexpr 
+    bool is_none() const {return value_ == nullptr;}
+    
+    [[nodiscard]] constexpr 
+    T & unwrap(){
+        if(unlikely(value_ == nullptr)){__builtin_abort();}
+        return *value_;
+    }
+private:
+    T * value_;
 };
 
 

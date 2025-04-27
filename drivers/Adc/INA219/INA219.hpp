@@ -5,17 +5,15 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Option.hpp"
 
-#include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
 class INA219 {
 public:
-    using Error = BusError;
+    using Error = hal::BusError;
     using BusResult = Result<void, Error>;
 
     enum class AverageTimes:uint8_t{
@@ -112,9 +110,9 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
 
 namespace ymd::custom{
     template<>
-    struct result_converter<void, drivers::INA219::Error, BusError> {
-        static Result<void, drivers::INA219::Error> convert(const BusError & res){
-            if(res.ok()) return Ok();
+    struct result_converter<void, drivers::INA219::Error, hal::BusError> {
+        static Result<void, drivers::INA219::Error> convert(const hal::BusError & res){
+            if(res.is_ok()) return Ok();
             else return Err(res); 
         }
     };

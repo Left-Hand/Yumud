@@ -1,22 +1,22 @@
 /*
-  WString.h - String library for Wiring & Arduino
-  ...mostly rewritten by Paul Stoffregen...
-  Copyright (c) 2009-10 Hernando Barragan.  All right reserved.
-  Copyright 2011, Paul Stoffregen, paul@pjrc.com
+WString.h - String library for Wiring & Arduino
+...mostly rewritten by Paul Stoffregen...
+Copyright (c) 2009-10 Hernando Barragan.  All right reserved.
+Copyright 2011, Paul Stoffregen, paul@pjrc.com
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #pragma once
@@ -178,15 +178,7 @@ public:
     char * getBuffer() const {return buffer;}
 	const char * c_str() const { return buffer; }
 
-	// search
-	int indexOf( char ch ) const;
-	int indexOf( char ch, size_t fromIndex ) const;
-	int indexOf( const String &str ) const;
-	int indexOf( const String &str, size_t fromIndex ) const;
-	int lastIndexOf( char ch ) const;
-	int lastIndexOf( char ch, size_t fromIndex ) const;
-	int lastIndexOf( const String &str ) const;
-	int lastIndexOf( const String &str, size_t fromIndex ) const;
+
 	StringView substr( size_t beginIndex ) const { return substr(beginIndex, len); };
 	StringView substr( size_t beginIndex, size_t endIndex ) const;
 

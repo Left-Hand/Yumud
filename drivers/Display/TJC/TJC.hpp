@@ -1,28 +1,24 @@
 #pragma once
 
 namespace ymd::drivers{
-class HMI{
-
-};
-
-class TJC:public HMI{
+class TJC{
 private:
     void end(){
         constexpr char buf[3] = {char(0xff), char(0xff), char(0xff)};
-        uart.write(buf, 3);
+        uart_.write(buf, 3);
     }
 protected:
-    Uart & uart;
+    Uart & uart_;
 
 public:
-    TJC(Uart & _uart):uart(_uart){;}
+    TJC(Uart & _uart):uart_(_uart){;}
     void init(){
-        uart.set_splitter("");
+        uart_.set_splitter("");
     }
 
 
     void print(const String & str){
-        uart.print(str);
+        uart_.print(str);
         end();
     }
 

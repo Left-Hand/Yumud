@@ -110,7 +110,7 @@ protected:
 
 
         udelay(1);
-        at_gpio_ = true;
+        at_gpio_.set();
         return is_valid;
     }
 

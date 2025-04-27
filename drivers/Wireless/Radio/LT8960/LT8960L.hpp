@@ -181,7 +181,7 @@ protected:
     
 public:
 
-    LT8960L(hal::Gpio * scl, hal::Gpio * sda):
+    LT8960L(hal::Gpio & scl, hal::Gpio & sda):
         phy_(scl, sda){;}
 
 
@@ -260,28 +260,4 @@ public:
     [[nodiscard]] Result<void, Error> set_syncword_tolerance_bits(const uint bits);
 };
 
-}
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::LT8960L::Error, BusError> {
-        scexpr Result<T, drivers::LT8960L::Error> convert(const BusError berr){
-            using Error = drivers::LT8960L::Error;
-            using BusError = BusError;
-            
-            if constexpr(std::is_void_v<T>)
-                if(berr.ok()) return Ok();
-            
-            Error err = [](const BusError berr_){
-                switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case BusError::I2C_NOT_READY: return LT8960L::Error::I2C_NOT_READY;
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
 }

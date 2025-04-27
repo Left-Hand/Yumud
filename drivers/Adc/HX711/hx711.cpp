@@ -8,17 +8,17 @@ uint32_t HX711::read_data(void){
     uint32_t data=0;
 
     for(uint8_t i = 0; i < 24; i++){
-        sck_gpio_ = true;
+        sck_gpio_.set();
         __nopn(2);
-        sck_gpio_ = false;
+        sck_gpio_.clr();
 
-        data <<= 1; data |= bool(sdo_gpio_);
+        data <<= 1; data |= bool(sdo_gpio_.read());
     }
 
     for(uint8_t i = 0; i < (uint8_t)conv_type; i++){
-        sck_gpio_ = true;
+        sck_gpio_.set();
         __nopn(2);
-        sck_gpio_ = false;
+        sck_gpio_.clr();
     }
 
     data ^= 0x800000;
@@ -31,6 +31,6 @@ void HX711::init(){
     read_data();
 }
 
-bool HX711::isIdle(){
-    return sdo_gpio_ == false;
+bool HX711::is_idle(){
+    return sdo_gpio_ == LOW;
 }

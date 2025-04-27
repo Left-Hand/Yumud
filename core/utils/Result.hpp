@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Option.hpp"
+#include "typetraits/size_traits.hpp"
 
 
 namespace ymd{
@@ -9,17 +10,20 @@ namespace custom{
     template <typename T, typename E, typename S> 
     struct result_converter{};
 
+
+
     // 非侵入式地添加隐式类型转换
     // T为正确类型 E为错误类型 S为源类型
 
     // eg:
     // template<>
-    // struct result_converter<void, BusError, BusError> {
-    //     static Result<void, BusError> convert(const BusError & res){
+    // struct result_converter<void, hal::BusError, hal::BusError> {
+    //     static Result<void, hal::BusError> convert(const hal::BusError & res){
     //         if(res.ok()) return Ok();
     //         else return Err(res); 
     //     }
     // };
+
 }
 
 template<typename T>
@@ -60,12 +64,12 @@ namespace details{
         using ok_type = T;
         using err_type = E;
     
-        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):
-            data_(T(val)){;}
+        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):data_(val.unwrap()){;}
+        __fast_inline constexpr _Storage_Diff(Ok<T> && val):data_(std::move(val.unwrap())){;}
     
     
-        __fast_inline constexpr _Storage_Diff(const Err<E> & val):
-            data_(E(val)){;}
+        __fast_inline constexpr _Storage_Diff(const Err<E> & val):data_(val.unwrap()){;}
+        __fast_inline constexpr _Storage_Diff(Err<E> && val):data_(std::move(val.unwrap())){;}
     
         __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
         __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
@@ -147,7 +151,7 @@ namespace details{
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
-            data_(std::forward<E>(static_cast<E>(val))){;}
+            data_(val.unwrap()){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
         // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
@@ -166,10 +170,10 @@ namespace details{
         using ok_type = T;
         using err_type = void;
         using Data = std::optional<T>;
-        __fast_inline constexpr _Storage_OkOnly(const Ok<void> & val):
-            data_(static_cast<T>(val)){;}
+        __fast_inline constexpr _Storage_OkOnly(const Ok<T> & val):
+            data_(val.unwrap()){;}
     
-        __fast_inline constexpr _Storage_OkOnly(const Err<T> &):
+        __fast_inline constexpr _Storage_OkOnly(const Err<void> &):
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_OkOnly(const _Storage_OkOnly &) = default;
@@ -241,20 +245,15 @@ namespace details{
 
 template <typename T, typename E>
 class Result{
-// private:
-    // using Storage = std::variant<T, E>;
-    // using details::operator|;
-    // using _Storage = details::_Storage;
 public:
     using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
     using err_type = Storage::err_type;
     using type = Result<T, E>;
     constexpr Result & operator =(const Result<T, E> &) = default;
-    // constexpr Result & operator =(Result<T, E> &&) = default;
 
 private:
-    Storage result_;
+    Storage storage_;
 
     struct _Loc{
         const Result<T, E> & owner_;
@@ -272,29 +271,29 @@ private:
         Args && ... args
     ) const {
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
             #endif
-            std::terminate();
+            __builtin_abort();
         }
     }
     friend class _Loc;
 public:
 
-    template<typename U>
-    requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<U> & value) : result_(Ok<T>(*value)){}
+    template<typename T2>
+    requires (std::is_convertible_v<Ok<T2>, Ok<T>>)
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(value){}
     
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<void> & value) : storage_(Ok<void>()){}
     
-    // [[nodiscard]] __fast_inline constexpr Result(Err<E> && error) : result_(Err<E>(*error)){}
-    template<typename U>
-    requires (!std::is_void_v<U>)
-    [[nodiscard]] __fast_inline constexpr Result(const Err<U> & error) : result_(Err<E>(
-        static_cast<E>(*error))){}
+    template<typename E2>
+    requires (std::is_convertible_v<Err<E2>, Err<E>>)
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : storage_(error){}
 
+        
+    [[nodiscard]] __fast_inline constexpr Result(const Err<void> & value) : storage_(Err<void>()){}
 
     [[nodiscard]] __fast_inline constexpr
     Result<T, E> operator |(const Result<T, E> && rhs) const {
@@ -302,18 +301,12 @@ public:
         else return rhs;
     }
 
-    // [[nodiscard]] __fast_inline constexpr
-    // template<typename Fn>
-    // Result<T, E> operator | (Fn && fn){
-    //     if(is_ok()) std::forward<Fn>(fn)();
-    //     return *this;
-    // }
-
     template<typename S>
     requires requires(S s) {
         { custom::result_converter<T, E, S>::convert(s) } -> std::convertible_to<Result<T, E>>;
     }
-    [[nodiscard]] __fast_inline constexpr Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
+    [[nodiscard]] __fast_inline constexpr explicit 
+    Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
 
         // 修改map方法
     template<
@@ -324,8 +317,8 @@ public:
     >
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
-            if constexpr(std::is_void_v<T>) return Ok<TFReturn>(std::forward<Fn>(fn)());
-            else return Ok<TFReturn>(std::forward<Fn>(fn)(result_.unwrap()));
+            if constexpr(std::is_void_v<TFReturn>) return Ok<TFReturn>(std::forward<Fn>(fn)());
+            else return Ok<TFReturn>(std::forward<Fn>(fn)(storage_.unwrap()));
         }
         else return Err<E>(unwrap_err());
     }
@@ -448,16 +441,14 @@ public:
     template<typename Fn>
     __fast_inline constexpr 
     Result<T, E> inspect(Fn && fn) const {
-        if (is_ok()) std::forward<Fn>(fn)(unwrap());
+        if (is_ok()){
+            if constexpr(!std::is_void_v<T>) std::forward<Fn>(fn)(unwrap());
+            else std::forward<Fn>(fn)();
+        }
         return *this;
     }
 
-    template<typename Fn>
-    __fast_inline constexpr 
-    Result<T, E> if_ok(Fn && fn) const {
-        if (is_ok()) std::forward<Fn>(fn)();
-        return *this;
-    }
+
 
     template<typename Fn>
     __fast_inline constexpr 
@@ -468,15 +459,21 @@ public:
         return *this;
     }
 
+    template<typename Fn>
+    __fast_inline constexpr 
+    Result<T, E> if_ok(Fn && fn) const {
+        if (is_ok()) std::forward<Fn>(fn)();
+        return *this;
+    }
 
     [[nodiscard]] __fast_inline constexpr 
     bool is_ok() const {
-        return result_.is_ok();
+        return storage_.is_ok();
     }
 
     [[nodiscard]] __fast_inline constexpr 
     bool is_err() const {
-        return result_.is_err();
+        return storage_.is_err();
     }
     
 
@@ -485,12 +482,12 @@ public:
     constexpr 
     T expect(Args && ... args) const{
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             PANIC_NSRC(std::forward<Args>(args)...);
             #endif
-            exit(1);
+            __builtin_abort();
         }
     }
     
@@ -521,9 +518,9 @@ public:
     __fast_inline constexpr 
     T unwrap() const {
         if (likely(is_ok())) {
-            return result_.unwrap();
+            return storage_.unwrap();
         } else {
-            exit(1);
+            __builtin_abort();
         }
     }
 
@@ -548,22 +545,22 @@ public:
 
     __fast_inline constexpr 
     T operator !() const{
-        return result_.unwrap();
+        return storage_.unwrap();
     }
 
     __fast_inline constexpr 
     E unwrap_err() const {
         if (likely(is_err())) {
-            return result_.unwrap_err();
+            return storage_.unwrap_err();
         } else {
-            exit(1);
+            __builtin_abort();
         }
     }
 
     constexpr Option<T> 
     ok() const{
         if (likely(is_ok())) {
-            return Some(result_.unwrap());
+            return Some(storage_.unwrap());
         } else {
             return None;
         }
@@ -572,7 +569,7 @@ public:
     constexpr Option<E> 
     err() const{
         if (likely(is_err())) {
-            return Some(result_.unwrap_err());
+            return Some(storage_.unwrap_err());
         } else {
             return None;
         }
@@ -594,18 +591,6 @@ public:
         return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
     }
 
-
-        // 添加隐式类型转换运算符
-    template<typename U, typename V>
-    operator Result<U, V>() const {
-        if (is_ok()) {
-            if constexpr(std::is_void_v<U>) return Ok();
-            if constexpr(std::is_void_v<T>) return Ok();
-            else return Ok<U>(unwrap());
-        } else {
-            return Result<U, V>(unwrap_err());
-        }
-    }
 };
 
 template<

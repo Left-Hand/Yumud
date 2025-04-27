@@ -71,9 +71,9 @@ using namespace ymd;
             delay(1);
         }
         delay(300);
-        tx_led = false;
+        tx_led.clr();
         DEBUG_PRINTLN("noth", uart.available());
-        tx_led = true;
+        tx_led.set();
     }
     #endif
 }

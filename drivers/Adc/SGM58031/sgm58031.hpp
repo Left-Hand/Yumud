@@ -2,14 +2,30 @@
 
 #include "core/io/regs.hpp"
 
-#include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{
+
+class SGM58031_Error{
+public:
+    enum Kind:uint8_t {
+        Unspecified = 0xff
+    };
+
+    constexpr SGM58031_Error(Kind kind):kind_(kind){}
+    constexpr bool operator ==(const SGM58031_Error other) const {
+        return kind_ == other.kind_;
+    }
+
+    constexpr bool operator ==(const Kind kind) const {
+        return kind_ == kind;
+    }
+private:
+    Kind kind_;
+};
 
 class SGM58031{
 public:
@@ -22,8 +38,37 @@ public:
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
-    enum class FS:uint8_t{
-        FS6_144 = 0, FS4_096, FS2_048, FS1_024, FS0_512, FS0_256
+    class FS{
+    public:
+        enum Kind{
+            FS6_144 = 0, FS4_096, FS2_048, FS1_024, FS0_512, FS0_256
+        };
+
+        constexpr FS(Kind kind):kind_(kind){;}
+        constexpr real_t to_real() const{
+            switch(kind_){
+                case FS::FS0_256:
+                    return real_t(0.256);
+                case FS::FS0_512:
+                    return real_t(0.512f);
+                case FS::FS1_024:
+                    return real_t(1.024f);
+                case FS::FS2_048:
+                    return real_t(2.048f);
+                case FS::FS4_096:
+                    return real_t(4.096f);
+                case FS::FS6_144:
+                    return real_t(6.144f);
+                default:
+                    __builtin_unreachable();
+            }
+        }
+
+        constexpr uint8_t as_u8() const {
+            return uint8_t(kind_);
+        }
+    private:
+        Kind kind_;
     };
 
     enum class PGA:uint8_t{
@@ -122,58 +167,53 @@ public:
 
     void init();
 
-    void getDeviceId(){
+    void get_device_id(){
         read_reg(RegAddress::DeviceID, deviceIdReg);
     }
 
-    bool isIdle(){
+    bool is_idle(){
         read_reg(RegAddress::Config, configReg);
         return configReg.os;
     }
 
-    void startConv(){
+    void start_conv(){
         config1Reg.pd = true;
         write_reg(RegAddress::Config1, config1Reg);
         configReg.os = true;
         write_reg(RegAddress::Config, configReg);
     }
 
-    int16_t getConvData(){
+    int16_t get_conv_data(){
         read_reg(RegAddress::Conv, convReg);
         return *(int16_t *)&convReg;
     }
 
-    real_t getConvVoltage(){
-        int16_t data = getConvData();
+    real_t get_conv_voltage(){
+        int16_t data = get_conv_data();
         real_t uni = real_t(data) / (1 << 15);
         return uni * fullScale;
     }
-    void setContMode(const bool continuous){
+    void set_cont_mode(const bool continuous){
         configReg.mode = continuous;
         write_reg(RegAddress::Config, configReg);
     }
 
-    void setDataRate(const DataRate _dr);
+    void set_datarate(const DataRate _dr);
 
-    void setMux(const MUX _mux){
+    void set_mux(const MUX _mux){
         configReg.mux = (uint8_t)_mux;
         write_reg(RegAddress::Config, configReg);
     }
 
-    void setFS(const FS fs);
+    void set_fs(const FS fs);
 
-    void setFS(const real_t _fs, const real_t _vref);
+    void set_fs(const real_t _fs, const real_t _vref);
 
-    void setTrim(const real_t _trim);
-    void enableCh3AsRef(bool yes){
+    void set_trim(const real_t _trim);
+    void enable_ch3_as_ref(bool yes){
         config1Reg.extRef = yes;
         write_reg(RegAddress::Config1, config1Reg);
     }
 };
-
-#ifdef SGM58031_DEBUG
-#undef SGM58031_DEBUG
-#endif
-
 
 }

@@ -25,50 +25,8 @@ using namespace ymd::drivers;
 
 using Error = MPU6050::Error;
 
-Result<void, Error> MPU6050::write_reg(const uint8_t addr, const uint8_t data){
-    if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->write_reg(uint8_t(addr), data);
-        MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
-        return err;
-    }else if(p_spi_drv_){
-        MPU6050_TODO();
-        __builtin_unreachable();
-    }else{
-        MPU6050_PANIC("no drv", p_i2c_drv_.has_value());
-        __builtin_unreachable();
-    }
-}
-
-Result<void, Error> MPU6050::read_reg(const uint8_t addr, uint8_t & data){
-    if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->read_reg(uint8_t(addr), data);
-        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err, addr);
-        return err;
-    }else if(p_spi_drv_){
-        MPU6050_TODO();
-        __builtin_unreachable();
-    }else{
-        MPU6050_PANIC("no drv", p_i2c_drv_.has_value());
-        __builtin_unreachable();
-    }
-}
-
-Result<void, Error> MPU6050::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    if(p_i2c_drv_.has_value()){
-        auto err = p_i2c_drv_->read_burst((uint8_t)reg_addr, std::span(datas, len), MSB);
-        MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed");
-        return err;
-    }else if(p_spi_drv_){
-        MPU6050_TODO();
-        __builtin_unreachable();
-    }else{
-        MPU6050_PANIC("no drv");
-        __builtin_unreachable();
-    }
-}
-
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
-    p_i2c_drv_(i2c_drv),
+    phy_(i2c_drv),
     package_(package){
     }
     
@@ -76,7 +34,7 @@ Result<void, Error> MPU6050::verify(){
 
     reset().unwrap();
     const auto pkres = this->get_package();
-    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::ALREADY));
+    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) return Err(Error(Error::WrongWhoAmI));
     
     const auto package = pkres.unwrap();
 
@@ -85,7 +43,7 @@ Result<void, Error> MPU6050::verify(){
             case Package::MPU6050: MPU6050_DEBUG("this is MPU6050 in fact"); break;
             case Package::MPU6500: MPU6050_DEBUG("this is MPU6500 in fact"); break;
             case Package::MPU9250: MPU6050_DEBUG("this is MPU9250 in fact"); break;
-            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return Err(Error(Error::ALREADY));
+            default: MPU6050_PANIC("this is unknown device", uint8_t(package)); return Err(Error(Error::UnknownDevice));
         }
         return Ok();
     }
@@ -117,17 +75,17 @@ Result<void, Error> MPU6050::update(){
 }
 
 Option<Vector3_t<real_t>> MPU6050::get_acc(){
-    real_t x = uni(acc_x_reg) * acc_scaler;
-    real_t y = uni(acc_y_reg) * acc_scaler;
-    real_t z = uni(acc_z_reg) * acc_scaler;
+    real_t x = uni(acc_x_reg) * acc_scaler_;
+    real_t y = uni(acc_y_reg) * acc_scaler_;
+    real_t z = uni(acc_z_reg) * acc_scaler_;
     return  Some{Vector3_t<real_t>{x, y, z}};
 }
 
 Option<Vector3_t<real_t>> MPU6050::get_gyr(){
     // if(!data_valid) return None;
-    real_t x = uni(gyr_x_reg) * gyr_scaler;
-    real_t y = uni(gyr_y_reg) * gyr_scaler;
-    real_t z = uni(gyr_z_reg) * gyr_scaler;
+    real_t x = uni(gyr_x_reg) * gyr_scaler_;
+    real_t y = uni(gyr_y_reg) * gyr_scaler_;
+    real_t z = uni(gyr_z_reg) * gyr_scaler_;
     return Some{Vector3_t<real_t>{x, y, z}};
 }
 
@@ -138,7 +96,7 @@ Option<real_t> MPU6050::get_temperature(){
 
 
 Result<void, Error> MPU6050::set_acc_range(const AccRange range){
-    this->acc_scaler = this->calculate_acc_scale(range);
+    this->acc_scaler_ = this->calculate_acc_scale(range);
 
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
@@ -153,7 +111,7 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
 }
 
 Result<void, Error> MPU6050::set_gyr_range(const GyrRange range){
-    this->gyr_scaler = this->calculate_gyr_scale(range);
+    this->gyr_scaler_ = this->calculate_gyr_scale(range);
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
 
@@ -162,11 +120,9 @@ Result<void, Error> MPU6050::set_gyr_range(const GyrRange range){
 
 
 Result<void, Error> MPU6050::reset(){
-    if(p_i2c_drv_){
-        return p_i2c_drv_->release();
-    }
-
-    return Ok();
+    const auto berr = phy_.reset();
+    if(berr.is_ok()) return Ok();
+    else return Err(berr.unwrap_err());
 }
 
 Result<void, Error> MPU6050::enable_direct_mode(const Enable en){

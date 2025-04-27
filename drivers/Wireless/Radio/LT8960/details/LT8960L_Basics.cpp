@@ -201,7 +201,7 @@ Result<void, Error> LT8960L::wait_pkt_ready(const uint timeout){
         [this]{return is_pkt_ready()
         .and_then([](bool rdy) -> Result<void, Error>{
             if (rdy) return Ok();
-            else return Err(Error::TransmitTimeout);
+            else return Err(Error(Error::TransmitTimeout));
         });}
     );
 }
@@ -281,40 +281,43 @@ Result<void, Error> LT8960L_Phy::_write_reg(
     uint8_t address, 
     uint16_t data
 ){
-    auto guard = create_guard();
+    auto guard = i2c_.create_guard();
     
-    auto res = bus_.begin(address)
-        .then([&]{return bus_.write(data >> 8);})
-        .then([&]{return bus_.write(data);})
+    auto res = i2c_.begin(hal::LockRequest(address, 0))
+        .then([&]{return i2c_.write(data >> 8);})
+        .then([&]{return i2c_.write(data);})
     ;
 
-    return Result<void, Error>(res);
+    if(res.is_ok()) return Ok();
+    else return Err(Error(res.unwrap_err()));
 }
 
 Result<void, Error> LT8960L_Phy::_read_reg(
     uint8_t address, 
     uint16_t & data
 ){
-    auto guard = create_guard();
+    auto guard = i2c_.create_guard();
     
 
-    auto res = bus_.begin(address | 0x80)
+    auto res = i2c_.begin(hal::LockRequest(address | 0x80, 0))
     .then([&](){
         uint32_t dummy = 0; 
-        const auto err = bus_.read(dummy, ACK); 
+        const auto err = i2c_.read(dummy, ACK); 
         data = (dummy & 0xff)<< 8;
         return err;
     })
 
     .then([&](){
         uint32_t dummy = 0; 
-        const auto err = bus_.read(dummy, NACK); 
+        const auto err = i2c_.read(dummy, NACK); 
         data |= (dummy & 0xff);
         return err;
     })
 
     ;
-    return Result<void, Error>(res);
+
+    if(res.is_ok()) return Ok();
+    else return Err(Error(res.unwrap_err()));
 
 }
 
@@ -408,14 +411,15 @@ Result<void, Error> LT8960L::verify(){
 }
 
 Result<bool, Error> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
-    return Result<bool, Error>(Ok((bus_inst_.sda().read())))
-        .if_ok([&]{bus_inst_.sda().set();});
+    return Result<bool, Error>(Ok(
+        (bool(i2c_.sda().read()))))
+        .if_ok([&]{i2c_.sda().set();});
 }
 
 Result<void, Error> LT8960L_Phy::start_hw_listen_pkt(){
-    bus_inst_.scl().clr(); 
-    bus_inst_.sda().set(); 
-    bus_inst_.sda().inpu();
+    i2c_.scl().clr(); 
+    i2c_.sda().set(); 
+    i2c_.sda().inpu();
 
     return Ok();
 }
@@ -429,72 +433,74 @@ Result<bool, Error> LT8960L::is_receiving(){
 
 
 Result<void, Error> LT8960L_Phy::init(){
-    bus_inst_.init(600'000);
+    i2c_.init(600'000);
     return Ok();
 }
 
 Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
 
 
-    auto guard = create_guard();
+    auto guard = i2c_.create_guard();
     uint32_t len = 0;
     bool invalid = false;
 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
-    auto res = bus_.begin(address | 0x80)
-        .then([&]() -> BusError{
-            const auto err = bus_.read(len, ACK);
-            if(err.wrong()) return err;
+    auto res = i2c_.begin(hal::LockRequest{uint32_t(address | 0x80), 0})
+        .then([&]() -> hal::BusError{
+            const auto err = i2c_.read(len, ACK);
+            if(err.is_err()) return err;
             if(len > LT8960L_PACKET_SIZE || len > pbuf.size()) {
                 // LT8960L_PANIC("read buf length too long", len);
-                // return BusError::LengthOverflow;
+                // return hal::BusError::LengthOverflow;
                 invalid = true;
             }
-            return BusError::OK;
+            return hal::BusError::Ok();
             }
         )
 
-        .then([&]() -> BusError{
-            if(invalid) return BusError::OK;
+        .then([&]() -> hal::BusError{
+            if(invalid) return hal::BusError::Ok();
             for(size_t i = 0; i < len; i++){
                 uint32_t dummy = 0;
-                const auto err = bus_.read(dummy, (i == len - 1 ? NACK : ACK));
-                if(err.wrong()) return err;
+                const auto err = i2c_.read(dummy, (i == len - 1 ? NACK : ACK));
+                if(err.is_err()) return err;
                 pbuf[i] = std::byte(dummy);
             }
-            return BusError::OK;
+            return hal::BusError::Ok();
         })
     ;
 
-    LT8960L_ASSERT(res.ok(), "error while read burst", res);
+    LT8960L_ASSERT(res.is_ok(), "error while read burst", res);
 
-    return rescond(res.ok(), invalid ? 0 : len, res);
+    if(res.is_ok()) return Ok(invalid ? 0 : len);
+    else return Err(Error(res.unwrap_err()));
 }
 
 
 Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
     
-    auto guard = create_guard();
+    auto guard = i2c_.create_guard();
     
     LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
 
-    auto res = bus_.begin(address)
+    auto res = i2c_.begin(hal::LockRequest{address, 0})
         .then([&](){
-            return bus_.write(pbuf.size());
+            return i2c_.write(pbuf.size());
         })
 
-        .then([&]() -> BusError{
+        .then([&]() -> hal::BusError{
             for(const auto data : pbuf){
-                auto err = bus_.write(uint32_t(data));
-                if (err.wrong()) return err;
+                auto err = i2c_.write(uint32_t(data));
+                if (err.is_err()) return err;
             }
-            return BusError::OK;
+            return hal::BusError::Ok();
         })
     ;
 
-    LT8960L_ASSERT(res.ok(), "error while write burst", res);
+    LT8960L_ASSERT(res.is_ok(), "error while write burst", res);
 
-    return rescond(res.ok(), pbuf.size(), res);
+    if(res.is_ok()) return Ok(pbuf.size());
+    else return Err(Error(res));
 }
 

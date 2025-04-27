@@ -53,12 +53,10 @@ public:
     }
 
     virtual void reset();
-    //����ǰ��λ����Ϊĳƫ��
     void locateRelatively(const real_t offset){
         locate(offset);
     }
 
-    //Ȧ��Ѱַ �趨ƫ��
     void locateAbsolutely(const real_t offset){
         locate(getLapPosition() + offset);
     }
@@ -69,8 +67,8 @@ public:
 
     void update();
 
-    bool stable(){
-        return encoder.stable();
+    bool is_stable(){
+        return encoder.is_stable().unwrap();
     }
 
     virtual real_t getPosition(){

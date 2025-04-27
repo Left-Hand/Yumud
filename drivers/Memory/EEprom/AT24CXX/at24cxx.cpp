@@ -1,6 +1,7 @@
 #include "at24cxx.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 // #define AT24CXX_DEBUG
@@ -33,23 +34,22 @@ if(loc > m_capacity){\
 #endif
 
     
-void AT24CXX::writePool(const size_t addr, const uint8_t * data, const size_t len){
+hal::BusError AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
     AT24CXX_DEBUG("write", len, "bytes to", addr);
     // DEBUGGER.print_arr(data, len);
     if (is_small_chip()){
-        i2c_drv_.write_burst(uint8_t(addr), std::span(data, len)).unwrap();
+        return i2c_drv_.write_burst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.write_burst((uint16_t)addr, std::span(data, len)).unwrap();
-
+        return i2c_drv_.write_burst((uint16_t)addr, std::span(data, len));
     }
 }
 
-void AT24CXX::readPool(const size_t addr, uint8_t * data, const size_t len){
+hal::BusError AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
     AT24CXX_DEBUG("read", len, "bytes to", addr);
     if (is_small_chip()){
-        i2c_drv_.read_burst(uint8_t(addr), std::span(data, len)).unwrap();
+        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }else{
-        i2c_drv_.read_burst((uint16_t)addr, std::span(data, len)).unwrap();
+        return i2c_drv_.read_burst((uint16_t)addr, std::span(data, len));
     }
 }
 
@@ -68,7 +68,7 @@ void AT24CXX::wait_for_free(){
     // delay(400);
 }
 
-void AT24CXX::storeBytes(const Address loc, const void * data, const Address len){
+void AT24CXX::store_bytes(const Address loc, const void * data, const Address len){
     auto full_end = loc + len; 
     CHECK_ADDR(full_end);
 
@@ -83,15 +83,15 @@ void AT24CXX::storeBytes(const Address loc, const void * data, const Address len
         if(op_window){
             wait_for_free();
             const uint8_t * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
-            writePool(op_window.from, ptr, op_window.length());
+            write_pool(op_window.from, ptr, op_window.length());
             update_entry_ms();
         }
     }while(op_window);
 }
 
 
-void AT24CXX::loadBytes(const Address loc, void * data, const Address len){
+void AT24CXX::load_bytes(const Address loc, void * data, const Address len){
     auto full_end = loc + len; 
     CHECK_ADDR(full_end);
-    readPool(loc, reinterpret_cast<uint8_t *>(data), len);
+    read_pool(loc, reinterpret_cast<uint8_t *>(data), len);
 }

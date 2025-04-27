@@ -16,8 +16,8 @@ using namespace ymd;
 #define LT8920_DEBUG(...)
 #define LT8920_PANIC(...)  PANIC_NSRC()
 #define LT8920_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void)read_reg(reg.address, reg).unwrap();
-#define WRITE_REG(reg) (void)write_reg(reg.address, reg).unwrap();
+#define READ_REG(reg) (void)read_reg(reg.address, reg);
+#define WRITE_REG(reg) (void)write_reg(reg.address, reg);
 #endif
 
 
@@ -31,9 +31,15 @@ using namespace ymd;
 #define PKT_FLAG flag_reg.pktFlag
 #define FIFO_FLAG flag_reg.fifoFlag
 
+
+void LT8920::delayT3(){udelay(1);}
+
+void LT8920::delayT5(){udelay(1);}
+
+
 bool LT8920::verify(){
     uint16_t reg;
-    read_reg(30, reg).unwrap();
+    read_reg(30, reg);
     return (reg == 0xf413);
 }
 
@@ -347,10 +353,12 @@ void LT8920::setSyncWord(const uint64_t syncword){
 }
 
 
-BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
+hal::BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT).unwrap();
+        if(const auto err = 
+            spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT);
+            err.is_err()) return err;
         delayT3();
 
         return spi_drv_->write_single((reg));
@@ -361,10 +369,13 @@ BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
     PANIC();
 }
 
-BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
+hal::BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT).unwrap();
+        const auto err = spi_drv_->transfer_single(
+            reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
+            uint8_t(address | 0x80), CONT);
+        if(err.is_err()) return err;
         return spi_drv_->read_single(reg);
     }else if(i2c_drv_){
         return i2c_drv_->read_reg(uint8_t(address), reg, MSB);
@@ -374,10 +385,10 @@ BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
 }
 
 
-BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
+hal::BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
-        spi_drv_->write_single(uint8_t(50), CONT).unwrap();
+        if(const auto err = spi_drv_->write_single(uint8_t(50), CONT); err.is_err()) return err;
         return spi_drv_->write_burst<uint8_t>(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
@@ -386,10 +397,10 @@ BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     PANIC();
 }
 
-BusError LT8920::readFifo(uint8_t * data, const size_t len){
+hal::BusError LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
-        spi_drv_->write_single(uint8_t(50 | 0x80), CONT).unwrap();
+        if(const auto err = spi_drv_->write_single(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
         return spi_drv_->read_burst(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
@@ -398,9 +409,10 @@ BusError LT8920::readFifo(uint8_t * data, const size_t len){
     PANIC();
 }
 
-BusError LT8920::updateFifoStatus(){
+hal::BusError LT8920::updateFifoStatus(){
     if(spi_drv_){
         // return spi_drv_->transfer_single(flag_reg.as_ref(), flag_reg.address);
+        TODO();
     } else if(i2c_drv_){
         return i2c_drv_->read_reg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
     }
@@ -410,7 +422,7 @@ BusError LT8920::updateFifoStatus(){
 
 bool LT8920::getFifoStatus(){
     if(fifo_status_gpio){
-        return fifo_status_gpio->read();
+        return bool(fifo_status_gpio->read());
     }else{
         updateFifoStatus();
         return flag_reg.fifoFlag;
@@ -419,7 +431,7 @@ bool LT8920::getFifoStatus(){
 
 bool LT8920::getPktStatus(){
     if(pkt_status_gpio){
-        return pkt_status_gpio->read();
+        return bool(pkt_status_gpio->read());
     }else{
         updateFifoStatus();
         return flag_reg.pktFlag;

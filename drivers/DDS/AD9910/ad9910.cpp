@@ -1,11 +1,8 @@
 #include "ad9910.hpp"
-
-#include "concept/pwm_channel.hpp"
+#include "core/clock/clock.hpp"
 #include "concept/analog_channel.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
-
 #include "hal/gpio/gpio_port.hpp"
 
 
@@ -41,16 +38,16 @@ scexpr real_t magic_2 = real_t(25.20615385);	   //将输入幅度因子分为两
 
 void AD9910::init(void)
 {	
-	AD9910_PWR = 0;//软件拉低
+	AD9910_PWR.clr();//软件拉低
 	
-	PROFILE2 = 0;
-    PROFILE1 = 0;
-    PROFILE0 = 0;
-	DRCTL=0;
-    DRHOLD=0;
-	MAS_REST=1; 
+	PROFILE2.clr();
+    PROFILE1.clr();
+    PROFILE0.clr();
+	DRCTL.clr();
+    DRHOLD.clr();
+	MAS_REST.set(); 
     delay(5);
-	MAS_REST=0; 
+	MAS_REST.clr(); 
 
     write_reg(0x00, cfr1, 4);
     write_reg(0x01, cfr2, 4);
@@ -61,15 +58,19 @@ void AD9910::init(void)
 
 
 
-void AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
+hal::BusError AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
-    spi_drv.write_single(addr).unwrap();
-    spi_drv.write_burst<uint8_t>(data, len).unwrap();
+
+    UNWRAP_OR_RETURN(spi_drv.write_single(addr));
+    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(data, len));
+
     __nopn(4);
+
+	return hal::BusError::Ok();
 }
 
-void AD9910::write_data(const uint8_t txdat){
-    spi_drv.write_single(txdat).unwrap();
+hal::BusError AD9910::write_data(const uint8_t txdat){
+    return spi_drv.write_single(txdat);
 }  
 
     

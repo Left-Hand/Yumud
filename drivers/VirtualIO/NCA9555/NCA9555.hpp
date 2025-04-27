@@ -7,7 +7,6 @@
 
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{ 
 class NCA9555: public hal::VGpioPortIntf<16>{
@@ -46,11 +45,11 @@ protected:
     ConfigReg config_reg;
 
 
-    BusError write_reg(const uint8_t addr, const uint16_t data){
+    hal::BusError write_reg(const uint8_t addr, const uint16_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    BusError read_reg(const uint8_t addr, uint16_t & data){
+    hal::BusError read_reg(const uint8_t addr, uint16_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 
@@ -62,8 +61,8 @@ public:
 
     void init();
     void set_inversion(const uint16_t mask);
-    void write_port(const uint16_t data) override;
-    uint16_t read_port() override;
-    void set_mode(const int index, const hal::GpioMode mode)override;
+    void write_port(const uint16_t data);
+    uint16_t read_port();
+    void set_mode(const int index, const hal::GpioMode mode);
 };
 }

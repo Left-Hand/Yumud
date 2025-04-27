@@ -61,8 +61,8 @@ void M3508::tick(){
             break;
         case CtrlMethod::POS:{
             targ_spd = (targ_spd * 15 + targ_spd_ester.update(targ_pos)) >> 4;
-            real_t pos_err = targ_pos - getPosition();
-            real_t spd_err = targ_spd - getSpeed();
+            real_t pos_err = targ_pos - get_position();
+            real_t spd_err = targ_spd - get_speed();
 
             // scexpr real_t kp = real_t(2.35); 
             // scexpr real_t kd = real_t(0.85);
@@ -109,27 +109,27 @@ void M3508::tick(){
     expect_curr = CLAMP2(expect_curr, curr_limit);
     curr_setpoint = STEP_TO(curr_setpoint, expect_curr, curr_delta);
     if(ctrl_method != CtrlMethod::NONE){
-        applyTargetCurrent(curr_setpoint);
+        apply_target_current(curr_setpoint);
     }
 }
 
-void M3508::setTargetCurrent(const real_t _curr){
+void M3508::set_target_current(const real_t _curr){
     ctrl_method = CtrlMethod::CURR;
     targ_curr = _curr;
 }
 
 
-void M3508::setTargetSpeed(const real_t _spd){
+void M3508::set_target_speed(const real_t _spd){
     ctrl_method = CtrlMethod::SPD;
     targ_spd = _spd;
 }
 
-void M3508::setTargetPosition(const real_t _pos){
+void M3508::set_target_position(const real_t _pos){
     ctrl_method = CtrlMethod::POS;
     targ_pos = _pos;
 }
 
-void M3508::updateMeasurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t temp){
+void M3508::update_measurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t temp){
     odo_.update();
     lap_position = _lap_position;
     curr = _curr;
@@ -157,7 +157,7 @@ void M3508Port::tick(){
         if(msg.id() > 0x200 and msg.id() <= 0x208){
             can.read();
             size_t index = msg.id() - 0x200;
-            updateInst(msg, index);
+            update_inst(msg, index);
         }else{
             break;
         }

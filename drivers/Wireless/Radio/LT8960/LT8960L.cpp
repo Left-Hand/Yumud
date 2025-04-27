@@ -9,7 +9,7 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while tx");
-            return Err(Error::InvalidState);
+            return Err(Error(Error::InvalidState));
 
         case States::TransmitFailed:
             LT8960L_PANIC("transmit failed");
@@ -57,7 +57,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while rx", uint8_t(states_.kind()));
-            return Err(Error::InvalidState);
+            return Err(Error(Error::InvalidState));
 
         case States::ReceiveFailed:
             LT8960L_DEBUG("receive failed");
@@ -100,7 +100,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
                     states_ = States::ReceiveFailed;
                     states_.timeout() = 0;
 
-                    return Err(Error::ReceiveTimeout);
+                    return Err(Error(Error::ReceiveTimeout));
                 }
             }
 
@@ -199,8 +199,7 @@ auto LT8960L::transmit_ble(std::span<const std::byte> buf) -> Result<size_t, Err
             LT8960L_DEBUG("transmit successfully");
             return Ok(res);})
         .inspect_err([](Error err){
-            match{err}
-            (
+            MATCH{err}(
                 Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},
                 Error::PacketOverlength, []{LT8960L_PANIC("ble overlen");},
                 _ , []{LT8960L_PANIC("unknown");}

@@ -19,8 +19,8 @@ using namespace ymd::drivers;
 #endif
 
 
-#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
-#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg);
+#define READ_REG(reg) read_reg(reg.address, reg);
 
 scexpr uint16_t b10(const int value, const int step) {
         

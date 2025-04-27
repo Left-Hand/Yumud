@@ -4,64 +4,64 @@
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-#define DEVICE_ADDR 0xB8
+static constexpr uint8_t DEVICE_ADDR = 0xB8;
 
-#define CHIP_ID_ADDR 0x00
-#define CHIP_ID_VALUE 0x1324
+static constexpr uint8_t CHIP_ID_ADDR = 0x00;
+static constexpr uint16_t CHIP_ID_VALUE = 0x1324;
 
-#define ROW_START_ADDR 0x01
-#define ROW_START_VALUE 0x01
+static constexpr uint8_t ROW_START_ADDR = 0x01;
+static constexpr uint8_t ROW_START_VALUE = 0x01;
 
-#define COL_START_ADDR 0x02
-#define COL_START_VALUE 0x04
+static constexpr uint8_t COL_START_ADDR = 0x02;
+static constexpr uint8_t COL_START_VALUE = 0x04;
 
-#define WINDOWS_HEIGHT_ADDR 0x03
-#define WINDOWS_HEIGHT_VALUE 480
+static constexpr uint8_t WINDOWS_HEIGHT_ADDR = 0x03;
+static constexpr uint16_t WINDOWS_HEIGHT_VALUE = 480;
 
-#define WINDOW_WIDTH_ADDR 0x04
-#define WINDOW_WIDTH_VALUE 752
+static constexpr uint8_t WINDOW_WIDTH_ADDR = 0x04;
+static constexpr uint16_t WINDOW_WIDTH_VALUE = 752;
 
-#define HORIZONTAL_BLANKING_ADDR 0x05
-#define HORIZONTAL_BLANKING_VALUE 91
+static constexpr uint8_t HORIZONTAL_BLANKING_ADDR = 0x05;
+static constexpr uint8_t HORIZONTAL_BLANKING_VALUE = 91;
 
-#define CHIP_CONTROL_ADDR 0x07
-#define CHIP_CONTROL_VALUE 0x188
+static constexpr uint8_t CHIP_CONTROL_ADDR = 0x07;
+static constexpr uint16_t CHIP_CONTROL_VALUE = 0x188;
 
-#define COARSE_SHUTTER_WIDTH_1_ADDR 0x08
-#define COARSE_SHUTTER_WIDTH_1_VALUE 0x1BB
-#define COARSE_SHUTTER_WIDTH_2_ADDR 0x09
-#define COARSE_SHUTTER_WIDTH_2_VALUE 0x1D9
-#define COARSE_SHUTTER_WIDTH_3_ADDR 0x0A
-#define COARSE_SHUTTER_WIDTH_3_VALUE 0x164
-#define COARSE_SHUTTER_WIDTH_TOTAL_ADDR 0x0B
-#define COARSE_SHUTTER_WIDTH_TOTAL_VALUE (60 * 7) // Related to exposure time
+static constexpr uint8_t COARSE_SHUTTER_WIDTH_1_ADDR = 0x08;
+static constexpr uint16_t COARSE_SHUTTER_WIDTH_1_VALUE = 0x1BB;
+static constexpr uint8_t COARSE_SHUTTER_WIDTH_2_ADDR = 0x09;
+static constexpr uint16_t COARSE_SHUTTER_WIDTH_2_VALUE = 0x1D9;
+static constexpr uint8_t COARSE_SHUTTER_WIDTH_3_ADDR = 0x0A;
+static constexpr uint16_t COARSE_SHUTTER_WIDTH_3_VALUE = 0x164;
+static constexpr uint8_t COARSE_SHUTTER_WIDTH_TOTAL_ADDR = 0x0B;
+static constexpr uint16_t COARSE_SHUTTER_WIDTH_TOTAL_VALUE = (60 * 7); // Related to exposure time
 
-#define VERTICAL_BLANKING_ADDR 0x06
+static constexpr uint8_t VERTICAL_BLANKING_ADDR = 0x06;
 // Value = COARSE_SHUTTER_WIDTH_TOTAL_VALUE-COARSE_SHUTTER_WIDTH_1_ADDR+7
 
-#define READ_MODE_ADDR 0x0D
-#define READ_MODE_VALUE 0x3A // 4*4 binning mode & flip row and column
+static constexpr uint8_t READ_MODE_ADDR = 0x0D;
+static constexpr uint8_t READ_MODE_VALUE = 0x3A; // 4*4 binning mode & flip row and column
 
-#define SENSOR_TYPE_CONTROL_ADDR 0x0F
-#define SENSOR_TYPE_CONTROL_VALUE 0x00 // Linear opeartion & mono sensor
+static constexpr uint8_t SENSOR_TYPE_CONTROL_ADDR = 0x0F;
+static constexpr uint8_t SENSOR_TYPE_CONTROL_VALUE = 0x00; // Linear opeartion & mono sensor
 
-#define ADC_COMPANDING_MODE_ADDR 0x1C
-#define ADC_COMPANDING_MODE_VALUE 0x202
+static constexpr uint8_t ADC_COMPANDING_MODE_ADDR = 0x1C;
+static constexpr uint16_t ADC_COMPANDING_MODE_VALUE = 0x202;
 
-#define AEC_AGC_DESIRED_BIN_ADDR 0xA5
-#define AEC_AGC_DESIRED_BIN_VALUE 0x3A
+static constexpr uint8_t AEC_AGC_DESIRED_BIN_ADDR = 0xA5;
+static constexpr uint8_t AEC_AGC_DESIRED_BIN_VALUE = 0x3A;
 
-#define AEC_LOW_PASS_FILTER_ADDR 0xA8
-#define AEC_LOW_PASS_FILTER_VALUE 0x01
+static constexpr uint8_t AEC_LOW_PASS_FILTER_ADDR = 0xA8;
+static constexpr uint8_t AEC_LOW_PASS_FILTER_VALUE = 0x01;
 
-#define AGC_LOW_PASS_FILTER_ADDR 0xAA
-#define AGC_LOW_PASS_FILTER_VALUE 0x02
+static constexpr uint8_t AGC_LOW_PASS_FILTER_ADDR = 0xAA;
+static constexpr uint8_t AGC_LOW_PASS_FILTER_VALUE = 0x02;
 
-#define AGC_AEC_BIN_DIFFERENCE_THRESHOLD_ADDR 0xAE
-#define AGC_AEC_BIN_DIFFERENCE_THRESHOLD_VALUE 0x0A
+static constexpr uint8_t AGC_AEC_BIN_DIFFERENCE_THRESHOLD_ADDR = 0xAE;
+static constexpr uint8_t AGC_AEC_BIN_DIFFERENCE_THRESHOLD_VALUE = 0x0A;
 
-#define AGC_AEC_ENABLE_ADDR 0xAF
-#define AGC_AEC_ENABLE_VALUE 0x02 // Enable AGC & disable AEC
+static constexpr uint8_t AGC_AEC_ENABLE_ADDR = 0xAF;
+static constexpr uint8_t AGC_AEC_ENABLE_VALUE = 0x02; // Enable AGC & disable AEC
 
 bool MT9V034::init(){
     // DEBUG_PRINTLN(size);
@@ -109,6 +109,6 @@ bool MT9V034::verify(){
     return true;
 }
 
-void MT9V034::setExposureValue(const uint16_t value){
+void MT9V034::set_exposure_value(const uint16_t value){
     write_reg(0x0B, value);
 }

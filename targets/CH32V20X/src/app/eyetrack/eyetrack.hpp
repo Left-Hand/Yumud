@@ -26,8 +26,8 @@ protected:
         EyeInfo info_;
         auto & operator = (const EyeInfo & info){
             info_.pos = (info.pos + info_.pos * 7) / 8;
-            yaw_.setRadian(info_.pos[0] * real_t(0.6) + real_t(1.8));
-            pitch_.setRadian(info_.pos[1] * real_t(-0.4) + real_t(1.8));
+            yaw_.set_radian(info_.pos[0] * real_t(0.6) + real_t(1.8));
+            pitch_.set_radian(info_.pos[1] * real_t(-0.4) + real_t(1.8));
             return *this;
         }
     };
@@ -37,8 +37,8 @@ protected:
         PwmRadianServo upper_;
 
         EyelidPhy & operator = (const EyelidInfo & info){
-            lower_.setRadian(info.range[0]);
-            upper_.setRadian(info.range[1]);
+            lower_.set_radian(info.range[0]);
+            upper_.set_radian(info.range[1]);
             return *this;
         }
     };

@@ -350,69 +350,6 @@ void String::getBytes(uint8_t *buf, size_t bufsize, size_t index) const
 	buf[n] = 0;
 }
 
-/*********************************************/
-/*  Search                                   */
-/*********************************************/
-
-int String::indexOf(char c) const
-{
-	return indexOf(c, 0);
-}
-
-int String::indexOf( char ch, size_t fromIndex ) const
-{
-	if (fromIndex >= len) return -1;
-	const char* temp = strchr(buffer + fromIndex, ch);
-	if (temp == NULL) return -1;
-	return temp - buffer;
-}
-
-int String::indexOf(const String &s2) const
-{
-	return indexOf(s2, 0);
-}
-
-int String::indexOf(const String &s2, size_t fromIndex) const
-{
-	if (fromIndex >= len) return -1;
-	const char *found = strstr(buffer + fromIndex, s2.buffer);
-	if (found == NULL) return -1;
-	return found - buffer;
-}
-
-int String::lastIndexOf( char theChar ) const
-{
-	return lastIndexOf(theChar, len - 1);
-}
-
-int String::lastIndexOf(char ch, size_t fromIndex) const
-{
-	if (fromIndex >= len) return -1;
-	char tempchar = buffer[fromIndex + 1];
-	buffer[fromIndex + 1] = '\0';
-	char* temp = strrchr( buffer, ch );
-	buffer[fromIndex + 1] = tempchar;
-	if (temp == NULL) return -1;
-	return temp - buffer;
-}
-
-int String::lastIndexOf(const String &s2) const
-{
-	return lastIndexOf(s2, len - s2.len);
-}
-
-int String::lastIndexOf(const String &s2, size_t fromIndex) const
-{
-  	if (s2.len == 0 || len == 0 || s2.len > len) return -1;
-	if (fromIndex >= len) fromIndex = len - 1;
-	int found = -1;
-	for (char *p = buffer; p <= buffer + fromIndex; p++) {
-		p = strstr(p, s2.buffer);
-		if (!p) break;
-		if ((size_t)(p - buffer) <= fromIndex) found = p - buffer;
-	}
-	return found;
-}
 
 StringView String::substr(size_t left, size_t right) const{
 	return StringView(*this).substr(left, right);

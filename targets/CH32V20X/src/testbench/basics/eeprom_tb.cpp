@@ -215,7 +215,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     // while(true);
     Flash sto(0);
     sto.init();
-    Memory flash = sto.slicePages(-1);
+    Memory flash = sto.slice_pages(-1);
     sys::preinit();
 
     // logger.prints("ok");

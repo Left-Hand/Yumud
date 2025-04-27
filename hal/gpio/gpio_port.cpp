@@ -3,7 +3,7 @@
 
 using namespace ymd::hal;
 
-void GpioPort::set_mode(const int index, const GpioMode mode){
+void GpioPort::set_mode(const size_t index, const GpioMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
     gpio.set_mode(mode);
 }

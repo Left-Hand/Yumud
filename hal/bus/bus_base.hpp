@@ -2,98 +2,65 @@
 
 #include "core/platform.hpp"
 
-#include "BusTrait.hpp"
 #include "bus_enums.hpp"
+#include "bus_error.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 
-struct BusError{
+class LockRequest{
 public:
-    enum Kind:uint8_t{
-        OK,
-        ALREADY,
-        OCCUPIED,
-        TIMEOUT,
-        OVERLOAD,
-        NO_ACK,
-        NO_CS_PIN,
-        ZERO_LENGTH,
-        VERIFY_FAILD,
+    constexpr explicit LockRequest(const uint32_t payload, const uint32_t custom_len):
+        payload_(payload), 
+        custom_len_(custom_len){}
 
-        LengthOverflow,
-
-        UNSPECIFIED = 0xff
-    };
-
-    Kind type = Kind::OK;
-
-    BusError(const Kind & _type):type(_type){;}
-    BusError(Kind && _type):type(_type){;}
-    BusError(const BusError & other):type(other.type){;}
-    BusError(BusError && other):type(other.type){;}
-    BusError & operator = (const BusError & other) = default;
-    BusError & operator = (BusError && other) = default;
-    __fast_inline BusError & emplace(const BusError & other){type = other.type; return *this;}
-    __fast_inline BusError & emplace(BusError && other){type = other.type; return *this;}
-
-    bool operator ==(const Kind & _type){return type == _type;}
-    bool operator !=(const Kind & _type){return type != _type;}
-
-    __fast_inline bool wrong() const {return unlikely(type != Kind::OK);}
-    __fast_inline bool ok() const {return likely(type == Kind::OK);}
-
-    auto unwrap() const {return type;}
-
-    // template<typename F>
-    // auto map(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
-    //     if (ok()) return fn(unwrap());
-    //     else return err();
-    // }
-
-    // 链式处理
-    template<typename Fn>
-    BusError then(Fn && fn){
-        if (ok()) return std::forward<Fn>(fn)();
-        return *this;
+    constexpr uint32_t custom() const {
+        return ((1 << custom_len_) - 1) & payload_; 
     }
 
-    BusError operator | (const BusError rhs) const{
-        if(wrong()) return *this;
-        else return rhs;
+    constexpr uint32_t id() const {
+        return (payload_ >> custom_len_);
     }
 
-    explicit operator Kind() {return type;}
+    constexpr size_t custom_len() const {
+        return custom_len_;
+    }
+
+    constexpr uint32_t as_u32() const {
+        return std::bit_cast<uint32_t>(*this);
+    }
+private:
+    uint32_t payload_:29;
+    uint32_t custom_len_:3;
 };
-
 
 class BusBase{
 private:
-    class Locker{
-    protected:
-        uint16_t req:8 = 0;
-        uint16_t oninterrupt_:1 = false;
-        uint16_t locked_:1 = false;
+
+    class Locker final{
+    private:
+        uint32_t req_id_:29 = 0;
+        uint32_t is_read:1 = false;
+        uint32_t oninterrupt_:1 = false;
+        uint32_t locked_:1 = false;
     public:
         Locker(const Locker & other) = delete;
         Locker(Locker && other) = delete;
-        Locker(){;}
-        // Locker(Locker * last, Locker * next):last_(last), next_(next){;}
+        __fast_inline Locker(){;}
 
-        ~Locker(){
+        __fast_inline ~Locker(){
             unlock();
-            // last_ = next_;
         }
 
-        void lock(const uint8_t index);
+        void lock(const LockRequest req);
 
-        void unlock(){
+        __fast_inline void unlock(){
             locked_ = false;
         }
 
-        bool owned_by(const uint8_t index) const;
+        bool is_owned_by(const LockRequest req) const;
 
-        bool locked() const {
+        __fast_inline bool is_locked() const {
             return locked_;
         }
     };
@@ -101,27 +68,60 @@ private:
     Locker __own_locker__ = {};
     Locker & locker;
 
-    virtual BusError lead(const uint8_t _address) = 0;
+    virtual BusError lead(const LockRequest req) = 0;
     virtual void trail() = 0;
+
+    struct _Guard{
+        BusBase & bus_;
+        
+        __fast_inline _Guard(BusBase & bus):
+            bus_(bus){;}
+        __fast_inline ~_Guard(){
+            bus_.end();
+        }
+    };
 public:
     BusBase():locker(__own_locker__){;}
 
     virtual ~BusBase(){;}
     
     BusBase(const BusBase &) = delete;
-    BusBase(BusBase &&) = delete;
+    BusBase(BusBase &&) = default;
 
-    BusError begin(const uint8_t index);
+    BusError begin(const LockRequest req);
 
     BusError end();
 
-    bool occupied(){return locker.locked();}
+    _Guard create_guard(){return _Guard{*this};}
+
+    bool occupied(){return locker.is_locked();}
 };
 
+template<typename TBus>
+concept is_bus = std::is_base_of_v<BusBase, TBus>;
 
+template<typename TBus>
+concept is_writable_bus = requires(TBus bus, const uint32_t data) {
+    bus.write(data);
+};
 
-OutputStream & operator << (OutputStream & os, const BusError & err);
+template<typename TBus>
+concept is_readable_bus = requires(TBus bus, uint32_t & data, Ack need_ack) {
+    bus.read(data);
+};
 
-OutputStream & operator << (OutputStream & os, const BusError::Kind & err);
+template<typename TBus>
+concept is_fulldup_bus = is_writable_bus<TBus> && is_readable_bus<TBus>;
+
+template <typename TBus>
+struct driver_of_bus {
+    using driver_type = void;
+};
 
 };
+
+namespace ymd{
+    OutputStream & operator << (OutputStream & os, const hal::BusError & err);
+
+    OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err);
+}

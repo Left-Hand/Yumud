@@ -163,7 +163,7 @@ void SpiHw::install_gpios(){
     }
 
 
-    if(false == cs_port.is_index_valid(0)){
+    if(false == cs_port_.is_index_valid(0)){
         Gpio & cs_pin = get_hw_cs_gpio();
         cs_pin.set();
         if(hw_cs_enabled_){
@@ -174,9 +174,9 @@ void SpiHw::install_gpios(){
         bind_cs_pin(cs_pin, 0);
     }
 
-    for(size_t i = 0; i < cs_port.size(); i++){
-        if(cs_port.is_index_valid(i)){
-            cs_port[i].outpp();
+    for(size_t i = 0; i < cs_port_.size(); i++){
+        if(cs_port_.is_index_valid(i)){
+            cs_port_[i].outpp();
         }
     }
 }
@@ -246,18 +246,18 @@ void SpiHw::set_bitorder(const Endian endian){
 }
 
 
-BusError SpiHw::write(const uint32_t data){
+hal::BusError SpiHw::write(const uint32_t data){
     uint32_t dummy;
     return transfer(dummy, data);
 }
 
 
-BusError SpiHw::read(uint32_t & data){
+hal::BusError SpiHw::read(uint32_t & data){
     return transfer(data, 0);
 }
 
 
-BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
+hal::BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     if(bool(tx_strategy_)){
         while ((instance_->STATR.TXE) == RESET);
         instance_->DATAR.DR = data_tx;
@@ -268,7 +268,7 @@ BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
         data_rx = instance_->DATAR.DR;
     }
 
-    return BusError::OK;
+    return hal::BusError::Ok();
 }
 
 namespace ymd::hal{

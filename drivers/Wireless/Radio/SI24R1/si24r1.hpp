@@ -3,12 +3,10 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
-
-
 
 
 namespace ymd::drivers{
@@ -198,71 +196,72 @@ protected:
     FeatureReg feature_reg;
 
 
-    BusError write_reg(RegAddress addr, const auto & value){
+    hal::BusError write_reg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT).unwrap();
-        return spi_drv.write_burst(&(value), sizeof(value));
+        spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
+        return spi_drv_.write_burst(&(value), sizeof(value));
     }
 
-    BusError read_reg(RegAddress addr, auto & value){
+    hal::BusError read_reg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT).unwrap();
-        return spi_drv.read_burst(&(value), sizeof(value));
+        return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT)
+        | spi_drv_.read_burst(&(value), sizeof(value));
     }
 
-    BusError readFifo(uint8_t *buffer, size_t size){
+    hal::BusError readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
-                uint8_t(Command::R_RX_PAYLOAD), CONT).unwrap();
-            return spi_drv.read_burst(buffer, size);
+            return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::R_RX_PAYLOAD), CONT)
+            | spi_drv_.read_burst(buffer, size);
         }
     }
 
-    BusError writeFifo(const uint8_t *buffer, size_t size){
+    hal::BusError writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
-                uint8_t(Command::W_TX_PAYLOAD), CONT).unwrap();
-            return spi_drv.write_burst<uint8_t>(buffer, size);
+            return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::W_TX_PAYLOAD), CONT)
+            | spi_drv_.write_burst<uint8_t>(buffer, size);
         }
     }
 
-    BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
+    hal::BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
-                uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT).unwrap();
-            return spi_drv.write_burst<uint8_t>(buffer, size);
+            return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+                uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT)
+            | spi_drv_.write_burst<uint8_t>(buffer, size);
         }
     }
 
-    BusError clearTxFifo(){
-        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
-            uint8_t(Command::FLUSH_TX)).unwrap();
+    hal::BusError clearTxFifo(){
+        return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+            uint8_t(Command::FLUSH_TX));
     }
 
-    BusError clearRxFifo(){
-        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
-            uint8_t(Command::FLUSH_RX)).unwrap();
+    hal::BusError clearRxFifo(){
+        return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+            uint8_t(Command::FLUSH_RX));
     }
 
-    BusError updateStatus(){
-        return spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
+    hal::BusError updateStatus(){
+        return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
-    hal::SpiDrv spi_drv;
+    hal::SpiDrv spi_drv_;
 public: 
-    Si24R1(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    Si24R1(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    Si24R1(const hal::SpiDrv & _spi_drv):spi_drv_(_spi_drv){;}
+    Si24R1(hal::SpiDrv && _spi_drv):spi_drv_(_spi_drv){;}
 
-    size_t available(){
+    Result<size_t, hal::BusError> available(){
         uint8_t size;
-        spi_drv.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT).unwrap();
-        spi_drv.read_single((size)).unwrap();
-        return size;
+        if(const auto err = spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+            uint8_t(Command::R_RX_PL_WID), CONT); err.is_err()) return Err(err);
+        if(const auto err = spi_drv_.read_single((size)); err.is_err()) return Err(err);
+        return Ok(size);
     }
 };
 

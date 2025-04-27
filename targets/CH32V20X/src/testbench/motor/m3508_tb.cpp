@@ -46,8 +46,8 @@ void m3508_main(){
         // real_t targ_curr = 4 * sin( t*real_t(1.7));
         // real_t targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);
-        motor.setTargetPosition(target);   
-        motor2.setTargetPosition(target);   
+        motor.set_target_position(target);   
+        motor2.set_target_position(target);   
         // motor.setTargetCurrent(0);   
         // port[2].setTargetCurrent(max_curr * cos(t));   
         // port[3].setTargetCurrent(max_curr * -sin(t));   
@@ -60,7 +60,7 @@ void m3508_main(){
         // can1.write(msg);
         // can1.write({0x2fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(5000, 5000, 5000, 5000)});
         // delay(3);
-        led = (millis() % 400) > 200;
+        led = BoolLevel::from((millis() % 400) > 200);
 
         // static real_t last_pos = 0;
         // DEBUG_PRINTLN(std::setprecision(3), target, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());

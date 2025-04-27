@@ -7,13 +7,13 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 LedGpio &  LedGpio::operator =(const real_t duty){
-    inst_ = (duty > real_t(0.5)) ^ inversed;
+    inst_ = BoolLevel::from((duty > real_t(0.5)) ^ inversed);
     return *this;
 }
 
 void LedGpio::toggle() {
     state =!state;
-    inst_ = state ^ inversed;
+    inst_ = BoolLevel::from(state ^ inversed);
 }
 
 

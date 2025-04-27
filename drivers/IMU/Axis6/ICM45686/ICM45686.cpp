@@ -51,7 +51,7 @@ Result<void, Error> ICM45686::verify(){
     if(const auto res = read_reg(uint8_t(ICM45686::REGISTER::WHO_AM_I), Product_ID); res.is_err()){
         return Err(res.unwrap_err());
     }else{
-        if(Product_ID != 0xE9) return Err(Error::WrongWhoAmI);
+        if(Product_ID != 0xE9) return Err(Error(Error::WrongWhoAmI));
         return Ok();
     }
 

@@ -1,11 +1,13 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "drivers/Proximeter/FlowSensor.hpp"
+#include "core/utils/Result.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "core/utils/Result.hpp"
+#include "drivers/Proximeter/FlowSensor.hpp"
+
+
 
 namespace ymd::drivers{
 
@@ -86,18 +88,17 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::PMW3901::Error, BusError> {
-        static Result<T, drivers::PMW3901::Error> convert(const BusError berr){
+    struct result_converter<T, drivers::PMW3901::Error, hal::BusError> {
+        static Result<T, drivers::PMW3901::Error> convert(const hal::BusError berr){
             using Error = drivers::PMW3901::Error;
-            using BusError = BusError;
             
-            if(berr.ok()) return Ok();
+            if(berr.is_ok()) return Ok();
 
-            Error err = [](const BusError berr_){
-                switch(berr_.type){
-                    // case BusError::NO_ACK : return Error::I2C_NOT_ACK;
+            Error err = [](const hal::BusError berr_){
+                switch(berr_.unwrap_err()){
+                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
 
-                    // case BusError::I2C_NOT_READY: return PMW3901::Error::I2C_NOT_READY;
+                    // case hal::BusError::I2C_NOT_READY: return PMW3901::Error::I2C_NOT_READY;
                     default: return Error::Unspecified;
                 }
             }(berr);

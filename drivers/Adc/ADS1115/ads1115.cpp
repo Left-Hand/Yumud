@@ -1,6 +1,5 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
-#include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 // #define ADS1115_DEBUG
@@ -36,45 +35,45 @@ DeviceResult ADS1115::write_reg(const RegAddress addr, const uint16_t data){
 DeviceResult ADS1115::verify(){
     return make_result(i2c_drv_.verify()).check("verify failed");
 }
-void ADS1115::startConv(){
+void ADS1115::start_conv(){
     auto & reg = config_reg;
     reg.busy = true;
     WRITE_REG(reg);
     reg.busy = false;
 }
 
-bool ADS1115::isBusy(){
+bool ADS1115::is_busy(){
     auto & reg = config_reg;
     READ_REG(reg);
     return reg.busy;
 }
 
-void ADS1115::setThreshold(int16_t low, int16_t high){
+void ADS1115::set_threshold(int16_t low, int16_t high){
     low_thresh_reg.data = low;
     high_thresh_reg.data = high;
     WRITE_REG(low_thresh_reg);
     WRITE_REG(high_thresh_reg);
 }
 
-void ADS1115::enableContMode(bool en){
+void ADS1115::enable_cont_mode(bool en){
     auto & reg = config_reg;
     reg.oneshot_en =!en;
     WRITE_REG(reg);
 }
 
-void ADS1115::setPga(const PGA pga){
+void ADS1115::set_pga(const PGA pga){
     auto & reg = config_reg;
     reg.pga = uint16_t(pga);
     WRITE_REG(reg);
 }
 
-void ADS1115::setMux(const MUX mux){
+void ADS1115::set_mux(const MUX mux){
     auto & reg = config_reg;
     reg.mux = uint16_t(mux);
     WRITE_REG(reg);
 }
 
-void ADS1115::setDataRate(const DataRate data_rate){
+void ADS1115::set_data_rate(const DataRate data_rate){
     auto & reg = config_reg;
     reg.data_rate = uint16_t(data_rate);
     WRITE_REG(reg);

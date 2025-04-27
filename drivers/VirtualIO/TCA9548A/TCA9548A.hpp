@@ -1,6 +1,9 @@
+
+
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Option.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
@@ -9,39 +12,40 @@ namespace ymd::drivers{
 
 class TCA9548A{
 public:
-class VirtualI2c: public hal::I2c{
+class VirtualI2c final: public hal::I2c{
     protected:
         TCA9548A & host_;
         const uint8_t ch_;
-        BusError lead(const uint8_t address){return host_.lead(address, ch_);}
+        hal::BusError lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
         void trail(){return host_.trail(ch_);}
     public:
         VirtualI2c(TCA9548A & host, const uint8_t ch);
 
-        BusError write(const uint32_t data) override final {return host_.write(data);}
-        BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
-
-        void set_baudrate(const uint32_t baud) override final{return host_.set_baudrate(baud);}
+        hal::BusError write(const uint32_t data) {return host_.write(data);}
+        hal::BusError read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
+        hal::BusError unlock_bus() {return host_.unlock_bus();}
+        hal::BusError set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
     };
 
 protected:
     hal::I2c & i2c_;
     hal::I2cDrv self_i2c_drv_;
-    uint8_t last_ch_ = -1;
+    Option<uint8_t> last_ch_ = None;
 
-    void switch_vbus(const uint8_t ch);
+    hal::BusError switch_vbus(const uint8_t ch);
+    hal::BusError unlock_bus(){return i2c_.unlock_bus();}
 
-    BusError lead(const uint8_t address, const uint8_t ch);
+    hal::BusError lead(const uint8_t address, const uint8_t ch);
 
     void trail(const uint8_t ch);
 
-    void set_baudrate(const uint32_t baud){i2c_.set_baudrate(baud);}
+    hal::BusError set_baudrate(const uint32_t baud){return i2c_.set_baudrate(baud);}
 
-    BusError write(const uint32_t data){
+    hal::BusError write(const uint32_t data){
         return i2c_.write(data);
     }
 
-    BusError read(uint32_t & data, const Ack ack){
+    hal::BusError read(uint32_t & data, const Ack ack){
         return i2c_.read(data, ack);
     }
 
@@ -59,8 +63,6 @@ protected:
         VirtualI2c(*this, 7),
     };
 public:
-    TCA9548A(const hal::I2cDrv & i2c_drv):
-        i2c_(i2c_drv.bus()), self_i2c_drv_(i2c_drv){;}
     TCA9548A(hal::I2cDrv && i2c_drv):
         i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
     TCA9548A(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
@@ -73,7 +75,7 @@ public:
 
     auto which() const {return last_ch_;}
 
-    BusError verify() {
+    hal::BusError verify() {
         return self_i2c_drv_.verify();
     }
 };

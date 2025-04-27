@@ -6,7 +6,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
-class PAJ7620{
+class PAJ7620 final{
 protected:
     hal::I2cDrv i2c_drv_;
 
@@ -30,7 +30,7 @@ protected:
 
     Flags flags;
 
-    void unlock_i2c();//bad i2c device;
+    hal::BusError unlock_i2c();//bad i2c device;
     
     // void wakeup();
 public:

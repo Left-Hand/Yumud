@@ -1,127 +1,142 @@
 #pragma once
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/vport.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/vport.hpp"
 #include <array>
-#include <initializer_list>
 
-template<uint8_t len>
-class HC595{
-protected:
-    hal::GpioIntf & sclk_pin;
-    hal::GpioIntf & data_pin;
-    hal::GpioIntf & latch_pin;
 
-    std::array<uint8_t, len> buf;
+namespace ymd::drivers{
 
-    void write(const uint8_t data){
-        latch_pin.clr();
-        for(uint8_t mask = 0x80; mask; mask >>= 1){
-            data_pin.write(mask & data);
-            sclk_pin.set();
-            sclk_pin.clr();
-        }
-        latch_pin.set();
+class HC595_Phy final{
+    HC595_Phy(
+        hal::GpioIntf & sclk_io, 
+        hal::GpioIntf & data_io, 
+        hal::GpioIntf & latch_io
+    ):
+        sclk_io_(sclk_io), 
+        data_io_(data_io), 
+        latch_io_(latch_io)
+    {;}
+
+    void init(){
+        sclk_io_.outpp();
+        data_io_.outpp();
+        latch_io_.outpp();
     }
 
+    void write(const uint8_t data){
+        latch_io_.clr();
+        for(uint8_t mask = 0x80; mask; mask >>= 1){
+            data_io_.write(mask & data);
+            pulse();
+        }
+        latch_io_.set();
+    }
+
+private:
+    hal::GpioIntf & sclk_io_;
+    hal::GpioIntf & data_io_;
+    hal::GpioIntf & latch_io_;
+
+    void pulse(){
+        sclk_io_.set();
+        sclk_io_.clr();
+    }
+
+
+};
+
+template<uint8_t N>
+class HC595 final{
+protected:
+    HC595_Phy phy_;
+    std::array<uint8_t, N> buf_;
     void flush(){
-        for(int8_t i = 0; i < len; i++){
-            write(buf[i]);
+        for(int8_t i = 0; i < N; i++){
+            write(buf_[i]);
         }
     }
 public:
-    HC595(hal::GpioIntf & _sclk_pin, hal::GpioIntf & _data_pin, hal::GpioIntf & _latch_pin):
-            sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
+    HC595(HC595_Phy && phy):phy_(std::move(phy)){;}
 
     void init(){
-        sclk_pin.outpp();
-        data_pin.outpp();
-        latch_pin.outpp();
+        sclk_io_.outpp();
+        data_io_.outpp();
+        latch_io_.outpp();
     }
-    void setContent(const uint8_t * data_ptr, size_t data_len){
-        for(size_t i = 0; i < data_len; i++){
-            buf[i] = data_ptr[i];
-        }
-
-        flush();
-    }
-
-    void setContent(const std::initializer_list<uint8_t> & data_list){
-        uint8_t i = 0;
-        for(const auto & data : data_list){
-            buf[i] = data;
-            i++;
-        }
-
+    void set_content(const std::span<const uint8_t, N> data_list){
+        std::copy(data_list.begin(), data_list.end(), buf_.begin());
         flush();
     }
 
     HC595 & operator << (const uint8_t data){write(data); return *this;}
 };
 
-class HC595Single: public VGpioPortIntf<8>{
-protected:
-    hal::GpioIntf & sclk_pin;
-    hal::GpioIntf & data_pin;
-    hal::GpioIntf & latch_pin;
+// class HC595Single: public VGpioPortIntf<8>{
+// protected:
+//     hal::GpioIntf & sclk_io_;
+//     hal::GpioIntf & data_io_;
+//     hal::GpioIntf & latch_io_;
 
-    uint8_t buf = 0;
+//     uint8_t buf_ = 0;
 
-    void write(const uint16_t data) override{
-        buf = data;
-        latch_pin.clr();
-        for(uint8_t mask = 0x80; mask; mask >>= 1){
-            data_pin.write(mask & buf);
-            sclk_pin.set();
-            sclk_pin.clr();
-        }
-        latch_pin.set();
-    }
+//     void write(const uint16_t data) override{
+//         buf_ = data;
+//         latch_io_.clr();
+//         for(uint8_t mask = 0x80; mask; mask >>= 1){
+//             data_io_.write(mask & buf_);
+//             sclk_io_.set();
+//             sclk_io_.clr();
+//         }
+//         latch_io_.set();
+//     }
 
-    uint16_t read() override{
-        return buf;
-    }
+//     uint16_t read() override{
+//         return buf_;
+//     }
 
-public:
-    HC595Single(hal::GpioIntf & _sclk_pin, hal::GpioIntf & _data_pin, hal::GpioIntf & _latch_pin):
-            sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
+// public:
+//     HC595Single(hal::GpioIntf & sclk_io, hal::GpioIntf & data_io, hal::GpioIntf & latch_io):
+//             sclk_io_(sclk_io), data_io_(data_io), latch_io_(latch_io){;}
 
-    void init(){
-        sclk_pin.outpp();
-        data_pin.outpp();
-        latch_pin.outpp();
-    }
-
-
-    void set(const Pin pin) override{
-        if((uint8_t)pin == 0)return;
-        write(buf | (uint8_t)pin);
-    }
-    void clr(const Pin pin) override{
-        if((uint8_t)pin == 0)return;
-        write(buf &= ~(uint8_t)(pin));
-    }
-
-    void set(const uint16_t data) override{
-        write(buf | (uint8_t)data);
-    }
-    void clr(const uint16_t data) override{
-        write(buf & (~(uint8_t)(data)));
-    }
-
-    void write_by_index(const int index, const bool data) override{
-        if(index < 0 || index >= 8) return;
-        uint8_t last_buf = buf;
-        buf &= ~(uint8_t)(1 << index);
-        buf |= (uint8_t)(data << index);
-        if(last_buf != buf) write(buf);
-    }
-    bool read_by_index(const int index) override{
-        if(index < 0 || index >= 8) return false;
-        return buf & (1 << index);
-    }
+//     void init(){
+//         sclk_io_.outpp();
+//         data_io_.outpp();
+//         latch_io_.outpp();
+//     }
 
 
-    HC595Single & operator << (const uint8_t data){write(data); return *this;}
-    HC595Single & operator = (const uint16_t data) override {write(data); return *this;}
-};
+//     void set(const Pin pin) override{
+//         if((uint8_t)pin == 0)return;
+//         write(buf_ | (uint8_t)pin);
+//     }
+//     void clr(const Pin pin) override{
+//         if((uint8_t)pin == 0)return;
+//         write(buf_ &= ~(uint8_t)(pin));
+//     }
+
+//     void set(const uint16_t data) override{
+//         write(buf | (uint8_t)data);
+//     }
+//     void clr(const uint16_t data) override{
+//         write(buf & (~(uint8_t)(data)));
+//     }
+
+//     void write_by_index(const int index, const bool data) override{
+//         if(index < 0 || index >= 8) return;
+//         uint8_t last_buf = buf;
+//         buf &= ~(uint8_t)(1 << index);
+//         buf |= (uint8_t)(data << index);
+//         if(last_buf != buf) write(buf);
+//     }
+//     bool read_by_index(const int index) override{
+//         if(index < 0 || index >= 8) return false;
+//         return buf & (1 << index);
+//     }
+
+
+//     HC595Single & operator << (const uint8_t data){write(data); return *this;}
+//     HC595Single & operator = (const uint16_t data) override {write(data); return *this;}
+// };
+
+}

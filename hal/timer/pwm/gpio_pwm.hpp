@@ -27,7 +27,7 @@ public:
     __fast_inline volatile uint16_t & cvr() override {return cvr_;}
     __fast_inline volatile uint16_t & arr() override {return arr_;}
     
-    __fast_inline void tick(){gpio_ = bool(cnt_ < cvr_); cnt_ = (cnt_ + 1)% arr_;}
+    __fast_inline void tick(){gpio_ = BoolLevel::from(cnt_ < cvr_); cnt_ = (cnt_ + 1)% arr_;}
 
     __inline void setThreshold(const uint16_t val){cvr_ = val - 1;}
     __inline void setPeriod(const uint16_t val){arr_ = val - 1;}

@@ -41,12 +41,12 @@ protected:
     ScaledPwm instance_;
     real_t last_rad;
 
-    void setGLobalRadian(const real_t rad) override{
+    void set_global_radian(const real_t rad) override{
         instance_ = (rad) * real_t(1 / PI);
         last_rad = rad;
     }
 
-    real_t getGlobalRadian() override{
+    real_t get_global_radian() override{
         return last_rad;
     }
     
@@ -55,28 +55,28 @@ public:
             instance_(instance, {real_t(0.025), real_t(0.125)})
             {;}
 
-    void idle() override{
-        instance_.enable(false);
-    }
+    // void idle() override{
+    //     instance_.enable(false);
+    // }
 
 };
 
 class PwmSpeedServo:public SpeedServo{
-protected:
+protected: 
     ScaledPwm instance_;
     real_t max_turns_per_second_;
     real_t expect_speed_;
 
-    void setSpeedDirectly(const real_t rps) override{
+    void set_speed_directly(const real_t rps) override{
         expect_speed_ = rps;
-        setDuty(rps / max_turns_per_second_);
+        set_duty(rps / max_turns_per_second_);
     }
 
-    real_t getSpeed() override{
+    real_t get_speed() override{
         return expect_speed_;
     }
 
-    void setDuty(const real_t duty){
+    void set_duty(const real_t duty){
         instance_ = (duty + 1) * real_t(0.5);
     }
 public:
@@ -89,27 +89,6 @@ public:
 
 };
 
-
-
-
-
-// class Servo180: public PwmRadianServo{
-// public:
-//     Servo180(PwmIntf & _instance):PwmRadianServo(_instance, 180){;}
-// };
-
-
-// class Servo270: public PwmRadianServo{
-// public:
-//     Servo270(PwmIntf & _instance):PwmRadianServo(_instance, 270){;}
-// };
-
-
-// class Servo360: public PwmSpeedServo{
-// public:
-//     Servo360(PwmIntf & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
-// };
-
-    using MG995 = PwmRadianServo;
-    using SG90 = PwmRadianServo;
+using MG995 = PwmRadianServo;
+using SG90 = PwmRadianServo;
 }

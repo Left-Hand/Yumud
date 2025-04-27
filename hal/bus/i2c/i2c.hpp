@@ -7,23 +7,26 @@ namespace ymd::hal{
 class Gpio;
 
 class I2c:public BusBase{
+private:
+    hal::Gpio & scl_gpio_;
+    hal::Gpio & sda_gpio_;
+    
 protected:
-    hal::Gpio & scl_gpio;
-    hal::Gpio & sda_gpio;
-
     uint32_t timeout_ = 10;
-
-    I2c(hal::Gpio & _scl_gpio, hal::Gpio & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
+    I2c(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):scl_gpio_(scl_gpio),sda_gpio_(sda_gpio){}
 public:
+    I2c(I2c && other) = default;
+
     void set_timeout(const uint32_t timeout){timeout_ = timeout;}
 
-    virtual BusError read(uint32_t & data, const Ack ack) = 0;
-    virtual BusError write(const uint32_t data) = 0;
+    virtual hal::BusError read(uint32_t & data, const Ack ack) = 0;
+    virtual hal::BusError write(const uint32_t data) = 0;
+    virtual hal::BusError unlock_bus() = 0;
+    virtual hal::BusError set_baudrate(const uint32_t baudrate) = 0;
 
-    hal::Gpio & scl(){return scl_gpio;};
-    hal::Gpio & sda(){return sda_gpio;};
+    __fast_inline hal::Gpio & scl(){return scl_gpio_;};
+    __fast_inline hal::Gpio & sda(){return sda_gpio_;};
 
-    virtual void set_baudrate(const uint32_t baudrate) = 0;
 };
 
 

@@ -7,7 +7,12 @@
 
 namespace ymd::drivers{
 
-class MT6835:public MagEncoderIntf{
+class MT6835 final:public MagEncoderIntf{
+public:
+    using Error = EncoderError;
+
+    template<typename T = void>
+using IResult = Result<T, Error>;
 protected:
 
     using RegAddress = uint8_t;
@@ -125,18 +130,18 @@ protected:
     uint16_t getPositionData();
 
 
-    BusError write_reg(const RegAddress addr, const uint8_t data);
-    BusError read_reg(const RegAddress addr, uint8_t & data);
+    hal::BusError write_reg(const RegAddress addr, const uint8_t data);
+    hal::BusError read_reg(const RegAddress addr, uint8_t & data);
 public:
     MT6835(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6835(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     MT6835(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    void init() override;
+    void init();
 
-    void update() override;
-    real_t getLapPosition() override{return lap_position;}
-    uint32_t getErrCnt() const {return errcnt;}
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<real_t> get_lap_position(){return Ok(lap_position);}
+    [[nodiscard]] uint32_t get_err_cnt() const {return errcnt;}
 
 };
 

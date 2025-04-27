@@ -345,22 +345,7 @@ public:
     void raise(hal::GpioIntf & gpio){
         gpio.set();
     }
-    uint32_t write(Register reg, uint32_t value)
-    {
-        // The indices of this array match the values of the Register enum:
-        scexpr uint8_t register_length[8] = { 1, 3, 2, 3, 4, 2, 3, 2 };  // And 4 beyond that
-
-        uint32_t    rval = 0;
-        int         len = (uint8_t(reg)&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[uint8_t(reg)&0x07] : 4;
-        spi_drv_.write_single(uint8_t(reg)).unwrap();
-        while (len-- > 0){
-            uint8_t ret = 0;
-            auto err = spi_drv_.transfer_single<uint8_t>(ret, (value>>len*8) & 0xFF);
-            if(err.wrong()) return 0;
-            rval = (rval<<8) | ret; 
-        }
-        return rval;
-    }
+    uint32_t write(Register reg, uint32_t value);
 
 };
 

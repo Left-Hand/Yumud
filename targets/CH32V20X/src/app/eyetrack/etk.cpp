@@ -156,8 +156,8 @@ void etk_main(){
             auto vec = Vector2_t<real_t>(eye.eyeInfo().pos) * real_t(0.2);
             vec = Vector2_t<real_t>(real_t(PI/2), real_t(PI - 0.2)) + Vector2_t<real_t>(-vec.x, vec.y);
                                                                                                                                                                                                                                                                                     
-            servo_x.setRadian(+vec.x);
-            servo_y.setRadian(+vec.y);
+            servo_x.set_radian(+vec.x);
+            servo_y.set_radian(+vec.y);
         }        
         #endif
     

@@ -476,9 +476,9 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
     set_rx_strategy(rx_strategy);
 }
 
-BusError UartHw::lead(const uint8_t index){
+hal::BusError UartHw::lead(const LockRequest req){
     while((instance_->STATR & USART_FLAG_TXE) == RESET);
-    return BusError::OK;
+    return hal::BusError::Ok();
 }
 
 void UartHw::trail(){

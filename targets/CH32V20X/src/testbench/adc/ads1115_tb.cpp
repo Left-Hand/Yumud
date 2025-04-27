@@ -73,12 +73,12 @@ void ads1115_main()
 
     drivers::ADS1115 ads = {i2c};
 
-    ads.setDataRate(ads.builder().datarate(860).unwrap());
-    ads.setMux(ads.builder().differential(2,3).unwrap());
+    ads.set_data_rate(ads.builder().datarate(860).unwrap());
+    ads.set_mux(ads.builder().differential(2,3).unwrap());
     // ads.setMux(ads.builder().singleend(0).unwarp());
-    ads.setPga(drivers::ADS1115::PGA::_1_024V);
-    ads.enableContMode();
-    ads.startConv();
+    ads.set_pga(drivers::ADS1115::PGA::_1_024V);
+    ads.enable_cont_mode();
+    ads.start_conv();
 
     while(true){
         // if(ads.ready()){

@@ -18,13 +18,20 @@ using namespace ymd;
 
 #define UART hal::uart2
 
+#if 0
+#define SCL_GPIO hal::portD[1]
+#define SDA_GPIO hal::portD[0]
+#else
+#define SCL_GPIO hal::portB[6]
+#define SDA_GPIO hal::portB[7]
+#endif
 struct FoundInfo{
     uint8_t addr;
     uint max_bbaud;
 };
 
-Result<void, BusError> make_result(const BusError res){
-    if(res.ok()) return Ok();
+Result<void, hal::BusError> make_result(const hal::BusError res){
+    if(res.is_ok()) return Ok();
     else return Err(res); 
 }
 
@@ -35,13 +42,13 @@ template<typename T>
 
 struct [[nodiscard]] Task {
     struct promise_type {
-        Result<T, BusError> result;
+        Result<T, hal::BusError> result;
         std::coroutine_handle<> continuation;
 
         Task get_return_object() { return Task{Handle::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
-        void return_value(Result<T, BusError> res) { result = res; }
+        void return_value(Result<T, hal::BusError> res) { result = res; }
         void unhandled_exception() noexcept {}
     };
 
@@ -58,7 +65,7 @@ struct [[nodiscard]] Task {
             handle.promise().continuation = cont;
             handle.resume();
         }
-        Result<T, BusError> await_resume() noexcept {
+        Result<T, hal::BusError> await_resume() noexcept {
             return handle.promise().result;
         }
     };
@@ -74,23 +81,19 @@ struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    // __pure
-    // __attribute__((const))
-    static Result<uint, BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint, hal::BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
-        // if(auto err = i2c_drv.verify(); err.wrong()){
-        //     return err; 
-        // }
+
         const uint max_baud = [&]{
             uint baud = start_freq;
             while(baud < 10_MHz){
                 // i2c_drv.set_baudrate(uint(baud * grow_scale));
                 i2c.set_baudrate(uint(baud * grow_scale));
                 const auto err = i2c_drv.verify();
-                if(err.wrong()) break;
+                if(err.is_err()) break;
 
                 baud = baud + (baud >> 1);
-                delay(2);
+                delay(1);
             }
 
             return baud;
@@ -101,14 +104,14 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+    static Result<void, hal::BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
         return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.verify());
     }
 
 };
 
-
-void i2c_scanner_functional(){
+[[maybe_unused]]
+static void i2c_scanner_functional(){
 
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
@@ -122,16 +125,16 @@ void i2c_scanner_functional(){
 
     
     // I2cTester::getMaxBaudRate(i2c, read_addr)
-    //     .then([](uint baud) -> Result<uint, BusError>{ 
+    //     .then([](uint baud) -> Result<uint, hal::BusError>{ 
     //         if (baud > 100_KHz) return Ok(baud);
-    //         else return Err(BusError::OCCUPIED); 
+    //         else return Err(hal::BusError::OCCUPIED); 
     //     })
         ;
 }
 
 
 template<typename ... Args>
-auto log(Args && ... args) {
+static auto log(Args && ... args) {
     return std::views::transform(
         [&args...](auto&& value) {
             DEBUG_PRINTS(std::forward<Args>(args)..., value);
@@ -140,39 +143,15 @@ auto log(Args && ... args) {
     );
 }
 
-// template<typename T>
-// struct A;
-
-// template<typename T>
-// struct B;
-
-// template<typename T, typename U>
-// struct C{
-//     std::variant<A<T>, B<U>> value;
-// };
-
-// template<typename T>
-// struct A{
-//     T value;
-// };
-
-// template<typename T>
-// struct B{
-//     T value;
-// };
-
-// C<int, int> test(int v){
-//     return v > 0 ? A<int>{v} : B<int>{v};
-// }
 void test_result(){
     // DEBUG_SOURCE("hahah");
     // while(1);
-    // using MyResult = Result<void, BusError>;
+    // using MyResult = Result<void, hal::BusError>;
     // auto ok = Ok<void>{};
     // auto ok = Ok();
     // MyResult res = {ok};
     // DEBUG_PRINTLN("before");
-    // auto res = Result<uint, BusError>(Err(BusError(BusError::NO_ACK)));
+    // auto res = Result<uint, hal::BusError>(Err(hal::BusError(hal::BusError::NO_ACK)));
     // res.loc().expect("Device is not responding", "nmd");
     // DEBUG_PRINTLN("after");
 
@@ -193,7 +172,7 @@ void i2c_scanner_main(){
     DEBUGGER.force_sync();
     
     // test_result();
-    I2cSw i2c = {portB[6], portB[7]};
+    I2cSw i2c = {SCL_GPIO, SDA_GPIO};
     i2c.init(100_KHz);
     
     // auto data = std::vector{1, 2, 3};
@@ -237,7 +216,7 @@ void i2c_scanner_main(){
                 });
 
             // I2cTester::verify(i2c, read_addr)
-            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, BusError> {
+            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, hal::BusError> {
             //         return I2cTester::getMaxBaudRate(i2c, read_addr)
             //             .map([read_addr](uint baud) {
             //                 return FoundInfo{read_addr, baud};
@@ -247,7 +226,7 @@ void i2c_scanner_main(){
             //         [&founded_devices](FoundInfo info) { // 成功分支
             //             founded_devices.emplace_back(info);
             //         },
-            //         [](BusError err) { // 失败分支
+            //         [](hal::BusError err) { // 失败分支
             //             PANIC("Address", read_addr, "failed:", err.code());
             //         }
             //     );
@@ -265,6 +244,7 @@ void i2c_scanner_main(){
             // });
 
             delay(1);
+            // udelay(100);
         }
 
         delay(10);
@@ -296,7 +276,7 @@ void i2c_scanner_main(){
 
     DEBUG_PRINTLN("Scan done, Click reset to restart");
 
-    exit(0);
+    while(true);
 }
 
 

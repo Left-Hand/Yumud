@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = details::BoschSensorError;
+using Error = ImuError;
 
 
 template<typename Fn, typename Fn_Dur>
@@ -39,8 +39,8 @@ Result<void, Error> BMI088_Acc::reset(){
 }
 
 Result<void, Error> BMI088_Acc::verify_chip_id(){
-    const auto err = phy_.read_regs(acc_chipid_reg);
-    return err | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error::UNSPECIFIED));
+    return phy_.read_regs(acc_chipid_reg) 
+        | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error(Error::WrongWhoAmI)));
 }
 
 Result<void, Error> BMI088_Acc::verify(){

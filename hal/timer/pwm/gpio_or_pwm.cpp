@@ -22,7 +22,7 @@ bool GpioOrPwm::hasGpio() const {
 
 GpioOrPwm & GpioOrPwm::operator = (const real_t duty){
     if(std::holds_alternative<GpioRef>(inst_)){
-        std::get<GpioRef>(inst_).get() = (duty > real_t(0.5));
+        std::get<GpioRef>(inst_).get() = BoolLevel::from(duty > real_t(0.5));
     }else if(std::holds_alternative<PwmRef>(inst_)){
         std::get<PwmRef>(inst_).get() = duty;
     };

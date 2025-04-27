@@ -45,7 +45,7 @@ bool INA3221::ready(){
 
 bool INA3221::verify(){
 
-    INA3221_ASSERT(i2c_drv.verify().ok(), "INA3221 drv lost");
+    INA3221_ASSERT(i2c_drv.verify().is_ok(), "INA3221 drv lost");
 
     READ_REG(chip_id_reg);
     READ_REG(manu_id_reg);

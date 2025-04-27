@@ -11,7 +11,7 @@ void TTP229::update(){
     {
         sck_gpio_.set();
         sck_gpio_.clr();
-        new_map <<= 1; new_map |= sdo_gpio_.read();
+        new_map <<= 1; new_map |= bool(sdo_gpio_.read());
     }
     map_ = new_map;
     uint8_t new_num = 0;
@@ -25,4 +25,4 @@ void TTP229::update(){
     num_ = Some(new_num);
 }
 
-bool TTP229::is_idle(){return bool(sdo_gpio_) == false;}
+bool TTP229::is_idle(){return sdo_gpio_ == LOW;}

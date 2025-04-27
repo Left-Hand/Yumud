@@ -1,44 +1,54 @@
 #include "SccbDrv.hpp"
 
+using namespace ymd;
 using namespace ymd::hal;
 
-void SccbDrv::write_reg(const uint8_t reg_address, const uint16_t reg_data){
-    if(bus_.begin(index_).ok()){
+hal::BusError SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
+    if(i2c_.begin(slave_addr_.to_write_req()).is_ok()){
         
         //#region 写入地址字节和第一个字节
-        bus_.write(reg_address);
-        bus_.write((uint8_t)(reg_data >> 8));
+        if(const auto err = 
+            i2c_.write(addr)
+            | i2c_.write(uint8_t(data >> 8));
+        err.is_err()) return err;
         //#endregion
     
         //#region 写入第二个字节
-        bus_.begin(index_);
-        bus_.write(0xF0);
-        bus_.write((uint8_t)reg_data);
+        if(const auto err = 
+            i2c_.begin(slave_addr_.to_write_req());
+        err.is_err()) return err;
+
+        return i2c_.write(0xF0)
+            | i2c_.write(data)
         //#endregion
-        bus_.end();
+            | i2c_.end();
     }
+
+    return hal::BusError::Ok();
 }
 
-void SccbDrv::read_reg(const uint8_t reg_address, uint16_t & reg_data){
-    if(bus_.begin(index_).ok()){
+hal::BusError SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
+    if(i2c_.begin(slave_addr_.to_write_req()).is_ok()){
         uint32_t data_l, data_h;
 
         // 写入地址字节
-        bus_.write(reg_address);
+        i2c_.write(addr);
 
         // 写入第一个字节        
-        bus_.begin(index_ | 0x01);
-        bus_.read(data_h, NACK);
+        i2c_.begin(slave_addr_.to_read_req());
+        i2c_.read(data_h, NACK);
 
         // 写入第二个字节
-        bus_.begin(index_);
-        bus_.write(0xF0);
+        i2c_.begin(slave_addr_.to_write_req());
+        i2c_.write(0xF0);
 
-        bus_.begin(index_ | 0x01);
-        bus_.read(data_l, NACK);
+        i2c_.begin(slave_addr_.to_read_req());
+        i2c_.read(data_l, NACK);
         
-        bus_.end();
+        i2c_.end();
 
-        reg_data = ((uint8_t)data_h << 8) | (uint8_t)data_l;
+        data = ((uint8_t)data_h << 8) | (uint8_t)data_l;
     }
+
+    return hal::BusError::Ok();
 }

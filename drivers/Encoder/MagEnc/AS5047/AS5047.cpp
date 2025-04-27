@@ -4,18 +4,20 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
-
+using Error = AS5047::Error;
 
 void AS5047::init() {
-
+    TODO();
 }
 
 uint16_t AS5047::getPositionData(){
+    TODO();
     return 0;
 }
 
-void AS5047::update() {
-
+Result<void, Error> AS5047::update() {
+    TODO();
+    return Ok();
 }
 
 

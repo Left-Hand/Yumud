@@ -1,15 +1,21 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-
+#include "core/utils/Result.hpp"
 #include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "drivers/Encoder/MagEncoder.hpp"
 
 namespace ymd::drivers{
-class AS5600{
+
+class AS5600 final: public MagEncoderIntf{
 public:
+    using Error = EncoderError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class PowerMode:uint8_t{
         Norm = 0, Pol5Ms, Pol10Ms, Pol100Ms
     };
@@ -137,23 +143,35 @@ protected:
         return uni_to_u16(CLAMP(degrees / 360, real_t(0), real_t(1))) >> 4;
     }
 
-    BusError write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    [[nodiscard]]
+    IResult<void> write_reg(const RegAddress addr, const uint16_t data){
+        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data, LSB); err.is_err())
+            return Err(Error::BusError(err.unwrap_err()));
+        return Ok();
     }
 
-    BusError read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+    [[nodiscard]]
+    IResult<void> read_reg(const RegAddress addr, uint16_t & data){
+        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data, LSB); err.is_err())
+            return Err(Error::BusError(err.unwrap_err()));
+        return Ok();
     }
 
-    BusError write_reg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data);
+    [[nodiscard]]
+    IResult<void> write_reg(const RegAddress addr, const uint8_t data){
+        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data); err.is_err())
+            return Err(Error::BusError(err.unwrap_err()));
+        return Ok();
     }
 
-    BusError read_reg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data);
+    [[nodiscard]]
+    IResult<void> read_reg(const RegAddress addr, uint8_t & data){
+        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data); err.is_err())
+            return Err(Error::BusError(err.unwrap_err()));
+        return Ok();
     }
 public:
-scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
 
     AS5600(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     AS5600(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
@@ -161,41 +179,59 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
     AS5600(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    void setPowerMode(const PowerMode _power_mode);
+    [[nodiscard]]
+    IResult<> set_power_mode(const PowerMode _power_mode);
 
-    void setFastFilter(const FastFilter _fast_filter);
+    [[nodiscard]]
+    IResult<> set_fast_filter(const FastFilter _fast_filter);
 
-    void setSlowFilter(const SlowFilter _slow_filter);
+    [[nodiscard]]
+    IResult<> set_slow_filter(const SlowFilter _slow_filter);
 
-    void setPwmFrequency(const PwmFrequency _pwm_frequency);
+    [[nodiscard]]
+    IResult<> set_pwm_frequency(const PwmFrequency _pwm_frequency);
 
-    void setOuputStage(const OutputStage _output_stage);
+    [[nodiscard]]
+    IResult<> set_ouput_stage(const OutputStage _output_stage);
 
-    void setHysteresis(const Hysteresis _hysteresis);
-
-    int8_t getMagStatus();
-
-    uint8_t getGain();
-
-    uint16_t getMagnitude();
-
-    real_t getRawAngle();
-
-    real_t getAngle();
-
-    void setStartAngle(const real_t angle);
-
-    void setEndAngle(const real_t angle);
-
-    void setAmountAngle(const real_t angle);
-
-    uint8_t getProgramTimes();
-
-    void burnAngle();
-
-    void burnSetting();
-
-    void init();
+    [[nodiscard]]
+    IResult<> set_hysteresis(const Hysteresis _hysteresis);
+    
+    [[nodiscard]]
+    IResult<int8_t> get_mag_status();
+    
+    [[nodiscard]]
+    IResult<uint8_t> get_gain();
+    
+    [[nodiscard]]
+    IResult<uint16_t> get_magnitude();
+    
+    [[nodiscard]]
+    IResult<real_t> get_raw_angle();
+    
+    [[nodiscard]]
+    IResult<real_t> get_angle();
+    
+    [[nodiscard]]
+    IResult<> set_start_angle(const real_t angle);
+    
+    [[nodiscard]]
+    IResult<> set_end_angle(const real_t angle);
+    
+    [[nodiscard]]
+    IResult<> set_amount_angle(const real_t angle);
+    
+    [[nodiscard]]
+    IResult<uint8_t> get_program_times();
+    
+    [[nodiscard]]
+    IResult<> burn_angle();
+    
+    [[nodiscard]]
+    IResult<> burn_setting();
+    
+    [[nodiscard]]
+    IResult<> init();
 };
 
 

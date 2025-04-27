@@ -40,7 +40,7 @@ protected:
     }
 
     bool sendAtCommand(const String & token){
-        set_pin = false;
+        set_pin.clr();
         udelay(1);
         uart.writeN("AT", 2);
         if(token.length()){
@@ -75,7 +75,7 @@ protected:
 
         // end_process:
         udelay(1);
-        set_pin = true;
+        set_pin.set();
         return is_valid;
     }
 public:

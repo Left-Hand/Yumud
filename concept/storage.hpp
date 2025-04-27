@@ -27,18 +27,18 @@ protected:
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
 
-    virtual void storeByte(const Address loc, const uint8_t data){
-        storeBytes(loc, &data, 1);
+    virtual void store_byte(const Address loc, const uint8_t data){
+        store_bytes(loc, &data, 1);
     }
-    virtual void loadByte(const Address loc, uint8_t & data){
-        loadBytes(loc, &data, 1);
+    virtual void load_byte(const Address loc, uint8_t & data){
+        load_bytes(loc, &data, 1);
     }
 
-    virtual void storeBytes(const Address loc, const void * data, const Address len) = 0;
+    virtual void store_bytes(const Address loc, const void * data, const Address len) = 0;
 
-    virtual void loadBytes(const Address loc, void * data, const Address len) = 0;
+    virtual void load_bytes(const Address loc, void * data, const Address len) = 0;
 
-    virtual void eraseBytes(const Address loc, const Address len){};
+    virtual void erase_bytes(const Address loc, const Address len){};
 public:
     virtual void init() = 0;
 

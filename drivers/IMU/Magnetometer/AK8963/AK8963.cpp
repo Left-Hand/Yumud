@@ -31,21 +31,21 @@ using Error = AK8963::Error;
 #endif
 
 Result<void, Error> AK8963::write_reg(const uint8_t addr, const uint8_t data){
-    auto err = phy_.write_reg(uint8_t(addr), data);
-    AK8963_ASSERT(err.ok(), "AK8963 write reg failed", err);
-    return err;
+    auto res = phy_.write_reg(uint8_t(addr), data);
+    // AK8963_ASSERT(res.is_ok(), "AK8963 write reg failed", res);
+    return res;
 }
 
 Result<void, Error> AK8963::read_reg(const uint8_t addr, uint8_t & data){
-    auto err = phy_.read_reg(uint8_t(addr), data);
-    AK8963_ASSERT(err.ok(), "AK8963 read reg failed", err);
-    return err;
+    auto res = phy_.read_reg(uint8_t(addr), data);
+    // AK8963_ASSERT(res.is_ok(), "AK8963 read reg failed", res);
+    return res;
 }
 
 Result<void, Error> AK8963::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    auto err = phy_.read_burst(reg_addr, datas, len);
-    AK8963_ASSERT(err.ok(), "AK8963 read reg failed");
-    return err;
+    auto res = phy_.read_burst(reg_addr, datas, len);
+    // AK8963_ASSERT(res.is_ok(), "AK8963 read reg failed");
+    return res;
 }
 
 Result<void, Error> AK8963::init(){
@@ -81,9 +81,8 @@ Result<void, Error> AK8963::init(){
 Result<void, Error> AK8963::verify(){
     // p_i2c_drv_->release().unwrap();
 
-    if (!phy_.verify().ok()){
-        AK8963_PANIC("AK8963 not founded");
-        return Err{Error::DEVICE_NOT_FOUNDED};
+    if (!phy_.verify().is_ok()){
+        return Err{Error::PhyVerifyFailed};
     }
 
     read_reg(wia_reg.address, wia_reg.data).unwrap();
@@ -93,7 +92,7 @@ Result<void, Error> AK8963::verify(){
             AK8963_DEBUG("it is normal to read 63 when comm speed too high");
         }
         AK8963_PANIC("AK8963 verify failed", wia_reg.data);
-        return Err{Error::DEVICE_WHOAMI_FAILED};
+        return Err{Error::WrongWhoAmI};
     }
     return Ok();
 }

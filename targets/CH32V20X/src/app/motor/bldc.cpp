@@ -11,7 +11,7 @@
 
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+// #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
@@ -79,10 +79,6 @@ public:
         SensorlessObserverTrait & ob
     ):
         ob_(ob){;}
-    real_t getLapPosition() = 0;
-    void update() = 0;
-    void init() = 0;
-    bool stable() = 0;
 };
 
 
@@ -400,8 +396,8 @@ void bldc_main(){
 
 
 
-    en_gpio = true;
-    slp_gpio = true;
+    en_gpio.set();
+    slp_gpio.set();
     // uint32_t dt;
 
     // std::array<real_t, 2> ab_volt;
@@ -1081,9 +1077,9 @@ void bldc_main(){
             }
         }
 
-        ledr = (millis() % 200) > 100;
-        ledb = (millis() % 400) > 200;
-        ledg = (millis() % 800) > 400;
+        ledr = BoolLevel::from((millis() % 200) > 100);
+        ledb = BoolLevel::from((millis() % 400) > 200);
+        ledg = BoolLevel::from((millis() % 800) > 400);
 
         // auto _t = real_t(0);
 

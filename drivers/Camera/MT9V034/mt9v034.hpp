@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class MT9V034:public CameraWithSccb<Grayscale>{
+class MT9V034:public Camera<Grayscale>{
 protected:
     enum class RegAddress : uint8_t {
         ChipId = 0,
@@ -72,17 +72,25 @@ public:
     static constexpr Vector2i CAMERA_SIZE = {188, 120};
 public:
     MT9V034(const hal::SccbDrv & sccb_drv):
-        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(sccb_drv, CAMERA_SIZE){;}
+        ImageBasics(CAMERA_SIZE),
+        Camera<Grayscale>(CAMERA_SIZE),
+        sccb_drv_(sccb_drv)
+        {;}
     MT9V034(hal::SccbDrv && sccb_drv):
-        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(std::move(sccb_drv), CAMERA_SIZE){;}
+        ImageBasics(CAMERA_SIZE), 
+        Camera<Grayscale>(CAMERA_SIZE),
+        sccb_drv_(sccb_drv)
+        {;}
     MT9V034(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        ImageBasics(CAMERA_SIZE), CameraWithSccb<Grayscale>(hal::SccbDrv{i2c, addr}, CAMERA_SIZE){;}
+        MT9V034(hal::SccbDrv{i2c, addr}){;}
 
     bool init();
 
     bool verify();
 
-    void setExposureValue(const uint16_t value);
+    void set_exposure_value(const uint16_t value);
+private:
+    hal::SccbDrv sccb_drv_;
 };
 
 }

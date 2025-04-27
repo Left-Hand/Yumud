@@ -1,3 +1,6 @@
+//TODO 移除所有的unwrap
+
+
 #include "st7789.hpp"
 #include "types/range/range.hpp"
 #include "core/debug/debug.hpp"
@@ -5,6 +8,9 @@
 
 using namespace ymd::drivers;
 using namespace ymd;
+
+template<typename T = void>
+using IResult = ST7789::IResult<T>;
 
 // #define ST7789_EXPRIMENTAL_SKIP
 
@@ -24,21 +30,18 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
     }
 } 
 
-void ST7789::init(){
-    interface_.init();
-    
-    write_command(0x01);
-
-    udelay(50);
-	write_command(0x11);
-    udelay(50);
-	write_command(0x3A);
-	write_data(0x55);
-	write_command(0x36);
-	write_data(0x00);
-	write_command(0x21);
-	write_command(0x13);
-	write_command(0x29);
+IResult<> ST7789::init(){
+    return interface_.init()
+    | write_command(0x01).inspect([](){udelay(50);})
+	| write_command(0x11).inspect([](){udelay(50);})
+	| write_command(0x3A)
+	| write_data(0x55)
+	| write_command(0x36)
+	| write_data(0x00)
+	| write_command(0x21)
+	| write_command(0x13)
+	| write_command(0x29)
+    ;
 }
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
@@ -82,24 +85,21 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
-    interface_.write_burst<RGB565>(color, size_t(rect));
+    interface_.write_burst<RGB565>(color, size_t(rect)).unwrap();
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    interface_.write_burst<RGB565>(color_ptr, size_t(rect));
+    interface_.write_burst<RGB565>(color_ptr, size_t(rect)).unwrap();
 }
 
 void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
-    // PANIC()
     auto & self = *this;
     auto pos_ = pos;
     for(uint8_t i = 0x01; i; i <<= 1){
         if(i & mask) self.putpixel_unsafe(pos_, color);
         pos_.y++;
     }
-
-    // DEBUG_PRINTLN(mask);
 }
 
 void ST7789::putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){

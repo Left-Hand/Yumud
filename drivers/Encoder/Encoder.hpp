@@ -1,18 +1,38 @@
 #pragma once
+
+
 #include "core/math/real.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
+#include "hal/bus/bus_error.hpp"
 
 
 namespace ymd::drivers{
 
+namespace details{
+enum class EncoderError_Kind:uint8_t{
+    CantSetup,
+    WrongPc,
+    MagnetLost,
+    MagnetWeak,
+    MagnetOverflow
+};
+}
+
+DEF_ERROR_SUMWITH_BUSERROR(EncoderError, details::EncoderError_Kind)
+        
+
 class EncoderIntf{
 public:
-    virtual real_t getLapPosition() = 0;
-    virtual void update() = 0;
-    virtual void init() = 0;
-    virtual bool stable() = 0;
+    virtual Result<real_t, EncoderError> get_lap_position() = 0;
+    virtual Result<void, EncoderError> update() = 0;
+    // virtual void init() = 0;
+    virtual Result<bool, EncoderError> is_stable() = 0;
 
     virtual ~EncoderIntf() = default;
 };
+
 
 class IncrementalEncoderIntf: public EncoderIntf{
 

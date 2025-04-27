@@ -76,7 +76,7 @@ protected:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    BusError lead(const uint8_t address) override;
+    hal::BusError lead(const LockRequest req) override;
     void trail() override;
 public:
     UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):

@@ -16,7 +16,7 @@ void SGM58031::init(){
     read_reg(RegAddress::DeviceID, deviceIdReg);
 }
 
-void SGM58031::setDataRate(const DataRate _dr){
+void SGM58031::set_datarate(const DataRate _dr){
     uint8_t dr = (uint8_t)_dr;
     configReg.dataRate = dr & 0b111;
     config1Reg.drSel = dr >> 3;
@@ -24,34 +24,13 @@ void SGM58031::setDataRate(const DataRate _dr){
     write_reg(RegAddress::Config1, config1Reg);
 }
 
-void SGM58031::setFS(const FS fs){
-    configReg.pga = (uint8_t)fs;
-    switch(fs){
-        case FS::FS0_256:
-            fullScale = real_t(0.256);
-            break;
-        case FS::FS0_512:
-            fullScale = real_t(0.512f);
-            break;
-        case FS::FS1_024:
-            fullScale = real_t(1.024f);
-            break;
-        case FS::FS2_048:
-            fullScale = real_t(2.048f);
-            break;
-        case FS::FS4_096:
-            fullScale = real_t(4.096f);
-            break;
-        case FS::FS6_144:
-            fullScale = real_t(6.144f);
-            break;
-        default:
-            break;
-    }
+void SGM58031::set_fs(const FS fs){
+    fullScale = fs.to_real();
+    configReg.pga = fs.as_u8();
     write_reg(RegAddress::Config, configReg);
 }
 
-void SGM58031::setFS(const real_t _fs, const real_t _vref){
+void SGM58031::set_fs(const real_t _fs, const real_t _vref){
     real_t ratio = abs(_fs) / _vref;
     PGA pga;
     if(ratio >= 3){
@@ -72,9 +51,9 @@ void SGM58031::setFS(const real_t _fs, const real_t _vref){
 }
 
 
-void SGM58031::setTrim(const real_t _trim){
+void SGM58031::set_trim(const real_t _trim){
     real_t trim = _trim * real_t(4.0f / 3.0f);
     real_t offset = trim - real_t(1.30225f);
-    trimReg.gn = (int)(offset * 0b01111111010);
+    trimReg.gn = int(offset * 0b01111111010);
     write_reg(RegAddress::Trim, trimReg);
 }

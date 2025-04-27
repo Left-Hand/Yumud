@@ -9,9 +9,9 @@ class LDS14{
 protected:
     hal::Uart & m_uart;
 
-    static constexpr uint8_t header_token = 0x54;
-    static constexpr uint16_t verlen_token = 0x55;
-    static constexpr size_t point_per_pack = 12;
+    static constexpr uint8_t HEADER_TOKEN = 0x54;
+    static constexpr uint16_t VERLEN_TOKEN = 0x55;
+    static constexpr size_t POINTS_PER_PACK = 12;
 
     #pragma pack(push, 1)
 
@@ -21,18 +21,19 @@ protected:
     };
 
 
-    struct LidarFrame{
+    struct LidarFrame final{
         uint8_t header;
         uint8_t verlen;
         uint16_t speed;
         uint16_t start_angle;
-        LidarPoint points[point_per_pack];
+        LidarPoint points[POINTS_PER_PACK];
         uint16_t end_angle;
         uint16_t timestamp;
         uint8_t crc8;
 
-    protected:
+    private:
         uint8_t calc_crc() const;
+        static uint8_t s_calc_crc(const std::span<const uint8_t> pbuf);
 
     public:
         bool is_valid() const {return crc8 == calc_crc();}

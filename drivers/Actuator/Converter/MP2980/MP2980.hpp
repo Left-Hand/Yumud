@@ -66,8 +66,8 @@ protected:
 
         RefReg & set(const uint16_t data){
             auto & self = *this;
-            self.as_bytes()[0] = std::byte(data & 0b111);
-            self.as_bytes()[1] = std::byte(data >> 3);
+            self.as_bytes()[0] = uint8_t(data & 0b111);
+            self.as_bytes()[1] = uint8_t(data >> 3);
 
             return *this;
         }
@@ -132,19 +132,19 @@ protected:
     MaskReg mask_reg = {};
     StatusReg status_reg = {};
 
-    BusError write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg).unwrap();
+    hal::BusError write_reg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    BusError read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg).unwrap();
+    hal::BusError read_reg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    BusError write_reg(const RegAddress address, const uint16_t reg){
+    hal::BusError write_reg(const RegAddress address, const uint16_t reg){
         return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
     }
 
-    BusError read_reg(const RegAddress address, uint16_t & reg){
+    hal::BusError read_reg(const RegAddress address, uint16_t & reg){
         return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
     }
 

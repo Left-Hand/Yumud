@@ -58,23 +58,23 @@ protected:
     JedecId jedec_id;
 
 
-    BusError writeByte(const uint8_t data, const Continuous cont = DISC){
+    hal::BusError write_byte(const uint8_t data, const Continuous cont = DISC){
         return spi_drv_.write_single<uint8_t>(data, cont);
     }
 
-    BusError writeByte(const Command cmd, const Continuous cont = DISC){
-        return writeByte(uint8_t(cmd), cont);
+    hal::BusError write_byte(const Command cmd, const Continuous cont = DISC){
+        return write_byte(uint8_t(cmd), cont);
     }
 
-    BusError writeBytes(const void * data, const size_t len){
+    hal::BusError write_bytes(const void * data, const size_t len){
         return spi_drv_.write_burst<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
-    BusError readByte(uint8_t & data, const Continuous cont = DISC){
+    hal::BusError read_byte(uint8_t & data, const Continuous cont = DISC){
         return spi_drv_.read_single<uint8_t>(data, cont);
     }
 
-    BusError readBytes(void * data, const size_t len){
+    hal::BusError read_bytes(void * data, const size_t len){
         // DEBUGGER.print("nr");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("nr!");
@@ -84,8 +84,8 @@ protected:
         // DEBUGGER.println("ar!");
     }
 
-    void writeAddr(const Address addr, const Continuous cont = DISC);
-    void skipByte(){writeByte(0, CONT);}
+    void write_addr(const Address addr, const Continuous cont = DISC);
+    void skip_byte(){write_byte(0, CONT);}
 
     void entry_store() override;
     void exit_store() override;
@@ -93,32 +93,40 @@ protected:
     void entry_load() override;
     void exit_load() override;
 
-    void loadBytes(const Address loc, void * data, const Address len) override;
-    void storeBytes(const Address loc, const void * data, const Address len) override;
+    void load_bytes(const Address loc, void * data, const Address len) override;
+    void store_bytes(const Address loc, const void * data, const Address len) override;
 
-    void updateDeviceId();
+    void update_device_id();
 
-    void updateJedecId();
+    void update_jedec_id();
 
-    void updateStatus();
+    void update_status();
 
-    void writePage(const Address addr, const uint8_t * data, size_t len);
+    void write_page(const Address addr, const uint8_t * data, size_t len);
 
-    bool waitForFree(size_t timeout);
+    bool wait_for_free(size_t timeout);
 
-    bool isLargeChip(){return capacity_ > 0x1000000;}
+    bool is_large_chip(){return capacity_ > 0x1000000;}
 
 
-    void eraseSector(const Address addr);
+    void erase_sector(const Address addr);
 
-    void eraseBlock(const Address addr);
+    void erase_block(const Address addr);
 
-    void eraseWholeChip();
+    void erase_whole_chip();
 
 public:
-    X25QXX(const hal::SpiDrv & spi_drv, const Address capacity):spi_drv_(spi_drv), StoragePaged(capacity, 256){;}
+    X25QXX(const hal::SpiDrv & spi_drv, const Address capacity):
+        StoragePaged(capacity, 256),
+        spi_drv_(spi_drv)
+        
+        {;}
 
-    X25QXX(hal::SpiDrv && spi_drv, const Address capacity):spi_drv_(std::move(spi_drv)), StoragePaged(capacity, 256){;}
+    X25QXX(hal::SpiDrv && spi_drv, const Address capacity):
+        StoragePaged(capacity, 256),
+        spi_drv_(std::move(spi_drv))
+    
+        {;}
     void init() override{}
 
     bool busy() override;
@@ -126,33 +134,33 @@ public:
 
     void enableWrite(const bool en = true){
         if(en){
-            writeByte(Command::WriteEnable);
+            write_byte(Command::WriteEnable);
         }else{
-            writeByte(Command::WriteDisable);
+            write_byte(Command::WriteDisable);
         }
     }
 
-    JedecManufacturer getDeviceManufacturer(){
-        updateJedecId();
+    JedecManufacturer get_device_manufacturer(){
+        update_jedec_id();
         return JedecManufacturer(jedec_id.manufacturer_id);
     }
 
-    JedecStorageType getDeviceStorageType(){
-        updateJedecId();
+    JedecStorageType get_device_storage_type(){
+        update_jedec_id();
         return JedecStorageType(jedec_id.memory_type);
     }
 
     size_t getDeviceCapacity(){
-        updateJedecId();
+        update_jedec_id();
         return 1 << jedec_id.capacity;
     }
 
-    void enablePowerDown(const bool en = true);
+    void enable_power_down(const bool en = true);
 
 
-    bool isWriteable();
+    bool is_writeable();
 
-    void eraseBytes(const Address loc, const size_t len) override;
+    void erase_bytes(const Address loc, const size_t len) override;
 };
 
 }

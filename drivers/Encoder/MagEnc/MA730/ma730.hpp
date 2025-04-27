@@ -3,13 +3,17 @@
 #include "core/io/regs.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
-class MA730:public MagEncoderIntf{
+class MA730 final:public MagEncoderIntf{
 public:
+    using Error = EncoderError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class Width:uint8_t{
         W90, W180, W270, W360
     };
@@ -81,54 +85,64 @@ protected:
     DirectionReg directionReg = {};
     MagnitudeReg magnitudeReg = {};
 
-    BusError write_reg(const RegAddress reg_addr, uint8_t data);
+    [[nodiscard]]
+    IResult<> write_reg(const RegAddress addr, uint8_t data);
 
-    BusError read_reg(const RegAddress reg_addr, uint8_t & reg);
+    [[nodiscard]]
+    IResult<> read_reg(const RegAddress addr, uint8_t & reg);
 
-    BusError directRead(uint16_t & data);
-
-    uint16_t getRawData();
-
-    void setZeroData(const uint16_t data);
+    [[nodiscard]]
+    IResult<> direct_read(uint16_t & data);
+    
+    [[nodiscard]]
+    IResult<uint16_t> get_raw_data();
+    
+    [[nodiscard]]
+    IResult<> set_zero_data(const uint16_t data);
 public:
     MA730(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MA730(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
-    void init() override;
-    void update();
-    bool stable() override {return isMagnitudeProper();}
+    void init();
+    IResult<> update();
+    IResult<bool> is_stable() {return is_magnitude_proper();}
 
 
-    void setZeroPosition(const real_t position);
-    
-
-    real_t getLapPosition() override{
-        return lap_position;
+    IResult<> set_zero_position(const real_t position);
+    IResult<real_t> get_lap_position(){
+        return Ok(lap_position);
     }
 
-    void setTrimX(const real_t k);
-    void setTrimY(const real_t k);
-    void setTrim(const real_t am, const real_t e);
+    [[nodiscard]]
+    IResult<> set_trim_x(const real_t k);
 
-    void setMagThresholdLow(const MagThreshold threshold);
-    void setMagThresholdHigh(const MagThreshold threshold);
-    void setDirection(const bool direction);
+    [[nodiscard]]
+    IResult<> set_trim_y(const real_t k);
 
-    bool isMagnitudeLow();
-    bool isMagnitudeHigh();
-    bool isMagnitudeProper();
+    [[nodiscard]]
+    IResult<> set_trim(const real_t am, const real_t e);
 
-    void setZparameters(const Width width, const Phase phase);
-    void setPulsePerTurn(const uint16_t _ppt);
+    [[nodiscard]]
+    IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
+    [[nodiscard]] IResult<> set_direction(const bool direction);
+    [[nodiscard]] IResult<bool> is_magnitude_low();
+    [[nodiscard]] IResult<bool> is_magnitude_high();
+    [[nodiscard]] IResult<bool> is_magnitude_proper();
+
+    [[nodiscard]]
+    IResult<> set_zparameters(const Width width, const Phase phase);
+
+    [[nodiscard]]
+    IResult<> set_pulse_per_turn(const uint16_t ppt);
 };
 
-class MA732:public MA730{
-public:
-    using MA730::MA730; 
-};
+// class MA732:public MA730{
+// public:
+//     using MA730::MA730; 
+// };
 
 
 };

@@ -26,25 +26,7 @@ public:
         FuseRomAccess = 0b1111,
     };
 
-    enum class Error:uint8_t{
-        I2C_NOT_RESPONED = 0x00,
-        I2C_NOT_ACK = 0x01,
-        I2C_NOT_READY = 0x02,
-        I2C_NOT_RECEIVED = 0x03,
-        I2C_NOT_SENT = 0x04,
-        I2C_NOT_TRANSFERED = 0x05,
-        I2C_NOT_TRANSFERED_BYTE = 0x06,
-        I2C_NOT_TRANSFERED_BYTE_ACK = 0x07,
-        
-        DEVICE_NOT_FOUNDED = 0x10,
-        DEVICE_WHOAMI_FAILED,
-        SENS_OVERFLOW,
-        DATA_NOT_READY,
-
-        UNSPECIFIED = 0xff
-    };
-
-
+    using Error = ImuError;
 protected:
     AsahiKaseiSensor_Phy phy_;
 
@@ -179,26 +161,3 @@ public:
     Result<void, Error> setMode(const Mode mode);
 };
 };
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::AK8963::Error, BusError> {
-        static Result<T, drivers::AK8963::Error> convert(const BusError berr){
-            using Error = drivers::AK8963::Error;
-            using BusError = BusError;
-            
-            if(berr.ok()) return Ok();
-
-            Error err = [](const BusError berr_){
-                switch(berr_.type){
-                    case BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case BusError::I2C_NOT_READY: return AK8963::Error::I2C_NOT_READY;
-                    default: return Error::UNSPECIFIED;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
-}

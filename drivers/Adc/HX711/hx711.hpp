@@ -2,6 +2,7 @@
 
 
 #include "core/math/real.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 
 
 namespace ymd::hal{
@@ -36,17 +37,17 @@ public:
         sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
     ~HX711(){;}
     void init();
-    bool isIdle();
+    bool is_idle();
 
     void update(){
-        if(isIdle()) last_data = read_data();
+        if(is_idle()) last_data = read_data();
     }
 
     void inverse(const bool en = true){
         inversed = en;
     }
     void compensate(){
-        while(!isIdle());
+        while(!is_idle());
         update();
         zero_offset = last_data;
     }

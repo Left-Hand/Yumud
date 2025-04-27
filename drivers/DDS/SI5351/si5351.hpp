@@ -85,9 +85,9 @@ private:
     hal::I2cDrv i2c_drv_;
     bool clk_first_set[8];
 
-	uint8_t si5351_write_bulk(uint8_t, uint8_t, const uint8_t *);
-	uint8_t si5351_write(uint8_t, uint8_t);
-	uint8_t si5351_read(uint8_t);
+	hal::BusError si5351_write_bulk(uint8_t, uint8_t, const uint8_t *);
+	hal::BusError si5351_write(uint8_t, uint8_t);
+	hal::BusError si5351_read(uint8_t, uint8_t & );
 public:
     Si5351(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     Si5351(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}

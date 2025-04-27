@@ -17,8 +17,8 @@ using namespace ymd::drivers;
 #endif
 
 
-#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap();
-#define READ_REG(reg) read_reg(reg.address, reg).unwrap();
+#define WRITE_REG(reg) write_reg(reg.address, reg);
+#define READ_REG(reg) read_reg(reg.address, reg);
 
 
 MP2980 & MP2980::setFeedBackVref(const real_t vref){

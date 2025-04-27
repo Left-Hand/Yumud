@@ -1,46 +1,55 @@
 #pragma once
 
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
-#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 
-class MT6816:public MagEncoderIntf{
-protected:
-    hal::SpiDrv spi_drv_;
+class MT6816 final:public MagEncoderIntf{
+public:
+    using Error = EncoderError;
 
-    real_t lap_position;
-    size_t errcnt = 0;
-    bool fast_mode = true;
-
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+private:
     struct Semantic:public Reg16<>{
         using Reg16::operator=;
+        #pragma pack(push, 1)
         uint16_t pc:1;
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
+        #pragma pack(pop)
     };
 
-    Semantic last_semantic;
+    static_assert(sizeof(Semantic) == 2);
 
-    uint16_t getPositionData();
+    static constexpr size_t MAX_INIT_RETRY_TIMES = 32;
+
+    hal::SpiDrv spi_drv_;
+
+    real_t lap_position_;
+    size_t err_cnt_ = 0;
+    bool fast_mode_ = true;
+    Semantic last_sema_;
+
+    Result<uint16_t, hal::BusError> get_position_data();
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::Spi & _bus, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{_bus, index}){;}
 
-    void init() override;
+    IResult<> init();
+    IResult<> update();
 
+    IResult<real_t> get_lap_position() { return Ok(lap_position_);}
+    uint32_t get_err_cnt() const {return err_cnt_;}
 
-    void update() override;
-
-
-    real_t getLapPosition() override{return lap_position;}
-
-    uint32_t getErrCnt() const {return errcnt;}
-
-    bool stable() override {return last_semantic.no_mag == false;}
+    IResult<bool> is_stable() {return Ok(last_sema_.no_mag == false);}
 };
 
 };

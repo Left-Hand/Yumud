@@ -8,6 +8,9 @@
 namespace ymd::drivers{
 
 class AS5047:public MagEncoderIntf{
+public:
+    using Error = EncoderError;
+
 protected:
 
     using RegAddress = uint16_t;
@@ -30,12 +33,6 @@ protected:
         uint8_t :4;
     };
 
-    // struct DiaagcReg:public Reg8<>{
-    //     scexpr RegAddress address = 0x3ffc;
-
-    //     uint8_t 
-    // };
-
 
     hal::SpiDrv spi_drv_;
 
@@ -43,25 +40,23 @@ protected:
     size_t errcnt = 0;
     bool fast_mode = true;
 
-
     uint16_t getPositionData();
-
 
     void write_reg(const RegAddress addr, const uint8_t data);
     void read_reg(const RegAddress addr, uint8_t & data);
-
-
 
 public:
     AS5047(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     AS5047(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    void init() override;
+    void init() ;
 
-    void update() override;
-    real_t getLapPosition() override{return lap_position;}
-    uint32_t getErrCnt() const {return errcnt;}
+    Result<void, Error> update();
+    Result<real_t, Error> get_lap_position() {
+        return Ok(lap_position);
+    }
+    uint32_t get_err_cnt() const {return errcnt;}
 
 };
 
