@@ -88,7 +88,7 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
-    phy_.write_burst<uint16_t>(color, rect.get_area()).unwrap();
+    phy_.write_repeat<uint16_t>(color, rect.get_area()).unwrap();
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
@@ -160,6 +160,7 @@ Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets p
             displayer.set_swap_xy(true);
             // displayer.set_swap_xy(false);
             displayer.set_display_offset({0, 35}); 
+            // displayer.set_display_offset({70, 0}); 
             // displayer.set_display_offset({35, 0}); 
             // displayer.set_display_offset({-0, 0}); 
             displayer.set_format_rgb(true);

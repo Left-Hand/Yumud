@@ -128,7 +128,7 @@ void gui_main(){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 tftDisplayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tftDisplayer({spi, SpiSlaveIndex(0), lcd_dc, dev_rst}, {240, 135});
 
     {
         tftDisplayer.init();

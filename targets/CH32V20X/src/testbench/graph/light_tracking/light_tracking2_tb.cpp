@@ -61,7 +61,7 @@ static std::tuple<real_t, real_t> rand01_2(){
     static dsp::LcgNoiseSiggen noise;
     noise.update();
     // hal::rng.update();
-    return noise.get_as_01_2();
+    return noise.get_as_01x2();
     // const uint32_t temp = rng.update();
     // const uint32_t u0 = temp >> 16;
     // const uint32_t u1 = temp & 0xffff;
@@ -139,24 +139,6 @@ static __fast_inline bool tb_intersect_impl (const Vector3_t<real_t> & t0, const
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
-[[nodiscard]]
-static __fast_inline bool bb_intersect(const Vector3_t<real_t> & start, const Vector3_t<real_t> & inv_dir){
-    const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
-    const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
-
-    return bb_intersect_impl(t0, t1);
-};
-
-
-
-[[nodiscard]] __pure
-static __fast_inline bool tb_intersect (const Vector3_t<real_t> & start, const Vector3_t<real_t> & inv_dir){
-    const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
-    const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
-
-    return tb_intersect_impl(t0, t1);
-};
-
 
 [[nodiscard]] __pure
 static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
@@ -188,7 +170,7 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<co
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::tuple<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & rotation){
+static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & rotation){
     const auto wi_z = rotation.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
@@ -197,7 +179,7 @@ static std::optional<std::tuple<RGB, real_t>> sample_bsdf(const Interaction_t<re
     const auto bsdf_pdf = wi_z * inv_pi;
     if(bsdf_pdf == 0) return std::nullopt;
 
-    return std::make_tuple(
+    return std::make_pair(
         get_relect_color(interaction.i) * (INV_PI * std::abs(wi_z)),
         bsdf_pdf
     );
@@ -330,12 +312,12 @@ static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfa
         const real_t uy = y * INV_LCD_H;
 
         sample += 
-        // sampleRay(
-        //     sample,
-        //     Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
-        //     co_triangles
-        // )
-        RGB(ux, uy, CLAMP(ux + uy, 0, 1))
+        sampleRay(
+            sample,
+            Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+            co_triangles
+        )
+        // RGB(ux, uy, CLAMP(ux + uy, 0, 1))
         * inv_spp;
 
     }
@@ -349,23 +331,24 @@ static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfa
 }
 
 __no_inline
-static RGB565 draw3drt(const uint x, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles, const auto param){
-    // const auto sample = samplePixel(x, y, co_triangles);
+static RGB565 draw3drt(const uint x, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+    const auto sample = samplePixel(x, y, co_triangles);
 
-    const real_t ux = x * INV_LCD_H;
-    const real_t uy = y * INV_LCD_H;
-    const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
+    // const real_t ux = x * INV_LCD_H;
+    // const real_t uy = y * INV_LCD_H;
+    // const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
 
     return RGB565::from_565(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
+    // return RGB565::(sample);
 }
 
 
 __no_inline
 static void render_row(const __restrict std::span<RGB565> row, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     // ASSERT(row.size() == LCD_W);
-    const auto s = sin(8 * time());
+    // const auto s = sin(8 * time());
     for (size_t x = 0; x < LCD_W; x++){
-        row[x] = draw3drt(x, y, co_triangles, s);
+        row[x] = draw3drt(x, y, co_triangles);
     }
 
     // filter(row);
@@ -376,7 +359,9 @@ static void render_row(const __restrict std::span<RGB565> row, const uint y, std
 #define UART hal::uart2
 using drivers::ST7789;
 
-static constexpr size_t LCD_SPI_FREQ_HZ = 12_MHz;
+static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
+// static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 4;
+// static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 16;
 void light_tracking_main(void){
 
     UART.init(576000);
@@ -405,8 +390,23 @@ void light_tracking_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    
-
+    // lcd_cs.outpp();
+    // while(true){
+    //     lcd_cs = HIGH;
+    //     lcd_cs = LOW;
+    //     lcd_cs = HIGH;
+    //     lcd_cs = LOW;
+    //     lcd_cs = HIGH;
+    //     lcd_cs = LOW;
+    //     udelay(20);
+    //     for(size_t i = 0; i < 100; i++){
+    //         lcd_cs.set();
+    //         __nopn(4);
+    //         lcd_cs.clr();
+    //         __nopn(4);
+    //     }
+    //     udelay(20);
+    // }
 
     spi.bind_cs_pin(lcd_cs, 0);
     // spi.init(144_MHz, CommStrategy::Blocking);
@@ -417,7 +417,7 @@ void light_tracking_main(void){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 displayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 displayer({spi, SpiSlaveIndex(0), lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
     drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170);
 
@@ -426,7 +426,10 @@ void light_tracking_main(void){
 
     
     auto fill = [&]{
-        const auto st = sinpu(time() * 20) * 0.5_r + 0.5_r;
+        const auto u = micros();
+        const auto st = sinpu(time() * 2) * 0.5_r + 0.5_r;
+        // displayer.setpos_unsafe({0,0});
+        displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
             // row.fill(RGB565(Color_t<real_t>(0,int(y==0),0,0)));
@@ -442,6 +445,7 @@ void light_tracking_main(void){
                 // item = RGB565(Color_t<real_t>(real_t(y) / LCD_H, st, 0));
                 // item = RGB565::from_u16(0x003f);
                 // item = RGB565::from_u16(0xff00);
+                // item = RGB565::from_565(y, x, uint8_t(31 * st));
                 item = RGB565::from_565(y, x, uint8_t(31 * st));
                     // real_t(x) * INV_LCD_W,
                     // x % 2,
@@ -451,23 +455,31 @@ void light_tracking_main(void){
                     // 0, 0, 1));
             }
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-            const auto u = micros();
-            displayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
-            DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
+            
+            // const auto u = micros();
+            displayer.put_next_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
+
             // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
             // renderer.draw_rect(Rect2i(20, 0, 20, 40));
         }
+
+        const auto use_us = micros() - u;
+        const auto fps = 1000000 / use_us;
+        DEBUG_PRINTLN(use_us,fps);
     };
 
-    while(true){
-        fill();
-    }
+    // while(true){
+    //     fill();
+    // }
 
     std::vector<TriangleSurfaceCache_t<real_t>> co_triangles(triangles.begin(), triangles.end());
     // for(uint i = 0; i < co_triangles.size(); i++) 
     //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
     DEBUG_PRINTLN(millis());
     auto render = [&](){
+        const auto u = micros();
+        displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
 
             std::array<RGB565, LCD_W> row;
@@ -481,10 +493,17 @@ void light_tracking_main(void){
             // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
             // renderer.draw_rect(Rect2i(20, 0, 20, 40));
         }
+
+        
+        const auto use_us = micros() - u;
+        const auto fps = 1000000 / use_us;
+        DEBUG_PRINTLN(use_us,fps);
     };
 
     // for(size_t i = 0; i < 100; i++) render();
-    while(true) render();
+    while(true){
+        render();
+    }
 
     DEBUG_PRINTLN(millis());
 

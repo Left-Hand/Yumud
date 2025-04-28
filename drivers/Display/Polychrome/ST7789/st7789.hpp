@@ -3,6 +3,7 @@
 #include "drivers/Display/DisplayerPhy.hpp"
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -10,38 +11,100 @@ class ST7789_Phy final{
 public:
     template<typename T = void>
     using IResult = Result<void, DisplayerError>;
-protected:
-    hal::SpiDrv spi_drv_;
+private:
+    hal::SpiHw & spi_;
+    hal::SpiSlaveIndex idx_;
+
     hal::Gpio & dc_gpio_;
     hal::Gpio & res_gpio_;
     hal::Gpio & blk_gpio_;
 
     static constexpr auto COMMAND_LEVEL = LOW;
     static constexpr auto DATA_LEVEL = HIGH;
+
+
+    template <hal::valid_spi_data T>
+    hal::HalResult phy_write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC) {
+        static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+        if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+        if constexpr (sizeof(T) != 1){
+            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+                return res;
+        }
+
+        const auto p = reinterpret_cast<const T *>(pdata);
+        for (size_t i = 0; i < len; i++){
+            (void)spi_.fast_write(p[i]);
+            // (void)spi_.write(static_cast<uint32_t>(p[i]));
+        } 
+        if (cont == DISC) spi_.end();
+        if constexpr (sizeof(T) != 1) {
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+        }
+        return hal::HalResult::Ok();
+    }
+
+    template <hal::valid_spi_data T>
+    hal::HalResult phy_write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC) {
+        static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
+        if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+        if constexpr (sizeof(T) != 1){
+            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+                return res;
+        }
+        for (size_t i = 0; i < len; i++){
+            if(const auto res = spi_.write(uint32_t(static_cast<T>(data)));
+                res.is_err()) return res;
+        } 
+        if (cont == DISC) spi_.end();
+        if constexpr (sizeof(T) != 1) {
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+        }
+        return hal::HalResult::Ok();
+    }
+
+    template<hal::valid_spi_data T>
+    hal::HalResult phy_write_single(const is_stdlayout auto data, Continuous cont = DISC) {
+        static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
+
+        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+        if constexpr (sizeof(T) != 1){
+            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+                return res;
+        }
+
+        if constexpr (sizeof(T) == 1) {
+            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return res;
+        } else if constexpr (sizeof(T) == 2) {
+            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
+        }
+
+        if (cont == DISC) spi_.end();
+        if constexpr (sizeof(T) != 1) {
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+        }
+
+        return hal::HalResult::Ok();
+    }
+
 public:
 
-    ST7789_Phy(
-            hal::SpiDrv && spi_drv, 
-            hal::Gpio & dc_gpio, 
-            hal::Gpio & res_gpio = hal::NullGpio,
-            hal::Gpio & blk_gpio = hal::NullGpio
-        ) :spi_drv_(std::move(spi_drv)), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
 
-    ST7789_Phy(
-        const hal::SpiDrv & spi_drv, 
-        hal::Gpio & dc_gpio, 
-        hal::Gpio & res_gpio = hal::NullGpio,
-        hal::Gpio & blk_gpio = hal::NullGpio
-    ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
+    // ST7789_Phy(
+    //     const hal::SpiDrv & spi_drv, 
+    //     hal::Gpio & dc_gpio, 
+    //     hal::Gpio & res_gpio = hal::NullGpio,
+    //     hal::Gpio & blk_gpio = hal::NullGpio
+    // ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
 
 
     ST7789_Phy(
-        hal::Spi & bus,
+        hal::SpiHw & bus,
         const hal::SpiSlaveIndex index,
         hal::Gpio & dc_gpio, 
         hal::Gpio & res_gpio = hal::NullGpio,
         hal::Gpio & blk_gpio = hal::NullGpio
-    ):ST7789_Phy(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
+    ):spi_(bus), idx_(index), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio) {};
 
     [[nodiscard]] IResult<> init(){
         dc_gpio_.outpp();
@@ -64,30 +127,35 @@ public:
     }
 
     [[nodiscard]] IResult<> write_command(const uint8_t cmd){
-        dc_gpio_ = COMMAND_LEVEL;
-        return IResult<>(spi_drv_.write_single<uint8_t>(cmd));
+        // dc_gpio_ = COMMAND_LEVEL;
+        dc_gpio_.clr();
+        return IResult<>(phy_write_single<uint8_t>(cmd));
     }
 
     [[nodiscard]] IResult<> write_data8(const uint8_t data){
-        dc_gpio_ = DATA_LEVEL;
-        return IResult<>(spi_drv_.write_single<uint8_t>(data));
+        // dc_gpio_ = DATA_LEVEL;
+        dc_gpio_.set();
+        return IResult<>(phy_write_single<uint8_t>(data));
     }
 
     [[nodiscard]] IResult<> write_data16(const uint16_t data){
-        dc_gpio_ = DATA_LEVEL;
-        return IResult<>(spi_drv_.write_single<uint16_t>(data));
+        // dc_gpio_ = DATA_LEVEL;
+        dc_gpio_.set();
+        return IResult<>(phy_write_single<uint16_t>(data));
     }
 
     template<typename U>
     [[nodiscard]] IResult<> write_burst(const auto * data, size_t len){
-        dc_gpio_ = DATA_LEVEL;
-        return IResult<>(spi_drv_.write_burst<U>(data, len));
+        // dc_gpio_ = DATA_LEVEL;
+        dc_gpio_.set();
+        return IResult<>(phy_write_burst<U>(data, len));
     }
 
     template<typename U>
-    [[nodiscard]] IResult<> write_burst(const auto & data, size_t len){
-        dc_gpio_ = DATA_LEVEL;
-        return IResult<>(spi_drv_.write_burst<U>(data, len));
+    [[nodiscard]] IResult<> write_repeat(const auto & data, size_t len){
+        // dc_gpio_ = DATA_LEVEL;
+        dc_gpio_.set();
+        return IResult<>(phy_write_repeat<U>(data, len));
     }
 };
 
@@ -149,9 +217,6 @@ private:
 
 protected:
 
-    void setpos_unsafe(const Vector2i & pos);
-    void setarea_unsafe(const Rect2i & rect);
-
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
         setpos_unsafe(pos);
         phy_.write_data16(uint16_t(color)).unwrap();
@@ -170,9 +235,17 @@ public:
 
     IResult<> init();
 
-    void put_texture(const Rect2i & rect, const is_color auto * color_ptr){
+    
+    void setpos_unsafe(const Vector2i & pos);
+    void setarea_unsafe(const Rect2i & rect);
+
+    void put_texture(const Rect2i & rect, const is_color auto * pcolor){
         setarea_unsafe(rect);
-        phy_.write_burst<uint16_t>(color_ptr, rect.get_area()).unwrap();
+        put_next_texture(rect, pcolor);
+    }
+
+    void put_next_texture(const Rect2i & rect, const is_color auto * pcolor){
+        phy_.write_burst<uint16_t>(pcolor, rect.get_area()).unwrap();
     }
 
     IResult<> set_display_offset(const Vector2i & _offset){

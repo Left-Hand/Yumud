@@ -28,7 +28,7 @@ public:
     }
     
     [[nodiscard]] constexpr __fast_inline
-    std::tuple<real_t, real_t> get_as_01_2(){
+    std::tuple<real_t, real_t> get_as_01x2(){
         update();
         const uint32_t temp = get();
         const uint32_t u0 = temp >> 16;

@@ -55,11 +55,12 @@ scexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
 // scexpr size_t LCD_W = 240;
 // scexpr size_t LCD_H = 135;
 
-// scexpr size_t LCD_W = 170;
-// scexpr size_t LCD_H = 320;
+scexpr size_t LCD_W = 120;
+scexpr size_t LCD_H = 120;
 
-scexpr size_t LCD_H = 170;
-scexpr size_t LCD_W = 320;
+
+// scexpr size_t LCD_W = 320;
+// scexpr size_t LCD_H = 170;
 
 // scexpr size_t LCD_W = 160;
 // scexpr size_t LCD_H = 80;
