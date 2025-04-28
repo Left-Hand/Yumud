@@ -50,7 +50,7 @@ using namespace ymd;
 void AD9833::write_data(uint16_t data) {
     AD9833_FSYNC(HIGH);
     AD9833_FSYNC(LOW);
-    spi_drv_.write_single(data).is_ok();
+    spi_drv_.write_single<uint16_t>(data).is_ok();
     AD9833_FSYNC(HIGH);
 }
 

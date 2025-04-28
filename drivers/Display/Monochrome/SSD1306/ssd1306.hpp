@@ -24,6 +24,63 @@ template<typename T>
 struct _oled_preset;
 
 
+
+
+class SSD1306_Phy final{
+public:
+    using Error = DisplayerError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+protected:
+
+    hal::I2cDrv i2c_drv_;
+    static constexpr uint8_t CMD_TOKEN = 0x00;
+    static constexpr uint8_t DATA_TOKEN = 0x40;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
+public:
+    SSD1306_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
+    SSD1306_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
+    SSD1306_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){};
+
+    [[nodiscard]] IResult<> init(){
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_command(const uint32_t cmd){
+        return IResult<>(i2c_drv_.write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+    }
+
+    [[nodiscard]] IResult<> write_data(const uint32_t data){
+        return IResult<>(i2c_drv_.write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
+    }
+
+    [[nodiscard]] IResult<> write_burst(const is_stdlayout auto * pdata, size_t len){
+        if constexpr(sizeof(*pdata) != 1){
+            return IResult<>(i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len), LSB));
+        }else {
+            return IResult<>(i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len)));
+        }
+    }
+
+    [[nodiscard]] IResult<> write_burst(const is_stdlayout auto data, size_t len){
+        if constexpr(sizeof(data) != 1){
+            return IResult<>(i2c_drv_.write_repeat(DATA_TOKEN, std::span(data, len), LSB));
+        }else {
+            return IResult<>(i2c_drv_.write_repeat(DATA_TOKEN, data, len));
+        }
+    }
+
+    [[nodiscard]] IResult<> write_u8(const uint8_t data, size_t len) {
+        return write_burst<uint8_t>(data, len);
+    }
+
+    [[nodiscard]] IResult<> write_u8(const uint8_t * data, size_t len) {
+        return write_burst<uint8_t>(data, len);
+    }
+};
+    
+
 class SSD13XX:public Displayer<Binary>{
 public:
     using Vector2 = ImageBasics::Vector2;
@@ -35,7 +92,9 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 protected:
-    DisplayerPhyIntf & phy_;
+    // DisplayerPhyIntf & phy_;
+    using Phy = SSD1306_Phy;
+    Phy phy_;
     void setarea_unsafe(const Rect2i & area) {
         setpos_unsafe(area.position);
     }
@@ -60,10 +119,10 @@ protected:
 public:
 
     template<typename Cfg, typename T = std::decay_t<Cfg>>
-    SSD13XX(DisplayerPhyIntf & interface, Cfg && cfg):
+    SSD13XX(Phy && phy, Cfg && cfg):
         ImageBasics(_oled_preset<T>::size),
         Displayer(_oled_preset<T>::size), 
-        phy_(interface),
+        phy_(std::move(phy)),
         offset_(_oled_preset<T>::offset), 
         cmds_(std::span(_oled_preset<T>::buf)),
         config_(cfg),

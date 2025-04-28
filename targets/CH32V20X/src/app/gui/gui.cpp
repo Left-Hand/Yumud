@@ -185,15 +185,15 @@ void gui_main(){
     // camera.init();
     // camera.setExposureValue(1200);
 
-    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.size());
-        tftDisplayer.put_texture(area, src.get_data());
-    };
+    // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+    //     auto area = Rect2i(pos, src.size());
+    //     tftDisplayer.put_texture(area, src.get_data());
+    // };
 
-    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.size());
-        tftDisplayer.put_texture(area, src.get_data());
-    };
+    // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+    //     auto area = Rect2i(pos, src.size());
+    //     tftDisplayer.put_texture(area, src.get_data());
+    // };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());

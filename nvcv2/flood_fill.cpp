@@ -251,10 +251,10 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
     Rect2i _a = a.abs();
     Rect2i _b = b.abs();
 
-    real_t ins = int(_a.intersection(_b));
+    real_t ins = _a.intersection(_b).get_area();
     if(ins == 0) return 0;
 
-    real_t uni = int(_a) + int(_b) - ins;
+    real_t uni = _a.get_area() + _b.get_area() - ins;
 
     return (ins / uni);
 }
@@ -343,7 +343,7 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                 bool skip_flag = false;
 
                 {
-                    skip_flag |= not filter.area_range.has(uint(rect));
+                    skip_flag |= not filter.area_range.has(rect.get_area());
                 }
 
                 {

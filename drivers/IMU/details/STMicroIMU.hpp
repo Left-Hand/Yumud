@@ -26,8 +26,8 @@ public:
         if(i2c_drv_){
             return i2c_drv_->write_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            return spi_drv_->write_single(uint8_t(addr), CONT)
-            | spi_drv_->write_single(data);
+            return spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT)
+            | spi_drv_->write_single<uint8_t>(data);
         }
 
         PANIC();
@@ -37,8 +37,8 @@ public:
         if(i2c_drv_){
             return i2c_drv_->read_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            return spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT)
-            | spi_drv_->read_single(data);
+            return spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
+            | spi_drv_->read_single<uint8_t>(data);
         }
 
         PANIC();

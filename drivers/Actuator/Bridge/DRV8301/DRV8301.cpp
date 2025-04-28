@@ -75,6 +75,8 @@ struct SpiFormat{
     }
 };
 
+static_assert(sizeof(SpiFormat) == 2);
+
 hal::BusError DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,

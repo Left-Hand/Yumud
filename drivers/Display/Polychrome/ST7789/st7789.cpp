@@ -5,6 +5,7 @@
 #include "types/range/range.hpp"
 #include "core/debug/debug.hpp"
 
+#define ST7789_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 using namespace ymd::drivers;
 using namespace ymd;
@@ -31,17 +32,19 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
 } 
 
 IResult<> ST7789::init(){
-    return interface_.init()
-    | write_command(0x01).inspect([](){udelay(50);})
-	| write_command(0x11).inspect([](){udelay(50);})
-	| write_command(0x3A)
-	| write_data(0x55)
-	| write_command(0x36)
-	| write_data(0x00)
-	| write_command(0x21)
-	| write_command(0x13)
-	| write_command(0x29)
-    ;
+    if(const auto res = phy_.init(); res.is_err())          return res;
+    udelay(50);
+    if(const auto res = write_command(0x01); res.is_err())  return res;
+    udelay(50);
+	if(const auto res = write_command(0x11); res.is_err())  return res;
+	if(const auto res = write_command(0x3A); res.is_err())  return res;
+	if(const auto res = write_data8(0x55); res.is_err())    return res;
+	if(const auto res = write_command(0x36); res.is_err())  return res;
+	if(const auto res = write_data8(0x00); res.is_err())    return res;
+	if(const auto res = write_command(0x21); res.is_err())  return res;
+	if(const auto res = write_command(0x13); res.is_err())  return res;
+	if(const auto res = write_command(0x29); res.is_err())  return res;
+    return Ok();
 }
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
@@ -85,12 +88,12 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
-    interface_.write_burst<RGB565>(color, size_t(rect)).unwrap();
+    phy_.write_burst<uint16_t>(color, rect.get_area()).unwrap();
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    interface_.write_burst<RGB565>(color_ptr, size_t(rect)).unwrap();
+    phy_.write_burst<uint16_t>(color_ptr, rect.get_area()).unwrap();
 }
 
 void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
@@ -103,5 +106,71 @@ void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RG
 }
 
 void ST7789::putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
-    PANIC();
+    TODO();
 }
+
+IResult<> ST7789::modify_ctrl(const bool yes,const uint8_t pos){
+    uint8_t temp = 0x01 << pos;
+    if (yes) scr_ctrl_ |= temp;
+    else scr_ctrl_ &= ~temp;
+
+    if(const auto res = write_command(0x36); res.is_err()) return res;
+    if(const auto res = write_data8(scr_ctrl_); res.is_err()) return res;
+    return Ok();
+}
+
+
+namespace ymd::drivers{
+Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset){
+    using enum ST7789_Presets;
+    displayer.init();
+    switch(preset){
+        case _120X80:
+            displayer.set_flip_x(false);
+            displayer.set_flip_y(true);
+            displayer.set_swap_xy(true);
+            displayer.set_display_offset({40, 52}); 
+            displayer.set_format_rgb(true);
+            displayer.set_flush_dir_h(false);
+            displayer.set_flush_dir_v(false);
+            displayer.set_inversion(true);
+            break;
+        case _240X135:
+            displayer.set_flip_x(true);
+            displayer.set_flip_y(true);
+            displayer.set_swap_xy(false);
+            displayer.set_display_offset({52, 40}); 
+            displayer.set_format_rgb(true);
+            displayer.set_flush_dir_h(false);
+            displayer.set_flush_dir_v(false);
+            displayer.set_inversion(true);
+            break;
+        case _320X170:
+            // displayer.set_flip_x(false);
+            // displayer.set_flip_y(false);
+            // displayer.set_swap_xy(true);
+            // displayer.set_display_offset({-30, 30}); 
+            // displayer.set_format_rgb(true);
+            // displayer.set_flush_dir_h(false);
+            // displayer.set_flush_dir_v(false);
+            // displayer.set_inversion(true);
+
+            displayer.set_flip_x(false);
+            displayer.set_flip_y(true);
+            displayer.set_swap_xy(true);
+            // displayer.set_swap_xy(false);
+            displayer.set_display_offset({0, 35}); 
+            // displayer.set_display_offset({35, 0}); 
+            // displayer.set_display_offset({-0, 0}); 
+            displayer.set_format_rgb(true);
+            displayer.set_flush_dir_h(false);
+            displayer.set_flush_dir_v(false);
+            // displayer.set_inversion(false);
+            displayer.set_inversion(true);
+            break;
+    }
+    return Ok();
+}
+
+}
+

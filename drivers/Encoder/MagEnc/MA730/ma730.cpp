@@ -26,22 +26,22 @@ void MA730::init(){
 }
 
 IResult<> MA730::write_reg(const RegAddress addr, uint8_t data){
-    const auto err = spi_drv_.write_single((uint16_t)(0x8000 | ((uint8_t)addr << 8) | data));
+    const auto err = spi_drv_.write_single<uint16_t>((uint16_t)(0x8000 | ((uint8_t)addr << 8) | data));
     return Err(Error::BusError(err));
 }
 
 IResult<> MA730::read_reg(const RegAddress addr, uint8_t & data){
     uint16_t dummy;
-    if(const auto err = spi_drv_.write_single((uint16_t)(0x4000 | ((uint8_t)addr << 8))); err.is_err())
+    if(const auto err = spi_drv_.write_single<uint16_t>((uint16_t)(0x4000 | ((uint8_t)addr << 8))); err.is_err())
         return Err(Error::BusError(err));
-    if(const auto err = spi_drv_.read_single(dummy); err.is_err()) 
+    if(const auto err = spi_drv_.read_single<uint16_t>(dummy); err.is_err()) 
         return Err(Error::BusError(err));
     data = dummy >> 8;
     return Err(Error::BusError(hal::BusError::Ok()));
 }
 
 IResult<> MA730::direct_read(uint16_t & data){
-    const auto err = spi_drv_.read_single(data);
+    const auto err = spi_drv_.read_single<uint16_t>(data);
 
     return Err(Error::BusError(err));
 }

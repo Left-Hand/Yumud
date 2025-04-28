@@ -361,7 +361,7 @@ hal::BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
             err.is_err()) return err;
         delayT3();
 
-        return spi_drv_->write_single((reg));
+        return spi_drv_->write_single<uint16_t>((reg));
     }else if(i2c_drv_){
         return i2c_drv_->write_reg(uint8_t(address), reg, MSB);
     }
@@ -376,7 +376,7 @@ hal::BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
             reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
             uint8_t(address | 0x80), CONT);
         if(err.is_err()) return err;
-        return spi_drv_->read_single(reg);
+        return spi_drv_->read_single<uint16_t>(reg);
     }else if(i2c_drv_){
         return i2c_drv_->read_reg(uint8_t(address), reg, MSB);
     }
@@ -388,7 +388,7 @@ hal::BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
 hal::BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
-        if(const auto err = spi_drv_->write_single(uint8_t(50), CONT); err.is_err()) return err;
+        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); err.is_err()) return err;
         return spi_drv_->write_burst<uint8_t>(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
@@ -400,8 +400,8 @@ hal::BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
 hal::BusError LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
-        if(const auto err = spi_drv_->write_single(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
-        return spi_drv_->read_burst(data, len);
+        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
+        return spi_drv_->read_burst<uint8_t>(data, len);
     }else if(i2c_drv_){
         return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
     }

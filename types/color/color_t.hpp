@@ -52,8 +52,7 @@ public:
 	Color_t() = default;
 
 	
-    template <typename U>
-	constexpr __fast_inline Color_t(U p_r, U p_g, U p_b, U p_a = U(1)) {
+	constexpr __fast_inline Color_t(T p_r, T p_g, T p_b, T p_a = T(1)) {
 		r = static_cast<T>(p_r);
 		g = static_cast<T>(p_g);
 		b = static_cast<T>(p_b);
@@ -225,16 +224,17 @@ public:
     }
     __fast_inline constexpr operator RGB565() const {
         return RGB565::from_565(
-            (uint8_t)(r * 31),
-            (uint8_t)(g * 63),
-            (uint8_t)(b * 31));
+            uint8_t(r * a * 31),
+            uint8_t(g * a * 63),
+            uint8_t(b * a * 31)
+        );
     }
 
     __fast_inline constexpr operator RGB888() const {
         return RGB888(
-            (uint8_t)(r * 255),
-            (uint8_t)(g * 255),
-            (uint8_t)(b * 255));
+            (uint8_t)(r * a * 255),
+            (uint8_t)(g * a * 255),
+            (uint8_t)(b * a * 255));
     }
 };
 

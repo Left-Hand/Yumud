@@ -67,4 +67,5 @@ private:
     std::optional<Kind> kind_;
 };
 
+using HalResult = BusError;
 }

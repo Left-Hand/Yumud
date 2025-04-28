@@ -9,7 +9,15 @@
 
 namespace ymd::hal{
 
+class SpiHw;
+class SpiSw;
 
+
+template <typename T>
+concept valid_spi_data = (
+    std::is_standard_layout_v<T> 
+    and (sizeof(T) <= 2) 
+    and std::is_integral_v<T>);
 
 class SpiDrv final{
 protected:
@@ -24,7 +32,7 @@ public:
     template<typename T>
     void force_write(const T data) {
         constexpr size_t size = sizeof(T);
-        if (size != 1) this->set_data_width(size * 8);
+        if constexpr(size != 1) this->set_data_width(size * 8);
 
         if constexpr (size == 1) {
             spi_.write(uint8_t(data));
@@ -34,138 +42,136 @@ public:
             spi_.write(uint32_t(data));
         }
 
-        if (size != 1) this->set_data_width(8);
+        if constexpr(size != 1) this->set_data_width(8);
     }
+
     
-    void set_data_width(const size_t width){}
+    hal::HalResult set_data_width(const size_t width){return spi_.set_data_width(width);}
     void set_endian(const Endian endian){endian_ = endian;}
     void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 
     uint8_t index_;
 public:
     [[nodiscard]]
-    hal::BusError release();
-    void end(){spi_.end();}
+    hal::HalResult release();
 
-    template<typename T>
-    requires std::is_standard_layout_v<T>
-    [[nodiscard]]
-    hal::BusError write_single(const T data, Continuous cont = DISC);
 
-    template<typename U>
-    requires std::is_standard_layout_v<U>
-    [[nodiscard]]
-    hal::BusError write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
+    void end(){return spi_.end();}
 
-    template<typename U>
-    requires std::is_standard_layout_v<U>
-    [[nodiscard]]
-    hal::BusError write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
+    template<valid_spi_data T>
+    hal::HalResult write_single(const is_stdlayout auto data, Continuous cont = DISC);
 
-    template<typename T>
-    requires std::is_standard_layout_v<T>
-    [[nodiscard]]
-    hal::BusError read_burst(T * data_ptr, const size_t len, const Continuous cont = DISC);
+    template<valid_spi_data T>
+    hal::HalResult write_burst(const is_stdlayout auto data, const size_t len, Continuous cont = DISC);
 
-    template<typename T>
-    requires std::is_standard_layout_v<T>
-    [[nodiscard]]
-    hal::BusError read_single(T & data, const Continuous cont = DISC);
+    template<valid_spi_data T>
+    hal::HalResult write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC);
 
-    template<typename T>
-    requires std::is_standard_layout_v<T>
-    [[nodiscard]]
-    hal::BusError transfer_single(T & data_rx, T data_tx, Continuous cont = DISC);
+    template<valid_spi_data T>
+    hal::HalResult read_burst(is_stdlayout auto * pdata, const size_t len, const Continuous cont = DISC);
+
+    template<valid_spi_data T>
+    hal::HalResult read_single(is_stdlayout auto & data, const Continuous cont = DISC);
+
+    template<valid_spi_data T>
+    hal::HalResult transfer_single(T & data_rx, const T data_tx, Continuous cont = DISC);
 };
 
-template<typename T>
-requires std::is_standard_layout_v<T>
-hal::BusError SpiDrv::write_single(const T data, Continuous cont) {
-    constexpr size_t size = sizeof(T);
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (size != 1) this->set_data_width(size * 8);
+template<valid_spi_data T>
+hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous cont) {
+    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if constexpr (size == 1) {
-            spi_.write(uint8_t(data));
-        } else if constexpr (size == 2) {
-            spi_.write(uint16_t(data));
-        } else {
-            spi_.write(uint32_t(data));
-        }
-
-        if (cont == DISC) spi_.end();
-        if (size != 1) this->set_data_width(8);
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    if constexpr (sizeof(T) != 1){
+        if(const auto res = this->set_data_width(sizeof(T) * 8); res.is_err())
+            return res;
     }
 
-    return hal::BusError::Ok();
-}
-
-template <typename U>
-requires std::is_standard_layout_v<U>
-hal::BusError SpiDrv::write_burst(const is_stdlayout auto & data, const size_t len, Continuous cont) {
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (sizeof(U) != 1) this->set_data_width(sizeof(U) * 8);
-        for (size_t i = 0; i < len; i++) spi_.write(static_cast<U>(data));
-        if (cont == DISC) spi_.end();
-        if (sizeof(U) != 1) this->set_data_width(8);
+    if constexpr (sizeof(T) == 1) {
+        if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return res;
+    } else if constexpr (sizeof(T) == 2) {
+        if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
     }
-    return hal::BusError::Ok();
+
+    if (cont == DISC) spi_.end();
+    if constexpr (sizeof(T) != 1) this->set_data_width(8);
+
+    return hal::HalResult::Ok();
 }
 
-template <typename U>
-requires std::is_standard_layout_v<U>
-hal::BusError SpiDrv::write_burst(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont) {
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (sizeof(U) != 1) this->set_data_width(sizeof(U) * 8);
-        for (size_t i = 0; i < len; i++) spi_.write(static_cast<U>(data_ptr[i]));
-        if (cont == DISC) spi_.end();
-        if (sizeof(U) != 1) this->set_data_width(8);
+
+template <valid_spi_data T>
+hal::HalResult SpiDrv::write_burst(const is_stdlayout auto data, const size_t len, Continuous cont) {
+    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
+    if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+    if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+    for (size_t i = 0; i < len; i++){
+        spi_.write(uint32_t(static_cast<T>(data)));
     }
-    return hal::BusError::Ok();
+    if (cont == DISC) spi_.end();
+    if constexpr (sizeof(T) != 1) this->set_data_width(8);
+    return hal::HalResult::Ok();
 }
 
-template<typename T>
-requires std::is_standard_layout_v<T>
-hal::BusError SpiDrv::read_burst(T * data_ptr, const size_t len, const Continuous cont) {
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+
+template <valid_spi_data T>
+hal::HalResult SpiDrv::write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont) {
+    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+    if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+    if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+    for (size_t i = 0; i < len; i++){
+        spi_.write(uint32_t(reinterpret_cast<const T *>(pdata)[i]));
+    } 
+    if (cont == DISC) spi_.end();
+    if constexpr (sizeof(T) != 1) this->set_data_width(8);
+    return hal::HalResult::Ok();
+}
+
+
+template <valid_spi_data T>
+hal::HalResult SpiDrv::read_burst(is_stdlayout auto * pdata, const size_t len, const Continuous cont) {
+    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         for (size_t i = 0; i < len; i++) {
             uint32_t temp = 0;
             spi_.read(temp);
-            data_ptr[i] = temp;
+            pdata[i] = temp;
         }
         if (cont == DISC) spi_.end();
-        if (sizeof(T) != 1) this->set_data_width(8);
+        if constexpr (sizeof(T) != 1) this->set_data_width(8);
     }
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-template<typename T>
-requires std::is_standard_layout_v<T>
-hal::BusError SpiDrv::read_single(T & data, const Continuous cont) {
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+
+template <valid_spi_data T>
+hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous cont) {
+    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
+    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t temp = 0;
         spi_.read(temp);
-        data = temp;
+        // data = *reinterpret_cast<std::decay_t<decltype(data)> *>(&temp);
+        memcpy(&data, &temp, sizeof(T));
         if (cont == DISC) spi_.end();
-        if (sizeof(T) != 1) this->set_data_width(8);
+        if constexpr (sizeof(T) != 1) this->set_data_width(8);
     }
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-template<typename T>
-requires std::is_standard_layout_v<T>
-hal::BusError SpiDrv::transfer_single(T & datarx, T datatx, Continuous cont) {
-    if (hal::BusError::Ok() == spi_.begin(idx_.to_req())) {
-        if (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+
+template <valid_spi_data T>
+hal::HalResult SpiDrv::transfer_single(T & datarx, const T datatx, Continuous cont) {
+    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t ret = 0;
         spi_.transfer(ret, datatx);
         datarx = ret;
-        if (sizeof(T) != 1) this->set_data_width(8);
+        if constexpr (sizeof(T) != 1) this->set_data_width(8);
         if (cont == DISC) spi_.end();
     }
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
 
@@ -174,5 +180,5 @@ template<>
 struct driver_of_bus<hal::Spi>{
     using driver_type = hal::SpiDrv;
 };
-    
+
 }

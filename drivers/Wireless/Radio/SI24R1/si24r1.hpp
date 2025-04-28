@@ -215,7 +215,7 @@ protected:
             size = MIN(size, 32);
             return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::R_RX_PAYLOAD), CONT)
-            | spi_drv_.read_burst(buffer, size);
+            | spi_drv_.read_burst<uint8_t>(buffer, size);
         }
     }
 
@@ -258,9 +258,9 @@ public:
 
     Result<size_t, hal::BusError> available(){
         uint8_t size;
-        if(const auto err = spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
+        if(const auto err = spi_drv_.transfer_single<uint8_t>(status_reg.as_ref(), 
             uint8_t(Command::R_RX_PL_WID), CONT); err.is_err()) return Err(err);
-        if(const auto err = spi_drv_.read_single((size)); err.is_err()) return Err(err);
+        if(const auto err = spi_drv_.read_single<uint8_t>((size)); err.is_err()) return Err(err);
         return Ok(size);
     }
 };

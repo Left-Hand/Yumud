@@ -371,23 +371,12 @@ static void render_row(const __restrict std::span<RGB565> row, const uint y, std
     // filter(row);
 }
 
-// [[maybe_unused]]
-// static std::vector<RGB565> render_row_v2(const uint w, const uint y){
-//     std::vector<RGB565> row(w);
-
-//     for (uint x = 0; x < LCD_W; x++){
-//         row[x] = draw3drt(x, y);
-//     }
-
-//     // filter(row);
-
-//     return row;
-// }
 
 
 #define UART hal::uart2
 using drivers::ST7789;
 
+static constexpr size_t LCD_SPI_FREQ_HZ = 12_MHz;
 void light_tracking_main(void){
 
     UART.init(576000);
@@ -412,7 +401,7 @@ void light_tracking_main(void){
     auto & lcd_dc = portA[11];
     auto & dev_rst = portA[12];
     
-    
+
     lcd_blk.outpp(HIGH);
     #endif
 
@@ -420,47 +409,59 @@ void light_tracking_main(void){
 
 
     spi.bind_cs_pin(lcd_cs, 0);
-    spi.init(144_MHz, CommStrategy::Blocking);
+    // spi.init(144_MHz, CommStrategy::Blocking);
+    spi.init(LCD_SPI_FREQ_HZ, CommStrategy::Blocking);
+    // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
+    (void)spi.set_bitorder(MSB);
+    // spi.set_bitorder(LSB);
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
-    // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 tftDisplayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
+    // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
+    ST7789 displayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
+    drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170);
 
-    {
-        tftDisplayer.init();
-
-
-        if(true ){
-        // if(false){
-            tftDisplayer.set_flip_x(false);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(true);
-            tftDisplayer.set_display_offset({40, 52}); 
-        }else{
-            tftDisplayer.set_flip_x(true);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(false);
-            tftDisplayer.set_display_offset({52, 40}); 
-        }
-        tftDisplayer.set_format_rgb(true);
-        tftDisplayer.set_flush_dir_h(false);
-        tftDisplayer.set_flush_dir_v(false);
-        tftDisplayer.set_inversion(true);
-    }
-
-    tftDisplayer.fill(ColorEnum::PINK);
+    displayer.fill(ColorEnum::PINK);
     delay(200);
 
-    for (uint y = 0; y < LCD_H; y++){
-        std::array<RGB565, LCD_W> row;
-        row.fill(RGB565(Color_t<real_t>(0,1,0,0)));
-        // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-        tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
-        // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-        // renderer.draw_rect(Rect2i(20, 0, 20, 40));
-    }
+    
+    auto fill = [&]{
+        const auto st = sinpu(time() * 20) * 0.5_r + 0.5_r;
+        for (uint y = 0; y < LCD_H; y++){
+            std::array<RGB565, LCD_W> row;
+            // row.fill(RGB565(Color_t<real_t>(0,int(y==0),0,0)));
+            // row[0] = 
+            for(size_t x = 0; x < row.size(); x++){
+                auto & item = row[x];
 
+                // constexpr auto c = Color_t<real_t>(1,1,0,0);
+                // constexpr auto r8 = RGB888(c);
+                // // constexpr auto r = RGB565(c); 
+                // constexpr auto r = RGB565(r8); 
+
+                // item = RGB565(Color_t<real_t>(real_t(y) / LCD_H, st, 0));
+                // item = RGB565::from_u16(0x003f);
+                // item = RGB565::from_u16(0xff00);
+                item = RGB565::from_565(y, x, uint8_t(31 * st));
+                    // real_t(x) * INV_LCD_W,
+                    // x % 2,
+                    // 1,
+                    
+                    // 0, st, 0));
+                    // 0, 0, 1));
+            }
+            // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
+            const auto u = micros();
+            displayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
+            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+        }
+    };
+
+    while(true){
+        fill();
+    }
 
     std::vector<TriangleSurfaceCache_t<real_t>> co_triangles(triangles.begin(), triangles.end());
     // for(uint i = 0; i < co_triangles.size(); i++) 
@@ -474,10 +475,10 @@ void light_tracking_main(void){
 
             // const auto row = render_row_v2(LCD_W, y);
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-            tftDisplayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
             // DEBUG_PRINTLN(uint8_t(row[50].b));
 
-            // tftDisplayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
             // renderer.draw_rect(Rect2i(20, 0, 20, 40));
         }
     };

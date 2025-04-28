@@ -18,10 +18,10 @@ hal::BusError SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
             i2c_.begin(slave_addr_.to_write_req());
         err.is_err()) return err;
 
-        return i2c_.write(0xF0)
-            | i2c_.write(data)
+        i2c_.create_guard();
+        if(const auto res = i2c_.write(0xF0); res.is_err()) return res;
+        if(const auto res = i2c_.write(data); res.is_err()) return res;
         //#endregion
-            | i2c_.end();
     }
 
     return hal::BusError::Ok();

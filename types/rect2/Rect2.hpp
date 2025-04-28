@@ -238,10 +238,10 @@ public:
         return (size.x != 0) && (size.y != 0);
     }
 
-    template<arithmetic U>
-    constexpr explicit operator U() const {
-        return get_area();
-    }
+    // template<arithmetic U>
+    // constexpr explicit operator U() const {
+    //     return get_area();
+    // }
 };
 
 using Rect2i = Rect2_t<int>;

@@ -139,7 +139,6 @@ static void oled_tb(){
     // i2c.init(0);
     i2c.init(I2C_BAUD);
 
-    DisplayerPhyI2c oled_phy{i2c};
 
     // auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
     constexpr auto cfg = SSD13XX_Presets::_128X64{{
@@ -147,7 +146,7 @@ static void oled_tb(){
         .flip_y = true
     }};
 
-    auto oled = SSD13XX(oled_phy, cfg);
+    auto oled = SSD13XX({i2c}, cfg);
     auto & frame = oled.fetch_frame();
     
     // DEBUG_PRINTLN("init started");

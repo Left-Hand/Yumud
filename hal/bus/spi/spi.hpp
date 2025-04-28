@@ -51,9 +51,9 @@ public:
     [[nodiscard]] virtual hal::BusError write(const uint32_t data) = 0;
     [[nodiscard]] virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    virtual void set_data_width(const uint8_t len) = 0;
-    virtual void set_baudrate(const uint32_t baud) = 0;
-    virtual void set_bitorder(const Endian endian) = 0;
+    [[nodiscard]] virtual hal::BusError set_data_width(const uint8_t len) = 0;
+    [[nodiscard]] virtual hal::BusError set_baudrate(const uint32_t baud) = 0;
+    [[nodiscard]] virtual hal::BusError set_bitorder(const Endian endian) = 0;
 
     virtual void init(
         const uint32_t baudrate, 

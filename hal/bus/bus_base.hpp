@@ -90,7 +90,7 @@ public:
 
     BusError begin(const LockRequest req);
 
-    BusError end();
+    void end();
 
     _Guard create_guard(){return _Guard{*this};}
 

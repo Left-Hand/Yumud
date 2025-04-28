@@ -34,11 +34,9 @@ hal::BusError BusBase::begin(const LockRequest req){
     }
 }
 
-hal::BusError BusBase::end(){
+void BusBase::end(){
     this->trail();
     locker.unlock();
-
-    return hal::BusError::Ok();
 }
 
 namespace ymd{

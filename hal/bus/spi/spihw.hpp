@@ -56,12 +56,12 @@ public:
 
     void enable_hw_cs(const bool en = true);
 
-    [[nodiscard]] hal::BusError write(const uint32_t data);
-    [[nodiscard]] hal::BusError read(uint32_t & data);
-    [[nodiscard]] hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx);
-    void set_data_width(const uint8_t len);
-    void set_baudrate(const uint32_t baudrate);
-    void set_bitorder(const Endian endian);
+    [[nodiscard]] hal::HalResult write(const uint32_t data);
+    [[nodiscard]] hal::HalResult read(uint32_t & data);
+    [[nodiscard]] hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx);
+    [[nodiscard]] hal::HalResult set_data_width(const uint8_t len);
+    [[nodiscard]] hal::HalResult set_baudrate(const uint32_t baudrate);
+    [[nodiscard]] hal::HalResult set_bitorder(const Endian endian);
 
     #ifdef ENABLE_SPI1
     friend void ::SPI1_IRQHandler(void);

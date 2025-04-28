@@ -6,6 +6,91 @@
 
 namespace ymd::drivers{
 
+class ST7789_Phy final{
+public:
+    template<typename T = void>
+    using IResult = Result<void, DisplayerError>;
+protected:
+    hal::SpiDrv spi_drv_;
+    hal::Gpio & dc_gpio_;
+    hal::Gpio & res_gpio_;
+    hal::Gpio & blk_gpio_;
+
+    static constexpr auto COMMAND_LEVEL = LOW;
+    static constexpr auto DATA_LEVEL = HIGH;
+public:
+
+    ST7789_Phy(
+            hal::SpiDrv && spi_drv, 
+            hal::Gpio & dc_gpio, 
+            hal::Gpio & res_gpio = hal::NullGpio,
+            hal::Gpio & blk_gpio = hal::NullGpio
+        ) :spi_drv_(std::move(spi_drv)), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
+
+    ST7789_Phy(
+        const hal::SpiDrv & spi_drv, 
+        hal::Gpio & dc_gpio, 
+        hal::Gpio & res_gpio = hal::NullGpio,
+        hal::Gpio & blk_gpio = hal::NullGpio
+    ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
+
+
+    ST7789_Phy(
+        hal::Spi & bus,
+        const hal::SpiSlaveIndex index,
+        hal::Gpio & dc_gpio, 
+        hal::Gpio & res_gpio = hal::NullGpio,
+        hal::Gpio & blk_gpio = hal::NullGpio
+    ):ST7789_Phy(hal::SpiDrv(bus, index), dc_gpio, res_gpio, blk_gpio) {};
+
+    [[nodiscard]] IResult<> init(){
+        dc_gpio_.outpp();
+        res_gpio_.outpp(HIGH);
+        blk_gpio_.outpp(HIGH);
+
+        return reset();
+    }
+
+    [[nodiscard]] IResult<> reset(){
+        delay(10);
+        res_gpio_.clr();
+        delay(10);
+        res_gpio_.set();
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> set_back_light_brightness(const real_t brightness){
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_command(const uint8_t cmd){
+        dc_gpio_ = COMMAND_LEVEL;
+        return IResult<>(spi_drv_.write_single<uint8_t>(cmd));
+    }
+
+    [[nodiscard]] IResult<> write_data8(const uint8_t data){
+        dc_gpio_ = DATA_LEVEL;
+        return IResult<>(spi_drv_.write_single<uint8_t>(data));
+    }
+
+    [[nodiscard]] IResult<> write_data16(const uint16_t data){
+        dc_gpio_ = DATA_LEVEL;
+        return IResult<>(spi_drv_.write_single<uint16_t>(data));
+    }
+
+    template<typename U>
+    [[nodiscard]] IResult<> write_burst(const auto * data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return IResult<>(spi_drv_.write_burst<U>(data, len));
+    }
+
+    template<typename U>
+    [[nodiscard]] IResult<> write_burst(const auto & data, size_t len){
+        dc_gpio_ = DATA_LEVEL;
+        return IResult<>(spi_drv_.write_burst<U>(data, len));
+    }
+};
+
 class ST7789:public Displayer<RGB565>{
 public:
     template<typename T = void>
@@ -42,32 +127,25 @@ public:
 private:
     using Algo = ST7789_ReflashAlgo;
 
-    DisplayerPhySpi interface_;
+    ST7789_Phy phy_;
     Algo algo_;
 
     Vector2_t<uint16_t> offset_;
     uint8_t scr_ctrl_ = 0;
 
     __fast_inline IResult<> write_command(const uint8_t cmd){
-        return interface_.write_command(cmd);
+        return phy_.write_command(cmd);
     }
 
-    __fast_inline IResult<> write_data(const uint8_t data){
-        return interface_.write_data(data);
+    __fast_inline IResult<> write_data8(const uint8_t data){
+        return phy_.write_data8(data);
     }
 
     __fast_inline IResult<> write_data16(const uint16_t data){
-        return interface_.write_data16(data);
+        return phy_.write_data16(data);
     }
 
-    IResult<> modify_ctrl(const bool yes,const uint8_t pos){
-        uint8_t temp = 0x01 << pos;
-        if (yes) scr_ctrl_ |= temp;
-        else scr_ctrl_ &= ~temp;
-
-        return write_command(0x36) | 
-        write_data(scr_ctrl_);
-    }
+    IResult<> modify_ctrl(const bool yes, const uint8_t pos);
 
 protected:
 
@@ -76,7 +154,7 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
         setpos_unsafe(pos);
-        interface_.write_data16(uint16_t(color)).unwrap();
+        phy_.write_data16(uint16_t(color)).unwrap();
     }
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 color);
@@ -84,17 +162,17 @@ protected:
     void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color);
     void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color);
 public:
-    ST7789(const DisplayerPhySpi & interface, const Vector2_t<uint16_t> & size):
+    ST7789(const ST7789_Phy & phy, const Vector2_t<uint16_t> & size):
             ImageBasics(size), 
             Displayer<RGB565>(size), 
-            interface_(interface),
+            phy_(phy),
             algo_(size){;}
 
     IResult<> init();
 
     void put_texture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
-        interface_.write_burst<RGB565>(color_ptr, int(rect)).unwrap();
+        phy_.write_burst<uint16_t>(color_ptr, rect.get_area()).unwrap();
     }
 
     IResult<> set_display_offset(const Vector2i & _offset){
@@ -131,5 +209,13 @@ public:
         return write_command(0x20 + inv);
     }
 };
+
+enum class ST7789_Presets{
+    _120X80,
+    _240X135,
+    _320X170
+};
+
+Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset);
 
 };
