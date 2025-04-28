@@ -103,7 +103,7 @@ public:
         return *read_ptr;
     }
 
-    size_t available() const {
+    __fast_inline size_t available() const {
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
@@ -111,7 +111,7 @@ public:
         }
     }
 
-    size_t straight() const{
+    __fast_inline size_t straight() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{
@@ -122,7 +122,7 @@ public:
     __fast_inline const T foresee(const size_t idx) const{
         return *advance(read_ptr, idx);
     }
-    void vent(const size_t len){
+    __fast_inline void vent(const size_t len){
         read_ptr = advance(read_ptr, len);
         return;
     }

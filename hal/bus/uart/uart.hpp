@@ -17,6 +17,20 @@ static constexpr size_t UART_FIFO_BUF_SIZE = 256;
 #endif
 
 
+#ifndef UART_DMA_BUF_SIZE
+static constexpr size_t UART_DMA_BUF_SIZE = 64;
+#endif
+
+#ifndef UART_TX_DMA_BUF_SIZE
+static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+#endif
+
+
+#ifndef UART_RX_DMA_BUF_SIZE
+static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+#endif
+
+
 class Uart:public BusBase{
 
 public:

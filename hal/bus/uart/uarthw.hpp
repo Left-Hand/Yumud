@@ -59,16 +59,18 @@ protected:
 
     void invoke_tx_dma();
 
-    void on_rxne_interrupt();
-    void on_txe_interrupt();
+    __fast_inline void on_rxne_interrupt(){
+        this->rx_fifo_.push(uint8_t(instance_->DATAR));
+    }
+    
+    __fast_inline void on_txe_interrupt(){
+    
+    }
+    
     void on_rxidle_interrupt();
 
     size_t rx_dma_buf_index_;
-    // size_t tx_dma_buf_index_;
 
-    #ifndef UART_DMA_BUF_SIZE
-    #define UART_DMA_BUF_SIZE 64
-    #endif
 
     std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf_;
     std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf_;

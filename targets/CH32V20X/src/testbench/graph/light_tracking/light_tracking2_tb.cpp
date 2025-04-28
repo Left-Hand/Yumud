@@ -424,9 +424,9 @@ void light_tracking_main(void){
     displayer.fill(ColorEnum::PINK);
     delay(200);
 
-    
+    [[maybe_unused]]
     auto fill = [&]{
-        const auto u = micros();
+        // const auto u = micros();
         const auto st = sinpu(time() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unsafe({0,0});
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
@@ -464,9 +464,9 @@ void light_tracking_main(void){
             // renderer.draw_rect(Rect2i(20, 0, 20, 40));
         }
 
-        const auto use_us = micros() - u;
-        const auto fps = 1000000 / use_us;
-        DEBUG_PRINTLN(use_us,fps);
+        // const uint32_t use_us = micros() - u;
+        // const auto fps = 1000000 / use_us;
+        // DEBUG_PRINTLN(use_us,fps);
     };
 
     // while(true){
@@ -478,7 +478,7 @@ void light_tracking_main(void){
     //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
     DEBUG_PRINTLN(millis());
     auto render = [&](){
-        const auto u = micros();
+        // const auto u = micros();
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
 
@@ -495,9 +495,9 @@ void light_tracking_main(void){
         }
 
         
-        const auto use_us = micros() - u;
-        const auto fps = 1000000 / use_us;
-        DEBUG_PRINTLN(use_us,fps);
+        // const auto use_us = micros() - u;
+        // const auto fps = 1000000 / use_us;
+        // DEBUG_PRINTLN(use_us,fps);
     };
 
     // for(size_t i = 0; i < 100; i++) render();
