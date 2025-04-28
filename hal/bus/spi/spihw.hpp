@@ -56,9 +56,37 @@ public:
 
     void enable_hw_cs(const bool en = true);
 
-    [[nodiscard]] hal::HalResult write(const uint32_t data);
-    [[nodiscard]] hal::HalResult read(uint32_t & data);
-    [[nodiscard]] hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx);
+    [[nodiscard]] __fast_inline hal::HalResult fast_write(const uint16_t data){
+        while ((instance_->STATR.TXE) == RESET);
+        instance_->DATAR.DR = data;
+
+        return hal::HalResult::Ok();
+    }
+
+    [[nodiscard]] __fast_inline hal::HalResult write(const uint32_t data){
+        uint32_t dummy;
+        return transfer(dummy, data);
+    }
+    
+    
+    [[nodiscard]] __fast_inline hal::HalResult read(uint32_t & data){
+        return transfer(data, 0);
+    }
+    
+    
+    [[nodiscard]] __fast_inline hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx){
+        if(bool(tx_strategy_)){
+            while ((instance_->STATR.TXE) == RESET);
+            instance_->DATAR.DR = data_tx;
+        }
+    
+        if(bool(rx_strategy_)){
+            while ((instance_->STATR.RXNE) == RESET);
+            data_rx = instance_->DATAR.DR;
+        }
+    
+        return hal::HalResult::Ok();
+    }
     [[nodiscard]] hal::HalResult set_data_width(const uint8_t len);
     [[nodiscard]] hal::HalResult set_baudrate(const uint32_t baudrate);
     [[nodiscard]] hal::HalResult set_bitorder(const Endian endian);

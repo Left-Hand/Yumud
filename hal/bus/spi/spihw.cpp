@@ -252,30 +252,7 @@ hal::HalResult SpiHw::set_bitorder(const Endian endian){
 }
 
 
-hal::HalResult SpiHw::write(const uint32_t data){
-    uint32_t dummy;
-    return transfer(dummy, data);
-}
 
-
-hal::HalResult SpiHw::read(uint32_t & data){
-    return transfer(data, 0);
-}
-
-
-hal::HalResult SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
-    if(bool(tx_strategy_)){
-        while ((instance_->STATR.TXE) == RESET);
-        instance_->DATAR.DR = data_tx;
-    }
-
-    if(bool(rx_strategy_)){
-        while ((instance_->STATR.RXNE) == RESET);
-        data_rx = instance_->DATAR.DR;
-    }
-
-    return hal::HalResult::Ok();
-}
 
 namespace ymd::hal{
 #ifdef ENABLE_SPI1

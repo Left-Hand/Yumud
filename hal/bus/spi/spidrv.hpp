@@ -3,9 +3,11 @@
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
+#include <functional>
 
 
 #include "spi.hpp"
+#include "spihw.hpp"
 
 namespace ymd::hal{
 
@@ -25,9 +27,20 @@ protected:
     SpiSlaveIndex idx_;
     Endian endian_ = LSB;  
     uint32_t baudrate_ = 1000000;
+    uint8_t last_width_ = -1;
+
+    using WriteFn = std::function<HalResult(uint32_t)>;
+
+    // WriteFn write_fn_;
 public:
-    SpiDrv(hal::Spi & spi, const SpiSlaveIndex idx):
-        spi_(spi), idx_(idx){;}
+
+    template<typename T>
+    requires (std::is_base_of_v<Spi, T>)
+    SpiDrv(T & spi, const SpiSlaveIndex idx):
+        spi_(spi), 
+        idx_(idx)
+        // write_fn_([this](const uint32_t data) -> HalResult{return this->spi_.write(data);})
+        {;}
 
     template<typename T>
     void force_write(const T data) {
@@ -46,23 +59,33 @@ public:
     }
 
     
-    hal::HalResult set_data_width(const size_t width){return spi_.set_data_width(width);}
+    __fast_inline hal::HalResult set_data_width(const size_t width){
+        if(last_width_ != width) return spi_.set_data_width(width);
+        else return hal::HalResult::Ok();
+    }
+
     void set_endian(const Endian endian){endian_ = endian;}
     void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 
     uint8_t index_;
 public:
     [[nodiscard]]
-    hal::HalResult release();
-
-
+    hal::HalResult release(){
+        if (auto err = spi_.begin(idx_.to_req()); err.is_ok()) {
+            __nopn(4);
+            spi_.end();
+            return hal::HalResult::Ok();
+        }else{
+            return err;
+        }
+    }
     void end(){return spi_.end();}
 
     template<valid_spi_data T>
     hal::HalResult write_single(const is_stdlayout auto data, Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult write_burst(const is_stdlayout auto data, const size_t len, Continuous cont = DISC);
+    hal::HalResult write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC);
 
     template<valid_spi_data T>
     hal::HalResult write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC);
@@ -101,12 +124,13 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
 
 
 template <valid_spi_data T>
-hal::HalResult SpiDrv::write_burst(const is_stdlayout auto data, const size_t len, Continuous cont) {
+hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
     if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < len; i++){
-        spi_.write(uint32_t(static_cast<T>(data)));
+        if(const auto res = spi_.write(uint32_t(static_cast<T>(data))); 
+            res.is_err()) return res;
     }
     if (cont == DISC) spi_.end();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
@@ -120,7 +144,8 @@ hal::HalResult SpiDrv::write_burst(const is_stdlayout auto * pdata, const size_t
     if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < len; i++){
-        spi_.write(uint32_t(reinterpret_cast<const T *>(pdata)[i]));
+        if(const auto res = spi_.write(uint32_t(reinterpret_cast<const T *>(pdata)[i]));
+            res.is_err()) return res;
     } 
     if (cont == DISC) spi_.end();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
@@ -177,7 +202,7 @@ hal::HalResult SpiDrv::transfer_single(T & datarx, const T datatx, Continuous co
 
 
 template<>
-struct driver_of_bus<hal::Spi>{
+struct driver_of_bus<hal::SpiHw>{
     using driver_type = hal::SpiDrv;
 };
 

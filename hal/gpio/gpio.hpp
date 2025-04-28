@@ -51,8 +51,23 @@ public:
     __fast_inline void clr(){
         instance_->BCR = uint16_t(pin_);
     }
-    __fast_inline void write(const BoolLevel val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
+    // __fast_inline void write(const BoolLevel val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
+
+    //BSHR的寄存器在BCR前 {1->BSHR; 0->BCR} 使用逻辑操作而非判断以提高速度
+    __fast_inline void write(const BoolLevel val){*(&instance_->BCR - int(bool(val))) = uint16_t(pin_);}
+
     __fast_inline BoolLevel read() const {return BoolLevel::from(instance_->INDR & uint16_t(pin_));}
+
+    hal::Gpio & operator = (const BoolLevel level){
+        write(level);
+        return *this;
+    }
+
+    hal::Gpio & operator = (const hal::Gpio & other){
+        write(other.read());
+        return *this;
+    }
+
 
     void set_mode(const GpioMode mode) ;
     __fast_inline GPIO_TypeDef * inst() const {return instance_;} 
