@@ -53,8 +53,8 @@ protected:
 
     scexpr uint8_t ramprofile0[8] = {0};
 
-    hal::BusError write_reg(const uint8_t, const uint8_t *, const size_t);
-    hal::BusError write_data(const uint8_t);
+    hal::HalResult write_reg(const uint8_t, const uint8_t *, const size_t);
+    hal::HalResult write_data(const uint8_t);
 
     void writeProfile(const Profile & profile);
     void writeRamprofile();

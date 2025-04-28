@@ -76,7 +76,7 @@ protected:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    hal::BusError lead(const LockRequest req) override;
+    hal::HalResult lead(const LockRequest req) override;
     void trail() override;
 public:
     UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):

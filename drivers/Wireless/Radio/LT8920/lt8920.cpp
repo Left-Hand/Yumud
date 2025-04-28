@@ -353,7 +353,7 @@ void LT8920::setSyncWord(const uint64_t syncword){
 }
 
 
-hal::BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
+hal::HalResult LT8920::write_reg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         if(const auto err = 
@@ -369,7 +369,7 @@ hal::BusError LT8920::write_reg(const RegAddress address, const uint16_t reg){
     PANIC();
 }
 
-hal::BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
+hal::HalResult LT8920::read_reg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         const auto err = spi_drv_->transfer_single(
@@ -385,7 +385,7 @@ hal::BusError LT8920::read_reg(const RegAddress address, uint16_t & reg){
 }
 
 
-hal::BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
+hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
         if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); err.is_err()) return err;
@@ -397,7 +397,7 @@ hal::BusError LT8920::writeFifo(const uint8_t * data, const size_t len){
     PANIC();
 }
 
-hal::BusError LT8920::readFifo(uint8_t * data, const size_t len){
+hal::HalResult LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
         if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
@@ -409,7 +409,7 @@ hal::BusError LT8920::readFifo(uint8_t * data, const size_t len){
     PANIC();
 }
 
-hal::BusError LT8920::updateFifoStatus(){
+hal::HalResult LT8920::updateFifoStatus(){
     if(spi_drv_){
         // return spi_drv_->transfer_single(flag_reg.as_ref(), flag_reg.address);
         TODO();

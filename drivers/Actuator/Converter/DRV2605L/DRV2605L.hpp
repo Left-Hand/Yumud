@@ -17,7 +17,7 @@ public:
         Unspecified
     };
 
-    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     enum class Package:uint8_t{
         _2605,
@@ -358,22 +358,22 @@ protected:
 
     [[nodiscard]] Result<void, Error> 
     write_reg(const RegAddress address, const uint8_t reg){
-        const auto err = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
-        if(err.is_err()) return Err(Error(err));
+        const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
     [[nodiscard]] Result<void, Error> 
     read_reg(const RegAddress addr, uint8_t & reg){
-        const auto err = i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
-        if(err.is_err()) return Err(Error(err));
+        const auto res = i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
     [[nodiscard]] Result<void, Error> 
     requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        const auto err = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
-        if(err.is_err()) return Err(Error(err));
+        const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 

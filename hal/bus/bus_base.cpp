@@ -22,7 +22,7 @@ bool BusBase::Locker::is_owned_by(const LockRequest req) const {
         and (sys::exception::is_intrrupt_acting() == oninterrupt_));
 }
 
-hal::BusError BusBase::begin(const LockRequest req){
+hal::HalResult BusBase::begin(const LockRequest req){
     if(false == locker.is_locked()){
         locker.lock(req);
         return lead(req);
@@ -30,7 +30,7 @@ hal::BusError BusBase::begin(const LockRequest req){
         locker.lock(req);
         return lead(req);
     }else{
-        return hal::BusError::OccuipedByOther;
+        return hal::HalResult::OccuipedByOther;
     }
 }
 
@@ -39,32 +39,3 @@ void BusBase::end(){
     locker.unlock();
 }
 
-namespace ymd{
-
-OutputStream & print_buserr_kind(OutputStream & os, const hal::BusError::Kind err){
-    using Kind = hal::BusError::Kind;
-    #define PRINT_CASE(x) case Kind::x: return os << #x;
-    switch(err){
-        PRINT_CASE(AlreadyUnderUse);
-        PRINT_CASE(OccuipedByOther);
-        PRINT_CASE(AckTimeout);
-        PRINT_CASE(BusOverload);
-        PRINT_CASE(SelecterOutOfRange);
-        PRINT_CASE(NoSelecter);
-        PRINT_CASE(PayloadNoLength);
-        PRINT_CASE(VerifyFailed);
-        PRINT_CASE(LengthOverflow);
-        PRINT_CASE(Unspecified);
-        default: return os << "Unknown";
-    }
-}
-
-OutputStream & operator << (OutputStream & os, const hal::BusError & err){
-    if(err.is_ok()) return os << "Ok";
-    else return print_buserr_kind(os, err.unwrap_err());
-}
-
-OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err){
-    return print_buserr_kind(os, err);
-}
-}

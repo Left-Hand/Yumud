@@ -3,7 +3,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-hal::BusError SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
+hal::HalResult SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
     if(i2c_.begin(slave_addr_.to_write_req()).is_ok()){
         
         //#region 写入地址字节和第一个字节
@@ -24,10 +24,10 @@ hal::BusError SccbDrv::write_reg(const uint8_t addr, const uint16_t data){
         //#endregion
     }
 
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-hal::BusError SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
+hal::HalResult SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
     if(i2c_.begin(slave_addr_.to_write_req()).is_ok()){
         uint32_t data_l, data_h;
 
@@ -50,5 +50,5 @@ hal::BusError SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
         data = ((uint8_t)data_h << 8) | (uint8_t)data_l;
     }
 
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }

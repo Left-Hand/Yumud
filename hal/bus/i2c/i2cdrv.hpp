@@ -80,95 +80,88 @@ public:
     }
 private:
 
-    hal::BusError write_repeat_impl(
+    hal::HalResult write_repeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 
         const size_t len, 
         const Endian endian){
-            return write_template(addr, endian, [&]() -> hal::BusError{return this->write_homo_payload(data, len, endian);});
+            return write_template(addr, endian, [&]() -> hal::HalResult{return this->write_homo_payload(data, len, endian);});
         }
 
-    hal::BusError write_burst_impl(
+    hal::HalResult write_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<const valid_i2c_data auto> pdata, 
         const Endian endian){
-            return write_template(addr, endian, [&]() -> hal::BusError{return this->write_payload(pdata, endian);});}
+            return write_template(addr, endian, [&]() -> hal::HalResult{return this->write_payload(pdata, endian);});}
 
-    hal::BusError read_burst_impl(
+    hal::HalResult read_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<valid_i2c_data auto> pdata,
         const Endian endian){
-            return read_template(addr, endian, [&]() -> hal::BusError{return this->read_payload(pdata, endian);});}
+            return read_template(addr, endian, [&]() -> hal::HalResult{return this->read_payload(pdata, endian);});}
 
     template<typename T, typename... Ts>    //TODO 改写为Y组合子
     __fast_inline
-    hal::BusError write_payloads(Endian endian, const std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
-        if constexpr (sizeof...(Ts) == 0) return hal::BusError::Ok();
-        else{hal::BusError err = write_payload(first, endian);
+    hal::HalResult write_payloads(Endian endian, const std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
+        if constexpr (sizeof...(Ts) == 0) return hal::HalResult::Ok();
+        else{hal::HalResult err = write_payload(first, endian);
             return err.is_err() ? err : write_payloads<Ts...>(endian, rest...);}
     }
 
     template<typename T, typename... Ts>   //TODO 改写为Y组合子
     __fast_inline
-    hal::BusError read_payloads(Endian endian, const std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
-        if constexpr (sizeof...(Ts) == 0) return hal::BusError::Ok();
-        else{hal::BusError err = read_payload(first, endian);
+    hal::HalResult read_payloads(Endian endian, const std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
+        if constexpr (sizeof...(Ts) == 0) return hal::HalResult::Ok();
+        else{hal::HalResult err = read_payload(first, endian);
             return err.is_err() ? err : read_payloads<Ts...>(endian, rest...);}
     }
 
     template<valid_i2c_data T>
-    hal::BusError write_payload(const std::span<const T> pdata,const Endian endian){
-        // if constexpr (sizeof(T) == 1){
-        //     for(size_t i = 0; i < pdata.size(); i++){
-        //         const auto err = i2c_.write(uint32_t(pdata[i]));
-        //         if(err.is_err()) return err;
-        //     }
-        //     return hal::BusError::Ok();
-        // }
+    hal::HalResult write_payload(const std::span<const T> pdata,const Endian endian){
         return iterate_bytes(
             pdata, endian, 
-            [&](const std::byte byte, const bool is_end) -> hal::BusError{ return i2c_.write(uint32_t(byte)); },
-            [](const hal::BusError err) -> bool {return err.is_err();},
-            []() -> hal::BusError {return hal::BusError::Ok();}
+            [&](const std::byte byte, const bool is_end) -> hal::HalResult{ return i2c_.write(uint32_t(byte)); },
+            [](const hal::HalResult err) -> bool {return err.is_err();},
+            []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
     }
 
     template<valid_i2c_data Tfirst, valid_i2c_data ... Trest>
-    hal::BusError operate_payloads(const std::span<Tfirst> pfirst, const std::span<Trest>... prest, const Endian endian){
+    hal::HalResult operate_payloads(const std::span<Tfirst> pfirst, const std::span<Trest>... prest, const Endian endian){
         if constexpr(std::is_const_v<Tfirst>) {
             if(const auto err = this->write_payload(pfirst, endian); err.is_err()) return err;}
         else {if(const auto err = this->read_payload(pfirst, endian); err.is_err()) return err;}
 
         if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(prest..., endian);
-        else return hal::BusError::Ok();
+        else return hal::HalResult::Ok();
 
     }
     
-    hal::BusError write_homo_payload(const valid_i2c_data auto data, const size_t len, const Endian endian){
+    hal::HalResult write_homo_payload(const valid_i2c_data auto data, const size_t len, const Endian endian){
         return iterate_bytes(
             data, len, endian, 
-            [&](const std::byte byte, const bool is_end) -> hal::BusError{ return i2c_.write(uint32_t(byte)); },
-            [](const hal::BusError err) -> bool {return err.is_err();},
-            []() -> hal::BusError {return hal::BusError::Ok();}
+            [&](const std::byte byte, const bool is_end) -> hal::HalResult{ return i2c_.write(uint32_t(byte)); },
+            [](const hal::HalResult err) -> bool {return err.is_err();},
+            []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
     }
     
-    hal::BusError read_payload(
+    hal::HalResult read_payload(
         const std::span<valid_i2c_data auto> pdata,
         const Endian endian
     ){
         return iterate_bytes(
             pdata, endian, 
-            [&](std::byte & byte, const bool is_end) -> hal::BusError{
+            [&](std::byte & byte, const bool is_end) -> hal::HalResult{
                 uint32_t dummy = 0; auto err = i2c_.read(dummy, is_end ? NACK : ACK); byte = std::byte(dummy); return err;},
-            [](const hal::BusError err) -> bool {return err.is_err();},
-            []() -> hal::BusError {return hal::BusError::Ok();}
+            [](const hal::HalResult err) -> bool {return err.is_err();},
+            []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
         
     }
 
     template<typename Fn>
-    hal::BusError write_template(
+    hal::HalResult write_template(
         const valid_i2c_regaddr auto addr,
         const Endian endian,
         Fn && fn
@@ -180,12 +173,12 @@ private:
     }
 
     template<typename Fn>
-    hal::BusError read_template(
+    hal::HalResult read_template(
         const valid_i2c_regaddr auto addr,
         const Endian endian,
         Fn && fn
     ){
-        return write_template(addr, endian, [&]() -> hal::BusError{
+        return write_template(addr, endian, [&]() -> hal::HalResult{
             if(const auto reset_err = i2c_.begin(slave_addr_.to_read_req()); reset_err.is_ok()){
                 return std::forward<Fn>(fn)();
             }else{
@@ -197,7 +190,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_burst(
+    hal::HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pdata
     ){
@@ -207,7 +200,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_burst(
+    hal::HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pdata,
         const Endian endian
@@ -218,7 +211,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    hal::BusError read_burst(
+    hal::HalResult read_burst(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pdata
     ){
@@ -229,7 +222,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    hal::BusError read_burst(
+    hal::HalResult read_burst(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pdata,
         const Endian endian
@@ -239,47 +232,47 @@ public:
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    hal::BusError write_blocks(
+    hal::HalResult write_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<std::add_const_t<Ts>> ... args,
         const Endian endian
     ){
-        return write_template(addr, endian, [&]() -> hal::BusError{
+        return write_template(addr, endian, [&]() -> hal::HalResult{
             if constexpr(sizeof...(args)) return this->write_payloads<Ts...>(endian, args...);
-            else return hal::BusError::Ok();
+            else return hal::HalResult::Ok();
         });
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    hal::BusError read_blocks(
+    hal::HalResult read_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<std::remove_const_t<Ts>> ... args,
         const Endian endian
     ){
-        return read_template(addr, endian, [&]() -> hal::BusError{
+        return read_template(addr, endian, [&]() -> hal::HalResult{
             if constexpr(sizeof...(args)) return this->read_payloads<Ts...>(endian, args...);
-            else return hal::BusError::Ok();
+            else return hal::HalResult::Ok();
         });
     }
 
     template<typename ... Trest>
     [[nodiscard]] __fast_inline
-    hal::BusError operate_blocks(
+    hal::HalResult operate_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<Trest> ... rest,
         const Endian endian
     ){
-        return read_template(addr, endian, [&]() -> hal::BusError{
+        return read_template(addr, endian, [&]() -> hal::HalResult{
             if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(rest..., endian);
-            else return hal::BusError::Ok();
+            else return hal::HalResult::Ok();
         });
     }
     
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_repeat(
+    hal::HalResult write_repeat(
         const valid_i2c_regaddr auto addr,
         const T data, 
         const size_t len, 
@@ -291,7 +284,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_repeat(
+    hal::HalResult write_repeat(
         const valid_i2c_regaddr auto addr, 
         const T data, 
         const size_t len
@@ -303,7 +296,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_reg(
+    hal::HalResult write_reg(
         const valid_i2c_regaddr auto addr, 
         const T data, 
         const Endian endian
@@ -314,7 +307,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    hal::BusError write_reg(
+    hal::HalResult write_reg(
         const valid_i2c_regaddr auto addr, 
         const T & data
     ){
@@ -324,7 +317,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    hal::BusError read_reg(
+    hal::HalResult read_reg(
         const valid_i2c_regaddr auto addr,
         T & data, 
         Endian endian
@@ -335,7 +328,7 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    hal::BusError read_reg(
+    hal::HalResult read_reg(
         const valid_i2c_regaddr auto addr,
         T & data
     ){
@@ -343,10 +336,10 @@ public:
     }
 
     [[nodiscard]]
-    hal::BusError verify();
+    hal::HalResult verify();
 
     [[nodiscard]]
-    hal::BusError release();
+    hal::HalResult release();
 };
 
 template<>

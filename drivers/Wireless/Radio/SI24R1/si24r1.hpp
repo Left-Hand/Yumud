@@ -196,21 +196,21 @@ protected:
     FeatureReg feature_reg;
 
 
-    hal::BusError write_reg(RegAddress addr, const auto & value){
+    hal::HalResult write_reg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
         spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
         return spi_drv_.write_burst(&(value), sizeof(value));
     }
 
-    hal::BusError read_reg(RegAddress addr, auto & value){
+    hal::HalResult read_reg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
         return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT)
         | spi_drv_.read_burst(&(value), sizeof(value));
     }
 
-    hal::BusError readFifo(uint8_t *buffer, size_t size){
+    hal::HalResult readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -219,7 +219,7 @@ protected:
         }
     }
 
-    hal::BusError writeFifo(const uint8_t *buffer, size_t size){
+    hal::HalResult writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -228,7 +228,7 @@ protected:
         }
     }
 
-    hal::BusError writeFifoNoAck(const uint8_t *buffer, size_t size){
+    hal::HalResult writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
             return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
@@ -237,17 +237,17 @@ protected:
         }
     }
 
-    hal::BusError clearTxFifo(){
+    hal::HalResult clearTxFifo(){
         return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_TX));
     }
 
-    hal::BusError clearRxFifo(){
+    hal::HalResult clearRxFifo(){
         return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), 
             uint8_t(Command::FLUSH_RX));
     }
 
-    hal::BusError updateStatus(){
+    hal::HalResult updateStatus(){
         return spi_drv_.transfer_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
@@ -256,7 +256,7 @@ public:
     Si24R1(const hal::SpiDrv & _spi_drv):spi_drv_(_spi_drv){;}
     Si24R1(hal::SpiDrv && _spi_drv):spi_drv_(_spi_drv){;}
 
-    Result<size_t, hal::BusError> available(){
+    Result<size_t, hal::HalResult> available(){
         uint8_t size;
         if(const auto err = spi_drv_.transfer_single<uint8_t>(status_reg.as_ref(), 
             uint8_t(Command::R_RX_PL_WID), CONT); err.is_err()) return Err(err);

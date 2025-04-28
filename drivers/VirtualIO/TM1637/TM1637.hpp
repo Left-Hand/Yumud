@@ -19,7 +19,7 @@ public:
 
     };
 
-    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,

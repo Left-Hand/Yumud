@@ -1438,15 +1438,15 @@ void Si5351::set_ref_freq(uint32_t ref_freq, enum si5351_pll_input ref_osc)
 	//si5351_write(SI5351_PLL_INPUT_SOURCE, reg_val);
 }
 
-hal::BusError Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
+hal::HalResult Si5351::si5351_write_bulk(uint8_t addr, uint8_t bytes, const uint8_t *data){
 	return i2c_drv_.write_burst(addr, std::span(data, bytes));
 }
 
-hal::BusError Si5351::si5351_write(uint8_t addr, uint8_t data){
+hal::HalResult Si5351::si5351_write(uint8_t addr, uint8_t data){
     return i2c_drv_.write_reg(addr, data);
 }
 
-hal::BusError Si5351::si5351_read(uint8_t addr, uint8_t &data){
+hal::HalResult Si5351::si5351_read(uint8_t addr, uint8_t &data){
     return i2c_drv_.read_reg(addr, data);
 }
 

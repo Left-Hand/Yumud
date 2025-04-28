@@ -124,10 +124,7 @@ public:
     using SelfTestMode = Regs::SelfTestMode;
     using FifoMode     = Regs::FifoMode;
 
-    enum class Error:uint8_t{
-        WhoAmIMismatch,
-        Unspecified = 0xff
-    };
+    using Error = ImuError;
 
     template<typename T>
     using Result = Result<T, Error>; 
@@ -201,26 +198,6 @@ public:
 
 };
 
-}
-
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::LIS3DH::Error, hal::BusError> {
-        static Result<T, drivers::LIS3DH::Error> convert(const hal::BusError berr){
-            using Error = drivers::LIS3DH::Error;
-            
-            if(berr.is_ok()) return Ok();
-
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
-        }
-    };
 }
 
 namespace ymd::drivers{

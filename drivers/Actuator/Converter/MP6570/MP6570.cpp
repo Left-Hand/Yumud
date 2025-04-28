@@ -96,7 +96,7 @@ struct SpiReadResult{
     }
 };
 
-hal::BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
+hal::HalResult MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     if(i2c_drv_){
         return i2c_drv_->write_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
@@ -118,7 +118,7 @@ hal::BusError MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data)
     }
 }
 
-hal::BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
+hal::HalResult MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
     if(i2c_drv_){
         return i2c_drv_->read_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
@@ -144,9 +144,9 @@ hal::BusError MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
         const auto result_opt = rr.result();
         if(result_opt){
             data = *result_opt;
-            return hal::BusError::BusOverload;
+            return hal::HalResult::BusOverload;
         }else{
-            return hal::BusError::Ok();
+            return hal::HalResult::Ok();
         }
         
     }else{

@@ -63,7 +63,7 @@ public:
             return Result<void, Error>(i2c_drv_->release());
         }
 
-        return Result<void, Error>(hal::BusError::Ok());
+        return Result<void, Error>(hal::HalResult::Ok());
     }
 private:
     std::optional<hal::I2cDrv> i2c_drv_;

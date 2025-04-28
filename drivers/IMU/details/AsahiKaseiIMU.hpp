@@ -19,7 +19,7 @@ public:
                 err.is_err()) return Result<void, ImuError>(err);
             if(const auto err = spi_drv_->write_single<uint8_t>(data); 
                 err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(hal::BusError::Ok());
+            return Result<void, ImuError>(hal::HalResult::Ok());
         }
 
         PANIC();
@@ -52,7 +52,7 @@ public:
     }
 
     Result<void, ImuError> verify(){
-        return Result<void, ImuError>(hal::BusError::Ok());
+        return Result<void, ImuError>(hal::HalResult::Ok());
     }
 public:
     AsahiKaseiSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

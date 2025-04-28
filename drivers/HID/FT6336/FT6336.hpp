@@ -164,17 +164,17 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     
-    [[nodiscard]] Result<void, hal::BusError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, hal::HalResult> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::HalResult> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::BusError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, hal::HalResult> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::HalResult> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::BusError> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] Result<void, hal::HalResult> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);

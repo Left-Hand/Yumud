@@ -77,7 +77,7 @@ struct SpiFormat{
 
 static_assert(sizeof(SpiFormat) == 2);
 
-hal::BusError DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
+hal::HalResult DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -87,7 +87,7 @@ hal::BusError DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
     return spi_drv_.write_single<uint16_t>((spi_format));
 }
 
-hal::BusError DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
+hal::HalResult DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
@@ -98,5 +98,5 @@ hal::BusError DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
     if(err.is_err()) return err;
     reg = spi_format.data;
 
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }

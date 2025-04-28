@@ -35,10 +35,10 @@ protected:
     };
 
 
-    hal::BusError write_reg(const uint8_t addr, const uint8_t data);
-    hal::BusError read_reg(const RegAddress addr, uint8_t & data);
+    hal::HalResult write_reg(const uint8_t addr, const uint8_t data);
+    hal::HalResult read_reg(const RegAddress addr, uint8_t & data);
 
-    hal::BusError read_burst(const RegAddress addr, void * datas, const size_t len);
+    hal::HalResult read_burst(const RegAddress addr, void * datas, const size_t len);
     void readAdj();
 public:
 

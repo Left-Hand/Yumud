@@ -20,8 +20,8 @@ public:
     SccbDrv(const SccbDrv & other) = default;
     SccbDrv(SccbDrv && other) = default;
 
-    hal::BusError write_reg(const uint8_t addr, const uint16_t data);
-    hal::BusError read_reg(const uint8_t addr, uint16_t & data);
+    hal::HalResult write_reg(const uint8_t addr, const uint16_t data);
+    hal::HalResult read_reg(const uint8_t addr, uint16_t & data);
 };
 
 }

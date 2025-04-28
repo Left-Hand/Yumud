@@ -4,11 +4,11 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-hal::BusError SpiDrv::release(){
+hal::HalResult SpiDrv::release(){
     if (auto err = spi_.begin(idx_.to_req()); err.is_ok()) {
         __nopn(4);
         spi_.end();
-        return hal::BusError::Ok();
+        return hal::HalResult::Ok();
     }else{
         return err;
     }

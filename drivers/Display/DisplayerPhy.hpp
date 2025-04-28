@@ -24,17 +24,17 @@ enum class DisplayerError_Kind:uint8_t{
     MagnetOverflow
 };
 }
-DEF_ERROR_SUMWITH_BUSERROR(DisplayerError, details::DisplayerError_Kind)
+DEF_ERROR_SUMWITH_HALERROR(DisplayerError, details::DisplayerError_Kind)
 }
 
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::DisplayerError, hal::BusError> {
-        static Result<T, drivers::DisplayerError> convert(const hal::BusError berr){
+    struct result_converter<T, drivers::DisplayerError, hal::HalResult> {
+        static Result<T, drivers::DisplayerError> convert(const hal::HalResult res){
             
-            if(berr.is_ok()) return Ok();
-            return Err(berr); 
+            if(res.is_ok()) return Ok();
+            return Err(res.unwrap_err()); 
         }
     };
 }

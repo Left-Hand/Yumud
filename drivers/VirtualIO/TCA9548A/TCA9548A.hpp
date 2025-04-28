@@ -16,15 +16,15 @@ class VirtualI2c final: public hal::I2c{
     protected:
         TCA9548A & host_;
         const uint8_t ch_;
-        hal::BusError lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
+        hal::HalResult lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
         void trail(){return host_.trail(ch_);}
     public:
         VirtualI2c(TCA9548A & host, const uint8_t ch);
 
-        hal::BusError write(const uint32_t data) {return host_.write(data);}
-        hal::BusError read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
-        hal::BusError unlock_bus() {return host_.unlock_bus();}
-        hal::BusError set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
+        hal::HalResult write(const uint32_t data) {return host_.write(data);}
+        hal::HalResult read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
+        hal::HalResult unlock_bus() {return host_.unlock_bus();}
+        hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
     };
 
 protected:
@@ -32,20 +32,20 @@ protected:
     hal::I2cDrv self_i2c_drv_;
     Option<uint8_t> last_ch_ = None;
 
-    hal::BusError switch_vbus(const uint8_t ch);
-    hal::BusError unlock_bus(){return i2c_.unlock_bus();}
+    hal::HalResult switch_vbus(const uint8_t ch);
+    hal::HalResult unlock_bus(){return i2c_.unlock_bus();}
 
-    hal::BusError lead(const uint8_t address, const uint8_t ch);
+    hal::HalResult lead(const uint8_t address, const uint8_t ch);
 
     void trail(const uint8_t ch);
 
-    hal::BusError set_baudrate(const uint32_t baud){return i2c_.set_baudrate(baud);}
+    hal::HalResult set_baudrate(const uint32_t baud){return i2c_.set_baudrate(baud);}
 
-    hal::BusError write(const uint32_t data){
+    hal::HalResult write(const uint32_t data){
         return i2c_.write(data);
     }
 
-    hal::BusError read(uint32_t & data, const Ack ack){
+    hal::HalResult read(uint32_t & data, const Ack ack){
         return i2c_.read(data, ack);
     }
 
@@ -75,7 +75,7 @@ public:
 
     auto which() const {return last_ch_;}
 
-    hal::BusError verify() {
+    hal::HalResult verify() {
         return self_i2c_drv_.verify();
     }
 };

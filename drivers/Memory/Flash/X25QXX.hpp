@@ -58,23 +58,23 @@ protected:
     JedecId jedec_id;
 
 
-    hal::BusError write_byte(const uint8_t data, const Continuous cont = DISC){
+    hal::HalResult write_byte(const uint8_t data, const Continuous cont = DISC){
         return spi_drv_.write_single<uint8_t>(data, cont);
     }
 
-    hal::BusError write_byte(const Command cmd, const Continuous cont = DISC){
+    hal::HalResult write_byte(const Command cmd, const Continuous cont = DISC){
         return write_byte(uint8_t(cmd), cont);
     }
 
-    hal::BusError write_bytes(const void * data, const size_t len){
+    hal::HalResult write_bytes(const void * data, const size_t len){
         return spi_drv_.write_burst<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
-    hal::BusError read_byte(uint8_t & data, const Continuous cont = DISC){
+    hal::HalResult read_byte(uint8_t & data, const Continuous cont = DISC){
         return spi_drv_.read_single<uint8_t>(data, cont);
     }
 
-    hal::BusError read_bytes(void * data, const size_t len){
+    hal::HalResult read_bytes(void * data, const size_t len){
         // DEBUGGER.print("nr");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("nr!");

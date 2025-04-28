@@ -34,7 +34,7 @@ if(loc > m_capacity){\
 #endif
 
     
-hal::BusError AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
+hal::HalResult AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
     AT24CXX_DEBUG("write", len, "bytes to", addr);
     // DEBUGGER.print_arr(data, len);
     if (is_small_chip()){
@@ -44,7 +44,7 @@ hal::BusError AT24CXX::write_pool(const size_t addr, const uint8_t * data, const
     }
 }
 
-hal::BusError AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
+hal::HalResult AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
     AT24CXX_DEBUG("read", len, "bytes to", addr);
     if (is_small_chip()){
         return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));

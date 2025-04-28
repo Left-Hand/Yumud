@@ -113,37 +113,37 @@ public:\
 };\
 
 
-#define DEF_ERROR_SUMWITH_BUSERROR(name, kind)\
-class name:public SumtypeError<kind, hal::BusError>{\
+#define DEF_ERROR_SUMWITH_HALERROR(name, kind)\
+class name:public SumtypeError<kind, hal::HalError>{\
 public:\
     using Kind = kind;\
-    using Super = SumtypeError<Kind, hal::BusError>;\
+    using Super = SumtypeError<Kind, hal::HalError>;\
     using Super::Super;\
     using enum Kind;\
-    static constexpr name BusError(const hal::BusError & err){\
+    static constexpr name HalError(const hal::HalError & err){\
         return name(err);\
     }\
 };\
 
-// DEF_ERROR_SUMWITH_BUSERROR(MyError, details::MyError_Kind)
+// DEF_ERROR_SUMWITH_HALERROR(MyError, details::MyError_Kind)
 
 // __inline void test_err(){
 //     // static constexpr MyError err{MyError::I2cError};
 //     {
-//         // using t1 = err_enum_t<typename hal::BusError::Kind>;
-//         // using t2 = err_enum_t<hal::BusError>;
-//         // using t = first_convertible_t<typename hal::BusError::Kind, hal::BusError>;
-//         // static constexpr bool ok = std::is_convertible_v<typename hal::BusError::Kind, hal::BusError>;
-//         static constexpr SumtypeError<hal::BusError> err0{hal::BusError::Ok()};
-//         static constexpr SumtypeError<hal::BusError> err{hal::BusError::AckTimeout};
-//         // static constexpr MyError err2(hal::BusError::AckTimeout);
+//         // using t1 = err_enum_t<typename hal::HalResult::Kind>;
+//         // using t2 = err_enum_t<hal::HalResult>;
+//         // using t = first_convertible_t<typename hal::HalResult::Kind, hal::HalResult>;
+//         // static constexpr bool ok = std::is_convertible_v<typename hal::HalResult::Kind, hal::HalResult>;
+//         static constexpr SumtypeError<hal::HalResult> err0{hal::HalResult::Ok()};
+//         static constexpr SumtypeError<hal::HalResult> err{hal::HalResult::AckTimeout};
+//         // static constexpr MyError err2(hal::HalResult::AckTimeout);
 //         // static constexpr MyError err2(MyError::I2cError);
 
 //         static constexpr MyError err2 = MyError::I2cError;
-//         static constexpr MyError err3(hal::BusError::AckTimeout);
+//         static constexpr MyError err3(hal::HalResult::AckTimeout);
 //         static constexpr auto err4 = err2.as<MyError::Kind>().unwrap();
 
-//         // static constexpr auto err5 = err2.as<hal::BusError>().unwrap();
+//         // static constexpr auto err5 = err2.as<hal::HalResult>().unwrap();
 //     }
 // }
 }

@@ -15,8 +15,8 @@ namespace ymd::drivers{
 class ADS111X{
 public:
 
-    using DeviceResult = Result<void, hal::BusError>;
-    __inline DeviceResult make_result(const hal::BusError res){
+    using DeviceResult = Result<void, hal::HalResult>;
+    __inline DeviceResult make_result(const hal::HalResult res){
         if(res.is_ok()) return Ok();
         else return Err(res); 
     }

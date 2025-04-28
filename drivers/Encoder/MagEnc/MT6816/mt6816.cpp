@@ -24,7 +24,7 @@ Result<void, Error> MT6816::init() {
     return Err(Error::CantSetup);
 }
 
-Result<uint16_t, hal::BusError> MT6816::get_position_data(){
+Result<uint16_t, hal::HalResult> MT6816::get_position_data(){
     uint16_t dataTx[2];
     uint16_t dataRx[2] = {0, 0};
 

@@ -19,7 +19,7 @@ enum LT8960L_Error_Kind:uint8_t{
     Unspecified = 0xff
 };
 
-DEF_ERROR_SUMWITH_BUSERROR(LT8960L_Error, LT8960L_Error_Kind)
+DEF_ERROR_SUMWITH_HALERROR(LT8960L_Error, LT8960L_Error_Kind)
 
 class LT8960L_Phy final{
 public:

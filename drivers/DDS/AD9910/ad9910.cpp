@@ -58,7 +58,7 @@ void AD9910::init(void)
 
 
 
-hal::BusError AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
+hal::HalResult AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
 
     UNWRAP_OR_RETURN(spi_drv.write_single<uint8_t>(addr));
@@ -66,10 +66,10 @@ hal::BusError AD9910::write_reg(const uint8_t addr, const uint8_t * data, const 
 
     __nopn(4);
 
-	return hal::BusError::Ok();
+	return hal::HalResult::Ok();
 }
 
-hal::BusError AD9910::write_data(const uint8_t txdat){
+hal::HalResult AD9910::write_data(const uint8_t txdat){
     return spi_drv.write_single<uint8_t>(txdat);
 }  
 

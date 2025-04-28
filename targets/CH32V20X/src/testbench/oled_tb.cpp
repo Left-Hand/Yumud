@@ -180,7 +180,7 @@ static void oled_tb(){
         painter.draw_args({0, 52}, millis()).unwrap();
 
         if(const auto res = oled.update(); res.is_err())
-            DEBUG_PRINTLN(res.unwrap_err().as<BusError>().unwrap());
+            DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
 
 
         key_left.update();

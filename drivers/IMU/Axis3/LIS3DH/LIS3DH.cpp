@@ -55,7 +55,7 @@ Result<void, Error> LIS3DH::verify(){
     return verify_phy()
         | reset()
         | read_reg(reg)
-        | rescond(reg.as_val() == reg.key, Ok(), Err(Error::WhoAmIMismatch))
+        | rescond(reg.as_val() == reg.key, Ok(), Err(Error(Error::WrongWhoAmI)))
     ;
 }
 

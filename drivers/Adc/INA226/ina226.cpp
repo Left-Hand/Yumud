@@ -178,9 +178,9 @@ IResult<void> INA226::enable_alert_latch(const bool en){
 }
 
 IResult<> INA226::verify(){
-    if(const auto phy_v = i2c_drv_.verify(); phy_v.is_err()){
+    if(const auto res = i2c_drv_.verify(); res.is_err()){
         INA226_ASSERT(false, "INA226 i2c lost");
-        return Err(Error::BusError(phy_v));
+        return Err(Error::HalError(res.unwrap_err()));
     }
 
     if(const auto res = this->read_reg(chipIDReg); res.is_err()) return res;

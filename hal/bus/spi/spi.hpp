@@ -36,7 +36,7 @@ protected:
     CommStrategy rx_strategy_;
     std::optional<uint8_t> last_index;
 
-    [[nodiscard]] hal::BusError lead(const LockRequest req);
+    [[nodiscard]] hal::HalResult lead(const LockRequest req);
     void trail(){
         cs_port_[last_index.value()].set();
         last_index.reset();
@@ -47,13 +47,13 @@ public:
     Spi(hal::Spi &&) = delete;
 
     
-    [[nodiscard]] virtual hal::BusError read(uint32_t & data) = 0;
-    [[nodiscard]] virtual hal::BusError write(const uint32_t data) = 0;
-    [[nodiscard]] virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
+    [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
+    [[nodiscard]] virtual hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    [[nodiscard]] virtual hal::BusError set_data_width(const uint8_t len) = 0;
-    [[nodiscard]] virtual hal::BusError set_baudrate(const uint32_t baud) = 0;
-    [[nodiscard]] virtual hal::BusError set_bitorder(const Endian endian) = 0;
+    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
+    [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
+    [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
 
     virtual void init(
         const uint32_t baudrate, 

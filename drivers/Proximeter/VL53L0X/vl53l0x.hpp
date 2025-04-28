@@ -20,7 +20,7 @@ public:
         LightTooWeak
     };
 
-    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     VL53L0X(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}

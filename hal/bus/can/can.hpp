@@ -77,7 +77,7 @@ protected:
     
     // BusError begin(const LockRequest req){return hal::BusError::Ok();}
 
-    hal::BusError lead(const hal::LockRequest req){return hal::BusError::Ok();};
+    hal::HalResult lead(const hal::LockRequest req){return hal::HalResult::Ok();};
     void trail(){};
 
     void install_gpio();

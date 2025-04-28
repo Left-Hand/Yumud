@@ -183,15 +183,15 @@ protected:
 
     hal::I2cDrv i2c_drv_;
 
-    hal::BusError write_reg(const RegAddress address, const uint8_t reg){
+    hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
         return i2c_drv_.write_reg(uint8_t(address), reg);
     }
 
-    hal::BusError read_reg(const RegAddress address, uint8_t & reg){
+    hal::HalResult read_reg(const RegAddress address, uint8_t & reg){
         return i2c_drv_.read_reg(uint8_t(address), reg);
     }
 
-    hal::BusError read_burst(const RegAddress addr, uint8_t * data, size_t len){
+    hal::HalResult read_burst(const RegAddress addr, uint8_t * data, size_t len){
         return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
     }
 

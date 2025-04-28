@@ -30,7 +30,7 @@ struct FoundInfo{
     uint max_bbaud;
 };
 
-Result<void, hal::BusError> make_result(const hal::BusError res){
+Result<void, hal::HalResult> make_result(const hal::HalResult res){
     if(res.is_ok()) return Ok();
     else return Err(res); 
 }
@@ -42,13 +42,13 @@ template<typename T>
 
 struct [[nodiscard]] Task {
     struct promise_type {
-        Result<T, hal::BusError> result;
+        Result<T, hal::HalResult> result;
         std::coroutine_handle<> continuation;
 
         Task get_return_object() { return Task{Handle::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
-        void return_value(Result<T, hal::BusError> res) { result = res; }
+        void return_value(Result<T, hal::HalResult> res) { result = res; }
         void unhandled_exception() noexcept {}
     };
 
@@ -65,7 +65,7 @@ struct [[nodiscard]] Task {
             handle.promise().continuation = cont;
             handle.resume();
         }
-        Result<T, hal::BusError> await_resume() noexcept {
+        Result<T, hal::HalResult> await_resume() noexcept {
             return handle.promise().result;
         }
     };
@@ -81,7 +81,7 @@ struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint, hal::BusError> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint, hal::HalResult> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
 
         const uint max_baud = [&]{
@@ -104,7 +104,7 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, hal::BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+    static Result<void, hal::HalResult> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
         return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.verify());
     }
 

@@ -45,11 +45,11 @@ protected:
     ConfigReg config_reg;
 
 
-    hal::BusError write_reg(const uint8_t addr, const uint16_t data){
+    hal::HalResult write_reg(const uint8_t addr, const uint16_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
     }
 
-    hal::BusError read_reg(const uint8_t addr, uint16_t & data){
+    hal::HalResult read_reg(const uint8_t addr, uint16_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
     }
 

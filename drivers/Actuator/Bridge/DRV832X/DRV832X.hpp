@@ -306,15 +306,15 @@ protected:
         R16_CsaCtrl csa_ctrl;
     }regs_;
 
-    hal::BusError write_reg(const RegAddress addr, const uint16_t reg);
-    hal::BusError read_reg(const RegAddress addr, uint16_t & reg);
+    hal::HalResult write_reg(const RegAddress addr, const uint16_t reg);
+    hal::HalResult read_reg(const RegAddress addr, uint16_t & reg);
     
 
-    hal::BusError write_reg(const auto & reg){
+    hal::HalResult write_reg(const auto & reg){
         return write_reg(reg.address, reg);
     }
 
-    hal::BusError read_reg(auto & reg){
+    hal::HalResult read_reg(auto & reg){
         return read_reg(reg.address, reg);
     }
 
@@ -345,8 +345,8 @@ public:
 
 namespace ymd::custom{
     template<>
-    struct result_converter<void, drivers::DRV832X::Error, hal::BusError> {
-        static Result<void, drivers::DRV832X::Error> convert(const hal::BusError & res){
+    struct result_converter<void, drivers::DRV832X::Error, hal::HalResult> {
+        static Result<void, drivers::DRV832X::Error> convert(const hal::HalResult & res){
             if(res.is_ok()) return Ok();
             else return Err(drivers::DRV832X::Error::Unspecified); 
         }

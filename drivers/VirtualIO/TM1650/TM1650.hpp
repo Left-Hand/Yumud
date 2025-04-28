@@ -26,7 +26,7 @@ namespace details{
     };
 }
 
-DEF_ERROR_SUMWITH_BUSERROR(TM1650_Error, details::TM1650_Error_Kind)
+DEF_ERROR_SUMWITH_HALERROR(TM1650_Error, details::TM1650_Error_Kind)
 
 class TM1650_Phy final{
 private:

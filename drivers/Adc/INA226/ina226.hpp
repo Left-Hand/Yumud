@@ -23,7 +23,7 @@ public:
         ResTooBig
     };
 
-    DEF_ERROR_SUMWITH_BUSERROR(Error, Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -259,10 +259,10 @@ public:
 
 namespace ymd::custom{
     template<>
-    struct result_converter<void, drivers::INA226::Error, hal::BusError> {
-        static Result<void, drivers::INA226::Error> convert(const hal::BusError & res){
+    struct result_converter<void, drivers::INA226::Error, hal::HalResult> {
+        static Result<void, drivers::INA226::Error> convert(const hal::HalResult & res){
             if(res.is_ok()) return Ok();
-            else return Err(res); 
+            else return Err(res.unwrap_err()); 
         }
     };
 }
