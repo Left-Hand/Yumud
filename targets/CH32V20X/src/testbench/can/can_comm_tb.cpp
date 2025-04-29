@@ -61,7 +61,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
 
             cnt++;
             delay(200);
-            portC[13] = !portC[13];
+            portC[13].toggle();
         }else{
             logger.println("ava", can.available());
             while(can.available()){
@@ -73,7 +73,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             can.write(msg_v);
 
             delay(200);
-            portC[14] = !portC[14];
+            portC[14].toggle();
         }
     }
 }

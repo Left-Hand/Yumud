@@ -34,9 +34,9 @@ protected:
     // WriteFn write_fn_;
 public:
 
-    template<typename T>
-    requires (std::is_base_of_v<Spi, T>)
-    SpiDrv(T & spi, const SpiSlaveIndex idx):
+    // template<typename T>
+    // requires (std::is_base_of_v<Spi, T>)
+    SpiDrv(Spi & spi, const SpiSlaveIndex idx):
         spi_(spi), 
         idx_(idx)
         // write_fn_([this](const uint32_t data) -> HalResult{return this->spi_.write(data);})

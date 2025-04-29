@@ -324,8 +324,10 @@ void bldc_main(){
     pwm_w.init();
 
     spi1.init(18_MHz);
-    spi1.bind_cs_pin(portA[15], 2);
-    spi1.bind_cs_pin(portA[0], 0);
+
+    const auto ma730_spi_fd = spi1.attach_next_cs(portA[15]).value();
+    // spi1.bind_cs_pin(, 2);
+    // spi1.bind_cs_pin(portA[0], 0);
 
 
     can1.init(1_MHz);
@@ -334,7 +336,7 @@ void bldc_main(){
 
     // bmi.init();
 
-    MA730 ma730{spi1, SpiSlaveIndex(2)};
+    MA730 ma730{spi1, ma730_spi_fd};
     ma730.init();
 
     // for(size_t i = 0; i < 1000; ++i) {

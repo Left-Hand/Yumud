@@ -825,12 +825,12 @@ template<class E, fixed_string unknown = "", auto Min = enum_min(E{}), auto Max 
   if constexpr (constexpr auto cases = enumerators<E, Min, Max>; std::empty(cases)) {
     return unknown;
   } else {
-    const auto switch_case = [&]<std::size_t I = 0u>(auto switch_case, const auto value) -> std::string_view {
+    const auto switch_case = [&]<std::size_t I = 0u>(auto switch_case_, const auto value) -> std::string_view {
       if constexpr (I == std::size(cases)) {
         return unknown;
       } else {
         switch (value) {
-          default:             return switch_case.template operator()<I + 1u>(switch_case, value);
+          default:             return switch_case_.template operator()<I + 1u>(switch_case_, value);
           case cases[I].first: return cases[I].second;
         }
       }

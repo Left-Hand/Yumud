@@ -443,7 +443,8 @@ void light_tracking_main(void){
     // }
 
     test_res();
-    spi.bind_cs_pin(lcd_cs, 0);
+    // spi.bind_cs_pin(lcd_cs, 0);
+    const auto spi_fd = spi.attach_next_cs(lcd_cs).value();
     // spi.init(144_MHz, CommStrategy::Blocking);
     spi.init(LCD_SPI_FREQ_HZ, CommStrategy::Blocking);
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
@@ -452,8 +453,9 @@ void light_tracking_main(void){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 displayer({spi, SpiSlaveIndex(0), lcd_dc, dev_rst}, {240, 135});
+    ST7789 displayer({spi, spi_fd,  lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
+    DEBUG_PRINTLN(spi_fd.as_u8());
     drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170);
 
     displayer.fill(ColorEnum::PINK);

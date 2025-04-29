@@ -64,7 +64,7 @@ public:
     }
 
     void bind_pin(hal::GpioIntf & gpio, const size_t index){
-        if(index >= N)return;
+        if(index >= N) while(true);
         pin_ptrs[size_t(index)] = &gpio;
     }
 

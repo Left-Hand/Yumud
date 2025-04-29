@@ -15,7 +15,9 @@ void ad9959_main(){
     auto & spi = spisw;
     spi.init(100000);//maxium baud
     spi.set_bitorder(LSB);
-    spi.bind_cs_pin(cs_gpio, 0);
+
+    [[maybe_unused]]
+    const auto spi_fd = spi.attach_next_cs(cs_gpio);
 
     // timer1.init(1);
     // SpiDrv ad9959_drv{spi, 0};

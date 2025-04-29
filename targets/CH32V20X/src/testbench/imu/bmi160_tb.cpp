@@ -14,11 +14,11 @@ void bmi160_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     spi1.init(18000000);
-    spi1.bind_cs_pin(portA[0], 0);
+
 
     using Quat = Quat_t<real_t>;
     
-    BMI160 bmi{{spi1, SpiSlaveIndex(0)}};
+    BMI160 bmi{{spi1, spi1.attach_next_cs(portA[0]).value()}};
     bmi.init();
 
     auto & ledr = portC[13];

@@ -41,6 +41,11 @@ protected:
         cs_port_[last_index.value()].set();
         last_index.reset();
     }
+
+    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
+        gpio.outpp(HIGH);
+        cs_port_.bind_pin(gpio, index);
+    }
 public:
     Spi(){;}
     Spi(const hal::Spi &) = delete;
@@ -59,20 +64,10 @@ public:
         const uint32_t baudrate, 
         const CommStrategy tx_strategy = CommStrategy::Blocking, 
         const CommStrategy rx_strategy = CommStrategy::Blocking) = 0;
-    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
-        gpio.outpp(HIGH);
-        cs_port_.bind_pin(gpio, index);
-    }
 
-    std::optional<SpiSlaveIndex> attach_next_cs(hal::GpioIntf & io){
-        for(size_t i = 0; i < cs_port_.size(); i++){
-            if(cs_port_.is_index_empty(i)){
-                cs_port_[i] = io;
-                return SpiSlaveIndex{uint16_t(i)};
-            }
-        }
-        return std::nullopt;
-    }
+
+    [[nodiscard]]
+    std::optional<SpiSlaveIndex> attach_next_cs(hal::GpioIntf & io);
 };
 
 }
