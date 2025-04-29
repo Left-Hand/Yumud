@@ -1,4 +1,4 @@
-//这个驱动还未完成
+//这个驱动已经完成
 //这个驱动还未测试
 
 //TM1637是天微半导体的一款LED矩阵驱动/按键矩阵扫描芯片
@@ -13,8 +13,94 @@
 
 namespace ymd::drivers{
 
+template<typename T, size_t N>
+class DisplayBuf {
+public:
+    struct Element {
+        T value;
+        bool dirty;
+
+        Element(T v, bool d) : value(v), dirty(d) {}
+    };
+
+    class Iterator {
+    public:
+        Iterator(DisplayBuf& owner, size_t index) : owner_(owner), index_(index) {}
+
+        Element operator*() const {
+            return {owner_.buf_[index_], owner_.buf_[index_] != owner_.last_buf_[index_]};
+        }
+
+        Iterator& operator++() {
+            ++index_;
+            return *this;
+        }
+
+        bool operator!=(const Iterator& other) const {
+            return index_ != other.index_;
+        }
+
+    private:
+        DisplayBuf& owner_;
+        size_t index_;
+    };
+
+    DisplayBuf() {
+        last_buf_.fill(T{});
+        buf_.fill(T{});
+    }
+
+    Iterator begin() {
+        return Iterator(*this, 0);
+    }
+
+    Iterator end() {
+        return Iterator(*this, N);
+    }
+
+    void set(size_t index, T value) {
+        if (index < N) {
+            buf_[index] = value;
+        }
+    }
+
+    T get(size_t index) const {
+        if (index < N) {
+            return buf_[index];
+        }
+        return T{};
+    }
+
+    void flush() {
+        last_buf_ = buf_;
+    }
+
+    bool changed() const {
+        return last_buf_ != buf_;
+    }
+
+    std::span<const T, N> to_span() const {
+        return std::span<const T, N>(buf_);
+    }
+
+private:
+    std::array<T, N> last_buf_;
+    std::array<T, N> buf_;
+};
+
+
+
 struct _TM1637_Collections{
+    enum class Error_Kind{
+        KeyFormatWrong,
+        DisplayLengthTooLong,
+        IndexOutOfRange,
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
     static constexpr uint8_t CGRAM_BEGIN_ADDR = 0;
+    static constexpr uint8_t CGRAM_MAX_LEN = 6;
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -26,6 +112,8 @@ struct _TM1637_Collections{
         _13_16,
         _14_16,
     };
+
+
 
     struct DataCommand{
         const uint8_t __resv1__:1 = 0;
@@ -59,54 +147,76 @@ struct _TM1637_Collections{
 
     class KeyEvent{
     public:
-        constexpr Option<uint8_t> row() const {return row_;}
-        constexpr Option<uint8_t> col() const {return col_;}
-
-        static constexpr KeyEvent from_u8(const uint8_t data){
-            //low 3bit must be 111
-            if((data & 0b111) != 0b111) return {None, None};
-
+        constexpr Option<uint8_t> row() const {
             //no key pressed
-            if(data == 0xff) return {None, None};
+            if(raw_ == 0xff) return None;
 
-            const uint8_t key = data >> 3;
+            const uint8_t key = raw_ >> 3;
             switch(key){
-                case 0b11101: return {Some<uint8_t>(0), Some<uint8_t>(0)};
-                case 0b01001: return {Some<uint8_t>(0), Some<uint8_t>(1)};
-                case 0b10101: return {Some<uint8_t>(0), Some<uint8_t>(2)};
-                case 0b00101: return {Some<uint8_t>(0), Some<uint8_t>(3)};
-                case 0b11111: return {Some<uint8_t>(1), Some<uint8_t>(0)};
-                case 0b01011: return {Some<uint8_t>(1), Some<uint8_t>(1)};
-                case 0b10111: return {Some<uint8_t>(1), Some<uint8_t>(2)};
-                case 0b00111: return {Some<uint8_t>(1), Some<uint8_t>(3)};
-
-                case 0b11010: return {Some<uint8_t>(2), Some<uint8_t>(0)};
-                case 0b01010: return {Some<uint8_t>(2), Some<uint8_t>(1)};
-                case 0b10010: return {Some<uint8_t>(2), Some<uint8_t>(2)};
-                case 0b00010: return {Some<uint8_t>(2), Some<uint8_t>(3)};
-                case 0b11110: return {Some<uint8_t>(1), Some<uint8_t>(0)};
-                case 0b01110: return {Some<uint8_t>(1), Some<uint8_t>(1)};
-                case 0b10110: return {Some<uint8_t>(1), Some<uint8_t>(2)};
-                case 0b00110: return {Some<uint8_t>(1), Some<uint8_t>(3)};
+                case 0b11101: return Some<uint8_t>(0);
+                case 0b01001: return Some<uint8_t>(0);
+                case 0b10101: return Some<uint8_t>(0);
+                case 0b00101: return Some<uint8_t>(0);
+                case 0b11111: return Some<uint8_t>(1);
+                case 0b01011: return Some<uint8_t>(1);
+                case 0b10111: return Some<uint8_t>(1);
+                case 0b00111: return Some<uint8_t>(1);
+                case 0b11010: return Some<uint8_t>(2);
+                case 0b01010: return Some<uint8_t>(2);
+                case 0b10010: return Some<uint8_t>(2);
+                case 0b00010: return Some<uint8_t>(2);
+                case 0b11110: return Some<uint8_t>(1);
+                case 0b01110: return Some<uint8_t>(1);
+                case 0b10110: return Some<uint8_t>(1);
+                case 0b00110: return Some<uint8_t>(1);
                 // default: while(true);
-                default: return {None, None};
+                default: return None;
             }
         }
+        constexpr Option<uint8_t> col() const {
+            //no key pressed
+            if(raw_ == 0xff) return None;
+
+            const uint8_t key = raw_ >> 3;
+            switch(key){
+                case 0b11101: return Some<uint8_t>(0);
+                case 0b01001: return Some<uint8_t>(1);
+                case 0b10101: return Some<uint8_t>(2);
+                case 0b00101: return Some<uint8_t>(3);
+                case 0b11111: return Some<uint8_t>(0);
+                case 0b01011: return Some<uint8_t>(1);
+                case 0b10111: return Some<uint8_t>(2);
+                case 0b00111: return Some<uint8_t>(3);
+                case 0b11010: return Some<uint8_t>(0);
+                case 0b01010: return Some<uint8_t>(1);
+                case 0b10010: return Some<uint8_t>(2);
+                case 0b00010: return Some<uint8_t>(3);
+                case 0b11110: return Some<uint8_t>(0);
+                case 0b01110: return Some<uint8_t>(1);
+                case 0b10110: return Some<uint8_t>(2);
+                case 0b00110: return Some<uint8_t>(3);
+                // default: while(true);
+                default: return None;
+                // default: return {None, None};
+            }
+        }
+
+        static constexpr Result<KeyEvent, Error> from_u8(const uint8_t data){
+            //low 3bit must be 111
+            if((data & 0b111) != 0b111) return Err(Error::KeyFormatWrong);
+            return Ok(KeyEvent{uint8_t(data >> 3)});
+        }
     private:
-        constexpr KeyEvent(Option<uint8_t> row, Option<uint8_t> col): 
-            row_(row),
-            col_(col)
+        constexpr KeyEvent(uint8_t raw): 
+            raw_(raw)
         {;}
 
-        Option<uint8_t> row_;
-        Option<uint8_t> col_;
+        // Option<uint8_t> row_;
+        // Option<uint8_t> col_;
+        uint8_t raw_;
     };
 
-    enum class Error_Kind{
 
-    };
-
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 };
 
 class TM1637_Phy final:public _TM1637_Collections{
@@ -117,9 +227,13 @@ public:
 
     Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
 
-    Result<void, Error> write_screen(const std::span<const uint8_t, 6> pbuf);
+    Result<void, Error> write_screen(const std::span<const uint8_t, CGRAM_MAX_LEN> pbuf);
 
     Result<void, Error> write_sram(const std::span<const uint8_t> pbuf, const PulseWidth pw);
+
+    // Result<void, Error> write_sram_fixed(const std::span<const uint8_t> pbuf, const PulseWidth pw);
+
+    Result<uint8_t, Error> read_key();
 private:
     hal::I2c & i2c_;
 };
@@ -128,13 +242,20 @@ class TM1637 final:public _TM1637_Collections{
 public:
     using Phy = TM1637_Phy;
 
-    Result<void, Error> flush(){
-        return phy_.write_screen(buf_);
+    Result<void, Error> flush();
+
+    Result<KeyEvent, Error> read_key();
+
+    Result<void, Error> set(const size_t pos, const uint8_t val){
+        if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
+        buf_.set(pos, val);
     }
 private:
     Phy phy_;
-    std::array<uint8_t, 6> buf_;
+    using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
+    Buf buf_;
 };
+
 
 class TM1637_SegDisplayer final{
     static constexpr std::array<uint8_t, 22> SEG_TABLE = {
