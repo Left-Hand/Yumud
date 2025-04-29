@@ -1,7 +1,5 @@
 #include "flood_fill.hpp"
-// #include "pixels.hpp"
-
-
+#include <span>
 
 
 template <typename T>
@@ -14,7 +12,7 @@ __fast_inline constexpr T saturate_cast(const auto & v) {
 namespace ymd::nvcv2::Shape{
 
 
-scexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };
+static constexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };
 // const std::array<Vector2i,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
 
@@ -261,7 +259,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 
 
 Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
-    scexpr Grayscale labelable = 255;
+    static constexpr Grayscale labelable = 255;
 
     auto size = src.size();
     auto nrow = size.x;

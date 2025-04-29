@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nvcv2.hpp"
+#include "nvcv2/nvcv2.hpp"
 
 namespace ymd::nvcv2::Shape{
 
@@ -19,20 +19,24 @@ struct Blob{
 };
 
 struct BlobFilter{
-    Range_t<uint> area_range = {0, UINT32_MAX};
-    Range_t<uint> width_range = {0, UINT32_MAX};
-    Range_t<uint> height_range = {0, UINT32_MAX};
+    Range_t<uint32_t> area_range = {0, UINT32_MAX};
+    Range_t<uint32_t> width_range = {0, UINT32_MAX};
+    Range_t<uint32_t> height_range = {0, UINT32_MAX};
 
-    static BlobFilter clamp_width(const uint min_width, const uint max_width = UINT32_MAX){
-        BlobFilter filter;
-        filter.width_range = {min_width, max_width};
-        return filter;
-    }
+    // static BlobFilter clamp_width(const uint32_t min_width, const uint32_t max_width = UINT32_MAX){
+    //     BlobFilter filter;
+    //     filter.width_range = {min_width, max_width};
+    //     return filter;
+    // }
 
-    static BlobFilter clamp_area(const uint min_area, const uint max_area = UINT32_MAX){
-        BlobFilter filter;
-        filter.area_range = {min_area, max_area};
-        return filter;
+    // static constexpr BlobFilter clamp_area(const uint32_t min_area, const uint32_t max_area = UINT32_MAX){
+    //     BlobFilter filter;
+    //     filter.area_range = {min_area, max_area};
+    //     return filter;
+    // }
+
+    constexpr bool is_valid(const Blob & blob) const{ 
+        return true;
     }
 };
 
@@ -40,17 +44,14 @@ struct BlobFilter{
 class FloodFill{
 // public:
 protected:
-
-
     using Blobs = sstl::vector<Blob, 16>;
     Blobs m_blobs;
 
 public:
-
-
     Image<Grayscale> run(const ImageReadable<Binary> & src, const BlobFilter & filter = BlobFilter());
     auto & blobs() const{return m_blobs;}
 };
+
 class SimilarRects{
 public:    
     SimilarRects(const real_t _eps) : eps(_eps) {}

@@ -1,6 +1,6 @@
 
 #pragma once
-#include "nvcv2.hpp"
+#include "nvcv2/nvcv2.hpp"
 
 
 namespace ymd::nvcv2::Shape{
@@ -16,7 +16,7 @@ private:
 	int Find(int x);
 	void Union(int x, int y);
 
-	void findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out, int &max);
+	int findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out);
 
 	void twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src);
 public:
