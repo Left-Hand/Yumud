@@ -7,6 +7,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 #define I2CSW_SCL_USE_PP_THAN_OD
+// #define I2CSW_TEST_TIMEOUT (1000)
 
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
@@ -14,6 +15,7 @@ void I2cSw::delay_dur(){
 }
 
 hal::HalResult I2cSw::wait_ack(){
+
     delay_dur();
     sda().set();
     sda().inpu();
@@ -24,7 +26,13 @@ hal::HalResult I2cSw::wait_ack(){
     bool ovt = false;
     const auto m = micros();
     while(sda().read() == HIGH){
-        if(micros() - m >= timeout_){
+        if(micros() - m >= 
+        #if I2CSW_TEST_TIMEOUT
+            I2CSW_TEST_TIMEOUT
+        #else
+            timeout_
+        #endif
+        ){
         // if(micros() - m >= 1000){
             ovt = true;
             break;
@@ -41,7 +49,6 @@ hal::HalResult I2cSw::wait_ack(){
     }else{
         return hal::HalResult::Ok();
     }
-
 }
 
 hal::HalResult I2cSw::lead(const LockRequest req){
@@ -58,7 +65,13 @@ hal::HalResult I2cSw::lead(const LockRequest req){
     delay_dur();
     scl().clr();
     delay_dur();
-    return write(req.id() << 1 | req.custom());
+
+    switch(req.custom_len()){
+        case 0:return write(req.id());
+        case 1:return write(req.id() << 1 | req.custom());
+        default: break;
+    }
+    return HalResult::InvalidArgument;
 }
 
 void I2cSw::trail(){

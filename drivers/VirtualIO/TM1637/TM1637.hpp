@@ -1,5 +1,5 @@
 //这个驱动已经完成
-//这个驱动还未测试
+//这个驱动正在测试
 
 //TM1637是天微半导体的一款LED矩阵驱动/按键矩阵扫描芯片
 
@@ -103,23 +103,23 @@ struct _TM1637_Collections{
     static constexpr uint8_t CGRAM_MAX_LEN = 6;
 
     enum class PulseWidth:uint8_t{
-        _1_16 = 0,
-        _2_16,
-        _4_16,
-        _10_16,
-        _11_16,
-        _12_16,
-        _13_16,
-        _14_16,
+        _1_16   = 0b000,
+        _2_16   = 0b001,
+        _4_16   = 0b010,
+        _10_16  = 0b011,
+        _11_16  = 0b100,
+        _12_16  = 0b101,
+        _13_16  = 0b110,
+        _14_16  = 0b111,
     };
 
 
 
     struct DataCommand{
         const uint8_t __resv1__:1 = 0;
-        uint8_t write_else_read:1;
-        uint8_t addr_inc_en:1;
-        const uint8_t __resv2__:5 = 0b01001;
+        uint8_t read_key:1;
+        uint8_t addr_inc_disen:1;
+        const uint8_t __resv2__:5 = 0b01000;
 
         constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
@@ -221,34 +221,43 @@ struct _TM1637_Collections{
 
 class TM1637_Phy final:public _TM1637_Collections{
 public:
-    TM1637_Phy(hal::I2c & i2c): i2c_(i2c){;}
+    TM1637_Phy(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
+        scl_gpio_(scl_gpio),
+        sda_gpio_(sda_gpio)
+    {;}
 
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
-
-    Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
-
-    Result<void, Error> write_screen(const std::span<const uint8_t, CGRAM_MAX_LEN> pbuf);
 
     Result<void, Error> write_sram(const std::span<const uint8_t> pbuf, const PulseWidth pw);
 
-    // Result<void, Error> write_sram_fixed(const std::span<const uint8_t> pbuf, const PulseWidth pw);
-
     Result<uint8_t, Error> read_key();
+
 private:
-    hal::I2c & i2c_;
+    Result<void, Error> write_byte(const uint8_t data);
+    Result<void, Error> wait_ack();
+    Result<void, Error> iic_start(const uint8_t data);
+    Result<void, Error> iic_stop();
+    hal::Gpio & scl_gpio_;
+    hal::Gpio & sda_gpio_;
 };
 
 class TM1637 final:public _TM1637_Collections{
 public:
     using Phy = TM1637_Phy;
 
+    TM1637(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio): 
+        phy_(TM1637_Phy(scl_gpio, sda_gpio)){;}
+
+
+    [[nodiscard]]
     Result<void, Error> flush();
-
+    
+    [[nodiscard]]
     Result<KeyEvent, Error> read_key();
-
+    [[nodiscard]]
     Result<void, Error> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
         buf_.set(pos, val);
+        return Ok();
     }
 private:
     Phy phy_;

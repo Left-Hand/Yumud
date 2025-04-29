@@ -21,7 +21,8 @@ int main(){
     // embd_main();
     // i2c_scanner_main();
     // oled_main();
-    light_tracking_main();
+    // light_tracking_main();
+    tm1637_main();
     // ads1115_main();
     // embd_main();
     // gui_main();

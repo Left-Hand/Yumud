@@ -22,6 +22,7 @@ public:
         PayloadNoLength,
         VerifyFailed,
         LengthOverflow,
+        InvalidArgument,
         Unspecified = 0x7f
     };
 

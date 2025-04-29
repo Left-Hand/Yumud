@@ -5,9 +5,6 @@
 
 namespace ymd::drivers{
 
-
-
-
 class U13T{
 public:
     class Command{
