@@ -98,19 +98,19 @@ private:
     LedRegs all_channel = {};
     uint8_t prescale_reg = {};
 
-    hal::BusError write_reg(const RegAddress addr, const uint8_t reg){
+    hal::HalResult write_reg(const RegAddress addr, const uint8_t reg){
         return i2c_drv_.write_reg(uint8_t(addr), reg);
     };
 
-    hal::BusError write_reg(const RegAddress addr, const uint16_t reg){
+    hal::HalResult write_reg(const RegAddress addr, const uint16_t reg){
         return i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint8_t & reg){
+    hal::HalResult read_reg(const RegAddress addr, uint8_t & reg){
         return i2c_drv_.read_reg(uint8_t(addr), reg);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint16_t & reg){
+    hal::HalResult read_reg(const RegAddress addr, uint16_t & reg){
         return i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
     }
     void write_mask(const uint16_t data);

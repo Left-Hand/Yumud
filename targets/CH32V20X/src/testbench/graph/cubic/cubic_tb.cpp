@@ -443,15 +443,11 @@ void cubic_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    
-
-
-    spi.bind_cs_pin(lcd_cs, 0);
     spi.init(144_MHz, CommStrategy::Blocking);
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    drivers::ST7789 tftDisplayer({{spi, SpiSlaveIndex(0)}, lcd_dc, dev_rst}, {240, 135});
+    drivers::ST7789 tftDisplayer({spi, spi.attach_next_cs(lcd_cs).value(), lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
 
     {

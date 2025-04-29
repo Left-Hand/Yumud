@@ -30,22 +30,21 @@ static constexpr uint8_t VL53L0X_DEVICEMODE_CONTINUOUS_TIMED_RANGING        = ((
 using Error = VL53L0X::Error;
 
 Result<void, Error> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
-	const auto berr = i2c_drv_.read_reg(reg, data);
+	const auto res = i2c_drv_.read_reg(reg, data);
 
-	if(berr.is_err()) return Err(Error::BusError(berr));
+	if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
 	return Ok();
 }
 
 Result<void, Error> VL53L0X::read_burst(const uint8_t reg, uint16_t * data, const size_t len){
-	const auto berr = i2c_drv_.read_burst(reg, std::span<uint16_t>(data, len), MSB);
-
-	if(berr.is_err()) return Err(Error(berr));
+	const auto res = i2c_drv_.read_burst(reg, std::span<uint16_t>(data, len), MSB);
+	if(res.is_err()) return Err(Error(res.unwrap_err()));
 	return Ok();
 }
 
 Result<void, Error> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
-	if(const auto berr = i2c_drv_.write_reg(reg, byte); berr.is_err())
-		return Err(Error(berr));
+	if(const auto res = i2c_drv_.write_reg(reg, byte); res.is_err())
+		return Err(Error(res.unwrap_err()));
 	return Ok();
 }
 
@@ -120,14 +119,12 @@ Result<void, Error> VL53L0X::stop(){
 }
 
 Result<void, Error> VL53L0X::update(){
-    if(const auto res = is_busy(); res.is_ok()){
-		if(res.unwrap()){
-			this->flush();
-		}
-		return Ok();
-	}else{
-		return Err(res.unwrap_err());
+	const auto res = is_busy();
+    if(res.is_err()) return Err(res.unwrap_err());
+	if(res.unwrap() == false){
+		return this->flush();
 	}
+	return Ok();
 }
 
 

@@ -29,7 +29,7 @@ static constexpr uint8_t GYR_CHIP_ID = 0;
 
 
 Result<void, Error> BMI088_Acc::init(){
-    
+    TODO();
     return Ok();
 }
 
@@ -56,16 +56,15 @@ Result<void, Error> BMI088_Acc::verify(){
 }
 
 Result<void, Error> BMI088_Acc::update(){
-    return phy_.read_burst(acc_x_reg.address, 
-        // std::span(&(acc_x_reg.as_ref()), 3),
-        // LSB
+    return phy_.read_burst(
+        acc_x_reg.address, 
         &(acc_x_reg.as_ref()), 3
     );
 }
 
 Result<void, Error> BMI088_Gyr::update(){
-    return phy_.read_burst(gyr_x_reg.address, 
-        // std::span(&(gyr_x_reg.as_ref()), 3),
+    return phy_.read_burst(
+        gyr_x_reg.address, 
         &(gyr_x_reg.as_ref()), 3
     );
 }
@@ -119,4 +118,20 @@ Result<void, Error> BMI088_Gyr::set_gyr_range(const GyrRange range){
 Result<void, Error> BMI088_Gyr::set_gyr_odr(const GyrOdr odr){
     gyro_bw_reg.data = uint8_t(odr);
     return phy_.write_regs(gyro_range_reg);
+}
+
+
+Result<void, Error> BMI088_Gyr::init(){
+    TODO();
+    return Ok();
+}
+
+Result<void, Error> BMI088_Gyr::reset(){
+    TODO();
+    return Ok();
+}
+
+Result<void, Error> BMI088_Gyr::verify(){
+    TODO();
+    return Ok();
 }

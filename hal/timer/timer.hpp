@@ -106,7 +106,7 @@ protected:
     void enable_rcc(const bool en);
     void remap(const uint8_t rm);
     
-    Callback & get_callback(const IT it){
+    __fast_inline Callback & get_callback(const IT it){
         switch(it){
             default:
             case IT::Update: return cbs_[0];
@@ -120,7 +120,7 @@ protected:
         }
     }
 
-    __inline void invoke_callback(const IT it){
+    __fast_inline void invoke_callback(const IT it){
         auto & cb = get_callback(it);
         EXECUTE(cb);
     }

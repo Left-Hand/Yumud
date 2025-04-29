@@ -37,7 +37,7 @@ private:
     bool fast_mode_ = true;
     Semantic last_sema_;
 
-    Result<uint16_t, hal::BusError> get_position_data();
+    Result<uint16_t, hal::HalResult> get_position_data();
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}

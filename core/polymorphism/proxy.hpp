@@ -876,7 +876,8 @@ class proxy : public details::facade_traits<F>::direct_accessor {
     P& result = *std::construct_at(
         reinterpret_cast<P*>(ptr_), std::forward<Args>(args)...);
     if constexpr (requires { (bool)result; })
-        { assert((bool)result); }
+        // { assert((bool)result); }
+        { if(not(bool)result) __builtin_abort(); }
     meta_ = details::meta_ptr<typename _Traits::meta>{std::in_place_type<P>};
     return result;
   }

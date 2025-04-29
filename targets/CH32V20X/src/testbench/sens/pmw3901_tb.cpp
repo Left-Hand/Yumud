@@ -19,10 +19,8 @@ void pmw3901_main(){
     auto & spi = spi1;
 
     spi.init(4_MHz);
-    spi.bind_cs_pin(portA[15], 0);
 
-
-    PMW3901 pmw{spi, SpiSlaveIndex(0)};
+    PMW3901 pmw{spi, spi.attach_next_cs(portA[15]).value()};
     pmw.init().unwrap();
 
     while(true){

@@ -68,7 +68,7 @@ private:
     Locker __own_locker__ = {};
     Locker & locker;
 
-    virtual BusError lead(const LockRequest req) = 0;
+    virtual HalResult lead(const LockRequest req) = 0;
     virtual void trail() = 0;
 
     struct _Guard{
@@ -88,9 +88,9 @@ public:
     BusBase(const BusBase &) = delete;
     BusBase(BusBase &&) = default;
 
-    BusError begin(const LockRequest req);
+    HalResult begin(const LockRequest req);
 
-    BusError end();
+    void end();
 
     _Guard create_guard(){return _Guard{*this};}
 
@@ -119,9 +119,3 @@ struct driver_of_bus {
 };
 
 };
-
-namespace ymd{
-    OutputStream & operator << (OutputStream & os, const hal::BusError & err);
-
-    OutputStream & operator << (OutputStream & os, const hal::BusError::Kind & err);
-}

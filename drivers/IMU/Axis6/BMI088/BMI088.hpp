@@ -1,5 +1,9 @@
-#pragma once
+//这个驱动还未完成
+//这个驱动还未测试
 
+//BMI088是博世科技推出的一款高精度IMU
+
+#pragma once
 
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
@@ -205,7 +209,7 @@ public:
 };
 
 
-class BMI088_Gyr final:public _BMI088_Collections, public AccelerometerIntf{
+class BMI088_Gyr final:public _BMI088_Collections, public GyroscopeIntf{
 public:
     using Error = ImuError;
 protected:

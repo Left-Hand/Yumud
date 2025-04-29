@@ -15,11 +15,11 @@ public:
         if(i2c_drv_){
             return Result<void, ImuError>(i2c_drv_->write_reg(uint8_t(addr), data));
         }else if(spi_drv_){
-            if(const auto err = spi_drv_->write_single(uint8_t(addr), CONT); 
+            if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT); 
                 err.is_err()) return Result<void, ImuError>(err);
-            if(const auto err = spi_drv_->write_single(data); 
+            if(const auto err = spi_drv_->write_single<uint8_t>(data); 
                 err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(hal::BusError::Ok());
+            return Result<void, ImuError>(hal::HalResult::Ok());
         }
 
         PANIC();
@@ -29,9 +29,9 @@ public:
         if(i2c_drv_){
             return Result<void, ImuError>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
-            if(const auto err = spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT); 
+            if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT); 
                 err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(spi_drv_->read_single(data));
+            return Result<void, ImuError>(spi_drv_->read_single<uint8_t>(data));
         }
 
         PANIC();
@@ -52,7 +52,7 @@ public:
     }
 
     Result<void, ImuError> verify(){
-        return Result<void, ImuError>(hal::BusError::Ok());
+        return Result<void, ImuError>(hal::HalResult::Ok());
     }
 public:
     AsahiKaseiSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

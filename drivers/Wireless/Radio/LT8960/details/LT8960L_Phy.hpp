@@ -4,12 +4,11 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
-
 #include "core/utils/Errno.hpp"
 
 namespace ymd::drivers{
 
-
+namespace details{
 enum LT8960L_Error_Kind:uint8_t{
     TransmitTimeout,
     PacketOverlength,
@@ -18,13 +17,13 @@ enum LT8960L_Error_Kind:uint8_t{
     InvalidState,
     Unspecified = 0xff
 };
-
-DEF_ERROR_SUMWITH_BUSERROR(LT8960L_Error, LT8960L_Error_Kind)
+}
 
 class LT8960L_Phy final{
 public:
     static constexpr uint8_t DEFAULT_I2C_ADDR = 0x1A;
-    using Error = LT8960L_Error;
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, details::LT8960L_Error_Kind)
 
 public:
     LT8960L_Phy(hal::Gpio & scl_io, hal::Gpio & sda_io):

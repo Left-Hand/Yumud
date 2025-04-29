@@ -13,7 +13,7 @@ namespace ymd::drivers{
 
 class INA219 {
 public:
-    using Error = hal::BusError;
+    using Error = hal::HalResult;
     using BusResult = Result<void, Error>;
 
     enum class AverageTimes:uint8_t{
@@ -110,8 +110,8 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
 
 namespace ymd::custom{
     template<>
-    struct result_converter<void, drivers::INA219::Error, hal::BusError> {
-        static Result<void, drivers::INA219::Error> convert(const hal::BusError & res){
+    struct result_converter<void, drivers::INA219::Error, hal::HalResult> {
+        static Result<void, drivers::INA219::Error> convert(const hal::HalResult & res){
             if(res.is_ok()) return Ok();
             else return Err(res); 
         }

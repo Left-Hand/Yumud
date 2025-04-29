@@ -2,8 +2,10 @@
 
 #include "../LT8960L.hpp"
 #include "core/debug/debug.hpp"
-#include "hal/gpio/gpio.hpp"
 #include "core/buffer/ringbuf/Fifo_t.hpp"
+
+#include "hal/gpio/gpio.hpp"
+
 
 #define LT8960L_DEBUG_EN
 
@@ -19,15 +21,13 @@
 #define LT8960L_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
+namespace ymd::drivers{
+
+using Error = drivers::LT8960L::Error;
 
 // scexpr size_t packet_len = 64;
-scexpr size_t LT8960L_PACKET_SIZE = 12;
+static constexpr size_t LT8960L_PACKET_SIZE = 12;
 // scexpr size_t LT8960L_BUFFER_SIZE = 12;
-
-using namespace ymd;
-using namespace ymd::drivers;
-
-using Error = LT8960L::Error;
 
 class Tx{
     Fifo_t<std::byte, LT8960L_PACKET_SIZE> fifo_;
@@ -75,4 +75,6 @@ __inline Result<void, Error> retry(const size_t times, Fn && fn){
 template<typename Fn>
 __inline Result<void, Error> wait(const size_t timeout, Fn && fn){
     return retry(timeout, std::forward<Fn>(fn), [](){delay(1);});
+}
+
 }

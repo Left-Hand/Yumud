@@ -37,15 +37,15 @@ enum class ImuError_Kind:uint8_t{
 };
 }
 
-DEF_ERROR_SUMWITH_BUSERROR(ImuError, details::ImuError_Kind)
+DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 }
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::ImuError, hal::BusError> {
-        static Result<T, drivers::ImuError> convert(const hal::BusError berr){
+    struct result_converter<T, drivers::ImuError, hal::HalResult> {
+        static Result<T, drivers::ImuError> convert(const hal::HalResult res){
             
-            if(berr.is_ok()) return Ok();
-            return Err(berr); 
+            if(res.is_ok()) return Ok();
+            return Err(res.unwrap_err()); 
         }
     };
 }

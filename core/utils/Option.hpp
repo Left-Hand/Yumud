@@ -18,8 +18,8 @@ namespace custom{
 
     // eg:
     // template<>
-    // struct option_converter<hal::BusError, hal::BusError> {
-    //     static Option<hal::BusError> convert(const hal::BusError & res){
+    // struct option_converter<hal::HalResult, hal::HalResult> {
+    //     static Option<hal::HalResult> convert(const hal::HalResult & res){
     //         if(res.ok()) return Some(res);
     //         else return None; 
     //     }

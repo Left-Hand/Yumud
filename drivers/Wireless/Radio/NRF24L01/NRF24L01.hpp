@@ -121,7 +121,7 @@ struct _NRF24L01_Regs{
 
 class NRF24L01{
 public:
-    using Error = hal::BusError;
+    using Error = hal::HalResult;
 
     enum class Package{
         NRF24L01,
@@ -165,16 +165,16 @@ protected:
         uint8_t cmd_;
     };
 
-    [[nodiscard]] Result<void, hal::BusError> write_command(const Command cmd);
-    [[nodiscard]] Result<void, hal::BusError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, hal::HalResult> write_command(const Command cmd);
+    [[nodiscard]] Result<void, hal::HalResult> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::BusError> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::HalResult> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::BusError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, hal::HalResult> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::BusError> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] Result<void, hal::HalResult> read_reg(T & reg){return read_reg(reg.address, reg);}
 
     
 
@@ -200,22 +200,10 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::NRF24L01::Error, hal::BusError> {
-        static Result<T, drivers::NRF24L01::Error> convert(const hal::BusError berr){
-            using Error = drivers::NRF24L01::Error;
-            
-            if(berr.is_ok()) return Ok();
-
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case hal::BusError::I2C_NOT_READY: return NRF24L01::Error::I2C_NOT_READY;
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
+    struct result_converter<T, drivers::NRF24L01::Error, hal::HalResult> {
+        static Result<T, drivers::NRF24L01::Error> convert(const hal::HalResult res){
+            if(res.is_ok()) return Ok();
+            return Err(drivers::NRF24L01::Error(res.unwrap_err())); 
         }
     };
 }

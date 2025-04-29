@@ -63,7 +63,7 @@ void PAJ7620::select_bank(uint8_t bank) {
 // 	verify();
 // }
 
-hal::BusError PAJ7620::unlock_i2c(){
+hal::HalResult PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
 	return i2c_drv_.verify();
 }

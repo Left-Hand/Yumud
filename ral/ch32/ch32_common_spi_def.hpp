@@ -144,7 +144,7 @@ namespace CH32V20x{
             CFGR.ISSE = en;
         }
 
-        constexpr void enable_dma_txconst (const bool en){
+        constexpr void enable_dma_tx(const bool en){
             CTLR2.TXDMAEN = en;
         }
 

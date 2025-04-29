@@ -27,28 +27,28 @@ using IResult = typename MT6701::IResult<T>;
 
 
 IResult<> MT6701_Phy::write_reg(const RegAddress addr, const uint16_t data){
-    if(i2c_drv_) return Err(Error::BusError(i2c_drv_->write_reg(uint8_t(addr), data, MSB)));
+    if(i2c_drv_) return Err(Error(i2c_drv_->write_reg(uint8_t(addr), data, MSB).unwrap_err()));
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint16_t & data){
-    if(i2c_drv_) return Err(Error::BusError(i2c_drv_->read_reg(uint8_t(addr), data, MSB)));
+    if(i2c_drv_) return Err(Error(i2c_drv_->read_reg(uint8_t(addr), data, MSB).unwrap_err()));
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 IResult<> MT6701_Phy::write_reg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv_) return Err(Error::BusError(i2c_drv_->write_reg(uint8_t(addr), data)));
+    if(i2c_drv_) return Err(Error(i2c_drv_->write_reg(uint8_t(addr), data).unwrap_err()));
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_) return Err(Error::BusError(i2c_drv_->read_reg(uint8_t(addr), data)));
+    if(i2c_drv_) return Err(Error(i2c_drv_->read_reg(uint8_t(addr), data).unwrap_err()));
     else{
         MT6701_NO_I2C_FAULT;
     }

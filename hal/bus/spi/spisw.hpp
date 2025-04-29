@@ -19,7 +19,7 @@ protected:
     __no_inline void delay_dur(){
         udelay(delays);
     }
-    hal::BusError lead(const LockRequest req) override{
+    hal::HalResult lead(const LockRequest req) override{
         auto ret = Spi::lead(req);
         delay_dur();
         return ret;
@@ -48,36 +48,39 @@ public:
         const CommStrategy rx_strategy = CommStrategy::Blocking) override;
 
 
-    hal::BusError write(const uint32_t data) {
+    hal::HalResult write(const uint32_t data) {
         uint32_t dummy;
         transfer(dummy, data);
-        return hal::BusError::Ok();
+        return hal::HalResult::Ok();
     }
 
-    hal::BusError read(uint32_t & data) {
+    hal::HalResult read(uint32_t & data) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
         transfer(ret, dummy); 
-        return hal::BusError::Ok();
+        return hal::HalResult::Ok();
     }
 
-    hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
+    hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
 
-    void set_baudrate(const uint32_t baudrate) {
+    hal::HalResult set_baudrate(const uint32_t baudrate) {
         if(baudrate == 0){
             delays = 0;
         }else{
             uint32_t b = baudrate / 1000;
             delays = 200 / b;
         }
+        return HalResult::Ok();
     }
 
-    void set_data_width(const uint8_t bits) override {
+    hal::HalResult set_data_width(const uint8_t bits) override {
         data_bits = bits;
+        return HalResult::Ok();
     }
 
-    void set_bitorder(const Endian endian) override {
+    hal::HalResult set_bitorder(const Endian endian) override {
         m_msb = (endian == MSB);
+        return HalResult::Ok();
     }
 };
 

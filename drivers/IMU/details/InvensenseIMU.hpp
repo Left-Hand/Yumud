@@ -16,8 +16,8 @@ public:
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->write_reg(uint8_t(addr), data));
         }else if(spi_drv_){
-            return Result<void, Error>(spi_drv_->write_single(uint8_t(addr), CONT)
-            | spi_drv_->write_single(data));
+            return Result<void, Error>(spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT)
+            | spi_drv_->write_single<uint8_t>(data));
         }
 
         PANIC();
@@ -27,8 +27,8 @@ public:
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
-            return Result<void, Error>(spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT)
-            | spi_drv_->read_single(data));
+            return Result<void, Error>(spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
+            | spi_drv_->read_single<uint8_t>(data));
         }
 
         PANIC();
@@ -63,7 +63,7 @@ public:
             return Result<void, Error>(i2c_drv_->release());
         }
 
-        return Result<void, Error>(hal::BusError::Ok());
+        return Result<void, Error>(hal::HalResult::Ok());
     }
 private:
     std::optional<hal::I2cDrv> i2c_drv_;

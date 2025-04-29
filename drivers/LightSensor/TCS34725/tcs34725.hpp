@@ -85,23 +85,23 @@ protected:
         return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
-    hal::BusError write_reg(const RegAddress addr, const uint16_t data){
+    hal::HalResult write_reg(const RegAddress addr, const uint16_t data){
         return i2c_drv_.write_reg(conv_reg_address(addr), (uint16_t)data, LSB);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint16_t & data){
+    hal::HalResult read_reg(const RegAddress addr, uint16_t & data){
         return i2c_drv_.read_reg(conv_reg_address(addr), (uint16_t &)data, LSB);
     }
 
-    hal::BusError write_reg(const RegAddress addr, const uint8_t data){
+    hal::HalResult write_reg(const RegAddress addr, const uint8_t data){
         return i2c_drv_.write_reg(conv_reg_address(addr, false), (uint8_t)data);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint8_t & data){
+    hal::HalResult read_reg(const RegAddress addr, uint8_t & data){
         return i2c_drv_.read_reg(conv_reg_address(addr, false), (uint8_t &)data);
     }
 
-    hal::BusError request_reg_data(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    hal::HalResult request_reg_data(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);

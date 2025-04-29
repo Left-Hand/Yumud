@@ -1,4 +1,8 @@
+#include "LT8960L.hpp"
 #include "details/LT8960L_Errno.hpp"
+
+using namespace ymd;
+using namespace ymd::drivers;
 
 void LT8960L::States::transition_to(const Kind status){
     status_ = status;

@@ -10,8 +10,6 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace CH32;
 
-static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
-static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 
 
 #define UART_IT_TEMPLATE(name, uname, fname)\
@@ -191,15 +189,6 @@ void UartHw::enable_rcc(const bool en){
     }
 }
 
-
-void UartHw::on_rxne_interrupt(){
-    this->rx_fifo_.push(uint8_t(instance_->DATAR));
-}
-
-void UartHw::on_txe_interrupt(){
-
-}
-
 void UartHw::on_rxidle_interrupt(){
     switch(rx_strategy_){
         case CommStrategy::Dma:{
@@ -217,6 +206,7 @@ void UartHw::on_rxidle_interrupt(){
             while(true);
     }
 }
+
 
 Gpio & UartHw::rxio(){
     switch((uint32_t)instance_){
@@ -476,9 +466,9 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
     set_rx_strategy(rx_strategy);
 }
 
-hal::BusError UartHw::lead(const LockRequest req){
+hal::HalResult UartHw::lead(const LockRequest req){
     while((instance_->STATR & USART_FLAG_TXE) == RESET);
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
 void UartHw::trail(){

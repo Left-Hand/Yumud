@@ -209,13 +209,7 @@ void DmaChannel::enable_it(const NvicPriority _priority, const bool en){
     NvicPriority::enable(_priority, IRQn(irq), en);
 }
 
-void DmaChannel::on_transfer_half_interrupt(){
-    EXECUTE(half_cb_);
-}
 
-void DmaChannel::on_transfer_done_interrupt(){
-    EXECUTE(done_cb_);
-}
 
 
 void DmaChannel::set_periph_width(const size_t width){

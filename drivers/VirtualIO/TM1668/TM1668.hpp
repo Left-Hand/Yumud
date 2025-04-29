@@ -19,7 +19,7 @@ class TM1668_Error{
             Unspecified = 0xff,
         };
         constexpr TM1668_Error(const Kind kind): kind_(kind){;}
-        constexpr TM1668_Error(const hal::BusError err)
+        constexpr TM1668_Error(const hal::HalResult err)
             {
 
             }
@@ -33,20 +33,12 @@ class TM1668_Error{
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::TM1668_Error, hal::BusError> {
-        scexpr Result<T, drivers::TM1668_Error> convert(const hal::BusError berr){
-            using Error = drivers::TM1668_Error;
-            
+    struct result_converter<T, drivers::TM1668_Error, hal::HalResult> {
+        scexpr Result<T, drivers::TM1668_Error> convert(const hal::HalResult res){
             if constexpr(std::is_void_v<T>)
-                if(berr.is_ok()) return Ok();
-            
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    default: return Error::Unspecified;
-                }
-            }(berr);
+                if(res.is_ok()) return Ok();
 
-            return Err(err); 
+            return Err(drivers::TM1668_Error(res.unwrap_err())); 
         }
     };
 }

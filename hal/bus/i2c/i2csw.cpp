@@ -10,10 +10,10 @@ using namespace ymd::hal;
 
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
-    else for(size_t i = 0; i < 3; i++)__nopn(5);
+    else for(size_t i = 0; i < 3; i++) __nopn(5);
 }
 
-hal::BusError I2cSw::wait_ack(){
+hal::HalResult I2cSw::wait_ack(){
     delay_dur();
     sda().set();
     sda().inpu();
@@ -36,15 +36,15 @@ hal::BusError I2cSw::wait_ack(){
     scl().clr();
     delay_dur();
     
-    if(ovt){
-        return hal::BusError::AckTimeout;
+    if(ovt and (discard_ack_ == false)){
+        return hal::HalResult::AckTimeout;
     }else{
-        return hal::BusError::Ok();
+        return hal::HalResult::Ok();
     }
 
 }
 
-hal::BusError I2cSw::lead(const LockRequest req){
+hal::HalResult I2cSw::lead(const LockRequest req){
     #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl().outpp();
     #else
@@ -74,11 +74,7 @@ void I2cSw::trail(){
 
 
 
-hal::BusError I2cSw::write(const uint32_t data){
-    // if(data == 0){
-    //     __nopn(3);
-    // }
-    // DEBUG_PRINTLN("d", uint8_t(data));
+hal::HalResult I2cSw::write(const uint32_t data){
     sda().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -92,7 +88,7 @@ hal::BusError I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-hal::BusError I2cSw::read(uint32_t & data, const Ack ack){
+hal::HalResult I2cSw::read(uint32_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda().set();
@@ -116,7 +112,7 @@ hal::BusError I2cSw::read(uint32_t & data, const Ack ack){
     sda().inpu();
 
     data = ret;
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
 void I2cSw::init(const uint32_t baudrate){
@@ -134,7 +130,7 @@ void I2cSw::init(const uint32_t baudrate){
     set_baudrate(baudrate);
 }
 
-hal::BusError I2cSw::set_baudrate(const uint32_t baudrate) {
+hal::HalResult I2cSw::set_baudrate(const uint32_t baudrate) {
     if(baudrate == 0){
         delays_ = 0;
     }else{
@@ -142,13 +138,13 @@ hal::BusError I2cSw::set_baudrate(const uint32_t baudrate) {
         delays_ = 400 / b;
     }
 
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-hal::BusError I2cSw::reset(){
-    return hal::BusError::Ok();
+hal::HalResult I2cSw::reset(){
+    return hal::HalResult::Ok();
 }
 
-hal::BusError I2cSw::unlock_bus(){
-    return hal::BusError::Ok();
+hal::HalResult I2cSw::unlock_bus(){
+    return hal::HalResult::Ok();
 }

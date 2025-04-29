@@ -36,10 +36,15 @@ protected:
     CommStrategy rx_strategy_;
     std::optional<uint8_t> last_index;
 
-    hal::BusError lead(const LockRequest req);
+    [[nodiscard]] hal::HalResult lead(const LockRequest req);
     void trail(){
         cs_port_[last_index.value()].set();
         last_index.reset();
+    }
+
+    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
+        gpio.outpp(HIGH);
+        cs_port_.bind_pin(gpio, index);
     }
 public:
     Spi(){;}
@@ -47,32 +52,22 @@ public:
     Spi(hal::Spi &&) = delete;
 
     
-    virtual hal::BusError read(uint32_t & data) = 0;
-    virtual hal::BusError write(const uint32_t data) = 0;
-    virtual hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
+    [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
+    [[nodiscard]] virtual hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    virtual void set_data_width(const uint8_t len) = 0;
-    virtual void set_baudrate(const uint32_t baud) = 0;
-    virtual void set_bitorder(const Endian endian) = 0;
+    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
+    [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
+    [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
 
     virtual void init(
         const uint32_t baudrate, 
         const CommStrategy tx_strategy = CommStrategy::Blocking, 
         const CommStrategy rx_strategy = CommStrategy::Blocking) = 0;
-    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
-        gpio.outpp(HIGH);
-        cs_port_.bind_pin(gpio, index);
-    }
 
-    std::optional<SpiSlaveIndex> attach_next_cs(hal::GpioIntf & io){
-        for(size_t i = 0; i < cs_port_.size(); i++){
-            if(cs_port_.is_index_empty(i)){
-                cs_port_[i] = io;
-                return SpiSlaveIndex{uint16_t(i)};
-            }
-        }
-        return std::nullopt;
-    }
+
+    [[nodiscard]]
+    std::optional<SpiSlaveIndex> attach_next_cs(hal::GpioIntf & io);
 };
 
 }

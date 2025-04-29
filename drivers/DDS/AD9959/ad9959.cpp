@@ -69,20 +69,20 @@ void AD9959::set_clock( int mult,const int32_t calibration) // Mult must be 0 or
 
 
 
-    const auto err = spi_drv_.write_single(Register::FR1)
+    const auto err = spi_drv_.write_single<uint8_t>(Register::FR1)
     // High VCO Gain is needed for a 255-500MHz master clock, and not up to 160Mhz
     // In-between is unspecified.
-    | spi_drv_.write_single(
-        (core_clock > 200 ? uint8_t(FR1_Bits::VCOGain) : uint8_t(0)) |
+    | spi_drv_.write_single<uint8_t>(
+        uint8_t((core_clock > 200 ? uint8_t(FR1_Bits::VCOGain) : uint8_t(0)) |
         (mult*uint8_t(FR1_Bits::PllDivider)) | 
-        uint8_t(FR1_Bits::ChargePump3)         // Lock fast
+        uint8_t(FR1_Bits::ChargePump3))         // Lock fast
     )
     // Profile0 means each channel is modulated by a different profile pin:
-    | spi_drv_.write_single(
-        uint8_t(FR1_Bits::ModLevels2) |
+    | spi_drv_.write_single<uint8_t>(
+        uint8_t(uint8_t(FR1_Bits::ModLevels2) |
         uint8_t(FR1_Bits::RampUpDownOff) |
-        uint8_t(FR1_Bits::Profile0))
-    | spi_drv_.write_single(FR1_Bits::SyncClkDisable)
+        uint8_t(FR1_Bits::Profile0)))
+    | spi_drv_.write_single<uint8_t>(FR1_Bits::SyncClkDisable)
     ; // Don't output SYNC_CLK
 
     if(err.is_err()) PANIC();
@@ -112,14 +112,15 @@ void AD9959::set_amplitude(ChannelIndex chan, uint16_t amplitude){        // Max
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
     set_channels(chan);
-    UNWRAP_OR_PANIC(spi_drv_.write_single(Register::ACR)); // Amplitude control register
-    UNWRAP_OR_PANIC(spi_drv_.write_single(0)); // Time between ramp steps
+    UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(Register::ACR)); // Amplitude control register
+    UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(uint8_t(0))); // Time between ramp steps
     if (amplitude < 1024){// Enable amplitude control with no ramping
-        UNWRAP_OR_PANIC(spi_drv_.write_single((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8));
+        UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(uint8_t(
+            (uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8)));
     }else{
-        UNWRAP_OR_PANIC(spi_drv_.write_single(0));// Disable the amplitude multiplier
+        UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(uint8_t(0)));// Disable the amplitude multiplier
     }
-    UNWRAP_OR_PANIC(spi_drv_.write_single(amplitude&0xFF));       // Bottom 8 bits of amplitude
+    UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(uint8_t(amplitude&0xFF)));       // Bottom 8 bits of amplitude
 }
 
 void AD9959::set_phase(ChannelIndex chan, uint16_t phase){                // Maximum phase value is 16383
@@ -209,7 +210,7 @@ uint32_t AD9959::write(Register reg, uint32_t value)
 
     uint32_t    rval = 0;
     int         len = (uint8_t(reg)&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[uint8_t(reg)&0x07] : 4;
-    if(const auto err = spi_drv_.write_single(uint8_t(reg)); err.is_err()) PANIC();
+    if(const auto err = spi_drv_.write_single<uint8_t>(uint8_t(reg)); err.is_err()) PANIC();
     while (len-- > 0){
         uint8_t ret = 0;
         auto err = spi_drv_.transfer_single<uint8_t>(ret, (value>>len*8) & 0xFF);

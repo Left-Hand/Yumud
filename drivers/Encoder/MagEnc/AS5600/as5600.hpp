@@ -146,28 +146,28 @@ protected:
     [[nodiscard]]
     IResult<void> write_reg(const RegAddress addr, const uint16_t data){
         if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data, LSB); err.is_err())
-            return Err(Error::BusError(err.unwrap_err()));
+            return Err(Error::HalError(err.unwrap_err()));
         return Ok();
     }
 
     [[nodiscard]]
     IResult<void> read_reg(const RegAddress addr, uint16_t & data){
         if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data, LSB); err.is_err())
-            return Err(Error::BusError(err.unwrap_err()));
+            return Err(Error::HalError(err.unwrap_err()));
         return Ok();
     }
 
     [[nodiscard]]
     IResult<void> write_reg(const RegAddress addr, const uint8_t data){
         if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data); err.is_err())
-            return Err(Error::BusError(err.unwrap_err()));
+            return Err(Error::HalError(err.unwrap_err()));
         return Ok();
     }
 
     [[nodiscard]]
     IResult<void> read_reg(const RegAddress addr, uint8_t & data){
         if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data); err.is_err())
-            return Err(Error::BusError(err.unwrap_err()));
+            return Err(Error::HalError(err.unwrap_err()));
         return Ok();
     }
 public:

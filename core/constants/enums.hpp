@@ -32,19 +32,12 @@ static constexpr name l = name::from(false);\
 DEF_MAKE_BINA_ENUM(Endian, MSB, LSB)
 DEF_MAKE_BINA_ENUM(Continuous, CONT, DISC)
 DEF_MAKE_BINA_ENUM(Ack, ACK, NACK)
-DEF_MAKE_BINA_ENUM(ClockDirection, CLOCKWISE,COUNTERCLOCKWISE)
+DEF_MAKE_BINA_ENUM(ClockDirection, CW, CCW)
 DEF_MAKE_BINA_ENUM(BoolLevel, HIGH, LOW)
 DEF_MAKE_BINA_ENUM(Enable, EN, DISEN)
-// DEF_MAKE_BINA_ENUM(TB, TOP, BOTTOM)
-// DEF_MAKE_BINA_ENUM(LR, LEFT, RIGHT)
+DEF_MAKE_BINA_ENUM(TB, TOP, BOTTOM)
+DEF_MAKE_BINA_ENUM(LR, LEFT, RIGHT)
 
 #undef DEF_MAKE_BINA_ENUM
-enum class TB:uint8_t{TOP, BOTTOM};
-enum class LR:uint8_t{LEFT, RIGHT};
-
-
-
-OutputStream & operator<<(OutputStream & os, const TB tb);
-
-OutputStream & operator<<(OutputStream & os, const LR lr);
+;
 };

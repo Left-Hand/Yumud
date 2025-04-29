@@ -1,8 +1,11 @@
 #include "tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/string/string.hpp"
+#include "core/stream/StringStream.hpp"
+#include "core/math/realmath.hpp"
+#include "core/clock/time.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -10,9 +13,8 @@
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
 
-
 #include "types/image/painter.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "types/image/font/instance.hpp"
 
 
 using namespace GpioUtils;
@@ -43,13 +45,13 @@ protected:
     real_t para = 0;
 public:
     Menu(VerticalBinaryImage & _frame, OutputStream & _os):frame_(_frame), os_(_os){
-        painter_.bindImage(frame_);
-        painter_.setColor(Binary(true));
+        painter_.bind_image(frame_);
+        painter_.set_color(Binary(true));
     }
 
     void render(){
         frame_.fill(0);
-        painter_.drawString({0,0}, String(millis()));
+        painter_.draw_string({0,0}, String(millis())).unwrap();
 
         String str;
 
@@ -74,9 +76,9 @@ public:
                 break;
         }
 
-        // painter_.drawString({0,8}, "func:" + str);
-        painter_.drawString({0,8}, "func:");
-        painter_.drawString({0,16}, send_str);
+        // painter_.draw_string{0,8}, "func:" + str);
+        painter_.draw_string({0,8}, "func:").unwrap();
+        painter_.draw_string({0,16}, send_str).unwrap();
     }
 
     void next(){
@@ -116,8 +118,8 @@ public:
 static void oled_tb(){
     auto & SCL_GPIO = portB[6];
     auto & SDA_GPIO = portB[7];
-    static constexpr auto I2C_BAUD = 1000;
-    static constexpr auto MONITOR_HZ = 5000;
+    static constexpr auto I2C_BAUD = 2'000'000;
+    // static constexpr auto MONITOR_HZ = 5000;
 
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
@@ -125,6 +127,8 @@ static void oled_tb(){
 
     Key key_left{portB[2], LOW};
     Key key_right{portB[1], LOW};
+
+    Font8x5 font;
 
     key_left.init();
     key_right.init();
@@ -135,50 +139,58 @@ static void oled_tb(){
     // i2c.init(0);
     i2c.init(I2C_BAUD);
 
-    DisplayerPhyI2c oled_phy{i2c};
 
     // auto oled = SSD13XX(oled_phy, SSD13XX_72X40_Config());
-    constexpr auto cfg = SSD13XX_128X64_Config();
+    constexpr auto cfg = SSD13XX_Presets::_128X64{{
+        .flip_x = true,
+        .flip_y = true
+    }};
 
-    auto oled = SSD13XX(oled_phy, cfg);
+    auto oled = SSD13XX({i2c}, cfg);
     auto & frame = oled.fetch_frame();
     
     // DEBUG_PRINTLN("init started");
 
-    hal::timer1.init(MONITOR_HZ);
-    hal::timer1.attach(TimerIT::Update,{0,0},[&]{
-        DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
-    });
+    // hal::timer1.init(MONITOR_HZ);
+    // hal::timer1.attach(TimerIT::Update,{0,0},[&]{
+    //     DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
+    // });
 
     oled.init().unwrap();
-    oled.enable_flip_x(false).unwrap();
-    oled.enable_flip_y(false).unwrap();
 
     Menu menu {frame, DEBUGGER};
 
-    // DEBUG_PRINTLN("app started");
+    Painter<Binary> painter;
+    
+    painter.set_en_font(font).unwrap();
+    painter.bind_image(oled.fetch_frame());
+    painter.set_color(Binary(Binary::WHITE));
+
     while(true){
-        bool i = false;
-        i = !i;
-        oled.turn_display(i).unwrap();
-        delay(1);
-        menu.render();
-        // oled.update().unwrap();
-        
-        // oled.fill(Binary::WHITE);
-        // if(res.is_err()) DEBUG_PRINTLN("err: ", res.unwrap_err().as<hal::BusError>().unwrap());
-        // DEBUG_PRINTLN(millis());
-        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::AckTimeout));
-        // DEBUG_PRINTLN("err: ", hal::BusError(hal::BusError::Ok()));
+        painter.fill(Binary(Binary::BLACK)).unwrap();
+        painter.set_color(Binary(Binary::WHITE));
+
+        const Rect2i view = {0,0,128,48};
+
+        painter.draw_hollow_rect(view).unwrap();
+        painter.draw_fx(view.shrink(6), [&](const real_t x){
+            return sinpu(4 * x + time()) * 0.5_r + 0.5_r;
+        }).unwrap();
+
+        painter.draw_args({0, 52}, millis()).unwrap();
+
+        if(const auto res = oled.update(); res.is_err())
+            DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+
 
         key_left.update();
         key_right.update();
 
-        if(key_right.pressed()){
+        if(key_right.just_pressed()){
             menu.invoke();
         }
 
-        if(key_left.pressed()){
+        if(key_left.just_pressed()){
             menu.next();
         }
     }

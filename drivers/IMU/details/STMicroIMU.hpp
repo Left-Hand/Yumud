@@ -22,29 +22,29 @@ public:
 
 
 
-    hal::BusError write_reg(const uint8_t addr, const uint8_t data) {
+    hal::HalResult write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
             return i2c_drv_->write_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            return spi_drv_->write_single(uint8_t(addr), CONT)
-            | spi_drv_->write_single(data);
+            return spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT)
+            | spi_drv_->write_single<uint8_t>(data);
         }
 
         PANIC();
     }
 
-    hal::BusError read_reg(const uint8_t addr, uint8_t & data) {
+    hal::HalResult read_reg(const uint8_t addr, uint8_t & data) {
         if(i2c_drv_){
             return i2c_drv_->read_reg(uint8_t(addr), data);
         }else if(spi_drv_){
-            return spi_drv_->write_single(uint8_t(uint8_t(addr) | 0x80), CONT)
-            | spi_drv_->read_single(data);
+            return spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
+            | spi_drv_->read_single<uint8_t>(data);
         }
 
         PANIC();
     }
 
-    hal::BusError read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    hal::HalResult read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
             return i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
         }else if(spi_drv_){
@@ -55,9 +55,9 @@ public:
         PANIC();
     }
 
-    hal::BusError verify(){
+    hal::HalResult verify(){
         if(i2c_drv_) return i2c_drv_->verify();
-        if(spi_drv_) return hal::BusError::Ok();
+        if(spi_drv_) return hal::HalResult::Ok();
         PANIC();
     }
 };

@@ -1,6 +1,7 @@
 #include "LT8960L_Errno.hpp"
 
-
+using namespace ymd;
+using namespace ymd::drivers;
 
 Result<void, Error> LT8960L::set_pa_current(const uint8_t current){
     regs_.pa_config_reg.pa_current = current;
@@ -447,7 +448,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
     auto res = i2c_.begin(hal::LockRequest{uint32_t(address | 0x80), 0})
-        .then([&]() -> hal::BusError{
+        .then([&]() -> hal::HalResult{
             const auto err = i2c_.read(len, ACK);
             if(err.is_err()) return err;
             if(len > LT8960L_PACKET_SIZE || len > pbuf.size()) {
@@ -455,19 +456,19 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
                 // return hal::BusError::LengthOverflow;
                 invalid = true;
             }
-            return hal::BusError::Ok();
+            return hal::HalResult::Ok();
             }
         )
 
-        .then([&]() -> hal::BusError{
-            if(invalid) return hal::BusError::Ok();
+        .then([&]() -> hal::HalResult{
+            if(invalid) return hal::HalResult::Ok();
             for(size_t i = 0; i < len; i++){
                 uint32_t dummy = 0;
                 const auto err = i2c_.read(dummy, (i == len - 1 ? NACK : ACK));
                 if(err.is_err()) return err;
                 pbuf[i] = std::byte(dummy);
             }
-            return hal::BusError::Ok();
+            return hal::HalResult::Ok();
         })
     ;
 
@@ -489,18 +490,18 @@ Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const 
             return i2c_.write(pbuf.size());
         })
 
-        .then([&]() -> hal::BusError{
+        .then([&]() -> hal::HalResult{
             for(const auto data : pbuf){
                 auto err = i2c_.write(uint32_t(data));
                 if (err.is_err()) return err;
             }
-            return hal::BusError::Ok();
+            return hal::HalResult::Ok();
         })
     ;
 
     LT8960L_ASSERT(res.is_ok(), "error while write burst", res);
 
     if(res.is_ok()) return Ok(pbuf.size());
-    else return Err(Error(res));
+    else return Err(Error(res.unwrap_err()));
 }
 

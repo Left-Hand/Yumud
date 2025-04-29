@@ -3,7 +3,7 @@ namespace ymd{
 
 template<typename ColorType>
 Grayscale Image<ColorType>::mean(const Rect2i & roi) const{
-    return this->sum(roi) / (int(roi));
+    return this->sum(roi) / (roi.get_area());
 }
 
 

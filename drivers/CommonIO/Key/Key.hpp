@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class Key:public KeyIntf{
+class Key final:public KeyIntf{
 protected:
     using Level = BoolLevel;
     hal::GpioIntf & m_gpio;
@@ -32,16 +32,16 @@ public:
 
     void update() {
         last_state = now_state;
-        filter.update(bool(*this));
+        filter.update(bool(m_gpio.read()));
         now_state = filter.result();
     }
 
-    bool pressed(){
+    bool just_pressed() const {
         return last_state == false and now_state == true;
     }
 
-    operator bool() const {
-        return m_gpio.read() == level_;
+    bool is_pressed() const {
+        return now_state == true;
     }
 
     hal::GpioIntf & io(){

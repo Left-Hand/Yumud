@@ -801,7 +801,7 @@ namespace ymd::nvcv2::Shape{
             Direction t;
         }__packed;
 
-        auto gm = new gvec_t[int(roi)];
+        auto gm = new gvec_t[roi.get_area()];
 
         const auto w = size_t(roi.w);
 
@@ -939,7 +939,7 @@ namespace ymd::nvcv2::Shape{
     
         // sizeof(vec_t);
         auto roi = src.rect();
-        auto gm = new vec_t[int(roi)];
+        auto gm = new vec_t[roi.get_area()];
         
         const auto w = size_t(roi.w);
 

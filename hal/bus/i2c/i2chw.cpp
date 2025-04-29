@@ -100,7 +100,7 @@ void I2cHw::enable_hw_timeout(const bool en){
     else instance->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
-hal::BusError I2cHw::unlock_bus(){
+hal::HalResult I2cHw::unlock_bus(){
     if(locked()){
         I2C_Cmd(instance, DISABLE);
 
@@ -127,10 +127,10 @@ hal::BusError I2cHw::unlock_bus(){
         I2C_Cmd(instance, ENABLE);
         reset();
 
-        return hal::BusError::Ok();
+        return hal::HalResult::Ok();
     }
 
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
 void I2cHw::trail(){
@@ -139,7 +139,7 @@ void I2cHw::trail(){
 }
 
 
-hal::BusError I2cHw::lead(const LockRequest req){
+hal::HalResult I2cHw::lead(const LockRequest req){
     const auto address = req.id();
     const bool is_read = req.custom();
     // while(I2C_GetFlagStatus(instance, I2C_FLAG_BUSY));
@@ -147,21 +147,21 @@ hal::BusError I2cHw::lead(const LockRequest req){
     while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_MODE_SELECT) == ErrorStatus::NoREADY);
     I2C_Send7bitAddress(instance, address & 0xFE, is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
     while(I2C_CheckEvent(instance, is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) == ErrorStatus::NoREADY);
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-hal::BusError I2cHw::write(const uint32_t data){
+hal::HalResult I2cHw::write(const uint32_t data){
     I2C_SendData(instance, data);
     while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_TRANSMITTED) == ErrorStatus::NoREADY);
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
-hal::BusError I2cHw::read(uint32_t & data, const Ack ack){
+hal::HalResult I2cHw::read(uint32_t & data, const Ack ack){
     I2C_AcknowledgeConfig(instance, bool(ack));
     while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));
     data = I2C_ReceiveData(instance);
-    return hal::BusError::Ok();
+    return hal::HalResult::Ok();
 }
 
 namespace ymd{

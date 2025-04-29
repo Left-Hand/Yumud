@@ -1,7 +1,14 @@
+//这个驱动已经完成
+//这个驱动已经测试
+
+//PMW3901是原相科技的一款光流传感器
+
 #pragma once
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -14,10 +21,11 @@ namespace ymd::drivers{
 
 class PMW3901 final:public FlowSensorIntf{
 public:
-    enum class Error{
-        Bus,
-        Unspecified = 0xff,
+    enum class Error_Kind:uint8_t{
+            
     };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 private:
     struct MotionReg:public Reg8<>{
         using Reg8::operator=;
@@ -88,22 +96,10 @@ public:
 
 namespace ymd::custom{
     template<typename T>
-    struct result_converter<T, drivers::PMW3901::Error, hal::BusError> {
-        static Result<T, drivers::PMW3901::Error> convert(const hal::BusError berr){
-            using Error = drivers::PMW3901::Error;
-            
-            if(berr.is_ok()) return Ok();
-
-            Error err = [](const hal::BusError berr_){
-                switch(berr_.unwrap_err()){
-                    // case hal::BusError::NO_ACK : return Error::I2C_NOT_ACK;
-
-                    // case hal::BusError::I2C_NOT_READY: return PMW3901::Error::I2C_NOT_READY;
-                    default: return Error::Unspecified;
-                }
-            }(berr);
-
-            return Err(err); 
+    struct result_converter<T, drivers::PMW3901::Error, hal::HalResult> {
+        static Result<T, drivers::PMW3901::Error> convert(const hal::HalResult res){
+            if(res.is_ok()) return Ok();
+            return Err(drivers::PMW3901::Error(res.unwrap_err())); 
         }
     };
 }

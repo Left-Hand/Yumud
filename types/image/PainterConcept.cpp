@@ -5,7 +5,10 @@
 
 using namespace ymd;
 
-void PainterConcept::drawHollowRect(const Rect2i & rect){
+template<typename T = void>
+using IResult = PainterConcept::IResult<T>;
+
+IResult<> PainterConcept::draw_hollow_rect(const Rect2i & rect){
     // Rect2i regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;
 
@@ -13,25 +16,34 @@ void PainterConcept::drawHollowRect(const Rect2i & rect){
     // Rangei y_range = regular.get_y_range();
 
     // if(y_range.length() > 2){
-    //     drawHriLine(x_range, y_range.from);
-    //     drawHriLine(x_range, y_range.to - 1);
+    //     draw_hri_line(x_range, y_range.from);
+    //     draw_hri_line(x_range, y_range.to - 1);
     //     Rangei shrunk_y_range = y_range.grow(-1);
     //     drawVerLine(shrunk_y_range, x_range.from);
     //     drawVerLine(shrunk_y_range, x_range.to - 1);
     // }else{
     //     drawFilledRect(Rect2i(x_range, y_range));
     // }
-    auto p1 = rect.position;
-    auto p2 = rect.position + Vector2i{rect.size.x, 0};
-    auto p3 = rect.position + rect.size;
-    auto p4 = rect.position + Vector2i{0, rect.size.y};
-    drawLine(p1,p2);
-    drawLine(p2,p3);
-    drawLine(p4,p3);
-    drawLine(p1,p4);
+
+    if(const auto res = draw_hri_line(rect.get_x_range(), rect.position.y);
+        res.is_err()) return res;
+    if(const auto res = draw_hri_line(rect.get_x_range(), rect.position.y + rect.size.y - 1);
+        res.is_err()) return res;
+    if(const auto res = draw_ver_line(rect.get_y_range(), rect.position.x);
+        res.is_err()) return res;
+    if(const auto res = draw_ver_line(rect.get_y_range(), rect.position.x + rect.size.x - 1);
+        res.is_err()) return res;
+
+    return Ok();
 }
-void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getClipWindow()))) || radius <= 0) return;
+
+
+IResult<> PainterConcept::draw_hollow_circle(const Vector2i & pos, const uint radius){
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius))
+        .intersects(this->get_clip_window())))) return Ok();
+
+    if(radius == 0) return Ok();
+    if(radius < 0) return Err(Error::MinusRadius);
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -42,14 +54,14 @@ void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
     int err=dx - 2 * radius;
 
     while (x>=y) {
-        this->drawPixel(Vector2i(x0-x, y0+y));
-        this->drawPixel(Vector2i(x0+x, y0+y));
-        this->drawPixel(Vector2i(x0-y, y0+x));
-        this->drawPixel(Vector2i(x0+y, y0+x));
-        this->drawPixel(Vector2i(x0-x, y0-y));
-        this->drawPixel(Vector2i(x0+x, y0-y));
-        this->drawPixel(Vector2i(x0-y, y0-x));
-        this->drawPixel(Vector2i(x0+y, y0-x));
+        this->draw_pixel(Vector2i(x0-x, y0+y));
+        this->draw_pixel(Vector2i(x0+x, y0+y));
+        this->draw_pixel(Vector2i(x0-y, y0+x));
+        this->draw_pixel(Vector2i(x0+y, y0+x));
+        this->draw_pixel(Vector2i(x0-x, y0-y));
+        this->draw_pixel(Vector2i(x0+x, y0-y));
+        this->draw_pixel(Vector2i(x0-y, y0-x));
+        this->draw_pixel(Vector2i(x0+y, y0-x));
 
         if (err<=0) {
             y++;
@@ -62,12 +74,21 @@ void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
             err += dx-radius * 2;
         }
     }
+
+    return Ok();
 }
 
-void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(0,0), getClipWindow().size)))) || radius == 0) return;
+IResult<> PainterConcept::draw_filled_circle(const Vector2i & pos, const uint radius){
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius))
+        .inside(Rect2i(Vector2i(0,0), get_clip_window().size))))) return Ok();
+    
+
+    if(radius < 0) return Err(Error::MinusRadius);
+    if(radius == 0) return Ok();
+
     if(radius == 1){
-        return drawPixel(pos);
+        draw_pixel(pos);
+        return Ok();
     }
     int x0 = pos.x;
     int y0 = pos.y;
@@ -79,11 +100,11 @@ void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
 
     while (x>=y) {
         // if(src_image->has_point(x0 - y))
-        drawHriLine(Vector2i(x0 - x, y0 + y), 2*x);
-        drawHriLine(Vector2i(x0 - y, y0 + x), 2*y);
-        drawHriLine(Vector2i(x0 - x, y0 - y), 2*x);
-        drawHriLine(Vector2i(x0 - y, y0 - x), 2*y);
-
+        const auto res = draw_hri_line(Vector2i(x0 - x, y0 + y), 2*x)
+        | draw_hri_line(Vector2i(x0 - y, y0 + x), 2*y)
+        | draw_hri_line(Vector2i(x0 - x, y0 - y), 2*x)
+        | draw_hri_line(Vector2i(x0 - y, y0 - x), 2*y);
+        if(res.is_err()) return res;
         if (err<=0) {
             y++;
             err += dy;
@@ -94,30 +115,21 @@ void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
             dx += 2;
             err += dx-ABS(radius * 2);
         }
-
-
     }
+
+    return Ok();
 }
 
-
-
-void PainterConcept::drawString(const Vector2i & pos, const String & str){
-    drawStr(pos, str.c_str(), str.length());
+IResult<> PainterConcept::draw_string(const Vector2i & pos, const StringView str){
+    return draw_str(pos, str.data(), str.length());
 }
 
-void PainterConcept::drawString(const Vector2i & pos, const char * str){
-    drawStr(pos, str, strlen(str));
-}
-
-void PainterConcept::drawString(const Vector2i & pos, const StringView & str){
-    drawStr(pos, str.data(), str.length());
-}
-
-void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r) {
+IResult<> PainterConcept::draw_hollow_ellipse(const Vector2i & pos, const Vector2i & r) {
     int rx = r.x;
     int ry = r.y;
-    if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx == ry) return draw_hollow_circle(pos, rx);
+    if (!this->get_clip_window().intersects(Rect2i::from_center(pos, r))) return Ok();
+    if (rx<2 || ry<2 ) return Ok();
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -129,10 +141,10 @@ void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r)
     int s;
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
-        drawPixel(Vector2i(x0 + x, y0 + y));
-        drawPixel(Vector2i(x0 - x, y0 + y));
-        drawPixel(Vector2i(x0 - x, y0 - y));
-        drawPixel(Vector2i(x0 + x, y0 - y));
+        draw_pixel(Vector2i(x0 + x, y0 + y));
+        draw_pixel(Vector2i(x0 - x, y0 + y));
+        draw_pixel(Vector2i(x0 - x, y0 - y));
+        draw_pixel(Vector2i(x0 + x, y0 - y));
         if (s >= 0) {
             s += fx2 * (1 - y);
             y--;
@@ -141,10 +153,10 @@ void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r)
     }
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
-        drawPixel(Vector2i(x0 + x, y0 + y));
-        drawPixel(Vector2i(x0 - x, y0 + y));
-        drawPixel(Vector2i(x0 - x, y0 - y));
-        drawPixel(Vector2i(x0 + x, y0 - y));
+        draw_pixel(Vector2i(x0 + x, y0 + y));
+        draw_pixel(Vector2i(x0 - x, y0 + y));
+        draw_pixel(Vector2i(x0 - x, y0 - y));
+        draw_pixel(Vector2i(x0 + x, y0 - y));
         if (s >= 0)
         {
             s += fy2 * (1 - x);
@@ -152,13 +164,15 @@ void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r)
         }
         s += rx2 * ((4 * y) + 6);
     }
+
+    return Ok();
 }
 
-void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r){
+IResult<> PainterConcept::draw_filled_ellipse(const Vector2i & pos, const Vector2i & r){
     int rx = r.x;
     int ry = r.y;
-    if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx == ry) return draw_hollow_circle(pos, rx);
+    if (rx<2 || ry<2|| !this->get_clip_window().intersects(Rect2i::from_center(pos, r))) return Ok();
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -172,8 +186,8 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
         Rangei x_range = Rangei(x0 - x, x0 + x + 1);
-        drawHriLine(x_range, y0 - y);
-        drawHriLine(x_range, y0 + y);
+        if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
         if (s >= 0) {
             s += fx2 * (1 - y);
@@ -184,8 +198,8 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
         Rangei x_range = Rangei(x0 - x, x0 + x + 1);
-        drawHriLine(x_range, y0 - y);
-        drawHriLine(x_range, y0 + y);
+        if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
         if (s >= 0) {
             s += fy2 * (1 - x);
@@ -193,26 +207,35 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
         }
         s += rx2 * ((4 * y) + 6);
     }
+
+    return Ok();
 }
 
 
-void PainterConcept::drawPolyline(const Vector2i * points, const size_t count){
-    for(size_t i = 0; i < count-1; i++) drawLine(points[i], points[i + 1]);
+IResult<> PainterConcept::draw_polyline(const std::span<const Vector2i> points){
+    const auto count = points.size();
+    for(size_t i = 0; i < count-1; i++){
+        const auto res = draw_line(points[i], points[i + 1]);
+        if(res.is_err()) return res;
+    }
+    return Ok();
 }
 
 
-void PainterConcept::drawPolygon(const Vector2i * points, const size_t count){
-    drawPolyline(points, count);
-    drawLine(points[0], points[count - 1]);
+IResult<> PainterConcept::draw_polygon(const std::span<const Vector2i> points){
+    const auto count = points.size();
+    return draw_polyline(points) |
+    draw_line(points[0], points[count - 1]);
 }
 
-void PainterConcept::drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
-    drawLine(p0, p1);
-    drawLine(p1, p2);
-    drawLine(p0, p2);
+IResult<> PainterConcept::draw_hollow_triangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
+    if(const auto res = draw_line(p0, p1); res.is_err()) return res;
+    if(const auto res = draw_line(p1, p2); res.is_err()) return res;
+    if(const auto res = draw_line(p0, p2); res.is_err()) return res;
+    return Ok();
 }
 
-void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
+IResult<> PainterConcept::draw_filled_triangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
     int a, b, last;
     int x0 = p0.x;
     int y0 = p0.y;
@@ -240,8 +263,8 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         else if (x1 > b) b = x1;
         if (x2 < a)      a = x2;
         else if (x2 > b) b = x2;
-        drawHriLine(Rangei(a, b + 1), y0);
-        return;
+        if(const auto res = draw_hri_line(Rangei(a, b + 1), y0); res.is_err()) return res;
+        return Ok();
     }
 
     int dx01 = x1 - x0;
@@ -264,7 +287,7 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        drawHriLine(Rangei(a, b + 1), y);
+        if(const auto res = draw_hri_line(Rangei(a, b + 1), y); res.is_err()) return res;
     }
 
     sa = dx12 * (y - y1);
@@ -276,21 +299,18 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        drawHriLine(Rangei(a, b + 1), y);
+        if(const auto res = draw_hri_line(Rangei(a, b + 1), y); res.is_err()) return res;
     }
+
+    return Ok();
 }
 
-void PainterConcept::drawRoi(const Rect2i & rect){
-    drawHollowRect(rect);
+IResult<> PainterConcept::draw_roi(const Rect2i & rect){
     Vector2i center = rect.get_center();
-    drawHriLine(center+Vector2i(-2,0), 5);
-    drawVerLine(center+Vector2i(0,-2), 5);
+    if(const auto res = draw_hollow_rect(rect); res.is_err()) return res;
+    if(const auto res = draw_hri_line(center+Vector2i(-2,0), 5); res.is_err()) return res;
+    if(const auto res = draw_ver_line(center+Vector2i(0,-2), 5); res.is_err()) return res;
+
+    return Ok();
 }
 
-void PainterConcept::drawPolyline(const std::initializer_list<Vector2i> & points){
-    drawPolyline(points.begin(), points.size());
-}
-
-void PainterConcept::drawPolygon(const std::initializer_list<Vector2i> & points){
-    drawPolygon(points.begin(), points.size());
-}

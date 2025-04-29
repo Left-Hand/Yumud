@@ -16,7 +16,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-hal::BusError TCS34725::request_reg_data(const TCS34725::RegAddress addr, uint16_t * data_ptr, const size_t len){
+hal::HalResult TCS34725::request_reg_data(const TCS34725::RegAddress addr, uint16_t * data_ptr, const size_t len){
     uint8_t address = conv_reg_address(addr);
     TCS34725_DEBUG("address", address)
 

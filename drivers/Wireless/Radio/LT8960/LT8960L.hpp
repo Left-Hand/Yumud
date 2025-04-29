@@ -9,14 +9,13 @@
 
 namespace ymd::drivers{
 
-
-
 class LT8960L{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = LT8960L_Phy::DEFAULT_I2C_ADDR;
     static constexpr auto MAX_RX_RETRY = 2;
 
-    using Error = LT8960L_Error;
+    using Error = LT8960L_Phy::Error;
+
     using Regs = _LT8960L_Regs;
 
     using RegAddress = Regs::RegAddress;

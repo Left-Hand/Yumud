@@ -30,7 +30,7 @@ protected:
 
     Flags flags;
 
-    hal::BusError unlock_i2c();//bad i2c device;
+    hal::HalResult unlock_i2c();//bad i2c device;
     
     // void wakeup();
 public:

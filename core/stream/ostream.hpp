@@ -341,13 +341,6 @@ public:
         return *this;
     }
 
-    template<typename T>
-    requires std::is_enum_v<T>
-    OutputStream & operator<<(T && e){
-        print_int(static_cast<int>(e));
-        return *this;
-    }
-
     template <typename ... Args>
     OutputStream & print(Args&&... args){
         print_indent();

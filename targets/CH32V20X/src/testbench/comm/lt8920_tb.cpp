@@ -35,9 +35,9 @@ void lt8920_main(){
 
 
     spi.init(2_MHz);
-    spi.bind_cs_pin(portA[0], 0);
+    
 
-    LT8920 lt{spi, SpiSlaveIndex(0)};
+    LT8920 lt{spi, spi.attach_next_cs(portA[0]).value()};
     bindSystickCb([&](){
         lt.tick();
     });

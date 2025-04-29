@@ -75,30 +75,6 @@ public:
     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(r | (g << 8) | (b << 16));}
 };
 
-
-// struct XYZ888 {
-
-//     uint8_t x;
-//     uint8_t y;
-//     uint8_t z;
-
-// #ifdef __cplusplus
-// public:
-//     __fast_inline constexpr XYZ888() = default;
-    
-//     __fast_inline constexpr XYZ888(const XYZ888 & other): 
-//         x(other.x),
-//         y(other.y),
-//         z(other.z)
-//     {;} 
-
-//     XYZ888(const RGB888 & xyz); 
-
-//     __fast_inline constexpr XYZ888(const uint8_t _x, const uint8_t _y, const uint8_t _z):x(_x), y(_y), z(_z){;}
-//     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(x | (y << 8) | (z << 16));}
-//
-// };
-
 struct LAB888 {
 
     uint8_t l;
@@ -169,12 +145,21 @@ struct RGB565{
     __fast_inline constexpr RGB565(const Binary & bn);
 
     __fast_inline static constexpr 
-    RGB565 from_565(const uint8_t _r, const uint8_t _g, const uint8_t _b){
+    RGB565 from_565(const uint8_t r, const uint8_t g, const uint8_t b){
         RGB565 ret;
-        ret.b = _b & 0b11111; 
-        ret.g = _g & 0b111111; 
-        ret.r = _r & 0b1111;
+        ret.b = b & 0b11111; 
+        ret.g = g & 0b111111; 
+        ret.r = r & 0b11111;
         return ret;
+    }
+
+    __fast_inline static constexpr 
+    RGB565 from_u16(const uint16_t raw){
+        return  from_565(
+            raw >> 11,
+            raw >> 5,
+            raw
+        );
     }
     __fast_inline constexpr operator RGB888() const {
         return RGB888(r << 3, g << 2, b << 3);
@@ -209,9 +194,9 @@ private:
     static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
 
     __fast_inline constexpr RGB565(const uint8_t _r, const uint8_t _g, const uint8_t _b): b(_b & 0b11111), g(_g & 0b111111), r(_r & 0b11111){;}
-
-
 };
+
+static_assert(sizeof(RGB565) == 2);
 
 
 
@@ -276,13 +261,20 @@ struct ARGB32{
 struct Binary{
     uint8_t data;
 
-    enum{
+    enum Kind:uint8_t{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
-    __fast_inline constexpr Binary() : data(0){;}
-    __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
 
+    __fast_inline constexpr Binary() : data(0){;}
+    __fast_inline constexpr Binary(const Kind kind) : data(kind){;}
+    __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
+    
+    __fast_inline constexpr Binary(const Binary & other) = default;
+    __fast_inline constexpr Binary(Binary && other) = default;
+
+    __fast_inline constexpr Binary & operator = (const Binary & other) = default;
+    __fast_inline constexpr Binary & operator = (Binary && other) = default;
     __fast_inline constexpr Binary(const RGB888 & rgb): data((rgb.r + rgb.g + rgb.b) > 128 * 3 ? 255 : 0){;}
 
     __fast_inline constexpr explicit operator uint8_t() const {return data;}

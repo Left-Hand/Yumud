@@ -2,37 +2,22 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-
+#include "core/utils/Errno.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 
 namespace ymd::drivers{
 
-class DRV2605L_Error{
+class DRV2605L{
 public:
-    enum Kind:uint8_t{
+    using RegAddress = uint8_t;
+
+    enum class Error_Kind:uint8_t{
         BusFault,
         Unspecified
     };
 
-    DRV2605L_Error(Kind kind):kind_(kind){;}
-
-    bool operator == (const DRV2605L_Error other) const{
-        return kind_ == other.kind_;
-    }
-
-    bool operator == (const Kind other) const{
-        return kind_ == other;
-    }
-private:
-    Kind kind_;
-};
-
-class DRV2605L{
-public:
-    using RegAddress = uint8_t;
-    using Error = DRV2605L_Error;
-
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     enum class Package:uint8_t{
         _2605,
@@ -46,8 +31,6 @@ public:
     DRV2605L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     DRV2605L(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     DRV2605L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
-
-
 
 protected:
 
@@ -373,32 +356,48 @@ protected:
     Control1Reg control1_reg = {};
     Control2Reg control2_reg = {};
 
-    auto write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
+    [[nodiscard]] Result<void, Error> 
+    write_reg(const RegAddress address, const uint8_t reg){
+        const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
+        return Ok();
     }
 
-    auto read_reg(const RegAddress addr, uint8_t & reg){
-        return i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
+    [[nodiscard]] Result<void, Error> 
+    read_reg(const RegAddress addr, uint8_t & reg){
+        const auto res = i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
+        return Ok();
     }
 
-    auto requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+    [[nodiscard]] Result<void, Error> 
+    requestBurst(const RegAddress addr, uint8_t * data, size_t len){
+        const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+        if(res.is_err()) return Err(Error(res.unwrap_err()));
+        return Ok();
+    }
+
+    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
+        return read_reg(reg.address, reg.as_ref());
     }
 
 
-    void setFbBrakeFactor(const FbBrakeFactor factor);
-    void setFbBrakeFactor(const int fractor);
+    [[nodiscard]] Result<void, Error> set_fb_brake_factor(const FbBrakeFactor factor);
+    [[nodiscard]] Result<void, Error> set_fb_brake_factor(const int fractor);
 public:
-    void reset();
-    void update();
-    bool verify();
+    [[nodiscard]] Result<void, Error> reset();
+    [[nodiscard]] Result<void, Error> update();
+    [[nodiscard]] Result<void, Error> verify();
 
-    Result<void, Error> init();
-    Package getPackage();
-    void setBemfGain(const BemfGain gain);
-    void setLoopGain(const LoopGain gain);
-    void play(const uint8_t idx);
-    Result<void, Error> autocal();
+    [[nodiscard]] Result<void, Error> init();
+    Package get_package();
+    [[nodiscard]] Result<void, Error> set_bemf_gain(const BemfGain gain);
+    [[nodiscard]] Result<void, Error> set_loop_gain(const LoopGain gain);
+    [[nodiscard]] Result<void, Error> play(const uint8_t idx);
+    [[nodiscard]] Result<void, Error> autocal();
 };
 
 }

@@ -19,7 +19,7 @@ protected:
 
     uint16_t current_char = '\0';
     uint16_t fetch_next(){return tx_fifo_.pop();}
-    hal::BusError lead(const LockRequest req){return hal::BusError::Ok();}
+    hal::HalResult lead(const LockRequest req){return hal::HalResult::Ok();}
     void trail(){;}
 public:
 

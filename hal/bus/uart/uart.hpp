@@ -17,6 +17,20 @@ static constexpr size_t UART_FIFO_BUF_SIZE = 256;
 #endif
 
 
+#ifndef UART_DMA_BUF_SIZE
+static constexpr size_t UART_DMA_BUF_SIZE = 64;
+#endif
+
+#ifndef UART_TX_DMA_BUF_SIZE
+static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+#endif
+
+
+#ifndef UART_RX_DMA_BUF_SIZE
+static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+#endif
+
+
 class Uart:public BusBase{
 
 public:
@@ -41,10 +55,10 @@ protected:
     __fast_inline void call_post_tx_callback(){EXECUTE(post_tx_cb_);}
     __fast_inline void call_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
-    hal::BusError read(uint32_t & data) {char _;read1(_);data = _;return hal::BusError::Ok();};
-    hal::BusError write(const uint32_t data) {write1(char(data)); return hal::BusError::Ok();};
+    hal::HalResult read(uint32_t & data) {char _;read1(_);data = _;return hal::HalResult::Ok();};
+    hal::HalResult write(const uint32_t data) {write1(char(data)); return hal::HalResult::Ok();};
 
-    hal::BusError transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::BusError::Ok();};
+    hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::HalResult::Ok();};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 

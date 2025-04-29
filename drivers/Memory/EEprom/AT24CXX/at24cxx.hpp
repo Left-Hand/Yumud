@@ -14,9 +14,9 @@ class AT24CXX:public StoragePaged{
 private:
     constexpr bool is_small_chip(){return capacity_ <= 256;}
 
-    hal::BusError write_pool(const size_t addr, const uint8_t * data, const size_t len);
+    hal::HalResult write_pool(const size_t addr, const uint8_t * data, const size_t len);
 
-    hal::BusError read_pool(const size_t addr, uint8_t * data, const size_t len);
+    hal::HalResult read_pool(const size_t addr, uint8_t * data, const size_t len);
 protected:
     scexpr uint32_t min_duration_ms = 6;
 

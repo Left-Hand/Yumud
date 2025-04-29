@@ -89,24 +89,24 @@ protected:
     int16_t magZReg = {};
     StatusReg statusReg = {};
 
-    hal::BusError write_reg(const RegAddress addr, const uint16_t data){
+    hal::HalResult write_reg(const RegAddress addr, const uint16_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint16_t & data){
+    hal::HalResult read_reg(const RegAddress addr, uint16_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
     }
 
-    hal::BusError write_reg(const RegAddress addr, const uint8_t data){
+    hal::HalResult write_reg(const RegAddress addr, const uint8_t data){
         return i2c_drv_.write_reg(uint8_t(addr), data);
     }
 
-    hal::BusError read_reg(const RegAddress addr, uint8_t & data){
+    hal::HalResult read_reg(const RegAddress addr, uint8_t & data){
         return i2c_drv_.read_reg(uint8_t(addr), data);
     }
 
 
-    hal::BusError read_burst(const RegAddress addr, int16_t * pdata, size_t len){
+    hal::HalResult read_burst(const RegAddress addr, int16_t * pdata, size_t len){
         return i2c_drv_.read_burst(uint8_t(addr), std::span(pdata, len), MSB);
     }
 

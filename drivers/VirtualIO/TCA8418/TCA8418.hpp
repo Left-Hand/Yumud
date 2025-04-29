@@ -432,7 +432,7 @@ struct TCA8418_Regs{
 class TCA8418_Error{
 public:
     enum Kind:uint8_t{
-        BusError,
+        HalResult,
         VerifyFailed,
         WrongWhoAmI,
         Unspecified = 0xff,

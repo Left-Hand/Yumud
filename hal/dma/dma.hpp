@@ -166,8 +166,13 @@ protected:
         return 0;
     }
 
-    void on_transfer_half_interrupt();
-    void on_transfer_done_interrupt();
+    __fast_inline void on_transfer_half_interrupt(){
+        EXECUTE(half_cb_);
+    }
+    
+    __fast_inline void on_transfer_done_interrupt(){
+        EXECUTE(done_cb_);
+    }
 
     #ifdef ENABLE_DMA1
         friend void ::DMA1_Channel1_IRQHandler(void);
