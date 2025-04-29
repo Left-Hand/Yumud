@@ -351,10 +351,44 @@ static void render_row(const __restrict std::span<RGB565> row, const uint y, std
         row[x] = draw3drt(x, y, co_triangles);
     }
 
-    // filter(row);
+    filter(row);
 }
 
 
+
+Result<void, HalError> test_res1(){
+    DEBUG_PRINTLN("res1");
+    if(sys::chip::get_chip_id() == 0) return Ok();
+    return Err(HalError::NoSelecter);
+}
+
+Result<void, HalError> test_res2(){
+    DEBUG_PRINTLN("res2");
+    if(sys::chip::get_chip_id() == 0) return Ok();
+    return Err(HalError::NoSelecter);
+}
+
+void test_res(){
+    // if((test_res1() | test_res2()).is_ok()){
+    //     DEBUG_PRINTLN("res ok");
+    // }else{
+    //     DEBUG_PRINTLN("res fail");
+    // }
+    auto com_res = [] -> Result<void, HalError>{
+        // if(const auto res = test_res1(); res.is_err()) return res;
+        // if(const auto res = test_res2(); res.is_err()) return res;
+        // return Ok();
+
+        if((test_res1() | test_res2()).is_ok()) return Ok();
+        else return Err(HalError::NoSelecter);
+    }();
+
+    if(com_res.is_ok()){
+        DEBUG_PRINTLN("res ok");
+    }else{
+        DEBUG_PRINTLN("res fail");
+    }
+}
 
 #define UART hal::uart2
 using drivers::ST7789;
@@ -408,6 +442,7 @@ void light_tracking_main(void){
     //     udelay(20);
     // }
 
+    test_res();
     spi.bind_cs_pin(lcd_cs, 0);
     // spi.init(144_MHz, CommStrategy::Blocking);
     spi.init(LCD_SPI_FREQ_HZ, CommStrategy::Blocking);
@@ -478,7 +513,7 @@ void light_tracking_main(void){
     //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
     DEBUG_PRINTLN(millis());
     auto render = [&](){
-        // const auto u = micros();
+        const auto u = micros();
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
 
@@ -495,9 +530,9 @@ void light_tracking_main(void){
         }
 
         
-        // const auto use_us = micros() - u;
+        const auto use_us = micros() - u;
         // const auto fps = 1000000 / use_us;
-        // DEBUG_PRINTLN(use_us,fps);
+        DEBUG_PRINTLN(uint32_t(use_us));
     };
 
     // for(size_t i = 0; i < 100; i++) render();

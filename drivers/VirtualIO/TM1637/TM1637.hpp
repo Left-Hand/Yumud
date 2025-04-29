@@ -13,13 +13,8 @@
 
 namespace ymd::drivers{
 
-class TM1637_Phy final{
-public:
-    enum class Error_Kind{
-
-    };
-
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+struct _TM1637_Collections{
+    static constexpr uint8_t CGRAM_BEGIN_ADDR = 0;
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -34,9 +29,11 @@ public:
 
     struct DataCommand{
         const uint8_t __resv1__:1 = 0;
-        uint8_t write_or_read:1;
+        uint8_t write_else_read:1;
         uint8_t addr_inc_en:1;
         const uint8_t __resv2__:5 = 0b01001;
+
+        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DataCommand) == 1);
@@ -44,14 +41,18 @@ public:
     struct AddressCommand{
         uint8_t addr:3;
         const uint8_t __resv2__:5 = 0b11000;
+
+        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(AddressCommand) == 1);
 
     struct DisplayCommand{
         PulseWidth pulse_width:3;
-        uint8_t display_on:1;
+        uint8_t display_en:1;
         const uint8_t __resv2__:4 = 0b1000;
+
+        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
@@ -101,17 +102,31 @@ public:
         Option<uint8_t> col_;
     };
 
+    enum class Error_Kind{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+};
+
+class TM1637_Phy final:public _TM1637_Collections{
+public:
+    TM1637_Phy(hal::I2c & i2c): i2c_(i2c){;}
+
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
     Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
 
     Result<void, Error> write_screen(const std::span<const uint8_t, 6> pbuf);
+
+    Result<void, Error> write_sram(const std::span<const uint8_t> pbuf, const PulseWidth pw);
+private:
+    hal::I2c & i2c_;
 };
 
-class TM1637 final{
+class TM1637 final:public _TM1637_Collections{
 public:
     using Phy = TM1637_Phy;
-    using Error = Phy::Error;
 
     Result<void, Error> flush(){
         return phy_.write_screen(buf_);

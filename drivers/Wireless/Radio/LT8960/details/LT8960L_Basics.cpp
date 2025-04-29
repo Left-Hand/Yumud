@@ -1,6 +1,7 @@
 #include "LT8960L_Errno.hpp"
 
-
+using namespace ymd;
+using namespace ymd::drivers;
 
 Result<void, Error> LT8960L::set_pa_current(const uint8_t current){
     regs_.pa_config_reg.pa_current = current;

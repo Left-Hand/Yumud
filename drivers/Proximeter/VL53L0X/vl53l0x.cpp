@@ -119,14 +119,12 @@ Result<void, Error> VL53L0X::stop(){
 }
 
 Result<void, Error> VL53L0X::update(){
-    if(const auto res = is_busy(); res.is_ok()){
-		if(res.unwrap()){
-			this->flush();
-		}
-		return Ok();
-	}else{
-		return Err(res.unwrap_err());
+	const auto res = is_busy();
+    if(res.is_err()) return Err(res.unwrap_err());
+	if(res.unwrap() == false){
+		return this->flush();
 	}
+	return Ok();
 }
 
 
