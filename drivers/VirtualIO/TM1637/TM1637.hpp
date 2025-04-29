@@ -105,14 +105,19 @@ public:
 
     Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
 
-    Result<void, Error> write_screen(const uint8_t addr, const std::span<const uint8_t, 6> pbuf);
-
-    // Result<KeyEvent, Error> read_key();
+    Result<void, Error> write_screen(const std::span<const uint8_t, 6> pbuf);
 };
 
 class TM1637 final{
 public:
+    using Phy = TM1637_Phy;
+    using Error = Phy::Error;
+
+    Result<void, Error> flush(){
+        return phy_.write_screen(buf_);
+    }
 private:
+    Phy phy_;
     std::array<uint8_t, 6> buf_;
 };
 

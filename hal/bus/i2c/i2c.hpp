@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus_base.hpp"
-#include "i2c_trait.hpp"
+#include "i2c_utils.hpp"
 
 namespace ymd::hal{
 class Gpio;

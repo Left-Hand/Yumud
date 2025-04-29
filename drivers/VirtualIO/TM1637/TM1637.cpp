@@ -18,7 +18,7 @@ Result<void, Error> TM1637_Phy::write_burst(const uint8_t addr, const std::span<
     return Ok();
 }
 
-Result<void, Error> TM1637_Phy::write_screen(const uint8_t addr, const std::span<const uint8_t, 6> pbuf){
+Result<void, Error> TM1637_Phy::write_screen(const std::span<const uint8_t, 6> pbuf){
     TODO();
 
     return Ok();

@@ -4,7 +4,7 @@
 #include <concepts>
 #include <initializer_list>
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "sccb.hpp"
 
 
 
