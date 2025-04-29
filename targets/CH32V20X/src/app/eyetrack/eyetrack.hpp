@@ -12,7 +12,7 @@ struct EyeInfo{
 };
 
 struct EyelidInfo{
-    Range_t<real_t> range;
+    Range2_t<real_t> range;
 };
 
 class Eyes;

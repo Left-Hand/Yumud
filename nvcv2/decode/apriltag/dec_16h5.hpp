@@ -1,7 +1,7 @@
 #pragma once
 
-#include "apriltag.hpp"
-#include "apriltag_utils.hpp"
+#include "Apriltag.hpp"
+#include "Apriltag_utils.hpp"
 
 #include "core/utils/Option.hpp"
 
@@ -42,16 +42,16 @@ public:
     };
 
     constexpr Apriltag16H5Decoder(){;}
-    // void update(const AprilTagPattern pattern){
-    //     auto result = apriltag_utils::find_code(
-    //         std::span(CODE_TABLE), apriltag_utils::get_rcr_code_16h5, pattern);
+    // void update(const ApriltagPattern pattern){
+    //     auto result = Apriltag_utils::find_code(
+    //         std::span(CODE_TABLE), Apriltag_utils::get_rcr_code_16h5, pattern);
     // }
 
-    // Option<AprilTagIndex> index() const{
+    // Option<ApriltagIndex> index() const{
     //     if(result_.is_some()) return Some(result_.unwrap().index);
     //     else return None;
     // }
-    // Option<AprilTagDirection> direction() const{
+    // Option<ApriltagDirection> direction() const{
     //     if(result_.is_some()) return Some(result_.unwrap().direction);
     //     else return None;
     // }
@@ -60,7 +60,7 @@ public:
     //     return result_.is_some() != 0;
     // }
 // private:
-//     Option<AprilTagResult> result_ = None;
+//     Option<ApriltagResult> result_ = None;
 };
 
 };

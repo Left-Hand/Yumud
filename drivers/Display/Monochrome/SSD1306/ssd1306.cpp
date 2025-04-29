@@ -4,7 +4,7 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
-void SSD13XX::setpos_unsafe(const Vector2i & pos){
+void SSD13XX::setpos_unsafe(const Vector2u & pos){
     // auto & frame = fetch_frame();
     // frame.setpos_unsafe(pos);
     TODO("not implemented");
@@ -17,7 +17,7 @@ Result<void, DisplayerError> SSD13XX::set_offset(){
 }
 
 
-Result<void, DisplayerError> SSD13XX::set_flush_pos(const Vector2i & pos){
+Result<void, DisplayerError> SSD13XX::set_flush_pos(const Vector2u & pos){
     const auto [x, y] = pos + offset_;
     if(const auto res = phy_.write_command(0xb0 | size_t(y / 8));
         res.is_err()) return res;
@@ -61,7 +61,7 @@ Result<void, DisplayerError> SSD13XX::enable(const bool en){
 Result<void, DisplayerError> SSD13XX::update(){
     auto & frame = fetch_frame();
     for(size_t y = 0; y < size_t(size().y); y += 8){
-        if(const auto res = set_flush_pos(Vector2i(0, y)); 
+        if(const auto res = set_flush_pos(Vector2u(0, y)); 
             res.is_err()) return res;
 
         const auto line = std::span<const uint8_t>(

@@ -11,10 +11,10 @@ void Renderer::bind(Canvas & _source){
 }
 
 void Renderer::draw_rect(const Rect2i rect) {
-    Rect2i ints = clip_.intersection(rect);
-    if(!ints) return;
+    Rect2i ins = clip_.intersection(rect);
+    if(ins.get_area() == 0) return;
 
-    PUT_RECT(ints, color_);
+    PUT_RECT(ins, color_);
 }
 
 void Renderer::draw_pixel(const Vector2i pos) {
@@ -68,27 +68,27 @@ void Renderer::draw_line(const Vector2i from, const Vector2i to) {
     }
 }
 
-//����һ��ˮƽ��
+//绘制一条水平线
 void Renderer::draw_hri_line(const Vector2i pos,const int l){
     auto rect = Rect2i(pos, Vector2i(l, 1));
-    if(bool(rect) == false) return;
+    if(rect.get_area() == 0) return;
     draw_rect(rect);
 }
 
-//����һ��ˮƽ��
-void Renderer::draw_hri_line(const Rangei x_range, const int y){
+//绘制一条水平线
+void Renderer::draw_hri_line(const Range2i x_range, const int y){
     draw_hri_line(Vector2i(x_range.from, y), x_range.length());
 }
 
-//����һ����ֱ��
+//绘制一条垂直线
 void Renderer::draw_ver_line(const Vector2i pos,const int l){
     auto rect = Rect2i(pos, Vector2i(1, l));
-    if(bool(rect) == false) return;
+    if(rect.get_area() == 0) return;
     PUT_RECT(pos, color_)
 }
 
-//����һ����ֱ��
-void Renderer::draw_ver_line(const Rangei y_range, const int x){
+//绘制一条垂直线
+void Renderer::draw_ver_line(const Range2i y_range, const int x){
     draw_ver_line(Vector2i(x, y_range.from), y_range.length());
 }
 

@@ -20,10 +20,6 @@
 using namespace ymd;
 
 namespace ymd::nvcv2{
-    using Vector2 = ImageBasics::Vector2;
-    using Vector2i = ImageBasics::Vector2i;
-
-
     enum class Direction:uint8_t{
         R, UR, U, UL, L, DL, D, DR
     };

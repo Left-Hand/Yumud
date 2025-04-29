@@ -80,13 +80,13 @@ void AT24CXX::store_bytes(const Address loc, const void * data, const Address le
 
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
-        if(op_window){
+        if(op_window.length() != 0){
             wait_for_free();
             const uint8_t * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
             write_pool(op_window.from, ptr, op_window.length());
             update_entry_ms();
         }
-    }while(op_window);
+    }while(op_window.length());
 }
 
 

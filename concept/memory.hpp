@@ -10,7 +10,7 @@ class Memory{
 
 protected:
     using Address = size_t;
-    using AddressView = Range_t<Address>;
+    using AddressView = Range2_t<Address>;
 
     Storage & storage_;
     const AddressView view_;

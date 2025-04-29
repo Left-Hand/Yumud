@@ -29,7 +29,7 @@ protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
 
-    using Range = Range_t<real_t>;
+    using Range = Range2_t<real_t>;
     using Switches = MotorUtils::Switches;
 
 

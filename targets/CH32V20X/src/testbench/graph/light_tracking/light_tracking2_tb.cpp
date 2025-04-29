@@ -351,7 +351,7 @@ static void render_row(const __restrict std::span<RGB565> row, const uint y, std
         row[x] = draw3drt(x, y, co_triangles);
     }
 
-    filter(row);
+    // filter(row);
 }
 
 

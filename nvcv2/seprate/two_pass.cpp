@@ -39,9 +39,9 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	int label = 1;
 
 	//init lable image
-	for (int y = 0; y < h; y++)
+	for (auto y = 0u; y < h; y++)
 	{
-		for (int x = 0; x < w; x++)
+		for (auto x = 0u; x < w; x++)
 		{
 			if (src[{x,y}] != 0)
 			{
@@ -75,9 +75,9 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	}
 
 	//second pass 
-	for (int y = 0; y < h; y++)
+	for (auto y = 0u; y < h; y++)
 	{
-		for (int x = 0; x < w; x++)
+		for (auto x = 0u; x < w; x++)
 		{
 			if (src.at(y, x) != 0)
 				out.at(y, x) = Find(out.at<int>(y, x));
@@ -89,9 +89,9 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 int TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out){
 	const auto [imgH, imgW] = out.size();
 	auto max = INT_FAST32_MIN;
-	for (int i = 0; i < imgH; i++)
+	for (auto i = 0u; i < imgH; i++)
 	{
-		for (int j = 0; j < imgW; j++)
+		for (auto j = 0u; j < imgW; j++)
 		{
 			auto ele = uint8_t(out.at(i, j));
 			if (ele > max) {

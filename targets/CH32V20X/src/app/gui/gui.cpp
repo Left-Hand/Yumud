@@ -30,8 +30,6 @@ using namespace ymd::drivers;
 using namespace ymd::nvcv2;
 using namespace ymd::hal;
 
-using Vector2i = Vector2_t<int>;
-
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 
 class RenderTrait{
@@ -50,7 +48,7 @@ public:
     void render(PainterConcept & painter) override{
         painter.set_color(ColorEnum::WHITE);
         painter.draw_filled_rect(rect_);
-        // painter.drawString(rect_ + Vector2i{0, -10}, name_);
+        // painter.drawString(rect_ + Vector2u{0, -10}, name_);
     }
 };
 
@@ -61,7 +59,7 @@ protected:
     Items items_;
 
     int item_padding_ = 10;
-    Vector2i item_org_ = {10,10};
+    Vector2u item_org_ = {10,10};
 
     void draw_otherwides(PainterConcept & painter){
         painter.set_color(ColorEnum::WHITE);
@@ -185,22 +183,22 @@ void gui_main(){
     // camera.init();
     // camera.setExposureValue(1200);
 
-    // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+    // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2u & pos){
     //     auto area = Rect2i(pos, src.size());
     //     tftDisplayer.put_texture(area, src.get_data());
     // };
 
-    // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+    // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2u & pos){
     //     auto area = Rect2i(pos, src.size());
     //     tftDisplayer.put_texture(area, src.get_data());
     // };
 
-    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2u & pos){
         auto area = Rect2i(pos, src.size());
         tftDisplayer.put_texture(area, src.get_data());
     };
 
-    Image<RGB565> img{{tftDisplayer.rect().w, 4}};
+    Image<RGB565> img{{tftDisplayer.rect().w, 4u}};
 
     Renderer renderer = {};
     renderer.bind(tftDisplayer);
@@ -210,7 +208,7 @@ void gui_main(){
     while(true){
         renderer.bind(img);
         renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
-        renderer.draw_pixel(Vector2i(0, 0));
+        renderer.draw_pixel(Vector2u(0, 0));
         renderer.draw_rect(Rect2i(20, 0, 20, 40));
 
         tftDisplayer.put_texture(img.rect(), img.get_data());

@@ -75,7 +75,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
 }
 
 #define BOUNDARY_CHECK()\
-if(not src.rect().contains(Rect2i{offs, tmp.size()})){\
+if(not src.rect().contains(Rect2u{offs, tmp.size()})){\
     ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
@@ -93,12 +93,12 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
     uint32_t den_t = 0;
     uint32_t den_s = 0;
 
-    for(auto y = 0; y < tmp.size().y; y++){
-        const auto * tmp_ptr = &tmp[Vector2i{0,y}];
-        const auto * src_ptr = &src[Vector2i{0,y} + offs];
+    for(auto y = 0u; y < tmp.size().y; y++){
+        const auto * tmp_ptr = &tmp[Vector2u{0,y}];
+        const auto * src_ptr = &src[Vector2u{0,y} + offs];
 
         int32_t line_num = 0;
-        for(auto x = 0; x < tmp.size().x; x++){
+        for(auto x = 0u; x < tmp.size().x; x++){
             int32_t tmp_val = *tmp_ptr - t_mean;
             int32_t src_val = *src_ptr - s_mean;
 
@@ -132,12 +132,12 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
     uint64_t num = 0;
     uint32_t area = tmp.size().x * tmp.size().y;
 
-    for(auto y = 0; y < tmp.size().y; y++){
-        const auto * tmp_ptr = &tmp[Vector2i{0,y}];
-        const auto * src_ptr = &src[Vector2i{0,y} + offs];
+    for(auto y = 0u; y < tmp.size().y; y++){
+        const auto * tmp_ptr = &tmp[Vector2u{0,y}];
+        const auto * src_ptr = &src[Vector2u{0,y} + offs];
 
         uint32_t line_num = 0;
-        for(auto x = 0; x < tmp.size().x; x++){
+        for(auto x = 0u; x < tmp.size().x; x++){
             int32_t tmp_val = *tmp_ptr;
             int32_t src_val = *src_ptr;
 

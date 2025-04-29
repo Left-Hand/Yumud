@@ -8,7 +8,7 @@ class Memory;
 class Storage{
 protected:
     using Address = size_t;
-    using AddressView = Range_t<Address>;
+    using AddressView = Range2_t<Address>;
 
     const Address capacity_;
     const AddressView view_;

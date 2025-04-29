@@ -32,7 +32,6 @@ using namespace ymd::drivers;
 using namespace ymd::nvcv2;
 using namespace etk;
 
-using Vector2i = Vector2_t<int>;
 
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 

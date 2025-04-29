@@ -5,8 +5,6 @@
 #include "core/math/realmath.hpp"
 
 namespace ymd::nvcv2::Shape{
-    using Vector2 = Vector2_t<real_t>;
-    using Vector2i = Vector2_t<int>;
 
     static void clear_corners(ImageWritable<is_monochrome auto> & dst){
         const auto size = dst.size();
@@ -73,9 +71,10 @@ namespace ymd::nvcv2::Shape{
             for(size_t x = core_radius; x < w - core_radius; ++x){
                 uint32_t sum = 0;
 
-                for(size_t dy = -core_radius; dy <= core_radius; ++dy){
-                    for(size_t dx = -core_radius; dx <= core_radius; ++dx){
-                        sum += src[Vector2i{x + dx, y + dy}] * core[dy + core_radius][dx + core_radius];
+                for(int dy = -core_radius; dy <= int(core_radius); ++dy){
+                    for(int dx = -core_radius; dx <= int(core_radius); ++dx){
+                        sum += src[Vector2u{size_t(x + dx), size_t(y + dy)}] 
+                            * core[size_t(dy + core_radius)][size_t(dx + core_radius)];
                     }
                 }
                 
@@ -90,9 +89,9 @@ namespace ymd::nvcv2::Shape{
         Pixels::copy(src, temp);
     }
 
-    Vector2i find_most(const Image<Grayscale> & src, const Grayscale & tg_color,  const Vector2i & point, const Vector2i & vec){
-        Vector2i current_point = point;
-        Vector2i delta_point = Vector2i(sign(vec.x), sign(vec.y));
+    Vector2u find_most(const Image<Grayscale> & src, const Grayscale & tg_color,  const Vector2u & point, const Vector2u & vec){
+        Vector2u current_point = point;
+        Vector2u delta_point = Vector2u(sign(vec.x), sign(vec.y));
 
         {
             while(true){
@@ -109,16 +108,16 @@ namespace ymd::nvcv2::Shape{
             }
         }
 
-        auto eve = [](const Vector2i & _point, const Vector2i & _vec) -> int{
+        auto eve = [](const Vector2u & _point, const Vector2u & _vec) -> int{
             return _point.dot(_vec);
         };
 
         int current_eve = eve(current_point, vec);
         while(true){
-            Vector2i next_x_vec = current_point + Vector2i(sign(vec.x), 0);
-            Vector2i next_y_vec = current_point + Vector2i(0, sign(vec.y));
+            Vector2u next_x_vec = current_point + Vector2u(sign(vec.x), 0);
+            Vector2u next_y_vec = current_point + Vector2u(0, sign(vec.y));
 
-            Vector2i * next_point = &current_point;
+            Vector2u * next_point = &current_point;
             current_eve = eve(current_point, vec);
 
             if(src[next_x_vec] == tg_color){
@@ -577,14 +576,14 @@ namespace ymd::nvcv2::Shape{
 
         for(size_t y = 0; y < h / m; y++){
             for(size_t x = 0; x < w / m; x++){
-                Vector2i base = Vector2i(x, y)* m;
+                Vector2u base = Vector2u(x, y)* m;
                 size_t pixel = 0;
                 for(size_t j = 0; j < m; j++){
                     for(size_t i = 0; i < m; i++){
-                        Vector2i src_pos = base + Vector2i(i, j);
+                        Vector2u src_pos = base + Vector2u(i, j);
                         pixel += bool(src[src_pos]);
                     }
-                Vector2i dst_pos = Vector2i(x,y);
+                Vector2u dst_pos = Vector2u(x,y);
                 dst[dst_pos] = Binary(bool(pixel > n));
                 }
             }
@@ -613,7 +612,7 @@ namespace ymd::nvcv2::Shape{
 
             for (size_t y = 0; y < h; ++y) {
                 for (size_t x = 0; x < w; ++x) {
-                    const Vector2i p{x,y};
+                    const Vector2u p{x,y};
                     // const Binary * p = &temp[x + y * w];
                     
                     if (temp[p] == 0) continue;
@@ -677,18 +676,18 @@ namespace ymd::nvcv2::Shape{
                         if((x + y) % 2 == 0) continue;
                     }
 
-                    const Vector2i base = Vector2i(x, y);
+                    const Vector2u base = Vector2u(x, y);
                     bool p1 = temp[base];
                     if (p1 == 0) continue;
 
-                    bool p2 = temp[base + Vector2i(0, -1)];
-                    bool p3 = temp[base + Vector2i(1, -1)];
-                    bool p4 = temp[base + Vector2i(1, 0)];
-                    bool p5 = temp[base + Vector2i(1, 1)];
-                    bool p6 = temp[base + Vector2i(0, 1)];
-                    bool p7 = temp[base + Vector2i(-1, 1)];
-                    bool p8 = temp[base + Vector2i(-1, 0)];
-                    bool p9 = temp[base + Vector2i(-1, -1)];
+                    bool p2 = temp[base + Vector2u(0, -1)];
+                    bool p3 = temp[base + Vector2u(1, -1)];
+                    bool p4 = temp[base + Vector2u(1, 0)];
+                    bool p5 = temp[base + Vector2u(1, 1)];
+                    bool p6 = temp[base + Vector2u(0, 1)];
+                    bool p7 = temp[base + Vector2u(-1, 1)];
+                    bool p8 = temp[base + Vector2u(-1, 0)];
+                    bool p9 = temp[base + Vector2u(-1, -1)];
 
                     size_t B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
                     size_t C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
@@ -791,7 +790,7 @@ namespace ymd::nvcv2::Shape{
         #undef TWO_AND_HALF
     } 
 
-    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
+    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2_t<uint16_t> & threshold){
         auto roi = src.rect();
 
         const auto [low_thresh, high_thresh] = threshold;
@@ -973,7 +972,9 @@ namespace ymd::nvcv2::Shape{
 
                     // Find the direction and round angle to 0, 45, 90 or 135
 
-                    gm[w * y + x] = vec_t{vx >> shift_bits, vy >> shift_bits};
+                    gm[w * y + x] = vec_t{
+                        int8_t(vx >> shift_bits), 
+                        int8_t(vy >> shift_bits)};
                 }
             }
         }
@@ -981,7 +982,6 @@ namespace ymd::nvcv2::Shape{
         clear_corners(dst);
 
         scexpr size_t wid = 4;
-        scexpr size_t scale = 127;
 
         using template_t = std::array<std::array<vec_t, wid * 2 + 1>, wid * 2 + 1>;
 
@@ -990,7 +990,8 @@ namespace ymd::nvcv2::Shape{
             for(size_t y = -wid; y <= wid; y++){
                 for(size_t x = -wid; x <= wid; x++){
                     real_t rad = atan2(real_t(y), real_t(x));
-                    vec_t vec = vec_t{cos(rad) * scale, sin(rad) * scale};
+                    const auto [s, c] = sincos(rad);
+                    vec_t vec = vec_t{int8_t(s), int8_t(c)};
                     // vec_t vec = vec_t{scale, 0};
                     ret[y + wid][x + wid] = vec;
                 }
@@ -1043,7 +1044,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
     
-        const auto size = (Rect2i(Vector2i(), dst.size()).intersection(Rect2i(Vector2i(), src.size()))).size;
+        const auto size = (Rect2i(Vector2u(), dst.size()).intersection(Rect2i(Vector2u(), src.size()))).size;
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 
