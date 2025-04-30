@@ -64,18 +64,16 @@ constexpr T Quat_t<T>::inv_length() const {
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
 template<typename T>
-constexpr void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
-	T half_a1 = p_euler.x / 2;
-	T half_a2 = p_euler.y / 2;
-	T half_a3 = p_euler.z / 2;
+constexpr void Quat_t<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XYZ> &p_euler) {
+
 
 	// R = X(a1).Y(a2).Z(a3) convention for Euler angles.
 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
 	// a3 is the angle of the first rotation, following the notation in this reference.
 
-	auto [sin_a1, cos_a1] = sincos(half_a1);
-	auto [sin_a2, cos_a2] = sincos(half_a2);
-	auto [sin_a3, cos_a3] = sincos(half_a3);
+	auto [sin_a1, cos_a1] = sincos(p_euler.x / 2);
+	auto [sin_a2, cos_a2] = sincos(p_euler.y / 2);
+	auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
 
 	set(sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
 			-sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
@@ -83,55 +81,55 @@ constexpr void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 			-sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3);
 }
 
-// get_euler_xyz returns a vector containing the Euler angles in the format
-// (ax,ay,az), where ax is the angle of rotation around x axis,
-// and similar for other axes.
-// This implementation uses XYZ convention (Z is the first rotation).
-// Vector3_t<T> Quat_t<T>::get_euler_xyz() const {
-// 	Basis m(*this);
-// 	return m.get_euler_xyz();
+// // get_euler_xyz returns a vector containing the Euler angles in the format
+// // (ax,ay,az), where ax is the angle of rotation around x axis,
+// // and similar for other axes.
+// // This implementation uses XYZ convention (Z is the first rotation).
+// // Vector3_t<T> Quat_t<T>::get_euler_xyz() const {
+// // 	Basis m(*this);
+// // 	return m.get_euler_xyz();
+// // }
+
+// // set_euler_yxz expects a vector containing the Euler angles in the format
+// // (ax,ay,az), where ax is the angle of rotation around x axis,
+// // and similar for other axes.
+// // This implementation uses YXZ convention (Z is the first rotation).
+// template<typename T>
+// constexpr void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
+	
+// 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
+// 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
+// 	// a3 is the angle of the first rotation, following the notation in this reference.
+
+// 	// if constexpr(is_fixed_point_v<T>){	
+// 	// 	auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
+// 	// 	auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
+// 	// 	auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
+
+// 	// 	static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
+// 	// 		return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
+// 	// 	};
+	
+// 	// 	set(
+// 	// 		mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
+// 	// 		mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
+// 	// 		mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
+// 	// 		mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
+// 	// 	);
+// 	// }else{
+// 	auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
+// 	auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
+// 	auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
+
+// 	set(
+// 		sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
+// 		sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
+// 		-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
+// 		sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
+// 	);
+// 	// }
+
 // }
-
-// set_euler_yxz expects a vector containing the Euler angles in the format
-// (ax,ay,az), where ax is the angle of rotation around x axis,
-// and similar for other axes.
-// This implementation uses YXZ convention (Z is the first rotation).
-template<typename T>
-constexpr void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
-	
-	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
-	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
-	// a3 is the angle of the first rotation, following the notation in this reference.
-
-	// if constexpr(is_fixed_point_v<T>){	
-	// 	auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
-	// 	auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
-	// 	auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
-
-	// 	static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
-	// 		return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
-	// 	};
-	
-	// 	set(
-	// 		mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
-	// 		mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
-	// 		mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
-	// 		mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
-	// 	);
-	// }else{
-	auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
-	auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
-	auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
-
-	set(
-		sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
-		sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
-		-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
-		sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
-	);
-	// }
-
-}
 
 // get_euler_yxz returns a vector containing the Euler angles in the format
 // (ax,ay,az), where ax is the angle of rotation around x axis,

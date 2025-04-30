@@ -201,13 +201,18 @@ public:
     constexpr void reconf(const Config & cfg){
         cfg_ = cfg;
 
-        for(size_t i = 0; i < 3; i++)
-            norms_[i] = get_xynorm_from_idx(i);
+        // for(size_t i = 0; i < 3; i++)
+        //     norms_[i] = get_xynorm_from_idx(i);
     }
 private:
     Config cfg_ {};
 
-    std::array<Vector2_t<T>, 3> norms_ {};
+    // static constexpr SQRT3 =  1.732050807568877;
+    static constexpr std::array<Vector2_t<T>, 3> norms_ {
+        Vector2_t<T>(1, 0),
+        Vector2_t<T>(T(-0.5), T(SQRT3/2)),
+        Vector2_t<T>(T(-0.5), T(-SQRT3/2))
+    };
 
     //pure fn
     static constexpr Vector2_t<T> get_xynorm_from_idx(const size_t idx){

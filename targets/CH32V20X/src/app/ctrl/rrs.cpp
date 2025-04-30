@@ -12,13 +12,14 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
+#include "types/euler/euler.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
 #define UART hal::uart2
-static constexpr uint SERVO_FREQ = 50;
+static constexpr uint SERVO_FREQ = 200;
 #define SCL_GPIO hal::portB[0]
 #define SDA_GPIO hal::portB[1]
 
@@ -38,7 +39,7 @@ void rrs3_robot_main(){
     PCA9685 pca{i2c};
 
     if(const auto res = [&]{
-        return pca.init({.freq = SERVO_FREQ, .trim = 1.09_r});
+        return pca.init({.freq = SERVO_FREQ, .trim = 0.991_r});
     }(); res.is_err()) PANIC(res.unwrap_err().as<HalError>().unwrap());
     
     MG995 servo_a{pca[0]};
@@ -46,10 +47,10 @@ void rrs3_robot_main(){
     MG995 servo_c{pca[2]};
 
     constexpr const Config cfg{
-        .base_length = 0.1_r,
-        .link_length = 0.1_r,
-        .base_plate_radius = 0.1_r,
-        .top_plate_radius = 0.1_r
+        .base_length = 0.081_r,
+        .link_length = 0.128_r,
+        .base_plate_radius = 0.050_r,
+        .top_plate_radius = 0.08434_r
     };
 
     constexpr const RRS3 rrs3{cfg};
@@ -62,25 +63,27 @@ void rrs3_robot_main(){
             //     Vector3_t<real_t>(0.5_r * sin(t), 0.5_r * cos(2*t), 1).normalized()
             // ),
 
-            .orientation = Quat_t<real_t>::from_euler({
-                0.2_r * sin(t), 0.2_r * cos(2*t), 0
+            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+                .x = 0.6_r * sinpu(t), .y = 0.6_r * cospu(t), .z = 0
             }),
 
-            .z = 0.13_r,
+            .z = 0.15_r,
         };
         
         if(const auto solu_opt = rrs3.inverse(gest); solu_opt.is_some()){
             const auto solu = solu_opt.unwrap();
 
-            servo_a.set_radian(solu[0].to_absolute().j1_abs_rad);
-            servo_b.set_radian(solu[1].to_absolute().j1_abs_rad);
-            servo_c.set_radian(solu[2].to_absolute().j1_abs_rad);
+            servo_a.set_radian(solu[0].to_absolute().j1_abs_rad + 0.7_r);
+            servo_b.set_radian(solu[1].to_absolute().j1_abs_rad + 0.7_r);
+            servo_c.set_radian(solu[2].to_absolute().j1_abs_rad + 0.7_r);
 
             // if(const auto res = pca[0].set_duty(sinpu(time()) * 0.3_r + 0.5_r);
             //     res.is_err()){
             //         DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
             //     }
-            DEBUG_PRINTLN(pca.dump_cvr(0,1,2), gest.orientation);
+            // const auto u = micros();
+            const auto e = gest.orientation.to_euler();
+            DEBUG_PRINTLN(pca.dump_cvr(0,1,2), gest.orientation, e.x, e.y, e.z);
         }else{
             DEBUG_PRINTLN("no solution");
         }
