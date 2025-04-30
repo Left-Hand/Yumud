@@ -3,7 +3,7 @@
 #include "types/vector2/vector2.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd{
+namespace ymd::robots{
     
 template<typename T>
 class CrossSolver_t{

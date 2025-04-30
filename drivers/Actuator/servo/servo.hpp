@@ -30,6 +30,8 @@ public:
         // setGLobalRadian(rad);
     }
 
+    void idle();
+
     real_t get_radian(){
         return get_global_radian();
     }
