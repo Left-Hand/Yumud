@@ -27,13 +27,15 @@ void ina3221_main(){
 
     INA3221 ina = {i2c};
 
-    ina.init();
-
-
+    ina.init().unwrap();
 
     while(true){
-        ina.update(1);
-        DEBUG_PRINTLN(ina.getBusVolt(1), ina.getShuntVolt(1));
+        const auto ch = INA3221::ChannelIndex::CH1;
+        ina.update(ch).unwrap();
+        DEBUG_PRINTLN(
+            ina.get_bus_volt(ch).unwrap(), 
+            ina.get_shunt_volt(ch).unwrap()
+        );
         // mpu.update();
         // DEBUG_PRINTLN(millis(), ina.verify());
         delay(2);

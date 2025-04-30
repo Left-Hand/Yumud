@@ -1,25 +1,38 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+//这个驱动已经完成
+//这个驱动还未重测试
 
-#include "core/utils/Option.hpp"
+// INA3221 是一款三通道、高侧电流和总线电压监视
+// 器，具有一个兼容I2C和SMBUS的接口。INA3221
+// 不仅能够监视分流压降和总线电源电压，还针对这些信
+// 号提供有可编程的转换时间和平均值计算模式。
+// INA3221 提供关键报警和警告报警，用于检测每条通
+// 道上可编程的多种超范围情况。
+
+#include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+
 namespace ymd::drivers{
 
 class INA3221{
 public:
-    using DeviceResult = Result<void, hal::HalResult>;
-private:
-    __inline DeviceResult make_result(const hal::HalResult res){
-        if(res.is_ok()) return Ok();
-        else return Err(res); 
-    }
-public:
+    enum class Error_Kind{
+        WrongChipId,
+        WrongManuId,
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
 
     // Address Pins and Slave Addresses
     // A0   ADDRESS 0
@@ -29,6 +42,12 @@ public:
     // SCL  1000011 0
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
+
+    enum class ChannelIndex:uint8_t{
+        CH1 = 0,
+        CH2,
+        CH3
+    };
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -166,34 +185,50 @@ protected:
         uint16_t:16;
     };
 
-    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, uint16_t & data){
-        return make_result(i2c_drv.read_reg((addr), data, MSB));
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
+        if(const auto res = i2c_drv.read_reg((addr), data, MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const uint16_t data){
-        return make_result(i2c_drv.write_reg((addr), data, MSB));
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
+        if(const auto res = (i2c_drv.write_reg((addr), data, MSB));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, int16_t & data){
-        return make_result(i2c_drv.read_reg((addr), data, MSB));
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data){
+        if(const auto res = (i2c_drv.read_reg((addr), data, MSB));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const int16_t data){
-        return make_result(i2c_drv.write_reg((addr), data, MSB));
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const int16_t data){
+        if(const auto res = (i2c_drv.write_reg((addr), data, MSB));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    [[nodiscard]] DeviceResult read_burst(const RegAddress addr, void * data_ptr, const size_t len){
-        return make_result(i2c_drv.read_burst(uint8_t(addr), std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB));
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, void * data_ptr, const size_t len){
+        if(const auto res = (i2c_drv.read_burst(uint8_t(addr), 
+            std::span(reinterpret_cast<uint16_t *>(data_ptr), len), LSB));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
     struct INA3221Channel:public hal::AnalogInIntf{
     public:
         enum class ChannelType:uint8_t{
-            SHUNT_VOLT,
-            BUS_VOLT,
+            Shunt,
+            BusBar,
         };
-
-        using ChannelIndex = uint8_t;
 
     protected:
         INA3221 & parent_;
@@ -206,13 +241,16 @@ protected:
         INA3221Channel(const INA3221Channel & other) = delete;
         INA3221Channel(INA3221Channel && other) = delete;
         operator real_t() override{
+            return get_volt().unwrap();
+        }
+
+        IResult<real_t> get_volt(){
             switch(ch_){
-                case ChannelType::SHUNT_VOLT:
-                    return parent_.getShuntVolt(idx_);
-                case ChannelType::BUS_VOLT:
-                    return parent_.getBusVolt(idx_);
-                default:
-                    return real_t(0);
+                case ChannelType::Shunt:
+                    return parent_.get_shunt_volt(idx_);
+                case ChannelType::BusBar:
+                    return parent_.get_bus_volt(idx_);
+                default: __builtin_unreachable();
             }
         }
     };
@@ -244,12 +282,12 @@ protected:
 
 
     std::array<INA3221Channel, 6> channels = {
-        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 0},
-        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 0},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 2},
-        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH3},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH3},
     };
 public:
     INA3221(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
@@ -257,32 +295,32 @@ public:
     INA3221(hal::I2c & _i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv(hal::I2cDrv(_i2c, addr)){;}
     ~INA3221(){;}
     
-    bool ready();
+    [[nodiscard]] IResult<bool> is_ready();
 
-    INA3221 & init();
-    INA3221 & update();
-    INA3221 & update(const size_t index);
-    bool verify();
-    INA3221 & reset();
-    INA3221 & setAverageTimes(const uint16_t times);
-    void setAverageTimes(const AverageTimes times);
-    void enableMeasureBus(const bool en = true);
-    void enableMeasureShunt(const bool en = true);
-    void enableContinuous(const bool en = true);
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> update(const ChannelIndex index);
+    [[nodiscard]] IResult<> verify();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> set_average_times(const uint16_t times);
+    [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
+    [[nodiscard]] IResult<> enable_measure_bus(const bool en = true);
+    [[nodiscard]] IResult<> enable_measure_shunt(const bool en = true);
+    [[nodiscard]] IResult<> enable_continuous(const bool en = true);
 
-    INA3221 & enableChannel(const size_t index, const bool en = true);
+    [[nodiscard]] IResult<> enable_channel(const ChannelIndex index, const bool en = true);
 
-    INA3221 & setBusConversionTime(const ConversionTime time);
-    INA3221 & setShuntConversionTime(const ConversionTime time);
+    [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
+    [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] int getShuntVoltuV(const size_t index);
-    [[nodiscard]] int getBusVoltmV(const size_t index);
+    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelIndex index);
+    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelIndex index);
 
-    [[nodiscard]] real_t getShuntVolt(const size_t index);
-    [[nodiscard]] real_t getBusVolt(const size_t index);
+    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelIndex index);
+    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelIndex index);
 
-    INA3221 & setInstantOVC(const size_t index, const real_t volt);
-    INA3221 & setConstantOVC(const size_t index, const real_t volt);
+    [[nodiscard]] IResult<void> set_instant_ovc(const ChannelIndex index, const real_t volt);
+    [[nodiscard]] IResult<void> set_constant_ovc(const ChannelIndex index, const real_t volt);
 };
 
 }
