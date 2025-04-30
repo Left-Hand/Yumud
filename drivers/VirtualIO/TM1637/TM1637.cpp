@@ -49,21 +49,21 @@ Result<void, Error> TM1637_Phy::wait_ack(){
     }
 }
 
-// Result<void, Error> TM1637_Phy::read_key(uint8_t & data){
-//     uint8_t ret = 0;
+Result<void, Error> TM1637_Phy::read_byte(uint8_t & data){
+    uint8_t ret = 0;
 
-//     for(uint8_t i = 0; i < 8; i++){
-//         scl_gpio_.clr();
-//         ret = ret >> 1;
-//         udelay(30);
-//         scl_gpio_.set();
-//         ret = ret | ((sda_gpio_.read() == HIGH) ? 0x80 : 0x00);
-//         udelay(30);
-//     }
+    for(uint8_t i = 0; i < 8; i++){
+        scl_gpio_.clr();
+        ret = ret >> 1;
+        udelay(30);
+        scl_gpio_.set();
+        ret = ret | ((sda_gpio_.read() == HIGH) ? 0x80 : 0x00);
+        udelay(30);
+    }
 
-//     data = ret;
-//     return Ok();
-// }
+    data = ret;
+    return Ok();
+}
 
 Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
     scl_gpio_.outod(HIGH);
@@ -86,57 +86,81 @@ Result<void, Error> TM1637_Phy::iic_stop(){
     return Ok();
 }
 
-Result<void, Error> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf, const PulseWidth pw){
+Result<void, Error> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
     if(pbuf.size() > TM1637::CGRAM_MAX_LEN) return Err(Error::DisplayLengthTooLong);
-
-    const auto command1 = DataCommand{
-        .read_key = false,//write
-        .addr_inc_disen = false
-    }.as_u8();
 
     const auto command2 = AddressCommand{
         .addr = CGRAM_BEGIN_ADDR
     }.as_u8();
 
-    const auto command3 = DisplayCommand{
-        .pulse_width = pw,
-        .display_en = true
-    }.as_u8();
-
-    // const auto guard = i2c_.create_guard();
-
-    iic_start(command1);
-    iic_stop();
-
-    delay(1);
-
-    iic_start(command2);
+    
+    if(const auto res = iic_start(command2); res.is_err()) return res;
     for(size_t i = 0; i < pbuf.size(); i++){
-        write_byte(pbuf[i]);
+        if(const auto res = write_byte(pbuf[i]);
+            res.is_err()) return res;
     }
-    iic_stop();
-
-    delay(1);
-
-    iic_start(command3);
-    iic_stop();
-
-    return Ok();
+    return iic_stop();
 }
 
+
+Result<void, Error> TM1637_Phy::set_display(const DisplayCommand command){
+    const auto res = 
+        iic_start(command.as_u8()) 
+        | iic_stop()
+    ;
+
+    return res;
+}
 Result<uint8_t, Error> TM1637_Phy::read_key(){
     const auto command1 = DataCommand{
         .read_key = true,//write
         .addr_inc_disen = true
-    }.as_u8();
+    };
 
-    // i2c_.begin(hal::LockRequest(command1, 0));
+    uint8_t data;
 
-    // uint32_t data;
-    // i2c_.read(data, ACK);
-    // i2c_.end();
-    // return Ok(data);
-    return Ok(0);
+    const auto res = 
+        iic_start(command1.as_u8())
+        | read_byte(data)
+        | iic_stop()
+    ;
+
+    if(res.is_err()) return Err(res.unwrap_err());
+    return Ok(data);
+}
+
+Result<void, Error> TM1637_Phy::set_data_mode(const DataCommand command1){
+
+    const auto res = 
+        iic_start(command1.as_u8())
+        | iic_stop()
+    ;
+
+    return res;
+}
+
+Result<void, Error> TM1637::switch_to_display(){
+    if(is_on_display_else_readkey_ == true) return Ok();
+    is_on_display_else_readkey_ = true;
+
+    return phy_.set_data_mode(
+        {
+            .read_key = false,//write
+            .addr_inc_disen = false
+        }
+    );
+}
+Result<void, Error>  TM1637::switch_to_readkey(){
+    if(is_on_display_else_readkey_ == false) return Ok();
+    is_on_display_else_readkey_ = false;
+
+    return phy_.set_data_mode(
+        {
+            .read_key = true,
+            .addr_inc_disen = false
+        }
+    );
+
 }
 
 Result<TM1637::KeyEvent, Error> TM1637::read_key(){
@@ -151,9 +175,15 @@ Result<void, Error> TM1637::flush(){
     const bool changed = buf_.changed();
     if(changed){
         // const auto res = phy_.write_screen(buf_.to_span());
-        const auto res = phy_.write_sram(buf_.to_span(), PulseWidth::_1_16);
+        const auto res = phy_.write_sram(buf_.to_span());
+        if(res.is_err())return res;
         buf_.flush();
-        return res;
     }
+
+    phy_.set_display(DisplayCommand{
+        .pulse_width = PulseWidth::_4_16,
+        .display_en = true
+    });
+
     return Ok();
 }

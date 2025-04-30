@@ -18,16 +18,16 @@ static void tm1637_tb(){
     TM1637 tm1637{hal::portB[0], hal::portB[1]};
 
     while(true){
-        delay(1);
-        tm1637.set(0, uint8_t(millis()));
-        tm1637.set(1, 0xee);
-        tm1637.set(2, 0xff);
-        tm1637.set(3, 0xff);
-        tm1637.set(4, 0xff);
-        tm1637.set(5, uint8_t(millis()));
-        if(const auto res = tm1637.flush(); res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+        const auto res = 
+            tm1637.set(0, SegDisplayer::digit_to_seg(millis() / 1000))
+            | tm1637.set(1, SegDisplayer::digit_to_seg(millis() / 100))
+            | tm1637.set(2, SegDisplayer::digit_to_seg(millis() / 10))
+            | tm1637.set(3, SegDisplayer::digit_to_seg(millis() % 10))
+            | tm1637.flush()
+        ;
+        if(res.is_err()) PANIC();
         DEBUG_PRINTLN(millis(), uint8_t(millis()));
-        delay(200);
+        delay(20);
     }
 }
 
