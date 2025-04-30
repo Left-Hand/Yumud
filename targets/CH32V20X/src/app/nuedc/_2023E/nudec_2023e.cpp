@@ -1,7 +1,5 @@
 #include "src/testbench/tb.h"
 
-
-
 #include "threads.hpp"
 
 namespace nudec::_2023E{
