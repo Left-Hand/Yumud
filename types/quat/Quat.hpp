@@ -55,6 +55,8 @@ struct Quat_t{
 
     static constexpr Quat_t<T> IDENTITY = Quat_t<T>(0,0,0,1);
 
+    [[nodiscard]]
+
     __fast_inline constexpr Quat_t(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
             x(static_cast<T>(p_x)),
             y(static_cast<T>(p_y)),
@@ -62,9 +64,10 @@ struct Quat_t{
             w(static_cast<T>(p_w)) {
     }
 
-
+    [[nodiscard]]
     constexpr Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
+    [[nodiscard]]
     static constexpr Quat_t from_shortest_arc(const Vector3_t<T> &v0, const Vector3_t<T> &v1){
         Quat_t<T> self;
         Vector3_t<T> c = v0.cross(v1);
@@ -95,6 +98,7 @@ struct Quat_t{
         return ret;
     }
 
+    [[nodiscard]]
     constexpr Quat_t(const Quat_t &p_q) :
             x(p_q.x),
             y(p_q.y),
@@ -110,12 +114,25 @@ struct Quat_t{
         return *this;
     }
 
+    [[nodiscard]]
     consteval size_t size() const {return 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr T * begin(){return &x;}
+
+    [[nodiscard]]
     __fast_inline constexpr const T * begin() const {return &x;}
+
+    [[nodiscard]]
     __fast_inline constexpr T * end(){return &x + 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr const T * end() const {return &x + 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr  T & operator [](const size_t idx){return (&x)[idx];}
+
+    [[nodiscard]]
     __fast_inline constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
 
     [[nodiscard]]
@@ -234,7 +251,7 @@ struct Quat_t{
     }
 
     __fast_inline constexpr
-    void operator/=(const T &s){*this = *this / s;};
+    Quat_t & operator/=(const T &s){return *this = *this / s;};
 
     [[nodiscard]] __fast_inline constexpr
     Quat_t operator/(const T &s) const;

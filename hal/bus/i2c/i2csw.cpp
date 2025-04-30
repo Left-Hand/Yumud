@@ -33,7 +33,6 @@ hal::HalResult I2cSw::wait_ack(){
             timeout_
         #endif
         ){
-        // if(micros() - m >= 1000){
             ovt = true;
             break;
         }
@@ -42,7 +41,8 @@ hal::HalResult I2cSw::wait_ack(){
 
     delay_dur();
     scl().clr();
-    delay_dur();
+    // delay_dur();
+    sda().outod();
     
     if(ovt and (discard_ack_ == false)){
         return hal::HalResult::AckTimeout;

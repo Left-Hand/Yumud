@@ -1,11 +1,11 @@
-#include "bus_error.hpp"
+#include "hal_result.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd{
 
 
 
-OutputStream & print_buserr_kind(OutputStream & os, const hal::HalError::Kind err){
+OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind err){
     using Kind = hal::HalError::Kind;
     switch(err){
         case Kind::AlreadyUnderUse: return os << "AlreadyUnderUse";
@@ -25,14 +25,18 @@ OutputStream & print_buserr_kind(OutputStream & os, const hal::HalError::Kind er
 
 OutputStream & operator << (OutputStream & os, const hal::HalResult & res){
     if(res.is_ok()) return os << "Ok";
-    else return print_buserr_kind(os, res.unwrap_err().kind());
+    else{
+        os << "Err(";
+        print_halerr_kind(os, res.unwrap_err().kind());
+        return os << ")" << os.endl();
+    }
 }
 
 OutputStream & operator << (OutputStream & os, const hal::HalError & err){
-    return print_buserr_kind(os, err.kind());
+    return print_halerr_kind(os, err.kind());
 }
 
 OutputStream & operator << (OutputStream & os, const hal::HalError::Kind & err_kind){
-    return print_buserr_kind(os, err_kind);
+    return print_halerr_kind(os, err_kind);
 }
 }

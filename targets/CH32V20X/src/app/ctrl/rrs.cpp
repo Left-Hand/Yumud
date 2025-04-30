@@ -1,4 +1,8 @@
+#include "src/testbench/tb.h"
+
 #include "core/clock/time.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
@@ -13,29 +17,39 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
+#define UART hal::uart2
 static constexpr uint SERVO_FREQ = 50;
+#define SCL_GPIO hal::portB[0]
+#define SDA_GPIO hal::portB[1]
 
-void rrs_robot_main(){
+void rrs3_robot_main(){
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
+    DEBUGGER.no_brackets();
+
     using RRS3 = typename ymd::robots::RRS_Kinematics<real_t>;
     using Gesture = typename RRS3::Gesture;
     using Config = typename RRS3::Config;
 
-    I2cSw i2c = {portD[2], portC[12]};
+    I2cSw i2c = {SCL_GPIO, SDA_GPIO};
     
     i2c.init(400_KHz);
-    PCA9685 pca{i2c};
-    pca.init();
-    pca.set_frequency(SERVO_FREQ, real_t(1.09));
 
+    PCA9685 pca{i2c};
+
+    if(const auto res = [&]{
+        return pca.init({.freq = SERVO_FREQ, .trim = 1.09_r});
+    }(); res.is_err()) PANIC(res.unwrap_err().as<HalError>().unwrap());
+    
     MG995 servo_a{pca[0]};
     MG995 servo_b{pca[1]};
     MG995 servo_c{pca[2]};
 
     constexpr const Config cfg{
-        .base_length = 5,
-        .link_length = 5,
-        .base_plate_radius = 1,
-        .top_plate_radius = 1
+        .base_length = 0.1_r,
+        .link_length = 0.1_r,
+        .base_plate_radius = 0.1_r,
+        .top_plate_radius = 0.1_r
     };
 
     constexpr const RRS3 rrs3{cfg};
@@ -43,26 +57,42 @@ void rrs_robot_main(){
         const auto t = time();
 
         const Gesture gest{
-            .orientation = Quat_t<real_t>::from_shortest_arc(
-                Vector3_t<real_t>{0, 0, 1},
-                Vector3_t<real_t>(0.1_r * sin(t), 0.1_r * cos(t), 1).normalized()
-            ),
-            .z = 5,
+            // .orientation = Quat_t<real_t>::from_shortest_arc(
+            //     Vector3_t<real_t>{0, 0, 1.0_r},
+            //     Vector3_t<real_t>(0.5_r * sin(t), 0.5_r * cos(2*t), 1).normalized()
+            // ),
+
+            .orientation = Quat_t<real_t>::from_euler({
+                0.2_r * sin(t), 0.2_r * cos(2*t), 0
+            }),
+
+            .z = 0.13_r,
         };
         
-        if(const auto res_opt = rrs3.inverse(gest); res_opt.is_some()){
-            const auto res = res_opt.unwrap();
+        if(const auto solu_opt = rrs3.inverse(gest); solu_opt.is_some()){
+            const auto solu = solu_opt.unwrap();
 
-            servo_a.set_radian(res[0].to_absolute().j1_abs_rad);
-            servo_b.set_radian(res[1].to_absolute().j1_abs_rad);
-            servo_c.set_radian(res[2].to_absolute().j1_abs_rad);
+            servo_a.set_radian(solu[0].to_absolute().j1_abs_rad);
+            servo_b.set_radian(solu[1].to_absolute().j1_abs_rad);
+            servo_c.set_radian(solu[2].to_absolute().j1_abs_rad);
+
+            // if(const auto res = pca[0].set_duty(sinpu(time()) * 0.3_r + 0.5_r);
+            //     res.is_err()){
+            //         DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+            //     }
+            DEBUG_PRINTLN(pca.dump_cvr(0,1,2), gest.orientation);
         }else{
             DEBUG_PRINTLN("no solution");
         }
+
+
     };
 
     hal::timer1.init(SERVO_FREQ);
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, ctrl);
 
-    while(true);
+    DEBUG_PRINTLN("app started");
+    while(true){
+        delay(1000);
+    }
 }

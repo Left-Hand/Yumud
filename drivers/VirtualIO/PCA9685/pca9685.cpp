@@ -5,6 +5,26 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+using Error = PCA9685::Error;
+
+#define PCA9685_DEBUG_EN
+
+#ifdef PCA9685_DEBUG_EN
+#define PCA9685_TODO(...) TODO()
+#define PCA9685_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define PCA9685_PANIC(...) PANIC{__VA_ARGS__}
+#define PCA9685_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+#else
+#define PCA9685_DEBUG(...)
+#define PCA9685_TODO(...) PANIC_NSRC()
+#define PCA9685_PANIC(...)  PANIC_NSRC()
+#define PCA9685_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#endif
+
+// #define PCA9685_FORCEWRITE
+#define PCA9685_NOVERIFY
+
+
 
 void PCA9685::write_mask(const uint16_t data){
     TODO();
@@ -15,72 +35,112 @@ uint16_t PCA9685::read_mask(){
     return 0;
 }
 
-void PCA9685::set_frequency(uint freq, real_t trim){
-        read_reg(RegAddress::Mode1, mode1_reg);
-        
-        prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
-        // prescale_reg = 121;
-        // enableSleep();
-        mode1_reg.sleep = true;
-        write_reg(RegAddress::Mode1, mode1_reg);
-        write_reg(RegAddress::Prescale, prescale_reg);
-        mode1_reg.sleep = false;
-        
-        write_reg(RegAddress::Mode1, mode1_reg);
-        // enableSleep(false);
-        delay(5);
-        mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
-        write_reg(RegAddress::Mode1, mode1_reg);
-    }
-
-void PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off){
-    if(channel > 15) PANIC();
+Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
+    if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
+        res.is_err()) return res;
     
-    if(sub_channels[channel].on.cvr != on){
-        write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);
+    prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
+    mode1_reg.sleep = true;
+    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg); 
+        res.is_err()) return res;
+    if(const auto res = write_reg(RegAddress::Prescale, prescale_reg); 
+        res.is_err()) return res;
+    mode1_reg.sleep = false;
+    
+    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+        res.is_err()) return res;
+    delay(5);
+
+    mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
+    return write_reg(RegAddress::Mode1, mode1_reg);
+}
+
+Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off){
+    if(channel > 15) return Err(Error::IndexOutOfRange);
+    
+    if(
+        #ifdef PCA9685_FORCEWRITE
+        true
+        #else
+        sub_channels[channel].on.cvr != on
+        #endif
+    ){
+        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on); 
+            res.is_err()) return res;
         sub_channels[channel].on.cvr = on;
     }
 
-    if(sub_channels[channel].off.cvr != off){
+    if(
+        #ifdef PCA9685_FORCEWRITE
+        true
+        #else
+        sub_channels[channel].off.cvr != off
+        #endif
+    ){
         auto & reg = sub_channels[channel].off;
 
         reg.full = false;
         reg.cvr = off;
-        write_reg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg);
+        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg);
+            res.is_err()) return res;
     }
+
+    // PCA9685_DEBUG(off);
+    return Ok();
 }
 
-void PCA9685::init(){
+Result<void, Error> PCA9685::init(){
+    #ifdef PCA9685_NOVERIFY
+    #else
+    if(const auto res = verify(); res.is_err()){
+        PCA9685_PANIC("verify failed");
+        return res;
+    }
+    #endif
+    return Ok();
+
+    delay(1);
     mode1_reg = 0;
-    write_reg(RegAddress::Mode1, mode1_reg);
+    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+        res.is_err()) return res;
     for(size_t i = 0; i < 16; i++){
-        set_pwm(i, 0, 0);
+        if(const auto res = set_pwm(i, 0, 0);
+            res.is_err()) return res;
     }
     delay(10);
+    return Ok();
 }
 
 
-void PCA9685::reset(){
-    read_reg(RegAddress::Mode1, mode1_reg);
-    if(1 == mode1_reg.restart){
-        mode1_reg.sleep = 0;
-        write_reg(RegAddress::Mode1, mode1_reg);
-    }
-    udelay(500);
-    mode1_reg.restart = 1;
-    write_reg(RegAddress::Mode1, mode1_reg);
+Result<void, Error> PCA9685::reset(){
+    const auto res = [&] -> Result<void, Error>{
+        if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
+            res.is_err()) return res;
+        if(1 == mode1_reg.restart){
+            mode1_reg.sleep = 0;
+            if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+                res.is_err()) return res;
+        }
+        udelay(500);
+        mode1_reg.restart = 1;
+        if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+            res.is_err()) return res;
+
+        return Ok();
+    }();
     mode1_reg.restart = 0;
+
+    return res;
 }
 
-void PCA9685::enable_ext_clk(const bool en){
+Result<void, Error> PCA9685::enable_ext_clk(const bool en){
     mode1_reg.extclk = en;
-    write_reg(RegAddress::Mode1, mode1_reg);
+    return write_reg(RegAddress::Mode1, mode1_reg);
 }
 
-void PCA9685::enable_sleep(const bool en){
+Result<void, Error> PCA9685::enable_sleep(const bool en){
     mode1_reg.sleep = en;
-    write_reg(RegAddress::Mode1, mode1_reg);
-    mode1_reg.sleep = 0;
+    return write_reg(RegAddress::Mode1, mode1_reg);
 }
 
 void PCA9685::set_by_mask(const uint16_t mask){
@@ -90,6 +150,12 @@ void PCA9685::set_by_mask(const uint16_t mask){
 }
 
 void PCA9685::clr_by_mask(const uint16_t mask){
+    TODO();
+    // buf &= ~mask;
+    // write(buf);
+}
+
+void PCA9685::write_by_mask(const uint16_t mask){
     TODO();
     // buf &= ~mask;
     // write(buf);
@@ -126,9 +192,9 @@ void PCA9685::set_mode(const size_t index, const hal::GpioMode mode){
 //     }
 }
 
-void PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
+Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
-    write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
+    return write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
 }
 
 __fast_inline BoolLevel PCA9685::PCA9685Channel::read() const {

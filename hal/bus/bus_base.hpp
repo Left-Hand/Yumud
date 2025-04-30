@@ -3,7 +3,7 @@
 #include "core/platform.hpp"
 
 #include "bus_enums.hpp"
-#include "bus_error.hpp"
+#include "hal/hal_result.hpp"
 
 namespace ymd::hal{
 

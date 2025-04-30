@@ -148,10 +148,10 @@ template<arithmetic T>
 class RRS_Kinematics final{
 public:
     struct Config{
-        T base_length;//基摇臂长度
-        T link_length;///摇臂长度
-        T base_plate_radius;//基座半径
-        T top_plate_radius;///顶座半径
+        T base_length;//基座摇臂长度(米)
+        T link_length;///上摇臂长度(米)
+        T base_plate_radius;//基座中心轴到关节的距离(米)
+        T top_plate_radius;///顶座中心轴到关节的距离(米)
     };
 
     struct Gesture{
