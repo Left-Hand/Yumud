@@ -3,8 +3,6 @@
 
 namespace ymd{
 
-
-
 OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind err){
     using Kind = hal::HalError::Kind;
     switch(err){
@@ -39,4 +37,6 @@ OutputStream & operator << (OutputStream & os, const hal::HalError & err){
 OutputStream & operator << (OutputStream & os, const hal::HalError::Kind & err_kind){
     return print_halerr_kind(os, err_kind);
 }
+
+
 }

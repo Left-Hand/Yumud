@@ -15,35 +15,47 @@ namespace nuedc::_2024E{
 chess_forward_ai(const Role role, const ChessBoard & board){
     // 判断指定位置是否能让指定角色获胜
     auto is_winning_move = [](const ChessBoard & board, const Vector2u& pos, Role check_role) -> bool {
-        // 检查行
-        int row_count = 0;
-        for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-            if (board.at({x, pos.y}) == check_role) ++row_count;
-        }
-        
-        // 检查列
-        int col_count = 0;
-        for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
-            if (board.at({pos.x, y}) == check_role) ++col_count;
-        }
-        
-        // 检查主对角线
-        int diag_count = 0;
-        if (pos.x == pos.y) {
-            for (size_t i = 0; i < ChessBoard::WIDTH; ++i) {
-                if (board.at({i, i}) == check_role) ++diag_count;
+        {
+            // 检查行
+            size_t cnt = 0;
+            for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
+                if (board.at({x, pos.y}) == check_role) ++cnt;
             }
+            if(cnt >= 2) return true;
         }
-        
-        // 检查副对角线
-        int anti_diag_count = 0;
-        if (pos.x + pos.y == 2) {
-            for (size_t i = 0; i < ChessBoard::WIDTH; ++i) {
-                if (board.at({i, 2 - i}) == check_role) ++anti_diag_count;
+
+        {
+            // 检查列
+            size_t cnt = 0;
+            for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
+                if (board.at({pos.x, y}) == check_role) ++cnt;
             }
+            if(cnt >= 2) return true;
         }
-        
-        return row_count >= 2 || col_count >= 2 || diag_count >= 2 || anti_diag_count >= 2;
+
+        {
+            // 检查主对角线
+            size_t cnt = 0;
+            if (pos.x == pos.y) {
+                for (size_t i = 0; i < ChessBoard::WIDTH; ++i) {
+                    if (board.at({i, i}) == check_role) ++cnt;
+                }
+            }
+            if(cnt >= 2) return true;
+        }
+
+        {
+            // 检查副对角线
+            size_t cnt = 0;
+            if (pos.x + pos.y == 2) {
+                for (size_t i = 0; i < ChessBoard::WIDTH; ++i) {
+                    if (board.at({i, 2 - i}) == check_role) ++cnt;
+                }
+            }
+            if(cnt >= 2) return true;
+        }
+
+        return false;
     };
 
     // 寻找可立即获胜的位置
@@ -70,16 +82,18 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     if (board.at({1,1}) == None) return {1,1};
 
     // 4. 占领四个角落
-    const std::array<Vector2u, 4> corners = {{{0,0}, {0,2}, {2,0}, {2,2}}};
+    constexpr std::array<Vector2u, 4> corners = {{{0,0}, {0,2}, {2,0}, {2,2}}};
     for (const auto& pos : corners) {
         if (board.at(pos) == None) return pos;
     }
 
     // 5. 占领边缘（非中心非角落）
-    const std::array<Vector2u, 4> edges = {{{0,1}, {1,0}, {1,2}, {2,1}}};
+    constexpr std::array<Vector2u, 4> edges = {{{0,1}, {1,0}, {1,2}, {2,1}}};
     for (const auto& pos : edges) {
         if (board.at(pos) == None) return pos;
     }
+
+    __builtin_abort();
 
     // 6. 最后兜底（理论上不会执行到此处）
     for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
