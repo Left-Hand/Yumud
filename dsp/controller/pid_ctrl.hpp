@@ -78,7 +78,7 @@ class PID_t{
             clp_max = static_cast<T>(_clp_max);}
 };
 
-#include "pid.tpp"
+#include "pid_ctrl.tpp"
 
 typedef PID_t<real_t> PID;
 

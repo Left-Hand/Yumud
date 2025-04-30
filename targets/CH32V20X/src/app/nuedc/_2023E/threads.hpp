@@ -42,7 +42,7 @@ public:
         // if(uart_.available())DEBUG_PRINTLN(uart_.available());
         auto strs_opt = splitter_.update(uart_);
         if(strs_opt.has_value()){
-            auto & strs = strs_opt.value();
+            const auto & strs = strs_opt.value();
 
             if(outen_){
                 os_.println("------");
@@ -56,7 +56,7 @@ public:
             }
 
             StringStream ss;
-            auto res = root_ ->call(ss, params);
+            const auto res = root_ ->call(ss, params);
 
             if(outen_){
                 os_.print("->", std::move(ss).move_str());

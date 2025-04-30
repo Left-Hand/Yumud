@@ -3,9 +3,10 @@
 
 using namespace ymd::canopen;
 
+#if 0
 
-PdoProtocol::PdoProtocol(Driver& driver, ObjectDictionary& od1)
-    : Protocol("Pdo", driver, od1) {
+PdoProtocol::PdoProtocol(Driver& driver, ObjectDict & od1)
+    : ProtocolBase("Pdo", driver) od1_(od1){
 }
 
 
@@ -32,3 +33,5 @@ bool PdoProtocol::processMessage(const CanMsg& msg) {
 
 //     return retval;
 // }
+
+#endif

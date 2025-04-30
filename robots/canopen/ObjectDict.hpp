@@ -2,6 +2,7 @@
 
 #include "Entry.hpp"
 #include <map>
+#include "core/utils/Option.hpp"
 
 namespace ymd::canopen{
 

@@ -8,6 +8,6 @@ public:
     struct Config{
         
     }
+};
 
-}
 }
