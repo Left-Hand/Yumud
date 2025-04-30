@@ -9,10 +9,10 @@ namespace ymd::drivers{
 class ScaledPwm:public hal::PwmIntf{
 protected:
     hal::PwmIntf & instance_;
-    Range_t<real_t> duty_range_;
+    Range2_t<real_t> duty_range_;
     bool enabled = true;
 public:
-    ScaledPwm(hal::PwmIntf & instance, const Range_t<real_t> & duty_range
+    ScaledPwm(hal::PwmIntf & instance, const Range2_t<real_t> & duty_range
             ):instance_(instance), duty_range_(duty_range){;}
 
     void enable(const bool en = true){

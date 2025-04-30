@@ -11,8 +11,6 @@ class Classify{
 
 class Mnist{
 public:
-    using Vector2 = ImageBasics::Vector2;
-    using Vector2i = ImageBasics::Vector2i;
     
     scexpr int N = 10; 
     scexpr Vector2i img_size = {28, 28};

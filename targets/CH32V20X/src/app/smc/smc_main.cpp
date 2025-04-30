@@ -7,11 +7,11 @@ using ymd::nvcv2::Shape::Seed;
 
 namespace SMC{
 
-std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
+std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = measurer.seed_pos;
     // auto last_road_window = measurer.road_window;
 
-    Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
+    Range2i road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
                                 WorldUtils::pixels(config.valid_road_meters.to)};
 
     real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
@@ -20,24 +20,24 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     auto y = last_seed_pos.y ? last_seed_pos.y : src.get_size().y - config.seed_height_base;
 
     //定义本次找到的x窗口
-    Rangei new_x_range;
-    if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗�?
+    Range2i new_x_range;
+    if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗�?
 
         new_x_range = get_side_range(src, y, road_valid_pixels.from, align_mode);
         // DEBUG_PRINTLN(new_x_range, road_valid_pixels.from);
-        //如果最长的区域都小于路�? 那么就视为找不到种子
+        //如果最长的区域都小于路�? 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
-            return {Vector2i{}, Rangei{}};
+            return {Vector2i{}, Range2i{}};
             // return {last_seed_pos, last_road_window};
         }
 
-    }else{//如果上次有种�?
+    }else{//如果上次有种�?
         new_x_range = get_h_range(src,last_seed_pos);
-        //在上次种子的基础上找新窗�?
+        //在上次种子的基础上找新窗�?
 
-        //如果最长的区域都小于路�? 那么就视为找不到种子
+        //如果最长的区域都小于路�? 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
-            return {Vector2i{}, Rangei{}};
+            return {Vector2i{}, Range2i{}};
         }
     }
     //能到这里 说明找到可行的区域了
@@ -53,16 +53,16 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
             new_seed_pos = Vector2i(new_x_range.from + int(road_align_pixels/2), y);
         }
 
-        if(last_seed_pos.x != 0)//如果上次有找�? 那么进行简单的均值滤�? 否则直接赋�?
+        if(last_seed_pos.x != 0)//如果上次有找�? 那么进行简单的均值滤�? 否则直接赋�?
             return {(last_seed_pos + new_seed_pos) / 2, new_x_range};
         else
             return {new_seed_pos, new_x_range};
     }
 
     //不应该运行到这里
-    //如果找不到种�? 就返回空
+    //如果找不到种�? 就返回空
     // ASSERT_WITH_HALT(false, "should not run here");
-    return {Vector2i(), Rangei()};
+    return {Vector2i(), Range2i()};
 }
 
 void SmartCar::reset(){
@@ -192,7 +192,7 @@ void SmartCar::update_holder(){
 void SmartCar::parse(){
 
     flagReg = flags;
-    if(flags.data != 0){//有标志位被置�?
+    if(flags.data != 0){//有标志位被置�?
         if(flags.enable_trig){
             reset();
             body.enable(true);
@@ -402,9 +402,9 @@ void SmartCar::main(){
         DRAW_STR("子状" + toString(int(switches.element_status)));
         DRAW_STR("元侧" + toString(int(switches.element_side)));
         DRAW_STR("附模" + toString(int(switches.align_mode)));
-        DRAW_STR("�?:" + toString(int(motor_strength.left * 99)));
-        DRAW_STR("�?:" + toString(int(motor_strength.right * 99)));
-        DRAW_STR("�?:" + toString(int(motor_strength.hri * 99)));
+        DRAW_STR("�?:" + toString(int(motor_strength.left * 99)));
+        DRAW_STR("�?:" + toString(int(motor_strength.right * 99)));
+        DRAW_STR("�?:" + toString(int(motor_strength.hri * 99)));
     };
 
     DEBUGGER.onRxDone([&](){parse_line(DEBUGGER.readString());});
@@ -441,14 +441,14 @@ void SmartCar::main(){
 
 
         //----------------------
-        //对输入进行解�?
+        //对输入进行解�?
         recordRunStatus(RunStatus::EVENTS);
         if(start_key) start();
         if(stop_key) stop();
         //----------------------
 
         //----------------------
-        //对事件进行解�?
+        //对事件进行解�?
         recordRunStatus(RunStatus::EVENTS);
         parse();
         //----------------------
@@ -456,7 +456,7 @@ void SmartCar::main(){
 
 
         /* #region */
-        //开始进行图像处�?
+        //开始进行图像处�?
         recordRunStatus(RunStatus::IMG_B);
 
         CREATE_BENCHMARK(benchmark.cap);
@@ -464,10 +464,10 @@ void SmartCar::main(){
         plot_gray(pers_gray_image, Rect2i{0, 60, 188, 60});
 
         CREATE_BENCHMARK(benchmark.pers);
-        Pixels::inverse(pers_gray_image);//对灰度图取反(边线为白色方便提�?)
+        Pixels::inverse(pers_gray_image);//对灰度图取反(边线为白色方便提�?)
 
         // fast_bina_opera(
-        Pixels::fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算�?
+        Pixels::fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算�?
 
         // plot_gray(diff_gray_image, Rect2i{0, 0, 188, 60});
         CREATE_BENCHMARK(benchmark.gray);
@@ -480,7 +480,7 @@ void SmartCar::main(){
         auto ccd_diff = ccd_image.space();
         auto ccd_bina = make_bina_mirror(ccd_image);
 
-        Pixels::fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算�?
+        Pixels::fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算�?
         Pixels::binarization(ccd_bina, ccd_diff, config.edge_threshold);
         Shape::anti_pepper_x(ccd_bina, ccd_bina);
         Shape::anti_pepper_x(ccd_bina, ccd_bina);
@@ -492,14 +492,14 @@ void SmartCar::main(){
 
 
         /* #region */
-        // 对种子进行搜�?
+        // 对种子进行搜�?
         recordRunStatus(RunStatus::SEED_B);
 
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
         Vector2i new_seed_pos;
-        Rangei new_road_window;
+        Range2i new_road_window;
         std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
 
         auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.seed_pos.x, 0});
@@ -520,7 +520,7 @@ void SmartCar::main(){
 
 
         /* #region */
-        // 寻找两侧的赛道轮廓并修剪为非自交的形�?
+        // 寻找两侧的赛道轮廓并修剪为非自交的形�?
         recordRunStatus(RunStatus::COAST_B);
         
         // {
@@ -563,7 +563,7 @@ void SmartCar::main(){
 
         /* #region */
 
-        //进行角点检�?
+        //进行角点检�?
         recordRunStatus(RunStatus::CORNER_B);
 
         recordRunStatus(RunStatus::CORNER_L);
@@ -589,7 +589,7 @@ void SmartCar::main(){
         // DEBUG_PRINTLN(left_corners.size(), right_corners.size());
     
         recordRunStatus(RunStatus::CORNER_E);
-        //角点检测结�?
+        //角点检测结�?
         /* #endregion */
 
 
@@ -598,7 +598,7 @@ void SmartCar::main(){
         /* #region */
 
     
-        //开始进行元素识�?
+        //开始进行元素识�?
         [[maybe_unused]]auto sign_with_dead_zone = [](const int a, const int b, const int zone){
             auto diff = a-b;
             if(std::abs(diff) < std::abs(zone)) return 0;
@@ -631,7 +631,7 @@ void SmartCar::main(){
 
         [[maybe_unused]] auto barrier_beg_detect = [&]() -> DetectResult {
            [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vector2i {
-                //少于两个拐点 没法判断有没有障�?
+                //少于两个拐点 没法判断有没有障�?
                 if(_corners.size() < 2) return {0,0};
 
                 auto box = CoastUtils::bounding_box(left_track);
@@ -795,12 +795,12 @@ void SmartCar::main(){
         //                 // if(measurer.get_road_length_meters() < max)
         //                 const auto * first_corner_ptr = CornerUtils::find_corner(_corners);
 
-        //                 //没有拐点�? 那就可以 
+        //                 //没有拐点�? 那就可以 
         //                 if(first_corner_ptr == nullptr) return true;
 
         //                 const auto & first_point = *first_corner_ptr;
 
-        //                 //十字�?
+        //                 //十字�?
         //                 if(first_point.point.y < 30) return true;
 
         //                 return false;
@@ -852,7 +852,7 @@ void SmartCar::main(){
         [[maybe_unused]] auto ring_out_detect = [&](const LR known_side) -> DetectResult {
             const auto & track = (known_side == RIGHT) ? left_track : right_track; 
 
-            //选取对立侧拐�?
+            //选取对立侧拐�?
             // const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
             // const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
             if(track.size() < 3) return false;
@@ -862,7 +862,7 @@ void SmartCar::main(){
 
             if(known_side == LR::RIGHT) if((track[2] - track[1]) < -least_x_diff) return {true};
             if(known_side == LR::LEFT) if((track[2] - track[1]) > least_x_diff) return {true};
-            //判断有没有拐�?
+            //判断有没有拐�?
             // if(track.size() == 2) return {true};
             return {false};
         };
@@ -897,7 +897,7 @@ void SmartCar::main(){
             case ElementType::STRAIGHT:
                 {
                     if(is_startup()) break;
-                    //判断何时处理 状态机 of 斑马�?
+                    //判断何时处理 状态机 of 斑马�?
                     if(true){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(bool(zebra_result));
@@ -907,7 +907,7 @@ void SmartCar::main(){
                         }
                     }
 
-                    //判断何时处理 状态机 of 障碍�?
+                    //判断何时处理 状态机 of 障碍�?
                     if(true){
                     // if(false){
                         auto result = RESULT_GETTER(barrier_beg_detect());
@@ -940,14 +940,14 @@ void SmartCar::main(){
                 }
                 break;
             
-            //已经处于斑马线元素状�?
+            //已经处于斑马线元素状�?
             case ElementType::ZEBRA:
                 {
 
                     using ZebraStatus = Zebra::Status;
                     auto zebra_status = switches.zebra_status;
                     switch(zebra_status) {
-                        //判断何时退出斑马线状�?
+                        //判断何时退出斑马线状�?
 
                         case ZebraStatus::BEG:{
                             // sw_element(ElementType::ZEBRA, (ZebraStatus::END), LR::LEFT, AlignMode::BOTH, {0, 1.2});
@@ -963,14 +963,14 @@ void SmartCar::main(){
                 }
                 break;
 
-            //已经处于障碍物元素状�?
+            //已经处于障碍物元素状�?
             case ElementType::BARRIER:
                 {
                     using BarrierStatus = Barrier::Status;
                     auto barrier_status = switches.barrier_status;
                     // DEBUG_PRINTLN(element_type, barrier_status);
                     switch(barrier_status) {
-                        //判断何时退出障碍物状�?
+                        //判断何时退出障碍物状�?
                         case BarrierStatus::BEG:if(true){
                             auto result = RESULT_GETTER(barrier_end_detect());
                             // DEBUG_PRINTLN(result.detected);
@@ -992,13 +992,13 @@ void SmartCar::main(){
                 }
                 break;
 
-            //已经处于十字元素状�?
+            //已经处于十字元素状�?
             case ElementType::CROSS:
                 {
                     using CrossStatus = Cross::Status;
                     auto cross_status = switches.cross_status;
                     switch(cross_status){
-                        //判断何时退出十字状�?
+                        //判断何时退出十字状�?
                         case CrossStatus::BEG:if(true){
                             // auto result = RESULT_GETTER(cross_beg_detect());
                             auto result = true;
@@ -1012,7 +1012,7 @@ void SmartCar::main(){
                 }
                 break;
 
-            //已经处于圆环状�?
+            //已经处于圆环状�?
             case ElementType::RING:
                 {
                     using RingStatus = Ring::Status;
@@ -1037,15 +1037,15 @@ void SmartCar::main(){
                         }break;
 
                         //判断何时出环
-                        case RingStatus::RUNNING: if(true){//判断何时对立有拐�?
+                        case RingStatus::RUNNING: if(true){//判断何时对立有拐�?
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
                                 sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, ring_config.c2});
                             }
                         }break;
 
-                        //判断何时退出圆�?
-                        case RingStatus::OUT: if(std::abs(measurer.get_angle()) > 1.42){//判断何时回到圆起�?
+                        //判断何时退出圆�?
+                        case RingStatus::OUT: if(std::abs(measurer.get_angle()) > 1.42){//判断何时回到圆起�?
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
                                 sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, ring_config.s2});
@@ -1065,7 +1065,7 @@ void SmartCar::main(){
             default:
                 break;
         }
-        //在自动模式下 如果识别不到赛道 就关断小�? 避免跑飞时撞�?
+        //在自动模式下 如果识别不到赛道 就关断小�? 避免跑飞时撞�?
 
         update_holder();
 
@@ -1090,7 +1090,7 @@ void SmartCar::main(){
                 auto coast_point_valid = [](const CoastItem & host, const CoastItem & guest, const LR _is_right) -> bool{
                     Vector2i delta = Vector2i(guest) - Vector2i(host);
 
-                    //如果两个点坐标一�? 那么通过
+                    //如果两个点坐标一�? 那么通过
                     if(delta.x == 0 && delta.y == 0) return true;
 
                     int abs_dx = std::abs(delta.x);
@@ -1124,7 +1124,7 @@ void SmartCar::main(){
                         bool abandon = coast_point_valid(host, guest, is_right) == false;
                         // bool abandon = false;
 
-                        //如果需要丢�? 添加到列�?
+                        //如果需要丢�? 添加到列�?
                         remove_indexes[j] |= abandon;
                     }
                 };
@@ -1133,7 +1133,7 @@ void SmartCar::main(){
 
 
                 //对初点做特殊讨论
-                //此处以返回值的第二个点为参�?
+                //此处以返回值的第二个点为参�?
 
                 if(remove_indexes[0] == true){
                     size_t secondary_index = 0;
@@ -1166,7 +1166,7 @@ void SmartCar::main(){
 
                         return ret;
                     }else{
-                        //第一个点不可�? 后面也找不到可取�? 等价与返回空
+                        //第一个点不可�? 后面也找不到可取�? 等价与返回空
 
                         return {};
                     }
@@ -1207,12 +1207,12 @@ void SmartCar::main(){
                     // plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
                     // plot_segment(seg_right, {0, 0}, RGB565::GREEN);
 
-                    //提取根向�?
+                    //提取根向�?
                     Vector2 left_root_vec = SegmentUtils::vec(seg_left);
                     Vector2 right_root_vec = SegmentUtils::vec(seg_right);
                     Vector2 root_vec;
 
-                    //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干�?) 那么进行根向量合�? 否则根据吸附的左右选择对应的根向量
+                    //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干�?) 那么进行根向量合�? 否则根据吸附的左右选择对应的根向量
                     bool left_valid = vec_valid(left_root_vec);
                     bool right_valid = vec_valid(right_root_vec);
                     bool road_valid = config.valid_road_meters.has(measurer.get_road_length_meters());
@@ -1255,7 +1255,7 @@ void SmartCar::main(){
 
 
                             if(vec_sin < abs(config.dir_merge_max_sin)){
-                                //计算两者按权重相加的向量（不需要考虑模长�?
+                                //计算两者按权重相加的向量（不需要考虑模长�?
                                 root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
                             }else{
                                 if(left_valid){
@@ -1296,7 +1296,7 @@ void SmartCar::main(){
         }
         // DEBUG_PRINTLN(measurer.get_dir());
         recordRunStatus(RunStatus::VEC_E);
-        //对轮廓的主向量提取结�?
+        //对轮廓的主向量提取结�?
         /* #endregion */
     
         // DEBUG_PRINTLN(measurer.get_angle());

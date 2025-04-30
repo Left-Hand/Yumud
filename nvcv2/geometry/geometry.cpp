@@ -57,14 +57,14 @@ Vector2 inv_perspective_fast(const Vector2 & v){
 
 void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> & src){
     auto size = static_cast<const ImageWritable<Grayscale> &>(dst).size();
-    for(int _y = 0; _y < size.y; _y++){
+    for(size_t _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;
 
-        for(int _x = 0; _x < size.x; _x++){
+        for(size_t _x = 0; _x < size.x; _x++){
             x += x_step;
-            if(size.has_point(Vector2i{x,y})){
-                dst[{_x,_y}]= src[{x,y}];
+            if(size.has_point(Vector2u{size_t(x),size_t(y)})){
+                dst[{_x,_y}]= src[{size_t(x),size_t(y)}];
             }else{
                 dst[{_x,_y}]=0;
             }

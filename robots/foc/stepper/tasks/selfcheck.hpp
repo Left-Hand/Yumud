@@ -23,7 +23,7 @@ protected:
 
     SubState sub_state = SubState::INIT;
     int cnt;
-    Range_t<real_t> move_range;
+    Range2_t<real_t> move_range;
 
     SVPWM & svpwm_;
     OdometerPoles & odo_;

@@ -42,6 +42,7 @@ struct __needprint_helper<std::_Setbase>{
 };
 
 struct __Splitter{};
+struct __Endl{};
 
 
 template<char c>
@@ -118,7 +119,7 @@ private:
         }
     }
 
-    __fast_inline void print_enter(){
+    __fast_inline void print_endl(){
         scexpr const char * enter_str = "\r\n";
         scexpr size_t enter_str_len = 2;
         
@@ -226,7 +227,7 @@ public:
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
-    OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
+    OutputStream & operator<<(std::ostream& (*manipulator)(std::ostream&)) {
         if (manipulator == static_cast<std::ostream& (*)(std::ostream&)>(std::endl)) {
             *this << "\r\n";
             this->flush();
@@ -234,19 +235,20 @@ public:
         return *this;
     }
 
-    OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
-    OutputStream& operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
-    OutputStream& operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
+    OutputStream & operator<<(std::ios_base& (*func)(std::ios_base&));
+    OutputStream & operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
+    OutputStream & operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
+    OutputStream & operator<<(const __Endl){this->print_endl(); return *this;}
     
-    OutputStream& operator<<(const std::nullopt_t){return *this << '/';}
-    OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
+    OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
+    OutputStream & operator<<(const __Splitter){print_splt(); return *this;}
 
     template<char chr>
-    OutputStream& operator<<(const __Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
-    OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
+    OutputStream & operator<<(const __Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
+    OutputStream & operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
     template<typename T>
-    OutputStream& operator<<(const std::optional<T> v){
+    OutputStream & operator<<(const std::optional<T> v){
         if(v.has_value()) return *this << v.value();
         else return *this << '/';
     }
@@ -365,7 +367,7 @@ public:
     }
 
     OutputStream & prints(){
-        print_enter();
+        print_endl();
         return *this;
     }
 
@@ -382,7 +384,7 @@ public:
     }
 
     OutputStream & printt(){
-        print_enter();
+        print_endl();
         return *this;
     }
 
@@ -399,7 +401,7 @@ public:
     }
 
     OutputStream & println(){
-        print_enter();
+        print_endl();
         return *this;
     }
 
@@ -407,6 +409,7 @@ public:
     auto radix() const {return config_.radix;}
 
 
+    __Endl endl() const {return {};}
 
     __Splitter splitter() const {return {};}
 

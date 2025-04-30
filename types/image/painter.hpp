@@ -9,24 +9,21 @@ namespace ymd{
 template<typename ColorType>
 class Painter:public PainterConcept{
 protected:
-    using Vector2 = Image<ColorType>::Vector2;
-    using Vector2i = Image<ColorType>::Vector2i;
 
     ImageWritable<ColorType> * src_image = nullptr;
     
     using Error = typename PainterConcept::Error;
-
     template<typename T = void>
     using IResult = PainterConcept::IResult<T>;
 
-    void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
+    void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
-    __no_inline Result<void, Error> draw_str(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
+    __no_inline Result<void, Error> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) override{
         GBKIterator iterator(str_ptr);
 
-        for(int x = pos.x;;){
+        for(size_t x = pos.x;;){
             if(x >= src_image->size().x){
                 // FIXME: in tsubst_copy, at cp/pt.cc:17004
                 // return Err(Error::StringLengthTooLong);
@@ -35,7 +32,7 @@ protected:
 
             if(iterator){
                 auto chr = iterator.next();
-                draw_char(Vector2i(x, pos.y), chr);
+                draw_char(Vector2u(x, pos.y), chr);
                 auto font = chr > 0x80 ? chfont : enfont;
                 if(font){
                     x += font->getSize().x + padding;
@@ -55,7 +52,7 @@ public:
     Painter():PainterConcept(){;}
 
 
-    Rect2i get_clip_window() override {
+    Rect2u get_clip_window() override {
         return src_image->rect();
     }
 
@@ -68,41 +65,41 @@ public:
         enfont->setScale(scale);
     }
 
-    void draw_texture_rect(const Rect2i & rect,const ColorType * color_ptr){
+    void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
         if(!src_image->getDisplayArea().contains(rect)) return;
         drawtexture_unsafe(rect, color_ptr);
     }
 
     template<typename w_ColorType>
-    void draw_image(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    void draw_image(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
         if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
-        auto rect = Rect2i(pos, image.size());
+        auto rect = Rect2u(pos, image.size());
         src_image->setarea_unsafe(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
+                src_image->putpixel_unsafe(Vector2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
-    IResult<> draw_filled_rect(const Rect2i & rect) override {
-        Rect2i rect_area = src_image->rect().intersection(rect);
-        if(!rect_area) return Ok();
+    IResult<> draw_filled_rect(const Rect2u & rect) override {
+        Rect2u ins = src_image->rect().intersection(rect);
+        if(ins.get_area() == 0) return Ok();
         
-        //FIXME use rect_area rather than rect will cause crash 
+        //FIXME use ins rather than rect will cause crash 
         src_image -> putrect_unsafe(rect, m_color);
 
         return Ok();
     }
 
-    void draw_pixel(const Vector2i & pos) override {
+    void draw_pixel(const Vector2u & pos) override {
         // src_image -> putpixel(pos, Binary(Binary::WHITE));
         src_image -> putpixel(pos, m_color);
     }
 
     [[nodiscard]]
-    IResult<> draw_line(const Vector2i & from, const Vector2i & to) override{
+    IResult<> draw_line(const Vector2u & from, const Vector2u & to) override{
         // if(!src_image->size().has_point(from)){
         //     return Err(Error(Error::StartPointOutOfBound));
         // }
@@ -134,11 +131,11 @@ public:
         int deltaY = ABS(dy << 1);
         int middle = dx;
         int y = y0;
-        for (int x = x0; x <= x1; ++x) {
+        for (int x = x0; x <= int(x1); ++x) {
             if (steep) {
-                draw_pixel({y,x});
+                draw_pixel({size_t(y),size_t(x)});
             } else {
-                draw_pixel({x,y});
+                draw_pixel({size_t(x),size_t(y)});
             }
             deltaY += ABS(dy << 1);
             if (deltaY >= middle) {
@@ -151,7 +148,7 @@ public:
     }
     
     [[nodiscard]]
-    IResult<> draw_char(const Vector2i & pos,const wchar_t chr) override {
+    IResult<> draw_char(const Vector2u & pos,const wchar_t chr) override {
         const Font * font = chr > 0x80 ? chfont : enfont;
         // if(font == nullptr){
         //     return Err(Error::NoChineseFontFounded);
@@ -159,26 +156,26 @@ public:
         
         if(font == nullptr) return Ok();
 
-        Rect2i image_area = Rect2i{Vector2i{0,0}, src_image->size()};
-        const Vector2i font_size = font->getSize();
-        Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
+        Rect2u image_area = Rect2u{Vector2u{0,0}, src_image->size()};
+        const Vector2u font_size = font->getSize();
+        Rect2u char_rect = Rect2u(pos, font_size).intersection(image_area);
 
-        if(!char_area) return Ok();
+        if(char_rect.get_area() == 0) return Ok();
         
-        for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
+        for(size_t i = char_rect.position.x; i < char_rect.position.x + char_rect.size.x ; i++){
             uint8_t mask = 0;
-            for(int j = 0; j < font_size.y; j++){
+            for(size_t j = 0; j < font_size.y; j++){
  
                 if(j % 8 == 0) mask = 0;
 
-                Vector2i offs = Vector2i(i - char_area.position.x ,j);
+                Vector2u offs = Vector2u(i - char_rect.position.x ,j);
                 if(font->getpixel(chr, offs)){
                 // if(true){
                     mask |= (0x01 << (j % 8));
                 }
 
                 if(j % 8 == 7 || j == font_size.y - 1){
-                    src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
+                    src_image->putseg_v8_unsafe(Vector2u(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
                     mask = 0;
                 }
             }

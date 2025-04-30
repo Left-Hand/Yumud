@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "core/math/real.hpp"
+
 #include "types/range/range.hpp"
 #include "types/vector2/vector2.hpp"
 
@@ -47,8 +47,8 @@ public:
     explicit constexpr Rect2_t(const Vector2_t<auto> * points, const size_t cnt){
         if(cnt < 1) return;
         const auto & first_point = points[0];
-        Range_t<T> x_range = {first_point.x, first_point.x};
-        Range_t<T> y_range = {first_point.y, first_point.y};
+        Range2_t<T> x_range = {first_point.x, first_point.x};
+        Range2_t<T> y_range = {first_point.y, first_point.y};
         for(size_t i = 1; i < cnt; i++){
             x_range = x_range.merge(points[i].x);
             y_range = y_range.merge(points[i].y);
@@ -57,7 +57,7 @@ public:
         *this = Rect2_t<T>(x_range, y_range);
     }
 
-    explicit constexpr Rect2_t(const Range_t<auto> & x_range,const Range_t<auto> & y_range):
+    explicit constexpr Rect2_t(const Range2_t<auto> & x_range,const Range2_t<auto> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
 
     constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
@@ -187,14 +187,14 @@ public:
     }
 
     constexpr Rect2_t<T> merge(const Rect2_t<auto> & other) const{
-        Range_t<T> range_x = this->get_x_range().merge(other.get_x_range());
-        Range_t<T> range_y = this->get_y_range().merge(other.get_y_range());
+        Range2_t<T> range_x = this->get_x_range().merge(other.get_x_range());
+        Range2_t<T> range_y = this->get_y_range().merge(other.get_y_range());
         return Rect2_t<T>(range_x, range_y);
     }
 
     constexpr Rect2_t<T> merge(const Vector2_t<auto> & point) const{
-        Range_t<T> range_x = this->get_x_range().merge(point.x);
-        Range_t<T> range_y = this->get_y_range().merge(point.y);
+        Range2_t<T> range_x = this->get_x_range().merge(point.x);
+        Range2_t<T> range_y = this->get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
 
@@ -226,16 +226,12 @@ public:
         return Rect2_t<T>(position + offset, size);
     }
 
-    constexpr Range_t<T> get_x_range() const{
-        return Range_t<T>(position.x, position.x + size.x).abs();
+    constexpr Range2_t<T> get_x_range() const{
+        return Range2_t<T>(position.x, position.x + size.x).abs();
     }
 
-    constexpr Range_t<T> get_y_range() const{
-        return Range_t<T>(position.y, position.y + size.y).abs();
-    }
-
-    constexpr explicit operator bool() const {
-        return (size.x != 0) && (size.y != 0);
+    constexpr Range2_t<T> get_y_range() const{
+        return Range2_t<T>(position.y, position.y + size.y).abs();
     }
 
     // template<arithmetic U>
@@ -245,7 +241,7 @@ public:
 };
 
 using Rect2i = Rect2_t<int>;
-using Window = Rect2i;
+using Rect2u = Rect2_t<uint>;
 using Rect2 = Rect2_t<real_t>;
 using Rect2f = Rect2_t<float>;
 

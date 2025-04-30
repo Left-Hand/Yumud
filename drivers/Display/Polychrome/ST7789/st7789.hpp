@@ -176,10 +176,10 @@ public:
         }
 
         __fast_inline constexpr
-        Range_t<uint32_t> get_point_index(const Rect2_t<uint16_t> r){
+        Range2_t<uint32_t> get_point_index(const Rect2_t<uint16_t> r){
             return {
                 get_point_index(r.position), 
-                get_point_index({r.position.x + r.size.x - 1, r.position.y + r.size.y - 1})};
+                get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};
         }
 
         bool update(const Rect2_t<uint16_t> rect);
@@ -188,7 +188,7 @@ public:
         }
     private:
         const Vector2_t<uint16_t> size_;
-        Rect2_t<uint16_t> curr_area_ = Rect2i(0,0,1,1);
+        Rect2_t<uint16_t> curr_area_ = Rect2u(0,0,1,1);
         uint32_t last_point_ = 0;
     };
 
@@ -217,15 +217,15 @@ private:
 
 protected:
 
-    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
+    __fast_inline void putpixel_unsafe(const Vector2u & pos, const RGB565 color){
         setpos_unsafe(pos);
         phy_.write_data16(uint16_t(color)).unwrap();
     }
 
-    void putrect_unsafe(const Rect2i & rect, const RGB565 color);
-    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr);
-    void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color);
-    void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color);
+    void putrect_unsafe(const Rect2u & rect, const RGB565 color);
+    void puttexture_unsafe(const Rect2u & rect, const RGB565 * color_ptr);
+    void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
+    void putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
 public:
     ST7789(const ST7789_Phy & phy, const Vector2_t<uint16_t> & size):
             ImageBasics(size), 
@@ -236,19 +236,19 @@ public:
     IResult<> init();
 
     
-    void setpos_unsafe(const Vector2i & pos);
-    void setarea_unsafe(const Rect2i & rect);
+    void setpos_unsafe(const Vector2u & pos);
+    void setarea_unsafe(const Rect2u & rect);
 
-    void put_texture(const Rect2i & rect, const is_color auto * pcolor){
+    void put_texture(const Rect2u & rect, const is_color auto * pcolor){
         setarea_unsafe(rect);
         put_next_texture(rect, pcolor);
     }
 
-    void put_next_texture(const Rect2i & rect, const is_color auto * pcolor){
+    void put_next_texture(const Rect2u & rect, const is_color auto * pcolor){
         phy_.write_burst<uint16_t>(pcolor, rect.get_area()).unwrap();
     }
 
-    IResult<> set_display_offset(const Vector2i & _offset){
+    IResult<> set_display_offset(const Vector2u & _offset){
         offset_ = _offset;
         return Ok();
     }

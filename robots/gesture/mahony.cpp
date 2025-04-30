@@ -49,7 +49,7 @@ void Mahony::update_v2(const Vector3 & gyr,const Vector3 & acc) {
 	const auto e = build_norm_vec3_from_cross_of_vec3(a_norm, v);
 
 	const auto delta = q.xform((gyr + kp_ * e) * (inv_fs_));
-	q = (q * Quat::from_euler(delta)).normalized();
+	q = (q * Quat::from_euler<EulerAnglePolicy::XYZ>({delta.x, delta.y, delta.z})).normalized();
 }
 
 

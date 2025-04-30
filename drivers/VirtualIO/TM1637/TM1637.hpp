@@ -1,7 +1,30 @@
 //这个驱动已经完成
-//这个驱动还未测试
+//这个驱动正在测试
+    //显示已经完成测试 需要进一步添加业务语法糖
+    //按键扫描还未测试 目前尚未有硬件平台
 
 //TM1637是天微半导体的一款LED矩阵驱动/按键矩阵扫描芯片
+
+
+// 快速上手:
+
+// (src/testbench/i2c/tm1637_tb.cpp)
+// 示例代码:
+
+// TM1637 tm1637{hal::portB[0], hal::portB[1]};
+
+// while(true){
+//     const auto res = 
+//         tm1637.set(0, SegDisplayer::digit_to_seg(millis() / 1000))
+//         | tm1637.set(1, SegDisplayer::digit_to_seg(millis() / 100))
+//         | tm1637.set(2, SegDisplayer::digit_to_seg(millis() / 10))
+//         | tm1637.set(3, SegDisplayer::digit_to_seg(millis() % 10))
+//         | tm1637.flush()
+//     ;
+//     if(res.is_err()) PANIC();
+//     DEBUG_PRINTLN(millis(), uint8_t(millis()));
+//     delay(20);
+// }
 
 #pragma once
 
@@ -13,6 +36,7 @@
 
 namespace ymd::drivers{
 
+// DisplayBuf: 显示缓存,能够区分脏数据
 template<typename T, size_t N>
 class DisplayBuf {
 public:
@@ -88,8 +112,8 @@ private:
     std::array<T, N> buf_;
 };
 
-
-
+namespace details{
+// TM1637 常用基础工具
 struct _TM1637_Collections{
     enum class Error_Kind{
         KeyFormatWrong,
@@ -103,23 +127,23 @@ struct _TM1637_Collections{
     static constexpr uint8_t CGRAM_MAX_LEN = 6;
 
     enum class PulseWidth:uint8_t{
-        _1_16 = 0,
-        _2_16,
-        _4_16,
-        _10_16,
-        _11_16,
-        _12_16,
-        _13_16,
-        _14_16,
+        _1_16   = 0b000,
+        _2_16   = 0b001,
+        _4_16   = 0b010,
+        _10_16  = 0b011,
+        _11_16  = 0b100,
+        _12_16  = 0b101,
+        _13_16  = 0b110,
+        _14_16  = 0b111,
     };
 
 
 
     struct DataCommand{
         const uint8_t __resv1__:1 = 0;
-        uint8_t write_else_read:1;
-        uint8_t addr_inc_en:1;
-        const uint8_t __resv2__:5 = 0b01001;
+        uint8_t read_key:1;
+        uint8_t addr_inc_disen:1;
+        const uint8_t __resv2__:5 = 0b01000;
 
         constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
@@ -215,88 +239,113 @@ struct _TM1637_Collections{
         // Option<uint8_t> col_;
         uint8_t raw_;
     };
-
-
 };
+}
 
-class TM1637_Phy final:public _TM1637_Collections{
+//TM1637 物理层接口
+//由于TM1637使用了另类的I2C接口 故特化
+class TM1637_Phy final:public details::_TM1637_Collections{
 public:
-    TM1637_Phy(hal::I2c & i2c): i2c_(i2c){;}
+    TM1637_Phy(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
+        scl_gpio_(scl_gpio),
+        sda_gpio_(sda_gpio)
+    {;}
 
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
-    Result<void, Error> write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf);
-
-    Result<void, Error> write_screen(const std::span<const uint8_t, CGRAM_MAX_LEN> pbuf);
-
-    Result<void, Error> write_sram(const std::span<const uint8_t> pbuf, const PulseWidth pw);
-
-    // Result<void, Error> write_sram_fixed(const std::span<const uint8_t> pbuf, const PulseWidth pw);
+    Result<void, Error> write_sram(const std::span<const uint8_t> pbuf);
 
     Result<uint8_t, Error> read_key();
+    Result<void, Error> set_display(const DisplayCommand);
+    Result<void, Error> set_data_mode(const DataCommand);
 private:
-    hal::I2c & i2c_;
+    Result<void, Error> write_byte(const uint8_t data);
+    Result<void, Error> read_byte(uint8_t & data);
+    Result<void, Error> wait_ack();
+    Result<void, Error> iic_start(const uint8_t data);
+    Result<void, Error> iic_stop();
+    hal::Gpio & scl_gpio_;
+    hal::Gpio & sda_gpio_;
 };
 
-class TM1637 final:public _TM1637_Collections{
+//TM1637本体
+class TM1637 final:public details::_TM1637_Collections{
 public:
     using Phy = TM1637_Phy;
 
+    TM1637(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio): 
+        phy_(TM1637_Phy(scl_gpio, sda_gpio)){;}
+
+
+    [[nodiscard]]
     Result<void, Error> flush();
-
+    
+    [[nodiscard]]
     Result<KeyEvent, Error> read_key();
-
+    [[nodiscard]]
     Result<void, Error> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
         buf_.set(pos, val);
+        return Ok();
     }
 private:
     Phy phy_;
     using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
     Buf buf_;
+    bool is_on_display_else_readkey_ = true;
+
+    [[nodiscard]] Result<void, Error> switch_to_display();
+    [[nodiscard]] Result<void, Error> switch_to_readkey();
 };
 
-
-class TM1637_SegDisplayer final{
+//段显示器
+struct SegDisplayer final{
     static constexpr std::array<uint8_t, 22> SEG_TABLE = {
-        0xc0,   //0
-        0xf9,   //1
-        0xa4,   //2
-        0xb0,   //3
-        0x99,   //4
-        0x92,   //5
-        0x82,   //6
-        0xf8,   //7
-        0x80,   //8
-        0x90,   //9
-        0x88,   //A
-        0x83,   //B
-        0xc6,   //C
-        0xa1,   //D
-        0x86,   //E
-        0x8e,   //F
+        uint8_t(~0xc0),   //0
+        uint8_t(~0xf9),   //1
+        uint8_t(~0xa4),   //2
+        uint8_t(~0xb0),   //3
+        uint8_t(~0x99),   //4
+        uint8_t(~0x92),   //5
+        uint8_t(~0x82),   //6
+        uint8_t(~0xf8),   //7
+        uint8_t(~0x80),   //8
+        uint8_t(~0x90),   //9
+        uint8_t(~0x88),   //A
+        uint8_t(~0x83),   //B
+        uint8_t(~0xc6),   //C
+        uint8_t(~0xa1),   //D
+        uint8_t(~0x86),   //E
+        uint8_t(~0x8e),   //F
 
-        0x8c,   //P
-        0xc1,   //U
-        0x91,   //Y
-        0x7c,   //L
-        0x00,   //全亮
-        0xff    //熄灭
+        uint8_t(~0x8c),   //P
+        uint8_t(~0xc1),   //U
+        uint8_t(~0x91),   //Y
+        uint8_t(~0x7c),   //L
+        uint8_t(~0x00),   //全亮
+        uint8_t(~0xff)    //熄灭
     };
+
+    // static constexpr uint8_t SEG_MINUS = 0x4f;
+    static constexpr uint8_t SEG_MINUS = 0xC0;
 
     static constexpr uint8_t DOT = 0x80;
     static constexpr uint8_t MINUS = 0x40;
 
     static constexpr uint8_t char_to_seg(const char c){
         switch(c){
-            case 0 ... 9: return SEG_TABLE[c];
-            case 'A' ... 'F': return SEG_TABLE[c - 'A' + 10];
-            case 'P': return SEG_TABLE[16];
-            case 'U': return SEG_TABLE[18];
-            case 'Y': return SEG_TABLE[19];
-            case 'L': return SEG_TABLE[20];
-            default: __builtin_unreachable();
+            case '0' ... '9': return uint8_t(SEG_TABLE[c - '0']);
+            case 'A' ... 'F': return uint8_t(SEG_TABLE[c - 'A' + 10]);
+            case 'a' ... 'f': return uint8_t(SEG_TABLE[c - 'a' + 10]);
+            case 'P': return uint8_t(SEG_TABLE[16]);
+            case 'U': return uint8_t(SEG_TABLE[17]);
+            case 'Y': return uint8_t(SEG_TABLE[18]);
+            case 'L': return uint8_t(SEG_TABLE[19]);
+            default: __builtin_abort();
         }
+    }
+
+    static constexpr uint8_t digit_to_seg(const uint8_t digit){
+        return char_to_seg((digit % 10) + '0');
     }
 
     [[nodiscard]] static constexpr 
@@ -310,7 +359,13 @@ class TM1637_SegDisplayer final{
     }
 
     [[nodiscard]] static constexpr 
-    Result<void, void> render_digit(const std::span<const uint8_t> context, const int num){
+    Result<void, void> render_digit(const std::span<uint8_t> context, const int num){
+        const auto len = context.size();
+        if(len >= 2){
+            context[0] = digit_to_seg(num % 10);
+            context[1] = digit_to_seg(num / 10);
+
+        }
         return Ok();
     }
 };

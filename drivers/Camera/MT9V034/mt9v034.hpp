@@ -63,13 +63,13 @@ protected:
         sccb_drv_.read_reg(addr, pData);
     }
 
-    void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{
+    void getpixel_unsafe(const Vector2u & pos, Grayscale & color) const override{
         color = data[pos.x + pos.y * size().x];
     };
 
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
-    static constexpr Vector2i CAMERA_SIZE = {188, 120};
+    static constexpr Vector2u CAMERA_SIZE = {188, 120};
 public:
     MT9V034(const hal::SccbDrv & sccb_drv):
         ImageBasics(CAMERA_SIZE),

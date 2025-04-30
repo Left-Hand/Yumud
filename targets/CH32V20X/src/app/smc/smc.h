@@ -138,7 +138,7 @@ public:
     real_t travel;
     real_t dir_error;
 
-    Rangei road_window;
+    Range2i road_window;
 
     Vector2i seed_pos;
 protected:
@@ -149,7 +149,7 @@ protected:
     }
 
     real_t now_spd;
-    Rangei ccd_range;
+    Range2i ccd_range;
     real_t dir;
 
     void update_gesture(){
@@ -231,7 +231,7 @@ public:
         update_front_speed();
     }
 
-    void update_ccd(const Rangei & _ccd_range){
+    void update_ccd(const Range2i & _ccd_range){
         ccd_range = _ccd_range;
     }
 
@@ -323,7 +323,7 @@ class SmartCar:public SmcCli{
 protected:
     void printRecordedRunStatus();
 
-    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> & src);
+    std::tuple<Point, Range2i> get_entry(const ImageReadable<Binary> & src);
 
     BkpItem & powerOnTimesReg = bkp[2];
     BkpItem & flagReg = bkp[3];

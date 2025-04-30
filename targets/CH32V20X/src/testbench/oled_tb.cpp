@@ -116,8 +116,8 @@ public:
 };
 
 static void oled_tb(){
-    auto & SCL_GPIO = portB[6];
-    auto & SDA_GPIO = portB[7];
+    auto & SCL_GPIO = portB[0];
+    auto & SDA_GPIO = portB[1];
     static constexpr auto I2C_BAUD = 2'000'000;
     // static constexpr auto MONITOR_HZ = 5000;
 

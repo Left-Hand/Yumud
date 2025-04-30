@@ -13,11 +13,9 @@ class VGpioPortIntf : public GpioPortIntf{
 protected:
     bool is_index_valid(const size_t index){return (index < N);}
 public:
-
-
-constexpr size_t size(){
-    return N;
-}
+    constexpr size_t size(){
+        return N;
+    }
 
     void set_by_mask(const uint16_t mask) override {
         uint16_t raw = read_mask();
@@ -29,8 +27,6 @@ constexpr size_t size(){
         write_by_mask(raw & (~mask));
     }
 
-    void write_by_mask(const uint16_t data);
-    // operator uint16_t(){return read_port();}
 };
 
 template<size_t N>

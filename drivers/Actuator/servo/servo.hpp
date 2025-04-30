@@ -7,14 +7,14 @@ namespace ymd::drivers{
 
 class RadianServo{
 private:
-    Range_t<real_t> rad_range_ = {0, real_t(PI)};
+    Range2_t<real_t> rad_range_ = {0, real_t(PI)};
     // real_t basis_ = 0;
 protected:
     
     virtual void set_global_radian(const real_t rad) = 0;
     virtual real_t get_global_radian() = 0;
 public:
-    void set_range(const Range_t<real_t> & range){
+    void set_range(const Range2_t<real_t> & range){
         rad_range_ = range;
     }
     

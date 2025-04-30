@@ -21,7 +21,7 @@ struct MetaData{
 
     real_t openloop_curr;
 
-    Range_t<real_t> pos_limit = Range_t<real_t>::INF;
+    Range2_t<real_t> pos_limit = Range2_t<real_t>::INF;
     real_t max_curr = real_t(0.7);
     real_t max_spd = 30;
     real_t max_acc = 30;

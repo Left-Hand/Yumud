@@ -1,8 +1,5 @@
 #include "two_pass.hpp"
 
-using std::min;
-using std::max;
-
 namespace ymd::nvcv2::Shape{
 
 TwoPass::TwoPass(int size)
@@ -42,9 +39,9 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	int label = 1;
 
 	//init lable image
-	for (int y = 0; y < h; y++)
+	for (auto y = 0u; y < h; y++)
 	{
-		for (int x = 0; x < w; x++)
+		for (auto x = 0u; x < w; x++)
 		{
 			if (src[{x,y}] != 0)
 			{
@@ -57,7 +54,7 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 					//two labels are marked
 					if (left != 0 && up != 0){
 						//adopt smaller label
-						out.at(y, x) = min(left, up);
+						out.at(y, x) = std::min(left, up);
 						if (left <= up)
 							Union(up, left);
 						else if (up<left)
@@ -65,7 +62,7 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 					}
 					else{
 						//adopt larger label
-						out.at(y, x) = max(left, up);
+						out.at(y, x) = std::max(left, up);
 					}
 				}
 				else
@@ -78,9 +75,9 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	}
 
 	//second pass 
-	for (int y = 0; y < h; y++)
+	for (auto y = 0u; y < h; y++)
 	{
-		for (int x = 0; x < w; x++)
+		for (auto x = 0u; x < w; x++)
 		{
 			if (src.at(y, x) != 0)
 				out.at(y, x) = Find(out.at<int>(y, x));
@@ -89,18 +86,20 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 }
 
 //find the max label value
-void TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out, int &max)
-{
-	auto [imgH, imgW] = out.size();
-
-	for (int i = 0; i < imgH; i++)
+int TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out){
+	const auto [imgH, imgW] = out.size();
+	auto max = INT_FAST32_MIN;
+	for (auto i = 0u; i < imgH; i++)
 	{
-		for (int j = 0; j < imgW; j++)
+		for (auto j = 0u; j < imgW; j++)
 		{
-			int idx = i*imgW + j;
-			if (out[idx] > max) max = out[idx];
+			auto ele = uint8_t(out.at(i, j));
+			if (ele > max) {
+				max = ele;
+			}
 		}
 	}
+	return max;
 }
 
 ImageWithData<Grayscale, Grayscale> TwoPass::run(const ImageReadable<Binary> & src)

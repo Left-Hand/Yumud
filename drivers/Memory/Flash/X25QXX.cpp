@@ -166,12 +166,12 @@ void X25QXX::store_bytes(const Address loc, const void * data, const Address len
     
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
-        if(op_window){
+        if(op_window.length() != 0){
             self.wait_for_free(UINT32_MAX);
             auto * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
             self.write_page(op_window.from, ptr, op_window.length());
         }
-    }while(op_window);
+    }while(op_window.length());
 }
 
 void X25QXX::write_addr(const Address addr, const Continuous cont){

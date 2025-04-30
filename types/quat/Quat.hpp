@@ -34,6 +34,7 @@
 
 // #include "vector3/vector3.hpp"
 #include "types/vector3/vector3.hpp"
+#include "types/euler/euler.hpp"
 // #include "core/math/fast/conv.hpp"
 
 namespace ymd{
@@ -41,10 +42,10 @@ namespace ymd{
 template <arithmetic T>
 
 struct Quat_t{
-    T x = {};
-    T y = {};
-    T z = {};
-    T w = {};                
+    T x;
+    T y;
+    T z;
+    T w;                
 
     __fast_inline constexpr Quat_t() :
             x(0),
@@ -55,6 +56,8 @@ struct Quat_t{
 
     static constexpr Quat_t<T> IDENTITY = Quat_t<T>(0,0,0,1);
 
+    [[nodiscard]]
+
     __fast_inline constexpr Quat_t(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
             x(static_cast<T>(p_x)),
             y(static_cast<T>(p_y)),
@@ -62,9 +65,10 @@ struct Quat_t{
             w(static_cast<T>(p_w)) {
     }
 
-
+    [[nodiscard]]
     constexpr Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
+    [[nodiscard]]
     static constexpr Quat_t from_shortest_arc(const Vector3_t<T> &v0, const Vector3_t<T> &v1){
         Quat_t<T> self;
         Vector3_t<T> c = v0.cross(v1);
@@ -88,13 +92,15 @@ struct Quat_t{
         return self;
     }
 
+    template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
-    static constexpr Quat_t<T> from_euler(const Vector3_t<T> &euler) {
+    static constexpr Quat_t<T> from_euler(const EulerAngle_t<T, P> &euler) {
         Quat_t<T> ret;
-        ret.set_euler(euler);
+        ret.set_euler_xyz({euler.x, euler.y, euler.z});
         return ret;
     }
 
+    [[nodiscard]]
     constexpr Quat_t(const Quat_t &p_q) :
             x(p_q.x),
             y(p_q.y),
@@ -110,12 +116,25 @@ struct Quat_t{
         return *this;
     }
 
+    [[nodiscard]]
     consteval size_t size() const {return 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr T * begin(){return &x;}
+
+    [[nodiscard]]
     __fast_inline constexpr const T * begin() const {return &x;}
+
+    [[nodiscard]]
     __fast_inline constexpr T * end(){return &x + 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr const T * end() const {return &x + 4;}
+
+    [[nodiscard]]
     __fast_inline constexpr  T & operator [](const size_t idx){return (&x)[idx];}
+
+    [[nodiscard]]
     __fast_inline constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
 
     [[nodiscard]]
@@ -146,9 +165,7 @@ struct Quat_t{
     [[nodiscard]]
     constexpr T angle_to(const Quat_t &p_to) const;
 
-    constexpr void set_euler_xyz(const Vector3_t<T> &p_euler);
-    constexpr void set_euler_yxz(const Vector3_t<T> &p_euler);
-    constexpr void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
+    constexpr void set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XYZ> &p_euler);
 
     [[nodiscard]]
     constexpr Quat_t integral(const Vector3_t<T> & p) const {
@@ -234,10 +251,46 @@ struct Quat_t{
     }
 
     __fast_inline constexpr
-    void operator/=(const T &s){*this = *this / s;};
+    Quat_t & operator/=(const T &s){return *this = *this / s;};
 
     [[nodiscard]] __fast_inline constexpr
     Quat_t operator/(const T &s) const;
+
+
+    // https://blog.csdn.net/xiaoma_bk/article/details/79082629
+    template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
+    EulerAngle_t<T, P> to_euler() const {
+        auto & q = *this;
+
+        EulerAngle_t<T, P> angles;
+    
+        // roll (x-axis rotation)
+
+        const auto qx_squ = q.x * q.x;
+        const auto qy_squ = q.y * q.y;
+        T sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+        T cosr_cosp = 1 - 2 * (qx_squ + qy_squ);
+
+        angles.x = std::atan2(sinr_cosp, cosr_cosp);
+    
+        // pitch (y-axis rotation)
+        T sinp = 2 * (q.w * q.y - q.z * q.x);
+        if (std::abs(sinp) >= 1)
+            angles.y = sinp > 0 ? T(PI / 2) : T(-PI / 2); // use 90 degrees if out of range
+        else
+            angles.y = std::asin(sinp);
+    
+        // yaw (z-axis rotation)
+        T siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+        T cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+        angles.z = std::atan2(siny_cosp, cosy_cosp);
+    
+        return angles;
+        // return {
+        //     .x = std::atan2(sinr_cosp, cosr_cosp);
+        //     .y = 2 * (q.w * q.y - q.z * q.x);
+        // }
+    }
 };
 
 template<arithmetic T>

@@ -5,7 +5,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/bus_error.hpp"
+#include "hal/hal_result.hpp"
 
 
 namespace ymd::drivers{

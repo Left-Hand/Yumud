@@ -33,6 +33,7 @@
 
 
 #include "core/stream/ostream.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd{
 
@@ -47,7 +48,7 @@ public:
     
     constexpr Vector2_t(){;}
 
-    constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
+    constexpr Vector2_t(const T _x, const T _y): x(T(_x)), y(T(_y)){;}
 
     template<arithmetic U = T>
     constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
@@ -256,7 +257,7 @@ __fast_inline constexpr Vector2_t<T> operator*(const arithmetic auto & n, const 
 }
 
 
-using Vector2i = Vector2_t<int>;
+
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }
@@ -274,9 +275,11 @@ __fast_inline constexpr auto normal(const Vector2_t<arithmetic auto> & from, con
     return (to - from).normalized();
 }
 
+
+using Vector2 = Vector2_t<real_t>;
+using Vector2i = Vector2_t<int>;
+using Vector2u = Vector2_t<uint>;
+
 }
-
-
-
 
 #include "vector2.tpp"

@@ -1,7 +1,5 @@
 #include "flood_fill.hpp"
-// #include "pixels.hpp"
-
-
+#include <span>
 
 
 template <typename T>
@@ -14,8 +12,13 @@ __fast_inline constexpr T saturate_cast(const auto & v) {
 namespace ymd::nvcv2::Shape{
 
 
-scexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };
-// const std::array<Vector2i,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
+static constexpr std::array<Vector2i,4> OFFSETS_4 = { 
+    Vector2i{-1, 0}, 
+    Vector2i{0, -1}, 
+    Vector2i{0, 1}, 
+    Vector2i{1, 0}
+};
+// const std::array<Vector2u,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
 
 template<typename _Tp, class _EqPredicate> int
@@ -131,7 +134,7 @@ partition( const std::vector<_Tp>& _vec, std::vector<int>& labels,
 }
 
 
-void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t eps,
+void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t eps,
                      std::vector<int>* weights, std::vector<real_t>* levelWeights){
     if( groupThreshold <= 0 || rectList.empty() )
     {
@@ -152,7 +155,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
     // SimilarRects(eps)//TODO
     int nclasses = partition(rectList, labels, SimilarRects(eps));
  
-    std::vector<Rect2i> rrects(nclasses);
+    std::vector<Rect2u> rrects(nclasses);
     std::vector<int> rweights(nclasses, 0);
     std::vector<int> rejectLevels(nclasses, 0);
     std::vector<real_t> rejectWeights(nclasses, std::numeric_limits<real_t>::lowest());
@@ -188,9 +191,9 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 	// 计算每一类别的平均矩形框位置，即每一个类别最终对应一个矩形框
     for( i = 0; i < nclasses; i++ )
     {
-        Rect2i r = rrects[i];
+        Rect2u r = rrects[i];
         real_t s = real_t(1)/rweights[i];
-        rrects[i] = Rect2i(
+        rrects[i] = Rect2u(
             saturate_cast<int>(r.x*s),
             saturate_cast<int>(r.y*s),
             saturate_cast<int>(r.w*s),
@@ -205,7 +208,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 	// 再次过滤上面分类中得到的所有矩形框
     for( i = 0; i < nclasses; i++ )
     {
-        Rect2i r1 = rrects[i];
+        Rect2u r1 = rrects[i];
         int n1 = rweights[i];
         real_t w1 = rejectWeights[i];
         int l1 = rejectLevels[i];
@@ -222,7 +225,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
  
             if( j == i || n2 <= groupThreshold )
                 continue;
-            Rect2i r2 = rrects[j];
+            Rect2u r2 = rrects[j];
  
             int dx = saturate_cast<int>( r2.w * eps );
             int dy = saturate_cast<int>( r2.h * eps );
@@ -246,10 +249,10 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
         }
     }
 }
-[[maybe_unused]] static real_t iou(const Rect2i & a, const Rect2i & b){
+[[maybe_unused]] static real_t iou(const Rect2u & a, const Rect2u & b){
 
-    Rect2i _a = a.abs();
-    Rect2i _b = b.abs();
+    Rect2u _a = a.abs();
+    Rect2u _b = b.abs();
 
     real_t ins = _a.intersection(_b).get_area();
     if(ins == 0) return 0;
@@ -261,16 +264,16 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 
 
 Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
-    scexpr Grayscale labelable = 255;
+    static constexpr Grayscale labelable = 255;
 
-    auto size = src.size();
-    auto nrow = size.x;
-    auto ncol = size.y;
+    const auto size = src.size();
+    const auto nrow = size.x;
+    const auto ncol = size.y;
     Image<Grayscale> map({nrow, ncol});
     m_blobs.clear();
 
-    for(int y = 0; y < ncol; ++y){
-        for(int x = 0; x < nrow; ++x){
+    for(size_t y = 0u; y < ncol; ++y){
+        for(size_t x = 0u; x < nrow; ++x){
             if(src[{x,y}] == Binary::BLACK){
                 map[{x,y}] = Grayscale(0);
             }else{
@@ -281,12 +284,12 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
 
     uint8_t label = 1;
 
-    auto get_neighbor_indices = [&](const int row,const int col) {
-        std::array<Vector2i, 4> result;
+    auto get_neighbor_indices = [&](const size_t row,const size_t col) {
+        std::array<Vector2u, 4> result;
         uint8_t i = 0;
-        for (const auto& offset : offsets_4) {
-            int x = row + offset.x;
-            int y = col + offset.y;
+        for (const auto& offset : OFFSETS_4) {
+            const size_t x = row + offset.x;
+            const size_t y = col + offset.y;
             if (x >= 0 && x < nrow && y >= 0 && y < ncol) {
                 result[i] = {x, y};
                 i++;
@@ -296,8 +299,8 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
     };
 
     // Perform seed filling
-    for (int row = 0; row < nrow; ++row) {
-        for (int col = 0; col < ncol; ++col) {
+    for (size_t row = 0; row < nrow; ++row) {
+        for (size_t col = 0; col < ncol; ++col) {
             // Skip background pixels and already labelled pixels
             if (map[{row,col}] != labelable) {
                 continue;
@@ -308,7 +311,7 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
             std::vector<Vector2_t<uint8_t>> current_indices;
             map[{row,col}] = label;
             Blob blob{
-                .rect = Rect2i(Vector2i{row, col}, Vector2i{0,0}),
+                .rect = Rect2u(Vector2u{row, col}, Vector2u{0,0}),
                 .area = 0,
                 .index = label,
             };

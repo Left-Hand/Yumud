@@ -16,10 +16,11 @@ hal::HalResult I2cDrv::release(){
 
 
 hal::HalResult I2cDrv::verify(){
-    const auto guard = i2c_.create_guard();
-    if(const auto err = i2c_.begin(slave_addr_.to_read_req()); err.is_err()) return err;
-    
-    return hal::HalResult::Ok();
+
+
+    const auto res = i2c_.begin(slave_addr_.to_read_req());
+    i2c_.end();
+    return res;
 }
 
 }

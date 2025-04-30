@@ -8,7 +8,7 @@
 
 #include "types/vector3/Vector3.hpp"
 
-#include "hal/bus/bus_error.hpp"
+#include "hal/hal_result.hpp"
 
 namespace ymd::drivers{
 

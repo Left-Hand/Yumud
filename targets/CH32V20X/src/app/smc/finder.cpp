@@ -7,9 +7,9 @@ using namespace ymd::nvcv2;
 namespace SMC{
 
 
-    Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos){
+    Range2i get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos){
         auto size = src.get_size();
-        Rangei current_window = {0,size.x - 1};
+        Range2i current_window = {0,size.x - 1};
 
         for(auto x = pos.x; x > 0; x--){
             if(bool(src[{x, pos.y}]) == true){
@@ -28,10 +28,10 @@ namespace SMC{
         return current_window;
     }
 
-    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode align_mode){
+    Range2i get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode align_mode){
 
-        sstl::vector<Rangei, 8> windows;
-        Rangei current_window = {0,0};
+        sstl::vector<Range2i, 8> windows;
+        Range2i current_window = {0,0};
 
         enum class SearchStatus{
             SEEKING,
@@ -72,13 +72,13 @@ namespace SMC{
                 switch(align_mode){
 
                     case AlignMode::RIGHT:
-                        std::sort(windows.begin(), windows.end(), [](const Rangei & p1, const Rangei & p2){return p1.get_center() > p2.get_center();});
+                        std::sort(windows.begin(), windows.end(), [](const Range2i & p1, const Range2i & p2){return p1.get_center() > p2.get_center();});
                         break;
                     case AlignMode::LEFT:
-                        std::sort(windows.begin(), windows.end(), [](const Rangei & p1, const Rangei & p2){return p1.get_center() < p2.get_center();});
+                        std::sort(windows.begin(), windows.end(), [](const Range2i & p1, const Range2i & p2){return p1.get_center() < p2.get_center();});
                         break;
                     case AlignMode::BOTH:
-                        std::sort(windows.begin(), windows.end(), [&size](const Rangei & p1, const Rangei & p2){
+                        std::sort(windows.begin(), windows.end(), [&size](const Range2i & p1, const Range2i & p2){
                             auto center_cmp = [](const int _p1, const int _p2, const int center) -> bool{
                                 return std::abs(_p1 - center) < std::abs(_p2 - center);
                             };
@@ -105,11 +105,11 @@ namespace SMC{
         return {seg.first + offs, seg.second + offs};
     }
 
-    bool PileUtils::invalidity(const Pile & pile, const Rangei & valid_width){
+    bool PileUtils::invalidity(const Pile & pile, const Range2i & valid_width){
         return pile.second.length() < valid_width.from || pile.second.length() > valid_width.to;
     }
 
-    bool PileUtils::invalidity(const Piles & piles, const Rangei & valid_width){
+    bool PileUtils::invalidity(const Piles & piles, const Range2i & valid_width){
         for(const auto & pile : piles){
             if(PileUtils::invalidity(pile, valid_width)) return true;
         }
@@ -260,7 +260,7 @@ namespace SMC{
         Piles ret;
         for(const auto & point : coast){
             if(ret.count(point.x) == 0){
-                ret[point.x] = Rangei(point.y, point.y);
+                ret[point.x] = Range2i(point.y, point.y);
             } else {
                 ret[point.x].merge(point.y);
             }
@@ -273,7 +273,7 @@ namespace SMC{
         Piles ret;
         for(const auto & point : coast){
             if(ret.count(point.y) == 0){
-                ret[point.y] = Rangei(point.x, point.x);
+                ret[point.y] = Range2i(point.x, point.x);
             } else {
                 ret[point.y].merge(point.x);
             }

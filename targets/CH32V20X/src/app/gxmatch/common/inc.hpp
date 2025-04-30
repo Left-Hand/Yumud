@@ -18,9 +18,6 @@ namespace gxm{
     using namespace ymd;
     using namespace ymd::drivers;
 
-    using Vector2 = Vector2_t<real_t>;
-    using Vector2i = Vector2_t<int>;
-
     using Vector3 = Vector3_t<real_t>;
     using Vector3i = Vector3_t<int>;
     using AABB = AABB_t<real_t>;

@@ -47,7 +47,7 @@ IResult<> ST7789::init(){
     return Ok();
 }
 
-void ST7789::setarea_unsafe(const Rect2i & rect){
+void ST7789::setarea_unsafe(const Rect2u & rect){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP
     bool need = algo_.update(rect);
@@ -55,7 +55,7 @@ void ST7789::setarea_unsafe(const Rect2i & rect){
     #endif
 
     const Vector2_t<uint16_t> p1 = offset_ + rect.position;
-    const Vector2_t<uint16_t> p2 = offset_ + rect.get_end() - Vector2i(1,1);
+    const Vector2_t<uint16_t> p2 = offset_ + rect.get_end() - Vector2u(1,1);
 
     write_command(0x2a);
     write_data16(p1.x);
@@ -68,7 +68,7 @@ void ST7789::setarea_unsafe(const Rect2i & rect){
     write_command(0x2c);
 }
 
-void ST7789::setpos_unsafe(const Vector2i & pos){
+void ST7789::setpos_unsafe(const Vector2u & pos){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP
     bool need = algo_.update(rect);
@@ -86,17 +86,17 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 
 
-void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
+void ST7789::putrect_unsafe(const Rect2u & rect, const RGB565 color){
     setarea_unsafe(rect);
     phy_.write_repeat<uint16_t>(color, rect.get_area()).unwrap();
 }
 
-void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
+void ST7789::puttexture_unsafe(const Rect2u & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
     phy_.write_burst<uint16_t>(color_ptr, rect.get_area()).unwrap();
 }
 
-void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
+void ST7789::putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color){
     auto & self = *this;
     auto pos_ = pos;
     for(uint8_t i = 0x01; i; i <<= 1){
@@ -105,7 +105,7 @@ void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RG
     }
 }
 
-void ST7789::putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
+void ST7789::putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color){
     TODO();
 }
 

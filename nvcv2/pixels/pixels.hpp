@@ -17,9 +17,9 @@ namespace ymd::nvcv2::Pixels{
     template<typename T>
     requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
     void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {
-        for (auto x = 0; x < MIN(dst.size().x, src.size().x); x++) {
-            for (auto y = 0; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vector2i{x, y}] = src[Vector2i{x, y}];
+        for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
+            for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
+                dst[Vector2u{x, y}] = src[Vector2u{x, y}];
             }
         }
     }
@@ -35,9 +35,9 @@ namespace ymd::nvcv2::Pixels{
         auto window = dst.rect().intersection(src.rect());
         for (auto y = window.y; y < window.y + window.h; y++) {
             for (auto x = window.x; x < window.x + window.w; x++) {
-                const int a = src[Vector2i{x,y}];
-                const int b = src[Vector2i{x+1,y}];
-                const int c = src[Vector2i{x,y+1}];
+                const int a = src[Vector2u{x,y}];
+                const int b = src[Vector2u{x+1,y}];
+                const int c = src[Vector2u{x,y+1}];
                 dst[{x,y}] = uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
@@ -47,10 +47,10 @@ namespace ymd::nvcv2::Pixels{
     }
 
     __inline void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
-        const auto size = (Rect2i(Vector2i(), em.size()).intersection(Rect2i(Vector2i(), dm.size()))).size;
+        const auto size = (Rect2u(Vector2u(), em.size()).intersection(Rect2u(Vector2u(), dm.size()))).size;
         const auto area = size.x * size.y;
 
-        for (auto i = 0; i < area; i++) {
+        for (auto i = 0u; i < area; i++) {
             out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
         }
     }
@@ -84,7 +84,7 @@ namespace ymd::nvcv2::Pixels{
 
     template<is_monocolour_v T>
     void inverse(ImageWithData<T, T>& src) {
-        for (auto i = 0; i < src.size().x * src.size().y; i++) {
+        for (auto i = 0u; i < src.size().x * src.size().y; i++) {
             src[i] = uint8_t(~uint8_t(src[i]));
         }
     }

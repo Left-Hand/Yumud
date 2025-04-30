@@ -53,8 +53,21 @@ class Option{
 private:
     using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
     
-    T value_;
+    // T value_;
+
+
+    // data_t storage_;
+
+    struct Empty {};
+    union {
+        Empty empty_;
+        T storage_;
+    };
+
     bool exists_;
+
+    constexpr T & get(){return storage_;}
+    constexpr const T & get() const {return storage_;}
 public:
     [[nodiscard]] constexpr 
     Option(_None_t):
@@ -62,16 +75,44 @@ public:
     {}
 
     [[nodiscard]] constexpr 
-    Option(const Some<T> & value):
-        value_(value),
+    Option(const Some<T> & something):
         exists_(true)
-        {}
+        {
+            std::construct_at(&storage_, something.get());
+        }
 
     [[nodiscard]] constexpr 
-    Option(Some<T> && value):
-        value_(std::move(*value)),
-        exists_(true)
-        {}
+    Option(const Option<T> & other) = default;
+
+    constexpr 
+    Option & operator = (const Option<T> & other) = default;
+
+
+    [[nodiscard]] constexpr 
+    Option(Option<T> && other):
+        exists_(other.exists_)
+    {
+        if(other.exists_) std::construct_at(&storage_, other.storage_);
+        other.exists_ = false;
+    }
+
+        
+    constexpr 
+    Option & operator = (Option<T> && other){
+        if(exists_) std::destroy_at(&storage_);
+        exists_ = other.exists_;
+        if(other.exists_) std::construct_at(&storage_, std::move(other.storage_));
+        other.exists_ = false;
+        return *this;
+    }
+
+
+
+    constexpr ~Option() {
+        if (exists_) {
+            storage_.~T();
+        }
+    }
 
 
     template<typename S>
@@ -87,7 +128,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T & 
     value_or(const T & default_value) const{
-        return exists_ ? value_ : default_value;
+        return exists_ ? get() : default_value;
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
@@ -95,13 +136,13 @@ public:
         if(unlikely(exists_ == false)){
             __PANIC_EXPLICIT_SOURCE(loc);
         }
-        return value_;
+        return get();
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap() const {
         if(unlikely(exists_ == false)) __builtin_trap();
-        return value_;
+        return get();
     }
 
 
@@ -114,7 +155,7 @@ public:
     template<typename FnSome, typename FnNone>
     constexpr auto match(FnSome&& some_fn, FnNone&& none_fn) const& {
         if (is_some()) {
-            return std::invoke(std::forward<FnSome>(some_fn), value_);
+            return std::invoke(std::forward<FnSome>(some_fn), get());
         } else {
             return std::invoke(std::forward<FnNone>(none_fn));
         }
@@ -127,7 +168,7 @@ public:
     >
     constexpr auto map(Fn&& fn) const& -> Option<TIResult> {
         if (is_some()) {
-            return Some<TIResult>(std::forward<Fn>(fn)(value_));
+            return Some<TIResult>(std::forward<Fn>(fn)(get()));
         }
         return None;
     }
@@ -146,9 +187,9 @@ public:
     constexpr auto and_then(Fn&& fn) const -> Option<TData>{
         if (is_some()){
             if constexpr(is_option_v<TIResult>){
-                return std::forward<Fn>(fn)(value_);
+                return std::forward<Fn>(fn)(get());
             }else{
-                return Some<TData>(std::forward<Fn>(fn)(value_));
+                return Some<TData>(std::forward<Fn>(fn)(get()));
             }
         }
         return None;
@@ -178,8 +219,8 @@ template<typename T>
 class Option<T *>{
 public:
     [[nodiscard]] constexpr 
-    Option(Some<T *> && value):
-        value_(*value){;}
+    Option(Some<T *> && something):
+        value_(something.get()){;}
 
     [[nodiscard]] constexpr 
     Option(_None_t): value_(nullptr){;}

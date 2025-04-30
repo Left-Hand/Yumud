@@ -104,7 +104,7 @@ class Slider:public Control{
 public:
     PASS_THEME(Slider, Control)
 
-    Range_t<real_t> range;
+    Range2_t<real_t> range;
     
     void render(PainterConcept & painter) override{
         painter.set_color(theme_.bg_color);

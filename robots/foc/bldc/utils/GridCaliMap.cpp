@@ -46,7 +46,7 @@ GridCaliMap::ErrorCode GridCaliMap::loadSamples(const Samples & samples){
         // |   |
         //找出满足到下一次y的区间
         
-        Rangei range = Rangei(temp_index, temp_index);
+        Range2i range = Range2i(temp_index, temp_index);
 
         for(; temp_index < temp.size(); temp_index++){
             range.to ++;

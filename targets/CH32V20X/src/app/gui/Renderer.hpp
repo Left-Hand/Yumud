@@ -14,8 +14,6 @@ namespace ymd{
 class Renderer{
 protected:
     using ColorType = RGB565;
-    using Vector2 = Image<ColorType>::Vector2;
-    using Vector2i = Image<ColorType>::Vector2i;
     using Canvas = ImageWritable<RGB565>; 
 
 
@@ -35,8 +33,8 @@ public:
     void draw_line(const Vector2i from, const Vector2i to);
     void draw_hri_line(const Vector2i pos,const int l);
     void draw_ver_line(const Vector2i pos,const int l);
-    void draw_ver_line(const Rangei y_range, const int x);
-    void draw_hri_line(const Rangei x_range, const int y);
+    void draw_ver_line(const Range2i y_range, const int x);
+    void draw_hri_line(const Range2i x_range, const int y);
 };
 
 }

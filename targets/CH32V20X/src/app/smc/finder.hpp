@@ -23,8 +23,8 @@ namespace SMC{
 
 
     using Boundry = std::map<int, int>;
-    using Pile = std::pair<int, Rangei>;
-    using Piles = std::map<int, Rangei>;
+    using Pile = std::pair<int, Range2i>;
+    using Piles = std::map<int, Range2i>;
     using Point = Vector2i; 
     using ymd::nvcv2::Shape::Seed;
     using Segment = std::pair<const Point & ,const Point &>;
@@ -37,7 +37,7 @@ namespace SMC{
     using Points = sstl::vector<Vector2_t<int16_t>, max_item_size>;
     using Coast = sstl::vector<CoastItem, max_item_size>;
     using Coasts = sstl::vector<Coast, 4>;
-    using Ranges = sstl::vector<Range_t<int16_t>, max_ranges_size>;
+    using Ranges = sstl::vector<Range2_t<int16_t>, max_ranges_size>;
 
     enum class CornerType:uint8_t{
         NONE,
@@ -171,14 +171,14 @@ namespace SMC{
     int get_x_edges(const ImageReadable<Binary> & src, const int y);
     int get_x_edges(const ImageReadable<Grayscale> & src, const int y);
 
-    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
+    std::tuple<Point, Range2i> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point);
-    Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
-    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode);
+    Range2i get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
+    Range2i get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode);
 
     namespace PileUtils{
-        bool invalidity(const Pile & pile, const Rangei & valid_width);
-        bool invalidity(const Piles & piles, const Rangei & valid_width);
+        bool invalidity(const Pile & pile, const Range2i & valid_width);
+        bool invalidity(const Piles & piles, const Range2i & valid_width);
     }
     namespace CoastUtils{
         bool is_self_intersection(const Coast & coast);

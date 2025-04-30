@@ -3,8 +3,8 @@
 #include "nvcv2/pixels/pixels.hpp"
 #include "nvcv2/shape/shape.hpp"
 #include "nvcv2/geometry/geometry.hpp"
-#include "nvcv2/two_pass.hpp"
-#include "nvcv2/flood_fill.hpp"
+// #include "nvcv2/seprate/two_pass.hpp"
+// #include "nvcv2/flood_fill.hpp"
 #include "nvcv2/mnist/mnist.hpp"
 #include "nvcv2/template/template.hpp"
 
