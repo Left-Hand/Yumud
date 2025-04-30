@@ -1,145 +1,10 @@
 #pragma once
 
-#include "core/utils/Option.hpp"
-#include "types/vector2/Vector2.hpp"
+#include "chess.hpp"
 
 using namespace ymd;
 
 namespace nuedc::_2024E{
-
-
-class Role{
-public:
-    enum class Kind:uint8_t{
-        X,
-        O
-    };
-
-    using enum Kind;
-
-    //FIXME remove default constructor
-    [[nodiscard]]
-    constexpr Role() = default;
-    
-    [[nodiscard]]
-    constexpr Role(const Kind kind) : kind_(kind){;}
-
-    [[nodiscard]]
-    constexpr Role(const Role & other) = default;
-
-    [[nodiscard]]
-    constexpr bool operator ==(const Kind kind) const{return kind_ == kind;}
-
-    [[nodiscard]]
-    constexpr bool operator !=(const Kind kind) const{return kind_ != kind;}
-
-    [[nodiscard]]
-    constexpr bool operator ==(const Role other) const{return kind_ == other.kind_;}
-
-    [[nodiscard]]
-    constexpr bool operator !=(const Role other) const{return kind_ == other.kind_;}
-
-    [[nodiscard]]
-    constexpr Role operator !() const{return Role(kind_ == X ? O : X);}
-
-    [[nodiscard]]
-    constexpr Role get_opponent() const{return !(*this);}
-private:
-    //FIXME remove default constructor
-    Kind kind_ = X;
-};
-
-class Chess{
-public:
-    Chess() = delete;
-
-    [[nodiscard]]
-    constexpr Chess(const Role kind) : data_(Some(kind)){;}
-
-    [[nodiscard]]
-    constexpr Chess(const _None_t) : data_(None){;}
-
-    [[nodiscard]]
-    static constexpr Chess O() {return Chess(Role::O);}
-
-    [[nodiscard]]
-    static constexpr Chess X() {return Chess(Role::X);}
-
-    [[nodiscard]]
-    static constexpr Chess N() {return Chess(None);}
-
-    [[nodiscard]]
-    constexpr bool operator == (const Role kind) const {
-        return data_.is_some() && data_.unwrap() == kind;
-    }
-
-    [[nodiscard]]
-    constexpr bool operator != (const Role & chess) const{
-        return data_.is_some() && data_.unwrap() != chess;
-    } 
-    
-    [[nodiscard]]
-    constexpr bool operator == (const ymd::_None_t) const {
-        return data_.is_none();
-    }
-
-    [[nodiscard]]
-    constexpr bool operator != (const ymd::_None_t) const{
-        return data_.is_some();
-    }
-
-    [[nodiscard]]
-    constexpr bool is_some() const {
-        return data_.is_some();
-    }
-private:
-    using Data = ymd::Option<Role>;
-    Data data_ = None;
-};
-
-class ChessBoard{
-public:
-    static constexpr size_t WIDTH = 3;
-    using Data = std::array<std::array<Chess, WIDTH>, WIDTH>;
-
-    [[nodiscard]]
-    constexpr ChessBoard() = default;
-
-    [[nodiscard]]
-    constexpr ChessBoard(const Data & data):
-        data_(data){;}
-
-    [[nodiscard]]
-    constexpr auto & at(const Vector2u pos){
-        if(pos.x >= WIDTH || pos.y >= WIDTH) __builtin_abort();
-        return data_[pos.y][pos.x];
-    }
-    
-    [[nodiscard]]
-    constexpr const auto & at(const Vector2u pos) const{
-        if(pos.x >= WIDTH || pos.y >= WIDTH) __builtin_abort();
-        return data_[pos.y][pos.x];
-    }
-
-    [[nodiscard]]
-    constexpr bool is_full() const {
-        auto & self = *this;
-        for (size_t y = 0; y < ChessBoard::WIDTH; ++y)
-            for (size_t x = 0; x < ChessBoard::WIDTH; ++x)
-                if (self.at({x, y}) == None) return false;
-        return true;
-    }
-private:
-
-
-    Data data_ = {
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}},
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}},
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}}
-    };
-
-    static constexpr auto DATA_SIZE = sizeof(Data);
-};
 
 
 // 迭代下一步棋
@@ -149,7 +14,7 @@ private:
 [[nodiscard]] static constexpr Vector2u 
 chess_forward_ai(const Role role, const ChessBoard & board){
     // 判断指定位置是否能让指定角色获胜
-    auto is_winning_move = [&](const Vector2u& pos, Role check_role) -> bool {
+    auto is_winning_move = [](const ChessBoard & board, const Vector2u& pos, Role check_role) -> bool {
         // 检查行
         int row_count = 0;
         for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
@@ -182,11 +47,11 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     };
 
     // 寻找可立即获胜的位置
-    auto find_winning_move = [&](Role check_role) -> std::optional<Vector2u> {
+    auto find_winning_move = [is_winning_move](const ChessBoard & board,const Role check_role) -> std::optional<Vector2u> {
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
                 Vector2u pos{x, y};
-                if (board.at(pos) == None && is_winning_move(pos, check_role)) {
+                if (board.at(pos) == None && is_winning_move(board, pos, check_role)) {
                     return pos;
                 }
             }
@@ -194,14 +59,12 @@ chess_forward_ai(const Role role, const ChessBoard & board){
         return std::nullopt;
     };
 
-    // 获取对手角色
-    auto get_opponent = [&](Role r) { return r == Role::X ? Role::O : Role::X; };
 
     // 1. 优先抢占必胜点
-    if (auto pos = find_winning_move(role)) return *pos;
+    if (const auto pos = find_winning_move(board, role)) return *pos;
 
     // 2. 阻止对手必胜
-    if (auto pos = find_winning_move(get_opponent(role))) return *pos;
+    if (const auto pos = find_winning_move(board, role.get_opponent())) return *pos;
 
     // 3. 占领中心
     if (board.at({1,1}) == None) return {1,1};
@@ -221,7 +84,7 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     // 6. 最后兜底（理论上不会执行到此处）
     for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
         for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-            Vector2u pos{x, y};
+            const Vector2u pos{x, y};
             if (board.at(pos) == None) return pos;
         }
     }

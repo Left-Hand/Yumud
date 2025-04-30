@@ -63,7 +63,11 @@ public:
     constexpr Some(const T & val):val_(val){}
     constexpr Some(T && val):val_(std::move(val)){;}
 
-    constexpr T & operator*(){
+    constexpr T & get(){
+        return val_;
+    }
+
+    constexpr const T & get() const{
         return val_;
     }
 private:
@@ -83,7 +87,7 @@ public:
     constexpr Some(std::nullptr_t) = delete;
     constexpr Some(T * val):val_(val){;}
 
-    constexpr T * operator*(){
+    constexpr T * get(){
         return val_;
     }
 private:
