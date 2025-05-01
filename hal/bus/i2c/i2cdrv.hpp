@@ -142,9 +142,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
-        const std::span<const T> pdata
+        const std::span<const T> pdata,
+        const Endian endian = LSB
     ){
-        return write_burst_impl(addr, pdata, LSB);
+        return write_burst_impl(addr, pdata, endian);
     }
         
     template<typename T>
@@ -163,9 +164,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult read_burst(
         const valid_i2c_regaddr auto addr,
-        const std::span<T> pdata
+        const std::span<T> pdata,
+        const Endian endian = LSB
     ){
-        return this->read_burst_impl(addr, pdata, LSB);
+        return this->read_burst_impl(addr, pdata, endian);
 
     }
 
@@ -237,9 +239,10 @@ public:
     hal::HalResult write_repeat(
         const valid_i2c_regaddr auto addr, 
         const T data, 
-        const size_t len
+        const size_t len,
+        const Endian endian = LSB
     ){
-        return write_repeat_impl(addr, data, len, LSB);
+        return write_repeat_impl(addr, data, len, endian);
     }
 
 
@@ -259,9 +262,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult write_reg(
         const valid_i2c_regaddr auto addr, 
-        const T & data
+        const T & data,
+        const Endian endian = LSB
     ){
-        return this->write_burst_impl(addr, std::span(&data, 1), LSB);
+        return this->write_burst_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
@@ -280,9 +284,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult read_reg(
         const valid_i2c_regaddr auto addr,
-        T & data
+        T & data,
+        const Endian endian = LSB
     ){
-        return this->read_burst_impl(addr, std::span(&data, 1), LSB);
+        return this->read_burst_impl(addr, std::span(&data, 1), endian);
     }
 
     [[nodiscard]]
