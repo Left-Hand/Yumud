@@ -58,14 +58,17 @@ CanMsg PdoTxSession::buildMessage() const {
 
     numBytes = std::min(numBytes, 8);
 
-    return CanMsg(hal::CanStdId(cobId), data);
+    return CanMsg::from_bytes(
+        cobId.to_stdid(), 
+        std::span(data)
+    );
 }
 
 //将收到的pdo报文写入字典
 bool PdoRxSession::processMessage(const CanMsg& msg){
     const CobId cobId = int(params_[1].value());
 
-    if (msg.id() != cobId) {
+    if (cobId.to_stdid() != msg.id()) {
         return false;
     }
 
@@ -80,7 +83,7 @@ bool PdoRxSession::processMessage(const CanMsg& msg){
         const auto [bits, subindex, index] = Mapping(map);
     
         //获取映射项
-        SubEntry& se = pdo_.getSubEntry(index, subindex).value();
+        SubEntry se = pdo_.getSubEntry(index, subindex).value();
 
         se.put(msg);
 

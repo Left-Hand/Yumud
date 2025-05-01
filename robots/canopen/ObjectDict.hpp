@@ -31,8 +31,8 @@ public:
     // }
 
 
-    virtual SdoAbortCode write(const std::span<const std::byte> pdata, const Didx didx) = 0;
-    virtual SdoAbortCode read(const std::span<std::byte> pdata, const Didx didx) const = 0;
+    virtual SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
+    virtual SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
@@ -64,11 +64,11 @@ public:
         }
     }
 
-    SdoAbortCode write(const std::span<const std::byte> pdata, const Didx didx){
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx){
         return SdoAbortCode::None;
     }
     
-    SdoAbortCode read(const std::span<std::byte> pdata, const Didx didx) const {
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const {
         return SdoAbortCode::None;
     }
 
@@ -104,9 +104,9 @@ public:
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
     
-    SdoAbortCode write(const std::span<const std::byte> pdata, const Didx didx) override;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
     
-    SdoAbortCode read(const std::span<std::byte> pdata, const Didx didx) const override;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
 
     StringView ename(const Didx didx) const final override;
     

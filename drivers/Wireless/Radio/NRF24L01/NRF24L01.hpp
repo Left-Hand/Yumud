@@ -189,9 +189,9 @@ public:
     
     Result<void, Error> update();
 
-    Result<size_t, Error> transmit(std::span<std::byte> buf);
+    Result<size_t, Error> transmit(std::span<uint8_t> buf);
 
-    Result<size_t, Error> receive(std::span<std::byte> buf);
+    Result<size_t, Error> receive(std::span<uint8_t> buf);
 
     // Result<Regs, Error> dump();
 };

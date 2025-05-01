@@ -7,7 +7,7 @@ using namespace ymd::canopen;
 bool SdoProtocol::processMessage(const CanMsg & msg) {
     // int index = 0;
     // int subIndex = 0;
-    if (!Protocol::processMessage(msg)) {
+    if (!ProtocolBase::processMessage(msg)) {
         return false;
     }
 

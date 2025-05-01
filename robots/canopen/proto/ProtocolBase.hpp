@@ -43,6 +43,8 @@ public:
 
     virtual bool stop(){return true;}
 
+    virtual std::optional<SubEntry> getSubEntry(const uint16_t, const uint8_t) = 0;
+
     StringView name() const{return StringView(name_);}
 
     virtual bool processMessage(const CanMsg& msg){return true;}

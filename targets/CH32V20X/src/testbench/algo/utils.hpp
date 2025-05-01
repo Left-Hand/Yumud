@@ -307,25 +307,25 @@ template<
     size_t N = sizeof(std::decay_t<Arg>)
 >
 __fast_inline constexpr 
-std::byte get_byte_from_arg(const size_t idx, Arg && arg){
+uint8_t get_byte_from_arg(const size_t idx, Arg && arg){
     static_assert(N <= 8, "N must be less than 8");
 
     using T = bytes_to_uint_t<N>;
 
     const T raw = std::bit_cast<T>(arg);
-    return std::byte{uint8_t(raw >> (idx * 8))};
+    return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
 //由于未知原因 iq_t不支持平凡复制 故需要额外进行特化
 template<size_t Q>
 __fast_inline constexpr 
-std::byte get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
+uint8_t get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
     static_assert(sizeof(ymd::iq_t<Q>) <= 8, "Size of iq_t<Q> must be less than 8");
 
     using T = bytes_to_uint_t<sizeof(ymd::iq_t<Q>)>;
 
     const T raw = std::bit_cast<T>(arg.value);
-    return std::byte{uint8_t(raw >> (idx * 8))};
+    return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
 
@@ -335,11 +335,11 @@ template<
     size_t N = sizeof(std::decay_t<Arg>)
 >
 __fast_inline constexpr
-std::array<std::byte, N> make_bytes_from_arg(Arg && arg){
+std::array<uint8_t, N> make_bytes_from_arg(Arg && arg){
     static_assert(N <= 8, "N must be less than 8");
 
     return [arg]<size_t... I>(std::index_sequence<I...>) {
-        return std::array<std::byte, N>{{ get_byte_from_arg(I, arg)... }};
+        return std::array<uint8_t, N>{{ get_byte_from_arg(I, arg)... }};
     }(std::make_index_sequence<N>{});
 }
 
@@ -347,12 +347,12 @@ std::array<std::byte, N> make_bytes_from_arg(Arg && arg){
 
 // template<size_t N1, size_t N2>
 // constexpr
-// std::array<std::byte, N1 + N2> concat_arr(
-//     const std::array<const std::byte, N1> & arr1,
-//     const std::array<const std::byte, N2> & arr2
+// std::array<uint8_t, N1 + N2> concat_arr(
+//     const std::array<const uint8_t, N1> & arr1,
+//     const std::array<const uint8_t, N2> & arr2
 // ){
 //     return [&](){
-//         std::array<std::byte, N1 + N2> ret;
+//         std::array<uint8_t, N1 + N2> ret;
 //         for(size_t i = 0; i < N1; i++)
 //             ret[i] = arr1[i];
 //         for(size_t i = 0; i < N2; i++)
@@ -367,8 +367,8 @@ template<
     size_t N = total_bytes_v<std::decay_t<Args> ... >
 >
 __inline constexpr
-std::array<std::byte, N> make_bytes_from_args(Args && ... args){
-    std::array<std::byte, N> result;
+std::array<uint8_t, N> make_bytes_from_args(Args && ... args){
+    std::array<uint8_t, N> result;
     size_t offset = 0;
 
     ([&](const auto& arg) {
@@ -387,8 +387,8 @@ template<
     size_t N = packed_tuple_total_bytes_v<std::decay_t<Tup>>
 >
 __inline constexpr
-std::array<std::byte, N> make_bytes_from_tuple(Tup && tup){
-    std::array<std::byte, N> result;
+std::array<uint8_t, N> make_bytes_from_tuple(Tup && tup){
+    std::array<uint8_t, N> result;
     size_t offset = 0;
 
     std::apply([&result, &offset](auto&&... args) {
@@ -411,7 +411,7 @@ template<
     size_t ArgSize = sizeof(Arg)
 >
 __fast_inline constexpr 
-Arg make_arg_from_bytes(const std::span<const std::byte, ArgSize> & bytes) {
+Arg make_arg_from_bytes(const std::span<const uint8_t, ArgSize> & bytes) {
     static_assert(sizeof(Arg) <= 8, "N must be less than 8"); // 确保类型不超过8字节
 
     using T = bytes_to_uint_t<sizeof(Arg)>; // 使用预定义的中间类型
@@ -436,7 +436,7 @@ template<
     size_t ArgSize = sizeof(Arg)
 >
 __inline constexpr 
-Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
+Arg fetch_arg_from_bytes(const std::span<const uint8_t, TupSize> bytes) {
     // 静态断言确保元组元素索引有效
     static_assert(I < std::tuple_size_v<Tup>, "out of range");
 
@@ -453,7 +453,7 @@ Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
 
 template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
 __inline constexpr 
-Tup make_tuple_from_bytes(const std::span<const std::byte, N> bytes) {
+Tup make_tuple_from_bytes(const std::span<const uint8_t, N> bytes) {
     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
 
     // 根据索引序列展开并构造元组
@@ -473,7 +473,7 @@ template<
     size_t N = packed_tuple_total_bytes_v<ArgsTup>
 >
 __inline constexpr 
-Ret _invoke_func_by_bytes_impl(Fn && fn, const std::span<const std::byte, N> bytes){
+Ret _invoke_func_by_bytes_impl(Fn && fn, const std::span<const uint8_t, N> bytes){
     if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
     else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
 }
@@ -486,7 +486,7 @@ Ret _invoke_func_by_bytes_impl(Fn && fn, const std::span<const std::byte, N> byt
 //     size_t N = packed_tuple_total_bytes_v<ArgsTup>
 // >
 // constexpr 
-// Ret _invoke_memfunc_by_bytes_impl(Obj & obj, Ret(Obj::*fn)(Args...), const std::span<const std::byte, N> bytes){
+// Ret _invoke_memfunc_by_bytes_impl(Obj & obj, Ret(Obj::*fn)(Args...), const std::span<const uint8_t, N> bytes){
 //     if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
 //     else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
 // }
@@ -501,7 +501,7 @@ __inline constexpr
 Ret _invoke_memfunc_by_bytes_impl(
     Obj & obj,
     Ret(std::decay_t<Obj>::*fn)(Args...),
-    const std::span<const std::byte, N>& bytes
+    const std::span<const uint8_t, N>& bytes
 ) {
     auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
     if constexpr (std::is_void_v<Ret>) {
@@ -521,7 +521,7 @@ __inline constexpr
 Ret _invoke_memfunc_by_bytes_impl(
     const Obj & obj,
     Ret(std::decay_t<Obj>::*fn)(Args...) const,
-    const std::span<const std::byte, N>& bytes
+    const std::span<const uint8_t, N>& bytes
 ) {
     auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
     if constexpr (std::is_void_v<Ret>) {
@@ -538,7 +538,7 @@ template<
     typename ... Args,
     size_t N = packed_tuple_total_bytes_v<std::tuple<Args...>>
 >
-constexpr Ret invoke_func_by_bytes(Ret(*fn)(Args...), const std::span<const std::byte, N> bytes){
+constexpr Ret invoke_func_by_bytes(Ret(*fn)(Args...), const std::span<const uint8_t, N> bytes){
     using Fn = std::decay_t<Ret(*)(Args...)>;
     return _invoke_func_by_bytes_impl<Fn, Ret, std::tuple<Args...>>(std::forward<Fn>(fn), bytes);
 }
@@ -552,7 +552,7 @@ template<
     size_t N = packed_tuple_total_bytes_v<ArgsTup>
 >
 requires is_functor_v<std::decay_t<Fn>>
-constexpr Ret invoke_func_by_bytes(Fn && fn, const std::span<const std::byte, N> bytes){
+constexpr Ret invoke_func_by_bytes(Fn && fn, const std::span<const uint8_t, N> bytes){
     if constexpr(std::is_void_v<Ret>) details::_invoke_func_by_bytes_impl<Fn, Ret, ArgsTup>(fn, bytes);
     else return details::_invoke_func_by_bytes_impl<Fn, Ret, ArgsTup>(fn, bytes);
 }
@@ -568,7 +568,7 @@ template<
 __fast_inline constexpr Ret invoke_func_by_bytes(
     auto & obj, 
     Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...), 
-    const std::span<const std::byte, N> bytes
+    const std::span<const uint8_t, N> bytes
 ){
     if constexpr(std::is_void_v<Ret>) 
         details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
@@ -586,7 +586,7 @@ template<
 constexpr Ret invoke_func_by_bytes(
     const auto & obj, 
     Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...) const , 
-    const std::span<const std::byte, N> bytes
+    const std::span<const uint8_t, N> bytes
 ){
     if constexpr(std::is_void_v<Ret>) 
         details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
@@ -596,7 +596,7 @@ constexpr Ret invoke_func_by_bytes(
 
 
 
-// // template<std::span<const std::byte> ... Ts>
+// // template<std::span<const uint8_t> ... Ts>
 // void apply_serval_bytes(const int ... pieces) {
 //     auto handler = [](const auto& piece) {  // 使用auto兼容不同参数类型
 //         DEBUG_PRINTLN(piece);
@@ -604,7 +604,7 @@ constexpr Ret invoke_func_by_bytes(
 //     (handler(pieces), ...);  // 折叠表达式展开调用
 // }
 
-// C++20 修复方案（假设参数类型为 std::span<const std::byte>）
+// C++20 修复方案（假设参数类型为 std::span<const uint8_t>）
 
 template<typename ... Ts>
 void apply_serval_bytes(Ts && ... pieces) {

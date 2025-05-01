@@ -76,7 +76,7 @@ private:
     // }
 
     template<typename T>
-    constexpr CanMsg(const details::CanId_t<T> id, const std::span<const std::byte> pdata) : CanMsg(id, CanRemoteSpec::Data){
+    constexpr CanMsg(const details::CanId_t<T> id, const std::span<const uint8_t> pdata) : CanMsg(id, CanRemoteSpec::Data){
         is_remote_ = false;
         resize(MIN(pdata.size(), 8));
         for(uint8_t i = 0; i < dlc_; i++){
@@ -125,8 +125,8 @@ public:
 
     static constexpr CanMsg from_remote(CanStdId id){return CanMsg(id, CanRemoteSpec::Remote);}
     // static constexpr CanMsg from_remote(CanExtId id){return CanMsg(id, CanRemoteSpec::Remote);}
-    static constexpr CanMsg from_bytes(CanStdId id, std::span<const std::byte> pdata){return CanMsg(id, pdata);}
-    // static constexpr CanMsg from_bytes(CanExtId id, std::span<const std::byte> pdata){return CanMsg(id, pdata);}
+    static constexpr CanMsg from_bytes(CanStdId id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
+    // static constexpr CanMsg from_bytes(CanExtId id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
 
     static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){return CanMsg(raw, data, len);}
 
@@ -147,8 +147,8 @@ public:
     constexpr uint64_t as_u64() const{ return data64_;}
     constexpr uint64_t & as_u64() {return data64_;}
 
-    std::span<const std::byte> to_span() const{
-        return std::span(reinterpret_cast<const std::byte *>(begin()), size());
+    std::span<const uint8_t> to_span() const{
+        return std::span(reinterpret_cast<const uint8_t *>(begin()), size());
     }
 
     constexpr bool is_std() const {return is_ext_ == false;}

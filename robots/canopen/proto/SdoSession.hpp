@@ -13,6 +13,8 @@ public:
 
     virtual bool processMessage(const CanMsg & msg_) = 0;
 
+    
+
 protected:
     int extractCmdSpecifier(const CanMsg & msg) {return (msg[0] >> 5);}
     int extractN2(const CanMsg & msg) {return ((msg[0] >> 2) & 0x03);}

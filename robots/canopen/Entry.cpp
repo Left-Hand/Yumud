@@ -19,7 +19,7 @@ using namespace ymd::canopen;
 // }
 
 
-SdoAbortCode SubEntry::read(std::span<std::byte> pdata) const{
+SdoAbortCode SubEntry::read(std::span<uint8_t> pdata) const{
     if(unlikely(!is_readable())) return SdoAbortCode::ReadOnlyAccess;
     if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
     if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;
@@ -27,7 +27,7 @@ SdoAbortCode SubEntry::read(std::span<std::byte> pdata) const{
     return SdoAbortCode::None;
 }
 
-SdoAbortCode SubEntry::write(const std::span<const std::byte> pdata){
+SdoAbortCode SubEntry::write(const std::span<const uint8_t> pdata){
     if(unlikely(!is_writeable())) return SdoAbortCode::WriteOnlyAccess;
     if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
     if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;

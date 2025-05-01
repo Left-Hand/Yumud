@@ -79,7 +79,7 @@ Result<void, Error> LT8960L::set_tx_power(const LT8960L::Power power){
     return write_regs(regs_.pa_config_reg);
 }
 
-Result<void, Error> trasmit_rf(const std::span<std::byte> buf){
+Result<void, Error> trasmit_rf(const std::span<uint8_t> buf){
     return Ok();
 }
 
@@ -324,7 +324,7 @@ Result<void, Error> LT8960L_Phy::_read_reg(
 
 
 
-Result<size_t, Error> LT8960L::read_fifo(std::span<std::byte> buf){
+Result<size_t, Error> LT8960L::read_fifo(std::span<uint8_t> buf){
     return phy_.read_burst(Regs::R16_Fifo::address, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
@@ -438,7 +438,7 @@ Result<void, Error> LT8960L_Phy::init(){
     return Ok();
 }
 
-Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::byte> pbuf){
+Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf){
 
 
     auto guard = i2c_.create_guard();
@@ -466,7 +466,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
                 uint32_t dummy = 0;
                 const auto err = i2c_.read(dummy, (i == len - 1 ? NACK : ACK));
                 if(err.is_err()) return err;
-                pbuf[i] = std::byte(dummy);
+                pbuf[i] = uint8_t(dummy);
             }
             return hal::HalResult::Ok();
         })
@@ -479,7 +479,7 @@ Result<size_t, Error> LT8960L_Phy::read_burst(uint8_t address, std::span<std::by
 }
 
 
-Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const std::byte> pbuf){
+Result<size_t, Error> LT8960L_Phy::write_burst(uint8_t address, std::span<const uint8_t> pbuf){
     
     auto guard = i2c_.create_guard();
     

@@ -18,8 +18,8 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
         << '[' << std::dec << msg.size() << ']';
     os << "> ";
     
-    os << std::hex << std::span<const std::byte>{
-        reinterpret_cast<const std::byte *>(msg.begin()), 
+    os << std::hex << std::span<const uint8_t>{
+        reinterpret_cast<const uint8_t *>(msg.begin()), 
         msg.size()
     };
 

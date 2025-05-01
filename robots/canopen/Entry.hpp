@@ -2,6 +2,7 @@
 
 
 #include "utils.hpp"
+#include "core/debug/debug.hpp"
 
 namespace ymd::canopen {
 
@@ -103,15 +104,11 @@ private:
 
 
 class SubEntry {
-
 public:
     using AccessType = EntryAccessType;
     using DataType = EntryDataType;
-
 private:
-
 #pragma pack(push, 1)
-// #pragma pack(pop)
     StringView name_;
     AccessType access_type_;
     DataType data_type_;
@@ -222,9 +219,9 @@ public:
     }
 
 
-    SdoAbortCode read(std::span<std::byte> pdata) const;
+    SdoAbortCode read(std::span<uint8_t> pdata) const;
 
-    SdoAbortCode write(const std::span<const std::byte> pdata);
+    SdoAbortCode write(const std::span<const uint8_t> pdata);
 
     SdoAbortCode read_any(void * pdata);
 
@@ -238,6 +235,10 @@ public:
     bool is_readable() const {return access_type_ != AccessType::WO;}
     bool is_writeable() const {return access_type_ == AccessType::RW || access_type_ == AccessType::WO;}
     StringView name() const {return StringView(name_);}
+
+    void put(const hal::CanMsg & msg){
+        TODO();
+    }
 
 };
 
@@ -269,7 +270,7 @@ public:
 		subentries_.push_back(sub);
 	}
 
-    std::optional<SubEntry> operator [](const SubIndex idx){
+    std::optional<SubEntry> operator [](const SubIndex idx) const {
     // optref<SubEntry> operator [](const SubIndex idx){
         return (subentries_[idx]);
     }

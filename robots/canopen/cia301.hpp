@@ -79,7 +79,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             }
         }
 
-        SdoAbortCode write(const std::span<const std::byte> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
             if(unlikely(sidx) != 0) return SdoAbortCode::InvalidValue;
             if(unlikely(pdata.size() < 1)) return SdoAbortCode::InvalidValue;
 
@@ -91,11 +91,11 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             }
         }
 
-        SdoAbortCode read(const std::span<std::byte> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
             static constexpr SubIndex base_idx = 1;
 
             if(unlikely(sidx) < 1){
-                pdata[0] = std::byte(getErrorCnt());
+                pdata[0] = uint8_t(getErrorCnt());
                 return SdoAbortCode::None;
             }
 
@@ -147,7 +147,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             return str.c_str();
         }
 
-        SdoAbortCode write(const std::span<const std::byte> pdata){
+        SdoAbortCode write(const std::span<const uint8_t> pdata){
             if(unlikely(str.length() != pdata.size())) return SdoAbortCode::MaxLessThanMin;
 
             memcpy(&str[0], pdata.data(), pdata.size());
@@ -155,7 +155,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         } 
 
 
-        SdoAbortCode read(const std::span<std::byte> pdata) const {
+        SdoAbortCode read(const std::span<uint8_t> pdata) const {
             if(unlikely(str.length() != pdata.size())) return SdoAbortCode::MaxLessThanMin;
 
             memcpy(pdata.data(), str.c_str(), pdata.size());
@@ -222,7 +222,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         };
 
 
-        SdoAbortCode write(const std::span<const std::byte> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
             //TODO support auto save
             if(sidx == 0x00){
                 return SdoAbortCode::UnsupportedAccess;
@@ -251,7 +251,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         } 
 
 
-        SdoAbortCode read(const std::span<std::byte> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
             //TODO
             // ReadStruct reg = ReadStruct{pdata};
             return SdoAbortCode::None;
@@ -280,7 +280,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         };
 
 
-        SdoAbortCode write(const std::span<const std::byte> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
             //TODO support auto save
             if(sidx == 0x00){
                 return SdoAbortCode::UnsupportedAccess;
@@ -309,7 +309,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         } 
 
 
-        SdoAbortCode read(const std::span<std::byte> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
             //TODO
             // ReadStruct reg = ReadStruct{pdata};
             return SdoAbortCode::None;
@@ -403,9 +403,9 @@ public:
 
     std::optional<SubEntry> find(const Didx didx);
 
-    SdoAbortCode write(const std::span<const std::byte> pdata, const Didx didx) override;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
     
-    SdoAbortCode read(const std::span<std::byte> pdata, const Didx didx) const override;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
 
 };
 

@@ -130,8 +130,9 @@ struct SdoPacket{
     uint8_t subidx;
     uint32_t data;
 
-    static SdoPacket from(const CanMsg & msg){return std::bit_cast<SdoPacket>(msg.data64());}
-
+    static SdoPacket from(const CanMsg & msg){
+        return std::bit_cast<SdoPacket>(msg.as_u64());
+    }
 };
 #pragma pack(pop)
 
@@ -149,26 +150,30 @@ void SdoClientSession::requestWrite(const OdIndex idx, const OdSubIndex subidx, 
     }();
 
     sdo_.sendMessage(
-        CanMsg(cobid_,
-        std::make_tuple(SdoPacket{
-            .cmd = cmd_code,
-            .idx = idx,
-            .subidx = subidx,
-            .data = et.data32()
-        }))
+        CanMsg::from_tuple(
+            cobid_.to_stdid(),
+            std::make_tuple(SdoPacket{
+                .cmd = cmd_code,
+                .idx = idx,
+                .subidx = subidx,
+                .data = uint32_t(et)
+            })
+        )
     );
 }
 
 void SdoClientSession::requestRead(const OdIndex idx, const OdSubIndex subidx, SubEntry & et){
     // 发送 SDO 读请求
     sdo_.sendMessage(
-        CanMsg(cobid_,
-        std::make_tuple(SdoPacket{
-            .cmd = 0x40, // SDO Read Request
-            .idx = idx,
-            .subidx = subidx,
-            .data = 0 // 读请求不需要数据字段
-        }))
+        CanMsg::from_tuple(
+            cobid_.to_stdid(),
+            std::make_tuple(SdoPacket{
+                .cmd = 0x40, // SDO Read Request
+                .idx = idx,
+                .subidx = subidx,
+                .data = 0 // 读请求不需要数据字段
+            })
+        )
     );
 }
 
@@ -192,13 +197,16 @@ void SdoServerSession::processWriteRequest(const CanMsg & msg) {
 
     if (!sub_entry_opt.has_value()) {
         // 如果子条目不存在，发送错误响应
-        sdo_.sendMessage(CanMsg(cobid_, 
-        std::make_tuple(SdoPacket{
-            .cmd = 0x80, // SDO Abort Transfer
-            .idx = idx,
-            .subidx = subidx,
-            .data = uint32_t(SdoAbortCode::ObjectDoesNotExist) // Object does not exist
-        })));
+        sdo_.sendMessage(
+            CanMsg::from_tuple(
+                cobid_.to_stdid(), 
+                std::make_tuple(SdoPacket{
+                    .cmd = 0x80, // SDO Abort Transfer
+                    .idx = idx,
+                    .subidx = subidx,
+                    .data = uint32_t(SdoAbortCode::ObjectDoesNotExist) // Object does not exist
+                }))
+        );
         return;
     }
 
@@ -208,25 +216,36 @@ void SdoServerSession::processWriteRequest(const CanMsg & msg) {
     const auto dsize = sub_entry.dsize();
     if (dsize != (sdo_packet.cmd & 0x0F)) {
         // 如果数据大小不匹配，发送错误响应
-        sdo_.sendMessage(CanMsg(cobid_, std::make_tuple(SdoPacket{
-            .cmd = 0x80, // SDO Abort Transfer
-            .idx = idx,
-            .subidx = subidx,
-            .data = uint32_t(SdoAbortCode::InvalidBlockSize) // Invalid size for object
-        })));
+        sdo_.sendMessage(
+            CanMsg::from_tuple(
+                cobid_.to_stdid(), 
+                std::make_tuple(SdoPacket{
+                .cmd = 0x80, // SDO Abort Transfer
+                .idx = idx,
+                .subidx = subidx,
+                .data = uint32_t(SdoAbortCode::InvalidBlockSize) // Invalid size for object
+            }))
+        );
         return;
     }
 
     // 写入数据到对象字典
-    sub_entry.put(sdo_packet.data);
-
+    TODO(); 
+    {
+        //sub_entry.put(sdo_packet.data);
+    }
     // 发送SDO写响应
-    sdo_.sendMessage(CanMsg(cobid_, std::make_tuple(SdoPacket{
-        .cmd = 0x60, // SDO Write Response
-        .idx = sdo_packet.idx,
-        .subidx = sdo_packet.subidx,
-        .data = 0 // No additional data needed
-    })));
+    sdo_.sendMessage(
+        CanMsg::from_tuple(
+            cobid_.to_stdid(), 
+            std::make_tuple(SdoPacket{
+                .cmd = 0x60, // SDO Write Response
+                .idx = sdo_packet.idx,
+                .subidx = sdo_packet.subidx,
+                .data = 0 // No additional data needed
+            })
+        )
+    );
 }
 
 
@@ -246,14 +265,14 @@ void SdoServerSession::processReadRequest(const CanMsg & msg) {
     auto & sub_entry = sub_entry_opt.value();
 
     // 检查客户端请求的读取权限
-    if (!sub_entry.readable()) {
+    if (!sub_entry.is_readable()) {
         // 如果没有读取权限，发送 SDO 中止传输响应
         sendReadResponse(0x00, idx, subidx, 0x06010001); // Access denied
         return;
     }
 
     // 从子条目中读取数据
-    uint32_t data = sub_entry.data32();
+    uint32_t data = int(sub_entry);
 
     // 发送 SDO 读响应
     sendReadResponse(0x00, idx, subidx, data);
@@ -270,7 +289,12 @@ void SdoServerSession::sendWriteResponse(const uint8_t cmd, const OdIndex idx, c
     };
 
     // 发送响应消息
-    sdo_.sendMessage(CanMsg(cobid_, std::make_tuple(response_packet)));
+    sdo_.sendMessage(
+        CanMsg::from_tuple(
+            cobid_.to_stdid(), 
+            std::make_tuple(response_packet)
+        )
+    );
 }
 
 void SdoServerSession::sendReadResponse(const uint8_t cmd, const OdIndex idx, const OdSubIndex subidx, uint32_t data){
@@ -283,5 +307,10 @@ void SdoServerSession::sendReadResponse(const uint8_t cmd, const OdIndex idx, co
     };
 
     // 发送响应消息
-    sdo_.sendMessage(CanMsg(cobid_, std::make_tuple(response_packet)));
+    sdo_.sendMessage(
+        CanMsg::from_tuple(
+            cobid_.to_stdid(), 
+            std::make_tuple(response_packet)
+        )
+    );
 }

@@ -42,27 +42,27 @@ public:
         ErrorWaring,
     };
 protected:
-    auto devSendMsg(const Msg && msg){
+    auto dev_send_msg(const Msg && msg){
             
     }
 
-    auto devSendString(const StringView str){
+    auto dev_send_string(const StringView str){
 
     }
 
-    auto devSendMsg(const uint id, bool is_remote, const std::span<const std::byte> buf){
-        if(is_remote) devSendMsg(Msg::empty(hal::CanStdId(id)));
-        else devSendMsg(Msg::from_bytes(hal::CanStdId(id), buf));
+    auto dev_send_msg(const uint32_t id, bool is_remote, const std::span<const uint8_t> buf){
+        if(is_remote) dev_send_msg(Msg::empty(hal::CanStdId(id)));
+        else dev_send_msg(Msg::from_bytes(hal::CanStdId(id), buf));
     }
 
-    auto devSetBaud(const uint baud){
+    auto dev_set_baud(const uint32_t baud){
         
     }
-    void devOpen(){
+    void dev_open(){
         
     }
 
-    void devClose(){
+    void dev_close(){
         
     }
 };
@@ -74,94 +74,94 @@ private:
 
     
     //不以\r结尾
-    Error handleRecvString(const StringView str){
+    Error handle_recv_string(const StringView str){
         if(!str.size()) return Error::NoArg;
         if(str.size() < 1) return Error::InvalidFormat;
         const auto cmd_str = str.substr(1, str.size());
         switch(str[0]){
             default:return Error::InvalidFormat;
-            case 'S':return handleSetBaud(cmd_str);
+            case 'S':return handle_set_baud(cmd_str);
 
-            case 't':return handleSendStdMsg(cmd_str, false);
-            case 'r':return handleSendStdMsg(cmd_str, true);
+            case 't':return handle_send_std_msg(cmd_str, false);
+            case 'r':return handle_send_std_msg(cmd_str, true);
 
             // case 'T':return handleSendExtMsg(cmd_str, false);
             // case 'R':return handleSendExtMsg(cmd_str, true);
 
-            case 'F':responseFlag();
-            case 'O':return handleOpen(cmd_str);
-            case 'C':return handleClose(cmd_str);
+            case 'F':response_flag();
+            case 'O':return handle_open(cmd_str);
+            case 'C':return handle_close(cmd_str);
 
-            case 'V':reponseVersion();
-            case 'N':reponseSerialIdx();
+            case 'V':reponse_version();
+            case 'N':reponse_serial_idx();
 
             case 'Z':return Error::NotSupportedYet;
         }
         return Error::None;
     }
 
-    void reponseVersion(){
-        devSendString("V1013\r");
+    void reponse_version(){
+        dev_send_string("V1013\r");
     }
     
-    void reponseSerialIdx(){
-        devSendString("NA123\r");
+    void reponse_serial_idx(){
+        dev_send_string("NA123\r");
     }
 
-    Flags getFlag() const {
+    Flags get_flag() const {
         return Flags::RxFifoFull;
     }
 
-    void responseFlag(){
+    void response_flag(){
         const char str[2] = {
-            char(getFlag()), 'r'
+            char(get_flag()), 'r'
         };
 
-        devSendString(StringView(str, 2));
+        dev_send_string(StringView(str, 2));
     }
 
-    Error handleSetBaud(const StringView str){
+    Error handle_set_baud(const StringView str){
         if(!str.size()) return Error::NoArg;
         const char baud = str[0];
         switch(baud){
             default:return Error::InvalidBaud;
-            case '0': devSetBaud(10_KHz);
-            case '1': devSetBaud(20_KHz);
-            case '2': devSetBaud(50_KHz);
-            case '3': devSetBaud(100_KHz);
-            case '4': devSetBaud(125_KHz);
-            case '5': devSetBaud(250_KHz);
-            case '6': devSetBaud(500_KHz);
-            case '7': devSetBaud(800_KHz);
-            case '8': devSetBaud(1000_KHz);
+            case '0': dev_set_baud(10_KHz);
+            case '1': dev_set_baud(20_KHz);
+            case '2': dev_set_baud(50_KHz);
+            case '3': dev_set_baud(100_KHz);
+            case '4': dev_set_baud(125_KHz);
+            case '5': dev_set_baud(250_KHz);
+            case '6': dev_set_baud(500_KHz);
+            case '7': dev_set_baud(800_KHz);
+            case '8': dev_set_baud(1000_KHz);
         }
     }
 
-    Error handleSendStdMsg(const StringView str, const bool is_rmt){
+    Error handle_send_std_msg(const StringView str, const bool is_rmt){
         if(!str.size()) return Error::NoArg;
         if(str.size() < 4) return Error::InvalidDataLength;
 
-        const auto id = UNWRAP(parseStdId(str.substr(0, 3)));
-        const auto dlc = UNWRAP(parseLen(str.substr(3, 4)));
+        const auto id = UNWRAP(parse_std_id(str.substr(0, 3)));
+        const auto dlc = UNWRAP(parse_len(str.substr(3, 4)));
         const StringView data_str = str.substr(4, str.size());
         
         if(is_rmt){
-            const auto data = UNWRAP(parseData(data_str, dlc));
-            devSendMsg(id, false, std::span(data));
+            const auto data = UNWRAP(parse_data(data_str, dlc));
+            dev_send_msg(id, false, std::span(data));
         }else{
             if(data_str.size()) return Error::InvalidData;
-            devSendMsg(id, true, {});
+            dev_send_msg(id, true, {});
         }
 
     }
 
-    Error handleOpen(const StringView str){ 
-        devOpen();
+    Error handle_open(const StringView str){ 
+        dev_open();
         return Error::None;
     }
 
-    Error handleClose(const StringView str){ 
-        devClose();
+    Error handle_close(const StringView str){ 
+        dev_close();
         return Error::None;
     }
 
@@ -170,7 +170,7 @@ private:
         return Msg();
     }
 
-    static constexpr MyResult<int> parseStdId(const StringView str){
+    static constexpr MyResult<int> parse_std_id(const StringView str){
         using enum Error;
         return Result<StringView, void>{Ok(str)}
             .validate([](auto&& s){ return s.size() != 0; }, NoArg)
@@ -181,7 +181,7 @@ private:
             });
     }
     
-    static constexpr MyResult<int> parseExtId(const StringView str){
+    static constexpr MyResult<int> parse_ext_id(const StringView str){
         using enum Error;
 
         return Result<StringView, void>{Ok(str)}
@@ -193,20 +193,20 @@ private:
             });
     }
 
-    static constexpr MyResult<std::array<std::byte, 8>> parseData(const StringView str, const uint8_t dlc){
+    static constexpr MyResult<std::array<uint8_t, 8>> parse_data(const StringView str, const uint8_t dlc){
         using enum Error;
         if(str.size() != dlc * 2) return Err(InvalidDataLength);
 
-        std::array<std::byte, 8> buf;
+        std::array<uint8_t, 8> buf;
 
         for(int i = 0; i < dlc; i++){
-            buf[i] = std::byte(int(str.substr(i * 2, i * 2 + 2)));
+            buf[i] = uint8_t(int(str.substr(i * 2, i * 2 + 2)));
         }
 
         return Ok{buf};
     }
 
-    static constexpr MyResult<int> parseLen(const StringView str){
+    static constexpr MyResult<int> parse_len(const StringView str){
 
         using enum Error;
 
@@ -223,19 +223,19 @@ private:
 
 class EcCan:public AsciiCanIntf{
 private:
-    void devSetSwj(const uint8_t swj){
+    void dev_set_swj(const uint8_t swj){
 
     }
 
-    void devSetBs1(const uint8_t bs1){
+    void dev_set_bs1(const uint8_t bs1){
 
     }
 
-    void devSetBs2(const uint8_t bs2){
+    void dev_set_bs2(const uint8_t bs2){
 
     }
 
-    void devSetFilter(const uint8_t fidx, const std::span<const std::byte> buf){
+    void dev_set_filter(const uint8_t fidx, const std::span<const uint8_t> buf){
 
     }
 
@@ -247,20 +247,20 @@ private:
         SET_BS2
     };
 
-    Error handleSetBaud(const StringView str){
+    Error handle_set_baud(const StringView str){
         if(!str.size()) return Error::NoArg;
         const char baud = str[0];
         switch(baud){
             default:return Error::InvalidBaud;
-            case '0': devSetBaud(10_KHz);
-            case '1': devSetBaud(20_KHz);
-            case '2': devSetBaud(50_KHz);
-            case '3': devSetBaud(100_KHz);
-            case '4': devSetBaud(125_KHz);
-            case '5': devSetBaud(250_KHz);
-            case '6': devSetBaud(500_KHz);
-            case '7': devSetBaud(800_KHz);
-            case '8': devSetBaud(1000_KHz);
+            case '0': dev_set_baud(10_KHz);
+            case '1': dev_set_baud(20_KHz);
+            case '2': dev_set_baud(50_KHz);
+            case '3': dev_set_baud(100_KHz);
+            case '4': dev_set_baud(125_KHz);
+            case '5': dev_set_baud(250_KHz);
+            case '6': dev_set_baud(500_KHz);
+            case '7': dev_set_baud(800_KHz);
+            case '8': dev_set_baud(1000_KHz);
         }
     }
 
@@ -340,11 +340,11 @@ private:
     uint8_t id_[4];
     uint8_t buf_[64];
 
-    Error handleInput(const uint8_t data){
+    Error handle_input(const uint8_t data){
         switch(state_){
             default:break;
             case State::GET_HEADER:
-                handleHeader(data);
+                handle_header(data);
                 break;
             case State::GET_CRC:
                 break;
@@ -356,7 +356,7 @@ private:
         return Error::None;
     }
 
-    Error handleHeader(const uint8_t header){
+    Error handle_header(const uint8_t header){
         if(header & 0x80){// CANFD
             msginfo_ = MsgInfo{
                 .dlc = uint8_t(header & 0b111111),
@@ -401,13 +401,13 @@ private:
     }
 
 
-    Error handleOpen(const StringView str){ 
-        devOpen();
+    Error handle_open(const StringView str){ 
+        dev_open();
         return Error::None;
     }
 
-    Error handleClose(const StringView str){ 
-        devClose();
+    Error handle_close(const StringView str){ 
+        dev_close();
         return Error::None;
     }
 

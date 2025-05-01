@@ -2,7 +2,7 @@
 
 #include "canopen/utils.hpp"
 #include "canopen/ObjectDict.hpp"
-// #include "PdoProtocol.hpp"
+
 
 namespace ymd::canopen{
 
@@ -11,10 +11,7 @@ class PdoProtocol;
 class PdoSessionBase {
 public:
     using Driver = CanDriver;
-    using CobId = uint16_t;
-
-
-
+    
     class ParamsSubIndex{
         // 每个 PDO 都有一个通信参数对象，用于配置 PDO 的通信行为。
         // 子索引：
@@ -60,15 +57,15 @@ public:
         EventProfile = 255
     };
 
-    PdoSessionBase(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
-        : pdo_(pdo), params_(params), mapping_(mapping) {
+    PdoSessionBase(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+        : pdo_(pdo), params_(std::move(params)), mapping_(std::move(mapping)) {
     }
 
 
 protected:
     PdoProtocol & pdo_;
-    OdEntry & params_;
-    OdEntry & mapping_;
+    const OdEntry params_;
+    const OdEntry mapping_;
 };
 
 
@@ -77,8 +74,8 @@ private:
     CanMsg buildMessage() const ;
     int transSyncCount = 0;
 public:
-    PdoTxSession(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
-        : PdoSessionBase(pdo, params, mapping) {
+    PdoTxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+        : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
     }
 
     bool onSyncEvent();
@@ -87,8 +84,8 @@ public:
 
 class PdoRxSession:public PdoSessionBase{
 public:
-    PdoRxSession(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
-        : PdoSessionBase(pdo, params, mapping) {
+    PdoRxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+        : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
     }
     
     bool processMessage(const CanMsg& msg);
