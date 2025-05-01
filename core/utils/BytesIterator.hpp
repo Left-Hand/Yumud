@@ -7,42 +7,6 @@
 
 namespace ymd{
 
-
-// template<typename T>
-// requires std::is_standard_layout_v<T>
-// class BytesIterator{
-// private:
-//     const uint8_t * data_;
-//     const bool mutes_;
-//     const Endian endian_;
-//     bool ends_ = false;
-//     size_t len_;
-
-//     T temp;
-
-//     BytesIterator(const uint8_t * data, const bool mutes, const Endian endian, const size_t len):
-//         data_(data),
-//         mutes_(mutes),
-//         endian_(endian),
-//         len_(len){;}
-// public:
-
-//     template<typename U = T>
-//     requires std::is_standard_layout_v<U>
-//     BytesIterator(const U * data_, const size_t len, const Endian endian):
-//         BytesIterator(reinterpret_cast<const uint8_t *>(data_), true, endian, len),
-
-//     template<typename U = T>
-//     requires std::is_standard_layout_v<U>
-//     BytesIterator(const U data_, const size_t len, const Endian endian):
-//         BytesIterator(reinterpret_cast<const uint8_t *>(false), true, endian, len),
-
-//     uint8_t next(){
-        
-//     }
-// };
-
-
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
 [[nodiscard]] __fast_inline
 auto iterate_bytes(std::span<T> pdata, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){

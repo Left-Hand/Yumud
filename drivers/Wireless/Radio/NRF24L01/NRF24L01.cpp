@@ -41,11 +41,12 @@ Result<void, Error> NRF24L01::read_reg(const uint8_t addr, uint8_t & data){
 }
 
 Result<size_t, Error> NRF24L01::transmit(std::span<uint8_t> buf){
-
+    TODO();
     return Ok(0u);
 }
 
 Result<size_t, Error> NRF24L01::receive(std::span<uint8_t> buf){
+    TODO();
     return Ok(0u);
 }
 
