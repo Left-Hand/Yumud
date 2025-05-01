@@ -20,12 +20,13 @@ using drivers::VL6180X;
 [[maybe_unused]]
 static void vl6180x_range_single_shot_tb(VL6180X & vl6180){
     vl6180.init();
-    vl6180.configureDefault();
-    vl6180.setTimeout(500);
+    vl6180.configure_default();
+    vl6180.set_timeout(500);
 
     while(true){
-        DEBUG_PRINTLN(vl6180.readRangeSingleMillimeters());
-        if (vl6180.timeoutOccurred()) { DEBUG_PRINTLN(" TIMEOUT"); }
+        DEBUG_PRINTLN(
+            vl6180.read_range_single_millimeters().unwrap()
+        );
     }
 }
 
@@ -34,14 +35,15 @@ static void vl6180x_range_single_shot_scaling_tb(VL6180X & vl6180){
     static constexpr auto SCALING = 2;
 
     vl6180.init();
-    vl6180.configureDefault();
-    vl6180.setScaling(SCALING);
-    vl6180.setTimeout(500);
+    vl6180.configure_default();
+    vl6180.set_scaling(SCALING);
+    vl6180.set_timeout(500);
     while(true){
         DEBUG_PRINTLN(
-            vl6180.getScaling(),
-            vl6180.readRangeSingleMillimeters()
+            // vl6180.get_scaling().unwrap(),
+            vl6180.read_range_single_millimeters().unwrap()
         );
+        delay(1);
     }
 }
 
@@ -49,7 +51,7 @@ static void vl6180x_range_single_shot_scaling_tb(VL6180X & vl6180){
 [[maybe_unused]]
 static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){ 
     vl6180.init();
-    vl6180.configureDefault();
+    vl6180.configure_default();
 
     // Reduce range max convergence time and ALS integration
     // time to 30 ms and 50 ms, respectively, to allow 10 Hz
@@ -58,23 +60,23 @@ static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){
     vl6180.set_max_convergence_time(30);
     vl6180.set_inter_measurement_period(50);
 
-    vl6180.setTimeout(500);
+    vl6180.set_timeout(500);
 
     // stop continuous mode if already active
-    vl6180.stopContinuous();
+    vl6180.stop_continuous();
     // in case stopContinuous() triggered a single-shot
     // measurement, wait for it to complete
     delay(1300);
     // start interleaved continuous mode with period of 100 ms
-    vl6180.startInterleavedContinuous(100);
-    vl6180.startAmbientContinuous(100);
-    vl6180.startRangeContinuous(100);
+    vl6180.start_interleaved_continuous(100);
+    vl6180.start_ambient_continuous(100);
+    vl6180.start_range_continuous(100);
 
 
     while(true){
         DEBUG_PRINTLN(
-            vl6180.readAmbientContinuous(),
-            vl6180.readRangeContinuousMillimeters()
+            vl6180.read_ambient_continuous().unwrap(),
+            vl6180.read_range_continuous_millimeters().unwrap()
         );
     }
 }

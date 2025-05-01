@@ -89,7 +89,8 @@ struct VL6180X_Collections{
     };
 
     enum class Error_Kind:uint8_t{
-        WrongWhoAmI
+        WrongWhoAmI,
+        InvalidScaling
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -107,14 +108,14 @@ public:
     VL6180X_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
     template<typename T>
-    IResult<> write_reg(const uint16_t command, const T data){
+    [[nodiscard]] IResult<> write_reg(const uint16_t command, const T data){
         const auto res = i2c_drv_.write_reg(command, data, MSB);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
     
     template<typename T>
-    IResult<> read_reg(const uint16_t command, T & data){
+    [[nodiscard]] IResult<> read_reg(const uint16_t command, T & data){
         const auto res = i2c_drv_.read_reg(command, data, MSB);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -132,72 +133,83 @@ public:
     VL6180X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_{hal::I2cDrv(i2c, addr)}{;}
 
-    IResult<> verify();
+    [[nodiscard]]IResult<> verify();
 
-    void init();
+    [[nodiscard]]IResult<> init();
 
-    void configureDefault();
+    [[nodiscard]]IResult<> configure_default();
 
-    void setScaling(uint8_t new_scaling);
-    inline uint8_t getScaling() { return scaling; }
+    [[nodiscard]]IResult<> set_scaling(uint8_t new_scaling);
+    inline uint8_t get_scaling() { return scaling; }
 
-    uint8_t readRangeSingle();
-    inline uint16_t readRangeSingleMillimeters() { return (uint16_t)scaling * readRangeSingle(); }
-    uint16_t readAmbientSingle();
+    [[nodiscard]]IResult<uint8_t> read_range_single();
 
-    void startRangeContinuous(uint16_t period);
-    void startAmbientContinuous(uint16_t period);
-    void startInterleavedContinuous(uint16_t period);
-    void stopContinuous();
+    [[nodiscard]]IResult<uint16_t> read_ambient_single();
 
-    uint8_t readRangeContinuous();
-    inline uint16_t readRangeContinuousMillimeters() { return (uint16_t)scaling * readRangeContinuous(); }
-    uint16_t readAmbientContinuous();
+    [[nodiscard]]IResult<> start_range_continuous(uint16_t period);
+    [[nodiscard]]IResult<> start_ambient_continuous(uint16_t period);
+    [[nodiscard]]IResult<> start_interleaved_continuous(uint16_t period);
+    [[nodiscard]]IResult<> stop_continuous();
+    
+    [[nodiscard]]IResult<uint8_t> read_range_continuous();
+    [[nodiscard]]IResult<uint16_t> read_ambient_continuous();
+    
 
-    inline void setTimeout(uint16_t timeout) { io_timeout = timeout; }
-    inline uint16_t getTimeout() { return io_timeout; }
-    bool timeoutOccurred();
+    bool timeout_occurred();
 
-    uint8_t readRangeStatus();
+    [[nodiscard]]IResult<uint8_t> read_range_status();
 
-    IResult<> set_max_convergence_time(const uint8_t ms){
-        return writeReg(RegAddress::SYSRANGE__MAX_CONVERGENCE_TIME, ms);
+    [[nodiscard]]IResult<> set_max_convergence_time(const uint8_t ms){
+        return write_reg(RegAddress::SYSRANGE__MAX_CONVERGENCE_TIME, ms);
     }
 
-    IResult<>  set_inter_measurement_period(const uint8_t ms){
-        return writeReg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
+    [[nodiscard]]IResult<>  set_inter_measurement_period(const uint8_t ms){
+        return write_reg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
     }
+
+    [[nodiscard]]IResult<uint16_t> read_range_single_millimeters() { 
+        if(const auto res = read_range_single(); 
+            res.is_err()) return Err(res.unwrap_err());
+        else return Ok(uint16_t(scaling) * res.unwrap());
+    }
+    [[nodiscard]]IResult<uint16_t> read_range_continuous_millimeters() {
+        if(const auto res = read_range_continuous();
+            res.is_err()) return Err(res.unwrap_err());
+        else return Ok(uint16_t(scaling) * res.unwrap());
+    }
+    inline void set_timeout(uint16_t timeout) { io_timeout = timeout; }
+    inline uint16_t get_timeout() { return io_timeout; }
 private:
-    IResult<> writeReg(RegAddress reg, uint8_t value){
+    [[nodiscard]]IResult<> write_reg(RegAddress reg, uint8_t value){
         return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
-    IResult<> writeReg(uint16_t reg, uint8_t value){
+    [[nodiscard]]IResult<> write_reg(uint16_t reg, uint8_t value){
         return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
-    IResult<> writeReg16Bit(RegAddress reg, uint16_t value){
+    [[nodiscard]]IResult<> write_reg16_bit(RegAddress reg, uint16_t value){
         return phy_.write_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
     }
-    IResult<> writeReg16Bit(const uint16_t reg, uint16_t value){
+    [[nodiscard]]IResult<> write_reg16_bit(const uint16_t reg, uint16_t value){
         return phy_.write_reg<uint16_t>(reg, value);
     }
 
 
     template<typename T>
-    IResult<> readReg(uint16_t reg, T & value){
+    [[nodiscard]]IResult<> read_reg(uint16_t reg, T & value){
         return phy_.read_reg<T>(std::bit_cast<uint16_t>(reg), value);
     }
 
     template<typename T>
-    IResult<> readReg(RegAddress reg, T & value){
-        return readReg(std::bit_cast<uint16_t>(reg), value);
+    [[nodiscard]]IResult<> read_reg(RegAddress reg, T & value){
+        return read_reg(std::bit_cast<uint16_t>(reg), value);
     }
-    IResult<> readReg16Bit(RegAddress reg, uint16_t & value){
+    [[nodiscard]]IResult<> read_reg16_bit(RegAddress reg, uint16_t & value){
         return phy_.read_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
-
+private:
     VL6180X_Phy phy_;
     uint8_t scaling;
     int8_t ptp_offset;
