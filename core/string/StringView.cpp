@@ -4,12 +4,6 @@
 
 using namespace ymd;
 
-StringView::StringView(const String &str):data_(str.c_str()), size_(str.length()){
-
-}
-
-
-
 std::vector<StringView> StringView::split(const char delimiter, const size_t max_pieces) const{
     std::vector<StringView> strs;
     
@@ -29,17 +23,17 @@ std::vector<StringView> StringView::split(const char delimiter, const size_t max
     return strs;
 }
 
-int StringView::indexOf(char c) const
-{
-	return indexOf(c, 0);
-}
+// int StringView::indexOf(char c) const
+// {
+// 	return indexOf(c, 0);
+// }
 
-int StringView::indexOf( char ch, size_t fromIndex ) const{
-	if (fromIndex >= size_) return -1;
-	const char* temp = strchr(data_ + fromIndex, ch);
-	if (temp == NULL) return -1;
-	return temp - data_;
-}
+// int StringView::indexOf( char ch, size_t fromIndex ) const{
+// 	if (fromIndex >= size_) return -1;
+// 	const char* temp = strchr(data_ + fromIndex, ch);
+// 	if (temp == NULL) return -1;
+// 	return temp - data_;
+// }
 
 // int StringView::lastIndexOf( char theChar ) const
 // {

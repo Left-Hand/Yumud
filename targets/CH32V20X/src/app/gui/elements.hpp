@@ -91,7 +91,7 @@ public:
         painter.draw_hollow_rect(rect).unwrap();
 
         painter.set_color(theme_.text_color);
-        painter.draw_string(rect.position + Vector2i(10,7), text).unwrap();
+        painter.draw_string(rect.position + Vector2i(10,7), StringView(text)).unwrap();
     }
 };
 

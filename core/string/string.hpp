@@ -87,7 +87,7 @@ public:
 	}
 
 	
-	~String(void);
+	~String();
 
     uint32_t hash() const {return StringView(*this).hash();}
 	
@@ -96,7 +96,7 @@ public:
 	// is left unchanged).  reserve(0), if successful, will validate an
 	// invalid string (i.e., "if (s)" will be true afterwards)
 	uint8_t reserve(size_t size);
-	inline size_t length(void) const {return len;}
+	inline size_t length() const {return len;}
 
 	// creates a copy of the assigned value.  if the value is null or
 	// invalid, or if the memory allocation fails, the string will be 
@@ -192,28 +192,30 @@ public:
 	// String& replace(const String & find, const String & replace);
 	void remove(size_t index);
 	void remove(size_t index, size_t count);
-	String & toLowerCase(void);
-	String & toUpperCase(void);
-	void trim(void);
-	void alphanum(void);
+	String & toLowerCase();
+	String & toUpperCase();
+	void trim();
+	void alphanum();
 
-    bool isNumeric(void) const;
-    bool isDigit(void) const;
+    bool isNumeric() const;
+    bool isDigit() const;
 
 
 	template<integral T>
-    explicit operator T(void) const{return T(StringView(*this));}
+    explicit operator T() const{return T(StringView(*this));}
 
 	template<floating T>
-    explicit operator T(void) const{return T(StringView(*this));}
+    explicit operator T() const{return T(StringView(*this));}
 	
 	template<size_t Q>
 	explicit operator iq_t<Q>() const {return iq_t<Q>(StringView(*this));}
 
-	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
-	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
+	explicit operator std::string() const {return std::string(this->c_str(), this->length());}
+	explicit operator std::string_view() const {return std::string(this->c_str(), this->length());}
 
-	operator StringView(void) const {return StringView(this->c_str(), this->length());}
+	explicit operator StringView() const {
+		return StringView(this->c_str(), this->length());
+	}
 
 	size_t capacity() const {return capacity_;}
 // protected:
@@ -223,8 +225,8 @@ public:
 	size_t len;       // the String length (not counting the '\0')
 // protected:
 public:
-	void init(void);
-	void invalidate(void);
+	void init();
+	void invalidate();
 	uint8_t changeBuffer(size_t maxStrLen);
 
 

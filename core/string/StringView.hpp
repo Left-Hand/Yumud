@@ -17,10 +17,15 @@ class String;
 class StringView {
 public:
 
-    // 构造函数
-    StringView(const String & str);
-    constexpr StringView(const ::std::string & str): data_(str.c_str()), size_(str.length()) {}
-    constexpr StringView(const ::std::string_view & str): data_(str.data()), size_(str.length()) {}
+    // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
+    // template<typename Dummy = void>
+    // constexpr explicit StringView(const String & str):
+    // data_(str.c_str()), size_(str.length()){;}
+
+    
+    // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
+    constexpr explicit StringView(const std::string & str): data_(str.c_str()), size_(str.length()) {}
+    constexpr StringView(const std::string_view & str): data_(str.data()), size_(str.length()) {}
     constexpr StringView(const char* str) : data_(str), size_(str ? strlen(str) : 0) {}
     constexpr StringView(const char* str, size_t size) : data_(str), size_(size) {}
     constexpr StringView(const std::nullopt_t): data_(nullptr), size_(0){;}
@@ -35,8 +40,8 @@ public:
     }
 
     constexpr StringView& operator=(StringView && other) {
-        data_ = ::std::move(other.data_);
-        size_ = ::std::move(other.size_);
+        data_ = std::move(other.data_);
+        size_ = std::move(other.size_);
         return *this;
     }
 
@@ -73,9 +78,13 @@ public:
 
         return StringView(this->data_ + left, right - left);
     }
+
+	__fast_inline constexpr StringView cutstr(size_t left, size_t len) const {
+        return substr(left, left + len);
+    }
     
-	int indexOf(const char ch ) const;
-	int indexOf(const char ch,const size_t fromIndex ) const;
+	// int indexOf(const char ch ) const;
+	// int indexOf(const char ch,const size_t fromIndex ) const;
 
     constexpr uint32_t hash() const {return hash_impl(data_, size_);}
 
