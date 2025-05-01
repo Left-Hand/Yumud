@@ -8,7 +8,8 @@ OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind er
     switch(err){
         case Kind::AlreadyUnderUse: return os << "AlreadyUnderUse";
         case Kind::OccuipedByOther: return os << "OccuipedByOther";
-        case Kind::AckTimeout: return os << "AckTimeout";
+        case Kind::SlaveAddrAckTimeout: return os << "SlaveAddrAckTimeout";
+        case Kind::WritePayloadAckTimeout: return os << "WritePayloadAckTimeout";
         case Kind::BusOverload: return os << "BusOverload";
         case Kind::SelecterOutOfRange: return os << "SelecterOutOfRange";
         case Kind::NoSelecter: return os << "NoSelecter";

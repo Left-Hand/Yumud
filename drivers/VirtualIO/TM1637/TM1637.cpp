@@ -42,8 +42,7 @@ Result<void, Error> TM1637_Phy::wait_ack(){
     scl_gpio_.clr();
     
     if(ovt){
-        // iic_stop();
-        return Err(hal::HalResult::AckTimeout);
+        return Err(hal::HalResult::WritePayloadAckTimeout);
     }else{
         return Ok();
     }
@@ -70,7 +69,9 @@ Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
     sda_gpio_.outod(HIGH);
     udelay(2);
     sda_gpio_.clr();
-    return write_byte(data);
+    if(const auto res = write_byte(data);
+        res.is_err()) return Err(hal::HalResult::SlaveAddrAckTimeout);
+    return Ok();
 }
 
 Result<void, Error> TM1637_Phy::iic_stop(){

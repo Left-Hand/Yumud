@@ -28,6 +28,9 @@ using namespace ymd::drivers;
 #define INA3221_DEBUG(...)
 #define INA3221_PANIC(...)  PANIC_NSRC()
 #define INA3221_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECKRES(x, ...) (x)
+#define CHECKERR(x, ...) (x)
 #endif
 
 template<typename T = void>

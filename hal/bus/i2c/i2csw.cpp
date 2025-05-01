@@ -10,6 +10,7 @@ using namespace ymd::hal;
 // #define I2CSW_DISCARD_ACK
 // #define I2CSW_TEST_TIMEOUT (1000)
 
+
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
     else for(size_t i = 0; i < 3; i++) __nopn(5);
@@ -51,7 +52,7 @@ hal::HalResult I2cSw::wait_ack(){
     sda().outod();
     
     if(ovt and (discard_ack_ == false)){
-        return hal::HalResult::AckTimeout;
+        return hal::HalResult::WritePayloadAckTimeout;
     }else{
         return hal::HalResult::Ok();
     }
@@ -72,9 +73,16 @@ hal::HalResult I2cSw::lead(const LockRequest req){
     scl().clr();
     delay_dur();
 
+    constexpr auto header_err_transform = 
+    [](const HalResult res) -> HalResult{
+        if(res == HalResult::WritePayloadAckTimeout) 
+            return HalResult::SlaveAddrAckTimeout;
+        return res;
+    };
+
     switch(req.custom_len()){
-        case 0:return write(req.id());
-        case 1:return write(req.id() << 1 | req.custom());
+        case 0:return header_err_transform(write(req.id()));
+        case 1:return header_err_transform(write(req.id() << 1 | req.custom()));
         default: break;
     }
     return HalResult::InvalidArgument;
@@ -88,7 +96,7 @@ void I2cSw::trail(){
     scl().set();
     delay_dur();
     sda().set();
-    // delay_dur();
+    delay_dur();
 }
 
 

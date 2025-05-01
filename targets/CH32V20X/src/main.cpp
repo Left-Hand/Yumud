@@ -19,7 +19,8 @@ int main(){
     //  uart_main();
     // qlz_main();
     // embd_main();
-    ina3221_main();
+    // ina3221_main();
+    mpu6050_main();
     rrs3_robot_main();
     // oled_main();
     // i2c_scanner_main();

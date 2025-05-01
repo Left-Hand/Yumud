@@ -3,11 +3,11 @@
 #include "core/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Adc/INA3221/ina3221.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 using drivers::INA3221;
@@ -43,9 +43,7 @@ void ina3221_main(){
             ina.get_bus_volt(ch).unwrap(), 
             ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
         );
-        // mpu.update();
-        // DEBUG_PRINTLN(millis(), ina.verify());
-        delay(2);
+        delay(1);
     }
 
 }
