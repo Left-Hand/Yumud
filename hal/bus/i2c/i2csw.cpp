@@ -7,6 +7,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 #define I2CSW_SCL_USE_PP_THAN_OD
+// #define I2CSW_DISCARD_ACK
 // #define I2CSW_TEST_TIMEOUT (1000)
 
 void I2cSw::delay_dur(){
@@ -24,6 +25,8 @@ hal::HalResult I2cSw::wait_ack(){
     // TimeStamp delta;
 
     bool ovt = false;
+
+    #ifndef I2CSW_DISCARD_ACK
     const auto m = micros();
     while(sda().read() == HIGH){
         if(micros() - m >= 
@@ -36,8 +39,11 @@ hal::HalResult I2cSw::wait_ack(){
             ovt = true;
             break;
         }
-        udelay(1);
+        __nopn(4);
     }
+    #else
+    for(size_t i = 0; i < 3; i++)delay_dur();
+    #endif
 
     delay_dur();
     scl().clr();
@@ -82,7 +88,7 @@ void I2cSw::trail(){
     scl().set();
     delay_dur();
     sda().set();
-    delay_dur();
+    // delay_dur();
 }
 
 

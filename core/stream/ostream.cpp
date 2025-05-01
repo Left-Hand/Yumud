@@ -96,6 +96,7 @@ int OutputStream::transform_char(const char chr) const{
             case '<':
             case '>':
                 return -1;
+                // return chr;
             default:
                 return chr;
         }
@@ -106,7 +107,8 @@ int OutputStream::transform_char(const char chr) const{
 
 void OutputStream::checked_write(const char data){
     const auto res = transform_char(data);
-    if(likely(res) >= 0) write(res);
+    // if(likely(res) >= 0) write(res);
+    if(res >= 0) write(res);
 }
 
 void OutputStream::print_source_loc(const std::source_location & loc){

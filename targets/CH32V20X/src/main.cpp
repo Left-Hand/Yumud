@@ -19,6 +19,7 @@ int main(){
     //  uart_main();
     // qlz_main();
     // embd_main();
+    ina3221_main();
     rrs3_robot_main();
     // oled_main();
     // i2c_scanner_main();
@@ -58,7 +59,7 @@ int main(){
     // coro_main();
     // sincos_main();
     // i2c_scanner_main();
-    // ina3221_main();
+
 
     // i2c_scanner_main();
     // tca9548_main();

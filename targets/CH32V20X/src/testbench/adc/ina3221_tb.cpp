@@ -13,6 +13,11 @@ using namespace ymd;
 using drivers::INA3221;
 
 #define UART uart2
+#define SCL_GPIO hal::portB[0]
+#define SDA_GPIO hal::portB[1]
+
+static constexpr double SHUNT_RES = 0.1;
+static constexpr double INV_SHUNT_RES = 1 / SHUNT_RES;
 
 void ina3221_main(){
     UART.init(576000);
@@ -22,8 +27,8 @@ void ina3221_main(){
     DEBUGGER.no_brackets();
 
     
-    auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
-    i2c.init(400_KHz);
+    auto i2c = hal::I2cSw(SCL_GPIO, SDA_GPIO);
+    i2c.init(1200_KHz);
 
     INA3221 ina = {i2c};
 
@@ -32,9 +37,11 @@ void ina3221_main(){
     while(true){
         const auto ch = INA3221::ChannelIndex::CH1;
         ina.update(ch).unwrap();
+        ina.update(INA3221::ChannelIndex::CH2).unwrap();
+        ina.update(INA3221::ChannelIndex::CH3).unwrap();
         DEBUG_PRINTLN(
             ina.get_bus_volt(ch).unwrap(), 
-            ina.get_shunt_volt(ch).unwrap()
+            ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
         );
         // mpu.update();
         // DEBUG_PRINTLN(millis(), ina.verify());
