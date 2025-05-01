@@ -354,7 +354,7 @@ public:
     void init(){
 
         //因为是中心对齐的顶部触发 所以频率翻倍
-        timer.init(MOTOR_ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
+        timer.init(MOTOR_ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
 
         pwm_pos.init();
         pwm_neg.init();

@@ -19,7 +19,7 @@
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
 
-#define FREQ 40_KHz
+static constexpr size_t FREQ = 40_KHz;
 // #define FREQ 200
 
 // #define UART uart1
@@ -88,7 +88,7 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc(4);
 
 
-    timer.init(FREQ, TimerMode::CenterAlignedDualTrig);
+    timer.init(FREQ, TimerCountMode::CenterAlignedDualTrig);
     timer.enable_arr_sync();
 
     #if TIM_INDEX == 1

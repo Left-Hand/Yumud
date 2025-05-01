@@ -9,7 +9,7 @@
 namespace ymd::hal{
     class Gpio;
 
-    enum class TimerMode:uint8_t{
+    enum class TimerCountMode:uint8_t{
         Up                      = TIM_CounterMode_Up,
         Down                    = TIM_CounterMode_Down,
         CenterAlignedDownTrig   = TIM_CounterMode_CenterAligned1,

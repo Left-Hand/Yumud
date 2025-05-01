@@ -174,7 +174,7 @@
 //     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
 
 //     // constexpr auto a = F_CPU / 4096;
-//     timer1.init(4096, 1, TimerMode::CenterAlignedUpTrig);
+//     timer1.init(4096, 1, TimerCountMode::CenterAlignedUpTrig);
 //     timer1.enableArrSync();
 //     TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
 
@@ -188,7 +188,7 @@
 //     // timer1.oc(4).init();
 //     // timer1.oc(4)= 0.99;
 
-//     timer3.init(4096, 1, TimerMode::CenterAlignedDownTrig);
+//     timer3.init(4096, 1, TimerCountMode::CenterAlignedDownTrig);
 //     timer3.enableArrSync();
 //     GPIO_PinRemapConfig(TIM3_REMAP, DISABLE);
 

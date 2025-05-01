@@ -307,7 +307,7 @@ void bldc_main(){
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
 
-    timer1.init(chopper_freq, TimerMode::CenterAlignedUpTrig);
+    timer1.init(chopper_freq, TimerCountMode::CenterAlignedUpTrig);
 
     auto & pwm_u = timer1.oc(1); 
     auto & pwm_v = timer1.oc(2); 

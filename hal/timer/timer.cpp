@@ -1,5 +1,6 @@
 #include "timer.hpp"
 #include "core/system.hpp"
+// #include "ral/ch32/ch32_common_tim_def.hpp"
 
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
 #define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
@@ -42,6 +43,8 @@ __inline void TIM_ASSERT(bool x){
 #else
 #define TIM_ASSERT(x)
 #endif
+
+
 
 void BasicTimer::enable_rcc(const bool en){
     switch(uint32_t(instance)){
@@ -168,14 +171,53 @@ void BasicTimer::remap(const uint8_t rm){
     }
 }
 
-uint BasicTimer::get_clk(){
-    return internal::is_advanced_timer(instance) ? sys::clock::get_apb2_freq() : sys::clock::get_apb1_freq();
+uint32_t BasicTimer::get_bus_freq(){
+    return internal::is_advanced_timer(instance) ? 
+        sys::clock::get_apb2_freq() : 
+        sys::clock::get_apb1_freq();
+}
+
+void BasicTimer::set_psc(const uint16_t psc){
+    instance->PSC = psc;
+}
+void BasicTimer::set_arr(const uint16_t arr){
+    instance->ATRLR = arr;
+}
+
+void BasicTimer::set_count_mode(const TimerCountMode mode){
+    auto tmpcr1 = instance->CTLR1;
+
+    if((instance == TIM1) || (instance == TIM2) || (instance == TIM3) || (instance == TIM4) || (instance == TIM5))
+    {
+        tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
+        tmpcr1 |= (uint32_t)mode;
+    }
+
+    tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
+    tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
+
+    instance->CTLR1 = tmpcr1;
+}
+
+void BasicTimer::enable_arr_sync(const bool en){
+    if(en){
+        instance->CTLR1 = instance->CTLR1 | TIM_ARPE;
+    }else{
+        instance->CTLR1 = (instance->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
+    }
+}
+
+void BasicTimer::enable_psc_sync(const bool en){
+    if(en){
+        instance->SWEVGR = instance->SWEVGR | TIM_PSCReloadMode_Immediate;
+    }else{
+        instance->SWEVGR = instance->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
+    }
 }
 
 
-void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
-    this->enable_rcc(true);
-    uint32_t raw_period = this->get_clk() / freq;
+void BasicTimer::set_freq(const uint32_t freq){
+    uint32_t raw_period = this->get_bus_freq() / freq;
 
     // TIM_Get_BusFreq(instance);
     // uint32_t raw_period = 144000000 / freq;
@@ -188,28 +230,20 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
         cycle++;
     }
 
-    if(raw_period / cycle == 0) HALT;
+    if(raw_period / cycle == 0) while(true);
 
-    init(raw_period / cycle, cycle, mode, en);
+    set_arr(raw_period / cycle - 1);
+    set_psc(cycle - 1);
 }
 
-void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mode, const bool en){
+
+void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     this->enable_rcc(true);
 
     TIM_InternalClockConfig(instance);
 
-    const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
-        .TIM_Prescaler = uint16_t(MAX(int(cycle - 1), 0)),
-        .TIM_CounterMode = (uint16_t)mode,
-        .TIM_Period = uint16_t(MAX(int(period - 1), 0)),
-        .TIM_ClockDivision = TIM_CKD_DIV1,
-        .TIM_RepetitionCounter = 0,
-    };
-
-    TIM_TimeBaseInit(instance, &TIM_TimeBaseStructure);
-
-    //令人困惑的是 删除这行将无法正常工作
-    this->get_clk();
+    set_freq(freq);
+    set_count_mode(mode);
 
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
@@ -288,7 +322,7 @@ void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_dead_zone(const uint32_t ns){
+void AdvancedTimer::set_dead_zone_ns(const uint32_t ns){
     uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance->BDTR;
@@ -297,32 +331,32 @@ void AdvancedTimer::set_dead_zone(const uint32_t ns){
     instance->BDTR = tempreg;
 }
 
-uint8_t AdvancedTimer::calculate_deadzone(const uint ns){
-	const uint64_t busFreq = this->get_clk();
+uint8_t AdvancedTimer::calculate_deadzone(const uint32_t ns){
+	const uint64_t busFreq = this->get_bus_freq();
 
     uint8_t dead = (ns * (busFreq / 1000000) / 1000);
 
     if(dead < 128){
 
     }else if(dead < 256){
-        uint8_t head = 0b10000000;
-        uint8_t mask = 0b00111111;
+        const uint8_t head = 0b10000000;
+        const uint8_t mask = 0b00111111;
 
         dead = MIN(dead, 254) >> 1;
         dead -= 64;
         dead &= mask;
         dead |= head;
     }else if(dead < 509){
-        uint8_t head = 0b11000000;
-        uint8_t mask = 0b00011111;
+        const uint8_t head = 0b11000000;
+        const uint8_t mask = 0b00011111;
 
         dead = MIN(dead, 504) >> 1;
         dead -= 32;
         dead &= mask;
         dead |= head;
     }else if(dead < 1009){
-        uint8_t head = 0b11100000;
-        uint8_t mask = 0b00011111;
+        const uint8_t head = 0b11100000;
+        const uint8_t mask = 0b00011111;
 
         dead = MIN(dead, 1008) >> 4;
         dead -= 32;
