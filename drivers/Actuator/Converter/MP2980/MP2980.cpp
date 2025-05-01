@@ -4,9 +4,9 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-#define MP2980_DEBUG
+#define MP2980_DEBUG_EN
 
-#ifdef MP2980_DEBUG
+#ifdef MP2980_DEBUG_EN
 #undef MP2980_DEBUG
 #define MP2980_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MP2980_PANIC(...) PANIC(__VA_ARGS__)

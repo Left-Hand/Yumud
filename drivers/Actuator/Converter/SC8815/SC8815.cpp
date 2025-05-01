@@ -6,9 +6,9 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define SC8815_DEBUG
+#define SC8815_DEBUG_EN
 
-#ifdef SC8815_DEBUG
+#ifdef SC8815_DEBUG_EN
 #undef SC8815_DEBUG
 #define SC8815_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define SC8815_PANIC(...) PANIC(__VA_ARGS__)
