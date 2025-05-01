@@ -90,7 +90,9 @@ struct VL6180X_Collections{
 
     enum class Error_Kind:uint8_t{
         WrongWhoAmI,
-        InvalidScaling
+        InvalidScaling,
+        RangeDataNotReady,
+        AmbientDataNotReady
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -142,20 +144,15 @@ public:
     [[nodiscard]]IResult<> set_scaling(uint8_t new_scaling);
     inline uint8_t get_scaling() { return scaling; }
 
-    [[nodiscard]]IResult<uint8_t> read_range_single();
-
-    [[nodiscard]]IResult<uint16_t> read_ambient_single();
 
     [[nodiscard]]IResult<> start_range_continuous(uint16_t period);
     [[nodiscard]]IResult<> start_ambient_continuous(uint16_t period);
     [[nodiscard]]IResult<> start_interleaved_continuous(uint16_t period);
     [[nodiscard]]IResult<> stop_continuous();
     
-    [[nodiscard]]IResult<uint8_t> read_range_continuous();
-    [[nodiscard]]IResult<uint16_t> read_ambient_continuous();
-    
 
-    bool timeout_occurred();
+    [[nodiscard]]IResult<uint16_t> read_ambient();
+    
 
     [[nodiscard]]IResult<uint8_t> read_range_status();
 
@@ -167,18 +164,19 @@ public:
         return write_reg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
     }
 
-    [[nodiscard]]IResult<uint16_t> read_range_single_millimeters() { 
-        if(const auto res = read_range_single(); 
+    [[nodiscard]]IResult<uint16_t> read_range_millimeters() { 
+        if(const auto res = read_range(); 
             res.is_err()) return Err(res.unwrap_err());
         else return Ok(uint16_t(scaling) * res.unwrap());
     }
-    [[nodiscard]]IResult<uint16_t> read_range_continuous_millimeters() {
-        if(const auto res = read_range_continuous();
-            res.is_err()) return Err(res.unwrap_err());
-        else return Ok(uint16_t(scaling) * res.unwrap());
+
+    [[nodiscard]] IResult<> invoke_read_range(){
+        return write_reg(RegAddress::SYSRANGE__START, 0x01);
     }
-    inline void set_timeout(uint16_t timeout) { io_timeout = timeout; }
-    inline uint16_t get_timeout() { return io_timeout; }
+
+    [[nodiscard]] IResult<> invoke_read_ambient(){
+        return write_reg(RegAddress::SYSALS__START, 0x01);
+    }
 private:
     [[nodiscard]]IResult<> write_reg(RegAddress reg, uint8_t value){
         return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
@@ -209,12 +207,17 @@ private:
         return phy_.read_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
+    [[nodiscard]]IResult<uint8_t> read_range();
 private:
     VL6180X_Phy phy_;
     uint8_t scaling;
     int8_t ptp_offset;
-    uint16_t io_timeout;
-    bool did_timeout;
 };
 
+}
+
+namespace ymd{
+OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error & err);
+
+OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error_Kind & err_kind);
 }

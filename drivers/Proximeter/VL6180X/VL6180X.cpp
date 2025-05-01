@@ -138,7 +138,7 @@ IResult<> VL6180X::configure_default(){
 		res.is_err()) return res;
 
 	// sysals__integration_period = 99 (100 ms)
-	if(const auto res = write_reg16_bit(RegAddress::SYSALS__INTEGRATION_PERIOD, 0x0063);
+	if(const auto res = write_reg16_bit(RegAddress::SYSALS__INTEGRATION_PERIOD, 99);
 		res.is_err()) return res;
 
 	// sysrange__vhv_recalibrate = 1 (manually trigger a VHV recalibration)
@@ -216,19 +216,6 @@ IResult<> VL6180X::set_scaling(uint8_t new_scaling){
 	return Ok();
 }
 
-// Performs a single-shot ranging measurement
-IResult<uint8_t> VL6180X::read_range_single(){
-	if(const auto res = write_reg(RegAddress::SYSRANGE__START, 0x01);
-		res.is_err()) return Err(res.unwrap_err());
-	return read_range_continuous();
-}
-
-// Performs a single-shot ambient light measurement
-IResult<uint16_t> VL6180X::read_ambient_single(){
-	if(const auto res = write_reg(RegAddress::SYSALS__START, 0x01);
-		res.is_err()) return Err(res.unwrap_err());
-	return read_ambient_continuous();
-}
 
 // Starts continuous ranging measurements with the given period in ms
 // (10 ms resolution; defaults to 100 ms if not specified).
@@ -370,22 +357,15 @@ IResult<> VL6180X::stop_continuous(){
 // Returns a range reading when continuous mode is activated
 // (readRangeSingle() also calls this function after starting a single-shot
 // range measurement)
-IResult<uint8_t> VL6180X::read_range_continuous(){
-	uint16_t millis_start = millis();
+IResult<uint8_t> VL6180X::read_range(){
 	// While computation is not finished
 	// only watching if bits 2:0 (mask 0x07) are set to 0b100 (0x04)
-	while ((({
+	if((({
 		uint8_t dummy;
 		if(const auto res = read_reg(RegAddress::RESULT__INTERRUPT_STATUS_GPIO, dummy);
 			res.is_err()) return Err(res.unwrap_err());
 		dummy;
-	}) & 0x07) != 0x04){
-		if (io_timeout > 0 && ((uint16_t)millis() - millis_start) > io_timeout)
-		{
-			did_timeout = true;
-			return Ok(255);
-		}
-	}
+	}) & 0x07) != 0x04) return Err(Error::RangeDataNotReady);
 
 	uint8_t range; 
 	if(const auto res = read_reg(RegAddress::RESULT__RANGE_VAL, range);
@@ -399,25 +379,16 @@ IResult<uint8_t> VL6180X::read_range_continuous(){
 // Returns an ambient light reading when continuous mode is activated
 // (readAmbientSingle() also calls this function after starting a single-shot
 // ambient light measurement)
-IResult<uint16_t> VL6180X::read_ambient_continuous()
-{
-	uint16_t millis_start = millis();
+IResult<uint16_t> VL6180X::read_ambient(){
 	// While computation is not finished
 	// only watching if bits 5:3 (mask 0x38) are set to 0b100 (0x20)
-	while (
+	if(
 		(({
 			uint8_t dummy;
 			if(const auto res = read_reg(RegAddress::RESULT__INTERRUPT_STATUS_GPIO, dummy);
 				res.is_err()) return Err(res.unwrap_err());
 			dummy; 
-		})
-		& 0x38) != 0x20)
-	{
-		if (io_timeout > 0 && (millis() - millis_start) > io_timeout){
-			did_timeout = true;
-			return Ok(0);
-		}
-	}
+		}) & 0x38) != 0x20) return Err(Error::AmbientDataNotReady);
 
 	uint16_t ambient;
 	if(const auto res = read_reg16_bit(RegAddress::RESULT__ALS_VAL, ambient);
@@ -428,14 +399,6 @@ IResult<uint16_t> VL6180X::read_ambient_continuous()
 	return Ok(ambient);
 }
 
-// Did a timeout occur in one of the read functions since the last call to
-// timeout_occurred()?
-bool VL6180X::timeout_occurred(){
-	bool tmp = did_timeout;
-	did_timeout = false;
-	return tmp;
-}
-
 // Get ranging success/error status code (Use it before using a measurement)
 // Return error code; One of possible VL6180X_ERROR_* values
 IResult<uint8_t> VL6180X::read_range_status(){
@@ -443,4 +406,23 @@ IResult<uint8_t> VL6180X::read_range_status(){
 	if(const auto res = read_reg(RegAddress::RESULT__RANGE_STATUS, dummy);
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok(dummy >> 4);
+}
+
+namespace ymd{
+
+OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error & err){
+	using Kind = drivers::VL6180X::Error_Kind;
+	if(err.is<Kind>()) return os << err.as<Kind>().unwrap();
+	else return os << err.as<hal::HalError>().unwrap();
+}
+OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error_Kind & err_kind){
+	using Kind = drivers::VL6180X::Error_Kind;
+	switch(err_kind){
+		case Kind::WrongWhoAmI: return os << "WrongWhoAmI";
+		case Kind::InvalidScaling: return os << "InvalidScaling";
+		case Kind::RangeDataNotReady: return os << "RangeDataNotReady";
+		case Kind::AmbientDataNotReady: return os << "AmbientDataNotReady";
+		default: __builtin_unreachable();
+	}
+}
 }

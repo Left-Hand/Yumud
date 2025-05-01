@@ -19,13 +19,13 @@ using drivers::VL6180X;
 
 [[maybe_unused]]
 static void vl6180x_range_single_shot_tb(VL6180X & vl6180){
-    vl6180.init();
-    vl6180.configure_default();
-    vl6180.set_timeout(500);
+    vl6180.init().unwrap();
+    vl6180.configure_default().unwrap();
 
+    vl6180.invoke_read_range().unwrap();
     while(true){
         DEBUG_PRINTLN(
-            vl6180.read_range_single_millimeters().unwrap()
+            vl6180.read_range_millimeters().unwrap()
         );
     }
 }
@@ -34,15 +34,21 @@ static void vl6180x_range_single_shot_tb(VL6180X & vl6180){
 static void vl6180x_range_single_shot_scaling_tb(VL6180X & vl6180){
     static constexpr auto SCALING = 2;
 
-    vl6180.init();
-    vl6180.configure_default();
-    vl6180.set_scaling(SCALING);
-    vl6180.set_timeout(500);
+    vl6180.init().unwrap();
+    vl6180.configure_default().unwrap();
+    vl6180.set_scaling(SCALING).unwrap();
+
+    vl6180.invoke_read_range().unwrap();
     while(true){
-        DEBUG_PRINTLN(
-            // vl6180.get_scaling().unwrap(),
-            vl6180.read_range_single_millimeters().unwrap()
-        );
+
+        const auto res = vl6180.read_range_millimeters();
+
+        if(res.is_err()){
+            // DEBUG_PRINTLN(res.unwrap_err());
+        }else{
+            DEBUG_PRINTLN(res.unwrap());
+            vl6180.invoke_read_range().unwrap();
+        }
         delay(1);
     }
 }
@@ -50,33 +56,32 @@ static void vl6180x_range_single_shot_scaling_tb(VL6180X & vl6180){
 
 [[maybe_unused]]
 static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){ 
-    vl6180.init();
-    vl6180.configure_default();
+    vl6180.init().unwrap();
+    vl6180.configure_default().unwrap();
 
     // Reduce range max convergence time and ALS integration
     // time to 30 ms and 50 ms, respectively, to allow 10 Hz
     // operation (as suggested by table "Interleaved mode
     // limits (10 Hz operation)" in the datasheet).
-    vl6180.set_max_convergence_time(30);
-    vl6180.set_inter_measurement_period(50);
+    vl6180.set_max_convergence_time(30).unwrap();
+    vl6180.set_inter_measurement_period(50).unwrap();
 
-    vl6180.set_timeout(500);
 
     // stop continuous mode if already active
-    vl6180.stop_continuous();
+    vl6180.stop_continuous().unwrap();
     // in case stopContinuous() triggered a single-shot
     // measurement, wait for it to complete
     delay(1300);
     // start interleaved continuous mode with period of 100 ms
-    vl6180.start_interleaved_continuous(100);
-    vl6180.start_ambient_continuous(100);
-    vl6180.start_range_continuous(100);
+    vl6180.start_interleaved_continuous(100).unwrap();
+    vl6180.start_ambient_continuous(100).unwrap();
+    vl6180.start_range_continuous(100).unwrap();
 
 
     while(true){
         DEBUG_PRINTLN(
-            vl6180.read_ambient_continuous().unwrap(),
-            vl6180.read_range_continuous_millimeters().unwrap()
+            vl6180.read_ambient().unwrap_or(114514),
+            vl6180.read_range_millimeters().unwrap_or(114514)
         );
     }
 }
@@ -88,7 +93,7 @@ void vl6180x_main(){
     // DEBUGGER.no_brackets();
 
     hal::I2cSw i2c = {SCL_GPIO, SDA_GPIO};
-    i2c.init(200_KHz);
+    i2c.init(400_KHz);
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     VL6180X vl6180{i2c};

@@ -535,6 +535,18 @@ public:
         }
     }
 
+    
+    __fast_inline constexpr 
+    T unwrap_or(auto && val) const {
+        if (likely(is_ok())) {
+            return storage_.unwrap();
+        } else {
+            return static_cast<T>(val);
+        }
+    }
+
+    
+
     struct _PanicWithOutUnlock{
         ~_PanicWithOutUnlock(){
             if (will_panic) {
