@@ -96,7 +96,7 @@ constexpr T as_fn() const {return T(*this);}\
 
 DEF_REG_TEMPLATE(Reg8, uint8_t, as_u8)
 DEF_REG_TEMPLATE(Reg16, uint16_t, as_u16)
-// DEF_REG_TEMPLATE(Reg24, uint24_t)
+DEF_REG_TEMPLATE(Reg24, uint24_t, as_u24)
 DEF_REG_TEMPLATE(Reg32, uint32_t, as_u32)
 DEF_REG_TEMPLATE(Reg64, uint64_t, as_u64)
 
@@ -107,7 +107,7 @@ DEF_REG_TEMPLATE(Reg64i, int64_t, as_i64)
 
 DEF_REGC_TEMPLATE(RegC8, uint8_t, as_u8)
 DEF_REGC_TEMPLATE(RegC16, uint16_t, as_u16)
-// DEF_REGC_TEMPLATE(RegC24, uint24_t)
+DEF_REGC_TEMPLATE(RegC24, uint24_t, as_u24)
 DEF_REGC_TEMPLATE(RegC32, uint32_t, as_u32)
 DEF_REGC_TEMPLATE(RegC64, uint64_t, as_u64)
 
