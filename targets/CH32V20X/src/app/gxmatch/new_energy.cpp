@@ -356,15 +356,15 @@ public:
         //因为是中心对齐的顶部触发 所以频率翻倍
         timer.init(MOTOR_ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
 
-        pwm_pos.init();
-        pwm_neg.init();
+        pwm_pos.init({
+            .cvr_sync_en = EN,
+            .valid_level = HIGH
+        });
+        pwm_neg.init({
+            .cvr_sync_en = EN,
+            .valid_level = HIGH
+        });
     
-        pwm_pos.set_sync();
-        pwm_neg.set_sync();
-    
-        pwm_pos.set_polarity(false);
-        pwm_neg.set_polarity(false);
-
         
         adc1.init(
             {
@@ -379,11 +379,10 @@ public:
 
         timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
-        timer3.oc(4).init(TimerOcMode::UpValid, false)
-            .set_output_state(true)
-            .set_idle_state(false);
+        timer3.oc(4).init({.install_en = DISEN});
+        timer3.oc(4).enable_output(EN);
 
-        timer3.oc(4).cvr() = int(1);
+        timer3.oc(4).cvr() = 1;
     }
 
     void process(const real_t t){

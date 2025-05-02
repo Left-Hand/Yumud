@@ -31,6 +31,8 @@ __interrupt void fname(void){\
     }\
 }\
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 #ifdef ENABLE_UART1
 UART_IT_TEMPLATE(uart1, USART1, USART1_IRQHandler)
@@ -64,6 +66,8 @@ UART_IT_TEMPLATE(uart7, USART7, UART7_IRQHandler)
 UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
 #endif
 
+
+#pragma GCC diagnostic pop
 
 
 

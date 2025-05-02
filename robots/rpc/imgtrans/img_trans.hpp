@@ -29,7 +29,15 @@ struct PieceHeader{
     TransType trans_type;
 };
 
-struct ImagePieceUnit:public PieceHeader{
+struct Inner {
+    int x;
+    double y;
+};
+
+
+struct ImagePieceUnit{
+    uint16_t header;
+    TransType trans_type;
     uint32_t hash;
     uint8_t time_stamp;
     uint8_t size_x;

@@ -99,8 +99,6 @@ public:
 private:
     std::array<Callback, 8> cbs_;
 
-    void set_psc(const uint16_t psc);
-    void set_arr(const uint16_t arr);
 
 protected:
     TIM_TypeDef * instance;
@@ -129,10 +127,12 @@ protected:
     }
 
 public:
+    BasicTimer(TIM_TypeDef * _base):instance(_base){;}
+
     void set_count_mode(const TimerCountMode mode);
 
-
-    BasicTimer(TIM_TypeDef * _base):instance(_base){;}
+    void set_psc(const uint16_t psc);
+    void set_arr(const uint16_t arr);
 
     void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
     void enable(const bool en = true);

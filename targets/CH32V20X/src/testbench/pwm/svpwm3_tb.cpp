@@ -9,6 +9,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -18,8 +19,8 @@
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
 
-static constexpr size_t FREQ = 2_KHz;
-// #define FREQ 200
+static constexpr size_t CHOP_FREQ = 40_KHz;
+// #define CHOP_FREQ 200
 
 // #define UART uart1
 #define UART hal::uart2
@@ -32,7 +33,7 @@ static constexpr size_t FREQ = 2_KHz;
 #define TIM1_USE_CC4 0
 // #define TIM1_USE_CC4 1
 
-void sincos_pwm_main(){
+void svpwm3_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
 
@@ -47,13 +48,12 @@ void sincos_pwm_main(){
     auto & timer = timer4;
     #endif
 
-    auto & pwm_ap = timer.oc(1);
-    auto & pwm_an = timer.oc(2);
-    auto & pwm_bp = timer.oc(3);
-    auto & pwm_bn = timer.oc(4);
+    auto & pwm_u = timer.oc(1);
+    auto & pwm_v = timer.oc(2);
+    auto & pwm_w = timer.oc(3);
 
 
-    timer.init(FREQ, TimerCountMode::CenterAlignedDualTrig);
+    timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig);
     timer.enable_arr_sync();
 
     #if TIM_INDEX == 1
@@ -89,20 +89,17 @@ void sincos_pwm_main(){
         .valid_level = HIGH
     };
 
-    const TimerOcPwmConfig pwm_inv_cfg = {
-        .cvr_sync_en = EN,
-        .valid_level = LOW,
-    };
-    
-    pwm_ap.init(pwm_noinv_cfg);
-    pwm_an.init(pwm_noinv_cfg);
-    pwm_bp.init(pwm_inv_cfg);
-    pwm_bn.init(pwm_inv_cfg);
+    // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
+    timer.init(20000, TimerCountMode::CenterAlignedUpTrig);
 
-    TimerOcPair pwm_a = {pwm_ap, pwm_an};
-    TimerOcPair pwm_b = {pwm_bp, pwm_bn};
+    timer.oc(4).init({});
+    timer.oc(4).enable_output(EN);
+    timer.oc(4).cvr() = timer.arr() - 1;
 
-    pwm_b.inverse(true);
+    pwm_u.init(pwm_noinv_cfg);
+    pwm_v.init(pwm_noinv_cfg);
+    pwm_w.init(pwm_noinv_cfg);
+
 
     adc1.init(
         {
@@ -146,11 +143,13 @@ void sincos_pwm_main(){
 
     while(true){
         
-        const auto t = time() * real_t(3 * TAU);
-        const auto [st, ct] = sincospu(t);
-        
-        pwm_a = st;
-        pwm_b = ct;
+        const auto t = time() * real_t(5 * TAU);
+        const auto [st,ct] = sincos(t);
+        const auto [u, v, w] = drivers::SVM(st * 0.5_r, ct * 0.5_r);
+
+        pwm_u.set_duty(u);
+        pwm_v.set_duty(v);
+        pwm_w.set_duty(w);
 
         DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
     }

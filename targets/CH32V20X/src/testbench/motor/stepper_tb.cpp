@@ -162,15 +162,10 @@ void stepper_tb(UartHw & logger_inst){
     
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedDownTrig);
     timer1.enable_arr_sync();
-    timer1.oc(1).init();
-    timer1.oc(2).init();
-    timer1.oc(3).init();
-    timer1.oc(4).init();
-
-    timer1.oc(1).set_polarity(false);
-    timer1.oc(2).set_polarity(false);
-    timer1.oc(3).set_polarity(false);
-    timer1.oc(4).set_polarity(false);
+    timer1.oc(1).init({.valid_level = LOW});
+    timer1.oc(2).init({.valid_level = LOW});
+    timer1.oc(3).init({.valid_level = LOW});
+    timer1.oc(4).init({.valid_level = LOW});
     
     // using AdcChannelEnum = AdcChannelIndex;
     // using AdcCycleEnum = AdcSampleCycles;

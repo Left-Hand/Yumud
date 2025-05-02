@@ -152,3 +152,6 @@ void rrs3_robot_main();
 void nuedc_2023e_main();
 void tm1637_main();
 void vl6180x_main();
+void svpwm3_main();
+void phase3pwm_main();
+void pfm_zvs_main();
