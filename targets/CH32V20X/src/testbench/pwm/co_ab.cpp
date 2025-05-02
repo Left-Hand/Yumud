@@ -9,53 +9,46 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 
-class TimerOCTwins:public PwmIntf{
-protected:
-    TimerOC & oc_;
-    TimerOCN & ocn_;
-    bool last_polar = false;
-public:
-    TimerOCTwins(AdvancedTimer & timer, const size_t idx):
-        oc_(timer.oc(idx)),
-        ocn_(timer.ocn(idx)){;}
+static constexpr size_t CHOP_FREQ = 40_KHz;
+// #define CHOP_FREQ 200
 
-    TimerOCTwins(TimerOC & oc, TimerOCN & ocn):
-        oc_(oc), ocn_(ocn){;}
+// #define UART uart1
+#define UART hal::uart2
 
-    TimerOCTwins & operator = (const real_t value) override{
-        const bool polar = value > 0;
-        if(last_polar != polar){
-            last_polar = polar;
+#define TIM_INDEX 1
+// #define TIM_INDEX 2
+// #define TIM_INDEX 3
+// #define TIM_INDEX 4
 
-            if(polar){
-                oc_.set_output_state(true);
-                ocn_.set_output_state(false);
-            }else{
-                oc_.set_output_state(false);
-                ocn_.set_output_state(true);
-            }
-        }
-        oc_ = abs(value);
-        return *this;
-    }
-};
+#define TIM1_USE_CC4 0
+// #define TIM1_USE_CC4 1
+
+
+
 
 void co_ab_main(){
     uart2.init(DEBUG_UART_BAUD);
     DEBUGGER.retarget(&uart2);
 
-    auto & timer = timer1;
+    #if TIM_INDEX == 1
+    auto & timer = hal::timer1;
+    #elif TIM_INDEX == 2
+    auto & timer = hal::timer2;
+    #elif TIM_INDEX == 3
+    auto & timer = hal::timer3;
+    #elif TIM_INDEX == 4
+    auto & timer = hal::timer4;
+    #endif
+
     auto & pwm_p = timer.oc(1);
     auto & pwm_n = timer.ocn(1);
 
-    timer.init(10_KHz);
+    timer.init(CHOP_FREQ);
 
-    pwm_p.init();
-    pwm_n.init();
+    pwm_p.init({});
+    pwm_n.init({});
 
-    pwm_p.set_idle_state(true);
-    pwm_n.set_idle_state(true);
-    TimerOCTwins pwm_pair{pwm_p, pwm_n};
+    TimerOcMirror pwm_mirror{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(millis());
@@ -64,7 +57,7 @@ void co_ab_main(){
         auto prog = sin(6 * time());
         // pwm_gpio = bool(prog > 0.5_r);
         // pwm_p = prog;
-        pwm_pair = prog;
+        pwm_mirror = prog;
         // delay(200);
     }    
 }

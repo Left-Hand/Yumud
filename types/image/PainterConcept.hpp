@@ -150,7 +150,7 @@ public:
     [[nodiscard]] IResult<> draw_args(const Vector2u pos, Ts && ... args){
         StringStream ss;
         ss.print(std::forward<Ts>(args)...);
-        return draw_string(pos, std::move(ss).move_str());
+        return draw_string(pos, StringView(std::move(ss).move_str()));
     }
     
     template<typename Fn>

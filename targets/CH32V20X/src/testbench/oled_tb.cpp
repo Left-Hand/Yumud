@@ -51,7 +51,7 @@ public:
 
     void render(){
         frame_.fill(0);
-        painter_.draw_string({0,0}, String(millis())).unwrap();
+        painter_.draw_args({0,0}, millis()).unwrap();
 
         String str;
 
@@ -76,9 +76,9 @@ public:
                 break;
         }
 
-        // painter_.draw_string{0,8}, "func:" + str);
-        painter_.draw_string({0,8}, "func:").unwrap();
-        painter_.draw_string({0,16}, send_str).unwrap();
+        // painter_.draw_args{0,8}, "func:" + str);
+        painter_.draw_args({0,8}, "func:").unwrap();
+        painter_.draw_args({0,16}, StringView(send_str)).unwrap();
     }
 
     void next(){

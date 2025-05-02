@@ -1,5 +1,7 @@
 #include "timer.hpp"
 #include "core/system.hpp"
+#include <optional>
+// #include "ral/ch32/ch32_common_tim_def.hpp"
 
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
 #define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
@@ -42,6 +44,108 @@ __inline void TIM_ASSERT(bool x){
 #else
 #define TIM_ASSERT(x)
 #endif
+
+
+//pure function, easy test
+static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
+	const uint32_t bus_freq, 
+	const uint32_t tim_freq, 
+	std::pair<uint16_t, uint16_t> arr_range
+){
+    const auto [min_arr, max_arr] = arr_range;
+    const unsigned int target_div = bus_freq / tim_freq;
+    
+    auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
+        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+    };
+
+    [[maybe_unused]]
+    auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
+        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+    };
+    
+    auto calc_freq_from_arr_and_psc = [bus_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
+        return bus_freq / (arr + 1) / (psc + 1);
+    };
+    
+    const auto min_psc = calc_psc_from_arr(max_arr);
+    const auto max_psc = calc_psc_from_arr(min_arr);
+
+    if (min_arr > max_arr) __builtin_abort();
+    
+    struct Best{
+        uint16_t arr;
+        uint16_t psc;
+        uint32_t freq_err;
+    };
+    
+    Best best{max_arr, min_psc, UINT32_MAX};
+    for(int arr = max_arr; arr >= min_arr; arr--){
+        const auto expect_psc = calc_psc_from_arr(arr);
+        if((expect_psc >= max_psc) or (expect_psc < min_psc)) continue;
+        
+        std::optional<uint32_t> last_freq_;
+
+        // const int psc_start = MAX(min_psc, expect_psc - 5);
+        // const int psc_stop = MIN(max_psc, expect_psc + 5);
+        // if(psc_start >= psc_stop) continue;
+
+        // for(int psc = psc_start; psc < psc_stop; psc++){
+        for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
+            const auto freq = calc_freq_from_arr_and_psc(arr, psc);
+            if(last_freq_.has_value()){
+                if((last_freq_.value() - tim_freq) * (freq - tim_freq) < 0) break;
+            }else{
+                last_freq_ = freq;
+            }
+            const auto freq_err = uint32_t(ABS(int(freq) - int(tim_freq)));
+            if(freq_err < best.freq_err){
+                if(freq_err == 0) return {uint16_t(arr), psc};
+                best = {uint16_t(arr), uint16_t(psc), freq_err};
+            }
+        }
+    }
+    
+    if(best.freq_err == UINT32_MAX) __builtin_abort();
+    return {best.arr, best.psc};
+}
+
+
+static constexpr uint8_t calculate_deadzone_code_from_ns(const uint32_t bus_freq, const uint32_t ns){
+
+    const uint16_t scale = (ns * (bus_freq / 1000000) / 1000);
+    if(scale < 128){
+        return scale;
+    }else if(scale < 256){
+        const uint8_t head = 0b10000000;
+        const uint8_t mask = 0b00111111;
+
+        return ((((MIN(scale, 254) >> 1) - 64) & mask) | head);
+    }else if(scale < 509){
+        const uint8_t head = 0b11000000;
+        const uint8_t mask = 0b00011111;
+
+        return ((((MIN(scale, 504) >> 1) - 32) & mask) | head);
+    }else if(scale < 1009){
+        const uint8_t head = 0b11100000;
+        const uint8_t mask = 0b00011111;
+
+        return (((MIN(scale, 1008) >> 4) - 32) & mask) | head;
+    }else{
+        return 0xff;
+    }
+}
+
+namespace details{
+    void static_test(){
+        // Test 1: Perfect match found
+        static_assert(std::get<0>(calc_best_arr_and_psc(72'000'000, 
+            2'000, {0, 65535})) == 35999, "Test 1: ARR mismatch");
+        static_assert(std::get<1>(calc_best_arr_and_psc(72'000'000, 
+            2'000, {0, 65535})) == 0, "Test 1: PSC mismatch");
+    }
+}
+
 
 void BasicTimer::enable_rcc(const bool en){
     switch(uint32_t(instance)){
@@ -168,48 +272,69 @@ void BasicTimer::remap(const uint8_t rm){
     }
 }
 
-uint BasicTimer::get_clk(){
-    return internal::is_advanced_timer(instance) ? sys::clock::get_apb2_freq() : sys::clock::get_apb1_freq();
+uint32_t BasicTimer::get_bus_freq(){
+    return internal::is_advanced_timer(instance) ? 
+        sys::clock::get_apb2_freq() : 
+        sys::clock::get_apb1_freq();
+}
+
+void BasicTimer::set_psc(const uint16_t psc){
+    instance->PSC = psc;
+}
+void BasicTimer::set_arr(const uint16_t arr){
+    instance->ATRLR = arr;
+}
+
+void BasicTimer::set_count_mode(const TimerCountMode mode){
+    auto tmpcr1 = instance->CTLR1;
+
+    if((instance == TIM1) || (instance == TIM2) || (instance == TIM3) || (instance == TIM4) || (instance == TIM5))
+    {
+        tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
+        tmpcr1 |= (uint32_t)mode;
+    }
+
+    tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
+    tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
+
+    instance->CTLR1 = tmpcr1;
+}
+
+void BasicTimer::enable_arr_sync(const bool en){
+    if(en){
+        instance->CTLR1 = instance->CTLR1 | TIM_ARPE;
+    }else{
+        instance->CTLR1 = (instance->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
+    }
+}
+
+void BasicTimer::enable_psc_sync(const bool en){
+    if(en){
+        instance->SWEVGR = instance->SWEVGR | TIM_PSCReloadMode_Immediate;
+    }else{
+        instance->SWEVGR = instance->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
+    }
+}
+
+
+void BasicTimer::set_freq(const uint32_t freq){
+    const auto [arr, psc] = calc_best_arr_and_psc(
+        get_bus_freq(), freq, {0, 65535}
+    );
+
+    set_arr(arr);
+    set_psc(psc);
 }
 
 
 void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     this->enable_rcc(true);
-    uint32_t raw_period = this->get_clk() / freq;
-
-    // TIM_Get_BusFreq(instance);
-    // uint32_t raw_period = 144000000 / freq;
-
-    // can`t adaptly select the best frequency by gcd
-    // TODO
-
-    uint16_t cycle = 1;
-    while(raw_period > 16384 * cycle){
-        cycle++;
-    }
-
-    if(raw_period / cycle == 0) HALT;
-
-    init(raw_period / cycle, cycle, mode, en);
-}
-
-void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mode, const bool en){
-    this->enable_rcc(true);
 
     TIM_InternalClockConfig(instance);
 
-    const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
-        .TIM_Prescaler = uint16_t(MAX(int(cycle - 1), 0)),
-        .TIM_CounterMode = (uint16_t)mode,
-        .TIM_Period = uint16_t(MAX(int(period - 1), 0)),
-        .TIM_ClockDivision = TIM_CKD_DIV1,
-        .TIM_RepetitionCounter = 0,
-    };
-
-    TIM_TimeBaseInit(instance, &TIM_TimeBaseStructure);
-
-    //令人困惑的是 删除这行将无法正常工作
-    this->get_clk();
+    set_freq(freq);
+    set_count_mode(mode);
+    enable_arr_sync(true);
 
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
@@ -270,7 +395,7 @@ void GenericTimer::enable_single(const bool _single){
 }
 
 void GenericTimer::set_trgo_source(const TrgoSource source){
-    TIM_SelectOutputTrigger(instance, (uint8_t)source);
+    TIM_SelectOutputTrigger(instance, uint8_t(source));
 }
 
 void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
@@ -288,7 +413,7 @@ void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_dead_zone(const uint32_t ns){
+void AdvancedTimer::set_dead_zone_ns(const uint32_t ns){
     uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance->BDTR;
@@ -297,42 +422,11 @@ void AdvancedTimer::set_dead_zone(const uint32_t ns){
     instance->BDTR = tempreg;
 }
 
-uint8_t AdvancedTimer::calculate_deadzone(const uint ns){
-	const uint64_t busFreq = this->get_clk();
-
-    uint8_t dead = (ns * (busFreq / 1000000) / 1000);
-
-    if(dead < 128){
-
-    }else if(dead < 256){
-        uint8_t head = 0b10000000;
-        uint8_t mask = 0b00111111;
-
-        dead = MIN(dead, 254) >> 1;
-        dead -= 64;
-        dead &= mask;
-        dead |= head;
-    }else if(dead < 509){
-        uint8_t head = 0b11000000;
-        uint8_t mask = 0b00011111;
-
-        dead = MIN(dead, 504) >> 1;
-        dead -= 32;
-        dead &= mask;
-        dead |= head;
-    }else if(dead < 1009){
-        uint8_t head = 0b11100000;
-        uint8_t mask = 0b00011111;
-
-        dead = MIN(dead, 1008) >> 4;
-        dead -= 32;
-        dead &= mask;
-        dead |= head;
-    }else{
-        dead = 0xff;
-    }
-
-    return dead;
+uint8_t AdvancedTimer::calculate_deadzone(const uint32_t ns){
+    return calculate_deadzone_code_from_ns(
+        this->get_bus_freq(),
+        ns
+    );
 }
 
 void BasicTimer::enable_it(const IT it,const NvicPriority request, const bool en){

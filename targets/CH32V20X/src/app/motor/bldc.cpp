@@ -307,21 +307,20 @@ void bldc_main(){
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
 
-    timer1.init(chopper_freq, TimerMode::CenterAlignedUpTrig);
+    timer1.init(chopper_freq, TimerCountMode::CenterAlignedUpTrig);
 
     auto & pwm_u = timer1.oc(1); 
     auto & pwm_v = timer1.oc(2); 
     auto & pwm_w = timer1.oc(3); 
 
-    timer1.oc(4).init(TimerOcMode::UpValid, false)
-                .set_output_state(true)
-                .set_idle_state(false);
+    timer1.oc(4).init({});
+    timer1.oc(4).enable_output(EN);
     
     timer1.oc(4).cvr() = timer1.arr() - 1;
 
-    pwm_u.init();
-    pwm_v.init();
-    pwm_w.init();
+    pwm_u.init({});
+    pwm_v.init({});
+    pwm_w.init({});
 
     spi1.init(18_MHz);
 

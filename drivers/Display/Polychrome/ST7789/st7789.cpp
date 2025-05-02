@@ -144,6 +144,23 @@ Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets p
             displayer.set_flush_dir_h(false);
             displayer.set_flush_dir_v(false);
             displayer.set_inversion(true);
+
+
+            // displayer.set_flip_x(false);
+            // displayer.set_flip_y(true);
+            // if(true){
+            //     displayer.set_swap_xy(true);
+            //     displayer.set_display_offset({40, 52}); 
+            // }else{
+            //     displayer.set_swap_xy(false);
+            //     displayer.set_display_offset({52, 40}); 
+            // }
+            // displayer.set_format_rgb(true);
+            // displayer.set_flush_dir_h(false);
+            // displayer.set_flush_dir_v(false);
+            // displayer.set_inversion(true);
+    
+            // displayer.fill(ColorEnum::BLACK);
             break;
         case _320X170:
             // displayer.set_flip_x(false);

@@ -9,7 +9,7 @@ void LT8960L::States::transition_to(const Kind status){
     // LT8960L_DEBUG(uint8_t(status));
 };
 
-Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
+Result<size_t, Error> LT8960L::transmit_rf(std::span<const uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while tx");
@@ -57,7 +57,7 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const std::byte> buf){
     }
 }
 
-Result<size_t, Error> LT8960L::receive_rf(std::span<std::byte> buf){
+Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while rx", uint8_t(states_.kind()));
@@ -187,7 +187,7 @@ constexpr std::array<First, sizeof...(Ts)> make_array(
     return Arr{std::forward<Ts>(args)...};
 }
 
-auto LT8960L::transmit_ble(std::span<const std::byte> buf) -> Result<size_t, Error>{
+auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error>{
     using RP = std::pair<uint8_t, uint16_t>;
     static constexpr auto CMDS = make_array<RP>(
         RP{7 , 0x0000},
@@ -257,7 +257,7 @@ auto LT8960L::transmit_ble(std::span<const std::byte> buf) -> Result<size_t, Err
     return Ok(0u);
 }
 
-Result<size_t, Error> LT8960L::receive_ble(std::span<std::byte> buf){
+Result<size_t, Error> LT8960L::receive_ble(std::span<uint8_t> buf){
     TODO();
     // uint8_t i, len;
     // LT8960L_start();

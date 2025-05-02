@@ -30,9 +30,9 @@ static constexpr size_t LT8960L_PACKET_SIZE = 12;
 // scexpr size_t LT8960L_BUFFER_SIZE = 12;
 
 class Tx{
-    Fifo_t<std::byte, LT8960L_PACKET_SIZE> fifo_;
+    Fifo_t<uint8_t, LT8960L_PACKET_SIZE> fifo_;
 
-    size_t write(std::span<const std::byte> pdata){
+    size_t write(std::span<const uint8_t> pdata){
         fifo_.push(pdata);
         return pdata.size();
     }
@@ -44,9 +44,9 @@ class Tx{
 
 
 class Rx{
-    Fifo_t<std::byte, LT8960L_PACKET_SIZE> fifo_;
+    Fifo_t<uint8_t, LT8960L_PACKET_SIZE> fifo_;
 
-    size_t read(std::span<std::byte> pdata){
+    size_t read(std::span<uint8_t> pdata){
         fifo_.pop(pdata);
         return pdata.size();
     }

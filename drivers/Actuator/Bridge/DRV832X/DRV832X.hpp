@@ -3,6 +3,9 @@
 #include <optional>
 #include <array>
 
+#include "core/utils/Result.hpp"
+#include "core/utils/errno.hpp"
+
 #include "concept/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -15,9 +18,11 @@ namespace ymd::drivers{
 
 class DRV832X:public Coil3DriverIntf{
 public:
-    enum class Error:uint8_t{
-        Unspecified = 0xff
+    enum class Error_Kind{
+
     };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     enum class PeakCurrent:uint8_t{
         _1_7A = 0,
@@ -306,15 +311,15 @@ protected:
         R16_CsaCtrl csa_ctrl;
     }regs_;
 
-    hal::HalResult write_reg(const RegAddress addr, const uint16_t reg);
-    hal::HalResult read_reg(const RegAddress addr, uint16_t & reg);
-    
+    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint16_t reg);
+    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint16_t & reg);
 
-    hal::HalResult write_reg(const auto & reg){
+
+    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
         return write_reg(reg.address, reg);
     }
 
-    hal::HalResult read_reg(auto & reg){
+    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
         return read_reg(reg.address, reg);
     }
 
@@ -328,27 +333,17 @@ public:
 
     void init();
 
-    Result<void, Error> set_peak_current(const PeakCurrent peak_current);
-    Result<void, Error> set_ocp_mode(const OcpMode ocp_mode);
-    // Result<void, Error> set_octw_mode(const OctwMode octw_mode);
-    Result<void, Error> set_gain(const Gain gain);
-    // Result<void, Error> set_oc_ad_table(const OcAdTable oc_ad_table);
-    Result<void, Error> enable_pwm3(const bool en = true);
+    [[nodiscard]] Result<void, Error> set_peak_current(const PeakCurrent peak_current);
+    [[nodiscard]] Result<void, Error> set_ocp_mode(const OcpMode ocp_mode);
+    // [[nodiscard]] Result<void, Error> set_octw_mode(const OctwMode octw_mode);
+    [[nodiscard]] Result<void, Error> set_gain(const Gain gain);
+    // [[nodiscard]] Result<void, Error> set_oc_ad_table(const OcAdTable oc_ad_table);
+    [[nodiscard]] Result<void, Error> enable_pwm3(const bool en = true);
 
-    Result<void, Error> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    Result<void, Error> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
-    Result<void, Error> set_drive_time(const PeakDriveTime ptime);
-
-};
+    [[nodiscard]] Result<void, Error> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] Result<void, Error> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] Result<void, Error> set_drive_time(const PeakDriveTime ptime);
 
 };
 
-namespace ymd::custom{
-    template<>
-    struct result_converter<void, drivers::DRV832X::Error, hal::HalResult> {
-        static Result<void, drivers::DRV832X::Error> convert(const hal::HalResult & res){
-            if(res.is_ok()) return Ok();
-            else return Err(drivers::DRV832X::Error::Unspecified); 
-        }
-    };
-}
+};

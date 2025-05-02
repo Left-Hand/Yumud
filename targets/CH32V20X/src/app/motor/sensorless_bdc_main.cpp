@@ -73,21 +73,16 @@ void at8222_tb(){
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻�?
-    timer.init(ISR_FREQ * 2, TimerMode::CenterAlignedUpTrig);
+    timer.init(ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
 
     auto & pwm_pos = timer.oc(1);
     auto & pwm_neg = timer.oc(2);
 
     
-    pwm_pos.init();
-    pwm_neg.init();
+    pwm_pos.init({});
+    pwm_neg.init({});
 
-    pwm_pos.set_sync();
-    pwm_neg.set_sync();
 
-    pwm_pos.set_polarity(true);
-    pwm_neg.set_polarity(true);
-    
     adc1.init(
         {
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
@@ -103,9 +98,7 @@ void at8222_tb(){
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);
 
-    timer.oc(4).init(TimerOcMode::UpValid, false)
-        .set_output_state(true)
-        .set_idle_state(false);
+    timer.oc(4).init({.install_en = DISEN});
 
     // timer.oc(4).cvr() = timer.arr() - 1; 
     // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 

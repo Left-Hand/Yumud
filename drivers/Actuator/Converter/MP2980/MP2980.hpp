@@ -1,6 +1,9 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/result.hpp"
+#include "core/utils/Errno.hpp"
+
 #include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
@@ -11,6 +14,15 @@ namespace ymd::drivers{
 
 class MP2980{
 public:
+    enum class Error_Kind{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class VrefSlewRate:uint8_t{
         _38_V_S,
         _50_V_S,
@@ -132,20 +144,36 @@ protected:
     MaskReg mask_reg = {};
     StatusReg status_reg = {};
 
-    hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg);
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult write_reg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return write_reg(reg.address, reg.as_val());
     }
 
 public:
@@ -156,22 +184,22 @@ public:
     MP2980(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     MP2980(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    MP2980 & setFeedBackVref(const real_t vref);
-    MP2980 & setFeedBackVrefMv(const uint vref_mv);
-    MP2980 & enablePowerSwitching(const bool en = true);
-    MP2980 & enableVrefChangeFunc(const bool en = true);
-    MP2980 & setPngState(const bool state);
-    MP2980 & enableDither(const bool en = true);
-    MP2980 & setVrefSlewRate(const VrefSlewRate slewrate);
-    MP2980 & setOvpMode(const OvpMode mode);
-    MP2980 & setOcpMode(const OcpMode mode);
-    MP2980 & setFsw(const Fsw fsw);
-    MP2980 & setBuckBoostFsw(const BuckBoostFsw fsw);
-    MP2980 & setCurrLimitThreshold(const CurrLimitThreshold threshold);
-    Interrupts interrupts();
-    MP2980 & setInterruptMask(const Interrupts mask);
-    MP2980 & setOutputVolt(const real_t output_volt);
-    MP2980 & init();
+    [[nodiscard]] IResult<> set_feed_back_vref(const real_t vref);
+    [[nodiscard]] IResult<> set_feed_back_vref_mv(const uint vref_mv);
+    [[nodiscard]] IResult<> enable_power_switching(const bool en = true);
+    [[nodiscard]] IResult<> enable_vref_change_func(const bool en = true);
+    [[nodiscard]] IResult<> set_png_state(const bool state);
+    [[nodiscard]] IResult<> enable_dither(const bool en = true);
+    [[nodiscard]] IResult<> set_vref_slew_rate(const VrefSlewRate slewrate);
+    [[nodiscard]] IResult<> set_ovp_mode(const OvpMode mode);
+    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode mode);
+    [[nodiscard]] IResult<> set_fsw(const Fsw fsw);
+    [[nodiscard]] IResult<> set_buck_boost_fsw(const BuckBoostFsw fsw);
+    [[nodiscard]] IResult<> set_curr_limit_threshold(const CurrLimitThreshold threshold);
+    [[nodiscard]] IResult<Interrupts> interrupts();
+    [[nodiscard]] IResult<> set_interrupt_mask(const Interrupts mask);
+    [[nodiscard]] IResult<> set_output_volt(const real_t output_volt);
+    [[nodiscard]] IResult<> init();
 };
 
 }

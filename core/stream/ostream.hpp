@@ -83,6 +83,7 @@ private:
         .splitter = ", ",
         .radix = 10,
         .eps = 3,
+        .indent = 0,
         .flags = 0,
     };
 

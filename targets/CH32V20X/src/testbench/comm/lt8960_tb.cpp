@@ -15,6 +15,8 @@
 
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 #include "hal/gpio/gpio_port.hpp"
+
+
 using namespace ymd::drivers;
 
 
@@ -49,7 +51,7 @@ bool has_rx_authority(){
 }
 
 
-// 伪隝机庝列生戝器（简坕线性坝馈移佝寄存器�?
+// 伪隝机庝列生戝器（简坕线性坝馈移佝寄存器�?
 class LFSR {
 public:
     LFSR(uint32_t seed = 0xACE12345) : state(seed) {}
@@ -65,26 +67,26 @@ private:
 };
 
 // 扰砝函数
-void scramble(std::span<std::byte> data) {
+void scramble(std::span<uint8_t> data) {
     LFSR lfsr;
     for (auto& byte : data) {
         for (size_t i = 0; i < 8; ++i) {
-            byte ^= std::byte(lfsr.next() << i);
+            byte ^= uint8_t(lfsr.next() << i);
         }
     }
 }
 
-// 坝扰砝函�?
-void descramble(std::span<std::byte> data) {
+// 坝扰砝函�?
+void descramble(std::span<uint8_t> data) {
     LFSR lfsr;
     for (auto& byte : data) {
         for (size_t i = 0; i < 8; ++i) {
-            byte ^= std::byte(lfsr.next() << i);
+            byte ^= uint8_t(lfsr.next() << i);
         }
     }
 }
 
-static constexpr uint8_t calc_crc(const std::span<const std::byte> pdata){
+static constexpr uint8_t calc_crc(const std::span<const uint8_t> pdata){
     uint8_t sum = 0;
     for(size_t i = 0; i < pdata.size(); i++){
         sum += uint8_t(pdata[i]);
@@ -99,17 +101,17 @@ auto make_payload_from_args(Ts && ... args){
     const auto crc = calc_crc(std::span(body));
 
     constexpr size_t size = total_bytes_v<std::decay_t<Ts> ... > + 1;
-    std::array<std::byte, size> payload;
+    std::array<uint8_t, size> payload;
     std::copy(body.begin(), body.end(), payload.begin());
-    payload[body.size()] = std::byte{crc};
+    payload[body.size()] = uint8_t{crc};
 
     return payload;
 };
 
 template<typename ... Ts>
-Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const std::byte> pdata){
+Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const uint8_t> pdata){
     auto crc = calc_crc(pdata.subspan(0, pdata.size() - 1));
-    if (pdata.back() != std::byte{crc}){
+    if (pdata.back() != uint8_t{crc}){
         return None;
     }
 
@@ -155,12 +157,12 @@ void lt8960_tb(){
     
     auto tx_task = [&]{
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
-        // std::array data = {std::byte(uint8_t(64 + 64 * sin(time() * 20))), std::byte(0x34), std::byte(0x56), std::byte(0x78)};
+        // std::array data = {uint8_t(uint8_t(64 + 64 * sin(time() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
         const auto t = time();
         const auto [s, c] = sincos(frac(t) * tau);
         // auto [u, v, w] = SVM(s,c);
         // const auto payload = make_bytes_from_args(u, v, t);
-        // auto copy_arr_to_span[](std::span<std::byte> dest, const std::array<std::byte, auto>& src){
+        // auto copy_arr_to_span[](std::span<uint8_t> dest, const std::array<uint8_t, auto>& src){
         //     std::copy(src.begin(), src.end(), dest.begin());
         // };
 
@@ -178,17 +180,17 @@ void lt8960_tb(){
     
     // real_t mdur;
     [[maybe_unused]] auto rx_task = [&]{
-        static std::array<std::byte, 16> buf;
+        static std::array<uint8_t, 16> buf;
 
         // const real_t mbegin = micros();
         auto len = rx_ltr.receive_rf(buf).unwrap();
         auto data = std::span(buf).subspan(0, len);
         if(len){
             // auto mend = micros();
-            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(buf));
-            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const std::byte>(buf));
-            // auto [u] = make_tuple_from_bytes<std::tuple<real_t>>(std::span<const std::byte>(data));
-            auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const std::byte>(data));
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const uint8_t>(buf));
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const uint8_t>(buf));
+            // auto [u] = make_tuple_from_bytes<std::tuple<real_t>>(std::span<const uint8_t>(data));
+            auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
             // DEBUG_PRINTLN(u, v, w, time() - tt);
             // DEBUG_PRINTLN(u, v, time() - w, mend -  mbegin);
             // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, std::showbase, data);

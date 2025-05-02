@@ -3,7 +3,7 @@
 #include "ActionConcept.hpp"
 #include <memory>
 
-namespace ymd{
+namespace ymd::robots{
 
 
 template<typename T>

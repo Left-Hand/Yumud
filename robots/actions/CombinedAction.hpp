@@ -4,7 +4,7 @@
 #include "ActionQueue.hpp"
 
 
-namespace ymd{
+namespace ymd::robots{
 
 struct CombinedAction:public Action{
 protected:

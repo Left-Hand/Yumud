@@ -7,7 +7,7 @@
 //     logger.set_eps(4);
 
 
-//     timer1.init(32000, Timer::TimerMode::Up);
+//     timer1.init(32000, Timer::TimerCountMode::Up);
 
 
 //     timer1.initBdtr(16);

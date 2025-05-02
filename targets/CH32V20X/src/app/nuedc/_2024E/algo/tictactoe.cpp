@@ -58,11 +58,11 @@ static constexpr void test(){
     }}) == Vector2u{2,0}, "Should complete winning row");
 
     // Test 3: Block opponent win (Column)
-    // static_assert(fn(Role::O, ChessBoard{{
-    //     std::to_array({Chess::X(), Chess::N(), Chess::N()}),
-    //     std::to_array({Chess::X(), Chess::O(), Chess::N()}),
-    //     std::to_array({Chess::N(), Chess::N(), Chess::N()}),
-    // }}) == Vector2u{2,2}, "Should block opponent's column win");
+    static_assert(fn(Role::O, ChessBoard{{
+        std::to_array({Chess::X(), Chess::N(), Chess::N()}),
+        std::to_array({Chess::X(), Chess::O(), Chess::N()}),
+        std::to_array({Chess::N(), Chess::N(), Chess::N()}),
+    }}) == Vector2u{0,2}, "Should block opponent's column win");
 
     // Test 4: Corner preference when center taken
     static_assert(fn(Role::X, ChessBoard{{
@@ -72,18 +72,18 @@ static constexpr void test(){
     }}) == Vector2u{0,0}, "Corner should be second choice");
 
     // Test 5: Edge selection as last resort
-    // static_assert(fn(Role::O, ChessBoard{{
-    //     std::to_array({Chess::X(), Chess::N(), Chess::X()}),
-    //     std::to_array({Chess::N(), Chess::O(), Chess::N()}),
-    //     std::to_array({Chess::X(), Chess::N(), Chess::O()}),
-    // }}) == Vector2u{0,1}, "Edge should be final fallback");
+    static_assert(fn(Role::O, ChessBoard{{
+        std::to_array({Chess::X(), Chess::N(), Chess::X()}),
+        std::to_array({Chess::N(), Chess::O(), Chess::N()}),
+        std::to_array({Chess::X(), Chess::N(), Chess::O()}),
+    }}) == Vector2u{1,0}, "Edge should be final fallback");
 
     // Test 6: Full board defense priority
-    // static_assert(fn(Role::X, ChessBoard{{
-    //     std::to_array({Chess::X(), Chess::O(), Chess::X()}),
-    //     std::to_array({Chess::O(), Chess::X(), Chess::N()}),
-    //     std::to_array({Chess::N(), Chess::X(), Chess::O()}),
-    // }}) == Vector2u{2,1}, "Should prioritize blocking over offense");
+    static_assert(fn(Role::X, ChessBoard{{
+        std::to_array({Chess::X(), Chess::O(), Chess::X()}),
+        std::to_array({Chess::O(), Chess::X(), Chess::N()}),
+        std::to_array({Chess::N(), Chess::X(), Chess::O()}),
+    }}) == Vector2u{0,2}, "Should prioritize blocking over offense");
 }
 
 }

@@ -84,12 +84,13 @@ void ExtiChannel::init(){
         if(gpio->index() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->index());
     }
 
-    EXTI_InitTypeDef EXTI_InitStructure = {0};
+    EXTI_InitTypeDef EXTI_InitStructure{
+        .EXTI_Line = (uint32_t)line,
+        .EXTI_Mode = (EXTIMode_TypeDef)mode,
+        .EXTI_Trigger = (EXTITrigger_TypeDef)trigger,
+        .EXTI_LineCmd = ENABLE
+    };
 
-    EXTI_InitStructure.EXTI_Line = (uint32_t)line;
-    EXTI_InitStructure.EXTI_Mode = (EXTIMode_TypeDef)mode;
-    EXTI_InitStructure.EXTI_Trigger = (EXTITrigger_TypeDef)trigger;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
 
     if(mode == Mode::Interrupt){

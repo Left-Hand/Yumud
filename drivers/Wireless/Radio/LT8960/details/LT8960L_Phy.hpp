@@ -35,9 +35,9 @@ public:
 
     [[nodiscard]] Result<void, Error> read_reg(uint8_t address, uint16_t & data);
 
-    [[nodiscard]] Result<size_t, Error> read_burst(uint8_t address, std::span<std::byte> pbuf);
+    [[nodiscard]] Result<size_t, Error> read_burst(uint8_t address, std::span<uint8_t> pbuf);
 
-    [[nodiscard]] Result<size_t, Error> write_burst(uint8_t address, std::span<const std::byte> pbuf);
+    [[nodiscard]] Result<size_t, Error> write_burst(uint8_t address, std::span<const uint8_t> pbuf);
 
     [[nodiscard]] Result<void, Error> start_hw_listen_pkt();
 

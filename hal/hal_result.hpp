@@ -15,7 +15,8 @@ public:
     enum class Kind:uint8_t{
         AlreadyUnderUse = 0,
         OccuipedByOther,
-        AckTimeout,
+        WritePayloadAckTimeout,
+        SlaveAddrAckTimeout,
         BusOverload,
         SelecterOutOfRange,
         NoSelecter,

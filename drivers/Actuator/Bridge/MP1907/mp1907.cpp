@@ -13,8 +13,8 @@ MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, hal::GpioIntf & 
     en_gpio_(en_gpio){;}
 
 void MP1907::init(){
-    inst_.init();
-    inst_n_.init();
+    inst_.init({});
+    inst_n_.init({});
 }
 
 MP1907 & MP1907::operator=(const real_t duty){

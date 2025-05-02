@@ -1,19 +1,41 @@
 #pragma once
 
+//这个驱动已经完成
+//这个驱动还未测试
+
+// SC8815 是一款同步升降压充电控制器，同时支持电池
+// 反向放电工作。芯片支持VBAT电池端36V高压工作，
+// 因此在适配器电压高于、低于或者等于电池电压时，均
+// 能保证1-6节锂电池应用。当工作系统需要电池提供能
+// 量时，SC8815也支持电池反向放电工作，输出设定的
+// 电压，并且放电最高电压可达36V。
+
 #include "core/io/regs.hpp"
+#include "core/utils/result.hpp"
+#include "core/utils/Errno.hpp"
+
 #include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
 class SC8815{
+public:
+    enum class Error_Kind{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
 protected:
     using RegAddress = uint8_t;
-    uint bus_shunt_res_mohms_ = 0;
-    uint bat_shunt_res_mohms_ = 0;
+    uint32_t bus_shunt_res_mohms_ = 0;
+    uint32_t bat_shunt_res_mohms_ = 0;
     real_t fb_up_res_kohms_ = 0;
     real_t fb_down_res_kohms_ = 0;
 
@@ -271,27 +293,47 @@ protected:
     MaskReg mask_reg = {};
 
 
-    hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg);
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult write_reg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg, LSB);
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg, LSB);
-    }
-    hal::HalResult read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    SC8815 & powerUp();
-    public:
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> power_up();
+
+public:
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
 
@@ -299,57 +341,57 @@ protected:
     SC8815(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     SC8815(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    Interrupts interrupts();
+    [[nodiscard]] IResult<Interrupts> interrupts();
 
-    SC8815 & init(const BatConfig & bat_conf = {
+    [[nodiscard]] IResult<> init(const BatConfig & bat_conf = {
         .vcell_set = BatVoltType::_4_2V,
         .csel = BatCellsType::_1S,
         .use_ext_setting = false,
         .ircomp = BatIrCompType::_20m
     });
 
-    bool verify();
+    [[nodiscard]] IResult<> verify();
 
-    SC8815 & reset();
-    real_t getBusVolt();
-    real_t getBusCurr();
-    real_t getBatVolt();
-    real_t getBatCurr();
-    real_t getAdinVolt();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<real_t> get_bus_volt();
+    [[nodiscard]] IResult<real_t> get_bus_curr();
+    [[nodiscard]] IResult<real_t> get_bat_volt();
+    [[nodiscard]] IResult<real_t> get_bat_curr();
+    [[nodiscard]] IResult<real_t> get_adin_volt();
 
-    SC8815 & setBusCurrLimit(const real_t curr);
-    SC8815 & setBatCurrLimit(const real_t curr);
-    SC8815 & setOutputVolt(const real_t volt);
+    [[nodiscard]] IResult<> set_bus_curr_limit(const real_t curr);
+    [[nodiscard]] IResult<> set_bat_curr_limit(const real_t curr);
+    [[nodiscard]] IResult<> set_output_volt(const real_t volt);
 
-    SC8815 & setInternalVbusRef(const real_t volt);
-    SC8815 & setExternalVbusRef(const real_t volt);
+    [[nodiscard]] IResult<> set_internal_vbus_ref(const real_t volt);
+    [[nodiscard]] IResult<> set_external_vbus_ref(const real_t volt);
 
-    SC8815 & setIBatLimRatio();
+    [[nodiscard]] IResult<> set_ibat_lim_ratio();
 
-    SC8815 & enableOtg(const bool en = true);
-    SC8815 & enableTrikleCharge(const bool en = true);
-    SC8815 & enableOvpProtect(const bool en = true);
-    SC8815 & enableDither(const bool en = true);
-    SC8815 & enableAdcConv(const bool en = true);
-    SC8815 & enablePfmMode(const bool en = true);
-    SC8815 & enableSFB(const bool en = true);
-    SC8815 & enableGpo(const bool en = true);
-    SC8815 & enablePgate(const bool en = true);
-    SC8815 & setBatVolt(const BatVoltType bat_volt);
-    SC8815 & setBatCells(const BatCellsType bat_cells);
-    SC8815 & setBatCells(const uint bat_cells);
-    SC8815 & enableVbatUseExtneral(const bool use);
-    SC8815 & setBatIrComp(const BatIrCompType bat_ir_comp);
+    [[nodiscard]] IResult<> enable_otg(const bool en = true);
+    [[nodiscard]] IResult<> enable_trikle_charge(const bool en = true);
+    [[nodiscard]] IResult<> enable_ovp_protect(const bool en = true);
+    [[nodiscard]] IResult<> enable_dither(const bool en = true);
+    [[nodiscard]] IResult<> enable_adc_conv(const bool en = true);
+    [[nodiscard]] IResult<> enable_pfm_mode(const bool en = true);
+    [[nodiscard]] IResult<> enable_sfb(const bool en = true);
+    [[nodiscard]] IResult<> enable_gpo(const bool en = true);
+    [[nodiscard]] IResult<> enable_pgate(const bool en = true);
+    [[nodiscard]] IResult<> set_bat_volt(const BatVoltType bat_volt);
+    [[nodiscard]] IResult<> set_bat_cells(const BatCellsType bat_cells);
+    [[nodiscard]] IResult<> set_bat_cells(const uint32_t bat_cells);
+    [[nodiscard]] IResult<> enable_vbat_use_extneral(const bool use);
+    [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrCompType bat_ir_comp);
     
-    SC8815 & setIBatRatio(const IBatRatio ratio);
-    SC8815 & setIBusRatio(const IBusRatio ratio);
-    SC8815 & setVBatMonRatio(const VBatMonRatio ratio);
-    SC8815 & setVBusRatio(const VBusRatio ratio);
+    [[nodiscard]] IResult<> set_ibat_ratio(const IBatRatio ratio);
+    [[nodiscard]] IResult<> set_ibus_ratio(const IBusRatio ratio);
+    [[nodiscard]] IResult<> set_vbat_mon_ratio(const VBatMonRatio ratio);
+    [[nodiscard]] IResult<> set_vbus_ratio(const VBusRatio ratio);
     
     
-    SC8815 & reconfBat(const BatConfig & config);
-    SC8815 & reconfRatio(const RatioConfig & config);
-    SC8815 & reconfInterruptMask(const Interrupts mask);
+    [[nodiscard]] IResult<> reconf_bat(const BatConfig & config);
+    [[nodiscard]] IResult<> reconf_ratio(const RatioConfig & config);
+    [[nodiscard]] IResult<> reconf_interrupt_mask(const Interrupts mask);
 };
 
 }

@@ -14,6 +14,10 @@ public:
 
     constexpr CanId_t(const T raw):raw_(raw){;}
 
+    static constexpr CanId_t from_raw(const T raw){
+        return CanId_t(raw);
+    }
+
     constexpr auto operator<=>(const CanId_t<T>& other) const = default;
 
     constexpr uint16_t as_raw() const {return raw_;}
@@ -32,7 +36,7 @@ private:
 }
 
 using CanStdId = details::CanId_t<uint16_t>;
-using CanExtId = details::CanId_t<uint16_t>;
+using CanExtId = details::CanId_t<uint32_t>;
 
 
 }

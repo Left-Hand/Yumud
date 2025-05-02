@@ -34,11 +34,20 @@ void Transmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const u
         uint16_t block_start = block_number * mtu;
         uint16_t block_end = block_start + std::min(len - block_start, mtu);
 
-        ImagePieceUnit unit;
-        unit.size_x = img_size.x;
-        unit.size_y = img_size.y;
-        unit.trans_type = TransType(index);
-        unit.data_index = block_start;
+        // uint32_t hash;
+        // uint8_t time_stamp;
+        // uint8_t size_x;
+        // uint8_t size_y;
+        // uint16_t data_index;
+        ImagePieceUnit unit{
+            .header = header,
+            .trans_type = {0,0},
+            .hash = 0u,
+            .time_stamp = 0u,
+            .size_x = uint8_t(img_size.x),
+            .size_y = uint8_t(img_size.y),
+            .data_index = block_start
+        };
 
         sendBlockData(unit, (const uint8_t *)buf + block_start, block_end - block_start);
 

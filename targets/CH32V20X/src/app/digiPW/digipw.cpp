@@ -24,7 +24,7 @@
 
 #include "drivers/Actuator/Bridge/MP1907/mp1907.hpp"
 
-#include "dsp/controller/PID.hpp"
+#include "dsp/controller/pid_ctrl.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -144,7 +144,7 @@ void digipw_main(){
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
-    ch.set_sync(true);
+    ch.enable_cvr_sync(EN);
     auto & en_gpio = portB[0];
     auto & led = portA[7];
 

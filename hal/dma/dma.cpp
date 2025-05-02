@@ -123,8 +123,7 @@ void DmaChannel::start(void * dst, const void * src, const size_t size){
 void DmaChannel::init(const Mode mode,const Priority priority){
     enable_rcc(true);
     mode_ = mode;
-    DMA_InitTypeDef DMA_InitStructure = {0};
-    // DMA_DeInit(instance);
+    DMA_InitTypeDef DMA_InitStructure;
 
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 

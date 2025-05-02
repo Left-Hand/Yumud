@@ -178,7 +178,7 @@ void enum_main(){
         // static constexpr auto f_2 = fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
         // static_ass
-        static constexpr auto tup_ = make_tuple_from_bytes<tup_t>(std::span<const std::byte, 14>(arr4));
+        static constexpr auto tup_ = make_tuple_from_bytes<tup_t>(std::span<const uint8_t, 14>(arr4));
         static_assert(tup == tup_);
         // static const auto make_arg_from_bytes
     }

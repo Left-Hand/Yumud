@@ -1,11 +1,12 @@
 #include "MP2980.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 
-#define MP2980_DEBUG
+#define MP2980_DEBUG_EN
 
-#ifdef MP2980_DEBUG
+#ifdef MP2980_DEBUG_EN
 #undef MP2980_DEBUG
 #define MP2980_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MP2980_PANIC(...) PANIC(__VA_ARGS__)
@@ -17,25 +18,26 @@ using namespace ymd::drivers;
 #endif
 
 
-#define WRITE_REG(reg) write_reg(reg.address, reg);
-#define READ_REG(reg) read_reg(reg.address, reg);
+
+using Error = MP2980::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
 
 
-MP2980 & MP2980::setFeedBackVref(const real_t vref){
-    setFeedBackVrefMv(int(vref * 1000));
-    return *this;
+IResult<> MP2980::set_feed_back_vref(const real_t vref){
+    return set_feed_back_vref_mv(int(vref * 1000));
 }
 
-MP2980 & MP2980::setFeedBackVrefMv(const uint vref_mv){
+IResult<> MP2980::set_feed_back_vref_mv(const uint vref_mv){
     ref_reg.set(vref_mv);
-    WRITE_REG(ref_reg);
-    return *this;
+    return write_reg(ref_reg);
 }
 
 // Enables power switching. 
 // 1: Enable power switching 
 // 0: Disable power switching but other internal control circuits work 
-MP2980 & MP2980::enablePowerSwitching(const bool en){
+IResult<> MP2980::enable_power_switching(const bool en){
     // The default value is determined via the ADDR pin setting. See Table 1 on 
     // page 28 for more details. 
     // If ENPWR resets from 1 to 0, the MP2980 resets the VREF bits to 0.5V 
@@ -45,15 +47,14 @@ MP2980 & MP2980::enablePowerSwitching(const bool en){
     // the previous VOUT value after ENPWR = 0. 
     // After ENPWER is set to 0, the discharge function works for 200ms. 
     ctrl1_reg.en_pwr = en;
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
 // Enables the VREF change function. 
 // 1: VOUT changes based on the VREF registers. After VREF reaches the 
 // new level set via the VREF bits, GO_BIT resets to 0 automatically 
 // 0: VOUT cannot be changed 
-MP2980 & MP2980::enableVrefChangeFunc(const bool en){
+IResult<> MP2980::enable_vref_change_func(const bool en){
     // If GO_BIT = 1, enable the output change based on the VREF register. 
     // When the command completes (internal VREF steps to the target VREF), 
     // GO_BIT automatically resets to 0. This prevents false operation of VOUT 
@@ -69,11 +70,10 @@ MP2980 & MP2980::enableVrefChangeFunc(const bool en){
     // after a 20ms delay. 
 
     ctrl1_reg.go_bit = en;
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
-MP2980 & MP2980::setPngState(const bool state){
+IResult<> MP2980::set_png_state(const bool state){
     // Sets the power not good (PNG) status reset and control. See the PNG bit 
     // description on page 35. 
     // 1’b 0: The PNG bit status recovers to 0 once VOUT returns to its normal 
@@ -81,35 +81,31 @@ MP2980 & MP2980::setPngState(const bool state){
     // 1’b 1: The PNG bit status latches to 1 once VOUT exceeds the power good 
     // voltage range 
     ctrl1_reg.png_latch = state;
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
-MP2980 & MP2980::enableDither(const bool en){
+IResult<> MP2980::enable_dither(const bool en){
     ctrl1_reg.dither = en;
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
 // enum class DischargePath{
 
 // };
 
-// MP2980 & setDischargePath(){
+// IResult<> setDischargePath(){
 
 // }
 
-MP2980 & MP2980::setVrefSlewRate(const VrefSlewRate slewrate){
+IResult<> MP2980::set_vref_slew_rate(const VrefSlewRate slewrate){
     ctrl1_reg.sr = uint8_t(slewrate);
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
 
-MP2980 & MP2980::setOvpMode(const OvpMode mode){
+IResult<> MP2980::set_ovp_mode(const OvpMode mode){
     ctrl2_reg.ovp_mode = uint8_t(mode);
-    WRITE_REG(ctrl2_reg);
-    return *this;
+    return write_reg(ctrl2_reg);
 }
 
 enum class OcpMode:uint8_t{
@@ -118,61 +114,60 @@ enum class OcpMode:uint8_t{
     LatchOff
 };
 
-MP2980 & MP2980::setOcpMode(const OcpMode mode){
+IResult<> MP2980::set_ocp_mode(const OcpMode mode){
     ctrl2_reg.ocp_mode = uint8_t(mode);
-    WRITE_REG(ctrl2_reg);
-    return *this;
+    return write_reg(ctrl2_reg);
 }
 
 
-MP2980 & MP2980::setFsw(const Fsw fsw){
+IResult<> MP2980::set_fsw(const Fsw fsw){
     ctrl2_reg.fsw = uint8_t(fsw);
-    WRITE_REG(ctrl1_reg);
-    return *this;
+    return write_reg(ctrl1_reg);
 }
 
-MP2980 & MP2980::setBuckBoostFsw(const BuckBoostFsw fsw){
+IResult<> MP2980::set_buck_boost_fsw(const BuckBoostFsw fsw){
     ctrl2_reg.bb_fsw = uint8_t(fsw);
-    WRITE_REG(ctrl2_reg);
-    return *this;
+    return write_reg(ctrl2_reg);
 }
 
-MP2980 & MP2980::setCurrLimitThreshold(const CurrLimitThreshold threshold){
+IResult<> MP2980::set_curr_limit_threshold(const CurrLimitThreshold threshold){
     ilim_reg.ilim = uint8_t(threshold);
-    WRITE_REG(ilim_reg);
-    return *this;
+    return write_reg(ilim_reg);
 }
 
-MP2980::Interrupts MP2980::interrupts(){
-    READ_REG(status_reg);
-    return Interrupts(status_reg);
+IResult<MP2980::Interrupts> MP2980::interrupts(){
+    if(const auto res = read_reg(status_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(Interrupts(status_reg));
 }
 
-MP2980 & MP2980::setInterruptMask(const Interrupts mask){
+IResult<> MP2980::set_interrupt_mask(const Interrupts mask){
     mask_reg = std::bit_cast<uint8_t>(mask);
-    WRITE_REG(mask_reg);
-    return *this;
+    return write_reg(mask_reg);
 }
 
-MP2980 & MP2980::setOutputVolt(const real_t output_volt){
+IResult<> MP2980::set_output_volt(const real_t output_volt){
     const uint output_mv = int(output_volt * 1000);
     const uint fb_mv = (output_mv * fb_down_res_ohms) / (fb_up_res_ohms + fb_down_res_ohms);
-    this->setFeedBackVrefMv(fb_mv);
-    return *this;
+    return set_feed_back_vref_mv(fb_mv);
 }
 
-MP2980 & MP2980::init(){
-    auto & self = *this;
-    self
-        .setFeedBackVref(0.5_r)
-        .enablePowerSwitching(true)
-        .enableVrefChangeFunc(false)
-        .setPngState(false)
-        .enableDither(false)
-        // .
-        .setVrefSlewRate(VrefSlewRate::_50_V_S)
-        .setCurrLimitThreshold(CurrLimitThreshold::_51_2_mV)
-    ;
+IResult<> MP2980::init(){
 
-    return self;
+    if(const auto res = set_feed_back_vref(0.5_r);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = enable_power_switching(true);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = enable_vref_change_func(false);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_png_state(false);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = enable_dither(false);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_vref_slew_rate(VrefSlewRate::_50_V_S);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_curr_limit_threshold(CurrLimitThreshold::_51_2_mV);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
 }

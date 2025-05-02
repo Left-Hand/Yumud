@@ -1,7 +1,7 @@
 #include "CombinedAction.hpp"
 
 
-using namespace ymd;
+using namespace ymd::robots;
 
 
 void CombinedAction::execute() {

@@ -3,14 +3,13 @@
 
 namespace ymd{
 
-
-
 OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind err){
     using Kind = hal::HalError::Kind;
     switch(err){
         case Kind::AlreadyUnderUse: return os << "AlreadyUnderUse";
         case Kind::OccuipedByOther: return os << "OccuipedByOther";
-        case Kind::AckTimeout: return os << "AckTimeout";
+        case Kind::SlaveAddrAckTimeout: return os << "SlaveAddrAckTimeout";
+        case Kind::WritePayloadAckTimeout: return os << "WritePayloadAckTimeout";
         case Kind::BusOverload: return os << "BusOverload";
         case Kind::SelecterOutOfRange: return os << "SelecterOutOfRange";
         case Kind::NoSelecter: return os << "NoSelecter";
@@ -39,4 +38,6 @@ OutputStream & operator << (OutputStream & os, const hal::HalError & err){
 OutputStream & operator << (OutputStream & os, const hal::HalError::Kind & err_kind){
     return print_halerr_kind(os, err_kind);
 }
+
+
 }

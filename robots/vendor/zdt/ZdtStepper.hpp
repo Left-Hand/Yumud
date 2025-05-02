@@ -25,16 +25,16 @@ protected:
     };
     VerifyType verify_type = VerifyType::X6B;
     
-    using Buf = sstl::vector<std::byte, 16>;
+    using Buf = sstl::vector<uint8_t, 16>;
 
-    static inline std::byte get_verify_code(const VerifyType type, std::span<const std::byte> pdata ){
+    static inline uint8_t get_verify_code(const VerifyType type, std::span<const uint8_t> pdata ){
         switch(type){
             default:
                 PANIC();
             case VerifyType::X6B:
-                return std::byte{0x6b};
+                return uint8_t{0x6b};
             case VerifyType::XOR:{
-                std::byte code{0};
+                uint8_t code{0};
                 for(size_t i = 0; i < pdata.size(); i++){
                     code ^= pdata[i];
                 };
@@ -49,18 +49,18 @@ protected:
                         crc <<= 1;
                     }
                 }
-                return std::byte(crc >> 8);
+                return uint8_t(crc >> 8);
             }
         }
     }
 
-    static inline void array_append(Buf & dst, std::span<const std::byte> pdata){
+    static inline void array_append(Buf & dst, std::span<const uint8_t> pdata){
         for(size_t i = 0; i < pdata.size(); i++){
             dst.push_back(pdata[i]);
         }
     }
     
-    static inline void array_append(Buf & dst, const std::byte data){
+    static inline void array_append(Buf & dst, const uint8_t data){
         dst.push_back(data);
     }
 
@@ -68,9 +68,9 @@ protected:
     void write_data(const T & obj){
 
         Buf buf;
-        array_append(buf, std::span(reinterpret_cast<const std::byte *>(&obj), sizeof(T)));
+        array_append(buf, std::span(reinterpret_cast<const uint8_t *>(&obj), sizeof(T)));
         // array_append(buf, sync_flag);
-        array_append(buf, get_verify_code(verify_type, std::span(reinterpret_cast<const std::byte *>(&obj), sizeof(T))));
+        array_append(buf, get_verify_code(verify_type, std::span(reinterpret_cast<const uint8_t *>(&obj), sizeof(T))));
 
         if(uart_){
             uart_->write1((char)id);

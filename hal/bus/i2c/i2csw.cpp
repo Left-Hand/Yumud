@@ -7,7 +7,9 @@ using namespace ymd;
 using namespace ymd::hal;
 
 #define I2CSW_SCL_USE_PP_THAN_OD
+// #define I2CSW_DISCARD_ACK
 // #define I2CSW_TEST_TIMEOUT (1000)
+
 
 void I2cSw::delay_dur(){
     if(delays_) udelay(delays_);
@@ -24,6 +26,8 @@ hal::HalResult I2cSw::wait_ack(){
     // TimeStamp delta;
 
     bool ovt = false;
+
+    #ifndef I2CSW_DISCARD_ACK
     const auto m = micros();
     while(sda().read() == HIGH){
         if(micros() - m >= 
@@ -36,8 +40,11 @@ hal::HalResult I2cSw::wait_ack(){
             ovt = true;
             break;
         }
-        udelay(1);
+        __nopn(4);
     }
+    #else
+    for(size_t i = 0; i < 3; i++)delay_dur();
+    #endif
 
     delay_dur();
     scl().clr();
@@ -45,7 +52,7 @@ hal::HalResult I2cSw::wait_ack(){
     sda().outod();
     
     if(ovt and (discard_ack_ == false)){
-        return hal::HalResult::AckTimeout;
+        return hal::HalResult::WritePayloadAckTimeout;
     }else{
         return hal::HalResult::Ok();
     }
@@ -66,9 +73,16 @@ hal::HalResult I2cSw::lead(const LockRequest req){
     scl().clr();
     delay_dur();
 
+    constexpr auto header_err_transform = 
+    [](const HalResult res) -> HalResult{
+        if(res == HalResult::WritePayloadAckTimeout) 
+            return HalResult::SlaveAddrAckTimeout;
+        return res;
+    };
+
     switch(req.custom_len()){
-        case 0:return write(req.id());
-        case 1:return write(req.id() << 1 | req.custom());
+        case 0:return header_err_transform(write(req.id()));
+        case 1:return header_err_transform(write(req.id() << 1 | req.custom()));
         default: break;
     }
     return HalResult::InvalidArgument;

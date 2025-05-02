@@ -13,7 +13,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     portC[14].outpp();
 
     {
-        auto data = std::to_array<std::byte>({std::byte(3),std::byte(4)}); 
+        auto data = std::to_array<uint8_t>({uint8_t(3),uint8_t(4)}); 
         const uint32_t id = 0x1314;
         CanMsg msg = CanMsg::from_bytes(hal::CanStdId(id), std::span(data));
 

@@ -6,10 +6,10 @@ using namespace ymd::drivers;
 using namespace ymd::hal;
 
 void EG2103::init(){
-    inst_.init();
+    inst_.init({});
 
     if(p_inst_n_){
-        p_inst_n_->init();
+        p_inst_n_->init({});
     }
 }
 

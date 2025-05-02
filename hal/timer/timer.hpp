@@ -89,20 +89,21 @@ ADVANCED_TIMER_IT_FORWARD_DECL(10)
 
 
 namespace ymd::hal{
-class TimerHw{};
 
-class BasicTimer:public TimerHw{
+class BasicTimer{
 public:
     using IT = TimerIT;
-    using Mode = TimerMode;
+    using Mode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(void)>;
 private:
     std::array<Callback, 8> cbs_;
+
+
 protected:
     TIM_TypeDef * instance;
 
-    uint get_clk();
+    uint32_t get_bus_freq();
     void enable_rcc(const bool en);
     void remap(const uint8_t rm);
     
@@ -124,17 +125,23 @@ protected:
         auto & cb = get_callback(it);
         EXECUTE(cb);
     }
-public:
 
+public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
+    void set_count_mode(const TimerCountMode mode);
+
+    void set_psc(const uint16_t psc);
+    void set_arr(const uint16_t arr);
+
     void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
-    void init(const uint16_t period, const uint16_t cycle, const Mode mode = Mode::Up, const bool en = true);
     void enable(const bool en = true);
 
-    void enable_it(const IT it,const NvicPriority request, const bool en = true);
-    void enable_arr_sync(const bool _sync = true){TIM_ARRPreloadConfig(instance, FunctionalState(_sync));}
+    void set_freq(const uint32_t freq);
 
+    void enable_it(const IT it,const NvicPriority request, const bool en = true);
+    void enable_arr_sync(const bool sync = true);
+    void enable_psc_sync(const bool sync = true);
     auto & inst() {return instance;}
 
     volatile uint16_t & cnt(){return instance->CNT;}
@@ -212,7 +219,7 @@ public:
 
 class AdvancedTimer:public GenericTimer{
 protected:
-    uint8_t calculate_deadzone(const uint deadzone_ns);
+    uint8_t calculate_deadzone(const uint32_t deadzone_ns);
 
     TimerOCN n_channels[3];
 
@@ -232,10 +239,12 @@ public:
                 TimerOCN(instance, TimerChannel::ChannelIndex::CH3N),
             }{;}
 
-    void init_bdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
-    void enable_cvr_sync(const bool _sync = true){TIM_CCPreloadControl(instance, FunctionalState(_sync));}
+    void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
+    void enable_cvr_sync(const bool _sync = true){
+        TIM_CCPreloadControl(instance, FunctionalState(_sync));
+    }
 
-    void set_dead_zone(const uint32_t ns);
+    void set_dead_zone_ns(const uint32_t ns);
     void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
 
     TimerChannel & operator [](const int index);

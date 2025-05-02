@@ -215,7 +215,7 @@ template<typename T>
 MATCH() -> MATCH<T>;
 
 
-#define UNWRAP_OR_RETURN(x) if(const auto err = x; err.is_err()) return err;
-#define UNWRAP_OR_RETURN_ERR(x) if(const auto err = x; err.is_err()) return Err(Error(err));
+#define UNWRAP_OR_RETURN(x) if(const auto res = x; res.is_err()) return res;
+#define UNWRAP_OR_RETURN_ERR(x) if(const auto res = x; res.is_err()) return Err(Error(res.unwrap_err()));
 
 } // namespace ymd

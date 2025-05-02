@@ -18,34 +18,47 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART uart2
-
+#define SCL_GPIO hal::portB[0]
+#define SDA_GPIO hal::portB[1]
 #define MAG_ACTIVATED
 
-void ak8963_tb(hal::I2c & i2c){
-    AK8963 mpu{i2c};
+auto init_mpu6050(MPU6050 & mpu){
+    return mpu.set_package(MPU6050::Package::MPU6050) | 
+    mpu.init() |
+    mpu.set_acc_range(MPU6050::AccRange::_2G) |
+    mpu.enable_direct_mode(EN);
+}
 
-    mpu.init();
-    // mpu.setAccRange(MPU6050::AccRange::_2G);
+void ak8963_tb(hal::I2c & i2c){
+    MPU6050 mpu{i2c};
+    
+    if(const auto res = init_mpu6050(mpu); 
+        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+
+    AK8963 aku{i2c};
+    aku.init();
+    // aku.setAccRange(MPU6050::AccRange::_2G);
 
     while(true){
-        mpu.update();
+        aku.update();
         delay(5);
-        DEBUG_PRINTLN_IDLE(mpu.get_magnet().unwrap());
+        DEBUG_PRINTLN_IDLE(aku.get_magnet().unwrap());
     }
     while(true);
 }
 
 void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
-    !+mpu.set_package(MPU6050::Package::MPU9250);
-    !+mpu.init();
-    !+mpu.set_acc_range(MPU6050::AccRange::_2G);
-    !+mpu.enable_direct_mode(EN);
 
-    ak8963_tb(i2c);
+    if(const auto res = init_mpu6050(mpu); 
+        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+
     while(true){
-        !+mpu.update();
-        DEBUG_PRINTLN_IDLE(mpu.get_gyr().unwrap());
+        mpu.update().unwrap();
+        DEBUG_PRINTLN_IDLE(
+            mpu.get_acc().unwrap(),
+            mpu.get_gyr().unwrap()
+        );
     }
 }
 
@@ -130,14 +143,14 @@ void mpu6050_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     // I2cSw i2c{portA[12], portA[15]};
-    I2cSw i2c{portB[6], portB[7]};
+    I2cSw i2c{SCL_GPIO, SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(400_KHz);
     // i2c.init();
 
     delay(200);
 
-    // mpu6050_tb(i2c);
-    mpu6500_tb(i2c);
+    mpu6050_tb(i2c);
+    // mpu6500_tb(i2c);
     // ak8963_tb(i2c);
 }

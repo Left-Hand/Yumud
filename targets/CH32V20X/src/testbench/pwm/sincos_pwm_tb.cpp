@@ -2,14 +2,13 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/math/realmath.hpp"
 
+#include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-
-#include "core/math/realmath.hpp"
-#include "hal/gpio/gpio_port.hpp"
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -19,7 +18,7 @@
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
 
-#define FREQ 40_KHz
+static constexpr size_t FREQ = 2_KHz;
 // #define FREQ 200
 
 // #define UART uart1
@@ -33,40 +32,6 @@
 #define TIM1_USE_CC4 0
 // #define TIM1_USE_CC4 1
 
-class TimerOCPair:public PwmIntf{
-protected:
-    TimerOC & oc_;
-    TimerOC & ocn_;
-    bool inversed = false;
-public:
-    TimerOCPair(AdvancedTimer & timer, const size_t idx, const size_t idx2):
-        oc_(timer.oc(idx)),
-        ocn_(timer.oc(idx2)){;}
-
-    TimerOCPair(TimerOC & oc, TimerOC & ocn):
-        oc_(oc), ocn_(ocn){;}
-
-    TimerOCPair & operator = (const real_t value) override{
-        const bool is_minus = signbit(value);
-        const auto abs_value = inversed ? (1 - ABS(value)) : ABS(value);
-        const auto zero_value = real_t(inversed);
-
-        if(is_minus){
-            oc_ = zero_value;
-            ocn_ = abs_value;
-        }else{
-            oc_ = abs_value;
-            ocn_ = zero_value;
-        }
-        
-        return *this;
-    }
-
-    void inverse(const bool en){
-        inversed = en;
-    }
-};
-    
 void sincos_pwm_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
@@ -88,16 +53,15 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc(4);
 
 
-    timer.init(FREQ, TimerMode::CenterAlignedDualTrig);
+    timer.init(FREQ, TimerCountMode::CenterAlignedDualTrig);
     timer.enable_arr_sync();
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
     auto & trig_oc = timer.oc(4);
-    trig_oc.init(TimerOcMode::UpValid, false)
-    .setOutputState(true)
-    .setIdleState(false)
-    ;
+    trig_oc.init(TimerOcMode::UpValid, false);
+    trig_oc.enable_output(true);
+    trig_oc.set_idle_state(false);
     // trig_oc.cvr() = timer.arr() / 2;
     trig_oc.cvr() = timer.arr() - 10;
     // trig_oc.cvr() = 10;
@@ -107,35 +71,36 @@ void sincos_pwm_main(){
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
-    timer.setTrgoSource(TimerTrgoSource::Update);
+    timer.set_trgo_source(TimerTrgoSource::Update);
     #elif TIM_INDEX == 3
     auto & trig_oc = timer.oc(4);
-    trig_oc.init(TimerOcMode::UpValid, false)
-    .setOutputState(true)
-    .setIdleState(false)
-    ;
+    trig_oc.init(TimerOcMode::UpValid, false);
+    trig_oc.enable_output(true);
+    trig_oc.set_idle_state(false);
     // trig_oc.cvr() = timer.arr() / 2;
     trig_oc.cvr() = timer.arr() - 1;
     #elif TIM_INDEX == 4
     //重要!!!!
-    timer.setTrgoSource(TimerTrgoSource::Update);
+    timer.set_trgo_source(TimerTrgoSource::Update);
     #endif
 
-    pwm_ap.init();
-    pwm_ap.set_sync();
-    pwm_an.init();
-    pwm_an.set_sync();
+    const TimerOcPwmConfig pwm_noinv_cfg = {
+        .cvr_sync_en = EN,
+        .valid_level = HIGH
+    };
 
-    pwm_bp.init();
-    pwm_bp.set_sync();
-    pwm_bn.init();
-    pwm_bn.set_sync();
+    const TimerOcPwmConfig pwm_inv_cfg = {
+        .cvr_sync_en = EN,
+        .valid_level = LOW,
+    };
+    
+    pwm_ap.init(pwm_noinv_cfg);
+    pwm_an.init(pwm_noinv_cfg);
+    pwm_bp.init(pwm_inv_cfg);
+    pwm_bn.init(pwm_inv_cfg);
 
-    pwm_bp.set_polarity(false);
-    pwm_bn.set_polarity(false);
-
-    TimerOCPair pwm_a = {pwm_ap, pwm_an};
-    TimerOCPair pwm_b = {pwm_bp, pwm_bn};
+    TimerOcPair pwm_a = {pwm_ap, pwm_an};
+    TimerOcPair pwm_b = {pwm_bp, pwm_bn};
 
     pwm_b.inverse(true);
 
@@ -181,13 +146,12 @@ void sincos_pwm_main(){
 
     while(true){
         
-        const auto t = time() * real_t(5 * TAU);
-        const auto st = sin<30>(t);
-        const auto ct = cos<30>(t);
+        const auto t = time() * real_t(3 * TAU);
+        const auto [st, ct] = sincospu(t);
         
         pwm_a = st;
         pwm_b = ct;
 
-        DEBUG_PRINTLN_IDLE(st, ct, real_t(inj),     sizeof(Gpio));
+        DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
     }
 }

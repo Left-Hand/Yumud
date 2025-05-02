@@ -3,7 +3,7 @@
 #include "hal/bus/can/can.hpp"
 #include "drivers/Encoder/odometer.hpp"
 
-#include "dsp/controller/PID.hpp"
+#include "dsp/controller/pid_ctrl.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "robots/foc/stepper/observer/observer.hpp"

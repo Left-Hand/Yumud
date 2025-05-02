@@ -111,9 +111,9 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
     }
 
     if constexpr (sizeof(T) == 1) {
-        if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return res;
+        if(const auto res = spi_.write(std::bit_cast<uint8_t>(data)); res.is_err()) return res;
     } else if constexpr (sizeof(T) == 2) {
-        if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
+        if(const auto res = spi_.write(std::bit_cast<uint16_t>(data)); res.is_err()) return res;
     }
 
     if (cont == DISC) spi_.end();

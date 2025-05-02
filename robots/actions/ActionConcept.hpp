@@ -2,15 +2,13 @@
 
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
+#include "core/math/real.hpp"
+#include "core/stream/StringStream.hpp"
 
 #include <functional>
 #include <queue>
 
-#include "core/math/real.hpp"
-#include "core/stream/StringStream.hpp"
-
-
-namespace ymd{
+namespace ymd::robots{
 
 struct Action {
 public:
@@ -89,7 +87,7 @@ public:
 };
 
 #define ACTION_NAME(nm)\
-const char * name() override {return #nm; }
+const char * name() {return #nm; }
 
 struct DelayAction:public Action{
 protected:

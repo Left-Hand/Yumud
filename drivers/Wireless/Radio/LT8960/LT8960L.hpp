@@ -126,11 +126,11 @@ protected:
 
 
     [[nodiscard]] __fast_inline
-    Result<size_t, Error> write_fifo(std::span<const std::byte> buf){
+    Result<size_t, Error> write_fifo(std::span<const uint8_t> buf){
         return phy_.write_burst(Regs::R16_Fifo::address, buf);
     }
 
-    [[nodiscard]]Result<size_t, Error> read_fifo(std::span<std::byte> buf);
+    [[nodiscard]]Result<size_t, Error> read_fifo(std::span<uint8_t> buf);
 
     [[nodiscard]] Result<void, Error> set_pa_current(const uint8_t current);
 
@@ -217,13 +217,13 @@ public:
 
     [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
 
-    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const uint8_t> buf);
 
-    [[nodiscard]] Result<size_t, Error> receive_rf(std::span<std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> receive_rf(std::span<uint8_t> buf);
 
-    [[nodiscard]] Result<size_t, Error> transmit_ble(std::span<const std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> transmit_ble(std::span<const uint8_t> buf);
     
-    [[nodiscard]] Result<size_t, Error> receive_ble(std::span<std::byte> buf);
+    [[nodiscard]] Result<size_t, Error> receive_ble(std::span<uint8_t> buf);
 
     [[nodiscard]] Result<void, Error> set_datarate(LT8960L::DataRate rate);
 
@@ -246,9 +246,9 @@ public:
     [[nodiscard]] Result<void, Error> tick();
     
 
-    [[nodiscard]] Result<void, Error> write(const std::span<const std::byte> pdata);
+    [[nodiscard]] Result<void, Error> write(const std::span<const uint8_t> pdata);
 
-    [[nodiscard]] Result<void, Error> read(const std::span<std::byte> pdata);
+    [[nodiscard]] Result<void, Error> read(const std::span<uint8_t> pdata);
 
     [[nodiscard]] size_t available() const;
 

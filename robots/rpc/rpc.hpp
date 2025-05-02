@@ -98,7 +98,7 @@ public:
     EntryIntf(const StringView & name):name_(name){;}
     EntryIntf(const StringView && name):name_(name){;}
     const StringView name(){
-        return name_;
+        return StringView(name_);
     }
 
     virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;

@@ -56,21 +56,21 @@ void nuedc_2023e_main(){
     DEBUGGER.no_brackets();
     DEBUGGER.force_sync();
     DEBUGGER.set_eps(4);
-
+    
     constexpr auto cfg = make_cfg();
 
     SERVO_PWMGEN_TIMER.init(50);
     hal::TimerOC & pwm_yaw = SERVO_PWMGEN_TIMER.oc(1);
     hal::TimerOC & pwm_pitch = SERVO_PWMGEN_TIMER.oc(2);
 
-    pwm_yaw.init();
-    pwm_pitch.init();
+    pwm_yaw.init({});
+    pwm_pitch.init({});
 
-    pwm_yaw.set_sync();
-    pwm_pitch.set_sync();
+    pwm_yaw.enable_cvr_sync();
+    pwm_pitch.enable_cvr_sync();
 
-    pwm_yaw.set_polarity(false);
-    pwm_pitch.set_polarity(false);
+    pwm_yaw.set_valid_level(HIGH);
+    pwm_pitch.set_valid_level(HIGH);
 
     auto servo_yaw = PwmServo::make_sg90(cfg.yaw_cfg, pwm_yaw);
 
