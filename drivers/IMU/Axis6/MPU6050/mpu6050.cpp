@@ -47,7 +47,7 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     package_(package){
     }
     
-Result<void, Error> MPU6050::verify(){
+Result<void, Error> MPU6050::validate(){
 
     RETURN_ON_ERR(this->reset())
 
@@ -75,7 +75,7 @@ Result<void, Error> MPU6050::verify(){
 
 
 Result<void, Error> MPU6050::init(){
-    RETURN_ON_ERR(verify())
+    RETURN_ON_ERR(validate())
     RETURN_ON_ERR(write_reg(0x6b, 0))
     RETURN_ON_ERR(write_reg(0x19, 0x00))
     RETURN_ON_ERR(write_reg(0x1a, 0x00))

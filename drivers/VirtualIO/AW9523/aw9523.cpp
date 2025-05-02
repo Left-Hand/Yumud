@@ -67,7 +67,7 @@ void AW9523::set_led_current(const hal::Pin pin, const uint8_t current){
 }
 
 
-bool AW9523::verify(){
+bool AW9523::validate(){
     uint8_t chipId;
     read_reg(RegAddress::chipId, chipId);
     return (chipId == valid_chipid);

@@ -5,7 +5,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 using Error = TCA8418::Error;
 
-Result<void, Error> TCA8418::verify(){
+Result<void, Error> TCA8418::validate(){
     TODO();
     return Ok();
 }

@@ -37,7 +37,7 @@ void LT8920::delayT3(){udelay(1);}
 void LT8920::delayT5(){udelay(1);}
 
 
-bool LT8920::verify(){
+bool LT8920::validate(){
     uint16_t reg;
     read_reg(30, reg);
     return (reg == 0xf413);

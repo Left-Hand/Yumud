@@ -7,6 +7,6 @@ bool OV2640::init(){
     return true;
 }
 
-bool OV2640::verify(){
+bool OV2640::validate(){
     return true;
 }

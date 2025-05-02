@@ -51,7 +51,7 @@ public:
         PANIC();
     }
 
-    Result<void, ImuError> verify(){
+    Result<void, ImuError> validate(){
         return Result<void, ImuError>(hal::HalResult::Ok());
     }
 public:

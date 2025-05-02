@@ -9,7 +9,7 @@ using Error = BMP280::Error;
 template<typename T = void>
 using IResult = BMP280::IResult<T>;
 
-IResult<> BMP280::verify(){
+IResult<> BMP280::validate(){
     if(const auto res = read_reg(chipIDReg);
         res.is_err()) return res;
     BMP280_DEBUG("CHIP code: ", uint8_t(chipIDReg));
@@ -101,7 +101,7 @@ IResult<> BMP280::init(){
     if(const auto res = reset();
         res.is_err()) return res;
 
-    if(const auto res = verify();
+    if(const auto res = validate();
         res.is_err()) return res;
     // BMP280_DEBUG("BMP280 validation:", chip_valid);
 

@@ -349,7 +349,7 @@ public:
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> update(const ChannelIndex index);
-    [[nodiscard]] IResult<> verify();
+    [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
     [[nodiscard]] IResult<> enable_measure_bus(const Enable en = EN);

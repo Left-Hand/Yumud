@@ -50,7 +50,7 @@ Result<void, Error> LIS3DH::clear_flag(){
 }
 
 
-Result<void, Error> LIS3DH::verify(){
+Result<void, Error> LIS3DH::validate(){
     auto & reg = regs_.whoami_reg;
     return verify_phy()
         | reset()

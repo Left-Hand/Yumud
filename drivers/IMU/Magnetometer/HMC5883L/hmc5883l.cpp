@@ -18,7 +18,7 @@ using namespace ymd::drivers;
 #endif
 
 void HMC5883L::init(){
-    this->verify();
+    this->validate();
     this->enableHighSpeed();
     this->enableContMode();
     this->setMeasurementMode(MeasurementMode::Norm);
@@ -66,7 +66,7 @@ Option<Vector3_t<real_t>> HMC5883L::get_magnet(){
     return Some(Vector3_t<real_t>(x,y,z));
 }
 
-bool HMC5883L::verify(){
+bool HMC5883L::validate(){
     uint8_t id[3] = {0};
     read_reg(RegAddress::IDA, id[0]);
     read_reg(RegAddress::IDB, id[1]);

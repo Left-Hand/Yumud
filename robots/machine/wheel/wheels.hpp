@@ -35,7 +35,7 @@ public:
 
     void request();
 
-    bool verify();
+    bool validate();
 
     void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spd);
 

@@ -19,7 +19,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 void QMC5883L::init(){
-    if(this->verify()){
+    if(this->validate()){
         this->setResetPeriod(1);
         this->enableContMode();
         this->setFullScale(FullScale::FS2G);
@@ -73,7 +73,7 @@ Option<Vector3_t<real_t>> QMC5883L::get_magnet(){
     }};
 }
 
-bool QMC5883L::verify(){
+bool QMC5883L::validate(){
     read_reg(RegAddress::ChipID, chipIDReg);
     return QMC5883L_ASSERT(chipIDReg == 0xFF, "QMC5883L not found");
 }

@@ -24,7 +24,7 @@ private:
 
 public:
     Result<void, Error> init();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     
     Result<void, Error> enableChainMode(Enable en = EN);
 };

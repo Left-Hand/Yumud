@@ -92,7 +92,7 @@ Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off)
 Result<void, Error> PCA9685::init(){
     #ifdef PCA9685_NOVERIFY
     #else
-    if(const auto res = verify(); res.is_err()){
+    if(const auto res = validate(); res.is_err()){
         PCA9685_PANIC("verify failed");
         return res;
     }

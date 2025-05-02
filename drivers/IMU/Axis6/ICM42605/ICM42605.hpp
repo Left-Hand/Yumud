@@ -163,7 +163,7 @@ public:
 
     void init();
     
-    bool verify();
+    bool validate();
     
     void update();
 

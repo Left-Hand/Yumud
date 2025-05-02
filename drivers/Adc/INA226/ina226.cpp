@@ -65,7 +65,7 @@ IResult<> INA226::init(const uint mohms, const uint max_current_a){
 
     INA226_DEBUG("init");
     
-    if(const auto res = verify();
+    if(const auto res = validate();
         res.is_err()) return res;
     if(const auto res = reset();
         res.is_err()) return res;
@@ -183,8 +183,8 @@ IResult<void> INA226::enable_alert_latch(const bool en){
     return write_reg(maskReg);
 }
 
-IResult<> INA226::verify(){
-    if(const auto res = i2c_drv_.verify(); res.is_err()){
+IResult<> INA226::validate(){
+    if(const auto res = i2c_drv_.validate(); res.is_err()){
         INA226_ASSERT(false, "INA226 i2c lost");
         return Err(Error::HalError(res.unwrap_err()));
     }
@@ -192,8 +192,10 @@ IResult<> INA226::verify(){
     if(const auto res = this->read_reg(chipIDReg); res.is_err()) return res;
     if(const auto res = this->read_reg(manufactureIDReg); res.is_err()) return res;
 
-    if((chipIDReg != VALID_CHIP_ID)) return INA226_ERROR(Error::ChipIdVerifyFailed);
-    if((manufactureIDReg == VALID_MANU_ID)) return INA226_ERROR(Error::ManuIdVerifyFailed);
+    if((chipIDReg != VALID_CHIP_ID)) 
+        return INA226_ERROR(Error::ChipIdVerifyFailed);
+    if((manufactureIDReg != VALID_MANU_ID)) 
+        return INA226_ERROR(Error::ManuIdVerifyFailed);
 
     return Ok();
 }

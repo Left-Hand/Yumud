@@ -17,7 +17,7 @@ hal::HalResult I2cDrv::release(){
 }
 
 
-hal::HalResult I2cDrv::verify(){
+hal::HalResult I2cDrv::validate(){
     const auto res = i2c_.begin(slave_addr_.to_read_req());
     i2c_.end();
     return res;

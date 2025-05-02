@@ -70,7 +70,7 @@ public:
 
     void init();
     void update();
-    bool verify();
+    bool validate();
     void reset();
 
     void setPmuMode(const PmuType pum, const PmuMode mode);

@@ -207,6 +207,7 @@ public:
     INA226(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
+    [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> update();
 
@@ -216,7 +217,7 @@ public:
 
     [[nodiscard]] IResult<> set_average_times(const uint16_t times);
 
-    [[nodiscard]] IResult<> verify();
+
 
     [[nodiscard]] auto & ch(const Index index){
         return channels[uint8_t(index)];

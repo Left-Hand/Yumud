@@ -13,7 +13,7 @@ public:
         phy_(hal::I2cDrv(_i2c, addr)){;}
     ~BMP280(){;}
 
-    [[nodiscard]] IResult<> verify();
+    [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> set_temprature_sample_mode(const TempratureSampleMode tempMode);
 

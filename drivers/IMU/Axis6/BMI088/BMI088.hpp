@@ -197,7 +197,7 @@ public:
 
     Result<void, Error> init();
     Result<void, Error> reset();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> update();
 
     Option<Vector3_t<real_t>> get_acc();
@@ -284,7 +284,7 @@ public:
 
     Result<void, Error> init();
     Result<void, Error> reset();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> update();
     Option<Vector3_t<real_t>> get_gyr();
 

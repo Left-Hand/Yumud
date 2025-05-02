@@ -39,7 +39,7 @@ using IResult = INA3221::IResult<T>;
 using Error = INA3221::Error;
 
 IResult<> INA3221::init(){
-    INA3221_ASSERT(verify().is_ok(), "INA3221 verify failed");
+    INA3221_ASSERT(validate().is_ok(), "INA3221 verify failed");
 
     if(const auto res = this->enable_channel(ChannelIndex::CH1);
         res.is_err()) return res;
@@ -67,7 +67,7 @@ IResult<bool> INA3221::is_ready(){
 }
 
 
-IResult<void> INA3221::verify(){
+IResult<void> INA3221::validate(){
     if(const auto res = read_reg(chip_id_reg); res.is_err()) return CHECKRES(res);
     if(const auto res = read_reg(manu_id_reg); res.is_err()) return CHECKRES(res);
 

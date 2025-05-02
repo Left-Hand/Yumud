@@ -104,7 +104,7 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
 
     Result<void, Error> update();
 
-    Result<void, Error> verify();
+    Result<void, Error> validate();
 };
 }
 

@@ -145,7 +145,7 @@ public:
     
     void update();
 
-    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> validate();
     [[nodiscard]] Result<void, Error> set_mode(Mode mode);
 
     void reset();

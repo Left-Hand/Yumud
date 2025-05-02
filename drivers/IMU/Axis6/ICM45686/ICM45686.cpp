@@ -45,7 +45,7 @@ __inline Result<void, Error> wait(const size_t timeout, Fn && fn){
 }
 
 
-Result<void, Error> ICM45686::verify(){
+Result<void, Error> ICM45686::validate(){
     uint8_t Product_ID = 0x00;
 
     if(const auto res = read_reg(uint8_t(ICM45686::REGISTER::WHO_AM_I), Product_ID); res.is_err()){

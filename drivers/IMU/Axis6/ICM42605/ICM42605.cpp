@@ -44,7 +44,7 @@ void ICM42605::init() {
     phy_.write_reg(ICM42605_PWR_MGMT0, 0b00011111);
 }
 
-bool ICM42605::verify(){
+bool ICM42605::validate(){
     phy_.write_reg(ICM42605_BANK_SEL, 0);
     uint8_t id = 0;
     phy_.read_reg(ICM42605_WHO_AM_I, id);

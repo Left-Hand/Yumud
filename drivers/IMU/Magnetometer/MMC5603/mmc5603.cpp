@@ -29,7 +29,7 @@ void MMC5603::reset(){
     reg.do_reset = false;
 }
 
-bool MMC5603::verify(){
+bool MMC5603::validate(){
     auto & reg = product_id_reg;
     READ_REG(reg)
     if(reg != reg.correct_id) return false;

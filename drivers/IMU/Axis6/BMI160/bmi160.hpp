@@ -119,7 +119,7 @@ public:
 
     Result<void, Error> init();
     Result<void, Error> update();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> reset();
 
     

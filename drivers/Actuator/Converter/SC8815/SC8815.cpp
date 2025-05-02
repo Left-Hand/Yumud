@@ -82,7 +82,7 @@ IResult<> SC8815::reset(){
     return Ok();
 }
 
-IResult<> SC8815::verify(){
+IResult<> SC8815::validate(){
     TODO();
     return Ok();
 }

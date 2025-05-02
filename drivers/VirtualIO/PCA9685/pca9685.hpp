@@ -162,8 +162,8 @@ private:
     uint16_t read_mask();
 
     [[nodiscard]] Result<void, Error> init();
-    [[nodiscard]] Result<void, Error> verify(){
-        const auto res = i2c_drv_.verify();
+    [[nodiscard]] Result<void, Error> validate(){
+        const auto res = i2c_drv_.validate();
         if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
         return Ok();
     }

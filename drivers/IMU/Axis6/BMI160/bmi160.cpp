@@ -21,7 +21,7 @@ using Error = BMI160::Error;
 
 Result<void, Error> BMI160::init(){
     const auto res = reset()
-    | verify()
+    | validate()
     | set_acc_odr(AccOdr::_800)
     | set_acc_range(AccRange::_8G)
     | set_gyr_odr(GyrOdr::_800)
@@ -43,7 +43,7 @@ Result<void, Error> BMI160::update(){
         | phy_.read_burst(gyr_reg.gyr_address, &gyr_reg.x, 3);
 }
 
-Result<void, Error> BMI160::verify(){
+Result<void, Error> BMI160::validate(){
     uint8_t dummy;
     const auto err = phy_.read_reg(0x7f, dummy) 
         | phy_.read_reg(chip_id_reg.address, chip_id_reg.data);

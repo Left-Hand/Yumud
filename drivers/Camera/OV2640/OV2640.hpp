@@ -23,7 +23,7 @@ public:
 
     bool init();
 
-    bool verify();
+    bool validate();
 
 private:
 

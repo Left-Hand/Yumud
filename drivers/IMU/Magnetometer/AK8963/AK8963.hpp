@@ -151,7 +151,7 @@ public:
 
     Result<void, Error> init();
     void update();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> reset();
     Result<void, Error> busy();
     Result<void, Error> stable();

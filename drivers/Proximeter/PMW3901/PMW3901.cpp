@@ -164,7 +164,7 @@ Result<void, Error> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8
     return Ok();
 }
 
-Result<bool, Error> PMW3901::verify(){
+Result<bool, Error> PMW3901::validate(){
     return assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)
     | assert_reg(PMW3901_REG_Product_ID, 0x49);
 }
@@ -254,7 +254,7 @@ Result<void, Error> PMW3901::init() {
     return write_reg(PMW3901_REG_Power_Up_Reset, 0x5A)
     .if_ok([this]{
         delay(5);
-        PMW3901_ASSERT(verify().expect("PMW3901 not found!"), "PMW3901 verify failed!");
+        PMW3901_ASSERT(validate().expect("PMW3901 not found!"), "PMW3901 verify failed!");
     })
 
 

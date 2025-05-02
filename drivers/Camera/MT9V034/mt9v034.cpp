@@ -66,7 +66,7 @@ static constexpr uint8_t AGC_AEC_ENABLE_VALUE = 0x02; // Enable AGC & disable AE
 bool MT9V034::init(){
     // DEBUG_PRINTLN(size);
 
-    if(false == verify()){
+    if(false == validate()){
         return false;
     }
 
@@ -100,7 +100,7 @@ bool MT9V034::init(){
 }
 
 
-bool MT9V034::verify(){
+bool MT9V034::validate(){
     uint16_t chip_version = 0;
     [[maybe_unused]]scexpr uint16_t valid_version = 0x1324;
     read_reg(CHIP_ID_ADDR, chip_version);

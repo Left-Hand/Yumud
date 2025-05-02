@@ -59,7 +59,7 @@ protected:
 
 public:
     EyesPhy(const Refs & refs)
-    : eye_phy_{PwmRadianServo{refs.yaw}, PwmRadianServo{refs.pitch}}
+    : eye_phy_{.yaw_ = PwmRadianServo{refs.yaw}, .pitch_ = PwmRadianServo{refs.pitch}, .info_ = EyeInfo{.pos = {}}}
     , eyelid_phys_{
         EyelidPhy{PwmRadianServo{refs.upper_l}, PwmRadianServo{refs.lower_l}},
         EyelidPhy{PwmRadianServo{refs.upper_r}, PwmRadianServo{refs.lower_r}}

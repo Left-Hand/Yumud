@@ -89,7 +89,7 @@ struct I2cTester{
             while(baud < 10_MHz){
                 // i2c_drv.set_baudrate(uint(baud * grow_scale));
                 i2c.set_baudrate(uint(baud * grow_scale));
-                const auto err = i2c_drv.verify();
+                const auto err = i2c_drv.validate();
                 if(err.is_err()) break;
 
                 baud = baud + (baud >> 1);
@@ -104,8 +104,8 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, hal::HalResult> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.verify());
+    static Result<void, hal::HalResult> validate(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+        return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate());
     }
 
 };
@@ -206,7 +206,7 @@ void i2c_scanner_main(){
 
         for(uint8_t i = 0; i < 128; i++){
             const uint8_t read_addr = i << 1;
-            I2cTester::verify(i2c, read_addr)
+            I2cTester::validate(i2c, read_addr)
                 .if_ok([&]{
                     const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
                     founded_devices.emplace_back(
@@ -215,7 +215,7 @@ void i2c_scanner_main(){
                     );
                 });
 
-            // I2cTester::verify(i2c, read_addr)
+            // I2cTester::validate(i2c, read_addr)
             //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, hal::BusError> {
             //         return I2cTester::getMaxBaudRate(i2c, read_addr)
             //             .map([read_addr](uint baud) {
@@ -232,7 +232,7 @@ void i2c_scanner_main(){
             //     );
 
 
-            // I2cTester::verify(i2c, read_addr)
+            // I2cTester::validate(i2c, read_addr)
             // .and_then([&i2c, read_addr] {
             //     return I2cTester::getMaxBaudRate(i2c, read_addr)
             //         .map([read_addr](uint max_baud) {
@@ -287,7 +287,7 @@ void i2c_scanner_main(){
 //     async_task<void> scan_devices() {
 //     for (uint8_t i : std::views::iota(0, 128)) {
 //         co_await i2c.acquire();
-//         auto result = co_await I2cTester::verify(i2c, i<<1);
+//         auto result = co_await I2cTester::validate(i2c, i<<1);
 //         if (result) {
 //             auto baud = co_await I2cTester::getMaxBaudRate(i2c, i<<1);
 //             founded_devices.emplace_back(i<<1, baud);

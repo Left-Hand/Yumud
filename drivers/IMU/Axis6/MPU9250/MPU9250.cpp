@@ -10,7 +10,7 @@ Result<void, Error> MPU9250::init(){
     return Ok{};
 }
 
-Result<void, Error> MPU9250::verify(){
+Result<void, Error> MPU9250::validate(){
 
     return Ok{};
 }

@@ -76,7 +76,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> verify() {
+    Result<void, Error> validate() {
         return Ok();
     }
 public:

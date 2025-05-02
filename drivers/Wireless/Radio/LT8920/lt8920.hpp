@@ -84,7 +84,7 @@ public:
     void enableAutoAck(const bool en = true);
     void enableCrc(const bool en = true);
     void init();
-    bool verify();
+    bool validate();
     void setSyncWord(const uint64_t syncword);
     void setErrBitsTolerance(uint8_t errbits);
     void setDataRate(const DataRate dr);

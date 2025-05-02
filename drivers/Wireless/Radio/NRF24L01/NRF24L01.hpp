@@ -183,7 +183,7 @@ public:
     NRF24L01(const NRF24L01 & other) = delete;
     NRF24L01(NRF24L01 && other) = delete;
 
-    Result<void, Error> verify();
+    Result<void, Error> validate();
 
     Result<void, Error> init();
     

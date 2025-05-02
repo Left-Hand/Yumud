@@ -51,7 +51,7 @@ public:
 
     void init();
     void update();
-    bool verify();
+    bool validate();
     bool busy();
     bool stable();
     void setMode(const Mode mode);

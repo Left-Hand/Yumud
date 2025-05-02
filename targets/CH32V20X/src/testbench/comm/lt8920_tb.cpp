@@ -42,7 +42,7 @@ void lt8920_main(){
         lt.tick();
     });
 
-    if(lt.verify()){
+    if(lt.validate()){
         DEBUG_PRINTLN("LT8920 founded");
     }else{
         DEBUG_PRINTLN("LT8920 not founded, please check your physical connection");
@@ -64,7 +64,7 @@ void lt8920_main(){
     }else{
         auto src = String("Hello World!!!");
         while(true){
-            // lt.verify();
+            // lt.validate();
             // lt.setDataRate(LT8920::DataRate::Kbps125);
             // DEBUG_PRINTLN(lt.isRfSynthLocked());
 
