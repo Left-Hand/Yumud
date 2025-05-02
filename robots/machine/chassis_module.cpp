@@ -155,7 +155,7 @@ void ChassisModule::tick800(){
         // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.0035);
         // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.005);
         // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.002);
-        auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr().unwrap()).z + real_t(0.00113);
+        auto gyr_raw = Vector3_t<real_t>(gyr_sensor_.get_gyr().unwrap()).z + real_t(0.00113);
         // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z;
         // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.00625);
         // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.00525);

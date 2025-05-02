@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-class MPU6050:public Axis6{
+class MPU6050:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
     

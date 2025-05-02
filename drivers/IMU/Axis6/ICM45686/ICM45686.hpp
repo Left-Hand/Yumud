@@ -23,7 +23,7 @@ private:
 };
 
 
-class ICM45686:public Axis6{
+class ICM45686:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 

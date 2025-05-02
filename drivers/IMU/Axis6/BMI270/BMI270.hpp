@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class BMI270 final:public Axis6{
+class BMI270 final:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 

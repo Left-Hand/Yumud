@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class ADXL345:public Axis6{
+class ADXL345:public AccelerometerIntf, public GyroscopeIntf{
 public:
     enum class DataRate:uint8_t{
         HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,

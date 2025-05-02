@@ -6,7 +6,7 @@
 
 namespace ymd::drivers{
 
-class ICM42688:public Axis6{
+class ICM42688:public AccelerometerIntf, public GyroscopeIntf{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68); 
 

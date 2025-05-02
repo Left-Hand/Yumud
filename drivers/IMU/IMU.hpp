@@ -67,12 +67,4 @@ public:
     virtual Option<Vector3_t<real_t>> get_magnet() = 0;
 };
 
-class Axis6:public AccelerometerIntf, public GyroscopeIntf{
-public:
-};
-
-class Axis9:public Axis6, public MagnetometerIntf{
-
-};
-
 }

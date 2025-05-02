@@ -64,7 +64,8 @@ protected:
     Wheels wheels_;
     Mecanum4Solver_t<real_t> solver_{config_.solver_config};
 
-    drivers::Axis6 & acc_gyr_sensor_;
+    drivers::AccelerometerIntf & acc_sensor_;
+    drivers::GyroscopeIntf & gyr_sensor_;
     drivers::MagnetometerIntf & mag_sensor_;
 
     Ray2_t<real_t> current_jny_;
@@ -89,13 +90,15 @@ protected:
 public:
     ChassisModule(const Config & config, 
             const Wheels & wheels,
-            drivers::Axis6 & acc_gyr_sensor,
+            drivers::AccelerometerIntf & acc_sensor,
+            drivers::GyroscopeIntf & gyr_sensor,
             drivers::MagnetometerIntf & mag_sensor
         ):
-        config_(config), 
-        wheels_(wheels),
-        acc_gyr_sensor_(acc_gyr_sensor),
-        mag_sensor_(mag_sensor)
+            config_(config), 
+            wheels_(wheels),
+            acc_sensor_(acc_sensor),
+            gyr_sensor_(gyr_sensor),
+            mag_sensor_(mag_sensor)
         {}
 
 
