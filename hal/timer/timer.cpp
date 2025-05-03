@@ -332,7 +332,7 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
 
     TIM_InternalClockConfig(instance);
 
-    set_freq(freq);
+    set_freq(internal::is_aligned_count_mode(mode) ? (freq * 2) : (freq));
     set_count_mode(mode);
     enable_arr_sync(true);
 
@@ -419,7 +419,7 @@ void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_dead_zone_ns(const uint32_t ns){
+void AdvancedTimer::set_deadzone_ns(const uint32_t ns){
     uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance->BDTR;

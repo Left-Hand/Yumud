@@ -244,7 +244,7 @@ public:
     void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
 
 
-    void set_dead_zone_ns(const uint32_t ns);
+    void set_deadzone_ns(const uint32_t ns);
     void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
 
     TimerChannel & operator [](const int index);
