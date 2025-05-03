@@ -326,7 +326,7 @@ public:
 
         trig_occasion_opt = Some(curr_occasion);
 
-        on_sector_update(curr_occasion);
+        on_duty_update();
     }
 
     void on_ch4_isr(){
@@ -436,23 +436,23 @@ private:
     Duty duty_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
     Duty duty_cmd_ = {0.0_r, 0.0_r, 0.0_r};
 
+    void on_duty_update(){
+        
+        duty_cmd_[0] = duty_cmd_shadow_[0];
+        duty_cmd_[1] = duty_cmd_shadow_[1];
+        duty_cmd_[2] = duty_cmd_shadow_[2];
+    
+        test_gpio.toggle();
+    }
     void on_sector_update(const TrigOccasion curr_ocs){
 
 
 
         pwm_u_.set_duty(duty_cmd_[0]);
-
-
-        // set_pwm_shift_60(pwm_v_, curr_ocs, duty_cmd_[1]);
         set_pwm_shift_120(pwm_v_, curr_ocs, duty_cmd_[1]);
         set_pwm_shift_240(pwm_w_, curr_ocs, duty_cmd_[2]);
 
 
-        if(curr_ocs == TrigOccasion::UpJust){
-            duty_cmd_[0] = duty_cmd_shadow_[0];
-            duty_cmd_[1] = duty_cmd_shadow_[1];
-            duty_cmd_[2] = duty_cmd_shadow_[2];
-        }
 
         test_gpio.toggle();
 
@@ -539,7 +539,7 @@ private:
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::InactiveForever);
-                    pwm.set_duty(1_r);
+                    pwm.set_duty(1);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_duty(TWO_BY_3 - duty);
@@ -549,11 +549,17 @@ private:
         case DutySpan::_240:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(0);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_duty(FOUR_BY_3 - duty);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(1);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_duty(TWO_BY_3 - duty);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
@@ -565,9 +571,10 @@ private:
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::ActiveForever);
-                    pwm.set_duty(FOUR_BY_3 - duty);
-                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(0);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(FOUR_BY_3 - duty);
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
@@ -610,11 +617,17 @@ private:
         case DutySpan::_240:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(0);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_duty(TWO_BY_3 - duty);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(1);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_duty(FOUR_BY_3 - duty);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
@@ -681,7 +694,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         const auto t = time();
 
         [[maybe_unused]]
-        const auto [st, ct] = sincospu(10 * t);
+        const auto [st, ct] = sincospu(700 * t);
 
         // const auto mt = st * 0.4_r ;
         // const auto mt = 0.2917_r + ONE_BY_3;
@@ -701,8 +714,14 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         //     real_t(timer.oc(3))
         // );
 
-        DEBUG_PRINTLN(u, v, w);
-        delay(1);
+        DEBUG_PRINTLN_IDLE(
+            u, 
+            v, 
+            w,
+            real_t(timer.oc(1))
+        );
+        // delay(1);
+        udelay(100);
         // pwm_gen.set_duty({0.2_r, 0.4_r, 0.6_r});
         // pwm_gen.set_duty({0.6_r, 0.8_r, 0.9_r});
 
