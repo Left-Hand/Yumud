@@ -172,48 +172,49 @@ public:
 
     using OcMode = hal::TimerOcMode;
 
-    struct SlaveAlgoHelper{
-        struct CalcResult{
-            OcMode oc_mode_temp;
-            real_t oc_duty;
-            OcMode oc_mode2;
+    struct CalcResult{
+        OcMode oc_mode_temp;
+        real_t oc_duty;
+        OcMode oc_mode2;
+        Enable sync_en;
+        friend OutputStream & operator <<(OutputStream & os, const CalcResult & self){
+            return os << self.oc_duty;
+        }
+    };
 
-            friend OutputStream & operator <<(OutputStream & os, const CalcResult & self){
-                return os << self.oc_duty;
-            }
-        };
+    struct SlaveAlgoHelper{
 
 
         static constexpr Option<CalcResult> calc_in_120_v(const TrigOccasion occasion, const real_t duty){
             switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::InactiveForever, ONE_BY_3 - duty, OcMode::ActiveAboveCvr});
                 case TrigOccasion::UpFirst:
-                    return Some(CalcResult{OcMode::ActiveForever, ONE_BY_3 + duty, OcMode::ActiveBelowCvr});
-                case TrigOccasion::DownJust:
-                    return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
+                    return Some(CalcResult{OcMode::ActiveForever, ONE_BY_3 + duty, OcMode::ActiveBelowCvr, DISEN});
+                case TrigOccasion::UpSecond:
+                    return Some(CalcResult{OcMode::ActiveBelowCvr, 0, OcMode::ActiveBelowCvr, EN});
+                case TrigOccasion::DownSecond:
+                    return Some(CalcResult{OcMode::ActiveBelowCvr, ONE_BY_3 - duty, OcMode::ActiveAboveCvr, EN});
                 default: return None;
             }
         }
 
         static constexpr Option<CalcResult> calc_in_240_v(const TrigOccasion occasion, const real_t duty){
             switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::ActiveForever, ONE_BY_3 + duty, OcMode::ActiveBelowCvr});
-                case TrigOccasion::DownJust:
-                    return Some(CalcResult{OcMode::InactiveForever, duty - ONE_BY_3, OcMode::ActiveBelowCvr});
+                case TrigOccasion::UpSecond:
+                    return Some(CalcResult{OcMode::InactiveForever, duty - ONE_BY_3, OcMode::ActiveBelowCvr, EN});
+                case TrigOccasion::DownSecond:
+                    return Some(CalcResult{OcMode::ActiveForever, ONE_BY_3 + duty, OcMode::ActiveBelowCvr, EN});
                 default: return None;
             }
         }
 
         static constexpr Option<CalcResult> calc_in_360_v(const TrigOccasion occasion, const real_t duty){
             switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::ActiveForever, 1, OcMode::ActiveForever});
-                case TrigOccasion::DownJust:
-                    return Some(CalcResult{OcMode::ActiveForever, FIVE_BY_3 - duty, OcMode::ActiveAboveCvr});
+                case TrigOccasion::UpSecond:
+                    return Some(CalcResult{OcMode::ActiveForever, FIVE_BY_3 - duty, OcMode::ActiveAboveCvr, EN});
                 case TrigOccasion::DownFirst:
-                    return Some(CalcResult{OcMode::InactiveForever, duty - ONE_BY_3, OcMode::ActiveBelowCvr});
+                    return Some(CalcResult{OcMode::InactiveForever, duty - ONE_BY_3, OcMode::ActiveBelowCvr, DISEN});
+                case TrigOccasion::DownSecond:
+                    return Some(CalcResult{OcMode::ActiveForever, 1, OcMode::ActiveForever, EN});
                 default: return None;
             }
         }
@@ -223,7 +224,7 @@ public:
 
             switch(duty_span){
             case DutySpan::_0: 
-                return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
+                return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever, EN});
             case DutySpan::_120:
                 return calc_in_120_v(occasion, duty);
             case DutySpan::_240:
@@ -234,54 +235,54 @@ public:
             }
         }
 
-        static constexpr Option<CalcResult> calc_in_120_w(const TrigOccasion occasion, const real_t duty){
-            switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::InactiveForever, TWO_BY_3 - duty, OcMode::ActiveAboveCvr});
-                case TrigOccasion::UpSecond:
-                    return Some(CalcResult{OcMode::ActiveForever, TWO_BY_3 + duty, OcMode::ActiveBelowCvr});
-                case TrigOccasion::DownJust:
-                    return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
-                default: return None;
-            }
-        }
+        // static constexpr Option<CalcResult> calc_in_120_w(const TrigOccasion occasion, const real_t duty){
+        //     switch(occasion.kind()){
+        //         case TrigOccasion::UpJust:
+        //             return Some(CalcResult{OcMode::InactiveForever, TWO_BY_3 - duty, OcMode::ActiveAboveCvr});
+        //         case TrigOccasion::UpSecond:
+        //             return Some(CalcResult{OcMode::ActiveForever, TWO_BY_3 + duty, OcMode::ActiveBelowCvr});
+        //         case TrigOccasion::DownJust:
+        //             return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
+        //         default: return None;
+        //     }
+        // }
 
-        static constexpr Option<CalcResult> calc_in_240_w(const TrigOccasion occasion, const real_t duty){
-            switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::InactiveForever, TWO_BY_3 - duty, OcMode::ActiveAboveCvr});
-                case TrigOccasion::DownJust:
-                    return Some(CalcResult{OcMode::ActiveForever, FOUR_BY_3 - duty, OcMode::ActiveAboveCvr});
-                default: return None;
-            }
-        }
+        // static constexpr Option<CalcResult> calc_in_240_w(const TrigOccasion occasion, const real_t duty){
+        //     switch(occasion.kind()){
+        //         case TrigOccasion::UpJust:
+        //             return Some(CalcResult{OcMode::InactiveForever, TWO_BY_3 - duty, OcMode::ActiveAboveCvr});
+        //         case TrigOccasion::DownJust:
+        //             return Some(CalcResult{OcMode::ActiveForever, FOUR_BY_3 - duty, OcMode::ActiveAboveCvr});
+        //         default: return None;
+        //     }
+        // }
 
-        static constexpr Option<CalcResult> calc_in_360_w(const TrigOccasion occasion, const real_t duty){
-            switch(occasion.kind()){
-                case TrigOccasion::UpJust:
-                    return Some(CalcResult{OcMode::ActiveForever, 1, OcMode::ActiveForever});
-                case TrigOccasion::UpSecond:
-                    return Some(CalcResult{OcMode::ActiveForever, FOUR_BY_3 - duty, OcMode::ActiveAboveCvr});
-                case TrigOccasion::DownSecond:
-                    return Some(CalcResult{OcMode::InactiveForever, duty - TWO_BY_3, OcMode::ActiveBelowCvr});
-                default: return None;
-            }
-        }
-        static constexpr Option<CalcResult> calc_w(const TrigOccasion occasion, const real_t duty){
-            const auto duty_span = calc_duty_span(duty);
+        // static constexpr Option<CalcResult> calc_in_360_w(const TrigOccasion occasion, const real_t duty){
+        //     switch(occasion.kind()){
+        //         case TrigOccasion::UpJust:
+        //             return Some(CalcResult{OcMode::ActiveForever, 1, OcMode::ActiveForever});
+        //         case TrigOccasion::UpSecond:
+        //             return Some(CalcResult{OcMode::ActiveForever, FOUR_BY_3 - duty, OcMode::ActiveAboveCvr});
+        //         case TrigOccasion::DownSecond:
+        //             return Some(CalcResult{OcMode::InactiveForever, duty - TWO_BY_3, OcMode::ActiveBelowCvr});
+        //         default: return None;
+        //     }
+        // }
+        // static constexpr Option<CalcResult> calc_w(const TrigOccasion occasion, const real_t duty){
+        //     const auto duty_span = calc_duty_span(duty);
 
-            switch(duty_span){
-                case DutySpan::_0: 
-                    return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
-                case DutySpan::_120:
-                    return calc_in_120_w(occasion, duty);
-                case DutySpan::_240:
-                    return calc_in_240_w(occasion, duty);
-                case DutySpan::_360:
-                    return calc_in_360_w(occasion, duty);
-                    default: return None;
-            }
-        }
+        //     switch(duty_span){
+        //         case DutySpan::_0: 
+        //             return Some(CalcResult{OcMode::InactiveForever, 0, OcMode::InactiveForever});
+        //         case DutySpan::_120:
+        //             return calc_in_120_w(occasion, duty);
+        //         case DutySpan::_240:
+        //             return calc_in_240_w(occasion, duty);
+        //         case DutySpan::_360:
+        //             return calc_in_360_w(occasion, duty);
+        //             default: return None;
+        //     }
+        // }
 
         static constexpr DutySpan calc_duty_span(const real_t duty){
             constexpr auto NEAR_ONE = 0.999_r;
@@ -441,41 +442,110 @@ private:
         pwm_u_.set_duty(duty_cmd_[0]);
 
         {
-            const auto res_opt = SlaveAlgoHelper::calc_v(curr_ocs, duty_cmd_[1]);
-            if(res_opt.is_some()){
-                const auto [mode_temp, duty, mode] = res_opt.unwrap();
-                pwm_v_.set_oc_mode(mode_temp);
-                if(not_in_one(duty)) PANIC{duty};
-                if(true){
-                    pwm_v_.set_duty(duty);
-                    pwm_v_.set_oc_mode(mode);
-                }
+            const auto duty = duty_cmd_[1];
+            const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+            auto & pwm = pwm_v_;
+
+            switch(duty_span){
+            case DutySpan::_120:
+                switch(curr_ocs.kind()){
+                    case TrigOccasion::UpFirst:
+                        pwm.enable_cvr_sync(DISEN);
+                        pwm.set_oc_mode(OcMode::ActiveForever);
+                        pwm.set_duty(ONE_BY_3 + duty);
+                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                        break;
+                    case TrigOccasion::UpSecond:
+                        pwm.enable_cvr_sync(EN);
+                        pwm.set_oc_mode(OcMode::InactiveForever);
+                        break;
+                    case TrigOccasion::DownSecond:
+                        pwm.enable_cvr_sync(DISEN);
+                        pwm.set_duty(1_r);
+                        pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                        pwm.enable_cvr_sync(EN);
+                        pwm.set_duty(ONE_BY_3 - duty);
+                        break;
+                    default: break;
+                };break;
+            case DutySpan::_240:
+                switch(curr_ocs.kind()){
+                    case TrigOccasion::UpSecond:
+                        pwm.enable_cvr_sync(EN);
+                        pwm.set_duty(duty - ONE_BY_3);
+                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                        break;
+                    case TrigOccasion::DownSecond:
+                        pwm.enable_cvr_sync(EN);
+                        pwm.set_duty(ONE_BY_3 + duty);
+                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                        break;
+                    default: break;
+                }; break;
+            case DutySpan::_360:
+                switch(curr_ocs.kind()){
+                    case TrigOccasion::UpSecond:
+                        pwm.enable_cvr_sync(DISEN);
+                        pwm.set_duty(0);
+                        pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                        pwm.enable_cvr_sync(EN);
+                        pwm.set_duty(FIVE_BY_3 - duty);
+                        break;
+                    case TrigOccasion::DownFirst:
+                        pwm.enable_cvr_sync(DISEN);
+                        pwm.set_oc_mode(OcMode::InactiveForever);
+                        pwm.set_duty(duty - ONE_BY_3);
+                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                        break;
+                    case TrigOccasion::DownSecond:
+                        pwm.enable_cvr_sync(DISEN);
+                        pwm.set_oc_mode(OcMode::ActiveForever);
+                    default: break;
+                }; break;
+                default: break;
             }
+
+            // const auto res_opt = SlaveAlgoHelper::calc_v(curr_ocs, duty_cmd_[1]);
+            // if(res_opt.is_some()){
+            //     const auto [mode_temp, duty, mode, sync_en] = res_opt.unwrap();
+            //     if(sync_en == EN){
+            //         // if(mode_temp == OcMode::InactiveForever){
+            //         //     pwm_v_.set_duty(0);
+            //         //     pwm_v_.set_oc_mode(OcMode::ActiveAboveCvr);
+            //         //     pwm_v_.enable_cvr_sync(EN);
+            //         //     pwm_v_.set_duty(duty);
+            //         // }else{
+            //         //     pwm_v_.set_oc_mode(mode);
+            //         //     pwm_v_.enable_cvr_sync(EN);
+            //         //     pwm_v_.set_duty(duty);
+            //         // }
+            //         pwm_v_.set_duty(1);
+            //         pwm_v_.set_oc_mode(mode);
+            //         pwm_v_.enable_cvr_sync(EN);
+            //         pwm_v_.set_duty(duty);
+            //     }else{
+            //         pwm_v_.enable_cvr_sync(DISEN);
+            //         pwm_v_.set_oc_mode(mode_temp);
+            //         pwm_v_.set_duty(duty);
+            //         pwm_v_.set_oc_mode(mode);
+            //     }
+            // }
         }
 
-        {
-            const auto res_opt = SlaveAlgoHelper::calc_w(curr_ocs, duty_cmd_[2]);
-            if(res_opt.is_some()){
-                const auto [mode_temp, duty, mode] = res_opt.unwrap();
+        // {
+        //     const auto res_opt = SlaveAlgoHelper::calc_w(curr_ocs, duty_cmd_[2]);
+        //     if(res_opt.is_some()){
+        //         const auto [mode_temp, duty, mode] = res_opt.unwrap();
 
-                // if(!not_in_one(duty)){
-                if(not_in_one(duty)) PANIC{duty};
-                // if(true){
-                // if(mode_temp != mode){
-                //     pwm_w_.set_oc_mode(mode_temp);
-                //     pwm_w_.set_duty(duty);
-                //     pwm_w_.set_oc_mode(mode);
-                // }else{
-                if(curr_ocs != TrigOccasion::DownJust){
-                    pwm_w_.set_oc_mode(mode_temp);
-                    pwm_w_.set_duty(duty);
-                    pwm_w_.set_oc_mode(mode);
-                }else{
-                    pwm_w_.set_oc_mode(OcMode::InactiveForever);
-                }
-                // if(curr_ocs == TrigOccasion::UpSecond) pwm_w_.set_oc_mode(OcMode::InactiveForever);
-            }
-        }
+        //         // if(!not_in_one(duty)){
+        //         if(not_in_one(duty)) PANIC{duty};
+
+        //         pwm_w_.set_oc_mode(mode_temp);
+        //         pwm_w_.set_duty(duty);
+        //         pwm_w_.set_oc_mode(mode);
+        //         // if(curr_ocs == TrigOccasion::UpSecond) pwm_w_.set_oc_mode(OcMode::InactiveForever);
+        //     }
+        // }
 
         if(curr_ocs == TrigOccasion::UpJust){
             duty_cmd_[0] = duty_cmd_shadow_[0];
@@ -526,8 +596,10 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         [[maybe_unused]]
         const auto [st, ct] = sincospu(10 * t);
 
-        // const auto mt = st * 0.4_r + 0.5_r;
-        const auto mt = 0.2917_r;
+        const auto mt = st * 0.4_r + 0.5_r;
+        // const auto mt = 0.2917_r + ONE_BY_3;
+        // const auto mt = 0.2917_r;
+        // const auto mt = 0.68_r;
         // const auto mt = 0.8_r;
 
         // DEBUG_PRINTLN(InterleavedPwmGen3::SlaveAlgoHelper::calc_in_360_w(TrigOccasion::DownJust, mt).unwrap());
