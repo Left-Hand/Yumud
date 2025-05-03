@@ -208,7 +208,7 @@ public:
     requires (std::is_integral_v<Args> && ...)
     std::array<uint16_t, sizeof...(Args)> dump_cvr(Args ...args){
         auto dump_one = [&](const uint idx) -> uint16_t{
-            if(idx >= CHANNELS_COUNT) __builtin_abort();
+            if(idx >= CHANNELS_COUNT) sys::abort();
             return sub_channels[idx].off.cvr;
         };
 
@@ -235,7 +235,7 @@ public:
     };
     
     PCA9685Channel & operator [](const size_t index){
-        if(index >= CHANNELS_COUNT) __builtin_abort();
+        if(index >= CHANNELS_COUNT) sys::abort();
         return channels[index];
     }
 };

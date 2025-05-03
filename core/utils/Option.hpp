@@ -232,7 +232,7 @@ public:
     
     [[nodiscard]] constexpr 
     T & unwrap(){
-        if(unlikely(value_ == nullptr)){__builtin_abort();}
+        if(unlikely(value_ == nullptr)){sys::abort();}
         return *value_;
     }
 private:

@@ -71,7 +71,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
     const auto min_psc = calc_psc_from_arr(max_arr);
     const auto max_psc = calc_psc_from_arr(min_arr);
 
-    if (min_arr > max_arr) __builtin_abort();
+    if (min_arr > max_arr) ymd::sys::abort();
     
     struct Best{
         uint16_t arr;
@@ -106,7 +106,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         }
     }
     
-    if(best.freq_err == UINT32_MAX) __builtin_abort();
+    if(best.freq_err == UINT32_MAX) ymd::sys::abort();
     return {best.arr, best.psc};
 }
 
@@ -339,6 +339,12 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
     enable(en);
+}
+
+
+void BasicTimer::deinit(){
+    this->enable_rcc(false);
+    cbs_.fill(nullptr);
 }
 
 

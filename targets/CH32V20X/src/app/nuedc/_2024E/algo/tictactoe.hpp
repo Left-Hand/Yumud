@@ -93,7 +93,7 @@ chess_forward_ai(const Role role, const ChessBoard & board){
         if (board.at(pos) == None) return pos;
     }
 
-    __builtin_abort();
+    sys::abort();
 
     // 6. 最后兜底（理论上不会执行到此处）
     for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {

@@ -1,5 +1,6 @@
 #include "timer_oc.hpp"
 #include "hal/gpio/gpio_port.hpp"
+#include "core/system.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -33,58 +34,50 @@ void TimerOCN::init(const TimerOcnPwmConfig & cfg){
 void TimerOC::set_oc_mode(const TimerOC::Mode mode){
     using enum ChannelIndex;
 
-    uint16_t m_code;
-    uint16_t s_code;
-    // volatile uint16_t *ctlr_reg;
-    switch(idx_){
-        default:
-            HALT;
-            [[fallthrough]];
+    const uint8_t raw_code = uint8_t(mode) << 4;
 
-        case CH1:
-            {
-                uint16_t tmpccmrx = instance->CHCTLR1;
-                m_code = TIM_OC1M;
-                s_code = TIM_CC1S;
-                tmpccmrx &= (uint16_t)(~((uint16_t)(m_code)));
-                tmpccmrx &= (uint16_t)(~((uint16_t)(s_code)));
-                tmpccmrx |= (uint16_t)mode;
-                instance->CHCTLR1 = tmpccmrx;
-                break;
-            }
-        case CH2:
-            {
-                uint16_t tmpccmrx = instance->CHCTLR1;
-                m_code = TIM_OC2M;
-                s_code = TIM_CC2S;
-                tmpccmrx &= (uint16_t)(~((uint16_t)(m_code)));
-                tmpccmrx &= (uint16_t)(~((uint16_t)(s_code)));
-                tmpccmrx |= (uint16_t)((uint16_t)mode << 8);
-                instance->CHCTLR1 = tmpccmrx;
-                break;
-            }
-        case CH3:
-            {
-                uint16_t tmpccmrx = instance->CHCTLR2;
-                m_code = TIM_OC3M;
-                s_code = TIM_CC3S;
-                tmpccmrx &= (uint16_t)(~((uint16_t)(m_code)));
-                tmpccmrx &= (uint16_t)(~((uint16_t)(s_code)));
-                tmpccmrx |= (uint16_t)mode;
-                instance->CHCTLR2 = tmpccmrx;
-                break;
-            }
-        case CH4:
-            {
-                uint16_t tmpccmrx = instance->CHCTLR2;
-                m_code = TIM_OC4M;
-                s_code = TIM_CC4S;
-                tmpccmrx &= (uint16_t)(~((uint16_t)(m_code << 8)));
-                tmpccmrx &= (uint16_t)(~((uint16_t)(s_code)));
-                tmpccmrx |= (uint16_t)((uint16_t)mode << 8);
-                instance->CHCTLR2 = tmpccmrx;
-                break;
-            }
+    switch(idx_){
+        default: ymd::sys::abort();
+        case CH1:{
+            uint16_t tmpccmrx = instance->CHCTLR1;
+            const uint16_t m_code = TIM_OC1M;
+            const uint16_t s_code = TIM_CC1S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(raw_code);
+            instance->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case CH2:{
+            uint16_t tmpccmrx = instance->CHCTLR1;
+            const uint16_t m_code = TIM_OC2M;
+            const uint16_t s_code = TIM_CC2S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(raw_code) << 8);
+            instance->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case CH3:{
+            uint16_t tmpccmrx = instance->CHCTLR2;
+            const uint16_t m_code = TIM_OC3M;
+            const uint16_t s_code = TIM_CC3S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(raw_code);
+            instance->CHCTLR2 = tmpccmrx;
+            break;
+        }
+        case CH4:{
+            uint16_t tmpccmrx = instance->CHCTLR2;
+            const uint16_t m_code = TIM_OC4M;
+            const uint16_t s_code = TIM_CC4S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code << 8)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(raw_code) << 8);
+            instance->CHCTLR2 = tmpccmrx;
+            break;
+        }
     }
 
 }

@@ -26,8 +26,6 @@ void *_sbrk(ptrdiff_t incr){
 }
 
 void _exit(int status){
-    DEBUG_PRINTLN("exited");
-    delay(10);
     while(true);
 }
 

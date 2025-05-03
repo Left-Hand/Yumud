@@ -2,6 +2,7 @@
 
 #define __DEBUG_INCLUDED
 
+#include "core/system.hpp"
 #include "core/clock/clock.hpp"
 #include <source_location>
 
@@ -42,25 +43,23 @@ __fast_inline void DEBUG_PRINT(Args&& ... args) {
 template<typename ... Args>
 __attribute__((noreturn))
 __fast_inline void PANIC_NSRC(Args&& ... args) {
+    sys::trip();
     ymd::DEBUGGER.set_indent(0);
     DEBUG_PRINTLN();
     DEBUG_PRINTLN("panicked: ");
     delay(10);
-    DISABLE_INT;
-    DISABLE_INT;
-    exit(1);
+    sys::abort();
 }
 
 template<typename Expr, typename ... Args>
 __fast_inline bool ASSERT_NSRC(Expr &&expr, Args&& ... args) {
     if(false == bool(std::forward<Expr>(expr))){
+        sys::trip();
         ymd::DEBUGGER.set_indent(0);
         DEBUG_PRINTLN();
         DEBUG_PRINTLN("assert failed: ");
         delay(10);
-        DISABLE_INT;
-        DISABLE_INT;
-        exit(1);
+        sys::abort();
     }
     return true;
 }
@@ -97,17 +96,18 @@ template <typename... Args>
 DEBUG_SRC(Args &&...) -> DEBUG_SRC<Args ...>;
 
 
-template <typename... Args>
-struct DEBUG_ERROR
-{    
-	DEBUG_ERROR(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        DEBUG_PRINT("[Err] ");
-        DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
-	}
-};
+// template <typename... Args>
+// struct DEBUG_ERROR
+// {    
+// 	DEBUG_ERROR(Args &&... args, const std::source_location& loc = std::source_location::current()){
+//         sys::trip();
+//         DEBUG_PRINT("[Err] ");
+//         DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
+// 	}
+// };
 
-template <typename... Args>
-DEBUG_ERROR(Args &&...) -> DEBUG_ERROR<Args...>;
+// template <typename... Args>
+// DEBUG_ERROR(Args &&...) -> DEBUG_ERROR<Args...>;
 
 
 template <typename... Args>
@@ -127,16 +127,16 @@ template <typename... Args>
 struct PANIC
 {    
 	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        sys::trip();
         ymd::DEBUGGER.set_indent(0);
+
         DEBUG_PRINTLN();
         DEBUG_PRINTLN("panicked: ");
+
         ymd::DEBUGGER.set_indent(1);
         DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
         delay(10);
-
-        DISABLE_INT;
-        DISABLE_INT;
-        exit(1);
+        sys::abort();
 	}
 };
 
@@ -157,19 +157,15 @@ PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
 template <typename Texpr, typename... Args>
 struct ASSERT{
 private:
-	bool result_;
+	bool is_ok_;
 public:
 	constexpr ASSERT(Texpr && expr, Args &&... args, const std::source_location& loc = std::source_location::current()):
-		result_(bool(expr)){
-		if(!result_){
-            DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
-            delay(10);
-            DISABLE_INT;
-            DISABLE_INT;
-			exit(1);
+		is_ok_(bool(expr)){
+		if(!is_ok_){
+            PANIC<Args ...>(std::forward<Args>(args)..., loc);
 		}
 	}
-	constexpr operator bool() const {return result_;}
+	constexpr operator bool() const {return is_ok_;}
 };
 
 template <typename Texpr, typename... Args>

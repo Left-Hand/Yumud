@@ -98,8 +98,6 @@ public:
     using Callback = std::function<void(void)>;
 private:
     std::array<Callback, 8> cbs_;
-
-
 protected:
     TIM_TypeDef * instance;
 
@@ -129,13 +127,15 @@ protected:
 public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
+    
+    void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
+    void deinit();
+
+    void enable(const bool en = true);
     void set_count_mode(const TimerCountMode mode);
 
     void set_psc(const uint16_t psc);
     void set_arr(const uint16_t arr);
-
-    void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
-    void enable(const bool en = true);
 
     void set_freq(const uint32_t freq);
 

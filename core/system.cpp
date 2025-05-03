@@ -5,6 +5,7 @@
 #include "core/arch.hpp"
 
 #include "hal/crc/crc.hpp"
+#include "hal/timer/timer.hpp"
 
 #include "core/clock/clock.hpp"
 
@@ -113,10 +114,13 @@ void sys::preinit(){
 }
 
 
+
+
 void sys::reset(){
     __disable_irq();
     __disable_irq();
     NVIC_SystemReset();
+    while(true);
 }
 
 uint64_t sys::chip::get_chip_id(){
@@ -331,7 +335,7 @@ void sys::exception::enable_interrupt(){
     ret; \
 })
 
-void sys::exit() {
+void sys::dump() {
     // 使用宏读取寄存器的值
     const uint32_t cpu_x1 = READ_REGISTER(x1);
     const uint32_t cpu_x3 = READ_REGISTER(x3);
@@ -339,17 +343,30 @@ void sys::exit() {
 
     // 打印寄存器值
     DEBUG_PRINTLN(
-        "system exited, here is map:",
+        "system exited, reg dump:",
         "mstatus: ", cpu_mstatus,
         "x1: ", cpu_x1,
         "x3: ", cpu_x3
     );
-
-    // 退出程序
-    _exit(0);
 }
-void sys::halt(){
-    HALT;
+
+//跳闸 第一时间关闭功率输出
+void sys::trip(){
+    hal::timer1.deinit();
+    hal::timer2.deinit();
+    hal::timer3.deinit();
+    hal::timer4.deinit();
+}
+
+//关闭所有外设
+void sys::abort(){
+    DISABLE_INT;
+    DISABLE_INT;
+
+    trip();
+
+    RCC_DeInit();
+    while(true);
 }
 
 void sys::jumpto(const uint32_t addr){

@@ -71,7 +71,7 @@ public:
 
         static constexpr SendStr from_str(const StringView strv){
             SendStr ret;
-            if(strv.size() > MAX_STR_LEN) __builtin_abort();
+            if(strv.size() > MAX_STR_LEN) sys::abort();
             memcpy(ret.str, strv.data(), strv.size());
             return ret;
         }

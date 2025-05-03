@@ -20,7 +20,7 @@ public:
 };
 
 struct TimerOcPwmConfig final{
-    TimerOcMode oc_mode = TimerOcMode::UpValid;
+    TimerOcMode oc_mode = TimerOcMode::ActiveBeforeCvr;
     Enable cvr_sync_en = EN;
     BoolLevel valid_level = HIGH;
     Enable out_en = EN;
@@ -32,7 +32,7 @@ struct TimerOcnPwmConfig final{
     Enable install_en = EN;
 };
 
-class TimerOC final:public TimerOut, public PwmIntf{
+class TimerOC final:public PwmIntf, public TimerOut{
 public:
     using Mode = TimerOcMode;
 protected:

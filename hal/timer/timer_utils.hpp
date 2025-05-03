@@ -17,6 +17,14 @@ namespace ymd::hal{
         CenterAlignedDualTrig   = TIM_CounterMode_CenterAligned3
     };
 
+    // enum class TimerCountMode:uint8_t{
+    //     Up                      = 0x00,
+    //     Down                    = 0x01,
+    //     CenterAlignedDownTrig   = 0x02,
+    //     CenterAlignedUpTrig     = 0x04,
+    //     CenterAlignedDualTrig   = 0x06
+    // };
+
     enum class TimerChannelIndex:uint8_t{
         CH1     =   0b000,
         CH1N    =   0b001,
@@ -38,6 +46,19 @@ namespace ymd::hal{
         OC4R    = TIM_TRGOSource_OC4Ref            
     };
 
+
+    // enum class TimerTrgoSource:uint8_t{
+    //     Reset   = 0x000,             
+    //     Enable  = 0x001,           
+    //     Update  = 0x002,           
+    //     OC1     = 0x003,            
+    //     OC1R    = 0x004,            
+    //     OC2R    = 0x005,            
+    //     OC3R    = 0x006,            
+    //     OC4R    = 0x007            
+    // };
+
+
     enum class TimerIT:uint8_t{
         Update  = TIM_IT_Update,
         CC1     = TIM_IT_CC1,
@@ -49,6 +70,17 @@ namespace ymd::hal{
         Break   = TIM_IT_Break,
     };
 
+    // enum class TimerIT:uint8_t{
+    //     Update  = 0x01,
+    //     CC1     = 0x02,
+    //     CC2     = 0x04,
+    //     CC3     = 0x08,
+    //     CC4     = 0x10,
+    //     COM     = 0x20,
+    //     Trigger = 0x40,
+    //     Break   = 0x80,
+    // };
+
     enum class TimerBdtrLockLevel:uint16_t{
         Off     = TIM_LOCKLevel_OFF,
         Low     = TIM_LOCKLevel_1,
@@ -56,13 +88,22 @@ namespace ymd::hal{
         High    = TIM_LOCKLevel_3
     };
 
+    // enum class TimerBdtrLockLevel:uint8_t{
+    //     Off     = 0x00,
+    //     Low     = 0x01,
+    //     Medium  = 0x02,
+    //     High    = 0x03
+    // };
+
     enum class TimerOcMode:uint8_t{
-        Timing      = TIM_OCMode_Timing,
-        Active      = TIM_OCMode_Active,
-        Inactive    = TIM_OCMode_Inactive,
-        Toggle      = TIM_OCMode_Toggle,
-        UpValid     = TIM_OCMode_PWM1,
-        DownValid   = TIM_OCMode_PWM2
+        Freeze              = 0b000,
+        ActiveUnlessCvr     = 0b001,
+        InactiveUnlessCvr   = 0b010,
+        ToggleWhenCvr       = 0b011,
+        InactiveForever     = 0b100,
+        ActiveForever       = 0b101,
+        ActiveBeforeCvr     = 0b110,
+        ActiveAfterCvr      = 0b111,
     };
 
     namespace internal{
