@@ -11,6 +11,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "src/testbench/tb.h"
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 
 // https://www.cnblogs.com/wchmcu/p/18781096
@@ -537,6 +538,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
                     pwm.set_duty(1_r);
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
@@ -681,7 +683,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         [[maybe_unused]]
         const auto [st, ct] = sincospu(10 * t);
 
-        const auto mt = st * 0.4_r + 0.5_r;
+        // const auto mt = st * 0.4_r ;
         // const auto mt = 0.2917_r + ONE_BY_3;
         // const auto mt = 0.2917_r;
         // const auto mt = 0.68_r;
@@ -690,15 +692,16 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         // DEBUG_PRINTLN(InterleavedPwmGen3::SlaveAlgoHelper::calc_in_360_w(TrigOccasion::DownJust, mt).unwrap());
         // const auto mt = 0.4_r;
         // const auto mt = 0.24_r;
-
-        pwm_gen.set_duty({mt, mt, mt});
+        static constexpr const real_t depth = 0.4_r;
+        const auto [u, v, w] = drivers::SVM(st * depth, ct * depth);
+        pwm_gen.set_duty({u, v, w});
         // DEBUG_PRINTLN(
         //     real_t(timer.oc(1)),
         //     real_t(timer.oc(2)),
         //     real_t(timer.oc(3))
         // );
 
-        DEBUG_PRINTLN(mt);
+        DEBUG_PRINTLN(u, v, w);
         delay(1);
         // pwm_gen.set_duty({0.2_r, 0.4_r, 0.6_r});
         // pwm_gen.set_duty({0.6_r, 0.8_r, 0.9_r});
