@@ -441,111 +441,11 @@ private:
 
         pwm_u_.set_duty(duty_cmd_[0]);
 
-        {
-            const auto duty = duty_cmd_[1];
-            const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
-            auto & pwm = pwm_v_;
 
-            switch(duty_span){
-            case DutySpan::_120:
-                switch(curr_ocs.kind()){
-                    case TrigOccasion::UpFirst:
-                        pwm.enable_cvr_sync(DISEN);
-                        pwm.set_oc_mode(OcMode::ActiveForever);
-                        pwm.set_duty(ONE_BY_3 + duty);
-                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
-                        break;
-                    case TrigOccasion::UpSecond:
-                        pwm.enable_cvr_sync(EN);
-                        pwm.set_oc_mode(OcMode::InactiveForever);
-                        break;
-                    case TrigOccasion::DownSecond:
-                        pwm.enable_cvr_sync(DISEN);
-                        pwm.set_duty(1_r);
-                        pwm.set_oc_mode(OcMode::ActiveAboveCvr);
-                        pwm.enable_cvr_sync(EN);
-                        pwm.set_duty(ONE_BY_3 - duty);
-                        break;
-                    default: break;
-                };break;
-            case DutySpan::_240:
-                switch(curr_ocs.kind()){
-                    case TrigOccasion::UpSecond:
-                        pwm.enable_cvr_sync(EN);
-                        pwm.set_duty(duty - ONE_BY_3);
-                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
-                        break;
-                    case TrigOccasion::DownSecond:
-                        pwm.enable_cvr_sync(EN);
-                        pwm.set_duty(ONE_BY_3 + duty);
-                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
-                        break;
-                    default: break;
-                }; break;
-            case DutySpan::_360:
-                switch(curr_ocs.kind()){
-                    case TrigOccasion::UpSecond:
-                        pwm.enable_cvr_sync(DISEN);
-                        pwm.set_duty(0);
-                        pwm.set_oc_mode(OcMode::ActiveAboveCvr);
-                        pwm.enable_cvr_sync(EN);
-                        pwm.set_duty(FIVE_BY_3 - duty);
-                        break;
-                    case TrigOccasion::DownFirst:
-                        pwm.enable_cvr_sync(DISEN);
-                        pwm.set_oc_mode(OcMode::InactiveForever);
-                        pwm.set_duty(duty - ONE_BY_3);
-                        pwm.set_oc_mode(OcMode::ActiveBelowCvr);
-                        break;
-                    case TrigOccasion::DownSecond:
-                        pwm.enable_cvr_sync(DISEN);
-                        pwm.set_oc_mode(OcMode::ActiveForever);
-                    default: break;
-                }; break;
-                default: break;
-            }
+        // set_pwm_shift_60(pwm_v_, curr_ocs, duty_cmd_[1]);
+        set_pwm_shift_120(pwm_v_, curr_ocs, duty_cmd_[1]);
+        set_pwm_shift_240(pwm_w_, curr_ocs, duty_cmd_[2]);
 
-            // const auto res_opt = SlaveAlgoHelper::calc_v(curr_ocs, duty_cmd_[1]);
-            // if(res_opt.is_some()){
-            //     const auto [mode_temp, duty, mode, sync_en] = res_opt.unwrap();
-            //     if(sync_en == EN){
-            //         // if(mode_temp == OcMode::InactiveForever){
-            //         //     pwm_v_.set_duty(0);
-            //         //     pwm_v_.set_oc_mode(OcMode::ActiveAboveCvr);
-            //         //     pwm_v_.enable_cvr_sync(EN);
-            //         //     pwm_v_.set_duty(duty);
-            //         // }else{
-            //         //     pwm_v_.set_oc_mode(mode);
-            //         //     pwm_v_.enable_cvr_sync(EN);
-            //         //     pwm_v_.set_duty(duty);
-            //         // }
-            //         pwm_v_.set_duty(1);
-            //         pwm_v_.set_oc_mode(mode);
-            //         pwm_v_.enable_cvr_sync(EN);
-            //         pwm_v_.set_duty(duty);
-            //     }else{
-            //         pwm_v_.enable_cvr_sync(DISEN);
-            //         pwm_v_.set_oc_mode(mode_temp);
-            //         pwm_v_.set_duty(duty);
-            //         pwm_v_.set_oc_mode(mode);
-            //     }
-            // }
-        }
-
-        // {
-        //     const auto res_opt = SlaveAlgoHelper::calc_w(curr_ocs, duty_cmd_[2]);
-        //     if(res_opt.is_some()){
-        //         const auto [mode_temp, duty, mode] = res_opt.unwrap();
-
-        //         // if(!not_in_one(duty)){
-        //         if(not_in_one(duty)) PANIC{duty};
-
-        //         pwm_w_.set_oc_mode(mode_temp);
-        //         pwm_w_.set_duty(duty);
-        //         pwm_w_.set_oc_mode(mode);
-        //         // if(curr_ocs == TrigOccasion::UpSecond) pwm_w_.set_oc_mode(OcMode::InactiveForever);
-        //     }
-        // }
 
         if(curr_ocs == TrigOccasion::UpJust){
             duty_cmd_[0] = duty_cmd_shadow_[0];
@@ -555,9 +455,194 @@ private:
 
         test_gpio.toggle();
 
-
-
     }
+
+    void set_pwm_shift_60(TimerOC & pwm, const TrigOccasion curr_ocs, const real_t duty){
+        const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+
+        switch(duty_span){
+        case DutySpan::_120:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpFirst:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(ONE_BY_3 + duty);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    break;
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_duty(1_r);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(ONE_BY_3 - duty);
+                    break;
+                default: break;
+            };break;
+        case DutySpan::_240:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(duty - ONE_BY_3);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(ONE_BY_3 + duty);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    break;
+                default: break;
+            }; break;
+        case DutySpan::_360:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_duty(0);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(FIVE_BY_3 - duty);
+                    break;
+                case TrigOccasion::DownFirst:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(duty - ONE_BY_3);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    break;
+                default: break;
+            }; break;
+            default: break;
+        }
+    }
+
+    void set_pwm_shift_120(TimerOC & pwm, const TrigOccasion curr_ocs, const real_t duty){
+        const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+
+        switch(duty_span){
+        case DutySpan::_120:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(TWO_BY_3 + duty);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(0);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_duty(1_r);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(TWO_BY_3 - duty);
+                    break;
+                default: break;
+            };break;
+        case DutySpan::_240:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(FOUR_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(TWO_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    break;
+                default: break;
+            }; break;
+        case DutySpan::_360:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(FOUR_BY_3 - duty);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(duty - TWO_BY_3);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(1);
+                    break;
+                default: break;
+            }; break;
+            default: break;
+        }
+    }
+
+    void set_pwm_shift_240(TimerOC & pwm, const TrigOccasion curr_ocs, const real_t duty){
+        const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+
+        switch(duty_span){
+        case DutySpan::_120:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(0);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(TWO_BY_3 + duty);
+                    break;
+                case TrigOccasion::DownFirst:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(TWO_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(1);
+                    break;
+                default: break;
+            };break;
+        case DutySpan::_240:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(TWO_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(FOUR_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    break;
+                default: break;
+            }; break;
+        case DutySpan::_360:
+            switch(curr_ocs.kind()){
+                case TrigOccasion::UpFirst:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_duty(FOUR_BY_3 - duty);
+                    pwm.set_oc_mode(OcMode::ActiveAboveCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(0);
+                    break;
+                case TrigOccasion::DownSecond:
+                    pwm.enable_cvr_sync(DISEN);
+                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_duty(1);
+                    pwm.set_oc_mode(OcMode::ActiveBelowCvr);
+                    pwm.enable_cvr_sync(EN);
+                    pwm.set_duty(duty - TWO_BY_3);
+                    break;
+                default: break;
+            }; break;
+            default: break;
+        }
+    }
+
 };
 
 void InterleavedPwmGen3::static_test(){
