@@ -86,7 +86,7 @@ void TimerOut::enable_output(const Enable en){
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
 }
 
-void TimerOut::enable_cvr_sync(const Enable en){
+void TimerOC::enable_cvr_sync(const Enable en){
     using enum ChannelIndex;
 
     switch(idx_){
@@ -103,6 +103,7 @@ void TimerOut::enable_cvr_sync(const Enable en){
             TIM_OC4PreloadConfig(instance, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         default:
+            sys::abort();
             break;
     }
 }

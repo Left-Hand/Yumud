@@ -102,8 +102,8 @@ namespace ymd::hal{
         ToggleWhenCvr       = 0b011,
         InactiveForever     = 0b100,
         ActiveForever       = 0b101,
-        ActiveBeforeCvr     = 0b110,
-        ActiveAfterCvr      = 0b111,
+        ActiveBelowCvr     = 0b110,
+        ActiveAboveCvr      = 0b111,
     };
 
     namespace internal{

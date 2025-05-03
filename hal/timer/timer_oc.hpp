@@ -12,7 +12,6 @@ protected:
     TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}
     void install_to_pin(const Enable en = EN);
 public:
-    void enable_cvr_sync(const Enable en = EN);
     void set_valid_level(const BoolLevel level);
     void enable_output(const Enable en = EN);
 
@@ -20,7 +19,7 @@ public:
 };
 
 struct TimerOcPwmConfig final{
-    TimerOcMode oc_mode = TimerOcMode::ActiveBeforeCvr;
+    TimerOcMode oc_mode = TimerOcMode::ActiveBelowCvr;
     Enable cvr_sync_en = EN;
     BoolLevel valid_level = HIGH;
     Enable out_en = EN;
@@ -45,8 +44,10 @@ public:
             arr_(instance->ATRLR){;}
 
     void init(const TimerOcPwmConfig & config);
-    void set_oc_mode(const Mode mode);
 
+    void set_oc_mode(const Mode mode);
+    void enable_cvr_sync(const Enable en = EN);
+    
     Gpio & io();
     __fast_inline volatile uint16_t & cvr() {return cvr_;}
     __fast_inline volatile uint16_t & arr() {return arr_;}
@@ -57,7 +58,7 @@ public:
     __fast_inline void set_duty(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline TimerOC & operator = (const real_t duty) 
         override {set_duty(duty); return *this;}
-    __fast_inline operator real_t(){return real_t(cvr_) / int(arr_);}
+    __fast_inline operator real_t(){return iq_t<8>(cvr_) / int(arr_);}
 };
 
 class TimerOCN final:public TimerOut{

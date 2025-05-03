@@ -440,6 +440,9 @@ void BasicTimer::enable_it(const IT it,const NvicPriority request, const bool en
     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
 }
 
+void BasicTimer::enable_cc_ctrl_sync(const bool sync){
+    TIM_CCPreloadControl(instance, sync);
+}
 
 TimerOC & GenericTimer::oc(const size_t index){
     TIM_ASSERT(index <= 4 and index != 0);
@@ -451,6 +454,8 @@ TimerOC & GenericTimer::oc(const size_t index){
 TimerChannel & GenericTimer::operator [](const int index){
     return channels[index];
 }
+
+
 
 
 TimerChannel & AdvancedTimer::operator [](const int index){

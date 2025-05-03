@@ -142,6 +142,8 @@ public:
     void enable_it(const IT it,const NvicPriority request, const bool en = true);
     void enable_arr_sync(const bool sync = true);
     void enable_psc_sync(const bool sync = true);
+
+    void enable_cc_ctrl_sync(const bool sync = true);
     auto & inst() {return instance;}
 
     volatile uint16_t & cnt(){return instance->CNT;}
@@ -240,9 +242,7 @@ public:
             }{;}
 
     void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
-    void enable_cvr_sync(const bool _sync = true){
-        TIM_CCPreloadControl(instance, FunctionalState(_sync));
-    }
+
 
     void set_dead_zone_ns(const uint32_t ns);
     void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
