@@ -31,8 +31,10 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/string/StringView.hpp"
+#include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/HID/Event.hpp"
 
 namespace ymd::drivers{
 
@@ -119,6 +121,8 @@ struct _TM1637_Collections{
         KeyFormatWrong,
         DisplayLengthTooLong,
         IndexOutOfRange,
+        DutyGreatThanOne,
+        DutyLessThanZero
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -126,18 +130,47 @@ struct _TM1637_Collections{
     static constexpr uint8_t CGRAM_BEGIN_ADDR = 0;
     static constexpr uint8_t CGRAM_MAX_LEN = 6;
 
-    enum class PulseWidth:uint8_t{
-        _1_16   = 0b000,
-        _2_16   = 0b001,
-        _4_16   = 0b010,
-        _10_16  = 0b011,
-        _11_16  = 0b100,
-        _12_16  = 0b101,
-        _13_16  = 0b110,
-        _14_16  = 0b111,
+    class PulseWidth{
+    public:
+        enum class Kind:uint8_t{
+            _1_16   = 0b000,
+            _2_16   = 0b001,
+            _4_16   = 0b010,
+            _10_16  = 0b011,
+            _11_16  = 0b100,
+            _12_16  = 0b101,
+            _13_16  = 0b110,
+            _14_16  = 0b111
+        };
+        constexpr PulseWidth(const Kind kind):kind_(kind){;}
+
+        using enum Kind;
+        static constexpr Option<PulseWidth> from_duty(const real_t duty){
+            if(duty < DUTY_TABLE[0]) return None;
+            else return Some(PulseWidth(duty2kind(duty)));
+        }
+
+        constexpr auto kind() const { return kind_; }
+    private:
+        Kind kind_;
+
+        static constexpr std::array DUTY_TABLE = {
+            real_t(1.0 / 16),
+            real_t(2.0 / 16),
+            real_t(4.0 / 16),
+            real_t(10.0 / 16),
+            real_t(11.0 / 16),
+            real_t(12.0 / 16),
+            real_t(13.0 / 16),
+            real_t(14.0 / 16)
+        };
+
+        static constexpr Kind duty2kind(const real_t duty){
+            const auto it = std::lower_bound(DUTY_TABLE.begin(), DUTY_TABLE.end(), duty);
+            const auto idx = std::distance(DUTY_TABLE.begin(), it);
+            return std::bit_cast<Kind>(uint8_t(idx));
+        }
     };
-
-
 
     struct DataCommand{
         const uint8_t __resv1__:1 = 0;
@@ -160,7 +193,7 @@ struct _TM1637_Collections{
     static_assert(sizeof(AddressCommand) == 1);
 
     struct DisplayCommand{
-        PulseWidth pulse_width:3;
+        PulseWidth::Kind pulse_width:3;
         uint8_t display_en:1;
         const uint8_t __resv2__:4 = 0b1000;
 
@@ -168,77 +201,6 @@ struct _TM1637_Collections{
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
-
-    class KeyEvent{
-    public:
-        constexpr Option<uint8_t> row() const {
-            //no key pressed
-            if(raw_ == 0xff) return None;
-
-            const uint8_t key = raw_ >> 3;
-            switch(key){
-                case 0b11101: return Some<uint8_t>(0);
-                case 0b01001: return Some<uint8_t>(0);
-                case 0b10101: return Some<uint8_t>(0);
-                case 0b00101: return Some<uint8_t>(0);
-                case 0b11111: return Some<uint8_t>(1);
-                case 0b01011: return Some<uint8_t>(1);
-                case 0b10111: return Some<uint8_t>(1);
-                case 0b00111: return Some<uint8_t>(1);
-                case 0b11010: return Some<uint8_t>(2);
-                case 0b01010: return Some<uint8_t>(2);
-                case 0b10010: return Some<uint8_t>(2);
-                case 0b00010: return Some<uint8_t>(2);
-                case 0b11110: return Some<uint8_t>(1);
-                case 0b01110: return Some<uint8_t>(1);
-                case 0b10110: return Some<uint8_t>(1);
-                case 0b00110: return Some<uint8_t>(1);
-                // default: while(true);
-                default: return None;
-            }
-        }
-        constexpr Option<uint8_t> col() const {
-            //no key pressed
-            if(raw_ == 0xff) return None;
-
-            const uint8_t key = raw_ >> 3;
-            switch(key){
-                case 0b11101: return Some<uint8_t>(0);
-                case 0b01001: return Some<uint8_t>(1);
-                case 0b10101: return Some<uint8_t>(2);
-                case 0b00101: return Some<uint8_t>(3);
-                case 0b11111: return Some<uint8_t>(0);
-                case 0b01011: return Some<uint8_t>(1);
-                case 0b10111: return Some<uint8_t>(2);
-                case 0b00111: return Some<uint8_t>(3);
-                case 0b11010: return Some<uint8_t>(0);
-                case 0b01010: return Some<uint8_t>(1);
-                case 0b10010: return Some<uint8_t>(2);
-                case 0b00010: return Some<uint8_t>(3);
-                case 0b11110: return Some<uint8_t>(0);
-                case 0b01110: return Some<uint8_t>(1);
-                case 0b10110: return Some<uint8_t>(2);
-                case 0b00110: return Some<uint8_t>(3);
-                // default: while(true);
-                default: return None;
-                // default: return {None, None};
-            }
-        }
-
-        static constexpr Result<KeyEvent, Error> from_u8(const uint8_t data){
-            //low 3bit must be 111
-            if((data & 0b111) != 0b111) return Err(Error::KeyFormatWrong);
-            return Ok(KeyEvent{uint8_t(data >> 3)});
-        }
-    private:
-        constexpr KeyEvent(uint8_t raw): 
-            raw_(raw)
-        {;}
-
-        // Option<uint8_t> row_;
-        // Option<uint8_t> col_;
-        uint8_t raw_;
-    };
 };
 }
 
@@ -280,21 +242,83 @@ public:
     Result<void, Error> flush();
     
     [[nodiscard]]
-    Result<KeyEvent, Error> read_key();
+    Result<Option<MatrixKeyEvent>, Error> read_key();
     [[nodiscard]]
     Result<void, Error> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
         buf_.set(pos, val);
         return Ok();
     }
+
+
+    [[nodiscard]]
+    Result<void, Error> set_display_duty(const real_t duty);
+    
 private:
-    Phy phy_;
     using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
+
+    Phy phy_;
     Buf buf_;
+    DisplayCommand disp_cmd_;
     bool is_on_display_else_readkey_ = true;
 
     [[nodiscard]] Result<void, Error> switch_to_display();
     [[nodiscard]] Result<void, Error> switch_to_readkey();
+
+    static constexpr Result<Option<MatrixKeyEvent>, Error> make_key_event(const uint8_t raw){
+        if(raw == 0xff){
+            return Ok(None);
+        }
+        const auto col = [&] -> Option<uint8_t>{
+            const uint8_t key = raw & 0x0f;
+            switch(key){
+                case 0b11101: return Some<uint8_t>(0);
+                case 0b01001: return Some<uint8_t>(1);
+                case 0b10101: return Some<uint8_t>(2);
+                case 0b00101: return Some<uint8_t>(3);
+                case 0b11111: return Some<uint8_t>(0);
+                case 0b01011: return Some<uint8_t>(1);
+                case 0b10111: return Some<uint8_t>(2);
+                case 0b00111: return Some<uint8_t>(3);
+                case 0b11010: return Some<uint8_t>(0);
+                case 0b01010: return Some<uint8_t>(1);
+                case 0b10010: return Some<uint8_t>(2);
+                case 0b00010: return Some<uint8_t>(3);
+                case 0b11110: return Some<uint8_t>(0);
+                case 0b01110: return Some<uint8_t>(1);
+                case 0b10110: return Some<uint8_t>(2);
+                case 0b00110: return Some<uint8_t>(3);
+                default: return None;
+            }
+        }();
+
+        const auto row = [&] -> Option<uint8_t>{
+            const uint8_t key = raw >> 4;
+            switch(key){
+                case 0b11101: return Some<uint8_t>(0);
+                case 0b01001: return Some<uint8_t>(1);
+                case 0b10101: return Some<uint8_t>(2);
+                case 0b00101: return Some<uint8_t>(3);
+                case 0b11111: return Some<uint8_t>(0);
+                case 0b01011: return Some<uint8_t>(1);
+                case 0b10111: return Some<uint8_t>(2);
+                case 0b00111: return Some<uint8_t>(3);
+                case 0b11010: return Some<uint8_t>(0);
+                case 0b01010: return Some<uint8_t>(1);
+                case 0b10010: return Some<uint8_t>(2);
+                case 0b00010: return Some<uint8_t>(3);
+                case 0b11110: return Some<uint8_t>(0);
+                case 0b01110: return Some<uint8_t>(1);
+                case 0b10110: return Some<uint8_t>(2);
+                case 0b00110: return Some<uint8_t>(3);
+                default: return None;
+            }
+        }();
+
+        return Ok(Some(
+            MatrixKeyEvent(col, row)
+        ));
+    }
 };
 
 //段显示器

@@ -161,13 +161,27 @@ Result<void, Error>  TM1637::switch_to_readkey(){
             .addr_inc_disen = false
         }
     );
-
 }
 
-Result<TM1637::KeyEvent, Error> TM1637::read_key(){
+Result<void, Error> TM1637::set_display_duty(const real_t duty){
+    if(duty > 1) return Err(Error::DutyGreatThanOne);
+    if(duty < 0) return Err(Error::DutyLessThanZero);
+
+    const auto pw_opt = PulseWidth::from_duty(duty);
+    if(pw_opt.is_some()){
+        disp_cmd_.pulse_width = pw_opt.unwrap().kind();
+        disp_cmd_.display_en = true;
+    }else{
+        disp_cmd_.display_en = false;
+    }
+
+    return Ok();
+}
+
+Result<Option<MatrixKeyEvent>, Error> TM1637::read_key(){
     const auto res = phy_.read_key();
     if(res.is_err()) return Err(res.unwrap_err());
-    return KeyEvent::from_u8(res.unwrap());
+    return make_key_event(res.unwrap());
 }
 
 Result<void, Error> TM1637::flush(){
