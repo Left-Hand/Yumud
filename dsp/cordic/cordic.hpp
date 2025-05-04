@@ -4,38 +4,38 @@
 #include "core/math/real.hpp"
 
 
-template<typename real, int size>
+template<typename T, size_t N>
 class Cordic{
 protected:
     using cem = ConstexprMath;
 
 	struct Coord{
-		real x;
-		real y;
+		T x;
+		T y;
 	};
 
-	scexpr std::array<_iq, size> sine{[]{
-        std::array<_iq, size> temp = {};
-        for(int i = 0; i < size; ++i) {
+	scexpr std::array<_iq, N> sine{[]{
+        std::array<_iq, N> temp = {};
+        for(size_t i = 0; i < N; ++i) {
             temp[i] = _iq(cem::sin(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));
         }
         return temp;
     }()};
 
-	scexpr std::array<_iq, size> cosine{[]{
-        std::array<_iq, size> temp = {};
-        for(int i = 0; i < size; ++i) {
+	scexpr std::array<_iq, N> cosine{[]{
+        std::array<_iq, N> temp = {};
+        for(size_t i = 0; i < N; ++i) {
             temp[i] = _iq(cem::cos(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));
         }
         return temp;
     }()};
 
-	Coord sincosu(const real & _x) const{
-		real unit = real(PI / 4);
-		real x = fmod(_x, PI);
-		Coord coord = Coord{real(1), real(0)};
+	constexpr Coord sincosu(const T _x) const{
+		T unit = T(PI / 4);
+		T x = fmod(_x, PI);
+		Coord coord = Coord{T(1), T(0)};
 
-		for(uint8_t i = 0; i < size; i++){
+		for(uint8_t i = 0; i < N; i++){
 			if(x > unit){
 				coord = Coord{
 					coord.x * real_t(cosine[i]) - coord.y * real_t(sine[i]),
@@ -49,12 +49,12 @@ protected:
 		return coord;
 	}
 
-	Coord atan2squu(const real & _y, const real & _x) const{
+	constexpr Coord atan2squu(const T _y, const T _x) const{
 		Coord coord = Coord{_x, _y};
-		real angleSum = real(0);
-		real angle = real(PI / 4);
+		T angleSum = T(0);
+		T angle = T(PI / 4);
 
-		for(uint8_t i = 0; i < size; i++){
+		for(uint8_t i = 0; i < N; i++){
 			if(coord.y > 0){
 				coord = Coord{
 					coord.x * real_t(cosine[i]) + coord.y * real_t(sine[i]),
@@ -74,12 +74,12 @@ protected:
 		return Coord{coord.x, angleSum};
 	}
 
-	Coord atan2squ(const real & y, const real & x) const{
+	constexpr Coord atan2squ(const T y, const T x) const{
 
 		if(x >= 0){
 			Coord ret = atan2squu(abs(y), x);
-			real atan2_abs = ret.y;
-			real squ_abs = ret.x;
+			T atan2_abs = ret.y;
+			T squ_abs = ret.x;
 			return Coord{squ_abs, atan2_abs > 0 ? atan2_abs : -atan2_abs};
 		}else{
 			if(y > 0){
@@ -94,35 +94,36 @@ protected:
 public:
 	consteval Cordic(){;}
 
-	real squ(const real & y, const real & x) const{
+	constexpr T squ(const T y, const T x) const{
 		return atan2squ(y,x).x;
 	}
-	real atan2(const real & y, const real & x) const{
+
+	constexpr T atan2(const T y, const T x) const{
 		return atan2squ(y, x).y;
 	}
 
-	real asin(const real & x) const {
-		if (x <= -1) return -real(PI / 2);
-		if (x >= 1) return real(PI / 2);
+	constexpr T asin(const T x) const {
+		if (x <= -1) return -T(PI / 2);
+		if (x >= 1) return T(PI / 2);
 		return atan2(x, sqrt(1 - x * x));
 	}
 
-	real acos(const real & x) const{
-		if (x <= -1) return real(PI);
-		if (x >= 1) return real(0);
+	constexpr T acos(const T x) const{
+		if (x <= -1) return T(PI);
+		if (x >= 1) return T(0);
 		return atan2(sqrt(1 - x * x), x);
 	}
 
-	real sin(const real & x) const{
-		real ret = sincosu(x).y;
+	constexpr T sin(const T x) const{
+		T ret = sincosu(x).y;
 		return x > 0 ? ret : -ret;
 	}
 
-	real cos(const real & x){
+	constexpr T cos(const T x){
 		return sincosu(abs(x)).x;
 	}
 
-//	real tan(const real & x){
+//	T tan(const T x){
 //		Coord coord
 //	}
 };

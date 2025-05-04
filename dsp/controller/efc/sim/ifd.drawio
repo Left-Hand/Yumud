@@ -1,0 +1,94 @@
+<mxfile>
+  <diagram name="Page-1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 输入信号 -->
+        <mxCell id="input" value="Input Signal" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="100" y="200" width="60" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 高通滤波器 AD(s) -->
+        <mxCell id="ad" value="AD(s)&#xa;(高通 HPF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="220" y="200" width="100" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 连接输入到AD(s) -->
+        <mxCell id="link_input_ad" source="input" target="ad" style="edgeStyle=none;curved=1;endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 分支点 -->
+        <mxCell id="branch" value="" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="380" y="215" width="20" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- 连接AD(s)到分支点 -->
+        <mxCell id="link_ad_branch" source="ad" target="branch" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- ICF(s) 的并联分支 -->
+        <mxCell id="icf1" value="LPF (i=1)&#xa;(1/(1+T_{IFD}s))" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="icf2" value="LPF (i=2)&#xa;(1/(1+T_{IFD}s))^2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="480" y="200" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="icf3" value="LPF (i=3)&#xa;(1/(1+T_{IFD}s))^3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="480" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 连接分支点到各LPF -->
+        <mxCell id="link_branch_icf1" source="branch" target="icf1" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="link_branch_icf2" source="branch" target="icf2" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="link_branch_icf3" source="branch" target="icf3" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 求和点 -->
+        <mxCell id="sum" value="Σ" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="660" y="200" width="40" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- 连接各LPF到求和点 -->
+        <mxCell id="link_icf1_sum" source="icf1" target="sum" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="link_icf2_sum" source="icf2" target="sum" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="link_icf3_sum" source="icf3" target="sum" style="edgeStyle=none;endArrow=none;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 输出 -->
+        <mxCell id="output" value="Output IFD(s)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="760" y="200" width="60" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 连接求和点到输出 -->
+        <mxCell id="link_sum_output" source="sum" target="output" style="edgeStyle=none;endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 标题 -->
+        <mxCell id="title" value="IFD(s) = AD(s) × ICF(s) 系统结构" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="200" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
