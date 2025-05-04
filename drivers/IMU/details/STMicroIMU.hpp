@@ -55,8 +55,8 @@ public:
         PANIC();
     }
 
-    hal::HalResult verify(){
-        if(i2c_drv_) return i2c_drv_->verify();
+    hal::HalResult validate(){
+        if(i2c_drv_) return i2c_drv_->validate();
         if(spi_drv_) return hal::HalResult::Ok();
         PANIC();
     }

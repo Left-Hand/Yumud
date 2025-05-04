@@ -528,7 +528,7 @@ public:
     TCA8418(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_({i2c, addr}){;}
 
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> init();
 private:
     Result<size_t, Error> get_pending_events_cnt();

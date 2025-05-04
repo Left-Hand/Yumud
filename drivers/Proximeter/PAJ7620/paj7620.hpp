@@ -36,7 +36,7 @@ protected:
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7((0x73));
 
-    bool verify();
+    bool validate();
     void init();
     void update();
     Flags detect();

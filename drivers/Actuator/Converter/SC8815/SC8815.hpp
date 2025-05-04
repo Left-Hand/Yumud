@@ -350,7 +350,7 @@ public:
         .ircomp = BatIrCompType::_20m
     });
 
-    [[nodiscard]] IResult<> verify();
+    [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<real_t> get_bus_volt();

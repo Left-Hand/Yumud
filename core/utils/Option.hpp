@@ -81,6 +81,15 @@ public:
             std::construct_at(&storage_, something.get());
         }
 
+    template<typename U>
+    requires std::convertible_to<U, T>
+    [[nodiscard]] constexpr 
+    Option(const Some<U> & something):
+        exists_(true)
+        {
+            std::construct_at(&storage_, static_cast<T>(something.get()));
+        }
+
     [[nodiscard]] constexpr 
     Option(const Option<T> & other) = default;
 
@@ -232,7 +241,7 @@ public:
     
     [[nodiscard]] constexpr 
     T & unwrap(){
-        if(unlikely(value_ == nullptr)){__builtin_abort();}
+        if(unlikely(value_ == nullptr)){sys::abort();}
         return *value_;
     }
 private:

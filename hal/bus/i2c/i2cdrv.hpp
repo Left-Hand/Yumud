@@ -291,7 +291,7 @@ public:
     }
 
     [[nodiscard]]
-    hal::HalResult verify();
+    hal::HalResult validate();
 
     [[nodiscard]]
     hal::HalResult release();

@@ -276,7 +276,7 @@ private:
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
             #endif
-            __builtin_abort();
+            sys::abort();
         }
     }
     friend class _Loc;
@@ -498,7 +498,7 @@ public:
             #ifdef __DEBUG_INCLUDED
             PANIC_NSRC(std::forward<Args>(args)...);
             #endif
-            __builtin_abort();
+            sys::abort();
         }
     }
     
@@ -531,7 +531,7 @@ public:
         if (likely(is_ok())) {
             return storage_.unwrap();
         } else {
-            __builtin_abort();
+            sys::abort();
         }
     }
 
@@ -576,7 +576,7 @@ public:
         if (likely(is_err())) {
             return storage_.unwrap_err();
         } else {
-            __builtin_abort();
+            sys::abort();
         }
     }
 

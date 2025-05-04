@@ -340,7 +340,7 @@ struct SegDisplayer final{
             case 'U': return uint8_t(SEG_TABLE[17]);
             case 'Y': return uint8_t(SEG_TABLE[18]);
             case 'L': return uint8_t(SEG_TABLE[19]);
-            default: __builtin_abort();
+            default: sys::abort();
         }
     }
 

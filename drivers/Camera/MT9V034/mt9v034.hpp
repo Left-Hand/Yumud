@@ -86,7 +86,7 @@ public:
 
     bool init();
 
-    bool verify();
+    bool validate();
 
     void set_exposure_value(const uint16_t value);
 private:

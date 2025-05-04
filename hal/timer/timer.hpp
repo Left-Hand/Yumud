@@ -98,8 +98,6 @@ public:
     using Callback = std::function<void(void)>;
 private:
     std::array<Callback, 8> cbs_;
-
-
 protected:
     TIM_TypeDef * instance;
 
@@ -129,19 +127,23 @@ protected:
 public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
+    
+    void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
+    void deinit();
+
+    void enable(const bool en = true);
     void set_count_mode(const TimerCountMode mode);
 
     void set_psc(const uint16_t psc);
     void set_arr(const uint16_t arr);
-
-    void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
-    void enable(const bool en = true);
 
     void set_freq(const uint32_t freq);
 
     void enable_it(const IT it,const NvicPriority request, const bool en = true);
     void enable_arr_sync(const bool sync = true);
     void enable_psc_sync(const bool sync = true);
+
+    void enable_cc_ctrl_sync(const bool sync = true);
     auto & inst() {return instance;}
 
     volatile uint16_t & cnt(){return instance->CNT;}
@@ -240,11 +242,9 @@ public:
             }{;}
 
     void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
-    void enable_cvr_sync(const bool _sync = true){
-        TIM_CCPreloadControl(instance, FunctionalState(_sync));
-    }
 
-    void set_dead_zone_ns(const uint32_t ns);
+
+    void set_deadzone_ns(const uint32_t ns);
     void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
 
     TimerChannel & operator [](const int index);

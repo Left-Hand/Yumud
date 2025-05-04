@@ -171,7 +171,7 @@ public:
 
     Option<real_t> result();
 
-    DeviceResult verify();
+    DeviceResult validate();
 
     [[nodiscard]] constexpr auto builder(){return ConfigBuilder{};}
 

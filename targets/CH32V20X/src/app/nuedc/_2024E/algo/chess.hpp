@@ -41,7 +41,7 @@ public:
         switch(kind_){
             case X: return 'X';
             case O: return 'O';
-            default: __builtin_abort();
+            default: sys::abort();
         }
     }
 
@@ -104,7 +104,7 @@ public:
         switch(data_.unwrap().kind()){
             case Role::X: return 'X';
             case Role::O: return 'O';
-            default: __builtin_abort();
+            default: sys::abort();
         }
     }
 
@@ -155,7 +155,7 @@ public:
 
     [[nodiscard]]
     static constexpr Option<ChessBoard> from_str(const char * str){
-        if(strlen(str) != WIDTH * WIDTH) __builtin_abort();
+        if(strlen(str) != WIDTH * WIDTH) sys::abort();
         auto build_row = [str](size_t row_index) constexpr -> Option<Row> {
             const auto c0_opt = Chess::from_char(str[row_index * WIDTH + 0]);
             if(c0_opt.is_none()) return None;
@@ -187,13 +187,13 @@ public:
     
     [[nodiscard]]
     constexpr auto & at(const Vector2u pos){
-        if(not (pos.x < WIDTH and pos.y < WIDTH)) __builtin_abort();
+        if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         return data_[pos.y][pos.x];
     }
     
     [[nodiscard]]
     constexpr const auto & at(const Vector2u pos) const{
-        if(not (pos.x < WIDTH and pos.y < WIDTH)) __builtin_abort();
+        if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         return data_[pos.y][pos.x];
     }
 
@@ -208,20 +208,20 @@ public:
 
     [[nodiscard]] 
     constexpr ChessBoard remove_chess(const Vector2u pos) const {
-        if(this->at({pos.x, pos.y}) == None) __builtin_abort();
+        if(this->at({pos.x, pos.y}) == None) sys::abort();
         return modify(pos, Chess::N());
     }
 
     [[nodiscard]] 
     constexpr ChessBoard add_chess(const Vector2u pos, const Role role) const {
-        if(this->at({pos.x, pos.y}) != None) __builtin_abort();
+        if(this->at({pos.x, pos.y}) != None) sys::abort();
         return modify(pos, role == Role::X ? Chess::X() : Chess::O());
     }
 
     [[nodiscard]]
     constexpr ChessBoard modify(const Vector2u pos, const Chess chess) const {
 
-        if(not (pos.x < WIDTH and pos.y < WIDTH)) __builtin_abort();
+        if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         auto data = data_;
         data[pos.y][pos.x] = chess;
         return {data};

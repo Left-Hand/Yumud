@@ -58,11 +58,11 @@ Result<void, Error> INA219::update(){
 }
 
 
-Result<void, Error> INA219::verify(){
+Result<void, Error> INA219::validate(){
     // scexpr uint16_t valid_manu_id = 0x5449;
     // scexpr uint16_t valid_chip_id = 0x2260;
     
-    INA219_ASSERT(i2c_drv_.verify().is_ok(), "INA219 i2c lost");
+    INA219_ASSERT(i2c_drv_.validate().is_ok(), "INA219 i2c lost");
 
     // READ_REG(chipIDReg);
     // READ_REG(manufactureIDReg);

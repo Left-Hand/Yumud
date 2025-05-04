@@ -14,7 +14,10 @@ namespace ymd::drivers{
 
 class INA226 {
 public:
+    // ASCII 的 TI。
     static constexpr uint16_t VALID_MANU_ID = 0x5449;
+
+    // INA226
     static constexpr uint16_t VALID_CHIP_ID = 0x2260;
 
     enum class Error_Kind{
@@ -204,18 +207,17 @@ public:
     INA226(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    #undef CHANNEL_CONTENT
+    [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] IResult<> init(const uint mohms, const uint max_current_a);
+
+    [[nodiscard]] IResult<> config(const uint mohms, const uint max_current_a);
+
+    [[nodiscard]] IResult<> set_average_times(const uint16_t times);
 
 
-    IResult<> update();
-
-    IResult<> init(const uint mohms, const uint max_current_a);
-
-    IResult<> config(const uint mohms, const uint max_current_a);
-
-    IResult<> set_average_times(const uint16_t times);
-
-    IResult<> verify();
 
     [[nodiscard]] auto & ch(const Index index){
         return channels[uint8_t(index)];

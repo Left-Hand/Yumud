@@ -117,7 +117,7 @@ void ICM42688::update(){
 }
 
 
-bool ICM42688::verify(){
+bool ICM42688::validate(){
     return false;
 }
 

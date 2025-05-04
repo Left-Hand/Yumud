@@ -59,7 +59,7 @@ static constexpr Pair INIT_MAP[] = {
 	Pair{0x030, 0x00},
 };
 
-IResult<> VL6180X::verify(){
+IResult<> VL6180X::validate(){
 	static constexpr uint16_t WHO_AM_I_ADDR = 0;
 	static constexpr uint8_t KEY = 0xb4;
 
@@ -72,7 +72,7 @@ IResult<> VL6180X::verify(){
 // Initialize sensor with settings from ST application note AN4545, section
 // "SR03 settings" - "Mandatory : private registers"
 IResult<> VL6180X::init(){
-	if(const auto res = verify();
+	if(const auto res = validate();
 		res.is_err()) return res;
 
 	if(const auto res = read_reg(RegAddress::SYSRANGE__PART_TO_PART_RANGE_OFFSET, ptp_offset);

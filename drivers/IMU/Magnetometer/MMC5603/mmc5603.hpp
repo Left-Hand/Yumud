@@ -34,7 +34,7 @@ public:
 
     void update();
 
-    bool verify();
+    bool validate();
 
     void reset();
 

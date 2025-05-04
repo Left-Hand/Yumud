@@ -162,8 +162,8 @@ private:
     uint16_t read_mask();
 
     [[nodiscard]] Result<void, Error> init();
-    [[nodiscard]] Result<void, Error> verify(){
-        const auto res = i2c_drv_.verify();
+    [[nodiscard]] Result<void, Error> validate(){
+        const auto res = i2c_drv_.validate();
         if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
         return Ok();
     }
@@ -208,7 +208,7 @@ public:
     requires (std::is_integral_v<Args> && ...)
     std::array<uint16_t, sizeof...(Args)> dump_cvr(Args ...args){
         auto dump_one = [&](const uint idx) -> uint16_t{
-            if(idx >= CHANNELS_COUNT) __builtin_abort();
+            if(idx >= CHANNELS_COUNT) sys::abort();
             return sub_channels[idx].off.cvr;
         };
 
@@ -235,7 +235,7 @@ public:
     };
     
     PCA9685Channel & operator [](const size_t index){
-        if(index >= CHANNELS_COUNT) __builtin_abort();
+        if(index >= CHANNELS_COUNT) sys::abort();
         return channels[index];
     }
 };

@@ -12,7 +12,7 @@ void BMM150::update(){
 
 }
 
-bool BMM150::verify(){
+bool BMM150::validate(){
     return true;
 }
 

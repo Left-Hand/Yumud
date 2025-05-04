@@ -78,7 +78,7 @@ public:
     PMW3901(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
     PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
-    [[nodiscard]] Result<bool, Error> verify();
+    [[nodiscard]] Result<bool, Error> validate();
     [[nodiscard]] Result<void, Error> init();
 
     [[nodiscard]] Result<void, Error> update();

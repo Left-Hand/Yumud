@@ -3,7 +3,6 @@
 namespace ymd::drivers{
 
 std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
-
     enum class Sector:uint8_t{
         _1 = 0b010,
         _2 = 0b000,
@@ -13,10 +12,10 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         _6 = 0b011
     };
 
-    static constexpr q16 one_by_sqrt3 = 1 / sqrt(3_r);
-    static constexpr q16 half_one = q16(0.5);
+    static constexpr q16 ONE_BY_SQRT3 = 1 / sqrt(3_r);
+    static constexpr q16 HALF_ONE = q16(0.5);
 
-    const auto beta_by_sqrt3 = beta * one_by_sqrt3;
+    const auto beta_by_sqrt3 = beta * ONE_BY_SQRT3;
 
     Sector sector {uint8_t(
         (  uint8_t(std::signbit(beta_by_sqrt3 + alpha)) << 2)
@@ -38,9 +37,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
             const q16 a = (alpha - beta_by_sqrt3) >> 1;
             const q16 b = beta_by_sqrt3;
 
-            const q16 u = (half_one + a + b);
-            const q16 v = (half_one - a + b);
-            const q16 w = (half_one - a - b);
+            const q16 u = (HALF_ONE + a + b);
+            const q16 v = (HALF_ONE - a + b);
+            const q16 w = (HALF_ONE - a - b);
 
             return {u, v, w};
         }
@@ -48,9 +47,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
         case Sector::_2:
         case Sector::_5:
         {
-            const q16 u = half_one + alpha;
-            const q16 v = half_one + beta_by_sqrt3;
-            const q16 w = half_one - beta_by_sqrt3;
+            const q16 u = HALF_ONE + alpha;
+            const q16 v = HALF_ONE + beta_by_sqrt3;
+            const q16 w = HALF_ONE - beta_by_sqrt3;
 
             return {u, v, w};
         }
@@ -61,9 +60,9 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
             const q16 a = beta_by_sqrt3;
             const q16 b = (- alpha - beta_by_sqrt3) >> 1;
 
-            const q16 u = (half_one - a - b);
-            const q16 v = (half_one + a + b);
-            const q16 w = (half_one - a + b);
+            const q16 u = (HALF_ONE - a - b);
+            const q16 v = (HALF_ONE + a + b);
+            const q16 w = (HALF_ONE - a + b);
 
             return {u, v, w};
         }

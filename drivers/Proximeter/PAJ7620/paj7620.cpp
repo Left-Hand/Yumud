@@ -54,18 +54,18 @@ void PAJ7620::select_bank(uint8_t bank) {
 
 // void PAJ7620::wakeup(){
 	
-// 	i2c_drv.verify();
+// 	i2c_drv.validate();
 // 	delay(5);
-// 	i2c_drv.verify();
+// 	i2c_drv.validate();
 // 	delay(5);
 
 // 	selectBank(0);//进入BANK0寄存器区域
-// 	verify();
+// 	validate();
 // }
 
 hal::HalResult PAJ7620::unlock_i2c(){
 	// i2c_drv_.release();
-	return i2c_drv_.verify();
+	return i2c_drv_.validate();
 }
 
 void PAJ7620::update(){
@@ -77,8 +77,8 @@ PAJ7620::Flags PAJ7620::detect(){
 	return (flags);
 }
 
-bool PAJ7620::verify(){
-	if(auto passed = i2c_drv_.verify().is_ok(); !passed){
+bool PAJ7620::validate(){
+	if(auto passed = i2c_drv_.validate().is_ok(); !passed){
 		PAJ7620_DEBUG("PAJ7620 not found");
 		return false;
 	}
@@ -97,7 +97,7 @@ bool PAJ7620::verify(){
 
 
 void PAJ7620::init(){
-	PAJ7620_ASSERT(verify(), "paj7620 not found");
+	PAJ7620_ASSERT(validate(), "paj7620 not found");
 
 
 	// uint8_t temp;

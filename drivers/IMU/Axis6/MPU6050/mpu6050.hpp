@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-class MPU6050:public Axis6{
+class MPU6050:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
     
@@ -182,7 +182,7 @@ public:
     MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
 
-    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> validate();
 
     [[nodiscard]] Result<void, Error> init();
     

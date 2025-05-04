@@ -43,9 +43,9 @@ Result<void, Error> BMI088_Acc::verify_chip_id(){
         | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error(Error::WrongWhoAmI)));
 }
 
-Result<void, Error> BMI088_Acc::verify(){
+Result<void, Error> BMI088_Acc::validate(){
     return reset()
-        | phy_.verify()
+        | phy_.validate()
         | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){delay(1);})
         | set_acc_odr(AccOdr::_200Hz)
         | set_acc_bwp(AccBwp::Normal)
@@ -131,7 +131,7 @@ Result<void, Error> BMI088_Gyr::reset(){
     return Ok();
 }
 
-Result<void, Error> BMI088_Gyr::verify(){
+Result<void, Error> BMI088_Gyr::validate(){
     TODO();
     return Ok();
 }

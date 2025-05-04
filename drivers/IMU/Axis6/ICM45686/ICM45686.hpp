@@ -23,7 +23,7 @@ private:
 };
 
 
-class ICM45686:public Axis6{
+class ICM45686:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 
@@ -145,7 +145,7 @@ public:
     
     void update();
 
-    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> validate();
     [[nodiscard]] Result<void, Error> set_mode(Mode mode);
 
     void reset();

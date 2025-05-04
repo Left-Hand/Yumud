@@ -22,7 +22,7 @@ void SC8721::update(){
 
 }
 
-bool SC8721::verify(){
+bool SC8721::validate(){
     return true;
 }
 

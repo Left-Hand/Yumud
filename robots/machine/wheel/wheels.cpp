@@ -23,7 +23,7 @@ void Wheels::init(){
 }
 
 
-bool Wheels::verify(){
+bool Wheels::validate(){
     return true;
 }
 

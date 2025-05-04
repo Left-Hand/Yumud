@@ -32,8 +32,8 @@ DeviceResult ADS1115::write_reg(const RegAddress addr, const uint16_t data){
     return make_result(i2c_drv_.write_reg(uint8_t(addr), data, LSB)).check("write_reg failed");
 }
 
-DeviceResult ADS1115::verify(){
-    return make_result(i2c_drv_.verify()).check("verify failed");
+DeviceResult ADS1115::validate(){
+    return make_result(i2c_drv_.validate()).check("verify failed");
 }
 void ADS1115::start_conv(){
     auto & reg = config_reg;

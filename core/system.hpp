@@ -5,10 +5,17 @@
 
 namespace ymd::sys{
     void preinit();
+    
+    __attribute__((noreturn))
+    void abort();
+
+    void trip();
+
+    __attribute__((noreturn))
     void reset();
 
-    void exit();
-    void halt();
+    void dump();
+
     void jumpto(const uint32_t addr);
 
     namespace chip{

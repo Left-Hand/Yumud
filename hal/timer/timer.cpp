@@ -71,7 +71,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
     const auto min_psc = calc_psc_from_arr(max_arr);
     const auto max_psc = calc_psc_from_arr(min_arr);
 
-    if (min_arr > max_arr) __builtin_abort();
+    if (min_arr > max_arr) ymd::sys::abort();
     
     struct Best{
         uint16_t arr;
@@ -106,7 +106,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         }
     }
     
-    if(best.freq_err == UINT32_MAX) __builtin_abort();
+    if(best.freq_err == UINT32_MAX) ymd::sys::abort();
     return {best.arr, best.psc};
 }
 
@@ -332,13 +332,19 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
 
     TIM_InternalClockConfig(instance);
 
-    set_freq(freq);
+    set_freq(internal::is_aligned_count_mode(mode) ? (freq * 2) : (freq));
     set_count_mode(mode);
     enable_arr_sync(true);
 
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
     enable(en);
+}
+
+
+void BasicTimer::deinit(){
+    this->enable_rcc(false);
+    cbs_.fill(nullptr);
 }
 
 
@@ -413,7 +419,7 @@ void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_dead_zone_ns(const uint32_t ns){
+void AdvancedTimer::set_deadzone_ns(const uint32_t ns){
     uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance->BDTR;
@@ -434,6 +440,9 @@ void BasicTimer::enable_it(const IT it,const NvicPriority request, const bool en
     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
 }
 
+void BasicTimer::enable_cc_ctrl_sync(const bool sync){
+    TIM_CCPreloadControl(instance, sync);
+}
 
 TimerOC & GenericTimer::oc(const size_t index){
     TIM_ASSERT(index <= 4 and index != 0);
@@ -445,6 +454,8 @@ TimerOC & GenericTimer::oc(const size_t index){
 TimerChannel & GenericTimer::operator [](const int index){
     return channels[index];
 }
+
+
 
 
 TimerChannel & AdvancedTimer::operator [](const int index){

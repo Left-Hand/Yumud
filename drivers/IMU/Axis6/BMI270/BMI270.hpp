@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class BMI270 final:public Axis6{
+class BMI270 final:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 
@@ -70,7 +70,7 @@ public:
 
     void init();
     void update();
-    bool verify();
+    bool validate();
     void reset();
 
     void setPmuMode(const PmuType pum, const PmuMode mode);

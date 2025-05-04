@@ -56,7 +56,7 @@ public:
         _8dBm,
     };
 
-    void verify(){
+    void validate(){
         return write("AT\r\n");
     }
 

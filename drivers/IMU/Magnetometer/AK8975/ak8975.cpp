@@ -18,7 +18,7 @@ using namespace ymd::drivers;
 
 
 void AK8975::init(){
-    if(verify() == false) return;
+    if(validate() == false) return;
     readAdj();
     update();
 }
@@ -34,7 +34,7 @@ void AK8975::update(){
 }
 
 
-bool AK8975::verify(){
+bool AK8975::validate(){
     // <Self-test Sequence> 
     // (1) Set Power-down mode 
     // (2) Write “1” to SELF bit of ASTC register 

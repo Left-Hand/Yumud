@@ -30,12 +30,15 @@ template<typename T = void>
 using IResult = INA226::IResult<T>;
 
 IResult<> INA226::update(){
-    return this->read_reg(busVoltageReg)
-    // delay(1);
-    | this->read_reg(currentReg)
-    // this->read_reg(shuntVoltageReg);
-    | this->read_reg(powerReg)
-    ;
+    if(const auto res = this->read_reg(busVoltageReg);
+        res.is_err()) return res;
+    if(const auto res = this->read_reg(currentReg);
+        res.is_err()) return res;
+    if(const auto res = this->read_reg(powerReg);
+        res.is_err()) return res;
+
+    return Ok();
+    // ;
     // this->read_reg(configReg);
     // DEBUG_PRINTLN(std::bitset<16>(configReg.as_val()));
     // read_burst(busVoltageReg.address, &busVoltageReg.as_ref(), 3).unwrap();
@@ -56,28 +59,31 @@ IResult<> INA226::read_reg(const RegAddress addr, int16_t & data){
     return IResult<>(i2c_drv_.read_reg(uint8_t(addr), data, MSB))
         .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
-
-// IResult<> INA226::read_burst(const RegAddress addr, uint16_t * p_data, const size_t len){
-//     return IResult(i2c_drv_.read_burst(uint8_t(addr), std::span(p_data, len), LSB));
-// }
-
-
 IResult<> INA226::init(const uint mohms, const uint max_current_a){
     configReg.rst = 0b0;
     configReg.__resv__ = 0b100;
 
     INA226_DEBUG("init");
     
-    return verify()
-    | reset()
-    | set_average_times(16)
-    | set_bus_conversion_time(ConversionTime::_140us)
-    | set_shunt_conversion_time(ConversionTime::_140us)
-    | enable_bus_voltage_measure()
-    | enable_continuous_measure()
-    | enable_shunt_voltage_measure()
-    | config(mohms, max_current_a)
-    ;
+    if(const auto res = validate();
+        res.is_err()) return res;
+    if(const auto res = reset();
+        res.is_err()) return res;
+    if(const auto res = set_average_times(16);
+        res.is_err()) return res;
+    if(const auto res = set_bus_conversion_time(ConversionTime::_140us);
+        res.is_err()) return res;
+    if(const auto res = set_shunt_conversion_time(ConversionTime::_140us);
+        res.is_err()) return res;
+    if(const auto res = enable_bus_voltage_measure();
+        res.is_err()) return res;
+    if(const auto res = enable_continuous_measure();
+        res.is_err()) return res;
+    if(const auto res = enable_shunt_voltage_measure();
+        res.is_err()) return res;
+    if(const auto res = config(mohms, max_current_a);
+        res.is_err()) return res;
+    return Ok();
 }
 
 IResult<> INA226::config(const uint mohms, const uint max_current_a){
@@ -177,8 +183,8 @@ IResult<void> INA226::enable_alert_latch(const bool en){
     return write_reg(maskReg);
 }
 
-IResult<> INA226::verify(){
-    if(const auto res = i2c_drv_.verify(); res.is_err()){
+IResult<> INA226::validate(){
+    if(const auto res = i2c_drv_.validate(); res.is_err()){
         INA226_ASSERT(false, "INA226 i2c lost");
         return Err(Error::HalError(res.unwrap_err()));
     }
@@ -186,8 +192,10 @@ IResult<> INA226::verify(){
     if(const auto res = this->read_reg(chipIDReg); res.is_err()) return res;
     if(const auto res = this->read_reg(manufactureIDReg); res.is_err()) return res;
 
-    if((chipIDReg != VALID_CHIP_ID)) return INA226_ERROR(Error::ChipIdVerifyFailed);
-    if((manufactureIDReg == VALID_MANU_ID)) return INA226_ERROR(Error::ManuIdVerifyFailed);
+    if((chipIDReg != VALID_CHIP_ID)) 
+        return INA226_ERROR(Error::ChipIdVerifyFailed);
+    if((manufactureIDReg != VALID_MANU_ID)) 
+        return INA226_ERROR(Error::ManuIdVerifyFailed);
 
     return Ok();
 }

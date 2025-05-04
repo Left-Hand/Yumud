@@ -12,7 +12,7 @@ void BMI270::update(){
 }
 
 
-bool BMI270::verify(){
+bool BMI270::validate(){
     return true;
 }
 

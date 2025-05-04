@@ -159,7 +159,7 @@ Result<void, Error> LT8960L::init_ble(const Power power){
 
 
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
-    return verify()
+    return validate()
         | write_reg(1, 0x5781)
         | write_reg(26, 0x3A00)
         | set_tx_power(power)
@@ -295,7 +295,7 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
     return phy_.init() 
-    | verify()
+    | validate()
 
     // 无具体寄存器说明 直接参考手册
     | write_reg(1, 0x5781)

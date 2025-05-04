@@ -75,8 +75,8 @@ public:
 
     auto which() const {return last_ch_;}
 
-    hal::HalResult verify() {
-        return self_i2c_drv_.verify();
+    hal::HalResult validate() {
+        return self_i2c_drv_.validate();
     }
 };
 

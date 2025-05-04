@@ -213,7 +213,7 @@ public:
 
     [[nodiscard]] Result<void, Error> sleep();
 
-    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> validate();
 
     [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
 

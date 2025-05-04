@@ -152,7 +152,7 @@ public:
 
     Result<void> init();
     Result<void> update();
-    Result<void> verify();
+    Result<void> validate();
     Result<void> reset();
 
     Result<void> clear_flag();
@@ -211,7 +211,7 @@ LIS3DH::Result<void> LIS3DH::read_reg(auto & reg){
 }
 
 LIS3DH::Result<void> LIS3DH::verify_phy(){
-    return LIS3DH::Result<void>(phy_.verify());
+    return LIS3DH::Result<void>(phy_.validate());
 }
 
 }

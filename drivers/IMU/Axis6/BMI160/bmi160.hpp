@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class BMI160:public Axis6{
+class BMI160:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 
@@ -119,7 +119,7 @@ public:
 
     Result<void, Error> init();
     Result<void, Error> update();
-    Result<void, Error> verify();
+    Result<void, Error> validate();
     Result<void, Error> reset();
 
     

@@ -135,7 +135,7 @@ public:
     VL6180X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_{hal::I2cDrv(i2c, addr)}{;}
 
-    [[nodiscard]]IResult<> verify();
+    [[nodiscard]]IResult<> validate();
 
     [[nodiscard]]IResult<> init();
 

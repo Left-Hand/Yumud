@@ -398,13 +398,13 @@ Result<void, Error> LT8960L::reset(){
     // return retry(3, [this]() -> Result<void, Error>{return Err(Error::PacketOverlength);});
 }
 
-Result<void, Error> LT8960L::verify(){
+Result<void, Error> LT8960L::validate(){
     uint16_t buf = 0;
 
     return reset() 
         | read_reg(Regs::R16_ChipId::address, buf)
         .validate(buf == Regs::R16_ChipId::key, Error::ChipIdMismatch)
-    // | phy_.verify()
+    // | phy_.validate()
     // .if_err([](auto && e){
     //     LT8960L_DEBUG("verify failed");
     // })

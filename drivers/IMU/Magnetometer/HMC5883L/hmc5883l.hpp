@@ -162,7 +162,7 @@ public:
 
     Option<Vector3_t<real_t>> get_magnet() override;
 
-    bool verify();
+    bool validate();
     void update();
 
 

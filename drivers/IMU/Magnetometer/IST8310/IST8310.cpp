@@ -22,7 +22,7 @@ void IST8310::init(){
     reset();
     delay(10);
 
-    if(verify() == false) HALT;
+    if(validate() == false) HALT;
 
     enableContious(false);
     setXAverageTimes(AverageTimes::_4);
@@ -34,7 +34,7 @@ void IST8310::update(){
     read_burst(axis_x_reg.address, &axis_x_reg, 3);
 }
 
-bool IST8310::verify(){
+bool IST8310::validate(){
     auto & reg = whoami_reg;
     READ_REG(reg);
     return reg == reg.expected_value;

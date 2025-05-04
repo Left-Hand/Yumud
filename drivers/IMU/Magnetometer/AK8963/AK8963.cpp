@@ -50,7 +50,7 @@ Result<void, Error> AK8963::read_burst(const uint8_t reg_addr, int16_t * datas, 
 
 Result<void, Error> AK8963::init(){
     AK8963_DEBUG("AK8963 init begin");
-    AK8963_ASSERT(verify().is_ok(), "AK8963 verify failed");
+    AK8963_ASSERT(validate().is_ok(), "AK8963 verify failed");
 
     delay(2);
     reset();
@@ -78,10 +78,10 @@ Result<void, Error> AK8963::init(){
 }
 
 
-Result<void, Error> AK8963::verify(){
+Result<void, Error> AK8963::validate(){
     // p_i2c_drv_->release().unwrap();
 
-    if (!phy_.verify().is_ok()){
+    if (!phy_.validate().is_ok()){
         return Err{Error::PhyVerifyFailed};
     }
 

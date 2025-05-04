@@ -390,7 +390,7 @@ protected:
 public:
     [[nodiscard]] Result<void, Error> reset();
     [[nodiscard]] Result<void, Error> update();
-    [[nodiscard]] Result<void, Error> verify();
+    [[nodiscard]] Result<void, Error> validate();
 
     [[nodiscard]] Result<void, Error> init();
     Package get_package();

@@ -133,7 +133,7 @@ public:
 
     void set_led_current(const hal::Pin pin, const uint8_t current);
     
-    bool verify();
+    bool validate();
 
     AW9523Pwm operator [](const size_t index){
         return AW9523Pwm(*this, hal::Pin(1 << index));
