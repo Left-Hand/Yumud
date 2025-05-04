@@ -52,13 +52,13 @@ public:
     }
 
     template<typename T>
-    constexpr Option<T *> as() {
+    constexpr Option<T &> as() {
         if(! this->is<T>()) return None;
         return Some<T *>(&std::get<T>(value_)); 
     }
 
     template<typename T>
-    constexpr Option<const T *> as() const {
+    constexpr Option<const T &> as() const {
         if(! this->is<T>()) return None;
         return Some<const T *>(&std::get<T>(value_)); 
     }

@@ -45,7 +45,18 @@ struct __unwrap_helper<std::optional<T>> {
         helper::unwrap(std::move(result)); \
     })
 
+template<typename T>
+class Borrow{
+public:
+    Borrow(T * ptr):
+        ptr_(ptr){;}
 
+    Borrow(std::nullptr_t) = delete;
+
+    T & unwrap() const {return *ptr_;}
+private:
+    T * ptr_;
+};
 
     
 template<typename T>

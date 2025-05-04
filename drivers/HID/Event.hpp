@@ -14,14 +14,17 @@ public:
         return col_;
     }
 
-    constexpr MatrixKeyEvent(Option<uint8_t> row, Option<uint8_t> col):
+    constexpr bool is_pressed() const { return is_pressed_; }
+    constexpr MatrixKeyEvent(Option<uint8_t> row, Option<uint8_t> col, bool is_pressed = true):
         row_(row),
-        col_(col)
+        col_(col),
+        is_pressed_(is_pressed)
     {;}
 private:
 
     Option<uint8_t> row_;
     Option<uint8_t> col_;
+    bool is_pressed_;
 };
 
 class CharKeyEvent{

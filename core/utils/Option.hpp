@@ -225,7 +225,7 @@ public:
 };
 
 template<typename T>
-class Option<T *>{
+class Option<T &>{
 public:
     [[nodiscard]] constexpr 
     Option(Some<T *> && something):
