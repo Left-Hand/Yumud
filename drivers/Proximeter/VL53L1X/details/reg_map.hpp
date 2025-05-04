@@ -171,21 +171,21 @@ static constexpr uint16_t VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY = 0x0006;
     fields: \n
         - [15:0] = osc_frequency (fixed point 4.12)
 */
-#define VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY_HI                                      0x0006
+static constexpr uint16_t VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY_HI = 0x0006;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY_LO                                      0x0007
+static constexpr uint16_t VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY_LO = 0x0007;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND                                     0x0008
+static constexpr uint16_t VL53L1_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND = 0x0008;
 /*!<
     type:     uint8_t \n
     default:  0x81 \n
@@ -352,7 +352,7 @@ static constexpr uint16_t VL53L1_GLOBAL_CONFIG__REF_EN_START_SELECT = 0x0013;
     fields: \n
         - [7:0] = ref_en_start_select
 */
-#define VL53L1_REF_SPAD_MAN__NUM_REQUESTED_REF_SPADS                                     0x0014
+static constexpr uint16_t VL53L1_REF_SPAD_MAN__NUM_REQUESTED_REF_SPADS = 0x0014;
 /*!<
     type:     uint8_t \n
     default:  0x2C \n
@@ -382,7 +382,7 @@ static constexpr uint16_t VL53L1_REF_SPAD_MAN__REF_LOCATION = 0x0015;
     fields: \n
         - [1:0] = ref_spad_man__ref_location
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS                            0x0016
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS = 0x0016;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -397,21 +397,21 @@ static constexpr uint16_t VL53L1_REF_SPAD_MAN__REF_LOCATION = 0x0015;
     fields: \n
         - [15:0] = crosstalk_compensation_plane_offset_kcps (fixed point 7.9)
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS_HI                         0x0016
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS_HI = 0x0016;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS_LO                         0x0017
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS_LO = 0x0017;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS                        0x0018
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS = 0x0018;
 /*!<
     type:     int16_t \n
     default:  0x0000 \n
@@ -426,21 +426,21 @@ static constexpr uint16_t VL53L1_REF_SPAD_MAN__REF_LOCATION = 0x0015;
     fields: \n
         - [15:0] = crosstalk_compensation_x_plane_gradient_kcps (fixed point 5.11)
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS_HI                     0x0018
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS_HI = 0x0018;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS_LO                     0x0019
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS_LO = 0x0019;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS                        0x001A
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS = 0x001A;
 /*!<
     type:     int16_t \n
     default:  0x0000 \n
@@ -455,21 +455,21 @@ static constexpr uint16_t VL53L1_REF_SPAD_MAN__REF_LOCATION = 0x0015;
     fields: \n
         - [15:0] = crosstalk_compensation_y_plane_gradient_kcps (fixed point 5.11)
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS_HI                     0x001A
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS_HI = 0x001A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS_LO                     0x001B
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS_LO = 0x001B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS                                     0x001C
+static constexpr uint16_t VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS = 0x001C;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -484,14 +484,14 @@ static constexpr uint16_t VL53L1_REF_SPAD_MAN__REF_LOCATION = 0x0015;
     fields: \n
         - [15:0] = ref_spad_char__total_rate_target_mcps (fixed point 9.7)
 */
-#define VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS_HI                                  0x001C
+static constexpr uint16_t VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS_HI = 0x001C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS_LO                                  0x001D
+static constexpr uint16_t VL53L1_REF_SPAD_CHAR__TOTAL_RATE_TARGET_MCPS_LO = 0x001D;
 /*!<
     info: \n
         - msb =  0
@@ -513,14 +513,14 @@ static constexpr uint16_t VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM = 0x001E;
     fields: \n
         - [12:0] = part_to_part_offset_mm (fixed point 11.2)
 */
-#define VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM_HI                                     0x001E
+static constexpr uint16_t VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM_HI = 0x001E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM_LO                                     0x001F
+static constexpr uint16_t VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM_LO = 0x001F;
 /*!<
     info: \n
         - msb =  0
@@ -600,14 +600,14 @@ static constexpr uint16_t VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS = 0x0024;
     fields: \n
         - [15:0] = dss_config__target_total_rate_mcps (fixed point 9.7)
 */
-#define VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS_HI                                     0x0024
+static constexpr uint16_t VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS_HI = 0x0024;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS_LO                                     0x0025
+static constexpr uint16_t VL53L1_DSS_CONFIG__TARGET_TOTAL_RATE_MCPS_LO = 0x0025;
 /*!<
     info: \n
         - msb =  0
@@ -836,7 +836,7 @@ static constexpr uint16_t VL53L1_ANA_CONFIG__SPAD_SEL_PSWIDTH = 0x0033;
     fields: \n
         - [2:0] = spad_sel_pswidth
 */
-#define VL53L1_ANA_CONFIG__VCSEL_PULSE_WIDTH_OFFSET                                      0x0034
+static constexpr uint16_t VL53L1_ANA_CONFIG__VCSEL_PULSE_WIDTH_OFFSET = 0x0034;
 /*!<
     type:     uint8_t \n
     default:  0x08 \n
@@ -866,7 +866,7 @@ static constexpr uint16_t VL53L1_ANA_CONFIG__FAST_OSC__CONFIG_CTRL = 0x0035;
     fields: \n
         -   [0] = osc_config__latch_bypass
 */
-#define VL53L1_SIGMA_ESTIMATOR__EFFECTIVE_PULSE_WIDTH_NS                                 0x0036
+static constexpr uint16_t VL53L1_SIGMA_ESTIMATOR__EFFECTIVE_PULSE_WIDTH_NS = 0x0036;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -881,7 +881,7 @@ static constexpr uint16_t VL53L1_ANA_CONFIG__FAST_OSC__CONFIG_CTRL = 0x0035;
     fields: \n
         - [7:0] = sigma_estimator__eff_pulse_width
 */
-#define VL53L1_SIGMA_ESTIMATOR__EFFECTIVE_AMBIENT_WIDTH_NS                               0x0037
+static constexpr uint16_t VL53L1_SIGMA_ESTIMATOR__EFFECTIVE_AMBIENT_WIDTH_NS = 0x0037;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -911,7 +911,7 @@ static constexpr uint16_t VL53L1_SIGMA_ESTIMATOR__SIGMA_REF_MM = 0x0038;
     fields: \n
         - [7:0] = sigma_estimator__sigma_ref
 */
-#define VL53L1_ALGO__CROSSTALK_COMPENSATION_VALID_HEIGHT_MM                              0x0039
+static constexpr uint16_t VL53L1_ALGO__CROSSTALK_COMPENSATION_VALID_HEIGHT_MM = 0x0039;
 /*!<
     type:     uint8_t \n
     default:  0x14 \n
@@ -926,7 +926,7 @@ static constexpr uint16_t VL53L1_SIGMA_ESTIMATOR__SIGMA_REF_MM = 0x0038;
     fields: \n
         - [7:0] = crosstalk_compensation_valid_height_mm
 */
-#define VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_0                                  0x003A
+static constexpr uint16_t VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_0 = 0x003A;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -941,7 +941,7 @@ static constexpr uint16_t VL53L1_SIGMA_ESTIMATOR__SIGMA_REF_MM = 0x0038;
     fields: \n
         - [7:0] = static_config_spare_0
 */
-#define VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_1                                  0x003B
+static constexpr uint16_t VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_1 = 0x003B;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -971,14 +971,14 @@ static constexpr uint16_t VL53L1_ALGO__RANGE_IGNORE_THRESHOLD_MCPS = 0x003C;
     fields: \n
         - [15:0] = range_ignore_thresh_mcps (fixed point 3.13)
 */
-#define VL53L1_ALGO__RANGE_IGNORE_THRESHOLD_MCPS_HI                                      0x003C
+static constexpr uint16_t VL53L1_ALGO__RANGE_IGNORE_THRESHOLD_MCPS_HI = 0x003C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_ALGO__RANGE_IGNORE_THRESHOLD_MCPS_LO                                      0x003D
+static constexpr uint16_t VL53L1_ALGO__RANGE_IGNORE_THRESHOLD_MCPS_LO = 0x003D;
 /*!<
     info: \n
         - msb =  0
@@ -1031,7 +1031,7 @@ static constexpr uint16_t VL53L1_ALGO__CONSISTENCY_CHECK__TOLERANCE = 0x0040;
     fields: \n
         - [3:0] = consistency_check_tolerance (fixed point 1.3)
 */
-#define VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_2                                  0x0041
+static constexpr uint16_t VL53L1_SPARE_HOST_CONFIG__STATIC_CONFIG_SPARE_2 = 0x0041;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -1077,7 +1077,7 @@ static constexpr uint16_t VL53L1_SD_CONFIG__RESET_STAGES_LSB = 0x0043;
         - [7:4] = accum_reset__clear_stage
         - [3:0] = count_reset__clear_stage
 */
-#define VL53L1_GPH_CONFIG__STREAM_COUNT_UPDATE_VALUE                                     0x0044
+static constexpr uint16_t VL53L1_GPH_CONFIG__STREAM_COUNT_UPDATE_VALUE = 0x0044;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -1305,7 +1305,7 @@ static constexpr uint16_t VL53L1_SYSTEM__THRESH_RATE_LOW_LO = 0x0053;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT                                 0x0054
+static constexpr uint16_t VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT = 0x0054;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -1320,14 +1320,14 @@ static constexpr uint16_t VL53L1_SYSTEM__THRESH_RATE_LOW_LO = 0x0053;
     fields: \n
         - [15:0] = dss_config__manual_effective_spads_select
 */
-#define VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_HI                              0x0054
+static constexpr uint16_t VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_HI = 0x0054;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_LO                              0x0055
+static constexpr uint16_t VL53L1_DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_LO = 0x0055;
 /*!<
     info: \n
         - msb =  0
@@ -1573,7 +1573,7 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__SIGMA_THRESH_LO = 0x0065;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS                               0x0066
+static constexpr uint16_t VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS = 0x0066;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -1588,14 +1588,14 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__SIGMA_THRESH_LO = 0x0065;
     fields: \n
         - [15:0] = range_config__min_count_rate_rtn_limit_mcps (fixed point 9.7)
 */
-#define VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_HI                            0x0066
+static constexpr uint16_t VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_HI = 0x0066;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_LO                            0x0067
+static constexpr uint16_t VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_LO = 0x0067;
 /*!<
     info: \n
         - msb =  0
@@ -1917,7 +1917,7 @@ static constexpr uint16_t VL53L1_ROI_CONFIG__USER_ROI_CENTRE_SPAD = 0x007F;
     fields: \n
         - [7:0] = user_roi_center_spad
 */
-#define VL53L1_ROI_CONFIG__USER_ROI_REQUESTED_GLOBAL_XY_SIZE                             0x0080
+static constexpr uint16_t VL53L1_ROI_CONFIG__USER_ROI_REQUESTED_GLOBAL_XY_SIZE = 0x0080;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -2116,7 +2116,7 @@ static constexpr uint16_t VL53L1_RESULT__STREAM_COUNT = 0x008B;
     fields: \n
         - [7:0] = result__stream_count
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0                                    0x008C
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x008C;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2131,21 +2131,21 @@ static constexpr uint16_t VL53L1_RESULT__STREAM_COUNT = 0x008B;
     fields: \n
         - [15:0] = result__dss_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI                                 0x008C
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x008C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO                                 0x008D
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x008D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0                                   0x008E
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x008E;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2160,14 +2160,14 @@ static constexpr uint16_t VL53L1_RESULT__STREAM_COUNT = 0x008B;
     fields: \n
         - [15:0] = result__peak_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI                                0x008E
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x008E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO                                0x008F
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x008F;
 /*!<
     info: \n
         - msb =  0
@@ -2189,14 +2189,14 @@ static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0 = 0x0090;
     fields: \n
         - [15:0] = result__ambient_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI                                    0x0090
+static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI = 0x0090;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO                                    0x0091
+static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO = 0x0091;
 /*!<
     info: \n
         - msb =  0
@@ -2261,7 +2261,7 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0                            0x0096
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0 = 0x0096;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2276,21 +2276,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__final_crosstalk_corrected_range_mm_sd0
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI                         0x0096
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI = 0x0096;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO                         0x0097
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO = 0x0097;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0               0x0098
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0 = 0x0098;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2305,21 +2305,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__peak_signal_count_rate_crosstalk_corrected_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI            0x0098
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI = 0x0098;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO            0x0099
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO = 0x0099;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0                               0x009A
+static constexpr uint16_t VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x009A;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2334,21 +2334,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__mm_inner_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                            0x009A
+static constexpr uint16_t VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x009A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                            0x009B
+static constexpr uint16_t VL53L1_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x009B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0                               0x009C
+static constexpr uint16_t VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x009C;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2363,21 +2363,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__mm_outer_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                            0x009C
+static constexpr uint16_t VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x009C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                            0x009D
+static constexpr uint16_t VL53L1_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x009D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0                                    0x009E
+static constexpr uint16_t VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x009E;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2392,21 +2392,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__avg_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI                                 0x009E
+static constexpr uint16_t VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x009E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO                                 0x009F
+static constexpr uint16_t VL53L1_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x009F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1                                    0x00A0
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1 = 0x00A0;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2421,21 +2421,21 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__dss_actual_effective_spads_sd1 (fixed point 8.8)
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI                                 0x00A0
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI = 0x00A0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO                                 0x00A1
+static constexpr uint16_t VL53L1_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO = 0x00A1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1                                   0x00A2
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1 = 0x00A2;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2450,14 +2450,14 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD0_LO = 0x0095;
     fields: \n
         - [15:0] = result__peak_signal_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI                                0x00A2
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI = 0x00A2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO                                0x00A3
+static constexpr uint16_t VL53L1_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO = 0x00A3;
 /*!<
     info: \n
         - msb =  0
@@ -2479,14 +2479,14 @@ static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1 = 0x00A4;
     fields: \n
         - [15:0] = result__ambient_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI                                    0x00A4
+static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI = 0x00A4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO                                    0x00A5
+static constexpr uint16_t VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO = 0x00A5;
 /*!<
     info: \n
         - msb =  0
@@ -2551,7 +2551,7 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD1_LO = 0x00A9;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1                            0x00AA
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1 = 0x00AA;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -2566,14 +2566,14 @@ static constexpr uint16_t VL53L1_RESULT__PHASE_SD1_LO = 0x00A9;
     fields: \n
         - [15:0] = result__final_crosstalk_corrected_range_mm_sd1
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI                         0x00AA
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI = 0x00AA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO                         0x00AB
+static constexpr uint16_t VL53L1_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO = 0x00AB;
 /*!<
     info: \n
         - msb =  0
@@ -2698,7 +2698,7 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
         - [3:0] = result__distance_int_info
         - [7:4] = result__rate_int_info
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0                                    0x00B4
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0 = 0x00B4;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -2713,35 +2713,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__ambient_window_events_sd0
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3                                  0x00B4
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3 = 0x00B4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2                                  0x00B5
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2 = 0x00B5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1                                  0x00B6
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1 = 0x00B6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0                                  0x00B7
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0 = 0x00B7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0                                     0x00B8
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0 = 0x00B8;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -2756,35 +2756,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__ranging_total_events_sd0
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3                                   0x00B8
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3 = 0x00B8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2                                   0x00B9
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2 = 0x00B9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1                                   0x00BA
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1 = 0x00BA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0                                   0x00BB
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0 = 0x00BB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0                                      0x00BC
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0 = 0x00BC;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -2799,35 +2799,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__signal_total_events_sd0
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3                                    0x00BC
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3 = 0x00BC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2                                    0x00BD
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2 = 0x00BD;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1                                    0x00BE
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1 = 0x00BE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0                                    0x00BF
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0 = 0x00BF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0                                    0x00C0
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0 = 0x00C0;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -2842,35 +2842,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__total_periods_elapsed_sd0
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3                                  0x00C0
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3 = 0x00C0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2                                  0x00C1
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2 = 0x00C1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1                                  0x00C2
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1 = 0x00C2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0                                  0x00C3
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0 = 0x00C3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1                                    0x00C4
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1 = 0x00C4;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -2885,35 +2885,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__ambient_window_events_sd1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3                                  0x00C4
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3 = 0x00C4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2                                  0x00C5
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2 = 0x00C5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1                                  0x00C6
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1 = 0x00C6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0                                  0x00C7
+static constexpr uint16_t VL53L1_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0 = 0x00C7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1                                     0x00C8
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1 = 0x00C8;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -2928,35 +2928,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__ranging_total_events_sd1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3                                   0x00C8
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3 = 0x00C8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2                                   0x00C9
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2 = 0x00C9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1                                   0x00CA
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1 = 0x00CA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0                                   0x00CB
+static constexpr uint16_t VL53L1_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0 = 0x00CB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1                                      0x00CC
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1 = 0x00CC;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -2971,35 +2971,35 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__signal_total_events_sd1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3                                    0x00CC
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3 = 0x00CC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2                                    0x00CD
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2 = 0x00CD;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1                                    0x00CE
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1 = 0x00CE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0                                    0x00CF
+static constexpr uint16_t VL53L1_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0 = 0x00CF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1                                    0x00D0
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1 = 0x00D0;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -3014,28 +3014,28 @@ static constexpr uint16_t VL53L1_RESULT__THRESH_INFO = 0x00B3;
     fields: \n
         - [31:0] = result_core__total_periods_elapsed_sd1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3                                  0x00D0
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3 = 0x00D0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2                                  0x00D1
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2 = 0x00D1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1                                  0x00D2
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1 = 0x00D2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0                                  0x00D3
+static constexpr uint16_t VL53L1_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0 = 0x00D3;
 /*!<
     info: \n
         - msb =  0
@@ -3101,7 +3101,7 @@ static constexpr uint16_t VL53L1_PHASECAL_RESULT__VCSEL_START = 0x00D8;
     fields: \n
         - [6:0] = result_phasecal__vcsel_start
 */
-#define VL53L1_REF_SPAD_CHAR_RESULT__NUM_ACTUAL_REF_SPADS                                0x00D9
+static constexpr uint16_t VL53L1_REF_SPAD_CHAR_RESULT__NUM_ACTUAL_REF_SPADS = 0x00D9;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -3347,14 +3347,14 @@ static constexpr uint16_t VL53L1_FIRMWARE__CAL_REPEAT_RATE_COUNTER = 0x00E8;
     fields: \n
         - [11:0] = firmware_cal_repeat_rate
 */
-#define VL53L1_FIRMWARE__CAL_REPEAT_RATE_COUNTER_HI                                      0x00E8
+static constexpr uint16_t VL53L1_FIRMWARE__CAL_REPEAT_RATE_COUNTER_HI = 0x00E8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_FIRMWARE__CAL_REPEAT_RATE_COUNTER_LO                                      0x00E9
+static constexpr uint16_t VL53L1_FIRMWARE__CAL_REPEAT_RATE_COUNTER_LO = 0x00E9;
 /*!<
     info: \n
         - msb =  0
@@ -3426,7 +3426,7 @@ static constexpr uint16_t VL53L1_GPH__SYSTEM__THRESH_LOW_LO = 0x00EF;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_GPH__SYSTEM__ENABLE_XTALK_PER_QUADRANT                                    0x00F0
+static constexpr uint16_t VL53L1_GPH__SYSTEM__ENABLE_XTALK_PER_QUADRANT = 0x00F0;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -3549,7 +3549,7 @@ static constexpr uint16_t VL53L1_GPH__SD_CONFIG__QUANTIFIER = 0x00F7;
     fields: \n
         - [3:0] = shadow_sd_config__quantifier
 */
-#define VL53L1_GPH__ROI_CONFIG__USER_ROI_CENTRE_SPAD                                     0x00F8
+static constexpr uint16_t VL53L1_GPH__ROI_CONFIG__USER_ROI_CENTRE_SPAD = 0x00F8;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -3564,7 +3564,7 @@ static constexpr uint16_t VL53L1_GPH__SD_CONFIG__QUANTIFIER = 0x00F7;
     fields: \n
         - [7:0] = shadow_user_roi_center_spad_q0
 */
-#define VL53L1_GPH__ROI_CONFIG__USER_ROI_REQUESTED_GLOBAL_XY_SIZE                        0x00F9
+static constexpr uint16_t VL53L1_GPH__ROI_CONFIG__USER_ROI_REQUESTED_GLOBAL_XY_SIZE = 0x00F9;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -5049,7 +5049,7 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__CONFIG = 0x0430;
         -   [6] = fw_calc__snr_avg_signal_rate_en
         -   [7] = fw_calc__sigma_en
 */
-#define VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE                                    0x0432
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE = 0x0432;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5064,14 +5064,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__CONFIG = 0x0430;
     fields: \n
         - [15:0] = offset_corrected_range
 */
-#define VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE_HI                                 0x0432
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE_HI = 0x0432;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE_LO                                 0x0433
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__OFFSET_CORRECTED_RANGE_LO = 0x0433;
 /*!<
     info: \n
         - msb =  0
@@ -5121,7 +5121,7 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_4_0 = 0x0437;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC                                 0x0438
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC = 0x0438;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5136,14 +5136,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_4_0 = 0x0437;
     fields: \n
         - [13:0] = ambient_duration_prec_calc
 */
-#define VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC_HI                              0x0438
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC_HI = 0x0438;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC_LO                              0x0439
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_DURATION_PRE_CALC_LO = 0x0439;
 /*!<
     info: \n
         - msb =  0
@@ -5195,14 +5195,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_TOTAL_PERIODS = 0x043E;
     fields: \n
         - [15:0] = algo_total_periods
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_TOTAL_PERIODS_HI                                     0x043E
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_TOTAL_PERIODS_HI = 0x043E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_TOTAL_PERIODS_LO                                     0x043F
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_TOTAL_PERIODS_LO = 0x043F;
 /*!<
     info: \n
         - msb =  0
@@ -5267,28 +5267,28 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS = 0x0444;
     fields: \n
         - [31:0] = algo_signal_events
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_3                                      0x0444
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_3 = 0x0444;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_2                                      0x0445
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_2 = 0x0445;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_1                                      0x0446
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_1 = 0x0446;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_0                                      0x0447
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_SIGNAL_EVENTS_0 = 0x0447;
 /*!<
     info: \n
         - msb =  0
@@ -5310,28 +5310,28 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS = 0x0448;
     fields: \n
         - [31:0] = algo_ambient_events
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_3                                     0x0448
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_3 = 0x0448;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_2                                     0x0449
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_2 = 0x0449;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_1                                     0x044A
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_1 = 0x044A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_0                                     0x044B
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_AMBIENT_EVENTS_0 = 0x044B;
 /*!<
     info: \n
         - msb =  0
@@ -5367,7 +5367,7 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_6_LO = 0x044D;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD                                  0x044E
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD = 0x044E;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5382,14 +5382,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_6_LO = 0x044D;
     fields: \n
         - [15:0] = algo_adjust_vcsel_period
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD_HI                               0x044E
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD_HI = 0x044E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD_LO                               0x044F
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__ALGO_ADJUST_VCSEL_PERIOD_LO = 0x044F;
 /*!<
     info: \n
         - msb =  0
@@ -5469,28 +5469,28 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS = 0x0454;
     fields: \n
         - [19:0] = rate_per_spad_mcps
 */
-#define VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_3                                      0x0454
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_3 = 0x0454;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_2                                      0x0455
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_2 = 0x0455;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_1                                      0x0456
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_1 = 0x0456;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_0                                      0x0457
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__RATE_PER_SPAD_MCPS_0 = 0x0457;
 /*!<
     info: \n
         - msb =  0
@@ -5527,7 +5527,7 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_8 = 0x0459;
     fields: \n
         - [7:0] = mcu_calc__spare_8
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS                                     0x045A
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS = 0x045A;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5542,21 +5542,21 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_8 = 0x0459;
     fields: \n
         - [15:0] = peak_signal_rate
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS_HI                                  0x045A
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS_HI = 0x045A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS_LO                                  0x045B
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_MCPS_LO = 0x045B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS                                      0x045C
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS = 0x045C;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5571,14 +5571,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__SPARE_8 = 0x0459;
     fields: \n
         - [15:0] = avg_signal_rate
 */
-#define VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS_HI                                   0x045C
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS_HI = 0x045C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS_LO                                   0x045D
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AVG_SIGNAL_RATE_MCPS_LO = 0x045D;
 /*!<
     info: \n
         - msb =  0
@@ -5600,14 +5600,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_RATE_MCPS = 0x045E;
     fields: \n
         - [15:0] = ambient_rate
 */
-#define VL53L1_MCU_RANGE_CALC__AMBIENT_RATE_MCPS_HI                                      0x045E
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_RATE_MCPS_HI = 0x045E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__AMBIENT_RATE_MCPS_LO                                      0x045F
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__AMBIENT_RATE_MCPS_LO = 0x045F;
 /*!<
     info: \n
         - msb =  0
@@ -5673,7 +5673,7 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__DEBUG = 0x0463;
     fields: \n
         -   [0] = calc_debug__divide_by_zero
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS                          0x0464
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS = 0x0464;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -5688,14 +5688,14 @@ static constexpr uint16_t VL53L1_MCU_RANGE_CALC__DEBUG = 0x0463;
     fields: \n
         - [15:0] = peak_signal_rate_xtalk_corr
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS_HI                       0x0464
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS_HI = 0x0464;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS_LO                       0x0465
+static constexpr uint16_t VL53L1_MCU_RANGE_CALC__PEAK_SIGNAL_RATE_XTALK_CORR_MCPS_LO = 0x0465;
 /*!<
     info: \n
         - msb =  0
@@ -6843,14 +6843,14 @@ static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_OFFSET_1_LSB = 0x0699;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_OFFSET_REF_1_MSB                                    0x069A
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_OFFSET_REF_1_MSB = 0x069A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_OFFSET_REF_1_LSB                                    0x069B
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_OFFSET_REF_1_LSB = 0x069B;
 /*!<
     info: \n
         - msb =  0
@@ -6871,42 +6871,42 @@ static constexpr uint16_t VL53L1_RANGING_CORE__FILTER_STRENGTH_REF_1 = 0x069D;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_1_MSB                                    0x069E
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_1_MSB = 0x069E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_1_LSB                                    0x069F
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_1_LSB = 0x069F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_REF_1_MSB                                0x06A0
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_REF_1_MSB = 0x06A0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_REF_1_LSB                                0x06A1
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_EVENT_LIMIT_REF_1_LSB = 0x06A1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TIMEOUT_OVERALL_PERIODS_MSB                                 0x06A4
+static constexpr uint16_t VL53L1_RANGING_CORE__TIMEOUT_OVERALL_PERIODS_MSB = 0x06A4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TIMEOUT_OVERALL_PERIODS_LSB                                 0x06A5
+static constexpr uint16_t VL53L1_RANGING_CORE__TIMEOUT_OVERALL_PERIODS_LSB = 0x06A5;
 /*!<
     info: \n
         - msb =  0
@@ -6934,21 +6934,21 @@ static constexpr uint16_t VL53L1_RANGING_CORE__STATIC_HW_VALUE = 0x06A8;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__FORCE_CONTINUOUS_AMBIENT                                    0x06A9
+static constexpr uint16_t VL53L1_RANGING_CORE__FORCE_CONTINUOUS_AMBIENT = 0x06A9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TEST_PHASE_SELECT_TO_FILTER                                 0x06AA
+static constexpr uint16_t VL53L1_RANGING_CORE__TEST_PHASE_SELECT_TO_FILTER = 0x06AA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TEST_PHASE_SELECT_TO_TIMING_GEN                             0x06AB
+static constexpr uint16_t VL53L1_RANGING_CORE__TEST_PHASE_SELECT_TO_TIMING_GEN = 0x06AB;
 /*!<
     info: \n
         - msb =  0
@@ -6962,7 +6962,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__INITIAL_PHASE_VALUE_1 = 0x06AC;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__INITIAL_PHASE_VALUE_REF_1                                   0x06AD
+static constexpr uint16_t VL53L1_RANGING_CORE__INITIAL_PHASE_VALUE_REF_1 = 0x06AD;
 /*!<
     info: \n
         - msb =  0
@@ -7228,14 +7228,14 @@ static constexpr uint16_t VL53L1_RANGING_CORE__NVM_CTRL__READN = 0x0783;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__NVM_CTRL__PULSE_WIDTH_MSB                                   0x0784
+static constexpr uint16_t VL53L1_RANGING_CORE__NVM_CTRL__PULSE_WIDTH_MSB = 0x0784;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__NVM_CTRL__PULSE_WIDTH_LSB                                   0x0785
+static constexpr uint16_t VL53L1_RANGING_CORE__NVM_CTRL__PULSE_WIDTH_LSB = 0x0785;
 /*!<
     info: \n
         - msb =  0
@@ -7494,7 +7494,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__SPAD_DISABLE_CTRL = 0x07BB;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SPAD_EN_SHIFT_OUT_DEBUG                                     0x07BC
+static constexpr uint16_t VL53L1_RANGING_CORE__SPAD_EN_SHIFT_OUT_DEBUG = 0x07BC;
 /*!<
     info: \n
         - msb =  0
@@ -7557,7 +7557,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__STATUS = 0x0980;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__LASER_CONTINUITY_STATE                                      0x0981
+static constexpr uint16_t VL53L1_RANGING_CORE__LASER_CONTINUITY_STATE = 0x0981;
 /*!<
     info: \n
         - msb =  0
@@ -7620,105 +7620,105 @@ static constexpr uint16_t VL53L1_RANGING_CORE__RANGE_REF_1_LLL = 0x0989;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_MMM                                 0x098A
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_MMM = 0x098A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LMM                                 0x098B
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LMM = 0x098B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LLM                                 0x098C
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LLM = 0x098C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LLL                                 0x098D
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_1_LLL = 0x098D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_MMM                                  0x098E
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_MMM = 0x098E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LMM                                  0x098F
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LMM = 0x098F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LLM                                  0x0990
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LLM = 0x0990;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LLL                                  0x0991
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_1_LLL = 0x0991;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_MMM                                   0x0992
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_MMM = 0x0992;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LMM                                   0x0993
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LMM = 0x0993;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LLM                                   0x0994
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LLM = 0x0994;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LLL                                   0x0995
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_1_LLL = 0x0995;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_MM                                  0x0996
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_MM = 0x0996;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_LM                                  0x0997
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_LM = 0x0997;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_LL                                  0x0998
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_1_LL = 0x0998;
 /*!<
     info: \n
         - msb =  0
@@ -7746,126 +7746,126 @@ static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_MISMATCH_LL = 0x099B;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_MMM                             0x099C
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_MMM = 0x099C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LMM                             0x099D
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LMM = 0x099D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LLM                             0x099E
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LLM = 0x099E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LLL                             0x099F
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_WINDOW_EVENTS_REF_1_LLL = 0x099F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_MMM                              0x09A0
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_MMM = 0x09A0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LMM                              0x09A1
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LMM = 0x09A1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LLM                              0x09A2
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LLM = 0x09A2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LLL                              0x09A3
+static constexpr uint16_t VL53L1_RANGING_CORE__RANGING_TOTAL_EVENTS_REF_1_LLL = 0x09A3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_MMM                               0x09A4
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_MMM = 0x09A4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LMM                               0x09A5
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LMM = 0x09A5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LLM                               0x09A6
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LLM = 0x09A6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LLL                               0x09A7
+static constexpr uint16_t VL53L1_RANGING_CORE__SIGNAL_TOTAL_EVENTS_REF_1_LLL = 0x09A7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_MM                              0x09A8
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_MM = 0x09A8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_LM                              0x09A9
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_LM = 0x09A9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_LL                              0x09AA
+static constexpr uint16_t VL53L1_RANGING_CORE__TOTAL_PERIODS_ELAPSED_REF_1_LL = 0x09AA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_MM                                     0x09AB
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_MM = 0x09AB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_LM                                     0x09AC
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_LM = 0x09AC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_LL                                     0x09AD
+static constexpr uint16_t VL53L1_RANGING_CORE__AMBIENT_MISMATCH_REF_LL = 0x09AD;
 /*!<
     info: \n
         - msb =  0
@@ -7893,7 +7893,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__INTR_MANAGER__A0 = 0x0A02;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__POWER_FSM_TIME_OSC__A0                                      0x0A06
+static constexpr uint16_t VL53L1_RANGING_CORE__POWER_FSM_TIME_OSC__A0 = 0x0A06;
 /*!<
     info: \n
         - msb =  0
@@ -7907,14 +7907,14 @@ static constexpr uint16_t VL53L1_RANGING_CORE__VCSEL_ATEST__A0 = 0x0A07;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__VCSEL_PERIOD_CLIPPED__A0                                    0x0A08
+static constexpr uint16_t VL53L1_RANGING_CORE__VCSEL_PERIOD_CLIPPED__A0 = 0x0A08;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__VCSEL_STOP_CLIPPED__A0                                      0x0A09
+static constexpr uint16_t VL53L1_RANGING_CORE__VCSEL_STOP_CLIPPED__A0 = 0x0A09;
 /*!<
     info: \n
         - msb =  0
@@ -8012,7 +8012,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__SPARE_REGISTER__A0 = 0x0A23;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__VCSEL_CONT_STAGE5_BYPASS__A0                                0x0A24
+static constexpr uint16_t VL53L1_RANGING_CORE__VCSEL_CONT_STAGE5_BYPASS__A0 = 0x0A24;
 /*!<
     info: \n
         - msb =  0
@@ -8166,7 +8166,7 @@ static constexpr uint16_t VL53L1_RANGING_CORE__REF_EN_START_SELECT = 0x0A39;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGING_CORE__REGDVDD1V2_ATEST__EWOK                                      0x0A41
+static constexpr uint16_t VL53L1_RANGING_CORE__REGDVDD1V2_ATEST__EWOK = 0x0A41;
 /*!<
     info: \n
         - msb =  0
@@ -8187,7 +8187,7 @@ static constexpr uint16_t VL53L1_PRIVATE__PATCH_BASE_ADDR_RSLV = 0x0E00;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__INTERRUPT_STATUS                                      0x0ED0
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__INTERRUPT_STATUS = 0x0ED0;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -8252,7 +8252,7 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__STREAM_COUNT = 0x0ED3;
     fields: \n
         - [7:0] = prev_shadow_result__stream_count
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0                        0x0ED4
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0ED4;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8267,21 +8267,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__STREAM_COUNT = 0x0ED3;
     fields: \n
         - [15:0] = prev_shadow_result__dss_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI                     0x0ED4
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0ED4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO                     0x0ED5
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0ED5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0                       0x0ED6
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x0ED6;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8296,21 +8296,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__STREAM_COUNT = 0x0ED3;
     fields: \n
         - [15:0] = prev_shadow_result__peak_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI                    0x0ED6
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x0ED6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO                    0x0ED7
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x0ED7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0                           0x0ED8
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0 = 0x0ED8;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8325,14 +8325,14 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__STREAM_COUNT = 0x0ED3;
     fields: \n
         - [15:0] = prev_shadow_result__ambient_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI                        0x0ED8
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI = 0x0ED8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO                        0x0ED9
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO = 0x0ED9;
 /*!<
     info: \n
         - msb =  0
@@ -8397,7 +8397,7 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0                0x0EDE
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0 = 0x0EDE;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8412,21 +8412,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__final_crosstalk_corrected_range_mm_sd0
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI             0x0EDE
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI = 0x0EDE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO             0x0EDF
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO = 0x0EDF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0   0x0EE0
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0 = 0x0EE0;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8441,21 +8441,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__peak_signal_count_rate_crosstalk_corrected_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI 0x0EE0
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI = 0x0EE0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO 0x0EE1
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO = 0x0EE1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0                   0x0EE2
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0EE2;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8470,21 +8470,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__mm_inner_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                0x0EE2
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0EE2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                0x0EE3
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0EE3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0                   0x0EE4
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0EE4;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8499,21 +8499,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__mm_outer_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                0x0EE4
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0EE4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                0x0EE5
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0EE5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0                        0x0EE6
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x0EE6;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8528,21 +8528,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__avg_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI                     0x0EE6
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x0EE6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO                     0x0EE7
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x0EE7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1                        0x0EE8
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1 = 0x0EE8;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8557,21 +8557,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__dss_actual_effective_spads_sd1 (fixed point 8.8)
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI                     0x0EE8
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI = 0x0EE8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO                     0x0EE9
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO = 0x0EE9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1                       0x0EEA
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1 = 0x0EEA;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8586,21 +8586,21 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__peak_signal_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI                    0x0EEA
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI = 0x0EEA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO                    0x0EEB
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO = 0x0EEB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1                           0x0EEC
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1 = 0x0EEC;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8615,14 +8615,14 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD0_LO = 0x0EDD;
     fields: \n
         - [15:0] = prev_shadow_result__ambient_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI                        0x0EEC
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI = 0x0EEC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO                        0x0EED
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO = 0x0EED;
 /*!<
     info: \n
         - msb =  0
@@ -8687,7 +8687,7 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD1_LO = 0x0EF1;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1                0x0EF2
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1 = 0x0EF2;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -8702,14 +8702,14 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__PHASE_SD1_LO = 0x0EF1;
     fields: \n
         - [15:0] = prev_shadow_result__final_crosstalk_corrected_range_mm_sd1
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI             0x0EF2
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI = 0x0EF2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO             0x0EF3
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO = 0x0EF3;
 /*!<
     info: \n
         - msb =  0
@@ -8832,7 +8832,7 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0                        0x0EFC
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0 = 0x0EFC;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -8847,35 +8847,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__ambient_window_events_sd0
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3                      0x0EFC
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3 = 0x0EFC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2                      0x0EFD
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2 = 0x0EFD;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1                      0x0EFE
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1 = 0x0EFE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0                      0x0EFF
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0 = 0x0EFF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0                         0x0F00
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0 = 0x0F00;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -8890,35 +8890,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__ranging_total_events_sd0
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3                       0x0F00
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3 = 0x0F00;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2                       0x0F01
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2 = 0x0F01;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1                       0x0F02
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1 = 0x0F02;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0                       0x0F03
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0 = 0x0F03;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0                          0x0F04
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0 = 0x0F04;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -8933,35 +8933,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__signal_total_events_sd0
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3                        0x0F04
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3 = 0x0F04;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2                        0x0F05
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2 = 0x0F05;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1                        0x0F06
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1 = 0x0F06;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0                        0x0F07
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0 = 0x0F07;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0                        0x0F08
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0 = 0x0F08;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -8976,35 +8976,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__total_periods_elapsed_sd0
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3                      0x0F08
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3 = 0x0F08;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2                      0x0F09
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2 = 0x0F09;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1                      0x0F0A
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1 = 0x0F0A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0                      0x0F0B
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0 = 0x0F0B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1                        0x0F0C
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1 = 0x0F0C;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -9019,35 +9019,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__ambient_window_events_sd1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3                      0x0F0C
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3 = 0x0F0C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2                      0x0F0D
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2 = 0x0F0D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1                      0x0F0E
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1 = 0x0F0E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0                      0x0F0F
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0 = 0x0F0F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1                         0x0F10
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1 = 0x0F10;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -9062,35 +9062,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__ranging_total_events_sd1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3                       0x0F10
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3 = 0x0F10;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2                       0x0F11
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2 = 0x0F11;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1                       0x0F12
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1 = 0x0F12;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0                       0x0F13
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0 = 0x0F13;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1                          0x0F14
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1 = 0x0F14;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -9105,35 +9105,35 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__signal_total_events_sd1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3                        0x0F14
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3 = 0x0F14;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2                        0x0F15
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2 = 0x0F15;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1                        0x0F16
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1 = 0x0F16;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0                        0x0F17
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0 = 0x0F17;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1                        0x0F18
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1 = 0x0F18;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -9148,28 +9148,28 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__SPARE_3_SD1_LO = 0x0EFB;
     fields: \n
         - [31:0] = prev_shadow_result_core__total_periods_elapsed_sd1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3                      0x0F18
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3 = 0x0F18;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2                      0x0F19
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2 = 0x0F19;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1                      0x0F1A
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1 = 0x0F1A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0                      0x0F1B
+static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0 = 0x0F1B;
 /*!<
     info: \n
         - msb =  0
@@ -9315,7 +9315,7 @@ static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__ROI_MODE_CONTROL = 0x0F2F;
         - [1:0] = gph__dss_config__input_mode
         -   [2] = gph__calculate_roi_enable
 */
-#define VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT                            0x0F30
+static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT = 0x0F30;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -9330,21 +9330,21 @@ static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__ROI_MODE_CONTROL = 0x0F2F;
     fields: \n
         - [15:0] = gph__dss_config__manual_effective_spads_select
 */
-#define VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_HI                         0x0F30
+static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_HI = 0x0F30;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_LO                         0x0F31
+static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT_LO = 0x0F31;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_GPH__DSS_CONFIG__MANUAL_BLOCK_SELECT                                      0x0F32
+static constexpr uint16_t VL53L1_GPH__DSS_CONFIG__MANUAL_BLOCK_SELECT = 0x0F32;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -9449,7 +9449,7 @@ static constexpr uint16_t VL53L1_GPH__MM_CONFIG__TIMEOUT_MACROP_B_LO = 0x0F39;
     fields: \n
         - [7:0] = gph_mm_config__config_timeout_macrop_b_lo
 */
-#define VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_HI                                    0x0F3A
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_HI = 0x0F3A;
 /*!<
     type:     uint8_t \n
     default:  0x01 \n
@@ -9464,7 +9464,7 @@ static constexpr uint16_t VL53L1_GPH__MM_CONFIG__TIMEOUT_MACROP_B_LO = 0x0F39;
     fields: \n
         - [3:0] = gph_Range2_timeout_overall_periods_macrop_a_hi
 */
-#define VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_LO                                    0x0F3B
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_LO = 0x0F3B;
 /*!<
     type:     uint8_t \n
     default:  0x92 \n
@@ -9509,7 +9509,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__VCSEL_PERIOD_B = 0x0F3D;
     fields: \n
         - [5:0] = gph_range_config__vcsel_period_b
 */
-#define VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_HI                                    0x0F3E
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_HI = 0x0F3E;
 /*!<
     type:     uint8_t \n
     default:  0x01 \n
@@ -9524,7 +9524,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__VCSEL_PERIOD_B = 0x0F3D;
     fields: \n
         - [3:0] = gph_Range2_timeout_overall_periods_macrop_b_hi
 */
-#define VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_LO                                    0x0F3F
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_LO = 0x0F3F;
 /*!<
     type:     uint8_t \n
     default:  0x92 \n
@@ -9568,7 +9568,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__SIGMA_THRESH_LO = 0x0F41;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS                          0x0F42
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS = 0x0F42;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -9583,14 +9583,14 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__SIGMA_THRESH_LO = 0x0F41;
     fields: \n
         - [15:0] = gph_range_config__min_count_rate_rtn_limit_mcps (fixed point 9.7)
 */
-#define VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_HI                       0x0F42
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_HI = 0x0F42;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_LO                       0x0F43
+static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS_LO = 0x0F43;
 /*!<
     info: \n
         - msb =  0
@@ -9642,7 +9642,7 @@ static constexpr uint16_t VL53L1_FIRMWARE__INTERNAL_STREAM_COUNT_DIV = 0x0F46;
     fields: \n
         - [7:0] = fw__internal_stream_count_div
 */
-#define VL53L1_FIRMWARE__INTERNAL_STREAM_COUNTER_VAL                                     0x0F47
+static constexpr uint16_t VL53L1_FIRMWARE__INTERNAL_STREAM_COUNTER_VAL = 0x0F47;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -10348,14 +10348,14 @@ static constexpr uint16_t VL53L1_VHV_RESULT__PEAK_SIGNAL_RATE_MCPS = 0x0F82;
     fields: \n
         - [15:0] = vhv_result__peak_signal_rate_mcps
 */
-#define VL53L1_VHV_RESULT__PEAK_SIGNAL_RATE_MCPS_HI                                      0x0F82
+static constexpr uint16_t VL53L1_VHV_RESULT__PEAK_SIGNAL_RATE_MCPS_HI = 0x0F82;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_VHV_RESULT__PEAK_SIGNAL_RATE_MCPS_LO                                      0x0F83
+static constexpr uint16_t VL53L1_VHV_RESULT__PEAK_SIGNAL_RATE_MCPS_LO = 0x0F83;
 /*!<
     info: \n
         - msb =  0
@@ -10377,28 +10377,28 @@ static constexpr uint16_t VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF = 0x0F84;
     fields: \n
         - [31:0] = vhv_result__signal_total_events_ref
 */
-#define VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_3                                     0x0F84
+static constexpr uint16_t VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_3 = 0x0F84;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_2                                     0x0F85
+static constexpr uint16_t VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_2 = 0x0F85;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_1                                     0x0F86
+static constexpr uint16_t VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_1 = 0x0F86;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_0                                     0x0F87
+static constexpr uint16_t VL53L1_VHV_RESULT__SIGNAL_TOTAL_EVENTS_REF_0 = 0x0F87;
 /*!<
     info: \n
         - msb =  0
@@ -10420,14 +10420,14 @@ static constexpr uint16_t VL53L1_PHASECAL_RESULT__PHASE_OUTPUT_REF = 0x0F88;
     fields: \n
         - [15:0] = phasecal_result__normalised_phase_ref
 */
-#define VL53L1_PHASECAL_RESULT__PHASE_OUTPUT_REF_HI                                      0x0F88
+static constexpr uint16_t VL53L1_PHASECAL_RESULT__PHASE_OUTPUT_REF_HI = 0x0F88;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_PHASECAL_RESULT__PHASE_OUTPUT_REF_LO                                      0x0F89
+static constexpr uint16_t VL53L1_PHASECAL_RESULT__PHASE_OUTPUT_REF_LO = 0x0F89;
 /*!<
     info: \n
         - msb =  0
@@ -10522,14 +10522,14 @@ static constexpr uint16_t VL53L1_MM_RESULT__INNER_INTERSECTION_RATE = 0x0F92;
     fields: \n
         - [15:0] = mm_result__inner_intersection_rate
 */
-#define VL53L1_MM_RESULT__INNER_INTERSECTION_RATE_HI                                     0x0F92
+static constexpr uint16_t VL53L1_MM_RESULT__INNER_INTERSECTION_RATE_HI = 0x0F92;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_MM_RESULT__INNER_INTERSECTION_RATE_LO                                     0x0F93
+static constexpr uint16_t VL53L1_MM_RESULT__INNER_INTERSECTION_RATE_LO = 0x0F93;
 /*!<
     info: \n
         - msb =  0
@@ -10609,35 +10609,35 @@ static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS = 0x0F98;
     fields: \n
         - [23:0] = xtalk_calc__xtalk_for_enabled_spads (fixed point 11.13)
 */
-#define VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_3                                     0x0F98
+static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_3 = 0x0F98;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_2                                     0x0F99
+static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_2 = 0x0F99;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_1                                     0x0F9A
+static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_1 = 0x0F9A;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_0                                     0x0F9B
+static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS_0 = 0x0F9B;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS                                     0x0F9C
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS = 0x0F9C;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -10652,35 +10652,35 @@ static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS = 0x0F98;
     fields: \n
         - [23:0] = xtalk_result__avg_xtalk_user_roi_kcps (fixed point 11.13)
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_3                                   0x0F9C
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_3 = 0x0F9C;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_2                                   0x0F9D
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_2 = 0x0F9D;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_1                                   0x0F9E
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_1 = 0x0F9E;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_0                                   0x0F9F
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_USER_ROI_KCPS_0 = 0x0F9F;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS                                 0x0FA0
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS = 0x0FA0;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -10695,35 +10695,35 @@ static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS = 0x0F98;
     fields: \n
         - [23:0] = xtalk_result__avg_xtalk_mm_inner_roi_kcps (fixed point 11.13)
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_3                               0x0FA0
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_3 = 0x0FA0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_2                               0x0FA1
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_2 = 0x0FA1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_1                               0x0FA2
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_1 = 0x0FA2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_0                               0x0FA3
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_INNER_ROI_KCPS_0 = 0x0FA3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS                                 0x0FA4
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS = 0x0FA4;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -10738,28 +10738,28 @@ static constexpr uint16_t VL53L1_XTALK_CALC__XTALK_FOR_ENABLED_SPADS = 0x0F98;
     fields: \n
         - [23:0] = xtalk_result__avg_xtalk_mm_outer_roi_kcps (fixed point 11.13)
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_3                               0x0FA4
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_3 = 0x0FA4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_2                               0x0FA5
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_2 = 0x0FA5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_1                               0x0FA6
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_1 = 0x0FA6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_0                               0x0FA7
+static constexpr uint16_t VL53L1_XTALK_RESULT__AVG_XTALK_MM_OUTER_ROI_KCPS_0 = 0x0FA7;
 /*!<
     info: \n
         - msb =  0
@@ -10809,7 +10809,7 @@ static constexpr uint16_t VL53L1_RANGE_RESULT__ACCUM_PHASE_0 = 0x0FAB;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE                                      0x0FAC
+static constexpr uint16_t VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE = 0x0FAC;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -10824,14 +10824,14 @@ static constexpr uint16_t VL53L1_RANGE_RESULT__ACCUM_PHASE_0 = 0x0FAB;
     fields: \n
         - [15:0] = range_result__offset_corrected_range
 */
-#define VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE_HI                                   0x0FAC
+static constexpr uint16_t VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE_HI = 0x0FAC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE_LO                                   0x0FAD
+static constexpr uint16_t VL53L1_RANGE_RESULT__OFFSET_CORRECTED_RANGE_LO = 0x0FAD;
 /*!<
     info: \n
         - msb =  0
@@ -10918,7 +10918,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__STREAM_COUNT = 0x0FB3;
     fields: \n
         - [7:0] = shadow_result__stream_count
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0                             0x0FB4
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0FB4;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -10933,21 +10933,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__STREAM_COUNT = 0x0FB3;
     fields: \n
         - [15:0] = shadow_result__dss_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI                          0x0FB4
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0FB4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO                          0x0FB5
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0FB5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0                            0x0FB6
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x0FB6;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -10962,21 +10962,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__STREAM_COUNT = 0x0FB3;
     fields: \n
         - [15:0] = shadow_result__peak_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI                         0x0FB6
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x0FB6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO                         0x0FB7
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x0FB7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0                                0x0FB8
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0 = 0x0FB8;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -10991,14 +10991,14 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__STREAM_COUNT = 0x0FB3;
     fields: \n
         - [15:0] = shadow_result__ambient_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI                             0x0FB8
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_HI = 0x0FB8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO                             0x0FB9
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0_LO = 0x0FB9;
 /*!<
     info: \n
         - msb =  0
@@ -11063,7 +11063,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0                     0x0FBE
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0 = 0x0FBE;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11078,21 +11078,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__final_crosstalk_corrected_range_mm_sd0
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI                  0x0FBE
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_HI = 0x0FBE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO                  0x0FBF
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0_LO = 0x0FBF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0        0x0FC0
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0 = 0x0FC0;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11107,21 +11107,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__peak_signal_count_rate_crosstalk_corrected_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI     0x0FC0
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_HI = 0x0FC0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO     0x0FC1
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0_LO = 0x0FC1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0                        0x0FC2
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0FC2;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11136,21 +11136,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__mm_inner_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                     0x0FC2
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0FC2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                     0x0FC3
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_INNER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0FC3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0                        0x0FC4
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0 = 0x0FC4;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11165,21 +11165,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__mm_outer_actual_effective_spads_sd0 (fixed point 8.8)
 */
-#define VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI                     0x0FC4
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_HI = 0x0FC4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO                     0x0FC5
+static constexpr uint16_t VL53L1_SHADOW_RESULT__MM_OUTER_ACTUAL_EFFECTIVE_SPADS_SD0_LO = 0x0FC5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0                             0x0FC6
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0 = 0x0FC6;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11194,21 +11194,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__avg_signal_count_rate_mcps_sd0 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI                          0x0FC6
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_HI = 0x0FC6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO                          0x0FC7
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AVG_SIGNAL_COUNT_RATE_MCPS_SD0_LO = 0x0FC7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1                             0x0FC8
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1 = 0x0FC8;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11223,21 +11223,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__dss_actual_effective_spads_sd1 (fixed point 8.8)
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI                          0x0FC8
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_HI = 0x0FC8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO                          0x0FC9
+static constexpr uint16_t VL53L1_SHADOW_RESULT__DSS_ACTUAL_EFFECTIVE_SPADS_SD1_LO = 0x0FC9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1                            0x0FCA
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1 = 0x0FCA;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11252,21 +11252,21 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__peak_signal_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI                         0x0FCA
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_HI = 0x0FCA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO                         0x0FCB
+static constexpr uint16_t VL53L1_SHADOW_RESULT__PEAK_SIGNAL_COUNT_RATE_MCPS_SD1_LO = 0x0FCB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1                                0x0FCC
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1 = 0x0FCC;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11281,14 +11281,14 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD0_LO = 0x0FBD;
     fields: \n
         - [15:0] = shadow_result__ambient_count_rate_mcps_sd1 (fixed point 9.7)
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI                             0x0FCC
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_HI = 0x0FCC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO                             0x0FCD
+static constexpr uint16_t VL53L1_SHADOW_RESULT__AMBIENT_COUNT_RATE_MCPS_SD1_LO = 0x0FCD;
 /*!<
     info: \n
         - msb =  0
@@ -11353,7 +11353,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD1_LO = 0x0FD1;
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1                     0x0FD2
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1 = 0x0FD2;
 /*!<
     type:     uint16_t \n
     default:  0x0000 \n
@@ -11368,14 +11368,14 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__PHASE_SD1_LO = 0x0FD1;
     fields: \n
         - [15:0] = shadow_result__final_crosstalk_corrected_range_mm_sd1
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI                  0x0FD2
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_HI = 0x0FD2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO                  0x0FD3
+static constexpr uint16_t VL53L1_SHADOW_RESULT__FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD1_LO = 0x0FD3;
 /*!<
     info: \n
         - msb =  0
@@ -11500,7 +11500,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
         - [3:0] = shadow_result__distance_int_info
         - [7:4] = shadow_result__rate_int_info
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0                             0x0FDC
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0 = 0x0FDC;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11515,35 +11515,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__ambient_window_events_sd0
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3                           0x0FDC
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_3 = 0x0FDC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2                           0x0FDD
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_2 = 0x0FDD;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1                           0x0FDE
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_1 = 0x0FDE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0                           0x0FDF
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD0_0 = 0x0FDF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0                              0x0FE0
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0 = 0x0FE0;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11558,35 +11558,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__ranging_total_events_sd0
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3                            0x0FE0
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_3 = 0x0FE0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2                            0x0FE1
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_2 = 0x0FE1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1                            0x0FE2
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_1 = 0x0FE2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0                            0x0FE3
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD0_0 = 0x0FE3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0                               0x0FE4
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0 = 0x0FE4;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -11601,35 +11601,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__signal_total_events_sd0
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3                             0x0FE4
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_3 = 0x0FE4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2                             0x0FE5
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_2 = 0x0FE5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1                             0x0FE6
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_1 = 0x0FE6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0                             0x0FE7
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD0_0 = 0x0FE7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0                             0x0FE8
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0 = 0x0FE8;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11644,35 +11644,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__total_periods_elapsed_sd0
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3                           0x0FE8
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_3 = 0x0FE8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2                           0x0FE9
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_2 = 0x0FE9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1                           0x0FEA
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_1 = 0x0FEA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0                           0x0FEB
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD0_0 = 0x0FEB;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1                             0x0FEC
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1 = 0x0FEC;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11687,35 +11687,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__ambient_window_events_sd1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3                           0x0FEC
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_3 = 0x0FEC;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2                           0x0FED
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_2 = 0x0FED;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1                           0x0FEE
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_1 = 0x0FEE;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0                           0x0FEF
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__AMBIENT_WINDOW_EVENTS_SD1_0 = 0x0FEF;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1                              0x0FF0
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1 = 0x0FF0;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11730,35 +11730,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__ranging_total_events_sd1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3                            0x0FF0
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_3 = 0x0FF0;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2                            0x0FF1
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_2 = 0x0FF1;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1                            0x0FF2
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_1 = 0x0FF2;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0                            0x0FF3
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__RANGING_TOTAL_EVENTS_SD1_0 = 0x0FF3;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1                               0x0FF4
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1 = 0x0FF4;
 /*!<
     type:     int32_t \n
     default:  0x00000000 \n
@@ -11773,35 +11773,35 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__signal_total_events_sd1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3                             0x0FF4
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_3 = 0x0FF4;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2                             0x0FF5
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_2 = 0x0FF5;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1                             0x0FF6
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_1 = 0x0FF6;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0                             0x0FF7
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SIGNAL_TOTAL_EVENTS_SD1_0 = 0x0FF7;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1                             0x0FF8
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1 = 0x0FF8;
 /*!<
     type:     uint32_t \n
     default:  0x00000000 \n
@@ -11816,28 +11816,28 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__THRESH_INFO = 0x0FDB;
     fields: \n
         - [31:0] = shadow_result_core__total_periods_elapsed_sd1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3                           0x0FF8
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_3 = 0x0FF8;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2                           0x0FF9
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_2 = 0x0FF9;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1                           0x0FFA
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_1 = 0x0FFA;
 /*!<
     info: \n
         - msb =  0
         - lsb =  0
         - i2c_size =  1
 */
-#define VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0                           0x0FFB
+static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__TOTAL_PERIODS_ELAPSED_SD1_0 = 0x0FFB;
 /*!<
     info: \n
         - msb =  0
@@ -11859,7 +11859,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SPARE_0 = 0x0FFC;
     fields: \n
         - [7:0] = shadow_result_core__spare_0
 */
-#define VL53L1_SHADOW_PHASECAL_RESULT__REFERENCE_PHASE_HI                                0x0FFE
+static constexpr uint16_t VL53L1_SHADOW_PHASECAL_RESULT__REFERENCE_PHASE_HI = 0x0FFE;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
@@ -11874,7 +11874,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT_CORE__SPARE_0 = 0x0FFC;
     fields: \n
         - [7:0] = shadow_phasecal_result__reference_phase_hi
 */
-#define VL53L1_SHADOW_PHASECAL_RESULT__REFERENCE_PHASE_LO                                0x0FFF
+static constexpr uint16_t VL53L1_SHADOW_PHASECAL_RESULT__REFERENCE_PHASE_LO = 0x0FFF;
 /*!<
     type:     uint8_t \n
     default:  0x00 \n
