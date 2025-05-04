@@ -77,13 +77,13 @@ void rrs3_robot_main(){
             servo_b.set_radian(solu[1].to_absolute().j1_abs_rad + 0.7_r);
             servo_c.set_radian(solu[2].to_absolute().j1_abs_rad + 0.7_r);
 
-            // if(const auto res = pca[0].set_duty(sinpu(time()) * 0.3_r + 0.5_r);
-            //     res.is_err()){
-            //         DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
-            //     }
-            // const auto u = micros();
             const auto e = gest.orientation.to_euler();
-            DEBUG_PRINTLN(pca.dump_cvr(0,1,2), gest.orientation, e.x, e.y, e.z);
+            DEBUG_PRINTLN(
+                pca.dump_cvr(0,1,2), 
+                gest.orientation, 
+                e.x, e.y, e.z,
+                sizeof(PCA9685)
+            );
         }else{
             DEBUG_PRINTLN("no solution");
         }
