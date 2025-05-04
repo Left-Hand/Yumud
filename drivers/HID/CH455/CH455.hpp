@@ -13,6 +13,13 @@
     //  Sda: Gpio;
     //  ~Interrupt: Option<Gpio>;
 
+// 错误码:
+    // BrightnessGreaterThanMax,
+    // BrightnessLessThanMin,
+    // ReadKeyBit2VerifyFailed,
+    // ReadKeyBit7VerifyFailed,
+
+
 #include "details/CH455_collections.hpp"
 #include "drivers/HID/Event.hpp"
 

@@ -6,7 +6,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/VirtualIO/TCA9548A/TCA9548A.hpp"
+#include "drivers/VirtualBus/TCA9548A/TCA9548A.hpp"
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 
 
