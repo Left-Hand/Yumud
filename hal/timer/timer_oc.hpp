@@ -56,6 +56,7 @@ public:
     __fast_inline volatile uint16_t arr() const {return arr_;}
 
     __fast_inline void set_duty(const real_t duty){cvr_ = int(duty * arr_);}
+    __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
     __fast_inline TimerOC & operator = (const real_t duty) 
         override {set_duty(duty); return *this;}
     __fast_inline operator real_t(){return iq_t<8>(cvr_) / int(arr_);}
