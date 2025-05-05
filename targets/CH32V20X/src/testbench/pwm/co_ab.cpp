@@ -57,7 +57,7 @@ void co_ab_main(){
         auto prog = sin(6 * time());
         // pwm_gpio = bool(prog > 0.5_r);
         // pwm_p = prog;
-        pwm_mirror = prog;
+        pwm_mirror.set_duty(prog);
         // delay(200);
     }    
 }

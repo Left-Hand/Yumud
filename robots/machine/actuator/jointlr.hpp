@@ -22,13 +22,17 @@ protected:
     bool inversed_ = false;
     bool inited_ = false;
 
-    RadianServo & servo_;
+    RadianServoIntf & servo_;
     real_t last_radian_;
     real_t expect_radian_;
 
     void output(const real_t rad);
 public:
-    JointLR(const real_t max_rad_delta, const real_t basis_radian, RadianServo & servo):
+    JointLR(
+        const real_t max_rad_delta, 
+        const real_t basis_radian, 
+        RadianServoIntf & servo
+    ):
         max_rad_delta_(max_rad_delta),
         basis_radian_(basis_radian),
         servo_(servo){}
@@ -36,10 +40,10 @@ public:
     DELETE_COPY_AND_MOVE(JointLR)
     
     bool reached() override;
-    void setRadian(const real_t dist) override; 
-    real_t getRadian(){return (last_radian_);}
+    void set_radian(const real_t dist) override; 
+    real_t get_radian(){return (last_radian_);}
     void tick() override;
-    void idle();
+    void idle(){;}
     void inverse(const bool en = true){
         inversed_ = en;
     }

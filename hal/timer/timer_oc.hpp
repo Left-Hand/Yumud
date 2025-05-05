@@ -57,8 +57,6 @@ public:
 
     __fast_inline void set_duty(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
-    __fast_inline TimerOC & operator = (const real_t duty) 
-        override {set_duty(duty); return *this;}
     __fast_inline operator real_t(){return iq_t<8>(cvr_) / int(arr_);}
 };
 
@@ -78,12 +76,6 @@ protected:
 public:
     TimerOcMirror(TimerOC & oc, TimerOCN & ocn):
         oc_(oc), ocn_(ocn){;}
-
-    TimerOcMirror & operator = (const real_t value) override{
-        set_duty(value);
-        return *this;
-    }
-
     void set_duty(const real_t value){
         const bool polar = value > 0;
         if(last_polar != polar){
@@ -97,7 +89,7 @@ public:
                 ocn_.enable_output(EN);
             }
         }
-        oc_ = abs(value);
+        oc_.set_duty(abs(value));
     }
 };
 
@@ -110,20 +102,19 @@ public:
     TimerOcPair(TimerOC & oc, TimerOC & ocn):
         oc_(oc),
         ocn_(ocn){;}
-    TimerOcPair & operator = (const real_t value) override{
+    void set_duty(const real_t value) override{
         const bool is_minus = signbit(value);
         const auto abs_value = inversed ? (1 - ABS(value)) : ABS(value);
         const auto zero_value = real_t(inversed);
 
         if(is_minus){
-            oc_ = zero_value;
-            ocn_ = abs_value;
+            oc_.set_duty(zero_value);
+            ocn_.set_duty(abs_value);
         }else{
-            oc_ = abs_value;
-            ocn_ = zero_value;
+            oc_.set_duty(abs_value);
+            ocn_.set_duty(zero_value);
         }
         
-        return *this;
     }
 
     void inverse(const bool en){

@@ -3,7 +3,7 @@
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace ymd::drivers{
-class RadianServo;
+class RadianServoIntf;
 }
 
 namespace ymd::robots{
@@ -16,7 +16,7 @@ public:
     };
     
 protected:
-    using Servo = ymd::drivers::RadianServo;
+    using Servo = ymd::drivers::RadianServoIntf;
 
     const Config & config_;
     Servo & servo_;

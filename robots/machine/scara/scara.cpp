@@ -3,19 +3,19 @@
 namespace ymd::robots{
 
 void Scara::goHome(){
-    joint_l.setRadian(real_t(PI/2));
-    joint_r.setRadian(real_t(PI/2));
+    joint_l.set_radian(real_t(PI/2));
+    joint_r.set_radian(real_t(PI/2));
 }
 
 void Scara::moveXY(const Vector2 & pos){
     auto [a,b] = solver_.inverse(pos);
-    joint_l.setRadian(a);
-    joint_r.setRadian(b);
+    joint_l.set_radian(a);
+    joint_r.set_radian(b);
 }
 
 
 Vector2 Scara::getPos(){
-    return solver_.forward(joint_l.getRadian(), joint_r.getRadian());
+    return solver_.forward(joint_l.get_radian(), joint_r.get_radian());
 }
 
 void Scara::press(){

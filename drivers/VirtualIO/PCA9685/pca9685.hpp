@@ -95,20 +95,19 @@ public:
         friend class PCA9685;
     public:
 
-        PCA9685Channel & operator = (const real_t duty){
+        void set_duty(const real_t duty){
             pca_.set_pwm(channel_, 0, uint16_t(duty << 12)).unwrap();
-            return *this;
         }
 
-        [[nodiscard]]
-        __fast_inline Result<void, Error> set_duty(const real_t duty) {
-            return pca_.set_pwm(channel_, 0, uint16_t(duty << 12));
-        }
+        // [[nodiscard]]
+        // __fast_inline Result<void, Error> set_duty(const real_t duty) {
+        //     return pca_.set_pwm(channel_, 0, uint16_t(duty << 12));
+        // }
 
-        __fast_inline void set() {*this = real_t(1);}
-        __fast_inline void clr() {*this = real_t(0);}
+        __fast_inline void set() {this->set_duty(real_t(1));}
+        __fast_inline void clr() {this->set_duty(real_t(0));}
         __fast_inline void write(const BoolLevel val){
-            *this = real_t(bool(val));
+            this->set_duty(real_t((bool(val))));
         }
 
         BoolLevel read() const;

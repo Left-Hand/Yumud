@@ -61,9 +61,10 @@ protected:
     value between 0 to 0xFF */
     #pragma pack(pop)
 private:
-    constexpr CanMsg(const CanStdId id, const CanRemoteSpec remote){
+    template<typename T>
+    constexpr CanMsg(const details::CanId_t<T> id, const CanRemoteSpec remote){
         id_ = id.as_raw();
-        is_ext_ = false;
+        is_ext_ = std::is_same_v<CanExtId, std::decay_t<decltype(id)>>;
         is_remote_ = (remote == CanRemoteSpec::Remote)? true : false;
         dlc_ = 0;
     }
@@ -120,18 +121,21 @@ public:
     constexpr CanMsg copy(){
         return *this;
     }
-
-    static constexpr CanMsg empty(CanStdId id){return CanMsg(id, CanRemoteSpec::Data);}
-
-    static constexpr CanMsg from_remote(CanStdId id){return CanMsg(id, CanRemoteSpec::Remote);}
+    template<typename T>
+    static constexpr CanMsg empty(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Data);}
+    template<typename T>
+    static constexpr CanMsg from_remote(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Remote);}
     // static constexpr CanMsg from_remote(CanExtId id){return CanMsg(id, CanRemoteSpec::Remote);}
-    static constexpr CanMsg from_bytes(CanStdId id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
+    template<typename T>
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
     // static constexpr CanMsg from_bytes(CanExtId id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
 
-    static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){return CanMsg(raw, data, len);}
+    static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){
+        return CanMsg(raw, data, len);}
 
-    template<typename ... Ts>
-    static constexpr CanMsg from_tuple(CanStdId id, const std::tuple<Ts...>& tup){return CanMsg(id, tup);}
+    template<typename ... Ts, typename T>
+    static constexpr CanMsg from_tuple(details::CanId_t<T> id, const std::tuple<Ts...>& tup){
+        return CanMsg(id, tup);}
 
     // template<typename ... Ts>
     // static constexpr CanMsg from_tuple(CanExtId id, const std::tuple<Ts...>& tup){return CanMsg(id, tup);}

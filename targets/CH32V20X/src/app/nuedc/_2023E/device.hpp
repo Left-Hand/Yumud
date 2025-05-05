@@ -33,16 +33,20 @@ struct MotorCmd{
     real_t ref_spd;
 };
 
-template<typename T, typename Trait>
-struct ImplFor{
-
+class MotorIntf{
+    virtual void set_motorcmd(const MotorCmd & cmd);
 };
 
-class PwmServo final{
+class PwmServo final:public MotorIntf{
 public:
     using Config = ServoConfig;
 
-    PwmServo(const Config & cfg, real_t min_duty, real_t max_duty, ymd::hal::PwmIntf & pwm) 
+    PwmServo(
+        const Config & cfg, 
+        real_t min_duty, 
+        real_t max_duty, 
+        ymd::hal::PwmIntf & pwm
+    ) 
         :min_duty_(min_duty), max_duty_(max_duty), pwm_(pwm){
             reconf(cfg);
         }
@@ -77,6 +81,25 @@ private:
 };
 
 
+namespace tests{
+class MockServo final:public MotorIntf{
+public:
+    void set_radian(const real_t rad){
+        // DEBUG_PRINTLN("set", radian_);
+        radian_ = rad;
+    }
 
+    real_t get_radian(){
+        // DEBUG_PRINTLN("get", radian_);
+        return radian_;
+    }
+
+    void set_motorcmd(const MotorCmd & cmd){
+        set_radian(cmd.ref_pos * real_t(PI));
+    }
+private:
+    real_t radian_;
+};
+}
 
 }

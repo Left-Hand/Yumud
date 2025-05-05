@@ -58,9 +58,9 @@ public:
         red(_red_ch), green(_green_ch), blue(_blue_ch){;}
 
     RgbLedAnalog & operator = (const Color & color) override{
-        red = color.r;    
-        green = color.g;    
-        blue = color.b;    
+        red.set_duty(color.r);    
+        green.set_duty(color.g);    
+        blue.set_duty(color.b);    
         return *this;
     }
 };

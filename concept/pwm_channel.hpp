@@ -4,10 +4,11 @@
 namespace ymd::hal{
 class PwmIntf{
 public:
-    void set_duty(const real_t duty){
-        *this = duty;
+    virtual void set_duty(const real_t duty) = 0;
+    virtual PwmIntf & operator = (const real_t duty) final{
+        this->set_duty(duty);
+        return *this;
     }
-    virtual PwmIntf & operator = (const real_t duty) = 0;
 };
 
 template <typename T>
