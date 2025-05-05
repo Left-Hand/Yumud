@@ -9,18 +9,20 @@
 
 namespace ymd::drivers{
 
-class Coil2DriverIntf: public ActuatorIntf{
+class Coil2DriverIntf{
 public:
     virtual Coil2DriverIntf& operator= (const real_t duty) = 0;
+    virtual void enable(const bool en) = 0;
 };
 
-class Coil3DriverIntf: public ActuatorIntf{
+class Coil3DriverIntf{
 
 public:
     using UVW_Duty = std::tuple<real_t, real_t, real_t>;
     using AlphaBeta_Duty = std::tuple<real_t, real_t>;
 
     virtual Coil3DriverIntf& operator= (const UVW_Duty & duty) = 0;
+    virtual void enable(const bool en) = 0;
 };
 
 

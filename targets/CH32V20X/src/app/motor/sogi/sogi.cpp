@@ -1,1 +1,0 @@
-#include "sogi.hpp"

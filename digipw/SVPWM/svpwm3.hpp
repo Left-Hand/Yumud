@@ -2,13 +2,13 @@
 
 #include "svpwm.hpp"
 
-namespace ymd::drivers{
+namespace ymd::digipw{
 
 std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta);
 
 class SVPWM3 final:public SVPWM{
 protected:
-    using Driver = Coil3DriverIntf;
+    using Driver = drivers::Coil3DriverIntf;
 
     Driver & driver_;
     // const int bus_volt = 12;

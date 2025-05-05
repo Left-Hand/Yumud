@@ -1,6 +1,6 @@
 #include "svpwm3.hpp"
 
-namespace ymd::drivers{
+namespace ymd::digipw{
 
 std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
     enum class Sector:uint8_t{

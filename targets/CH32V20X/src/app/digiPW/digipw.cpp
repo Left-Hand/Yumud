@@ -28,8 +28,8 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
-#include "buck/buck.hpp"
-#include "sogi/spll.hpp"
+#include "digipw/buck/buck.hpp"
+#include "digipw/pll/sogi/spll.hpp"
 
 #include <sstream>
 #include <ctime>

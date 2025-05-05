@@ -9,7 +9,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -145,7 +145,7 @@ void svpwm3_main(){
         
         const auto t = time() * real_t(5 * TAU);
         const auto [st,ct] = sincos(t);
-        const auto [u, v, w] = drivers::SVM(st * 0.5_r, ct * 0.5_r);
+        const auto [u, v, w] = digipw::SVM(st * 0.5_r, ct * 0.5_r);
 
         pwm_u.set_duty(u);
         pwm_v.set_duty(v);

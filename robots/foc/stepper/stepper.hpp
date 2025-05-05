@@ -5,7 +5,7 @@
 
 #include "robots/foc/focmotor.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm2.hpp"
+#include "digipw/SVPWM/svpwm2.hpp"
 
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
@@ -64,7 +64,7 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCStepper(const NodeId _id, SVPWM & _svpwm, EncoderIntf & _encoder, Memory & _memory):
+    FOCStepper(const NodeId _id, digipw::SVPWM & _svpwm, EncoderIntf & _encoder, Memory & _memory):
             FOCMotor(_id, _svpwm, _encoder, 50, _memory){;}
 
     bool isActive() const {

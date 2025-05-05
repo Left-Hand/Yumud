@@ -14,8 +14,8 @@
 #include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm2.hpp"
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm2.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -140,7 +140,7 @@ void stepper_tb(UartHw & logger_inst){
     coilA.init();
     coilB.init();
 
-    SVPWM2 svpwm{coilA, coilB};
+    digipw::SVPWM2 svpwm{coilA, coilB};
 
     #endif
 

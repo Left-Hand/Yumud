@@ -13,7 +13,7 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 

@@ -14,8 +14,8 @@
 // #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
-#include "drivers/Actuator/SVPWM/svpwm.hpp"
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/Actuator/Bridge/DRV8301/DRV8301.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
@@ -25,8 +25,7 @@
 #include "core/polymorphism/traits.hpp"
 
 #include "utils.hpp"
-#include "../digiPW/sogi/spll.hpp"
-#include "sogi/sogi.hpp"
+#include "digipw/pll/sogi/sogi.hpp"
 
 #include "ctrl.hpp"
 

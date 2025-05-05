@@ -92,7 +92,7 @@ protected:
     std::array<real_t, cogging_samples> forward_cogging_err;
     std::array<real_t, cogging_samples> backward_cogging_err;
 
-    SVPWM & svpwm;
+    digipw::SVPWM & svpwm;
     OdometerPoles & odo;
 
     void sw_state(const SubState new_state){
@@ -100,7 +100,7 @@ protected:
         cnt = 0;
     };
 public:
-    CaliTasker(SVPWM & _svpwm, OdometerPoles & _odo):svpwm(_svpwm), odo(_odo){};
+    CaliTasker(digipw::SVPWM & _svpwm, OdometerPoles & _odo):svpwm(_svpwm), odo(_odo){};
 
     void run();
     bool done();

@@ -72,11 +72,11 @@ protected:
     uint32_t tone_index;
     uint32_t play_begin_ms;
     
-    SVPWM & svpwm_;
+    digipw::SVPWM & svpwm_;
     bool done_ = false;
     
 public:
-    ToneTasker(SVPWM & _svpwm):svpwm_(_svpwm){;}
+    ToneTasker(digipw::SVPWM & _svpwm):svpwm_(_svpwm){;}
 
     void run();
     void reset();

@@ -11,7 +11,7 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm.hpp"
 #include "drivers/Encoder/OdometerPoles.hpp"
 
 #include "concept/memory.hpp"

@@ -5,7 +5,7 @@
 #include "core/math/realmath.hpp"
 
 
-namespace ymd::drivers{
+namespace ymd::digipw{
 class SVPWM{
 protected:
     bool rsv = false;

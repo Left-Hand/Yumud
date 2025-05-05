@@ -11,7 +11,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "src/testbench/tb.h"
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 
 
 // https://www.cnblogs.com/wchmcu/p/18781096
@@ -621,7 +621,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         const auto [st, ct] = sincospu(700 * t);
 
         static constexpr const real_t depth = 0.7_r;
-        const auto [u, v, w] = drivers::SVM(st * depth, ct * depth);
+        const auto [u, v, w] = digipw::SVM(st * depth, ct * depth);
         pwm_gen.set_duty({u, v, w});
     });
 

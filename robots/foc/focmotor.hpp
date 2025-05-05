@@ -115,7 +115,7 @@ protected:
         // CLI_DEBUG(warn_message);
     }
 
-    SVPWM & svpwm;
+    digipw::SVPWM & svpwm;
     OdometerPoles odo;
     Memory & memory;
 
@@ -153,7 +153,7 @@ public:
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
 
-    FOCMotor(const NodeId _id, SVPWM & _svpwm, EncoderIntf & encoder, const size_t _poles, Memory & _memory):
+    FOCMotor(const NodeId _id, digipw::SVPWM & _svpwm, EncoderIntf & encoder, const size_t _poles, Memory & _memory):
             FOCMotorConcept(_id),
             svpwm(_svpwm), odo(encoder, _poles), memory(_memory){;}
 
