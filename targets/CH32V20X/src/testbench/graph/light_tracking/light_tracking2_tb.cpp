@@ -100,12 +100,6 @@ static Interaction_t<real_t> make_interaction(
     };
 }
 
-template<size_t Q>
-__fast_inline scexpr bool not_in_one(const iq_t<Q> x){
-    return std::bit_cast<int32_t>(x.value) & (~((1 << Q) - 1));
-} 
-
-
 [[nodiscard]]
 static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const TriangleSurfaceCache_t<real_t> & surface){
     const auto & E1 = surface.v1 - surface.v0;  // E1 = v1 - v0

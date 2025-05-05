@@ -94,26 +94,6 @@ public:
     requires std::is_integral_v<T>
     __fast_inline constexpr iq_t(const T intValue) : value(_iq<Q>::from_i32(intValue << Q)) {;}
 
-    // template<typename T>
-    // requires std::is_integral_v<T>
-    // struct _CastFromIntHelper{
-    // private:
-    //     T value_;
-    // public:
-    //     __fast_inline constexpr _CastFromIntHelper(const T value):
-    //         value_(value){;}
-
-    //     __fast_inline constexpr operator T() const{
-    //         return value_;
-    //     }
-    // };
-
-    // template<typename T>
-    // requires std::is_integral_v<T>
-    // __fast_inline constexpr iq_t(const _CastFromIntHelper<T> helper) : 
-    //     value(_iq<Q>::from_i32(T(helper) << Q)) {;}
-
-
     #ifdef STRICT_IQ
     __fast_inline consteval explicit iq_t(const float fv):value((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
     #else
@@ -521,6 +501,19 @@ size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
     return _qtoa_impl(qv.value.to_i32(), str, eps, Q);
 }
 
+template<size_t Q>
+bool not_in_one(const iq_t<Q> qv){
+    // return (qv.value.to_i32() & (~uint32_t((1 << Q) - 1)));
+    if(qv < iq_t<Q>(-0.001)) return true;
+    if(qv > iq_t<Q>(1.001)) return true;
+    return false;
+}
+
+template<size_t Q>
+bool is_in_one(const iq_t<Q> qv){
+    return not is_in_one(qv);
+}
+
 }
 
 namespace std{
@@ -553,4 +546,8 @@ namespace std{
     struct common_type<double, iq_t<Q>> {
         using type = iq_t<Q>;
     };
+
+    template<size_t Q>
+    __fast_inline constexpr auto signbit(const iq_t<Q> iq)  {return ymd::signbit(iq);}
+    
 }

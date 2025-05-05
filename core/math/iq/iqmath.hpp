@@ -218,9 +218,6 @@ namespace std{
     __fast_inline constexpr bool isnormal(const iq_t<P> iq){return ymd::isnormal(iq);}
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
-    __fast_inline constexpr bool signbit(const iq_t<P> iq){return ymd::signbit(iq);}
-
-    template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){return ymd::fmod(a, b);}
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -237,6 +234,12 @@ namespace std{
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log(const iq_t<P> iq){return ymd::log(iq);}
+
+    template<size_t Q = IQ_DEFAULT_Q, size_t P>
+    __fast_inline constexpr iq_t<Q> pow(const iq_t<P> a, const iq_t<P> b){return ymd::pow(a, b);}
+
+    // template<size_t Q = IQ_DEFAULT_Q, size_t P>
+    // __fast_inline constexpr iq_t<Q> powf(const iq_t<P> a, const iq_t<P> b){return ymd::powf(a, b);}
 
 }
 

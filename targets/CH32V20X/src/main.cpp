@@ -25,8 +25,8 @@ int main(){
     // svpwm3_main();
     // sincos_pwm_main();
     // pfm_zvs_main();
-    // phase3pwm_main();
-    rrs3_robot_main();
+    phase3pwm_main();
+    // rrs3_robot_main();
     // oled_main();
     // i2c_scanner_main();
     // oled_main();

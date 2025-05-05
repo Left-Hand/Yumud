@@ -1,21 +1,18 @@
 #pragma once
 
 #include "real.hpp"
-
 #include "core/math_defs.hpp"
-
-#ifdef USE_IQ
-#include "iq/iqmath.hpp"
-#endif
 
 #include <cmath>
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
+#include "iq/iqmath.hpp"
+
 namespace ymd{
 
     
-    template<floating T>
-    __fast_inline constexpr T powfi(const T base, const int exponent) {
+    template<arithmetic T>
+    __fast_inline constexpr T powfi(const T base, const size_t exponent) {
         if(0 == exponent) {
             return T(1);
         }else if(1 == exponent){
@@ -33,11 +30,6 @@ namespace ymd{
             }
             return ret;
         }
-    }
-    
-    template<floating T>
-    __fast_inline constexpr T powi(const T base, const int exponent) {
-        return powi(base, exponent);
     }
     
     template<floating T>
@@ -75,10 +67,15 @@ namespace ymd{
         return x * x;
     }
     
+    template<size_t N>
+    __fast_inline constexpr iq_t<N> square(const iq_t<N> x) {
+        return x * x;
+    }
+    
     template<arithmetic T>
     __fast_inline constexpr T round(const T x) {
-        const int i = int(floor(x));
-        return T(i) + T(int(bool(x - i >= 0.5)));
+        const size_t i = size_t(floor(x));
+        return T(i) + T(size_t(bool(x - i >= 0.5)));
     }
     
     
@@ -89,6 +86,4 @@ namespace ymd{
     __fast_inline constexpr real_t normal(const real_t & a, const real_t & b){
         return SIGN(b - a);
     }
-    }
-    
-    
+}

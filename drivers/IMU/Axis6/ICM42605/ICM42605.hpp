@@ -9,6 +9,11 @@ namespace ymd::drivers{
 
 class ICM42605 final:public AccelerometerIntf, public GyroscopeIntf{
 public:
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
     enum class AFS:uint8_t{
@@ -161,13 +166,13 @@ public:
     ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
-    void init();
+    IResult<> init();
     
-    bool validate();
+    IResult<> validate();
     
-    void update();
+    IResult<> update();
 
-    void reset();
+    IResult<> reset();
 
     Option<Vector3_t<real_t>> get_acc();
     Option<Vector3_t<real_t>> get_gyr();

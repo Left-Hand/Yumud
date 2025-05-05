@@ -61,7 +61,10 @@ __fast_inline constexpr T round(const T x)
     return int(x+0.5f);
 }
 
-
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr int roundi(const iq_t<P> iq){
+    return int(iq + iq_t<Q>(0.5));
+}
 template<floating T>
 __fast_inline constexpr bool is_equal_approx(const T a, const T b) {
     // Check for exact equality first, required to handle "infinity" values.
@@ -105,11 +108,11 @@ bool is_equal_approx(const iq_t<Q> a, const iq_t<Q> b) {
 template<size_t Q>
 bool is_equal_approx_ratio(const iq_t<Q> a, const iq_t<Q> b, iq_t<Q> epsilon, iq_t<Q> min_epsilon){
 
-    iq_t<Q> diff = abs(a - b);
+    iq_t<Q> diff = std::abs(a - b);
     if (diff == 0 || diff < min_epsilon) {
         return true;
     }
-    iq_t<Q> avg_size = (abs(a) + abs(b)) >> 1;
+    iq_t<Q> avg_size = (std::abs(a) + std::abs(b)) >> 1;
     diff /= avg_size;
     return diff < epsilon;
 }
