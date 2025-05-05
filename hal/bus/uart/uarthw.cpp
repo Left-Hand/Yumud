@@ -377,6 +377,10 @@ void UartHw::on_rx_dma_half(){
 }
 
 
+void UartHw::enable_single_line_mode(const bool en){
+    USART_HalfDuplexCmd(instance_, en);
+    txio().inpu();
+}
 
 void UartHw::invoke_tx_dma(){
     if(tx_dma_.pending() == 0){
@@ -396,7 +400,7 @@ void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ == tx_strategy) return;
 
     Gpio & tx_pin = txio();
-    if(bool(tx_strategy)){
+    if(tx_strategy != CommStrategy::Nil){
         tx_pin.afpp();
     }else{
         // tx_pin.inflt();

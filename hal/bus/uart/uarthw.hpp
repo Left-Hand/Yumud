@@ -90,6 +90,8 @@ public:
         const CommStrategy tx_strategy = CommStrategy::Dma
     );
 
+    void enable_single_line_mode(const bool en = true);
+
     void writeN(const char * data_ptr, const size_t len) override;
 
     void write1(const char data) override;

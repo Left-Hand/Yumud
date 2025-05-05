@@ -22,7 +22,7 @@ public:
 
 
     static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u8(0xd0);
+        hal::I2cSlaveAddr<7>::from_u8(0b11010000);
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000

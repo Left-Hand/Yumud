@@ -155,3 +155,5 @@ void vl6180x_main();
 void svpwm3_main();
 void phase3pwm_main();
 void pfm_zvs_main();
+
+void half_line_uart_main();
