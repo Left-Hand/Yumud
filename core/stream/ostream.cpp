@@ -105,11 +105,6 @@ int OutputStream::transform_char(const char chr) const{
     return chr;
 }
 
-void OutputStream::checked_write(const char data){
-    const auto res = transform_char(data);
-    // if(likely(res) >= 0) write(res);
-    if(res >= 0) write(res);
-}
 
 void OutputStream::print_source_loc(const std::source_location & loc){
     const auto guard = this->create_guard();
@@ -122,25 +117,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
-struct Buf{
-    scexpr size_t buf_cap = 64;
 
-    char buf[buf_cap];
-    uint8_t size = 0;
-
-
-    __inline void push_back(const char data){
-        buf[size++] = data;
-    }
-
-    __inline bool full() const {
-        return unlikely(size == buf_cap);
-    }
-
-    __inline void clear(){
-        size = 0;
-    }
-};
 
 void OutputStream::checked_write(const char * pdata, const size_t len){
     //将数据分为大块处理提高性能
@@ -150,18 +127,19 @@ void OutputStream::checked_write(const char * pdata, const size_t len){
     for(size_t i = 0; i < len; i++){
         const auto res = transform_char(pdata[i]);
         if(likely(res) >= 0){
-            if(unlikely(buf.full())){
-                write(buf.buf, buf.buf_cap);
-                buf.clear();
-            }else{
-                buf.push_back(res);
-            }
+            // if(unlikely(buf.full())){
+            //     write(buf.buf, buf.buf_cap);
+            //     buf.clear();
+            // }else{
+            //     buf.push_back(res);
+            // }
+            write(char(res));
         }
     }
 
-    if(likely(buf.size)){
-        write(buf.buf, buf.size);
-    }
+    // if(likely(buf.size)){
+    //     write(buf.buf, buf.size);
+    // }
 }
 
 
@@ -207,8 +185,13 @@ OutputStream & OutputStream::operator<<(const bool val){
 
 
 OutputStream & OutputStream::flush(){
-    while(pending()){__nopn(1);};
+    buf_.flush([this](const std::span<const char> pbuf){this->sendout(pbuf);});
     return *this;
+}
+
+void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
+    if(!p_route_.has_value()) while(true);
+    p_route_->writeN(pbuf.data(), pbuf.size());
 }
 
 OutputStream & OutputStream::operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}

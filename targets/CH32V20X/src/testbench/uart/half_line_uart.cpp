@@ -12,7 +12,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 #define UART hal::uart2
-static constexpr size_t BAUD = 576000;
+static constexpr size_t BAUD = 921600;
 
 void half_line_uart_main(){
 
@@ -20,7 +20,7 @@ void half_line_uart_main(){
     DEBUGGER.retarget(&UART);
 
     uart1.init(BAUD);
-    // uart1.enable_single_line_mode();
+    uart1.enable_single_line_mode();
 
     while(true){
         const auto ava = uart1.available();

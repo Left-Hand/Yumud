@@ -3,6 +3,8 @@
 #include "core/platform.hpp"
 #include <span>
 
+namespace ymd{
+
 template<typename T, size_t N>
 class Fifo_t{
 protected:
@@ -130,3 +132,4 @@ public:
 template<uint32_t size>
 using RingBuf = Fifo_t<uint8_t, size>;
 
+}
