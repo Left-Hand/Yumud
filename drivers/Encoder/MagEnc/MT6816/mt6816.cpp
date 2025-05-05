@@ -31,8 +31,8 @@ Result<uint16_t, hal::HalResult> MT6816::get_position_data(){
     dataTx[0] = (0x80 | 0x03) << 8;
     dataTx[1] = (0x80 | 0x04) << 8;
 
-    if(const auto err = spi_drv_.transfer_single(dataRx[1], dataTx[1]); err.is_err()) return Err(err);
-    if(const auto err = spi_drv_.transfer_single(dataRx[0], dataTx[0]); err.is_err()) return Err(err);
+    if(const auto err = spi_drv_.transceive_single(dataRx[1], dataTx[1]); err.is_err()) return Err(err);
+    if(const auto err = spi_drv_.transceive_single(dataRx[0], dataTx[0]); err.is_err()) return Err(err);
 
     return Ok<uint16_t>(((dataRx[0] & 0x00FF) << 8) | (dataRx[1]));
 }

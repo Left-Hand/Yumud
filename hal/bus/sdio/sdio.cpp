@@ -16,7 +16,7 @@
 // #define SDMMC_CMD_WRITE_SINGLE_BLOCK                  ((uint8_t)24)  /* Writes single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC. */
 // #define SDMMC_CMD_APP_CMD                             ((uint8_t)55)  /* Indicates to the card that the next command is an application specific command rather than a standard command. */
 
-// #define SDMMC_ACMD_APP_SD_SET_BUSWIDTH                ((uint8_t)6)   /* (ACMD6) Defines the data bus width to be used for data transfer. The allowed data bus widths are given in SCR register. */
+// #define SDMMC_ACMD_APP_SD_SET_BUSWIDTH                ((uint8_t)6)   /* (ACMD6) Defines the data bus width to be used for data transceive. The allowed data bus widths are given in SCR register. */
 // #define SDMMC_ACMD_SD_APP_OP_COND                     ((uint8_t)41)  /* (ACMD41) Sends host capacity support information (HCS) and asks the accessed card to send its operating condition register (OCR) content in the response on the CMD line. */
 // #define SDMMC_ACMD_SD_APP_SET_CLR_CARD_DETECT         ((uint8_t)42)  /* (ACMD42) Connect/Disconnect the 50 KOhm pull-up resistor on CD/DAT3 (pin 1) of the card  */
 
@@ -69,11 +69,11 @@
 // #define SDIO_CLEAR_FLAG(__FLAG__)            (SDIO->ICR = (__FLAG__))
 
 // #define SDMMC_MAX_VOLT_TRIAL                 0x00000FFFU
-// #define SDIO_CARD_TRANSFER                   0x00000004U    /* Card is in transfer state */
+// #define SDIO_CARD_TRANSFER                   0x00000004U    /* Card is in transceive state */
 // #define SDIO_CARD_ERROR                      0x000000FFU    /* Card response Error */
 // #define SDIO_CMDTIMEOUT                      200U           /* Command send and response timeout */
-// #define SDIO_DATA_TIMEOUT                    100U           /* Read data transfer timeout */
-// #define SDIO_WRITE_TIMEOUT                   200U           /* Write data transfer timeout */
+// #define SDIO_DATA_TIMEOUT                    100U           /* Read data transceive timeout */
+// #define SDIO_WRITE_TIMEOUT                   200U           /* Write data transceive timeout */
 
 // #ifndef SDIO_CLOCK
 //   #define SDIO_CLOCK                         18000000       /* 18 MHz */

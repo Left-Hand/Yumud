@@ -24,6 +24,7 @@ public:
         VerifyFailed,
         LengthOverflow,
         InvalidArgument,
+        TxLengthAndRxLengthNotMatch,
         Unspecified = 0x7f
     };
 

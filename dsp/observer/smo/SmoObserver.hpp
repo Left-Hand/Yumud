@@ -1,5 +1,9 @@
 #pragma once
 
+// https://blog.csdn.net/lijialin_bit/article/details/104263194
+
+
+
 #include "core/math/real.hpp"
 
 namespace ymd::foc{
@@ -9,8 +13,21 @@ public:
     SmoObserver(const SmoObserver & other) = delete;
     SmoObserver(SmoObserver && other) = default;
 
-    // 构造函数
-    SmoObserver(iq_t<16> _f_para, iq_t<16> _g_para, iq_t<16> _Kslide, iq_t<16> _Kslf);
+    struct  Config{
+        iq_t<16> f_para;
+        iq_t<16> g_para;
+        iq_t<16> kslide;   
+        iq_t<16> kslf;   
+    };
+
+    SmoObserver(const Config & cfg);
+
+    void reconf(const Config & cfg){
+        f_para_ = cfg.f_para;
+        g_para_ = cfg.g_para;
+        Kslide_ = cfg.kslide;
+        Kslf_ = cfg.kslf;
+    }
 
     void reset();
 
@@ -21,10 +38,10 @@ public:
     iq_t<16> theta() const {return Theta;}
 
 private:
-    const iq_t<16> f_para;
-    const iq_t<16> g_para;
-    const iq_t<16> Kslide;
-    const iq_t<16> Kslf;
+    iq_t<16> f_para_;
+    iq_t<16> g_para_;
+    iq_t<16> Kslide_;
+    iq_t<16> Kslf_;
 public:
     iq_t<16> Ealpha;
     iq_t<16> Ebeta;

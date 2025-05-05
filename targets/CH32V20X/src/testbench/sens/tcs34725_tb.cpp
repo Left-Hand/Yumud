@@ -6,7 +6,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
+#include "drivers/HumitureSensor/TCS34725/tcs34725.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd::drivers;

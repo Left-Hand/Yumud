@@ -126,10 +126,10 @@
     };
 
      spi_drv_.write_burst<uint8_t>(static_cast<const uint8_t *>(buf), sizeof(buf), DISC);
-    //  SPI.transfer(_addr >> 8);
-    //  SPI.transfer(_addr & 0xFF);
-    //  SPI.transfer(_cb);
-    //  SPI.transfer(_data);
+    //  SPI.transceive(_addr >> 8);
+    //  SPI.transceive(_addr & 0xFF);
+    //  SPI.transceive(_cb);
+    //  SPI.transceive(_data);
     //  resetSS();
     //  SPI.endTransaction();
  
@@ -140,11 +140,11 @@
  {
     //  SPI.beginTransaction(wiznet_SPI_settings);
     //  setSS();
-    //  SPI.transfer(_addr >> 8);
-    //  SPI.transfer(_addr & 0xFF);
-    //  SPI.transfer(_cb);
+    //  SPI.transceive(_addr >> 8);
+    //  SPI.transceive(_addr & 0xFF);
+    //  SPI.transceive(_cb);
     //  for (uint16_t i=0; i<_len; i++){
-    //      SPI.transfer(_buf[i]);
+    //      SPI.transceive(_buf[i]);
     //  }
     //  resetSS();
     //  SPI.endTransaction();
@@ -165,10 +165,10 @@
  {
     //  SPI.beginTransaction(wiznet_SPI_settings);
     //  setSS();
-    //  SPI.transfer(_addr >> 8);
-    //  SPI.transfer(_addr & 0xFF);
-    //  SPI.transfer(_cb);
-    //  uint8_t _data = SPI.transfer(0);
+    //  SPI.transceive(_addr >> 8);
+    //  SPI.transceive(_addr & 0xFF);
+    //  SPI.transceive(_cb);
+    //  uint8_t _data = SPI.transceive(0);
     //  resetSS();
     //  SPI.endTransaction();
     uint8_t _data = 0;
@@ -179,11 +179,11 @@
  { 
     //  SPI.beginTransaction(wiznet_SPI_settings);
     //  setSS();
-    //  SPI.transfer(_addr >> 8);
-    //  SPI.transfer(_addr & 0xFF);
-    //  SPI.transfer(_cb);
+    //  SPI.transceive(_addr >> 8);
+    //  SPI.transceive(_addr & 0xFF);
+    //  SPI.transceive(_cb);
     //  for (uint16_t i=0; i<_len; i++){
-    //      _buf[i] = SPI.transfer(0);
+    //      _buf[i] = SPI.transceive(0);
     //  }
     //  resetSS();
     //  SPI.endTransaction();
@@ -204,10 +204,10 @@
  {
     //  SPI.beginTransaction(wiznet_SPI_settings);
     //  setSS();
-    //  SPI.transfer( 0x00 );
-    //  SPI.transfer( 0x39 );
-    //  SPI.transfer( 0x01);
-    //  uint8_t _data = SPI.transfer(0);
+    //  SPI.transceive( 0x00 );
+    //  SPI.transceive( 0x39 );
+    //  SPI.transceive( 0x01);
+    //  uint8_t _data = SPI.transceive(0);
     //  resetSS();
     //  SPI.endTransaction();
     

@@ -87,17 +87,17 @@ public:
         DataFrame new_frame;
         spi_drv_.write_single<uint8_t>((uint8_t)0x01).unwrap_err();
 
-        spi_drv_.transfer_single<uint8_t>(
+        spi_drv_.transceive_single<uint8_t>(
             reinterpret_cast<uint8_t &>(frame.dev_id), 
             (uint8_t)0x42).unwrap_err();
         new_frame.dev_id = frame.dev_id;
 
         uint8_t permit;
-        spi_drv_.transfer_single<uint8_t>(permit, (uint8_t)0x00).unwrap_err();
+        spi_drv_.transceive_single<uint8_t>(permit, (uint8_t)0x00).unwrap_err();
 
 
         for(uint8_t i = 0; i < 6; i++){
-            spi_drv_.transfer_single(new_frame.data[i], (uint8_t)0x00, Continuous::from(i == 5)).unwrap_err();
+            spi_drv_.transceive_single(new_frame.data[i], (uint8_t)0x00, Continuous::from(i == 5)).unwrap_err();
         }
 
         if(permit == 0x5a){

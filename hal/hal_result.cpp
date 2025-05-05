@@ -17,7 +17,6 @@ OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind er
         case Kind::VerifyFailed: return os << "VerifyFailed";
         case Kind::LengthOverflow: return os << "LengthOverflow";
         case Kind::Unspecified: return os << "Unspecified";
-        default: return os << "Unknown";
     }
     return os;
 }

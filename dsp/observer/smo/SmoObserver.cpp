@@ -4,13 +4,8 @@
 namespace ymd::foc{
 
 // 构造函数
-SmoObserver::SmoObserver(iq_t<16> _f_para, iq_t<16> _g_para,  iq_t<16> _Kslide, iq_t<16> _Kslf)
-:   f_para(_f_para),
-   g_para(_g_para),
-   Kslide(_Kslide),
-   Kslf(_Kslf)
-    {
-
+SmoObserver::SmoObserver(const Config & cfg){
+    reconf(cfg);
     reset();
 }
 
@@ -30,8 +25,8 @@ void SmoObserver::reset(){
 void SmoObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta) {
 
     // 滑模电流观测器
-    EstIalpha = (f_para * EstIalpha) + (g_para * (Valpha - Ealpha - Zalpha));
-    EstIbeta = (f_para * EstIbeta) + (g_para * (Vbeta - Ebeta - Zbeta));
+    EstIalpha = (f_para_ * EstIalpha) + (g_para_ * (Valpha - Ealpha - Zalpha));
+    EstIbeta = (f_para_ * EstIbeta) + (g_para_ * (Vbeta - Ebeta - Zbeta));
 
     // 当前电流误差
     auto IalphaError = EstIalpha - Ialpha;
@@ -39,24 +34,24 @@ void SmoObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<
 
     // 滑模控制计算器
     if (abs(IalphaError) < E0) {
-        Zalpha = (Kslide * IalphaError * invE0);  // (Kslide * (IalphaError) / E0)
+        Zalpha = (Kslide_ * IalphaError * invE0);  // (Kslide_ * (IalphaError) / E0)
     } else if (IalphaError >= E0) {
-        Zalpha = Kslide;
+        Zalpha = Kslide_;
     } else if (IalphaError <= -E0) {
-        Zalpha = -Kslide;
+        Zalpha = -Kslide_;
     }
 
     if (abs(IbetaError) < E0) {
-        Zbeta = (Kslide * IbetaError * invE0);  // (Kslide * (IbetaError) / E0)
+        Zbeta = (Kslide_ * IbetaError * invE0);  // (Kslide_ * (IbetaError) / E0)
     } else if (IbetaError >= E0) {
-        Zbeta = Kslide;
+        Zbeta = Kslide_;
     } else if (IbetaError <= -E0) {
-        Zbeta = -Kslide;
+        Zbeta = -Kslide_;
     }
 
     // 滑模控制滤波器 -> 反电动势计算器
-    Ealpha = Ealpha + (Kslf * (Zalpha - Ealpha));
-    Ebeta = Ebeta + (Kslf * (Zbeta - Ebeta));
+    Ealpha = Ealpha + (Kslf_ * (Zalpha - Ealpha));
+    Ebeta = Ebeta + (Kslf_ * (Zbeta - Ebeta));
 
     // 转子角度计算器 -> Theta = atan(-Ealpha, Ebeta)
     Theta = atan2(-Ealpha, Ebeta);

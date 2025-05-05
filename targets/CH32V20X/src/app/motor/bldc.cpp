@@ -405,7 +405,12 @@ void bldc_main(){
 
     // scexpr real_t r_ohms = 7.1_r;
     // scepxr real_t l_mh = 1.45_r;
-    [[maybe_unused]] SmoObserver smo_ob = {0.7_r, 0.04_r, 8.22_r, 0.3_r};
+    [[maybe_unused]] auto smo_ob = SmoObserver{{
+        0.7_r, 
+        0.04_r,
+        8.22_r, 
+        0.3_r
+    }};
     [[maybe_unused]] RolbgObserver lbg_ob;
 
     [[maybe_unused]] NonlinearObserver nlr_ob = {
