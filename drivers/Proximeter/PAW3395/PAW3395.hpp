@@ -74,18 +74,18 @@ private:
 
     [[nodiscard]] IResult<int16_t> read_i16(const uint8_t addr1, const uint8_t addr2){
         const uint8_t low_byte = ({
-            const auto res = read_reg(addr1)
+            const auto res = read_reg(addr1);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
-        })
+        });
 
         const uint8_t high_byte = ({
-            const auto res = read_reg(addr2)
+            const auto res = read_reg(addr2);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
-        })
+        });
 
-        return int16_t((high_byte << 8) | low_byte);
+        return Ok(int16_t((high_byte << 8) | low_byte));
     }
 
     [[nodiscard]] IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>> list){

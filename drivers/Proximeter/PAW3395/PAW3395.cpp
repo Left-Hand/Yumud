@@ -186,5 +186,5 @@ IResult<> PAW3395::powerup(){
 }
 
 IResult<> PAW3395::init() {
-
+	return Ok();
 }
