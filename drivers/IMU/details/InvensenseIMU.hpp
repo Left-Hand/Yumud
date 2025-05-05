@@ -12,7 +12,7 @@ namespace ymd::drivers{
 class InvensenseSensor_Phy final{
 public:
     using Error = ImuError;
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data) {
+    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->write_reg(uint8_t(addr), data));
         }else if(spi_drv_){
@@ -23,7 +23,7 @@ public:
         PANIC();
     }
 
-    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data) {
+    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data) {
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
@@ -34,7 +34,7 @@ public:
         PANIC();
     }
 
-    Result<void, Error> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    [[nodiscard]] Result<void, Error> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
             return Result<void, Error>(
                 i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), MSB));
@@ -46,7 +46,7 @@ public:
         PANIC();
     }
 
-    Result<void, Error> write_command(const uint8_t command){
+    [[nodiscard]] Result<void, Error> write_command(const uint8_t command){
         return this->write_reg(0x7e, command);
     }
 public:
@@ -58,7 +58,7 @@ public:
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    Result<void, Error> reset(){
+    [[nodiscard]] Result<void, Error> reset(){
         if(i2c_drv_){
             return Result<void, Error>(i2c_drv_->release());
         }

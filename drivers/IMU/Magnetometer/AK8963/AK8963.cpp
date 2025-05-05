@@ -7,7 +7,7 @@ using namespace ymd::drivers;
 using Error = AK8963::Error;
 
 // #define AK8963_DEBUG_EN
-#define AK8963_NOTHROW_EN
+// #define AK8963_NOTHROW_EN
 
 #ifdef AK8963_DEBUG_EN
 #define AK8963_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
@@ -24,8 +24,8 @@ using Error = AK8963::Error;
 #define READ_REG(reg, ...) read_reg(reg.address, reg).unwrap();
 #define WRITE_REG(reg, ...) write_reg(reg.address, reg).unwrap();
 #else
-#define READ_REG(reg, ...) if(const auto res = read_reg(reg.address, reg); res.is_err()) return res;
-#define WRITE_REG(reg, ...) if(const auto res = write_reg(reg.address, reg); res.is_err()) return res;
+#define READ_REG(reg, ...) if(const auto res = read_reg(reg.address, reg); res.is_err()) return Err(res.unwrap_err());
+#define WRITE_REG(reg, ...) if(const auto res = write_reg(reg.address, reg); res.is_err()) return Err(res.unwrap_err());
 #endif
 
 #endif
@@ -125,7 +125,7 @@ Result<void, Error> AK8963::disableI2c(){
 }
 
 
-void AK8963::update(){
+Result<void, Error> AK8963::update(){
     // ak8963c-datasheet 8.3.5
     // when any of measurement data is read, be sure to read 
     // ST2 register at the end. 
@@ -137,9 +137,7 @@ void AK8963::update(){
     READ_REG(st2_reg);
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
     data_valid_ &= !st2_reg.hofl;
-    // READ_REG(mag_y_reg);
-    // READ_REG(mag_z_reg);
-    // data_valid_ = true;
+    return Ok();
 }
 Option<Vector3_t<real_t>> AK8963::get_magnet(){
     return optcond(data_valid_, Vector3_t<real_t>{
