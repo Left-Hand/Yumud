@@ -10,6 +10,12 @@ class ICM42688:public AccelerometerIntf, public GyroscopeIntf{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68); 
 
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+
     enum class AFS:uint8_t{
         _16G,// default
         _8G,
@@ -159,13 +165,13 @@ protected:
 public:
     ICM42688(hal::I2c & i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
 
-    void init();
+    IResult<> init();
     
-    void update();
+    IResult<> update();
 
-    bool validate();
+    IResult<> validate();
 
-    void reset();
+    IResult<> reset();
 
     Option<Vector3_t<real_t>> get_acc();
     Option<Vector3_t<real_t>> get_gyr();
