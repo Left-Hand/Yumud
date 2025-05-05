@@ -65,16 +65,16 @@ public:
 
     [[nodiscard]] __fast_inline hal::HalResult write(const uint32_t data){
         uint32_t dummy;
-        return transfer(dummy, data);
+        return transceive(dummy, data);
     }
     
     
     [[nodiscard]] __fast_inline hal::HalResult read(uint32_t & data){
-        return transfer(data, 0);
+        return transceive(data, 0);
     }
     
     
-    [[nodiscard]] __fast_inline hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx){
+    [[nodiscard]] __fast_inline hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx){
         if(bool(tx_strategy_)){
             while ((instance_->STATR.TXE) == RESET);
             instance_->DATAR.DR = data_tx;

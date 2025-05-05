@@ -6,9 +6,11 @@
 
 
 namespace ymd::drivers{
-// class AK8975:public MagnetometerIntf, public AsahiKaseiSensor{
-class AK8975:public MagnetometerIntf{
-    public:
+
+class AK8975 final:public MagnetometerIntf{
+public:
+    using Error = ImuError;
+
     enum class Mode:uint8_t{
         PowerDown = 0b0000,
         SingleMeasurement = 0b0001,
@@ -17,13 +19,16 @@ class AK8975:public MagnetometerIntf{
     };
 
 protected:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
-
     using RegAddress = uint8_t;
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+
+
+    AsahiKaseiSensor_Phy phy_;
     struct{
         int16_t x;
         int16_t y;
@@ -34,29 +39,24 @@ protected:
         uint8_t z_adj;
     };
 
-
-    hal::HalResult write_reg(const uint8_t addr, const uint8_t data);
-    hal::HalResult read_reg(const RegAddress addr, uint8_t & data);
-
-    hal::HalResult read_burst(const RegAddress addr, void * datas, const size_t len);
-    void readAdj();
+    [[nodiscard]] IResult<> update_adj();
 public:
+    static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
+    AK8975(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    AK8975(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
+    AK8975(hal::I2c & bus):phy_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
+    AK8975(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
+    AK8975(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
+    AK8975(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
-    AK8975(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AK8975(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AK8975(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
-    AK8975(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    AK8975(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    AK8975(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
-
-    void init();
-    void update();
-    bool validate();
-    bool busy();
-    bool stable();
-    void setMode(const Mode mode);
-    void disableI2c();
-    Option<Vector3_t<real_t>> get_magnet() override;
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<bool> is_busy();
+    [[nodiscard]] IResult<bool> is_stable();
+    [[nodiscard]] IResult<> set_mode(const Mode mode);
+    [[nodiscard]] IResult<> disable_i2c();
+    Option<Vector3_t<real_t>> get_magnet() ;
 };
 
 };

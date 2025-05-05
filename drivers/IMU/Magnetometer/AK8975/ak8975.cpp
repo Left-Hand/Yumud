@@ -15,26 +15,31 @@ using namespace ymd::drivers;
 #define AK8975_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
+using Error = AK8975::Error;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-void AK8975::init(){
-    if(validate() == false) return;
-    readAdj();
-    update();
+IResult<> AK8975::init(){
+    if(const auto res = validate(); 
+        res.is_err()) return res;
+    if(const auto res = update_adj();
+        res.is_err()) return res;
+    return update();
 }
 
 
-void AK8975::readAdj(){
-    read_burst(0x10, &x_adj, 3);
+IResult<> AK8975::update_adj(){
+    return phy_.read_burst(0x10, std::span(&x_adj, 3));
 }
 
 
-void AK8975::update(){
-    read_burst(0x03, &x, 2 * 3);
+IResult<> AK8975::update(){
+    return phy_.read_burst(0x03, &x, 2 * 3);
 }
 
 
-bool AK8975::validate(){
+IResult<> AK8975::validate(){
     // <Self-test Sequence> 
     // (1) Set Power-down mode 
     // (2) Write “1” to SELF bit of ASTC register 
@@ -46,74 +51,86 @@ bool AK8975::validate(){
     // (5) Read measurement data (HXL to HZH) 
     // (6) Write “0” to SELF bit of ASTC register
 
-    scexpr uint timeout_ms = 10;
+    scexpr uint TIME_OUT_MS = 10;
 
     
     {
         uint8_t id = 0;
-        read_reg(0x00, id);
-        if(id != 0x48) return false;
+        if(const auto res = phy_.read_reg(0x00, id);
+            res.is_err()) return Err(res.unwrap_err());
+        if(id != 0x48) return Err(Error::WrongWhoAmI);
         //id not correct
     }
 
     //1
-    setMode(Mode::SelfTest);
+    if(const auto res = set_mode(Mode::SelfTest);
+        res.is_err()) return res;
 
     //2
-    write_reg(0x0c, 0x40);
+    if(const auto res = phy_.write_reg(0x0c, 0x40);
+        res.is_err()) return res;
 
     //3
-    setMode(Mode::PowerDown);
+    if(const auto res = set_mode(Mode::PowerDown);
+        res.is_err()) return res;
 
     //4
     auto ms = millis();
     bool readed = false;
-    while(millis() - ms < timeout_ms){
-        if(this->busy() == false){
+
+    while(millis() - ms < TIME_OUT_MS){
+        const auto res = this->is_busy();
+        if(res.is_err()) return Err(res.unwrap_err());
+
+        if(res.unwrap() == false){
             readed = true;
             break;
         }
     }
 
-    if(readed == false) return false; 
+    if(readed == false) return Err(Error::CantSetup); 
 
     //5
-    update();
+    if(const auto res = update();
+        res.is_err()) return res;
 
     //6
-    write_reg(0x0c, 0x00);
-    
-    return stable();
+    return phy_.write_reg(0x0c, 0x00);
 }
 
-bool AK8975::busy(){
+IResult<bool> AK8975::is_busy(){
     uint8_t stat;
-    read_reg(0x00, stat);
-    return stat == 0;
+    if(const auto res = phy_.read_reg(0x00, stat);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(stat == 0);
 }
 
-bool AK8975::stable(){
+IResult<bool> AK8975::is_stable(){
     uint8_t stat;
-    read_reg(0x09, stat);
-    if(stat != 0) return false;
+    if(const auto res = phy_.read_reg(0x09, stat);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(stat != 0) return Ok(false);
     
-    update();
+    if(const auto res = update();
+        res.is_err()) return Err(res.unwrap_err());
+
     const auto mag = get_magnet();
-    if(mag.is_none()) return false;
+    if(mag.is_none()) return Ok(false);
 
-    auto [a, b, c] = get_magnet().unwrap();
-    if(ABS(a) + ABS(b) + ABS(c) > real_t(2.4)) return false;
+    auto [a, b, c] = mag.unwrap();
+    if(ABS(a) + ABS(b) + ABS(c) > real_t(2.4)) return Ok(false);
 
-    return true;
+    return Ok(true);
 }
 
 
-void AK8975::setMode(const Mode mode){
-    write_reg(0x0A, (uint8_t)mode);
+IResult<> AK8975::set_mode(const Mode mode){
+    return phy_.write_reg(0x0A, (uint8_t)mode);
 }
 
-void AK8975::disableI2c(){
-    write_reg(0x0F, 0x01);
+IResult<> AK8975::disable_i2c(){
+    return phy_.write_reg(0x0F, 0x01);
 }
 
 Option<Vector3_t<real_t>> AK8975::get_magnet(){

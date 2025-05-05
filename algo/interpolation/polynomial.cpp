@@ -3,6 +3,10 @@
 
 using namespace ymd::intp;
 
+static constexpr real_t cube(const real_t x){
+    return x*x*x;
+}
+
 real_t CosineInterpolation::forward(real_t x) const {
     real_t x2 = x*x;
     real_t x4 = x2*x2;
@@ -34,9 +38,9 @@ std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2 & handle){
 real_t SeatInterpolation::forward(const real_t x) const {
     real_t y = 0;
     if (x <= a){
-        y = b - b*pow(1-x/a, real_t(3));
+        y = b - b*cube(1-x/a);
     } else {
-        y = b + (1-b)*pow((x-a)/(1-a), 3);
+        y = b + (1-b)*cube((x-a)/(1-a));
     }
     return y;
 }
@@ -44,9 +48,9 @@ real_t SeatInterpolation::forward(const real_t x) const {
 real_t SeatLineInterpolation::forward(const real_t x) const {
     real_t y = 0;
     if (x<=a){
-        y = b*x + (1-b)*a*(1-pow(1-x/a, real_t(3)));
+        y = b*x + (1-b)*a*(1-cube(1-x/a));
     } else {
-        y = b*x + (1-b)*(a + (1-a)*pow((x-a)/(1-a), real_t(3)));
+        y = b*x + (1-b)*(a + (1-a)*cube((x-a)/(1-a)));
     }
     return y;
 }
@@ -56,9 +60,9 @@ real_t SeatOddInterpolation::forward(const real_t x) const {
     // int p = 2*n + 1;
     real_t y = 0;
     if (x <= a){
-        y = b - b*pow(1-x/a, p);
+        y = b - b*ymd::powfi(1-x/a, p);
     } else {
-        y = b + (1-b)*pow((x-a)/(1-a), p);
+        y = b + (1-b)*ymd::powfi((x-a)/(1-a), p);
     }
     return y;
 }
@@ -68,18 +72,19 @@ real_t SymmetricInterpolation::forward(const real_t x) const {
     if (+_n%2 == 0){ 
         // even polynomial
         if (x<=real_t(0.5)){
-        y = pow(2*x, _n)/2;
+        y = ymd::powfi(2*x, _n)/2;
         } else {
-        y = 1 - pow(2*(x-1), _n)/2;
+        y = 1 - ymd::powfi(2*(x-1), _n)/2;
         }
     } 
     
     else { 
         // odd polynomial
         if (x<=real_t(0.5)){
-        y = pow(2*x, real_t(_n))/2;
+        y = ymd::powfi(2*x, _n)/2;
+        // y = (2*x, _n)/2;
         } else {
-        y = 1 + pow(2*(x-1), real_t(_n))/2;
+        y = 1 + ymd::powfi(2*(x-1), _n)/2;
         }
     }
 

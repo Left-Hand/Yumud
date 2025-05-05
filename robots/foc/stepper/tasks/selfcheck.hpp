@@ -25,7 +25,7 @@ protected:
     int cnt;
     Range2_t<real_t> move_range;
 
-    SVPWM & svpwm_;
+    digipw::SVPWM & svpwm_;
     OdometerPoles & odo_;
 
     using ErrorCode = MotorUtils::ErrorCode;
@@ -35,7 +35,7 @@ protected:
         cnt = 0;
     };
 public:
-    SelfCheckTasker(SVPWM & _svpwm, OdometerPoles & _odo):
+    SelfCheckTasker(digipw::SVPWM & _svpwm, OdometerPoles & _odo):
         svpwm_(_svpwm), odo_(_odo){;}
 
     void reset();

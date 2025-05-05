@@ -11,7 +11,7 @@ class AsahiKaseiSensor_Phy final{
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 public:
-    Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data){
+    [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
             return Result<void, ImuError>(i2c_drv_->write_reg(uint8_t(addr), data));
         }else if(spi_drv_){
@@ -25,7 +25,7 @@ public:
         PANIC();
     }
 
-    Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data){
+    [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
             return Result<void, ImuError>(i2c_drv_->read_reg(uint8_t(addr), data));
         }else if(spi_drv_){
@@ -37,7 +37,7 @@ public:
         PANIC();
     }
 
-    Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
             return Result<void, ImuError>(
                 i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
@@ -51,7 +51,11 @@ public:
         PANIC();
     }
 
-    Result<void, ImuError> validate(){
+    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, const std::span<uint8_t> pbuf){
+        return Ok();
+    }
+
+    [[nodiscard]] Result<void, ImuError> validate(){
         return Result<void, ImuError>(hal::HalResult::Ok());
     }
 public:

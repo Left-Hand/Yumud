@@ -50,18 +50,18 @@ public:
 
     hal::HalResult write(const uint32_t data) {
         uint32_t dummy;
-        transfer(dummy, data);
+        transceive(dummy, data);
         return hal::HalResult::Ok();
     }
 
     hal::HalResult read(uint32_t & data) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
-        transfer(ret, dummy); 
+        transceive(ret, dummy); 
         return hal::HalResult::Ok();
     }
 
-    hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
+    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) override ;
 
     hal::HalResult set_baudrate(const uint32_t baudrate) {
         if(baudrate == 0){

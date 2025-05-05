@@ -19,7 +19,7 @@ void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const
 }
 
 
-hal::HalResult SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
+hal::HalResult SpiSw::transceive(uint32_t & data_rx, const uint32_t data_tx){
     uint32_t ret = 0;
 
     sclk_gpio.set();

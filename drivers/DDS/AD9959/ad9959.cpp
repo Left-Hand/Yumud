@@ -213,7 +213,7 @@ uint32_t AD9959::write(Register reg, uint32_t value)
     if(const auto err = spi_drv_.write_single<uint8_t>(uint8_t(reg)); err.is_err()) PANIC();
     while (len-- > 0){
         uint8_t ret = 0;
-        auto err = spi_drv_.transfer_single<uint8_t>(ret, (value>>len*8) & 0xFF);
+        auto err = spi_drv_.transceive_single<uint8_t>(ret, (value>>len*8) & 0xFF);
         if(err.is_err()) return 0;
         rval = (rval<<8) | ret; 
     }

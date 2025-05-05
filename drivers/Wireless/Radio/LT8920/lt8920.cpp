@@ -357,7 +357,7 @@ hal::HalResult LT8920::write_reg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
         if(const auto err = 
-            spi_drv_->transfer_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT);
+            spi_drv_->transceive_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT);
             err.is_err()) return err;
         delayT3();
 
@@ -372,7 +372,7 @@ hal::HalResult LT8920::write_reg(const RegAddress address, const uint16_t reg){
 hal::HalResult LT8920::read_reg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
     if(spi_drv_){
-        const auto err = spi_drv_->transfer_single(
+        const auto err = spi_drv_->transceive_single(
             reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
             uint8_t(address | 0x80), CONT);
         if(err.is_err()) return err;
@@ -411,7 +411,7 @@ hal::HalResult LT8920::readFifo(uint8_t * data, const size_t len){
 
 hal::HalResult LT8920::updateFifoStatus(){
     if(spi_drv_){
-        // return spi_drv_->transfer_single(flag_reg.as_ref(), flag_reg.address);
+        // return spi_drv_->transceive_single(flag_reg.as_ref(), flag_reg.address);
         TODO();
     } else if(i2c_drv_){
         return i2c_drv_->read_reg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));

@@ -11,20 +11,6 @@
 
 namespace ymd::drivers{
 
-
-template<typename T>
-class Borrow{
-public:
-    Borrow(T * ptr):
-        ptr_(ptr){;}
-
-    Borrow(std::nullptr_t) = delete;
-
-    T & unwrap() const {return *ptr_;}
-private:
-    T * ptr_;
-};
-
 struct TM7705_Collections{
     enum class Error_Kind{
 

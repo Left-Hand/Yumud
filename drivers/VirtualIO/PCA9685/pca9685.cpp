@@ -2,10 +2,6 @@
 #include "core/debug/debug.hpp"
 
 
-using namespace ymd;
-using namespace ymd::drivers;
-
-using Error = PCA9685::Error;
 
 #define PCA9685_DEBUG_EN
 
@@ -22,15 +18,18 @@ using Error = PCA9685::Error;
 #endif
 
 // #define PCA9685_FORCEWRITE
-#define PCA9685_NOVERIFY
 
+using namespace ymd;
+using namespace ymd::drivers;
 
+using Error = PCA9685::Error;
+using Vport = PCA9685::PCA9685_Vport;
 
-void PCA9685::write_mask(const uint16_t data){
+void Vport::write_mask(const uint16_t data){
     TODO();
 }
 
-uint16_t PCA9685::read_mask(){
+uint16_t Vport::read_mask(){
     TODO();
     return 0;
 }
@@ -89,14 +88,15 @@ Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off)
     return Ok();
 }
 
+Result<void, Error> PCA9685::validate(){
+    return reset();
+}
+
 Result<void, Error> PCA9685::init(){
-    #ifdef PCA9685_NOVERIFY
-    #else
     if(const auto res = validate(); res.is_err()){
         PCA9685_PANIC("verify failed");
         return res;
     }
-    #endif
     return Ok();
 
     delay(1);
@@ -107,10 +107,15 @@ Result<void, Error> PCA9685::init(){
         if(const auto res = set_pwm(i, 0, 0);
             res.is_err()) return res;
     }
-    delay(10);
+    delay(1);
     return Ok();
 }
 
+
+Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
+    sub_addr_regs[index] = addr;
+    return write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
+}
 
 Result<void, Error> PCA9685::reset(){
     const auto res = [&] -> Result<void, Error>{
@@ -121,7 +126,7 @@ Result<void, Error> PCA9685::reset(){
             if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
                 res.is_err()) return res;
         }
-        udelay(500);
+        delay(1);
         mode1_reg.restart = 1;
         if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
             res.is_err()) return res;
@@ -143,25 +148,25 @@ Result<void, Error> PCA9685::enable_sleep(const bool en){
     return write_reg(RegAddress::Mode1, mode1_reg);
 }
 
-void PCA9685::set_by_mask(const uint16_t mask){
+void Vport::set_by_mask(const uint16_t mask){
     TODO();
     // buf |= mask;
     // write(buf);
 }
 
-void PCA9685::clr_by_mask(const uint16_t mask){
+void Vport::clr_by_mask(const uint16_t mask){
     TODO();
     // buf &= ~mask;
     // write(buf);
 }
 
-void PCA9685::write_by_mask(const uint16_t mask){
+void Vport::write_by_mask(const uint16_t mask){
     TODO();
     // buf &= ~mask;
     // write(buf);
 }
 
-void PCA9685::write_by_index(const size_t index, const BoolLevel level){
+void Vport::write_by_index(const size_t index, const BoolLevel level){
     TODO();
     // if(!isIndexValid(index))return;
     // if(data) buf |= 1 << index;
@@ -169,7 +174,7 @@ void PCA9685::write_by_index(const size_t index, const BoolLevel level){
     // write(buf);
 }
 
-BoolLevel PCA9685::read_by_index(const size_t index){
+BoolLevel Vport::read_by_index(const size_t index){
     TODO();
     // if(!isIndexValid(index)) return false;
     // read();
@@ -178,7 +183,7 @@ BoolLevel PCA9685::read_by_index(const size_t index){
 }
 
 
-void PCA9685::set_mode(const size_t index, const hal::GpioMode mode){
+void Vport::set_mode(const size_t index, const hal::GpioMode mode){
     TODO();
 //     if(!isIndexValid(index))return;
 //     uint16_t mask = 1 << index;
@@ -192,10 +197,6 @@ void PCA9685::set_mode(const size_t index, const hal::GpioMode mode){
 //     }
 }
 
-Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
-    sub_addr_regs[index] = addr;
-    return write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
-}
 
 __fast_inline BoolLevel PCA9685::PCA9685Channel::read() const {
     TODO();

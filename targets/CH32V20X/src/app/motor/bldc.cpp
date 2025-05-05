@@ -14,8 +14,8 @@
 // #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
-#include "drivers/Actuator/SVPWM/svpwm.hpp"
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/Actuator/Bridge/DRV8301/DRV8301.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
@@ -25,8 +25,7 @@
 #include "core/polymorphism/traits.hpp"
 
 #include "utils.hpp"
-#include "../digiPW/sogi/spll.hpp"
-#include "sogi/sogi.hpp"
+#include "digipw/pll/sogi/sogi.hpp"
 
 #include "ctrl.hpp"
 
@@ -405,7 +404,12 @@ void bldc_main(){
 
     // scexpr real_t r_ohms = 7.1_r;
     // scepxr real_t l_mh = 1.45_r;
-    [[maybe_unused]] SmoObserver smo_ob = {0.7_r, 0.04_r, 8.22_r, 0.3_r};
+    [[maybe_unused]] auto smo_ob = SmoObserver{{
+        0.7_r, 
+        0.04_r,
+        8.22_r, 
+        0.3_r
+    }};
     [[maybe_unused]] RolbgObserver lbg_ob;
 
     [[maybe_unused]] NonlinearObserver nlr_ob = {

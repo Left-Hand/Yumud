@@ -5,7 +5,7 @@ using namespace ymd;
 using namespace ymd::intp;
 
 template<typename T>
-static __fast_inline T sq(const T x){
+static __fast_inline T square(const T x){
     return x * x;
 }
 
@@ -21,19 +21,19 @@ bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,c
     scexpr real_t epsilon = real_t(0.001);
 
     // checking whether the line of the two pts are vertical
-    if (abs(xDelta_a) <= epsilon && abs(yDelta_b) <= epsilon){
+    if (std::abs(xDelta_a) <= epsilon && std::abs(yDelta_b) <= epsilon){
         return false;
     }
-    if (abs(yDelta_a) <= epsilon){
+    if (std::abs(yDelta_a) <= epsilon){
         return true;
     }
-    else if (abs(yDelta_b) <= epsilon){
+    else if (std::abs(yDelta_b) <= epsilon){
         return true;
     }
-    else if (abs(xDelta_a)<= epsilon){
+    else if (std::abs(xDelta_a)<= epsilon){
         return true;
     }
-    else if (abs(xDelta_b)<= epsilon){
+    else if (std::abs(xDelta_b)<= epsilon){
         return true;
     }
     else return false;
@@ -50,15 +50,15 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
     real_t xDelta_b = pt3x - pt2x;
     scexpr real_t epsilon = real_t(0.001);
 
-    if (abs(xDelta_a) <= epsilon && abs(yDelta_b) <= epsilon){
+    if (std::abs(xDelta_a) <= epsilon && std::abs(yDelta_b) <= epsilon){
         // m_Centerx = (pt2x + pt3x) / 2;
         // m_Centery = (pt1y + pt2y) / 2;
-        // m_dRadius = sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y));
+        // m_dRadius = std::sqrt(square(m_Centerx-pt1x) + square(m_Centery-pt1y));
         // return;
         return {
             (pt2x + pt3x) / 2,
             (pt1y + pt2y) / 2,
-            sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y))
+            std::sqrt(square(m_Centerx-pt1x) + square(m_Centery-pt1y))
         };
     }
 
@@ -66,7 +66,7 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
     real_t aSlope = yDelta_a / xDelta_a; 
     real_t bSlope = yDelta_b / xDelta_b;
 
-    // if (abs(aSlope-bSlope) <= epsilon){	
+    // if (std::abs(aSlope-bSlope) <= epsilon){	
     //     // checking whether the given points are colinear. 	
     //     return;
     // }
@@ -78,7 +78,7 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
         aSlope*(pt2x+pt3x) )
         /(2* (bSlope-aSlope) ),
         -1*(m_Centerx - (pt1x+pt2x)/2)/aSlope +  (pt1y+pt2y)/2,
-        sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y))
+        std::sqrt(square(m_Centerx-pt1x) + square(m_Centery-pt1y))
     };
 }
 
@@ -140,9 +140,9 @@ real_t ArcInterpolation::forward(real_t x) const {
     
     real_t y = 0;
     if (x >= m_Centerx){
-        y = m_Centery - sqrt(sq(m_dRadius) - sq(x-m_Centerx)); 
+        y = m_Centery - std::sqrt(square(m_dRadius) - square(x-m_Centerx)); 
     } else {
-        y = m_Centery + sqrt(sq(m_dRadius) - sq(x-m_Centerx)); 
+        y = m_Centery + std::sqrt(square(m_dRadius) - square(x-m_Centerx)); 
     }
     return y;
 }
@@ -153,7 +153,7 @@ real_t ArcInterpolation::forward(real_t x) const {
 // Return signed distance from line Ax + By + C = 0 to point P.
 static real_t linetopoint (real_t a, real_t b, real_t c, real_t ptx, real_t pty){
   real_t lp = 0;
-  real_t d = sqrt((a*a)+(b*b));
+  real_t d = std::sqrt((a*a)+(b*b));
   if (d != 0){
     lp = (a*ptx + b*pty + c)/d;
   }
@@ -206,12 +206,12 @@ void CircularFilletInterpoation::computeFilletParameters (
     if (d1 <= 0) {
     rr= -rr;
     }
-    c1p = c1 - rr*sqrt((a1*a1)+(b1*b1));  /* Line parallel l1 at d */
+    c1p = c1 - rr*std::sqrt((a1*a1)+(b1*b1));  /* Line parallel l1 at d */
     rr = r;
     if (d2 <= 0){
     rr = -rr;
     }
-    c2p = c2 - rr*sqrt((a2*a2)+(b2*b2));  /* Line parallel l2 at d */
+    c2p = c2 - rr*std::sqrt((a2*a2)+(b2*b2));  /* Line parallel l2 at d */
     d = (a1*b2)-(a2*b1);
 
     real_t pCx = (c2p*b1-c1p*b2)/d; /* Intersect constructed lines */
@@ -240,9 +240,9 @@ void CircularFilletInterpoation::computeFilletParameters (
     real_t gv2x = pBx-pCx; 
     real_t gv2y = pBy-pCy;
 
-    real_t arcStart = real_t(atan2(gv1y,gv1x)); 
+    real_t arcStart = real_t(std::atan2(gv1y,gv1x)); 
     real_t arcAngle = 0;
-    real_t dd = sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
+    real_t dd = std::sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
     if (dd != 0){
     arcAngle = (acos((gv1x*gv2x + gv1y*gv2y)/dd));
     } 
@@ -307,9 +307,9 @@ real_t CircularFilletInterpoation::forward(real_t x) const {
     y = arcEndY + t*(1 - arcEndY);
   } else {
     if (x >= arcCenterX){
-      y = arcCenterY - sqrt(sq(arcRadius) - sq(x-arcCenterX)); 
+      y = arcCenterY - std::sqrt(square(arcRadius) - square(x-arcCenterX)); 
     } else{
-      y = arcCenterY + sqrt(sq(arcRadius) - sq(x-arcCenterX)); 
+      y = arcCenterY + std::sqrt(square(arcRadius) - square(x-arcCenterX)); 
     }
   }
   return y;

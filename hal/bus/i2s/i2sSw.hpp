@@ -91,7 +91,7 @@ public:
         return Error::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
+    Error transceive(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
         return Error::OK;
     }
 

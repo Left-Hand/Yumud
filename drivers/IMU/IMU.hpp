@@ -19,6 +19,8 @@ enum class ImuError_Kind:uint8_t{
     UnknownDevice,
     PhyVerifyFailed,
 
+    CantSetup,
+    
     AccCantSetup,
     GyrCantSetup,
     MagCantSetup,

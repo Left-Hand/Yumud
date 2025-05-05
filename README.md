@@ -83,9 +83,7 @@ int main(){
     led.outpp(HIGH);
 
     while(true){
-
-        //通过重载GPIO的布尔运算符以写入与读取，使得GPIO能够直接被布尔量赋值
-        led = !led;
+        led.toggle();
         delay(200);
     }
 }
@@ -103,26 +101,26 @@ int main(){
 
     //使用工厂模式来获取定时器①的输出比较通道①
     auto pwm = timer1.oc(1);
-    pwm.init();
+    pwm.init({});
 
     {
         //获取互补PWM通道并初始化
         auto pwmn = timer1.ocn(1);
-        pwmn.init();
+        pwmn.init({});
 
         //或者也可以直接
         // timer1.ocn(1).init();
     }
 
-    //将刹车寄存器初始化 默认为200ns
-    timer1.initBdtr();
+    //将刹车寄存器初始化
+    timer1.init_bdtr(200_ns);
 
     //进入主循环
     while(true){
         // time (时间) 是一个获取高精度秒数(微秒级)的函数 将在systick中被自动更改
         const auto t = time();
         // 重载了PWM被数值赋值的函数 使得对它的赋值能直接改变占空比
-        pwm = 0.5 + 0.5 * sin(t);
+        pwm = 0.5_r + 0.4_r * sin(t);
     }
 
     //或者也可以直接这样做
@@ -158,7 +156,7 @@ int main(){
     SG90   servo   {timer1.ch(1)};
     DRV8825 stepper {timer1.ch(2);}
 
-    //通过引用的方式建立is-a的关系 其中多继承确保只要是两个继承自角度可控类的对象均可以传入云台中
+    //通过引用的方式建立is-a的关系 确保只要是两个继承自角度可控类的对象均可以传入云台中
     Gimbal  gimbal  {servo, stepper};
     gimbal.init();
 
@@ -177,7 +175,7 @@ int main(){
         }
 
         //内部有多种向量数据类型(多维向量与四元数等)，为机器人学奠定基础
-        gimbal.moveTo(Vector2(1, 0).rotated(angle));
+        gimbal.move_to(Vector2(1, 0).rotated(angle));
     }
 }
 
@@ -232,7 +230,7 @@ int main(){
 ##### examples 官方例程
 
 
-##### algo 算法
+##### algo 计算机算法
 - [x] random 伪随机数发生器
 - [x] hash 哈希函数
 - [x] interpolation 插值
@@ -260,9 +258,10 @@ int main(){
 - [ ] 控制器
     - [x] PID 控制器
     - [ ] 模糊PID控制器
-    - [ ] LQR 控制器
+    - [x] LQR 控制器
     - [ ] MPC 控制器
     - [ ] ADRC 控制器
+    - [ ] EFC 控制器
 
 - [ ] fft(未测试)
 
@@ -383,6 +382,26 @@ int main(){
     - [ ] 霍夫变换
 
 
+##### digipw 电源与电机
+- [ ] 软开关Buck控制器
+- [x] 控制环路
+    - [x] 电流环
+    - [x] 功率环
+    - [x] 电压环
+- [x] MPPT控制器
+- [x] Pll
+    - [x] SPll 
+
+
+- [x] SVPWM
+    - [x] SVPWM
+    - [x] SVPWM2
+    - [x] SVPWM3
+
+- [x] 斩波控制
+    - [x] 交错三相斩波控制器 
+    - [ ] 交错双相斩波控制器 
+
 ##### drivers 设备驱动
 
 - [x] 执行器
@@ -406,27 +425,40 @@ int main(){
         - [x] MP2980
         - [ ] MP6570
 
-    - [x] SVPWM
-        - [x] SVPWM
-        - [x] SVPWM2
-        - [x] SVPWM3
-    
     - [ ] 云台
     - [x] 舵机
 
 - [x] ADC
+    - [ ] AD7606
     - [x] ADS112C04
     - [x] ADS1115
+    - [x] FDC2X1X
     - [x] HX711
+    - [ ] INA219
     - [x] INA226
+    - [ ] INA228
     - [x] INA3221
     - [x] SGM58031
-
-- [x] DAC
-    - [x] TM8211
+    - [ ] TM7705
 
 - [ ] 音频
     - [x] JQ8900
+
+- [x] 摄像头
+    - [x] MT9V034
+    - [ ] OV2640
+
+- [x] 一般IO
+    - [x] LED
+        - [x] 模拟LED
+    - [x] 按键
+        - [ ] 按键矩阵
+
+
+- [x] DAC
+    - [x] TM8211
+    - [x] MCP4725
+
 
 - [x] DDS
     - [x] AD5933
@@ -437,9 +469,6 @@ int main(){
     - [x] AD9959
     - [x] SI5351
 
-- [x] 摄像头
-    - [x] MT9V034
-    - [ ] OV2640
 
 - [x] 屏幕
     - [x] SSD1306(OLED)
@@ -461,12 +490,26 @@ int main(){
     - [x] 里程计
 
 - [x] HID设备
-    - [x] PS2手柄
+    - [ ] CH455
+    - [ ] CH456
     - [ ] FT6336
+    - [x] PS2手柄
+    - [ ] TCA8418
+    - [x] TM1637
+    - [ ] TM1650
+    - [ ] TM1668
+
+- [x] 环境传感
+    - [x] BH1750
+    - [x] MAX31855
+    - [x] TCS34725
+    - [x] NTC
 
 - [x] IMU
-    - [ ] 三轴
+    - [ ] 加速度计
+        - [ ] L3G4200D 
         - [ ] LISDW12 
+        - [ ] LIS3DH 
 
     - [x] 六轴
         - [x] ADXL345  
@@ -475,9 +518,15 @@ int main(){
         - [x] BMI270
         - [x] ICM42605
         - [x] ICM42688
+        - [x] ICM45686
+        - [x] LSM303
+        - [x] MPU65XX
         - [x] MPU6050
 
+    - [x] 角加速度计
+        - [ ] L3G4200D
     - [x] 地磁
+        - [x] AK8963
         - [x] AK8975
         - [x] BMM150
         - [x] HMC5883L
@@ -485,13 +534,11 @@ int main(){
         - [x] MMC5603
         - [x] QMC5883L
 
-- [x] 环境光传感器
-    - [x] BH1750
-    - [x] TCS34725
 
 - [x] 气压计
-    - [x] BMP280
+    - [ ] BMP085
     - [ ] BMP180
+    - [x] BMP280
 
 - [x] 存储器
     - [x] EEPROM(AT24)
@@ -502,31 +549,39 @@ int main(){
     - [x] DSHOT
     - [x] NEC
 
+- [x] 网络
+    - [ ] LAN8742
+    - [ ] W5500
+    - [ ] YT8512
+
 - [x] 空间感知
+    - [ ] LD19
     - [ ] LDS14
     - [x] PAJ7620
     - [x] VL53L0X
+    - [ ] PAW3327
+    - [ ] PAW3395
     - [x] PMW3901
-    - [ ] SR04 
+    - [x] VL53L0X
+    - [x] VL53L1X
+    - [x] VL53L5X
     - [ ] VL6180X
 
 - [ ] 识别器
     - [ ] GM80X
     - [x] U13T
 
-- [x] 一般IO
-    - [x] LED
-        - [x] 模拟LED
-    - [x] 按键
-        - [ ] 按键矩阵
-
+- [ ] 虚拟总线
+    - [ ] CH9431
+    - [ ] MCP23016
+    - [ ] TCA9548A
 
 - [x] 虚拟IO
     - [x] AS9523
     - [ ] HC138
     - [ ] HC165
     - [x] HC595
-    - [x] MCP23016
+    - [ ] MPR121
     - [x] NCA9555
     - [x] PCA9695
     - [x] PCF8574
@@ -535,12 +590,16 @@ int main(){
 
 - [x] 无线
     - [x] CH9141
+    - [ ] ECB02
     - [x] HC12
+    - [ ] LR1121
     - [x] LT8920
     - [x] LT8960
-    - [ ] LT8960
+    - [ ] NRFL01
     - [ ] Si24R1
     - [ ] XL2400
+    - [ ] XL2400P
+    - [ ] XN297L
 
 ##### ral 寄存器访问层(Register Access Layer)
 
@@ -751,8 +810,46 @@ int main(){
 - [ ] BLE
 
 
-##### robots 机器人与电力学相关代码
+##### robots 机器人学相关代码
+- [x] 动作池
+    - [x] 运动队列
+    - [x] 单个运动
+    - [x] 组合运动
 
+- [ ] 自动驾驶
+    - [x] 轨迹生成器
+    - [x] 位置估测器
+    - [ ] 状态滤波器
+    - [x] 地图
+    - [x] 行为规划
+    - [x] 导航器
+
+- [ ] 行为树
+    - [ ] 复合节点
+        - [x] 选择节点
+        - [x] 顺序节点
+        - [x] 全通节点
+
+    - [ ] 工厂类
+
+    - [x] 装饰器
+
+- [ ] Can网络
+    - [x] SLCAN协议
+    - [x] ECCAN协议
+
+- [ ] CANOPEN协议
+
+    - [x] Cia301
+    - [x] Cia402
+    - [x] 子节点
+    - [ ] Nmt协议
+    - [x] Pdo协议
+        - [x] Pdo异步会话
+    - [x] Sdo协议
+        - [x] Sdo异步会话
+
+- [ ] 轨迹
 - [ ] FOC
     - [x] 步进电机FOC算法
         - [x] 电流环
@@ -779,7 +876,10 @@ int main(){
 
     - [ ] 无刷电机FOC算法
 
-- [ ] 正逆解
+- [ ] 姿态结算
+    - [x] mahony
+
+- [ ] 运动学正逆解
     - [x] Scara正逆解
     - [x] 轮腿正逆解
         - [ ] 串联腿动力学建模
@@ -788,21 +888,24 @@ int main(){
     - [x] 交叉臂正逆解
     - [ ] 六轴正逆解
 
+- [ ] 机械控制
+    - [x] scara机械臂
+    - [x] 麦克纳姆底盘
+    - [x] 转动关节与平动关节
+    - [ ] 飞达 
+    - [ ] 夹爪 
+
+- [ ] mavlink
+    - [x] Serde/DeSerde
+    - [ ] 载荷
+
+- [ ] Tween 插值器
+
 - [ ] DJI RoboMaster相关驱动
     - [x] M2006
     - [x] M3508
     - [x] M6020
     - [x] DR16
-
-- [ ] 变换器
-    - [ ] `halfbridge` 通用半桥驱动 
-    - [x] `buck.hpp` BUCK驱动
-    - [x] `pmdc.hpp` 直流有刷电机驱动算法
-    - [ ] `spread_cycle.hpp` 对SpeadCycle斩波驱动的低劣模仿
-
-- [ ] 机械
-    - [x] 平动滑台描述
-    - [ ] 转动关节描述
 
 - [ ] rpc rpc框架
     - [x] 串口 RPC
@@ -819,19 +922,6 @@ int main(){
     - [ ] 任务队列
     - [ ] 光栅化器
 
-- [ ] 策略
-    - [x] 动作池
-        - [x] 运动队列
-        - [x] 单个运动
-        - [x] 组合运动
 
-    - [ ] 行为树
-        - [ ] 复合节点
-            - [x] 选择节点
-            - [x] 顺序节点
-            - [x] 全通节点
 
-        - [x] 装饰器
-
-    - [ ] FSM
 

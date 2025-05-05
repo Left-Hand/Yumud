@@ -22,42 +22,68 @@ public:
 
 
 
-    hal::HalResult write_reg(const uint8_t addr, const uint8_t data) {
+    [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data) {
         if(i2c_drv_){
-            return i2c_drv_->write_reg(uint8_t(addr), data);
+            if(const auto res = i2c_drv_->write_reg(uint8_t(addr), data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            return spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT)
-            | spi_drv_->write_single<uint8_t>(data);
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+
+            if(const auto res = spi_drv_->write_single<uint8_t>(data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         PANIC();
     }
 
-    hal::HalResult read_reg(const uint8_t addr, uint8_t & data) {
+    [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data) {
         if(i2c_drv_){
-            return i2c_drv_->read_reg(uint8_t(addr), data);
+            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
+                res.is_err()) return Err(res.unwrap_err());   
+            return Ok();
         }else if(spi_drv_){
-            return spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
-            | spi_drv_->read_single<uint8_t>(data);
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_single<uint8_t>(data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         PANIC();
     }
 
-    hal::HalResult read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
-            return i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
+            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            return spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
-            | spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         PANIC();
     }
 
-    hal::HalResult validate(){
-        if(i2c_drv_) return i2c_drv_->validate();
-        if(spi_drv_) return hal::HalResult::Ok();
+    [[nodiscard]] Result<void, ImuError> validate(){
+        if(i2c_drv_){
+            if(const auto res = i2c_drv_->validate();
+                res.is_err()) return Err(res.unwrap_err());
+
+            return Ok();
+        }
+
+        if(spi_drv_){
+            return Ok();
+        }
+
+
         PANIC();
     }
 };

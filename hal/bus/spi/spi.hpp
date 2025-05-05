@@ -54,7 +54,7 @@ public:
     
     [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
     [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
-    [[nodiscard]] virtual hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
     [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
     [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;

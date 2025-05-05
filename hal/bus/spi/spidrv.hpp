@@ -97,7 +97,13 @@ public:
     hal::HalResult read_single(is_stdlayout auto & data, const Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult transfer_single(T & data_rx, const T data_tx, Continuous cont = DISC);
+    hal::HalResult transceive_single(T & data_rx, const T data_tx, Continuous cont = DISC);
+
+    template<valid_spi_data T, size_t N>
+    hal::HalResult transceive_burst(const std::span<T, N> data_rx, const std::span<const T, N> data_tx, Continuous cont = DISC);
+
+    template<valid_spi_data T>
+    hal::HalResult transceive_burst(const std::span<T> data_rx, const std::span<const T> data_tx, Continuous cont = DISC);
 };
 
 template<valid_spi_data T>
@@ -156,7 +162,8 @@ hal::HalResult SpiDrv::write_burst(const is_stdlayout auto * pdata, const size_t
 template <valid_spi_data T>
 hal::HalResult SpiDrv::read_burst(is_stdlayout auto * pdata, const size_t len, const Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
-    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         for (size_t i = 0; i < len; i++) {
             uint32_t temp = 0;
@@ -173,7 +180,8 @@ hal::HalResult SpiDrv::read_burst(is_stdlayout auto * pdata, const size_t len, c
 template <valid_spi_data T>
 hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t temp = 0;
         spi_.read(temp);
@@ -187,12 +195,55 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
 
 
 template <valid_spi_data T>
-hal::HalResult SpiDrv::transfer_single(T & datarx, const T datatx, Continuous cont) {
-    if (hal::HalResult::Ok() == spi_.begin(idx_.to_req())) {
+hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous cont) {
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t ret = 0;
-        spi_.transfer(ret, datatx);
+        spi_.transceive(ret, datatx);
         datarx = ret;
+        if constexpr (sizeof(T) != 1) this->set_data_width(8);
+        if (cont == DISC) spi_.end();
+    }
+    return hal::HalResult::Ok();
+}
+
+template<valid_spi_data T, size_t N>
+hal::HalResult SpiDrv::transceive_burst(
+    const std::span<T, N> pbuf_rx, 
+    const std::span<const T, N> pbuf_tx, 
+    Continuous cont 
+){
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    {
+        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+        for(size_t i = 0; i < N; i++) {
+            uint32_t dummy = 0;
+            spi_.transceive(dummy, pbuf_tx[i]);
+            pbuf_rx[i] = dummy;
+        }
+        if constexpr (sizeof(T) != 1) this->set_data_width(8);
+        if (cont == DISC) spi_.end();
+    }
+    return hal::HalResult::Ok();
+}
+
+template<valid_spi_data T>
+hal::HalResult SpiDrv::transceive_burst(
+    const std::span<T> pbuf_rx, 
+    const std::span<const T> pbuf_tx, 
+    Continuous cont
+){
+    if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+    {
+        const auto N = pbuf_rx.size();
+        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+        uint32_t ret = 0;
+        for(size_t i = 0; i < N; i++) {
+            uint32_t dummy = 0;
+            spi_.transceive(dummy, pbuf_tx[i]);
+            pbuf_rx[i] = dummy;
+        }
         if constexpr (sizeof(T) != 1) this->set_data_width(8);
         if (cont == DISC) spi_.end();
     }

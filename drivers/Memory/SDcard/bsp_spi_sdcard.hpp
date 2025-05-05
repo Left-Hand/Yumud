@@ -327,7 +327,7 @@ SD_Error SD_read_burstBlocks(uint8_t* pBuffer, uint64_t ReadAddr, uint16_t Block
 
 	/*!< SD chip select low */
 	SD_CS_LOW();
-	/*!< Data transfer */
+	/*!< Data transceive */
 	while (NumberOfBlocks--)
 	{
 		/*!< Send CMD17 (SD_CMD_READ_SINGLE_BLOCK) to read one block */
@@ -462,7 +462,7 @@ SD_Error SD_write_burstBlocks(uint8_t* pBuffer, uint64_t WriteAddr, uint16_t Blo
 
 	/*!< SD chip select low */
 	SD_CS_LOW();
-	/*!< Data transfer */
+	/*!< Data transceive */
 	while (NumberOfBlocks--)
 	{
 		/*!< Send CMD24 (SD_CMD_WRITE_SINGLE_BLOCK) to write blocks */

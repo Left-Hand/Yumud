@@ -11,7 +11,7 @@
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 #include "src/testbench/algo/utils.hpp"
 
-#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
 
 using namespace ymd;
 

@@ -58,7 +58,7 @@ public:
     hal::HalResult read(uint32_t & data) {char _;read1(_);data = _;return hal::HalResult::Ok();};
     hal::HalResult write(const uint32_t data) {write1(char(data)); return hal::HalResult::Ok();};
 
-    hal::HalResult transfer(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::HalResult::Ok();};
+    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::HalResult::Ok();};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 

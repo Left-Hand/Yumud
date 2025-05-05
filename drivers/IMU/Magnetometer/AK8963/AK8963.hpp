@@ -150,7 +150,7 @@ public:
     AK8963(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
     Result<void, Error> init();
-    void update();
+    Result<void, Error> update();
     Result<void, Error> validate();
     Result<void, Error> reset();
     Result<void, Error> busy();
