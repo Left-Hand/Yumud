@@ -88,31 +88,7 @@ void rpc_main(){
         //     // rpc::MethodParam("2"),
         //     // rpc::MethodParam(String(millis())),
         // };
-        {
-            auto strs_opt = splitter.update(uart2);
-            if(strs_opt.has_value()){
-                auto & strs = strs_opt.value();
 
-                DEBUG_PRINTLN("------");
-                DEBUG_PRINTS("Inputs:", strs);
-
-                b = sin(time());
-
-                {
-                    std::vector<rpc::CallParam> params;
-                    params.reserve(strs.size());
-                    for(const auto & str  : strs){
-                        params.push_back(rpc::CallParam(str));
-                    }
-                    DEBUGGER.print("->");
-                    auto res = list ->call(DEBUGGER, params);
-                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res));
-                    DEBUG_PRINTLN("------");
-                }
-
-                splitter.clear();
-            }
-        }
 
         continue;
         // // res->call(DEBUGGER, params);

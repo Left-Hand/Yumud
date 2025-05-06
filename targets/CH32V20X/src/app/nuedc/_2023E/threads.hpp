@@ -40,32 +40,26 @@ public:
         }
     void process(const real_t t){
         // if(uart_.available())DEBUG_PRINTLN(uart_.available());
-        auto strs_opt = splitter_.update(uart_);
-        if(strs_opt.has_value()){
-            const auto & strs = strs_opt.value();
-
-            if(outen_){
-                os_.println("------");
-                os_.prints("Inputs:", strs);
-            }
-
-            std::vector<rpc::CallParam> params;
-            params.reserve(strs.size());
-            for(const auto & str : strs){
-                params.push_back(rpc::CallParam(str));
-            }
-
-            StringStream ss;
-            const auto res = root_ ->call(ss, params);
-
-            if(outen_){
-                os_.print("->", std::move(ss).move_str());
-                os_.prints("\r\n^^Function exited with return code", uint8_t(res));
-                os_.println("------");
-            }
-
-            splitter_.clear();
+        while(uart_.available()){
+            char chr;
+            uart_.read1(chr);
+            splitter_.update(chr, [this](const StringViews strs){
+                if(outen_){
+                    os_.println("------");
+                    os_.prints("Inputs:", strs);
+                }
+    
+                // StringStream ss;
+                const auto res = root_ ->call(os_, rpc::AccessProvider_ByStringViews(strs));
+    
+                if(outen_){
+                    // os_.print("->", std::move(ss).move_str());
+                    os_.prints("\r\n^^Function exited with return code", uint8_t(res));
+                    os_.println("------");
+                }
+            });
         }
+
     }
 
     void set_outen(bool outen){ outen_ = outen; }   

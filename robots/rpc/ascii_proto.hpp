@@ -102,10 +102,13 @@ public:
     // AsciiProtocolConcept(InputStream & _is, OutputStream & _os):is(_is), os(_os){}
 
     void update(){
-        auto args = parser.update(is);
-        if(args){
-            parseArgs(args.value());
-            parser.clear();
+        while(is.available()){
+            char chr;
+            is.read1(chr);
+            parser.update(chr, [this](
+                const StringViews args){
+                this->parseArgs(args);
+            });
         }
     }
 };

@@ -23,17 +23,17 @@ std::vector<StringView> StringView::split(const char delimiter, const size_t max
     return strs;
 }
 
-// int StringView::indexOf(char c) const
-// {
-// 	return indexOf(c, 0);
-// }
+std::optional<size_t> StringView::find(char c) const{
+	return find_from(c, 0);
+}
 
-// int StringView::indexOf( char ch, size_t fromIndex ) const{
-// 	if (fromIndex >= size_) return -1;
-// 	const char* temp = strchr(data_ + fromIndex, ch);
-// 	if (temp == NULL) return -1;
-// 	return temp - data_;
-// }
+std::optional<size_t> StringView::find_from(char ch, size_t from) const{
+	if (from >= size_) return std::nullopt;
+    for(size_t i = from; i < size_; i++){
+        if(data_[i] == ch) return i;
+    }
+    return std::nullopt;
+}
 
 // int StringView::lastIndexOf( char theChar ) const
 // {

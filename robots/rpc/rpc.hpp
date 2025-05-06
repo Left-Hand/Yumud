@@ -61,17 +61,58 @@ using Param = CallParam;
 using Params = std::span<const CallParam>;
 
 
-// class AccessProviderIntf{
-// public:
-//     virtual size_t size() const = 0;
-// };
+class AccessProviderIntf{
+public:
+    virtual size_t size() const = 0;
+    virtual CallParam operator[](size_t idx) const = 0;
+};
 
-// class AccessProviderByString{
-// public:
 
-// };
 
-using AccessProviderIntf = Params;
+// 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
+class SubHelper final : public AccessProviderIntf {
+public:
+    constexpr SubHelper(const AccessProviderIntf & provider, size_t offset, size_t size): 
+        provider_(provider), offset_(offset), size_(size){;}
+    size_t size() const {return size_;}
+    CallParam operator[](size_t idx) const{
+        return CallParam(provider_[offset_ + idx]);
+    }
+private:
+    const AccessProviderIntf & provider_;
+    const size_t offset_;
+    const size_t size_;
+};
+
+static constexpr SubHelper make_sub_provider(
+    const AccessProviderIntf & owner, 
+    const size_t offset, 
+    const size_t size)
+{
+        return SubHelper(owner, offset, size);
+}
+
+static constexpr SubHelper make_sub_provider(
+    const AccessProviderIntf & owner, 
+    const size_t offset)
+{
+        return SubHelper(owner, offset, owner.size());
+}
+class AccessProvider_ByStringViews final: public AccessProviderIntf{
+public: 
+    AccessProvider_ByStringViews(const std::span<const StringView> views):
+        views_(views){;}
+
+    size_t size() const{
+        return views_.size();
+    }
+
+    CallParam operator [](const size_t idx) const {
+        return CallParam(views_[idx]);
+    }
+private:    
+    std::span<const StringView> views_;
+};
 
 // class AccessReponserIntf{
 
@@ -210,7 +251,7 @@ protected:
     }
 
     template<typename T, std::size_t... Is>
-    static T convert_params(const Params params, std::index_sequence<Is...>) {
+    static T convert_params(const auto & params, std::index_sequence<Is...>) {
         return std::make_tuple(convert<typename std::tuple_element<Is, T>::type>(params[Is])...);
     }
 public:
@@ -235,6 +276,12 @@ public:
     MethodByLambda(const StringView name, const Callback && callback)
         : MethodIntf(name), callback_(callback) {}
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
+        for(size_t i = 0; i < ap.size(); i++){
+            DEBUG_PRINTLN('[', StringView(ap[i]), ']');
+        }
+
+        DEBUG_PRINTLN(N, ap.size());
+
         if (ap.size() != N) {
             return AccessResult::Fail;
         }
@@ -309,10 +356,7 @@ public:
     }
 
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) override{
-        // ar << ap;
-        // if(ap.size() < 2) return AccessResult::Fail;
-
-        auto head_hash = StringView(ap[0]).hash();
+        const auto head_hash = StringView(ap[0]).hash();
 
         if(head_hash == "ls"_ha){
             for(auto & entry:entries_){
@@ -324,7 +368,7 @@ public:
         for(auto & entry:entries_){
             auto ent_hash = entry->name().hash();
             if(head_hash == ent_hash){
-                return entry->call(ar, {ap.begin() + 1, ap.end()});
+                return entry->call(ar, make_sub_provider(ap, 1));
             }
         }
 

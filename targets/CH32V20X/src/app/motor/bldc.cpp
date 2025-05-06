@@ -1058,29 +1058,6 @@ void bldc_main(){
         );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
-        {
-            auto strs_opt = splitter.update(uart2);
-            if(strs_opt.has_value()){
-                auto & strs = strs_opt.value();
-
-                DEBUG_PRINTLN("------");
-                DEBUG_PRINTS("Inputs:", strs);
-
-                {
-                    std::vector<rpc::CallParam> params;
-                    params.reserve(strs.size());
-                    for(const auto & str  : strs){
-                        params.push_back(rpc::CallParam(str));
-                    }
-                    DEBUGGER.print("->");
-                    auto res = list ->call(DEBUGGER, params);
-                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res));
-                    DEBUG_PRINTLN("------");
-                }
-
-                splitter.clear();
-            }
-        }
 
         ledr = BoolLevel::from((millis() % 200) > 100);
         ledb = BoolLevel::from((millis() % 400) > 200);
