@@ -435,20 +435,24 @@ void String::trim(void)
 }
 
 void String::alphanum(void){
-	char * new_buf = (char *)malloc(len);
+	char * new_buf = new char[len];
 
 	size_t len0 = len;
 	len = 0;
 	for(size_t i = 0; i < len0; i++){
 		char chr = buffer[i];
-		if(StringUtils::is_alpha(chr) || StringUtils::is_digit(chr) || chr == ' ' || chr == '+' || chr == '-' || chr == '.'){
+		if(StringUtils::is_alpha(chr) || StringUtils::is_digit(chr) 
+			|| chr == ' ' || chr == '+' || chr == '-' || chr == '.' 
+			|| chr == '_'
+		){
 			new_buf[len++] = chr;
 		}
 	}
 
 	memcpy(buffer, new_buf, len);
 	buffer[len] = 0;
-	free(new_buf);
+
+	delete new_buf;
 }
 
 bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str(), len);}

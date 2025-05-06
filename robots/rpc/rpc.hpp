@@ -132,7 +132,7 @@ namespace internal{
     PRO_DEF_MEM_DISPATCH(MemName, name);
 
     struct EntryFacade : pro::facade_builder
-        ::support_copy<pro::constraint_level::nontrivial>
+        // ::support_copy<pro::constraint_level::nontrivial>
         ::add_convention<internal::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
         ::add_convention<internal::MemName, StringView()>
         ::build {};
@@ -301,11 +301,11 @@ public:
     // }
 
     template<typename ... Args>
-    EntryList(const StringView name, Args& ... entries) :
+    EntryList(const StringView name, Args&& ... entries) :
         EntryIntf(name)
         // entries_{(std::forward<Args>(entries)...)}
     {
-        (entries_.push_back(entries), ...);
+        (entries_.push_back(std::move(entries)), ...);
     }
 
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) override{
@@ -331,8 +331,8 @@ public:
         return AccessResult::Fail;
     }
 
-    void add(EntryProxy & entry){
-        entries_.push_back(entry);
+    void add(EntryProxy && entry){
+        entries_.push_back(std::move(entry));
     }
 };
 

@@ -26,7 +26,7 @@ int main(){
     // sincos_pwm_main();
     // pfm_zvs_main();
     // phase3pwm_main();
-    half_line_uart_main();
+    // half_line_uart_main();
     // rrs3_robot_main();
     // oled_main();
     // i2c_scanner_main();
@@ -59,8 +59,8 @@ int main(){
     // lt8960_main();
     // ws2812_main();
     // gxm_new_energy_main();
-    // rrs3_main();
-    nuedc_2023e_main();
+    rrs3_robot_main();
+    // nuedc_2023e_main();
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();
