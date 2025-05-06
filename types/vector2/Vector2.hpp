@@ -46,15 +46,16 @@ public:
     T x;
     T y;
     
-    constexpr Vector2_t(){;}
+    
+    [[nodiscard]] constexpr Vector2_t(){;}
 
-    constexpr Vector2_t(const T _x, const T _y): x(T(_x)), y(T(_y)){;}
-
-    template<arithmetic U = T>
-    constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+    [[nodiscard]] constexpr Vector2_t(const T _x, const T _y): x(T(_x)), y(T(_y)){;}
 
     template<arithmetic U = T>
-    constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    [[nodiscard]] constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+
+    template<arithmetic U = T>
+    [[nodiscard]] constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     T & operator [](const size_t index) { return *(&this->x + index);}
 
@@ -74,13 +75,13 @@ public:
     scexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
     scexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
 
-    constexpr Vector2_t<T> normalize(){*this /= this->length();}
-    constexpr Vector2_t<T> normalized() const;
-    constexpr T cross(const Vector2_t<T> & with) const;
-    constexpr T dot(const Vector2_t<T> & with) const;
-    constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
-    constexpr Vector2_t<T> rotated(const T r)const;
-    constexpr Vector2_t<T> abs() const;
+    [[nodiscard]] constexpr Vector2_t<T> normalize(){*this /= this->length();}
+    [[nodiscard]] constexpr Vector2_t<T> normalized() const;
+    [[nodiscard]] constexpr T cross(const Vector2_t<T> & with) const;
+    [[nodiscard]] constexpr T dot(const Vector2_t<T> & with) const;
+    [[nodiscard]] constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
+    [[nodiscard]] constexpr Vector2_t<T> rotated(const T r)const;
+    [[nodiscard]] constexpr Vector2_t<T> abs() const;
 
 
     static bool sort_by_x(const Vector2_t & a, const Vector2_t & b){
@@ -110,46 +111,50 @@ public:
         return {x, y + v};
     }
 
-    constexpr T angle() const {return atan2(y, x);}
-	constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
-	constexpr T angle_to_point(const Vector2_t<T> & p_vector2) const {return atan2(y - p_vector2.y, x - p_vector2.x);}
-    constexpr T aspect() const {return (!!y) ? x/y : T(0);}
-    constexpr Vector2_t<T> bounce(const Vector2_t<T> & n) const;
-    constexpr Vector2_t<T> ceil() const;
+    [[nodiscard]] constexpr T angle() const {return atan2(y, x);}
+	[[nodiscard]] constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
+	[[nodiscard]] constexpr T angle_to_point(const Vector2_t<T> & p_vector2) const {return atan2(y - p_vector2.y, x - p_vector2.x);}
+    [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
+    [[nodiscard]] constexpr Vector2_t<T> bounce(const Vector2_t<T> & n) const;
+    [[nodiscard]] constexpr Vector2_t<T> ceil() const;
 
     template<arithmetic U>
-    constexpr Vector2_t<T> clampmin(const U & _length) const{
+    [[nodiscard]] constexpr Vector2_t<T> clampmin(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
     }
 
     template<arithmetic U>
-    constexpr Vector2_t<T> clampmax(const U & _length) const{
+    [[nodiscard]] constexpr Vector2_t<T> clampmax(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
-        return (l > length ? *this * length / l : *this);
+        return (l >= length ? (this->normalized() * length) : *this);
     }
 
-    constexpr Vector2_t<T> clamp(const arithmetic auto & _min, const arithmetic auto & _max) const;
+    [[nodiscard]] constexpr Vector2_t<T> clamp(const arithmetic auto & _min, const arithmetic auto & _max) const;
 
-    constexpr Vector2_t<T> dir_to(const Vector2_t<T> & b) const;
-    constexpr T dist_to(const Vector2_t<T> & b) const;
-    constexpr T dist_squared_to(const Vector2_t<T> & b) const;
-    constexpr Vector2_t<T> floor() const;
-    constexpr bool is_equal_approx(const Vector2_t<T> & v) const;
-    __inline constexpr T manhattan_distance()const{
+    [[nodiscard]] constexpr Vector2_t<T> dir_to(const Vector2_t<T> & b) const;
+    [[nodiscard]] constexpr T dist_to(const Vector2_t<T> & b) const;
+    [[nodiscard]] constexpr T dist_squared_to(const Vector2_t<T> & b) const;
+    [[nodiscard]] constexpr Vector2_t<T> floor() const;
+    [[nodiscard]] constexpr bool is_equal_approx(const Vector2_t<T> & v) const;
+    [[nodiscard]] constexpr T manhattan_distance()const{
         return ABS(x) + ABS(y);
     }
 
 
-    constexpr bool has_point(const Vector2_t<auto> & _v)const;
-    constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
-    constexpr T length() const {
+    [[nodiscard]] constexpr bool has_point(const Vector2_t<auto> & _v)const;
+    [[nodiscard]] constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
+    [[nodiscard]] constexpr T length() const {
+        return mag(x,y);
+    }
+
+    [[nodiscard]] constexpr T inv_length() const {
         return imag(x,y);
     }
     
-    constexpr T length_squared() const {return (x*x + y*y);}
+    [[nodiscard]] constexpr T length_squared() const {return (x*x + y*y);}
     
     __fast_inline constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
     __fast_inline constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const arithmetic auto & delta) const;

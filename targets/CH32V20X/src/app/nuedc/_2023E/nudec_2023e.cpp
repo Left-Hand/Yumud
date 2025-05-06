@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "threads.hpp"
-// #include "tests.hpp"
+#include "tests.hpp"
 
 #define USE_MOCK_SERVO
 
@@ -38,7 +38,7 @@ public:
     hal::TimerOC & pwm_pitch = SERVO_PWMGEN_TIMER.oc(2);
 
     void setup(){
-        DBG_UART.init(921600);
+        DBG_UART.init(576000);
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.no_brackets();
         DEBUGGER.force_sync();
@@ -76,8 +76,8 @@ public:
         #endif
     }
 
-    auto wtime(){
-        return time();
+    auto time(){
+        return ymd::time();
     }
 
     void ready(){
@@ -107,8 +107,10 @@ static constexpr auto make_cfg(){
         },
         .gimbal_cfg = {
             .dyna_cfg = {
-                .r = 2,
+                .kp = 2.0_r,
+                .kd = 2.0_r,
                 .max_spd = 1_r,
+                .max_acc = 1_r,
                 .fs = CTRL_FREQ
             },
             .kine_cfg = {
@@ -150,7 +152,7 @@ void nuedc_2023e_main(){
 
     robots::ReplThread repl_thread = {
         &DBG_UART, &DBG_UART,
-        rpc::EntryProxy{rpc::make_list(
+        rpc::make_list(
             "list",
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
@@ -167,7 +169,7 @@ void nuedc_2023e_main(){
                     servo_yaw.get_radian()
                 );
             })
-        )}
+        )
     };
 
     world.ready();
@@ -176,10 +178,35 @@ void nuedc_2023e_main(){
         gimbal_actuator.set_gest({0,0});
     });
 
+    const auto tau = 50.0_r;
+
+    TdVec2 td{{
+        .kp = tau * tau,
+        .kd = 2 * tau,
+        .max_spd = 40.0_r,
+        .max_acc = 600.0_r,
+        .fs = 1000
+    }};
+
+    auto test_td = [&](const auto t){
+        // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
+        const auto [x,y] = sincos(real_t(TAU) * t);
+        // const auto [x,y] = sincos(ret);
+        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
+        const auto u = Vector2{CLAMP(70 * x, -5, 5), 0};
+        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vector2{6 * x, 0};
+        td.update(u);
+        DEBUG_PRINTLN(u, td.get(), td.get()[1].length(), td.get()[2].length());
+    };
+
+    real_t t = 0;
     while(true){
-        const real_t t = world.wtime();
-        repl_thread.process(t);
+        // const real_t t = world.time();
+        repl_thread.process(0);
+        t += 0.001_r;
+        test_td(t);
         // DEBUG_PRINTLN(millis());
-        delay(1);
+        // delay(1);
     }
 }

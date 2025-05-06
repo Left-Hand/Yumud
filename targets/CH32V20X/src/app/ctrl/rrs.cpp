@@ -116,6 +116,7 @@ public:
     }
 
     void ready(){
+        DEBUG_PRINTLN("===========");
         DEBUG_PRINTLN("app started");
     }
 
@@ -232,13 +233,13 @@ void rrs3_robot_main(){
 
     robots::ReplThread repl_thread = {
         &DBG_UART, &DBG_UART,
-        rpc::EntryProxy{rpc::make_list(
+        rpc::make_list(
             "list",
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
             rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
             rrs3_robot.make_rpc_node("rrs3")
-        )}
+        )
     };
 
     auto ctrl = [&]{
