@@ -25,7 +25,7 @@ public:
     }
     
     void set_radian(const real_t rad){
-        set_global_radian(rad_range_.clamp(rad));
+        set_global_radian(real_t(PI) - rad_range_.clamp(rad));
     }
 
     real_t get_radian(){

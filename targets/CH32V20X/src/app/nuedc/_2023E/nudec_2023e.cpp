@@ -58,7 +58,6 @@ public:
         pwm_pitch.set_valid_level(HIGH);
         #endif
 
-        delay(20);
     }
 
     auto make_yaw_servo(){
@@ -146,9 +145,8 @@ void nuedc_2023e_main(){
     });
 
     // auto gimbal_planner = GimbalPlanner(cfg.gimbal_cfg, gimbal_actuator);
-    delay(200);
 
-    ReplThread repl_thread = ReplThread(
+    robots::ReplThread repl_thread = {
         DBG_UART, 
         rpc::EntryProxy{rpc::make_list(
             "list",
@@ -168,7 +166,7 @@ void nuedc_2023e_main(){
                 );
             })
         )}
-    );
+    };
 
     world.ready();
 
