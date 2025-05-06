@@ -72,24 +72,25 @@ public:
 // 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
 class SubHelper final : public AccessProviderIntf {
 public:
-    constexpr SubHelper(const AccessProviderIntf & provider, size_t offset, size_t size): 
-        provider_(provider), offset_(offset), size_(size){;}
-    size_t size() const {return size_;}
+    constexpr SubHelper(const AccessProviderIntf & provider, size_t offset, size_t end): 
+        provider_(provider), offset_(offset), end_(end){;}
+    size_t size() const {return end_ - offset_;}
     CallParam operator[](size_t idx) const{
+        if(idx >= size()) while(true);
         return CallParam(provider_[offset_ + idx]);
     }
 private:
     const AccessProviderIntf & provider_;
     const size_t offset_;
-    const size_t size_;
+    const size_t end_;
 };
 
 static constexpr SubHelper make_sub_provider(
     const AccessProviderIntf & owner, 
     const size_t offset, 
-    const size_t size)
+    const size_t end)
 {
-        return SubHelper(owner, offset, size);
+        return SubHelper(owner, offset, end);
 }
 
 static constexpr SubHelper make_sub_provider(
@@ -276,11 +277,6 @@ public:
     MethodByLambda(const StringView name, const Callback && callback)
         : MethodIntf(name), callback_(callback) {}
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
-        for(size_t i = 0; i < ap.size(); i++){
-            DEBUG_PRINTLN('[', StringView(ap[i]), ']');
-        }
-
-        DEBUG_PRINTLN(N, ap.size());
 
         if (ap.size() != N) {
             return AccessResult::Fail;

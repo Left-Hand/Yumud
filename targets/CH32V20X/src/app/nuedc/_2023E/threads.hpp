@@ -32,6 +32,14 @@ private:
 
 };
 
+
+class DummyOutputStream final: public OutputStream{
+public:
+    DummyOutputStream(){;}
+    size_t pending() const {return 0;}
+    void sendout(const std::span<const char> pbuf){;}
+};
+
 class ReplThread{
 public:
     ReplThread(Uart & uart, rpc::EntryProxy && root) :
@@ -48,12 +56,15 @@ public:
                     os_.println("------");
                     os_.prints("Inputs:", strs);
                 }
-    
-                // StringStream ss;
-                const auto res = root_ ->call(os_, rpc::AccessProvider_ByStringViews(strs));
+
+                const auto res = [&]{
+                    if(!this->outen_){
+                        DummyOutputStream dos{};
+                        return root_ ->call(dos, rpc::AccessProvider_ByStringViews(strs));
+                    }else return root_ ->call(os_, rpc::AccessProvider_ByStringViews(strs));
+                }();
     
                 if(outen_){
-                    // os_.print("->", std::move(ss).move_str());
                     os_.prints("\r\n^^Function exited with return code", uint8_t(res));
                     os_.println("------");
                 }

@@ -46,8 +46,9 @@ private:
                 from = i;
             }
     
-            if((line[i] != delimiter and (i + 1 == line.length()))
-            or (line[i + 1] == delimiter) or (line[i + 1] == '\0')){
+            
+            if(line[i] != delimiter and 
+                (i + 1 >= line.length() or line[i + 1] == delimiter or line[i + 1] == '\0')){
                 strs.push_back(line.substr(from, i+1));
             }
     
