@@ -47,7 +47,7 @@ void rpc_main(){
 
 
     //memfunc
-    auto res2 = rpc::make_function("ball", ball, &Ball::set_xy);
+    auto res2 = rpc::make_function("ball", &ball, &Ball::set_xy);
 
     real_t a;
     real_t b;

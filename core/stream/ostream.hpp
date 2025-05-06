@@ -521,13 +521,17 @@ private:
 public:
     OutputStreamByRoute(){;}
 
+    OutputStreamByRoute(Route && route):    
+        p_route_(std::move(route)){;}
+
+
     size_t pending() const {
         if(unlikely(!p_route_)) while(true);
         return p_route_->pending();
     }
 
-    void retarget(Route p_route){
-        p_route_ = p_route;
+    void retarget(Route && p_route){
+        p_route_ = std::move(p_route);
     }
 
     Route & route() {

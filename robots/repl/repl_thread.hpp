@@ -10,15 +10,12 @@
 namespace ymd::robots{
 class ReplThread{
 public:
-    ReplThread(hal::Uart & uart, rpc::EntryProxy && root) :
-        uart_(uart), root_(std::move(root)){
-            os_.retarget(&uart_);
-        }
+    ReplThread(ReadCharProxy && is, WriteCharProxy && os, rpc::EntryProxy && root) :
+        is_(std::move(is)), os_(std::move(os)), root_(std::move(root)){}
     void process(const real_t t){
-        // if(uart_.available())DEBUG_PRINTLN(uart_.available());
-        while(uart_.available()){
+        while(is_->available()){
             char chr;
-            uart_.read1(chr);
+            is_->read1(chr);
             splitter_.update(chr, [this](const StringViews strs){
                 if(outen_){
                     os_.println("------");
@@ -43,7 +40,7 @@ public:
 
     void set_outen(bool outen){ outen_ = outen; }   
 private:
-    hal::Uart & uart_;
+    ReadCharProxy is_;
     OutputStreamByRoute os_;
 
     rpc::EntryProxy root_;

@@ -24,7 +24,7 @@ static constexpr uint SERVO_FREQ = 50;
 #define SCL_GPIO hal::portB[0]
 #define SDA_GPIO hal::portB[1]
 
-// #define MOCK_TEST_ALL
+#define MOCK_TEST_ALL
 
 #ifdef MOCK_TEST_ALL
 #define USE_MOCK_SERVO
@@ -124,12 +124,90 @@ public:
     }
 };
 
-
-void rrs3_robot_main(){
-
+class RRS3_Robot{
+public:
     using RRS3_Kinematics = typename ymd::robots::RRS_Kinematics<real_t>;
     using Gesture = typename RRS3_Kinematics::Gesture;
     using Config = typename RRS3_Kinematics::Config;
+
+    using ServoSetter = std::function<void(real_t, real_t, real_t)>;
+
+    template<typename T>
+    using IResult = RRS3_Kinematics::IResult<T>;
+
+    template<typename SetterFn>
+    RRS3_Robot(
+        const Config & cfg, 
+        SetterFn && servo_setter_fn
+    ): 
+        rrs3_kine_{cfg},
+        servo_setter_(std::forward<SetterFn>(servo_setter_fn)){;}
+
+    void set_gest(const real_t yaw, const real_t pitch, const real_t height){
+
+        const Gesture gest{
+            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+                .x = yaw, 
+                .y = pitch, 
+                .z = 0
+            }),
+
+            .z = height,
+        };
+
+        
+        if(const auto solu_opt = rrs3_kine_.inverse(gest); solu_opt.is_some()){
+            const auto solu = solu_opt.unwrap();
+
+            const std::array<real_t, 3> r = {
+                solu[0].to_absolute().j1_abs_rad,
+                solu[1].to_absolute().j1_abs_rad,
+                solu[2].to_absolute().j1_abs_rad
+            };
+
+            apply_radians_to_servos(r);
+        }else{
+            DEBUG_PRINTLN("no solution");
+        }
+    };
+
+    void set_bias(const real_t a, const real_t b, const real_t c){
+        r_bias_ = {a,b,c};
+    }
+
+    void go_home(){
+        apply_radians_to_servos({0,0,0});
+    }
+
+    auto make_rpc_node(const StringView name){
+        return rpc::make_list(
+            name,
+            rpc::make_function("gest", this, &RRS3_Robot::set_gest),
+            rpc::make_function("set_bias", this, &RRS3_Robot::set_bias),
+            rpc::make_function("set_zero", this, &RRS3_Robot::go_home)
+        );
+    }
+private:
+    RRS3_Kinematics rrs3_kine_;
+
+    std::array<real_t,3> r_bias_ = {
+        1.15_r,0.99_r,1.25_r
+    };
+
+    ServoSetter servo_setter_;
+
+    void apply_radians_to_servos(const std::array<real_t,3> & rads){
+        servo_setter_(
+            rads[0] + r_bias_[0], 
+            rads[1] + r_bias_[1], 
+            rads[2] + r_bias_[2]
+        );
+    }
+};
+
+void rrs3_robot_main(){
+
+    using Config = typename RRS3_Robot::Config;
 
 
     constexpr const Config cfg{
@@ -139,8 +217,6 @@ void rrs3_robot_main(){
         .top_plate_radius = 0.08434_r
     };
 
-    constexpr const RRS3_Kinematics rrs3{cfg};
-
     HardwareFactory hw{};
     hw.setup();
 
@@ -148,85 +224,20 @@ void rrs3_robot_main(){
     auto & servo_b = hw.servo_b;
     auto & servo_c = hw.servo_c;
 
-    std::array<real_t,3> r_bias = {
-        1.15_r,0.99_r,1.25_r
-    };
-
-    auto set_gest = [&](const real_t yaw, const real_t pitch, const real_t height){
-
-        // DEBUG_PRINTLN(yaw, pitch);
-        const Gesture gest{
-            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
-                .x = yaw * real_t(TAU / 360), 
-                .y = pitch * real_t(TAU / 360), 
-                .z = 0
-            }),
-
-            .z = height,
-        };
-
-        DEBUG_PRINTLN(gest.orientation);
-        
-        if(const auto solu_opt = rrs3.inverse(gest); solu_opt.is_some()){
-            const auto solu = solu_opt.unwrap();
-
-            const real_t r[] = {
-                solu[0].to_absolute().j1_abs_rad,
-                solu[1].to_absolute().j1_abs_rad,
-                solu[2].to_absolute().j1_abs_rad
-            };
-
-
-            servo_a.set_radian(r[0] + r_bias[0]);
-            servo_b.set_radian(r[1] + r_bias[1]);
-            servo_c.set_radian(r[2] + r_bias[2]);
-
-            // const auto e = gest.orientation.to_euler();
-            DEBUG_PRINTLN(
-                // gest.orientation, 
-                r
-                // e.x, e.y, e.z
-            );
-        }else{
-            DEBUG_PRINTLN("no solution");
-        }
-    };
-
-    auto set_bias = [&](const real_t r1, const real_t r2, const real_t r3){
-        r_bias[0] = r1;
-        r_bias[1] = r2;
-        r_bias[2] = r3;
-    };
-
-    auto set_zero = [&]{
-        servo_a.set_radian(r_bias[0]);
-        servo_b.set_radian(r_bias[1]);
-        servo_c.set_radian(r_bias[2]);
-    };
-
-    auto get_bias = [&](){
-        DEBUG_PRINTLN(r_bias);
-    };
-
-    auto out_bias = [&](const real_t r1, const real_t r2, const real_t r3){
-        set_bias(r1, r2, r3);
-        set_zero();
-    };
-
+    RRS3_Robot rrs3_robot{cfg, [&](real_t r1, real_t r2, real_t r3){
+        servo_a.set_radian(r1);
+        servo_b.set_radian(r2);
+        servo_c.set_radian(r3);
+    }};
 
     robots::ReplThread repl_thread = {
-        DBG_UART, 
+        &DBG_UART, &DBG_UART,
         rpc::EntryProxy{rpc::make_list(
             "list",
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
             rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
-            // rpc::make_function("set_gest", set_gest),
-            rpc::make_function("gest", set_gest),
-            rpc::make_function("set_bias", set_bias),
-            rpc::make_function("get_bias", get_bias),
-            rpc::make_function("set_zero", set_zero),
-            rpc::make_function("out", out_bias)
+            rrs3_robot.make_rpc_node("rrs3")
         )}
     };
 
@@ -235,15 +246,16 @@ void rrs3_robot_main(){
         const auto [s,c] = sincospu(0.7_r * t);
         // set_gest(5.0_r * s, 5.0_r * c, 0.14_r + 0.02_r * s);
         // set_gest(15.0_r * s, 15.0_r * c, 0.14_r);
-        set_gest(3.0_r * s, 3.0_r * c, 0.14_r);
-        DEBUG_PRINTLN("wh");
+        rrs3_robot.set_gest(
+            ANGLE2RAD(3.0_r * s), 
+            ANGLE2RAD(3.0_r * c), 
+            0.14_r
+        );
+        // DEBUG_PRINTLN("wh");
     };
 
     hw.ready();
-    set_zero();
-    // hw.register_servo_ctl_callback(ctrl);
-    
-
+    rrs3_robot.go_home();
     
     while(true){
         const real_t t = time();

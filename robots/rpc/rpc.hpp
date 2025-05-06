@@ -461,10 +461,12 @@ auto make_function(const StringView name, Ret(*callback)(Args...)) {
 }
 
 template<typename Ret, typename ... Args>
-auto make_function( const StringView name, auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...)) {
-    return pro::make_proxy<internal::EntryFacade, MethodByMemFunc<std::remove_cvref_t<decltype(obj)>, Ret, Args...>>(
+auto make_function( const StringView name, auto * pobj, 
+    Ret(std::remove_reference_t<std::remove_pointer_t<decltype(pobj)>>::*member_func_ptr)(Args...)) {
+    return pro::make_proxy<internal::EntryFacade, 
+    MethodByMemFunc<std::remove_cvref_t<std::remove_pointer_t<decltype(pobj)>>, Ret, Args...>>(
         name,
-        &obj,
+        pobj,
         member_func_ptr
     );
 }
