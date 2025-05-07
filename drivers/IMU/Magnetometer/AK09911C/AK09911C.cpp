@@ -7,7 +7,7 @@ using Error = AK09911C::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<Vector3_t<uint8_t>> get_coeff(){
+IResult<Vector3_t<uint8_t>> AK09911C::get_coeff(){
     // Vector3_t coeff = {};
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
