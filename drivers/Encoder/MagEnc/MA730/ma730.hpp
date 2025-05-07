@@ -105,13 +105,13 @@ public:
     MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
-    void init();
-    IResult<> update();
-    IResult<bool> is_stable() {return is_magnitude_proper();}
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<bool> is_stable() {return is_magnitude_proper();}
 
 
-    IResult<> set_zero_position(const real_t position);
-    IResult<real_t> get_lap_position(){
+    [[nodiscard]] IResult<> set_zero_position(const real_t position);
+    [[nodiscard]] IResult<real_t> get_lap_position(){
         return Ok(lap_position);
     }
 

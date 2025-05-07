@@ -335,7 +335,7 @@ void bldc_main(){
     // bmi.init();
 
     MA730 ma730{spi1, ma730_spi_fd};
-    ma730.init();
+    ma730.init().unwrap();
 
     // for(size_t i = 0; i < 1000; ++i) {
     //     bmi.update();

@@ -21,8 +21,10 @@ using Error = MA730::Error;
 template<typename T = void>
 using IResult = typename MA730::IResult<T>;
 
-void MA730::init(){
-    get_lap_position();
+IResult<> MA730::init(){
+    if(const auto res = get_lap_position();
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 IResult<> MA730::write_reg(const RegAddress addr, uint8_t data){
