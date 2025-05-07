@@ -231,10 +231,10 @@ void at8222_tb(){
         // pwm_pos = 0.87_r * abs(sinpu(time()));
         // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
         // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
-        pwm_pos = 0_r;
+        pwm_pos.set_duty(0_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
-        pwm_neg = 0.9_r;
+        pwm_neg.set_duty(0.9_r);
 
 
 

@@ -12,39 +12,204 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
+#include "robots/repl/repl_thread.hpp"
 #include "types/euler/euler.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-#define UART hal::uart2
-static constexpr uint SERVO_FREQ = 200;
+#define DBG_UART hal::uart2
+static constexpr uint SERVO_FREQ = 50;
 #define SCL_GPIO hal::portB[0]
 #define SDA_GPIO hal::portB[1]
 
-void rrs3_robot_main(){
-    UART.init(576000);
-    DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+#define MOCK_TEST_ALL
 
-    using RRS3 = typename ymd::robots::RRS_Kinematics<real_t>;
-    using Gesture = typename RRS3::Gesture;
-    using Config = typename RRS3::Config;
+#ifdef MOCK_TEST_ALL
+#define USE_MOCK_SERVO
+#define USE_MOCK_TIME
+#define USE_MOCK_OUTPUT
+#else
+// #define USE_MOCK_SERVO
+// #define USE_MOCK_TIME
+// #define USE_MOCK_OUTPUT
+#endif
 
+
+struct ImpureWorldRefs{
+    RadianServoIntf & servo_a;
+    RadianServoIntf & servo_b;
+    RadianServoIntf & servo_c;
+};
+
+
+class MockRadianServo final:public RadianServoIntf{
+protected:
+    real_t current_radian_;
+public:
+    void set_radian(const real_t radian){
+        current_radian_ = radian;
+    }
+    real_t get_radian(){
+        return current_radian_;
+    }
+};
+
+
+class ImpureWorld{
+public:
+    ImpureWorld(const ImpureWorldRefs refs):  
+        refs_(refs){;}
+
+    void set_radian(const std::array<real_t, 3> rads){
+        refs_.servo_a.set_radian(rads[0]);
+        refs_.servo_b.set_radian(rads[1]);
+        refs_.servo_c.set_radian(rads[2]);
+    }
+private:
+    using Refs = ImpureWorldRefs;
+
+    Refs refs_;
+};
+
+class HardwareFactory{
+public:
     I2cSw i2c = {SCL_GPIO, SDA_GPIO};
-    
-    i2c.init(400_KHz);
-
     PCA9685 pca{i2c};
 
-    if(const auto res = [&]{
-        return pca.init({.freq = SERVO_FREQ, .trim = 0.991_r});
-    }(); res.is_err()) PANIC(res.unwrap_err().as<HalError>().unwrap());
-    
+
+    #ifndef USE_MOCK_SERVO
+
     MG995 servo_a{pca[0]};
     MG995 servo_b{pca[1]};
     MG995 servo_c{pca[2]};
+    #else
+    MockRadianServo servo_a;
+    MockRadianServo servo_b;
+    MockRadianServo servo_c;
+    #endif
+
+    void setup(){
+        // #ifdef USE_MOCK_SERVO
+
+        DBG_UART.init(576000);
+        DEBUGGER.retarget(&DBG_UART);
+        DEBUGGER.no_brackets();
+        DEBUGGER.force_sync();
+
+        i2c.init(400_KHz);
+
+        #ifndef USE_MOCK_SERVO
+        if(const auto res = [&]{
+            return pca.init({.freq = SERVO_FREQ, .trim = 0.991_r});
+        }(); res.is_err()) PANIC(res.unwrap_err().as<HalError>().unwrap());
+
+        #endif
+
+        hal::timer1.init(SERVO_FREQ);
+    }
+
+    template<typename Fn>
+    void register_servo_ctl_callback(Fn && fn){
+        hal::timer1.attach(hal::TimerIT::Update, {0,0}, std::forward<Fn>(fn));
+    }
+
+    void ready(){
+        DEBUG_PRINTLN("===========");
+        DEBUG_PRINTLN("app started");
+    }
+
+    void loop(){
+        
+    }
+};
+
+class RRS3_Robot{
+public:
+    using RRS3_Kinematics = typename ymd::robots::RRS_Kinematics<real_t>;
+    using Gesture = typename RRS3_Kinematics::Gesture;
+    using Config = typename RRS3_Kinematics::Config;
+
+    using ServoSetter = std::function<void(real_t, real_t, real_t)>;
+
+    template<typename T>
+    using IResult = RRS3_Kinematics::IResult<T>;
+
+    template<typename SetterFn>
+    RRS3_Robot(
+        const Config & cfg, 
+        SetterFn && servo_setter_fn
+    ): 
+        rrs3_kine_{cfg},
+        servo_setter_(std::forward<SetterFn>(servo_setter_fn)){;}
+
+    void set_gest(const real_t yaw, const real_t pitch, const real_t height){
+
+        const Gesture gest{
+            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+                .x = yaw, 
+                .y = pitch, 
+                .z = 0
+            }),
+
+            .z = height,
+        };
+
+        
+        if(const auto solu_opt = rrs3_kine_.inverse(gest); solu_opt.is_some()){
+            const auto solu = solu_opt.unwrap();
+
+            const std::array<real_t, 3> r = {
+                solu[0].to_absolute().j1_abs_rad,
+                solu[1].to_absolute().j1_abs_rad,
+                solu[2].to_absolute().j1_abs_rad
+            };
+
+            apply_radians_to_servos(r);
+        }else{
+            DEBUG_PRINTLN("no solution");
+        }
+    };
+
+    void set_bias(const real_t a, const real_t b, const real_t c){
+        r_bias_ = {a,b,c};
+    }
+
+    void go_home(){
+        apply_radians_to_servos({0,0,0});
+    }
+
+    auto make_rpc_node(const StringView name){
+        return rpc::make_list(
+            name,
+            rpc::make_function("gest", this, &RRS3_Robot::set_gest),
+            rpc::make_function("set_bias", this, &RRS3_Robot::set_bias),
+            rpc::make_function("set_zero", this, &RRS3_Robot::go_home)
+        );
+    }
+private:
+    RRS3_Kinematics rrs3_kine_;
+
+    std::array<real_t,3> r_bias_ = {
+        1.15_r,0.99_r,1.25_r
+    };
+
+    ServoSetter servo_setter_;
+
+    void apply_radians_to_servos(const std::array<real_t,3> & rads){
+        servo_setter_(
+            rads[0] + r_bias_[0], 
+            rads[1] + r_bias_[1], 
+            rads[2] + r_bias_[2]
+        );
+    }
+};
+
+void rrs3_robot_main(){
+
+    using Config = typename RRS3_Robot::Config;
+
 
     constexpr const Config cfg{
         .base_length = 0.081_r,
@@ -53,49 +218,51 @@ void rrs3_robot_main(){
         .top_plate_radius = 0.08434_r
     };
 
-    constexpr const RRS3 rrs3{cfg};
-    auto ctrl = [&]{
-        const auto t = time();
+    HardwareFactory hw{};
+    hw.setup();
 
-        const Gesture gest{
-            // .orientation = Quat_t<real_t>::from_shortest_arc(
-            //     Vector3_t<real_t>{0, 0, 1.0_r},
-            //     Vector3_t<real_t>(0.5_r * sin(t), 0.5_r * cos(2*t), 1).normalized()
-            // ),
+    auto & servo_a = hw.servo_a;
+    auto & servo_b = hw.servo_b;
+    auto & servo_c = hw.servo_c;
 
-            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
-                .x = 0.6_r * sinpu(t), .y = 0.6_r * cospu(t), .z = 0
-            }),
+    RRS3_Robot rrs3_robot{cfg, [&](real_t r1, real_t r2, real_t r3){
+        servo_a.set_radian(r1);
+        servo_b.set_radian(r2);
+        servo_c.set_radian(r3);
+    }};
 
-            .z = 0.15_r,
-        };
-        
-        if(const auto solu_opt = rrs3.inverse(gest); solu_opt.is_some()){
-            const auto solu = solu_opt.unwrap();
-
-            servo_a.set_radian(solu[0].to_absolute().j1_abs_rad + 0.7_r);
-            servo_b.set_radian(solu[1].to_absolute().j1_abs_rad + 0.7_r);
-            servo_c.set_radian(solu[2].to_absolute().j1_abs_rad + 0.7_r);
-
-            const auto e = gest.orientation.to_euler();
-            DEBUG_PRINTLN(
-                pca.dump_cvr(0,1,2), 
-                gest.orientation, 
-                e.x, e.y, e.z,
-                sizeof(PCA9685)
-            );
-        }else{
-            DEBUG_PRINTLN("no solution");
-        }
-
-
+    robots::ReplThread repl_thread = {
+        &DBG_UART, &DBG_UART,
+        rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
+            rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+            rrs3_robot.make_rpc_node("rrs3")
+        )
     };
 
-    hal::timer1.init(SERVO_FREQ);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, ctrl);
+    auto ctrl = [&]{
+        const auto t = time();
+        const auto [s,c] = sincospu(0.7_r * t);
+        // set_gest(5.0_r * s, 5.0_r * c, 0.14_r + 0.02_r * s);
+        // set_gest(15.0_r * s, 15.0_r * c, 0.14_r);
+        rrs3_robot.set_gest(
+            ANGLE2RAD(3.0_r * s), 
+            ANGLE2RAD(3.0_r * c), 
+            0.14_r
+        );
+        // DEBUG_PRINTLN("wh");
+    };
 
-    DEBUG_PRINTLN("app started");
+    hw.ready();
+    rrs3_robot.go_home();
+    
     while(true){
-        delay(1000);
+        const real_t t = time();
+        repl_thread.process(t);
+        delay(10);
+        ctrl();
+        // DEBUG_PRINTLN(t);
     }
 }

@@ -75,8 +75,10 @@ public:
     //impure fn
     void reconf(const Config & cfg){
         td_.reconf({
-            .r          = cfg.r,
+            .kp          = cfg.kp,
+            .kd          = cfg.kd,
             .max_spd    = cfg.max_spd,
+            .max_acc    = cfg.max_acc,
             .fs         = cfg.fs
         });
     }

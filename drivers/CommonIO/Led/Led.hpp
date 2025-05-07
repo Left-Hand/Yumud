@@ -16,7 +16,7 @@ namespace ymd::drivers{
 class LedConcept{
 public:
     virtual void toggle() = 0;
-    virtual LedConcept & operator = (const real_t duty) = 0;
+    virtual void set_duty(const real_t duty) = 0;
 };
 
 class LedGpio:public LedConcept{
@@ -28,12 +28,12 @@ protected:
 public:
     LedGpio(hal::GpioIntf & inst, const bool inv = false):inst_(inst), inversed(inv){;}
 
-    LedGpio & operator = (const real_t duty) override;
-
     void toggle() override;
 
-    operator bool() const{return state ^ inversed;}
-    operator real_t() const{return state ^ inversed;}
+    void set_duty(const real_t duty);
+
+    explicit operator bool() const{return state ^ inversed;}
+    explicit operator real_t() const{return state ^ inversed;}
 };
 
 class LedAnalog : public LedConcept{
@@ -48,14 +48,12 @@ public:
 
     void toggle() override {
         last_duty_ = 1 - last_duty_;
-        *this = (last_duty_);
+        this->set_duty(last_duty_);
     }
 
-    LedAnalog & operator = (const real_t duty) override{
+    void set_duty(const real_t duty){
         last_duty_ = inversed ? 1 - duty : duty;
-        inst = last_duty_;
-
-        return *this;
+        inst.set_duty(last_duty_);
     }
 };
 

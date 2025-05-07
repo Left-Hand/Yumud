@@ -20,7 +20,7 @@ public:
 
 class Joint:public Actuator{
 public:
-    virtual void setRadian(const real_t rad) = 0;
+    virtual void set_radian(const real_t rad) = 0;
 };
 
 }

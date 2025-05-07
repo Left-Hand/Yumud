@@ -1,26 +1,15 @@
 #include "src/testbench/tb.h"
+#include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/math/realmath.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
-
-#include "core/math/realmath.hpp"
 #include "hal/gpio/gpio_port.hpp"
-
-#include "src/testbench/tb.h"
-
-#include "core/debug/debug.hpp"
-#include "core/clock/time.hpp"
-
-#include "hal/timer/instance/timer_hw.hpp"
-#include "core/math/realmath.hpp"
-
-#include "hal/bus/uart/uarthw.hpp"
-
 
 
 // 外设：

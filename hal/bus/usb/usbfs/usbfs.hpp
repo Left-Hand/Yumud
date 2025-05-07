@@ -15,8 +15,6 @@ protected:
 
 public:
     void init();
-    void write(const char data) override;
-    void write(const char * data_ptr, const size_t len) override;
     size_t pending() const {return 0;}
 };
 

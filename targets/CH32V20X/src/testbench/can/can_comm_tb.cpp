@@ -27,7 +27,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         real_t data = 0.09_r;
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
-        CanMsg msg = CanMsg::from_tuple(CanExtId(id), std::make_tuple(data));
+        CanMsg msg = CanMsg::from_tuple(CanExtId::from_raw(id), std::make_tuple(data));
         // msg.load(data);
         // auto read = msg.to_vector();
         logger.println(id, msg.size(), msg.to_span(), real_t(msg));

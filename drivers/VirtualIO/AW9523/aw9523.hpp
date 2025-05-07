@@ -92,9 +92,8 @@ protected:
             aw9523.enable_led_mode(pin);
         }
 
-        AW9523Pwm & operator = (const real_t duty) override{
+        void set_duty(const real_t duty) override{
             aw9523.set_led_current(pin,int(255 * duty));
-            return *this;
         }
     };
 

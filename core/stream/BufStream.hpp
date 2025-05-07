@@ -10,6 +10,10 @@ protected:
     char * buf_;
     const size_t max_len_;
     size_t len_ = 0;
+
+    size_t available_for_write() const {
+        return max_len_ - len_;
+    }
 public:
     template <typename T>
     requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
@@ -21,8 +25,13 @@ public:
         buf_(buf),
         max_len_(max_len){;}
 
-    void write(const char data);
-    void write(const char * data_ptr, const size_t len);
+    void sendout(std::span<const char> pbuf){
+        if(pbuf.size() > available_for_write()){
+            while(true);
+        }else{
+            std::memcpy(buf_, pbuf.data(), pbuf.size());
+        }
+    }
     size_t pending() const {return 0;}
 
 

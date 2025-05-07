@@ -83,8 +83,8 @@ public:
         return substr(left, left + len);
     }
     
-	// int indexOf(const char ch ) const;
-	// int indexOf(const char ch,const size_t fromIndex ) const;
+    std::optional<size_t> find(const char ch ) const;
+	std::optional<size_t> find_from(const char ch,const size_t from) const;
 
     constexpr uint32_t hash() const {return hash_impl(data_, size_);}
 

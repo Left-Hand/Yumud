@@ -12,7 +12,6 @@
 
 #include "digipw/pwmgen/interleaved_pwmgen3.hpp"
 
-#include "src/testbench/tb.h"
 #include "digipw/SVPWM/svpwm3.hpp"
 
 

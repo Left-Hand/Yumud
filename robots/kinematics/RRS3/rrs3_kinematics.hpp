@@ -4,13 +4,15 @@
 
 #include <cmath>
 #include <array>
+
 #include "types/ray2/ray2.hpp"
 #include "types/vector3/Vector3.hpp"
 #include "types/quat/Quat.hpp"
 #include "types/plane/plane.hpp"
 
-#include "core/debug/debug.hpp"
-
+// #include "core/debug/debug.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 namespace ymd::robots{
 
@@ -144,9 +146,22 @@ public:
 };
 
 
+struct RRS_Kinematics_Collections{
+    enum class Error_Kind:uint8_t{
+        OutOfRange
+    };
+    
+    DEF_ERROR_WITH_KIND(Error, Error_Kind)
+};
+
+
 template<arithmetic T>
-class RRS_Kinematics final{
+class RRS_Kinematics final:public RRS_Kinematics_Collections{
 public:
+
+    template<typename U = void>
+    using IResult = Result<U, Error>;
+
     struct Config{
         T base_length;//基座摇臂长度(米)
         T link_length;///上摇臂长度(米)

@@ -1,5 +1,6 @@
 #include "jointlr.hpp"
 #include "hal/bus/uart/uarthw.hpp"
+#include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 
 
@@ -9,7 +10,7 @@ bool JointLR::reached(){
     return last_radian_ == expect_radian_;
 }
 
-void JointLR::setRadian(const real_t rad){
+void JointLR::set_radian(const real_t rad){
     expect_radian_ = rad;
 
     if(!inited_){
@@ -42,7 +43,4 @@ void JointLR::tick(){
     }
 }
 
-void JointLR::idle(){
-    servo_.idle();
-}
 }

@@ -294,11 +294,11 @@ struct Quat_t{
 };
 
 template<arithmetic T>
-__fast_inline constexpr Quat_t<T> operator*(const arithmetic auto & n, const Quat_t<T> & vec){
+[[nodiscard]] __fast_inline constexpr Quat_t<T> operator*(const arithmetic auto & n, const Quat_t<T> & vec){
     return vec * n;
 }
 
-__fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_t<arithmetic auto> & b, const arithmetic auto & t){
+[[nodiscard]] __fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_t<arithmetic auto> & b, const arithmetic auto & t){
     return a.slerp(b, t);
 }
 
@@ -314,6 +314,27 @@ template<arithmetic T>
 Quat_t() -> Quat_t<T>;
 }
 
+
+// namespace std{
+//     template<typename T>
+//     struct tuple_size<ymd::Quat_t<T>> {
+//         constexpr static size_t value = 4;
+//     };
+
+//     template<size_t N, typename T>
+//     struct tuple_element<N, ymd::Quat_t<T>> {
+//         using type = T;
+//     };
+
+//     template<size_t N, typename T>
+//     auto get(ymd::Quat_t<T> & v){
+//         static_assert(N < 4);
+//         if constexpr (N == 0) return v.x;
+//         else if constexpr (N == 1) return v.y;
+//         else if constexpr (N == 2) return v.z;
+//         else return v.w;
+//     }
+// }
 
 
 #include "Quat.tpp"

@@ -10,11 +10,11 @@ bool ZAxisCross::reached(){
 }
 
 real_t ZAxisCross::getDistance(){
-    return solver_.forward(motor_.getRadian());
+    return solver_.forward(motor_.get_radian());
 }
 
 void ZAxisCross::setDistance(const real_t dist){
-    motor_.setRadian(solver_.inverse(dist));
+    motor_.set_radian(solver_.inverse(dist));
 }
 
 void ZAxisCross::tick(){

@@ -10,14 +10,14 @@ static __fast_inline T square(const T x){
 }
 
 bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const {
-    auto [pt1x, pt1y] = pt1;
-    auto [pt2x, pt2y] = pt2;
-    auto [pt3x, pt3y] = pt3;
+    const auto [pt1x, pt1y] = pt1;
+    const auto [pt2x, pt2y] = pt2;
+    const auto [pt3x, pt3y] = pt3;
 
-    real_t yDelta_a = pt2y - pt1y;
-    real_t xDelta_a = pt2x - pt1x;
-    real_t yDelta_b = pt3y - pt2y;
-    real_t xDelta_b = pt3x - pt2x;
+    const real_t yDelta_a = pt2y - pt1y;
+    const real_t xDelta_a = pt2x - pt1x;
+    const real_t yDelta_b = pt3y - pt2y;
+    const real_t xDelta_b = pt3x - pt2x;
     scexpr real_t epsilon = real_t(0.001);
 
     // checking whether the line of the two pts are vertical
@@ -40,14 +40,14 @@ bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,c
 }
 
 std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const {
-    auto [pt1x, pt1y] = pt1;
-    auto [pt2x, pt2y] = pt2;
-    auto [pt3x, pt3y] = pt3;
+    const auto [pt1x, pt1y] = pt1;
+    const auto [pt2x, pt2y] = pt2;
+    const auto [pt3x, pt3y] = pt3;
 
-    real_t yDelta_a = pt2y - pt1y;
-    real_t xDelta_a = pt2x - pt1x;
-    real_t yDelta_b = pt3y - pt2y;
-    real_t xDelta_b = pt3x - pt2x;
+    const real_t yDelta_a = pt2y - pt1y;
+    const real_t xDelta_a = pt2x - pt1x;
+    const real_t yDelta_b = pt3y - pt2y;
+    const real_t xDelta_b = pt3x - pt2x;
     scexpr real_t epsilon = real_t(0.001);
 
     if (std::abs(xDelta_a) <= epsilon && std::abs(yDelta_b) <= epsilon){

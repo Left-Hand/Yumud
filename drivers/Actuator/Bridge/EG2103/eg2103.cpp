@@ -14,6 +14,6 @@ void EG2103::init(){
 }
 
 EG2103 & EG2103::operator=(const real_t duty){
-    inst_ = duty_range.clamp(duty);
+    inst_.set_duty(duty_range.clamp(duty));
     return *this;
 }

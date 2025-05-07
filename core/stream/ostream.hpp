@@ -1,15 +1,23 @@
 #pragma once
 
 
-#include "stream_base.hpp"
 #include <ostream>
 #include <span>
 #include <ranges>
+#include <cstring>
+
+#include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
+#include "core/buffer/ringbuf/Fifo_t.hpp"
+
 
 namespace std{
     class source_location;
 }
+
+#ifndef OSTREAM_BUF_SIZE
+static constexpr size_t OSTREAM_BUF_SIZE = 64;
+#endif
 
 namespace ymd{
 
@@ -110,7 +118,10 @@ private:
     }
 
     __fast_inline void print_end(){
-        if(unlikely(config_.force_sync)) flush();
+        flush();
+        if(unlikely(config_.force_sync)){
+            while(pending()) __nopn(1);
+        }
     }
 
     __fast_inline void print_indent(){
@@ -143,10 +154,66 @@ private:
     }
 
     int transform_char(const char chr) const;
-    void checked_write(const char data);
+    void checked_write(const char data){
+        const auto res = transform_char(data);
+        if(res >= 0) write(res);
+    }
+
     void checked_write(const char * pdata, const size_t len);
 
     void print_source_loc(const std::source_location & loc);
+
+    struct Buf{
+        
+        char buf[OSTREAM_BUF_SIZE];
+        uint8_t size = 0;
+        
+        
+        // 用于压入数据，当数据溢满时发送数据包
+        template<typename Fn>
+        __fast_inline void push(const std::span<const char> pdata, Fn&& fn) {
+            size_t offset = 0;
+            while (offset < pdata.size()) {
+                size_t available = OSTREAM_BUF_SIZE - size;
+                size_t copy_size = std::min(available, pdata.size() - offset);
+
+                std::memcpy(buf + size, pdata.data() + offset, copy_size);
+                size += static_cast<uint8_t>(copy_size);
+                offset += copy_size;
+
+                if (size == OSTREAM_BUF_SIZE) {
+                    fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                    clear();  // 发送后重置缓冲区
+                }
+            }
+        }
+
+        // 用于压入数据，当数据溢满时发送数据包
+        template<typename Fn>
+        __fast_inline void push(char data, Fn&& fn) {
+            buf[size++] = data;
+            if (size == OSTREAM_BUF_SIZE) {
+                fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                clear();  // 发送后重置缓冲区
+            }
+        }
+
+        // 强制刷新缓冲区（发送剩余数据）
+        template<typename Fn>
+        __fast_inline void flush(Fn&& fn) {
+            if (size > 0) {
+                fn(std::span<const char>(buf, size));  // 发送缓冲区数据
+                clear();  // 发送后重置缓冲区
+            }
+        }
+
+        // 清空缓冲区（不发送数据）
+        __fast_inline void clear() {
+            size = 0;
+        }
+    };
+
+    Buf buf_;
 public:
     OutputStream(){
         reconf(DEFAULT_CONFIG);
@@ -156,18 +223,18 @@ public:
 
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
-
-
-
     
-    virtual void write(const char data) = 0;
-    virtual void write(const char * pdata, const size_t len){
-        for(size_t i = 0; i<len; i++) write(pdata[i]);
+    void write(const char data) {
+        buf_.push(data, [this](const std::span<const char> pbuf){this->sendout(pbuf);});
+    }
+    void write(const char * pdata, const size_t len){
+        buf_.push(std::span<const char>(pdata, len),  
+        [this](const std::span<const char> pbuf){this->sendout(pbuf);});
 	}
 
     virtual size_t pending() const = 0;
 
-
+    virtual void sendout(const std::span<const char>) = 0;
     OutputStream & set_splitter(const char * splitter){
         strcpy(config_.splitter, splitter);
         sp_len = strlen(splitter);
@@ -444,30 +511,27 @@ public:
 };
 
 
-class OutputStreamByRoute : public OutputStream{
+class OutputStreamByRoute final: public OutputStream{
 private:
     using Traits = WriteCharTraits;
     using Route = pro::proxy<Traits>;
     Route p_route_;
 
+    void sendout(const std::span<const char> pbuf);
 public:
     OutputStreamByRoute(){;}
-    void write(const char data){
-        if(unlikely(!p_route_)) while(true);
-        p_route_->write1(data);
-    }
-    void write(const char * pdata, const size_t len){
-        if(unlikely(!p_route_)) while(true);
-        p_route_->writeN(pdata, len);
-	}
+
+    OutputStreamByRoute(Route && route):    
+        p_route_(std::move(route)){;}
+
 
     size_t pending() const {
         if(unlikely(!p_route_)) while(true);
         return p_route_->pending();
     }
 
-    void retarget(Route p_route){
-        p_route_ = p_route;
+    void retarget(Route && p_route){
+        p_route_ = std::move(p_route);
     }
 
     Route & route() {

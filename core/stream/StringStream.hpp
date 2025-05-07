@@ -12,11 +12,10 @@ protected:
 public:
     StringStream(){;}
 
-    void write(const char data);
-    void write(const char * data_ptr, const size_t len);
     size_t pending() const;
 
     String && move_str() && {
+        flush();
         return std::move(str_);
     }
 
@@ -26,6 +25,10 @@ public:
 
     String copy() const{
         return String(str_);
+    }
+
+    void sendout(const std::span<const char> pbuf){
+        str_.concat(pbuf.data(), pbuf.size());
     }
 
     explicit operator String() const;
