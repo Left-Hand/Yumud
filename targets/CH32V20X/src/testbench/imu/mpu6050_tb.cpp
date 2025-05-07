@@ -36,11 +36,11 @@ void ak8963_tb(hal::I2c & i2c){
         res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
 
     AK8963 aku{i2c};
-    aku.init();
+    aku.init().unwrap();
     // aku.setAccRange(MPU6050::AccRange::_2G);
 
     while(true){
-        aku.update();
+        aku.update().unwrap();
         delay(5);
         DEBUG_PRINTLN_IDLE(aku.get_magnet().unwrap());
     }
@@ -94,7 +94,7 @@ void mpu6500_tb(hal::I2c & i2c){
         !+mpu.update();
 
         #ifdef MAG_ACTIVATED
-        aku.update();
+        aku.update().unwrap();
         #endif
 
         // mahony.update9(

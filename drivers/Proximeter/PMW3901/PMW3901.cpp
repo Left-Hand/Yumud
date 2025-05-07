@@ -26,6 +26,85 @@ static constexpr uint8_t PMW3901_REG_RawData_Grab            = 0x58;
 static constexpr uint8_t PMW3901_REG_RawData_Grab_Status     = 0x59;
 static constexpr uint8_t PMW3901_REG_Inverse_Product_ID      = 0x5F;
 
+static constexpr auto INIT_LIST1 = std::to_array({
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
+    std::make_pair<uint8_t, uint8_t>(0x61, 0xAD),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x03),
+    std::make_pair<uint8_t, uint8_t>(0x40, 0x00),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x05),
+    std::make_pair<uint8_t, uint8_t>(0x41, 0xB3),
+    std::make_pair<uint8_t, uint8_t>(0x43, 0xF1),
+    std::make_pair<uint8_t, uint8_t>(0x45, 0x14),
+    std::make_pair<uint8_t, uint8_t>(0x5B, 0x32),
+    std::make_pair<uint8_t, uint8_t>(0x5F, 0x34),
+    std::make_pair<uint8_t, uint8_t>(0x7B, 0x08),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x06),
+    std::make_pair<uint8_t, uint8_t>(0x44, 0x1B),
+    std::make_pair<uint8_t, uint8_t>(0x40, 0xBF),
+    std::make_pair<uint8_t, uint8_t>(0x4E, 0x3F),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x08),
+    std::make_pair<uint8_t, uint8_t>(0x65, 0x20),
+    std::make_pair<uint8_t, uint8_t>(0x6A, 0x18),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x09),
+    std::make_pair<uint8_t, uint8_t>(0x4F, 0xAF),
+    std::make_pair<uint8_t, uint8_t>(0x5F, 0x40),
+    std::make_pair<uint8_t, uint8_t>(0x48, 0x80),
+    std::make_pair<uint8_t, uint8_t>(0x49, 0x80),
+    std::make_pair<uint8_t, uint8_t>(0x57, 0x77),
+    std::make_pair<uint8_t, uint8_t>(0x60, 0x78),
+    std::make_pair<uint8_t, uint8_t>(0x61, 0x78),
+    std::make_pair<uint8_t, uint8_t>(0x62, 0x08),
+    std::make_pair<uint8_t, uint8_t>(0x63, 0x50),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x0A),
+    std::make_pair<uint8_t, uint8_t>(0x45, 0x60),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
+    std::make_pair<uint8_t, uint8_t>(0x4D, 0x11),
+    std::make_pair<uint8_t, uint8_t>(0x55, 0x80),
+    std::make_pair<uint8_t, uint8_t>(0x74, 0x21),
+    std::make_pair<uint8_t, uint8_t>(0x75, 0x1F),
+    std::make_pair<uint8_t, uint8_t>(0x4A, 0x78),
+    std::make_pair<uint8_t, uint8_t>(0x4B, 0x78),
+    std::make_pair<uint8_t, uint8_t>(0x44, 0x08),
+    std::make_pair<uint8_t, uint8_t>(0x45, 0x50),
+    std::make_pair<uint8_t, uint8_t>(0x64, 0xFF),
+    std::make_pair<uint8_t, uint8_t>(0x65, 0x1F),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x14),
+    std::make_pair<uint8_t, uint8_t>(0x65, 0x67),
+    std::make_pair<uint8_t, uint8_t>(0x66, 0x08),
+    std::make_pair<uint8_t, uint8_t>(0x63, 0x70),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x15),
+    std::make_pair<uint8_t, uint8_t>(0x48, 0x48),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
+    std::make_pair<uint8_t, uint8_t>(0x41, 0x0D),
+    std::make_pair<uint8_t, uint8_t>(0x43, 0x14),
+    std::make_pair<uint8_t, uint8_t>(0x4B, 0x0E),
+    std::make_pair<uint8_t, uint8_t>(0x45, 0x0F),
+    std::make_pair<uint8_t, uint8_t>(0x44, 0x42),
+    std::make_pair<uint8_t, uint8_t>(0x4C, 0x80),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x10),
+    std::make_pair<uint8_t, uint8_t>(0x5B, 0x02),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
+    std::make_pair<uint8_t, uint8_t>(0x40, 0x41),
+    std::make_pair<uint8_t, uint8_t>(0x70, 0x00),
+});static_assert(sizeof(INIT_LIST1) == 2 * INIT_LIST1.size());
+
+static constexpr auto INIT_LIST2 = std::to_array({
+    std::make_pair<uint8_t, uint8_t>(0x32, 0x44),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
+    std::make_pair<uint8_t, uint8_t>(0x40, 0x40),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x06),
+    std::make_pair<uint8_t, uint8_t>(0x62, 0xF0),
+    std::make_pair<uint8_t, uint8_t>(0x63, 0x00),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x0D),
+    std::make_pair<uint8_t, uint8_t>(0x48, 0xC0),
+    std::make_pair<uint8_t, uint8_t>(0x6F, 0xD5),
+    std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
+    std::make_pair<uint8_t, uint8_t>(0x5B, 0xA0),
+    std::make_pair<uint8_t, uint8_t>(0x4E, 0xA8),
+    std::make_pair<uint8_t, uint8_t>(0x5A, 0x50),
+    std::make_pair<uint8_t, uint8_t>(0x40, 0x80),
+});static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
+
 // #define PMW3901_DEBUG_EN
 
 #ifdef PMW3901_DEBUG_EN
@@ -170,97 +249,104 @@ Result<bool, Error> PMW3901::validate(){
 }
 
 Result<void, Error> PMW3901::init() {
-    static constexpr auto INIT_LIST1 = std::to_array({
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
-        std::make_pair<uint8_t, uint8_t>(0x61, 0xAD),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x03),
-        std::make_pair<uint8_t, uint8_t>(0x40, 0x00),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x05),
-        std::make_pair<uint8_t, uint8_t>(0x41, 0xB3),
-        std::make_pair<uint8_t, uint8_t>(0x43, 0xF1),
-        std::make_pair<uint8_t, uint8_t>(0x45, 0x14),
-        std::make_pair<uint8_t, uint8_t>(0x5B, 0x32),
-        std::make_pair<uint8_t, uint8_t>(0x5F, 0x34),
-        std::make_pair<uint8_t, uint8_t>(0x7B, 0x08),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x06),
-        std::make_pair<uint8_t, uint8_t>(0x44, 0x1B),
-        std::make_pair<uint8_t, uint8_t>(0x40, 0xBF),
-        std::make_pair<uint8_t, uint8_t>(0x4E, 0x3F),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x08),
-        std::make_pair<uint8_t, uint8_t>(0x65, 0x20),
-        std::make_pair<uint8_t, uint8_t>(0x6A, 0x18),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x09),
-        std::make_pair<uint8_t, uint8_t>(0x4F, 0xAF),
-        std::make_pair<uint8_t, uint8_t>(0x5F, 0x40),
-        std::make_pair<uint8_t, uint8_t>(0x48, 0x80),
-        std::make_pair<uint8_t, uint8_t>(0x49, 0x80),
-        std::make_pair<uint8_t, uint8_t>(0x57, 0x77),
-        std::make_pair<uint8_t, uint8_t>(0x60, 0x78),
-        std::make_pair<uint8_t, uint8_t>(0x61, 0x78),
-        std::make_pair<uint8_t, uint8_t>(0x62, 0x08),
-        std::make_pair<uint8_t, uint8_t>(0x63, 0x50),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x0A),
-        std::make_pair<uint8_t, uint8_t>(0x45, 0x60),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
-        std::make_pair<uint8_t, uint8_t>(0x4D, 0x11),
-        std::make_pair<uint8_t, uint8_t>(0x55, 0x80),
-        std::make_pair<uint8_t, uint8_t>(0x74, 0x1F),
-        std::make_pair<uint8_t, uint8_t>(0x75, 0x1F),
-        std::make_pair<uint8_t, uint8_t>(0x4A, 0x78),
-        std::make_pair<uint8_t, uint8_t>(0x4B, 0x78),
-        std::make_pair<uint8_t, uint8_t>(0x44, 0x08),
-        std::make_pair<uint8_t, uint8_t>(0x45, 0x50),
-        std::make_pair<uint8_t, uint8_t>(0x64, 0xFF),
-        std::make_pair<uint8_t, uint8_t>(0x65, 0x1F),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x14),
-        std::make_pair<uint8_t, uint8_t>(0x65, 0x60),
-        std::make_pair<uint8_t, uint8_t>(0x66, 0x08),
-        std::make_pair<uint8_t, uint8_t>(0x63, 0x78),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x15),
-        std::make_pair<uint8_t, uint8_t>(0x48, 0x58),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
-        std::make_pair<uint8_t, uint8_t>(0x41, 0x0D),
-        std::make_pair<uint8_t, uint8_t>(0x43, 0x14),
-        std::make_pair<uint8_t, uint8_t>(0x4B, 0x0E),
-        std::make_pair<uint8_t, uint8_t>(0x45, 0x0F),
-        std::make_pair<uint8_t, uint8_t>(0x44, 0x42),
-        std::make_pair<uint8_t, uint8_t>(0x4C, 0x80),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x10),
-        std::make_pair<uint8_t, uint8_t>(0x5B, 0x02),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
-        std::make_pair<uint8_t, uint8_t>(0x40, 0x41),
-        std::make_pair<uint8_t, uint8_t>(0x70, 0x00),
-    });static_assert(sizeof(INIT_LIST1) == 2 * INIT_LIST1.size());
-
-    static constexpr auto INIT_LIST2 = std::to_array({
-        std::make_pair<uint8_t, uint8_t>(0x32, 0x44),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
-        std::make_pair<uint8_t, uint8_t>(0x40, 0x40),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x06),
-        std::make_pair<uint8_t, uint8_t>(0x62, 0xf0),
-        std::make_pair<uint8_t, uint8_t>(0x63, 0x00),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x0D),
-        std::make_pair<uint8_t, uint8_t>(0x48, 0xC0),
-        std::make_pair<uint8_t, uint8_t>(0x6F, 0xd5),
-        std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
-        std::make_pair<uint8_t, uint8_t>(0x5B, 0xa0),
-        std::make_pair<uint8_t, uint8_t>(0x4E, 0xA8),
-        std::make_pair<uint8_t, uint8_t>(0x5A, 0x50),
-        std::make_pair<uint8_t, uint8_t>(0x40, 0x80),
-    });static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-    if(const auto err = spi_drv_.release(); err.is_err()) return Result<void, Error>(err);
-    return write_reg(PMW3901_REG_Power_Up_Reset, 0x5A)
-    .if_ok([this]{
-        delay(5);
-        PMW3901_ASSERT(validate().expect("PMW3901 not found!"), "PMW3901 verify failed!");
-    })
+
+    if(const auto err = spi_drv_.release(); err.is_err()) 
+        return Result<void, Error>(err);
+    
+    if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 
+        res.is_err()) return res; 
 
 
-    | update()
-    | write_list(std::span(INIT_LIST1))
-    .if_ok([]{delay(1);})    
-    | write_list(std::span(INIT_LIST2))
-    ;
+    delay(5);
+    PMW3901_ASSERT(validate().expect("PMW3901 not found!"), "PMW3901 verify failed!");
+
+    if(const auto res = update();
+        res.is_err()) return res;
+
+	// set performance optimization registers
+	// from PixArt PMW3901MB Optical Motion Tracking chip demo kit V3.20 (21 Aug 2018)
+	uint8_t v = 0;
+	uint8_t c1 = 0;
+	uint8_t c2 = 0;
+
+	if(const auto res = write_reg(0x7F, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x55, 0x01);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x50, 0x07);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x7f, 0x0e);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x43, 0x10);
+        res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = read_reg(0x67, v);
+        res.is_err()) return Err(res.unwrap_err());
+
+	// if bit7 is set
+	if (v & (1 << 7)) {
+		if(const auto res = write_reg(0x48, 0x04);
+            res.is_err()) return Err(res.unwrap_err());
+
+	} else {
+		if(const auto res = write_reg(0x48, 0x02);
+            res.is_err()) return Err(res.unwrap_err());
+	}
+
+	if(const auto res = write_reg(0x7F, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x51, 0x7b);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x50, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_reg(0x55, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = write_reg(0x7F, 0x0e);
+        res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = read_reg(0x73, v);
+        res.is_err()) return Err(res.unwrap_err());
+
+	if (v == 0) {
+		if(const auto res = read_reg(0x70, c1);
+            res.is_err()) return Err(res.unwrap_err());
+
+		if (c1 <= 28) {
+			c1 = c1 + 14;
+
+		} else {
+			c1 = c1 + 11;
+		}
+
+		if (c1 > 0x3F) {
+			c1 = 0x3F;
+		}
+
+		if(const auto res = read_reg(0x71, c2);
+            res.is_err()) return Err(res.unwrap_err());
+		c2 = ((uint16_t)c2 * 45) / 100;
+
+		if(const auto res = write_reg(0x7f, 0x00);
+            res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_reg(0x61, 0xAD);
+            res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_reg(0x51, 0x70);
+            res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_reg(0x7f, 0x0e);
+            res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_reg(0x70, c1);
+            res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_reg(0x71, c2);
+            res.is_err()) return Err(res.unwrap_err());
+	}
+
+    if(const auto res = write_list(std::span(INIT_LIST1));
+        res.is_err()) return res;
+    delay(10);
+
+    if(const auto res = write_list(std::span(INIT_LIST2));
+        res.is_err()) return res;   
+    return Ok();
 }

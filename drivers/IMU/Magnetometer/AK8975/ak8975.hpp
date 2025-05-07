@@ -56,7 +56,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    Option<Vector3_t<real_t>> get_magnet() ;
+    [[nodiscard]] Option<Vector3_t<real_t>> get_magnet() ;
 };
 
 };
