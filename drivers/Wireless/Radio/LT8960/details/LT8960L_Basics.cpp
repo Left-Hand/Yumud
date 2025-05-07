@@ -374,6 +374,7 @@ Result<void, Error> LT8960L::set_rf_channel(const Channel ch, const bool tx, con
 }
 
 Result<void, Error> LT8960L::set_rf_freq_mhz(const uint freq){
+    TODO();
     return Ok();
 }
 
@@ -412,9 +413,9 @@ Result<void, Error> LT8960L::validate(){
 }
 
 Result<bool, Error> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
-    return Result<bool, Error>(Ok(
-        (bool(i2c_.sda().read()))))
-        .if_ok([&]{i2c_.sda().set();});
+    bool is_ok = i2c_.sda().read() == HIGH;
+    if(is_ok) i2c_.sda().set();
+    return Ok(is_ok);
 }
 
 Result<void, Error> LT8960L_Phy::start_hw_listen_pkt(){

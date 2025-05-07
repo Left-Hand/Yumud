@@ -178,22 +178,23 @@ void nuedc_2023e_main(){
         gimbal_actuator.set_gest({0,0});
     });
 
-    const auto tau = 50.0_r;
+    const auto tau = 70.0_r;
 
     TdVec2 td{{
         .kp = tau * tau,
         .kd = 2 * tau,
         .max_spd = 40.0_r,
-        .max_acc = 600.0_r,
+        .max_acc = 1600.0_r,
         .fs = 1000
     }};
 
     auto test_td = [&](const auto t){
         // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
         const auto [x,y] = sincos(real_t(TAU) * t);
+        const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
-        const auto u = Vector2{CLAMP(70 * x, -5, 5), 0};
+        const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
         // const auto u = Vector2{6 * x, 0};
         td.update(u);
