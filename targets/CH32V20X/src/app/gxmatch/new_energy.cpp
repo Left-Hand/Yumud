@@ -177,7 +177,7 @@ public:
         return false;
     }
     private:
-        immutable_t<uint32_t> delay_ms_ = 0;
+        uint32_t delay_ms_ = 0;
         Option<uint32_t> last_millis_ = None;
 };
 

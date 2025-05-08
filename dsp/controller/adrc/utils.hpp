@@ -6,7 +6,8 @@
 
 #include "dsp/state_vector.hpp"
 
-namespace ymd::dsp{
+namespace ymd::dsp::adrc{
+
 static constexpr 
 real_t fal(const real_t e, const real_t alpha, const real_t delta){
 

@@ -157,7 +157,7 @@ public:
     
     //impure fn
     [[nodiscard]]
-    constexpr const auto & get() const {
+    constexpr const auto & get_states() const {
         return state_;
     }
 // private:
@@ -207,7 +207,8 @@ public:
         // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, lpf.get());
         
         // DEBUG_PRINTLN(expect_spd);
-        if(dist > 0.2_r){
+        // if(dist > 0.2_r){
+        if(true){
             auto expect_spd = SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
             if(spd * lpf.get()[1] < 0) expect_spd += lpf.get()[1];
             const auto spd_cmd = iq_t<16>(CLAMP2(expect_spd, self.max_spd_));

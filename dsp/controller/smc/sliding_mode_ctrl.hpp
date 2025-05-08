@@ -23,48 +23,48 @@ public:
     }
 
     void reconf(const Config & cfg){
-        c_.borrow_mut() = cfg.c;
-        q_.borrow_mut() = cfg.q;
+        c_ = cfg.c;
+        q_ = cfg.q;
 
-        out_min_.borrow_mut() = cfg.out_min;
-        out_max_.borrow_mut() = cfg.out_max;
+        out_min_ = cfg.out_min;
+        out_max_ = cfg.out_max;
 
-        fs_.borrow_mut() = cfg.fs;
+        fs_ = cfg.fs;
     }
 
     void reset(){
-        output_.borrow_mut() = out_min_.get();
+        output_ = out_min_;
     }
 
     void update(const q20 targ,const q20 meas) {
-        const auto c = c_.get();
-        const auto q = q_.get();
-        // const auto fs = fs_.get();
+        const auto c = c_;
+        const auto q = q_;
+        // const auto fs = fs_;
 
         const q20 x1 = targ - meas;
-        const q20 x2 = (x1 - err_prev_.get());
-        err_prev_.borrow_mut() = x1;
+        const q20 x2 = (x1 - err_prev_);
+        err_prev_ = x1;
 
         const q20 s = c * x1 + x2;
         const q20 delta = c * x2 + q * s;
 
-        output_.borrow_mut() = CLAMP(output_.get() + delta, out_min_.get(), out_max_.get());
+        output_ = CLAMP(output_ + delta, out_min_, out_max_);
     }
 
-    auto get() const {return output_.get();}
+    auto get() const {return output_;}
 
 private:
 
-    immutable_t<q20> c_ = 0;
-    immutable_t<q20> q_ = 0;
+    q20 c_ = 0;
+    q20 q_ = 0;
     
-    immutable_t<q20> out_min_ = 0;
-    immutable_t<q20> out_max_ = 0;
+    q20 out_min_ = 0;
+    q20 out_max_ = 0;
 
-    immutable_t<unsigned int> fs_ = 0;
+    unsigned int fs_ = 0;
 
-    immutable_t<q20> output_  = 0;
+    q20 output_  = 0;
 
-    immutable_t<q20> err_prev_ = 0;
+    q20 err_prev_ = 0;
 };
 }
