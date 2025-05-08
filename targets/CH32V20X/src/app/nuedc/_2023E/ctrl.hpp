@@ -8,6 +8,18 @@
 #include "types/vector2/vector2.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
+namespace std{
+    template<size_t Q, size_t Q2>
+    [[nodiscard]] __fast_inline constexpr iq_t<Q> copysign(const iq_t<Q> x, const iq_t<Q2> s){
+        // return iq_t<Q>(_iq<Q>::from_i32((
+        //     (std::bit_cast<int32_t>(x.value) & 0x7fff'ffff) | 
+        //     (std::bit_cast<int32_t>(s.value) & 0x8000'0000)
+        // )));
+
+        return s > 0 ? x : -x;
+        // return SIGN_AS(x,s);
+    }
+}
 namespace nudec::_2023E{
 
 //跟踪微分器 用于平滑输入
@@ -169,11 +181,16 @@ public:
     q16 max_acc_;
     State state_ {};
 
+    dsp::TrackingDifferentiatorByOrders<2> lpf = {dsp::TrackingDifferentiatorByOrders<2>::Config{
+        .r = 80.0_r,
+        .fs = 1000
+    }};
+
     //pure fn
     [[nodiscard]]
-    // static constexpr __fast_inline State 
-    static State 
-    forward(const Self & self, const State & state, const T u0){
+    static constexpr __fast_inline State 
+    // static State 
+    forward(Self & self, const State & state, const T u0){
         // const auto r_3 = r_2 * r;
         const auto dt = self.dt_;
         // const auto max_spd = self.max_spd_;
@@ -192,25 +209,22 @@ public:
         //     .fs = 1000
         // }};
 
-        static dsp::TrackingDifferentiatorByOrders<2> lpf = {dsp::TrackingDifferentiatorByOrders<2>::Config{
-            .r = 80.0_r,
-            .fs = 1000
-        }};
+        // static 
 
-        lpf.update(u0);
-        const auto u = lpf.get()[0];
+        self.lpf.update(u0);
+        const auto u = self.lpf.get()[0];
         // const auto u = u0;
         const auto pos_err = u - pos;
         const auto dist = ABS(pos_err);
         // const auto expect_spd = CLAMP2(SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_);
-        // const auto expect_spd = iq_t<16>(CLAMP2(lpf.get()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
-        // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, lpf.get());
+        // const auto expect_spd = iq_t<16>(CLAMP2(self.lpf.get()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
+        // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.get());
         
         // DEBUG_PRINTLN(expect_spd);
-        // if(dist > 0.2_r){
-        if(true){
-            auto expect_spd = SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
-            if(spd * lpf.get()[1] < 0) expect_spd += lpf.get()[1];
+        if(dist > 0.2_r){
+        // if(true){
+            auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
+            if(spd * self.lpf.get()[1] < 0) expect_spd += self.lpf.get()[1];
             const auto spd_cmd = iq_t<16>(CLAMP2(expect_spd, self.max_spd_));
             return {
                 pos + spd * dt, 

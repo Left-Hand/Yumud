@@ -123,6 +123,13 @@ static constexpr auto make_cfg(){
 
 }
 
+
+template<size_t Q>
+static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
+    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
+}
+
+
 void Kalman_Filter_X(real_t Accel,real_t Gyro)		{
     static constexpr real_t Q_angle=0.001_r;// 过程噪声的协方差
 	static constexpr real_t Q_gyro=0.003_r;//0.003 过程噪声的协方差 过程噪声的协方差为一个一行两列矩阵
@@ -187,7 +194,8 @@ private:
     State state_;
     real_t dt_;
     static constexpr State forward(const Self & self, const State & x, const real_t u_in){
-        const auto u = u_in * 5.0_r;
+        const auto noise_of_partial = sinpu(x[0]);
+        const auto u = u_in * 5.0_r + 200 * noise_of_partial;
         return {
             x[0] + x[1] * self.dt_,
             x[1] + u * self.dt_
@@ -285,7 +293,7 @@ void nuedc_2023e_main(){
         DEBUG_PRINTLN(u, td.get()[0][0], td.get()[1][0], td.get()[2], u1 - u0);
     };
 
-    
+    [[maybe_unused]]
     auto test_cs = [&](const auto t){
         const auto tau = 80.0_r;
         // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
@@ -301,7 +309,7 @@ void nuedc_2023e_main(){
         // const auto u = 15 * CLAMP2(sin(t), 0.7_r);
         // const auto u = 15 * t + 5 * sin(3 * t);
         // const auto u = 5 * frac(t);
-        const auto u = 5 * sign(sin(3 * t));
+        const auto u = 10 * sign(sin(3 * t));
 
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
         // const auto u = Vector2{6 * x, 0};
@@ -344,43 +352,52 @@ void nuedc_2023e_main(){
 
     auto test_leso = [&](const auto t){
         // const auto tau = 80.0_r;
-        static constexpr auto mc_w = 60.8_r;
+        static constexpr auto mc_w = 90.8_r;
         static CommandShaper1 cs{{
             .kp = mc_w * mc_w,
             .kd = 2 * mc_w,
-            .max_spd = 40.0_r,
+            .max_spd = 60.0_r,
             // .max_acc = 200.0_r,
-            // .max_acc = 80.0_r,
+            // .max_acc = 120.0_r,
             // .max_acc = 100.0_r,
-            .max_acc = 160.0_r,
+            // .max_acc = 260.0_r,
+            .max_acc = 170.0_r,
             .fs = 1000
         }};
 
         static dsp::Leso leso{dsp::Leso::Config{
             .b0 = 1,
-            .w = 17.8_r,
+            .w = mc_w / 3,
             .fs = 1000
         }};
 
         static MockMotor motor{{.fs = 1000}};
 
-        // const auto p0 = 12 * sign(sin(2 * t));
+        const auto p0 = 12 * sign(sin(2 * t));
         // const auto p0 = 0.2_r * int(3 * t);
         // const auto p0 = 2 * frac(3 * t);
-        const auto p0 = 12 * frac(t);
+        // const auto p0 = 12 * frac(t);
+        // const auto p0 = 12 * tpzpu(t);
+        // const auto p0 = CLAMP2(10 * tpzpu(t/4), 5);
         // const auto p0 = 12 * sin(2 * t);
+
+        const auto u0 = micros();
+
         cs.update(p0);
         const auto p = cs.get_states()[0];
         const auto v = cs.get_states()[1];
 
 
+        [[maybe_unused]]
+        static constexpr auto kp = mc_w * mc_w;
         static constexpr auto kd = 2 * mc_w;
-        const auto u = kd * dsp::adrc::ssqrt(p - motor.get()[0]) + kd * (v - motor.get()[1]);
+        // const auto u = kd * dsp::adrc::ssqrt(p - motor.get()[0]) + kd * (v - motor.get()[1]);
+        const auto u = kp * (p - motor.get()[0]) + kd * (v - motor.get()[1]);
         // const auto dist_inj = + 0.1_r* sinpu(3 * t);
         // const auto dist_inj = 80 + 30.1_r * sin(10 * t);
         const auto dist_inj = 0;
         
-        const auto u0 = micros();
+
         motor.update(u + dist_inj - leso.get_disturbance());
         leso.update(motor.get()[1], u);
         const auto u1 = micros();

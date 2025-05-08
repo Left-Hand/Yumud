@@ -125,17 +125,17 @@ class TrackingDifferentiatorByOrders :public _TrackingDifferentiatorByOrders_Bas
 public:
 
 
-    TrackingDifferentiatorByOrders(const Config & cfg){
+    constexpr TrackingDifferentiatorByOrders(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reset(){
+    constexpr void reset(){
         state_.reset();
     }
 
 
-    void update(const q20 u){
+    constexpr void update(const q20 u){
         const auto r = r_;
         const auto r_2 = r * r;
         const auto r_3 = r_2 * r;
@@ -173,8 +173,8 @@ public:
         }
     }
 
-    const auto & back() const {return state_.back();}
-    const auto & get() const {return state_;}
+    constexpr const auto & back() const {return state_.back();}
+    constexpr const auto & get() const {return state_;}
 
 
 private:
