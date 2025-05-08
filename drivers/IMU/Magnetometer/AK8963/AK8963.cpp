@@ -13,20 +13,12 @@ using Error = AK8963::Error;
 #define AK8963_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define AK8963_PANIC(...) PANIC{__VA_ARGS__}
 #define AK8963_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg, ...) read_reg(reg.address, reg).loc().expect(__VA_ARGS__);
+#define read_reg(reg, ...) read_reg(reg.address, reg).loc().expect(__VA_ARGS__);
 #define WRITE_REG(reg, ...) write_reg(reg.address, reg).loc().expect(__VA_ARGS__);
 #else
 #define AK8963_DEBUG(...)
 #define AK8963_PANIC(...)  PANIC_NSRC()
 #define AK8963_ASSERT(cond, ...) ASSERT_NSRC(cond)
-
-#ifdef AK8963_NOTHROW_EN
-#define READ_REG(reg, ...) read_reg(reg.address, reg).unwrap();
-#define WRITE_REG(reg, ...) write_reg(reg.address, reg).unwrap();
-#else
-#define READ_REG(reg, ...) if(const auto res = read_reg(reg.address, reg); res.is_err()) return Err(res.unwrap_err());
-#define WRITE_REG(reg, ...) if(const auto res = write_reg(reg.address, reg); res.is_err()) return Err(res.unwrap_err());
-#endif
 
 #endif
 
@@ -53,11 +45,14 @@ Result<void, Error> AK8963::init(){
     AK8963_ASSERT(validate().is_ok(), "AK8963 verify failed");
 
     delay(2);
-    reset();
+    if(const auto res = reset();
+        res.is_err()) return Err(res.unwrap_err());
     delay(2);
 
     {
-        const auto coeff = getCoeff().unwrap();
+        const auto coeff_res = get_coeff();
+        if(coeff_res.is_err()) return Err(coeff_res.unwrap_err());
+        const auto coeff = coeff_res.unwrap();
 
         auto coeff2adj = [&](const uint8_t _coeff) -> real_t{
             return ((iq_t<16>(_coeff - 128) >> 8) + 1);
@@ -70,8 +65,10 @@ Result<void, Error> AK8963::init(){
 
     delay(10);
 
-    setMode(Mode::ContMode2).unwrap();
-    set_data_width(16);
+    if(const auto res = set_mode(Mode::ContMode2);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_data_width(16);
+        res.is_err()) return Err(res.unwrap_err());
 
     AK8963_DEBUG("AK8963 init successfully!!");
     return Ok();
@@ -79,13 +76,13 @@ Result<void, Error> AK8963::init(){
 
 
 Result<void, Error> AK8963::validate(){
-    // p_i2c_drv_->release().unwrap();
 
     if (!phy_.validate().is_ok()){
         return Err{Error::PhyVerifyFailed};
     }
 
-    read_reg(wia_reg.address, wia_reg.data).unwrap();
+    if(const auto res = read_reg(wia_reg.address, wia_reg.data);
+        res.is_err()) return Err(res.unwrap_err());
 
     if (wia_reg.data != wia_reg.correct){
         if(wia_reg.data == 63){
@@ -96,12 +93,16 @@ Result<void, Error> AK8963::validate(){
     }
     return Ok();
 }
-Result<Vector3_t<uint8_t>, Error> AK8963::getCoeff(){
+Result<Vector3_t<uint8_t>, Error> AK8963::get_coeff(){
     // Vector3_t coeff = {};
-    write_reg(0x0a, 0x0f).unwrap();
-    READ_REG(asax_reg);
-    READ_REG(asay_reg);
-    READ_REG(asaz_reg);
+    if(const auto res = write_reg(0x0a, 0x0f);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_reg(asax_reg.address, asax_reg.as_ref());
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_reg(asay_reg.address, asay_reg.as_ref());
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_reg(asaz_reg.address, asaz_reg.as_ref());
+        res.is_err()) return Err(res.unwrap_err());
     return Ok(Vector3_t<uint8_t>{asax_reg.data, asay_reg.data, asaz_reg.data});
 }
 
@@ -120,7 +121,7 @@ Result<void, Error> AK8963::busy(){
 Result<void, Error> AK8963::stable(){return Ok();}
 
 
-Result<void, Error> AK8963::disableI2c(){
+Result<void, Error> AK8963::disable_i2c(){
     return Ok();
 }
 
@@ -134,7 +135,8 @@ Result<void, Error> AK8963::update(){
     // using Ret = function_traits<Fn>::return_type;
     // using t = std::invoke_result_t<decltype(lam2)>>;
     data_valid_ = this->read_burst(mag_x_reg.address, &mag_x_reg, 3).is_ok();
-    READ_REG(st2_reg);
+    if(const auto res = read_reg(st2_reg.address, st2_reg.as_ref());
+        res.is_err()) return Err(res.unwrap_err());
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
     data_valid_ &= !st2_reg.hofl;
     return Ok();
@@ -161,7 +163,7 @@ Result<void, Error> AK8963::set_data_width(const uint8_t bits){
     return write_reg(reg.address, reg);
 }
 
-Result<void, Error> AK8963::setMode(const AK8963::Mode mode){
+Result<void, Error> AK8963::set_mode(const AK8963::Mode mode){
     cntl1_reg.mode = uint8_t(mode);
     return write_reg(cntl1_reg.address, cntl1_reg);
 }

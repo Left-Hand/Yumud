@@ -24,8 +24,8 @@ public:
 
 
     void update(const q20 v){
-        const auto h = h_.get();
-        const auto r = r_.get();
+        const auto h = h_;
+        const auto r = r_;
 
         const auto x1 = state_[0];
         const auto x2 = state_[1];
@@ -36,7 +36,7 @@ public:
     }
 
     void update2(const q20 v){
-        const auto h = h_.get();
+        const auto h = h_;
 
         const auto x1 = state_[0];
         const auto x2 = state_[1];
@@ -62,49 +62,46 @@ public:
 
     __fast_inline
     constexpr q20 fhan2(q20 x1,q20 x2) const{
-        const auto deltaa_squ = square(deltaa_.get());
-        const auto r = r_.get();
-        const auto inv_h = inv_h_.get();
+        const auto deltaa_squ = square(deltaa_);
+        const auto r = r_;
+        const auto inv_h = inv_h_;
 
-        const auto y = x1 + x2 * h_.get();
+        const auto y = x1 + x2 * h_;
         const auto a0 = sqrt(deltaa_squ + 8 * r * abs(y));
-        const auto a = ((abs(y)<=deltaa0_.get()) ? 
+        const auto a = ((abs(y)<=deltaa0_) ? 
             (x2+y * inv_h) : 
-            (x2+0.5_r*(a0-deltaa_.get())*sign(y)));
+            (x2+0.5_r*(a0-deltaa_)*sign(y)));
     
-        if(abs(a)<=deltaa_.get())
+        if(abs(a)<=deltaa_)
             return -a * inv_h;
         else
             return -r*sign(a);
     }
 
-    const auto & get() const {return state_.get();}
+    const auto & get() const {return state_;}
 
 
     void reconf(const Config & cfg){
-        h_.borrow_mut() = cfg.h;
-        r_.borrow_mut() = cfg.r;
+        h_ = cfg.h;
+        r_ = cfg.r;
 
-        deltaa_.borrow_mut() = cfg.r*cfg.h;
-        deltaa0_.borrow_mut() = cfg.r*cfg.h*cfg.h;
-        inv_h_.borrow_mut() = 1/cfg.h;
-        // d_lmt_.borrow_mut() = - cfg.r 
+        deltaa_ = cfg.r*cfg.h;
+        deltaa0_ = cfg.r*cfg.h*cfg.h;
+        inv_h_ = 1/cfg.h;
+        // d_lmt_ = - cfg.r 
     }
 private:
-    immutable_t<q20> h_ = 0;
-    immutable_t<q20> r_ = 0;
+    q20 h_ = 0;
+    q20 r_ = 0;
     
-    immutable_t<q20> deltaa_ = 0;
-    immutable_t<q20> deltaa0_ = 0;
-    immutable_t<q20> inv_h_ = 0;
-    // immutable_t<q20> d_lmt_ = 0;
+    q20 deltaa_ = 0;
+    q20 deltaa0_ = 0;
+    q20 inv_h_ = 0;
+    // q20 d_lmt_ = 0;
 
     using State = StateVector<q20, 2>;
     State state_;
 };
-
-
-
 
 class  _TrackingDifferentiatorByOrders_Base{
 public:
@@ -114,13 +111,13 @@ public:
     };
 
     void reconf(const Config & cfg){
-        r_.borrow_mut() = cfg.r;
-        dt_.borrow_mut() = 1_q24 / cfg.fs;
+        r_ = cfg.r;
+        dt_ = 1_q24 / cfg.fs;
     }
 
 protected:
-    immutable_t<q8> r_ = 0;
-    immutable_t<q20> dt_ = 0;
+    q8 r_ = 0;
+    q20 dt_ = 0;
 };
 
 template<size_t N>
@@ -128,21 +125,21 @@ class TrackingDifferentiatorByOrders :public _TrackingDifferentiatorByOrders_Bas
 public:
 
 
-    TrackingDifferentiatorByOrders(const Config & cfg){
+    constexpr TrackingDifferentiatorByOrders(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reset(){
+    constexpr void reset(){
         state_.reset();
     }
 
 
-    void update(const q20 u){
-        const auto r = r_.get();
+    constexpr void update(const q20 u){
+        const auto r = r_;
         const auto r_2 = r * r;
         const auto r_3 = r_2 * r;
-        const auto dt = dt_.get();
+        const auto dt = dt_;
 
         if constexpr (N == 2){
             const auto x1 = state_[0];
@@ -176,8 +173,8 @@ public:
         }
     }
 
-    const auto & back() const {return state_.back();}
-    const auto & get() const {return state_.get();}
+    constexpr const auto & back() const {return state_.back();}
+    constexpr const auto & get() const {return state_;}
 
 
 private:

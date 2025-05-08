@@ -44,7 +44,7 @@ public:
         // return last_;
     }
 
-    constexpr const T & get() const {
+    [[nodiscard] ]constexpr const T & get() const {
         return last_;
     }
 

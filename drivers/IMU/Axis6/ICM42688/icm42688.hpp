@@ -3,17 +3,177 @@
 #pragma once
 
 #include "drivers/IMU/details/InvensenseIMU.hpp"
+#include "core/io/regs.hpp"
+#include "core/utils/Reg.hpp"
 
 namespace ymd::drivers{
 
-class ICM42688:public AccelerometerIntf, public GyroscopeIntf{
-public:
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68); 
+struct ICM42688_Collections{
+    static constexpr auto ICM42688_WHO_AM_I = 0x75;
+    // static constexpr 
 
+    
     using Error = ImuError;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+    using RegAddress = uint8_t;
+};
+
+struct ICM42688_Regs:public ICM42688_Collections{
+    struct R8_DEVICE_CONFIG:public Reg8<>{
+        static constexpr RegAddress address = 0x11;
+        uint8_t soft_reset_config:1;
+        uint8_t __resv1__:3;
+        uint8_t spi_mode:1;
+        uint8_t __resv2__:3;
+    }DEF_R8(device_config_reg);
+
+    struct R8_DRIVE_CONFIG:public Reg8<>{
+        static constexpr RegAddress address = 0x13;
+        uint8_t spi_slew_rate:3;
+        uint8_t i2c_slew_rate:3;
+        uint8_t :2;
+    }DEF_R8(drive_config_reg);
+
+    struct R8_INT_CONFIG:public Reg8<>{
+        static constexpr RegAddress address = 0x14;
+        uint8_t int1_polatity:1;
+        uint8_t int1_drive_circuit:1;
+        uint8_t int1_mode:1;
+        uint8_t int2_polatity:1;
+        uint8_t int2_drive_circuit:1;
+        uint8_t int2_mode:1;
+        uint8_t :2;
+    }DEF_R8(int_config_reg)
+
+    struct R8_FIFO_CONFIG:public Reg8<>{
+        static constexpr RegAddress address = 0x16;
+        uint8_t :6;
+        uint8_t fifo_mode:2;
+    }DEF_R8(fifo_config_reg)
+
+    struct R16_TEMPDATA:public Reg16<>{
+        static constexpr RegAddress address = 0x1D;
+        uint16_t data;
+    }DEF_R16(tempdata_reg)
+
+    struct R16_ACCEL_DATA_X:public Reg16<>{
+        static constexpr RegAddress address = 0x1f;
+        int16_t data;
+    }DEF_R16(accel_data_x_reg)
+    struct R16_ACCEL_DATA_Y:public Reg16<>{
+        static constexpr RegAddress address = 0x21;
+        int16_t data;
+    }DEF_R16(accel_data_y_reg)
+    struct R16_ACCEL_DATA_Z:public Reg16<>{
+        static constexpr RegAddress address = 0x23;
+        int16_t data;
+    }DEF_R16(accel_data_z_reg)
+
+    struct R16_GYRO_DATA_X:public Reg16<>{
+        static constexpr RegAddress address = 0x25;
+        int16_t data;
+    }DEF_R16(gyro_data_x_reg)
+    struct R16_GYRO_DATA_Y:public Reg16<>{
+        static constexpr RegAddress address = 0x27;
+        int16_t data;
+    }DEF_R16(gyro_data_y_reg)
+    struct R16_GYRO_DATA_Z:public Reg16<>{
+        static constexpr RegAddress address = 0x29;
+        int16_t data;
+    }DEF_R16(gyro_data_z_reg)
+
+    struct R16_TMST_FSYNC:public Reg16<>{
+        static constexpr RegAddress address = 0x2B;
+        int16_t data;
+    }DEF_R16(tmst_fsync_reg)
+
+    struct R8_INT_STATUS1:public Reg8<>{
+        static constexpr RegAddress address = 0x2D;
+        uint8_t agc_rdy_int:1;
+        uint8_t fifo_full_int:1;
+        uint8_t fifo_ths_int:1;
+        uint8_t data_rdy_int:1;
+
+        uint8_t reset_done_int:1;
+        uint8_t pll_rdy_int:1;
+        uint8_t ui_fsync_int:1;
+        uint8_t :1;
+    }DEF_R8(int_status1_reg)
+
+    struct R16_FIFO_COUNT:public Reg16<>{
+        static constexpr RegAddress address = 0x2E;
+        uint16_t fifo_count;
+    }DEF_R16(fifo_count_reg)
+
+    struct R8_FIFO_DATA:public Reg8<>{
+        static constexpr RegAddress address = 0x30;
+        uint8_t fifo_data;
+    }DEF_R8(fifo_data_reg)
+
+    struct R16_APEX_DATA0:public Reg16<>{
+        static constexpr RegAddress address = 0x31;
+        // uint8_t data;
+        uint16_t step_cnt;
+    }DEF_R16(apex_data0_reg)
+
+    struct R8_APEX_DATA2:public Reg8<>{
+        static constexpr RegAddress address = 0x33;
+        uint8_t step_cadence;
+    }DEF_R8(apex_data2_reg)
+
+    struct R8_APEX_DATA3:public Reg8<>{
+        static constexpr RegAddress address = 0x34;
+        uint8_t activity_class:2;
+        uint8_t dmp_idle:1;
+        uint8_t :5;
+    }DEF_R8(apex_data3_reg)
+
+    struct R8_APEX_DATA4:public Reg8<>{
+        static constexpr RegAddress address = 0x35;
+        uint8_t tap_dir:1;
+        uint8_t tap_axis:2;
+        uint8_t tap_num:2;
+        uint8_t :3;
+    }DEF_R8(apex_data4_reg)
+
+    struct R8_APEX_DATA5:public Reg8<>{
+        static constexpr RegAddress address = 0x36;
+        uint8_t double_tap_timing:6;
+        uint8_t :2;
+    }DEF_R8(apex_data5_reg)
+
+    struct R8_INT_STATUS2:public Reg8<>{
+        static constexpr RegAddress address = 0x37;
+        uint8_t wom_x_int:1;
+        uint8_t wom_y_int:1;
+        uint8_t wom_z_int:1;
+        uint8_t smd_int:1;
+        uint8_t :4;
+    }DEF_R8(int_status2_reg)
+
+    struct R8_INT_STATUS3:public Reg8<>{
+        static constexpr RegAddress address = 0x38;
+        uint8_t tap_det_int:1;
+        uint8_t sleep_int:1;
+        uint8_t wake_int:1;
+        uint8_t tilt_det_int:1;
+        uint8_t step_cnt_ovf_int:1;
+        uint8_t step_det_int:1;
+        uint8_t :2;
+    }DEF_R8(int_status3_reg)
+
+};
+
+class ICM42688:
+    public AccelerometerIntf, 
+    public GyroscopeIntf,
+    public ICM42688_Regs
+{
+public:
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68); 
 
 
     enum class AFS:uint8_t{

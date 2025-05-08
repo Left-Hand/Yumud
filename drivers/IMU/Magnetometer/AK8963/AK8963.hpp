@@ -131,7 +131,7 @@ protected:
 
     Vector3_t<real_t> adj_scale;
 
-    Result<Vector3_t<uint8_t>, Error> getCoeff();
+    [[nodiscard]] Result<Vector3_t<uint8_t>, Error> get_coeff();
 
     static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
         if(is_16_bits){
@@ -149,15 +149,15 @@ public:
     AK8963(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
     AK8963(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
-    Result<void, Error> init();
-    Result<void, Error> update();
-    Result<void, Error> validate();
-    Result<void, Error> reset();
-    Result<void, Error> busy();
-    Result<void, Error> stable();
-    Result<void, Error> disableI2c();
-    Option<Vector3_t<real_t>> get_magnet();
-    Result<void, Error> set_data_width(const uint8_t bits);
-    Result<void, Error> setMode(const Mode mode);
+    [[nodiscard]] Result<void, Error> init();
+    [[nodiscard]] Result<void, Error> update();
+    [[nodiscard]] Result<void, Error> validate();
+    [[nodiscard]] Result<void, Error> reset();
+    [[nodiscard]] Result<void, Error> busy();
+    [[nodiscard]] Result<void, Error> stable();
+    [[nodiscard]] Result<void, Error> disable_i2c();
+    [[nodiscard]] Option<Vector3_t<real_t>> get_magnet();
+    [[nodiscard]] Result<void, Error> set_data_width(const uint8_t bits);
+    [[nodiscard]] Result<void, Error> set_mode(const Mode mode);
 };
 };
