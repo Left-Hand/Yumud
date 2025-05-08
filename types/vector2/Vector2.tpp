@@ -128,7 +128,7 @@ constexpr T Vector2_t<T>::project(const T & rad) const{
 
 template<arithmetic T>
 constexpr bool Vector2_t<T>::is_equal_approx(const Vector2_t<T> & b) const{
-    return is_equal_approx_f(x, b.x) && is_equal_approx_f(y, b.y);
+    return ymd::is_equal_approx(x, b.x) && ymd::is_equal_approx(y, b.y);
 }
 
 template<arithmetic T>

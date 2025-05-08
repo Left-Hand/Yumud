@@ -3,6 +3,7 @@
 #include "threads.hpp"
 #include "tests.hpp"
 
+
 #define USE_MOCK_SERVO
 
 
@@ -38,11 +39,7 @@ public:
     hal::TimerOC & pwm_pitch = SERVO_PWMGEN_TIMER.oc(2);
 
     void setup(){
-        DBG_UART.init(576000);
-        DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.no_brackets();
-        DEBUGGER.force_sync();
-        DEBUGGER.set_eps(4);
+
 
         SERVO_PWMGEN_TIMER.init(50);
 
@@ -128,6 +125,11 @@ static constexpr auto make_cfg(){
 
 void nuedc_2023e_main(){
     using namespace nudec::_2023E;
+    DBG_UART.init(576000);
+    DEBUGGER.retarget(&DBG_UART);
+    DEBUGGER.no_brackets();
+    DEBUGGER.force_sync();
+    DEBUGGER.set_eps(4);
 
     const auto cfg = make_cfg();
 
@@ -174,39 +176,104 @@ void nuedc_2023e_main(){
 
     world.ready();
 
-    world.register_servo_ctl_callback([&]{
-        gimbal_actuator.set_gest({0,0});
-    });
+    // world.register_servo_ctl_callback([&]{
+    //     gimbal_actuator.set_gest({0,0});
+    // });
 
-    const auto tau = 70.0_r;
+    const auto tau = 80.0_r;
 
     TdVec2 td{{
         .kp = tau * tau,
         .kd = 2 * tau,
-        .max_spd = 40.0_r,
-        .max_acc = 1600.0_r,
+        .max_spd = 60.0_r,
+        .max_acc = 1000.0_r,
         .fs = 1000
     }};
 
+    CommandShaper1 cs{{
+        .kp = tau * tau,
+        .kd = 2 * tau,
+        .max_spd = 40.0_r,
+        // .max_acc = 200.0_r,
+        // .max_acc = 80.0_r,
+        .max_acc = 100.0_r,
+        .fs = 1000
+    }};
+
+    [[maybe_unused]]
     auto test_td = [&](const auto t){
         // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
-        const auto [x,y] = sincos(real_t(TAU) * t);
-        const auto m = sin(3 * real_t(TAU) * t);
+        // const auto [x,y] = sincos(real_t(TAU) * t);
+        // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
-        const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vector2{10 * frac(t * 3), 0};
+        const auto u = Vector2{10 * frac(t), 0};
+        
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
         // const auto u = Vector2{6 * x, 0};
+
+        const auto u0 = micros();
         td.update(u);
-        DEBUG_PRINTLN(u, td.get(), td.get()[1].length(), td.get()[2].length());
+        const auto u1 = micros();
+        DEBUG_PRINTLN(u, td.get()[0][0], td.get()[1][0], td.get()[2], u1 - u0);
     };
 
-    real_t t = 0;
+    
+    auto test_cs = [&](const auto t){
+        // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
+        // const auto [x,y] = sincos(real_t(TAU) * t);
+        // const auto m = sin(3 * real_t(TAU) * t);
+        // const auto [x,y] = sincos(ret);
+        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
+        
+        // const auto u = 10 * frac(t);
+        // const auto u = 10 * sinpu(t);
+        // const auto u = 150 * CLAMP2(sin(t/5), 0.7_r);
+        // const auto u = 15 * CLAMP2(sin(t), 0.7_r);
+        // const auto u = 15 * t + 5 * sin(3 * t);
+        // const auto u = 5 * frac(t);
+        const auto u = 5 * sign(sinpu(t));
+
+        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vector2{6 * x, 0};
+
+        const auto u0 = micros();
+        cs.update(u);
+        // for(size_t i = 0; i < 300; i ++)cs.update(u);
+        // __nopn(1);
+        // portC[13].toggle();
+        const auto u1 = micros();
+        DEBUG_PRINTLN(
+            u,
+            cs.get()[0],
+            u1 - u0
+        //     cs.get()[0], 
+        //     cs.get()[1], 
+        //     cs.get()[2],
+        //     cs.kp_,
+        //     cs.max_acc_
+        //     // u1 - u0
+        );
+    };
+
+    delay(20);
+    // bindSystickCb([&]{
+    //     const auto t = time();
+    //     // test_td(t);
+    //     test_cs(t);
+    // });
+    
     while(true){
+        const auto t = time();
+        // test_td(t);
+        test_cs(t);
         // const real_t t = world.time();
-        repl_thread.process(0);
-        t += 0.001_r;
-        test_td(t);
+        // repl_thread.process(0);
+        // t += 0.001_r;
+        // test_td(t);
         // DEBUG_PRINTLN(millis());
         // delay(1);
     }
