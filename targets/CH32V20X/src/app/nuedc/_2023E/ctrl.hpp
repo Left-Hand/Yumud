@@ -139,7 +139,7 @@ public:
     using E = q16;
     using T = q16;
 
-    using State = std::array<T, 2>;
+    using State = std::array<q20, 2>;
 
     
     CommandShaper1(const Config & cfg){
@@ -176,7 +176,7 @@ public:
 public:
     q12 kp_;
     q12 kd_;
-    q16 dt_;
+    q20 dt_;
     q16 max_spd_;
     q16 max_acc_;
     State state_ {};
@@ -221,14 +221,15 @@ public:
         // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.get());
         
         // DEBUG_PRINTLN(expect_spd);
-        if(dist > 0.2_r){
+        if(dist > 0.1_r){
         // if(true){
-            auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
+            auto expect_spd = std::copysign(std::sqrt(1.93_r * self.max_acc_ * dist), pos_err);
+            // auto expect_spd = std::copysign(std::sqrt(1.57_r * self.max_acc_ * dist), pos_err);
             if(spd * self.lpf.get()[1] < 0) expect_spd += self.lpf.get()[1];
-            const auto spd_cmd = iq_t<16>(CLAMP2(expect_spd, self.max_spd_));
+            const auto spd_cmd = q20(CLAMP2(expect_spd, self.max_spd_));
             return {
                 pos + spd * dt, 
-                STEP_TO(spd, spd_cmd, self.max_acc_ * self.dt_),
+                STEP_TO(spd, spd_cmd, q20((self.max_acc_)* self.dt_)),
             };
         }else{
             return {

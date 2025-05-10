@@ -63,7 +63,7 @@ bool PAW3805::walkRegSequence(const PAWSensorRegSeq *regSeqList, uint8_t regSeqN
         //
         if ( regSeqList[i].rw ==PAWSENSOR_READCOMPARE )
         {
-            value = PAW3805::readReg(regSeqList[i].regoffset);
+            value = PAW3805::read_reg(regSeqList[i].regoffset);
 
             if ( value != regSeqList[i].value )
             {
@@ -76,7 +76,7 @@ bool PAW3805::walkRegSequence(const PAWSensorRegSeq *regSeqList, uint8_t regSeqN
         //
         else if ( regSeqList[i].rw == PAWSENSOR_READONLY )
         {
-            value = PAW3805::readReg(regSeqList[i].regoffset);
+            value = PAW3805::read_reg(regSeqList[i].regoffset);
 
         }
         // mask compare with previous read value
@@ -93,7 +93,7 @@ bool PAW3805::walkRegSequence(const PAWSensorRegSeq *regSeqList, uint8_t regSeqN
         //
         else if ( regSeqList[i].rw == PAWSENSOR_WRITE )
         {
-            PAW3805::writeReg(regSeqList[i].regoffset , regSeqList[i].value );
+            PAW3805::write_reg(regSeqList[i].regoffset , regSeqList[i].value );
         }
     }
 
@@ -182,11 +182,11 @@ void PAW3805::enable_Interrupt(bool enabled)
 /// This function reads the specified register over the SPI interface and returns
 /// its value
 /// \param
-///    regAddress - address to read
+///    addr - address to read
 /// \return
 ///    register value read from sensor
 ////////////////////////////////////////////////////////////////////////////////////////
-uint8_t PAW3805::readReg(uint8_t regAddress)
+uint8_t PAW3805_Phy::read_reg(uint8_t addr)
 {
     TODO();
     return 0;
@@ -197,7 +197,7 @@ uint8_t PAW3805::readReg(uint8_t regAddress)
     // wiced_hal_gpio_set_pin_output(PAW_sensor_config.cs_gpio, CS_ASSERT);
 
     // // Write the register address over the SPI
-    // wiced_hal_pspi_tx_data(SPI1, 1 ,&regAddress);
+    // wiced_hal_pspi_tx_data(SPI1, 1 ,&addr);
 
     // // Now get the response from the sensor
     // wiced_hal_pspi_rx_data(SPI1, 1, &val);
@@ -209,32 +209,10 @@ uint8_t PAW3805::readReg(uint8_t regAddress)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-/// This function writes the given value to the specified sensor register over the
-/// SPI interface
-/// \param
-///    regAddress - address to write to
-/// \param
-///    val - value to write
-///////////////////////////////////////////////////////////////////////////
-void PAW3805::writeReg(uint8_t regAddress, uint8_t val)
-{
-    TODO();
-    return;
-//     uint8_t buf[2];
 
-//     // Create spi command. Ensure write bit is set in the address byte
-//     buf[0] = regAddress | WRITE_CMD_BIT;
-//     buf[1] = val;
-
-//     // Assert CS.
-//     wiced_hal_gpio_set_pin_output(PAW_sensor_config.cs_gpio, CS_ASSERT);
-
-//     // Get the SPI interface to do the job
-//     wiced_hal_pspi_tx_data(SPI1, 2,(uint8_t *)buf);
-
-//     // Deassert CS
-//     wiced_hal_gpio_set_pin_output(PAW_sensor_config.cs_gpio, CS_DEASSERT);
+void PAW3805_Phy::write_reg(uint8_t addr, uint8_t val){
+    const std::array<uint8_t,2> buf = {uint8_t(addr | WRITE_CMD_BIT), val};
+    spi_drv_.write_burst<uint8_t>(buf.data(), buf.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +222,7 @@ void PAW3805::writeReg(uint8_t regAddress, uint8_t val)
 /// \param
 ///    bytesToRead - number of consecutive registers to read
 ////////////////////////////////////////////////////////////////////////////////
-void PAW3805::burstRead(uint8_t  *buf, uint8_t bytesToRead)
+void PAW3805_Phy::burst_read(uint8_t  *buf, uint8_t bytesToRead)
 {
     TODO();
     return ;
@@ -280,16 +258,16 @@ void PAW3805::getMotion(int16_t *x, int16_t *y)
 //         PAWActive = true;
 
 //         //if motion data is valid
-//         while (PAW3805::readReg(0x02) & 0x80)
+//         while (PAW3805::read_reg(0x02) & 0x80)
 //         {
 // #ifndef QUICK_BURST
-//             data[0] = PAW3805::readReg(0x03);
-//             data[1] = PAW3805::readReg(0x04);
-//             data[2] = PAW3805::readReg(0x11);
-//             data[3] = PAW3805::readReg(0x12);
+//             data[0] = PAW3805::read_reg(0x03);
+//             data[1] = PAW3805::read_reg(0x04);
+//             data[2] = PAW3805::read_reg(0x11);
+//             data[3] = PAW3805::read_reg(0x12);
 
 // #else
-//             PAW3805::burstRead(data, 4);
+//             PAW3805::burst_read(data, 4);
 
 //             WICED_BT_TRACE("data[0]:0x%x, data[1]:0x%x, data[2]:0x%x, data[3]:0x%x\n", data[0], data[1], data[2], data[3]);
 // #endif
@@ -328,17 +306,17 @@ void PAW3805::flushMotion(void)
 //     if (PAWdeviceFound && Interrupt_isInterruptPinActive(&PAWIntr))
 //     {
 //         //if motion data is valid
-//         while (PAW3805::readReg(0x02) & 0x80)
+//         while (PAW3805::read_reg(0x02) & 0x80)
 //         {
 // #ifndef QUICK_BURST
-//             data[0] = PAW3805::readReg(0x03);
-//             data[1] = PAW3805::readReg(0x04);
-//             data[2] = PAW3805::readReg(0x11);
-//             data[3] = PAW3805::readReg(0x12);
+//             data[0] = PAW3805::read_reg(0x03);
+//             data[1] = PAW3805::read_reg(0x04);
+//             data[2] = PAW3805::read_reg(0x11);
+//             data[3] = PAW3805::read_reg(0x12);
 //             UNUSED_VARIABLE(data);
 
 // #else
-//             PAW3805::burstRead(data, 4);
+//             PAW3805::burst_read(data, 4);
 
 //             WICED_BT_TRACE("data[0]:0x%x, data[1]:0x%x, data[2]:0x%x, data[3]:0x%x\n", data[0], data[1], data[2], data[3]);
 // #endif
