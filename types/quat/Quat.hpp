@@ -86,6 +86,32 @@ struct Quat_t{
         }
     }
 
+    [[nodiscard]]
+    static constexpr Quat_t<T> from_direction(const Vector3_t<T> & dir){
+        // Default direction is the positive Z-axis
+        const Vector3_t<T> default_dir(0, 0, 1);
+        
+        // Normalize the input direction
+        const Vector3_t<T> normalized_dir = dir.normalized();
+        
+        // Calculate the dot product to determine the angle between the vectors
+        T dot = default_dir.dot(normalized_dir);
+        
+        // If the vectors are nearly parallel, return the identity quaternion
+        if (std::abs(dot) > T(1) - T(CMP_EPSILON)) {
+            return Quat_t<T>::IDENTITY;
+        }
+        
+        // Calculate the rotation axis using the cross product
+        Vector3_t<T> axis = default_dir.cross(normalized_dir);
+        
+        // Calculate the angle between the vectors
+        T angle = std::acos(dot);
+        
+        // Create and return the quaternion representing the rotation
+        return Quat_t<T>(axis, angle);
+    }
+
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
     static constexpr Quat_t<T> from_euler(const EulerAngle_t<T, P> &euler) {
@@ -162,14 +188,20 @@ struct Quat_t{
     constexpr void set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XYZ> &p_euler);
 
     [[nodiscard]]
-    constexpr Quat_t integral(const Vector3_t<T> & p) const {
+    constexpr Quat_t integral(const Vector3_t<T> & p, const T delta) const {
+        const auto k = delta / 2;
         return Quat_t<T>(
-            x + real_t(0.5f) * (-y * p.z + z * p.y + w * p.x),
-            y + real_t(0.5f) * (x * p.z - z * p.x + w * p.y),
-            z + real_t(0.5f) * (-x * p.y + y * p.x + w * p.z),
-            w + real_t(0.5f) * (-x * p.x - y * p.y - z * p.z)
+            x + k * (-y * p.z + z * p.y + w * p.x),
+            y + k * (x * p.z - z * p.x + w * p.y),
+            z + k * (-x * p.y + y * p.x + w * p.z),
+            w + k * (-x * p.x - y * p.y - z * p.z)
         ).normalized();
     }
+
+    // [[nodiscard]]
+    // constexpr Quat_t integral(const Quat_t<T> & q, const T delta) const {
+
+    // }
 
     [[nodiscard]]
     constexpr Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
@@ -227,11 +259,11 @@ struct Quat_t{
 
     [[nodiscard]] __fast_inline constexpr
     Vector3_t<T> xform_up() const {
-        // ¼ÙÉèÊäÈë v = (0, 0, 1)
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ v = (0, 0, 1)
         return Vector3_t<T>(
-            2 * (w * y + z * x),      // x ·ÖÁ¿
-            2 * (-w * x + z * y),     // y ·ÖÁ¿
-            2 * (z * z + w * w) - 1   // z ·ÖÁ¿
+            2 * (w * y + z * x),      // x ï¿½ï¿½ï¿½ï¿½
+            2 * (-w * x + z * y),     // y ï¿½ï¿½ï¿½ï¿½
+            2 * (z * z + w * w) - 1   // z ï¿½ï¿½ï¿½ï¿½
         );
     }
 

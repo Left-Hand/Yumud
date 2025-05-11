@@ -1,7 +1,7 @@
 #include "icm42688.hpp"
 #include "core/debug/debug.hpp"
 
-// #define ICM42688_DEBUG_EN
+#define ICM42688_DEBUG_EN
 
 #ifdef ICM42688_DEBUG_EN
 
@@ -176,12 +176,14 @@ IResult<> ICM42688::set_acc_odr(const AccOdr odr){
 	reg.accel_odr = odr;
 	return write_reg(reg);
 }
+
 IResult<> ICM42688::set_acc_fs(const AccFs fs){
 	auto & reg = accel_config0_reg;
 	reg.accel_fs = fs;
 	lsb_acc_ = calc_acc_lsb(fs);
 	return write_reg(reg);
 }
+
 IResult<> ICM42688::reset(){
 	auto & reg = device_config_reg;
 	reg.soft_reset_config = 1;
@@ -195,6 +197,13 @@ IResult<> ICM42688::reset(){
 
 IResult<>  ICM42688::update(){
 	return phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
+	// const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
+	// if(res.is_err()) return res;
+	// int16_t buf[6] = {0};
+	// phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
+	// // DEBUG_PRINTLN(buf, q16(lsb_acc_) * (buf[0]), lsb_acc_.value.to_i32() * buf[0]);
+	// DEBUG_PRINTLN((buf[0]) * q16(0.001_r), (buf[0]) * q16(0.001_r) - 0.5_r);
+	// return Ok();
 }
 
 
@@ -203,7 +212,7 @@ IResult<>  ICM42688::validate(){
 		res.is_err()) return res;
 	
 	if(who_am_i_reg.data != who_am_i_reg.KEY){
-		return CHECK_ERR(Err(Error::WrongWhoAmI));
+		return CHECK_ERR(Err(Error::WrongWhoAmI), who_am_i_reg.data);
 	}
 
 	return Ok();
@@ -211,6 +220,9 @@ IResult<>  ICM42688::validate(){
 
 Option<Vector3_t<q24>> ICM42688::get_acc(){
     return Some{Vector3_t<q24>{
+		// acc_data_.x, 
+		// acc_data_.y, 
+		// acc_data_.z, 
 		lsb_acc_ * acc_data_.x, 
 		lsb_acc_ * acc_data_.y, 
 		lsb_acc_ * acc_data_.z, 
@@ -221,11 +233,11 @@ Option<Vector3_t<q24>> ICM42688::get_acc(){
 Option<Vector3_t<q24>> ICM42688::get_gyr(){
 
     return Some{Vector3_t<q24>{
-		// lsb_gyr_ * gyr_data_.x,
-		// lsb_gyr_ * gyr_data_.y,
-		// lsb_gyr_ * gyr_data_.z
-		gyr_data_.x,
-		gyr_data_.y,
-		gyr_data_.z
+		lsb_gyr_ * gyr_data_.x,
+		lsb_gyr_ * gyr_data_.y,
+		lsb_gyr_ * gyr_data_.z
+		// 0.005_q24 * gyr_data_.x,
+		// 0.005_q24 * gyr_data_.y,
+		// 0.005_q24 * gyr_data_.z
 	}};
 }

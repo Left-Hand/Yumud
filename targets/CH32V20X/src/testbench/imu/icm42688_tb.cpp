@@ -21,7 +21,7 @@ using namespace ymd::drivers;
 #define UART uart2
 #define SCL_GPIO hal::portB[3]
 #define SDA_GPIO hal::portB[5]
-static constexpr uint FS = 1000;
+static constexpr uint FS = 500;
 static constexpr auto INV_FS = (1.0_q24 / FS);
 // #define MAG_ACTIVATED
 
@@ -51,9 +51,11 @@ static void icm42688_tb(ICM42688 & imu){
     q24 z = 0;
     uint32_t exe = 0;
 
+    const real_t tau = 1.3_r;
     Mahony mahony{{
-        .kp = 2,
-        .ki = 0.3_r,
+        .kp = tau * tau,
+        .ki = 2 * tau,
+        // .ki = 0,
         .fs = FS
     }};
 
@@ -71,22 +73,25 @@ static void icm42688_tb(ICM42688 & imu){
         // const auto u0 = micros();
         // imu.update().unwrap();
         // const auto u1 = micros();
-        const auto acc = imu.get_acc().unwrap();
-        const auto gyr = imu.get_gyr().unwrap();
-        const auto gest = Quat_t<real_t>::from_shortest_arc(
-            acc.normalized(),
-            {0,0,1}
-        );
+        // const auto acc = imu.get_acc().unwrap();
+        // const auto gyr = imu.get_gyr().unwrap();
+        // const auto gest = Quat_t<real_t>::from_shortest_arc(
+        //     acc.normalized(),
+        //     {0,0,1}
+        // );
 
+        const auto gest = mahony.result();
         const auto euler = gest.to_euler();
         DEBUG_PRINTLN(
-            // gest 
-            euler,
-            acc,
-            gyr
-            // ,imu.get_gyr().unwrap()
-            // ,z, exe
+            0
+            ,gest
+            // ,euler
+            // ,acc
+        //     ,gyr
+        //     // ,imu.get_gyr().unwrap()
+        //     // ,z, exe
         );
+        delay(1);
         // DEBUG_PRINTLN(mahony.result().normalized(), z, exe);
         // DEBUG_PRINTLN(mahony.result().to_euler(), z, exe);
         // DEBUG_PRINTLN(z);
@@ -99,7 +104,7 @@ void icm42688_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
-    DEBUGGER.set_eps(5);
+    DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(true);
 
     // I2cSw i2c{portA[12], portA[15]};
@@ -111,12 +116,11 @@ void icm42688_main(){
     delay(200);
 
 
-    ICM42688 imu = {i2c};
+    // ICM42688 imu = {i2c};
 
-    // auto & spi = spi1;
-    // spi.init(18_MHz);
-    // ICM42688 imu = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
+    auto & spi = spi1;
+    spi.init(18_MHz);
+    ICM42688 imu = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
+
     icm42688_tb(imu);
-    // mpu6500_tb(i2c);
-    // ak8963_tb(i2c);
 }
