@@ -60,7 +60,8 @@ int main(){
     // ws2812_main();
     // gxm_new_energy_main();
     // rrs3_robot_main();
-    nuedc_2023e_main();
+    // nuedc_2023e_main();
+    icm42688_main();
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();

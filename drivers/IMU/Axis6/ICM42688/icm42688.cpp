@@ -22,6 +22,13 @@ scexpr real_t  LSB_GYR_500_R_x256	= real_t(256 * 0.00026631611);
 scexpr real_t  LSB_GYR_250_R_x256	= real_t(256 * 0.00013315805);
 scexpr real_t LSB_GYR_125D_R_x256  	= real_t(256 * 0.000066579027);	
 
+static constexpr uint8_t ACC_DATA_X0L_ADDR             = 0x20;
+static constexpr uint8_t ACC_DATA_Y0L_ADDR             = 0x22;
+static constexpr uint8_t ACC_DATA_Z0L_ADDR             = 0x24;
+static constexpr uint8_t GYR_DATA_X0L_ADDR              = 0x26;
+static constexpr uint8_t GYR_DATA_Y0L_ADDR              = 0x28;
+static constexpr uint8_t GYR_DATA_Z0L_ADDR              = 0x2A;
+
 
 using Error = ICM42688::Error;
 
@@ -151,15 +158,55 @@ IResult<> ICM42688::init(){
 
 IResult<>  ICM42688::update(){
 	// read_burst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data.x, 3);
-	return phy_.read_burst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
+	// return phy_.read_burst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6);
+	// int16_t buf[6] = {0};
+	// // return phy_.read_burst(ACC_DATA_X0_ADDR, &acc_data_.x, 6);
+	// // const auto res = phy_.read_burst(ACC_DATA_X0_ADDR, buf, 6);
+
+	
+	// if(res.is_err()) return res;
+
+	// const auto conv = [](int16_t x){
+	// 	// return int16_t(uint32_t(x) >> 8) | (uint32_t(x) << 8);
+	// 	return x;
+	// };
+
+	// acc_data_.x = conv(buf[0]);
+	// acc_data_.y = conv(buf[1]);
+	// acc_data_.z = conv(buf[2]);
+
+	// return res;
+	// phy_.read_burst(uint8_t(RegAddress::ACC_DATA_X1), &acc_data_.x, 6)
 
 
 	// read_burst(uint8_t(RegAddress::GYR_DATA_X1), &gyr_data.x, 3);
+	return phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
+	
+	// uint8_t buf[6] = {0};
+	
+	// // const auto res = phy_.read_burst(ACC_DATA_X0_ADDR, buf, 6);
+	// // if(res.is_err()) return res;
+	// for(size_t i = 0; i < 6; ++i){
+	// 	if(const auto res = phy_.read_reg(ACC_DATA_X0L_ADDR + i - 1, buf[i]);
+	// 		res.is_err()) return res;
+	// }
+	// const auto conv = [](int16_t a, uint8_t b){
+	// 	// return int16_t(uint32_t(a) | (uint32_t(b) << 8));
+	// 	return int16_t(uint32_t(b) | (uint32_t(a) << 8));
+	// };
+
+	// acc_data_.x = conv(buf[0], buf[1]);
+	// acc_data_.y = conv(buf[2], buf[3]);
+	// acc_data_.z = conv(buf[4], buf[5]);
+
+	// // DEBUG_PRINTLN(buf);
+	// DEBUG_PRINTLN(acc_data_);
+
+	return Ok();
 }
 
 
 IResult<>  ICM42688::validate(){
-	TODO();
     // return false;
 	return Ok();
 }
@@ -170,7 +217,7 @@ IResult<>  ICM42688::reset(){
 }
 
 Option<Vector3_t<real_t>> ICM42688::get_acc(){
-
+	[[maybe_unused]]
     auto conv = [this](const real_t x) -> real_t {
         return ((x * this -> lsb_acc_x64) >> 6);
     };
@@ -180,6 +227,11 @@ Option<Vector3_t<real_t>> ICM42688::get_acc(){
 		conv(acc_data_.y),
 		conv(acc_data_.z)
 	}};
+    // return Some{Vector3_t<real_t>{
+	// 	(acc_data_.x), 
+	// 	(acc_data_.y),
+	// 	(acc_data_.z)
+	// }};
 }
 
 
