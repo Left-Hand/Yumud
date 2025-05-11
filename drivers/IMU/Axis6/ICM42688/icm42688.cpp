@@ -209,8 +209,8 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-Option<Vector3_t<real_t>> ICM42688::get_acc(){
-    return Some{Vector3_t<real_t>{
+Option<Vector3_t<q24>> ICM42688::get_acc(){
+    return Some{Vector3_t<q24>{
 		lsb_acc_ * acc_data_.x, 
 		lsb_acc_ * acc_data_.y, 
 		lsb_acc_ * acc_data_.z, 
@@ -218,11 +218,14 @@ Option<Vector3_t<real_t>> ICM42688::get_acc(){
 }
 
 
-Option<Vector3_t<real_t>> ICM42688::get_gyr(){
+Option<Vector3_t<q24>> ICM42688::get_gyr(){
 
-    return Some{Vector3_t<real_t>{
-		lsb_gyr_ * gyr_data_.x,
-		lsb_gyr_ * gyr_data_.y,
-		lsb_gyr_ * gyr_data_.z
+    return Some{Vector3_t<q24>{
+		// lsb_gyr_ * gyr_data_.x,
+		// lsb_gyr_ * gyr_data_.y,
+		// lsb_gyr_ * gyr_data_.z
+		gyr_data_.x,
+		gyr_data_.y,
+		gyr_data_.z
 	}};
 }

@@ -157,7 +157,7 @@ public:
 
     Result<void> clear_flag();
 
-    Option<Vector3_t<real_t>> get_acc();
+    Option<Vector3_t<q24>> get_acc();
 
     Result<void> sleep()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = false; return write_reg(reg);}

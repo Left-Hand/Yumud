@@ -22,8 +22,8 @@ public:
 
     IResult<> reset();
 
-    Option<Vector3_t<real_t>> get_acc();
-    Option<Vector3_t<real_t>> get_gyr();
+    Option<Vector3_t<q24>> get_acc();
+    Option<Vector3_t<q24>> get_gyr();
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;

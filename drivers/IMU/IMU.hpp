@@ -55,18 +55,18 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
-    virtual Option<Vector3_t<real_t>> get_acc() = 0;
+    virtual Option<Vector3_t<q24>> get_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Option<Vector3_t<real_t>> get_gyr() = 0;
+    virtual Option<Vector3_t<q24>> get_gyr() = 0;
 };
 
 class MagnetometerIntf{
 public:
 
-    virtual Option<Vector3_t<real_t>> get_magnet() = 0;
+    virtual Option<Vector3_t<q24>> get_magnet() = 0;
 };
 
 }

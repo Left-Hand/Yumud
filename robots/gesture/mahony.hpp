@@ -9,21 +9,20 @@
 namespace ymd{
 class Mahony{
 public:
-    // using Quat = Quat_t<Norm_t<q14>>;
     using Quat = Quat_t<q14>;
     using Vector3 = Vector3_t<q14>;
 protected:
-    real_t inv_fs_;
+    q14 inv_fs_;
 
-    real_t ki_;
-    real_t kp_;
-    // real_t fs;
+    q14 ki_;
+    q14 kp_;
+    // q14 fs;
     Vector3 inte_;
 	Quat q;
 public:
     struct Config{
-        real_t kp;
-        real_t ki;
+        q14 kp;
+        q14 ki;
         uint fs;
     };
 
@@ -35,7 +34,7 @@ public:
     void reconf(const Config & cfg){
         ki_ = cfg.ki;
         kp_ = cfg.kp;    
-        inv_fs_ = real_t(1) / cfg.fs;
+        inv_fs_ = q14(1) / cfg.fs;
     }
 
     void reset(){

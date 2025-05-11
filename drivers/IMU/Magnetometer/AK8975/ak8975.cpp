@@ -133,9 +133,9 @@ IResult<> AK8975::disable_i2c(){
     return phy_.write_reg(0x0F, 0x01);
 }
 
-Option<Vector3_t<real_t>> AK8975::get_magnet(){
+Option<Vector3_t<q24>> AK8975::get_magnet(){
     scexpr real_t max_mT = real_t(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
-    return Some{Vector3_t<real_t>{CONV(x), CONV(y), CONV(z)}};
+    return Some{Vector3_t<q24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

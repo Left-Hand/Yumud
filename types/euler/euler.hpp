@@ -54,5 +54,12 @@ using EulerAngle_t = _EulerAngleStorage<T, P>;
     // constexpr EulerAngle_t& operator=(const EulerAngle_t& other) = default;
     // constexpr EulerAngle_t& operator=(EulerAngle_t&& other) = default;
 // };
+template <arithmetic T, EulerAnglePolicy P>
+__fast_inline OutputStream & operator<<(OutputStream & os, const EulerAngle_t<T, P> & value){
+    return os << os.brackets<'('>()
+        << value.x << os.splitter()
+        << value.y << os.splitter()
+        << value.z << os.brackets<')'>();
+}
 
 }

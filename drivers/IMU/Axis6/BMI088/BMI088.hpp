@@ -200,7 +200,7 @@ public:
     Result<void, Error> validate();
     Result<void, Error> update();
 
-    Option<Vector3_t<real_t>> get_acc();
+    Option<Vector3_t<q24>> get_acc();
     Option<real_t> get_temperature();
 
     Result<void, Error> set_acc_range(const AccRange range);
@@ -286,7 +286,7 @@ public:
     Result<void, Error> reset();
     Result<void, Error> validate();
     Result<void, Error> update();
-    Option<Vector3_t<real_t>> get_gyr();
+    Option<Vector3_t<q24>> get_gyr();
 
 
     Result<void, Error> set_gyr_range(const GyrRange range);

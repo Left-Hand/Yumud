@@ -94,18 +94,18 @@ Result<void, Error> MPU6050::update(){
     return res;
 }
 
-Option<Vector3_t<real_t>> MPU6050::get_acc(){
+Option<Vector3_t<q24>> MPU6050::get_acc(){
     real_t x = uni(acc_x_reg) * acc_scaler_;
     real_t y = uni(acc_y_reg) * acc_scaler_;
     real_t z = uni(acc_z_reg) * acc_scaler_;
-    return  Some{Vector3_t<real_t>{x, y, z}};
+    return  Some{Vector3_t<q24>{x, y, z}};
 }
 
-Option<Vector3_t<real_t>> MPU6050::get_gyr(){
+Option<Vector3_t<q24>> MPU6050::get_gyr(){
     real_t x = uni(gyr_x_reg) * gyr_scaler_;
     real_t y = uni(gyr_y_reg) * gyr_scaler_;
     real_t z = uni(gyr_z_reg) * gyr_scaler_;
-    return Some{Vector3_t<real_t>{x, y, z}};
+    return Some{Vector3_t<q24>{x, y, z}};
 }
 
 Option<real_t> MPU6050::get_temperature(){

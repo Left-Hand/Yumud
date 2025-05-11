@@ -70,26 +70,20 @@ struct Quat_t{
 
     [[nodiscard]]
     static constexpr Quat_t from_shortest_arc(const Vector3_t<T> &v0, const Vector3_t<T> &v1){
-        Quat_t<T> self;
-        Vector3_t<T> c = v0.cross(v1);
+        const Vector3_t<T> n0 = v0.normalized();
+        const Vector3_t<T> n1 = v1.normalized();
+
         T d = v0.dot(v1);
 
-        if (d < T(-1) + T(CMP_EPSILON)) {
-            self.x = 0;
-            self.y = 1;
-            self.z = 0;
-            self.w = 0;
+        if (std::abs(d) > T(1) - T(CMP_EPSILON)) {
+            const auto axis = n0.get_any_perpendicular();
+            return Quat_t<T>(axis.x, axis.y, axis.z, T(0));
         } else {
+            Vector3_t<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T rs = T(1) / s;
-
-            self.x = c.x * rs;
-            self.y = c.y * rs;
-            self.z = c.z * rs;
-            self.w = s / 2;
+            return Quat_t<T>{c.x * rs, c.y * rs, c.z * rs, s / 2};
         }
-
-        return self;
     }
 
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>

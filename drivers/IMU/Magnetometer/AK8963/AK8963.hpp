@@ -129,7 +129,7 @@ protected:
     bool data_valid_ = false;
     bool data_is_16_bits_ = false;
 
-    Vector3_t<real_t> adj_scale;
+    Vector3_t<q24> adj_scale;
 
     [[nodiscard]] Result<Vector3_t<uint8_t>, Error> get_coeff();
 
@@ -156,7 +156,7 @@ public:
     [[nodiscard]] Result<void, Error> busy();
     [[nodiscard]] Result<void, Error> stable();
     [[nodiscard]] Result<void, Error> disable_i2c();
-    [[nodiscard]] Option<Vector3_t<real_t>> get_magnet();
+    [[nodiscard]] Option<Vector3_t<q24>> get_magnet();
     [[nodiscard]] Result<void, Error> set_data_width(const uint8_t bits);
     [[nodiscard]] Result<void, Error> set_mode(const Mode mode);
 };

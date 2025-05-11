@@ -199,7 +199,7 @@ IResult<> L3G4200D::update(){
 }
 
 
-Option<Vector3_t<real_t>> L3G4200D::get_acc(){
+Option<Vector3_t<q24>> L3G4200D::get_acc(){
     return None;
 }
 

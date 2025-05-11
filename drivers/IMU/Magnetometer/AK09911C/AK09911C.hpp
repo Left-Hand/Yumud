@@ -135,7 +135,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    Option<Vector3_t<real_t>> get_magnet() ;
+    Option<Vector3_t<q24>> get_magnet() ;
 private:
 
     AsahiKaseiSensor_Phy phy_;

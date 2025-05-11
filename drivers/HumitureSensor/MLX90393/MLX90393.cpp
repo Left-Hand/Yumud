@@ -273,7 +273,7 @@ IResult<> MLX90393::start_single_measurement(void) {
     /* Set the device to single measurement mode */
     return transceive(std::span(rx), std::span(tx), 0);
 }
-IResult<Vector3_t<real_t>> MLX90393::read_measurement() {
+IResult<Vector3_t<q24>> MLX90393::read_measurement() {
     const uint8_t tx[1] = {MLX90393_REG_RM | MLX90393_AXIS_ALL};
     uint8_t rx[6] = {0};
 
@@ -320,7 +320,7 @@ IResult<Vector3_t<real_t>> MLX90393::read_measurement() {
  *
  * @return True if the operation succeeded, otherwise false.
  */
-IResult<Vector3_t<real_t>> MLX90393::read_data() {
+IResult<Vector3_t<q24>> MLX90393::read_data() {
     if(const auto res = start_single_measurement(); res.is_err())
         return Err(Error::CantReadData);
   // See MLX90393 Getting Started Guide for fancy formula

@@ -130,8 +130,8 @@ public:
     Result<void, Error> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
     PmuMode get_pmu_mode(const PmuType pum);
-    Option<Vector3_t<real_t>> get_acc();
-    Option<Vector3_t<real_t>> get_gyr();
+    Option<Vector3_t<q24>> get_acc();
+    Option<Vector3_t<q24>> get_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr
