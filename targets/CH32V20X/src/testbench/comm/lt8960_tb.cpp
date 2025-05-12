@@ -2,19 +2,25 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/utils/typetraits/size_traits.hpp"
+#include "core/utils/typetraits/function_traits.hpp"
+// #include "core/utils/typetraits/typetraits_details.hpp"
+#include "core/utils/typetraits/serialize_traits.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
 
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-
-#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
-#include "src/testbench/algo/utils.hpp"
-
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
+#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
+
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "hal/gpio/gpio_port.hpp"
+
+
+
 
 
 using namespace ymd::drivers;

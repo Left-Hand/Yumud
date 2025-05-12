@@ -1,7 +1,48 @@
-#include "utils.hpp"
 #include "core/math/realmath.hpp"
 
+#include "../tb.h"
+
+#include "core/math/real.hpp"
+
+#include "core/debug/debug.hpp"
+#include "core/clock/time.hpp"
+#include "core/clock/clock.hpp"
+
+#include "core/utils/typetraits/size_traits.hpp"
+#include "core/utils/typetraits/function_traits.hpp"
+// #include "core/utils/typetraits/typetraits_details.hpp"
+#include "core/utils/typetraits/serialize_traits.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
+
+
+// https://taylorconor.com/blog/enum-reflection/
+
 #include "hal/bus/uart/uarthw.hpp"
+
+
+
+enum Fruit {
+    BANANA = 5,
+    APPLE = 12,
+};
+
+
+
+// // template<std::span<const uint8_t> ... Ts>
+// void apply_serval_bytes(const int ... pieces) {
+//     auto handler = [](const auto& piece) {  // 使用auto兼容不同参数类型
+//         DEBUG_PRINTLN(piece);
+//     };
+//     (handler(pieces), ...);  // 折叠表达式展开调用
+// }
+
+// C++20 修复方案（假设参数类型为 std::span<const uint8_t>）
+
+template<typename ... Ts>
+void apply_serval_bytes(Ts && ... pieces) {
+    (DEBUG_PRINTLN(pieces), ...);  // 直接展开参数包
+}
+
 auto pfunc(const real_t a, const real_t b){
     return a * a + b * b;
     // return a;
@@ -82,19 +123,19 @@ void enum_main(){
 
 
     {
-        [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
-        [[maybe_unused]] constexpr const char * _10 = enum_item_name_v<Fruit, Fruit(10)>;
+        [[maybe_unused]] constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+        [[maybe_unused]] constexpr const char * _10 = magic::enum_item_name_v<Fruit, Fruit(10)>;
 
-        [[maybe_unused]] constexpr size_t count = enum_count_v<Fruit>;
+        [[maybe_unused]] constexpr size_t count = magic::enum_count_v<Fruit>;
         // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
         // using type = decltype(Fruit::BANANA);
-        // constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
+        // constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
     
-        // static_assert(!, "!enum_is_valid_v<Fruit, Fruit::10>()");
+        // static_assert(!, "!magic::enum_is_valid_v<Fruit, Fruit::10>()");
         // const auto f = __PRETTY_FUNCTION__;
-        static_assert(enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
-        static_assert(!enum_is_valid_v<Fruit, Fruit(10)>, "enum_is_valid_v<Fruit, Fruit::10>()");
-        // static_assert(!enum_is_valid_v<Fruit, Fruit>, "!enum_is_valid_v<Fruit, Fruit::10>()");
+        static_assert(magic::enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
+        static_assert(!magic::enum_is_valid_v<Fruit, Fruit(10)>, "magic::enum_is_valid_v<Fruit, Fruit::10>()");
+        // static_assert(!magic::enum_is_valid_v<Fruit, Fruit>, "!magic::enum_is_valid_v<Fruit, Fruit::10>()");
     }
 
 

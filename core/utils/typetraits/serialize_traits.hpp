@@ -6,9 +6,6 @@
 namespace ymd::magic{
 
 
-
-
-
 template<size_t N, typename ... Args>
 using args_element_t = typename magic::details::_element_t<N, Args...>::type;
 
@@ -16,18 +13,17 @@ template<size_t N, typename ... Args>
 static constexpr size_t element_bytes_v = sizeof(args_element_t<N, Args...>);
 
 template<size_t N, typename Tup>
-static constexpr size_t tuple_element_offset_v = magic::details::_tuple_element_offset_v<N, Tup>::value;
-
-
-
+static constexpr size_t tuple_element_offset_v = magic::details::
+    _tuple_element_offset_v<N, Tup>::value;
 
 
 template<typename ... Args>
-static constexpr size_t total_bytes_of_args_v = magic::details::_total_bytes_of_args_v<sizeof...(Args) - 1, Args...>::value;
-
+static constexpr size_t total_bytes_of_args_v = magic::details::
+    _total_bytes_of_args_v<sizeof...(Args) - 1, Args...>::value;
 
 template<typename Tup>
-static constexpr size_t total_bytes_of_packed_tuple_v = magic::details::_packed_tuple_total_bytes_v<Tup>::value;
+static constexpr size_t total_bytes_of_packed_tuple_v = magic::details::
+    _packed_tuple_total_bytes_v<Tup>::value;
 
 
 
@@ -73,25 +69,6 @@ std::array<uint8_t, N> make_bytes_from_arg(Arg && arg){
         return std::array<uint8_t, N>{{ get_byte_from_arg(I, arg)... }};
     }(std::make_index_sequence<N>{});
 }
-
-
-
-// template<size_t N1, size_t N2>
-// constexpr
-// std::array<uint8_t, N1 + N2> concat_arr(
-//     const std::array<const uint8_t, N1> & arr1,
-//     const std::array<const uint8_t, N2> & arr2
-// ){
-//     return [&](){
-//         std::array<uint8_t, N1 + N2> ret;
-//         for(size_t i = 0; i < N1; i++)
-//             ret[i] = arr1[i];
-//         for(size_t i = 0; i < N2; i++)
-//             ret[N1 + i] = arr2[i];
-//         return ret;
-//     }();
-// }
-
 
 template<
     typename ... Args,
