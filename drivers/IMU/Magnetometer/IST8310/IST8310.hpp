@@ -8,9 +8,9 @@
 
 namespace ymd::drivers{
 
-class IST8310:public MagnetometerIntf{
-public:
+struct IST8310_Collections{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
+    using RegAddress = uint8_t;
 
     using Error = ImuError;
 
@@ -25,36 +25,9 @@ public:
         _16 = 0b100,
     };
     
-    IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+};
 
-    void init();
-    void update();
-
-    bool validate();
-
-    void reset();
-
-    void enableContious(const bool en = true);
-
-    void setXAverageTimes(const AverageTimes times);
-    void setYAverageTimes(const AverageTimes times);
-
-    int getTemperature();
-
-    bool busy();
-    void enableInterrupt(const bool en = true);
-    void setInterruptLevel(const BoolLevel lv);
-    bool getInterruptStatus();
-
-    void sleep(const bool en = true);
-
-    IResult<Vector3_t<q24>> read_mag() override;
-
-protected:
-    using RegAddress = uint8_t;
+struct IST8310_Regs:public IST8310_Collections{
 
 
     struct WhoAmIReg:public Reg8<>{
@@ -142,9 +115,6 @@ protected:
     };
 
 
-
-    hal::I2cDrv i2c_drv_;
-
     WhoAmIReg whoami_reg;
     Status1Reg status1_reg;
     AxisXReg axis_x_reg;
@@ -156,6 +126,49 @@ protected:
     SelfTestReg selftest_reg;
     TempReg temp_reg; 
     AverageReg average_reg;
+};
+
+
+
+class IST8310:
+    public MagnetometerIntf,
+    public IST8310_Regs{
+public:
+
+    IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+    void init();
+    void update();
+
+    bool validate();
+
+    void reset();
+
+    void enableContious(const bool en = true);
+
+    void setXAverageTimes(const AverageTimes times);
+    void setYAverageTimes(const AverageTimes times);
+
+    int getTemperature();
+
+    bool busy();
+    void enableInterrupt(const bool en = true);
+    void setInterruptLevel(const BoolLevel lv);
+    bool getInterruptStatus();
+
+    void sleep(const bool en = true);
+
+    IResult<Vector3_t<q24>> read_mag() override;
+
+protected:
+
+
+
+    hal::I2cDrv i2c_drv_;
+
     hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
         return i2c_drv_.write_reg(uint8_t(address), reg);
     }

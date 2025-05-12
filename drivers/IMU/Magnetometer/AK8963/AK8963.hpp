@@ -15,7 +15,7 @@ struct AK8963_Collections{
     using RegAddress = uint8_t;
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b00011000);
-    
+
     enum class Mode:uint8_t{
 
         // "0000":  Power-down mode 
@@ -151,7 +151,7 @@ private:
     bool data_valid_ = false;
     bool data_is_16_bits_ = false;
 
-    Vector3_t<q24> adj_scale;
+    Vector3_t<q24> adj_scale_;
 
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
@@ -164,7 +164,7 @@ private:
 
     [[nodiscard]] IResult<Vector3_t<uint8_t>> get_coeff();
 
-        static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
+    static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
         if(is_16_bits){
             return (data * iq_t<16>(0.15));
         }else{

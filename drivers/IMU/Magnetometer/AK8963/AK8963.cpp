@@ -60,7 +60,7 @@ Result<void, Error> AK8963::init(){
             return ((iq_t<16>(_coeff - 128) >> 8) + 1);
         };
 
-        adj_scale = Vector3_t<q24>(
+        adj_scale_ = Vector3_t<q24>(
             coeff2adj(coeff.x), coeff2adj(coeff.y), coeff2adj(coeff.z)
         );
     }
@@ -145,9 +145,9 @@ Result<void, Error> AK8963::update(){
 }
 IResult<Vector3_t<q24>> AK8963::read_mag(){
     return Ok(Vector3_t<q24>{
-        conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale.x,
-        conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale.y,
-        conv_data_to_ut(mag_z_reg.as_val(), data_is_16_bits_) * adj_scale.z}
+        conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale_.x,
+        conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale_.y,
+        conv_data_to_ut(mag_z_reg.as_val(), data_is_16_bits_) * adj_scale_.z}
     );
 }
 

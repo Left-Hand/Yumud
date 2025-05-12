@@ -124,56 +124,65 @@ public:
     QMC5883L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
             i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    void init();
+    [[nodiscard]] IResult<> init();
 
-    void enableContMode(const bool en = true);
+    [[nodiscard]] IResult<> enable_cont_mode(const bool en = true);
     
-    void setDataRate(const DataRate rate);
+    [[nodiscard]] IResult<> set_data_rate(const DataRate rate);
     
-    void setFullScale(const FullScale fullscale);
+    [[nodiscard]] IResult<> set_full_scale(const FullScale fullscale);
     
-    void setOverSampleRatio(const OverSampleRatio ratio);
+    [[nodiscard]] IResult<> set_over_sample_ratio(const OverSampleRatio ratio);
 
-    void update();
+    [[nodiscard]] IResult<> update();
 
-    IResult<Vector3_t<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vector3_t<q24>> read_mag() override;
     
-    bool validate();
+    [[nodiscard]] IResult<> validate();
 
-    void setResetPeriod(const uint8_t resetPeriod);
+    [[nodiscard]] IResult<> set_reset_period(const uint8_t resetPeriod);
 
-    void reset();
+    [[nodiscard]] IResult<> reset();
 
-    void enableInterrupt(const bool en = true);
+    [[nodiscard]] IResult<> enable_interrupt(const bool en = true);
 
-    bool isOverflow();
+    [[nodiscard]] IResult<bool> is_overflow();
 private:
     hal::I2cDrv i2c_drv_;
 
     real_t fs;
     uint8_t ovsfix = 0;
 
-    hal::HalResult write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult write_reg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_burst(const RegAddress addr, int16_t * datas, const size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len), LSB);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * datas, const size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len), LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    real_t From16BitToGauss(const int16_t data);
 
     void setFs(const FullScale FS){
         switch(FS){
@@ -207,9 +216,10 @@ private:
         }
     }
 
-    bool busy(){
-        read_reg(RegAddress::Status, statusReg);
-        return statusReg.ready == false;
+    IResult<bool> is_busy(){
+        if(const auto res = read_reg(RegAddress::Status, statusReg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(statusReg.ready == false);
     }
 };
 
