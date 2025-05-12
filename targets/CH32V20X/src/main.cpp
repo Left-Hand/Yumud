@@ -61,7 +61,9 @@ int main(){
     // gxm_new_energy_main();
     // rrs3_robot_main();
     // nuedc_2023e_main();
-    icm42688_main();
+    // icm42688_main();
+    ak09911c_main();
+    // i2c_scanner_main();
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();

@@ -22,8 +22,10 @@ using namespace ymd;
 #define SCL_GPIO hal::portD[1]
 #define SDA_GPIO hal::portD[0]
 #else
-#define SCL_GPIO hal::portB[6]
-#define SDA_GPIO hal::portB[7]
+// #define SCL_GPIO hal::portB[6]
+// #define SDA_GPIO hal::portB[7]
+#define SCL_GPIO hal::portB[3]
+#define SDA_GPIO hal::portB[5]
 #endif
 struct FoundInfo{
     uint8_t addr;

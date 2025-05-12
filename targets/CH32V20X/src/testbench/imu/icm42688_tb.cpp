@@ -3,17 +3,15 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 #include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
-
 #include "robots/gesture/mahony.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/gpio/gpio_port.hpp"
+
 
 using namespace ymd::drivers;
 

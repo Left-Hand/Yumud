@@ -1,5 +1,14 @@
 #pragma once
 
+//这款磁传感器不建议使用 原因如下：
+// 1.I2c通信频率低
+// 2.经常发生读写故障 需要多次重试才能正常通信
+// 3.数据抖动大 直接转为姿态能有10度左右的抖动
+// 4.很容易受环境磁场干扰
+
+//注意
+//市售的AK09911模块没有给RSTN接上拉电阻 导致模块默认处于复位状态
+
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/AsahiKaseiIMU.hpp"
@@ -9,7 +18,9 @@ namespace ymd::drivers{
 
 
 struct AK09911C_Collections{
-    static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
+    // 0b 0 0 0 1 1 0 1 (CAD)
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001101);
+    // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001100);
 
     using RegAddress = uint8_t;
     using Error = ImuError;
@@ -159,7 +170,7 @@ struct AK09911C_Regs : public AK09911C_Collections{
 
 class AK09911C final:
     public MagnetometerIntf, 
-    public AK09911C_Regs{
+    private AK09911C_Regs{
 public:
 
     AK09911C(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
@@ -184,28 +195,35 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_odr(const Odr odr);
 
+    using AK09911C_Regs::Mode;
 private:
-
+    
     AsahiKaseiSensor_Phy phy_;
     Option<Vector3_t<q24>> scale_ = None; 
-
+    
+    [[nodiscard]] IResult<> selftest();
+    [[nodiscard]] IResult<> blocking_update();
     [[nodiscard]] IResult<> update_adj();
 
-    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return phy_.write_reg(addr, data);
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return phy_.read_reg(addr, data);
     }
 
-
-    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
         return phy_.write_reg(reg.address, reg.as_val());
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
+    [[nodiscard]] IResult<> read_reg(auto & reg){
         return phy_.read_reg(reg.address, reg.as_ref());
+    }
+
+    
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pdata, size_t len){
+        return phy_.read_burst(addr, pdata, len);
     }
 
     [[nodiscard]] IResult<Vector3_t<int8_t>> get_coeff();

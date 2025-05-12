@@ -38,6 +38,10 @@ enum class ImuError_Kind:uint8_t{
     MagOverflow,
     AccOverflow,
     GyrOverflow,
+
+    AxisXOverflow,
+    AxisYOverflow,
+    AxisZOverflow,
 };
 }
 
