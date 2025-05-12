@@ -2,6 +2,8 @@
 
 #include "typetraits_details.hpp"
 
+// https://taylorconor.com/blog/enum-reflection/
+
 namespace ymd::magic{
 
 template <typename E, E V> 

@@ -2,29 +2,9 @@
 
 #include "typetraits_details.hpp"
 #include "size_traits.hpp"
+#include "args_traits.hpp"
 
 namespace ymd::magic{
-
-
-template<size_t N, typename ... Args>
-using args_element_t = typename magic::details::_element_t<N, Args...>::type;
-
-template<size_t N, typename ... Args>
-static constexpr size_t element_bytes_v = sizeof(args_element_t<N, Args...>);
-
-template<size_t N, typename Tup>
-static constexpr size_t tuple_element_offset_v = magic::details::
-    _tuple_element_offset_v<N, Tup>::value;
-
-
-template<typename ... Args>
-static constexpr size_t total_bytes_of_args_v = magic::details::
-    _total_bytes_of_args_v<sizeof...(Args) - 1, Args...>::value;
-
-template<typename Tup>
-static constexpr size_t total_bytes_of_packed_tuple_v = magic::details::
-    _packed_tuple_total_bytes_v<Tup>::value;
-
 
 
 //由于c++标准无法认定机器是小端 所以reinterpret_cast是non-constexpr的 

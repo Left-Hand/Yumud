@@ -164,5 +164,28 @@ struct _tuple_element_offset_v<0, Tup>{
 };
 
 
+template<typename T>
+struct _is_member_variable{
+    static constexpr bool value = false;
+};
+
+template<typename T, typename U>
+struct _is_member_variable<U T::*>{
+    static constexpr bool value = true;
+};
+}
+
+namespace ymd::magic{
+
+// 只有在特化时才能够确定值 可用于constexpr排除分支下的static_assert
+template <typename T>
+static constexpr bool false_v = false;
+
+template <typename T>
+static constexpr bool true_v = true;
+
+
+// template<typename T>
+// static constexpr bool is_member_variable_v = details::_is_member_variable<decltype(&T::)>::value;
 
 }
