@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ymd{
+namespace ymd::magic{
 
 namespace details{
     template <size_t Size>
@@ -117,7 +117,6 @@ using size_to_int_t = typename details::size_to_int<Size>::type;
 // using size_to_uint_t = typename details::size_to_uint<Size>::type;
 
 
-
 template<typename T>
 __inline static constexpr 
 T lower_mask_of(const size_t b){
@@ -141,5 +140,6 @@ bool is_under_bits(const size_t bits, const D && val){
     const T lower_mask = lower_mask_of<T>(bits);
     return val <= lower_mask;
 }
+
 
 }

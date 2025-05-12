@@ -362,15 +362,16 @@ Result<void, Error> LT8960L::set_syncword_tolerance_bits(const uint bits){
 
 Result<bool, Error> LT8960L::is_rfsynth_locked(){
     auto & reg = regs_.rf_synthlock_reg;
-    return read_reg(regs_.rf_synthlock_reg).to<bool>(reg.synth_locked);
+    return read_reg(reg).to<bool>(reg.synth_locked);
 }
 
 
 Result<void, Error> LT8960L::set_rf_channel(const Channel ch, const bool tx, const bool rx){
-    regs_.rf_config_reg.tx_en = tx;
-    regs_.rf_config_reg.rx_en = rx;
-    regs_.rf_config_reg.rf_channel_no = ch.into_code();
-    return write_regs(regs_.rf_config_reg);
+    auto & reg = regs_.rf_config_reg;
+    reg.tx_en = tx;
+    reg.rx_en = rx;
+    reg.rf_channel_no = ch.as_u8();
+    return write_regs(reg);
 }
 
 Result<void, Error> LT8960L::set_rf_freq_mhz(const uint freq){

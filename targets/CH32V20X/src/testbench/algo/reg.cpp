@@ -34,7 +34,7 @@ struct R16_Temp:public RegBase<uint16_t>{
 
 void test() {
 
-    static_assert(mask_of<uint16_t>(8, 16) == 0xFF00);
+    static_assert(magic::mask_of<uint16_t>(8, 16) == 0xFF00);
 
     {
         // static constexpr uint16_t temp = 0xFF00;

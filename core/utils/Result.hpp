@@ -89,7 +89,7 @@ namespace details{
         static constexpr size_t ok_size = sizeof(T);
         static constexpr size_t err_size = sizeof(E);
         static constexpr size_t max_size = std::max(ok_size,err_size);
-        using data_type = size_to_int_t<max_size>;
+        using data_type = magic::size_to_int_t<max_size>;
 
     public:
         using ok_type = T;

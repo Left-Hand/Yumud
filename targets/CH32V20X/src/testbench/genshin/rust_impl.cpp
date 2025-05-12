@@ -29,14 +29,6 @@ struct MyStruct {
 };
 
 
-
-// template<typename T>
-// struct ImplFor<T, MyStruct>{
-//     static void method(U &) { 
-//         DEBUGGER << "Default method\n";
-//     }
-// };
-
 template<>
 struct ImplFor<int, MyStruct> {
     static void method(MyStruct& obj) {

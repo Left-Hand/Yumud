@@ -169,17 +169,17 @@ enum class EntryType:uint8_t{
 //     return StringUtils::qtoa(str, num, 3);
 // }
 
-namespace internal{
+namespace details{
     PRO_DEF_MEM_DISPATCH(MemCall, call);
     PRO_DEF_MEM_DISPATCH(MemName, name);
 
     struct EntryFacade : pro::facade_builder
         // ::support_copy<pro::constraint_level::nontrivial>
-        ::add_convention<internal::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
-        ::add_convention<internal::MemName, StringView()>
+        ::add_convention<details::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
+        ::add_convention<details::MemName, StringView()>
         ::build {};
 }
-using EntryProxy = pro::proxy<internal::EntryFacade>;
+using EntryProxy = pro::proxy<details::EntryFacade>;
 
 
 //???????
@@ -418,14 +418,14 @@ protected:
 
 
 //?????????????????????????
-namespace internal{
+namespace details{
 template<typename Ret, typename ArgsTuple, template<typename, typename...> class MethodByLambda, typename Lambda>
 struct make_method_by_lambda_impl;
 
 template<typename Ret, template<typename, typename...> class MethodByLambda, typename... Args, typename Lambda>
 struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
     static auto make(const StringView name, Lambda&& lambda) {
-        return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
+        return pro::make_proxy<details::EntryFacade, MethodByLambda<Ret, Args...>>(
             name,
             std::forward<Lambda>(lambda)
         );
@@ -441,11 +441,11 @@ auto make_function(const StringView name, Lambda&& lambda) {
     using DecayedLambda = typename std::decay<Lambda>::type;
 
     // ??? Lambda ?????????????????
-    using Ret = typename function_traits<DecayedLambda>::return_type;
-    using ArgsTuple = typename function_traits<DecayedLambda>::args_type;
+    using Ret = typename magic::functor_ret_t<DecayedLambda>;
+    using ArgsTuple = typename magic::functor_args_tuple_t<DecayedLambda>;
 
     // ?? ArgsTuple ?????????????????? make_proxy
-    return internal::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
         name,
         std::forward<Lambda>(lambda)
     );
@@ -454,7 +454,7 @@ auto make_function(const StringView name, Lambda&& lambda) {
 
 template<typename Ret, typename ... Args>
 auto make_function(const StringView name, Ret(*callback)(Args...)) {
-    return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
+    return pro::make_proxy<details::EntryFacade, MethodByLambda<Ret, Args...>>(
         name,
         static_cast<Ret(*)(Args...)>(callback)
     );
@@ -463,7 +463,7 @@ auto make_function(const StringView name, Ret(*callback)(Args...)) {
 template<typename Ret, typename ... Args>
 auto make_function( const StringView name, auto * pobj, 
     Ret(std::remove_reference_t<std::remove_pointer_t<decltype(pobj)>>::*member_func_ptr)(Args...)) {
-    return pro::make_proxy<internal::EntryFacade, 
+    return pro::make_proxy<details::EntryFacade, 
     MethodByMemFunc<std::remove_cvref_t<std::remove_pointer_t<decltype(pobj)>>, Ret, Args...>>(
         name,
         pobj,
@@ -473,7 +473,7 @@ auto make_function( const StringView name, auto * pobj,
 
 template<typename T>
 auto make_property(const StringView name, T & val){
-    return pro::make_proxy<internal::EntryFacade, Property<T>>(
+    return pro::make_proxy<details::EntryFacade, Property<T>>(
         name, 
         val
     );
@@ -481,7 +481,7 @@ auto make_property(const StringView name, T & val){
 
 template<typename T>
 auto make_ro_property(const StringView name, const T & val){
-    return pro::make_proxy<internal::EntryFacade, Property<const T>>(
+    return pro::make_proxy<details::EntryFacade, Property<const T>>(
         name, 
         val
     );
@@ -490,7 +490,7 @@ auto make_ro_property(const StringView name, const T & val){
 
 template<typename ... Args>
 auto make_list(const StringView name, Args && ... entries){
-    return pro::make_proxy<internal::EntryFacade, EntryList>(
+    return pro::make_proxy<details::EntryFacade, EntryList>(
         name, 
         (entries)...
     );
