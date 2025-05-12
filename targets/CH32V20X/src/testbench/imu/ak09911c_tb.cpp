@@ -45,7 +45,8 @@ static void ak09911c_test(drivers::AK09911C & aku){
     });
     
     while(true){
-        DEBUG_PRINTLN(millis(), gest, aku.read_mag().unwrap());
+        // DEBUG_PRINTLN(aku.update());
+        DEBUG_PRINTLN(millis(), gest, aku.read_mag());
     }
 }
 

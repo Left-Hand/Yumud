@@ -311,6 +311,14 @@ struct __unwrap_helper<Option<T>> {
     }
 };
 
+
+template<typename T>
+OutputStream & operator<<(OutputStream & os, const Option<T> & opt) {
+    if(opt.is_some())
+        return os << "Some" << os.brackets<'('>() << opt.unwrap() << os.brackets<')'>();
+    else 
+        return os << "None";
+}
 }
 
 

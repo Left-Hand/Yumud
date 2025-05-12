@@ -645,7 +645,18 @@ Result(Err<E> && val) -> Result<void, E>;
 template<typename TDummy = void>
 Result() -> Result<void, void>;
 
-
+template<typename T, typename E>
+OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
+    if(res.is_ok()){
+        os << "Ok" << os.brackets<'('>(); 
+        if constexpr(!std::is_void_v<T>) os << res.unwrap();
+        return os << os.brackets<')'>();
+    }else {
+        os << "Err" << os.brackets<'('>(); 
+        if constexpr(!std::is_void_v<E>) os << res.unwrap_err();
+        return os << os.brackets<')'>();
+    }
+}
 
 // Specialization for std::optional
 template <typename T, typename E>

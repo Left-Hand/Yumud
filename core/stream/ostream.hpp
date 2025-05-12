@@ -25,6 +25,22 @@ class String;
 class StringView;
 class StringStream;
 
+template<typename T>
+struct derive_debug_dispatcher {};
+
+template<typename T>
+concept has_derive_debug_dispatcher = requires(OutputStream& os, const T& value) {
+    derive_debug_dispatcher<T>::call(os, value);
+};
+
+
+#define DERIVE_DEBUG(type)\
+OutputStream& operator<<(OutputStream& os,const type value) {\
+    derive_debug_dispatcher<type>::call(os, value);\
+    return os;\
+}\
+
+
 template<size_t Q>
 struct iq_t;
 
@@ -331,6 +347,12 @@ public:
         return *this << str;
     }
 
+    template<typename T>
+    requires has_derive_debug_dispatcher<T>
+    OutputStream & operator<<(T && val){
+        derive_debug_dispatcher<T>::call(*this, std::forward<T>(val));
+        return *this;
+    }
 
     //#region print integer
 private:
