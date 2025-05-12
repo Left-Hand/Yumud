@@ -6,38 +6,53 @@ struct __static_string
 {
     static constexpr const char str[]={args...};
     
-    constexpr
-    operator const char*()const{return __static_string::str;}
+    constexpr explicit operator const char*()const{
+        return __static_string::str;}
+
+    constexpr explicit operator std::string_view()const{
+        return std::string_view(__static_string::str, sizeof...(args));}
 };
 
 
 
 
 template <typename E, E V>
-constexpr auto _enum_item_name() {
+constexpr std::string_view _enum_item_name() {
     constexpr std::string_view fully_name = __PRETTY_FUNCTION__;
 
     constexpr std::size_t begin=[&](){
-        for(std::size_t i=fully_name.size() - 1;i>1;i--){
+        // for(std::size_t i=fully_name.size() - 1;i>1;i--){
+        //     const char chr = fully_name[i];
+        //     if(chr ==' ' || chr == ')')
+        //         return i + 1;
+        // }
+        for(std::size_t i = 0; i < fully_name.size(); i++){
             const char chr = fully_name[i];
-            if(chr ==' ' || chr == ')')
-                return i + 1;
+            if(chr ==';')
+                return i + 8;
         }
     }();
     constexpr std::size_t end=[&](){
-        for(std::size_t i=0;i<fully_name.size();i++)
-            if(fully_name[i]==']')
+        // for(std::size_t i=0;i<fully_name.size();i++)
+        //     if(fully_name[i]==']')
+        //         return i;
+
+        for(std::size_t i=fully_name.size() - 1; i>1; i--){
+            const char chr = fully_name[i];
+            if(chr ==';')
                 return i;
+        }
     }();
     
     constexpr auto type_name_view=fully_name.substr(begin,end-begin);
+    // constexpr auto type_name_view=fully_name;
     constexpr auto indices=std::make_index_sequence<type_name_view.size()>();
     constexpr auto type_name=[&]<std::size_t...indices>(std::integer_sequence<std::size_t,indices...>)
     {
         constexpr auto str=__static_string<type_name_view[indices]...,'\0'>();
         return str;
     }(indices);
-    return type_name;
+    return std::string_view(type_name);
 }
 
 
@@ -63,6 +78,8 @@ constexpr bool _enum_is_valid() {
         return c >= '0' && c <= '9';
     };
 
+    if(is_digit(name[0])) return false;
+
     for(size_t i = 0; i < name.length(); i++){
         if(!is_digit(name[i])) return true;
     }
@@ -71,18 +88,18 @@ constexpr bool _enum_is_valid() {
 
 
 template <typename E> 
-consteval int _enum_count_valid() {
+consteval size_t _enum_count_valid() {
     return 0;
 }
 
 template <typename E, E A, E... B> 
-consteval int _enum_count_valid() {
+consteval size_t _enum_count_valid() {
     bool is_valid = _enum_is_valid<E, A>();
-    return _enum_count_valid<E, B...>() + (int)is_valid;
+    return _enum_count_valid<E, B...>() + (size_t)is_valid;
 }
 
-template <typename E, int... I> 
-consteval int _enum_internal_element_count(std::integer_sequence<int, I...> unused) {
+template <typename E, size_t... I> 
+consteval size_t _enum_internal_element_count(std::integer_sequence<size_t, I...> unused) {
     return _enum_count_valid<E, (E)I...>();
 }
 

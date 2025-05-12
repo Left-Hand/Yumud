@@ -21,22 +21,107 @@
 
 
 
-enum Fruit {
+enum Fruit:uint8_t{
     BANANA = 5,
     APPLE = 12,
 };
 
+namespace ymd::magic{
+    namespace details{
+        template<
+            typename E, 
+            size_t I,
+            typename Int = std::underlying_type_t<E>,
+            Int E_RAW
+        >
+        static consteval E _enum_find_item(){
+            constexpr Int ENUM_INT_MIN = std::numeric_limits<Int>::min();
+            constexpr Int ENUM_INT_MAX = std::numeric_limits<Int>::max();
+            static_assert(ENUM_INT_MAX - ENUM_INT_MIN <= 256);
+            constexpr bool is_valid = magic::enum_is_valid_v<E, static_cast<E>(E_RAW)>;
+            if constexpr(is_valid){
+                if constexpr (I == 0) return static_cast<E>(E_RAW);
+                else return _enum_find_item<E, I - 1, Int, E_RAW + 1>();
+            }else{
+                return _enum_find_item<E, I, Int, E_RAW + 1>();
+            }
+        }
 
 
-// // template<std::span<const uint8_t> ... Ts>
-// void apply_serval_bytes(const int ... pieces) {
-//     auto handler = [](const auto& piece) {  // 使用auto兼容不同参数类型
-//         DEBUG_PRINTLN(piece);
-//     };
-//     (handler(pieces), ...);  // 折叠表达式展开调用
-// }
 
-// C++20 修复方案（假设参数类型为 std::span<const uint8_t>）
+        template<typename E, size_t I>
+        static constexpr E _enum_item_v(){
+            using Int = std::underlying_type_t<E>;
+            constexpr Int ENUM_INT_MIN = std::numeric_limits<Int>::min();
+            return _enum_find_item<E, I, Int, ENUM_INT_MIN>();
+        }
+    }
+
+    template<typename E, size_t I>
+    static constexpr E enum_item_v = details::_enum_item_v<E, I>();
+}
+
+static constexpr auto bn = magic::enum_item_v<Fruit, 1>;
+static constexpr bool is_e = magic::enum_is_valid_v<Fruit, static_cast<Fruit>(0)>;
+static constexpr auto e_name = magic::enum_item_name_v<Fruit, static_cast<Fruit>(0)>;
+static constexpr auto e_name2 = magic::enum_item_name_v<Fruit, static_cast<Fruit>(Fruit::APPLE)>;
+namespace ymd{
+// template<size_t I>
+
+OutputStream & operator <<(OutputStream & os, Fruit value){
+    using Enum = Fruit;
+    static constexpr size_t enum_count = magic::enum_count_v<Fruit>;
+    using Int = std::underlying_type_t<Enum>;
+    // using Is = std::make_index_sequence<enum_count>;
+
+    using IndexStorage = std::array<Int, enum_count>;
+    using StringsStorage = std::array<std::string_view, enum_count>;
+
+    // static constexpr IndexStorage index_storage = std::to_array<Int, enum_count>(
+    //     magic::enum_item_v<Enum, Is>... 
+    // );
+
+    // static constexpr StringsStorage strings_storage = std::to_array<std::string_view, enum_count>(
+    //     magic::enum_item_name_v<Enum, Is>...
+    // );
+    
+    // Helper function to generate the index array
+    static constexpr auto make_index_storage = []<size_t... I>(std::index_sequence<I...>) {
+        return IndexStorage{magic::enum_item_v<Enum, I>...};
+    };
+    
+    // Helper function to generate the string array
+    static constexpr auto make_strings_storage = []<size_t... I>(std::index_sequence<I...>) {
+        return StringsStorage{magic::enum_item_name_v<Enum, magic::enum_item_v<Enum, I>>...};
+    };
+
+    static constexpr IndexStorage index_storage = make_index_storage(std::make_index_sequence<enum_count>{});
+    static constexpr StringsStorage strings_storage = make_strings_storage(std::make_index_sequence<enum_count>{});
+
+    static constexpr auto sorted_index_storage = []{
+        auto arr = index_storage;
+        std::sort(arr.begin(), arr.end());
+        return arr;
+    }();
+
+    const int index = [&]{
+        auto it = std::lower_bound(sorted_index_storage.begin(), sorted_index_storage.end(), static_cast<Int>(value));
+        if (it != sorted_index_storage.end() && *it == static_cast<Int>(value)) {
+            return static_cast<int>(it - sorted_index_storage.begin());
+        }
+        return -1;
+    }();
+
+    if(index >= 0){
+        const auto str = strings_storage[index];
+        return os << str;
+    }else{
+        return os << int(value);
+    }
+    return os;
+};
+
+}
 
 template<typename ... Ts>
 void apply_serval_bytes(Ts && ... pieces) {
@@ -116,17 +201,25 @@ void enum_main(){
             r = magic::invoke_func_by_serialzed_bytes(ball, dyn_func, std::span(bytes));
         }
         // DEBUG_PRINTLN(t);
-        DEBUG_PRINTLN(s,c,r, uint32_t(micros() - begin_m));
+        // DEBUG_PRINTLN(s,c,r, uint32_t(micros() - begin_m), Fruit::APPLE);
+        // DEBUG_PRINTLN(Fruit::APPLE);
+        // const auto name = magic::enum_item_name_v<Fruit, Fruit::APPLE>;
+        // const auto name = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+        // const auto name = magic::enum_item_name_v<Fruit, Fruit::APPLE>;
+        const auto dyn_name = runtime_true() ? 
+            magic::enum_item_name_v<Fruit, Fruit::APPLE> : magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+        DEBUG_PRINTLN(dyn_name);
         delay(10);
         // delay(10);
     }
 
 
     {
-        [[maybe_unused]] constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
-        [[maybe_unused]] constexpr const char * _10 = magic::enum_item_name_v<Fruit, Fruit(10)>;
+        // [[maybe_unused]] constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+        // [[maybe_unused]] constexpr const char * _10 = magic::enum_item_name_v<Fruit, Fruit(10)>;
 
         [[maybe_unused]] constexpr size_t count = magic::enum_count_v<Fruit>;
+        static_assert(count == 2);
         // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
         // using type = decltype(Fruit::BANANA);
         // constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
