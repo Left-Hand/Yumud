@@ -18,6 +18,11 @@ using namespace ymd::drivers;
 #define READ_REG(reg) read_reg(reg.address, reg);
 
 
+using Error = ImuError;
+
+template<typename T = void>
+using IResult= Result<T, Error>;
+
 void IST8310::init(){
     reset();
     delay(10);
@@ -74,12 +79,12 @@ void IST8310::setAverageTimes(bool is_x, AverageTimes times){
     WRITE_REG(reg)
 }
 
-Option<Vector3_t<q24>> IST8310::read_mag(){
+IResult<Vector3_t<q24>> IST8310::read_mag(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Some{Vector3_t<q24>{
+    return Ok{Vector3_t<q24>{
         conv(axis_x_reg),
         conv(axis_y_reg),
         conv(axis_z_reg)

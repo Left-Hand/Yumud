@@ -34,6 +34,20 @@ struct AK09911C_Collections{
         // “10000”: Self-test mode
         // “11111”: Fuse ROM access mode
 
+        // @page 16 6.4.3
+
+        // When Continuous measurement mode 1 (MODE[4:0]=“00010”), 2 (MODE[4:0]=“00100”), 3 (MODE[4:0]=“00110”) or 4 
+        // (MODE[4:0]=“01000”) is set, magnetic sensor measurement is started periodically at 10 Hz, 20 Hz, 50 Hz or 100 Hz 
+        // respectively. After magnetic sensor measurement and signal processing is finished, measurement magnetic data is stored to 
+        // measurement data registers (HXL to HZH) and all circuits except for the minimum circuit required for counting cycle 
+        // length are turned off (PD). When the next measurement timing comes, AK09911 wakes up automatically from PD and 
+        // starts measurement again.
+        // Continuous measurement mode ends when Power-down mode (MODE[4:0]=“00000”) is set. It repeats measurement until 
+        // Power-down mode is set.
+        // When Continuous measurement mode 1 (MODE[4:0]=“00010”), 2 (MODE[4:0]=“00100”), 3 (MODE[4:0]=“00110”) or 4 
+        // (MODE[4:0]=“01000”) is set again while AK09911 is already in Continuous measurement mode, a new measurement starts. 
+        // ST1, ST2 and measurement data registers (HXL to TMPS) will not be initialized by this.
+
         PowerDown = 0b00000,
         SingleMeasurement = 0b00001,
         Cont1 = 0b00010,
@@ -42,6 +56,14 @@ struct AK09911C_Collections{
         Cont4 = 0b01000,
         SelfTest = 0b10000,
         FuseRomAccess = 0b11111,
+    };
+
+    enum class Odr:uint8_t{
+        Single = 0b00001,
+        _10Hz = 0b00010,
+        _20Hz = 0b00100,
+        _50Hz = 0b00110,
+        _100Hz = 0b01000,
     };
 
 };
@@ -154,12 +176,13 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] Option<Vector3_t<q24>> read_mag();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_mag();
 
     [[nodiscard]] IResult<bool> is_data_ready();
     [[nodiscard]] IResult<bool> is_data_overrun();
     [[nodiscard]] IResult<> enable_hs_i2c(const Enable en);
     [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> set_odr(const Odr odr);
 
 private:
 

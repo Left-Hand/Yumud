@@ -12,16 +12,14 @@ class BMM150:public MagnetometerIntf{
 public:
     using Error = ImuError;
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
 protected:
     BoschSensor_Phy phy_;
     using RegAddress = uint8_t;
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
-
-    struct{
-
-    };
-
 
 public:
     BMM150(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(bus, addr)){;}
@@ -34,7 +32,7 @@ public:
 
     void reset();
 
-    Option<Vector3_t<q24>> read_mag() override;
+    IResult<Vector3_t<q24>> read_mag();
 };
 
 

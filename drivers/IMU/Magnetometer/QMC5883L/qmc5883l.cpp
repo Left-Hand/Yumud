@@ -18,6 +18,12 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+using Error = ImuError;
+
+template<typename T = void>
+using IResult= Result<T, Error>;
+
+
 void QMC5883L::init(){
     if(this->validate()){
         this->setResetPeriod(1);
@@ -65,8 +71,8 @@ void QMC5883L::update(){
     read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
-Option<Vector3_t<q24>> QMC5883L::read_mag(){
-    return Some{Vector3_t<q24>{
+IResult<Vector3_t<q24>> QMC5883L::read_mag(){
+    return Ok{Vector3_t<q24>{
         uni(int16_t(magXReg)) * fs,
         uni(int16_t(magYReg)) * fs,
         uni(int16_t(magZReg)) * fs

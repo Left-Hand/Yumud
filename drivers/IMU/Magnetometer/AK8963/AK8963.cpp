@@ -13,8 +13,6 @@ using Error = AK8963::Error;
 #define AK8963_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define AK8963_PANIC(...) PANIC{__VA_ARGS__}
 #define AK8963_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define read_reg(reg, ...) read_reg(reg.address, reg).loc().expect(__VA_ARGS__);
-#define WRITE_REG(reg, ...) write_reg(reg.address, reg).loc().expect(__VA_ARGS__);
 #else
 #define AK8963_DEBUG(...)
 #define AK8963_PANIC(...)  PANIC_NSRC()
@@ -22,6 +20,10 @@ using Error = AK8963::Error;
 
 #endif
 
+using Error = ImuError;
+
+template<typename T = void>
+using IResult= Result<T, Error>;
 Result<void, Error> AK8963::write_reg(const uint8_t addr, const uint8_t data){
     auto res = phy_.write_reg(uint8_t(addr), data);
     // AK8963_ASSERT(res.is_ok(), "AK8963 write reg failed", res);
@@ -141,8 +143,8 @@ Result<void, Error> AK8963::update(){
     data_valid_ &= !st2_reg.hofl;
     return Ok();
 }
-Option<Vector3_t<q24>> AK8963::read_mag(){
-    return optcond(data_valid_, Vector3_t<q24>{
+IResult<Vector3_t<q24>> AK8963::read_mag(){
+    return Ok(Vector3_t<q24>{
         conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale.x,
         conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale.y,
         conv_data_to_ut(mag_z_reg.as_val(), data_is_16_bits_) * adj_scale.z}

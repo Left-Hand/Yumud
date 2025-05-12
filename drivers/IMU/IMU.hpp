@@ -68,7 +68,7 @@ public:
 class MagnetometerIntf{
 public:
 
-    virtual Option<Vector3_t<q24>> read_mag() = 0;
+    virtual Result<Vector3_t<q24>, ImuError> read_mag() = 0;
 };
 
 }

@@ -98,3 +98,7 @@ IResult<> AK09911C::reset(){
     cntl3_reg.srst = 0;
     return res;
 }
+
+IResult<> AK09911C::set_odr(const Odr odr){
+    return set_mode(static_cast<Mode>(odr));
+}

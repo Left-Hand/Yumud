@@ -12,6 +12,10 @@ class IST8310:public MagnetometerIntf{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
 
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult= Result<T, Error>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0b000,
@@ -47,7 +51,7 @@ public:
 
     void sleep(const bool en = true);
 
-    Option<Vector3_t<q24>> read_mag() override;
+    IResult<Vector3_t<q24>> read_mag() override;
 
 protected:
     using RegAddress = uint8_t;

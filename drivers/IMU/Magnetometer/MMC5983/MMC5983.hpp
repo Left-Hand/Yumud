@@ -20,31 +20,7 @@ struct MMC5983_Collections{
     using IResult = Result<T, Error>;
 
     using RegAddress = uint8_t;
-};
-
-
-struct MMC5983_Regs:public MMC5983_Collections{
-    struct R8_Status:public Reg8<>{
-        static constexpr RegAddress address = 0x08;
-        uint8_t meas_mag_done:1;
-        uint8_t meas_temp_done:1;
-        const uint8_t __resv1__:2 = 0;
-        uint8_t otp_read_done:1;
-        const uint8_t __resv2__:3 = 0;
-    }DEF_R8(status_reg)
-
-    struct R8_InternalControl0:public Reg8<>{
-        static constexpr RegAddress address = 0x09;
-        uint8_t tm_m:1;
-        uint8_t tm_t:1;
-        uint8_t int_meas_done_en:1;
-        uint8_t set:1;
-        uint8_t reset:1;
-        uint8_t auto_sr_en:1;
-        uint8_t otp_read:1;
-        uint8_t :1;
-    }DEF_R8(internal_control_0_reg)
-
+    
     enum class BandWidth:uint8_t{
         _100Hz = 0b00,
         _200Hz = 0b01,
@@ -52,15 +28,7 @@ struct MMC5983_Regs:public MMC5983_Collections{
         _800Hz = 0b11,
     };
 
-    struct R8_InternalControl1:public Reg8<>{
-        static constexpr RegAddress address = 0x0A;
-        BandWidth bw:2;
-        uint8_t x_inhibit:1;
-        uint8_t yz_inhibit:2;
-        const uint8_t __resv__:2 = 0;
-        uint8_t sw_rst:1;
-    }DEF_R8(internal_control_1_reg)
-
+    
     enum class DataRate:uint8_t{
         SingleShot = 0b000,
         _1Hz = 0b001,
@@ -82,6 +50,60 @@ struct MMC5983_Regs:public MMC5983_Collections{
         _1000 = 0b110,
         _2000 = 0b111
     };
+};
+
+
+struct MMC5983_Regs:public MMC5983_Collections{
+
+    struct DataPacket{
+        static constexpr uint8_t address = 0;
+
+        constexpr Vector3_t<int32_t> to_vec3() const{
+            const int32_t x = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
+            const int32_t y = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
+            const int32_t z = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
+
+            return {x,y,z};
+        }
+        constexpr std::span<uint8_t> as_bytes() {return std::span(buf_);}
+    private:
+        using Buf = std::array<uint8_t, 7>;
+
+        Buf buf_;
+    } data_packet_;
+
+    static_assert(sizeof(DataPacket) == 7);
+
+    struct R8_Status:public Reg8<>{
+        static constexpr RegAddress address = 0x08;
+        uint8_t meas_mag_done:1;
+        uint8_t meas_temp_done:1;
+        const uint8_t __resv1__:2 = 0;
+        uint8_t otp_read_done:1;
+        const uint8_t __resv2__:3 = 0;
+    }DEF_R8(status_reg)
+
+    struct R8_InternalControl0:public Reg8<>{
+        static constexpr RegAddress address = 0x09;
+        uint8_t tm_m:1;
+        uint8_t tm_t:1;
+        uint8_t int_meas_done_en:1;
+        uint8_t set:1;
+        uint8_t reset:1;
+        uint8_t auto_sr_en:1;
+        uint8_t otp_read:1;
+        uint8_t :1;
+    }DEF_R8(internal_control_0_reg)
+
+    struct R8_InternalControl1:public Reg8<>{
+        static constexpr RegAddress address = 0x0A;
+        BandWidth bw:2;
+        uint8_t x_inhibit:1;
+        uint8_t yz_inhibit:2;
+        const uint8_t __resv__:2 = 0;
+        uint8_t sw_rst:1;
+    }DEF_R8(internal_control_1_reg)
+
 
     struct R8_InternalControl2:public Reg8<>{
         static constexpr RegAddress address = 0x0B;
@@ -102,7 +124,7 @@ class MMC5983:
 public:
     void init();
 
-    Option<Vector3_t<q24>> read_mag();
+    IResult<Vector3_t<q24>> read_mag();
 private:    
     IResult<> write_reg(const uint8_t address, const uint8_t data);
     IResult<> read_reg(const uint8_t address, uint8_t & data);

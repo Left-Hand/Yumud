@@ -17,6 +17,13 @@ using namespace ymd::drivers;
 #define HMC5883L_ASSERT(cond, ...) ASSERT{cond}
 #endif
 
+
+
+using Error = ImuError;
+
+template<typename T = void>
+using IResult= Result<T, Error>;
+
 void HMC5883L::init(){
     this->validate();
     this->enableHighSpeed();
@@ -58,12 +65,12 @@ void HMC5883L::setMode(const Mode mode){
     write_reg(RegAddress::Mode, modeReg);
 }
 
-Option<Vector3_t<q24>> HMC5883L::read_mag(){
-    real_t x = From12BitToGauss(magXReg);
-    real_t y = From12BitToGauss(magYReg);
-    real_t z = From12BitToGauss(magZReg);
+IResult<Vector3_t<q24>> HMC5883L::read_mag(){
+    real_t x = From12BitToGauss(magXReg, lsb_);
+    real_t y = From12BitToGauss(magYReg, lsb_);
+    real_t z = From12BitToGauss(magZReg, lsb_);
 
-    return Some(Vector3_t<q24>(x,y,z));
+    return Ok(Vector3_t<q24>(x,y,z));
 }
 
 bool HMC5883L::validate(){
