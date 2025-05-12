@@ -174,8 +174,8 @@ public:
 
     IResult<> reset();
 
-    Option<Vector3_t<q24>> get_acc();
-    Option<Vector3_t<q24>> get_gyr();
+    Option<Vector3_t<q24>> read_acc();
+    Option<Vector3_t<q24>> read_gyr();
 };
 
 }

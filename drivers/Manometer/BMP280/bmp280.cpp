@@ -62,7 +62,7 @@ IResult<> BMP280::enable_spi3(const bool en){
 IResult<int32_t> BMP280::get_pressure(){
 
     uint32_t adc_T = ({
-        const auto res = get_temperature_data();
+        const auto res = read_temp_data();
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
@@ -135,7 +135,7 @@ IResult<uint32_t> BMP280::get_pressure_data(){
     return Ok(pressureData);
 }
 
-IResult<uint32_t> BMP280::get_temperature_data(){
+IResult<uint32_t> BMP280::read_temp_data(){
     uint32_t temperatureData = 0;
     if(const auto res = read_reg(temperatureReg);
         res.is_err()) return Err(res.unwrap_err());

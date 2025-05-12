@@ -141,7 +141,7 @@ Result<void, Error> AK8963::update(){
     data_valid_ &= !st2_reg.hofl;
     return Ok();
 }
-Option<Vector3_t<q24>> AK8963::get_magnet(){
+Option<Vector3_t<q24>> AK8963::read_mag(){
     return optcond(data_valid_, Vector3_t<q24>{
         conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale.x,
         conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale.y,

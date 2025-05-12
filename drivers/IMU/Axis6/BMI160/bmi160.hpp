@@ -130,12 +130,12 @@ public:
     Result<void, Error> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
     PmuMode get_pmu_mode(const PmuType pum);
-    Option<Vector3_t<q24>> get_acc();
-    Option<Vector3_t<q24>> get_gyr();
+    Option<Vector3_t<q24>> read_acc();
+    Option<Vector3_t<q24>> read_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr
-    Option<GyrOdr> get_gyr_odr(const real_t odr){
+    Option<GyrOdr> read_gyr_odr(const real_t odr){
         constexpr std::array odr_map = {
             25, 50, 100, 200, 400, 800, 1600, 3200
         };
@@ -149,7 +149,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<AccOdr> get_acc_odr(const real_t odr){
+    Option<AccOdr> read_acc_odr(const real_t odr){
         constexpr std::array odr_map = {
             real_t(25.0/32),
             real_t(25.0/16),

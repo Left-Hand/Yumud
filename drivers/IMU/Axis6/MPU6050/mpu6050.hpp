@@ -10,8 +10,7 @@
 
 namespace ymd::drivers{
 
-class MPU6050:public AccelerometerIntf, public GyroscopeIntf{
-public:
+struct MPU6050_Collections{
     using Error = ImuError;
     
     enum class Package:uint8_t{
@@ -42,13 +41,10 @@ public:
         _2000deg    =   3
     };
 
-protected:
-    using Phy = InvensenseSensor_Phy;
+        using RegAddress = uint8_t;   
+};
 
-    using RegAddress = uint8_t;    
-
-    Phy phy_;
-
+struct MPU6050_Regs:public MPU6050_Collections{ 
     struct GyrConfReg:public Reg8<>{
         scexpr RegAddress address = 0x1b;
 
@@ -109,15 +105,55 @@ protected:
         scexpr RegAddress address = 0x75;
         uint8_t data;
     } whoami_reg = {};
+};
 
+class MPU6050:
+    public AccelerometerIntf, 
+    public GyroscopeIntf,
+    public MPU6050_Regs{
+public:
+    MPU6050(const MPU6050 & other) = delete;
+    MPU6050(MPU6050 && other) = delete;
+
+    MPU6050(const hal::I2cDrv & i2c_drv):
+        MPU6050(i2c_drv, Package::MPU6050){;}
+    MPU6050(hal::I2cDrv && i2c_drv):
+        MPU6050(std::move(i2c_drv), Package::MPU6050){;}
+    MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
+
+    [[nodiscard]] Result<void, Error> validate();
+
+    [[nodiscard]] Result<void, Error> init();
+    
+    [[nodiscard]] Result<void, Error> update();
+
+    [[nodiscard]] Option<Vector3_t<q24>> read_acc();
+    [[nodiscard]] Option<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] Option<real_t> read_temp();
+
+    [[nodiscard]] Result<void, Error> set_acc_range(const AccRange range);
+    [[nodiscard]] Result<void, Error> set_gyr_range(const GyrRange range);
+
+    [[nodiscard]] Result<void, Error> reset();
+
+    void set_package(const Package package){
+        package_ = package;
+    }
+
+    [[nodiscard]] Result<Package, Error> get_package();
+
+    [[nodiscard]] Result<void, Error> enable_direct_mode(const Enable en = EN);
+private:
+
+    using Phy = InvensenseSensor_Phy;
+    Phy phy_;
+
+    bool data_valid = false;
     Package package_ = Package::MPU6050;
     real_t acc_scaler_ = 0;
     real_t gyr_scaler_ = 0;
 
-    [[nodiscard]] static constexpr 
-    uint8_t package2whoami(const Package package){return uint8_t(package);}
-
-    bool data_valid = false;
 
     static constexpr real_t calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
@@ -171,40 +207,9 @@ protected:
     [[nodiscard]] Result<void, Error> read_reg(T & reg){
         return read_reg(reg.address, reg);
     }
-public:
-    MPU6050(const MPU6050 & other) = delete;
-    MPU6050(MPU6050 && other) = delete;
 
-    MPU6050(const hal::I2cDrv & i2c_drv):
-        MPU6050(i2c_drv, Package::MPU6050){;}
-    MPU6050(hal::I2cDrv && i2c_drv):
-        MPU6050(std::move(i2c_drv), Package::MPU6050){;}
-    MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
-
-    [[nodiscard]] Result<void, Error> validate();
-
-    [[nodiscard]] Result<void, Error> init();
-    
-    [[nodiscard]] Result<void, Error> update();
-
-    [[nodiscard]] Option<Vector3_t<q24>> get_acc();
-    [[nodiscard]] Option<Vector3_t<q24>> get_gyr();
-    [[nodiscard]] Option<real_t> get_temperature();
-
-    [[nodiscard]] Result<void, Error> set_acc_range(const AccRange range);
-    [[nodiscard]] Result<void, Error> set_gyr_range(const GyrRange range);
-
-    [[nodiscard]] Result<void, Error> reset();
-
-    [[nodiscard]] Result<void, Error> set_package(const Package package){
-        package_ = package;
-        return Ok();
-    }
-
-    [[nodiscard]] Result<Package, Error> get_package();
-
-    [[nodiscard]] Result<void, Error> enable_direct_mode(const Enable en = EN);
+    [[nodiscard]] static constexpr 
+    uint8_t package2whoami(const Package package){return uint8_t(package);}
 };
 
 };

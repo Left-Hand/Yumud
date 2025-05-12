@@ -50,7 +50,7 @@ public:
     real_t getSpeed() const override;
     real_t getPosition() const override;
     real_t getCurrent() const override;
-    real_t get_acc() const override;
+    real_t read_acc() const override;
     real_t readSpeed() const{return meta.spd;}
     real_t readPosition() const{return meta.pos;}
     real_t readCurrent() const{return meta.curr;}

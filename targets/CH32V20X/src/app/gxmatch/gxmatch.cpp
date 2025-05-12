@@ -613,7 +613,7 @@ void host_main(){
                 //     wheels[3].getPosition()
                 // )
                 // DEBUG_PRINTLN(est_.rot());
-                DEBUG_PRINTLN(mag_sensor_.get_magnet());
+                DEBUG_PRINTLN(mag_sensor_.read_mag());
                 delay(5);
             }
         };
@@ -642,8 +642,8 @@ void host_main(){
                 acc_gyr_sensor_.update();
                 mag_sensor_.update();
 
-                const auto gyr3_raw = Vector3{acc_gyr_sensor_.get_gyr()};
-                const auto mag3_raw = Vector3{mag_sensor_.get_magnet()};
+                const auto gyr3_raw = Vector3{acc_gyr_sensor_.read_gyr()};
+                const auto mag3_raw = Vector3{mag_sensor_.read_mag()};
 
                 const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
                 const auto gyr_raw = gyr3_raw.z;
@@ -711,7 +711,7 @@ void host_main(){
                 // can_master.update();
                 acc_gyr_sensor_.update();
         
-                ang += Vector3(acc_gyr_sensor_.get_gyr()).z * 0.005_r;
+                ang += Vector3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
                 // auto delta = solver.inverse(Vector2{0.4_r*sin(t), 0}, 0);
 
                 // scexpr real_t delta = {0.003_r};

@@ -17,6 +17,8 @@ enum class ImuError_Kind:uint8_t{
     WrongWhoAmI,
     PackageNotMatch,
     UnknownDevice,
+    WrongDeviceId,
+    WrongCompanyId,
     PhyVerifyFailed,
 
     CantSetup,
@@ -55,18 +57,18 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
-    virtual Option<Vector3_t<q24>> get_acc() = 0;
+    virtual Option<Vector3_t<q24>> read_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Option<Vector3_t<q24>> get_gyr() = 0;
+    virtual Option<Vector3_t<q24>> read_gyr() = 0;
 };
 
 class MagnetometerIntf{
 public:
 
-    virtual Option<Vector3_t<q24>> get_magnet() = 0;
+    virtual Option<Vector3_t<q24>> read_mag() = 0;
 };
 
 }

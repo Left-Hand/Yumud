@@ -46,7 +46,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    Option<Vector3_t<q24>> get_magnet() override;
+    Option<Vector3_t<q24>> read_mag() override;
 
 protected:
     using RegAddress = uint8_t;

@@ -63,9 +63,9 @@ static void icm42688_tb(ICM42688 & imu){
     timer1.attach(TimerIT::Update, {0,0},[&]{
         const auto u0 = micros();
         imu.update().unwrap();
-        z = z + INV_FS * imu.get_gyr().unwrap().z;
-        // mahony.update(imu.get_gyr().unwrap(), imu.get_acc().unwrap());
-        mahony.update(imu.get_gyr().unwrap(), imu.get_acc().unwrap());
+        z = z + INV_FS * imu.read_gyr().unwrap().z;
+        // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
+        mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
         exe = micros() - u0;
     });
 
@@ -73,22 +73,22 @@ static void icm42688_tb(ICM42688 & imu){
         // const auto u0 = micros();
         // imu.update().unwrap();
         // const auto u1 = micros();
-        // const auto acc = imu.get_acc().unwrap();
-        // const auto gyr = imu.get_gyr().unwrap();
+        // const auto acc = imu.read_acc().unwrap();
+        // const auto gyr = imu.read_gyr().unwrap();
         // const auto gest = Quat_t<real_t>::from_shortest_arc(
         //     acc.normalized(),
         //     {0,0,1}
         // );
 
         const auto gest = mahony.result();
-        const auto euler = gest.to_euler();
+        // const auto euler = gest.to_euler();
         DEBUG_PRINTLN(
             0
             ,gest
             // ,euler
             // ,acc
         //     ,gyr
-        //     // ,imu.get_gyr().unwrap()
+        //     // ,imu.read_gyr().unwrap()
         //     // ,z, exe
         );
         delay(1);

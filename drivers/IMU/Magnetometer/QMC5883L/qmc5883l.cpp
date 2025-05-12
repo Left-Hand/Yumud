@@ -65,7 +65,7 @@ void QMC5883L::update(){
     read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
-Option<Vector3_t<q24>> QMC5883L::get_magnet(){
+Option<Vector3_t<q24>> QMC5883L::read_mag(){
     return Some{Vector3_t<q24>{
         uni(int16_t(magXReg)) * fs,
         uni(int16_t(magYReg)) * fs,

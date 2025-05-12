@@ -25,8 +25,8 @@ public:\
     bool operator != (const name & other) const { return value == other.value; }\
 };\
 OutputStream & operator <<(OutputStream & os, const name self);\
-static constexpr name u = name::from(true);\
-static constexpr name l = name::from(false);\
+static inline constexpr name u = name::from(true);\
+static inline constexpr name l = name::from(false);\
 
 
 DEF_MAKE_BINA_ENUM(Endian, MSB, LSB)

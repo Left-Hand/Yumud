@@ -70,7 +70,7 @@ Result<void, Error> LIS3DH::reset(){
 
 
 
-Option<Vector3_t<q24>> LIS3DH::get_acc(){
+Option<Vector3_t<q24>> LIS3DH::read_acc(){
     return None;
 
 }

@@ -186,7 +186,7 @@ public:
 
     void update();
 
-    Option<Vector3_t<q24>> get_magnet() override;
+    Option<Vector3_t<q24>> read_mag() override;
     
     bool validate();
 

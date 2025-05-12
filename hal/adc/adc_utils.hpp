@@ -58,6 +58,6 @@ namespace ymd::hal{
 
     namespace __adc_internal{
         void install_pin(const AdcChannelIndex channel, const bool en = true);
-        real_t get_temperature();
+        real_t read_temp();
     }
 }

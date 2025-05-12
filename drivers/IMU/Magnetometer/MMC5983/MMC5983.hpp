@@ -102,7 +102,7 @@ class MMC5983:
 public:
     void init();
 
-    Option<Vector3_t<q24>> get_magnet();
+    Option<Vector3_t<q24>> read_mag();
 private:    
     IResult<> write_reg(const uint8_t address, const uint8_t data);
     IResult<> read_reg(const uint8_t address, uint8_t & data);

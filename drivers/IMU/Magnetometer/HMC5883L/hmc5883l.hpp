@@ -160,7 +160,7 @@ public:
     void setGain(const Gain gain);
     void setMode(const Mode mode);
 
-    Option<Vector3_t<q24>> get_magnet() override;
+    Option<Vector3_t<q24>> read_mag() override;
 
     bool validate();
     void update();

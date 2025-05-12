@@ -20,6 +20,6 @@ void BMM150::reset(){
 
 }
 
-Option<Vector3_t<q24>> BMM150::get_magnet(){
+Option<Vector3_t<q24>> BMM150::read_mag(){
     return Some{Vector3_t<q24>{0,0,0}};
 }

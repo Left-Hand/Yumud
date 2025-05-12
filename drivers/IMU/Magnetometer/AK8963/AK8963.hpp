@@ -156,7 +156,7 @@ public:
     [[nodiscard]] Result<void, Error> busy();
     [[nodiscard]] Result<void, Error> stable();
     [[nodiscard]] Result<void, Error> disable_i2c();
-    [[nodiscard]] Option<Vector3_t<q24>> get_magnet();
+    [[nodiscard]] Option<Vector3_t<q24>> read_mag();
     [[nodiscard]] Result<void, Error> set_data_width(const uint8_t bits);
     [[nodiscard]] Result<void, Error> set_mode(const Mode mode);
 };

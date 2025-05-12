@@ -17,11 +17,31 @@ struct AK09911C_Collections{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
+    // enum class Mode:uint8_t{
+    //     PowerDown = 0b0000,
+    //     SingleMeasurement = 0b0001,
+    //     SelfTest = 0b1000,
+    //     FuseRomAccess = 0b1111,
+    // };
+
     enum class Mode:uint8_t{
-        PowerDown = 0b0000,
-        SingleMeasurement = 0b0001,
-        SelfTest = 0b1000,
-        FuseRomAccess = 0b1111,
+        // “00000”: Power-down mode
+        // “00001”: Single measurement mode
+        // “00010”: Continuous measurement mode 1
+        // “00100”: Continuous measurement mode 2
+        // “00110”: Continuous measurement mode 3
+        // “01000”: Continuous measurement mode 4
+        // “10000”: Self-test mode
+        // “11111”: Fuse ROM access mode
+
+        PowerDown = 0b00000,
+        SingleMeasurement = 0b00001,
+        Cont1 = 0b00010,
+        Cont2 = 0b00100,
+        Cont3 = 0b00110,
+        Cont4 = 0b01000,
+        SelfTest = 0b10000,
+        FuseRomAccess = 0b11111,
     };
 
 };
@@ -58,7 +78,8 @@ struct AK09911C_Regs : public AK09911C_Collections{
 
         uint8_t drdy:1;
         uint8_t dor:1;
-        uint8_t :6;
+        uint8_t :5;
+        uint8_t hsm:1;
 
         bool is_data_ready() const {return drdy;}
         bool is_data_overrun() const {return dor;}
@@ -77,14 +98,12 @@ struct AK09911C_Regs : public AK09911C_Collections{
 
     } DEF_R8(st2_reg)
 
+    //cntl1 reg is a dummy reg, it is not listed here
+
     struct R8_CNTL2:public Reg8<>{
         scexpr RegAddress address = 0x31;
 
-        uint8_t mode0:1;
-        uint8_t mode1:1;
-        uint8_t mode2:1;
-        uint8_t mode3:1;
-        uint8_t mode4:1;
+        Mode mode:5;
         uint8_t :3;
     } DEF_R8(cntl2_reg)
 
@@ -94,6 +113,8 @@ struct AK09911C_Regs : public AK09911C_Collections{
         uint8_t srst:1;
         uint8_t :7;
     } DEF_R8(cntl3_reg)
+
+    //test reg is a dummy reg, it is not listed here
 
     struct _R8_ASA:public Reg8<>{
         uint8_t data;
@@ -114,7 +135,9 @@ struct AK09911C_Regs : public AK09911C_Collections{
 };
 
 
-class AK09911C final:public MagnetometerIntf, public AK09911C_Regs{
+class AK09911C final:
+    public MagnetometerIntf, 
+    public AK09911C_Regs{
 public:
 
     AK09911C(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
@@ -124,10 +147,6 @@ public:
     AK09911C(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
     AK09911C(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
-
-    [[nodiscard]] IResult<Vector3_t<uint8_t>> get_coeff();
-    
-
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> validate();
@@ -135,10 +154,17 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    Option<Vector3_t<q24>> get_magnet() ;
+    [[nodiscard]] Option<Vector3_t<q24>> read_mag();
+
+    [[nodiscard]] IResult<bool> is_data_ready();
+    [[nodiscard]] IResult<bool> is_data_overrun();
+    [[nodiscard]] IResult<> enable_hs_i2c(const Enable en);
+    [[nodiscard]] IResult<> reset();
+
 private:
 
     AsahiKaseiSensor_Phy phy_;
+    Option<Vector3_t<q24>> scale_ = None; 
 
     [[nodiscard]] IResult<> update_adj();
 
@@ -148,6 +174,22 @@ private:
 
     [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
         return phy_.read_reg(addr, data);
+    }
+
+
+    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
+        return phy_.write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
+        return phy_.read_reg(reg.address, reg.as_ref());
+    }
+
+    [[nodiscard]] IResult<Vector3_t<int8_t>> get_coeff();
+
+    [[nodiscard]] static constexpr Vector3_t<q24> 
+    transform_coeff_into_scale(const Vector3_t<int8_t> coeff){
+        return Vector3_t<q24>(coeff) / 128 + Vector3_t<q24>(1, 1, 1); 
     }
     
 };

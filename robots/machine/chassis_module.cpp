@@ -151,17 +151,17 @@ void ChassisModule::tick800(){
         // acc_gyr_sensor_.update();
         // mag_sensor_.update();
 
-        // auto mag = Vector3_t<real_t>(mag_sensor_.get_magnet());
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.0035);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.005);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.002);
-        auto gyr_raw = Vector3_t<real_t>(gyr_sensor_.get_gyr().unwrap()).z + real_t(0.00113);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z;
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.00625);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z + real_t(0.00525);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.get_gyr()).z - real_t(0.134);
+        // auto mag = Vector3_t<real_t>(mag_sensor_.read_mag());
+        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.0035);
+        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.005);
+        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.002);
+        auto gyr_raw = Vector3_t<real_t>(gyr_sensor_.read_gyr().unwrap()).z + real_t(0.00113);
+        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z;
+        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00625);
+        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00525);
+        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.134);
 
         static KalmanFilter_t<real_t> kf{10,0.01_r};
         gyr_ = ABS(gyr_raw) > 3 ? real_t(0) : kf.update(gyr_raw);
