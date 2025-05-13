@@ -1,7 +1,7 @@
 #pragma once
 
 #include "details/ICM42688_collections.hpp"
-#include "core/utils/EnumDict.hpp"
+#include "core/utils/EnumArray.hpp"
 
 namespace ymd::drivers{
 

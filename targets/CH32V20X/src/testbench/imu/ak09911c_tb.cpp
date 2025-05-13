@@ -7,7 +7,6 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
 #include "drivers/IMU/Magnetometer/AK09911C/AK09911C.hpp"
 
 #include "robots/gesture/mahony.hpp"

@@ -37,6 +37,7 @@ using namespace ymd::drivers;
 
 using Error = ICM42688::Error;
 
+
 template<typename T = void>
 using IResult = Result<T, Error>; 
 
@@ -160,7 +161,10 @@ IResult<> ICM42688::init(){
 }
 
 IResult<> ICM42688::set_gyr_odr(const GyrOdr odr){
-	auto & reg = gyro_config0_reg;
+	// auto & reg = gyro_config0_reg;
+	// reg.gyro_odr = odr;
+	// return write_reg(reg);
+	auto reg = RegCopy(gyro_config0_reg);
 	reg.gyro_odr = odr;
 	return write_reg(reg);
 }

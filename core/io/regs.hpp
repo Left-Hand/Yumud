@@ -5,8 +5,30 @@
 
 namespace ymd{
 
+template<typename T> 
+struct RegCopy:public T{
+	constexpr RegCopy(T & owner)
+		:owner_(owner){
+        T & self = *this;
+        self.as_ref() = owner_.as_val();
+    }
 
-struct __RegBase{};
+    constexpr void apply(){
+        const T & self = *this;
+        owner_.as_ref() = self.as_val();
+    }
+private:
+	T & owner_;
+};
+
+template<typename T>
+RegCopy(T) -> RegCopy<T>;
+
+
+struct __RegBase{
+    template<typename T>
+    friend class RegCopy;
+};
 
 template<typename T, typename D = T>
 struct alignas(sizeof(T)) __RegC_t:public __RegBase{
