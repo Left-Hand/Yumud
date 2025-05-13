@@ -2,13 +2,78 @@
 
 #include <type_traits>
 
-#include "core/utils/typetraits/size_traits.hpp"
-#include "core/utils/typetraits/function_traits.hpp"
-// #include "core/utils/typetraits/typetraits_details.hpp"
-#include "core/utils/typetraits/serialize_traits.hpp"
 #include "core/utils/typetraits/enum_traits.hpp"
+#include "core/utils/Option.hpp"
 
 namespace ymd{
+
+template<typename E, typename T>
+requires std::is_enum_v<E>
+class EnumArray{
+public:
+    using Dump = magic::enum_dump<E>;
+    static constexpr size_t COUNT = Dump::COUNT;
+
+    constexpr EnumArray() = default;
+    constexpr EnumArray(std::array<T, COUNT> arr):
+        arr_(arr){;}
+
+
+    template<typename... Args>
+    requires (sizeof...(Args) == COUNT)
+    constexpr EnumArray(Args&&... args):
+        arr_{static_cast<T>(args)...} {}
+    constexpr T & operator [](const E e){
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return arr_[rank_opt.value()];
+        else __builtin_abort();
+    }
+
+    constexpr const T & operator [](const E e) const {
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return arr_[rank_opt.value()];
+        else __builtin_abort();
+    }
+
+    constexpr Option<const T &> at(const E e) const {
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return Some(&arr_[rank_opt.value()]);
+        else return None;
+    }
+
+    template<typename U>
+    constexpr Option<E> lower_bound(U&& val) const {
+        // 使用二分查找找到第一个大于等于 val 的枚举项
+        auto it = std::lower_bound(arr_.begin(), arr_.end(), std::forward<U>(val));
+        if (it != arr_.end()) {
+            // 找到对应的枚举项
+            size_t idx = std::distance(arr_.begin(), it);
+            return Some(Dump::index_to_enum(idx));
+        }
+        return None; // 未找到
+    }
+
+    template<typename U>
+    constexpr Option<E> upper_bound(U&& val) const {
+        // 使用二分查找找到第一个大于 val 的枚举项
+        auto it = std::upper_bound(arr_.begin(), arr_.end(), std::forward<U>(val));
+        if (it != arr_.end()) {
+            // 找到对应的枚举项
+            size_t idx = std::distance(arr_.begin(), it);
+            return Some(Dump::index_to_enum(idx));
+        }
+        return None; // 未找到
+    }
+
+    const T * begin() const { return arr_.begin(); }
+    const T * end() const { return arr_.end(); }
+
+    T * begin() { return arr_.begin(); }
+    T * end() { return arr_.end(); }
+
+private:
+    std::array<T, COUNT> arr_;
+};
 
 template<typename E, typename T>
 requires std::is_enum_v<E>
@@ -17,18 +82,45 @@ public:
     using Dump = magic::enum_dump<E>;
     static constexpr size_t COUNT = Dump::COUNT;
 
-    T & operator [](const E e){
-        const auto idx_opt = Dump::enum_to_index(e);
-        if(idx_opt.has_value()) return dict[idx_opt.value()];
+    constexpr EnumDict() = default;
+    constexpr EnumDict(std::array<T, COUNT> arr):
+        arr_(arr){;}
+
+
+    template<typename... Args>
+    requires (sizeof...(Args) == COUNT)
+    constexpr EnumDict(Args&&... args):
+        arr_{static_cast<T>(args)...} {}
+    constexpr T & operator [](const E e){
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return arr_[rank_opt.value()];
         else __builtin_abort();
     }
 
-    const T & operator [](const E e) const {
-        const auto idx_opt = Dump::enum_to_index(e);
-        if(idx_opt.has_value()) return dict[idx_opt.value()];
+    constexpr const T & operator [](const E e) const {
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return arr_[rank_opt.value()];
         else __builtin_abort();
     }
+
+    constexpr Option<const T &> at(const E e) const {
+        const auto rank_opt = Dump::enum_to_rank(e);
+        if(rank_opt.has_value()) return Some(&arr_[rank_opt.value()]);
+        else return None;
+    }
+
+
+    using Pair = std::pair<E, T>;
+
+    // Pair begin(){return {Dump::index_to_enum(1), arr_.front();}}
+    // Pair end(){return {Dump::index_to_enum(COUNT - 1), arr_.back()};}
+    constexpr Pair begin() const {return {Dump::index_to_enum(1), arr_.front()};}
+    constexpr Pair end() const {return {Dump::index_to_enum(COUNT - 1), arr_.back()};}
+
 private:
-    std::array<T, COUNT> dict;
+    std::array<T, COUNT> arr_;
 };
+
+
+
 }

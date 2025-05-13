@@ -1,6 +1,7 @@
 #pragma once
 
 #include "details/ICM42688_collections.hpp"
+#include "core/utils/EnumDict.hpp"
 
 namespace ymd::drivers{
 
@@ -51,42 +52,29 @@ private:
 
     static constexpr q24 calc_gyr_lsb(const GyrFs fs){
         /*Turn Into Radian*/
-        constexpr  q24 LSB_GYR_2000_R	= q24(0.0010652644);
-        constexpr  q24 LSB_GYR_1000_R	= q24(0.00053263222);
-        constexpr  q24  LSB_GYR_500_R	= q24(0.00026631611);
-        constexpr  q24  LSB_GYR_250_R	= q24(0.00013315805);
-        constexpr  q24 LSB_GYR_125_R  	= q24(0.000066579027);	
-        constexpr  q24 LSB_GYR_62_5_R  	= q24(0.000066579027/2);	
-        constexpr  q24 LSB_GYR_31_25_R  	= q24(0.000066579027/4);	
-        constexpr  q24 LSB_GYR_15_625_R  	= q24(0.000066579027/8);	
+        constexpr EnumArray<GyrFs, q24> map = {
+            q24(0.0010652644),
+            q24(0.00053263222),
+            q24(0.00026631611),
+            q24(0.00013315805),
+            q24(0.000066579027),
+            q24(0.000066579027/2),
+            q24(0.000066579027/4),
+            q24(0.000066579027/8)
+        };
 
-        switch(fs){
-            case GyrFs::_2000DPS:   return LSB_GYR_2000_R;
-            case GyrFs::_1000DPS:   return LSB_GYR_1000_R;
-            case GyrFs::_500DPS:    return LSB_GYR_500_R;
-            case GyrFs::_250DPS:    return LSB_GYR_250_R;
-            case GyrFs::_125DPS:    return LSB_GYR_125_R;
-            case GyrFs::_62_5DPS:   return LSB_GYR_62_5_R;
-            case GyrFs::_31_25DPS:  return LSB_GYR_31_25_R;
-            case GyrFs::_15_625DPS: return LSB_GYR_15_625_R;
-            default: __builtin_unreachable();
-            
-        }
+        return map[fs];
     }
 
     static constexpr q24 calc_acc_lsb(const AccFs fs){
+        constexpr EnumArray<AccFs, q24> map = {
+            q24( 0.0047856934),
+            q24( 0.0023928467),
+            q24( 0.0011964233),
+            q24(0.00059821167)
+        };
 
-        constexpr q24 LSB_ACC_16G = q24( 0.0047856934);
-        constexpr q24  LSB_ACC_8G = q24( 0.0023928467);
-        constexpr q24  LSB_ACC_4G = q24( 0.0011964233);
-        constexpr q24  LSB_ACC_2G = q24(0.00059821167);
-        switch(fs){
-            case AccFs::_16G: return LSB_ACC_16G;
-            case AccFs::_8G: return LSB_ACC_8G;
-            case AccFs::_4G: return LSB_ACC_4G;
-            case AccFs::_2G: return LSB_ACC_2G;
-            default: __builtin_unreachable();
-        }
+        return map[fs];
     }
 
     IResult<> set_gyr_odr(const GyrOdr odr);

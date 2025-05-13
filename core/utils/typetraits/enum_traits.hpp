@@ -57,7 +57,7 @@ struct enum_dump{
     using StringsStorage = std::array<std::string_view, COUNT>;
 
     static constexpr std::optional<std::string_view> enum_to_str(const Enum value){
-        const auto index = enum_to_index(value);
+        const auto index = enum_to_rank(value);
         if(index.has_value()) return strings_storage[index.value()];
         else return std::nullopt;
     }
@@ -69,7 +69,7 @@ struct enum_dump{
         return std::nullopt;
     }
 
-    static constexpr std::optional<size_t> enum_to_index(const Enum value){
+    static constexpr std::optional<size_t> enum_to_rank(const Enum value){
         auto it = std::lower_bound(index_storage.begin(), index_storage.end(), static_cast<Int>(value));
         if (it != index_storage.end() && *it == static_cast<Int>(value)) {
             return static_cast<int>(it - index_storage.begin());

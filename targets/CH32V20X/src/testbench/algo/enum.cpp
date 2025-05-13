@@ -12,6 +12,10 @@
 #include "core/utils/Option.hpp"
 
 
+#include "core/utils/typetraits/size_traits.hpp"
+#include "core/utils/typetraits/function_traits.hpp"
+// #include "core/utils/typetraits/typetraits_details.hpp"
+#include "core/utils/typetraits/serialize_traits.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 
@@ -80,7 +84,7 @@ public:
     Ret visit(Fn && fn) const {
         auto & self = *this;
         return std::visit([&](const auto & value) {
-            using T = std::decay_t<decltype(value)>;
+            // using T = std::decay_t<decltype(value)>;
 
             std::forward<Fn>(fn)(value);
         }, self.value_);

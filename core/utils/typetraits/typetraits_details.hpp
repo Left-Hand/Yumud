@@ -19,7 +19,8 @@ struct __static_string
 template <typename E, E V>
 constexpr std::string_view _enum_item_name() {
     constexpr std::string_view fully_name = __PRETTY_FUNCTION__;
-
+    
+    //TODO
     constexpr std::size_t begin=[&](){
         // for(std::size_t i=fully_name.size() - 1;i>1;i--){
         //     const char chr = fully_name[i];
@@ -43,6 +44,15 @@ constexpr std::string_view _enum_item_name() {
                 return i;
         }
     }();
+
+    // constexpr std::size_t begin=[&](){
+    //     for(std::size_t i = end; i > 1; i--){
+    //         const char chr = fully_name[i];
+    //         if(chr ==';') return i + 2;
+    //         if(chr ==':') return i + 1;
+    //     }
+    // }();
+
     
     constexpr auto type_name_view=fully_name.substr(begin,end-begin);
     // constexpr auto type_name_view=fully_name;
