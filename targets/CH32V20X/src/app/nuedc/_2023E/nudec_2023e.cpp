@@ -13,7 +13,7 @@ auto & DBG_UART = hal::uart2;
 static constexpr auto CTRL_FREQ = 50;
 
 
-namespace nudec::_2023E{
+namespace nuedc::_2023E{
 
 struct AppConfig{
     ServoConfig yaw_cfg;
@@ -211,7 +211,7 @@ private:
 
 
 void nuedc_2023e_main(){
-    using namespace nudec::_2023E;
+    using namespace nuedc::_2023E;
     DBG_UART.init(576000);
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets();

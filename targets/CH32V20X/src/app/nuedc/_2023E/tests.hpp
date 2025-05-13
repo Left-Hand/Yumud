@@ -1,6 +1,6 @@
 #include "device.hpp"
 
-namespace nudec::_2023E::tests{
+namespace nuedc::_2023E::tests{
 class MockServo final:public MotorIntf{
 public:
     void set_radian(const real_t rad){

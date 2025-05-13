@@ -20,7 +20,7 @@ namespace std{
         // return SIGN_AS(x,s);
     }
 }
-namespace nudec::_2023E{
+namespace nuedc::_2023E{
 
 //跟踪微分器 用于平滑输入
 class TdVec2{

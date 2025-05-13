@@ -16,6 +16,7 @@ protected:
 
     q24 ki_;
     q24 kp_;
+    q24 kd_;
     uint fs_;
     Vector3 gyr_hat_;
     Vector3 inte_;
@@ -48,6 +49,7 @@ public:
     void myupdate(const Vector3 & gyr,const Vector3 & acc);
 
     void update_v2(const Vector3 & gyr,const Vector3 & acc);
+    void myupdate_v2(const Vector3 & gyr,const Vector3 & acc);
     
     // void update(const Vector3 & gyr,const Vector3 & acc, const Vector3 & mag);
 

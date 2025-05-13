@@ -3,7 +3,7 @@
 #include "core/utils/Option.hpp"
 
 using namespace ymd;
-namespace nudec::_2021F{
+namespace nuedc::_2021F{
 class PlaceName{
 public:
     enum class Kind{

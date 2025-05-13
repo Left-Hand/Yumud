@@ -3,7 +3,7 @@
 #include "device.hpp"
 #include "ctrl.hpp"
 
-namespace nudec::_2023E{
+namespace nuedc::_2023E{
 
 //描述了一组关节解
 struct GimbalSolution final{

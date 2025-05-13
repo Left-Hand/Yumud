@@ -51,8 +51,8 @@ static void icm42688_tb(ICM42688 & imu){
 
     const real_t tau = 1.3_r;
     Mahony mahony{{
-        .kp = tau * tau,
-        .ki = 2 * tau,
+        .kp = 2 * tau,
+        .ki = tau * tau,
         // .ki = 0,
         .fs = FS
     }};
@@ -63,7 +63,8 @@ static void icm42688_tb(ICM42688 & imu){
         imu.update().unwrap();
         z = z + INV_FS * imu.read_gyr().unwrap().z;
         // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
-        mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
+        // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
+        mahony.myupdate_v2(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
         exe = micros() - u0;
     });
 
