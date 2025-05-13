@@ -17,7 +17,9 @@ enum class EncoderError_Kind:uint8_t{
     MagnetLost,
     MagnetWeak,
     MagnetOverflow,
-    RegProgramFailed
+    RegProgramFailed,
+    ValueOverflow,
+    ValueUnderflow,
 };
 }
 
