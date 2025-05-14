@@ -60,7 +60,7 @@ struct MMC5983_Collections{
 
 struct MMC5983_Regs:public MMC5983_Collections{
 
-    struct DataPacket{
+    struct alignas(sizeof(8)) DataPacket{
         static constexpr uint8_t address = 0;
 
         constexpr Vector3_t<int32_t> to_vec3() const{
@@ -71,9 +71,10 @@ struct MMC5983_Regs:public MMC5983_Collections{
             return {x,y,z};
         }
 
-        constexpr q8 to_temp() const {
+        constexpr q16 to_temp() const {
             // Temperature output, unsigned format. The range is -75~125°C, about 0.8°C/LSB, 00000000 stands for -75°C
-            return q8(buf_[8]) * 0.8_r - 75;
+            // return q16(buf_[7] * 0.8_q16 - 75);
+            return buf_[7];
         }
         constexpr std::span<uint8_t> as_bytes() {return std::span(buf_);}
     private:
@@ -198,7 +199,7 @@ public:
     [[nodiscard]] IResult<> enable_yz(const Enable en);
     
     [[nodiscard]] IResult<Vector3_t<q24>> read_mag();
-    [[nodiscard]] IResult<q8> read_temp();
+    [[nodiscard]] IResult<q16> read_temp();
     
     
     [[nodiscard]] IResult<bool> is_mag_meas_done();

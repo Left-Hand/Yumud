@@ -53,10 +53,10 @@ IResult<> MMC5983::init(){
     if(const auto res = set_prd_magset(PrdSet::_100);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_bandwidth(MMC5983::BandWidth::_100Hz);
+    if(const auto res = set_bandwidth(MMC5983::BandWidth::_200Hz);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_odr(MMC5983::Odr::_100Hz);
+    if(const auto res = set_odr(MMC5983::Odr::_200Hz);
         res.is_err()) return CHECK_RES(res);
 
     return Ok();
@@ -122,7 +122,7 @@ IResult<Vector3_t<q24>> MMC5983::read_mag(){
     });
 }
 
-IResult<q8> MMC5983::read_temp(){
+IResult<q16> MMC5983::read_temp(){
     return Ok(data_packet_.to_temp());
 }
 
