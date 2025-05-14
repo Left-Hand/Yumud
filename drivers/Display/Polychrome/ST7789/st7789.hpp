@@ -25,16 +25,16 @@ private:
 
     template <hal::valid_spi_data T>
     hal::HalResult phy_write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC) {
-        static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+        // static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
                 return res;
         }
 
-        const auto p = reinterpret_cast<const T *>(pdata);
+        // const auto p = reinterpret_cast<const T *>(pdata);
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(p[i]);
+            (void)spi_.fast_write(static_cast<T>(pdata[i]));
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
         if (cont == DISC) spi_.end();

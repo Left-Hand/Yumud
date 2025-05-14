@@ -352,10 +352,18 @@ void sys::dump() {
 
 //跳闸 第一时间关闭功率输出
 void sys::trip(){
+    #ifdef ENABLE_TIM1
     hal::timer1.deinit();
+    #endif
+    #ifdef ENABLE_TIM2
     hal::timer2.deinit();
+    #endif
+    #ifdef ENABLE_TIM3
     hal::timer3.deinit();
+    #endif
+    #ifdef ENABLE_TIM4
     hal::timer4.deinit();
+    #endif
 }
 
 //关闭所有外设

@@ -35,7 +35,7 @@ static constexpr size_t MODU_FREQ = 10;
 void pfm_zvs_main(){
 
 
-    UART.init(DEBUG_UART_BAUD);
+    UART.init(576000);
     DEBUGGER.retarget(&UART);
 
     #if TIM_INDEX == 1

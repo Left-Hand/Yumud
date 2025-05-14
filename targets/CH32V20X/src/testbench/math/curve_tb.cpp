@@ -102,7 +102,7 @@ auto rasterization_points(const auto & functor, const size_t n){
 
 
 void curve_tb() {
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
     DEBUG_PRINTLN(std::setprecision(4));
 
     using Vector3 = Vector3_t<real_t>;

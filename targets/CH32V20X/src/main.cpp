@@ -141,7 +141,8 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // light_tracking_main();
-    cubic_main();
+    // cubic_main();
+    smc2025_main();
     // sdc_main();
     // proxy_tb();
     // paj7620_main();

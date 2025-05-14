@@ -107,7 +107,7 @@ calibrate_magfield(const std::span<const Vector3_t<q24>> data) {
 
 
     // 4. 解3x3线性方程组(使用克莱姆法则，避免矩阵求逆)
-    auto solve_3x3 = [](const q24 A[6], const q24 b[3]) -> Vector3_t<q24> {
+    auto solve_3x3 = [&]() -> Vector3_t<q24> {
         // 计算行列式
         const auto det = A[0]*(A[3]*A[5] - A[4]*A[4]) 
                         - A[1]*(A[1]*A[5] - A[4]*A[2]) 
@@ -137,7 +137,7 @@ calibrate_magfield(const std::span<const Vector3_t<q24>> data) {
         };
     };
 
-    Vector3_t<q24> solution = solve_3x3(A, b);
+    Vector3_t<q24> solution = solve_3x3();
 
     // 5. 计算软铁缩放因子
     auto compute_scale_factors = [](Vector3_t<q24> params) {
@@ -292,7 +292,7 @@ static void mmc5983_test(drivers::MMC5983 & imu){
         // const auto p = project_v2_to_v3();
         const auto p = Vector3_t<q24>();
         DEBUG_PRINTLN(p,i, v2);
-        d6elay(1);
+        delay(1);
         calibrator.add_data(p + Vector3_t<q24>(0.2_r,1,1));
     }
     std::tie(mean, soft_iron) = calibrator.get_result();

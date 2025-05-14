@@ -1,7 +1,10 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "drivers/Camera/Camera.hpp" 
+
+#include "hal/bus/dvp/dvp.hpp"
+#include "types/image/image.hpp"
+#include "hal/bus/sccb/sccb_drv.hpp"
 
 namespace ymd::drivers{
 

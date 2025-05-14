@@ -301,7 +301,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    uart2.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    uart2.init(576000, CommStrategy::Blocking);
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(2);
     DEBUGGER.set_radix(10);
@@ -318,7 +318,7 @@ void eeprom_main(){
 void flash_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
     DEBUGGER.retarget(&DEBUGGER_INST);
 
     // auto & led = portA[8];

@@ -31,7 +31,7 @@ void pca_tb(OutputStream & logger){
 }
 
 void pca_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
     DEBUGGER.retarget(&DEBUGGER_INST);
 
     pca_tb(DEBUGGER);

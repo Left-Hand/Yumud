@@ -7,7 +7,7 @@
 
 
 void int_tb() {
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
 
     // i8 a = {0};
 

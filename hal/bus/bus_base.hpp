@@ -92,7 +92,7 @@ public:
 
     void end();
 
-    _Guard create_guard(){return _Guard{*this};}
+    [[nodiscard]]_Guard create_guard(){return _Guard{*this};}
 
     bool occupied(){return locker.is_locked();}
 };
