@@ -13,7 +13,7 @@ struct RegCopy:public T{
         self.as_ref() = owner_.as_val();
     }
 
-    constexpr void apply(){
+    constexpr void apply() const {
         const T & self = *this;
         owner_.as_ref() = self.as_val();
     }

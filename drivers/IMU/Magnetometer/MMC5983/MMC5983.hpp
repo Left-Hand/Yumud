@@ -1,5 +1,10 @@
 #pragma once
 
+// 相当优秀的磁力计 调整好一点不带漂
+
+// 这个驱动已经完成编写
+// 这个驱动已经完成测试
+
 // https://www.memsic.com/Public/Uploads/uploadfile/files/20220119/MMC5983MADatasheetRevA.pdf
 // https://github.com/kriswiner/MMC5983MA/blob/master/LSM6DSM_MMC5983MA_LPS22HB_Dragonfly/MMC5983MA.cpp
 
@@ -14,8 +19,8 @@ namespace ymd::drivers{
 
 
 struct MMC5983_Collections{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
     using Error = ImuError;
-
     template<typename T = void>
     using IResult = Result<T, Error>;
 
@@ -29,7 +34,7 @@ struct MMC5983_Collections{
     };
 
     
-    enum class DataRate:uint8_t{
+    enum class Odr:uint8_t{
         SingleShot = 0b000,
         _1Hz = 0b001,
         _10Hz = 0b010,
@@ -65,14 +70,19 @@ struct MMC5983_Regs:public MMC5983_Collections{
 
             return {x,y,z};
         }
+
+        constexpr q8 to_temp() const {
+            // Temperature output, unsigned format. The range is -75~125°C, about 0.8°C/LSB, 00000000 stands for -75°C
+            return q8(buf_[8]) * 0.8_r - 75;
+        }
         constexpr std::span<uint8_t> as_bytes() {return std::span(buf_);}
     private:
-        using Buf = std::array<uint8_t, 7>;
+        using Buf = std::array<uint8_t, 8>;
 
         Buf buf_;
     } data_packet_;
 
-    static_assert(sizeof(DataPacket) == 7);
+    static_assert(sizeof(DataPacket) == 8);
 
     struct R8_Status:public Reg8<>{
         static constexpr RegAddress address = 0x08;
@@ -107,27 +117,128 @@ struct MMC5983_Regs:public MMC5983_Collections{
 
     struct R8_InternalControl2:public Reg8<>{
         static constexpr RegAddress address = 0x0B;
-        DataRate data_rate:3;
+        Odr data_rate:3;
         uint8_t cmm_en:1;
-        uint8_t prd_set:3;
+        PrdSet prd_set:3;
         uint8_t en_prd_set:1 = 0;
     }DEF_R8(internal_control_2_reg)
+
+    struct R8_ProductID:public Reg8<>{
+        static constexpr RegAddress address = 0x2F;
+        static constexpr uint8_t KEY = 0b00110000;
+        uint8_t product_id:8;
+    }DEF_R8(product_id_reg)
 };
 
 class MMC5983_Phy: public MMC5983_Collections{
+public:
+    MMC5983_Phy(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
+    MMC5983_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        MMC5983_Phy(hal::I2cDrv{i2c, addr}){;}
+    MMC5983_Phy(const hal::SpiDrv & spi_drv):
+        i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
+    MMC5983_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv{spi, index}){;}
+
+    [[nodiscard]] __fast_inline
+    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+        if(i2c_drv_){
+            return Result<void, Error>(i2c_drv_->write_reg(addr, data));
+        }else{
+            PANIC();
+        }
+    }
+
+    [[nodiscard]] __fast_inline
+    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+        if(i2c_drv_){
+            return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
+        }else{
+            PANIC();
+        }
+    }
+
+    [[nodiscard]] __fast_inline
+    Result<void, Error> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
+        if(i2c_drv_){
+            return Result<void, Error>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pdata));
+        }else{
+            PANIC();
+        }
+    }
+
+    
 private:
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 };
 
 class MMC5983:
     public MagnetometerIntf,
     public MMC5983_Regs{
 public:
-    void init();
+    MMC5983(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    MMC5983(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, addr}){;}
+    MMC5983(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    MMC5983(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
 
-    IResult<Vector3_t<q24>> read_mag();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> reset();
+
+    [[nodiscard]] IResult<> set_odr(const Odr odr);
+    [[nodiscard]] IResult<> set_bandwidth(const BandWidth bw);
+    [[nodiscard]] IResult<> enable_x(const Enable en);
+    [[nodiscard]] IResult<> enable_yz(const Enable en);
+    
+    [[nodiscard]] IResult<Vector3_t<q24>> read_mag();
+    [[nodiscard]] IResult<q8> read_temp();
+    
+    
+    [[nodiscard]] IResult<bool> is_mag_meas_done();
+    [[nodiscard]] IResult<bool> is_temp_meas_done();
+    
+    
+    [[nodiscard]] IResult<> set_prd_magset(const PrdSet prdset);
+    [[nodiscard]] IResult<> enable_magset(const Enable en);
+    [[nodiscard]] IResult<> enable_magreset(const Enable en);
+    [[nodiscard]] IResult<Vector3_t<q24>> do_magset();
+    [[nodiscard]] IResult<Vector3_t<q24>> do_magreset();
+    [[nodiscard]] IResult<> enable_auto_mag_sr(const Enable en);
+    
+    [[nodiscard]] IResult<> enable_mag_meas(const Enable en);
+    [[nodiscard]] IResult<> enable_temp_meas(const Enable en);
 private:    
-    IResult<> write_reg(const uint8_t address, const uint8_t data);
-    IResult<> read_reg(const uint8_t address, uint8_t & data);
+    using Phy = MMC5983_Phy;
+    Phy phy_;
+    [[nodiscard]] IResult<> write_reg(const uint8_t address, const uint8_t data){
+        return phy_.write_reg(address, data);
+    }
+    
+    [[nodiscard]] IResult<> read_reg(const uint8_t address, uint8_t & data){
+        return phy_.read_reg(address, data);
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = phy_.write_reg(reg.address, reg.as_val());
+        if(res.is_ok()) reg.apply();
+        return res;
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return phy_.read_reg(reg.address, reg.as_ref());
+    }
+
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
+        return phy_.read_burst(addr, pdata);
+    }
 
 };
 

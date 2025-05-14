@@ -35,7 +35,7 @@ concept has_derive_debug_dispatcher = requires(OutputStream& os, const T& value)
 
 
 #define DERIVE_DEBUG(type)\
-OutputStream& operator<<(OutputStream& os,const type value) {\
+inline OutputStream& operator<<(OutputStream& os,const type value) {\
     derive_debug_dispatcher<type>::call(os, value);\
     return os;\
 }\

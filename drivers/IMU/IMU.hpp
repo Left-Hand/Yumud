@@ -5,9 +5,9 @@
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
 
 #include "types/vector3/Vector3.hpp"
-
 #include "hal/hal_result.hpp"
 
 namespace ymd::drivers{
@@ -41,7 +41,7 @@ enum class ImuError_Kind:uint8_t{
 
     AxisXOverflow,
     AxisYOverflow,
-    AxisZOverflow,
+    AxisZOverflow
 };
 }
 
@@ -74,5 +74,14 @@ public:
 
     virtual Result<Vector3_t<q24>, ImuError> read_mag() = 0;
 };
+
+}
+
+namespace ymd{
+    DERIVE_DEBUG(drivers::details::ImuError_Kind)
+// OutputStream & print_halerr_kind(OutputStream & os, const drivers::details::ImuError_Kind err){
+//     derive_debug_dispatcher<drivers::details::ImuError_Kind>::call(os, err);
+//     return os;
+// }
 
 }
