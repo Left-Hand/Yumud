@@ -61,12 +61,12 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
-    virtual Option<Vector3_t<q24>> read_acc() = 0;
+    virtual Result<Vector3_t<q24>, ImuError> read_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Option<Vector3_t<q24>> read_gyr() = 0;
+    virtual Result<Vector3_t<q24>, ImuError> read_gyr() = 0;
 };
 
 class MagnetometerIntf{

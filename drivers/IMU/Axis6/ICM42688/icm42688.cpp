@@ -222,8 +222,8 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-Option<Vector3_t<q24>> ICM42688::read_acc(){
-    return Some{Vector3_t<q24>{
+IResult<Vector3_t<q24>> ICM42688::read_acc(){
+    return Ok{Vector3_t<q24>{
 		// acc_data_.x, 
 		// acc_data_.y, 
 		// acc_data_.z, 
@@ -234,9 +234,9 @@ Option<Vector3_t<q24>> ICM42688::read_acc(){
 }
 
 
-Option<Vector3_t<q24>> ICM42688::read_gyr(){
+IResult<Vector3_t<q24>> ICM42688::read_gyr(){
 
-    return Some{Vector3_t<q24>{
+    return Ok{Vector3_t<q24>{
 		lsb_gyr_ * gyr_data_.x,
 		lsb_gyr_ * gyr_data_.y,
 		lsb_gyr_ * gyr_data_.z

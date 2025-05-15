@@ -9,6 +9,9 @@ class BMI160:public AccelerometerIntf, public GyroscopeIntf{
 public:
     using Error = ImuError;
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
     };
@@ -130,8 +133,8 @@ public:
     Result<void, Error> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
     PmuMode get_pmu_mode(const PmuType pum);
-    Option<Vector3_t<q24>> read_acc();
-    Option<Vector3_t<q24>> read_gyr();
+    IResult<Vector3_t<q24>> read_acc();
+    IResult<Vector3_t<q24>> read_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr

@@ -19,7 +19,8 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = LIS3DH::Error;
-
+template<typename T = void>
+using IResult = Result<T, Error>;
 Result<void, Error> LIS3DH::init(){
 	// LIS_Write_Byte(CTRL_REG1,0x3F);			//设置低功耗模式 xyz轴使能 采样频率25HZ
 	// LIS_Write_Byte(CTRL_REG2,0x09);			//高通滤波正常模式，数据从内部滤波器到输出寄存器 高通滤波器使能到中断1
@@ -70,8 +71,8 @@ Result<void, Error> LIS3DH::reset(){
 
 
 
-Option<Vector3_t<q24>> LIS3DH::read_acc(){
-    return None;
+IResult<Vector3_t<q24>> LIS3DH::read_acc(){
+    return Ok(Vector3_t<q24>());
 
 }
 

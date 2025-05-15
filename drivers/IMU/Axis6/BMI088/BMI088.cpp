@@ -6,6 +6,8 @@ using namespace ymd::drivers;
 
 using Error = ImuError;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
 
 template<typename Fn, typename Fn_Dur>
 Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
@@ -70,21 +72,21 @@ Result<void, Error> BMI088_Gyr::update(){
 }
 
 
-Option<Vector3_t<q24>> BMI088_Acc::read_acc(){
-    return Some(Vector3_t<q24>(
+IResult<Vector3_t<q24>> BMI088_Acc::read_acc(){
+    return Ok(Vector3_t<q24>(
         acc_x_reg.as_val() * acc_scaler_,
         acc_y_reg.as_val() * acc_scaler_,
         acc_z_reg.as_val() * acc_scaler_
     ));
 }
-Option<real_t> BMI088_Acc::read_temp(){
+IResult<real_t> BMI088_Acc::read_temp(){
 	auto bmi088_raw_temp = int16_t((temp_reg.as_bytes()[0] << 3) | (temp_reg.as_bytes()[1] >> 5));
 	if (bmi088_raw_temp > 1023) bmi088_raw_temp -= 2048;
-    return Some(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
+    return Ok(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
 }
 
-Option<Vector3_t<q24>> BMI088_Gyr::read_gyr(){
-    return Some(Vector3_t<q24>(
+IResult<Vector3_t<q24>> BMI088_Gyr::read_gyr(){
+    return Ok(Vector3_t<q24>(
         gyr_x_reg.as_val() * gyr_scaler_,
         gyr_y_reg.as_val() * gyr_scaler_,
         gyr_z_reg.as_val() * gyr_scaler_
