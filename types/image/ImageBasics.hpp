@@ -222,21 +222,21 @@ protected:
 
     void setpos_unsafe(const Vector2u & pos) override { select_area.position = pos; }
     void setarea_unsafe(const Rect2u & rect) override { select_area = rect; }
-    void putpixel_unsafe(const Vector2u & pos, const ColorType color) override { data[this->size().x * pos.y + pos.x] = color; }
-    void getpixel_unsafe(const Vector2u & pos, ColorType & color) const override { color = data[this->size().x * pos.y + pos.x]; }
+    void putpixel_unsafe(const Vector2u & pos, const ColorType color) override { data_[this->size().x * pos.y + pos.x] = color; }
+    void getpixel_unsafe(const Vector2u & pos, ColorType & color) const override { color = data_[this->size().x * pos.y + pos.x]; }
 
-    std::shared_ptr<DataType[]> data;
+    std::shared_ptr<DataType[]> data_;
 
 
 public:
-    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data(_data) {;}
-    ImageWithData(const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
+    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data_(_data) {;}
+    ImageWithData(const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data_(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
 
     // Move constructor
-    ImageWithData(ImageWithData&& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data(std::move(other.data)){}
+    ImageWithData(ImageWithData&& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data_(std::move(other.data_)){}
 
 
-    ImageWithData(const ImageWithData& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data(other.data){}
+    ImageWithData(const ImageWithData& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data_(other.data_){}
 
 
     // Move assignment operator
@@ -244,28 +244,28 @@ public:
         if (this != &other) {
             this->size = std::move(other.size);
             this->select_area = std::move(other.select_area);
-            this->data = std::move(other.data);
+            this->data_ = std::move(other.data_);
         }
         return *this;
     }
 
 
-    __fast_inline const DataType& operator[](const size_t index) const { return data[index]; }
-    __fast_inline const ColorType& operator[](const Vector2u & pos) const { return data[pos.x + pos.y * this->size().x]; }
+    __fast_inline const DataType& operator[](const size_t index) const { return data_[index]; }
+    __fast_inline const ColorType& operator[](const Vector2u & pos) const { return data_[pos.x + pos.y * this->size().x]; }
 
-    __fast_inline DataType& operator[](const size_t index) { return data[index]; }
-    __fast_inline ColorType& operator[](const Vector2u & pos) { return data[pos.x + pos.y * this->size().x]; }
+    __fast_inline DataType& operator[](const size_t index) { return data_[index]; }
+    __fast_inline ColorType& operator[](const Vector2u & pos) { return data_[pos.x + pos.y * this->size().x]; }
 
 
     template<typename ToColorType>
-    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * this->size().x]; }
+    __fast_inline ToColorType at(const int y, const int x) const { return data_[x + y * this->size().x]; }
 
-    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * this->size().x]; }
-    __fast_inline const ColorType & at(const int y, const int x)const{ return data[x + y * this->size().x]; }
+    __fast_inline ColorType & at(const int y, const int x){ return data_[x + y * this->size().x]; }
+    __fast_inline const ColorType & at(const int y, const int x)const{ return data_[x + y * this->size().x]; }
 
 
     bool operator == (const ImageWithData<auto, auto> & other) const {
-        return data == other.data;
+        return data_ == other.data_;
     }
 };
 

@@ -72,6 +72,9 @@ void smc2025_main(){
     Image<RGB565> rgb_img{{tft.rect().w, 4u}};
     Renderer renderer = {};
 
+    camera.set_exposure_value(1200).unwrap();
+    camera.set_gain(2.4_r).unwrap();
+
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Grayscale> & src, 
         const Rect2i & area

@@ -21,16 +21,16 @@ public:
         uint32_t data_index = point_index / 8;
         uint8_t mask = 1 << (point_index % 8);
         if(color){
-            data[data_index] |= mask;
+            data_[data_index] |= mask;
         }else{
-            data[data_index] &= ~mask;
+            data_[data_index] &= ~mask;
         }
 
     }
     void getpixel_unsafe(const Vector2u & pos, Binary & color) const override{
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
-        color = data[data_index] & (1 << (point_index % 8));
+        color = data_[data_index] & (1 << (point_index % 8));
     }
 
 
@@ -42,7 +42,7 @@ public:
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
         if(data_index % 8){
-            uint16_t & datum = *(uint16_t *)&data[data_index];
+            uint16_t & datum = *(uint16_t *)&data_[data_index];
             uint16_t shifted_mask = mask << (data_index % 8);
             // uint16_t presv = datum & (~shifted_mask);
             if(color){
@@ -51,7 +51,7 @@ public:
                 datum &= (~shifted_mask); 
             }
         }else{
-            uint8_t & datum = data[data_index];
+            uint8_t & datum = data_[data_index];
             // uint8_t presv = datum & (~mask);
             if(color){
                 datum |= mask;
@@ -69,14 +69,14 @@ public:
         uint8_t mask = (1 << (pos.y % 8));
 
         if(color){
-            data[data_index] |= mask;
+            data_[data_index] |= mask;
         }else{
-            data[data_index] &= (~mask);
+            data_[data_index] &= (~mask);
         }
     }
     void getpixel_unsafe(const Vector2u & pos, Binary & color) const override{
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
-        color = Binary(data[data_index] & (PackedBinary)color << (pos.y % 8));
+        color = Binary(data_[data_index] & (PackedBinary)color << (pos.y % 8));
     }
 public:
     VerticalBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2u & _size): ImageBasics(_size), PackedBinaryImage(_data, _size){;}
@@ -85,20 +85,20 @@ public:
     void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const Binary color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
         if(pos.y % 8){
-            uint16_t datum = (data[data_index + size().x] << 8) | data[data_index];
+            uint16_t datum = (data_[data_index + size().x] << 8) | data_[data_index];
             uint16_t shifted_mask = mask << (pos.y % 8);
             if(color){
                 datum |= shifted_mask;
             }else{
                 datum &= (~shifted_mask); 
             }
-            data[data_index] = datum & 0xFF;
-            data[data_index + size().x] = datum >> 8;
+            data_[data_index] = datum & 0xFF;
+            data_[data_index + size().x] = datum >> 8;
         }else{
             if(color){
-                data[data_index] |= mask;
+                data_[data_index] |= mask;
             }else{
-                data[data_index] &= (~mask);
+                data_[data_index] &= (~mask);
             }
         }
     }
