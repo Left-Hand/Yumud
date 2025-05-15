@@ -24,6 +24,9 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
+#include "drivers/IMU/Magnetometer/HMC5883L/hmc5883l.hpp"
+#include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
+
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -65,13 +68,21 @@ void smc2025_main(){
 
     drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170);
 
-    I2cSw i2c{hal::portD[2], hal::portC[12]};
-    i2c.init(100_KHz);
-    
-    drivers::MT9V034 camera{i2c};
-    if(const auto res = camera.init();
-        res.is_err()) PANIC(res.unwrap_err());
+    I2cSw cam_i2c{hal::portD[2], hal::portC[12]};
+    cam_i2c.init(100_KHz);
 
+    I2cSw i2c{hal::portB[3], hal::portB[5]};
+    i2c.init(800_KHz);
+    
+    drivers::MT9V034 camera{cam_i2c};
+
+    camera.init().examine();
+
+    // drivers::HMC5883L hmc{i2c};
+    // hmc.init().examine();
+
+    drivers::QMC5883L qmc{i2c};
+    qmc.init().examine();
     
     Image<RGB565> rgb_img{{tft.rect().w, 4u}};
     Renderer renderer = {};
@@ -89,7 +100,7 @@ void smc2025_main(){
     };
 
     while(true){
-        
+        qmc.update().examine();
         renderer.bind(rgb_img);
         renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
@@ -101,7 +112,7 @@ void smc2025_main(){
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
         // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
-        DEBUG_PRINTLN(millis());
+        DEBUG_PRINTLN(millis(), qmc.read_mag().unwrap());
         delay(20);
     }
 

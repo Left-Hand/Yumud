@@ -147,7 +147,7 @@ PANIC(Args &&...) -> PANIC<Args ...>;
 template <typename... Args>
 __attribute__((noreturn))
 PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
-    const std::source_location& loc = std::source_location::current(), 
+    const std::source_location& loc, 
     Args &&... args){
     PANIC<Args ...>(std::forward<Args>(args)..., loc);
 }
