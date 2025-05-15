@@ -89,7 +89,7 @@ namespace details{
         static constexpr size_t ok_size = sizeof(T);
         static constexpr size_t err_size = sizeof(E);
         static constexpr size_t max_size = std::max(ok_size,err_size);
-        using data_type = size_to_int_t<max_size>;
+        using data_type = magic::size_to_int_t<max_size>;
 
     public:
         using ok_type = T;
@@ -535,6 +535,16 @@ public:
         }
     }
 
+    template<typename ... Args>
+    __fast_inline void examine(
+        const std::source_location & loca = std::source_location::current())
+    {
+        if (unlikely(!is_ok())) {
+            __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
+        }
+    }
+
+
     
     __fast_inline constexpr 
     T unwrap_or(auto && val) const {
@@ -645,7 +655,18 @@ Result(Err<E> && val) -> Result<void, E>;
 template<typename TDummy = void>
 Result() -> Result<void, void>;
 
-
+template<typename T, typename E>
+OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
+    if(res.is_ok()){
+        os << "Ok" << os.brackets<'('>(); 
+        if constexpr(!std::is_void_v<T>) os << res.unwrap();
+        return os << os.brackets<')'>();
+    }else {
+        os << "Err" << os.brackets<'('>(); 
+        if constexpr(!std::is_void_v<E>) os << res.unwrap_err();
+        return os << os.brackets<')'>();
+    }
+}
 
 // Specialization for std::optional
 template <typename T, typename E>

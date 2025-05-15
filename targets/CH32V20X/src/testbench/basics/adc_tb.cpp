@@ -108,7 +108,7 @@ void adc_tb(OutputStream & logger){
     
     // RegularChannel rch{ADC1, AdcChannel::CH0, 0};
 
-    adc1.init(
+    hal::adc1.init(
         {
             AdcChannelConfig{AdcChannelIndex::TEMP, AdcSampleCycles::T239_5},
             AdcChannelConfig{AdcChannelIndex::VREF, AdcSampleCycles::T239_5},

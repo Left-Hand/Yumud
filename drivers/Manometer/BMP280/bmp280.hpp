@@ -39,7 +39,7 @@ private:
     BMP280_Phy phy_;
     [[nodiscard]] IResult<uint32_t> get_pressure_data();
 
-    [[nodiscard]] IResult<uint32_t> get_temperature_data();
+    [[nodiscard]] IResult<uint32_t> read_temp_data();
 
 
     [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){

@@ -41,7 +41,7 @@ namespace ymd{
 template<typename T>
 constexpr T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);
-	return acosf(CLAMP(d * d * 2.0f - 1.0f, -1.0f, 1.0f));
+	return acosf(CLAMP(d * d * 2 - 1, -1, 1));
 }
 
 template<typename T>
@@ -205,7 +205,7 @@ constexpr Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) c
 	cosom = dot(p_to);
 
 	// adjust signs (if necessary)
-	if (cosom < 0.0) {
+	if (cosom < T(0)) {
 		cosom = -cosom;
 		to1.x = -p_to.x;
 		to1.y = -p_to.y;
@@ -220,16 +220,17 @@ constexpr Quat_t<T> Quat_t<T>::slerp(const Quat_t<T> &p_to, const T &p_weight) c
 
 	// calculate coefficients
 
-	if ((1.0 - cosom) > CMP_EPSILON) {
+	if ((T(1) - cosom) > T(CMP_EPSILON)) {
 		// standard case (slerp)
-		omega = acos(cosom);
-		sinom = sinf(omega);
-		scale0 = sinf((1 - p_weight) * omega) / sinom;
-		scale1 = sinf(p_weight * omega) / sinom;
+		omega = std::acos(cosom);
+		sinom = std::sinf(omega);
+		const auto inv_sinom = 1 / sinom;
+		scale0 = std::sinf((1 - p_weight) * omega) * inv_sinom;
+		scale1 = std::sinf(p_weight * omega) * inv_sinom;
 	} else {
 		// "from" and "to" Quat_t<T>s are very close
 		//  ... so we can do a linear interpolation
-		scale0 = 1.0 - p_weight;
+		scale0 = T(1) - p_weight;
 		scale1 = p_weight;
 	}
 	// calculate final values
@@ -262,7 +263,7 @@ constexpr Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight)
 template<typename T>
 constexpr Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a, const Quat_t<T> &p_post_b, const T &p_weight) const {
 
-	T t2 = (1.0 - p_weight) * p_weight * 2;
+	T t2 = (T(1) - p_weight) * p_weight * 2;
 	Quat_t<T> sp = this->slerp(p_b, p_weight);
 	Quat_t<T> sq = p_pre_a.slerpni(p_post_b, p_weight);
 	return sp.slerpni(sq, t2);

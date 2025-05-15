@@ -2,6 +2,8 @@
 
 #include "../core/platform.hpp"
 
+#define DEBUGGER_INST hal::uart6
+
 #define F_CPU 144000000
 #define USE_IQ
 
@@ -10,7 +12,7 @@
 #define EXTRA_IQ
 
 // #define ENABLE_UART1
-// #define ENABLE_UART2
+#define ENABLE_UART2
 // #define ENABLE_UART3
 // #define ENABLE_UART4
 // #define ENABLE_UART5
@@ -30,6 +32,9 @@
 #define UART2_REMAP 0
 #define UART7_REMAP 3
 
+#define ENABLE_SPI1
+#define SPI1_REMAP 1
+
 #define ENABLE_SPI2
 #define SPI2_REMAP 1
 
@@ -38,6 +43,9 @@
 
 #define ENABLE_TIM2
 #define TIM2_REMAP 0
+
+#define ENABLE_TIM3
+#define TIM3_REMAP 0
 
 #define ENABLE_TIM4
 #define TIM4_REMAP 1
@@ -52,4 +60,7 @@
 
 
 #define ENABLE_USBFS
+#define ENABLE_ADC1
 
+#define ENABLE_CAN1
+#define CAN1_REMAP 0

@@ -66,14 +66,14 @@ public:
 
     class Channel{
     public:
-        constexpr Channel (const uint8_t ch):ch_(ch){;}
+        constexpr explicit Channel (const uint8_t ch):ch_(ch){;}
 
         constexpr Channel (const Channel & other) = default;
         constexpr Channel (Channel && other) = default;
         constexpr Channel & operator = (const Channel & other) = default;
         constexpr Channel & operator = (Channel && other) = default;
 
-        constexpr auto into_code() const {
+        constexpr auto as_u8() const {
             return ch_;
         }
     private:    

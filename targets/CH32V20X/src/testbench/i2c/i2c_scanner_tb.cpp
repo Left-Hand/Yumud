@@ -16,14 +16,20 @@
 
 using namespace ymd;
 
-#define UART hal::uart2
+#define UART DEBUGGER_INST
 
 #if 0
 #define SCL_GPIO hal::portD[1]
 #define SDA_GPIO hal::portD[0]
 #else
-#define SCL_GPIO hal::portB[6]
-#define SDA_GPIO hal::portB[7]
+// #define SCL_GPIO hal::portB[6]
+// #define SDA_GPIO hal::portB[7]
+// #define SCL_GPIO hal::portB[3]
+// #define SDA_GPIO hal::portB[5]
+#define SCL_GPIO hal::portD[2]
+#define SDA_GPIO hal::portC[12]
+// #define SCL_GPIO hal::portC[12]
+// #define SDA_GPIO hal::portD[2]
 #endif
 struct FoundInfo{
     uint8_t addr;

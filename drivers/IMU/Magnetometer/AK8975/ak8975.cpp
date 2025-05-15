@@ -115,8 +115,8 @@ IResult<bool> AK8975::is_stable(){
     if(const auto res = update();
         res.is_err()) return Err(res.unwrap_err());
 
-    const auto mag = get_magnet();
-    if(mag.is_none()) return Ok(false);
+    const auto mag = read_mag();
+    if(mag.is_ok()) return Ok(false);
 
     auto [a, b, c] = mag.unwrap();
     if(ABS(a) + ABS(b) + ABS(c) > real_t(2.4)) return Ok(false);
@@ -133,9 +133,9 @@ IResult<> AK8975::disable_i2c(){
     return phy_.write_reg(0x0F, 0x01);
 }
 
-Option<Vector3_t<real_t>> AK8975::get_magnet(){
+IResult<Vector3_t<q24>> AK8975::read_mag(){
     scexpr real_t max_mT = real_t(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
-    return Some{Vector3_t<real_t>{CONV(x), CONV(y), CONV(z)}};
+    return Ok{Vector3_t<q24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

@@ -13,8 +13,8 @@ private:
     using T = std::decay_t<D>;
     D & data_;
 
-    static constexpr D lower_mask = lower_mask_of<T>(b_bits);
-	static constexpr D mask = mask_of<T>(b_bits, e_bits);
+    static constexpr D lower_mask = magic::lower_mask_of<T>(b_bits);
+	static constexpr D mask = magic::mask_of<T>(b_bits, e_bits);
 
     static constexpr size_t bits_len = e_bits - b_bits;
 
@@ -28,7 +28,7 @@ public:
     auto & operator =(const I & in){
         static_assert(!std::is_const_v<D>, "cannot assign to const");
         data_ = (static_cast<D>(
-            std::bit_cast<type_to_uint_t<decltype(in)>>(in)) << b_bits) | (data_ & ~mask);
+            std::bit_cast<magic::type_to_uint_t<decltype(in)>>(in)) << b_bits) | (data_ & ~mask);
         return *this;
     }
 
@@ -41,7 +41,7 @@ public:
 
     [[nodiscard]] __inline constexpr 
     I as_val() const{
-        return std::bit_cast<I>(static_cast<type_to_uint_t<I>>((data_ & mask) >> (b_bits)));
+        return std::bit_cast<I>(static_cast<magic::type_to_uint_t<I>>((data_ & mask) >> (b_bits)));
     }
 
     [[nodiscard]] __inline consteval
@@ -64,7 +64,7 @@ public:
 
     [[nodiscard]] __inline constexpr
     explicit BitFieldDyn(D & data, const size_t b_bits, const size_t e_bits):
-        data_(data), b_bits_(b_bits), mask_(mask_of<T>(b_bits, e_bits)){;}
+        data_(data), b_bits_(b_bits), mask_(magic::mask_of<T>(b_bits, e_bits)){;}
 
     [[nodiscard]] __inline constexpr 
     auto & operator =(I && in){
@@ -99,7 +99,7 @@ template<typename T, size_t b_bits, size_t e_bits, size_t cnt>
 struct BitFieldArray{
 private:    
     // using T = std::decay_t<D>;
-    static constexpr size_t data_len = type_to_bits_v<T>;
+    static constexpr size_t data_len = magic::type_to_bits_v<T>;
     static constexpr size_t len = e_bits - b_bits;
     static constexpr size_t per_len = (len / cnt);
     // static constexpr size_t len = ()

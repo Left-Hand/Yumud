@@ -10,8 +10,8 @@ template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{
 public:
 
-    auto get_data() const {return this->data.get();}
-    auto get_ptr() const {return this->data;}
+    auto get_data() const {return this->data_.get();}
+    auto get_ptr() const {return this->data_;}
     Image(std::shared_ptr<ColorType[]> _data, const Vector2u & _size):  ImageBasics(_size), ImageWithData<ColorType, ColorType>(_data, _size) {}
 
     Image(const Vector2u & _size): ImageBasics(_size), ImageWithData<ColorType, ColorType>(_size) {}
@@ -24,22 +24,22 @@ public:
         if (this != &other) {
             this->size_mut() = std::move(other.size());
             this->select_area = std::move(other.select_area);
-            this->data = std::move(other.data);
+            this->data_ = std::move(other.data_);
         }
         return *this;
     }
 
     Image<ColorType> clone() const {
         auto temp = Image<ColorType>(this->size());
-        memcpy(temp.data.get(), this->data.get(), this->size().x * this->size().y * sizeof(ColorType));
+        memcpy(temp.data_.get(), this->data_.get(), this->size().x * this->size().y * sizeof(ColorType));
         return temp;
     }
 
     Image<ColorType> & clone(const Image<ColorType> & other){
         const auto _size = (Rect2u(ImageBasics::size())).intersection(Rect2u(other.size())).size;
         this->size_mut() = _size;
-        this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
-        memcpy(this->data.get(), other.data.get(), _size.x * _size.y * sizeof(ColorType));
+        this->data_ = std::make_shared<ColorType[]>(_size.x * _size.y);
+        memcpy(this->data_.get(), other.data_.get(), _size.x * _size.y * sizeof(ColorType));
         return *this;
     }
 
@@ -96,12 +96,6 @@ public:
     ImageView(ImageView & other, const Rect2u & _window):instance(other.instance), 
         window(Rect2u(other.window.position + _window.position, other.window.size).intersection(Vector2u(), other.instance.getSize())){;}
     Rect2u rect() const {return window;}
-};
-
-template<typename ColorType>
-class Camera:public Image<ColorType>{
-public:
-    Camera(const Vector2u & _size):ImageBasics(_size), Image<ColorType>(_size){;}
 };
 
 template<typename ColorType>

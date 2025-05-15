@@ -104,8 +104,8 @@ void rrs3_tb(){
 [[maybe_unused]] 
 void rrs3_main(){
 
-    uart2.init(576000, CommStrategy::Blocking);
-    DEBUGGER.retarget(&uart2);
+    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets();
     DEBUGGER.force_sync();
 

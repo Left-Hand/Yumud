@@ -157,3 +157,7 @@ void phase3pwm_main();
 void pfm_zvs_main();
 
 void half_line_uart_main();
+void icm42688_main();
+void ak09911c_main();
+void mmc5983_main();
+void smc2025_main();

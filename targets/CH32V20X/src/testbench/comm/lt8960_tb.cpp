@@ -2,19 +2,25 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/utils/typetraits/size_traits.hpp"
+#include "core/utils/typetraits/function_traits.hpp"
+// #include "core/utils/typetraits/typetraits_details.hpp"
+#include "core/utils/typetraits/serialize_traits.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
 
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-
-#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
-#include "src/testbench/algo/utils.hpp"
-
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
+#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
+
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "hal/gpio/gpio_port.hpp"
+
+
+
 
 
 using namespace ymd::drivers;
@@ -96,11 +102,11 @@ static constexpr uint8_t calc_crc(const std::span<const uint8_t> pdata){
 
 
 template<typename ... Ts>
-auto make_payload_from_args(Ts && ... args){
-    const auto body = make_bytes_from_args(args...);
+static constexpr auto make_payload_from_args(Ts && ... args){
+    const auto body = magic::serialize_args_to_bytes(args...);
     const auto crc = calc_crc(std::span(body));
 
-    constexpr size_t size = total_bytes_v<std::decay_t<Ts> ... > + 1;
+    constexpr size_t size = magic::total_bytes_of_args_v<std::decay_t<Ts> ... > + 1;
     std::array<uint8_t, size> payload;
     std::copy(body.begin(), body.end(), payload.begin());
     payload[body.size()] = uint8_t{crc};
@@ -109,13 +115,13 @@ auto make_payload_from_args(Ts && ... args){
 };
 
 template<typename ... Ts>
-Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const uint8_t> pdata){
+static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const uint8_t> pdata){
     auto crc = calc_crc(pdata.subspan(0, pdata.size() - 1));
     if (pdata.back() != uint8_t{crc}){
         return None;
     }
 
-    return Some(make_tuple_from_bytes<std::tuple<Ts...>>(pdata.subspan(0, pdata.size() - 1)));
+    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(pdata.subspan(0, pdata.size() - 1)));
 }
 
 void lt8960_tb(){
@@ -161,7 +167,7 @@ void lt8960_tb(){
         const auto t = time();
         const auto [s, c] = sincos(frac(t) * tau);
         // auto [u, v, w] = SVM(s,c);
-        // const auto payload = make_bytes_from_args(u, v, t);
+        // const auto payload = serialize_args_to_bytes(u, v, t);
         // auto copy_arr_to_span[](std::span<uint8_t> dest, const std::array<uint8_t, auto>& src){
         //     std::copy(src.begin(), src.end(), dest.begin());
         // };

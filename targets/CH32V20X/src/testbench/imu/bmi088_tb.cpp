@@ -51,8 +51,8 @@ static void bmi088_tb(hal::Spi & spi){
 
         
         mahony.update(
-            gyr_sensor.get_gyr().unwrap(), 
-            acc_sensor.get_acc().unwrap()
+            gyr_sensor.read_gyr().unwrap(), 
+            acc_sensor.read_acc().unwrap()
         );
             
         const uint32_t end_m = micros();

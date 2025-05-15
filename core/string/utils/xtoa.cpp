@@ -58,6 +58,7 @@ size_t _itoa_impl(T value, char * str, uint8_t radix){
 }
 
 
+//TODO eps为5时计算会溢出 暂时限制eps=5的情况
 size_t ymd::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q){
     //TODO 支持除了Q16格式外其他格式转换到字符串的函数 
     scexpr size_t Q = 16;

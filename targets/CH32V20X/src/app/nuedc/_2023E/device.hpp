@@ -21,7 +21,7 @@
 
 
 
-namespace nudec::_2023E{
+namespace nuedc::_2023E{
 
 struct ServoConfig{
     real_t min_radian;

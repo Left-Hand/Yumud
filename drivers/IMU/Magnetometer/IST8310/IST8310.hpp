@@ -8,10 +8,14 @@
 
 namespace ymd::drivers{
 
-class IST8310:public MagnetometerIntf{
-public:
+struct IST8310_Collections{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
+    using RegAddress = uint8_t;
 
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult= Result<T, Error>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0b000,
@@ -21,87 +25,60 @@ public:
         _16 = 0b100,
     };
     
-    IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+};
 
-    void init();
-    void update();
-
-    bool validate();
-
-    void reset();
-
-    void enableContious(const bool en = true);
-
-    void setXAverageTimes(const AverageTimes times);
-    void setYAverageTimes(const AverageTimes times);
-
-    int getTemperature();
-
-    bool busy();
-    void enableInterrupt(const bool en = true);
-    void setInterruptLevel(const BoolLevel lv);
-    bool getInterruptStatus();
-
-    void sleep(const bool en = true);
-
-    Option<Vector3_t<real_t>> get_magnet() override;
-
-protected:
-    using RegAddress = uint8_t;
+struct IST8310_Regs:public IST8310_Collections{
 
 
-    struct WhoAmIReg:public Reg8<>{
+    struct R8_WhoAmI:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t expected_value = 0x10;
         uint8_t data;
-    };
+    }DEF_R8(whoami_reg)
 
-    struct Status1Reg:public Reg8<>{
+    struct R8_Status1:public Reg8<>{
         scexpr RegAddress address = 0x02;
 
         uint8_t drdy:1;
         uint8_t ovf:1;
         uint8_t :6;
-    };
+    }DEF_R8(status1_reg)
 
-    struct AxisXReg:public Reg16i<>{
+    struct R16_AxisX:public Reg16i<>{
         scexpr RegAddress address = 0x03;
 
         int16_t data;
-    };
+    }DEF_R16(axis_x_reg)
 
-    struct AxisYReg:public Reg16i<>{
+    struct R16_AxisY:public Reg16i<>{
         scexpr RegAddress address = 0x05;
 
         int16_t data;
-    };
+    }DEF_R16(axis_y_reg)
 
-    struct AxisZReg:public Reg16i<>{
+    struct R16_AxisZ:public Reg16i<>{
         scexpr RegAddress address = 0x07;
 
         int16_t data;
-    };
+    }DEF_R16(axis_z_reg)
 
-    struct Status2Reg:public Reg8<>{
+    struct R8_Status2:public Reg8<>{
         scexpr RegAddress address = 0x09;
 
         uint8_t :3;
         uint8_t on_int:1;
         uint8_t :4;
-    };
+    }DEF_R8(status2_reg)
 
-    struct Ctrl1Reg:public Reg8<>{
+    struct R8_Ctrl1:public Reg8<>{
         scexpr RegAddress address = 0x0A;
 
         uint8_t awake:1;
         uint8_t cont:1;
         uint8_t :6;
-    };
+    }DEF_R8(ctrl1_reg)
 
-    struct Ctrl2Reg:public Reg8<>{
+    struct R8_Ctrl2:public Reg8<>{
         scexpr RegAddress address = 0x0B;
 
         uint8_t reset:1;
@@ -109,62 +86,98 @@ protected:
         uint8_t drdy_level:1;
         uint8_t int_en:1;
         uint8_t :4;
-    };
+    }DEF_R8(ctrl2_reg)
 
-    struct SelfTestReg:public Reg8<>{
+    struct R8_SelfTest:public Reg8<>{
         scexpr RegAddress address = 0x0C;
 
         uint8_t :6;
         uint8_t st_en:1;
         uint8_t :1;
-    };
+    }DEF_R8(self_test_reg)
 
-    struct TempReg:public Reg8<>{
+    struct R16_Temp:public Reg8<>{
         scexpr RegAddress address = 0x1C;
         uint16_t data;
 
-        operator int() const {
-            return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
+        constexpr q16 to_temp() const {
+            return (this->as_val() * q16(0.8) - 75);
         }
-    };
+    }DEF_R16(temp_reg)
 
 
-    struct AverageReg:public Reg8<>{
+    struct R8_Average:public Reg8<>{
         scexpr RegAddress address = 0x41;
 
-        uint8_t x_times:3;
-        uint8_t y_times:3;
+        AverageTimes x_times:3;
+        AverageTimes y_times:3;
         uint8_t :2;
-    };
+    }DEF_R8(average_reg)
+
+};
+
+
+
+class IST8310:
+    public MagnetometerIntf,
+    public IST8310_Regs{
+public:
+
+    IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+    IResult<> init();
+    IResult<> update();
+
+    IResult<> validate();
+
+    IResult<> reset();
+
+    IResult<> enable_contious(const bool en = true);
+
+    IResult<> set_x_average_times(const AverageTimes times);
+    IResult<> set_y_average_times(const AverageTimes times);
+
+    IResult<q16> get_temperature();
+
+    IResult<bool> is_data_ready();
+    IResult<> enable_interrupt(const bool en = true);
+    IResult<> set_interrupt_level(const BoolLevel lv);
+    IResult<bool> get_interrupt_status();
+
+    IResult<> enable_sleep(const bool en = true);
+
+    IResult<Vector3_t<q24>> read_mag() override;
+
+protected:
 
 
 
     hal::I2cDrv i2c_drv_;
 
-    WhoAmIReg whoami_reg;
-    Status1Reg status1_reg;
-    AxisXReg axis_x_reg;
-    AxisYReg axis_y_reg;
-    AxisZReg axis_z_reg;
-    Status2Reg status2_reg;
-    Ctrl1Reg ctrl1_reg;
-    Ctrl2Reg ctrl2_reg;
-    SelfTestReg selftest_reg;
-    TempReg temp_reg; 
-    AverageReg average_reg;
-    hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(reg.address), reg.as_val(), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
     }
 
-    hal::HalResult read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg);
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(reg.address), reg.as_ref(), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    hal::HalResult read_burst(const RegAddress addr, int16_t * data, const size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len), LSB);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pdata, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pdata, len), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    void setAverageTimes(bool is_x, AverageTimes times);
 };
 
 }

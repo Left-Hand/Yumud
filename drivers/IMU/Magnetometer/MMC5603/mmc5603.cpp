@@ -17,6 +17,11 @@ using namespace ymd::drivers;
 #define WRITE_REG(reg)     write_reg(reg.address, reg);
 #define READ_REG(reg)     read_reg(reg.address, reg);
 
+using Error = ImuError;
+
+template<typename T = void>
+using IResult= Result<T, Error>;
+
 void MMC5603::update(){
     auto & reg = x_reg;
     read_burst(reg.address_x, &reg.data_h, 6);
@@ -71,8 +76,8 @@ void MMC5603::enableContious(const bool en){
 }
 
 
-Option<Vector3_t<real_t>> MMC5603::get_magnet(){
-    return Some{Vector3_t<real_t>{
+IResult<Vector3_t<q24>> MMC5603::read_mag(){
+    return Ok{Vector3_t<q24>{
         s16_to_uni(int16_t(x_reg)),
         s16_to_uni(int16_t(y_reg)),
         s16_to_uni(int16_t(z_reg))

@@ -42,7 +42,7 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 
-#define UART uart2
+#define UARt DEBUGGER_INST
 
 void test_sogi(){
     scexpr int ac_freq = 50;
@@ -108,8 +108,8 @@ void test_sogi(){
     }
 }
 void digipw_main(){
-    UART.init(6_MHz);
-    DEBUGGER.retarget(&UART);
+    DEBUGGER_INST.init(6_MHz);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

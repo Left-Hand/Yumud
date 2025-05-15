@@ -71,7 +71,7 @@ class Leso{
     
         constexpr void reconf(const Config & cfg){
             b0_ = cfg.b0;
-            delta_ = 1_q16 / cfg.fs;
+            delta_ = 1_q20 / cfg.fs;
             g1_ = 2 * cfg.w;
             g2_ = cfg.w * cfg.w;
         }
@@ -88,7 +88,7 @@ class Leso{
     
         State state_;
         q8 b0_;
-        q16 delta_;
+        q20 delta_;
         q16 g1_;
         q16 g2_;
     

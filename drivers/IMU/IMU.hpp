@@ -5,9 +5,9 @@
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
 
 #include "types/vector3/Vector3.hpp"
-
 #include "hal/hal_result.hpp"
 
 namespace ymd::drivers{
@@ -17,6 +17,8 @@ enum class ImuError_Kind:uint8_t{
     WrongWhoAmI,
     PackageNotMatch,
     UnknownDevice,
+    WrongDeviceId,
+    WrongCompanyId,
     PhyVerifyFailed,
 
     CantSetup,
@@ -36,6 +38,10 @@ enum class ImuError_Kind:uint8_t{
     MagOverflow,
     AccOverflow,
     GyrOverflow,
+
+    AxisXOverflow,
+    AxisYOverflow,
+    AxisZOverflow
 };
 }
 
@@ -55,18 +61,27 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
-    virtual Option<Vector3_t<real_t>> get_acc() = 0;
+    virtual Option<Vector3_t<q24>> read_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Option<Vector3_t<real_t>> get_gyr() = 0;
+    virtual Option<Vector3_t<q24>> read_gyr() = 0;
 };
 
 class MagnetometerIntf{
 public:
 
-    virtual Option<Vector3_t<real_t>> get_magnet() = 0;
+    virtual Result<Vector3_t<q24>, ImuError> read_mag() = 0;
 };
+
+}
+
+namespace ymd{
+    DERIVE_DEBUG(drivers::details::ImuError_Kind)
+// OutputStream & print_halerr_kind(OutputStream & os, const drivers::details::ImuError_Kind err){
+//     derive_debug_dispatcher<drivers::details::ImuError_Kind>::call(os, err);
+//     return os;
+// }
 
 }

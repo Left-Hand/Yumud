@@ -16,6 +16,7 @@ protected:
 public:
     void init();
     size_t pending() const {return 0;}
+    void sendout(std::span<const char>){;}
 };
 
 #if defined(CH32V30X) && defined(ENABLE_USBFS)

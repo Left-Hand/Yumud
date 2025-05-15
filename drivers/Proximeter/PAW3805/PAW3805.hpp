@@ -67,14 +67,7 @@ struct PAW3805_Collections{
 
     } PAWsensor_Config;
 
-    enum
-    {
-        // This bit must be set in the address byte of every write to
-        WRITE_CMD_BIT  = 0x80,
-
-        CS_ASSERT       = 0,    // low active
-        CS_DEASSERT     = 1,
-    };
+    static constexpr uint8_t WRITE_CMD_BIT  = 0x80;
 
     enum PAWSENSOR_ACT_PROCEDURE_ID
     {
@@ -179,7 +172,7 @@ struct PAW3805_Collections{
 
 };
 
-class PAW3805_Phy{
+class PAW3805_Phy final:public PAW3805_Collections{
 public:
     PAW3805_Phy(hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
@@ -187,9 +180,9 @@ public:
     PAW3805_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
-    uint8_t readReg(uint8_t regAddress);
-    void writeReg(uint8_t regAddress, uint8_t val);
-    void burstRead(uint8_t  *buf, uint8_t bytesToRead);
+    uint8_t read_reg(uint8_t addr);
+    void write_reg(uint8_t addr, uint8_t val);
+    void burst_read(uint8_t  *buf, uint8_t bytesToRead);
 private:
     hal::SpiDrv spi_drv_;
 };
@@ -214,9 +207,9 @@ private:
     bool  PAWdeviceFound=false;
     bool  PAWActive=false;
 
-    uint8_t readReg(uint8_t regAddress);
-    void writeReg(uint8_t regAddress, uint8_t val);
-    void burstRead(uint8_t  *buf, uint8_t bytesToRead);
+    uint8_t read_reg(uint8_t addr);
+    void write_reg(uint8_t addr, uint8_t val);
+    void burst_read(uint8_t  *buf, uint8_t bytesToRead);
     bool verifyProductId(void);
     void reset(void);
     bool walkRegSequence(const PAWSensorRegSeq *regSeqList, uint8_t regSeqNo);

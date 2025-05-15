@@ -60,27 +60,27 @@ public:
 
     class LidarSpinSpeed{
     public:
-        LidarSpinSpeed(uint16_t data):data(data){;}
+        LidarSpinSpeed(uint16_t data):data_(data){;}
 
         real_t to_radian() const{
             static constexpr real_t LSB_TO_RADIAN = real_t(TAU / 360);
-            return LSB_TO_RADIAN * data;
+            return LSB_TO_RADIAN * data_;
         }
     private:
-        uint16_t data;
+        uint16_t data_;
     };
 
     class LidarAngle{
     public:
-        LidarAngle(uint16_t data):data(data){;}
+        LidarAngle(uint16_t data):data_(data){;}
 
         real_t to_radian() const{
             static constexpr auto LSB_TO_RADIAN = q24(TAU / 360 * 0.01);
-            return LSB_TO_RADIAN * data;
+            return LSB_TO_RADIAN * data_;
         }
 
     private:
-        uint16_t data;
+        uint16_t data_;
     };
 
     struct LidarFrame final{

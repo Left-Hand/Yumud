@@ -8,7 +8,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 void float_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
 
     while(true){
         bf16 i = sin(time());

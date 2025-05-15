@@ -14,108 +14,120 @@ using namespace ymd::drivers;
 #define IST8310_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) write_reg(reg.address, reg);
-#define READ_REG(reg) read_reg(reg.address, reg);
 
+using Error = ImuError;
 
-void IST8310::init(){
-    reset();
+template<typename T = void>
+using IResult= Result<T, Error>;
+
+IResult<> IST8310::init(){
+    if(const auto res = reset();
+        res.is_err()) return res;
+
     delay(10);
 
-    if(validate() == false) HALT;
+    if(const auto res = validate();
+        res.is_err()) return res;
 
-    enableContious(false);
-    setXAverageTimes(AverageTimes::_4);
-    setYAverageTimes(AverageTimes::_4);
-
-    update();
+    if(const auto res = enable_contious(false);
+        res.is_err()) return res;
+    if(const auto res = set_x_average_times(AverageTimes::_4);
+        res.is_err()) return res;
+    if(const auto res = set_y_average_times(AverageTimes::_4);
+        res.is_err()) return res;
+    if(const auto res = update();
+        res.is_err()) return res;
+    return Ok();
 }
-void IST8310::update(){
-    read_burst(axis_x_reg.address, &axis_x_reg, 3);
+IResult<> IST8310::update(){
+    return read_burst(axis_x_reg.address, &axis_x_reg, 3);
 }
 
-bool IST8310::validate(){
-    auto & reg = whoami_reg;
-    READ_REG(reg);
-    return reg == reg.expected_value;
+IResult<> IST8310::validate(){
+    auto reg = RegCopy(whoami_reg);
+    if(const auto res = read_reg(reg);
+        res.is_err()) return res;
+    if(reg.as_val() != reg.expected_value)
+        return Err(Error::WrongWhoAmI);
+    return Ok();
 }
 
-void IST8310::reset(){
-    auto & reg = ctrl2_reg;
+IResult<> IST8310::reset(){
+    auto reg = RegCopy(ctrl2_reg);
     reg.reset = 1;
-    WRITE_REG(reg)
+    return write_reg(reg);
     reg.reset = 0;
 }
 
-void IST8310::enableContious(const bool en){
-    auto & reg = ctrl1_reg;
+IResult<> IST8310::enable_contious(const bool en){
+    auto reg = RegCopy(ctrl1_reg);
     reg.cont = en;
-    WRITE_REG(reg);
+    return write_reg(reg);;
 }
 
 
-void IST8310::setXAverageTimes(const AverageTimes times){
-    setAverageTimes(true, times);
+IResult<> IST8310::set_x_average_times(const AverageTimes times){
+    auto reg = RegCopy(average_reg);
+    reg.x_times = times;
+
+    return write_reg(reg);
 }
 
 
-void IST8310::setYAverageTimes(const AverageTimes times){
-    setAverageTimes(false, times);
+IResult<> IST8310::set_y_average_times(const AverageTimes times){
+    auto reg = RegCopy(average_reg);
+
+    reg.y_times = times;
+
+    return write_reg(reg);
 }
 
-void IST8310::setAverageTimes(bool is_x, AverageTimes times){
-    auto & reg = average_reg;
-    if(is_x){
-        reg.x_times = uint8_t(times);
-    }else{
-        reg.y_times = uint8_t(times);
-    }
 
-    WRITE_REG(reg)
-}
 
-Option<Vector3_t<real_t>> IST8310::get_magnet(){
+IResult<Vector3_t<q24>> IST8310::read_mag(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Some{Vector3_t<real_t>{
+    return Ok{Vector3_t<q24>{
         conv(axis_x_reg),
         conv(axis_y_reg),
         conv(axis_z_reg)
     }};
 }
 
-int IST8310::getTemperature(){
-    return temp_reg;
+IResult<q16> IST8310::get_temperature(){
+    return Ok(temp_reg.to_temp());
 }
 
-bool IST8310::busy(){
-    auto & reg = status1_reg;
-    READ_REG(reg);
-    return reg.drdy == false;
+IResult<bool> IST8310::is_data_ready(){
+    auto reg = RegCopy(status1_reg);
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(reg.drdy));
 }
 
-void IST8310::enableInterrupt(const bool en){
-    auto & reg = ctrl2_reg;
+IResult<> IST8310::enable_interrupt(const bool en){
+    auto reg = RegCopy(ctrl2_reg);
     reg.int_en = en;
-    WRITE_REG(reg);
+    return write_reg(reg);;
 }
 
-void IST8310::setInterruptLevel(const BoolLevel lv){
-    auto & reg = ctrl2_reg;
+IResult<> IST8310::set_interrupt_level(const BoolLevel lv){
+    auto reg = RegCopy(ctrl2_reg);
     reg.drdy_level = bool(lv);
-    WRITE_REG(reg);
+    return write_reg(reg);;
 }
 
-void IST8310::sleep(const bool en){
-    auto & reg = ctrl1_reg;
+IResult<> IST8310::enable_sleep(const bool en){
+    auto reg = RegCopy(ctrl1_reg);
     reg.awake = !en;
-    WRITE_REG(reg);
+    return write_reg(reg);;
 }
 
-bool IST8310::getInterruptStatus(){
-    auto & reg = status2_reg;
-    READ_REG(reg);
-    return reg.on_int;
+IResult<bool> IST8310::get_interrupt_status(){
+    auto reg = RegCopy(status2_reg);
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(reg.on_int));
 }

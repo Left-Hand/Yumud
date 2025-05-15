@@ -57,24 +57,24 @@ Result<void, Error> BMI160::reset(){
     return phy_.write_command(uint8_t(Command::SOFT_RESET));
 }
 
-Option<Vector3_t<real_t>> BMI160::get_acc(){
+Option<Vector3_t<q24>> BMI160::read_acc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
-    return Some{Vector3_t<real_t>{
+    return Some{Vector3_t<q24>{
         conv(acc_reg.x),
         conv(acc_reg.y),
         conv(acc_reg.z)
     }};
 }
 
-Option<Vector3_t<real_t>> BMI160::get_gyr(){
+Option<Vector3_t<q24>> BMI160::read_gyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
-    return Some{Vector3_t<real_t>{
+    return Some{Vector3_t<q24>{
         conv(gyr_reg.x),
         conv(gyr_reg.y),
         conv(gyr_reg.z)

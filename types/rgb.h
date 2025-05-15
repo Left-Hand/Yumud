@@ -305,6 +305,7 @@ struct Grayscale{
     __fast_inline constexpr operator uint8_t() const {return data;}
 
     __fast_inline constexpr operator RGB888() const {return RGB888{data, data, data};}
+    // __fast_inline constexpr operator RGB565() const {return RGB565{data >> 3, data >> 2, data >> 3};}
 
     __fast_inline constexpr explicit operator bool() const {return data;}
 
@@ -358,7 +359,7 @@ using RGB24 = RGB888;
 
 __fast_inline constexpr Grayscale::Grayscale(const RGB565 & rgb):data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
 
-__fast_inline constexpr RGB565::RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
+__fast_inline constexpr RGB565::RGB565(const Grayscale & gs): b(uint8_t(gs) >> 3), g(uint8_t(gs) >> 2), r(uint8_t(gs) >> 3){;}
 
 __fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565(RGB565::from_raw((bool)bn ? 0xffff : 0)){;}
 

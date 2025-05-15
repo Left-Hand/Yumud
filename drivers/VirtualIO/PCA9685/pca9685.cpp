@@ -118,24 +118,22 @@ Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t add
 }
 
 Result<void, Error> PCA9685::reset(){
-    const auto res = [&] -> Result<void, Error>{
-        if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
-            res.is_err()) return res;
-        if(1 == mode1_reg.restart){
-            mode1_reg.sleep = 0;
-            if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
-                res.is_err()) return res;
-        }
-        delay(1);
-        mode1_reg.restart = 1;
+
+    if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
+        res.is_err()) return res;
+    if(1 == mode1_reg.restart){
+        mode1_reg.sleep = 0;
         if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
             res.is_err()) return res;
+    }
+    delay(1);
+    mode1_reg.restart = 1;
+    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+        res.is_err()) return res;
 
-        return Ok();
-    }();
     mode1_reg.restart = 0;
 
-    return res;
+    return Ok();
 }
 
 Result<void, Error> PCA9685::enable_ext_clk(const bool en){

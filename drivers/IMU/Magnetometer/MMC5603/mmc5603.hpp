@@ -11,6 +11,11 @@ namespace ymd::drivers{
 
 class MMC5603:public MagnetometerIntf{
 public:
+
+    using Error = ImuError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+    
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
 
 
@@ -46,7 +51,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    Option<Vector3_t<real_t>> get_magnet() override;
+    IResult<Vector3_t<q24>> read_mag() override;
 
 protected:
     using RegAddress = uint8_t;

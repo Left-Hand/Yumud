@@ -156,9 +156,9 @@ protected:
         mpu.update();
         qml.update();
 
-        msm.acc = drift.acc.xform(Vector3(mpu.get_acc()));
-        msm.gyr = (Vector3(mpu.get_gyr()) - drift.gyr);
-        msm.magnet = drift.magnet.xform(Vector3(qml.get_magnet()));
+        msm.acc = drift.acc.xform(Vector3(mpu.read_acc()));
+        msm.gyr = (Vector3(mpu.read_gyr()) - drift.gyr);
+        msm.magnet = drift.magnet.xform(Vector3(qml.read_mag()));
 
         real_t delta_t = t - last_t;
         last_t = t;
@@ -202,9 +202,9 @@ public:
         Vector3 temp_magent = Vector3();
         
         for(int i = 0; i < cali_times; ++i){
-            temp_gravity += Vector3(mpu.get_acc());
-            temp_gyr_offs += Vector3(mpu.get_gyr());    
-            temp_magent += Vector3(qml.get_magnet());
+            temp_gravity += Vector3(mpu.read_acc());
+            temp_gyr_offs += Vector3(mpu.read_gyr());    
+            temp_magent += Vector3(qml.read_mag());
             delay(5);
         }
 
@@ -248,11 +248,11 @@ public:
         return now_spd;
     }
 
-    auto get_acc() const{
+    auto read_acc() const{
         return msm.acc;
     }
 
-    auto get_gyr() const{
+    auto read_gyr() const{
         return msm.gyr;
     }
 

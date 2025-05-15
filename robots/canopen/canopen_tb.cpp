@@ -12,8 +12,8 @@ using namespace ymd::hal;
 using namespace ymd::canopen;
 
 void canopen_main(){
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    DEBUGGER_INST.init(576000);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

@@ -166,7 +166,6 @@ Gpio & Can::get_rx_gpio(){
     switch((uint32_t)instance){
         default:
             HALT
-            [[fallthrough]];
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_RX_GPIO;

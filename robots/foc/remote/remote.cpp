@@ -39,7 +39,7 @@ real_t RemoteFOCMotor::getPosition() const{
     POST(Command::GET_POS); 
     return readPosition();
 }
-real_t RemoteFOCMotor::get_acc() const{POST(Command::GET_ACC); return readAcc();}
+real_t RemoteFOCMotor::read_acc() const{POST(Command::read_acc); return readAcc();}
 void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
@@ -68,7 +68,7 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
         case Command::GET_SPD:
             meta.spd = E(msg);
             break;
-        case Command::GET_ACC:
+        case Command::read_acc:
             meta.acc = E(msg);
             break;
         case Command::GET_CURR:

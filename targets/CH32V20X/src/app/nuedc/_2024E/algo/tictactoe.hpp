@@ -14,7 +14,7 @@ namespace nuedc::_2024E{
 [[nodiscard]] static constexpr Vector2u 
 chess_forward_ai(const Role role, const ChessBoard & board){
     // 判断指定位置是否能让指定角色获胜
-    auto is_winning_move = [](const ChessBoard & board, const Vector2u& pos, Role check_role) -> bool {
+    auto is_winning_move = [&board](const Vector2u& pos, Role check_role) -> bool {
         {
             // 检查行
             size_t cnt = 0;
@@ -59,11 +59,11 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     };
 
     // 寻找可立即获胜的位置
-    auto find_winning_move = [is_winning_move](const ChessBoard & board,const Role check_role) -> std::optional<Vector2u> {
+    auto find_winning_move = [is_winning_move, &board](const Role check_role) -> std::optional<Vector2u> {
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
                 Vector2u pos{x, y};
-                if (board.at(pos) == None && is_winning_move(board, pos, check_role)) {
+                if (board.at(pos) == None && is_winning_move(pos, check_role)) {
                     return pos;
                 }
             }
@@ -73,10 +73,10 @@ chess_forward_ai(const Role role, const ChessBoard & board){
 
 
     // 1. 优先抢占必胜点
-    if (const auto pos = find_winning_move(board, role)) return *pos;
+    if (const auto pos = find_winning_move(role)) return *pos;
 
     // 2. 阻止对手必胜
-    if (const auto pos = find_winning_move(board, role.get_opponent())) return *pos;
+    if (const auto pos = find_winning_move(role.get_opponent())) return *pos;
 
     // 3. 占领中心
     if (board.at({1,1}) == None) return {1,1};

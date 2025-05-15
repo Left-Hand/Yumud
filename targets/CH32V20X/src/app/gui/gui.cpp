@@ -20,7 +20,7 @@
 #include "nvcv2/shape/shape.hpp"
 #include "image/font/instance.hpp"
 
-#include "Renderer.hpp"
+#include "image/render/renderer.hpp"
 #include "elements.hpp"
 
 #include "core/math/realmath.hpp"
@@ -93,8 +93,8 @@ void gui_main(){
     //     delay(200);
     // }
 
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    DEBUGGER_INST.init(576000);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

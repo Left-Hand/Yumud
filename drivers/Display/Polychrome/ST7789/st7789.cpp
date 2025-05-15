@@ -93,7 +93,7 @@ void ST7789::putrect_unsafe(const Rect2u & rect, const RGB565 color){
 
 void ST7789::puttexture_unsafe(const Rect2u & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    phy_.write_burst<uint16_t>(color_ptr, rect.get_area()).unwrap();
+    phy_.write_burst<uint16_t>(std::span<const RGB565>(color_ptr, rect.get_area())).unwrap();
 }
 
 void ST7789::putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color){

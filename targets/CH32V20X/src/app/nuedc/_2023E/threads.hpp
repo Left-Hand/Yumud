@@ -6,7 +6,7 @@
 #include "core/stream/StringStream.hpp"
 #include "robots/repl/repl_thread.hpp"
 
-namespace nudec::_2023E{
+namespace nuedc::_2023E{
 
 
 

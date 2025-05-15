@@ -1,25 +1,11 @@
 #include "hal_result.hpp"
 #include "core/stream/ostream.hpp"
+#include "core/utils/typetraits/enum_traits.hpp"
 
 namespace ymd{
 
 OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind err){
-    using Kind = hal::HalError::Kind;
-    switch(err){
-        case Kind::AlreadyUnderUse: return os << "AlreadyUnderUse";
-        case Kind::OccuipedByOther: return os << "OccuipedByOther";
-        case Kind::SlaveAddrAckTimeout: return os << "SlaveAddrAckTimeout";
-        case Kind::WritePayloadAckTimeout: return os << "WritePayloadAckTimeout";
-        case Kind::BusOverload: return os << "BusOverload";
-        case Kind::SelecterOutOfRange: return os << "SelecterOutOfRange";
-        case Kind::NoSelecter: return os << "NoSelecter";
-        case Kind::PayloadNoLength: return os << "PayloadNoLength";
-        case Kind::VerifyFailed: return os << "VerifyFailed";
-        case Kind::LengthOverflow: return os << "LengthOverflow";
-        case Kind::Unspecified: return os << "Unspecified";
-        case Kind::TxLengthAndRxLengthNotMatch: return os << "TxLengthAndRxLengthNotMatch";
-        case Kind::InvalidArgument: return os << "InvalidArgument";
-    }
+    derive_debug_dispatcher<hal::HalError::Kind>::call(os, err);
     return os;
 }
 

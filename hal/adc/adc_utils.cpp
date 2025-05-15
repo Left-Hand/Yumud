@@ -27,7 +27,7 @@ namespace ymd::hal::__adc_internal{
         else io.inflt();
     }
 
-    real_t get_temperature(){
+    real_t read_temp(){
         return 25;
     }
 }

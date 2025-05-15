@@ -60,7 +60,12 @@ int main(){
     // ws2812_main();
     // gxm_new_energy_main();
     // rrs3_robot_main();
-    nuedc_2023e_main();
+    // nuedc_2023e_main();
+    // icm42688_main();
+    mmc5983_main();
+    // ak09911c_main();
+    // enum_main();
+    // i2c_scanner_main();
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();
@@ -103,6 +108,7 @@ int main(){
 
     while(true);
     #elif defined(CH32V30X)
+    // i2c_scanner_main();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
@@ -136,7 +142,8 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // light_tracking_main();
-    cubic_main();
+    // cubic_main();
+    smc2025_main();
     // sdc_main();
     // proxy_tb();
     // paj7620_main();

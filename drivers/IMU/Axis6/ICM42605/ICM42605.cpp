@@ -121,10 +121,10 @@ IResult<> ICM42605::reset(){
     return Ok();
 }
 
-Option<Vector3_t<real_t>> ICM42605::get_acc(){
-    return Some{Vector3_t<real_t>{0,0,0}};//TODO
+Option<Vector3_t<q24>> ICM42605::read_acc(){
+    return Some{Vector3_t<q24>{0,0,0}};//TODO
 }
 
-Option<Vector3_t<real_t>> ICM42605::get_gyr(){
-    return Some{Vector3_t<real_t>{0,0,0}};//TODO
+Option<Vector3_t<q24>> ICM42605::read_gyr(){
+    return Some{Vector3_t<q24>{0,0,0}};//TODO
 }

@@ -110,7 +110,7 @@ public:
         real_t get_position() {return odo_.getPosition() / reduction_ratio;}
         real_t get_current() const {return curr;}
         real_t get_speed() const {return speed / reduction_ratio * real_t(2.5);}
-        real_t get_temperature() const {return temperature;}
+        real_t read_temp() const {return temperature;}
         uint32_t delta(){return micros_delta;}
         auto & enc() {return enc_;}
         auto & odo() {return odo_;}

@@ -23,8 +23,8 @@ using namespace ymd::drivers;
 #define MAG_ACTIVATED
 
 auto init_mpu6050(MPU6050 & mpu){
-    return mpu.set_package(MPU6050::Package::MPU6050) | 
-    mpu.init() |
+    mpu.set_package(MPU6050::Package::MPU6050);
+    return mpu.init() |
     mpu.set_acc_range(MPU6050::AccRange::_2G) |
     mpu.enable_direct_mode(EN);
 }
@@ -42,7 +42,7 @@ void ak8963_tb(hal::I2c & i2c){
     while(true){
         aku.update().unwrap();
         delay(5);
-        DEBUG_PRINTLN_IDLE(aku.get_magnet().unwrap());
+        DEBUG_PRINTLN_IDLE(aku.read_mag().unwrap());
     }
     while(true);
 }
@@ -56,8 +56,8 @@ void mpu6050_tb(hal::I2c & i2c){
     while(true){
         mpu.update().unwrap();
         DEBUG_PRINTLN_IDLE(
-            mpu.get_acc().unwrap(),
-            mpu.get_gyr().unwrap()
+            mpu.read_acc().unwrap(),
+            mpu.read_gyr().unwrap()
         );
     }
 }
@@ -67,14 +67,14 @@ void mpu6500_tb(hal::I2c & i2c){
 
     #ifdef MAG_ACTIVATED
         AK8963 aku{i2c};
-        !+mpu.set_package(MPU6050::Package::MPU9250);
+        mpu.set_package(MPU6050::Package::MPU9250);
     #else
         mpu.setPackage(MPU6050::Package::MPU6050);
     #endif
 
-    !+mpu.init();
-    !+mpu.set_acc_range(MPU6050::AccRange::_2G);
-    !+mpu.enable_direct_mode(EN);
+    mpu.init().unwrap();
+    mpu.set_acc_range(MPU6050::AccRange::_2G).unwrap();
+    mpu.enable_direct_mode(EN).unwrap();
 
     #ifdef MAG_ACTIVATED
         aku.init().unwrap();
@@ -98,29 +98,29 @@ void mpu6500_tb(hal::I2c & i2c){
         #endif
 
         // mahony.update9(
-            // mpu.get_gyr().unwrap(), 
-            // mpu.get_acc().unwrap(), 
-            // aku.get_magnet().unwrap()
+            // mpu.read_gyr().unwrap(), 
+            // mpu.read_acc().unwrap(), 
+            // aku.read_mag().unwrap()
         // );
 
         // mahony.update(
-        //     mpu.get_gyr().unwrap(), 
-        //     mpu.get_acc().unwrap(),
-        //     aku.get_magnet().unwrap()
+        //     mpu.read_gyr().unwrap(), 
+        //     mpu.read_acc().unwrap(),
+        //     aku.read_mag().unwrap()
         // );
 
         const uint32_t begin_m = micros();
 
         // mahony.update(
-        //     mpu.get_gyr().unwrap(), 
-        //     mpu.get_acc().unwrap()
-        //     // aku.get_magnet().unwrap()
+        //     mpu.read_gyr().unwrap(), 
+        //     mpu.read_acc().unwrap()
+        //     // aku.read_mag().unwrap()
         // );
 
         
         mahony.update(
-            mpu.get_gyr().unwrap(), 
-            mpu.get_acc().unwrap()
+            mpu.read_gyr().unwrap(), 
+            mpu.read_acc().unwrap()
         );
             
         const uint32_t end_m = micros();
@@ -129,7 +129,7 @@ void mpu6500_tb(hal::I2c & i2c){
         // DEBUG_PRINTLN(mahony.result());
         DEBUG_PRINTLN(
             mahony.result(), 
-            // Quat_t<real_t>(Vector3_t<real_t>(0,0,1), aku.get_magnet().unwrap().normalized()), 
+            // Quat_t<real_t>(Vector3_t<real_t>(0,0,1), aku.read_mag().unwrap().normalized()), 
             end_m - begin_m
         );
     });

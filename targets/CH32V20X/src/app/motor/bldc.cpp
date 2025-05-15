@@ -339,8 +339,8 @@ void bldc_main(){
 
     // for(size_t i = 0; i < 1000; ++i) {
     //     bmi.update();
-    //     // auto [x,y,z] = bmi.get_acc();
-    //     auto [x,y,z] = bmi.get_gyr();
+    //     // auto [x,y,z] = bmi.read_acc();
+    //     auto [x,y,z] = bmi.read_gyr();
     //     DEBUG_PRINTLN(x,y,z);
     //     delay(2);
     //     // DEBUGGER << std::endl;
