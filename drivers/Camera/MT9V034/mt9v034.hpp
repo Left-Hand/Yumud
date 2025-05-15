@@ -11,7 +11,7 @@
 namespace ymd::drivers{
 struct MT9V034_Collections{
     /// Camera i2c address configuration for {S_CTRL_ADR1, S_CTRL_ADR0} inputs
-/// (see Table 6 "address modes" in rev. 7 datasheet)
+    /// (see Table 6 "address modes" in rev. 7 datasheet)
 
     // pub const CAM_PERIPH_ADDRESS_00: u8 = 0x90 >> 1;
     // pub const CAM_PERIPH_ADDRESS_01: u8 = 0x98 >> 1;
@@ -27,7 +27,7 @@ struct MT9V034_Collections{
 
     
     // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d);
-    static constexpr Vector2u CAMERA_SIZE = {188, 120};
+    static constexpr Vector2u FRAME_SIZE = {188, 120};
 
 
     enum class GeneralRegAddress{
@@ -211,19 +211,13 @@ struct MT9V034_Regs:public MT9V034_Collections{
     uint16_t agcAecEnableReg = 0x02;
 };
 
-class MT9V034:
-    public Camera<Grayscale>,
-    public MT9V034_Collections{
+class MT9V034: public MT9V034_Collections{
 public:
     MT9V034(const hal::SccbDrv & sccb_drv):
-        ImageBasics(CAMERA_SIZE),
-        Camera<Grayscale>(CAMERA_SIZE),
         sccb_drv_(sccb_drv)
         {;}
     MT9V034(hal::SccbDrv && sccb_drv):
-        ImageBasics(CAMERA_SIZE), 
-        Camera<Grayscale>(CAMERA_SIZE),
-        sccb_drv_(sccb_drv)
+        sccb_drv_(std::move(sccb_drv))
         {;}
     MT9V034(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
@@ -235,10 +229,11 @@ public:
     [[nodiscard]] IResult<> set_exposure_value(const uint16_t value);
     [[nodiscard]] IResult<> set_gain(const real_t gain);
 
-
-    
+    [[nodiscard]] const auto & frame() const {return frame_;}
+    [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}
 private:
     hal::SccbDrv sccb_drv_;
+    Image<Grayscale> frame_ = {FRAME_SIZE};
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint16_t data);
 
@@ -269,10 +264,6 @@ private:
         return write_general_reg(GeneralRegAddress::Control, uint16_t(context));
     }
 
-    void getpixel_unsafe(const Vector2u & pos, Grayscale & color) const {
-        color = data_[pos.x + pos.y * size().x];
-    };
-
     [[nodiscard]] IResult<> set_exposure_range(const Range2u range);
 
     [[nodiscard]] IResult<> enable_pixel_test_pattern(
@@ -282,7 +273,7 @@ private:
 
     [[nodiscard]] IResult<> init_general_regs(const uint16_t max_pixel_count);
 
-        /// Set just the maximum pixels to be used for adjusting automatic gain control
+    /// Set just the maximum pixels to be used for adjusting automatic gain control
     /// Note this the _output_ pixel count, ie the pixels post-binning
     [[nodiscard]] IResult<> set_agc_pixel_count(uint16_t max_pixels){
         return write_general_reg(GeneralRegAddress::AgcAecPixelCount, max_pixels);

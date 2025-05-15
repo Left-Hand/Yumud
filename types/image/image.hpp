@@ -99,12 +99,6 @@ public:
 };
 
 template<typename ColorType>
-class Camera:public Image<ColorType>{
-public:
-    Camera(const Vector2u & _size):ImageBasics(_size), Image<ColorType>(_size){;}
-};
-
-template<typename ColorType>
 class Displayer:public ImageWritable<ColorType>{
 public:
 public:

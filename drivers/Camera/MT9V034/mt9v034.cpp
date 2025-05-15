@@ -125,7 +125,7 @@ IResult<> MT9V034::init(){
 
     #ifdef ENABLE_DVP
     const auto size = this->size();
-    dvp.init((uint32_t *)data_.get(), (uint32_t *)data_.get(), size.x * size.y, size.y);
+    dvp.init((uint32_t *)frame_.get_data(), (uint32_t *)frame_.get_data(), size.x * size.y, size.y);
     #endif
 
     return Ok();

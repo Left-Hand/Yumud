@@ -91,7 +91,7 @@ void smc2025_main(){
         renderer.draw_pixel(Vector2u(0, 0));
         renderer.draw_rect(Rect2i(0, 0, 20, 40));
 
-        const auto gray_img = camera.clone();
+        const auto gray_img = camera.frame().clone();
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
