@@ -108,6 +108,7 @@ int main(){
 
     while(true);
     #elif defined(CH32V30X)
+    // i2c_scanner_main();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();

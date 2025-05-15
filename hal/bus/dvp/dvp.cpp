@@ -49,7 +49,7 @@ void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, u
 
 extern "C"{
 __interrupt void DVP_IRQHandler(void){
-    PANIC("int");
+    // PANIC("int");
     if (DVP->IFR & RB_DVP_IF_ROW_DONE){
         /* Write 0 clear 0 */
         DVP->IFR &= ~RB_DVP_IF_ROW_DONE;  //clear Interrupt

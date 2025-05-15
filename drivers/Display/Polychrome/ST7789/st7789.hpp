@@ -24,23 +24,26 @@ private:
 
 
     template <hal::valid_spi_data T>
-    hal::HalResult phy_write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC) {
-        // static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+    hal::HalResult phy_write_burst(const std::span<const auto> pdata, Continuous cont = DISC) {
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
                 return res;
         }
 
-        // const auto p = reinterpret_cast<const T *>(pdata);
+        const auto len = pdata.size();
+        // DEBUG_PRINTLN(len, pdata[0], static_cast<T>(pdata[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<T>(pdata[i]));
+            (void)spi_.fast_write(static_cast<RGB565>(pdata[i]));
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
+
         if (cont == DISC) spi_.end();
+
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
         }
+
         return hal::HalResult::Ok();
     }
 
@@ -145,10 +148,9 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] IResult<> write_burst(const auto * data, size_t len){
-        // dc_gpio_ = DATA_LEVEL;
+    [[nodiscard]] IResult<> write_burst(std::span<const auto> pdata){
         dc_gpio_.set();
-        return IResult<>(phy_write_burst<U>(data, len));
+        return IResult<>(phy_write_burst<U>(pdata));
     }
 
     template<typename U>
@@ -245,7 +247,7 @@ public:
     }
 
     void put_next_texture(const Rect2u & rect, const is_color auto * pcolor){
-        phy_.write_burst<uint16_t>(pcolor, rect.get_area()).unwrap();
+        phy_.write_burst<uint16_t>(std::span(pcolor, rect.get_area())).unwrap();
     }
 
     IResult<> set_display_offset(const Vector2u & _offset){

@@ -2,7 +2,7 @@
 #include "core/stream/ostream.hpp"
 #include "core/math/realmath.hpp"
 
-using namespace ymd;
+
 
 //https://www.zhihu.com/question/27417946/answer/1253126563
 
@@ -97,6 +97,7 @@ scexpr uint16_t xyz_table[256] = {
     uint16_t(97.344529f * 256), uint16_t(98.225055f * 256), uint16_t(99.110210f * 256), uint16_t(100.00000f * 256)
 };
 
+namespace ymd{
 template<arithmetic T>
 struct XYZ_t{
     T x,y,z;
@@ -447,8 +448,8 @@ OutputStream & operator<<(OutputStream & os, const sGrayscale & sgs){
     return os << '(' << int8_t(sgs) << ')';
 }
 
-#define OS_RGB    return os << '(' << uint8_t(rgb.r) << ',' << uint8_t(rgb.g) << 'r' << uint8_t(rgb.b) << ')';
-#define OS_XXX(u,v,w)    return os << '(' << uint8_t(u) << ',' << uint8_t(v) << 'r' << uint8_t(w) << ')';
+#define OS_RGB    return os << '(' << uint8_t(rgb.r) << os.splitter() << uint8_t(rgb.g) << os.splitter() << uint8_t(rgb.b) << ')';
+#define OS_XXX(u,v,w)    return os << '(' << uint8_t(u) << os.splitter() << uint8_t(v) << os.splitter() << uint8_t(w) << ')';
 
 OutputStream & operator<<(OutputStream & os, const RGB565 & rgb){OS_RGB}
 
@@ -460,3 +461,5 @@ OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, 
 
 #undef OS_RGB
 #undef OS_XXX
+
+}

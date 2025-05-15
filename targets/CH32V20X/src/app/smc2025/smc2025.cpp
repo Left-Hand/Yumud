@@ -49,33 +49,19 @@ void smc2025_main(){
 
     spi2.init(144_MHz);
     
-    auto & lcd_blk = portC[7];
+    auto & lcd_blk = portD[0];
     lcd_blk.outpp(HIGH);
 
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    const auto spi_fd = spi.attach_next_cs(portD[6]).value();
+    const auto spi_fd = spi.attach_next_cs(portD[4]).value();
 
     drivers::ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 240});
 
-        {
-        tft.init();
+    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170);
 
-        tft.set_flip_x(true);
-        tft.set_flip_y(false);
-        tft.set_swap_xy(true);
-        tft.set_display_offset({320-240, 0}); 
-
-        tft.set_format_rgb(true);
-        tft.set_flush_dir_h(false);
-        tft.set_flush_dir_v(false);
-        tft.set_inversion(true);
-    }
-
-
-
-    I2cSw i2c{hal::portC[12], hal::portD[2]};
+    I2cSw i2c{hal::portD[2], hal::portC[12]};
     i2c.init(100_KHz);
     
     drivers::MT9V034 camera{i2c};
@@ -86,7 +72,10 @@ void smc2025_main(){
     Image<RGB565> rgb_img{{tft.rect().w, 4u}};
     Renderer renderer = {};
 
-    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](
+        const Image<Grayscale> & src, 
+        const Rect2i & area
+    ){
         tft.put_texture(area.intersection(
                 Rect2i(area.position, src.size())), 
                 src.get_data());
@@ -97,13 +86,15 @@ void smc2025_main(){
         renderer.bind(rgb_img);
         renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
-        renderer.draw_rect(Rect2i(20, 0, 20, 40));
+        renderer.draw_rect(Rect2i(0, 0, 20, 40));
 
         const auto gray_img = camera.clone();
-        // plot_gray(gray_img, {0,0, 240,240});
+        plot_gray(gray_img, {0,6, 240,240});
 
+        // DEBUG_PRINTLN(rgb_img.at(0, 0));
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
-        DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
+        // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
+        DEBUG_PRINTLN(millis());
         delay(20);
     }
 
