@@ -5,12 +5,13 @@
 
 namespace ymd::drivers{
 
-class BMI160:public AccelerometerIntf, public GyroscopeIntf{
-public:
+struct BMI160_Collections{
     using Error = ImuError;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -87,14 +88,10 @@ public:
         FAST_SETUP
     };
 
-protected:
+};
 
-    BoschSensor_Phy phy_;
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
-
-    real_t acc_scale = 0;
-    real_t gyr_scale = 0;
+struct BMI160_Regs:public BMI160_Collections{
 
     // #pragma pack(push, 1)
 
@@ -114,27 +111,34 @@ protected:
     GyrConfReg gyr_conf_reg = {};
     GyrRangeReg gyr_range_reg = {};
     // #pragma pack(pop)
+};
 
-    static real_t calculate_acc_scale(const AccRange range);
-    static real_t calculate_gyr_scale(const GyrRange range);
+class BMI160 final:
+    public AccelerometerIntf, 
+    public GyroscopeIntf,
+    private BMI160_Regs{
+
 public:
+    using Error = BMI160_Collections::Error;
+    using AccOdr = BMI160_Collections::AccOdr;
+    using GyrOdr = BMI160_Collections::GyrOdr;
     BMI160(BoschSensor_Phy && phy):phy_(phy){;}
 
-    Result<void, Error> init();
-    Result<void, Error> update();
-    Result<void, Error> validate();
-    Result<void, Error> reset();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> reset();
 
     
-    Result<void, Error> set_acc_odr(const AccOdr odr);
-    Result<void, Error> set_acc_range(const AccRange range);
-    Result<void, Error> set_gyr_odr(const GyrOdr odr);
-    Result<void, Error> set_gyr_range(const GyrRange range);
-    Result<void, Error> set_pmu_mode(const PmuType pum, const PmuMode mode);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_range(const AccRange range);
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);
+    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
-    PmuMode get_pmu_mode(const PmuType pum);
-    IResult<Vector3_t<q24>> read_acc();
-    IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pum);
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr
@@ -175,6 +179,17 @@ public:
         }
         return None;
     }
+
+private:
+    BoschSensor_Phy phy_;
+
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
+
+    real_t acc_scale = 0;
+    real_t gyr_scale = 0;
+
+    static real_t calculate_acc_scale(const AccRange range);
+    static real_t calculate_gyr_scale(const GyrRange range);
 };
 
 }

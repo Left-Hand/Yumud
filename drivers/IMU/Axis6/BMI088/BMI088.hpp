@@ -21,7 +21,7 @@ public:
     
     template<typename T = void>
     using IResult = Result<T, Error>;
-    
+
     enum class AccRange:uint8_t{
         _3G,
         _6G,
@@ -152,7 +152,7 @@ protected:
     REG8_QUICK_DEF(0x7c, R8_AccPwrConf, acc_pwrconf_reg);
     REG8_QUICK_DEF(0x7d, R8_AccPwrCtrl, acc_pwrctrl_reg);
 
-    IResult<> verify_chip_id();
+    [[nodiscard]] IResult<> verify_chip_id();
 
     class InterruptChannel{
     protected:
@@ -161,7 +161,7 @@ protected:
         InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
             bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-        IResult<> enable_output(const bool en = true){
+        [[nodiscard]] IResult<> enable_output(const bool en = true){
             ctrl_.int_out = en;
             return bmi_.phy_.write_reg(address_, ctrl_);
         }
@@ -202,17 +202,17 @@ public:
     BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
-    IResult<> init();
-    IResult<> reset();
-    IResult<> validate();
-    IResult<> update();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
 
-    IResult<Vector3_t<q24>> read_acc();
-    IResult<real_t> read_temp();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<real_t> read_temp();
 
-    IResult<> set_acc_range(const AccRange range);
-    IResult<> set_acc_bwp(const AccBwp bwp);
-    IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_range(const AccRange range);
+    [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 };
 
 
@@ -266,7 +266,7 @@ protected:
         uint8_t :3;
     }DEF_R8(gyro_selftest_reg)
 
-    IResult<> verify_chip_id();
+    [[nodiscard]] IResult<> verify_chip_id();
 
     static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
         switch(range){
@@ -294,15 +294,15 @@ public:
     BMI088_Gyr(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
-    IResult<> init();
-    IResult<> reset();
-    IResult<> validate();
-    IResult<> update();
-    IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
 
 
-    IResult<> set_gyr_range(const GyrRange range);
-    IResult<> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 };
     
 

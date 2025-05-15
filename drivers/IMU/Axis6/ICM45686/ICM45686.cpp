@@ -11,15 +11,11 @@ using Error = ICM45686::Error;
 #define ICM45686_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define ICM45686_PANIC(...) PANIC{__VA_ARGS__}
 #define ICM45686_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
 #else
 #define ICM45686_DEBUG(...)
 #define ICM45686_TODO(...) PANIC_NSRC()
 #define ICM45686_PANIC(...)  PANIC_NSRC()
 #define ICM45686_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) read_reg(reg.address, reg).unwrap()
-#define WRITE_REG(reg) write_reg(reg.address, reg).unwrap()
 #endif
 
 

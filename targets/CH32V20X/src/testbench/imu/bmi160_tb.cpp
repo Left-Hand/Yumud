@@ -19,7 +19,7 @@ void bmi160_main(){
     using Quat = Quat_t<real_t>;
     
     BMI160 bmi{{spi1, spi1.attach_next_cs(portA[0]).value()}};
-    bmi.init();
+    bmi.init().examine();
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -30,7 +30,7 @@ void bmi160_main(){
     ledg.outpp();
     portA[7].inana();
 
-    bmi.init();
+    bmi.init().examine();
     while(true){
         // auto pos = ma730.getLapPosition();
 
@@ -39,7 +39,7 @@ void bmi160_main(){
         ledg = BoolLevel::from((millis() % 800) > 400);
 
         delay(20);
-        bmi.update();
+        bmi.update().examine();
         Vector3_t<real_t> acc = bmi.read_acc().unwrap();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
