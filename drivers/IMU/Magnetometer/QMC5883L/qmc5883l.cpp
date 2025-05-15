@@ -27,39 +27,39 @@ using IResult= Result<T, Error>;
 IResult<> QMC5883L::init(){
     if(const auto res = this->validate();
         res.is_err()) return res;
+    if(const auto res = this->reset();
+        res.is_err()) return res;
     if(const auto res = this->set_reset_period(1);
         res.is_err()) return res;
     if(const auto res = this->enable_cont_mode();
         res.is_err()) return res;
-    if(const auto res = this->set_full_scale(FullScale::FS2G);
+    if(const auto res = this->set_fs(FullScale::_2G);
         res.is_err()) return res;
-    if(const auto res = this->set_over_sample_ratio(OverSampleRatio::OSR512);
+    if(const auto res = this->set_over_sample_ratio(OverSampleRatio::_512);
         res.is_err()) return res;
-    if(const auto res = this->set_data_rate(DataRate::DR200);
+    if(const auto res = this->set_odr(Odr::_200);
         res.is_err()) return res;
 
     return Ok();
 }
 
 IResult<> QMC5883L::enable_cont_mode(const bool en){
-    configAReg.measureMode = static_cast<uint8_t>((en));
+    configAReg.measureMode = en;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
-IResult<> QMC5883L::set_data_rate(const DataRate rate){
-    configAReg.dataRate = static_cast<uint8_t>(rate);
+IResult<> QMC5883L::set_odr(const Odr rate){
+    configAReg.odr = rate;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
-IResult<> QMC5883L::set_full_scale(const FullScale fullscale){
-    configAReg.fullScale = static_cast<uint8_t>(fullscale);
-    setFs(fullscale);
+IResult<> QMC5883L::set_fs(const FullScale fullscale){
+    configAReg.fs = fullscale;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
 IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
-    configAReg.OverSampleRatio = static_cast<uint8_t>(ratio);
-    setOvsfix(ratio);
+    configAReg.ovs_ratio = ratio;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
@@ -69,9 +69,9 @@ IResult<> QMC5883L::update(){
 
 IResult<Vector3_t<q24>> QMC5883L::read_mag(){
     return Ok{Vector3_t<q24>{
-        uni(int16_t(magXReg)) * fs,
-        uni(int16_t(magYReg)) * fs,
-        uni(int16_t(magZReg)) * fs
+        uni(int16_t(magXReg)) * scaler_.to_fullscale(),
+        uni(int16_t(magYReg)) * scaler_.to_fullscale(),
+        uni(int16_t(magZReg)) * scaler_.to_fullscale()
     }};
 }
 
@@ -99,7 +99,7 @@ IResult<> QMC5883L::reset(){
 }
 
 IResult<> QMC5883L::enable_interrupt(const bool en){
-    configBReg.intEn = static_cast<uint8_t>((en));
+    configBReg.intEn = en;
     return write_reg(RegAddress::ConfigB, configBReg);
 }
 

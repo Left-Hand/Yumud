@@ -96,6 +96,9 @@ private:
 }
 
 namespace ymd{
+template<typename T>
+struct derive_debug_dispatcher;
+
 template<typename E>
 requires std::is_enum_v<E>
 struct derive_debug_dispatcher<E> {
