@@ -18,82 +18,93 @@ using namespace ymd::drivers;
 #endif
 
 
-
 using Error = ImuError;
 
 template<typename T = void>
 using IResult= Result<T, Error>;
 
-void HMC5883L::init(){
-    this->validate();
-    this->enableHighSpeed();
-    this->enableContMode();
-    this->setMeasurementMode(MeasurementMode::Norm);
-    this->setDataRate(DataRate::DR75);
-    this->setSampleNumber(SampleNumber::SN1);
-    this->setGain(Gain::GL1_52);
+IResult<> HMC5883L::init(){
+    if(const auto res = validate();
+        res.is_err()) return res;
+    if(const auto res = enable_high_speed();
+        res.is_err()) return res;
+    if(const auto res = set_mode(Mode::Continuous);
+        res.is_err()) return res;
+    if(const auto res = set_odr(Odr::DR75);
+        res.is_err()) return res;
+    if(const auto res = set_sample_number(SampleNumber::SN1);
+        res.is_err()) return res;
+    if(const auto res = set_gain(Gain::GL1_52);
+        res.is_err()) return res;
+    return Ok();
 }
 
-void HMC5883L::enableHighSpeed(const bool en){
-    modeReg.hs = true;
-    write_reg(RegAddress::Mode, modeReg);
+IResult<> HMC5883L::enable_high_speed(const bool en){
+    auto reg = RegCopy(mode_reg);
+    reg.hs = true;
+    return write_reg(reg);
 }
 
-void HMC5883L::setMeasurementMode(const MeasurementMode mode){
-    configAReg.measureMode = (uint8_t)mode;
-    write_reg(RegAddress::ConfigA, configAReg);
+
+IResult<> HMC5883L::set_odr(const Odr rate){
+    auto reg = RegCopy(config_a_reg);
+    reg.dataRate = static_cast<uint8_t>(rate);
+    return write_reg(reg);
 }
 
-void HMC5883L::setDataRate(const DataRate rate){
-    configAReg.dataRate = (uint8_t)rate;
-    write_reg(RegAddress::ConfigA, configAReg);
+IResult<> HMC5883L::set_sample_number(const SampleNumber number){
+    auto reg = RegCopy(config_a_reg);
+    reg.sampleNumber = static_cast<uint8_t>(number);
+    return write_reg(reg);
 }
 
-void HMC5883L::setSampleNumber(const SampleNumber number){
-    configAReg.sampleNumber = (uint8_t)number;
-    write_reg(RegAddress::ConfigA, configAReg);
+IResult<> HMC5883L::set_gain(const Gain gain){
+    auto reg = RegCopy(config_b_reg);
+    reg.gain = gain;
+    if(const auto res = write_reg(reg);
+        res.is_err()) return res;
+    set_lsb(gain);
+    return Ok();
 }
 
-void HMC5883L::setGain(const Gain gain){
-    configBReg.gain = (uint8_t)gain;
-    write_reg(RegAddress::ConfigB, configBReg);
-    setLsb(gain);
-}
-
-void HMC5883L::setMode(const Mode mode){
-    modeReg.mode = (uint8_t)mode;
-    write_reg(RegAddress::Mode, modeReg);
+IResult<> HMC5883L::set_mode(const Mode mode){
+    auto reg = RegCopy(mode_reg);
+    reg.mode = mode;
+    return write_reg(reg);
 }
 
 IResult<Vector3_t<q24>> HMC5883L::read_mag(){
-    real_t x = From12BitToGauss(magXReg, lsb_);
-    real_t y = From12BitToGauss(magYReg, lsb_);
-    real_t z = From12BitToGauss(magZReg, lsb_);
+    real_t x = transform_raw_to_gauss(magXReg, lsb_);
+    real_t y = transform_raw_to_gauss(magYReg, lsb_);
+    real_t z = transform_raw_to_gauss(magZReg, lsb_);
 
     return Ok(Vector3_t<q24>(x,y,z));
 }
 
-bool HMC5883L::validate(){
-    uint8_t id[3] = {0};
-    read_reg(RegAddress::IDA, id[0]);
-    read_reg(RegAddress::IDB, id[1]);
-    read_reg(RegAddress::IDC, id[2]);
-    bool passed = (id[0] == 'H' && id[1] == '4' && id[2] == '3');
-    HMC5883L_ASSERT(passed, "HMC5883L not found!", id);
-    return passed;
+IResult<> HMC5883L::validate(){
+    if(const auto res = read_reg(id_a_reg);
+        res.is_err()) return res;
+    if(const auto res = read_reg(id_b_reg);
+        res.is_err()) return res;
+    if(const auto res = read_reg(id_c_reg);
+        res.is_err()) return res;
+    bool passed = (
+        id_a_reg.as_val() == 'H'
+        and id_b_reg.as_val() == '4' 
+        and id_c_reg.as_val() == '3');
+
+    if(!passed) return Err(Error::WrongWhoAmI);
+    return Ok();
 }
 
-void HMC5883L::update(){
-    read_burst(RegAddress::MagX, &magXReg, 3);
+IResult<> HMC5883L::update(){
+    return read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
 
-bool HMC5883L::busy(){
-    read_reg(RegAddress::Status, statusReg);
-    return statusReg.ready == false;
-}
+IResult<bool> HMC5883L::is_data_ready(){
 
-void HMC5883L::enableContMode(const bool en){
-    modeReg.mode = (uint8_t)(en ? Mode::Continuous : Mode::Single);
-    write_reg(RegAddress::Mode, modeReg);
+    if(const auto res = read_reg(status_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(status_reg.ready == false);
 }

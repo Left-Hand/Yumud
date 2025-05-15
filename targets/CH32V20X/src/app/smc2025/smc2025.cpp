@@ -29,6 +29,10 @@ using namespace ymd::hal;
 
 #define UART hal::uart6
 
+
+struct HwPort{
+};
+
 void smc2025_main(){
 
     UART.init(576_KHz);
