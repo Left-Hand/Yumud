@@ -77,11 +77,17 @@ private:
     // }
 
     template<typename T>
-    constexpr CanMsg(const details::CanId_t<T> id, const std::span<const uint8_t> pdata) : CanMsg(id, CanRemoteSpec::Data){
+    constexpr CanMsg(const details::CanId_t<T> id, const uint8_t * pdata, const size_t size) : CanMsg(id, CanRemoteSpec::Data){
         is_remote_ = false;
-        resize(MIN(pdata.size(), 8));
+        resize(MIN(size, 8));
         for(uint8_t i = 0; i < dlc_; i++){
             data_[i] = uint8_t(pdata[i]);
+        }
+
+        if(std::is_constant_evaluated()){
+            for(uint8_t i = dlc_; i < 8; i++){
+                data_[i] = 0;
+            }
         }
     }
     
@@ -121,14 +127,20 @@ public:
     constexpr CanMsg copy(){
         return *this;
     }
+
     template<typename T>
     static constexpr CanMsg empty(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Data);}
+
     template<typename T>
     static constexpr CanMsg from_remote(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Remote);}
-    // static constexpr CanMsg from_remote(CanExtId id){return CanMsg(id, CanRemoteSpec::Remote);}
+
     template<typename T>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
-    // static constexpr CanMsg from_bytes(CanExtId id, std::span<const uint8_t> pdata){return CanMsg(id, pdata);}
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pdata)
+        {return CanMsg(id, pdata.data(), pdata.size());}
+
+    template<typename T>
+    static constexpr CanMsg from_list(details::CanId_t<T> id, const std::initializer_list<uint8_t> pdata)
+        {return CanMsg(id, pdata.begin(), pdata.size());}
 
     static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){
         return CanMsg(raw, data, len);}
@@ -151,15 +163,23 @@ public:
     constexpr uint64_t as_u64() const{ return data64_;}
     constexpr uint64_t & as_u64() {return data64_;}
 
-    std::span<const uint8_t> to_span() const{
-        return std::span(reinterpret_cast<const uint8_t *>(begin()), size());
+    constexpr std::span<const uint8_t> to_span() const{
+        return std::span(begin(), size());
+    }
+
+    template<size_t N>
+    requires (N <= 8)
+    constexpr std::span<const uint8_t, N> to_span_with_length() const{
+        if(N <= size())
+            return std::span<const uint8_t, N>(begin(), N);
+        else __builtin_abort();
     }
 
     constexpr bool is_std() const {return is_ext_ == false;}
     constexpr bool is_ext() const {return is_ext_ == true;}
     constexpr bool is_remote() const {return (is_remote_ == true);}
     constexpr uint8_t mailbox() const {return mbox_;}
-    void read(uint8_t * buf, size_t len){
+    constexpr void read(uint8_t * buf, size_t len){
         if(is_remote_ == true) return;
         len = MIN(len, 8);
         // memcpy(buf, data_, len);
@@ -169,7 +189,7 @@ public:
         dlc_ = len;
     }
 
-    uint32_t id() const {
+    constexpr uint32_t id() const {
         return id_;
     }
 
@@ -186,7 +206,7 @@ public:
     }
 
     
-    void set_ext(const bool en){
+    constexpr void set_ext(const bool en){
         is_ext_ = (en ? true : false);
     }
     

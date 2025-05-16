@@ -13,6 +13,7 @@
 namespace ymd::drivers{
 
 struct VL6180X_Collections{
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0101001);
     // using RegAddress = uint8_t;
     enum class RegAddress:uint16_t{
         IDENTIFICATION__MODEL_ID              = 0x000,
@@ -129,7 +130,7 @@ private:
 
 class VL6180X final:public VL6180X_Collections{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0101001);
+
     VL6180X(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     VL6180X(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     VL6180X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
@@ -142,15 +143,11 @@ public:
     [[nodiscard]]IResult<> configure_default();
 
     [[nodiscard]]IResult<> set_scaling(uint8_t new_scaling);
-    inline uint8_t get_scaling() { return scaling; }
-
-
     [[nodiscard]]IResult<> start_range_continuous(uint16_t period);
     [[nodiscard]]IResult<> start_ambient_continuous(uint16_t period);
     [[nodiscard]]IResult<> start_interleaved_continuous(uint16_t period);
     [[nodiscard]]IResult<> stop_continuous();
     
-
     [[nodiscard]]IResult<uint16_t> read_ambient();
     
 
@@ -217,7 +214,5 @@ private:
 }
 
 namespace ymd{
-OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error & err);
-
-OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error_Kind & err_kind);
+DERIVE_DEBUG(drivers::VL6180X::Error_Kind );
 }

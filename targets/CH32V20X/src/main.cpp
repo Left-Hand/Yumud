@@ -62,7 +62,8 @@ int main(){
     // rrs3_robot_main();
     // nuedc_2023e_main();
     // icm42688_main();
-    mmc5983_main();
+    // mmc5983_main();
+    lazy_main();
     // ak09911c_main();
     // enum_main();
     // i2c_scanner_main();
@@ -143,7 +144,8 @@ int main(){
     // gui_main();
     // light_tracking_main();
     // cubic_main();
-    smc2025_main();
+    // smc2025_main();
+    
     // sdc_main();
     // proxy_tb();
     // paj7620_main();
