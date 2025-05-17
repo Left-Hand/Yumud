@@ -20,7 +20,7 @@ using namespace ymd::hal;
     led.init();
     while(true){
         led = Color_t<real_t>::from_hsv(0.5_r + 0.5_r * sin(time()),1,1,0.2_r);
-        delay(10);
+        clock::delay(10ms);
     }
 }
 

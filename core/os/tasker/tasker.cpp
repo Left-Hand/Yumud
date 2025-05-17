@@ -3,8 +3,8 @@
 
 using namespace ymd;
 
-uint32_t Tasker::getTick(void) {
-    return millis();
+Milliseconds Tasker::getTick(void) {
+    return clock::millis();
 }
 
 // void Tasker::update(uint32_t period) {

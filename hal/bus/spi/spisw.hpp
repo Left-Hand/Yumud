@@ -17,7 +17,7 @@ protected:
     bool m_msb = true;
 
     __no_inline void delay_dur(){
-        udelay(delays);
+        clock::delay(Microseconds(delays));
     }
     hal::HalResult lead(const LockRequest req) override{
         auto ret = Spi::lead(req);

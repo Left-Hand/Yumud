@@ -32,7 +32,7 @@ void ch9141_tb(IOStream & logger, Uart & uart){
         // }
 
         // if(logger.available()){
-        //     delay(2);
+        //     clock::delay(2ms);
         //     commer.println("from l:", logger.readString());
         // }
 

@@ -149,7 +149,7 @@ int32_t YT8512C::init()
     /* 到了这里，初始化完成！！！ */
     if (status == YT8512C_STATUS_OK){
         /* 等待2s进行初始化 */
-        delay(YT8512C_INIT_TO);
+        clock::delay(YT8512C_INIT_TOms);
     }
 
     return status;

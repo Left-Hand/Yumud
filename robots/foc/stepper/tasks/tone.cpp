@@ -7,14 +7,14 @@ void ToneTasker::run(){
 
     if(done_) return;
 
-    if(millis() >= tones[tone_index].sustain_ms + play_begin_ms){ // play one note done
+    if(clock::millis() >= tones[tone_index].sustain_ms + play_begin_ms){ // play one note done
         if(tone_index >= tones.size()){
             done_ = true;
             return;
         } // play done
         else{
             tone_index++;
-            play_begin_ms = millis();
+            play_begin_ms = clock::millis();
         }
     }
     
@@ -31,7 +31,7 @@ void ToneTasker::reset(){
     cnt = 0;
     done_ = false;
     tone_index = 0;
-    play_begin_ms = millis();
+    play_begin_ms = clock::millis();
 }
 
 bool ToneTasker::done(){

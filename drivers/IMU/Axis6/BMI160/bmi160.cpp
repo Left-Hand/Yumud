@@ -43,7 +43,7 @@ IResult<> BMI160::init(){
         ;res.is_err()) return res;
 	//check the PMU_status	Register(0x03) 
     ;
-    delay(1);
+    clock::delay(1ms);
 
 	if(const auto res = (get_pmu_mode(PmuType::ACC));
         res.is_err()) return Err(res.unwrap_err());

@@ -53,7 +53,7 @@ void print_curve(OutputStream & logger, const Curve & curve){
     logger << std::setprecision(4);
     for(auto it = curve.begin(); it != curve.end(); it++){
         auto [pos, rad] = Ray(*it);
-        delay(1);
+        clock::delay(1ms);
         logger.println(pos.x, pos.y, rad);
     }
 };
@@ -81,7 +81,7 @@ void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func){
         auto targ = func(time());
         servo.setRadian(targ);
         // DEBUG_PRINTLN(joint.getRadian(), targ);
-        delay(20);
+        clock::delay(20ms);
     }
 }
 
@@ -90,7 +90,7 @@ void test_joint(JointLR & joint, std::function<real_t(real_t)> && func){
         auto targ = func(time());
         joint.setRadian(targ);
         // DEBUG_PRINTLN(joint.getRadian(), targ);
-        delay(20);
+        clock::delay(20ms);
     }
 }
 

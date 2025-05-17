@@ -7,9 +7,9 @@ void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();
     while(true){
         gpio.set();
-        delay(200);
+        clock::delay(200ms);
         gpio.clr();
-        delay(200);
+        clock::delay(200ms);
     }
 }
 

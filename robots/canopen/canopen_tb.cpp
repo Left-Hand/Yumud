@@ -26,7 +26,7 @@ void canopen_main(){
 
     while(true){
 
-        const auto m = micros();
+        const auto m = clock::micros();
         // for(size_t i = 0; i < 1000; i++){
         //     od.find(index);
         // }
@@ -35,9 +35,9 @@ void canopen_main(){
         et.write_any(data + 1);
         et.read_any(data);
         // et.(&data, index);
-        DEBUG_PRINTLN(data, et.name(), et.dsize(), micros() - m);
+        DEBUG_PRINTLN(data, et.name(), et.dsize(), clock::micros() - m);
         // DEBUG_PRINTLN(data, et.name(),(index), micros() - m);
         
-        delay(1);
+        clock::delay(1ms);
     }
 }   

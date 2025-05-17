@@ -55,17 +55,18 @@ hal::HalResult AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_
 
 
 void AT24CXX::wait_for_free(){
-    uint32_t delays;
-    if(last_entry_ms == 0){
-        delays = min_duration_ms;
-        update_entry_ms();
-    }else{
-        delays = min_duration_ms;
-    }
+    const auto delays = [&]{
+        if(last_entry_ms == 0ms){
+            update_entry_ms();
+            return min_duration_ms;
+        }else{
+            return min_duration_ms;
+        }
+    }();
 
-    AT24CXX_DEBUG("wait for", delays, "ms");
-    delay(delays);
-    // delay(400);
+    AT24CXX_DEBUG("wait for", delays);
+    clock::delay(Milliseconds(delays));
+    // clock::delay(400ms);
 }
 
 void AT24CXX::store_bytes(const Address loc, const void * data, const Address len){

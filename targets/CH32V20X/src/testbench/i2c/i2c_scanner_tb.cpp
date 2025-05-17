@@ -99,7 +99,7 @@ struct I2cTester{
                 if(err.is_err()) break;
 
                 baud = baud + (baud >> 1);
-                delay(1);
+                clock::delay(1ms);
             }
 
             return baud;
@@ -249,11 +249,11 @@ void i2c_scanner_main(){
             //     founded_devices.push_back(std::forward<decltype(info)>(info));
             // });
 
-            delay(1);
-            // udelay(100);
+            clock::delay(1ms);
+            // clock::delay(100us);
         }
 
-        delay(10);
+        clock::delay(10ms);
 
         if(founded_devices.size()){
             DEBUG_PRINTS("Found", founded_devices.size(), " devices" );
@@ -267,7 +267,7 @@ void i2c_scanner_main(){
                         "|  Max baud is: ", baud, "Hz"
                     );
 
-                    delay(1);
+                    clock::delay(1ms);
                 }
                 // const Result res = Err{0};
                 // res.loc().expect("unknown bug");

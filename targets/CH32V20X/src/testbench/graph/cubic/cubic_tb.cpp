@@ -474,13 +474,13 @@ void cubic_main(void){
     }
 
     tftDisplayer.fill(ColorEnum::PINK);
-    delay(200);
+    clock::delay(200ms);
 	precompute_1();
 
 	float angle = 0;
 
 	while (1){
-		auto m = millis();
+		auto m = clock::millis();
 		precompute_2(angle += 4);
 		makeTriangle();
 
@@ -516,6 +516,6 @@ void cubic_main(void){
 
 			}
 		}
-		DEBUG_PRINTLN(millis() - m);
+		DEBUG_PRINTLN(clock::millis() - m);
 	}
 }

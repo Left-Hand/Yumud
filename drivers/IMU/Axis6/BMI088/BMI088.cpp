@@ -48,12 +48,12 @@ Result<void, Error> BMI088_Acc::verify_chip_id(){
 Result<void, Error> BMI088_Acc::validate(){
     return reset()
         | phy_.validate()
-        | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){delay(1);})
+        | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);})
         | set_acc_odr(AccOdr::_200Hz)
         | set_acc_bwp(AccBwp::Normal)
         | interrupts[0].enable_output(true)
         | interrupts[1].enable_output(true)
-        // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){delay(1);})
+        // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);})
     ;
 }
 

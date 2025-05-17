@@ -33,9 +33,9 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
 
 IResult<> ST7789::init(){
     if(const auto res = phy_.init(); res.is_err())          return res;
-    udelay(50);
+    clock::delay(50us);
     if(const auto res = write_command(0x01); res.is_err())  return res;
-    udelay(50);
+    clock::delay(50us);
 	if(const auto res = write_command(0x11); res.is_err())  return res;
 	if(const auto res = write_command(0x3A); res.is_err())  return res;
 	if(const auto res = write_data8(0x55); res.is_err())    return res;

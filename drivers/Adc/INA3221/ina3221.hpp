@@ -20,7 +20,7 @@
 //         ina.get_bus_volt(ch).unwrap(), 
 //         ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
 //     );
-//     delay(2);
+//     clock::delay(2ms);
 // }
 
 

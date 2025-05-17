@@ -43,18 +43,18 @@ using namespace ymd;
     ch2.init();
 
 
-    auto entry = millis();
-    while(millis() - entry < 3000){
+    auto entry = clock::millis();
+    while(clock::millis() - entry < 3000ms){
         // ch1.enable();
         // ch2.enable();
         ch1 = 0;
         ch2 = 0;
 
-        delay(20);
+        clock::delay(20ms);
     }
 
-    delay(200);
-    // delay(3000);
+    clock::delay(200ms);
+    // clock::delay(3000ms);
     // ch1.init();
     // ch2.init();
 
@@ -70,19 +70,19 @@ using namespace ymd;
     // real_t temp = base;
     // while(true){
         // ch2 = 0.2;
-        // delay(15);
+        // clock::delay(15ms);
 
         // temp = std::max(temp, base + (0.5 + 0.5 * sin((t - t0)/2)) * delta);
         // ch1 = temp;
         // ch2 = temp;
-        // delay(20);
+        // clock::delay(20ms);
 
-        // delay(10);
+        // clock::delay(10ms);
         // ch1 = 0.6;
         // ch2 = 0.6;
         // oc2 = 0.4;
         // logger.println(temp);
-        // delay(20);
+        // clock::delay(20ms);
     // }
 }
 

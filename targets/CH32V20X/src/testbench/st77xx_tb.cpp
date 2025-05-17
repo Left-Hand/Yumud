@@ -255,7 +255,7 @@ void st77xx_tb(hal::Spi & spi){
         // tftDisplayer.fill(RGB565::RED);
         // tftDisplayer.fill(RGB565::BLUE);
         // painter.drawString({0,0}, "Hello");
-        // delay(100);
+        // clock::delay(100ms);
         // tftDisplayer.fill(RGB565::YELLOW);
 
         painter.setColor(RGB565::GREEN);
@@ -275,11 +275,11 @@ void st77xx_tb(hal::Spi & spi){
         painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
 
-        // delay(300);
+        // clock::delay(300ms);
 
         // painter.drawHollowRect(Rect2i{12,12,60,30});
 
-        // delay(10);
+        // clock::delay(10ms);
         // const auto & blob = blobs[0];
         // printf("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
         // printf("%d\r\n", blobs.size());

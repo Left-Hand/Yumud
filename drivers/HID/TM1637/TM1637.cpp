@@ -12,9 +12,9 @@ Result<void, Error> TM1637_Phy::write_byte(const uint8_t data){
     for(uint8_t mask = 0x01; mask; mask <<= 1){
         scl_gpio_.clr();
         sda_gpio_.write(BoolLevel::from(mask & data));
-        udelay(3);
+        clock::delay(3us);
         scl_gpio_.set();
-        udelay(3);
+        clock::delay(3us);
     }
 
     return wait_ack();
@@ -24,21 +24,21 @@ Result<void, Error> TM1637_Phy::write_byte(const uint8_t data){
 Result<void, Error> TM1637_Phy::wait_ack(){
     sda_gpio_.inpu();
     scl_gpio_.clr();
-    udelay(5);
+    clock::delay(5us);
     scl_gpio_.set();
 
     bool ovt = false;
-    const auto m = micros();
+    const auto m = clock::micros();
     while(sda_gpio_.read() == HIGH){
-        if(micros() - m >= 100){
+        if(clock::micros() - m >= Microseconds(2)){
             ovt = true;
             break;
         }
-        udelay(1);
+        clock::delay(1us);
     }
 
     scl_gpio_.set();
-    udelay(2);
+    clock::delay(2us);
     scl_gpio_.clr();
     
     if(ovt){
@@ -54,10 +54,10 @@ Result<void, Error> TM1637_Phy::read_byte(uint8_t & data){
     for(uint8_t i = 0; i < 8; i++){
         scl_gpio_.clr();
         ret = ret >> 1;
-        udelay(30);
+        clock::delay(30us);
         scl_gpio_.set();
         ret = ret | ((sda_gpio_.read() == HIGH) ? 0x80 : 0x00);
-        udelay(30);
+        clock::delay(30us);
     }
 
     data = ret;
@@ -67,7 +67,7 @@ Result<void, Error> TM1637_Phy::read_byte(uint8_t & data){
 Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
     scl_gpio_.outod(HIGH);
     sda_gpio_.outod(HIGH);
-    udelay(2);
+    clock::delay(2us);
     sda_gpio_.clr();
     if(const auto res = write_byte(data);
         res.is_err()) return Err(hal::HalResult::SlaveAddrAckTimeout);
@@ -77,11 +77,11 @@ Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
 Result<void, Error> TM1637_Phy::iic_stop(){
     scl_gpio_.clr();
     sda_gpio_.outod();
-    udelay(2);
+    clock::delay(2us);
     sda_gpio_.clr();
-    udelay(2);
+    clock::delay(2us);
     scl_gpio_.set();
-    udelay(2);
+    clock::delay(2us);
     sda_gpio_.set();
 
     return Ok();

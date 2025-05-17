@@ -46,7 +46,7 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
     channel.transfer_mem2mem<char>(dst, src, sizeof(src));
     while(channel.pending()){
         logger.println(channel.pending());
-        delay(200);
+        clock::delay(200ms);
     }
 
 

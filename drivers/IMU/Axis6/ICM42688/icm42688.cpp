@@ -49,7 +49,7 @@ IResult<> ICM42688::init(){
 	if(const auto res = reset();
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-	delay(30);
+	clock::delay(30ms);
 
 	/*Gyr设置*/
 	if(const auto res = set_gyr_fs(GyrFs::_2000DPS);
@@ -70,7 +70,7 @@ IResult<> ICM42688::init(){
 	if(const auto res = phy_.write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
-	delay(30);
+	clock::delay(30ms);
 
 	
 	/*指定Bank0*/

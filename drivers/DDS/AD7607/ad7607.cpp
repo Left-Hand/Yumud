@@ -10,7 +10,7 @@ void AD7607::reset(void){
     /*! ___|-----|________  >= 50ns */
     rst_gpio.clr();
     rst_gpio.set();
-    delay(1);
+    clock::delay(1ms);
     rst_gpio.clr();
 }
  

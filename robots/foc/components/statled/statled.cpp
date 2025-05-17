@@ -43,7 +43,7 @@ void StatLed::run(){
             break;
     }
 
-    real_t uni = time() * real_t(100000 / period) * real_t(0.01);
+    real_t uni = clock::time() * real_t(100000 / period) * real_t(0.01);
     real_t ratio;
     switch(method){
         case Method::Saw:

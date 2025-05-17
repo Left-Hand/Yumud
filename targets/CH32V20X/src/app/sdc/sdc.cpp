@@ -21,7 +21,7 @@ void w25qxx_main(){
     spi.init(36_MHz);
     X25QXX w25{hal::SpiDrv{spi, spi_fd}, 1_MB};
     std::array<uint8_t, 8> arr;
-    delay(20);
+    clock::delay(20ms);
     arr = {1,1,4,5,1,4};
 
     scexpr size_t addr = 0;
@@ -33,6 +33,6 @@ void w25qxx_main(){
 
         w25.load(addr,arr.begin(), arr.size());
         DEBUG_PRINTLN(std::oct, arr);
-        delay(200);
+        clock::delay(200ms);
     }
 }

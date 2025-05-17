@@ -37,30 +37,30 @@
 
 //         // {
 //         //     i2sWs.clr();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //     for(int i = 16; i > 0; i--)
 //         //     {
 //         //         i2sSck.clr();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //         i2sSda = (data >> i) & 0x01;
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //        // digitalWrite(BCK, HIGH);
 //         //         i2sSck.set();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //     }
 //         //                     i2sSda.clr();
 //         //     for(int i = 16; i > 0; i--)
 //         //     {
 //         //         i2sSck.clr();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 
-//         //     // udelay(10);
+//         //     // clock::delay(10us);
 //         //         // digitalWrite(BCK, HIGH);
 //         //         i2sSck.set();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //     }
 //         //     i2sWs.set();
-//         //     udelay(10);
+//         //     clock::delay(10us);
 //         //     i2sWs.clr();
 //         // }
 
@@ -68,7 +68,7 @@
 
 
 //         logger.println(data_out);
-//         // udelay(100);
+//         // clock::delay(100us);
 //         Sys::Clock::reCalculateTime();
 //     }
 // }

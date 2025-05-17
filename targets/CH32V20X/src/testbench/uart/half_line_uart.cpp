@@ -32,6 +32,6 @@ void half_line_uart_main(){
         //     uart1.read1(chr);
         //     DEBUG_PRINT(int(chr));
         // }
-        delay(10);
+        clock::delay(10ms);
     }
 }

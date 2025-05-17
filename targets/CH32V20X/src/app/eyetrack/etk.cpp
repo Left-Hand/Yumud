@@ -133,7 +133,7 @@ using namespace etk;
 //         eye.render(painter);
 
 
-//         delay(20);
+//         clock::delay(20ms);
 //         painter.fill(ColorEnum::BLACK).unwrap();
 
 //         painter.setColor(ColorEnum::RED).unwrap();

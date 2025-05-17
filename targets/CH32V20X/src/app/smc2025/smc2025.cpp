@@ -113,7 +113,7 @@ void smc2025_main(){
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
         // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
         DEBUG_PRINTLN(millis(), qmc.read_mag().unwrap());
-        delay(20);
+        clock::delay(20ms);
     }
 
     // timer4.init(24000);
@@ -122,9 +122,9 @@ void smc2025_main(){
     // timer8.oc(1).init();
     // timer8.oc(2).init();
 
-    // delay(200);
+    // clock::delay(200ms);
 
-    // delay(200);
+    // clock::delay(200ms);
 
     // i2c.init(400000);
     // sccb.init(10000);

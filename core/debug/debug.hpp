@@ -47,7 +47,7 @@ __fast_inline void PANIC_NSRC(Args&& ... args) {
     ymd::DEBUGGER.set_indent(0);
     DEBUG_PRINTLN();
     DEBUG_PRINTLN("panicked: ");
-    delay(10);
+    clock::delay(10ms);
     sys::abort();
 }
 
@@ -58,7 +58,7 @@ __fast_inline bool ASSERT_NSRC(Expr &&expr, Args&& ... args) {
         ymd::DEBUGGER.set_indent(0);
         DEBUG_PRINTLN();
         DEBUG_PRINTLN("assert failed: ");
-        delay(10);
+        clock::delay(10ms);
         sys::abort();
     }
     return true;
@@ -75,7 +75,7 @@ struct DEBUG_SRC
 {    
 	DEBUG_SRC(Args &&... args, const std::source_location& loc = std::source_location::current()){
         DEBUG_PRINTS(std::forward<Args>(args)...);
-        delay(10);
+        clock::delay(10ms);
         
         {
             const auto guard = ymd::DEBUGGER.create_guard();
@@ -135,7 +135,7 @@ struct PANIC
 
         ymd::DEBUGGER.set_indent(1);
         DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
-        delay(10);
+        clock::delay(10ms);
         sys::abort();
 	}
 };

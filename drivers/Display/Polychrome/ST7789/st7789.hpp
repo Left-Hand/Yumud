@@ -118,9 +118,9 @@ public:
     }
 
     [[nodiscard]] IResult<> reset(){
-        delay(10);
+        clock::delay(10ms);
         res_gpio_.clr();
-        delay(10);
+        clock::delay(10ms);
         res_gpio_.set();
         return Ok();
     }

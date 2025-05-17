@@ -8,10 +8,16 @@
 
 namespace ymd::hal{
 
-class CaptureChannelConcept{
+class CaptureChannelIntf{
+    virtual Microseconds getPulseUs() const = 0;
+    virtual Microseconds getPeriodUs() const = 0;
+    virtual void init() = 0;
+};
+
+class CaptureChannelConcept:public CaptureChannelIntf{
 protected:
-    uint32_t pulse = 0;
-    uint32_t period = 0;
+    Microseconds pulse = 0us;
+    Microseconds period = 0us;
     const uint32_t unit;
     const bool double_edge;
 public:
@@ -23,9 +29,9 @@ public:
             // real_t period_value;
             // unit_value.value = _iq<16>(unit);
             // period_value.value = _iq<16>(period);
-            return unit / period;
+            return unit / period.count();
         }else{
-            return unit / period;
+            return unit / period.count();
         }
         //     float unit_value = unit;
         //     float period_value = period;
@@ -40,16 +46,12 @@ public:
             // pulse_value.value = _iq<16>(pulse);
             // period_value.value = _iq<16>(period);
             // return pulse_value/period_value;
-            return unit / period;
+            return unit / period.count();
 
         }else{
-            return pulse/period;
+            return pulse.count() / period.count();
         }
     }
-
-    virtual uint32_t getPulseUs() const = 0;
-    virtual uint32_t getPeriodUs() const = 0;
-    virtual void init() = 0;
 };
 
 class CaptureChannel:public CaptureChannelConcept{
@@ -59,7 +61,7 @@ class CaptureChannel:public CaptureChannelConcept{
 class CaptureChannelExti:public CaptureChannelConcept{
 protected:
     ExtiChannel instance;
-    uint32_t last_t;
+    Microseconds last_t;
     std::function<void(void)> cb;
 
     void update(){
@@ -68,17 +70,17 @@ protected:
             bool val = bool(instance.gpio->read());
 
             if(val == false){
-                uint32_t current_t = micros();
+                const auto current_t = clock::micros();
                 pulse = current_t - last_t;
                 last_t = current_t;
             }else{
-                uint32_t current_t = micros();
+                const auto current_t = clock::micros();
                 period = current_t - last_t + pulse;
                 last_t = current_t;
                 EXECUTE(cb);
             }
         }else{
-            uint32_t current_t = micros();
+            const auto current_t = clock::micros();
             period = current_t - last_t;
             last_t = current_t;
             EXECUTE(cb);
@@ -102,11 +104,11 @@ public:
         cb = _cb;
     }
 
-    uint32_t getPulseUs() const override{
+    Microseconds getPulseUs() const override{
         return pulse;
     }
 
-    uint32_t getPeriodUs() const override{
+    Microseconds getPeriodUs() const override{
         return period;
     }
 };

@@ -126,7 +126,7 @@ void curve_tb() {
 
         void setPosition(const Vector2_t<real_t> & pos){
             auto [x,y] = pos;
-            DEBUG_PRINTLN(x,y, sin(time()));
+            DEBUG_PRINTLN(x,y, sin(clock::time()));
         }
 
         void setScale(const Vector3 & scale){
@@ -136,12 +136,12 @@ void curve_tb() {
 
         Vector2_t<real_t> getPosition(){
             // DEBUG_PRINTLN
-            return Vector2_t<real_t>(1,0).rotated(time());
+            return Vector2_t<real_t>(1,0).rotated(clock::time());
         }
 
         operator real_t(){
             // DEBUG_PRINTLN("??")
-            return time();
+            return clock::time();
         }
     };
 
@@ -208,7 +208,7 @@ void curve_tb() {
 
     // for(auto & p : points) {
     //     DEBUG_PRINTLN(p);
-    //     delay(10);
+    //     clock::delay(10ms);
     // }
 
     // DEBUG_PRINTLN(get_y_by_x(points, 0.1_r));
@@ -232,9 +232,9 @@ void curve_tb() {
 
     // for(auto & p : rpoints) {
     //     DEBUG_PRINTLN(p);
-    //     delay(1);
+    //     clock::delay(1ms);
     // }
-    delay(10);
+    clock::delay(10ms);
     
     while(true){
         // DEBUG_PRINTLN(getter());
@@ -242,14 +242,14 @@ void curve_tb() {
         // setter = Vector2_t<real_t>(1,0).rotated(t);
 
         // DEBUG_PRINTLN(getter(), getter2());
-        // tw3.update(frac(time()));
+        // tw3.update(frac(clock::time()));
         // pos_setter({sin(time()), cos(time())});
 
         // tw2->update(fmod(t, tw2->period()));
         // tweener.update(fmod(t, tweener.period()));
         // DEBUG_PRINTLN(size_t(&Ball::setPosition));
-        tp->update(fmod(time(), tp->period()));
-        tp2->update(fmod(time(), tp2->period()));
+        tp->update(fmod(clock::time(), tp->period()));
+        tp2->update(fmod(clock::time(), tp2->period()));
         // DEBUG_PRINTLN(sizeof(decltype(tweener4)));P
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener)>));
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener4)>));
@@ -267,11 +267,11 @@ void curve_tb() {
         // setter = getter;
         // setter = Vector2_t<real_t>(getter);
         // setter(getter());
-        delay(10);
+        clock::delay(10ms);
     }
 
     // while(true){
     //     DEBUG_PRINTLN(millis());
-    //     delay(10);
+    //     clock::delay(10ms);
     // }
 }

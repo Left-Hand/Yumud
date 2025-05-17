@@ -37,9 +37,6 @@ namespace ymd::sys{
     }
 
     namespace clock{
-        void delay_ms(const uint32_t ms);
-        void delay_us(const uint32_t us);
-
         uint32_t get_system_freq();
         uint32_t get_apb1_freq();
         void set_apb1_freq(const uint32_t ferq);

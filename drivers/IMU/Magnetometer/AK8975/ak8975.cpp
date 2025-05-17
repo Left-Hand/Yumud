@@ -51,7 +51,7 @@ IResult<> AK8975::validate(){
     // (5) Read measurement data (HXL to HZH) 
     // (6) Write “0” to SELF bit of ASTC register
 
-    scexpr uint TIME_OUT_MS = 10;
+    scexpr auto TIME_OUT_MS = 10ms;
 
     
     {
@@ -75,10 +75,10 @@ IResult<> AK8975::validate(){
         res.is_err()) return res;
 
     //4
-    auto ms = millis();
+    auto ms = clock::millis();
     bool readed = false;
 
-    while(millis() - ms < TIME_OUT_MS){
+    while(clock::millis() - ms < TIME_OUT_MS){
         const auto res = this->is_busy();
         if(res.is_err()) return Err(res.unwrap_err());
 

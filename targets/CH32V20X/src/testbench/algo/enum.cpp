@@ -76,7 +76,7 @@ void enum_main(){
         //     return x * x + y * y;
         // };
 
-        const auto t = time();
+        const auto t = clock::time();
 
         // const auto s = sin<30>(t);
         // const auto c = cos<30>(t);
@@ -107,8 +107,8 @@ void enum_main(){
         const auto dyn_name = runtime_true() ? 
             magic::enum_item_name_v<Fruit, Fruit::MANGO> : magic::enum_item_name_v<Fruit, Fruit::BANANA>;
         DEBUG_PRINTLN(dyn_name);
-        delay(10);
-        // delay(10);
+        clock::delay(10ms);
+        // clock::delay(10ms);
     }
 
 

@@ -51,7 +51,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
 
             while(can.pending()){
                 logger.println("err", can.get_tx_errcnt(), can.get_rx_errcnt(), can.is_busoff(), (int)can.error());
-                delay(2);
+                clock::delay(2ms);
             }
 
             while(can.available()){
@@ -60,7 +60,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             }
 
             cnt++;
-            delay(200);
+            clock::delay(200ms);
             portC[13].toggle();
         }else{
             logger.println("ava", can.available());
@@ -72,7 +72,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             const auto msg_v = CanMsg::from_tuple(CanStdId(0), std::make_tuple(0x13,0x14));
             can.write(msg_v);
 
-            delay(200);
+            clock::delay(200ms);
             portC[14].toggle();
         }
     }

@@ -27,7 +27,7 @@ using namespace ymd::drivers;
 #define MEMORY_TB_CONTENT
 
 #define MEMORY_TB_ASSERT(x, s, a, b)\
-if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); PANIC();}\
+if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); clock::delay(1ms); PANIC();}\
 else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 
 struct TestData{
@@ -219,7 +219,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     sys::preinit();
 
     // logger.prints("ok");
-    delay(10);
+    clock::delay(10ms);
 
     if(true){
         using Cnt = size_t;
@@ -325,7 +325,7 @@ void flash_main(){
     // led.outpp();
     // while(true){
     //     DEBUG_PRINTLN(millis());
-    //     delay(100);
+    //     clock::delay(100ms);
     //     led.toggle();
     // }
     flash_tb(DEBUGGER);

@@ -240,7 +240,7 @@ private:
 //     }
 
 //     void process() {
-//         auto now = millis();
+//         auto now = clock::millis();
 //         for (auto it = active.begin(); it != active.end();) {
 //             auto& handle = *it;
 //             if (handle.done()) {
@@ -433,77 +433,20 @@ struct Singleton final{
     }
 };
 
-using namespace std::chrono_literals;
-static constexpr auto dur = 200ms;
-struct SystemClock final{
-    using rep = int64_t;
-    /// The period must be provided by the backend.
-    using period = std::ratio<1,1000>;
-    /// Alias for durations representable with this clock.
-    using duration = std::chrono::duration<rep, period>;
-    using time_point = std::chrono::time_point<SystemClock>;
-    /// The epoch must be provided by the backend.
-
-    /// The time points of this clock cannot decrease, however the time between
-    /// ticks of this clock may slightly vary due to sleep modes. The duration
-    /// during sleep may be ignored or backfilled with another clock.
-    static constexpr bool is_monotonic = true;
-    static constexpr bool is_steady = false;
-
-    /// The now() function may not move forward while in a critical section or
-    /// interrupt. This must be provided by the backend.
-    static constexpr bool is_free_running = false;
-
-    /// The clock must stop while in halting debug mode.
-    static constexpr bool is_stopped_in_halting_debug_mode = true;
-
-    /// The now() function can be invoked at any time.
-    static constexpr bool is_always_enabled = true;
-
-    /// The now() function may work in non-maskable interrupt contexts (e.g.
-    /// exception/fault handlers), depending on the backend. This must be provided
-    /// by the backend.
-    static constexpr bool is_nmi_safe = false;
-
-    /// This is thread and IRQ safe. This must be provided by the backend.
-    static time_point now() noexcept {
-        return time_point(duration(millis()));
-    }
-
-    /// This is purely a helper, identical to directly using std::chrono::ceil, to
-    /// convert a duration type which cannot be implicitly converted where the
-    /// result is rounded up.
-    template <class Rep, class Period>
-    static constexpr duration for_at_least(std::chrono::duration<Rep, Period> d) {
-        return std::chrono::ceil<duration>(d);
-    }
-
-    // /// Computes the nearest time_point after the specified duration has elapsed.
-    // ///
-    // /// This is useful for translating delay or timeout durations into deadlines.
-    // ///
-    // /// The time_point is computed based on now() plus the specified duration
-    // /// where a singular clock tick is added to handle partial ticks. This ensures
-    // /// that a duration of at least 1 tick does not result in [0,1] ticks and
-    // /// instead in [1,2] ticks.
-    // static time_point TimePointAfterAtLeast(duration after_at_least) {
-    //     return now() + after_at_least + duration(1);
-    // }
-};
 
 
 // Utility for async delay
 // Deferred<int> sleep(uint32_t ms) {
 auto sleep(uint32_t ms) {
     struct Awaiter {
-        uint32_t start_time;
-        uint32_t delay_ms;
+        Milliseconds start_time;
+        Milliseconds delay_ms;
 
-        Awaiter(uint32_t ms) : start_time(millis()), delay_ms(ms) {}
+        Awaiter(uint32_t ms) : start_time(clock::millis()), delay_ms(ms) {}
 
         bool await_ready() {
-            DEBUG_PRINTLN("mill", millis(), start_time);
-            return (millis() - start_time) >= delay_ms;
+            DEBUG_PRINTLN("mill", clock::millis(), start_time);
+            return (clock::millis() - start_time) >= delay_ms;
         }
 
         void await_suspend(std::coroutine_handle<> awaiting) {
@@ -513,13 +456,13 @@ auto sleep(uint32_t ms) {
         void await_resume() {}
 
         void reset(){
-            start_time = millis();
+            start_time = clock::millis();
         }
 
         // static void update() {
         // // Called periodically from main loop to resume timed-out coroutines
         // for (auto& awaiter : active_awaiters) {
-        //     if ((millis() - awaiter.start_time) >= awaiter.delay_ms) {
+        //     if ((clock::millis() - awaiter.start_time) >= awaiter.delay_ms) {
         //         awaiter.h.resume();
         //     }
         // }
@@ -620,7 +563,7 @@ void lazy_main() {
     portC[13].write(HIGH);  
 
     // while(true){
-    //     DEBUG_PRINTS(millis());
+    //     DEBUG_PRINTS(clock::millis());
     // }
 
     // const auto res = reply(42).get();
@@ -639,13 +582,13 @@ void lazy_main() {
             co_await (sleep(200));
             // co_await sleep_task;
             // sleep_task.reset();
-            // delay(200);
+            // clock::delay(200ms);
             portC[13].write(LOW);
             // co_await sleep_task;
             // sleep_task.reset();
             co_await (sleep(200));
             // co_await sleep(200);
-            // delay(200);
+            // clock::delay(200ms);
             // co_await 0;
             co_yield 0;
         }
@@ -655,7 +598,7 @@ void lazy_main() {
     while(true){
         // task.get();
         task.resume();
-        DEBUG_PRINTLN(millis());
+        DEBUG_PRINTLN(clock::millis());
     }
 
     // start_blink(); // Initialize blinking
@@ -663,11 +606,11 @@ void lazy_main() {
     // // Main event loop
     // while(true) {
     //     Singleton<CoroutineManager>::get().process();
-    //     delay(1); // Prevent CPU spinning
+    //     clock::delay(1ms); // Prevent CPU spinning
     // }
 
     // while (true) {
-    //     uint32_t now = millis();
+    //     uint32_t now = clock::millis();
 
     //     for (auto it = g_suspended_coroutines.begin(); it != g_suspended_coroutines.end();) {
     //         auto& coro = *it;
@@ -679,7 +622,7 @@ void lazy_main() {
     //         }
     //     }
 
-    //     delay(1); // Prevent tight loop from consuming all CPU
+    //     clock::delay(1ms); // Prevent tight loop from consuming all CPU
     // }
     while(true);
 }

@@ -21,18 +21,18 @@ struct AppConfig{
     GimbalPlanner::Config gimbal_cfg;
 };
 
-class WorldFactoryBase{
+class HwPortBase{
 public:
     static auto make_mock_servo(){
         return tests::MockServo();
     }
 };
 
-class WorldFactory:private WorldFactoryBase{
+class HwPort:private HwPortBase{
 public:
     using Config = AppConfig;
 
-    WorldFactory(const Config & cfg_):cfg(cfg_){;}
+    HwPort(const Config & cfg_):cfg(cfg_){;}
 
     const Config cfg;
 
@@ -75,7 +75,7 @@ public:
     }
 
     auto time(){
-        return ymd::time();
+        return clock::time();
     }
 
     void ready(){
@@ -220,7 +220,7 @@ void nuedc_2023e_main(){
 
     const auto cfg = make_cfg();
 
-    WorldFactory world{cfg};
+    HwPort world{cfg};
     world.setup();
 
     auto servo_yaw = world.make_yaw_servo();
@@ -293,9 +293,9 @@ void nuedc_2023e_main(){
         // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
         // const auto u = Vector2{6 * x, 0};
 
-        const auto u0 = micros();
+        const auto u0 = clock::micros();
         td.update(u);
-        const auto u1 = micros();
+        const auto u1 = clock::micros();
         DEBUG_PRINTLN(u, td.get()[0][0], td.get()[1][0], td.get()[2], u1 - u0);
     };
 
@@ -337,9 +337,9 @@ void nuedc_2023e_main(){
         }};
 
 
-        const auto u0 = micros();
+        const auto u0 = clock::micros();
         cs.update(u);
-        const auto u1 = micros();
+        const auto u1 = clock::micros();
 
         leso.update(cs.get_states()[0], u);
         DEBUG_PRINTLN(
@@ -394,7 +394,7 @@ void nuedc_2023e_main(){
         // const auto p0 = CLAMP2(10 * tpzpu(t/4), 5);
         // const auto p0 = 30 * sin(t);
 
-        // const auto u0 = micros();
+        // const auto u0 = clock::micros();
         test_gpio.clr();
 
         cs.update(p0);
@@ -416,7 +416,7 @@ void nuedc_2023e_main(){
         motor.update(u + dist_inj - leso.get_disturbance());
         // motor.update(u + dist_inj - leso.get_disturbance());
         leso.update(motor.get()[1], u);
-        // const auto u1 = micros();
+        // const auto u1 = clock::micros();
         test_gpio.set();
 
         // DEBUG_PRINTLN(
@@ -429,7 +429,7 @@ void nuedc_2023e_main(){
         // exe = u1 - u0;
     };
 
-    delay(20);
+    clock::delay(20ms);
     // bindSystickCb([&]{
     //     const auto t = time();
     //     // test_td(t);
@@ -446,7 +446,7 @@ void nuedc_2023e_main(){
     });
 
     while(true){
-        delay(1);
+        clock::delay(1ms);
 
         DEBUG_PRINTLN(
             //     p0, p, v, u,
@@ -463,6 +463,6 @@ void nuedc_2023e_main(){
         // t += 0.001_r;
         // test_td(t);
         // DEBUG_PRINTLN(millis());
-        // delay(1);
+        // clock::delay(1ms);
     }
 }

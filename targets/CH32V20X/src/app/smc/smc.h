@@ -205,7 +205,7 @@ public:
             temp_gravity += Vector3(mpu.read_acc());
             temp_gyr_offs += Vector3(mpu.read_gyr());    
             temp_magent += Vector3(qml.read_mag());
-            delay(5);
+            clock::delay(5ms);
         }
 
         Vector3 g = temp_gravity / cali_times;

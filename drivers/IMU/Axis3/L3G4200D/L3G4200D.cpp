@@ -179,7 +179,7 @@ IResult<> L3G4200D::calibrate(uint8_t samples){
     //     sigma[1] += delta[1] * delta[1];
     //     sigma[2] += delta[2] * delta[2];
 
-    //     delay(5);
+    //     clock::delay(5ms);
     // }
     // // Calculate delta
     // delta[0] = sum[0] / samples;

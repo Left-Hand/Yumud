@@ -24,7 +24,7 @@ IResult<> IST8310::init(){
     if(const auto res = reset();
         res.is_err()) return res;
 
-    delay(10);
+    clock::delay(10ms);
 
     if(const auto res = validate();
         res.is_err()) return res;

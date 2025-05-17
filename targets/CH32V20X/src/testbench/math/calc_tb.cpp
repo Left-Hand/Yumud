@@ -41,7 +41,7 @@ static void getline(OutputStream & logger, string & str){
     //         }
     //     }
     //     else{
-    //         delay(400);
+    //         clock::delay(400ms);
     //         logger.print(' ');
     //     }
     // }

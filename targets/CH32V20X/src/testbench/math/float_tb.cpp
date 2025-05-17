@@ -11,14 +11,14 @@ void float_main(){
     DEBUGGER_INST.init(576000, CommStrategy::Blocking);
 
     while(true){
-        bf16 i = sin(time());
+        bf16 i = sin(clock::time());
         bf16 o = i;
 
-        auto mic = micros();
+        const auto mic = clock::micros();
         for(size_t _ = 0; _ < 10000; _++){
             o = bf16(float(sin(real_t::from(float(o)))));
         }
-        auto dur = micros() - mic;
+        const auto dur = clock::micros() - mic;
         DEBUG_PRINTLN(real_t(i), real_t(o), dur);
     }
 }

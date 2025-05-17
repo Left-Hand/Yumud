@@ -90,7 +90,7 @@ void Flash::erase_page(const Address vaddr){
     const auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     // BREAKPOINT
-    // delay(2);
+    // clock::delay(2ms);
     // DEBUG_VALUE(phyaddr, "erase")
     // FLASH_ErasePage_Fast(phyaddr);
     FLASH_ErasePage(phyaddr);
@@ -158,7 +158,7 @@ void Flash::revert_clock(){
 void Flash::entry_store(){
     config_clock();
     // Systick_Init();
-    // delay(1);
+    // clock::delay(1ms);
 }
 
 void Flash::exit_store(){

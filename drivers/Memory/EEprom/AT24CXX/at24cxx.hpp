@@ -18,10 +18,10 @@ private:
 
     hal::HalResult read_pool(const size_t addr, uint8_t * data, const size_t len);
 protected:
-    scexpr uint32_t min_duration_ms = 6;
+    scexpr auto min_duration_ms = 6ms;
 
     hal::I2cDrv i2c_drv_;
-    uint32_t last_entry_ms = 0;
+    Milliseconds last_entry_ms = 0ms;
 
     void store_bytes(const Address loc, const void * data, const Address len) override;
 
@@ -55,13 +55,13 @@ protected:
 public:
     void init() override{};
 
-    bool busy() override{return last_entry_ms + min_duration_ms - millis() > 0;}
+    bool busy() override{return last_entry_ms + min_duration_ms - clock::millis() > 0ms;}
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
 private:
     void wait_for_free();
 
-    void update_entry_ms(){last_entry_ms = millis();}
+    void update_entry_ms(){last_entry_ms = clock::millis();}
 };
 
 #define AT24CXX_DEF_TEMPLATE(name, size, pagesize)\

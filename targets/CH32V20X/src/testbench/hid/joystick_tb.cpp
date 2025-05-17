@@ -29,8 +29,8 @@ void joystick_tb(OutputStream & logger){
         // logger.println("??");
         joystick.update();
         logger.println(joystick.getLeftJoystick(),joystick.getRightJoystick(), joystick.getLeftDirection(), (uint8_t)joystick.id());
-        delay(10);
-        // delay(100);
+        clock::delay(10ms);
+        // clock::delay(100ms);
             // (uint8_t)joystick.id(), joystick.valueof(Event::LX));
     }
     #endif

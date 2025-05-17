@@ -34,7 +34,7 @@ void M3508::reset(){
 
 
 void M3508::tick(){
-    uint32_t this_micros = micros();
+    const auto this_micros = clock::micros();
     micros_delta =this_micros - last_micros; 
     last_micros = this_micros;
     real_t expect_curr = 0;

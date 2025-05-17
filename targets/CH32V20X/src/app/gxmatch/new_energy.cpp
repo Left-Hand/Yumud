@@ -36,16 +36,16 @@ static constexpr size_t STAT_COUNT = 16;
 static constexpr size_t STR_LEN = 16;
 
 //防止短期内多次触发 设定最小死区时间
-static constexpr uint32_t DETECT_DEAD_ZONE_MS = 300;
-static constexpr size_t RESPONSE_DELAY_MS = 0;
+static constexpr auto DETECT_DEAD_ZONE = 300ms;
+static constexpr auto RESPONSE_DELAY = 0ms;
 
 static constexpr uint8_t U13T_HEADER_TOKEN = 0x7f;
 static constexpr size_t U13T_MAX_PAYLOAD_SIZE = 32;
 
-static constexpr size_t BLINK_DUR_MS = 60;
+static constexpr auto BLINK_DUR = 60ms;
 static constexpr size_t POWERON_BLINK_TIMES = 2;
-static constexpr real_t LED_SUSTAIN_TIME_S = 0.5_r;
-static constexpr real_t LED_BLANKING_TIME_S = 0.1_r;
+static constexpr auto LED_SUSTAIN = 500ms;
+static constexpr auto LED_BLANKING = 100ms;
 
 static constexpr size_t MOTOR_ISR_FREQ = 5000;
 static constexpr real_t SAMPLE_RES = 0.005_r;
@@ -163,22 +163,22 @@ namespace gxm{
 
 class DelayedSemphr final{
 public:
-    DelayedSemphr(const uint32_t delay_ms):
+    DelayedSemphr(const Milliseconds delay_ms):
         delay_ms_(delay_ms){;}
     void give(){
-        last_millis_ = Some(millis());
+        last_millis_ = Some(Milliseconds(clock::millis()));
     }
 
     bool take(){
-        if(last_millis_.is_some() and last_millis_.unwrap() + delay_ms_ < millis()){
+        if(last_millis_.is_some() and last_millis_.unwrap() + delay_ms_ < clock::millis()){
             last_millis_ = None;
             return true;
         }
         return false;
     }
     private:
-        uint32_t delay_ms_ = 0;
-        Option<uint32_t> last_millis_ = None;
+        Milliseconds delay_ms_ = 0ms;
+        Option<Milliseconds> last_millis_ = None;
 };
 
 struct StationName final{
@@ -508,7 +508,7 @@ private:
     Option<StationName> last_sta_ = None;
 
     //上次播放的时间 提供死区参考
-    uint32_t last_detected_ms_ = 0;
+    Milliseconds last_detected_ms_ = 0ms;
 
     class FrameDecoder final{
     public:
@@ -563,7 +563,7 @@ private:
     };
 
     FrameDecoder frame_decoder_{};
-    DelayedSemphr semphr_{RESPONSE_DELAY_MS};
+    DelayedSemphr semphr_{RESPONSE_DELAY};
 
     Option<StationName> match_context(std::span<const uint8_t, 16> data) const {
         return StationName::from_gbk(data);
@@ -591,8 +591,8 @@ private:
         }else if(is_identity_payload(payload)){
             const auto line = (std::span(payload).subspan<9,16>());
 
-            if(millis() > last_detected_ms_ + DETECT_DEAD_ZONE_MS){
-                last_detected_ms_ = millis();
+            if(clock::millis() > last_detected_ms_ + DETECT_DEAD_ZONE){
+                last_detected_ms_ = clock::millis();
                 last_sta_ = match_context(line);
             }
         }
@@ -646,9 +646,9 @@ public:
     void blink(const size_t times){
         for(size_t i = 0; i < times; i++){
             on();
-            delay(BLINK_DUR_MS);
+            clock::delay(BLINK_DUR);
             off();
-            delay(BLINK_DUR_MS);
+            clock::delay(BLINK_DUR);
         }
     }
 
@@ -675,9 +675,9 @@ public:
 
     void process(const real_t t){
         if(!invoke_t_.is_some()) return;
-        const auto dt = t - invoke_t_.unwrap();
-        if(dt < LED_BLANKING_TIME_S) led_.off();
-        else if(dt > LED_SUSTAIN_TIME_S) led_.off();
+        const auto dt = Milliseconds(uint32_t((t - invoke_t_.unwrap()) * 1000));
+        if(dt < LED_BLANKING) led_.off();
+        else if(dt > LED_SUSTAIN) led_.off();
         else led_.on();
     }
 private:
@@ -760,16 +760,16 @@ void app(){
 
     
     bindSystickCb([&]{
-        const auto t = time();
+        const auto t = clock::time();
         motor_task.process(t);
     });
     
     gxm::StationDict<bool> played{};
     DEBUG_PRINTLN("app start");
-    delay(10);
+    clock::delay(10ms);
 
     while(true){
-        const auto t = time();
+        const auto t = clock::time();
 
         boardcast_task.process(t);
         detect_task.process(t);
@@ -788,7 +788,7 @@ void app(){
 
         DEBUG_PRINTLN(motor_task.get_current(), motor_task.get_duty());
 
-        delay(1);
+        clock::delay(1ms);
     }
 }
 

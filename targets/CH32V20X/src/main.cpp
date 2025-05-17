@@ -84,7 +84,7 @@ int main(){
     // lt8920_main();
     // ma730_main();
     // bmi160_main();
-    // delay(200);
+    // clock::delay(200ms);
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);

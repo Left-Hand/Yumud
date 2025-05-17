@@ -41,7 +41,7 @@ IResult<> MMC5983::init(){
     if(const auto res = validate();
         res.is_err()) return res;
 
-    delay(1);
+    clock::delay(1ms);
 
 
     if(const auto res = enable_mag_meas(EN);
@@ -78,7 +78,7 @@ IResult<> MMC5983::reset(){
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
     reg.sw_rst = 0;
-    delay(1);
+    clock::delay(1ms);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
     
@@ -180,12 +180,12 @@ template<typename Fn>
 static auto do_setreset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
     if(const auto res = std::forward<Fn>(fn)(EN);
         res.is_err()) return Err(res.unwrap_err());
-    for(auto m = millis(); ;){
+    for(auto m = clock::millis(); ;){
         if(const auto res = imu.is_mag_meas_done(); 
             res.is_err()) return Err(res.unwrap_err());
         else if(res.unwrap() == true)
             break;
-        if(millis() - m > 1000) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
+        if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
     }
     if(const auto res = imu.update();
         res.is_err()) return Err(res.unwrap_err());

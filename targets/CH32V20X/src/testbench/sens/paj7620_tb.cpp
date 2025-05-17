@@ -27,7 +27,7 @@ void paj7620_main(){
     paj.init();
 
     while(true){
-        delay(100);
+        clock::delay(100ms);
         paj.update();
 
         #if UART_DEST == UART_DEST_FPGA

@@ -64,7 +64,7 @@ void pfm_zvs_main(){
 
 
     while(true){
-        const auto t = time();
+        const auto t = clock::time();
         const auto st = sinpu(t * 100);
         pwm_p.set_duty(st * 0.4_r + 0.5_r);
 
@@ -76,7 +76,7 @@ void pfm_zvs_main(){
         timer.set_deadzone_ns(dead_zone_ns);
         DEBUG_PRINTLN(arr);
 
-        udelay(300);
+        clock::delay(300us);
         
     }    
 }

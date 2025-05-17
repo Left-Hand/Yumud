@@ -39,7 +39,7 @@ void can_ring_main(){
             // DEBUG_PRINTLN(tx_msg);
         }
 
-        delay(100);
+        clock::delay(100ms);
 
         if(can.available()){
             while(can.available()){

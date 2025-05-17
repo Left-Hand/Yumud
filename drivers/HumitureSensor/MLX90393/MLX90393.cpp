@@ -327,7 +327,7 @@ IResult<Vector3_t<q24>> MLX90393::read_data() {
   // tconv = f(OSR, DIG_FILT, OSR2, ZYXT)
   // For now, using Table 18 from datasheet
   // Without +10ms delay measurement doesn't always seem to work
-    delay(int(mlx90393_tconv[_dig_filt][_osr] + 10));
+    clock::delay(Milliseconds(uint32_t(mlx90393_tconv[_dig_filt][_osr] + 10)));
     return read_measurement();
 }
 
@@ -374,7 +374,7 @@ IResult<> MLX90393_Phy::transceive(std::span<uint8_t> rx_pbuf, std::span<const u
     //     if(const auto res = i2c_drv_->write(txbuf, txlen)) ; res.is_err())
     //     return MLX90393_STATUS_ERROR;
     //     }
-    //     delay(interdelay);
+    //     clock::delay(interdelayms);
 
     //     /* Read status byte plus any others */
     //     if(const auto res = i2c_drv_->read(rxbuf2, rxlen + 1)) ; res.is_err())
@@ -392,7 +392,7 @@ IResult<> MLX90393_Phy::transceive(std::span<uint8_t> rx_pbuf, std::span<const u
     //     for (i = 0; i < rxlen; i++) {
     //     rxbuf[i] = rxbuf2[i + 1];
     //     }
-    //     delay(interdelay);
+    //     clock::delay(interdelayms);
     // }
 
     // /* Mask out bytes available in the status response. */

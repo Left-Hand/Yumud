@@ -100,13 +100,13 @@ void rpc_main(){
         // res->call(DEBUGGER, {{frac(t)}, {t}});
         // p->call(DEBUGGER, {});
         // DEBUG_PRINTLN("")
-        // delay(10);
+        // clock::delay(10ms);
         // auto & body = *res;
 
         // res->call(DEBUGGER, rpc::Params{rpc::CallParam{t}, rpc::CallParam{t}});
         // std::vector params_holder = {rpc::CallParam{"b"}, rpc::CallParam{t}};
 
-        delay(1);
+        clock::delay(1ms);
         // DEBUG_PRINTLN(res, sizeof(res));
     }
 }   

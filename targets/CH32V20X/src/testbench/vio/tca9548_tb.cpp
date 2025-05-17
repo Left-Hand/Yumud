@@ -35,14 +35,14 @@ void tca9548_main()
 
     auto mpu = drivers::MPU6050{act_i2c};
     
-    !+mpu.init();
+    mpu.init().examine();
 
 
     while(true){
-        !+mpu.update();
-        DEBUG_PRINTLN(millis(), mpu.read_acc().unwrap());
-        DEBUG_PRINTLN(millis(), tca.validate());
-        delay(20);
+        mpu.update().examine();
+        DEBUG_PRINTLN(clock::millis(), mpu.read_acc().unwrap());
+        DEBUG_PRINTLN(clock::millis(), tca.validate());
+        clock::delay(20ms);
     }
 
 }

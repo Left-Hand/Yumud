@@ -41,7 +41,7 @@ void ak8963_tb(hal::I2c & i2c){
 
     while(true){
         aku.update().unwrap();
-        delay(5);
+        clock::delay(5ms);
         DEBUG_PRINTLN_IDLE(aku.read_mag().unwrap());
     }
     while(true);
@@ -91,7 +91,7 @@ void mpu6500_tb(hal::I2c & i2c){
 
     hal::timer1.init(200);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
-        !+mpu.update();
+        mpu.update().examine();
 
         #ifdef MAG_ACTIVATED
         aku.update().unwrap();
@@ -109,7 +109,7 @@ void mpu6500_tb(hal::I2c & i2c){
         //     aku.read_mag().unwrap()
         // );
 
-        const uint32_t begin_m = micros();
+        const auto begin_m = clock::micros();
 
         // mahony.update(
         //     mpu.read_gyr().unwrap(), 
@@ -123,7 +123,7 @@ void mpu6500_tb(hal::I2c & i2c){
             mpu.read_acc().unwrap()
         );
             
-        const uint32_t end_m = micros();
+        const auto end_m = clock::micros();
         // DEBUG_PRINTLN(fusion.quat());
         // DEBUG_PRINTLN(Basis_t<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
         // DEBUG_PRINTLN(mahony.result());
@@ -148,7 +148,7 @@ void mpu6050_main(){
     i2c.init(400_KHz);
     // i2c.init();
 
-    delay(200);
+    clock::delay(200ms);
 
     mpu6050_tb(i2c);
     // mpu6500_tb(i2c);

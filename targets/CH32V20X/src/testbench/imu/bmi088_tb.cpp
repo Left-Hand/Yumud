@@ -47,7 +47,7 @@ static void bmi088_tb(hal::Spi & spi){
     hal::timer1.init(CALC_FREQ_HZ);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
 
-        const uint32_t begin_m = micros();
+        const auto begin_m = clock::micros();
 
         
         mahony.update(
@@ -55,7 +55,7 @@ static void bmi088_tb(hal::Spi & spi){
             acc_sensor.read_acc().unwrap()
         );
             
-        const uint32_t end_m = micros();
+        const auto end_m = clock::micros();
 
         DEBUG_PRINTLN(
             mahony.result(), 
@@ -71,7 +71,7 @@ void bmi088_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
-    delay(200);
+    clock::delay(200ms);
 
     spi1.init(9_MHz);
     bmi088_tb(hal::spi1);

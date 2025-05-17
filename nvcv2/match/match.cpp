@@ -37,14 +37,14 @@ int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi, const real
 int Matcher::number(const Image<Binary> & src, const Rect2i & roi){
     const auto tmp_size = roi.size;
 
-    auto begin = millis();
+    const auto begin = clock::millis();
     for(size_t i = 0; i < N; i++){
         Image<Binary> tmp = Image<Binary>::load_from_buf(digit_bina_images[i], tmp_size);
         ymd::nvcv2::Pixels::inverse(tmp);
         result[i] = ymd::nvcv2::Match::template_match(src, tmp, roi.position);
     }
 
-    auto elp = millis() - begin;
+    const auto elp = clock::millis() - begin;
     for(const auto & item : result){
         DEBUGGER << item << ',';
     }

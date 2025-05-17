@@ -88,9 +88,9 @@ void gui_main(){
     led.outpp();
     // while(true){
     //     led = true;
-    //     delay(200);
+    //     clock::delay(200ms);
     //     led = false;
-    //     delay(200);
+    //     clock::delay(200ms);
     // }
 
     DEBUGGER_INST.init(576000);
@@ -207,12 +207,12 @@ void gui_main(){
 
     while(true){
         renderer.bind(img);
-        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
+        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
         renderer.draw_rect(Rect2i(20, 0, 20, 40));
 
         tftDisplayer.put_texture(img.rect(), img.get_data());
-        DEBUG_PRINTLN(millis());
+        DEBUG_PRINTLN(clock::millis());
     }
 }
 
@@ -249,19 +249,19 @@ void gui_main(){
         // auto sketch = make_image<Grayscale>(camera.size()/2);
         // auto img = Shape::x2(camera);
         // tftDisplayer.puttexture(img.get_view(), img.get_data());
-        // delay(10);
+        // clock::delay(10ms);
         // #endif
 
 
         // // DEBUG_PRINTLN(millis(), micros(), t);
         // // uart2.println(millis(), micros(), t, nanos());
-        // // delay(1);
-        // // udelay(180);
-        // // udelay(380);
-        // // delay(1);
+        // // clock::delay(1ms);
+        // // clock::delay(180us);
+        // // clock::delay(380us);
+        // // clock::delay(1ms);
         // // if(millis() > 10000) Sys::Misc::reset();
         // // while(uart7.pending());
-        // // udelay(500);
+        // // clock::delay(500us);
 
         // #define GUI_TB
         // #ifdef GUI_TB
@@ -281,7 +281,7 @@ void gui_main(){
         // opt.render(painter);
 
 
-        // // delay(200);
+        // // clock::delay(200ms);
         // // painter.fill(ColorEnum::RED);
         // // auto m = micros();
         // // painter.fill(ColorEnum::GREEN);
@@ -303,8 +303,8 @@ void gui_main(){
         // painter.drawLine({30,20}, {80,50});
         // painter.drawLine({40,40}, {10,50});
         // // painter.drawLine({20,20}, {90,210});
-        // delay(20);
+        // clock::delay(20ms);
         // tftDisplayer.fill(ColorEnum::BLACK);
-        // delay(20);
+        // clock::delay(20ms);
         // tftDisplayer.fill(ColorEnum::BLACK);
         // #endif

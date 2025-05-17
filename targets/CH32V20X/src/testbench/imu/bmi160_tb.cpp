@@ -34,11 +34,11 @@ void bmi160_main(){
     while(true){
         // auto pos = ma730.getLapPosition();
 
-        ledr = BoolLevel::from((millis() % 200) > 100);
-        ledb = BoolLevel::from((millis() % 400) > 200);
-        ledg = BoolLevel::from((millis() % 800) > 400);
+        ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
+        ledb = BoolLevel::from((clock::millis() % 400).count() > 200);
+        ledg = BoolLevel::from((clock::millis() % 800).count() > 400);
 
-        delay(20);
+        clock::delay(20ms);
         bmi.update().examine();
         Vector3_t<real_t> acc = bmi.read_acc().unwrap();
         acc.x = acc.x >> 10;

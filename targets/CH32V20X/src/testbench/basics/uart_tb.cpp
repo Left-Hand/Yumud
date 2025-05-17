@@ -36,7 +36,7 @@ using namespace ymd;
             }
         }
         else{
-            delay(400);
+            clock::delay(400ms);
             logger.print(' ');
         }
     }
@@ -52,13 +52,13 @@ using namespace ymd;
 
     uart.bind_post_tx_cb([&](){
         tx_led.set();
-        delay(1);
+        clock::delay(1ms);
         tx_led.clr();
     });
 
     uart.bind_post_rx_cb([&](){
         rx_led.set();
-        delay(1);
+        clock::delay(1ms);
         rx_led.clr();
     });
 
@@ -68,9 +68,9 @@ using namespace ymd;
             char chr;
             uart.read1(chr);
             uart.write1(chr);
-            delay(1);
+            clock::delay(1ms);
         }
-        delay(300);
+        clock::delay(300ms);
         tx_led.clr();
         DEBUG_PRINTLN("noth", uart.available());
         tx_led.set();

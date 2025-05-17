@@ -32,9 +32,9 @@ using namespace ymd;
 #define FIFO_FLAG flag_reg.fifoFlag
 
 
-void LT8920::delayT3(){udelay(1);}
+void LT8920::delayT3(){clock::delay(1us);}
 
-void LT8920::delayT5(){udelay(1);}
+void LT8920::delayT5(){clock::delay(1us);}
 
 
 bool LT8920::validate(){
@@ -274,9 +274,9 @@ void LT8920::readBlock(uint8_t * data, uint8_t len){
 void LT8920::reset(){
     if(nrst_gpio){
         nrst_gpio->outpp(LOW);
-        delay(20);
+        clock::delay(20ms);
         nrst_gpio->set();
-        delay(20);
+        clock::delay(20ms);
     }
 }
 
@@ -289,9 +289,9 @@ void LT8920::init(){
 
     fifo_ptr_reg = 0;
 
-    // delay(5);
+    // clock::delay(5ms);
     // setBrclkSel(BrclkSel::Mhz12);
-    // delay(5);
+    // clock::delay(5ms);
     // enableRssi();
     // enableAutoAck();
     // setSyncWordBitsgth(SyncWordBits::_32);

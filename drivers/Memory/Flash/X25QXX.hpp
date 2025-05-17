@@ -2,6 +2,8 @@
 
 
 #include "core/io/regs.hpp"
+#include "core/clock/clock.hpp"
+
 #include "concept/storage.hpp"
 #include "concept/jedec.hpp"
 
@@ -104,7 +106,7 @@ protected:
 
     void write_page(const Address addr, const uint8_t * data, size_t len);
 
-    bool wait_for_free(size_t timeout);
+    bool wait_for_free(Milliseconds timeout);
 
     bool is_large_chip(){return capacity_ > 0x1000000;}
 
@@ -132,7 +134,7 @@ public:
     bool busy() override;
 
 
-    void enableWrite(const bool en = true){
+    void enable_write(const bool en = true){
         if(en){
             write_byte(Command::WriteEnable);
         }else{
@@ -150,7 +152,7 @@ public:
         return JedecStorageType(jedec_id.memory_type);
     }
 
-    size_t getDeviceCapacity(){
+    size_t get_device_capacity(){
         update_jedec_id();
         return 1 << jedec_id.capacity;
     }

@@ -74,7 +74,7 @@ __inline Result<void, Error> retry(const size_t times, Fn && fn){
 
 template<typename Fn>
 __inline Result<void, Error> wait(const size_t timeout, Fn && fn){
-    return retry(timeout, std::forward<Fn>(fn), [](){delay(1);});
+    return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
 }
 
 }

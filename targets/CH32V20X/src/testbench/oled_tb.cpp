@@ -51,7 +51,7 @@ public:
 
     void render(){
         frame_.fill(0);
-        painter_.draw_args({0,0}, millis()).unwrap();
+        painter_.draw_args({0,0}, clock::millis()).unwrap();
 
         String str;
 
@@ -132,7 +132,7 @@ static void oled_tb(){
 
     key_left.init();
     key_right.init();
-    delay(100);
+    clock::delay(100ms);
 
     // I2cSw i2c{portB[13], portB[15]};
     I2cSw i2c{SCL_GPIO, SDA_GPIO};
@@ -174,10 +174,10 @@ static void oled_tb(){
 
         painter.draw_hollow_rect(view).unwrap();
         painter.draw_fx(view.shrink(6), [&](const real_t x){
-            return sinpu(4 * x + time()) * 0.5_r + 0.5_r;
+            return sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
         }).unwrap();
 
-        painter.draw_args({0, 52}, millis()).unwrap();
+        painter.draw_args({0, 52}, clock::millis()).unwrap();
 
         if(const auto res = oled.update(); res.is_err())
             DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());

@@ -69,7 +69,7 @@ void lt8920_main(){
             // DEBUG_PRINTLN(lt.isRfSynthLocked());
 
             lt.writeBlock((const uint8_t *)src.c_str(), src.length());
-            delay(200);
+            clock::delay(200ms);
             // DEBUG_PRINTLN(src, lt.receivedAck());
         }
     }

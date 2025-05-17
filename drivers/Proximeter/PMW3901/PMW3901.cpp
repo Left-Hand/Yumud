@@ -162,7 +162,7 @@ Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, c
 //         pixel = pixel << 2; //push left to 7:2
 //         pixel += (b & MASK); //set lower 2 from b to 1:0
 //         img[count++] = Grayscale(pixel); //put temp value in fbuffer array
-//         //udelay(100);
+//         //clock::delay(100us);
 //         }
 //     }
 
@@ -259,7 +259,7 @@ Result<void, Error> PMW3901::init() {
         res.is_err()) return res; 
 
 
-    delay(5);
+    clock::delay(5ms);
     PMW3901_ASSERT(validate().expect("PMW3901 not found!"), "PMW3901 verify failed!");
 
     if(const auto res = update();
@@ -344,7 +344,7 @@ Result<void, Error> PMW3901::init() {
 
     if(const auto res = write_list(std::span(INIT_LIST1));
         res.is_err()) return res;
-    delay(10);
+    clock::delay(10ms);
 
     if(const auto res = write_list(std::span(INIT_LIST2));
         res.is_err()) return res;   

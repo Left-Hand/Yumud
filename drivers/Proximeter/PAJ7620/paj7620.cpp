@@ -55,9 +55,9 @@ void PAJ7620::select_bank(uint8_t bank) {
 // void PAJ7620::wakeup(){
 	
 // 	i2c_drv.validate();
-// 	delay(5);
+// 	clock::delay(5ms);
 // 	i2c_drv.validate();
-// 	delay(5);
+// 	clock::delay(5ms);
 
 // 	selectBank(0);//进入BANK0寄存器区域
 // 	validate();
@@ -83,7 +83,7 @@ bool PAJ7620::validate(){
 		return false;
 	}
 
-	delay(20);
+	clock::delay(20ms);
 	select_bank(0);
 	// // selectBank(0);
 

@@ -3,7 +3,7 @@
 #include "core/clock/clock.hpp"
 
 namespace ymd{
-class TaskTimer {
+class TaskTimer final{
 public:
     // enum MeasureType{
     //     Disabled,
@@ -14,23 +14,23 @@ public:
     // };
 
     struct Context{
-        uint32_t start_time = 0;
-        uint32_t end_time = 0;
-        uint32_t length = 0;
-        uint32_t max_length = 0;
+        Microseconds start_time;
+        Microseconds end_time;
+        Microseconds length;
+        Microseconds max_length;
     };
 protected:
     Context context_;
 public:
     TaskTimer() = default;
 
-    uint32_t start() {
-        return micros();
+    Microseconds start() {
+        return clock::micros();
     }
 
-    void stop(uint32_t start_time) {
-        const uint32_t end_time = micros();
-        const uint32_t length = end_time - start_time;
+    void stop(Microseconds start_time) {
+        const auto end_time = clock::micros();
+        const auto length = end_time - start_time;
 
         // switch(measure_type){
         //     case MeasureType::Disabled:
@@ -63,11 +63,12 @@ struct __TaskTimerGuard{
     __TaskTimerGuard(const __TaskTimerGuard&&) = delete;
     void operator=(const __TaskTimerGuard&) = delete;
     void operator=(const __TaskTimerGuard&&) = delete;
-    __TaskTimerGuard(TaskTimer& timer) : timer_(timer), start_time(timer.start()) {}
-    ~__TaskTimerGuard() { timer_.stop(start_time); }
+    __TaskTimerGuard(TaskTimer& timer) : timer_(timer), start_time_(timer.start()) {}
+    ~__TaskTimerGuard() { timer_.stop(start_time_); }
     
+private:
     TaskTimer & timer_;
-    uint32_t start_time;
+    Microseconds start_time_;
     bool exit_ = false;
 };
 
