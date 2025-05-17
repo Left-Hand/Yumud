@@ -1,6 +1,7 @@
 #include "flash.hpp"
 #include "core/sdk.hpp"
 
+#if 0
 using namespace ymd;
 
 #define CLOCK_CONFIG_BY_AHB 0
@@ -172,3 +173,4 @@ void Flash::entry_load(){
 void Flash::exit_load(){
     revert_clock();
 }
+#endif

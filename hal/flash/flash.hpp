@@ -4,6 +4,8 @@
 #include "concept/storage.hpp"
 #include "concept/memory.hpp"
 
+
+#if 0
 namespace ymd{
 class Flash:public Storage{
 protected:
@@ -70,3 +72,5 @@ public:
     }
 };
 };
+
+#endif

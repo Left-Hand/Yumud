@@ -3,41 +3,37 @@
 
 using namespace ymd;
 
-Memory Storage::slice(const Storage::AddressView & _view){
-    return Memory(*this, view().intersection(view()));
-}
+// Memory StorageBase::slice(const AddressView view){
+//     return Memory(*this, );
+// }
 
-Memory Storage::slice(const Storage::Address from, const Storage::Address to){
-    // return Memory(*this, view().intersection(Storage::AddressView{from, to}));
-    // DEBUG_PRINTLN(from, to);
-    return Memory(*this, {from, to});
-}
+// Memory StorageBase::slice(const StorageBase::Address from, const StorageBase::Address to){
+//     // return Memory(*this, view().intersection(StorageBase::AddressView{from, to}));
+//     // DEBUG_PRINTLN(from, to);
+//     return Memory(*this, {from, to});
+// }
 
-void Storage::store(const Address loc, const void * data, const Address len){
-    if(view().has(loc)){
-        entry_store();
-        store_bytes(loc, data, len);
-        exit_store();
-    }
-}
+// void StorageBase::store(const Address loc, const void * data, const Address len){
+//     if(view().has(loc)){
+//         entry_store();
+//         store_bytes(loc, data, len);
+//         exit_store();
+//     }
+// }
 
-void Storage::load(const Address loc, void * data, const Address len){
-    if(view().has(loc)){
-        entry_load();
-        load_bytes(loc, data, len);
-        exit_load();
-    }
-}
+// void StorageBase::load(const Address loc, void * data, const Address len){
+//     if(view().has(loc)){
+//         entry_load();
+//         load_bytes(loc, data, len);
+//         exit_load();
+//     }
+// }
 
 
-void Storage::erase(const Address loc, const size_t len){
-    if(view().has(loc)){
-        entry_store();
-        erase_bytes(loc, len);
-        exit_store();
-    }
-}
-
-Storage::operator Memory(){
-    return Memory(*this, view());
-}
+// void StorageBase::erase(const Address loc, const size_t len){
+//     if(view().has(loc)){
+//         entry_store();
+//         erase_bytes(loc, len);
+//         exit_store();
+//     }
+// }

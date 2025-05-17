@@ -12,13 +12,10 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 
-
+#if 0
 namespace ymd::drivers{
 
-
-class X25QXX: public StoragePaged{
-protected:
-    hal::SpiDrv spi_drv_;
+struct X25QXX_Collections:public StorageCollections{
 
     enum class Command:uint8_t{
         WriteEnable = 0x06,
@@ -55,11 +52,9 @@ protected:
         uint8_t memory_type;
         uint8_t manufacturer_id;
     };
+};
 
-    StatusReg statusReg;
-    JedecId jedec_id;
-
-
+class X25QXX_Phy final:public StorageCollections{
     hal::HalResult write_byte(const uint8_t data, const Continuous cont = DISC){
         return spi_drv_.write_single<uint8_t>(data, cont);
     }
@@ -85,41 +80,16 @@ protected:
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("ar!");
     }
+};
 
-    void write_addr(const Address addr, const Continuous cont = DISC);
-    void skip_byte(){write_byte(0, CONT);}
+class X25QXX_Regs:public X25QXX_Collections{
 
-    void entry_store() override;
-    void exit_store() override;
+};
 
-    void entry_load() override;
-    void exit_load() override;
-
-    void load_bytes(const Address loc, void * data, const Address len) override;
-    void store_bytes(const Address loc, const void * data, const Address len) override;
-
-    void update_device_id();
-
-    void update_jedec_id();
-
-    void update_status();
-
-    void write_page(const Address addr, const uint8_t * data, size_t len);
-
-    bool wait_for_free(Milliseconds timeout);
-
-    bool is_large_chip(){return capacity_ > 0x1000000;}
-
-
-    void erase_sector(const Address addr);
-
-    void erase_block(const Address addr);
-
-    void erase_whole_chip();
+class X25QXX final: public StorageIntf{
 
 public:
     X25QXX(const hal::SpiDrv & spi_drv, const Address capacity):
-        StoragePaged(capacity, 256),
         spi_drv_(spi_drv)
         
         {;}
@@ -129,9 +99,9 @@ public:
         spi_drv_(std::move(spi_drv))
     
         {;}
-    void init() override{}
+    void init(){}
 
-    bool busy() override;
+    bool is_busy();
 
 
     void enable_write(const bool en = true){
@@ -162,7 +132,44 @@ public:
 
     bool is_writeable();
 
-    void erase_bytes(const Address loc, const size_t len) override;
+    void erase_bytes(const Address loc, const size_t len);
+private:
+protected:
+    hal::SpiDrv spi_drv_;
+
+
+    StatusReg statusReg;
+    JedecId jedec_id;
+
+
+
+
+    void write_addr(const Address addr, const Continuous cont = DISC);
+    void skip_byte(){write_byte(0, CONT);}
+
+    void load_bytes(const Address loc, std::span<const >);
+    void store_bytes(const Address loc, const void * data, const Address len);
+
+    void update_device_id();
+
+    void update_jedec_id();
+
+    void update_status();
+
+    void write_page(const Address addr, const uint8_t * data, size_t len);
+
+    bool wait_for_free(Milliseconds timeout);
+
+    bool is_large_chip(){return capacity_ > 0x1000000;}
+
+
+    void erase_sector(const Address addr);
+
+    void erase_block(const Address addr);
+
+    void erase_whole_chip();
+
 };
 
 }
+#endif

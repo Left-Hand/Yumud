@@ -43,7 +43,7 @@ bool FOCStepper::loadArchive(){
     using BoardInfo = MotorUtils::BoardInfo;
 
     Archive archive;
-    memory.load(0,archive);
+    // memory.load(0,archive);
 
     bool match = true;
     bool abort = false;
@@ -111,12 +111,12 @@ void FOCStepper::saveArchive(){
     }
 
     archive.node_id = uint8_t(node_id);
-    memory.store(0,archive);
+    // memory.store(0,archive);
 }
 
 
 void FOCStepper::removeArchive(){
-    memory.store(0,Archive());
+    // memory.store(0,Archive());
 }
 
 OutputStream &ymd::operator<<(OutputStream &os, const foc::MotorUtils::BoardInfo &bi){

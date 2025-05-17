@@ -1,6 +1,9 @@
 #include "X25QXX.hpp"
 #include "core/debug/debug.hpp"
 
+
+#if 0
+
 using namespace ymd::drivers;
 
 #define self (*this)
@@ -12,6 +15,7 @@ using namespace ymd::drivers;
 #else
 #define X25QXX_DEBUG(...)
 #endif
+
 
 class RAIIfunctor{
 protected:
@@ -188,3 +192,5 @@ void X25QXX::erase_bytes(const Address loc, const size_t len){
     //FIXME
     erase_sector(loc);
 }
+
+#endif

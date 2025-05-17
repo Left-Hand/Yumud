@@ -8,7 +8,7 @@
 #define W25Q16_DEBUG(...)
 #endif
 
-
+#if 0
 using namespace ymd;
 void W25Q16::write_page(const size_t addr, const void * _data, Address len){
     enable_write();
@@ -157,3 +157,5 @@ bool W25Q16::is_writeable(){
     statusReg = temp;
     return statusReg.write_enable_latch;
 }
+
+#endif
