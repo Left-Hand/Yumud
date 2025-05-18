@@ -13,7 +13,7 @@
 // #include "core/utils/typetraits/typetraits_details.hpp"
 #include "core/utils/typetraits/serialize_traits.hpp"
 #include "core/utils/typetraits/enum_traits.hpp"
-#include "rust_enum.hpp"
+// #include "rust_enum.hpp"
 #include <coroutine>
 #include <vector>
 #include <chrono>
