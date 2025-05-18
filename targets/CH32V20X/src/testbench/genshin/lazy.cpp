@@ -554,10 +554,27 @@ void test_pipeline() {
 
 void lazy_main() {
 
-    UART.init(576000);
+    UART.init(576000 * 10 / 9);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
+
+    auto & led = portD[0];
+    // auto & led = portB[8];
+    led.outpp();
+    while(true){
+        led = HIGH;
+        clock::delay(2ms);
+        led = LOW;
+        clock::delay(1ms);
+        DEBUG_PRINTLN(clock::millis(), UART.available());
+        // while(UART.available()){
+        //     char chr;
+        //     UART.read1(chr);
+        //     DEBUG_PRINTLN(chr);
+        // }
+    }
+
 
     portC[13].outpp();
     portC[13].write(HIGH);  

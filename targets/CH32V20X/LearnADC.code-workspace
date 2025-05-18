@@ -113,7 +113,9 @@
             "*.ipp": "cpp",
             "source_location": "cpp",
             "expected": "c",
-            "format": "cpp"
+            "format": "cpp",
+            "queue": "cpp",
+            "stack": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
