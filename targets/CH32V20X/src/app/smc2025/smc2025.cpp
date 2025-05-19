@@ -27,6 +27,8 @@
 #include "drivers/IMU/Magnetometer/HMC5883L/hmc5883l.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
+#include "render.hpp"
+
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -36,6 +38,31 @@ using namespace ymd::hal;
 struct HwPort{
 };
 
+
+
+using namespace ymd::smc::sim;
+
+Scene make_scene(){
+    Scene scene;
+    scene.add_element(AnnularSector{
+        .x = 0,
+        .y = 0,
+
+        .inner_radius = 0.6_r - 0.45_r/2,
+        .outer_radius = 0.6_r + 0.45_r/2,
+        
+        .start_rad = -0.0_r,
+        .stop_rad = 2.5_r
+    });
+
+    scene.add_element(RectBlob{
+        .x = -0.2_r,
+        .y = -0.1_r,
+        .width = 0.45_r,
+        .height = 0.8_r
+    });
+    return scene;
+}
 void smc2025_main(){
 
     UART.init(576_KHz);
@@ -78,14 +105,12 @@ void smc2025_main(){
 
     camera.init().examine();
 
-    // drivers::HMC5883L hmc{i2c};
-    // hmc.init().examine();
-
     drivers::QMC5883L qmc{i2c};
     qmc.init().examine();
     
     Image<RGB565> rgb_img{{tft.rect().w, 4u}};
     Renderer renderer = {};
+
 
     camera.set_exposure_value(1200).unwrap();
     camera.set_gain(2.4_r).unwrap();
@@ -99,21 +124,28 @@ void smc2025_main(){
                 src.get_data());
     };
 
+    const auto scene = make_scene();
+
     while(true){
         qmc.update().examine();
         renderer.bind(rgb_img);
-        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
+        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
         renderer.draw_rect(Rect2i(0, 0, 20, 40));
 
-        const auto gray_img = camera.frame().clone();
+        // const auto gray_img = camera.frame().clone();
+        const auto viewpoint = Ray2_t<real_t>{Vector2_t<real_t>{0, 0}, real_t(PI/2)};
+        const auto gray_img = scene.render(viewpoint);
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
         // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
-        DEBUG_PRINTLN(millis(), qmc.read_mag().unwrap());
-        clock::delay(20ms);
+        // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
+        // clock::delay(20ms);
+
+
+
     }
 
     // timer4.init(24000);
@@ -163,3 +195,4 @@ void smc2025_main(){
     // timer.enableIt(TimerIT::Update, NvicPriority{0,0});
 
 }
+

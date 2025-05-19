@@ -13,11 +13,11 @@ namespace ymd{
 class Memory;
 
 struct AddressDiff{
-    [[nodiscard]] constexpr explicit AddressDiff(const uint32_t AddressDiff):AddressDiff_(AddressDiff){;}
-    [[nodiscard]] constexpr uint32_t as_u32() const {return AddressDiff_;}
+    [[nodiscard]] constexpr explicit AddressDiff(const uint32_t diff):value_(diff){;}
+    [[nodiscard]] constexpr uint32_t as_u32() const {return value_;}
     [[nodiscard]] constexpr auto operator<=>(const AddressDiff &) const = default;
 private:
-    uint32_t AddressDiff_;
+    uint32_t value_;
 };
 
 using Capacity = AddressDiff;

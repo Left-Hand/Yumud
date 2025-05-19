@@ -9,6 +9,8 @@
 
 #include "hal/gpio/gpio_port.hpp"
 
+
+#if 0
 using namespace ymd::drivers;
 
 void w25qxx_main(){
@@ -36,3 +38,5 @@ void w25qxx_main(){
         clock::delay(200ms);
     }
 }
+
+#endif

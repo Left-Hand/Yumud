@@ -77,8 +77,17 @@ public:
 
     [[nodiscard]] constexpr Vector2_t<T> normalize(){*this /= this->length();}
     [[nodiscard]] constexpr Vector2_t<T> normalized() const;
-    [[nodiscard]] constexpr T cross(const Vector2_t<T> & with) const;
-    [[nodiscard]] constexpr T dot(const Vector2_t<T> & with) const;
+    [[nodiscard]] constexpr T cross(const Vector2_t<T> & other) const;
+
+    [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vector2_t<T> & other) const{
+        return this->cross(other) > 0;
+    }
+
+    [[nodiscard]] __fast_inline constexpr bool is_count_clockwise_to(const Vector2_t<T> & other) const{
+        return not is_clockwise_to(other);
+    }
+
+    [[nodiscard]] constexpr T dot(const Vector2_t<T> & other) const;
     [[nodiscard]] constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
     [[nodiscard]] constexpr Vector2_t<T> rotated(const T r)const;
     [[nodiscard]] constexpr Vector2_t<T> abs() const;
@@ -174,10 +183,10 @@ public:
     [[nodiscard]] __fast_inline constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
     [[nodiscard]] __fast_inline constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
-    [[nodiscard]] __fast_inline constexpr Vector2_t<T> flipy() const {return {x,-y};}
-    [[nodiscard]] __fast_inline constexpr Vector2_t<T> flipx() const {return {-x,y};}
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> flip_y() const {return {x,-y};}
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> flip_x() const {return {-x,y};}
 
-    [[nodiscard]] __fast_inline constexpr Vector2_t<T> swapxy() const {return {y,x};}
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> swap_xy() const {return {y,x};}
 
     __fast_inline constexpr Vector2_t<T> & operator=(const Vector2_t<auto> & b){
         x = static_cast<T>(b.x);
@@ -215,9 +224,14 @@ public:
 
     __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
         // using CommonType = typename std::common_type<T, decltype(n)>::type;
-        const T inv_n = static_cast<T>(1) / n;
-        x = static_cast<T>(x * inv_n);
-        y = static_cast<T>(y * inv_n);
+        if constexpr(std::is_integral_v<T>){
+            x = x / n;
+            y = y / n;
+        }else{
+            const T inv_n = static_cast<T>(1) / n;
+            x = static_cast<T>(x * inv_n);
+            y = static_cast<T>(y * inv_n);
+        }
         return *this;
     }
 
@@ -238,8 +252,14 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_angle(const T & len, const T & rad){
-        return {len * cos(rad), len * sin(rad)};
+    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & len, const T & rad){
+        const auto [s,c] = sincos(rad);
+        return {len * c, len * s};
+    }
+
+    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_idenity_rotation(const T & rad){
+        const auto [s,c] = sincos(rad);
+        return {c, s};
     }
 
     [[nodiscard]] __fast_inline static constexpr Vector2_t<T> ones(const T & len){

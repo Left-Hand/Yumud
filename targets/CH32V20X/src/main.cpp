@@ -144,7 +144,7 @@ int main(){
     // gui_main();
     // light_tracking_main();
     // cubic_main();
-    // smc2025_main();
+    smc2025_main();
     
     // sdc_main();
     // proxy_tb();

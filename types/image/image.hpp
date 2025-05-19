@@ -73,6 +73,10 @@ public:
     Image<toColorType> space() const {
         return Image<toColorType>(this->size());
     }
+
+    void set_pixel(const Vector2u & pos, const ColorType color) {
+        this->data_[pos.y * this->size().x + pos.x] = color;
+    }
 };
 
 

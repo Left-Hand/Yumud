@@ -11,6 +11,7 @@
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 
 #include "core/utils/SumtypeEnum.hpp"
+#include "core/utils/Match.hpp"
 #include "core/utils/Unit.hpp"
 #include "core/polymorphism/reflect.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -55,6 +56,40 @@ struct Shape:public SumtypeEnum<Circle, Rectangle>{
     // struct Rectangle{int a; int b;};
 
 };
+
+using namespace fp;
+// constexpr auto pattern_as_int = pattern | keywords::as<int>;
+// constexpr auto pattern_is_int = pattern | keywords::is<int>;
+// // constexpr auto pattern_as_int = pattern | keywords::as<int>;
+// constexpr auto pattern_as_int_e3 = pattern | keywords::as<int> = 3;
+// constexpr auto pattern_as_int_f1 = pattern | keywords::as<int> = []{return 1;};
+// constexpr auto rf1 = pattern_as_int_f1.execute();
+// constexpr auto re3 = pattern_as_int_e3.execute();
+
+constexpr auto me = match(1);
+
+constexpr auto shape = Shape(Shape::Circle(1));
+// constexpr auto shape = Circle(1);
+constexpr auto is_circle = (pattern | keywords::is<Circle>).is_compatible(shape);
+// constexpr auto is_circle = (pattern | keywords::unhandled).is_compatible(shape);
+constexpr auto is_rectangle = (pattern | keywords::is<Rectangle>).is_compatible(shape);
+
+// constexpr auto reflection = match(Rectangle(1,2))(
+// constexpr auto reflection = match(Shape::Circle(1))(
+// constexpr auto reflection = match(Shape::Rectangle(2,2))(
+constexpr auto reflection = match(Shape::Square(1))(
+    pattern | keywords::is<Circle> = [](Circle circle){return circle.radius;},
+    // pattern | keywords::is<Circle> = 1,
+    // pattern | keywords::is<Circle> = 1,
+    pattern | keywords::is<Rectangle> = [](const Rectangle & rect){return rect.a + rect.b;},
+    // pattern | keywords::is<Rectangle> = 4,
+    pattern | keywords::is<Square> = 4
+);
+
+static_assert(is_circle, "");
+// static_assert(reflection == 2, "");
+static_assert(reflection == 4, "");
+// static_assert(reflection == 1, "");
 
 static_assert(std::is_same_v<Circle, Shape::Circle>);
 
