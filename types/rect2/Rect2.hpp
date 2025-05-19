@@ -28,6 +28,13 @@ public:
         };
     };
 
+    static constexpr Rect2_t<T> INF = Rect2_t<T>(
+        std::numeric_limits<T>::min(), 
+        std::numeric_limits<T>::min(),
+        std::numeric_limits<T>::max(), 
+        std::numeric_limits<T>::max()
+    );
+
     [[nodiscard]] constexpr Rect2_t():position(Vector2_t<T>(0,0)), size(Vector2_t<T>(0,0)){}
 
     [[nodiscard]] constexpr Rect2_t(const Rect2_t<T> & other):
@@ -68,7 +75,7 @@ public:
 
     [[nodiscard]] static constexpr Rect2_t from_center_and_size(
         const Vector2_t<T> & center, const Vector2_t<T> & size){
-        return Rect2_t<T>(center - size, size / 2);
+        return Rect2_t<T>(center - size, size);
     }
 
     [[nodiscard]] static constexpr Rect2_t from_corners(const Vector2_t<T> & a, const Vector2_t<T> & b){
@@ -112,10 +119,12 @@ public:
 
 
     constexpr bool has_point(const Vector2_t<T> & point) const {
-        bool x_ins = this->get_x_range().has(point.x);
-        if(!x_ins) return false;
-        bool y_ins = this->get_y_range().has(point.y);
-        return(y_ins);
+        // bool x_ins = this->get_x_range().has(point.x);
+        // if(!x_ins) return false;
+        // bool y_ins = this->get_y_range().has(point.y);
+        // return(y_ins);
+        return IN_RANGE(point.x, position.x, position.x + size.x)
+            and IN_RANGE(point.y, position.y, position.y + size.y);
     }
 
     constexpr bool contains(const Rect2_t<T> & other) const {

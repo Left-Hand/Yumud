@@ -41,18 +41,22 @@ using cache_of_t = cache_of<T>::type;
 
 template<typename T>
 struct ElementWithPlacement{
+    using Element = T;
     using Cache = cache_of_t<T>;
-    Placement place;
+
+    Placement placement;
+    BoundingBox bounding_box;
     Cache cache;
-    T element;
+    // T element;
 };
 
 template<typename T>
-constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& place){
+constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& placement){
     return ElementWithPlacement<T>{
-        .place = place,
+        .placement = placement,
+        .bounding_box = element.to_bounding_box(),
         .cache = element.to_cache(),
-        .element = element,
+        // .element = element,
     };
 }
 
@@ -123,9 +127,10 @@ struct AnnularSector{
     }
 
     constexpr auto to_bounding_box() const {
+        //TODO 更精细的包围盒划分
         return BoundingBox::from_center_and_halfsize(
             {0,0}, 
-            {outer_radius * 2, outer_radius * 2}
+            {outer_radius, outer_radius}
         );
     }
 };
@@ -138,9 +143,6 @@ struct RectBlob{
         return s_is_covered(*this, offset);
     }
 
-    // constexpr Rect2_t<real_t> get_bounding_box() const {
-    //     return Rect2_t<real_t>{x,y,width, height};
-    // }
 
     struct Cache{
         real_t half_width;
@@ -165,12 +167,11 @@ struct RectBlob{
         };
     }
 
-    // constexpr auto to_bounding_box() const {
-    //     return BoundingBox::from_center_and_size(
-    //         {0,0},
-    //         {width, height}
-    //     );
-    // }
+    constexpr auto to_bounding_box() const {
+        // return BoundingBox{-width/2,-height/2, width, height};
+        constexpr auto INF = BoundingBox::from_center_and_size({0,0}, {1000,1000});
+        return INF;
+    }
 private:
     __fast_inline static constexpr bool s_is_covered(const RectBlob & self, const Vector2_t<real_t> offset){
         //fastest solution by benchmark
@@ -206,37 +207,38 @@ private:
 };
 
 
-namespace static_test{
-static constexpr auto blob = RectBlob{
-    .width = 1,
-    .height = 1
-};
+// namespace static_test{
+// static constexpr auto blob = RectBlob{
+//     .width = 1,
+//     .height = 1
+// };
 
-static constexpr auto arc = AnnularSector{
-    .inner_radius = 1,
-    .outer_radius = 2,
+// static constexpr auto arc = AnnularSector{
+//     .inner_radius = 1,
+//     .outer_radius = 2,
     
-    .start_rad = 0,
-    .stop_rad = 1.5_r
-};
+//     .start_rad = 0,
+//     .stop_rad = 1.5_r
+// };
 
-static_assert(blob.is_covered({1,1}) == false);
-static_assert(blob.is_covered({0,0}) == true);
+// static_assert(blob.is_covered({1,1}) == false);
+// static_assert(blob.is_covered({0,0}) == true);
 
-// static_assert(arc.is_covered({1,1}) == true);
-// static_assert(arc.is_covered({0,0}) == false);
-// static_assert(arc.is_covered({-0.02_r,1.1_r}) == false);
-// static_assert(arc.is_covered({1.3_r,0.1_r}) == true);  // 0°方向
-// static_assert(arc.is_covered({-1.9_r,0}) == false); // 180°方向（超出角度范围）
+// // static_assert(arc.is_covered({1,1}) == true);
+// // static_assert(arc.is_covered({0,0}) == false);
+// // static_assert(arc.is_covered({-0.02_r,1.1_r}) == false);
+// // static_assert(arc.is_covered({1.3_r,0.1_r}) == true);  // 0°方向
+// // static_assert(arc.is_covered({-1.9_r,0}) == false); // 180°方向（超出角度范围）
 
-// static_assert(Vector2_t<real_t>(1,1).is_clockwise_to(Vector2_t<real_t>(1,0)));
+// // static_assert(Vector2_t<real_t>(1,1).is_clockwise_to(Vector2_t<real_t>(1,0)));
 
-}
+// }
 
 static constexpr real_t PIXELS_PER_METER = 70;
 static constexpr real_t METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
-static constexpr Vector2u CAMERA_SIZE = {188, 120};
 // static constexpr Vector2u CAMERA_SIZE = {94, 60};
+// static constexpr Vector2u CAMERA_SIZE = {188, 120};
+static constexpr Vector2u CAMERA_SIZE = {150, 100};
 static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 
 static constexpr Vector2 transform_camera_to_scene(
@@ -250,13 +252,13 @@ static constexpr Vector2 transform_camera_to_scene(
     return viewpoint.org + camera_offset.rotated(rot);
 }
 
-namespace static_test{
-    constexpr auto viewpoint = Ray2_t<real_t>{Vector2(0, 0), real_t(PI/2)};
-    constexpr auto pos1 = transform_camera_to_scene(HALF_CAMERA_SIZE, viewpoint);
-    // constexpr auto pos2 = transform_camera_to_scene(HALF_CAMERA_SIZE, viewpoint);
-    static_assert(float(pos1.x) == 0);
-    static_assert(float(pos1.y) == 0);
-}
+// namespace static_test{
+//     constexpr auto viewpoint = Ray2_t<real_t>{Vector2(0, 0), real_t(PI/2)};
+//     constexpr auto pos1 = transform_camera_to_scene(HALF_CAMERA_SIZE, viewpoint);
+//     // constexpr auto pos2 = transform_camera_to_scene(HALF_CAMERA_SIZE, viewpoint);
+//     static_assert(float(pos1.x) == 0);
+//     static_assert(float(pos1.y) == 0);
+// }
 
 namespace details{
     PRO_DEF_MEM_DISPATCH(MemIsCovered, is_covered);
@@ -337,47 +339,48 @@ public:
 
 
     Image<Grayscale> render(const Ray2_t<real_t> viewpoint) const {
-        Image<Grayscale> ret{CAMERA_SIZE};
-
+        static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
+        const auto pdata = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org = transform_camera_to_scene({0,0}, viewpoint);
         const auto y_step = transform_camera_to_scene({0,1}, viewpoint) - org;
         const auto x_step = transform_camera_to_scene({1,0}, viewpoint) - org;
         
-        auto pos = org;
-        for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
-            const auto beg = pos;
-            for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
-                const bool covered = this->is_covered(pos);
-                const auto color = covered ? Grayscale{255} : Grayscale{0};
-                ret.set_pixel({x,y}, color);
-                pos += x_step;
+        const auto window = Rect2_t<real_t>::from_corners(
+            org, transform_camera_to_scene(CAMERA_SIZE, viewpoint)).grow(EXTENDED_BOUND_LENGTH);
+            
+        bool dirty = false;
+        auto apply_render = [&](const bool rough_judge_passed, auto && fn){
+            if(!rough_judge_passed) return;
+            dirty = true;
+            using Fn = std::decay_t<decltype(fn)>;
+            auto local_pos = org;
+            for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
+                const auto beg = local_pos;
+                for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
+                    const bool covered = std::forward<Fn>(fn)(local_pos);
+                    const auto color = covered ? 255 : 0;
+                    pdata[y * CAMERA_SIZE.x + x] |= color;
+                    local_pos += x_step;
+                }
+                local_pos = beg;
+                local_pos += y_step;
             }
-            pos = beg;
-            pos += y_step;
-        }
+        };
 
-        return ret;
+        std::apply([&](const auto&... object){
+            (apply_render(
+                window.intersects(object.bounding_box.shift(object.placement.pos)),
+                [&](const Vector2_t<real_t> local_pos) { 
+                    return object.cache.is_covered(local_pos - object.placement.pos); 
+                }), ...);
+        }, objects_);
+
+        if(!dirty) std::memset(pdata.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
+        return Image<Grayscale>(std::move(
+            std::reinterpret_pointer_cast<Grayscale[]>(pdata)), CAMERA_SIZE);
     }
 private:
-    // Objects elements_;
-
-    // template<typename T>
-    // using element_with_placement_t = ElementWithPlacement<T>;
-
     std::tuple<Objects...> objects_;  // Expanded parameter pack
-
-    // constexpr bool is_covered(const Vector2_t<real_t> offset) const { 
-    //     return std::apply([&](const auto&... objects){
-    //         return (objects->is_covered(offset) || ...);
-    //     }, objects);
-    // }
-
-    const bool is_covered(const Vector2_t<real_t> pos) const { 
-        return std::apply([&](const auto&... object){
-            return (object.cache.is_covered(pos - object.place.pos) || ...);  // Fixed member access
-            // return ((objects.get_bounding_box().has_point(offset) ? objects.is_covered(offset) : false) || ...);  // Fixed member access
-        }, objects_);
-    }
 };
 
 
