@@ -75,6 +75,15 @@ public:
     [[nodiscard]] __fast_inline static constexpr Vector3_t from_rcp(const Vector3_t<arithmetic auto>& v){
         return Vector3_t<T>(1/v.x, 1/v.y, 1/v.z);}
 
+    [[nodiscard]] __fast_inline static constexpr Vector3_t from_x(T _x){
+        return Vector3_t<T>(_x, T(0), T(0));}
+
+    [[nodiscard]] __fast_inline static constexpr Vector3_t from_y(T _y){
+        return Vector3_t<T>(T(0), _y, T(0));}
+
+    [[nodiscard]] __fast_inline static constexpr Vector3_t from_z(T _z){
+        return Vector3_t<T>(T(0), T(0), _z);}
+
     template<arithmetic U = T>
     [[nodiscard]] __fast_inline constexpr Vector3_t(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
 

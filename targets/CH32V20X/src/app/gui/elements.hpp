@@ -66,7 +66,7 @@ protected:
     const Theme & theme_;
 public:
     CanvasItem(const Theme & _theme): theme_(_theme){;}
-    virtual void render(PainterConcept & painter) = 0;
+    virtual void render(PainterBase & painter) = 0;
 };
 
 #define PASS_THEME(derived, base)\
@@ -83,7 +83,7 @@ public:
     String text;
     PASS_THEME(Label, Control)
 
-    void render(PainterConcept & painter) override{
+    void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
         painter.draw_filled_rect(rect);
 
@@ -106,7 +106,7 @@ public:
 
     Range2_t<real_t> range;
     
-    void render(PainterConcept & painter) override{
+    void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
         painter.draw_filled_rect(rect);
 
@@ -132,7 +132,7 @@ class OptionButton:public Control{
 public:
     PASS_THEME(OptionButton, Control)
     
-    void render(PainterConcept & painter) override{
+    void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
         painter.draw_filled_rect(rect);
 

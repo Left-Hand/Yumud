@@ -22,8 +22,8 @@ class String;
 
 class StringView;
 
-class PainterConcept{
-protected:
+class PainterBase{
+public:
     using Cursor = Vector2u;
 
     enum class Error_Kind{
@@ -37,6 +37,7 @@ protected:
         NoEnglishFontFounded,
         NoChineseFontFounded,
         StringLengthTooLong,
+        PointsTooLess
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
@@ -44,53 +45,11 @@ protected:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    Cursor cursor = {0,0};
-
-    RGB888 m_color;
-    Rect2u crop_rect;
-
-    Font * enfont = nullptr;
-    Font * chfont = nullptr;
-    int padding = 1;
-
-    [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l){
-        auto ins = Rect2u(pos, Vector2u(l, 1));
-        // ins = this->getClipWindow.intersection(ins);
-        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
-        return draw_filled_rect(ins);
-    }
-    [[nodiscard]] IResult<> draw_ver_line(const Vector2u & pos,const int l){
-        auto ins = Rect2u(pos, Vector2u(1, l));
-        // ins = this->getClipWindow.intersection(ins);
-        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
-        return draw_filled_rect(ins);
-    }
-    [[nodiscard]] IResult<> draw_ver_line(const Range2i & y_range, const int x){
-        auto y_range_regular = y_range.abs();
-        return draw_ver_line(Vector2u(x, y_range_regular.from), y_range_regular.length());
-    }
-
-    [[nodiscard]] IResult<> draw_hri_line(const Range2i & x_range, const int y){
-        auto x_range_regular = x_range.abs();
-        return draw_hri_line(Vector2u(x_range_regular.from, y), x_range_regular.length());
-    }
-
-    virtual IResult<> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) = 0;
-
-    IResult<> draw_gbk_str(const Vector2u & pos, const StringView str){
-        TODO();
-        return Ok();
-    }
-
-    IResult<> draw_utf8_str(const Vector2u & pos, const StringView str){
-        TODO();
-        return Ok();
-    }
-
 public:
-    DELETE_COPY_AND_MOVE(PainterConcept)
+    PainterBase(const PainterBase & other) = delete;
+    PainterBase(PainterBase && other) = delete;
 
-    PainterConcept() = default;
+    PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
         this->set_color(color);
         draw_filled_rect(this->get_clip_window());
@@ -171,6 +130,52 @@ public:
 
         return Ok();
     }
+
+// private:
+protected:
+    Cursor cursor = {0,0};
+
+    RGB888 m_color;
+    Rect2u crop_rect;
+
+    Font * enfont = nullptr;
+    Font * chfont = nullptr;
+    int padding = 1;
+
+    [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l){
+        auto ins = Rect2u(pos, Vector2u(l, 1));
+        // ins = this->getClipWindow.intersection(ins);
+        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+        return draw_filled_rect(ins);
+    }
+    [[nodiscard]] IResult<> draw_ver_line(const Vector2u & pos,const int l){
+        auto ins = Rect2u(pos, Vector2u(1, l));
+        // ins = this->getClipWindow.intersection(ins);
+        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+        return draw_filled_rect(ins);
+    }
+    [[nodiscard]] IResult<> draw_ver_line(const Range2i & y_range, const int x){
+        auto y_range_regular = y_range.abs();
+        return draw_ver_line(Vector2u(x, y_range_regular.from), y_range_regular.length());
+    }
+
+    [[nodiscard]] IResult<> draw_hri_line(const Range2i & x_range, const int y){
+        auto x_range_regular = x_range.abs();
+        return draw_hri_line(Vector2u(x_range_regular.from, y), x_range_regular.length());
+    }
+
+    virtual IResult<> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) = 0;
+
+    IResult<> draw_gbk_str(const Vector2u & pos, const StringView str){
+        TODO();
+        return Ok();
+    }
+
+    IResult<> draw_utf8_str(const Vector2u & pos, const StringView str){
+        TODO();
+        return Ok();
+    }
+
 };
 
 }

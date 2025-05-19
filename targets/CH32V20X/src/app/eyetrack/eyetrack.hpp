@@ -114,7 +114,7 @@ public:
     const auto & eyelidsInfo() const {return eyelids_info_;}
 
 
-    void render(PainterConcept & painter) {
+    void render(PainterBase & painter) {
         auto render_eye = [&](const LR side){
 
             auto center = (side == LEFT) ? config_.l_center : config_.r_center;

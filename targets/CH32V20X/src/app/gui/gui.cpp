@@ -20,7 +20,6 @@
 #include "nvcv2/shape/shape.hpp"
 #include "image/font/instance.hpp"
 
-#include "image/render/renderer.hpp"
 #include "elements.hpp"
 
 #include "core/math/realmath.hpp"
@@ -34,7 +33,7 @@ using namespace ymd::hal;
 
 class RenderTrait{
 public:
-    virtual void render(PainterConcept & painter) = 0;
+    virtual void render(PainterBase & painter) = 0;
 };
 
 
@@ -45,7 +44,7 @@ protected:
 public:
     Icon() = default;
 
-    void render(PainterConcept & painter) override{
+    void render(PainterBase & painter) override{
         painter.set_color(ColorEnum::WHITE);
         painter.draw_filled_rect(rect_);
         // painter.drawString(rect_ + Vector2u{0, -10}, name_);
@@ -61,13 +60,13 @@ protected:
     int item_padding_ = 10;
     Vector2u item_org_ = {10,10};
 
-    void draw_otherwides(PainterConcept & painter){
+    void draw_otherwides(PainterBase & painter){
         painter.set_color(ColorEnum::WHITE);
     }
 public:
     Menu() = default;
 
-    void render(PainterConcept & painter) override{
+    void render(PainterBase & painter) override{
         // auto item_org = item_org_;
         // for(auto it = items_.begin(); it != items_.end(); ++it){
         // for(auto item : items_){
@@ -200,16 +199,16 @@ void gui_main(){
 
     Image<RGB565> img{{tftDisplayer.rect().w, 4u}};
 
-    Renderer renderer = {};
-    renderer.bind(tftDisplayer);
-    renderer.set_color(ColorEnum::BLACK);
-    renderer.draw_rect(tftDisplayer.rect());
+    Painter<RGB565> painter = {};
+    painter.bind_image(tftDisplayer);
+    painter.set_color(ColorEnum::BLACK);
+    painter.draw_filled_rect(tftDisplayer.rect());
 
     while(true){
-        renderer.bind(img);
-        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        renderer.draw_pixel(Vector2u(0, 0));
-        renderer.draw_rect(Rect2u(20, 0, 20, 40));
+        painter.bind_image(img);
+        painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        painter.draw_pixel(Vector2u(0, 0));
+        painter.draw_hollow_rect(Rect2u(20, 0, 20, 40));
 
         tftDisplayer.put_texture(img.rect(), img.get_data());
         DEBUG_PRINTLN(clock::millis());

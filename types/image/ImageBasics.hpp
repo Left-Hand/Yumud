@@ -11,6 +11,8 @@
 
 namespace ymd{
 
+    // class Painter;
+    
 template <typename ColorType>
 class Painter;
 
@@ -21,7 +23,7 @@ class ImageWR;
 template <typename ColorType>
 class PixelProxy;
 
-class Renderer;
+
 
 class ImageBasics{
 public:
@@ -160,7 +162,7 @@ protected:
     }
 
     friend class Painter<ColorType>;
-    friend class Renderer;
+    // friend class Painter;
     friend class PixelProxy<ColorType>;
 public:
     ImageWritable(const Vector2u & _size):ImageBasics(_size){;}
@@ -209,6 +211,7 @@ protected:
     using UVShaderCallback = ColorType(*)(const Vector2 &);
 
     friend class Painter<ColorType>;
+    // friend class Painter;
 public:
     ImageWR(const Vector2u & _size):ImageReadable<ColorType>(_size), ImageWritable<ColorType>(_size){;}
 };

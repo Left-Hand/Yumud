@@ -6,9 +6,9 @@
 using namespace ymd;
 
 template<typename T = void>
-using IResult = PainterConcept::IResult<T>;
+using IResult = PainterBase::IResult<T>;
 
-IResult<> PainterConcept::draw_hollow_rect(const Rect2u & rect){
+IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
     // Rect2u regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;
 
@@ -38,7 +38,7 @@ IResult<> PainterConcept::draw_hollow_rect(const Rect2u & rect){
 }
 
 
-IResult<> PainterConcept::draw_hollow_circle(const Vector2u & pos, const uint radius){
+IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radius){
     if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
         .intersects(this->get_clip_window())))) return Ok();
 
@@ -78,7 +78,7 @@ IResult<> PainterConcept::draw_hollow_circle(const Vector2u & pos, const uint ra
     return Ok();
 }
 
-IResult<> PainterConcept::draw_filled_circle(const Vector2u & pos, const uint radius){
+IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radius){
     if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
         .inside(Rect2u(Vector2u(0,0), get_clip_window().size))))) return Ok();
     
@@ -120,11 +120,11 @@ IResult<> PainterConcept::draw_filled_circle(const Vector2u & pos, const uint ra
     return Ok();
 }
 
-IResult<> PainterConcept::draw_string(const Vector2u & pos, const StringView str){
+IResult<> PainterBase::draw_string(const Vector2u & pos, const StringView str){
     return draw_str(pos, str.data(), str.length());
 }
 
-IResult<> PainterConcept::draw_hollow_ellipse(const Vector2u & pos, const Vector2u & r) {
+IResult<> PainterBase::draw_hollow_ellipse(const Vector2u & pos, const Vector2u & r) {
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
@@ -168,7 +168,7 @@ IResult<> PainterConcept::draw_hollow_ellipse(const Vector2u & pos, const Vector
     return Ok();
 }
 
-IResult<> PainterConcept::draw_filled_ellipse(const Vector2u & pos, const Vector2u & r){
+IResult<> PainterBase::draw_filled_ellipse(const Vector2u & pos, const Vector2u & r){
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
@@ -212,7 +212,7 @@ IResult<> PainterConcept::draw_filled_ellipse(const Vector2u & pos, const Vector
 }
 
 
-IResult<> PainterConcept::draw_polyline(const std::span<const Vector2u> points){
+IResult<> PainterBase::draw_polyline(const std::span<const Vector2u> points){
     const auto count = points.size();
     for(size_t i = 0; i < count-1; i++){
         const auto res = draw_line(points[i], points[i + 1]);
@@ -222,20 +222,20 @@ IResult<> PainterConcept::draw_polyline(const std::span<const Vector2u> points){
 }
 
 
-IResult<> PainterConcept::draw_polygon(const std::span<const Vector2u> points){
+IResult<> PainterBase::draw_polygon(const std::span<const Vector2u> points){
     const auto count = points.size();
     return draw_polyline(points) |
     draw_line(points[0], points[count - 1]);
 }
 
-IResult<> PainterConcept::draw_hollow_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){
+IResult<> PainterBase::draw_hollow_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){
     if(const auto res = draw_line(p0, p1); res.is_err()) return res;
     if(const auto res = draw_line(p1, p2); res.is_err()) return res;
     if(const auto res = draw_line(p0, p2); res.is_err()) return res;
     return Ok();
 }
 
-IResult<> PainterConcept::draw_filled_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){
+IResult<> PainterBase::draw_filled_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){
     int a, b, last;
     int x0 = p0.x;
     int y0 = p0.y;
@@ -305,7 +305,7 @@ IResult<> PainterConcept::draw_filled_triangle(const Vector2u & p0,const Vector2
     return Ok();
 }
 
-IResult<> PainterConcept::draw_roi(const Rect2u & rect){
+IResult<> PainterBase::draw_roi(const Rect2u & rect){
     Vector2u center = rect.get_center();
     if(const auto res = draw_hollow_rect(rect); res.is_err()) return res;
     if(const auto res = draw_hri_line(center+Vector2u(-2,0), 5); res.is_err()) return res;

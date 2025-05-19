@@ -7,14 +7,14 @@
 namespace ymd{
 
 template<typename ColorType>
-class Painter:public PainterConcept{
+class Painter:public PainterBase{
 protected:
 
     ImageWritable<ColorType> * src_image = nullptr;
     
-    using Error = typename PainterConcept::Error;
+    using Error = typename PainterBase::Error;
     template<typename T = void>
-    using IResult = PainterConcept::IResult<T>;
+    using IResult = PainterBase::IResult<T>;
 
     void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
@@ -49,7 +49,7 @@ protected:
         return Ok();
     }
 public:
-    Painter():PainterConcept(){;}
+    Painter():PainterBase(){;}
 
 
     Rect2u get_clip_window() override {
