@@ -85,6 +85,13 @@ constexpr auto make_scene2(){
         },
 
         RectBlob{
+            .width = 0.45_r,
+            .height = 0.8_r
+        } | Placement{
+            .pos = {-0.6_r, -0.4_r}
+        },
+
+        RectBlob{
             .width = 1.8_r,
             .height = 0.45_r
         } | Placement{
@@ -147,10 +154,10 @@ void smc2025_main(){
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Grayscale> & src, 
-        const Rect2i & area
+        const Rect2u & area
     ){
         tft.put_texture(area.intersection(
-                Rect2i(area.position, src.size())), 
+                Rect2u(area.position, src.size())), 
                 src.get_data());
     };
 
@@ -162,13 +169,13 @@ void smc2025_main(){
         renderer.bind(rgb_img);
         renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
-        renderer.draw_rect(Rect2i(0, 0, 20, 40));
+        renderer.draw_rect(Rect2u(0, 0, 20, 40));
 
         // const auto gray_img = camera.frame().clone();
-        const auto viewpoint = Ray2_t<real_t>{
-            Vector2_t<real_t>(0, sinpu(clock::time() / 2) * 0.8_r), real_t(PI/2) + 0.09_r * sinpu(clock::time())};
         // const auto viewpoint = Ray2_t<real_t>{
-        //     Vector2_t<real_t>(0, 0), 0};
+        //     Vector2_t<real_t>(0, sinpu(clock::time() / 2) * 0.8_r), real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+        const auto viewpoint = Ray2_t<real_t>{
+            Vector2_t<real_t>(0, 0), 0};
 
         const auto mbegin = clock::micros();
         const auto gray_img = scene.render(viewpoint);

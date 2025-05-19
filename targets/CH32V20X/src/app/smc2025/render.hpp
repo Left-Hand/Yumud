@@ -18,6 +18,8 @@ namespace ymd::smc::sim{
 
 // struct ElementWithPlacement;
 
+using BoundingBox = Rect2_t<real_t>;
+
 struct Placement{
     Vector2_t<real_t> pos;
 
@@ -40,17 +42,17 @@ using cache_of_t = cache_of<T>::type;
 template<typename T>
 struct ElementWithPlacement{
     using Cache = cache_of_t<T>;
-    T element;
     Placement place;
     Cache cache;
+    T element;
 };
 
 template<typename T>
 constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& place){
     return ElementWithPlacement<T>{
-        .element = element,
         .place = place,
-        .cache = element.to_cache()
+        .cache = element.to_cache(),
+        .element = element,
     };
 }
 
@@ -96,7 +98,7 @@ struct AnnularSector{
         Vector2_t<real_t> start_norm_vec;
         Vector2_t<real_t> stop_norm_vec;
 
-        constexpr bool is_covered(const Vector2_t<real_t> offset) const {
+        __fast_inline constexpr bool is_covered(const Vector2_t<real_t> offset) const {
             return s_is_covered(*this, offset);
         }
     private:
@@ -106,10 +108,8 @@ struct AnnularSector{
             if((len_squ - self.squ_outer_radius) * (len_squ - self.squ_inner_radius) > 0)
                 return false;
 
-            if(offset.is_clockwise_to(self.start_norm_vec)) return false;
-            if(offset.is_count_clockwise_to(self.stop_norm_vec)) return false;
-
-            return true;
+            return offset.is_count_clockwise_to(self.start_norm_vec)
+                and (offset.is_clockwise_to(self.stop_norm_vec));
         } 
     };
 
@@ -121,12 +121,16 @@ struct AnnularSector{
             .stop_norm_vec = Vector2_t<real_t>::from_idenity_rotation(stop_rad)
         };
     }
+
+    constexpr auto to_bounding_box() const {
+        return BoundingBox::from_center_and_halfsize(
+            {0,0}, 
+            {outer_radius * 2, outer_radius * 2}
+        );
+    }
 };
 
 struct RectBlob{
-    // real_t x;
-    // real_t y;
-    
     real_t width;
     real_t height;
 
@@ -160,6 +164,13 @@ struct RectBlob{
             .half_height = height / 2,
         };
     }
+
+    // constexpr auto to_bounding_box() const {
+    //     return BoundingBox::from_center_and_size(
+    //         {0,0},
+    //         {width, height}
+    //     );
+    // }
 private:
     __fast_inline static constexpr bool s_is_covered(const RectBlob & self, const Vector2_t<real_t> offset){
         //fastest solution by benchmark
@@ -224,8 +235,8 @@ static_assert(blob.is_covered({0,0}) == true);
 
 static constexpr real_t PIXELS_PER_METER = 70;
 static constexpr real_t METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
-// static constexpr Vector2u CAMERA_SIZE = {188, 120};
-static constexpr Vector2u CAMERA_SIZE = {94, 60};
+static constexpr Vector2u CAMERA_SIZE = {188, 120};
+// static constexpr Vector2u CAMERA_SIZE = {94, 60};
 static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 
 static constexpr Vector2 transform_camera_to_scene(

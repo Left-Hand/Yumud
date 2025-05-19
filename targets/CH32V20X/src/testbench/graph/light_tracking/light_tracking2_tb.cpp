@@ -488,11 +488,11 @@ void light_tracking_main(void){
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
             
             // const auto u = micros();
-            displayer.put_next_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_next_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
             // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
 
-            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+            // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2u(20, 0, 20, 40));
         }
 
         // const uint32_t use_us = micros() - u;
@@ -518,11 +518,11 @@ void light_tracking_main(void){
 
             // const auto row = render_row_v2(LCD_W, y);
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-            displayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
             // DEBUG_PRINTLN(uint8_t(row[50].b));
 
-            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+            // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2u(20, 0, 20, 40));
         }
 
         

@@ -9,9 +9,9 @@ void Matcher::init(){
 
 }
 
-int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi, const real_t threshold){
+int Matcher::number(const Image<Grayscale> & src, const Rect2u & roi, const real_t threshold){
     const auto tmp_size = roi.size;
-    auto fault = src.clone(Rect2i(roi.position, tmp_size));
+    auto fault = src.clone(Rect2u(roi.position, tmp_size));
     auto fault_bina = make_bina_mirror(fault);
 
     for(size_t i = 0; i < N; i++){
@@ -34,7 +34,7 @@ int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi, const real
 }
 
 
-int Matcher::number(const Image<Binary> & src, const Rect2i & roi){
+int Matcher::number(const Image<Binary> & src, const Rect2u & roi){
     const auto tmp_size = roi.size;
 
     const auto begin = clock::millis();
@@ -53,11 +53,11 @@ int Matcher::number(const Image<Binary> & src, const Rect2i & roi){
 }
 
 
-int Matcher::april(const Image<Grayscale> &, const Rect2i & roi){
+int Matcher::april(const Image<Grayscale> &, const Rect2u & roi){
     return 0;
 }
 
-int Matcher::april(const Image<Binary> & src, const Rect2i & roi){
+int Matcher::april(const Image<Binary> & src, const Rect2u & roi){
     // using Vertex = std::array<Vector2i, 4>;
 
     // Vertex vertex;
@@ -80,7 +80,7 @@ real_t number_match(const Image<Grayscale> &src, const uint index){
 
             //     auto char_pos = rect.get_center();
             //     const Vector2i tmp_size = {8, 12};
-            //     const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
+            //     const Rect2u clip_window = Rect2u::from_center(char_pos, tmp_size);
             //     auto clipped = img.clone(clip_window);
 
 
@@ -89,7 +89,7 @@ real_t number_match(const Image<Grayscale> &src, const uint index){
             //     painter.setColor(RGB565::BLUE);
             //     painter.drawRoi(clip_window);
 
-            //     auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+            //     auto result = matcher.number(tmp, Rect2u(Vector2i(0,0), tmp_size));
 
             //     plot_number(clip_window, result);
 

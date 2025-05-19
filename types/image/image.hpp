@@ -36,7 +36,8 @@ public:
     }
 
     Image<ColorType> & clone(const Image<ColorType> & other){
-        const auto _size = (Rect2u(ImageBasics::size())).intersection(Rect2u(other.size())).size;
+        const auto _size = (Rect2u::from_size(ImageBasics::size())).
+            intersection(Rect2u::from_size(other.size())).size;
         this->size_mut() = _size;
         this->data_ = std::make_shared<ColorType[]>(_size.x * _size.y);
         memcpy(this->data_.get(), other.data_.get(), _size.x * _size.y * sizeof(ColorType));

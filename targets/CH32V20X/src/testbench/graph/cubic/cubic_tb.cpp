@@ -302,7 +302,7 @@ static void makeTriangle(void)
 	}
 }
 
-static void drawTriangle(const Rect2i & clip)
+static void drawTriangle(const Rect2u & clip)
 {
 	for (size_t k = 0; k < triangleIdx; k++)
 	{
@@ -501,7 +501,7 @@ void cubic_main(void){
 				}
 
 
-				const auto clip = Rect2i(
+				const auto clip = Rect2u(
 					LCD_W * i / M,
 					LCD_H * j / N,
 					LCD_W / M,

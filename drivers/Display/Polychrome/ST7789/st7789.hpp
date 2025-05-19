@@ -190,7 +190,7 @@ public:
         }
     private:
         const Vector2_t<uint16_t> size_;
-        Rect2_t<uint16_t> curr_area_ = Rect2u(0,0,1,1);
+        Rect2_t<uint16_t> curr_area_ = {0,0,1,1};
         uint32_t last_point_ = 0;
     };
 

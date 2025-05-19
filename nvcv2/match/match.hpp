@@ -16,10 +16,10 @@ protected:
     std::array<real_t, N> result;
 public:
     void init();
-    int number(const Image<Grayscale> &, const Rect2i & roi, const real_t threshold = real_t(0.0));
-    int number(const Image<Binary> &, const Rect2i & roi);
-    int april(const Image<Grayscale> &, const Rect2i & roi);
-    int april(const Image<Binary> &, const Rect2i & roi);
+    int number(const Image<Grayscale> &, const Rect2u & roi, const real_t threshold = real_t(0.0));
+    int number(const Image<Binary> &, const Rect2u & roi);
+    int april(const Image<Grayscale> &, const Rect2u & roi);
+    int april(const Image<Binary> &, const Rect2u & roi);
 };
 
 
