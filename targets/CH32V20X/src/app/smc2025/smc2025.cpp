@@ -64,9 +64,11 @@ using namespace ymd::smc::sim;
 //     return scene;
 // }
 
-class StatefulBlueprintFactory{
+
+
+static constexpr auto ROAD_WIDTH = 0.45_r; 
+class BlueprintFactory{
 public:
-    static constexpr auto ROAD_WIDTH = 0.45_r; 
     auto make_annular_sector(const real_t radius, const real_t rotation){
         const auto ret = AnnularSector{
             .inner_radius = radius - ROAD_WIDTH / 2,
@@ -75,93 +77,114 @@ public:
             .start_rad = viewpoint_.rad,
             .stop_rad = viewpoint_.rad + rotation
         } | Placement{
-            .pos = viewpoint_.org,
-            .rotation = viewpoint_.rad
+            .pos = viewpoint_.pos,
         };
 
         return ret;
     }
 
     auto make_stright(const real_t length){
-        const auto ret = RectBlob{
+        const auto ret = RotatedRect{
             .width = ROAD_WIDTH,
-            .height = length
-        } | Placement{
-            .pos = viewpoint_.org,
+            .height = length,
             .rotation = viewpoint_.rad
+        } | Placement{
+            .pos = viewpoint_.pos,
         };
 
         return ret;
     }
 private:
-    Ray2_t<real_t> viewpoint_;
+    Gest2_t<real_t> viewpoint_;
 };
 
 constexpr auto make_scene2(){
     return make_static_scene(
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
+        // AnnularSector{
+        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
+        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
             
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {0.0_r, 0.0_r}
-        },
+        //     .start_rad = 0.0_r,
+        //     .stop_rad = real_t(3 * PI / 2)
+        //     // .stop_rad = real_t(PI)
+        // } | Placement{
+        //     .pos = {0.0_r, 0.0_r}
+        // },
 
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
+        // AnnularSector{
+        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
+        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
             
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {-10.3_r, 0.0_r}
-        },
+        //     .start_rad = 0.0_r,
+        //     // .stop_rad = real_t(3 * PI / 2)
+        //     .stop_rad = real_t(PI)
+        // } | Placement{
+        //     .pos = {-10.3_r, 0.0_r}
+        // },
 
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
+        // AnnularSector{
+        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
+        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
             
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {-20.3_r, 0.0_r}
-        },
+        //     .start_rad = 0.0_r,
+        //     // .stop_rad = real_t(3 * PI / 2)
+        //     .stop_rad = real_t(PI)
+        // } | Placement{
+        //     .pos = {-20.3_r, 0.0_r}
+        // },
 
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
+        // AnnularSector{
+        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
+        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
             
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {5.3_r, 0.0_r}
-        },
+        //     .start_rad = 0.0_r,
+        //     // .stop_rad = real_t(3 * PI / 2)
+        //     .stop_rad = real_t(PI)
+        // } | Placement{
+        //     .pos = {5.3_r, 0.0_r}
+        // },
         
-        RectBlob{
-            .width = 0.45_r,
-            .height = 0.8_r
-        } | Placement{
-            .pos = {0.6_r, -0.4_r}
-        },
+        // RectBlob{
+        //     .width = ROAD_WIDTH,
+        //     .height = 0.8_r
+        // } | Placement{
+        //     .pos = {0.6_r, -0.4_r}
+        // },
 
-        RectBlob{
-            .width = 0.45_r,
-            .height = 0.8_r
-        } | Placement{
-            .pos = {-0.6_r, -0.4_r}
-        },
+        // RectBlob{
+        //     .width = ROAD_WIDTH,
+        //     .height = 0.8_r
+        // } | Placement{
+        //     .pos = {-0.6_r, -0.4_r}
+        // },
 
-        RectBlob{
-            .width = 1.8_r,
-            .height = 0.45_r
+        // RectBlob{
+        //     .width = ROAD_WIDTH,
+        //     .height = 0.8_r
+        // } | Placement{
+        //     .pos = {-0.6_r, -0.4_r}
+        // },
+
+        // RectBlob{
+        //     .width = 1.8_r,
+        //     .height = ROAD_WIDTH
+        // } | Placement{
+        //     .pos = {0.4_r, - 0.7_r}
+        // }
+
+        // RectBlob{
+        //     .width = 1.8_r,
+        //     .height = ROAD_WIDTH
+        // } | Placement{
+        //     .pos = {0, 0}
+        // }
+
+        RotatedRect{
+            .width = ROAD_WIDTH,
+            .height = 1.1_r,
+            .rotation = 0.3_r
         } | Placement{
-            .pos = {0.4_r, - 0.7_r}
+            .pos = {0.0_r, -0.0_r}
         }
 
     );
@@ -238,11 +261,11 @@ void smc2025_main(){
         renderer.draw_rect(Rect2u(0, 0, 20, 40));
 
         // const auto gray_img = camera.frame().clone();
-        const auto viewpoint = Ray2_t<real_t>{
-            {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
-            real_t(PI/2) + 0.09_r * sinpu(clock::time())};
-        // const auto viewpoint = Ray2_t<real_t>{
-        //     Vector2_t<real_t>(-20, 0), 0};
+        // const auto viewpoint = Gest2_t<real_t>{
+        //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
+        //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+        const auto viewpoint = Gest2_t<real_t>{
+            Vector2_t<real_t>(0, 0), real_t(PI/2)};
 
         const auto mbegin = clock::micros();
         const auto gray_img = scene.render(viewpoint);

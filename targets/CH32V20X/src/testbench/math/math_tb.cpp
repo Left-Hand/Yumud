@@ -194,7 +194,7 @@ void math_tb(){
 
 
     auto line = Line{Vector2_t<real_t>{1,0}, Vector2_t<real_t>{0,1}};
-    auto other = Line{Vector2_t<real_t>{0,0}, real_t(PI/4)};
+    auto other = Line::from_point_and_rad(Vector2_t<real_t>{0,0}, real_t(PI/4));
     print("line", line);
     print("other",other);
 
@@ -205,11 +205,11 @@ void math_tb(){
     print("abs", line.abs());
     print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.5_r}));
     print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line{Vector2_t<real_t>{0,0}, atan(real_t(0.3333_r))}));
-    print("foot", line.foot(Vector2_t<real_t>{0, 0.5_r}));
+    print("intersection", line.intersection(Line::from_point_and_rad(Vector2_t<real_t>{0,0}, atan(real_t(0.3333_r)))));
+    print("foot", line.foot_of(Vector2_t<real_t>{0, 0.5_r}));
     print("mirror", line.mirror(Vector2_t<real_t>{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vector2_t<real_t>{0, 0.5_r}));
-    print("orthogonal_with", line.orthogonal_with(Line{Vector2_t<real_t>{0,0}, real_t(PI/4)}));
+    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_rad(Vector2_t<real_t>{0,0}, real_t(PI/4))));
     print("unit", line.unit());
     print("rebase", line.rebase(Vector2_t<real_t>{-1,0}));
     print("rotated", line.rotated(Vector2_t<real_t>{-1,0}, real_t(PI/4)));
