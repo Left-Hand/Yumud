@@ -17,6 +17,11 @@ class _BMI088_Collections{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
+    using Error = ImuError;
+    
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class AccRange:uint8_t{
         _3G,
         _6G,
@@ -64,9 +69,11 @@ protected:
     using RegAddress = uint8_t;
 };
 
-class BMI088_Acc final: public _BMI088_Collections, public AccelerometerIntf{
+class BMI088_Acc final: 
+    public AccelerometerIntf,
+    public _BMI088_Collections{
 public:
-    using Error = ImuError;
+
 protected:
     real_t acc_scaler_ = 0;
     BoschSensor_Phy phy_;
@@ -145,7 +152,7 @@ protected:
     REG8_QUICK_DEF(0x7c, R8_AccPwrConf, acc_pwrconf_reg);
     REG8_QUICK_DEF(0x7d, R8_AccPwrCtrl, acc_pwrctrl_reg);
 
-    Result<void, Error> verify_chip_id();
+    [[nodiscard]] IResult<> verify_chip_id();
 
     class InterruptChannel{
     protected:
@@ -154,7 +161,7 @@ protected:
         InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
             bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-        Result<void, Error> enable_output(const bool en = true){
+        [[nodiscard]] IResult<> enable_output(const bool en = true){
             ctrl_.int_out = en;
             return bmi_.phy_.write_reg(address_, ctrl_);
         }
@@ -195,23 +202,28 @@ public:
     BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
-    Result<void, Error> init();
-    Result<void, Error> reset();
-    Result<void, Error> validate();
-    Result<void, Error> update();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
 
-    Option<Vector3_t<q24>> read_acc();
-    Option<real_t> read_temp();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<real_t> read_temp();
 
-    Result<void, Error> set_acc_range(const AccRange range);
-    Result<void, Error> set_acc_bwp(const AccBwp bwp);
-    Result<void, Error> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_range(const AccRange range);
+    [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 };
 
 
-class BMI088_Gyr final:public _BMI088_Collections, public GyroscopeIntf{
+class BMI088_Gyr final:
+    public GyroscopeIntf,
+    public _BMI088_Collections{
 public:
     using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 protected:
     BoschSensor_Phy phy_;
     real_t gyr_scaler_ = 0;
@@ -254,7 +266,7 @@ protected:
         uint8_t :3;
     }DEF_R8(gyro_selftest_reg)
 
-    Result<void, Error> verify_chip_id();
+    [[nodiscard]] IResult<> verify_chip_id();
 
     static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
         switch(range){
@@ -282,15 +294,15 @@ public:
     BMI088_Gyr(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
-    Result<void, Error> init();
-    Result<void, Error> reset();
-    Result<void, Error> validate();
-    Result<void, Error> update();
-    Option<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
 
 
-    Result<void, Error> set_gyr_range(const GyrRange range);
-    Result<void, Error> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 };
     
 

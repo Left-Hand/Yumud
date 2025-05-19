@@ -179,7 +179,7 @@ IResult<> L3G4200D::calibrate(uint8_t samples){
     //     sigma[1] += delta[1] * delta[1];
     //     sigma[2] += delta[2] * delta[2];
 
-    //     delay(5);
+    //     clock::delay(5ms);
     // }
     // // Calculate delta
     // delta[0] = sum[0] / samples;
@@ -199,8 +199,8 @@ IResult<> L3G4200D::update(){
 }
 
 
-Option<Vector3_t<q24>> L3G4200D::read_acc(){
-    return None;
+IResult<Vector3_t<q24>> L3G4200D::read_acc(){
+    return Ok(Vector3_t<q24>());
 }
 
 IResult<uint8_t> L3G4200D::read_temperature(){

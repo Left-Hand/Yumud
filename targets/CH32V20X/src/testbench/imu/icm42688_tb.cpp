@@ -39,7 +39,7 @@ static void icm42688_tb(ICM42688 & imu){
     //     else{
     //         DEBUG_PRINTLN("ok");
     //     }
-    //     delay(1);
+    //     clock::delay(1ms);
     // }
     DEBUG_PRINTLN("init started");
 
@@ -47,7 +47,7 @@ static void icm42688_tb(ICM42688 & imu){
     imu.init().unwrap();
 
     q24 z = 0;
-    uint32_t exe = 0;
+    Microseconds exe = 0us;
 
     const real_t tau = 1.3_r;
     Mahony mahony{{
@@ -59,19 +59,19 @@ static void icm42688_tb(ICM42688 & imu){
 
     timer1.init(FS);
     timer1.attach(TimerIT::Update, {0,0},[&]{
-        const auto u0 = micros();
+        const auto u0 = clock::micros();
         imu.update().unwrap();
         z = z + INV_FS * imu.read_gyr().unwrap().z;
         // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
         // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
         mahony.myupdate_v2(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
-        exe = micros() - u0;
+        exe = clock::micros() - u0;
     });
 
     while(true){
-        // const auto u0 = micros();
+        // const auto u0 = clock::micros();
         // imu.update().unwrap();
-        // const auto u1 = micros();
+        // const auto u1 = clock::micros();
         // const auto acc = imu.read_acc().unwrap();
         // const auto gyr = imu.read_gyr().unwrap();
         // const auto gest = Quat_t<real_t>::from_shortest_arc(
@@ -90,7 +90,7 @@ static void icm42688_tb(ICM42688 & imu){
         //     // ,imu.read_gyr().unwrap()
         //     // ,z, exe
         );
-        delay(1);
+        clock::delay(1ms);
         // DEBUG_PRINTLN(mahony.result().normalized(), z, exe);
         // DEBUG_PRINTLN(mahony.result().to_euler(), z, exe);
         // DEBUG_PRINTLN(z);
@@ -112,7 +112,7 @@ void icm42688_main(){
     i2c.init(4000_KHz);
     // i2c.init();
 
-    delay(200);
+    clock::delay(200ms);
 
 
     // ICM42688 imu = {i2c};

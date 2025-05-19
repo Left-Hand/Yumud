@@ -58,7 +58,7 @@ struct Theme{
 class CanvasItem{
 public:
     // struct Config{
-    Rect2i rect = Rect2i();
+    Rect2u rect = Rect2u();
     // };  
     // auto config() const{return config_;}
 protected:
@@ -91,7 +91,7 @@ public:
         painter.draw_hollow_rect(rect).unwrap();
 
         painter.set_color(theme_.text_color);
-        painter.draw_string(rect.position + Vector2i(10,7), StringView(text)).unwrap();
+        painter.draw_string(rect.position + Vector2u(10,7), StringView(text)).unwrap();
     }
 };
 
@@ -113,17 +113,17 @@ public:
         painter.set_color(theme_.stroke_color);
         painter.draw_hollow_rect(rect).unwrap();
         
-        scexpr auto sp = 3;
-        auto sb = rect.position + Vector2i{sp, rect.size.y/2};
+        scexpr auto sp = 3u;
+        auto sb = rect.position + Vector2u{sp, rect.size.y/2};
         auto sw = rect.size.x - 2 * sp;
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2i{sb, Vector2i{sw, 2}});
+        painter.draw_filled_rect(Rect2u{sb, Vector2u{sw, 2}});
 
-        scexpr auto h = 6;
-        scexpr auto w = 6;
+        scexpr auto h = 6u;
+        scexpr auto w = 6u;
         painter.set_color(theme_.text_color);
-        painter.draw_filled_rect(Rect2i{sb + Vector2i{5, - h / 2}, Vector2i{w, h}});
+        painter.draw_filled_rect(Rect2u{sb + Vector2i{5, - h / 2}, Vector2u{w, h}});
     }
 };
 
@@ -140,13 +140,13 @@ public:
         painter.draw_hollow_rect(rect).unwrap();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
+        painter.draw_filled_rect(Rect2u{rect.position + Vector2u(3,6), Vector2u(22,10)});
 
         painter.set_color(theme_.text_color);
-        painter.draw_filled_circle(rect.position + Vector2i(10,10), 5).unwrap();
+        painter.draw_filled_circle(rect.position + Vector2u(10,10), 5).unwrap();
 
         painter.set_color(theme_.text_color);
-        painter.draw_string(rect.position + Vector2i(30,7), "选择").unwrap();
+        painter.draw_string(rect.position + Vector2u(30,7), "选择").unwrap();
 
         
     }

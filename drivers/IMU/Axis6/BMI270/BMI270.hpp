@@ -5,9 +5,16 @@
 
 namespace ymd::drivers{
 
-class BMI270 final:public AccelerometerIntf, public GyroscopeIntf{
-public:
+struct BMI270_Collections{
     using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
+
+    using RegAddress = uint8_t;
+
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -41,12 +48,9 @@ public:
         FAST_SETUP
     };
 
-protected:
-    BoschSensor_Phy phy_;
+};
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
-
-    using RegAddress = uint8_t;
+struct BMI270_Regs:public BMI270_Collections{
     
     #include "regs.ipp"
 
@@ -62,21 +66,31 @@ protected:
     
     IntStatus0Reg int_status0_reg = {};
     IntStatus1Reg int_status1_reg = {};
+};
 
+class BMI270 final:
+    public AccelerometerIntf, 
+    public GyroscopeIntf,
+    private BMI270_Regs{
 public:
+    using Error = BMI270_Collections::Error;
+
     BMI270(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
 
-    void init();
-    void update();
-    bool validate();
-    void reset();
+    IResult<> init();
+    IResult<> update();
+    IResult<> validate();
+    IResult<> reset();
 
-    void setPmuMode(const PmuType pum, const PmuMode mode);
+    IResult<> setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    Option<Vector3_t<q24>> read_acc();
-    Option<Vector3_t<q24>> read_gyr();
+    IResult<Vector3_t<q24>> read_acc();
+    IResult<Vector3_t<q24>> read_gyr();
+private:
+    BoschSensor_Phy phy_;
+
 };
 
 }

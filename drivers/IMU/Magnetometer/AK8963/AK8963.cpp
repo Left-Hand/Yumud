@@ -46,10 +46,10 @@ Result<void, Error> AK8963::init(){
     AK8963_DEBUG("AK8963 init begin");
     AK8963_ASSERT(validate().is_ok(), "AK8963 verify failed");
 
-    delay(2);
+    clock::delay(2ms);
     if(const auto res = reset();
         res.is_err()) return Err(res.unwrap_err());
-    delay(2);
+    clock::delay(2ms);
 
     {
         const auto coeff_res = get_coeff();
@@ -65,7 +65,7 @@ Result<void, Error> AK8963::init(){
         );
     }
 
-    delay(10);
+    clock::delay(10ms);
 
     if(const auto res = set_mode(Mode::ContMode2);
         res.is_err()) return Err(res.unwrap_err());
@@ -112,7 +112,7 @@ Result<void, Error> AK8963::reset(){
     cntl2_reg.srst = 1;
     const auto res = write_reg(cntl2_reg.address, cntl2_reg);
     cntl2_reg.srst = 0;
-    delay(1);
+    clock::delay(1ms);
     return res;
 }
 

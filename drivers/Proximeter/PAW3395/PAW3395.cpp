@@ -124,12 +124,12 @@ IResult<> PAW3395::powerup(){
 	if(const auto res = write_reg(PAW3395_REG_POWER_UP_RESET, 0x5A);
 		res.is_ok()) return res;
 
-	delay(5);
+	clock::delay(5ms);
 
 	if(const auto res = write_list(std::span(INIT_TABLE_1));
 		res.is_err()) return res;
 
-	delay(1);
+	clock::delay(1ms);
 
 	bool is_susccessfully_inited = false;
 	static constexpr size_t MAX_RETRY_TIMES = 60;
@@ -143,7 +143,7 @@ IResult<> PAW3395::powerup(){
 			return Err(res.unwrap_err());
 		}
 		
-		delay(1);
+		clock::delay(1ms);
 	}
 
 	if(const auto res = write_reg(0x7F, 0x14);

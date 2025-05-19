@@ -163,8 +163,8 @@ void lt8960_tb(){
     
     auto tx_task = [&]{
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
-        // std::array data = {uint8_t(uint8_t(64 + 64 * sin(time() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
-        const auto t = time();
+        // std::array data = {uint8_t(uint8_t(64 + 64 * sin(clock::time() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
+        const auto t = clock::time();
         const auto [s, c] = sincos(frac(t) * tau);
         // auto [u, v, w] = SVM(s,c);
         // const auto payload = serialize_args_to_bytes(u, v, t);
@@ -197,8 +197,8 @@ void lt8960_tb(){
             // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const uint8_t>(buf));
             // auto [u] = make_tuple_from_bytes<std::tuple<real_t>>(std::span<const uint8_t>(data));
             auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
-            // DEBUG_PRINTLN(u, v, w, time() - tt);
-            // DEBUG_PRINTLN(u, v, time() - w, mend -  mbegin);
+            // DEBUG_PRINTLN(u, v, w, clock::time() - tt);
+            // DEBUG_PRINTLN(u, v, clock::time() - w, mend -  mbegin);
             // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, std::showbase, data);
             // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, data);
             if(may_res.is_some()) {
@@ -216,7 +216,7 @@ void lt8960_tb(){
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
     }
 
-    delay(5);
+    clock::delay(5ms);
 
     if (has_rx_authority()) {
         hal::timer2.init(RX_FREQ);

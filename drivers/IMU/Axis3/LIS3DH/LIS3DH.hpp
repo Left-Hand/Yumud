@@ -126,16 +126,16 @@ public:
 
     using Error = ImuError;
 
-    template<typename T>
-    using Result = Result<T, Error>; 
+    template<typename T = void>
+    using IResult = Result<T, Error>; 
 protected:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
-    Result<void> write_reg(const auto & reg);
+    IResult<> write_reg(const auto & reg);
 
-    Result<void> read_reg(auto & reg);
+    IResult<> read_reg(auto & reg);
 
-    Result<void> verify_phy();
+    IResult<> verify_phy();
 
     Regs regs_ = {};
 
@@ -150,49 +150,49 @@ public:
     LIS3DH(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
     LIS3DH(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
-    Result<void> init();
-    Result<void> update();
-    Result<void> validate();
-    Result<void> reset();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> reset();
 
-    Result<void> clear_flag();
+    [[nodiscard]] IResult<> clear_flag();
 
-    Option<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
 
-    Result<void> sleep()
+    [[nodiscard]] IResult<> sleep()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = false; return write_reg(reg);}
-    Result<void> wakeup()
+    [[nodiscard]] IResult<> wakeup()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = true; return write_reg(reg);}
 
-    Result<void> enable_drdy_pulse(const Enable en)
+    [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en)
         {auto & reg = regs_.ctrl1_reg; reg.drdy_pulse = bool(en); return write_reg(reg);}
 
-    Result<void> block_when_update(const Enable en)
+    [[nodiscard]] IResult<> block_when_update(const Enable en)
         {auto & reg = regs_.ctrl1_reg; reg.drdy_pulse = bool(en); return write_reg(reg);}
 
 
     enum class FilteringStrategy:uint8_t{ FIR, IIR};
     enum class Bandwidth:uint8_t{_440Hz, _235Hz};
     
-    Result<void> set_filtering_strategy(const FilteringStrategy st)
+    [[nodiscard]] IResult<> set_filtering_strategy(const FilteringStrategy st)
         {auto & reg = regs_.ctrl4_reg; reg.dsp_lp_type = bool(st); return write_reg(reg);}
 
-    Result<void> set_bandwidth(const Bandwidth bw)
+    [[nodiscard]] IResult<> set_bandwidth(const Bandwidth bw)
         {auto & reg = regs_.ctrl4_reg; reg.dsp_bw_sel = bool(bw); return write_reg(reg);}
 
-    Result<void> set_selftest_mode(const SelfTestMode mode)
+    [[nodiscard]] IResult<> set_selftest_mode(const SelfTestMode mode)
         {auto & reg = regs_.ctrl4_reg; reg.selftest_mode = uint8_t(mode); return write_reg(reg);}
 
-    Result<void> set_int1_pp_or_od(const FormerLatter sel)
+    [[nodiscard]] IResult<> set_int1_pp_or_od(const FormerLatter sel)
         {auto & reg = regs_.ctrl4_reg; reg.pp_od_int1 = sel; return write_reg(reg);}
 
-    Result<void> set_int2_pp_or_od(const FormerLatter sel)
+    [[nodiscard]] IResult<> set_int2_pp_or_od(const FormerLatter sel)
         {auto & reg = regs_.ctrl4_reg; reg.pp_od_int2 = sel; return write_reg(reg);}
         
-    Result<void> enable_fifo(const Enable en)
+    [[nodiscard]] IResult<> enable_fifo(const Enable en)
         {auto & reg = regs_.ctrl4_reg; reg.fifo_en = bool(en); return write_reg(reg);}
 
-    Result<void> enable_spi_hw(const Enable en)
+    [[nodiscard]] IResult<> enable_spi_hw(const Enable en)
         {auto & reg = regs_.ctrl5_reg; reg.fifo_spi_hs_on = bool(en); return write_reg(reg);}
 
 
@@ -202,16 +202,16 @@ public:
 
 namespace ymd::drivers{
 
-LIS3DH::Result<void> LIS3DH::write_reg(const auto & reg){
-    return LIS3DH::Result<void>(phy_.write_reg(reg.address, reg.as_val()));
+LIS3DH::IResult<> LIS3DH::write_reg(const auto & reg){
+    return LIS3DH::IResult<>(phy_.write_reg(reg.address, reg.as_val()));
 }
 
-LIS3DH::Result<void> LIS3DH::read_reg(auto & reg){
-    return LIS3DH::Result<void>(phy_.read_reg(reg.address, reg.as_ref()));
+LIS3DH::IResult<> LIS3DH::read_reg(auto & reg){
+    return LIS3DH::IResult<>(phy_.read_reg(reg.address, reg.as_ref()));
 }
 
-LIS3DH::Result<void> LIS3DH::verify_phy(){
-    return LIS3DH::Result<void>(phy_.validate());
+LIS3DH::IResult<> LIS3DH::verify_phy(){
+    return LIS3DH::IResult<>(phy_.validate());
 }
 
 }

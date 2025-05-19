@@ -18,80 +18,62 @@ using namespace ymd::drivers;
 #endif
 
 
-#define ACCESS_STRICT_PROTECT
-
-#ifdef ACCESS_STRICT_PROTECT
-#define CHECK_ADDR(loc)\
-AT24CXX_ASSERT((loc <= capacity_), "invalid addr", loc, capacity_)
-#else
-
-#define CHECK_ADDR(loc)\
-if(loc > m_capacity){\
-    AT24CXX_ASSERT("invalid addr");\
-    return;\
-}
-
-#endif
-
     
-hal::HalResult AT24CXX::write_pool(const size_t addr, const uint8_t * data, const size_t len){
-    AT24CXX_DEBUG("write", len, "bytes to", addr);
-    // DEBUGGER.print_arr(data, len);
+hal::HalResult AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pdata){
     if (is_small_chip()){
-        return i2c_drv_.write_burst(uint8_t(addr), std::span(data, len));
+        return i2c_drv_.write_burst(uint8_t(addr.as_u32()), pdata);
     }else{
-        return i2c_drv_.write_burst((uint16_t)addr, std::span(data, len));
+        return i2c_drv_.write_burst(uint16_t(addr.as_u32()), pdata);
     }
 }
 
-hal::HalResult AT24CXX::read_pool(const size_t addr, uint8_t * data, const size_t len){
-    AT24CXX_DEBUG("read", len, "bytes to", addr);
+hal::HalResult AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pdata){
     if (is_small_chip()){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+        return i2c_drv_.read_burst(uint8_t(addr.as_u32()), pdata);
     }else{
-        return i2c_drv_.read_burst((uint16_t)addr, std::span(data, len));
+        return i2c_drv_.read_burst(uint16_t(addr.as_u32()), pdata);
     }
 }
 
 
-void AT24CXX::wait_for_free(){
-    uint32_t delays;
-    if(last_entry_ms == 0){
-        delays = min_duration_ms;
-        update_entry_ms();
-    }else{
-        delays = min_duration_ms;
-    }
-
-    AT24CXX_DEBUG("wait for", delays, "ms");
-    delay(delays);
-    // delay(400);
-}
-
-void AT24CXX::store_bytes(const Address loc, const void * data, const Address len){
-    auto full_end = loc + len; 
-    CHECK_ADDR(full_end);
-
-    
-    AddressView store_window = AddressView{loc,loc + len};
-    AddressView op_window = {0,0};
-
-    AT24CXX_DEBUG("multi store entry", store_window);
-
+template<typename FnBefore, typename FnExecute, typename FnAfter>
+auto internate_grid(
+    const uint32_t address, 
+    const uint32_t grid,
+    const std::span<const uint8_t> pdata,
+    const FnBefore&& fn_before, 
+    FnExecute&& fn_execute, 
+    FnAfter&& fn_after
+){
+    Range2_t<uint32_t> store_window = {address,address + grid};
+    Range2_t<uint32_t> op_window = {0,0};
     do{
-        op_window = store_window.grid_forward(op_window, m_pagesize);
+        op_window = store_window.grid_forward(op_window, grid);
         if(op_window.length() != 0){
-            wait_for_free();
-            const uint8_t * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
-            write_pool(op_window.from, ptr, op_window.length());
-            update_entry_ms();
+            std::forward<FnBefore>(fn_before)();
+            const uint8_t * ptr = (pdata.data() + (op_window.from - store_window.from));
+            std::forward<FnExecute>(fn_execute)(op_window.from, std::span<const uint8_t>(ptr, op_window.length()));
+            std::forward<FnAfter>(fn_after)();
         }
     }while(op_window.length());
 }
 
+// void AT24CXX::store_bytes_impl(const Address loc, const std::span<const uint8_t> pdata){
+//     // const auto full_end = loc + len; 
+//     // CHECK_ADDR(full_end);
 
-void AT24CXX::load_bytes(const Address loc, void * data, const Address len){
-    auto full_end = loc + len; 
-    CHECK_ADDR(full_end);
-    read_pool(loc, reinterpret_cast<uint8_t *>(data), len);
+//     internate_grid(
+//         loc.as_u32(),
+//         pagesize_,
+//         pdata,
+//         [this]{blocking_until_free();},
+//         [this](const uint32_t address, const std::span<const uint8_t> pdata){write_burst(Address(address), pdata);},
+//         [this]{state_ = Operation::Store;},
+//     );
+// }
+
+
+void AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pdata){
+    // auto full_end = loc + ; 
+    read_burst(loc, pdata);
 }

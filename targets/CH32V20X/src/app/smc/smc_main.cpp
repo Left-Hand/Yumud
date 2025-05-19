@@ -112,7 +112,7 @@ void SmartCar::init_periphs(){
     timer8.oc(1).init();
     timer8.oc(2).init();
 
-    delay(200);
+    clock::delay(200ms);
 }
 
 void SmartCar::init_fans(){
@@ -220,7 +220,7 @@ void SmartCar::main(){
     init_debugger();
     init_periphs();
 
-    delay(200);
+    clock::delay(200ms);
 
     init_fans();
     init_sensor();
@@ -412,7 +412,7 @@ void SmartCar::main(){
     
     camera.setExposureValue(1000);
 
-    delay(500);
+    clock::delay(500ms);
 
     #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
 

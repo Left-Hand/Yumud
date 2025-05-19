@@ -20,7 +20,9 @@ public:
     scexpr Range2_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
     // constexpr Range2_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
 
-    [[nodiscard]] constexpr Range2_t() = default;
+    [[nodiscard]] constexpr Range2_t():
+        from(static_cast<T>(0)),
+        to(static_cast<T>(0)){;}
 
     [[nodiscard]] constexpr Range2_t(const T _from, const T _to): from(_from), to(_to) {
         *this = this -> abs();

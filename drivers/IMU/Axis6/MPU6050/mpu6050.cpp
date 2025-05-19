@@ -42,6 +42,9 @@ using namespace ymd::drivers;
 
 using Error = MPU6050::Error;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     phy_(i2c_drv),
     package_(package){
@@ -94,22 +97,22 @@ Result<void, Error> MPU6050::update(){
     return res;
 }
 
-Option<Vector3_t<q24>> MPU6050::read_acc(){
+IResult<Vector3_t<q24>> MPU6050::read_acc(){
     real_t x = uni(acc_x_reg) * acc_scaler_;
     real_t y = uni(acc_y_reg) * acc_scaler_;
     real_t z = uni(acc_z_reg) * acc_scaler_;
-    return  Some{Vector3_t<q24>{x, y, z}};
+    return  Ok{Vector3_t<q24>{x, y, z}};
 }
 
-Option<Vector3_t<q24>> MPU6050::read_gyr(){
+IResult<Vector3_t<q24>> MPU6050::read_gyr(){
     real_t x = uni(gyr_x_reg) * gyr_scaler_;
     real_t y = uni(gyr_y_reg) * gyr_scaler_;
     real_t z = uni(gyr_z_reg) * gyr_scaler_;
-    return Some{Vector3_t<q24>{x, y, z}};
+    return Ok{Vector3_t<q24>{x, y, z}};
 }
 
-Option<real_t> MPU6050::read_temp(){
-    return optcond(data_valid, Some(real_t(36.65f) + uni(temperature_reg) / 340));
+Result<real_t, Error> MPU6050::read_temp(){
+    return Ok(real_t(36.65f) + uni(temperature_reg) / 340);
 }
 
 Result<void, Error> MPU6050::set_acc_range(const AccRange range){

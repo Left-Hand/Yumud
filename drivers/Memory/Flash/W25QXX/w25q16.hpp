@@ -5,6 +5,7 @@
 
 #include "hal/bus/spi/spidrv.hpp"
 
+#if 0
 namespace ymd{
 
 
@@ -88,3 +89,5 @@ private:
 };
 
 }
+
+#endif

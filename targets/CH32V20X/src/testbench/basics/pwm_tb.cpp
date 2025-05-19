@@ -46,10 +46,10 @@ void pwm_tb(OutputStream & logger){
     #endif
 
     while(true){
-        const auto t = time();
+        const auto t = clock::time();
         logger.println(t, pwm.cnt(), pwm.cvr());
         pwm.set_duty(0.5_q * sin(4 * t) + 0.5_q);
-        udelay(100);
+        clock::delay(100us);
     }
 
 }

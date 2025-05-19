@@ -133,7 +133,7 @@ void proxy_tb(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
     StringStream ss;
-    uint32_t dur;
+    Microseconds dur;
     {
 
         std::vector<DrawableProxy> shapes;
@@ -174,17 +174,17 @@ void proxy_tb(){
 
 
         ss.reserve(1000);
-        auto m = micros();
+        const auto m = clock::micros();
         
         char buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            qtoa(time(), buf, 4);
+            qtoa(clock::time(), buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);
         }
-        dur = micros() - m;
+        dur = clock::micros() - m;
 
         // using type = decltype(nullptr);
         // std::nullptr_t
@@ -206,12 +206,12 @@ void proxy_tb(){
     DEBUG_PRINTLN("!!!!");
     DEBUG_PRINTLN(StringView(ss));
     DEBUG_PRINTLN("!!!!");
-    delay(100);
+    clock::delay(100ms);
     DEBUG_PRINTLN("done", dur);
 
     // while(true){
     //     DEBUG_PRINTLN(13 * sin(13 * t));
-    //     delay(1);
+    //     clock::delay(1ms);
     // }
 
     while(true);

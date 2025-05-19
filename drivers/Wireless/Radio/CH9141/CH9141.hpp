@@ -63,7 +63,7 @@ protected:
     protected:
         hal::GpioIntf & m_set_gpio;
         void mdelay(){
-            delay(1);
+            clock::delay(1ms);
         }
     public:
         SetKeeper(hal::GpioIntf & set_pin):m_set_gpio(set_pin){
@@ -109,7 +109,7 @@ protected:
         // }
 
 
-        udelay(1);
+        clock::delay(1us);
         at_gpio_.set();
         return is_valid;
     }

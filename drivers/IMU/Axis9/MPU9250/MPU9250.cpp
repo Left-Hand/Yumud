@@ -22,6 +22,6 @@ Result<void, Error> MPU9250::enableChainMode(Enable en){
     //     MPU9250_WR_Reg(MPU9250_ADDR,INT_PIN_CFG,0x02);//Set PassBy
     // i2c_dev = MPU9250_RD_Reg(MAG_ADDR,0x00);//Read MAG ID,should be 0x48
 
-    delay(5);
+    clock::delay(5ms);
     return Ok{};
 }

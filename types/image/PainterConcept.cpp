@@ -39,7 +39,7 @@ IResult<> PainterConcept::draw_hollow_rect(const Rect2u & rect){
 
 
 IResult<> PainterConcept::draw_hollow_circle(const Vector2u & pos, const uint radius){
-    if((!(Rect2u::from_center(pos, Vector2u(radius, radius))
+    if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
         .intersects(this->get_clip_window())))) return Ok();
 
     if(radius == 0) return Ok();
@@ -79,7 +79,7 @@ IResult<> PainterConcept::draw_hollow_circle(const Vector2u & pos, const uint ra
 }
 
 IResult<> PainterConcept::draw_filled_circle(const Vector2u & pos, const uint radius){
-    if((!(Rect2u::from_center(pos, Vector2u(radius, radius))
+    if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
         .inside(Rect2u(Vector2u(0,0), get_clip_window().size))))) return Ok();
     
 
@@ -128,7 +128,7 @@ IResult<> PainterConcept::draw_hollow_ellipse(const Vector2u & pos, const Vector
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
-    if (!this->get_clip_window().intersects(Rect2u::from_center(pos, r))) return Ok();
+    if (!this->get_clip_window().intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
     if (rx<2 || ry<2 ) return Ok();
 
     int x0 = pos.x;
@@ -172,7 +172,7 @@ IResult<> PainterConcept::draw_filled_ellipse(const Vector2u & pos, const Vector
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
-    if (rx<2 || ry<2|| !this->get_clip_window().intersects(Rect2u::from_center(pos, r))) return Ok();
+    if (rx<2 || ry<2|| !this->get_clip_window().intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
 
     int x0 = pos.x;
     int y0 = pos.y;

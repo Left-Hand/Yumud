@@ -146,7 +146,7 @@ void sincos_pwm_main(){
 
     while(true){
         
-        const auto t = time() * real_t(3 * TAU);
+        const auto t = clock::time() * real_t(3 * TAU);
         const auto [st, ct] = sincospu(t);
         
         pwm_a.set_duty(st);

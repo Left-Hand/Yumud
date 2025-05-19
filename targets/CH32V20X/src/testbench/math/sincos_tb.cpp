@@ -96,13 +96,13 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
     constexpr uint32_t uiq31_quatpi = uint32_t(uint64_t(1 << 29) * (PI));
 
     const uint32_t uiq31_flip_x = (sect & 0b1) ? (uiq31_quatpi - uiq31_eeq_x) : uiq31_eeq_x;
-    //将x由锯齿波变为三角�?
+    //将x由锯齿波变为三角�?
 
     const int32_t iq31_x = uiq31_flip_x & 0x01ffffff;
-    //获取每个扇区的偏移�?
+    //获取每个扇区的偏移�?
 
     const uint8_t lut_index = (uint16_t)(uiq31_flip_x >> 25) & 0x003f;
-    //计算查找表索�?
+    //计算查找表索�?
 
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
@@ -119,15 +119,15 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
 
     return __IQNgetCosSinPUTemplate<Q>(
         (uint32_t(iqn_x) * uiqn_inv_tau) >> Q, std::forward<Fn>(fn));
-    //现在直接缩到原来1/pi 调用pu版本 这样减少了一次取�?(复杂度与除法相同) 性能提高20%
-    //这个函数后面的不用看�?
+    //现在直接缩到原来1/pi 调用pu版本 这样减少了一次取�?(复杂度与除法相同) 性能提高20%
+    //这个函数后面的不用看�?
 
     iqn_x = iqn_x % iqn_tau;
     if(iqn_x < 0) iqn_x += iqn_tau;
     //将x取余到[0, 2 * pi)之间
 
     const uint32_t uiqn_norm_x = (uint32_t(iqn_x) * uiqn_inv_tau >> Q);
-    //计算x / tau的�? 即为[0, 2pi) 之间到[0, 1)之前的锯齿波 以方便提取区块索�?
+    //计算x / tau的�? 即为[0, 2pi) 之间到[0, 1)之前的锯齿波 以方便提取区块索�?
 
     constexpr uint32_t eeq_mask = ((1 << (Q-3)) - 1);
     const uint8_t sect = uiqn_norm_x >> (Q - 3);
@@ -142,13 +142,13 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
     constexpr uint32_t uiq31_quatpi = uint32_t(uint64_t(1 << 29) * (PI));
 
     const uint32_t uiq31_flip_x = (sect & 0b1) ? (uiq31_quatpi - uiq31_eeq_x) : uiq31_eeq_x;
-    //将x由锯齿波变为三角�?
+    //将x由锯齿波变为三角�?
 
     const int32_t iq31_x = uiq31_flip_x & 0x01ffffff;
-    //获取每个扇区的偏移�?
+    //获取每个扇区的偏移�?
 
     const uint8_t lut_index = (uint16_t)(uiq31_flip_x >> 25) & 0x003f;
-    //计算查找表索�?
+    //计算查找表索�?
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
 }
@@ -159,7 +159,7 @@ auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 
     const int32_t iq31_sin = __iqdetails::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos = __iqdetails::_IQ31CosLookup[lut_index];
-    //获取查找表的校准�?
+    //获取查找表的校准�?
 
     switch(sect){
         case 0: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
@@ -224,13 +224,13 @@ __fast_inline constexpr std::array<iq_t<Q>, 2> mysincospu(const iq_t<P> iq_x){
 
 
 template<typename Fn>
-__no_inline uint32_t eval_func(Fn && fn){
-    auto y = std::forward<Fn>(fn)(time());
+__no_inline auto eval_func(Fn && fn){
+    auto y = std::forward<Fn>(fn)(clock::time());
 
     static constexpr size_t times = 10000;
 
-    const auto begin_m = micros();
-    const auto t = time();
+    const auto begin_m = clock::micros();
+    const auto t = clock::time();
     for(size_t i = 0; i < times; ++i){
         __nop;
         (y) = (std::forward<Fn>(fn)(t));
@@ -238,20 +238,20 @@ __no_inline uint32_t eval_func(Fn && fn){
         // __nop;
     }
 
-    const auto end_m = micros();
+    const auto end_m = clock::micros();
     // DEBUG_PRINTLN(uint32_t(end_m - begin_m) / times);
-    return uint32_t((end_m - begin_m));
+    return (end_m - begin_m);
 }
 
 template<typename Fn>
-void test_func(Fn && fn, const uint32_t dur){
+void test_func(Fn && fn, const Milliseconds dur){
     while(true){
-        const auto t = time();
+        const auto t = clock::time();
         const auto x = 2 * frac(t * 2) * real_t(TAU) -  1000 * real_t(TAU);
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
         DEBUG_PRINTLN(x, y, dur);
-        delay(1);
+        clock::delay(1ms);
     }
 }
 
@@ -276,8 +276,8 @@ void sincos_main(){
     DEBUGGER.no_brackets();
 
 
-    delay(200);
+    clock::delay(200ms);
 
-    const uint32_t dur = eval_func(func);
-    test_func(func, dur);
+    const auto dur = eval_func(func);
+    // test_func(func, dur);
 }

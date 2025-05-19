@@ -1,6 +1,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
+#include "core/fp/matchit.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -139,42 +140,78 @@ private:
 class ServoCtrlSystem{
 public:
     void update(){
-        encoder_.update().unwrap();
-        const auto lap_pos_raw = encoder_.get_lap_position().unwrap();
-        fb_pos_td_.update(lap_pos_raw);
+        // encoder_.update().unwrap();
+        // const auto lap_pos_raw = encoder_.get_lap_position().unwrap();
+        // fb_pos_td_.update(lap_pos_raw);
 
-        const auto pos_meas = fb_pos_td_.get()[0];
-        const auto spd_meas = fb_pos_td_.get()[1];
+        // const auto pos_meas = fb_pos_td_.get()[0];
+        // const auto spd_meas = fb_pos_td_.get()[1];
 
-        const auto pos_ref = cmd_pos_td_.get()[0];
-        const auto spd_ref = cmd_pos_td_.get()[1];
+        // const auto pos_ref = cmd_pos_td_.get()[0];
+        // const auto spd_ref = cmd_pos_td_.get()[1];
 
-        dynamics_.update({
-            .pos_meas = pos_meas,
-            .spd_meas = spd_meas,
-            .pos_ref = pos_ref,
-            .spd_ref = spd_ref
-        });
+        // dynamics_.update({
+        //     .pos_meas = pos_meas,
+        //     .spd_meas = spd_meas,
+        //     .pos_ref = pos_ref,
+        //     .spd_ref = spd_ref
+        // });
 
-        const auto torque = dynamics_.get().torque;
+        // const auto torque = dynamics_.get().torque;
 
-        electric_.update({
-            .curr_meas_raw = 0,
-            .curr_targ = torque,
-        });
+        // electric_.update({
+        //     .curr_meas_raw = 0,
+        //     .curr_targ = torque,
+        // });
 
-        const auto duty = electric_.get().duty;
-        pwm.set_duty(duty);
+        // const auto duty = electric_.get().duty;
+        // pwm_.set_duty(duty);
     }
+
+    ServoCtrlSystem(hal::AnalogInIntf & ana, hal::PwmIntf & pwm):
+        encoder_(drivers::AnalogEncoder::Config{.volt_range = {}, .pos_range = {}}, ana),
+        pwm_(pwm){;}
 private:    
     drivers::AnalogEncoder encoder_;
     using Td = dsp::TrackingDifferentiatorByOrders<2>;
-    Td fb_pos_td_;
-    Td cmd_pos_td_;
+    // Td fb_pos_td_;
+    // Td cmd_pos_td_;
 
-    ServoDynamics dynamics_;
-    ServoElectrics electric_;
-    hal::PwmIntf & pwm;
+    // ServoDynamics dynamics_;
+    // ServoElectrics electric_;
+    hal::PwmIntf & pwm_;
 };
 
+
+constexpr uint32_t factorial(uint32_t n)
+{
+    using namespace matchit;
+    assert(n >= 0);
+    return match(n)(
+        pattern | 0 = 1,
+        pattern | _ = [n] { return n * factorial(n - 1); }
+    );
 }
+
+template<typename T1, typename T2>
+constexpr auto eval(std::tuple<char, T1, T2> const& expr)
+{
+    using namespace matchit;
+    Id<T1> i;
+    Id<T2> j;
+    return match(expr)(
+        pattern | ds('+', i, j) = i + j,
+        pattern | ds('-', i, j) = i - j,
+        pattern | ds('*', i, j) = i * j,
+        pattern | ds('/', i, j) = i / j,
+        pattern | _ = []
+        {
+            assert(false);
+            return -1;
+        });
+}
+
+static constexpr auto a = factorial(3);
+static constexpr auto b = eval(std::make_tuple('+', 3,4));
+}
+

@@ -82,11 +82,11 @@ void ads1115_main()
 
     while(true){
         // if(ads.ready()){
-            DEBUG_PRINTLN(millis(), ads.result().unwrap());
+            DEBUG_PRINTLN(clock::millis(), ads.result().unwrap());
         // }
 
         // ads.
-        delay(2);
+        clock::delay(2ms);
     }
 
 }

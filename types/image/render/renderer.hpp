@@ -18,21 +18,21 @@ protected:
 
 
     Canvas * src_ = nullptr;
-    Rect2i clip_ = Rect2i{0, 0, 0xffff, 0xffff};
+    Rect2u clip_ = Rect2u{0, 0, 0xffff, 0xffff};
 
     ColorType color_ = ColorEnum::WHITE;
     // ColorType stroke_color_ = ColorEnum::WHITE;
 public:
     Renderer(){;}
     void bind(Canvas & _source);
-    void set_clip(const Rect2i clip){clip_ = clip;}
+    void set_clip(const Rect2u clip){clip_ = clip;}
     void set_color(const ColorType color){color_ = color;}
 
-    void draw_rect(const Rect2i rect);
-    void draw_pixel(const Vector2i pos);
-    void draw_line(const Vector2i from, const Vector2i to);
-    void draw_hri_line(const Vector2i pos,const int l);
-    void draw_ver_line(const Vector2i pos,const int l);
+    void draw_rect(const Rect2u rect);
+    void draw_pixel(const Vector2u pos);
+    void draw_line(const Vector2u from, const Vector2u to);
+    void draw_hri_line(const Vector2u pos,const int l);
+    void draw_ver_line(const Vector2u pos,const int l);
     void draw_ver_line(const Range2i y_range, const int x);
     void draw_hri_line(const Range2i x_range, const int y);
 };

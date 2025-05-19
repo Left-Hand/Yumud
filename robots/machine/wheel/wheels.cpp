@@ -11,7 +11,7 @@ void Wheels::init(){
         // wheel->reset();
     }
     
-    delay(10);
+    clock::delay(10ms);
 
     for(Wheel & wheel : instances_){
         auto & motor = wheel.motor();

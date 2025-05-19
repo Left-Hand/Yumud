@@ -302,7 +302,7 @@ static void makeTriangle(void)
 	}
 }
 
-static void drawTriangle(const Rect2i & clip)
+static void drawTriangle(const Rect2u & clip)
 {
 	for (size_t k = 0; k < triangleIdx; k++)
 	{
@@ -474,13 +474,13 @@ void cubic_main(void){
     }
 
     tftDisplayer.fill(ColorEnum::PINK);
-    delay(200);
+    clock::delay(200ms);
 	precompute_1();
 
 	float angle = 0;
 
 	while (1){
-		auto m = millis();
+		auto m = clock::millis();
 		precompute_2(angle += 4);
 		makeTriangle();
 
@@ -501,7 +501,7 @@ void cubic_main(void){
 				}
 
 
-				const auto clip = Rect2i(
+				const auto clip = Rect2u(
 					LCD_W * i / M,
 					LCD_H * j / N,
 					LCD_W / M,
@@ -516,6 +516,6 @@ void cubic_main(void){
 
 			}
 		}
-		DEBUG_PRINTLN(millis() - m);
+		DEBUG_PRINTLN(clock::millis() - m);
 	}
 }

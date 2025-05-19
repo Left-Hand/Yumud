@@ -21,17 +21,17 @@ namespace ymd::dsp{
     template<typename FnIn, typename FnFt>
     void evaluate_func(const uint times, FnIn && fn_in, FnFt && fn_ft){
         
-        const auto begin_m = micros();
+        const auto begin_m = clock::micros();
 
         for(size_t i = 0; i < times; ++i){
             const auto x = real_t(i) / times;
             std::forward<FnFt>(fn_ft)(x);
         }
 
-        const auto end_m = micros();
+        const auto end_m = clock::micros();
         
-        DEBUG_PRINTS(real_t(uint32_t(end_m - begin_m)) / times, "us per call");
-        delay(20);
+        DEBUG_PRINTS(real_t((end_m - begin_m).count()) / times, "us per call");
+        clock::delay(20ms);
         std::terminate();
     }
 
@@ -79,9 +79,9 @@ void butterworth_bandpass_coeff_tb(const T f1f, const T f2f, const bool scale_en
     // const T sf = dsp::sf_bwbp<T, n>(f1f, f2f ); /* scaling factor for the c coefficients */
 
     DEBUG_PRINTLN(ccof);
-    delay(20);
+    clock::delay(20ms);
     DEBUG_PRINTLN(dcof);
-    delay(20);
+    clock::delay(20ms);
 
     std::terminate();
 }
@@ -405,7 +405,7 @@ void dtmf_tb(const uint fs){
 
     hal::timer1.init(fs);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
-        const auto t = time();
+        const auto t = clock::time();
         dtmf.update(t);
         const auto wave = real_t(dtmf.result());
 
@@ -453,7 +453,7 @@ void pso_tb(){
 
     pso.init(-10, 1);
     auto eval_func = [](const Particle & p){
-        // return -ABS(p.x - 5.5_r + sin(time()));
+        // return -ABS(p.x - 5.5_r + sin(clock::time()));
         // return -ABS(p.x - 0.5_r);
         // const auto targ = sin(2 * time());
         // DEBUG_PRINTLN(targ);
@@ -474,7 +474,7 @@ void pso_tb(){
 
     constexpr size_t loops = 200;
 
-    const auto begin_m = micros();
+    const auto begin_m = clock::micros();
 
 
     for(size_t i = 0; i < loops; i++){
@@ -485,12 +485,12 @@ void pso_tb(){
         // for(const auto & p : particles){
             // DEBUG_PRINT(p.x);
             // DEBUG_PRINT(DEBUGGER.splitter());
-            // delay(1);
+            // clock::delay(1ms);
         // }
-        // delay(1);
+        // clock::delay(1ms);
         // DEBUG_PRINTLN(pso.gbest(), pso.geval());
     }
-    DEBUG_PRINTLN(pso.gbest(), pso.geval(), micros() - begin_m);
+    DEBUG_PRINTLN(pso.gbest(), pso.geval(), clock::micros() - begin_m);
 }
 
 void dsp_main(){
@@ -523,7 +523,7 @@ void dsp_main(){
         // return 10_r* sin(rad);
         // return 0.002_r;
 
-        const T rad = T(TAU) * T(time());
+        const T rad = T(TAU) * T(clock::time());
 
         static constexpr uint8_t code = 0x12;
         const auto index = int(10 * rad) % 8;

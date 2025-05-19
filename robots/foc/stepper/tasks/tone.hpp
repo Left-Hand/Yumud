@@ -6,7 +6,7 @@ namespace ymd::foc{
 using namespace ymd::drivers;
 class ToneTasker{
 protected:
-    enum class Tones:int{
+    enum class Tones:uint16_t{
         N = 0,
         G4 = 392,
         A4 = 440,
@@ -20,7 +20,7 @@ protected:
     
     struct Tone{
         Tones freq_hz;
-        int sustain_ms;
+        Milliseconds sustain_ms;
     };
 
     scexpr real_t tone_current = real_t(0.15);
@@ -61,16 +61,16 @@ protected:
         // {.freq_hz = E5,.sustain_ms = 100},  // 3
         // {.freq_hz = D5,.sustain_ms = 100},  // 2
         
-        {.freq_hz = B4,.sustain_ms = 100},  // 7
-        {.freq_hz = C5,.sustain_ms = 100},  // 1
-        {.freq_hz = B4,.sustain_ms = 100},  // 7
-        {.freq_hz = G4,.sustain_ms = 100},  // 5
+        {.freq_hz = B4, .sustain_ms = 100ms},  // 7
+        {.freq_hz = C5, .sustain_ms = 100ms},  // 1
+        {.freq_hz = B4, .sustain_ms = 100ms},  // 7
+        {.freq_hz = G4, .sustain_ms = 100ms},  // 5
     });
 
 
     uint32_t cnt;
     uint32_t tone_index;
-    uint32_t play_begin_ms;
+    Milliseconds play_begin_ms;
     
     digipw::SVPWM & svpwm_;
     bool done_ = false;

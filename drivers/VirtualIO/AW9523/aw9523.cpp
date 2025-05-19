@@ -7,7 +7,7 @@ using namespace ymd::drivers;
 
 void AW9523::init(){
     reset();
-    delay(10);
+    clock::delay(10ms);
     set_led_current_limit(CurrentLimit::Low);
     for(uint8_t i = 0; i< 16; i++){
         write_reg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);

@@ -342,7 +342,7 @@ bool TCA8418::readByte(uint8_t *data, uint8_t reg) {
     //     if(timeout > I2CTIMEOUT) {
     //     return(true);
     //     }
-    //     delay(1);
+    //     clock::delay(1ms);
     // } 			// Experimental
 
     // *data = I2CREAD();
@@ -392,7 +392,7 @@ void TCA8418::write3Bytes(uint32_t data, uint8_t reg) {
     //   if(timeout > I2CTIMEOUT) {
     //     return(true);
     //   }
-    //   delay(1);
+    //   clock::delay(1ms);
     // } 		//Experimental
     
     // datau.b[0] = I2CREAD();

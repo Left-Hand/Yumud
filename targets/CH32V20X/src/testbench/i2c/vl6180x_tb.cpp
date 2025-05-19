@@ -49,7 +49,7 @@ static void vl6180x_range_single_shot_scaling_tb(VL6180X & vl6180){
             DEBUG_PRINTLN(res.unwrap());
             vl6180.invoke_read_range().unwrap();
         }
-        delay(1);
+        clock::delay(1ms);
     }
 }
 
@@ -71,7 +71,7 @@ static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){
     vl6180.stop_continuous().unwrap();
     // in case stopContinuous() triggered a single-shot
     // measurement, wait for it to complete
-    delay(1300);
+    clock::delay(1300ms);
     // start interleaved continuous mode with period of 100 ms
     vl6180.start_interleaved_continuous(100).unwrap();
     vl6180.start_ambient_continuous(100).unwrap();

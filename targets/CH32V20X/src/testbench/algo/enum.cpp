@@ -31,92 +31,6 @@ DERIVE_DEBUG(Fruit)
 }
 
 
-template<typename ... Ts>
-class AggregateEnum{
-public:
-    using Self = AggregateEnum<Ts...>;
-
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-    constexpr AggregateEnum(Raw && val):
-        value_(std::in_place_type<T>, static_cast<T>(val)) {
-    }
-
-    
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-
-    constexpr bool is() const{
-        return std::holds_alternative<T>(value_);
-    }
-
-    template<typename T>
-    constexpr Option<T &> as() {
-        if(! this->is<T>()) return None;
-        return Some<T *>(&std::get<T>(value_)); 
-    }
-
-    template<typename T>
-    constexpr Option<const T &> as() const {
-        if(! this->is<T>()) return None;
-        return Some<const T *>(&std::get<T>(value_)); 
-    }
-
-
-    constexpr bool operator ==(const Self & other) const {
-        return this->value_ == other.value_;
-    }
-
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-    constexpr bool operator ==(const Raw &rhs) const {
-        if(not this->is<T>()) return false;
-        return this->as<T>().unwrap() == static_cast<T>(rhs);
-    }
-
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-    constexpr bool operator !=(const Raw &rhs) const {
-        return !(this->operator ==(rhs));
-    }
-
-    template<typename Fn, typename Ret = magic::functor_ret_t<Fn>>
-    Ret visit(Fn && fn) const {
-        auto & self = *this;
-        return std::visit([&](const auto & value) {
-            // using T = std::decay_t<decltype(value)>;
-
-            std::forward<Fn>(fn)(value);
-        }, self.value_);
-    }
-
-    friend OutputStream & operator <<(OutputStream & os,const AggregateEnum & self){
-        // 使用 std::visit 遍历 std::variant
-        std::visit([&os](const auto& value) {
-            using T = std::decay_t<decltype(value)>;
-
-            // 检查类型是否可被 OutputStream 打印
-            if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
-                os << value; // 如果可打印，则直接打印
-            } else {
-                os << "[Unprintable type]"; // 否则打印提示信息
-            }
-        }, self.value_);
-
-        return os;
-    }
-private:
-    std::variant<Ts...> value_;
-
-    constexpr size_t var_index() const {
-        return value_.index();
-    }
-};
-
-auto pfunc(const real_t a, const real_t b){
-    return a * a + b * b;
-    // return a;
-};
 
 auto pfunc(const int16_t a, const int16_t b){
     return int(a) * a + int(b) * b;
@@ -162,7 +76,7 @@ void enum_main(){
         //     return x * x + y * y;
         // };
 
-        const auto t = time();
+        const auto t = clock::time();
 
         // const auto s = sin<30>(t);
         // const auto c = cos<30>(t);
@@ -193,8 +107,8 @@ void enum_main(){
         const auto dyn_name = runtime_true() ? 
             magic::enum_item_name_v<Fruit, Fruit::MANGO> : magic::enum_item_name_v<Fruit, Fruit::BANANA>;
         DEBUG_PRINTLN(dyn_name);
-        delay(10);
-        // delay(10);
+        clock::delay(10ms);
+        // clock::delay(10ms);
     }
 
 

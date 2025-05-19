@@ -16,7 +16,7 @@ void ekf_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     
-    delay(200);
+    clock::delay(200ms);
 
     // AdaptiveEKF<real_t, 2,3> ekf = {};
     // Predict<real_t> predict;

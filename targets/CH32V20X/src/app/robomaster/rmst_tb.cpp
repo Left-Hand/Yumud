@@ -19,7 +19,7 @@ using namespace ymd;
 using namespace ymd::rmst;
 
 auto input(){
-    const auto t = time();
+    const auto t = clock::time();
 
     static constexpr auto w0 = real_t(TAU * 4); 
     static constexpr auto w1 = real_t(TAU * 70); 
@@ -158,7 +158,7 @@ void so_tb(){
     // while(true);
     dsp_func_test(fs, [&](){
         // auto x = input();
-        auto x = time();
+        const auto x = clock::time();
         // auto r = 0.001_r;
         sof.update(x);
         // DEBUG_PRINTLN(config.a1, config.a2, config.b0, config.b1, config.b2);
@@ -186,7 +186,7 @@ void rmst_main(){
         
         // !+motor.requestWritePara(0x301, 0x02);
         !motor.ctrl(0, 0, 0, 500, 5);
-        delay(10);
+        clock::delay(10ms);
     }
 
 

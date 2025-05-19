@@ -17,7 +17,7 @@ void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
     tcs.start_conv();
     while(true){
         logger.println(tcs.get_crgb());
-        delay(30);
+        clock::delay(30ms);
     }
 }
 

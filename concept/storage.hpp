@@ -1,69 +1,232 @@
 #pragma once
 
 #include "types/range/range.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Option.hpp"
+#include "core/utils/Errno.hpp"
+
+#include "hal/hal_result.hpp"
 
 namespace ymd{
 
+
 class Memory;
-class Storage{
-protected:
-    using Address = size_t;
-    using AddressView = Range2_t<Address>;
 
-    const Address capacity_;
-    const AddressView view_;
+struct AddressDiff{
+    [[nodiscard]] constexpr explicit AddressDiff(const uint32_t diff):value_(diff){;}
+    [[nodiscard]] constexpr uint32_t as_u32() const {return value_;}
+    [[nodiscard]] constexpr auto operator<=>(const AddressDiff &) const = default;
+private:
+    uint32_t value_;
+};
 
-    friend class Memory;
-protected:
-    Storage(const Address capacity):capacity_(capacity), view_({0, capacity}){;}
-    Storage(const Address capacity, const AddressView & _view):capacity_(capacity), view_(_view){;}
+using Capacity = AddressDiff;
 
-    virtual ~Storage() = default;
-    friend class Memory;
 
-    virtual void entry_store() = 0;
-    virtual void exit_store() = 0;
+struct Address{
+    [[nodiscard]] constexpr explicit Address(const size_t addr):addr_(addr){;}
+    // constexpr uint32_t addr() const {return addr_;}
+    [[nodiscard]] constexpr uint32_t as_u32() const {return addr_;}
 
-    virtual void entry_load() = 0;
-    virtual void exit_load() = 0;
+    [[nodiscard]] constexpr auto operator<=>(const Address &) const = default;
+    [[nodiscard]] constexpr AddressDiff operator - (const Address &rhs) const {return AddressDiff(addr_ - rhs.addr_);}
+    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const {return Address(addr_ - rhs.as_u32());}
+    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const {return Address(addr_ + rhs.as_u32());}
+private:
+    uint32_t addr_;
+};
 
-    virtual void store_byte(const Address loc, const uint8_t data){
-        store_bytes(loc, &data, 1);
-    }
-    virtual void load_byte(const Address loc, uint8_t & data){
-        load_bytes(loc, &data, 1);
-    }
+struct AddressRange{
+    Address from;
+    Address to;
 
-    virtual void store_bytes(const Address loc, const void * data, const Address len) = 0;
+    constexpr explicit AddressRange(const Address _from, const Address _to):
+        from(_from),to(_to){;}
 
-    virtual void load_bytes(const Address loc, void * data, const Address len) = 0;
+    constexpr explicit AddressRange(const Address _addr, const AddressDiff _AddressDiff):
+        from(_addr),to(_addr + _AddressDiff){;}
 
-    virtual void erase_bytes(const Address loc, const Address len){};
-public:
-    virtual void init() = 0;
-
-    virtual bool busy() = 0;
-    Address size() const {return capacity_;}
-    AddressView view() const {return {0, capacity_};}
-
-    void store(const Address loc, const void * data, const Address len);
-
-    void load(const Address loc, void * data, const Address len);
-
-    void erase(const Address loc, const size_t len);
-
-    operator Memory();
-    Memory slice(const AddressView & _view);
-    Memory slice(const size_t from, const size_t to);
+    constexpr AddressDiff capacity() const{ return to - from; }
 };
 
 
-class StoragePaged:public Storage{
-protected:
-    const Address m_pagesize;
+class BlockDeviceOperation{
 public:
-    StoragePaged(const Address capacity, const Address _pagesize):Storage(capacity, {0, capacity}), m_pagesize(_pagesize){;}
-    StoragePaged(const Address capacity, const AddressView  & _view, const Address _pagesize):Storage(capacity, _view), m_pagesize(_pagesize){;}
+    struct Write{
+        Address addr;
+        AddressDiff length;
+        const uint8_t * pdata;
+    };
+
+    struct Read{
+        Address addr;
+        AddressDiff length;
+        uint8_t * pdata;
+    };
+
+    struct Erase{
+        Address addr;
+        AddressDiff length;
+    };
+
+    enum class Kind{
+        Write,
+        Read,
+        Erase
+    };
+
+    // using enum Kind;
+
+    // template<typename T>
+    BlockDeviceOperation(Write oper):value_(oper){;}
+    BlockDeviceOperation(Read oper):value_(oper){;}
+    BlockDeviceOperation(Erase oper):value_(oper){;}
+
+
+    template<typename T>
+    T as(){
+        if(std::holds_alternative<T>(value_))
+            return std::get<T>(value_);
+        else __builtin_unreachable();
+    }
+
+    Kind kind() const{
+        if(std::holds_alternative<Write>(value_))
+            return Kind::Write;
+        else if(std::holds_alternative<Read>(value_))
+            return Kind::Read;
+        else if(std::holds_alternative<Erase>(value_))
+            return Kind::Erase;
+        else __builtin_unreachable();
+    }
+private:
+    std::variant<Write, Read, Erase> value_;
 };
+
+class BlockDeviceAsyncTask;
+
+class BlockDeviceIntf{
+public:
+    enum class Error_Kind{
+        IsOperatingByOther,
+        PayloadOverlength
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error,Error_Kind)
+
+    using Operation = BlockDeviceOperation;
+
+    
+    template<typename T = void>
+    using IResult = Result<T,Error>;
+public:
+
+    virtual ~BlockDeviceIntf() = 0;
+    
+    // virtual bool is_busy() = 0;
+
+    virtual bool is_available() = 0;
+
+    virtual IResult<size_t> resume() = 0;
+
+protected:
+    virtual IResult<> push_operation(const Operation op);
+    friend class BlockDeviceAsyncTask;
+};
+
+class BlockDeviceAsyncTask final{
+public:
+    BlockDeviceAsyncTask(
+        BlockDeviceIntf & device, 
+        BlockDeviceOperation op
+    ) : device_(device), op_(op){;}
+
+    auto & device() { return device_; }
+    const auto & operation() const { return op_; }
+
+    using DeviceError = BlockDeviceIntf::Error_Kind;
+    Result<size_t, BlockDeviceIntf::Error> resume(){
+        switch(progress_){
+            case Progress::Pending:{
+                if(device_.is_available() == false) break;
+                const auto res = device_.push_operation(op_);
+                if(res.is_err()){
+                    progress_ = Progress::Failed;
+                    return Err(res.unwrap_err());
+                }else{
+                    progress_ = Progress::InProgress;
+                    return device_.resume();
+                }
+            }break;
+            case Progress::InProgress:{
+                const auto res = device_.resume();
+                if(res.is_err()) {
+                    progress_ = Progress::Failed;
+                    err_ = res.err();
+                    return Err(res.unwrap_err());
+                }
+                if(const auto remain = res.unwrap(); remain == 0)
+                    progress_ = Progress::Completed;
+            }break;
+            case Progress::Completed: { 
+                return Ok(0u);
+            }break;
+            case Progress::Failed: { 
+                return Err(err_.unwrap());
+            }break;
+            default: __builtin_unreachable();
+        }
+    }
+private:
+    BlockDeviceIntf & device_;
+    BlockDeviceOperation op_;
+    // Result<Capacity, BlockDeviceIntf::Error> result_;
+    Option<BlockDeviceIntf::Error> err_ = None;
+    enum class Progress{
+        Pending,
+        InProgress,
+        Completed,
+        Failed
+    };
+
+    Progress progress_ = Progress::Pending;
+};
+
+
+
+class StorageIntf:
+    public BlockDeviceIntf{
+public:
+    virtual AddressDiff capacity() = 0;
+    // virtual void store_bytes(const Address loc, const std::span<const uint8_t> pdata) final{
+    //     entry_oper(Operation::Store);
+    //     store_bytes_impl(loc, pdata);
+    //     exit_oper(Operation::Store);
+    // }
+
+    // virtual void load_bytes(const Address loc, const std::span<uint8_t> pdata) final{
+    //     entry_oper(Operation::Load);
+    //     load_bytes_impl(loc, pdata);
+    //     exit_oper(Operation::Load);
+    // }
+
+    // virtual void erase_bytes(const Address loc, const AddressDiff len) final{
+    //     entry_oper(Operation::Erase);
+    //     erase_bytes_impl(loc, len);
+    //     exit_oper(Operation::Erase);
+    // };
+protected:
+    // virtual push_operation(const Operation op);
+    // virtual void entry_oper(const Operation op) = 0;
+    // virtual void exit_oper(const Operation op) = 0;
+
+    // virtual void store_bytes_impl(const Address loc, const std::span<const uint8_t> pdata) = 0;
+
+    // virtual void load_bytes_impl(const Address loc, const std::span<uint8_t> pdata) = 0;
+
+    // virtual void erase_bytes_impl(const Address loc, const AddressDiff length) = 0;
+};
+
+
 
 }

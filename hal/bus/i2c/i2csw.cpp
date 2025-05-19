@@ -12,7 +12,7 @@ using namespace ymd::hal;
 
 
 void I2cSw::delay_dur(){
-    if(delays_) udelay(delays_);
+    if(delays_) clock::delay(Microseconds(delays_));
     else for(size_t i = 0; i < 3; i++) __nopn(5);
 }
 
@@ -28,9 +28,9 @@ hal::HalResult I2cSw::wait_ack(){
     bool ovt = false;
 
     #ifndef I2CSW_DISCARD_ACK
-    const auto m = micros();
+    const auto m = clock::micros();
     while(sda().read() == HIGH){
-        if(micros() - m >= 
+        if(clock::micros() - m >= 
         #if I2CSW_TEST_TIMEOUT
             I2CSW_TEST_TIMEOUT
         #else

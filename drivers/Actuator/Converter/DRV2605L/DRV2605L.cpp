@@ -97,7 +97,7 @@ Result<void, Error> DRV2605L::init(){
     mode_reg = 0x40;
     if(const auto res = write_reg(mode_reg); res.is_err()) return res;
 
-    udelay(250);
+    clock::delay(250us);
 
     // // rated_voltage_reg = 0X50;
     // WRITE_REG(rated_voltage_reg);

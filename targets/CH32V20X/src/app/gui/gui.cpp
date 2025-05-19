@@ -40,7 +40,7 @@ public:
 
 class Icon:public RenderTrait{
 protected:
-    Rect2i rect_ = {0,0,30,30};
+    Rect2u rect_ = {0,0,30,30};
     String name_ = "nil";
 public:
     Icon() = default;
@@ -88,9 +88,9 @@ void gui_main(){
     led.outpp();
     // while(true){
     //     led = true;
-    //     delay(200);
+    //     clock::delay(200ms);
     //     led = false;
-    //     delay(200);
+    //     clock::delay(200ms);
     // }
 
     DEBUGGER_INST.init(576000);
@@ -184,17 +184,17 @@ void gui_main(){
     // camera.setExposureValue(1200);
 
     // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2u & pos){
-    //     auto area = Rect2i(pos, src.size());
+    //     auto area = Rect2u(pos, src.size());
     //     tftDisplayer.put_texture(area, src.get_data());
     // };
 
     // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2u & pos){
-    //     auto area = Rect2i(pos, src.size());
+    //     auto area = Rect2u(pos, src.size());
     //     tftDisplayer.put_texture(area, src.get_data());
     // };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2u & pos){
-        auto area = Rect2i(pos, src.size());
+        auto area = Rect2u(pos, src.size());
         tftDisplayer.put_texture(area, src.get_data());
     };
 
@@ -207,12 +207,12 @@ void gui_main(){
 
     while(true){
         renderer.bind(img);
-        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(time())), 255});
+        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
         renderer.draw_pixel(Vector2u(0, 0));
-        renderer.draw_rect(Rect2i(20, 0, 20, 40));
+        renderer.draw_rect(Rect2u(20, 0, 20, 40));
 
         tftDisplayer.put_texture(img.rect(), img.get_data());
-        DEBUG_PRINTLN(millis());
+        DEBUG_PRINTLN(clock::millis());
     }
 }
 
@@ -224,7 +224,7 @@ void gui_main(){
 
         // painter.set_color(ColorEnum::RED);
         // painter.draw_filled_rect({60,60 + 10 * sin(t),20,20});
-        // Rect2i rect = {30,40,80,50};
+        // Rect2u rect = {30,40,80,50};
         // painter.draw_filled_rect(rect);
         // painter.drawHollowRect(rect);
         // painter.drawPixel(rect.position);
@@ -249,19 +249,19 @@ void gui_main(){
         // auto sketch = make_image<Grayscale>(camera.size()/2);
         // auto img = Shape::x2(camera);
         // tftDisplayer.puttexture(img.get_view(), img.get_data());
-        // delay(10);
+        // clock::delay(10ms);
         // #endif
 
 
         // // DEBUG_PRINTLN(millis(), micros(), t);
         // // uart2.println(millis(), micros(), t, nanos());
-        // // delay(1);
-        // // udelay(180);
-        // // udelay(380);
-        // // delay(1);
+        // // clock::delay(1ms);
+        // // clock::delay(180us);
+        // // clock::delay(380us);
+        // // clock::delay(1ms);
         // // if(millis() > 10000) Sys::Misc::reset();
         // // while(uart7.pending());
-        // // udelay(500);
+        // // clock::delay(500us);
 
         // #define GUI_TB
         // #ifdef GUI_TB
@@ -269,11 +269,11 @@ void gui_main(){
         // painter.set_color(ColorEnum::BLACK);
         // painter.draw_filled_rect(painter.getClipWindow());
 
-        // // label.rect = Rect2i{15 + 10 * sin(4 * t),20,100,20};
-        // // label2.rect = Rect2i{15,80 + 20 * sin(4 * t),100,20};
+        // // label.rect = Rect2u{15 + 10 * sin(4 * t),20,100,20};
+        // // label2.rect = Rect2u{15,80 + 20 * sin(4 * t),100,20};
         
-        // slider.rect = Rect2i{15,20,100,20};
-        // opt.rect = Rect2i{15,40,100,20};
+        // slider.rect = Rect2u{15,20,100,20};
+        // opt.rect = Rect2u{15,40,100,20};
 
         // // label.render(painter);
         // // label2.render(painter);
@@ -281,7 +281,7 @@ void gui_main(){
         // opt.render(painter);
 
 
-        // // delay(200);
+        // // clock::delay(200ms);
         // // painter.fill(ColorEnum::RED);
         // // auto m = micros();
         // // painter.fill(ColorEnum::GREEN);
@@ -303,8 +303,8 @@ void gui_main(){
         // painter.drawLine({30,20}, {80,50});
         // painter.drawLine({40,40}, {10,50});
         // // painter.drawLine({20,20}, {90,210});
-        // delay(20);
+        // clock::delay(20ms);
         // tftDisplayer.fill(ColorEnum::BLACK);
-        // delay(20);
+        // clock::delay(20ms);
         // tftDisplayer.fill(ColorEnum::BLACK);
         // #endif

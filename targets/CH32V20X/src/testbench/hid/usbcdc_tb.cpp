@@ -8,6 +8,6 @@ void usbcdc_tb(UsbFS & fs){
     while(true){
         static int i = 0;
         fs.println(i++);
-        delay(100);
+        clock::delay(100ms);
     }
 }

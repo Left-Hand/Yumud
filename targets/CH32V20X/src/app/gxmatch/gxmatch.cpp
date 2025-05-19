@@ -348,7 +348,7 @@ void host_main(){
                 // DEBUG_PRINTLN(std::setprecision(4), inv_rad, height, f_height);
                                 
                 joint_z.setRadian(inv_rad);
-                delay(20);
+                clock::delay(20ms);
             }
         }
         //#endregion
@@ -377,7 +377,7 @@ void host_main(){
                 // DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
                 joint_z.setRadian(inv_radz);
                 // servo_cross.setRadian(real_t(0.4));
-                delay(20);
+                clock::delay(20ms);
             }
         }
         //#endregion
@@ -392,7 +392,7 @@ void host_main(){
 
                 auto p3 = grab_module.getPos();
                 DEBUG_PRINTLN(pos.x, pos.y, height, p3.x, p3.y, p3.z);
-                delay(20);
+                clock::delay(20ms);
             }
         }
         //#endregion
@@ -436,7 +436,7 @@ void host_main(){
             // while(true){
             //     // DEBUG_PRINTLN(grab_module.pending());
             //     DEBUG_PRINTLN(millis(), grab_module.pending(), grab_module.which());
-            //     delay(200);
+            //     clock::delay(200ms);
             // }
             while(true);
         }
@@ -573,10 +573,10 @@ void host_main(){
 
             while(true){
                 // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
-                delay(5);
+                clock::delay(5ms);
 
                 // {
-                //     delay(2000);
+                //     clock::delay(2000ms);
 
                 //     static bool fwd = false;
                 //     fwd = !fwd;
@@ -614,7 +614,7 @@ void host_main(){
                 // )
                 // DEBUG_PRINTLN(est_.rot());
                 DEBUG_PRINTLN(mag_sensor_.read_mag());
-                delay(5);
+                clock::delay(5ms);
             }
         };
 
@@ -657,7 +657,7 @@ void host_main(){
                 // DEBUG_PRINTLN(rot, gyr_raw, x, y);
                 DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmodp(rot_raw, real_t(PI/2)));
                 // DEBUG_PRINTLN(gyr_raw);
-                delay(5);
+                clock::delay(5ms);
             }
         };
 
@@ -673,18 +673,18 @@ void host_main(){
         auto test_single_motor = [&](){
             RemoteFOCMotor stp = {logger, can1, 1};
             stp.reset();
-            delay(1000);
+            clock::delay(1000ms);
             while(true){
                 auto targ = sin(time());
                 stp.setTargetPosition(targ);
-                delay(5);
+                clock::delay(5ms);
                 DEBUG_PRINTLN(targ);
             }
 
             if(true){//测试单个轮子
                 Wheel wheel = {wheel_config, stp};
                 wheel.setPosition(0.2_r * sin(time()));
-                delay(5);
+                clock::delay(5ms);
             }
         };
 
@@ -742,7 +742,7 @@ void host_main(){
                 // DEBUG_PRINTLN(delta);
                 // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
                 DEBUG_PRINTLN(ang);
-                delay(5);
+                clock::delay(5ms);
             }
         }
 
@@ -772,7 +772,7 @@ void host_main(){
                 // DEBUG_PRINTLN(delta);
                 // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
                 DEBUG_PRINTLN(std::setprecision(4), py);
-                delay(5);
+                clock::delay(5ms);
             }
         }
 
@@ -814,9 +814,9 @@ void host_main(){
 
         while(false){
             displayer.fill(ColorEnum::BLACK);
-            delay(200);
+            clock::delay(200ms);
             displayer.fill(ColorEnum::WHITE);
-            delay(200);
+            clock::delay(200ms);
         }
 
         while(true){
@@ -1327,7 +1327,7 @@ void host_main(){
         // sm_go_staging();
         // sm_end();
 
-        // delay(1000);
+        // clock::delay(1000ms);
         // chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
         // chassis << new StraightAction(chassis, 1.74_r);
         // chassis << new StrictSpinAction(chassis, real_t(-PI/2));
@@ -1354,13 +1354,13 @@ void host_main(){
             // wheels.setCurrent({0, 0, 1, 0});
             // wheels.setCurrent({0, 0, 0, 1});
             // DEBUG_PRINTLN(chassis.gyr(), chassis.rad());
-            delay(10);
+            clock::delay(10ms);
             chassis.setCurrent({0,0,0.1_r * sin(time())});
             // vuart.println("color");
             // vision.offset();
-            // delay(2000);
+            // clock::delay(2000ms);
             // vuart.println("offset");
-            // delay(2000);
+            // clock::delay(2000ms);
             // DEBUG_PRINTLN(vision.color(), vision.offset());
             // if(vision.has_color()){
             //     // DEBUG_PRINTLN("color", int(vision.color()));
@@ -1386,7 +1386,7 @@ void host_main(){
             // if(vision.has_offset()){
             //     DEBUG_PRINTLN(vision.offset());
             // }
-            // delay(200);
+            // clock::delay(200ms);
             // if(vuart.available()){
             //     DEBUG_PRINTLN(vuart.readString());
             // }
@@ -1394,16 +1394,16 @@ void host_main(){
                 // DEBUG_PRINTLN("???")
             // }
             // vuart.println("offset");
-            // delay(1000);
+            // clock::delay(1000ms);
             continue;
             // DEBUG_PRINTLN(uart2.available());
-            // delay(10);
+            // clock::delay(10ms);
             // delay
-            // delay(100);
+            // clock::delay(100ms);
             // txo.toggle();
             // uart2.println()
             // {
-            //     delay(2000);
+            //     clock::delay(2000ms);
 
             //     static bool fwd = false;
             //     fwd = !fwd;
@@ -1466,7 +1466,7 @@ void host_main(){
             // can.write(CanMsg{0b0010'00000010, std::make_tuple(targ)});
 
             led.toggle();
-            delay(19);
+            clock::delay(19ms);
 
             real_t spd = 0;
             if(can.available()){

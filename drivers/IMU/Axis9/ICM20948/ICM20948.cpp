@@ -159,7 +159,7 @@ IResult<> ICM20948::device_reset()
 void ICM20948::ak09916_soft_reset()
 {
 	write_single_ak09916_reg(MAG_CNTL3, 0x01);
-	delay(100);
+	clock::delay(100ms);
 }
 
 IResult<> ICM20948::wakeup()
@@ -483,7 +483,7 @@ uint8_t ICM20948::read_single_ak09916_reg(uint8_t reg)
     // write_single_reg(ub_3, B3_I2C_SLV0_REG, reg);
     // write_single_reg(ub_3, B3_I2C_SLV0_CTRL, 0x81);
 
-    // delay(1);
+    // clock::delay(1ms);
     // return read_single_reg(ub_0, B0_EXT_SLV_SENS_DATA_00);
 
     TODO();
@@ -505,7 +505,7 @@ uint8_t* ICM20948::read_multiple_ak09916_reg(uint8_t reg, uint8_t len)
     // write_single_reg(ub_3, B3_I2C_SLV0_REG, reg);
     // write_single_reg(ub_3, B3_I2C_SLV0_CTRL, 0x80 | len);
 
-    // delay(1);
+    // clock::delay(1ms);
     // return read_multiple_reg(ub_0, B0_EXT_SLV_SENS_DATA_00, len);
 
     TODO();

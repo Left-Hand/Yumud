@@ -3,6 +3,7 @@
 #include <type_traits>
 
 #include "core/utils/typetraits/enum_traits.hpp"
+#include "core/utils/Option.hpp"
 
 namespace ymd{
 template<typename E, typename T>
@@ -72,4 +73,33 @@ public:
 private:
     std::array<T, COUNT> arr_;
 };
+
+template<typename E, typename T>
+class EnumScaler{
+public:
+    constexpr EnumScaler(const E init_e, const EnumArray<E, T> & mapping):
+        enum_(init_e),
+        // scale_(scale),
+        mapping_(mapping)
+        {;}
+
+    constexpr EnumScaler & operator =(const E e){
+        enum_ = e;
+    }
+
+    // constexpr auto to_lsb(){
+    //     return mapping_[enum_] / scale_;
+    // }
+
+    constexpr auto to_fullscale(){
+        return mapping_[enum_];
+    }
+
+private:
+    E enum_;
+    // size_t scale_;
+    const EnumArray<E, T> & mapping_;
+};
+
+
 }

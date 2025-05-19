@@ -66,7 +66,7 @@ struct _None_t{
 };
 
 [[maybe_unused]] static inline _None_t None = {};
-[[maybe_unused]] static inline _None_t _ = {};
+// [[maybe_unused]] static inline _None_t _ = {};
 
 template<typename T>
 struct Some{

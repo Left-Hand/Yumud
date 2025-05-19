@@ -23,7 +23,7 @@ void FOCStepper::invoke_selfcheck_task(){
 }
 
 void FOCStepper::tick(){
-    auto begin_micros = micros();
+    const auto begin_micros = clock::micros();
     RunStatus exe_status;
 
     switch(run_status){
@@ -129,7 +129,7 @@ void FOCStepper::tick(){
             }
         }
     }
-    exe_micros = micros() - begin_micros;
+    exe_micros = clock::micros() - begin_micros;
 }
 
 void FOCStepper::run(){
@@ -166,11 +166,11 @@ void FOCStepper::report(){
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
     // if(DEBUGGER.pending()==0){
-    //     // udelay(200);   
-    //     // delay(1); 
+    //     // clock::delay(200us);   
+    //     // clock::delay(1ms); 
         // DEBUG_PRINTLN(std::setprecision(3), target, getSpeed(), getPosition(), getCurrent(), run_leadangle, speed_ctrl.soft_targ_spd);
     // }
-    // delay(1);
+    // clock::delay(1ms);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
     // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
     // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

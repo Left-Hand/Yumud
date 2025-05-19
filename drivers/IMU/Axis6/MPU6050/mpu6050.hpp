@@ -13,6 +13,9 @@ namespace ymd::drivers{
 struct MPU6050_Collections{
     using Error = ImuError;
     
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class Package:uint8_t{
         MPU6050 = 0x68,
         MPU6500 = 0x70,
@@ -41,7 +44,7 @@ struct MPU6050_Collections{
         _2000deg    =   3
     };
 
-        using RegAddress = uint8_t;   
+    using RegAddress = uint8_t;   
 };
 
 struct MPU6050_Regs:public MPU6050_Collections{ 
@@ -122,20 +125,20 @@ public:
     MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
 
-    [[nodiscard]] Result<void, Error> validate();
+    [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] Result<void, Error> init();
+    [[nodiscard]] IResult<> init();
     
-    [[nodiscard]] Result<void, Error> update();
+    [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] Option<Vector3_t<q24>> read_acc();
-    [[nodiscard]] Option<Vector3_t<q24>> read_gyr();
-    [[nodiscard]] Option<real_t> read_temp();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<real_t> read_temp();
 
-    [[nodiscard]] Result<void, Error> set_acc_range(const AccRange range);
-    [[nodiscard]] Result<void, Error> set_gyr_range(const GyrRange range);
+    [[nodiscard]] IResult<> set_acc_range(const AccRange range);
+    [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);
 
-    [[nodiscard]] Result<void, Error> reset();
+    [[nodiscard]] IResult<> reset();
 
     void set_package(const Package package){
         package_ = package;
@@ -143,7 +146,7 @@ public:
 
     [[nodiscard]] Result<Package, Error> get_package();
 
-    [[nodiscard]] Result<void, Error> enable_direct_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_direct_mode(const Enable en = EN);
 private:
 
     using Phy = InvensenseSensor_Phy;
@@ -186,25 +189,25 @@ private:
 
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 
-    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return phy_.write_reg(addr, data);
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> write_reg(const T & reg){
+    [[nodiscard]] IResult<> write_reg(const T & reg){
         return write_reg(reg.address, reg);
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return phy_.read_reg(addr, data);
     }
 
-    [[nodiscard]] Result<void, Error> read_burst(const uint8_t addr, int16_t * data, const size_t len){
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, int16_t * data, const size_t len){
         return phy_.read_burst(addr, data, len);
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> read_reg(T & reg){
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return read_reg(reg.address, reg);
     }
 

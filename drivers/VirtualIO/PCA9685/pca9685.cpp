@@ -48,7 +48,7 @@ Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
     
     if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
         res.is_err()) return res;
-    delay(5);
+    clock::delay(5ms);
 
     mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
     return write_reg(RegAddress::Mode1, mode1_reg);
@@ -99,7 +99,7 @@ Result<void, Error> PCA9685::init(){
     }
     return Ok();
 
-    delay(1);
+    clock::delay(1ms);
     mode1_reg = 0;
     if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
         res.is_err()) return res;
@@ -107,7 +107,7 @@ Result<void, Error> PCA9685::init(){
         if(const auto res = set_pwm(i, 0, 0);
             res.is_err()) return res;
     }
-    delay(1);
+    clock::delay(1ms);
     return Ok();
 }
 
@@ -126,7 +126,7 @@ Result<void, Error> PCA9685::reset(){
         if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
             res.is_err()) return res;
     }
-    delay(1);
+    clock::delay(1ms);
     mode1_reg.restart = 1;
     if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
         res.is_err()) return res;

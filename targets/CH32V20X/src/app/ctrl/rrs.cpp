@@ -243,7 +243,7 @@ void rrs3_robot_main(){
     };
 
     auto ctrl = [&]{
-        const auto t = time();
+        const auto t = clock::time();
         const auto [s,c] = sincospu(0.7_r * t);
         // set_gest(5.0_r * s, 5.0_r * c, 0.14_r + 0.02_r * s);
         // set_gest(15.0_r * s, 15.0_r * c, 0.14_r);
@@ -259,9 +259,9 @@ void rrs3_robot_main(){
     rrs3_robot.go_home();
     
     while(true){
-        const real_t t = time();
+        const real_t t = clock::time();
         repl_thread.process(t);
-        delay(10);
+        clock::delay(10ms);
         ctrl();
         // DEBUG_PRINTLN(t);
     }

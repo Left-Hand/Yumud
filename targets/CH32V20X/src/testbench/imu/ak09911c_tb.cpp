@@ -45,7 +45,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
     
     while(true){
         // DEBUG_PRINTLN(aku.update());
-        DEBUG_PRINTLN(millis(), gest, aku.read_mag());
+        DEBUG_PRINTLN(clock::millis(), gest, aku.read_mag());
     }
 }
 
@@ -62,7 +62,7 @@ void ak09911c_main(){
     i2c.init(200_KHz);
     // i2c.init();
 
-    delay(200);
+    clock::delay(200ms);
 
 
     AK09911C aku = {i2c};

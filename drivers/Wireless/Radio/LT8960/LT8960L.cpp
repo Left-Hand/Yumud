@@ -206,7 +206,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
             MATCH{err}(
                 Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},
                 Error::PacketOverlength, []{LT8960L_PANIC("ble overlen");},
-                _ , []{LT8960L_PANIC("unknown");}
+                None , []{LT8960L_PANIC("unknown");}
             );
         })
     ;
@@ -223,7 +223,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
     //     LT8960L_WriteReg(7, 0x01,0);
     //     do
     //     {
-    //         LL_mDelay(0);
+    //         LL_mclock::delay(0ms);
     //     }
     //     while(LT8960L_GetPKT()==0);    
     // }        
@@ -236,7 +236,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
     //     LT8960L_WriteReg(7, 0x01,24);
     //     do
     //     {
-    //         LL_mDelay(0);
+    //         LL_mclock::delay(0ms);
     //     }
     //     while(LT8960L_GetPKT()==0);            
     // }
@@ -248,7 +248,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
     //     LT8960L_WriteReg(7, 0x01,78);        
     //     do
     //     {
-    //         LL_mDelay(0);
+    //         LL_mclock::delay(0ms);
     //     }
     //     while(LT8960L_GetPKT()==0);        
     // }        

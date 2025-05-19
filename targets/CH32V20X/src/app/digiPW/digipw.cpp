@@ -73,7 +73,7 @@ void test_sogi(){
         DEBUG_PRINTLN("--------------");
         DEBUG_PRINTLN("start");
 
-        const auto micros_begin = micros();
+        const auto micros_begin = clock::micros();
         real_t tm = 0;
 
         for(size_t i = 0; i < times; i++){
@@ -86,17 +86,17 @@ void test_sogi(){
             spll.update(u0);
         }
 
-        const auto micros_end = micros();
-        DEBUG_PRINT(real_t(micros_end - micros_begin) / times,"us per call");
-        DEBUG_PRINTLN(uint32_t(micros_begin), uint32_t(micros_end));
+        const auto micros_end = clock::micros();
+        DEBUG_PRINT(real_t((micros_end - micros_begin).count()) / times,"us per call");
+        DEBUG_PRINTLN(micros_begin, micros_end);
         while(true);
     }
 
-    uint32_t dm = 0;
+    Microseconds dm = 0us;
     timer1.bind_cb(TimerIT::Update, [&](){
-        auto m = micros();
+        const auto m = clock::micros();
         run_sogi();
-        dm = micros() - m;
+        dm = clock::micros() - m;
     });
 
     timer1.enable_it(TimerIT::Update, {0,0});
@@ -104,7 +104,7 @@ void test_sogi(){
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
         DEBUG_PRINTLN(u0, raw_theta, spll.theta());
-        delay(1);
+        clock::delay(1ms);
     }
 }
 void digipw_main(){

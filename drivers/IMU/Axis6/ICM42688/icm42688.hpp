@@ -15,21 +15,21 @@ public:
     ICM42688(hal::Spi & spi, const hal::SpiSlaveIndex idx):phy_(spi, idx){;}
     ICM42688(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
 
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
     
-    IResult<> update();
+    [[nodiscard]] IResult<> update();
 
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
 
-    IResult<> reset();
+    [[nodiscard]] IResult<> reset();
 
-    Option<Vector3_t<q24>> read_acc();
-    Option<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;
 
-    IResult<> switch_bank(const Bank bank){
+    [[nodiscard]] IResult<> switch_bank(const Bank bank){
         if(last_bank_.is_none() or (last_bank_.unwrap() != bank)){
             const auto res = phy_.write_reg(0x76, static_cast<uint8_t>(bank));
             last_bank_ = Some(bank);
@@ -38,13 +38,13 @@ private:
         return Ok();
     }
 
-    IResult<> write_reg(const auto & reg){
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
         return phy_.write_reg(reg.address, reg.as_val());
     }
 
-    IResult<> read_reg(auto & reg){
+    [[nodiscard]] IResult<> read_reg(auto & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
         return phy_.read_reg(reg.address, reg.as_ref());
@@ -77,10 +77,10 @@ private:
         return map[fs];
     }
 
-    IResult<> set_gyr_odr(const GyrOdr odr);
-    IResult<> set_gyr_fs(const GyrFs fs);
-    IResult<> set_acc_odr(const AccOdr odr);
-    IResult<> set_acc_fs(const AccFs fs);
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     
     q24 lsb_acc_;
     q24 lsb_gyr_;

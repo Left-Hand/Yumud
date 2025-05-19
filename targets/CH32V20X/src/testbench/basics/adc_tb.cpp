@@ -74,7 +74,7 @@ void adc_tb(OutputStream & logger){
         // logger.println(int(src_data << 12), int(raw_data), int(filt_data));
 
 
-        // delay(1);
+        // clock::delay(1ms);
     }
     #endif
 
@@ -91,11 +91,11 @@ void adc_tb(OutputStream & logger){
         adc1.swStartRegular(true);
 
         while(true){
-            delay(1);
+            clock::delay(1ms);
             bool still_waiting = !adc1.isIdle();
             while(!adc1.isIdle()){
                 logger.println(".");
-                delay(200);
+                clock::delay(200ms);
             }
             if(still_waiting) logger.println();
             break;

@@ -87,7 +87,7 @@ private:
     hal::SpiDrv spi_drv_;
 
     void wait_tsc(){
-        udelay(1);
+        clock::delay(1us);
     }
 
     IResult<> modify_bit(const uint8_t addr, const uint8_t mask, const uint8_t data){

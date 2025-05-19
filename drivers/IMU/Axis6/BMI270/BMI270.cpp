@@ -1,23 +1,29 @@
 #include "BMI270.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
-void BMI270::init(){
+using Error = BMI270::Error;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> BMI270::init(){
+    return Ok();
 }
 
 
-void BMI270::update(){
-
+IResult<> BMI270::update(){
+    return Ok();
 }
 
 
-bool BMI270::validate(){
-    return true;
+IResult<> BMI270::validate(){
+    return Ok();
 }
 
 
-void BMI270::reset(){
-
+IResult<> BMI270::reset(){
+    return Ok();
 }
 

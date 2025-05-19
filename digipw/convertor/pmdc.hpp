@@ -127,7 +127,7 @@
 //         // logger.println(target_pos, odo.getPosition(), est.getSpeed(), motor_curr );
 //         // motor.setDuty(sin(t));
 //         // logger.println(ADC1->IDATAR1);
-//         // delay(2);
+//         // clock::delay(2ms);
 
 //         logger.println(ADC1->IDATAR1);
 //         if(logger.available()){

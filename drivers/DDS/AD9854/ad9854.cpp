@@ -50,14 +50,14 @@ void AD9854::Init(void){
 	for(i = 5; i >= 0; i--)	freq[i] = ftw >> ((5 - i) * 8);
 	
 	
-	delay(10);
+	clock::delay(10ms);
 	ports.UD_CLK = 0;
 	ports.MRESET = 1;
-	udelay(10);
+	clock::delay(10us);
 	ports.MRESET = 0;
 	
 	AD9854::SendData(CTRL, data, 4);
-	delay(50);
+	clock::delay(50ms);
 	ports.UD_CLK = 1;
 	ports.UD_CLK = 0;	
 	AD9854::SendData(FTW1, freq, 6);
@@ -73,7 +73,7 @@ void AD9854::SendOneByte(uint8_t data){
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){
 	int i;
 	ports.IO_RESET = 1;
-	udelay(1);
+	clock::delay(1us);
 	ports.IO_RESET = 0;
 	SendOneByte(_register);
 	for(i = 0; i < ByteNum; i++)	SendOneByte(data[i]);

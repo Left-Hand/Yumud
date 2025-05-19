@@ -196,9 +196,9 @@ void at8222_tb(){
     //     DEBUG_PRINTLN('/');
     //     static bool i = 0;
     //     i = !i;
-    //     // udelay(2);
+    //     // clock::delay(2us);
     //     // __nopn(60);
-    //     // delay(1);
+    //     // clock::delay(1ms);
     //     watch_gpio.write(i);
     // }
 
@@ -261,7 +261,7 @@ void at8222_tb(){
         // spd_targ = 7.0_r + 3 * sin(5 * time());
         // spd_targ = 8.0_r + 1.0_r * ((sin(2.0_r * time())) > 0 ? 1 : -1);
         // spd_targ = 8.0_r + 1.0_r * sinpu(2.0_r * time());
-        const auto t = time();
+        const auto t = clock::time();
 
         #define TEST_MODE 1
 

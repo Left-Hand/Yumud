@@ -31,7 +31,7 @@ void hive_main(){
         i_hive.insert(num_type(i));
     }
 
-    const auto begin_m = micros();
+    const auto begin_m = clock::micros();
     // for(size_t i = 0; i != 300; ++i)
     {
     
@@ -48,7 +48,7 @@ void hive_main(){
         }
     }
 
-    DEBUG_PRINTLN(total, uint32_t(micros() - begin_m));
+    DEBUG_PRINTLN(total, clock::micros() - begin_m);
 
     // DEBUG_PRINTLN(Vector2(1,2));
     std::terminate();

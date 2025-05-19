@@ -29,7 +29,7 @@ static auto stddev(const Itpair<auto> & src){
 namespace ymd::nvcv2::Match{
 
 real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
-    // auto rect = Rect2i(offs, tmp.size()).intersection(src.rect());
+    // auto rect = Rect2u(offs, tmp.size()).intersection(src.rect());
 
     // uint and_score = 0;
     // uint or_score = 0;
@@ -48,7 +48,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
     // u16_to_uni(res, ret);
     // return ret;
 
-    auto rect = Rect2i(offs, tmp.size()).intersection(src.rect());
+    auto rect = Rect2u(offs, tmp.size()).intersection(src.rect());
 
     uint score = 0;
     // uint base = tmp.sum() / 255;
@@ -87,7 +87,7 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
     BOUNDARY_CHECK()
 
     int t_mean = int(tmp.mean());
-    int s_mean = int(src.mean(Rect2i(offs, tmp.size())));
+    int s_mean = int(src.mean(Rect2u(offs, tmp.size())));
 
     int64_t num = 0;
     uint32_t den_t = 0;

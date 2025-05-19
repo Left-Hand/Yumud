@@ -43,13 +43,13 @@
 
 using namespace ymd;
 
-void sys::clock::delay_ms(const uint32_t ms){
-    delay(ms);
-}
+// void sys::clock::delay_ms(const uint32_t ms){
+//     clock::delay(ms);
+// }
 
-void sys::clock::delay_us(const uint32_t us){
-    udelay(us);
-}
+// void sys::clock::delay_us(const uint32_t us){
+//     clock::delay(us);
+// }
 
 void sys::preinit(){
     #ifdef N32G45X

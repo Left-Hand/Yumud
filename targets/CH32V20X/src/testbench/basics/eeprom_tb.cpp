@@ -16,6 +16,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+#if 0
+
 using namespace ymd::drivers;
 
 #define MEMORY_TB_FIRSTBYTE
@@ -27,7 +29,7 @@ using namespace ymd::drivers;
 #define MEMORY_TB_CONTENT
 
 #define MEMORY_TB_ASSERT(x, s, a, b)\
-if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); PANIC();}\
+if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); clock::delay(1ms); PANIC();}\
 else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 
 struct TestData{
@@ -54,13 +56,13 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef MEMORY_TB_FIRSTBYTE
     {
         scexpr uint8_t before_orignal = 0x37;
-        mem.store(0,before_orignal);
+        // mem.store(0,before_orignal);
         uint8_t before;
-        mem.load(0,before);
+        // mem.load(0,before);
         MEMORY_TB_ASSERT(before_orignal == before, "specified byte", before_orignal, before);
-        mem.store(0,uint8_t(before + 1));
+        // mem.store(0,uint8_t(before + 1));
         uint8_t after;
-        mem.load(0,after);
+        // mem.load(0,after);
         MEMORY_TB_ASSERT(before + 1 == after, "firts byte tb", before, after);
     }
     #endif
@@ -158,7 +160,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         TestData archive;
 
         logger.prints("write", archive);
-        mem.store(0,archive);
+        // mem.store(0,archive);
         archive.value = real_t(0.2);
         archive.crc = 0x12;
         // archive.name = "rstr1aN";
@@ -166,7 +168,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         // archive.data.fill(0x78);
         // memset(&archive, 'a', sizeof(archive));
         logger.prints("modi", archive);
-        mem.load(0,archive);
+        // mem.load(0,archive);
         logger.prints("read", archive);
 
     }
@@ -219,7 +221,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     sys::preinit();
 
     // logger.prints("ok");
-    delay(10);
+    clock::delay(10ms);
 
     if(true){
         using Cnt = size_t;
@@ -325,7 +327,7 @@ void flash_main(){
     // led.outpp();
     // while(true){
     //     DEBUG_PRINTLN(millis());
-    //     delay(100);
+    //     clock::delay(100ms);
     //     led.toggle();
     // }
     flash_tb(DEBUGGER);
@@ -334,3 +336,5 @@ void flash_main(){
 // OutputStream & operator << (OutputStream & os, const TestData & td){
 //     return os << td.data << ',' << td.name << ',' << td.value << ',' << td.crc;
 // }
+
+#endif

@@ -131,10 +131,10 @@ void leetcode_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 
-    auto m = micros();
+    auto m = clock::micros();
 
     // leetcode_no283();
     leetcode_no11();
 
-    DEBUG_PRINTS("done, use", micros() - m, "us");
+    DEBUG_PRINTS("done, use", clock::micros() - m, "us");
 }

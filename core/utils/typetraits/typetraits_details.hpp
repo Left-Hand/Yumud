@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 namespace ymd::magic::details{
 template<char...args>
 struct __static_string

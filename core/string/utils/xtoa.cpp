@@ -112,8 +112,9 @@ size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
 }
 
 
-size_t iltoa(int64_t value, char * str, uint8_t radix){
-    return _itoa_impl<int64_t>(value, str, radix);
+size_t StringUtils::iltoa(int64_t value, char * str, uint8_t radix){
+    // return _itoa_impl<int64_t>(value, str, radix);
+    return _itoa_impl<int32_t>(value, str, radix);
 }
 
 size_t StringUtils::ftoa(float number,char *buf, uint8_t eps)

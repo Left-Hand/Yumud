@@ -46,14 +46,14 @@ void AD9910::init(void)
 	DRCTL.clr();
     DRHOLD.clr();
 	MAS_REST.set(); 
-    delay(5);
+    clock::delay(5ms);
 	MAS_REST.clr(); 
 
     write_reg(0x00, cfr1, 4);
     write_reg(0x01, cfr2, 4);
     write_reg(0x02, cfr3, 4);
 
-	delay(1);
+	clock::delay(1ms);
 }      
 
 
@@ -78,7 +78,7 @@ void AD9910::writeProfile(const Profile & profile){
 
     write_reg(0x0e, profile.cbegin(), 8);
 
-	delay(1);
+	clock::delay(1ms);
 }         
 
 
@@ -119,7 +119,7 @@ void AD9910::writeDrg(const DrgParamenter & drgparameter){
     write_reg(0x0c, drgparameter.cbegin() + 8, 4);
     write_reg(0x0d, drgparameter.cbegin() + 16, 4);
 	
-	delay(1);
+	clock::delay(1ms);
 }         
 
 
@@ -174,13 +174,13 @@ void AD9910::freqSweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t Swee
 void AD9910::writeRamprofile(void)
 {
     write_reg(0x0e, ramprofile0, 8);
-	delay(1);
+	clock::delay(1ms);
 }         
 
 void AD9910::sendSample(const uint8_t * data, const size_t len)
 {
     write_reg(0x16, data, len);
-	delay(1);
+	clock::delay(1ms);
 }         
 
 // void AD9910::Square_wave(uint32_t Sample_interval)//方波

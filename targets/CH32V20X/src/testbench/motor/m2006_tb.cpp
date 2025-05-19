@@ -21,8 +21,8 @@ void m2006_main(){
     can.init(1_MHz);
     can[0].mask(CanID16{0x201, CanRemoteSpec::Data}, CanID16{0xffff, CanRemoteSpec::Remote});
     while(true){
-        auto s = real_t(0.07) * sin(4 * time());
-        auto c = real_t(0.07) * cos(4 * time());
+        auto s = real_t(0.07) * sin(4 * clock::time());
+        auto c = real_t(0.07) * cos(4 * clock::time());
         // real_t s = real_t(0.07);
         // real_t c = real_t(0.07);
         int16_t d = int16_t(s * 32768 * real_t(0.2));
@@ -30,6 +30,6 @@ void m2006_main(){
         CanMsg msg = CanMsg::from_tuple(CanStdId(0x200), std::make_tuple(BSWAP_16(d), BSWAP_16(d2)));
         DEBUG_PRINTLN(can1.read());
         can1.write(msg);
-        delay(10);
+        clock::delay(10ms);
     }
 }

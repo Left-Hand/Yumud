@@ -407,22 +407,3 @@ IResult<uint8_t> VL6180X::read_range_status(){
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok(dummy >> 4);
 }
-
-namespace ymd{
-
-OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error & err){
-	using Kind = drivers::VL6180X::Error_Kind;
-	if(err.is<Kind>()) return os << err.as<Kind>().unwrap();
-	else return os << err.as<hal::HalError>().unwrap();
-}
-OutputStream & operator<<(OutputStream & os, const drivers::VL6180X::Error_Kind & err_kind){
-	using Kind = drivers::VL6180X::Error_Kind;
-	switch(err_kind){
-		case Kind::WrongWhoAmI: return os << "WrongWhoAmI";
-		case Kind::InvalidScaling: return os << "InvalidScaling";
-		case Kind::RangeDataNotReady: return os << "RangeDataNotReady";
-		case Kind::AmbientDataNotReady: return os << "AmbientDataNotReady";
-		default: __builtin_unreachable();
-	}
-}
-}

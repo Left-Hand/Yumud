@@ -24,12 +24,12 @@
 
 [[maybe_unused]] __no_inline
 static void filter(const std::span<RGB565> row) {
-    static constexpr size_t WINDOW_SIZE = 3; // 3x3 ÖÐÖµÂË²¨´°¿Ú
+    static constexpr size_t WINDOW_SIZE = 3; // 3x3 ï¿½ï¿½Öµï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½
     static constexpr size_t HALF_WINDOW = WINDOW_SIZE / 2;
 
 
     if (row.size() < WINDOW_SIZE) {
-        // Èç¹ûÐÐ³¤¶ÈÐ¡ÓÚ3£¬ÎÞ·¨½øÐÐÖÐÖµÂË²¨
+        // ï¿½ï¿½ï¿½ï¿½Ð³ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½3ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ë²ï¿½
         return;
     }
 
@@ -37,7 +37,7 @@ static void filter(const std::span<RGB565> row) {
     std::array<RGB565, WINDOW_SIZE> window;
 
     for (size_t i = 0; i < row.size(); ++i) {
-        // ÊÕ¼¯´°¿ÚÄÚµÄÏñËØ
+        // ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
         for (size_t j = 0; j < WINDOW_SIZE; ++j) {
             size_t index = i + j - HALF_WINDOW;
             if (index < 0) {
@@ -48,10 +48,10 @@ static void filter(const std::span<RGB565> row) {
             window[j] = row[index];
         }
 
-        // ¶Ô´°¿ÚÄÚµÄÏñËØ½øÐÐÅÅÐò
+        // ï¿½Ô´ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½Ø½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         std::sort(window.begin(), window.end());
 
-        // È¡ÖÐÖµ
+        // È¡ï¿½ï¿½Öµ
         row[i] = window[HALF_WINDOW];
     }
 }
@@ -245,7 +245,7 @@ static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & 
     return (sample * lightColor * mis_weight * 2) / light_pdf;
 }
 
-// Éú³É´ÓÄ¬ÈÏZÖá(0,0,1)Ðý×ªµ½·¨Ïß·½ÏòµÄËÄÔªÊý
+// ï¿½ï¿½ï¿½É´ï¿½Ä¬ï¿½ï¿½Zï¿½ï¿½(0,0,1)ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½
 static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
@@ -254,7 +254,7 @@ static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
         normal.x,
         0,
         real_t(1) + normal.z
-    ) * ilen; // ×îºóÒ»²½¹éÒ»»¯£¨¿ÉºÏ²¢µ½ºóÐø²Ù×÷ÖÐ£©
+    ) * ilen; // ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ÉºÏ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½
 }
 
 [[maybe_unused]]
@@ -340,7 +340,7 @@ static RGB565 draw3drt(const uint x, const uint y, std::span<const TriangleSurfa
 __no_inline
 static void render_row(const __restrict std::span<RGB565> row, const uint y, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     // ASSERT(row.size() == LCD_W);
-    // const auto s = sin(8 * time());
+    // const auto s = sin(8 * clock::time());
     for (size_t x = 0; x < LCD_W; x++){
         row[x] = draw3drt(x, y, co_triangles);
     }
@@ -426,14 +426,14 @@ void light_tracking_main(void){
     //     lcd_cs = LOW;
     //     lcd_cs = HIGH;
     //     lcd_cs = LOW;
-    //     udelay(20);
+    //     clock::delay(20us);
     //     for(size_t i = 0; i < 100; i++){
     //         lcd_cs.set();
     //         __nopn(4);
     //         lcd_cs.clr();
     //         __nopn(4);
     //     }
-    //     udelay(20);
+    //     clock::delay(20us);
     // }
 
     test_res();
@@ -453,12 +453,12 @@ void light_tracking_main(void){
     drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170);
 
     displayer.fill(ColorEnum::PINK);
-    delay(200);
+    clock::delay(200ms);
 
     [[maybe_unused]]
     auto fill = [&]{
         // const auto u = micros();
-        const auto st = sinpu(time() * 2) * 0.5_r + 0.5_r;
+        const auto st = sinpu(clock::time() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unsafe({0,0});
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
@@ -488,11 +488,11 @@ void light_tracking_main(void){
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
             
             // const auto u = micros();
-            displayer.put_next_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_next_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
             // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
 
-            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+            // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2u(20, 0, 20, 40));
         }
 
         // const uint32_t use_us = micros() - u;
@@ -507,9 +507,9 @@ void light_tracking_main(void){
     std::vector<TriangleSurfaceCache_t<real_t>> co_triangles(triangles.begin(), triangles.end());
     // for(uint i = 0; i < co_triangles.size(); i++) 
     //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
-    DEBUG_PRINTLN(millis());
+    DEBUG_PRINTLN(clock::millis());
     auto render = [&](){
-        const auto u = micros();
+        const auto u = clock::micros();
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
         for (uint y = 0; y < LCD_H; y++){
 
@@ -518,17 +518,17 @@ void light_tracking_main(void){
 
             // const auto row = render_row_v2(LCD_W, y);
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-            displayer.put_texture(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
             // DEBUG_PRINTLN(uint8_t(row[50].b));
 
-            // displayer.put_rect(Rect2i(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
-            // renderer.draw_rect(Rect2i(20, 0, 20, 40));
+            // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(Rect2u(20, 0, 20, 40));
         }
 
         
-        const auto use_us = micros() - u;
+        const auto use_us = clock::micros() - u;
         // const auto fps = 1000000 / use_us;
-        DEBUG_PRINTLN(uint32_t(use_us));
+        DEBUG_PRINTLN(use_us);
     };
 
     // for(size_t i = 0; i < 100; i++) render();
@@ -536,6 +536,6 @@ void light_tracking_main(void){
         render();
     }
 
-    DEBUG_PRINTLN(millis());
+    DEBUG_PRINTLN(clock::millis());
 
 }

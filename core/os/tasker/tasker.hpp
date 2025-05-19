@@ -54,7 +54,7 @@ class Tasker{
 
     public:
         uint32_t task_cnt;
-        uint32_t getTick(void);
+        Milliseconds getTick(void);
         void handle(void);
         TaskerStatus addTask(Task & task);
         TaskerStatus addTasks(std::vector<Task>& tasks);

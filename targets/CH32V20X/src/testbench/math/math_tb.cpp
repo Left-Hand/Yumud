@@ -71,12 +71,12 @@ void math_tb(){
         
     //     for(size_t i = 0; i < cnt; i++){
     //         cnts.push_back(logger.pending());
-    //         delay(1);
+    //         clock::delay(1ms);
     //     }
         
     //     print(cnts);
 
-    //     delay(200);
+    //     clock::delay(200ms);
     // }
 
     // #define  WHEELLEG_TB

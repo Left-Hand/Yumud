@@ -49,7 +49,7 @@ IResult<> ICM42688::init(){
 	if(const auto res = reset();
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-	delay(30);
+	clock::delay(30ms);
 
 	/*Gyr设置*/
 	if(const auto res = set_gyr_fs(GyrFs::_2000DPS);
@@ -70,7 +70,7 @@ IResult<> ICM42688::init(){
 	if(const auto res = phy_.write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
-	delay(30);
+	clock::delay(30ms);
 
 	
 	/*指定Bank0*/
@@ -222,8 +222,8 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-Option<Vector3_t<q24>> ICM42688::read_acc(){
-    return Some{Vector3_t<q24>{
+IResult<Vector3_t<q24>> ICM42688::read_acc(){
+    return Ok{Vector3_t<q24>{
 		// acc_data_.x, 
 		// acc_data_.y, 
 		// acc_data_.z, 
@@ -234,9 +234,9 @@ Option<Vector3_t<q24>> ICM42688::read_acc(){
 }
 
 
-Option<Vector3_t<q24>> ICM42688::read_gyr(){
+IResult<Vector3_t<q24>> ICM42688::read_gyr(){
 
-    return Some{Vector3_t<q24>{
+    return Ok{Vector3_t<q24>{
 		lsb_gyr_ * gyr_data_.x,
 		lsb_gyr_ * gyr_data_.y,
 		lsb_gyr_ * gyr_data_.z

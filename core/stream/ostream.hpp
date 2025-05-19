@@ -5,6 +5,7 @@
 #include <span>
 #include <ranges>
 #include <cstring>
+#include <chrono>
 
 #include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
@@ -44,6 +45,7 @@ inline OutputStream& operator<<(OutputStream& os,const type value) {\
 template<size_t Q>
 struct iq_t;
 
+namespace detials{
 template <typename T>
 struct __needprint_helper {
     static constexpr bool value = true;
@@ -78,6 +80,7 @@ template<>
 struct __needprint_helper<__Splitter>{
     static constexpr bool value = false;
 };
+}
 
 class OutputStream{
 public:
@@ -100,6 +103,16 @@ public:
         };
     };
 private:
+    template<typename T>
+    using __needprint_helper = detials::__needprint_helper<T>;
+
+    using __Splitter = detials::__Splitter;
+    using __Endl = detials::__Endl;
+
+    
+    template<char c>
+    using __Brackets = detials::__Brackets<c>;
+
 
     uint8_t sp_len;
 
@@ -325,6 +338,19 @@ public:
     OutputStream & operator<<(const __Endl){this->print_endl(); return *this;}
     
     OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
+
+
+    template<typename T>
+    OutputStream & operator<<(const std::chrono::duration<T, std::milli> ms){
+        return *this << ms.count() << "ms";}
+
+    template<typename T>
+    OutputStream & operator<<(const std::chrono::duration<T, std::micro> us){
+        return *this << us.count() << "us";}
+
+    template<typename T>
+    OutputStream & operator<<(const std::chrono::duration<T, std::nano> ns){
+        return *this << ns.count() << "ns";}
     OutputStream & operator<<(const __Splitter){print_splt(); return *this;}
 
     template<char chr>

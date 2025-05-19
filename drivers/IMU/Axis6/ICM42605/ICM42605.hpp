@@ -166,16 +166,16 @@ public:
     ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
     
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
     
-    IResult<> update();
+    [[nodiscard]] IResult<> update();
 
-    IResult<> reset();
+    [[nodiscard]] IResult<> reset();
 
-    Option<Vector3_t<q24>> read_acc();
-    Option<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
 };
 
 }

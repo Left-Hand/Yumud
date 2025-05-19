@@ -5,7 +5,7 @@
 namespace ymd::nvcv2::Shape{
 
 struct Blob{
-    Rect2i rect;
+    Rect2u rect;
     int area;
     int index;
 
@@ -55,12 +55,12 @@ public:
 class SimilarRects{
 public:    
     SimilarRects(const real_t _eps) : eps(_eps) {}
-    inline bool operator()(const Rect2i& r1, const Rect2i& r2) const{
+    inline bool operator()(const Rect2u& r1, const Rect2u& r2) const{
         real_t delta = eps*(std::min(r1.w, r2.w) + std::min(r1.h, r2.h))*real_t(0.5);
-        return std::abs(r1.x - r2.x) <= delta &&
-        std::abs(r1.y - r2.y) <= delta &&
-        std::abs(r1.x + r1.w - r2.x - r2.w) <= delta &&
-        std::abs(r1.y + r1.h - r2.y - r2.h) <= delta;
+        return ABS(r1.x - r2.x) <= delta &&
+            ABS(r1.y - r2.y) <= delta &&
+            ABS(r1.x + r1.w - r2.x - r2.w) <= delta &&
+            ABS(r1.y + r1.h - r2.y - r2.h) <= delta;
     }
 
     real_t eps;

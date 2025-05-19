@@ -10,6 +10,11 @@ namespace ymd::drivers{
 
 class ADXL345:public AccelerometerIntf, public GyroscopeIntf{
 public:
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class DataRate:uint8_t{
         HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,
         HZ12_5,HZ25,HZ50,HZ100,HZ200,HZ400,HZ800,HZ1600,HZ3200
@@ -314,8 +319,8 @@ public:
         return deviceIDReg.data;
     }
 
-    Option<Vector3_t<q24>> read_acc();
-    Option<Vector3_t<q24>> read_gyr();
+    IResult<Vector3_t<q24>> read_acc();
+    IResult<Vector3_t<q24>> read_gyr();
 
 };
 

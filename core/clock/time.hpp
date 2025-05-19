@@ -4,6 +4,6 @@
 
 #include "core/math/real.hpp"
 
-namespace ymd{
+namespace ymd::clock{
 real_t time();
 }

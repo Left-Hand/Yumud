@@ -21,7 +21,7 @@ void matrix_main(){
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
-    delay(200);
+    clock::delay(200ms);
 
 
 

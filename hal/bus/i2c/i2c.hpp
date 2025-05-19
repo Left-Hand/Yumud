@@ -1,5 +1,8 @@
 #pragma once
 
+// #include "core/clock/clock.hpp"
+#include <chrono>
+
 #include "hal/bus/bus_base.hpp"
 #include "i2c_utils.hpp"
 
@@ -12,14 +15,15 @@ private:
     hal::Gpio & sda_gpio_;
     
 protected:
-    uint32_t timeout_ = 10;
+    using Timeout = std::chrono::duration<uint16_t, std::micro>;
+    Timeout timeout_ = Timeout(10);
     bool discard_ack_ = false;
 
     I2c(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):scl_gpio_(scl_gpio),sda_gpio_(sda_gpio){}
 public:
     I2c(I2c && other) = default;
 
-    void set_timeout(const uint32_t timeout){timeout_ = timeout;}
+    void set_timeout(const std::chrono::microseconds timeout){timeout_ = timeout;}
     void discard_ack(const bool en){discard_ack_ = en;}
 
     virtual hal::HalResult read(uint32_t & data, const Ack ack) = 0;

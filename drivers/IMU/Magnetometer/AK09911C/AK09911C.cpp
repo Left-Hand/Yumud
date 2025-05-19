@@ -86,16 +86,16 @@ IResult<Vector3_t<int8_t>> AK09911C::get_coeff(){
     });
 }
 IResult<> AK09911C::blocking_update(){
-    static constexpr size_t READ_TIMEOUT_MS = 10;
-    const auto begin_u = millis();
+    static constexpr auto READ_TIMEOUT_MS = 10ms;
+    const auto begin_u = clock::millis();
 
-    while(millis() - begin_u < READ_TIMEOUT_MS) {
+    while(clock::millis() - begin_u < READ_TIMEOUT_MS) {
         if(const auto res = is_data_ready(); res.is_ok()){
             if(res.unwrap() == true) break;
         }else {
             return CHECK_ERR(Err(res.unwrap_err()));
         }
-        udelay(100);
+        clock::delay(100us);
     }
 
     if(const auto res = read_burst(MagXReg::address, &mag_x_reg, 3);
@@ -124,17 +124,17 @@ IResult<> AK09911C::selftest(){
 
     if(const auto res = set_mode(Mode::PowerDown);
         res.is_err()) return res;
-    delay(1);
+    clock::delay(1ms);
     if(const auto res = set_mode(Mode::SelfTest);
         res.is_err()) return res;
-    delay(1);
+    clock::delay(1ms);
 
     //进行两次测量 因为第一次的数据不准容易自检失败
     for(size_t i = 0; i < 2; ++i){
         if(const auto res = retry(2, [this]{return blocking_update();});
             res.is_err()) return res;
 
-        delay(2);
+        clock::delay(2ms);
     }
 
     auto check_xyz = [this] -> IResult<>{
@@ -156,7 +156,7 @@ IResult<> AK09911C::selftest(){
         return Ok();
     };
 
-    if(const auto res = retry(3, [&]{return check_xyz();}, []{delay(2);});
+    if(const auto res = retry(3, [&]{return check_xyz();}, []{clock::delay(2ms);});
         res.is_err()) return res;
 
     return Ok();
@@ -179,7 +179,7 @@ IResult<> AK09911C::validate(){
         return Ok();
     };
 
-    if(const auto res = retry(2, [&]{return check_vendor();}, []{delay(2);});
+    if(const auto res = retry(2, [&]{return check_vendor();}, []{clock::delay(2ms);});
         res.is_err()) return res;
 
     if(const auto res = selftest(); res.is_err())

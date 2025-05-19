@@ -143,7 +143,7 @@ private:
         // const auto ret = iq_t<16>(std::bit_cast<_iq<16>>(int32_t((lcg_.update() >> 16) & 0xffff)));
         const auto ret = iq_t<16>(std::bit_cast<_iq<16>>(int32_t((lcg_.get() >> 16))));
         // DEBUG_PRINTLN(ret);
-        // delay(1);
+        // clock::delay(1ms);
         return ret;
         // return 1;
         // return rng_.

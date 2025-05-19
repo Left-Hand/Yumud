@@ -299,7 +299,7 @@ void bldc_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
-    delay(200);
+    clock::delay(200ms);
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
@@ -342,7 +342,7 @@ void bldc_main(){
     //     // auto [x,y,z] = bmi.read_acc();
     //     auto [x,y,z] = bmi.read_gyr();
     //     DEBUG_PRINTLN(x,y,z);
-    //     delay(2);
+    //     clock::delay(2ms);
     //     // DEBUGGER << std::endl;
     // }
     Odometer odo{ma730};
@@ -389,7 +389,7 @@ void bldc_main(){
     // for(size_t i = 0; i < 400; ++i){
     //     curr_sens.updatUVW();
     //     curr_sens.updateAB();
-    //     delay(1);
+    //     clock::delay(1ms);
     // }
     
     // mp6540.setBias(14.68_r,14.68_r,14.62_r);
@@ -506,7 +506,7 @@ void bldc_main(){
     }};
 
     AbVoltage ab_volt;
-    volatile uint32_t exe_micros;
+    Microseconds exe_micros;
     [[maybe_unused]] auto cb = [&]{
         odo.update();
 
@@ -546,14 +546,14 @@ void bldc_main(){
         #if (TEST_MODE == TEST_MODE_Q_SIN_CURR)
         const auto d_curr_cmd = 0.0_r;
         const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(time());
+        const auto q_curr_cmd =  0.2_r * sin(clock::time());
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
         #elif (TEST_MODE == TEST_MODE_VOLT_POS_CTRL)
 
         #elif (TEST_MODE == TEST_MODE_WEAK_MAG)
         const auto d_curr_cmd = 0.0_r;
         const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(time());
+        const auto q_curr_cmd =  0.2_r * sin(clock::time());
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
 
         // const auto d_volt = d_pi_ctrl.update(0.2_r, dq_curr.d);
@@ -565,8 +565,8 @@ void bldc_main(){
         #elif (TEST_MODE == TEST_MODE_POS_SIN)
         scexpr real_t omega = 3 * real_t(TAU);
         scexpr real_t amp = 1.5_r;
-        targ_pos = amp * sin(omega * time());
-        targ_spd = amp * omega * cos(omega * time());
+        targ_pos = amp * sin(omega * clock::time());
+        targ_spd = amp * omega * cos(omega * clock::time());
 
         const auto d_curr_cmd = 0.0_r;
         const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
@@ -579,7 +579,7 @@ void bldc_main(){
 
         const auto d_curr_cmd = 0.0_r;
         const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd = SIGN_AS(amp, sin(omega * time()));
+        const auto q_curr_cmd = SIGN_AS(amp, sin(omega * clock::time()));
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
         #endif
         // const auto d_volt = 0;
@@ -727,7 +727,7 @@ void bldc_main(){
     [[maybe_unused]] auto cb_sensorless = [&]{
 
         // targ_pos = real_t(6.0) * sin(2 * t);
-        targ_pos = real_t(1.0) * time();
+        targ_pos = real_t(1.0) * clock::time();
 
         const auto & ab_curr = curr_sens.ab();
         // const auto dq_curr = curr_sens.dq();
@@ -828,12 +828,12 @@ void bldc_main(){
         // auto & ob = nlr_ob;
         // const auto max_amp = real_t(8.7);
 
-        const auto begin_m = uint32_t(micros());
+        const auto begin_m = clock::micros();
         // const auto max_amp = real_t(2.8) + sin(t);
         // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        // auto theta = omega * time();
+        // auto theta = omega * clock::time();
         // const auto theta = 0;
-        // const auto t = time();
+        // const auto t = clock::time();
 
 
         mg_meas_rad = mt * omega;
@@ -867,8 +867,8 @@ void bldc_main(){
 
         // curr_sens.capture();
 
-        // exe_micros  = uint32_t(micros()) - begin_m;
-        exe_micros = uint32_t(micros()) - begin_m;
+        // exe_micros  = uint32_t(clock::micros()) - begin_m;
+        exe_micros = clock::micros() - begin_m;
     };
 
 
@@ -932,9 +932,9 @@ void bldc_main(){
             // DEBUGGER.force_sync();
             // DEBUG_PRINTLN("Done Current Bias Measure!!");
             // DEBUG_PRINTLN(calibrater.result());
-            // delay(100);
+            // clock::delay(100ms);
             // ASSERT(false);
-            // delay(1000); sys::reset();
+            // clock::delay(1000ms); sys::reset();
         }
     };
 
@@ -958,7 +958,7 @@ void bldc_main(){
         real_t hfi_c = cos(hfi_rad);
         real_t hfi_out = hfi_base_volt * hfi_c;
 
-        real_t openloop_rad = -frac(2.1_r * time())*real_t(TAU);
+        real_t openloop_rad = -frac(2.1_r * clock::time())*real_t(TAU);
         const auto [openloop_s, openloop_c] = sincos(openloop_rad);
         // real_t s = sin(hfi_rad);
 
@@ -995,7 +995,7 @@ void bldc_main(){
 
         // hfi_result = mul;
         
-        // dt = micros() - m;
+        // dt = clock::micros() - m;
     };
 
     // adc1.bindCb(AdcIT::JEOC, cb_pulse);
@@ -1012,7 +1012,7 @@ void bldc_main(){
 
     
     while(true){
-        [[maybe_unused]] const auto t = time();
+        [[maybe_unused]] const auto t = clock::time();
 
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
         DEBUG_PRINTLN_IDLE(
@@ -1052,16 +1052,16 @@ void bldc_main(){
             sl_meas_rad,
             exe_micros
             // pll.theta(),
-            // micros() * 0.001_r
+            // clock::micros() * 0.001_r
             // real_t(exe_micros)
             // curr_sens.mid()
         );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
-        ledr = BoolLevel::from((millis() % 200) > 100);
-        ledb = BoolLevel::from((millis() % 400) > 200);
-        ledg = BoolLevel::from((millis() % 800) > 400);
+        ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
+        ledb = BoolLevel::from((clock::millis() % 400).count() > 200);
+        ledg = BoolLevel::from((clock::millis() % 800).count() > 400);
 
         // auto _t = real_t(0);
 
@@ -1071,7 +1071,7 @@ void bldc_main(){
         // DEBUG_PRINTLN_IDLE((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
         // DEBUG_PRINTLN_IDLE((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
         // DEBUG_PRINTLN_IDLE((odo.getPosition()), ab_curr[0],ab_curr[1]);
-        // delay(2);
+        // clock::delay(2ms);
         // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
         [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
         [[maybe_unused]] const auto dq_curr = curr_sens.dq();
@@ -1104,7 +1104,7 @@ void bldc_main(){
             // DEBUG_PRINTLN_IDLE(ab_volt[0]);
             // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], ab_volt[0]);
             // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_ob.getTheta(), dt > 100 ? 1000 + dt : dt);
-            // delay(2);
+            // clock::delay(2ms);
             
             // DEBUG_PRINTLN_IDLE(rad, sin(rad), cos(rad), atan2(sin(rad), cos(rad)));
             // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
@@ -1120,10 +1120,10 @@ void bldc_main(){
             // DEBUG_PRINTLN_IDLE(ab_curr, dq_curr, can1.available(), can1.getTxErrCnt(), std::setbase(2), CAN1->ERRSR);
             // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
-        // delay(2);
+        // clock::delay(2ms);
         // DEBUGGER.no_brackets(true);
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2_t<real_t>(1,1));
-        // delay(2);
+        // clock::delay(2ms);
 
         // DEBUGGER.force_sync();
         // if(false){
@@ -1155,7 +1155,7 @@ void bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), real_t(v_sense), real_t(w_sense));
         // pwm_u = sin(t) * 0.5_r + 0.5_r;
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // delay(5);
+        // clock::delay(5ms);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), s_lpf_u_curr);
         // auto [a,b] = Vector2_t<real_t>{real_t(0), real_t(0.2)}.rotated(open_rad);
@@ -1163,10 +1163,10 @@ void bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;
         // cb();
-        // delay(10);
+        // clock::delay(10ms);
         // DEBUG_PRINTLN(spi1.cs_port.isIndexValid(0), spi1.cs_port.isIndexValid(1), spi1.cs_port.isIndexValid(2))
         // DEBUG_PRINTLN("0");
         // bmi.check();
-        // delay(20);
+        // clock::delay(20ms);
     }
 }

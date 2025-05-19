@@ -4,7 +4,9 @@
 #include <type_traits>
 
 #include "Option.hpp"
+
 #include "typetraits/args_traits.hpp"
+#include "typetraits/enum_traits.hpp"
 // #include "hal/bus/bus_error.hpp"
 
 namespace ymd{

@@ -78,9 +78,9 @@ void rrs3_tb(){
     DEBUG_PRINTLN(Vector2_t<T>::RIGHT.rotated(T(TAU  / 3)));
     DEBUG_PRINTLN(Vector2_t<T>::RIGHT.rotated(T(-TAU / 3)));
 
-    const auto u = micros();
+    const auto u = clock::micros();
     const auto res_opt = rrs3.inverse(gest);
-    DEBUG_PRINTLN(micros() - u);
+    DEBUG_PRINTLN(clock::micros() - u);
     if(res_opt.is_some()){
         const auto res = res_opt.unwrap();
         for(const auto & solu : res){
@@ -96,7 +96,7 @@ void rrs3_tb(){
 
     while(true){
         // DEBUG_PRINTLN(millis());
-        // delay(1);
+        // clock::delay(1ms);
     }
     
 }

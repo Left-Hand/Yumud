@@ -1,6 +1,7 @@
 #include "flash.hpp"
 #include "core/sdk.hpp"
 
+#if 0
 using namespace ymd;
 
 #define CLOCK_CONFIG_BY_AHB 0
@@ -90,7 +91,7 @@ void Flash::erase_page(const Address vaddr){
     const auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     // BREAKPOINT
-    // delay(2);
+    // clock::delay(2ms);
     // DEBUG_VALUE(phyaddr, "erase")
     // FLASH_ErasePage_Fast(phyaddr);
     FLASH_ErasePage(phyaddr);
@@ -158,7 +159,7 @@ void Flash::revert_clock(){
 void Flash::entry_store(){
     config_clock();
     // Systick_Init();
-    // delay(1);
+    // clock::delay(1ms);
 }
 
 void Flash::exit_store(){
@@ -172,3 +173,4 @@ void Flash::entry_load(){
 void Flash::exit_load(){
     revert_clock();
 }
+#endif

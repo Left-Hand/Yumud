@@ -37,7 +37,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
     timer.attach(TimerIT::Update, {0,0}, [&]{
         pwm_gen.on_update_isr();
 
-        const auto t = time();
+        const auto t = clock::time();
 
         const auto [st, ct] = sincospu(700 * t);
 
@@ -67,15 +67,15 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
             // w,
             real_t(timer.oc(1))
         );
-        // delay(1);
-        udelay(100);
+        // clock::delay(1ms);
+        clock::delay(100us);
         // pwm_gen.set_duty({0.2_r, 0.4_r, 0.6_r});
         // pwm_gen.set_duty({0.6_r, 0.8_r, 0.9_r});
 
         // DEBUG_PRINTLN(t, real_t(pwm_trig_));
         // if(trig_occasion_opt_.is_some())
         //     DEBUG_PRINTLN(trig_occasion_opt_.unwrap().kind());
-        // delay(1);
+        // clock::delay(1ms);
     }
 }
 

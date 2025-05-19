@@ -44,7 +44,7 @@ class FOCStepper:public FOCMotor{
     // bool command_debug_enabled = false;
     // bool run_debug_enabled = false;
     
-    uint64_t exe_micros = 0;
+    Microseconds exe_micros = 0us;
 
     bool skip_tone = false;
     bool cmd_mode = false;
@@ -156,7 +156,7 @@ public:
     }
 
     uint32_t exe() const override {
-        return exe_micros;
+        return exe_micros.count();
     }
 
 

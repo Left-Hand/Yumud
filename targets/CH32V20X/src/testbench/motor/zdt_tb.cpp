@@ -15,14 +15,14 @@ void zdt_main(UartHw & logger){
     ZdtMotor motor{can1};
     
     
-    delay(10);
+    clock::delay(10ms);
     motor.enable();
-    delay(10);
+    clock::delay(10ms);
     motor.triggerCali();
     while(true){
         motor.enable();
-        motor.setTargetPosition(sin(time()));    
-        delay(10);
+        motor.setTargetPosition(sin(clock::time()));    
+        clock::delay(10ms);
         if(can1.available()) DEBUG_PRINTLN(can1.read());
         // DEBUG_PRINTLN(can1.pending(), can1.getRxErrCnt(), can1.getTxErrCnt());
     }

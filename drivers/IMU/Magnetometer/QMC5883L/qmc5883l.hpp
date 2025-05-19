@@ -1,32 +1,45 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/EnumArray.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include <tuple>
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{
 
 struct QMC5883L_Collections{
+
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1a);
+
+    using Error = ImuError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class Mode:uint8_t{
         Single,Continuous
     };
 
-    enum class DataRate:uint8_t{
-        DR10, DR50, DR100, DR200
+    enum class Odr:uint8_t{
+        _10, _50, _100, _200
     };
 
     enum class OverSampleRatio:uint8_t{
-        OSR512, OSR256, OSR128, OSR64
+        _512, 
+        _256, 
+        _128, 
+        _64
     };
 
     enum class FullScale:uint8_t{
-        FS2G, FS8G
+        _2G, 
+        _8G
     };
+};
 
+struct QMC5883L_Regs:public QMC5883L_Collections{
     enum class RegAddress:uint8_t{
         MagX = 0x00,
         MagY = 0x02,
@@ -38,15 +51,6 @@ struct QMC5883L_Collections{
         ResetPeriod = 0x0B,
         ChipID = 0x0D
     };
-
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1a);
-
-    using Error = ImuError;
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-};
-
-struct QMC5883L_Regs:public QMC5883L_Collections{
 
     struct MagXReg:public Reg16i<>{
         int16_t :16;
@@ -74,9 +78,9 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     struct ConfigAReg:public Reg8<>{
         
         uint8_t measureMode:2;
-        uint8_t dataRate:2;
-        uint8_t fullScale:2;
-        uint8_t OverSampleRatio:2;
+        Odr odr:2;
+        FullScale fs:2;
+        OverSampleRatio ovs_ratio:2;
         
     };
 
@@ -128,9 +132,9 @@ public:
 
     [[nodiscard]] IResult<> enable_cont_mode(const bool en = true);
     
-    [[nodiscard]] IResult<> set_data_rate(const DataRate rate);
+    [[nodiscard]] IResult<> set_odr(const Odr rate);
     
-    [[nodiscard]] IResult<> set_full_scale(const FullScale fullscale);
+    [[nodiscard]] IResult<> set_fs(const FullScale fullscale);
     
     [[nodiscard]] IResult<> set_over_sample_ratio(const OverSampleRatio ratio);
 
@@ -150,8 +154,15 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    real_t fs;
-    uint8_t ovsfix = 0;
+    static constexpr EnumArray<FullScale, q24> scaler_mapping_ = {
+        2, 8
+    };
+
+    EnumScaler<FullScale, q24> scaler_ = {
+        FullScale::_2G,
+        scaler_mapping_
+    };
+
 
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
         if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
@@ -183,38 +194,6 @@ private:
         return Ok();
     }
 
-
-    void setFs(const FullScale FS){
-        switch(FS){
-        case FullScale::FS2G:
-            fs = real_t(2);
-            break;
-        case FullScale::FS8G:
-            fs = real_t(8);
-            break;
-        default:
-            break;
-        }
-    }
-
-    void setOvsfix(const OverSampleRatio OSR){
-        switch(OSR){
-        case OverSampleRatio::OSR512:
-            ovsfix = 9;
-            break;
-        case OverSampleRatio::OSR256:
-            ovsfix = 8;
-            break;
-        case OverSampleRatio::OSR128:
-            ovsfix = 7;
-            break;
-        case OverSampleRatio::OSR64:
-            ovsfix = 6;
-            break;
-        default:
-            break;
-        }
-    }
 
     IResult<bool> is_busy(){
         if(const auto res = read_reg(RegAddress::Status, statusReg);

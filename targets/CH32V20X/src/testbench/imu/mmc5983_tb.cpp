@@ -102,7 +102,7 @@ calibrate_magfield(const std::span<const Vector3_t<q24>> data) {
         b[2] += z2;
 
         DEBUG_PRINTLN(A, b);
-        delay(1);
+        clock::delay(1ms);
     }
 
 
@@ -292,7 +292,7 @@ static void mmc5983_test(drivers::MMC5983 & imu){
         // const auto p = project_v2_to_v3();
         const auto p = Vector3_t<q24>();
         DEBUG_PRINTLN(p,i, v2);
-        delay(1);
+        clock::delay(1ms);
         calibrator.add_data(p + Vector3_t<q24>(0.2_r,1,1));
     }
     std::tie(mean, soft_iron) = calibrator.get_result();
@@ -301,7 +301,7 @@ static void mmc5983_test(drivers::MMC5983 & imu){
     while(true);
     for(const auto & mag : calibrator.data()){
         DEBUG_PRINTLN(mag);
-        delay(1);
+        clock::delay(1ms);
     }
     while(true){
         while(imu.is_mag_meas_done().unwrap() == false);
@@ -345,7 +345,7 @@ void mmc5983_main(){
     i2c.init(200_KHz);
     // i2c.init();
 
-    delay(200);
+    clock::delay(200ms);
 
 
     MMC5983 imu = {i2c};

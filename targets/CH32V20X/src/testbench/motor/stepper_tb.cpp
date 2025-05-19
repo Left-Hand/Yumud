@@ -197,7 +197,7 @@ void stepper_tb(UartHw & logger_inst){
 
     I2cSw i2cSw{portD[1], portD[0]};
     i2cSw.init(400_KHz);
-    AT24C02 at24{i2cSw};
+    AT24CXX at24{AT24CXX::AT24C02{}, i2cSw};
     Memory mem{at24};
 
     uint8_t node_id = get_default_id();

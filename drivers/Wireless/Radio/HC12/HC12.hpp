@@ -41,7 +41,7 @@ protected:
 
     bool sendAtCommand(const String & token){
         set_pin.clr();
-        udelay(1);
+        clock::delay(1us);
         uart.writeN("AT", 2);
         if(token.length()){
             uart.write1('+');
@@ -74,7 +74,7 @@ protected:
         // }
 
         // end_process:
-        udelay(1);
+        clock::delay(1us);
         set_pin.set();
         return is_valid;
     }

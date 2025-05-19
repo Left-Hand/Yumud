@@ -26,7 +26,7 @@
  {
    SPI_CS = ss_pin;
  
-   delay(1000);
+   clock::delay(1000ms);
    w5500.swReset();
    for (int i=0; i<MAX_SOCK_NUM; i++) {
      uint8_t cntl_byte = (0x0C + (i<<5));
@@ -41,7 +41,7 @@
  {
    SPI_CS = ss_pin;
  
-   delay(1000);
+   clock::delay(1000ms);
    initSS();
    SPI.begin(sck_pin, miso_pin, mosi_pin, ss_pin);
    w5500.swReset();

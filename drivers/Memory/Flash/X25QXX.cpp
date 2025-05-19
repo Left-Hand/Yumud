@@ -1,6 +1,9 @@
 #include "X25QXX.hpp"
 #include "core/debug/debug.hpp"
 
+
+#if 0
+
 using namespace ymd::drivers;
 
 #define self (*this)
@@ -12,6 +15,7 @@ using namespace ymd::drivers;
 #else
 #define X25QXX_DEBUG(...)
 #endif
+
 
 class RAIIfunctor{
 protected:
@@ -46,12 +50,12 @@ void X25QXX::update_jedec_id(){
     read_byte(jedec_id.capacity);
 }
 
-bool X25QXX::wait_for_free(size_t timeout){
+bool X25QXX::wait_for_free(Milliseconds timeout){
     write_byte(Command::ReadStatusRegister, CONT);
 
-    size_t begin = millis();
+    const auto begin = clock::millis();
 
-    while(millis() - begin < timeout){
+    while(clock::millis() - begin < timeout){
         read_byte(statusReg, CONT);
         if(statusReg.busy == false){
             break;
@@ -86,7 +90,7 @@ void X25QXX::write_page(const Address addr, const uint8_t * data, size_t len){
 
 
 void X25QXX::entry_store(){
-    self.wait_for_free(UINT32_MAX);
+    self.wait_for_free(Milliseconds(std::numeric_limits<uint32_t>::max()));
     // self.enable_write();
 }
     
@@ -95,11 +99,11 @@ void X25QXX::exit_store(){
 }
     
 void X25QXX::entry_load(){
-    delay(10);
+    clock::delay(10ms);
 }
     
 void X25QXX::exit_load(){
-    delay(10);
+    clock::delay(10ms);
 }
 
 
@@ -167,7 +171,7 @@ void X25QXX::store_bytes(const Address loc, const void * data, const Address len
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
         if(op_window.length() != 0){
-            self.wait_for_free(UINT32_MAX);
+            self.wait_for_free(Milliseconds(UINT32_MAX));
             auto * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
             self.write_page(op_window.from, ptr, op_window.length());
         }
@@ -188,3 +192,5 @@ void X25QXX::erase_bytes(const Address loc, const size_t len){
     //FIXME
     erase_sector(loc);
 }
+
+#endif

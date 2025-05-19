@@ -62,7 +62,8 @@ int main(){
     // rrs3_robot_main();
     // nuedc_2023e_main();
     // icm42688_main();
-    mmc5983_main();
+    // mmc5983_main();
+    lazy_main();
     // ak09911c_main();
     // enum_main();
     // i2c_scanner_main();
@@ -83,7 +84,7 @@ int main(){
     // lt8920_main();
     // ma730_main();
     // bmi160_main();
-    // delay(200);
+    // clock::delay(200ms);
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
@@ -144,6 +145,7 @@ int main(){
     // light_tracking_main();
     // cubic_main();
     smc2025_main();
+    
     // sdc_main();
     // proxy_tb();
     // paj7620_main();

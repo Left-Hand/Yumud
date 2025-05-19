@@ -6,20 +6,20 @@ using namespace ymd::drivers;
 
 void JQ8900::Phy::write(const uint8_t data){
     ser_.set();
-    udelay(1000);
+    clock::delay(1000us);
     ser_.clr();
-    udelay(3200);
+    clock::delay(3200us);
 
     for(uint8_t i = 1; bool(i); i <<= 1){
         ser_.set();
         if(i & data){
-            udelay(600);
+            clock::delay(600us);
             ser_.clr();
-            udelay(200);
+            clock::delay(200us);
         }else{
-            udelay(200);
+            clock::delay(200us);
             ser_.clr();
-            udelay(600);  
+            clock::delay(600us);  
         }
     }
     ser_.set();
