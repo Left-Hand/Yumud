@@ -14,6 +14,15 @@
 
 using namespace ymd;
 
+consteval real_t operator"" _deg(long double x){
+    return real_t(x * PI / 180);
+}
+consteval real_t operator"" _deg(uint64_t x){
+    return real_t(x * PI / 180);
+}
+
+
+
 namespace ymd::smc::sim{
 
 template<typename T>
@@ -21,22 +30,35 @@ struct Gest2_t{
     Vector2_t<T> pos;
     T rad;
 
-    constexpr Gest2_t<T> forward_move(const T length) const {
-        const auto delta = Vector2_t<T>{cos(rad), sin(rad)} * length;
+    [[nodiscard]] constexpr Gest2_t<T> forward_move(const T length) const {
+        const auto [s, c] = sincos(rad);
+        const auto delta = Vector2_t<T>{c, s} * length;
         return {
             .pos = pos + delta,
             .rad = rad
         };
     }
 
-    constexpr Gest2_t<T> revolve_by_radius_and_ratation(
-            const T radius, const T rot) const {
-        const auto [s,c] = sincos(rot);
-        const auto delta = (rot > 0) ? 
-            Vector2_t<T>{radius * (c - 1), radius * s} :
-            Vector2_t<T>{radius * (1 - c), -radius * s};
+    [[nodiscard]] constexpr Gest2_t<T> side_move(const T length) const {
+        const auto [s, c] = sincos(rad + real_t(PI/2));
+        const auto delta = Vector2_t<T>{c, s} * length;
+        return {
+            .pos = pos + delta,
+            .rad = rad
+        };
+    }
 
-        return {pos + delta, rad + rot};
+    [[nodiscard]] constexpr Gest2_t<T> revolve_by_radius_and_rotation(
+            const T radius, const T rot) const {
+
+        const auto ar = Vector2_t<T>::from_rotation(rad, radius).rotated(
+            rot > 0 ? T(PI/2) : T(-PI/2)
+        );
+
+        const auto org = pos + ar;
+        const auto delta = (-ar).rotated(rot);
+        return {org + delta, rad + rot};
+        // return {org, rad + rot};
     }
 };
 
@@ -47,12 +69,12 @@ using BoundingBox = Rect2_t<real_t>;
 struct Placement{
     Vector2_t<real_t> pos;
 
-    real_t rotation = 0;
-    real_t scale = 1;
+    // real_t rotation = 0;
+    // real_t scale = 1;
 
-    Vector2 apply_transform(Vector2 p) const {
-    return (p * scale).rotated(rotation) + pos;
-    }
+    // Vector2 apply_transform(Vector2 p) const {
+    // return (p * scale).rotated(rotation) + pos;
+    // }
 };
 
 template<typename T>
@@ -120,11 +142,13 @@ struct AnnularSector{
         return Rect2_t<real_t>(x_min, x_max, y_min, y_max);
     }
 
-    struct Cache{
+    struct alignas(4) Cache{
         real_t squ_inner_radius;
         real_t squ_outer_radius;
         Vector2_t<real_t> start_norm_vec;
         Vector2_t<real_t> stop_norm_vec;
+        bool is_close;
+
 
         __fast_inline constexpr bool is_covered(const Vector2_t<real_t> offset) const {
             return s_is_covered(*this, offset);
@@ -136,17 +160,23 @@ struct AnnularSector{
             if((len_squ - self.squ_outer_radius) * (len_squ - self.squ_inner_radius) > 0)
                 return false;
 
-            return offset.is_count_clockwise_to(self.start_norm_vec)
-                or (offset.is_clockwise_to(self.stop_norm_vec));
+            const auto b1 = offset.is_count_clockwise_to(self.start_norm_vec);
+            const auto b2 = offset.is_clockwise_to(self.stop_norm_vec);
+
+            if(self.is_close) return b1 and b2;
+            else return b1 or b2;
         } 
     };
 
     constexpr auto to_cache() const {
+        const auto v1 = Vector2_t<real_t>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2_t<real_t>::from_idenity_rotation(stop_rad);
         return Cache{
             .squ_inner_radius = square(inner_radius),
             .squ_outer_radius = square(outer_radius),
-            .start_norm_vec = Vector2_t<real_t>::from_idenity_rotation(start_rad),
-            .stop_norm_vec = Vector2_t<real_t>::from_idenity_rotation(stop_rad)
+            .start_norm_vec = v1,
+            .stop_norm_vec = v2,
+            .is_close = v2.is_count_clockwise_to(v1)
         };
     }
 
@@ -178,8 +208,8 @@ struct RectBlob{
     private:
         __fast_inline static constexpr bool s_is_covered(const Cache & self, const Vector2_t<real_t> offset){
             return 
-                (ABS(offset.x) - (self.half_width) <= 0)
-                and (ABS(offset.y) - (self.half_height) <= 0)
+                (abs(offset.x) - (self.half_width) <= 0)
+                and (abs(offset.y) - (self.half_height) <= 0)
             ;
         }
     };
@@ -197,8 +227,8 @@ struct RectBlob{
 private:
     __fast_inline static constexpr bool s_is_covered(const RectBlob & self, const Vector2_t<real_t> offset){
         return 
-            (ABS(offset.x) - (self.width >> 1) <= 0)
-            and (ABS(offset.y) - (self.height >> 1) <= 0)
+            (abs(offset.x) - (self.width >> 1) <= 0)
+            and (abs(offset.y) - (self.height >> 1) <= 0)
         ;
     }
 };
@@ -211,7 +241,7 @@ struct RotatedRect{
     __fast_inline constexpr bool is_covered(const Vector2_t<real_t> offset) const {
         return s_is_covered(*this, offset);
     }
-    struct Cache{
+    struct alignas(4) Cache{
         real_t half_width;
         real_t half_height;
         real_t s;
@@ -226,9 +256,9 @@ struct RotatedRect{
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
             return 
-                (ABS(-self.s * offset.x + self.c * offset.y)
+                (abs(-self.s * offset.x + self.c * offset.y)
                     <= self.half_height) and
-                (ABS(-self.c * offset.x - self.s * offset.y) 
+                (abs(-self.c * offset.x - self.s * offset.y) 
                     <= self.half_width)
             ;
         }
@@ -270,8 +300,8 @@ struct RotatedRect{
 private:
     __fast_inline static constexpr bool s_is_covered(const RotatedRect & self, const Vector2_t<real_t> offset){
         return 
-            (ABS(offset.x) - (self.width >> 1) <= 0)
-            and (ABS(offset.y) - (self.height >> 1) <= 0)
+            (abs(offset.x) - (self.width >> 1) <= 0)
+            and (abs(offset.y) - (self.height >> 1) <= 0)
         ;
     }
 };
@@ -304,20 +334,19 @@ private:
 
 // }
 
-static constexpr real_t PIXELS_PER_METER = 70;
-static constexpr real_t METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
+
 // static constexpr Vector2u CAMERA_SIZE = {94, 60};
 // static constexpr Vector2u CAMERA_SIZE = {188, 120};
-static constexpr Vector2u CAMERA_SIZE = {150, 100};
+static constexpr Vector2u CAMERA_SIZE = {120, 80};
 static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 
 static constexpr Vector2 transform_camera_to_scene(
-    const Vector2u pixel, const Gest2_t<real_t> viewpoint) {
+    const Vector2u pixel, const Gest2_t<real_t> viewpoint, const real_t scale) {
     const Vector2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vector2 camera_offset = Vector2(pixel_offset) * METERS_PER_PIXEL;
+    const Vector2 camera_offset = Vector2(pixel_offset) * scale;
     const auto rot = viewpoint.rad - real_t(PI/2);
     return viewpoint.pos + camera_offset.rotated(rot);
 }
@@ -341,54 +370,54 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Gest2_t<real_t> viewpoint) const = 0;
+    virtual Image<Grayscale> render(const Gest2_t<real_t> viewpoint, const real_t scale) const = 0;
 };
 
-class DynamicScene final:public SceneIntf{
-public:
-    DynamicScene(){;}
+// class DynamicScene final:public SceneIntf{
+// public:
+//     DynamicScene(){;}
 
-    template<typename T>
-    void add_element(T && element){
-        elements_.emplace_back(
-            pro::make_proxy<details::ElementFacade>(
-                std::forward<T>(element))
-        );
-    }
+//     template<typename T>
+//     void add_element(T && element){
+//         elements_.emplace_back(
+//             pro::make_proxy<details::ElementFacade>(
+//                 std::forward<T>(element))
+//         );
+//     }
 
-    Image<Grayscale> render(const Gest2_t<real_t> viewpoint) const {
-        Image<Grayscale> ret{CAMERA_SIZE};
+//     Image<Grayscale> render(const Gest2_t<real_t> viewpoint) const {
+//         Image<Grayscale> ret{CAMERA_SIZE};
 
-        const auto org = transform_camera_to_scene({0,0}, viewpoint);
-        const auto y_step = transform_camera_to_scene({0,1}, viewpoint) - org;
-        const auto x_step = transform_camera_to_scene({1,0}, viewpoint) - org;
+//         const auto org = transform_camera_to_scene({0,0}, viewpoint);
+//         const auto y_step = transform_camera_to_scene({0,1}, viewpoint) - org;
+//         const auto x_step = transform_camera_to_scene({1,0}, viewpoint) - org;
         
-        auto offset = org;
-        for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
-            const auto beg = offset;
-            for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
-                const bool covered = this->is_covered(offset);
-                ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
-                offset += x_step;
-            }
-            offset = beg;
-            offset += y_step;
-        }
+//         auto offset = org;
+//         for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
+//             const auto beg = offset;
+//             for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
+//                 const bool covered = this->is_covered(offset);
+//                 ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
+//                 offset += x_step;
+//             }
+//             offset = beg;
+//             offset += y_step;
+//         }
 
-        return ret;
-    }
-private:
-    std::vector<pro::proxy<details::ElementFacade>> elements_;
+//         return ret;
+//     }
+// private:
+//     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-    bool is_covered(const Vector2_t<real_t> offset) const{
-        for(const auto & element : elements_){
-            if(element->is_covered(offset)){
-                return true;
-            }
-        }
-        return false;
-    }
-};
+//     bool is_covered(const Vector2_t<real_t> offset) const{
+//         for(const auto & element : elements_){
+//             if(element->is_covered(offset)){
+//                 return true;
+//             }
+//         }
+//         return false;
+//     }
+// };
 
 
 template<typename ...Objects>
@@ -401,15 +430,16 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Gest2_t<real_t> viewpoint) const {
+    Image<Grayscale> render(const Gest2_t<real_t> viewpoint, const real_t scale) const {
         static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pdata = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
-        const auto org = transform_camera_to_scene({0,0}, viewpoint);
-        const auto y_step = transform_camera_to_scene({0,1}, viewpoint) - org;
-        const auto x_step = transform_camera_to_scene({1,0}, viewpoint) - org;
+        const auto org = transform_camera_to_scene({0,0}, viewpoint, scale);
+        const auto y_step = transform_camera_to_scene({0,1}, viewpoint, scale) - org;
+        const auto x_step = transform_camera_to_scene({1,0}, viewpoint, scale) - org;
         
         const auto window = Rect2_t<real_t>::from_corners(
-            org, transform_camera_to_scene(CAMERA_SIZE, viewpoint)).grow(EXTENDED_BOUND_LENGTH);
+            org, transform_camera_to_scene(CAMERA_SIZE, viewpoint, scale))
+            .grow(EXTENDED_BOUND_LENGTH);
             
         bool dirty = false;
         auto apply_render = [&](const bool rough_judge_passed, auto && fn){

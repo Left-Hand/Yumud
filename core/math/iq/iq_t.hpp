@@ -452,11 +452,8 @@ using q31 = iq_t<31>;
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> abs(const iq_t<P> iq){
-    if(iq > 0){
-        return iq;
-    }else{
-        return -iq;
-    }
+    const auto ivalue = iq.value.to_i32();
+    return iq_t<Q>(_iq<Q>::from_i32(ivalue > 0 ? ivalue : -ivalue));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>

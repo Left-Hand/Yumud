@@ -28,11 +28,13 @@
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
 #include "render.hpp"
+#include "scenes.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
 #define UART hal::uart6
+
 
 
 struct HwPort{
@@ -42,153 +44,7 @@ struct HwPort{
 
 using namespace ymd::smc::sim;
 
-// DynamicScene make_scene(){
-//     DynamicScene scene;
-//     scene.add_element(AnnularSector{
-//         .x = 0,
-//         .y = 0,
 
-//         .inner_radius = 0.6_r - 0.45_r/2,
-//         .outer_radius = 0.6_r + 0.45_r/2,
-        
-//         .start_rad = -0.0_r,
-//         .stop_rad = 2.5_r
-//     });
-
-//     scene.add_element(RectBlob{
-//         .x = -0.2_r,
-//         .y = -0.1_r,
-//         .width = 0.45_r,
-//         .height = 0.8_r
-//     });
-//     return scene;
-// }
-
-
-
-static constexpr auto ROAD_WIDTH = 0.45_r; 
-class BlueprintFactory{
-public:
-    auto make_annular_sector(const real_t radius, const real_t rotation){
-        const auto ret = AnnularSector{
-            .inner_radius = radius - ROAD_WIDTH / 2,
-            .outer_radius = radius + ROAD_WIDTH / 2,
-            
-            .start_rad = viewpoint_.rad,
-            .stop_rad = viewpoint_.rad + rotation
-        } | Placement{
-            .pos = viewpoint_.pos,
-        };
-
-        return ret;
-    }
-
-    auto make_stright(const real_t length){
-        const auto ret = RotatedRect{
-            .width = ROAD_WIDTH,
-            .height = length,
-            .rotation = viewpoint_.rad
-        } | Placement{
-            .pos = viewpoint_.pos,
-        };
-
-        return ret;
-    }
-private:
-    Gest2_t<real_t> viewpoint_;
-};
-
-constexpr auto make_scene2(){
-    return make_static_scene(
-        // AnnularSector{
-        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
-        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
-            
-        //     .start_rad = 0.0_r,
-        //     .stop_rad = real_t(3 * PI / 2)
-        //     // .stop_rad = real_t(PI)
-        // } | Placement{
-        //     .pos = {0.0_r, 0.0_r}
-        // },
-
-        // AnnularSector{
-        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
-        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
-            
-        //     .start_rad = 0.0_r,
-        //     // .stop_rad = real_t(3 * PI / 2)
-        //     .stop_rad = real_t(PI)
-        // } | Placement{
-        //     .pos = {-10.3_r, 0.0_r}
-        // },
-
-        // AnnularSector{
-        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
-        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
-            
-        //     .start_rad = 0.0_r,
-        //     // .stop_rad = real_t(3 * PI / 2)
-        //     .stop_rad = real_t(PI)
-        // } | Placement{
-        //     .pos = {-20.3_r, 0.0_r}
-        // },
-
-        // AnnularSector{
-        //     .inner_radius = 0.6_r - ROAD_WIDTH/2,
-        //     .outer_radius = 0.6_r + ROAD_WIDTH/2,
-            
-        //     .start_rad = 0.0_r,
-        //     // .stop_rad = real_t(3 * PI / 2)
-        //     .stop_rad = real_t(PI)
-        // } | Placement{
-        //     .pos = {5.3_r, 0.0_r}
-        // },
-        
-        // RectBlob{
-        //     .width = ROAD_WIDTH,
-        //     .height = 0.8_r
-        // } | Placement{
-        //     .pos = {0.6_r, -0.4_r}
-        // },
-
-        // RectBlob{
-        //     .width = ROAD_WIDTH,
-        //     .height = 0.8_r
-        // } | Placement{
-        //     .pos = {-0.6_r, -0.4_r}
-        // },
-
-        // RectBlob{
-        //     .width = ROAD_WIDTH,
-        //     .height = 0.8_r
-        // } | Placement{
-        //     .pos = {-0.6_r, -0.4_r}
-        // },
-
-        // RectBlob{
-        //     .width = 1.8_r,
-        //     .height = ROAD_WIDTH
-        // } | Placement{
-        //     .pos = {0.4_r, - 0.7_r}
-        // }
-
-        // RectBlob{
-        //     .width = 1.8_r,
-        //     .height = ROAD_WIDTH
-        // } | Placement{
-        //     .pos = {0, 0}
-        // }
-
-        RotatedRect{
-            .width = ROAD_WIDTH,
-            .height = 1.1_r,
-            .rotation = 0.3_r
-        } | Placement{
-            .pos = {0.0_r, -0.0_r}
-        }
-
-    );
-}
 void smc2025_main(){
 
     UART.init(576_KHz);
@@ -250,8 +106,6 @@ void smc2025_main(){
                 src.get_data());
     };
 
-    // const auto scene = make_scene();
-    constexpr auto scene = make_scene2();
 
     while(true){
         // qmc.update().examine();
@@ -264,14 +118,18 @@ void smc2025_main(){
         // const auto viewpoint = Gest2_t<real_t>{
         //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+        const auto t = clock::time();
         const auto viewpoint = Gest2_t<real_t>{
-            Vector2_t<real_t>(0, 0), real_t(PI/2)};
+            Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.5_r, 0)
+            .rotated(t), t + 0.2_r * sinpu(t)};
+            // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
 
         const auto mbegin = clock::micros();
-        const auto gray_img = scene.render(viewpoint);
+        const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
-        DEBUG_PRINTLN(render_use.count(), sizeof(scene));
+        
+        DEBUG_PRINTLN(render_use.count());
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
         // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));

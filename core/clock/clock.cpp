@@ -158,7 +158,7 @@ real_t time(){
             };
         };
 
-        const Depart microsec = Depart{.res64 = micros().count()};
+        const Depart microsec = Depart{.res64 = uint64_t(micros().count())};
 
         return 
             + real_t{_iq<16>::from_i32((int(microsec.l15) << 16) / 1000000)} 
