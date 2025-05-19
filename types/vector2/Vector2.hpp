@@ -252,7 +252,7 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & len, const T & rad){
+    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & rad, const T & len){
         const auto [s,c] = sincos(rad);
         return {len * c, len * s};
     }

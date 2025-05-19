@@ -42,26 +42,56 @@ struct HwPort{
 
 using namespace ymd::smc::sim;
 
-Scene make_scene(){
-    Scene scene;
-    scene.add_element(AnnularSector{
-        .x = 0,
-        .y = 0,
+// DynamicScene make_scene(){
+//     DynamicScene scene;
+//     scene.add_element(AnnularSector{
+//         .x = 0,
+//         .y = 0,
 
-        .inner_radius = 0.6_r - 0.45_r/2,
-        .outer_radius = 0.6_r + 0.45_r/2,
+//         .inner_radius = 0.6_r - 0.45_r/2,
+//         .outer_radius = 0.6_r + 0.45_r/2,
         
-        .start_rad = -0.0_r,
-        .stop_rad = 2.5_r
-    });
+//         .start_rad = -0.0_r,
+//         .stop_rad = 2.5_r
+//     });
 
-    scene.add_element(RectBlob{
-        .x = -0.2_r,
-        .y = -0.1_r,
-        .width = 0.45_r,
-        .height = 0.8_r
-    });
-    return scene;
+//     scene.add_element(RectBlob{
+//         .x = -0.2_r,
+//         .y = -0.1_r,
+//         .width = 0.45_r,
+//         .height = 0.8_r
+//     });
+//     return scene;
+// }
+
+constexpr auto make_scene2(){
+    return make_static_scene(
+        AnnularSector{
+            .inner_radius = 0.6_r - 0.45_r/2,
+            .outer_radius = 0.6_r + 0.45_r/2,
+            
+            .start_rad = 0.0_r,
+            // .stop_rad = real_t(3 * PI / 2)
+            .stop_rad = real_t(PI)
+        } | Placement{
+            .pos = {0.0_r, 0.0_r}
+        },
+        
+        RectBlob{
+            .width = 0.45_r,
+            .height = 0.8_r
+        } | Placement{
+            .pos = {0.6_r, -0.4_r}
+        },
+
+        RectBlob{
+            .width = 1.8_r,
+            .height = 0.45_r
+        } | Placement{
+            .pos = {0.4_r, - 0.7_r}
+        }
+
+    );
 }
 void smc2025_main(){
 
@@ -124,7 +154,8 @@ void smc2025_main(){
                 src.get_data());
     };
 
-    const auto scene = make_scene();
+    // const auto scene = make_scene();
+    constexpr auto scene = make_scene2();
 
     while(true){
         qmc.update().examine();
@@ -134,10 +165,16 @@ void smc2025_main(){
         renderer.draw_rect(Rect2i(0, 0, 20, 40));
 
         // const auto gray_img = camera.frame().clone();
-        const auto viewpoint = Ray2_t<real_t>{Vector2_t<real_t>{0, 0}, real_t(PI/2)};
-        const auto gray_img = scene.render(viewpoint);
-        plot_gray(gray_img, {0,6, 240,240});
+        const auto viewpoint = Ray2_t<real_t>{
+            Vector2_t<real_t>(0, sinpu(clock::time() / 2) * 0.8_r), real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+        // const auto viewpoint = Ray2_t<real_t>{
+        //     Vector2_t<real_t>(0, 0), 0};
 
+        const auto mbegin = clock::micros();
+        const auto gray_img = scene.render(viewpoint);
+        const auto render_use = clock::micros() - mbegin;
+        plot_gray(gray_img, {0,6, 240,240});
+        DEBUG_PRINTLN(render_use.count(), sizeof(scene));
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
         tft.put_texture(rgb_img.rect(), rgb_img.get_data());
         // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
