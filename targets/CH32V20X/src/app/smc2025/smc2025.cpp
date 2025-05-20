@@ -199,7 +199,7 @@ void smc2025_main(){
     drivers::QMC5883L qmc{i2c};
     qmc.init().examine();
     
-    Image<RGB565> rgb_img{{tft.rect().w, 4u}};
+    Image<RGB565> rgb_img{{tft.rect().w(), 4u}};
     // Painter<RGB565> painter = {};
 
 
@@ -242,7 +242,7 @@ void smc2025_main(){
         const auto viewpoint = Pose2_t{
             Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.5_r, 0)
             .rotated(t), t + 0.2_r * sinpu(t)};
-            // {0.0_r, 0.0_r}, 0.0_r};
+            // {2.0_r, 0.0_r}, 0.0_r};
 
 
             // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};

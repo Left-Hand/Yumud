@@ -59,9 +59,9 @@ struct Pose2_t{
     [[nodiscard]] constexpr Pose2_t<T> revolve_by_radius_and_rotation(
             const T radius, const T rot) const {
 
-        const auto ar = Vector2_t<T>::from_rotation(rad, radius).rotated(
+        const auto ar = Vector2_t<T>::from_idenity_rotation(rad).rotated(
             rot > 0 ? T(PI/2) : T(-PI/2)
-        );
+        ) * radius;
 
         const auto org = pos + ar;
         const auto delta = (-ar).rotated(rot);
@@ -123,8 +123,8 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
 
 // template<typename T>
 // struct Element{
-//     constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-//         return T::is_covered(static_cast<const T &>(*this));
+//     constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+//         return T::has_point(static_cast<const T &>(*this));
 //     }
 // };
 
@@ -146,8 +146,8 @@ struct AnnularSector{
         const bool y_reached_top = does_contains_rad(iq_t<16>(PI/2));
         const bool y_reached_bottom = does_contains_rad(iq_t<16>(-PI/2));
 
-        const auto p1 = Vector2_t<iq_t<16>>::from_rotation(start_rad, outer_radius);
-        const auto p2 = Vector2_t<iq_t<16>>::from_rotation(stop_rad, outer_radius);
+        const auto p1 = Vector2_t<iq_t<16>>::from_idenity_rotation(start_rad) * outer_radius;
+        const auto p2 = Vector2_t<iq_t<16>>::from_idenity_rotation(stop_rad) * outer_radius;
 
         const auto x_min = x_reached_left ? (-outer_radius) : MIN(p1.x, p2.x);
         const auto x_max = x_reached_right ? (outer_radius) : MAX(p1.x, p2.x);
@@ -165,21 +165,23 @@ struct AnnularSector{
         bool is_close;
 
 
-        __fast_inline constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-            return s_is_covered(*this, offset);
+        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_has_point(*this, offset);
         }
     private:
-        static constexpr bool s_is_covered(const Cache & self, const Vector2_t<iq_t<16>> offset){
+        static constexpr bool s_has_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
             const auto len_squ = offset.length_squared();
 
-            if((len_squ - self.squ_outer_radius) * (len_squ - self.squ_inner_radius) > 0)
+            if (len_squ < self.squ_inner_radius || 
+                len_squ > self.squ_outer_radius) {
                 return false;
+            }
 
-            const auto b1 = offset.is_count_clockwise_to(self.start_norm_vec);
-            const auto b2 = offset.is_clockwise_to(self.stop_norm_vec);
-
-            if(self.is_close) return b1 and b2;
-            else return b1 or b2;
+            return self.is_close 
+                ? (offset.is_count_clockwise_to(self.start_norm_vec) && 
+                offset.is_clockwise_to(self.stop_norm_vec))
+                : (offset.is_count_clockwise_to(self.start_norm_vec) || 
+                offset.is_clockwise_to(self.stop_norm_vec));
         } 
     };
 
@@ -196,22 +198,89 @@ struct AnnularSector{
     }
 
     constexpr auto to_bounding_box() const {
-        //TODO 更精细的包围盒划分
-        return BoundingBox::from_center_and_halfsize(
-            {0,0}, 
-            // {1000, 1000}
-            {outer_radius, outer_radius}
-            // Vector2_t<real_t>::INF / 2
+        const auto v1 = Vector2_t<iq_t<16>>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2_t<iq_t<16>>::from_idenity_rotation(stop_rad);
+        const bool is_close = v2.is_count_clockwise_to(v1);
+        Rect2_t<real_t> bb = Rect2_t<real_t>::from_minimal_bounding_box({
+            v1 * inner_radius,
+            v1 * outer_radius,
+            v2 * inner_radius,
+            v2 * outer_radius
+        });
+
+        MergeHelper::merge_if_has_radian(bb, {1,0}, v1, v2, is_close);
+        MergeHelper::merge_if_has_radian(bb, {0,1}, v1, v2, is_close);
+        MergeHelper::merge_if_has_radian(bb, {-1,0}, v1, v2, is_close);
+        MergeHelper::merge_if_has_radian(bb, {0,-1}, v1, v2, is_close);
+
+        return bb;
+    }
+
+    __fast_inline constexpr bool has_radian(
+        const real_t radian)
+    const {
+        return has_radian(Vector2_t<iq_t<16>>::from_idenity_rotation(radian));
+    }
+
+    __fast_inline constexpr bool has_radian(
+        const Vector2_t<real_t> offset)
+    const {
+        const auto v1 = Vector2_t<iq_t<16>>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2_t<iq_t<16>>::from_idenity_rotation(stop_rad);
+        return MergeHelper::has_radian(
+            offset,
+            v1, v2, v2.is_count_clockwise_to(v1)
         );
     }
+private:
+
+    struct MergeHelper{
+        static constexpr bool has_radian(
+            const real_t radian,
+            const Vector2_t<real_t> start_norm_vec,
+            const Vector2_t<real_t> stop_norm_vec,
+            const bool is_close
+        ){
+            return has_radian(
+                Vector2_t<iq_t<16>>::from_idenity_rotation(radian), 
+                start_norm_vec, stop_norm_vec, 
+                is_close
+            );
+        }
+
+        static constexpr bool has_radian(
+            const Vector2_t<real_t> offset,
+            const Vector2_t<real_t> start_norm_vec,
+            const Vector2_t<real_t> stop_norm_vec,
+            const bool is_close
+        ){
+            const auto b1 = offset.is_count_clockwise_to(start_norm_vec);
+            const auto b2 = offset.is_clockwise_to(stop_norm_vec);
+            if(is_close) return b1 and b2;
+            else return b1 or b2;
+        }
+
+        static constexpr void merge_if_has_radian(
+            BoundingBox & box,
+            const Vector2_t<real_t> offset,
+            const Vector2_t<real_t> start_norm_vec,
+            const Vector2_t<real_t> stop_norm_vec,
+            const bool is_close
+        ){
+            if(has_radian(offset, start_norm_vec, stop_norm_vec, is_close)){
+                box = box.merge(offset);
+            }
+        }
+    };
+
 };
 
 struct RectBlob{
     iq_t<16> width;
     iq_t<16> height;
 
-    __fast_inline constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-        return s_is_covered(*this, offset);
+    __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+        return s_has_point(*this, offset);
     }
 
 
@@ -219,11 +288,11 @@ struct RectBlob{
         iq_t<16> half_width;
         iq_t<16> half_height;
 
-        __fast_inline constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-            return s_is_covered(*this, offset);
+        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_has_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr bool s_is_covered(const Cache & self, const Vector2_t<iq_t<16>> offset){
+        __fast_inline static constexpr bool s_has_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
             return 
                 (abs(offset.x) - (self.half_width) <= 0)
                 and (abs(offset.y) - (self.half_height) <= 0)
@@ -242,7 +311,7 @@ struct RectBlob{
         return BoundingBox{-width/2,-height/2, width, height};
     }
 private:
-    __fast_inline static constexpr bool s_is_covered(const RectBlob & self, const Vector2_t<iq_t<16>> offset){
+    __fast_inline static constexpr bool s_has_point(const RectBlob & self, const Vector2_t<iq_t<16>> offset){
         return 
             (abs(offset.x) - (self.width >> 1) <= 0)
             and (abs(offset.y) - (self.height >> 1) <= 0)
@@ -255,8 +324,8 @@ struct RotatedRect{
     iq_t<16> height;
     iq_t<16> rotation;
 
-    __fast_inline constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-        return s_is_covered(*this, offset);
+    __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+        return s_has_point(*this, offset);
     }
     struct alignas(4) Cache{
         iq_t<16> half_width;
@@ -264,11 +333,11 @@ struct RotatedRect{
         iq_t<16> s;
         iq_t<16> c;
 
-        __fast_inline constexpr bool is_covered(const Vector2_t<iq_t<16>> offset) const {
-            return s_is_covered(*this, offset);
+        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_has_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr bool s_is_covered(
+        __fast_inline static constexpr bool s_has_point(
             const Cache & self, const Vector2_t<iq_t<16>> offset){
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
@@ -315,7 +384,7 @@ struct RotatedRect{
         }
     }
 private:
-    __fast_inline static constexpr bool s_is_covered(const RotatedRect & self, const Vector2_t<iq_t<16>> offset){
+    __fast_inline static constexpr bool s_has_point(const RotatedRect & self, const Vector2_t<iq_t<16>> offset){
         return 
             (abs(offset.x) - (self.width >> 1) <= 0)
             and (abs(offset.y) - (self.height >> 1) <= 0)
@@ -330,8 +399,13 @@ private:
 static constexpr Vector2u CAMERA_SIZE = {120, 80};
 static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 
+
+//将相机像素转换为地面坐标
 static constexpr Vector2 project_pixel_to_ground(
-    const Vector2u pixel, const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> scale) {
+    const Vector2u pixel, 
+    const Pose2_t<iq_t<16>> viewpoint, 
+    const iq_t<16> scale
+) {
     const Vector2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
@@ -342,8 +416,35 @@ static constexpr Vector2 project_pixel_to_ground(
 }
 
 
+static constexpr Vector2u project_ground_to_pixel(
+    const Vector2& ground_pos,
+    const Pose2_t<iq_t<16>> viewpoint,
+    const iq_t<16> scale)
+{
+    // 1. Remove viewpoint position offset
+    const Vector2 relative_pos = ground_pos - viewpoint.pos;
+    
+    // 2. Calculate inverse rotation (original rotation was viewpoint.rad - PI/2)
+    const auto [s, c] = sincos(-(viewpoint.rad - iq_t<16>(PI/2)));
+    
+    // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
+    const Vector2 unrotated = {
+        c * relative_pos.x - s * relative_pos.y,
+        s * relative_pos.x + c * relative_pos.y
+    };
+    
+    // 4. Remove scaling and convert to pixel space
+    const Vector2 pixel_offset = unrotated / scale;
+    
+    // 5. Convert to camera coordinates and clamp to pixel grid
+    return Vector2u{
+        static_cast<uint>(round(pixel_offset.x + HALF_CAMERA_SIZE.x)),
+        static_cast<uint>(round(HALF_CAMERA_SIZE.y - pixel_offset.y))
+    };
+}
+
 namespace details{
-    PRO_DEF_MEM_DISPATCH(MemIsCovered, is_covered);
+    PRO_DEF_MEM_DISPATCH(MemIsCovered, has_point);
 
     struct ElementFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::none>
@@ -386,7 +487,7 @@ public:
 //         for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
 //             const auto beg = offset;
 //             for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
-//                 const bool covered = this->is_covered(offset);
+//                 const bool covered = this->has_point(offset);
 //                 ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
 //                 offset += x_step;
 //             }
@@ -399,9 +500,9 @@ public:
 // private:
 //     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-//     bool is_covered(const Vector2_t<iq_t<16>> offset) const{
+//     bool has_point(const Vector2_t<iq_t<16>> offset) const{
 //         for(const auto & element : elements_){
-//             if(element->is_covered(offset)){
+//             if(element->has_point(offset)){
 //                 return true;
 //             }
 //         }
@@ -461,7 +562,7 @@ public:
                 ground_region.intersects(object.bounding_box.shift(object.placement.pos)),
                 // true,
                 [&](const Vector2_t<iq_t<16>> local_pos) { 
-                    return object.cache.is_covered(local_pos - object.placement.pos); 
+                    return object.cache.has_point(local_pos - object.placement.pos); 
                 }), ...);
         }, objects_);
 

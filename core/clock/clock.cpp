@@ -148,17 +148,15 @@ static consteval double sepow(const double base, const size_t times){
 
 real_t time(){
     if constexpr(is_fixed_point_v<real_t>){
-        union Depart{
-            uint64_t res64;
-            struct{
-                uint64_t l15:15;
-                uint64_t m15:15;
-                uint64_t h31:31;
-                uint64_t unused:3;//精度足以万年 可以舍弃3位
-            };
+        struct Depart{
+            uint64_t l15:15;
+            uint64_t m15:15;
+            uint64_t h31:31;
+            uint64_t unused:3;//精度足以万年 可以舍弃3位
         };
 
-        const Depart microsec = Depart{.res64 = uint64_t(micros().count())};
+        // const Depart microsec = Depart{.res64 = uint64_t(micros().count())};
+        const Depart microsec = std::bit_cast<Depart>(uint64_t(micros().count()));
 
         return 
             + real_t{_iq<16>::from_i32((int(microsec.l15) << 16) / 1000000)} 

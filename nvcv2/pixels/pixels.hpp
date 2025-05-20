@@ -33,8 +33,8 @@ namespace ymd::nvcv2::Pixels{
         }
 
         auto window = dst.rect().intersection(src.rect());
-        for (auto y = window.y; y < window.y + window.h; y++) {
-            for (auto x = window.x; x < window.x + window.w; x++) {
+        for (auto y = window.y(); y < window.y() + window.h(); y++) {
+            for (auto x = window.x(); x < window.x() + window.w(); x++) {
                 const int a = src[Vector2u{x,y}];
                 const int b = src[Vector2u{x+1,y}];
                 const int c = src[Vector2u{x,y+1}];
@@ -93,8 +93,8 @@ namespace ymd::nvcv2::Pixels{
     template<is_monocolour_v T>
     void inverse(ImageWritable<T>& dst, const ImageReadable<T> & src) {
         auto window = dst.rect().intersection(src.rect());
-        for (auto y = window.y; y < window.y + window.h; y++) {
-            for (auto x = window.x; x < window.x + window.w; x++) {
+        for (auto y = window.y(); y < window.y() + window.h(); y++) {
+            for (auto x = window.x(); x < window.x() + window.w(); x++) {
                     dst[{x,y}] = uint8_t(~uint8_t(T(src[{x,y}])));
             }
         }

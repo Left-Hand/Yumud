@@ -76,12 +76,6 @@ struct Vector2_t{
     [[nodiscard]] constexpr Vector2_t(const Vector2_t<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
-    
-    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & rad, const T & len){
-        const auto [s,c] = sincos(rad);
-        return {len * c, len * s};
-    }
-
     [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_idenity_rotation(const T & rad){
         const auto [s,c] = sincos(rad);
         return {c, s};
@@ -95,16 +89,16 @@ struct Vector2_t{
         static_assert(std::is_integral_v<T> == false);
         (*this) = (*this) * this->inv_length();
     }
-    
+
     [[nodiscard]] constexpr Vector2_t<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vector2_t<T> & other) const;
 
     [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vector2_t<T> & other) const{
-        return this->cross(other) > 0;
+        return (x*other.y > y*other.x);
     }
 
     [[nodiscard]] __fast_inline constexpr bool is_count_clockwise_to(const Vector2_t<T> & other) const{
-        return not is_clockwise_to(other);
+        return (x*other.y < y*other.x);
     }
 
     [[nodiscard]] constexpr T dot(const Vector2_t<T> & other) const;

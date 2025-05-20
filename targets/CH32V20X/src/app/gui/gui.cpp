@@ -197,7 +197,7 @@ void gui_main(){
         tftDisplayer.put_texture(area, src.get_data());
     };
 
-    Image<RGB565> img{{tftDisplayer.rect().w, 4u}};
+    Image<RGB565> img{{tftDisplayer.rect().w(), 4u}};
 
     Painter<RGB565> painter = {};
     painter.bind_image(tftDisplayer);

@@ -800,22 +800,20 @@ namespace ymd::nvcv2::Shape{
             Direction t;
         }__packed;
 
-        auto gm = new gvec_t[roi.get_area()];
+        auto gm = std::make_unique<gvec_t[]>(roi.get_area());
 
-        const auto w = size_t(roi.w);
-
-        #define FAST_SQUARE(x) (x * x)
+        const auto w = roi.w();
         
         scexpr size_t shift_bits = 9;
         
-        const uint8_t low_squ = FAST_SQUARE(low_thresh) >> shift_bits;
-        const uint8_t high_squ = FAST_SQUARE(high_thresh) >> shift_bits;
+        const uint8_t low_squ = square(low_thresh) >> shift_bits;
+        const uint8_t high_squ = square(high_thresh) >> shift_bits;
         
 
         //2. Finding Image Gradients
         {
-            for (size_t y = size_t(roi.y) + 1; y < size_t(roi.y) + size_t(roi.h) - 1u; y++) {
-                for (size_t x = size_t(roi.x) + 1; x < size_t(roi.x) + size_t(roi.w) - 1u; x++) {
+            for (size_t y = roi.y() + 1; y < roi.y() + roi.h() - 1u; y++) {
+                for (size_t x = roi.x() + 1; x < roi.x() + roi.w() - 1u; x++) {
                     int16_t vx = 0, vy = 0;
 
                     //  1   0   -1
@@ -843,7 +841,7 @@ namespace ymd::nvcv2::Shape{
                     // Find the direction and round angle to 0, 45, 90 or 135
 
                     gm[w * y + x] = gvec_t{
-                        .g = uint8_t((FAST_SQUARE(vx) + FAST_SQUARE(vy)) >> shift_bits),
+                        .g = uint8_t((square(vx) + square(vy)) >> shift_bits),
                         .t = xy_to_dir(vx, vy)};
                 }
             }
@@ -855,11 +853,10 @@ namespace ymd::nvcv2::Shape{
         gvec_t *va = nullptr, *vb = nullptr;
 
         clear_corners(dst);
-
-        for (size_t gy = 1; gy < size_t(roi.h)-1; gy++) {
+        for (size_t gy = 1; gy < size_t(roi.h())-1; gy++) {
             gvec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (size_t gx = 1; gx < size_t(roi.w)-1u; gx++) {
+            for (size_t gx = 1; gx < roi.w()-1u; gx++) {
                 vc++;
                 dp++;
 
@@ -872,14 +869,14 @@ namespace ymd::nvcv2::Shape{
                 } else if (vc->g >= high_squ){
                     *dp = 255;
                 } else{
-                    if( gm[(gy - 1) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
-                        gm[(gy - 1) * size_t(roi.w) + (gx + 0)].g >= high_squ ||
-                        gm[(gy - 1) * size_t(roi.w) + (gx + 1)].g >= high_squ ||
-                        gm[(gy + 0) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
-                        gm[(gy + 0) * size_t(roi.w) + (gx + 1)].g >= high_squ ||
-                        gm[(gy + 1) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
-                        gm[(gy + 1) * size_t(roi.w) + (gx + 0)].g >= high_squ ||
-                        gm[(gy + 1) * size_t(roi.w) + (gx + 1)].g >= high_squ)
+                    if( gm[(gy - 1) * size_t(roi.w()) + (gx - 1)].g >= high_squ ||
+                        gm[(gy - 1) * size_t(roi.w()) + (gx + 0)].g >= high_squ ||
+                        gm[(gy - 1) * size_t(roi.w()) + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 0) * size_t(roi.w()) + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 0) * size_t(roi.w()) + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w()) + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w()) + (gx + 0)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w()) + (gx + 1)].g >= high_squ)
                     {
 
                         *dp = 255;
@@ -894,26 +891,26 @@ namespace ymd::nvcv2::Shape{
                     switch (Direction(vc->t)) {
                         default:
                         case Direction::R: {
-                            va = &gm[(gy + 0) * size_t(roi.w) + (gx - 1)];
-                            vb = &gm[(gy + 0) * size_t(roi.w) + (gx + 1)];
+                            va = &gm[(gy + 0) * size_t(roi.w()) + (gx - 1)];
+                            vb = &gm[(gy + 0) * size_t(roi.w()) + (gx + 1)];
                             break;
                         }
 
                         case Direction::UR: {
-                            va = &gm[(gy + 1) * size_t(roi.w) + (gx + 1)];
-                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx - 1)];
+                            va = &gm[(gy + 1) * size_t(roi.w()) + (gx + 1)];
+                            vb = &gm[(gy - 1) * size_t(roi.w()) + (gx - 1)];
                             break;
                         }
 
                         case Direction::U: {
-                            va = &gm[(gy + 1) * size_t(roi.w) + (gx + 0)];
-                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx + 0)];
+                            va = &gm[(gy + 1) * size_t(roi.w()) + (gx + 0)];
+                            vb = &gm[(gy - 1) * size_t(roi.w()) + (gx + 0)];
                             break;
                         }
 
                         case Direction::UL: {
-                            va = &gm[(gy + 1) * size_t(roi.w) + (gx - 1)];
-                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx + 1)];
+                            va = &gm[(gy + 1) * size_t(roi.w()) + (gx - 1)];
+                            vb = &gm[(gy - 1) * size_t(roi.w()) + (gx + 1)];
                             break;
                         }
                     }
@@ -926,26 +923,24 @@ namespace ymd::nvcv2::Shape{
         }
         #undef FAST_SQRT
         #undef FAST_SQUARE8
-
-        delete gm;
     }
 
     void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
 
         using vec_t = Vector2_t<int8_t>;
-        #define FAST_SQUARE(x) (x * x)
+        #define square(x) (x * x)
         scexpr size_t shift_bits = 3;
     
         // sizeof(vec_t);
         auto roi = src.rect();
         auto gm = new vec_t[roi.get_area()];
         
-        const auto w = size_t(roi.w);
+        const auto w = size_t(roi.w());
 
         //2. Finding Image Gradients
         {
-            for (size_t y = size_t(roi.y) + 1; y < size_t(roi.y) + size_t(roi.h) - 1u; y++) {
-                for (size_t x = size_t(roi.x) + 1; x < size_t(roi.x) + size_t(roi.w) - 1u; x++) {
+            for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
+                for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
                     int16_t vx = 0, vy = 0;
 
                     //  1   0   -1
@@ -1001,10 +996,10 @@ namespace ymd::nvcv2::Shape{
 
         auto temp = generate_template();
               
-        for (size_t gy = wid; gy < size_t(roi.h) - wid; gy++) {
+        for (size_t gy = wid; gy < size_t(roi.h()) - wid; gy++) {
             vec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (size_t gx = wid; gx < size_t(roi.w) - wid; gx++) {
+            for (size_t gx = wid; gx < size_t(roi.w()) - wid; gx++) {
                 vc++;
                 dp++;
 
@@ -1024,8 +1019,8 @@ namespace ymd::nvcv2::Shape{
                         sum += vec.x * tvec.x + vec.y * tvec.y;
                     }
                 }
-                // size_t sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
-                // size_t sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
+                // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
                 // size_t sum = MAX(x_sum, y_sum);
                 // size_t sum =  x_sum * x_sum + y_sum * y_sum;
                 *dp = (ABS(sum) / ((wid * 2 + 1) * (wid * 2 + 1))) >> 4; 

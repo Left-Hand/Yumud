@@ -12,28 +12,13 @@ template<arithmetic T>
 class [[nodiscard]] Rect2_t{
 public:
 
-    union{
-        Vector2_t<T> position;
-        struct{
-            T x;
-            T y;
-        };
-    };
+    Vector2_t<T> position;
+    Vector2_t<T> size;
 
-    union{
-        Vector2_t<T> size;
-        struct{
-            T w;
-            T h;
-        };
+    static constexpr Rect2_t<T> INF = {
+        Vector2_t<T>{std::numeric_limits<T>::lowest(), std::numeric_limits<T>::lowest()},
+        Vector2_t<T>{std::numeric_limits<T>::max(), std::numeric_limits<T>::max()}
     };
-
-    static constexpr Rect2_t<T> INF = Rect2_t<T>(
-        std::numeric_limits<T>::min(), 
-        std::numeric_limits<T>::min(),
-        std::numeric_limits<T>::max(), 
-        std::numeric_limits<T>::max()
-    );
 
     [[nodiscard]] constexpr Rect2_t():position(Vector2_t<T>(0,0)), size(Vector2_t<T>(0,0)){}
 
@@ -65,6 +50,8 @@ public:
         return Rect2_t<T>(a, b-a).abs();
     }
 
+
+
     
     [[nodiscard]] static constexpr Rect2_t from_size(const Vector2_t<T> _size){
         return Rect2_t<T>({0,0}, _size);
@@ -72,7 +59,7 @@ public:
 
     [[nodiscard]] static constexpr Rect2_t from_minimal_bounding_box(
             const std::span<const Vector2_t<T>> points){
-        if(points.size() == 0) while(true);
+        if(points.size() == 0) __builtin_abort();
         const auto & first_point = points[0];
         auto x_min = first_point.x;
         auto x_max = first_point.x;
@@ -97,6 +84,20 @@ public:
         const std::initializer_list<Vector2_t<T>> & points){
             return from_minimal_bounding_box(std::span(points.begin(), points.end()));
         }
+
+    // Add direct component accessors
+    [[nodiscard]] constexpr T & x() { return position.x; }
+    [[nodiscard]] constexpr const T & x() const { return position.x; }
+
+    [[nodiscard]] constexpr T & y() { return position.y; }
+    [[nodiscard]] constexpr const T & y() const { return position.y; }
+
+    [[nodiscard]] constexpr T & w() { return size.x; }
+    [[nodiscard]] constexpr const T & w() const { return size.x; }
+
+    [[nodiscard]] constexpr T & h() { return size.y; }
+    [[nodiscard]] constexpr const T & h() const { return size.y; }
+
 
     [[nodiscard]] constexpr T get_area() const {return ABS(size.x * size.y);}
     [[nodiscard]] constexpr Vector2_t<T> get_center() const {return(position + size / 2);}
@@ -135,9 +136,9 @@ public:
 
 
     constexpr bool has_point(const Vector2_t<T> & point) const {
-        // bool x_ins = this->get_x_range().has(point.x);
+        // bool x_ins = this->get_x_range().h()as(point.x);
         // if(!x_ins) return false;
-        // bool y_ins = this->get_y_range().has(point.y);
+        // bool y_ins = this->get_y_range().h()as(point.y);
         // return(y_ins);
         return IN_RANGE(point.x, position.x, position.x + size.x)
             and IN_RANGE(point.y, position.y, position.y + size.y);
@@ -190,28 +191,24 @@ public:
     }
 
     [[nodiscard]] constexpr bool intersects(const Rect2_t<T> & other) const{
-        // return this->get_x_range().intersects(other.get_x_range())
-        //     and this->get_y_range().intersects(other.get_y_range());
         const auto & self = *this;
 
-        return (self.x < other.x + other.w) &&
-                (other.x < self.x + self.w) &&
-                (self.y < other.y + other.h) &&
-                (other.y < self.y + self.h);
-        // return (ABS(other.position.x - this->position.x) * 2) < (other.size.x + this->size.x)
-        // and (ABS(other.position.y - this->position.y) * 2) < (other.size.y + this->size.y);
+        return (self.x() < other.x() + other.w()) &&
+                (other.x() < self.x() + self.w()) &&
+                (self.y() < other.y() + other.h()) &&
+                (other.y() < self.y() + self.h());
     }
 
     [[nodiscard]] constexpr Rect2_t<T> intersection(const Rect2_t<T> & other) const{
 
         auto _position = Vector2_t<T>(
-            MAX(T(this->x), T(other.x)),
-            MAX(T(this->y), T(other.y))
+            MAX(T(this->x()), T(other.x())),
+            MAX(T(this->y()), T(other.y()))
         );
 
         auto _size = Vector2_t<T>(
-            MIN(T(this->x + this->w), T(other.x + other.w)) - _position.x,
-            MIN(T(this->y + this->h), T(other.y + other.h)) - _position.y
+            MIN(T(this->x() + this->w()), T(other.x() + other.w())) - _position.x,
+            MIN(T(this->y() + this->h()), T(other.y() + other.h())) - _position.y
         );
 
         if(_size.x < 0 || _size.y < 0) return Rect2_t<T>();
@@ -225,15 +222,19 @@ public:
     }
 
     [[nodiscard]] constexpr Rect2_t<T> merge(const Vector2_t<T> & point) const{
-        Range2_t<T> range_x = this->get_x_range().merge(point.x);
-        Range2_t<T> range_y = this->get_y_range().merge(point.y);
-        return Rect2_t<T>(range_x, range_y);
+        auto & self = *this;
+        auto x_min = MIN(self.x(), point.x);
+        auto x_max = MAX(self.x() + self.w(), point.x);
+        auto y_min = MIN(self.y(), point.y);
+        auto y_max = MAX(self.y() + self.h(), point.y);
+
+        return Rect2_t<T>(x_min, y_min, x_max - x_min, y_max - y_min);
     }
 
     [[nodiscard]] constexpr auto constrain(const Vector2_t<T> & point) const{
         std::remove_cvref_t<decltype(point)> ret;
-        ret.x = this->get_x_range().clamp(point.x);
-        ret.y = this->get_y_range().clamp(point.y);
+        ret.x() = this->get_x_range().clamp(point.x);
+        ret.y() = this->get_y_range().clamp(point.y);
         return ret;
     }
 
