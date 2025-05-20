@@ -257,7 +257,9 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
     Rect2u _a = a.abs();
     Rect2u _b = b.abs();
 
-    real_t ins = _a.intersection(_b).get_area();
+    real_t ins = _a.intersection(_b)
+        .map([](const Rect2u & rect){return rect.get_area();})
+        .unwrap_or(0);
     if(ins == 0) return 0;
 
     real_t uni = _a.get_area() + _b.get_area() - ins;

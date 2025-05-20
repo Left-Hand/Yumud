@@ -28,18 +28,21 @@ static auto stddev(const Itpair<auto> & src){
 
 namespace ymd::nvcv2::Match{
 
-real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
+real_t template_match(
+    __restrict const Image<Binary> & src, 
+    __restrict const Image<Binary> & tmp,
+    const Vector2i & offs){
     // auto rect = Rect2u(offs, tmp.size()).intersection(src.rect());
 
     // uint and_score = 0;
     // uint or_score = 0;
 
     // for(uint y = 0; y < (uint)rect.h; y++){
-    //     const auto * tmp_ptr = &tmp[Vector2i{0,y}];
-    //     const auto * src_ptr = &src[Vector2i{0,y} + offs];
+    //     const auto * p_tmp = &tmp[Vector2i{0,y}];
+    //     const auto * p_src = &src[Vector2i{0,y} + offs];
     //     for(uint x = 0; x < (uint)rect.w; x++){
-    //         and_score += int(bool(*tmp_ptr) && bool(*src_ptr));
-    //         or_score += int(bool(*src_ptr) || bool(*src_ptr));
+    //         and_score += int(bool(*p_tmp) && bool(*p_src));
+    //         or_score += int(bool(*p_src) || bool(*p_src));
     //     }
     // }
 
@@ -48,20 +51,18 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
     // u16_to_uni(res, ret);
     // return ret;
 
-    auto rect = Rect2u(offs, tmp.size()).intersection(src.rect());
+    auto rect = Rect2u(offs, tmp.size())
+        .intersection(src.size().to_rect()).unwrap_or(Rect2u{});
 
     uint score = 0;
-    // uint base = tmp.sum() / 255;
-    // uint or_score = 0;
-
     for(uint y = 0; y < rect.h(); y++){
-        const auto * tmp_ptr = &tmp[Vector2i(0,y)];
-        const auto * src_ptr = &src[Vector2i(0,y) + offs];
+        const auto * p_tmp = &tmp[Vector2u(0,y)];
+        const auto * p_src = &src[Vector2u(0,y) + offs];
         for(uint x = 0; x < rect.w(); x++){
-            score += int(bool(*tmp_ptr) ^ bool(*src_ptr));
-            // if(bool(*tmp_ptr) + bool(*src_ptr) == 1) score++;
-            tmp_ptr++;
-            src_ptr++;
+            score += int(bool(*p_tmp) ^ bool(*p_src));
+            // if(bool(*p_tmp) + bool(*p_src) == 1) score++;
+            p_tmp++;
+            p_src++;
         }
     }
 
@@ -75,7 +76,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
 }
 
 #define BOUNDARY_CHECK()\
-if(not src.rect().contains(Rect2u{offs, tmp.size()})){\
+if(not src.size().to_rect().contains(Rect2u{offs, tmp.size()})){\
     ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
@@ -94,20 +95,20 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
     uint32_t den_s = 0;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const auto * tmp_ptr = &tmp[Vector2u{0,y}];
-        const auto * src_ptr = &src[Vector2u{0,y} + offs];
+        const auto * p_tmp = &tmp[Vector2u{0,y}];
+        const auto * p_src = &src[Vector2u{0,y} + offs];
 
         int32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = *tmp_ptr - t_mean;
-            int32_t src_val = *src_ptr - s_mean;
+            int32_t tmp_val = *p_tmp - t_mean;
+            int32_t src_val = *p_src - s_mean;
 
             line_num += ((tmp_val * src_val));
             den_t += FAST_SQUARE(tmp_val);
             den_s += FAST_SQUARE(src_val);
 
-            tmp_ptr++;
-            src_ptr++;
+            p_tmp++;
+            p_src++;
         }
 
         num += line_num;
@@ -133,18 +134,18 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
     uint32_t area = tmp.size().x * tmp.size().y;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const auto * tmp_ptr = &tmp[Vector2u{0,y}];
-        const auto * src_ptr = &src[Vector2u{0,y} + offs];
+        const auto * p_tmp = &tmp[Vector2u{0,y}];
+        const auto * p_src = &src[Vector2u{0,y} + offs];
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = *tmp_ptr;
-            int32_t src_val = *src_ptr;
+            int32_t tmp_val = *p_tmp;
+            int32_t src_val = *p_src;
 
             line_num += FAST_SQUARE8(tmp_val - src_val);
 
-            tmp_ptr++;
-            src_ptr++;
+            p_tmp++;
+            p_src++;
         }
 
         num += line_num;

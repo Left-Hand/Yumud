@@ -30,8 +30,7 @@ public:
 
     Image & operator=(Image && other) noexcept {
         if (this != &other) {
-            this->size_mut() = std::move(other.size());
-            this->select_area = std::move(other.select_area);
+            this->set_size(other.size());
             this->data_ = std::move(other.data_);
         }
         return *this;
@@ -48,11 +47,10 @@ public:
     }
 
     Image<ColorType> & clone(const Image<ColorType> & other){
-        const auto _size = (Rect2u::from_size(ImageBasics::size())).
-            intersection(Rect2u::from_size(other.size())).size;
-        this->size_mut() = _size;
-        this->data_ = std::make_shared<ColorType[]>(_size.x * _size.y);
-        memcpy(this->data_.get(), other.data_.get(), _size.x * _size.y * sizeof(ColorType));
+        const auto size = ImageBasics::size().overlap_as_vec2(other.size());
+        this-> set_size(size);
+        this->data_ = std::make_shared<ColorType[]>(size.area());
+        memcpy(this->data_.get(), other.data_.get(), size.area() * sizeof(ColorType));
         return *this;
     }
 
@@ -69,10 +67,10 @@ public:
     auto clone(const Vector2u & _size) const{return clone(Rect2u(Vector2u{0,0}, _size));}
 
     constexpr ColorType mean(const Rect2u & view) const;
-    constexpr ColorType mean() const{return mean(this->rect());}
+    constexpr ColorType mean() const{return mean(this->size().to_rect());}
 
     constexpr uint64_t sum(const Rect2u & roi) const;
-    constexpr uint64_t sum() const{return sum(this->rect());}
+    constexpr uint64_t sum() const{return sum(this->size().to_rect());}
     constexpr ColorType bilinear_interpol(const Vector2 & pos) const;
 
     void load(const uint8_t * buf, const Vector2u & _size);

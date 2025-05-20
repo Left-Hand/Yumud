@@ -20,29 +20,29 @@ public:
     static constexpr Range2_t<T> POS = {T(0), std::numeric_limits<T>::max()};
     static constexpr Range2_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
 
-    [[nodiscard]] constexpr Range2_t():
+    [[nodiscard]] __fast_inline constexpr Range2_t():
         from(static_cast<T>(0)),
         to(static_cast<T>(0)){;}
 
-    [[nodiscard]] constexpr Range2_t(const T _from, const T _to): from(_from), to(_to) {
+    [[nodiscard]] __fast_inline constexpr Range2_t(const T _from, const T _to): from(_from), to(_to) {
         if(to > from) std::swap(from, to);
     }
 
-    [[nodiscard]] constexpr Range2_t(const Range2_t<T> & other): 
+    [[nodiscard]] __fast_inline constexpr Range2_t(const Range2_t<T> & other): 
         from(static_cast<T>(other.from)), 
         to(static_cast<T>(other.to))
     {
         *this = this -> abs(); 
     }
 
-    [[nodiscard]] constexpr Range2_t(const std::pair<T, T> & other): 
+    [[nodiscard]] __fast_inline constexpr Range2_t(const std::pair<T, T> & other): 
         from(static_cast<T>(other.first)), 
         to(static_cast<T>(other.second))
     {
         *this = this -> abs(); 
     }
 
-    [[nodiscard]] constexpr Range2_t(const std::tuple<T, T> & other):
+    [[nodiscard]] __fast_inline constexpr Range2_t(const std::tuple<T, T> & other):
         from(static_cast<T>(std::get<0>(other))), 
         to(static_cast<T>(std::get<1>(other)))
     {
@@ -50,11 +50,11 @@ public:
     }
 
     template<typename U = T>
-    [[nodiscard]] static constexpr Range2_t<T> from_dipole(const U dipole){
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_dipole(const U dipole){
         return Range2_t<T>{dipole, dipole};
     } 
 
-    [[nodiscard]] static constexpr Range2_t<T> from_center_and_length(
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_center_and_length(
         const arithmetic auto center, const arithmetic auto length)
     {
         if constexpr(std::is_integral_v<T>){
@@ -68,7 +68,7 @@ public:
     } 
 
     template<typename U = T>
-    [[nodiscard]] static constexpr Range2_t<T> from_center_and_half_length(
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_center_and_half_length(
         const arithmetic auto center, const arithmetic auto half_length)
     {
         return {static_cast<T>(center - half_length), 
@@ -76,14 +76,14 @@ public:
     } 
 
     template<typename U = T>
-    [[nodiscard]] static constexpr Range2_t<T> from_start_and_length(
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_start_and_length(
         const arithmetic auto start, const arithmetic auto length)
     {
         return {start, static_cast<T>(start + length)};
     } 
     
     template<typename U = T>
-    [[nodiscard]] static constexpr Range2_t<T> from_start_and_gridsize(
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_start_and_gridsize(
         const arithmetic auto start, const arithmetic auto grid_size)
     {
         const auto resi = [&]{
@@ -98,37 +98,37 @@ public:
         return Range2_t<T>(ret_from, ret_from + grid_size);
     }
 
-    [[nodiscard]] constexpr T & operator [](const size_t index) 
+    [[nodiscard]] __fast_inline constexpr T & operator [](const size_t index) 
         { return *(&this->from + index);}
 
-    [[nodiscard]] constexpr const T & operator [](const size_t index) const 
+    [[nodiscard]] __fast_inline constexpr const T & operator [](const size_t index) const 
         {return *(&this->from + index);}
 
-    [[nodiscard]] constexpr const T * begin() const { return &this->from;}
+    [[nodiscard]] __fast_inline constexpr const T * begin() const { return &this->from;}
 
-    [[nodiscard]] constexpr const T * end() const { return &this->to;}
+    [[nodiscard]] __fast_inline constexpr const T * end() const { return &this->to;}
 
-    [[nodiscard]] constexpr Range2_t<T> & operator=(const Range2_t<auto> & other) {
+    [[nodiscard]] __fast_inline constexpr Range2_t<T> & operator=(const Range2_t<auto> & other) {
         this->from = static_cast<T>(other.from);
         this->to = static_cast<T>(other.to);
         return *this;
     }
 
-    [[nodiscard]] constexpr bool is_regular() const {
+    [[nodiscard]] __fast_inline constexpr bool is_regular() const {
         return from <= to;
     }
 
-    [[nodiscard]] constexpr T length() const{
+    [[nodiscard]] __fast_inline constexpr T length() const{
         return ABS(to - from);
     }
 
-    [[nodiscard]] constexpr T length_signed() const{
+    [[nodiscard]] __fast_inline constexpr T length_signed() const{
         return (to - from);
     }
 
     [[nodiscard]] constexpr Range2_t<T> abs() const{
         if((from > to)) return Range2_t<T>(to, from);
-        else return *this;
+        return *this;
     }
 
     [[nodiscard]] constexpr Range2_t<T> operator * (const arithmetic auto rhs) const{
@@ -144,15 +144,6 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr Range2_t<T> & operator *= (const arithmetic auto & rhs) {
-        *this = *this * rhs;
-        return *this;
-    }
-
-    [[nodiscard]] constexpr Range2_t<T> & operator /= (const arithmetic auto & rhs){
-        *this = *this / rhs;
-        return *this;
-    }
 
     [[nodiscard]] constexpr bool operator == (const Range2_t<auto> & other) const {
         return (this->from == other.from && this->to == other.to);
@@ -170,15 +161,17 @@ public:
         return (this->from <= other.from && this->to >= other.to);
     }
 
-    [[nodiscard]] constexpr bool inside(const Range2_t<auto> & other) const {
+    [[nodiscard]] constexpr bool is_inside(const Range2_t<auto> & other) const {
         return other.contains(*this);
     }
 
     [[nodiscard]] constexpr bool has(const arithmetic auto & value) const{
-        return (this->from <= static_cast<T>(value) && static_cast<T>(value) < this->to);
+        return (this->from <= static_cast<T>(value) 
+            && static_cast<T>(value) < this->to);
     }
 
-    [[nodiscard]] constexpr bool has(const Range2_t<auto> & other) const{return contains(other);}
+    [[nodiscard]] constexpr bool has(const Range2_t<auto> & other) const{
+        return contains(other);}
 
     [[nodiscard]] constexpr T padding(const Range2_t<T> other) const {
         if(this->intersects(other)) return 0;
@@ -262,7 +255,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] constexpr Range2_t<T> scale(const auto & amount){
+    [[nodiscard]] constexpr Range2_t<T> scale_around_center(const auto & amount){
         const T len = this->length();
         const T center = this->get_center();
         const Range2_t<T> ret = Range2_t<T>(center - len * amount / 2, center + len * amount / 2);
@@ -271,7 +264,7 @@ public:
     }
 
 
-    [[nodiscard]] constexpr Range2_t<T> grow(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr Range2_t<T> expand(const arithmetic auto & value) const{
         const Range2_t<T> ret = Range2_t<T>(this->from - value, this->to + value);
         if (ret.is_regular()) return ret;
         else return Range2_t<T>();

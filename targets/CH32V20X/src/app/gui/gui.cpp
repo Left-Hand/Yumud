@@ -124,35 +124,35 @@ void gui_main(){
     spi.init(144_MHz, CommStrategy::Blocking);
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
-    // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 tftDisplayer({spi, spi_fd, lcd_dc, dev_rst}, {240, 135});
+    // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
+    ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 135});
 
     {
-        tftDisplayer.init();
+        tft.init();
 
 
         if(true ){
         // if(false){
-            tftDisplayer.set_flip_x(false);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(true);
-            tftDisplayer.set_display_offset({40, 52}); 
+            tft.set_flip_x(false);
+            tft.set_flip_y(true);
+            tft.set_swap_xy(true);
+            tft.set_display_offset({40, 52}); 
         }else{
-            tftDisplayer.set_flip_x(true);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(false);
-            tftDisplayer.set_display_offset({52, 40}); 
+            tft.set_flip_x(true);
+            tft.set_flip_y(true);
+            tft.set_swap_xy(false);
+            tft.set_display_offset({52, 40}); 
         }
-        tftDisplayer.set_format_rgb(true);
-        tftDisplayer.set_flush_dir_h(false);
-        tftDisplayer.set_flush_dir_v(false);
-        tftDisplayer.set_inversion(true);
+        tft.set_format_rgb(true);
+        tft.set_flush_dir_h(false);
+        tft.set_flush_dir_v(false);
+        tft.set_inversion(true);
     }
 
     // Painter<RGB565> painter = Painter<RGB565>();
 
 
-    // painter.bindImage(tftDisplayer);
+    // painter.bindImage(tft);
     // painter.fill(ColorEnum::BLACK);
 
     // painter.setChFont(ymd::font7x7);
@@ -184,25 +184,25 @@ void gui_main(){
 
     // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2u & pos){
     //     auto area = Rect2u(pos, src.size());
-    //     tftDisplayer.put_texture(area, src.get_data());
+    //     tft.put_texture(area, src.get_data());
     // };
 
     // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2u & pos){
     //     auto area = Rect2u(pos, src.size());
-    //     tftDisplayer.put_texture(area, src.get_data());
+    //     tft.put_texture(area, src.get_data());
     // };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2u & pos){
         auto area = Rect2u(pos, src.size());
-        tftDisplayer.put_texture(area, src.get_data());
+        tft.put_texture(area, src.get_data());
     };
 
-    Image<RGB565> img{{tftDisplayer.rect().w(), 4u}};
+    Image<RGB565> img{{tft.size().x, 4u}};
 
     Painter<RGB565> painter = {};
-    painter.bind_image(tftDisplayer);
+    painter.bind_image(tft);
     painter.set_color(ColorEnum::BLACK);
-    painter.draw_filled_rect(tftDisplayer.rect()).examine();
+    painter.draw_filled_rect(tft.size().to_rect()).examine();
 
     while(true){
         painter.bind_image(img);
@@ -210,7 +210,7 @@ void gui_main(){
         painter.draw_pixel(Vector2u(0, 0));
         painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 
-        tftDisplayer.put_texture(img.rect(), img.get_data());
+        tft.put_texture(img.size().to_rect(), img.get_data());
         DEBUG_PRINTLN(clock::millis());
     }
 }
@@ -235,7 +235,7 @@ void gui_main(){
 
         // painter.drawString({0,0}, "hello");
         // painter.draw_filled_rect(rect);
-        // logger.println(rect, tftDisplayer.get_view().intersection(rect));
+        // logger.println(rect, tft.get_view().intersection(rect));
 
         // painter.println(millis());
 
@@ -247,7 +247,7 @@ void gui_main(){
         // #ifdef CAMERA_TB
         // auto sketch = make_image<Grayscale>(camera.size()/2);
         // auto img = Shape::x2(camera);
-        // tftDisplayer.puttexture(img.get_view(), img.get_data());
+        // tft.puttexture(img.get_view(), img.get_data());
         // clock::delay(10ms);
         // #endif
 
@@ -303,7 +303,7 @@ void gui_main(){
         // painter.drawLine({40,40}, {10,50});
         // // painter.drawLine({20,20}, {90,210});
         // clock::delay(20ms);
-        // tftDisplayer.fill(ColorEnum::BLACK);
+        // tft.fill(ColorEnum::BLACK);
         // clock::delay(20ms);
-        // tftDisplayer.fill(ColorEnum::BLACK);
+        // tft.fill(ColorEnum::BLACK);
         // #endif

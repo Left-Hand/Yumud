@@ -21,7 +21,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
     const auto curr_pt_range = get_point_index(curr_area_);
     const auto desired_pt_range = get_point_index(rect);
 
-    if(desired_pt_range.inside(curr_pt_range) and rect.inside(curr_area_)){
+    if(desired_pt_range.is_inside(curr_pt_range) and rect.is_inside(curr_area_)){
         last_point_ += desired_pt_range.length();
         return false;
     }else{

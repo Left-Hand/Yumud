@@ -279,6 +279,18 @@ struct Vector2_t{
     [[nodiscard]] __fast_inline constexpr T area() const {
         return x * y;
     }
+
+    [[nodiscard]] __fast_inline constexpr Rect2_t<T> to_rect() const {
+        return Rect2_t<T>(ZERO, *this);
+    }
+
+    [[nodiscard]] __fast_inline constexpr Rect2_t<T> overlap_as_rect(const Vector2_t<T> & other) const {
+        return Rect2_t<T>({0,0}, {MIN(x, other.x), MIN(y, other.y)});
+    }
+
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> overlap_as_vec2(const Vector2_t<T> & other) const {
+        return {MIN(x, other.x), MIN(y, other.y)};
+    }
 };
 
 template<arithmetic T>

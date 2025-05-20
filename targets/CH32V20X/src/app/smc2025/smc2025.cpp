@@ -199,7 +199,7 @@ void smc2025_main(){
     drivers::QMC5883L qmc{i2c};
     qmc.init().examine();
     
-    Image<RGB565> rgb_img{{tft.rect().w(), 4u}};
+    Image<RGB565> rgb_img{{tft.size().x, 4u}};
     // Painter<RGB565> painter = {};
 
 
@@ -210,18 +210,30 @@ void smc2025_main(){
         const Image<Grayscale> & src, 
         const Rect2u & area
     ){
-        tft.put_texture(area.intersection(
-                Rect2u(area.position, src.size())), 
-                src.get_data());
+        tft.put_texture(
+            ({
+                const auto ins_opt = area.intersection(
+                    Rect2u(area.position, src.size()));
+                if(ins_opt.is_none()) return;
+                ins_opt.unwrap();
+            }), 
+            src.get_data()
+        );
     };
 
     [[maybe_unused]] auto plot_bina = [&](
         const Image<Grayscale> & src, 
         const Rect2u & area
     ){
-        tft.put_texture(area.intersection(
-                Rect2u(area.position, src.size())), 
-                src.get_data());
+        tft.put_texture(
+            ({
+                const auto ins_opt = area.intersection(
+                    Rect2u(area.position, src.size()));
+                if(ins_opt.is_none()) return;
+                ins_opt.unwrap();
+            }), 
+            src.get_data()
+        );
     };
 
 
@@ -248,12 +260,12 @@ void smc2025_main(){
             // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
 
         const auto mbegin = clock::micros();
-        const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
+        const auto gray_img = Scenes::render_scene1(viewpoint, 0.006_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.rect(), rgb_img.get_data());//
+        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());//
         DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);

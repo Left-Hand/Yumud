@@ -32,7 +32,11 @@ namespace ymd::nvcv2::Pixels{
             return;
         }
 
-        auto window = dst.rect().intersection(src.rect());
+        auto window_opt = (dst.size().to_rect())
+            .intersection(src.size().to_rect());
+
+        if(window_opt.is_none()) return;
+        const auto window = window_opt.unwrap();
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
                 const int a = src[Vector2u{x,y}];
@@ -46,12 +50,21 @@ namespace ymd::nvcv2::Pixels{
         }
     }
 
-    __inline void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
-        const auto size = (Rect2u(Vector2u(), em.size()).intersection(Rect2u(Vector2u(), dm.size()))).size;
-        const auto area = size.x * size.y;
+    __inline void fast_bina_opera(
+            Image<Binary> & out,
+            const Image<Grayscale> & em, 
+            const uint8_t et,
+            const Image<Grayscale>& dm,
+            const uint8_t dt) {
+
+        const auto area = Vector2_t<size_t>{
+            MIN(em.size().x, dm.size().x), 
+            MIN(em.size().y, dm.size().y)
+        }.area();
 
         for (auto i = 0u; i < area; i++) {
-            out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
+            out[i] = Binary((static_cast<uint8_t>(em[i]) > et) || 
+                (static_cast<uint8_t>(dm[i]) > dt));
         }
     }
     

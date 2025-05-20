@@ -791,7 +791,7 @@ namespace ymd::nvcv2::Shape{
     } 
 
     void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2_t<uint16_t> & threshold){
-        auto roi = src.rect();
+        auto roi = src.size().to_rect();
 
         const auto [low_thresh, high_thresh] = threshold;
 
@@ -889,7 +889,7 @@ namespace ymd::nvcv2::Shape{
 
                 if(true){
                     switch (Direction(vc->t)) {
-                        default:
+                        default: __builtin_unreachable();
                         case Direction::R: {
                             va = &gm[(gy + 0) * size_t(roi.w()) + (gx - 1)];
                             vb = &gm[(gy + 0) * size_t(roi.w()) + (gx + 1)];
@@ -921,8 +921,6 @@ namespace ymd::nvcv2::Shape{
                 }
             }
         }
-        #undef FAST_SQRT
-        #undef FAST_SQUARE8
     }
 
     void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
@@ -932,8 +930,8 @@ namespace ymd::nvcv2::Shape{
         scexpr size_t shift_bits = 3;
     
         // sizeof(vec_t);
-        auto roi = src.rect();
-        auto gm = new vec_t[roi.get_area()];
+        auto roi = src.size().to_rect();
+        auto gm = std::make_unique<vec_t[]>(roi.get_area());
         
         const auto w = size_t(roi.w());
 
@@ -976,30 +974,30 @@ namespace ymd::nvcv2::Shape{
 
         clear_corners(dst);
 
-        scexpr size_t wid = 4;
+        scexpr size_t WINDOW_HALF_SIZE = 4;
 
-        using template_t = std::array<std::array<vec_t, wid * 2 + 1>, wid * 2 + 1>;
+        using template_t = std::array<std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, WINDOW_HALF_SIZE * 2 + 1>;
 
         auto generate_template = []() -> template_t{
             template_t ret;
-            for(size_t y = -wid; y <= wid; y++){
-                for(size_t x = -wid; x <= wid; x++){
+            for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+                for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
                     real_t rad = atan2(real_t(y), real_t(x));
                     const auto [s, c] = sincos(rad);
                     vec_t vec = vec_t{int8_t(s), int8_t(c)};
                     // vec_t vec = vec_t{scale, 0};
-                    ret[y + wid][x + wid] = vec;
+                    ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
                 }
             }
             return ret;
         };
 
         auto temp = generate_template();
-              
-        for (size_t gy = wid; gy < size_t(roi.h()) - wid; gy++) {
+
+        for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
             vec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (size_t gx = wid; gx < size_t(roi.w()) - wid; gx++) {
+            for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
                 vc++;
                 dp++;
 
@@ -1008,10 +1006,10 @@ namespace ymd::nvcv2::Shape{
                 // size_t x_sum = 0;
                 // size_t y_sum = 0;
                 size_t sum = 0;
-                for(size_t y = -wid; y <= wid; y++){
-                    for(size_t x = -wid; x <= wid; x++){
+                for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+                    for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
                         const auto & vec = gm[(gy + y) * w + (gx + x)];
-                        const auto & tvec = temp[y + wid][x + wid];
+                        const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
                         // x_sum += ABS(vec.x * tvec.x);
                         // y_sum += ABS(vec.y * tvec.y);
                         // sum += temp[3][3].length_squared();
@@ -1023,12 +1021,9 @@ namespace ymd::nvcv2::Shape{
                 // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
                 // size_t sum = MAX(x_sum, y_sum);
                 // size_t sum =  x_sum * x_sum + y_sum * y_sum;
-                *dp = (ABS(sum) / ((wid * 2 + 1) * (wid * 2 + 1))) >> 4; 
+                *dp = (ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4; 
             }
         }
-        #undef FAST_SQRT
-
-        delete gm;
     }
 
     void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
@@ -1039,20 +1034,21 @@ namespace ymd::nvcv2::Shape{
             return;
         }
     
-        const auto size = (Rect2i(Vector2u(), dst.size()).intersection(Rect2i(Vector2u(), src.size()))).size;
-        const auto w = size_t(size.x);
-        const auto h = size_t(size.y);
+        const auto [w,h] = Vector2u{
+            MIN(src.size().x, dst.size().x),
+            MIN(src.size().y, dst.size().y),
+        };
 
-        scexpr size_t wid = 3;
-        scexpr size_t least_size = 7;
+        static constexpr size_t WINDOW_HALF_SIZE = 3;
+        static constexpr size_t LEAST_POINTS = 7;
 
-        for(size_t y = wid; y < h - wid - 1u; y++){
-            for(size_t x = wid; x < w - wid - 1u; x++){
+        for(size_t y = WINDOW_HALF_SIZE; y < h - WINDOW_HALF_SIZE - 1u; y++){
+            for(size_t x = WINDOW_HALF_SIZE; x < w - WINDOW_HALF_SIZE - 1u; x++){
 
-                std::array<uint8_t, least_size> min_values;
+                std::array<uint8_t, LEAST_POINTS> min_values;
                 std::fill(min_values.begin(), min_values.end(), 255);
-                for(size_t i=y-wid;i<=y+wid;i++){
-                    for(size_t j=x-wid;j<=x+wid;j++){
+                for(size_t i=y-WINDOW_HALF_SIZE;i<=y+WINDOW_HALF_SIZE;i++){
+                    for(size_t j=x-WINDOW_HALF_SIZE;j<=x+WINDOW_HALF_SIZE;j++){
                         auto current_value = uint8_t(src[{j,i}]);
                         auto it = std::find_if(min_values.begin(), min_values.end(), [current_value](const uint8_t val){
                             return val > current_value;
@@ -1063,14 +1059,11 @@ namespace ymd::nvcv2::Shape{
                     }
                 }
 
-                auto ave = std::accumulate(min_values.begin(), min_values.end(), 0)/least_size;
-                auto raw = src[{x,y}];
+                const auto ave = std::accumulate(min_values.begin(), min_values.end(), 0)/LEAST_POINTS;
+                const auto raw = src[{x,y}];
 
-                #define RELU(x) ((x) > 0 ? (x) : 0)
-
+                auto RELU = [](uint8_t _x) -> uint8_t {return (_x) > 0 ? (_x) : (0);};
                 dst[{x,y}] = CLAMP(RELU(raw - ave - 30) * 8, 0, 255);
-
-                #undef RELU
             }
         }
     }

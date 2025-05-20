@@ -79,8 +79,8 @@ IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radiu
 }
 
 IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radius){
-    if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
-        .inside(Rect2u(Vector2u(0,0), get_clip_window().size))))) return Ok();
+    if(not Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
+        .is_inside(get_clip_window())) return Ok();
     
 
     if(radius < 0) return Err(Error::MinusRadius);
