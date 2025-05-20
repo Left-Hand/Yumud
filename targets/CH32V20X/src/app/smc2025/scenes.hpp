@@ -11,7 +11,7 @@ static constexpr auto ROAD_WIDTH = 0.475_r;
 namespace ymd::smc::sim{
 class BlueprintBuilder{
 public:
-    constexpr BlueprintBuilder(const Gest2_t<real_t> & entrypoint):
+    constexpr BlueprintBuilder(const Pose2_t<real_t> & entrypoint):
         viewpoint_(entrypoint){;}
 
     [[nodiscard]] constexpr auto add_annular_sector(const real_t radius, const real_t rotation){
@@ -55,12 +55,12 @@ public:
         return ret;
     }
 private:
-    Gest2_t<real_t> viewpoint_;
+    Pose2_t<real_t> viewpoint_;
 };
 
 struct Scenes{
     __no_inline static Image<Grayscale> render_scene1
-        (const Gest2_t<real_t> viewpoint, const real_t scale);    
+        (const Pose2_t<real_t> viewpoint, const real_t scale);    
 };
 
 }

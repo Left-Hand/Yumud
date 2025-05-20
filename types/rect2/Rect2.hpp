@@ -45,23 +45,6 @@ public:
         position(static_cast<Vector2_t<T>>(_position)), 
         size(static_cast<Vector2_t<T>>(_size)){}
 
-    [[nodiscard]] static constexpr Rect2_t from_size(const Vector2_t<T> _size){
-        return Rect2_t<T>({0,0}, _size);
-    }
-
-    [[nodiscard]] static constexpr Rect2_t from_minimal_bounding_box(const std::span<const Vector2_t<T>> points){
-        if(points.size() < 1) while(true);
-        const auto & first_point = points[0];
-        Range2_t<T> x_range = {first_point.x, first_point.x};
-        Range2_t<T> y_range = {first_point.y, first_point.y};
-        for(size_t i = 1; i < points.size(); i++){
-            x_range = x_range.merge(points[i].x);
-            y_range = y_range.merge(points[i].y);
-        }
-
-        return Rect2_t<T>(x_range, y_range);
-    }
-
     [[nodiscard]] constexpr Rect2_t(const Range2_t<T> & x_range,const Range2_t<T> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), 
             size(Vector2_t<T>(x_range.length(), y_range.length())){;}
@@ -81,6 +64,39 @@ public:
     [[nodiscard]] static constexpr Rect2_t from_corners(const Vector2_t<T> & a, const Vector2_t<T> & b){
         return Rect2_t<T>(a, b-a).abs();
     }
+
+    
+    [[nodiscard]] static constexpr Rect2_t from_size(const Vector2_t<T> _size){
+        return Rect2_t<T>({0,0}, _size);
+    }
+
+    [[nodiscard]] static constexpr Rect2_t from_minimal_bounding_box(
+            const std::span<const Vector2_t<T>> points){
+        if(points.size() == 0) while(true);
+        const auto & first_point = points[0];
+        auto x_min = first_point.x;
+        auto x_max = first_point.x;
+        auto y_min = first_point.y;
+        auto y_max = first_point.y;
+
+        for(size_t i = 1; i < points.size(); i++){
+            x_min = MIN(x_min, points[i].x);
+            x_max = MAX(x_max, points[i].x);
+
+            y_min = MIN(y_min, points[i].y);
+            y_max = MAX(y_max, points[i].y);
+        }
+
+        // return Rect2_t<T>(x_min, y_min, 
+        //     x_max - x_min, y_max - y_min);
+    
+        return from_corners({x_min, y_min}, {x_max, y_max});
+    }
+
+    [[nodiscard]] static constexpr Rect2_t from_minimal_bounding_box(
+        const std::initializer_list<Vector2_t<T>> & points){
+            return from_minimal_bounding_box(std::span(points.begin(), points.end()));
+        }
 
     [[nodiscard]] constexpr T get_area() const {return ABS(size.x * size.y);}
     [[nodiscard]] constexpr Vector2_t<T> get_center() const {return(position + size / 2);}
@@ -174,10 +190,16 @@ public:
     }
 
     [[nodiscard]] constexpr bool intersects(const Rect2_t<T> & other) const{
-        bool x_ins = this->get_x_range().intersects(other.get_x_range());
-        if(!x_ins) return false;
-        bool y_ins = this->get_y_range().intersects(other.get_y_range());
-        return y_ins;
+        // return this->get_x_range().intersects(other.get_x_range())
+        //     and this->get_y_range().intersects(other.get_y_range());
+        const auto & self = *this;
+
+        return (self.x < other.x + other.w) &&
+                (other.x < self.x + self.w) &&
+                (self.y < other.y + other.h) &&
+                (other.y < self.y + self.h);
+        // return (ABS(other.position.x - this->position.x) * 2) < (other.size.x + this->size.x)
+        // and (ABS(other.position.y - this->position.y) * 2) < (other.size.y + this->size.y);
     }
 
     [[nodiscard]] constexpr Rect2_t<T> intersection(const Rect2_t<T> & other) const{
@@ -235,17 +257,12 @@ public:
     }
 
     [[nodiscard]] constexpr Range2_t<T> get_x_range() const{
-        return Range2_t<T>(position.x, position.x + size.x);
+        return Range2_t<T>::from_start_and_length(position.x, size.x);
     }
 
     [[nodiscard]] constexpr Range2_t<T> get_y_range() const{
-        return Range2_t<T>(position.y, position.y + size.y);
+        return Range2_t<T>::from_start_and_length(position.y, size.y);
     }
-
-    // template<arithmetic U>
-    // constexpr explicit operator U() const {
-    //     return get_area();
-    // }
 };
 
 using Rect2i = Rect2_t<int>;

@@ -68,6 +68,19 @@ public:
     }
 
 
+    [[nodiscard]] auto create_color_guard(){
+        struct ColorGuard{
+            PainterBase & owner;
+            RGB888 color;
+
+            ~ColorGuard(){
+                owner.set_color(color);
+            }
+        };
+
+        return ColorGuard{*this, m_color};
+    }
+
     void set_color(RGB888 _color){
         m_color = _color;
     }
@@ -154,12 +167,12 @@ protected:
         if(ins.get_area() == 0) return Err(Error::AreaNotExist);
         return draw_filled_rect(ins);
     }
-    [[nodiscard]] IResult<> draw_ver_line(const Range2i & y_range, const int x){
+    [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x){
         auto y_range_regular = y_range.abs();
         return draw_ver_line(Vector2u(x, y_range_regular.from), y_range_regular.length());
     }
 
-    [[nodiscard]] IResult<> draw_hri_line(const Range2i & x_range, const int y){
+    [[nodiscard]] IResult<> draw_hri_line(const Range2u & x_range, const int y){
         auto x_range_regular = x_range.abs();
         return draw_hri_line(Vector2u(x_range_regular.from, y), x_range_regular.length());
     }

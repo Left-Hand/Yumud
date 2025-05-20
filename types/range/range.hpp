@@ -15,36 +15,94 @@ public:
     T to;
     #pragma pack(pop)
 
-    scexpr Range2_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
-    scexpr Range2_t<T> POS = {T(0), std::numeric_limits<T>::max()};
-    scexpr Range2_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
-    // constexpr Range2_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
+    static constexpr Range2_t<T> INF = {
+        std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
+    static constexpr Range2_t<T> POS = {T(0), std::numeric_limits<T>::max()};
+    static constexpr Range2_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
 
     [[nodiscard]] constexpr Range2_t():
         from(static_cast<T>(0)),
         to(static_cast<T>(0)){;}
 
     [[nodiscard]] constexpr Range2_t(const T _from, const T _to): from(_from), to(_to) {
-        *this = this -> abs();
+        if(to > from) std::swap(from, to);
     }
 
-    [[nodiscard]] constexpr Range2_t(const Range2_t<auto> & other): from(static_cast<T>(other.from)), to(static_cast<T>(other.to)) {
+    [[nodiscard]] constexpr Range2_t(const Range2_t<T> & other): 
+        from(static_cast<T>(other.from)), 
+        to(static_cast<T>(other.to))
+    {
         *this = this -> abs(); 
     }
 
-    [[nodiscard]] constexpr Range2_t(const std::pair<arithmetic auto, arithmetic auto> & other): 
-    from(static_cast<T>(other.first)), to(static_cast<T>(other.second)) {
+    [[nodiscard]] constexpr Range2_t(const std::pair<T, T> & other): 
+        from(static_cast<T>(other.first)), 
+        to(static_cast<T>(other.second))
+    {
         *this = this -> abs(); 
     }
 
-    [[nodiscard]] constexpr Range2_t(const std::tuple<auto, auto> & other):
-    from(static_cast<T>(std::get<0>(other))), to(static_cast<T>(std::get<1>(other))) {
+    [[nodiscard]] constexpr Range2_t(const std::tuple<T, T> & other):
+        from(static_cast<T>(std::get<0>(other))), 
+        to(static_cast<T>(std::get<1>(other)))
+    {
         *this = this -> abs(); 
     }
 
-    [[nodiscard]] constexpr T & operator [](const size_t index) { return *(&this->from + index);}
+    template<typename U = T>
+    [[nodiscard]] static constexpr Range2_t<T> from_dipole(const U dipole){
+        return Range2_t<T>{dipole, dipole};
+    } 
 
-    [[nodiscard]] constexpr const T & operator [](const size_t index) const {return *(&this->from + index);}
+    [[nodiscard]] static constexpr Range2_t<T> from_center_and_length(
+        const arithmetic auto center, const arithmetic auto length)
+    {
+        if constexpr(std::is_integral_v<T>){
+            const auto half_length = length / 2;
+            return {center - half_length, center + half_length};
+        }else{
+            constexpr T HALF_ONE = static_cast<T>(0.5);
+            const auto half_length = (length * HALF_ONE);
+            return {center - half_length, center + half_length};
+        }
+    } 
+
+    template<typename U = T>
+    [[nodiscard]] static constexpr Range2_t<T> from_center_and_half_length(
+        const arithmetic auto center, const arithmetic auto half_length)
+    {
+        return {static_cast<T>(center - half_length), 
+                static_cast<T>(center + half_length)};
+    } 
+
+    template<typename U = T>
+    [[nodiscard]] static constexpr Range2_t<T> from_start_and_length(
+        const arithmetic auto start, const arithmetic auto length)
+    {
+        return {start, static_cast<T>(start + length)};
+    } 
+    
+    template<typename U = T>
+    [[nodiscard]] static constexpr Range2_t<T> from_start_and_gridsize(
+        const arithmetic auto start, const arithmetic auto grid_size)
+    {
+        const auto resi = [&]{
+            if constexpr(std::is_integral_v<T>){
+                return (start % grid_size);
+            }else{
+                return fposmodp(start, grid_size);
+            }
+        }();
+
+        const auto ret_from = start - resi;
+        return Range2_t<T>(ret_from, ret_from + grid_size);
+    }
+
+    [[nodiscard]] constexpr T & operator [](const size_t index) 
+        { return *(&this->from + index);}
+
+    [[nodiscard]] constexpr const T & operator [](const size_t index) const 
+        {return *(&this->from + index);}
 
     [[nodiscard]] constexpr const T * begin() const { return &this->from;}
 
@@ -54,10 +112,6 @@ public:
         this->from = static_cast<T>(other.from);
         this->to = static_cast<T>(other.to);
         return *this;
-    }
-
-    [[nodiscard]] constexpr static Range2_t<T> from_center(const arithmetic auto & center, const arithmetic auto & length){
-        return Range2_t<T>(center - length / 2, center + length / 2);
     }
 
     [[nodiscard]] constexpr bool is_regular() const {
@@ -73,45 +127,30 @@ public:
     }
 
     [[nodiscard]] constexpr Range2_t<T> abs() const{
-        if(unlikely(from > to)) return Range2_t<T>(to, from);
+        if((from > to)) return Range2_t<T>(to, from);
         else return *this;
     }
 
-    // [[nodiscard]] constexpr Range2_t<T> operator + (const arithmetic auto & rvalue) const{
-    //     Range2_t<T> regular = this -> abs();
-    //     return Range2_t<T>(this->from + rvalue, this->to + rvalue);
-    // }
-
-    // [[nodiscard]] constexpr Range2_t<T> operator - (const arithmetic auto & rvalue) const{
-    //     Range2_t<T> regular = this -> abs();
-    //     return Range2_t<T>(this->from - rvalue, this->to - rvalue);
-    // }
-
-    [[nodiscard]] constexpr Range2_t<T> operator * (const arithmetic auto rvalue) const{
-        return Range2_t<T>(this->from * rvalue, this->to * rvalue);
+    [[nodiscard]] constexpr Range2_t<T> operator * (const arithmetic auto rhs) const{
+        return Range2_t<T>(this->from * rhs, this->to * rhs);
     }
 
-    [[nodiscard]] constexpr Range2_t<T> operator / (const arithmetic auto & rvalue) const{
-        return Range2_t<T>(this->from / rvalue, this->to / rvalue);
+    [[nodiscard]] constexpr Range2_t<T> operator / (const arithmetic auto & rhs) const{
+        if constexpr(std::is_integral_v<T>){
+            return {this->from / rhs, this->to / rhs};
+        }else{
+            const auto inv_rhs = 1 / rhs;
+            return {this->from * inv_rhs, this->to * inv_rhs};
+        }
     }
 
-    // [[nodiscard]] constexpr Range2_t<T> & operator += (const arithmetic auto & rvalue) {
-    //     *this = *this + rvalue;
-    //     return *this;
-    // }
-
-    // [[deprecated]] constexpr Range2_t<T> & operator -= (const arithmetic auto & rvalue) {
-    //     *this = *this - rvalue;
-    //     return *this;
-    // }
-
-    [[nodiscard]] constexpr Range2_t<T> & operator *= (const arithmetic auto & rvalue) {
-        *this = *this * rvalue;
+    [[nodiscard]] constexpr Range2_t<T> & operator *= (const arithmetic auto & rhs) {
+        *this = *this * rhs;
         return *this;
     }
 
-    [[nodiscard]] constexpr Range2_t<T> & operator /= (const arithmetic auto & rvalue){
-        *this = *this / rvalue;
+    [[nodiscard]] constexpr Range2_t<T> & operator /= (const arithmetic auto & rhs){
+        *this = *this / rhs;
         return *this;
     }
 
@@ -119,7 +158,7 @@ public:
         return (this->from == other.from && this->to == other.to);
     }
 
-    [[nodiscard]] constexpr bool operator!= (const Range2_t<auto> & other) const {
+    [[nodiscard]] constexpr bool operator != (const Range2_t<auto> & other) const {
         return !(*this == other);
     }
 
@@ -155,36 +194,25 @@ public:
         return (from + to) / 2;
     }
 
-    [[nodiscard]] static constexpr Range2_t<T> grid(const arithmetic auto & value, const auto & grid_size){
-        T ret_from;
-        if constexpr(std::is_integral_v<T>){
-            ret_from = (value / grid_size) * grid_size;
-        }else{
-            ret_from = floor(value / grid_size) * grid_size;
-        }
-        return Range2_t<T>(ret_from, ret_from + grid_size);
+    [[nodiscard]] static constexpr Range2_t<T> grid_next_right(
+        const arithmetic auto & value, const arithmetic auto & grid_size){
+        return from_start_and_gridsize((value + grid_size), grid_size);
     }
 
-    [[nodiscard]] static constexpr Range2_t<T> grid_next(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right = true){
-        return grid(right ? (value + grid_size) : (value-grid_size), grid_size);
-    }
-
-    [[nodiscard]] static constexpr Range2_t<T> grid_next_right(const arithmetic auto & value, const arithmetic auto & grid_size){
-        return grid_next(value, grid_size, true);
-    }
-
-    [[nodiscard]] static constexpr Range2_t<T> grid_next_left(const arithmetic auto & value, const arithmetic auto & grid_size){
-        return grid_next(value, grid_size, false);
+    [[nodiscard]] static constexpr Range2_t<T> grid_next_left(
+        const arithmetic auto & value, const arithmetic auto & grid_size){
+        return from_start_and_gridsize((value - grid_size), grid_size);
     }
 
     [[nodiscard]] constexpr Range2_t<T> gridfy(const arithmetic auto & grid_size) const {
-        return Range2_t<T>(grid(from, grid_size), grid(to, grid_size));
+        return Range2_t<T>(from_start_and_gridsize(from, grid_size), from_start_and_gridsize(to, grid_size));
     }
 
-    [[nodiscard]] static constexpr Range2_t<T> part_in_grid(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right_part = true){
+    [[nodiscard]] static constexpr Range2_t<T> part_in_grid(
+        const arithmetic auto & value, const arithmetic auto & grid_size, const bool right_part = true){
         if constexpr(std::is_integral<T>::value){
             if(value % grid_size == 0) return {value, value};
-            auto gridfied = grid(value, grid_size);
+            auto gridfied = from_start_and_gridsize(value, grid_size);
             if(right_part){
                 return {value, gridfied.to};
             }else{
@@ -217,7 +245,7 @@ public:
     [[nodiscard]] constexpr Range2_t<T> grid_forward(const Range2_t<auto> & before, const auto & grid_size) const{
 
         if(before.from == before.to && before.from == 0){//initial
-            auto grid_field = grid(this->from, grid_size);
+            auto grid_field = from_start_and_gridsize(this->from, grid_size);
             if(grid_field.has(*this)) return *this;
             else return {this->from, grid_field.to};
         }
@@ -270,20 +298,20 @@ public:
         return from + (value) * (to - from);
     }
 
-    [[nodiscard]] constexpr bool operator<(const arithmetic auto & value) const {
-        return value < this->from;
-    }
+    // [[nodiscard]] constexpr bool operator<(const arithmetic auto & value) const {
+    //     return value < this->from;
+    // }
 
-    [[nodiscard]] constexpr bool operator<=(const arithmetic auto & value) const {
-        return value <= this->to;
-    }
+    // [[nodiscard]] constexpr bool operator<=(const arithmetic auto & value) const {
+    //     return value <= this->to;
+    // }
 
-    [[nodiscard]] constexpr bool operator>(const arithmetic auto & value) const {
-        return value > this->to;
-    }
-    [[nodiscard]] constexpr bool operator>=(const arithmetic auto & value) const {
-        return value >= this->from;
-    }
+    // [[nodiscard]] constexpr bool operator>(const arithmetic auto & value) const {
+    //     return value > this->to;
+    // }
+    // [[nodiscard]] constexpr bool operator>=(const arithmetic auto & value) const {
+    //     return value >= this->from;
+    // }
 
 
     [[nodiscard]] constexpr T clamp(const arithmetic auto & value) const{
@@ -294,21 +322,21 @@ public:
     [[nodiscard]] constexpr T min() const {return MIN(this->from, this->to);}
 };
 
-constexpr bool operator<(const arithmetic auto & value, const Range2_t<auto> & range){
-    return range.abs() > value;
-}
+// constexpr bool operator<(const arithmetic auto & value, const Range2_t<auto> & range){
+//     return range.abs() > value;
+// }
 
-constexpr bool operator<=(const arithmetic auto & value, const Range2_t<auto> & range){
-    return range.abs() >= value;
-}
+// constexpr bool operator<=(const arithmetic auto & value, const Range2_t<auto> & range){
+//     return range.abs() >= value;
+// }
 
-constexpr bool operator>(const arithmetic auto & value, const Range2_t<auto> & range){
-    return range.abs() < value;
-}
+// constexpr bool operator>(const arithmetic auto & value, const Range2_t<auto> & range){
+//     return range.abs() < value;
+// }
 
-constexpr bool operator>=(const arithmetic auto & value, const Range2_t<auto> & range){
-    return range.abs() <= value; 
-}
+// constexpr bool operator>=(const arithmetic auto & value, const Range2_t<auto> & range){
+//     return range.abs() <= value; 
+// }
 
 
 using Range2i = Range2_t<int>;

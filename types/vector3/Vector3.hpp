@@ -166,10 +166,17 @@ public:
     template<arithmetic U>
     __fast_inline constexpr 
     Vector3_t & operator /= (const U & _v){
-        T inv_v = 1 / static_cast<T>(_v);
-        x *= inv_v;
-        y *= inv_v;
-        z *= inv_v;
+        if constexpr(std::is_integral_v<T>){
+            const T v = static_cast<T>(_v);
+            x /= v;
+            y /= v;
+            z /= v;
+        }else{
+            const T inv_v = 1 / static_cast<T>(_v);
+            x *= inv_v;
+            y *= inv_v;
+            z *= inv_v;
+        }
         return *this;
     }
 
@@ -297,6 +304,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr 
     T length() const{
+        static_assert(not std::is_integral_v<T>);
         return sqrt(x * x + y * y + z * z);
     }
 
@@ -306,6 +314,7 @@ public:
     }
 
     constexpr void normalize() {
+        static_assert(not std::is_integral_v<T>);
         T lengthsq = length_squared();
         if (unlikely(lengthsq == 0)) {
             x = y = z = 0;
@@ -319,6 +328,7 @@ public:
 
     [[nodiscard]] constexpr 
     Vector3_t normalized() const {
+        static_assert(not std::is_integral_v<T>);
         Vector3_t v = *this;
         v.normalize();
         return v;

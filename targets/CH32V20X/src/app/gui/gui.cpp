@@ -202,13 +202,13 @@ void gui_main(){
     Painter<RGB565> painter = {};
     painter.bind_image(tftDisplayer);
     painter.set_color(ColorEnum::BLACK);
-    painter.draw_filled_rect(tftDisplayer.rect());
+    painter.draw_filled_rect(tftDisplayer.rect()).examine();
 
     while(true){
         painter.bind_image(img);
         painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
         painter.draw_pixel(Vector2u(0, 0));
-        painter.draw_hollow_rect(Rect2u(20, 0, 20, 40));
+        painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 
         tftDisplayer.put_texture(img.rect(), img.get_data());
         DEBUG_PRINTLN(clock::millis());

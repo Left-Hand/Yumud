@@ -12,13 +12,13 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
     // Rect2u regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;
 
-    // Range2i x_range = regular.get_x_range();
-    // Range2i y_range = regular.get_y_range();
+    // Range2u x_range = regular.get_x_range();
+    // Range2u y_range = regular.get_y_range();
 
     // if(y_range.length() > 2){
     //     draw_hri_line(x_range, y_range.from);
     //     draw_hri_line(x_range, y_range.to - 1);
-    //     Range2i shrunk_y_range = y_range.grow(-1);
+    //     Range2u shrunk_y_range = y_range.grow(-1);
     //     drawVerLine(shrunk_y_range, x_range.from);
     //     drawVerLine(shrunk_y_range, x_range.to - 1);
     // }else{
@@ -185,7 +185,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vector2u & pos, const Vector2u 
     int s;
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
-        Range2i x_range = Range2i(x0 - x, x0 + x + 1);
+        Range2u x_range = Range2u(x0 - x, x0 + x + 1);
         if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
         if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
@@ -197,7 +197,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vector2u & pos, const Vector2u 
     }
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
-        Range2i x_range = Range2i(x0 - x, x0 + x + 1);
+        Range2u x_range = Range2u(x0 - x, x0 + x + 1);
         if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
         if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
@@ -263,7 +263,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vector2u & p0,const Vector2u &
         else if (x1 > b) b = x1;
         if (x2 < a)      a = x2;
         else if (x2 > b) b = x2;
-        if(const auto res = draw_hri_line(Range2i(a, b + 1), y0); res.is_err()) return res;
+        if(const auto res = draw_hri_line(Range2u(a, b + 1), y0); res.is_err()) return res;
         return Ok();
     }
 
@@ -287,7 +287,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vector2u & p0,const Vector2u &
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        if(const auto res = draw_hri_line(Range2i(a, b + 1), y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(Range2u(a, b + 1), y); res.is_err()) return res;
     }
 
     sa = dx12 * (y - y1);
@@ -299,7 +299,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vector2u & p0,const Vector2u &
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        if(const auto res = draw_hri_line(Range2i(a, b + 1), y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(Range2u(a, b + 1), y); res.is_err()) return res;
     }
 
     return Ok();

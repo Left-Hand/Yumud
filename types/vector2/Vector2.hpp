@@ -42,40 +42,60 @@ struct Rect2_t;
 
 template<arithmetic T>
 struct Vector2_t{
-public:
+    static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
+    static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
+    static constexpr Vector2_t<T> INF = Vector2_t<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
+
+    static constexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
+    static constexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
+    static constexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
+    static constexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
+
+    static constexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
+    static constexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
+    static constexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
+    static constexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
+
+
     T x;
     T y;
     
     
-    [[nodiscard]] constexpr Vector2_t(){;}
+    [[nodiscard]] constexpr Vector2_t():
+        x(T(0)),
+        y(T(0)){;}
 
-    [[nodiscard]] constexpr Vector2_t(const T _x, const T _y): x(T(_x)), y(T(_y)){;}
+    [[nodiscard]] constexpr Vector2_t(const T _x, const T _y): 
+        x(T(_x)), y(T(_y)){;}
 
     template<arithmetic U = T>
-    [[nodiscard]] constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+    [[nodiscard]] constexpr Vector2_t(const std::tuple<U, U> & v) : 
+        x(std::get<0>(v)), y(std::get<1>(v)){;}
 
     template<arithmetic U = T>
-    [[nodiscard]] constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    [[nodiscard]] constexpr Vector2_t(const Vector2_t<U> & _v) : 
+        x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    
+    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & rad, const T & len){
+        const auto [s,c] = sincos(rad);
+        return {len * c, len * s};
+    }
+
+    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_idenity_rotation(const T & rad){
+        const auto [s,c] = sincos(rad);
+        return {c, s};
+    }
+    
     [[nodiscard]] T & operator [](const size_t index) { return *(&this->x + index);}
 
     [[nodiscard]] const T & operator [](const size_t index) const {return *(&this->x + index);}
 
-    scexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
-    scexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
-    scexpr Vector2_t<T> INF = Vector2_t<T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
-
-    scexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
-    scexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
-    scexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
-    scexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
-
-    scexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
-    scexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
-    scexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
-    scexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
-
-    [[nodiscard]] constexpr Vector2_t<T> normalize(){*this /= this->length();}
+    [[nodiscard]] constexpr Vector2_t<T> normalize(){
+        static_assert(std::is_integral_v<T> == false);
+        (*this) = (*this) * this->inv_length();
+    }
+    
     [[nodiscard]] constexpr Vector2_t<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vector2_t<T> & other) const;
 
@@ -89,8 +109,8 @@ public:
 
     [[nodiscard]] constexpr T dot(const Vector2_t<T> & other) const;
     [[nodiscard]] constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
-    [[nodiscard]] constexpr Vector2_t<T> rotated(const T r)const;
-    [[nodiscard]] constexpr Vector2_t<T> abs() const;
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> rotated(const T r)const;
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> abs() const;
 
 
     [[nodiscard]] static bool sort_by_x(const Vector2_t & a, const Vector2_t & b){
@@ -252,15 +272,6 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_rotation(const T & rad, const T & len){
-        const auto [s,c] = sincos(rad);
-        return {len * c, len * s};
-    }
-
-    [[nodiscard]] __fast_inline static constexpr Vector2_t<T> from_idenity_rotation(const T & rad){
-        const auto [s,c] = sincos(rad);
-        return {c, s};
-    }
 
     [[nodiscard]] __fast_inline static constexpr Vector2_t<T> ones(const T & len){
         return {len, len};

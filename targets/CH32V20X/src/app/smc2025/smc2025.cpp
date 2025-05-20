@@ -34,6 +34,14 @@ using namespace ymd::hal;
 
 
 
+static constexpr size_t MAX_COAST_ITEMS = 64;
+using Pile = Range2_t<uint8_t>;
+using Piles = std::map<uint8_t, Pile>;
+using Pixel = Vector2_t<uint8_t>;
+using PixelSegment = std::pair<Pixel ,Pixel>;
+using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
+
+
 struct HwPort{
 };
 
@@ -41,34 +49,8 @@ struct HwPort{
 
 using namespace ymd::smc::sim;
 
-enum class AlignMode:uint8_t{
-    LEFT,
-    RIGHT,
-    BOTH,
-    UPPER
-};
-
-
-using Boundry = std::map<size_t, size_t>;
-using Pile = std::pair<size_t, Range2i>;
-using Piles = std::map<size_t, Range2i>;
-using Point = Vector2i; 
-using ymd::nvcv2::Shape::Seed;
-using Segment = std::pair<const Point & ,const Point &>;
-
-
-static constexpr size_t max_item_size = 64;
-static constexpr size_t max_ranges_size = 16;
-
-using CoastItem = Vector2_t<uint8_t>;
-using Points = sstl::vector<Vector2_t<int16_t>, max_item_size>;
-using Coast = sstl::vector<CoastItem, max_item_size>;
-using Coasts = sstl::vector<Coast, 4>;
-using Ranges = sstl::vector<Range2_t<int16_t>, max_ranges_size>;
-
 
 class Plotter{
-public:
     using Error = PainterBase::Error;
 
     template<typename T = void>
@@ -86,125 +68,90 @@ public:
         return Ok();
     };
 
-    IResult<> plot_coast(const Coast & coast,  const Vector2u pos){
-        if(coast.size() <= 1){
+    IResult<> plot_coast(const Pixels & coast){
+        if(coast.size() < 2){
             return Err(Error::PointsTooLess);
         }
 
-        auto it = coast.begin();
-
-        while(it != std::prev(coast.end())){
+        for(auto it = coast.begin(); 
+            it != std::prev(coast.end()); 
+            it = std::next(it)
+        ){
             auto & p_curr = *it;
             auto & p_next = *std::next(it);
             if(const auto res = painter_.draw_line(p_curr, p_next);
                 res.is_err()) return res;
-            it = std::next(it);
         }
 
         return Ok();
     };
 
-    IResult<> plot_coast_colored (
-        const Coast & coast, const Vector2u pos)
-    {
-
-        if(coast.size() <= 2){
-            return Err(Error::PointsTooLess);
-        }
-
-        auto it = coast.begin();
-
-        while(it != std::prev(coast.end())){
-            auto & p_curr = *it;
-            auto & p_next = *std::next(it);
-            if(const auto res = painter_.draw_line(p_curr, p_next);
-                res.is_err()) return res;
-            it = std::next(it);
-        }
-
-        return Ok();
+    IResult<> plot_segment(const PixelSegment seg){
+        return painter_.draw_line(seg.first, seg.second);
     };
 
-    IResult<> plot_segment(const Segment seg, const Vector2u pos){
-        return painter_.draw_line(seg.first + pos, seg.second + pos);
-    };
-
-    IResult<> plot_points(const std::span<const Point> pts,  const Vector2u pos){
+    template<typename T>
+    IResult<> plot_dots(const std::span<const T> pts){
         for(const auto & pt : pts){
-            if(const auto res = painter_.draw_filled_circle(pt + pos, 2);
-                res.is_err()) return res;
-        }
-
-    };
-
-
-    IResult<> plot_coast_points(const Coast & pts,  const Vector2u pos){
-        for(const auto & pt : pts){
-            if(const auto res = painter_.draw_filled_circle(pt + pos, 2);
+            if(const auto res = painter_.draw_filled_circle({pt.x, pt.y}, 2);
                 res.is_err()) return res;
         }
     };
 
-    IResult<> plot_bound(const Boundry & bound,  const Vector2u pos){
-        for(auto && pt : bound){
-            painter_.draw_pixel(Vector2u{pt.second, pt.first}+ pos);
-        }
 
+    IResult<> plot_pixels(const Pixels & pts){
+        for(const auto pixel : pts){
+            painter_.draw_pixel(pixel);
+        }
         return Ok();
     };
 
-    IResult<> plot_point(const Vector2u pos, const uint radius = 2){
+    IResult<> plot_dot(const Vector2u pos, const uint radius = 2){
         painter_.draw_pixel(pos);
 
         return Ok();
     };
 
-    // [[maybe_unused]] auto plot_pile = [&](const Pile & bound, const RGB565 & color = RGB565::RED){
-    //     painter_.draw_line(Vector2u{bound.second.from, bound.first}, {bound.second.to, bound.first});
-    // }; 
-
 
     IResult<> plot_vec3(const Vector3_t<real_t> & vec3,  const Vector2u pos){
-        static constexpr auto square_length = 50;
+        static constexpr auto WINDOW_LENGTH = 50u;
+        static constexpr auto ARROW_RADIUS = 3u;
+        static constexpr auto X_UNIT = Vector2_t<real_t>::RIGHT;
+        static constexpr auto Y_UNIT = Vector2_t<real_t>::RIGHT.rotated(real_t(PI / 3));
+        static constexpr auto Z_UNIT = Vector2_t<real_t>::DOWN;
+        
+        static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
+        static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
+        static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
+        
         const auto arm_length = vec3.length();
-
-        static constexpr auto radius = 3;
-        static constexpr auto x_unit = Vector2_t(1.0_r, 0.0_r);
-        static constexpr auto y_unit = Vector2_t(0.5_r, -0.73_r);
-        static constexpr auto z_unit = Vector2_t(0.0_r, -1_r);
-
         const auto x_axis = Vector3_t<real_t>::from_x(arm_length);
         const auto y_axis = Vector3_t<real_t>::from_y(arm_length);
         const auto z_axis = Vector3_t<real_t>::from_z(arm_length);
 
-        static constexpr RGB565 x_color = RGB565(ColorEnum::RED);
-        static constexpr RGB565 y_color = RGB565(ColorEnum::GREEN);
-        static constexpr RGB565 z_color = RGB565(ColorEnum::BLUE);
-        // static constexpr RGB565 bg_color = RGB565(ColorEnum::BLACK);
-
-        auto vec3n = vec3.normalized();
-        const auto rot = Quat_t<real_t>::from_shortest_arc(Vector3_t<real_t>(0, 0, -1), vec3n);
-        const Vector2u center_point = pos + Vector2u(square_length, square_length) / 2;
+        const auto rot = Quat_t<real_t>::from_direction(vec3);
+        const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
             const Vector3_t<real_t> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            Vector3_t<real_t> end = rot.xform(axis);
-            Vector2u end_point = center_point + (x_unit * end.x + y_unit * end.y + z_unit * end.z);
+            const Vector3_t<real_t> end = rot.xform(axis);
+            const Vector2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
                 res.is_err()) return res;
-            if(const auto res = painter_.draw_filled_circle(end_point, radius);
+            if(const auto res = painter_.draw_filled_circle(end_point, ARROW_RADIUS);
                 res.is_err()) return res;
         };
 
-        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vector2u{square_length, square_length}});
+        const auto guard = painter_.create_color_guard();
+        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vector2u{WINDOW_LENGTH, WINDOW_LENGTH}});
             res.is_err()) return res;
-        if(const auto res = plot_vec3_to_plane(x_axis, 'X', x_color);
+        if(const auto res = plot_vec3_to_plane(x_axis, 'X', X_COLOR);
             res.is_err()) return res;
-        if(const auto res = plot_vec3_to_plane(y_axis, 'Y', y_color);
+        if(const auto res = plot_vec3_to_plane(y_axis, 'Y', Y_COLOR);
             res.is_err()) return res;
-        if(const auto res = plot_vec3_to_plane(z_axis, 'Z', z_color);
+        if(const auto res = plot_vec3_to_plane(z_axis, 'Z', Z_COLOR);
             res.is_err()) return res;
         return Ok();
     };
@@ -222,13 +169,7 @@ void smc2025_main(){
     DEBUGGER.force_sync(true);
 
 
-    // bkp.init();
-    
-    // {
-    //     portD[4].outpp(1);
-    // }
-
-    // printRecordedRunStatus();
+    // bkp.init();edRunStatus();
     auto & spi = spi2;
 
     spi2.init(144_MHz);
@@ -294,13 +235,16 @@ void smc2025_main(){
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
         // const auto gray_img = camera.frame().clone();
-        // const auto viewpoint = Gest2_t<real_t>{
+        // const auto viewpoint = Pose_t<real_t>{
         //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
-        const auto t = clock::time();
-        const auto viewpoint = Gest2_t<real_t>{
+        [[maybe_unused]]const auto t = clock::time();
+        const auto viewpoint = Pose2_t{
             Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.5_r, 0)
             .rotated(t), t + 0.2_r * sinpu(t)};
+            // {0.0_r, 0.0_r}, 0.0_r};
+
+
             // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
 
         const auto mbegin = clock::micros();
@@ -309,14 +253,14 @@ void smc2025_main(){
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.rect(), rgb_img.get_data());
-        // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
+        tft.put_texture(rgb_img.rect(), rgb_img.get_data());//
+        DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
         
         
         
-        DEBUG_PRINTLN(render_use.count());
+        // DEBUG_PRINTLN(render_use.count(), viewpoint);
     }
 
     // timer4.init(24000);

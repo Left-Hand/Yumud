@@ -5,7 +5,7 @@ namespace ymd::smc::sim{
 static constexpr auto make_scene1(){
 
     BlueprintBuilder builder = {
-        Gest2_t<real_t>{.pos = {0, 0}, .rad = real_t(PI)}
+        Pose2_t<real_t>{Vector2_t<real_t>{0, 0}, real_t(PI)}
     };
     return make_static_scene(
         builder.add_stright(4.00_r)
@@ -43,7 +43,7 @@ static constexpr auto scene1 = make_scene1();
 
 
 
-Image<Grayscale> Scenes::render_scene1(const Gest2_t<real_t> viewpoint, const real_t scale){
+Image<Grayscale> Scenes::render_scene1(const Pose2_t<real_t> viewpoint, const real_t scale){
     return scene1.render(viewpoint, scale);
 } 
 

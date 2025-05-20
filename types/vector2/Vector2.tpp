@@ -86,7 +86,7 @@ constexpr T Vector2_t<T>::dist_squared_to(const Vector2_t<T> & b) const{
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::reflect(const Vector2_t<T> & n) const {
-    return 2.0f * n * this->dot(n) - *this;
+    return 2 * n * this->dot(n) - *this;
 }
 
 template<arithmetic T>
@@ -96,12 +96,14 @@ constexpr Vector2_t<T> Vector2_t<T>::bounce(const Vector2_t<T> & n) const {
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const arithmetic auto & _t) const{
+    static_assert(not std::is_integral_v<T>);
     return *this * (1-_t)+b * _t;
 }
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const arithmetic auto & _t) const{
-    return lerp(b, sinf(PI / 2 * _t));
+    static_assert(not std::is_integral_v<T>);
+    return lerp(b, sin(static_cast<T>(PI / 2) * _t));
 }
 
 template<arithmetic T>
@@ -170,7 +172,8 @@ constexpr Vector2_t<T> Vector2_t<T>::snapped(const Vector2_t<T> &by) const{
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::normalized() const{
-    return *this * isqrt(this->length_squared());
+    static_assert(not std::is_integral_v<T>);
+    return (*this) * isqrt(this->length_squared());
 }
 
 template<arithmetic T>
@@ -191,6 +194,7 @@ constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> 
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotated(const T r) const{
+    static_assert(not std::is_integral_v<T>);
     auto [s, c] = sincos(r);
     return this->improduct(Vector2_t<T>(c, s));
 }

@@ -45,7 +45,9 @@ struct Quat_t{
     T x;
     T y;
     T z;
-    T w;                
+    T w;
+
+static_assert(not std::is_integral_v<T>);
 
     __fast_inline constexpr Quat_t() :
             x(0),
