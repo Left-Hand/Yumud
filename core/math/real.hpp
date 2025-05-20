@@ -178,12 +178,9 @@ __fast_inline constexpr real_t s16_to_uni(const int16_t data){
 template<size_t Q>
 __fast_inline constexpr uint16_t uni_to_u16(const iq_t<Q> qv){
     uint16_t data;
-#if Q >= 16
-    data = qv.value >> (Q - 16);
-#else
-    data = qv.value << (16 - Q);
-#endif
-    if(data == 0 && long(qv.value) != 0) data = 0xffff;
+    if constexpr (Q >= 16) data = qv.to_i32() >> (Q - 16);
+    else data = qv.to_i32() << (16 - Q);
+    if(data == 0 && (qv.to_i32() != 0)) data = 0xffff;
     return data;
 }
 

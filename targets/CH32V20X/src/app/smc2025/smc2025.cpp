@@ -203,8 +203,8 @@ void smc2025_main(){
     // Painter<RGB565> painter = {};
 
 
-    camera.set_exposure_value(1200).unwrap();
-    camera.set_gain(2.4_r).unwrap();
+    camera.set_exposure_value(1200).examine();
+    camera.set_gain(2.4_r).examine();
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Grayscale> & src, 
@@ -237,8 +237,6 @@ void smc2025_main(){
     };
 
 
-
-
     while(true){
         // qmc.update().examine();
         // painter.bind_image(rgb_img);
@@ -265,13 +263,14 @@ void smc2025_main(){
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());//
-        DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
+        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());
+        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
+        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
+        const auto rect = gray_img.size().to_rect();
+        const auto range = Range2_t<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
-        
-        
-        
         // DEBUG_PRINTLN(render_use.count(), viewpoint);
     }
 
@@ -322,4 +321,3 @@ void smc2025_main(){
     // timer.enableIt(TimerIT::Update, NvicPriority{0,0});
 
 }
-

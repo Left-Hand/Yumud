@@ -24,8 +24,9 @@ public:
         from(static_cast<T>(0)),
         to(static_cast<T>(0)){;}
 
-    [[nodiscard]] __fast_inline constexpr Range2_t(const T _from, const T _to): from(_from), to(_to) {
-        if(to > from) std::swap(from, to);
+    [[nodiscard]] __fast_inline constexpr Range2_t(const T _from, const T _to): 
+    from(_from), to(_to) {
+        if(to < from) std::swap(from, to);
     }
 
     [[nodiscard]] __fast_inline constexpr Range2_t(const Range2_t<T> & other): 
@@ -50,12 +51,12 @@ public:
     }
 
     template<typename U = T>
-    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_dipole(const U dipole){
+    [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_dipole(const T dipole){
         return Range2_t<T>{dipole, dipole};
     } 
-
+    
     [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_center_and_length(
-        const arithmetic auto center, const arithmetic auto length)
+        const T center, const T length)
     {
         if constexpr(std::is_integral_v<T>){
             const auto half_length = length / 2;
@@ -67,24 +68,21 @@ public:
         }
     } 
 
-    template<typename U = T>
     [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_center_and_half_length(
-        const arithmetic auto center, const arithmetic auto half_length)
+        const T center, const T half_length)
     {
         return {static_cast<T>(center - half_length), 
                 static_cast<T>(center + half_length)};
     } 
 
-    template<typename U = T>
     [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_start_and_length(
-        const arithmetic auto start, const arithmetic auto length)
+        const T start, const T length)
     {
         return {start, static_cast<T>(start + length)};
     } 
     
-    template<typename U = T>
     [[nodiscard]] __fast_inline static constexpr Range2_t<T> from_start_and_gridsize(
-        const arithmetic auto start, const arithmetic auto grid_size)
+        const T start, const T grid_size)
     {
         const auto resi = [&]{
             if constexpr(std::is_integral_v<T>){

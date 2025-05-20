@@ -54,50 +54,62 @@ constexpr bool is_fixed_point_v<iq_t<Q>> = true;
 
 template<size_t Q>
 struct iq_t{
+public:
+    using iq_type = _iq<Q>;
 private:
     static_assert(Q < 32, "Q must be less than 32");
 
+    iq_type value_;
 public:
-    using iq_type = _iq<Q>;
 
     static constexpr size_t q_num = Q;
-    iq_type value;
 
-    __fast_inline constexpr iq_t():value(_iq<Q>::from_i32(0)){;}
 
-    template<size_t P>
-    __fast_inline constexpr iq_t(const _iq<P> otherv) : value(otherv){;}
-
-    __fast_inline explicit constexpr operator _iq<Q>() const {return value;}
+    __fast_inline constexpr iq_t():value_(_iq<Q>::from_i32(0)){;}
 
     template<size_t P>
-    __fast_inline constexpr operator iq_t<P>() const {return iq_t<P>(value);}
+    __fast_inline constexpr iq_t(const _iq<P> otherv) : value_(otherv){;}
+
+    __fast_inline explicit constexpr operator _iq<Q>() const {return value_;}
+
+    template<size_t P>
+    __fast_inline constexpr operator iq_t<P>() const {return iq_t<P>(value_);}
     
-    __fast_inline constexpr iq_t(const iq_t<Q> & other):value(other.value){};
+    __fast_inline constexpr iq_t(const iq_t<Q> & other):value_(other.qvalue()){};
     
     template<size_t P>
     __fast_inline constexpr iq_t & operator = (const iq_t<P> & other){
-        value = (_iq<Q>(other.value));
+        value_ = _iq<Q>(other.qvalue());
         return *this;
     };
     
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator = (iq_t<P> && other){
-        value = (_iq<Q>(other.value));
+        value_ = _iq<Q>(other.qvalue());
         return *this;
     };
     
+    static constexpr iq_t<Q> from_i32(const int32_t value_){
+        return iq_t<Q>(_iq<Q>::from_i32(value_));
+    };
 
+    constexpr int32_t to_i32() const{
+        return value_.to_i32();
+    };
+
+    constexpr _iq<Q> qvalue() const {
+        return value_;  
+    }
 
     template<typename T>
     requires std::is_integral_v<T>
-    __fast_inline constexpr iq_t(const T intValue) : value(_iq<Q>::from_i32(intValue << Q)) {;}
+    __fast_inline constexpr iq_t(const T intValue) : value_(_iq<Q>::from_i32(intValue << Q)) {;}
 
     #ifdef STRICT_IQ
-    __fast_inline consteval explicit iq_t(const float fv):value((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
+    __fast_inline consteval explicit iq_t(const float fv):value_((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
     #else
-    __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
+    __fast_inline constexpr iq_t(const float fv):value_((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
     #endif
 
     static __fast_inline constexpr iq_t from (const floating auto fv){return iq_t{__iqdetails::_IQFtoN<Q>(fv)};}
@@ -107,13 +119,13 @@ public:
     }
 
     __fast_inline constexpr iq_t operator-() const {
-        return iq_t(_iq<Q>::from_i32(-(value.to_i32())));
+        return iq_t(_iq<Q>::from_i32(-(to_i32())));
     }
 
     //#region addsub
     template<size_t P>
     __fast_inline constexpr iq_t & operator +=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() + _iq<Q>(other.value).to_i32()));
+        return *this = iq_t<Q>(_iq<Q>::from_i32(this->to_i32() + _iq<Q>(other.qvalue()).to_i32()));
     }
 
     __fast_inline constexpr iq_t & operator +=(const integral auto other) {
@@ -122,7 +134,7 @@ public:
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator -=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() - _iq<Q>(other.value).to_i32()));
+        return *this = iq_t<Q>(_iq<Q>::from_i32(this->to_i32() - _iq<Q>(other.qvalue()).to_i32()));
     }
 
     __fast_inline constexpr iq_t & operator -=(const integral auto other) {
@@ -135,19 +147,19 @@ public:
     template<size_t P>
     __fast_inline constexpr iq_t& operator *=(const iq_t<P> other) {
         return *this = iq_t<Q>(_iq<Q>::from_i32(
-            (int64_t(this->value.to_i32()) * int64_t((other).value.to_i32())) >> (P)
+            (int64_t(this->to_i32()) * int64_t((other).to_i32())) >> (P)
         ));
     }
 
     __fast_inline constexpr iq_t& operator *=(const integral auto other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->value.to_i32() * other));
+        return *this = iq_t<Q>(_iq<Q>::from_i32(this->to_i32() * other));
     }
     
     //#endregion
 
     //#region division
     __fast_inline constexpr iq_t & operator/=(const integral auto other) {
-        return *this = iq_t(_iq<Q>::from_i32((value.to_i32() / other)));
+        return *this = iq_t(_iq<Q>::from_i32((to_i32() / other)));
     }
 
     template<size_t P>
@@ -155,7 +167,7 @@ public:
         if (std::is_constant_evaluated()) {
             return *this = iq_t<Q>::from(float(*this) / float(other));
         }else{
-            return *this = iq_t(__iqdetails::_IQNdiv<Q>(value, _iq<Q>(other.value)));
+            return *this = iq_t(__iqdetails::_IQNdiv<Q>(value_, _iq<Q>(other.qvalue())));
         }
     }
 
@@ -165,7 +177,7 @@ public:
     #define IQ_COMP_TEMPLATE(op)\
     template<size_t P>\
     __fast_inline constexpr bool operator op (const iq_t<P> other) const {\
-        return value.to_i32() op iq_type(other.value).to_i32();\
+        return to_i32() op iq_type(other.qvalue()).to_i32();\
     }\
     \
     template<typename T>\
@@ -177,7 +189,7 @@ public:
     template<typename T>\
     requires std::is_integral_v<T>\
     __fast_inline constexpr bool operator op (const T other) const {\
-        return (((value.to_i32())) op (int32_t(other) << Q));\
+        return (((to_i32())) op (int32_t(other) << Q));\
     }\
 
 
@@ -192,22 +204,22 @@ public:
 
     //#region shifts
     __fast_inline constexpr iq_t operator<<(int shift) const {
-        return iq_t(_iq<Q>::from_i32(value.to_i32() << shift));
+        return iq_t(_iq<Q>::from_i32(to_i32() << shift));
     }
 
     __fast_inline constexpr iq_t operator>>(int shift) const {
-        return iq_t(_iq<Q>::from_i32(value.to_i32() >> shift));
+        return iq_t(_iq<Q>::from_i32(to_i32() >> shift));
     }
     //#endregion
 
     __fast_inline constexpr explicit operator bool() const {
-        return bool(value.to_i32());
+        return bool(to_i32());
     }
 
     template<typename T>
     requires std::is_integral_v<T>
     __fast_inline constexpr explicit operator T() const {
-        return value.to_i32() >> Q;
+        return to_i32() >> Q;
     }
     
 
@@ -215,9 +227,9 @@ public:
     requires std::is_floating_point_v<T>
     __inline constexpr explicit operator T() const{
         if(std::is_constant_evaluated()){
-            return float(value.to_i32()) / int(1 << Q);
+            return float(to_i32()) / int(1 << Q);
         }else{
-            return __iqdetails::_IQNtoF<Q>(value);
+            return __iqdetails::_IQNtoF<Q>(value_);
         }
     }
 };
@@ -452,15 +464,15 @@ using q31 = iq_t<31>;
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> abs(const iq_t<P> iq){
-    const auto ivalue = iq.value.to_i32();
+    const auto ivalue = iq.to_i32();
     return iq_t<Q>(_iq<Q>::from_i32(ivalue > 0 ? ivalue : -ivalue));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr bool isnormal(const iq_t<P> iq){return bool(iq.value);}
+__fast_inline constexpr bool isnormal(const iq_t<P> iq){return iq.to_i32();}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr bool signbit(const iq_t<P> iq){return std::bit_cast<int32_t>(iq.value) & (1 << 31);}
+__fast_inline constexpr bool signbit(const iq_t<P> iq){return iq.to_i32() & (1 << 31);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
@@ -469,17 +481,17 @@ __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32(a.value.to_i32() % b.value.to_i32()));}
+__fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32(a.to_i32() % b.to_i32()));}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){return a * (1 - x) + b * x;}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32((a.value.to_i32() + b.value.to_i32()) >> 1));}
+__fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32((a.to_i32() + b.to_i32()) >> 1));}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
-    return iq_t<Q>(_iq<Q>::from_i32((iq.value.to_i32()) & ((1 << P) - 1)));
+    return iq_t<Q>(_iq<Q>::from_i32((iq.to_i32()) & ((1 << P) - 1)));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -491,16 +503,16 @@ __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return (iq > int(iq)) ? i
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>(int(iq + iq_t<Q>::from(0.5)));}
 
-size_t _qtoa_impl(const int32_t value, char * str, uint8_t eps, const uint8_t _Q);
+size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);
 
 template<size_t Q>
 size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
-    return _qtoa_impl(qv.value.to_i32(), str, eps, Q);
+    return _qtoa_impl(qv.to_i32(), str, eps, Q);
 }
 
 template<size_t Q>
 bool not_in_one(const iq_t<Q> qv){
-    // return (qv.value.to_i32() & (~uint32_t((1 << Q) - 1)));
+    // return (qv.to_i32() & (~uint32_t((1 << Q) - 1)));
     if(qv < iq_t<Q>(-0.001)) return true;
     if(qv > iq_t<Q>(1.001)) return true;
     return false;
@@ -547,4 +559,13 @@ namespace std{
     template<size_t Q>
     __fast_inline constexpr auto signbit(const iq_t<Q> iq)  {return ymd::signbit(iq);}
     
+    template<size_t Q>
+    struct make_signed<iq_t<Q>>{
+        using type = iq_t<Q>;
+    };
+
+    template<size_t Q>
+    struct make_unsigned<iq_t<Q>>{
+        using type = iq_t<Q>;
+    };
 }

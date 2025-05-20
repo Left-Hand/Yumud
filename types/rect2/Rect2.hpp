@@ -7,20 +7,7 @@
 #include "types/vector2/vector2.hpp"
 
 
-namespace std{
-    template<size_t Q>
-    struct make_signed<iq_t<Q>>{
-        using type = iq_t<Q>;
-    };
-
-    template<size_t Q>
-    struct make_unsigned<iq_t<Q>>{
-        using type = iq_t<Q>;
-    };
-}
 namespace ymd{
-
-
 
 template<arithmetic T>
 class [[nodiscard]] Rect2_t{

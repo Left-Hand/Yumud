@@ -107,7 +107,7 @@ constexpr void Quat_t<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::
 // 	// 	auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
 
 // 	// 	static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
-// 	// 		return q14(_iq<14>::from_i32(((a.value.to_i32() * b.value.to_i32()) >> 14) * c.value.to_i32() >> 14));
+// 	// 		return q14(_iq<14>::from_i32(((a.to_i32() * b.to_i32()) >> 14) * c.to_i32() >> 14));
 // 	// 	};
 	
 // 	// 	set(

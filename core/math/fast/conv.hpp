@@ -120,7 +120,7 @@ Norm_t<T> qmux(const Norm_t<T> a, const Norm_t<T> b){
     if constexpr (ymd::is_fixed_point_v<T> and ymd::iq_num_v<T> < 15){
         constexpr size_t q_num = ymd::iq_num_v<T>;
         return Norm_t(iq_t<q_num>(std::bit_cast<_iq<q_num>>(
-            (T(a).value.to_i32() * T(b).value.to_i32()) >> q_num)
+            (T(a).to_i32() * T(b).to_i32()) >> q_num)
         ));
     }else{
         return Norm_t(T(a) * T(b));
