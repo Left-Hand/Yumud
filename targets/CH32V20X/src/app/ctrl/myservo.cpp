@@ -182,36 +182,65 @@ private:
     hal::PwmIntf & pwm_;
 };
 
-
-constexpr uint32_t factorial(uint32_t n)
-{
-    using namespace matchit;
-    assert(n >= 0);
-    return match(n)(
-        pattern | 0 = 1,
-        pattern | _ = [n] { return n * factorial(n - 1); }
-    );
 }
+#define UART hal::uart2
 
-template<typename T1, typename T2>
-constexpr auto eval(std::tuple<char, T1, T2> const& expr)
-{
-    using namespace matchit;
-    Id<T1> i;
-    Id<T2> j;
-    return match(expr)(
-        pattern | ds('+', i, j) = i + j,
-        pattern | ds('-', i, j) = i - j,
-        pattern | ds('*', i, j) = i * j,
-        pattern | ds('/', i, j) = i / j,
-        pattern | _ = []
-        {
-            assert(false);
-            return -1;
-        });
+void myservo_main(){
+    UART.init(576000);
+    // UART.enable_single_line_mode(false);
+    DEBUGGER.retarget(&UART);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.force_sync();
+
+    // auto & led = portD[0];
+    auto & led = portB[8];
+
+    auto & mode1_gpio   = portB[1];
+    auto & phase_gpio   = portA[7];
+    // auto & en_gpio      = portA[6];
+    auto & mode2_gpio   = portA[5];
+
+    phase_gpio.outpp();
+    // en_gpio.outpp(HIGH);
+
+    hal::timer3.init(1000);
+    auto & pwm = hal::timer3.oc(1);
+    pwm.init({});
+    timer3.attach(TimerIT::Update, {0,0}, [&]{
+        // const auto duty = sin(clock::time());
+        // phase_gpio = BoolLevel::from(duty > 0);
+        // pwm.set_duty(ABS(duty));
+
+    });
+
+    led.outpp();
+    while(true){
+        led = BoolLevel::from((clock::millis() % 400).count() > 200);
+            // auto pwm = hal::
+        mode1_gpio.outpp(HIGH);
+        // slp_gpio
+        const auto duty = sin(3 * clock::time());
+        const auto level = duty > 0.0_r;
+        phase_gpio = BoolLevel::from(level);
+        // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);
+        pwm.set_duty(ABS(duty));
+        // led = HIGH;
+        // clock::delay(200ms);
+        // led = LOW;
+        // clock::delay(200ms);
+        DEBUG_PRINTLN(
+            real_t(pwm), 
+            bool(portA[6].read()), 
+            bool(phase_gpio.read())
+            , duty, level
+        );
+        // DEBUG_PRINTLN(clock::millis().count(), UART.available());
+        // DEBUG_PRINTLN(UART.available());
+        // while(UART.available()){
+        //     char chr;
+        //     UART.read1(chr);
+        //     DEBUG_PRINTLN(chr);
+        // }
+    }
+
 }
-
-static constexpr auto a = factorial(3);
-static constexpr auto b = eval(std::make_tuple('+', 3,4));
-}
-

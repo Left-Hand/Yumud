@@ -250,15 +250,18 @@ void smc2025_main(){
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
         [[maybe_unused]]const auto t = clock::time();
         const auto viewpoint = Pose2_t{
-            Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.5_r, 0)
-            .rotated(t), t + 0.2_r * sinpu(t)};
-            // {2.0_r, 0.0_r}, 0.0_r};
+            // Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.9_r, 0)
+            // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
+            // {1.0_r, -0.5_r}, 0.0_r};
+            {0.0_r, -0.01_r}, 0.0_r};
 
 
             // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
 
         const auto mbegin = clock::micros();
         const auto gray_img = Scenes::render_scene1(viewpoint, 0.006_r);
+        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
+        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 

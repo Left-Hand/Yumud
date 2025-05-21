@@ -34,7 +34,10 @@ static constexpr auto make_scene1(){
         ,builder.add_annular_sector(0.5_r, 120_deg)
         ,builder.add_annular_sector(0.5_r, -180_deg)
         ,builder.add_annular_sector(0.5_r, 180_deg)
-        ,builder.add_stright(1.55_r)
+        ,builder.add_stright(1.43_r)
+        ,builder.add_zebra_stright(0.12_r)
+        ,Aurora{} | Placement{.pos = {1.0_r, -0.8_r}}
+        ,Aurora{} | Placement{.pos = {-2.0_r, -2.8_r}}
 
     );
 }

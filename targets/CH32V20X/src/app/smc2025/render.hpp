@@ -12,6 +12,21 @@
 #include "types/ray2/Ray2.hpp"
 #include "types/line2/Line2.hpp"
 
+template<size_t Q>
+static constexpr iq_t<Q> tpzpup(const iq_t<Q> x){
+    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
+}
+
+// static constexpr Vector2u CAMERA_SIZE = {94/2, 60/2};
+// static constexpr Vector2u CAMERA_SIZE = {94, 60};
+static constexpr Vector2u CAMERA_SIZE = {94 * 3 / 2, 60 * 3 / 2};
+// static constexpr Vector2u CAMERA_SIZE = {188, 120};
+// static constexpr Vector2u CAMERA_SIZE = {120, 80};
+// static constexpr Vector2u CAMERA_SIZE = {120, 80};
+static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
+static constexpr uint8_t WHITE_COLOR = 0x9f;
+
+
 using namespace ymd;
 
 consteval iq_t<16> operator"" _deg(long double x){
@@ -121,12 +136,6 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
     };
 }
 
-// template<typename T>
-// struct Element{
-//     constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-//         return T::has_point(static_cast<const T &>(*this));
-//     }
-// };
 
 struct AnnularSector{
 
@@ -165,11 +174,11 @@ struct AnnularSector{
         bool is_close;
 
 
-        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-            return s_has_point(*this, offset);
+        __fast_inline constexpr uint8_t color_from_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_color_from_point(*this, offset);
         }
     private:
-        static constexpr bool s_has_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
+        static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
             const auto len_squ = offset.length_squared();
 
             if (len_squ < self.squ_inner_radius || 
@@ -177,11 +186,11 @@ struct AnnularSector{
                 return false;
             }
 
-            return self.is_close 
+            return (self.is_close 
                 ? (offset.is_count_clockwise_to(self.start_norm_vec) && 
                 offset.is_clockwise_to(self.stop_norm_vec))
                 : (offset.is_count_clockwise_to(self.start_norm_vec) || 
-                offset.is_clockwise_to(self.stop_norm_vec));
+                offset.is_clockwise_to(self.stop_norm_vec))) ? WHITE_COLOR : 0;
         } 
     };
 
@@ -279,23 +288,18 @@ struct RectBlob{
     iq_t<16> width;
     iq_t<16> height;
 
-    __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-        return s_has_point(*this, offset);
-    }
-
-
     struct Cache{
         iq_t<16> half_width;
         iq_t<16> half_height;
 
-        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-            return s_has_point(*this, offset);
+        __fast_inline constexpr uint8_t color_from_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_color_from_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr bool s_has_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
+        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
             return 
-                (abs(offset.x) - (self.half_width) <= 0)
-                and (abs(offset.y) - (self.half_height) <= 0)
+                ((abs(offset.x) - (self.half_width) <= 0)
+                and (abs(offset.y) - (self.half_height) <= 0)) ? WHITE_COLOR : 0;
             ;
         }
     };
@@ -310,12 +314,36 @@ struct RectBlob{
     constexpr auto to_bounding_box() const {
         return BoundingBox{-width/2,-height/2, width, height};
     }
-private:
-    __fast_inline static constexpr bool s_has_point(const RectBlob & self, const Vector2_t<iq_t<16>> offset){
-        return 
-            (abs(offset.x) - (self.width >> 1) <= 0)
-            and (abs(offset.y) - (self.height >> 1) <= 0)
-        ;
+};
+
+
+struct Aurora{
+    iq_t<16> radius = 1;
+
+    struct Cache{
+        iq_t<16> squ_radius;
+
+        __fast_inline constexpr uint8_t color_from_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_color_from_point(*this, offset);
+        }
+    private:
+        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2_t<iq_t<16>> offset){
+            const auto len_squ = offset.length_squared();
+            // const auto temp = MAX(9 * len_squ, 1);
+            // return uint8_t(130 / temp);
+            const auto temp = CLAMP(2 - 3 * len_squ,0, 1);
+            return uint8_t(130 * temp);
+        }
+    };
+
+    constexpr auto to_cache() const {
+        return Cache{
+            .squ_radius = square(radius)
+        };
+    }
+
+    constexpr auto to_bounding_box() const {
+        return BoundingBox{-radius, -radius, 2 * radius, 2 * radius};
     }
 };
 
@@ -324,28 +352,27 @@ struct RotatedRect{
     iq_t<16> height;
     iq_t<16> rotation;
 
-    __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-        return s_has_point(*this, offset);
-    }
     struct alignas(4) Cache{
         iq_t<16> half_width;
         iq_t<16> half_height;
         iq_t<16> s;
         iq_t<16> c;
 
-        __fast_inline constexpr bool has_point(const Vector2_t<iq_t<16>> offset) const {
-            return s_has_point(*this, offset);
+        __fast_inline constexpr uint8_t color_from_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_color_from_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr bool s_has_point(
+        __fast_inline static constexpr uint8_t s_color_from_point(
             const Cache & self, const Vector2_t<iq_t<16>> offset){
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
             return 
-                (abs(-self.s * offset.x + self.c * offset.y)
+                ((abs(-self.s * offset.x + self.c * offset.y)
                     <= self.half_height) and
                 (abs(-self.c * offset.x - self.s * offset.y) 
-                    <= self.half_width)
+                    <= self.half_width))
+                    
+                ? WHITE_COLOR : 0
             ;
         }
     };
@@ -383,21 +410,77 @@ struct RotatedRect{
             default: __builtin_unreachable();
         }
     }
-private:
-    __fast_inline static constexpr bool s_has_point(const RotatedRect & self, const Vector2_t<iq_t<16>> offset){
-        return 
-            (abs(offset.x) - (self.width >> 1) <= 0)
-            and (abs(offset.y) - (self.height >> 1) <= 0)
-        ;
+};
+
+struct RotatedZebraRect{
+    iq_t<16> width;
+    iq_t<16> height;
+    iq_t<16> rotation;
+
+    struct alignas(4) Cache{
+        iq_t<16> half_width;
+        iq_t<16> half_height;
+        iq_t<16> s;
+        iq_t<16> c;
+
+        __fast_inline constexpr uint8_t color_from_point(const Vector2_t<iq_t<16>> offset) const {
+            return s_color_from_point(*this, offset);
+        }
+    private:
+        __fast_inline static constexpr uint8_t s_color_from_point(
+            const Cache & self, const Vector2_t<iq_t<16>> offset){
+            // -s * p.x + c * p.y;
+            // -c * p.x - s * p.y;
+            const auto x_offset = - self.c * offset.x - self.s * offset.y;
+            
+            return 
+                ((abs(-self.s * offset.x + self.c * offset.y)
+                    <= self.half_height) and
+                (abs(x_offset) 
+                    <= self.half_width))
+                    
+                // ? (static_cast<uint8_t>(CLAMP(sinpu(x_offset * 15) * 3 + 1, 0, 2) * WHITE_COLOR / 2)) : 0
+                ? (WHITE_COLOR) : 0
+            ;
+        }
+    };
+
+    constexpr auto to_cache() const {
+        const auto [s,c] = sincos(rotation);
+        return Cache{
+            .half_width = width / 2,
+            .half_height = height / 2,
+            .s = s,
+            .c = c
+        };
+    }
+
+    constexpr BoundingBox to_bounding_box() const {
+        const auto rot = Vector2_t<iq_t<16>>::from_idenity_rotation(rotation);
+        const std::array<Vector2_t<iq_t<16>>, 4> points = {
+            get_raw_point<0>().improduct(rot),
+            get_raw_point<1>().improduct(rot),
+            get_raw_point<2>().improduct(rot),
+            get_raw_point<3>().improduct(rot)
+        };
+
+        return BoundingBox::from_minimal_bounding_box(std::span(points));
+    }
+
+    template<size_t I>
+    requires ((0 <= I) and (I < 4))
+    constexpr Vector2_t<iq_t<16>> get_raw_point() const {
+        switch(I){
+            case 0: return {-width / 2, height / 2};
+            case 1: return {width / 2, height / 2};
+            case 2: return {-width / 2, -height / 2};
+            case 3: return {width / 2, -height / 2};
+            default: __builtin_unreachable();
+        }
     }
 };
 
 
-
-// static constexpr Vector2u CAMERA_SIZE = {94, 60};
-// static constexpr Vector2u CAMERA_SIZE = {188, 120};
-static constexpr Vector2u CAMERA_SIZE = {120, 80};
-static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 
 
 //将相机像素转换为地面坐标
@@ -444,7 +527,7 @@ static constexpr Vector2u project_ground_to_pixel(
 }
 
 namespace details{
-    PRO_DEF_MEM_DISPATCH(MemIsCovered, has_point);
+    PRO_DEF_MEM_DISPATCH(MemIsCovered, color_from_point);
 
     struct ElementFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::none>
@@ -487,7 +570,7 @@ public:
 //         for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
 //             const auto beg = offset;
 //             for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
-//                 const bool covered = this->has_point(offset);
+//                 const bool covered = this->color_from_point(offset);
 //                 ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
 //                 offset += x_step;
 //             }
@@ -500,9 +583,9 @@ public:
 // private:
 //     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-//     bool has_point(const Vector2_t<iq_t<16>> offset) const{
+//     bool color_from_point(const Vector2_t<iq_t<16>> offset) const{
 //         for(const auto & element : elements_){
-//             if(element->has_point(offset)){
+//             if(element->color_from_point(offset)){
 //                 return true;
 //             }
 //         }
@@ -535,8 +618,6 @@ public:
             project_pixel_to_ground(CAMERA_SIZE,          viewpoint, scale)
         });
 
-        // const auto rect1 = std::get<0>(objects_).bounding_box.shift(std::get<0>(objects_).placement.pos);
-        // DEBUG_PRINTLN(ground_region, ground_region.intersects(rect1));
             
         bool dirty = false;
         auto apply_render = [&](const bool rough_judge_passed, auto && fn){
@@ -546,11 +627,12 @@ public:
             auto local_pos = org;
             for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
                 const auto beg = local_pos;
+                auto * ptr = &pdata[y * CAMERA_SIZE.x];
                 for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
-                    const bool covered = std::forward<Fn>(fn)(local_pos);
-                    const auto color = covered ? 255 : 0;
-                    pdata[y * CAMERA_SIZE.x + x] |= color;
+                    const uint8_t color = std::forward<Fn>(fn)(local_pos);
+                    *ptr = MIN(*ptr + color, 255);
                     local_pos += x_step;
+                    ptr = std::next(ptr);
                 }
                 local_pos = beg;
                 local_pos += y_step;
@@ -562,7 +644,7 @@ public:
                 ground_region.intersects(object.bounding_box.shift(object.placement.pos)),
                 // true,
                 [&](const Vector2_t<iq_t<16>> local_pos) { 
-                    return object.cache.has_point(local_pos - object.placement.pos); 
+                    return object.cache.color_from_point(local_pos - object.placement.pos); 
                 }), ...);
         }, objects_);
 

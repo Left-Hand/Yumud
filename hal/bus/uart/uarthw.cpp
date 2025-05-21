@@ -379,7 +379,11 @@ void UartHw::on_rx_dma_half(){
 
 void UartHw::enable_single_line_mode(const bool en){
     USART_HalfDuplexCmd(instance_, en);
-    txio().inpu();
+    if(en){
+        txio().inpu();
+    }else{
+        txio().outod();
+    }
 }
 
 void UartHw::invoke_tx_dma(){

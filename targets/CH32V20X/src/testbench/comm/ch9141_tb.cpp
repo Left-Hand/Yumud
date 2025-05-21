@@ -3,6 +3,7 @@
 
 #include "hal/gpio/gpio_port.hpp"
 
+#if 0
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
@@ -40,3 +41,5 @@ void ch9141_tb(IOStream & logger, Uart & uart){
         
     }
 }
+
+#endif

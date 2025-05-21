@@ -54,6 +54,21 @@ public:
 
         return ret;
     }
+
+    [[nodiscard]] constexpr auto add_zebra_stright(const real_t length){
+        ASSERT(length > 0);
+        const auto ret = RotatedZebraRect{
+            .width = ROAD_WIDTH,
+            .height = length,
+            .rotation = viewpoint_.rad - real_t(PI / 2)
+        } | Placement{
+            .pos = viewpoint_.forward_move(length / 2).pos,
+        };
+
+        viewpoint_ = viewpoint_.forward_move(length);
+
+        return ret;
+    }
 private:
     Pose2_t<real_t> viewpoint_;
 };

@@ -1,13 +1,16 @@
 #pragma once
 
 #include "hal/bus/uart/uart.hpp"
+#include "hal/gpio/gpio_intf.hpp"
+
 #include "core/string/string.hpp"
 #include "core/clock/clock.hpp"
-#include "../Radio.hpp"
 
+
+#if 0
 
 namespace ymd::drivers{
-class HC12: public Radio{
+class HC12 final{
 public:
     enum class PowerMode{
         Low,
@@ -95,3 +98,5 @@ public:
 
 
 };
+
+#endif
