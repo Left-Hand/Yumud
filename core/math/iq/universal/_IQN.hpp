@@ -14,6 +14,10 @@ private:
 public:
     operator int32_t() = delete;
 
+    // template<size_t P>
+    // constexpr _iq(const _iq<P> other):
+    //     value_(_iq<P>::transform<Q>(other.to_i32()).to_i32()){;}
+
     static __fast_inline constexpr _iq<Q> from_i32(const int32_t value){
         return _iq<Q>(value);
     }
@@ -33,12 +37,17 @@ public:
 
     template<size_t P>
     __fast_inline constexpr explicit operator _iq<P>() const{
+        return transform<P>(value_);
+    }
+
+    template<size_t P>
+    __fast_inline static constexpr _iq<P> transform(const int32_t value){
         if constexpr (P > Q){
-            return _iq<P>::from_i32(int32_t(value_) << (P - Q));
+            return _iq<P>::from_i32(int32_t(value) << (P - Q));
         }else if constexpr (P < Q){
-            return _iq<P>::from_i32(int32_t(value_) >> (Q - P));
+            return _iq<P>::from_i32(int32_t(value) >> (Q - P));
         }else{
-            return _iq<P>::from_i32(int32_t(value_));
+            return _iq<P>::from_i32(int32_t(value));
         }
     }
 };

@@ -21,6 +21,7 @@ using namespace GpioUtils;
 using namespace ymd::drivers;
 using namespace ymd;
 
+#if 0
 
 #define UART hal::uart2
 
@@ -199,3 +200,5 @@ static void oled_tb(){
 void oled_main(){
     oled_tb();
 }
+
+#endif

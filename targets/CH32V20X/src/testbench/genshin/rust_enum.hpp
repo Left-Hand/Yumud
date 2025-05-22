@@ -18,24 +18,24 @@
 
 using namespace ymd;
 
-template<class... Fs> struct overload : Fs... { using Fs::operator()...; };
-template<class... Fs> overload(Fs...) -> overload<Fs...>;
+// template<class... Fs> struct overload : Fs... { using Fs::operator()...; };
+// template<class... Fs> overload(Fs...) -> overload<Fs...>;
 
 
 
-template<class... Ts>
-struct matcher
-{
-    std::tuple<Ts...> vs;
-    template<class... Vs> constexpr matcher(Vs&&... vs) : vs(std::forward<Vs>(vs)...) {}
-    template<class Fs> constexpr auto operator->*(Fs&& f) const
-    {
-        auto curry = [&](auto&&... vs) { return std::visit(std::forward<Fs>(f), vs...); };
-	return std::apply(curry, std::move(vs));
-    }
-};
-template<class... Ts> matcher(Ts&&...)->matcher<Ts&&...>;
-#define Match(...) matcher{__VA_ARGS__} ->* overload
+// template<class... Ts>
+// struct matcher
+// {
+//     std::tuple<Ts...> vs;
+//     template<class... Vs> constexpr matcher(Vs&&... vs) : vs(std::forward<Vs>(vs)...) {}
+//     template<class Fs> constexpr auto operator->*(Fs&& f) const
+//     {
+//         auto curry = [&](auto&&... vs) { return std::visit(std::forward<Fs>(f), vs...); };
+// 	return std::apply(curry, std::move(vs));
+//     }
+// };
+// template<class... Ts> matcher(Ts&&...)->matcher<Ts&&...>;
+// #define Match(...) matcher{__VA_ARGS__} ->* overload
 
 namespace ymd{
 

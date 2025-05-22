@@ -131,7 +131,7 @@ struct SdoPacket{
     uint32_t data;
 
     static SdoPacket from(const CanMsg & msg){
-        return std::bit_cast<SdoPacket>(msg.as_u64());
+        return std::bit_cast<SdoPacket>(msg.payload_as_u64());
     }
 };
 #pragma pack(pop)

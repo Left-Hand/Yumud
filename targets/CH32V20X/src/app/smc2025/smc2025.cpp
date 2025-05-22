@@ -1,3 +1,5 @@
+#include "src/testbench/tb.h"
+
 #include "core/system.hpp"
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
@@ -6,33 +8,38 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "drivers/Camera/MT9V034/mt9v034.hpp"
-
-#include "nvcv2/shape/shape.hpp"
-#include "image/font/instance.hpp"
-
-#include "src/testbench/tb.h"
-
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "image/render/renderer.hpp"
+#include "types/quat/Quat.hpp"
+#include "types/image/image.hpp"
+#include "types/image/font/font.hpp"
+#include "types/image/painter.hpp"
+#include "types/image/font/instance.hpp"
+
+#include "nvcv2/shape/shape.hpp"
+
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
-
-#include "drivers/IMU/Magnetometer/HMC5883L/hmc5883l.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
 #include "render.hpp"
+#include "scenes.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
 #define UART hal::uart6
+
+
+
+static constexpr size_t MAX_COAST_ITEMS = 64;
+using Pile = Range2_t<uint8_t>;
+using Piles = std::map<uint8_t, Pile>;
+using Pixel = Vector2_t<uint8_t>;
+using PixelSegment = std::pair<Pixel ,Pixel>;
+using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
 
 
 struct HwPort{
@@ -42,130 +49,117 @@ struct HwPort{
 
 using namespace ymd::smc::sim;
 
-// DynamicScene make_scene(){
-//     DynamicScene scene;
-//     scene.add_element(AnnularSector{
-//         .x = 0,
-//         .y = 0,
 
-//         .inner_radius = 0.6_r - 0.45_r/2,
-//         .outer_radius = 0.6_r + 0.45_r/2,
-        
-//         .start_rad = -0.0_r,
-//         .stop_rad = 2.5_r
-//     });
+class Plotter{
+    using Error = PainterBase::Error;
 
-//     scene.add_element(RectBlob{
-//         .x = -0.2_r,
-//         .y = -0.1_r,
-//         .width = 0.45_r,
-//         .height = 0.8_r
-//     });
-//     return scene;
-// }
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
-class StatefulBlueprintFactory{
-public:
-    static constexpr auto ROAD_WIDTH = 0.45_r; 
-    auto make_annular_sector(const real_t radius, const real_t rotation){
-        const auto ret = AnnularSector{
-            .inner_radius = radius - ROAD_WIDTH / 2,
-            .outer_radius = radius + ROAD_WIDTH / 2,
-            
-            .start_rad = viewpoint_.rad,
-            .stop_rad = viewpoint_.rad + rotation
-        } | Placement{
-            .pos = viewpoint_.org,
-            .rotation = viewpoint_.rad
-        };
-
-        return ret;
+    Plotter(drivers::ST7789 & tft):
+        tft_(tft)
+    {
+        painter_.bind_image(tft);
     }
 
-    auto make_stright(const real_t length){
-        const auto ret = RectBlob{
-            .width = ROAD_WIDTH,
-            .height = length
-        } | Placement{
-            .pos = viewpoint_.org,
-            .rotation = viewpoint_.rad
-        };
+    IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
+        tft_.put_texture(area, image.get_data());
 
-        return ret;
-    }
-private:
-    Ray2_t<real_t> viewpoint_;
-};
+        return Ok();
+    };
 
-constexpr auto make_scene2(){
-    return make_static_scene(
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
-            
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {0.0_r, 0.0_r}
-        },
-
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
-            
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {-10.3_r, 0.0_r}
-        },
-
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
-            
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {-20.3_r, 0.0_r}
-        },
-
-        AnnularSector{
-            .inner_radius = 0.6_r - 0.45_r/2,
-            .outer_radius = 0.6_r + 0.45_r/2,
-            
-            .start_rad = 0.0_r,
-            // .stop_rad = real_t(3 * PI / 2)
-            .stop_rad = real_t(PI)
-        } | Placement{
-            .pos = {5.3_r, 0.0_r}
-        },
-        
-        RectBlob{
-            .width = 0.45_r,
-            .height = 0.8_r
-        } | Placement{
-            .pos = {0.6_r, -0.4_r}
-        },
-
-        RectBlob{
-            .width = 0.45_r,
-            .height = 0.8_r
-        } | Placement{
-            .pos = {-0.6_r, -0.4_r}
-        },
-
-        RectBlob{
-            .width = 1.8_r,
-            .height = 0.45_r
-        } | Placement{
-            .pos = {0.4_r, - 0.7_r}
+    IResult<> plot_coast(const Pixels & coast){
+        if(coast.size() < 2){
+            return Err(Error::PointsTooLess);
         }
 
-    );
-}
+        for(auto it = coast.begin(); 
+            it != std::prev(coast.end()); 
+            it = std::next(it)
+        ){
+            auto & p_curr = *it;
+            auto & p_next = *std::next(it);
+            if(const auto res = painter_.draw_line(p_curr, p_next);
+                res.is_err()) return res;
+        }
+
+        return Ok();
+    };
+
+    IResult<> plot_segment(const PixelSegment seg){
+        return painter_.draw_line(seg.first, seg.second);
+    };
+
+    template<typename T>
+    IResult<> plot_dots(const std::span<const T> pts){
+        for(const auto & pt : pts){
+            if(const auto res = painter_.draw_filled_circle({pt.x, pt.y}, 2);
+                res.is_err()) return res;
+        }
+    };
+
+
+    IResult<> plot_pixels(const Pixels & pts){
+        for(const auto pixel : pts){
+            painter_.draw_pixel(pixel);
+        }
+        return Ok();
+    };
+
+    IResult<> plot_dot(const Vector2u pos, const uint radius = 2){
+        painter_.draw_pixel(pos);
+
+        return Ok();
+    };
+
+
+    IResult<> plot_vec3(const Vector3_t<real_t> & vec3,  const Vector2u pos){
+        static constexpr auto WINDOW_LENGTH = 50u;
+        static constexpr auto ARROW_RADIUS = 3u;
+        static constexpr auto X_UNIT = Vector2_t<real_t>::RIGHT;
+        static constexpr auto Y_UNIT = Vector2_t<real_t>::RIGHT.rotated(real_t(PI / 3));
+        static constexpr auto Z_UNIT = Vector2_t<real_t>::DOWN;
+        
+        static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
+        static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
+        static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
+        
+        const auto arm_length = vec3.length();
+        const auto x_axis = Vector3_t<real_t>::from_x(arm_length);
+        const auto y_axis = Vector3_t<real_t>::from_y(arm_length);
+        const auto z_axis = Vector3_t<real_t>::from_z(arm_length);
+
+        const auto rot = Quat_t<real_t>::from_direction(vec3);
+        const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
+
+        auto plot_vec3_to_plane = [&](
+            const Vector3_t<real_t> & axis, const char chr, const RGB565 color)
+        -> IResult<>{
+            const Vector3_t<real_t> end = rot.xform(axis);
+            const Vector2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
+            painter_.set_color(color);
+            if(const auto res = painter_.draw_line(center_point, end_point);
+                res.is_err()) return res;
+            if(const auto res = painter_.draw_filled_circle(end_point, ARROW_RADIUS);
+                res.is_err()) return res;
+        };
+
+        const auto guard = painter_.create_color_guard();
+        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vector2u{WINDOW_LENGTH, WINDOW_LENGTH}});
+            res.is_err()) return res;
+        if(const auto res = plot_vec3_to_plane(x_axis, 'X', X_COLOR);
+            res.is_err()) return res;
+        if(const auto res = plot_vec3_to_plane(y_axis, 'Y', Y_COLOR);
+            res.is_err()) return res;
+        if(const auto res = plot_vec3_to_plane(z_axis, 'Z', Z_COLOR);
+            res.is_err()) return res;
+        return Ok();
+    };
+private:
+    drivers::ST7789 & tft_;
+    Painter<RGB565> painter_;
+};
+
 void smc2025_main(){
 
     UART.init(576_KHz);
@@ -175,13 +169,7 @@ void smc2025_main(){
     DEBUGGER.force_sync(true);
 
 
-    // bkp.init();
-    
-    // {
-    //     portD[4].outpp(1);
-    // }
-
-    // printRecordedRunStatus();
+    // bkp.init();edRunStatus();
     auto & spi = spi2;
 
     spi2.init(144_MHz);
@@ -211,52 +199,82 @@ void smc2025_main(){
     drivers::QMC5883L qmc{i2c};
     qmc.init().examine();
     
-    Image<RGB565> rgb_img{{tft.rect().w, 4u}};
-    Renderer renderer = {};
+    Image<RGB565> rgb_img{{tft.size().x, 4u}};
+    // Painter<RGB565> painter = {};
 
 
-    camera.set_exposure_value(1200).unwrap();
-    camera.set_gain(2.4_r).unwrap();
+    camera.set_exposure_value(1200).examine();
+    camera.set_gain(2.4_r).examine();
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Grayscale> & src, 
         const Rect2u & area
     ){
-        tft.put_texture(area.intersection(
-                Rect2u(area.position, src.size())), 
-                src.get_data());
+        tft.put_texture(
+            ({
+                const auto ins_opt = area.intersection(
+                    Rect2u(area.position, src.size()));
+                if(ins_opt.is_none()) return;
+                ins_opt.unwrap();
+            }), 
+            src.get_data()
+        );
     };
 
-    // const auto scene = make_scene();
-    constexpr auto scene = make_scene2();
+    [[maybe_unused]] auto plot_bina = [&](
+        const Image<Grayscale> & src, 
+        const Rect2u & area
+    ){
+        tft.put_texture(
+            ({
+                const auto ins_opt = area.intersection(
+                    Rect2u(area.position, src.size()));
+                if(ins_opt.is_none()) return;
+                ins_opt.unwrap();
+            }), 
+            src.get_data()
+        );
+    };
+
 
     while(true){
         // qmc.update().examine();
-        renderer.bind(rgb_img);
-        renderer.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        renderer.draw_pixel(Vector2u(0, 0));
-        renderer.draw_rect(Rect2u(0, 0, 20, 40));
+        // painter.bind_image(rgb_img);
+        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        // painter.draw_pixel(Vector2u(0, 0));
+        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
         // const auto gray_img = camera.frame().clone();
-        const auto viewpoint = Ray2_t<real_t>{
-            {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
-            real_t(PI/2) + 0.09_r * sinpu(clock::time())};
-        // const auto viewpoint = Ray2_t<real_t>{
-        //     Vector2_t<real_t>(-20, 0), 0};
+        // const auto viewpoint = Pose_t<real_t>{
+        //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
+        //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+        [[maybe_unused]]const auto t = clock::time();
+        const auto viewpoint = Pose2_t{
+            // Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.9_r, 0)
+            // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
+            // {1.0_r, -0.5_r}, 0.0_r};
+            {0.0_r, -0.01_r}, 0.0_r};
+
+
+            // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
 
         const auto mbegin = clock::micros();
-        const auto gray_img = scene.render(viewpoint);
+        const auto gray_img = Scenes::render_scene1(viewpoint, 0.006_r);
+        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
+        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
-        DEBUG_PRINTLN(render_use.count(), sizeof(scene));
+
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.rect(), rgb_img.get_data());
-        // DEBUG_PRINTLN(millis(), gray_img.size(), uint8_t(gray_img.mean()));
+        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());
+        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
+        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
+        const auto rect = gray_img.size().to_rect();
+        const auto range = Range2_t<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
-
-
-
+        // DEBUG_PRINTLN(render_use.count(), viewpoint);
     }
 
     // timer4.init(24000);
@@ -306,4 +324,3 @@ void smc2025_main(){
     // timer.enableIt(TimerIT::Update, NvicPriority{0,0});
 
 }
-

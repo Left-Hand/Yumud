@@ -28,10 +28,7 @@ template<size_t Q>
 __fast_inline constexpr 
 uint8_t get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
     static_assert(sizeof(ymd::iq_t<Q>) <= 8, "Size of iq_t<Q> must be less than 8");
-
-    using T = bytes_to_uint_t<sizeof(ymd::iq_t<Q>)>;
-
-    const T raw = std::bit_cast<T>(arg.value);
+    const auto raw = arg.to_i32();
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
@@ -152,5 +149,141 @@ Tup make_tuple_from_bytes(const std::span<const uint8_t, N> bytes) {
     // 使用索引序列调用辅助函数
     return construct_tuple(Is{});
 }
+
+
+
+namespace details{
+
+template<
+    typename Fn,
+    typename Ret,
+    typename ArgsTup,
+    size_t N = magic::total_bytes_of_packed_tuple_v<ArgsTup>
+>
+__inline constexpr 
+Ret _invoke_func_by_serialzed_bytes_impl(Fn && fn, const std::span<const uint8_t, N> bytes){
+    if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+    else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+}
+
+// template<
+//     typename Obj
+//     typename Fn,
+//     typename Ret,
+//     typename ... Args,
+//     size_t N = magic::total_bytes_of_packed_tuple_v<ArgsTup>
+// >
+// constexpr 
+// Ret _invoke_memfunc_by_bytes_impl(Obj & obj, Ret(Obj::*fn)(Args...), const std::span<const uint8_t, N> bytes){
+//     if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+//     else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<ArgsTup>(bytes));
+// }
+
+template<
+    typename Obj,
+    typename Ret,
+    typename ... Args,
+    size_t N = magic::total_bytes_of_packed_tuple_v<std::tuple<Args...>>
+>
+__inline constexpr 
+Ret _invoke_memfunc_by_bytes_impl(
+    Obj & obj,
+    Ret(std::decay_t<Obj>::*fn)(Args...),
+    const std::span<const uint8_t, N>& bytes
+) {
+    auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
+    if constexpr (std::is_void_v<Ret>) {
+        std::apply([&](Args... args) { (obj.*fn)(args...); }, args_tuple);
+    } else {
+        return std::apply([&](Args... args) { return (obj.*fn)(args...); }, args_tuple);
+    }
+}
+
+template<
+    typename Obj,
+    typename Ret,
+    typename ... Args,
+    size_t N = magic::total_bytes_of_packed_tuple_v<std::tuple<Args...>>
+>
+__inline constexpr 
+Ret _invoke_memfunc_by_bytes_impl(
+    const Obj & obj,
+    Ret(std::decay_t<Obj>::*fn)(Args...) const,
+    const std::span<const uint8_t, N>& bytes
+) {
+    auto args_tuple = make_tuple_from_bytes<std::tuple<Args...>>(bytes);
+    if constexpr (std::is_void_v<Ret>) {
+        std::apply([&](Args... args) { (obj.*fn)(args...); }, args_tuple);
+    } else {
+        return std::apply([&](Args... args) { return (obj.*fn)(args...); }, args_tuple);
+    }
+}
+}
+
+
+template<
+    typename Ret,
+    typename ... Args,
+    size_t N = magic::total_bytes_of_packed_tuple_v<std::tuple<Args...>>
+>
+constexpr Ret invoke_func_by_serialzed_bytes(Ret(*fn)(Args...), const std::span<const uint8_t, N> bytes){
+    using Fn = std::decay_t<Ret(*)(Args...)>;
+    return magic::details::_invoke_func_by_serialzed_bytes_impl
+		<Fn, Ret, std::tuple<Args...>>(std::forward<Fn>(fn), bytes);
+}
+
+
+//lambda版本
+template<
+    typename Fn,
+    typename ArgsTup = functor_args_tuple_t<std::decay_t<Fn>>,
+    typename Ret = functor_ret_t<std::decay_t<Fn>>,
+    size_t N = magic::total_bytes_of_packed_tuple_v<ArgsTup>
+>
+requires magic::is_functor_v<std::decay_t<Fn>>
+constexpr Ret invoke_func_by_serialzed_bytes(Fn && fn, const std::span<const uint8_t, N> bytes){
+    if constexpr(std::is_void_v<Ret>) magic::details::
+		_invoke_func_by_serialzed_bytes_impl<Fn, Ret, ArgsTup>(fn, bytes);
+    else return magic::details::
+		_invoke_func_by_serialzed_bytes_impl<Fn, Ret, ArgsTup>(fn, bytes);
+}
+
+
+//成员函数版本
+template<
+    typename Ret, 
+    typename ... Args,
+    typename ArgsTup = std::tuple<Args...>,
+    size_t N = magic::total_bytes_of_packed_tuple_v<ArgsTup>
+>
+__fast_inline constexpr Ret invoke_func_by_serialzed_bytes(
+    auto & obj, 
+    Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...), 
+    const std::span<const uint8_t, N> bytes
+){
+    if constexpr(std::is_void_v<Ret>) 
+        magic::details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+    else 
+        return magic::details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+}
+
+//常成员函数版本
+template<
+    typename Ret, 
+    typename ... Args,
+    typename ArgsTup = std::tuple<Args...>,
+    size_t N = magic::total_bytes_of_packed_tuple_v<ArgsTup>
+>
+constexpr Ret invoke_func_by_serialzed_bytes(
+    const auto & obj, 
+    Ret(std::remove_reference_t<decltype(obj)>::*fn)(Args...) const , 
+    const std::span<const uint8_t, N> bytes
+){
+    if constexpr(std::is_void_v<Ret>) 
+        magic::details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+    else 
+        return magic::details::_invoke_memfunc_by_bytes_impl<std::remove_reference_t<decltype(obj)>, Ret, Args...>(obj, fn, bytes);
+}
+
 
 }

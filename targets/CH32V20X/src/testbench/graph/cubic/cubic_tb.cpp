@@ -312,10 +312,10 @@ static void drawTriangle(const Rect2u & clip)
 		auto ymin = triangle.ymin;
 		auto ymax = triangle.ymax;
 
-		const auto clipX0 = clip.x;
-		const auto clipY0 = clip.y;
-		const auto clipX1 = clip.x + clip.w;
-		const auto clipY1 = clip.y + clip.h;
+		const auto clipX0 = clip.x();
+		const auto clipY0 = clip.y();
+		const auto clipX1 = clip.x() + clip.w();
+		const auto clipY1 = clip.y() + clip.h();
 
 		if (xmin < clipX0) xmin = clipX0;
 		if (xmin >= clipX1) continue;

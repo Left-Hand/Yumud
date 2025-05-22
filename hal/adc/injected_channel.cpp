@@ -15,5 +15,5 @@ uint16_t AdcInjectedChannel::data(){
 }
 
 real_t AdcInjectedChannel::uni(){
-    return u16_to_uni(ADC_GetInjectedConversionValue(instance, mask) << 4);
+    return iq_t<18>(ADC_GetInjectedConversionValue(instance, mask)) >> 12;
 }

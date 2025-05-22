@@ -63,19 +63,19 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
     Command cmd = (Command)(msg.id() & 0x7F);
     switch(cmd){
         case Command::GET_POS:
-            meta.pos = E(msg);
+            meta.pos = (msg).to<E>();
             break;
         case Command::GET_SPD:
-            meta.spd = E(msg);
+            meta.spd = (msg).to<E>();
             break;
         case Command::read_acc:
-            meta.acc = E(msg);
+            meta.acc = (msg).to<E>();
             break;
         case Command::GET_CURR:
-            meta.curr = E(msg);
+            meta.curr = (msg).to<E>();
             break;
         case Command::GET_ALL:{
-            auto res = E_4(msg);
+            auto res = (msg).to<E_4>();
             meta.curr =     real_t(std::get<0>(res));
             meta.spd =      real_t(std::get<1>(res));
             meta.pos =      real_t(std::get<2>(res));

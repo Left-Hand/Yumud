@@ -66,7 +66,7 @@ public:
     }
 
     __fast_inline constexpr Line2_t<T> normal() const{
-        return Line2_t<T>(this->org, this->rad + T(PI/2));
+        return Line2_t<T>::from_point_and_rad(this->org, this->rad + T(PI/2));
     }
 
     __fast_inline constexpr Ray2_t<T> rotated(const T & r) const{
@@ -104,7 +104,7 @@ public:
     }
 
     operator Line2_t<T>() const{
-        return Line2_t<T>(this->org, this->rad);
+        return Line2_t<T>::from_point_and_rad(this->org, this->rad);
     }
 };
 

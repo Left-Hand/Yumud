@@ -21,10 +21,26 @@
 namespace ymd::nvcv2::Geometry{
 
 
-
-PerspectiveConfig perspective_config;
-InvPerspectiveConfig inv_perspective_config;
-
+static constexpr PerspectiveConfig perspective_config{
+    .H1 = real_t(1.0),
+    .H2 = real_t(3.433333333333334),
+    .H3 = real_t(0.0),
+    .H4 = real_t(-7.21363183512792e-17),
+    .H5 = real_t(3.191489361702128),
+    .H6 = real_t(-8.30478318108259e-15),
+    .H7 = real_t(-0.0),
+    .H8 = real_t(0.036524822695035465),
+};
+static constexpr InvPerspectiveConfig inv_perspective_config{
+    .H1 = real_t(1.00000),
+    .H2 = real_t(-0.28200),
+    .H3 = real_t(0.00000),
+    .H4 = real_t(0.00000),
+    .H5 = real_t(0.64000),
+    .H6 = real_t(0.00000),
+    .H7 = real_t(0.00000),
+    .H8 = real_t(-0.00600),
+};
 
 Vector2 perspective(const Vector2 & v){
     auto [x,y] = v;

@@ -7,20 +7,24 @@
 namespace ymd{
 
 template<typename ColorType>
-class Painter:public PainterConcept{
+class Painter:public PainterBase{
 protected:
 
     ImageWritable<ColorType> * src_image = nullptr;
     
-    using Error = typename PainterConcept::Error;
+    using Error = typename PainterBase::Error;
     template<typename T = void>
-    using IResult = PainterConcept::IResult<T>;
+    using IResult = PainterBase::IResult<T>;
 
     void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
-    __no_inline Result<void, Error> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) override{
+    __no_inline Result<void, Error> draw_str(
+        const Vector2u & pos, 
+        const char * str_ptr, 
+        const size_t str_len)
+    {
         GBKIterator iterator(str_ptr);
 
         for(size_t x = pos.x;;){
@@ -49,11 +53,11 @@ protected:
         return Ok();
     }
 public:
-    Painter():PainterConcept(){;}
+    Painter():PainterBase(){;}
 
 
-    Rect2u get_clip_window() override {
-        return src_image->rect();
+    Rect2u get_clip_window(){
+        return src_image->size().to_rect();
     }
 
     void bind_image(ImageWritable<ColorType> & _source){
@@ -83,9 +87,12 @@ public:
     }
 
     [[nodiscard]]
-    IResult<> draw_filled_rect(const Rect2u & rect) override {
-        Rect2u ins = src_image->rect().intersection(rect);
-        if(ins.get_area() == 0) return Ok();
+    IResult<> draw_filled_rect(const Rect2u & rect){
+        const auto area = src_image->size().to_rect()
+            .intersection(rect)
+            .map([](const Rect2u & _rect){return _rect.get_area();})
+            .unwrap_or(0);
+        if(area == 0) return Ok();
         
         //FIXME use ins rather than rect will cause crash 
         src_image -> putrect_unsafe(rect, m_color);
@@ -93,13 +100,13 @@ public:
         return Ok();
     }
 
-    void draw_pixel(const Vector2u & pos) override {
+    void draw_pixel(const Vector2u & pos){
         // src_image -> putpixel(pos, Binary(Binary::WHITE));
         src_image -> putpixel(pos, m_color);
     }
 
     [[nodiscard]]
-    IResult<> draw_line(const Vector2u & from, const Vector2u & to) override{
+    IResult<> draw_line(const Vector2u & from, const Vector2u & to){
         // if(!src_image->size().has_point(from)){
         //     return Err(Error(Error::StartPointOutOfBound));
         // }
@@ -148,7 +155,7 @@ public:
     }
     
     [[nodiscard]]
-    IResult<> draw_char(const Vector2u & pos,const wchar_t chr) override {
+    IResult<> draw_char(const Vector2u & pos,const wchar_t chr){
         const Font * font = chr > 0x80 ? chfont : enfont;
         // if(font == nullptr){
         //     return Err(Error::NoChineseFontFounded);
@@ -156,12 +163,13 @@ public:
         
         if(font == nullptr) return Ok();
 
-        Rect2u image_area = Rect2u{Vector2u{0,0}, src_image->size()};
+        const Rect2u image_area = Rect2u{Vector2u{0,0}, src_image->size()};
         const Vector2u font_size = font->getSize();
-        Rect2u char_rect = Rect2u(pos, font_size).intersection(image_area);
+        const auto char_rect_opt = Rect2u(pos, font_size)
+            .intersection(image_area);
+        if(char_rect_opt.is_none()) return Ok();
+        const auto char_rect = char_rect_opt.unwrap();
 
-        if(char_rect.get_area() == 0) return Ok();
-        
         for(size_t i = char_rect.position.x; i < char_rect.position.x + char_rect.size.x ; i++){
             uint8_t mask = 0;
             for(size_t j = 0; j < font_size.y; j++){
@@ -183,8 +191,6 @@ public:
 
         return Ok();
     }
-
-
 
 };
 

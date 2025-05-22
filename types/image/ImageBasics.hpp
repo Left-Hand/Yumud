@@ -11,6 +11,8 @@
 
 namespace ymd{
 
+    // class Painter;
+    
 template <typename ColorType>
 class Painter;
 
@@ -21,17 +23,16 @@ class ImageWR;
 template <typename ColorType>
 class PixelProxy;
 
-class Renderer;
+
 
 class ImageBasics{
 public:
     using Vector2 = Vector2_t<real_t>;
-
 private:
     Vector2u size_;
 protected:
-    __fast_inline Vector2u & size_mut() {
-        return this->size_;
+    __fast_inline void set_size(const Vector2u size){
+        size_ = size;
     }
 public:
 
@@ -55,10 +56,6 @@ public:
 
     Vector2 uvstep() const{
         return Vector2(real_t(2) / this->size().x, real_t(2) / this->size().y);
-    }
-
-    virtual Rect2u rect() const{
-        return {Vector2u(0,0), this->size_};
     }
 
     __fast_inline Vector2u size() const{
@@ -135,7 +132,11 @@ protected:
         }
     }
 
-    virtual void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const ColorType color){
+    virtual void putseg_v8_unsafe(
+        const Vector2u & pos, 
+        const uint8_t mask, 
+        const ColorType color
+    ){
         if(true){
             for(size_t i = 0; i < 8; i++){
                 if(mask & (1 << i)) putpixel_unsafe(pos + Vector2u{0u,i}, color);
@@ -147,7 +148,11 @@ protected:
         }
     }
 
-    virtual void putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const ColorType color){
+    virtual void putseg_h8_unsafe(
+        const Vector2u & pos, 
+        const uint8_t mask, 
+        const ColorType color
+    ){
         if(true){
             for(size_t i = 0; i < 8; i++){
                 if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2u{i,0}, color);
@@ -160,10 +165,10 @@ protected:
     }
 
     friend class Painter<ColorType>;
-    friend class Renderer;
     friend class PixelProxy<ColorType>;
 public:
     ImageWritable(const Vector2u & _size):ImageBasics(_size){;}
+
     void fill(const ColorType color){
         putrect_unsafe(Rect2u{Vector2u{0,0}, this->size()}, color);
     }
@@ -174,16 +179,21 @@ public:
     }
 
     virtual void put_texture(const Rect2u & rect, const ColorType * color_ptr){
-        if(rect.inside(this->rect())){
+        if(rect.is_inside(this->size().to_rect())){
             puttexture_unsafe(rect, color_ptr);
         }else{
-            auto ins = rect.intersection(this->rect());
-            if(ins.get_area() == 0) return;
+            const auto ins_opt = rect.intersection(this->size().to_rect());
+            if(ins_opt.is_none()) return;
+            const auto ins = ins_opt.unwrap();
             setarea_unsafe(ins);
-            uint32_t i = 0;
-            for(size_t x = ins.position.x; x < ins.position.x + ins.size.x; x++)
-                for(size_t y = ins.position.y; y < ins.position.y + ins.size.y; y++, i++)
+
+            size_t i = 0;
+            for(size_t x = ins.position.x; x < ins.position.x + ins.size.x; x++){
+                for(size_t y = ins.position.y; y < ins.position.y + ins.size.y; y++){
                     putpixel_unsafe(Vector2u(x,y), color_ptr[i]);
+                    i++;
+                }
+            }
         }
     }
 
@@ -209,59 +219,76 @@ protected:
     using UVShaderCallback = ColorType(*)(const Vector2 &);
 
     friend class Painter<ColorType>;
+    // friend class Painter;
 public:
-    ImageWR(const Vector2u & _size):ImageReadable<ColorType>(_size), ImageWritable<ColorType>(_size){;}
+    ImageWR(const Vector2u & _size):
+        ImageReadable<ColorType>(_size), 
+        ImageWritable<ColorType>(_size){;}
 };
 
 
 template<typename ColorType, typename DataType>
 class ImageWithData : public ImageWR<ColorType> {
-public:
 protected:
-    Rect2u select_area;
+    void setpos_unsafe(const Vector2u & pos) {;}
 
-    void setpos_unsafe(const Vector2u & pos) override { select_area.position = pos; }
-    void setarea_unsafe(const Rect2u & rect) override { select_area = rect; }
-    void putpixel_unsafe(const Vector2u & pos, const ColorType color) override { data_[this->size().x * pos.y + pos.x] = color; }
-    void getpixel_unsafe(const Vector2u & pos, ColorType & color) const override { color = data_[this->size().x * pos.y + pos.x]; }
+    void setarea_unsafe(const Rect2u & rect) {;}
+
+    void putpixel_unsafe(const Vector2u & pos, const ColorType color) 
+        { data_[this->size().x * pos.y + pos.x] = color; }
+    void getpixel_unsafe(const Vector2u & pos, ColorType & color) const 
+        { color = data_[this->size().x * pos.y + pos.x]; }
 
     std::shared_ptr<DataType[]> data_;
-
-
 public:
-    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data_(_data) {;}
-    ImageWithData(const Vector2u & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data_(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
+    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2u & _size) : 
+        ImageBasics(_size), ImageWR<ColorType>(_size), data_(_data) {;}
+
+    ImageWithData(const Vector2u & _size) : 
+        ImageBasics(_size), ImageWR<ColorType>(_size), 
+        data_(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
 
     // Move constructor
-    ImageWithData(ImageWithData&& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data_(std::move(other.data_)){}
+    ImageWithData(ImageWithData&& other) noexcept : 
+        ImageBasics(other.size()), 
+        ImageWR<ColorType>(other.size()), data_(std::move(other.data_)){}
 
 
-    ImageWithData(const ImageWithData& other) noexcept : ImageBasics(other.size()), ImageWR<ColorType>(other.size()), data_(other.data_){}
+    ImageWithData(const ImageWithData& other) noexcept : 
+        ImageBasics(other.size()), 
+        ImageWR<ColorType>(other.size()), data_(other.data_){}
 
-
-    // Move assignment operator
     ImageWithData& operator=(ImageWithData&& other) noexcept {
         if (this != &other) {
-            this->size = std::move(other.size);
-            this->select_area = std::move(other.select_area);
+            this->size_ = std::move(other.size_);
             this->data_ = std::move(other.data_);
         }
         return *this;
     }
 
 
-    __fast_inline const DataType& operator[](const size_t index) const { return data_[index]; }
-    __fast_inline const ColorType& operator[](const Vector2u & pos) const { return data_[pos.x + pos.y * this->size().x]; }
+    __fast_inline const DataType & operator[](const size_t index) const { 
+        return data_[index]; }
 
-    __fast_inline DataType& operator[](const size_t index) { return data_[index]; }
-    __fast_inline ColorType& operator[](const Vector2u & pos) { return data_[pos.x + pos.y * this->size().x]; }
+    __fast_inline DataType & operator[](const size_t index) {
+        return data_[index]; }
+
+    __fast_inline ColorType & operator[](const Vector2u & pos) {
+        return data_[pos.x + pos.y * this->size().x]; }
+
+    __fast_inline const ColorType & operator[](const Vector2u & pos) const {
+        return data_[pos.x + pos.y * this->size().x]; }
 
 
     template<typename ToColorType>
-    __fast_inline ToColorType at(const int y, const int x) const { return data_[x + y * this->size().x]; }
+    __fast_inline ToColorType at(const int y, const int x) const {
+        return data_[x + y * this->size().x]; }
 
-    __fast_inline ColorType & at(const int y, const int x){ return data_[x + y * this->size().x]; }
-    __fast_inline const ColorType & at(const int y, const int x)const{ return data_[x + y * this->size().x]; }
+    __fast_inline ColorType & at(const int y, const int x){
+        return data_[x + y * this->size().x]; }
+
+    __fast_inline const ColorType & at(const int y, const int x)const{
+        return data_[x + y * this->size().x]; }
 
 
     bool operator == (const ImageWithData<auto, auto> & other) const {

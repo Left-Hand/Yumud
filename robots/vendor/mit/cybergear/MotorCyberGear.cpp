@@ -180,7 +180,7 @@ CyberGear_Result<void> CyberGear::onReceive(const CanMsg & msg){
     const auto cgid = CgId{id};
     const auto cmd = cgid.cmd().as_val();
 
-    const uint64_t data = msg.as_u64();
+    const uint64_t data = msg.payload_as_u64();
     const uint8_t dlc = msg.size();
 
     switch(cmd){

@@ -24,24 +24,34 @@ void can_ring_main(){
         CanID16{0x200, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),
         CanID16{0x000, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any));
 
+
     while(true){
 
-        constexpr auto ids = std::to_array<uint16_t>({0x200, 0x201, 0x401, 0x402, 0x120});
+        // constexpr auto ids = std::to_array<uint16_t>({0x200, 0x201, 0x401, 0x402, 0x120});
 
-        for(auto i : ids){
-            CanMsg tx_msg = CanMsg::from_tuple(CanStdId(i), std::make_tuple(0x12345678));
-            can.write(tx_msg);
-        }
-
-        {
-            CanMsg tx_msg = CanMsg::from_remote(CanStdId(0x201));
-            can.write(tx_msg);
-            // DEBUG_PRINTLN(tx_msg);
-        }
+        // for(auto i : ids){
+        //     CanMsg tx_msg = CanMsg::from_tuple(CanStdId(i), std::make_tuple(0x12345678));
+        //     can.write(tx_msg);
+        //     clock::delay(2ms);
+        // }
+        // can.write(CanMsg::from_tuple(CanStdId(0x10), {0, 1}));
+        can.write(CanMsg::from_list(CanStdId(0x10), {0, 1, 3}));
+        clock::delay(2ms);
+        can.write(CanMsg::from_tuple(CanStdId(0x20), std::make_tuple(0x12345678)));
+        clock::delay(2ms);
+        can.write(CanMsg::from_tuple(CanStdId(0x30), std::make_tuple(0x12345678)));
+        clock::delay(2ms);
+        can.write(CanMsg::from_tuple(CanExtId(0x40), std::make_tuple(0x12345678)));
+        // {
+        //     CanMsg tx_msg = CanMsg::from_remote(CanStdId(0x201));
+        //     can.write(tx_msg);
+        //     // DEBUG_PRINTLN(tx_msg);
+        // }
 
         clock::delay(100ms);
 
         if(can.available()){
+            DEBUG_PRINTLN(can.available());
             while(can.available()){
                 auto rx_msg = can.read();
                 DEBUG_PRINTLN(rx_msg);
@@ -50,4 +60,5 @@ void can_ring_main(){
             DEBUG_PRINTLN('N');
         }
     }
+
 }

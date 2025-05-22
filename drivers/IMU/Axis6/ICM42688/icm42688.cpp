@@ -205,7 +205,7 @@ IResult<>  ICM42688::update(){
 	// if(res.is_err()) return res;
 	// int16_t buf[6] = {0};
 	// phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
-	// // DEBUG_PRINTLN(buf, q16(lsb_acc_) * (buf[0]), lsb_acc_.value.to_i32() * buf[0]);
+	// // DEBUG_PRINTLN(buf, q16(lsb_acc_) * (buf[0]), lsb_acc_.to_i32() * buf[0]);
 	// DEBUG_PRINTLN((buf[0]) * q16(0.001_r), (buf[0]) * q16(0.001_r) - 0.5_r);
 	// return Ok();
 }

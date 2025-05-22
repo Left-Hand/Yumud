@@ -11,42 +11,50 @@ struct Line2_t{
 public:
     T d;
     T rad; 
+private:
+    constexpr Line2_t(const T & _d, const T & _rad): 
+        d(static_cast<T>(_d)),rad(static_cast<T>(_rad)){;}
 
 public:
-    constexpr Line2_t(){;}
+    [[nodiscard]] constexpr Line2_t():
+        d(0),
+        rad(0){;}
 
-    constexpr Line2_t(const Segment2D_t<auto> & seg):
+    [[nodiscard]] constexpr Line2_t(const Segment2D_t<auto> & seg):
         d(((seg.from).cross(seg.to)) / (seg.to - seg.from).length()), 
         rad(seg.angle()){;}
 
-    constexpr Line2_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
+    [[nodiscard]] constexpr Line2_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
             Line2_t(Segment2D_t<T>(_from, _to)){;}
             
 
     // d = p.x * sin(_rad) - p.y * cos(_rad) 
-    constexpr Line2_t(const Vector2_t<auto> & p, const T & _rad): 
-        d(p.x * sin(_rad) - p.y * cos(_rad)),rad(_rad){;}
+    [[nodiscard]] static constexpr Line2_t from_point_and_rad(const Vector2_t<auto> & p, const T & _rad){
+        const auto [s,c] = sincos(_rad);
+        return Line2_t{p.x * s - p.y * c, _rad};
+    }
 
-    constexpr Line2_t(const T & _d, const T & _rad): 
-        d(static_cast<T>(_d)),rad(static_cast<T>(_rad)){;}
+    [[nodiscard]] static constexpr Line2_t from_dist_and_rad(const T & _d, const T & _rad){
+        return Line2_t{_d, _rad};
+    }
 
 
-    __fast_inline constexpr T xfromy(const T & y){
+    [[nodiscard]] __fast_inline constexpr T xfromy(const T & y){
         auto den = sin(rad);
         return den ? (y * cos(rad) + d) / den: T{0};
     }
 
-    __fast_inline constexpr T yfromx(const T & x){
+    [[nodiscard]] __fast_inline constexpr T yfromx(const T & x){
         auto den = cos(rad);
         return den ? (x * sin(rad) - d) / den : T{0};
     }
 
-    __fast_inline constexpr T angle() const {
+    [[nodiscard]] __fast_inline constexpr T angle() const {
         //FIXME rounded in [0, TAU]
         return this->rad;
     }
 
-    __fast_inline constexpr Line2_t<T> abs() const {
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> abs() const {
         if(T(0) <= rad and rad < T(PI)) return *this; 
 
         auto m = fposmodp(rad, T(TAU));
@@ -60,52 +68,52 @@ public:
     }
 
 
-	__fast_inline constexpr bool operator==(const Line2_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator==(const Line2_t & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
         return is_equal_approx(regular.d, other_regular.d) and is_equal_approx(regular.rad, other_regular.rad);
     }
 
-	__fast_inline constexpr bool operator!=(const Line2_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator!=(const Line2_t & other) const{
         return (*this == other) == false; 
     }
 
-    __fast_inline constexpr T distance_to(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr T distance_to(const Vector2_t<T> & p) const{
         return ABS(this->signed_distance_to(p));
     }
     
-    __fast_inline constexpr T signed_distance_to(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr T signed_distance_to(const Vector2_t<T> & p) const{
         // x * -sin(rad) + y * cos(rad) + d = 0
-
-        return -sin(rad) * p.x + cos(rad) * p.y + d;
+        const auto [s,c] = sincos(rad);
+        return -s * p.x + c * p.y + d;
     }
 
-    __fast_inline constexpr T angle_to(const Line2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr T angle_to(const Line2_t<T> & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
 
         return other_regular.rad - regular.rad;
     }
 
-    __fast_inline constexpr bool parallel_with(const Line2_t & other) const{
+    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Line2_t & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (is_equal_approx(regular.d, other_regular.d)) and 
                 is_equal_approx(fposmodp(other_regular.rad - regular.rad, T(PI)), T(0));
     }
 
-    __fast_inline constexpr std::optional<T> distance_with(const Line2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<T> distance_with(const Line2_t<T> & other) const{
         if(not this->parallel_with(other)) return std::nullopt;
         return {this->d - other.d};
     }
 
-    __fast_inline constexpr bool intersects(const Line2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr bool intersects(const Line2_t<T> & other) const{
         if(this->parallel_with(other)) return false;
         else if(this->operator==(other)) return false;
         return true;
     }
 
-    __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Line2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Line2_t<T> & other) const{
         if(false == this->intersects(other)) return std::nullopt;
         
 
@@ -128,8 +136,8 @@ public:
         return Vector2_t<real_t>{num1 * inv_den, num2 * inv_den};
     }
 
-    __fast_inline constexpr Line2_t<T> rotated(const Vector2_t<T> & p, const T & delta){
-        if(this->has_point(p)) return Line2_t{p, this->rad + delta};
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> rotated(const Vector2_t<T> & p, const T & delta){
+        if(this->has_point(p)) return Line2_t::from_point_and_rad(p, this->rad + delta);
         else{
             //FIXME optimize
             auto rebased = this->rebase(p);
@@ -138,17 +146,18 @@ public:
         }
     }
 
-    __fast_inline constexpr Line2_t<T> normal(const Vector2_t<T> & p){
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> normal(const Vector2_t<T> & p){
         auto new_rad = this->rad + T(PI/2);
         return {sin(new_rad) * p.x - cos(new_rad) * p.x, new_rad};
     }
 
-    __fast_inline constexpr Line2_t<T> rebase(const Vector2_t<T> & p){
+
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> rebase(const Vector2_t<T> & p){
         auto regular = this->abs();
         return Line2_t{regular.distance_to(p), regular.rad};
     }
 
-    __fast_inline constexpr std::optional<Vector2_t<T>> fillet(const Line2_t<T> & other, const T & radius) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vector2_t<T>> fillet(const Line2_t<T> & other, const T & radius) const{
         if(false == this->intersects(other)) return std::nullopt;
 
 
@@ -156,29 +165,31 @@ public:
         return {};
     }
     
-    __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
         return is_equal_approx(distance_to(p), T(0));
     }
 
-    __fast_inline constexpr int sign(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr int sign(const Vector2_t<T> & p) const{
         return sign(this->signed_distance_to(Line2_t(p, this->rad)));
     }
 
-    __fast_inline constexpr std::tuple<T, T, T> abc() const{
+    //直线标准方程 ax + by + c = 0的三个系数
+    [[nodiscard]] __fast_inline constexpr std::tuple<T, T, T> abc() const{
         return {-sin(rad), cos(rad), d};
     }
 
 
-    __fast_inline constexpr bool orthogonal_with(const Line2_t<T> & other) const {
+    //是否与另一条直线正交
+    [[nodiscard]] __fast_inline constexpr bool is_orthogonal_with(const Line2_t<T> & other) const {
         return is_equal_approx(fposmodp(other.rad - this->rad, T(PI)), T(PI/2));
         // return fposmodp(other.rad - this->rad, T(PI));
     }
 
-    __fast_inline constexpr Line2_t<T> mean(const Line2_t<T> & other) const {
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> mean(const Line2_t<T> & other) const {
         auto regular = this->abs();
         auto other_regular = other.abs();
 
-        if(regular.paraell_with(other_regular)){
+        if(regular.is_paraell_with(other_regular)){
             if(is_equal_approx(regular.rad, other_regular.rad)){
                 return *this;
             }else{
@@ -192,7 +203,8 @@ public:
         }
     }
 
-    __fast_inline constexpr Vector2_t<T> foot(const Vector2_t<T> & p) const{
+    //计算直线关于某个点的垂足
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> foot_of(const Vector2_t<T> & p) const{
         //https://blog.csdn.net/hjxu2016/article/details/111594359
 
         // x * -sin(rad) + y * cos(rad) + d = 0
@@ -218,12 +230,12 @@ public:
         return {B2 * x0 - AB * y0 + s * C, -AB * x0 + A2 * y0 - c * C};
     }
 
-    __fast_inline constexpr Vector2_t<T> mirror(const Vector2_t<T> & p) const {
-        return (this->foot(p) * 2) - p;
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> mirror(const Vector2_t<T> & p) const {
+        return (this->foot_of(p) * 2) - p;
     }
 
 
-    __fast_inline constexpr Line2_t<T> reflect(const Line2_t<T> & other) const {
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> reflect(const Line2_t<T> & other) const {
         auto res = other.intersection(other);
         if(res){
             //cross
@@ -236,23 +248,23 @@ public:
         }
     }
 
-    __fast_inline constexpr Line2_t<T> lineplofit(const Vector2_t<T> * begin, const size_t len){
+    [[nodiscard]] __fast_inline constexpr Line2_t<T> lineplofit(const Vector2_t<T> * begin, const size_t len){
         //TODO
         return {};
     }
     
-    __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> & p, const Vector2_t<T> & base) const {
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> & p, const Vector2_t<T> & base) const {
         
         // TODO
 
         return Vector2_t<T>{0,0};
     }
 
-    __fast_inline constexpr Segment2D_t<T> perpendicular(const Vector2_t<T> & p) const{
-        return {p, this->foot(p)};
+    [[nodiscard]] __fast_inline constexpr Segment2D_t<T> perpendicular(const Vector2_t<T> & p) const{
+        return {p, this->foot_of(p)};
     }
 
-    __fast_inline constexpr Vector2_t<T> unit() const{
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> unit() const{
         return {cos(this->rad), sin(this->rad)};
     }
 

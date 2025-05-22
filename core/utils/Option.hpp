@@ -2,6 +2,8 @@
 
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
+#include "core/utils/typetraits/function_traits.hpp"
+
 #include "details/unwrap_util.hpp"
 #include <variant>
 #include <source_location>
@@ -154,6 +156,12 @@ public:
         return get();
     }
 
+    [[nodiscard]] __fast_inline constexpr const T 
+    unwrap_or(const T choice) const {
+        if(unlikely(exists_ == false)) return choice;
+        return get();
+    }
+
 
     __fast_inline constexpr void 
     unexpected() const {
@@ -173,12 +181,11 @@ public:
     // 函数式映射 (Monadic map)
     template<
         typename Fn,
-        typename TIResult = std::invoke_result_t<Fn, T>
+        typename TIResult = magic::functor_ret_t<Fn>
     >
     constexpr auto map(Fn&& fn) const& -> Option<TIResult> {
-        if (is_some()) {
+        if (is_some()) 
             return Some<TIResult>(std::forward<Fn>(fn)(get()));
-        }
         return None;
     }
 

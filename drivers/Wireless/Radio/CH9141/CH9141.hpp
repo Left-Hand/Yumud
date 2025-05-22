@@ -1,15 +1,14 @@
 #pragma once
 
-#include <optional>
-#include <initializer_list>
-#include <type_traits>
-
-
 #include "hal/bus/uart/uart.hpp"
+#include "hal/gpio/gpio_intf.hpp"
+
 #include "core/string/string.hpp"
 #include "core/clock/clock.hpp"
-#include "../Radio.hpp"
 
+#include "core/utils/Option.hpp"
+
+#if 0
 
 namespace ymd::drivers{
 struct MacAddress{
@@ -36,7 +35,7 @@ public:
     uint8_t & operator [](const size_t index) {return buf[index];}
 };
 
-class CH9141: public Radio{
+class CH9141 final{
 public:
     enum class PowerMode{
         Low,
@@ -77,8 +76,8 @@ protected:
     };
 
     hal::Uart & uart_;
-    hal::GpioIntf & at_gpio_;
-    hal::GpioIntf & slp_gpio_;
+    Option<hal::GpioIntf &> at_gpio_;
+    Option<hal::GpioIntf &> slp_gpio_;
 
     bool sendAtCommand(const char * token){
         SetKeeper{at_gpio_};
@@ -110,7 +109,7 @@ protected:
 
 
         clock::delay(1us);
-        at_gpio_.set();
+        // at_gpio_.set();
         return is_valid;
     }
 
@@ -121,8 +120,8 @@ protected:
 public:
     CH9141(
         hal::Uart & uart, 
-        hal::GpioIntf & set_gpio = hal::NullGpio, 
-        hal::GpioIntf & slp_gpio = hal::NullGpio)
+        Option<hal::GpioIntf &> set_gpio = None, 
+        Option<hal::GpioIntf &> slp_gpio = None)
     :uart_(uart), at_gpio_(set_gpio), slp_gpio_(slp_gpio){;}
 
     void write(const char data){
@@ -146,8 +145,8 @@ public:
     }
 
     void init(){
-        at_gpio_.outpp(HIGH);
-        slp_gpio_.outpp(HIGH);
+        // at_gpio_.inspect((auto & io){io.outpp(HIGH);});
+        // slp_gpio_.inspect((auto & io){io.outpp(HIGH);});
     }
 
     void reset(){sendAtCommand("RESET");}
@@ -172,3 +171,5 @@ public:
     }
 };
 };
+
+#endif

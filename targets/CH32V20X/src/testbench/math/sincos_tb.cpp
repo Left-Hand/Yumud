@@ -191,33 +191,33 @@ auto __IQ31getSinCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const 
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mysin(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinDispatcher));
+    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getSinDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mycos(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getCosDispatcher));
+    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getCosDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr std::array<iq_t<Q>, 2> mysincos(const iq_t<P> iq_x){
-    auto res = (expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
+    auto res = (expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
     return {res[0], res[1]};
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mysinpu(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinDispatcher));
+    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getSinDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mycospu(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getCosDispatcher));
+    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getCosDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr std::array<iq_t<Q>, 2> mysincospu(const iq_t<P> iq_x){
-    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.value.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
+    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), expeprimental::__IQ31getSinCosDispatcher));
     return {res[0], res[1]};
 }
 

@@ -17,6 +17,7 @@ int main(){
     // eeprom_main();
     // while(true);
     //  uart_main();
+    //  can_ring_main();
     // qlz_main();
     // embd_main();
     // ina3221_main();
@@ -63,7 +64,7 @@ int main(){
     // nuedc_2023e_main();
     // icm42688_main();
     // mmc5983_main();
-    lazy_main();
+    // lazy_main();
     // ak09911c_main();
     // enum_main();
     // i2c_scanner_main();
@@ -106,7 +107,7 @@ int main(){
     // temp_tb2(logger);
     // eeprom_tb(uart1);
     // eeprom_main();
-
+    myservo_main();
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();

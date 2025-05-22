@@ -4,6 +4,8 @@
 #include "hal/nvic/nvic.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+#include "core/debug/debug.hpp"
+
 //#region switches
 
 // #define SCE_ENABLED
@@ -20,7 +22,6 @@ using Callback = Can::Callback;
 
 template<uint32_t IT>
 ITStatus MY_CAN_GetITStatus(CAN_TypeDef* CANx){
-  
     if((CANx->INTENR & IT) != RESET){
         if constexpr(IT == CAN_IT_TME){
             return(CANx->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
@@ -31,12 +32,25 @@ ITStatus MY_CAN_GetITStatus(CAN_TypeDef* CANx){
         }else if constexpr(IT == CAN_IT_FOV0){
             return (CANx->RFIFO0 & CAN_RFIFO0_FOVR0);  
         }else if constexpr(IT == CAN_IT_FMP1){
-            return (CANx->RFIFO0 & CAN_RFIFO1_FMP1);  
+            return (CANx->RFIFO1 & CAN_RFIFO1_FMP1);  
         }else if constexpr(IT == CAN_IT_FF1){
-            return (CANx->RFIFO0 & CAN_RFIFO1_FULL1);  
-        }else if constexpr(IT == CAN_IT_FOV0){
-            return (CANx->RFIFO0 & CAN_RFIFO1_FOVR1);  
-        }
+            return (CANx->RFIFO1 & CAN_RFIFO1_FULL1);  
+        }else if constexpr(IT == CAN_IT_FOV1){
+            return (CANx->RFIFO1 & CAN_RFIFO1_FOVR1);  
+        }else if constexpr (IT == CAN_IT_WKU)
+            return (CANx->STATR& CAN_STATR_WKUI);  
+        else if constexpr (IT == CAN_IT_SLK)
+            return (CANx->STATR& CAN_STATR_SLAKI);  
+        else if constexpr (IT == CAN_IT_EWG)
+            return (CANx->ERRSR& CAN_ERRSR_EWGF);  
+        else if constexpr (IT == CAN_IT_EPV)
+            return (CANx->ERRSR& CAN_ERRSR_EPVF); 
+        else if constexpr (IT == CAN_IT_BOF)
+            return (CANx->ERRSR& CAN_ERRSR_BOFF);  
+        else if constexpr (IT == CAN_IT_LEC)
+            return (CANx->ERRSR& CAN_ERRSR_LEC);  
+        else if constexpr (IT == CAN_IT_ERR)
+            return (CANx->STATR& CAN_STATR_ERRI); 
     }
     return RESET;
 }
@@ -72,9 +86,15 @@ void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
         CANx->ERRSR = RESET; 
         CANx->STATR = CAN_STATR_ERRI; 
 	}
+    // else{
+    //     static_assert(false_n_v<IT>);
+    // }
+    // else{
+    //     PANIC("what");
+    // }
 }
 void Can::init_it(){
-    uint32_t it_mask = 
+    const uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
         | CAN_IT_FMP1   //rx fifo1
@@ -179,11 +199,8 @@ Gpio & Can::get_rx_gpio(){
 }
 
 void Can::install_gpio(){
-    auto & txGpio = get_tx_gpio();
-    auto & rxGpio = get_rx_gpio();
-
-    txGpio.afpp();
-    rxGpio.afpp();
+    get_tx_gpio().afpp();
+    get_rx_gpio().afpp();
 }
 
 
@@ -229,57 +246,18 @@ void Can::enable_rcc(){
     }
 }
 
-void Can::init(const uint baudrate, const Mode _mode){
-    BaudRate baud;
-    switch(baudrate){
-        default:
-            while(true);
-        case 125_KHz:
-            baud = BaudRate::_125K;
-            break;
-        case 250_KHz:
-            baud = BaudRate::_250K;
-            break;
-        case 500_KHz:
-            baud = BaudRate::_500K;
-            break;
-        case 1_MHz:
-            baud = BaudRate::_1M;
-            break;
-    }
-
-    init(baud, _mode);
-}
-
 void Can::init(const BaudRate baudrate, const Mode _mode){
-    install_gpio();
     enable_rcc();
+    install_gpio();
 
-
-    scexpr uint8_t swj = CAN_SJW_2tq;
-    scexpr uint8_t bs1 = CAN_BS1_6tq;
-    scexpr uint8_t bs2 = CAN_BS2_5tq;
-
-    const uint8_t prescale = [baudrate]()->uint8_t{
-        switch(baudrate){
-            default:
-            case BaudRate::_125K:
-                return 96;
-            case BaudRate::_250K:
-                return 48;
-            case BaudRate::_500K:
-                return 24;
-            case BaudRate::_1M:
-                return 12;
-        };
-    }();
+    const auto setting = baudrate.dump();
 
     const CAN_InitTypeDef config = {
-        .CAN_Prescaler = prescale,
-        .CAN_Mode = (uint8_t)_mode,
-        .CAN_SJW = swj,
-        .CAN_BS1 = bs1,
-        .CAN_BS2 = bs2,
+        .CAN_Prescaler = setting.prescale,
+        .CAN_Mode = std::bit_cast<uint8_t>(_mode),
+        .CAN_SJW = std::bit_cast<uint8_t>(setting.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(setting.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(setting.bs2),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,
@@ -312,8 +290,6 @@ uint8_t Can::transmit(const CanMsg & msg){
     {
         uint32_t tempreg = instance->TSTATR;
 
-        // scexpr auto mask = CAN_TSTATR_TME0 | CAN_TSTATR_TME1 | CAN_TSTATR_TME2;
-
         if((tempreg & CAN_TSTATR_TME0)){
             transmit_mailbox = 0;
         }else if((tempreg & CAN_TSTATR_TME1)){
@@ -332,17 +308,17 @@ uint8_t Can::transmit(const CanMsg & msg){
         uint32_t tempmir;
         uint32_t tempdtr = instance->sTxMailBox[transmit_mailbox].TXMDTR;
 
-        if(msg.is_std()){
-            tempmir = ((msg.id() << 21) | (msg.is_remote() << 1) | 0x01);
-        }else{
-            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.is_remote() << 1) | 0x01);
-        }
-
+        // if(msg.is_std()){
+        //     tempmir = ((msg.id() << 21) | (msg.is_remote() << 1) | 0x01);
+        // }else{
+        //     tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.is_remote() << 1) | 0x01);
+        // }
+        tempmir = msg.identifier_as_u32();
         tempdtr &= (uint32_t)0xFFFFFFF0;
         tempdtr |= msg.size() & 0x0F;
 
         if(msg.size() && (!msg.is_remote())){
-            const uint64_t data = msg.as_u64();
+            const uint64_t data = msg.payload_as_u64();
             instance->sTxMailBox[transmit_mailbox].TXMDLR = data & UINT32_MAX;
             instance->sTxMailBox[transmit_mailbox].TXMDHR = data >> 32;
         }
@@ -444,11 +420,9 @@ CanMsg Can::receive(const uint8_t fifo_num){
     const uint32_t rxmir = instance->sFIFOMailBox[fifo_num].RXMIR;
     const uint32_t rxmdtr = instance->sFIFOMailBox[fifo_num].RXMDTR;
 
-    const uint32_t id = ((uint8_t)0x04 & rxmir) ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
-    const bool is_remote = (uint8_t)0x02 & rxmir;
     const uint8_t dlc = (uint8_t)0x0F & rxmdtr;
 
-    uint64_t data = instance->sFIFOMailBox[fifo_num].RXMDLR | (uint64_t(instance->sFIFOMailBox[fifo_num].RXMDHR) << 32);
+    const uint64_t data = instance->sFIFOMailBox[fifo_num].RXMDLR | (uint64_t(instance->sFIFOMailBox[fifo_num].RXMDHR) << 32);
 
     if(fifo_num == CAN_FIFO0){
         instance->RFIFO0 = CAN_RFIFO0_RFOM0 | instance->RFIFO0;
@@ -456,11 +430,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
         instance->RFIFO1 = CAN_RFIFO1_RFOM1 | instance->RFIFO1;
     }
 
-    if(is_remote){
-        return CanMsg::from_regs(id, 0, 0);
-    }else{
-        return CanMsg::from_regs(id, data, dlc);
-    }
+    return CanMsg::from_regs(rxmir, data, dlc);
 }
 
 
@@ -470,6 +440,7 @@ CanFilter Can::operator[](const size_t idx) const {
 }
 
 void Can::on_tx_interrupt(){
+
     for(uint8_t mbox = 0; mbox < 3; mbox++){
         if(is_mail_box_done(mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(instance, mbox);
@@ -544,31 +515,35 @@ void USB_HP_CAN1_TX_IRQHandler(void){
 }
 
 
-#define CAN_RX_HANDLER(inst, uinst, nfifo)\
-static constexpr auto fmp_mask = CAN_IT_FMP1;\
-static constexpr auto ff_mask = CAN_IT_FF1;\
-static constexpr auto fov_mask = CAN_IT_FOV1;\
-static constexpr auto fifo_num = nfifo;\
-if (MY_CAN_GetITStatus<fmp_mask>(uinst)){\
-    inst.on_rx_msg_interrupt(fifo_num);\
-    MY_CAN_ClearITPendingBit<fmp_mask>(uinst);\
-}else if(MY_CAN_GetITStatus<ff_mask>(uinst)){\
+#define CAN_RX_HANDLER(inst, uinst)\
+if (MY_CAN_GetITStatus<FMP_MASK>(uinst)){\
+    inst.on_rx_msg_interrupt(FIFO_NUM);\
+    MY_CAN_ClearITPendingBit<FMP_MASK>(uinst);\
+}else if(MY_CAN_GetITStatus<FF_MASK>(uinst)){\
     inst.on_rx_full_interrupt();\
-    MY_CAN_ClearITPendingBit<ff_mask>(uinst);\
-}else if(MY_CAN_GetITStatus<fov_mask>(uinst)){\
+    MY_CAN_ClearITPendingBit<FF_MASK>(uinst);\
+}else if(MY_CAN_GetITStatus<FOV_MASK>(uinst)){\
     inst.on_rx_overrun_interrupt();\
-    MY_CAN_ClearITPendingBit<fov_mask>(uinst);\
+    MY_CAN_ClearITPendingBit<FOV_MASK>(uinst);\
 }\
 
 
 __interrupt
 void USB_LP_CAN1_RX0_IRQHandler(void) {
-    CAN_RX_HANDLER(can1, CAN1, CAN_FIFO0)
+    static constexpr auto FMP_MASK = CAN_IT_FMP0;
+    static constexpr auto FF_MASK = CAN_IT_FF0;
+    static constexpr auto FOV_MASK = CAN_IT_FOV0;
+    static constexpr auto FIFO_NUM = CAN_FIFO0;
+    CAN_RX_HANDLER(can1, CAN1)
 }
 
 __interrupt
 void CAN1_RX1_IRQHandler(void){
-    CAN_RX_HANDLER(can1, CAN1, CAN_FIFO1)
+    static constexpr auto FMP_MASK = CAN_IT_FMP1;
+    static constexpr auto FF_MASK = CAN_IT_FF1;
+    static constexpr auto FOV_MASK = CAN_IT_FOV1;
+    static constexpr auto FIFO_NUM = CAN_FIFO1;
+    CAN_RX_HANDLER(can1, CAN1)
 }
 
 #ifdef SCE_ENABLED

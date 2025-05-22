@@ -5,7 +5,9 @@
 template <typename T>
 __fast_inline constexpr T saturate_cast(const auto & v) {
     using SrcType = std::remove_reference<decltype(v)>::type;
-    return static_cast<T>(CLAMP(v, std::numeric_limits<SrcType>::min(), std::numeric_limits<SrcType>::max()));
+    return static_cast<T>(CLAMP(v, 
+        std::numeric_limits<SrcType>::min(), 
+        std::numeric_limits<SrcType>::max()));
 }
 
 
@@ -149,8 +151,9 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
     }
  
     std::vector<int> labels;
-	// 调用partition函数，将所有的矩形框初步分为几类，其中labels为每个矩形框对应的类别编号，eps为判断两个矩形框是否属于
-	// 同一类的控制参数。如果两个矩形框的四个相应顶点的差值的绝对值都在deta范围内，则认为属于同一类，否则是不同类。
+	// 调用partition函数，将所有的矩形框初步分为几类，其中labels为每个矩形框对应的类别编号，
+    // eps为判断两个矩形框是否属于同一类的控制参数。
+    // 如果两个矩形框的四个相应顶点的差值的绝对值都在deta范围内，则认为属于同一类，否则是不同类。
 
     // SimilarRects(eps)//TODO
     int nclasses = partition(rectList, labels, SimilarRects(eps));
@@ -163,10 +166,10 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
     for( i = 0; i < nlabels; i++ )
     {
         int cls = labels[i];
-        rrects[cls].x += rectList[i].x;
-        rrects[cls].y += rectList[i].y;
-        rrects[cls].w += rectList[i].w;
-        rrects[cls].h += rectList[i].h;
+        rrects[cls].x() += rectList[i].x();
+        rrects[cls].y() += rectList[i].y();
+        rrects[cls].w() += rectList[i].w();
+        rrects[cls].h() += rectList[i].h();
         rweights[cls]++;
     }
  
@@ -194,10 +197,10 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
         Rect2u r = rrects[i];
         real_t s = real_t(1)/rweights[i];
         rrects[i] = Rect2u(
-            saturate_cast<int>(r.x*s),
-            saturate_cast<int>(r.y*s),
-            saturate_cast<int>(r.w*s),
-            saturate_cast<int>(r.h*s));
+            saturate_cast<int>(r.x()*s),
+            saturate_cast<int>(r.y()*s),
+            saturate_cast<int>(r.w()*s),
+            saturate_cast<int>(r.h()*s));
     }
  
     rectList.clear();
@@ -227,14 +230,14 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
                 continue;
             Rect2u r2 = rrects[j];
  
-            int dx = saturate_cast<int>( r2.w * eps );
-            int dy = saturate_cast<int>( r2.h * eps );
+            int dx = saturate_cast<int>( r2.w() * eps );
+            int dy = saturate_cast<int>( r2.h() * eps );
  
             if( i != j &&
-                r1.x >= r2.x - dx &&
-                r1.y >= r2.y - dy &&
-                r1.x + r1.w <= r2.x + r2.w + dx &&
-                r1.y + r1.h <= r2.y + r2.h + dy &&
+                r1.x() >= r2.x() - dx &&
+                r1.y() >= r2.y() - dy &&
+                r1.x() + r1.w() <= r2.x() + r2.w() + dx &&
+                r1.y() + r1.h() <= r2.y() + r2.h() + dy &&
                 (n2 > std::max(3, n1) || n1 < 3) )
                 break;
         }
@@ -254,7 +257,9 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
     Rect2u _a = a.abs();
     Rect2u _b = b.abs();
 
-    real_t ins = _a.intersection(_b).get_area();
+    real_t ins = _a.intersection(_b)
+        .map([](const Rect2u & rect){return rect.get_area();})
+        .unwrap_or(0);
     if(ins == 0) return 0;
 
     real_t uni = _a.get_area() + _b.get_area() - ins;
@@ -330,7 +335,8 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                 auto current_index = current_indices.back();
                 current_indices.pop_back();
 
-                for (const auto& neighbor_pos : get_neighbor_indices(current_index.x, current_index.y)) {
+                for (const auto& neighbor_pos : get_neighbor_indices(
+                    current_index.x, current_index.y)) {
                     if (map[neighbor_pos] == labelable) {
                         map[neighbor_pos] = label;
                         current_indices.push_back(neighbor_pos);
@@ -350,17 +356,16 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                 }
 
                 {
-                    skip_flag |= not filter.width_range.has(rect.w);
-                    skip_flag |= not filter.height_range.has(rect.h);
+                    skip_flag |= not filter.width_range.has(rect.w());
+                    skip_flag |= not filter.height_range.has(rect.h());
                 }
-                // skip_flag |= rect.h > 50;
+                // skip_flag |= rect.h() > 50;
                 // skip_flag |= rect.h < 5;
                 // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
                 // skip_flag |= blob.area < 50;
                 // skip_flag |= blob.area > 20;
                 // skip_flag |= true;
 
-                if(skip_flag) goto choice;
 
                 // for(auto & m_blob : m_blobs){
                 //     auto & m_rect = m_blob.rect;
@@ -373,7 +378,6 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                 //     }
                 // }
 
-                choice:
 
                 if(skip_flag){
 
