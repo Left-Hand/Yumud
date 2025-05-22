@@ -15,7 +15,6 @@ protected:
     
     NodeId id = 0x01;
 
-    bool b_extid = false;
     uint8_t sync_flag = 0x00;
 
     enum class VerifyType:uint8_t{
@@ -84,9 +83,9 @@ protected:
             do{
                 op_window = store_window.grid_forward(op_window, 8);
                 if(op_window.length() != 0){
-                    CanMsg msg = CanMsg::from_bytes(hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.from) / 8)), 
-                                        std::span(buf.begin() + op_window.from, op_window.length()));
-                    msg.set_ext(b_extid);
+                    CanMsg msg = CanMsg::from_bytes(
+                        hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.from) / 8)), 
+                        std::span(buf.begin() + op_window.from, op_window.length()));
                     DEBUG_PRINTLN(msg);
                     if(can_)can_->write(msg);
                 }

@@ -69,7 +69,7 @@ protected:
     Callback cb_txfail_;
     Callback cb_rx_;
 
-    bool sync_ = true;
+    bool sync_ = false;
 
     Gpio & get_tx_gpio();
     Gpio & get_rx_gpio();
@@ -93,7 +93,7 @@ protected:
     void on_sce_interrupt();
 
 
-    void init(const BaudRate baudrate, const Mode mode);
+
     uint8_t transmit(const CanMsg & msg);
     CanMsg receive(const uint8_t fifo_num);
 
@@ -125,7 +125,7 @@ public:
 
     void set_baudrate(const uint32_t baudrate);
 
-    void init(const uint baudrate, const Mode mode = Mode::Normal);
+    void init(const BaudRate baudrate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg);
     const CanMsg && read();

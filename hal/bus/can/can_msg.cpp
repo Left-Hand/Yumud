@@ -9,19 +9,15 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
     
     os << os.brackets<'{'>();
 
-    os.set_radix(16);
-    os << uint32_t(msg.id());
-        
     os << '<'
         << ((msg.is_std()) ? 'S' : 'E')
-        << ((msg.is_remote()) ? 'R' : 'D') << std::noshowbase
-        << '[' << std::dec << msg.size() << ']';
-    os << "> ";
-    
-    os << std::hex << std::span<const uint8_t>{
-        reinterpret_cast<const uint8_t *>(msg.begin()), 
-        msg.size()
-    };
+        << ((msg.is_remote()) ? 'R' : 'D')
+        << "> ";
+
+    os << "id=" << std::hex << std::showbase << uint32_t(msg.id());
+    os << " | buf" 
+        << '[' << std::dec << msg.size() << "]=" 
+        << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
 
     return os << os.brackets<'}'>();
 }

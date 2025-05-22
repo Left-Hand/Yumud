@@ -22,8 +22,8 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "core/polymorphism/reflect.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "drivers/Encoder/Encoder.hpp"
 #include "drivers/Encoder/AnalogEncoder.hpp"
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
@@ -183,35 +183,85 @@ private:
 };
 
 }
-#define UART hal::uart2
 
+#define UART hal::uart2
+static constexpr uint32_t TIM_FREQ = 10000;
+static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 void myservo_main(){
     UART.init(576000);
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
+    DEBUG_PRINTLN("powerup");
+
 
     // auto & led = portD[0];
     auto & led = portB[8];
+    led.outpp(HIGH);
+
+    auto & can = can1;
 
     auto & mode1_gpio   = portB[1];
     auto & phase_gpio   = portA[7];
     // auto & en_gpio      = portA[6];
-    auto & mode2_gpio   = portA[5];
-
+    // auto & mode2_gpio   = portA[5];
     phase_gpio.outpp();
-    // en_gpio.outpp(HIGH);
 
-    hal::timer3.init(1000);
+    using Filter = dsp::ButterLowpassFilter<iq_t<16>, 4>;
+    using Config = typename Filter::Config;
+
+    Filter filter = {Config{
+        .fc = 20,
+        .fs = ISR_FREQ,
+    }};
+
+    auto init_adc = []{
+        adc1.init(
+            {
+                {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            },{
+                {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
+                {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
+            }
+        );
+
+        // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
+        adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
+        // adc1.enableContinous();
+        adc1.enable_auto_inject(false);
+    };
+
+    // can.init(CanBaudrate::_1M, CanMode::Internal);
+    can.init(CanBaudrate::_1M);
+    init_adc();
+
+    auto & ain1 = adc1.inj(1);
+    auto & ain2 = adc1.inj(2);
+
+
+    hal::timer3.init(TIM_FREQ, TimerCountMode::CenterAlignedUpTrig);
+
+    real_t sense_raw_volt;
     auto & pwm = hal::timer3.oc(1);
     pwm.init({});
-    timer3.attach(TimerIT::Update, {0,0}, [&]{
+    auto & pwm_trig = hal::timer3.oc(4);
+    pwm_trig.init({.install_en = DISEN});
+    pwm_trig.set_duty(0.001_r);
+    hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);
+
+    real_t duty = 0;
+    real_t curr_cmd = 0;
+
+    hal::adc1.attach(AdcIT::JEOC, {0,0}, [&]{
         // const auto duty = sin(clock::time());
         // phase_gpio = BoolLevel::from(duty > 0);
         // pwm.set_duty(ABS(duty));
-
+        sense_raw_volt = ain1.get_voltage();
+        filter.update(sense_raw_volt);
+        duty = CLAMP(duty + 0.05_r * (curr_cmd - filter.get()), 0, 0.9_r);
     });
+
 
     led.outpp();
     while(true){
@@ -219,27 +269,50 @@ void myservo_main(){
             // auto pwm = hal::
         mode1_gpio.outpp(HIGH);
         // slp_gpio
-        const auto duty = sin(3 * clock::time());
+        // const auto duty = 0.6_r * sinpu(clock::time());
+
         const auto level = duty > 0.0_r;
         phase_gpio = BoolLevel::from(level);
+        // curr_cmd = ABS(0.015_r * sin(clock::time()))+ 0.015_r;
+        // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);
-        pwm.set_duty(ABS(duty));
+        // pwm.set_duty(ABS(duty));
+        duty = CLAMP(ain2.get_voltage() / 3.3_r, 0, 0.9_r);
+        pwm.set_duty(duty);
         // led = HIGH;
         // clock::delay(200ms);
         // led = LOW;
         // clock::delay(200ms);
-        DEBUG_PRINTLN(
-            real_t(pwm), 
-            bool(portA[6].read()), 
-            bool(phase_gpio.read())
-            , duty, level
-        );
+        // DEBUG_PRINTLN(
+        //     real_t(pwm) 
+        //     ,bool(portA[6].read()) 
+        //     ,bool(phase_gpio.read())
+        //     ,real_t(ain1)
+        //     ,real_t(ain2)
+        // );
         // DEBUG_PRINTLN(clock::millis().count(), UART.available());
         // DEBUG_PRINTLN(UART.available());
         // while(UART.available()){
         //     char chr;
         //     UART.read1(chr);
         //     DEBUG_PRINTLN(chr);
+        // }
+        // constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
+        // DEBUG_PRINTLN(msg);
+        // DEBUG_PRINTLN("before", can.pending());
+        // clock::delay(200ms);
+        // DEBUG_PRINTLN("after", can.pending());
+        // clock::delay(2ms);
+        // can.write(msg);
+        DEBUG_PRINTLN_IDLE(
+            duty, 
+            sense_raw_volt, 
+            filter.get(), 
+            ain2.get_voltage(),
+            timer3.cnt()
+        );
+        // for(auto i = 0; i < 1000; ++i){
+        //     DEBUG_PRINTLN(portB[9].read());
         // }
     }
 

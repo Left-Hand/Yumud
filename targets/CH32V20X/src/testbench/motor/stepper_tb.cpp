@@ -202,7 +202,7 @@ void stepper_tb(UartHw & logger_inst){
 
     uint8_t node_id = get_default_id();
     auto & can = can1;
-    can.init(1_MHz);
+    can.init(CanBaudrate::_1M);
     // can.enableHwReTransmit();
     
     can[0].mask(

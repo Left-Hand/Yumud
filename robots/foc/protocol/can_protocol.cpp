@@ -14,12 +14,12 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
 
     #define VERIFIED_BIND(cmd, method, x, ...)\
     case cmd:\
-        if(static_cast<decltype(x)>(msg) == x) method(__VA_ARGS__);\
+        if((msg.to<std::decay_t<decltype(x)>>()) == x) method(__VA_ARGS__);\
         break;\
 
     #define SETTER_BIND_TYPE(cmd, method, type)\
     case cmd:\
-        method(type(msg));\
+        method(msg.to<type>());\
         break;\
     
     #define SETTER_BIND_VALUE(cmd, value)\

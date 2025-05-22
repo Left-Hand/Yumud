@@ -328,7 +328,7 @@ void bldc_main(){
     // spi1.bind_cs_pin(portA[0], 0);
 
 
-    can1.init(1_MHz);
+    can1.init(CanBaudrate::_1M);
 
     // BMI160 bmi{spi1, 0};
 

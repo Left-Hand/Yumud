@@ -17,6 +17,7 @@ int main(){
     // eeprom_main();
     // while(true);
     //  uart_main();
+    //  can_ring_main();
     // qlz_main();
     // embd_main();
     // ina3221_main();

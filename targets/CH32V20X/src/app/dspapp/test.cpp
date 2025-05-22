@@ -264,9 +264,9 @@ void bpsk_tb(auto && fn_in, const T fl, const T fh, const uint fs){
 }
 
 
-template<typename T, size_t n>
+template<typename T, size_t B>
 void butterworth_lowpass_tb(auto && fn_in, const T fc, const uint fs){
-    using Filter = dsp::ButterLowpassFilter<T, n>;
+    using Filter = dsp::ButterLowpassFilter<T, B>;
     using Config = typename Filter::Config;
 
     Filter filter = {Config{
@@ -278,9 +278,9 @@ void butterworth_lowpass_tb(auto && fn_in, const T fc, const uint fs){
     // dsp::evaluate_func(fs, fn_in, filter);
 }
 
-template<typename T, size_t n>
+template<typename T, size_t N>
 void butterworth_highpass_tb(auto && fn_in, const T fc, const uint fs){
-    using Filter = dsp::ButterHighpassFilter<T, n>;
+    using Filter = dsp::ButterHighpassFilter<T, N>;
     using Config = typename Filter::Config;
 
     Filter filter = {Config{
