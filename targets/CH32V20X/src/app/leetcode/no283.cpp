@@ -5,6 +5,9 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 class Solution283{
 public:
 	void moveZeroes(std::vector<int>& nums) {

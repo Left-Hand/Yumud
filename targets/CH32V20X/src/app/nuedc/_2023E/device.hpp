@@ -19,7 +19,8 @@
 #include "concept/pwm_channel.hpp"
 #include "types/vector2/vector2.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 
 namespace nuedc::_2023E{
 

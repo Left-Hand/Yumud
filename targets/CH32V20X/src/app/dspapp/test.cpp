@@ -16,6 +16,8 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 namespace ymd::dsp{
     template<typename FnIn, typename FnFt>

@@ -19,41 +19,38 @@ namespace ymd::hal{
     class DmaChannel;
 }
 
-using namespace ymd;
-using namespace ymd::hal;
 
+void memory_tb(ymd::OutputStream & logger);
 
-void memory_tb(OutputStream & logger);
+void stepper_tb(ymd::hal::UartHw & logger);
 
-void stepper_tb(hal::UartHw & logger);
+void lua_tb(ymd::OutputStream & logger);
+void pwm_tb(ymd::OutputStream & logger);
 
-void lua_tb(OutputStream & logger);
-void pwm_tb(OutputStream & logger);
-
-void adc_tb(OutputStream & logger);
-void temp_tb(OutputStream & logger);
-void temp_tb2(OutputStream & logger);
-void filter_tb(OutputStream & logger);
+void adc_tb(ymd::OutputStream & logger);
+void temp_tb(ymd::OutputStream & logger);
+void temp_tb2(ymd::OutputStream & logger);
+void filter_tb(ymd::OutputStream & logger);
 
 void pmdc_tb();
 
-void lds14_tb(IOStream & logger,Uart & uart);
-void gpio_tb(hal::GpioIntf & gpio);
-// void pca_tb(IOStream & logger);
+void lds14_tb(ymd::IOStream & logger,ymd::hal::Uart & uart);
+void gpio_tb(ymd::hal::GpioIntf & gpio);
+// void pca_tb(ymd::IOStream & logger);
 void pca_main();
-void st77xx_tb(hal::Spi & spi);
+void st77xx_tb(ymd::hal::Spi & spi);
 
-void joystick_tb(OutputStream & logger);
+void joystick_tb(ymd::OutputStream & logger);
 
-void dma_tb(OutputStream & logger, DmaChannel & channel);
+void dma_tb(ymd::OutputStream & logger, ymd::hal::DmaChannel & channel);
 
-void ch9141_tb(IOStream & logger, Uart & uart);
+void ch9141_tb(ymd::IOStream & logger, ymd::hal::Uart & uart);
 
-void can_tb(IOStream & logger, hal::Can & can, bool tx_role = true);
+void can_tb(ymd::IOStream & logger, ymd::hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 
-void at24cxx_tb(OutputStream & logger, hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
 
 void at24cxx_main();
 
@@ -66,13 +63,13 @@ void flash_main();
 void qlz_main();
 
 void uart_main();
-void tcs34725_tb(OutputStream & logger, hal::I2c & i2c);
+void tcs34725_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
 
 void tcs34725_main();
 
 void dshot_main();
 
-void at24cxx_tb(OutputStream & logger, hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
 void i2c_scanner_main();
 
 void dshot_main();
@@ -94,9 +91,9 @@ void uart_main();
 void m3508_main();
 void m2006_main();
 
-void math_tb(hal::UartHw & logger);
+void math_tb(ymd::hal::UartHw & logger);
 
-void zdt_main(hal::UartHw & logger);
+void zdt_main(ymd::hal::UartHw & logger);
 
 void coro_main();
 void pmw3901_main();

@@ -42,43 +42,43 @@ OutputStream & operator << (OutputStream & os, const Result<auto, auto> & result
     // while(true);
 
 
-static __no_inline auto test_result(int _x){
-    Result<int, const char *> result = Ok(_x);
+// static __no_inline auto test_result(int _x){
+//     Result<int, const char *> result = Ok(_x);
 
-    auto squared = result
-        .transform([](auto && x){
-            return rescond(x > 0, x * x, "minus");
-        })
-        .transform([](auto && x){
-            return rescond(x > 9, x + 1, "small");
-        });
+//     auto squared = result
+//         .transform([](auto && x){
+//             return rescond(x > 0, x * x, "minus");
+//         })
+//         .transform([](auto && x){
+//             return rescond(x > 9, x + 1, "small");
+//         });
     
-    return squared;
-}
+//     return squared;
+// }
 
 void ads1115_main()
 {
 
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     // DEBUGGER.no_brackets();
 
     // DEBUG_PRINTLN(test_result(4));
-    DEBUG_PRINTLN(test_result(4).loc().expect("no"));
+    // DEBUG_PRINTLN(test_result(4).loc().expect("no"));
     while(true);
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
     i2c.init(400_KHz);
 
     drivers::ADS1115 ads = {i2c};
 
-    ads.set_data_rate(ads.builder().datarate(860).unwrap());
-    ads.set_mux(ads.builder().differential(2,3).unwrap());
+    ads.set_data_rate(ads.builder().datarate(860).unwrap()).examine();
+    ads.set_mux(ads.builder().differential(2,3).unwrap()).examine();
     // ads.setMux(ads.builder().singleend(0).unwarp());
-    ads.set_pga(drivers::ADS1115::PGA::_1_024V);
-    ads.enable_cont_mode();
-    ads.start_conv();
+    ads.set_pga(drivers::ADS1115::PGA::_1_024V).examine();
+    ads.enable_cont_mode().examine();
+    ads.start_conv().examine();
 
     while(true){
         // if(ads.ready()){

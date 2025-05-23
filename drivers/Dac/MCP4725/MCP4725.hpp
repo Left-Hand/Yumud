@@ -28,7 +28,7 @@ public:
     MCP4725(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}    
 
     //使用快速模式写命令写DAC寄存器
-    Result<void, Error> MCP4725_WriteData_Voltage(uint16_t Vout)   //电压单位mV
+    [[nodsicard]] Result<void, Error> write_data_volt(uint16_t Vout)   //电压单位mV
     {
         const uint8_t Dn = ( 4096 * Vout) / VREF_5V; //这里的VREF_5V宏定义为5000
         const uint8_t temp = (0x0F00 & Dn) >> 8;  //12位数据。0000XXXX XXXXXXXX 
@@ -38,7 +38,7 @@ public:
         return Ok();
     }
     
-    Result<void, Error> MCP4725_WriteData_Digital(uint16_t data)   //12位数字量
+    [[nodsicard]] Result<void, Error> write_data_u16(uint16_t data)   //12位数字量
     {
         if(const auto res = i2c_drv_.write_reg(uint8_t(data >> 8), uint8_t(data));
             res.is_err()) return Err(res.unwrap_err());

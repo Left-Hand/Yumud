@@ -8,7 +8,9 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-using namespace hal;
+using namespace ymd;
+using namespace ymd::hal;
+
 using Can = hal::Can;
 void can_ring_main(){
     // scexpr size_t cb_freq = 200;
@@ -18,7 +20,7 @@ void can_ring_main(){
 
     DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
-    can.init(1_MHz, Can::Mode::Internal);
+    can.init(hal::CanBaudrate::_1M, Can::Mode::Internal);
 
     can[0].mask(
         CanID16{0x200, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),

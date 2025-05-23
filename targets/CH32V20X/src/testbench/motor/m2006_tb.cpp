@@ -9,7 +9,9 @@
 #include "core/math/realmath.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-using namespace hal;
+using namespace ymd;
+using namespace ymd::hal;
+
 void m2006_main(){
     // scexpr size_t cb_freq = 200;
 

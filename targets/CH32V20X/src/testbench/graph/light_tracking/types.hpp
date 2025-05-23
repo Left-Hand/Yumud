@@ -7,6 +7,7 @@
 #include "types/ray3/ray3.hpp"
 
 using RGB = ymd::RGB_t<real_t>;
+using namespace ymd;
 
 template<typename T>
 struct TriangleSurface_t{

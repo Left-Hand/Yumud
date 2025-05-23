@@ -21,6 +21,8 @@
 
 #include "hal/rng/rng.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 [[maybe_unused]] __no_inline
 static void filter(const std::span<RGB565> row) {

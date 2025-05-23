@@ -11,6 +11,9 @@
 
 #include "digipw/SVPWM/svpwm3.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
 // 可以配置不同的串口输出和定时器（在下方以宏给出）

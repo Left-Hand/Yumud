@@ -10,6 +10,8 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
+
 using drivers::INA3221;
 
 #define UART uart2

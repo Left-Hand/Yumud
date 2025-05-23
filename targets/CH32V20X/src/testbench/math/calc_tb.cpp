@@ -24,6 +24,9 @@ using std::min;
 using std::max;
 #define endl "\r\n";
 
+using namespace ymd;
+using namespace ymd::hal;
+
 static void getline(OutputStream & logger, string & str){
     // String temp_str;
     // while(true){

@@ -15,6 +15,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 
 #define UART DEBUGGER_INST
 

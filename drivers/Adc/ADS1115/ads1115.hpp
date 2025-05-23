@@ -2,6 +2,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 #include "core/utils/Option.hpp"
 
 #include "concept/analog_channel.hpp"
@@ -11,16 +12,25 @@
 namespace ymd::drivers{
 
 
+struct ADS111X_Collections{
 
-class ADS111X{
-public:
+    enum class Error_Kind:uint8_t{
 
-    using DeviceResult = Result<void, hal::HalResult>;
-    __inline DeviceResult make_result(const hal::HalResult res){
-        if(res.is_ok()) return Ok();
-        else return Err(res); 
-    }
+    };
 
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    using RegAddress = uint8_t;
+
+    // ADDR PIN CONNECTION SLAVE ADDRESS
+    // GND 1001000
+    // VDD 1001001
+    // SDA 1001010
+    // SCL 1001011
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10010000);
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class Package:uint8_t{
         ADS1113,
@@ -41,10 +51,9 @@ public:
         _6_144V = 0, _4_096V, _2_048V, _1_024V, _0_512V, _0_256V
     };
 
-protected:
-    hal::I2cDrv i2c_drv_;
+};
 
-    using RegAddress = uint8_t;
+struct ADS111X_Regs:public ADS111X_Collections{ 
 
     struct ConversionReg:public Reg16<>{
         scexpr RegAddress address = 0b00; 
@@ -81,10 +90,54 @@ protected:
     ConfigReg config_reg = {};
     LowThreshReg low_thresh_reg = {};
     HighThreshReg high_thresh_reg = {};
+};
+
+class ADS111X final:
+    public ADS111X_Regs{
+public:
+    ADS111X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS111X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS111X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){};
+
+    [[nodiscard]] IResult<> start_conv();
+
+    [[nodiscard]] IResult<> set_threshold(int16_t low, int16_t high);
+
+    [[nodiscard]] IResult<> enable_cont_mode(bool en = true);
+
+    [[nodiscard]] IResult<> set_pga(const PGA pga);
+
+    [[nodiscard]] IResult<> set_mux(const MUX mux);
+
+    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
+
+    [[nodiscard]] IResult<bool> is_ready();
+    [[nodiscard]] IResult<bool> is_busy();
+
+    [[nodiscard]] Option<real_t> result();
+
+    [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] constexpr auto builder(){return ConfigBuilder{};}
+private:
+    hal::I2cDrv i2c_drv_;
 
 
-    [[nodiscard]] DeviceResult read_reg(const RegAddress addr, uint16_t & data);
-    [[nodiscard]] DeviceResult write_reg(const RegAddress addr, const uint16_t data); 
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data); 
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = write_reg(reg.address, reg.as_val());
+        if(res.is_ok()) reg.apply();
+        return res;
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
+
     struct ConfigBuilder{
 
         // ADS111X & owner_;
@@ -141,40 +194,6 @@ protected:
             return Ok{};
         }
     };
-
-public:
-    // ADDR PIN CONNECTION SLAVE ADDRESS
-    // GND 1001000
-    // VDD 1001001
-    // SDA 1001010
-    // SCL 1001011
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10010000);
-    ADS111X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    ADS111X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    ADS111X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){};
-
-    void start_conv();
-
-    bool is_busy();
-
-    void set_threshold(int16_t low, int16_t high);
-
-    void enable_cont_mode(bool en = true);
-
-    void set_pga(const PGA pga);
-
-    void set_mux(const MUX mux);
-
-    void set_data_rate(const DataRate data_rate);
-
-    bool ready();
-
-    Option<real_t> result();
-
-    DeviceResult validate();
-
-    [[nodiscard]] constexpr auto builder(){return ConfigBuilder{};}
-
 };
 
 using ADS1113 = ADS111X;

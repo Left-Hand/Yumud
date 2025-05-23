@@ -9,12 +9,13 @@
 
 namespace ymd::drivers{
 
-class AS5600 final: public MagEncoderIntf{
-public:
+struct AS5600_Collections{
     using Error = EncoderError;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
 
     enum class PowerMode:uint8_t{
         Norm = 0, Pol5Ms, Pol10Ms, Pol100Ms
@@ -40,8 +41,53 @@ public:
         None = 0, LSB6, LSB7, LSB9, LSB18, LSB21, LSB24, LSB10
     };
 
-protected:
-    hal::I2cDrv i2c_drv_;
+    enum class RegAddress : uint8_t {
+        ProgramTimes = 0x00,
+        StartAngle = 0x01,
+        EndAngle = 0x03,
+        AmountAngle = 0x05,
+        Config = 0x07,
+        RawAngle = 0x0c,
+        Angle = 0x0d,
+        Status = 0x0B,
+        AutoGain = 0x1A,
+        Magnitude = 0x1B,
+        Burn = 0xFF
+    };
+
+    class MagStatus{
+    public:
+        enum class Kind:uint8_t{
+            High = 0,
+            Low = 1,
+            Proper = 2,
+            Unknown = 3
+        };
+
+        using enum Kind;
+
+        MagStatus(const Kind _kind):kind_(_kind){;}
+
+        [[nodiscard]]
+        bool is_high() const{
+            return kind_ == Kind::High;
+        }
+
+        [[nodiscard]]
+        bool is_low() const{
+            return kind_ == Kind::Low;
+        }
+
+        [[nodiscard]]
+        bool is_proper() const{
+            return kind_ == Kind::Proper;
+        }
+    private:
+        Kind kind_;
+    };
+};
+
+struct AS5600_Regs:public AS5600_Collections{
 
     struct ProgramTimesReg:public Reg8<>{
         
@@ -119,65 +165,22 @@ protected:
     AutoGainReg autoGainReg = {};
     MagnitudeReg magnitudeReg = {};
     BurnReg burnReg = {};
+};
 
-    enum class RegAddress : uint8_t {
-        ProgramTimes = 0x00,
-        StartAngle = 0x01,
-        EndAngle = 0x03,
-        AmountAngle = 0x05,
-        Config = 0x07,
-        RawAngle = 0x0c,
-        Angle = 0x0d,
-        Status = 0x0B,
-        AutoGain = 0x1A,
-        Magnitude = 0x1B,
-        Burn = 0xFF
-    };
-
-    real_t From12BitTo360Degrees(const uint16_t data){
-        auto uni = u16_to_uni(data << 4);
-        return uni * 360;
-    }
-
-    uint16_t From360DegreesTo12Bit(const real_t degrees){
-        return uni_to_u16(CLAMP(degrees / 360, real_t(0), real_t(1))) >> 4;
-    }
-
-    [[nodiscard]]
-    IResult<void> write_reg(const RegAddress addr, const uint16_t data){
-        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data, LSB); err.is_err())
-            return Err(Error::HalError(err.unwrap_err()));
-        return Ok();
-    }
-
-    [[nodiscard]]
-    IResult<void> read_reg(const RegAddress addr, uint16_t & data){
-        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data, LSB); err.is_err())
-            return Err(Error::HalError(err.unwrap_err()));
-        return Ok();
-    }
-
-    [[nodiscard]]
-    IResult<void> write_reg(const RegAddress addr, const uint8_t data){
-        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data); err.is_err())
-            return Err(Error::HalError(err.unwrap_err()));
-        return Ok();
-    }
-
-    [[nodiscard]]
-    IResult<void> read_reg(const RegAddress addr, uint8_t & data){
-        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data); err.is_err())
-            return Err(Error::HalError(err.unwrap_err()));
-        return Ok();
-    }
+class AS5600 final: 
+    public MagEncoderIntf,
+    public AS5600_Regs{
 public:
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
-
     AS5600(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     AS5600(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
 
     AS5600(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+
+
+            
+    [[nodiscard]]
+    IResult<> init();
 
     [[nodiscard]]
     IResult<> set_power_mode(const PowerMode _power_mode);
@@ -198,7 +201,7 @@ public:
     IResult<> set_hysteresis(const Hysteresis _hysteresis);
     
     [[nodiscard]]
-    IResult<int8_t> get_mag_status();
+    IResult<MagStatus> get_mag_status();
     
     [[nodiscard]]
     IResult<uint8_t> get_gain();
@@ -229,9 +232,37 @@ public:
     
     [[nodiscard]]
     IResult<> burn_setting();
-    
+
+private:
+    hal::I2cDrv i2c_drv_;
+
     [[nodiscard]]
-    IResult<> init();
+    IResult<> write_reg(const RegAddress addr, const uint16_t data){
+        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data, LSB); err.is_err())
+            return Err(Error::HalError(err.unwrap_err()));
+        return Ok();
+    }
+
+    [[nodiscard]]
+    IResult<> read_reg(const RegAddress addr, uint16_t & data){
+        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data, LSB); err.is_err())
+            return Err(Error::HalError(err.unwrap_err()));
+        return Ok();
+    }
+
+    [[nodiscard]]
+    IResult<> write_reg(const RegAddress addr, const uint8_t data){
+        if(const auto err = i2c_drv_.write_reg(uint8_t(addr), data); err.is_err())
+            return Err(Error::HalError(err.unwrap_err()));
+        return Ok();
+    }
+
+    [[nodiscard]]
+    IResult<> read_reg(const RegAddress addr, uint8_t & data){
+        if(const auto err = i2c_drv_.read_reg(uint8_t(addr), data); err.is_err())
+            return Err(Error::HalError(err.unwrap_err()));
+        return Ok();
+    }
 };
 
 

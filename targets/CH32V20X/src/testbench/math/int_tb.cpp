@@ -5,6 +5,8 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 void int_tb() {
     DEBUGGER_INST.init(576000);

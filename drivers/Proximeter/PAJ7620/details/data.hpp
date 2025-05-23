@@ -1,56 +1,52 @@
 #pragma once
 
 
-
-
-
-
 /* Register bank select R/W*/
-#define GESTURE_REG_BANK_SEL (0xEF)
+static constexpr uint8_t GESTURE_REG_BANK_SEL = 0xEF;
 
 /* Bank 0 register, setting the address (R-Read, W-Write)
-#define GESTURE_ADDR_PARTID_L (0x00)
-#define GESTURE_ADDR_PARTID_H (0x01)
-#define GESTURE_ADDR_VERSIONID (0x02) */
-#define GESTURE_ADDR_SUSPEND_ENL (0x03) /* R */
-#define GESTURE_ADDR_GEST_DETECT_INT1 (0x41) /* R/W */
-#define GESTURE_ADDR_GEST_DETECT_INT2 (0x42) /* R/W */
-#define GESTURE_ADDR_GEST_DETECT_INTFLAG1 (0x43) /* R */
-#define GESTURE_ADDR_GEST_DETECT_INTFLAG2 (0x44) /* R */
-#define GESTURE_ADDR_STATE_INDIC (0x45) /* R */
-#define GESTURE_ADDR_PS_HIGH_THRESH (0x69) /* R/W */
-#define GESTURE_ADDR_PS_LOW_THRESH (0x6A) /* R/W */
-#define GESTURE_ADDR_PS_APPROACH_STATE (0x6B) /* R */
-#define GESTURE_ADDR_PS_DATA (0x6C) /* R */
+static constexpr uint8_t GESTURE_ADDR_PARTID_L = 0x00;
+static constexpr uint8_t GESTURE_ADDR_PARTID_H = 0x01;
+static constexpr uint8_t GESTURE_ADDR_VERSIONID = 0x02; */
+static constexpr uint8_t GESTURE_ADDR_SUSPEND_ENL = 0x03; /* R */
+static constexpr uint8_t GESTURE_ADDR_GEST_DETECT_INT1 = 0x41; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_GEST_DETECT_INT2 = 0x42; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_GEST_DETECT_INTFLAG1 = 0x43; /* R */
+static constexpr uint8_t GESTURE_ADDR_GEST_DETECT_INTFLAG2 = 0x44; /* R */
+static constexpr uint8_t GESTURE_ADDR_STATE_INDIC = 0x45; /* R */
+static constexpr uint8_t GESTURE_ADDR_PS_HIGH_THRESH = 0x69; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_PS_LOW_THRESH = 0x6A; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_PS_APPROACH_STATE = 0x6B; /* R */
+static constexpr uint8_t GESTURE_ADDR_PS_DATA = 0x6C; /* R */
 
-#define GESTURE_BANK0 0x00 /* Define Value for Bank 0 */
+static constexpr uint8_t GESTURE_BANK0 = 0x00; /* Define Value for Bank 0 */
 
 /* Bank 1 Registers, setting the address */
-#define GESTURE_ADDR_IDLE_S1_STEP1 (0x67) /* R/W */
-#define GESTURE_ADDR_IDLE_S1_STEP2 (0X68) /* R/W */
-#define GESTURE_ADDR_IDLE_S2_STEP1 (0x69) /* R/W */
-#define GESTURE_ADDR_IDLE_S2_STEP2 (0x6A) /* R/W */
-#define GESTURE_ADDR_OP_TO_S1_STEP1 (0x6B) /* R/W */
-#define GESTURE_ADDR_OP_TO_S1_STEP2 (0x6C) /* R/W */
-#define GESTURE_ADDR_OP_TO_S2_STEP1 (0x6D) /* R/W */
-#define GESTURE_ADDR_OP_TO_S2_STEP2 (0x6E) /* R/W */
-#define GESTURE_ADDR_OP_ENABLE (0x72) /* R/W */
-#define GESTURE_ADDR_PS_GAIN (0x44) /* R/W */
+static constexpr uint8_t GESTURE_ADDR_IDLE_S1_STEP1 = 0x67; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_IDLE_S1_STEP2 = 0X68; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_IDLE_S2_STEP1 = 0x69; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_IDLE_S2_STEP2 = 0x6A; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_OP_TO_S1_STEP1 = 0x6B; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_OP_TO_S1_STEP2 = 0x6C; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_OP_TO_S2_STEP1 = 0x6D; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_OP_TO_S2_STEP2 = 0x6E; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_OP_ENABLE = 0x72; /* R/W */
+static constexpr uint8_t GESTURE_ADDR_PS_GAIN = 0x44; /* R/W */
 
-#define GESTURE_BANK1 0x01 /* Define Value for Bank 1 */
+static constexpr uint8_t GESTURE_BANK1 = 0x01; /* Define Value for Bank 1 */
 
 
-#define GESTURE_ENABLE 0x01 /* Enable address operations */
-#define GESTURE_DISABLE 0x00 /* Disable */
+static constexpr uint8_t GESTURE_ENABLE = 0x01; /* Enable address operations */
+static constexpr uint8_t GESTURE_DISABLE = 0x00; /* Disable */
 
-#define GESTURE_I2C_SUSPEND 0x00 /* Address suspend CMD */
-#define GESTURE_I2C_WAKEUP 0x01
+static constexpr uint8_t GESTURE_I2C_SUSPEND = 0x00; /* Address suspend CMD */
+static constexpr uint8_t GESTURE_I2C_WAKEUP = 0x01;
 
-#define GEST_REACT_T 400 /* Gesture reaction time has to be less than gesture entry time for forward/backwards movement */
-#define GEST_ENTR_T 600 /* Both can be adjusted to needs */
-#define GEST_QUIT_T 1000
+static constexpr uint16_t GEST_REACT_T = 400; /* Gesture reaction time has to be less than gesture entry time for forward/backwards movement */
+static constexpr uint16_t GEST_ENTR_T = 600; /* Both can be adjusted to needs */
+static constexpr uint16_t GEST_QUIT_T = 1000;
 
-#define PAJ7620_REGITER_BANK_SEL 0xEF
+static constexpr uint8_t PAJ7620_REGITER_BANK_SEL = 0xEF;
 
 static constexpr uint8_t GES_RIGHT_FLAG				          = (1<<0);
 static constexpr uint8_t GES_LEFT_FLAG				          = (1<<1);

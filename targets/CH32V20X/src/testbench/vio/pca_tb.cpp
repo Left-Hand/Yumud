@@ -9,7 +9,8 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void pca_tb(OutputStream & logger){

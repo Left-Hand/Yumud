@@ -7,6 +7,16 @@ using Error = AS5600::Error;
 
 template<typename T = void>
 using IResult = AS5600::IResult<T>;
+
+
+static constexpr real_t From12BitTo360Degrees(const uint16_t data){
+    auto uni = u16_to_uni(data << 4);
+    return uni * 360;
+}
+
+static constexpr uint16_t From360DegreesTo12Bit(const real_t degrees){
+    return uni_to_u16(CLAMP(degrees / 360, real_t(0), real_t(1))) >> 4;
+}
 IResult<> AS5600::set_power_mode(const PowerMode _power_mode){
     configReg.powerMode = uint8_t(_power_mode);
     return write_reg(RegAddress::Config, configReg);
@@ -37,13 +47,14 @@ IResult<> AS5600::set_hysteresis(const Hysteresis _hysteresis){
     return write_reg(RegAddress::Config, configReg);
 }
 
-IResult<int8_t> AS5600::get_mag_status(){
+IResult<AS5600::MagStatus> AS5600::get_mag_status(){
     // UNWRAP_OR_RETURN_ERR(read_reg(RegAddress::Status, statusReg));
     if(const auto res = read_reg(RegAddress::Status, statusReg); res.is_err())
         return Err(res.unwrap_err());
-    if(statusReg.magProper) return Ok(0);
-    else if(statusReg.magHigh) return Ok(1);
-    else return Ok(-1);
+    if(statusReg.magProper) return Ok(MagStatus(MagStatus::Proper));
+    else if(statusReg.magHigh) return Ok(MagStatus(MagStatus::High));
+    else if(statusReg.magLow) return Ok(MagStatus(MagStatus::Low));
+    else return Ok(MagStatus(MagStatus::Unknown));
 }
 
 IResult<uint8_t> AS5600::get_gain(){

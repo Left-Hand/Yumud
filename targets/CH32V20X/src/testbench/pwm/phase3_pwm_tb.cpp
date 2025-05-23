@@ -15,6 +15,10 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 
 
+
+using namespace ymd;
+using namespace ymd::hal;
+
 // https://www.cnblogs.com/wchmcu/p/18781096
 // https://www.cnblogs.com/wchmcu/p/18325273
 

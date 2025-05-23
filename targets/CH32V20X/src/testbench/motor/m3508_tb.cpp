@@ -11,6 +11,8 @@
 #include "robots/vendor/DJI/DR16/DR16.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void m3508_main(){

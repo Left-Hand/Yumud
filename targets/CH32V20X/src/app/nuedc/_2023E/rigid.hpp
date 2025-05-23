@@ -3,6 +3,7 @@
 #include "device.hpp"
 #include "ctrl.hpp"
 
+using namespace ymd;
 namespace nuedc::_2023E{
 
 //描述了一组关节解

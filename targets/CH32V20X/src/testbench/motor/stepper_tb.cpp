@@ -25,6 +25,9 @@
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
 
 // #include "dsp/filter/EKF.hpp"
+
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::intp;

@@ -18,7 +18,8 @@
 #include "core/utils/typetraits/serialize_traits.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 
 enum class Fruit:uint8_t{
     BANANA = 5,

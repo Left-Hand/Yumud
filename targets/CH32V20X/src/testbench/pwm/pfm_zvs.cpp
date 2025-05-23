@@ -12,6 +12,10 @@
 #include "hal/gpio/gpio_port.hpp"
 
 
+
+using namespace ymd;
+using namespace ymd::hal;
+
 // 外设：
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端

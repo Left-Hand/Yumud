@@ -9,6 +9,9 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 
+using namespace ymd;
+using namespace ymd::hal;
+
 static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define CHOP_FREQ 200
 

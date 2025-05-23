@@ -430,13 +430,12 @@ public:
         }
     }
 
-    template<typename Fn>
-    requires (!std::is_void_v<std::invoke_result_t<Fn, T>>)
-    [[nodiscard]]__fast_inline constexpr auto transform(Fn&& fn) const & {
-        // static_assert(>, "transform function must return a value");
-        return and_then([fn=std::forward<Fn>(fn)](auto&& val){
-            return fn(std::forward<decltype(val)>(val));
-        });
+    template<typename Fn,
+        typename TRet = magic::functor_ret_t<Fn>
+    >
+    [[nodiscard]]__fast_inline constexpr Result<TRet, E> transform(Fn&& fn) const & {
+        if(is_ok()) return Ok<TRet>(std::forward<Fn>(fn)(unwrap()));
+        else return Err<E>(unwrap_err());
     }
 
     // template<typename Fn>

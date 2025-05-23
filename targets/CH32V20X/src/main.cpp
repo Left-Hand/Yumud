@@ -12,7 +12,7 @@
 
 
 int main(){
-    sys::preinit();
+    ymd::sys::preinit();
     #ifdef CH32V20X
     // eeprom_main();
     // while(true);

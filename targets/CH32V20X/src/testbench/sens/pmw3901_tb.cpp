@@ -7,6 +7,9 @@
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void pmw3901_main(){

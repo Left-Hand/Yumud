@@ -14,6 +14,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 
 namespace ymd{
 template<typename Trait, typename Obj>

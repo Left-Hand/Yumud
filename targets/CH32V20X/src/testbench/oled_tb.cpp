@@ -17,9 +17,8 @@
 #include "types/image/font/instance.hpp"
 
 
-using namespace GpioUtils;
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 #if 0
 

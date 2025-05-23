@@ -12,7 +12,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 using ymd::drivers::BMI088_Acc;

@@ -2,6 +2,9 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 struct Node{
 	size_t idx;
 };

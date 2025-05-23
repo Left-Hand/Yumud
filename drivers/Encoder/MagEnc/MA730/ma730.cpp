@@ -4,10 +4,9 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
-#define MA730_DEBUG
+#define MA730_DEBUG_EN
 
-#ifdef MA730_DEBUG
-#undef MA730_DEBUG
+#ifdef MA730_DEBUG_EN
 #define MA730_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MA730_PANIC(...) PANIC(__VA_ARGS__)
 #define MA730_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
@@ -28,17 +27,19 @@ IResult<> MA730::init(){
 }
 
 IResult<> MA730::write_reg(const RegAddress addr, uint8_t data){
-    const auto res = spi_drv_.write_single<uint16_t>((uint16_t)(0x8000 | ((uint8_t)addr << 8) | data));
-    if(res.is_err()) return Err(Error(res.unwrap_err()));
+    const auto tx = uint16_t(0x8000 | ((uint8_t)addr << 8) | data);
+    if(const auto res = spi_drv_.write_single<uint16_t>(tx);
+        res.is_err()) return Err(Error(res.unwrap_err()));
     return Ok();
 }
 
 IResult<> MA730::read_reg(const RegAddress addr, uint8_t & data){
     uint16_t dummy;
-    if(const auto res = spi_drv_.write_single<uint16_t>((uint16_t)(0x4000 | ((uint8_t)addr << 8))); res.is_err())
-        return Err(Error(res.unwrap_err()));
-    if(const auto res = spi_drv_.read_single<uint16_t>(dummy); res.is_err()) 
-        return Err(Error(res.unwrap_err()));
+    const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
+    if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
+        res.is_err()) return Err(Error(res.unwrap_err()));
+    if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
+        res.is_err()) return Err(Error(res.unwrap_err()));
     data = dummy >> 8;
     return Ok();
 }

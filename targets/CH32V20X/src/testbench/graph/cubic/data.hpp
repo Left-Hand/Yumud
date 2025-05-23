@@ -3,6 +3,7 @@
 
 #include "types/vector3/Vector3.hpp"
 
+using namespace ymd;
 
 struct mat4_t
 {
