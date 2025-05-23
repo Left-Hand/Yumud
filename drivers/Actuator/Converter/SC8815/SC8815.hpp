@@ -21,8 +21,10 @@
 
 namespace ymd::drivers{
 
-class SC8815{
-public:
+
+struct SC8815_Collections{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
+
     enum class Error_Kind{
 
     };
@@ -32,14 +34,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-protected:
     using RegAddress = uint8_t;
-    uint32_t bus_shunt_res_mohms_ = 0;
-    uint32_t bat_shunt_res_mohms_ = 0;
-    real_t fb_up_res_kohms_ = 0;
-    real_t fb_down_res_kohms_ = 0;
-
-    hal::I2cDrv i2c_drv_;
 
 
     enum class IBatRatio:uint8_t{
@@ -62,13 +57,13 @@ protected:
         _5x = 1,
     };
 
-    enum class SwitchingFreq{
+    enum class SwitchingFreq:uint8_t{
         _150kHz = 0b00,
         _300kHz = 0b01,
         _450kHz = 0b11,
     };
 
-    enum class DeadZone{
+    enum class DeadZone:uint8_t{
         _20ns = 0b00, //default
         _40ns = 0b01,
         _60ns = 0b10,
@@ -107,6 +102,13 @@ protected:
         BatIrCompType ircomp;
     };
 
+    struct RatioConfig{
+        VBusRatio vbus_ratio;
+        VBatMonRatio vbat_mon_ratio;
+        IBusRatio ibus_ratio;
+        IBatRatio ibat_ratio;
+    };
+
     struct Interrupts{
         uint8_t :1;
         uint8_t eoc:1;
@@ -117,102 +119,101 @@ protected:
         uint8_t ac_ok:1;
         uint8_t :1;
     };
-    
 
-    struct VbatSetReg:public Reg8<>{
-        scexpr RegAddress address = 0x00;
+    static_assert(sizeof(Interrupts) == 1);
+};
+
+struct SC8815_Regs:public SC8815_Collections {
+
+    struct R8_VbatSet:public Reg8<>{
+        static constexpr RegAddress address = 0x00;
 
         uint8_t vcell_set:3;
         uint8_t csel:2;
         uint8_t vbat_sel:1;
         uint8_t ircomp:2;
-    };
+    }DEF_R8(vbat_set_reg)
 
-    struct VbusRefISetReg:public Reg16<>{
+    struct R16_VbusRefISet:public Reg16<>{
         using Reg16::operator=;
-        scexpr RegAddress address = 0x01;
+        static constexpr RegAddress address = 0x01;
 
-        uint16_t :16;
-    };
+        uint16_t value;
+    }DEF_R16(vbus_ref_i_set_reg)
 
-    struct VbusRefESetReg:public Reg16<>{
+    struct R16_VbusRefESet:public Reg16<>{
         using Reg16::operator=;
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
         
-        uint16_t :16;
-    };
+        uint16_t value;
+    }DEF_R16(vbus_ref_e_set_reg)
     
-    struct IBusLimSetReg:public Reg8<>{
+    struct R8_IBusLimSet:public Reg8<>{
         using Reg8::operator=;
-        scexpr RegAddress address = 0x05;
+        static constexpr RegAddress address = 0x05;
         
         uint8_t :8;
-    };
+    }DEF_R8(ibus_lim_set_reg)
     
-    struct IBatLimSetReg:public Reg8<>{
+    struct R8_IBatLimSet:public Reg8<>{
         using Reg8::operator=;
-        scexpr RegAddress address = 0x06;
+        static constexpr RegAddress address = 0x06;
 
         uint8_t :8;
-    };
+    }DEF_R8(ibat_lim_set_reg)
 
     
-    struct VinSetReg:public Reg8<>{
-        scexpr RegAddress address = 0x07;
+    struct R8_VinSet:public Reg8<>{
+        static constexpr RegAddress address = 0x07;
 
         uint8_t :8;
-    };
+    }DEF_R8(vin_set_reg)
     
-    struct RatioReg:public Reg8<>{
-        scexpr RegAddress address = 0x08;
+    struct R8_Ratio:public Reg8<>{
+        static constexpr RegAddress address = 0x08;
 
         uint8_t vbus_ratio:1;
         uint8_t vbat_mon_ratio:1;
         uint8_t ibus_ratio:2;
         uint8_t ibat_ratio:1;
         uint8_t :3;
-    };
+    }DEF_R8(ratio_reg)
 
-    struct RatioConfig{
-        VBusRatio vbus_ratio;
-        VBatMonRatio vbat_mon_ratio;
-        IBusRatio ibus_ratio;
-        IBatRatio ibat_ratio;
-    };
 
-    struct Ctrl0SetReg:public Reg8<>{
-        scexpr RegAddress address = 0x09;
+
+    struct R8_Ctrl0Set:public Reg8<>{
+        static constexpr RegAddress address = 0x09;
 
         uint8_t dt_set:2;
-        uint8_t freq_set:3;
+        uint8_t freq_set:2;
         uint8_t vinreg_ratio:1;
         uint8_t :2;
         uint8_t en_otg:1;
-    };
+    }DEF_R8(ctrl0_set_reg)
 
-    struct Ctrl1SetReg:public Reg8<>{
-        scexpr RegAddress address = 0x0A;
+    struct R8_Ctrl1Set:public Reg8<>{
+        static constexpr RegAddress address = 0x0A;
         
         uint8_t :2;
         uint8_t dis_ovp:1;
-        uint8_t trickle_set:3;
+        uint8_t trickle_set:1;
         uint8_t fb_sel:1;
         uint8_t dis_term:1;
         uint8_t dis_trickle:1;
         uint8_t ichar_set:1;
-    };
+    }DEF_R8(ctrl1_set_reg)
 
-    struct Ctrl2SetReg:public Reg8<>{
-        scexpr RegAddress address = 0x0B;
+    struct R8_Ctrl2Set:public Reg8<>{
+        static constexpr RegAddress address = 0x0B;
         
         uint8_t slew_set:2;
         uint8_t en_dither:1;
         uint8_t factory:1;
         uint8_t :4;
-    };
+    }DEF_R8(ctrl2_set_reg)
 
-    struct Ctrl3SetReg:public Reg8<>{
-        scexpr RegAddress address = 0x0C;
+    struct R8_Ctrl3Set:public Reg8<>{
+        static constexpr RegAddress address = 0x0C;
         
         uint8_t en_pfm:1;
         uint8_t eoc_set:1;
@@ -222,133 +223,68 @@ protected:
         uint8_t ad_start:1;
         uint8_t gpo_ctrl:1;
         uint8_t en_pgate:1;
-    };
+    }DEF_R8(ctrl3_set_reg)
 
-    struct VbusFbValueReg:public Reg16<>{
-        scexpr RegAddress address = 0x0d;
-
-        uint16_t value;
-    };
-
-    struct VbatFbValueReg:public Reg16<>{
-        scexpr RegAddress address = 0x0f;
+    struct R16_VbusFbValue:public Reg16<>{
+        static constexpr RegAddress address = 0x0d;
 
         uint16_t value;
-    };
+    }DEF_R16(vbus_fb_value_reg)
 
-    struct IBusValueReg:public Reg16<>{
-        scexpr RegAddress address = 0x11;
+    struct R16_VbatFbValue:public Reg16<>{
+        static constexpr RegAddress address = 0x0f;
 
-        uint16_t :16;
-    };
+        uint16_t value;
+    }DEF_R16(vbat_fb_value_reg)
 
-    struct IBatValueReg:public Reg16<>{
-        scexpr RegAddress address = 0x13;
+    struct R16_IBusValue:public Reg16<>{
+        static constexpr RegAddress address = 0x11;
 
-        uint16_t :16;
-    };
+        uint16_t value;
+    }DEF_R16(ibus_value_reg)
 
-    struct AdinValueReg:public Reg16<>{
-        scexpr RegAddress address = 0x03;
+    struct R16_IBatValue:public Reg16<>{
+        static constexpr RegAddress address = 0x13;
 
-        uint16_t :16;
-    };
+        uint16_t value;
+    }DEF_R16(ibat_value_reg)
 
-    struct StatusReg:public Reg8<>, public Interrupts{
+    struct R16_AdinValue:public Reg16<>{
+        static constexpr RegAddress address = 0x03;
+
+        uint16_t value;
+    }DEF_R16(adin_value_reg)
+
+    struct R8_Status:public Reg8<>, public Interrupts{
         using Reg8::operator =;
 
-        scexpr RegAddress address = 0x17;
-    };
+        static constexpr RegAddress address = 0x17;
+    }DEF_R8(status_reg)
 
-    struct MaskReg:public Reg8<>, public Interrupts{
+    struct R8_Mask:public Reg8<>, public Interrupts{
         using Reg8::operator =;
 
-        scexpr RegAddress address = 0x19;
-    };
+        static constexpr RegAddress address = 0x19;
+    }DEF_R8(mask_reg)
+};
 
-
-    VbatSetReg vbat_set_reg = {};
-    VbusRefISetReg vbus_ref_i_set_reg = {};
-    VbusRefESetReg vbus_ref_e_set_reg = {};
-
-    IBusLimSetReg ibus_lim_set_reg = {};
-    IBatLimSetReg ibat_lim_set_reg = {};
-    
-    VinSetReg vin_set_reg = {};
-    RatioReg ratio_reg = {};
-
-    Ctrl0SetReg ctrl0_set_reg = {};
-    Ctrl1SetReg ctrl1_set_reg = {};
-    Ctrl2SetReg ctrl2_set_reg = {};
-    Ctrl3SetReg ctrl3_set_reg = {};
-
-    VbusFbValueReg vbus_fb_value_reg = {};
-    VbatFbValueReg vbat_fb_value_reg = {};
-
-    IBusValueReg ibus_value_reg = {};
-    IBatValueReg ibat_value_reg = {};
-
-    AdinValueReg adin_value_reg = {};
-    StatusReg status_reg = {};
-    MaskReg mask_reg = {};
-
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
-
-    [[nodiscard]] IResult<> read_reg(auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
-
-    [[nodiscard]] IResult<> power_up();
-
+class SC8815 final:public SC8815_Regs{
 public:
-
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
-
-    SC8815(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8815(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8815(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
-
-    [[nodiscard]] IResult<Interrupts> interrupts();
-
-    [[nodiscard]] IResult<> init(const BatConfig & bat_conf = {
+    static constexpr auto DEFAULT_BAT_CONFIG = BatConfig {
         .vcell_set = BatVoltType::_4_2V,
         .csel = BatCellsType::_1S,
         .use_ext_setting = false,
         .ircomp = BatIrCompType::_20m
-    });
+    };
+
+    SC8815(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SC8815(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8815(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
+        :i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+    [[nodiscard]] IResult<Interrupts> interrupts();
+
+    [[nodiscard]] IResult<> init(const BatConfig & bat_conf);
 
     [[nodiscard]] IResult<> validate();
 
@@ -392,6 +328,54 @@ public:
     [[nodiscard]] IResult<> reconf_bat(const BatConfig & config);
     [[nodiscard]] IResult<> reconf_ratio(const RatioConfig & config);
     [[nodiscard]] IResult<> reconf_interrupt_mask(const Interrupts mask);
+private:
+protected:
+    uint32_t bus_shunt_res_mohms_ = 0;
+    uint32_t bat_shunt_res_mohms_ = 0;
+    real_t fb_up_res_kohms_ = 0;
+    real_t fb_down_res_kohms_ = 0;
+
+    hal::I2cDrv i2c_drv_;
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return write_reg(reg.address, reg.as_val());
+    }
+
+    [[nodiscard]] IResult<> power_up();
 };
 
 }

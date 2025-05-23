@@ -25,7 +25,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-scexpr uint16_t b10(const int value, const int step) {
+static constexpr uint16_t b10(const int value, const int step) {
         
     int cnt = (value / step) - 1;
     uint8_t byte2 = cnt % 4;
@@ -36,7 +36,7 @@ scexpr uint16_t b10(const int value, const int step) {
     return (byte2 << 8) | byte1;
 }
 
-scexpr int inv_b10(const uint16_t data, const int step) {
+static constexpr int inv_b10(const uint16_t data, const int step) {
     
     uint8_t byte1 = data & 0xFF;
     uint8_t byte2 = data >> 14;
