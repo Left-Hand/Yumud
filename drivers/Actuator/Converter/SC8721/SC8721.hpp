@@ -1,18 +1,28 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
-class SC8721{
-public:
+struct SC8721_Collections{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
+    using RegAddress = uint8_t;
+
+    enum class Error_Kind{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class DeadZone:uint8_t{
         _20ns,
@@ -49,34 +59,10 @@ public:
         uint8_t on_cc:1;
     };
 
+};
 
-    SC8721(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8721(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8721(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
-
-    void update();
-
-    bool validate();
-
-    void reset();
-
-    void setTargetVoltage(const real_t volt);
-
-    void enableExternalFb(const bool en = true);
-
-    void setDeadZone(const DeadZone dz);
-
-    void setSwitchFreq(const SwitchFreq freq);
-
-    Status getStatus();
-
-    void setSlopeComp(const SlopComp sc);
-protected:
-    using RegAddress = uint8_t;
-
-    hal::I2cDrv i2c_drv_;
-
-    struct CSOReg:public Reg8<>{
+struct SC8721_Regs:public SC8721_Collections{
+        struct CSOReg:public Reg8<>{
         scexpr RegAddress address = 0x01;
 
         uint8_t cso_set;
@@ -165,19 +151,62 @@ protected:
     Status2Reg status2_reg = {};
 
     
-    hal::HalResult write_reg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.write_reg(uint8_t(address), reg);
-    }
+};
 
-    hal::HalResult read_reg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.read_reg(uint8_t(address), reg);
-    }
-
-    hal::HalResult read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
-    }
+class SC8721 final:public SC8721_Regs{
 public:
+    SC8721(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SC8721(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8721(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] IResult<> reset();
+
+    [[nodiscard]] IResult<> set_target_voltage(const real_t volt);
+
+    [[nodiscard]] IResult<> enable_external_fb(const bool en = true);
+
+    [[nodiscard]] IResult<> set_dead_zone(const DeadZone dz);
+
+    [[nodiscard]] IResult<> set_switch_freq(const SwitchFreq freq);
+
+    [[nodiscard]] IResult<Status> get_status();
+
+    [[nodiscard]] IResult<> set_slope_comp(const SlopComp sc);
+private:
+    hal::I2cDrv i2c_drv_;
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = write_reg(reg.address, reg.as_val());
+        if(res.is_ok()) reg.apply();
+        return res;
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
 };
 
 }

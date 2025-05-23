@@ -15,34 +15,65 @@ using namespace ymd::drivers;
 #define SC8721_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg) write_reg(reg.address, reg);
-#define READ_REG(reg) read_reg(reg.address, reg);
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
 
-void SC8721::update(){
 
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    ASSERT{false, #x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
+#define RETURN_ON_ERR(x) ({\
+    if(const auto __res_return_on_err = (x); __res_return_on_err.is_err()){\
+        return CHECK_RES(__res_return_on_err);\
+    }\
+});\
+
+
+using namespace ymd;
+using namespace ymd::drivers;
+
+using Error = SC8721::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> SC8721::update(){
+    TODO();
 }
 
-bool SC8721::validate(){
-    return true;
+IResult<> SC8721::validate(){
+    TODO();
+    return Ok();
 }
 
-void SC8721::reset(){
-
+IResult<> SC8721::reset(){
+    TODO();
 }
 
 
-void SC8721::setTargetVoltage(const real_t volt){
+IResult<> SC8721::set_target_voltage(const real_t volt){
     uint16_t data = int(volt * 50);
 
-    vout_set_msb_reg.vout_set_msb = data >> 2;
-    vout_set_lsb_reg.vout_set_lsb = data & 0b11;
+    auto vout_set_msb_reg_copy = RegCopy(vout_set_msb_reg);
+    auto vout_set_lsb_reg_copy = RegCopy(vout_set_lsb_reg);
+    vout_set_msb_reg_copy.vout_set_msb = data >> 2;
+    vout_set_lsb_reg_copy.vout_set_lsb = data & 0b11;
 
-    WRITE_REG(vout_set_msb_reg)
-    WRITE_REG(vout_set_lsb_reg)
+    if(const auto res = write_reg(vout_set_msb_reg_copy);
+        res.is_err()) return res;
+    if(const auto res = write_reg(vout_set_lsb_reg_copy);
+        res.is_err()) return res;
+    return Ok();
 }
 
-void SC8721::enableExternalFb(const bool en){
-    auto & reg = vout_set_lsb_reg;
+IResult<> SC8721::enable_external_fb(const bool en){
+    auto reg = RegCopy(vout_set_lsb_reg);
 
     reg.fb_sel = en;
     if(en){
@@ -52,40 +83,42 @@ void SC8721::enableExternalFb(const bool en){
         reg.fb_dir = false;
     }
 
-    WRITE_REG(reg)
+    return write_reg(reg);
 }
 
-void SC8721::setDeadZone(const DeadZone dz){
-    auto & reg = sys_set_reg;
+IResult<> SC8721::set_dead_zone(const DeadZone dz){
+    auto reg = RegCopy(sys_set_reg);
     reg.ext_dt = bool(dz);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
 
-void SC8721::setSwitchFreq(const SwitchFreq freq){
-    auto & reg = freq_set_reg;
+IResult<> SC8721::set_switch_freq(const SwitchFreq freq){
+    auto reg = RegCopy(freq_set_reg);
     reg.freq_set = uint8_t(freq);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
-SC8721::Status SC8721::getStatus(){
-    READ_REG(status1_reg);
-    READ_REG(status2_reg);
+IResult<SC8721::Status> SC8721::get_status(){
+    if(const auto res = read_reg(status1_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_reg(status2_reg);
+        res.is_err()) return Err(res.unwrap_err());
 
-    Status status;
-    status.short_circuit = status1_reg.vout_short;
-    status.vout_vin_h = status1_reg.vout_vin_h;
-    status.thermal_shutdown = status1_reg.thd;
-    status.ocp = status1_reg.ocp;
-    status.vin_ovp = status2_reg.vinovp;
-    status.on_cv = status2_reg.vinreg_flag;
-    status.on_cc = status2_reg.ibus_flag;
-
-    return status;
+    return Ok(Status{
+        .short_circuit = status1_reg.vout_short,
+        .vout_vin_h = status1_reg.vout_vin_h,
+        .thermal_shutdown = status1_reg.thd,
+        .ocp = status1_reg.ocp,
+        .vin_ovp = status2_reg.vinovp,
+        .on_cv = status2_reg.vinreg_flag,
+        .on_cc = status2_reg.ibus_flag
+    });
 }
 
-void SC8721::setSlopeComp(const SlopComp sc){
-    slope_comp_reg.slop_comp = uint8_t(sc);
+IResult<> SC8721::set_slope_comp(const SlopComp sc){
+    auto reg = RegCopy(slope_comp_reg);
+    reg.slop_comp = uint8_t(sc);
 
-    WRITE_REG(slope_comp_reg)
+    return write_reg(reg);
 }
