@@ -56,10 +56,10 @@ public:
 
     using Callback = std::function<void(void)>;
 protected:
-    CAN_TypeDef * instance;
+    CAN_TypeDef * instance_;
     
     #ifndef CAN_SOFTFIFO_SIZE
-    #define CAN_SOFTFIFO_SIZE 8
+    static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
     #endif
 
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
@@ -74,10 +74,10 @@ protected:
     Gpio & get_tx_gpio();
     Gpio & get_rx_gpio();
 
-    
-    // BusError begin(const LockRequest req){return hal::BusError::Ok();}
+    hal::HalResult lead(const hal::LockRequest req){
+        return hal::HalResult::Ok();
+    };
 
-    hal::HalResult lead(const hal::LockRequest req){return hal::HalResult::Ok();};
     void trail(){};
 
     void install_gpio();
@@ -94,8 +94,8 @@ protected:
 
 
 
-    uint8_t transmit(const CanMsg & msg);
-    CanMsg receive(const uint8_t fifo_num);
+    [[nodiscard]] std::optional<uint8_t> transmit(const CanMsg & msg);
+    [[nodiscard]] CanMsg receive(const uint8_t fifo_num);
 
     friend class CanFilter;
 
@@ -119,7 +119,7 @@ protected:
     friend void ::CAN2_SCE_IRQHandler(void);
     #endif
 public:
-    Can(CAN_TypeDef * _instance):instance(_instance){;}
+    Can(CAN_TypeDef * instance):instance_(instance){;}
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
@@ -128,25 +128,23 @@ public:
     void init(const BaudRate baudrate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg);
-    const CanMsg && read();
-    const CanMsg & front();
-    size_t pending();
-    size_t available();
+    [[nodiscard]] CanMsg read();
+    [[nodiscard]] size_t pending();
+    [[nodiscard]] size_t available();
 
-    void clear(){while(this->available()){this->read();}}
+    void clear_rx(){while(this->available()){(void)this->read();}}
     void set_sync(const bool en){sync_ = en;}
-    bool is_tranmitting();
-    bool is_receiving();
+    [[nodiscard]] bool is_tranmitting();
+    [[nodiscard]] bool is_receiving();
     void enable_hw_retransmit(const bool en = true);
     void cancel_transmit(const uint8_t mbox);
     void cancel_all_transmits();
     void enable_fifo_lock(const bool en = true);
     void enable_index_priority(const bool en = true);
-    uint8_t get_tx_errcnt();
-    uint8_t get_rx_errcnt();
-    CanError error();
-
-    bool is_busoff();
+    [[nodiscard]] uint8_t get_tx_errcnt();
+    [[nodiscard]] uint8_t get_rx_errcnt();
+    [[nodiscard]] CanError get_last_error();
+    [[nodiscard]] bool is_busoff();
 
     void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
     void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}

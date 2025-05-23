@@ -16,10 +16,6 @@ namespace std{
     class source_location;
 }
 
-#ifndef OSTREAM_BUF_SIZE
-static constexpr size_t OSTREAM_BUF_SIZE = 64;
-#endif
-
 namespace ymd{
 
 class String;
@@ -45,7 +41,11 @@ inline OutputStream& operator<<(OutputStream& os,const type value) {\
 template<size_t Q>
 struct iq_t;
 
-namespace detials{
+namespace details{
+struct Splitter{};
+struct Endl{};
+
+
 template <typename T>
 struct __needprint_helper {
     static constexpr bool value = true;
@@ -67,22 +67,32 @@ struct __needprint_helper<std::_Setbase>{
     static constexpr bool value = false;
 };
 
-struct __Splitter{};
-struct __Endl{};
+template<>
+struct __needprint_helper<Splitter>{
+    static constexpr bool value = false;
+};
+
+template<typename T>
+static constexpr bool needprint_v = __needprint_helper<std::decay_t<T>>::value;
+
 
 
 template<char c>
-struct __Brackets{
+struct Brackets{
     static constexpr char chr = c;
 };
 
-template<>
-struct __needprint_helper<__Splitter>{
-    static constexpr bool value = false;
-};
+
 }
 
-class OutputStream{
+class OutputStreamIntf{
+public:
+    virtual size_t pending() const = 0;
+
+    virtual void sendout(const std::span<const char>) = 0;
+};
+
+class OutputStream:public OutputStreamIntf{
 public:
     struct Config{
         char splitter[4];
@@ -103,15 +113,12 @@ public:
         };
     };
 private:
-    template<typename T>
-    using __needprint_helper = detials::__needprint_helper<T>;
 
-    using __Splitter = detials::__Splitter;
-    using __Endl = detials::__Endl;
-
+    using Splitter = details::Splitter;
+    using Endl = details::Endl;
     
     template<char c>
-    using __Brackets = detials::__Brackets<c>;
+    using Brackets = details::Brackets<c>;
 
 
     uint8_t sp_len;
@@ -132,7 +139,7 @@ private:
 
     template<typename T>
     __fast_inline void print_splt_then_entity(T && any){
-        if constexpr(true == __needprint_helper<std::decay_t<T>>::value){
+        if constexpr(details::needprint_v<T>){
             print_splt();
         }
         *this << std::forward<T>(any);
@@ -140,7 +147,7 @@ private:
 
     template<typename T>
     __fast_inline void print_splt_then_entity(const char splt, T && any){
-        if constexpr(true ==__needprint_helper<std::decay_t<T>>::value){
+        if constexpr(details::needprint_v<T>){
             write(splt);
         }
         *this << std::forward<T>(any);
@@ -194,6 +201,10 @@ private:
 
     struct Buf{
         
+        #ifndef OSTREAM_BUF_SIZE
+        static constexpr size_t OSTREAM_BUF_SIZE = 64;
+        #endif
+
         char buf[OSTREAM_BUF_SIZE];
         uint8_t size = 0;
         
@@ -261,9 +272,6 @@ public:
         [this](const std::span<const char> pbuf){this->sendout(pbuf);});
 	}
 
-    virtual size_t pending() const = 0;
-
-    virtual void sendout(const std::span<const char>) = 0;
     OutputStream & set_splitter(const char * splitter){
         strcpy(config_.splitter, splitter);
         sp_len = strlen(splitter);
@@ -335,7 +343,7 @@ public:
     OutputStream & operator<<(std::ios_base& (*func)(std::ios_base&));
     OutputStream & operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
     OutputStream & operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
-    OutputStream & operator<<(const __Endl){this->print_endl(); return *this;}
+    OutputStream & operator<<(const Endl){this->print_endl(); return *this;}
     
     OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
 
@@ -351,10 +359,10 @@ public:
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::nano> ns){
         return *this << ns.count() << "ns";}
-    OutputStream & operator<<(const __Splitter){print_splt(); return *this;}
+    OutputStream & operator<<(const Splitter){print_splt(); return *this;}
 
     template<char chr>
-    OutputStream & operator<<(const __Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
+    OutputStream & operator<<(const Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
     OutputStream & operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
     template<typename T>
@@ -474,7 +482,7 @@ public:
         print_indent();
         *this << std::forward<First>(first);
 
-        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+        if constexpr(false == details::needprint_v<First>){
             return prints(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(' ', std::forward<Args>(args)), ...);
@@ -491,7 +499,7 @@ public:
     OutputStream & printt(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+        if constexpr(false == details::needprint_v<First>){
             return printt(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity('\t', std::forward<Args>(args)), ...);
@@ -508,7 +516,7 @@ public:
     OutputStream & println(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+        if constexpr(false == details::needprint_v<First>){
             return println(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(std::forward<Args>(args)), ...);
@@ -525,12 +533,12 @@ public:
     auto radix() const {return config_.radix;}
 
 
-    __Endl endl() const {return {};}
+    Endl endl() const {return {};}
 
-    __Splitter splitter() const {return {};}
+    Splitter splitter() const {return {};}
 
     template<char chr>
-    __Brackets<chr> brackets() const {return {};}
+    Brackets<chr> brackets() const {return {};}
 
     OutputStream & flush();
 

@@ -211,8 +211,13 @@ void myservo_main(){
     using Filter = dsp::ButterLowpassFilter<iq_t<16>, 4>;
     using Config = typename Filter::Config;
 
-    Filter filter = {Config{
-        .fc = 20,
+    Filter curr_filter = {Config{
+        .fc = 40,
+        .fs = ISR_FREQ,
+    }};
+
+    Filter spin_filter = {Config{
+        .fc = 40,
         .fs = ISR_FREQ,
     }};
 
@@ -258,8 +263,9 @@ void myservo_main(){
         // phase_gpio = BoolLevel::from(duty > 0);
         // pwm.set_duty(ABS(duty));
         sense_raw_volt = ain1.get_voltage();
-        filter.update(sense_raw_volt);
-        duty = CLAMP(duty + 0.05_r * (curr_cmd - filter.get()), 0, 0.9_r);
+        curr_filter.update(sense_raw_volt);
+        spin_filter.update(ain2.get_voltage());
+        duty = CLAMP(duty + 0.05_r * (curr_cmd - curr_filter.get()), 0, 0.9_r);
     });
 
 
@@ -297,18 +303,20 @@ void myservo_main(){
         //     UART.read1(chr);
         //     DEBUG_PRINTLN(chr);
         // }
-        // constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
         // DEBUG_PRINTLN(msg);
         // DEBUG_PRINTLN("before", can.pending());
         // clock::delay(200ms);
         // DEBUG_PRINTLN("after", can.pending());
         // clock::delay(2ms);
-        // can.write(msg);
+
+        constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
+        can.write(msg);
+        
         DEBUG_PRINTLN_IDLE(
             duty, 
             sense_raw_volt, 
-            filter.get(), 
-            ain2.get_voltage(),
+            curr_filter.get(), 
+            spin_filter.get(),
             timer3.cnt()
         );
         // for(auto i = 0; i < 1000; ++i){
