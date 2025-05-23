@@ -10,6 +10,8 @@
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 bool isInInterruptContext() {

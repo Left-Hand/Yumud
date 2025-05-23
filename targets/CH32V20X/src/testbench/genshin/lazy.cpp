@@ -23,7 +23,7 @@
 // https://zplutor.github.io/2022/03/25/cpp-coroutine-beginner/
 
 using namespace ymd;
-
+using namespace ymd::hal;
 
 struct CustomAllocator {
     void* allocate(size_t size){

@@ -11,6 +11,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 
 #define UART uart2
 

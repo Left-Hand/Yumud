@@ -15,6 +15,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 
 struct FoundInfo{
     uint8_t addr;

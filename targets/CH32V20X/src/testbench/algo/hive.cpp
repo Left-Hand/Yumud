@@ -12,6 +12,9 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 void hive_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);

@@ -5,6 +5,9 @@
 #include "types/matrix/matrix_static.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 template<arithmetic T, size_t N_X, size_t N_Y>
 class AdaptiveEKF {
     using MatrixXX = Matrix_t<T, N_X, N_X>;

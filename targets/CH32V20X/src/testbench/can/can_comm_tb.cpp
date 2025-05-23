@@ -6,8 +6,11 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
-    can.init(1_MHz, hal::Can::Mode::Normal);
+    can.init(hal::CanBaudrate::_1M, hal::Can::Mode::Normal);
 
     portC[13].outpp();
     portC[14].outpp();
@@ -18,7 +21,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         CanMsg msg = CanMsg::from_bytes(hal::CanStdId(id), std::span(data));
 
         // constexpr auto a = sizeof(msg);
-        auto read = msg.to_span();
+        auto read = msg.payload();
         logger.println(id, data, read);
 
     }
@@ -30,14 +33,14 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         CanMsg msg = CanMsg::from_tuple(CanExtId::from_raw(id), std::make_tuple(data));
         // msg.load(data);
         // auto read = msg.to_vector();
-        logger.println(id, msg.size(), msg.to_span(), real_t(msg));
+        logger.println(id, msg.size(), msg.payload(), msg.to<real_t>());
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
-        msg = CanMsg::from_tuple(CanStdId(id), std::make_tuple(data2));
-        logger.println(id, msg.size(), msg.to_span(), real_t(msg));
-        for(uint8_t i = 0; i < msg.size(); i++){
-            logger.println(msg[i]);
+        const auto msg2 = CanMsg::from_tuple(CanStdId(id), std::make_tuple(data2));
+        logger.println(id, msg2.size(), msg2.payload(), msg2.to<real_t>());
+        for(uint8_t i = 0; i < msg2.size(); i++){
+            logger.println(msg2[i]);
         }
 
         while(true);
@@ -50,7 +53,12 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             can.write(msg_v);
 
             while(can.pending()){
-                logger.println("err", can.get_tx_errcnt(), can.get_rx_errcnt(), can.is_busoff(), (int)can.error());
+                logger.println("err", 
+                    can.get_tx_errcnt(), 
+                    can.get_rx_errcnt(), 
+                    can.is_busoff(), 
+                    std::bit_cast<uint8_t>(can.get_last_error())
+                );
                 clock::delay(2ms);
             }
 

@@ -2,6 +2,7 @@
 
 #include "core/math/float/bf16.hpp"
 
+using namespace ymd;
 
 static constexpr std::array<TriangleSurface_t<bf16>,32> triangles =
 {

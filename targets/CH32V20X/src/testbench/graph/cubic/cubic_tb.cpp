@@ -22,6 +22,7 @@
 #include "data.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 
 #define RADIANS(x) ((3.1415926f / 180) * (x))
 

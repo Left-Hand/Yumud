@@ -10,7 +10,8 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 static inline constexpr auto get_m_a_s_udiv32(uint32_t Divisor){
     const uint32_t n = std::countr_zero(Divisor);
     const uint32_t _t = Divisor >> n;

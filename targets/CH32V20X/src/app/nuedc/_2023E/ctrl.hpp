@@ -8,6 +8,9 @@
 #include "types/vector2/vector2.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 namespace std{
     template<size_t Q, size_t Q2>
     [[nodiscard]] __fast_inline constexpr iq_t<Q> copysign(const iq_t<Q> x, const iq_t<Q2> s){

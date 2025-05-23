@@ -5,6 +5,9 @@
 #include "tests.hpp"
 
 
+using namespace ymd;
+using namespace ymd::hal;
+
 #define USE_MOCK_SERVO
 
 

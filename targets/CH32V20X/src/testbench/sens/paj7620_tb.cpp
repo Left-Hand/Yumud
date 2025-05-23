@@ -6,6 +6,8 @@
 
 #include "drivers/Proximeter/PAJ7620/paj7620.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 #define UART_DEST_FPGA 0

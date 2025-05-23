@@ -59,8 +59,8 @@ static __no_inline auto test_result(int _x){
 void ads1115_main()
 {
 
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     // DEBUGGER.no_brackets();

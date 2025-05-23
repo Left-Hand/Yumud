@@ -9,6 +9,8 @@
 #include "drivers/HumitureSensor/TCS34725/tcs34725.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){

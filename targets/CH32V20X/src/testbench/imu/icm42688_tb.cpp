@@ -12,7 +12,8 @@
 #include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
 #include "robots/gesture/mahony.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 // #define UART uart2

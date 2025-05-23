@@ -9,6 +9,8 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开

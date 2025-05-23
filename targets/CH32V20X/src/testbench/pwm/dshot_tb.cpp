@@ -8,11 +8,13 @@
 
 #include "drivers/Modem/dshot/dshot.hpp"
 
-scexpr size_t n = 40;
-static std::array<uint16_t, 40> data;
-
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::hal;
+using namespace ymd::drivers;
+
+scexpr size_t N = 40;
+static std::array<uint16_t, N> data;
+
 
 [[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
 	uint16_t speed_data;

@@ -7,6 +7,8 @@
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/timer.hpp"
 
+
+
 namespace ymd::digipw{
 
 class InterleavedPwmGen3 final{
@@ -275,7 +277,7 @@ private:
     hal::TimerOCN & pwm_vn_;
     hal::TimerOCN & pwm_wn_;
 
-    hal::Gpio & test_gpio = portA[12];
+    hal::Gpio & test_gpio = hal::portA[12];
 
     Option<TrigOccasion> trig_occasion_opt_ = None;
     Duty duty_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};

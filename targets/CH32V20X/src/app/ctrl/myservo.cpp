@@ -28,6 +28,8 @@
 #include "drivers/Encoder/AnalogEncoder.hpp"
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 namespace ymd::motorctl{
 class ServoElectrics{
 public:

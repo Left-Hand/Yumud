@@ -19,6 +19,8 @@
 #include "robots/tween/Tween.hpp"
 #include "core/math/realmath.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 using Point = Vector2_t<real_t>;
 using Points = std::vector<Vector2_t<real_t>>;

@@ -28,6 +28,9 @@
 
 #include <ranges>
 
+using namespace ymd;
+using namespace ymd::hal;
+
 #define EQUAL_ASSERT(a, b)\
 do{\
     auto _a = (a);\

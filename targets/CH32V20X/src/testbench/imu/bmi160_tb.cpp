@@ -8,6 +8,9 @@
 #include "types/quat/Quat.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void bmi160_main(){

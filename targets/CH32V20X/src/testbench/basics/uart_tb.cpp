@@ -11,6 +11,9 @@
 #include "core/debug/debug.hpp"
 #include "core/string/string.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 #define UART_TB_ECHO
 using std::string;
 

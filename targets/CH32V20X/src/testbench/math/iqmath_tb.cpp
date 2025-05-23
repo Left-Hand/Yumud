@@ -7,7 +7,8 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
-
+using namespace ymd;
+using namespace ymd::hal;
 
 template<int Q>
 void iqmath_tb() {

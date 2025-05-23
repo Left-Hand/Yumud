@@ -7,7 +7,11 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
+
+
 void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 

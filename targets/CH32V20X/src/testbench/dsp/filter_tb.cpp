@@ -13,7 +13,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 
-
+using namespace ymd;
+using namespace ymd::hal;
 void filter_tb(OutputStream & logger){
     logger.set_eps(4);
 
