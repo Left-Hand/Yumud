@@ -42,19 +42,19 @@ OutputStream & operator << (OutputStream & os, const Result<auto, auto> & result
     // while(true);
 
 
-static __no_inline auto test_result(int _x){
-    Result<int, const char *> result = Ok(_x);
+// static __no_inline auto test_result(int _x){
+//     Result<int, const char *> result = Ok(_x);
 
-    auto squared = result
-        .transform([](auto && x){
-            return rescond(x > 0, x * x, "minus");
-        })
-        .transform([](auto && x){
-            return rescond(x > 9, x + 1, "small");
-        });
+//     auto squared = result
+//         .transform([](auto && x){
+//             return rescond(x > 0, x * x, "minus");
+//         })
+//         .transform([](auto && x){
+//             return rescond(x > 9, x + 1, "small");
+//         });
     
-    return squared;
-}
+//     return squared;
+// }
 
 void ads1115_main()
 {
@@ -66,7 +66,7 @@ void ads1115_main()
     // DEBUGGER.no_brackets();
 
     // DEBUG_PRINTLN(test_result(4));
-    DEBUG_PRINTLN(test_result(4).loc().expect("no"));
+    // DEBUG_PRINTLN(test_result(4).loc().expect("no"));
     while(true);
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
     i2c.init(400_KHz);
