@@ -186,6 +186,15 @@ private:
 
 }
 
+class Joystick{
+public: 
+    virtual void update();
+};
+
+class AnalogJoystick{
+
+};
+
 #define UART hal::uart2
 static constexpr uint32_t TIM_FREQ = 10000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;

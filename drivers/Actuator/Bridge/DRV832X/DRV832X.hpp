@@ -16,13 +16,17 @@
 
 namespace ymd::drivers{
 
-class DRV832X:public Coil3DriverIntf{
-public:
+struct DRV832X_Collections{
     enum class Error_Kind{
 
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    using RegAddress = uint8_t;
 
     enum class PeakCurrent:uint8_t{
         _1_7A = 0,
@@ -197,12 +201,10 @@ public:
         _0_75V = 2,
         _1_0V = 3,
     };
-protected:
-    hal::SpiDrv spi_drv_;
+};
 
-    using RegAddress = uint8_t;
-
-    struct Status1Reg:public Reg16<>{
+struct DRV832X_Regs:public DRV832X_Collections{
+    struct R16_Status1:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t vds_lc:1;
@@ -220,7 +222,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Status2Reg:public Reg16<>{
+    struct R16_Status2:public Reg16<>{
         scexpr RegAddress address = 0x01;
 
         uint16_t vgs_lc:1;
@@ -238,7 +240,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Ctrl1Reg:public Reg16<>{
+    struct R16_Ctrl1:public Reg16<>{
         scexpr RegAddress address = 0x02;
 
         uint16_t clr_flt:1;
@@ -301,28 +303,20 @@ protected:
         uint16_t csa_fet:1;
     };
 
-    struct Regs{
-        Status1Reg status1;
-        Status2Reg status2;
-        Ctrl1Reg ctrl1;
-        R16_GateDriveHs gate_drv_hs;
-        R16_GateDriveLs gate_drv_ls;
-        R16_OcpCtrl ocp_ctrl;
-        R16_CsaCtrl csa_ctrl;
-    }regs_;
 
-    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint16_t reg);
-    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint16_t & reg);
+    R16_Status1 status1_reg;
+    R16_Status2 status2_reg;
+    R16_Ctrl1 ctrl1_reg;
+    R16_GateDriveHs gate_drv_hs_reg;
+    R16_GateDriveLs gate_drv_ls_reg;
+    R16_OcpCtrl ocp_ctrl_reg;
+    R16_CsaCtrl csa_ctrl_reg;
+};
 
-
-    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
-        return write_reg(reg.address, reg);
-    }
-
-    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
-        return read_reg(reg.address, reg);
-    }
-
+class DRV832X final:
+    public Coil3DriverIntf,
+    public DRV832X_Regs{
+public:
 
 
 public:
@@ -331,18 +325,33 @@ public:
     DRV832X(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
-    void init();
+    [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] Result<void, Error> set_peak_current(const PeakCurrent peak_current);
-    [[nodiscard]] Result<void, Error> set_ocp_mode(const OcpMode ocp_mode);
-    // [[nodiscard]] Result<void, Error> set_octw_mode(const OctwMode octw_mode);
-    [[nodiscard]] Result<void, Error> set_gain(const Gain gain);
-    // [[nodiscard]] Result<void, Error> set_oc_ad_table(const OcAdTable oc_ad_table);
-    [[nodiscard]] Result<void, Error> enable_pwm3(const bool en = true);
+    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
+    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> enable_pwm3(const bool en = true);
 
-    [[nodiscard]] Result<void, Error> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] Result<void, Error> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] Result<void, Error> set_drive_time(const PeakDriveTime ptime);
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
+private:
+    hal::SpiDrv spi_drv_;
+
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+
+
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
+        return write_reg(reg.address, reg);
+    }
+
+    [[nodiscard]] IResult<> read_reg(auto & reg){
+        return read_reg(reg.address, reg);
+    }
+
+
 
 };
 

@@ -313,9 +313,11 @@ public:
     [[nodiscard]] IResult<> enable_sfb(const bool en = true);
     [[nodiscard]] IResult<> enable_gpo(const bool en = true);
     [[nodiscard]] IResult<> enable_pgate(const bool en = true);
+
     [[nodiscard]] IResult<> set_bat_volt(const BatVoltType bat_volt);
+
     [[nodiscard]] IResult<> set_bat_cells(const BatCellsType bat_cells);
-    [[nodiscard]] IResult<> set_bat_cells(const uint32_t bat_cells);
+
     [[nodiscard]] IResult<> enable_vbat_use_extneral(const bool use);
     [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrCompType bat_ir_comp);
     
@@ -337,43 +339,32 @@ protected:
 
     hal::I2cDrv i2c_drv_;
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = i2c_drv_.write_reg(
+            uint8_t(reg.address), 
+            reg.as_val(), LSB);
+        if(res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        const auto res = i2c_drv_.read_reg(
+            uint8_t(reg.address), 
+            reg.as_ref(), LSB);
+        if(res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint8_t> pdata){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
-
-    [[nodiscard]] IResult<> read_reg(auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
 
     [[nodiscard]] IResult<> power_up();
 };

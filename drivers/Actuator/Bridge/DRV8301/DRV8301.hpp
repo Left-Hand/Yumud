@@ -1,8 +1,8 @@
 #pragma once
 
-#include <optional>
-#include <array>
 
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 #include "concept/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -13,8 +13,19 @@
 
 namespace ymd::drivers{
 
-class DRV8301:public Coil3DriverIntf{
-public:
+
+struct DRV8301_Collections{
+    enum class Error_Kind:uint8_t{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    using RegAddress = uint8_t;
+
     enum class PeakCurrent:uint8_t{
         _1_7A = 0,
         _0_7A = 1,
@@ -78,12 +89,9 @@ public:
         _2131mA,
         _2400mA,
     };
+};
 
-protected:
-    hal::SpiDrv spi_drv_;
-
-    using RegAddress = uint8_t;
-
+struct DRV8301_Regs:public DRV8301_Collections{
     struct Status1Reg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
@@ -138,10 +146,13 @@ protected:
     Status1Reg status1_reg = {};
     Status2Reg status2_reg = {};
     Ctrl1Reg ctrl1_reg = {};
-    Ctrl2Reg ctrl2_reg = {};
+    Ctrl2Reg ctrl2_reg = {}; 
+};
 
-    hal::HalResult write_reg(const RegAddress addr, const uint16_t reg);
-    hal::HalResult read_reg(const RegAddress addr, uint16_t & reg);
+class DRV8301 final:
+    public Coil3DriverIntf,
+    public DRV8301_Regs{
+public:
 
 public:
     DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
@@ -149,14 +160,34 @@ public:
     DRV8301(hal::Spi & spi, const hal::SpiSlaveIndex idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
 
 
-    void init();
+    IResult<> init();
+    IResult<> set_peak_current(const PeakCurrent peak_current);
+    IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    IResult<> set_octw_mode(const OctwMode octw_mode);
+    IResult<> set_gain(const Gain gain);
+    IResult<> set_oc_ad_table(const OcAdTable oc_ad_table);
+    IResult<> enable_pwm3(const bool en = true);
+private:
+    hal::SpiDrv spi_drv_;
 
-    void setPeakCurrent(const PeakCurrent peak_current);
-    void setOcpMode(const OcpMode ocp_mode);
-    void setOctwMode(const OctwMode octw_mode);
-    void setGain(const Gain gain);
-    void setOcAdTable(const OcAdTable oc_ad_table);
-    void enablePwm3(const bool en = true);
+    IResult<> write_reg(const RegAddress addr, const uint16_t reg);
+    IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = write_reg(reg.address, reg.as_val());
+        if(res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        const auto res = read_reg(reg.address, reg.as_val());
+        if(res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
 };
 
 };

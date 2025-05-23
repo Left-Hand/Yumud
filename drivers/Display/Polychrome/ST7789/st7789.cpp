@@ -5,8 +5,6 @@
 #include "types/range/range.hpp"
 #include "core/debug/debug.hpp"
 
-#define ST7789_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
-
 using namespace ymd::drivers;
 using namespace ymd;
 

@@ -128,20 +128,22 @@ IResult<real_t> SC8815::get_adin_volt(){
 
 IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
     const auto ratio = ((ratio_reg & 0x0c) == 4) ? 6 : 3;
-    ibus_lim_set_reg = uint16_t(
+    auto reg = RegCopy(ibus_lim_set_reg);
+    reg.as_ref() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
     );
 
-    return write_reg(ibus_lim_set_reg);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_bat_curr_limit(const real_t limit_ma){
     const auto ratio = ((ratio_reg & 0x10) == 16) ? 12 : 6;
-    ibat_lim_set_reg = uint16_t(
+    auto reg = RegCopy(ibat_lim_set_reg);
+    reg.as_ref() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
     );
 
-    return write_reg(ibat_lim_set_reg);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_output_volt(const real_t volt){
@@ -166,41 +168,43 @@ IResult<> SC8815::set_output_volt(const real_t volt){
 
         //写入到 SC8815 VBUSREF_E_SET 寄存器
 
-        vbus_ref_e_set_reg = uint16_t(tmp1 | (tmp2 << 14));
-        return write_reg(vbus_ref_e_set_reg);
+        auto reg = RegCopy(vbus_ref_e_set_reg);
+        reg.as_ref() = uint16_t(tmp1 | (tmp2 << 14));
+        return write_reg(reg);
     }else{
         const int ratio = (ratio_reg & 0x01) ? 10 : 25; //取得 VBUS 电压的比率
         const uint16_t value = int(volt / ratio);   //计算对应的参考电压
 
         uint16_t tmp2;
         //得到 VBUSREF 寄存器 2 的值
-        for (tmp2 = 0; tmp2 < 3; tmp2++)
-        {
-            if (((value - tmp2 - 1) % 4) == 0)
-            {
+        for (tmp2 = 0; tmp2 < 3; tmp2++){
+            if (((value - tmp2 - 1) % 4) == 0){
                 break;
             }
         }
 
         //得到 VBUSREF 寄存器 1 的值
         const uint16_t tmp1 = (tmp1 - tmp2 - 1) / 4;
-        vbus_ref_i_set_reg = uint16_t(tmp1 | (tmp2 << 14));
+        auto reg = RegCopy(vbus_ref_i_set_reg);
+        reg.as_ref() = uint16_t(tmp1 | (tmp2 << 14));
 
-        return write_reg(vbus_ref_i_set_reg);
+        return write_reg(reg);
     }
 
 
 }
 
 IResult<> SC8815::set_internal_vbus_ref(const real_t volt){
-    vbus_ref_i_set_reg = b10(int(volt * 1000), 2);
-    return write_reg(vbus_ref_i_set_reg);
+    auto reg = RegCopy(vbus_ref_i_set_reg);
+    reg.as_ref() = b10(int(volt * 1000), 2);
+    return write_reg(reg);
 
 }
 
 IResult<> SC8815::set_external_vbus_ref(const real_t volt){
-    vbus_ref_e_set_reg = b10(int(volt * 1000), 2);
-    return write_reg(vbus_ref_e_set_reg);
+    auto reg = RegCopy(vbus_ref_e_set_reg);
+    reg.as_ref() = b10(int(volt * 1000), 2);
+    return write_reg(reg);
 
 }
 
@@ -211,13 +215,15 @@ IResult<> SC8815::set_ibat_lim_ratio(){
 }
 
 IResult<> SC8815::enable_otg(const bool en){
-    ctrl0_set_reg.en_otg = en;
-    return write_reg(ctrl0_set_reg);
+    auto reg = RegCopy(ctrl0_set_reg);
+    reg.en_otg = en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_trikle_charge(const bool en){
-    ctrl1_set_reg.dis_trickle = !en;
-    return write_reg(ctrl1_set_reg);
+    auto reg = RegCopy(ctrl1_set_reg);
+    reg.dis_trickle = !en;
+    return write_reg(reg);
 
 }
 
@@ -227,39 +233,46 @@ IResult<> SC8815::enable_ovp_protect(const bool en){
 }
 
 IResult<> SC8815::power_up(){
-    ctrl2_set_reg.factory = 1;//Factory setting bit. MCU shall write this bit to 1 after power up.
-    return write_reg(ctrl2_set_reg);
+    auto reg = RegCopy(ctrl2_set_reg);
+    reg.factory = 1;//Factory setting bit. MCU shall write this bit to 1 after power up.
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_dither(const bool en){
-    ctrl2_set_reg.en_dither = en;
-    return write_reg(ctrl2_set_reg);
+    auto reg = RegCopy(ctrl2_set_reg);
+    reg.en_dither = en;
+    return write_reg(reg);
 
 }
 
 IResult<> SC8815::enable_adc_conv(const bool en){
-    ctrl3_set_reg.ad_start = en;
-    return write_reg(ctrl3_set_reg);
+    auto reg = RegCopy(ctrl3_set_reg);
+    reg.ad_start = en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_pfm_mode(const bool en){
-    ctrl3_set_reg.en_pfm = en;
-    return write_reg(ctrl3_set_reg);
+    auto reg = RegCopy(ctrl3_set_reg);
+    reg.en_pfm = en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_sfb(const bool en){
-    ctrl3_set_reg.dis_shortfoldback = !en;
-    return write_reg(ctrl3_set_reg);
+    auto reg = RegCopy(ctrl3_set_reg);
+    reg.dis_shortfoldback = !en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_gpo(const bool en){
-    ctrl3_set_reg.gpo_ctrl = en;
-    return write_reg(ctrl3_set_reg);
+    auto reg = RegCopy(ctrl3_set_reg);
+    reg.gpo_ctrl = en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_pgate(const bool en){
-    ctrl3_set_reg.en_pgate = en;
-    return write_reg(ctrl3_set_reg);
+    auto reg = RegCopy(ctrl3_set_reg);
+    reg.en_pgate = en;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::reconf_bat(const BatConfig & config){
@@ -281,55 +294,59 @@ IResult<SC8815::Interrupts> SC8815::interrupts(){
 }
 
 IResult<> SC8815::reconf_interrupt_mask(const Interrupts mask){
-    mask_reg = std::bit_cast<uint8_t>(mask);
-    return write_reg(mask_reg);
+    auto reg = RegCopy(mask_reg);
+    reg.as_ref() = std::bit_cast<uint8_t>(mask);
+    return write_reg(reg);
 }
 
 
 
 IResult<> SC8815::set_bat_volt(const BatVoltType bat_volt){
-    vbat_set_reg.vcell_set = uint8_t(bat_volt);
-    return write_reg(vbat_set_reg);
+    auto reg = RegCopy(vbat_set_reg);
+    reg.vcell_set = uint8_t(bat_volt);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_bat_cells(const BatCellsType bat_cells){
-    vbat_set_reg.vcell_set = uint8_t(bat_cells);
-    return write_reg(vbat_set_reg);
-}
-
-IResult<> SC8815::set_bat_cells(const uint32_t bat_cells){
-    if(bat_cells > 4) SC8815_PANIC();
-    return set_bat_cells(BatCellsType(bat_cells));
+    auto reg = RegCopy(vbat_set_reg);
+    reg.vcell_set = uint8_t(bat_cells);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::enable_vbat_use_extneral(const bool use){
-    vbat_set_reg.vbat_sel = use;
-    return write_reg(vbat_set_reg);
+    auto reg = RegCopy(vbat_set_reg);
+    reg.vbat_sel = use;
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_bat_ir_comp(const BatIrCompType bat_ir_comp){
-    vbat_set_reg.ircomp = uint8_t(bat_ir_comp);
-    return write_reg(vbat_set_reg);
+    auto reg = RegCopy(vbat_set_reg);
+    reg.ircomp = uint8_t(bat_ir_comp);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_ibat_ratio(const IBatRatio ratio){
-    ratio_reg.ibat_ratio = uint8_t(ratio);
-    return write_reg(ratio_reg);
+    auto reg = RegCopy(ratio_reg);
+    reg.ibat_ratio = uint8_t(ratio);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_ibus_ratio(const IBusRatio ratio){
-    ratio_reg.ibus_ratio = uint8_t(ratio);
-    return write_reg(ratio_reg);
+    auto reg = RegCopy(ratio_reg);
+    reg.ibus_ratio = uint8_t(ratio);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_vbat_mon_ratio(const VBatMonRatio ratio){
-    ratio_reg.vbat_mon_ratio = uint8_t(ratio);
-    return write_reg(ratio_reg);
+    auto reg = RegCopy(ratio_reg);
+    reg.vbat_mon_ratio = uint8_t(ratio);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::set_vbus_ratio(const VBusRatio ratio){
-    ratio_reg.vbus_ratio = uint8_t(ratio);
-    return write_reg(ratio_reg);
+    auto reg = RegCopy(ratio_reg);
+    reg.vbus_ratio = uint8_t(ratio);
+    return write_reg(reg);
 }
 
 IResult<> SC8815::reconf_ratio(const RatioConfig & config){

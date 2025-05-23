@@ -59,6 +59,8 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
+    using RegAddress = uint8_t;
+
 
     // Address Pins and Slave Addresses
     // A0   ADDRESS 0
@@ -67,7 +69,7 @@ public:
     // SDA  1000010 0
     // SCL  1000011 0
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
     enum class ChannelIndex:uint8_t{
         CH1 = 0,
@@ -124,13 +126,19 @@ public:
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 
+    struct Config{
+        ConversionTime shunt_conv_time;
+        ConversionTime bus_conv_time;
+        AverageTimes average_times;
+    };
 
-protected:
 
-    using RegAddress = uint8_t;
 
+};
+
+struct INA3221_Regs:public INA3221_Collections {
     struct R16_Config:public Reg16<>{
-        scexpr RegAddress address = 0x00;
+        static constexpr RegAddress address = 0x00;
 
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
@@ -169,11 +177,11 @@ protected:
         }
     };
 
-    struct R16_ShuntVolt1:public R16_ShuntVolt{scexpr RegAddress address = 0x01;};
-    struct R16_ShuntVolt2:public R16_ShuntVolt{scexpr RegAddress address = 0x03;};
-    struct R16_ShuntVolt3:public R16_ShuntVolt{scexpr RegAddress address = 0x05;};
-    struct R16_ShuntVoltSum:public R16_ShuntVolt{scexpr RegAddress address = 0x0D;};
-    struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{scexpr RegAddress address = 0x0E;};
+    struct R16_ShuntVolt1:public R16_ShuntVolt{static constexpr RegAddress address = 0x01;};
+    struct R16_ShuntVolt2:public R16_ShuntVolt{static constexpr RegAddress address = 0x03;};
+    struct R16_ShuntVolt3:public R16_ShuntVolt{static constexpr RegAddress address = 0x05;};
+    struct R16_ShuntVoltSum:public R16_ShuntVolt{static constexpr RegAddress address = 0x0D;};
+    struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{static constexpr RegAddress address = 0x0E;};
 
     struct R16_BusVolt:public Reg16i<>{
 
@@ -192,9 +200,9 @@ protected:
         }
     };
 
-    struct R16_BusVolt1:public R16_BusVolt{scexpr RegAddress address = 0x02;};
-    struct R16_BusVolt2:public R16_BusVolt{scexpr RegAddress address = 0x04;};
-    struct R16_BusVolt3:public R16_BusVolt{scexpr RegAddress address = 0x06;};
+    struct R16_BusVolt1:public R16_BusVolt{static constexpr RegAddress address = 0x02;};
+    struct R16_BusVolt2:public R16_BusVolt{static constexpr RegAddress address = 0x04;};
+    struct R16_BusVolt3:public R16_BusVolt{static constexpr RegAddress address = 0x06;};
 
 
 
@@ -205,9 +213,9 @@ protected:
         int16_t :16;
     };
 
-    struct R16_InstantOVC1:public R16_InstantOVC{scexpr RegAddress address = 0x07;};
-    struct R16_InstantOVC2:public R16_InstantOVC{scexpr RegAddress address = 0x09;};
-    struct R16_InstantOVC3:public R16_InstantOVC{scexpr RegAddress address = 0x0b;};
+    struct R16_InstantOVC1:public R16_InstantOVC{static constexpr RegAddress address = 0x07;};
+    struct R16_InstantOVC2:public R16_InstantOVC{static constexpr RegAddress address = 0x09;};
+    struct R16_InstantOVC3:public R16_InstantOVC{static constexpr RegAddress address = 0x0b;};
 
     struct R16_ConstantOVC:public Reg16i<>{
         static constexpr int16_t to_i16(const real_t volt){
@@ -216,9 +224,9 @@ protected:
         int16_t :16;
     };
 
-    struct R16_ConstantOVC1:public R16_ConstantOVC{scexpr RegAddress address = 0x08;};
-    struct R16_ConstantOVC2:public R16_ConstantOVC{scexpr RegAddress address = 0x0A;};
-    struct R16_ConstantOVC3:public R16_ConstantOVC{scexpr RegAddress address = 0x0C;};
+    struct R16_ConstantOVC1:public R16_ConstantOVC{static constexpr RegAddress address = 0x08;};
+    struct R16_ConstantOVC2:public R16_ConstantOVC{static constexpr RegAddress address = 0x0A;};
+    struct R16_ConstantOVC3:public R16_ConstantOVC{static constexpr RegAddress address = 0x0C;};
 
     struct R16_Mask:public Reg16<>{
         uint16_t conv_ready:1;
@@ -238,27 +246,52 @@ protected:
     };
 
     struct R16_PowerHo:public Reg16i<>{
-        scexpr RegAddress address = 0x10;
+        static constexpr RegAddress address = 0x10;
         int16_t :16;
     };
 
     struct R16_PowerLo:public Reg16i<>{
-        scexpr RegAddress address = 0x11;
+        static constexpr RegAddress address = 0x11;
         int16_t :16;
     };
 
     struct R16_ManuId:public Reg16<>{
-        scexpr uint16_t key = 0x5449;
-        scexpr RegAddress address = 0xfe;
+        static constexpr uint16_t key = 0x5449;
+        static constexpr RegAddress address = 0xfe;
         uint16_t:16;
     };
 
     
     struct R16_ChipId:public Reg16<>{
-        scexpr uint16_t key = 0x3220;
-        scexpr RegAddress address = 0xff;
+        static constexpr uint16_t key = 0x3220;
+        static constexpr RegAddress address = 0xff;
         uint16_t:16;
     };
+
+    #pragma pack(push, 1)
+    R16_Config       config_reg = {};
+    R16_ShuntVolt1    shuntvolt1_reg = {};
+    R16_BusVolt1      busvolt1_reg = {};
+    R16_ShuntVolt2    shuntvolt2_reg = {};
+    R16_BusVolt2      busvolt2_reg = {};
+    R16_ShuntVolt3    shuntvolt3_reg = {};
+    R16_BusVolt3      busvolt3_reg = {};
+    R16_InstantOVC1   instant_ovc1_reg = {};
+    R16_ConstantOVC1  constant_ovc1_reg = {};
+    R16_InstantOVC2   instant_ovc2_reg = {};
+    R16_ConstantOVC2  constant_ovc2_reg = {};
+    R16_InstantOVC3   instant_ovc3_reg = {};
+    R16_ConstantOVC3  constant_ovc3_reg = {};
+
+    R16_ShuntVoltSum    shuntvolt_sum_reg = {};
+    R16_ShuntVoltSumLimit    shuntvolt_sum_limit_reg = {};
+    R16_Mask         mask_reg = {};
+    R16_PowerHo      power_ho_reg = {};
+    R16_PowerLo      power_lo_reg = {};
+
+    R16_ManuId       manu_id_reg = {};
+    R16_ChipId       chip_id_reg = {};
+    #pragma pack(pop)
 };
 
 class INA3221_Phy final : public INA3221_Collections{
@@ -298,14 +331,12 @@ public:
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
-
-    // [[nodiscard]] IResult<> read_burst_impl()
-
 private:
     hal::I2cDrv i2c_drv_;
 };
 
-class INA3221 final:public INA3221_Collections{
+class INA3221 final:
+    public INA3221_Regs{
 public:
     struct INA3221Channel:public hal::AnalogInIntf{
     public:
@@ -339,14 +370,23 @@ public:
         }
     };
 public:
-    INA3221(const hal::I2cDrv & _i2c_drv):phy_(_i2c_drv){;}
-    INA3221(hal::I2cDrv && _i2c_drv):phy_(std::move(_i2c_drv)){;}
-    INA3221(hal::I2c & _i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(_i2c, addr)){;}
+    static constexpr auto DEFAULT_CONFIG = Config{
+        .shunt_conv_time = ConversionTime::_140us, 
+        .bus_conv_time = ConversionTime::_140us, 
+        .average_times = AverageTimes::_1
+    };
+
+    INA3221(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    INA3221(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    INA3221(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv(i2c, addr)){;}
     ~INA3221(){;}
     
     [[nodiscard]] IResult<bool> is_ready();
 
-    [[nodiscard]] IResult<> init();
+
+    [[nodiscard]] IResult<> init(const Config & cfg = DEFAULT_CONFIG);
+    [[nodiscard]] IResult<> reconf(const Config & cfg);
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> update(const ChannelIndex index);
     [[nodiscard]] IResult<> validate();
@@ -364,9 +404,6 @@ public:
     [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelIndex index);
     [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelIndex index);
 
-    // [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelIndex index);
-    // [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelIndex index);
-
     [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelIndex index);
     [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelIndex index);
 
@@ -374,68 +411,6 @@ public:
     [[nodiscard]] IResult<void> set_constant_ovc(const ChannelIndex index, const real_t volt);
 private:
     INA3221_Phy phy_;
-
-    #pragma pack(push, 1)
-    R16_Config       config_reg = {};
-    R16_ShuntVolt1    shuntvolt1_reg = {};
-    R16_BusVolt1      busvolt1_reg = {};
-    R16_ShuntVolt2    shuntvolt2_reg = {};
-    R16_BusVolt2      busvolt2_reg = {};
-    R16_ShuntVolt3    shuntvolt3_reg = {};
-    R16_BusVolt3      busvolt3_reg = {};
-    R16_InstantOVC1   instant_ovc1_reg = {};
-    R16_ConstantOVC1  constant_ovc1_reg = {};
-    R16_InstantOVC2   instant_ovc2_reg = {};
-    R16_ConstantOVC2  constant_ovc2_reg = {};
-    R16_InstantOVC3   instant_ovc3_reg = {};
-    R16_ConstantOVC3  constant_ovc3_reg = {};
-
-    R16_ShuntVoltSum    shuntvolt_sum_reg = {};
-    R16_ShuntVoltSumLimit    shuntvolt_sum_limit_reg = {};
-    R16_Mask         mask_reg = {};
-    R16_PowerHo      power_ho_reg = {};
-    R16_PowerLo      power_lo_reg = {};
-
-    R16_ManuId       manu_id_reg = {};
-    R16_ChipId       chip_id_reg = {};
-    #pragma pack(pop)
-
-    // __fast_inline std::pair<R16_ShuntVolt, RegAddress>get_shunt_volt_reg(const ChannelIndex index){
-    //     switch(index){
-    //         case ChannelIndex::CH1: return shuntvolt1_reg;
-    //         case ChannelIndex::CH2: return shuntvolt2_reg;
-    //         case ChannelIndex::CH3: return shuntvolt3_reg;
-    //         default: __builtin_unreachable();
-    //     }
-    // }
-
-    // __fast_inline std::pair<R16_BusVolt, RegAddress>get_bus_volt_reg(const ChannelIndex index){
-    //     switch(index){
-    //         case ChannelIndex::CH1: return busvolt1_reg;
-    //         case ChannelIndex::CH2: return busvolt2_reg;
-    //         case ChannelIndex::CH3: return busvolt3_reg;
-    //         default: __builtin_unreachable();
-    //     }
-    // }
-
-    // __fast_inline std::pair<R16_InstantOVC, RegAddress> get_instant_ovc_reg(const ChannelIndex index){ 
-    //     switch(index){
-    //         case ChannelIndex::CH1: return instant_ovc1_reg;
-    //         case ChannelIndex::CH2: return instant_ovc2_reg;
-    //         case ChannelIndex::CH3: return instant_ovc3_reg;
-    //         default: __builtin_unreachable();
-    //     }
-    // }
-
-    // __fast_inline std::pair<R16_ConstantOVC, RegAddress> get_constant_ovc_reg(const ChannelIndex index){ 
-    //     switch(index){
-    //         case ChannelIndex::CH1: return constant_ovc1_reg;
-    //         case ChannelIndex::CH2: return constant_ovc2_reg;
-    //         case ChannelIndex::CH3: return constant_ovc3_reg;
-    //         default: __builtin_unreachable();
-    //     }
-    // }
-
     [[nodiscard]] IResult<> write_reg(const auto & reg){
         return phy_.write_reg(reg.address, reg.as_val());
     }
