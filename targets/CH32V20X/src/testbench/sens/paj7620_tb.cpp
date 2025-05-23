@@ -26,16 +26,20 @@ void paj7620_main(){
 
     PAJ7620 paj{i2c};
 
-    paj.init();
+    paj.init().examine();
 
     while(true){
         clock::delay(100ms);
-        paj.update();
+        paj.update().examine();
 
         #if UART_DEST == UART_DEST_FPGA
         logger.write(paj.detect());
         #elif UART_DEST == UART_DEST_PC
-        DEBUG_PRINTLN(std::bitset<8>(paj.detect()));
+        DEBUG_PRINTLN(
+            paj.detect()
+                .unwrap()
+                .to_bitset()
+        );
         #endif
         // DEBUG_PRINTLN(std::bitset<8>(6));
     }

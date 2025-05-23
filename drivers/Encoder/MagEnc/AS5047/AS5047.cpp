@@ -6,7 +6,7 @@ using namespace ymd;
 
 using Error = AS5047::Error;
 
-void AS5047::init() {
+Result<void, Error> AS5047::init() {
     TODO();
 }
 

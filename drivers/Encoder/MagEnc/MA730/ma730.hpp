@@ -7,8 +7,7 @@
 
 namespace ymd::drivers{
 
-class MA730 final:public MagEncoderIntf{
-public:
+struct MA730_Collections{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -26,10 +25,6 @@ public:
         mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
     };
 
-protected:
-    hal::SpiDrv spi_drv_;
-    real_t lap_position = {};
-
     enum class RegAddress:uint8_t{
         ZeroDataLow,
         ZeroDataHigh,
@@ -42,7 +37,9 @@ protected:
         Magnitude = 27
     };
 
+};
 
+struct MA730_Regs:public MA730_Collections{
     struct TrimConfigReg:public Reg8<>{
         uint8_t enableX:1;
         uint8_t enableY:1;
@@ -84,21 +81,11 @@ protected:
     ThresholdReg thresholdReg = {};
     DirectionReg directionReg = {};
     MagnitudeReg magnitudeReg = {};
+};
 
-    [[nodiscard]]
-    IResult<> write_reg(const RegAddress addr, uint8_t data);
-
-    [[nodiscard]]
-    IResult<> read_reg(const RegAddress addr, uint8_t & reg);
-
-    [[nodiscard]]
-    IResult<> direct_read(uint16_t & data);
-    
-    [[nodiscard]]
-    IResult<uint16_t> get_raw_data();
-    
-    [[nodiscard]]
-    IResult<> set_zero_data(const uint16_t data);
+class MA730 final:
+    public MagEncoderIntf,
+    public MA730_Regs{
 public:
     MA730(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MA730(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
@@ -137,6 +124,24 @@ public:
 
     [[nodiscard]]
     IResult<> set_pulse_per_turn(const uint16_t ppt);
+private:
+    hal::SpiDrv spi_drv_;
+    real_t lap_position = {};
+
+    [[nodiscard]]
+    IResult<> write_reg(const RegAddress addr, uint8_t data);
+
+    [[nodiscard]]
+    IResult<> read_reg(const RegAddress addr, uint8_t & reg);
+
+    [[nodiscard]]
+    IResult<> direct_read(uint16_t & data);
+    
+    [[nodiscard]]
+    IResult<uint16_t> get_raw_data();
+    
+    [[nodiscard]]
+    IResult<> set_zero_data(const uint16_t data);
 };
 
 // class MA732:public MA730{

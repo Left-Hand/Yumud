@@ -50,10 +50,10 @@ public:
     AS5047(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
     AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    void init() ;
+    [[nodiscard]]Result<void, Error> init() ;
 
-    Result<void, Error> update();
-    Result<real_t, Error> get_lap_position() {
+    [[nodiscard]]Result<void, Error> update();
+    [[nodiscard]]Result<real_t, Error> get_lap_position() {
         return Ok(lap_position);
     }
     uint32_t get_err_cnt() const {return errcnt;}
