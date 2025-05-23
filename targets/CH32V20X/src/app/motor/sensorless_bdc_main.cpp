@@ -23,6 +23,8 @@
 #include "dsp/homebrew/edge_counter.hpp"
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
 static constexpr real_t SAMPLE_RES = 0.008_r;

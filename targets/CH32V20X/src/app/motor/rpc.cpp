@@ -30,8 +30,8 @@ iq_t<16> add2(const iq_t<16> x, const iq_t<16> y){
 }
 
 void rpc_main(){
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 
@@ -53,7 +53,7 @@ void rpc_main(){
     real_t b;
     auto p = rpc::make_property("a", a);
 
-    portA[8].outpp();
+    hal::portA[8].outpp();
 
     auto list = rpc::make_list(
         "list", 

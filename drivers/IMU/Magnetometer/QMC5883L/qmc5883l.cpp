@@ -89,13 +89,13 @@ IResult<> QMC5883L::set_reset_period(const uint8_t resetPeriod){
 
 IResult<> QMC5883L::reset(){
     configBReg.srst = true;
-    if(const auto res = write_reg(RegAddress::ConfigB, resetPeriodReg);
-    res.is_err()){
+    if(const auto res = write_reg(RegAddress::ConfigB, configBReg);
+        res.is_err()){
         configBReg.srst = false;
         return res;
     }
     configBReg.srst = false;
-    return write_reg(RegAddress::ConfigB, resetPeriodReg);
+    return write_reg(RegAddress::ConfigB, configBReg);
 }
 
 IResult<> QMC5883L::enable_interrupt(const bool en){

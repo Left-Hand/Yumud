@@ -160,6 +160,7 @@ private:
     Painter<RGB565> painter_;
 };
 
+
 void smc2025_main(){
 
     UART.init(576_KHz);
@@ -245,23 +246,21 @@ void smc2025_main(){
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
         // const auto gray_img = camera.frame().clone();
-        // const auto viewpoint = Pose_t<real_t>{
+        // const auto pose = Pose_t<real_t>{
         //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
         [[maybe_unused]]const auto t = clock::time();
-        const auto viewpoint = Pose2_t{
+        const auto pose = Pose2_t{
             // Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.9_r, 0)
             // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
             // {1.0_r, -0.5_r}, 0.0_r};
-            {0.0_r, -0.01_r}, 0.0_r};
-
-
-            // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
+            {-1.0_r, -1.81_r}, 1.57_r};
 
         const auto mbegin = clock::micros();
-        const auto gray_img = Scenes::render_scene1(viewpoint, 0.006_r);
-        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
-        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
+        // const auto gray_img = Scenes::render_scene2(pose, 0.02_r);
+        const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
+        // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
+        // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 
@@ -274,7 +273,7 @@ void smc2025_main(){
         DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
-        // DEBUG_PRINTLN(render_use.count(), viewpoint);
+        // DEBUG_PRINTLN(render_use.count(), pose);
     }
 
     // timer4.init(24000);

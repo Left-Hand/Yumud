@@ -28,6 +28,9 @@
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
+
 static constexpr auto DBG_UARTSW_BAUD = 38400; 
 static constexpr auto TTS_UARTSW_BAUD = 9600; 
 static constexpr auto U13T_BAUD = 115200; 

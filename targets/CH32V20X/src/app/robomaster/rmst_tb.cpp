@@ -16,6 +16,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::rmst;
 
 auto input(){

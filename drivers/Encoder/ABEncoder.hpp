@@ -144,8 +144,8 @@ public:
         a_gpio_(a_gpio), b_gpio_(b_gpio){;}
 
     void init(){
-        portA[0].inpu();
-        portA[1].inpu();    
+        hal::portA[0].inpu();
+        hal::portA[1].inpu();    
     }
 
     uint8_t get_code() const {

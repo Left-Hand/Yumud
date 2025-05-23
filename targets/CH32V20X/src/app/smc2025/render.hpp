@@ -100,10 +100,10 @@ struct Placement{
     Vector2_t<iq_t<16>> pos;
 
     // iq_t<16> rotation = 0;
-    // iq_t<16> scale = 1;
+    // iq_t<16> zoom = 1;
 
     // Vector2 apply_transform(Vector2 p) const {
-    // return (p * scale).rotated(rotation) + pos;
+    // return (p * zoom).rotated(rotation) + pos;
     // }
 };
 
@@ -481,19 +481,17 @@ struct RotatedZebraRect{
 };
 
 
-
-
 //将相机像素转换为地面坐标
 static constexpr Vector2 project_pixel_to_ground(
     const Vector2u pixel, 
     const Pose2_t<iq_t<16>> viewpoint, 
-    const iq_t<16> scale
+    const iq_t<16> zoom
 ) {
     const Vector2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vector2 camera_offset = Vector2(pixel_offset) * scale;
+    const Vector2 camera_offset = Vector2(pixel_offset) * zoom;
     const auto rot = viewpoint.rad - iq_t<16>(PI/2);
     return viewpoint.pos + camera_offset.rotated(rot);
 }
@@ -502,7 +500,7 @@ static constexpr Vector2 project_pixel_to_ground(
 static constexpr Vector2u project_ground_to_pixel(
     const Vector2& ground_pos,
     const Pose2_t<iq_t<16>> viewpoint,
-    const iq_t<16> scale)
+    const iq_t<16> zoom)
 {
     // 1. Remove viewpoint position offset
     const Vector2 relative_pos = ground_pos - viewpoint.pos;
@@ -517,7 +515,7 @@ static constexpr Vector2u project_ground_to_pixel(
     };
     
     // 4. Remove scaling and convert to pixel space
-    const Vector2 pixel_offset = unrotated / scale;
+    const Vector2 pixel_offset = unrotated / zoom;
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return Vector2u{
@@ -544,7 +542,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> scale) const = 0;
+    virtual Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -604,18 +602,18 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> scale) const {
+    Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pdata = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
-        const auto org =    project_pixel_to_ground({0,0}, viewpoint, scale);
-        const auto y_step = project_pixel_to_ground({0,1}, viewpoint, scale) - org;
-        const auto x_step = project_pixel_to_ground({1,0}, viewpoint, scale) - org;
+        const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
+        const auto y_step = project_pixel_to_ground({0,1}, viewpoint, zoom) - org;
+        const auto x_step = project_pixel_to_ground({1,0}, viewpoint, zoom) - org;
 
         const auto ground_region = Rect2_t<iq_t<16>>::from_minimal_bounding_box({
             org, 
-            project_pixel_to_ground({CAMERA_SIZE.x,0},    viewpoint, scale),
-            project_pixel_to_ground({0,CAMERA_SIZE.y},    viewpoint, scale),
-            project_pixel_to_ground(CAMERA_SIZE,          viewpoint, scale)
+            project_pixel_to_ground({CAMERA_SIZE.x,0},    viewpoint, zoom),
+            project_pixel_to_ground({0,CAMERA_SIZE.y},    viewpoint, zoom),
+            project_pixel_to_ground(CAMERA_SIZE,          viewpoint, zoom)
         });
 
             

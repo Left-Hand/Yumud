@@ -9,9 +9,9 @@ namespace ymd::foc{
 
 class CurrentSensor{
 protected:
-    AnalogInIntf & u_sense_;
-    AnalogInIntf & v_sense_;
-    AnalogInIntf & w_sense_;
+    hal::AnalogInIntf & u_sense_;
+    hal::AnalogInIntf & v_sense_;
+    hal::AnalogInIntf & w_sense_;
 
     UvwCurrent uvw_bias_;
     UvwCurrent uvw_raw_;
@@ -50,9 +50,9 @@ protected:
 
 public:
     CurrentSensor(
-        AnalogInIntf & u_sense,
-        AnalogInIntf & v_sense, 
-        AnalogInIntf & w_sense
+        hal::AnalogInIntf & u_sense,
+        hal::AnalogInIntf & v_sense, 
+        hal::AnalogInIntf & w_sense
     ): 
         u_sense_(u_sense),
         v_sense_(v_sense), 

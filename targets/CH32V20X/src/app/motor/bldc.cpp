@@ -45,6 +45,7 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
