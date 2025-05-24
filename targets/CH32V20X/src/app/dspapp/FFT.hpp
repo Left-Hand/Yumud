@@ -17,41 +17,39 @@ namespace ymd::dsp{
 */
 
 namespace details{
-template<arithmetic T>
-constexpr void _FFT(std::span<T> c, int isign){
-    int n, n2, nb, j, k, i0, i1;
+template<arithmetic T, int isign>
+constexpr void _FFT(std::span<T> c){
+    size_t n, nb, j,i0, i1;
     T wr, wi, wrk, wik;
     T d, dr, di, d0r, d0i, d1r, d1i;
     T *cp;
 
     j = 0;
-    const auto N = c.size();
-    n2 = N / 2;
-    for( k = 0; k < N; ++k ){
-        if( k < j )
-        {
-        i0 = k << 1;
-        i1 = j << 1;
-        dr = c[i0];
-        di = c[i0+1];
-        c[i0] = c[i1];
-        c[i0+1] = c[i1+1];
-        c[i1] = dr;
-        c[i1+1] = di;
+    const size_t N = c.size();
+    const size_t n2 = N / 2;
+    for(size_t k = 0; k < N; ++k ){
+        if( k < j ){
+            i0 = k << 1;
+            i1 = j << 1;
+            dr = c[i0];
+            di = c[i0+1];
+            c[i0] = c[i1];
+            c[i0+1] = c[i1+1];
+            c[i1] = dr;
+            c[i1+1] = di;
         }
         n = N >> 1;
-        while( (n >= 2) && (j >= n) )
-        {
-        j -= n;
-        n = n >> 1;
+        while( (n >= 2) && (j >= n) ){
+            j -= n;
+            n = n >> 1;
         }
         j += n;
     }
 
-    for( n = 2; n <= N; n = n << 1 ){
+    for(size_t k = 2; n <= N; n = n << 1 ){
         wr = std::cos(T(TAU) / n );
         wi = std::sin(T(TAU) / n );
-        if( isign == 1 ) wi = -wi;
+        if constexpr( isign == 1 ) wi = -wi;
         cp = c;
         nb = N / n;
         n2 = n >> 1;
@@ -83,12 +81,12 @@ constexpr void _FFT(std::span<T> c, int isign){
 
 template<arithmetic T>
 constexpr void FFT(std::span<T> c){
-    details::_FFT(c, 1);
+    details::_FFT<T, 1>(c);
 }
 
 template<arithmetic T>
 constexpr void IFFT(std::span<T> c){
-    details::_FFT(c, -1);
+    details::_FFT<T, -1>(c);
 }
 
 }

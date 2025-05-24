@@ -9,14 +9,14 @@ struct Ray3_t{
     Vector3_t<T> start;
     Vector3_t<T> direction;
 
-    Ray3_t(){;}
+    [[nodiscard]] constexpr Ray3_t(){;}
 
-    Ray3_t(const Ray3_t<T> & other):
+    [[nodiscard]] constexpr Ray3_t(const Ray3_t<T> & other):
 
         start(other.start),
         direction(other.direction){;}
 
-    static constexpr Ray3_t from_start_and_dir(const Vector3_t<T> & _start, const Vector3_t<T> & _direction){
+    [[nodiscard]] static constexpr Ray3_t from_start_and_dir(const Vector3_t<T> & _start, const Vector3_t<T> & _direction){
         Ray3_t ret;
         ret.start = _start;
         ret.direction = _direction.normalized();
@@ -24,7 +24,7 @@ struct Ray3_t{
         return ret;
     }
 
-    static constexpr Ray3_t from_start_and_stop(const Vector3_t<T> & _start, const Vector3_t<T> & _stop){
+    [[nodiscard]] static constexpr Ray3_t from_start_and_stop(const Vector3_t<T> & _start, const Vector3_t<T> & _stop){
         Ray3_t ret;
         ret.start = _start;
         ret.direction = (_stop - _start).normalized();

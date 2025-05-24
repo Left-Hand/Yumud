@@ -12,39 +12,39 @@ public:
     Vector2_t<T> to;
 
 public:
-    constexpr Segment2D_t(){;}
+    [[nodiscard]] constexpr Segment2D_t(){;}
 
-    constexpr Segment2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
+    [[nodiscard]] constexpr Segment2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
             from(static_cast<Vector2_t<T>>(_from)), to(static_cast<Vector2_t<T>>(_to)){;}
 
     template<arithmetic U = T>
-    constexpr Segment2D_t(const std::tuple<U, U, U, U> & tup) : 
+    [[nodiscard]] constexpr Segment2D_t(const std::tuple<U, U, U, U> & tup) : 
             from((Vector2_t<T>(std::get<0>(tup), std::get<1>(tup)))),
             to((Vector2_t<T>(std::get<2>(tup), std::get<3>(tup)))){;}
 
-    __fast_inline constexpr const Vector2_t<T> & operator [](const size_t idx) const {
+    [[nodiscard]] __fast_inline constexpr const Vector2_t<T> & operator [](const size_t idx) const {
         if(idx > 2) HALT;
         return *(&from + idx);
     }
 
-    __fast_inline constexpr Vector2_t<T> & operator [](const size_t idx){
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> & operator [](const size_t idx){
         if(idx > 2) HALT;
         return *(&from + idx);
     }
 
-	__fast_inline constexpr bool operator==(const Segment2D_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator==(const Segment2D_t & other) const{
         return from == other.from and to == other.to;
     }
 
-	__fast_inline constexpr bool operator!=(const Segment2D_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator!=(const Segment2D_t & other) const{
         return (*this == other) == false; 
     }
 
-    __fast_inline constexpr Vector2_t<T> get_center() const{
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> get_center() const{
         return (this->from + this->to)/2;
     }
 
-    __fast_inline constexpr T distance_to(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr T distance_to(const Vector2_t<T> & p) const{
         const auto diff1 = from - p;
         const auto diff2 = to - p;
         const auto diff3 = to - from;
@@ -58,23 +58,23 @@ public:
         }
     }
 
-    __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
         return is_equal_approx(distance_to(p), 0);
     }
 
-    __fast_inline constexpr int sign(const Vector2_t<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr int sign(const Vector2_t<T> & p) const{
         return sign((from - p).cross(to - p));
     }
 
-    __fast_inline constexpr bool parallel_with(const Segment2D_t & other){
+    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Segment2D_t & other){
         return is_equal_approx(this->diff().cross(other.diff()), 0);
     }
 
-    __fast_inline constexpr bool orthogonal_with(const Segment2D_t & other){
+    [[nodiscard]] __fast_inline constexpr bool orthogonal_with(const Segment2D_t & other){
         return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
-    __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Segment2D_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Segment2D_t<T> & other) const{
         if(this->parallel_with(other)) return std::nullopt;
         else if(this->operator==(other)) return std::nullopt;
         
@@ -90,11 +90,11 @@ public:
         return {this->d - other.d};
     }
 
-    __fast_inline constexpr Vector2_t<T> diff() const{
+    [[nodiscard]] __fast_inline constexpr Vector2_t<T> diff() const{
         return to - from;
     }
 
-    __fast_inline constexpr std::tuple<T, T, T> abc() const{
+    [[nodiscard]] __fast_inline constexpr std::tuple<T, T, T> abc() const{
 
         //https://www.cnblogs.com/sailJs/p/17802652.html
 
@@ -106,15 +106,15 @@ public:
         return {from.y - to.y, to.x - from.x, from.cross(to)};
     }
 
-    __fast_inline constexpr T length() const {
+    [[nodiscard]] __fast_inline constexpr T length() const {
         return (to - from).length();
     }
 
-    __fast_inline constexpr T length_squared() const{
+    [[nodiscard]] __fast_inline constexpr T length_squared() const{
         return (to - from).length_squared();
     }
 
-    __fast_inline constexpr T angle() const {
+    [[nodiscard]] __fast_inline constexpr T angle() const {
         return (to - from).angle();
     }
 };

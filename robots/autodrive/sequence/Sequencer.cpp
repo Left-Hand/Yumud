@@ -97,8 +97,8 @@ void Sequencer::sideways(Curve & curve, const Ray2_t<real_t> & from, const Ray2_
 }
 
 void Sequencer::follow(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to){
-    const auto from_line = Line2_t<real_t>(from);
-    const auto to_line = Line2_t<real_t>(to);
+    const auto from_line = from.to_line();
+    const auto to_line = to.to_line();
 
     if(from_line.parallel_with(to_line)){
         this->linear(curve, from, to.org);
