@@ -53,11 +53,11 @@ struct Transform2D_t{
 	// Warning #2: 2D be aware that unlike 3D code, 2D code uses a left-handed coordinate system: Y-axis points down,
 	// and angle is measure from +X to +Y in a clockwise-fashion.
 
-	Vector2_t<T> elements[3];
+	Vector2<T> elements[3];
 
 	__fast_inline Transform2D_t(const T xx, const T xy, const T yx, const T yy, const T ox, const T oy);
 
-	__fast_inline Transform2D_t(const T p_rot, const Vector2_t<T> &p_pos);
+	__fast_inline Transform2D_t(const T p_rot, const Vector2<T> &p_pos);
 	__fast_inline Transform2D_t() {
 		elements[0][0] = T(1);
 		elements[1][1] = T(1);
@@ -68,16 +68,16 @@ struct Transform2D_t{
 	static constexpr Transform2D_t<T> FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
 
 
-	inline T tdotx(const Vector2_t<T> &v) const { return elements[0][0] * v.x + elements[1][0] * v.y; }
-	inline T tdoty(const Vector2_t<T> &v) const { return elements[0][1] * v.x + elements[1][1] * v.y; }
+	inline T tdotx(const Vector2<T> &v) const { return elements[0][0] * v.x + elements[1][0] * v.y; }
+	inline T tdoty(const Vector2<T> &v) const { return elements[0][1] * v.x + elements[1][1] * v.y; }
 
-	inline const Vector2_t<T> &operator[](int p_idx) const { return elements[p_idx]; }
-	inline Vector2_t<T> &operator[](int p_idx) { return elements[p_idx]; }
+	inline const Vector2<T> &operator[](int p_idx) const { return elements[p_idx]; }
+	inline Vector2<T> &operator[](int p_idx) { return elements[p_idx]; }
 
-	inline Vector2_t<T> get_axis(int p_axis) const {
+	inline Vector2<T> get_axis(int p_axis) const {
 		return elements[p_axis];
 	}
-	inline void set_axis(int p_axis, const Vector2_t<T> &p_vec) {
+	inline void set_axis(int p_axis, const Vector2<T> &p_vec) {
 		elements[p_axis] = p_vec;
 	}
 
@@ -89,24 +89,24 @@ struct Transform2D_t{
 
 	void set_rotation(T p_phi);
 	T get_rotation() const;
-	void set_rotation_and_scale(T p_phi, const Vector2_t<T> &p_scale);
+	void set_rotation_and_scale(T p_phi, const Vector2<T> &p_scale);
 	void rotate(T p_phi);
 
-	void scale(const Vector2_t<T> &p_scale);
-	void scale_basis(const Vector2_t<T> &p_scale);
+	void scale(const Vector2<T> &p_scale);
+	void scale_basis(const Vector2<T> &p_scale);
 	void translate(T p_tx, T p_ty);
-	void translate(const Vector2_t<T> &p_translation);
+	void translate(const Vector2<T> &p_translation);
 
 	T basis_determinant() const;
 
-	Vector2_t<T> get_scale() const;
+	Vector2<T> get_scale() const;
 
-	inline const Vector2_t<T> &get_origin() const { return elements[2]; }
-	inline void set_origin(const Vector2_t<T> &p_origin) { elements[2] = p_origin; }
+	inline const Vector2<T> &get_origin() const { return elements[2]; }
+	inline void set_origin(const Vector2<T> &p_origin) { elements[2] = p_origin; }
 
-	Transform2D_t scaled(const Vector2_t<T> &p_scale) const;
-	Transform2D_t basis_scaled(const Vector2_t<T> &p_scale) const;
-	Transform2D_t translated(const Vector2_t<T> &p_offset) const;
+	Transform2D_t scaled(const Vector2<T> &p_scale) const;
+	Transform2D_t basis_scaled(const Vector2<T> &p_scale) const;
+	Transform2D_t translated(const Vector2<T> &p_offset) const;
 	Transform2D_t rotated(T p_phi) const;
 
 	Transform2D_t untranslated() const;
@@ -122,12 +122,12 @@ struct Transform2D_t{
 
 	Transform2D_t interpolate_with(const Transform2D_t &p_transform, T p_c) const;
 
-	Vector2_t<T> basis_xform(const Vector2_t<T> &p_vec) const;
-	Vector2_t<T> basis_xform_inv(const Vector2_t<T> &p_vec) const;
-	Vector2_t<T> xform(const Vector2_t<T> &p_vec) const;
-	Vector2_t<T> xform_inv(const Vector2_t<T> &p_vec) const;
-	Rect2_t<T> xform(const Rect2_t<T> &p_vec) const;
-	Rect2_t<T> xform_inv(const Rect2_t<T> &p_vec) const;
+	Vector2<T> basis_xform(const Vector2<T> &p_vec) const;
+	Vector2<T> basis_xform_inv(const Vector2<T> &p_vec) const;
+	Vector2<T> xform(const Vector2<T> &p_vec) const;
+	Vector2<T> xform_inv(const Vector2<T> &p_vec) const;
+	Rect2<T> xform(const Rect2<T> &p_vec) const;
+	Rect2<T> xform_inv(const Rect2<T> &p_vec) const;
 };
 
 

@@ -126,12 +126,12 @@ static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const Trian
 };
 
 [[nodiscard]]
-static __fast_inline bool bb_intersect_impl(const Vector3_t<real_t> & t0, const Vector3_t<real_t> & t1){
+static __fast_inline bool bb_intersect_impl(const Vector3<real_t> & t0, const Vector3<real_t> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 [[nodiscard]]
-static __fast_inline bool tb_intersect_impl (const Vector3_t<real_t> & t0, const Vector3_t<real_t> & t1){
+static __fast_inline bool tb_intersect_impl (const Vector3<real_t> & t0, const Vector3<real_t> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
@@ -144,10 +144,10 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<co
     };
 
     const auto & start = ray.start;
-    const auto inv_dir = Vector3_t<real_t>::from_rcp(ray.direction);
+    const auto inv_dir = Vector3<real_t>::from_rcp(ray.direction);
 
-    const Vector3_t<real_t> t0 = (bbmin - start) * inv_dir;
-    const Vector3_t<real_t> t1 = (bbmax - start) * inv_dir;
+    const Vector3<real_t> t0 = (bbmin - start) * inv_dir;
+    const Vector3<real_t> t1 = (bbmax - start) * inv_dir;
 
     
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
@@ -190,7 +190,7 @@ static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> &
     const auto azimuth = u1 * real_t(TAU);
     const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vector3_t<real_t>(
+    const auto v = Vector3<real_t>(
         real_t((r * cos_a)), 
         real_t((r * sin_a)), 
         real_t((sqrtf(1 - u0)))
@@ -212,16 +212,16 @@ static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & 
 
     const auto & light = co_triangles[light_idx];
 
-    const auto linear_t = Vector3_t(
+    const auto linear_t = Vector3(
         (1 - su),
         (1 - u1) * su,
         u1 * su
     );
 
-    const auto light_pos = Vector3_t{
-        Vector3_t(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
-        Vector3_t(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
-        Vector3_t(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
+    const auto light_pos = Vector3{
+        Vector3(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
+        Vector3(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
+        Vector3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
     const auto ray = Ray3_t<real_t>::from_start_and_stop(
@@ -248,7 +248,7 @@ static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & 
 }
 
 // ���ɴ�Ĭ��Z��(0,0,1)��ת�����߷������Ԫ��
-static Quat_t<real_t> quat_from_normal(const Vector3_t<real_t>& normal)
+static Quat_t<real_t> quat_from_normal(const Vector3<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
     return Quat_t<real_t>(
@@ -310,7 +310,7 @@ static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfa
         sample += 
         sampleRay(
             sample,
-            Ray3_t<real_t>::from_start_and_dir(eye,Vector3_t<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3_t<real_t>::from_start_and_dir(eye,Vector3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))

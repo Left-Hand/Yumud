@@ -207,7 +207,7 @@ public:
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
     [[nodiscard]] IResult<real_t> read_temp();
 
     [[nodiscard]] IResult<> set_acc_range(const AccRange range);
@@ -298,7 +298,7 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
 
 
     [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);

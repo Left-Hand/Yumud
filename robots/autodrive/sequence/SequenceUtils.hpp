@@ -6,10 +6,10 @@ namespace ymd::robots{
 
 //序列器约束
 struct SequenceLimits{
-    real_t max_gyr;
-    real_t max_agr;
-    real_t max_spd;
-    real_t max_acc;
+    q16 max_gyr;
+    q16 max_agr;
+    q16 max_spd;
+    q16 max_acc;
 };
 
 //序列器参数
@@ -21,27 +21,27 @@ struct SequenceParas{
 struct CurvePoint {
 protected:
     scexpr int XY_SHIFT_BITS = 10;
-    scexpr real_t RAD_SCALE = real_t(1024 / TAU);
-    scexpr real_t INV_RAD_SCALE = real_t(TAU / 1024);
+    scexpr q16 RAD_SCALE = q16(1024 / TAU);
+    scexpr q16 INV_RAD_SCALE = q16(TAU / 1024);
     
     uint32_t x_:11;
     uint32_t y_:11;
     uint32_t rad_:10;
 public:
-    constexpr CurvePoint(const real_t & x, const real_t & y, const real_t & rad):
+    constexpr CurvePoint(const q16 & x, const q16 & y, const q16 & rad):
         x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(rad * RAD_SCALE){;}
 
-    constexpr CurvePoint(const Vector2 & pos, const real_t & rad):
+    constexpr CurvePoint(const Vector2q<16> & pos, const q16 & rad):
         CurvePoint(pos.x, pos.y, rad){;}
         
-    constexpr CurvePoint(const Ray2_t<real_t> & ray):
+    constexpr CurvePoint(const Ray2_t<q16> & ray):
         CurvePoint(ray.org.x, ray.org.y, ray.rad){;}
 
-    constexpr Ray2_t<real_t> to_ray() const{
-        return Ray2_t<real_t>(
-            Vector2_t<real_t>(
-                real_t(x_) >> XY_SHIFT_BITS, 
-                real_t(y_) >> XY_SHIFT_BITS), 
+    constexpr Ray2_t<q16> to_ray() const{
+        return Ray2_t<q16>(
+            Vector2<q16>(
+                q16(x_) >> XY_SHIFT_BITS, 
+                q16(y_) >> XY_SHIFT_BITS), 
             rad_ * INV_RAD_SCALE
         );
     }

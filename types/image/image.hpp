@@ -71,7 +71,7 @@ public:
 
     constexpr uint64_t sum(const Rect2u & roi) const;
     constexpr uint64_t sum() const{return sum(this->size().to_rect());}
-    constexpr ColorType bilinear_interpol(const Vector2 & pos) const;
+    constexpr ColorType bilinear_interpol(const Vector2q<16> & pos) const;
 
     void load(const uint8_t * buf, const Vector2u & _size);
     static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2u & _size){

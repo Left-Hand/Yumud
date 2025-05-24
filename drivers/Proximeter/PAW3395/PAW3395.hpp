@@ -30,7 +30,7 @@ public:
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> update(const real_t rad);
 
-    [[nodiscard]] Vector2_t<real_t> get_position(){
+    [[nodiscard]] Vector2<real_t> get_position(){
         return {x_cm * real_t(0.01), y_cm * real_t(0.01)};
     }
 

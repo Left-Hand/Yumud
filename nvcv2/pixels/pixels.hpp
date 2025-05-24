@@ -57,7 +57,7 @@ namespace ymd::nvcv2::Pixels{
             const Image<Grayscale>& dm,
             const uint8_t dt) {
 
-        const auto area = Vector2_t<size_t>{
+        const auto area = Vector2<size_t>{
             MIN(em.size().x, dm.size().x), 
             MIN(em.size().y, dm.size().y)
         }.area();

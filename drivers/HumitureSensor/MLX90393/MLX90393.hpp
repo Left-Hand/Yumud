@@ -122,7 +122,7 @@ public:
     [[nodiscard]] IResult<> reset(void);
     [[nodiscard]] IResult<> exit_mode(void);
     
-    [[nodiscard]] IResult<Vector3_t<q24>> read_measurement();
+    [[nodiscard]] IResult<Vector3<q24>> read_measurement();
     [[nodiscard]] IResult<> start_single_measurement(void);
     
     [[nodiscard]] IResult<> set_gain(Gain gain);
@@ -138,7 +138,7 @@ public:
     [[nodiscard]] IResult<OverSampling> get_oversampling(void);
     
     [[nodiscard]] IResult<> set_trig_int(bool state);
-    [[nodiscard]] IResult<Vector3_t<q24>> read_data();
+    [[nodiscard]] IResult<Vector3<q24>> read_data();
 
     
 private:

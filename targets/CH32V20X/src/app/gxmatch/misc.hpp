@@ -11,7 +11,7 @@ using namespace ymd::foc;
 namespace gxm{
 
 
-using Vector2 = Vector2_t<real_t>;
+using Vector2 = Vector2<real_t>;
 
 
 

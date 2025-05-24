@@ -86,8 +86,8 @@ public:
 
     IResult<> setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    IResult<Vector3_t<q24>> read_acc();
-    IResult<Vector3_t<q24>> read_gyr();
+    IResult<Vector3<q24>> read_acc();
+    IResult<Vector3<q24>> read_gyr();
 private:
     BoschSensor_Phy phy_;
 

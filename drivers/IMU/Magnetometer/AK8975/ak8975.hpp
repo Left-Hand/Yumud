@@ -56,7 +56,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vector3_t<q24>> read_mag() ;
+    [[nodiscard]] IResult<Vector3<q24>> read_mag() ;
 };
 
 };

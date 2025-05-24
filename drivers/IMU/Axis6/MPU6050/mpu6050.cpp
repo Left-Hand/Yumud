@@ -97,18 +97,18 @@ Result<void, Error> MPU6050::update(){
     return res;
 }
 
-IResult<Vector3_t<q24>> MPU6050::read_acc(){
+IResult<Vector3<q24>> MPU6050::read_acc(){
     real_t x = uni(acc_x_reg) * acc_scaler_;
     real_t y = uni(acc_y_reg) * acc_scaler_;
     real_t z = uni(acc_z_reg) * acc_scaler_;
-    return  Ok{Vector3_t<q24>{x, y, z}};
+    return  Ok{Vector3<q24>{x, y, z}};
 }
 
-IResult<Vector3_t<q24>> MPU6050::read_gyr(){
+IResult<Vector3<q24>> MPU6050::read_gyr(){
     real_t x = uni(gyr_x_reg) * gyr_scaler_;
     real_t y = uni(gyr_y_reg) * gyr_scaler_;
     real_t z = uni(gyr_z_reg) * gyr_scaler_;
-    return Ok{Vector3_t<q24>{x, y, z}};
+    return Ok{Vector3<q24>{x, y, z}};
 }
 
 Result<real_t, Error> MPU6050::read_temp(){

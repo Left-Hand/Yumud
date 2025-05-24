@@ -275,7 +275,7 @@ void myservo_main(){
     pwm_trig.set_duty(0.001_r);
     hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
-    real_t curr_cmd = 0;
+    // real_t curr_cmd = 0;
 
     bool duty_is_forward = false;
     auto set_duty = [&](real_t duty){

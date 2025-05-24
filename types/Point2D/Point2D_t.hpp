@@ -17,11 +17,11 @@ struct Point2D_t<T>{
     constexpr Point2D_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
     template<arithmetic U = T>
-    constexpr Point2D_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    constexpr Point2D_t(const Vector2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     template<arithmetic U = T>
-    constexpr Point2D_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    constexpr Point2D_t(const Vector2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
-    operator Vector2_t<T>() const{ return Vector2_t<T>{this->x, this->y}};
+    operator Vector2<T>() const{ return Vector2<T>{this->x, this->y}};
 };
 }

@@ -157,7 +157,7 @@ public:
 
     [[nodiscard]] IResult<> clear_flag();
 
-    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
 
     [[nodiscard]] IResult<> sleep()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = false; return write_reg(reg);}

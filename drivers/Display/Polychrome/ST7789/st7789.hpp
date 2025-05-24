@@ -10,7 +10,7 @@ namespace ymd::drivers{
 class ST7789_Phy final{
 public:
     template<typename T = void>
-    using IResult = Result<void, DisplayerError>;
+    using IResult = Result<void, drivers::DisplayerError>;
 private:
     hal::SpiHw & spi_;
     hal::SpiSlaveIndex idx_;
@@ -169,28 +169,28 @@ public:
     class ST7789_ReflashAlgo{
     public:
 
-        ST7789_ReflashAlgo(const Vector2_t<uint16_t> & size):
+        ST7789_ReflashAlgo(const Vector2<uint16_t> & size):
             size_(size){;}
 
         __fast_inline constexpr
-        uint32_t get_point_index(const Vector2_t<uint16_t> p){
+        uint32_t get_point_index(const Vector2<uint16_t> p){
             return (p.x + p.y * size_t(size_.x));
         }
 
         __fast_inline constexpr
-        Range2_t<uint32_t> get_point_index(const Rect2_t<uint16_t> r){
+        Range2_t<uint32_t> get_point_index(const Rect2<uint16_t> r){
             return {
                 get_point_index(r.position), 
                 get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};
         }
 
-        bool update(const Rect2_t<uint16_t> rect);
-        bool update(const Vector2_t<uint16_t> p){
-            return update(Rect2_t<uint16_t>{p, size_});
+        bool update(const Rect2<uint16_t> rect);
+        bool update(const Vector2<uint16_t> p){
+            return update(Rect2<uint16_t>{p, size_});
         }
     private:
-        const Vector2_t<uint16_t> size_;
-        Rect2_t<uint16_t> curr_area_ = {0,0,1,1};
+        const Vector2<uint16_t> size_;
+        Rect2<uint16_t> curr_area_ = {0,0,1,1};
         uint32_t last_point_ = 0;
     };
 
@@ -200,7 +200,7 @@ private:
     ST7789_Phy phy_;
     Algo algo_;
 
-    Vector2_t<uint16_t> offset_;
+    Vector2<uint16_t> offset_;
     uint8_t scr_ctrl_ = 0;
 
     __fast_inline IResult<> write_command(const uint8_t cmd){
@@ -229,7 +229,7 @@ protected:
     void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
     void putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
 public:
-    ST7789(const ST7789_Phy & phy, const Vector2_t<uint16_t> & size):
+    ST7789(const ST7789_Phy & phy, const Vector2<uint16_t> & size):
             ImageBasics(size), 
             Displayer<RGB565>(size), 
             phy_(phy),

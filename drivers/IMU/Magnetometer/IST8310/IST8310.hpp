@@ -149,7 +149,7 @@ public:
 
     IResult<> enable_sleep(const bool en = true);
 
-    IResult<Vector3_t<q24>> read_mag() override;
+    IResult<Vector3<q24>> read_mag() override;
 
 protected:
 

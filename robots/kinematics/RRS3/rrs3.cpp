@@ -55,10 +55,10 @@ void rrs3_tb(){
     [[maybe_unused]] 
     constexpr const RRS3 rrs3{cfg};
     constexpr const auto head = Quat_t<T>::from_shortest_arc(
-        Vector3_t<T>{0, 0, 1},
-        // Vector3_t<T>{-0.1_r, -0.1_r, 1_r}.normalized()
-        Vector3_t<T>{T(-0.1), T(-0.1), 1}.normalized()
-        // Vector3_t<T>{T(0), T(0), 1}.normalized()
+        Vector3<T>{0, 0, 1},
+        // Vector3<T>{-0.1_r, -0.1_r, 1_r}.normalized()
+        Vector3<T>{T(-0.1), T(-0.1), 1}.normalized()
+        // Vector3<T>{T(0), T(0), 1}.normalized()
     );
 
 
@@ -68,15 +68,15 @@ void rrs3_tb(){
         .z = 5,
     };
     
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2_t<T>::RIGHT.rotated(T(TAU  / 3)), gest));
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2_t<T>::RIGHT.rotated(T(-TAU / 3)), gest));
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2_t<T>::RIGHT.rotated(T(0)), gest));
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2_t<T>::RIGHT.rotated(T(TAU  / 3)), gest).unwrap().to_absolute());
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2_t<T>::RIGHT.rotated(T(-TAU / 3)), gest).unwrap().to_absolute());
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2_t<T>::RIGHT.rotated(T(0)), gest).unwrap().to_absolute());
+    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(TAU  / 3)), gest));
+    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(-TAU / 3)), gest));
+    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(0)), gest));
+    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(TAU  / 3)), gest).unwrap().to_absolute());
+    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(-TAU / 3)), gest).unwrap().to_absolute());
+    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(0)), gest).unwrap().to_absolute());
     
-    DEBUG_PRINTLN(Vector2_t<T>::RIGHT.rotated(T(TAU  / 3)));
-    DEBUG_PRINTLN(Vector2_t<T>::RIGHT.rotated(T(-TAU / 3)));
+    DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(TAU  / 3)));
+    DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(-TAU / 3)));
 
     const auto u = clock::micros();
     const auto res_opt = rrs3.inverse(gest);

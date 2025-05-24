@@ -19,7 +19,7 @@ public:
         ErrorCode code;  
     };
 protected:
-    using Sample = ymd::Vector2_t<real_t>;
+    using Sample = ymd::Vector2<real_t>;
     using Samples = std::vector<Sample>;
     Samples samples_;
 

@@ -9,26 +9,26 @@ namespace ymd{
 template<arithmetic T>
 struct Ray2_t{
 public:
-    Vector2_t<T> org;
+    Vector2<T> org;
     T rad;
 
 public:
     [[nodiscard]] __fast_inline constexpr Ray2_t():
-        org(Vector2_t<T>(0,0)),
+        org(Vector2<T>(0,0)),
         rad(T(0)){;}
 
-    [[nodiscard]] __fast_inline constexpr Ray2_t(const Vector2_t<T> & _org, const T & _rad): 
-            org(static_cast<Vector2_t<T>>(_org)), rad(static_cast<T>(_rad)){;}
+    [[nodiscard]] __fast_inline constexpr Ray2_t(const Vector2<T> & _org, const T & _rad): 
+            org(static_cast<Vector2<T>>(_org)), rad(static_cast<T>(_rad)){;}
 
     [[nodiscard]] __fast_inline constexpr Ray2_t(const T & _x, const T & _y, const T & _rad): 
-            org(Vector2_t<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
+            org(Vector2<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
             
-    [[nodiscard]] __fast_inline constexpr Ray2_t(const Vector2_t<T> & _from, const Vector2_t<T> & _to): 
-            org(static_cast<Vector2_t<T>>(_from)), rad((_to - _from).angle()){;}
+    [[nodiscard]] __fast_inline constexpr Ray2_t(const Vector2<T> & _from, const Vector2<T> & _to): 
+            org(static_cast<Vector2<T>>(_from)), rad((_to - _from).angle()){;}
 
     template<arithmetic U = T>
     [[nodiscard]] __fast_inline constexpr Ray2_t(const std::tuple<U, U, U> & tup) : 
-            org((Vector2_t<T>(std::get<0>(tup), std::get<1>(tup)))),
+            org((Vector2<T>(std::get<0>(tup), std::get<1>(tup)))),
             rad(std::get<3>(tup)){;}
 
 	[[nodiscard]] __fast_inline constexpr bool operator==(const Ray2_t & other) const{
@@ -57,7 +57,7 @@ public:
 
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2_t<T> & pt) const{
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2<T> & pt) const{
         return is_equal_approx(distance_to(pt), 0);
     }
 
@@ -65,7 +65,7 @@ public:
         return is_equal_approx(this->rad, other.rad);
     }
 
-    [[nodiscard]] __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Ray2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vector2<T>> intersection(const Ray2_t<T> & other) const{
         return this->to_line().intersection(other.to_line());
     }
 
@@ -77,11 +77,11 @@ public:
         return {this->org, this->rad + r};
     }
     
-    [[nodiscard]] __fast_inline constexpr Vector2_t<T> endpoint(const T & l) const{
-        return this->org + Vector2_t<T>{l, 0}.rotated(this->rad);
+    [[nodiscard]] __fast_inline constexpr Vector2<T> endpoint(const T & l) const{
+        return this->org + Vector2<T>{l, 0}.rotated(this->rad);
     }
     
-    [[nodiscard]] __fast_inline constexpr Segment2D_t<T> cut(const T & l) const{
+    [[nodiscard]] __fast_inline constexpr Segment2_t<T> cut(const T & l) const{
         return {this->org, endpoint(l)};
     }
 
@@ -105,6 +105,11 @@ public:
     }
 };
 
+
+template<size_t Q>
+using Ray2q = Ray2_t<iq_t<Q>>;
+using Ray2f = Ray2_t<float>;
+using Ray2d = Ray2_t<double>;
 
 __inline OutputStream & operator <<(OutputStream & os, const Ray2_t<auto> & ray){
     return os << os.brackets<'('>() << 

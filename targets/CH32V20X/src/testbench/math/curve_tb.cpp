@@ -22,8 +22,8 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-using Point = Vector2_t<real_t>;
-using Points = std::vector<Vector2_t<real_t>>;
+using Point = Vector2<real_t>;
+using Points = std::vector<Vector2<real_t>>;
 
 using namespace ymd::intp;
 using namespace ymd::utils;
@@ -33,20 +33,20 @@ using namespace ymd::curve;
 
 
 
-auto compare_points_by_x = [](const Vector2_t<real_t> & a, const Vector2_t<real_t> & b) -> bool {
+auto compare_points_by_x = [](const Vector2<real_t> & a, const Vector2<real_t> & b) -> bool {
     return a.x < b.x;
 };
 
 auto get_iter_by_x = [](const Points & points, const real_t x) -> Points::const_iterator {
     // 使用 std::lower_bound 找到第一个 x 坐标大于等于给定 x 的点
-    return std::lower_bound(points.begin(), points.end(), x, [](const Vector2_t<real_t> & p, const real_t val) {
+    return std::lower_bound(points.begin(), points.end(), x, [](const Vector2<real_t> & p, const real_t val) {
         return p.x < val;
     });
 };
 
 auto get_y_by_x = [](const Points & points, const real_t x){
     // 查找第一个 x >= x 的点
-    auto it = std::lower_bound(points.begin(), points.end(), x, [](const Vector2_t<real_t> & p, const real_t val) {
+    auto it = std::lower_bound(points.begin(), points.end(), x, [](const Vector2<real_t> & p, const real_t val) {
         return p.x < val;
     });
 
@@ -107,7 +107,7 @@ void curve_tb() {
     DEBUGGER_INST.init(576000);
     DEBUG_PRINTLN(std::setprecision(4));
 
-    using Vector3 = Vector3_t<real_t>;
+    using Vector3 = Vector3<real_t>;
 
     Points points = {
         {0,0},
@@ -117,7 +117,7 @@ void curve_tb() {
         {1,1},
     };
 
-    std::sort(points.begin(), points.end(), Vector2_t<real_t>::sort_by_x);
+    std::sort(points.begin(), points.end(), Vector2<real_t>::sort_by_x);
 
 
     class Ball{
@@ -126,7 +126,7 @@ void curve_tb() {
             DEBUG_PRINTLN(size);
         }
 
-        void setPosition(const Vector2_t<real_t> & pos){
+        void setPosition(const Vector2<real_t> & pos){
             auto [x,y] = pos;
             DEBUG_PRINTLN(x,y, sin(clock::time()));
         }
@@ -136,9 +136,9 @@ void curve_tb() {
             DEBUG_PRINTLN(x,y,z);
         }
 
-        Vector2_t<real_t> getPosition(){
+        Vector2<real_t> getPosition(){
             // DEBUG_PRINTLN
-            return Vector2_t<real_t>(1,0).rotated(clock::time());
+            return Vector2<real_t>(1,0).rotated(clock::time());
         }
 
         operator real_t(){
@@ -151,9 +151,9 @@ void curve_tb() {
 
 
     auto pos_setter = make_setter(ball, &Ball::setPosition);
-    auto curve = make_curve<Vector2_t<real_t>>({0,0}, {1,4}, 1, CosineInterpolation());
+    auto curve = make_curve<Vector2<real_t>>({0,0}, {1,4}, 1, CosineInterpolation());
     auto curve2 = make_curve(-2, 9, 2, CosineInterpolation());
-    auto curve3 = make_curve<CurveTrapezoid_t, Vector2_t<real_t>>({9,0}, {30, 8}, 20, 90);
+    auto curve3 = make_curve<CurveTrapezoid_t, Vector2<real_t>>({9,0}, {30, 8}, 20, 90);
 
     auto getter = make_getter(ball, &Ball::getPosition);
     auto getter2 = make_getter(ball, &Ball::operator real_t);
@@ -164,7 +164,7 @@ void curve_tb() {
     //     1, {1,0}, {-0.3_r,4}, CosineInterpolation()
     // );
 
-    // [[maybe_unused]] Tweener_t<Vector2_t<real_t>> * tw2 = new_tweener<Vector2_t<real_t>>(
+    // [[maybe_unused]] Tweener_t<Vector2<real_t>> * tw2 = new_tweener<Vector2<real_t>>(
     //     pos_setter,curve3
     // );
     // [[maybe_unused]] auto tweener = make_tweener(
@@ -184,8 +184,8 @@ void curve_tb() {
     );
 
 
-    // auto tweener4 = TweenerStatic_t<Vector2_t<real_t>>(pos_setter, curve3);
-    // sizeof(TweenerStatic_t<Vector2_t<real_t>>::Curve &);
+    // auto tweener4 = TweenerStatic_t<Vector2<real_t>>(pos_setter, curve3);
+    // sizeof(TweenerStatic_t<Vector2<real_t>>::Curve &);
     // sizeof(tweener4._curve);
     // using setter_type = decltype(&tweener4._setter);
     // using curve_type = decltype(&tweener4._curve);
@@ -198,7 +198,7 @@ void curve_tb() {
     // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::CurveWrapper);
     // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::SetterWrapper);
 
-    // [[maybe_unused]] auto tw3 = new_tweener<Vector2_t<real_t>>(
+    // [[maybe_unused]] auto tw3 = new_tweener<Vector2<real_t>>(
     //     pos_setter,curve3
     // );
 
@@ -226,11 +226,11 @@ void curve_tb() {
     // auto rpoints = rasterization_points(intp::QuadraticSeatInterpolation({0.6_r, 0.2_r}, 10), 50);
     // auto rpoints = rasterization_points(intp::SymmetricInterpolation({0.6_r, 0.2_r}, 10), 50);
     // [[maybe_unused]] auto tw1 = make_tweener(0, 4, intp::CosineInterpolation());
-    // [[maybe_unused]] auto tw2 = make_tweener(Vector2_t<real_t>(0,0), Vector2_t<real_t>(4,4), intp::CosineInterpolation());
+    // [[maybe_unused]] auto tw2 = make_tweener(Vector2<real_t>(0,0), Vector2<real_t>(4,4), intp::CosineInterpolation());
 
 
     // auto rpoints = rasterization_points(tw1, 50);
-    // auto rpoints = rasterization_points(make_tweener(Vector2_t<real_t>(0,0), Vector2_t<real_t>(1,4), intp::CosineInterpolation()), 50);
+    // auto rpoints = rasterization_points(make_tweener(Vector2<real_t>(0,0), Vector2<real_t>(1,4), intp::CosineInterpolation()), 50);
 
     // for(auto & p : rpoints) {
     //     DEBUG_PRINTLN(p);
@@ -241,7 +241,7 @@ void curve_tb() {
     while(true){
         // DEBUG_PRINTLN(getter());
         // tweener.update(frac(t));
-        // setter = Vector2_t<real_t>(1,0).rotated(t);
+        // setter = Vector2<real_t>(1,0).rotated(t);
 
         // DEBUG_PRINTLN(getter(), getter2());
         // tw3.update(frac(clock::time()));
@@ -265,9 +265,9 @@ void curve_tb() {
         // DEBUG_PRINTLN(real_t(i++) / 10 + real_t(0.0001))
         // DEBUG_PRINTLN(2 * sin(time()))
         // auto pos = getter();
-        // setter = Vector2_t<real_t>(getter);
+        // setter = Vector2<real_t>(getter);
         // setter = getter;
-        // setter = Vector2_t<real_t>(getter);
+        // setter = Vector2<real_t>(getter);
         // setter(getter());
         clock::delay(10ms);
     }

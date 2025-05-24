@@ -121,12 +121,12 @@ IResult<> ICM42605::reset(){
     return Ok();
 }
 
-IResult<Vector3_t<q24>> ICM42605::read_acc(){
+IResult<Vector3<q24>> ICM42605::read_acc(){
     TODO();
-    return Ok{Vector3_t<q24>{0,0,0}};//TODO
+    return Ok{Vector3<q24>{0,0,0}};//TODO
 }
 
-IResult<Vector3_t<q24>> ICM42605::read_gyr(){
+IResult<Vector3<q24>> ICM42605::read_gyr(){
     TODO();
-    return Ok{Vector3_t<q24>{0,0,0}};//TODO
+    return Ok{Vector3<q24>{0,0,0}};//TODO
 }

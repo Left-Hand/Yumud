@@ -9,11 +9,11 @@ namespace ymd{
 template<arithmetic T>
 struct Arc2D_t{
 public:
-	Vector2_t<T> org;
+	Vector2<T> org;
 	T r;
 	Range2_t<T> range;
 public:
-	__fast_inline constexpr Arc2D_t(const Vector2_t<T> & _org, const T & _r, const Range2_t<T> _range):
+	__fast_inline constexpr Arc2D_t(const Vector2<T> & _org, const T & _r, const Range2_t<T> _range):
         org(_org), r(_r), range(_range) {}
 	
 	__fast_inline constexpr bool intersects(const Arc2D_t<T> & other) const {

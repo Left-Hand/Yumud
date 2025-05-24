@@ -8,13 +8,13 @@ namespace ymd{
 template<arithmetic T>
 struct Circle2D_t{
 public:
-	Vector2_t<T> org;
+	Vector2<T> org;
 	T r;
 public:
-	__fast_inline constexpr Circle2D_t(const Vector2_t<T> & _org, const T & _r):
+	__fast_inline constexpr Circle2D_t(const Vector2<T> & _org, const T & _r):
         org(_org), r(_r){}
 
-	__fast_inline constexpr bool contains(const Vector2_t<T> & p) const {
+	__fast_inline constexpr bool contains(const Vector2<T> & p) const {
 		return 	(p - org).length_squared() < r * r;
 	}
 	

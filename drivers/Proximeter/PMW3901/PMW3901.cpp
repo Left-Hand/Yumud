@@ -221,7 +221,7 @@ Result<void, Error> PMW3901::update(){
 Result<void, Error> PMW3901::update(const real_t rad){
     return read_data()
     .if_ok([&]{
-        auto delta = Vector2_t<real_t>(data_.dx.as_val(), data_.dy.as_val())
+        auto delta = Vector2<real_t>(data_.dx.as_val(), data_.dy.as_val())
             .rotated(rad - real_t(PI/2)) * scale;
         x_cm += delta.x;
         y_cm += delta.y;

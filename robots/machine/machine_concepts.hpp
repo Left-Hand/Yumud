@@ -85,7 +85,7 @@ public:
 
 struct XY_Machine:public X_Machine, public Y_Machine{
 private:
-    using Vector2 = Vector2_t<real_t>;
+    using Vector2 = Vector2<real_t>;
     bool reached(const real_t x) const override{
         return false;
     }

@@ -925,7 +925,7 @@ namespace ymd::nvcv2::Shape{
 
     void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
 
-        using vec_t = Vector2_t<int8_t>;
+        using vec_t = Vector2<int8_t>;
         #define square(x) (x * x)
         scexpr size_t shift_bits = 3;
     

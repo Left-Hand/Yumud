@@ -12,21 +12,21 @@ real_t CosineInterpolation::forward(real_t x) const {
     real_t x4 = x2*x2;
     real_t x6 = x4*x2;
     
-    scexpr real_t fa = real_t( 4.0/9.0);
-    scexpr real_t fb = real_t(-17.0/9.0);
-    scexpr real_t fc = real_t(22.0/9.0);
+    static constexpr real_t fa = real_t( 4.0/9.0);
+    static constexpr real_t fb = real_t(-17.0/9.0);
+    static constexpr real_t fc = real_t(22.0/9.0);
     
     return fa*x6 + fb*x4 + fc*x2;
 }
 
 
-std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2 & handle){
+std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2q<16> & handle){
 
-    scexpr double epsilon = 0.001;
-    scexpr real_t min_param_a = real_t(0.0 + epsilon);
-    scexpr real_t max_param_a = real_t(1.0 - epsilon);
-    scexpr real_t min_param_b = real_t(0.0);
-    scexpr real_t max_param_b = real_t(1.0);
+    static constexpr double epsilon = 0.001;
+    static constexpr real_t min_param_a = real_t(0.0 + epsilon);
+    static constexpr real_t max_param_a = real_t(1.0 - epsilon);
+    static constexpr real_t min_param_b = real_t(0.0);
+    static constexpr real_t max_param_b = real_t(1.0);
 
     auto [a,b] = handle;
 

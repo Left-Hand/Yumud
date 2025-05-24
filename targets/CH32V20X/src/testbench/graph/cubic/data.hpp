@@ -13,60 +13,60 @@ struct mat4_t
 
 static const std::array vertex =
 {
-	Vector3_t<float>{-1.0f, -1.0f, -1.0f}, // 0
-	Vector3_t<float>{ 1.0f,  1.0f, -1.0f}, // 1
-	Vector3_t<float>{ 1.0f, -1.0f, -1.0f}, // 2
-	Vector3_t<float>{-1.0f,  1.0f, -1.0f}, // 3
-	Vector3_t<float>{-1.0f, -1.0f,  1.0f}, // 4
-	Vector3_t<float>{ 1.0f, -1.0f,  1.0f}, // 5
-	Vector3_t<float>{ 1.0f,  1.0f,  1.0f}, // 6
-	Vector3_t<float>{-1.0f,  1.0f,  1.0f}, // 7
+	Vector3<float>{-1.0f, -1.0f, -1.0f}, // 0
+	Vector3<float>{ 1.0f,  1.0f, -1.0f}, // 1
+	Vector3<float>{ 1.0f, -1.0f, -1.0f}, // 2
+	Vector3<float>{-1.0f,  1.0f, -1.0f}, // 3
+	Vector3<float>{-1.0f, -1.0f,  1.0f}, // 4
+	Vector3<float>{ 1.0f, -1.0f,  1.0f}, // 5
+	Vector3<float>{ 1.0f,  1.0f,  1.0f}, // 6
+	Vector3<float>{-1.0f,  1.0f,  1.0f}, // 7
 };
-// static const std::array<Vector2_t<float>, 36> texcoord =
+// static const std::array<Vector2<float>, 36> texcoord =
 static const std::array texcoord =
 {
 	// back face
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-left
-	Vector2_t<float>{1.0f, 0.0f}, // top-right
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-right         
-	Vector2_t<float>{1.0f, 0.0f}, // top-right
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-left
-	Vector2_t<float>{1.0f, 1.0f}, // top-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-left
+	Vector2<float>{1.0f, 0.0f}, // top-right
+	Vector2<float>{0.0f, 0.0f}, // bottom-right         
+	Vector2<float>{1.0f, 0.0f}, // top-right
+	Vector2<float>{0.0f, 1.0f}, // bottom-left
+	Vector2<float>{1.0f, 1.0f}, // top-left
 	// front face
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-right
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 1.0f}, // top-right
+	Vector2<float>{1.0f, 1.0f}, // top-right
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-left
 	// left face
-	Vector2_t<float>{1.0f, 1.0f}, // top-right
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-left
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-right
+	Vector2<float>{1.0f, 1.0f}, // top-right
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 1.0f}, // top-right
 	// right face
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-right         
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-left     
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 1.0f}, // top-right         
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-left     
 	// bottom face
-	Vector2_t<float>{1.0f, 0.0f}, // top-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-left
-	Vector2_t<float>{0.0f, 0.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 0.0f}, // top-right
+	Vector2<float>{1.0f, 0.0f}, // top-right
+	Vector2<float>{1.0f, 1.0f}, // top-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-left
+	Vector2<float>{0.0f, 0.0f}, // bottom-right
+	Vector2<float>{1.0f, 0.0f}, // top-right
 	// top face
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 1.0f}, // top-right     
-	Vector2_t<float>{0.0f, 1.0f}, // bottom-right
-	Vector2_t<float>{1.0f, 0.0f}, // top-left
-	Vector2_t<float>{0.0f, 0.0f}  // bottom-left     
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 1.0f}, // top-right     
+	Vector2<float>{0.0f, 1.0f}, // bottom-right
+	Vector2<float>{1.0f, 0.0f}, // top-left
+	Vector2<float>{0.0f, 0.0f}  // bottom-left     
 };
 static const auto cubic_index = std::to_array<uint8_t>(
 {

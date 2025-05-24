@@ -54,9 +54,9 @@ void AABB_t<T>::merge_with(const AABB_t<T> & p_aabb) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
 	}
 #endif
-	Vector3_t<T> beg_1, beg_2;
-	Vector3_t<T> end_1, end_2;
-	Vector3_t<T> min, max;
+	Vector3<T> beg_1, beg_2;
+	Vector3<T> end_1, end_2;
+	Vector3<T> min, max;
 
 	beg_1 = position;
 	beg_2 = p_aabb.position;
@@ -92,12 +92,12 @@ AABB_t<T> AABB_t<T>::intersection(const AABB_t<T> & p_aabb) const {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
 	}
 #endif
-	Vector3_t<T> src_min = position;
-	Vector3_t<T> src_max = position + size;
-	Vector3_t<T> dst_min = p_aabb.position;
-	Vector3_t<T> dst_max = p_aabb.position + p_aabb.size;
+	Vector3<T> src_min = position;
+	Vector3<T> src_max = position + size;
+	Vector3<T> dst_min = p_aabb.position;
+	Vector3<T> dst_max = p_aabb.position + p_aabb.size;
 
-	Vector3_t<T> min, max;
+	Vector3<T> min, max;
 
 	if (src_min.x > dst_max.x || src_max.x < dst_min.x) {
 		return AABB_t<T>();
@@ -129,13 +129,13 @@ AABB_t<T> AABB_t<T>::intersection(const AABB_t<T> & p_aabb) const {
 // backtracked intersection, or use p_from as the intersection, and
 // carry on progressing without e.g. reflecting against the normal.
 template<arithmetic T>
-bool AABB_t<T>::find_intersects_ray(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir, bool &r_inside, Vector3_t<T> *r_intersection_point, Vector3_t<T> *r_normal) const {
+bool AABB_t<T>::find_intersects_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, bool &r_inside, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
 	}
 #endif
-	Vector3_t<T> end = position + size;
+	Vector3<T> end = position + size;
 	T tmin = -1e20;
 	T tmax = 1e20;
 	int axis = 0;
@@ -185,7 +185,7 @@ bool AABB_t<T>::find_intersects_ray(const Vector3_t<T> & p_from, const Vector3_t
 		r_intersection_point->coord[axis] = (p_dir[axis] >= 0) ? position.coord[axis] : end.coord[axis];
 	}
 	if (r_normal) {
-		*r_normal = Vector3_t<T>();
+		*r_normal = Vector3<T>();
 		(*r_normal)[axis] = (p_dir[axis] >= 0) ? -1 : 1;
 	}
 
@@ -193,7 +193,7 @@ bool AABB_t<T>::find_intersects_ray(const Vector3_t<T> & p_from, const Vector3_t
 }
 
 template<arithmetic T>
-bool AABB_t<T>::intersects_segment(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to, Vector3_t<T> *r_intersection_point, Vector3_t<T> *r_normal) const {
+bool AABB_t<T>::intersects_segment(const Vector3<T> & p_from, const Vector3<T> & p_to, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -243,10 +243,10 @@ bool AABB_t<T>::intersects_segment(const Vector3_t<T> & p_from, const Vector3_t<
 		}
 	}
 
-	Vector3_t<T> rel = p_to - p_from;
+	Vector3<T> rel = p_to - p_from;
 
 	if (r_normal) {
-		Vector3_t<T> normal;
+		Vector3<T> normal;
 		normal[axis] = sign;
 		*r_normal = normal;
 	}
@@ -260,15 +260,15 @@ bool AABB_t<T>::intersects_segment(const Vector3_t<T> & p_from, const Vector3_t<
 
 template<arithmetic T>
 bool AABB_t<T>::intersects_plane(const Plane_t<T> &p_plane) const {
-	Vector3_t<T> points[8] = {
-		Vector3_t<T>(position.x, position.y, position.z),
-		Vector3_t<T>(position.x, position.y, position.z + size.z),
-		Vector3_t<T>(position.x, position.y + size.y, position.z),
-		Vector3_t<T>(position.x, position.y + size.y, position.z + size.z),
-		Vector3_t<T>(position.x + size.x, position.y, position.z),
-		Vector3_t<T>(position.x + size.x, position.y, position.z + size.z),
-		Vector3_t<T>(position.x + size.x, position.y + size.y, position.z),
-		Vector3_t<T>(position.x + size.x, position.y + size.y, position.z + size.z),
+	Vector3<T> points[8] = {
+		Vector3<T>(position.x, position.y, position.z),
+		Vector3<T>(position.x, position.y, position.z + size.z),
+		Vector3<T>(position.x, position.y + size.y, position.z),
+		Vector3<T>(position.x, position.y + size.y, position.z + size.z),
+		Vector3<T>(position.x + size.x, position.y, position.z),
+		Vector3<T>(position.x + size.x, position.y, position.z + size.z),
+		Vector3<T>(position.x + size.x, position.y + size.y, position.z),
+		Vector3<T>(position.x + size.x, position.y + size.y, position.z + size.z),
 	};
 
 	bool over = false;
@@ -286,17 +286,17 @@ bool AABB_t<T>::intersects_plane(const Plane_t<T> &p_plane) const {
 }
 
 template<arithmetic T>
-Vector3_t<T> AABB_t<T>::get_longest_axis() const {
-	Vector3_t<T> axis(1, 0, 0);
+Vector3<T> AABB_t<T>::get_longest_axis() const {
+	Vector3<T> axis(1, 0, 0);
 	T max_size = size.x;
 
 	if (size.y > max_size) {
-		axis = Vector3_t<T>(0, 1, 0);
+		axis = Vector3<T>(0, 1, 0);
 		max_size = size.y;
 	}
 
 	if (size.z > max_size) {
-		axis = Vector3_t<T>(0, 0, 1);
+		axis = Vector3<T>(0, 0, 1);
 	}
 
 	return axis;
@@ -320,17 +320,17 @@ int AABB_t<T>::get_longest_axis_index() const {
 }
 
 template<arithmetic T>
-Vector3_t<T> AABB_t<T>::get_shortest_axis() const {
-	Vector3_t<T> axis(1, 0, 0);
+Vector3<T> AABB_t<T>::get_shortest_axis() const {
+	Vector3<T> axis(1, 0, 0);
 	T min_size = size.x;
 
 	if (size.y < min_size) {
-		axis = Vector3_t<T>(0, 1, 0);
+		axis = Vector3<T>(0, 1, 0);
 		min_size = size.y;
 	}
 
 	if (size.z < min_size) {
-		axis = Vector3_t<T>(0, 0, 1);
+		axis = Vector3<T>(0, 0, 1);
 	}
 
 	return axis;
@@ -361,7 +361,7 @@ AABB_t<T> AABB_t<T>::merge(const AABB_t<T> & p_with) const {
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::expand(const Vector3_t<T> & p_vector) const {
+AABB_t<T> AABB_t<T>::expand(const Vector3<T> & p_vector) const {
 	AABB_t<T> aabb = *this;
 	aabb.expand_to(p_vector);
 	return aabb;
@@ -375,7 +375,7 @@ AABB_t<T> AABB_t<T>::grow(T p_by) const {
 }
 
 template<arithmetic T>
-void AABB_t<T>::get_edge(int p_edge, Vector3_t<T> &r_from, Vector3_t<T> &r_to) const {
+void AABB_t<T>::get_edge(int p_edge, Vector3<T> &r_from, Vector3<T> &r_to) const {
 	switch (p_edge) {
 		default:
 		    HALT;
@@ -439,8 +439,8 @@ void AABB_t<T>::get_edge(int p_edge, Vector3_t<T> &r_from, Vector3_t<T> &r_to) c
 }
 
 template<arithmetic T>
-std::optional<Vector3_t<T>> AABB_t<T>::intersects_segment_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to) const {
-	Vector3_t<T> inters;
+std::optional<Vector3<T>> AABB_t<T>::intersects_segment_bind(const Vector3<T> & p_from, const Vector3<T> & p_to) const {
+	Vector3<T> inters;
 	if (intersects_segment(p_from, p_to, &inters)) {
 		return inters;
 	}
@@ -448,8 +448,8 @@ std::optional<Vector3_t<T>> AABB_t<T>::intersects_segment_bind(const Vector3_t<T
 }
 
 template<arithmetic T>
-std::optional<Vector3_t<T>> AABB_t<T>::intersects_ray_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir) const {
-	Vector3_t<T> inters;
+std::optional<Vector3<T>> AABB_t<T>::intersects_ray_bind(const Vector3<T> & p_from, const Vector3<T> & p_dir) const {
+	Vector3<T> inters;
 	bool inside = false;
 
 	if (find_intersects_ray(p_from, p_dir, inside, &inters)) {

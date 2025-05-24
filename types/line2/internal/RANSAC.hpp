@@ -6,7 +6,7 @@
 #define RANSAC_K 2
  
 //y=ax+b
-void lineplofit(std::vector<ymd::Vector2_t<float>>& points_list, int points_num, float* a, float* b)
+void lineplofit(std::vector<ymd::Vector2<float>>& points_list, int points_num, float* a, float* b)
 {
     float sum_x2 = 0.0;
     float sum_y = 0.0;
@@ -80,12 +80,12 @@ static void GetRansacRandomNum(int n, int num, int p[])
 }
  
  
-void RansacPolyfitLine(std::vector<ymd::Vector2_t<float>> p, int iter_num, float alpha, float* a, float* b)
+void RansacPolyfitLine(std::vector<ymd::Vector2<float>> p, int iter_num, float alpha, float* a, float* b)
 {
     int r_idx[RANSAC_K];
  
  
-    std::vector<ymd::Vector2_t<float>> pick_p;
+    std::vector<ymd::Vector2<float>> pick_p;
  
  
     srand((unsigned)time(NULL));
@@ -94,8 +94,8 @@ void RansacPolyfitLine(std::vector<ymd::Vector2_t<float>> p, int iter_num, float
     int max_inline_num = 0;
  
  
-    std::vector<ymd::Vector2_t<float>> inline_p;
-    std::vector<ymd::Vector2_t<float>> max_inline_p;
+    std::vector<ymd::Vector2<float>> inline_p;
+    std::vector<ymd::Vector2<float>> max_inline_p;
     std::vector<float> d_list;
  
  

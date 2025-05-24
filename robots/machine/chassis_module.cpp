@@ -6,7 +6,7 @@
 using namespace ymd::robots;
 using namespace ChassisActions;
 
-void ChassisModule::recalibrate(const Ray2_t<real_t> & ray){
+void ChassisModule::recalibrate(const Ray2q<16> & ray){
     TODO();
 }
 
@@ -25,7 +25,7 @@ void ChassisModule::closeloop(){
             break;
 
         case CtrlMode::STRICT_SHIFT:{
-            auto p1234 = solver_.inverse(Ray2_t<real_t>{target_jny_.org, 0});
+            auto p1234 = solver_.inverse(Ray2q<16>{target_jny_.org, 0});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
@@ -35,7 +35,7 @@ void ChassisModule::closeloop(){
         }
             break;
         case CtrlMode::STRICT_SPIN:{
-            auto p1234 = solver_.inverse(Ray2_t<real_t>{0,0, target_rot_});
+            auto p1234 = solver_.inverse(Ray2q<16>{0,0, target_rot_});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
@@ -47,12 +47,12 @@ void ChassisModule::closeloop(){
         case CtrlMode::SHIFT:{
             auto rot_output = rot_ctrl_.update(0, this->rad(), this->gyr());
             auto pos_output = pos_ctrl_.update(target_jny_.org, this->jny().org, this->spd());
-            setCurrent(Ray2_t<real_t>{pos_output, rot_output});
+            setCurrent(Ray2q<16>{pos_output, rot_output});
         }
             break;
         case CtrlMode::SPIN:{
             auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
-            setCurrent(Ray2_t<real_t>{Vector2{0,0}, rot_output});    
+            setCurrent(Ray2q<16>{Vector2q<16>{0,0}, rot_output});    
         }
             break;
     }
@@ -83,14 +83,14 @@ void ChassisModule::entry_strict_shift(){
     reset_journey();
 }
 
-void ChassisModule::setCurrent(const Ray2_t<real_t> & ray){
+void ChassisModule::setCurrent(const Ray2q<16> & ray){
     auto && curr = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
     wheels_.setCurrent(curr);
     // wheels_.setSpeed(curr);
 }
 
-void ChassisModule::setPosition(const Ray2_t<real_t> & ray){
+void ChassisModule::setPosition(const Ray2q<16> & ray){
     // DEBUG_PRINTLN("!!!!", ray);
     auto && pos = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
@@ -105,7 +105,7 @@ void ChassisModule::setPosition(const std::tuple<real_t, real_t, real_t, real_t>
 
 
 
-void ChassisModule::trim(const Ray2_t<real_t> & ray){
+void ChassisModule::trim(const Ray2q<16> & ray){
     auto & self = *this;
     self << new TrimAction(self, ray);
 }
@@ -146,22 +146,22 @@ void ChassisModule::tick800(){
     if(i == 0){
 
         // auto time = Sys::t;
-        // auto delta = solver.inverse(Vector2{0, 0.00_r}, 0.7_r);
+        // auto delta = solver.inverse(Vector2q<16>{0, 0.00_r}, 0.7_r);
         // wheels.setCurrent(delta);
         // acc_gyr_sensor_.update();
         // mag_sensor_.update();
 
-        // auto mag = Vector3_t<real_t>(mag_sensor_.read_mag());
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.0035);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.005);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.002);
-        auto gyr_raw = Vector3_t<real_t>(gyr_sensor_.read_gyr().unwrap()).z + real_t(0.00113);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z;
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00625);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00525);
-        // gyr_ = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3_t<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.134);
+        // auto mag = Vector3<real_t>(mag_sensor_.read_mag());
+        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.0035);
+        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.005);
+        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.002);
+        auto gyr_raw = Vector3<real_t>(gyr_sensor_.read_gyr().unwrap()).z + real_t(0.00113);
+        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z;
+        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00625);
+        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00525);
+        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.134);
 
         static KalmanFilter_t<real_t> kf{10,0.01_r};
         gyr_ = ABS(gyr_raw) > 3 ? real_t(0) : kf.update(gyr_raw);
@@ -171,7 +171,7 @@ void ChassisModule::tick800(){
 
         gyr_sum_ += gyr_;
 
-        auto calculate_journey = [this]() -> Ray2_t<real_t>{
+        auto calculate_journey = [this]() -> Ray2q<16>{
             return solver_.forward(
                 wheels_[0].readPosition() - last_motor_positions[0],
                 wheels_[1].readPosition() - last_motor_positions[1],
@@ -214,7 +214,7 @@ void ChassisModule::straight(const real_t dist){
 }
 
 //平移
-void ChassisModule:: shift(const Vector2 & diff){
+void ChassisModule:: shift(const Vector2q<16> & diff){
     auto & self = *this;
     self << new ShiftAction(self, diff);
 }
@@ -230,7 +230,7 @@ void ChassisModule::strict_spin(const real_t ang){
     self << new StrictSpinAction(self, ang);
 }
 
-void ChassisModule::strict_shift(const Vector2 & offs){
+void ChassisModule::strict_shift(const Vector2q<16> & offs){
     auto & self = *this;
     self << new StrictShiftAction(self, offs);
 }
@@ -240,9 +240,9 @@ void ChassisModule::strict_shift(const Vector2 & offs){
 //     self << new DelayAction(int(dur * 1000));
 // }
 
-void ChassisModule::follow(const Ray2_t<real_t> & to){
+void ChassisModule::follow(const Ray2q<16> & to){
     auto & self = *this;
-    auto from = Ray2_t<real_t>{{0,0}, real_t(PI/2)};
+    auto from = Ray2q<16>{{0,0}, real_t(PI/2)};
 
     auto p_opt = from.intersection(to);
     auto p = p_opt.value();

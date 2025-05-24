@@ -51,7 +51,7 @@ public:
 
     void inhibitChannels(bool x, bool y, bool z);
 
-    IResult<Vector3_t<q24>> read_mag() override;
+    IResult<Vector3<q24>> read_mag() override;
 
 protected:
     using RegAddress = uint8_t;

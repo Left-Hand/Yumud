@@ -6,7 +6,7 @@ real_t CubicInterpolation::forward(const real_t x) const {
     return forward({_a, _b}, {_c, _d}, x);
 }
 
-real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
+real_t CubicInterpolation::forward(const Vector2q<16> & a,const Vector2q<16> & b, const real_t x){
 
     scexpr real_t y0a = 0; // initial y
     scexpr real_t x0a = 0; // initial x 
@@ -45,7 +45,7 @@ real_t NearCubicInterpolation::forward(const real_t x) const {
 }
 
 
-real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, const real_t x){
+real_t NearCubicInterpolation::forward(const Vector2q<16> & from,const Vector2q<16> & to, const real_t x){
     auto [a,b] = from;
     auto [c,d] = to;
     real_t y = 0;

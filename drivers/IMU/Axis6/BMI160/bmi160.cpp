@@ -80,24 +80,24 @@ IResult<> BMI160::reset(){
     return phy_.write_command(uint8_t(Command::SOFT_RESET));
 }
 
-IResult<Vector3_t<q24>> BMI160::read_acc(){
+IResult<Vector3<q24>> BMI160::read_acc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
-    return Ok{Vector3_t<q24>{
+    return Ok{Vector3<q24>{
         conv(acc_reg.x),
         conv(acc_reg.y),
         conv(acc_reg.z)
     }};
 }
 
-IResult<Vector3_t<q24>> BMI160::read_gyr(){
+IResult<Vector3<q24>> BMI160::read_gyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
-    return Ok{Vector3_t<q24>{
+    return Ok{Vector3<q24>{
         conv(gyr_reg.x),
         conv(gyr_reg.y),
         conv(gyr_reg.z)

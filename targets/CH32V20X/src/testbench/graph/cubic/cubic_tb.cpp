@@ -32,9 +32,9 @@ static constexpr float fovy = RADIANS(45.0f);
 static constexpr float aspect = (float)LCD_W / LCD_H;
 static constexpr float znear = 0.1f;
 static constexpr float zfar = 10.0f;
-static constexpr Vector3_t<float> eye = {2.5, 2.5, 2.5};
-static constexpr Vector3_t<float> center = {0,0,0};
-static constexpr Vector3_t<float> up = {0,1,0};
+static constexpr Vector3<float> eye = {2.5, 2.5, 2.5};
+static constexpr Vector3<float> center = {0,0,0};
+static constexpr Vector3<float> up = {0,1,0};
 
 
 
@@ -119,15 +119,15 @@ static constexpr Vector3_t<float> up = {0,1,0};
 
 #define lookat(view, eye, center, up) \
 { \
-	Vector3_t<float> zaxis; \
+	Vector3<float> zaxis; \
 	zaxis = (eye - center); \
 	zaxis.normalize(); \
  \
-	Vector3_t<float> xaxis; \
+	Vector3<float> xaxis; \
 	xaxis = up.cross(zaxis); \
 	xaxis.normalize(); \
  \
-	Vector3_t<float> yaxis; \
+	Vector3<float> yaxis; \
 	yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
@@ -200,16 +200,16 @@ static buffer_t colorbuffer;
 struct vertex_t
 {
 	float rhw;
-	Vector2_t<int> point;
+	Vector2<int> point;
 };
 struct triangle_t
 {
 	uint8_t v0;
 	uint8_t v1;
 	uint8_t v2;
-	Vector2_t<float> texcoord0;
-	Vector2_t<float> texcoord1;
-	Vector2_t<float> texcoord2;
+	Vector2<float> texcoord0;
+	Vector2<float> texcoord1;
+	Vector2<float> texcoord2;
 	int16_t W12;
 	int16_t W20;
 	int16_t W01;
@@ -351,21 +351,21 @@ static void drawTriangle(const Rect2u & clip)
 			for (size_t x = xmin; x <= xmax; x++)
 			{
 				if ((w12 >= 0) and (w20 >= 0) and (w01 >= 0)){
-					const auto uv = Vector3_t{
+					const auto uv = Vector3{
 						w12 * triangle.area_r,
 						w20 * triangle.area_r,
 						w01 * triangle.area_r,
 					};
 
-					Vector3_t<float> vertex_rhw = {
+					Vector3<float> vertex_rhw = {
 						vVertex[v0].rhw,
 						vVertex[v1].rhw,
 						vVertex[v2].rhw,
 					};
 
 					const auto uv_rhw = uv / vertex_rhw.dot(uv);
-					const auto u = Vector3_t(triangle.texcoord0.x, triangle.texcoord1.x, triangle.texcoord2.x).dot(uv_rhw);
-					const auto texcoordV = Vector3_t(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
+					const auto u = Vector3(triangle.texcoord0.x, triangle.texcoord1.x, triangle.texcoord2.x).dot(uv_rhw);
+					const auto texcoordV = Vector3(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
 					const auto v = texcoordV.dot(uv_rhw);
 					const auto texcolor = doge[uint(u * 31 + 0.5f)][uint(v * 31 + 0.5f)];
 					colorbuffer[y - clipY0][x - clipX0] = texcolor;

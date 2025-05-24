@@ -8,7 +8,7 @@ namespace etk{
 using namespace ymd::drivers;
 
 struct EyeInfo{
-    Vector2_t<real_t> pos;
+    Vector2<real_t> pos;
 };
 
 struct EyelidInfo{

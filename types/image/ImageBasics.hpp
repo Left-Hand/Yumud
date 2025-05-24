@@ -26,8 +26,6 @@ class PixelProxy;
 
 
 class ImageBasics{
-public:
-    using Vector2 = Vector2_t<real_t>;
 private:
     Vector2u size_;
 protected:
@@ -38,24 +36,24 @@ public:
 
     ImageBasics(const Vector2u & size):size_(size){;}
 
-    Vector2u uv2pixel(const Vector2 & uv) const{
+    Vector2u uv2pixel(const Vector2q<16> & uv) const{
         return Vector2u(
             int(LERP(0u, this->size().x, ((uv.x + 1) / 2))), 
             int(LERP(0u, this->size().y, (uv.y + 1)/2)));
     }
 
-    Vector2 uv2aero(const Vector2 & uv) const{
-        return Vector2(((uv.x + 1) * (this->size().x / 2)), (uv.y + 1) * (this->size().y / 2));
+    Vector2q<16> uv2aero(const Vector2q<16> & uv) const{
+        return Vector2q<16>(((uv.x + 1) * (this->size().x / 2)), (uv.y + 1) * (this->size().y / 2));
     }
 
-    Vector2 pixel2uv(const Vector2u & pixel) const {
-        return Vector2(
+    Vector2q<16> pixel2uv(const Vector2u & pixel) const {
+        return Vector2q<16>(
             INVLERP(this->size().x / 2, this->size().x, real_t(pixel.x)), 
             INVLERP(this->size().y / 2, this->size().y, real_t(pixel.y)));
     }
 
-    Vector2 uvstep() const{
-        return Vector2(real_t(2) / this->size().x, real_t(2) / this->size().y);
+    Vector2q<16> uvstep() const{
+        return Vector2q<16>(real_t(2) / this->size().x, real_t(2) / this->size().y);
     }
 
     __fast_inline Vector2u size() const{
@@ -216,7 +214,7 @@ class ImageWR:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
 public:
 protected:
     using PixelShaderCallback = ColorType(*)(const Vector2u &);
-    using UVShaderCallback = ColorType(*)(const Vector2 &);
+    using UVShaderCallback = ColorType(*)(const Vector2q<16> &);
 
     friend class Painter<ColorType>;
     // friend class Painter;

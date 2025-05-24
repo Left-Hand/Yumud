@@ -33,8 +33,8 @@ namespace SMC{
     scexpr int max_item_size = 64;
     scexpr int max_ranges_size = 16;
 
-    using CoastItem = Vector2_t<uint8_t>;
-    using Points = sstl::vector<Vector2_t<int16_t>, max_item_size>;
+    using CoastItem = Vector2<uint8_t>;
+    using Points = sstl::vector<Vector2<int16_t>, max_item_size>;
     using Coast = sstl::vector<CoastItem, max_item_size>;
     using Coasts = sstl::vector<Coast, 4>;
     using Ranges = sstl::vector<Range2_t<int16_t>, max_ranges_size>;

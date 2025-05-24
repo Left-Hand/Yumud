@@ -19,7 +19,6 @@ class Interpolation{
 protected:
 
 public:
-    using Vector2 = Vector2_t<real_t>;
     virtual real_t forward(const real_t x) const = 0;
     real_t operator ()(const real_t x) const{
         return forward(x);

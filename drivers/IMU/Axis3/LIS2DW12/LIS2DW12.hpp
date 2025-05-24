@@ -226,7 +226,7 @@ public:
     
     void set_pmu_mode(const PmuType pum, const PmuMode mode);
     PmuMode get_pmu_mode(const PmuType pum);
-    IResult<Vector3_t<q24>> read_acc();
+    IResult<Vector3<q24>> read_acc();
 };
 
 }

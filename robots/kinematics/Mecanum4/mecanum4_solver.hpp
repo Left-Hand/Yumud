@@ -6,7 +6,7 @@ namespace ymd{
 
 template<arithmetic T>
 struct PoseVelocity2D_t{
-    Vector2_t<T> velocity;
+    Vector2<T> velocity;
     T spinrate;
 };
 
@@ -24,7 +24,7 @@ public:
 protected:
     const Config & config;
 
-    Vector2_t<T> get_velocity_from_wheels(const T4 & spd4) {
+    Vector2<T> get_velocity_from_wheels(const T4 & spd4) {
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
         T s2 = std::get<2>(spd4);
@@ -32,7 +32,7 @@ protected:
 
         T x = (s0 + s3 - s1 - s2) * T(0.25);
         T y = (s0 + s1 + s2 + s3) * T(0.25);
-        return Vector2_t<T>(x, y);
+        return Vector2<T>(x, y);
     }
 
     T get_spinrate_from_wheels(const T4 & spd4) {
@@ -44,7 +44,7 @@ protected:
         return (s1 - s0 + s2 - s3) / (4 * temp);
     }
 
-    T4  get_wheels_from_status(const Vector2_t<T>& spd, T spinrate) {
+    T4  get_wheels_from_status(const Vector2<T>& spd, T spinrate) {
         T temp = (config.chassis_height_meter + config.chassis_width_meter) / 2;
         return {
             spd.y + spd.x - spinrate * temp,
@@ -69,7 +69,7 @@ public:
         return get_wheels_from_status(pv.org, pv.rad);
     }
 
-    T4 inverse(const Vector2_t<T> & velocity, const T spinrate){
+    T4 inverse(const Vector2<T> & velocity, const T spinrate){
         return get_wheels_from_status(velocity, spinrate);
     }
 };

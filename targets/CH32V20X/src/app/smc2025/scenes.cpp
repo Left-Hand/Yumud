@@ -6,7 +6,7 @@ static constexpr auto make_scene1(){
     constexpr auto ROAD_WIDTH = 0.45_r;
     BlueprintBuilder builder = {
         {.road_width = ROAD_WIDTH}
-        ,Pose2_t<real_t>{Vector2_t<real_t>{0, 0}, real_t(PI)}
+        ,Pose2_t<real_t>{Vector2<real_t>{0, 0}, real_t(PI)}
     };
 
     return make_static_scene(
@@ -48,7 +48,7 @@ static constexpr auto make_scene2(){
     constexpr auto ROAD_WIDTH = 0.05_r;
     BlueprintBuilder builder = {
         {.road_width = ROAD_WIDTH}
-        ,Pose2_t<real_t>{Vector2_t<real_t>{0, 0}, real_t(PI)}
+        ,Pose2_t<real_t>{Vector2<real_t>{0, 0}, real_t(PI)}
     };
     
     return make_static_scene(

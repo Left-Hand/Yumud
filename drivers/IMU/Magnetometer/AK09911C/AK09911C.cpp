@@ -69,7 +69,7 @@ IResult<> AK09911C::update(){
 }
 
 
-IResult<Vector3_t<int8_t>> AK09911C::get_coeff(){
+IResult<Vector3<int8_t>> AK09911C::get_coeff(){
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(asax_reg.address, asax_reg.as_ref());
@@ -79,7 +79,7 @@ IResult<Vector3_t<int8_t>> AK09911C::get_coeff(){
     if(const auto res = read_reg(asaz_reg.address, asaz_reg.as_ref());
         res.is_err()) return Err(res.unwrap_err());
     
-    return Ok(Vector3_t<uint8_t>{
+    return Ok(Vector3<uint8_t>{
         asax_reg.data, 
         asay_reg.data, 
         asaz_reg.data
@@ -222,7 +222,7 @@ IResult<> AK09911C::set_odr(const Odr odr){
     return set_mode(static_cast<Mode>(odr));
 }
 
-IResult<Vector3_t<q24>> AK09911C::read_mag(){
+IResult<Vector3<q24>> AK09911C::read_mag(){
     static constexpr int16_t MIN_VALUE = -8190;
     static constexpr int16_t MAX_VALUE = 8190;
 
@@ -240,7 +240,7 @@ IResult<Vector3_t<q24>> AK09911C::read_mag(){
         return CHECK_ERR(Err(Error::AxisZOverflow));
     
     static constexpr q24 VALUE_LSB = q24(6E-5);
-    return Ok(Vector3_t<q24>{
+    return Ok(Vector3<q24>{
         VALUE_LSB * x,
         VALUE_LSB * y,
         VALUE_LSB * z

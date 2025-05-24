@@ -37,7 +37,7 @@ public:
     };
 
     using E = q16;
-    using T = Vector2_t<q16>;
+    using T = Vector2<q16>;
 
     using State = std::array<T, 3>;
     using Self = TdVec2;
@@ -93,11 +93,11 @@ private:
         const auto spd = state[1];
         // const auto acc = state[2];
 
-        // const auto raw_a = ((q12(self.kp_) * (Vector2_t<q12>(u - pos)))
+        // const auto raw_a = ((q12(self.kp_) * (Vector2<q12>(u - pos)))
         //      - (self.kd_ * spd));
         // DEBUG_PRINTLN(raw_a, self.max_acc_);
 
-        const auto pos_err = Vector2_t<q12>(u - pos);
+        const auto pos_err = Vector2<q12>(u - pos);
         const auto dist = pos_err.length();
         const auto norm_pos_err = pos_err / dist;
         const auto expect_spd = std::sqrt(2 * self.max_acc_ * dist);

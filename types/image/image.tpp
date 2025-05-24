@@ -34,11 +34,11 @@ void Image<ColorType>::load(const uint8_t * buf, const Vector2u & _size){
 
 
 template<typename ColorType>
-constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
+constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2q<16> & pos) const {
     Vector2u pos_i = {uint(pos.x), uint(pos.y)};
     // return img(pos_i);
     if(!this->size().has_point(pos_i) || !this->size().has_point(pos_i + Vector2u{1,1})) return ColorType();
-    Vector2 pos_frac = {frac(pos.x), frac(pos.y)};
+    Vector2q<16> pos_frac = {frac(pos.x), frac(pos.y)};
     
     const auto & self = *this;
     if(pos_frac.x){

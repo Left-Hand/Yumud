@@ -5,8 +5,8 @@
 #include "types/range/range.hpp"
 #include "core/debug/debug.hpp"
 
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 template<typename T = void>
 using IResult = ST7789::IResult<T>;
@@ -15,7 +15,7 @@ using IResult = ST7789::IResult<T>;
 
 
 //判断刷新命令符必要性判断算法 以提高spi dma的吞吐率
-bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
+bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
     const auto curr_pt_range = get_point_index(curr_area_);
     const auto desired_pt_range = get_point_index(rect);
 
@@ -52,8 +52,8 @@ void ST7789::setarea_unsafe(const Rect2u & rect){
     if(!need) return;
     #endif
 
-    const Vector2_t<uint16_t> p1 = offset_ + rect.position;
-    const Vector2_t<uint16_t> p2 = offset_ + rect.get_end() - Vector2u(1,1);
+    const Vector2<uint16_t> p1 = offset_ + rect.position;
+    const Vector2<uint16_t> p2 = offset_ + rect.get_end() - Vector2u(1,1);
 
     write_command(0x2a);
     write_data16(p1.x);

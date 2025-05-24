@@ -68,12 +68,12 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]]
-    constexpr Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
+    constexpr Quat_t(const Vector3<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
     [[nodiscard]]
-    static constexpr Quat_t from_shortest_arc(const Vector3_t<T> &v0, const Vector3_t<T> &v1){
-        const Vector3_t<T> n0 = v0.normalized();
-        const Vector3_t<T> n1 = v1.normalized();
+    static constexpr Quat_t from_shortest_arc(const Vector3<T> &v0, const Vector3<T> &v1){
+        const Vector3<T> n0 = v0.normalized();
+        const Vector3<T> n1 = v1.normalized();
 
         T d = v0.dot(v1);
 
@@ -81,7 +81,7 @@ static_assert(not std::is_integral_v<T>);
             const auto axis = n0.get_any_perpendicular();
             return Quat_t<T>(axis.x, axis.y, axis.z, T(0));
         } else {
-            Vector3_t<T> c = n0.cross(n1);
+            Vector3<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T rs = T(1) / s;
             return Quat_t<T>{c.x * rs, c.y * rs, c.z * rs, s / 2};
@@ -89,12 +89,12 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]]
-    static constexpr Quat_t<T> from_direction(const Vector3_t<T> & dir){
+    static constexpr Quat_t<T> from_direction(const Vector3<T> & dir){
         // Default direction is the positive Z-axis
-        const Vector3_t<T> default_dir(0, 0, 1);
+        const Vector3<T> default_dir(0, 0, 1);
         
         // Normalize the input direction
-        const Vector3_t<T> normalized_dir = dir.normalized();
+        const Vector3<T> normalized_dir = dir.normalized();
         
         // Calculate the dot product to determine the angle between the vectors
         T dot = default_dir.dot(normalized_dir);
@@ -105,7 +105,7 @@ static_assert(not std::is_integral_v<T>);
         }
         
         // Calculate the rotation axis using the cross product
-        Vector3_t<T> axis = default_dir.cross(normalized_dir);
+        Vector3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
         T angle = std::acos(dot);
@@ -190,7 +190,7 @@ static_assert(not std::is_integral_v<T>);
     constexpr void set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XYZ> &p_euler);
 
     [[nodiscard]]
-    constexpr Quat_t integral(const Vector3_t<T> & p, const T delta) const {
+    constexpr Quat_t integral(const Vector3<T> & p, const T delta) const {
         const auto k = delta / 2;
         return Quat_t<T>(
             x + k * (-y * p.z + z * p.y + w * p.x),
@@ -214,8 +214,8 @@ static_assert(not std::is_integral_v<T>);
     [[nodiscard]]
     constexpr Quat_t cubic_slerp(const Quat_t &p_b, const Quat_t &p_pre_a, const Quat_t &p_post_b, const T &p_weight) const;
 
-    constexpr void set_axis_angle(const Vector3_t<T> &axis, const T &angle);
-    constexpr void get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
+    constexpr void set_axis_angle(const Vector3<T> &axis, const T &angle);
+    constexpr void get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
         r_angle = 2.0f * acos(w);
         T r = (1.0f) / sqrt(1 - w * w);
         r_axis.x = x * r;
@@ -233,7 +233,7 @@ static_assert(not std::is_integral_v<T>);
     Quat_t operator*(const Quat_t & p_q) const;
 
     // [[nodiscard]] __fast_inline constexpr
-    // Quat_t operator*(const Vector3_t<T> &v) const {
+    // Quat_t operator*(const Vector3<T> &v) const {
     //     return Quat_t(w * v.x + y * v.z - z * v.y,
     //             w * v.y + z * v.x - x * v.z,
     //             w * v.z + x * v.y - y * v.x,
@@ -241,9 +241,9 @@ static_assert(not std::is_integral_v<T>);
     // }
 
     [[nodiscard]] __fast_inline constexpr
-    Vector3_t<T> operator*(const Vector3_t<T> &v) const {
-        Vector3_t<T> u(x, y, z);
-        Vector3_t<T> uv = u.cross(v);
+    Vector3<T> operator*(const Vector3<T> &v) const {
+        Vector3<T> u(x, y, z);
+        Vector3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
     }
 
@@ -253,16 +253,16 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vector3_t<T> xform(const Vector3_t<T> &v) const {
-        Vector3_t<T> u(x, y, z);
-        Vector3_t<T> uv = u.cross(v);
+    Vector3<T> xform(const Vector3<T> &v) const {
+        Vector3<T> u(x, y, z);
+        Vector3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vector3_t<T> xform_up() const {
+    Vector3<T> xform_up() const {
         // �������� v = (0, 0, 1)
-        return Vector3_t<T>(
+        return Vector3<T>(
             2 * (w * y + z * x),      // x ����
             2 * (-w * x + z * y),     // y ����
             2 * (z * z + w * w) - 1   // z ����
@@ -270,8 +270,8 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vector3_t<T> xform_top() const{
-        return Vector3_t<T>(
+    Vector3<T> xform_top() const{
+        return Vector3<T>(
             T(2 * (x * z - w * y)),
             T(2 * (w * x + y * z)),
             T(w * w - x * x - y * y + z * z)

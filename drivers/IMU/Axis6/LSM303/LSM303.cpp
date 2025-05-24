@@ -265,7 +265,7 @@ IResult<> LSM303::readReg(int reg, uint8_t & data)
     return Ok();
 }
 
-// Reads the 3 accelerometer channels and stores them in Vector3_t a
+// Reads the 3 accelerometer channels and stores them in Vector3 a
 IResult<> LSM303::readAcc()
 {
     TODO();

@@ -85,7 +85,7 @@ constexpr void Quat_t<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::
 // // (ax,ay,az), where ax is the angle of rotation around x axis,
 // // and similar for other axes.
 // // This implementation uses XYZ convention (Z is the first rotation).
-// // Vector3_t<T> Quat_t<T>::get_euler_xyz() const {
+// // Vector3<T> Quat_t<T>::get_euler_xyz() const {
 // // 	Basis m(*this);
 // // 	return m.get_euler_xyz();
 // // }
@@ -95,7 +95,7 @@ constexpr void Quat_t<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::
 // // and similar for other axes.
 // // This implementation uses YXZ convention (Z is the first rotation).
 // template<typename T>
-// constexpr void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
+// constexpr void Quat_t<T>::set_euler_yxz(const Vector3<T> &p_euler) {
 	
 // 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
 // 	// Conversion to Quat_t<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
@@ -135,7 +135,7 @@ constexpr void Quat_t<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
-// Vector3_t<T> Quat_t<T>::get_euler_yxz() const {
+// Vector3<T> Quat_t<T>::get_euler_yxz() const {
 // 	Basis m(*this);
 // 	return m.get_euler_yxz();
 // }
@@ -269,7 +269,7 @@ constexpr Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T>
 	return sp.slerpni(sq, t2);
 }
 template<typename T>
-constexpr void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
+constexpr void Quat_t<T>::set_axis_angle(const Vector3<T> &axis, const T &angle) {
 
 	T d = axis.length();
 	if (d == 0) {

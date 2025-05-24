@@ -105,15 +105,15 @@ public:
     };
 
 
-    static constexpr Vector2_t<T> forward(const Config & cfg, const Solution & solu, const Vector2_t<T> org){
+    static constexpr Vector2<T> forward(const Config & cfg, const Solution & solu, const Vector2<T> org){
         const auto B = cfg.base_length;
         const auto L = cfg.link_length;
         const auto R1 = solu.to_absolute().j1_abs_rad;
         const auto R2 = solu.to_absolute().j2_abs_rad;
-        return org + Vector2_t<T>(B, 0).rotated(R1) + Vector2_t<T>(L, 0).rotated(R2);
+        return org + Vector2<T>(B, 0).rotated(R1) + Vector2<T>(L, 0).rotated(R2);
     }
 
-    static constexpr Option<Solution> inverse(const Config & cfg, const Vector2_t<T> dest, const Vector2_t<T> org){
+    static constexpr Option<Solution> inverse(const Config & cfg, const Vector2<T> dest, const Vector2<T> org){
         const auto pos = dest - org;
         const T L_squ = pos.length_squared();
         const T L = std::sqrt(L_squ);
@@ -223,35 +223,35 @@ private:
     Config cfg_ {};
 
     // static constexpr SQRT3 =  1.732050807568877;
-    static constexpr std::array<Vector2_t<T>, 3> norms_ {
-        Vector2_t<T>(1, 0),
-        Vector2_t<T>(T(-0.5), T(SQRT3/2)),
-        Vector2_t<T>(T(-0.5), T(-SQRT3/2))
+    static constexpr std::array<Vector2<T>, 3> norms_ {
+        Vector2<T>(1, 0),
+        Vector2<T>(T(-0.5), T(SQRT3/2)),
+        Vector2<T>(T(-0.5), T(-SQRT3/2))
     };
 
     //pure fn
-    static constexpr Vector2_t<T> get_xynorm_from_idx(const size_t idx){
-        return Vector2_t<T>::RIGHT.rotated(idx * T(TAU / 3));
+    static constexpr Vector2<T> get_xynorm_from_idx(const size_t idx){
+        return Vector2<T>::RIGHT.rotated(idx * T(TAU / 3));
     };
 
     //pure fn
     //输入关节的方位单位向量
     //获取基座铰链的位置
-    static constexpr Vector3_t<T> get_base_point(const Config & cfg, const Vector2_t<T> xy_norm){
-        const auto base_point_2 = Vector2_t<T>{cfg.base_plate_radius, 0}.improduct(xy_norm);
-        return Vector3_t<T>{base_point_2.x, base_point_2.y, 0};
+    static constexpr Vector3<T> get_base_point(const Config & cfg, const Vector2<T> xy_norm){
+        const auto base_point_2 = Vector2<T>{cfg.base_plate_radius, 0}.improduct(xy_norm);
+        return Vector3<T>{base_point_2.x, base_point_2.y, 0};
     }
 
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的位置
-    static constexpr Vector3_t<T> get_top_point(const Config & cfg, const Vector2_t<T> xy_norm, const Gesture & gest){
-        const auto top_point_2 = Vector2_t<T>{cfg.top_plate_radius, 0}.improduct(xy_norm);
-        return gest.orientation.xform(Vector3_t<T>{top_point_2.x, top_point_2.y, 0}) + Vector3_t<T>(0, 0, gest.z);
+    static constexpr Vector3<T> get_top_point(const Config & cfg, const Vector2<T> xy_norm, const Gesture & gest){
+        const auto top_point_2 = Vector2<T>{cfg.top_plate_radius, 0}.improduct(xy_norm);
+        return gest.orientation.xform(Vector3<T>{top_point_2.x, top_point_2.y, 0}) + Vector3<T>(0, 0, gest.z);
     }
 
     struct Sphere{
-        Vector3_t<T> org;
+        Vector3<T> org;
         T radius;
 
         friend OutputStream & operator << (OutputStream & os, const Sphere & self){
@@ -263,7 +263,7 @@ private:
 
     struct CirclePassZAxis{
         //这个圆所在的平面包含z轴 自由度特殊化
-        Vector3_t<T> org;
+        Vector3<T> org;
         T radius;
 
         friend OutputStream & operator << (OutputStream & os, const CirclePassZAxis & self){
@@ -276,14 +276,14 @@ private:
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的活动球面
-    static constexpr Sphere get_top_sphere(const Config & cfg, const Vector2_t<T> xy_norm, const Gesture & gest){
+    static constexpr Sphere get_top_sphere(const Config & cfg, const Vector2<T> xy_norm, const Gesture & gest){
         return Sphere{get_top_point(cfg, xy_norm, gest), cfg.link_length};
     }
 
     //pure fn
     //输入活动球面和方位单位向量
     //获取切片圆
-    static constexpr Option<CirclePassZAxis> project_sphere_to_circle(const Sphere & sphere, const Vector2_t<T> xy_norm){
+    static constexpr Option<CirclePassZAxis> project_sphere_to_circle(const Sphere & sphere, const Vector2<T> xy_norm){
         // 方位单位向量的结构体绑定
         // [x', y'] = xy_norm
 
@@ -311,7 +311,7 @@ private:
 
     //pure fn
     //通过计算底部，顶部铰链位置和切片圆的半径 将问题转换为二维平面上的双转动副问题
-    static constexpr Option<Solution2> inverse_single_axis(const Config & cfg, const Vector2_t<T> xy_norm, const Gesture & gest){
+    static constexpr Option<Solution2> inverse_single_axis(const Config & cfg, const Vector2<T> xy_norm, const Gesture & gest){
         const auto sphere = get_top_sphere(cfg, xy_norm, gest);
         const auto circle_opt = project_sphere_to_circle(sphere, xy_norm);
         if(circle_opt.is_none()) return None;
@@ -323,14 +323,14 @@ private:
             {.base_length = cfg.base_length, .link_length = circle.radius}, 
 
             //目的位置
-            Vector2_t<T>{r_to_org, circle.org.z},
+            Vector2<T>{r_to_org, circle.org.z},
             //基位置
-            Vector2_t<T>{cfg.base_plate_radius, 0}
+            Vector2<T>{cfg.base_plate_radius, 0}
         );
     }
 
     // 正解需要考虑yaw角错位 难度极高
-    // static constexpr Vector3_t<T> forward_point(const Config & cfg, const Vector2_t<T> xy_norm, const Solution2 & solu){
+    // static constexpr Vector3<T> forward_point(const Config & cfg, const Vector2<T> xy_norm, const Solution2 & solu){
     //     const auto p_2d = RR2_Kinematics<T>::forward(
     //         //大臂长度和小臂长度
     //         {.base_length = cfg.base_length, .link_length = cfg.link_length}, 
@@ -338,10 +338,10 @@ private:
     //         //关节角度
     //         solu,
     //         //基位置
-    //         Vector2_t<T>{cfg.base_plate_radius,0}
+    //         Vector2<T>{cfg.base_plate_radius,0}
     //     );
 
-    //     const auto p_3d = Vector3_t<T>{
+    //     const auto p_3d = Vector3<T>{
     //         p_2d.x * xy_norm.x, 
     //         p_2d.x * xy_norm.y, 
     //         p_2d.y

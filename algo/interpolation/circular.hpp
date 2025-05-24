@@ -11,12 +11,12 @@ protected:
     real_t m_dRadius;
     real_t _a;
     real_t _b;
-    // Vector2 
-    bool IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const;
+    // Vector2q<16> 
+    bool IsPerpendicular(const Vector2q<16> & pt1,const Vector2q<16> & pt2,const Vector2q<16> & pt3) const;
 
-    std::tuple<real_t, real_t, real_t> calcCircleFrom3Points (const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const;
+    std::tuple<real_t, real_t, real_t> calcCircleFrom3Points (const Vector2q<16> & pt1,const Vector2q<16> & pt2,const Vector2q<16> & pt3) const;
 public:
-    ArcInterpolation(const Vector2 & handle);
+    ArcInterpolation(const Vector2q<16> & handle);
 
     real_t forward(const real_t x) const override;
 };
@@ -34,17 +34,17 @@ protected:
     real_t arcEndY;
 
     void computeFilletParameters (
-        const Vector2 & pt1,
-        const Vector2 & pt2,
-        const Vector2 & pt3,
-        const Vector2 & pt4,
+        const Vector2q<16> & pt1,
+        const Vector2q<16> & pt2,
+        const Vector2q<16> & pt3,
+        const Vector2q<16> & pt4,
         real_t r);
 
     const real_t _a;
     const real_t _b;
     const real_t _R;
 public:
-    CircularFilletInterpoation(const Vector2 & handle, real_t R):
+    CircularFilletInterpoation(const Vector2q<16> & handle, real_t R):
         _a(handle.x), _b(handle.y), _R(R){
             // computeFilletParameters
             computeFilletParameters ({0,0}, {_a,_b}, {_a,_b}, {1,1}, _R);
