@@ -53,11 +53,17 @@ IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint8_t & data){
         MT6701_NO_I2C_FAULT;
     }
 }
-void MT6701::init(){
-    enable_pwm();
-    set_pwm_polarity(true);
-    set_pwm_freq(PwmFreq::HZ497_2);
-    update();
+IResult<> MT6701::init(){
+    if(const auto res = enable_pwm();
+        res.is_err()) return res;
+    if(const auto res = set_pwm_polarity(true);
+        res.is_err()) return res;
+    if(const auto res = set_pwm_freq(PwmFreq::HZ497_2);
+        res.is_err()) return res;
+    if(const auto res = update();
+        res.is_err()) return res;
+
+    return Ok();
 }
 
 IResult<> MT6701::update(){

@@ -52,7 +52,8 @@ public:
     PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
         this->set_color(color);
-        draw_filled_rect(this->get_clip_window());
+        if(const auto res = draw_filled_rect(this->get_clip_window());
+            res.is_err()) return res;
         // return res;
         return Ok();
     }

@@ -447,34 +447,12 @@ void cubic_main(void){
     spi.init(144_MHz, CommStrategy::Blocking);
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
-    // ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    drivers::ST7789 tftDisplayer({spi, spi.attach_next_cs(lcd_cs).value(), lcd_dc, dev_rst}, {240, 135});
+    // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
+    drivers::ST7789 tft({spi, spi.attach_next_cs(lcd_cs).value(), lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
 
-    {
-        tftDisplayer.init();
-
-
-        if(true ){
-        // if(false){
-            tftDisplayer.set_flip_x(false);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(true);
-            tftDisplayer.set_display_offset({40, 52}); 
-        }else{
-            tftDisplayer.set_flip_x(true);
-            tftDisplayer.set_flip_y(true);
-            tftDisplayer.set_swap_xy(false);
-            tftDisplayer.set_display_offset({52, 40}); 
-        }
-        tftDisplayer.set_format_rgb(true);
-        tftDisplayer.set_flush_dir_h(false);
-        tftDisplayer.set_flush_dir_v(false);
-        tftDisplayer.set_inversion(true);
-		// tftDisplayer.set
-    }
-
-    tftDisplayer.fill(ColorEnum::PINK);
+	tft.init(drivers::ST7789_Presets::_240X135).examine();
+    tft.fill(RGB565(ColorEnum::PINK)).examine();
     clock::delay(200ms);
 	precompute_1();
 
@@ -513,7 +491,7 @@ void cubic_main(void){
 
 				drawTriangle(clip);
 
-				tftDisplayer.put_texture(clip, &colorbuffer[0][0]);
+				tft.put_texture(clip, &colorbuffer[0][0]).examine();
 
 			}
 		}

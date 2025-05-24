@@ -36,12 +36,12 @@ private:
             case 'T':return  handle_send_ext_msg(cmd_str, false);
             case 'R':return  handle_send_ext_msg(cmd_str, true);
 
-            case 'F':response_flag();
+            case 'F':return response_flag();
             case 'O':return handle_open(cmd_str);
             case 'C':return handle_close(cmd_str);
 
-            case 'V':reponse_version();
-            case 'N':reponse_serial_idx();
+            case 'V':return reponse_version();
+            case 'N':return reponse_serial_idx();
 
             case 'Z':return Err(Error::NotSupportedYet);
         }

@@ -244,7 +244,7 @@ namespace details{
 
 
 template <typename T, typename E>
-class Result{
+class [[nodiscard]] Result{
 public:
     using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
@@ -326,7 +326,7 @@ public:
         typename Fn,
         typename FDecay = std::decay_t<Fn>,
 
-        typename TFReturn = std::invoke_result_t<FDecay, T>
+        typename TFReturn = magic::functor_ret_t<FDecay>
     >
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
@@ -348,8 +348,8 @@ public:
 
     template<
         typename F,//函数的类型
-        // typename TFReturn = std::conditional_t<std::is_void_v<T>, std::invoke_result_t<typename F::operator()>, std::invoke_result_t<F>>,//函数返回值的类型
-        typename TFReturn = std::invoke_result_t<F, T>,//函数返回值的类型
+        typename FDecay = std::decay_t<F>,
+        typename TFReturn = magic::functor_ret_t<FDecay>,
         typename TFReturnIsResult = is_result_t<TFReturn>,
         typename TOk = std::conditional_t<
             is_result_v<TFReturn>,
@@ -437,16 +437,6 @@ public:
         if(is_ok()) return Ok<TRet>(std::forward<Fn>(fn)(unwrap()));
         else return Err<E>(unwrap_err());
     }
-
-    // template<typename Fn>
-    // __fast_inline constexpr auto transform(Fn&& fn) const & {
-    //     return and_then([fn=std::forward<Fn>(fn)](auto&& val) -> Result<
-    //         typename std::invoke_result_t<Fn, T>::ok_type,  // 推导新Ok类型
-    //         typename std::invoke_result_t<Fn, T>::err_type  // 推导新Err类型
-    //     > {
-    //         return fn(std::forward<decltype(val)>(val));
-    //     });
-    // }
 
     template<typename Fn>
     __fast_inline constexpr 
@@ -543,8 +533,6 @@ public:
         }
     }
 
-
-    
     __fast_inline constexpr 
     T unwrap_or(auto && val) const {
         if (likely(is_ok())) {
@@ -553,33 +541,6 @@ public:
             return static_cast<T>(val);
         }
     }
-
-    
-
-    struct _PanicWithOutUnlock{
-        ~_PanicWithOutUnlock(){
-            if (will_panic) {
-                PANIC("unsafe ignore without unlock");
-            }
-        }
-
-        void operator !(){
-            will_panic = false;
-        }
-    private:
-        bool will_panic = true;
-    };
-
-    __fast_inline constexpr 
-    auto operator +() const{
-        return _PanicWithOutUnlock{};
-    }
-
-    __fast_inline constexpr 
-    T operator !() const{
-        return storage_.unwrap();
-    }
-
     __fast_inline constexpr 
     E unwrap_err() const {
         if (likely(is_err())) {
@@ -614,8 +575,8 @@ public:
     template<
         typename FnOk,
         typename FnErr,
-        typename TOkReturn = std::invoke_result_t<FnOk, T>,//函数返回值的类型
-        typename TErrReturn = std::invoke_result_t<FnErr, E>//函数返回值的类型
+        typename TOkReturn = magic::functor_ret_t<FnOk>,//函数返回值的类型
+        typename TErrReturn = magic::functor_ret_t<FnErr>//函数返回值的类型
     >
     __fast_inline constexpr auto match(FnOk && fn_ok, FnErr && fn_err) const 
     -> Result<TOkReturn, TErrReturn>{
@@ -691,6 +652,5 @@ struct __unwrap_helper<Result<T, E>> {
         return obj.unwrap_err();
     }
 };
-
 
 }

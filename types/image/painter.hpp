@@ -36,7 +36,8 @@ protected:
 
             if(iterator){
                 auto chr = iterator.next();
-                draw_char(Vector2u(x, pos.y), chr);
+                if(const auto res = draw_char(Vector2u(x, pos.y), chr);
+                    res.is_err()) return res;
                 auto font = chr > 0x80 ? chfont : enfont;
                 if(font){
                     x += font->getSize().x + padding;

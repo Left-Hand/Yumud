@@ -11,7 +11,8 @@ using IResult = Result<T, Error>;
 
 IResult<> ICM20948::init()
 {
-	while(!who_am_i());
+	if(const auto res = validate();
+		res.is_err()) return res;
 
 	if(const auto res = device_reset();
 		res.is_err()) return res;
@@ -134,11 +135,13 @@ void ak09916_init()
 
 
 /* Sub Functions */
-IResult<bool> ICM20948::who_am_i()
+IResult<> ICM20948::validate()
 {
 	const auto id = read_single_reg(ub_0, B0_WHO_AM_I);
 
-	return Ok(id == ICM20948_ID);
+	if(id != ICM20948_ID) return Err(Error::WrongWhoAmI);
+
+	return Ok();
 }
 
 bool ICM20948::ak09916_who_am_i()
@@ -158,7 +161,7 @@ IResult<> ICM20948::device_reset()
 
 void ICM20948::ak09916_soft_reset()
 {
-	write_single_ak09916_reg(MAG_CNTL3, 0x01);
+	write_single_ak09916_reg(MAG_CNTL3, 0x01).unwrap();
 	clock::delay(100ms);
 }
 

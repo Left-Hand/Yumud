@@ -81,45 +81,18 @@ public:
 };
     
 
-class SSD13XX:public Displayer<Binary>{
+class SSD13XX final{
 public:
-
+    using Phy = SSD1306_Phy;
     using Error = DisplayerError;
     using Config = SSD13XX_Config;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
-protected:
-    // DisplayerPhyIntf & phy_;
-    using Phy = SSD1306_Phy;
-    Phy phy_;
-    void setarea_unsafe(const Rect2u & area) {
-        setpos_unsafe(area.position);
-    }
 
-    void putpixel_unsafe(const Vector2u & pos, const Binary color){
-        auto & frame = fetch_frame();
-        frame.putpixel_unsafe(pos, color);
-    }
-
-    void setpos_unsafe(const Vector2u & pos) ;
-
-    [[nodiscard]] IResult<> set_flush_pos(const Vector2u & pos);
-    [[nodiscard]] IResult<> set_offset();
-
-    const Vector2u offset_;
-    const std::span<const uint8_t> cmds_;
-    const Config config_;
-    VerticalBinaryImage frame_;
-
-
-    [[nodiscard]] IResult<> preinit_by_cmds();
-public:
 
     template<typename Cfg, typename T = std::decay_t<Cfg>>
     SSD13XX(Phy && phy, Cfg && cfg):
-        ImageBasics(_oled_preset<T>::size),
-        Displayer(_oled_preset<T>::size), 
         phy_(std::move(phy)),
         offset_(_oled_preset<T>::offset), 
         cmds_(std::span(_oled_preset<T>::buf)),
@@ -141,7 +114,34 @@ public:
     [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){return phy_.write_command(0xC0 | (flip << 3));}
     [[nodiscard]] IResult<> enable_inversion(const bool inv = true){return phy_.write_command(0xA7 - inv);}  
 
+    [[nodiscard]] Vector2u size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
+
+private:
+
+    Phy phy_;
+    [[nodiscard]] IResult<> setarea_unsafe(const Rect2u & area) {
+        return setpos_unsafe(area.position);
+    }
+
+    [[nodiscard]] IResult<> putpixel_unsafe(const Vector2u & pos, const Binary color){
+        auto & frame = fetch_frame();
+        frame.putpixel_unsafe(pos, color);
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> setpos_unsafe(const Vector2u & pos) ;
+
+    [[nodiscard]] IResult<> set_flush_pos(const Vector2u & pos);
+    [[nodiscard]] IResult<> set_offset();
+
+    const Vector2u offset_;
+    const std::span<const uint8_t> cmds_;
+    const Config config_;
+    VerticalBinaryImage frame_;
+
+
+    [[nodiscard]] IResult<> preinit_by_cmds();
 };
 
 

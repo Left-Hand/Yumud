@@ -188,8 +188,8 @@ private:
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
 
-    static real_t calculate_acc_scale(const AccRange range);
-    static real_t calculate_gyr_scale(const GyrRange range);
+    [[nodiscard]] static real_t calculate_acc_scale(const AccRange range);
+    [[nodiscard]] static real_t calculate_gyr_scale(const GyrRange range);
 };
 
 }

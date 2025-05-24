@@ -195,10 +195,8 @@ Result<void, Error> TM1637::flush(){
         buf_.flush();
     }
 
-    phy_.set_display(DisplayCommand{
+    return phy_.set_display(DisplayCommand{
         .pulse_width = PulseWidth::_4_16,
         .display_en = true
     });
-
-    return Ok();
 }

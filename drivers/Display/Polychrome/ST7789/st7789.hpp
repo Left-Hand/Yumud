@@ -7,6 +7,11 @@
 
 namespace ymd::drivers{
 
+enum class ST7789_Presets{
+    _120X80,
+    _240X135,
+    _320X170
+};
 class ST7789_Phy final{
 public:
     template<typename T = void>
@@ -24,7 +29,7 @@ private:
 
 
     template <hal::valid_spi_data T>
-    hal::HalResult phy_write_burst(const std::span<const auto> pdata, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_burst(const std::span<const auto> pdata, Continuous cont = DISC) {
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
@@ -48,7 +53,7 @@ private:
     }
 
     template <hal::valid_spi_data T>
-    hal::HalResult phy_write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
@@ -67,7 +72,7 @@ private:
     }
 
     template<hal::valid_spi_data T>
-    hal::HalResult phy_write_single(const is_stdlayout auto data, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_single(const is_stdlayout auto data, Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
         if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
@@ -161,7 +166,7 @@ public:
     }
 };
 
-class ST7789:public Displayer<RGB565>{
+class ST7789 final{
 public:
     template<typename T = void>
     using IResult = Result<void, DisplayerError>;
@@ -188,6 +193,8 @@ public:
         bool update(const Vector2<uint16_t> p){
             return update(Rect2<uint16_t>{p, size_});
         }
+
+        auto size() const {return size_;}
     private:
         const Vector2<uint16_t> size_;
         Rect2<uint16_t> curr_area_ = {0,0,1,1};
@@ -203,54 +210,62 @@ private:
     Vector2<uint16_t> offset_;
     uint8_t scr_ctrl_ = 0;
 
-    __fast_inline IResult<> write_command(const uint8_t cmd){
+    [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
         return phy_.write_command(cmd);
     }
 
-    __fast_inline IResult<> write_data8(const uint8_t data){
+    [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
         return phy_.write_data8(data);
     }
 
-    __fast_inline IResult<> write_data16(const uint16_t data){
+    [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
         return phy_.write_data16(data);
     }
 
-    IResult<> modify_ctrl(const bool yes, const uint8_t pos);
+    [[nodiscard]] IResult<> modify_ctrl(const bool yes, const uint8_t pos);
 
 protected:
 
-    __fast_inline void putpixel_unsafe(const Vector2u & pos, const RGB565 color){
-        setpos_unsafe(pos);
-        phy_.write_data16(uint16_t(color)).unwrap();
+    [[nodiscard]] __fast_inline IResult<> putpixel_unsafe(const Vector2<uint16_t> & pos, const RGB565 color){
+        if(const auto res = setpos_unsafe(pos);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_data16(uint16_t(color));
+            res.is_err()) return res;
+        return Ok();
     }
 
-    void putrect_unsafe(const Rect2u & rect, const RGB565 color);
-    void puttexture_unsafe(const Rect2u & rect, const RGB565 * color_ptr);
-    void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
-    void putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color);
+    [[nodiscard]] IResult<> putrect_unsafe(const Rect2<uint16_t> & rect, const RGB565 color);
+    [[nodiscard]] IResult<> puttexture_unsafe(const Rect2<uint16_t> & rect, const RGB565 * color_ptr);
+    [[nodiscard]] IResult<> putseg_v8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color);
+    [[nodiscard]] IResult<> putseg_h8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color);
 public:
     ST7789(const ST7789_Phy & phy, const Vector2<uint16_t> & size):
-            ImageBasics(size), 
-            Displayer<RGB565>(size), 
             phy_(phy),
             algo_(size){;}
 
-    IResult<> init();
 
-    
-    void setpos_unsafe(const Vector2u & pos);
-    void setarea_unsafe(const Rect2u & rect);
+    auto size() const {return algo_.size();}
 
-    void put_texture(const Rect2u & rect, const is_color auto * pcolor){
-        setarea_unsafe(rect);
-        put_next_texture(rect, pcolor);
+    IResult<> init(const ST7789_Presets preset);
+    IResult<> fill(const RGB565 color){
+        return putrect_unsafe(size().to_rect(), color);
+    }
+    IResult<> setpos_unsafe(const Vector2<uint16_t> & pos);
+    IResult<> setarea_unsafe(const Rect2<uint16_t> & rect);
+
+    IResult<> put_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
+        if(const auto res = setarea_unsafe(rect);
+            res.is_err()) return res;
+        if(const auto res = put_next_texture(rect, pcolor);
+            res.is_err()) return res;
+        return Ok();
     }
 
-    void put_next_texture(const Rect2u & rect, const is_color auto * pcolor){
-        phy_.write_burst<uint16_t>(std::span(pcolor, rect.get_area())).unwrap();
+    IResult<> put_next_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
+        return phy_.write_burst<uint16_t>(std::span(pcolor, rect.get_area()));
     }
 
-    IResult<> set_display_offset(const Vector2u & _offset){
+    IResult<> set_display_offset(const Vector2<uint16_t> & _offset){
         offset_ = _offset;
         return Ok();
     }
@@ -285,11 +300,7 @@ public:
     }
 };
 
-enum class ST7789_Presets{
-    _120X80,
-    _240X135,
-    _320X170
-};
+
 
 Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset);
 

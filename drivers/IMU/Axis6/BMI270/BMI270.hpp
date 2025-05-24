@@ -79,15 +79,15 @@ public:
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
 
-    IResult<> init();
-    IResult<> update();
-    IResult<> validate();
-    IResult<> reset();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> reset();
 
-    IResult<> setPmuMode(const PmuType pum, const PmuMode mode);
-    PmuMode getPmuMode(const PmuType pum);
-    IResult<Vector3<q24>> read_acc();
-    IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
+    PmuMode get_pmu_mode(const PmuType pum);
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
 private:
     BoschSensor_Phy phy_;
 

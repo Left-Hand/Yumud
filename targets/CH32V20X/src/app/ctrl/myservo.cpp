@@ -305,9 +305,9 @@ void myservo_main(){
 
         // const auto duty_cmd = 0.4_r * sin(clock::time());
         // const auto pos_cmd = int(sin(clock::time()/3) * 5) * 0.2_r;
-        const auto pos_cmd = 0.01_r * sin(clock::time() * 3);
-        // const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
-        const auto duty_cmd = 0.4_r * sign(sinpu(clock::time() * 10));
+        const auto pos_cmd = 0.81_r * sin(clock::time() * 3);
+        const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
+        // const auto duty_cmd = 0.4_r * sign(sinpu(clock::time() * 10));
         set_duty(duty_cmd);
         // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);

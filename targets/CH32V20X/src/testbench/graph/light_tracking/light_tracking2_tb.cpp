@@ -452,9 +452,9 @@ void light_tracking_main(void){
     ST7789 displayer({spi, spi_fd,  lcd_dc, dev_rst}, {240, 135});
     DEBUG_PRINTLN("--------------");
     DEBUG_PRINTLN(spi_fd.as_u8());
-    drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170);
+    drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170).examine();
 
-    displayer.fill(ColorEnum::PINK);
+    displayer.fill(ColorEnum::PINK).examine();
     clock::delay(200ms);
 
     [[maybe_unused]]
@@ -462,7 +462,7 @@ void light_tracking_main(void){
         // const auto u = micros();
         const auto st = sinpu(clock::time() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unsafe({0,0});
-        displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
+        displayer.setarea_unsafe({0,0, LCD_W, LCD_H}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
             // row.fill(RGB565(Color_t<real_t>(0,int(y==0),0,0)));
@@ -490,7 +490,7 @@ void light_tracking_main(void){
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
             
             // const auto u = micros();
-            displayer.put_next_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_next_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data()).examine();
             // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
 
             // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
@@ -512,7 +512,7 @@ void light_tracking_main(void){
     DEBUG_PRINTLN(clock::millis());
     auto render = [&](){
         const auto u = clock::micros();
-        displayer.setarea_unsafe({0,0, LCD_W, LCD_H});
+        displayer.setarea_unsafe({0,0, LCD_W, LCD_H}).examine();
         for (uint y = 0; y < LCD_H; y++){
 
             std::array<RGB565, LCD_W> row;
@@ -520,7 +520,7 @@ void light_tracking_main(void){
 
             // const auto row = render_row_v2(LCD_W, y);
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
-            displayer.put_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data());
+            displayer.put_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data()).examine();
             // DEBUG_PRINTLN(uint8_t(row[50].b));
 
             // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);

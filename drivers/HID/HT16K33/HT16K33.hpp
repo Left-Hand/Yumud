@@ -129,7 +129,11 @@ struct HT16K33_Regs:public HT16K33_Collections{
 
     struct SystemSetup:public Reg8<>{
         uint8_t turn_on:1;
-        const uint8_t __resv__:7 = 0b0010000;
+        uint8_t __resv__:7 = 0b0010000;
+
+        SystemSetup(const bool _turn_on):
+            turn_on(bool(_turn_on))
+        {;}
     };
 
     CHECK_R8(SystemSetup)
@@ -158,6 +162,10 @@ struct HT16K33_Regs:public HT16K33_Collections{
     struct IntSet:public Reg8<>{
         IntPinFunc int_pin_func:2;
         const uint8_t __resv__:6 = 0b101000;
+
+        IntSet(const IntPinFunc _func):
+            int_pin_func(_func)
+        {;}
     };
 
     CHECK_R8(IntSet)
@@ -222,15 +230,11 @@ private:
     }
 
     IResult<> system_setup(const Enable en){
-        return write_command(SystemSetup{
-            .turn_on = bool(en)
-        });
+        return write_command(SystemSetup{bool(en)});
     }
 
     IResult<> set_int_pin_func(const IntPinFunc func){
-        return write_command(IntSet{
-            .int_pin_func = func
-        });
+        return write_command(IntSet{func});
     }
 };
 }

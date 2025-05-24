@@ -128,28 +128,28 @@ public:
     IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    IResult<> init();
-    IResult<> update();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
 
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
 
-    IResult<> reset();
+    [[nodiscard]] IResult<> reset();
 
-    IResult<> enable_contious(const bool en = true);
+    [[nodiscard]] IResult<> enable_contious(const bool en = true);
 
-    IResult<> set_x_average_times(const AverageTimes times);
-    IResult<> set_y_average_times(const AverageTimes times);
+    [[nodiscard]] IResult<> set_x_average_times(const AverageTimes times);
+    [[nodiscard]] IResult<> set_y_average_times(const AverageTimes times);
 
-    IResult<q16> get_temperature();
+    [[nodiscard]] IResult<q16> get_temperature();
 
-    IResult<bool> is_data_ready();
-    IResult<> enable_interrupt(const bool en = true);
-    IResult<> set_interrupt_level(const BoolLevel lv);
-    IResult<bool> get_interrupt_status();
+    [[nodiscard]] IResult<bool> is_data_ready();
+    [[nodiscard]] IResult<> enable_interrupt(const bool en = true);
+    [[nodiscard]] IResult<> set_interrupt_level(const BoolLevel lv);
+    [[nodiscard]] IResult<bool> get_interrupt_status();
 
-    IResult<> enable_sleep(const bool en = true);
+    [[nodiscard]] IResult<> enable_sleep(const bool en = true);
 
-    IResult<Vector3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vector3<q24>> read_mag() override;
 
 protected:
 

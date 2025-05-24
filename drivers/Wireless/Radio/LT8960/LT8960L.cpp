@@ -199,9 +199,9 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
             return Err(res.unwrap_err());
 
     return write_fifo(buf)
-        .and_then([](auto && res) -> Result<size_t, Error>{
+        .and_then([](size_t size) -> Result<size_t, Error>{
             LT8960L_DEBUG("transmit successfully");
-            return Ok(res);})
+            return Ok(size);})
         .inspect_err([](Error err){
             MATCH{err}(
                 Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},

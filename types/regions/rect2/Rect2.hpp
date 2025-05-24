@@ -32,7 +32,8 @@ public:
         position(Vector2<T>(_x,_y)),
         size(Vector2<T>(_width, _height)){;}
 
-    [[nodiscard]] __fast_inline constexpr Rect2(const Rect2<T> & other):
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Rect2(const Rect2<U> & other):
         position(static_cast<Vector2<T>>(other.position)), 
         size(static_cast<Vector2<T>>(other.size)){;}
 

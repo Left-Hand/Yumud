@@ -68,34 +68,34 @@ public:
         OdrBw odrbw;
     };
 
-    IResult<> init(const Config & cfg);
-    IResult<> reconf(const Config & cfg);
+    [[nodiscard]] IResult<> init(const Config & cfg);
+    [[nodiscard]] IResult<> reconf(const Config & cfg);
 
-    IResult<Dps> get_dps();
-    IResult<OdrBw> get_odrbw();
+    [[nodiscard]] IResult<Dps> get_dps();
+    [[nodiscard]] IResult<OdrBw> get_odrbw();
 
-    IResult<> calibrate(uint8_t samples);
-    IResult<> update();
+    [[nodiscard]] IResult<> calibrate(uint8_t samples);
+    [[nodiscard]] IResult<> update();
 
-    IResult<Vector3<q24>> read_acc();
-    IResult<uint8_t> read_temperature();
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
+    [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
     hal::I2cDrv i2c_drv_;
 
     
-    IResult<> write_reg(uint8_t reg, uint8_t value){
+    [[nodiscard]] IResult<> write_reg(uint8_t reg, uint8_t value){
         if(const auto res = i2c_drv_.write_reg(reg, value);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_reg(uint8_t reg, uint8_t & ret){
+    [[nodiscard]] IResult<> read_reg(uint8_t reg, uint8_t & ret){
         if(const auto res = i2c_drv_.read_reg(reg, ret);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_burst(uint8_t reg, uint8_t *buf, uint8_t size){
+    [[nodiscard]] IResult<> read_burst(uint8_t reg, uint8_t *buf, uint8_t size){
         if(const auto res = i2c_drv_.read_burst(reg, std::span(buf, size), LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

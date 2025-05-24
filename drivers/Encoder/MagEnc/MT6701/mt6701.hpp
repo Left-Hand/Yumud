@@ -190,7 +190,7 @@ public:
     ~MT6701(){};
 
 
-    void init();
+    IResult<> init();
 
     IResult<> update();
     IResult<real_t> get_lap_position();

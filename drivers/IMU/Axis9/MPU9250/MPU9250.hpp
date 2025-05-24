@@ -23,10 +23,10 @@ public:
 private:
 
 public:
-    Result<void, Error> init();
-    Result<void, Error> validate();
+    [[nodiscard]] Result<void, Error> init();
+    [[nodiscard]] Result<void, Error> validate();
     
-    Result<void, Error> enableChainMode(Enable en = EN);
+    [[nodiscard]] Result<void, Error> enableChainMode(Enable en = EN);
 };
 
 

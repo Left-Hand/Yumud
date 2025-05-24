@@ -123,7 +123,6 @@ protected:
             for(size_t y = rect.position.y; y < rect.position.y + rect.size.y; y++)
                 putpixel_unsafe(Vector2u(x,y), color);
     }
-
     void putpixel(const Vector2u & pos, const ColorType & color){
         if(this->size().has_point(pos)){
             putpixel_unsafe(pos, color);

@@ -46,7 +46,7 @@ public:
 
     void render(PainterBase & painter) override{
         painter.set_color(ColorEnum::WHITE);
-        painter.draw_filled_rect(rect_);
+        painter.draw_filled_rect(rect_).examine();
         // painter.drawString(rect_ + Vector2u{0, -10}, name_);
     }
 };
@@ -127,27 +127,7 @@ void gui_main(){
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 135});
 
-    {
-        tft.init();
-
-
-        if(true ){
-        // if(false){
-            tft.set_flip_x(false);
-            tft.set_flip_y(true);
-            tft.set_swap_xy(true);
-            tft.set_display_offset({40, 52}); 
-        }else{
-            tft.set_flip_x(true);
-            tft.set_flip_y(true);
-            tft.set_swap_xy(false);
-            tft.set_display_offset({52, 40}); 
-        }
-        tft.set_format_rgb(true);
-        tft.set_flush_dir_h(false);
-        tft.set_flush_dir_v(false);
-        tft.set_inversion(true);
-    }
+    drivers::init_lcd(tft, ST7789_Presets::_240X135).examine();
 
     // Painter<RGB565> painter = Painter<RGB565>();
 
@@ -193,16 +173,16 @@ void gui_main(){
     // };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2u & pos){
-        auto area = Rect2u(pos, src.size());
-        tft.put_texture(area, src.get_data());
+        auto area = Rect2<uint16_t>(pos, src.size());
+        tft.put_texture(area, src.get_data()).examine();
     };
 
     Image<RGB565> img{{tft.size().x, 4u}};
 
     Painter<RGB565> painter = {};
-    painter.bind_image(tft);
-    painter.set_color(ColorEnum::BLACK);
-    painter.draw_filled_rect(tft.size().to_rect()).examine();
+    // painter.bind_image(tft);
+    // painter.set_color(ColorEnum::BLACK);
+    // painter.draw_filled_rect(tft.size().to_rect()).examine();
 
     while(true){
         painter.bind_image(img);
@@ -210,7 +190,7 @@ void gui_main(){
         painter.draw_pixel(Vector2u(0, 0));
         painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 
-        tft.put_texture(img.size().to_rect(), img.get_data());
+        tft.put_texture(img.size().to_rect(), img.get_data()).examine();
         DEBUG_PRINTLN(clock::millis());
     }
 }

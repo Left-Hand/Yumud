@@ -165,7 +165,7 @@ Enables the LSM303's accelerometer and magnetometer. Also:
 Note that this function will also reset other settings controlled by
 the registers it writes to.
 */
-IResult<> LSM303::enableDefault()
+IResult<> LSM303::enable_default()
 {
 
     if (_device == device_D)
@@ -174,25 +174,30 @@ IResult<> LSM303::enableDefault()
 
     // 0x00 = 0b00000000
     // AFS = 0 (+/- 2 g full scale)
-    writeReg(CTRL2, 0x00);
+    if(const auto res = write_reg(CTRL2, 0x00);
+        res.is_err()) return res;
 
     // 0x57 = 0b01010111
     // AODR = 0101 (50 Hz ODR); AZEN = AYEN = AXEN = 1 (all axes enabled)
-    writeReg(CTRL1, 0x57);
+    if(const auto res = write_reg(CTRL1, 0x57);
+        res.is_err()) return res;
 
     // Magnetometer
 
     // 0x64 = 0b01100100
     // M_RES = 11 (high resolution mode); M_ODR = 001 (6.25 Hz ODR)
-    writeReg(CTRL5, 0x64);
+    if(const auto res = write_reg(CTRL5, 0x64);
+        res.is_err()) return res;
 
     // 0x20 = 0b00100000
     // MFS = 01 (+/- 4 gauss full scale)
-    writeReg(CTRL6, 0x20);
+    if(const auto res = write_reg(CTRL6, 0x20);
+        res.is_err()) return res;
 
     // 0x00 = 0b00000000
     // MLP = 0 (low power mode off); MD = 00 (continuous-conversion mode)
-    writeReg(CTRL7, 0x00);
+    if(const auto res = write_reg(CTRL7, 0x00);
+        res.is_err()) return res;
     }
     else
     {
@@ -202,42 +207,49 @@ IResult<> LSM303::enableDefault()
     {
         // 0x08 = 0b00001000
         // FS = 00 (+/- 2 g full scale); HR = 1 (high resolution enable)
-        writeAccReg(CTRL_REG4_A, 0x08);
+        if(const auto res = write_acc_reg(CTRL_REG4_A, 0x08);
+            res.is_err()) return res;
 
         // 0x47 = 0b01000111
         // ODR = 0100 (50 Hz ODR); LPen = 0 (normal mode); Zen = Yen = Xen = 1 (all axes enabled)
-        writeAccReg(CTRL_REG1_A, 0x47);
+        if(const auto res = write_acc_reg(CTRL_REG1_A, 0x47);
+            res.is_err()) return res;
     }
     else // DLM, DLH
     {
         // 0x00 = 0b00000000
         // FS = 00 (+/- 2 g full scale)
-        writeAccReg(CTRL_REG4_A, 0x00);
+        if(const auto res = write_acc_reg(CTRL_REG4_A, 0x00);
+            res.is_err()) return res;
 
         // 0x27 = 0b00100111
         // PM = 001 (normal mode); DR = 00 (50 Hz ODR); Zen = Yen = Xen = 1 (all axes enabled)
-        writeAccReg(CTRL_REG1_A, 0x27);
+        if(const auto res = write_acc_reg(CTRL_REG1_A, 0x27);
+            res.is_err()) return res;
     }
 
     // Magnetometer
 
     // 0x0C = 0b00001100
     // DO = 011 (7.5 Hz ODR)
-    writeMagReg(CRA_REG_M, 0x0C);
+    if(const auto res = write_mag_reg(CRA_REG_M, 0x0C);
+        res.is_err()) return res;
 
     // 0x20 = 0b00100000
     // GN = 001 (+/- 1.3 gauss full scale)
-    writeMagReg(CRB_REG_M, 0x20);
+    if(const auto res = write_mag_reg(CRB_REG_M, 0x20);
+        res.is_err()) return res;
 
     // 0x00 = 0b00000000
     // MD = 00 (continuous-conversion mode)
-    writeMagReg(MR_REG_M, 0x00);
+    if(const auto res = write_mag_reg(MR_REG_M, 0x00);
+        res.is_err()) return res;
   }
   return Ok();
 }
 
 // Writes an accelerometer register
-IResult<> LSM303::writeAccReg(uint8_t reg, uint8_t value)
+IResult<> LSM303::write_acc_reg(uint8_t reg, uint8_t value)
 {
     TODO();
     return Ok();
@@ -245,13 +257,13 @@ IResult<> LSM303::writeAccReg(uint8_t reg, uint8_t value)
 
 
 // Writes a magnetometer register
-IResult<> LSM303::writeMagReg(uint8_t reg, uint8_t value)
+IResult<> LSM303::write_mag_reg(uint8_t reg, uint8_t value)
 {
     TODO();
     return Ok();
 }
 
-IResult<> LSM303::writeReg(uint8_t reg, uint8_t value)
+IResult<> LSM303::write_reg(uint8_t reg, uint8_t value)
 {
     TODO();
     return Ok();
@@ -259,20 +271,20 @@ IResult<> LSM303::writeReg(uint8_t reg, uint8_t value)
 
 // Note that this function will not work for reading TEMP_OUT_H_M and TEMP_OUT_L_M on the DLHC.
 // To read those two registers, use readMagReg() instead.
-IResult<> LSM303::readReg(int reg, uint8_t & data)
+IResult<> LSM303::read_reg(int reg, uint8_t & data)
 {
     TODO();
     return Ok();
 }
 
 // Reads the 3 accelerometer channels and stores them in Vector3 a
-IResult<> LSM303::readAcc()
+IResult<> LSM303::read_acc()
 {
     TODO();
     return Ok();
 }
 
-IResult<> LSM303::readMag()
+IResult<> LSM303::read_mag()
 {
     TODO();
     return Ok();

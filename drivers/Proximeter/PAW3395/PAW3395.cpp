@@ -135,7 +135,8 @@ IResult<> PAW3395::powerup(){
 	static constexpr size_t MAX_RETRY_TIMES = 60;
 
 	for (size_t retry = 0; retry < MAX_RETRY_TIMES; retry++) {
-		const auto res = read_reg(0x6C).map([&](auto val) { return (val == 0x80);});
+		const auto res = read_reg(0x6C).map(
+			[&](uint8_t val) { return (val == 0x80);});
 		if(res.is_ok()){
 			is_susccessfully_inited = res.unwrap();
 			break;

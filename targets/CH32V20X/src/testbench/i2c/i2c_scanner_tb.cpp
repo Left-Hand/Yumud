@@ -88,7 +88,7 @@ struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint, hal::HalResult> getMaxBaudRate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint, hal::HalResult> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
 
         const uint max_baud = [&]{
@@ -131,7 +131,7 @@ static void i2c_scanner_functional(){
     // const uint8_t read_addr = 0x08;
 
     
-    // I2cTester::getMaxBaudRate(i2c, read_addr)
+    // I2cTester::get_max_baudrate(i2c, read_addr)
     //     .then([](uint baud) -> Result<uint, hal::BusError>{ 
     //         if (baud > 100_KHz) return Ok(baud);
     //         else return Err(hal::BusError::OCCUPIED); 
@@ -215,16 +215,16 @@ void i2c_scanner_main(){
             const uint8_t read_addr = i << 1;
             I2cTester::validate(i2c, read_addr)
                 .if_ok([&]{
-                    const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
+                    const auto result = I2cTester::get_max_baudrate(i2c, read_addr);
                     founded_devices.emplace_back(
                         read_addr, 
                         result.loc().expect("unknown bug")
                     );
-                });
+                }).examine();
 
             // I2cTester::validate(i2c, read_addr)
             //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, hal::BusError> {
-            //         return I2cTester::getMaxBaudRate(i2c, read_addr)
+            //         return I2cTester::get_max_baudrate(i2c, read_addr)
             //             .map([read_addr](uint baud) {
             //                 return FoundInfo{read_addr, baud};
             //             });
@@ -241,7 +241,7 @@ void i2c_scanner_main(){
 
             // I2cTester::validate(i2c, read_addr)
             // .and_then([&i2c, read_addr] {
-            //     return I2cTester::getMaxBaudRate(i2c, read_addr)
+            //     return I2cTester::get_max_baudrate(i2c, read_addr)
             //         .map([read_addr](uint max_baud) {
             //             return FoundInfo{read_addr, max_baud};
             //         });
@@ -296,7 +296,7 @@ void i2c_scanner_main(){
 //         co_await i2c.acquire();
 //         auto result = co_await I2cTester::validate(i2c, i<<1);
 //         if (result) {
-//             auto baud = co_await I2cTester::getMaxBaudRate(i2c, i<<1);
+//             auto baud = co_await I2cTester::get_max_baudrate(i2c, i<<1);
 //             founded_devices.emplace_back(i<<1, baud);
 //         }
 //     }

@@ -15,7 +15,7 @@ Result<void, Error> MT6816::init() {
 
     
     for(size_t i = 0; i < MAX_INIT_RETRY_TIMES; i++){
-        this->update();
+        this->update().unwrap();
         if(this->get_lap_position().is_ok()){
             return Ok();
         }
