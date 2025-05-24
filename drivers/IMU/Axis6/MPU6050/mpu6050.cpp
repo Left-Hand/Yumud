@@ -1,7 +1,7 @@
 #include "mpu6050.hpp"
 #include "core/debug/debug.hpp"
 
-#define MPU6050_DEBUG_EN
+// #define MPU6050_DEBUG_EN
 
 #ifdef MPU6050_DEBUG_EN
 #define MPU6050_TODO(...) TODO()
@@ -28,6 +28,9 @@
 #define MPU6050_TODO(...) PANIC_NSRC()
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
 #endif
 
 

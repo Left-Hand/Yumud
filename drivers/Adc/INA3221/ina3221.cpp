@@ -76,7 +76,7 @@ IResult<bool> INA3221::is_ready(){
 }
 
 
-IResult<void> INA3221::validate(){
+IResult<> INA3221::validate(){
     if(const auto res = read_reg(chip_id_reg); res.is_err()) return CHECKRES(res);
     if(const auto res = read_reg(manu_id_reg); res.is_err()) return CHECKRES(res);
 

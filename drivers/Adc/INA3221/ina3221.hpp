@@ -407,8 +407,8 @@ public:
     [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelIndex index);
     [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelIndex index);
 
-    [[nodiscard]] IResult<void> set_instant_ovc(const ChannelIndex index, const real_t volt);
-    [[nodiscard]] IResult<void> set_constant_ovc(const ChannelIndex index, const real_t volt);
+    [[nodiscard]] IResult<> set_instant_ovc(const ChannelIndex index, const real_t volt);
+    [[nodiscard]] IResult<> set_constant_ovc(const ChannelIndex index, const real_t volt);
 private:
     INA3221_Phy phy_;
     [[nodiscard]] IResult<> write_reg(const auto & reg){
