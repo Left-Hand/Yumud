@@ -5,7 +5,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/quat/Quat.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 

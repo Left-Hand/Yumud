@@ -11,7 +11,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "types/quat/Quat.hpp"
+#include "types/vectors/quat/Quat.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
@@ -35,7 +35,7 @@ using namespace ymd::hal;
 
 
 static constexpr size_t MAX_COAST_ITEMS = 64;
-using Pile = Range2_t<uint8_t>;
+using Pile = Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
 using Pixel = Vector2<uint8_t>;
 using PixelSegment = std::pair<Pixel ,Pixel>;
@@ -269,7 +269,7 @@ void smc2025_main(){
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
         const auto rect = gray_img.size().to_rect();
-        const auto range = Range2_t<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
         DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);

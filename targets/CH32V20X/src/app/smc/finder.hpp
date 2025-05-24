@@ -37,7 +37,7 @@ namespace SMC{
     using Points = sstl::vector<Vector2<int16_t>, max_item_size>;
     using Coast = sstl::vector<CoastItem, max_item_size>;
     using Coasts = sstl::vector<Coast, 4>;
-    using Ranges = sstl::vector<Range2_t<int16_t>, max_ranges_size>;
+    using Ranges = sstl::vector<Range2<int16_t>, max_ranges_size>;
 
     enum class CornerType:uint8_t{
         NONE,

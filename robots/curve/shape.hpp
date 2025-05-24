@@ -16,7 +16,7 @@ struct Circle_t{
 
 template<arithmetic T>
 struct Arc_t:public Circle_t<T>{
-    Range2_t<T> angle;
+    Range2<T> angle;
 };
 
 using Line = Line_t<real_t>;

@@ -7,7 +7,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
-#include "types/vector3/Vector3.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/errno.hpp"

@@ -3,8 +3,8 @@
 #include "core/math/real.hpp"
 #include "float.h"
 
-#include "types/vector3/vector3.hpp"
-#include "types/ray3/ray3.hpp"
+#include "types/vectors/vector3/vector3.hpp"
+#include "types/regions/ray3/ray3.hpp"
 
 using RGB = ymd::RGB_t<real_t>;
 using namespace ymd;

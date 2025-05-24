@@ -178,7 +178,7 @@ public:
         }
 
         __fast_inline constexpr
-        Range2_t<uint32_t> get_point_index(const Rect2<uint16_t> r){
+        Range2<uint32_t> get_point_index(const Rect2<uint16_t> r){
             return {
                 get_point_index(r.position), 
                 get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};

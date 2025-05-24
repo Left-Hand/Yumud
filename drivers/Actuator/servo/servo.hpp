@@ -14,13 +14,13 @@ public:
 
 class RadianServoBase:public RadianServoIntf{
 private:
-    Range2_t<real_t> rad_range_ = {0, real_t(PI)};
+    Range2<real_t> rad_range_ = {0, real_t(PI)};
 protected:
     
     virtual void set_global_radian(const real_t rad) = 0;
     virtual real_t get_global_radian() = 0;
 public:
-    void set_range(const Range2_t<real_t> & range){
+    void set_range(const Range2<real_t> & range){
         rad_range_ = range;
     }
     

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 
 namespace ymd::drivers{
 class ActuatorIntf{

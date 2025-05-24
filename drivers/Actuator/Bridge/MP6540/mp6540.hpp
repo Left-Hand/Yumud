@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CoilDriver.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 
 #include "concept/analog_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "types/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
 #include "robots/foc/remote/remote.hpp"
 #include "machine_concepts.hpp"
 

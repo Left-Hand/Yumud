@@ -8,8 +8,8 @@
 
 #include "hal/bus/uart/uart.hpp"
 
-#include "types/vector3/Vector3.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/quat/Quat.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 

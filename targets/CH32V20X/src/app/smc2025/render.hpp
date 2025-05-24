@@ -9,8 +9,8 @@
 
 #include "nvcv2/shape/shape.hpp"
 
-#include "types/ray2/Ray2.hpp"
-#include "types/line2/Line2.hpp"
+#include "types/regions/ray2/Ray2.hpp"
+#include "types/regions/line2/Line2.hpp"
 
 template<size_t Q>
 static constexpr iq_t<Q> tpzpup(const iq_t<Q> x){

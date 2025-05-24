@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/ray2/ray2.hpp"
+#include "types/regions/ray2/ray2.hpp"
 
 namespace ymd{
 

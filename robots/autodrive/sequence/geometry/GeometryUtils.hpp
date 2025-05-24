@@ -1,12 +1,12 @@
 #pragma once
 
-#include "types/vector3/vector3.hpp"
-#include "types/vector2/vector2.hpp"
-#include "types/rect2/rect2.hpp"
-#include "types/Ray2/Ray2.hpp"
-#include "types/quat/Quat.hpp"
-#include "types/basis/Basis.hpp"
-#include "types/Line2/Line2.hpp"
+#include "types/vectors/vector3/vector3.hpp"
+#include "types/vectors/vector2/vector2.hpp"
+#include "types/regions/rect2/rect2.hpp"
+#include "types/regions/ray2/Ray2.hpp"
+#include "types/vectors/quat/Quat.hpp"
+#include "types/transforms/basis/Basis.hpp"
+#include "types/regions/line2/Line2.hpp"
 
 namespace ymd::geometry{
 

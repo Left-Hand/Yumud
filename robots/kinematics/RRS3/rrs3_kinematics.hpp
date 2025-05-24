@@ -5,10 +5,10 @@
 #include <cmath>
 #include <array>
 
-#include "types/ray2/ray2.hpp"
-#include "types/vector3/Vector3.hpp"
-#include "types/quat/Quat.hpp"
-#include "types/plane/plane.hpp"
+#include "types/regions/ray2/ray2.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/quat/Quat.hpp"
+#include "types/regions/plane/plane.hpp"
 
 // #include "core/debug/debug.hpp"
 #include "core/utils/Result.hpp"

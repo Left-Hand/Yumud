@@ -13,7 +13,7 @@
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
 #include "robots/repl/repl_thread.hpp"
-#include "types/euler/euler.hpp"
+#include "types/transforms/euler/euler.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

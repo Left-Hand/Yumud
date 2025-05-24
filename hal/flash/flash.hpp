@@ -11,9 +11,9 @@ class Flash:public Storage{
 protected:
 
     using Page = size_t;
-    using PageRange = Range2_t<Page>;
+    using PageRange = Range2<Page>;
     using Address = size_t;
-    using AddressWindow = Range2_t<Address>;
+    using AddressWindow = Range2<Address>;
 
     scexpr Page page_size = 256;
     scexpr Address base_address = 0x08'00'00'00;

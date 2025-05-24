@@ -10,8 +10,8 @@ constexpr ColorType Image<ColorType>::mean(const Rect2u & roi) const{
 template<typename ColorType>
 constexpr uint64_t Image<ColorType>::sum(const Rect2u & roi) const{
     uint64_t _sum = 0;
-    const Range2_t<uint> x_range = roi.get_x_range();
-    const Range2_t<uint> y_range = roi.get_y_range();
+    const Range2<uint> x_range = roi.get_x_range();
+    const Range2<uint> y_range = roi.get_y_range();
 
     const auto & self = *this;
     

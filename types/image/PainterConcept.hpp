@@ -10,9 +10,9 @@
 #include "core/utils/Errno.hpp"
 
 
-#include "types/rect2/rect2.hpp"
-#include "types/color/color_t.hpp"
-#include "types/rgb.h"
+#include "types/regions/rect2/rect2.hpp"
+#include "types/colors/color/color.hpp"
+#include "types/colors/rgb/rgb.hpp"
 
 #include "font/font.hpp"
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vector2/vector2.hpp"
-#include "types/range/range.hpp"
+#include "types/vectors/vector2/vector2.hpp"
+#include "types/regions/range2/range2.hpp"
 
 #include "motor_scexpr.hpp"
 
@@ -21,7 +21,7 @@ struct MetaData{
 
     real_t openloop_curr;
 
-    Range2_t<real_t> pos_limit = Range2_t<real_t>::INF;
+    Range2<real_t> pos_limit = Range2<real_t>::INF;
     real_t max_curr = real_t(0.7);
     real_t max_spd = 30;
     real_t max_acc = 30;

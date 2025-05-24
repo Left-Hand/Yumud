@@ -2,8 +2,8 @@
 
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 
-#include "types/ray2/Ray2.hpp"
-#include "types/vector2/Vector2.hpp"
+#include "types/regions/ray2/Ray2.hpp"
+#include "types/vectors/vector2/Vector2.hpp"
 
 #include "chassis_ctrl.hpp"
 #include "drivers/IMU/IMU.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/Actuator/servo/servo.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 #include "concept/pwm_channel.hpp"
 
 namespace ymd::drivers{
@@ -9,10 +9,10 @@ namespace ymd::drivers{
 class ScaledPwm final:public hal::PwmIntf{
 protected:
     hal::PwmIntf & instance_;
-    Range2_t<real_t> duty_range_;
+    Range2<real_t> duty_range_;
     bool enabled = true;
 public:
-    ScaledPwm(hal::PwmIntf & instance, const Range2_t<real_t> & duty_range
+    ScaledPwm(hal::PwmIntf & instance, const Range2<real_t> & duty_range
             ):instance_(instance), duty_range_(duty_range){;}
 
     void enable(const bool en = true){

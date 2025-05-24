@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vector2/vector2.hpp"
-#include "types/vector3/vector3.hpp"
-#include "types/plane/plane.hpp"
-#include "types/aabb/aabb.hpp"
-#include "transform3d/transform3d.hpp"
+#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector3/vector3.hpp"
+#include "types/regions/plane/plane.hpp"
+#include "types/regions/aabb/aabb.hpp"
+#include "types/transforms/transform3d/transform3d.hpp"
 
 #define SQU(x) ((x) * (x)) 
 

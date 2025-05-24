@@ -45,8 +45,8 @@ auto internate_grid(
     FnExecute&& fn_execute, 
     FnAfter&& fn_after
 ){
-    Range2_t<uint32_t> store_window = {address,address + grid};
-    Range2_t<uint32_t> op_window = {0,0};
+    Range2<uint32_t> store_window = {address,address + grid};
+    Range2<uint32_t> op_window = {0,0};
     do{
         op_window = store_window.grid_forward(op_window, grid);
         if(op_window.length() != 0){

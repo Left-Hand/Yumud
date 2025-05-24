@@ -143,7 +143,7 @@ namespace ymd::nvcv2::Shape{
     }
 
 
-    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range2_t<uint16_t> & threshold);
+    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range2<uint16_t> & threshold);
     void eye(Image<Grayscale> &dst, const Image<Grayscale> &src);
     class Seed{
         public:            

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/quat/quat.hpp"
+#include "types/vectors/quat/quat.hpp"
 
 
 #include "core/math/fast/conv.hpp"

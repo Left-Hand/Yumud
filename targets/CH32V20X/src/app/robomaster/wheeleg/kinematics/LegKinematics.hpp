@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
 #include "core/utils/Option.hpp"
 
 namespace ymd::rmst{

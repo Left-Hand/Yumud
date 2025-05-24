@@ -8,16 +8,17 @@
 
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
-#include "types/plane/plane.hpp"
-#include "types/aabb/aabb.hpp"
-#include "types/transform3d/transform3d.hpp"
-#include "types/transform2d/transform2d.hpp"
+#include "types/regions/plane/plane.hpp"
+#include "types/regions/aabb/aabb.hpp"
+#include "types/regions/segment2/Segment2.hpp"
+#include "types/regions/Line2/Line2.hpp"
+#include "types/regions/Ray2/Ray2.hpp"
 
-#include "types/segment2/Segment2.hpp"
-#include "types/Line2/Line2.hpp"
-#include "types/Ray2/Ray2.hpp"
-#include "types/Arc2D/Arc2D_t.hpp"
-#include "types/Bezier2D/Bezier2D_t.hpp"
+#include "types/transforms/transform3d/transform3d.hpp"
+#include "types/transforms/transform2d/transform2d.hpp"
+
+#include "types/shapes/Arc2/Arc2.hpp"
+#include "types/shapes/Bezier2/Bezier2.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"

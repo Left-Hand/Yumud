@@ -1467,7 +1467,7 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_A_HI = 0x005E;
         ['timing_config', 'range_config']
 
     fields: \n
-        - [3:0] = Range2_timeout_overall_periods_macrop_a_hi
+        - [3:0] = Range2imeout_overall_periods_macrop_a_hi
 */
 static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_A_LO = 0x005F;
 /*!<
@@ -1482,7 +1482,7 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_A_LO = 0x005F;
         ['timing_config', 'range_config']
 
     fields: \n
-        - [7:0] = Range2_timeout_overall_periods_macrop_a_lo
+        - [7:0] = Range2imeout_overall_periods_macrop_a_lo
 */
 static constexpr uint16_t VL53L1_RANGE_CONFIG__VCSEL_PERIOD_A = 0x0060;
 /*!<
@@ -1512,7 +1512,7 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_B_HI = 0x0061;
         ['timing_config', 'range_config']
 
     fields: \n
-        - [3:0] = Range2_timeout_overall_periods_macrop_b_hi
+        - [3:0] = Range2imeout_overall_periods_macrop_b_hi
 */
 static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_B_LO = 0x0062;
 /*!<
@@ -1527,7 +1527,7 @@ static constexpr uint16_t VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_B_LO = 0x0062;
         ['timing_config', 'range_config']
 
     fields: \n
-        - [7:0] = Range2_timeout_overall_periods_macrop_b_lo
+        - [7:0] = Range2imeout_overall_periods_macrop_b_lo
 */
 static constexpr uint16_t VL53L1_RANGE_CONFIG__VCSEL_PERIOD_B = 0x0063;
 /*!<
@@ -9462,7 +9462,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_HI = 0x0F3A
         ['gph_timing_config', 'range_config']
 
     fields: \n
-        - [3:0] = gph_Range2_timeout_overall_periods_macrop_a_hi
+        - [3:0] = gph_Range2imeout_overall_periods_macrop_a_hi
 */
 static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_LO = 0x0F3B;
 /*!<
@@ -9477,7 +9477,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_A_LO = 0x0F3B
         ['gph_timing_config', 'range_config']
 
     fields: \n
-        - [7:0] = gph_Range2_timeout_overall_periods_macrop_a_lo
+        - [7:0] = gph_Range2imeout_overall_periods_macrop_a_lo
 */
 static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__VCSEL_PERIOD_A = 0x0F3C;
 /*!<
@@ -9522,7 +9522,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_HI = 0x0F3E
         ['gph_timing_config', 'range_config']
 
     fields: \n
-        - [3:0] = gph_Range2_timeout_overall_periods_macrop_b_hi
+        - [3:0] = gph_Range2imeout_overall_periods_macrop_b_hi
 */
 static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_LO = 0x0F3F;
 /*!<
@@ -9537,7 +9537,7 @@ static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__TIMEOUT_MACROP_B_LO = 0x0F3F
         ['gph_timing_config', 'range_config']
 
     fields: \n
-        - [7:0] = gph_Range2_timeout_overall_periods_macrop_b_lo
+        - [7:0] = gph_Range2imeout_overall_periods_macrop_b_lo
 */
 static constexpr uint16_t VL53L1_GPH__RANGE_CONFIG__SIGMA_THRESH = 0x0F40;
 /*!<

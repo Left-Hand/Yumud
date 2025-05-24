@@ -6,7 +6,7 @@
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "concept/pwm_channel.hpp"
 #include "core/io/regs.hpp"
-#include "types/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 

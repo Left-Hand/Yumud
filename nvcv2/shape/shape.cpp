@@ -790,7 +790,7 @@ namespace ymd::nvcv2::Shape{
         #undef TWO_AND_HALF
     } 
 
-    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2_t<uint16_t> & threshold){
+    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2<uint16_t> & threshold){
         auto roi = src.size().to_rect();
 
         const auto [low_thresh, high_thresh] = threshold;
