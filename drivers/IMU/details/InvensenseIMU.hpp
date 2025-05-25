@@ -37,9 +37,11 @@ public:
             return Result<void, Error>(
                 i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), MSB));
         }else if(spi_drv_){
-            return Result<void, Error>(spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
-            // | spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)));
-            | spi_drv_->read_burst<uint16_t>(reinterpret_cast<uint16_t *>(datas), len));
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_burst<int16_t>(std::span(datas, len));
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         __builtin_unreachable();

@@ -31,53 +31,81 @@ public:
     using Error = DisplayerError;
     template<typename T = void>
     using IResult = Result<T, Error>;
-protected:
 
-    hal::I2cDrv i2c_drv_;
     static constexpr uint8_t CMD_TOKEN = 0x00;
     static constexpr uint8_t DATA_TOKEN = 0x40;
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
-public:
-    SSD1306_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
-    SSD1306_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
+
+    SSD1306_Phy(const hal::I2cDrv & i2c_drv):
+        p_i2c_drv_(i2c_drv){};
+    SSD1306_Phy(hal::I2cDrv && i2c_drv):
+        p_i2c_drv_(std::move(i2c_drv)){};
     SSD1306_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv{i2c, addr}){};
+        p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
 
     [[nodiscard]] IResult<> init(){
         return Ok();
     }
 
     [[nodiscard]] IResult<> write_command(const uint32_t cmd){
-        return IResult<>(i2c_drv_.write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+        if(p_i2c_drv_.has_value()) 
+            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+        else if(p_spi_drv_.has_value()){
+            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+        }
+        return Err(Error(Error::NoAvailablePhy));
     }
 
     [[nodiscard]] IResult<> write_data(const uint32_t data){
-        return IResult<>(i2c_drv_.write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
-    }
-
-    [[nodiscard]] IResult<> write_burst(const is_stdlayout auto * pdata, size_t len){
-        if constexpr(sizeof(*pdata) != 1){
-            return IResult<>(i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len), LSB));
-        }else {
-            return IResult<>(i2c_drv_.write_burst(DATA_TOKEN, std::span(pdata, len)));
+        if(p_i2c_drv_.has_value()) 
+            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
+        else if(p_spi_drv_.has_value()){
+            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
         }
+        return Err(Error(Error::NoAvailablePhy));
     }
 
-    [[nodiscard]] IResult<> write_burst(const is_stdlayout auto data, size_t len){
-        if constexpr(sizeof(data) != 1){
-            return IResult<>(i2c_drv_.write_repeat(DATA_TOKEN, std::span(data, len), LSB));
-        }else {
-            return IResult<>(i2c_drv_.write_repeat(DATA_TOKEN, data, len));
+    template<is_stdlayout T>
+    [[nodiscard]] IResult<> write_burst(const std::span<const T> pdata){
+        if(p_i2c_drv_.has_value()){
+            if constexpr(sizeof(T) != 1){
+                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pdata, LSB));
+            }else {
+                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pdata));
+            }
+        }else if(p_spi_drv_.has_value()){
+            // if constexpr(sizeof(T) != 1){
+            //     return IResult<>(p_spi_drv_->write_burst<T>(pdata));
+            // }else {
+            //     return IResult<>(p_spi_drv_->write_burst<T>(pdata));
+            // }
         }
+        // return IResult<>(Err(Error(Error::NoAvailablePhy)));
+        PANIC();
     }
 
-    [[nodiscard]] IResult<> write_u8(const uint8_t data, size_t len) {
-        return write_burst<uint8_t>(data, len);
+    template<is_stdlayout T>
+    [[nodiscard]] IResult<> write_repeat(const T data, size_t len){
+        if(p_i2c_drv_.has_value()){
+            if constexpr(sizeof(data) != 1){
+                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, LSB));
+            }else {
+                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
+            }
+        }else if(p_spi_drv_.has_value()){
+            // if constexpr(sizeof(data) != 1){
+            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
+            // }else {
+            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len));
+            // }
+        }
+        PANIC();
     }
 
-    [[nodiscard]] IResult<> write_u8(const uint8_t * data, size_t len) {
-        return write_burst<uint8_t>(data, len);
-    }
+private:
+    std::optional<hal::I2cDrv> p_i2c_drv_;
+    std::optional<hal::SpiDrv> p_spi_drv_;
+
 };
     
 

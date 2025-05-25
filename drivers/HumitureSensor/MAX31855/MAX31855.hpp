@@ -60,7 +60,7 @@ public:
         // if(const auto res = spi_drv_.)
         const auto raw_span = payload.to_u16_span();
         if(const auto res = spi_drv_.read_burst<uint16_t>(
-                raw_span.data(), raw_span.size()
+                std::span(raw_span)
             );
             res.is_err()) return Err(res.unwrap_err());
         return Ok<MAX31855_Payload>(payload);

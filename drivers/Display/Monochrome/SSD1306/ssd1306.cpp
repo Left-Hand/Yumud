@@ -52,13 +52,19 @@ IResult<> SSD13XX::init(){
 IResult<> SSD13XX::enable(const bool en){
     
     if(en){
-        if(const auto res = phy_.write_command(0x8D); res.is_err()) return res;
-        if(const auto res = phy_.write_command(0x14); res.is_err()) return res;
-        if(const auto res = phy_.write_command(0xAF); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x8D);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x14);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_command(0xAF);
+            res.is_err()) return res;
     }else{
-        if(const auto res = phy_.write_command(0x8D); res.is_err()) return res;
-        if(const auto res = phy_.write_command(0x10); res.is_err()) return res;
-        if(const auto res = phy_.write_command(0xAE); res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x8D);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_command(0x10);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_command(0xAE);
+            res.is_err()) return res;
     }
 
     return Ok();
@@ -66,14 +72,14 @@ IResult<> SSD13XX::enable(const bool en){
 
 IResult<> SSD13XX::update(){
     auto & frame = fetch_frame();
-    for(size_t y = 0; y < size_t(size().y); y += 8){
+    for(size_t y = 0; y < size().y; y += 8){
         if(const auto res = set_flush_pos(Vector2u(0, y)); 
             res.is_err()) return res;
 
         const auto line = std::span<const uint8_t>(
-            &frame[(y / 8) * size_t(size().x)], size().x);
+            &frame[(y / 8) * size().x], size().x);
 
-        if(const auto res = phy_.write_u8(&line[0], line.size());
+        if(const auto res = phy_.write_burst(line);
             res.is_err()) return res;
     }
     return Ok();

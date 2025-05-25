@@ -215,7 +215,7 @@ protected:
             size = MIN(size, 32);
             return spi_drv_.transceive_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::R_RX_PAYLOAD), CONT)
-            | spi_drv_.read_burst<uint8_t>(buffer, size);
+            | spi_drv_.read_burst<uint8_t>(std::span(buffer, size));
         }
     }
 
@@ -224,7 +224,7 @@ protected:
             size = MIN(size, 32);
             return spi_drv_.transceive_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD), CONT)
-            | spi_drv_.write_burst<uint8_t>(buffer, size);
+            | spi_drv_.write_burst<uint8_t>(std::span(buffer, size));
         }
     }
 
@@ -233,7 +233,7 @@ protected:
             size = MIN(size, 32);
             return spi_drv_.transceive_single(reinterpret_cast<uint8_t &>(status_reg), 
                 uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT)
-            | spi_drv_.write_burst<uint8_t>(buffer, size);
+            | spi_drv_.write_burst<uint8_t>(std::span(buffer, size));
         }
     }
 

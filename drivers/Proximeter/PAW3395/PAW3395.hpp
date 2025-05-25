@@ -53,7 +53,7 @@ private:
             data
         };
 
-        if(const auto res = spi_drv_.write_burst<uint8_t>(temp.data(), temp.size());
+        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(temp));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

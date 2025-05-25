@@ -13,13 +13,6 @@ struct ImageSpan{
 };
 
 
-
-template<typename ColorType, typename DataType>
-class ImageDataTypeDiff:public Image<ColorType>{
-
-};
-
-
 template<typename ColorType>
 class ImageView:
     public ImageReadableIntf<ColorType>, 

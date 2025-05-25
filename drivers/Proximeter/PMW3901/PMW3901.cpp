@@ -136,7 +136,7 @@ Result<void, Error> PMW3901::read_reg(const uint8_t command, uint8_t & data){
 
 Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
     return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_burst<uint8_t>(data, len));
+    | spi_drv_.read_burst<uint8_t>(std::span(data, len)));
 }
 
 

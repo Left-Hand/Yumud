@@ -389,7 +389,7 @@ hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
         if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); err.is_err()) return err;
-        return spi_drv_->write_burst<uint8_t>(data, len);
+        return spi_drv_->write_burst<uint8_t>(std::span(data, len));
     }else if(i2c_drv_){
         return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
     }
@@ -400,8 +400,9 @@ hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
 hal::HalResult LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
-        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
-        return spi_drv_->read_burst<uint8_t>(data, len);
+        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
+            err.is_err()) return err;
+        return spi_drv_->read_burst<uint8_t>(std::span(data, len));
     }else if(i2c_drv_){
         return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
     }

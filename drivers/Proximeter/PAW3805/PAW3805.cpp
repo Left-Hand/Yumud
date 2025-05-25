@@ -212,7 +212,7 @@ uint8_t PAW3805_Phy::read_reg(uint8_t addr)
 
 void PAW3805_Phy::write_reg(uint8_t addr, uint8_t val){
     const std::array<uint8_t,2> buf = {uint8_t(addr | WRITE_CMD_BIT), val};
-    spi_drv_.write_burst<uint8_t>(buf.data(), buf.size());
+    spi_drv_.write_burst<uint8_t>(std::span(buf));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
