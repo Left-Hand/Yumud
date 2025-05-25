@@ -71,8 +71,8 @@ Vector2q<16> inv_perspective_fast(const Vector2q<16> & v){
     return ret;
 }
 
-void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> & src){
-    auto size = static_cast<const ImageWritable<Grayscale> &>(dst).size();
+void perspective(Image<Grayscale> & dst,const Image<Grayscale> & src){
+    auto size = static_cast<const Image<Grayscale> &>(dst).size();
     for(size_t _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;

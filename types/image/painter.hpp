@@ -10,7 +10,7 @@ template<typename ColorType>
 class Painter:public PainterBase{
 protected:
 
-    ImageWritable<ColorType> * src_image = nullptr;
+    Image<ColorType> * src_image = nullptr;
     
     using Error = typename PainterBase::Error;
     template<typename T = void>
@@ -61,17 +61,18 @@ public:
         return src_image->size().to_rect();
     }
 
-    void bind_image(ImageWritable<ColorType> & _source){
-        src_image = &_source;
-    }
+    // void bind_image(Image<ColorType> & _source){
+    //     src_image = &_source;
+    // }
 
     void set_font_scale(const uint8_t scale){
         chfont->setScale(scale);
         enfont->setScale(scale);
     }
 
+    #if 0
     void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
-        if(!src_image->getDisplayArea().contains(rect)) return;
+        if(!src_image->size().to_rect().contains(rect)) return;
         drawtexture_unsafe(rect, color_ptr);
     }
 
@@ -100,6 +101,7 @@ public:
 
         return Ok();
     }
+
 
     void draw_pixel(const Vector2u & pos){
         // src_image -> putpixel(pos, Binary(Binary::WHITE));
@@ -192,6 +194,41 @@ public:
 
         return Ok();
     }
+    #else
+    void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
+        TODO();
+    }
+
+    template<typename w_ColorType>
+    void draw_image(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
+        TODO();
+    }
+
+    [[nodiscard]]
+    IResult<> draw_filled_rect(const Rect2u & rect){
+        TODO();
+        return Ok();
+    }
+
+
+    void draw_pixel(const Vector2u & pos){
+        return;
+    }
+
+    [[nodiscard]]
+    IResult<> draw_line(const Vector2u & from, const Vector2u & to){
+        TODO();
+        return Ok();
+    }
+    
+    [[nodiscard]]
+    IResult<> draw_char(const Vector2u & pos,const wchar_t chr){
+        // const auto err = Error(Error::Unfinished);
+        // return Err(err);
+        TODO();
+        return Ok();
+    }
+    #endif
 
 };
 

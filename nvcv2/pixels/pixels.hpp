@@ -3,20 +3,20 @@
 #include "../nvcv2.hpp"
 
 namespace ymd::nvcv2::pixels{
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src);
+    void conv(Image<RGB565>& dst, const Image<Grayscale>& src);
 
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src);
+    void conv(Image<RGB565>& dst, const Image<Binary>& src);
 
 
-    void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src);
+    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src);
 
-    auto dyeing(const ImageReadable<Grayscale>& src);
+    auto dyeing(const Image<Grayscale>& src);
 
     Grayscale dyeing(const Grayscale in);
 
     template<typename T>
     requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
-    void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {
+    void copy(Image<T>& dst, const Image<T>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = src[Vector2u{x, y}];
@@ -68,13 +68,17 @@ namespace ymd::nvcv2::pixels{
         }
     }
     
-    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold);
+    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold);
 
-    Image<Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold);
+    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold);
     void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k = real_t(0.5), const real_t eps = real_t(0.02));
+    void iter_threshold(
+        Image<Binary>& dst, 
+        const Image<Grayscale>& src, 
+        const real_t k = real_t(0.5), 
+        const real_t eps = real_t(0.02));
 
     void max_entropy(const Image<Grayscale>& src,const int thresh);
 
@@ -104,7 +108,7 @@ namespace ymd::nvcv2::pixels{
 
 
     template<is_monocolour_v T>
-    void inverse(ImageWritable<T>& dst, const ImageReadable<T> & src) {
+    void inverse(Image<T>& dst, const Image<T> & src) {
         auto window = dst.rect().intersection(src.rect());
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
@@ -135,7 +139,7 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op);
+    void mask_with(Image<Grayscale> & src, const Image<Binary>& op);
     void sum_with(Image<Grayscale> & src, Image<Grayscale>& op);
     void sub_with(Image<Grayscale> & src, Image<Grayscale>& op);
 }

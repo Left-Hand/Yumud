@@ -37,7 +37,8 @@ public:
         NoEnglishFontFounded,
         NoChineseFontFounded,
         StringLengthTooLong,
-        PointsTooLess
+        PointsTooLess,
+        Unfinished,
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)

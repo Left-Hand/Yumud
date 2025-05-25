@@ -25,15 +25,6 @@ constexpr uint64_t Image<ColorType>::sum(const Rect2u & roi) const{
 }
 
 template<typename ColorType>
-void Image<ColorType>::load(const uint8_t * buf, const Vector2u & _size){
-    this->set_size(_size);
-    this->data_ = std::make_shared<ColorType[]>(_size.x * _size.y);
-    auto area = this->size().x * this->size().y;
-    memcpy((uint8_t *)this->data_.get(), buf, area);
-}
-
-
-template<typename ColorType>
 constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2q<16> & pos) const {
     Vector2u pos_i = {uint(pos.x), uint(pos.y)};
     // return img(pos_i);
@@ -90,4 +81,5 @@ constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2q<16> & pos
     //         LERP(pos_frac.x, operator()(pos_i), operator()(pos_i + Vector2u(1, 0))),
     //         LERP(pos_frac.x, operator()(pos_i + Vector2u(0, 1)), operator()(pos_i + Vector2u(1, 1))));
 }
+
 }

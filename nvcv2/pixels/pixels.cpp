@@ -49,18 +49,18 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
+    void conv(Image<RGB565>& dst, const Image<Grayscale>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vector2u{x, y}] = src[Vector2u{x, y}];
+                dst[Vector2u{x, y}] = RGB565(src[Vector2u{x, y}]);
             }
         }
     }
 
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src) {
+    void conv(Image<RGB565>& dst, const Image<Binary>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vector2u{x, y}] = src[Vector2u{x, y}];
+                dst[Vector2u{x, y}] = RGB565(src[Vector2u{x, y}]);
             }
         }
     }
@@ -68,7 +68,7 @@ namespace ymd::nvcv2::pixels{
 
     static UniqueRandomGenerator lcg;
 
-    void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src){
+    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = lcg[src[Vector2u{x, y}]];
@@ -80,13 +80,13 @@ namespace ymd::nvcv2::pixels{
         return lcg[(uint8_t)in];
     }
 
-    auto dyeing(const ImageReadable<Grayscale>& src){
+    auto dyeing(const Image<Grayscale>& src){
         Image<Grayscale> tmp{src.size()};
         dyeing(tmp, src);
         return tmp;
     }
 
-    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
+    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold){
         for (auto x = 0u; x < std::min(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < std::min(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = src[Vector2u{x, y}].to_bina(threshold);
@@ -94,7 +94,7 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    Image<Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
+    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold){
         Image<Binary> dst{src.size()};
         binarization(dst, src, threshold);
         return dst;
@@ -385,7 +385,7 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op) {
+    void mask_with(Image<Grayscale> & src, const Image<Binary>& op) {
         for (auto i = 0u; i < src.size().area(); i++) {
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }

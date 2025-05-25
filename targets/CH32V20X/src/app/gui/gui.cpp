@@ -179,11 +179,12 @@ void gui_main(){
 
     Image<RGB565> img{{tft.size().x, 4u}};
 
-    Painter<RGB565> painter = {};
+    // Painter<RGB565> painter = {};
     // painter.bind_image(tft);
     // painter.set_color(ColorEnum::BLACK);
     // painter.draw_filled_rect(tft.size().to_rect()).examine();
 
+    #if 0
     while(true){
         painter.bind_image(img);
         painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
@@ -193,6 +194,7 @@ void gui_main(){
         tft.put_texture(img.size().to_rect(), img.get_data()).examine();
         DEBUG_PRINTLN(clock::millis());
     }
+    #endif
 }
 
         // #ifdef DRAW_TB

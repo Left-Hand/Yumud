@@ -16,11 +16,11 @@ private:
 	int Find(int x);
 	void Union(int x, int y);
 
-	int findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out);
+	int findMaxLabel(const Image<Grayscale> & out);
 
-	void twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src);
+	void twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary> &src);
 public:
-	// void run(ImageWithData<Grayscale, Grayscale> & out, const ImageReadable<Binary> & src, int &max);
-	ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+	// void run(Image<Grayscale> & out, const Image<Binary> & src, int &max);
+	Image<Grayscale> run(const Image<Binary> & src);
 };
 }

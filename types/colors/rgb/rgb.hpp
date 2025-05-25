@@ -317,7 +317,8 @@ struct Grayscale{
 
     __fast_inline constexpr bool operator <= (const Grayscale & other){return data <= other.data;}
 
-    __fast_inline constexpr Binary to_bina(const Grayscale & threshold = Grayscale(128)){return Binary(data > (uint8_t)threshold);}
+    __fast_inline constexpr Binary to_bina(const Grayscale & threshold = Grayscale(128)) const 
+        {return Binary(data > (uint8_t)threshold);}
 };
 
 

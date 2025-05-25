@@ -10,49 +10,45 @@ template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{
 public:
 
-    auto get_data() const {return this->data_.get();}
-    auto get_ptr() const {return this->data_;}
+
     Image(std::shared_ptr<ColorType[]> _data, const Vector2u & _size): 
-        ImageBasics(_size), 
         ImageWithData<ColorType, ColorType>(_data, _size) {}
 
     Image(const Vector2u & _size): 
-        ImageBasics(_size), 
         ImageWithData<ColorType, ColorType>(_size) {}
 
     Image(Image&& other) noexcept : 
-        ImageBasics(other.size()), 
         ImageWithData<ColorType, ColorType>(std::move(other)){;}
 
     Image(const Image & other) noexcept: 
-        ImageBasics(other.size()), 
         ImageWithData<ColorType, ColorType>(other) {}
 
-    Image & operator=(Image && other) noexcept {
-        if (this != &other) {
-            this->set_size(other.size());
-            this->data_ = std::move(other.data_);
-        }
+
+    Image & operator=(Image&& other){
+        return *this;
+    }
+    Image & operator=(const Image& other){
         return *this;
     }
 
     Image<ColorType> clone() const {
-        auto temp = Image<ColorType>(this->size());
+        const auto img_size = this->size();
+        auto temp = Image<ColorType>(img_size);
         memcpy(
-            temp.data_.get(), 
-            this->data_.get(), 
-            this->size().x * this->size().y * sizeof(ColorType)
+            temp.get_data(), 
+            this->get_data(), 
+            img_size.x * img_size.y * sizeof(ColorType)
         );
         return temp;
     }
 
-    Image<ColorType> & clone(const Image<ColorType> & other){
-        const auto size = ImageBasics::size().overlap_as_vec2(other.size());
-        this-> set_size(size);
-        this->data_ = std::make_shared<ColorType[]>(size.area());
-        memcpy(this->data_.get(), other.data_.get(), size.area() * sizeof(ColorType));
-        return *this;
-    }
+    // Image<ColorType> & clone(const Image<ColorType> & other){
+    //     const auto size = ImageBasics::size().overlap_as_vec2(other.size());
+    //     this-> set_size(size);
+    //     this->data_ = std::make_shared<ColorType[]>(size.area());
+    //     memcpy(this->data_.get(), other.data_.get(), size.area() * sizeof(ColorType));
+    //     return *this;
+    // }
 
     Image<ColorType> clone(const Rect2u & view) const {
         auto temp = Image<ColorType>(view.size);
@@ -73,11 +69,10 @@ public:
     constexpr uint64_t sum() const{return sum(this->size().to_rect());}
     constexpr ColorType bilinear_interpol(const Vector2q<16> & pos) const;
 
-    void load(const uint8_t * buf, const Vector2u & _size);
     static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2u & _size){
-        Image<ColorType> img(_size);
-        img.load(buf, _size);
-        return img;
+        auto data = std::make_shared<ColorType[]>(_size.x * _size.y);
+        memcpy(data.get(), buf, _size.x * _size.y * sizeof(ColorType));
+        return Image<ColorType>(std::move(data), _size);
     }
 
     template<typename toColorType = ColorType>
@@ -98,7 +93,9 @@ class ImageDataTypeDiff:public Image<ColorType>{
 
 
 template<typename ColorType>
-class ImageView:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
+class ImageView:
+    public ImageReadableIntf<ColorType>, 
+    public ImageWritableIntf<ColorType>{
 public:
 protected:
     using m_Image = ImageWR<ColorType>;
@@ -117,20 +114,13 @@ public:
 };
 
 template<typename ColorType>
-class Displayer:public ImageWritable<ColorType>{
-public:
-public:
-    Displayer(const Vector2u & size):ImageBasics(size), ImageWritable<ColorType>(size){;}
-};
-
-template<typename ColorType>
 struct PixelProxy{
 public:
     
-    ImageWritable<ColorType> & src;
+    ImageWritableIntf<ColorType> & src;
     Vector2u pos;
 
-    PixelProxy(ImageWritable<ColorType> & _src, Vector2u _pos) : src(_src), pos(_pos) {}
+    PixelProxy(ImageWritableIntf<ColorType> & _src, Vector2u _pos) : src(_src), pos(_pos) {}
 
     auto & operator = (const ColorType & color){
         src.putpixel(pos, color);

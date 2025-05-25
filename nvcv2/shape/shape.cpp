@@ -595,6 +595,7 @@ void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real
     }
 }
 
+#if 0
 void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
 
     if(src == dst){
@@ -660,7 +661,7 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
     if(src == dst){
         auto temp = src.clone();
         zhang_suen2(temp, src);
-        dst.clone(temp);
+        dst = std::move(temp);
         return;
     }
 
@@ -712,8 +713,8 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
     }
     
     dst.clone(temp);
-
 }
+#endif
 
 void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
     if(src == dst){
@@ -741,7 +742,7 @@ void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
     if(src == dst){
         auto temp = src.space();
         convo_roberts_xy(temp, src);
-        dst.clone(temp);
+        dst = std::move(temp);
         return;
     }
 
@@ -1035,7 +1036,7 @@ void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
     if(dst == src){
         auto temp = dst.space();
         adaptive_threshold(temp, src);
-        dst.clone(temp);
+        dst = std::move(temp);
         return;
     }
 

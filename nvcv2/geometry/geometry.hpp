@@ -34,6 +34,6 @@ Vector2q<16> inv_perspective(const Vector2q<16> & v);
 Vector2q<16> inv_perspective_fast(const Vector2q<16> & v);
 
 void perspective(
-    __restrict ImageWritable<Grayscale> & dst,
-    __restrict const ImageReadable<Grayscale> & src);
+    __restrict Image<Grayscale> & dst,
+    __restrict const Image<Grayscale> & src);
 }
