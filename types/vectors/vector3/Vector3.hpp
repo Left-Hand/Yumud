@@ -49,6 +49,10 @@ public:
     static constexpr Vector3<T> FORWARD = Vector3<T>(0, 0, 1);
     static constexpr Vector3<T> BACK = Vector3<T>(0, 0, -1);
 
+    static constexpr Vector3<T> X_AXIS = Vector3<T>(1, 0, 0);
+    static constexpr Vector3<T> Y_AXIS = Vector3<T>(0, 1, 0);
+    static constexpr Vector3<T> Z_AXIS = Vector3<T>(0, 0, 1);
+
     static constexpr Vector3<T> ZERO = Vector3<T>(0, 0, 0);
     static constexpr Vector3<T> ONE = Vector3<T>(1, 1, 1);
 

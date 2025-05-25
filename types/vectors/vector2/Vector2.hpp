@@ -48,6 +48,10 @@ struct Vector2{
 
     static constexpr Vector2<T> LEFT = Vector2<T>(-1, 0);
     static constexpr Vector2<T> RIGHT = Vector2<T>(1, 0);
+
+    static constexpr Vector2<T> X_AXIS = Vector2<T>(1, 0);
+    static constexpr Vector2<T> Y_AXIS = Vector2<T>(0, 1);
+
     static constexpr Vector2<T> UP = Vector2<T>(0, 1);
     static constexpr Vector2<T> DOWN = Vector2<T>(0, -1);
 

@@ -59,11 +59,11 @@ class Plotter{
     Plotter(drivers::ST7789 & tft):
         tft_(tft)
     {
-        painter_.bind_image(tft);
+        // painter_.bind_image(tft);
     }
 
     IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
-        tft_.put_texture(area, image.get_data());
+        tft_.put_texture(area, image.get_data()).examine();
 
         return Ok();
     };
@@ -77,8 +77,8 @@ class Plotter{
             it != std::prev(coast.end()); 
             it = std::next(it)
         ){
-            auto & p_curr = *it;
-            auto & p_next = *std::next(it);
+            const auto & p_curr = *it;
+            const auto & p_next = *std::next(it);
             if(const auto res = painter_.draw_line(p_curr, p_next);
                 res.is_err()) return res;
         }
@@ -185,7 +185,7 @@ void smc2025_main(){
 
     drivers::ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 240});
 
-    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170);
+    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170).examine();
 
     I2cSw cam_i2c{hal::portD[2], hal::portC[12]};
     cam_i2c.init(100_KHz);
@@ -219,7 +219,7 @@ void smc2025_main(){
                 ins_opt.unwrap();
             }), 
             src.get_data()
-        );
+        ).examine();
     };
 
     [[maybe_unused]] auto plot_bina = [&](
@@ -234,7 +234,7 @@ void smc2025_main(){
                 ins_opt.unwrap();
             }), 
             src.get_data()
-        );
+        ).examine();
     };
 
 
@@ -265,7 +265,7 @@ void smc2025_main(){
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());
+        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data()).examine();
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
         const auto rect = gray_img.size().to_rect();
