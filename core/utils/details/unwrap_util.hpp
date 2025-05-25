@@ -121,8 +121,17 @@ public:
     using TDecay = std::decay_t<T>;
 
     template<typename T2>
-    requires (std::is_convertible_v<T2, TDecay>)
-    constexpr Ok(T2 && val):val_(static_cast<TDecay>(val)){}
+    requires (std::is_convertible_v<T2, TDecay>) and (not std::is_trivially_copy_assignable_v<TDecay>)
+    constexpr Ok(T2 && val):val_(std::forward<std::decay_t<T2>>(val)){}
+
+    template<typename T2>
+    requires (std::is_convertible_v<T2, TDecay>) and (std::is_trivially_copy_assignable_v<TDecay>)
+    constexpr Ok(T2 && val):val_(static_cast<std::decay_t<T2>>(val)){}
+
+    // template<typename T2>
+    // requires (std::is_convertible_v<T2, TDecay>)
+    // constexpr Ok(T && val):val_(std::move<T>(val)){}
+    // constexpr Ok(const T & val):val_((val)){}
     
     
     template<typename T2>

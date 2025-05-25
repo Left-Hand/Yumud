@@ -8,14 +8,21 @@ using namespace ymd::nvcv2;
 
 
 
-DigitProbability match_numbers(const Image<Grayscale> & src, const Rect2u & roi, const real_t threshold){
+DigitProbability match_numbers(
+        const Image<Grayscale> & src, 
+        const Rect2u & roi, 
+        const real_t threshold
+){
     const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2u(roi.position, tmp_size));
-    auto fault_bina = make_bina_mirror(fault);
+    auto fault_bina = fault.mirror<Grayscale>();
 
     DigitProbability digit_p;
     for(size_t i = 0; i < MAX_NUMBERS; i++){
-        Image<Grayscale> tmp = Image<Grayscale>::load_from_buf(digit_images[i], tmp_size);
+        Image<Grayscale> tmp = Image<Grayscale>::from_buf(
+            reinterpret_cast<const Grayscale *>(digit_images[i]), 
+            tmp_size
+        );
         digit_p[i] = ymd::nvcv2::match::template_match(fault, tmp);
     }
     return digit_p;
@@ -41,7 +48,10 @@ DigitProbability match_numbers(const Image<Binary> & src, const Rect2u & roi){
     DigitProbability digit_p;
     // const auto begin = clock::millis();
     for(size_t i = 0; i < MAX_NUMBERS; i++){
-        Image<Binary> tmp = Image<Binary>::load_from_buf(digit_bina_images[i], tmp_size);
+        Image<Binary> tmp = Image<Binary>::from_buf(
+            reinterpret_cast<const Binary *>(digit_bina_images[i]), 
+            tmp_size
+        );
         ymd::nvcv2::pixels::inverse(tmp);
         digit_p[i] = ymd::nvcv2::match::template_match(src, tmp, roi.position);
     }

@@ -77,7 +77,7 @@ public:
     }
 
     template<typename w_ColorType>
-    void draw_image(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
         if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2u(pos, image.size());
         src_image->setarea_unsafe(rect);
@@ -200,7 +200,7 @@ public:
     }
 
     template<typename w_ColorType>
-    void draw_image(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
         TODO();
     }
 

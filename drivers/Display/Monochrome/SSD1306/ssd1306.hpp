@@ -110,9 +110,12 @@ public:
 
     [[nodiscard]] IResult<> turn_display(const bool i);
 
-    [[nodiscard]] IResult<> enable_flip_y(const bool flip = true){return phy_.write_command(0xA0 | flip);}
-    [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){return phy_.write_command(0xC0 | (flip << 3));}
-    [[nodiscard]] IResult<> enable_inversion(const bool inv = true){return phy_.write_command(0xA7 - inv);}  
+    [[nodiscard]] IResult<> enable_flip_y(const bool flip = true){
+        return phy_.write_command(0xA0 | flip);}
+    [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){
+        return phy_.write_command(0xC0 | (flip << 3));}
+    [[nodiscard]] IResult<> enable_inversion(const bool inv = true){
+        return phy_.write_command(0xA7 - inv);}  
 
     [[nodiscard]] Vector2u size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};

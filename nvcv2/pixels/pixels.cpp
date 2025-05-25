@@ -5,12 +5,12 @@ namespace ymd::nvcv2::pixels{
 
     class UniqueRandomGenerator {
     private:
-        scexpr uint8_t m = 251;
-        scexpr uint8_t a = 37;
-        scexpr uint8_t c = 71;
+        static constexpr uint8_t m = 251;
+        static constexpr uint8_t a = 37;
+        static constexpr uint8_t c = 71;
         std::array<uint8_t, 256> data;
 
-        scexpr uint8_t iter(const uint8_t x){
+        static constexpr uint8_t iter(const uint8_t x){
             return (a * x + c) % m;
         }
     public:
@@ -38,16 +38,6 @@ namespace ymd::nvcv2::pixels{
             return data[index];
         }
     };
-
-    uint sum(const Image<Grayscale>& src){
-        uint s = 0;
-        for (size_t i = 0; i < size_t(src.size().area()); i++) {
-            s += uint8_t(src[i]);
-        }
-
-        return s;
-    }
-
 
     void conv(Image<RGB565>& dst, const Image<Grayscale>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {

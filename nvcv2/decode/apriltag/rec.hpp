@@ -37,7 +37,10 @@ public:
         const Vector2q<16> & _grid_pos, 
         const Image<Grayscale> & gs
     ){
-        return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
+        // TODO();
+        while(true);
+        return Grayscale(0);
+        // return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
     };
 
     static constexpr Vector2q<16> get_vertex(const Vertexs & __vertexs, const Vector2q<16> & __grid_pos){

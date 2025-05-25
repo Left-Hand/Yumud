@@ -1,12 +1,16 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+
+#include "core/utils/Result.hpp"
 
 #include "types/vectors/vector2/vector2.hpp"
 #include "types/regions/rect2/rect2.hpp"
 #include "types/colors/color/color.hpp"
 #include "types/colors/rgb/rgb.hpp"
-#include <functional>
-#include <memory>
+
+
 
 
 namespace ymd{
@@ -36,25 +40,7 @@ class PixelProxy;
 
 //     ImageBasics(const Vector2u & size):size_(size){;}
 
-//     Vector2u uv2pixel(const Vector2q<16> & uv) const{
-//         return Vector2u(
-//             uint(LERP(0u, this->size().x, ((uv.x + 1) / 2))), 
-//             uint(LERP(0u, this->size().y, (uv.y + 1)/2)));
-//     }
 
-//     Vector2q<16> uv2aero(const Vector2q<16> & uv) const{
-//         return Vector2q<16>(((uv.x + 1) * (this->size().x / 2)), (uv.y + 1) * (this->size().y / 2));
-//     }
-
-//     Vector2q<16> pixel2uv(const Vector2u & pixel) const {
-//         return Vector2q<16>(
-//             INVLERP(this->size().x / 2, this->size().x, real_t(pixel.x)), 
-//             INVLERP(this->size().y / 2, this->size().y, real_t(pixel.y)));
-//     }
-
-//     Vector2q<16> uvstep() const{
-//         return Vector2q<16>(real_t(2) / this->size().x, real_t(2) / this->size().y);
-//     }
 
 //     __fast_inline Vector2u size() const{
 //         return this->size_;
@@ -183,94 +169,5 @@ protected:
     friend class PixelProxy<ColorType>;
 };
 
-
-template<typename ColorType, typename DataType>
-class ImageWithData{
-public:
-    ImageWithData(const Vector2u & size):
-        size_(size),
-        data_(std::make_shared<DataType[]>(size.x * size.y)){}
-
-    ImageWithData(std::shared_ptr<DataType[]> data, const Vector2u & size):
-        size_(size),
-        data_(data){}
-    ImageWithData(ImageWithData&& other) noexcept : 
-        ImageWithData(std::move(other.data_), other.size()){;}
-
-    ImageWithData(const ImageWithData& other) noexcept : 
-        ImageWithData(other.size(), other.data_){;}
-
-    ImageWithData& operator=(ImageWithData&& other) noexcept {
-        if (this != &other) {
-            this->size_ = std::move(other.size_);
-            this->data_ = std::move(other.data_);
-            other.size_ = Vector2u{0,0};
-            other.data_ = nullptr;
-        }
-        return *this;
-    }
-
-
-    __fast_inline const DataType & operator[](const size_t index) const { 
-        return data_[index]; }
-
-    __fast_inline DataType & operator[](const size_t index) {
-        return data_[index]; }
-
-    __fast_inline ColorType & operator[](const Vector2u & pos) {
-        return data_[pos.x + pos.y * this->size().x]; }
-
-    __fast_inline const ColorType & operator[](const Vector2u & pos) const {
-        return data_[pos.x + pos.y * this->size().x]; }
-
-
-    template<typename ToColorType>
-    __fast_inline ToColorType at(const uint y, const uint x) const {
-        return data_[x + y * this->size().x]; }
-
-    __fast_inline ColorType & at(const uint y, const uint x){
-        return data_[x + y * this->size().x]; }
-
-    __fast_inline const ColorType & at(const uint y, const uint x)const{
-        return data_[x + y * this->size().x]; }
-
-
-    bool operator == (const ImageWithData<auto, auto> & other) const {
-        return data_ == other.data_;
-    }
-
-    void load_from_u8(const DataType * buf, const Vector2u & _size){
-        if(this->size() != _size){
-            this->set_size(_size);
-            this->data_ = std::make_shared<DataType[]>(_size.x * _size.y);
-        }
-        const auto area = this->size().x * this->size().y;
-        memcpy(this->get_data(), buf, area);
-    }
-
-    ImageWithData<ColorType, DataType> from_u8(const DataType * buf, const Vector2u & _size){
-        auto data = std::make_shared<DataType[]>(_size.x * _size.y);
-        memcpy(data.get(), buf, _size.x * _size.y);
-        return ImageWithData<ColorType, DataType>(data, _size);
-    }
-
-protected:
-
-    void putpixel_unsafe(const Vector2u & pos, const ColorType color) 
-        { data_[this->size().x * pos.y + pos.x] = color; }
-    void getpixel_unsafe(const Vector2u & pos, ColorType & color) const 
-        { color = data_[this->size().x * pos.y + pos.x]; }
-
-private:
-    Vector2u size_;
-
-    std::shared_ptr<DataType[]> data_;
-
-public:
-    Vector2u size() const { return size_; }
-
-    auto get_data() const {return this->data_.get();}
-    auto get_ptr() const {return this->data_;}
-};
 
 }

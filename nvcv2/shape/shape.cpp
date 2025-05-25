@@ -89,7 +89,7 @@ void gauss5x5(Image<Grayscale> & dst, const Image<Grayscale> & src){
 }
 
 void gauss(Image<Grayscale> & src){
-    auto temp = src.space();
+    auto temp = Image<Grayscale>(src.size());
     gauss(temp, src);
     pixels::copy(src, temp);
 }
@@ -221,7 +221,7 @@ void dilate(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         dilate(dst, temp);
         return;
@@ -249,7 +249,7 @@ void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         dilate_xy(dst, temp);
         return;
@@ -315,7 +315,7 @@ void dilate_y(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         dilate_y(dst, temp);
         return;
@@ -338,7 +338,7 @@ void erosion(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         erosion(dst, temp);
         return;
@@ -371,7 +371,7 @@ void erosion_x(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         erosion_x(dst, temp);
         return;
@@ -397,7 +397,7 @@ void dilate_x(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         dilate_x(dst, temp);
         return;
@@ -421,7 +421,7 @@ void erosion_y(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         erosion_y(dst, temp);
         return;
@@ -444,7 +444,7 @@ void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         erosion_xy(dst, temp);
         return;
@@ -499,7 +499,7 @@ void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         anti_pepper_x(dst, temp);
         return;
@@ -525,7 +525,7 @@ void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
 
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         anti_pepper_y(dst, temp);
         return;
@@ -550,7 +550,7 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         anti_pepper(dst, temp);
         return;
@@ -598,7 +598,7 @@ void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real
 #if 0
 void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
 
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         zhang_suen(temp, src);
         dst.clone(temp);
@@ -658,7 +658,7 @@ void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
 
 void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
 
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         zhang_suen2(temp, src);
         dst = std::move(temp);
@@ -717,7 +717,7 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
 #endif
 
 void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
-    if(src == dst){
+    if(src.is_shared_with(dst)){
         auto temp = src.clone();
         convo_roberts_x(dst, temp);
         return;
@@ -739,8 +739,8 @@ void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
 }
 
 void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
-    if(src == dst){
-        auto temp = src.space();
+    if(src.is_shared_with(dst)){
+        auto temp = Image<Grayscale>(src.size());
         convo_roberts_xy(temp, src);
         dst = std::move(temp);
         return;
@@ -1033,8 +1033,8 @@ void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
 }
 
 void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
-    if(dst == src){
-        auto temp = dst.space();
+    if(dst.is_shared_with(src)){
+        auto temp = Image<Grayscale>(src.size());
         adaptive_threshold(temp, src);
         dst = std::move(temp);
         return;

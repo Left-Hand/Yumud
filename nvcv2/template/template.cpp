@@ -1,8 +1,10 @@
 #include "template.hpp"
+#include "core/math/realmath.hpp"
+
+#include "nvcv2/pixels/pixels.hpp"
 #include <bits/stl_numeric.h>
 #include "dsp/fastmath/sqrt.hpp"
 #include "dsp/fastmath/square.hpp"
-#include "core/math/realmath.hpp"
 
 
 #define BOUNDARY_CHECK()\
@@ -18,8 +20,8 @@ using Itpair = std::pair<T, T>;
 namespace ymd::nvcv2::match{
 
 real_t template_match(
-    __restrict const Image<Binary> & src, 
-    __restrict const Image<Binary> & tmp,
+    const Image<Binary> & src, 
+    const Image<Binary> & tmp,
     const Vector2u & offs){
     BOUNDARY_CHECK()
 
@@ -50,8 +52,8 @@ real_t template_match_ncc(
 ){
     BOUNDARY_CHECK()
 
-    int32_t t_mean = int32_t(tmp.mean());
-    int32_t s_mean = int32_t(src.mean(Rect2u(offs, tmp.size())));
+    int32_t t_mean = int32_t(pixels::mean(tmp));
+    int32_t s_mean = int32_t(pixels::mean(src, Rect2u(offs, tmp.size())));
 
     int64_t num = 0;
     uint64_t den_t = 0;

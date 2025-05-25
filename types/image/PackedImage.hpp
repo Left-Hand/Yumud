@@ -2,21 +2,40 @@
 
 #include "image.hpp"
 
+
 namespace ymd{
 
 using PackedBinary = uint8_t;
 
-class PackedBinaryImage:public ImageWithData<Binary, PackedBinary>{
+class PackedBinaryImage{
 public:
 
 protected:
     PackedBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2u & _size): 
-        ImageWithData<Binary, PackedBinary>(_data, _size){;}
+        data_(std::move(_data)),
+        size_(_size){;}
     PackedBinaryImage(const Vector2u & _size): 
-        ImageWithData<Binary, PackedBinary>(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
+        PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
+
+protected:
+    std::shared_ptr<uint8_t[]> data_;
+    Vector2u size_;
+
+public:
+    constexpr Vector2u size() const {return size_;}
+    auto * get_data() {return data_.get();}
+    const auto * get_data() const {return data_.get();}
+
+    auto & operator[](const size_t idx){
+        return data_[idx];
+    }
+
+    const auto & operator[](const size_t idx) const {
+        return data_[idx];
+    }
 };
 
-class HorizonBinaryImage : public PackedBinaryImage{
+class HorizonBinaryImage final: public PackedBinaryImage{
 public:
     void putpixel_unsafe(const Vector2u & pos, const Binary color){
         uint32_t point_index = (pos.y * size().x + pos.x);
@@ -64,9 +83,10 @@ public:
             }
         }
     }
+
 };
 
-class VerticalBinaryImage : public PackedBinaryImage{
+class VerticalBinaryImage final: public PackedBinaryImage{
 public:
     void putpixel_unsafe(const Vector2u & pos, const Binary color){
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
@@ -109,6 +129,5 @@ public:
         }
     }
 };
-
 
 }

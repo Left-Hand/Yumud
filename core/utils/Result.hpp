@@ -58,27 +58,50 @@ using result_err_type_t = details::_result_type<TResult>::err_type;
 
 namespace details{
     template<typename T, typename E>
-    struct _Storage_Diff{
+    struct _Storage_Diff {
     public:
         using Data = std::variant<T, E>;
         using ok_type = T;
         using err_type = E;
-    
-        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):data_(val.unwrap()){;}
-        __fast_inline constexpr _Storage_Diff(Ok<T> && val):data_(std::move(val.unwrap())){;}
-    
-    
-        __fast_inline constexpr _Storage_Diff(const Err<E> & val):data_(val.unwrap()){;}
-        __fast_inline constexpr _Storage_Diff(Err<E> && val):data_(std::move(val.unwrap())){;}
-    
-        __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
-        __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
-    
-        __fast_inline constexpr bool is_ok() const{return std::holds_alternative<T>(data_);}
-        __fast_inline constexpr bool is_err() const{return std::holds_alternative<E>(data_);}
-    
-        __fast_inline constexpr T unwrap() const{return std::get<T>(data_);}
-        __fast_inline constexpr E unwrap_err() const{return std::get<E>(data_);}
+
+        // Constructor for Ok case - copy if trivially copyable
+        template<typename U = T, std::enable_if_t<std::is_trivially_copy_assignable_v<U>, int> = 0>
+        __fast_inline constexpr _Storage_Diff(const Ok<T>& okay)
+            : data_(Data{std::in_place_index<0>, okay.unwrap()}) {}
+
+        // Constructor for Ok case - move otherwise
+        template<typename U = T, std::enable_if_t<!std::is_trivially_copy_assignable_v<U>, int> = 0>
+        __fast_inline constexpr _Storage_Diff(Ok<T>&& okay)
+            : data_(Data{std::in_place_index<0>, std::move(okay).unwrap()}) {}
+
+        // Constructor for Err case - const reference
+        __fast_inline constexpr _Storage_Diff(const Err<E>& error)
+            : data_(Data{std::in_place_index<1>, error.unwrap()}) {}
+
+        // Constructor for Err case - rvalue reference
+        __fast_inline constexpr _Storage_Diff(Err<E>&& error)
+            : data_(Data{std::in_place_index<1>, std::move(error).unwrap()}) {}
+
+        // Copy/move constructors
+        __fast_inline constexpr _Storage_Diff(const _Storage_Diff&) = default;
+        __fast_inline constexpr _Storage_Diff(_Storage_Diff&&) = default;
+
+        // Assignment operators
+        __fast_inline constexpr _Storage_Diff& operator=(const _Storage_Diff&) = default;
+        __fast_inline constexpr _Storage_Diff& operator=(_Storage_Diff&&) = default;
+
+        // State checks
+        __fast_inline constexpr bool is_ok() const noexcept { return data_.index() == 0; }
+        __fast_inline constexpr bool is_err() const noexcept { return data_.index() == 1; }
+
+        // Value access (const &)
+        __fast_inline constexpr const T& unwrap() const & { return std::get<0>(data_); }
+        __fast_inline constexpr const E& unwrap_err() const & { return std::get<1>(data_); }
+
+        // Value access (rvalue &&)
+        __fast_inline constexpr T&& unwrap() && { return std::get<0>(std::move(data_)); }
+        __fast_inline constexpr E&& unwrap_err() && { return std::get<1>(std::move(data_)); }
+
     private:
         Data data_;
     };
@@ -284,11 +307,15 @@ public:
 
     template<typename T2>
     requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(value){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(okay){}
+
+    template<typename T2>
+    requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T2> && okay) : storage_(std::move(okay)){}
 
     template<typename T2 = T>
     requires (std::is_void_v<T2>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(Ok<void>()){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(Ok<void>()){}
     
     template<typename E2>
     requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
