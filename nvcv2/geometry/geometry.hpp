@@ -3,7 +3,7 @@
 
 #include "../nvcv2.hpp"
 
-namespace ymd::nvcv2::Geometry{
+namespace ymd::nvcv2::geometry{
 
 struct PerspectiveConfig{
     real_t H1; 

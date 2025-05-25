@@ -1,9 +1,9 @@
 #include "mnist.hpp"
 
-#define MDL_BUF_LEN (960)
-#define LBUF_LEN (360)
+static constexpr uint MDL_BUF_LEN = (960);
+static constexpr uint LBUF_LEN = (360);
 
-scexpr uint8_t mdl_data[920] PROGMEM={\
+static constexpr std::array<uint8_t, 920> MDL_DATA ={
     0x4d, 0x41, 0x49, 0x58, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0xc0, 0x03, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x1c, 0x00, 0x1c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 
     0x01, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -71,7 +71,7 @@ void Mnist::parse_output(){
     const float* data  = out.dataf;
     real_t maxp = 0;
     int maxi = -1;
-    for(int i=0; i<N; i++){
+    for(size_t i=0; i<N; i++){
         outputs[i] = real_t::from(data[i]);
         if(real_t::from(data[i]) > maxp) {
             maxi = i;
@@ -100,7 +100,7 @@ void Mnist::parse_output(){
 
 void Mnist::load(){
     memset(mdl_buf, 0, sizeof(mdl_buf));
-    auto res = tm_load(&mdl, mdl_data, mdl_buf, layer_cb, &in);
+    auto res = tm_load(&mdl, MDL_DATA.data(), mdl_buf, layer_cb, &in);
     loaded = bool(res == TM_OK);
 
     if(res != TM_OK) {
@@ -122,7 +122,7 @@ Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2u & pos){
 }
 
 Mnist::Result Mnist::update(const Image<Grayscale> & img){
-    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.get_data()};
+    tm_mat_t in_uint8 = {3,IMAGE_SIZE.x,IMAGE_SIZE.y,IMAGE_CHANNELS, (mtype_t*)img.get_data()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
     err = tm_run(&mdl, &in, outs);

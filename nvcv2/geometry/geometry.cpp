@@ -18,7 +18,7 @@
 // #define H8 -1.391*(10^-2)
 // #define H9 1.000*(10^0)
 
-namespace ymd::nvcv2::Geometry{
+namespace ymd::nvcv2::geometry{
 
 
 static constexpr PerspectiveConfig perspective_config{

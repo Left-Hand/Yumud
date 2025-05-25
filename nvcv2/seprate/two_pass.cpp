@@ -1,6 +1,6 @@
 #include "two_pass.hpp"
 
-namespace ymd::nvcv2::Shape{
+namespace ymd::nvcv2::shape{
 
 TwoPass::TwoPass(int size)
 {

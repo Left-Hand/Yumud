@@ -8,8 +8,7 @@
 
 namespace ymd{
 template<arithmetic T, size_t R, size_t C>
-class Matrix_t
-{
+class Matrix_t{
 public:
     __fast_inline constexpr Matrix_t(){}
 
@@ -19,14 +18,16 @@ public:
         }
     }
 
-    template<typename... Args>
+    template<typename ... Args>
+    requires (sizeof...(Args) == R * C) 
     explicit __fast_inline constexpr
-    Matrix_t(Args... args) requires (sizeof...(args) == R * C) {
+    Matrix_t(Args... args) {
         static_assert(sizeof...(args) == R * C);
         auto ptr = begin();
         auto values = std::array<T, R * C>{{static_cast<T>(args)...}};
         std::copy(values.begin(), values.end(), ptr);
     }
+
 
     __fast_inline constexpr Matrix_t& operator = (const Matrix_t & other){
         for(size_t i = 0; i < size(); i++){
@@ -49,15 +50,8 @@ public:
     }
 
 
-    __fast_inline consteval size_t rows(void) const { return R;}
-    __fast_inline consteval size_t cols(void) const { return C;}
-
-
-    // __fast_inline constexpr auto row(const size_t row){return std::span<T>(&data_[row], R);}  
-    // __fast_inline constexpr const auto row(const size_t row) const {return data_[row];}
-
-    // __fast_inline constexpr auto & operator[](const size_t row){return data_[row];}  
-    // __fast_inline constexpr const auto & operator[](const size_t row) const {return data_[row];}
+    __fast_inline consteval size_t rows() const { return R;}
+    __fast_inline consteval size_t cols() const { return C;}
     __fast_inline constexpr std::span<T> operator[](const size_t row) {return std::span<T>(&data_[row * C], C);}
     __fast_inline constexpr std::span<const T> operator[](const size_t row) const {return std::span<const T>(&data_[row * C], C);}
     __fast_inline constexpr T & at(const size_t row, const size_t col) { return data_[row * C + col];}

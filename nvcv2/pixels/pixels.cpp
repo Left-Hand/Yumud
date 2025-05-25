@@ -1,7 +1,7 @@
 #include "pixels.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::nvcv2::Pixels{
+namespace ymd::nvcv2::pixels{
 
     class UniqueRandomGenerator {
     private:
@@ -119,7 +119,7 @@ namespace ymd::nvcv2::Pixels{
         {
             int current_sum = 0;
             int current_cnt = 0;
-            for(int i = 0; i < 256; i++){
+            for(size_t i = 0; i < 256; i++){
                 current_sum += statics[i] * i;
                 current_cnt += statics[i];
                 
@@ -134,21 +134,21 @@ namespace ymd::nvcv2::Pixels{
         real_t p1 = real_t();
         
         int max_i = 0;
-        real_t max_t = real_t(0);
+        real_t max_sep = 0;
         
         for(int i = 0; i < 256; i++){
-            int current_sum = sum_map[i];
-            int current_cnt = cnt_map[i];
+            const int current_sum = sum_map[i];
+            const int current_cnt = cnt_map[i];
             
-            int remain_sum = total_sum - current_sum;
-            int remain_cnt = total_cnt - current_cnt;
-            real_t m1 = real_t(current_sum) / current_cnt;
-            real_t m2 = real_t(remain_sum) / (remain_cnt);
+            const int remain_sum = total_sum - current_sum;
+            const int remain_cnt = total_cnt - current_cnt;
+            const real_t m1 = real_t(current_sum) / current_cnt;
+            const real_t m2 = real_t(remain_sum) / remain_cnt;
             
             real_t t = p1 * (1 - p1) * (m1 - m2) * (m1 - m2);
-            if(t > max_t){
+            if(t > max_sep){
                 max_i = i;
-                max_t = t;
+                max_sep = t;
             }
             
             p1 += real_t(1.0f / 256.0f);
@@ -158,7 +158,12 @@ namespace ymd::nvcv2::Pixels{
     }
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k, const real_t eps){
+    void iter_threshold(
+            Image<Binary>& dst, 
+            const Image<Grayscale>& src, 
+            const real_t k, 
+            const real_t eps
+    ){
         const Vector2u size = src.size();
         std::array<int, 256> statics;
         statics.fill(0);
@@ -199,7 +204,7 @@ namespace ymd::nvcv2::Pixels{
             int remain_sum = total_sum - current_sum;
             int remain_cnt = total_cnt - current_cnt;
             real_t m1 = real_t(current_sum) / current_cnt;
-            real_t m2 = real_t(remain_sum) / (remain_cnt);
+            real_t m2 = real_t(remain_sum) / remain_cnt;
             
             real_t t = m1 * k + m2 * (1 - k);
             if(ABS(t - last_t) < eps){
@@ -211,7 +216,7 @@ namespace ymd::nvcv2::Pixels{
         binarization(dst, src, last_i);
     }
 
-    void max_entropy(const Image<Grayscale>& src, const int thresh){
+    void calc_max_entropy(const Image<Grayscale>& src, const int thresh){
         const Vector2u size = src.size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
@@ -256,7 +261,6 @@ namespace ymd::nvcv2::Pixels{
                 // thresh = i + p;
             }
         }
- 
     }
     int get_huang_fuzzy_threshold(Histogram hist){
         int X, Y;
