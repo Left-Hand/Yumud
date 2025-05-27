@@ -11,17 +11,18 @@ using IResult = MT6816::IResult<T>;
 
 
 Result<void, Error> MT6816::init() {
-    lap_position_ = -1; // not possible before init done;
+    for(size_t i = 0;; i++){
+        if(const auto res = this->update();
+            res.is_err()) return res;
 
-    
-    for(size_t i = 0; i < MAX_INIT_RETRY_TIMES; i++){
-        this->update().unwrap();
-        if(this->get_lap_position().is_ok()){
-            return Ok();
+        {
+            const auto res = this->get_lap_position();
+            if(res.is_ok()) return Ok();
+            else if(i == MAX_INIT_RETRY_TIMES)
+                return Err(res.unwrap_err());
         }
     } // while reading before get correct position
-
-    return Err(Error::CantSetup);
+    __builtin_unreachable();
 }
 
 Result<uint16_t, hal::HalResult> MT6816::get_position_data(){
@@ -31,8 +32,10 @@ Result<uint16_t, hal::HalResult> MT6816::get_position_data(){
     dataTx[0] = (0x80 | 0x03) << 8;
     dataTx[1] = (0x80 | 0x04) << 8;
 
-    if(const auto err = spi_drv_.transceive_single(dataRx[1], dataTx[1]); err.is_err()) return Err(err);
-    if(const auto err = spi_drv_.transceive_single(dataRx[0], dataTx[0]); err.is_err()) return Err(err);
+    if(const auto err = spi_drv_.transceive_single(dataRx[1], dataTx[1]);
+        err.is_err()) return Err(err);
+    if(const auto err = spi_drv_.transceive_single(dataRx[0], dataTx[0]);
+        err.is_err()) return Err(err);
 
     return Ok<uint16_t>(((dataRx[0] & 0x00FF) << 8) | (dataRx[1]));
 }
@@ -44,7 +47,8 @@ IResult<> MT6816::update(){
         semantic = raw_16;
         last_sema_ = semantic;
 
-        if(semantic.no_mag) return Err(Error::MagnetLost);
+        if(semantic.no_mag)
+            return Err(Error::MagnetLost);
 
         uint8_t count = 0;
 

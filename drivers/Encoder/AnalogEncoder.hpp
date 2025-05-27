@@ -31,10 +31,6 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] Result<bool, EncoderError> is_stable(){
-        return Ok(true);
-    }
-
 private:
     hal::AnalogInIntf & ain_;
     Range2<real_t> volt_range_;

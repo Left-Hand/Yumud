@@ -6,8 +6,8 @@
 namespace ymd::drivers{
 
 struct SSD13XX_Config{
-    bool flip_x = false;
-    bool flip_y = false;
+    bool flip_x_en = false;
+    bool flip_y_en = false;
 };
 
 struct SSD13XX_Presets{
@@ -107,7 +107,8 @@ private:
     std::optional<hal::SpiDrv> p_spi_drv_;
 
 };
-    
+
+class SSD13XX_DrawDispacther;
 
 class SSD13XX final{
 public:
@@ -118,6 +119,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
 
     template<typename Cfg, typename T = std::decay_t<Cfg>>
     SSD13XX(Phy && phy, Cfg && cfg):
@@ -128,16 +130,13 @@ public:
         frame_(_oled_preset<T>::size){
         }
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
+
 
     [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> enable(const bool en = true);
-
-    [[nodiscard]] IResult<> turn_display(const bool i);
-
+    [[nodiscard]] IResult<> enable_display(const bool en = true);
     [[nodiscard]] IResult<> enable_flip_y(const bool flip = true){
         return phy_.write_command(0xA0 | flip);}
     [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){
@@ -145,53 +144,76 @@ public:
     [[nodiscard]] IResult<> enable_inversion(const bool inv = true){
         return phy_.write_command(0xA7 - inv);}  
 
-    [[nodiscard]] Vector2u size() const {return frame_.size();}
+    [[nodiscard]] Vector2u16 size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
 
 private:
 
     Phy phy_;
-    [[nodiscard]] IResult<> setarea_unsafe(const Rect2u & area) {
-        return setpos_unsafe(area.position);
-    }
 
-    [[nodiscard]] IResult<> putpixel_unsafe(const Vector2u & pos, const Binary color){
+    const Vector2u16 offset_;
+    const std::span<const uint8_t> cmds_;
+    const Config config_;
+    VerticalBinaryImage frame_;
+
+    [[nodiscard]] IResult<> putpixel_unsafe(const Vector2u16 pos, const Binary color){
         auto & frame = fetch_frame();
         frame.putpixel_unsafe(pos, color);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> setpos_unsafe(const Vector2u & pos) ;
+    [[nodiscard]] IResult<> setpos_unsafe(const Vector2u16 pos) ;
 
-    [[nodiscard]] IResult<> set_flush_pos(const Vector2u & pos);
-    [[nodiscard]] IResult<> set_offset();
+    [[nodiscard]] IResult<> set_offset(const Vector2u16 offset);
 
-    const Vector2u offset_;
-    const std::span<const uint8_t> cmds_;
-    const Config config_;
-    VerticalBinaryImage frame_;
-
+    [[nodiscard]] IResult<> set_flush_pos(const Vector2u16 pos);
 
     [[nodiscard]] IResult<> preinit_by_cmds();
+
+    friend class SSD13XX_DrawDispacther;
+};
+
+
+// struct BufferedDrawDispather;
+
+class SSD13XX_DrawDispacther{
+public:
+    static constexpr bool IS_BUFFERED = true;
+
+    using Error = DisplayerError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    // [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2u16 pos, const RGB888 color){
+    //     self.putpixel_unsafe(pos, color);
+    // }
+
+    // [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
+    //     self.putpixel_unsafe(pos, color);
+    // }
+
+    // [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){
+
+    // }
 };
 
 
 
 namespace details{
 template<typename T>
-static constexpr Vector2u oled_display_size_v = _oled_preset<T>::size;
+static constexpr Vector2u16 oled_display_size_v = _oled_preset<T>::size;
 
 template<typename T>
-static constexpr Vector2u oled_display_offset_v = _oled_preset<T>::size;
+static constexpr Vector2u16 oled_display_offset_v = _oled_preset<T>::size;
 
 template<typename T>
-static constexpr Vector2u oled_initcmd_v = _oled_preset<T>::initcmd;
+static constexpr Vector2u16 oled_initcmd_v = _oled_preset<T>::initcmd;
 }
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_72X40>{
-    static constexpr Vector2u size = Vector2u(72, 40);
-    static constexpr Vector2u offset = Vector2u(28, 0);
+    static constexpr Vector2u16 size = Vector2u16(72, 40);
+    static constexpr Vector2u16 offset = Vector2u16(28, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0xD5,0xF0,0xA8,0X27,0XD3,0X00,0X40,
         0X8D,0X14,0X20,0X02,0XA1,0XC8,0XDA,0X12,
@@ -202,8 +224,8 @@ struct _oled_preset<SSD13XX_Presets::_72X40>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X64>{
-    static constexpr Vector2u size = Vector2u(128, 64);
-    static constexpr Vector2u offset = Vector2u(0, 0);
+    static constexpr Vector2u16 size = Vector2u16(128, 64);
+    static constexpr Vector2u16 offset = Vector2u16(0, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         // 0xAE, 0xD5, 0xF0, 0xA8, 0X27, 0XD3, 0X00, 0X40,
         // 0X8D, 0X14, 0X20, 0X02, 0XA1, 0XC8, 0XDA, 0X12,
@@ -248,8 +270,8 @@ struct _oled_preset<SSD13XX_Presets::_128X64>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X32>{
-    static constexpr Vector2u size = Vector2u(128, 32);
-    static constexpr Vector2u offset = Vector2u(2, 0);
+    static constexpr Vector2u16 size = Vector2u16(128, 32);
+    static constexpr Vector2u16 offset = Vector2u16(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE, 0x00, 0x10, 0x00, 0xB0, 0X81, 0XFF, 0XA1, 0XA6,
         0XA8, 0X1F, 0XC8, 0XD3, 0X00, 0XD5, 0X80, 0XD9,
@@ -259,8 +281,8 @@ struct _oled_preset<SSD13XX_Presets::_128X32>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_88X48>{
-    static constexpr Vector2u size = Vector2u(88, 48);
-    static constexpr Vector2u offset = Vector2u(2, 0);
+    static constexpr Vector2u16 size = Vector2u16(88, 48);
+    static constexpr Vector2u16 offset = Vector2u16(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
@@ -270,8 +292,8 @@ struct _oled_preset<SSD13XX_Presets::_88X48>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_64X48>{
-    static constexpr Vector2u size = Vector2u(64, 48);
-    static constexpr Vector2u offset = Vector2u(2, 0);
+    static constexpr Vector2u16 size = Vector2u16(64, 48);
+    static constexpr Vector2u16 offset = Vector2u16(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
@@ -282,8 +304,8 @@ struct _oled_preset<SSD13XX_Presets::_64X48>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X80>{
-    static constexpr Vector2u size = Vector2u(128, 80);
-    static constexpr Vector2u offset = Vector2u(2, 0);
+    static constexpr Vector2u16 size = Vector2u16(128, 80);
+    static constexpr Vector2u16 offset = Vector2u16(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,

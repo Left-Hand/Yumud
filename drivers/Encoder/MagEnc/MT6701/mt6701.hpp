@@ -57,9 +57,7 @@ private:
     std::optional<hal::SpiDrv> spi_drv_;
 };
 
-
-class MT6701 final :public MagEncoderIntf{
-public:
+struct MT6701_Regs{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -77,53 +75,6 @@ public:
     enum class PwmFreq{
         HZ994_4,HZ497_2
     };
-
-protected:
-    struct Semantic{
-        union{
-            struct{
-                uint32_t crc:6;
-                union{
-                    struct{
-                        uint32_t stat:2;
-                        uint32_t pushed:1;
-                        uint32_t overspd:1;
-                    };
-                    uint32_t mg:4;
-                };
-                uint16_t data_14bit:14;
-            };
-            struct{
-                uint8_t data8;
-                uint16_t data16;
-            };
-        };
-        
-        Semantic(const uint16_t data):data8(0), data16(data){;}
-
-        Semantic(const uint8_t _data8, const uint16_t _data16):data8(_data8), data16(_data16){;}
-        
-        __inline bool valid(const bool fast_mode) const {
-            bool valid = (pushed == false) and (overspd == false);
-            if(fast_mode == false){
-                return valid and crc_valid();
-            }else{
-                return valid;
-            }
-        }
-
-    private:
-        __inline bool crc_valid() const{
-            return true;//TODO
-        }
-    };
-    
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
-
-    MT6701_Phy phy_;
-    Semantic semantic = {0, 0};
-    real_t lap_position = real_t(0);
-    bool fast_mode = true;
 
     struct UVWMuxReg : public Reg8<>{
         uint8_t __resv__:7;
@@ -179,6 +130,13 @@ protected:
     uint8_t stopData = {};
 
     using RegAddress = MT6701_Phy::RegAddress;
+};
+
+
+class MT6701 final:
+    public MagEncoderIntf,
+    public MT6701_Regs
+{
 public:
     MT6701(MT6701_Phy && phy):
         phy_(std::move(phy)){;}
@@ -186,44 +144,94 @@ public:
     MT6701(hal::I2c & i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(MT6701_Phy(i2c, addr)){;}
 
-
     ~MT6701(){};
 
+    [[nodiscard]] IResult<> init();
 
-    IResult<> init();
+    [[nodiscard]] IResult<> update();
 
-    IResult<> update();
-    IResult<real_t> get_lap_position();
+    [[nodiscard]] IResult<real_t> get_lap_position();
     
-    IResult<bool> is_stable();
+    [[nodiscard]] IResult<MagStatus> get_mag_status();
 
-    IResult<> enable_uvwmux(const bool enable = true);
+    [[nodiscard]] IResult<> enable_uvwmux(const bool enable = true);
 
-    IResult<> enable_abzmux(const bool enable = true);
+    [[nodiscard]] IResult<> enable_abzmux(const bool enable = true);
 
-    IResult<> set_direction(const bool clockwise);
+    [[nodiscard]] IResult<> set_direction(const bool clockwise);
 
-    IResult<> set_poles(const uint8_t _poles);
+    [[nodiscard]] IResult<> set_poles(const uint8_t _poles);
 
-    IResult<> set_abz_resolution(const uint16_t abzResolution);
+    [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abzResolution);
 
-    IResult<> set_zero_position(const uint16_t zeroPosition);
+    [[nodiscard]] IResult<> set_zero_position(const uint16_t zeroPosition);
 
-    IResult<> set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth);
+    [[nodiscard]] IResult<> set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth);
 
-    IResult<> set_hysteresis(const Hysteresis hysteresis);
+    [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
 
-    IResult<> enable_fast_mode(const bool en = true);
+    [[nodiscard]] IResult<> enable_fast_mode(const bool en = true);
 
-    IResult<> enable_pwm(const bool enable = true);
+    [[nodiscard]] IResult<> enable_pwm(const bool enable = true);
 
-    IResult<> set_pwm_polarity(const bool polarity);
+    [[nodiscard]] IResult<> set_pwm_polarity(const bool polarity);
 
-    IResult<> set_pwm_freq(const PwmFreq pwmFreq);
+    [[nodiscard]] IResult<> set_pwm_freq(const PwmFreq pwmFreq);
 
-    IResult<> set_start(const real_t start);
+    [[nodiscard]] IResult<> set_start_position(const real_t start);
 
-    IResult<> set_stop(const real_t stop);
+    [[nodiscard]] IResult<> set_stop_position(const real_t stop);
+private:
+    struct Semantic{
+        union{
+            struct{
+                uint32_t crc:6;
+                union{
+                    struct{
+                        uint32_t stat:2;
+                        uint32_t pushed:1;
+                        uint32_t overspd:1;
+                    };
+                    uint32_t mg:4;
+                };
+                uint16_t data_14bit:14;
+            };
+            struct{
+                uint8_t data8;
+                uint16_t data16;
+            };
+        };
+        
+        Semantic(const uint16_t data):data8(0), data16(data){;}
+
+        Semantic(const uint8_t _data8, const uint16_t _data16):data8(_data8), data16(_data16){;}
+        
+        __inline IResult<> validate_fast() const {
+            if(pushed) return Err(Error::MagnetHigh);
+            if(overspd) return Err(Error::OverSpeed);
+            return Ok();
+        }
+
+        __inline IResult<> validate() const {
+            if(pushed) return Err(Error::MagnetHigh);
+            if(overspd) return Err(Error::OverSpeed);
+            if(is_crc_ok() == false) return Err(Error::WrongCrc);
+            return Ok();
+        }
+
+    private:
+        __inline bool is_crc_ok() const{
+            return true;//TODO
+        }
+    };
+    
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
+
+    MT6701_Phy phy_;
+    Semantic semantic = {0, 0};
+    real_t lap_position = real_t(0);
+    bool fast_mode = true;
+
 };
 
 }

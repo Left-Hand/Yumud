@@ -67,9 +67,6 @@ public:
 
     void update();
 
-    bool is_stable(){
-        return encoder.is_stable().unwrap();
-    }
 
     virtual real_t getPosition(){
         return accPosition;

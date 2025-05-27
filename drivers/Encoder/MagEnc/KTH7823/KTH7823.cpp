@@ -24,7 +24,7 @@ IResult<> KTH7823::update(){
     if(res.is_err()) return Err(res.unwrap_err());
 
     const auto data = res.unwrap();
-    lap_position = q16(data) >> 16;
+    lap_position_ = u16_to_uni(data);
 
     return Ok();
 }

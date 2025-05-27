@@ -17,7 +17,7 @@ using namespace ymd;
 using Error = MT6701::Error;
 
 template<typename T = void>
-using IResult = typename MT6701::IResult<T>;
+using IResult = Result<T, Error>;
 
 
 #define MT6701_NO_I2C_FAULT\
@@ -95,10 +95,6 @@ IResult<real_t> MT6701::get_lap_position(){
     return Ok(lap_position);
 }
 
-IResult<bool> MT6701::is_stable(){
-    return Ok(semantic.valid(fast_mode));
-}
-
 
 IResult<> MT6701::enable_uvwmux(const bool enable){
     uvwMuxReg.uvwMux = enable;
@@ -164,7 +160,7 @@ IResult<> MT6701::set_pwm_freq(const PwmFreq pwmFreq){
     return phy_.write_reg(RegAddress::WireConfig, uint8_t(wireConfigReg));
 }
 
-IResult<> MT6701::set_start(const real_t start){
+IResult<> MT6701::set_start_position(const real_t start){
     uint16_t _startData = uni_to_u16(start);
     _startData >>= 4;
     startData = _startData;
@@ -175,7 +171,7 @@ IResult<> MT6701::set_start(const real_t start){
         ;
 }
 
-IResult<> MT6701::set_stop(const real_t stop){
+IResult<> MT6701::set_stop_position(const real_t stop){
     uint16_t _stopData = uni_to_u16(stop);
     _stopData >>= 4;
     stopData = _stopData;

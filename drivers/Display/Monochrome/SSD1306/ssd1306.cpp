@@ -8,22 +8,14 @@ using Error = SSD13XX::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
-
-IResult<> SSD13XX::setpos_unsafe(const Vector2u & pos){
-    // auto & frame = fetch_frame();
-    // frame.setpos_unsafe(pos);
-    TODO("not implemented");
-    return Ok();
-}
-
-IResult<> SSD13XX::set_offset(){
+IResult<> SSD13XX::set_offset(const Vector2u16 offset){
     if(const auto res = phy_.write_command(0xD3); res.is_err()) return res; 
-    if(const auto res = phy_.write_command(offset_.y); res.is_err()) return res;
+    if(const auto res = phy_.write_command(offset.y); res.is_err()) return res;
     return Ok();
 }
 
 
-IResult<> SSD13XX::set_flush_pos(const Vector2u & pos){
+IResult<> SSD13XX::set_flush_pos(const Vector2u16 pos){
     const auto [x, y] = pos + offset_;
     if(const auto res = phy_.write_command(0xb0 | size_t(y / 8));
         res.is_err()) return res;
@@ -39,17 +31,17 @@ IResult<> SSD13XX::init(){
         res.is_err()) return res;
     if(const auto res = preinit_by_cmds(); 
         res.is_err()) return res;
-    if(const auto res = enable(); 
+    if(const auto res = enable_display(); 
         res.is_err()) return res;
-    if(const auto res = set_offset() ; 
+    if(const auto res = set_offset(offset_); 
         res.is_err()) return res;
-    if(const auto res = enable_flip_x(config_.flip_x); 
+    if(const auto res = enable_flip_x(config_.flip_x_en); 
         res.is_err()) return res;
-    if(const auto res = enable_flip_y(config_.flip_y); 
+    if(const auto res = enable_flip_y(config_.flip_y_en); 
         res.is_err()) return res;
     return Ok();
 }
-IResult<> SSD13XX::enable(const bool en){
+IResult<> SSD13XX::enable_display(const bool en){
     
     if(en){
         if(const auto res = phy_.write_command(0x8D);
@@ -73,7 +65,7 @@ IResult<> SSD13XX::enable(const bool en){
 IResult<> SSD13XX::update(){
     auto & frame = fetch_frame();
     for(size_t y = 0; y < size().y; y += 8){
-        if(const auto res = set_flush_pos(Vector2u(0, y)); 
+        if(const auto res = set_flush_pos(Vector2u16(0, y)); 
             res.is_err()) return res;
 
         const auto line = std::span<const uint8_t>(
@@ -95,8 +87,8 @@ IResult<> SSD13XX::preinit_by_cmds(){
     return Ok();
 }
 
-IResult<> SSD13XX::turn_display(const bool i){
-    if(const auto res = phy_.write_command(0xC8 - 8*uint8_t(i));
-        res.is_err()) return res;  //正常显示
-    return phy_.write_command(0xA1 - uint8_t(i));
-}
+// IResult<> SSD13XX::enable_inversion(const bool i){
+//     if(const auto res = phy_.write_command(0xC8 - 8*uint8_t(i));
+//         res.is_err()) return res;  //正常显示
+//     return phy_.write_command(0xA1 - uint8_t(i));
+// }

@@ -326,6 +326,8 @@ using Vector2q = Vector2<iq_t<Q>>;
 using Vector2f = Vector2<float>;
 using Vector2i = Vector2<int>;
 using Vector2u = Vector2<uint>;
+using Vector2u8 = Vector2<uint8_t>;
+using Vector2u16 = Vector2<uint16_t>;
 
 }
 

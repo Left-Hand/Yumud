@@ -299,6 +299,8 @@ using Rect2u = Rect2<uint>;
 template<size_t Q>
 using Rect2q = Rect2<iq_t<Q>>;
 
+using Rect2u8 = Rect2<uint8_t>;
+using Rect2u16 = Rect2<uint16_t>;
 
 template<typename T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Rect2<T> & value){

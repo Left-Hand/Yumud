@@ -41,7 +41,8 @@ private:
 public:
     MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MT6816(hal::Spi & _bus, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{_bus, index}){;}
+    MT6816(hal::Spi & _bus, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv{_bus, index}){;}
 
     IResult<> init();
     IResult<> update();
@@ -49,7 +50,13 @@ public:
     IResult<real_t> get_lap_position() { return Ok(lap_position_);}
     uint32_t get_err_cnt() const {return err_cnt_;}
 
-    IResult<bool> is_stable() {return Ok(last_sema_.no_mag == false);}
+    IResult<MagStatus> get_mag_status() {
+        if(last_sema_.no_mag){
+            return Ok(MagStatus::Low());
+        }else{
+            return Ok(MagStatus::Proper());
+        }
+    }
 };
 
 };

@@ -11,16 +11,16 @@ void SelfCheckTasker::run(){
         case SubState::TEST_MAG:
             odo_.update();
 
-            if(odo_.encoder.is_stable().unwrap() == false){
-                // throw_error(ErrorCode::ODO_NO_SIGNAL, ("odometer is not stable"));
-                // return RunStatus::ERROR;
+            // if(odo_.encoder.get_mag_status().unwrap().is_proper() == false){
+            //     // throw_error(ErrorCode::ODO_NO_SIGNAL, ("odometer is not stable"));
+            //     // return RunStatus::ERROR;
                 
-            }else{
+            // }else{
                 odo_.reset();
                 odo_.update();
                 move_range = Range2<real_t>::from_center_and_length(odo_.getPosition(), 0);
                 sw_state(SubState::TEST_A);
-            }
+            // }
             break;
 
         case SubState::TEST_A:
