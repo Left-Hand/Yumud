@@ -44,7 +44,7 @@ protected:
         swRst = 0x7f
     };
 
-    uint16_t dir;
+    uint16_t dir_reg;
     uint16_t inten;
     CtlReg ctl;
     uint16_t ledMode;
@@ -79,9 +79,9 @@ protected:
     class AW9523Pwm:public hal::PwmIntf{
     protected:
         AW9523 & aw9523;
-        hal::Pin pin;
+        hal::PinSource pin;
 
-        AW9523Pwm(AW9523 & _aw9523, const hal::Pin _pin):aw9523(_aw9523), pin(_pin){;}
+        AW9523Pwm(AW9523 & _aw9523, const hal::PinSource _pin):aw9523(_aw9523), pin(_pin){;}
 
         DELETE_COPY_AND_MOVE(AW9523Pwm)
         
@@ -126,16 +126,16 @@ public:
 
     void enable_irq_by_index(const size_t index, const bool en = true);
 
-    void enable_led_mode(const hal::Pin pin, const bool en = true);
+    void enable_led_mode(const hal::PinSource pin, const bool en = true);
 
     void set_led_current_limit(const CurrentLimit limit);
 
-    void set_led_current(const hal::Pin pin, const uint8_t current);
+    void set_led_current(const hal::PinSource pin, const uint8_t current);
     
     bool validate();
 
     AW9523Pwm operator [](const size_t index){
-        return AW9523Pwm(*this, hal::Pin(1 << index));
+        return AW9523Pwm(*this, hal::PinSource(1 << index));
     }
 };
 

@@ -12,8 +12,8 @@ public:
     virtual void set_by_index(const size_t index);
     virtual void clr_by_index(const size_t index);
 
-    void set_pin(const Pin pin){set_by_mask(uint16_t(pin));}
-    void clr_pin(const Pin pin){clr_by_mask(uint16_t(pin));}
+    void set_pin(const PinSource pin){set_by_mask(uint16_t(pin));}
+    void clr_pin(const PinSource pin){clr_by_mask(uint16_t(pin));}
 
     virtual void set_by_mask(const uint16_t mask) = 0;
     virtual void clr_by_mask(const uint16_t mask) = 0;

@@ -14,22 +14,22 @@ public:
     GpioPort(GPIO_TypeDef * _instance):
         instance(_instance),
         channels{
-            Gpio(instance, Pin::_0),
-            Gpio(instance, Pin::_1),
-            Gpio(instance, Pin::_2),
-            Gpio(instance, Pin::_3),
-            Gpio(instance, Pin::_4),
-            Gpio(instance, Pin::_5),
-            Gpio(instance, Pin::_6),
-            Gpio(instance, Pin::_7),
-            Gpio(instance, Pin::_8),
-            Gpio(instance, Pin::_9),
-            Gpio(instance, Pin::_10),
-            Gpio(instance, Pin::_11),
-            Gpio(instance, Pin::_12),
-            Gpio(instance, Pin::_13),
-            Gpio(instance, Pin::_14),
-            Gpio(instance, Pin::_15),
+            Gpio(instance, PinSource::_0),
+            Gpio(instance, PinSource::_1),
+            Gpio(instance, PinSource::_2),
+            Gpio(instance, PinSource::_3),
+            Gpio(instance, PinSource::_4),
+            Gpio(instance, PinSource::_5),
+            Gpio(instance, PinSource::_6),
+            Gpio(instance, PinSource::_7),
+            Gpio(instance, PinSource::_8),
+            Gpio(instance, PinSource::_9),
+            Gpio(instance, PinSource::_10),
+            Gpio(instance, PinSource::_11),
+            Gpio(instance, PinSource::_12),
+            Gpio(instance, PinSource::_13),
+            Gpio(instance, PinSource::_14),
+            Gpio(instance, PinSource::_15),
         }{;}
     void init();
     void enableRcc(const bool en = true);
@@ -47,8 +47,8 @@ public:
         return channels[index & 0b1111];
     };
 
-    Gpio & operator [](const Pin pin){
-        if(pin != Pin::None) return channels[CTZ(uint16_t(pin)) & 0b1111];
+    Gpio & operator [](const PinSource pin){
+        if(pin != PinSource::None) return channels[CTZ(uint16_t(pin)) & 0b1111];
         else return Gpio::null();
     };
 

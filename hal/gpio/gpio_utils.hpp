@@ -4,7 +4,9 @@
 #include "core/platform.hpp"
 
 namespace ymd::hal{
-enum class Pin:uint16_t{
+
+
+enum class PinSource:uint16_t{
     None,
     _0 = 1 << 0,
     _1 = 1 << 1,
@@ -24,6 +26,45 @@ enum class Pin:uint16_t{
     _15 = 1 << 15,
 };
 
+class PinMask{
+public:
+    explicit constexpr PinMask(const uint16_t raw):
+        raw_(raw){;}
+
+    explicit constexpr PinMask(const PinSource source):
+        raw_(std::bit_cast<uint16_t>(raw_)){;}
+
+    static constexpr PinMask from_u16(const uint16_t raw){
+        return PinMask(raw);
+    }
+
+    constexpr uint16_t to_u16() const {return raw_;}
+    constexpr PinSource to_source() const {
+        return std::bit_cast<PinSource>(raw_);}
+
+    constexpr PinMask operator | (const PinMask other) const {
+        return PinMask(raw_ | other.raw_);
+    }
+
+    constexpr PinMask operator & (const PinMask other) const {
+        return PinMask(raw_ & other.raw_);
+    }
+
+    constexpr PinMask operator ~() const {
+        return PinMask(~raw_);
+    }
+private:
+    uint16_t raw_;
+};
+
+enum class PortSource:uint8_t{
+    PA,
+    PB,
+    PC,
+    PD,
+    PE,
+    PF
+};
 
 enum class PinName:uint8_t{
     #define PINNAME_CREATE_TEMPLATE(x, n)\
@@ -67,44 +108,55 @@ enum class PinName:uint8_t{
     #endif
 };
 
+class GpioMode{
+public:
+    enum class Kind:uint8_t{
+        InAnalog = 0b0000,
+        InFloating = 0b0100,
+        InPullUP = 0b1000,
+        InPullDN = 0b1100,
+        OutPP = 0b0011,
+        OutOD = 0b0111,
+        OutAfPP = 0b1011,
+        OutAfOD = 0b1111
+    };
+    using enum Kind;
 
-enum class GpioMode:uint8_t{
-#if defined(HDW_SXX32)
-    InAnalog = 0b0000,
-    InFloating = 0b0100,
-    InPullUP = 0b1000,
-    InPullDN = 0b1100,
-    OutPP = 0b0011,
-    OutOD = 0b0111,
-    OutAfPP = 0b1011,
-    OutAfOD = 0b1111
-#elif defined(USE_STM32_HAL_LIB)
-    InAnalog = GPIO_MODE_ANALOG,
-    InFloating = GPIO_MODE_INPUT,
-    InPullUP = GPIO_MODE_INPUT,
-    InPullDN = GPIO_MODE_INPUT,
-    OutPP = GPIO_MODE_OUTPUT_PP,
-    OutOD = GPIO_MODE_OUTPUT_OD,
-    OutAfPP = GPIO_MODE_AF_PP,
-#endif
+    constexpr GpioMode(const Kind kind):kind_(kind){;}
+
+    constexpr bool operator ==(const Kind kind) const 
+        {return kind_ == kind;}
+    constexpr bool operator ==(const GpioMode other) const
+        {return kind_ == other.kind_;}
+    constexpr bool is_in_mode() const {
+        return (kind_ == InAnalog) 
+        || (kind_ == InFloating) 
+        || (kind_ == InPullUP) 
+        || (kind_ == InPullDN);
+    }
+
+    constexpr bool is_out_mode() const {
+        return (kind_ == OutPP)
+        || (kind_ == OutOD)
+        || (kind_ == OutAfPP)
+        || (kind_ == OutAfOD);
+    }
+
+    constexpr bool is_outpp_mode() const {
+        return (kind_ == OutPP)
+        || (kind_ == OutAfPP);
+    }
+
+    constexpr bool is_outod_mode() const {
+        return (kind_ == OutOD)
+        || (kind_ == OutAfOD);
+    }
+
+    explicit operator uint8_t() const {
+        return std::bit_cast<uint8_t>(kind_);
+    }
+private:
+    Kind kind_;
 };
 
-
-namespace GpioUtils{
-    __inline scexpr bool isIn(const GpioMode mode){
-        return mode == GpioMode::InAnalog || mode == GpioMode::InFloating || mode == GpioMode::InPullUP || mode == GpioMode::InPullDN;
-    }
-
-    __inline scexpr bool isOut(const GpioMode mode){
-        return mode == GpioMode::OutPP || mode == GpioMode::OutOD || mode == GpioMode::OutAfPP || mode == GpioMode::OutAfOD;
-    }
-
-    __inline scexpr bool isPP(const GpioMode mode){
-        return mode == GpioMode::OutPP || mode == GpioMode::OutAfPP;
-    }
-
-    __inline scexpr bool isOD(const GpioMode mode){
-        return mode == GpioMode::OutOD || mode == GpioMode::OutAfOD;
-    }
-}
 }

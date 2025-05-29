@@ -32,12 +32,14 @@ BoolLevel AW9523::read_by_index(const size_t index){
 void AW9523::set_mode(const size_t index, const hal::GpioMode mode){
     if(false == is_index_valid(index))return;
     uint16_t mask = 1 << index;
-    if(hal::GpioUtils::isIn(mode)) dir |= mask;
-    else dir &= ~mask;
-    write_reg(RegAddress::dir, dir);
+    if(mode.is_in_mode()) 
+        dir_reg |= mask;
+    else 
+        dir_reg &= ~mask;
+    write_reg(RegAddress::dir, dir_reg);
 
     if(index < 8){
-        ctl.p0mod = hal::GpioUtils::isPP(mode);
+        ctl.p0mod = mode.is_outpp_mode();
         write_reg(RegAddress::ctl, ctl);
     }
 }
@@ -47,7 +49,7 @@ void AW9523::enable_irq_by_index(const size_t index, const bool en ){
     write_reg(RegAddress::inten, (uint8_t)(en << index));
 }
 
-void AW9523::enable_led_mode(const hal::Pin pin, const bool en){
+void AW9523::enable_led_mode(const hal::PinSource pin, const bool en){
     uint index = CTZ((uint16_t)pin);
     if(en) ledMode &= ~(1 << index);
     else ledMode |= (1 << index);
@@ -59,7 +61,7 @@ void AW9523::set_led_current_limit(const CurrentLimit limit){
     write_reg(RegAddress::ctl, ctl);
 }
 
-void AW9523::set_led_current(const hal::Pin pin, const uint8_t current){
+void AW9523::set_led_current(const hal::PinSource pin, const uint8_t current){
     uint index = CTZ((uint16_t)pin);
     if(index < 8) index += 4;
     else if(index < 12) index -= 8;

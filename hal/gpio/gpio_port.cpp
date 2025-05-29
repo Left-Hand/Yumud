@@ -4,7 +4,10 @@
 using namespace ymd::hal;
 
 void GpioPort::set_mode(const size_t index, const GpioMode mode){
-    Gpio gpio = Gpio(instance, (Pin)(1 << index));
+    Gpio gpio = Gpio(
+        instance, 
+        std::bit_cast<PinSource>(uint16_t(1 << index))
+    );
     gpio.set_mode(mode);
 }
 

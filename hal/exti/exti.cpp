@@ -3,98 +3,61 @@
 
 using namespace ymd::hal;
 
-ExtiChannel::ExtiChannel(const Line _line, const NvicPriority & _priority,
-        const Trigger _trigger, const Mode _mode):
+using TrigEdge = ExtiTrigEdge;
+using TrigMode = ExtiTrigMode;
+using TrigSource = ExtiTrigSource;
 
-    line(_line), 
-    gpio(nullptr), 
-    gpio_mode(GpioMode::InAnalog),
-    priority(_priority), 
-    trigger(_trigger), 
-    mode(_mode){;}
+ExtiChannel::ExtiChannel(
+    const TrigSource source, 
+    const NvicPriority priority,
+    const TrigEdge edge, 
+    const TrigMode mode
+):
 
-
-ExtiChannel::ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
-        const Trigger _trigger,  const Mode _mode):
-
-    line(from_gpio_to_line(_gpio)), 
-    gpio(&_gpio),
-    gpio_mode(
-        (trigger == Trigger::Dual)? GpioMode::InFloating : 
-        ((trigger == Trigger::Rising)? GpioMode::InPullDN : GpioMode::InPullUP)
-    ),
-    priority(_priority), 
-    trigger(_trigger),
-    mode(_mode){;}
+    source_(source), 
+    p_gpio_(nullptr), 
+    gpio_mode_(GpioMode::InAnalog),
+    priority_(priority), 
+    edge_(edge), 
+    mode_(mode){;}
 
 
-ExtiChannel::Source ExtiChannel::from_gpio_to_source(const Gpio & gpio){
-    switch((uint32_t)gpio.inst()){
-        default:
-        #ifdef ENABLE_GPIOA
-        case GPIOA_BASE:
-            return Source::PA;
-        #endif
-        #ifdef ENABLE_GPIOB
-        case GPIOB_BASE:
-            return Source::PB;
-        #endif
-        #ifdef ENABLE_GPIOC
-        case GPIOC_BASE:
-            return Source::PC;
-        #endif
-        #ifdef ENABLE_GPIOD
-        case GPIOD_BASE:
-            return Source::PD;
-        #endif
-        #ifdef ENABLE_GPIOE
-        case GPIOE_BASE:
-            return Source::PE;
-        #endif
-        #ifdef ENABLE_GPIOF
-        case GPIOF_BASE:
-            return Source::PF;
-        #endif
-    }
-}
-
-
-ExtiChannel::Line ExtiChannel::from_gpio_to_line(const Gpio & gpio){
-    return gpio.valid() ? (Line)(1 << gpio.valid()) : (Line::_None);
-}
-
-
-IRQn ExtiChannel::from_line_to_irqn(const Line line){
-    switch(line){
-        case Line::_0: return EXTI0_IRQn;
-        case Line::_1: return EXTI1_IRQn;
-        case Line::_2: return EXTI2_IRQn;
-        case Line::_3: return EXTI3_IRQn;
-        case Line::_4: return EXTI4_IRQn;
-        case Line::_5 ... Line::_9: return EXTI9_5_IRQn;
-        case Line::_10 ... Line::_15: return EXTI15_10_IRQn;
-        default: return IRQn(0);
-    }
-}
+ExtiChannel::ExtiChannel(
+    Gpio & gpio, 
+    const NvicPriority priority,
+    const TrigEdge edge,
+    const TrigMode mode
+):
+    source_(map_pinsource_to_trigsource(gpio.pin())), 
+    p_gpio_(&gpio),
+    gpio_mode_(map_edge_to_gpiomode(edge)),
+    priority_(priority), 
+    edge_(edge),
+    mode_(mode){;}
 
 
 void ExtiChannel::init(){
-    if(gpio){
-        gpio->set_mode(gpio_mode);
-        if(gpio->index() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->index());
+    if(p_gpio_){
+        p_gpio_->set_mode(gpio_mode_);
+        if(p_gpio_->is_valid()){
+            GPIO_EXTILineConfig(
+                std::bit_cast<uint8_t>(p_gpio_->port()), 
+                std::bit_cast<uint8_t>(p_gpio_->index())
+            );
+        }
     }
 
     EXTI_InitTypeDef EXTI_InitStructure{
-        .EXTI_Line = (uint32_t)line,
-        .EXTI_Mode = (EXTIMode_TypeDef)mode,
-        .EXTI_Trigger = (EXTITrigger_TypeDef)trigger,
+        .EXTI_Line = (uint32_t)source_,
+        .EXTI_Mode = (EXTIMode_TypeDef)mode_,
+        .EXTI_Trigger = (EXTITrigger_TypeDef)edge_,
         .EXTI_LineCmd = ENABLE
     };
 
     EXTI_Init(&EXTI_InitStructure);
 
-    if(mode == Mode::Interrupt){
-        enableIt(true);
+    if(mode_ == TrigMode::Interrupt){
+        enable_it(true);
     }
 }
 
@@ -103,9 +66,9 @@ void ExtiChannel::init(){
 static std::array<std::function<void(void)>, 21> funcs;
 
 #define EXTI_INTERRUPT_CONTENT_TEMPLATE(n)\
-if(EXTI_GetITStatus((uint32_t)ExtiChannel::Line::_##n)){\
+if(EXTI_GetITStatus((uint32_t)ExtiChannel::TrigSource::_##n)){\
     if(funcs[n]) funcs[n]();\
-    EXTI_ClearITPendingBit((uint32_t)ExtiChannel::Line::_##n);\
+    EXTI_ClearITPendingBit((uint32_t)ExtiChannel::TrigSource::_##n);\
 }\
 
 #define EXTI_INTERRUPT_HANDLER_TEMPLATE_BEGIN(n)\

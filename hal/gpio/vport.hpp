@@ -170,11 +170,11 @@ public:
 //         }
 //     }
 
-//     void set_pin(const Pin pin) override{
+//     void set_pin(const PinSource pin) override{
 //         const auto i = CTZ(uint16_t(pin));
 //         if(isIndexValid(i)) pin_ptrs[]->set_pin();
 //     }
-//     void clr_pin(const Pin pin) override{
+//     void clr_pin(const PinSource pin) override{
 //         const auto i = CTZ(uint16_t(pin));
 //         if(isIndexValid(i)) pin_ptrs[i]->clr_pin();
 //     }

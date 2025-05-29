@@ -9,108 +9,94 @@
 namespace ymd::hal{
 
 class CaptureChannelIntf{
-    virtual Microseconds getPulseUs() const = 0;
-    virtual Microseconds getPeriodUs() const = 0;
-    virtual void init() = 0;
-};
-
-class CaptureChannelConcept:public CaptureChannelIntf{
-protected:
-    Microseconds pulse = 0us;
-    Microseconds period = 0us;
-    const uint32_t unit;
-    const bool double_edge;
 public:
-    CaptureChannelConcept(const uint32_t _unit,const bool _double_edge): unit(_unit), double_edge(_double_edge){;}
-    real_t getFreq() const{
-        // #ifdef USE_IQ
+    virtual Microseconds get_pulse_us() const = 0;
+    virtual Microseconds get_period_us() const = 0;
+};
+
+struct CaptureChannelUtils{ 
+
+    template<typename T, typename U>
+    static constexpr auto map_pulse_and_period_to_duty(
+        const T pulse_, 
+        const U period_
+    ) {
         if constexpr(is_fixed_point_v<real_t>){
-            // real_t unit_value;
-            // real_t period_value;
-            // unit_value.value = _iq<16>(unit);
-            // period_value.value = _iq<16>(period);
-            return unit / period.count();
+            return pulse_ / period_;
         }else{
-            return unit / period.count();
+            return pulse_ / period_;
         }
-        //     float unit_value = unit;
-        //     float period_value = period;
-        //     return unit_value / period_value;
-        // }
     }
 
-    real_t getDuty() const{
+    template<typename T, typename U>
+    static constexpr auto map_unit_and_period_to_freq(
+        const T unit_, 
+        const U period_
+    ){
         if constexpr(is_fixed_point_v<real_t>){
-            // real_t pulse_value;
-            // real_t period_value;
-            // pulse_value.value = _iq<16>(pulse);
-            // period_value.value = _iq<16>(period);
-            // return pulse_value/period_value;
-            return unit / period.count();
-
+            return unit_ / period_;
         }else{
-            return pulse.count() / period.count();
+            return unit_ / period_;
         }
     }
 };
 
-class CaptureChannel:public CaptureChannelConcept{
 
-};
-
-class CaptureChannelExti:public CaptureChannelConcept{
-protected:
-    ExtiChannel instance;
-    Microseconds last_t;
-    std::function<void(void)> cb;
-
+class CaptureChannelExti final:public CaptureChannelIntf{
+public:
     void update(){
-        if(double_edge){
-            if(instance.gpio == nullptr) return;
-            bool val = bool(instance.gpio->read());
+        if(double_edge_){
+            if(instance_.p_gpio_ == nullptr) return;
+            bool val = bool(instance_.p_gpio_->read());
 
             if(val == false){
                 const auto current_t = clock::micros();
-                pulse = current_t - last_t;
-                last_t = current_t;
+                pulse_ = current_t - last_t_;
+                last_t_ = current_t;
             }else{
                 const auto current_t = clock::micros();
-                period = current_t - last_t + pulse;
-                last_t = current_t;
-                EXECUTE(cb);
+                period_ = current_t - last_t_ + pulse_;
+                last_t_ = current_t;
+                EXECUTE(cb_);
             }
         }else{
             const auto current_t = clock::micros();
-            period = current_t - last_t;
-            last_t = current_t;
-            EXECUTE(cb);
+            period_ = current_t - last_t_;
+            last_t_ = current_t;
+            EXECUTE(cb_);
         }
     }
 public:
-    CaptureChannelExti(const ExtiChannel && _instance):
-        CaptureChannelConcept(1000000, 
-                _instance.trigger == ExtiChannel::Trigger::Dual), 
-        instance(_instance){;}
-
-    CaptureChannelExti(const ExtiChannel & _instance):CaptureChannelExti(std::move(_instance)){;}
-
-    void init() override{
-        instance.init();
-        instance.bindCb([this](){this->update();});
-        instance.enableIt();
+    CaptureChannelExti(ExtiChannel & instance):
+        instance_(instance),
+        unit_(1000000), 
+        double_edge_(instance.edge_ == ExtiTrigEdge::Dual){;}
+    void init(){
+        instance_.init();
+        instance_.bind_cb([this](){this->update();});
+        instance_.enable_it();
     }
 
-    void bindCb(std::function<void(void)> && _cb){
-        cb = _cb;
+    template<typename Fn>
+    void bind_cb(Fn && _cb){
+        cb_ = std::function<void(void)>(std::move(_cb));
     }
 
-    Microseconds getPulseUs() const override{
-        return pulse;
+    Microseconds get_pulse_us() const{
+        return pulse_;
     }
 
-    Microseconds getPeriodUs() const override{
-        return period;
+    Microseconds get_period_us() const{
+        return period_;
     }
+private:
+    ExtiChannel & instance_;
+    const uint32_t unit_;
+    const bool double_edge_;
+    std::function<void(void)> cb_ = nullptr;
+    Microseconds last_t_ = 0us;
+    Microseconds pulse_ = 0us;
+    Microseconds period_ = 0us;
 };
 
 
