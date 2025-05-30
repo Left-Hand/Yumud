@@ -423,7 +423,7 @@ hal::HalResult LT8920::updateFifoStatus(){
 
 bool LT8920::getFifoStatus(){
     if(fifo_status_gpio){
-        return bool(fifo_status_gpio->read());
+        return fifo_status_gpio->read().to_bool();
     }else{
         updateFifoStatus();
         return flag_reg.fifoFlag;
@@ -432,7 +432,7 @@ bool LT8920::getFifoStatus(){
 
 bool LT8920::getPktStatus(){
     if(pkt_status_gpio){
-        return bool(pkt_status_gpio->read());
+        return pkt_status_gpio->read().to_bool();
     }else{
         updateFifoStatus();
         return flag_reg.pktFlag;

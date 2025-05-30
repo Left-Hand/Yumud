@@ -25,13 +25,13 @@ using namespace ymd::drivers;
 using Error = PCA9685::Error;
 using Vport = PCA9685::PCA9685_Vport;
 
-void Vport::write_mask(const uint16_t data){
+void Vport::write_mask(const hal::PinMask mask){
     TODO();
 }
 
-uint16_t Vport::read_mask(){
+hal::PinMask Vport::read_mask(){
     TODO();
-    return 0;
+    return hal::PinMask::from_index(0);
 }
 
 Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
@@ -146,19 +146,19 @@ Result<void, Error> PCA9685::enable_sleep(const bool en){
     return write_reg(RegAddress::Mode1, mode1_reg);
 }
 
-void Vport::set_by_mask(const uint16_t mask){
+void Vport::set_by_mask(const hal::PinMask mask){
     TODO();
     // buf |= mask;
     // write(buf);
 }
 
-void Vport::clr_by_mask(const uint16_t mask){
+void Vport::clr_by_mask(const hal::PinMask mask){
     TODO();
     // buf &= ~mask;
     // write(buf);
 }
 
-void Vport::write_by_mask(const uint16_t mask){
+void Vport::write_by_mask(const hal::PinMask mask){
     TODO();
     // buf &= ~mask;
     // write(buf);

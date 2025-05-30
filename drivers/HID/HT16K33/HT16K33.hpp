@@ -230,7 +230,7 @@ private:
     }
 
     IResult<> system_setup(const Enable en){
-        return write_command(SystemSetup{bool(en)});
+        return write_command(SystemSetup{en.to_bool()});
     }
 
     IResult<> set_int_pin_func(const IntPinFunc func){

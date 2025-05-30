@@ -157,7 +157,7 @@ hal::HalResult I2cHw::write(const uint32_t data){
 }
 
 hal::HalResult I2cHw::read(uint32_t & data, const Ack ack){
-    I2C_AcknowledgeConfig(instance, bool(ack));
+    I2C_AcknowledgeConfig(instance, ack == ACK);
     while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));
     data = I2C_ReceiveData(instance);

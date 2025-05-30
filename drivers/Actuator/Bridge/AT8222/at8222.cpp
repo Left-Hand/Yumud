@@ -10,7 +10,7 @@ void AT8222::init(){
 }
 
 void AT8222::enable(const bool en){
-    enable_gpio_.write(BoolLevel::from(en));
+    enable_gpio_.write(en ? HIGH : LOW);
     if(!en){
         forward_pwm_.set_duty(real_t(1));
         backward_pwm_.set_duty(real_t(1));

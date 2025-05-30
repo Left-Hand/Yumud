@@ -23,7 +23,7 @@ public:
     }
 
     void init(const Level level){
-        if(level){
+        if(level == HIGH){
             m_gpio.inpd();
         }else{
             m_gpio.inpu();
@@ -32,7 +32,7 @@ public:
 
     void update() {
         last_state = now_state;
-        filter.update(bool(m_gpio.read()));
+        filter.update(m_gpio.read().to_bool());
         now_state = filter.result();
     }
 

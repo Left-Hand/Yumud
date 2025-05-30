@@ -36,7 +36,7 @@ IResult<> TM7705_Phy::read_byte(uint8_t & ret){   //从TM7705寄存器读数据
     {
         sclk_gpio_= LOW;
         clock::delay(1us);
-        dat2=(dat2<<1) | bool(dout_gpio_.read());	  // 高位先读
+        dat2=(dat2<<1) | dout_gpio_.read().to_bool();	  // 高位先读
         clock::delay(1us);
         sclk_gpio_ = HIGH;
         clock::delay(1us);

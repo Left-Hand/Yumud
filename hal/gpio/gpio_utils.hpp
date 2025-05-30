@@ -28,34 +28,72 @@ enum class PinSource:uint16_t{
 
 class PinMask{
 public:
-    explicit constexpr PinMask(const uint16_t raw):
+    [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
         raw_(raw){;}
 
-    explicit constexpr PinMask(const PinSource source):
+    [[nodiscard]] explicit constexpr PinMask(const PinSource source):
         raw_(std::bit_cast<uint16_t>(raw_)){;}
 
-    static constexpr PinMask from_u16(const uint16_t raw){
+    [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
         return PinMask(raw);
     }
 
-    constexpr uint16_t to_u16() const {return raw_;}
-    constexpr PinSource to_source() const {
+    [[nodiscard]] static constexpr PinMask from_index(const size_t index){
+        return PinMask(uint16_t(1 << index));
+    }
+    [[nodiscard]] constexpr uint16_t as_u16() const {return raw_;}
+    [[nodiscard]] constexpr PinSource as_source() const {
         return std::bit_cast<PinSource>(raw_);}
 
-    constexpr PinMask operator | (const PinMask other) const {
+
+    [[nodiscard]] constexpr bool test(size_t idx) const {
+        return raw_ & (1 << idx);
+    }
+
+    [[nodiscard]] constexpr PinMask modify(size_t idx, const BoolLevel level) const {
+        if(level == HIGH) return PinMask(raw_ | (1 << idx));
+        else return PinMask(raw_ & (~(1 << idx)));
+    }
+
+    [[nodiscard]] constexpr PinMask operator | (const PinMask other) const {
         return PinMask(raw_ | other.raw_);
     }
 
-    constexpr PinMask operator & (const PinMask other) const {
+    [[nodiscard]] constexpr PinMask operator & (const PinMask other) const {
         return PinMask(raw_ & other.raw_);
     }
 
-    constexpr PinMask operator ~() const {
+    [[nodiscard]] constexpr PinMask operator ~() const {
         return PinMask(~raw_);
+    }
+
+    [[nodiscard]] constexpr operator bool(){
+        return raw_;
     }
 private:
     uint16_t raw_;
 };
+
+
+// struct PinSource{
+//     static constexpr PinMask None = PinMask(0);
+//     static constexpr PinMask _0 =   PinMask::from_index(0);
+//     static constexpr PinMask _1 =   PinMask::from_index(1);
+//     static constexpr PinMask _2 =   PinMask::from_index(2);
+//     static constexpr PinMask _3 =   PinMask::from_index(3);
+//     static constexpr PinMask _4 =   PinMask::from_index(4);
+//     static constexpr PinMask _5 =   PinMask::from_index(5);
+//     static constexpr PinMask _6 =   PinMask::from_index(6);
+//     static constexpr PinMask _7 =   PinMask::from_index(7);
+//     static constexpr PinMask _8 =   PinMask::from_index(8);
+//     static constexpr PinMask _9 =   PinMask::from_index(9);
+//     static constexpr PinMask _10 =  PinMask::from_index(10);
+//     static constexpr PinMask _11 =  PinMask::from_index(11);
+//     static constexpr PinMask _12 =  PinMask::from_index(12);
+//     static constexpr PinMask _13 =  PinMask::from_index(13);
+//     static constexpr PinMask _14 =  PinMask::from_index(14);
+//     static constexpr PinMask _15 =  PinMask::from_index(15);
+// };
 
 enum class PortSource:uint8_t{
     PA,

@@ -115,7 +115,7 @@ IResult<> IST8310::enable_interrupt(const bool en){
 
 IResult<> IST8310::set_interrupt_level(const BoolLevel lv){
     auto reg = RegCopy(ctrl2_reg);
-    reg.drdy_level = bool(lv);
+    reg.drdy_level = lv.to_bool();
     return write_reg(reg);;
 }
 

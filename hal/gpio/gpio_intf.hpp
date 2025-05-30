@@ -17,7 +17,7 @@ public:
     virtual void write(const BoolLevel val) = 0;
     virtual BoolLevel read() const = 0;
     BoolLevel toggle() {
-        const BoolLevel val = BoolLevel::from(!bool(this->read())); 
+        const BoolLevel val = not this->read(); 
         write(val); 
         return val;
     }

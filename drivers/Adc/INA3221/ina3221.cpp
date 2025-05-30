@@ -109,13 +109,13 @@ IResult<> INA3221::enable_channel(const ChannelIndex index, const Enable en){
     switch(index){
         default: __builtin_unreachable();
         case ChannelIndex::CH1:
-            config_reg.ch1_en = bool(en);
+            config_reg.ch1_en = en.to_bool();
             break;
         case ChannelIndex::CH2:
-            config_reg.ch2_en = bool(en);
+            config_reg.ch2_en = en.to_bool();
             break;
         case ChannelIndex::CH3:
-            config_reg.ch3_en = bool(en);
+            config_reg.ch3_en = en.to_bool();
             break;
     }
     return write_reg(config_reg);
@@ -220,17 +220,17 @@ IResult<> INA3221::set_constant_ovc(const ChannelIndex index, const real_t volt)
 }
 
 IResult<> INA3221::enable_measure_bus(const Enable en){
-    config_reg.bus_measure_en = bool(en);
+    config_reg.bus_measure_en = en.to_bool();
     return write_reg(config_reg);
 }
 
 
 IResult<> INA3221::enable_measure_shunt(const Enable en){
-    config_reg.shunt_measure_en = bool(en);
+    config_reg.shunt_measure_en = en.to_bool();
     return write_reg(config_reg);
 }
 
 IResult<> INA3221::enable_continuous(const Enable en){
-    config_reg.continuos = bool(en);
+    config_reg.continuos = en.to_bool();
     return write_reg(config_reg);
 }

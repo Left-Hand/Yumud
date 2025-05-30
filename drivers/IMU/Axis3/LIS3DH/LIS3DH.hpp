@@ -164,11 +164,17 @@ public:
     [[nodiscard]] IResult<> wakeup()
         {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = true; return write_reg(reg);}
 
-    [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en)
-        {auto & reg = regs_.ctrl1_reg; reg.drdy_pulse = bool(en); return write_reg(reg);}
+    [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en){
+        auto & reg = regs_.ctrl1_reg; 
+        reg.drdy_pulse = en.to_bool(); 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> block_when_update(const Enable en)
-        {auto & reg = regs_.ctrl1_reg; reg.drdy_pulse = bool(en); return write_reg(reg);}
+    [[nodiscard]] IResult<> block_when_update(const Enable en){
+        auto & reg = regs_.ctrl1_reg; 
+        reg.drdy_pulse = en.to_bool(); 
+        return write_reg(reg);
+    }
 
 
     enum class FilteringStrategy:uint8_t{ FIR, IIR};
@@ -189,11 +195,16 @@ public:
     [[nodiscard]] IResult<> set_int2_pp_or_od(const FormerLatter sel)
         {auto & reg = regs_.ctrl4_reg; reg.pp_od_int2 = sel; return write_reg(reg);}
         
-    [[nodiscard]] IResult<> enable_fifo(const Enable en)
-        {auto & reg = regs_.ctrl4_reg; reg.fifo_en = bool(en); return write_reg(reg);}
+    [[nodiscard]] IResult<> enable_fifo(const Enable en){
+        auto & reg = regs_.ctrl4_reg; 
+        reg.fifo_en = en.to_bool(); 
+        return write_reg(reg);}
 
-    [[nodiscard]] IResult<> enable_spi_hw(const Enable en)
-        {auto & reg = regs_.ctrl5_reg; reg.fifo_spi_hs_on = bool(en); return write_reg(reg);}
+    [[nodiscard]] IResult<> enable_spi_hw(const Enable en){
+        auto & reg = regs_.ctrl5_reg; 
+        reg.fifo_spi_hs_on = en.to_bool(); 
+        return write_reg(reg);
+    }
 
 
 };

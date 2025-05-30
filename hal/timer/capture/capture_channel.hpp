@@ -47,7 +47,7 @@ public:
     void update(){
         if(double_edge_){
             if(instance_.p_gpio_ == nullptr) return;
-            bool val = bool(instance_.p_gpio_->read());
+            bool val = instance_.p_gpio_->read() == HIGH;
 
             if(val == false){
                 const auto current_t = clock::micros();
