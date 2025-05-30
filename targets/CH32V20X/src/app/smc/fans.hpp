@@ -28,7 +28,7 @@ public:
         last_t = 0;
     }
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         enabled = en;
         if(!en){
             instanceP = (real_t(0));
@@ -81,7 +81,7 @@ public:
         right_fan.setForce(force);
     }
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         left_fan.enable(en);
         right_fan.enable(en);
     }

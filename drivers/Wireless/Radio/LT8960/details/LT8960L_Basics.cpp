@@ -41,8 +41,8 @@ Result<void, Error> LT8960L::set_retrans_time(const uint8_t times){
     return write_regs((regs_.config2_reg));
 }
 
-Result<void, Error> LT8960L::enable_autoack(const bool en){
-    regs_.config3_reg.autoack_en = en;
+Result<void, Error> LT8960L::enable_autoack(const Enable en){
+    regs_.config3_reg.autoack_en = en == EN;
     return write_regs((regs_.config3_reg));
 }
 
@@ -143,8 +143,8 @@ Result<void, Error> LT8960L::sleep(){
         | write_reg(35,0x4300);
 }
 
-Result<void, Error> LT8960L::enable_analog(const bool en){
-    if(en){
+Result<void, Error> LT8960L::enable_analog(const Enable en){
+    if(en == EN){
         return write_reg(15, 0xEC4C)
             | write_reg(17, 0x0000);
     }else{
@@ -211,13 +211,13 @@ Result<void, Error> LT8960L::wait_rst_done(const uint timeout){
     return Ok();
 }
 
-Result<void, Error> LT8960L::enable_gain_weaken(const bool en){
+Result<void, Error> LT8960L::enable_gain_weaken(const Enable en){
     // 1Mbps数据率传输近距离存在阻塞死区（收发相距15cm内增益过强导致
     // 通讯变差），推荐用户使用62.5Kbps传输距离更远且不存在死区。也可
     // 通过降低接收灵敏度减少死区范围，具体操作: 0x38寄存器写0xBCDF
     // 0x0F 寄存器写0x643C 降低接收灵敏度缩小死区。如需恢复灵敏度，用户
     // 可0x38寄存器写0XBFFF，0x0F寄存器写0x644C恢复灵敏度。
-    if(en){
+    if(en == EN){
         return write_reg(0x38, 0xbcdf)
             | write_reg(0x0f, 0x643c);
     }else{

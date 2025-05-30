@@ -136,11 +136,11 @@ void lt8960_tb(){
     
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)
-        | ltr.enable_use_hw_pkt(true)
+        | ltr.enable_use_hw_pkt(EN)
         | ltr.set_datarate(LT8960L::DataRate::_250K)
         // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
         // | ltr.set_datarate(LT8960L::DataRate::_1M)
-        | ltr.enable_gain_weaken(true)
+        | ltr.enable_gain_weaken(EN)
         // | ltr.set_syncword_tolerance_bits(1)
         | ltr.set_syncword_tolerance_bits(0)
         | ltr.set_pack_type(LT8960L::PacketType::Manchester)

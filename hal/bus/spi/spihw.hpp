@@ -39,11 +39,11 @@ protected:
     Gpio & get_sclk_gpio();
     Gpio & get_hw_cs_gpio();
 
-    void enable_rcc(const bool en = true);
+    void enable_rcc(const Enable en = EN);
     uint16_t calculate_prescaler(const uint32_t baudrate);
     void install_gpios();
 
-    void enable_rx_it(const bool en = true);
+    void enable_rx_it(const Enable en = EN);
 public:
     SpiHw(const SpiHw & other) = delete;
     SpiHw(SpiHw && other) = delete;
@@ -54,7 +54,7 @@ public:
         const CommStrategy tx_strategy = CommStrategy::Blocking, 
         const CommStrategy rx_strategy = CommStrategy::Blocking);
 
-    void enable_hw_cs(const bool en = true);
+    void enable_hw_cs(const Enable en = EN);
 
     [[nodiscard]] __fast_inline hal::HalResult fast_write(const uint16_t data){
         while ((instance_->STATR.TXE) == RESET);

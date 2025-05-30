@@ -48,7 +48,7 @@ public:
     RigidBody(MotorStrength & _motor_strength, SideFan & _left_fan, SideFan & _right_fan, HriFanPair & _hri_fan):
             motor_strength(_motor_strength), left_fan(_left_fan), right_fan(_right_fan), hri_fan(_hri_fan){;}
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         enabled = en;
         left_fan.enable(en);
         right_fan.enable(en);

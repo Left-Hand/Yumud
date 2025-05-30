@@ -154,8 +154,8 @@ public:
         // const auto a = (m % 100) > 50; 
         // const auto b = ((m+25) % 100) > 50; 
 
-        const auto a = bool(a_gpio_.read()); 
-        const auto b = bool(b_gpio_.read()); 
+        const auto a = a_gpio_.read().to_bool(); 
+        const auto b = b_gpio_.read().to_bool(); 
 
         return uint8_t(uint8_t(b) << 1) | uint8_t(a);
     }

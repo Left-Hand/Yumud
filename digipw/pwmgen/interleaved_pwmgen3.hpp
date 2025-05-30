@@ -152,9 +152,9 @@ public:
 
     void init(const Config & cfg){
 
-        timer_.init(cfg.freq, hal::TimerCountMode::CenterAlignedDualTrig, false);
+        timer_.init(cfg.freq, hal::TimerCountMode::CenterAlignedDualTrig, DISEN);
         timer_.set_deadzone_ns(cfg.deadzone_ns);
-        timer_.enable_cc_ctrl_sync(false);
+        timer_.enable_cc_ctrl_sync(DISEN);
 
         pwm_u_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,

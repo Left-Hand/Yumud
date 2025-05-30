@@ -64,15 +64,15 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
     return Ok();
 }
 
-IResult<> AW9523::enable_irq_by_index(const size_t index, const bool en ){
+IResult<> AW9523::enable_irq_by_index(const size_t index, const Enable en ){
     GUARD_INDEX(index);
-    return write_reg(RegAddress::Inten, (uint8_t)(en << index));
+    return write_reg(RegAddress::Inten, uint8_t(int(en == EN) << index));
 }
 
-IResult<> AW9523::enable_led_mode(const hal::PinSource pin, const bool en){
+IResult<> AW9523::enable_led_mode(const hal::PinSource pin, const Enable en){
     uint index = CTZ((uint16_t)pin);
     GUARD_INDEX(index);
-    led_mode_ = led_mode_.modify(index, BoolLevel::from(en));
+    led_mode_ = led_mode_.modify(index, BoolLevel::from(en == EN));
     return write_reg(RegAddress::LedMode, led_mode_.as_u16());
 }
 

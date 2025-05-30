@@ -95,7 +95,7 @@ void at8222_tb(){
     );
 
     adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
-    adc1.enable_auto_inject(false);
+    adc1.enable_auto_inject(DISEN);
     // adc1.set_pga(AdcPga::X16);
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);

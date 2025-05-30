@@ -41,11 +41,11 @@ public:
         }
     }
 
-    void sleep(const bool en = true){
+    void sleep(const Enable en = EN){
         if(slp_gpio_) (*slp_gpio_).write(en);
     }
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         // for(auto & gpio : en_gpios_){
         //     if(gpio.isValid()) gpio = en;
         // }

@@ -24,7 +24,7 @@ struct AWU_Def{
     volatile R16_AWU_WR WR;
     volatile R16_AWU_PSC PSC;
 
-    void enable(const bool en){
+    void enable(const Enable en){
         CSR.AWUEN = en;
     }
 

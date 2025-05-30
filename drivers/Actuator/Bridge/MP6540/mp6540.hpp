@@ -59,7 +59,7 @@ public:
 
     void init();
     
-    void enable(const bool en = true);
+    void enable(const Enable en = EN);
 
     MP6540CurrentChannel & ch(const size_t index);
 

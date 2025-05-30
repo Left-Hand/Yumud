@@ -53,8 +53,8 @@ public:
     void forwardPosition(const real_t step);
     void freeze();
 
-    void inverse(const bool en = true){
-        inversed_ = en;
+    void inverse(const Enable en = EN){
+        inversed_ = en == EN;
     }
 
     // real_t getSpeed();

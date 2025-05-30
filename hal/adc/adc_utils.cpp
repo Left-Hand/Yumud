@@ -3,7 +3,7 @@
 
 namespace ymd::hal::__adc_internal{
 
-    void install_pin(const AdcChannelIndex channel, const bool en){
+    void install_pin(const AdcChannelIndex channel, const Enable en){
         uint8_t ch_index = (uint8_t)channel;
 
         if(ch_index > 15) return;
@@ -23,7 +23,7 @@ namespace ymd::hal::__adc_internal{
         }
 
         Gpio & io = (*gpio_port)[pin];
-        if(en)io.inana();
+        if(en == EN)io.inana();
         else io.inflt();
     }
 

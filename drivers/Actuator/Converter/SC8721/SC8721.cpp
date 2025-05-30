@@ -72,11 +72,11 @@ IResult<> SC8721::set_target_voltage(const real_t volt){
     return Ok();
 }
 
-IResult<> SC8721::enable_external_fb(const bool en){
+IResult<> SC8721::enable_external_fb(const Enable en){
     auto reg = RegCopy(vout_set_lsb_reg);
 
-    reg.fb_sel = en;
-    if(en){
+    reg.fb_sel = en == EN;
+    if(en == EN){
         reg.fb_on = false;
     }else{
         reg.fb_on = true;

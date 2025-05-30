@@ -144,7 +144,7 @@ struct LPTIM_Def{
         const_cast<R32_LPTIM_IER &>(IER) = BIT_CAST(R32_LPTIM_IER, ev);
     }
 
-    void enable_use_ext_clock(const bool en){
+    void enable_use_ext_clock(const Enable en){
         CFGR.CKSEL = en;
     }
 
@@ -152,7 +152,7 @@ struct LPTIM_Def{
         CFGR.CKPOL = edge;
     }
 
-    void set_encoder_mode(const bool en){
+    void set_encoder_mode(const Enable en){
         CFGR.CKPOL = en;
     }
 
@@ -187,11 +187,11 @@ struct LPTIM_Def{
         CFGR.TRIGEN = mode;
     }
 
-    constexpr void set_timeout(const bool en){
+    constexpr void set_timeout(const Enable en){
         CFGR.TIMOUT = en;
     }
 
-    constexpr void enable_oneshot_wave(const bool en){
+    constexpr void enable_oneshot_wave(const Enable en){
         CFGR.WAVE = en;
     }
 
@@ -207,35 +207,35 @@ struct LPTIM_Def{
         CFGR.COUNTMODE = mode;
     }
 
-    constexpr void enable_encoder_mode(const bool en){
+    constexpr void enable_encoder_mode(const Enable en){
         CFGR.ENC = en;
     }
 
-    constexpr void set_internal_clock_source(const bool en){
+    constexpr void set_internal_clock_source(const Enable en){
         CFGR.CLKMX_SEL = en;
     }
 
-    constexpr void enable_force_pwm(const bool en){
+    constexpr void enable_force_pwm(const Enable en){
         CFGR.FORCE_PWM = en;
     }
 
-    constexpr void enable(const bool en){
+    constexpr void enable(const Enable en){
         CR.ENABLE = en;
     }
 
-    constexpr void start_single_count(const bool en){
+    constexpr void start_single_count(const Enable en){
         CR.SNGSTRT = en;
     }
 
-    constexpr void start_continuous_count(const bool en){
+    constexpr void start_continuous_count(const Enable en){
         CR.CNTSTRT = en;
     }
 
-    constexpr void enable_output(const bool en){
+    constexpr void enable_output(const Enable en){
         CR.OUTEN = en;
     }
 
-    constexpr void enable_ext_trig_count_direction(const bool en){
+    constexpr void enable_ext_trig_count_direction(const Enable en){
         CR.DIR_EXTEN = en;
     }
 

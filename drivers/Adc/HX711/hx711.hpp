@@ -43,8 +43,8 @@ public:
         if(is_idle()) last_data = read_data();
     }
 
-    void inverse(const bool en = true){
-        inversed = en;
+    void inverse(const Enable en = EN){
+        inversed = en == EN;
     }
     void compensate(){
         while(!is_idle());

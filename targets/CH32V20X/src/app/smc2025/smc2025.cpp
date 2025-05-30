@@ -167,7 +167,7 @@ void smc2025_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(true);
+    DEBUGGER.force_sync(EN);
 
 
     // bkp.init();edRunStatus();

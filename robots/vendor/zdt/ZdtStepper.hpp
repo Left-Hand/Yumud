@@ -129,7 +129,7 @@ public:
         // write_data(frame);  
     }
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         struct Frame{
             const uint8_t head = 0xf3;//1
             const uint8_t head2 = 0xab;
@@ -137,7 +137,7 @@ public:
         }__packed;
 
         write_data(Frame{
-            .en = en
+            .en = en == EN
         });
     }
 

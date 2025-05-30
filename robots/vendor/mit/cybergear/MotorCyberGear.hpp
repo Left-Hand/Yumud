@@ -125,7 +125,7 @@ public:
     
     [[nodiscard]] CyberGear_Result<void> onReceive(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<void> enable(const bool en = true, const bool clear_fault = true);
+    [[nodiscard]] CyberGear_Result<void> enable(const Enable en = EN, const bool clear_fault = true);
 
     [[nodiscard]] CyberGear_Result<void> setCurrentAsMachineHome();
 

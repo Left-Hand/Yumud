@@ -166,13 +166,13 @@ public:
 
     [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en){
         auto & reg = regs_.ctrl1_reg; 
-        reg.drdy_pulse = en.to_bool(); 
+        reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
     [[nodiscard]] IResult<> block_when_update(const Enable en){
         auto & reg = regs_.ctrl1_reg; 
-        reg.drdy_pulse = en.to_bool(); 
+        reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
@@ -197,12 +197,12 @@ public:
         
     [[nodiscard]] IResult<> enable_fifo(const Enable en){
         auto & reg = regs_.ctrl4_reg; 
-        reg.fifo_en = en.to_bool(); 
+        reg.fifo_en = en == EN; 
         return write_reg(reg);}
 
     [[nodiscard]] IResult<> enable_spi_hw(const Enable en){
         auto & reg = regs_.ctrl5_reg; 
-        reg.fifo_spi_hs_on = en.to_bool(); 
+        reg.fifo_spi_hs_on = en == EN; 
         return write_reg(reg);
     }
 

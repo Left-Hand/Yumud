@@ -26,11 +26,11 @@ public:
 
     virtual void set_ab_duty(const real_t alpha_duty, const real_t beta_duty) = 0;
 
-    void inverse(const bool en = true){
-        rsv = en;
+    void inverse(const Enable en = EN){
+        rsv = en == EN;
     }
 
-    virtual void enable(const bool en = true) = 0;
+    virtual void enable(const Enable en = EN) = 0;
 };
 
 };

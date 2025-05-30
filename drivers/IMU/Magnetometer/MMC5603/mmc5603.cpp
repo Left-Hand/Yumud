@@ -64,7 +64,7 @@ IResult<> MMC5603::set_data_rate(const DataRate dr){
         }
     }
 
-    if(const auto res = enable_contious(true);
+    if(const auto res = enable_contious(EN);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -79,9 +79,9 @@ IResult<> MMC5603::set_band_width(const BandWidth bw){
     return Ok();
 }
 
-IResult<> MMC5603::enable_contious(const bool en){
+IResult<> MMC5603::enable_contious(const Enable en){
     auto reg = RegCopy(ctrl2_reg);
-    reg.cont_en = en;
+    reg.cont_en = en == EN;
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();

@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include <bit>
+#include "core/io/regs.hpp"
 
-namespace CH32V203{
+
+namespace ymd::ral::CH32V203{
 
 struct R32_OPA_CTLR{
     uint32_t EN1:1;
@@ -32,12 +33,12 @@ struct R32_OPA_CTLR{
 struct OPA_Def{
     volatile R32_OPA_CTLR CTLR;
 
-    constexpr void enable(const uint8_t index, const bool enable){
+    constexpr void enable(const uint8_t index, const Enable en){
         switch(index){
-            case 1: this->CTLR.EN1 = enable; return;
-            case 2: this->CTLR.EN2 = enable; return;
-            case 3: this->CTLR.EN3 = enable; return;
-            case 4: this->CTLR.EN4 = enable; return;
+            case 1: this->CTLR.EN1 = en == EN; return;
+            case 2: this->CTLR.EN2 = en == EN; return;
+            case 3: this->CTLR.EN3 = en == EN; return;
+            case 4: this->CTLR.EN4 = en == EN; return;
         }
     }
     constexpr void select_out(const uint8_t index, const bool sel){
@@ -72,7 +73,7 @@ struct OPA_Def{
 
 };
 
-namespace chip{
-    using OPA_Def = CH32V203::OPA_Def;
-    using CH32V203::OPA_Inst;
+namespace ymd::chip{
+    using OPA_Def = ral::CH32V203::OPA_Def;
+    using ral::CH32V203::OPA_Inst;
 }

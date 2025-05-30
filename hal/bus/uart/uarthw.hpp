@@ -45,14 +45,14 @@ public:
 protected:
     USART_TypeDef * instance_;
 
-    void enable_rcc(const bool en);
-    void enable_it(const bool en);
-    void enable_rxne_it(const bool en);
-    void enable_idle_it(const bool en);
+    void enable_rcc(const Enable en);
+    void enable_it(const Enable en);
+    void enable_rxne_it(const Enable en);
+    void enable_idle_it(const Enable en);
     void invoke_tx_it();
 
-    void enable_rx_dma(const bool en);
-    void enable_tx_dma(const bool en);
+    void enable_rx_dma(const Enable en);
+    void enable_tx_dma(const Enable en);
 
     void on_rx_dma_done();
     void on_rx_dma_half();
@@ -90,7 +90,7 @@ public:
         const CommStrategy tx_strategy = CommStrategy::Dma
     );
 
-    void enable_single_line_mode(const bool en = true);
+    void enable_single_line_mode(const Enable en = EN);
 
     void writeN(const char * data_ptr, const size_t len) override;
 

@@ -32,7 +32,7 @@ public:
             Gpio(instance, PinSource::_15),
         }{;}
     void init();
-    void enableRcc(const bool en = true);
+    void enableRcc(const Enable en = EN);
 
 
     __inline void write_by_index(const size_t index, const BoolLevel data) override;

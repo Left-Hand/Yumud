@@ -186,10 +186,10 @@ public:
 
     [[nodiscard]] IResult<> set_feed_back_vref(const real_t vref);
     [[nodiscard]] IResult<> set_feed_back_vref_mv(const uint vref_mv);
-    [[nodiscard]] IResult<> enable_power_switching(const bool en = true);
-    [[nodiscard]] IResult<> enable_vref_change_func(const bool en = true);
+    [[nodiscard]] IResult<> enable_power_switching(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_vref_change_func(const Enable en = EN);
     [[nodiscard]] IResult<> set_png_state(const bool state);
-    [[nodiscard]] IResult<> enable_dither(const bool en = true);
+    [[nodiscard]] IResult<> enable_dither(const Enable en = EN);
     [[nodiscard]] IResult<> set_vref_slew_rate(const VrefSlewRate slewrate);
     [[nodiscard]] IResult<> set_ovp_mode(const OvpMode mode);
     [[nodiscard]] IResult<> set_ocp_mode(const OcpMode mode);

@@ -161,7 +161,7 @@ void stepper_tb(UartHw & logger_inst){
     SVPWM3 svpwm {mp6540};
     #endif
     
-    svpwm.inverse(false);
+    svpwm.inverse(DISEN);
     
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedDownTrig);
     timer1.enable_arr_sync();

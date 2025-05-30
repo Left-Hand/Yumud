@@ -1,6 +1,6 @@
 // #include "adc_channel.hpp"
 
-// void AdcChannelOnChip::installToPin(const bool en){
+// void AdcChannelOnChip::installToPin(const Enable en){
 //     uint8_t ch_index = (uint8_t)channel;
 
 //     if(ch_index > 15) return;

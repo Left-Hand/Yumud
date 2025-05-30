@@ -330,7 +330,7 @@ public:
     [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
     [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
     [[nodiscard]] IResult<> set_gain(const Gain gain);
-    [[nodiscard]] IResult<> enable_pwm3(const bool en = true);
+    [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 
     [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
     [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);

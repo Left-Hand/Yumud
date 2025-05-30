@@ -129,7 +129,7 @@ struct AFIO_Def{
     ASSERT_REG_IS_32BIT(R32_AFIO_PCFR2)
 
 
-    void set_eventout(const uint8_t pin, const uint8_t port, const bool en){
+    void set_eventout(const uint8_t pin, const uint8_t port, const Enable en){
         ECR.EVOE = en;
         ECR.PIN = pin;
         ECR.PORT = port;

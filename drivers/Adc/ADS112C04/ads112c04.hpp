@@ -182,8 +182,8 @@ public:
         write_reg(config0_reg.address, config0_reg);
     }
 
-    void enableTurbo(const bool en = true){
-        config1_reg.turbo_mode = en;
+    void enableTurbo(const Enable en = EN){
+        config1_reg.turbo_mode = en == EN;
         write_reg(config1_reg.address, (config1_reg));
     }
 

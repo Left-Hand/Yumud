@@ -40,7 +40,7 @@ public:
 
 class Dac{
 protected:
-    void enableRcc(const bool en);
+    void enableRcc(const Enable en);
 public:
     void init();
 

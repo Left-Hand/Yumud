@@ -21,7 +21,7 @@ protected:
 
 
     // void init();
-    void enable(const bool en){}
+    void enable(const Enable en){}
 
 
     __fast_inline DRV8801 & operator = (const real_t duty);

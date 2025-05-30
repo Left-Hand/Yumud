@@ -57,7 +57,7 @@ void ExtiChannel::init(){
     EXTI_Init(&EXTI_InitStructure);
 
     if(mode_ == TrigMode::Interrupt){
-        enable_it(true);
+        enable_it(EN);
     }
 }
 

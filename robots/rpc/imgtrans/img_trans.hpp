@@ -48,7 +48,7 @@ struct ImagePieceUnit{
 
 
 
-class Transmitter{
+class ImageTransmitter{
 protected:
     // scexpr size_t str_tx_buf_size = 512;
     // scexpr size_t str_rx_buf_size = 512;
@@ -67,7 +67,7 @@ protected:
 
     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 public:
-    Transmitter(OutputStream & _instance):instance(_instance){;}
+    ImageTransmitter(OutputStream & _instance):instance(_instance){;}
 
 
     template<typename T>
@@ -76,8 +76,8 @@ public:
         transmit((const uint8_t *)img.get_data(),img.get_size(), index); 
     }
 
-    void enable(const bool en){
-        enabled = en;
+    void enable(const Enable en){
+        enabled = en == EN;
     }
 };
 

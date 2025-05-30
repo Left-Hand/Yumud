@@ -61,8 +61,8 @@ public:
         locate(getLapPosition() + offset);
     }
 
-    void inverse(const bool en = true){
-        rsv = en;
+    void inverse(const Enable en = EN){
+        rsv = en == EN;
     }
 
     void update();

@@ -120,31 +120,31 @@ struct I2C_Def{
     uint16_t :16;
 
 
-    constexpr void enable(const bool en){
+    constexpr void enable(const Enable en){
         this->CTLR1.PE = en;
     }
 
-    constexpr void enable_dma(const bool en){
+    constexpr void enable_dma(const Enable en){
         this->CTLR2.DMAEN = en;
     }
 
-    constexpr void set_next_dma_is_last(const bool en){
+    constexpr void set_next_dma_is_last(const Enable en){
         CTLR2.LAST = en;
     }
 
-    constexpr void generate_start(const bool en){
+    constexpr void generate_start(const Enable en){
         CTLR1.START = en;
     }
 
-    constexpr void generate_stop(const bool en){
+    constexpr void generate_stop(const Enable en){
         CTLR1.STOP = en;
     }
 
-    constexpr void enable_ack(const bool en){
+    constexpr void enable_ack(const Enable en){
         CTLR1.ACK = en;
     }
 
-    constexpr void generate_call(const bool en){
+    constexpr void generate_call(const Enable en){
         CTLR1.ENGC = en;
     }
 
@@ -178,7 +178,7 @@ struct I2C_Def{
         DATAR.DR = addr;
     }
 
-    constexpr void soft_reset(const bool en){
+    constexpr void soft_reset(const Enable en){
         CTLR1.SWRST = en;
     }
 

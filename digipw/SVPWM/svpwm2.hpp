@@ -20,7 +20,7 @@ public:
         coil_b_ = duty_b;
     }
 
-    void enable(const bool en = true) final override{
+    void enable(const Enable en = EN) final override{
         coil_a_.enable(en);
         coil_b_.enable(en);
     }

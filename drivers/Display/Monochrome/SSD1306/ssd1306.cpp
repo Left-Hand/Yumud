@@ -41,9 +41,9 @@ IResult<> SSD13XX::init(){
         res.is_err()) return res;
     return Ok();
 }
-IResult<> SSD13XX::enable_display(const bool en){
+IResult<> SSD13XX::enable_display(const Enable en){
     
-    if(en){
+    if(en == EN){
         if(const auto res = phy_.write_command(0x8D);
             res.is_err()) return res;
         if(const auto res = phy_.write_command(0x14);

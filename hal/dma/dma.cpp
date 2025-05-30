@@ -3,7 +3,7 @@
 #include "core/sdk.hpp"
 
 using namespace ymd::hal;
-using namespace CH32;
+using namespace ymd::ral::CH32;
 
 namespace ymd::hal{
 
@@ -92,16 +92,16 @@ DMA2_IT_TEMPLATE(11);
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(instance,DMA_Channel_TypeDef)>(x))
 
 
-void DmaChannel::enable_rcc(bool en){
+void DmaChannel::enable_rcc(Enable en){
     #ifdef ENABLE_DMA2
     if(instance < DMA2_Channel1){
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
     }else{
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en == EN);
     }
 
     #else
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
     #endif
 }
 
@@ -121,7 +121,7 @@ void DmaChannel::start(void * dst, const void * src, const size_t size){
 
 
 void DmaChannel::init(const Mode mode,const Priority priority){
-    enable_rcc(true);
+    enable_rcc(EN);
     mode_ = mode;
     DMA_InitTypeDef DMA_InitStructure;
 
@@ -188,7 +188,7 @@ void DmaChannel::init(const Mode mode,const Priority priority){
     DMA_Init(SDK_INST(instance), &DMA_InitStructure);
 }
 
-void DmaChannel::enable_it(const NvicPriority _priority, const bool en){
+void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
     IRQn irq = IRQn_Type::Software_IRQn;
     switch(dma_index){
         case 1:
@@ -237,13 +237,13 @@ size_t DmaChannel::pending(){
     return SDK_INST(instance) -> CNTR;
 }
 
-void DmaChannel::enable_done_it(const bool en){
+void DmaChannel::enable_done_it(const Enable en){
     DMA_ClearITPendingBit(done_mask);
-    DMA_ITConfig(SDK_INST(instance), DMA_IT_TC, en);
+    DMA_ITConfig(SDK_INST(instance), DMA_IT_TC, en == EN);
 }
 
-void DmaChannel::enable_half_it(const bool en){
+void DmaChannel::enable_half_it(const Enable en){
     DMA_ClearITPendingBit(half_mask);
-    DMA_ITConfig(SDK_INST(instance), DMA_IT_HT, en);
+    DMA_ITConfig(SDK_INST(instance), DMA_IT_HT, en == EN);
 }
 

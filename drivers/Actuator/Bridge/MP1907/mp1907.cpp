@@ -18,6 +18,6 @@ void MP1907::init(){
 }
 
 MP1907 & MP1907::operator=(const real_t duty){
-    inst_.set_duty(duty_range.clamp(duty));
+    inst_.set_duty(duty_range_.clamp(duty));
     return *this;
 }

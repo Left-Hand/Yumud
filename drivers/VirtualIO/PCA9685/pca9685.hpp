@@ -32,9 +32,9 @@ public:
 
     [[nodiscard]] Result<void, Error> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] Result<void, Error> enable_ext_clk(const bool en = true);
+    [[nodiscard]] Result<void, Error> enable_ext_clk(const Enable en = EN);
 
-    [[nodiscard]] Result<void, Error> enable_sleep(const bool en = true);
+    [[nodiscard]] Result<void, Error> enable_sleep(const Enable en = EN);
 
     [[nodiscard]] Result<void, Error> init(const Config & cfg){
         return init() | reconf(cfg);

@@ -54,7 +54,7 @@ IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint8_t & data){
     }
 }
 IResult<> MT6701::init(){
-    if(const auto res = enable_pwm();
+    if(const auto res = enable_pwm(EN);
         res.is_err()) return res;
     if(const auto res = set_pwm_polarity(true);
         res.is_err()) return res;
@@ -96,13 +96,13 @@ IResult<real_t> MT6701::get_lap_position(){
 }
 
 
-IResult<> MT6701::enable_uvwmux(const bool enable){
-    uvwMuxReg.uvwMux = enable;
+IResult<> MT6701::enable_uvwmux(const Enable en){
+    uvwMuxReg.uvwMux = en == EN;
     return phy_.write_reg(RegAddress::UVWMux, uint8_t(uvwMuxReg));
 }
 
-IResult<> MT6701::enable_abzmux(const bool enable){
-    abzMuxReg.abzMux = enable;
+IResult<> MT6701::enable_abzmux(const Enable en){
+    abzMuxReg.abzMux = en == EN;
     return phy_.write_reg(RegAddress::ABZMux, uint8_t(abzMuxReg));
 }
 
@@ -140,13 +140,13 @@ IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
     ;
 }
 
-IResult<> MT6701::enable_fast_mode(const bool en){
-    fast_mode = en;
+IResult<> MT6701::enable_fast_mode(const Enable en){
+    fast_mode = en == EN;
     return Ok();
 }
 
-IResult<> MT6701::enable_pwm(const bool enable){
-    wireConfigReg.isPwm = enable;
+IResult<> MT6701::enable_pwm(const Enable en){
+    wireConfigReg.isPwm = en == EN;
     return phy_.write_reg(RegAddress::WireConfig, uint8_t(wireConfigReg));
 }
 

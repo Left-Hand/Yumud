@@ -338,7 +338,7 @@ void mmc5983_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(true);
+    DEBUGGER.force_sync(EN);
 
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{SCL_GPIO, SDA_GPIO};

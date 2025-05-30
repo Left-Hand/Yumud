@@ -136,13 +136,13 @@ Result<void, Error> PCA9685::reset(){
     return Ok();
 }
 
-Result<void, Error> PCA9685::enable_ext_clk(const bool en){
-    mode1_reg.extclk = en;
+Result<void, Error> PCA9685::enable_ext_clk(const Enable en){
+    mode1_reg.extclk = en == EN;
     return write_reg(RegAddress::Mode1, mode1_reg);
 }
 
-Result<void, Error> PCA9685::enable_sleep(const bool en){
-    mode1_reg.sleep = en;
+Result<void, Error> PCA9685::enable_sleep(const Enable en){
+    mode1_reg.sleep = en == EN;
     return write_reg(RegAddress::Mode1, mode1_reg);
 }
 

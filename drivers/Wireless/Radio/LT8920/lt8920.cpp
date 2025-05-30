@@ -129,7 +129,7 @@ void LT8920::clearFifoPtr() {
 }
 
 void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
-    config1_reg.syncWordLen = (uint16_t)len;
+    config1_reg.syncWordLen = std::bit_cast<uint8_t>(len);
     write_reg(config1_reg.address, (config1_reg));
 }
 
@@ -138,13 +138,13 @@ void LT8920::setRetransTime(const uint8_t times) {
     write_reg(config2_reg.address, (config2_reg));
 }
 
-void LT8920::enableAutoAck(const bool en) {
-    config3_reg.autoAck = en;
+void LT8920::enableAutoAck(const Enable en) {
+    config3_reg.autoAck = en == EN;
     write_reg(config3_reg.address, (config3_reg));
 }
 
-void LT8920::enableCrc(const bool en){
-    config3_reg.crcEn = en;
+void LT8920::enableCrc(const Enable en){
+    config3_reg.crcEn = en == EN;
     write_reg(config3_reg.address, (config3_reg));
 }
 

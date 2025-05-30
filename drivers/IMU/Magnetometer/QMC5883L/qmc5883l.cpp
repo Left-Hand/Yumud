@@ -43,8 +43,8 @@ IResult<> QMC5883L::init(){
     return Ok();
 }
 
-IResult<> QMC5883L::enable_cont_mode(const bool en){
-    configAReg.measureMode = en;
+IResult<> QMC5883L::enable_cont_mode(const Enable en){
+    configAReg.measureMode = en == EN;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
@@ -98,8 +98,8 @@ IResult<> QMC5883L::reset(){
     return write_reg(RegAddress::ConfigB, configBReg);
 }
 
-IResult<> QMC5883L::enable_interrupt(const bool en){
-    configBReg.intEn = en;
+IResult<> QMC5883L::enable_interrupt(const Enable en){
+    configBReg.intEn = en == EN;
     return write_reg(RegAddress::ConfigB, configBReg);
 }
 

@@ -12,12 +12,16 @@ protected:
     Range2<real_t> duty_range_;
     bool enabled = true;
 public:
-    ScaledPwm(hal::PwmIntf & instance, const Range2<real_t> & duty_range
-            ):instance_(instance), duty_range_(duty_range){;}
+    ScaledPwm(
+        hal::PwmIntf & instance, 
+        const Range2<real_t> & duty_range
+    ):
+        instance_(instance), 
+        duty_range_(duty_range){;}
 
-    void enable(const bool en = true){
-        enabled = en;
-        if(false == en) this->set_duty(0);
+    void enable(const Enable en = EN){
+        enabled = en == EN;
+        if(en == DISEN) this->set_duty(0);
     }
 
     void set_duty(const real_t duty) override {

@@ -8,7 +8,7 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace CH32;
+using namespace ymd::ral::CH32;
 
 
 
@@ -71,11 +71,11 @@ UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
 
 
 
-void UartHw::enable_rcc(const bool en){
+void UartHw::enable_rcc(const Enable en){
     switch((uint32_t)instance_){
         #ifdef ENABLE_UART1
         case USART1_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en == EN);
             if(UART1_REMAP){
                 GPIO_PinRemapConfig(GPIO_Remap_USART1, true);
             }
@@ -83,7 +83,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART2
         case USART2_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en == EN);
             if(UART2_REMAP){
                 GPIO_PinRemapConfig(GPIO_Remap_USART2, true);
             }
@@ -91,7 +91,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART3
         case USART3_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en == EN);
             switch (UART3_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap1_USART3, ENABLE);
@@ -109,7 +109,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART4
         case UART4_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en == EN);
             switch (UART4_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART4, ENABLE);
@@ -125,7 +125,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART5
         case UART5_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en == EN);
             switch (UART4_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART5, ENABLE);
@@ -141,7 +141,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART6
         case UART6_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, en == EN);
             switch (UART6_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART6, ENABLE);
@@ -157,7 +157,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART7
         case UART7_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en == EN);
             
             switch (UART7_REMAP){
                 case 1:
@@ -174,7 +174,7 @@ void UartHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_UART8
         case UART8_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, en == EN);
             switch (UART8_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART8, ENABLE);
@@ -290,7 +290,7 @@ Gpio & UartHw::txio(){
     }
 }
 
-void UartHw::enable_it(const bool en){
+void UartHw::enable_it(const Enable en){
     IRQn irq = IRQn::Software_IRQn;
     uint8_t pp = 1;
     uint8_t sp = 7;
@@ -377,9 +377,9 @@ void UartHw::on_rx_dma_half(){
 }
 
 
-void UartHw::enable_single_line_mode(const bool en){
-    USART_HalfDuplexCmd(instance_, en);
-    if(en){
+void UartHw::enable_single_line_mode(const Enable en){
+    USART_HalfDuplexCmd(instance_, en == EN);
+    if(en == EN){
         txio().inpu();
     }else{
         txio().outod();
@@ -414,10 +414,10 @@ void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
         case CommStrategy::Blocking:
             break;
         case CommStrategy::Interrupt:
-            enable_tx_dma(false);
+            enable_tx_dma(DISEN);
             break;
         case CommStrategy::Dma:
-            enable_tx_dma(true);
+            enable_tx_dma(EN);
             break;
         default:
             break;
@@ -440,14 +440,14 @@ void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
         case CommStrategy::Blocking:
             break;
         case CommStrategy::Interrupt:
-            enable_rx_dma(false);
-            enable_idle_it(false);
-            enable_rxne_it(true);
+            enable_rx_dma(DISEN);
+            enable_idle_it(DISEN);
+            enable_rxne_it(EN);
             break;
         case CommStrategy::Dma:
-            enable_rxne_it(false);
-            enable_idle_it(true);
-            enable_rx_dma(true);
+            enable_rxne_it(DISEN);
+            enable_idle_it(EN);
+            enable_rx_dma(EN);
             break;
         default:
             break;
@@ -458,7 +458,7 @@ void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
 
 
 void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const CommStrategy tx_strategy){
-    enable_rcc(true);
+    enable_rcc(EN);
 
     const USART_InitTypeDef USART_InitStructure{
         .USART_BaudRate = baudrate,
@@ -473,7 +473,7 @@ void UartHw::init(const uint32_t baudrate, const CommStrategy rx_strategy, const
     USART_Init(instance_, &USART_InitStructure);
     USART_Cmd(instance_, ENABLE);
 
-    enable_it(true);
+    enable_it(EN);
     set_tx_strategy(tx_strategy);
     set_rx_strategy(rx_strategy);
 }
@@ -573,19 +573,19 @@ namespace ymd::hal{
 }
     
 
-void UartHw::enable_tx_dma(const bool en){
-    USART_DMACmd(instance_, USART_DMAReq_Tx, en);
+void UartHw::enable_tx_dma(const Enable en){
+    USART_DMACmd(instance_, USART_DMAReq_Tx, en == EN);
 
-    if(en){
+    if(en == EN){
         tx_dma_.init(DmaMode::toPeriph, DmaPriority::Medium);
         tx_dma_.enable_it({1,1});
         tx_dma_.enable_done_it();
         tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
     }
 }
-void UartHw::enable_rx_dma(const bool en){
-    USART_DMACmd(instance_, USART_DMAReq_Rx, en);
-    if(en){
+void UartHw::enable_rx_dma(const Enable en){
+    USART_DMACmd(instance_, USART_DMAReq_Rx, en == EN);
+    if(en == EN){
         rx_dma_.init(DmaMode::toMemCircular, DmaPriority::Medium);
         rx_dma_.enable_it({1,1});
         rx_dma_.enable_done_it();
@@ -599,12 +599,12 @@ void UartHw::enable_rx_dma(const bool en){
     }
 }
 
-void UartHw::enable_rxne_it(const bool en){
+void UartHw::enable_rxne_it(const Enable en){
     USART_ClearITPendingBit(instance_, USART_IT_RXNE);
-    USART_ITConfig(instance_, USART_IT_RXNE, en);
+    USART_ITConfig(instance_, USART_IT_RXNE, en == EN);
 }
 
-void UartHw::enable_idle_it(const bool en){
+void UartHw::enable_idle_it(const Enable en){
     USART_ClearITPendingBit(instance_, USART_IT_IDLE);
-    USART_ITConfig(instance_, USART_IT_IDLE, en);
+    USART_ITConfig(instance_, USART_IT_IDLE, en == EN);
 }

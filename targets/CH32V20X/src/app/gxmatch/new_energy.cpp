@@ -378,7 +378,7 @@ public:
         );
 
         adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
-        adc1.enable_auto_inject(false);
+        adc1.enable_auto_inject(DISEN);
 
         timer3.set_trgo_source(TimerTrgoSource::OC4R);
 

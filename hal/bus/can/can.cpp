@@ -298,8 +298,8 @@ std::optional<uint8_t> Can::transmit(const CanMsg & msg){
 }
 
 
-void Can::enable_hw_retransmit(const bool en){
-    if(en)  instance_->CTLR &= ~CAN_CTLR_NART;
+void Can::enable_hw_retransmit(const Enable en){
+    if(en == EN)  instance_->CTLR &= ~CAN_CTLR_NART;
     else    instance_->CTLR |=  CAN_CTLR_NART;
 }
 
@@ -364,13 +364,13 @@ void Can::cancel_all_transmits(){
     instance_->TSTATR = instance_->TSTATR | (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
-void Can::enable_fifo_lock(const bool en){
-    if(en) instance_->CTLR |= CAN_CTLR_RFLM;
+void Can::enable_fifo_lock(const Enable en){
+    if(en == EN) instance_->CTLR |= CAN_CTLR_RFLM;
     else instance_->CTLR &= ~CAN_CTLR_RFLM;
 }
 
-void Can::enable_index_priority(const bool en){
-    if(en) instance_->CTLR |= CAN_CTLR_TXFP;
+void Can::enable_index_priority(const Enable en){
+    if(en == EN) instance_->CTLR |= CAN_CTLR_TXFP;
     else instance_->CTLR &= ~CAN_CTLR_TXFP;
 }
 

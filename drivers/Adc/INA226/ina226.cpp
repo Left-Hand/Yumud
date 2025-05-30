@@ -179,23 +179,23 @@ IResult<> INA226::reset(){
     return res;
 }
 
-IResult<> INA226::enable_shunt_voltage_measure(const bool en){
-    configReg.shuntVoltageEnable = en;
+IResult<> INA226::enable_shunt_voltage_measure(const Enable en){
+    configReg.shuntVoltageEnable = en == EN;
     return write_reg(configReg);
 }
 
-IResult<> INA226::enable_bus_voltage_measure(const bool en){
-    configReg.busVoltageEnable = en;
+IResult<> INA226::enable_bus_voltage_measure(const Enable en){
+    configReg.busVoltageEnable = en == EN;
     return write_reg(configReg);
 }
 
-IResult<> INA226::enable_continuous_measure(const bool en){
-    configReg.continuos = en;
+IResult<> INA226::enable_continuous_measure(const Enable en){
+    configReg.continuos = en == EN;
     return write_reg(configReg);
 }
 
-IResult<> INA226::enable_alert_latch(const bool en){
-    maskReg.alertLatchEnable = en;
+IResult<> INA226::enable_alert_latch(const Enable en){
+    maskReg.alertLatchEnable = en == EN;
     return write_reg(maskReg);
 }
 

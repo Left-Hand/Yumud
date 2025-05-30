@@ -99,15 +99,15 @@ struct OPA_Def{
         CFGR1.OPCM_LOCK = 1;
     }
 
-    constexpr void enable_opa_interrupt(const bool en){
+    constexpr void enable_opa_interrupt(const Enable en){
         CFGR1.IE_CNT = en;
     }
 
-    constexpr void enable_opa_polling_interrupt(const bool en){
+    constexpr void enable_opa_polling_interrupt(const Enable en){
         CFGR1.IE_CNT = en;
     }
 
-    constexpr void enable_nmi_from_opa(const bool en){
+    constexpr void enable_nmi_from_opa(const Enable en){
         CFGR1.NMI_EN = en;
     }
 
@@ -138,7 +138,7 @@ struct OPA_Def{
         return CFGR2.POLL1_CNT;
     }
 
-    constexpr void enable(const bool en){
+    constexpr void enable(const Enable en){
         CTLR1.EN1 = en;
     }
 
@@ -150,7 +150,7 @@ struct OPA_Def{
         CTLR1.PSEL1 = ch;
     }
 
-    constexpr void enable_opa_fb_res(const bool en){
+    constexpr void enable_opa_fb_res(const Enable en){
         CTLR1.FB_EN = en;
     }
 
@@ -158,7 +158,7 @@ struct OPA_Def{
         CTLR1.NSEL1 = ch;
     }
 
-    constexpr void enable_opa_lowpower_mode(const bool en){
+    constexpr void enable_opa_lowpower_mode(const Enable en){
         CTLR1.LP1 = en;
     }
 
@@ -170,7 +170,7 @@ struct OPA_Def{
         CTLR1.ITRIMN = trim;
     }
 
-    constexpr void enable_cmp(const uint8_t index, const bool en){
+    constexpr void enable_cmp(const uint8_t index, const Enable en){
         switch(index){
             case 1: CTLR2.EN1 = en; break;
             case 2: CTLR2.EN2 = en; break;
@@ -202,7 +202,7 @@ struct OPA_Def{
         }
     }
 
-    constexpr void enable_cmp_hysteresis(const uint8_t index,const bool en){
+    constexpr void enable_cmp_hysteresis(const uint8_t index,const Enable en){
         switch(index){
             case 1: CTLR2.HYEN1 = en; break;
             case 2: CTLR2.HYEN2 = en; break;
@@ -210,7 +210,7 @@ struct OPA_Def{
         }
     }
 
-    constexpr void enable_cmp_lowpower_mode(const uint8_t index,const bool en){
+    constexpr void enable_cmp_lowpower_mode(const uint8_t index,const Enable en){
         switch(index){
             case 1: CTLR2.LP1 = en; break;
             case 2: CTLR2.LP2 = en; break;

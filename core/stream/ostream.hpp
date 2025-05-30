@@ -308,8 +308,8 @@ public:
         config_.no_brackets = disen;
         return *this;
     }
-    OutputStream & force_sync(const bool en = true){
-        config_.force_sync = en;
+    OutputStream & force_sync(const Enable en = EN){
+        config_.force_sync = en == EN;
         return *this;
     }
 

@@ -179,7 +179,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         case "dis"_ha:
         case "de"_ha:
         case "d"_ha:
-            motor.enable(false);
+            motor.enable(DISEN);
             MY_OS_PRINTS("disabled");
             break;
 

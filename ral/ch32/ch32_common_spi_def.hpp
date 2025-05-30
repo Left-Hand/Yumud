@@ -7,7 +7,7 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace CH32V20x{
+namespace ymd::ral::CH32V20x{
     struct R16_SPI_CTLR1{
         uint16_t CPHA:1;
         uint16_t CPOL:1;
@@ -136,20 +136,20 @@ namespace CH32V20x{
         constexpr void init_i2s(){
 
         }
-        constexpr void enable_spi(const bool en){
-            CTLR1.SPE = en;
+        constexpr void enable_spi(const Enable en){
+            CTLR1.SPE = en == EN;
         }
 
-        constexpr void enable_i2s(const bool en){
-            CFGR.ISSE = en;
+        constexpr void enable_i2s(const Enable en){
+            CFGR.ISSE = en == EN;
         }
 
-        constexpr void enable_dma_tx(const bool en){
-            CTLR2.TXDMAEN = en;
+        constexpr void enable_dma_tx(const Enable en){
+            CTLR2.TXDMAEN = en == EN;
         }
 
-        constexpr void enable_dma_rx(const bool en){
-            CTLR2.RXDMAEN = en;
+        constexpr void enable_dma_rx(const Enable en){
+            CTLR2.RXDMAEN = en == EN;
         }
 
         constexpr void send(const uint16_t data){
@@ -160,23 +160,23 @@ namespace CH32V20x{
             return std::bit_cast<uint16_t>(DATAR.DR);
         }
 
-        constexpr void enable_soft_cs(const bool en){
-            CTLR1.SSI = en;
+        constexpr void enable_soft_cs(const Enable en){
+            CTLR1.SSI = en == EN;
         }
 
-        constexpr void enable_ss_output(const bool en){
-            CTLR2.SSOE = en;
+        constexpr void enable_ss_output(const Enable en){
+            CTLR2.SSOE = en == EN;
         }
 
-        constexpr void enable_dualbyte(const bool en){
-            CTLR1.DFF = en;
+        constexpr void enable_dualbyte(const Enable en){
+            CTLR1.DFF = en == EN;
         }
 
         constexpr void transmit_crc(){
             CTLR1.CRCNEXT = 1;
         }
 
-        constexpr void enable_crc(const bool en){
+        constexpr void enable_crc(const Enable en){
             CTLR1.CRCNEXT = 1;
         }
 
@@ -200,8 +200,8 @@ namespace CH32V20x{
             CTLR1.BIDIOE = 0;
         }
 
-        constexpr void enable_bidi(const bool en){
-            CTLR1.BIDIMODE = en;
+        constexpr void enable_bidi(const Enable en){
+            CTLR1.BIDIMODE = en == EN;
         }
 
         constexpr Events get_events(){

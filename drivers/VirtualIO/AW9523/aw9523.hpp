@@ -134,9 +134,9 @@ public:
 
     [[nodiscard]] IResult<> set_mode(const size_t index, const hal::GpioMode mode) ;
 
-    [[nodiscard]] IResult<> enable_irq_by_index(const size_t index, const bool en = true);
+    [[nodiscard]] IResult<> enable_irq_by_index(const size_t index, const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_led_mode(const hal::PinSource pin, const bool en = true);
+    [[nodiscard]] IResult<> enable_led_mode(const hal::PinSource pin, const Enable en = EN);
 
     [[nodiscard]] IResult<> set_led_current_limit(const CurrentLimit limit);
 

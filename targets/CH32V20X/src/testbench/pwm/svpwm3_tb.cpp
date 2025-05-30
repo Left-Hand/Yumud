@@ -126,7 +126,7 @@ void svpwm3_main(){
     adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T4TRGO);
     #endif
 
-    adc1.enable_auto_inject(false);
+    adc1.enable_auto_inject(DISEN);
 
     auto & inj = adc1.inj(1);
 

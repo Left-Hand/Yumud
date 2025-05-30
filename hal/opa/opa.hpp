@@ -119,7 +119,7 @@ public:
         using chip::OPA_Inst;
 
         remap<NegMap, PosMap, OutMap>();
-        OPA_Inst->enable(index, true);
+        OPA_Inst->enable(index, EN);
         OPA_Inst->select_neg(index, NegMap);
         OPA_Inst->select_pos(index, PosMap);
         OPA_Inst->select_out(index, OutMap);

@@ -60,7 +60,7 @@ protected:
     Callback half_cb_;
     Mode mode_;
 
-    void enable_rcc(const bool en);
+    void enable_rcc(const Enable en);
 
     void set_periph_width(const size_t width);
 
@@ -260,10 +260,10 @@ public:
 
     size_t pending();
 
-    void enable_it(const NvicPriority _priority, const bool en = true);
+    void enable_it(const NvicPriority _priority, const Enable en = EN);
 
-    void enable_done_it(const bool en = true);
-    void enable_half_it(const bool en = true);
+    void enable_done_it(const Enable en = EN);
+    void enable_half_it(const Enable en = EN);
 
     void bind_done_cb(auto && cb){
         done_cb_ = std::move(cb);

@@ -39,7 +39,7 @@ IResult<> HMC5883L::init(){
     return Ok();
 }
 
-IResult<> HMC5883L::enable_high_speed(const bool en){
+IResult<> HMC5883L::enable_high_speed(const Enable en){
     auto reg = RegCopy(mode_reg);
     reg.hs = true;
     return write_reg(reg);

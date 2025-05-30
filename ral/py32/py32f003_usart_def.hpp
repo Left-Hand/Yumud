@@ -96,15 +96,15 @@ struct USART_Def{
     uint16_t :16;
     volatile R16_CTLR3 CTLR3;
     uint16_t :16;
-    void enable(const bool en){
+    void enable(const Enable en){
         CTLR1.UE = en;
     }
 
-    void enable_tx_dma(const bool en){
+    void enable_tx_dma(const Enable en){
         CTLR3.DMAT = en;
     }
 
-    void enable_rx_dma(const bool en){
+    void enable_rx_dma(const Enable en){
         CTLR3.DMAR = en;
     }
 
@@ -120,7 +120,7 @@ struct USART_Def{
         CTLR1.WAKE = 0;
     }
 
-    void enable_slave_wakeup(const bool en){
+    void enable_slave_wakeup(const Enable en){
         CTLR1.RWU = en;
     }
 
@@ -132,7 +132,7 @@ struct USART_Def{
         CTLR2.LBCL = 0;
     }
 
-    void enable_lin(const bool en){
+    void enable_lin(const Enable en){
         CTLR2.LINEN = en;
     }
 
@@ -149,19 +149,19 @@ struct USART_Def{
     }
 
 
-    void enable_smartcard(const bool en){
+    void enable_smartcard(const Enable en){
         CTLR3.SCEN = en;
     }
 
-    void enable_smartcard_nack(const bool en){
+    void enable_smartcard_nack(const Enable en){
         CTLR3.NACK = en;
     }
 
-    void enable_halfduplex(const bool en){
+    void enable_halfduplex(const Enable en){
         CTLR3.HDSEL = en;
     }
 
-    void enable_oversamp8(const bool en){
+    void enable_oversamp8(const Enable en){
         // CTLR1.
     }
 
@@ -173,7 +173,7 @@ struct USART_Def{
         CTLR3.IRLP = 0;
     }
 
-    void enable_irda(const bool en){
+    void enable_irda(const Enable en){
         CTLR3.IREN = en;
     }
 

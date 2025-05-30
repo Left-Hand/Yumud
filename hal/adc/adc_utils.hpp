@@ -57,7 +57,7 @@ namespace ymd::hal{
     };
 
     namespace __adc_internal{
-        void install_pin(const AdcChannelIndex channel, const bool en = true);
+        void install_pin(const AdcChannelIndex channel, const Enable en = EN);
         real_t read_temp();
     }
 }

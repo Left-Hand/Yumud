@@ -54,8 +54,8 @@ IResult<bool> BMP280::is_idle(){
     return Ok(statusReg.busy == 0);
 }
 
-IResult<> BMP280::enable_spi3(const bool en){
-    configReg.spi3_en = en;
+IResult<> BMP280::enable_spi3(const Enable en){
+    configReg.spi3_en = en == EN;
     return write_reg(configReg);
 }
 
@@ -115,7 +115,7 @@ IResult<> BMP280::init(){
         res.is_err()) return res;
     if(const auto res = set_filter_coefficient(FilterCoefficient::OFF);
         res.is_err()) return res;
-    if(const auto res = enable_spi3(false);
+    if(const auto res = enable_spi3(DISEN);
         res.is_err()) return res;
 
     if(const auto res = read_burst(DIGT1_REG_ADDR, reinterpret_cast<int16_t *>(&digT1), 12);

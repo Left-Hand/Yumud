@@ -29,7 +29,7 @@ IResult<> IST8310::init(){
     if(const auto res = validate();
         res.is_err()) return res;
 
-    if(const auto res = enable_contious(false);
+    if(const auto res = enable_contious(DISEN);
         res.is_err()) return res;
     if(const auto res = set_x_average_times(AverageTimes::_4);
         res.is_err()) return res;
@@ -59,9 +59,9 @@ IResult<> IST8310::reset(){
     reg.reset = 0;
 }
 
-IResult<> IST8310::enable_contious(const bool en){
+IResult<> IST8310::enable_contious(const Enable en){
     auto reg = RegCopy(ctrl1_reg);
-    reg.cont = en;
+    reg.cont = en == EN;
     return write_reg(reg);;
 }
 
@@ -107,9 +107,9 @@ IResult<bool> IST8310::is_data_ready(){
     return Ok(bool(reg.drdy));
 }
 
-IResult<> IST8310::enable_interrupt(const bool en){
+IResult<> IST8310::enable_interrupt(const Enable en){
     auto reg = RegCopy(ctrl2_reg);
-    reg.int_en = en;
+    reg.int_en = en == EN;
     return write_reg(reg);;
 }
 
@@ -119,9 +119,9 @@ IResult<> IST8310::set_interrupt_level(const BoolLevel lv){
     return write_reg(reg);;
 }
 
-IResult<> IST8310::enable_sleep(const bool en){
+IResult<> IST8310::enable_sleep(const Enable en){
     auto reg = RegCopy(ctrl1_reg);
-    reg.awake = !en;
+    reg.awake = en == DISEN;
     return write_reg(reg);;
 }
 

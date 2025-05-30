@@ -214,20 +214,20 @@ IResult<> SC8815::set_ibat_lim_ratio(){
     return Ok();
 }
 
-IResult<> SC8815::enable_otg(const bool en){
+IResult<> SC8815::enable_otg(const Enable en){
     auto reg = RegCopy(ctrl0_set_reg);
-    reg.en_otg = en;
+    reg.en_otg = en == EN;
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_trikle_charge(const bool en){
+IResult<> SC8815::enable_trikle_charge(const Enable en){
     auto reg = RegCopy(ctrl1_set_reg);
-    reg.dis_trickle = !en;
+    reg.dis_trickle = (!en).to_bool();
     return write_reg(reg);
 
 }
 
-IResult<> SC8815::enable_ovp_protect(const bool en){
+IResult<> SC8815::enable_ovp_protect(const Enable en){
     TODO();
     return Ok();
 }
@@ -238,40 +238,40 @@ IResult<> SC8815::power_up(){
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_dither(const bool en){
+IResult<> SC8815::enable_dither(const Enable en){
     auto reg = RegCopy(ctrl2_set_reg);
-    reg.en_dither = en;
+    reg.en_dither = en == EN;
     return write_reg(reg);
 
 }
 
-IResult<> SC8815::enable_adc_conv(const bool en){
+IResult<> SC8815::enable_adc_conv(const Enable en){
     auto reg = RegCopy(ctrl3_set_reg);
-    reg.ad_start = en;
+    reg.ad_start = en == EN;
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_pfm_mode(const bool en){
+IResult<> SC8815::enable_pfm_mode(const Enable en){
     auto reg = RegCopy(ctrl3_set_reg);
-    reg.en_pfm = en;
+    reg.en_pfm = en == EN;
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_sfb(const bool en){
+IResult<> SC8815::enable_sfb(const Enable en){
     auto reg = RegCopy(ctrl3_set_reg);
-    reg.dis_shortfoldback = !en;
+    reg.dis_shortfoldback = en == DISEN;
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_gpo(const bool en){
+IResult<> SC8815::enable_gpo(const Enable en){
     auto reg = RegCopy(ctrl3_set_reg);
-    reg.gpo_ctrl = en;
+    reg.gpo_ctrl = en == EN;
     return write_reg(reg);
 }
 
-IResult<> SC8815::enable_pgate(const bool en){
+IResult<> SC8815::enable_pgate(const Enable en){
     auto reg = RegCopy(ctrl3_set_reg);
-    reg.en_pgate = en;
+    reg.en_pgate = en == EN;
     return write_reg(reg);
 }
 

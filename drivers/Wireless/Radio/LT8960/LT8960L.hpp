@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-class LT8960L{
+class LT8960L final{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = LT8960L_Phy::DEFAULT_I2C_ADDR;
     static constexpr auto MAX_RX_RETRY = 2;
@@ -28,6 +28,9 @@ public:
     using BrclkSel = Regs::BrclkSel;
     using DataRate = Regs::DataRate;
     using Mode = Regs::Mode;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     struct States{
     public:
@@ -95,85 +98,84 @@ protected:
     Channel curr_channel_ = Channel(0);
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> write_reg(const RegAddress address, const uint16_t reg){
+    IResult<> write_reg(const RegAddress address, const uint16_t reg){
         return phy_.write_reg(address, reg);
     }
 
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_reg(const RegAddress address, uint16_t & reg){
+    IResult<> read_reg(const RegAddress address, uint16_t & reg){
         return phy_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> write_regs(Ts const & ... reg) {
+    IResult<> write_regs(Ts const & ... reg) {
         return (phy_.write_reg(reg.address, reg.as_val()) | ...);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_regs(Ts & ... reg) {
+    IResult<> read_regs(Ts & ... reg) {
         return (phy_.read_reg(reg.address, reg.as_ref()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return phy_.read_reg(reg.address, reg);
     }
 
 
-    [[nodiscard]] __fast_inline
-    Result<size_t, Error> write_fifo(std::span<const uint8_t> buf){
+    [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
         return phy_.write_burst(Regs::R16_Fifo::address, buf);
     }
 
-    [[nodiscard]]Result<size_t, Error> read_fifo(std::span<uint8_t> buf);
+    [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);
 
-    [[nodiscard]] Result<void, Error> set_pa_current(const uint8_t current);
+    [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
 
-    [[nodiscard]] Result<void, Error> set_pa_gain(const uint8_t gain);
+    [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
 
-    [[nodiscard]] Result<void, Error> enable_analog(bool en = true);
+    [[nodiscard]] IResult<> enable_analog(Enable en = EN);
 
-    [[nodiscard]] Result<void, Error> change_carrier(const Channel ch);
+    [[nodiscard]] IResult<> change_carrier(const Channel ch);
 
-    [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] Result<void, Error> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
-    [[nodiscard]] Result<void, Error> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
-    [[nodiscard]] Result<void, Error> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
+    [[nodiscard]] IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
+    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
 
-    [[nodiscard]] Result<void, Error> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
-    [[nodiscard]] Result<void, Error> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
-    [[nodiscard]] Result<void, Error> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
+    [[nodiscard]] IResult<> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
+    [[nodiscard]] IResult<> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
+    [[nodiscard]] IResult<> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
 
     
 
-    [[nodiscard]] Result<void, Error> clear_fifo_write_and_read_ptr();
+    [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();
 
-    [[nodiscard]] Result<void, Error> ensure_correct_0x08();
+    [[nodiscard]] IResult<> ensure_correct_0x08();
 
-    [[nodiscard]] Result<void, Error> begin_receive();
+    [[nodiscard]] IResult<> begin_receive();
 
-    [[nodiscard]] Result<void, Error> begin_transmit();
+    [[nodiscard]] IResult<> begin_transmit();
 
-    [[nodiscard]] Result<void, Error> start_listen_pkt();
+    [[nodiscard]] IResult<> start_listen_pkt();
 
-    [[nodiscard]] Result<void, Error> set_radio_mode(const bool isRx);
+    [[nodiscard]] IResult<> set_radio_mode(const bool isRx);
 
-    [[nodiscard]] Result<void, Error> set_brclk_sel(const BrclkSel brclkSel);
+    [[nodiscard]] IResult<> set_brclk_sel(const BrclkSel brclkSel);
 
-    [[nodiscard]] Result<void, Error> clear_fifo_write_ptr();
+    [[nodiscard]] IResult<> clear_fifo_write_ptr();
 
-    [[nodiscard]] Result<void, Error> clear_fifo_read_ptr();
+    [[nodiscard]] IResult<> clear_fifo_read_ptr();
 
-    [[nodiscard]] Result<bool, Error> is_rfsynth_locked();
+    [[nodiscard]] IResult<bool> is_rfsynth_locked();
 
-    [[nodiscard]] Result<void, Error> set_fifo_full_threshold(const uint thd);
+    [[nodiscard]] IResult<> set_fifo_full_threshold(const size_t thd);
 
-    [[nodiscard]] Result<void, Error> set_fifo_empty_threshold(const uint thd);
+    [[nodiscard]] IResult<> set_fifo_empty_threshold(const size_t thd);
 
 
 
@@ -184,79 +186,81 @@ public:
         phy_(scl, sda){;}
 
 
-    [[nodiscard]] Result<void, Error> set_rf_freq_mhz(const uint freq);
+    [[nodiscard]] IResult<> set_rf_freq_mhz(const size_t freq);
 
-    [[nodiscard]] Result<void, Error> set_syncword(const uint32_t syncword);
+    [[nodiscard]] IResult<> set_syncword(const uint32_t syncword);
 
-    [[nodiscard]] Result<void, Error> set_retrans_time(const uint8_t times);
+    [[nodiscard]] IResult<> set_retrans_time(const uint8_t times);
 
-    [[nodiscard]] Result<void, Error> enable_autoack(const bool en = true);
+    [[nodiscard]] IResult<> enable_autoack(const Enable en = EN);
 
-    [[nodiscard]] Result<void, Error> init(const Power power, uint32_t syncword);
+    [[nodiscard]] IResult<> init(const Power power, uint32_t syncword);
 
-    [[nodiscard]] Result<void, Error> init_rf();
+    [[nodiscard]] IResult<> init_rf();
     
-    [[nodiscard]] Result<void, Error> init_ble(const Power power);
+    [[nodiscard]] IResult<> init_ble(const Power power);
 
-    [[nodiscard]] Result<void, Error> set_preamble_bytes(const uint bytes);
+    [[nodiscard]] IResult<> set_preamble_bytes(const size_t bytes);
 
-    [[nodiscard]] Result<void, Error> set_syncword_bytes(const uint bytes);
+    [[nodiscard]] IResult<> set_syncword_bytes(const size_t bytes);
     
-    [[nodiscard]] Result<void, Error> set_trailer_bits(const uint bits);
+    [[nodiscard]] IResult<> set_trailer_bits(const size_t bits);
 
-    [[nodiscard]] Result<void, Error> set_pack_type(const PacketType ptype);
+    [[nodiscard]] IResult<> set_pack_type(const PacketType ptype);
 
-    [[nodiscard]] Result<void, Error> wake();
+    [[nodiscard]] IResult<> wake();
 
-    [[nodiscard]] Result<void, Error> reset();
-    [[nodiscard]] Result<void, Error> wakup(){return reset();}
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> wakup(){return reset();}
 
-    [[nodiscard]] Result<void, Error> sleep();
+    [[nodiscard]] IResult<> sleep();
 
-    [[nodiscard]] Result<void, Error> validate();
+    [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] Result<void, Error> set_tx_power(const Power power);
+    [[nodiscard]] IResult<> set_tx_power(const Power power);
 
-    [[nodiscard]] Result<size_t, Error> transmit_rf(std::span<const uint8_t> buf);
+    [[nodiscard]] IResult<size_t> transmit_rf(std::span<const uint8_t> buf);
 
-    [[nodiscard]] Result<size_t, Error> receive_rf(std::span<uint8_t> buf);
+    [[nodiscard]] IResult<size_t> receive_rf(std::span<uint8_t> buf);
 
-    [[nodiscard]] Result<size_t, Error> transmit_ble(std::span<const uint8_t> buf);
+    [[nodiscard]] IResult<size_t> transmit_ble(std::span<const uint8_t> buf);
     
-    [[nodiscard]] Result<size_t, Error> receive_ble(std::span<uint8_t> buf);
+    [[nodiscard]] IResult<size_t> receive_ble(std::span<uint8_t> buf);
 
-    [[nodiscard]] Result<void, Error> set_datarate(LT8960L::DataRate rate);
+    [[nodiscard]] IResult<> set_datarate(LT8960L::DataRate rate);
 
-    [[nodiscard]] Result<void, Error> enable_gain_weaken(const bool en);
+    [[nodiscard]] IResult<> enable_gain_weaken(const Enable en);
 
-    [[nodiscard]] Result<bool, Error> is_pkt_ready();
+    [[nodiscard]] IResult<bool> is_pkt_ready();
     
-    [[nodiscard]] Result<bool, Error> is_receiving();
+    [[nodiscard]] IResult<bool> is_receiving();
 
-    [[nodiscard]] Result<bool, Error> is_rst_done();
+    [[nodiscard]] IResult<bool> is_rst_done();
 
-    [[nodiscard]] Result<void, Error> wait_pkt_ready(const uint timeout);
+    [[nodiscard]] IResult<> wait_pkt_ready(const size_t timeout);
 
-    [[nodiscard]] Result<void, Error> wait_rst_done(const uint timeout);
+    [[nodiscard]] IResult<> wait_rst_done(const size_t timeout);
 
-    [[nodiscard]] Result<void, Error> set_rf_channel(const Channel ch){curr_channel_ = ch; return Ok();}
+    [[nodiscard]] IResult<> set_rf_channel(const Channel ch){
+        curr_channel_ = ch; return Ok();}
 
-    [[nodiscard]] Result<void, Error> enable_use_hw_pkt(const bool en){use_hw_pkt_ = en; return Ok();}
+    [[nodiscard]] IResult<> enable_use_hw_pkt(const Enable en){
+        use_hw_pkt_ = en == EN; return Ok();}
 
-    [[nodiscard]] Result<void, Error> tick();
+    [[nodiscard]] IResult<> tick();
     
 
-    [[nodiscard]] Result<void, Error> write(const std::span<const uint8_t> pdata);
+    [[nodiscard]] IResult<> write(const std::span<const uint8_t> pdata);
 
-    [[nodiscard]] Result<void, Error> read(const std::span<uint8_t> pdata);
+    [[nodiscard]] IResult<> read(const std::span<uint8_t> pdata);
 
     [[nodiscard]] size_t available() const;
 
     [[nodiscard]] size_t pending() const;
 
-    [[nodiscard]] Result<void, Error> on_interrupt();
+    [[nodiscard]] IResult<> on_interrupt();
 
-    [[nodiscard]] Result<void, Error> set_syncword_tolerance_bits(const uint bits);
+    [[nodiscard]] IResult<> set_syncword_tolerance_bits(const size_t bits);
 };
 
 }

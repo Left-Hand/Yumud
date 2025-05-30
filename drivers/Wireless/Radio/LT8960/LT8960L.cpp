@@ -330,7 +330,7 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
 
     | set_datarate(DataRate::_62_5K)
     | clear_fifo_write_and_read_ptr()
-    | enable_gain_weaken(true)
+    | enable_gain_weaken(EN)
     ;
 }
 

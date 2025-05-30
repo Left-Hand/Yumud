@@ -247,13 +247,13 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_bus_voltage_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_bus_voltage_measure(const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_continuous_measure(const bool en = true);
+    [[nodiscard]] IResult<> enable_continuous_measure(const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_alert_latch(const bool en = true);
+    [[nodiscard]] IResult<> enable_alert_latch(const Enable en = EN);
 };
 
 

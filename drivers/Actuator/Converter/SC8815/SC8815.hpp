@@ -304,15 +304,15 @@ public:
 
     [[nodiscard]] IResult<> set_ibat_lim_ratio();
 
-    [[nodiscard]] IResult<> enable_otg(const bool en = true);
-    [[nodiscard]] IResult<> enable_trikle_charge(const bool en = true);
-    [[nodiscard]] IResult<> enable_ovp_protect(const bool en = true);
-    [[nodiscard]] IResult<> enable_dither(const bool en = true);
-    [[nodiscard]] IResult<> enable_adc_conv(const bool en = true);
-    [[nodiscard]] IResult<> enable_pfm_mode(const bool en = true);
-    [[nodiscard]] IResult<> enable_sfb(const bool en = true);
-    [[nodiscard]] IResult<> enable_gpo(const bool en = true);
-    [[nodiscard]] IResult<> enable_pgate(const bool en = true);
+    [[nodiscard]] IResult<> enable_otg(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_trikle_charge(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_ovp_protect(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_dither(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_adc_conv(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_pfm_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_sfb(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_gpo(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_pgate(const Enable en = EN);
 
     [[nodiscard]] IResult<> set_bat_volt(const BatVoltType bat_volt);
 

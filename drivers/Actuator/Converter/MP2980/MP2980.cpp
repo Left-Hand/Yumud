@@ -37,7 +37,7 @@ IResult<> MP2980::set_feed_back_vref_mv(const uint vref_mv){
 // Enables power switching. 
 // 1: Enable power switching 
 // 0: Disable power switching but other internal control circuits work 
-IResult<> MP2980::enable_power_switching(const bool en){
+IResult<> MP2980::enable_power_switching(const Enable en){
     // The default value is determined via the ADDR pin setting. See Table 1 on 
     // page 28 for more details. 
     // If ENPWR resets from 1 to 0, the MP2980 resets the VREF bits to 0.5V 
@@ -46,7 +46,7 @@ IResult<> MP2980::enable_power_switching(const bool en){
     // ENPWR = 0. The host must re-write VREF again if the system requires 
     // the previous VOUT value after ENPWR = 0. 
     // After ENPWER is set to 0, the discharge function works for 200ms. 
-    ctrl1_reg.en_pwr = en;
+    ctrl1_reg.en_pwr = en == EN;
     return write_reg(ctrl1_reg);
 }
 
@@ -54,7 +54,7 @@ IResult<> MP2980::enable_power_switching(const bool en){
 // 1: VOUT changes based on the VREF registers. After VREF reaches the 
 // new level set via the VREF bits, GO_BIT resets to 0 automatically 
 // 0: VOUT cannot be changed 
-IResult<> MP2980::enable_vref_change_func(const bool en){
+IResult<> MP2980::enable_vref_change_func(const Enable en){
     // If GO_BIT = 1, enable the output change based on the VREF register. 
     // When the command completes (internal VREF steps to the target VREF), 
     // GO_BIT automatically resets to 0. This prevents false operation of VOUT 
@@ -69,7 +69,7 @@ IResult<> MP2980::enable_vref_change_func(const bool en){
     // conditions. After GO_BIT resets to 0, the discharge continues and turn off 
     // after a 20ms delay. 
 
-    ctrl1_reg.go_bit = en;
+    ctrl1_reg.go_bit = en == EN;
     return write_reg(ctrl1_reg);
 }
 
@@ -84,8 +84,8 @@ IResult<> MP2980::set_png_state(const bool state){
     return write_reg(ctrl1_reg);
 }
 
-IResult<> MP2980::enable_dither(const bool en){
-    ctrl1_reg.dither = en;
+IResult<> MP2980::enable_dither(const Enable en){
+    ctrl1_reg.dither = en == EN;
     return write_reg(ctrl1_reg);
 }
 
@@ -156,13 +156,13 @@ IResult<> MP2980::init(){
 
     if(const auto res = set_feed_back_vref(0.5_r);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = enable_power_switching(true);
+    if(const auto res = enable_power_switching(EN);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = enable_vref_change_func(false);
+    if(const auto res = enable_vref_change_func(DISEN);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = set_png_state(false);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = enable_dither(false);
+    if(const auto res = enable_dither(DISEN);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = set_vref_slew_rate(VrefSlewRate::_50_V_S);
         res.is_err()) return Err(res.unwrap_err());

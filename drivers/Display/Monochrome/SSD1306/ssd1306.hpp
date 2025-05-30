@@ -136,7 +136,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> enable_display(const bool en = true);
+    [[nodiscard]] IResult<> enable_display(const Enable en = EN);
     [[nodiscard]] IResult<> enable_flip_y(const bool flip = true){
         return phy_.write_command(0xA0 | flip);}
     [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){

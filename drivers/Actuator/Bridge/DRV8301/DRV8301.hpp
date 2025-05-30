@@ -166,7 +166,7 @@ public:
     IResult<> set_octw_mode(const OctwMode octw_mode);
     IResult<> set_gain(const Gain gain);
     IResult<> set_oc_ad_table(const OcAdTable oc_ad_table);
-    IResult<> enable_pwm3(const bool en = true);
+    IResult<> enable_pwm3(const Enable en = EN);
 private:
     hal::SpiDrv spi_drv_;
 

@@ -11,31 +11,31 @@ void GpioPort::set_mode(const size_t index, const GpioMode mode){
     gpio.set_mode(mode);
 }
 
-void GpioPort::enableRcc(const bool en){
+void GpioPort::enableRcc(const Enable en){
     switch((uint32_t)instance){
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, en == EN);
             break;
         #endif
         #ifdef ENABLE_GPIOB
         case GPIOB_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, en == EN);
             break;
         #endif
         #ifdef ENABLE_GPIOC
         case GPIOC_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, en == EN);
             break;
         #endif
         #ifdef ENABLE_GPIOD
         case GPIOD_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, en == EN);
             break;
         #endif
         #ifdef ENABLE_GPIOE
         case GPIOE_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, en == EN);
             break;
         #endif
         default:

@@ -132,7 +132,7 @@ struct RCC_Def{
     volatile R32_RCC_APB1PCENR APB1PCENR;
     volatile R32_RCC_RSTSCKR RSTSCKR;
 
-    constexpr void enable_hsi(const bool en){
+    constexpr void enable_hsi(const Enable en){
         CTLR.HSION = en;
     }
 
@@ -205,7 +205,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void reset_spi(const uint8_t index, const bool en){
+    constexpr void reset_spi(const uint8_t index, const Enable en){
         switch(index){
             case 1: APB2PRSTR.SPI1RST = en;
         }
@@ -225,25 +225,25 @@ struct RCC_Def{
         RSTSCKR.POR_RSTF = 1;
     }
 
-    constexpr void enable_dma_clock(const uint8_t index, const bool en){
+    constexpr void enable_dma_clock(const uint8_t index, const Enable en){
         switch(index){
             case 1: AHBPCENR.DMA1 = en;
         }
     }
 
-    constexpr void enable_usbfs_clock(const bool en){
+    constexpr void enable_usbfs_clock(const Enable en){
         AHBPCENR.USBFS = en;
     }
 
-    constexpr void enable_usbpd_clock(const bool en){
+    constexpr void enable_usbpd_clock(const Enable en){
         AHBPCENR.USBPD = en;
     }
 
-    constexpr void enable_afio_clock(const bool en){
+    constexpr void enable_afio_clock(const Enable en){
         APB2PCENR.AFIOEN = en;
     }
 
-    constexpr void enable_io_port_clock(const uint8_t index, const bool en){
+    constexpr void enable_io_port_clock(const uint8_t index, const Enable en){
         switch(index){
             case 0: APB2PCENR.IOPAEN = en;
             case 1: APB2PCENR.IOPBEN = en;
@@ -251,20 +251,20 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_timer_clock(const uint8_t index, const bool en){
+    constexpr void enable_timer_clock(const uint8_t index, const Enable en){
         switch(index){
             case 2: APB1PCENR.TIM2EN = en;
             case 3: APB1PCENR.TIM3EN = en;
         }
     }
 
-    constexpr void enable_adc_clock(const uint8_t index, const bool en){
+    constexpr void enable_adc_clock(const uint8_t index, const Enable en){
         switch(index){
             case 1: APB2PCENR.ADC1EN = en;
         }
     }
 
-    constexpr void enable_usart_clock(const uint8_t index, const bool en){
+    constexpr void enable_usart_clock(const uint8_t index, const Enable en){
         switch(index){
             case 1: APB1PCENR.USART2EN = en;
             case 2: APB1PCENR.USART3EN = en;
@@ -272,23 +272,23 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_spi_clock(const uint8_t index, const bool en){
+    constexpr void enable_spi_clock(const uint8_t index, const Enable en){
         switch(index){
             case 1: APB2PCENR.SPI1EN = en;
         }
     }
 
-    constexpr void enable_i2c_clock(const uint8_t index, const bool en){
+    constexpr void enable_i2c_clock(const uint8_t index, const Enable en){
         switch(index){
             case 1: APB1PCENR.I2C1EN = en;
         }
     }
 
-    constexpr void enable_wwdg_clock(const bool en){
+    constexpr void enable_wwdg_clock(const Enable en){
         APB1PCENR.WWDGEN = en;
     }
 
-    constexpr void enable_pwr_clock(const bool en){
+    constexpr void enable_pwr_clock(const Enable en){
         APB1PCENR.PWREN = en;
     }
 

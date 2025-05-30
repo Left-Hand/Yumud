@@ -117,8 +117,8 @@ public:
         
     }
 
-    void inverse(const bool en){
-        inversed = en;
+    void inverse(const Enable en){
+        inversed = en == EN;
     }
 };
 

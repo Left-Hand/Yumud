@@ -189,7 +189,7 @@ public:
 
     [[nodiscard]] IResult<> set_band_width(const BandWidth bw);
 
-    [[nodiscard]] IResult<> enable_contious(const bool en = true);
+    [[nodiscard]] IResult<> enable_contious(const Enable en = EN);
 
     [[nodiscard]] IResult<> inhibit_channels(bool x, bool y, bool z);
 

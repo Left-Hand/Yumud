@@ -24,7 +24,7 @@ public:
     I2c(I2c && other) = default;
 
     void set_timeout(const std::chrono::microseconds timeout){timeout_ = timeout;}
-    void discard_ack(const bool en){discard_ack_ = en;}
+    void discard_ack(const Enable en){discard_ack_ = en == EN;}
 
     virtual hal::HalResult read(uint32_t & data, const Ack ack) = 0;
     virtual hal::HalResult write(const uint32_t data) = 0;

@@ -30,11 +30,11 @@ struct RNG_Def{
     volatile R32_RNG_SR SR;
     volatile R32_RNG_DR DR;
 
-    void enable(const bool en){
+    void enable(const Enable en){
         CR.RNGEN = en;
     }
 
-    void enable_interrupt(const bool en){
+    void enable_interrupt(const Enable en){
         CR.IE = en;
     }
 

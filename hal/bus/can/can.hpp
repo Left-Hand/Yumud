@@ -133,14 +133,14 @@ public:
     [[nodiscard]] size_t available();
 
     void clear_rx(){while(this->available()){(void)this->read();}}
-    void set_sync(const bool en){sync_ = en;}
+    void set_sync(const Enable en){sync_ = en == EN;}
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
-    void enable_hw_retransmit(const bool en = true);
+    void enable_hw_retransmit(const Enable en = EN);
     void cancel_transmit(const uint8_t mbox);
     void cancel_all_transmits();
-    void enable_fifo_lock(const bool en = true);
-    void enable_index_priority(const bool en = true);
+    void enable_fifo_lock(const Enable en = EN);
+    void enable_index_priority(const Enable en = EN);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
     [[nodiscard]] CanError get_last_error();

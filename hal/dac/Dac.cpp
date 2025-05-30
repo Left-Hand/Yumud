@@ -65,7 +65,7 @@ void DacChannel::settle(){
     io.inana();
 }
 
-void Dac::enableRcc(const bool en){
+void Dac::enableRcc(const Enable en){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, en);
 }
 

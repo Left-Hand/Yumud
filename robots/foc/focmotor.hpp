@@ -71,7 +71,7 @@ public:
     virtual void setPositionLimit(const Range & clamp) = 0;
     virtual void setSpeedLimit(const real_t max_spd) = 0;
     virtual void setAccLimit(const real_t max_acc) = 0;
-    virtual void enable(const bool en = true) = 0;
+    virtual void enable(const Enable en = EN) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 
@@ -101,7 +101,7 @@ protected:
         error_message = _error_message;
         status() = RunStatus::ERROR;
         if(shutdown_when_error_occurred){
-            enable(false);
+            enable(DISEN);
         }
         // CLI_DEBUG(error_message);
     }
@@ -110,7 +110,7 @@ protected:
         warn_message = _warn_message;
         status() = RunStatus::WARN;
         if(shutdown_when_warn_occurred){
-            enable(false);
+            enable(DISEN);
         }
         // CLI_DEBUG(warn_message);
     }

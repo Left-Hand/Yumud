@@ -254,7 +254,7 @@ void myservo_main(){
         // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
         adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
         // adc1.enableContinous();
-        adc1.enable_auto_inject(false);
+        adc1.enable_auto_inject(DISEN);
     };
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
