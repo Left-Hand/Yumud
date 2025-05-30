@@ -31,7 +31,7 @@ public:
 
     void set_ab_duty(const real_t x, const real_t y) final override;
 
-    void enable(const bool en = true) final override{
+    void enable(const Enable en = EN) final override{
         driver_.enable(en);
     }
 };

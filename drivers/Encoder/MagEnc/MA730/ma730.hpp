@@ -89,35 +89,29 @@ class MA730 final:
 public:
     MA730(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     MA730(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<bool> is_stable() {return is_magnitude_proper();}
-
 
     [[nodiscard]] IResult<> set_zero_position(const real_t position);
     [[nodiscard]] IResult<real_t> get_lap_position(){
-        return Ok(lap_position);
+        return Ok(lap_position_);
     }
 
-    [[nodiscard]]
-    IResult<> set_trim_x(const real_t k);
+    [[nodiscard]] IResult<> set_trim_x(const real_t k);
 
-    [[nodiscard]]
-    IResult<> set_trim_y(const real_t k);
+    [[nodiscard]] IResult<> set_trim_y(const real_t k);
 
-    [[nodiscard]]
-    IResult<> set_trim(const real_t am, const real_t e);
+    [[nodiscard]] IResult<> set_trim(const real_t am, const real_t e);
 
-    [[nodiscard]]
-    IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
+    [[nodiscard]] IResult<> set_mag_threshold(
+        const MagThreshold low, const MagThreshold high);
 
     [[nodiscard]] IResult<> set_direction(const bool direction);
-    [[nodiscard]] IResult<bool> is_magnitude_low();
-    [[nodiscard]] IResult<bool> is_magnitude_high();
-    [[nodiscard]] IResult<bool> is_magnitude_proper();
+    [[nodiscard]] IResult<MagStatus> get_mag_status();
 
     [[nodiscard]]
     IResult<> set_zparameters(const Width width, const Phase phase);
@@ -126,7 +120,7 @@ public:
     IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
-    real_t lap_position = {};
+    real_t lap_position_ = {};
 
     [[nodiscard]]
     IResult<> write_reg(const RegAddress addr, uint8_t data);
@@ -135,7 +129,7 @@ private:
     IResult<> read_reg(const RegAddress addr, uint8_t & reg);
 
     [[nodiscard]]
-    IResult<> direct_read(uint16_t & data);
+    IResult<uint16_t> direct_read();
     
     [[nodiscard]]
     IResult<uint16_t> get_raw_data();
@@ -143,11 +137,5 @@ private:
     [[nodiscard]]
     IResult<> set_zero_data(const uint16_t data);
 };
-
-// class MA732:public MA730{
-// public:
-//     using MA730::MA730; 
-// };
-
 
 };

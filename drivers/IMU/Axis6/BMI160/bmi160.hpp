@@ -137,8 +137,8 @@ public:
     [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
 
     [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pum);
-    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
 
 
     [[nodiscard]] __fast_inline constexpr
@@ -188,8 +188,8 @@ private:
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
 
-    static real_t calculate_acc_scale(const AccRange range);
-    static real_t calculate_gyr_scale(const GyrRange range);
+    [[nodiscard]] static real_t calculate_acc_scale(const AccRange range);
+    [[nodiscard]] static real_t calculate_gyr_scale(const GyrRange range);
 };
 
 }

@@ -56,13 +56,13 @@ void MP6540::init(){
     return;
 }
 
-void MP6540::enable(const bool en){
+void MP6540::enable(const Enable en){
     bool has_en = false;
     for(size_t i = 0; i < 3; i++){
         const auto & item = ens_[i]; 
         if(item == nullptr){
         }else{
-            item->write(BoolLevel::from(en));
+            item->write(en == EN ? HIGH : LOW);
         }
     }
 

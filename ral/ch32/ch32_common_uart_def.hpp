@@ -1,12 +1,14 @@
 #pragma once
 
 #include <cstdint>
+#include "core/io/regs.hpp"
+
 
 #ifndef BIT_CAST
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace CH32{
+namespace ymd::ral::CH32{
 
 struct R16_STATR{
     uint16_t PE:1;
@@ -109,16 +111,16 @@ struct USART_Def{
     volatile R16_GPR GPR;
     uint16_t :16;
 
-    void enable(const bool en){
-        CTLR1.UE = en;
+    void enable(const Enable en){
+        CTLR1.UE = en == EN;
     }
 
-    void enable_tx_dma(const bool en){
-        CTLR3.DMAT = en;
+    void enable_tx_dma(const Enable en){
+        CTLR3.DMAT = en == EN;
     }
 
-    void enable_rx_dma(const bool en){
-        CTLR3.DMAR = en;
+    void enable_rx_dma(const Enable en){
+        CTLR3.DMAR = en == EN;
     }
 
     void set_address(const uint8_t addr){
@@ -133,8 +135,8 @@ struct USART_Def{
         CTLR1.WAKE = 0;
     }
 
-    void enable_slave_wakeup(const bool en){
-        CTLR1.RWU = en;
+    void enable_slave_wakeup(const Enable en){
+        CTLR1.RWU = en == EN;
     }
 
     void switch_lin_breakdetect_11bit(){
@@ -145,8 +147,8 @@ struct USART_Def{
         CTLR2.LBCL = 0;
     }
 
-    void enable_lin(const bool en){
-        CTLR2.LINEN = en;
+    void enable_lin(const Enable en){
+        CTLR2.LINEN = en == EN;
     }
 
     void send(const uint16_t data){
@@ -169,28 +171,28 @@ struct USART_Def{
         GPR.PSC = scaler;
     }
 
-    void enable_smartcard(const bool en){
-        CTLR3.SCEN = en;
+    void enable_smartcard(const Enable en){
+        CTLR3.SCEN = en == EN;
     }
 
-    void enable_smartcard_nack(const bool en){
-        CTLR3.NACK = en;
+    void enable_smartcard_nack(const Enable en){
+        CTLR3.NACK = en == EN;
     }
 
-    void enable_halfduplex(const bool en){
-        CTLR3.HDSEL = en;
+    void enable_halfduplex(const Enable en){
+        CTLR3.HDSEL = en == EN;
     }
 
-    void enable_oversamp8(const bool en){
+    void enable_oversamp8(const Enable en){
         // CTLR1.
     }
 
-    void enable_irda_lowpower(const bool en){
-        CTLR3.IRLP = en;
+    void enable_irda_lowpower(const Enable en){
+        CTLR3.IRLP = en == EN;
     }
 
-    void enable_irda(const bool en){
-        CTLR3.IREN = en;
+    void enable_irda(const Enable en){
+        CTLR3.IREN = en == EN;
     }
 
     void wait_transmit_complete(){

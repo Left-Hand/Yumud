@@ -11,7 +11,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "types/quat/Quat.hpp"
+#include "types/vectors/quat/Quat.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
@@ -35,9 +35,9 @@ using namespace ymd::hal;
 
 
 static constexpr size_t MAX_COAST_ITEMS = 64;
-using Pile = Range2_t<uint8_t>;
+using Pile = Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
-using Pixel = Vector2_t<uint8_t>;
+using Pixel = Vector2<uint8_t>;
 using PixelSegment = std::pair<Pixel ,Pixel>;
 using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
 
@@ -59,11 +59,11 @@ class Plotter{
     Plotter(drivers::ST7789 & tft):
         tft_(tft)
     {
-        painter_.bind_image(tft);
+        // painter_.bind_image(tft);
     }
 
     IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
-        tft_.put_texture(area, image.get_data());
+        tft_.put_texture(area, image.get_data()).examine();
 
         return Ok();
     };
@@ -77,8 +77,8 @@ class Plotter{
             it != std::prev(coast.end()); 
             it = std::next(it)
         ){
-            auto & p_curr = *it;
-            auto & p_next = *std::next(it);
+            const auto & p_curr = *it;
+            const auto & p_next = *std::next(it);
             if(const auto res = painter_.draw_line(p_curr, p_next);
                 res.is_err()) return res;
         }
@@ -113,29 +113,29 @@ class Plotter{
     };
 
 
-    IResult<> plot_vec3(const Vector3_t<real_t> & vec3,  const Vector2u pos){
+    IResult<> plot_vec3(const Vector3<real_t> & vec3,  const Vector2u pos){
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
-        static constexpr auto X_UNIT = Vector2_t<real_t>::RIGHT;
-        static constexpr auto Y_UNIT = Vector2_t<real_t>::RIGHT.rotated(real_t(PI / 3));
-        static constexpr auto Z_UNIT = Vector2_t<real_t>::DOWN;
+        static constexpr auto X_UNIT = Vector2<real_t>::RIGHT;
+        static constexpr auto Y_UNIT = Vector2<real_t>::RIGHT.rotated(real_t(PI / 3));
+        static constexpr auto Z_UNIT = Vector2<real_t>::DOWN;
         
         static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
         static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
         static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vector3_t<real_t>::from_x(arm_length);
-        const auto y_axis = Vector3_t<real_t>::from_y(arm_length);
-        const auto z_axis = Vector3_t<real_t>::from_z(arm_length);
+        const auto x_axis = Vector3<real_t>::from_x(arm_length);
+        const auto y_axis = Vector3<real_t>::from_y(arm_length);
+        const auto z_axis = Vector3<real_t>::from_z(arm_length);
 
         const auto rot = Quat_t<real_t>::from_direction(vec3);
         const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
-            const Vector3_t<real_t> & axis, const char chr, const RGB565 color)
+            const Vector3<real_t> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            const Vector3_t<real_t> end = rot.xform(axis);
+            const Vector3<real_t> end = rot.xform(axis);
             const Vector2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
@@ -160,13 +160,14 @@ private:
     Painter<RGB565> painter_;
 };
 
+
 void smc2025_main(){
 
     UART.init(576_KHz);
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(true);
+    DEBUGGER.force_sync(EN);
 
 
     // bkp.init();edRunStatus();
@@ -184,7 +185,7 @@ void smc2025_main(){
 
     drivers::ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 240});
 
-    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170);
+    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170).examine();
 
     I2cSw cam_i2c{hal::portD[2], hal::portC[12]};
     cam_i2c.init(100_KHz);
@@ -218,7 +219,7 @@ void smc2025_main(){
                 ins_opt.unwrap();
             }), 
             src.get_data()
-        );
+        ).examine();
     };
 
     [[maybe_unused]] auto plot_bina = [&](
@@ -233,7 +234,7 @@ void smc2025_main(){
                 ins_opt.unwrap();
             }), 
             src.get_data()
-        );
+        ).examine();
     };
 
 
@@ -245,36 +246,34 @@ void smc2025_main(){
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
         // const auto gray_img = camera.frame().clone();
-        // const auto viewpoint = Pose_t<real_t>{
+        // const auto pose = Pose_t<real_t>{
         //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
         [[maybe_unused]]const auto t = clock::time();
-        const auto viewpoint = Pose2_t{
-            // Vector2_t<real_t>(0, -1.5_r) + Vector2_t<real_t>(-1.9_r, 0)
+        const auto pose = Pose2_t{
+            // Vector2<real_t>(0, -1.5_r) + Vector2<real_t>(-1.9_r, 0)
             // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
             // {1.0_r, -0.5_r}, 0.0_r};
-            {0.0_r, -0.01_r}, 0.0_r};
-
-
-            // Vector2_t<real_t>(-0.1_r, 0), real_t(PI)};
+            {-1.0_r, -1.81_r}, 1.57_r};
 
         const auto mbegin = clock::micros();
-        const auto gray_img = Scenes::render_scene1(viewpoint, 0.006_r);
-        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
-        // const auto gray_img = Scenes::render_scene1(viewpoint, 0.02_r);
+        // const auto gray_img = Scenes::render_scene2(pose, 0.02_r);
+        const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
+        // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
+        // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data());
+        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data()).examine();
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
         const auto rect = gray_img.size().to_rect();
-        const auto range = Range2_t<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
         DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
-        // DEBUG_PRINTLN(render_use.count(), viewpoint);
+        // DEBUG_PRINTLN(render_use.count(), pose);
     }
 
     // timer4.init(24000);

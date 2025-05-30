@@ -106,11 +106,11 @@ public:
 //     }
 
 
-//     void set(const Pin pin) override{
+//     void set(const PinSource pin) override{
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ | (uint8_t)pin);
 //     }
-//     void clr(const Pin pin) override{
+//     void clr(const PinSource pin) override{
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ &= ~(uint8_t)(pin));
 //     }

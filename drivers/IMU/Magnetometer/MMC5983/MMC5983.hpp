@@ -63,7 +63,7 @@ struct MMC5983_Regs:public MMC5983_Collections{
     struct alignas(sizeof(8)) DataPacket{
         static constexpr uint8_t address = 0;
 
-        constexpr Vector3_t<int32_t> to_vec3() const{
+        constexpr Vector3<int32_t> to_vec3() const{
             const int32_t x = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
             const int32_t y = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
             const int32_t z = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
@@ -198,7 +198,7 @@ public:
     [[nodiscard]] IResult<> enable_x(const Enable en);
     [[nodiscard]] IResult<> enable_yz(const Enable en);
     
-    [[nodiscard]] IResult<Vector3_t<q24>> read_mag();
+    [[nodiscard]] IResult<Vector3<q24>> read_mag();
     [[nodiscard]] IResult<q16> read_temp();
     
     
@@ -209,8 +209,8 @@ public:
     [[nodiscard]] IResult<> set_prd_magset(const PrdSet prdset);
     [[nodiscard]] IResult<> enable_magset(const Enable en);
     [[nodiscard]] IResult<> enable_magreset(const Enable en);
-    [[nodiscard]] IResult<Vector3_t<q24>> do_magset();
-    [[nodiscard]] IResult<Vector3_t<q24>> do_magreset();
+    [[nodiscard]] IResult<Vector3<q24>> do_magset();
+    [[nodiscard]] IResult<Vector3<q24>> do_magreset();
     [[nodiscard]] IResult<> enable_auto_mag_sr(const Enable en);
     
     [[nodiscard]] IResult<> enable_mag_meas(const Enable en);

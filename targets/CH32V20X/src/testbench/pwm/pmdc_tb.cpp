@@ -37,7 +37,7 @@
 //         vref_pwm = ABS(abs_max_value) / 3.3;
 //     }
 
-//     void enable(const bool en = true){
+//     void enable(const Enable en = EN){
 //         enabled = en;
 //         if(!en){
 //             // forward_pwm = real_t(1);

@@ -24,7 +24,7 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const
 }
 
 
-TimerChannel & TimerChannel::enableDma(const bool en){
+TimerChannel & TimerChannel::enableDma(const Enable en){
     using enum ChannelIndex;
 
     uint16_t source = 0;
@@ -46,7 +46,7 @@ TimerChannel & TimerChannel::enableDma(const bool en){
             break;
     }
 
-    TIM_DMACmd(instance, source, en);
+    TIM_DMACmd(instance, source, en == EN);
 
     return *this;
 }

@@ -3,7 +3,7 @@
 
 #include "../nvcv2.hpp"
 
-namespace ymd::nvcv2::Geometry{
+namespace ymd::nvcv2::geometry{
 
 struct PerspectiveConfig{
     real_t H1; 
@@ -27,13 +27,13 @@ struct InvPerspectiveConfig{
     real_t H8;
 };
 
-Vector2 perspective(const Vector2 & v);
+Vector2q<16> perspective(const Vector2q<16> & v);
 
-Vector2 inv_perspective(const Vector2 & v);
+Vector2q<16> inv_perspective(const Vector2q<16> & v);
 
-Vector2 inv_perspective_fast(const Vector2 & v);
+Vector2q<16> inv_perspective_fast(const Vector2q<16> & v);
 
 void perspective(
-    __restrict ImageWritable<Grayscale> & dst,
-    __restrict const ImageReadable<Grayscale> & src);
+    __restrict Image<Grayscale> & dst,
+    __restrict const Image<Grayscale> & src);
 }

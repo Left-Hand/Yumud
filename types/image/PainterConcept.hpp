@@ -10,9 +10,9 @@
 #include "core/utils/Errno.hpp"
 
 
-#include "types/rect2/rect2.hpp"
-#include "types/color/color_t.hpp"
-#include "types/rgb.h"
+#include "types/regions/rect2/rect2.hpp"
+#include "types/colors/color/color.hpp"
+#include "types/colors/rgb/rgb.hpp"
 
 #include "font/font.hpp"
 
@@ -37,7 +37,8 @@ public:
         NoEnglishFontFounded,
         NoChineseFontFounded,
         StringLengthTooLong,
-        PointsTooLess
+        PointsTooLess,
+        Unfinished,
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
@@ -52,7 +53,8 @@ public:
     PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
         this->set_color(color);
-        draw_filled_rect(this->get_clip_window());
+        if(const auto res = draw_filled_rect(this->get_clip_window());
+            res.is_err()) return res;
         // return res;
         return Ok();
     }

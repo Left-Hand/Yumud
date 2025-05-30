@@ -2,15 +2,15 @@
 
 #include "Encoder.hpp"
 #include "concept/analog_channel.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 
 namespace ymd::drivers{
 class AnalogEncoder final:public EncoderIntf{
 public:
     using Error = EncoderError;
     struct Config{
-        Range2_t<real_t> volt_range;
-        Range2_t<real_t> pos_range;
+        Range2<real_t> volt_range;
+        Range2<real_t> pos_range;
     };
 
     AnalogEncoder(const Config & cfg, hal::AnalogInIntf & ain):
@@ -31,14 +31,10 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] Result<bool, EncoderError> is_stable(){
-        return Ok(true);
-    }
-
 private:
     hal::AnalogInIntf & ain_;
-    Range2_t<real_t> volt_range_;
-    Range2_t<real_t> pos_range_;
+    Range2<real_t> volt_range_;
+    Range2<real_t> pos_range_;
     real_t last_pos_;
 };
 

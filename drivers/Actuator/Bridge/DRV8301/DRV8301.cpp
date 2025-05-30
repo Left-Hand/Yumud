@@ -17,51 +17,54 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define WRITE_REG(reg) write_reg(reg.address, reg.as_val());
-#define READ_REG(reg) read_reg(reg.address, reg.as_ref());
+using Error = DRV8301::Error;
 
-void DRV8301::init(){
+template<typename T = void>
+using IResult = Result<T, Error>;
 
+IResult<> DRV8301::init(){
+    TODO();
+    return Ok();
 }
 
-void DRV8301::setPeakCurrent(const PeakCurrent peak_current){
-    auto & reg = ctrl1_reg;
+IResult<> DRV8301::set_peak_current(const PeakCurrent peak_current){
+    auto reg = RegCopy(ctrl1_reg);
     reg.gate_current = uint16_t(peak_current);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
-void DRV8301::setOcpMode(const OcpMode ocp_mode){
-    auto & reg = ctrl1_reg;
+IResult<> DRV8301::set_ocp_mode(const OcpMode ocp_mode){
+    auto reg = RegCopy(ctrl1_reg);
     reg.ocp_mode = uint16_t(ocp_mode);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
 
-void DRV8301::setOctwMode(const OctwMode octw_mode){
-    auto & reg = ctrl2_reg;
+IResult<> DRV8301::set_octw_mode(const OctwMode octw_mode){
+    auto reg = RegCopy(ctrl2_reg);
     reg.octw_mode = uint16_t(octw_mode);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
-void DRV8301::setGain(const Gain gain){
-    auto & reg = ctrl2_reg;
+IResult<> DRV8301::set_gain(const Gain gain){
+    auto reg = RegCopy(ctrl2_reg);
     reg.gain = uint16_t(gain);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
-void DRV8301::setOcAdTable(const OcAdTable oc_ad_table){
-    auto & reg = ctrl1_reg;
+IResult<> DRV8301::set_oc_ad_table(const OcAdTable oc_ad_table){
+    auto reg = RegCopy(ctrl1_reg);
     reg.oc_adj_set = uint8_t(oc_ad_table);
-    WRITE_REG(reg);
+    return write_reg(reg);
 }
 
-void DRV8301::enablePwm3(const bool en){
-    auto & reg = ctrl1_reg;
-    reg.pwm3_en = en;
-    WRITE_REG(reg);
+IResult<> DRV8301::enable_pwm3(const Enable en){
+    auto reg = RegCopy(ctrl1_reg);
+    reg.pwm3_en = en == EN;
+    return write_reg(reg);
 }
 
-struct SpiFormat{
+struct Payload{
     uint16_t data:11;
     uint16_t addr:4;
     uint16_t write:1;
@@ -75,28 +78,30 @@ struct SpiFormat{
     }
 };
 
-static_assert(sizeof(SpiFormat) == 2);
+static_assert(sizeof(Payload) == 2);
 
-hal::HalResult DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
-    const SpiFormat spi_format = {
+IResult<> DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
+    const Payload payload = {
         .data = reg,
         .addr = uint16_t(addr),
         .write = 0
     };
 
-    return spi_drv_.write_single<uint16_t>((spi_format));
+    if(const auto res = spi_drv_.write_single<uint16_t>((payload));
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
-hal::HalResult DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
-    SpiFormat spi_format = {
+IResult<> DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
+    Payload payload = {
         .data = 0,
         .addr = uint16_t(addr),
         .write = 1
     };
 
-    const auto err = spi_drv_.read_single<uint16_t>((spi_format));
-    if(err.is_err()) return err;
-    reg = spi_format.data;
+    const auto res = spi_drv_.read_single<uint16_t>((payload));
+    if(res.is_err()) return Err(res.unwrap_err());
+    reg = payload.data;
 
-    return hal::HalResult::Ok();
+    return Ok();
 }

@@ -11,28 +11,28 @@ protected:
     const SequenceLimits & limits_;
     const SequenceParas & paras_;
 
-    void rotate(Curve & curve, const Ray2_t<real_t> & from, const real_t & end_rad);
+    void rotate(Curve & curve, const Ray2q<16> & from, const q16 & end_rad);
 
-    void linear(Curve & curve, const Ray2_t<real_t> & from, const Vector2 & end_pos);
+    void linear(Curve & curve, const Ray2q<16> & from, const Vector2q<16> & end_pos);
 public:
     Sequencer(const SequenceLimits & limits, const SequenceParas & paras):
         limits_(limits), paras_(paras){}
     
     //圆弧插补 未实现
-    void arc(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to, const real_t & radius);
+    void arc(Curve & curve, const Ray2q<16> & from, const Ray2q<16> & to, const q16 & radius);
     
     //侧向移动
-    void sideways(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to);
+    void sideways(Curve & curve, const Ray2q<16> & from, const Ray2q<16> & to);
 
     //径向移动
-    void follow(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to);
+    void follow(Curve & curve, const Ray2q<16> & from, const Ray2q<16> & to);
 
     //平移
-    void shift(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to);
+    void shift(Curve & curve, const Ray2q<16> & from, const Ray2q<16> & to);
 
     //旋转
-    void spin(Curve & curve, const Ray2_t<real_t> & from, const Ray2_t<real_t> & to);
+    void spin(Curve & curve, const Ray2q<16> & from, const Ray2q<16> & to);
 
-    void wait(Curve & curve, const Ray2_t<real_t> & from, const real_t & dur);
+    void wait(Curve & curve, const Ray2q<16> & from, const q16 & dur);
 };
 }

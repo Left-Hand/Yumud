@@ -34,8 +34,8 @@ protected:
     Nozzle & nozzle;
 public:
     void goHome();//进行坐标归位
-    void moveXY(const Vector2 & pos);//只改变XY坐标
-    Vector2 getPos();
+    void moveXY(const Vector2q<16> & pos);//只改变XY坐标
+    Vector2q<16> getPos();
     void press();//拾起物块
     void release();//放下物块
     void idle();

@@ -104,7 +104,7 @@ void sincos_pwm_main(){
     TimerOcPair pwm_a = {pwm_ap, pwm_an};
     TimerOcPair pwm_b = {pwm_bp, pwm_bn};
 
-    pwm_b.inverse(true);
+    pwm_b.inverse(EN);
 
     adc1.init(
         {
@@ -128,7 +128,7 @@ void sincos_pwm_main(){
     adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T4TRGO);
     #endif
 
-    adc1.enable_auto_inject(false);
+    adc1.enable_auto_inject(DISEN);
 
     auto & inj = adc1.inj(1);
 

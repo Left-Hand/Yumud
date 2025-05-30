@@ -153,7 +153,7 @@ public:
 
     [[nodiscard]] IResult<> set_target_voltage(const real_t volt);
 
-    [[nodiscard]] IResult<> enable_external_fb(const bool en = true);
+    [[nodiscard]] IResult<> enable_external_fb(const Enable en = EN);
 
     [[nodiscard]] IResult<> set_dead_zone(const DeadZone dz);
 

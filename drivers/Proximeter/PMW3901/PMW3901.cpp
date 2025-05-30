@@ -136,7 +136,7 @@ Result<void, Error> PMW3901::read_reg(const uint8_t command, uint8_t & data){
 
 Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
     return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_burst<uint8_t>(data, len));
+    | spi_drv_.read_burst<uint8_t>(std::span(data, len)));
 }
 
 
@@ -221,7 +221,7 @@ Result<void, Error> PMW3901::update(){
 Result<void, Error> PMW3901::update(const real_t rad){
     return read_data()
     .if_ok([&]{
-        auto delta = Vector2_t<real_t>(data_.dx.as_val(), data_.dy.as_val())
+        auto delta = Vector2<real_t>(data_.dx.as_val(), data_.dy.as_val())
             .rotated(rad - real_t(PI/2)) * scale;
         x_cm += delta.x;
         y_cm += delta.y;

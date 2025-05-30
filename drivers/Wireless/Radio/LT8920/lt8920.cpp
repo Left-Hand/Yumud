@@ -129,7 +129,7 @@ void LT8920::clearFifoPtr() {
 }
 
 void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
-    config1_reg.syncWordLen = (uint16_t)len;
+    config1_reg.syncWordLen = std::bit_cast<uint8_t>(len);
     write_reg(config1_reg.address, (config1_reg));
 }
 
@@ -138,13 +138,13 @@ void LT8920::setRetransTime(const uint8_t times) {
     write_reg(config2_reg.address, (config2_reg));
 }
 
-void LT8920::enableAutoAck(const bool en) {
-    config3_reg.autoAck = en;
+void LT8920::enableAutoAck(const Enable en) {
+    config3_reg.autoAck = en == EN;
     write_reg(config3_reg.address, (config3_reg));
 }
 
-void LT8920::enableCrc(const bool en){
-    config3_reg.crcEn = en;
+void LT8920::enableCrc(const Enable en){
+    config3_reg.crcEn = en == EN;
     write_reg(config3_reg.address, (config3_reg));
 }
 
@@ -389,7 +389,7 @@ hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv_){
         if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); err.is_err()) return err;
-        return spi_drv_->write_burst<uint8_t>(data, len);
+        return spi_drv_->write_burst<uint8_t>(std::span(data, len));
     }else if(i2c_drv_){
         return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
     }
@@ -400,8 +400,9 @@ hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
 hal::HalResult LT8920::readFifo(uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv_){
-        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); err.is_err()) return err;
-        return spi_drv_->read_burst<uint8_t>(data, len);
+        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
+            err.is_err()) return err;
+        return spi_drv_->read_burst<uint8_t>(std::span(data, len));
     }else if(i2c_drv_){
         return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
     }
@@ -422,7 +423,7 @@ hal::HalResult LT8920::updateFifoStatus(){
 
 bool LT8920::getFifoStatus(){
     if(fifo_status_gpio){
-        return bool(fifo_status_gpio->read());
+        return fifo_status_gpio->read().to_bool();
     }else{
         updateFifoStatus();
         return flag_reg.fifoFlag;
@@ -431,7 +432,7 @@ bool LT8920::getFifoStatus(){
 
 bool LT8920::getPktStatus(){
     if(pkt_status_gpio){
-        return bool(pkt_status_gpio->read());
+        return pkt_status_gpio->read().to_bool();
     }else{
         updateFifoStatus();
         return flag_reg.pktFlag;

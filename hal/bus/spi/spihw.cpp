@@ -8,11 +8,11 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-void SpiHw::enable_rcc(const bool en){
+void SpiHw::enable_rcc(const Enable en){
     switch((uint32_t)instance_){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
             if(SPI1_REMAP){
                 GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
             }
@@ -20,7 +20,7 @@ void SpiHw::enable_rcc(const bool en){
         #endif
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en == EN);
             break;
         #endif
         default:
@@ -184,11 +184,11 @@ void SpiHw::install_gpios(){
     }
 }
 
-void SpiHw::enable_hw_cs(const bool en){
+void SpiHw::enable_hw_cs(const Enable en){
     Gpio & cs_gpio = get_hw_cs_gpio();
     cs_gpio.set();
 
-    if(en){
+    if(en == EN){
         cs_gpio.afpp();
     }else{
         cs_gpio.outpp();
@@ -197,7 +197,7 @@ void SpiHw::enable_hw_cs(const bool en){
     instance_->enable_soft_cs(!en);
 }
 
-void SpiHw::enable_rx_it(const bool en){
+void SpiHw::enable_rx_it(const Enable en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const CommStrategy rx_strategy){
@@ -225,7 +225,7 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
 	SPI_Init((SPI_TypeDef *)instance_, &SPI_InitStructure);
 
 	// SPI_Cmd((SPI_TypeDef *)instance_, ENABLE);
-    instance_->enable_spi(true);
+    instance_->enable_spi(EN);
 
     while ((instance_->STATR.TXE) == RESET);
     instance_->DATAR.DR = 0;
@@ -237,7 +237,7 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
 
 
 hal::HalResult SpiHw::set_data_width(const uint8_t bits){
-    instance_->enable_dualbyte(bits == 16);
+    instance_->enable_dualbyte((bits == 16) ? EN : DISEN);
     return hal::HalResult::Ok();
 }
 

@@ -99,10 +99,10 @@ public:
 private:
     std::array<Callback, 8> cbs_;
 protected:
-    TIM_TypeDef * instance;
+    TIM_TypeDef * instance_;
 
     uint32_t get_bus_freq();
-    void enable_rcc(const bool en);
+    void enable_rcc(const Enable en);
     void remap(const uint8_t rm);
     
     __fast_inline Callback & get_callback(const IT it){
@@ -125,13 +125,13 @@ protected:
     }
 
 public:
-    BasicTimer(TIM_TypeDef * _base):instance(_base){;}
+    BasicTimer(TIM_TypeDef * _base):instance_(_base){;}
 
     
-    void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
+    void init(const uint32_t ferq, const Mode mode = Mode::Up, const Enable en = EN);
     void deinit();
 
-    void enable(const bool en = true);
+    void enable(const Enable en = EN);
     void set_count_mode(const TimerCountMode mode);
 
     void set_psc(const uint16_t psc);
@@ -139,30 +139,34 @@ public:
 
     void set_freq(const uint32_t freq);
 
-    void enable_it(const IT it,const NvicPriority request, const bool en = true);
-    void enable_arr_sync(const bool sync = true);
-    void enable_psc_sync(const bool sync = true);
+    void enable_it(const IT it,const NvicPriority request, const Enable en = EN);
+    void enable_arr_sync(const Enable en = EN);
+    void enable_psc_sync(const Enable en = EN);
 
-    void enable_cc_ctrl_sync(const bool sync = true);
-    auto & inst() {return instance;}
+    void enable_cc_ctrl_sync(const Enable en = EN);
+    auto & inst() {return instance_;}
 
-    volatile uint16_t & cnt(){return instance->CNT;}
-    volatile uint16_t & arr(){return instance->ATRLR;}
+    volatile uint16_t & cnt(){return instance_->CNT;}
+    volatile uint16_t & arr(){return instance_->ATRLR;}
 
-    void attach(const IT it, const NvicPriority & priority, auto && cb, const bool en = true){
-        bind_cb(it, std::forward<decltype(cb)>(cb));
+    template<typename Fn>
+    void attach(
+            const IT it, 
+            const NvicPriority & priority, 
+            Fn && cb, const Enable en = EN){
+        bind_cb(it, std::forward<Fn>(cb));
         enable_it(it, priority, en);
     }
 
     void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
-        attach(it, priority, nullptr, false);
+        attach(it, priority, nullptr, DISEN);
     }
 
     void bind_cb(const IT ch, auto && cb){
         get_callback(ch) = std::forward<decltype(cb)>(cb);
     }
 
-    BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
+    BasicTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM6
     BASIC_TIMER_FRIEND_DECL(6)
@@ -184,10 +188,10 @@ public:
     GenericTimer(TIM_TypeDef * _base):
             BasicTimer(_base),
             channels{
-                TimerOC(instance, TimerChannel::ChannelIndex::CH1),
-                TimerOC(instance, TimerChannel::ChannelIndex::CH2),
-                TimerOC(instance, TimerChannel::ChannelIndex::CH3),
-                TimerOC(instance, TimerChannel::ChannelIndex::CH4)
+                TimerOC(instance_, TimerChannel::ChannelIndex::CH1),
+                TimerOC(instance_, TimerChannel::ChannelIndex::CH2),
+                TimerOC(instance_, TimerChannel::ChannelIndex::CH3),
+                TimerOC(instance_, TimerChannel::ChannelIndex::CH4)
             }{;}
 
     void init_as_encoder(const Mode mode = Mode::Up);
@@ -198,7 +202,7 @@ public:
 
     TimerChannel & operator [](const int index);
     TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[uint8_t(channel) >> 1];}
-    [[deprecated]] GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
+    [[deprecated]] GenericTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM2
     GENERIC_TIMER_FRIEND_DECL(2)
@@ -236,22 +240,22 @@ public:
     AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
             n_channels{
-                TimerOCN(instance, TimerChannel::ChannelIndex::CH1N),
-                TimerOCN(instance, TimerChannel::ChannelIndex::CH2N),
-                TimerOCN(instance, TimerChannel::ChannelIndex::CH3N),
+                TimerOCN(instance_, TimerChannel::ChannelIndex::CH1N),
+                TimerOCN(instance_, TimerChannel::ChannelIndex::CH2N),
+                TimerOCN(instance_, TimerChannel::ChannelIndex::CH3N),
             }{;}
 
     void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
 
 
     void set_deadzone_ns(const uint32_t ns);
-    void set_repeat_times(const uint8_t rep){instance->RPTCR = rep;}
+    void set_repeat_times(const uint8_t rep){instance_->RPTCR = rep;}
 
     TimerChannel & operator [](const int index);
 
     TimerChannel & operator [](const TimerChannel::ChannelIndex ch);
     TimerOCN & ocn(const int index){return n_channels[index - 1];}
-    [[deprecated]] AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
+    [[deprecated]] AdvancedTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM1
     ADVANCED_TIMER_FRIEND_DECL(1);

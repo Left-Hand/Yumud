@@ -15,7 +15,7 @@ scexpr bool is_odd(const uint16_t val){
 
 
 
-struct SpiFrame{
+struct TxFrame{
     // #pragma pack(push, 1)
     // uint8_t slave_addr:7;
     // uint8_t write:1;
@@ -46,7 +46,7 @@ struct SpiFrame{
         const bool pen;
     };
 
-    constexpr SpiFrame(const WriteConfig & config):
+    constexpr TxFrame(const WriteConfig & config):
         header{
             uint8_t(uint8_t(config.slave_addr << 1) | uint8_t(0b1)),
 
@@ -64,7 +64,7 @@ struct SpiFrame{
                     : uint8_t(0b0))),
         } {}
 
-    constexpr SpiFrame(const ReadConfig & config):
+    constexpr TxFrame(const ReadConfig & config):
         header{
             uint8_t(uint8_t(config.slave_addr << 1) | uint8_t(0b0)),
 
@@ -75,7 +75,7 @@ struct SpiFrame{
         } {}
 };
 
-struct SpiReadResult{
+struct RxFrame{
     std::array<uint8_t, 3> payload;
 
     std::optional<uint16_t> result(){
@@ -101,7 +101,7 @@ hal::HalResult MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data
         return i2c_drv_->write_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
 
-        const SpiFrame frame = {SpiFrame::WriteConfig{
+        const TxFrame frame = {TxFrame::WriteConfig{
             .slave_addr = spi_slave_addr_,
             .reg_addr = reg_addr,
             .pen = true,
@@ -109,8 +109,7 @@ hal::HalResult MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data
         }};
 
         return spi_drv_->write_burst<uint8_t>(
-            (frame.payload.begin())
-            , (frame.payload.size()),
+            std::span(frame.payload),
             DISC);
     }else{
         PANIC("No phy");
@@ -122,24 +121,21 @@ hal::HalResult MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
     if(i2c_drv_){
         return i2c_drv_->read_reg(reg_addr, data, MSB);
     }else if(spi_drv_){
-        const SpiFrame frame = {SpiFrame::ReadConfig{
+        const TxFrame frame = {TxFrame::ReadConfig{
             .slave_addr = spi_slave_addr_,
             .reg_addr = reg_addr,
             .pen = true,
         }};
 
         if(const auto err = spi_drv_->write_burst<uint8_t>(
-            (frame.payload.begin())
-            , (frame.payload.size()),
+            std::span(frame.payload),
             CONT); err.is_err()) return err;
 
-        SpiReadResult rr;
+        RxFrame rr;
 
         if(const auto err = spi_drv_->read_burst<uint8_t>(
-            (rr.payload.begin())
-            , (rr.payload.size()),
-            DISC
-        ); err.is_err()) return err;
+            std::span(rr.payload),
+            DISC); err.is_err()) return err;
 
         const auto result_opt = rr.result();
         if(result_opt){

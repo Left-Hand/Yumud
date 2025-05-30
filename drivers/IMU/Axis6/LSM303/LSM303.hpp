@@ -15,18 +15,18 @@ public:
 
     LSM303(void);
 
-    IResult<> init(deviceType device = device_auto, sa0State sa0 = sa0_auto);
+    [[nodiscard]] IResult<> init(deviceType device = device_auto, sa0State sa0 = sa0_auto);
 
-    IResult<> enableDefault();
+    [[nodiscard]] IResult<> enable_default();
 
 
-    IResult<> readAcc();
-    IResult<> readMag();
-    IResult<> read();
+    [[nodiscard]] IResult<> read_acc();
+    [[nodiscard]] IResult<> read_mag();
+    [[nodiscard]] IResult<> read();
 private:
     
-    Option<Vector3_t<int16_t>> m_max = None; // maximum magnetometer values, used for calibration
-    Option<Vector3_t<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
+    Option<Vector3<int16_t>> m_max = None; // maximum magnetometer values, used for calibration
+    Option<Vector3<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
     deviceType _device = device_auto;; // chip type (D, DLHC, DLM, or DLH)
     uint8_t acc_address;
     uint8_t mag_address;
@@ -34,15 +34,15 @@ private:
     static const int dummy_reg_count = 6;
     regAddr translated_regs[dummy_reg_count + 1]; // index 0 not used
 
-    IResult<> test_reg(const uint8_t reg, const uint8_t val){return Ok();}
+    [[nodiscard]] IResult<> test_reg(const uint8_t reg, const uint8_t val){return Ok();}
     
-    IResult<> writeAccReg(uint8_t reg, uint8_t value);
+    [[nodiscard]] IResult<> write_acc_reg(uint8_t reg, uint8_t value);
     // uint8_t readAccReg(uint8_t reg);
-    IResult<> writeMagReg(uint8_t reg, uint8_t value);
+    [[nodiscard]] IResult<> write_mag_reg(uint8_t reg, uint8_t value);
     // uint8_t readMagReg(int reg);
 
-    IResult<> writeReg(uint8_t reg, uint8_t value);
-    IResult<> readReg(int reg, uint8_t & data);
+    [[nodiscard]] IResult<> write_reg(uint8_t reg, uint8_t value);
+    [[nodiscard]] IResult<> read_reg(int reg, uint8_t & data);
 };
 
 }

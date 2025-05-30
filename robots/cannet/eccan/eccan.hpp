@@ -117,8 +117,7 @@ private:
         switch(state_){
             default:break;
             case State::GET_HEADER:
-                handle_header(data);
-                break;
+                return handle_header(data);
             case State::GET_CRC:
                 break;
             case State::GET_DATA:

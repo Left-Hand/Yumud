@@ -284,17 +284,17 @@ void nuedc_2023e_main(){
 
     [[maybe_unused]]
     auto test_td = [&](const auto t){
-        // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
+        // const auto u = 6 * Vector2q<16>::RIGHT.rotated(real_t(TAU) * t);
         // const auto [x,y] = sincos(real_t(TAU) * t);
         // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
-        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
-        // const auto u = Vector2{10 * frac(t * 3), 0};
-        const auto u = Vector2{10 * frac(t), 0};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vector2q<16>{10 * frac(t * 3), 0};
+        const auto u = Vector2q<16>{10 * frac(t), 0};
         
-        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vector2{6 * x, 0};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vector2q<16>{6 * x, 0};
 
         const auto u0 = clock::micros();
         td.update(u);
@@ -305,12 +305,12 @@ void nuedc_2023e_main(){
     [[maybe_unused]]
     auto test_cs = [&](const auto t){
         const auto tau = 80.0_r;
-        // const auto u = 6 * Vector2::RIGHT.rotated(real_t(TAU) * t);
+        // const auto u = 6 * Vector2q<16>::RIGHT.rotated(real_t(TAU) * t);
         // const auto [x,y] = sincos(real_t(TAU) * t);
         // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
-        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vector2{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -5, 5) + m, 0};
         
         // const auto u = 10 * frac(t);
         // const auto u = 10 * sinpu(t);
@@ -320,8 +320,8 @@ void nuedc_2023e_main(){
         // const auto u = 5 * frac(t);
         const auto u = 10 * sign(sin(3 * t));
 
-        // const auto u = Vector2{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vector2{6 * x, 0};
+        // const auto u = Vector2q<16>{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vector2q<16>{6 * x, 0};
 
         static dsp::Leso leso{dsp::Leso::Config{
             .b0 = 1,

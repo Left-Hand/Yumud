@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/rect2/rect2.hpp"
+#include "types/regions/rect2/rect2.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace etk{
@@ -8,11 +8,11 @@ namespace etk{
 using namespace ymd::drivers;
 
 struct EyeInfo{
-    Vector2_t<real_t> pos;
+    Vector2<real_t> pos;
 };
 
 struct EyelidInfo{
-    Range2_t<real_t> range;
+    Range2<real_t> range;
 };
 
 class Eyes;

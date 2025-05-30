@@ -10,7 +10,7 @@ void GrabModule::goHome(){
     scara_.goHome();
 }
 
-void GrabModule::rapid(const Vector3_t<real_t> & pos){
+void GrabModule::rapid(const Vector3q<16> & pos){
     if(config_.safe_aabb.has_point(pos) == false){
         DEBUG_PRINTLN("out of bound", pos);
         return;
@@ -43,12 +43,12 @@ void GrabModule::release(){
     self << new ReleaseAction(self);
 }
 
-void GrabModule::move(const Vector3_t<real_t> & pos){
+void GrabModule::move(const Vector3q<16> & pos){
     auto & self = *this;
     self << new MoveAction(self, pos);
 }
 
-void GrabModule::move_xy(const Vector2 & pos){
+void GrabModule::move_xy(const Vector2q<16> & pos){
     auto & self = *this;
     self << new MoveXYAction(self, pos);
 }
@@ -58,7 +58,7 @@ void GrabModule::move_z(const real_t z){
     self << new MoveZAction(self, z);
 }
 
-Vector3_t<real_t> GrabModule::getPos(){
+Vector3q<16> GrabModule::getPos(){
     auto xy = scara_.getPos();
     auto z = zaxis_.getDistance();
     return {xy.x,xy.y,z};
@@ -180,8 +180,8 @@ void GrabModule::test(){
     // self.addAction(new MoveAction{self, config_.})
     // self << new TestAction{self};
     self << new TestAction{self};
-    // self << MoveAction(self, Vector3_t<real_t>(0, 0, 0), Vector3_t<real_t>(1,1,1));
-    // self << new MoveAction(self, Vector3_t<real_t>(0, 0.2_r, 0.1_r), Vector3_t<real_t>(0.1_r,0.2_r,0.1_r));
+    // self << MoveAction(self, Vector3q<16>(0, 0, 0), Vector3q<16>(1,1,1));
+    // self << new MoveAction(self, Vector3q<16>(0, 0.2_r, 0.1_r), Vector3q<16>(0.1_r,0.2_r,0.1_r));
     // self << PressAction(self);
     // self << ReleaseAction(self);
 }
@@ -206,28 +206,28 @@ void GrabModule::init(){
 }
 
 
-// Vector2 GrabModule::calculateTrayPos(TrayIndex index) const{
+// Vector2q<16> GrabModule::calculateTrayPos(TrayIndex index) const{
 //     // return {config_.tray_xy[size_t(index)].x, 0.144_r};
 //     return {config_.tray_xy[size_t(index)]};
 //     // switch(index){
 //     //     case TrayIndex::Left :
-//     //         return (Vector2{-0.1_r, 0.2_r});  
+//     //         return (Vector2q<16>{-0.1_r, 0.2_r});  
 //     //     case TrayIndex::Center :
-//     //         return (Vector2{0, 0.2_r});  
+//     //         return (Vector2q<16>{0, 0.2_r});  
 //     //     case TrayIndex::Right :
-//     //         return (Vector2{0.1_r, 0.2_r});  
+//     //         return (Vector2q<16>{0.1_r, 0.2_r});  
 //     // }
 // }
 
-// Vector2 GrabModule::calculateCatchPos(TrayIndex index) const{
+// Vector2q<16> GrabModule::calculateCatchPos(TrayIndex index) const{
 //     return {config_.catch_xy[size_t(index)]};
 //     // switch(index){
 //     //     default:
 //     //     case TrayIndex::Left :
-//     //         return (Vector2{-0.1_r, 0.24_r});  
+//     //         return (Vector2q<16>{-0.1_r, 0.24_r});  
 //     //     case TrayIndex::Center :
-//     //         return (Vector2{0, 0.24_r});  
+//     //         return (Vector2q<16>{0, 0.24_r});  
 //     //     case TrayIndex::Right :
-//     //         return (Vector2{0.1_r, 0.24_r});  
+//     //         return (Vector2q<16>{0.1_r, 0.24_r});  
 //     // }
 // }

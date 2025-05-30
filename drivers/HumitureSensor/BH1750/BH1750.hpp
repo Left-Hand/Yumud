@@ -55,8 +55,8 @@ public:
         currentMode = mode;
     }
 
-    void enable_continuous(const bool enabled = true){
-        continuous = enabled;
+    void enable_continuous(const Enable en = EN){
+        continuous = en == EN;
     }
 
     void start_conv();

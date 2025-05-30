@@ -12,9 +12,9 @@ class Classify{
 class Mnist{
 public:
     
-    scexpr int N = 10; 
-    scexpr Vector2i img_size = {28, 28};
-    scexpr int img_channels = 1;
+    static constexpr uint N = 10; 
+    static constexpr Vector2u IMAGE_SIZE = {28, 28};
+    static constexpr uint IMAGE_CHANNELS = 1;
 
     using Choices = std::array<real_t, N>;
     
@@ -28,7 +28,7 @@ public:
 protected:
     tm_mdl_t mdl;
     bool loaded = false;
-    tm_mat_t in = {3,img_size.x,img_size.y,img_channels, NULL};
+    tm_mat_t in = {3,IMAGE_SIZE.x,IMAGE_SIZE.y,IMAGE_CHANNELS, NULL};
     tm_mat_t outs[1];
 
     static tm_err_t layer_cb(tm_mdl_t* mdl, tml_head_t* lh){

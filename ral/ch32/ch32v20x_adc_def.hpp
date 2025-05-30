@@ -247,35 +247,35 @@ struct ADC_Def{
         CTLR1.AWDCH = channel;
     }
 
-    constexpr void enable_eoc_it(const bool en){
+    constexpr void enable_eoc_it(const Enable en){
         CTLR1.EOCIE = en;
     }
 
-    constexpr void enable_awd_it(const bool en){
+    constexpr void enable_awd_it(const Enable en){
         CTLR1.AWDIE = en;
     }
 
-    constexpr void enable_jeoc_it(const bool en){
+    constexpr void enable_jeoc_it(const Enable en){
         CTLR1.JEOCIE = en;
     }
 
-    constexpr void enable_scan_mode(const bool en){
+    constexpr void enable_scan_mode(const Enable en){
         CTLR1.SCAN = en;
     }
 
-    constexpr void enable_single_channel_watchdog_when_scan(const bool en){
+    constexpr void enable_single_channel_watchdog_when_scan(const Enable en){
         CTLR1.AWDSGL = en;
     }
 
-    constexpr void enable_auto_inject(const bool en){
+    constexpr void enable_auto_inject(const Enable en){
         CTLR1.JAUTO = en;
     }
 
-    constexpr void enable_regular_disc_mode(const bool en){
+    constexpr void enable_regular_disc_mode(const Enable en){
         CTLR1.DISCEN = en;
     }
 
-    constexpr void enable_injected_disc_mode(const bool en){
+    constexpr void enable_injected_disc_mode(const Enable en){
         CTLR1.JDISCEN = en;
     }
 
@@ -287,23 +287,23 @@ struct ADC_Def{
         CTLR1.DUALMOD = mode;
     }
 
-    constexpr void enable_injected_watchdog(const bool en){
+    constexpr void enable_injected_watchdog(const Enable en){
         CTLR1.JAWDEN = en;
     }
 
-    constexpr void enable_regular_watchdog(const bool en){
+    constexpr void enable_regular_watchdog(const Enable en){
         CTLR1.AWDEN = en;
     }
 
-    constexpr void enable_touchkey(const bool en){
+    constexpr void enable_touchkey(const Enable en){
         CTLR1.TKENABLE = en;
     }
 
-    constexpr void enable_touchkey_low_charge(const bool en){
+    constexpr void enable_touchkey_low_charge(const Enable en){
         CTLR1.TKITUNE = en;
     }
 
-    constexpr void enable_buffer(const bool en){
+    constexpr void enable_buffer(const Enable en){
         CTLR1.BUFEN = en;
     }
 
@@ -319,27 +319,27 @@ struct ADC_Def{
         }();
     }
 
-    constexpr void enable(const bool en){
+    constexpr void enable(const Enable en){
         CTLR2.ADON = en;
     }
 
-    constexpr void enable_cont_mode(const bool en){
+    constexpr void enable_cont_mode(const Enable en){
         CTLR2.CONT = en;
     }
 
-    constexpr void enable_calibrate(const bool en){
+    constexpr void enable_calibrate(const Enable en){
         CTLR2.CAL = en;
     }
 
-    constexpr void reset_calibrate(const bool en){
+    constexpr void reset_calibrate(const Enable en){
         CTLR2.RSTCAL = en;
     }
 
-    constexpr void enable_dma(const bool en){
+    constexpr void enable_dma(const Enable en){
         CTLR2.DMA = en;
     }
 
-    constexpr void enable_left_align(const bool en){
+    constexpr void enable_left_align(const Enable en){
         CTLR2.ALIGN = en;
     }
 
@@ -355,7 +355,7 @@ struct ADC_Def{
         CTLR2.JEXTSEL = trigger;
     }
 
-    constexpr void enable_injected_trigger(const bool en){
+    constexpr void enable_injected_trigger(const Enable en){
         CTLR2.JEXTTRIG = en;
     }
 
@@ -363,7 +363,7 @@ struct ADC_Def{
         CTLR2.EXTSEL = trigger;
     }
 
-    constexpr void enable_regular_trigger(const bool en){
+    constexpr void enable_regular_trigger(const Enable en){
         CTLR2.EXTTRIG = en;
     }
 
@@ -375,7 +375,7 @@ struct ADC_Def{
         CTLR2.SWSTART = 1;
     }
 
-    constexpr void enable_temp_and_vref(const bool en){
+    constexpr void enable_temp_and_vref(const Enable en){
         CTLR2.TSVREFE = en;
     }
 

@@ -5,7 +5,7 @@ namespace ymd{
 
 #define DEF_MAKE_BINA_ENUM(name, u, l)\
 OutputStream & operator <<(OutputStream & os, const name self){\
-    return os << (bool(self) ? #u : #l); } \
+    return os << ((self == name::u) ? #u : #l); } \
 
 DEF_MAKE_BINA_ENUM(Endian, MSB, LSB)
 DEF_MAKE_BINA_ENUM(Continuous, CONT, DISC)

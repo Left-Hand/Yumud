@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 
 namespace ymd::drivers{
 class ActuatorIntf{
@@ -9,7 +9,7 @@ class ActuatorIntf{
 //     bool enabled = false;
 public:
     // virtual void init() = 0;
-    virtual void enable(const bool en) = 0;
+    virtual void enable(const Enable en) = 0;
     virtual ~ActuatorIntf() = default;
 };
 }

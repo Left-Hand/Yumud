@@ -161,8 +161,8 @@ protected:
         InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
             bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-        [[nodiscard]] IResult<> enable_output(const bool en = true){
-            ctrl_.int_out = en;
+        [[nodiscard]] IResult<> enable_output(const Enable en = EN){
+            ctrl_.int_out = en == EN;
             return bmi_.phy_.write_reg(address_, ctrl_);
         }
     protected:
@@ -207,7 +207,7 @@ public:
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vector3_t<q24>> read_acc();
+    [[nodiscard]] IResult<Vector3<q24>> read_acc();
     [[nodiscard]] IResult<real_t> read_temp();
 
     [[nodiscard]] IResult<> set_acc_range(const AccRange range);
@@ -298,7 +298,7 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Vector3_t<q24>> read_gyr();
+    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
 
 
     [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);

@@ -14,92 +14,110 @@ using namespace ymd::drivers;
 #define MMC5603_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
-#define WRITE_REG(reg)     write_reg(reg.address, reg);
-#define READ_REG(reg)     read_reg(reg.address, reg);
-
 using Error = ImuError;
 
 template<typename T = void>
 using IResult= Result<T, Error>;
 
-void MMC5603::update(){
-    auto & reg = x_reg;
-    read_burst(reg.address_x, &reg.data_h, 6);
+IResult<> MMC5603::update(){
+    auto reg = RegCopy(x_reg);
+    return read_burst(reg.address_x, &reg.data_h, 6);
 }
 
-void MMC5603::reset(){
-    auto & reg = ctrl0_reg;
+IResult<> MMC5603::reset(){
+    auto reg = RegCopy(ctrl0_reg);
     reg.do_reset = true;
-    WRITE_REG(reg)
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
     reg.do_reset = false;
+    reg.apply();
+    return Ok();
 }
 
-bool MMC5603::validate(){
-    auto & reg = product_id_reg;
-    READ_REG(reg)
-    if(reg != reg.correct_id) return false;
+IResult<> MMC5603::validate(){
+    auto reg = RegCopy(product_id_reg);
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    
+    if(reg != reg.correct_id) return Err(Error::WrongWhoAmI);
 
-    setSelfTestThreshlds(0,0,0);//TODO change
+    if(const auto res = set_self_test_threshlds(0,0,0);//TODO change
+        res.is_err()) return res;
 
-    return true;
+    return Ok();
 }
 
-void MMC5603::setDataRate(const DataRate dr){
+IResult<> MMC5603::set_data_rate(const DataRate dr){
     {
-        auto & reg = odr_reg;
-        reg = uint8_t(dr);
-        WRITE_REG(reg);
+        auto reg = RegCopy(odr_reg);
+        reg.data_rate = dr;
+        if(const auto res = write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto & reg = ctrl2_reg;
+        auto reg = RegCopy(ctrl2_reg);
         if(reg.high_pwr != 1){
             reg.high_pwr = 1;
-            WRITE_REG(reg);
+            if(const auto res = write_reg(reg);
+                res.is_err()) return Err(res.unwrap_err());
         }
     }
 
-    enableContious(true);
+    if(const auto res = enable_contious(EN);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
 }
 
 
-void MMC5603::setBandWidth(const BandWidth bw){
-    auto & reg = ctrl1_reg;
+IResult<> MMC5603::set_band_width(const BandWidth bw){
+    auto reg = RegCopy(ctrl1_reg);
     reg.bandwidth = uint8_t(bw);
-    WRITE_REG(reg)
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
-void MMC5603::enableContious(const bool en){
-    auto & reg = ctrl2_reg;
-    reg.cont_en = en;
-    WRITE_REG(reg)
+IResult<> MMC5603::enable_contious(const Enable en){
+    auto reg = RegCopy(ctrl2_reg);
+    reg.cont_en = en == EN;
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 
-IResult<Vector3_t<q24>> MMC5603::read_mag(){
-    return Ok{Vector3_t<q24>{
+IResult<Vector3<q24>> MMC5603::read_mag(){
+    return Ok{Vector3<q24>{
         s16_to_uni(int16_t(x_reg)),
         s16_to_uni(int16_t(y_reg)),
         s16_to_uni(int16_t(z_reg))
     }};
 }
 
-void MMC5603::setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z){
-    x_st_reg = x;
-    y_st_reg = y;
-    z_st_reg = z;
+IResult<> MMC5603::set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z){
+    auto x_st_reg_copy = RegCopy(x_st_reg);
+    auto y_st_reg_copy = RegCopy(y_st_reg);
+    auto z_st_reg_copy = RegCopy(z_st_reg);
 
-    WRITE_REG(x_st_reg)
-    WRITE_REG(y_st_reg)
-    WRITE_REG(z_st_reg)
+    if(const auto res = write_reg(x_st_reg_copy);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(y_st_reg_copy);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(z_st_reg_copy);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
-void MMC5603::inhibitChannels(bool x, bool y, bool z){
-    auto & reg = ctrl1_reg;
+IResult<> MMC5603::inhibit_channels(bool x, bool y, bool z){
+    auto reg = RegCopy(ctrl1_reg);
 
     reg.x_inhibit = x;
     reg.y_inhibit = y;
     reg.z_inhibit = z;
 
-    WRITE_REG(reg)
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }

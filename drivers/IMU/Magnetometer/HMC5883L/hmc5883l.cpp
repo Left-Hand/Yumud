@@ -39,7 +39,7 @@ IResult<> HMC5883L::init(){
     return Ok();
 }
 
-IResult<> HMC5883L::enable_high_speed(const bool en){
+IResult<> HMC5883L::enable_high_speed(const Enable en){
     auto reg = RegCopy(mode_reg);
     reg.hs = true;
     return write_reg(reg);
@@ -73,12 +73,12 @@ IResult<> HMC5883L::set_mode(const Mode mode){
     return write_reg(reg);
 }
 
-IResult<Vector3_t<q24>> HMC5883L::read_mag(){
+IResult<Vector3<q24>> HMC5883L::read_mag(){
     real_t x = transform_raw_to_gauss(magXReg, lsb_);
     real_t y = transform_raw_to_gauss(magYReg, lsb_);
     real_t z = transform_raw_to_gauss(magZReg, lsb_);
 
-    return Ok(Vector3_t<q24>(x,y,z));
+    return Ok(Vector3<q24>(x,y,z));
 }
 
 IResult<> HMC5883L::validate(){

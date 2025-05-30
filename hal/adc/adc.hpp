@@ -164,22 +164,22 @@ protected:
         }
     }
 
-    void enable_singleshot(const bool en){
+    void enable_singleshot(const Enable en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
-        tempreg.DISCEN = en;
+        tempreg.DISCEN = en == EN;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_scan(const bool en){
+    void enable_scan(const Enable en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
-        tempreg.SCAN = en;
+        tempreg.SCAN = en == EN;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_temp_vref(const bool en){
+    void enable_temp_vref(const Enable en){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
-        tempreg.TSVREFE = en;
+        tempreg.TSVREFE = en == EN;
         instance->CTLR2 = tempreg.data;
     }
 
@@ -229,18 +229,18 @@ public:
         }
     }
 
-    void enable_it(const IT it, const NvicPriority priority, const bool en = true){
-        ADC_ITConfig(instance, (uint16_t)it, en);
+    void enable_it(const IT it, const NvicPriority priority, const Enable en = EN){
+        ADC_ITConfig(instance, std::bit_cast<uint16_t>(it), en == EN);
         priority.enable(ADC_IRQn);
     }
 
-    void attach(const IT it, const NvicPriority priority, auto && cb, const bool en = true){
+    void attach(const IT it, const NvicPriority priority, auto && cb, const Enable en = EN){
         bind_cb(it, std::forward<decltype(cb)>(cb));
         enable_it(it, priority, en);
     }
 
     void attach(const IT it, const NvicPriority priority, std::nullptr_t cb){
-        attach(it, priority, nullptr, false);
+        attach(it, priority, nullptr, DISEN);
     }
 
     void set_mode(const Mode mode){
@@ -255,22 +255,22 @@ public:
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_continous(const bool en = true){
+    void enable_continous(const Enable en = EN){
         auto tempreg = std::bit_cast<CTLR2>(instance->CTLR2);
-        tempreg.CONT = en;
+        tempreg.CONT = en == EN;
         instance->CTLR2 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_auto_inject(const bool en = true){
-        ADC_AutoInjectedConvCmd(instance, en);
+    void enable_auto_inject(const Enable en = EN){
+        ADC_AutoInjectedConvCmd(instance, en == EN);
     }
 
-    void enable_right_align(const bool en = true){
+    void enable_right_align(const Enable en = EN){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
-        tempreg.ALIGN = !en;
+        tempreg.ALIGN = en == DISEN;
         instance->CTLR2 = tempreg.data;
-        right_align = en;
+        right_align = en == EN;
     }
 
     void set_regular_trigger(const RegularTrigger trigger){
@@ -325,8 +325,8 @@ public:
         return (is_regular_idle() && is_injected_idle());
     }
 
-    void enable_dma(const bool en = true){
-        ADC_DMACmd(instance, en);
+    void enable_dma(const Enable en = EN){
+        ADC_DMACmd(instance, en == EN);
     }
 
     uint16_t get_conv_result(){

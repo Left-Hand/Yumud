@@ -16,7 +16,8 @@ namespace ymd::drivers{
 
 class AT24CXX final:public StorageIntf{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
+    static constexpr auto DEFAULT_I2C_ADDR = 
+        hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
 
     #define DEF_AT24CXX_PRESET_TEMPLATE(name, c, p)\
     struct name final{\
@@ -170,7 +171,7 @@ private:
             return mem_range_.end() - op_range_.end();
         }
 
-        static constexpr Range2_t<uint32_t> init_grid(const uint32_t addr, const uint32_t grid){
+        static constexpr Range2<uint32_t> init_grid(const uint32_t addr, const uint32_t grid){
             const auto rem = addr % grid;
             if(rem == 0){
                 return {addr, addr + grid};
@@ -179,20 +180,20 @@ private:
             }
         }
 
-        static constexpr Range2_t<uint32_t> next_grid(
-            const uint32_t addr, const uint32_t grid, const Range2_t<uint32_t> range
+        static constexpr Range2<uint32_t> next_grid(
+            const uint32_t addr, const uint32_t grid, const Range2<uint32_t> range
         ){
             const auto rem = addr % grid;
             const auto next_addr = addr - rem + grid;
             const auto next_end = range.clamp(next_addr + grid);
-            if(next_addr >= next_end) return Range2_t<uint32_t>{next_addr, next_addr};
-            else return Range2_t<uint32_t>{next_addr, next_end};
+            if(next_addr >= next_end) return Range2<uint32_t>{next_addr, next_addr};
+            else return Range2<uint32_t>{next_addr, next_end};
         }
 
     private:
         std::span<const uint8_t> pdata_;
-        Range2_t<uint32_t> mem_range_;
-        Range2_t<uint32_t> op_range_;
+        Range2<uint32_t> mem_range_;
+        Range2<uint32_t> op_range_;
 
         const uint32_t grid_size()const{
             return storage_.pagesize().as_u32();

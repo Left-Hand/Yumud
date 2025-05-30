@@ -32,9 +32,9 @@ public:
 
     [[nodiscard]] Result<void, Error> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] Result<void, Error> enable_ext_clk(const bool en = true);
+    [[nodiscard]] Result<void, Error> enable_ext_clk(const Enable en = EN);
 
-    [[nodiscard]] Result<void, Error> enable_sleep(const bool en = true);
+    [[nodiscard]] Result<void, Error> enable_sleep(const Enable en = EN);
 
     [[nodiscard]] Result<void, Error> init(const Config & cfg){
         return init() | reconf(cfg);
@@ -64,14 +64,14 @@ public:
     }
 
     class PCA9685_Vport final: public hal::VGpioPortIntf<16>{ 
-        void write_mask(const uint16_t data);
-        uint16_t read_mask();
+        void write_mask(const hal::PinMask mask);
+        hal::PinMask read_mask();
 
-        void set_by_mask(const uint16_t data);
+        void set_by_mask(const hal::PinMask mask);
 
-        void clr_by_mask(const uint16_t data);
+        void clr_by_mask(const hal::PinMask mask);
     
-        void write_by_mask(const uint16_t data);
+        void write_by_mask(const hal::PinMask mask);
         
         void write_by_index(const size_t index, const BoolLevel data);
     
@@ -107,7 +107,7 @@ public:
         __fast_inline void set() {this->set_duty(real_t(1));}
         __fast_inline void clr() {this->set_duty(real_t(0));}
         __fast_inline void write(const BoolLevel val){
-            this->set_duty(real_t((bool(val))));
+            this->set_duty(real_t((val.to_bool())));
         }
 
         BoolLevel read() const;

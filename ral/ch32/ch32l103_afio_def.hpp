@@ -175,23 +175,23 @@ struct AFIO_Def{
     //     PCFR1.SWCFG = remap & 0b111;
     // }
 
-    constexpr void enable_usbpd_high_threshold(const bool en){
+    constexpr void enable_usbpd_high_threshold(const Enable en){
         CR.USBPD_IN_HVT = en;
     }
 
-    constexpr void enable_udp_bc_source_volt(const bool en){
+    constexpr void enable_udp_bc_source_volt(const Enable en){
         CR.UDP_BC_VSRC = en;
     }
 
-    constexpr void enable_udm_bc_source_volt(const bool en){
+    constexpr void enable_udm_bc_source_volt(const Enable en){
         CR.UDM_BC_VSRC = en;
     }
 
-    constexpr void enable_udp_bc_cmp(const bool en){
+    constexpr void enable_udp_bc_cmp(const Enable en){
         CR.UDP_BC_CMPE = en;
     }
 
-    constexpr void enable_udm_bc_cmp(const bool en){
+    constexpr void enable_udm_bc_cmp(const Enable en){
         CR.UDM_BC_CMPE = en;
     }
 

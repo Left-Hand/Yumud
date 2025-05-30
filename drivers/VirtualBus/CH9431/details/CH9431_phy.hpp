@@ -112,7 +112,7 @@ private:
         return Ok(ret);
     }
 
-    IResult<void> write_byte(const uint8_t cmd, const uint8_t data){
+    IResult<> write_byte(const uint8_t cmd, const uint8_t data){
         const auto buf = std::array{cmd, data};
         
         if(const auto res = spi_drv_.write_burst<uint8_t>(buf.data(), buf.size());
@@ -120,7 +120,7 @@ private:
         return Ok();
     }
 
-    IResult<void> write_cmd(const uint8_t cmd){
+    IResult<> write_cmd(const uint8_t cmd){
         if(const auto res = spi_drv_.write_single<uint8_t>(cmd);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

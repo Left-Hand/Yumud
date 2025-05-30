@@ -85,8 +85,8 @@ real_t demo(uint milliseconds, uint microseconds = 0){
 
     if((i == 0) || (i == 2) || (i == 4))
         yt = CubicInterpolation::forward(
-            Vector2_t<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
-            Vector2_t<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+            Vector2<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+            Vector2<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
 
     else
         yt = _t;
@@ -161,7 +161,7 @@ void stepper_tb(UartHw & logger_inst){
     SVPWM3 svpwm {mp6540};
     #endif
     
-    svpwm.inverse(false);
+    svpwm.inverse(DISEN);
     
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedDownTrig);
     timer1.enable_arr_sync();

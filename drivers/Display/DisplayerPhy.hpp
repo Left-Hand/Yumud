@@ -11,17 +11,14 @@
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "types/rgb.h"
+#include "types/colors/rgb/rgb.hpp"
 
 
 namespace ymd::drivers{
 namespace details{
 enum class DisplayerError_Kind:uint8_t{
     CantSetup,
-    WrongPc,
-    MagnetLost,
-    MagnetWeak,
-    MagnetOverflow
+    NoAvailablePhy
 };
 }
 DEF_ERROR_SUMWITH_HALERROR(DisplayerError, details::DisplayerError_Kind)

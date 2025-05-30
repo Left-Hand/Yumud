@@ -61,15 +61,12 @@ public:
         locate(getLapPosition() + offset);
     }
 
-    void inverse(const bool en = true){
-        rsv = en;
+    void inverse(const Enable en = EN){
+        rsv = en == EN;
     }
 
     void update();
 
-    bool is_stable(){
-        return encoder.is_stable().unwrap();
-    }
 
     virtual real_t getPosition(){
         return accPosition;

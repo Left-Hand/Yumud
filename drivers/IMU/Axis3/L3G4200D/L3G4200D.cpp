@@ -199,8 +199,8 @@ IResult<> L3G4200D::update(){
 }
 
 
-IResult<Vector3_t<q24>> L3G4200D::read_acc(){
-    return Ok(Vector3_t<q24>());
+IResult<Vector3<q24>> L3G4200D::read_acc(){
+    return Ok(Vector3<q24>());
 }
 
 IResult<uint8_t> L3G4200D::read_temperature(){

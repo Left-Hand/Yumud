@@ -45,6 +45,7 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
@@ -1122,14 +1123,14 @@ void bldc_main(){
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
         // clock::delay(2ms);
         // DEBUGGER.no_brackets(true);
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2_t<real_t>(1,1));
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2<real_t>(1,1));
         // clock::delay(2ms);
 
         // DEBUGGER.force_sync();
         // if(false){
         //     const auto guard = DEBUGGER.createGuard();
         //     DEBUGGER.no_brackets(false);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }
 
@@ -1137,7 +1138,7 @@ void bldc_main(){
         //     const auto guard = DEBUGGER.createGuard();
         //     // DEBUGGER.set_splitter('|');
         //     DEBUGGER.no_brackets(true);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2_t<real_t>(1,1));
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2<real_t>(1,1));
         //     // DEBUGGER.flush();
         // }
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
@@ -1158,7 +1159,7 @@ void bldc_main(){
         // clock::delay(5ms);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), s_lpf_u_curr);
-        // auto [a,b] = Vector2_t<real_t>{real_t(0), real_t(0.2)}.rotated(open_rad);
+        // auto [a,b] = Vector2<real_t>{real_t(0), real_t(0.2)}.rotated(open_rad);
         // DEBUG_PRINTLN(a,b);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;

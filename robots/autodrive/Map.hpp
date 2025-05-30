@@ -48,7 +48,7 @@ public:
     bool operator ==(const FieldType type) const {return type_ == type;}
     bool operator !=(const FieldType type) const {return type_ != type;}
 
-    Vector2_t<real_t> to_pos(const Map & map) const;
+    Vector2<real_t> to_pos(const Map & map) const;
     real_t to_rot(const Map & map) const;
     Ray2_t<real_t> to_ray(const Map & map) const;
 };

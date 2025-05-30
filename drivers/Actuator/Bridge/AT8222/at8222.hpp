@@ -19,7 +19,7 @@ public:
     forward_pwm_(forward_pwm), backward_pwm_(backward_pwm), enable_gpio_(en_gpio){;}
 
     void init();
-    void enable(const bool en = true);
+    void enable(const Enable en = EN);
 
     __fast_inline AT8222 & operator = (const real_t duty);
 };

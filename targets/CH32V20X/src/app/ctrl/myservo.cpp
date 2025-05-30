@@ -186,6 +186,21 @@ private:
 
 }
 
+class Joystick{
+public: 
+    virtual void update();
+};
+
+class AnalogJoystick{
+
+};
+
+// template<typename Q>
+// static constexpr iq_t<Q> stepify(const iq_t<Q> x, const auto step){
+//     return int(x / step) * step;
+// }
+
+
 #define UART hal::uart2
 static constexpr uint32_t TIM_FREQ = 10000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
@@ -210,16 +225,19 @@ void myservo_main(){
     // auto & mode2_gpio   = portA[5];
     phase_gpio.outpp();
 
-    using Filter = dsp::ButterLowpassFilter<iq_t<16>, 4>;
-    using Config = typename Filter::Config;
+    using ButterLpf = dsp::ButterLowpassFilter<iq_t<16>, 4>;
+    using ButterLpfConfig = typename ButterLpf::Config;
 
-    Filter curr_filter = {Config{
+    using RcLpf = dsp::LowpassFilter_t<iq_t<20>>;
+    using RcLpfConfig = typename RcLpf::Config;
+
+    ButterLpf curr_filter = {ButterLpfConfig{
         .fc = 40,
         .fs = ISR_FREQ,
     }};
 
-    Filter spin_filter = {Config{
-        .fc = 40,
+    RcLpf spin_filter = {RcLpfConfig{
+        .fc = 2,
         .fs = ISR_FREQ,
     }};
 
@@ -236,7 +254,7 @@ void myservo_main(){
         // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
         adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
         // adc1.enableContinous();
-        adc1.enable_auto_inject(false);
+        adc1.enable_auto_inject(DISEN);
     };
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
@@ -257,17 +275,20 @@ void myservo_main(){
     pwm_trig.set_duty(0.001_r);
     hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
-    real_t duty = 0;
-    real_t curr_cmd = 0;
+    // real_t curr_cmd = 0;
+
+    bool duty_is_forward = false;
+    auto set_duty = [&](real_t duty){
+        duty = CLAMP2(duty, 0.8_r);
+        duty_is_forward = duty > 0.0_r;
+        phase_gpio = BoolLevel::from(duty_is_forward);
+        pwm.set_duty(ABS(duty));
+    };
 
     hal::adc1.attach(AdcIT::JEOC, {0,0}, [&]{
-        // const auto duty = sin(clock::time());
-        // phase_gpio = BoolLevel::from(duty > 0);
-        // pwm.set_duty(ABS(duty));
         sense_raw_volt = ain1.get_voltage();
         curr_filter.update(sense_raw_volt);
         spin_filter.update(ain2.get_voltage());
-        duty = CLAMP(duty + 0.05_r * (curr_cmd - curr_filter.get()), 0, 0.9_r);
     });
 
 
@@ -279,14 +300,21 @@ void myservo_main(){
         // slp_gpio
         // const auto duty = 0.6_r * sinpu(clock::time());
 
-        const auto level = duty > 0.0_r;
-        phase_gpio = BoolLevel::from(level);
-        // curr_cmd = ABS(0.015_r * sin(clock::time()))+ 0.015_r;
+
+        // curr_cmd = ABS(0.035_r * sin(clock::time() * 4))+ 0.035_r;
+
+        // const auto duty_cmd = 0.4_r * sin(clock::time());
+        // const auto pos_cmd = int(sin(clock::time()/3) * 5) * 0.2_r;
+        const auto pos_cmd = 0.81_r * sin(clock::time() * 3);
+        const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
+        // const auto duty_cmd = 0.4_r * sign(sinpu(clock::time() * 10));
+        set_duty(duty_cmd);
         // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);
         // pwm.set_duty(ABS(duty));
-        duty = CLAMP(ain2.get_voltage() / 3.3_r, 0, 0.9_r);
-        pwm.set_duty(duty);
+        // duty = CLAMP(ain2.get_voltage() / 3.3_r, 0, 0.9_r);
+        // pwm.set_duty(duty);
+
         // led = HIGH;
         // clock::delay(200ms);
         // led = LOW;
@@ -311,15 +339,15 @@ void myservo_main(){
         // DEBUG_PRINTLN("after", can.pending());
         // clock::delay(2ms);
 
-        constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
-        can.write(msg);
-        
+        // constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
+        // can.write(msg);
+        const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(
-            duty, 
+            duty_cmd,
             sense_raw_volt, 
-            curr_filter.get(), 
+            curr, 
             spin_filter.get(),
-            timer3.cnt()
+            pos_cmd
         );
         // for(auto i = 0; i < 1000; ++i){
         //     DEBUG_PRINTLN(portB[9].read());

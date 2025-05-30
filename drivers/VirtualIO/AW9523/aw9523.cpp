@@ -5,70 +5,94 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-void AW9523::init(){
-    reset();
-    clock::delay(10ms);
-    set_led_current_limit(CurrentLimit::Low);
-    for(uint8_t i = 0; i< 16; i++){
-        write_reg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);
+using Error = AW9523::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+#define GUARD_INDEX(index)\
+if(not is_index_valid(index))\
+    return Err(Error::IndexOutOfRange);\
+
+IResult<> AW9523::init(){
+    if(const auto res = validate();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = reset();
+        res.is_err()) return res;
+    clock::delay(2ms);
+    if(const auto res = set_led_current_limit(CurrentLimit::Low);
+        res.is_err()) return res;
+    for(uint8_t i = 0; i < 16; i++){
+        if(const auto res = set_led_current(std::bit_cast<hal::PinSource>(
+            hal::PinMask::from_index(i).as_u16()), 
+            0); res.is_err()) return Err(res.unwrap_err());
     }
-    ledMode = 0xffff;
+    led_mode_ = hal::PinMask(0xffff);
+    return Ok();
 }
 
 
-void AW9523::write_by_index(const size_t index, const BoolLevel data){
-    if(!is_index_valid(index))return;
-    if(data) buf |= 1 << index;
-    else buf &= ~(1 << index);
-    write_by_mask(buf);
+IResult<> AW9523::write_by_index(const size_t index, const BoolLevel data){
+    GUARD_INDEX(index);
+    buf_mask_ = buf_mask_.modify(index, data);
+    return write_by_mask(hal::PinMask(buf_mask_));
 }
 
-BoolLevel AW9523::read_by_index(const size_t index){
-    if(!is_index_valid(index)) return LOW;
-    read_mask();
-    return BoolLevel::from(buf & (1 << index));
+IResult<BoolLevel> AW9523::read_by_index(const size_t index){
+    GUARD_INDEX(index);
+    if(const auto res = read_mask();
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(BoolLevel::from(buf_mask_.test(index)));
 }
 
-void AW9523::set_mode(const size_t index, const hal::GpioMode mode){
-    if(false == is_index_valid(index))return;
+IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
+    GUARD_INDEX(index);
     uint16_t mask = 1 << index;
-    if(hal::GpioUtils::isIn(mode)) dir |= mask;
-    else dir &= ~mask;
-    write_reg(RegAddress::dir, dir);
+    if(mode.is_in_mode()) 
+        dir_reg |= mask;
+    else 
+        dir_reg &= ~mask;
+    if(const auto res = write_reg(RegAddress::Dir, dir_reg);
+        res.is_err()) return Err(res.unwrap_err());
 
     if(index < 8){
-        ctl.p0mod = hal::GpioUtils::isPP(mode);
-        write_reg(RegAddress::ctl, ctl);
+        ctl.p0mod = mode.is_outpp_mode();
+        if(const auto res = write_reg(RegAddress::Ctl, ctl);
+            res.is_err()) return Err(res.unwrap_err());
     }
+
+    return Ok();
 }
 
-void AW9523::enable_irq_by_index(const size_t index, const bool en ){
-    if(false == is_index_valid(index))return;
-    write_reg(RegAddress::inten, (uint8_t)(en << index));
+IResult<> AW9523::enable_irq_by_index(const size_t index, const Enable en ){
+    GUARD_INDEX(index);
+    return write_reg(RegAddress::Inten, uint8_t(int(en == EN) << index));
 }
 
-void AW9523::enable_led_mode(const hal::Pin pin, const bool en){
+IResult<> AW9523::enable_led_mode(const hal::PinSource pin, const Enable en){
     uint index = CTZ((uint16_t)pin);
-    if(en) ledMode &= ~(1 << index);
-    else ledMode |= (1 << index);
-    write_reg(RegAddress::ledMode, ledMode);
+    GUARD_INDEX(index);
+    led_mode_ = led_mode_.modify(index, BoolLevel::from(en == EN));
+    return write_reg(RegAddress::LedMode, led_mode_.as_u16());
 }
 
-void AW9523::set_led_current_limit(const CurrentLimit limit){
+IResult<> AW9523::set_led_current_limit(const CurrentLimit limit){
     ctl.isel = (uint8_t)limit;
-    write_reg(RegAddress::ctl, ctl);
+    return write_reg(RegAddress::Ctl, ctl);
 }
 
-void AW9523::set_led_current(const hal::Pin pin, const uint8_t current){
+IResult<> AW9523::set_led_current(const hal::PinSource pin, const uint8_t current){
     uint index = CTZ((uint16_t)pin);
-    if(index < 8) index += 4;
-    else if(index < 12) index -= 8;
-    write_reg((RegAddress)((uint8_t)RegAddress::dim + index), current);
+    GUARD_INDEX(index);
+    return write_reg(get_dim_addr(index), current);
 }
 
 
-bool AW9523::validate(){
-    uint8_t chipId;
-    read_reg(RegAddress::chipId, chipId);
-    return (chipId == valid_chipid);
+IResult<> AW9523::validate(){
+    uint8_t chip_id;
+    if(const auto res = read_reg(RegAddress::ChipId, chip_id);
+        res.is_err()) return res;
+    if(chip_id != VALID_CHIP_ID)
+        return Err(Error::WrongChipId);
+    return Ok();
 }

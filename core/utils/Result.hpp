@@ -58,27 +58,50 @@ using result_err_type_t = details::_result_type<TResult>::err_type;
 
 namespace details{
     template<typename T, typename E>
-    struct _Storage_Diff{
+    struct _Storage_Diff {
     public:
         using Data = std::variant<T, E>;
         using ok_type = T;
         using err_type = E;
-    
-        __fast_inline constexpr _Storage_Diff(const Ok<T> & val):data_(val.unwrap()){;}
-        __fast_inline constexpr _Storage_Diff(Ok<T> && val):data_(std::move(val.unwrap())){;}
-    
-    
-        __fast_inline constexpr _Storage_Diff(const Err<E> & val):data_(val.unwrap()){;}
-        __fast_inline constexpr _Storage_Diff(Err<E> && val):data_(std::move(val.unwrap())){;}
-    
-        __fast_inline constexpr _Storage_Diff(const _Storage_Diff &) = default;
-        __fast_inline constexpr _Storage_Diff(_Storage_Diff &&) = default;
-    
-        __fast_inline constexpr bool is_ok() const{return std::holds_alternative<T>(data_);}
-        __fast_inline constexpr bool is_err() const{return std::holds_alternative<E>(data_);}
-    
-        __fast_inline constexpr T unwrap() const{return std::get<T>(data_);}
-        __fast_inline constexpr E unwrap_err() const{return std::get<E>(data_);}
+
+        // Constructor for Ok case - copy if trivially copyable
+        template<typename U = T, std::enable_if_t<std::is_trivially_copy_assignable_v<U>, int> = 0>
+        __fast_inline constexpr _Storage_Diff(const Ok<T>& okay)
+            : data_(Data{std::in_place_index<0>, okay.unwrap()}) {}
+
+        // Constructor for Ok case - move otherwise
+        template<typename U = T, std::enable_if_t<!std::is_trivially_copy_assignable_v<U>, int> = 0>
+        __fast_inline constexpr _Storage_Diff(Ok<T>&& okay)
+            : data_(Data{std::in_place_index<0>, std::move(okay).unwrap()}) {}
+
+        // Constructor for Err case - const reference
+        __fast_inline constexpr _Storage_Diff(const Err<E>& error)
+            : data_(Data{std::in_place_index<1>, error.unwrap()}) {}
+
+        // Constructor for Err case - rvalue reference
+        __fast_inline constexpr _Storage_Diff(Err<E>&& error)
+            : data_(Data{std::in_place_index<1>, std::move(error).unwrap()}) {}
+
+        // Copy/move constructors
+        __fast_inline constexpr _Storage_Diff(const _Storage_Diff&) = default;
+        __fast_inline constexpr _Storage_Diff(_Storage_Diff&&) = default;
+
+        // Assignment operators
+        __fast_inline constexpr _Storage_Diff& operator=(const _Storage_Diff&) = default;
+        __fast_inline constexpr _Storage_Diff& operator=(_Storage_Diff&&) = default;
+
+        // State checks
+        __fast_inline constexpr bool is_ok() const noexcept { return data_.index() == 0; }
+        __fast_inline constexpr bool is_err() const noexcept { return data_.index() == 1; }
+
+        // Value access (const &)
+        __fast_inline constexpr const T& unwrap() const & { return std::get<0>(data_); }
+        __fast_inline constexpr const E& unwrap_err() const & { return std::get<1>(data_); }
+
+        // Value access (rvalue &&)
+        __fast_inline constexpr T&& unwrap() && { return std::get<0>(std::move(data_)); }
+        __fast_inline constexpr E&& unwrap_err() && { return std::get<1>(std::move(data_)); }
+
     private:
         Data data_;
     };
@@ -244,7 +267,7 @@ namespace details{
 
 
 template <typename T, typename E>
-class Result{
+class [[nodiscard]] Result{
 public:
     using Storage = details::storage_t<T, E>;
     using ok_type = Storage::ok_type;
@@ -284,11 +307,15 @@ public:
 
     template<typename T2>
     requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(value){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(okay){}
+
+    template<typename T2>
+    requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T2> && okay) : storage_(std::move(okay)){}
 
     template<typename T2 = T>
     requires (std::is_void_v<T2>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & value) : storage_(Ok<void>()){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(Ok<void>()){}
     
     template<typename E2>
     requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
@@ -326,7 +353,7 @@ public:
         typename Fn,
         typename FDecay = std::decay_t<Fn>,
 
-        typename TFReturn = std::invoke_result_t<FDecay, T>
+        typename TFReturn = magic::functor_ret_t<FDecay>
     >
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
@@ -348,8 +375,8 @@ public:
 
     template<
         typename F,//函数的类型
-        // typename TFReturn = std::conditional_t<std::is_void_v<T>, std::invoke_result_t<typename F::operator()>, std::invoke_result_t<F>>,//函数返回值的类型
-        typename TFReturn = std::invoke_result_t<F, T>,//函数返回值的类型
+        typename FDecay = std::decay_t<F>,
+        typename TFReturn = magic::functor_ret_t<FDecay>,
         typename TFReturnIsResult = is_result_t<TFReturn>,
         typename TOk = std::conditional_t<
             is_result_v<TFReturn>,
@@ -437,16 +464,6 @@ public:
         if(is_ok()) return Ok<TRet>(std::forward<Fn>(fn)(unwrap()));
         else return Err<E>(unwrap_err());
     }
-
-    // template<typename Fn>
-    // __fast_inline constexpr auto transform(Fn&& fn) const & {
-    //     return and_then([fn=std::forward<Fn>(fn)](auto&& val) -> Result<
-    //         typename std::invoke_result_t<Fn, T>::ok_type,  // 推导新Ok类型
-    //         typename std::invoke_result_t<Fn, T>::err_type  // 推导新Err类型
-    //     > {
-    //         return fn(std::forward<decltype(val)>(val));
-    //     });
-    // }
 
     template<typename Fn>
     __fast_inline constexpr 
@@ -543,8 +560,6 @@ public:
         }
     }
 
-
-    
     __fast_inline constexpr 
     T unwrap_or(auto && val) const {
         if (likely(is_ok())) {
@@ -553,33 +568,6 @@ public:
             return static_cast<T>(val);
         }
     }
-
-    
-
-    struct _PanicWithOutUnlock{
-        ~_PanicWithOutUnlock(){
-            if (will_panic) {
-                PANIC("unsafe ignore without unlock");
-            }
-        }
-
-        void operator !(){
-            will_panic = false;
-        }
-    private:
-        bool will_panic = true;
-    };
-
-    __fast_inline constexpr 
-    auto operator +() const{
-        return _PanicWithOutUnlock{};
-    }
-
-    __fast_inline constexpr 
-    T operator !() const{
-        return storage_.unwrap();
-    }
-
     __fast_inline constexpr 
     E unwrap_err() const {
         if (likely(is_err())) {
@@ -614,8 +602,8 @@ public:
     template<
         typename FnOk,
         typename FnErr,
-        typename TOkReturn = std::invoke_result_t<FnOk, T>,//函数返回值的类型
-        typename TErrReturn = std::invoke_result_t<FnErr, E>//函数返回值的类型
+        typename TOkReturn = magic::functor_ret_t<FnOk>,//函数返回值的类型
+        typename TErrReturn = magic::functor_ret_t<FnErr>//函数返回值的类型
     >
     __fast_inline constexpr auto match(FnOk && fn_ok, FnErr && fn_err) const 
     -> Result<TOkReturn, TErrReturn>{
@@ -691,6 +679,5 @@ struct __unwrap_helper<Result<T, E>> {
         return obj.unwrap_err();
     }
 };
-
 
 }

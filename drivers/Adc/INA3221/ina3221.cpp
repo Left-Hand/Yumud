@@ -38,16 +38,17 @@ using IResult = INA3221::IResult<T>;
 
 using Error = INA3221::Error;
 
-IResult<> INA3221::init(){
-    INA3221_ASSERT(validate().is_ok(), "INA3221 verify failed");
+IResult<> INA3221::init(const Config & cfg){
+    if(const auto res = this->validate(); 
+        res.is_err()) return CHECKRES(res, "INA3221 verify failed");
 
     if(const auto res = this->enable_channel(ChannelIndex::CH1);
         res.is_err()) return res;
-    if(const auto res = this->set_shunt_conversion_time(INA3221::ConversionTime::_140us);
+    if(const auto res = this->enable_channel(ChannelIndex::CH2);
         res.is_err()) return res;
-    if(const auto res = this->set_bus_conversion_time(INA3221::ConversionTime::_140us);
+    if(const auto res = this->enable_channel(ChannelIndex::CH3);
         res.is_err()) return res;
-    if(const auto res = this->set_average_times(INA3221::AverageTimes::_1);
+    if(const auto res = this->reconf(cfg);
         res.is_err()) return res;
     if(const auto res = this->enable_continuous();
         res.is_err()) return res;
@@ -55,9 +56,17 @@ IResult<> INA3221::init(){
         res.is_err()) return res;
     if(const auto res = this->enable_measure_shunt();
         res.is_err()) return res;
-    // while(true){
-    //     INA3221_DEBUG(config_reg);
-    // }
+
+    return Ok();
+}
+
+IResult<> INA3221::reconf(const Config & cfg){
+    if(const auto res = this->set_shunt_conversion_time(cfg.shunt_conv_time);
+        res.is_err()) return res;
+    if(const auto res = this->set_bus_conversion_time(cfg.bus_conv_time);
+        res.is_err()) return res;
+    if(const auto res = this->set_average_times(cfg.average_times);
+        res.is_err()) return res;
     return Ok();
 }
 
@@ -67,7 +76,7 @@ IResult<bool> INA3221::is_ready(){
 }
 
 
-IResult<void> INA3221::validate(){
+IResult<> INA3221::validate(){
     if(const auto res = read_reg(chip_id_reg); res.is_err()) return CHECKRES(res);
     if(const auto res = read_reg(manu_id_reg); res.is_err()) return CHECKRES(res);
 
@@ -100,13 +109,13 @@ IResult<> INA3221::enable_channel(const ChannelIndex index, const Enable en){
     switch(index){
         default: __builtin_unreachable();
         case ChannelIndex::CH1:
-            config_reg.ch1_en = bool(en);
+            config_reg.ch1_en = en == EN;
             break;
         case ChannelIndex::CH2:
-            config_reg.ch2_en = bool(en);
+            config_reg.ch2_en = en == EN;
             break;
         case ChannelIndex::CH3:
-            config_reg.ch3_en = bool(en);
+            config_reg.ch3_en = en == EN;
             break;
     }
     return write_reg(config_reg);
@@ -137,11 +146,11 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelIndex index){
 
     // RegAddress addr;
     const R16_ShuntVolt & reg = [&]() -> const R16_ShuntVolt &{
-    switch(index){
-        default: __builtin_unreachable();
-        case ChannelIndex::CH1:return shuntvolt1_reg;
-        case ChannelIndex::CH2:return shuntvolt2_reg;
-        case ChannelIndex::CH3:return shuntvolt3_reg;
+        switch(index){
+            default: __builtin_unreachable();
+            case ChannelIndex::CH1:return shuntvolt1_reg;
+            case ChannelIndex::CH2:return shuntvolt2_reg;
+            case ChannelIndex::CH3:return shuntvolt3_reg;
         }
     }();
 
@@ -211,17 +220,17 @@ IResult<> INA3221::set_constant_ovc(const ChannelIndex index, const real_t volt)
 }
 
 IResult<> INA3221::enable_measure_bus(const Enable en){
-    config_reg.bus_measure_en = bool(en);
+    config_reg.bus_measure_en = en == EN;
     return write_reg(config_reg);
 }
 
 
 IResult<> INA3221::enable_measure_shunt(const Enable en){
-    config_reg.shunt_measure_en = bool(en);
+    config_reg.shunt_measure_en = en == EN;
     return write_reg(config_reg);
 }
 
 IResult<> INA3221::enable_continuous(const Enable en){
-    config_reg.continuos = bool(en);
+    config_reg.continuos = en == EN;
     return write_reg(config_reg);
 }

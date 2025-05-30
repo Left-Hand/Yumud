@@ -32,7 +32,7 @@ public:
 
     void reset();
 
-    IResult<Vector3_t<q24>> read_mag();
+    IResult<Vector3<q24>> read_mag();
 };
 
 

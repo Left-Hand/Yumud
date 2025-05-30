@@ -486,11 +486,11 @@ namespace CH32V20x{
 
 
 
-        constexpr void enable_dbg_freeze(const bool en){
+        constexpr void enable_dbg_freeze(const Enable en){
             CTLR.DBF = en;
         }
 
-        constexpr void enable_ttcom_mode(const bool en){
+        constexpr void enable_ttcom_mode(const Enable en){
             CTLR.TTCM = en;
             sTxMailBox[0].TXMDTR.TGT = en;
             sTxMailBox[1].TXMDTR.TGT = en;

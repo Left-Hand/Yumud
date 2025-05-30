@@ -51,7 +51,7 @@ template<typename T>
 using option_type_t = details::_option_type<T>::type;
 
 template<typename T>
-class Option{
+class [[nodiscard]] Option{
 private:
     using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
     

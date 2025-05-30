@@ -295,23 +295,23 @@ struct TIM_Def{
     volatile R16_TIM_DMAADR DMAADR;
     uint16_t :16;
     
-    constexpr void enable(const bool en){
+    constexpr void enable(const Enable en){
         CTLR1.CEN = en;
     }
 
-    constexpr void enable_generate_update_event(const bool en){
+    constexpr void enable_generate_update_event(const Enable en){
         CTLR1.UDIS = en;
     }
 
-    constexpr void exhibit_ug_trigger_uev(const bool en){
+    constexpr void exhibit_ug_trigger_uev(const Enable en){
         CTLR1.URS = en;
     }
 
-    constexpr void set_single_pulse_mode(const bool en){
+    constexpr void set_single_pulse_mode(const Enable en){
         CTLR1.OPM = en;
     }
 
-    constexpr void set_dec_count_mode(const bool en){
+    constexpr void set_dec_count_mode(const Enable en){
         CTLR1.DIR = en;
     }
 
@@ -336,7 +336,7 @@ struct TIM_Def{
         CTLR1.CMS = mode;
     }
 
-    constexpr void enable_auto_preload(const bool en){
+    constexpr void enable_auto_preload(const Enable en){
         CTLR1.APRE = en;
     }
 
@@ -344,23 +344,23 @@ struct TIM_Def{
         CTLR1.CKD = prescale;
     }
 
-    constexpr void enable_bkin_from_cmp(const bool en){
+    constexpr void enable_bkin_from_cmp(const Enable en){
         CTLR1.BKSEL = en;
     }
 
-    constexpr void enable_cap_saturation(const bool en){
+    constexpr void enable_cap_saturation(const Enable en){
         CTLR1.TMR_CAP_OV_EN = en;
     }
 
-    constexpr void enable_cap_level_indicate(const bool en){
+    constexpr void enable_cap_level_indicate(const Enable en){
         CTLR1.TMR_CAP_LVL_EN = en;
     }
 
-    constexpr void enable_cc_preload(const bool en){
+    constexpr void enable_cc_preload(const Enable en){
         CTLR2.CCPC = en;
     }
 
-    constexpr void enable_cc_update_by_com_trgi(const bool en){
+    constexpr void enable_cc_update_by_com_trgi(const Enable en){
         CTLR2.CCUS = en;
     }
 
@@ -401,7 +401,7 @@ struct TIM_Def{
         SMCFGR.TS = source;
     }
 
-    constexpr void enable_master_slave_mode(const bool en){
+    constexpr void enable_master_slave_mode(const Enable en){
         SMCFGR.MSM = en;
     }
 
@@ -417,11 +417,11 @@ struct TIM_Def{
         SMCFGR.ETPS = prescale;
     }
 
-    constexpr void enable_ext_clockmode2(const bool en){
+    constexpr void enable_ext_clockmode2(const Enable en){
         SMCFGR.ECE = en;
     }
 
-    constexpr void enable_ext_trigger_inversion(const bool en){
+    constexpr void enable_ext_trigger_inversion(const Enable en){
         SMCFGR.ETP = en;
     }
 

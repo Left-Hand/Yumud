@@ -55,36 +55,6 @@ struct AS5600_Collections{
         Burn = 0xFF
     };
 
-    class MagStatus{
-    public:
-        enum class Kind:uint8_t{
-            High = 0,
-            Low = 1,
-            Proper = 2,
-            Unknown = 3
-        };
-
-        using enum Kind;
-
-        MagStatus(const Kind _kind):kind_(_kind){;}
-
-        [[nodiscard]]
-        bool is_high() const{
-            return kind_ == Kind::High;
-        }
-
-        [[nodiscard]]
-        bool is_low() const{
-            return kind_ == Kind::Low;
-        }
-
-        [[nodiscard]]
-        bool is_proper() const{
-            return kind_ == Kind::Proper;
-        }
-    private:
-        Kind kind_;
-    };
 };
 
 struct AS5600_Regs:public AS5600_Collections{
@@ -176,62 +146,42 @@ public:
 
     AS5600(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-
-
             
-    [[nodiscard]]
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
 
-    [[nodiscard]]
-    IResult<> set_power_mode(const PowerMode _power_mode);
+    [[nodiscard]] IResult<> set_power_mode(const PowerMode _power_mode);
 
-    [[nodiscard]]
-    IResult<> set_fast_filter(const FastFilter _fast_filter);
+    [[nodiscard]] IResult<> set_fast_filter(const FastFilter _fast_filter);
 
-    [[nodiscard]]
-    IResult<> set_slow_filter(const SlowFilter _slow_filter);
+    [[nodiscard]] IResult<> set_slow_filter(const SlowFilter _slow_filter);
 
-    [[nodiscard]]
-    IResult<> set_pwm_frequency(const PwmFrequency _pwm_frequency);
+    [[nodiscard]] IResult<> set_pwm_frequency(const PwmFrequency _pwm_frequency);
 
-    [[nodiscard]]
-    IResult<> set_ouput_stage(const OutputStage _output_stage);
+    [[nodiscard]] IResult<> set_ouput_stage(const OutputStage _output_stage);
 
-    [[nodiscard]]
-    IResult<> set_hysteresis(const Hysteresis _hysteresis);
+    [[nodiscard]] IResult<> set_hysteresis(const Hysteresis _hysteresis);
     
-    [[nodiscard]]
-    IResult<MagStatus> get_mag_status();
+    [[nodiscard]] IResult<MagStatus> get_mag_status();
     
-    [[nodiscard]]
-    IResult<uint8_t> get_gain();
+    [[nodiscard]] IResult<uint8_t> get_gain();
     
-    [[nodiscard]]
-    IResult<uint16_t> get_magnitude();
+    [[nodiscard]] IResult<uint16_t> get_magnitude();
     
-    [[nodiscard]]
-    IResult<real_t> get_raw_angle();
+    [[nodiscard]] IResult<real_t> get_raw_angle();
     
-    [[nodiscard]]
-    IResult<real_t> get_angle();
+    [[nodiscard]] IResult<real_t> get_angle();
     
-    [[nodiscard]]
-    IResult<> set_start_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_start_angle(const real_t angle);
     
-    [[nodiscard]]
-    IResult<> set_end_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_end_angle(const real_t angle);
     
-    [[nodiscard]]
-    IResult<> set_amount_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_amount_angle(const real_t angle);
     
-    [[nodiscard]]
-    IResult<uint8_t> get_program_times();
+    [[nodiscard]] IResult<uint8_t> get_program_times();
     
-    [[nodiscard]]
-    IResult<> burn_angle();
+    [[nodiscard]] IResult<> burn_angle();
     
-    [[nodiscard]]
-    IResult<> burn_setting();
+    [[nodiscard]] IResult<> burn_setting();
 
 private:
     hal::I2cDrv i2c_drv_;

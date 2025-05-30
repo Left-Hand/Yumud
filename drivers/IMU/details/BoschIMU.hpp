@@ -50,7 +50,7 @@ public:
         }else if(spi_drv_){
             return Result<void, Error>(
                 spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT)
-                | spi_drv_->read_burst<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t))
+                | spi_drv_->read_burst<uint8_t>(std::span(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)))
             );
         }
 

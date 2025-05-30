@@ -106,7 +106,7 @@ public:
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> enable_high_speed(const bool en = true);
+    [[nodiscard]] IResult<> enable_high_speed(const Enable en = EN);
 
     [[nodiscard]] IResult<> set_odr(const Odr rate);
     [[nodiscard]] IResult<> set_sample_number(const SampleNumber number);
@@ -114,7 +114,7 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 
-    [[nodiscard]] IResult<Vector3_t<q24>> read_mag();
+    [[nodiscard]] IResult<Vector3<q24>> read_mag();
 
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();

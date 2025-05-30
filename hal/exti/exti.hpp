@@ -9,97 +9,116 @@
 namespace ymd::hal{
 
 class Gpio;
-class Exti{
 
+enum class ExtiTrigEdge:uint8_t{
+    Rising = EXTI_Trigger_Rising,
+    Falling = EXTI_Trigger_Falling,
+    Dual = EXTI_Trigger_Rising_Falling
 };
 
-class ExtiChannel{
+enum class ExtiTrigMode:uint8_t{
+    Interrupt = EXTI_Mode_Interrupt,
+    Event = EXTI_Mode_Event
+};
+
+enum class ExtiTrigSource:uint32_t{
+    _None = 0,
+    _0 = EXTI_Line0,
+    _1 = EXTI_Line1,
+    _2 = EXTI_Line2,
+    _3 = EXTI_Line3,
+    _4 = EXTI_Line4,
+    _5 = EXTI_Line5,
+    _6 = EXTI_Line6,
+    _7 = EXTI_Line7,
+    _8 = EXTI_Line8,
+    _9 = EXTI_Line9,
+    _10 = EXTI_Line10,
+    _11 = EXTI_Line11,
+    _12 = EXTI_Line12,
+    _13 = EXTI_Line13,
+    _14 = EXTI_Line14,
+    _15 = EXTI_Line15
+
+
+    #if defined(CH32)
+    ,Pvd = EXTI_Line16
+    ,RtcAlarm = EXTI_Line17
+    ,UsbDWakeup = EXTI_Line18
+    ,EtherNetWakeUp = EXTI_Line19
+    ,UsbHSFsWakeUp = EXTI_Line20
+    #endif
+
+    #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
+    ,OscWakeUp = EXTI_Line21
+    #endif
+};
+
+class ExtiChannel final{
 public:
-    enum class Trigger:uint8_t{
-        Rising = EXTI_Trigger_Rising,
-        Falling = EXTI_Trigger_Falling,
-        Dual = EXTI_Trigger_Rising_Falling
-    };
+    using TrigEdge = ExtiTrigEdge;
+    using TrigMode = ExtiTrigMode;
+    using TrigSource = ExtiTrigSource;
+private:
+    const TrigSource source_;
 
-    enum class Mode:uint8_t{
-        Interrupt = EXTI_Mode_Interrupt,
-        Event = EXTI_Mode_Event
-    };
-
-    enum class Line:uint32_t{
-        _None = 0,
-        _0 = EXTI_Line0,
-        _1 = EXTI_Line1,
-        _2 = EXTI_Line2,
-        _3 = EXTI_Line3,
-        _4 = EXTI_Line4,
-        _5 = EXTI_Line5,
-        _6 = EXTI_Line6,
-        _7 = EXTI_Line7,
-        _8 = EXTI_Line8,
-        _9 = EXTI_Line9,
-        _10 = EXTI_Line10,
-        _11 = EXTI_Line11,
-        _12 = EXTI_Line12,
-        _13 = EXTI_Line13,
-        _14 = EXTI_Line14,
-        _15 = EXTI_Line15
-
-
-        #if defined(CH32)
-        ,Pvd = EXTI_Line16
-        ,RtcAlarm = EXTI_Line17
-        ,UsbDWakeup = EXTI_Line18
-        ,EtherNetWakeUp = EXTI_Line19
-        ,UsbHSFsWakeUp = EXTI_Line20
-        #endif
-
-        #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
-        ,OscWakeUp = EXTI_Line21
-        #endif
-    };
-
-protected:
-    enum class Source:uint8_t{
-        PA,PB,PC,PD,PE,PF
-    };
-
-    static Source from_gpio_to_source(const Gpio & gpio);
-    static Line from_gpio_to_line(const Gpio & gpio);
-    static IRQn from_line_to_irqn(const Line line);
-
-    const Line line;
-
-    Gpio * const gpio;
-    const GpioMode gpio_mode;
-    const NvicPriority priority;
-    const Trigger trigger;
-    const Mode mode;
-
-    // auto & getCallback(const Line line){
-    //     return funcs[CTZ((uint32_t)line)];
-    // }
-
-    // void onLineInterrupt(const Line line){
-    //     auto & func = getCallback(line);
-    //     EXECUTE(func);
-    // }
+    Gpio * const p_gpio_;
+    const GpioMode gpio_mode_;
+    const NvicPriority priority_;
+    const TrigEdge edge_;
+    const TrigMode mode_;
 
     friend class CaptureChannelExti;
 public:
-    ExtiChannel(const Line _line, const NvicPriority & _priority,
-            const Trigger _trigger = Trigger::Rising, const Mode _mode = Mode::Interrupt);
+    ExtiChannel(
+        const TrigSource line, 
+        const NvicPriority priority,
+        const TrigEdge edge = TrigEdge::Rising, 
+        const TrigMode _mode = TrigMode::Interrupt);
 
-    ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
-            const Trigger _trigger = Trigger::Rising,  const Mode _mode = Mode::Interrupt);
+    ExtiChannel(
+        Gpio & _gpio, 
+        const NvicPriority _priority,
+        const TrigEdge edge = TrigEdge::Rising, 
+        const TrigMode _mode = TrigMode::Interrupt);
 
 
     void init();
-    void bindCb(auto && func){
+    void bind_cb(auto && func){
         // getCallback = std::move(func);
     }
-    void enableIt(const bool en = true){
-        NvicPriority::enable(priority, from_line_to_irqn(line));
+
+
+    void enable_it(const Enable en = EN){
+        NvicPriority::enable(
+            priority_, 
+            map_source_to_irqn(source_)
+        );
+    }
+
+    static constexpr GpioMode map_edge_to_gpiomode(const TrigEdge edge){
+        if(edge == TrigEdge::Dual) return GpioMode::InFloating;
+        else if (edge == TrigEdge::Rising) return GpioMode::InPullDN;
+        else return GpioMode::InPullUP;
+    }
+
+    static constexpr IRQn map_source_to_irqn(const TrigSource source){
+            switch(source){
+            case TrigSource::_0: return EXTI0_IRQn;
+            case TrigSource::_1: return EXTI1_IRQn;
+            case TrigSource::_2: return EXTI2_IRQn;
+            case TrigSource::_3: return EXTI3_IRQn;
+            case TrigSource::_4: return EXTI4_IRQn;
+            case TrigSource::_5 ... TrigSource::_9: return EXTI9_5_IRQn;
+            case TrigSource::_10 ... TrigSource::_15: return EXTI15_10_IRQn;
+            default: return IRQn(0);
+        }
+    }
+
+    static constexpr TrigSource map_pinsource_to_trigsource(const PinSource source){
+        return std::bit_cast<TrigSource>(
+            uint32_t(uint16_t(source))
+        );
     }
 };
 

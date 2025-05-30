@@ -5,7 +5,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/quat/Quat.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 
@@ -43,7 +43,7 @@ void bmi160_main(){
 
         clock::delay(20ms);
         bmi.update().examine();
-        Vector3_t<real_t> acc = bmi.read_acc().unwrap();
+        Vector3<real_t> acc = bmi.read_acc().unwrap();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

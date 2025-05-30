@@ -23,6 +23,8 @@
 #include "dsp/homebrew/edge_counter.hpp"
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
+using namespace ymd;
+using namespace ymd::hal;
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
 static constexpr real_t SAMPLE_RES = 0.008_r;
@@ -93,7 +95,7 @@ void at8222_tb(){
     );
 
     adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
-    adc1.enable_auto_inject(false);
+    adc1.enable_auto_inject(DISEN);
     // adc1.set_pga(AdcPga::X16);
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);

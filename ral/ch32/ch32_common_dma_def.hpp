@@ -1,12 +1,14 @@
 #pragma once
 
 #include <cstdint>
+#include "core/io/regs.hpp"
+
 
 #ifndef ASSERT_REG_IS_32BIT
 #define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 4 bytes"); 
 #endif
 
-namespace CH32{
+namespace ymd::ral::CH32{
 
 struct R32_DMA_INTFR{
     uint32_t DATA;
@@ -85,36 +87,36 @@ struct DMA_CH_Def{
     volatile R32_DMA_PADDR PADDR;
     volatile R32_DMA_MADDR MADDR;
 
-    constexpr void enable(const bool en){
-        CFGR.EN = en;
+    constexpr void enable(const Enable en){
+        CFGR.EN = en == EN;
     }
 
-    constexpr void enable_transfer_done_interrupt(const bool en){
-        CFGR.TCIE = en;
+    constexpr void enable_transfer_done_interrupt(const Enable en){
+        CFGR.TCIE = en == EN;
     }
 
-    constexpr void enable_transfer_onhalf_interrupt(const bool en){
-        CFGR.HTIE = en;
+    constexpr void enable_transfer_onhalf_interrupt(const Enable en){
+        CFGR.HTIE = en == EN;
     }
 
-    void enable_transfer_error_interrupt(const bool en){
-        CFGR.TEIE = en;
+    void enable_transfer_error_interrupt(const Enable en){
+        CFGR.TEIE = en == EN;
     }
 
-    void set_source_is_mem(const bool en){
-        CFGR.DIR = en;
+    void set_source_is_mem(const Enable en){
+        CFGR.DIR = en == EN;
     }
 
-    void enable_circular_mode(const bool en){
-        CFGR.CIRC = en;
+    void enable_circular_mode(const Enable en){
+        CFGR.CIRC = en == EN;
     }
 
-    void enable_periph_increment(const bool en){
-        CFGR.PINC = en;
+    void enable_periph_increment(const Enable en){
+        CFGR.PINC = en == EN;
     }
 
-    void enable_mem_increment(const bool en){
-        CFGR.MINC = en;
+    void enable_mem_increment(const Enable en){
+        CFGR.MINC = en == EN;
     }
 
     void set_periph_data_size_bytes(const uint8_t size){
@@ -129,8 +131,8 @@ struct DMA_CH_Def{
         CFGR.PL = prio;
     }
 
-    void enable_mem2mem(const bool en){
-        CFGR.MEM2MEM = en;
+    void enable_mem2mem(const Enable en){
+        CFGR.MEM2MEM = en == EN;
     }
 
     void set_periph_address(const uint32_t addr){

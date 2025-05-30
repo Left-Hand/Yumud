@@ -1,6 +1,6 @@
 #include "GridCaliMap.hpp"
 
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 #include "types/Line2/Line2.hpp"
 
 

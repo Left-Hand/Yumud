@@ -130,7 +130,7 @@ public:
 
     [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] IResult<> enable_cont_mode(const bool en = true);
+    [[nodiscard]] IResult<> enable_cont_mode(const Enable en = EN);
     
     [[nodiscard]] IResult<> set_odr(const Odr rate);
     
@@ -140,7 +140,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vector3_t<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vector3<q24>> read_mag() override;
     
     [[nodiscard]] IResult<> validate();
 
@@ -148,7 +148,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_interrupt(const bool en = true);
+    [[nodiscard]] IResult<> enable_interrupt(const Enable en = EN);
 
     [[nodiscard]] IResult<bool> is_overflow();
 private:

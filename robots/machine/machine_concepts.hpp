@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "types/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
 #include "robots/foc/remote/remote.hpp"
 #include "machine_concepts.hpp"
 
@@ -85,7 +85,7 @@ public:
 
 struct XY_Machine:public X_Machine, public Y_Machine{
 private:
-    using Vector2 = Vector2_t<real_t>;
+    using Vector2 = Vector2<real_t>;
     bool reached(const real_t x) const override{
         return false;
     }

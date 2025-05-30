@@ -147,8 +147,8 @@ public:
         meta.pos_limit = clamp;
     }
 
-    void enable(const bool en = true){
-        if(en){
+    void enable(const Enable en = EN){
+        if(en == EN){
             rework();
         }else{
             shutdown();
@@ -182,12 +182,12 @@ public:
 
     void shutdown(){
         run_status = RunStatus::INACTIVE;
-        svpwm.enable(false);
+        svpwm.enable(DISEN);
     }
 
     void rework(){
         run_status = RunStatus::ACTIVE;
-        svpwm.enable(true);
+        svpwm.enable(EN);
     }
 
     real_t getRaddiff() const {

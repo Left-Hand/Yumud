@@ -31,7 +31,7 @@ public:
         vref_pwm = ABS(abs_max_value);
     }
 
-    void enable(const bool en = true){
+    void enable(const Enable en = EN){
         enabled = en;
         if(!en){
             forward_pwm = real_t(1);
@@ -75,7 +75,7 @@ public:
     //     instanceN.setClamp(abs_max_value);
     // }
 
-    // void enable(const bool en = true) override{
+    // void enable(const Enable en = EN) override{
     //     enabled = en;
     //     if(!en) setDuty(real_t(0));
     // }

@@ -4,7 +4,7 @@
 using namespace ymd::hal;
 using namespace ymd;
 
-void I2cHw::enable_rcc(const bool en){
+void I2cHw::enable_rcc(const Enable en){
     switch((uint32_t)instance){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:
@@ -67,7 +67,7 @@ bool I2cHw::locked(){
 
 void I2cHw::init(const uint32_t baudrate){
     // preinit();
-    enable_rcc();
+    enable_rcc(EN);
 
     scl().afod();
     sda().afod();
@@ -82,7 +82,7 @@ void I2cHw::init(const uint32_t baudrate){
     I2C_Init(instance, &I2C_InitStructure);
     I2C_Cmd(instance, ENABLE);
 
-    enable_hw_timeout(true);
+    enable_hw_timeout(EN);
 }
 
 void I2cHw::reset(){
@@ -95,8 +95,8 @@ void I2cHw::reset(){
     instance->CTLR1 &= ~I2C_CTLR1_SWRST;
 }
 
-void I2cHw::enable_hw_timeout(const bool en){
-    if(en) instance->STAR1 |= I2C_STAR1_TIMEOUT;
+void I2cHw::enable_hw_timeout(const Enable en){
+    if(en == EN) instance->STAR1 |= I2C_STAR1_TIMEOUT;
     else instance->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
@@ -157,7 +157,7 @@ hal::HalResult I2cHw::write(const uint32_t data){
 }
 
 hal::HalResult I2cHw::read(uint32_t & data, const Ack ack){
-    I2C_AcknowledgeConfig(instance, bool(ack));
+    I2C_AcknowledgeConfig(instance, ack == ACK);
     while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));
     data = I2C_ReceiveData(instance);

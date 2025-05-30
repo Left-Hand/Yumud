@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/uint24_t.hpp"
+#include "core/constants/enums.hpp"
 #include <span>
 
 namespace ymd{

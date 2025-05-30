@@ -129,8 +129,8 @@ CyberGear_Result<void> CyberGear::onCtrl2FeedBack(const uint32_t id, const uint6
     return Ok();
 }
 
-CyberGear_Result<void> CyberGear::enable(const bool en, const bool clear_fault){
-    if(en){
+CyberGear_Result<void> CyberGear::enable(const Enable en, const bool clear_fault){
+    if(en == EN){
         return this->transmit(
             make_id(CyberGear_Command::EN_MOT, host_id_, node_id_), 0, 0);
     }else{

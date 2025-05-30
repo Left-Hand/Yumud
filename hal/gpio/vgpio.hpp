@@ -20,7 +20,7 @@ public:
 
     VGpio(const Gpio & gpio);
     VGpio(GpioPortIntf & port, const int8_t pin_index);
-    VGpio(GpioPortIntf & port, const Pin pin);
+    VGpio(GpioPortIntf & port, const PinSource pin);
     __fast_inline void set() {port_.set_by_index(pin_index_);}
     __fast_inline void clr() {port_.clr_by_index(pin_index_);}
     __fast_inline void write(const BoolLevel val){port_.write_by_index(pin_index_, val);}

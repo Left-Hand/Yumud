@@ -16,6 +16,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::rmst;
 
 auto input(){
@@ -185,7 +186,7 @@ void rmst_main(){
         // !motor.changeCanId(0);
         
         // !+motor.requestWritePara(0x301, 0x02);
-        !motor.ctrl(0, 0, 0, 500, 5);
+        motor.ctrl(0, 0, 0, 500, 5).unwrap();
         clock::delay(10ms);
     }
 

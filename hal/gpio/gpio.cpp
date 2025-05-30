@@ -6,7 +6,7 @@
 using namespace ymd::hal;
 
 void Gpio::set_mode(const GpioMode mode){
-    if(!valid()) return;
+    if(not is_valid()) return;
     const auto ctz_pin = CTZ(uint16_t(pin_));
     auto & pin_cfg = (ctz_pin >= 8 ? ((instance_ -> CFGHR)) : ((instance_ -> CFGLR)));
     uint32_t tempreg = pin_cfg;
@@ -23,7 +23,7 @@ void Gpio::set_mode(const GpioMode mode){
 }
 
 Gpio & Gpio::null(){
-    static Gpio NullGpio = Gpio(GPIOD, Pin::None);
+    static Gpio NullGpio = Gpio(GPIOD, PinSource::None);
     return NullGpio;
 }
 

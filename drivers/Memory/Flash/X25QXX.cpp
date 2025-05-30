@@ -107,7 +107,7 @@ void X25QXX::exit_load(){
 }
 
 
-void X25QXX::enable_power_down(const bool en){
+void X25QXX::enable_power_down(const Enable en){
     write_byte(en ? Command::PowerDown : Command::ReleasePowerDown);
 }
 

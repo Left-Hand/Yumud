@@ -61,12 +61,12 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
         }
     }
 
-    if(temp_verf_activation) enable_temp_vref(true);
+    if(temp_verf_activation) enable_temp_vref(EN);
 
     if(MAX(injected_list.size(), regular_list.size()) > 1){
-        enable_scan(true);  
+        enable_scan(EN);  
     }else{
-        enable_singleshot(true);
+        enable_singleshot(EN);
     }
 
 

@@ -34,11 +34,11 @@ hal::HalResult SpiSw::transceive(uint32_t & data_rx, const uint32_t data_tx){
 
         if(m_msb){
             mosi_gpio = BoolLevel::from(data_tx & (1 << (data_bits - 2 - i)));
-            ret <<= 1; ret |= bool(miso_gpio.read());
+            ret <<= 1; ret |= miso_gpio.read().to_bool();
             delay_dur();
         }else{
             mosi_gpio = BoolLevel::from(data_tx & (1 << i));
-            ret >>= 1; ret |= (uint32_t(bool(miso_gpio.read())) << (data_bits - 1)) ;
+            ret >>= 1; ret |= (uint32_t(miso_gpio.read().to_bool()) << (data_bits - 1)) ;
             delay_dur();
         }
     }

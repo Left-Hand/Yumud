@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Led.hpp"
-#include "types/color/color_t.hpp"
+#include "types/colors/color/color.hpp"
 #include "concept/pwm_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 

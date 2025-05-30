@@ -12,7 +12,7 @@ uint32_t HX711::read_data(void){
         __nopn(2);
         sck_gpio_.clr();
 
-        data <<= 1; data |= bool(sdo_gpio_.read());
+        data <<= 1; data |= bool(sdo_gpio_.read() == HIGH);
     }
 
     for(uint8_t i = 0; i < (uint8_t)conv_type; i++){
@@ -32,5 +32,5 @@ void HX711::init(){
 }
 
 bool HX711::is_idle(){
-    return sdo_gpio_ == LOW;
+    return (sdo_gpio_.read() == LOW);
 }

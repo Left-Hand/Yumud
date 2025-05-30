@@ -34,25 +34,28 @@ public:
 
     static constexpr Grayscale get_vertex_val(
         const Vertexs & _vertexs, 
-        const Vector2 & _grid_pos, 
+        const Vector2q<16> & _grid_pos, 
         const Image<Grayscale> & gs
     ){
-        return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
+        // TODO();
+        while(true);
+        return Grayscale(0);
+        // return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
     };
 
-    static constexpr Vector2 get_vertex(const Vertexs & __vertexs, const Vector2 & __grid_pos){
-        const Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
+    static constexpr Vector2q<16> get_vertex(const Vertexs & __vertexs, const Vector2q<16> & __grid_pos){
+        const Vector2q<16> grid_scale = (__grid_pos + Vector2q<16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
 
-        const Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        const Vector2 lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
+        const Vector2q<16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+        const Vector2q<16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
         return upper_x.lerp(lower_x, grid_scale.y);
     };
 
 
-    static constexpr Vector2 get_vertex_grid(const Vertexs & __vertexs, const Vector2 & __grid_pos){
-        // return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-        return Vector2(0,0);
+    static constexpr Vector2q<16> get_vertex_grid(const Vertexs & __vertexs, const Vector2q<16> & __grid_pos){
+        // return get_vertex(__vertexs, __grid_pos + Vector2q<16>{0.5, 0.5});
+        return Vector2q<16>(0,0);
     };
 
 

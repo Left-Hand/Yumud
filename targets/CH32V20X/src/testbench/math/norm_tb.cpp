@@ -3,15 +3,15 @@
 #include "core/math/iq/iq_t.hpp"
 
 
-#include "types/vector3/Vector3.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/quat/Quat.hpp"
 
 template<arithmetic T>
 constexpr
 auto build_norm_vec3_from_quat(
     const T x, const T y, const T z, const T w){
 
-    return Vector3_t(
+    return Vector3(
         Norm_t(2 * (qconv(Nrom_t(x) , Norm_t(z) , Norm_t(- w), Nrom_t(y)))),
         Norm_t(2 * (qconv(Nrom_t(w) , Norm_t(x) , Norm_t(y  ), Nrom_t(z)))),
         Norm_t(fconv(qsqu(Norm_t(w)) - qsqu(Norm_t(x)) - qsqu(Norm_t(y)) + qsau(Norm_t(z))))

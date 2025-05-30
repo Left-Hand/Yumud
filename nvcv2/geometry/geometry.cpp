@@ -18,61 +18,61 @@
 // #define H8 -1.391*(10^-2)
 // #define H9 1.000*(10^0)
 
-namespace ymd::nvcv2::Geometry{
+namespace ymd::nvcv2::geometry{
 
 
 static constexpr PerspectiveConfig perspective_config{
-    .H1 = real_t(1.0),
-    .H2 = real_t(3.433333333333334),
-    .H3 = real_t(0.0),
-    .H4 = real_t(-7.21363183512792e-17),
-    .H5 = real_t(3.191489361702128),
-    .H6 = real_t(-8.30478318108259e-15),
-    .H7 = real_t(-0.0),
-    .H8 = real_t(0.036524822695035465),
+    .H1 = q16(1.0),
+    .H2 = q16(3.433333333333334),
+    .H3 = q16(0.0),
+    .H4 = q16(-7.21363183512792e-17),
+    .H5 = q16(3.191489361702128),
+    .H6 = q16(-8.30478318108259e-15),
+    .H7 = q16(-0.0),
+    .H8 = q16(0.036524822695035465),
 };
 static constexpr InvPerspectiveConfig inv_perspective_config{
-    .H1 = real_t(1.00000),
-    .H2 = real_t(-0.28200),
-    .H3 = real_t(0.00000),
-    .H4 = real_t(0.00000),
-    .H5 = real_t(0.64000),
-    .H6 = real_t(0.00000),
-    .H7 = real_t(0.00000),
-    .H8 = real_t(-0.00600),
+    .H1 = q16(1.00000),
+    .H2 = q16(-0.28200),
+    .H3 = q16(0.00000),
+    .H4 = q16(0.00000),
+    .H5 = q16(0.64000),
+    .H6 = q16(0.00000),
+    .H7 = q16(0.00000),
+    .H8 = q16(-0.00600),
 };
 
-Vector2 perspective(const Vector2 & v){
+Vector2q<16> perspective(const Vector2q<16> & v){
     auto [x,y] = v;
-    real_t inv_s = real_t(1) / (perspective_config.H8*y+real_t(1));
-    real_t _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
-    real_t _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
-    Vector2 ret = {_x,_y};
+    q16 inv_s = q16(1) / (perspective_config.H8*y+q16(1));
+    q16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
+    q16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
+    Vector2q<16> ret = {_x,_y};
     return ret;
 }
 
 
-Vector2 inv_perspective(const Vector2 & v){
+Vector2q<16> inv_perspective(const Vector2q<16> & v){
     auto [x,y] = v;
-    real_t inv_s = real_t(1) / (inv_perspective_config.H8*y+real_t(1));
-    real_t _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
-    real_t _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
-    Vector2 ret = {_x,_y};
+    q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
+    q16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
+    q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
+    Vector2q<16> ret = {_x,_y};
     return ret;
 }
 
-Vector2 inv_perspective_fast(const Vector2 & v){
+Vector2q<16> inv_perspective_fast(const Vector2q<16> & v){
     auto [x,y] = v;
-    real_t inv_s = real_t(1) / (inv_perspective_config.H8*y+real_t(1));
-    real_t _x = (x + inv_perspective_config.H2 * y)*inv_s;
-    real_t _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
-    Vector2 ret = {_x,_y};
+    q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
+    q16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
+    q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
+    Vector2q<16> ret = {_x,_y};
 
     return ret;
 }
 
-void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> & src){
-    auto size = static_cast<const ImageWritable<Grayscale> &>(dst).size();
+void perspective(Image<Grayscale> & dst,const Image<Grayscale> & src){
+    auto size = static_cast<const Image<Grayscale> &>(dst).size();
     for(size_t _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;

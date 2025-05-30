@@ -1,6 +1,6 @@
 #include "two_pass.hpp"
 
-namespace ymd::nvcv2::Shape{
+namespace ymd::nvcv2::shape{
 
 TwoPass::TwoPass(int size)
 {
@@ -33,7 +33,7 @@ void TwoPass::Union(int x, int y)
 		parent[i] = j;
 }
 
-void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src){
+void TwoPass::twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary> &src){
 	auto [w,h] = src.size();
 
 	int label = 1;
@@ -46,15 +46,15 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 			if (src[{x,y}] != 0)
 			{
 				//left and up labels
-				Grayscale left = (x - 1 < 0) ? Grayscale(0) : out.at(y, x - 1);
-				Grayscale up = (y - 1 < 0) ? Grayscale(0) : out.at(y - 1, x);
+				Grayscale left = (x - 1 < 0) ? Grayscale(0) : out.at({x - 1, y});
+				Grayscale up = (y - 1 < 0) ? Grayscale(0) : out.at({x, y-1});
 
 				//at least one label is marked
 				if (left != 0 || up != 0){
 					//two labels are marked
 					if (left != 0 && up != 0){
 						//adopt smaller label
-						out.at(y, x) = std::min(left, up);
+						out[{x,y}] = std::min(left, up);
 						if (left <= up)
 							Union(up, left);
 						else if (up<left)
@@ -62,13 +62,13 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 					}
 					else{
 						//adopt larger label
-						out.at(y, x) = std::max(left, up);
+						out[{x,y}] = std::max(left, up);
 					}
 				}
 				else
 				{
 					//non of two labels is markded, so add a new label
-					out.at(y, x) = ++label;
+					out[{x,y}] = ++label;
 				}
 			}
 		}
@@ -79,21 +79,21 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	{
 		for (auto x = 0u; x < w; x++)
 		{
-			if (src.at(y, x) != 0)
-				out.at(y, x) = Find(out.at<int>(y, x));
+			if (src[{x,y}] != 0)
+				out[{x,y}] = Find(out[{x,y}]);
 		}
 	}
 }
 
 //find the max label value
-int TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out){
+int TwoPass::findMaxLabel(const Image<Grayscale> & out){
 	const auto [imgH, imgW] = out.size();
 	auto max = INT_FAST32_MIN;
 	for (auto i = 0u; i < imgH; i++)
 	{
 		for (auto j = 0u; j < imgW; j++)
 		{
-			auto ele = uint8_t(out.at(i, j));
+			auto ele = uint8_t(out[{i, j}]);
 			if (ele > max) {
 				max = ele;
 			}
@@ -102,10 +102,10 @@ int TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out){
 	return max;
 }
 
-ImageWithData<Grayscale, Grayscale> TwoPass::run(const ImageReadable<Binary> & src)
+Image<Grayscale> TwoPass::run(const Image<Binary> & src)
 {
 	//detect connected-region using two Pass method
-	auto ret = ImageWithData<Grayscale, Grayscale>(src.size());
+	auto ret = Image<Grayscale>(src.size());
 	twoPassConnectComponent(ret, src);
 	return ret;
 	//find the largest label

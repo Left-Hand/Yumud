@@ -183,8 +183,8 @@ public:
             display_command_.display_on = false;
         }
 
-        void enable_seg7(const bool en = true){
-            display_command_.seg7_else_sge8 = en;
+        void enable_seg7(const Enable en = EN){
+            display_command_.seg7_else_sge8 = en == EN;
         }
 
     private:

@@ -6,7 +6,7 @@
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "concept/pwm_channel.hpp"
 #include "core/io/regs.hpp"
-#include "types/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -159,12 +159,12 @@ public:
         return 0;
     }
 
-    Vector2_t<real_t> getLeftJoystick() const {
-        return Vector2_t<real_t>{frame.lx-127, 127-frame.ly}/128;
+    Vector2<real_t> getLeftJoystick() const {
+        return Vector2<real_t>{frame.lx-127, 127-frame.ly}/128;
     }
 
-    Vector2_t<real_t> getRightJoystick() const {
-        return Vector2_t<real_t>{frame.rx-127, 127-frame.ry}/128;
+    Vector2<real_t> getRightJoystick() const {
+        return Vector2<real_t>{frame.rx-127, 127-frame.ry}/128;
     }
 
     Vector2i getLeftDirection() const{

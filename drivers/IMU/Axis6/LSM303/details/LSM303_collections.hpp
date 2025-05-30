@@ -167,8 +167,8 @@ struct LSM303_collections{
 
 
 struct LSM303_Regs : public LSM303_collections {
-    Vector3_t<int16_t> a; // accelerometer readings
-    Vector3_t<int16_t> m; // magnetometer readings
+    Vector3<int16_t> a; // accelerometer readings
+    Vector3<int16_t> m; // magnetometer readings
 
 };
 

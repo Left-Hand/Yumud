@@ -81,8 +81,8 @@ public:
     void setRetransTime(const uint8_t times);
 
     void enableAutoCali(const uint16_t open);
-    void enableAutoAck(const bool en = true);
-    void enableCrc(const bool en = true);
+    void enableAutoAck(const Enable en = EN);
+    void enableCrc(const Enable en = EN);
     void init();
     bool validate();
     void setSyncWord(const uint64_t syncword);

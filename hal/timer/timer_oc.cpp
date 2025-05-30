@@ -8,7 +8,7 @@ using namespace ymd::hal;
 
 void TimerOut::install_to_pin(const Enable en){
     Gpio & io = internal::get_pin(instance, idx_);
-    if(en)io.afpp();
+    if(en == EN)io.afpp();
     else io.inflt();
 }
 
@@ -82,7 +82,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
 
 }
 void TimerOut::enable_output(const Enable en){
-    if(en) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
+    if(en == EN) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
 }
 

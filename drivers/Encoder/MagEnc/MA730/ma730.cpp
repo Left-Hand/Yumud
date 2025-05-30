@@ -40,22 +40,22 @@ IResult<> MA730::read_reg(const RegAddress addr, uint8_t & data){
         res.is_err()) return Err(Error(res.unwrap_err()));
     if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
         res.is_err()) return Err(Error(res.unwrap_err()));
+    if((dummy & 0xff) != 0x00) 
+        return Err(Error::InvalidRxFormat);
     data = dummy >> 8;
     return Ok();
 }
 
-IResult<> MA730::direct_read(uint16_t & data){
+IResult<uint16_t> MA730::direct_read(){
+    uint16_t data;
     const auto res = spi_drv_.read_single<uint16_t>(data);
     if(res.is_err()) return Err(Error(res.unwrap_err()));
-    return Ok();
+    return Ok(data);
 }
 
 
 IResult<uint16_t> MA730::get_raw_data(){
-    uint16_t data = 0;
-    if(const auto res = direct_read(data); res.is_err())
-        return Err(res.unwrap_err());
-    return Ok(data);
+    return direct_read();
 }
 
 
@@ -71,12 +71,24 @@ IResult<> MA730::set_zero_position(const real_t position){
     return set_zero_data(data);
 }
 
+IResult<MagStatus> MA730::get_mag_status(){
+    const auto res = read_reg(RegAddress::Magnitude, magnitudeReg);
+    if(res.is_err()) return Err(res.unwrap_err());
+    const bool mgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
+    const bool mgh = magnitudeReg.magnitudeHigh;
+    if(mgl) return Ok(MagStatus::Low());
+    if(mgh) return Ok(MagStatus::High());
+    else return Ok(MagStatus::Proper());
+}
 
 IResult<> MA730::update(){
-    uint16_t data = 0;
-    const auto res = direct_read(data);
-    lap_position = u16_to_uni(data);
-    return res;
+    const uint16_t data = ({
+        const auto res = direct_read();
+        if(res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
+    lap_position_ = u16_to_uni(data);
+    return Ok();
 }
 
 
@@ -120,25 +132,6 @@ IResult<> MA730::set_direction(const bool direction){
     return write_reg(RegAddress::Direction, uint8_t(directionReg));
 }
 
-IResult<bool> MA730::is_magnitude_low(){
-    const auto res = read_reg(RegAddress::Magnitude, magnitudeReg);
-    if(res.is_err()) return Err(res.unwrap_err());
-    bool correctMgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
-    return Ok(bool(correctMgl));
-}
-
-IResult<bool> MA730::is_magnitude_high(){
-    const auto res = read_reg(RegAddress::Magnitude, magnitudeReg);
-    if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(bool(magnitudeReg.magnitudeHigh));
-}
-
-IResult<bool> MA730::is_magnitude_proper(){
-    const auto res = read_reg(RegAddress::Magnitude, magnitudeReg);
-    if(res.is_err()) return Err(res.unwrap_err());
-    const bool proper = !((!(magnitudeReg.mgl1 | magnitudeReg.mgl2)) | magnitudeReg.magnitudeHigh);
-    return Ok(proper);
-}
 
 IResult<> MA730::set_zparameters(const Width width, const Phase phase){
     zParametersReg.zWidth = (uint8_t)width;

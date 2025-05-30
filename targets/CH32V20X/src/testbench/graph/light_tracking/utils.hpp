@@ -5,17 +5,17 @@
 
 #include "types.hpp"
 #include "core/clock/time.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/quat/Quat.hpp"
 
 static constexpr auto vec3_compMax(auto v) {return MAX(v.x,v.y,v.z);}
 static constexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
 
-static constexpr auto eye     = Vector3_t<real_t>(0.0_r, 1.0_r, 3.5_r);
+static constexpr auto eye     = Vector3<real_t>(0.0_r, 1.0_r, 3.5_r);
 
 static constexpr auto lightColor = RGB{80, 80, 80};
 
-static constexpr auto bbmin = Vector3_t<real_t>(-1, 0, -1);
-static constexpr auto bbmax = Vector3_t<real_t>(1, 2, 1);
+static constexpr auto bbmin = Vector3<real_t>(-1, 0, -1);
+static constexpr auto bbmax = Vector3<real_t>(1, 2, 1);
 
 
 // static constexpr size_t LCD_W = 240;

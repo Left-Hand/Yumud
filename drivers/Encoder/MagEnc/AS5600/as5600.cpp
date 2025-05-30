@@ -47,37 +47,37 @@ IResult<> AS5600::set_hysteresis(const Hysteresis _hysteresis){
     return write_reg(RegAddress::Config, configReg);
 }
 
-IResult<AS5600::MagStatus> AS5600::get_mag_status(){
+IResult<MagStatus> AS5600::get_mag_status(){
     // UNWRAP_OR_RETURN_ERR(read_reg(RegAddress::Status, statusReg));
-    if(const auto res = read_reg(RegAddress::Status, statusReg); res.is_err())
-        return Err(res.unwrap_err());
-    if(statusReg.magProper) return Ok(MagStatus(MagStatus::Proper));
-    else if(statusReg.magHigh) return Ok(MagStatus(MagStatus::High));
-    else if(statusReg.magLow) return Ok(MagStatus(MagStatus::Low));
-    else return Ok(MagStatus(MagStatus::Unknown));
+    if(const auto res = read_reg(RegAddress::Status, statusReg);
+        res.is_err()) return Err(res.unwrap_err());
+    if(statusReg.magProper) return Ok(MagStatus::Proper());
+    else if(statusReg.magHigh) return Ok(MagStatus::High());
+    else if(statusReg.magLow) return Ok(MagStatus::Low());
+    else return Ok(MagStatus(MagStatus::Invalid()));
 }
 
 IResult<uint8_t> AS5600::get_gain(){
-    if(const auto res = read_reg(RegAddress::AutoGain, autoGainReg.data); res.is_err())
-        return Err(res.unwrap_err());
+    if(const auto res = read_reg(RegAddress::AutoGain, autoGainReg.data); 
+        res.is_err()) return Err(res.unwrap_err());
     return Ok(autoGainReg.data);
 }
 
 IResult<uint16_t> AS5600::get_magnitude(){
-    if(const auto res = read_reg(RegAddress::Magnitude, magnitudeReg.data); res.is_err())
-        return Err(res.unwrap_err());
+    if(const auto res = read_reg(RegAddress::Magnitude, magnitudeReg.data); 
+        res.is_err()) return Err(res.unwrap_err());
     return Ok((magnitudeReg.data) & 0xFFF);
 }
 
 IResult<real_t> AS5600::get_raw_angle(){
-    if(const auto res = read_reg(RegAddress::RawAngle, rawAngleReg.data); res.is_err())
-        return Err(res.unwrap_err());
+    if(const auto res = read_reg(RegAddress::RawAngle, rawAngleReg.data);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok(From12BitTo360Degrees(rawAngleReg.data));
 }
 
 IResult<real_t> AS5600::get_angle(){
-    if(const auto res = read_reg(RegAddress::Angle, angleReg.data); res.is_err())
-        return Err(res.unwrap_err());
+    if(const auto res = read_reg(RegAddress::Angle, angleReg.data);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok(From12BitTo360Degrees(angleReg.data));
 }
 
@@ -97,8 +97,8 @@ IResult<> AS5600::set_amount_angle(const real_t angle){
 }
 
 IResult<uint8_t> AS5600::get_program_times(){
-    if(const auto res = read_reg(RegAddress::ProgramTimes, programTimesReg); res.is_err())
-        return Err(res.unwrap_err());
+    if(const auto res = read_reg(RegAddress::ProgramTimes, programTimesReg);
+        res.is_err()) return Err(res.unwrap_err());
 
     return Ok(uint8_t(programTimesReg.times));
 }

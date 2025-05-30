@@ -7,7 +7,7 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace CH32V203{
+namespace ymd::ral::CH32V203{
 
     
 struct R16_I2C_CTLR1{
@@ -144,51 +144,51 @@ struct I2C_Def{
     uint16_t :16;
 
 
-    constexpr void enable(const bool en){
-        this->CTLR1.PE = en;
+    constexpr void enable(const Enable en){
+        this->CTLR1.PE = en == EN;
     }
 
-    constexpr void enable_dma(const bool en){
-        this->CTLR2.DMAEN = en;
+    constexpr void enable_dma(const Enable en){
+        this->CTLR2.DMAEN = en == EN;
     }
 
-    constexpr void set_next_dma_is_last(const bool en){
-        CTLR2.LAST = en;
+    constexpr void set_next_dma_is_last(const Enable en){
+        CTLR2.LAST = en == EN;
     }
 
-    constexpr void generate_start(const bool en){
-        CTLR1.START = en;
+    constexpr void generate_start(const Enable en){
+        CTLR1.START = en == EN;
     }
 
-    constexpr void generate_stop(const bool en){
-        CTLR1.STOP = en;
+    constexpr void generate_stop(const Enable en){
+        CTLR1.STOP = en == EN;
     }
 
-    constexpr void enable_ack(const bool en){
-        CTLR1.ACK = en;
+    constexpr void enable_ack(const Enable en){
+        CTLR1.ACK = en == EN;
     }
 
     constexpr void set_address2(const uint8_t addr){
         OADDR2.ADD2 = addr;
     }
 
-    constexpr void enable_dual_address(const bool en){
-        OADDR2.ENDUAL = en;
+    constexpr void enable_dual_address(const Enable en){
+        OADDR2.ENDUAL = en == EN;
     }
 
-    constexpr void generate_call(const bool en){
-        CTLR1.ENGC = en;
+    constexpr void generate_call(const Enable en){
+        CTLR1.ENGC = en == EN;
     }
 
     // #define LOAD16(d,s) auto d = __builtin_bit_cast(std::decay_t, s)
     constexpr void enable_interrupt(
-        const bool err_en,
-        const bool event_en,
-        const bool buf_en
+        const Enable err_en,
+        const Enable event_en,
+        const Enable buf_en
     ){
-        CTLR2.ITERREN = err_en;
-        CTLR2.ITEVTEN = event_en;
-        CTLR2.ITBUFEN = buf_en;
+        CTLR2.ITERREN = err_en == EN;
+        CTLR2.ITEVTEN = event_en == EN;
+        CTLR2.ITBUFEN = buf_en == EN;
     }
 
     constexpr void send(const uint8_t data){
@@ -211,8 +211,8 @@ struct I2C_Def{
         DATAR.DR = addr;
     }
 
-    constexpr void soft_reset(const bool en){
-        CTLR1.SWRST = en;
+    constexpr void soft_reset(const Enable en){
+        CTLR1.SWRST = en == EN;
     }
 
     constexpr void nack_next_transmit(){
@@ -227,20 +227,20 @@ struct I2C_Def{
         CTLR1.ALERT = !level;
     }
 
-    constexpr void transmit_pec(const bool en){
-        CTLR1.PEC = en;
+    constexpr void transmit_pec(const Enable en){
+        CTLR1.PEC = en == EN;
     }
 
-    constexpr void calculate_pec(const bool en){
-        CTLR1.ENPEC = en;
+    constexpr void calculate_pec(const Enable en){
+        CTLR1.ENPEC = en == EN;
     }
 
     constexpr uint8_t get_pec(){
         return std::bit_cast<uint8_t>(STAR2.PEC);
     }
 
-    constexpr void enable_arp(const bool en){
-        CTLR1.ENARP = en;
+    constexpr void enable_arp(const Enable en){
+        CTLR1.ENARP = en == EN;
     }
 
     constexpr void set_stretch(const bool set){

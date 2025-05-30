@@ -8,16 +8,17 @@
 
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
-#include "types/plane/plane.hpp"
-#include "types/aabb/aabb.hpp"
-#include "types/transform3d/transform3d.hpp"
-#include "types/transform2d/transform2d.hpp"
+#include "types/regions/plane/plane.hpp"
+#include "types/regions/aabb/aabb.hpp"
+#include "types/regions/segment2/Segment2.hpp"
+#include "types/regions/Line2/Line2.hpp"
+#include "types/regions/Ray2/Ray2.hpp"
 
-#include "types/segment2/Segment2.hpp"
-#include "types/Line2/Line2.hpp"
-#include "types/Ray2/Ray2.hpp"
-#include "types/Arc2D/Arc2D_t.hpp"
-#include "types/Bezier2D/Bezier2D_t.hpp"
+#include "types/transforms/transform3d/transform3d.hpp"
+#include "types/transforms/transform2d/transform2d.hpp"
+
+#include "types/shapes/Arc2/Arc2.hpp"
+#include "types/shapes/Bezier2/Bezier2.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
@@ -58,7 +59,7 @@ void math_tb(){
     DEBUGGER.set_eps(4);
     
 
-    // using Vector3 = Vector3_t<real_t>;
+    // using Vector3 = Vector3<real_t>;
     // using Plane = Plane_t<real_t>;
     // using Basis = Basis_t<real_t>;
     // using Transform3D = Transform3D_t<real_t>;
@@ -167,8 +168,8 @@ void math_tb(){
     
     while(true){
 
-        auto left_pos = Vector3_t<real_t>(real_t(-0.1), real_t(-0.2), 0);
-        auto right_pos = Vector3_t<real_t>(real_t(0.1), real_t(-0.1), real_t(0.02));
+        auto left_pos = Vector3<real_t>(real_t(-0.1), real_t(-0.2), 0);
+        auto right_pos = Vector3<real_t>(real_t(0.1), real_t(-0.1), real_t(0.02));
         auto pitch_rad = real_t(0.143);
         // print(wls.foot_plane(left_pos, right_pos, pitch_rad));
 
@@ -196,8 +197,8 @@ void math_tb(){
     using Line = Line2_t<real_t>;
 
 
-    auto line = Line{Vector2_t<real_t>{1,0}, Vector2_t<real_t>{0,1}};
-    auto other = Line::from_point_and_rad(Vector2_t<real_t>{0,0}, real_t(PI/4));
+    auto line = Line{Vector2<real_t>{1,0}, Vector2<real_t>{0,1}};
+    auto other = Line::from_point_and_rad(Vector2<real_t>{0,0}, real_t(PI/4));
     print("line", line);
     print("other",other);
 
@@ -206,17 +207,17 @@ void math_tb(){
     print("abc:", line.abc());
     print("angle:", line.angle());
     print("abs", line.abs());
-    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.5_r}));
-    print("dist", line.distance_to(Vector2_t<real_t>{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line::from_point_and_rad(Vector2_t<real_t>{0,0}, atan(real_t(0.3333_r)))));
-    print("foot", line.foot_of(Vector2_t<real_t>{0, 0.5_r}));
-    print("mirror", line.mirror(Vector2_t<real_t>{0, 0.5_r}));
-    print("perpendicular", line.perpendicular(Vector2_t<real_t>{0, 0.5_r}));
-    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_rad(Vector2_t<real_t>{0,0}, real_t(PI/4))));
+    print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line::from_point_and_rad(Vector2<real_t>{0,0}, atan(real_t(0.3333_r)))));
+    print("foot", line.foot_of(Vector2<real_t>{0, 0.5_r}));
+    print("mirror", line.mirror(Vector2<real_t>{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vector2<real_t>{0, 0.5_r}));
+    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_rad(Vector2<real_t>{0,0}, real_t(PI/4))));
     print("unit", line.unit());
-    print("rebase", line.rebase(Vector2_t<real_t>{-1,0}));
-    print("rotated", line.rotated(Vector2_t<real_t>{-1,0}, real_t(PI/4)));
-    print("normal", line.normal(Vector2_t<real_t>{-1,0}));
+    print("rebase", line.rebase(Vector2<real_t>{-1,0}));
+    print("rotated", line.rotated(Vector2<real_t>{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vector2<real_t>{-1,0}));
     #endif
 
     #define MATRIX_TB

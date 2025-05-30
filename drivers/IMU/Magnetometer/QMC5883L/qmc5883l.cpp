@@ -43,8 +43,8 @@ IResult<> QMC5883L::init(){
     return Ok();
 }
 
-IResult<> QMC5883L::enable_cont_mode(const bool en){
-    configAReg.measureMode = en;
+IResult<> QMC5883L::enable_cont_mode(const Enable en){
+    configAReg.measureMode = en == EN;
     return write_reg(RegAddress::ConfigA, configAReg);
 }
 
@@ -67,8 +67,8 @@ IResult<> QMC5883L::update(){
     return read_burst(RegAddress::MagX, &magXReg, 3);
 }
 
-IResult<Vector3_t<q24>> QMC5883L::read_mag(){
-    return Ok{Vector3_t<q24>{
+IResult<Vector3<q24>> QMC5883L::read_mag(){
+    return Ok{Vector3<q24>{
         uni(int16_t(magXReg)) * scaler_.to_fullscale(),
         uni(int16_t(magYReg)) * scaler_.to_fullscale(),
         uni(int16_t(magZReg)) * scaler_.to_fullscale()
@@ -89,17 +89,17 @@ IResult<> QMC5883L::set_reset_period(const uint8_t resetPeriod){
 
 IResult<> QMC5883L::reset(){
     configBReg.srst = true;
-    if(const auto res = write_reg(RegAddress::ConfigB, resetPeriodReg);
-    res.is_err()){
+    if(const auto res = write_reg(RegAddress::ConfigB, configBReg);
+        res.is_err()){
         configBReg.srst = false;
         return res;
     }
     configBReg.srst = false;
-    return write_reg(RegAddress::ConfigB, resetPeriodReg);
+    return write_reg(RegAddress::ConfigB, configBReg);
 }
 
-IResult<> QMC5883L::enable_interrupt(const bool en){
-    configBReg.intEn = en;
+IResult<> QMC5883L::enable_interrupt(const Enable en){
+    configBReg.intEn = en == EN;
     return write_reg(RegAddress::ConfigB, configBReg);
 }
 

@@ -2,21 +2,21 @@
 
 template<arithmetic T>
 struct Line_t{
-    Vector2_t<T> from;
-    Vector2_t<T> to;
+    Vector2<T> from;
+    Vector2<T> to;
 };
 
 
 template<arithmetic T>
 struct Circle_t{
-    Vector2_t<T> org;
+    Vector2<T> org;
     real_t to;
 };
 
 
 template<arithmetic T>
 struct Arc_t:public Circle_t<T>{
-    Range2_t<T> angle;
+    Range2<T> angle;
 };
 
 using Line = Line_t<real_t>;

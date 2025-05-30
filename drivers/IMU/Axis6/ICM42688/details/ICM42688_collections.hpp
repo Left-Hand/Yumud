@@ -197,8 +197,8 @@ struct ICM42688_Regs:public ICM42688_Collections{
     // #pragma pack(pop)
 
     #pragma pack(push, 1)
-    Vector3_t<int16_t> acc_data_;
-    Vector3_t<int16_t> gyr_data_;
+    Vector3<int16_t> acc_data_;
+    Vector3<int16_t> gyr_data_;
     #pragma pack(pop)
 
     static_assert(sizeof(acc_data_) == 6);

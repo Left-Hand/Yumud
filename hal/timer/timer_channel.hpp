@@ -25,7 +25,7 @@ public:
     TimerChannel(const TimerChannel & other) = delete;
     TimerChannel(TimerChannel && other) = delete;
 
-    TimerChannel & enableDma(const bool en = true);
+    TimerChannel & enableDma(const Enable en = EN);
 
     DmaChannel & dma() const;
 };

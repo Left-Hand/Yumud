@@ -5,15 +5,31 @@
 
 static constexpr real_t PIXELS_PER_METER = 10;
 static constexpr real_t METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
-static constexpr auto ROAD_WIDTH = 0.475_r; 
 
 
 namespace ymd::smc::sim{
+
+template<typename T>
+struct CameraViewport2_t{
+    Pose2_t<T> pose;
+    T zoom;
+};
+
+
 class BlueprintBuilder{
 public:
-    constexpr BlueprintBuilder(const Pose2_t<real_t> & entrypoint):
-        viewpoint_(entrypoint){;}
+    struct Config{
+        real_t road_width;
+    };
 
+    constexpr BlueprintBuilder(const Config & cfg, const Pose2_t<real_t> & entrypoint):
+        viewpoint_(entrypoint){
+            reconf(cfg);
+        }
+
+    constexpr void reconf(const Config & cfg){
+        road_width_ = cfg.road_width;
+    }
     [[nodiscard]] constexpr auto add_annular_sector(const real_t radius, const real_t rotation){
         ASSERT(radius > 0);
         const auto start_rad = ((rotation > 0) ? 
@@ -24,8 +40,8 @@ public:
                 : (viewpoint_.rad + real_t(PI/2)));
 
         const auto ret = AnnularSector{
-            .inner_radius = radius - ROAD_WIDTH / 2,
-            .outer_radius = radius + ROAD_WIDTH / 2,
+            .inner_radius = radius - road_width_ / 2,
+            .outer_radius = radius + road_width_ / 2,
             
             .start_rad = start_rad,
             .stop_rad = stop_rad,
@@ -43,7 +59,7 @@ public:
     [[nodiscard]] constexpr auto add_stright(const real_t length){
         ASSERT(length > 0);
         const auto ret = RotatedRect{
-            .width = ROAD_WIDTH,
+            .width = road_width_,
             .height = length,
             .rotation = viewpoint_.rad - real_t(PI / 2)
         } | Placement{
@@ -58,7 +74,7 @@ public:
     [[nodiscard]] constexpr auto add_zebra_stright(const real_t length){
         ASSERT(length > 0);
         const auto ret = RotatedZebraRect{
-            .width = ROAD_WIDTH,
+            .width = road_width_,
             .height = length,
             .rotation = viewpoint_.rad - real_t(PI / 2)
         } | Placement{
@@ -71,11 +87,14 @@ public:
     }
 private:
     Pose2_t<real_t> viewpoint_;
+    real_t road_width_;
 };
 
 struct Scenes{
     __no_inline static Image<Grayscale> render_scene1
-        (const Pose2_t<real_t> viewpoint, const real_t scale);    
+        (const CameraViewport2_t<real_t> & viewport);    
+    __no_inline static Image<Grayscale> render_scene2
+        (const CameraViewport2_t<real_t> & viewport);    
 };
 
 }

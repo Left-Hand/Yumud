@@ -275,7 +275,7 @@ public:
     }
 
     
-    // constexpr void set_ext(const bool en){
+    // constexpr void set_ext(const Enable en){
     //     is_ext_ = (en ? true : false);
     // }
     

@@ -7,7 +7,7 @@ VGpio::VGpio(const Gpio & gpio):
     port_(form_gpiotypedef_to_port(uint32_t(gpio.inst()))), pin_index_(gpio.index()){;}
 VGpio::VGpio(GpioPortIntf & port, const int8_t pin_index):
     port_(port), pin_index_(pin_index){;}
-VGpio::VGpio(GpioPortIntf & port, const Pin pin):
+VGpio::VGpio(GpioPortIntf & port, const PinSource pin):
     port_(port), pin_index_(CTZ(uint16_t(pin))){;}
 
 

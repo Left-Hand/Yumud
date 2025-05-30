@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/rgb.h"
+#include "types/colors/rgb/rgb.hpp"
 #include "core/string/string.hpp"
 
 
@@ -85,13 +85,13 @@ public:
 
     void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
-        painter.draw_filled_rect(rect);
+        painter.draw_filled_rect(rect).examine();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_hollow_rect(rect).unwrap();
+        painter.draw_hollow_rect(rect).examine();
 
         painter.set_color(theme_.text_color);
-        painter.draw_string(rect.position + Vector2u(10,7), StringView(text)).unwrap();
+        painter.draw_string(rect.position + Vector2u(10,7), StringView(text)).examine();
     }
 };
 
@@ -104,26 +104,26 @@ class Slider:public Control{
 public:
     PASS_THEME(Slider, Control)
 
-    Range2_t<real_t> range;
+    Range2<real_t> range;
     
     void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
-        painter.draw_filled_rect(rect);
+        painter.draw_filled_rect(rect).examine();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_hollow_rect(rect).unwrap();
+        painter.draw_hollow_rect(rect).examine();
         
         scexpr auto sp = 3u;
         auto sb = rect.position + Vector2u{sp, rect.size.y/2};
         auto sw = rect.size.x - 2 * sp;
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2u{sb, Vector2u{sw, 2}});
+        painter.draw_filled_rect(Rect2u{sb, Vector2u{sw, 2}}).examine();
 
         scexpr auto h = 6u;
         scexpr auto w = 6u;
         painter.set_color(theme_.text_color);
-        painter.draw_filled_rect(Rect2u{sb + Vector2i{5, - h / 2}, Vector2u{w, h}});
+        painter.draw_filled_rect(Rect2u{sb + Vector2i{5, - h / 2}, Vector2u{w, h}}).examine();
     }
 };
 
@@ -134,19 +134,19 @@ public:
     
     void render(PainterBase & painter) override{
         painter.set_color(theme_.bg_color);
-        painter.draw_filled_rect(rect);
+        painter.draw_filled_rect(rect).examine();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_hollow_rect(rect).unwrap();
+        painter.draw_hollow_rect(rect).examine();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2u{rect.position + Vector2u(3,6), Vector2u(22,10)});
+        painter.draw_filled_rect(Rect2u{rect.position + Vector2u(3,6), Vector2u(22,10)}).examine();
 
         painter.set_color(theme_.text_color);
-        painter.draw_filled_circle(rect.position + Vector2u(10,10), 5).unwrap();
+        painter.draw_filled_circle(rect.position + Vector2u(10,10), 5).examine();
 
         painter.set_color(theme_.text_color);
-        painter.draw_string(rect.position + Vector2u(30,7), "选择").unwrap();
+        painter.draw_string(rect.position + Vector2u(30,7), "选择").examine();
 
         
     }

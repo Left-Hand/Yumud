@@ -7,7 +7,7 @@ namespace ymd::hal{
 
 class I2cHw final: public I2c{
 private:
-    void enable_rcc(const bool enable = true);
+    void enable_rcc(const Enable enable = EN);
     hal::HalResult lead(const LockRequest req) final;
     void trail() final;
 
@@ -28,7 +28,7 @@ public:
     void reset();
     bool locked();
     hal::HalResult unlock_bus();
-    void enable_hw_timeout(const bool en = true);
+    void enable_hw_timeout(const Enable en = EN);
 };
 
 

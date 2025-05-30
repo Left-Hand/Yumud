@@ -4,8 +4,8 @@
 #include "core/math/iq/iq_t.hpp"
 
 
-#include "types/vector3/Vector3.hpp"
-#include "types/quat/Quat.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/quat/Quat.hpp"
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"

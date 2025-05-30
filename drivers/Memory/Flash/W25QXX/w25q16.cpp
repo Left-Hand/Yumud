@@ -78,7 +78,7 @@ void W25Q16::exit_load(){
 
 
 
-void W25Q16::enable_write(const bool en){
+void W25Q16::enable_write(const Enable en){
     if(en){
         write_byte(Commands::WriteEnable);
     }else{

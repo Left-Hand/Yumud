@@ -48,7 +48,7 @@ void RemoteFOCMotor::setPositionLimit(const Range & clamp){
 }
 
 
-void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::INACTIVE);}
+void RemoteFOCMotor::enable(const Enable en){POST((en == EN)? Command::ACTIVE: Command::INACTIVE);}
 // void RemoteFOCMotor::setNodeId(const NodeId _id){}
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
 void RemoteFOCMotor::setAccLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}

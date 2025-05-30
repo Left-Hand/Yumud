@@ -12,14 +12,14 @@ class Exti;
 class Gpio final: public GpioIntf{
 protected:
     GPIO_TypeDef * instance_;
-    const Pin pin_;
+    const PinSource pin_;
 
 
-    Gpio(GPIO_TypeDef * instance, const Pin pin):
+    Gpio(GPIO_TypeDef * instance, const PinSource pin):
         instance_(instance)
 
         #if defined(CH32V20X) || defined(CH32V30X)
-        ,pin_(Pin(
+        ,pin_(PinSource(
             (instance == GPIOC) && 
             (
                 ((* reinterpret_cast<uint32_t *> (0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
@@ -51,12 +51,13 @@ public:
     __fast_inline void clr(){
         instance_->BCR = uint16_t(pin_);
     }
-    // __fast_inline void write(const BoolLevel val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
 
     //BSHR的寄存器在BCR前 {1->BSHR; 0->BCR} 使用逻辑操作而非判断以提高速度
-    __fast_inline void write(const BoolLevel val){*(&instance_->BCR - int(bool(val))) = uint16_t(pin_);}
+    __fast_inline void write(const BoolLevel val){
+        *(&instance_->BCR - int(val.to_bool())) = uint16_t(pin_);}
 
-    __fast_inline BoolLevel read() const {return BoolLevel::from(instance_->INDR & uint16_t(pin_));}
+    __fast_inline BoolLevel read() const {
+        return BoolLevel::from(instance_->INDR & uint16_t(pin_));}
 
     hal::Gpio & operator = (const BoolLevel level){
         write(level);
@@ -82,8 +83,41 @@ public:
 
         return Gpio(
             _instance, 
-            Pin(1 << uint8_t(pin_source))
+            PinSource(1 << uint8_t(pin_source))
         );
+    }
+
+    constexpr PinSource pin() const {return pin_;}
+
+    constexpr PortSource port() const {
+        const auto base = reinterpret_cast<uint32_t>(instance_);
+        switch(base){
+            default:
+            #ifdef ENABLE_GPIOA
+            case GPIOA_BASE:
+                return PortSource::PA;
+            #endif
+            #ifdef ENABLE_GPIOB
+            case GPIOB_BASE:
+                return PortSource::PB;
+            #endif
+            #ifdef ENABLE_GPIOC
+            case GPIOC_BASE:
+                return PortSource::PC;
+            #endif
+            #ifdef ENABLE_GPIOD
+            case GPIOD_BASE:
+                return PortSource::PD;
+            #endif
+            #ifdef ENABLE_GPIOE
+            case GPIOE_BASE:
+                return PortSource::PE;
+            #endif
+            #ifdef ENABLE_GPIOF
+            case GPIOF_BASE:
+                return PortSource::PF;
+            #endif
+        }
     }
 };
 

@@ -124,7 +124,7 @@ hal::HalResult I2cSw::read(uint32_t & data, const Ack ack){
 
     for(uint8_t i = 0; i < 8; i++){
         scl().set();
-        ret <<= 1; ret |= bool(sda().read());
+        ret <<= 1; ret |= sda().read().to_bool();
         delay_dur();
         scl().clr();
         delay_dur();

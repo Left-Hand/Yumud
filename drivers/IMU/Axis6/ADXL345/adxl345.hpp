@@ -319,8 +319,8 @@ public:
         return deviceIDReg.data;
     }
 
-    IResult<Vector3_t<q24>> read_acc();
-    IResult<Vector3_t<q24>> read_gyr();
+    IResult<Vector3<q24>> read_acc();
+    IResult<Vector3<q24>> read_gyr();
 
 };
 

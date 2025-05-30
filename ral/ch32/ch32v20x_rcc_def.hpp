@@ -332,7 +332,7 @@ struct RCC_Def{
     volatile R32_RCC_RSTSCKR        RSTSCKR;
     volatile R32_RCC_AHBRSTR        AHBRSTR;
 
-    constexpr void enable_hsi(const bool en){
+    constexpr void enable_hsi(const Enable en){
         CTLR.HSION = en;
     }
 
@@ -348,7 +348,7 @@ struct RCC_Def{
         return CTLR.HSICAL;
     }
 
-    constexpr void enable_hse(const bool en){
+    constexpr void enable_hse(const Enable en){
         CTLR.HSION = en;
     }
 
@@ -356,15 +356,15 @@ struct RCC_Def{
         return CTLR.HSIRDY;
     }
 
-    constexpr void enable_hse_bypass(const bool en){
+    constexpr void enable_hse_bypass(const Enable en){
         CTLR.HSEBYP = en;
     }
 
-    constexpr void enable_css(const bool en){
+    constexpr void enable_css(const Enable en){
         CTLR.CSSON = en;
     }
 
-    constexpr void enable_pll(const uint8_t pll_idx, const bool en){
+    constexpr void enable_pll(const uint8_t pll_idx, const Enable en){
         switch(pll_idx){
             case 1: CTLR.PLLON = en; return;
             case 2: CTLR.PLLON = en; return;
@@ -595,7 +595,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void reset_spi(const uint8_t index, const bool en){
+    constexpr void reset_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
             case 1:   APB2PCENR.SPI1_EN = en; return;
@@ -604,7 +604,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_i2c(const uint8_t index, const bool en){
+    constexpr void enable_i2c(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
             case 1:   APB1PCENR.I2C1_EN = en;return;
@@ -612,7 +612,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_timer(const uint8_t index, const bool en){
+    constexpr void enable_timer(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
             case 1:   APB2PCENR.TIM1_EN = en; return;
@@ -628,7 +628,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_usart(const uint8_t index, const bool en){
+    constexpr void enable_usart(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
             case 1:   APB2PCENR.USART1_EN = en; return;
@@ -642,7 +642,7 @@ struct RCC_Def{
         }
     }
 
-    constexpr void enable_spi(const uint8_t index, const bool en){
+    constexpr void enable_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
             case 1:   APB2PCENR.SPI1_EN = en; return;

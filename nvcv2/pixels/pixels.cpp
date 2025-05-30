@@ -1,16 +1,16 @@
 #include "pixels.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::nvcv2::Pixels{
+namespace ymd::nvcv2::pixels{
 
     class UniqueRandomGenerator {
     private:
-        scexpr uint8_t m = 251;
-        scexpr uint8_t a = 37;
-        scexpr uint8_t c = 71;
+        static constexpr uint8_t m = 251;
+        static constexpr uint8_t a = 37;
+        static constexpr uint8_t c = 71;
         std::array<uint8_t, 256> data;
 
-        scexpr uint8_t iter(const uint8_t x){
+        static constexpr uint8_t iter(const uint8_t x){
             return (a * x + c) % m;
         }
     public:
@@ -39,28 +39,18 @@ namespace ymd::nvcv2::Pixels{
         }
     };
 
-    uint sum(const Image<Grayscale>& src){
-        uint s = 0;
-        for (size_t i = 0; i < size_t(src.size().area()); i++) {
-            s += uint8_t(src[i]);
-        }
-
-        return s;
-    }
-
-
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
+    void conv(Image<RGB565>& dst, const Image<Grayscale>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vector2u{x, y}] = src[Vector2u{x, y}];
+                dst[Vector2u{x, y}] = RGB565(src[Vector2u{x, y}]);
             }
         }
     }
 
-    void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src) {
+    void conv(Image<RGB565>& dst, const Image<Binary>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vector2u{x, y}] = src[Vector2u{x, y}];
+                dst[Vector2u{x, y}] = RGB565(src[Vector2u{x, y}]);
             }
         }
     }
@@ -68,7 +58,7 @@ namespace ymd::nvcv2::Pixels{
 
     static UniqueRandomGenerator lcg;
 
-    void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src){
+    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = lcg[src[Vector2u{x, y}]];
@@ -80,13 +70,13 @@ namespace ymd::nvcv2::Pixels{
         return lcg[(uint8_t)in];
     }
 
-    auto dyeing(const ImageReadable<Grayscale>& src){
+    auto dyeing(const Image<Grayscale>& src){
         Image<Grayscale> tmp{src.size()};
         dyeing(tmp, src);
         return tmp;
     }
 
-    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
+    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold){
         for (auto x = 0u; x < std::min(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < std::min(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = src[Vector2u{x, y}].to_bina(threshold);
@@ -94,7 +84,7 @@ namespace ymd::nvcv2::Pixels{
         }
     }
 
-    Image<Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
+    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold){
         Image<Binary> dst{src.size()};
         binarization(dst, src, threshold);
         return dst;
@@ -119,7 +109,7 @@ namespace ymd::nvcv2::Pixels{
         {
             int current_sum = 0;
             int current_cnt = 0;
-            for(int i = 0; i < 256; i++){
+            for(size_t i = 0; i < 256; i++){
                 current_sum += statics[i] * i;
                 current_cnt += statics[i];
                 
@@ -134,21 +124,21 @@ namespace ymd::nvcv2::Pixels{
         real_t p1 = real_t();
         
         int max_i = 0;
-        real_t max_t = real_t(0);
+        real_t max_sep = 0;
         
         for(int i = 0; i < 256; i++){
-            int current_sum = sum_map[i];
-            int current_cnt = cnt_map[i];
+            const int current_sum = sum_map[i];
+            const int current_cnt = cnt_map[i];
             
-            int remain_sum = total_sum - current_sum;
-            int remain_cnt = total_cnt - current_cnt;
-            real_t m1 = real_t(current_sum) / current_cnt;
-            real_t m2 = real_t(remain_sum) / (remain_cnt);
+            const int remain_sum = total_sum - current_sum;
+            const int remain_cnt = total_cnt - current_cnt;
+            const real_t m1 = real_t(current_sum) / current_cnt;
+            const real_t m2 = real_t(remain_sum) / remain_cnt;
             
             real_t t = p1 * (1 - p1) * (m1 - m2) * (m1 - m2);
-            if(t > max_t){
+            if(t > max_sep){
                 max_i = i;
-                max_t = t;
+                max_sep = t;
             }
             
             p1 += real_t(1.0f / 256.0f);
@@ -158,7 +148,12 @@ namespace ymd::nvcv2::Pixels{
     }
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k, const real_t eps){
+    void iter_threshold(
+            Image<Binary>& dst, 
+            const Image<Grayscale>& src, 
+            const real_t k, 
+            const real_t eps
+    ){
         const Vector2u size = src.size();
         std::array<int, 256> statics;
         statics.fill(0);
@@ -199,7 +194,7 @@ namespace ymd::nvcv2::Pixels{
             int remain_sum = total_sum - current_sum;
             int remain_cnt = total_cnt - current_cnt;
             real_t m1 = real_t(current_sum) / current_cnt;
-            real_t m2 = real_t(remain_sum) / (remain_cnt);
+            real_t m2 = real_t(remain_sum) / remain_cnt;
             
             real_t t = m1 * k + m2 * (1 - k);
             if(ABS(t - last_t) < eps){
@@ -211,7 +206,7 @@ namespace ymd::nvcv2::Pixels{
         binarization(dst, src, last_i);
     }
 
-    void max_entropy(const Image<Grayscale>& src, const int thresh){
+    void calc_max_entropy(const Image<Grayscale>& src, const int thresh){
         const Vector2u size = src.size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
@@ -256,7 +251,6 @@ namespace ymd::nvcv2::Pixels{
                 // thresh = i + p;
             }
         }
- 
     }
     int get_huang_fuzzy_threshold(Histogram hist){
         int X, Y;
@@ -381,7 +375,7 @@ namespace ymd::nvcv2::Pixels{
     }
 
 
-    void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op) {
+    void mask_with(Image<Grayscale> & src, const Image<Binary>& op) {
         for (auto i = 0u; i < src.size().area(); i++) {
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }

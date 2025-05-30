@@ -7,7 +7,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/typetraits/enum_traits.hpp"
 
-#include "types/vector3/Vector3.hpp"
+#include "types/vectors/vector3/Vector3.hpp"
 #include "hal/hal_result.hpp"
 
 namespace ymd::drivers{
@@ -61,18 +61,18 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
-    virtual Result<Vector3_t<q24>, ImuError> read_acc() = 0;
+    virtual Result<Vector3<q24>, ImuError> read_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Result<Vector3_t<q24>, ImuError> read_gyr() = 0;
+    virtual Result<Vector3<q24>, ImuError> read_gyr() = 0;
 };
 
 class MagnetometerIntf{
 public:
 
-    virtual Result<Vector3_t<q24>, ImuError> read_mag() = 0;
+    virtual Result<Vector3<q24>, ImuError> read_mag() = 0;
 };
 
 }

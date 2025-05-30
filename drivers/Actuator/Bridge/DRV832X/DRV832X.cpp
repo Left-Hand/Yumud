@@ -18,6 +18,9 @@ using namespace ymd::drivers;
 
 using Error = DRV832X::Error;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
 struct SpiFormat{
     uint16_t data:11;
     uint16_t addr:4;
@@ -32,7 +35,7 @@ struct SpiFormat{
     }
 };
 
-Result<void, Error> DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
+IResult<> DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -45,7 +48,7 @@ Result<void, Error> DRV832X::write_reg(const RegAddress addr, const uint16_t reg
     return Ok();
 }
 
-Result<void, Error> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
+IResult<> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
@@ -60,24 +63,24 @@ Result<void, Error> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
 }
 
 
-Result<void, Error> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
-    auto & reg = regs_.gate_drv_hs;
+IResult<> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
+    auto & reg = gate_drv_hs_reg;
     reg.idrive_p_hs = uint8_t(pdrive);
     reg.idrive_n_hs = uint8_t(ndrive);
 
     return write_reg(reg);
 }
 
-Result<void, Error> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
-    auto & reg = regs_.gate_drv_ls;
+IResult<> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
+    auto & reg = gate_drv_ls_reg;
     reg.idrive_p_ls = uint8_t(pdrive);
     reg.idrive_n_ls = uint8_t(ndrive);
 
     return write_reg(reg);
 }
 
-Result<void, Error> DRV832X::set_drive_time(const PeakDriveTime ptime){
-    auto & reg = regs_.gate_drv_ls;
+IResult<> DRV832X::set_drive_time(const PeakDriveTime ptime){
+    auto & reg = gate_drv_ls_reg;
     reg.tdrive = uint8_t(ptime);
 
     return write_reg(reg);

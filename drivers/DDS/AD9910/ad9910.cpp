@@ -62,7 +62,7 @@ hal::HalResult AD9910::write_reg(const uint8_t addr, const uint8_t * data, const
     __nopn(4);
 
     UNWRAP_OR_RETURN(spi_drv.write_single<uint8_t>(addr));
-    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(data, len));
+    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(std::span(data, len)));
 
     __nopn(4);
 

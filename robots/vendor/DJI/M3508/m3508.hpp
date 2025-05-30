@@ -76,9 +76,7 @@ public:
             Result<real_t, Error> get_lap_position() {
                 return Ok(owner.lap_position);
             }
-            Result<bool, Error> is_stable() {return Ok(true);}
 
-        
         private:
             M3508 & owner;
         };

@@ -2,13 +2,11 @@
 
 
 #include "st7789.hpp"
-#include "types/range/range.hpp"
+#include "types/regions/range2/range2.hpp"
 #include "core/debug/debug.hpp"
 
-#define ST7789_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
-
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 template<typename T = void>
 using IResult = ST7789::IResult<T>;
@@ -17,7 +15,7 @@ using IResult = ST7789::IResult<T>;
 
 
 //判断刷新命令符必要性判断算法 以提高spi dma的吞吐率
-bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
+bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
     const auto curr_pt_range = get_point_index(curr_area_);
     const auto desired_pt_range = get_point_index(rect);
 
@@ -31,7 +29,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2_t<uint16_t> rect){
     }
 } 
 
-IResult<> ST7789::init(){
+IResult<> ST7789::init(const ST7789_Presets preset){
     if(const auto res = phy_.init(); res.is_err())          return res;
     clock::delay(50us);
     if(const auto res = write_command(0x01); res.is_err())  return res;
@@ -44,68 +42,94 @@ IResult<> ST7789::init(){
 	if(const auto res = write_command(0x21); res.is_err())  return res;
 	if(const auto res = write_command(0x13); res.is_err())  return res;
 	if(const auto res = write_command(0x29); res.is_err())  return res;
+    if(const auto res = init_lcd(*this, preset); res.is_err()) return res;
     return Ok();
 }
 
-void ST7789::setarea_unsafe(const Rect2u & rect){
+IResult<> ST7789::setarea_unsafe(const Rect2<uint16_t> & rect){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP
     bool need = algo_.update(rect);
     if(!need) return;
     #endif
 
-    const Vector2_t<uint16_t> p1 = offset_ + rect.position;
-    const Vector2_t<uint16_t> p2 = offset_ + rect.get_end() - Vector2u(1,1);
+    const Vector2<uint16_t> p1 = offset_ + rect.position;
+    const Vector2<uint16_t> p2 = offset_ + rect.get_end() - Vector2<uint16_t>(1,1);
 
-    write_command(0x2a);
-    write_data16(p1.x);
-    write_data16(p2.x);
+    if(const auto res = write_command(0x2a);
+        res.is_err()) return res;
+    if(const auto res = write_data16(p1.x);
+        res.is_err()) return res;
+    if(const auto res = write_data16(p2.x);
+        res.is_err()) return res;
+    if(const auto res = write_command(0x2b);
+        res.is_err()) return res;
+    if(const auto res = write_data16(p1.y);
+        res.is_err()) return res;
+    if(const auto res = write_data16(p2.y);
+        res.is_err()) return res;
+    if(const auto res = write_command(0x2c);
+        res.is_err()) return res;
 
-    write_command(0x2b);
-    write_data16(p1.y);
-    write_data16(p2.y);
-
-    write_command(0x2c);
+    return Ok();
 }
 
-void ST7789::setpos_unsafe(const Vector2u & pos){
+IResult<> ST7789::setpos_unsafe(const Vector2<uint16_t> & pos){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP
     bool need = algo_.update(rect);
     if(!need) return;
     #endif
 
-    write_command(0x2a);
-    write_data16(pos.x + offset_.x);
+    if(const auto res = write_command(0x2a);
+        res.is_err()) return res;
+    if(const auto res = write_data16(pos.x + offset_.x);
+        res.is_err()) return res;
+    if(const auto res = write_command(0x2b);
+        res.is_err()) return res;
+    if(const auto res = write_data16(pos.y + offset_.y);
+        res.is_err()) return res;
+    if(const auto res = write_command(0x2c);
+        res.is_err()) return res;
 
-    write_command(0x2b);
-    write_data16(pos.y + offset_.y);
-
-    write_command(0x2c);
+    return Ok();
 }
 
 
 
-void ST7789::putrect_unsafe(const Rect2u & rect, const RGB565 color){
-    setarea_unsafe(rect);
-    phy_.write_repeat<uint16_t>(color, rect.get_area()).unwrap();
+IResult<> ST7789::putrect_unsafe(const Rect2<uint16_t> & rect, const RGB565 color){
+    if(const auto res = setarea_unsafe(rect);
+        res.is_err()) return res;
+    if(const auto res = phy_.write_repeat<uint16_t>(
+            color, rect.get_area());
+        res.is_err()) return res;
+    return Ok();
 }
 
-void ST7789::puttexture_unsafe(const Rect2u & rect, const RGB565 * color_ptr){
-    setarea_unsafe(rect);
-    phy_.write_burst<uint16_t>(std::span<const RGB565>(color_ptr, rect.get_area())).unwrap();
+IResult<> ST7789::puttexture_unsafe(const Rect2<uint16_t> & rect, const RGB565 * color_ptr){
+    if(const auto res = setarea_unsafe(rect);
+        res.is_err()) return res;
+    if(const auto res = phy_.write_burst<uint16_t>(
+            std::span<const RGB565>(color_ptr, rect.get_area()));
+        res.is_err()) return res;
+    return Ok();
 }
 
-void ST7789::putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color){
+IResult<> ST7789::putseg_v8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color){
     auto & self = *this;
     auto pos_ = pos;
     for(uint8_t i = 0x01; i; i <<= 1){
-        if(i & mask) self.putpixel_unsafe(pos_, color);
+        if(i & mask){
+            if(const auto res = self.putpixel_unsafe(pos_, color);
+                res.is_err()) return res;
+        }
         pos_.y++;
     }
+
+    return Ok();
 }
 
-void ST7789::putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const RGB565 color){
+IResult<> ST7789::putseg_h8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color){
     TODO();
 }
 
@@ -123,27 +147,42 @@ IResult<> ST7789::modify_ctrl(const bool yes,const uint8_t pos){
 namespace ymd::drivers{
 Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset){
     using enum ST7789_Presets;
-    displayer.init();
     switch(preset){
         case _120X80:
-            displayer.set_flip_x(false);
-            displayer.set_flip_y(true);
-            displayer.set_swap_xy(true);
-            displayer.set_display_offset({40, 52}); 
-            displayer.set_format_rgb(true);
-            displayer.set_flush_dir_h(false);
-            displayer.set_flush_dir_v(false);
-            displayer.set_inversion(true);
+            if(const auto res = displayer.set_flip_x(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flip_y(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_swap_xy(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_display_offset({40, 52}); 
+                res.is_err()) return res;
+            if(const auto res = displayer.set_format_rgb(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_h(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_v(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_inversion(true);
+                res.is_err()) return res;
             break;
         case _240X135:
-            displayer.set_flip_x(true);
-            displayer.set_flip_y(true);
-            displayer.set_swap_xy(false);
-            displayer.set_display_offset({52, 40}); 
-            displayer.set_format_rgb(true);
-            displayer.set_flush_dir_h(false);
-            displayer.set_flush_dir_v(false);
-            displayer.set_inversion(true);
+            if(const auto res = displayer.set_flip_x(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flip_y(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_swap_xy(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_display_offset({52, 40}); 
+                res.is_err()) return res;
+            if(const auto res = displayer.set_format_rgb(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_h(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_v(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_inversion(true);
+                res.is_err()) return res;
 
 
             // displayer.set_flip_x(false);
@@ -172,19 +211,22 @@ Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets p
             // displayer.set_flush_dir_v(false);
             // displayer.set_inversion(true);
 
-            displayer.set_flip_x(false);
-            displayer.set_flip_y(true);
-            displayer.set_swap_xy(true);
-            // displayer.set_swap_xy(false);
-            displayer.set_display_offset({0, 35}); 
-            // displayer.set_display_offset({70, 0}); 
-            // displayer.set_display_offset({35, 0}); 
-            // displayer.set_display_offset({-0, 0}); 
-            displayer.set_format_rgb(true);
-            displayer.set_flush_dir_h(false);
-            displayer.set_flush_dir_v(false);
-            // displayer.set_inversion(false);
-            displayer.set_inversion(true);
+            if(const auto res = displayer.set_flip_x(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flip_y(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_swap_xy(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_display_offset({0, 35}); 
+                res.is_err()) return res;
+            if(const auto res = displayer.set_format_rgb(true);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_h(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_flush_dir_v(false);
+                res.is_err()) return res;
+            if(const auto res = displayer.set_inversion(true);
+                res.is_err()) return res;
             break;
     }
     return Ok();

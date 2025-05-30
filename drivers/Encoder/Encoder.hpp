@@ -14,25 +14,25 @@ namespace details{
 enum class EncoderError_Kind:uint8_t{
     CantSetup,
     WrongPc,
+    WrongCrc,
     MagnetLost,
-    MagnetWeak,
-    MagnetOverflow,
+    MagnetInvalid,
+    MagnetLow,
+    MagnetHigh,
+    OverSpeed,
     RegProgramFailed,
     ValueOverflow,
     ValueUnderflow,
+    InvalidRxFormat
 };
 }
 
 DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
-        
 
 class EncoderIntf{
 public:
     virtual Result<real_t, EncoderError> get_lap_position() = 0;
     virtual Result<void, EncoderError> update() = 0;
-    // virtual void init() = 0;
-    virtual Result<bool, EncoderError> is_stable() = 0;
-
     virtual ~EncoderIntf() = default;
 };
 

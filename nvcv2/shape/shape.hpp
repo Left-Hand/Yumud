@@ -1,66 +1,89 @@
 #pragma once
 
 #include "../nvcv2/nvcv2.hpp"
+#include "types/matrix/matrix_static.hpp"
+
 #include <algorithm>
 #include <bits/stl_numeric.h>
 
-namespace ymd::nvcv2::Shape{
-    namespace Cores{
-        const int roberts_x[2][2] = {{-1, 0}, {0, 1}};
-        const int roberts_y[2][2] = {{0, -1}, {1, 0}};
-        const int prewiit_x[3][3] = {{-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}};
-        const int prewiit_y[3][3] = {{-1, -1, -1}, {0, 0, 0}, {1, 1, 1}};
-        const int sobel_x[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-        const int sobel_y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
-        const int scharr_x[3][3] = {{-3, 0, 3}, {-10, 0, 10}, {-3, 0, 3}};
-        const int scharr_y[3][3] = {{-3, -10, -3}, {0, 0, 0}, {3, 10, 3}};
-        const int laplacian_4[3][3] = {{0, -1, 0}, {-1, 4, -1}, {0, -1, 0}};
-        const int laplacian_8[3][3] = {{-1, -1, -1}, {-1, 8, -1}, {-1, -1, -1}};
-        const int gauss[3][3] = {{1, 1, 1}, {1, 2, 1}, {1, 1, 1}};
+namespace ymd::nvcv2::shape{
+    namespace cores{
+        static constexpr auto roberts_x      = Matrix_t<int8_t, 2, 2>{-1, 0, 0, 1};
+        static constexpr auto roberts_y      = Matrix_t<int8_t, 2, 2>{0, -1, 1, 0};
+        static constexpr auto prewiit_x      = Matrix_t<int8_t, 3, 3>{-1, 0, 1, -1, 0, 1, -1, 0, 1};
+        static constexpr auto prewiit_y      = Matrix_t<int8_t, 3, 3>{-1, -1, -1, 0, 0, 0, 1, 1, 1};
+        static constexpr auto sobel_x        = Matrix_t<int8_t, 3, 3>{-1, 0, 1, -2, 0, 2, -1, 0, 1};
+        static constexpr auto sobel_y        = Matrix_t<int8_t, 3, 3>{-1, -2, -1, 0, 0, 0, 1, 2, 1};
+        static constexpr auto scharr_x       = Matrix_t<int8_t, 3, 3>{-3, 0, 3, -10, 0, 10, -3, 0, 3};
+        static constexpr auto scharr_y       = Matrix_t<int8_t, 3, 3>{-3, -10, -3, 0, 0, 0, 3, 10, 3};
+        static constexpr auto laplacian_4    = Matrix_t<int8_t, 3, 3>{0, -1, 0, -1, 4, -1, 0, -1, 0};
+        static constexpr auto laplacian_8    = Matrix_t<int8_t, 3, 3>{-1, -1, -1, -1, 8, -1, -1, -1, -1};
+        static constexpr auto gauss          = Matrix_t<int8_t, 3, 3>{1, 1, 1, 1, 2, 1, 1, 1, 1};
     }
 
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3], const int div = 1);
+    void convolution(
+        __restrict Image<Grayscale> & dst, 
+        __restrict const Image<Grayscale> & src, 
+        const Matrix_t<int8_t, 3, 3> & core, 
+        const int div = 1);
 
-    void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
+    void convolution(
+        Image<Grayscale> & dst, 
+        const Image<Grayscale> & src, 
+        const Matrix_t<int8_t, 2, 2> & core);
+
+    void gauss(Image<Grayscale> & dst, const Image<Grayscale> & src);
     void gauss(Image<Grayscale> &src);
-    void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
+    void gauss5x5(Image<Grayscale> & dst, const Image<Grayscale> & src);
 
-    Vector2i find_most(const Image<Grayscale> & src,  const Grayscale & tg_color, const Vector2i & point, const Vector2i & vec);
-    __inline void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
-    __inline void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
-    __inline void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
-    __inline void scharr_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_y);}
+    Vector2i find_most(
+        const Image<Grayscale> & src, 
+        const Grayscale & tg_color, 
+        const Vector2i & point, 
+        const Vector2i & vec);
+    __inline void sobel_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
+        convolution(dst, src, cores::sobel_x);}
+    __inline void sobel_y(Image<Grayscale> & dst, const Image<Grayscale> & src){
+        convolution(dst, src, cores::sobel_y);}
+    __inline void scharr_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
+        convolution(dst, src, cores::scharr_x);}
+    __inline void scharr_y(Image<Grayscale> & dst, const Image<Grayscale> & src){
+        convolution(dst, src, cores::scharr_y);}
 
-    void sobel_xy(Image<Grayscale> & dst, const ImageReadable<Grayscale> & src);
+    void sobel_xy(Image<Grayscale> & dst, const Image<Grayscale> & src);
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[2][2]);
 
-    void dilate(Image<Binary> & dst, const Image<Binary> & src);
 
-    void dilate_xy(Image<Binary> & dst, const Image<Binary> & src);
+    void dilate(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void dilate_y(Image<Binary> & dst, const Image<Binary> & src);
+    void dilate_xy(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void erosion(Image<Binary> & dst, const Image<Binary> & src);
+    void dilate_y(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void erosion_x(Image<Binary> & dst, const Image<Binary> & src);
+    void erosion(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void dilate_x(Image<Binary> & dst, const Image<Binary> & src);
+    void erosion_x(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void erosion_y(Image<Binary> & dst, const Image<Binary> & src);
+    void dilate_x(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void erosion_xy(Image<Binary> & dst, const Image<Binary> & src);
+    void erosion_y(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void x4(ImageWritable<bool> & dst, const ImageReadable<bool> & src);
+    void erosion_xy(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src);
 
-    void x4(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int m = 2);
+    void x4(Image<Binary> & dst, const Image<Binary> & src);
 
-    auto x4(const ImageReadable<Grayscale> & src, const int m = 2);
+    void x4(Image<Grayscale> & dst, const Image<Grayscale> & src, const int m = 2);
+
+    auto x4(const Image<Grayscale> & src, const int m = 2);
 
     Image<Grayscale> x2(const Image<Grayscale> & src);
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent);
+    void XN(
+        __restrict Image<Binary> dst,
+        __restrict const Image<Binary> & src, 
+        const int m, 
+        const real_t percent);
 
     void zhang_suen(Image<Binary> & dst,const Image<Binary> & src);
 
@@ -113,13 +136,13 @@ namespace ymd::nvcv2::Shape{
         dilate_y(src, src);
     }
 
-    __inline void morph_open(Image<Binary> & dst, const Image<Binary> & src){
+    __inline void morph_open(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src){
         Image<Binary> temp(dst.size());        
         erosion(temp, src);
         dilate(dst, temp);
     }
 
-    __inline void morph_close(Image<Binary> & dst, const Image<Binary> & src){
+    __inline void morph_close(__restrict Image<Binary> & dst,__restrict const Image<Binary> & src){
         Image<Binary> temp(dst.size());        
         dilate(temp, src);
         erosion(dst, temp);
@@ -133,18 +156,18 @@ namespace ymd::nvcv2::Shape{
         morph_open(src, src);
     }
 
-    void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src);
+    void convo_roberts_x(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
 
-    void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src);
+    void convo_roberts_xy(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
 
-    void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src);
-    __inline void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        convolution(dst, src, Cores::roberts_y);
+    void adaptive_threshold(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
+    __inline void convo_roberts_y(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src){
+        convolution(dst, src, cores::roberts_y);
     }
 
 
-    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range2_t<uint16_t> & threshold);
-    void eye(Image<Grayscale> &dst, const Image<Grayscale> &src);
+    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range2<uint16_t> & threshold);
+    void eye(Image<Grayscale> & dst, const Image<Grayscale> & src);
     class Seed{
         public:            
 
@@ -218,7 +241,7 @@ namespace ymd::nvcv2::Shape{
             uint8_t m_jounrey = 0;
             const bool cw;
 
-            scexpr std::array<Vector2i, 8>dirs = {
+            static constexpr std::array<Vector2i, 8>dirs = {
                 Vector2i{1,0},
                 Vector2i{1,-1}, 
                 Vector2i{0, -1}, 

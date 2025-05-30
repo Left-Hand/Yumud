@@ -36,9 +36,9 @@ void NCA9555::set_mode(const int index, const hal::GpioMode mode){
     auto & reg = config_reg;
     uint16_t new_dir = reg;
 
-    if(hal::GpioUtils::isIn(mode)){
+    if(mode.is_in_mode()){
         new_dir |= (1 << index);
-    }else if(hal::GpioUtils::isOut(mode)){
+    }else if(mode.is_out_mode()){
         new_dir &= ~(1 << index);
     }else{
         PANIC();

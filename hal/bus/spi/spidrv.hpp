@@ -39,7 +39,6 @@ public:
     SpiDrv(Spi & spi, const SpiSlaveIndex idx):
         spi_(spi), 
         idx_(idx)
-        // write_fn_([this](const uint32_t data) -> HalResult{return this->spi_.write(data);})
         {;}
 
     template<typename T>
@@ -85,25 +84,54 @@ public:
     hal::HalResult write_single(const is_stdlayout auto data, Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC);
+    hal::HalResult write_repeat(
+        const is_stdlayout auto data, const size_t len, 
+        Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont = DISC);
+    hal::HalResult write_burst(
+        const std::span<const is_stdlayout auto> pdata, 
+        Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult read_burst(is_stdlayout auto * pdata, const size_t len, const Continuous cont = DISC);
+    hal::HalResult read_burst(
+        const std::span<is_stdlayout auto> pdata, 
+        const Continuous cont = DISC);
+
+    template<valid_spi_data T, size_t N, is_stdlayout U>
+    hal::HalResult write_burst(
+        const std::span<const U, N> pdata, 
+        Continuous cont = DISC
+    ){
+        return this->write_burst<T>(std::span<const U>(pdata), cont);
+    }
+
+    template<valid_spi_data T, size_t N, is_stdlayout U>
+    hal::HalResult read_burst(
+        const std::span<U, N> pdata, 
+        const Continuous cont = DISC
+    ){
+        return this->read_burst<T>(std::span<U>(pdata), cont);
+    }
 
     template<valid_spi_data T>
     hal::HalResult read_single(is_stdlayout auto & data, const Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult transceive_single(T & data_rx, const T data_tx, Continuous cont = DISC);
+    hal::HalResult transceive_single(
+        T & data_rx, const T data_tx, Continuous cont = DISC);
 
     template<valid_spi_data T, size_t N>
-    hal::HalResult transceive_burst(const std::span<T, N> data_rx, const std::span<const T, N> data_tx, Continuous cont = DISC);
+    hal::HalResult transceive_burst(
+        const std::span<T, N> data_rx, 
+        const std::span<const T, N> data_tx, 
+        Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult transceive_burst(const std::span<T> data_rx, const std::span<const T> data_tx, Continuous cont = DISC);
+    hal::HalResult transceive_burst(
+        const std::span<T> data_rx, 
+        const std::span<const T> data_tx, 
+        Continuous cont = DISC);
 };
 
 template<valid_spi_data T>
@@ -144,13 +172,16 @@ hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t l
 }
 
 
-template <valid_spi_data T>
-hal::HalResult SpiDrv::write_burst(const is_stdlayout auto * pdata, const size_t len, Continuous cont) {
-    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+template <valid_spi_data T, is_stdlayout U>
+hal::HalResult SpiDrv::write_burst(
+        const std::span<const U> pdata, 
+        Continuous cont
+) {
+    static_assert(sizeof(T) == sizeof(U));
     if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
-    for (size_t i = 0; i < len; i++){
-        if(const auto res = spi_.write(uint32_t(reinterpret_cast<const T *>(pdata)[i]));
+    for (size_t i = 0; i < pdata.size(); i++){
+        if(const auto res = spi_.write(uint32_t(pdata[i]));
             res.is_err()) return res;
     } 
     if (cont == DISC) spi_.end();
@@ -159,20 +190,22 @@ hal::HalResult SpiDrv::write_burst(const is_stdlayout auto * pdata, const size_t
 }
 
 
-template <valid_spi_data T>
-hal::HalResult SpiDrv::read_burst(is_stdlayout auto * pdata, const size_t len, const Continuous cont) {
-    static_assert(sizeof(T) == sizeof(std::decay_t<decltype(*pdata)>));
+template <valid_spi_data T, is_stdlayout U>
+hal::HalResult SpiDrv::read_burst(
+        const std::span<U> pdata, 
+        const Continuous cont
+) {
+    static_assert(sizeof(T) == sizeof(U));
     if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
-    {
-        if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
-        for (size_t i = 0; i < len; i++) {
-            uint32_t temp = 0;
-            spi_.read(temp);
-            pdata[i] = temp;
-        }
-        if (cont == DISC) spi_.end();
-        if constexpr (sizeof(T) != 1) this->set_data_width(8);
+
+    if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
+    for (size_t i = 0; i < pdata.size(); i++) {
+        uint32_t temp = 0;
+        spi_.read(temp);
+        pdata[i] = temp;
     }
+    if (cont == DISC) spi_.end();
+    if constexpr (sizeof(T) != 1) this->set_data_width(8);
     return hal::HalResult::Ok();
 }
 
@@ -185,7 +218,6 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t temp = 0;
         spi_.read(temp);
-        // data = *reinterpret_cast<std::decay_t<decltype(data)> *>(&temp);
         memcpy(&data, &temp, sizeof(T));
         if (cont == DISC) spi_.end();
         if constexpr (sizeof(T) != 1) this->set_data_width(8);

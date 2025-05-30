@@ -3,7 +3,7 @@
 #include "core/clock/time.hpp"
 
 #include "robots/rpc/arg_parser.hpp"
-#include "types/vector3/vector3.hpp"
+#include "types/vectors/vector3/vector3.hpp"
 #include "core/math/realmath.hpp"
 #include "robots/rpc/rpc.hpp"
 
@@ -30,8 +30,8 @@ iq_t<16> add2(const iq_t<16> x, const iq_t<16> y){
 }
 
 void rpc_main(){
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 
@@ -53,7 +53,7 @@ void rpc_main(){
     real_t b;
     auto p = rpc::make_property("a", a);
 
-    portA[8].outpp();
+    hal::portA[8].outpp();
 
     auto list = rpc::make_list(
         "list", 
@@ -64,7 +64,7 @@ void rpc_main(){
         rpc::make_ro_property("b", b),
         rpc::make_ro_property("ba", ball.a),
         rpc::make_function("setm", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty);}),
-        rpc::make_function("xyz", [](){DEBUG_PRINTLN(Vector3_t<real_t>(0,0,0));}),
+        rpc::make_function("xyz", [](){DEBUG_PRINTLN(Vector3<real_t>(0,0,0));}),
         rpc::make_function("crc", [](){DEBUG_PRINTS(sys::chip::get_chip_id_crc());})
         // rpc::make_function("led", [](const int i){portA[8].write(i);})
     );

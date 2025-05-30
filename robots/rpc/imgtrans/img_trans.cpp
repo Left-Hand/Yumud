@@ -13,7 +13,7 @@ static constexpr  uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, ui
 	return hash;
 }
 
-void Transmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
+void ImageTransmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 
     unit.header = header;
     unit.hash = hash_djb2_buffer(data_from, len);
@@ -23,7 +23,7 @@ void Transmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from
     instance.write((const char *)(data_from), len);
 }
 
-void Transmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const uint8_t index){
+void ImageTransmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const uint8_t index){
     if(!enabled) return;
     size_t len = img_size.x * img_size.y;
     uint8_t block_total = len / mtu + bool(len % mtu);

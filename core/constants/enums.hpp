@@ -11,23 +11,26 @@ class OutputStream;
 
 #define DEF_MAKE_BINA_ENUM(name, u, l)\
 struct name {\
-private:\
-    bool value;\
-    constexpr name(){;}\
 public:\
-    constexpr name(const name & other){value = other.value;};\
-    constexpr name(const bool & _value) = delete;\
-    constexpr name(bool && _value) = delete;\
-    constexpr name operator = (const bool _value) = delete;\
-    static constexpr name from(bool _value) { name ret = name(); ret.value = _value; return ret; }\
-    explicit operator bool() const { return value; }\
-    bool operator == (const name & other) const { return value == other.value; }\
-    bool operator != (const name & other) const { return value == other.value; }\
+    enum class Kind:uint8_t{l, u};\
+    using enum Kind;\
+    [[nodiscard]] constexpr name(const name & other){kind_ = other.kind_;};\
+    [[nodiscard]] constexpr name(const Kind kind){kind_ = kind;};\
+    [[nodiscard]] constexpr name(const bool & kind) = delete;\
+    [[nodiscard]] constexpr name(bool && kind) = delete;\
+    [[nodiscard]] static constexpr name from(const bool b){return b ? name(u) : name(l);}\
+    [[nodiscard]] constexpr name operator ~() const{return name(((kind_ == u ? l : u)));}\
+    [[nodiscard]] constexpr name operator !() const{return name(((kind_ == u ? l : u)));}\
+    [[nodiscard]] constexpr name operator = (const bool kind) = delete;\
+    [[nodiscard]] constexpr bool operator == (const name & other) const { return kind_ == other.kind_; }\
+    [[nodiscard]] constexpr bool operator != (const name & other) const { return kind_ == other.kind_; }\
+    [[nodiscard]] constexpr bool to_bool() const { return kind_ == u; }\
+private:\
+    Kind kind_;\
+    constexpr name(){;}\
 };\
+using enum name::Kind;\
 OutputStream & operator <<(OutputStream & os, const name self);\
-static inline constexpr name u = name::from(true);\
-static inline constexpr name l = name::from(false);\
-
 
 DEF_MAKE_BINA_ENUM(Endian, MSB, LSB)
 DEF_MAKE_BINA_ENUM(Continuous, CONT, DISC)

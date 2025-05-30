@@ -49,14 +49,14 @@ the coefficients of the resulting polynomial.
 
 The multiplication has the following form:
 
-(x+p[0])*(x+p[1])*...*(x+p[n-1])
+(x+p[0])*(x+p[1])*...*(x+p[N-1])
 
 The p[i] coefficients are assumed to be complex and are passed to the 
 function as a pointer to an array of Ts of length 2n.
 
 The resulting polynomial has the following form:
 
-x^n + a[0]*x^n-1 + a[1]*x^n-2 + ... +a[n-2]*x + a[n-1]
+x^N + a[0]*x^N-1 + a[1]*x^N-2 + ... +a[N-2]*x + a[N-1]
 
 The a[i] coefficients can in general be complex but should in most
 cases turn out to be real. The a[i] coefficients are returned by the
@@ -66,30 +66,30 @@ calling program when no longer needed.
 
 Function arguments:
 
-n  -  The number of binomials to multiply
-p  -  Pointer to an array of Ts where p[2i] (i=0...n-1) is
+N  -  The number of binomials to multiply
+p  -  Pointer to an array of Ts where p[2i] (i=0...N-1) is
         assumed to be the real part of the coefficient of the ith binomial
         and p[2i+1] is assumed to be the imaginary part. The overall size
         of the array is then 2n.
 */
 
-template<arithmetic T, size_t n, typename Ret = std::array<T, 2 * n>>
-constexpr
-Ret binomial_mult(const std::span<T, 2 * n> p)
+template<
+    arithmetic T, 
+    size_t N, 
+    typename Ret = std::array<T, 2 * N>>
+constexpr Ret binomial_mult(const std::span<T, 2 * N> p)
 {
-    int i, j;
+    size_t i, j;
 
     Ret a;
 
-    for( i = 0; i < n; ++i )
-    {
-    for( j = i; j > 0; --j )
-    {
-        a[2*j] += p[2*i] * a[2*(j-1)] - p[2*i+1] * a[2*(j-1)+1];
-        a[2*j+1] += p[2*i] * a[2*(j-1)+1] + p[2*i+1] * a[2*(j-1)];
-    }
-    a[0] += p[2*i];
-    a[1] += p[2*i+1];
+    for( i = 0; i < N; ++i ){
+        for( j = i; j > 0; --j ){
+            a[2*j] += p[2*i] * a[2*(j-1)] - p[2*i+1] * a[2*(j-1)+1];
+            a[2*j+1] += p[2*i] * a[2*(j-1)+1] + p[2*i+1] * a[2*(j-1)];
+        }
+        a[0] += p[2*i];
+        a[1] += p[2*i+1];
     }
     return( a );
 }
@@ -101,7 +101,7 @@ the coefficients of the resulting polynomial.
 
 The multiplication has the following form:
 
-(x^2 + b[0]x + c[0])*(x^2 + b[1]x + c[1])*...*(x^2 + b[n-1]x + c[n-1])
+(x^2 + b[0]x + c[0])*(x^2 + b[1]x + c[1])*...*(x^2 + b[N-1]x + c[N-1])
 
 The b[i] and c[i] coefficients are assumed to be complex and are passed
 to the function as a pointers to arrays of Ts of length 2n. The real
@@ -121,14 +121,16 @@ the calling program when no longer needed.
 
 Function arguments:
 
-n  -  The number of trinomials to multiply
+N  -  The number of trinomials to multiply
 b  -  Pointer to an array of Ts of length 2n.
 c  -  Pointer to an array of Ts of length 2n.
 */
 
-template<arithmetic T, size_t n, typename Ret = std::array<T, 4 * n>>
-constexpr 
-Ret trinomial_mult(const std::span<const T, 2 * n> b, const std::span<const T, 2 * n> c){
+template<
+    arithmetic T, 
+    size_t N, 
+    typename Ret = std::array<T, 4 * N>>
+constexpr  Ret trinomial_mult(const std::span<const T, 2 * N> b, const std::span<const T, 2 * N> c){
 
     Ret a;
 
@@ -137,7 +139,7 @@ Ret trinomial_mult(const std::span<const T, 2 * n> b, const std::span<const T, 2
     a[0] = b[0];
     a[1] = b[1];
 
-    for(size_t i = 1; i < n; ++i ){
+    for(size_t i = 1; i < N; ++i ){
         a[2*(2*i+1)]   += c[2*i]*a[2*(2*i-1)]   - c[2*i+1]*a[2*(2*i-1)+1];
         a[2*(2*i+1)+1] += c[2*i]*a[2*(2*i-1)+1] + c[2*i+1]*a[2*(2*i-1)];
 
@@ -164,9 +166,11 @@ filter. The coefficients are returned as an array of Ts.
 
 */
 
-template<arithmetic T, size_t n, typename Ret = std::array<T, 2 * n>>
-constexpr 
-Ret dcof_bwlp(T fcf )
+template<
+    arithmetic T, 
+    size_t N, 
+    typename Ret = std::array<T, 2 * N>>
+constexpr  Ret dcof_bwlp(T fcf )
 {
     T theta;     // T(PI) * fcf / T(2)
     T st;        // sine of theta
@@ -182,8 +186,8 @@ Ret dcof_bwlp(T fcf )
     st = std::sin(theta);
     ct = std::cos(theta);
 
-    for(size_t  k = 0; k < n; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*n);
+    for(size_t  k = 0; k < N; ++k ){
+        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
         sparg = std::sin(parg);
         cparg = std::cos(parg);
         a = T(1) + st*sparg;
@@ -195,7 +199,7 @@ Ret dcof_bwlp(T fcf )
 
     dcof[1] = dcof[0];
     dcof[0] = T(1);
-    for(size_t  k = 3; k <= n; ++k )
+    for(size_t  k = 3; k <= N; ++k )
         dcof[k] = dcof[2*k-2];
     return( dcof );
 }
@@ -206,11 +210,12 @@ filter. The coefficients are returned as an array of Ts.
 
 */
 
-template<arithmetic T, size_t n, typename Ret = std::array<T, 2 * n>>
-constexpr
-Ret dcof_bwhp(T fcf )
-{
-    return( dcof_bwlp( n, fcf ) );
+template<
+    arithmetic T, 
+    size_t N, 
+    typename Ret = std::array<T, 2 * N>>
+constexpr Ret dcof_bwhp(T fcf ){
+    return( dcof_bwlp( N, fcf ) );
 }
 
 
@@ -220,9 +225,8 @@ filter. The coefficients are returned as an array of Ts.
 
 */
 
-template<arithmetic T, size_t n> 
-constexpr
-std::array<T, 4 * n> dcof_bwbp(T f1f, T f2f ){
+template<arithmetic T, size_t N> 
+constexpr std::array<T, 4 * N> dcof_bwbp(T f1f, T f2f ){
     T theta;     // T(PI) * (f2f - f1f) / T(2)
     T cp;        // cosine of phi
     T st;        // sine of theta
@@ -241,11 +245,11 @@ std::array<T, 4 * n> dcof_bwbp(T f1f, T f2f ){
     s2t = T(2)*st*ct;        // sine of 2*theta
     c2t = T(2)*ct*ct - T(1);  // cosine of 2*theta
 
-    std::array<T, 2 * n> rcof;
-    std::array<T, 2 * n> tcof;
+    std::array<T, 2 * N> rcof;
+    std::array<T, 2 * N> tcof;
 
-    for(size_t  k = 0; k < n; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*n);
+    for(size_t  k = 0; k < N; ++k ){
+        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
         sparg = std::sin(parg);
         cparg = std::cos(parg);
         a = T(1) + s2t*sparg;
@@ -255,13 +259,13 @@ std::array<T, 4 * n> dcof_bwbp(T f1f, T f2f ){
         tcof[2*k+1] = -T(2)*cp*st*cparg/a;
     }
 
-    auto dcof = trinomial_mult<T, n>(tcof, rcof);
+    auto dcof = trinomial_mult<T, N>(tcof, rcof);
 
     dcof[1] = dcof[0];
     dcof[0] = T(1);
-    for(size_t k = 3; k <= 2*n; ++k )
+    for(size_t k = 3; k <= 2*N; ++k )
         dcof[k] = dcof[2*k-2];
-    return( dcof );
+    return dcof;
 }
 
 /**********************************************************************
@@ -270,10 +274,8 @@ filter. The coefficients are returned as an array of Ts.
 
 */
 
-template<arithmetic T, size_t n>
-constexpr
-std::array<T, 2*n> dcof_bwbs(T f1f, T f2f )
-{
+template<arithmetic T, size_t N>
+constexpr std::array<T, 2*N> dcof_bwbs(T f1f, T f2f ){
     T theta;     // T(PI) * (f2f - f1f) / T(2)
     T cp;        // cosine of phi
     T st;        // sine of theta
@@ -292,11 +294,11 @@ std::array<T, 2*n> dcof_bwbs(T f1f, T f2f )
     s2t = T(2)*st*ct;        // sine of 2*theta
     c2t = T(2)*ct*ct - T(1);  // cosine 0f 2*theta
 
-    std::array<T, 2*n> rcof;
-    std::array<T, 2*n> tcof;  
+    std::array<T, 2*N> rcof;
+    std::array<T, 2*N> tcof;  
 
-    for(size_t  k = 0; k < n; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*n);
+    for(size_t  k = 0; k < N; ++k ){
+        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
         sparg = std::sin(parg);
         cparg = std::cos(parg);
         a = T(1) + s2t*sparg;
@@ -306,11 +308,11 @@ std::array<T, 2*n> dcof_bwbs(T f1f, T f2f )
         tcof[2*k+1] = T(2)*cp*st*cparg/a;
     }
 
-    auto dcof = trinomial_mult( n, tcof, rcof );
+    auto dcof = trinomial_mult( N, tcof, rcof );
 
     dcof[1] = dcof[0];
     dcof[0] = T(1);
-    for(size_t  k = 3; k <= 2*n; ++k )
+    for(size_t  k = 3; k <= 2*N; ++k )
         dcof[k] = dcof[2*k-2];
     return( dcof );
 }
@@ -321,24 +323,23 @@ filter. The coefficients are returned as an array of integers.
 
 */
 
-template<size_t n, typename Ret = std::array<int, n+1>>
-constexpr
-Ret ccof_bwlp(){
-    int m;
-    int i;
+template<size_t N, typename Ret = std::array<size_t, N+1>>
+constexpr Ret ccof_bwlp(){
+    size_t m;
+    size_t i;
 
     Ret ccof;
 
     ccof[0] = 1;
-    ccof[1] = n;
-    m = n/2;
+    ccof[1] = N;
+    m = N/2;
     for( i=2; i <= m; ++i)
     {
-        ccof[i] = (n-i+1)*ccof[i-1]/i;
-        ccof[n-i]= ccof[i];
+        ccof[i] = (N-i+1)*ccof[i-1]/i;
+        ccof[N-i]= ccof[i];
     }
-    ccof[n-1] = n;
-    ccof[n] = 1;
+    ccof[N-1] = N;
+    ccof[N] = 1;
 
     return( ccof );
 }
@@ -349,13 +350,12 @@ filter. The coefficients are returned as an array of integers.
 
 */
 
-template<size_t n>
-constexpr 
-std::array<int, n + 1> ccof_bwhp(){
+template<size_t N>
+constexpr std::array<size_t, N + 1> ccof_bwhp(){
 
-    auto ccof = ccof_bwlp<n>();
+    auto ccof = ccof_bwlp<N>();
 
-    for(size_t  i = 0; i <= n; ++i)
+    for(size_t  i = 0; i <= N; ++i)
         if( i % 2 ) ccof[i] = -ccof[i];
 
     return( ccof );
@@ -367,20 +367,19 @@ filter. The coefficients are returned as an array of integers.
 
 */
 
-template<size_t n, typename Ret = std::array<int, 2 * n + 1>>
-constexpr
-Ret ccof_bwbp(){
+template<size_t N, typename Ret = std::array<size_t, 2 * N + 1>>
+constexpr Ret ccof_bwbp(){
 
     Ret ccof;
 
-    auto tcof = ccof_bwhp<n>();
+    auto tcof = ccof_bwhp<N>();
 
-    for(size_t  i = 0; i < n; ++i)
+    for(size_t  i = 0; i < N; ++i)
     {
         ccof[2*i] = tcof[i];
         ccof[2*i+1] = (0);
     }
-    ccof[2*n] = tcof[n];
+    ccof[2*N] = tcof[N];
 
     return( ccof );
 }
@@ -392,12 +391,11 @@ filter. The coefficients are returned as an array of integers.
 */
 
 
-template<arithmetic T, size_t n, typename Ret = std::array<T, 2 * n + 1>>
-constexpr
-Ret ccof_bwbs(T f1f, T f2f )
+template<arithmetic T, size_t N, typename Ret = std::array<T, 2 * N + 1>>
+constexpr Ret ccof_bwbs(T f1f, T f2f )
 {
     T alpha;
-    int i, j;
+    size_t i, j;
 
     alpha = -T(2) * std::cos(T(PI) * (f2f + f1f) / T(2)) / std::cos(T(PI) * (f2f - f1f) / T(2));
 
@@ -408,14 +406,13 @@ Ret ccof_bwbs(T f1f, T f2f )
     ccof[2] = T(1);
     ccof[1] = alpha;
 
-    for( i = 1; i < n; ++i )
-    {
-    ccof[2*i+2] += ccof[2*i];
-    for( j = 2*i; j > 1; --j )
-        ccof[j+1] += alpha * ccof[j] + ccof[j-1];
+    for( i = 1; i < N; ++i ){
+        ccof[2*i+2] += ccof[2*i];
+        for( j = 2*i; j > 1; --j )
+            ccof[j+1] += alpha * ccof[j] + ccof[j-1];
 
-    ccof[2] += alpha * ccof[1] + T(1);
-    ccof[1] += alpha;
+        ccof[2] += alpha * ccof[1] + T(1);
+        ccof[1] += alpha;
     }
 
     return( ccof );
@@ -429,10 +426,9 @@ that the filter response has a maximum value of 1.
 */
 
 template<arithmetic T>
-constexpr
-T sf_bwlp( int n, T fcf )
+constexpr T sf_bwlp( size_t N, T fcf )
 {
-    int m, k;         // loop variables
+    size_t m, k;         // loop variables
     T omega;     // T(PI) * fcf
     T fomega;    // function of omega
     T parg0;     // zeroth pole angle
@@ -440,17 +436,17 @@ T sf_bwlp( int n, T fcf )
 
     omega = T(PI) * fcf;
     fomega = std::sin(omega);
-    parg0 = T(PI) / (T)(2*n);
+    parg0 = T(PI) / (T)(2*N);
 
-    m = n / 2;
+    m = N / 2;
     sf = T(1);
-    for( k = 0; k < n/2; ++k )
+    for( k = 0; k < N/2; ++k )
         sf *= T(1) + fomega * std::sin((T)(2*k+1)*parg0);
 
     fomega = std::sin(omega / T(2));
 
-    if( n % 2 ) sf *= fomega + std::cos(omega / T(2));
-    sf = pow( fomega, n ) / sf;
+    if( N % 2 ) sf *= fomega + std::cos(omega / T(2));
+    sf = pow( fomega, N ) / sf;
 
     return(sf);
 }
@@ -463,10 +459,9 @@ that the filter response has a maximum value of 1.
 */
 
 template<arithmetic T>
-constexpr
-T sf_bwhp( int n, T fcf )
+constexpr T sf_bwhp( size_t N, T fcf )
 {
-    int m, k;         // loop variables
+    size_t m, k;         // loop variables
     T omega;     // T(PI) * fcf
     T fomega;    // function of omega
     T parg0;     // zeroth pole angle
@@ -474,17 +469,17 @@ T sf_bwhp( int n, T fcf )
 
     omega = T(PI) * fcf;
     fomega = std::sin(omega);
-    parg0 = T(PI) / (T)(2*n);
+    parg0 = T(PI) / (T)(2*N);
 
-    m = n / 2;
+    m = N / 2;
     sf = T(1);
-    for( k = 0; k < n/2; ++k )
+    for( k = 0; k < N/2; ++k )
         sf *= T(1) + fomega * std::sin((T)(2*k+1)*parg0);
 
     fomega = std::cos(omega / T(2));
 
-    if( n % 2 ) sf *= fomega + std::sin(omega / T(2));
-    sf = pow( fomega, n ) / sf;
+    if( N % 2 ) sf *= fomega + std::sin(omega / T(2));
+    sf = pow( fomega, N ) / sf;
 
     return(sf);
 }
@@ -496,9 +491,8 @@ that the filter response has a maximum value of 1.
 
 */
 
-template<arithmetic T, size_t n>
-constexpr
-T sf_bwbp(T f1f, T f2f )
+template<arithmetic T, size_t N>
+constexpr T sf_bwbp(T f1f, T f2f )
 {
     T ctt;       // cotangent of theta
     T sfr, sfi;  // real and imaginary parts of the scaling factor
@@ -511,16 +505,16 @@ T sf_bwbp(T f1f, T f2f )
     sfr = T(1);
     sfi = T(0);
 
-    for(size_t  k = 0; k < n; ++k )
+    for(size_t  k = 0; k < N; ++k )
     {
-    parg = T(PI) * (T)(2*k+1)/(T)(2*n);
-    sparg = ctt + std::sin(parg);
-    cparg = std::cos(parg);
-    a = (sfr + sfi)*(sparg - cparg);
-    b = sfr * sparg;
-    c = -sfi * cparg;
-    sfr = b - c;
-    sfi = a - b - c;
+        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
+        sparg = ctt + std::sin(parg);
+        cparg = std::cos(parg);
+        a = (sfr + sfi)*(sparg - cparg);
+        b = sfr * sparg;
+        c = -sfi * cparg;
+        sfr = b - c;
+        sfi = a - b - c;
     }
 
     return( T(1) / sfr );
@@ -534,8 +528,7 @@ that the filter response has a maximum value of 1.
 */
 
 template<arithmetic T>
-constexpr
-T sf_bwbs( int n, T f1f, T f2f )
+constexpr T sf_bwbs( size_t N, T f1f, T f2f )
 {
     T tt;        // tangent of theta
     T sfr, sfi;  // real and imaginary parts of the scaling factor
@@ -548,8 +541,8 @@ T sf_bwbs( int n, T f1f, T f2f )
     sfr = T(1);
     sfi = T(0);
 
-    for(size_t  k = 0; k < n; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*n);
+    for(size_t  k = 0; k < N; ++k ){
+        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
         sparg = tt + std::sin(parg);
         cparg = std::cos(parg);
         a = (sfr + sfi)*(sparg - cparg);

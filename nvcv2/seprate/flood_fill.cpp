@@ -268,7 +268,7 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
 }
 
 
-Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
+Image<Grayscale> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter) {
     static constexpr Grayscale labelable = 255;
 
     const auto size = src.size();
@@ -312,8 +312,8 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
             }
 
             // Perform flood fill starting from (row, col)
-            // sstl::vector<Vector2_t<uint8_t>, 256> current_indices;
-            std::vector<Vector2_t<uint8_t>> current_indices;
+            // sstl::vector<Vector2<uint8_t>, 256> current_indices;
+            std::vector<Vector2<uint8_t>> current_indices;
             map[{row,col}] = label;
             Blob blob{
                 .rect = Rect2u(Vector2u{row, col}, Vector2u{0,0}),
