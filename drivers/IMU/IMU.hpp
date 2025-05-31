@@ -41,7 +41,14 @@ enum class ImuError_Kind:uint8_t{
 
     AxisXOverflow,
     AxisYOverflow,
-    AxisZOverflow
+    AxisZOverflow,
+
+    NoAvailablePhy,
+    I2cPhyIsNotSupportedYet,
+    I3cPhyIsNotSupportedYet,
+    SpiPhyIsNotSupportedYet,
+
+    Unreachable
 };
 }
 

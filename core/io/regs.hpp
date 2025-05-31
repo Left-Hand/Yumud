@@ -53,8 +53,8 @@ public:
     using value_type = T;
 
     
-    constexpr T operator &(const T data) const {return T(*this) & data;}
-    constexpr T operator |(const T data) const {return T(*this) | data;}
+    // constexpr T operator &(const T data) const {return T(*this) & data;}
+    // constexpr T operator |(const T data) const {return T(*this) | data;}
     // constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
     
     constexpr std::span<const uint8_t> as_bytes() const {
@@ -107,7 +107,7 @@ template<typename D = T>\
 struct name:public __Reg_t<T, D>{\
 using __Reg_t<T, D>::__Reg_t;\
 using __Reg_t<T, D>::operator =;\
-constexpr T as_fn() const {return T(*this);}\
+constexpr T as_fn() const {return std::bit_cast<T>(*this);}\
 };\
 
 #define DEF_REGC_TEMPLATE(name, T, as_fn)\

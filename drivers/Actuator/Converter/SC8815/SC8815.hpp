@@ -162,7 +162,6 @@ struct SC8815_Regs:public SC8815_Collections {
         uint8_t :8;
     }DEF_R8(ibat_lim_set_reg)
 
-    
     struct R8_VinSet:public Reg8<>{
         static constexpr RegAddress address = 0x07;
 
@@ -178,8 +177,6 @@ struct SC8815_Regs:public SC8815_Collections {
         IBatRatio ibat_ratio:1;
         uint8_t :3;
     }DEF_R8(ratio_reg)
-
-
 
     struct R8_Ctrl0Set:public Reg8<>{
         static constexpr RegAddress address = 0x09;
@@ -277,8 +274,10 @@ public:
         .ircomp = BatIrComp::_20m
     };
 
-    SC8815(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8815(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8815(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    SC8815(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     SC8815(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
         :i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 

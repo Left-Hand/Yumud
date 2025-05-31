@@ -4,8 +4,11 @@
 namespace ymd::drivers{
 class BMP280_Phy final:public BMP280_Collections{
 public:
-    BMP280_Phy(hal::I2cDrv && i2c_drv):
+    BMP280_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
+
+    BMP280_Phy(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
 
     IResult<> write_reg(const RegAddress addr, const uint16_t data){
@@ -33,9 +36,8 @@ public:
         // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }
 
-    IResult<> read_burst(const RegAddress addr, int16_t * datas, uint8_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), 
-            std::span(datas, len), MSB);
+    IResult<> read_burst(const RegAddress addr, const std::span<int16_t> pdata){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata, MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -19,6 +19,9 @@ public:
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class Package:uint8_t{
         _2605,
         _2604,
@@ -356,48 +359,48 @@ protected:
     Control1Reg control1_reg = {};
     Control2Reg control2_reg = {};
 
-    [[nodiscard]] Result<void, Error> 
+    [[nodiscard]] IResult<> 
     write_reg(const RegAddress address, const uint8_t reg){
         const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
         if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> 
+    [[nodiscard]] IResult<> 
     read_reg(const RegAddress addr, uint8_t & reg){
         const auto res = i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
         if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> 
+    [[nodiscard]] IResult<> 
     requestBurst(const RegAddress addr, uint8_t * data, size_t len){
         const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
         if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> write_reg(const auto & reg){
+    [[nodiscard]] IResult<> write_reg(const auto & reg){
         return write_reg(reg.address, reg.as_val());
     }
-    [[nodiscard]] Result<void, Error> read_reg(auto & reg){
+    [[nodiscard]] IResult<> read_reg(auto & reg){
         return read_reg(reg.address, reg.as_ref());
     }
 
 
-    [[nodiscard]] Result<void, Error> set_fb_brake_factor(const FbBrakeFactor factor);
-    [[nodiscard]] Result<void, Error> set_fb_brake_factor(const int fractor);
+    [[nodiscard]] IResult<> set_fb_brake_factor(const FbBrakeFactor factor);
+    [[nodiscard]] IResult<> set_fb_brake_factor(const int fractor);
 public:
-    [[nodiscard]] Result<void, Error> reset();
-    [[nodiscard]] Result<void, Error> update();
-    [[nodiscard]] Result<void, Error> validate();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] Result<void, Error> init();
+    [[nodiscard]] IResult<> init();
     Package get_package();
-    [[nodiscard]] Result<void, Error> set_bemf_gain(const BemfGain gain);
-    [[nodiscard]] Result<void, Error> set_loop_gain(const LoopGain gain);
-    [[nodiscard]] Result<void, Error> play(const uint8_t idx);
-    [[nodiscard]] Result<void, Error> autocal();
+    [[nodiscard]] IResult<> set_bemf_gain(const BemfGain gain);
+    [[nodiscard]] IResult<> set_loop_gain(const LoopGain gain);
+    [[nodiscard]] IResult<> play(const uint8_t idx);
+    [[nodiscard]] IResult<> autocal();
 };
 
 }

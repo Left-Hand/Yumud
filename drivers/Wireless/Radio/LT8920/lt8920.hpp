@@ -72,61 +72,61 @@ struct LT8920_Regs:public LT8920_Collections{
 
     // uint16_t __resv1__[2];
     // REG3 RO
-    RfSynthLockReg rf_synth_lock_reg = {};
+    R16_RfSynthLock rf_synth_lock_reg = {};
     // uint16_t __resv2__[2];
     // REG6 RO
-    RawRssiReg raw_rssi_reg = {};
+    R16_RawRssi raw_rssi_reg = {};
     // REG7 
-    RfConfigReg rf_config_reg = {};
+    R16_RfConfig rf_config_reg = {};
     // uint16_t __resv3__;
     // REG9
-    PaConfigReg pa_config_reg = {};
+    R16_PaConfig pa_config_reg = {};
 
     // REG10
-    OscEnableReg osc_enable_reg = {};
+    R16_OscEnable osc_enable_reg = {};
 
     // REG11
-    RssiPdnReg rssi_pdn_reg = {};
+    R16_RssiPdn rssi_pdn_reg = {};
     // uint16_t __resv4__[11];
     // REG23
-    DeviceIDReg device_id_reg = {};
+    R16_DeviceID device_id_reg = {};
     // uint16_t __resv5__[5];
     // REG29 RO
 
-    AutoCaliReg auto_cali_reg = {};
+    R16_AutoCali auto_cali_reg = {};
     // uint16_t __resv6__[2];
     // REG32 RO
-    Config1Reg config1_reg = {};
+    R16_Config1 config1_reg = {};
     // REG33 RO
-    Delay1Reg delay1_reg = {};
+    R16_Delay1 delay1_reg = {};
     // REG34
-    Delay2Reg delay2_reg = {};
+    R16_Delay2 delay2_reg = {};
     // REG35
-    Config2Reg config2_reg = {};
+    R16_Config2 config2_reg = {};
 
-    SyncWordReg sync_word_regs[4];
+    R16_SyncWord sync_word_regs[4];
 
     // REG40
-    ThresholdReg threshold_reg = {};
+    R16_Threshold threshold_reg = {};
 
     // REG41
-    Config3Reg config3_reg = {};
+    R16_Config3 config3_reg = {};
 
     // REG42
-    RxConfigReg rx_config_reg = {};
+    R16_RxConfig rx_config_reg = {};
 
     // REG43
-    RssiConfigReg rssi_config_reg = {};
+    R16_RssiConfig rssi_config_reg = {};
 
     // REG44
-    DataRateReg data_rate_reg = {};
+    R16_DataRate data_rate_reg = {};
     // uint16_t __resv7__[3];
     // REG48 RO
-    FlagReg flag_reg = {};
+    R16_Flag flag_reg = {};
 
     // uint16_t __resv8__[3];
     // REG52
-    FifoPtrReg fifo_ptr_reg = {};
+    R16_FifoPtr fifo_ptr_reg = {};
 };
 
 

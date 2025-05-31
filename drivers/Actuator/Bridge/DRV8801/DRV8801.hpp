@@ -19,8 +19,6 @@ protected:
         dir_(_dir),
         curr_ch_(_curr_ch){;}
 
-
-    // void init();
     void enable(const Enable en){}
 
 

@@ -16,11 +16,14 @@ namespace ymd::drivers{
 
 struct TCS34725_Collections{
     enum class Gain:uint8_t{
-        X1 = 0, X4, X16, X60 
+        _1x = 0b00, 
+        _4x = 0b01, 
+        _16x = 0b10, 
+        _60x = 0b11 
     };
 
     enum class Error_Kind{
-
+        WrongChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -50,86 +53,87 @@ struct TCS34725_Collections{
 };
 
 struct TCS34725_Regs:public TCS34725_Collections{
-    struct EnableReg:public Reg8<>{
+    struct R8_Enable:public Reg8<>{
         static constexpr auto address = RegAddress::Enable;
         uint8_t powerOn : 1;
         uint8_t adcEn : 1;
-        uint8_t __resv1__ :2;
+        uint8_t __resv1__ :1;
         uint8_t waitEn : 1;
         uint8_t intEn : 1;
         uint8_t __resv2__ :3;
-    };
+    }DEF_R8(enable_reg)
 
-    struct IntPersistenceReg:public Reg8<>{
+    struct R8_Integration:public Reg8<>{
+        static constexpr auto address = RegAddress::Integration;
+        uint8_t data;
+    }DEF_R8(integration_reg)
+
+    struct R8_IntPersistence:public Reg8<>{
         static constexpr auto address = RegAddress::IntPersistence;
         using Reg8::operator=;
         uint8_t __resv__ :4;
         uint8_t apers   :4;
-    };
+    }DEF_R8(int_persistence_reg)
 
-    struct LongWaitReg:public Reg8<>{
+    struct R8_LongWait:public Reg8<>{
         static constexpr auto address = RegAddress::LongWait;
         uint8_t __resv1__ :1;
         uint8_t waitLong : 1;
         uint8_t __resv2__ :6;
-    };
+    }DEF_R8(long_wait_reg)
 
-    struct GainReg:public Reg8<>{
+    struct R8_Gain:public Reg8<>{
         static constexpr auto address = RegAddress::Gain;
         using Reg8::operator=;
         Gain gain        :2;
         uint8_t __resv2__   :6;
-    };
+    }DEF_R8(gain_reg)
 
-    struct StatusReg:public Reg8<>{
+    struct R8_Status:public Reg8<>{
         static constexpr auto address = RegAddress::Status;
         uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
         uint8_t interrupt_flag     :1;
         uint8_t __resv2__   :3;
-    };
+    }DEF_R8(status_reg)
 
-    struct IntehrationReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Integration;
-        uint8_t data;
-    };
 
-    struct WaitTimeReg:public Reg8<>{
+    struct R8_WaitTime:public Reg8<>{
         static constexpr auto address = RegAddress::WaitTime;
         uint8_t data;
-    };
+    }DEF_R8(wait_time_reg)
 
-    struct LowThrReg:public Reg16<>{
+    struct R16_LowThr:public Reg16<>{
         static constexpr auto address = RegAddress::LowThr;
         uint16_t data;
-    };
+    }DEF_R16(low_thr_reg)
 
-    struct HighThrReg:public Reg16<>{
+    struct R16_HighThr:public Reg16<>{
         static constexpr auto address = RegAddress::HighThr;
         uint16_t data;
-    };
+    }DEF_R16(high_thr_reg)
 
-    struct DeviceIdReg:public Reg8<>{
+    struct R8_DeviceId:public Reg8<>{
         static constexpr auto address = RegAddress::DeviceId;
-        uint8_t id;
-    };
 
-    EnableReg enable_reg = {};
-    IntehrationReg integration_reg = {};
-    WaitTimeReg wait_time_reg = {};
-    LowThrReg low_thr_reg = {};
-    HighThrReg high_thr_reg = {};
-    IntPersistenceReg int_persistence_reg = {};
-    LongWaitReg long_wait_reg = {};
-    GainReg gain_reg = {};
-    DeviceIdReg device_id_reg = {};
-    StatusReg status_reg = {};
+        // 0x44 = TCS34721 and TCS34725
+        // 0x4D = TCS34723 and TCS34727
+
+        static constexpr uint8_t KEY = 0x44;
+        uint8_t id;
+    }DEF_R8(device_id_reg)
+
     std::array<uint16_t, 4> crgb = {0};
 };
 
 
-class TCS34725:public TCS34725_Regs{
+class TCS34725 final:public TCS34725_Regs{
 public:
+    struct Config{
+        Milliseconds integration_time = 240ms;
+        Gain gain = Gain::_1x;
+    };
+
     TCS34725(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     TCS34725(hal::I2cDrv && i2c_drv):
@@ -139,9 +143,15 @@ public:
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(bus, addr){;}
 
+    TCS34725(const TCS34725 &) = delete;
+    TCS34725(TCS34725 &&) = delete;
+    ~TCS34725() = default;
 
         
-    IResult<> init();
+    IResult<> init(const Config & cfg);
+
+    IResult<> validate();
+
     IResult<> set_integration_time(const Milliseconds ms);
 
     IResult<> set_wait_time(const Milliseconds ms);

@@ -127,7 +127,8 @@ IResult<> BMP280::init(){
     if(const auto res = enable_spi3(DISEN);
         res.is_err()) return res;
 
-    if(const auto res = read_burst(DIGT1_REG_ADDR, reinterpret_cast<int16_t *>(&digT1), 12);
+    if(const auto res = read_burst(DIGT1_REG_ADDR, 
+        std::span(reinterpret_cast<int16_t *>(&digT1), 12));
         res.is_err()) return res;
     return Ok();
 }

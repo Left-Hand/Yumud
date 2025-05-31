@@ -160,18 +160,18 @@ public:
     DRV8301(hal::Spi & spi, const hal::SpiSlaveIndex idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
 
 
-    IResult<> init();
-    IResult<> set_peak_current(const PeakCurrent peak_current);
-    IResult<> set_ocp_mode(const OcpMode ocp_mode);
-    IResult<> set_octw_mode(const OctwMode octw_mode);
-    IResult<> set_gain(const Gain gain);
-    IResult<> set_oc_ad_table(const OcAdTable oc_ad_table);
-    IResult<> enable_pwm3(const Enable en = EN);
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
+    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    [[nodiscard]] IResult<> set_octw_mode(const OctwMode octw_mode);
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> set_oc_ad_table(const OcAdTable oc_ad_table);
+    [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 private:
     hal::SpiDrv spi_drv_;
 
-    IResult<> write_reg(const RegAddress addr, const uint16_t reg);
-    IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

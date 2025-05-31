@@ -230,8 +230,10 @@ class FDC2X1X final:public FDC1X2X_Regs{
 public:
 
 
-    FDC2X1X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    FDC2X1X(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    FDC2X1X(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    FDC2X1X(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     FDC2X1X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 

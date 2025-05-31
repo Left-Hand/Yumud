@@ -45,6 +45,14 @@ IResult<> TCS34725::update(){
 }
 
 
+IResult<> TCS34725::validate(){
+    if(const auto res = read_reg(device_id_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    if(device_id_reg.id != device_id_reg.KEY)
+        return Err(Error::WrongChipId);
+    return Ok();
+}
+
 IResult<> TCS34725::set_int_persistence(const uint8_t times){
     auto reg = RegCopy(int_persistence_reg);
     if(times >= 5){
@@ -142,12 +150,14 @@ IResult<> TCS34725::start_conv(){
 }
 
 
-IResult<> TCS34725::init(){
+IResult<> TCS34725::init(const Config & cfg){
+    if(const auto res = validate();
+        res.is_err()) return res;
     if(const auto res = set_power(true);
         res.is_err()) return res;
-    if(const auto res = set_integration_time(240ms);
+    if(const auto res = set_integration_time(cfg.integration_time);
         res.is_err()) return res;
-    if(const auto res = set_gain(Gain::X1);
+    if(const auto res = set_gain(cfg.gain);
         res.is_err()) return res;
     return Ok();
 }

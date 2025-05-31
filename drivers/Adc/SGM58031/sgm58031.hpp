@@ -14,7 +14,7 @@ namespace ymd::drivers{
 struct SGM58031_Collections{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
     enum class Error_Kind{
-
+        WrongChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -23,34 +23,38 @@ struct SGM58031_Collections{
     using IResult = Result<T, Error>;
 
     enum class DataRate:uint8_t{
-        DR6_25 = 0,DR12_5, DR25, DR50, DR100, DR200, DR400, DR800,
-        DR7_5 = 0b1000, DR15, DR30, DR60, DR120, DR240, DR480, DR960
+        _6_25Hz = 0,_12_5Hz, _25Hz, _50Hz, _100Hz, _200Hz, _400Hz, _800Hz,
+        _7_5Hz = 0b1000, _15Hz, _30Hz, _60Hz, _120Hz, _240Hz, _480Hz, _960Hz
     };
 
     enum class MUX:uint8_t{
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
+    enum class PGA:uint8_t{
+        _2_3 = 0, _1, _2, _4, _8, _16
+    };
+
     class FS{
     public:
-        enum Kind{
-            FS6_144 = 0, FS4_096, FS2_048, FS1_024, FS0_512, FS0_256
+        enum Kind:uint8_t{
+            _6_144 = 0, _4_096, _2_048, _1_024, _0_512, _0_256
         };
 
         constexpr FS(Kind kind):kind_(kind){;}
         constexpr real_t to_real() const{
             switch(kind_){
-                case FS::FS0_256:
+                case FS::_0_256:
                     return real_t(0.256);
-                case FS::FS0_512:
+                case FS::_0_512:
                     return real_t(0.512f);
-                case FS::FS1_024:
+                case FS::_1_024:
                     return real_t(1.024f);
-                case FS::FS2_048:
+                case FS::_2_048:
                     return real_t(2.048f);
-                case FS::FS4_096:
+                case FS::_4_096:
                     return real_t(4.096f);
-                case FS::FS6_144:
+                case FS::_6_144:
                     return real_t(6.144f);
                 default:
                     __builtin_unreachable();
@@ -60,13 +64,14 @@ struct SGM58031_Collections{
         constexpr uint8_t as_u8() const {
             return uint8_t(kind_);
         }
+
+        constexpr auto as_pga() const {
+            return std::bit_cast<PGA>(kind_);
+        }
     private:
         Kind kind_;
     };
 
-    enum class PGA:uint8_t{
-        RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
-    };
 
     enum class RegAddress:uint8_t{
         Conv = 0,
@@ -75,7 +80,7 @@ struct SGM58031_Collections{
 };
 
 struct SGM58031_Regs:public SGM58031_Collections{
-    struct ConfigReg:public Reg16<>{
+    struct R16_Config:public Reg16<>{
         static constexpr auto address = RegAddress::Config;
         uint8_t compQue : 2;
         uint8_t compLat : 1;
@@ -83,13 +88,12 @@ struct SGM58031_Regs:public SGM58031_Collections{
         uint8_t compMode :1;
         uint8_t dataRate :3;
         uint8_t mode:   1;
-        uint8_t pga:    3;
-        uint8_t mux:    3;
+        PGA pga:    3;
+        MUX mux:    3;
         uint8_t os:     1;
-        
-    };
+    }DEF_R16(config_reg)
 
-    struct Config1Reg:public Reg16<>{
+    struct R16_Config1:public Reg16<>{
         static constexpr auto address = RegAddress::Config1;        
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
@@ -99,48 +103,39 @@ struct SGM58031_Regs:public SGM58031_Collections{
         uint8_t drSel       :1;
         uint8_t pd          :1;
         uint8_t __resv3__   :7;
-        
-    };
+    }DEF_R16(config1_reg)
 
-    struct DeviceIdReg:public Reg16<>{
+    struct R16_DeviceId:public Reg16<>{
         static constexpr auto address = RegAddress::DeviceID;
-
+        static constexpr uint16_t KEY = 0x0080; 
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
         uint8_t id          :5;
         uint8_t __resv2__   :3;
         
-    };
+    }DEF_R16(device_id_reg)
 
-    struct TrimReg:public Reg16<>{
+    struct R16_Trim:public Reg16<>{
         static constexpr auto address = RegAddress::Trim;
         uint16_t gn         :11;
         uint8_t __resv__    :5;
         
-    };
+    }DEF_R16(trim_reg)
 
-    struct ConvReg:public Reg16<>{
+    struct R16_Conv:public Reg16<>{
         static constexpr auto address = RegAddress::Conv;
         uint16_t data;
-    };
+    }DEF_R16(conv_reg)
 
-    struct LowThrReg:public Reg16<>{
+    struct R16_LowThr:public Reg16<>{
         static constexpr auto address = RegAddress::LowThr;
         uint16_t data;
-    };
+    }DEF_R16(low_thr_reg)
 
-    struct HighThrReg:public Reg16<>{
+    struct R16_HighThr:public Reg16<>{
         static constexpr auto address = RegAddress::HighThr;
         uint16_t data;
-    };
-
-    ConvReg conv_reg;
-    ConfigReg config_reg;
-    LowThrReg low_thr_reg;
-    HighThrReg high_thr_reg;
-    Config1Reg config1_reg;
-    DeviceIdReg device_id_reg;
-    TrimReg trim_reg;
+    }DEF_R16(high_thr_reg)
 };
 
 class SGM58031 final:public SGM58031_Regs{
@@ -153,6 +148,7 @@ public:
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
     IResult<> init();
+    IResult<> validate();
 
     IResult<> get_device_id(){
         return read_reg(device_id_reg);
@@ -201,7 +197,7 @@ public:
 
     IResult<> set_mux(const MUX _mux){
         auto reg = RegCopy(config_reg);
-        reg.mux = (uint8_t)_mux;
+        reg.mux = _mux;
         return write_reg(reg);
     }
 
@@ -237,6 +233,22 @@ private:
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
+
+static constexpr auto ratio2pga(const real_t ratio){
+    if(ratio >= 3){
+        return PGA::_2_3;
+    }else if(ratio >= 2){
+        return PGA::_1;
+    }else if(ratio >= 1){
+        return PGA::_2;
+    }else if(ratio >= real_t(0.5)){
+        return PGA::_4;
+    }else if(ratio >= real_t(0.25)){
+        return PGA::_8;
+    }else{
+        return PGA::_16;
+    }
+}
 
 };
 

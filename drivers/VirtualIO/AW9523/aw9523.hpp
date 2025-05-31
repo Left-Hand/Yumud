@@ -145,11 +145,15 @@ public:
     };
 
 
+    struct Config{
+        CurrentLimit current_limit = CurrentLimit::Low;
+    };
+
     AW9523(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){
         return write_reg(RegAddress::SwRst, (uint8_t)0x00);
     }

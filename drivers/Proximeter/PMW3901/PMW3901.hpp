@@ -19,7 +19,7 @@
 namespace ymd::drivers{
 
 
-class PMW3901 final:public FlowSensorIntf{
+class PMW3901 final{
 public:
     enum class Error_Kind:uint8_t{
         WrongChipId
@@ -72,13 +72,18 @@ private:
 
     [[nodiscard]] IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
 public:
+
+    PMW3901(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    PMW3901(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv(spi, index)){;}
+
     PMW3901(const PMW3901 & other) = delete;
     PMW3901(PMW3901 && other) = delete;
 
-    PMW3901(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    PMW3901(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
-
+    ~PMW3901() = default;
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> init();
 

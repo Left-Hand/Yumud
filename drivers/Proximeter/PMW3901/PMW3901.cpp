@@ -22,6 +22,9 @@ using namespace ymd::drivers;
 
 using Error = PMW3901::Error;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
 static constexpr uint8_t PMW3901_REG_Product_ID              = 0x00;
 static constexpr uint8_t PMW3901_REG_Revision_ID             = 0x01;
 static constexpr uint8_t PMW3901_REG_Motion                  = 0x02;
@@ -125,24 +128,24 @@ static constexpr auto INIT_LIST2 = std::to_array({
 
 scexpr real_t scale = real_t(13.0/2000);
 
-Result<void, Error> PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT)
+IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
+    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT)
     | spi_drv_.write_single<uint8_t>(data));
 }
 
 
-Result<void, Error> PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
+IResult<> PMW3901::read_reg(const uint8_t command, uint8_t & data){
+    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
     | spi_drv_.read_single<uint8_t>(data));
 }
 
-Result<void, Error> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pdata){
-    return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
+IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pdata){
+    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
     | spi_drv_.read_burst<uint8_t>(pdata));
 }
 
 
-// Result<void, Error> PMW3901::read_image(ImageWritable<Grayscale> & img){
+// IResult<> PMW3901::read_image(ImageWritable<Grayscale> & img){
 //     int count = 0;
 //     scexpr uint8_t MASK = 0x0c; //MASK to take bits 2 and 3 from b
 
@@ -180,18 +183,18 @@ Result<void, Error> PMW3901::read_burst(const uint8_t command, std::span<uint8_t
 // }
 
 
-Result<void, Error> PMW3901::set_led(bool ledOn){
+IResult<> PMW3901::set_led(bool ledOn){
     return write_reg(0x7f, 0x14)
     | write_reg(0x6f, ledOn ? 0x1c : 0x00)
     | write_reg(0x7f, 0x00)
     ;
 }
 
-Result<void, Error> PMW3901::read_data(){
+IResult<> PMW3901::read_data(){
     return read_data_burst();
 }
 
-Result<void, Error> PMW3901::read_data_slow(){
+IResult<> PMW3901::read_data_slow(){
     std::array<uint8_t, 5> buf;
 
     for(uint8_t i = 0; i < buf.size(); i++){
@@ -205,13 +208,13 @@ Result<void, Error> PMW3901::read_data_slow(){
     return Ok();
 }
 
-Result<void, Error> PMW3901::read_data_burst(){
+IResult<> PMW3901::read_data_burst(){
     return read_burst(0x16, std::span(&data_.motion.as_ref(), 6));
 }
 
 
 
-Result<void, Error> PMW3901::update(){
+IResult<> PMW3901::update(){
     return read_data()
     .if_ok([&]{
         x_cm += int16_t(data_.dx.as_val()) * scale;
@@ -220,7 +223,7 @@ Result<void, Error> PMW3901::update(){
 
 }
 
-Result<void, Error> PMW3901::update(const real_t rad){
+IResult<> PMW3901::update(const real_t rad){
     return read_data()
     .if_ok([&]{
         auto delta = Vector2<real_t>(data_.dx.as_val(), data_.dy.as_val())
@@ -238,14 +241,14 @@ Result<bool, Error> PMW3901::assert_reg(const uint8_t command, const uint8_t dat
     return Ok(temp == data);
 }
 
-Result<void, Error> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
+IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
     for(const auto & [cmd, data] : list){
         if(const auto res = write_reg(cmd, data); res.is_err()) return res;
     }
     return Ok();
 }
 
-Result<void, Error> PMW3901::validate(){
+IResult<> PMW3901::validate(){
     const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)
     | assert_reg(PMW3901_REG_Product_ID, 0x49);
 
@@ -254,12 +257,12 @@ Result<void, Error> PMW3901::validate(){
     return Ok();
 }
 
-Result<void, Error> PMW3901::init() {
+IResult<> PMW3901::init() {
 
 
 
     if(const auto err = spi_drv_.release(); err.is_err()) 
-        return Result<void, Error>(err);
+        return IResult<>(err);
     
     if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 
         res.is_err()) return res; 

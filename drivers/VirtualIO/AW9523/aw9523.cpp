@@ -14,20 +14,30 @@ using IResult = Result<T, Error>;
 if(not is_index_valid(index))\
     return Err(Error::IndexOutOfRange);\
 
-IResult<> AW9523::init(){
+IResult<> AW9523::init(const Config & cfg){
     if(const auto res = validate();
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = reset();
         res.is_err()) return res;
     clock::delay(2ms);
-    if(const auto res = set_led_current_limit(CurrentLimit::Low);
+    if(const auto res = set_led_current_limit(cfg.current_limit);
         res.is_err()) return res;
-    for(uint8_t i = 0; i < 16; i++){
-        if(const auto res = set_led_current(std::bit_cast<hal::PinSource>(
-            hal::PinMask::from_index(i).as_u16()), 
-            0); res.is_err()) return Err(res.unwrap_err());
-    }
-    led_mode_reg.mask = hal::PinMask(0xffff);
+
+
+    auto clear_output = [this]()-> IResult<>{
+        for(size_t i = 0; i < 16; i++){
+            if(const auto res = set_led_current(std::bit_cast<hal::PinSource>(
+                hal::PinMask::from_index(i).as_u16()), 
+                0); res.is_err()) return Err(res.unwrap_err());
+            }
+        led_mode_reg.mask = hal::PinMask(0xffff);
+        return Ok();
+    };
+
+    if(const auto res = clear_output(); 
+        res.is_err()) return res;
+    
+
     return Ok();
 }
 

@@ -27,68 +27,63 @@ public:
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     VL53L0X(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     VL53L0X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(i2c, addr){;}
+
+    VL53L0X(const VL53L0X &) = delete;
+    VL53L0X(VL53L0X &&) = delete;
     ~VL53L0X(){;}
 
-    [[nodiscard]]
-    Result<void, Error> start_conv();
+    [[nodiscard]] IResult<> start_conv();
+
+    [[nodiscard]] IResult<> init();
+
+    [[nodiscard]] IResult<> stop();
 
     [[nodiscard]]
-    Result<void, Error> init();
-
-    [[nodiscard]]
-    Result<void, Error> stop();
-
-    [[nodiscard]]
-    Result<real_t, Error> get_distance(){
-        if(const auto res = get_distance_mm(); res.is_ok())
+    Result<real_t, Error> read_distance(){
+        if(const auto res = read_distance_mm(); res.is_ok())
             return Ok(res.unwrap() * real_t(0.001));
         else return Err(Error(res.unwrap_err()));
     };
 
-    [[nodiscard]]
-    Result<uint16_t, Error> get_distance_mm();
+    [[nodiscard]] IResult<uint16_t> read_distance_mm();
 
-    [[nodiscard]]
-    Result<uint16_t, Error> get_ambient_count();
+    [[nodiscard]] IResult<uint16_t> read_ambient_count();
 
-    [[nodiscard]]
-    Result<uint16_t, Error> get_signal_count();
+    [[nodiscard]] IResult<uint16_t> read_signal_count();
 
-	Result<void, Error> enable_high_precision(const bool _highPrec = true);
-    Result<void, Error> enable_cont_mode(const bool _continuous = true);
-    Result<void, Error> update();
+    [[nodiscard]] IResult<> enable_high_precision(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_cont_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> update();
 
 private:
     hal::I2cDrv i2c_drv_;
-    bool highPrec_ = false;
-    bool continuous_ = false;
+    bool high_prec_en_ = false;
+    bool continuous_en_ = false;
 
     struct ConvResult{
-        uint16_t ambientCount; /**< Environment quantity */
-        uint16_t signalCount;  /**< A semaphore */
-        uint16_t distance;
+        uint16_t ambient_count; /**< Environment quantity */
+        uint16_t signal_count;  /**< A semaphore */
+        uint16_t distance_mm;
     };
 
     ConvResult result, last_result;
 
-    [[nodiscard]]
-    Result<void, Error> flush();
+    [[nodiscard]] IResult<> flush();
 
-    [[nodiscard]]
-    Result<bool, Error> is_busy();
+    [[nodiscard]] IResult<bool> is_busy();
 
-    [[nodiscard]]
-	Result<void, Error> read_byte_data(const uint8_t reg, uint8_t & data);
+    [[nodiscard]] IResult<> read_byte_data(const uint8_t reg, uint8_t & data);
 
-    [[nodiscard]]
-    Result<void, Error> read_burst(const uint8_t reg, uint16_t * data, const size_t len);
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg, const std::span<uint16_t> pdata);
 
-    [[nodiscard]]
-    Result<void, Error> write_byte_data(const uint8_t reg, const uint8_t byte);
+    [[nodiscard]] IResult<> write_byte_data(const uint8_t reg, const uint8_t byte);
 
 };
 

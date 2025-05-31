@@ -26,6 +26,7 @@ protected:
     CtrlMode ctrl_mode_ = CtrlMode::CC;
 };
 
+
 class BuckConverter {
 protected:
     using Coil2Driver = ymd::drivers::Coil2DriverIntf;
@@ -49,5 +50,6 @@ public:
     void run();
 
 };
+
 
 }

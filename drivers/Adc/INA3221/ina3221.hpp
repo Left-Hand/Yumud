@@ -69,7 +69,8 @@ public:
     // SDA  1000010 0
     // SCL  1000011 0
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
+    static constexpr auto DEFAULT_I2C_ADDR = 
+        hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
     enum class ChannelIndex:uint8_t{
         CH1 = 0,
@@ -115,7 +116,8 @@ public:
             return {static_cast<Kind>(temp2)};
         }
 
-        constexpr uint8_t as_raw() const {return static_cast<uint8_t>(kind_);}
+        constexpr uint8_t as_raw() const {
+            return static_cast<uint8_t>(kind_);}
         constexpr Kind kind() const {return kind_;}
     
     private:
@@ -123,7 +125,14 @@ public:
     };
 
     enum class ConversionTime:uint16_t{
-        _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
+        _140us = 0, 
+        _204us, 
+        _332us, 
+        _588us, 
+        _1_1ms, 
+        _2_116_ms,
+        _4_156ms, 
+        _8_244ms
     };
 
     struct Config{
@@ -177,11 +186,16 @@ struct INA3221_Regs:public INA3221_Collections {
         }
     };
 
-    struct R16_ShuntVolt1:public R16_ShuntVolt{static constexpr RegAddress address = 0x01;};
-    struct R16_ShuntVolt2:public R16_ShuntVolt{static constexpr RegAddress address = 0x03;};
-    struct R16_ShuntVolt3:public R16_ShuntVolt{static constexpr RegAddress address = 0x05;};
-    struct R16_ShuntVoltSum:public R16_ShuntVolt{static constexpr RegAddress address = 0x0D;};
-    struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{static constexpr RegAddress address = 0x0E;};
+    struct R16_ShuntVolt1:public R16_ShuntVolt{
+        static constexpr RegAddress address = 0x01;};
+    struct R16_ShuntVolt2:public R16_ShuntVolt{
+        static constexpr RegAddress address = 0x03;};
+    struct R16_ShuntVolt3:public R16_ShuntVolt{
+        static constexpr RegAddress address = 0x05;};
+    struct R16_ShuntVoltSum:public R16_ShuntVolt{
+        static constexpr RegAddress address = 0x0D;};
+    struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{
+        static constexpr RegAddress address = 0x0E;};
 
     struct R16_BusVolt:public Reg16i<>{
 
@@ -200,9 +214,12 @@ struct INA3221_Regs:public INA3221_Collections {
         }
     };
 
-    struct R16_BusVolt1:public R16_BusVolt{static constexpr RegAddress address = 0x02;};
-    struct R16_BusVolt2:public R16_BusVolt{static constexpr RegAddress address = 0x04;};
-    struct R16_BusVolt3:public R16_BusVolt{static constexpr RegAddress address = 0x06;};
+    struct R16_BusVolt1:public R16_BusVolt{
+        static constexpr RegAddress address = 0x02;};
+    struct R16_BusVolt2:public R16_BusVolt{
+        static constexpr RegAddress address = 0x04;};
+    struct R16_BusVolt3:public R16_BusVolt{
+        static constexpr RegAddress address = 0x06;};
 
 
 
@@ -213,9 +230,12 @@ struct INA3221_Regs:public INA3221_Collections {
         int16_t :16;
     };
 
-    struct R16_InstantOVC1:public R16_InstantOVC{static constexpr RegAddress address = 0x07;};
-    struct R16_InstantOVC2:public R16_InstantOVC{static constexpr RegAddress address = 0x09;};
-    struct R16_InstantOVC3:public R16_InstantOVC{static constexpr RegAddress address = 0x0b;};
+    struct R16_InstantOVC1:public R16_InstantOVC{
+        static constexpr RegAddress address = 0x07;};
+    struct R16_InstantOVC2:public R16_InstantOVC{
+        static constexpr RegAddress address = 0x09;};
+    struct R16_InstantOVC3:public R16_InstantOVC{
+        static constexpr RegAddress address = 0x0b;};
 
     struct R16_ConstantOVC:public Reg16i<>{
         static constexpr int16_t to_i16(const real_t volt){
@@ -224,9 +244,12 @@ struct INA3221_Regs:public INA3221_Collections {
         int16_t :16;
     };
 
-    struct R16_ConstantOVC1:public R16_ConstantOVC{static constexpr RegAddress address = 0x08;};
-    struct R16_ConstantOVC2:public R16_ConstantOVC{static constexpr RegAddress address = 0x0A;};
-    struct R16_ConstantOVC3:public R16_ConstantOVC{static constexpr RegAddress address = 0x0C;};
+    struct R16_ConstantOVC1:public R16_ConstantOVC{
+        static constexpr RegAddress address = 0x08;};
+    struct R16_ConstantOVC2:public R16_ConstantOVC{
+        static constexpr RegAddress address = 0x0A;};
+    struct R16_ConstantOVC3:public R16_ConstantOVC{
+        static constexpr RegAddress address = 0x0C;};
 
     struct R16_Mask:public Reg16<>{
         uint16_t conv_ready:1;
@@ -268,7 +291,6 @@ struct INA3221_Regs:public INA3221_Collections {
         uint16_t:16;
     };
 
-    #pragma pack(push, 1)
     R16_Config       config_reg = {};
     R16_ShuntVolt1    shuntvolt1_reg = {};
     R16_BusVolt1      busvolt1_reg = {};
@@ -291,7 +313,6 @@ struct INA3221_Regs:public INA3221_Collections {
 
     R16_ManuId       manu_id_reg = {};
     R16_ChipId       chip_id_reg = {};
-    #pragma pack(pop)
 };
 
 class INA3221_Phy final : public INA3221_Collections{
@@ -301,33 +322,41 @@ public:
     INA3221_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
+    [[nodiscard]] IResult<> read_reg(
+        const RegAddress addr, uint16_t & data
+    ){
         if(const auto res = i2c_drv_.read_reg((addr), data, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
+    [[nodiscard]] IResult<> write_reg(
+        const RegAddress addr, const uint16_t data
+    ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data){
+    [[nodiscard]] IResult<> read_reg(
+        const RegAddress addr, int16_t & data
+    ){
         if(const auto res = (i2c_drv_.read_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const int16_t data){
+    [[nodiscard]] IResult<> write_reg(
+        const RegAddress addr, const int16_t data
+    ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, void * data_ptr, const size_t len){
-        if(const auto res = (i2c_drv_.read_burst(uint8_t(addr), 
-            std::span(reinterpret_cast<uint16_t *>(data_ptr), len), ENDIAN));
+    [[nodiscard]] IResult<> read_burst(
+        const RegAddress addr, std::span<uint16_t> pdata){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

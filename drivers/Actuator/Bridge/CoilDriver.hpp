@@ -11,7 +11,8 @@ namespace ymd::drivers{
 
 class Coil2DriverIntf{
 public:
-    virtual Coil2DriverIntf& operator= (const real_t duty) = 0;
+    virtual Coil2DriverIntf& operator = (const real_t duty) = 0;
+    
     virtual void enable(const Enable en) = 0;
 };
 

@@ -1,21 +1,25 @@
 #include "AS5047.hpp"
 
 
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 using Error = AS5047::Error;
 
-Result<void, Error> AS5047::init() {
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> AS5047::init() {
     TODO();
+    return Ok();
 }
 
-uint16_t AS5047::getPositionData(){
+uint16_t AS5047::get_position_data(){
     TODO();
     return 0;
 }
 
-Result<void, Error> AS5047::update() {
+IResult<> AS5047::update() {
     TODO();
     return Ok();
 }
@@ -57,7 +61,7 @@ public:
     // ReadFrame()
 };
 
-void AS5047::write_reg(const RegAddress addr, const uint8_t data){
+IResult<> AS5047::write_reg(const RegAddress addr, const uint8_t data){
 
     // WRFormat format = {
     //     .addr = addr,
@@ -65,11 +69,14 @@ void AS5047::write_reg(const RegAddress addr, const uint8_t data){
     // };
 
     // spi_drv_.write_single(format, CONT);
+
     // spi_drv_.write_single(data);
+    TODO();
+    return Ok();
 }
 
 
-void AS5047::read_reg(const RegAddress addr, uint8_t & data){
+IResult<> AS5047::read_reg(const RegAddress addr, uint8_t & data){
 
     // WRFormat format = {
     //     .addr = addr,
@@ -78,4 +85,6 @@ void AS5047::read_reg(const RegAddress addr, uint8_t & data){
 
     // spi_drv_.write_single(format, CONT);
     // spi_drv_.read_single(data);
+    TODO();
+    return Ok();
 }

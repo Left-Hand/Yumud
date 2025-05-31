@@ -4,6 +4,16 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+
+template<typename First, typename ... Ts>
+constexpr std::array<First, sizeof...(Ts)> make_array(
+    Ts && ... args
+){
+    using Arr = std::array<First, sizeof...(Ts)>;
+    return Arr{std::forward<Ts>(args)...};
+}
+
+
 void LT8960L::States::transition_to(const Kind status){
     status_ = status;
     // LT8960L_DEBUG(uint8_t(status));
@@ -178,14 +188,6 @@ Result<void, Error> LT8960L::init_ble(const Power power){
     ;
 }
 
-
-template<typename First, typename ... Ts>
-constexpr std::array<First, sizeof...(Ts)> make_array(
-    Ts && ... args
-){
-    using Arr = std::array<First, sizeof...(Ts)>;
-    return Arr{std::forward<Ts>(args)...};
-}
 
 auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error>{
     using RP = std::pair<uint8_t, uint16_t>;

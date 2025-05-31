@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 
 #include "core/utils/Result.hpp"
-#include "core/utils/Option.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "concept/analog_channel.hpp"
 
@@ -13,8 +13,17 @@ namespace ymd::drivers{
 
 class INA219 {
 public:
-    using Error = hal::HalResult;
-    using BusResult = Result<void, Error>;
+
+
+    enum class Error_Kind:uint8_t{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -76,13 +85,13 @@ protected:
     }DEF_R16(calibration_reg)
     
 
-    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
 
-    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
     
-    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, int16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] Result<void, Error> read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<uint16_t> pdata);
 
 public:
     
@@ -102,18 +111,8 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
     #undef CHANNEL_CONTENT
 
 
-    Result<void, Error> update();
+    IResult<> update();
 
-    Result<void, Error> validate();
+    IResult<> validate();
 };
-}
-
-namespace ymd::custom{
-    template<>
-    struct result_converter<void, drivers::INA219::Error, hal::HalResult> {
-        static Result<void, drivers::INA219::Error> convert(const hal::HalResult & res){
-            if(res.is_ok()) return Ok();
-            else return Err(res); 
-        }
-    };
 }

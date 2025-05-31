@@ -13,6 +13,8 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> SGM58031::init(){
+    if(const auto res = validate();
+        res.is_err()) return res;
     if(const auto res = read_reg(config_reg);
         res.is_err()) return res;
     if(const auto res = read_reg(low_thr_reg);
@@ -21,23 +23,28 @@ IResult<> SGM58031::init(){
         res.is_err()) return res;
     if(const auto res = read_reg(trim_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(device_id_reg);
-        res.is_err()) return res;
     return Ok();
 }
 
-IResult<> SGM58031::set_datarate(const DataRate _dr){
-    uint8_t dr = (uint8_t)_dr;
+IResult<> SGM58031::validate(){
+    auto & reg = device_id_reg;
+    if(const auto res = read_reg(reg);
+        res.is_err()) return res;
+    if(reg.as_u16() != reg.KEY) 
+        return Err(Error::WrongChipId);
+    return Ok();
+}
+IResult<> SGM58031::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(config_reg);
-        reg.dataRate = dr & 0b111;
+        reg.dataRate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
 
     {
         auto reg = RegCopy(config1_reg);
-        reg.drSel = dr >> 3;
+        reg.drSel = std::bit_cast<uint8_t>(dr) >> 3;
         return write_reg(reg);
     }
 }
@@ -46,29 +53,16 @@ IResult<> SGM58031::set_fs(const FS fs){
     fullScale = fs.to_real();
 
     auto reg = RegCopy(config_reg);
-    reg.pga = fs.as_u8();
+    reg.pga = fs.as_pga();
     return write_reg(reg);
 }
 
+
+
 IResult<> SGM58031::set_fs(const real_t _fs, const real_t _vref){
     real_t ratio = abs(_fs) / _vref;
-    PGA pga;
-    if(ratio >= 3){
-        pga = PGA::RT2_3;
-    }else if(ratio >= 2){
-        pga = PGA::RT1;
-    }else if(ratio >= 1){
-        pga = PGA::RT2;
-    }else if(ratio >= real_t(0.5)){
-        pga = PGA::RT4;
-    }else if(ratio >= real_t(0.25)){
-        pga = PGA::RT8;
-    }else{
-        pga = PGA::RT16;
-    }
-
     auto reg = RegCopy(config_reg);
-    reg.pga = (uint8_t)pga;
+    reg.pga = ratio2pga(ratio);
     return write_reg(reg);
 }
 

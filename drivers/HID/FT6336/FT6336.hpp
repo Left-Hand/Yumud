@@ -6,15 +6,21 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 class FT6336 {
 public:
-    enum class Error{
+    enum class Error_Kind{
         Unspecified
     };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 protected:
 
     using RegAddress = uint8_t;
@@ -29,128 +35,128 @@ protected:
         None = 0x00
     };
 
-    struct DevModeReg:public Reg8<>{
+    struct R8_DevMode:public Reg8<>{
         static constexpr RegAddress address = 0x00;
         uint8_t :4;
         uint8_t device_mode:3;
         uint8_t :1;
     };
 
-    struct GestIdReg:public Reg8<>{
+    struct R8_GestId:public Reg8<>{
         static constexpr RegAddress address = 0x01;
         uint8_t gesture_id;
     };
 
-    struct TdStatusReg:public Reg8<>{
+    struct R8_TdStatus:public Reg8<>{
         static constexpr RegAddress address = 0x02;
         uint8_t touch_cnt:4;
         uint8_t :4;
     };
 
-    struct P1xhReg:public Reg8<>{
+    struct R8_P1xh:public Reg8<>{
         static constexpr RegAddress address = 0x03;
         uint8_t p1xh:4;
         uint8_t :2;
         uint8_t p1ev:2;
     };
 
-    struct P1xlReg:public Reg8<>{
+    struct R8_P1xl:public Reg8<>{
         static constexpr RegAddress address = 0x04;
         uint8_t p1xl;
     };
 
-    struct P1yhReg:public Reg8<>{
+    struct R8_P1yh:public Reg8<>{
         static constexpr RegAddress address = 0x05;
         uint8_t p1yh:4;
         uint8_t :2;
         uint8_t p1id:2;
     };
 
-    struct P1ylReg:public Reg8<>{
+    struct R8_P1yl:public Reg8<>{
         static constexpr RegAddress address = 0x06;
         uint8_t p1yl;
     };
 
-    struct P1WeightReg:public Reg8<>{
+    struct R8_P1Weight:public Reg8<>{
         static constexpr RegAddress address = 0x07;
         uint8_t p1weight;
     };
 
-    struct P1MiscReg:public Reg8<>{
+    struct R8_P1Misc:public Reg8<>{
         static constexpr RegAddress address = 0x08;
         uint8_t touch_area:4;
     };
 
-    struct P2xhReg:public Reg8<>{
+    struct R8_P2xh:public Reg8<>{
         static constexpr RegAddress address = 0x09;
         uint8_t p1xh:4;
         uint8_t :2;
         uint8_t p1ev:2;
     };
 
-    struct P2xlReg:public Reg8<>{
+    struct R8_P2xl:public Reg8<>{
         static constexpr RegAddress address = 0x0a;
         uint8_t p1xl;
     };
 
-    struct P2yhReg:public Reg8<>{
+    struct R8_P2yh:public Reg8<>{
         static constexpr RegAddress address = 0x0b;
         uint8_t p1yh:4;
         uint8_t :2;
         uint8_t p1id:2;
     };
 
-    struct P2ylReg:public Reg8<>{
+    struct R8_P2yl:public Reg8<>{
         static constexpr RegAddress address = 0x0c;
         uint8_t p1yl;
     };
 
-    struct P2WeightReg:public Reg8<>{
+    struct R8_P2Weight:public Reg8<>{
         static constexpr RegAddress address = 0x0d;
         uint8_t p1weight;
     };
 
-    struct P2MiscReg:public Reg8<>{
+    struct R8_P2Misc:public Reg8<>{
         static constexpr RegAddress address = 0x0e;
         uint8_t touch_area:4;
     };
 
-    struct ThGroupReg:public Reg8<>{
+    struct R8_ThGroup:public Reg8<>{
         static constexpr RegAddress address = 0x80;
         uint8_t touch_threshold;
     };
 
-    struct ThDiffReg:public Reg8<>{
+    struct R8_ThDiff:public Reg8<>{
         static constexpr RegAddress address = 0x85;
         uint8_t touch_threshold;
     };
 
-    struct CtrlReg:public Reg8<>{
+    struct R8_Ctrl:public Reg8<>{
         static constexpr RegAddress address = 0x86;
         bool enable_touch_detect:1;
     };
 
-    struct TimeEnterMonnitorReg:public Reg8<>{
+    struct R8_TimeEnterMonnitor:public Reg8<>{
         static constexpr RegAddress address = 0x87;
         uint8_t time_enter_monitor;
     };
 
-    struct PeriodActiveReg{
+    struct R8_PeriodActive:public Reg8<>{
         static constexpr RegAddress address = 0x88;
         uint8_t report_rate_when_active;
     };
 
-    struct PeriodMonitorReg{
+    struct R8_PeriodMonitor:public Reg8<>{
         static constexpr RegAddress address = 0x89;
         uint8_t report_rate_when_monitor;
     };
 
-    struct RadianValueReg{
+    struct R8_RadianValue:public Reg8<>{
         static constexpr RegAddress address = 0x91;
         uint8_t minimal_allowed_angle;
     };
 
-    struct OffsetLeftReightReg{
+    struct R8_OffsetLeftReight:public Reg8<>{
         static constexpr RegAddress address = 0x92;
         uint8_t maxmimul_offset;
     };
@@ -164,17 +170,17 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     
-    [[nodiscard]] Result<void, hal::HalResult> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::HalResult> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    [[nodiscard]] IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::HalResult> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::HalResult> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::HalResult> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
@@ -185,9 +191,9 @@ public:
     FT6336(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    Result<size_t, Error> get_touch_cnt();
+    IResult<size_t> get_touch_cnt();
 
-    Result<GestureID, Error> get_gesture_id();
+    IResult<GestureID> get_gesture_id();
 };
 
 }

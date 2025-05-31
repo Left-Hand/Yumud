@@ -29,20 +29,19 @@ struct SC8721_Collections{
         _40ns
     };
 
-    // Switching frequency setting:
-    // 00: 260kHz 
-    // 01: 500kHz(default)
-    // 10: 720kHz
-    // 11: 920kHz
-
     enum class SwitchFreq:uint8_t{
-        _260kHz,
-        _500kHz,
-        _720kHz,
-        _920kHz
+        // Switching frequency setting:
+        // 00: 260kHz 
+        // 01: 500kHz(default)
+        // 10: 720kHz
+        // 11: 920kHz
+        _260kHz = 0b00,
+        _500kHz = 0b01,
+        _720kHz = 0b10,
+        _920kHz = 0b11
     };
 
-    enum class SlopComp{
+    enum class SlopComp:uint8_t{
         _0,
         _50,
         _100,
@@ -58,6 +57,8 @@ struct SC8721_Collections{
         uint8_t on_cv:1;
         uint8_t on_cc:1;
     };
+
+    static_assert(sizeof(Status)==1,"sizeof(Status)==1");
 
 };
 
@@ -141,9 +142,12 @@ struct SC8721_Regs:public SC8721_Collections{
 
 class SC8721 final:public SC8721_Regs{
 public:
-    SC8721(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8721(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8721(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    SC8721(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    SC8721(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    SC8721(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> update();
 
@@ -177,8 +181,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<uint8_t> pdata){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -190,7 +194,8 @@ private:
         return res;
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return read_reg(reg.address, reg.as_ref());
     }
 };
