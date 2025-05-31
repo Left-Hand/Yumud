@@ -1,34 +1,27 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-
-#include "concept/analog_channel.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "concept/analog_channel.hpp"
 
 
 namespace ymd::drivers{
 
-class SGM58031_Error{
-public:
-    enum Kind:uint8_t {
-        Unspecified = 0xff
+struct SGM58031_Collections{
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
+    enum class Error_Kind{
+
     };
 
-    constexpr SGM58031_Error(Kind kind):kind_(kind){}
-    constexpr bool operator ==(const SGM58031_Error other) const {
-        return kind_ == other.kind_;
-    }
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-    constexpr bool operator ==(const Kind kind) const {
-        return kind_ == kind;
-    }
-private:
-    Kind kind_;
-};
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
-class SGM58031{
-public:
     enum class DataRate:uint8_t{
         DR6_25 = 0,DR12_5, DR25, DR50, DR100, DR200, DR400, DR800,
         DR7_5 = 0b1000, DR15, DR30, DR60, DR120, DR240, DR480, DR960
@@ -74,11 +67,16 @@ public:
     enum class PGA:uint8_t{
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
-protected:
-    hal::I2cDrv i2c_drv_;
 
+    enum class RegAddress:uint8_t{
+        Conv = 0,
+        Config,LowThr, HighThr, Config1, DeviceID,Trim
+    };
+};
+
+struct SGM58031_Regs:public SGM58031_Collections{
     struct ConfigReg:public Reg16<>{
-        
+        static constexpr auto address = RegAddress::Config;
         uint8_t compQue : 2;
         uint8_t compLat : 1;
         uint8_t compPol : 1;
@@ -92,7 +90,7 @@ protected:
     };
 
     struct Config1Reg:public Reg16<>{
-        
+        static constexpr auto address = RegAddress::Config1;        
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
         uint8_t busFlex     :1;
@@ -105,7 +103,8 @@ protected:
     };
 
     struct DeviceIdReg:public Reg16<>{
-        
+        static constexpr auto address = RegAddress::DeviceID;
+
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
         uint8_t id          :5;
@@ -114,106 +113,131 @@ protected:
     };
 
     struct TrimReg:public Reg16<>{
-        
+        static constexpr auto address = RegAddress::Trim;
         uint16_t gn         :11;
         uint8_t __resv__    :5;
         
     };
 
     struct ConvReg:public Reg16<>{
+        static constexpr auto address = RegAddress::Conv;
         uint16_t data;
-        
     };
 
     struct LowThrReg:public Reg16<>{
+        static constexpr auto address = RegAddress::LowThr;
         uint16_t data;
-        
     };
 
     struct HighThrReg:public Reg16<>{
+        static constexpr auto address = RegAddress::HighThr;
         uint16_t data;
-        
     };
 
-    ConvReg convReg;
-    ConfigReg configReg;
-    LowThrReg lowThrReg;
-    HighThrReg highThrReg;
-    Config1Reg config1Reg;
-    DeviceIdReg deviceIdReg;
-    TrimReg trimReg;
+    ConvReg conv_reg;
+    ConfigReg config_reg;
+    LowThrReg low_thr_reg;
+    HighThrReg high_thr_reg;
+    Config1Reg config1_reg;
+    DeviceIdReg device_id_reg;
+    TrimReg trim_reg;
+};
 
-    enum class RegAddress:uint8_t{
-        Conv = 0,
-        Config,LowThr, HighThr, Config1, DeviceID,Trim
-    };
-
-    real_t fullScale;
-    auto write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
-    }
-
-    auto read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
-    }
-
+class SGM58031 final:public SGM58031_Regs{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
+
 
     SGM58031(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     SGM58031(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    void init();
+    IResult<> init();
 
-    void get_device_id(){
-        read_reg(RegAddress::DeviceID, deviceIdReg);
+    IResult<> get_device_id(){
+        return read_reg(device_id_reg);
     }
 
-    bool is_idle(){
-        read_reg(RegAddress::Config, configReg);
-        return configReg.os;
+    IResult<bool> is_idle(){
+        if(const auto res = read_reg(config_reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(bool(config_reg.os));
     }
 
-    void start_conv(){
-        config1Reg.pd = true;
-        write_reg(RegAddress::Config1, config1Reg);
-        configReg.os = true;
-        write_reg(RegAddress::Config, configReg);
+    IResult<> start_conv(){
+        {
+            auto reg = RegCopy(config1_reg);
+            reg.pd = true;
+            if(const auto res = write_reg(reg);
+                res.is_err()) return Err(res.unwrap_err());
+        }
+
+        {
+            auto reg = RegCopy(config_reg);
+            reg.os = true;
+            return write_reg(reg);
+        }
     }
 
-    int16_t get_conv_data(){
-        read_reg(RegAddress::Conv, convReg);
-        return *(int16_t *)&convReg;
+    IResult<int16_t> get_conv_data(){
+        if(const auto res = read_reg(conv_reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(conv_reg.as_val());
     }
 
-    real_t get_conv_voltage(){
-        int16_t data = get_conv_data();
-        real_t uni = real_t(data) / (1 << 15);
-        return uni * fullScale;
+    IResult<real_t> get_conv_voltage(){
+        return get_conv_data()
+            .map([&](const int16_t x) -> real_t{
+                return (x * fullScale) >> 15; 
+            });
     }
-    void set_cont_mode(const bool continuous){
-        configReg.mode = continuous;
-        write_reg(RegAddress::Config, configReg);
-    }
-
-    void set_datarate(const DataRate _dr);
-
-    void set_mux(const MUX _mux){
-        configReg.mux = (uint8_t)_mux;
-        write_reg(RegAddress::Config, configReg);
+    IResult<> set_cont_mode(const bool continuous){
+        auto reg = RegCopy(config_reg);
+        reg.mode = continuous;
+        return write_reg(reg);
     }
 
-    void set_fs(const FS fs);
+    IResult<> set_datarate(const DataRate _dr);
 
-    void set_fs(const real_t _fs, const real_t _vref);
-
-    void set_trim(const real_t _trim);
-    void enable_ch3_as_ref(bool yes){
-        config1Reg.extRef = yes;
-        write_reg(RegAddress::Config1, config1Reg);
+    IResult<> set_mux(const MUX _mux){
+        auto reg = RegCopy(config_reg);
+        reg.mux = (uint8_t)_mux;
+        return write_reg(reg);
     }
+
+    IResult<> set_fs(const FS fs);
+
+    IResult<> set_fs(const real_t _fs, const real_t _vref);
+
+    IResult<> set_trim(const real_t _trim);
+    IResult<> enable_ch3_as_ref(const Enable en){
+        auto reg = RegCopy(config1_reg);
+        reg.extRef = en == EN;
+        return write_reg(reg);
+    }
+
+private:
+    hal::I2cDrv i2c_drv_;
+
+    real_t fullScale;
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = i2c_drv_.write_reg(
+            uint8_t(reg.address), reg.as_val(), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        if(const auto res = i2c_drv_.read_reg(
+            uint8_t(reg.address), reg.as_ref(), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
 };
 
 }

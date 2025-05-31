@@ -124,7 +124,7 @@ protected:
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg);
+        return phy_.read_reg(reg.address, reg.as_ref());
     }
 
 

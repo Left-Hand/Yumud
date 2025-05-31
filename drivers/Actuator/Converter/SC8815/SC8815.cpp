@@ -44,6 +44,37 @@ static constexpr int inv_b10(const uint16_t data, const int step) {
     return (4 * byte1 + byte2 + 1) * step;
 }
 
+static constexpr real_t map_ratio_to_num(SC8815::VBusRatio ratio){
+    switch(ratio){
+        case SC8815::VBusRatio::_12_5x: return 12.5_r;
+        case SC8815::VBusRatio::_5x: return 5_r;
+        default: __builtin_unreachable();
+    }
+}
+
+static constexpr real_t map_ratio_to_num(SC8815::IBatRatio ratio){
+    switch(ratio){
+        case SC8815::IBatRatio::_6x:  return 6_r;
+        case SC8815::IBatRatio::_12x: return 12_r;
+        default: __builtin_unreachable();
+    }
+}
+
+static constexpr real_t map_ratio_to_num(SC8815::IBusRatio ratio){
+    switch(ratio){
+        case SC8815::IBusRatio::_6x:  return 6_r;
+        case SC8815::IBusRatio::_3x: return 3_r;
+        default: __builtin_unreachable();
+    }
+}
+
+static constexpr real_t map_ratio_to_num(SC8815::VBatMonRatio ratio){
+    switch(ratio){
+        case SC8815::VBatMonRatio::_12_5x: return 12.5_r;
+        case SC8815::VBatMonRatio::_5x: return 5_r;
+        default: __builtin_unreachable();
+    }
+}
 
 
 IResult<> SC8815::init(const BatConfig & bat_conf){
@@ -89,33 +120,33 @@ IResult<> SC8815::validate(){
 
 
 IResult<real_t> SC8815::get_bus_volt(){
-    const auto ratio = ratio_reg.vbus_ratio ? 5.0_r : 12.5_r;
+    const auto ratio = map_ratio_to_num(ratio_reg.vbus_ratio);
     if(const auto res = read_reg(vbus_fb_value_reg); 
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(inv_b10(vbus_fb_value_reg, 1) * ratio / 1000);
+    return Ok(inv_b10(vbus_fb_value_reg.as_val(), 1) * ratio / 1000);
 }
 
 IResult<real_t> SC8815::get_bus_curr(){
-    const auto ratio = ratio_reg.ibus_ratio ? 6 : 3;
+    const auto ratio = map_ratio_to_num(ratio_reg.ibus_ratio);
     if(const auto res = read_reg(ibus_value_reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(0.05_r * ratio * inv_b10(uint16_t(ibus_value_reg), 1) / 
+    return Ok(0.05_r * ratio * inv_b10(uint16_t(ibus_value_reg.as_val()), 1) / 
         (3 * bus_shunt_res_mohms_));
 }
 
 IResult<real_t> SC8815::get_bat_volt(){
-    const auto ratio = ratio_reg.vbat_mon_ratio ? 5.0_r : 12.5_r;
+    const auto ratio = map_ratio_to_num(ratio_reg.vbat_mon_ratio);
     if(const auto res = read_reg(vbat_fb_value_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(inv_b10(uint16_t(vbat_fb_value_reg), 1) * ratio * 2 / 1000);
+    return Ok(inv_b10(uint16_t(vbat_fb_value_reg.as_val()), 1) * ratio * 2 / 1000);
 }
 
 IResult<real_t> SC8815::get_bat_curr(){
-    const auto ratio = ratio_reg.ibat_ratio ? 6 : 3;
+    const auto ratio = map_ratio_to_num(ratio_reg.ibat_ratio);
     if(const auto res = read_reg(ibat_value_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok((0.05_r * ratio * inv_b10(ibat_value_reg, 1) / 
+    return Ok((0.05_r * ratio * inv_b10(ibat_value_reg.as_val(), 1) / 
         (3 * bus_shunt_res_mohms_)));
 }
 
@@ -123,11 +154,11 @@ IResult<real_t> SC8815::get_adin_volt(){
     if(const auto res = read_reg(adin_value_reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(real_t(inv_b10(adin_value_reg, 1)) / 1000);
+    return Ok(real_t(inv_b10(adin_value_reg.as_val(), 1)) / 1000);
 }
 
 IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
-    const auto ratio = ((ratio_reg & 0x0c) == 4) ? 6 : 3;
+    const auto ratio = ((ratio_reg.as_val() & 0x0c) == 4) ? 6 : 3;
     auto reg = RegCopy(ibus_lim_set_reg);
     reg.as_ref() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
@@ -137,7 +168,7 @@ IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
 }
 
 IResult<> SC8815::set_bat_curr_limit(const real_t limit_ma){
-    const auto ratio = ((ratio_reg & 0x10) == 16) ? 12 : 6;
+    const auto ratio = ((ratio_reg.as_val() & 0x10) == 16) ? 12 : 6;
     auto reg = RegCopy(ibat_lim_set_reg);
     reg.as_ref() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
@@ -172,7 +203,7 @@ IResult<> SC8815::set_output_volt(const real_t volt){
         reg.as_ref() = uint16_t(tmp1 | (tmp2 << 14));
         return write_reg(reg);
     }else{
-        const int ratio = (ratio_reg & 0x01) ? 10 : 25; //取得 VBUS 电压的比率
+        const int ratio = (ratio_reg.as_val() & 0x01) ? 10 : 25; //取得 VBUS 电压的比率
         const uint16_t value = int(volt / ratio);   //计算对应的参考电压
 
         uint16_t tmp2;
@@ -301,15 +332,15 @@ IResult<> SC8815::reconf_interrupt_mask(const Interrupts mask){
 
 
 
-IResult<> SC8815::set_bat_volt(const BatVoltType bat_volt){
+IResult<> SC8815::set_bat_volt(const BatVolt bat_volt){
     auto reg = RegCopy(vbat_set_reg);
-    reg.vcell_set = uint8_t(bat_volt);
+    reg.vcell_set = bat_volt;
     return write_reg(reg);
 }
 
-IResult<> SC8815::set_bat_cells(const BatCellsType bat_cells){
+IResult<> SC8815::set_bat_cells(const BatCells bat_cells){
     auto reg = RegCopy(vbat_set_reg);
-    reg.vcell_set = uint8_t(bat_cells);
+    reg.csel = bat_cells;
     return write_reg(reg);
 }
 
@@ -319,33 +350,33 @@ IResult<> SC8815::enable_vbat_use_extneral(const bool use){
     return write_reg(reg);
 }
 
-IResult<> SC8815::set_bat_ir_comp(const BatIrCompType bat_ir_comp){
+IResult<> SC8815::set_bat_ir_comp(const BatIrComp bat_ir_comp){
     auto reg = RegCopy(vbat_set_reg);
-    reg.ircomp = uint8_t(bat_ir_comp);
+    reg.ircomp = bat_ir_comp;
     return write_reg(reg);
 }
 
 IResult<> SC8815::set_ibat_ratio(const IBatRatio ratio){
     auto reg = RegCopy(ratio_reg);
-    reg.ibat_ratio = uint8_t(ratio);
+    reg.ibat_ratio = ratio;
     return write_reg(reg);
 }
 
 IResult<> SC8815::set_ibus_ratio(const IBusRatio ratio){
     auto reg = RegCopy(ratio_reg);
-    reg.ibus_ratio = uint8_t(ratio);
+    reg.ibus_ratio = ratio;
     return write_reg(reg);
 }
 
 IResult<> SC8815::set_vbat_mon_ratio(const VBatMonRatio ratio){
     auto reg = RegCopy(ratio_reg);
-    reg.vbat_mon_ratio = uint8_t(ratio);
+    reg.vbat_mon_ratio = ratio;
     return write_reg(reg);
 }
 
 IResult<> SC8815::set_vbus_ratio(const VBusRatio ratio){
     auto reg = RegCopy(ratio_reg);
-    reg.vbus_ratio = uint8_t(ratio);
+    reg.vbus_ratio = ratio;
     return write_reg(reg);
 }
 

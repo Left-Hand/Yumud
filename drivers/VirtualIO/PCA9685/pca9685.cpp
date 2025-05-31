@@ -35,23 +35,30 @@ hal::PinMask Vport::read_mask(){
 }
 
 Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
-    if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
+    if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
     
-    prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
-    mode1_reg.sleep = true;
-    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg); 
+    auto mode1_reg_copy = RegCopy(mode1_reg);
+
+    mode1_reg_copy.sleep = true;
+    if(const auto res = write_reg(mode1_reg_copy); 
         res.is_err()) return res;
-    if(const auto res = write_reg(RegAddress::Prescale, prescale_reg); 
-        res.is_err()) return res;
-    mode1_reg.sleep = false;
+
+    {
+        auto reg = RegCopy(prescale_reg);
+        reg.prescale = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
+        if(const auto res = write_reg(reg); 
+            res.is_err()) return res;
+    }
+
+    mode1_reg_copy.sleep = false;
     
-    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+    if(const auto res = write_reg(mode1_reg_copy);
         res.is_err()) return res;
     clock::delay(5ms);
 
-    mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
-    return write_reg(RegAddress::Mode1, mode1_reg);
+    mode1_reg_copy.as_ref() = uint8_t(mode1_reg_copy.as_val() | uint8_t(0xa1));
+    return write_reg(mode1_reg_copy);
 }
 
 Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off){
@@ -80,7 +87,8 @@ Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off)
 
         reg.full = false;
         reg.cvr = off;
-        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg);
+        const auto address = RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel);
+        if(const auto res = write_reg(address, reg.as_val());
             res.is_err()) return res;
     }
 
@@ -100,8 +108,9 @@ Result<void, Error> PCA9685::init(){
     return Ok();
 
     clock::delay(1ms);
-    mode1_reg = 0;
-    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+
+    auto reg = RegCopy(mode1_reg);
+    if(const auto res = write_reg(reg);
         res.is_err()) return res;
     for(size_t i = 0; i < 16; i++){
         if(const auto res = set_pwm(i, 0, 0);
@@ -119,31 +128,35 @@ Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t add
 
 Result<void, Error> PCA9685::reset(){
 
-    if(const auto res = read_reg(RegAddress::Mode1, mode1_reg);
+    if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
-    if(1 == mode1_reg.restart){
-        mode1_reg.sleep = 0;
-        if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+
+    auto reg = RegCopy(mode1_reg);
+    if(1 == reg.restart){
+        reg.sleep = 0;
+        if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
     clock::delay(1ms);
-    mode1_reg.restart = 1;
-    if(const auto res = write_reg(RegAddress::Mode1, mode1_reg);
+    reg.restart = 1;
+    if(const auto res = write_reg(reg);
         res.is_err()) return res;
 
-    mode1_reg.restart = 0;
+    reg.restart = 0;
 
     return Ok();
 }
 
 Result<void, Error> PCA9685::enable_ext_clk(const Enable en){
-    mode1_reg.extclk = en == EN;
-    return write_reg(RegAddress::Mode1, mode1_reg);
+    auto reg = RegCopy(mode1_reg);
+    reg.extclk = en == EN;
+    return write_reg(reg);
 }
 
 Result<void, Error> PCA9685::enable_sleep(const Enable en){
-    mode1_reg.sleep = en == EN;
-    return write_reg(RegAddress::Mode1, mode1_reg);
+    auto reg = RegCopy(mode1_reg);
+    reg.sleep = en == EN;
+    return write_reg(reg);
 }
 
 void Vport::set_by_mask(const hal::PinMask mask){
@@ -187,11 +200,11 @@ void Vport::set_mode(const size_t index, const hal::GpioMode mode){
 //     uint16_t mask = 1 << index;
 //     if(GpioMode::isIn(mode)) dir |= mask;
 //     else dir &= ~mask;
-//     write_reg(RegAddress::dir, dir);
+//     write_reg(dir);
 
 //     if(index < 8){
 //         ctl.p0mod = GpioMode::isPP(mode);
-//         write_reg(RegAddress::ctl, ctl.data);
+//         write_reg(ctl.data);
 //     }
 }
 

@@ -1,6 +1,10 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+// #include "core/utils/Result.hpp"
+// #include "core/utils/Errno.hpp"
+
+#include "core/utils/Result.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
@@ -40,31 +44,56 @@ struct MA730_Collections{
 };
 
 struct MA730_Regs:public MA730_Collections{
+
+    struct ZeroDataLowReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ZeroDataLow;
+        uint8_t data;
+    };
+
+    struct ZeroDataHighReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ZeroDataHigh;
+        uint8_t data;
+    };
+
+    struct TrimReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Trim;
+        uint8_t trim;
+    };
     struct TrimConfigReg:public Reg8<>{
+        static constexpr auto address = RegAddress::TrimConfig;
         uint8_t enableX:1;
         uint8_t enableY:1;
         uint8_t :6;
     };
 
     struct ZParametersReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ZParameters;
         uint8_t :2;
-        uint8_t zPhase :2;
-        uint8_t zWidth :2;
+        Phase zPhase :2;
+        Width zWidth :2;
         uint8_t ppt:2;
     };
 
+    struct PulsePerTurnReg:public Reg8<>{
+        static constexpr auto address = RegAddress::PulsePerTurn;
+        uint8_t data;
+    };
+
     struct ThresholdReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Threshold;
         uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
     struct DirectionReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Direction;
         uint8_t :7;
         uint8_t direction :1;
     };
 
     struct MagnitudeReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;
@@ -73,22 +102,26 @@ struct MA730_Regs:public MA730_Collections{
         uint8_t magnitudeHigh :1;
     };
 
-    uint16_t zeroDataReg = {};
-    uint8_t trimReg = {};
-    TrimConfigReg trimConfigReg = {};
-    ZParametersReg zParametersReg = {};
-    uint8_t pulsePerTurnReg = {};
-    ThresholdReg thresholdReg = {};
-    DirectionReg directionReg = {};
-    MagnitudeReg magnitudeReg = {};
+    ZeroDataLowReg zero_data_low_reg = {};
+    ZeroDataHighReg zero_data_high_reg = {};
+    TrimReg trim_reg = {};
+
+    TrimConfigReg trim_config_reg = {};
+    ZParametersReg z_parameters_reg = {};
+    PulsePerTurnReg pulse_per_turn_reg = {};
+    ThresholdReg threshold_reg = {};
+    DirectionReg direction_reg = {};
+    MagnitudeReg magnitude_reg = {};
 };
 
 class MA730 final:
     public MagEncoderIntf,
     public MA730_Regs{
 public:
-    MA730(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    MA730(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    MA730(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    MA730(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
     MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
@@ -122,11 +155,33 @@ private:
     hal::SpiDrv spi_drv_;
     real_t lap_position_ = {};
 
-    [[nodiscard]]
-    IResult<> write_reg(const RegAddress addr, uint8_t data);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto address = reg.address;
+        const uint8_t data = reg.as_val();
+        const auto tx = uint16_t(
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        reg.apply();
+        return Ok();
+    }
 
-    [[nodiscard]]
-    IResult<> read_reg(const RegAddress addr, uint8_t & reg);
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        uint16_t dummy;
+        const auto addr = std::bit_cast<uint8_t>(reg.address);
+        const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if((dummy & 0xff) != 0x00) 
+            return Err(Error(Error::Kind::InvalidRxFormat));
+        reg.as_ref() = (dummy >> 8);
+        return Ok();
+    }
 
     [[nodiscard]]
     IResult<uint16_t> direct_read();

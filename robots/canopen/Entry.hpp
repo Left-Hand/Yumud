@@ -126,19 +126,15 @@ private:
 
         
         template<typename T>
-        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
-        constexpr ObjRef(const T & pdata):is_ref_(true), pdata_(reinterpret_cast<void *>(const_cast<T *>(&pdata))){}
+        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> )
+        constexpr ObjRef(const T & pdata):
+            is_ref_(true), 
+            pdata_(reinterpret_cast<void *>(const_cast<T *>(&pdata))){}
 
         template<typename T>
-        constexpr ObjRef(const T && pdata):is_ref_(false), pdata_(reinterpret_cast<void *>(&pdata)){}
-
-        // template<typename T>
-        // requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_rvalue_reference_v<T>)
-        // constexpr ObjRef(T pdata):is_ref_(true), data32_((pdata)){
-        //     // static_assert(false);
-        //     // static_assert(std::is_lvalue_reference_v<T>);
-        // }
-
+        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> )
+        constexpr ObjRef(T && pdata):
+            is_ref_(false), pdata_(reinterpret_cast<void *>(&pdata)){}
 
         template<typename T>
         requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
@@ -186,7 +182,7 @@ private:
 
     };
 
-    ObjRef obj_;
+    ObjRef obj_ref_;
 
 public:
     SubEntry(const SubEntry &) = default;
@@ -196,8 +192,16 @@ public:
     SubEntry & operator = (SubEntry &&) = default;
 
     template<typename T>
-    constexpr SubEntry(const StringView name, T && val, AccessType access_type, DataType data_type)
-        : name_(name), access_type_(access_type), data_type_(data_type), obj_(std::forward<T>(val)){}
+    constexpr SubEntry(
+        const StringView name, 
+        T && val, 
+        AccessType access_type, 
+        DataType data_type
+    ): 
+        name_(name), 
+        access_type_(access_type), 
+        data_type_(data_type), 
+        obj_ref_(std::forward<T>(val)){}
 
     explicit operator int() const ;
 

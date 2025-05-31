@@ -154,28 +154,29 @@ protected:
 
     [[nodiscard]] IResult<> verify_chip_id();
 
-    class InterruptChannel{
-    protected:
-        using Error = BMI088_Acc::Error;
-    public:
-        InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
-            bmi_(bmi), ctrl_(ctrl), address_(address){;}
+    // class InterruptChannel{
+    // protected:
+    //     using Error = BMI088_Acc::Error;
+    // public:
+    //     InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
+    //         bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-        [[nodiscard]] IResult<> enable_output(const Enable en = EN){
-            ctrl_.int_out = en == EN;
-            return bmi_.phy_.write_reg(address_, ctrl_);
-        }
-    protected:
-        BMI088_Acc & bmi_;
-        _R8_IoCtrl & ctrl_;
-        uint8_t address_;
-    };
+    //     [[nodiscard]] IResult<> enable_output(const Enable en = EN){
+    //         auto reg = RegCopy(ctrl_);
+    //         reg.int_out = en == EN;
+    //         return bmi_.phy_.write_reg(reg);
+    //     }
+    // protected:
+    //     BMI088_Acc & bmi_;
+    //     _R8_IoCtrl & ctrl_;
+    //     uint8_t address_;
+    // };
 
-    friend InterruptChannel;
-    std::array<InterruptChannel, 2> interrupts = {
-        InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
-        InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
-    };
+    // friend InterruptChannel;
+    // std::array<InterruptChannel, 2> interrupts = {
+    //     InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
+    //     InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
+    // };
 
     static constexpr Option<real_t> calculate_acc_scale(const AccRange range){
         constexpr double g = 9.806;
@@ -195,11 +196,13 @@ protected:
 public:
     BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Acc(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+    BMI088_Acc(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
 
 
     [[nodiscard]] IResult<> init();

@@ -64,24 +64,24 @@ IResult<> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
 
 
 IResult<> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
-    auto & reg = gate_drv_hs_reg;
-    reg.idrive_p_hs = uint8_t(pdrive);
-    reg.idrive_n_hs = uint8_t(ndrive);
+    auto reg = RegCopy(gate_drv_hs_reg);
+    reg.idrive_p_hs = pdrive;
+    reg.idrive_n_hs = ndrive;
 
     return write_reg(reg);
 }
 
 IResult<> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
-    auto & reg = gate_drv_ls_reg;
-    reg.idrive_p_ls = uint8_t(pdrive);
-    reg.idrive_n_ls = uint8_t(ndrive);
+    auto reg = RegCopy(gate_drv_ls_reg);
+    reg.idrive_p_ls = pdrive;
+    reg.idrive_n_ls = ndrive;
 
     return write_reg(reg);
 }
 
 IResult<> DRV832X::set_drive_time(const PeakDriveTime ptime){
-    auto & reg = gate_drv_ls_reg;
-    reg.tdrive = uint8_t(ptime);
+    auto reg = RegCopy(gate_drv_ls_reg);
+    reg.tdrive = ptime;
 
     return write_reg(reg);
 }

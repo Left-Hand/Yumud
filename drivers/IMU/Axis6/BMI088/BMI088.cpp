@@ -51,8 +51,8 @@ Result<void, Error> BMI088_Acc::validate(){
         | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);})
         | set_acc_odr(AccOdr::_200Hz)
         | set_acc_bwp(AccBwp::Normal)
-        | interrupts[0].enable_output(EN)
-        | interrupts[1].enable_output(EN)
+        // | interrupts[0].enable_output(EN)
+        // | interrupts[1].enable_output(EN)
         // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);})
     ;
 }

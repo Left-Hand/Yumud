@@ -95,39 +95,40 @@ Result<void, Error> MPU6050::init(){
 }
 
 Result<void, Error> MPU6050::update(){
-    auto res = this->read_burst(acc_x_reg.address, &acc_x_reg, 7);
+    auto res = this->read_burst(
+        acc_x_reg.address, std::span(&acc_x_reg.as_ref(), 7));
     data_valid = res.is_ok();
     return res;
 }
 
 IResult<Vector3<q24>> MPU6050::read_acc(){
-    real_t x = uni(acc_x_reg) * acc_scaler_;
-    real_t y = uni(acc_y_reg) * acc_scaler_;
-    real_t z = uni(acc_z_reg) * acc_scaler_;
+    real_t x = uni(acc_x_reg.as_val()) * acc_scaler_;
+    real_t y = uni(acc_y_reg.as_val()) * acc_scaler_;
+    real_t z = uni(acc_z_reg.as_val()) * acc_scaler_;
     return  Ok{Vector3<q24>{x, y, z}};
 }
 
 IResult<Vector3<q24>> MPU6050::read_gyr(){
-    real_t x = uni(gyr_x_reg) * gyr_scaler_;
-    real_t y = uni(gyr_y_reg) * gyr_scaler_;
-    real_t z = uni(gyr_z_reg) * gyr_scaler_;
+    real_t x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
+    real_t y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
+    real_t z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
     return Ok{Vector3<q24>{x, y, z}};
 }
 
 Result<real_t, Error> MPU6050::read_temp(){
-    return Ok(real_t(36.65f) + uni(temperature_reg) / 340);
+    return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) / 340);
 }
 
 Result<void, Error> MPU6050::set_acc_range(const AccRange range){
     this->acc_scaler_ = this->calculate_acc_scale(range);
 
-    auto & reg = acc_conf_reg;
-    reg.afs_sel = uint8_t(range);
+    auto reg = RegCopy(acc_conf_reg);
+    reg.afs_sel = range;
     return this->write_reg(reg);
 }
 
 Result<MPU6050::Package, Error> MPU6050::get_package(){
-    if(const auto err = read_reg(whoami_reg.address, whoami_reg); err.is_err()){
+    if(const auto err = read_reg(whoami_reg); err.is_err()){
         MPU6050_PANIC("read who am I failed", err.unwrap_err().as<hal::HalError>().unwrap());
     }
     return Ok{Package(whoami_reg.data)};
@@ -135,8 +136,8 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
 
 Result<void, Error> MPU6050::set_gyr_range(const GyrRange range){
     this->gyr_scaler_ = this->calculate_gyr_scale(range);
-    auto & reg = gyr_conf_reg;
-    reg.fs_sel = uint8_t(range);
+    auto reg = RegCopy(gyr_conf_reg);
+    reg.fs_sel = range;
 
     return write_reg(reg);
 }
@@ -150,9 +151,10 @@ Result<void, Error> MPU6050::reset(){
 
 Result<void, Error> MPU6050::enable_direct_mode(const Enable en){
     // int_pin_cfg_reg.bypass_en = bool(en);
-    int_pin_cfg_reg.as_ref() = 0x22;
-    RETURN_ON_ERR(write_reg(int_pin_cfg_reg))
-    RETURN_ON_ERR(write_reg(int_pin_cfg_reg))
+    auto reg = RegCopy(int_pin_cfg_reg);
+    reg.as_ref() = 0x22;
+    RETURN_ON_ERR(write_reg(reg))
+    // RETURN_ON_ERR(write_reg(int_pin_cfg_reg))
     RETURN_ON_ERR(write_reg(0x56, 0x01))
     return Ok();
     

@@ -299,9 +299,9 @@ protected:
 protected:
     AnalogDeviceIMU_Phy phy_;
 
-    void write_reg(const RegAddress reg_address, const uint8_t reg_data);
+    IResult<> write_reg(const RegAddress reg_address, const uint8_t reg_data);
 
-    void read_reg(const RegAddress reg_address, uint8_t & reg_data);
+    IResult<> read_reg(const RegAddress reg_address, uint8_t & reg_data);
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
 
@@ -314,10 +314,10 @@ public:
     ADXL345(hal::SpiDrv && _spi_drv): phy_(_spi_drv){;}
 
     ADXL345(hal::Spi & spi, const hal::SpiSlaveIndex index): phy_(hal::SpiDrv(spi, index)){;}
-    uint8_t getDeviceID(){
-        read_reg(RegAddress::DeviceID, deviceIDReg);
-        return deviceIDReg.data;
-    }
+    // uint8_t get_device_id(){
+    //     read_reg(RegAddress::DeviceID, deviceIDReg);
+    //     return deviceIDReg.data;
+    // }
 
     IResult<Vector3<q24>> read_acc();
     IResult<Vector3<q24>> read_gyr();

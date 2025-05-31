@@ -20,39 +20,10 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-#define MT6701_NO_I2C_FAULT\
-    MT6701_DEBUG("NO I2C!!");\
-    PANIC()\
-
-
-
-IResult<> MT6701_Phy::write_reg(const RegAddress addr, const uint16_t data){
-    if(i2c_drv_) return Err(Error(i2c_drv_->write_reg(uint8_t(addr), data, MSB).unwrap_err()));
-    else{
-        MT6701_NO_I2C_FAULT;
-    }
+static constexpr uint16_t uni_to_u12(const real_t uni){
+    return uint16_t(uni * 4096);
 }
 
-IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint16_t & data){
-    if(i2c_drv_) return Err(Error(i2c_drv_->read_reg(uint8_t(addr), data, MSB).unwrap_err()));
-    else{
-        MT6701_NO_I2C_FAULT;
-    }
-}
-
-IResult<> MT6701_Phy::write_reg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv_) return Err(Error(i2c_drv_->write_reg(uint8_t(addr), data).unwrap_err()));
-    else{
-        MT6701_NO_I2C_FAULT;
-    }
-}
-
-IResult<> MT6701_Phy::read_reg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_) return Err(Error(i2c_drv_->read_reg(uint8_t(addr), data).unwrap_err()));
-    else{
-        MT6701_NO_I2C_FAULT;
-    }
-}
 IResult<> MT6701::init(){
     if(const auto res = enable_pwm(EN);
         res.is_err()) return res;
@@ -67,8 +38,8 @@ IResult<> MT6701::init(){
 }
 
 IResult<> MT6701::update(){
-    const auto res = phy_.read_reg(RegAddress::RawAngle, rawAngleData);
-    lap_position = u16_to_uni(rawAngleData);
+    const auto res = phy_.read_reg(raw_angle_reg);
+    lap_position = u16_to_uni(raw_angle_reg.angle);
     return res;
     // else if(spi_drv){
 
@@ -97,47 +68,64 @@ IResult<real_t> MT6701::get_lap_position(){
 
 
 IResult<> MT6701::enable_uvwmux(const Enable en){
-    uvwMuxReg.uvwMux = en == EN;
-    return phy_.write_reg(RegAddress::UVWMux, uint8_t(uvwMuxReg));
+    auto reg = RegCopy(uvw_mux_reg);
+    reg.uvwMux = en == EN;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::enable_abzmux(const Enable en){
-    abzMuxReg.abzMux = en == EN;
-    return phy_.write_reg(RegAddress::ABZMux, uint8_t(abzMuxReg));
+    auto reg = RegCopy(abz_mux_reg);
+    reg.abzMux = en == EN;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_direction(const bool clockwise){
-    abzMuxReg.clockwise = clockwise;
-    return phy_.write_reg(RegAddress::ABZMux, uint8_t(abzMuxReg));
+    auto reg = RegCopy(abz_mux_reg);
+    reg.clockwise = clockwise;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_poles(const uint8_t _poles){
-    resolutionReg.poles = _poles;
-    return phy_.write_reg(RegAddress::Resolution, uint16_t(resolutionReg));
+    auto reg = RegCopy(resolution_reg);
+    reg.poles = _poles;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_abz_resolution(const uint16_t abzResolution){
-    resolutionReg.abzResolution = abzResolution;
-    return phy_.write_reg(RegAddress::Resolution, uint16_t(resolutionReg));
+
+    auto reg = RegCopy(resolution_reg);
+    reg.abzResolution = abzResolution;
+    return phy_.write_reg(reg);
 }
 
-IResult<> MT6701::set_zero_position(const uint16_t zeroPosition){
-    zeroConfigReg.zeroPosition = zeroPosition;
-    return phy_.write_reg(RegAddress::ZeroConfig, uint16_t(zeroConfigReg));
+IResult<> MT6701::set_zero_position(
+        const uint16_t zeroPosition){
+
+    auto reg = RegCopy(zero_config_reg);
+    reg.zeroPosition = zeroPosition;
+    return phy_.write_reg(reg);
 }
 
-IResult<> MT6701::set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth){
-    zeroConfigReg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
-    return phy_.write_reg(RegAddress::ZeroConfig, uint16_t(zeroConfigReg));
+IResult<> MT6701::set_zero_pulse_width(
+        const ZeroPulseWidth zeroPulseWidth){
+
+    auto reg = RegCopy(zero_config_reg);
+    reg.zeroPulseWidth = (uint8_t)zeroPulseWidth;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
-    hystersisReg.hysteresis = (uint8_t)hysteresis & 0b11;
-    zeroConfigReg.hysteresis = (uint8_t)hysteresis >> 2;
-    return 
-        phy_.write_reg(RegAddress::Hystersis, uint8_t(hystersisReg))
-        | phy_.write_reg(RegAddress::ZeroConfig, uint16_t(zeroConfigReg))
-    ;
+    {
+        auto reg = RegCopy(hystersis_reg);
+        reg.hysteresis = static_cast<uint8_t>(hysteresis)  & 0b11;
+        if(const auto res = phy_.write_reg(reg);
+            res.is_err()) return res;
+    }
+    {
+        auto reg = RegCopy(zero_config_reg);
+        reg.hysteresis = static_cast<uint8_t>(hysteresis) >> 2;
+        return phy_.write_reg(reg);
+    }
 }
 
 IResult<> MT6701::enable_fast_mode(const Enable en){
@@ -146,38 +134,57 @@ IResult<> MT6701::enable_fast_mode(const Enable en){
 }
 
 IResult<> MT6701::enable_pwm(const Enable en){
-    wireConfigReg.isPwm = en == EN;
-    return phy_.write_reg(RegAddress::WireConfig, uint8_t(wireConfigReg));
+    auto reg = RegCopy(wire_config_reg);
+    reg.isPwm = en == EN;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_pwm_polarity(const bool polarity){
-    wireConfigReg.pwmPolarityLow = !polarity;
-    return phy_.write_reg(RegAddress::WireConfig, uint8_t(wireConfigReg));
+    auto reg = RegCopy(wire_config_reg);
+    reg.pwmPolarityLow = !polarity;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_pwm_freq(const PwmFreq pwmFreq){
-    wireConfigReg.pwmFreq = (uint8_t)pwmFreq;
-    return phy_.write_reg(RegAddress::WireConfig, uint8_t(wireConfigReg));
+    auto reg = RegCopy(wire_config_reg);
+    reg.pwmFreq = (uint8_t)pwmFreq;
+    return phy_.write_reg(reg);
 }
 
 IResult<> MT6701::set_start_position(const real_t start){
-    uint16_t _startData = uni_to_u16(start);
-    _startData >>= 4;
-    startData = _startData;
-    startStopReg.start = _startData >> 8;
-    return 
-        phy_.write_reg(RegAddress::Start, startData)
-        | phy_.write_reg(RegAddress::StartStop, uint8_t(startStopReg))
-        ;
+
+    const uint16_t start_data = uni_to_u12(start);
+    {
+        auto reg =  RegCopy(start_reg);
+        reg.data = start_data;
+        if(const auto res = phy_.write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    {
+        auto reg = RegCopy(start_stop_reg);
+        reg.start = start_data >> 8;
+        if(const auto res = phy_.write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+    return Ok();
 }
 
 IResult<> MT6701::set_stop_position(const real_t stop){
-    uint16_t _stopData = uni_to_u16(stop);
-    _stopData >>= 4;
-    stopData = _stopData;
-    startStopReg.stop = _stopData >> 8;
-    return 
-        phy_.write_reg(RegAddress::Stop, stopData)
-        | phy_.write_reg(RegAddress::StartStop, uint8_t(startStopReg))
-        ;
+    const uint16_t stop_data = uni_to_u12(stop);
+
+    {
+        auto reg = RegCopy(stop_reg);
+        reg.data = stop_data;
+        if(const auto res = phy_.write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    {
+        auto reg = RegCopy(start_stop_reg);
+        reg.stop = stop_data >> 8;
+        if(const auto res = phy_.write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+    return Ok();
 }

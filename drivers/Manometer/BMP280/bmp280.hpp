@@ -47,8 +47,11 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> write_reg(const T & reg){
-        return write_reg(reg.address, reg);
+    [[nodiscard]] Result<void, Error> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return res;
+        reg.apply();
+        return Ok();
     }
 
     [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
@@ -62,7 +65,7 @@ private:
 
     template<typename T>
     [[nodiscard]] Result<void, Error> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg);
+        return phy_.read_reg(reg.address, reg.as_ref());
     }
 };
 

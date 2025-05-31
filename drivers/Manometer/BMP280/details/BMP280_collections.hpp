@@ -117,15 +117,15 @@ struct BMP280_Regs : public BMP280_Collections {
     int16_t digP7;
     int16_t digP8;
     int16_t digP9;
-    ChipIDReg chipIDReg;
-    ResetReg resetReg;
-    StatusReg statusReg;
-    CtrlReg ctrlReg;
-    ConfigReg configReg;
-    PressureReg pressureReg;
-    PressureXReg pressureXReg;
-    TemperatureReg temperatureReg;
-    TemperatureXReg temperatureXReg;
+    ChipIDReg chip_id_reg;
+    ResetReg reset_reg;
+    StatusReg status_reg;
+    CtrlReg ctrl_reg;
+    ConfigReg config_reg;
+    PressureReg pressure_reg;
+    PressureXReg pressure_x_reg;
+    TemperatureReg temperature_reg;
+    TemperatureXReg temperature_x_reg;
 
     static constexpr uint8_t RESET_REG_ADDR = 0xE0;
     static constexpr uint8_t DIGT1_REG_ADDR = 0x88;

@@ -1,12 +1,75 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
-class ADS112C04{
-public:
+
+struct ADS11204_Collections{
+
+    // [A1]     [A0]    [I2C ADDRESS]
+    // DGND     DGND    100 0000
+    // DGND     DVDD    100 0001
+    // DGND     SDA     100 0010
+    // DGND     SCL     100 0011
+    // DVDD     DGND    100 0100
+    // DVDD     DVDD    100 0101
+    // DVDD     SDA     100 0110
+    // DVDD     SCL     100 0111
+    // SDA      DGND    100 1000
+    // SDA      DVDD    100 1001
+    // SDA      SDA     100 1010
+    // SDA      SCL     100 1011
+    // SCL      DGND    100 1100
+    // SCL      DVDD    100 1101
+    // SCL      SDA     100 1110
+    // SCL      SCL     100 1111
+
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
+
+    enum class Error_Kind:uint8_t{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class Command:uint8_t{
+        RST =         0b0000'0110,
+        START =         0b0000'1000,
+        POWER_DOWN =    0b0000'0010,
+        READ_DATA =     0b0001'0000,
+        READ_REG =      0b0010'0000,
+        WRITE_REG =     0b0100'0000
+    };
+
+    enum class IDAC1_MUX {
+        DISABLED = 0b000, // 000 : IDAC1 disabled (default)
+        AIN0    = 0b001, // 001 : IDAC1 connected to AIN0
+        AIN1    = 0b010, // 010 : IDAC1 connected to AIN1
+        AIN2    = 0b011, // 011 : IDAC1 connected to AIN2
+        AIN3    = 0b100, // 100 : IDAC1 connected to AIN3
+        REFP    = 0b101, // 101 : IDAC1 connected to REFP
+        REFN    = 0b110, // 110 : IDAC1 connected to REFN
+        __RESV__ = 0b111  // 111 : Reserved
+    };
+
+    enum class IDAC2_MUX {
+        DISABLED = 0b000, // 000 :IDAC2 disabled (default)
+        AIN0    = 0b001, // 001 : IDAC2 connected to AIN0
+        AIN1    = 0b010, // 010 : IDAC2 connected to AIN1
+        AIN2    = 0b011, // 011 : IDAC2 connected to AIN2
+        AIN3    = 0b100, // 100 : IDAC2 connected to AIN3
+        REFP    = 0b101, // 101 : IDAC2 connected to REFP
+        REFN    = 0b110, // 110 : IDAC2 connected to REFN
+        __RESV__ = 0b111  // 111 : Reserved
+    };
+
     enum class DataRate:uint8_t{
         _20 = 0, _45, _90, _175, _330, _600, _1000
     };
@@ -58,62 +121,10 @@ public:
         _16BIT = 0b10, // 10 : CRC 16-bit
         __RESV__ = 0b11 // 11 : CRC 24-bit
     };
-protected:
-    hal::I2cDrv i2c_drv_;
-
-    // [A1]     [A0]    [I2C ADDRESS]
-    // DGND     DGND    100 0000
-    // DGND     DVDD    100 0001
-    // DGND     SDA     100 0010
-    // DGND     SCL     100 0011
-    // DVDD     DGND    100 0100
-    // DVDD     DVDD    100 0101
-    // DVDD     SDA     100 0110
-    // DVDD     SCL     100 0111
-    // SDA      DGND    100 1000
-    // SDA      DVDD    100 1001
-    // SDA      SDA     100 1010
-    // SDA      SCL     100 1011
-    // SCL      DGND    100 1100
-    // SCL      DVDD    100 1101
-    // SCL      SDA     100 1110
-    // SCL      SCL     100 1111
-
-scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
-
-    enum class Command:uint8_t{
-        RST =         0b0000'0110,
-        START =         0b0000'1000,
-        POWER_DOWN =    0b0000'0010,
-        READ_DATA =     0b0001'0000,
-        READ_REG =      0b0010'0000,
-        WRITE_REG =     0b0100'0000
-    };
-
-    enum class IDAC1_MUX {
-        DISABLED = 0b000, // 000 : IDAC1 disabled (default)
-        AIN0    = 0b001, // 001 : IDAC1 connected to AIN0
-        AIN1    = 0b010, // 010 : IDAC1 connected to AIN1
-        AIN2    = 0b011, // 011 : IDAC1 connected to AIN2
-        AIN3    = 0b100, // 100 : IDAC1 connected to AIN3
-        REFP    = 0b101, // 101 : IDAC1 connected to REFP
-        REFN    = 0b110, // 110 : IDAC1 connected to REFN
-        __RESV__ = 0b111  // 111 : Reserved
-    };
-
-    enum class IDAC2_MUX {
-        DISABLED = 0b000, // 000 :IDAC2 disabled (default)
-        AIN0    = 0b001, // 001 : IDAC2 connected to AIN0
-        AIN1    = 0b010, // 010 : IDAC2 connected to AIN1
-        AIN2    = 0b011, // 011 : IDAC2 connected to AIN2
-        AIN3    = 0b100, // 100 : IDAC2 connected to AIN3
-        REFP    = 0b101, // 101 : IDAC2 connected to REFP
-        REFN    = 0b110, // 110 : IDAC2 connected to REFN
-        __RESV__ = 0b111  // 111 : Reserved
-    };
-
     using RegAddress = uint8_t;
+};
 
+struct ADS112C04_Regs:public ADS11204_Collections{
     struct Config0Reg:public Reg8<>{
         scexpr RegAddress address = 0;
         uint8_t pga_bypass:1;
@@ -150,18 +161,11 @@ scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
     Config1Reg config1_reg = {};
     Config2Reg config2_reg = {};
     Config3Reg config3_reg = {};
+};
 
-    auto readData(uint16_t & data){
-        return i2c_drv_.read_reg(uint8_t(Command::READ_DATA), data, LSB);
-    }
 
-    auto read_reg(const RegAddress addr, uint8_t & data){
-        return i2c_drv_.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
-    }
-
-    auto write_reg(const RegAddress addr, const uint8_t data){
-        return i2c_drv_.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
-    }
+class ADS112C04 final:public ADS112C04_Regs{
+public:
 public:
 
     ADS112C04(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
@@ -169,37 +173,59 @@ public:
     ADS112C04(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    void init(){
+    IResult<> init(){
         config3_reg.__resv__ = 0;
+        return Ok();
     }
-    void setMux(const MUX mux){
+    IResult<> set_mux(const MUX mux){
         config0_reg.mux = uint8_t(mux);
-        write_reg(config0_reg.address, config0_reg);
+        return write_reg(config0_reg.address, config0_reg.as_val());
     }
 
-    void setGain(const GAIN gain){
+    IResult<> set_gain(const GAIN gain){
         config0_reg.gain = uint8_t(gain);
-        write_reg(config0_reg.address, config0_reg);
+        return write_reg(config0_reg.address, config0_reg.as_val());
     }
 
-    void enableTurbo(const Enable en = EN){
+    IResult<> enable_turbo(const Enable en = EN){
         config1_reg.turbo_mode = en == EN;
-        write_reg(config1_reg.address, (config1_reg));
+        return write_reg(config1_reg.address, (config1_reg.as_val()));
     }
 
-    bool isDone(){
-        read_reg(config2_reg.address, (config2_reg));
-        return config2_reg.conv_done;
+    IResult<bool> is_done(){
+        if(const auto res = read_reg(config2_reg.address, (config2_reg.as_ref()));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(bool(config2_reg.conv_done));
     }
 
-    void setIDAC(const IDAC idac){
+    IResult<> set_idac(const IDAC idac){
         config2_reg.idac = uint8_t(idac);
-        write_reg(config2_reg.address, (config2_reg));
+        return write_reg(config2_reg.address, (config2_reg.as_val()));
     }
 
-    void setDataRate(const DataRate data_rate){
+    IResult<> set_data_rate(const DataRate data_rate){
         config1_reg.data_rate = uint8_t(data_rate);
-        write_reg(config1_reg.address, (config1_reg));
+        return write_reg(config1_reg.address, (config1_reg.as_val()));
+    }
+private:
+    hal::I2cDrv i2c_drv_;
+
+    IResult<> read_data(uint16_t & data){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(Command::READ_DATA), data, LSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> read_reg(const RegAddress addr, uint8_t & data){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> write_reg(const RegAddress addr, const uint8_t data){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 };
 

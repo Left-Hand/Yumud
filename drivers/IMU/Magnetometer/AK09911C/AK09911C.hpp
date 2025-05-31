@@ -222,8 +222,8 @@ private:
     }
 
     
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pdata, size_t len){
-        return phy_.read_burst(addr, pdata, len);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<int16_t> pdata){
+        return phy_.read_burst(addr, pdata.data(), pdata.size());
     }
 
     [[nodiscard]] IResult<Vector3<int8_t>> get_coeff();

@@ -39,7 +39,7 @@ IResult<> MMC5603::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     
-    if(reg != reg.correct_id) return Err(Error::WrongWhoAmI);
+    if(reg.id != reg.correct_id) return Err(Error::WrongWhoAmI);
 
     if(const auto res = set_self_test_threshlds(0,0,0);//TODO change
         res.is_err()) return res;
@@ -90,9 +90,9 @@ IResult<> MMC5603::enable_contious(const Enable en){
 
 IResult<Vector3<q24>> MMC5603::read_mag(){
     return Ok{Vector3<q24>{
-        s16_to_uni(int16_t(x_reg)),
-        s16_to_uni(int16_t(y_reg)),
-        s16_to_uni(int16_t(z_reg))
+        s16_to_uni(x_reg.as_val()),
+        s16_to_uni(y_reg.as_val()),
+        s16_to_uni(z_reg.as_val())
     }};
 }
 

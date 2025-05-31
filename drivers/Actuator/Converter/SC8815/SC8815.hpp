@@ -70,7 +70,7 @@ struct SC8815_Collections{
         _80ns = 0b11,
     };
 
-    enum class BatVoltType:uint8_t{
+    enum class BatVolt:uint8_t{
         _4_1V,
         _4_2V,//default
         _4_25V,
@@ -81,14 +81,14 @@ struct SC8815_Collections{
         _4_5V,
     };
 
-    enum class BatCellsType:uint8_t{
+    enum class BatCells:uint8_t{
         _1S,
         _2S,
         _3S,
         _4S
     };
 
-    enum class BatIrCompType:uint8_t{
+    enum class BatIrComp:uint8_t{
         _0m,
         _20m,
         _40m,
@@ -96,10 +96,10 @@ struct SC8815_Collections{
     };
 
     struct BatConfig{
-        BatVoltType vcell_set;
-        BatCellsType csel;
+        BatVolt vcell_set;
+        BatCells csel;
         bool use_ext_setting;
-        BatIrCompType ircomp;
+        BatIrComp ircomp;
     };
 
     struct RatioConfig{
@@ -128,10 +128,10 @@ struct SC8815_Regs:public SC8815_Collections {
     struct R8_VbatSet:public Reg8<>{
         static constexpr RegAddress address = 0x00;
 
-        uint8_t vcell_set:3;
-        uint8_t csel:2;
+        BatVolt vcell_set:3;
+        BatCells csel:2;
         uint8_t vbat_sel:1;
-        uint8_t ircomp:2;
+        BatIrComp ircomp:2;
     }DEF_R8(vbat_set_reg)
 
     struct R16_VbusRefISet:public Reg16<>{
@@ -172,10 +172,10 @@ struct SC8815_Regs:public SC8815_Collections {
     struct R8_Ratio:public Reg8<>{
         static constexpr RegAddress address = 0x08;
 
-        uint8_t vbus_ratio:1;
-        uint8_t vbat_mon_ratio:1;
-        uint8_t ibus_ratio:2;
-        uint8_t ibat_ratio:1;
+        VBusRatio vbus_ratio:1;
+        VBatMonRatio vbat_mon_ratio:1;
+        IBusRatio ibus_ratio:2;
+        IBatRatio ibat_ratio:1;
         uint8_t :3;
     }DEF_R8(ratio_reg)
 
@@ -271,10 +271,10 @@ struct SC8815_Regs:public SC8815_Collections {
 class SC8815 final:public SC8815_Regs{
 public:
     static constexpr auto DEFAULT_BAT_CONFIG = BatConfig {
-        .vcell_set = BatVoltType::_4_2V,
-        .csel = BatCellsType::_1S,
+        .vcell_set = BatVolt::_4_2V,
+        .csel = BatCells::_1S,
         .use_ext_setting = false,
-        .ircomp = BatIrCompType::_20m
+        .ircomp = BatIrComp::_20m
     };
 
     SC8815(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
@@ -314,12 +314,12 @@ public:
     [[nodiscard]] IResult<> enable_gpo(const Enable en = EN);
     [[nodiscard]] IResult<> enable_pgate(const Enable en = EN);
 
-    [[nodiscard]] IResult<> set_bat_volt(const BatVoltType bat_volt);
+    [[nodiscard]] IResult<> set_bat_volt(const BatVolt bat_volt);
 
-    [[nodiscard]] IResult<> set_bat_cells(const BatCellsType bat_cells);
+    [[nodiscard]] IResult<> set_bat_cells(const BatCells bat_cells);
 
     [[nodiscard]] IResult<> enable_vbat_use_extneral(const bool use);
-    [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrCompType bat_ir_comp);
+    [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrComp bat_ir_comp);
     
     [[nodiscard]] IResult<> set_ibat_ratio(const IBatRatio ratio);
     [[nodiscard]] IResult<> set_ibus_ratio(const IBusRatio ratio);
@@ -331,7 +331,6 @@ public:
     [[nodiscard]] IResult<> reconf_ratio(const RatioConfig & config);
     [[nodiscard]] IResult<> reconf_interrupt_mask(const Interrupts mask);
 private:
-protected:
     uint32_t bus_shunt_res_mohms_ = 0;
     uint32_t bat_shunt_res_mohms_ = 0;
     real_t fb_up_res_kohms_ = 0;

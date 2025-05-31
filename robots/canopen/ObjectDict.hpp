@@ -140,9 +140,18 @@ constexpr SubEntry make_subentry_impl(
     return SubEntry{name, val, access_type, data_type};
 }
 
+template<typename T>
+constexpr SubEntry make_ro_subentry_impl(
+        const StringView name, 
+        const T & val, 
+        EntryAccessType access_type = std::is_const_v<T> ? EntryAccessType::RO : EntryAccessType::RW, 
+        EntryDataType data_type = EntryDataType::from<reg_decay_t<T>>()){
+    return SubEntry{name, val, access_type, data_type};
+}
+
 
 #define make_subentry(val) make_subentry_impl(NAME(#val), val);
-#define make_ro_subentry(val) make_subentry_impl(NAME(#val), val, EntryAccessType::RO);
+#define make_ro_subentry(val) make_ro_subentry_impl(NAME(#val), val, EntryAccessType::RO);
 #define make_subentry_spec(val, access_type, data_type) make_subentry_impl(NAME(#val), val, access_type, data_type);
 
 }

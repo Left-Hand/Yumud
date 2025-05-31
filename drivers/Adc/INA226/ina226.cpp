@@ -135,7 +135,9 @@ IResult<real_t> INA226::get_voltage(){
 }
 
 IResult<int> INA226::get_shunt_voltage_uv(){
-    return Ok((shuntVoltageReg << 1) + (shuntVoltageReg >> 1));
+    const auto val = shuntVoltageReg.as_val();
+    //val * 2.5
+    return Ok((val << 1) + (val >> 1));
 }
 
 IResult<real_t> INA226::get_shunt_voltage(){
@@ -210,9 +212,9 @@ IResult<> INA226::validate(){
     if(const auto res = this->read_reg(manufactureIDReg);
         res.is_err()) return res;
 
-    if((chipIDReg != VALID_CHIP_ID)) 
+    if((chipIDReg.as_val() != VALID_CHIP_ID)) 
         return CHECK_ERR(Err(Error::ChipIdVerifyFailed));
-    if((manufactureIDReg != VALID_MANU_ID)) 
+    if((manufactureIDReg.as_val() != VALID_MANU_ID)) 
         return CHECK_ERR(Err(Error::ManuIdVerifyFailed));
 
     return Ok();

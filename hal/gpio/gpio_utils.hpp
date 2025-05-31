@@ -28,6 +28,9 @@ enum class PinSource:uint16_t{
 
 class PinMask{
 public:
+    [[nodiscard]] constexpr PinMask():
+        raw_(0){;}
+
     [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
         raw_(raw){;}
 
@@ -55,6 +58,14 @@ public:
         else return PinMask(raw_ & (~(1 << idx)));
     }
 
+    [[nodiscard]] constexpr PinMask set_bit(size_t idx) const {
+        return PinMask(raw_ | (1 << idx));
+    }
+
+    [[nodiscard]] constexpr PinMask clr_bit(size_t idx) const {
+        return PinMask(raw_ & (~(1 << idx)));
+    }
+
     [[nodiscard]] constexpr PinMask operator | (const PinMask other) const {
         return PinMask(raw_ | other.raw_);
     }
@@ -67,7 +78,11 @@ public:
         return PinMask(~raw_);
     }
 
-    [[nodiscard]] constexpr operator bool(){
+    [[nodiscard]] constexpr bool operator == (const PinMask & other) const{
+        return  raw_ == other.raw_;
+    }
+
+    [[nodiscard]] explicit constexpr operator bool() const {
         return raw_;
     }
 private:

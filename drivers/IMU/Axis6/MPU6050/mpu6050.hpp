@@ -52,7 +52,7 @@ struct MPU6050_Regs:public MPU6050_Collections{
         scexpr RegAddress address = 0x1b;
 
         const uint8_t __resv__:3 = 0;
-        uint8_t fs_sel:2;
+        GyrRange fs_sel:2;
         uint8_t zg_st:1 = 0;
         uint8_t yg_st:1 = 0;
         uint8_t xg_st:1 = 0;
@@ -63,7 +63,7 @@ struct MPU6050_Regs:public MPU6050_Collections{
         scexpr RegAddress address = 0x1c;
 
         const uint8_t __resv__:3 = 0;
-        uint8_t afs_sel:2;
+        AccRange afs_sel:2;
         uint8_t zg_st:1 = 0;
         uint8_t yg_st:1 = 0;
         uint8_t xg_st:1 = 0;
@@ -194,21 +194,24 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const T & reg){
-        return write_reg(reg.address, reg);
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
     }
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return phy_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, int16_t * data, const size_t len){
-        return phy_.read_burst(addr, data, len);
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pdata){
+        return phy_.read_burst(addr, pdata.data(), pdata.size());
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg);
+        return read_reg(reg.address, reg.as_ref());
     }
 
     [[nodiscard]] static constexpr 

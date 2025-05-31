@@ -27,7 +27,7 @@ IResult<> AW9523::init(){
             hal::PinMask::from_index(i).as_u16()), 
             0); res.is_err()) return Err(res.unwrap_err());
     }
-    led_mode_ = hal::PinMask(0xffff);
+    led_mode_reg.mask = hal::PinMask(0xffff);
     return Ok();
 }
 
@@ -47,17 +47,22 @@ IResult<BoolLevel> AW9523::read_by_index(const size_t index){
 
 IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
     GUARD_INDEX(index);
-    uint16_t mask = 1 << index;
-    if(mode.is_in_mode()) 
-        dir_reg |= mask;
-    else 
-        dir_reg &= ~mask;
-    if(const auto res = write_reg(RegAddress::Dir, dir_reg);
-        res.is_err()) return Err(res.unwrap_err());
+
+    {
+        auto reg = RegCopy(dir_reg);
+        if(mode.is_in_mode()) 
+            reg.mask = reg.mask.modify(index, HIGH);
+        else 
+            reg.mask = reg.mask.modify(index, LOW);
+        
+        if(const auto res = write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
 
     if(index < 8){
-        ctl.p0mod = mode.is_outpp_mode();
-        if(const auto res = write_reg(RegAddress::Ctl, ctl);
+        auto reg = RegCopy(ctl_reg);
+        reg.p0mod = mode.is_outpp_mode();
+        if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
@@ -66,33 +71,36 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
 
 IResult<> AW9523::enable_irq_by_index(const size_t index, const Enable en ){
     GUARD_INDEX(index);
-    return write_reg(RegAddress::Inten, uint8_t(int(en == EN) << index));
+    auto reg = RegCopy(inten_reg);
+    reg.mask = reg.mask.modify(index, BoolLevel::from(en == EN));
+    return write_reg(reg);
 }
 
 IResult<> AW9523::enable_led_mode(const hal::PinSource pin, const Enable en){
     uint index = CTZ((uint16_t)pin);
     GUARD_INDEX(index);
-    led_mode_ = led_mode_.modify(index, BoolLevel::from(en == EN));
-    return write_reg(RegAddress::LedMode, led_mode_.as_u16());
+    auto reg = RegCopy(led_mode_reg);
+    reg.mask = reg.mask.modify(index, BoolLevel::from(en == EN));
+    return write_reg(reg);
 }
 
 IResult<> AW9523::set_led_current_limit(const CurrentLimit limit){
-    ctl.isel = (uint8_t)limit;
-    return write_reg(RegAddress::Ctl, ctl);
+    auto reg = RegCopy(ctl_reg);
+    reg.isel = (uint8_t)limit;
+    return write_reg(reg);
 }
 
 IResult<> AW9523::set_led_current(const hal::PinSource pin, const uint8_t current){
-    uint index = CTZ((uint16_t)pin);
+    uint index = CTZ(std::bit_cast<uint16_t>(pin));
     GUARD_INDEX(index);
     return write_reg(get_dim_addr(index), current);
 }
 
 
 IResult<> AW9523::validate(){
-    uint8_t chip_id;
-    if(const auto res = read_reg(RegAddress::ChipId, chip_id);
+    if(const auto res = read_reg(chip_id_reg);
         res.is_err()) return res;
-    if(chip_id != VALID_CHIP_ID)
+    if(chip_id_reg.id != VALID_CHIP_ID)
         return Err(Error::WrongChipId);
     return Ok();
 }

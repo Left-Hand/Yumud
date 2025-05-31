@@ -117,7 +117,7 @@ IResult<bool> ADS1115::is_busy(){
 
 Option<real_t> ADS1115::result(){
     auto & reg = conversion_reg;
-    if(read_reg(reg.address, reg).is_err()) return None;
+    if(read_reg(reg.address, reg.as_ref()).is_err()) return None;
     return Some(s16_to_uni(~reg.data) * 3.3_r);
     // return None;
 }

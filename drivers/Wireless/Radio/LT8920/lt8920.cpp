@@ -4,25 +4,39 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
+#define LT8920_DEBUG_EN
 
-#ifdef LT8920_DEBUG
-#undef LT8920_DEBUG
+#ifdef LT8920_DEBUG_EN
+
+#define LT8920_TODO(...) TODO()
 #define LT8920_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define LT8920_PANIC(...) PANIC{__VA_ARGS__}
 #define LT8920_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
-#define READ_REG(reg) read_reg(reg.address, reg).loc().expect();
-#define WRITE_REG(reg) write_reg(reg.address, reg).loc().expect();
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    ASSERT{false, #x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
 #else
 #define LT8920_DEBUG(...)
+#define LT8920_TODO(...) PANIC_NSRC()
 #define LT8920_PANIC(...)  PANIC_NSRC()
 #define LT8920_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#define READ_REG(reg) (void)read_reg(reg.address, reg);
-#define WRITE_REG(reg) (void)write_reg(reg.address, reg);
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
 #endif
 
-
-// #define LT8920_REG_DEBUG(...) LT8920_DEBUG(__VA_ARGS__)
-#define LT8920_REG_DEBUG(...)
 
 // #define CHANGE_STATE(x) state = x; LT8920_DEBUG("state = ", (uint8_t)state)
 #define CHANGE_STATE(x) state = x;
@@ -32,189 +46,217 @@ using namespace ymd;
 #define FIFO_FLAG flag_reg.fifoFlag
 
 
+using Error = LT8920::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
 void LT8920::delayT3(){clock::delay(1us);}
 
 void LT8920::delayT5(){clock::delay(1us);}
 
 
-bool LT8920::validate(){
+IResult<> LT8920::validate(){
     uint16_t reg;
-    read_reg(30, reg);
-    return (reg == 0xf413);
+    if(const auto res = read_reg(30, reg);
+        res.is_err()) return res;
+    if(reg != 0xf413)
+        return Err(Error::WrongChipId);
+    return Ok();
 }
 
-uint16_t LT8920::isRfSynthLocked() {
-    read_reg(rf_synth_lock_reg.address, (rf_synth_lock_reg));
-    return rf_synth_lock_reg.synthLocked;
+IResult<bool> LT8920::is_rf_synth_locked() {
+    if(const auto res = read_reg((rf_synth_lock_reg));
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(rf_synth_lock_reg.synthLocked));
 }
 
-uint8_t LT8920::getRssi() {
-    read_reg(raw_rssi_reg.address, (raw_rssi_reg));
-    return raw_rssi_reg.rawRssi;
+IResult<uint8_t> LT8920::get_rssi() {
+    if(const auto res = read_reg((raw_rssi_reg));
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(uint8_t(raw_rssi_reg.rawRssi));
 }
 
-void LT8920::setRfChannel(const uint8_t ch) {
-    rf_config_reg.rfChannelNo = ch;
-    write_reg(rf_config_reg.address, (rf_config_reg));
+IResult<> LT8920::set_rf_channel(const uint8_t ch) {
+    auto reg = RegCopy(rf_config_reg);
+    reg.rfChannelNo = ch;
+    return write_reg(reg);
 }
 
-void LT8920::setRfFreqMHz(const uint freq) {
+IResult<> LT8920::set_rf_freq_m_hz(const uint freq) {
     // Implementation for setRfFreqMHz
-    setRfChannel(freq - 2402);
+    return set_rf_channel(freq - 2402);
 }
 
-void LT8920::setRole(const Role _role) {
+IResult<> LT8920::set_role(const Role _role) {
+    auto reg = RegCopy( rf_config_reg);
     switch(_role){
         case Role::IDLE:
-            rf_config_reg.rxEn = false;
-            rf_config_reg.txEn = false;
+            reg.rxEn = false;
+            reg.txEn = false;
             break;
         case Role::BROADCASTER:
-            rf_config_reg.rxEn = false;
-            rf_config_reg.txEn = true;
+            reg.rxEn = false;
+            reg.txEn = true;
             break;
         case Role::LISTENER:
-            rf_config_reg.txEn = false;
-            rf_config_reg.rxEn = true;
+            reg.txEn = false;
+            reg.rxEn = true;
             break;
     }
 
     role = _role;
-    WRITE_REG(rf_config_reg);
+    return write_reg(reg);
 }
 
-void LT8920::setPaCurrent(const uint8_t current) {
-    pa_config_reg.paCurrent = current;
-    write_reg(pa_config_reg.address, (pa_config_reg));
+IResult<> LT8920::set_pa_current(const uint8_t current) {
+    auto reg = RegCopy(pa_config_reg);
+    reg.paCurrent = current;
+    return write_reg((reg));
 }
 
-void LT8920::setPaGain(const uint8_t gain) {
-    pa_config_reg.paGain = gain;
-    write_reg(pa_config_reg.address, (pa_config_reg));
+IResult<> LT8920::set_pa_gain(const uint8_t gain) {
+    auto reg = RegCopy(pa_config_reg);
+    reg.paGain = gain;
+    return write_reg((reg));
 }
 
-void LT8920::enableRssi(const uint16_t open) {
-    rssi_pdn_reg.rssiPdn = open;
-    write_reg(rssi_pdn_reg.address, (rssi_pdn_reg));
+IResult<> LT8920::enable_rssi(const uint16_t open) {
+    auto reg = RegCopy(rssi_pdn_reg);
+    reg.rssiPdn = open;
+    return write_reg((reg));
 }
 
-void LT8920::enableAutoCali(const uint16_t open) {
-    auto_cali_reg.autoCali = open;
-    write_reg(auto_cali_reg.address, (auto_cali_reg));
+IResult<> LT8920::enable_auto_cali(const uint16_t open) {
+    auto reg = RegCopy(auto_cali_reg);
+    reg.autoCali = open;
+    return write_reg((reg));
 }
 
-void LT8920::setBrclkSel(const BrclkSel brclkSel) {
-    config1_reg.brclkSel = (uint16_t)brclkSel;
-    write_reg(config1_reg.address, (config1_reg));
+IResult<> LT8920::set_brclk_sel(const BrclkSel brclkSel) {
+    auto reg = RegCopy(config1_reg);
+    reg.brclkSel = (uint16_t)brclkSel;
+    return write_reg((reg));
 }
 
-void LT8920::clearFifoWritePtr() {
-    fifo_ptr_reg.clearWritePtr = 1;
-    write_reg(fifo_ptr_reg.address, (fifo_ptr_reg));
-    fifo_ptr_reg.clearWritePtr = 0;
+IResult<> LT8920::clear_fifo_write_ptr() {
+    auto reg = RegCopy(fifo_ptr_reg);
+    reg.clearWritePtr = 1;
+    return write_reg(reg);
 }
 
-void LT8920::clearFifoReadPtr() {
-    fifo_ptr_reg.clearReadPtr = 1;
-    write_reg(fifo_ptr_reg.address, (fifo_ptr_reg));
-    fifo_ptr_reg.clearReadPtr = 0;
+IResult<> LT8920::clear_fifo_read_ptr() {
+    auto reg = RegCopy(fifo_ptr_reg);
+    reg.clearReadPtr = 1;
+    return write_reg((reg));
 }
 
-void LT8920::clearFifoPtr() {
-    fifo_ptr_reg.clearReadPtr = 1;
-    fifo_ptr_reg.clearWritePtr = 1;
-    WRITE_REG(fifo_ptr_reg);
-    fifo_ptr_reg.clearReadPtr = 0;
-    fifo_ptr_reg.clearWritePtr = 0;
+IResult<> LT8920::clear_fifo_ptr() {
+    auto reg = RegCopy(fifo_ptr_reg);
+    reg.clearReadPtr = 1;
+    reg.clearWritePtr = 1;
+    return write_reg(reg);
 }
 
-void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
-    config1_reg.syncWordLen = std::bit_cast<uint8_t>(len);
-    write_reg(config1_reg.address, (config1_reg));
+IResult<> LT8920::set_sync_word_bitsgth(const SyncWordBits len) {
+    auto reg = RegCopy(config1_reg);
+    reg.syncWordLen = std::bit_cast<uint8_t>(len);
+    return write_reg((reg));
 }
 
-void LT8920::setRetransTime(const uint8_t times) {
-    config2_reg.retransTimes = times - 1;
-    write_reg(config2_reg.address, (config2_reg));
+IResult<> LT8920::set_retrans_time(const uint8_t times) {
+    auto reg = RegCopy(config2_reg);
+    reg.retransTimes = times - 1;
+    return write_reg((reg));
 }
 
-void LT8920::enableAutoAck(const Enable en) {
-    config3_reg.autoAck = en == EN;
-    write_reg(config3_reg.address, (config3_reg));
+IResult<> LT8920::enable_auto_ack(const Enable en) {
+    auto reg = RegCopy(config3_reg);
+    reg.autoAck = en == EN;
+    return write_reg((reg));
 }
 
-void LT8920::enableCrc(const Enable en){
-    config3_reg.crcEn = en == EN;
-    write_reg(config3_reg.address, (config3_reg));
+IResult<> LT8920::enable_crc(const Enable en){
+    auto reg = RegCopy(config3_reg);
+    reg.crcEn = en == EN;
+    return write_reg((reg));
 }
 
-void LT8920::setErrBitsTolerance(uint8_t errbits){
+IResult<> LT8920::set_err_bits_tolerance(uint8_t errbits){
     errbits = MIN(errbits, 6);
-    threshold_reg.errbits = errbits + 1;
-    WRITE_REG(threshold_reg);
+    auto reg = RegCopy(threshold_reg);
+    reg.errbits = errbits + 1;
+    return write_reg(reg);
 }
 
-bool LT8920::receivedAck(){
+IResult<bool> LT8920::received_ack(){
     if(auto_ack_en){
-        READ_REG(fifo_ptr_reg);
-        return fifo_ptr_reg.fifoReadPtr == 0;
+        if(const auto res = read_reg(fifo_ptr_reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(fifo_ptr_reg.fifoReadPtr == 0);
     }else{
-        return false;
+        return Ok(false);
     }
 }
 
-void LT8920::setDataRate(const DataRate dr){
-    data_rate_reg.dataRate = (uint16_t)dr;
-    WRITE_REG(data_rate_reg);
+IResult<> LT8920::set_data_rate(const DataRate dr){
+    auto reg =  RegCopy(data_rate_reg);
+    reg.dataRate = (uint16_t)dr;
+    return write_reg(reg);
 }
 
-void LT8920::setDataRate(const uint32_t dr){
+IResult<> LT8920::set_data_rate(const uint32_t dr){
     switch(dr){
         default:
             LT8920_PANIC("unknown data rate, default to 62.5kbps");
-            [[fallthrough]];
         case 62500:
-            setDataRate(DataRate::Kbps62_5);
-            break;
+            return set_data_rate(DataRate::Kbps62_5);
         case 125000:
-            setDataRate(DataRate::Kbps125);
-            break;
+            return set_data_rate(DataRate::Kbps125);
         case 250000:
-            setDataRate(DataRate::Kbps250);
-            break;
+            return set_data_rate(DataRate::Kbps250);
         case 1000000:
-            setDataRate(DataRate::Mbps1);
-            break;
+            return set_data_rate(DataRate::Mbps1);
     }
 }
 
-void LT8920::writeBlock(const uint8_t *data, uint8_t len){
-    if(state != State::IDLE) return;
-    if(role == Role::LISTENER) return;
-    if(len == 0) return;
+IResult<> LT8920::write_block(const std::span<const uint8_t> pdata){
+    uint8_t len = pdata.size();
+    if(state != State::IDLE) return Ok();
+    if(role == Role::LISTENER) return Ok();
+    if(len == 0) return Ok();
 
     len = MIN(len, 32);
 
     CHANGE_STATE(State::TX_PKT);
     
-    setRole(Role::IDLE);
-    clearFifoPtr();
+    if(const auto res = set_role(Role::IDLE);
+        res.is_err()) return res;
+    if(const auto res = clear_fifo_ptr();
+        res.is_err()) return res;
 
     {
         if(first_as_len_en){
             //如果使能则第一个字节为数据长度
-            writeFifo(&len, 1);
+            if(const auto res = write_fifo(std::span(&len, 1));
+                res.is_err()) return res;
         }
 
-        writeFifo(data, len);
+        if(const auto res = write_fifo(pdata);
+            res.is_err()) return res;
     }
 
-    setRole(Role::BROADCASTER);
+    if(const auto res = set_role(Role::BROADCASTER);
+        res.is_err()) return res;
     CHANGE_STATE(State::TX_WAIT_ACK);
+
+    return Ok();
 }
 
-void LT8920::tick(){
-    updateFifoStatus();
+IResult<> LT8920::tick(){
+    if(const auto res = update_fifo_status();
+        res.is_err()) return res;
     switch(role){
         case Role::BROADCASTER:
             switch(state){
@@ -249,43 +291,59 @@ void LT8920::tick(){
         default:
             break;
     }
+
+    return Ok();
 }
 
-void LT8920::readBlock(uint8_t * data, uint8_t len){
-    if(len == 0) return;
-    if(role != Role::LISTENER) return;
+IResult<> LT8920::read_block(std::span<uint8_t> pdata){
+    uint8_t len = pdata.size();
+    if(len == 0) return Ok();
+    if(role != Role::LISTENER) return Ok();
     
-    if(PKT_FLAG == false) return;
-    if(CRCERR_FLAG == true) return;
+    if(PKT_FLAG == false) return Ok();
+    if(CRCERR_FLAG == true) return Ok();
 
     len = MIN(len, 32);
 
     if(first_as_len_en){
-        readFifo(&len, 1);
+        if(const auto res = read_fifo(std::span(&len, 1));
+            res.is_err()) return res;
     }
 
-    readFifo(data, len);
-    clearFifoPtr();
+    if(const auto res = read_fifo(std::span(pdata.begin(), len));
+        res.is_err()) return res;
+    if(const auto res = clear_fifo_ptr();
+        res.is_err()) return res;
 
-    setRole(Role::LISTENER);
+    if(const auto res = set_role(Role::LISTENER);
+        res.is_err()) return res;
     CHANGE_STATE(State::RX_WAIT_ACK);
+
+    return Ok();
 }
 
-void LT8920::reset(){
+IResult<> LT8920::reset(){
     if(nrst_gpio){
         nrst_gpio->outpp(LOW);
         clock::delay(20ms);
         nrst_gpio->set();
         clock::delay(20ms);
     }
+    return Ok();
 }
 
-void LT8920::init(){
-    reset();
+IResult<> LT8920::init(){
+    if(const auto res = validate();
+        res.is_err()) return res;
+
+    if(const auto res = reset();
+        res.is_err()) return res;
 
     rf_config_reg.__resv__ = 0;
-    setRole(Role::IDLE);
-    setRfChannel(0);
+    if(const auto res = set_role(Role::IDLE);
+        res.is_err()) return res;
+    if(const auto res = set_rf_channel(0);
+        res.is_err()) return res;
 
     fifo_ptr_reg = 0;
 
@@ -297,144 +355,163 @@ void LT8920::init(){
     // setSyncWordBitsgth(SyncWordBits::_32);
 
 
-    write_reg(0, 0x6fe0);    //masked
-    write_reg(1, 0x5681);    //masked
-    write_reg(2, 0x6617);    //masked
+    if(const auto res = write_reg(0, 0x6fe0);    //masked
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(1, 0x5681);    //masked
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(2, 0x6617);    //masked
+        res.is_err()) return Err(res.unwrap_err());
 
-    write_reg(4, 0x9cc9);    //masked
-    write_reg(5, 0x6637);    //masked
+    if(const auto res = write_reg(4, 0x9cc9);    //masked
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(5, 0x6637);    //masked
+        res.is_err()) return Err(res.unwrap_err());
 
-    write_reg(8, 0x6c90);    //masked
-    write_reg(9, 0x4840);    //power (default 71af) UNDOCUMENTED
+    if(const auto res = write_reg(8, 0x6c90);    //masked
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(9, 0x4840);    //power (default 71af) UNDOCUMENTED
+        res.is_err()) return Err(res.unwrap_err());
 
-    write_reg(10, 0x7ffd);   //bit 0: XTAL OSC enable
-    write_reg(11, 0x0008);   //bit 8: Power down RSSI (0=  RSSI operates normal)
-    write_reg(12, 0x0000);
-    write_reg(13, 0x48bd);   //(default 4855)
+    if(const auto res = write_reg(10, 0x7ffd);   //bit 0: XTAL OSC enable
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(11, 0x0008);   //bit 8: Power down RSSI (0=  RSSI operates normal)
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(12, 0x0000);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(13, 0x48bd);   //(default 4855)
+        res.is_err()) return Err(res.unwrap_err());
 
-    write_reg(22, 0x00ff);
-    write_reg(23, 0x8005);  //bit 2: Calibrate VCO before each Rx/Tx enable
-    write_reg(24, 0x0067);
-    write_reg(25, 0x1659);
-    write_reg(26, 0x19e0);
-    write_reg(27, 0x1300);  //bits 5:0, Crystal Frequency adjust
-    write_reg(28, 0x1800);
+    if(const auto res = write_reg(22, 0x00ff);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(23, 0x8005);  //bit 2: Calibrate VCO before each Rx/Tx enable
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(24, 0x0067);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(25, 0x1659);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(26, 0x19e0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(27, 0x1300);  //bits 5:0, Crystal Frequency adjust
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(28, 0x1800);
+        res.is_err()) return Err(res.unwrap_err());
 
-    write_reg(32, 0x4800);
+    if(const auto res = write_reg(32, 0x4800);
+        res.is_err()) return Err(res.unwrap_err());
     //0x5000 = 0101 0000 0000 0000 = preamble 010 (3 bytes), B 10 (48 bits)
-    write_reg(33, 0x3fc7);
-    write_reg(34, 0x2000);  //
-    write_reg(35, 0x0300);  //POWER mode,  bit 8/9 on = retransmit = 3x (default)
+    if(const auto res = write_reg(33, 0x3fc7);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(34, 0x2000);  //
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(35, 0x0300);  //POWER mode,  bit 8/9 on = retransmit = 3x (default)
+        res.is_err()) return Err(res.unwrap_err());
 
-    setSyncWord(0x0380'5a5a'0380'0380);
-    setErrBitsTolerance(1);
+    if(const auto res = set_sync_word(0x0380'5a5a'0380'0380);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_err_bits_tolerance(1);
+        res.is_err()) return Err(res.unwrap_err());
 
     // enableAutoAck();
     // enableCrc();
 
-    write_reg(41, 0xb800);
-    write_reg(42, 0xfdb0);
-    write_reg(43, 0x000f);
-    write_reg(44, 0x0400);
-    write_reg(45, 0x0552);
-    write_reg(52, 0x8080);
-    write_reg(50, 0x0000);
+    if(const auto res = write_reg(41, 0xb800);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(42, 0xfdb0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(43, 0x000f);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(44, 0x0400);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(45, 0x0552);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(52, 0x8080);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(50, 0x0000);
+        res.is_err()) return Err(res.unwrap_err());
 
     CHANGE_STATE(State::IDLE);
+
+    return Ok();
 }
 
-void LT8920::setSyncWord(const uint64_t syncword){
+IResult<> LT8920::set_sync_word(const uint64_t syncword){
     uint16_t words[4] = {0};
     memcpy(words, &syncword, 8);
     for(uint8_t i = 0; i < 4; i++){
         sync_word_regs[i].data = words[i];
-        write_reg(sync_word_regs[i].head_address + i, (sync_word_regs[i]));
+        if(const auto res = write_reg(
+                sync_word_regs[i].head_address + i, 
+                (sync_word_regs[i].as_val()));
+            res.is_err()) return res;
     }
+
+    return Ok();
 }
 
 
-hal::HalResult LT8920::write_reg(const RegAddress address, const uint16_t reg){
-    LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, uint8_t(address));
+
+IResult<> LT8920::write_fifo(std::span<const uint8_t> pdata){
     if(spi_drv_){
-        if(const auto err = 
-            spi_drv_->transceive_single(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address), CONT);
-            err.is_err()) return err;
-        delayT3();
-
-        return spi_drv_->write_single<uint16_t>((reg));
+        if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = spi_drv_->write_burst<uint8_t>(pdata);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }else if(i2c_drv_){
-        return i2c_drv_->write_reg(uint8_t(address), reg, MSB);
+        if(const auto res = i2c_drv_->write_burst(uint8_t(50) , pdata);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    PANIC();
+    return Err(Error::NoAvailablePhy);
+
 }
 
-hal::HalResult LT8920::read_reg(const RegAddress address, uint16_t & reg){
-    LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, uint8_t(address));
+IResult<> LT8920::read_fifo(std::span<uint8_t> pdata){
     if(spi_drv_){
-        const auto err = spi_drv_->transceive_single(
-            reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
-            uint8_t(address | 0x80), CONT);
-        if(err.is_err()) return err;
-        return spi_drv_->read_single<uint16_t>(reg);
+        if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = spi_drv_->read_burst<uint8_t>(pdata);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }else if(i2c_drv_){
-        return i2c_drv_->read_reg(uint8_t(address), reg, MSB);
+        if(const auto res = i2c_drv_->read_burst(uint8_t(50), pdata);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
-    PANIC();
+    return Err(Error::NoAvailablePhy);
+
 }
 
-
-hal::HalResult LT8920::writeFifo(const uint8_t * data, const size_t len){
-    LT8920_REG_DEBUG("Wfifo", std::dec, len);
-    if(spi_drv_){
-        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); err.is_err()) return err;
-        return spi_drv_->write_burst<uint8_t>(std::span(data, len));
-    }else if(i2c_drv_){
-        return i2c_drv_->write_burst(uint8_t(50) , std::span(data, len));
-    }
-
-    PANIC();
-}
-
-hal::HalResult LT8920::readFifo(uint8_t * data, const size_t len){
-    LT8920_REG_DEBUG("Rfifo", std::dec, len);
-    if(spi_drv_){
-        if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
-            err.is_err()) return err;
-        return spi_drv_->read_burst<uint8_t>(std::span(data, len));
-    }else if(i2c_drv_){
-        return i2c_drv_->read_burst(uint8_t(50), std::span(data, len));
-    }
-
-    PANIC();
-}
-
-hal::HalResult LT8920::updateFifoStatus(){
+IResult<> LT8920::update_fifo_status(){
     if(spi_drv_){
         // return spi_drv_->transceive_single(flag_reg.as_ref(), flag_reg.address);
         TODO();
     } else if(i2c_drv_){
-        return i2c_drv_->read_reg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
+        if(const auto res = read_reg(flag_reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
-
-    PANIC();
+    return Err(Error::NoAvailablePhy);
 }
 
-bool LT8920::getFifoStatus(){
+IResult<bool> LT8920::get_fifo_status(){
     if(fifo_status_gpio){
-        return fifo_status_gpio->read().to_bool();
+        return Ok(fifo_status_gpio->read().to_bool());
     }else{
-        updateFifoStatus();
-        return flag_reg.fifoFlag;
+        if(const auto res = update_fifo_status();
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(bool(flag_reg.fifoFlag));
     }
 }
 
-bool LT8920::getPktStatus(){
+IResult<bool> LT8920::get_pkt_status(){
     if(pkt_status_gpio){
-        return pkt_status_gpio->read().to_bool();
+        return Ok(pkt_status_gpio->read().to_bool());
     }else{
-        updateFifoStatus();
-        return flag_reg.pktFlag;
+        if(const auto res = update_fifo_status();
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(bool(flag_reg.pktFlag));
     }
 }

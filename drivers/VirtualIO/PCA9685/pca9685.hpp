@@ -26,24 +26,28 @@ public:
     PCA9685(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_{i2c, addr}{;}
 
-    [[nodiscard]] Result<void, Error> set_frequency(const uint freq, const real_t trim);
 
-    [[nodiscard]] Result<void, Error> set_pwm(const uint8_t channel, const uint16_t on, const uint16_t off);
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> validate();
+    
+    [[nodiscard]] IResult<> set_frequency(const uint freq, const real_t trim);
 
-    [[nodiscard]] Result<void, Error> set_sub_addr(const uint8_t index, const uint8_t addr);
+    [[nodiscard]] IResult<> set_pwm(const uint8_t channel, const uint16_t on, const uint16_t off);
 
-    [[nodiscard]] Result<void, Error> enable_ext_clk(const Enable en = EN);
+    [[nodiscard]] IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] Result<void, Error> enable_sleep(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_ext_clk(const Enable en = EN);
 
-    [[nodiscard]] Result<void, Error> init(const Config & cfg){
+    [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
+
+    [[nodiscard]] IResult<> init(const Config & cfg){
         return init() | reconf(cfg);
     }
-    [[nodiscard]] Result<void, Error> reconf(const Config & cfg){
+    [[nodiscard]] IResult<> reconf(const Config & cfg){
         return set_frequency(cfg.freq, cfg.trim);
     }
 
-    [[nodiscard]] Result<void, Error> reset();
+    [[nodiscard]] IResult<> reset();
 
 
 
@@ -100,7 +104,7 @@ public:
         }
 
         // [[nodiscard]]
-        // __fast_inline Result<void, Error> set_duty(const real_t duty) {
+        // __fast_inline IResult<> set_duty(const real_t duty) {
         //     return pca_.set_pwm(channel_, 0, uint16_t(duty << 12));
         // }
 
@@ -141,34 +145,46 @@ private:
     };
 
 
-    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint8_t reg){
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg);
-        if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
+        if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };
 
-    [[nodiscard]] Result<void, Error> write_reg(const RegAddress addr, const uint16_t reg){
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
-        if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
+        if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint8_t & reg){
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg);
-        if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
+        if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(const RegAddress addr, uint16_t & reg){
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
-        if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
+        if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> init();
-    [[nodiscard]] Result<void, Error> validate();
-};
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val()); 
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    };
 
-// static constexpr auto a = sizeof(PCA9685::PCA9685_Regs);
-// static constexpr auto a = sizeof(PCA9685::PCA9685Channel);
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        if(const auto res = read_reg(reg.address, reg.as_ref()); 
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    };
+
+
+};
 };

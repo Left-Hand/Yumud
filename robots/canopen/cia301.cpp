@@ -9,12 +9,15 @@ std::optional<SubEntry> Cia301ObjectDict::find(const Didx didx) {
             
         case 0x1000: switch (subidx) {
             case 0x0:
-                return make_ro_subentry(control_word_reg);
+                // return make_ro_subentry(control_word_reg);
+
+                TODO();
         }break;
 
         case 0x1001: switch (subidx) {
             case 0x0:
-                return make_ro_subentry(error_reg);
+                // return make_ro_subentry(error_reg);
+                TODO();
         }break;
 
         default: break;

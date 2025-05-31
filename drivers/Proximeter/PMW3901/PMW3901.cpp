@@ -4,6 +4,23 @@
 
 #include "core/math/realmath.hpp"
 
+// #define PMW3901_DEBUG_EN
+
+#ifdef PMW3901_DEBUG_EN
+#define PMW3901_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define PMW3901_PANIC(...) PANIC(__VA_ARGS__)
+#define PMW3901_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define PMW3901_DEBUG(...)
+#define PMW3901_PANIC(...)  PANIC_NSRC()
+#define PMW3901_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#endif
+
+
+using namespace ymd;
+using namespace ymd::drivers;
+
+using Error = PMW3901::Error;
 
 static constexpr uint8_t PMW3901_REG_Product_ID              = 0x00;
 static constexpr uint8_t PMW3901_REG_Revision_ID             = 0x01;
@@ -105,23 +122,8 @@ static constexpr auto INIT_LIST2 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x40, 0x80),
 });static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
-// #define PMW3901_DEBUG_EN
 
-#ifdef PMW3901_DEBUG_EN
-#define PMW3901_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define PMW3901_PANIC(...) PANIC(__VA_ARGS__)
-#define PMW3901_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
-#else
-#define PMW3901_DEBUG(...)
-#define PMW3901_PANIC(...)  PANIC_NSRC()
-#define PMW3901_ASSERT(cond, ...) ASSERT_NSRC(cond)
-#endif
-
-
-using namespace ymd;
-using namespace ymd::drivers;
-
-using Error = PMW3901::Error;
+scexpr real_t scale = real_t(13.0/2000);
 
 Result<void, Error> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT)
@@ -134,9 +136,9 @@ Result<void, Error> PMW3901::read_reg(const uint8_t command, uint8_t & data){
     | spi_drv_.read_single<uint8_t>(data));
 }
 
-Result<void, Error> PMW3901::read_burst(const uint8_t command, uint8_t * data, const size_t len){
+Result<void, Error> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pdata){
     return Result<void, Error>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_burst<uint8_t>(std::span(data, len)));
+    | spi_drv_.read_burst<uint8_t>(pdata));
 }
 
 
@@ -197,23 +199,23 @@ Result<void, Error> PMW3901::read_data_slow(){
     }
 
     data_.motion = buf[0];
-    data_.dx = (buf[2] << 8) | buf[1];
-    data_.dy = (buf[4] << 8) | buf[3];
+    data_.dx.data = (buf[2] << 8) | buf[1];
+    data_.dy.data = (buf[4] << 8) | buf[3];
 
     return Ok();
 }
 
 Result<void, Error> PMW3901::read_data_burst(){
-    return read_burst(0x16, &data_.motion, 6);
+    return read_burst(0x16, std::span(&data_.motion.as_ref(), 6));
 }
 
 
-scexpr real_t scale = real_t(13.0/2000);
+
 Result<void, Error> PMW3901::update(){
     return read_data()
     .if_ok([&]{
-        x_cm += int16_t(data_.dx) * scale;
-        y_cm += int16_t(data_.dy) * scale;
+        x_cm += int16_t(data_.dx.as_val()) * scale;
+        y_cm += int16_t(data_.dy.as_val()) * scale;
     });
 
 }
@@ -243,9 +245,13 @@ Result<void, Error> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8
     return Ok();
 }
 
-Result<bool, Error> PMW3901::validate(){
-    return assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)
+Result<void, Error> PMW3901::validate(){
+    const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)
     | assert_reg(PMW3901_REG_Product_ID, 0x49);
+
+    if(res.is_err()) return Err(res.unwrap_err());
+    if(res.unwrap() == false) return Err(Error::WrongChipId);
+    return Ok();
 }
 
 Result<void, Error> PMW3901::init() {
@@ -260,7 +266,8 @@ Result<void, Error> PMW3901::init() {
 
 
     clock::delay(5ms);
-    PMW3901_ASSERT(validate().expect("PMW3901 not found!"), "PMW3901 verify failed!");
+    if(const auto res = validate();
+        res.is_err()) return res;
 
     if(const auto res = update();
         res.is_err()) return res;

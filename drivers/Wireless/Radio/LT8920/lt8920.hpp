@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include <optional>
+#include "core/utils/Result.hpp"
+#include "core/utils/errno.hpp"
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -10,8 +11,17 @@
 
 namespace ymd::drivers{
 
-class LT8920{
-public:
+struct LT8920_Collections{
+    enum class Error_Kind{
+        WrongChipId,
+        NoAvailablePhy
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     enum class PacketType:uint8_t{
         NRZLaw = 0,Manchester,Line8_10,Interleave
     };
@@ -54,75 +64,10 @@ public:
         BROADCASTER,
         LISTENER
     };
-
-public:
-    LT8920(const hal::SpiDrv & spi_drv) : 
-        spi_drv_(spi_drv) {;}
-    LT8920(hal::SpiDrv && spi_drv) : 
-        spi_drv_(std::move(spi_drv)) {;}
-    LT8920(hal::Spi & spi, const hal::SpiSlaveIndex index) : 
-        spi_drv_(hal::SpiDrv(spi, index)) {;}
-
-    void bindNrstGpio(hal::GpioIntf & gpio){nrst_gpio = &gpio;}
-    void bindPktGpio(hal::GpioIntf & gpio){pkt_status_gpio = &gpio;}
-    uint16_t isRfSynthLocked();
-    uint8_t getRssi();
-    void setRfChannel(const uint8_t ch);
-    void setRfFreqMHz(const uint freq);
-    void startListen(){setRole(Role::LISTENER);}
-    void setPaCurrent(const uint8_t current);
-    void setPaGain(const uint8_t gain);
-    void enableRssi(const uint16_t open = true);
-    void reset();
-
-    void setBrclkSel(const BrclkSel brclkSel);
-
-    void setSyncWordBitsgth(const SyncWordBits len);
-    void setRetransTime(const uint8_t times);
-
-    void enableAutoCali(const uint16_t open);
-    void enableAutoAck(const Enable en = EN);
-    void enableCrc(const Enable en = EN);
-    void init();
-    bool validate();
-    void setSyncWord(const uint64_t syncword);
-    void setErrBitsTolerance(uint8_t errbits);
-    void setDataRate(const DataRate dr);
-    void setDataRate(const uint32_t dr);
-    bool receivedAck();
+};
 
 
-    void writeBlock(const uint8_t * data, const uint8_t len);
-    void readBlock(uint8_t * data, const uint8_t len);
-
-    void tick();
-
-    bool isIdle(){return State::IDLE == state;}
-protected:
-    void setRole(const Role _role);
-    void clearFifoWritePtr();
-    void clearFifoReadPtr();
-    void clearFifoPtr();
-
-    void onFifoInterrupt();
-    void onPktInterrupt();
-    void onRxTimeoutInterrupt();
- 
-    bool getFifoStatus();
-    bool getPktStatus();
-
-    std::optional<hal::SpiDrv> spi_drv_;
-    std::optional<hal::I2cDrv> i2c_drv_;
-    hal::GpioIntf * pkt_status_gpio = nullptr;
-    hal::GpioIntf * fifo_status_gpio = nullptr;
-    hal::GpioIntf * nrst_gpio = nullptr;
-
-    State state = State::OFF;
-    Role role = Role::IDLE;
-
-    bool first_as_len_en = true;
-    bool auto_ack_en = true;
-
+struct LT8920_Regs:public LT8920_Collections{
     #include "lt8920_regs.hpp"
 
     // uint16_t __resv1__[2];
@@ -182,16 +127,144 @@ protected:
     // uint16_t __resv8__[3];
     // REG52
     FifoPtrReg fifo_ptr_reg = {};
+};
+
+
+class LT8920 final: public LT8920_Regs{
+public:
+    LT8920(const hal::SpiDrv & spi_drv) : 
+        spi_drv_(spi_drv) {;}
+    LT8920(hal::SpiDrv && spi_drv) : 
+        spi_drv_(std::move(spi_drv)) {;}
+    LT8920(hal::Spi & spi, const hal::SpiSlaveIndex index) : 
+        spi_drv_(hal::SpiDrv(spi, index)) {;}
+
+    IResult<> bind_nrst_gpio(hal::GpioIntf & gpio){
+        nrst_gpio = &gpio;
+        return Ok();
+    }
+    IResult<> bind_pkt_gpio(hal::GpioIntf & gpio){
+        pkt_status_gpio = &gpio;
+        return Ok();
+    }
+    IResult<bool> is_rf_synth_locked();
+    IResult<uint8_t> get_rssi();
+    IResult<> set_rf_channel(const uint8_t ch);
+    IResult<> set_rf_freq_m_hz(const uint freq);
+    IResult<> start_listen(){return set_role(Role::LISTENER);}
+    IResult<> set_pa_current(const uint8_t current);
+    IResult<> set_pa_gain(const uint8_t gain);
+    IResult<> enable_rssi(const uint16_t open = true);
+    IResult<> reset();
+
+    IResult<> set_brclk_sel(const BrclkSel brclkSel);
+
+    IResult<> set_sync_word_bitsgth(const SyncWordBits len);
+    IResult<> set_retrans_time(const uint8_t times);
+
+    IResult<> enable_auto_cali(const uint16_t open);
+    IResult<> enable_auto_ack(const Enable en = EN);
+    IResult<> enable_crc(const Enable en = EN);
+    IResult<> init();
+    IResult<> validate();
+    IResult<> set_sync_word(const uint64_t syncword);
+    IResult<> set_err_bits_tolerance(uint8_t errbits);
+    IResult<> set_data_rate(const DataRate dr);
+    IResult<> set_data_rate(const uint32_t dr);
+    IResult<bool> received_ack();
+
+
+    IResult<> write_block(std::span<const uint8_t> pdata);
+    IResult<> read_block(std::span<uint8_t> pdata);
+
+    IResult<> tick();
+
+    IResult<bool> is_idle(){
+        return Ok(State::IDLE == state);}
+protected:
+    IResult<> set_role(const Role _role);
+    IResult<> clear_fifo_write_ptr();
+    IResult<> clear_fifo_read_ptr();
+    IResult<> clear_fifo_ptr();
+
+    IResult<> on_fifo_interrupt();
+    IResult<> on_pkt_interrupt();
+    IResult<> on_rx_timeout_interrupt();
+ 
+    IResult<bool> get_fifo_status();
+    IResult<bool> get_pkt_status();
+
+    std::optional<hal::SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    hal::GpioIntf * pkt_status_gpio = nullptr;
+    hal::GpioIntf * fifo_status_gpio = nullptr;
+    hal::GpioIntf * nrst_gpio = nullptr;
+
+    State state = State::OFF;
+    Role role = Role::IDLE;
+
+    bool first_as_len_en = true;
+    bool auto_ack_en = true;
 
     __no_inline void delayT3();
     __no_inline void delayT5();
 
-    hal::HalResult write_reg(const RegAddress address, const uint16_t reg);
-    hal::HalResult read_reg(const RegAddress address, uint16_t & reg);
-    hal::HalResult writeFifo(const uint8_t * data, const size_t len);
-    hal::HalResult readFifo(uint8_t * data, const size_t len);
 
-    hal::HalResult updateFifoStatus();
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+
+    IResult<> write_reg(const uint8_t address, const uint16_t reg){
+        if(spi_drv_){
+            if(const auto res = 
+                spi_drv_->transceive_single(
+                    reinterpret_cast<uint8_t &>(flag_reg), 
+                    uint8_t(address), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+            delayT3();
+
+            if(const auto res = 
+                spi_drv_->write_single<uint16_t>(reg);
+                res.is_err()) return Err(res.unwrap_err());
+        }else if(i2c_drv_){
+            if(const auto res = i2c_drv_->write_reg(uint8_t(address), reg, MSB);
+                res.is_err()) return Err(res.unwrap_err());
+        }
+        return Ok();
+    }
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        return read_reg(uint8_t(reg.address), reg.as_ref());
+    }
+
+
+    IResult<> read_reg(const uint8_t address, uint16_t & data){
+        if(spi_drv_){
+            if(const auto res = spi_drv_->transceive_single(
+                reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
+                uint8_t(address | 0x80), CONT); 
+            res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_single<uint16_t>(data);
+                res.is_err()) return Err(res.unwrap_err());
+        }else if(i2c_drv_){
+            if(const auto res = i2c_drv_->read_reg(uint8_t(address), data, MSB);
+                res.is_err()) return Err(res.unwrap_err());
+        }
+        return Ok();
+
+    }
+
+
+    IResult<> write_fifo(std::span<const uint8_t> pdata);
+    IResult<> read_fifo(std::span<uint8_t> pdata);
+
+    IResult<> update_fifo_status();
 };
 
 }

@@ -146,7 +146,7 @@ struct MMC5603_Regs:public MMC5603_Collections {
         scexpr RegAddress address = 0x39;
         scexpr uint8_t correct_id = 0b00010000;
         
-        uint8_t :8;
+        uint8_t id;
     };
 
     AxisReg x_reg;

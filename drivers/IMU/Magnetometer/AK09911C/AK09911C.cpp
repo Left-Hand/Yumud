@@ -58,7 +58,8 @@ IResult<> AK09911C::init(){
 
 
 IResult<> AK09911C::update(){
-    if(const auto res = read_burst(MagXReg::address, &mag_x_reg, 3);
+    if(const auto res = read_burst(
+        MagXReg::address, std::span(&mag_x_reg.as_ref(), 3));
         res.is_err()) return res;
     if(const auto res = read_reg(st2_reg);
         res.is_err()) return res;
@@ -98,7 +99,7 @@ IResult<> AK09911C::blocking_update(){
         clock::delay(100us);
     }
 
-    if(const auto res = read_burst(MagXReg::address, &mag_x_reg, 3);
+    if(const auto res = read_burst(MagXReg::address, std::span(&mag_x_reg.as_ref(), 3));
         res.is_err()) return res;
     if(const auto res = read_reg(st2_reg);
         res.is_err()) return res;

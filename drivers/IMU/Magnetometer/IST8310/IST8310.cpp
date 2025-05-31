@@ -40,7 +40,7 @@ IResult<> IST8310::init(){
     return Ok();
 }
 IResult<> IST8310::update(){
-    return read_burst(axis_x_reg.address, &axis_x_reg, 3);
+    return read_burst(axis_x_reg.address, &axis_x_reg.as_ref(), 3);
 }
 
 IResult<> IST8310::validate(){
@@ -90,9 +90,9 @@ IResult<Vector3<q24>> IST8310::read_mag(){
     };
 
     return Ok{Vector3<q24>{
-        conv(axis_x_reg),
-        conv(axis_y_reg),
-        conv(axis_z_reg)
+        conv(axis_x_reg.as_val()),
+        conv(axis_y_reg.as_val()),
+        conv(axis_z_reg.as_val())
     }};
 }
 

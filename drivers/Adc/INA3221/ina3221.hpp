@@ -77,7 +77,7 @@ public:
         CH3
     };
 
-    enum class Source:uint8_t{
+    enum class Source:uint16_t{
         CH1_BusBar,
         CH1_Shunt,
         CH2_BusBar,
@@ -88,7 +88,7 @@ public:
 
     class AverageTimes{
     public:
-        enum class Kind:uint8_t{
+        enum class Kind:uint16_t{
             _1 = 0,
             _4 = 1,
             _16 = 2,
@@ -122,7 +122,7 @@ public:
         Kind kind_;
     };
 
-    enum class ConversionTime:uint8_t{
+    enum class ConversionTime:uint16_t{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 
@@ -143,8 +143,8 @@ struct INA3221_Regs:public INA3221_Collections {
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
         uint16_t continuos :1;
-        uint16_t shunt_conv_time:3;
-        uint16_t bus_conv_time:3;
+        ConversionTime shunt_conv_time:3;
+        ConversionTime bus_conv_time:3;
         uint16_t average_times:3;
         uint16_t ch3_en:1;
         uint16_t ch2_en:1;
@@ -188,11 +188,11 @@ struct INA3221_Regs:public INA3221_Collections {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return real_t((int16_t(*this) >> 3) * 8) / 1000;
+            return real_t((int16_t(this->as_val()) >> 3) * 8) / 1000;
         }
 
         constexpr int to_mv() const {
-            return int16_t((int16_t(*this) >> 3) * 8);
+            return int16_t((int16_t(this->as_val()) >> 3) * 8);
         }
 
         static constexpr int16_t to_i16(const real_t volt){
@@ -411,11 +411,18 @@ public:
     [[nodiscard]] IResult<> set_constant_ovc(const ChannelIndex index, const real_t volt);
 private:
     INA3221_Phy phy_;
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return phy_.write_reg(reg.address, reg.as_val());
+
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+            res.is_err()) return res;
+        reg.apply();
+        return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return phy_.read_reg(reg.address, reg.as_ref());
     }
 

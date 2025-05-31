@@ -31,17 +31,7 @@ struct AW9523_Collections{
     };
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10110000);
-};
 
-struct AW9523_Regs:public AW9523_Collections{
-    static constexpr uint8_t VALID_CHIP_ID = 0x23;
-    
-    struct CtlReg:Reg8<>{
-        uint8_t isel:2;
-        uint8_t __resv1__:2;
-        uint8_t p0mod:1;
-        uint8_t __resv2__:3;
-    };
 
     enum class RegAddress:uint8_t{
         In = 0x00,
@@ -70,10 +60,56 @@ struct AW9523_Regs:public AW9523_Collections{
         SwRst = 0x7f
     };
 
-    uint16_t dir_reg;
-    uint16_t inten;
-    CtlReg ctl;
-    hal::PinMask led_mode_ = hal::PinMask(0);
+};
+
+struct AW9523_Regs:public AW9523_Collections{
+    static constexpr uint8_t VALID_CHIP_ID = 0x23;
+    
+    struct InputReg  : public Reg16<>{
+        static constexpr auto address = RegAddress::In;
+
+        hal::PinMask mask;
+    }DEF_R16(input_reg)
+
+    struct OutputReg  : public Reg16<>{
+        static constexpr auto address = RegAddress::Out;
+
+        hal::PinMask mask;
+    }DEF_R16(output_reg)
+
+    struct DirReg:public Reg16<>{
+        static constexpr auto address = RegAddress::Dir;
+
+        hal::PinMask mask;
+    }DEF_R16(dir_reg)
+
+    struct CtlReg:Reg8<>{
+        static constexpr auto address = RegAddress::Ctl;
+        uint8_t isel:2;
+        uint8_t __resv1__:2;
+        uint8_t p0mod:1;
+        uint8_t __resv2__:3;
+    }DEF_R8(ctl_reg)
+
+    struct IntEnReg:public Reg16<>{
+        static constexpr auto address = RegAddress::Inten;
+
+        hal::PinMask mask;
+    }DEF_R16(inten_reg)
+
+
+    struct LedModeReg:public Reg16<>{
+        static constexpr auto address = RegAddress::LedMode;
+
+        hal::PinMask mask;
+    }DEF_R16(led_mode_reg);
+
+
+    struct ChipIdReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ChipId;
+
+        uint8_t id;
+    }DEF_R8(chip_id_reg)
 
 
 };
@@ -113,7 +149,7 @@ public:
     AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
 
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> reset(){
         return write_reg(RegAddress::SwRst, (uint8_t)0x00);
     }
@@ -169,11 +205,18 @@ private:
     }
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
         return Ok();
-    };
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
 
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
         if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
@@ -181,13 +224,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, T & data){
         if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -199,10 +237,9 @@ private:
     }
 
     [[nodiscard]] IResult<hal::PinMask> read_mask() {
-        uint16_t buf;
-        if(const auto res = read_reg(RegAddress::In, buf);
+        if(const auto res = read_reg(input_reg);
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(hal::PinMask(buf));
+        return Ok(input_reg.mask);
     }
 };
 

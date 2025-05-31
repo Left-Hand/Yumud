@@ -28,20 +28,20 @@ struct DRV832X_Collections{
 
     using RegAddress = uint8_t;
 
-    enum class PeakCurrent:uint8_t{
+    enum class PeakCurrent:uint16_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
     };
 
-    enum class Gain:uint8_t{
+    enum class Gain:uint16_t{
         X10 = 0,
         X20 = 1,
         X40 = 2,
         X80 = 3
     };
 
-    enum class IDriveN:uint8_t{
+    enum class IDriveN:uint16_t{
         // 0000b = 20 mA
         // 0001b = 60 mA
         // 0010b = 120 mA
@@ -77,7 +77,7 @@ struct DRV832X_Collections{
         _2000mA = 15
     };
 
-    enum class IDriveP:uint8_t{
+    enum class IDriveP:uint16_t{
         // 0000b = 10 mA
         // 0001b = 30 mA
         // 0010b = 60 mA
@@ -113,7 +113,7 @@ struct DRV832X_Collections{
         _1000mA = 15
     };
 
-    enum class VdsLevel{
+    enum class VdsLevel:uint16_t{
         // 0000b = 0.06 V
         // 0001b = 0.13 V
         // 0010b = 0.2 V
@@ -149,29 +149,28 @@ struct DRV832X_Collections{
         _1_88V = 15
     };
 
-
-    enum class OcpMode{
+    enum class OcpMode:uint16_t{
         CurrentLimit = 0,
         OClatchShutdown = 1,
         ReportOnly = 2,
         OCdisabled = 3
     };
 
-    enum class OcpDeglitchTime:uint8_t{
+    enum class OcpDeglitchTime:uint16_t{
         _2us = 0,
         _4us,
         _6us,
         _8us,
     };
 
-    enum class PeakDriveTime:uint8_t{
+    enum class PeakDriveTime:uint16_t{
         _500ns = 0,
         _1us,
         _2us,
         _4us,
     };
 
-    enum class DeadTime:uint8_t{
+    enum class DeadTime:uint16_t{
         // 00b = 50-ns dead time
         // 01b = 100-ns dead time
         // 10b = 200-ns dead time
@@ -183,14 +182,14 @@ struct DRV832X_Collections{
         _400_ns = 3,
     };
 
-    enum class CsaGain:uint8_t{
+    enum class CsaGain:uint16_t{
         _5x = 0b00,
         _10x = 0b01,
         _20x = 0b10,
         _40x = 0b11,
     };
 
-    enum class SenseLevel:uint8_t{
+    enum class SenseLevel:uint16_t{
         // 00b = 0.25 V
         // 01b = 0.5 V
         // 10b = 0.75 V
@@ -200,6 +199,13 @@ struct DRV832X_Collections{
         _0_5V = 1,
         _0_75V = 2,
         _1_0V = 3,
+    };
+
+    enum class PwmMode:uint16_t{
+        _6x = 0b00,
+        _3x = 0b01,
+        _1x = 0b10,
+        Independent = 0b11,
     };
 };
 
@@ -215,12 +221,13 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t vds_ha:1;
         uint16_t otsd:1;
         uint16_t uvlo:1;
+
         uint16_t gdf:1;
         uint16_t vds_ocp:1;
         uint16_t fault:1;
 
-        uint16_t :6;
-    };
+        uint16_t :5;
+    }DEF_R16(status1_reg)
 
     struct R16_Status2:public Reg16<>{
         scexpr RegAddress address = 0x01;
@@ -237,8 +244,8 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t sb_oc:1;
         uint16_t sa_oc:1;
 
-        uint16_t :6;
-    };
+        uint16_t :5;
+    }DEF_R16(status2_reg)
 
     struct R16_Ctrl1:public Reg16<>{
         scexpr RegAddress address = 0x02;
@@ -248,51 +255,51 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t coast:1;
         uint16_t pwm1_dir:1;
         uint16_t pwm1_com:1;
-        uint16_t pwm_mode:2;
-        uint16_t otw_rep:2;
-        uint16_t dis_gdf:2;
-        uint16_t dis_cpuv:2;
+        PwmMode pwm_mode:2;
+        uint16_t otw_rep:1;
+        uint16_t dis_gdf:1;
+        uint16_t dis_cpuv:1;
 
-        uint16_t :7;
-    };
+        uint16_t :6;
+    }DEF_R16(ctrl1_reg)
 
     struct R16_GateDriveHs:public Reg16<>{
         scexpr RegAddress address = 0x03;
 
-        uint16_t idrive_n_hs:4;
-        uint16_t idrive_p_hs:4;
+        IDriveN idrive_n_hs:4;
+        IDriveP idrive_p_hs:4;
         uint16_t lock:3;
 
         uint16_t :5;
-    };
+    }DEF_R16(gate_drv_hs_reg)
 
     struct R16_GateDriveLs:public Reg16<>{
         scexpr RegAddress address = 0x04;
 
-        uint16_t idrive_n_ls:4;
-        uint16_t idrive_p_ls:4;
-        uint16_t tdrive:2;
+        IDriveN idrive_n_ls:4;
+        IDriveP idrive_p_ls:4;
+        PeakDriveTime tdrive:2;
         uint16_t cbc:1;
 
         uint16_t :5;
-    };
+    }DEF_R16(gate_drv_ls_reg)
 
-    struct R16_OcpCtrl{
+    struct R16_OcpCtrl:public Reg16<>{
         scexpr RegAddress address = 0x05;
 
-        uint16_t vds_lvl:4;
-        uint16_t ocp_deg:2;
-        uint16_t ocp_mode:2;
-        uint16_t dead_time:2;
+        VdsLevel vds_lvl:4;
+        OcpDeglitchTime ocp_deg:2;
+        OcpMode ocp_mode:2;
+        DeadTime dead_time:2;
         uint16_t tretry:1;
 
         uint16_t :5;
-    };
+    }DEF_R16(ocp_ctrl_reg)
 
     struct R16_CsaCtrl{
         scexpr RegAddress address = 0x06;
 
-        uint16_t sen_lvl:2;
+        SenseLevel sen_lvl:2;
         uint16_t csa_cal_c:1;
         uint16_t csa_cal_b:1;
         uint16_t csa_cal_a:1;
@@ -301,16 +308,10 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t ls_ref:1;
         uint16_t vref_div:1;
         uint16_t csa_fet:1;
-    };
 
+        uint16_t :5;
+    }DEF_R16(csa_ctrl_reg)
 
-    R16_Status1 status1_reg;
-    R16_Status2 status2_reg;
-    R16_Ctrl1 ctrl1_reg;
-    R16_GateDriveHs gate_drv_hs_reg;
-    R16_GateDriveLs gate_drv_ls_reg;
-    R16_OcpCtrl ocp_ctrl_reg;
-    R16_CsaCtrl csa_ctrl_reg;
 };
 
 class DRV832X final:
@@ -343,11 +344,17 @@ private:
     [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
 
 
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return write_reg(reg.address, reg);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return read_reg(reg.address, reg);
     }
 
