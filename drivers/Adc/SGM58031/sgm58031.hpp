@@ -23,8 +23,23 @@ struct SGM58031_Collections{
     using IResult = Result<T, Error>;
 
     enum class DataRate:uint8_t{
-        _6_25Hz = 0,_12_5Hz, _25Hz, _50Hz, _100Hz, _200Hz, _400Hz, _800Hz,
-        _7_5Hz = 0b1000, _15Hz, _30Hz, _60Hz, _120Hz, _240Hz, _480Hz, _960Hz
+        _6_25Hz = 0,
+        _12_5Hz, 
+        _25Hz, 
+        _50Hz, 
+        _100Hz, 
+        _200Hz, 
+        _400Hz, 
+        _800Hz,
+
+        _7_5Hz = 0b1000, 
+        _15Hz, 
+        _30Hz, 
+        _60Hz, 
+        _120Hz, 
+        _240Hz, 
+        _480Hz, 
+        _960Hz
     };
 
     enum class MUX:uint8_t{
@@ -75,7 +90,12 @@ struct SGM58031_Collections{
 
     enum class RegAddress:uint8_t{
         Conv = 0,
-        Config,LowThr, HighThr, Config1, DeviceID,Trim
+        Config,
+        LowThr, 
+        HighThr, 
+        Config1,
+        DeviceID,
+        Trim
     };
 };
 
@@ -140,8 +160,6 @@ struct SGM58031_Regs:public SGM58031_Collections{
 
 class SGM58031 final:public SGM58031_Regs{
 public:
-
-
     SGM58031(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     SGM58031(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
@@ -149,73 +167,21 @@ public:
 
     IResult<> init();
     IResult<> validate();
-
-    IResult<> get_device_id(){
-        return read_reg(device_id_reg);
-    }
-
-    IResult<bool> is_idle(){
-        if(const auto res = read_reg(config_reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok(bool(config_reg.os));
-    }
-
-    IResult<> start_conv(){
-        {
-            auto reg = RegCopy(config1_reg);
-            reg.pd = true;
-            if(const auto res = write_reg(reg);
-                res.is_err()) return Err(res.unwrap_err());
-        }
-
-        {
-            auto reg = RegCopy(config_reg);
-            reg.os = true;
-            return write_reg(reg);
-        }
-    }
-
-    IResult<int16_t> get_conv_data(){
-        if(const auto res = read_reg(conv_reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok(conv_reg.as_val());
-    }
-
-    IResult<real_t> get_conv_voltage(){
-        return get_conv_data()
-            .map([&](const int16_t x) -> real_t{
-                return (x * fullScale) >> 15; 
-            });
-    }
-    IResult<> set_cont_mode(const bool continuous){
-        auto reg = RegCopy(config_reg);
-        reg.mode = continuous;
-        return write_reg(reg);
-    }
-
+    IResult<bool> is_idle();
+    IResult<> start_conv();
+    IResult<int16_t> get_conv_data();
+    IResult<real_t> get_conv_voltage();
+    IResult<> enable_cont_mode(const Enable en);
     IResult<> set_datarate(const DataRate _dr);
-
-    IResult<> set_mux(const MUX _mux){
-        auto reg = RegCopy(config_reg);
-        reg.mux = _mux;
-        return write_reg(reg);
-    }
-
+    IResult<> set_mux(const MUX _mux);
     IResult<> set_fs(const FS fs);
-
     IResult<> set_fs(const real_t _fs, const real_t _vref);
-
     IResult<> set_trim(const real_t _trim);
-    IResult<> enable_ch3_as_ref(const Enable en){
-        auto reg = RegCopy(config1_reg);
-        reg.extRef = en == EN;
-        return write_reg(reg);
-    }
-
+    IResult<> enable_ch3_as_ref(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
 
-    real_t fullScale;
+    real_t full_scale_;
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
@@ -234,21 +200,21 @@ private:
         return Ok();
     }
 
-static constexpr auto ratio2pga(const real_t ratio){
-    if(ratio >= 3){
-        return PGA::_2_3;
-    }else if(ratio >= 2){
-        return PGA::_1;
-    }else if(ratio >= 1){
-        return PGA::_2;
-    }else if(ratio >= real_t(0.5)){
-        return PGA::_4;
-    }else if(ratio >= real_t(0.25)){
-        return PGA::_8;
-    }else{
-        return PGA::_16;
+    static constexpr auto ratio2pga(const real_t ratio){
+        if(ratio >= 3){
+            return PGA::_2_3;
+        }else if(ratio >= 2){
+            return PGA::_1;
+        }else if(ratio >= 1){
+            return PGA::_2;
+        }else if(ratio >= real_t(0.5)){
+            return PGA::_4;
+        }else if(ratio >= real_t(0.25)){
+            return PGA::_8;
+        }else{
+            return PGA::_16;
+        }
     }
-}
 
 };
 

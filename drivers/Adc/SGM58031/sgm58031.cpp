@@ -50,7 +50,7 @@ IResult<> SGM58031::set_datarate(const DataRate dr){
 }
 
 IResult<> SGM58031::set_fs(const FS fs){
-    fullScale = fs.to_real();
+    full_scale_ = fs.to_real();
 
     auto reg = RegCopy(config_reg);
     reg.pga = fs.as_pga();
@@ -72,5 +72,61 @@ IResult<> SGM58031::set_trim(const real_t _trim){
     real_t offset = trim - real_t(1.30225f);
     auto reg = RegCopy(trim_reg);
     reg.gn = int(offset * 0b01111111010);
+    return write_reg(reg);
+}
+
+
+IResult<bool> SGM58031::is_idle(){
+    if(const auto res = read_reg(config_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(config_reg.os));
+}
+
+IResult<> SGM58031::start_conv(){
+    {
+        auto reg = RegCopy(config1_reg);
+        reg.pd = true;
+        if(const auto res = write_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    {
+        auto reg = RegCopy(config_reg);
+        reg.os = true;
+        return write_reg(reg);
+    }
+}
+
+IResult<int16_t> SGM58031::get_conv_data(){
+    if(const auto res = read_reg(conv_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(conv_reg.as_val());
+}
+
+IResult<real_t> SGM58031::get_conv_voltage(){
+    const auto res = get_conv_data();
+    if(res.is_err()) return Err(res.unwrap_err());
+    return Ok((res.unwrap() * full_scale_) >> 15);
+}
+
+
+IResult<> SGM58031::enable_cont_mode(const Enable en){
+    auto reg = RegCopy(config_reg);
+    reg.mode = (en == EN);
+    return write_reg(reg);
+}
+
+IResult<> SGM58031::set_datarate(const DataRate _dr);
+
+IResult<> SGM58031::set_mux(const MUX _mux){
+    auto reg = RegCopy(config_reg);
+    reg.mux = _mux;
+    return write_reg(reg);
+}
+
+
+IResult<> SGM58031::enable_ch3_as_ref(const Enable en){
+    auto reg = RegCopy(config1_reg);
+    reg.extRef = en == EN;
     return write_reg(reg);
 }
