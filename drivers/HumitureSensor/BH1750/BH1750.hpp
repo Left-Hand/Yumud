@@ -39,9 +39,10 @@ public:
     BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
-    void power_on(){
-        send_command(Command::PowerOn);
-    }
+    // void power_on(){
+    //     send_command(Command::PowerOn);
+    //     MIN
+    // }
 
     void power_down(){
         send_command(Command::PowerDown);

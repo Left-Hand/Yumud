@@ -75,27 +75,28 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             if(_idx >= error_fifo.available()){
                 return std::nullopt;
             }else{
-                return error_fifo.foresee(_idx);
+                TODO();
+                // return error_fifo.foresee(_idx);
             }
         }
 
-        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pbuf, const SubIndex sidx){
             if(unlikely(sidx) != 0) return SdoAbortCode::InvalidValue;
-            if(unlikely(pdata.size() < 1)) return SdoAbortCode::InvalidValue;
+            if(unlikely(pbuf.size() < 1)) return SdoAbortCode::InvalidValue;
 
-            if(likely(!bool(pdata[0]))){
-                error_fifo.vent(error_fifo.available());
+            if(likely(!bool(pbuf[0]))){
+                error_fifo.waste(error_fifo.available());
                 return SdoAbortCode::None;
             }else{
                 return SdoAbortCode::InvalidValue;
             }
         }
 
-        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pbuf, const SubIndex sidx) const {
             static constexpr SubIndex base_idx = 1;
 
             if(unlikely(sidx) < 1){
-                pdata[0] = uint8_t(getErrorCnt());
+                pbuf[0] = uint8_t(getErrorCnt());
                 return SdoAbortCode::None;
             }
 
@@ -103,7 +104,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             const auto err_opt = getError(offset);
 
             if(err_opt.has_value()){
-                *(reinterpret_cast<Error *>(pdata.data())) = err_opt.value();
+                *(reinterpret_cast<Error *>(pbuf.data())) = err_opt.value();
                 return SdoAbortCode::None;
             }else{
                 //企图获取超界的错误
@@ -147,26 +148,26 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             return str.c_str();
         }
 
-        SdoAbortCode write(const std::span<const uint8_t> pdata){
-            if(unlikely(str.length() != pdata.size())) return SdoAbortCode::MaxLessThanMin;
+        SdoAbortCode write(const std::span<const uint8_t> pbuf){
+            if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
-            memcpy(&str[0], pdata.data(), pdata.size());
+            memcpy(&str[0], pbuf.data(), pbuf.size());
             return SdoAbortCode::None;
         } 
 
 
-        SdoAbortCode read(const std::span<uint8_t> pdata) const {
-            if(unlikely(str.length() != pdata.size())) return SdoAbortCode::MaxLessThanMin;
+        SdoAbortCode read(const std::span<uint8_t> pbuf) const {
+            if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
-            memcpy(pdata.data(), str.c_str(), pdata.size());
+            memcpy(pbuf.data(), str.c_str(), pbuf.size());
             return SdoAbortCode::None;
         }
     };
 
     struct DeviceNameReg : public CoStringObj{
         // 设备名称寄存器 只读 字符串类型
-        Index idx = 0x1008;
-        SubIndex subidx = 0x0;
+        static constexpr Index idx = 0x1008;
+        static constexpr SubIndex subidx = 0x0;
 
         using CoStringObj::CoStringObj;
     };
@@ -222,38 +223,37 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         };
 
 
-        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pbuf, const SubIndex sidx){
             //TODO support auto save
-            if(sidx == 0x00){
+            if(sidx != 0x00)
                 return SdoAbortCode::UnsupportedAccess;
-            }else{
-                //判断是否有保存器
-                if(!saver) return SdoAbortCode::UnsupportedAccess;
 
-                //判断写入的长度是否正确
-                if(pdata.size() != 4) 
-                    return SdoAbortCode::InvalidBlockSize;
+            //判断是否有保存器
+            if(!saver) return SdoAbortCode::UnsupportedAccess;
 
-                //判断是否密钥是否正确
-                if(!(*reinterpret_cast<const uint32_t *>(pdata.data()) == key))
-                    return SdoAbortCode::GeneralError;
+            //判断写入的长度是否正确
+            if(pbuf.size() != 4) 
+                return SdoAbortCode::InvalidBlockSize;
 
-                switch(sidx){
-                    case 0x00: HALT;
-                    case 0x01: saver->saveAllConfig(); break;
-                    case 0x02: saver->saveCommConfig(); break;
-                    case 0x03: saver->saveAppConfig(); break;
-                    default: saver->saveSpecConfig(uint8_t(sidx)); break;
-                }
+            //判断是否密钥是否正确
+            if(!(*reinterpret_cast<const uint32_t *>(pbuf.data()) == key))
+                return SdoAbortCode::GeneralError;
+
+            switch(sidx){
+                case 0x00: HALT;
+                case 0x01: saver->saveAllConfig(); break;
+                case 0x02: saver->saveCommConfig(); break;
+                case 0x03: saver->saveAppConfig(); break;
+                default: saver->saveSpecConfig(uint8_t(sidx)); break;
             }
 
             return SdoAbortCode::None;
         } 
 
 
-        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pbuf, const SubIndex sidx) const {
             //TODO
-            // ReadStruct reg = ReadStruct{pdata};
+            // ReadStruct reg = ReadStruct{pbuf};
             return SdoAbortCode::None;
         }
     };
@@ -280,7 +280,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         };
 
 
-        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
+        SdoAbortCode write(const std::span<const uint8_t> pbuf, const SubIndex sidx){
             //TODO support auto save
             if(sidx == 0x00){
                 return SdoAbortCode::UnsupportedAccess;
@@ -289,11 +289,11 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
                 if(!loader) return SdoAbortCode::UnsupportedAccess;
 
                 //判断写入的长度是否正确
-                if(pdata.size() != 4) 
+                if(pbuf.size() != 4) 
                     return SdoAbortCode::InvalidBlockSize;
 
                 //判断是否密钥是否正确
-                if(!(*reinterpret_cast<const uint32_t *>(pdata.data()) == key))
+                if(!(*reinterpret_cast<const uint32_t *>(pbuf.data()) == key))
                     return SdoAbortCode::GeneralError;
 
                 switch(sidx){
@@ -309,9 +309,9 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         } 
 
 
-        SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
+        SdoAbortCode read(const std::span<uint8_t> pbuf, const SubIndex sidx) const {
             //TODO
-            // ReadStruct reg = ReadStruct{pdata};
+            // ReadStruct reg = ReadStruct{pbuf};
             return SdoAbortCode::None;
         }
     };
@@ -403,9 +403,9 @@ public:
 
     std::optional<SubEntry> find(const Didx didx);
 
-    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) override;
     
-    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const override;
 
 };
 

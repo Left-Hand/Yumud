@@ -27,10 +27,10 @@ using Error = drivers::LT8960L::Error;
 
 // scexpr size_t packet_len = 64;
 static constexpr size_t LT8960L_PACKET_SIZE = 12;
-// scexpr size_t LT8960L_BUFFER_SIZE = 12;
+static constexpr size_t LT8960L_FIFO_SIZE = 16;
 
 class Tx{
-    Fifo_t<uint8_t, LT8960L_PACKET_SIZE> fifo_;
+    Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
 
     size_t write(std::span<const uint8_t> pdata){
         fifo_.push(pdata);
@@ -44,7 +44,7 @@ class Tx{
 
 
 class Rx{
-    Fifo_t<uint8_t, LT8960L_PACKET_SIZE> fifo_;
+    Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
 
     size_t read(std::span<uint8_t> pdata){
         fifo_.pop(pdata);
