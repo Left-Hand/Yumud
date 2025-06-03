@@ -51,12 +51,10 @@ public:
     using RegAddress = MT6701_Phy::RegAddress;
 
     MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
-        MT6701_Phy(std::nullopt, std::make_optional<hal::SpiDrv>(spi, idx)){;}
+        MT6701_Phy(std::nullopt, hal::SpiDrv(spi, idx)){;}
 
     MT6701_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        MT6701_Phy(std::make_optional<hal::I2cDrv>(i2c, addr), std::nullopt){;}
-
-
+        MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

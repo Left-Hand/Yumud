@@ -1,7 +1,9 @@
 #include "tcs34725.hpp"
 
 
-#ifdef TCS34725_DEBUG_EN
+#define TCS34725_DEBUG_EN 0
+
+#if TCS34725_DEBUG_EN
 #define TCS34725_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define TCS34725_PANIC(...) PANIC(__VA_ARGS__)
 #define TCS34725_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
@@ -24,7 +26,7 @@ IResult<> TCS34725::read_burst(
     const TCS34725::RegAddress addr, 
     const std::span<uint16_t> pbuf
 ){
-    uint8_t address = conv_reg_address(addr);
+    uint8_t address = conv_reg_address_repeated(addr);
     if(const auto res = i2c_drv_.read_burst(address, pbuf, LSB);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();

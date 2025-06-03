@@ -173,15 +173,15 @@ public:
     
     [[nodiscard]] IResult<uint16_t> get_magnitude();
     
-    [[nodiscard]] IResult<real_t> get_raw_angle();
+    [[nodiscard]] IResult<real_t> get_raw_position();
     
-    [[nodiscard]] IResult<real_t> get_angle();
+    [[nodiscard]] IResult<real_t> get_position();
     
-    [[nodiscard]] IResult<> set_start_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_start_position(const real_t position);
     
-    [[nodiscard]] IResult<> set_end_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_end_position(const real_t position);
     
-    [[nodiscard]] IResult<> set_amount_angle(const real_t angle);
+    [[nodiscard]] IResult<> set_amount_position(const real_t position);
     
     [[nodiscard]] IResult<uint8_t> get_program_times();
     

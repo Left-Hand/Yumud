@@ -179,7 +179,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            conv_reg_address(reg.address), 
+            conv_reg_address_repeated(reg.address), 
             reg.as_val(), LSB);
         res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -189,7 +189,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            conv_reg_address(reg.address), reg.as_ref(), LSB);
+            conv_reg_address_repeated(reg.address), reg.as_ref(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -197,8 +197,12 @@ private:
     [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint16_t> pbuf);
 
     
-    static constexpr uint8_t conv_reg_address(const RegAddress addr, bool repeat = true){
-        return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
+    static constexpr uint8_t conv_reg_address_norepeat(const RegAddress addr){
+        return (std::bit_cast<uint8_t>(addr) | 0x80);
+    }
+
+    static constexpr uint8_t conv_reg_address_repeated(const RegAddress addr){
+        return conv_reg_address_norepeat(addr) | (1 << 5);
     }
 
 };

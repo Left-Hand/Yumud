@@ -120,8 +120,6 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
     reg.thresholdLow = uint8_t(low);
     reg.thresholdHigh = uint8_t(high);
     return write_reg(reg);
-        // .inspect([&](auto && x){org_reg = reg;})
-
 }
 
 IResult<> MA730::set_direction(const bool direction){
@@ -152,6 +150,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
 
     {
         uint8_t ppt_h = ppt >> 2;
+
         auto reg = RegCopy(pulse_per_turn_reg);
         reg.data = ppt_h;
         if(const auto res = (write_reg(reg));

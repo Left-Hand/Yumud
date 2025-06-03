@@ -9,13 +9,12 @@ template<typename T = void>
 using IResult = AS5600::IResult<T>;
 
 
-static constexpr real_t From12BitTo360Degrees(const uint16_t data){
-    auto uni = u16_to_uni(data << 4);
-    return uni * 360;
+static constexpr q16 _12bits_2_pos(const uint16_t data){
+    return q16::from_i32(data << 4);
 }
 
-static constexpr uint16_t From360DegreesTo12Bit(const real_t degrees){
-    return uni_to_u16(CLAMP(degrees / 360, real_t(0), real_t(1))) >> 4;
+static constexpr uint16_t pos_2_12bits(const q16 pos){
+    return pos.to_i32() >> 4; 
 }
 
 IResult<> AS5600::set_power_mode(const PowerMode _power_mode){
@@ -75,33 +74,33 @@ IResult<uint16_t> AS5600::get_magnitude(){
     return Ok((magnitude_reg.data) & 0xFFF);
 }
 
-IResult<real_t> AS5600::get_raw_angle(){
+IResult<real_t> AS5600::get_raw_position(){
     if(const auto res = read_reg(raw_angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(From12BitTo360Degrees(raw_angle_reg.data));
+    return Ok(_12bits_2_pos(raw_angle_reg.data));
 }
 
-IResult<real_t> AS5600::get_angle(){
+IResult<real_t> AS5600::get_position(){
     if(const auto res = read_reg(angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(From12BitTo360Degrees(angle_reg.data));
+    return Ok(_12bits_2_pos(angle_reg.data));
 }
 
-IResult<> AS5600::set_start_angle(const real_t angle){
+IResult<> AS5600::set_start_position(const real_t angle){
     auto reg = RegCopy(start_angle_reg);
-    reg.data = From360DegreesTo12Bit(angle);
+    reg.data = pos_2_12bits(angle);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_end_angle(const real_t angle){
+IResult<> AS5600::set_end_position(const real_t angle){
     auto reg = RegCopy(end_angle_reg);
-    reg.data = From360DegreesTo12Bit(angle);
+    reg.data = pos_2_12bits(angle);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_amount_angle(const real_t angle){
+IResult<> AS5600::set_amount_position(const real_t angle){
     auto reg = RegCopy(amount_angle_reg);
-    reg.data = From360DegreesTo12Bit(angle);
+    reg.data = pos_2_12bits(angle);
     return write_reg(reg);
 }
 

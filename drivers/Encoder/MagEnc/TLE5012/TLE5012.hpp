@@ -7,10 +7,22 @@
 
 namespace ymd::drivers{
 
+struct TLE5012_Collections{
 
-class TLE502 final: 
+};
+
+struct TLE5012_Regs final: public TLE5012_Collections{
+
+};
+
+
+class TLE5012_Phy final: public TLE5012_Collections{
+
+};
+
+class TLE5012 final: 
     public MagEncoderIntf, 
-    public KTH7823_Regs{
+    public TLE5012_Regs{
     
 };
 

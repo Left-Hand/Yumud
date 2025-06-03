@@ -1,8 +1,10 @@
 #pragma once
 
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+#include "core/math/fraction.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "core/math/fraction.hpp"
 
 namespace ymd::drivers{
 
@@ -14,10 +16,51 @@ public:
         LMode = 3
     };
 
+    enum class Error_Kind{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+public:
+    BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+
+    // void power_on(){
+    //     send_command(Command::PowerOn);
+    //     MIN
+    // }
+
+    IResult<> power_down(){
+        return send_command(Command::PowerDown);
+    }
+
+    IResult<> reset(){
+        return send_command(Command::Reset);
+    }
+
+    void set_mode(const Mode mode){
+        current_mode_ = mode;
+    }
+
+    void enable_continuous(const Enable en = EN){
+        cont_en_ = en == EN;
+    }
+
+    IResult<> start_conv();
+
+    IResult<> change_measure_time(const uint16_t ms);
+
+    IResult<int> get_lx();
+
+private:
+
 protected:
     hal::I2cDrv i2c_drv_;
 
-    enum Command:uint8_t{
+    enum class Command:uint8_t{
         PowerDown = 0,
         PowerOn = 1,
         Reset = 7,
@@ -30,41 +73,14 @@ protected:
         .denominator = 69
     };
 
-    Mode currentMode = Mode::LMode;
-    bool continuous = false;
+    Mode current_mode_ = Mode::LMode;
+    bool cont_en_ = false;
 
-    void send_command(const uint8_t cmd);
-
-public:
-    BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-
-    // void power_on(){
-    //     send_command(Command::PowerOn);
-    //     MIN
-    // }
-
-    void power_down(){
-        send_command(Command::PowerDown);
+    IResult<> send_command(const uint8_t cmd);
+    IResult<> send_command(const Command cmd){
+        return send_command(std::bit_cast<uint8_t>(cmd));
     }
 
-    void reset(){
-        send_command(Command::Reset);
-    }
-
-    void set_mode(const Mode & mode){
-        currentMode = mode;
-    }
-
-    void enable_continuous(const Enable en = EN){
-        continuous = en == EN;
-    }
-
-    void start_conv();
-
-    void change_measure_time(const uint16_t ms);
-
-    int get_lx();
 };
 
 };
