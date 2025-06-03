@@ -357,8 +357,8 @@ private:
     }
 
     
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint8_t> pdata){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

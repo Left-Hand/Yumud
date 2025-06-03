@@ -19,19 +19,19 @@ using namespace ymd::drivers;
 
 
     
-hal::HalResult AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pdata){
+hal::HalResult AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pbuf){
     if (is_small_chip()){
-        return i2c_drv_.write_burst(uint8_t(addr.as_u32()), pdata);
+        return i2c_drv_.write_burst(uint8_t(addr.as_u32()), pbuf);
     }else{
-        return i2c_drv_.write_burst(uint16_t(addr.as_u32()), pdata);
+        return i2c_drv_.write_burst(uint16_t(addr.as_u32()), pbuf);
     }
 }
 
-hal::HalResult AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pdata){
+hal::HalResult AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf){
     if (is_small_chip()){
-        return i2c_drv_.read_burst(uint8_t(addr.as_u32()), pdata);
+        return i2c_drv_.read_burst(uint8_t(addr.as_u32()), pbuf);
     }else{
-        return i2c_drv_.read_burst(uint16_t(addr.as_u32()), pdata);
+        return i2c_drv_.read_burst(uint16_t(addr.as_u32()), pbuf);
     }
 }
 
@@ -40,7 +40,7 @@ template<typename FnBefore, typename FnExecute, typename FnAfter>
 auto internate_grid(
     const uint32_t address, 
     const uint32_t grid,
-    const std::span<const uint8_t> pdata,
+    const std::span<const uint8_t> pbuf,
     const FnBefore&& fn_before, 
     FnExecute&& fn_execute, 
     FnAfter&& fn_after
@@ -51,29 +51,29 @@ auto internate_grid(
         op_window = store_window.grid_forward(op_window, grid);
         if(op_window.length() != 0){
             std::forward<FnBefore>(fn_before)();
-            const uint8_t * ptr = (pdata.data() + (op_window.from - store_window.from));
+            const uint8_t * ptr = (pbuf.data() + (op_window.from - store_window.from));
             std::forward<FnExecute>(fn_execute)(op_window.from, std::span<const uint8_t>(ptr, op_window.length()));
             std::forward<FnAfter>(fn_after)();
         }
     }while(op_window.length());
 }
 
-// void AT24CXX::store_bytes_impl(const Address loc, const std::span<const uint8_t> pdata){
+// void AT24CXX::store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf){
 //     // const auto full_end = loc + len; 
 //     // CHECK_ADDR(full_end);
 
 //     internate_grid(
 //         loc.as_u32(),
 //         pagesize_,
-//         pdata,
+//         pbuf,
 //         [this]{blocking_until_free();},
-//         [this](const uint32_t address, const std::span<const uint8_t> pdata){write_burst(Address(address), pdata);},
+//         [this](const uint32_t address, const std::span<const uint8_t> pbuf){write_burst(Address(address), pbuf);},
 //         [this]{state_ = Operation::Store;},
 //     );
 // }
 
 
-void AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pdata){
+void AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf){
     // auto full_end = loc + ; 
-    read_burst(loc, pdata);
+    read_burst(loc, pbuf);
 }

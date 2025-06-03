@@ -34,8 +34,8 @@ IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & data){
     return res;
 }
 
-IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pdata){
-    auto res = phy_.read_burst(reg_addr, pdata.data(), pdata.size());
+IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+    auto res = phy_.read_burst(reg_addr, pbuf.data(), pbuf.size());
     return res;
 }
 

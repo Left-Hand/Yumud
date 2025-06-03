@@ -5,42 +5,42 @@
 using namespace ymd::canopen;
 using namespace ymd;
 
-SdoAbortCode StaticObjectDictBase::write(const std::span<const uint8_t> pdata, const Didx didx){
+SdoAbortCode StaticObjectDictBase::write(const std::span<const uint8_t> pbuf, const Didx didx){
     auto se_opt = find(didx);
 
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
 
     auto & se = se_opt.value();
 
-    return se.write(pdata);
+    return se.write(pbuf);
 }
 
-SdoAbortCode StaticObjectDictBase::read(const std::span<uint8_t> pdata, const Didx didx) const{
+SdoAbortCode StaticObjectDictBase::read(const std::span<uint8_t> pbuf, const Didx didx) const{
     auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
     
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
     
     auto & se = (se_opt.value());
-    return se.read(pdata);
+    return se.read(pbuf);
 }
 
-SdoAbortCode StaticObjectDictBase::_write_any(const void * pdata, const Didx didx){
+SdoAbortCode StaticObjectDictBase::_write_any(const void * pbuf, const Didx didx){
     auto se_opt = find(didx);
 
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
 
     auto & se = se_opt.value();
 
-    return se.write_any(pdata);
+    return se.write_any(pbuf);
 
 }
-SdoAbortCode StaticObjectDictBase::_read_any(void * pdata, const Didx didx) const{
+SdoAbortCode StaticObjectDictBase::_read_any(void * pbuf, const Didx didx) const{
     auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
     
     if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
     
     auto & se = (se_opt.value());
-    return se.read_any(pdata);
+    return se.read_any(pbuf);
 }
 
 StringView StaticObjectDictBase::ename(const Didx didx) const{

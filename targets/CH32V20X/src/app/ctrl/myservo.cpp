@@ -217,6 +217,16 @@ void myservo_main(){
     auto & led = portB[8];
     led.outpp(HIGH);
 
+    {
+        auto & ledr = portC[13];
+        ledr.outpp(HIGH);
+        while(true){
+            ledr.toggle();
+            clock::delay(200ms);
+            DEBUG_PRINTLN(clock::millis().count());
+        }
+    }
+
     auto & can = can1;
 
     auto & mode1_gpio   = portB[1];

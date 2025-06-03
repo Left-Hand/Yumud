@@ -141,11 +141,11 @@ private:
     };
 
     struct StoreTask final:public TaskBase{
-        StoreTask(AT24CXX & device, const Address addr, const std::span<const uint8_t> pdata):
+        StoreTask(AT24CXX & device, const Address addr, const std::span<const uint8_t> pbuf):
             TaskBase(device),
-            pdata_(pdata)
+            pbuf_(pbuf)
         {
-            mem_range_ = {addr.as_u32(), pdata.size()};
+            mem_range_ = {addr.as_u32(), pbuf.size()};
             op_range_ = init_grid(addr.as_u32(), grid_size());
         }
 
@@ -162,7 +162,7 @@ private:
 
             const auto offset = op_range_.from - mem_range_.from;
             storage_.write_burst(Address(op_range_.from), std::span<const uint8_t>(
-                pdata_.data() + offset, op_range_.length()));
+                pbuf_.data() + offset, op_range_.length()));
             //准备下次的范围
             op_range_ = next_grid(op_range_.from, grid_size(), mem_range_);
         }
@@ -191,7 +191,7 @@ private:
         }
 
     private:
-        std::span<const uint8_t> pdata_;
+        std::span<const uint8_t> pbuf_;
         Range2<uint32_t> mem_range_;
         Range2<uint32_t> op_range_;
 
@@ -231,13 +231,13 @@ private:
     //     }
     // }
 
-    hal::HalResult write_burst(const Address loc, const std::span<const uint8_t> pdata);
-    hal::HalResult read_burst(const Address loc, const std::span<uint8_t> pdata);
+    hal::HalResult write_burst(const Address loc, const std::span<const uint8_t> pbuf);
+    hal::HalResult read_burst(const Address loc, const std::span<uint8_t> pbuf);
 
 
-    void store_bytes_impl(const Address loc, const std::span<const uint8_t> pdata);
+    void store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf);
 
-    void load_bytes_impl(const Address loc, const std::span<uint8_t> pdata);
+    void load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf);
 
     void blocking_until_free(){
         while(is_busy()){

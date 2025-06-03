@@ -221,8 +221,8 @@ IResult<> LT8920::set_data_rate(const uint32_t dr){
     }
 }
 
-IResult<> LT8920::write_block(const std::span<const uint8_t> pdata){
-    uint8_t len = pdata.size();
+IResult<> LT8920::write_block(const std::span<const uint8_t> pbuf){
+    uint8_t len = pbuf.size();
     if(state != State::IDLE) return Ok();
     if(role == Role::LISTENER) return Ok();
     if(len == 0) return Ok();
@@ -243,7 +243,7 @@ IResult<> LT8920::write_block(const std::span<const uint8_t> pdata){
                 res.is_err()) return res;
         }
 
-        if(const auto res = write_fifo(pdata);
+        if(const auto res = write_fifo(pbuf);
             res.is_err()) return res;
     }
 
@@ -295,8 +295,8 @@ IResult<> LT8920::tick(){
     return Ok();
 }
 
-IResult<> LT8920::read_block(std::span<uint8_t> pdata){
-    uint8_t len = pdata.size();
+IResult<> LT8920::read_block(std::span<uint8_t> pbuf){
+    uint8_t len = pbuf.size();
     if(len == 0) return Ok();
     if(role != Role::LISTENER) return Ok();
     
@@ -310,7 +310,7 @@ IResult<> LT8920::read_block(std::span<uint8_t> pdata){
             res.is_err()) return res;
     }
 
-    if(const auto res = read_fifo(std::span(pdata.begin(), len));
+    if(const auto res = read_fifo(std::span(pbuf.begin(), len));
         res.is_err()) return res;
     if(const auto res = clear_fifo_ptr();
         res.is_err()) return res;
@@ -450,15 +450,15 @@ IResult<> LT8920::set_sync_word(const uint64_t syncword){
 
 
 
-IResult<> LT8920::write_fifo(std::span<const uint8_t> pdata){
+IResult<> LT8920::write_fifo(std::span<const uint8_t> pbuf){
     if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(50), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->write_burst<uint8_t>(pdata);
+        if(const auto res = spi_drv_->write_burst<uint8_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(i2c_drv_){
-        if(const auto res = i2c_drv_->write_burst(uint8_t(50) , pdata);
+        if(const auto res = i2c_drv_->write_burst(uint8_t(50) , pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -467,15 +467,15 @@ IResult<> LT8920::write_fifo(std::span<const uint8_t> pdata){
 
 }
 
-IResult<> LT8920::read_fifo(std::span<uint8_t> pdata){
+IResult<> LT8920::read_fifo(std::span<uint8_t> pbuf){
     if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<uint8_t>(pdata);
+        if(const auto res = spi_drv_->read_burst<uint8_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_burst(uint8_t(50), pdata);
+        if(const auto res = i2c_drv_->read_burst(uint8_t(50), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

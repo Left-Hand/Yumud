@@ -47,8 +47,8 @@ protected:
     using TReg = T;
     __RegC_t() = default;
 public:
-    __RegC_t(const std::span<const uint8_t> pdata){
-        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pdata.data()));
+    __RegC_t(const std::span<const uint8_t> pbuf){
+        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pbuf.data()));
     };
     using value_type = T;
 

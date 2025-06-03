@@ -22,10 +22,10 @@ using IResult = Result<T, Error>;
 
 IResult<> TCS34725::read_burst(
     const TCS34725::RegAddress addr, 
-    const std::span<uint16_t> pdata
+    const std::span<uint16_t> pbuf
 ){
     uint8_t address = conv_reg_address(addr);
-    if(const auto res = i2c_drv_.read_burst(address, pdata, LSB);
+    if(const auto res = i2c_drv_.read_burst(address, pbuf, LSB);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

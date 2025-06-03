@@ -604,7 +604,7 @@ public:
 
     Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
-        const auto pdata = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
+        const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
         const auto y_step = project_pixel_to_ground({0,1}, viewpoint, zoom) - org;
         const auto x_step = project_pixel_to_ground({1,0}, viewpoint, zoom) - org;
@@ -625,7 +625,7 @@ public:
             auto local_pos = org;
             for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
                 const auto beg = local_pos;
-                auto * ptr = &pdata[y * CAMERA_SIZE.x];
+                auto * ptr = &pbuf[y * CAMERA_SIZE.x];
                 for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
                     const uint8_t color = std::forward<Fn>(fn)(local_pos);
                     *ptr = MIN(*ptr + color, 255);
@@ -646,9 +646,9 @@ public:
                 }), ...);
         }, objects_);
 
-        if(!dirty) std::memset(pdata.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
+        if(!dirty) std::memset(pbuf.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
         return Image<Grayscale>(std::move(
-            std::reinterpret_pointer_cast<Grayscale[]>(pdata)), CAMERA_SIZE);
+            std::reinterpret_pointer_cast<Grayscale[]>(pbuf)), CAMERA_SIZE);
     }
 private:
     std::tuple<Objects...> objects_;  // Expanded parameter pack

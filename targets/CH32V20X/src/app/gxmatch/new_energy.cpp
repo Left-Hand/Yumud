@@ -572,12 +572,12 @@ private:
         return StationName::from_gbk(data);
     }
 
-    static constexpr auto is_pkt_payload(const std::span<const uint8_t> pdata){
-        return pdata.size() == 10;
+    static constexpr auto is_pkt_payload(const std::span<const uint8_t> pbuf){
+        return pbuf.size() == 10;
     }
 
-    static constexpr auto is_identity_payload(const std::span<const uint8_t> pdata){
-        return pdata.size() == 26;
+    static constexpr auto is_identity_payload(const std::span<const uint8_t> pbuf){
+        return pbuf.size() == 26;
     }
 
     void update_decoder(){

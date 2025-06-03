@@ -55,13 +55,13 @@ public:
     struct Write{
         Address addr;
         AddressDiff length;
-        const uint8_t * pdata;
+        const uint8_t * pbuf;
     };
 
     struct Read{
         Address addr;
         AddressDiff length;
-        uint8_t * pdata;
+        uint8_t * pbuf;
     };
 
     struct Erase{
@@ -198,15 +198,15 @@ class StorageIntf:
     public BlockDeviceIntf{
 public:
     virtual AddressDiff capacity() = 0;
-    // virtual void store_bytes(const Address loc, const std::span<const uint8_t> pdata) final{
+    // virtual void store_bytes(const Address loc, const std::span<const uint8_t> pbuf) final{
     //     entry_oper(Operation::Store);
-    //     store_bytes_impl(loc, pdata);
+    //     store_bytes_impl(loc, pbuf);
     //     exit_oper(Operation::Store);
     // }
 
-    // virtual void load_bytes(const Address loc, const std::span<uint8_t> pdata) final{
+    // virtual void load_bytes(const Address loc, const std::span<uint8_t> pbuf) final{
     //     entry_oper(Operation::Load);
-    //     load_bytes_impl(loc, pdata);
+    //     load_bytes_impl(loc, pbuf);
     //     exit_oper(Operation::Load);
     // }
 
@@ -220,9 +220,9 @@ protected:
     // virtual void entry_oper(const Operation op) = 0;
     // virtual void exit_oper(const Operation op) = 0;
 
-    // virtual void store_bytes_impl(const Address loc, const std::span<const uint8_t> pdata) = 0;
+    // virtual void store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf) = 0;
 
-    // virtual void load_bytes_impl(const Address loc, const std::span<uint8_t> pdata) = 0;
+    // virtual void load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf) = 0;
 
     // virtual void erase_bytes_impl(const Address loc, const AddressDiff length) = 0;
 };

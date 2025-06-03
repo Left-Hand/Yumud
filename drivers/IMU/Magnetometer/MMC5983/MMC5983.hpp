@@ -163,9 +163,9 @@ public:
     }
 
     [[nodiscard]] __fast_inline
-    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
+    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
-            return IResult<>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pdata));
+            return IResult<>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf));
         }else if(spi_drv_){
             return Err(Error::SpiPhyIsNotSupportedYet);
         }else{
@@ -241,8 +241,8 @@ private:
         return phy_.read_reg(reg.address, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
-        return phy_.read_burst(addr, pdata);
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
+        return phy_.read_burst(addr, pbuf);
     }
 
 };

@@ -250,9 +250,9 @@ public:
     [[nodiscard]] IResult<> tick();
     
 
-    [[nodiscard]] IResult<> write(const std::span<const uint8_t> pdata);
+    [[nodiscard]] IResult<> write(const std::span<const uint8_t> pbuf);
 
-    [[nodiscard]] IResult<> read(const std::span<uint8_t> pdata);
+    [[nodiscard]] IResult<> read(const std::span<uint8_t> pbuf);
 
     [[nodiscard]] size_t available() const;
 

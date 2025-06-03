@@ -355,8 +355,8 @@ public:
     }
 
     [[nodiscard]] IResult<> read_burst(
-        const RegAddress addr, std::span<uint16_t> pdata){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pdata, ENDIAN);
+        const RegAddress addr, std::span<uint16_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

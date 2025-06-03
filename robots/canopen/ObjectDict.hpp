@@ -12,8 +12,8 @@ public:
     using Index = OdIndex;
     using SubIndex = OdSubIndex;
 protected:
-    virtual SdoAbortCode _write_any(const void * pdata, const Didx didx) = 0;
-    virtual SdoAbortCode _read_any(void * pdata, const Didx didx) const = 0;
+    virtual SdoAbortCode _write_any(const void * pbuf, const Didx didx) = 0;
+    virtual SdoAbortCode _read_any(void * pbuf, const Didx didx) const = 0;
 public:
 
     // template<typename T>
@@ -31,16 +31,16 @@ public:
     // }
 
 
-    virtual SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
-    virtual SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
+    virtual SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) = 0;
+    virtual SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    SdoAbortCode write_any(const T pdata, const Didx didx){return _write_any(&pdata, didx);}
+    SdoAbortCode write_any(const T pbuf, const Didx didx){return _write_any(&pbuf, didx);}
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    SdoAbortCode read_any(T & pdata, const Didx didx) const {return _read_any(&pdata, didx);}
+    SdoAbortCode read_any(T & pbuf, const Didx didx) const {return _read_any(&pbuf, didx);}
     virtual StringView ename(const Didx didx) const = 0;
 };
 
@@ -64,11 +64,11 @@ public:
         }
     }
 
-    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx){
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx){
         return SdoAbortCode::None;
     }
     
-    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const {
         return SdoAbortCode::None;
     }
 
@@ -97,16 +97,16 @@ public:
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
     using CobId = uint16_t;
-    SdoAbortCode _write_any(const void * pdata, const Didx didx) final override;
-    SdoAbortCode _read_any(void * pdata, const Didx didx) const final override;
+    SdoAbortCode _write_any(const void * pbuf, const Didx didx) final override;
+    SdoAbortCode _read_any(void * pbuf, const Didx didx) const final override;
 public:
     StaticObjectDictBase() = default;
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
     
-    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) override;
     
-    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const override;
 
     StringView ename(const Didx didx) const final override;
     

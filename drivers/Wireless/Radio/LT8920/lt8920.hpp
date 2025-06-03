@@ -174,8 +174,8 @@ public:
     IResult<bool> received_ack();
 
 
-    IResult<> write_block(std::span<const uint8_t> pdata);
-    IResult<> read_block(std::span<uint8_t> pdata);
+    IResult<> write_block(std::span<const uint8_t> pbuf);
+    IResult<> read_block(std::span<uint8_t> pbuf);
 
     IResult<> tick();
 
@@ -261,8 +261,8 @@ protected:
     }
 
 
-    IResult<> write_fifo(std::span<const uint8_t> pdata);
-    IResult<> read_fifo(std::span<uint8_t> pdata);
+    IResult<> write_fifo(std::span<const uint8_t> pbuf);
+    IResult<> read_fifo(std::span<uint8_t> pbuf);
 
     IResult<> update_fifo_status();
 };

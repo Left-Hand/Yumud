@@ -139,9 +139,9 @@ IResult<> PMW3901::read_reg(const uint8_t command, uint8_t & data){
     | spi_drv_.read_single<uint8_t>(data));
 }
 
-IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pdata){
+IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
     return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_burst<uint8_t>(pdata));
+    | spi_drv_.read_burst<uint8_t>(pbuf));
 }
 
 

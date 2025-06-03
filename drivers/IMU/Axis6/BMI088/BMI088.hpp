@@ -139,7 +139,7 @@ protected:
         scexpr RegAddress address = 0x54;
     }DEF_R8(int2_ctrl_reg)
 
-    struct R8_Int1MapData:public Reg8<>{
+    struct R8_Int1Mapbuf:public Reg8<>{
         scexpr RegAddress address = 0x56;
         uint8_t __resv1__:2;
         uint8_t int1_drdy:1;

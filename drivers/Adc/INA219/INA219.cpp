@@ -46,7 +46,7 @@ IResult<> INA219::read_reg(const RegAddress addr, int16_t & data){
     return Ok();
 }
 
-IResult<> INA219::read_burst(const RegAddress addr, const std::span<uint16_t> pdata){
+IResult<> INA219::read_burst(const RegAddress addr, const std::span<uint16_t> pbuf){
     // return i2c_drv_.read_burst(uint8_t(addr), p_std::span(data, len), LSB);
     TODO();
     return Ok();

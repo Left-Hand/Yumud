@@ -81,7 +81,7 @@ private:
 
     [[nodiscard]] IResult<> read_byte_data(const uint8_t reg, uint8_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t reg, const std::span<uint16_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg, const std::span<uint16_t> pbuf);
 
     [[nodiscard]] IResult<> write_byte_data(const uint8_t reg, const uint8_t byte);
 

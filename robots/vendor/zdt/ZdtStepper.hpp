@@ -169,7 +169,7 @@ private:
         phy_.write_data(id_, {buf.data(), buf.size()});
     }
 
-    static inline uint8_t get_verify_code(const VerifyType type, std::span<const uint8_t> pdata ){
+    static inline uint8_t get_verify_code(const VerifyType type, std::span<const uint8_t> pbuf ){
         switch(type){
             default:
                 PANIC();
@@ -177,15 +177,15 @@ private:
                 return uint8_t{0x6b};
             case VerifyType::XOR:{
                 uint8_t code{0};
-                for(size_t i = 0; i < pdata.size(); i++){
-                    code ^= pdata[i];
+                for(size_t i = 0; i < pbuf.size(); i++){
+                    code ^= pbuf[i];
                 };
                 return code;
             }
             case VerifyType::CRC8:{
                 uint16_t crc = 0xffff;
-                for(size_t i = 0; i < pdata.size(); i++){
-                    crc ^= (uint16_t)(pdata[i]) << 8;
+                for(size_t i = 0; i < pbuf.size(); i++){
+                    crc ^= (uint16_t)(pbuf[i]) << 8;
                     for(uint8_t j = 0; j < 8; j++){
                         if(crc & 0x8000) crc ^= 0x1021;
                         crc <<= 1;
@@ -196,9 +196,9 @@ private:
         }
     }
 
-    static inline void array_append(Buf & dst, std::span<const uint8_t> pdata){
-        for(size_t i = 0; i < pdata.size(); i++){
-            dst.push_back(pdata[i]);
+    static inline void array_append(Buf & dst, std::span<const uint8_t> pbuf){
+        for(size_t i = 0; i < pbuf.size(); i++){
+            dst.push_back(pbuf[i]);
         }
     }
     

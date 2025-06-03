@@ -155,14 +155,14 @@ private:
     template<typename T>
     __fast_inline constexpr CanMsg(
             const details::CanId_t<T> id, 
-            const std::span<const uint8_t> pdata
+            const std::span<const uint8_t> pbuf
     ) : 
         CanMsg(id, CanRemoteSpec::Data)
     {
-        dlc_ = MIN(pdata.size(), 8);
+        dlc_ = MIN(pbuf.size(), 8);
 
         for(size_t i = 0; i < size(); i++){
-            buf_[i] = (pdata[i]);
+            buf_[i] = (pbuf[i]);
         }
 
         for(size_t i = size(); i < 8; i++){
@@ -206,12 +206,12 @@ public:
     static constexpr CanMsg from_remote(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Remote);}
 
     template<typename T>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pdata)
-        {return CanMsg(id, pdata);}
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pbuf)
+        {return CanMsg(id, pbuf);}
 
     template<typename T>
-    static constexpr CanMsg from_list(details::CanId_t<T> id, const std::initializer_list<uint8_t> pdata)
-        {return CanMsg(id, std::span<const uint8_t>(pdata.begin(), pdata.size()));}
+    static constexpr CanMsg from_list(details::CanId_t<T> id, const std::initializer_list<uint8_t> pbuf)
+        {return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));}
 
     static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){
         return CanMsg(raw, data, len);}

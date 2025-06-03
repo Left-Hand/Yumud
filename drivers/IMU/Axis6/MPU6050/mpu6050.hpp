@@ -205,8 +205,8 @@ private:
         return phy_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pdata){
-        return phy_.read_burst(addr, pdata.data(), pdata.size());
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
+        return phy_.read_burst(addr, pbuf.data(), pbuf.size());
     }
 
     template<typename T>

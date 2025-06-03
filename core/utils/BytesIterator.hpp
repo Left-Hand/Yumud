@@ -9,13 +9,13 @@ namespace ymd{
 
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
 [[nodiscard]] __fast_inline
-auto iterate_bytes(std::span<T> pdata, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
+auto iterate_bytes(std::span<T> pbuf, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
     using Byte = std::conditional_t<std::is_const_v<T>, const uint8_t, uint8_t>;
     constexpr size_t dsize = sizeof(T);
     
     const auto bytes = std::span<Byte>(
-        reinterpret_cast<Byte *>(std::addressof(pdata[0])), 
-        pdata.size() * dsize
+        reinterpret_cast<Byte *>(std::addressof(pbuf[0])), 
+        pbuf.size() * dsize
     );
 
     for(size_t i = 0; i < bytes.size(); i += dsize){

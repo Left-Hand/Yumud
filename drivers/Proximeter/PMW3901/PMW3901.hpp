@@ -64,7 +64,7 @@ private:
     [[nodiscard]] Result<bool, Error> assert_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
-    [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);
 
     [[nodiscard]] IResult<> read_data_slow();
     [[nodiscard]] IResult<> read_data_burst();

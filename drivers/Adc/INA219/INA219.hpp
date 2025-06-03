@@ -91,7 +91,7 @@ protected:
     
     [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<uint16_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<uint16_t> pbuf);
 
 public:
     

@@ -36,7 +36,7 @@ public:
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    void writeN(const char * pdata, const size_t len){tx_fifo_.push(std::span(pdata, len));}
+    void writeN(const char * pbuf, const size_t len){tx_fifo_.push(std::span(pbuf, len));}
 
     void write1(const char data){tx_fifo_.push(data);}
 

@@ -30,8 +30,8 @@ public:
     //         sizeof(std::decay_t<decltype(obj)>)});
     // }
 
-    // auto store_bytes(const Address loc, const std::span<const uint8_t> pdata){
-    //     return storage_.store_bytes(loc, pdata);
+    // auto store_bytes(const Address loc, const std::span<const uint8_t> pbuf){
+    //     return storage_.store_bytes(loc, pbuf);
     // }
 
     // auto load(const Address loc, is_stdlayout auto & obj){
@@ -39,8 +39,8 @@ public:
     //         sizeof(std::decay_t<decltype(obj)>)});
     // }
 
-    // auto load_bytes(const Address loc, const std::span<uint8_t> pdata){
-    //     return storage_.load_bytes(loc, pdata);
+    // auto load_bytes(const Address loc, const std::span<uint8_t> pbuf){
+    //     return storage_.load_bytes(loc, pbuf);
     // }
 
     // auto erase_bytes(const Address loc, const AddressDiff capacity){

@@ -32,9 +32,9 @@ static constexpr size_t LT8960L_FIFO_SIZE = 16;
 class Tx{
     Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
 
-    size_t write(std::span<const uint8_t> pdata){
-        fifo_.push(pdata);
-        return pdata.size();
+    size_t write(std::span<const uint8_t> pbuf){
+        fifo_.push(pbuf);
+        return pbuf.size();
     }
 
     size_t pending() const {
@@ -46,9 +46,9 @@ class Tx{
 class Rx{
     Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
 
-    size_t read(std::span<uint8_t> pdata){
-        fifo_.pop(pdata);
-        return pdata.size();
+    size_t read(std::span<uint8_t> pbuf){
+        fifo_.pop(pbuf);
+        return pbuf.size();
     }
 
     size_t awailable() const {

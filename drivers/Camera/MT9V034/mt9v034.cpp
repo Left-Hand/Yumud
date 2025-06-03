@@ -155,8 +155,8 @@ IResult<> MT9V034::write_reg(const uint8_t addr, const uint16_t reg_data){
     return Ok();
 }
 
-IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pData){
-    if(const auto res = sccb_drv_.read_reg(addr, pData);
+IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pbuf){
+    if(const auto res = sccb_drv_.read_reg(addr, pbuf);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

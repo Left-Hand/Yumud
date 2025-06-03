@@ -194,7 +194,7 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint16_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint16_t> pbuf);
 
     
     static constexpr uint8_t conv_reg_address(const RegAddress addr, bool repeat = true){

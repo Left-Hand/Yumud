@@ -12,13 +12,13 @@ using namespace ymd::drivers;
 
 static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
 
-void BurstDmaPwm::borrow(std::span<const uint16_t> pdata){
+void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
     dma_channel_.init(DmaMode::toPeriph, DmaPriority::Medium);
-    pdata_ = pdata;
+    pbuf_ = pbuf;
 }
 void BurstDmaPwm::invoke(){
     dma_channel_.transfer_mem2pph<uint16_t>(
-        &timer_oc_.cvr(), pdata_.data(), pdata_.size()
+        &timer_oc_.cvr(), pbuf_.data(), pbuf_.size()
     );
 }
 
@@ -48,10 +48,10 @@ DShotChannel::DShotChannel(hal::TimerOC & oc):
 BurstDmaPwm::BurstDmaPwm(hal::TimerOC & timer_oc):
     timer_oc_(timer_oc), dma_channel_(timer_oc.dma()){;}
 void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16_t data){
-    uint16_t tempdata = data;
+    uint16_t tempbuf = data;
     for(size_t i = 0; i < 16; i++){
-        buf[i] = (tempdata & 0x8000) ? HIGH_CVR : LOW_CVR;
-        tempdata = tempdata << 1;
+        buf[i] = (tempbuf & 0x8000) ? HIGH_CVR : LOW_CVR;
+        tempbuf = tempbuf << 1;
     }
 }
 

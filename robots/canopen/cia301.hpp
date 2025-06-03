@@ -81,11 +81,13 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         }
 
         SdoAbortCode write(const std::span<const uint8_t> pbuf, const SubIndex sidx){
-            if(unlikely(sidx) != 0) return SdoAbortCode::InvalidValue;
-            if(unlikely(pbuf.size() < 1)) return SdoAbortCode::InvalidValue;
+            if(unlikely(sidx) != 0) 
+                return SdoAbortCode::InvalidValue;
+            if(unlikely(pbuf.size() < 1)) 
+                return SdoAbortCode::InvalidValue;
 
             if(likely(!bool(pbuf[0]))){
-                error_fifo.waste(error_fifo.available());
+                // error_fifo.waste(error_fifo.available());
                 return SdoAbortCode::None;
             }else{
                 return SdoAbortCode::InvalidValue;

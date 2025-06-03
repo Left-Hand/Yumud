@@ -172,7 +172,7 @@ private:
         return read_reg(reg.address, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, const std::span<int16_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, const std::span<int16_t> pbuf);
 
 
 
