@@ -107,7 +107,9 @@ int main(){
     // temp_tb2(logger);
     // eeprom_tb(uart1);
     // eeprom_main();
-    myservo_main();
+    // myservo_main();
+    // myesc_main();
+    bldc_main();
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();

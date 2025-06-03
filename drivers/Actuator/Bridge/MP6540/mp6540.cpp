@@ -11,8 +11,8 @@ using namespace ymd::drivers;
 #define MP6540_DEBUG(...)
 #endif
 
-static void error(){
-    MP6540_DEBUG("terminated!!!");
+static void on_error(){
+    PANIC("terminated!!!");
 }
 
 
@@ -37,7 +37,7 @@ void MP6540::init(){
         const auto & item = pwms_[i];
         if(item == nullptr){
             MP6540_DEBUG("pwm[", i, "]: is null");
-            error();
+            on_error();
         }else{
             // item->init();
         } 
@@ -47,7 +47,7 @@ void MP6540::init(){
         const auto & item = ains_[i]; 
         if(item == nullptr){
             MP6540_DEBUG("ain[", i, "]: is null");
-            error();
+            on_error();
         }else{
 
         }
@@ -68,12 +68,12 @@ void MP6540::enable(const Enable en){
 
     if(has_en == false){
         MP6540_DEBUG("No enable channel found!");
-        error();
+        on_error();
     }
 }
 
-void MP6540::setSoRes(const uint so_res_ohms){
-    scexpr real_t curr_mirror_ratio = real_t(9200.0);
+void MP6540::set_so_res(const uint so_res_ohms){
+    static constexpr real_t curr_mirror_ratio = real_t(9200.0);
     const auto volt_to_curr_ratio = curr_mirror_ratio / so_res_ohms;
 
     for(auto & ch : chs){

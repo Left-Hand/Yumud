@@ -63,10 +63,10 @@ public:
 
     MP6540CurrentChannel & ch(const size_t index);
 
-    void setSoRes(const uint so_res_ohms);
+    void set_so_res(const uint so_res_ohms);
     // void setBias(const real_t b0, const real_t b1, const real_t b2);
 
-    MP6540 & operator= (const UVW_Duty & duty) override;
+    MP6540 & operator= (const UVW_Duty & duty);
 
 };
 

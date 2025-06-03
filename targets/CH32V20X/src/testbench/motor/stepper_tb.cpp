@@ -137,8 +137,8 @@ void stepper_tb(UartHw & logger_inst){
     auto & ena_gpio = portB[0];
     auto & enb_gpio = portA[7];
 
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio.outpp(HIGH)};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio.outpp(HIGH)};
+    AT8222 coilA{timer1.oc<3>(), timer1.oc<4>(), ena_gpio.outpp(HIGH)};
+    AT8222 coilB{timer1.oc<1>(), timer1.oc<2>(), enb_gpio.outpp(HIGH)};
 
     coilA.init();
     coilB.init();
@@ -165,10 +165,10 @@ void stepper_tb(UartHw & logger_inst){
     
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedDownTrig);
     timer1.enable_arr_sync();
-    timer1.oc(1).init({.valid_level = LOW});
-    timer1.oc(2).init({.valid_level = LOW});
-    timer1.oc(3).init({.valid_level = LOW});
-    timer1.oc(4).init({.valid_level = LOW});
+    timer1.oc<1>().init({.valid_level = LOW});
+    timer1.oc<2>().init({.valid_level = LOW});
+    timer1.oc<3>().init({.valid_level = LOW});
+    timer1.oc<4>().init({.valid_level = LOW});
     
     // using AdcChannelEnum = AdcChannelIndex;
     // using AdcCycleEnum = AdcSampleCycles;

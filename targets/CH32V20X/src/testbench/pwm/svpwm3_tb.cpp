@@ -51,9 +51,9 @@ void svpwm3_main(){
     auto & timer = timer4;
     #endif
 
-    auto & pwm_u = timer.oc(1);
-    auto & pwm_v = timer.oc(2);
-    auto & pwm_w = timer.oc(3);
+    auto & pwm_u = timer.oc<1>();
+    auto & pwm_v = timer.oc<2>();
+    auto & pwm_w = timer.oc<3>();
 
 
     timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig);
@@ -95,9 +95,9 @@ void svpwm3_main(){
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
     timer.init(20000, TimerCountMode::CenterAlignedUpTrig);
 
-    timer.oc(4).init({});
-    timer.oc(4).enable_output(EN);
-    timer.oc(4).cvr() = timer.arr() - 1;
+    timer.oc<4>().init({});
+    timer.oc<4>().enable_output(EN);
+    timer.oc<4>().cvr() = timer.arr() - 1;
 
     pwm_u.init(pwm_noinv_cfg);
     pwm_v.init(pwm_noinv_cfg);
@@ -128,7 +128,7 @@ void svpwm3_main(){
 
     adc1.enable_auto_inject(DISEN);
 
-    auto & inj = adc1.inj(1);
+    auto & inj = adc1.inj<1>();
 
     auto & trig_gpio = portC[13];
     trig_gpio.outpp();

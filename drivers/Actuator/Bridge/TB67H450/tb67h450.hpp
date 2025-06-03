@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class TB67H450:public Coil2Driver{
+class TB67H450{
 protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
@@ -27,7 +27,7 @@ public:
         setClamp(1.0);
     }
 
-    void setClamp(const real_t abs_max_value){
+    void set_clamp(const real_t abs_max_value){
         vref_pwm = ABS(abs_max_value);
     }
 
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    void setCurrent(const real_t curr){
+    void set_current(const real_t curr){
         if(curr > 0){
             forward_pwm = 0;
             backward_pwm = curr * inv_fullscale;
@@ -54,48 +54,8 @@ public:
     
     }
 
-    TB67H450 & operator = (const real_t curr){setCurrent(curr); return *this;}
+    TB67H450 & operator = (const real_t curr){set_current(curr); return *this;}
 };
-class Coil2:public Coil2Driver{
-protected:
-    PwmIntf & instanceP;
-    PwmIntf & instanceN;
-    bool enabled = true;
-public:
-    Coil2(PwmIntf & _instanceP, PwmIntf & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
-    void init() override{
-        instanceP.init();
-        instanceN.init();
-    }
-
-    // void setClamp(const real_t max_value) override{
-    //     real_t abs_max_value = abs(max_value);
-    //     instanceP.setClamp(abs_max_value);
-    //     instanceN.setClamp(abs_max_value);
-    // }
-
-    // void enable(const Enable en = EN) override{
-    //     enabled = en;
-    //     if(!en) setDuty(real_t(0));
-    // }
-
-    // void setDuty(const real_t duty) override{
-    //     if(!enabled){
-    //         instanceP = 0;
-    //         instanceN = 0;
-    //         return;
-    //     }
-    //     if(duty > 0){
-    //         instanceP = duty;
-    //         instanceN = 0;
-    //     }else{
-    //         instanceP = 0;
-    //         instanceN = -duty;
-    //     }
-    // }
-
-    // Coil2 & operator = (const real_t duty) override {setDuty(duty); return *this;}
-};
 
 };

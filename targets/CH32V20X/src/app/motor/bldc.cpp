@@ -269,7 +269,7 @@ public:
         // curr_stable_checker.update(mid_point_diff < stable_threshold);
     }
 
-    bool done(){
+    bool is_done(){
         return elapsed_ticks_ >= period_ticks_;
     }
 
@@ -309,14 +309,12 @@ void bldc_main(){
 
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedUpTrig);
 
-    auto & pwm_u = timer1.oc(1); 
-    auto & pwm_v = timer1.oc(2); 
-    auto & pwm_w = timer1.oc(3); 
+    auto & pwm_u = timer1.oc<1>(); 
+    auto & pwm_v = timer1.oc<2>(); 
+    auto & pwm_w = timer1.oc<3>(); 
 
-    timer1.oc(4).init({});
-    timer1.oc(4).enable_output(EN);
-    
-    timer1.oc(4).cvr() = timer1.arr() - 1;
+    timer1.oc<4>().init({.install_en = DISEN});
+    timer1.oc<4>().cvr() = timer1.arr() - 1;
 
     pwm_u.init({});
     pwm_v.init({});
@@ -352,11 +350,11 @@ void bldc_main(){
 
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
-        {adc1.inj(1), adc1.inj(2), adc1.inj(3)}
+        {adc1.inj<1>(), adc1.inj<2>(), adc1.inj<3>()}
     };
 
     mp6540.init();
-    mp6540.setSoRes(10_KHz);
+    mp6540.set_so_res(10'000);
     
     SVPWM3 svpwm {mp6540};
     
@@ -928,7 +926,7 @@ void bldc_main(){
         // speed_measurer.update(odo.getPosition());
 
         // mp6540.enable(true);
-        if(calibrater.done()) {
+        if(calibrater.is_done()) {
             // const auto guard = DEBUGGER.createGuard();
             // DEBUGGER.force_sync();
             // DEBUG_PRINTLN("Done Current Bias Measure!!");
@@ -1015,7 +1013,7 @@ void bldc_main(){
     while(true){
         [[maybe_unused]] const auto t = clock::time();
 
-        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
+        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
         DEBUG_PRINTLN_IDLE(
             // phase_res,
             // real_t(adc1.inj(1)),
@@ -1060,9 +1058,9 @@ void bldc_main(){
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
-        ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
-        ledb = BoolLevel::from((clock::millis() % 400).count() > 200);
-        ledg = BoolLevel::from((clock::millis() % 800).count() > 400);
+        ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+        ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+        ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
 
         // auto _t = real_t(0);
 

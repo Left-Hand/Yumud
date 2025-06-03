@@ -202,7 +202,7 @@ class AnalogJoystick{
 
 
 #define UART hal::uart2
-static constexpr uint32_t TIM_FREQ = 10000;
+static constexpr uint32_t TIM_FREQ = 5000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 void myservo_main(){
     UART.init(576000);
@@ -217,13 +217,42 @@ void myservo_main(){
     auto & led = portB[8];
     led.outpp(HIGH);
 
-    {
-        auto & ledr = portC[13];
-        ledr.outpp(HIGH);
+    // {
+    //     auto & ledr = portC[13];
+    //     ledr.outpp(HIGH);
+    //     while(true){
+    //         ledr.toggle();
+    //         clock::delay(200ms);
+    //         DEBUG_PRINTLN(clock::millis().count());
+    //     }
+    // }
+
+    while(true){
+
+        hal::timer3.init(TIM_FREQ, TimerCountMode::CenterAlignedUpTrig);
+
+        auto & pwm_pos = hal::timer3.oc<1>();
+        auto & pwm_neg = hal::timer3.oc<1>();
+
+        auto set_duty = [&](real_t duty){
+            duty = CLAMP2(duty, 0.8_r);
+            const auto duty_is_forward = duty > 0.0_r;
+            if(duty_is_forward){
+                pwm_pos.set_duty(duty);
+                pwm_neg.set_duty(0.0_r);
+            }else{
+                pwm_pos.set_duty(0.0_r);
+                pwm_neg.set_duty(-duty);
+            }
+        };
+        pwm_pos.init({});
+        pwm_neg.init({});
+
         while(true){
-            ledr.toggle();
-            clock::delay(200ms);
-            DEBUG_PRINTLN(clock::millis().count());
+            const auto t = clock::time();
+            const auto duty = sin(t) * 0.5_r;
+            set_duty(duty);
+            clock::delay(1ms);
         }
     }
 
@@ -271,16 +300,16 @@ void myservo_main(){
     can.init(CanBaudrate::_1M);
     init_adc();
 
-    auto & ain1 = adc1.inj(1);
-    auto & ain2 = adc1.inj(2);
+    auto & ain1 = adc1.inj<1>();
+    auto & ain2 = adc1.inj<2>();
 
 
     hal::timer3.init(TIM_FREQ, TimerCountMode::CenterAlignedUpTrig);
 
     real_t sense_raw_volt;
-    auto & pwm = hal::timer3.oc(1);
+    auto & pwm = hal::timer3.oc<1>();
+    auto & pwm_trig = hal::timer3.oc<4>();
     pwm.init({});
-    auto & pwm_trig = hal::timer3.oc(4);
     pwm_trig.init({.install_en = DISEN});
     pwm_trig.set_duty(0.001_r);
     hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);

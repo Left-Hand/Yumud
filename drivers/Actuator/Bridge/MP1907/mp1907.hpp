@@ -21,12 +21,16 @@ protected:
     Range2<real_t> duty_range_ = {real_t(0.03), real_t(0.97)};
 
 public:
-    MP1907(hal::TimerOC & ch, hal::TimerOCN & chn, hal::GpioIntf & en_gpio):
+    MP1907(
+        hal::TimerOC & ch, 
+        hal::TimerOCN & chn, 
+        hal::GpioIntf & en_gpio
+    ):
         inst_(ch),
         inst_n_(chn),
         en_gpio_(en_gpio){;}
 
-    MP1907(hal::AdvancedTimer & timer, const uint8_t pair_index, hal::GpioIntf & en_gpio);
+    // MP1907(hal::AdvancedTimer & timer, const uint8_t pair_index, hal::GpioIntf & en_gpio);
 
     void init();
     void setDutyRange(const Range2<real_t> & range){duty_range_ = range;}
@@ -34,7 +38,7 @@ public:
     void enable(const Enable en = EN){
         en_gpio_.write((en == EN) ? HIGH : LOW);
     }
-    MP1907 & operator=(const real_t duty) override;
+    MP1907 & operator=(const real_t duty);
 };
 
 };

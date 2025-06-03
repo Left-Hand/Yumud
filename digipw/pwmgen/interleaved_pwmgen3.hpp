@@ -134,20 +134,20 @@ public:
 public:
     InterleavedPwmGen3(hal::AdvancedTimer & timer):
         timer_(timer), 
-        pwm_u_(timer.oc(1)), 
-        pwm_v_(timer.oc(2)), 
-        pwm_w_(timer.oc(3)),
-        pwm_trig_(timer.oc(4)),
-        pwm_un_(timer.ocn(1)), 
-        pwm_vn_(timer.ocn(2)), 
-        pwm_wn_(timer.ocn(3))
+        pwm_u_(timer.oc<1>()), 
+        pwm_v_(timer.oc<2>()), 
+        pwm_w_(timer.oc<3>()),
+        pwm_trig_(timer.oc<4>()),
+        pwm_un_(timer.ocn<1>()), 
+        pwm_vn_(timer.ocn<2>()), 
+        pwm_wn_(timer.ocn<3>())
         {
     }
 
 
     struct Config{
         uint32_t freq;
-        uint32_t deadzone_ns;
+        Nanoseconds deadzone_ns;
     };
 
     void init(const Config & cfg){
@@ -200,7 +200,7 @@ public:
         timer_.set_freq(freq);
     }
 
-    void set_deadzone_ns(const uint32_t ns){
+    void set_deadzone_ns(const Nanoseconds ns){
         timer_.set_deadzone_ns(ns);
     }
 

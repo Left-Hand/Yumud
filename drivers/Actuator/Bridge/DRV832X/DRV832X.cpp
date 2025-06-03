@@ -16,10 +16,73 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = DRV832X::Error;
+using Error = DRV8323R::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
+
+
+
+IResult<> DRV8323R::init(const Config & cfg){
+
+    return Ok();
+}
+
+IResult<> DRV8323R::reconf(const Config & cfg){
+    return Ok();
+}
+
+IResult<> DRV8323R::set_peak_current(const PeakCurrent peak_current){
+    return Ok();
+}
+
+IResult<> DRV8323R::set_ocp_mode(const OcpMode ocp_mode){
+    return Ok();
+}
+
+IResult<> DRV8323R::set_gain(const Gain gain){
+    return Ok();
+}
+
+IResult<> DRV8323R::enable_pwm3(const Enable en){
+    return Ok();
+}
+
+IResult<> DRV8323R::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
+    auto reg = RegCopy(gate_drv_hs_reg);
+    reg.idrive_p_hs = pdrive;
+    reg.idrive_n_hs = ndrive;
+
+    return write_reg(reg);
+}
+
+IResult<> DRV8323R::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
+    auto reg = RegCopy(gate_drv_ls_reg);
+    reg.idrive_p_ls = pdrive;
+    reg.idrive_n_ls = ndrive;
+
+    return write_reg(reg);
+}
+
+IResult<> DRV8323R::set_drive_time(const PeakDriveTime ptime){
+    auto reg = RegCopy(gate_drv_ls_reg);
+    reg.tdrive = ptime;
+
+    return write_reg(reg);
+}
+
+IResult<DRV8323R::R16_Status1> DRV8323R::get_status1(){
+    if(const auto res = read_reg(status1_reg); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(status1_reg);
+}
+
+IResult<DRV8323R::R16_Status2> DRV8323R::get_status2(){
+    if(const auto res = read_reg(status2_reg); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(status2_reg);
+}
+
 
 struct SpiFormat{
     uint16_t data:11;
@@ -35,7 +98,7 @@ struct SpiFormat{
     }
 };
 
-IResult<> DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
+IResult<> DRV8323R_Phy::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -48,7 +111,7 @@ IResult<> DRV832X::write_reg(const RegAddress addr, const uint16_t reg){
     return Ok();
 }
 
-IResult<> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
+IResult<> DRV8323R_Phy::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
@@ -60,28 +123,4 @@ IResult<> DRV832X::read_reg(const RegAddress addr, uint16_t & reg){
     reg = spi_format.data;
 
     return Ok();
-}
-
-
-IResult<> DRV832X::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
-    auto reg = RegCopy(gate_drv_hs_reg);
-    reg.idrive_p_hs = pdrive;
-    reg.idrive_n_hs = ndrive;
-
-    return write_reg(reg);
-}
-
-IResult<> DRV832X::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
-    auto reg = RegCopy(gate_drv_ls_reg);
-    reg.idrive_p_ls = pdrive;
-    reg.idrive_n_ls = ndrive;
-
-    return write_reg(reg);
-}
-
-IResult<> DRV832X::set_drive_time(const PeakDriveTime ptime){
-    auto reg = RegCopy(gate_drv_ls_reg);
-    reg.tdrive = ptime;
-
-    return write_reg(reg);
 }

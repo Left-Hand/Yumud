@@ -382,10 +382,9 @@ public:
 
         timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
-        timer3.oc(4).init({.install_en = DISEN});
-        timer3.oc(4).enable_output(EN);
-
-        timer3.oc(4).cvr() = 1;
+        timer3.oc<4>().init({.install_en = DISEN});
+        timer3.oc<4>().enable_output(EN);
+        timer3.oc<4>().cvr() = 1;
     }
 
     void process(const real_t t){
@@ -403,14 +402,14 @@ public:
 private:
     hal::GenericTimer & timer = hal::timer3;
             
-    hal::TimerOC & pwm_pos = timer.oc(1);
-    hal::TimerOC & pwm_neg = timer.oc(2);
+    hal::TimerOC & pwm_pos = timer.oc<1>();
+    hal::TimerOC & pwm_neg = timer.oc<2>();
 
     Chopper chopper_{
         pwm_pos, pwm_neg, hal::NullGpio
     };
 
-    Sensor sensor_{hal::adc1.inj(1)};
+    Sensor sensor_{hal::adc1.inj<1>()};
 
     Motor motor_{chopper_, sensor_};
 

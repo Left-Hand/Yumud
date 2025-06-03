@@ -49,10 +49,10 @@ void sincos_pwm_main(){
     auto & timer = timer4;
     #endif
 
-    auto & pwm_ap = timer.oc(1);
-    auto & pwm_an = timer.oc(2);
-    auto & pwm_bp = timer.oc(3);
-    auto & pwm_bn = timer.oc(4);
+    auto & pwm_ap = timer.oc<1>();
+    auto & pwm_an = timer.oc<2>();
+    auto & pwm_bp = timer.oc<3>();
+    auto & pwm_bn = timer.oc<4>();
 
 
     timer.init(FREQ, TimerCountMode::CenterAlignedDualTrig);
@@ -130,7 +130,7 @@ void sincos_pwm_main(){
 
     adc1.enable_auto_inject(DISEN);
 
-    auto & inj = adc1.inj(1);
+    auto & inj = adc1.inj<1>();
 
     auto & trig_gpio = portC[13];
     trig_gpio.outpp();

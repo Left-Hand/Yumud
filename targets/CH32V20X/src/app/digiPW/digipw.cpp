@@ -140,10 +140,10 @@ void digipw_main(){
 
     constexpr auto CHOPPER_FREQ = 100'000;
     timer1.init(CHOPPER_FREQ);
-    timer1.init_bdtr(10);
+    timer1.init_bdtr(10ns);
 
-    auto & ch = timer1.oc(1);
-    auto & chn = timer1.ocn(1);
+    auto & ch = timer1.oc<1>();
+    auto & chn = timer1.ocn<1>();
     ch.enable_cvr_sync(EN);
     auto & en_gpio = portB[0];
     auto & led = portA[7];

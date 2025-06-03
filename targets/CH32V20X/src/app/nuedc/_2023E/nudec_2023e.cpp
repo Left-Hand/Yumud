@@ -39,8 +39,8 @@ public:
 
     const Config cfg;
 
-    hal::TimerOC & pwm_yaw = SERVO_PWMGEN_TIMER.oc(1);
-    hal::TimerOC & pwm_pitch = SERVO_PWMGEN_TIMER.oc(2);
+    hal::TimerOC & pwm_yaw = SERVO_PWMGEN_TIMER.oc<1>();
+    hal::TimerOC & pwm_pitch = SERVO_PWMGEN_TIMER.oc<2>();
 
     void setup(){
 

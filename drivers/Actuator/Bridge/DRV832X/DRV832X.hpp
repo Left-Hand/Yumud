@@ -3,14 +3,13 @@
 #include <optional>
 #include <array>
 
+#include "hal/bus/spi/spidrv.hpp"
+#include "hal/gpio/gpio.hpp"
+
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
 #include "concept/analog_channel.hpp"
-#include "hal/bus/spi/spidrv.hpp"
-
-#include "../CoilDriver.hpp"
-#include "core/utils/Result.hpp"
 
 
 
@@ -207,10 +206,15 @@ struct DRV832X_Collections{
         _1x = 0b10,
         Independent = 0b11,
     };
+
+
+    struct Config{
+
+    };
 };
 
 struct DRV832X_Regs:public DRV832X_Collections{
-    struct R16_Status1:public Reg16<>{
+    struct R16_Status1{
         scexpr RegAddress address = 0x00;
 
         uint16_t vds_lc:1;
@@ -227,9 +231,17 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t fault:1;
 
         uint16_t :5;
+
+        uint16_t & as_ref(){
+            return *reinterpret_cast<uint16_t*>(this);
+        }
+
+        std::bitset<11> as_bitset() const {
+            return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
+        }
     }DEF_R16(status1_reg)
 
-    struct R16_Status2:public Reg16<>{
+    struct R16_Status2{
         scexpr RegAddress address = 0x01;
 
         uint16_t vgs_lc:1;
@@ -245,6 +257,14 @@ struct DRV832X_Regs:public DRV832X_Collections{
         uint16_t sa_oc:1;
 
         uint16_t :5;
+
+        uint16_t & as_ref(){
+            return *reinterpret_cast<uint16_t*>(this);
+        }
+
+        std::bitset<11> as_bitset() const {
+            return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
+        }
     }DEF_R16(status2_reg)
 
     struct R16_Ctrl1:public Reg16<>{
@@ -314,19 +334,37 @@ struct DRV832X_Regs:public DRV832X_Collections{
 
 };
 
-class DRV832X final:
-    public Coil3DriverIntf,
+
+class DRV8323R_Phy final:public DRV832X_Collections{
+public:
+    DRV8323R_Phy(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    DRV8323R_Phy(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    DRV8323R_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv(spi, index)){;}
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+private:
+    hal::SpiDrv spi_drv_;
+};
+
+
+
+class DRV8323R final:
     public DRV832X_Regs{
 public:
+    DRV8323R(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    DRV8323R(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    DRV8323R(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv(spi, index)){;}
 
 
-public:
-    DRV832X(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    DRV832X(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV832X(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
-
-
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
+    [[nodiscard]] IResult<> reconf(const Config & cfg);
 
     [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
     [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
@@ -336,17 +374,17 @@ public:
     [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
     [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
+
+    [[nodiscard]] IResult<R16_Status1> get_status1();
+    [[nodiscard]] IResult<R16_Status2> get_status2();
 private:
-    hal::SpiDrv spi_drv_;
-
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+    using Phy = DRV8323R_Phy;
+    Phy phy_;
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -355,11 +393,103 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg);
+        return phy_.read_reg(reg.address, reg.as_ref());
+    }
+};
+
+
+class DRV8323H_Phy final:public DRV832X_Collections{
+public:
+    struct Params{
+        hal::Gpio & gain_gpio;
+        hal::Gpio & vds_gpio;
+        hal::Gpio & idrive_gpio;
+        hal::Gpio & mode_gpio;
+    };
+
+    DRV8323H_Phy(const Params & params):
+        gain_gpio_(params.gain_gpio),
+        vds_gpio_(params.vds_gpio),
+        idrive_gpio_(params.idrive_gpio),
+        mode_gpio_(params.mode_gpio){;}
+
+    void set_pwmmode(const PwmMode mode){
+        // _6x = GND,
+        // _3x = 47K to GND,
+        // _1x = HiZ,
+        // Independent = VDD,
+
+        switch(mode){
+            case PwmMode::_6x:
+                mode_gpio_.outpp(LOW);
+                break;
+            case PwmMode::_3x:
+                mode_gpio_.inpd();
+                break;
+            case PwmMode::_1x:
+                mode_gpio_.inflt();
+                break;
+                // mode_gpio_.outpp(HIGH);
+                break;
+            case  PwmMode::Independent:
+                mode_gpio_.outpp(HIGH);
+                break;
+        }
+    }
+
+    void set_idrive(const IDriveP drive){
+        // switch(drive){
+        //     case IDriveP::
+        // }
+        idrive_gpio_.inflt();
     }
 
 
 
+    // void set_gain(const Gain gain){
+    // // 4-level	MODE	GAIN
+    // // 直连DVDD	Independent	放大40倍
+    // // 高阻态/接>500kΩ电阻到AGND	单路PWM	放大20倍
+    // // 接47kΩ电阻到AGND	3路PWM	放大10倍
+    // // 直连AGND	6路PWM	放大5倍
+
+    //     switch(gain){
+
+    //     }
+    // }
+private:
+    hal::Gpio & gain_gpio_;
+    hal::Gpio & vds_gpio_;
+    hal::Gpio & idrive_gpio_;
+    hal::Gpio & mode_gpio_;
 };
+
+
+class DRV8323H final:
+    public DRV832X_Collections{
+public:
+
+    template<typename ... Args>
+    DRV8323H(Args && ... args):
+        phy_(std::forward<Args>(args)...){;}
+
+
+    [[nodiscard]] IResult<> init(const Config & cfg);
+    [[nodiscard]] IResult<> reconf(const Config & cfg);
+
+    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
+    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
+
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
+
+private:
+    using Phy = DRV8323H_Phy;
+    Phy phy_;
+};
+
 
 };

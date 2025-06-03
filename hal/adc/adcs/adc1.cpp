@@ -25,30 +25,6 @@ __interrupt void ADC1_2_IRQHandler(void){
 }
 #endif
 
-
-void Adc1::refresh_regular_data(){
-    if(regular_conv_index < 16){
-        regular_datas[regular_conv_index] = ADC1->RDATAR;
-        regular_conv_index++;
-    }
-}
-
-void Adc1::refresh_injected_data(){
-    injected_datas[0] = instance->IDATAR1;
-    injected_datas[1] = instance->IDATAR2;
-    injected_datas[2] = instance->IDATAR3;
-    injected_datas[3] = instance->IDATAR4;
-}
-
-uint16_t Adc1::get_regular_data_by_rank(const uint8_t rank){
-    return 0;
-}
-
-uint16_t Adc1::get_injected_data_by_rank(const uint8_t rank){
-    if(rank == 0 || rank > 4) return 0;
-    else return injected_datas[rank];
-}
-
 namespace ymd::hal{
 #ifdef ENABLE_ADC1
 Adc1 adc1;

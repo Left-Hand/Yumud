@@ -15,8 +15,11 @@ public:
     AT8222(
         hal::PwmIntf & forward_pwm, 
         hal::PwmIntf & backward_pwm, 
-        hal::GpioIntf & en_gpio):
-    forward_pwm_(forward_pwm), backward_pwm_(backward_pwm), enable_gpio_(en_gpio){;}
+        hal::GpioIntf & en_gpio
+    ):
+        forward_pwm_(forward_pwm), 
+        backward_pwm_(backward_pwm), 
+        enable_gpio_(en_gpio){;}
 
     void init();
     void enable(const Enable en = EN);

@@ -71,8 +71,8 @@ struct __Reg_t:public __RegC_t<T, D>{
 protected:
     constexpr __Reg_t<T> & operator = (const __Reg_t<T, D> & other) = default;
     constexpr __Reg_t<T> & operator = (__Reg_t<T, D> && other) = default;
-    __Reg_t(const T & data){*this = data;};
-    __Reg_t(T && data){*this = data;};
+    constexpr __Reg_t(const T & data){*this = data;};
+    constexpr __Reg_t(T && data){*this = data;};
     
 public:
     using value_type = T;

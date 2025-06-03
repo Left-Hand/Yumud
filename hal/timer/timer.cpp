@@ -1,6 +1,7 @@
 #include "timer.hpp"
 #include "core/system.hpp"
 #include <optional>
+#include "core/clock/clock.hpp"
 // #include "ral/ch32/ch32_common_tim_def.hpp"
 
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
@@ -111,9 +112,12 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
 }
 
 
-static constexpr uint8_t calculate_deadzone_code_from_ns(const uint32_t bus_freq, const uint32_t ns){
+static constexpr uint8_t calculate_deadzone_code_from_ns(
+    const uint32_t bus_freq, 
+    const ymd::Nanoseconds ns
+){
 
-    const uint16_t scale = (ns * (bus_freq / 1000000) / 1000);
+    const uint16_t scale = (ns.count() * (bus_freq / 1000000) / 1000);
     if(scale < 128){
         return scale;
     }else if(scale < 256){
@@ -136,15 +140,15 @@ static constexpr uint8_t calculate_deadzone_code_from_ns(const uint32_t bus_freq
     }
 }
 
-namespace details{
-    void static_test(){
-        // Test 1: Perfect match found
-        static_assert(std::get<0>(calc_best_arr_and_psc(72'000'000, 
-            2'000, {0, 65535})) == 35999, "Test 1: ARR mismatch");
-        static_assert(std::get<1>(calc_best_arr_and_psc(72'000'000, 
-            2'000, {0, 65535})) == 0, "Test 1: PSC mismatch");
-    }
-}
+// namespace details{
+//     void static_test(){
+//         // Test 1: Perfect match found
+//         static_assert(std::get<0>(calc_best_arr_and_psc(72'000'000, 
+//             2'000, {0, 65535})) == 35999, "Test 1: ARR mismatch");
+//         static_assert(std::get<1>(calc_best_arr_and_psc(72'000'000, 
+//             2'000, {0, 65535})) == 0, "Test 1: PSC mismatch");
+//     }
+// }
 
 
 void BasicTimer::enable_rcc(const Enable en){
@@ -288,11 +292,8 @@ void BasicTimer::set_arr(const uint16_t arr){
 void BasicTimer::set_count_mode(const TimerCountMode mode){
     auto tmpcr1 = instance_->CTLR1;
 
-    if((instance_ == TIM1) || (instance_ == TIM2) || (instance_ == TIM3) || (instance_ == TIM4) || (instance_ == TIM5))
-    {
-        tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
-        tmpcr1 |= (uint32_t)mode;
-    }
+    tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
+    tmpcr1 |= (uint32_t)mode;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
@@ -396,15 +397,15 @@ void GenericTimer::init_as_encoder(const Mode mode){
     TIM_Cmd(instance_, ENABLE);
 }
 
-void GenericTimer::enable_single(const bool _single){
-    TIM_SelectOnePulseMode(instance_, _single ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
+void GenericTimer::enable_single(const Enable en){
+    TIM_SelectOnePulseMode(instance_, (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
 void GenericTimer::set_trgo_source(const TrgoSource source){
     TIM_SelectOutputTrigger(instance_, uint8_t(source));
 }
 
-void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
+void AdvancedTimer::init_bdtr(const Nanoseconds ns, const LockLevel level){
 
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
@@ -419,7 +420,7 @@ void AdvancedTimer::init_bdtr(const uint32_t ns, const LockLevel level){
     TIM_BDTRConfig(instance_, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_deadzone_ns(const uint32_t ns){
+void AdvancedTimer::set_deadzone_ns(const Nanoseconds ns){
     uint8_t dead = this->calculate_deadzone(ns);
 
     uint16_t tempreg = instance_->BDTR;
@@ -428,7 +429,7 @@ void AdvancedTimer::set_deadzone_ns(const uint32_t ns){
     instance_->BDTR = tempreg;
 }
 
-uint8_t AdvancedTimer::calculate_deadzone(const uint32_t ns){
+uint8_t AdvancedTimer::calculate_deadzone(const Nanoseconds ns){
     return calculate_deadzone_code_from_ns(
         this->get_bus_freq(),
         ns
@@ -444,43 +445,13 @@ void BasicTimer::enable_cc_ctrl_sync(const Enable en){
     TIM_CCPreloadControl(instance_, en == EN);
 }
 
-TimerOC & GenericTimer::oc(const size_t index){
-    TIM_ASSERT(index <= 4 and index != 0);
 
-    return channels[index - 1];
-}
-
-
-TimerChannel & GenericTimer::operator [](const int index){
-    return channels[index];
-}
-
-
-
-
-TimerChannel & AdvancedTimer::operator [](const int index){
-    TIM_ASSERT(index <= 4 and index >= -3);
-    
-    bool is_co = index < 0;
-    if(is_co){
-        return n_channels[-index - 1];
-    }else{
-        return channels[(index -1) & 0b11];
-    }
-}
-
-
-TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
-    bool is_co = (uint8_t) ch & 0b1;
-    if(is_co){
-        return n_channels[((uint8_t)ch - 1) >> 1];
-    }else{
-        return channels[(uint8_t)ch >> 1];
-    }
-}
-
-
-#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invoke_callback(it); TIM_ClearITPendingBit(instance_, uint8_t(it)); return;}
+#define TRY_HANDLE_IT(it)\
+if((itstatus & uint8_t(it))) {\
+    invoke_callback(it); \
+    TIM_ClearITPendingBit(instance_, uint8_t(it)); \
+    return;\
+}\
 
 void GenericTimer::on_cc_interrupt(){
     const uint16_t itstatus = instance_->INTFR;
