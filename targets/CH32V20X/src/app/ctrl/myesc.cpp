@@ -13,7 +13,7 @@
 #include "drivers/Encoder/odometer.hpp"
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "drivers/Actuator/Bridge/DRV832X/DRV832X.hpp"
+#include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"

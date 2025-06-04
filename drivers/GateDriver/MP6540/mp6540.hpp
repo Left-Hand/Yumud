@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 #include "types/regions/range2/range2.hpp"
 
 #include "concept/analog_channel.hpp"
@@ -17,7 +17,7 @@ namespace ymd::drivers{
 
 
 
-class MP6540:public Coil3DriverIntf{
+class MP6540:public GateDriver3Intf{
 protected:
     using PWM3 = std::array<hal::PwmIntf *, 3>;
     using AIN3 = std::array<hal::AnalogInIntf *, 3>;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 #include "types/regions/range2/range2.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 #include <optional>
@@ -13,7 +13,7 @@ namespace ymd::hal{
 
 namespace ymd::drivers{
 
-class MP1907:public Coil2DriverIntf{
+class MP1907:public GateDriver2Intf{
 protected:
     hal::TimerOC & inst_;
     hal::TimerOCN & inst_n_;

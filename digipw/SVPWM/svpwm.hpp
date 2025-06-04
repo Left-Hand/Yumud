@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/Actuator/Bridge/CoilDriver.hpp"
+#include "drivers/GateDriver/GateDriverIntf.hpp"
 
 #include "core/math/realmath.hpp"
 

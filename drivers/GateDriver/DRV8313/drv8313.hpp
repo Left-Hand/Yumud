@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 
 #define DRV8313_DEBUG
 
@@ -13,7 +13,7 @@
 
 namespace ymd::drivers{
 
-class DRV8313:public Coil3Driver{
+class DRV8313:public GateDriver3{
 protected:
     // using PWM3 = std::array<PwmIntf &, 3>;
     using EnablePort = VGpioPort<3>;

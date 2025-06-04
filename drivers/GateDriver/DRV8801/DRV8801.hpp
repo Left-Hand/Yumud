@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 #include "concept/pwm_channel.hpp"
 #include "concept/analog_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"

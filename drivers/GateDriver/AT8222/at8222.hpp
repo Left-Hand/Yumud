@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
 namespace ymd::drivers{
 
-class AT8222:public Coil2DriverIntf{
+class AT8222:public GateDriver2Intf{
 protected:
     hal::PwmIntf & forward_pwm_;
     hal::PwmIntf & backward_pwm_;

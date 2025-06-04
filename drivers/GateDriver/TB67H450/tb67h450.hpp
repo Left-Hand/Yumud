@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CoilDriver.hpp"
+#include "GateDriverIntf.hpp"
 
 namespace ymd::drivers{
 

@@ -6,7 +6,7 @@
 namespace ymd::digipw{
 class SVPWM2 final:public SVPWM{
 public:
-    using Driver = drivers::Coil2DriverIntf;
+    using Driver = drivers::GateDriver2Intf;
 
     Driver & coil_a_;
     Driver & coil_b_;

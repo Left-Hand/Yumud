@@ -6,7 +6,7 @@
 #include "concept/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "../CoilDriver.hpp"
+#include "../GateDriverIntf.hpp"
 #include "types/regions/range2/range2.hpp"
 
 
@@ -150,7 +150,7 @@ struct DRV8301_Regs:public DRV8301_Collections{
 };
 
 class DRV8301 final:
-    public Coil3DriverIntf,
+    public GateDriver3Intf,
     public DRV8301_Regs{
 public:
 
