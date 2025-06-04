@@ -7,12 +7,16 @@
 
 namespace ymd::drivers{
 
-class Si5351C{
-protected:
-    hal::I2cDrv _i2c_drv;
+struct Si5351C_Collections{
 
-    struct DeviceStatusReg:public Reg8<>{
-        scexpr uint8_t address = 0x00;
+};
+
+struct Si5351C_Regs:
+    public Si5351C_Collections
+{
+
+    struct R8_DeviceStatus:public Reg8<>{
+        static constexpr uint8_t address = 0x00;
 
         uint8_t REVID:2;
         uint8_t :2;
@@ -22,8 +26,8 @@ protected:
         uint8_t SYS_INIT:1;
     };
 
-    struct InterruptStatusReg:public Reg8<>{
-        scexpr uint8_t address = 0x01;
+    struct R8_InterruptStatus:public Reg8<>{
+        static constexpr uint8_t address = 0x01;
 
         uint8_t :4;
         uint8_t LOS_STKY:1;
@@ -32,8 +36,8 @@ protected:
         uint8_t SYS_INIT_STKY:1;
     };
 
-    struct InterruptMaskReg:public Reg8<>{
-        scexpr uint8_t address = 0x02;
+    struct R8_InterruptMask:public Reg8<>{
+        static constexpr uint8_t address = 0x02;
 
         uint8_t :4;
         uint8_t LOS_MASK:1;
@@ -42,8 +46,8 @@ protected:
         uint8_t SYS_INIT_MASK:1;
     };
 
-    struct OutputEnableCtrlReg:public Reg8<>{
-        scexpr uint8_t address = 0x03;
+    struct R8_OutputEnableCtrl:public Reg8<>{
+        static constexpr uint8_t address = 0x03;
 
         uint8_t CLK0_OEB:1;
         uint8_t CLK1_OEB:1;
@@ -55,8 +59,8 @@ protected:
         uint8_t CLK7_OEB:1;
     };
 
-    struct OEBPinEnableCtrlReg:public Reg8<>{
-        scexpr uint8_t address = 0x09;
+    struct R8_OEBPinEnableCtrl:public Reg8<>{
+        static constexpr uint8_t address = 0x09;
 
         uint8_t OEB_CLK0:1;
         uint8_t OEB_CLK1:1;
@@ -68,8 +72,8 @@ protected:
         uint8_t OEB_CLK7:1;
     };
 
-    struct PllInputSourceReg:public Reg8<>{
-        scexpr uint8_t address = 15;
+    struct R8_PllInputSource:public Reg8<>{
+        static constexpr uint8_t address = 15;
 
         uint8_t :2;
         uint8_t PLLA_SOURCE:1;
@@ -77,8 +81,8 @@ protected:
         uint8_t :4;
     };
 
-    struct CLKCtrlReg:public Reg8<>{
-        scexpr uint8_t address = 16;
+    struct R8_CLKCtrl:public Reg8<>{
+        static constexpr uint8_t address = 16;
 
         uint8_t CLK_IDRV:2;
         uint8_t CLK_SRC:2;
@@ -88,8 +92,8 @@ protected:
         uint8_t CLK_PDN:4;
     };
 
-    struct CLK0CtrlReg:public Reg8<>{
-        scexpr uint8_t address = 16;
+    struct R8_CLK0Ctrl:public Reg8<>{
+        static constexpr uint8_t address = 16;
 
         uint8_t CLK0_IDRV:2;
         uint8_t CLK0_SRC:2;
@@ -99,8 +103,8 @@ protected:
         uint8_t CLK0_PDN:4;
     };
 
-    struct CLK1CtrlReg:public Reg8<>{
-        scexpr uint8_t address = 17;
+    struct R8_CLK1Ctrl:public Reg8<>{
+        static constexpr uint8_t address = 17;
 
         uint8_t CLK1_IDRV:2;
         uint8_t CLK1_SRC:2;
@@ -110,8 +114,8 @@ protected:
         uint8_t CLK1_PDN:4;
     };
 
-    struct CLK2CtrlReg:public Reg8<>{
-        scexpr uint8_t address = 18;
+    struct R8_CLK2Ctrl:public Reg8<>{
+        static constexpr uint8_t address = 18;
 
         uint8_t CLK2_IDRV:2;
         uint8_t CLK2_SRC:2;
@@ -121,8 +125,8 @@ protected:
         uint8_t CLK2_PDN:4;
     };
 
-    struct CLK3_0DisableStateReg:public Reg8<>{
-        scexpr uint8_t address = 24;
+    struct R8_CLK3_0DisableState:public Reg8<>{
+        static constexpr uint8_t address = 24;
 
         uint8_t CLK0_DIS_STATE:2;
         uint8_t CLK1_DIS_STATE:2;
@@ -130,39 +134,46 @@ protected:
         uint8_t CLK3_DIS_STATE:2;
     };
 
-    struct CLK7_4DisableStateReg:public Reg8<>{
-        scexpr uint8_t address = 25;
+    struct R8_CLK7_4DisableState:public Reg8<>{
+        static constexpr uint8_t address = 25;
 
         uint8_t CLK4_DIS_STATE:2;
         uint8_t CLK5_DIS_STATE:2;
         uint8_t CLK6_DIS_STATE:2;
         uint8_t CLK7_DIS_STATE:2;
     };
+};
 
-    // struct 
-protected:
+class Si5351C{
+public:
+    Si5351C(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){};
+    Si5351C(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){};
+    
+    void init();
+private:
+    hal::I2cDrv i2c_drv_;
     auto write_reg(const uint8_t address, const uint8_t data){
-        return _i2c_drv.write_reg(address, data);
+        return i2c_drv_.write_reg(address, data);
     }
-    auto write_burst(const uint8_t address, const uint8_t * data, const size_t len){
-        return _i2c_drv.write_burst(address, std::span(data, len));
+    auto write_burst(
+        const uint8_t address, 
+        const std::span<const uint8_t> pbuf
+    ){
+        return i2c_drv_.write_burst(address, pbuf);
     }
 
     auto read_reg(const uint8_t address, uint8_t & data){
-        return _i2c_drv.read_reg(address, data);
+        return i2c_drv_.read_reg(address, data);
     }
 
-    auto read_burst(const uint8_t address, uint8_t * data, const size_t len){
-        return _i2c_drv.read_burst(address, std::span(data, len));
+    auto read_burst(
+        const uint8_t address, 
+        std::span<uint8_t> pbuf
+    ){
+        return i2c_drv_.read_burst(address, pbuf);
     }
-public:
-    Si5351C(const hal::I2cDrv & i2c_drv):
-        _i2c_drv(i2c_drv){};
-    Si5351C(hal::I2cDrv && i2c_drv):
-        _i2c_drv(std::move(i2c_drv)){};
-    
-    void init();
-
 };
 
 }
