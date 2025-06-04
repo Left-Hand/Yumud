@@ -197,7 +197,19 @@ public:
     void init_as_encoder(const Mode mode = Mode::Up);
     void enable_single(const Enable en);
     void set_trgo_source(const TrgoSource source);
-    
+
+    template<size_t I>
+    requires(I >= 1 and I <= 4)
+    volatile uint16_t & cvr(){
+        switch(I){
+            case 1: return instance_->CH1CVR;
+            case 2: return instance_->CH2CVR;
+            case 3: return instance_->CH3CVR;
+            case 4: return instance_->CH4CVR;
+            default: __builtin_unreachable();
+        }
+    }
+
     template<size_t I>
     requires(I >= 1 and I <= 4)
     TimerOC & oc(){

@@ -5,7 +5,7 @@
 #include "robots/foc/stepper/stepper.hpp"
 #include "algo/interpolation/cubic.hpp"
 
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 

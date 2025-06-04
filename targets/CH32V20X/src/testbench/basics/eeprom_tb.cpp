@@ -7,8 +7,8 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Storage/Flash/W25QXX/w25q16.hpp"
 
 #include "algo/random/random_generator.hpp"
 

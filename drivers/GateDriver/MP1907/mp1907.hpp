@@ -30,8 +30,6 @@ public:
         inst_n_(chn),
         en_gpio_(en_gpio){;}
 
-    // MP1907(hal::AdvancedTimer & timer, const uint8_t pair_index, hal::GpioIntf & en_gpio);
-
     void init();
     void setDutyRange(const Range2<real_t> & range){duty_range_ = range;}
 
