@@ -82,7 +82,7 @@ void ads1115_main()
 
     while(true){
         // if(ads.ready()){
-            DEBUG_PRINTLN(clock::millis(), ads.result().unwrap());
+            DEBUG_PRINTLN(clock::millis(), ads.get_voltage().unwrap());
         // }
 
         // ads.

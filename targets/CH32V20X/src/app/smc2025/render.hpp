@@ -29,11 +29,11 @@ static constexpr uint8_t WHITE_COLOR = 0x9f;
 
 using namespace ymd;
 
-consteval iq_t<16> operator"" _deg(long double x){
-    return iq_t<16>(x * PI / 180);
+consteval q16 operator"" _deg(long double x){
+    return q16(x * PI / 180);
 }
-consteval iq_t<16> operator"" _deg(uint64_t x){
-    return iq_t<16>(x * PI / 180);
+consteval q16 operator"" _deg(uint64_t x){
+    return q16(x * PI / 180);
 }
 
 
@@ -63,7 +63,7 @@ struct Pose2_t{
     }
 
     [[nodiscard]] constexpr Pose2_t<T> side_move(const T length) const {
-        const auto [s, c] = sincos(rad + iq_t<16>(PI/2));
+        const auto [s, c] = sincos(rad + q16(PI/2));
         const auto delta = Vector2<T>{c, s} * length;
         return {
             pos + delta,
@@ -94,13 +94,13 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Pose2_t<T> & ob
         obj.rad << os.brackets<')'>();
 }
 
-using BoundingBox = Rect2<iq_t<16>>;
+using BoundingBox = Rect2<q16>;
 
 struct Placement{
-    Vector2<iq_t<16>> pos;
+    Vector2<q16> pos;
 
-    // iq_t<16> rotation = 0;
-    // iq_t<16> zoom = 1;
+    // q16 rotation = 0;
+    // q16 zoom = 1;
 
     // Vector2q<16> apply_transform(Vector2q<16> p) const {
     // return (p * zoom).rotated(rotation) + pos;
@@ -139,46 +139,46 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
 
 struct AnnularSector{
 
-    iq_t<16> inner_radius;
-    iq_t<16> outer_radius;
+    q16 inner_radius;
+    q16 outer_radius;
     
-    iq_t<16> start_rad;
-    iq_t<16> stop_rad;
+    q16 start_rad;
+    q16 stop_rad;
 
-    constexpr bool does_contains_rad(const iq_t<16> rad) const {
+    constexpr bool does_contains_rad(const q16 rad) const {
         return IN_RANGE(rad, start_rad, stop_rad);
     }
 
-    constexpr Rect2<iq_t<16>> get_bounding_box() const {
-        const bool x_reached_left = does_contains_rad(iq_t<16>(PI));
-        const bool x_reached_right = does_contains_rad(iq_t<16>(0));
-        const bool y_reached_top = does_contains_rad(iq_t<16>(PI/2));
-        const bool y_reached_bottom = does_contains_rad(iq_t<16>(-PI/2));
+    constexpr Rect2<q16> get_bounding_box() const {
+        const bool x_reached_left = does_contains_rad(q16(PI));
+        const bool x_reached_right = does_contains_rad(q16(0));
+        const bool y_reached_top = does_contains_rad(q16(PI/2));
+        const bool y_reached_bottom = does_contains_rad(q16(-PI/2));
 
-        const auto p1 = Vector2<iq_t<16>>::from_idenity_rotation(start_rad) * outer_radius;
-        const auto p2 = Vector2<iq_t<16>>::from_idenity_rotation(stop_rad) * outer_radius;
+        const auto p1 = Vector2<q16>::from_idenity_rotation(start_rad) * outer_radius;
+        const auto p2 = Vector2<q16>::from_idenity_rotation(stop_rad) * outer_radius;
 
         const auto x_min = x_reached_left ? (-outer_radius) : MIN(p1.x, p2.x);
         const auto x_max = x_reached_right ? (outer_radius) : MAX(p1.x, p2.x);
         const auto y_min = y_reached_top ? (-outer_radius) : MIN(p1.y, p2.y);
         const auto y_max = y_reached_bottom ? (outer_radius) : MAX(p1.y, p2.y);
 
-        return Rect2<iq_t<16>>(x_min, x_max, y_min, y_max);
+        return Rect2<q16>(x_min, x_max, y_min, y_max);
     }
 
     struct alignas(4) Cache{
-        iq_t<16> squ_inner_radius;
-        iq_t<16> squ_outer_radius;
-        Vector2<iq_t<16>> start_norm_vec;
-        Vector2<iq_t<16>> stop_norm_vec;
+        q16 squ_inner_radius;
+        q16 squ_outer_radius;
+        Vector2<q16> start_norm_vec;
+        Vector2<q16> stop_norm_vec;
         bool is_close;
 
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<iq_t<16>> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
-        static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<iq_t<16>> offset){
+        static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
             const auto len_squ = offset.length_squared();
 
             if (len_squ < self.squ_inner_radius || 
@@ -195,8 +195,8 @@ struct AnnularSector{
     };
 
     constexpr auto to_cache() const {
-        const auto v1 = Vector2<iq_t<16>>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<iq_t<16>>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
         return Cache{
             .squ_inner_radius = square(inner_radius),
             .squ_outer_radius = square(outer_radius),
@@ -207,8 +207,8 @@ struct AnnularSector{
     }
 
     constexpr auto to_bounding_box() const {
-        const auto v1 = Vector2<iq_t<16>>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<iq_t<16>>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
         const bool is_close = v2.is_count_clockwise_to(v1);
         Rect2<real_t> bb = Rect2<real_t>::from_minimal_bounding_box({
             v1 * inner_radius,
@@ -228,14 +228,14 @@ struct AnnularSector{
     __fast_inline constexpr bool has_radian(
         const real_t radian)
     const {
-        return has_radian(Vector2<iq_t<16>>::from_idenity_rotation(radian));
+        return has_radian(Vector2<q16>::from_idenity_rotation(radian));
     }
 
     __fast_inline constexpr bool has_radian(
         const Vector2<real_t> offset)
     const {
-        const auto v1 = Vector2<iq_t<16>>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<iq_t<16>>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
+        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
         return MergeHelper::has_radian(
             offset,
             v1, v2, v2.is_count_clockwise_to(v1)
@@ -251,7 +251,7 @@ private:
             const bool is_close
         ){
             return has_radian(
-                Vector2<iq_t<16>>::from_idenity_rotation(radian), 
+                Vector2<q16>::from_idenity_rotation(radian), 
                 start_norm_vec, stop_norm_vec, 
                 is_close
             );
@@ -285,18 +285,18 @@ private:
 };
 
 struct RectBlob{
-    iq_t<16> width;
-    iq_t<16> height;
+    q16 width;
+    q16 height;
 
     struct Cache{
-        iq_t<16> half_width;
-        iq_t<16> half_height;
+        q16 half_width;
+        q16 half_height;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<iq_t<16>> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<iq_t<16>> offset){
+        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
             return 
                 ((abs(offset.x) - (self.half_width) <= 0)
                 and (abs(offset.y) - (self.half_height) <= 0)) ? WHITE_COLOR : 0;
@@ -318,16 +318,16 @@ struct RectBlob{
 
 
 struct Aurora{
-    iq_t<16> radius = 1;
+    q16 radius = 1;
 
     struct Cache{
-        iq_t<16> squ_radius;
+        q16 squ_radius;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<iq_t<16>> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<iq_t<16>> offset){
+        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
             const auto len_squ = offset.length_squared();
             // const auto temp = MAX(9 * len_squ, 1);
             // return uint8_t(130 / temp);
@@ -348,22 +348,22 @@ struct Aurora{
 };
 
 struct RotatedRect{
-    iq_t<16> width;
-    iq_t<16> height;
-    iq_t<16> rotation;
+    q16 width;
+    q16 height;
+    q16 rotation;
 
     struct alignas(4) Cache{
-        iq_t<16> half_width;
-        iq_t<16> half_height;
-        iq_t<16> s;
-        iq_t<16> c;
+        q16 half_width;
+        q16 half_height;
+        q16 s;
+        q16 c;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<iq_t<16>> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
         __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vector2<iq_t<16>> offset){
+            const Cache & self, const Vector2<q16> offset){
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
             return 
@@ -388,8 +388,8 @@ struct RotatedRect{
     }
 
     constexpr BoundingBox to_bounding_box() const {
-        const auto rot = Vector2<iq_t<16>>::from_idenity_rotation(rotation);
-        const std::array<Vector2<iq_t<16>>, 4> points = {
+        const auto rot = Vector2<q16>::from_idenity_rotation(rotation);
+        const std::array<Vector2<q16>, 4> points = {
             get_raw_point<0>().improduct(rot),
             get_raw_point<1>().improduct(rot),
             get_raw_point<2>().improduct(rot),
@@ -401,7 +401,7 @@ struct RotatedRect{
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vector2<iq_t<16>> get_raw_point() const {
+    constexpr Vector2<q16> get_raw_point() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -413,22 +413,22 @@ struct RotatedRect{
 };
 
 struct RotatedZebraRect{
-    iq_t<16> width;
-    iq_t<16> height;
-    iq_t<16> rotation;
+    q16 width;
+    q16 height;
+    q16 rotation;
 
     struct alignas(4) Cache{
-        iq_t<16> half_width;
-        iq_t<16> half_height;
-        iq_t<16> s;
-        iq_t<16> c;
+        q16 half_width;
+        q16 half_height;
+        q16 s;
+        q16 c;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<iq_t<16>> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
         __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vector2<iq_t<16>> offset){
+            const Cache & self, const Vector2<q16> offset){
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
             const auto x_offset = - self.c * offset.x - self.s * offset.y;
@@ -456,8 +456,8 @@ struct RotatedZebraRect{
     }
 
     constexpr BoundingBox to_bounding_box() const {
-        const auto rot = Vector2<iq_t<16>>::from_idenity_rotation(rotation);
-        const std::array<Vector2<iq_t<16>>, 4> points = {
+        const auto rot = Vector2<q16>::from_idenity_rotation(rotation);
+        const std::array<Vector2<q16>, 4> points = {
             get_raw_point<0>().improduct(rot),
             get_raw_point<1>().improduct(rot),
             get_raw_point<2>().improduct(rot),
@@ -469,7 +469,7 @@ struct RotatedZebraRect{
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vector2<iq_t<16>> get_raw_point() const {
+    constexpr Vector2<q16> get_raw_point() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -484,29 +484,29 @@ struct RotatedZebraRect{
 //将相机像素转换为地面坐标
 static constexpr Vector2q<16> project_pixel_to_ground(
     const Vector2u pixel, 
-    const Pose2_t<iq_t<16>> viewpoint, 
-    const iq_t<16> zoom
+    const Pose2_t<q16> viewpoint, 
+    const q16 zoom
 ) {
     const Vector2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
     const Vector2q<16> camera_offset = Vector2q<16>(pixel_offset) * zoom;
-    const auto rot = viewpoint.rad - iq_t<16>(PI/2);
+    const auto rot = viewpoint.rad - q16(PI/2);
     return viewpoint.pos + camera_offset.rotated(rot);
 }
 
 
 static constexpr Vector2u project_ground_to_pixel(
     const Vector2q<16>& ground_pos,
-    const Pose2_t<iq_t<16>> viewpoint,
-    const iq_t<16> zoom)
+    const Pose2_t<q16> viewpoint,
+    const q16 zoom)
 {
     // 1. Remove viewpoint position offset
     const Vector2q<16> relative_pos = ground_pos - viewpoint.pos;
     
     // 2. Calculate inverse rotation (original rotation was viewpoint.rad - PI/2)
-    const auto [s, c] = sincos(-(viewpoint.rad - iq_t<16>(PI/2)));
+    const auto [s, c] = sincos(-(viewpoint.rad - q16(PI/2)));
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
     const Vector2q<16> unrotated = {
@@ -529,7 +529,7 @@ namespace details{
 
     struct ElementFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::none>
-        ::add_convention<MemIsCovered, bool(const Vector2<iq_t<16>>) const>
+        ::add_convention<MemIsCovered, bool(const Vector2<q16>) const>
         ::build {};
 }
 
@@ -542,7 +542,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> zoom) const = 0;
+    virtual Image<Grayscale> render(const Pose2_t<q16> viewpoint, const q16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -557,7 +557,7 @@ public:
 //         );
 //     }
 
-//     Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint) const {
+//     Image<Grayscale> render(const Pose2_t<q16> viewpoint) const {
 //         Image<Grayscale> ret{CAMERA_SIZE};
 
 //         const auto org = project_pixel_to_ground({0,0}, viewpoint);
@@ -581,7 +581,7 @@ public:
 // private:
 //     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-//     bool color_from_point(const Vector2<iq_t<16>> offset) const{
+//     bool color_from_point(const Vector2<q16> offset) const{
 //         for(const auto & element : elements_){
 //             if(element->color_from_point(offset)){
 //                 return true;
@@ -602,14 +602,14 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Pose2_t<iq_t<16>> viewpoint, const iq_t<16> zoom) const {
+    Image<Grayscale> render(const Pose2_t<q16> viewpoint, const q16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
         const auto y_step = project_pixel_to_ground({0,1}, viewpoint, zoom) - org;
         const auto x_step = project_pixel_to_ground({1,0}, viewpoint, zoom) - org;
 
-        const auto ground_region = Rect2<iq_t<16>>::from_minimal_bounding_box({
+        const auto ground_region = Rect2<q16>::from_minimal_bounding_box({
             org, 
             project_pixel_to_ground({CAMERA_SIZE.x,0},    viewpoint, zoom),
             project_pixel_to_ground({0,CAMERA_SIZE.y},    viewpoint, zoom),
@@ -641,7 +641,7 @@ public:
             (apply_render(
                 ground_region.intersects(object.bounding_box.shift(object.placement.pos)),
                 // true,
-                [&](const Vector2<iq_t<16>> local_pos) { 
+                [&](const Vector2<q16> local_pos) { 
                     return object.cache.color_from_point(local_pos - object.placement.pos); 
                 }), ...);
         }, objects_);

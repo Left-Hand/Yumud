@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct ADS11204_Collections{
+struct ADS112C04_Collections{
 
     // [A1]     [A0]    [I2C ADDRESS]
     // DGND     DGND    100 0000
@@ -28,7 +28,7 @@ struct ADS11204_Collections{
     // SCL      SDA     100 1110
     // SCL      SCL     100 1111
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
 
     enum class Error_Kind:uint8_t{
 
@@ -48,7 +48,7 @@ struct ADS11204_Collections{
         WRITE_REG =     0b0100'0000
     };
 
-    enum class IDAC1_MUX {
+    enum class IDAC1_MUX:uint8_t{
         DISABLED = 0b000, // 000 : IDAC1 disabled (default)
         AIN0    = 0b001, // 001 : IDAC1 connected to AIN0
         AIN1    = 0b010, // 010 : IDAC1 connected to AIN1
@@ -59,7 +59,7 @@ struct ADS11204_Collections{
         __RESV__ = 0b111  // 111 : Reserved
     };
 
-    enum class IDAC2_MUX {
+    enum class IDAC2_MUX:uint8_t{
         DISABLED = 0b000, // 000 :IDAC2 disabled (default)
         AIN0    = 0b001, // 001 : IDAC2 connected to AIN0
         AIN1    = 0b010, // 010 : IDAC2 connected to AIN1
@@ -75,7 +75,7 @@ struct ADS11204_Collections{
     };
 
 
-    enum class MUX : uint8_t {
+    enum class Mux : uint8_t {
         P0N1 = 0b0000, // AINP = AIN0, AINN = AIN1 (default)
         P0N2 = 0b0001, // AINP = AIN0, AINN = AIN2
         P0N3 = 0b0010, // AINP = AIN0, AINN = AIN3
@@ -94,17 +94,17 @@ struct ADS11204_Collections{
         __RESV__ = 0b1111 // Reserved
     };
 
-    enum class VREF:uint8_t{
+    enum class Vref:uint8_t{
         INTERNAL = 0b00, // 00 : Internal 2.048-V reference selected (default)
         EXTERNEL = 0b01, // 01 : External reference selected using the REFP and REFN inputs
         SUPPLY = 0b10// 10 : Analog supply (AVDD – AVSS) used as reference
     };
 
-    enum class GAIN:uint8_t{
+    enum class Gain:uint8_t{
         _1 = 0, _2, _4, _8, _16, _32, _64, _128
     };
 
-    enum class IDAC {
+    enum class IDAC:uint8_t{
         OFF     = 0b000, // 000 : Off (default)
         _10uA   = 0b001, // 001 : 10 µA
         _50uA   = 0b010, // 010 : 50 µA
@@ -115,7 +115,7 @@ struct ADS11204_Collections{
         _1500uA = 0b111  // 111 : 1500 µA
     };
 
-    enum class CRC_Type{
+    enum class CrcType:uint8_t{
         DISABLED = 0b00, // 00 : CRC disabled (default)
         INV = 0b01, // 01 : CRC 8-bit
         _16BIT = 0b10, // 10 : CRC 16-bit
@@ -124,108 +124,107 @@ struct ADS11204_Collections{
     using RegAddress = uint8_t;
 };
 
-struct ADS112C04_Regs:public ADS11204_Collections{
-    struct Config0Reg:public Reg8<>{
-        scexpr RegAddress address = 0;
+struct ADS112C04_Regs:public ADS112C04_Collections{
+    struct R8_Config0:public Reg8<>{
+        static constexpr RegAddress address = 0;
         uint8_t pga_bypass:1;
-        uint8_t gain:3;
-        uint8_t mux:4;
-    };
+        Gain gain:3;
+        Mux mux:4;
+    }DEF_R8(config0_reg)
 
-    struct Config1Reg:public Reg8<>{
-        scexpr RegAddress address = 1;
+    struct R8_Config1:public Reg8<>{
+        static constexpr RegAddress address = 1;
         uint8_t temp_sensor_mode:1;
-        uint8_t vref:2;
+        Vref vref:2;
         uint8_t cont_mode:1;
         uint8_t turbo_mode:1;
-        uint8_t data_rate:3;
-    };
+        DataRate data_rate:3;
+    }DEF_R8(config1_reg)
 
-    struct Config2Reg:public Reg8<>{
-        scexpr RegAddress address = 2;
-        uint8_t idac:3;
+    struct R8_Config2:public Reg8<>{
+        static constexpr RegAddress address = 2;
+        IDAC idac:3;
         uint8_t current_sense_en:1;
-        uint8_t crc_type:2;
+        CrcType crc_type:2;
         uint8_t data_counter_en:1;
         uint8_t conv_done:1;
-    };
+    }DEF_R8(config2_reg)
 
-    struct Config3Reg:public Reg8<>{
-        scexpr RegAddress address = 3;
+    struct R8_Config3:public Reg8<>{
+        static constexpr RegAddress address = 3;
         uint8_t __resv__:2;
-        uint8_t idac1_mux:3;
-        uint8_t idac2_mux:3;
-    };
-
-    Config0Reg config0_reg = {};
-    Config1Reg config1_reg = {};
-    Config2Reg config2_reg = {};
-    Config3Reg config3_reg = {};
+        IDAC1_MUX idac1_mux:3;
+        IDAC2_MUX idac2_mux:3;
+    }DEF_R8(config3_reg)
 };
 
 
-class ADS112C04 final:public ADS112C04_Regs{
-public:
+class ADS112C04 final:
+    public ADS112C04_Regs{
 public:
 
-    ADS112C04(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    ADS112C04(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS112C04(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    ADS112C04(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     ADS112C04(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    IResult<> init(){
-        config3_reg.__resv__ = 0;
-        return Ok();
-    }
-    IResult<> set_mux(const MUX mux){
-        config0_reg.mux = uint8_t(mux);
-        return write_reg(config0_reg.address, config0_reg.as_val());
-    }
 
-    IResult<> set_gain(const GAIN gain){
-        config0_reg.gain = uint8_t(gain);
-        return write_reg(config0_reg.address, config0_reg.as_val());
-    }
+    struct Config{
 
-    IResult<> enable_turbo(const Enable en = EN){
-        config1_reg.turbo_mode = en == EN;
-        return write_reg(config1_reg.address, (config1_reg.as_val()));
-    }
+    };
 
-    IResult<bool> is_done(){
-        if(const auto res = read_reg(config2_reg.address, (config2_reg.as_ref()));
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok(bool(config2_reg.conv_done));
-    }
+    IResult<> init();
 
-    IResult<> set_idac(const IDAC idac){
-        config2_reg.idac = uint8_t(idac);
-        return write_reg(config2_reg.address, (config2_reg.as_val()));
-    }
+    IResult<> validate();
 
-    IResult<> set_data_rate(const DataRate data_rate){
-        config1_reg.data_rate = uint8_t(data_rate);
-        return write_reg(config1_reg.address, (config1_reg.as_val()));
-    }
+    IResult<> set_mux(const Mux mux);
+
+    IResult<> set_gain(const Gain gain);
+
+    IResult<> enable_turbo(const Enable en = EN);
+
+    IResult<bool> is_done();
+
+    IResult<> set_idac(const IDAC idac);
+
+    IResult<> set_data_rate(const DataRate data_rate);
 private:
     hal::I2cDrv i2c_drv_;
 
     IResult<> read_data(uint16_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(Command::READ_DATA), data, LSB);
+        if(const auto res = i2c_drv_.read_reg(
+                std::bit_cast<uint8_t>(Command::READ_DATA), data, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> read_reg(const RegAddress addr, uint8_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(
+                std::bit_cast<uint8_t>(Command::READ_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_reg(const RegAddress addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
+        if(const auto res = i2c_drv_.write_reg(uint8_t(
+                std::bit_cast<uint8_t>(Command::WRITE_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
+    }
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        return read_reg(reg.address, reg.as_ref());
     }
 };
 

@@ -25,13 +25,10 @@ protected:
     uint32_t zero_offset;
     bool inversed = false;
 
-    scexpr real_t G = real_t(9.8);
+    scexpr real_t GRAVITY_G = real_t(9.8);
 
     uint32_t read_data(void);
 
-    class HX711Channel{
-
-    };
 public:
     HX711(hal::GpioIntf & sck_gpio, hal::GpioIntf & sdo_gpio):
         sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
@@ -61,7 +58,7 @@ public:
     }
 
     real_t getNewton(){
-        return (G * real_t(getWeightGram())) / 1000;
+        return (GRAVITY_G * real_t(getWeightGram())) / 1000;
     }
 
     void setConvType(const ConvType & _convtype){

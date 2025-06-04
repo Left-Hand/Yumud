@@ -29,7 +29,7 @@ struct INA226_Collections{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class AverageTimes:uint8_t{
+    enum class AverageTimes:uint16_t{
         _1 = 0,
         _4 = 1,
         _16 = 2,
@@ -40,24 +40,25 @@ struct INA226_Collections{
         _1024 = 7
     };
 
-    enum class ConversionTime:uint8_t{
+    enum class ConversionTime:uint16_t{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
+
     using RegAddress = uint8_t;
 
-    scexpr real_t voltage_lsb_mv = real_t(1.25);
+    scexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
 };
 
 struct INA226_Regs:public INA226_Collections{
     struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
-        uint16_t shuntVoltageEnable :1;
-        uint16_t busVoltageEnable :1;
+        uint16_t shunt_voltage_enable :1;
+        uint16_t bus_voltage_enable :1;
         uint16_t continuos :1;
-        uint16_t shuntVoltageConversionTime:3;
-        uint16_t busVoltageConversionTime:3;
-        uint16_t averageMode:3;
+        ConversionTime shunt_voltage_conversion_time:3;
+        ConversionTime bus_voltage_conversion_time:3;
+        AverageTimes average_times:3;
         uint16_t __resv__:3;
         uint16_t rst:1;
     }DEF_R16(config_reg)
@@ -90,33 +91,33 @@ struct INA226_Regs:public INA226_Collections{
     struct MaskReg:public Reg16<>{
         scexpr RegAddress address = 0x06;
 
-        uint16_t alertLatchEnable:1;
-        uint16_t alertPolarity:1;
-        uint16_t mathOverflow:1;
-        uint16_t convReadyFlag:1;
-        uint16_t alertFlag:1;
+        uint16_t alert_latch_enable:1;
+        uint16_t alert_polarity:1;
+        uint16_t math_overflow:1;
+        uint16_t conv_ready_flag:1;
+        uint16_t alert_flag:1;
         uint16_t __resv__:5;
-        uint16_t convReady:1;
-        uint16_t powerOverlimit:1;
-        uint16_t busUnderVoltage:1;
-        uint16_t busOverVoltage:1;
-        uint16_t shuntUnderVoltage:1;
-        uint16_t shuntOverVoltage:1;
+        uint16_t conv_ready:1;
+        uint16_t power_overlimit:1;
+        uint16_t bus_under_voltage:1;
+        uint16_t bus_over_voltage:1;
+        uint16_t shunt_under_voltage:1;
+        uint16_t shunt_over_voltage:1;
     }DEF_R16(mask_reg)
 
     struct AlertLimitReg:public Reg16<>{
         scexpr RegAddress address = 0x07;
-        uint16_t :16;
+        uint16_t data;
     }DEF_R16(alert_limit_reg)
 
     struct ManufactureReg:public Reg16<>{
         scexpr RegAddress address = 0xfe;
-        uint16_t :16;
+        uint16_t data;
     }DEF_R16(manufacture_reg)
 
     struct ChipIdReg:public Reg16<>{
         scexpr RegAddress address = 0xff;
-        uint16_t :16;
+        uint16_t data;
     }DEF_R16(chip_id_reg)
 };
 
@@ -237,7 +238,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
     
-    real_t current_lsb_ma = real_t(0.2);
+    real_t current_lsb_ma_ = real_t(0.2);
 
 
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);

@@ -114,10 +114,9 @@ public:
 
     [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
 
-    [[nodiscard]] IResult<bool> is_ready();
     [[nodiscard]] IResult<bool> is_busy();
 
-    [[nodiscard]] Option<real_t> result();
+    [[nodiscard]] Option<real_t> get_voltage();
 
     [[nodiscard]] IResult<> validate();
 
@@ -125,9 +124,8 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-
-
     [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data); 
 
     template<typename T>

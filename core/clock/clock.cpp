@@ -27,11 +27,11 @@ static volatile uint32_t msTick = 0;
 static volatile uint64_t micros_base = 0;
 
 
-static uint32_t millis_impl(void){
+static __fast_inline uint32_t millis_impl(void){
     return msTick;
 }
 
-static uint64_t micros_impl(void){
+static __fast_inline uint64_t micros_impl(void){
     M_SYSTICK_DISER;
     const uint32_t base = micros_base;
     const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
@@ -41,7 +41,7 @@ static uint64_t micros_impl(void){
     // return base * 10;
 }
 
-static uint64_t nanos_impl(void){
+static __fast_inline uint64_t nanos_impl(void){
     M_SYSTICK_DISER;
     const uint32_t base = micros_base;
     const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
@@ -52,7 +52,7 @@ static uint64_t nanos_impl(void){
 
 
 
-static void delay_us(const uint32_t us){
+static __fast_inline void delay_us(const uint32_t us){
     uint32_t currentTicks = SysTick->CNT;
     /* Number of ticks per millisecond */
     uint32_t tickPerMs = SysTick->CMP + 1;
@@ -75,15 +75,15 @@ static void delay_us(const uint32_t us){
     } while (nbTicks > elapsedTicks);
 }
 
-static void delay_ns(uint32_t ns) {
-    __IO uint64_t currentTicks = SysTick->CNT;
+static __fast_inline void delay_ns(uint32_t ns) {
+    volatile uint64_t currentTicks = SysTick->CNT;
     /* Number of ticks per millisecond */
     uint64_t tickPerMs = SysTick->CMP + 1;
     /* Number of ticks to count */
     uint64_t nbTicks = NANO_MUT(MAX(ns - NANO_TRIM, 0));
     /* Number of elapsed ticks */
     uint64_t elapsedTicks = 0;
-    __IO uint64_t oldTicks = currentTicks;
+    volatile uint64_t oldTicks = currentTicks;
     do {
         currentTicks = SysTick->CNT;
         // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :

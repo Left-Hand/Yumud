@@ -105,8 +105,8 @@ IResult<> INA226::init(const Config & cfg){
 IResult<> INA226::set_scale(const uint mohms, const uint max_current_a){
     INA226_DEBUG(mohms, max_current_a);
     
-    current_lsb_ma = real_t(int(max_current_a) * 1000) >> 15;
-    // INA226_DEBUG(current_lsb_ma, mohms * max_current_a);
+    current_lsb_ma_ = real_t(int(max_current_a) * 1000) >> 15;
+    // INA226_DEBUG(current_lsb_ma_, mohms * max_current_a);
     const auto val = int(0.00512 * 32768 * 1000) / (mohms * max_current_a);
     // PANIC(calibration_reg.as_val());
     auto reg = RegCopy(calibration_reg);
@@ -115,24 +115,21 @@ IResult<> INA226::set_scale(const uint mohms, const uint max_current_a){
     return write_reg(reg);
 }
 
-IResult<> INA226::set_average_times(const uint16_t times){
-
+static constexpr INA226::AverageTimes times2avtimes(const uint16_t times){
     uint8_t temp = CTZ(times);
-    uint8_t temp2;
 
     if(times <= 64){
-        temp2 = temp / 2;
+        return std::bit_cast<INA226::AverageTimes>(uint16_t(temp / 2));
     }else{
-        temp2 = 4 + (temp - 7); 
+        return std::bit_cast<INA226::AverageTimes>(uint16_t(4 + (temp - 7))); 
     }
-
-    auto reg = RegCopy(config_reg);
-    reg.averageMode = temp2;
-    return write_reg((reg));
+} 
+IResult<> INA226::set_average_times(const uint16_t times){
+    return set_average_times(times2avtimes(times));
 }
 
 IResult<real_t> INA226::get_voltage(){
-    return Ok(bus_volt_reg.as_val() * voltage_lsb_mv / 1000);
+    return Ok(bus_volt_reg.as_val() * VOLTAGE_LSB_MV / 1000);
     // return bus_voltage_reg.as_val();
 }
 
@@ -152,30 +149,30 @@ IResult<real_t> INA226::get_shunt_voltage(){
 }
 
 IResult<real_t> INA226::get_current(){
-    return Ok(current_reg.as_val() * current_lsb_ma / 1000);
+    return Ok(current_reg.as_val() * current_lsb_ma_ / 1000);
     // return current_reg.as_val() ;
 }
 
 IResult<real_t> INA226::get_power(){
-    return Ok(power_reg.as_val() * current_lsb_ma / 40);
+    return Ok(power_reg.as_val() * current_lsb_ma_ / 40);
     // return power_reg.as_val();
 }
 
 IResult<> INA226::set_average_times(const AverageTimes times){
     auto reg = RegCopy(config_reg);
-    reg.averageMode = uint8_t(times);
+    reg.average_times = times;
     return write_reg(reg);
 }
 
 IResult<> INA226::set_bus_conversion_time(const ConversionTime time){
     auto reg = RegCopy(config_reg);
-    reg.busVoltageConversionTime = uint8_t(time);
+    reg.bus_voltage_conversion_time = time;
     return write_reg(reg);
 }
 
 IResult<> INA226::set_shunt_conversion_time(const ConversionTime time){
     auto reg = RegCopy(config_reg);
-    reg.shuntVoltageConversionTime = uint8_t(time);
+    reg.shunt_voltage_conversion_time = time;
     return write_reg(reg);
 }
 
@@ -187,13 +184,13 @@ IResult<> INA226::reset(){
 
 IResult<> INA226::enable_shunt_voltage_measure(const Enable en){
     auto reg = RegCopy(config_reg);
-    reg.shuntVoltageEnable = en == EN;
+    reg.shunt_voltage_enable = en == EN;
     return write_reg(reg);
 }
 
 IResult<> INA226::enable_bus_voltage_measure(const Enable en){
     auto reg = RegCopy(config_reg);
-    reg.busVoltageEnable = en == EN;
+    reg.bus_voltage_enable = en == EN;
     return write_reg(reg);
 }
 
@@ -205,7 +202,7 @@ IResult<> INA226::enable_continuous_measure(const Enable en){
 
 IResult<> INA226::enable_alert_latch(const Enable en){
     auto  reg = RegCopy(mask_reg);
-    reg.alertLatchEnable = en == EN;
+    reg.alert_latch_enable = en == EN;
     return write_reg(reg);
 }
 

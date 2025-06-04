@@ -47,6 +47,7 @@ struct ADS7830_Collections{
     };
 
     class ChannelSelection{
+    public:
         enum class Kind:uint8_t{
             P0N1 = 0b0000,
             P2N3 = 0b0001,
@@ -75,7 +76,7 @@ struct ADS7830_Collections{
         static constexpr Option<ChannelSelection> 
             from_pos(
             const ChannelIndex pos){
-            return from_pos_and_neg(pos, const ChannelIndex::COM);
+            return from_pos_and_neg(pos, ChannelIndex::COM);
         }
 
         static constexpr Option<ChannelSelection> 
@@ -83,11 +84,11 @@ struct ADS7830_Collections{
             const ChannelIndex pos, 
             const ChannelIndex neg
         ){
-            return posneg2kind(pos, ChannelIndex::neg).
-                map([](const Kind kind){return ChannelSelection(kind)});
+            return posneg2kind(pos, ChannelIndex::COM).
+                map([](const Kind kind){return ChannelSelection(kind);});
         }
 
-        constexpr auto kind() const {return kind_};
+        constexpr auto kind() const {return kind_;};
     private:
         Kind kind_;
 
@@ -119,7 +120,7 @@ struct ADS7830_Collections{
                 std::make_pair(std::make_pair(CH7, COM), Kind::P7NC),
             });
 
-            for(const auto [key, value] : map){
+            for(const auto & [key, value] : map){
                 const auto [p, n] = key;
                 if((p == pos) and (n == neg)) return Some(value);
             }
@@ -127,10 +128,14 @@ struct ADS7830_Collections{
         }
     };
 
-    struct CommandByte:public Reg8<>{
+    struct CommandByte{
         const uint8_t __resv__:2 = 0;
         const PowerDownSel pd:2;
         const ChannelSelection::Kind sel:4;
+
+        constexpr uint8_t as_u8() const {
+            return std::bit_cast<uint8_t>(*this);
+        }
     };
 
     CHECK_R8(CommandByte)
@@ -158,7 +163,6 @@ public:
     }
 private:
     hal::I2cDrv i2c_drv_;
-    // hal::I2c & i2c_;
 };
 
 
@@ -167,28 +171,24 @@ struct ADS7830 final:
 public:
     using Phy = ADS7830_Phy;
 
-    IResult<> init(){
-        return Ok();
-    }
-
-    IResult<> validate(){
-        return Ok();
-    }
-
-
     ADS7830(Phy && phy):
         phy_(std::move(phy)){;}
+
+    IResult<> init();
+
+    IResult<> validate();
 
     IResult<ConvData> read_channel(const ChannelIndex ch){
         const auto sel = ({
             const auto s = ChannelSelection::from_pos(ch);
             if(s.is_none()) return Err(Error::NoChannelComb);
             s.unwrap().kind();
-        })
+        });
+
         const auto cmd = CommandByte{
             .pd = PowerDownSel::RefOn_AdcOn,
             .sel = sel 
-        }
+        };
 
         return phy_.fs_read(cmd);
     }

@@ -10,7 +10,7 @@ using namespace ymd;
 #define INA219_DEBUG_ON 0
 // #define INA219_DEBUG_ON 1
 
-#if (INA219_DEBUG_ON == 1)
+#if INA219_DEBUG_ON
 #define INA219_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define INA219_PANIC(...) PANIC(__VA_ARGS__)
 #define INA219_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
@@ -46,7 +46,10 @@ IResult<> INA219::read_reg(const RegAddress addr, int16_t & data){
     return Ok();
 }
 
-IResult<> INA219::read_burst(const RegAddress addr, const std::span<uint16_t> pbuf){
+IResult<> INA219::read_burst(
+    const RegAddress addr, 
+    const std::span<uint16_t> pbuf
+){
     // return i2c_drv_.read_burst(uint8_t(addr), p_std::span(data, len), LSB);
     TODO();
     return Ok();
