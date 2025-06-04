@@ -56,8 +56,8 @@ private:
             op_window = store_window.grid_forward(op_window, 8);
             if(op_window.length() != 0){
                 const auto msg = hal::CanMsg::from_bytes(
-                    hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.from) / 8)), 
-                    std::span(buf.begin() + op_window.from, op_window.length()));
+                    hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.start) / 8)), 
+                    std::span(buf.begin() + op_window.start, op_window.length()));
                 // DEBUG_PRINTLN(msg);
                 (void)can.write(msg);
             }

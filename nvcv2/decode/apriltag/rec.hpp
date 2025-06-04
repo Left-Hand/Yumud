@@ -78,8 +78,8 @@ public:
         if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
         ret[i] = Vector2u(x,y);\
 
-        for(auto y = y_range.from; y < y_range.to; ++y){
-            for(auto x = x_range.from; x < x_range.to; ++x){
+        for(auto y = y_range.start; y < y_range.stop; ++y){
+            for(auto x = x_range.start; x < x_range.stop; ++x){
                 const auto color = __map[{x,y}];
                 if(color != match) continue;
 

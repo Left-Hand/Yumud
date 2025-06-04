@@ -247,10 +247,10 @@ IResult<> MT9V034::enable_pixel_test_pattern(
 }
 
 IResult<> MT9V034::set_exposure_range(const Range2u range){
-    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, range.from);
+    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, range.start);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, range.to);
+    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, range.stop);
         res.is_err()) return res;
 
     return Ok();

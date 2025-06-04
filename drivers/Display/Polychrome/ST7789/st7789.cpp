@@ -24,7 +24,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
         return false;
     }else{
         curr_area_ = rect;
-        last_point_ = desired_pt_range.from;
+        last_point_ = desired_pt_range.start;
         return true;
     }
 } 

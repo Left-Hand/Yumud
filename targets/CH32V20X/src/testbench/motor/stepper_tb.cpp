@@ -127,6 +127,8 @@ uint8_t get_default_id(){
     DEBUG_PRINTLN("node_id", node_id);
     return node_id;
 };
+
+#if 0
 void stepper_tb(UartHw & logger_inst){
     logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
@@ -333,3 +335,5 @@ void stepper_tb(UartHw & logger_inst){
         // Sys::Clock::reCalculateTimeMs();
     }
 }
+
+#endif

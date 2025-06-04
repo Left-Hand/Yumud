@@ -17,21 +17,31 @@ using namespace ymd::drivers;
 #define AT24CXX_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
+using Error = AT24CXX::Error;
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    
-hal::HalResult AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pbuf){
+IResult<> AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pbuf){
     if (is_small_chip()){
-        return i2c_drv_.write_burst(uint8_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_burst(uint8_t(addr.as_u32()), pbuf);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }else{
-        return i2c_drv_.write_burst(uint16_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_burst(uint16_t(addr.as_u32()), pbuf);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 }
 
-hal::HalResult AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf){
+IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf){
     if (is_small_chip()){
-        return i2c_drv_.read_burst(uint8_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr.as_u32()), pbuf);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }else{
-        return i2c_drv_.read_burst(uint16_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_burst(uint16_t(addr.as_u32()), pbuf);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 }
 
@@ -51,12 +61,17 @@ auto internate_grid(
         op_window = store_window.grid_forward(op_window, grid);
         if(op_window.length() != 0){
             std::forward<FnBefore>(fn_before)();
-            const uint8_t * ptr = (pbuf.data() + (op_window.from - store_window.from));
-            std::forward<FnExecute>(fn_execute)(op_window.from, std::span<const uint8_t>(ptr, op_window.length()));
+            const uint8_t * ptr = (pbuf.data() + (op_window.start - store_window.start));
+            std::forward<FnExecute>(fn_execute)(op_window.start, std::span<const uint8_t>(ptr, op_window.length()));
             std::forward<FnAfter>(fn_after)();
         }
     }while(op_window.length());
 }
+
+
+// static constexpr Option<Range2u> map_grid_to_next(const Range2u range, const uint gsize){
+//     const bool left_is_aligned = range.start % gsize == 0;
+// }
 
 // void AT24CXX::store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf){
 //     // const auto full_end = loc + len; 
@@ -73,7 +88,24 @@ auto internate_grid(
 // }
 
 
-void AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf){
-    // auto full_end = loc + ; 
-    read_burst(loc, pbuf);
+IResult<> AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf){
+
+    if(const auto res = read_burst(loc, pbuf);
+        res.is_err()) return res;
+
+    TODO();
+    return Ok();
 }
+
+IResult<bool> AT24CXX::is_busy(){return Ok(true);}
+// IResult<bool> is_available(){return Ok(false);}
+
+IResult<> AT24CXX::init(){
+    if(const auto res = validate();
+        res.is_err()) return res;
+    return Ok();
+};
+
+IResult<> AT24CXX::validate(){
+    return Ok();
+};
