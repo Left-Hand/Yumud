@@ -22,6 +22,7 @@ using namespace ymd::drivers;
 
 struct ThisKeyBoardLayout{
 static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
+    // DEBUG_PRINTLN(x,y);
     switch(y){
         case 0: switch(x){
             case 0: return hid::KeyCode::from_char<'E'>();
@@ -31,6 +32,7 @@ static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
             case 4: return hid::KeyCode::from_char<'3'>();
             case 5: return hid::KeyCode::from_char<'2'>();
             case 6: return hid::KeyCode::from_char<'1'>();
+            default: break;
         }
 
         case 1: switch(x){
@@ -41,6 +43,7 @@ static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
             case 4: return hid::KeyCode::from_char<'6'>();
             case 5: return hid::KeyCode::from_char<'5'>();
             case 6: return hid::KeyCode::from_char<'4'>();
+            default: break;
         }
 
         case 2: switch(x){
@@ -51,22 +54,68 @@ static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
             case 4: return hid::KeyCode::from_char<'7'>();
             case 5: return hid::KeyCode::from_char<'8'>();
             case 6: return hid::KeyCode::from_char<'9'>();
-        }
+            default: break;
+        } 
+        default: break;
     }
+    PANIC(x,y);
 }
 };
 
-static constexpr auto a = ThisKeyBoardLayout::map(0,0).to_char().unwrap();
+// static constexpr auto a = ThisKeyBoardLayout::map(0,0).to_char().unwrap();
 class KeyBoardComponent{
 
 };
+
+// template<size_t N>
+// class FixedString{
+//     // static constexpr Option<FixedString> from_str(const StringView sv){
+
+//     // }
+
+//     constexpr FixedString(const StringView str):
+//         len_(MIN(str.length(), N))
+//     {
+//         // memcpy(buf_, str.data(), len_);
+//         for(size_t i = 0; i < len_){
+//             buf_[i] = str.data()[i];
+//         }
+//     }
+
+//     constexpr operator StringView() const {
+//         return StringView(buf_, len);
+//     }
+// private:
+
+//     char[N] buf_ = {};
+//     size_t len_;
+// };
+
+// class LineInput{
+// public:
+//     void input(hid::KeyCode code){
+        
+//     }
+// private:
+//     FixedString str_;
+//     size_t cursor_;
+// }
 
 
 
 static void HT16K33_tb(HT16K33 & ht16){
     ht16.init().examine();
     while(true){
-        DEBUG_PRINTLN(ht16.get_key_data(), sizeof(sstl::vector<uint8_t, 4>));
+        const auto keydata = ht16.get_key_data().examine();
+        const auto may_xy = keydata
+            .to_xy();
+
+        const auto may_token = may_xy 
+            .map([](std::tuple<uint8_t, uint8_t> xy){
+                const auto [x,y] = xy;
+                return ThisKeyBoardLayout::map(x,y).to_char();
+            });
+        DEBUG_PRINTLN(may_xy, may_token);
         clock::delay(40ms);
     }
 }

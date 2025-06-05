@@ -471,7 +471,7 @@ static constexpr Option<char> to_char(const KeyCode_Kind kind){
     using Kind = KeyCode_Kind;
     switch(kind){
         case Kind::Digit0 ... Kind::Digit9:
-            return Some(char(kind) + '0');
+            return Some(char(kind) - char(Kind::Digit0) + '0');
         case Kind::KeyA ... Kind::KeyZ:
             return Some(char(kind) - char(Kind::KeyA) + 'A');
         case Kind::NumpadSubtract:
@@ -484,6 +484,18 @@ static constexpr Option<char> to_char(const KeyCode_Kind kind){
             return Some('/');
         case Kind::NumpadComma:
             return Some('.');
+        default:
+            return None;
+    }
+}
+
+static constexpr Option<uint8_t> to_digit(const KeyCode_Kind kind){
+    using Kind = KeyCode_Kind;
+    switch(kind){
+        case Kind::Digit0 ... Kind::Digit9:
+            return Some(uint8_t(kind) - uint8_t(Kind::Digit0));
+        case Kind::Numpad0 ... Kind::Numpad9:
+            return Some(uint8_t(kind) - uint8_t(Kind::Numpad0));
         default:
             return None;
     }
@@ -527,9 +539,6 @@ public:
         }
     }
 
-
-
-
     static constexpr Option<KeyCode> from_char(const char ch) {
         switch(ch){
             case '0' ... '9':
@@ -563,6 +572,10 @@ public:
 
     constexpr Option<char> to_char() const {
         return hid::to_char(kind_);
+    }
+
+    constexpr Option<uint8_t> to_digit() const {
+        return hid::to_digit(kind_);
     }
 
     constexpr Kind kind() const {

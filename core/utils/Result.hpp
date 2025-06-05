@@ -552,12 +552,13 @@ public:
     }
 
     template<typename ... Args>
-    __fast_inline void examine(
+    __fast_inline T examine(
         const std::source_location & loca = std::source_location::current())
     {
         if (unlikely(!is_ok())) {
             __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
         }
+        return unwrap();
     }
 
     __fast_inline constexpr 

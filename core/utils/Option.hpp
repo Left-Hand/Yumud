@@ -156,6 +156,14 @@ public:
         return get();
     }
 
+    [[nodiscard]] __fast_inline constexpr const T & 
+    examine(const std::source_location loca = std::source_location::current()) const {
+        if (unlikely(!is_some())) {
+            __PANIC_EXPLICIT_SOURCE(loca);
+        }
+        return get();
+    }
+
     [[nodiscard]] __fast_inline constexpr const T 
     unwrap_or(const T choice) const {
         if(unlikely(exists_ == false)) return choice;

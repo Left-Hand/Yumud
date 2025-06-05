@@ -261,6 +261,20 @@ public:
             return byte & (1 << (x % 8));
         }
 
+        constexpr Option<std::tuple<uint8_t, uint8_t>> to_xy() const {
+            const auto it = std::find_if(buf_.begin(), buf_.end(), 
+                [](const uint8_t data){return data != 0x00;}
+            );
+
+            if(it == buf_.end()) return None;
+            const auto idx = std::distance(buf_.begin(), it);
+
+            const uint8_t y = idx >> 1;
+            const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
+            const uint8_t x = CTZ(line);
+            return Some{std::make_tuple(x,y)};
+        }
+
         template<size_t R>
         requires (R < 3)
         constexpr std::bitset<13> row_as_bitset() const {
