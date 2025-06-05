@@ -78,6 +78,13 @@ static void init_adc(){
     // adc1.enableContinous();
     adc1.enable_auto_inject(DISEN);
 }
+
+template<size_t N, typename T>
+std::array<T, N> ones(const T value){
+    std::array<T, N> ret;
+    ret.fill(value);
+    return ret;
+}
 void myesc_main(){
     DEBUG_UART.init(DEBUG_UART_BAUD);
     DEBUGGER.retarget(&DEBUG_UART);
@@ -158,7 +165,12 @@ void myesc_main(){
     idrive_gpio.outpp(HIGH);
     // idrive_gpio.inflt();
     // idrive_gpio.inpu();
+
+
     vds_gpio.outpp(LOW);
+
+    //dangerous no ocp protect!!!!
+    // vds_gpio.outpp(HIGH);
 
     // mosdrv.init({}).examine();
 
@@ -174,18 +186,23 @@ void myesc_main(){
     real_t u_curr;
     real_t v_curr;
     real_t w_curr;
+
+    auto & nfault_gpio = hal::PA<6>();
+    nfault_gpio.inpu();
+
     timer1.attach(TimerIT::Update, {0,0}, [&]{
         u_curr = soa.get_voltage();
         v_curr = sob.get_voltage();
         w_curr = soc.get_voltage();
-        const auto t = clock::time();
+        // const auto t = clock::time();
         // const auto p = t * 80;
         // const auto p = 60 * sinpu(t/4);
-        const auto p = 60 * t;
+        // const auto p = 60 * t;
         // const auto [s,c] = sincos(t * 80);
-        const auto [s,c] = sincos(p);
-        const auto mag = 0.2_r;
-        const auto [u, v, w] = SVM(s * mag, c * mag);
+        // const auto [s,c] = sincos(p);
+        // const auto mag = 0.02_r;
+        // const auto [u, v, w] = SVM(s * mag, c * mag);
+        const auto [u, v, w] = ones<3>(0.2_r);
         pwm_u.set_duty(u);
         pwm_v.set_duty(v);
         pwm_w.set_duty(w);
@@ -198,6 +215,7 @@ void myesc_main(){
             u_curr,
             v_curr,
             w_curr,
+            bool(nfault_gpio.read() == LOW),
             // mosdrv.get_status1().unwrap().as_bitset(),
             // mosdrv.get_status2().unwrap().as_bitset(),
 

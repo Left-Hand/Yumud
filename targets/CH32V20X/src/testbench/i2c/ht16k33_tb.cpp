@@ -20,9 +20,12 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::PB<1>()
 
 
+namespace ymd::mutask{
+
+};
+
 struct ThisKeyBoardLayout{
 static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
-    // DEBUG_PRINTLN(x,y);
     switch(y){
         case 0: switch(x){
             case 0: return hid::KeyCode::from_char<'E'>();
@@ -51,9 +54,9 @@ static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
             case 1: return hid::KeyCode::from_char<'X'>();
             case 2: return hid::KeyCode::from_char<'Z'>();
             case 3: return hid::KeyCode::from_char<'0'>();
-            case 4: return hid::KeyCode::from_char<'7'>();
+            case 4: return hid::KeyCode::from_char<'9'>();
             case 5: return hid::KeyCode::from_char<'8'>();
-            case 6: return hid::KeyCode::from_char<'9'>();
+            case 6: return hid::KeyCode::from_char<'7'>();
             default: break;
         } 
         default: break;
@@ -104,8 +107,14 @@ class KeyBoardComponent{
 
 
 static void HT16K33_tb(HT16K33 & ht16){
-    ht16.init().examine();
+    ht16.init({.pulse_duty = HT16K33::PulseDuty::_15_16}).examine();
+
+
+    uint8_t cnt = 0;
     while(true){
+        cnt++;
+        auto test_pattern = std::array<uint8_t, 16>{};
+        test_pattern.fill(cnt);
         const auto keydata = ht16.get_key_data().examine();
         const auto may_xy = keydata
             .to_xy();
@@ -115,6 +124,10 @@ static void HT16K33_tb(HT16K33 & ht16){
                 const auto [x,y] = xy;
                 return ThisKeyBoardLayout::map(x,y).to_char();
             });
+
+        ht16.update_displayer(0, std::span(test_pattern)).examine();
+
+
         DEBUG_PRINTLN(may_xy, may_token);
         clock::delay(40ms);
     }

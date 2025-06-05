@@ -483,6 +483,7 @@ static constexpr Option<char> to_char(const KeyCode_Kind kind){
         case Kind::NumpadDivide:
             return Some('/');
         case Kind::NumpadComma:
+        case Kind::Comma:
             return Some('.');
         default:
             return None;
@@ -556,7 +557,7 @@ public:
             case '*':
                 return Some(KeyCode(Kind::NumpadMultiply));
             case '.':
-                return Some(KeyCode(Kind::Comma));
+                return Some(KeyCode(Kind::NumpadComma));
             case '/':
                 return Some(KeyCode(Kind::NumpadDivide));
 

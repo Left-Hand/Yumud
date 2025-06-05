@@ -72,7 +72,8 @@ struct HT16K33_Collections{
     public:
         template<typename T>
         requires (sizeof(T) == 1)
-        constexpr Command(const T cmd):raw_(std::bit_cast<uint8_t>(cmd)){;}
+        constexpr Command(const T cmd):
+            raw_(std::bit_cast<uint8_t>(cmd)){;}
 
         uint8_t as_u8() const{
             return raw_;
@@ -85,8 +86,10 @@ struct HT16K33_Collections{
     enum class Error_Kind:uint8_t{
         DisplayBitIndexOutOfRange,
         DisplayByteIndexOutOfRange,
+        DisplayPayloadOversize,
         KeyColumnOutOfRange,
-        KeyRowOutOfRange
+        KeyRowOutOfRange,
+        UnknownInterruptCode
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -104,6 +107,71 @@ struct HT16K33_Collections{
         struct SOP20Settings{
             static constexpr Package PACKAGE = Package::SOP20;
         };
+    };
+
+    struct Config{
+        IntPinFunc int_pin_func = IntPinFunc::InterruptActiveLow;
+        PulseDuty pulse_duty = PulseDuty::_10_16;
+        BlinkFreq blink_freq = BlinkFreq::OFF;
+
+        // static constexpr Config Default(){
+        //     return {
+        //         .int_pin_func = IntPinFunc::InterruptActiveLow,
+        //         .pulse_duty = PulseDuty::_10_16,
+        //         .blink_freq = BlinkFreq::_2HZ
+        //     };
+        // }
+    };
+
+
+    struct KeyData{
+        constexpr bool test(const uint8_t x ,const uint8_t y) const {
+            const bool is_high_byte = x >= 8;
+            const auto byte = buf_[y * 2 + is_high_byte];
+            return byte & (1 << (x % 8));
+        }
+
+        constexpr Option<std::tuple<uint8_t, uint8_t>> to_xy() const {
+            const auto it = std::find_if(buf_.begin(), buf_.end(), 
+                [](const uint8_t data){return data != 0x00;}
+            );
+
+            if(it == buf_.end()) return None;
+            const auto idx = std::distance(buf_.begin(), it);
+
+            const uint8_t y = idx >> 1;
+            const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
+            const uint8_t x = CTZ(line);
+            return Some{std::make_tuple(x,y)};
+        }
+
+        template<size_t R>
+        requires (R < 3)
+        constexpr std::bitset<13> row_as_bitset() const {
+            const auto low_byte = buf_[R * 2];
+            const auto high_byte = buf_[R * 2 + 1];
+            return std::bitset<13>((high_byte << 8) | low_byte);
+        }
+
+        constexpr std::span<uint8_t> as_bytes(){
+            return std::span(buf_);
+        }
+
+        constexpr std::span<const uint8_t> as_bytes() const {
+            return std::span(buf_);
+        }
+
+        friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
+            const auto b3 = std::to_array<std::bitset<13>>({
+                self.row_as_bitset<0>(),
+                self.row_as_bitset<1>(),
+                self.row_as_bitset<2>()
+            });
+
+            return os << b3;
+        }
+    private:
+        std::array<uint8_t, 6> buf_;
     };
 };
 
@@ -143,6 +211,14 @@ struct HT16K33_Regs:public HT16K33_Collections{
         uint8_t display_on:1;
         BlinkFreq blink_freq:2;
         uint8_t __resv__:5 = 0b10000;
+
+        constexpr DisplaySetupCommand(
+            const Enable en,
+            const BlinkFreq freq
+        ){
+            display_on = en == EN;
+            blink_freq = freq;
+        }
     };
 
     CHECK_R8(DisplaySetupCommand)
@@ -161,6 +237,10 @@ struct HT16K33_Regs:public HT16K33_Collections{
     struct DimmingSet:public Reg8<>{
         PulseDuty dimming:4;
         const uint8_t __resv__:4 = 0b1110;
+
+        constexpr DimmingSet(const PulseDuty pulse){
+            dimming = pulse;
+        }
     };
 
     CHECK_R8(DimmingSet)
@@ -225,8 +305,6 @@ public:
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
-
-
 private:
     hal::I2cDrv i2c_drv_;
 };
@@ -245,72 +323,28 @@ public:
         package_ = set.PACKAGE;
     }
 
-    IResult<> init();
-    IResult<> validate();
+    [[nodiscard]] IResult<> init(const Config & cfg);
+
+    // [[nodiscard]] IResult<> reconf(const Config & cfg);
+    
+    [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] IResult<> set_int_pin_func(const IntPinFunc func);
+
+    [[nodiscard]] IResult<BoolLevel> get_int_status();
+
+    [[nodiscard]] IResult<> update_displayer(
+        const size_t offset, std::span<const uint8_t> pbuf);
+
+    [[nodiscard]] IResult<> clear_displayer();
 
 
-    IResult<> set_int_pin_func(const IntPinFunc func);
 
-    IResult<std::bitset<8>> get_int_status();
-
-
-    struct KeyData{
-        constexpr bool test(const uint8_t x ,const uint8_t y) const {
-            const bool is_high_byte = x >= 8;
-            const auto byte = buf_[y * 2 + is_high_byte];
-            return byte & (1 << (x % 8));
-        }
-
-        constexpr Option<std::tuple<uint8_t, uint8_t>> to_xy() const {
-            const auto it = std::find_if(buf_.begin(), buf_.end(), 
-                [](const uint8_t data){return data != 0x00;}
-            );
-
-            if(it == buf_.end()) return None;
-            const auto idx = std::distance(buf_.begin(), it);
-
-            const uint8_t y = idx >> 1;
-            const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
-            const uint8_t x = CTZ(line);
-            return Some{std::make_tuple(x,y)};
-        }
-
-        template<size_t R>
-        requires (R < 3)
-        constexpr std::bitset<13> row_as_bitset() const {
-            const auto low_byte = buf_[R * 2];
-            const auto high_byte = buf_[R * 2 + 1];
-            return std::bitset<13>((high_byte << 8) | low_byte);
-        }
-
-        constexpr std::span<uint8_t> as_bytes(){
-            return std::span(buf_);
-        }
-
-        constexpr std::span<const uint8_t> as_bytes() const {
-            return std::span(buf_);
-        }
-
-        friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
-            const auto b3 = std::to_array<std::bitset<13>>({
-                self.row_as_bitset<0>(),
-                self.row_as_bitset<1>(),
-                self.row_as_bitset<2>()
-            });
-
-            return os << b3;
-        }
-    private:
-        std::array<uint8_t, 6> buf_;
-    };
-
-    IResult<KeyData> get_key_data();
+    [[nodiscard]] IResult<KeyData> get_key_data();
 private:
     using Phy = HT16K33_Phy;
     Phy phy_;
     Package package_;
-
-    IResult<> commit_gcram_to_displayer();
 
     IResult<> set_display_bit(const size_t num, const bool value);
 
@@ -320,7 +354,11 @@ private:
 
     IResult<> write_command(const Command cmd);
 
-    IResult<> enable_system_setup(const Enable en);
+    IResult<> setup_system(const Enable en = EN);
+
+    IResult<> setup_displayer(const BlinkFreq freq, const Enable en = EN);
+
+    IResult<> set_pulse_duty(const PulseDuty duty);
 
 };
 }
