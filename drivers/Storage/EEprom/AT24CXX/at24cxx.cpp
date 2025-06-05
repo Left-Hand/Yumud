@@ -50,12 +50,6 @@ IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf)
 }
 
 
-
-
-
-
-
-
 #if 0
 namespace static_test{
     constexpr void test1(){
@@ -99,10 +93,6 @@ namespace static_test{
     }
 }
 #endif
-
-
-
-
 
 
 IResult<> AT24CXX::store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf){

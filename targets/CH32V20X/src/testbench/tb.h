@@ -162,3 +162,4 @@ void lazy_main();
 
 void myservo_main();
 void myesc_main();
+void ht16k33_main();

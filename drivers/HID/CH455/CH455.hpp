@@ -45,7 +45,7 @@ public:
 
     IResult<> display_digit(const uint8_t digit, const uint8_t value);
 
-    IResult<MatrixKeyEvent> get_key();
+    IResult<KeyEvent> get_key();
 
     template<typename Fn>
     void register_key_callback(Fn && fn) {

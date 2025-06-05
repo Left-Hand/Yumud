@@ -51,14 +51,46 @@ IResult<> HT16K33::write_command(const Command cmd){
     return phy_.write_command(cmd);
 }
 
-IResult<> HT16K33::system_setup(const Enable en){
+IResult<> HT16K33::enable_system_setup(const Enable en){
     return write_command(SystemSetupCommand{
         (en == EN)
     });
+}
+
+IResult<HT16K33::KeyData> HT16K33::get_key_data(){
+    static constexpr auto KEY0_REGADDR = 0x40;
+    KeyData ret;
+    if(const auto res = phy_.read_burst(KEY0_REGADDR, ret.as_bytes());
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(std::move(ret));
 }
 
 IResult<> HT16K33::set_int_pin_func(const IntPinFunc func){
     return write_command(IntSet{
         func
     });
+}
+IResult<std::bitset<8>> HT16K33::get_int_status(){
+    static constexpr auto INT_FLAG_REGADDR = 0x60;
+    uint8_t ret = 0;
+    if(const auto res = phy_.read_data(INT_FLAG_REGADDR, ret);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(std::bitset<8>(ret));
+}
+
+IResult<> HT16K33::init(){
+    if(const auto res = validate(); 
+        res.is_err()) return res;
+
+    if(const auto res = enable_system_setup(EN);
+        res.is_err()) return res;
+
+    if(const auto res = set_int_pin_func(IntPinFunc::InterruptActiveLow);
+        res.is_err()) return res;
+
+    return Ok();
+}
+
+IResult<> HT16K33::validate(){
+    return Ok();
 }

@@ -9,6 +9,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/HID/Event.hpp"
 
 
 namespace ymd::drivers{
@@ -62,8 +63,8 @@ struct HT16K33_Collections{
 
     enum class IntPinFunc:uint8_t{
         AsRowDriver,
-        AsExtiActiveLow,
-        AsExtiActiveHigh
+        InterruptActiveLow,
+        InterruptActiveHigh
     };
 
     struct Command{
@@ -81,9 +82,11 @@ struct HT16K33_Collections{
     };
 
 
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         DisplayBitIndexOutOfRange,
-        DisplayByteIndexOutOfRange
+        DisplayByteIndexOutOfRange,
+        KeyColumnOutOfRange,
+        KeyRowOutOfRange
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -92,6 +95,16 @@ struct HT16K33_Collections{
     using IResult = Result<T, Error>;
 
     using RegAddress = uint8_t;
+
+    struct Settings{
+        struct SOP28Settings{
+            static constexpr Package PACKAGE = Package::SOP28;
+        };
+
+        struct SOP20Settings{
+            static constexpr Package PACKAGE = Package::SOP20;
+        };
+    };
 };
 
 
@@ -171,6 +184,9 @@ public:
     HT16K33_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
 
+    HT16K33_Phy(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+
     [[nodiscard]] IResult<> write_command(const Command cmd){
         if(const auto res = i2c_drv_.write_blocks<>(cmd.as_u8(), LSB);
             res.is_err()) return Err(res.unwrap_err());
@@ -195,8 +211,8 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_data(const RegAddress addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(addr, data);
+    [[nodiscard]] IResult<> read_data(const RegAddress addr, uint8_t & data){
+        if(const auto res = i2c_drv_.read_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -217,12 +233,68 @@ private:
 
 class HT16K33 final:public HT16K33_Regs{
 public:
-    IResult<> validate();
+    template<typename Set>
+    HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv)
+    {
+        resetting(std::forward<Set>(set));
+    }
+    
+    template<typename Set>
+    void resetting(Set && set){
+        package_ = set.PACKAGE;
+    }
 
     IResult<> init();
+    IResult<> validate();
+
+
+    IResult<> set_int_pin_func(const IntPinFunc func);
+
+    IResult<std::bitset<8>> get_int_status();
+
+
+    struct KeyData{
+        constexpr bool test(const uint8_t x ,const uint8_t y) const {
+            const bool is_high_byte = x >= 8;
+            const auto byte = buf_[y * 2 + is_high_byte];
+            return byte & (1 << (x % 8));
+        }
+
+        template<size_t R>
+        requires (R < 3)
+        constexpr std::bitset<13> row_as_bitset() const {
+            const auto low_byte = buf_[R * 2];
+            const auto high_byte = buf_[R * 2 + 1];
+            return std::bitset<13>((high_byte << 8) | low_byte);
+        }
+
+        constexpr std::span<uint8_t> as_bytes(){
+            return std::span(buf_);
+        }
+
+        constexpr std::span<const uint8_t> as_bytes() const {
+            return std::span(buf_);
+        }
+
+        friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
+            const auto b3 = std::to_array<std::bitset<13>>({
+                self.row_as_bitset<0>(),
+                self.row_as_bitset<1>(),
+                self.row_as_bitset<2>()
+            });
+
+            return os << b3;
+        }
+    private:
+        std::array<uint8_t, 6> buf_;
+    };
+
+    IResult<KeyData> get_key_data();
 private:
     using Phy = HT16K33_Phy;
     Phy phy_;
+    Package package_;
 
     IResult<> commit_gcram_to_displayer();
 
@@ -234,8 +306,7 @@ private:
 
     IResult<> write_command(const Command cmd);
 
-    IResult<> system_setup(const Enable en);
+    IResult<> enable_system_setup(const Enable en);
 
-    IResult<> set_int_pin_func(const IntPinFunc func);
 };
 }

@@ -127,6 +127,9 @@ struct _TM1637_Collections{
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     static constexpr uint8_t CGRAM_BEGIN_ADDR = 0;
     static constexpr uint8_t CGRAM_MAX_LEN = 6;
 
@@ -242,7 +245,7 @@ public:
     Result<void, Error> flush();
     
     [[nodiscard]]
-    Result<Option<MatrixKeyEvent>, Error> read_key();
+    Result<Option<KeyPlacement>, Error> read_key();
     [[nodiscard]]
     Result<void, Error> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
@@ -265,60 +268,7 @@ private:
     [[nodiscard]] Result<void, Error> switch_to_display();
     [[nodiscard]] Result<void, Error> switch_to_readkey();
 
-    static constexpr Result<Option<MatrixKeyEvent>, Error> make_key_event(const uint8_t raw){
-        if(raw == 0xff){
-            return Ok(None);
-        }
-        const auto col = [&] -> Option<uint8_t>{
-            const uint8_t key = raw & 0x0f;
-            switch(key){
-                case 0b11101: return Some<uint8_t>(0);
-                case 0b01001: return Some<uint8_t>(1);
-                case 0b10101: return Some<uint8_t>(2);
-                case 0b00101: return Some<uint8_t>(3);
-                case 0b11111: return Some<uint8_t>(0);
-                case 0b01011: return Some<uint8_t>(1);
-                case 0b10111: return Some<uint8_t>(2);
-                case 0b00111: return Some<uint8_t>(3);
-                case 0b11010: return Some<uint8_t>(0);
-                case 0b01010: return Some<uint8_t>(1);
-                case 0b10010: return Some<uint8_t>(2);
-                case 0b00010: return Some<uint8_t>(3);
-                case 0b11110: return Some<uint8_t>(0);
-                case 0b01110: return Some<uint8_t>(1);
-                case 0b10110: return Some<uint8_t>(2);
-                case 0b00110: return Some<uint8_t>(3);
-                default: return None;
-            }
-        }();
 
-        const auto row = [&] -> Option<uint8_t>{
-            const uint8_t key = raw >> 4;
-            switch(key){
-                case 0b11101: return Some<uint8_t>(0);
-                case 0b01001: return Some<uint8_t>(1);
-                case 0b10101: return Some<uint8_t>(2);
-                case 0b00101: return Some<uint8_t>(3);
-                case 0b11111: return Some<uint8_t>(0);
-                case 0b01011: return Some<uint8_t>(1);
-                case 0b10111: return Some<uint8_t>(2);
-                case 0b00111: return Some<uint8_t>(3);
-                case 0b11010: return Some<uint8_t>(0);
-                case 0b01010: return Some<uint8_t>(1);
-                case 0b10010: return Some<uint8_t>(2);
-                case 0b00010: return Some<uint8_t>(3);
-                case 0b11110: return Some<uint8_t>(0);
-                case 0b01110: return Some<uint8_t>(1);
-                case 0b10110: return Some<uint8_t>(2);
-                case 0b00110: return Some<uint8_t>(3);
-                default: return None;
-            }
-        }();
-
-        return Ok(Some(
-            MatrixKeyEvent(col, row)
-        ));
-    }
 };
 
 //段显示器
