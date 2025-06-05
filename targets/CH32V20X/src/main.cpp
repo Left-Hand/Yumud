@@ -77,7 +77,7 @@ int main(){
 
     // i2c_scanner_main();
     // tca9548_main();
-    // eeprom_main();
+    eeprom_main();
     // flash_main();
     // digipw_main();
     // uart_main();

@@ -78,22 +78,47 @@ __inline void GpioPort::clr_by_mask(const PinMask mask){
 
 #ifdef ENABLE_GPIOA
 extern GpioPort portA;
+template<size_t I>
+requires (I < 16)
+static constexpr Gpio & PA(){
+    return portA[I];
+}
 #endif
 
 #ifdef ENABLE_GPIOB
 extern GpioPort portB;
+template<size_t I>
+requires (I < 16)
+static constexpr Gpio & PB(){
+    return portB[I];
+}
 #endif
 
 #ifdef ENABLE_GPIOC
 extern GpioPort portC;
+template<size_t I>
+requires (I < 16)
+static constexpr Gpio & PC(){
+    return portC[I];
+}
 #endif
 
 #ifdef ENABLE_GPIOD
 extern GpioPort portD;
+template<size_t I>
+requires (I < 16)
+static constexpr Gpio & PD(){
+    return portD[I];
+}
 #endif
 
 #ifdef ENABLE_GPIOE
 extern GpioPort portE;
+template<size_t I>
+requires (I < 16)
+static constexpr Gpio & PE(){
+    return portE[I];
+}
 #endif
 
 }

@@ -13,7 +13,8 @@ namespace ymd::drivers{
 struct AT24CXX_Collections{
 public:
     enum class Error_Kind{
-        IsOperatingByOther,
+        DeviceIsBusyStore,
+        DeviceIsBusyLoad,
         PayloadOverlength
     };
 
@@ -25,24 +26,27 @@ public:
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
 
-    #define DEF_AT24CXX_PRESET_TEMPLATE(name, c, p)\
-    struct name final{\
-        static constexpr auto CAPACITY = AddressDiff(c);\
-        static constexpr auto PAGE_SIZE = AddressDiff(p);\
-    };\
 
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C01, 1 << 7, 8)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C02, 1 << 8, 8)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C04, 1 << 9, 16)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C08, 1 << 10, 16)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C16, 1 << 11, 16)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C32, 1 << 12, 32)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C64, 1 << 13, 32)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C128, 1 << 14, 64)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C256, 1 << 15, 64)
-    DEF_AT24CXX_PRESET_TEMPLATE(AT24C512, 1 << 16, 128)
+    struct Config{
+        
+        template<size_t C, size_t P>
+        struct ConfigBase{
+            static constexpr auto CAPACITY = AddressDiff(C);
+            static constexpr auto PAGE_SIZE = AddressDiff(P);
+        };
 
-    #undef DEF_AT24CXX_PRESET_TEMPLATE
+        struct AT24C01 final:public ConfigBase<1 << 7, 8>{};
+        struct AT24C02 final:public ConfigBase<1 << 8, 8>{};
+        struct AT24C04 final:public ConfigBase<1 << 9, 16>{};
+        struct AT24C08 final:public ConfigBase<1 << 10, 16>{};
+        struct AT24C16 final:public ConfigBase<1 << 11, 16>{};
+        struct AT24C32 final:public ConfigBase<1 << 12, 32>{};
+        struct AT24C64 final:public ConfigBase<1 << 13, 32>{};
+        struct AT24C128 final:public ConfigBase<1 << 14, 64>{};
+        struct AT24C256 final:public ConfigBase<1 << 15, 64>{};
+        struct AT24C512 final:public ConfigBase<1 << 16, 128>{};
+    };
+
 };
 
 
@@ -56,164 +60,254 @@ public:
         pagesize_(cfg.PAGE_SIZE){;}
 
     AT24CXX(const auto & cfg, hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv_)), 
+        i2c_drv_(std::move(i2c_drv)), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
+
+    AT24CXX(const AT24CXX &) = delete;
+    AT24CXX(AT24CXX &&) = delete;
+
 
     IResult<> init();
     IResult<> validate();
 
     AddressDiff capacity(){return capacity_;}
 
-    IResult<bool> is_busy();
+    bool is_available(){
+        return state_.is_available(clock::millis());
+    }
 
-    IResult<size_t> resume(){return Ok(0u);}
+    auto poll(){
+        return state_.poll(*this, clock::millis());
+    }
 
+    IResult<> store_bytes(const Address begin, const std::span<const uint8_t> pbuf){
+        const auto now = clock::millis();
+        return state_.add_store_task(begin, pbuf, pagesize_, now) 
+            | state_.initial(*this, now);
+    }
+    IResult<> load_bytes(const Address begin, const std::span<uint8_t> pbuf){
+        const auto now = clock::millis();
+        return state_.add_load_task(begin, pbuf, pagesize_, now) 
+            | state_.initial(*this, now);
+    }
 private:
 
 
-    // class Timer final{
-    // public:
-    //     Timer() = default;
-    //     constexpr void reset(const Milliseconds now, const Milliseconds sustain){
-    //         begin_ = now;
-    //         sustain_ = sustain;
-    //     }
+    class Timer final{
+    public:
+        Timer() = default;
+        constexpr void reset(const Milliseconds now){
+            begin_ = now;
+        }
 
-    //     constexpr bool is_expired(const Milliseconds now) const {
-    //         return now - begin_ > sustain_;
-    //     }
+        constexpr bool is_expired(const Milliseconds now, const Milliseconds period) const {
+            return now - begin_ > period;
+        }
 
-    //     Milliseconds has_passed(const Milliseconds now) const {
-    //         return now - begin_;
-    //     }
-    // private:
-    //     Milliseconds begin_ = 0ms;
-    //     Milliseconds sustain_ = 0ms;
-    // };
-    // // static constexpr auto transform_operation_to_ms(const Operation operation){
-    // //     switch(operation){
-    // //         case Operation::Load: return 6ms;
-    // //         case Operation::Store: return 6ms;
-    // //         case Operation::Erase: return 6ms;
-    // //         default: __builtin_unreachable();
-    // //     }
-    // // }
+        constexpr Milliseconds duration(const Milliseconds now) const {
+            return now - begin_;
+        }
+    private:
+        Milliseconds begin_ = 0ms;
+    };
+
     
-    // struct TaskBase;
+    struct LoadTask final{
+    public:
+        constexpr LoadTask(
+            const uint32_t begin, 
+            const std::span<uint8_t> pbuf,
+            const uint32_t gsize
+        ):
+            iter_(RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
+            pbuf_(pbuf),
+            operating_(iter_.begin())
+        {;}
 
-    // struct State{
-    // public:
-    //     constexpr State() = default;
+        IResult<> initial(AT24CXX & self, const Milliseconds now){
+            return poll(self, now);
+        }
 
-    //     constexpr const auto manipulator() const{
-    //         return manipulator_;
-    //     }
+        IResult<> poll(AT24CXX & self, const Milliseconds now){
+            if(not is_oper_complete(now)) return Ok();
+            if(no_next_block_) return Ok();
 
-    //     constexpr bool is_available() const{return manipulator_ == nullptr;}
+            last_time_ = now;
+            const auto addr = operating_.start;
+            const auto piece = iter_.subspan(pbuf_, operating_);
+            if(const auto res = self.load_bytes_inblock_impl(Address(addr), piece);
+                res.is_err()) return Err(res.unwrap_err());
 
-    //     void inject_manipulator(TaskBase * task){
-    //         manipulator_ = task; 
-    //     }
+            const auto next_opt = iter_.next(operating_);
+            if(next_opt.is_some()){
+                operating_ = next_opt.unwrap();
+            }else{
+                no_next_block_ = true;
+            }
 
-    // private:
-    //     TaskBase * manipulator_ = nullptr;
-    //     friend class TaskBase;
-    // };
+            return Ok();
+        }
 
-    // struct TaskBase{
-    //     TaskBase(AT24CXX & storage):
-    //         storage_(storage){;}
+        constexpr bool is_oper_complete(const Milliseconds now) const{
+            return now - last_time_ >= 6ms;
+        }
+        constexpr bool is_task_complete(const Milliseconds now) const {
+            return no_next_block_ and is_oper_complete(now);
+        }
+    private:
+        const RangeGridIter iter_;
+        const std::span<uint8_t> pbuf_;
+        Milliseconds last_time_ = 0ms;
+        Range2u operating_;
+        bool no_next_block_ = false;
+    };
+
+    friend class LoadTask;
+
+    struct StoreTask final{
+    public:
+        constexpr StoreTask(
+            const uint32_t begin, 
+            const std::span<const uint8_t> pbuf,
+            const uint32_t gsize
+        ):
+            iter_(RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
+            pbuf_(pbuf),
+            operating_(iter_.begin())
+        {;}
+
+        IResult<> initial(AT24CXX & self, const Milliseconds now){
+            return poll(self, now);
+        }
+
+        IResult<> poll(AT24CXX & self, const Milliseconds now){
+            if(not is_oper_complete(now)) return Ok();
+            if(no_next_block_) return Ok();
+            last_time_ = now;
+            const auto addr = operating_.start;
+            const auto piece = iter_.subspan(pbuf_, operating_);
+            if(const auto res = self.store_bytes_inblock_impl(Address(addr), piece);
+                res.is_err()) return Err(res.unwrap_err());
 
 
-    //     IResult<> resume(){
-    //         // auto & self = *this;
-    //         auto & state = storage_.state_;
+            DEBUG_PRINTLN(operating_, iter_.next(operating_));
 
-    //         const bool is_available = (state.is_available()); 
+            const auto next_opt = iter_.next(operating_);
+            if(next_opt.is_some()){
+                operating_ = next_opt.unwrap();
+            }else{
+                no_next_block_ = true;
+            }
 
-    //         // const bool is_under_occupy = (state.manipulator() == this);
+            return Ok();
+        }
 
-    //         const bool cant_occupy = (state.manipulator() != nullptr 
-    //             and state.manipulator() != this);
+        constexpr bool is_oper_complete(const Milliseconds now) const{
+            return now - last_time_ >= 6ms;
+        }
+        constexpr bool is_task_complete(const Milliseconds now) const {
+            return no_next_block_ and is_oper_complete(now);
+        }
+    private:
+        const RangeGridIter iter_;
+        const std::span<const uint8_t> pbuf_;
+        Milliseconds last_time_ = 0ms;
+        Range2u operating_;
+        bool no_next_block_ = false;
+    };
 
-    //         if(cant_occupy) return Err(Error(Error::IsOperatingByOther));
-
-    //         if(is_available){
-    //             state.inject_manipulator(this);
-    //         }
-    //         return execute();
-    //     }
-    // protected:
-    //     AT24CXX & storage_;
-    //     Timer timer_;
-    // };
-
-    // struct StoreTask final:public TaskBase{
-    //     StoreTask(AT24CXX & device, const Address addr, const std::span<const uint8_t> pbuf):
-    //         TaskBase(device),
-    //         pbuf_(pbuf)
-    //     {
-    //         mem_range_ = {addr.as_u32(), pbuf.size()};
-    //         op_range_ = init_grid(addr.as_u32(), grid_size());
-    //     }
-
-    //     IResult<> execute(){
-    //         //设备正忙于处理上次的操作
-    //         if(!timer_.is_expired(clock::millis())) return Ok(pending());
-
-    //         //所有操作均结束
-    //         if(op_range_.length() == 0){
-    //             //释放所有权
-    //             storage_.state_.inject_manipulator(nullptr);
-    //             return Ok(0);
-    //         }
-
-    //         const auto offset = op_range_.from - mem_range_.from;
-    //         storage_.write_burst(Address(op_range_.from), std::span<const uint8_t>(
-    //             pbuf_.data() + offset, op_range_.length()));
-    //         //准备下次的范围
-    //         op_range_ = next_grid(op_range_.from, grid_size(), mem_range_);
-    //     }
-
-    //     size_t pending() const {
-    //         return mem_range_.end() - op_range_.end();
-    //     }
-
-    //     static constexpr Range2<uint32_t> init_grid(const uint32_t addr, const uint32_t grid){
-    //         const auto rem = addr % grid;
-    //         if(rem == 0){
-    //             return {addr, addr + grid};
-    //         }else{
-    //             return {addr, addr + grid - rem}; 
-    //         }
-    //     }
-
-    //     static constexpr Range2<uint32_t> next_grid(
-    //         const uint32_t addr, const uint32_t grid, const Range2<uint32_t> range
-    //     ){
-    //         const auto rem = addr % grid;
-    //         const auto next_addr = addr - rem + grid;
-    //         const auto next_end = range.clamp(next_addr + grid);
-    //         if(next_addr >= next_end) return Range2<uint32_t>{next_addr, next_addr};
-    //         else return Range2<uint32_t>{next_addr, next_end};
-    //     }
-
-    // private:
-    //     std::span<const uint8_t> pbuf_;
-    //     Range2<uint32_t> mem_range_;
-    //     Range2<uint32_t> op_range_;
-
-    //     const uint32_t grid_size()const{
-    //         return storage_.pagesize().as_u32();
-    //     }
-    // };
+    friend class StoreTask;
 
 
     hal::I2cDrv i2c_drv_;
-    // State state_;
     AddressDiff capacity_;
     AddressDiff pagesize_;
+
+
+
+    struct State final{
+        IResult<> poll(AT24CXX & self, const Milliseconds now){
+            if(is_available(now) == true){
+                may_tasks_ = std::nullopt;
+                return Ok();
+            }
+            auto & tasks = may_tasks_.value();
+            const auto res = std::visit([&](auto & task){
+                return task.poll(self, now);
+            }, tasks);
+            return res;
+        }
+
+        bool is_available(const Milliseconds now) const {
+            if(not may_tasks_.has_value())
+                return true;
+            const auto & tasks = may_tasks_.value();
+            return std::visit([&](const auto & task){
+                return task.is_task_complete(now);
+            }, tasks);
+        }
+
+        IResult<> add_store_task(
+            const Address begin, 
+            const std::span<const uint8_t> pbuf,
+            const AddressDiff gsize,
+            const Milliseconds now
+        ){
+            if(not is_available(now)) 
+                return Err(map_currtask_to_err(may_tasks_.value()));
+            may_tasks_.emplace(Tasks(StoreTask(begin.as_u32(), pbuf, gsize.as_u32())));
+            return Ok();
+        }
+
+
+        IResult<> add_load_task(
+            const Address begin, 
+            const std::span<uint8_t> pbuf,
+            const AddressDiff gsize,
+            const Milliseconds now
+        ){
+            if(not is_available(now)) 
+                return Err(map_currtask_to_err(may_tasks_.value()));
+            may_tasks_.emplace(Tasks(LoadTask(begin.as_u32(), pbuf, gsize.as_u32())));
+            return Ok();
+        }
+
+        IResult<> initial(AT24CXX & self, const Milliseconds now){
+            return initial_task(self, may_tasks_.value(), now);
+        }
+    private:
+
+        using Tasks = std::variant<
+            LoadTask, 
+            StoreTask
+        >;
+        std::optional<Tasks> may_tasks_;
+
+        static constexpr Error map_currtask_to_err(const Tasks & tasks){
+            if(std::holds_alternative<LoadTask>(tasks))
+                return Error::DeviceIsBusyLoad;
+            else if(std::holds_alternative<StoreTask>(tasks)) 
+                return Error::DeviceIsBusyStore;
+            __builtin_unreachable();
+        }
+
+        // IResult<bool> is_busy(AT24CXX & self, const Milliseconds now){        
+        //     if(may_tasks_.has_value() == false) return Ok(false);
+        //     const auto oper = map_task_to_oper(may_tasks_.value());
+        //     const auto lasting = map_operation_to_lasting(oper);
+
+        //     return Ok(timer_.is_expired(now, lasting));
+        // }
+
+        IResult<> initial_task(AT24CXX & self, Tasks & tasks, const Milliseconds now){
+            return std::visit([&](auto & task){
+                return task.initial(self, now);
+            }, tasks);
+        }
+    };
+
+    State state_;
 
     constexpr AddressDiff pagesize() const {
         return pagesize_;
@@ -222,31 +316,11 @@ private:
     constexpr bool is_small_chip(){
         return capacity_ <= AddressDiff(256);
     }
-
-    // constexpr bool is_busy() const {
-    //     constexpr auto STORE_LASTING = 6ms;
-    //     constexpr auto LOAD_LASTING = 6ms;
-    //     constexpr auto ERASE_LASTING = 6ms;
-
-    //     const auto oper = state_.operation();
-    //     if(oper.is_some()){
-    //         switch(oper.unwrap()){
-    //             case Operation::Store:  return state_.has_passed() < STORE_LASTING;
-    //             case Operation::Load:   return state_.has_passed() < LOAD_LASTING;
-    //             case Operation::Erase:  return state_.has_passed() < ERASE_LASTING;
-    //             default: __builtin_unreachable();
-    //         }
-    //     }else{
-    //         return false;
-    //     }
-    // }
-
     IResult<> write_burst(const Address loc, const std::span<const uint8_t> pbuf);
     IResult<> read_burst(const Address loc, const std::span<uint8_t> pbuf);
 
-
-    IResult<> store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf);
-    IResult<> load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf);
+    IResult<> store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf);
+    IResult<> load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf);
 };
 
 

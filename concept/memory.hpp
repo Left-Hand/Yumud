@@ -5,7 +5,7 @@
 
 namespace ymd{
 
-
+#if 0
 class Memory{
 
 protected:
@@ -51,5 +51,7 @@ public:
         return Memory{storage_, AddressRange{loc, capacity}};
     }
 };
+
+#endif
 
 }

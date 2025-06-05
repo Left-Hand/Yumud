@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/stream/ostream.hpp"
+#include "core/utils/Option.hpp"
 
 #include "type_traits"
 #include <algorithm>
@@ -33,21 +34,21 @@ public:
         start(static_cast<T>(other.start)), 
         stop(static_cast<T>(other.stop))
     {
-        *this = this -> abs(); 
+        if(stop < start) std::swap(start, stop); 
     }
 
     [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other): 
         start(static_cast<T>(other.first)), 
         stop(static_cast<T>(other.second))
     {
-        *this = this -> abs(); 
+        if(stop < start) std::swap(start, stop);
     }
 
     [[nodiscard]] __fast_inline constexpr Range2(const std::tuple<T, T> & other):
         start(static_cast<T>(std::get<0>(other))), 
         stop(static_cast<T>(std::get<1>(other)))
     {
-        *this = this -> abs(); 
+        if(stop < start) std::swap(start, stop);
     }
 
     template<typename U = T>
@@ -185,73 +186,6 @@ public:
         return (start + stop) / 2;
     }
 
-    [[nodiscard]] static constexpr Range2<T> grid_next_right(
-        const arithmetic auto & value, const arithmetic auto & grid_size){
-        return from_start_and_gridsize((value + grid_size), grid_size);
-    }
-
-    [[nodiscard]] static constexpr Range2<T> grid_next_left(
-        const arithmetic auto & value, const arithmetic auto & grid_size){
-        return from_start_and_gridsize((value - grid_size), grid_size);
-    }
-
-    [[nodiscard]] constexpr Range2<T> gridfy(const arithmetic auto & grid_size) const {
-        return Range2<T>(from_start_and_gridsize(start, grid_size), from_start_and_gridsize(stop, grid_size));
-    }
-
-    [[nodiscard]] static constexpr Range2<T> part_in_grid(
-        const arithmetic auto & value, const arithmetic auto & grid_size, const bool right_part = true){
-        if constexpr(std::is_integral<T>::value){
-            if(value % grid_size == 0) return {value, value};
-            auto gridfied = from_start_and_gridsize(value, grid_size);
-            if(right_part){
-                return {value, gridfied.stop};
-            }else{
-                return {gridfied.start, value};
-            }
-        }
-    }
-
-    [[nodiscard]] constexpr Range2<T> part_right_in_grid(const arithmetic auto & value, const arithmetic auto & grid_size) const{
-        return part_in_grid(value, grid_size, true);
-    }
-
-    [[nodiscard]] constexpr Range2<T> part_left_in_grid(const arithmetic auto & value, const arithmetic auto & grid_size) const{
-        return part_in_grid(value, grid_size, false);
-    }
-
-
-    [[nodiscard]] constexpr Range2<T> room_left(const Range2<auto> & content) const{
-        return {this->start, MAX(content.start, this->start)};
-    }
-
-    [[nodiscard]] constexpr Range2<T> room_right(const Range2<auto> & content) const{
-        return {this->start, MIN(content.start, this->start)};
-    }
-
-    [[nodiscard]] constexpr int rooms(const Range2<auto> & _content) const{
-        return bool(room_left(_content)) + bool(room_right(_content));
-    }
-
-    [[nodiscard]] constexpr Range2<T> grid_forward(const Range2<auto> & before, const auto & grid_size) const{
-
-        if(before.start == before.stop && before.start == 0){//initial
-            auto grid_field = from_start_and_gridsize(this->start, grid_size);
-            if(grid_field.has(*this)) return *this;
-            else return {this->start, grid_field.stop};
-        }
-
-
-        if(part_right_in_grid(before.stop, grid_size).length() != 0){
-            return {before.stop, before.stop};
-        }
-
-        auto ret = grid_next_right(before.start, grid_size);
-        if(ret.has(this->stop)){
-            return ret.part_left_in_grid(this->stop, grid_size);
-        }
-        return ret;
-    }
 
     [[nodiscard]] constexpr Range2<T> scale_around_center(const auto & amount){
         const T len = this->length();
@@ -289,20 +223,20 @@ public:
         return start + (value) * (stop - start);
     }
 
-    // [[nodiscard]] constexpr bool operator<(const arithmetic auto & value) const {
-    //     return value < this->start;
-    // }
+    [[nodiscard]] constexpr bool is_complete_less_than(const arithmetic auto & value) const {
+        return this->stop < value;
+    }
 
-    // [[nodiscard]] constexpr bool operator<=(const arithmetic auto & value) const {
-    //     return value <= this->stop;
-    // }
+    [[nodiscard]] constexpr bool is_partical_less_than(const arithmetic auto & value) const {
+        return this->start < value && this->stop >= value;
+    }
 
-    // [[nodiscard]] constexpr bool operator>(const arithmetic auto & value) const {
-    //     return value > this->stop;
-    // }
-    // [[nodiscard]] constexpr bool operator>=(const arithmetic auto & value) const {
-    //     return value >= this->start;
-    // }
+    [[nodiscard]] constexpr bool is_complete_great_than(const arithmetic auto & value) const {
+        return this->start > value;
+    }
+    [[nodiscard]] constexpr bool is_partical_great_than(const arithmetic auto & value) const {
+        return this->start <= value && this->stop > value;
+    }
 
 
     [[nodiscard]] constexpr T clamp(const arithmetic auto & value) const{
@@ -313,23 +247,6 @@ public:
     [[nodiscard]] constexpr T min() const {return MIN(this->start, this->stop);}
 };
 
-// constexpr bool operator<(const arithmetic auto & value, const Range2<auto> & range){
-//     return range.abs() > value;
-// }
-
-// constexpr bool operator<=(const arithmetic auto & value, const Range2<auto> & range){
-//     return range.abs() >= value;
-// }
-
-// constexpr bool operator>(const arithmetic auto & value, const Range2<auto> & range){
-//     return range.abs() < value;
-// }
-
-// constexpr bool operator>=(const arithmetic auto & value, const Range2<auto> & range){
-//     return range.abs() <= value; 
-// }
-
-
 using Range2i = Range2<int>;
 using Range2i = Range2<int>;
 using Range2u = Range2<uint>;
@@ -339,4 +256,88 @@ __inline OutputStream & operator<<(OutputStream & os, const Range2<auto> & value
 }
 
 
+
+class RangeGridIter{
+public:
+    constexpr RangeGridIter(
+        const Range2u range,
+        const uint32_t gsize
+    ):
+        range_targ_(range),
+        gsize_(gsize){;}
+
+    constexpr Option<Range2u> next(
+        const Range2u range_in
+    )const{
+        return next_of_range(range_in, range_targ_, gsize_);
+    }
+
+    constexpr Option<Range2u> prev(
+        const Range2u range_in
+    )const{
+        return prev_of_range(range_in, range_targ_, gsize_);
+    }
+
+    constexpr Range2u begin()const{
+        return begin_of_range(range_targ_, gsize_);
+    }
+
+    constexpr Range2u end()const{
+        return end_of_range(range_targ_, gsize_);
+    }
+
+    template<typename T>
+    constexpr std::span<T> subspan(const std::span<T> pbuf, const Range2u range) const{
+        const auto offset = range.start - range_targ_.start;
+        return pbuf.subspan(offset, range.length());
+    }
+
+    constexpr Range2u whole() const {
+        return range_targ_;
+    }
+private:
+
+    static constexpr Range2u begin_of_range(
+        const Range2u range,
+        const uint gsize
+    ){
+        const auto grid_remaining = gsize - range.start % gsize;
+        return Range2u(range.start, MIN(range.start + grid_remaining, range.stop));
+    }
+
+    static constexpr Range2u end_of_range(
+        const Range2u range,
+        const uint gsize
+    ){
+        const auto grid_begin = range.stop - range.stop % gsize;
+        return Range2u(MAX(range.start, grid_begin), range.stop);
+    }
+    static constexpr Option<Range2u> next_of_range(
+        const Range2u range_in, 
+        const Range2u range_targ, 
+        const uint gsize
+    ){
+        const auto end_range = end_of_range(range_targ, gsize);
+        if(range_in.stop >= end_range.stop) return None;
+        const auto next_stop = MIN(range_in.stop + gsize, range_targ.stop);
+        const auto remainder = next_stop % gsize;
+        if(remainder == 0) return Some(Range2u{next_stop - gsize , next_stop});
+        else return Some(Range2u{next_stop - remainder , next_stop});
+    }
+
+    static constexpr Option<Range2u> prev_of_range(
+        const Range2u range_in, 
+        const Range2u range_targ, 
+        const uint gsize
+    ){
+        const auto begin_range = begin_of_range(range_targ, gsize);
+        if(range_in.start <= begin_range.start) return None;
+        const auto prev_start = MAX(range_in.start - gsize, range_targ.start);
+        const auto remainder = prev_start % gsize;
+        return Some(Range2u(prev_start, prev_start - remainder + gsize));
+    }
+
+    const Range2u range_targ_;
+    const uint32_t gsize_;
+};
 };

@@ -22,6 +22,8 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pbuf){
+    // DEBUG_PRINTLN(addr, pbuf);
+    // return Ok();
     if (is_small_chip()){
         if(const auto res = i2c_drv_.write_burst(uint8_t(addr.as_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
@@ -34,6 +36,8 @@ IResult<> AT24CXX::write_burst(const Address addr, const std::span<const uint8_t
 }
 
 IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf){
+    // DEBUG_PRINTLN(addr, pbuf);
+    // return Ok();
     if (is_small_chip()){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr.as_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
@@ -46,59 +50,67 @@ IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf)
 }
 
 
-template<typename FnBefore, typename FnExecute, typename FnAfter>
-auto internate_grid(
-    const uint32_t address, 
-    const uint32_t grid,
-    const std::span<const uint8_t> pbuf,
-    const FnBefore&& fn_before, 
-    FnExecute&& fn_execute, 
-    FnAfter&& fn_after
-){
-    Range2<uint32_t> store_window = {address,address + grid};
-    Range2<uint32_t> op_window = {0,0};
-    do{
-        op_window = store_window.grid_forward(op_window, grid);
-        if(op_window.length() != 0){
-            std::forward<FnBefore>(fn_before)();
-            const uint8_t * ptr = (pbuf.data() + (op_window.start - store_window.start));
-            std::forward<FnExecute>(fn_execute)(op_window.start, std::span<const uint8_t>(ptr, op_window.length()));
-            std::forward<FnAfter>(fn_after)();
-        }
-    }while(op_window.length());
+
+
+
+
+
+
+#if 0
+namespace static_test{
+    constexpr void test1(){
+        constexpr auto it = RangeGridIter({0, 13}, 8);
+        constexpr auto _0 = it.begin();
+        constexpr auto _1 = it.next(_0).unwrap();
+        static_assert(_1 == Range2u{8, 13});
+        // constexpr auto _2 = it.next(_1).unwrap();
+
+        constexpr auto e_0 = it.end();  
+        constexpr auto e_1 = it.prev(e_0).unwrap();  
+        static_assert(e_1 == Range2u{0, 8});
+    }
+
+    constexpr void test2(){
+        constexpr auto it = RangeGridIter({2, 9}, 8);
+        constexpr auto _0 = it.begin();
+        constexpr auto _1 = it.next(_0).unwrap();
+        static_assert(_1 == Range2u{8, 9});
+
+        constexpr auto e_0 = it.end();  
+        constexpr auto e_1 = it.prev(e_0).unwrap();  
+        static_assert(e_1 == Range2u{2, 8});
+    }
+
+    constexpr void test3(){
+        constexpr auto it = RangeGridIter({2, 3}, 8);
+        constexpr auto _0 = it.begin();
+        static_assert(it.next(_0).is_none());
+
+        constexpr auto e_0 = it.end();  
+        static_assert(it.prev(e_0).is_none());  
+    }
+    constexpr void test4(){
+        constexpr auto it = RangeGridIter({257, 258}, 8);
+        constexpr auto _0 = it.begin();
+        static_assert(it.next(_0).is_none());
+
+        constexpr auto e_0 = it.end();  
+        static_assert(it.prev(e_0).is_none());  
+    }
 }
+#endif
 
 
-// static constexpr Option<Range2u> map_grid_to_next(const Range2u range, const uint gsize){
-//     const bool left_is_aligned = range.start % gsize == 0;
-// }
-
-// void AT24CXX::store_bytes_impl(const Address loc, const std::span<const uint8_t> pbuf){
-//     // const auto full_end = loc + len; 
-//     // CHECK_ADDR(full_end);
-
-//     internate_grid(
-//         loc.as_u32(),
-//         pagesize_,
-//         pbuf,
-//         [this]{blocking_until_free();},
-//         [this](const uint32_t address, const std::span<const uint8_t> pbuf){write_burst(Address(address), pbuf);},
-//         [this]{state_ = Operation::Store;},
-//     );
-// }
 
 
-IResult<> AT24CXX::load_bytes_impl(const Address loc, const std::span<uint8_t> pbuf){
 
-    if(const auto res = read_burst(loc, pbuf);
-        res.is_err()) return res;
 
-    TODO();
-    return Ok();
+IResult<> AT24CXX::store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf){
+    return write_burst(loc, pbuf);
 }
-
-IResult<bool> AT24CXX::is_busy(){return Ok(true);}
-// IResult<bool> is_available(){return Ok(false);}
+IResult<> AT24CXX::load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf){
+    return read_burst(loc, pbuf);
+}
 
 IResult<> AT24CXX::init(){
     if(const auto res = validate();
