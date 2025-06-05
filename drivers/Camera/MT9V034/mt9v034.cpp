@@ -155,8 +155,8 @@ IResult<> MT9V034::write_reg(const uint8_t addr, const uint16_t reg_data){
     return Ok();
 }
 
-IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pData){
-    if(const auto res = sccb_drv_.read_reg(addr, pData);
+IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pbuf){
+    if(const auto res = sccb_drv_.read_reg(addr, pbuf);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -247,10 +247,10 @@ IResult<> MT9V034::enable_pixel_test_pattern(
 }
 
 IResult<> MT9V034::set_exposure_range(const Range2u range){
-    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, range.from);
+    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, range.start);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, range.to);
+    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, range.stop);
         res.is_err()) return res;
 
     return Ok();

@@ -43,8 +43,8 @@ void co_ab_main(){
     auto & timer = hal::timer4;
     #endif
 
-    auto & pwm_p = timer.oc(1);
-    auto & pwm_n = timer.ocn(1);
+    auto & pwm_p = timer.oc<1>();
+    auto & pwm_n = timer.ocn<1>();
 
     timer.init(CHOP_FREQ);
 

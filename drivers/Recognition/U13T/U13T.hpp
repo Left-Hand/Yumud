@@ -73,8 +73,8 @@ public:
     void tick();
     void update();
 
-    void write(std::span<const uint8_t> pdata){
-        uart_.writeN(reinterpret_cast<const char *>(static_cast<const uint8_t *>(&pdata[0])), pdata.size());
+    void write(std::span<const uint8_t> pbuf){
+        uart_.writeN(reinterpret_cast<const char *>(static_cast<const uint8_t *>(&pbuf[0])), pbuf.size());
     }
 
     static constexpr std::array<uint8_t, 7> make_baudrate_payload(const uint32_t baudrate){

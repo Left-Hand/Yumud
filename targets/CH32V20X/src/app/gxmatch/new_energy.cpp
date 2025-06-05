@@ -16,7 +16,7 @@
 #include "hal/adc/adcs/adc1.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
-#include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
+#include "drivers/GateDriver/AT8222/at8222.hpp"
 #include "drivers/Audio/JQ8900/JQ8900.hpp"
 #include "drivers/Recognition/U13T/U13T.hpp"
 #include "drivers/Encoder/ABEncoder.hpp"
@@ -382,10 +382,9 @@ public:
 
         timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
-        timer3.oc(4).init({.install_en = DISEN});
-        timer3.oc(4).enable_output(EN);
-
-        timer3.oc(4).cvr() = 1;
+        timer3.oc<4>().init({.install_en = DISEN});
+        timer3.oc<4>().enable_output(EN);
+        timer3.oc<4>().cvr() = 1;
     }
 
     void process(const real_t t){
@@ -403,14 +402,14 @@ public:
 private:
     hal::GenericTimer & timer = hal::timer3;
             
-    hal::TimerOC & pwm_pos = timer.oc(1);
-    hal::TimerOC & pwm_neg = timer.oc(2);
+    hal::TimerOC & pwm_pos = timer.oc<1>();
+    hal::TimerOC & pwm_neg = timer.oc<2>();
 
     Chopper chopper_{
         pwm_pos, pwm_neg, hal::NullGpio
     };
 
-    Sensor sensor_{hal::adc1.inj(1)};
+    Sensor sensor_{hal::adc1.inj<1>()};
 
     Motor motor_{chopper_, sensor_};
 
@@ -572,12 +571,12 @@ private:
         return StationName::from_gbk(data);
     }
 
-    static constexpr auto is_pkt_payload(const std::span<const uint8_t> pdata){
-        return pdata.size() == 10;
+    static constexpr auto is_pkt_payload(const std::span<const uint8_t> pbuf){
+        return pbuf.size() == 10;
     }
 
-    static constexpr auto is_identity_payload(const std::span<const uint8_t> pdata){
-        return pdata.size() == 26;
+    static constexpr auto is_identity_payload(const std::span<const uint8_t> pbuf){
+        return pbuf.size() == 26;
     }
 
     void update_decoder(){

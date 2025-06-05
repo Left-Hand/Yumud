@@ -35,7 +35,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         .freq = 20_KHz,
         // .freq = 10_KHz,
         // .freq = 5_KHz,
-        .deadzone_ns = 200
+        .deadzone_ns = 200ns
     });
 
     timer.attach(TimerIT::Update, {0,0}, [&]{
@@ -69,7 +69,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
             // u, 
             // v, 
             // w,
-            real_t(timer.oc(1))
+            real_t(timer.oc<1>())
         );
         // clock::delay(1ms);
         clock::delay(100us);

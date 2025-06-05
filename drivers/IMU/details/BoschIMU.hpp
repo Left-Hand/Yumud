@@ -9,11 +9,17 @@
 namespace ymd::drivers{
 
 class BoschSensor_Phy final{
-private:
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+
 public:
     using Error = ImuError;
+    BoschSensor_Phy(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
+    BoschSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
+    BoschSensor_Phy(const hal::SpiDrv & spi_drv):
+        i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
+    BoschSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
@@ -27,6 +33,15 @@ public:
         }
 
         PANIC();
+    }
+
+    template<typename T>
+    [[nodiscard]] __fast_inline
+    Result<void, Error> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return res;
+        reg.apply();
+        return Ok();
     }
 
     [[nodiscard]] __fast_inline
@@ -79,16 +94,9 @@ public:
     Result<void, Error> validate() {
         return Ok();
     }
-public:
-
-    BoschSensor_Phy(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    BoschSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
-    BoschSensor_Phy(const hal::SpiDrv & spi_drv):
-        i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    BoschSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
-        BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
+private:
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 };
 }
 

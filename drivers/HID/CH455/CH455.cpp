@@ -41,7 +41,7 @@ IResult<> CH455::display_digit(const uint8_t digit, const uint8_t value){
     return phy_.write_u16(cmd);
 }
 
-IResult<MatrixKeyEvent> CH455::get_key() {
+IResult<KeyEvent> CH455::get_key() {
     const auto res =  phy_.read_u8();
     if(res.is_err()) return Err(res.unwrap_err());
 
@@ -53,7 +53,7 @@ IResult<MatrixKeyEvent> CH455::get_key() {
     // 码，此时按键代码的位6总是1，另外，如果需要了解按键何时释放，单片机可以通过查询方式定期
     // 读取按键代码，直到按键代码的位6为0。
 
-    struct KeyCode{
+    struct CH455KeyCode{
         uint8_t col:2;
         uint8_t bit2:1;
         uint8_t row:3;
@@ -61,15 +61,17 @@ IResult<MatrixKeyEvent> CH455::get_key() {
         uint8_t bit7:1;
     };
 
-    static_assert(sizeof(KeyCode) == 1);
+    static_assert(sizeof(CH455KeyCode) == 1);
 
-    const KeyCode code = std::bit_cast<KeyCode>(res.unwrap());
+    const CH455KeyCode code = std::bit_cast<CH455KeyCode>(res.unwrap());
     if(code.bit2 != 1) return Err(Error::ReadKeyBit2VerifyFailed);
     if(code.bit7 != 0) return Err(Error::ReadKeyBit7VerifyFailed);
 
-    return Ok(MatrixKeyEvent{
-        Some(uint8_t(code.col)),
-        Some(uint8_t(code.row)), 
-        bool(code.is_pressed)
+    return Ok(KeyEvent{
+        KeyPlacement{
+            Some(uint8_t(code.col)),
+            Some(uint8_t(code.row))
+        }, 
+        code.is_pressed ? KeyEvent::Type::Press : KeyEvent::Type::Release
     });
 }

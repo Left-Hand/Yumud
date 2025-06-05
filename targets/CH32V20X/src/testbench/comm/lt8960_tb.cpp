@@ -93,10 +93,10 @@ void descramble(std::span<uint8_t> data) {
     }
 }
 
-static constexpr uint8_t calc_crc(const std::span<const uint8_t> pdata){
+static constexpr uint8_t calc_crc(const std::span<const uint8_t> pbuf){
     uint8_t sum = 0;
-    for(size_t i = 0; i < pdata.size(); i++){
-        sum += uint8_t(pdata[i]);
+    for(size_t i = 0; i < pbuf.size(); i++){
+        sum += uint8_t(pbuf[i]);
     }
     return sum;
 };
@@ -116,13 +116,13 @@ static constexpr auto make_payload_from_args(Ts && ... args){
 };
 
 template<typename ... Ts>
-static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const uint8_t> pdata){
-    auto crc = calc_crc(pdata.subspan(0, pdata.size() - 1));
-    if (pdata.back() != uint8_t{crc}){
+static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<const uint8_t> pbuf){
+    auto crc = calc_crc(pbuf.subspan(0, pbuf.size() - 1));
+    if (pbuf.back() != uint8_t{crc}){
         return None;
     }
 
-    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(pdata.subspan(0, pdata.size() - 1)));
+    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(pbuf.subspan(0, pbuf.size() - 1)));
 }
 
 void lt8960_tb(){

@@ -1,50 +1,55 @@
 #include "NCA9555.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
-#define WRITE_REG(reg) write_reg(reg.address, reg);
-#define READ_REG(reg) read_reg(reg.address, reg);
 
-void NCA9555::init(){
-    set_inversion(0);
+using Error = NCA9555::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> NCA9555::init(){
+    return set_inversion(hal::PinMask(0));
 }
 
-void NCA9555::set_inversion(const uint16_t mask){
-    auto & reg = inversion_reg;
-    if(mask == reg) return;
-    reg = mask;
-    WRITE_REG(reg);
+
+IResult<> NCA9555::set_inversion(const hal::PinMask mask){
+    auto reg = RegCopy(inversion_reg);
+    if(mask == reg.mask) return Ok();
+    reg.mask = mask;
+    return write_reg(reg);
 }
 
-void NCA9555::write_port(const uint16_t data){
-    auto & reg = output_reg;
-    if(data == reg) return;
-    reg = data;
-    WRITE_REG(reg);
+
+IResult<> NCA9555::write_port(const uint16_t _mask){
+    const auto mask = hal::PinMask(_mask);
+    auto reg = RegCopy(output_reg);
+    if(mask == reg.mask) return Ok();
+    reg.mask = mask;
+    return write_reg(reg);
 }
 
-uint16_t NCA9555::read_port(){
+IResult<uint16_t> NCA9555::read_port(){
     auto & reg = input_reg;
-    READ_REG(reg);
-    return reg;
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(reg.mask.as_u16());
 }
 
-void NCA9555::set_mode(const int index, const hal::GpioMode mode){
-    if(index > 15) PANIC();
 
-    auto & reg = config_reg;
-    uint16_t new_dir = reg;
+IResult<> NCA9555::set_mode(const size_t index, const hal::GpioMode mode){
+    if(index > 15) return Err(Error::IndexOutOfRange);
 
-    if(mode.is_in_mode()){
-        new_dir |= (1 << index);
-    }else if(mode.is_out_mode()){
-        new_dir &= ~(1 << index);
-    }else{
-        PANIC();
+    auto reg = RegCopy(config_reg);
+    const auto new_mask = reg.mask.modify(
+        index, 
+        BoolLevel::from(mode.is_in_mode()));
+
+    if(reg.mask != new_mask){
+        reg.mask = new_mask;
+        return write_reg(reg);
     }
-
-    if(reg != new_dir){
-        WRITE_REG(reg)
-    }
+    return Ok();
 }

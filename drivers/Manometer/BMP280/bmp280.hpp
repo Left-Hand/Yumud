@@ -42,27 +42,30 @@ private:
     [[nodiscard]] IResult<uint32_t> read_temp_data();
 
 
-    [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return phy_.write_reg(addr, data);
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> write_reg(const T & reg){
-        return write_reg(reg.address, reg);
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return res;
+        reg.apply();
+        return Ok();
     }
 
-    [[nodiscard]] Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return phy_.read_reg(addr, data);
     }
 
-    [[nodiscard]] Result<void, Error> read_burst(
-        const uint8_t addr, int16_t * data, const size_t len){
-        return phy_.read_burst(addr, data, len);
+    [[nodiscard]] IResult<> read_burst(
+        const uint8_t addr, std::span<int16_t> pbuf){
+        return phy_.read_burst(addr, pbuf);
     }
 
     template<typename T>
-    [[nodiscard]] Result<void, Error> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg);
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return phy_.read_reg(reg.address, reg.as_ref());
     }
 };
 

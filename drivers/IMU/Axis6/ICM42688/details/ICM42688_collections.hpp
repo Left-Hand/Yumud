@@ -159,10 +159,10 @@ struct ICM42688_Regs:public ICM42688_Collections{
         uint8_t fifo_mode:2;
     }DEF_R8(fifo_config_reg)
 
-    struct R16_TEMPDATA:public Reg16<>{
+    struct R16_TEMpbuf:public Reg16<>{
         static constexpr RegAddress address = 0x1D;
         uint16_t data;
-    }DEF_R16(tempdata_reg)
+    }DEF_R16(tempbuf_reg)
 
     // #pragma pack(push, 1)
     // struct R16_ACCEL_DATA_X:public Reg16<>{

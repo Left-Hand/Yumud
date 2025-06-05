@@ -252,7 +252,7 @@ private:
 
 static void mmc5983_test(drivers::MMC5983 & imu){
 
-    if(const auto res = imu.init();
+    if(const auto res = imu.init({});
         res.is_err()) PANIC(res.unwrap_err());
 
     imu.enable_auto_mag_sr(EN).unwrap();

@@ -13,7 +13,7 @@
 #include "hal/bus/uart/uartsw.hpp"
 
 
-#include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
+#include "drivers/GateDriver/AT8222/at8222.hpp"
 
 
 #include "concept/pwm_channel.hpp"

@@ -90,28 +90,28 @@ public:
 
     template<valid_spi_data T>
     hal::HalResult write_burst(
-        const std::span<const is_stdlayout auto> pdata, 
+        const std::span<const is_stdlayout auto> pbuf, 
         Continuous cont = DISC);
 
     template<valid_spi_data T>
     hal::HalResult read_burst(
-        const std::span<is_stdlayout auto> pdata, 
+        const std::span<is_stdlayout auto> pbuf, 
         const Continuous cont = DISC);
 
     template<valid_spi_data T, size_t N, is_stdlayout U>
     hal::HalResult write_burst(
-        const std::span<const U, N> pdata, 
+        const std::span<const U, N> pbuf, 
         Continuous cont = DISC
     ){
-        return this->write_burst<T>(std::span<const U>(pdata), cont);
+        return this->write_burst<T>(std::span<const U>(pbuf), cont);
     }
 
     template<valid_spi_data T, size_t N, is_stdlayout U>
     hal::HalResult read_burst(
-        const std::span<U, N> pdata, 
+        const std::span<U, N> pbuf, 
         const Continuous cont = DISC
     ){
-        return this->read_burst<T>(std::span<U>(pdata), cont);
+        return this->read_burst<T>(std::span<U>(pbuf), cont);
     }
 
     template<valid_spi_data T>
@@ -174,14 +174,14 @@ hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t l
 
 template <valid_spi_data T, is_stdlayout U>
 hal::HalResult SpiDrv::write_burst(
-        const std::span<const U> pdata, 
+        const std::span<const U> pbuf, 
         Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
     if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
-    for (size_t i = 0; i < pdata.size(); i++){
-        if(const auto res = spi_.write(uint32_t(pdata[i]));
+    for (size_t i = 0; i < pbuf.size(); i++){
+        if(const auto res = spi_.write(uint32_t(pbuf[i]));
             res.is_err()) return res;
     } 
     if (cont == DISC) spi_.end();
@@ -192,17 +192,17 @@ hal::HalResult SpiDrv::write_burst(
 
 template <valid_spi_data T, is_stdlayout U>
 hal::HalResult SpiDrv::read_burst(
-        const std::span<U> pdata, 
+        const std::span<U> pbuf, 
         const Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
     if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
-    for (size_t i = 0; i < pdata.size(); i++) {
+    for (size_t i = 0; i < pbuf.size(); i++) {
         uint32_t temp = 0;
         spi_.read(temp);
-        pdata[i] = temp;
+        pbuf[i] = temp;
     }
     if (cont == DISC) spi_.end();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);

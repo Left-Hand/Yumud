@@ -13,7 +13,7 @@ namespace ymd::drivers{
 
 class BurstChannelIntf{
 public:
-    virtual void borrow(std::span<const uint16_t> pdata);
+    virtual void borrow(std::span<const uint16_t> pbuf);
     virtual void invoke();
     virtual void install();
 };
@@ -32,7 +32,7 @@ class BurstDmaPwm final:public BurstPwmIntf{
 public:
     BurstDmaPwm(hal::TimerOC & timer_oc);
 
-    void borrow(std::span<const uint16_t> pdata);
+    void borrow(std::span<const uint16_t> pbuf);
     void invoke();
     void install();
     bool is_done();
@@ -41,7 +41,7 @@ public:
 private:
     hal::TimerOC & timer_oc_;
     hal::DmaChannel & dma_channel_;
-    std::span<const uint16_t> pdata_;
+    std::span<const uint16_t> pbuf_;
 };
 
 class WS2812_PhyIntf{
@@ -51,8 +51,8 @@ class WS2812_PhyIntf{
 class WS2812_Phy_of_BurstPwm:public WS2812_PhyIntf{
 public:
     WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm);
-    void borrow(std::span<const uint16_t> pdata){
-        return burst_dma_pwm_.borrow(pdata);
+    void borrow(std::span<const uint16_t> pbuf){
+        return burst_dma_pwm_.borrow(pbuf);
     }
 
     void set_color(std::array<uint8_t, 3> color){

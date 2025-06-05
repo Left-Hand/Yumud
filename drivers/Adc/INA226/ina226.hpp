@@ -10,10 +10,8 @@
 
 namespace ymd::drivers{
 
-
-
-class INA226 {
-public:
+struct INA226_Collections{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
     // ASCII 的 TI。
     static constexpr uint16_t VALID_MANU_ID = 0x5449;
 
@@ -31,7 +29,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class AverageTimes:uint8_t{
+    enum class AverageTimes:uint16_t{
         _1 = 0,
         _4 = 1,
         _16 = 2,
@@ -42,114 +40,89 @@ public:
         _1024 = 7
     };
 
-    enum class ConversionTime:uint8_t{
+    enum class ConversionTime:uint16_t{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 
-protected:
-    hal::I2cDrv i2c_drv_;
-    
-    real_t current_lsb_ma = real_t(0.2);
-    scexpr real_t voltage_lsb_mv = real_t(1.25);
-
     using RegAddress = uint8_t;
 
+    scexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
+};
+
+struct INA226_Regs:public INA226_Collections{
     struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
-        uint16_t shuntVoltageEnable :1;
-        uint16_t busVoltageEnable :1;
+        uint16_t shunt_voltage_enable :1;
+        uint16_t bus_voltage_enable :1;
         uint16_t continuos :1;
-        uint16_t shuntVoltageConversionTime:3;
-        uint16_t busVoltageConversionTime:3;
-        uint16_t averageMode:3;
+        ConversionTime shunt_voltage_conversion_time:3;
+        ConversionTime bus_voltage_conversion_time:3;
+        AverageTimes average_times:3;
         uint16_t __resv__:3;
         uint16_t rst:1;
-    }DEF_R16(configReg);
+    }DEF_R16(config_reg)
 
     struct ShuntVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x01;
         uint16_t data;
-    };
+    }DEF_R16(shunt_volt_reg)
 
     struct BusVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x02;
         uint16_t data;
-    };
+    }DEF_R16(bus_volt_reg)
 
     struct PowerReg:public Reg16i<>{
         scexpr RegAddress address = 0x03;
         int16_t data;
-    };
+    }DEF_R16(power_reg)
 
     struct CurrentReg:public Reg16i<>{
         scexpr RegAddress address = 0x04;
         int16_t data;
-    };
+    }DEF_R16(current_reg)
     
     struct CalibrationReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
         int16_t data;
-    };
+    }DEF_R16(calibration_reg)
     
     struct MaskReg:public Reg16<>{
         scexpr RegAddress address = 0x06;
 
-        uint16_t alertLatchEnable:1;
-        uint16_t alertPolarity:1;
-        uint16_t mathOverflow:1;
-        uint16_t convReadyFlag:1;
-        uint16_t alertFlag:1;
+        uint16_t alert_latch_enable:1;
+        uint16_t alert_polarity:1;
+        uint16_t math_overflow:1;
+        uint16_t conv_ready_flag:1;
+        uint16_t alert_flag:1;
         uint16_t __resv__:5;
-        uint16_t convReady:1;
-        uint16_t powerOverlimit:1;
-        uint16_t busUnderVoltage:1;
-        uint16_t busOverVoltage:1;
-        uint16_t shuntUnderVoltage:1;
-        uint16_t shuntOverVoltage:1;
-    };
+        uint16_t conv_ready:1;
+        uint16_t power_overlimit:1;
+        uint16_t bus_under_voltage:1;
+        uint16_t bus_over_voltage:1;
+        uint16_t shunt_under_voltage:1;
+        uint16_t shunt_over_voltage:1;
+    }DEF_R16(mask_reg)
 
     struct AlertLimitReg:public Reg16<>{
         scexpr RegAddress address = 0x07;
-        uint16_t :16;
-    };
+        uint16_t data;
+    }DEF_R16(alert_limit_reg)
 
     struct ManufactureReg:public Reg16<>{
         scexpr RegAddress address = 0xfe;
-        uint16_t :16;
-    };
+        uint16_t data;
+    }DEF_R16(manufacture_reg)
 
     struct ChipIdReg:public Reg16<>{
         scexpr RegAddress address = 0xff;
-        uint16_t :16;
-    };
+        uint16_t data;
+    }DEF_R16(chip_id_reg)
+};
 
-    ShuntVoltReg shuntVoltageReg = {};
-    BusVoltReg busVoltageReg = {};
-    PowerReg powerReg = {};
-    CurrentReg currentReg = {};
-    CalibrationReg calibrationReg = {};
-    MaskReg maskReg = {};
-    AlertLimitReg alertLimitReg = {};
-    ManufactureReg manufactureIDReg = {};
-    ChipIdReg chipIDReg = {};
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
-    
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
-
-    [[nodiscard]] IResult<> read_reg(auto & reg){
-        return IResult<>(read_reg(reg.address, reg.as_ref()));
-    }
-
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return IResult<>(write_reg(reg.address, reg.as_val()));
-    }
-    
-    // [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint16_t * data_ptr, const size_t len);
-
+class INA226 final:public INA226_Regs{
+public:
     class CurrentChannel;
     class VoltageChannel;
 
@@ -200,24 +173,32 @@ protected:
 public:
     using Index = INA226Channel::Index;
     
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
+    struct Config{
+        const uint average_times = 16;
+        const ConversionTime bus_conv_time = ConversionTime::_140us;
+        const ConversionTime shunt_conv_time = ConversionTime::_140us;
+        const uint mohms;
+        const uint max_current_a;
+    };
 
-    INA226(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    INA226(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+
+    INA226(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    INA226(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     INA226(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
+
+
+    [[nodiscard]] IResult<> init(const Config & cfg);
+
+    [[nodiscard]] IResult<> set_scale(const uint mohms, const uint max_current_a);
 
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> init(const uint mohms, const uint max_current_a);
-
-    [[nodiscard]] IResult<> config(const uint mohms, const uint max_current_a);
-
     [[nodiscard]] IResult<> set_average_times(const uint16_t times);
-
-
 
     [[nodiscard]] auto & ch(const Index index){
         return channels[uint8_t(index)];
@@ -254,17 +235,31 @@ public:
     [[nodiscard]] IResult<> enable_continuous_measure(const Enable en = EN);
 
     [[nodiscard]] IResult<> enable_alert_latch(const Enable en = EN);
+private:
+    hal::I2cDrv i2c_drv_;
+    
+    real_t current_lsb_ma_ = real_t(0.2);
+
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+    
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
 };
 
 
-}
-
-namespace ymd::custom{
-    template<>
-    struct result_converter<void, drivers::INA226::Error, hal::HalResult> {
-        static Result<void, drivers::INA226::Error> convert(const hal::HalResult & res){
-            if(res.is_ok()) return Ok();
-            else return Err(res.unwrap_err()); 
-        }
-    };
 }

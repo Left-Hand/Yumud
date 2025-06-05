@@ -16,11 +16,14 @@ namespace ymd::drivers{
 
 struct TCS34725_Collections{
     enum class Gain:uint8_t{
-        X1 = 0, X4, X16, X60 
+        _1x = 0b00, 
+        _4x = 0b01, 
+        _16x = 0b10, 
+        _60x = 0b11 
     };
 
     enum class Error_Kind{
-
+        WrongChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -50,64 +53,105 @@ struct TCS34725_Collections{
 };
 
 struct TCS34725_Regs:public TCS34725_Collections{
-    struct EnableReg:public Reg8<>{
+    struct R8_Enable:public Reg8<>{
+        static constexpr auto address = RegAddress::Enable;
         uint8_t powerOn : 1;
         uint8_t adcEn : 1;
-        uint8_t __resv1__ :2;
+        uint8_t __resv1__ :1;
         uint8_t waitEn : 1;
         uint8_t intEn : 1;
         uint8_t __resv2__ :3;
-    };
+    }DEF_R8(enable_reg)
 
-    struct IntPersistenceReg:public Reg8<>{
+    struct R8_Integration:public Reg8<>{
+        static constexpr auto address = RegAddress::Integration;
+        uint8_t data;
+    }DEF_R8(integration_reg)
+
+    struct R8_IntPersistence:public Reg8<>{
+        static constexpr auto address = RegAddress::IntPersistence;
         using Reg8::operator=;
         uint8_t __resv__ :4;
         uint8_t apers   :4;
-    };
+    }DEF_R8(int_persistence_reg)
 
-    struct LongWaitReg:public Reg8<>{
+    struct R8_LongWait:public Reg8<>{
+        static constexpr auto address = RegAddress::LongWait;
         uint8_t __resv1__ :1;
         uint8_t waitLong : 1;
         uint8_t __resv2__ :6;
-    };
+    }DEF_R8(long_wait_reg)
 
-    struct GainReg:public Reg8<>{
+    struct R8_Gain:public Reg8<>{
+        static constexpr auto address = RegAddress::Gain;
         using Reg8::operator=;
-        uint8_t gain        :2;
+        Gain gain        :2;
         uint8_t __resv2__   :6;
-    };
+    }DEF_R8(gain_reg)
 
-    struct StatusReg:public Reg8<>{
+    struct R8_Status:public Reg8<>{
+        static constexpr auto address = RegAddress::Status;
         uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
         uint8_t interrupt_flag     :1;
         uint8_t __resv2__   :3;
-    };
+    }DEF_R8(status_reg)
 
-    EnableReg enableReg;
-    uint8_t integrationReg;
-    uint8_t waitTimeReg;
-    uint16_t lowThrReg;
-    uint16_t highThrReg;
-    IntPersistenceReg intPersistenceReg;
-    LongWaitReg longWaitReg;
-    GainReg gainReg;
-    uint8_t deviceIdReg;
-    StatusReg statusReg;
-    uint16_t crgb[4] = {0};
+
+    struct R8_WaitTime:public Reg8<>{
+        static constexpr auto address = RegAddress::WaitTime;
+        uint8_t data;
+    }DEF_R8(wait_time_reg)
+
+    struct R16_LowThr:public Reg16<>{
+        static constexpr auto address = RegAddress::LowThr;
+        uint16_t data;
+    }DEF_R16(low_thr_reg)
+
+    struct R16_HighThr:public Reg16<>{
+        static constexpr auto address = RegAddress::HighThr;
+        uint16_t data;
+    }DEF_R16(high_thr_reg)
+
+    struct R8_DeviceId:public Reg8<>{
+        static constexpr auto address = RegAddress::DeviceId;
+
+        // 0x44 = TCS34721 and TCS34725
+        // 0x4D = TCS34723 and TCS34727
+
+        static constexpr uint8_t KEY = 0x44;
+        uint8_t id;
+    }DEF_R8(device_id_reg)
+
+    std::array<uint16_t, 4> crgb = {0};
 };
 
 
-class TCS34725:public TCS34725_Regs{
+class TCS34725 final:public TCS34725_Regs{
 public:
-    TCS34725(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    struct Config{
+        Milliseconds integration_time = 240ms;
+        Gain gain = Gain::_1x;
+    };
+
+    TCS34725(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    TCS34725(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    TCS34725(
+        hal::I2c & bus, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(bus, addr){;}
 
+    TCS34725(const TCS34725 &) = delete;
+    TCS34725(TCS34725 &&) = delete;
+    ~TCS34725() = default;
 
         
-    IResult<> init();
+    IResult<> init(const Config & cfg);
+
+    IResult<> validate();
+
     IResult<> set_integration_time(const Milliseconds ms);
 
     IResult<> set_wait_time(const Milliseconds ms);
@@ -132,35 +176,33 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
-        if(const auto res = i2c_drv_.write_reg(conv_reg_address(addr), (uint16_t)data, LSB);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = i2c_drv_.write_reg(
+            conv_reg_address_repeated(reg.address), 
+            reg.as_val(), LSB);
+        res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        if(const auto res = i2c_drv_.read_reg(
+            conv_reg_address_repeated(reg.address), reg.as_ref(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
-        if(const auto res = i2c_drv_.read_reg(conv_reg_address(addr), (uint16_t &)data, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(conv_reg_address(addr, false), (uint8_t)data);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data){
-        if(const auto res = i2c_drv_.read_reg(conv_reg_address(addr, false), (uint8_t &)data);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint16_t> pdata);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, const std::span<uint16_t> pbuf);
 
     
-    static constexpr uint8_t conv_reg_address(const RegAddress addr, bool repeat = true){
-        return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
+    static constexpr uint8_t conv_reg_address_norepeat(const RegAddress addr){
+        return (std::bit_cast<uint8_t>(addr) | 0x80);
+    }
+
+    static constexpr uint8_t conv_reg_address_repeated(const RegAddress addr){
+        return conv_reg_address_norepeat(addr) | (1 << 5);
     }
 
 };

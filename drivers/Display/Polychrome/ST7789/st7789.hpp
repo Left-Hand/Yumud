@@ -29,17 +29,17 @@ private:
 
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_burst(const std::span<const auto> pdata, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_burst(const std::span<const auto> pbuf, Continuous cont = DISC) {
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
                 return res;
         }
 
-        const auto len = pdata.size();
-        // DEBUG_PRINTLN(len, pdata[0], static_cast<T>(pdata[0]));
+        const auto len = pbuf.size();
+        // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<RGB565>(pdata[i]));
+            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]));
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
@@ -153,9 +153,9 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] IResult<> write_burst(std::span<const auto> pdata){
+    [[nodiscard]] IResult<> write_burst(std::span<const auto> pbuf){
         dc_gpio_.set();
-        return IResult<>(phy_write_burst<U>(pdata));
+        return IResult<>(phy_write_burst<U>(pbuf));
     }
 
     template<typename U>

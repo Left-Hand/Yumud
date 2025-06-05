@@ -18,21 +18,25 @@
 
 namespace ymd::drivers{
 
-namespace details{
-    enum class TM1650_Error_Kind:uint8_t{
+struct TM1650_Collections{
+
+    enum class Error_Kind:uint8_t{
         I2cError,
         PayloadOverlength,
         Unspecified = 0xff,
     };
-}
 
-DEF_ERROR_SUMWITH_HALERROR(TM1650_Error, details::TM1650_Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-class TM1650_Phy final{
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+};
+
+
+class TM1650_Phy final:public TM1650_Collections{
 private:
     hal::I2cSw i2c_;
 public:
-    using Error = TM1650_Error;
 
     TM1650_Phy(hal::Gpio & scl_io, hal::Gpio & sda_io):
         i2c_{scl_io, sda_io}{;}
@@ -151,7 +155,7 @@ private:
     }
 };
 
-class TM1650{
+class TM1650 final:public TM1650_Collections{
 public:
     using Error = TM1650_Phy::Error;
     using DisplayCommand = TM1650_Phy::DisplayCommand;

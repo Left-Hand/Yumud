@@ -487,12 +487,12 @@ void UartHw::trail(){
     while((instance_->STATR & USART_FLAG_TC) == RESET);
 }
 
-void UartHw::writeN(const char * pdata, const size_t len){
+void UartHw::writeN(const char * pbuf, const size_t len){
     switch(tx_strategy_){
         case CommStrategy::Blocking:
             instance_->DATAR;
 
-            tx_fifo_.push(std::span(pdata, len));
+            tx_fifo_.push(std::span(pbuf, len));
             while(tx_fifo_.available()){
                 instance_->DATAR = tx_fifo_.pop();
                 while((instance_->STATR & USART_FLAG_TXE) == RESET);
@@ -501,12 +501,12 @@ void UartHw::writeN(const char * pdata, const size_t len){
             
             break;
         case CommStrategy::Interrupt:
-            tx_fifo_.push(std::span(pdata, len));
+            tx_fifo_.push(std::span(pbuf, len));
             invoke_tx_it();
 
             break;
         case CommStrategy::Dma:
-            tx_fifo_.push(std::span(pdata, len));
+            tx_fifo_.push(std::span(pbuf, len));
             invoke_tx_dma();
             break;
         default:

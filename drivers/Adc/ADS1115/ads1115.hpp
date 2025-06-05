@@ -95,9 +95,12 @@ struct ADS111X_Regs:public ADS111X_Collections{
 class ADS111X final:
     public ADS111X_Regs{
 public:
-    ADS111X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    ADS111X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    ADS111X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    ADS111X(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    ADS111X(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    ADS111X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
     [[nodiscard]] IResult<> start_conv();
 
@@ -111,10 +114,9 @@ public:
 
     [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
 
-    [[nodiscard]] IResult<bool> is_ready();
     [[nodiscard]] IResult<bool> is_busy();
 
-    [[nodiscard]] Option<real_t> result();
+    [[nodiscard]] Option<real_t> get_voltage();
 
     [[nodiscard]] IResult<> validate();
 
@@ -122,9 +124,8 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-
-
     [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data); 
 
     template<typename T>

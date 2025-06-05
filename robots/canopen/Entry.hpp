@@ -118,7 +118,7 @@ private:
         bool is_ref_ = false;
         bool is_const_ = false;
         union{
-            void * pdata_;
+            void * pbuf_;
             uint32_t data32_;
         };
     public:
@@ -126,25 +126,21 @@ private:
 
         
         template<typename T>
-        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
-        constexpr ObjRef(const T & pdata):is_ref_(true), pdata_(reinterpret_cast<void *>(const_cast<T *>(&pdata))){}
+        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> )
+        constexpr ObjRef(const T & pbuf):
+            is_ref_(true), 
+            pbuf_(reinterpret_cast<void *>(const_cast<T *>(&pbuf))){}
 
         template<typename T>
-        constexpr ObjRef(const T && pdata):is_ref_(false), pdata_(reinterpret_cast<void *>(&pdata)){}
-
-        // template<typename T>
-        // requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_rvalue_reference_v<T>)
-        // constexpr ObjRef(T pdata):is_ref_(true), data32_((pdata)){
-        //     // static_assert(false);
-        //     // static_assert(std::is_lvalue_reference_v<T>);
-        // }
-
+        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> )
+        constexpr ObjRef(T && pbuf):
+            is_ref_(false), pbuf_(reinterpret_cast<void *>(&pbuf)){}
 
         template<typename T>
         requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void write(const T val){
             if(likely(is_ref_)){
-                *reinterpret_cast<T*>(pdata_) = val;
+                *reinterpret_cast<T*>(pbuf_) = val;
             }else{
                 data32_ = std::bit_cast<T>(val);
             }
@@ -154,7 +150,7 @@ private:
         requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void read(T & val) const{
             if(likely(is_ref_)){
-                val = *reinterpret_cast<T*>(pdata_);
+                val = *reinterpret_cast<T*>(pbuf_);
             }else{
                 val = std::bit_cast<T>(data32_);
             }
@@ -164,18 +160,18 @@ private:
         requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr T read() const {
             if(likely(is_ref_)){
-                return *reinterpret_cast<T*>(pdata_);
+                return *reinterpret_cast<T*>(pbuf_);
             }else{
                 return std::bit_cast<T>(data32_);
             }
         }
 
         constexpr const void * data() const{
-            return likely(is_ref_) ? pdata_ : (&data32_);
+            return likely(is_ref_) ? pbuf_ : (&data32_);
         }
 
         constexpr void * data(){
-            return likely(is_ref_) ? pdata_ : (&data32_);
+            return likely(is_ref_) ? pbuf_ : (&data32_);
         }
 
         constexpr ObjRef & operator =(const auto val){this->write(val); return *this;}
@@ -186,7 +182,7 @@ private:
 
     };
 
-    ObjRef obj_;
+    ObjRef obj_ref_;
 
 public:
     SubEntry(const SubEntry &) = default;
@@ -196,8 +192,16 @@ public:
     SubEntry & operator = (SubEntry &&) = default;
 
     template<typename T>
-    constexpr SubEntry(const StringView name, T && val, AccessType access_type, DataType data_type)
-        : name_(name), access_type_(access_type), data_type_(data_type), obj_(std::forward<T>(val)){}
+    constexpr SubEntry(
+        const StringView name, 
+        T && val, 
+        AccessType access_type, 
+        DataType data_type
+    ): 
+        name_(name), 
+        access_type_(access_type), 
+        data_type_(data_type), 
+        obj_ref_(std::forward<T>(val)){}
 
     explicit operator int() const ;
 
@@ -208,24 +212,24 @@ public:
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode write_any(const T pdata){
-        return write_any((&pdata));
+    SdoAbortCode write_any(const T pbuf){
+        return write_any((&pbuf));
     }
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode read_any(T & pdata){
-        return read_any((&pdata));
+    SdoAbortCode read_any(T & pbuf){
+        return read_any((&pbuf));
     }
 
 
-    SdoAbortCode read(std::span<uint8_t> pdata) const;
+    SdoAbortCode read(std::span<uint8_t> pbuf) const;
 
-    SdoAbortCode write(const std::span<const uint8_t> pdata);
+    SdoAbortCode write(const std::span<const uint8_t> pbuf);
 
-    SdoAbortCode read_any(void * pdata);
+    SdoAbortCode read_any(void * pbuf);
 
-    SdoAbortCode write_any(const void * pdata);
+    SdoAbortCode write_any(const void * pbuf);
 
     SubEntry copy() const{return *this;}
 

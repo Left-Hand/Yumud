@@ -40,15 +40,15 @@ private:
 
     hal::HalResult write_burst_impl(
         const valid_i2c_regaddr auto addr, 
-        std::span<const valid_i2c_data auto> pdata, 
+        std::span<const valid_i2c_data auto> pbuf, 
         const Endian endian){
-            return write_template(addr, endian, [&]() -> hal::HalResult{return this->write_payload(pdata, endian);});}
+            return write_template(addr, endian, [&]() -> hal::HalResult{return this->write_payload(pbuf, endian);});}
 
     hal::HalResult read_burst_impl(
         const valid_i2c_regaddr auto addr, 
-        std::span<valid_i2c_data auto> pdata,
+        std::span<valid_i2c_data auto> pbuf,
         const Endian endian){
-            return read_template(addr, endian, [&]() -> hal::HalResult{return this->read_payload(pdata, endian);});}
+            return read_template(addr, endian, [&]() -> hal::HalResult{return this->read_payload(pbuf, endian);});}
 
     template<typename T, typename... Ts>    //TODO 改写为Y组合子
     __fast_inline
@@ -67,9 +67,9 @@ private:
     }
 
     template<valid_i2c_data T>
-    hal::HalResult write_payload(const std::span<const T> pdata,const Endian endian){
+    hal::HalResult write_payload(const std::span<const T> pbuf,const Endian endian){
         return iterate_bytes(
-            pdata, endian, 
+            pbuf, endian, 
             [&](const uint8_t byte, const bool is_end) -> hal::HalResult{ return i2c_.write(uint32_t(byte)); },
             [](const hal::HalResult err) -> bool {return err.is_err();},
             []() -> hal::HalResult {return hal::HalResult::Ok();}
@@ -97,11 +97,11 @@ private:
     }
     
     hal::HalResult read_payload(
-        const std::span<valid_i2c_data auto> pdata,
+        const std::span<valid_i2c_data auto> pbuf,
         const Endian endian
     ){
         return iterate_bytes(
-            pdata, endian, 
+            pbuf, endian, 
             [&](uint8_t & byte, const bool is_end) -> hal::HalResult{
                 uint32_t dummy = 0; auto err = i2c_.read(dummy, is_end ? NACK : ACK); byte = uint8_t(dummy); return err;},
             [](const hal::HalResult err) -> bool {return err.is_err();},
@@ -142,10 +142,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
-        const std::span<const T> pdata,
+        const std::span<const T> pbuf,
         const Endian endian = LSB
     ){
-        return write_burst_impl(addr, pdata, endian);
+        return write_burst_impl(addr, pbuf, endian);
     }
         
     template<typename T>
@@ -153,10 +153,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
-        const std::span<const T> pdata,
+        const std::span<const T> pbuf,
         const Endian endian
     ){
-        return write_burst_impl(addr, pdata, endian);
+        return write_burst_impl(addr, pbuf, endian);
     }
 
     template<typename T>
@@ -164,10 +164,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult read_burst(
         const valid_i2c_regaddr auto addr,
-        const std::span<T> pdata,
+        const std::span<T> pbuf,
         const Endian endian = LSB
     ){
-        return this->read_burst_impl(addr, pdata, endian);
+        return this->read_burst_impl(addr, pbuf, endian);
 
     }
 
@@ -176,10 +176,10 @@ public:
     [[nodiscard]] __fast_inline
     hal::HalResult read_burst(
         const valid_i2c_regaddr auto addr,
-        const std::span<T> pdata,
+        const std::span<T> pbuf,
         const Endian endian
     ){
-        return this->read_burst_impl(addr, pdata, endian);
+        return this->read_burst_impl(addr, pbuf, endian);
     }
 
     template<typename ... Ts>

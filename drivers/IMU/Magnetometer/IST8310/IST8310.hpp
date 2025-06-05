@@ -28,8 +28,6 @@ struct IST8310_Collections{
 };
 
 struct IST8310_Regs:public IST8310_Collections{
-
-
     struct R8_WhoAmI:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t expected_value = 0x10;
@@ -105,7 +103,6 @@ struct IST8310_Regs:public IST8310_Collections{
         }
     }DEF_R16(temp_reg)
 
-
     struct R8_Average:public Reg8<>{
         scexpr RegAddress address = 0x41;
 
@@ -118,13 +115,14 @@ struct IST8310_Regs:public IST8310_Collections{
 
 
 
-class IST8310:
+class IST8310 final:
     public MagnetometerIntf,
     public IST8310_Regs{
 public:
 
     IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    IST8310(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     IST8310(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
@@ -172,8 +170,8 @@ protected:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pdata, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pdata, len), MSB);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pbuf, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pbuf, len), MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

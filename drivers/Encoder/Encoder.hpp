@@ -23,7 +23,12 @@ enum class EncoderError_Kind:uint8_t{
     RegProgramFailed,
     ValueOverflow,
     ValueUnderflow,
-    InvalidRxFormat
+    InvalidRxFormat,
+
+    SpiIsNotSupportedYet,
+    I2cIsNotSupportedYet,
+    NoSupportedPhy,
+    Unreachable
 };
 }
 

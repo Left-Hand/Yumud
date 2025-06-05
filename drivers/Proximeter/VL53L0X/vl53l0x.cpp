@@ -23,33 +23,35 @@ static constexpr uint8_t VL53L0X_REG_SYSRANGE_MODE_START_STOP                 	=
 static constexpr uint8_t VL53L0X_REG_SYSRANGE_MODE_BACKTOBACK                 	= 0x02;
 static constexpr uint8_t VL53L0X_REG_SYSRANGE_MODE_TIMED                      	= 0x04;
 
-static constexpr uint8_t VL53L0X_DEVICEMODE_SINGLE_RANGING	                = ((uint8_t)  0);
-static constexpr uint8_t VL53L0X_DEVICEMODE_CONTINUOUS_RANGING	            = ((uint8_t)  1);
-static constexpr uint8_t VL53L0X_DEVICEMODE_CONTINUOUS_TIMED_RANGING        = ((uint8_t)  3);
+static constexpr uint8_t VL53L0X_DEVICEMODE_SINGLE_RANGING	                = 0;
+static constexpr uint8_t VL53L0X_DEVICEMODE_CONTINUOUS_RANGING	            = 1;
+static constexpr uint8_t VL53L0X_DEVICEMODE_CONTINUOUS_TIMED_RANGING        = 3;
 
 using Error = VL53L0X::Error;
 
-Result<void, Error> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
 	const auto res = i2c_drv_.read_reg(reg, data);
-
-	if(res.is_err()) return Err(Error::HalError(res.unwrap_err()));
+	if(res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
 
-Result<void, Error> VL53L0X::read_burst(const uint8_t reg, uint16_t * data, const size_t len){
-	const auto res = i2c_drv_.read_burst(reg, std::span<uint16_t>(data, len), MSB);
-	if(res.is_err()) return Err(Error(res.unwrap_err()));
+IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
+	const auto res = i2c_drv_.read_burst(reg, pbuf, MSB);
+	if(res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
 
-Result<void, Error> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
-	if(const auto res = i2c_drv_.write_reg(reg, byte); res.is_err())
-		return Err(Error(res.unwrap_err()));
+IResult<> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
+	const auto res = i2c_drv_.write_reg(reg, byte);
+	if(res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
 
 
-Result<void, Error> VL53L0X::init(){
+IResult<> VL53L0X::init(){
 	uint8_t data;
 #ifdef VL53L0X_ESD_2V8
 	if(const auto res = 
@@ -71,43 +73,44 @@ Result<void, Error> VL53L0X::init(){
 	| write_byte_data(0x80, 0x00);
 }
 
-Result<void, Error> VL53L0X::start_conv(){	
-	if(!continuous_){
-			return write_byte_data(0x80, 0x01)
-				| write_byte_data(0xFF, 0x01)
-				| write_byte_data(0x00, 0x00)
-				| write_byte_data(0x91, 0x3c)
-				| write_byte_data(0x00, 0x01)
-				| write_byte_data(0xFF, 0x00)
-				| write_byte_data(0x80, 0x00)
-				| write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
+IResult<> VL53L0X::start_conv(){	
+	if(!continuous_en_){
+		return write_byte_data(0x80, 0x01)
+			| write_byte_data(0xFF, 0x01)
+			| write_byte_data(0x00, 0x00)
+			| write_byte_data(0x91, 0x3c)
+			| write_byte_data(0x00, 0x01)
+			| write_byte_data(0xFF, 0x00)
+			| write_byte_data(0x80, 0x00)
+			| write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
     }else{
 		return write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_BACKTOBACK);
 	}	
 }
 
-Result<bool, Error> VL53L0X::is_busy(){
+IResult<bool> VL53L0X::is_busy(){
 	uint8_t data;
     if(const auto err = read_byte_data(VL53L0X_REG_SYSRANGE_START, data); err.is_err())
 		return Err(Error(err.unwrap_err()));
 	return Ok(data & 0x01);
 }
 
-Result<void, Error> VL53L0X::flush(){
-	return read_burst(VL53L0X_REG_RESULT_RANGE_STATUS + 6, &result.ambientCount, 3);
+IResult<> VL53L0X::flush(){
+	return read_burst(
+		VL53L0X_REG_RESULT_RANGE_STATUS + 6, std::span(&result.ambient_count, 3));
 }
 
-Result<void, Error> VL53L0X::enable_high_precision(const bool _highPrec){
-    highPrec_ = _highPrec;
-	return write_byte_data(VL53L0X_REG_SYSTEM_RANGE_CONFIG, highPrec_);
+IResult<> VL53L0X::enable_high_precision(const Enable en){
+    high_prec_en_ = en == EN;
+	return write_byte_data(VL53L0X_REG_SYSTEM_RANGE_CONFIG, high_prec_en_);
 }
 
-Result<void, Error> VL53L0X::enable_cont_mode(const bool _continuous){
-    continuous_ = _continuous;
+IResult<> VL53L0X::enable_cont_mode(const Enable en){
+    continuous_en_ = en == EN;
 	return Ok();
 }
 
-Result<void, Error> VL53L0X::stop(){
+IResult<> VL53L0X::stop(){
 	return 
 		write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_SINGLESHOT)
 		| write_byte_data(0xFF, 0x01)
@@ -118,7 +121,7 @@ Result<void, Error> VL53L0X::stop(){
 	;
 }
 
-Result<void, Error> VL53L0X::update(){
+IResult<> VL53L0X::update(){
 	const auto res = is_busy();
     if(res.is_err()) return Err(res.unwrap_err());
 	if(res.unwrap() == false){
@@ -128,24 +131,23 @@ Result<void, Error> VL53L0X::update(){
 }
 
 
-Result<uint16_t, Error> VL53L0X::get_distance_mm(){
+IResult<uint16_t> VL53L0X::read_distance_mm(){
     uint16_t ret;
-    if(result.distance <= 20 || result.distance  > 2400){
-        ret = last_result.distance;
+    if(result.distance_mm <= 20 || result.distance_mm > 2400){
+        ret = last_result.distance_mm;
     }else{
-        ret = result.distance;
-        last_result.distance = result.distance;
+        ret = result.distance_mm;
+        last_result.distance_mm = result.distance_mm;
     }
-    // ret = result.distance;
 
-	if(highPrec_) return Ok(ret / 4);
+	if(high_prec_en_) return Ok(ret / 4);
 	else return Ok(ret);
 }
 
-Result<uint16_t, Error> VL53L0X::get_ambient_count(){
-	return Ok(result.ambientCount);
+IResult<uint16_t> VL53L0X::read_ambient_count(){
+	return Ok(result.ambient_count);
 }
 
-Result<uint16_t, Error> VL53L0X::get_signal_count(){
-	return Ok(result.signalCount);
+IResult<uint16_t> VL53L0X::read_signal_count(){
+	return Ok(result.signal_count);
 }

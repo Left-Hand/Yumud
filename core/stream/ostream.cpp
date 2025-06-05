@@ -119,13 +119,13 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-void OutputStream::checked_write(const char * pdata, const size_t len){
+void OutputStream::checked_write(const char * pbuf, const size_t len){
     //将数据分为大块处理提高性能
 
     Buf buf;
 
     for(size_t i = 0; i < len; i++){
-        const auto res = transform_char(pdata[i]);
+        const auto res = transform_char(pbuf[i]);
         if(likely(res) >= 0){
             // if(unlikely(buf.full())){
             //     write(buf.buf, buf.buf_cap);

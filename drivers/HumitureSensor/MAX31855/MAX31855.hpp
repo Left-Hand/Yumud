@@ -53,7 +53,7 @@ struct MAX31855_Collections{
 class MAX31855 final:public MAX31855_Collections{
 public:
     MAX31855(hal::SpiDrv && spi_drv):   
-        spi_drv_(spi_drv){;}
+        spi_drv_(std::move(spi_drv)){;}
 
     MAX31855_Result read(){
         MAX31855_Payload payload;

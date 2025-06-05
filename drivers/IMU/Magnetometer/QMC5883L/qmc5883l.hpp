@@ -53,18 +53,25 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct MagXReg:public Reg16i<>{
+        static constexpr auto address = RegAddress::MagX;
         int16_t :16;
     };
 
     struct MagYReg:public Reg16i<>{
+        static constexpr auto address = RegAddress::MagY;
+
         int16_t :16;
     };
 
     struct MagZReg:public Reg16i<>{
+        static constexpr auto address = RegAddress::MagZ;
+
         int16_t :16;
     };
 
     struct StatusReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Status;
+
         uint8_t ready:1;
         uint8_t ovl:1;
         uint8_t lock:1;
@@ -72,11 +79,13 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct TemperatureReg:public Reg16<>{
+        static constexpr auto address = RegAddress::Tempature;
+
         uint16_t data;
     };
 
     struct ConfigAReg:public Reg8<>{
-        
+        static constexpr auto address = RegAddress::ConfigA;
         uint8_t measureMode:2;
         Odr odr:2;
         FullScale fs:2;
@@ -85,7 +94,8 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct ConfigBReg:public Reg8<>{
-        
+        static constexpr auto address = RegAddress::ConfigB;
+
         uint8_t intEn:1;
         uint8_t __resv__:5;
         uint8_t rol:1;
@@ -94,24 +104,27 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct ResetPeriodReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ResetPeriod;
         using Reg8::operator=;
         uint8_t data;
     };
 
     struct ChipIDReg:public Reg8<>{
+        static constexpr auto address = RegAddress::ChipID;
+
         uint8_t data;
     };
 
 
-    MagXReg magXReg;
-    MagYReg magYReg;
-    MagZReg magZReg;
-    StatusReg statusReg;
-    TemperatureReg temperatureReg;
-    ConfigAReg configAReg;
-    ConfigBReg configBReg;
-    ResetPeriodReg resetPeriodReg;
-    ChipIDReg chipIDReg;
+    MagXReg mag_x_reg;
+    MagYReg mag_y_reg;
+    MagZReg mag_z_reg;
+    StatusReg status_reg;
+    TemperatureReg temperature_reg;
+    ConfigAReg config_a_reg;
+    ConfigBReg config_b_reg;
+    ResetPeriodReg reset_period_reg;
+    ChipIDReg chip_id_reg;
 
 };
 
@@ -164,41 +177,37 @@ private:
     };
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(reg.address), reg.as_val(), LSB);
             res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(reg.address), reg.as_ref(), LSB);
+            res.is_err()) return Err(res.unwrap_err());
+
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * datas, const size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(datas, len), LSB);
+    [[nodiscard]] IResult<> read_burst(
+        const RegAddress addr, 
+        std::span<int16_t> pbuf
+    ){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
 
     IResult<bool> is_busy(){
-        if(const auto res = read_reg(RegAddress::Status, statusReg);
+        if(const auto res = read_reg(status_reg);
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(statusReg.ready == false);
+        return Ok(status_reg.ready == false);
     }
 };
 

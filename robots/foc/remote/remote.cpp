@@ -44,7 +44,7 @@ void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
     meta.pos_limit = clamp;
-    POST(Command::SET_POS_LMT, std::pair<E,E>{clamp.from, clamp.to});
+    POST(Command::SET_POS_LMT, std::pair<E,E>{clamp.start, clamp.stop});
 }
 
 

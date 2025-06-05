@@ -7,14 +7,16 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Storage/Flash/W25QXX/w25q16.hpp"
 
 #include "algo/random/random_generator.hpp"
 
 #include "core/math/real.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
+
+using namespace ymd;
 
 #if 0
 
@@ -301,40 +303,74 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     // 
 }
+#endif
+
 
 void eeprom_main(){
-    uart2.init(576000, CommStrategy::Blocking);
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init(576000, CommStrategy::Blocking);
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(2);
     DEBUGGER.set_radix(10);
-    DEBUGGER.set_splitter("\t\t");
+    DEBUGGER.set_splitter("\t");
 
-    I2cSw i2csw = I2cSw(portB[13], portB[12]);
+    hal::I2cSw i2csw = {hal::PB<13>(), hal::PB<12>()};
     i2csw.init(400000);
 
+    
+    using namespace drivers;
+    auto at24 = AT24CXX(
+        AT24CXX::Config::AT24C02{}, 
+        {i2csw, AT24CXX::DEFAULT_I2C_ADDR}
+    );
+
+
+    at24.init().examine();
+    const auto pbuf = std::span("Hello Woenejroktrvnknkebifdjknbuijekdnh3nuicedjkrld!");
+    auto pbuf2 = std::array<uint8_t, 30>{};
+    
+    // const auto pbuf = std::span("Hello");
+    DEBUG_PRINTLN("pw");
+    while(true){
+        // at24.store_bytes(Address(8), 
+        //     {reinterpret_cast<const uint8_t*>(pbuf.data()), pbuf.size()}).examine();
+
+        at24.load_bytes(Address(8), 
+            {(pbuf2.data()), pbuf2.size()}).examine();
+
+        // for(size_t i = 0; i < 30; ++i){
+        while(true){
+            at24.poll().examine();
+            clock::delay(1ms);
+            if(at24.is_available())
+                break;
+        }
+
+        clock::delay(1000ms);
+    }
     // eeprom02_tb(DEBUGGER, i2csw);
-    eeprom64_tb(DEBUGGER, i2csw);
+    // eeprom64_tb(DEBUGGER, i2csw);
+
     // flash_tb(logger);
+    while(true);
 }
 
-void flash_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+// void flash_main(){
+//     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    DEBUGGER_INST.init(576000);
-    DEBUGGER.retarget(&DEBUGGER_INST);
+//     DEBUGGER_INST.init(576000);
+//     DEBUGGER.retarget(&DEBUGGER_INST);
 
-    // auto & led = portA[8];
-    // led.outpp();
-    // while(true){
-    //     DEBUG_PRINTLN(millis());
-    //     clock::delay(100ms);
-    //     led.toggle();
-    // }
-    flash_tb(DEBUGGER);
-}
+//     // auto & led = portA[8];
+//     // led.outpp();
+//     // while(true){
+//     //     DEBUG_PRINTLN(millis());
+//     //     clock::delay(100ms);
+//     //     led.toggle();
+//     // }
+//     flash_tb(DEBUGGER);
+// }
 
 // OutputStream & operator << (OutputStream & os, const TestData & td){
 //     return os << td.data << ',' << td.name << ',' << td.value << ',' << td.crc;
 // }
 
-#endif

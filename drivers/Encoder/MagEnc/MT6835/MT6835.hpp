@@ -126,26 +126,29 @@ class MT6835 final:
     public MagEncoderIntf,
     public MT6835_Regs{
 public:
-    MT6835(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    MT6835(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MT6835(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
+    MT6835(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    MT6835(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    MT6835(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    void init();
+    [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<real_t> get_lap_position(){return Ok(lap_position);}
-    [[nodiscard]] uint32_t get_err_cnt() const {return errcnt;}
+    [[nodiscard]] IResult<real_t> get_lap_position(){return Ok(lap_position_);}
+    [[nodiscard]] uint32_t get_err_cnt() const {return errcnt_;}
 private:
     hal::SpiDrv spi_drv_;
 
-    real_t lap_position = 0;
-    size_t errcnt = 0;
-    bool fast_mode = true;
+    real_t lap_position_ = 0;
+    size_t errcnt_ = 0;
+    bool fast_mode_ = true;
 
-    uint16_t getPositionData();
+    uint16_t get_position_data();
 
-    hal::HalResult write_reg(const RegAddress addr, const uint8_t data);
-    hal::HalResult read_reg(const RegAddress addr, uint8_t & data);
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data);
+    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data);
 };
 
 };

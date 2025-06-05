@@ -45,23 +45,23 @@ private:
     ymd::Option<hal::Uart &> uart_;
     ymd::Option<hal::Can &> can_;
 
-    void can_write_data(
+    static void can_write_data(
             hal::Can & can, 
             const NodeId id, 
             const std::span<const uint8_t> buf){
-        Range2<size_t> store_window = Range2u{0,buf.size()};
-        Range2<size_t> op_window = {0,0};
+    //     Range2<size_t> store_window = Range2u{0,buf.size()};
+    //     Range2<size_t> op_window = {0,0};
     
-        do{
-            op_window = store_window.grid_forward(op_window, 8);
-            if(op_window.length() != 0){
-                const auto msg = hal::CanMsg::from_bytes(
-                    hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.from) / 8)), 
-                    std::span(buf.begin() + op_window.from, op_window.length()));
-                // DEBUG_PRINTLN(msg);
-                (void)can.write(msg);
-            }
-        }while(op_window.length());
+    //     do{
+    //         op_window = store_window.grid_forward(op_window, 8);
+    //         if(op_window.length() != 0){
+    //             const auto msg = hal::CanMsg::from_bytes(
+    //                 hal::CanStdId(uint32_t(id << 8) | (uint32_t(op_window.start) / 8)), 
+    //                 std::span(buf.begin() + op_window.start, op_window.length()));
+    //             // DEBUG_PRINTLN(msg);
+    //             (void)can.write(msg);
+    //         }
+    //     }while(op_window.length());
     }
 
     static void uart_write_data(
@@ -169,7 +169,7 @@ private:
         phy_.write_data(id_, {buf.data(), buf.size()});
     }
 
-    static inline uint8_t get_verify_code(const VerifyType type, std::span<const uint8_t> pdata ){
+    static inline uint8_t get_verify_code(const VerifyType type, std::span<const uint8_t> pbuf ){
         switch(type){
             default:
                 PANIC();
@@ -177,15 +177,15 @@ private:
                 return uint8_t{0x6b};
             case VerifyType::XOR:{
                 uint8_t code{0};
-                for(size_t i = 0; i < pdata.size(); i++){
-                    code ^= pdata[i];
+                for(size_t i = 0; i < pbuf.size(); i++){
+                    code ^= pbuf[i];
                 };
                 return code;
             }
             case VerifyType::CRC8:{
                 uint16_t crc = 0xffff;
-                for(size_t i = 0; i < pdata.size(); i++){
-                    crc ^= (uint16_t)(pdata[i]) << 8;
+                for(size_t i = 0; i < pbuf.size(); i++){
+                    crc ^= (uint16_t)(pbuf[i]) << 8;
                     for(uint8_t j = 0; j < 8; j++){
                         if(crc & 0x8000) crc ^= 0x1021;
                         crc <<= 1;
@@ -196,9 +196,9 @@ private:
         }
     }
 
-    static inline void array_append(Buf & dst, std::span<const uint8_t> pdata){
-        for(size_t i = 0; i < pdata.size(); i++){
-            dst.push_back(pdata[i]);
+    static inline void array_append(Buf & dst, std::span<const uint8_t> pbuf){
+        for(size_t i = 0; i < pbuf.size(); i++){
+            dst.push_back(pbuf[i]);
         }
     }
     

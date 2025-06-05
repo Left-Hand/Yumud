@@ -93,7 +93,7 @@ public:
     
     virtual Rect2u get_clip_window() = 0;
     
-    virtual IResult<> draw_line(const Vector2u & from, const Vector2u & to) = 0;
+    virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
 
     [[nodiscard]] IResult<> draw_hollow_rect(const Rect2u & rect);
 
@@ -135,10 +135,10 @@ public:
         const auto x_step = real_t(1) / x_range.length();
 
         real_t x = 0;
-        for(size_t i = size_t(x_range.from); i < size_t(x_range.to); i++){
+        for(size_t i = size_t(x_range.start); i < size_t(x_range.stop); i++){
             const auto y = std::forward<Fn>(fn)(x);
             draw_pixel({uint(i),uint(
-                y * (y_range.length()) + y_range.from
+                y * (y_range.length()) + y_range.start
             )});
             x = x + x_step;
         }
@@ -171,12 +171,12 @@ protected:
     }
     [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x){
         auto y_range_regular = y_range.abs();
-        return draw_ver_line(Vector2u(x, y_range_regular.from), y_range_regular.length());
+        return draw_ver_line(Vector2u(x, y_range_regular.start), y_range_regular.length());
     }
 
     [[nodiscard]] IResult<> draw_hri_line(const Range2u & x_range, const int y){
         auto x_range_regular = x_range.abs();
-        return draw_hri_line(Vector2u(x_range_regular.from, y), x_range_regular.length());
+        return draw_hri_line(Vector2u(x_range_regular.start, y), x_range_regular.length());
     }
 
     virtual IResult<> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) = 0;

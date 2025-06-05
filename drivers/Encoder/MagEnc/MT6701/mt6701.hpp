@@ -11,55 +11,9 @@
 
 namespace ymd::drivers{
 
-class MT6701_Phy{
-public:
+struct MT6701_Collections{
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
     using Error = EncoderError;
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class RegAddress:uint8_t{
-        RawAngle = 0x03,
-        UVWMux = 0x25,
-        ABZMux = 0x29,
-        Resolution = 0x30,
-        ZeroConfig = 0x32,
-        Hystersis = 0x34,
-        WireConfig = 0x38,
-        StartStop = 0x3e,
-        Start = 0x3f,
-        Stop = 0x40
-    };
-
-
-    MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
-        MT6701_Phy(std::nullopt, std::make_optional<hal::SpiDrv>(spi, idx)){;}
-
-    MT6701_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        MT6701_Phy(std::make_optional<hal::I2cDrv>(i2c, addr), std::nullopt){;}
-
-
-    IResult<> write_reg(const RegAddress addr, const uint16_t data);
-    
-    IResult<> read_reg(const RegAddress addr, uint16_t & data);
-    
-    IResult<> write_reg(const RegAddress addr, const uint8_t data);
-    
-    IResult<> read_reg(const RegAddress addr, uint8_t & data);
-private:
-    MT6701_Phy(
-        std::optional<hal::I2cDrv> && i2c_drv, 
-        std::optional<hal::SpiDrv> && spi_drv
-    ):
-        i2c_drv_(std::move(i2c_drv)),
-        spi_drv_(std::move(spi_drv)){;}
-
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
-};
-
-struct MT6701_Regs{
-    using Error = EncoderError;
-
     template<typename T = void>
     using IResult = Result<T, Error>;
 
@@ -76,12 +30,89 @@ struct MT6701_Regs{
         HZ994_4,HZ497_2
     };
 
-    struct UVWMuxReg : public Reg8<>{
+
+    enum class RegAddress:uint8_t{
+        RawAngle = 0x03,
+        UVWMux = 0x25,
+        ABZMux = 0x29,
+        Resolution = 0x30,
+        ZeroConfig = 0x32,
+        Hystersis = 0x34,
+        WireConfig = 0x38,
+        StartStop = 0x3e,
+        Start = 0x3f,
+        Stop = 0x40
+    };
+
+};
+
+class MT6701_Phy:public MT6701_Collections{
+public:
+    using RegAddress = MT6701_Phy::RegAddress;
+
+    MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
+        MT6701_Phy(std::nullopt, hal::SpiDrv(spi, idx)){;}
+
+    MT6701_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+        MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+
+        if(i2c_drv_){
+            if(const auto res = i2c_drv_->write_reg(
+                    std::bit_cast<uint8_t>(reg.address), 
+                    reg.as_val(), 
+                    MSB);
+                res.is_err()) return Err(res.unwrap_err());
+            reg.apply();
+            return Ok();
+        }else{
+            return Err(details::EncoderError_Kind::NoSupportedPhy);
+        }
+    }
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        if(i2c_drv_){
+            if(const auto res = i2c_drv_->read_reg(
+                    std::bit_cast<uint8_t>(reg.address), 
+                    reg.as_ref(), 
+                    MSB);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
+        }else{
+            return Err(details::EncoderError_Kind::NoSupportedPhy);
+        }
+    }
+
+private:
+    MT6701_Phy(
+        std::optional<hal::I2cDrv> && i2c_drv, 
+        std::optional<hal::SpiDrv> && spi_drv
+    ):
+        i2c_drv_(std::move(i2c_drv)),
+        spi_drv_(std::move(spi_drv)){;}
+
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
+};
+
+struct MT6701_Regs:public MT6701_Collections{
+    struct R16_RawAngle : public Reg16<>{
+        static constexpr auto address = RegAddress::RawAngle;
+        uint16_t angle;
+    }DEF_R16(raw_angle_reg)
+
+    struct R8_UVWMux : public Reg8<>{
+        static constexpr auto address = RegAddress::UVWMux;
         uint8_t __resv__:7;
         uint8_t uvwMux:1;
     };
 
-    struct ABZMuxReg : public Reg8<>{
+    struct R8_ABZMux : public Reg8<>{
+        static constexpr auto address = RegAddress::ABZMux;
+
         uint8_t __resv1__:1;
         uint8_t clockwise:1;
         uint8_t __resv2__:4;
@@ -89,47 +120,61 @@ struct MT6701_Regs{
         uint8_t __resv3__:1;
     };
 
-    struct ResolutionReg : public Reg16<>{
+    struct R16_Resolution : public Reg16<>{
+        static constexpr auto address = RegAddress::Resolution;
         uint16_t abzResolution:10;
         uint16_t __resv__:2;
         uint16_t poles:4;
     };
 
-    struct ZeroConfigReg : public Reg16<>{
+    struct R16_ZeroConfig : public Reg16<>{
+        static constexpr auto address = RegAddress::ZeroConfig;
         uint16_t zeroPosition:12;
         uint16_t zeroPulseWidth:3;
         uint16_t hysteresis:1;
     };
 
-    struct HystersisReg : public Reg8<>{
+    struct R8_Hystersis : public Reg8<>{
+        static constexpr auto address = RegAddress::Hystersis;
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
-    struct WireConfigReg : public Reg8<>{
+    struct R8_WireConfig : public Reg8<>{
+        static constexpr auto address = RegAddress::WireConfig;
         uint8_t __resv__:5;
         uint8_t isPwm:1;
         uint8_t pwmPolarityLow:1;
         uint8_t pwmFreq:1;
     };
 
-    struct StartStopReg : public Reg8<>{
+    struct R8_StartStop : public Reg8<>{
+        static constexpr auto address = RegAddress::StartStop;
         uint8_t start:4;
         uint8_t stop:4;
     };
 
-    uint16_t rawAngleData = {};
-    UVWMuxReg uvwMuxReg = {};
-    ABZMuxReg abzMuxReg = {};
-    ResolutionReg resolutionReg = {};
-    ZeroConfigReg zeroConfigReg = {};
-    HystersisReg hystersisReg = {};
-    WireConfigReg wireConfigReg = {};
-    StartStopReg startStopReg = {};
-    uint8_t startData = {};
-    uint8_t stopData = {};
+    struct R8_Start:public  Reg8<>{
+        static constexpr auto address = RegAddress::Start;
+        uint8_t data;
+    };
 
-    using RegAddress = MT6701_Phy::RegAddress;
+    struct R8_Stop:public  Reg8<>{
+        static constexpr auto address = RegAddress::Stop;
+        uint8_t data;
+    };
+
+    R8_UVWMux uvw_mux_reg = {};
+    R8_ABZMux abz_mux_reg = {};
+    R16_Resolution resolution_reg = {};
+    R16_ZeroConfig zero_config_reg = {};
+    R8_Hystersis hystersis_reg = {};
+    R8_WireConfig wire_config_reg = {};
+    R8_StartStop start_stop_reg = {};
+    R8_Start start_reg = {};
+    R8_Stop stop_reg = {};
+
+
 };
 
 
@@ -225,7 +270,7 @@ private:
         }
     };
     
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
+
 
     MT6701_Phy phy_;
     Semantic semantic = {0, 0};

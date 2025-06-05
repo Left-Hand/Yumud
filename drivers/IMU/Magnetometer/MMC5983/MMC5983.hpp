@@ -17,7 +17,6 @@
 
 namespace ymd::drivers{
 
-
 struct MMC5983_Collections{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
     using Error = ImuError;
@@ -59,7 +58,6 @@ struct MMC5983_Collections{
 
 
 struct MMC5983_Regs:public MMC5983_Collections{
-
     struct alignas(sizeof(8)) DataPacket{
         static constexpr uint8_t address = 0;
 
@@ -143,29 +141,35 @@ public:
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->write_reg(addr, data));
+            return IResult<>(i2c_drv_->write_reg(addr, data));
+        }else if(spi_drv_){
+            return Err(Error::SpiPhyIsNotSupportedYet);
         }else{
-            PANIC();
+            return Err(Error::NoAvailablePhy);
         }
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->read_reg(uint8_t(addr), data));
+            return IResult<>(i2c_drv_->read_reg(uint8_t(addr), data));
+        }else if(spi_drv_){
+            return Err(Error::SpiPhyIsNotSupportedYet);
         }else{
-            PANIC();
+            return Err(Error::NoAvailablePhy);
         }
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
+    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
-            return Result<void, Error>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pdata));
+            return IResult<>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf));
+        }else if(spi_drv_){
+            return Err(Error::SpiPhyIsNotSupportedYet);
         }else{
-            PANIC();
+            return Err(Error::NoAvailablePhy);
         }
     }
 
@@ -179,6 +183,12 @@ class MMC5983:
     public MagnetometerIntf,
     public MMC5983_Regs{
 public:
+    struct Config{
+        PrdSet prd_set = PrdSet::_100;
+        BandWidth bandwidth = BandWidth::_200Hz;
+        Odr data_rate = Odr::_200Hz;
+    };
+
     MMC5983(const hal::I2cDrv & i2c_drv):
         phy_(i2c_drv){;}
     MMC5983(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
@@ -188,7 +198,7 @@ public:
     MMC5983(hal::Spi & spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv{spi, index}){;}
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> reset();
@@ -200,7 +210,6 @@ public:
     
     [[nodiscard]] IResult<Vector3<q24>> read_mag();
     [[nodiscard]] IResult<q16> read_temp();
-    
     
     [[nodiscard]] IResult<bool> is_mag_meas_done();
     [[nodiscard]] IResult<bool> is_temp_meas_done();
@@ -218,27 +227,22 @@ public:
 private:    
     using Phy = MMC5983_Phy;
     Phy phy_;
-    [[nodiscard]] IResult<> write_reg(const uint8_t address, const uint8_t data){
-        return phy_.write_reg(address, data);
-    }
-    
-    [[nodiscard]] IResult<> read_reg(const uint8_t address, uint8_t & data){
-        return phy_.read_reg(address, data);
-    }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = phy_.write_reg(reg.address, reg.as_val());
-        if(res.is_ok()) reg.apply();
+        if(res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
         return res;
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return phy_.read_reg(reg.address, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pdata){
-        return phy_.read_burst(addr, pdata);
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
+        return phy_.read_burst(addr, pbuf);
     }
 
 };

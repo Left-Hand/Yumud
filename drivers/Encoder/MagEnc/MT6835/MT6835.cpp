@@ -10,11 +10,11 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-void MT6835::init() {
-
+IResult<> MT6835::init() {
+    return Ok();
 }
 
-uint16_t MT6835::getPositionData(){
+uint16_t MT6835::get_position_data(){
     return 0;
 }
 
@@ -23,35 +23,52 @@ IResult<> MT6835::update() {
 }
 
 
-struct WRFormat{
+struct Frame{
+    enum class Type:uint16_t{
+        Write = 0b0110,
+        Read = 0b0011,
+    };
+
+
     uint16_t addr:12;
-    uint16_t type:4;
+    Type type:4;
 
     operator uint16_t & (){return *reinterpret_cast<uint16_t *>(this);}
     operator uint16_t () const {return *reinterpret_cast<const uint16_t *>(this);}
 };
 
+static_assert(sizeof(Frame) == 2);
 
 
-hal::HalResult MT6835::write_reg(const RegAddress addr, const uint8_t data){
+IResult<> MT6835::write_reg(const RegAddress addr, const uint8_t data){
 
-    WRFormat format = {
+    Frame format = {
         .addr = addr,
-        .type = 0b0110
+        .type = Frame::Type::Write
     };
 
-    return spi_drv_.write_single<uint16_t>(format, CONT)
-    | spi_drv_.write_single<uint8_t>(data);
+    if(const auto res = spi_drv_.write_single<uint16_t>(format, CONT);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = spi_drv_.write_single<uint8_t>(data);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
 }
 
 
-hal::HalResult MT6835::read_reg(const RegAddress addr, uint8_t & data){
+IResult<> MT6835::read_reg(const RegAddress addr, uint8_t & data){
 
-    WRFormat format = {
+    Frame format = {
         .addr = addr,
-        .type = 0b0011
+        .type = Frame::Type::Read
     };
 
-    return spi_drv_.write_single<uint16_t>(format, CONT)
-    | spi_drv_.read_single<uint8_t>(data);
+    if(const auto res = spi_drv_.write_single<uint16_t>(format, CONT);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = spi_drv_.read_single<uint8_t>(data);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
 }

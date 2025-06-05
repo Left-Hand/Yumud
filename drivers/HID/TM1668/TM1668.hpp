@@ -7,52 +7,30 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+#include "core/utils/errno.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
-class TM1668_Error{
-    public:
-        enum Kind:uint8_t{
-            I2cError,
-            Unspecified = 0xff,
-        };
-        constexpr TM1668_Error(const Kind kind): kind_(kind){;}
-        constexpr TM1668_Error(const hal::HalResult err)
-            {
 
-            }
-        constexpr Kind kind() const {return kind_;}
-        constexpr bool operator ==(const TM1668_Error &rhs) const {return kind_ == rhs.kind_;}
-    private:
-        Kind kind_ = Kind::Unspecified;
+struct TM1668_Collections{
+    enum class Error_Kind{
+
     };
-}
 
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::TM1668_Error, hal::HalResult> {
-        scexpr Result<T, drivers::TM1668_Error> convert(const hal::HalResult res){
-            if constexpr(std::is_void_v<T>)
-                if(res.is_ok()) return Ok();
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+};
 
-            return Err(drivers::TM1668_Error(res.unwrap_err())); 
-        }
-    };
-}
-
-
-namespace ymd::drivers{
-class TM1668_Phy final{
+class TM1668_Phy final:public TM1668_Collections{
 public:
 
     TM1668_Phy(hal::I2c & i2c, hal::GpioIntf & scb_io):
         i2c_(i2c), scb_io_(scb_io){;}
     
-    using Error = TM1668_Error;
-
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
         _2_16,
@@ -118,7 +96,7 @@ public:
         Option<uint8_t> col_;
     };
 
-    Result<void, Error> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
+    IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
         auto res = write_display_cmd(cmd);
 
         for(size_t i = 0; i < pbuf.size(); i++){
@@ -147,7 +125,7 @@ public:
         return Ok<KeyEvent>(KeyEvent::from_u8(buf));
     }
 private:
-    Result<void, Error> write_display_cmd(const DisplayCommand cmd){
+    IResult<> write_display_cmd(const DisplayCommand cmd){
         // return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.as_u8());
         return Ok();
     }
@@ -158,7 +136,7 @@ private:
     void set_scb(){scb_io_.set();}
     void clr_scb(){scb_io_.clr();}
 
-    Result<void, Error> write_u8x2(const uint8_t payload1, const uint8_t payload2){
+    IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
         auto res = i2c_
@@ -166,13 +144,13 @@ private:
             .then([&](){return i2c_.write(payload2);})
         ;
 
-        return Result<void, Error>(res);
+        if(res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 };
 
-class TM1668{
+class TM1668 final:public TM1668_Collections{
 public:
-    using Error = TM1668_Phy::Error;
     using DisplayCommand = TM1668_Phy::DisplayCommand;
     using KeyEvent = TM1668_Phy::KeyEvent;
 
@@ -216,7 +194,7 @@ public:
     };
 
 
-    Result<void, Error> write_screen(
+    IResult<> write_screen(
         const DisplayCommand cmd, 
         const std::span<const uint8_t, 4> pbuf){
         

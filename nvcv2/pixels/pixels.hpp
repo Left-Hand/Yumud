@@ -154,8 +154,8 @@ namespace ymd::nvcv2::pixels{
         const Range2u x_range = roi.get_x_range();
         const Range2u y_range = roi.get_y_range();
 
-        for(uint j = y_range.from; j < y_range.to; ++j){
-            const auto * ptr = &(image[Vector2u{x_range.from, j}]);
+        for(uint j = y_range.start; j < y_range.stop; ++j){
+            const auto * ptr = &(image[Vector2u{x_range.start, j}]);
             for(uint i = 0; i < x_range.length(); ++i){
                 sum += uint8_t(ptr[i]);
             }

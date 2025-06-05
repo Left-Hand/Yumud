@@ -31,7 +31,7 @@ protected:
     
     scexpr uint8_t cfr1[4] = {0x00,0x40,0x00,0x00};
     scexpr uint8_t cfr2[4] = {0x01,0x00,0x00,0x00};
-    
+    scexpr uint8_t ramprofile0[8] = {0};
 
     struct Profile{
     protected:
@@ -39,7 +39,9 @@ protected:
     public: 
         Profile() = default;
         uint8_t & operator [](const size_t idx){return data[idx];}
-        const uint8_t * cbegin() const {return data;}
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>(data);
+        }
     };
 
     struct DrgParamenter {
@@ -48,29 +50,35 @@ protected:
     public: 
         DrgParamenter () = default;
         uint8_t & operator [](const size_t idx){return data[idx];}
-        const uint8_t * cbegin() const {return data;}
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>(data);
+        }
     };
 
-    scexpr uint8_t ramprofile0[8] = {0};
 
-    hal::HalResult write_reg(const uint8_t, const uint8_t *, const size_t);
+
+    hal::HalResult write_burst(const uint8_t, const std::span<const uint8_t> pbuf);
     hal::HalResult write_data(const uint8_t);
 
-    void writeProfile(const Profile & profile);
-    void writeRamprofile();
-    void writeDrg(const DrgParamenter & drg);
+    void write_profile(const Profile & profile);
+    void write_ramprofile();
+    void write_drg(const DrgParamenter & drg);
 
 
 public:
-    AD9910(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    AD9910(hal::SpiDrv && _spi_drv):spi_drv(std::move(_spi_drv)){;}
-    AD9910(hal::Spi & _spi, const hal::SpiSlaveIndex index):spi_drv(hal::SpiDrv(_spi, index)){;}
-    void init(void);
-    void freqConvert(uint32_t Freq);
+    AD9910(const hal::SpiDrv & _spi_drv):
+        spi_drv(_spi_drv){;}
+    AD9910(hal::SpiDrv && _spi_drv):
+        spi_drv(std::move(_spi_drv)){;}
+    AD9910(hal::Spi & _spi, const hal::SpiSlaveIndex index):
+        spi_drv(hal::SpiDrv(_spi, index)){;}
 
-    void setAmplitude(uint32_t);
-    void freqSweep(uint32_t, uint32_t, uint32_t, uint32_t);
-    void sendSample(const uint8_t *, const size_t);
+    void init(void);
+    void freq_convert(uint32_t Freq);
+
+    void set_amplitude(uint32_t);
+    void freq_sweep(uint32_t, uint32_t, uint32_t, uint32_t);
+    void send_sample(const std::span<const uint8_t> pbuf);
 };
 
 }

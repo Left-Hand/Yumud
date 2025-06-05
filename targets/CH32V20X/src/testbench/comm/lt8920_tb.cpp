@@ -41,25 +41,25 @@ void lt8920_main(){
 
     LT8920 lt{spi, spi.attach_next_cs(portA[0]).value()};
     bindSystickCb([&](){
-        lt.tick();
+        lt.tick().examine();
     });
 
-    if(lt.validate()){
+    if(lt.validate().is_ok()){
         DEBUG_PRINTLN("LT8920 founded");
     }else{
         DEBUG_PRINTLN("LT8920 not founded, please check your physical connection");
         PANIC();
     }
 
-    lt.bindNrstGpio(portB[0]);
-    lt.init();
-    lt.setDataRate(1_MHz);
+    lt.bind_nrst_gpio(portB[0]).examine();
+    lt.init().examine();
+    lt.set_data_rate(1_MHz).examine();
 
     // LT8920::Role role = LT8920::Role::BROADCASTER;
     // lt.setRole(role);
     bool is_rx = (sys::chip::get_chip_id_crc() != 0x5E0799D2);
     
-    if(is_rx) lt.startListen();
+    if(is_rx) lt.start_listen().examine();
 
     if(is_rx){
 
@@ -70,7 +70,9 @@ void lt8920_main(){
             // lt.setDataRate(LT8920::DataRate::Kbps125);
             // DEBUG_PRINTLN(lt.isRfSynthLocked());
 
-            lt.writeBlock((const uint8_t *)src.c_str(), src.length());
+            lt.write_block(std::span(
+                reinterpret_cast<const uint8_t *>(src.c_str()), 
+                src.length())).examine();
             clock::delay(200ms);
             // DEBUG_PRINTLN(src, lt.receivedAck());
         }

@@ -49,20 +49,20 @@ void AD9910::init(void)
     clock::delay(5ms);
 	MAS_REST.clr(); 
 
-    write_reg(0x00, cfr1, 4);
-    write_reg(0x01, cfr2, 4);
-    write_reg(0x02, cfr3, 4);
+    write_burst(0x00, std::span(cfr1));
+    write_burst(0x01, std::span(cfr2));
+    write_burst(0x02, std::span(cfr3));
 
 	clock::delay(1ms);
 }      
 
 
 
-hal::HalResult AD9910::write_reg(const uint8_t addr, const uint8_t * data, const size_t len){
+hal::HalResult AD9910::write_burst(const uint8_t addr, const std::span<const uint8_t> pbuf){
     __nopn(4);
 
     UNWRAP_OR_RETURN(spi_drv.write_single<uint8_t>(addr));
-    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(std::span(data, len)));
+    UNWRAP_OR_RETURN(spi_drv.write_burst<uint8_t>(pbuf));
 
     __nopn(4);
 
@@ -74,15 +74,15 @@ hal::HalResult AD9910::write_data(const uint8_t txdat){
 }  
 
     
-void AD9910::writeProfile(const Profile & profile){
+void AD9910::write_profile(const Profile & profile){
 
-    write_reg(0x0e, profile.cbegin(), 8);
+    write_burst(0x0e, profile.as_bytes());
 
 	clock::delay(1ms);
 }         
 
 
-void AD9910::freqConvert(uint32_t Freq)
+void AD9910::freq_convert(uint32_t Freq)
 {
 	uint32_t Temp;
 	if(Freq > 400000000)
@@ -95,10 +95,10 @@ void AD9910::freqConvert(uint32_t Freq)
 	profile[6]=(uint8_t)(Temp>>8);
 	profile[5]=(uint8_t)(Temp>>16);
 	profile[4]=(uint8_t)(Temp>>24);
-	writeProfile(profile);
+	write_profile(profile);
 }
 
-void AD9910::setAmplitude(uint32_t Amp)
+void AD9910::set_amplitude(uint32_t Amp)
 {
 	uint32_t Temp;
 	Temp = (uint32_t)(Amp*magic_2);
@@ -111,19 +111,20 @@ void AD9910::setAmplitude(uint32_t Amp)
 	profile[1]=(uint8_t)Temp;
 	profile[0]=(uint8_t)(Temp>>8);
 
-	writeProfile(profile);
+	write_profile(profile);
 }
 
-void AD9910::writeDrg(const DrgParamenter & drgparameter){
-    write_reg(0x0b, drgparameter.cbegin(), 8);
-    write_reg(0x0c, drgparameter.cbegin() + 8, 4);
-    write_reg(0x0d, drgparameter.cbegin() + 16, 4);
+void AD9910::write_drg(const DrgParamenter & drgparameter){
+	const auto bytes = drgparameter.as_bytes();
+    write_burst(0x0b, bytes.subspan(0, 8));
+    write_burst(0x0c, bytes.subspan(8, 4));
+    write_burst(0x0d, bytes.subspan(16, 4));
 	
 	clock::delay(1ms);
 }         
 
 
-void AD9910::freqSweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t SweepStepFre, uint32_t SweepTime){
+void AD9910::freq_sweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t SweepStepFre, uint32_t SweepTime){
 
 
 	const uint32_t Temp1 = (uint32_t)(SweepMinFre*magic_1);
@@ -168,18 +169,17 @@ void AD9910::freqSweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t Swee
 	}();
 
 	//发送DRG参数
-	writeDrg(drgparameter);
+	write_drg(drgparameter);
 }
 
-void AD9910::writeRamprofile(void)
+void AD9910::write_ramprofile(void)
 {
-    write_reg(0x0e, ramprofile0, 8);
+    write_burst(0x0e, std::span(ramprofile0));
 	clock::delay(1ms);
 }         
 
-void AD9910::sendSample(const uint8_t * data, const size_t len)
-{
-    write_reg(0x16, data, len);
+void AD9910::send_sample(const std::span<const uint8_t> pbuf){
+    write_burst(0x16, pbuf);
 	clock::delay(1ms);
 }         
 
@@ -200,5 +200,3 @@ void AD9910::sendSample(const uint8_t * data, const size_t len)
 // 	writeRamprofile();
 // 	sendSample();
 //  }
-
- #undef DLY

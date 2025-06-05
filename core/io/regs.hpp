@@ -7,7 +7,10 @@
 namespace ymd{
 
 template<typename T> 
-struct RegCopy:public T{
+struct RegCopy final:public T{
+public:
+    using value_type = typename T::value_type;
+
 	constexpr RegCopy(T & owner)
 		:owner_(owner){
         T & self = *this;
@@ -18,6 +21,10 @@ struct RegCopy:public T{
         const T & self = *this;
         owner_.as_ref() = self.as_val();
     }
+
+    // constexpr ~RegCopy(){
+    //     apply();
+    // }
 private:
 	T & owner_;
 };
@@ -40,16 +47,15 @@ protected:
     using TReg = T;
     __RegC_t() = default;
 public:
-    __RegC_t(const std::span<const uint8_t> pdata){
-        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pdata.data()));
+    __RegC_t(const std::span<const uint8_t> pbuf){
+        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pbuf.data()));
     };
     using value_type = T;
-    constexpr T copy() const{return std::bit_cast<T>(*this);}
-    constexpr operator T() const {return std::bit_cast<T>(*this);}
+
     
-    constexpr T operator &(const T data) const {return T(*this) & data;}
-    constexpr T operator |(const T data) const {return T(*this) | data;}
-    constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
+    // constexpr T operator &(const T data) const {return T(*this) & data;}
+    // constexpr T operator |(const T data) const {return T(*this) | data;}
+    // constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
     
     constexpr std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
@@ -65,8 +71,8 @@ struct __Reg_t:public __RegC_t<T, D>{
 protected:
     constexpr __Reg_t<T> & operator = (const __Reg_t<T, D> & other) = default;
     constexpr __Reg_t<T> & operator = (__Reg_t<T, D> && other) = default;
-    __Reg_t(const T & data){*this = data;};
-    __Reg_t(T && data){*this = data;};
+    constexpr __Reg_t(const T & data){*this = data;};
+    constexpr __Reg_t(T && data){*this = data;};
     
 public:
     using value_type = T;
@@ -75,10 +81,9 @@ public:
     using __RegC_t<T>::as_bytes;
     using TReg = __RegC_t<T>::TReg;
     
-    constexpr T copy() const{return std::bit_cast<T>(*this);}
+    // constexpr RegCopy<__Reg_t<T>> copy() const{return RegCopy(*this);}
     constexpr __Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
-    constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
-    constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
+    // constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
     constexpr std::span<uint8_t> as_bytes() {
         return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(TReg));}
     constexpr std::span<const uint8_t> as_bytes() const {
@@ -101,17 +106,14 @@ public:
 template<typename D = T>\
 struct name:public __Reg_t<T, D>{\
 using __Reg_t<T, D>::__Reg_t;\
-using __Reg_t<T, D>::operator T;\
-using __Reg_t<T, D>::operator T &;\
 using __Reg_t<T, D>::operator =;\
-constexpr T as_fn() const {return T(*this);}\
+constexpr T as_fn() const {return std::bit_cast<T>(*this);}\
 };\
 
 #define DEF_REGC_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
 struct name:public __RegC_t<T, D>{\
 using __RegC_t<T, D>::__RegC_t;\
-using __RegC_t<T, D>::operator T;\
 using __RegC_t<T, D>::operator =;\
 constexpr T as_fn() const {return T(*this);}\
 };\

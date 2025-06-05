@@ -5,14 +5,14 @@
 #include "robots/foc/stepper/stepper.hpp"
 #include "algo/interpolation/cubic.hpp"
 
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 
-#include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
-#include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
+#include "drivers/GateDriver/AT8222/at8222.hpp"
+#include "drivers/GateDriver/MP6540/mp6540.hpp"
 
 #include "digipw/SVPWM/svpwm2.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -127,6 +127,8 @@ uint8_t get_default_id(){
     DEBUG_PRINTLN("node_id", node_id);
     return node_id;
 };
+
+#if 0
 void stepper_tb(UartHw & logger_inst){
     logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
@@ -137,8 +139,8 @@ void stepper_tb(UartHw & logger_inst){
     auto & ena_gpio = portB[0];
     auto & enb_gpio = portA[7];
 
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio.outpp(HIGH)};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio.outpp(HIGH)};
+    AT8222 coilA{timer1.oc<3>(), timer1.oc<4>(), ena_gpio.outpp(HIGH)};
+    AT8222 coilB{timer1.oc<1>(), timer1.oc<2>(), enb_gpio.outpp(HIGH)};
 
     coilA.init();
     coilB.init();
@@ -165,10 +167,10 @@ void stepper_tb(UartHw & logger_inst){
     
     timer1.init(chopper_freq, TimerCountMode::CenterAlignedDownTrig);
     timer1.enable_arr_sync();
-    timer1.oc(1).init({.valid_level = LOW});
-    timer1.oc(2).init({.valid_level = LOW});
-    timer1.oc(3).init({.valid_level = LOW});
-    timer1.oc(4).init({.valid_level = LOW});
+    timer1.oc<1>().init({.valid_level = LOW});
+    timer1.oc<2>().init({.valid_level = LOW});
+    timer1.oc<3>().init({.valid_level = LOW});
+    timer1.oc<4>().init({.valid_level = LOW});
     
     // using AdcChannelEnum = AdcChannelIndex;
     // using AdcCycleEnum = AdcSampleCycles;
@@ -333,3 +335,5 @@ void stepper_tb(UartHw & logger_inst){
         // Sys::Clock::reCalculateTimeMs();
     }
 }
+
+#endif

@@ -1,8 +1,8 @@
 #include "ma730.hpp"
 #include "core/math/realmath.hpp"
 
-using namespace ymd::drivers;
 using namespace ymd;
+using namespace ymd::drivers;
 
 #define MA730_DEBUG_EN
 
@@ -26,26 +26,6 @@ IResult<> MA730::init(){
     return Ok();
 }
 
-IResult<> MA730::write_reg(const RegAddress addr, uint8_t data){
-    const auto tx = uint16_t(0x8000 | ((uint8_t)addr << 8) | data);
-    if(const auto res = spi_drv_.write_single<uint16_t>(tx);
-        res.is_err()) return Err(Error(res.unwrap_err()));
-    return Ok();
-}
-
-IResult<> MA730::read_reg(const RegAddress addr, uint8_t & data){
-    uint16_t dummy;
-    const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
-    if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
-        res.is_err()) return Err(Error(res.unwrap_err()));
-    if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
-        res.is_err()) return Err(Error(res.unwrap_err()));
-    if((dummy & 0xff) != 0x00) 
-        return Err(Error::InvalidRxFormat);
-    data = dummy >> 8;
-    return Ok();
-}
-
 IResult<uint16_t> MA730::direct_read(){
     uint16_t data;
     const auto res = spi_drv_.read_single<uint16_t>(data);
@@ -60,9 +40,17 @@ IResult<uint16_t> MA730::get_raw_data(){
 
 
 IResult<> MA730::set_zero_data(const uint16_t data){
-    zeroDataReg = data & 0xff;
-    return write_reg(RegAddress::ZeroDataLow, zeroDataReg & 0xff) | 
-    write_reg(RegAddress::ZeroDataHigh, zeroDataReg >> 8);
+    {
+        auto reg = RegCopy(zero_data_low_reg);
+        reg.data = data & 0xff;
+        return write_reg(reg);
+    }
+
+    {
+        auto reg = RegCopy(zero_data_high_reg);
+        reg.data = data >> 8;
+        return write_reg(reg);
+    }
 }
 
 
@@ -72,10 +60,10 @@ IResult<> MA730::set_zero_position(const real_t position){
 }
 
 IResult<MagStatus> MA730::get_mag_status(){
-    const auto res = read_reg(RegAddress::Magnitude, magnitudeReg);
+    const auto res = read_reg(magnitude_reg);
     if(res.is_err()) return Err(res.unwrap_err());
-    const bool mgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
-    const bool mgh = magnitudeReg.magnitudeHigh;
+    const bool mgl = !(magnitude_reg.mgl1 | magnitude_reg.mgl2);
+    const bool mgh = magnitude_reg.magnitudeHigh;
     if(mgl) return Ok(MagStatus::Low());
     if(mgh) return Ok(MagStatus::High());
     else return Ok(MagStatus::Proper());
@@ -93,22 +81,31 @@ IResult<> MA730::update(){
 
 
 IResult<> MA730::set_trim_x(const real_t k){
-    trimReg = (uint8_t)((real_t(1) - real_t(1) / k) * 258);
-    trimConfigReg.enableX = true;
-    trimConfigReg.enableY = false;
-
-    return write_reg(RegAddress::Trim, trimReg)
-    | write_reg(RegAddress::TrimConfig, uint8_t(trimConfigReg));
+    {
+        auto reg = RegCopy(trim_reg);
+        reg.trim = uint8_t((real_t(1) - real_t(1) / k) * 258);
+        return write_reg(reg);
+    }
+    {
+        auto reg = RegCopy(trim_config_reg);
+        reg.enableX = true;
+        reg.enableY = false;
+        return write_reg(reg);
+    }
 }
 
 IResult<> MA730::set_trim_y(const real_t k){
-    trimReg = (uint8_t)((real_t(1) - k) * 258);
-    trimConfigReg.enableX = false;
-    trimConfigReg.enableY = true;
-
-    return write_reg(RegAddress::Trim, trimReg)
-    | write_reg(RegAddress::TrimConfig, uint8_t(trimConfigReg))
-    ;
+    {
+        auto reg = RegCopy(trim_reg);
+        reg.trim = uint8_t((real_t(1) - k) * 258);
+        return write_reg(reg);
+    }
+    {
+        auto reg = RegCopy(trim_config_reg);
+        reg.enableX = false;
+        reg.enableY = true;
+        return write_reg(reg);
+    }
 }
 
 
@@ -119,34 +116,47 @@ IResult<> MA730::set_trim(const real_t am, const real_t e){
 }
 
 IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold high){
-    auto & reg = thresholdReg;
+    auto reg = RegCopy(threshold_reg);
     reg.thresholdLow = uint8_t(low);
     reg.thresholdHigh = uint8_t(high);
-    return write_reg(RegAddress::Threshold, reg.as_val())
-        // .inspect([&](auto && x){org_reg = reg;})
-    ;
+    return write_reg(reg);
 }
 
 IResult<> MA730::set_direction(const bool direction){
-    directionReg.direction = direction;
-    return write_reg(RegAddress::Direction, uint8_t(directionReg));
+    auto reg = RegCopy(direction_reg);
+    reg.direction = direction;
+    return write_reg(reg);
 }
 
 
 IResult<> MA730::set_zparameters(const Width width, const Phase phase){
-    zParametersReg.zWidth = (uint8_t)width;
-    zParametersReg.zPhase = (uint8_t)phase;
-    return write_reg(RegAddress::ZParameters, uint8_t(zParametersReg));
+    auto reg = RegCopy(z_parameters_reg);
+    reg.zWidth = width;
+    reg.zPhase = phase;
+    return write_reg(reg);
 }
 
 IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
     ppt = CLAMP(ppt - 1, 0, 1023);
-    uint8_t ppt_l = ppt & 0b11;
-    uint8_t ppt_h = ppt >> 2;
-    
-    zParametersReg.ppt = ppt_l;
-    pulsePerTurnReg = ppt_h;
 
-    return (write_reg(RegAddress::ZParameters, uint8_t(zParametersReg)))
-    | (write_reg(RegAddress::PulsePerTurn, pulsePerTurnReg));
+    {
+        uint8_t ppt_l = ppt & 0b11;
+
+        auto reg = RegCopy(z_parameters_reg);
+        reg.ppt = ppt_l;
+        if(const auto res = (write_reg(reg));
+            res.is_err()) return Err(res.unwrap_err()); 
+    }
+
+    {
+        uint8_t ppt_h = ppt >> 2;
+
+        auto reg = RegCopy(pulse_per_turn_reg);
+        reg.data = ppt_h;
+        if(const auto res = (write_reg(reg));
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    return Ok();
+
 }

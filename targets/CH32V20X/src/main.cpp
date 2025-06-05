@@ -78,6 +78,7 @@ int main(){
     // i2c_scanner_main();
     // tca9548_main();
     // eeprom_main();
+    ht16k33_main();
     // flash_main();
     // digipw_main();
     // uart_main();
@@ -107,7 +108,9 @@ int main(){
     // temp_tb2(logger);
     // eeprom_tb(uart1);
     // eeprom_main();
-    myservo_main();
+    // myservo_main();
+    // myesc_main();
+    // bldc_main();
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();

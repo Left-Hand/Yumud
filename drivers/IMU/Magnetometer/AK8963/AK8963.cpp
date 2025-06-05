@@ -24,27 +24,25 @@ using Error = ImuError;
 
 template<typename T = void>
 using IResult= Result<T, Error>;
-Result<void, Error> AK8963::write_reg(const uint8_t addr, const uint8_t data){
+IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t data){
     auto res = phy_.write_reg(uint8_t(addr), data);
-    // AK8963_ASSERT(res.is_ok(), "AK8963 write reg failed", res);
     return res;
 }
 
-Result<void, Error> AK8963::read_reg(const uint8_t addr, uint8_t & data){
+IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & data){
     auto res = phy_.read_reg(uint8_t(addr), data);
-    // AK8963_ASSERT(res.is_ok(), "AK8963 read reg failed", res);
     return res;
 }
 
-Result<void, Error> AK8963::read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len){
-    auto res = phy_.read_burst(reg_addr, datas, len);
-    // AK8963_ASSERT(res.is_ok(), "AK8963 read reg failed");
+IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+    auto res = phy_.read_burst(reg_addr, pbuf.data(), pbuf.size());
     return res;
 }
 
-Result<void, Error> AK8963::init(){
-    AK8963_DEBUG("AK8963 init begin");
-    AK8963_ASSERT(validate().is_ok(), "AK8963 verify failed");
+IResult<> AK8963::init(){
+    // AK8963_DEBUG("AK8963 init begin");
+    if(const auto res = validate();
+        res.is_err()) return Err(res.unwrap_err());
 
     clock::delay(2ms);
     if(const auto res = reset();
@@ -77,7 +75,7 @@ Result<void, Error> AK8963::init(){
 }
 
 
-Result<void, Error> AK8963::validate(){
+IResult<> AK8963::validate(){
 
     if (!phy_.validate().is_ok()){
         return Err{Error::PhyVerifyFailed};
@@ -99,44 +97,42 @@ Result<Vector3<uint8_t>, Error> AK8963::get_coeff(){
     // Vector3 coeff = {};
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(asax_reg.address, asax_reg.as_ref());
+    if(const auto res = read_reg(asax_reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(asay_reg.address, asay_reg.as_ref());
+    if(const auto res = read_reg(asay_reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(asaz_reg.address, asaz_reg.as_ref());
+    if(const auto res = read_reg(asaz_reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(Vector3<uint8_t>{asax_reg.data, asay_reg.data, asaz_reg.data});
 }
 
-Result<void, Error> AK8963::reset(){
-    cntl2_reg.srst = 1;
-    const auto res = write_reg(cntl2_reg.address, cntl2_reg);
-    cntl2_reg.srst = 0;
+IResult<> AK8963::reset(){
+    auto reg = RegCopy(cntl2_reg);
+    reg.srst = 1;
+    const auto res = write_reg(reg);
     clock::delay(1ms);
+    reg.srst = 0;
     return res;
 }
 
-Result<void, Error> AK8963::busy(){
+IResult<> AK8963::busy(){
     return Ok();
 }
 
-Result<void, Error> AK8963::stable(){return Ok();}
+IResult<> AK8963::stable(){return Ok();}
 
 
-Result<void, Error> AK8963::disable_i2c(){
+IResult<> AK8963::disable_i2c(){
     return Ok();
 }
 
 
-Result<void, Error> AK8963::update(){
+IResult<> AK8963::update(){
     // ak8963c-datasheet 8.3.5
     // when any of measurement data is read, be sure to read 
     // ST2 register at the end. 
-    // auto lam2 = [&](){return read_reg(st2_reg.address, st2_reg);};
-    // using Fn = std::decay_t<decltype(lam2)>;
-    // using Ret = function_traits<Fn>::return_type;
-    // using t = std::invoke_result_t<decltype(lam2)>>;
-    data_valid_ = this->read_burst(mag_x_reg.address, &mag_x_reg, 3).is_ok();
+    if(const auto res = this->read_burst(mag_x_reg.address, std::span(&mag_x_reg.as_ref(), 3));
+        res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(st2_reg.address, st2_reg.as_ref());
         res.is_err()) return Err(res.unwrap_err());
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
@@ -151,8 +147,8 @@ IResult<Vector3<q24>> AK8963::read_mag(){
     );
 }
 
-Result<void, Error> AK8963::set_data_width(const uint8_t bits){
-    auto & reg = st2_reg;
+IResult<> AK8963::set_data_width(const uint8_t bits){
+    auto reg = RegCopy(st2_reg);
     data_is_16_bits_ = [](const uint8_t bits_){
         switch(bits_){
             default: AK8963_PANIC(bits_, "bits is not allowed");
@@ -162,10 +158,11 @@ Result<void, Error> AK8963::set_data_width(const uint8_t bits){
     }(bits);
 
     reg.bitm = data_is_16_bits_;
-    return write_reg(reg.address, reg);
+    return write_reg(reg);
 }
 
-Result<void, Error> AK8963::set_mode(const AK8963::Mode mode){
-    cntl1_reg.mode = uint8_t(mode);
-    return write_reg(cntl1_reg.address, cntl1_reg);
+IResult<> AK8963::set_mode(const AK8963::Mode mode){
+    auto reg =  RegCopy(cntl1_reg);
+    reg.mode = uint8_t(mode);
+    return write_reg(reg);
 }

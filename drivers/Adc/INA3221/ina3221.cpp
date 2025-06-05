@@ -101,44 +101,48 @@ IResult<> INA3221::update(const ChannelIndex index){
 } 
 
 IResult<> INA3221::set_average_times(const AverageTimes times){
-    config_reg.average_times = times.as_raw();
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.average_times = times.as_raw();
+    return write_reg(reg);
 }
 
 IResult<> INA3221::enable_channel(const ChannelIndex index, const Enable en){
+    auto reg = RegCopy(config_reg);
     switch(index){
         default: __builtin_unreachable();
         case ChannelIndex::CH1:
-            config_reg.ch1_en = en == EN;
+            reg.ch1_en = en == EN;
             break;
         case ChannelIndex::CH2:
-            config_reg.ch2_en = en == EN;
+            reg.ch2_en = en == EN;
             break;
         case ChannelIndex::CH3:
-            config_reg.ch3_en = en == EN;
+            reg.ch3_en = en == EN;
             break;
     }
-    return write_reg(config_reg);
+    return write_reg(reg);
 }
 
 
 IResult<> INA3221::set_bus_conversion_time(const ConversionTime time){
-    config_reg.bus_conv_time = uint8_t(time);
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.bus_conv_time = time;
+    return write_reg(reg);
 }
 
 
 IResult<> INA3221::set_shunt_conversion_time(const ConversionTime time){
-    config_reg.shunt_conv_time = uint8_t(time);
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.shunt_conv_time = time;
+    return write_reg(reg);
 }
 
 
 IResult<> INA3221::reset(){
-    config_reg.rst = true;
-    const auto res = write_reg(config_reg);
     config_reg.rst = false;
-    return res;
+    auto reg = RegCopy(config_reg);
+    reg.rst = true;
+    return write_reg(reg);
 }
 
 
@@ -220,17 +224,20 @@ IResult<> INA3221::set_constant_ovc(const ChannelIndex index, const real_t volt)
 }
 
 IResult<> INA3221::enable_measure_bus(const Enable en){
-    config_reg.bus_measure_en = en == EN;
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.bus_measure_en = en == EN;
+    return write_reg(reg);
 }
 
 
 IResult<> INA3221::enable_measure_shunt(const Enable en){
-    config_reg.shunt_measure_en = en == EN;
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.shunt_measure_en = en == EN;
+    return write_reg(reg);
 }
 
 IResult<> INA3221::enable_continuous(const Enable en){
-    config_reg.continuos = en == EN;
-    return write_reg(config_reg);
+    auto reg = RegCopy(config_reg);
+    reg.continuos = en == EN;
+    return write_reg(reg);
 }

@@ -144,8 +144,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pdata, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pdata, len), MSB);
+    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pbuf, size_t len){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pbuf, len), MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

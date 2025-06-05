@@ -34,6 +34,9 @@ public:
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     struct Config{
         uint freq; 
         real_t trim = real_t(1);
@@ -43,7 +46,7 @@ public:
 struct PCA9685_Regs :public PCA9685_Collections{
 
     struct Mode1Reg:public Reg8<>{
-        using Reg8::operator=;
+        static constexpr auto address = RegAddress::Mode1;
         
         uint8_t allcall:1;
         uint8_t sub:3;
@@ -51,50 +54,42 @@ struct PCA9685_Regs :public PCA9685_Collections{
         uint8_t auto_inc:1;
         uint8_t extclk:1;
         uint8_t restart:1;
-    };
+    }DEF_R8(mode1_reg)
 
     struct Mode2Reg:public Reg8<>{
-        using Reg8::operator=;
+        static constexpr auto address = RegAddress::Mode2;
 
         uint8_t outne:2;
         uint8_t outdrv:1;
         uint8_t och:1;
         uint8_t invrt:1;
         uint8_t __resv__:3;
-    };
+    }DEF_R8(mode2_reg)
 
     struct LedOnOffReg:public Reg16<>{
+        // static constexpr auto address = RegAddress::Led;
+
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
         const uint16_t __resv__:3 = 0;
     };
-
-    static_assert(sizeof(Mode1Reg) == 1);
-    static_assert(sizeof(Mode2Reg) == 1);
 
     struct LedRegs{
         LedOnOffReg  on;
         LedOnOffReg off;
     };
 
-    enum class RegAddress:uint8_t{
-        Mode1,
-        Mode2,
-        LED0_ON_L = 0x06,
-        LED0_ON_H,
-        LED0_OFF_L,
-        LED0_OFF_H,
-        SubAddr = 0x02,
-        Prescale = 0xfe
-    };
+    struct PrescaleReg:public Reg8<>{
+        static constexpr auto address = RegAddress::Prescale;
 
-    Mode1Reg mode1_reg = {};
-    Mode2Reg mode2_reg = {};
+        uint8_t prescale:8;
+    }DEF_R8(prescale_reg)
+
+
     std::array<uint8_t,3> sub_addr_regs = {};
     uint8_t all_addr_reg = {};
     std::array<LedRegs, CHANNELS_COUNT> sub_channels = {};
     LedRegs all_channel = {};
-    uint8_t prescale_reg = {};
 };
 
 }

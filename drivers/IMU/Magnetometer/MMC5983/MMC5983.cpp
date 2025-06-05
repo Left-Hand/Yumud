@@ -37,7 +37,7 @@ IResult<> MMC5983::update(){
 }
 
 
-IResult<> MMC5983::init(){
+IResult<> MMC5983::init(const Config & cfg){
     if(const auto res = validate();
         res.is_err()) return res;
 
@@ -50,13 +50,13 @@ IResult<> MMC5983::init(){
     if(const auto res = enable_temp_meas(EN);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_prd_magset(PrdSet::_100);
+    if(const auto res = set_prd_magset(cfg.prd_set);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_bandwidth(MMC5983::BandWidth::_200Hz);
+    if(const auto res = set_bandwidth(cfg.bandwidth);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_odr(MMC5983::Odr::_200Hz);
+    if(const auto res = set_odr(cfg.data_rate);
         res.is_err()) return CHECK_RES(res);
 
     return Ok();

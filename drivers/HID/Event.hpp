@@ -5,27 +5,42 @@
 
 namespace ymd::drivers{
 
-class MatrixKeyEvent{
-public:
+struct KeyPlacement{
     constexpr Option<uint8_t> row() const {
-        return row_;
+        if(row_ > 0) return Some(row_);
+        else return None;
     }
     constexpr Option<uint8_t> col() const {
-        return col_;
+        if(row_ > 0) return Some(row_);
+        else return None;
     }
 
-    constexpr bool is_pressed() const { return is_pressed_; }
-    constexpr MatrixKeyEvent(Option<uint8_t> row, Option<uint8_t> col, bool is_pressed = true):
-        row_(row),
-        col_(col),
-        is_pressed_(is_pressed)
+    constexpr KeyPlacement(
+        Option<uint8_t> row, 
+        Option<uint8_t> col
+    ):
+        row_(row.is_some() ? row.unwrap() : -1),
+        col_(col.is_some() ? col.unwrap() : -1)
     {;}
 private:
-
-    Option<uint8_t> row_;
-    Option<uint8_t> col_;
-    bool is_pressed_;
+    int8_t row_;
+    int8_t col_;
 };
+
+struct KeyEvent{
+public:
+    enum class Type{
+        Press,
+        Release,
+        Hold,
+        DoublePress
+    };
+
+    KeyPlacement placement;
+    Type type;
+};
+
+
 
 class CharKeyEvent{
 public:

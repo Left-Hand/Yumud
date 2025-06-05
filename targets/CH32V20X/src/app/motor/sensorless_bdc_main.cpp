@@ -13,7 +13,7 @@
 #include "hal/bus/uart/uartsw.hpp"
 
 
-#include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
+#include "drivers/GateDriver/AT8222/at8222.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 
@@ -77,8 +77,8 @@ void at8222_tb(){
     //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init(ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
 
-    auto & pwm_pos = timer.oc(1);
-    auto & pwm_neg = timer.oc(2);
+    auto & pwm_pos = timer.oc<1>();
+    auto & pwm_neg = timer.oc<2>();
 
     
     pwm_pos.init({});
@@ -100,11 +100,11 @@ void at8222_tb(){
 
     timer.set_trgo_source(TimerTrgoSource::OC4R);
 
-    timer.oc(4).init({.install_en = DISEN});
+    timer.oc<4>().init({.install_en = DISEN});
 
     // timer.oc(4).cvr() = timer.arr() - 1; 
     // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 
-    timer.oc(4).cvr() = int(1); 
+    timer.oc<4>().cvr() = int(1); 
     
     LowpassFilter lpf{LowpassFilter::Config{
         .fc = 640,
@@ -206,7 +206,7 @@ void at8222_tb(){
 
     adc1.attach(AdcIT::JEOC, {0,0}, [&](){
         watch_gpio.toggle();
-        volt = adc1.inj(1).get_voltage();
+        volt = adc1.inj<1>().get_voltage();
         const auto curr_raw = volt_2_current(volt);
 
         lpf.update(curr_raw);

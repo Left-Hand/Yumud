@@ -3,6 +3,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/result.hpp"
+#include "core/utils/errno.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -108,7 +109,7 @@ struct _NRF24L01_Regs{
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t __resv1__:2;
-        
+
         uint8_t tx_empty:1;
         uint8_t tx_full:1;
         uint8_t tx_reuse:1;
@@ -116,12 +117,17 @@ struct _NRF24L01_Regs{
     }DEF_R8(fifo_status_reg);
 };
 
-// constexpr auto a = sizeof(_NRF24L01_Regs)
-
-
 class NRF24L01{
 public:
-    using Error = hal::HalResult;
+    enum class Error_Kind{
+
+    };
+
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class Package{
         NRF24L01,
@@ -165,16 +171,16 @@ protected:
         uint8_t cmd_;
     };
 
-    [[nodiscard]] Result<void, hal::HalResult> write_command(const Command cmd);
-    [[nodiscard]] Result<void, hal::HalResult> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] IResult<> write_command(const Command cmd);
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::HalResult> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    [[nodiscard]] IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    [[nodiscard]] Result<void, hal::HalResult> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] Result<void, hal::HalResult> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
 
     
 
@@ -183,27 +189,17 @@ public:
     NRF24L01(const NRF24L01 & other) = delete;
     NRF24L01(NRF24L01 && other) = delete;
 
-    Result<void, Error> validate();
+    IResult<> validate();
 
-    Result<void, Error> init();
+    IResult<> init();
     
-    Result<void, Error> update();
+    IResult<> update();
 
-    Result<size_t, Error> transmit(std::span<uint8_t> buf);
+    IResult<size_t> transmit(std::span<uint8_t> buf);
 
-    Result<size_t, Error> receive(std::span<uint8_t> buf);
+    IResult<size_t> receive(std::span<uint8_t> buf);
 
     // Result<Regs, Error> dump();
 };
 
 };
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::NRF24L01::Error, hal::HalResult> {
-        static Result<T, drivers::NRF24L01::Error> convert(const hal::HalResult res){
-            if(res.is_ok()) return Ok();
-            return Err(drivers::NRF24L01::Error(res.unwrap_err())); 
-        }
-    };
-}

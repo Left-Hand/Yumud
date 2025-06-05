@@ -38,7 +38,7 @@ protected:
 public:
     uint32_t            DevAddr;
     // uint32_t            Is_Initialized;
-    void               *pData;
+    void               *pbuf;
 
     int32_t init();
     int32_t deinit();

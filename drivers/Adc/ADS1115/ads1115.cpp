@@ -40,6 +40,7 @@ IResult<> ADS1115::validate(){
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
+
 IResult<> ADS1115::start_conv(){
     auto reg = RegCopy(config_reg);
     reg.busy = true;
@@ -100,13 +101,6 @@ IResult<> ADS1115::set_data_rate(const DataRate data_rate){
     return Ok();
 }
 
-IResult<bool> ADS1115::is_ready(){
-    auto & reg = config_reg;
-    if(const auto res = read_reg(reg);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.busy == false);
-}
-
 IResult<bool> ADS1115::is_busy(){
     auto & reg = config_reg;
     if(const auto res = read_reg(reg);
@@ -115,9 +109,9 @@ IResult<bool> ADS1115::is_busy(){
 }
 
 
-Option<real_t> ADS1115::result(){
+Option<real_t> ADS1115::get_voltage(){
     auto & reg = conversion_reg;
-    if(read_reg(reg.address, reg).is_err()) return None;
+    if(read_reg(reg.address, reg.as_ref()).is_err()) return None;
     return Some(s16_to_uni(~reg.data) * 3.3_r);
     // return None;
 }

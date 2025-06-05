@@ -1,0 +1,27 @@
+#pragma once
+
+#include "concept/pwm_channel.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
+
+
+namespace ymd::drivers{
+
+class GateDriver2Intf{
+public:
+    virtual GateDriver2Intf& operator = (const real_t duty) = 0;
+    
+    virtual void enable(const Enable en) = 0;
+};
+
+class GateDriver3Intf{
+
+public:
+    using UVW_Duty = std::tuple<real_t, real_t, real_t>;
+    using AlphaBeta_Duty = std::tuple<real_t, real_t>;
+
+    virtual GateDriver3Intf& operator= (const UVW_Duty & duty) = 0;
+    virtual void enable(const Enable en) = 0;
+};
+
+
+}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/clock/clock.hpp"
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 #include "hal/nvic/nvic.hpp"
@@ -28,18 +29,18 @@ __interrupt void TIM##x##_IRQHandler(void);\
 
 
 
-#define ADVANCED_TIMER_FRIEND_DECL(x)\
+#define DEF_ADVANCED_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_BRK_IRQHandler(void);\
 friend void ::TIM##x##_UP_IRQHandler(void);\
 friend void ::TIM##x##_TRG_COM_IRQHandler(void);\
 friend void ::TIM##x##_CC_IRQHandler(void);\
 
 
-#define GENERIC_TIMER_FRIEND_DECL(x)\
+#define DEF_GENERIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
 
 
-#define BASIC_TIMER_FRIEND_DECL(x)\
+#define DEF_BASIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
 
 
@@ -103,7 +104,7 @@ protected:
 
     uint32_t get_bus_freq();
     void enable_rcc(const Enable en);
-    void remap(const uint8_t rm);
+
     
     __fast_inline Callback & get_callback(const IT it){
         switch(it){
@@ -129,6 +130,7 @@ public:
 
     
     void init(const uint32_t ferq, const Mode mode = Mode::Up, const Enable en = EN);
+    void remap(const uint8_t rm);
     void deinit();
 
     void enable(const Enable en = EN);
@@ -142,7 +144,6 @@ public:
     void enable_it(const IT it,const NvicPriority request, const Enable en = EN);
     void enable_arr_sync(const Enable en = EN);
     void enable_psc_sync(const Enable en = EN);
-
     void enable_cc_ctrl_sync(const Enable en = EN);
     auto & inst() {return instance_;}
 
@@ -162,18 +163,17 @@ public:
         attach(it, priority, nullptr, DISEN);
     }
 
-    void bind_cb(const IT ch, auto && cb){
-        get_callback(ch) = std::forward<decltype(cb)>(cb);
+    template<typename Fn>
+    void bind_cb(const IT ch, Fn && cb){
+        get_callback(ch) = std::forward<Fn>(cb);
     }
 
-    BasicTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
-
     #ifdef ENABLE_TIM6
-    BASIC_TIMER_FRIEND_DECL(6)
+    DEF_BASIC_TIMER_FRIEND_DECL(6)
     #endif
 
     #ifdef ENABLE_TIM7
-    BASIC_TIMER_FRIEND_DECL(7)
+    DEF_BASIC_TIMER_FRIEND_DECL(7)
     #endif
 };
 
@@ -186,38 +186,50 @@ private:
     void on_it_interrupt();
 public:
     GenericTimer(TIM_TypeDef * _base):
-            BasicTimer(_base),
-            channels{
-                TimerOC(instance_, TimerChannel::ChannelIndex::CH1),
-                TimerOC(instance_, TimerChannel::ChannelIndex::CH2),
-                TimerOC(instance_, TimerChannel::ChannelIndex::CH3),
-                TimerOC(instance_, TimerChannel::ChannelIndex::CH4)
-            }{;}
+        BasicTimer(_base),
+        channels{
+            TimerOC(instance_, TimerChannel::ChannelIndex::CH1),
+            TimerOC(instance_, TimerChannel::ChannelIndex::CH2),
+            TimerOC(instance_, TimerChannel::ChannelIndex::CH3),
+            TimerOC(instance_, TimerChannel::ChannelIndex::CH4)
+        }{;}
 
     void init_as_encoder(const Mode mode = Mode::Up);
-    void enable_single(const bool _single = true);
+    void enable_single(const Enable en);
     void set_trgo_source(const TrgoSource source);
-    
-    TimerOC & oc(const size_t index);
 
-    TimerChannel & operator [](const int index);
-    TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[uint8_t(channel) >> 1];}
-    [[deprecated]] GenericTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
+    template<size_t I>
+    requires(I >= 1 and I <= 4)
+    volatile uint16_t & cvr(){
+        switch(I){
+            case 1: return instance_->CH1CVR;
+            case 2: return instance_->CH2CVR;
+            case 3: return instance_->CH3CVR;
+            case 4: return instance_->CH4CVR;
+            default: __builtin_unreachable();
+        }
+    }
+
+    template<size_t I>
+    requires(I >= 1 and I <= 4)
+    TimerOC & oc(){
+        return channels[I - 1];
+    }
 
     #ifdef ENABLE_TIM2
-    GENERIC_TIMER_FRIEND_DECL(2)
+    DEF_GENERIC_TIMER_FRIEND_DECL(2)
     #endif
 
     #ifdef ENABLE_TIM3
-    GENERIC_TIMER_FRIEND_DECL(3)
+    DEF_GENERIC_TIMER_FRIEND_DECL(3)
     #endif
 
     #ifdef ENABLE_TIM4
-    GENERIC_TIMER_FRIEND_DECL(4)
+    DEF_GENERIC_TIMER_FRIEND_DECL(4)
     #endif
 
     #ifdef ENABLE_TIM5
-    GENERIC_TIMER_FRIEND_DECL(5)
+    DEF_GENERIC_TIMER_FRIEND_DECL(5)
     #endif
 
 
@@ -225,7 +237,7 @@ public:
 
 class AdvancedTimer:public GenericTimer{
 protected:
-    uint8_t calculate_deadzone(const uint32_t deadzone_ns);
+    uint8_t calculate_deadzone(const Nanoseconds deadzone_ns);
 
     TimerOCN n_channels[3];
 
@@ -245,39 +257,36 @@ public:
                 TimerOCN(instance_, TimerChannel::ChannelIndex::CH3N),
             }{;}
 
-    void init_bdtr(const uint32_t ns, const LockLevel level = LockLevel::Off);
+    void init_bdtr(const Nanoseconds ns, const LockLevel level = LockLevel::Off);
 
-
-    void set_deadzone_ns(const uint32_t ns);
+    void set_deadzone_ns(const Nanoseconds ns);
     void set_repeat_times(const uint8_t rep){instance_->RPTCR = rep;}
 
-    TimerChannel & operator [](const int index);
-
-    TimerChannel & operator [](const TimerChannel::ChannelIndex ch);
-    TimerOCN & ocn(const int index){return n_channels[index - 1];}
-    [[deprecated]] AdvancedTimer & operator = (const real_t duty){instance_->CNT = uint16_t(instance_->ATRLR * duty); return *this;}
+    template<size_t I>
+    requires(I >= 1 and I <= 4)
+    TimerOCN & ocn(){return n_channels[I - 1];}
 
     #ifdef ENABLE_TIM1
-    ADVANCED_TIMER_FRIEND_DECL(1);
+    DEF_ADVANCED_TIMER_FRIEND_DECL(1);
     #endif
 
     #ifdef ENABLE_TIM8
-    ADVANCED_TIMER_FRIEND_DECL(8);
+    DEF_ADVANCED_TIMER_FRIEND_DECL(8);
     #endif
 
     #ifdef ENABLE_TIM9
-    ADVANCED_TIMER_FRIEND_DECL(9);
+    DEF_ADVANCED_TIMER_FRIEND_DECL(9);
     #endif
 
     #ifdef ENABLE_TIM10
-    ADVANCED_TIMER_FRIEND_DECL(10);
+    DEF_ADVANCED_TIMER_FRIEND_DECL(10);
     #endif
 };
 
 
-#undef BASIC_TIMER_FRIEND_DECL
-#undef GENERIC_TIMER_FRIEND_DECL
-#undef ADVANCED_TIMER_FRIEND_DECL
+#undef DEF_BASIC_TIMER_FRIEND_DECL
+#undef DEF_GENERIC_TIMER_FRIEND_DECL
+#undef DEF_ADVANCED_TIMER_FRIEND_DECL
 
 #ifdef ENABLE_TIM1
 extern AdvancedTimer timer1;

@@ -10,53 +10,62 @@ template<typename T = void>
 using IResult = BMP280::IResult<T>;
 
 IResult<> BMP280::validate(){
-    if(const auto res = read_reg(chipIDReg);
+    if(const auto res = read_reg(chip_id_reg);
         res.is_err()) return res;
-    BMP280_DEBUG("CHIP code: ", uint8_t(chipIDReg));
-    if(chipIDReg.as_val() != VALID_CHIPID) 
+    BMP280_DEBUG("CHIP code: ", uint8_t(chip_id_reg));
+    if(chip_id_reg.as_val() != VALID_CHIPID) 
         return Err(Error::WrongChipId);
     return Ok();
 }
 
 IResult<> BMP280::set_temprature_sample_mode(const TempratureSampleMode tempMode){
-    ctrlReg.osrs_t = (uint8_t)tempMode;
-    return write_reg(ctrlReg);
+    auto reg = RegCopy(ctrl_reg);
+    reg.osrs_t = (uint8_t)tempMode;
+    return write_reg(reg);
 }
 
 IResult<> BMP280::set_pressure_sample_mode(const PressureSampleMode pressureMode){
-    ctrlReg.osrs_p = (uint8_t)pressureMode;
-    return write_reg(ctrlReg);
+    auto reg = RegCopy(ctrl_reg);
+    reg.osrs_p = (uint8_t)pressureMode;
+    return write_reg(reg);
 }
 
 IResult<> BMP280::set_mode(const Mode mode){
-    ctrlReg.mode = (uint8_t)mode;
-    return write_reg(ctrlReg);
+    auto reg = RegCopy(ctrl_reg);
+    reg.mode = (uint8_t)mode;
+    return write_reg(reg);
 }
 
+
 IResult<> BMP280::set_datarate(const DataRate dataRate){
-    configReg.t_sb = (uint8_t)dataRate;
-    return write_reg(configReg);
+    auto reg = RegCopy(config_reg);
+    reg.t_sb = (uint8_t)dataRate;
+    return write_reg(reg);
 }
 
 IResult<> BMP280::set_filter_coefficient(const FilterCoefficient filterCoeff){
-    configReg.filter = (uint8_t)filterCoeff;
-    return write_reg(configReg);
+    auto reg = RegCopy(config_reg);
+    reg.filter = (uint8_t)filterCoeff;
+    return write_reg(reg);
 }
 
 IResult<> BMP280::reset(){
-    resetReg = RESET_KEY;
-    return write_reg(resetReg);
+    auto reg = RegCopy(reset_reg);
+    reg.as_ref() = RESET_KEY;
+    return write_reg(reg);
 }
 
 IResult<bool> BMP280::is_idle(){
-    if(const auto res = read_reg(statusReg);
+    auto & reg = status_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(statusReg.busy == 0);
+    return Ok(reg.busy == 0);
 }
 
 IResult<> BMP280::enable_spi3(const Enable en){
-    configReg.spi3_en = en == EN;
-    return write_reg(configReg);
+    auto reg = RegCopy(config_reg);
+    reg.spi3_en = en == EN;
+    return write_reg(reg);
 }
 
 IResult<int32_t> BMP280::get_pressure(){
@@ -118,31 +127,31 @@ IResult<> BMP280::init(){
     if(const auto res = enable_spi3(DISEN);
         res.is_err()) return res;
 
-    if(const auto res = read_burst(DIGT1_REG_ADDR, reinterpret_cast<int16_t *>(&digT1), 12);
+    if(const auto res = read_burst(DIGT1_REG_ADDR, 
+        std::span(reinterpret_cast<int16_t *>(&digT1), 12));
         res.is_err()) return res;
     return Ok();
 }
 
 IResult<uint32_t> BMP280::get_pressure_data(){
-    uint32_t pressureData = 0;
-    if(const auto res = read_reg(pressureReg);
+    uint32_t pressure_data = 0;
+    if(const auto res = read_reg(pressure_reg);
         res.is_err()) return Err(res.unwrap_err());
-    pressureData = pressureReg << 4;
-    if(const auto res = read_reg(pressureXReg);
+    pressure_data = pressure_reg.as_val() << 4;
+    if(const auto res = read_reg(pressure_x_reg);
         res.is_err()) return Err(res.unwrap_err());
-    pressureData |= pressureXReg >> 4;
-    // BMP280_DEBUG("PressureData:", pressureData);
-    return Ok(pressureData);
+    pressure_data |= pressure_x_reg.as_val() >> 4;
+    return Ok(pressure_data);
 }
 
 IResult<uint32_t> BMP280::read_temp_data(){
     uint32_t temperatureData = 0;
-    if(const auto res = read_reg(temperatureReg);
+    if(const auto res = read_reg(temperature_reg);
         res.is_err()) return Err(res.unwrap_err());
-    temperatureData = temperatureReg.as_val() << 4;
-    if(const auto res = read_reg(temperatureXReg);
+    temperatureData = temperature_reg.as_val() << 4;
+    if(const auto res = read_reg(temperature_x_reg);
         res.is_err()) return Err(res.unwrap_err());
-    temperatureData |= temperatureXReg.as_val() >> 4;
+    temperatureData |= temperature_x_reg.as_val() >> 4;
     // BMP280_DEBUG("TempratureData:", temperatureData);
     return Ok(temperatureData);
 }

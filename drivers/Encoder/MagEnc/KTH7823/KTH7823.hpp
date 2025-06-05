@@ -146,6 +146,8 @@ public:
     KTH7823(const Phy && phy):phy_(std::move(phy)){;}
 
     [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> validate();
+
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<> set_zero_position(const real_t position);
@@ -162,6 +164,7 @@ public:
     [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
     [[nodiscard]] IResult<> set_direction(const bool direction);
+
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
     [[nodiscard]] IResult<> set_zparameters(const Width width, const Phase phase);

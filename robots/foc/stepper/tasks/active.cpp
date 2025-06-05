@@ -22,8 +22,8 @@ void FOCStepper::active_task(){
     {
         auto is_pos_outrange = [&]() -> bool{
             scexpr real_t dead_zone = real_t(0.003);
-            return ((meta.pos >= meta.pos_limit.to - dead_zone and meta.targ_spd > 0)
-                or (meta.pos <= meta.pos_limit.from + dead_zone and meta.targ_spd < 0)) ;
+            return ((meta.pos >= meta.pos_limit.stop - dead_zone and meta.targ_spd > 0)
+                or (meta.pos <= meta.pos_limit.start + dead_zone and meta.targ_spd < 0)) ;
         };
         
         Result result;
@@ -43,7 +43,7 @@ void FOCStepper::active_task(){
     
             case CtrlType::SPEED:
                 if(is_pos_outrange()){
-                    result = position_ctrl.update((meta.targ_spd > 0 ? meta.pos_limit.to : meta.pos_limit.from)
+                    result = position_ctrl.update((meta.targ_spd > 0 ? meta.pos_limit.stop : meta.pos_limit.start)
                             , meta.pos, meta.spd);
                 }else{
                     result = speed_ctrl.update(meta.targ_spd, meta.spd);

@@ -178,10 +178,66 @@ Result<void, Error> TM1637::set_display_duty(const real_t duty){
     return Ok();
 }
 
-Result<Option<MatrixKeyEvent>, Error> TM1637::read_key(){
+
+static constexpr Result<Option<KeyPlacement>, Error> map_raw_to_keyplace(const uint8_t raw){
+    if(raw == 0xff){
+        return Ok(None);
+    }
+    const auto col = [&] -> Option<uint8_t>{
+        const uint8_t key = raw & 0x0f;
+        switch(key){
+            case 0b11101: return Some<uint8_t>(0);
+            case 0b01001: return Some<uint8_t>(1);
+            case 0b10101: return Some<uint8_t>(2);
+            case 0b00101: return Some<uint8_t>(3);
+            case 0b11111: return Some<uint8_t>(0);
+            case 0b01011: return Some<uint8_t>(1);
+            case 0b10111: return Some<uint8_t>(2);
+            case 0b00111: return Some<uint8_t>(3);
+            case 0b11010: return Some<uint8_t>(0);
+            case 0b01010: return Some<uint8_t>(1);
+            case 0b10010: return Some<uint8_t>(2);
+            case 0b00010: return Some<uint8_t>(3);
+            case 0b11110: return Some<uint8_t>(0);
+            case 0b01110: return Some<uint8_t>(1);
+            case 0b10110: return Some<uint8_t>(2);
+            case 0b00110: return Some<uint8_t>(3);
+            default: return None;
+        }
+    }();
+
+    const auto row = [&] -> Option<uint8_t>{
+        const uint8_t key = raw >> 4;
+        switch(key){
+            case 0b11101: return Some<uint8_t>(0);
+            case 0b01001: return Some<uint8_t>(1);
+            case 0b10101: return Some<uint8_t>(2);
+            case 0b00101: return Some<uint8_t>(3);
+            case 0b11111: return Some<uint8_t>(0);
+            case 0b01011: return Some<uint8_t>(1);
+            case 0b10111: return Some<uint8_t>(2);
+            case 0b00111: return Some<uint8_t>(3);
+            case 0b11010: return Some<uint8_t>(0);
+            case 0b01010: return Some<uint8_t>(1);
+            case 0b10010: return Some<uint8_t>(2);
+            case 0b00010: return Some<uint8_t>(3);
+            case 0b11110: return Some<uint8_t>(0);
+            case 0b01110: return Some<uint8_t>(1);
+            case 0b10110: return Some<uint8_t>(2);
+            case 0b00110: return Some<uint8_t>(3);
+            default: return None;
+        }
+    }();
+
+    return Ok(Some(
+        KeyPlacement(col, row)
+    ));
+}
+
+Result<Option<KeyPlacement>, Error> TM1637::read_key(){
     const auto res = phy_.read_key();
     if(res.is_err()) return Err(res.unwrap_err());
-    return make_key_event(res.unwrap());
+    return map_raw_to_keyplace(res.unwrap());
 }
 
 Result<void, Error> TM1637::flush(){

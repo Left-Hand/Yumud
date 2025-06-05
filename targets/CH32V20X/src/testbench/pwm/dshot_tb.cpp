@@ -45,8 +45,8 @@ static std::array<uint16_t, N> data;
     ch2.init();
 
 
-    auto entry = clock::millis();
-    while(clock::millis() - entry < 3000ms){
+    auto entry_t = clock::millis();
+    while(clock::millis() - entry_t < 3000ms){
         // ch1.enable();
         // ch2.enable();
         ch1 = 0;
@@ -102,8 +102,8 @@ void dshot_main(){
 
 
     timer.init(20_KHz);
-    auto & oc = timer.oc(1);
-    auto & oc2 = timer.oc(2);
+    auto & oc = timer.oc<1>();
+    auto & oc2 = timer.oc<2>();
 
     dshot_tb_new(DEBUGGER,oc, oc2);
     // dshot_tb_old(logger,oc, oc2);

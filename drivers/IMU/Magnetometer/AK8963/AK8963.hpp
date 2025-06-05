@@ -158,7 +158,21 @@ private:
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = write_reg(reg.address, reg.as_val());
+        if(res.is_err()) return res;
+        reg.apply();
+        return Ok();
+    }
+    
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
+
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, const std::span<int16_t> pbuf);
 
 
 

@@ -34,7 +34,3 @@ public:
     void SetFreq(real_t fre);
 };
 }
-
-#ifdef AD9854_DEBUG
-#undef AD9854_DEBUG
-#endif

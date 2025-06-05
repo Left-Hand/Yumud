@@ -65,7 +65,7 @@ public:
     virtual void write1(const char data) = 0;
 
     void read1(char & data);
-    void readN(char * pdata, const size_t len);
+    void readN(char * pbuf, const size_t len);
     Uart(const Uart & other) = delete;
     Uart(Uart && other) = delete;
 

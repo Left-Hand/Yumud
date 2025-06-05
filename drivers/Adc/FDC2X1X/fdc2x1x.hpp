@@ -1,13 +1,17 @@
 #pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
-class FDC2X1X{
+struct FDC2X1X_Collections{
 
-public:
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x54);
+
     enum class Package:uint8_t{
         FDC2112,
         FDC2114,
@@ -18,6 +22,15 @@ public:
     enum class DataRate:uint8_t{
         _20 = 0, _45, _90, _175, _330, _600, _1000
     };
+
+    enum class Error_Kind:uint8_t{
+        ChannelIndexOutOfRange
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class BandWidth:uint8_t{
         _1MHz   = 0b001,
@@ -75,10 +88,13 @@ public:
         _1354uA  = 0b11110, // 11110: 1.354 mA
         _1571uA  = 0b11111  // 11111: 1.571 mA
     };
-protected:
-    hal::I2cDrv i2c_drv_;
+
 
     using RegAddress =uint8_t;
+};
+
+
+struct FDC1X2X_Regs:public FDC2X1X_Collections{
 
     struct ConversionDataHighReg:public Reg16<>{
         scexpr RegAddress address =0x00;
@@ -208,58 +224,86 @@ protected:
     DriveCurrentReg drive_current_regs[4] = {};
     ManufacturerIdReg manufacturer_id_reg = {};
     DeviceIdReg device_id_reg = {};
+};
 
-    auto read_reg(const RegAddress addr, uint16_t & data){
-        return i2c_drv_.read_reg(uint8_t(addr), data, MSB);
-    }
-
-    auto write_reg(const RegAddress addr, const uint16_t data){
-        return i2c_drv_.write_reg(uint8_t(addr), data, MSB);
-    }
+class FDC2X1X final:public FDC1X2X_Regs{
 public:
-scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x54);
 
-    FDC2X1X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    FDC2X1X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+
+    FDC2X1X(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    FDC2X1X(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     FDC2X1X(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
-    void init();
 
-    bool isConvDone(){
-        read_reg(StatusReg::address, status_reg);
-        return status_reg.data_ready;
+
+    IResult<> init();
+
+    IResult<bool> is_conv_done(){
+        if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok(bool(status_reg.data_ready));
     }
 
-    bool isConvDone(uint8_t channel){
-        channel = MIN(channel, 3);
-        read_reg(StatusReg::address, status_reg);
-        switch(channel){
-            case 0: return status_reg.ch0_unread_conv;
-            case 1: return status_reg.ch1_unread_conv;
-            case 2: return status_reg.ch2_unread_conv;
-            case 3: return status_reg.ch3_unread_conv;
-            default: return false;
+    IResult<bool> is_conv_done(uint8_t idx){
+        if(idx > 3) return Err(Error::ChannelIndexOutOfRange);
+
+        if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
+            res.is_err()) return Err(res.unwrap_err());
+        switch(idx){
+            case 0: return Ok(bool(status_reg.ch0_unread_conv));
+            case 1: return Ok(bool(status_reg.ch1_unread_conv));
+            case 2: return Ok(bool(status_reg.ch2_unread_conv));
+            case 3: return Ok(bool(status_reg.ch3_unread_conv));
+            default: __builtin_unreachable();
         }
     }
 
-    void reset(){
-        reset_dev_reg.reset_dev = true;
-        write_reg(ResetDevReg::address,(reset_dev_reg));
-        reset_dev_reg.reset_dev = false;
+    IResult<> reset(){
+        auto reg = RegCopy(reset_dev_reg);
+        reg.reset_dev = true;
+        return write_reg(ResetDevReg::address,(reg.as_val()));
     }
 
-    uint32_t getData(uint8_t channel){
-        channel = MIN(channel, 3);
-        uint32_t ret = 0;
-        auto & highreg = conv_data_regs[channel].high;
-        auto & lowreg = conv_data_regs[channel].low;
+    IResult<uint32_t> get_data(uint8_t idx){
+        if(idx > 3)  return Err(Error::ChannelIndexOutOfRange);
 
-        read_reg(highreg.address, (highreg));
+        uint32_t ret = 0;
+        auto & highreg = conv_data_regs[idx].high;
+        auto & lowreg = conv_data_regs[idx].low;
+
+        if(const auto res = read_reg(highreg.address, (highreg.as_ref()));
+            res.is_err()) return Err(res.unwrap_err());
         ret |= (highreg.data_msb << 16);
-        read_reg(lowreg.address, (lowreg));
+        if(const auto res = read_reg(lowreg.address, (lowreg.as_ref()));
+            res.is_err()) return Err(res.unwrap_err());
         ret |= lowreg.data_lsb;
 
-        return ret;
+        return Ok(ret);
+    }
+
+private:
+    hal::I2cDrv i2c_drv_;
+
+    IResult<> read_reg(const RegAddress addr, uint16_t & data){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> write_reg(const RegAddress addr, const uint16_t data){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
     }
 };
 

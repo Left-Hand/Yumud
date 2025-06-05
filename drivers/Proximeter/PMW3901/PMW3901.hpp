@@ -19,13 +19,16 @@
 namespace ymd::drivers{
 
 
-class PMW3901 final:public FlowSensorIntf{
+class PMW3901 final{
 public:
     enum class Error_Kind:uint8_t{
-            
+        WrongChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 private:
     struct MotionReg:public Reg8<>{
         using Reg8::operator=;
@@ -38,10 +41,8 @@ private:
         uint8_t occured:1;
     };
 
-    struct DeltaReg:public Reg16<>{
-        using Reg16::operator =;
-
-        uint16_t :16;
+    struct DeltaReg:public Reg16i<>{
+        int16_t data;
     };
 
 
@@ -61,35 +62,39 @@ private:
     real_t y_cm = {};
 
     [[nodiscard]] Result<bool, Error> assert_reg(const uint8_t command, const uint8_t data);
-    [[nodiscard]] Result<void, Error> write_reg(const uint8_t command, const uint8_t data);
-    [[nodiscard]] Result<void, Error> read_reg(const uint8_t command, uint8_t & data);
-    [[nodiscard]] Result<void, Error> read_burst(const uint8_t commnad, uint8_t * data, const size_t len);
+    [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
+    [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
+    [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);
 
-    [[nodiscard]] Result<void, Error> read_data_slow();
-    [[nodiscard]] Result<void, Error> read_data_burst();
-    [[nodiscard]] Result<void, Error> read_data();
+    [[nodiscard]] IResult<> read_data_slow();
+    [[nodiscard]] IResult<> read_data_burst();
+    [[nodiscard]] IResult<> read_data();
 
-    [[nodiscard]] Result<void, Error> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
+    [[nodiscard]] IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
 public:
+
+    PMW3901(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    PMW3901(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv(spi, index)){;}
+
     PMW3901(const PMW3901 & other) = delete;
     PMW3901(PMW3901 && other) = delete;
 
-    PMW3901(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    PMW3901(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    PMW3901(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    ~PMW3901() = default;
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] Result<bool, Error> validate();
-    [[nodiscard]] Result<void, Error> init();
-
-    [[nodiscard]] Result<void, Error> update();
-    [[nodiscard]] Result<void, Error> update(const real_t rad);
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> update(const real_t rad);
 
     [[nodiscard]] Vector2<real_t> get_position(){
         return {x_cm * real_t(0.01), y_cm * real_t(0.01)};
     }
 
-    [[nodiscard]] Result<void, Error> set_led(bool on);
-    // [[nodiscard]] Result<void, Error> read_image(ImageWritable<Grayscale> & img);
+    [[nodiscard]] IResult<> set_led(bool on);
 };
 
 }

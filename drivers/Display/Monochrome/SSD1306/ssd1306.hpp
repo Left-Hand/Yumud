@@ -66,18 +66,18 @@ public:
     }
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_burst(const std::span<const T> pdata){
+    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf){
         if(p_i2c_drv_.has_value()){
             if constexpr(sizeof(T) != 1){
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pdata, LSB));
+                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB));
             }else {
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pdata));
+                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf));
             }
         }else if(p_spi_drv_.has_value()){
             // if constexpr(sizeof(T) != 1){
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pdata));
+            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
             // }else {
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pdata));
+            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
             // }
         }
         // return IResult<>(Err(Error(Error::NoAvailablePhy)));

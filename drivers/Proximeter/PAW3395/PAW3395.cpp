@@ -14,6 +14,11 @@ IResult<> PAW3395::corded_gaming(){
     return write_list(std::span(INIT_GAME_TABLE));
 }
 
+IResult<> PAW3395::validate(){
+	TODO();
+	return Ok();
+}
+
 IResult<> PAW3395::set_dpi(uint16_t DPI_Num){
 
 	// 设置分辨率模式：X轴和Y轴分辨率均由RESOLUTION_X_LOW和RESOLUTION_X_HIGH定义
@@ -53,32 +58,32 @@ IResult<> PAW3395::set_lift_off(bool height){
 	return Ok();
 }
 
-// IResult<> paw3395_sample_fetch(const struct device *dev, enum sensor_channel chan)
-// {
-// 	struct paw3395_data *data = dev->data;
-// 	const struct paw3395_config *config = dev->config;
+IResult<Vector2i> PAW3395::sample_fetch(){
 
-// 	data->motion = SPI_READ_ADDR(&config->bus, PAW3395_REG_MOTION) != 0x00;
+	const bool motion = ({
+		uint8_t temp = 0;
+		const auto res = read_reg(PAW3395_REG_MOTION, temp);
+		if (res.is_err()) return Err(res.unwrap_err());
+		temp == 0;
+	});
+	
+	if(motion == false) return
+		Ok(Vector2i(0,0));
 
-// 	if (data->motion) {
-// 		/* Combine high and low bytes into 16-bit signed values */
-// 		data->dx = -(int16_t)(SPI_READ_ADDR(&config->bus, PAW3395_REG_DELTA_X_L) +
-// 				(SPI_READ_ADDR(&config->bus, PAW3395_REG_DELTA_X_H) << 8));
-// 		data->dy = (int16_t)(SPI_READ_ADDR(&config->bus, PAW3395_REG_DELTA_Y_L) +
-// 				(SPI_READ_ADDR(&config->bus, PAW3395_REG_DELTA_Y_H) << 8));
+	const int16_t x = ({
+		const auto res = read_i16(PAW3395_REG_DELTA_X_L, PAW3395_REG_DELTA_X_H);
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
 
-// 		data->sum_x += data->dx;
-// 		data->sum_y += data->dy;
+	const int16_t y = ({
+		const auto res = read_i16(PAW3395_REG_DELTA_Y_L, PAW3395_REG_DELTA_Y_H);
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
 
-// 		data->sum_x_last += data->dx;
-// 		data->sum_y_last += data->dy;
-// 	} else {
-// 		data->dx = 0;
-// 		data->dy = 0;
-// 	}
-// 	SPI_CS_HIGH(&config->cs_gpio);
-// 	return 0;
-// }
+	return Ok(Vector2i{x,y});
+}
 
 // IResult<> paw3395_channel_get(
 // 	enum sensor_channel chan,
@@ -108,16 +113,19 @@ IResult<> PAW3395::set_lift_off(bool height){
 // 	return -ENOTSUP;
 // }
 
-// IResult<> paw3395_enable_ripple(const struct device *dev){
-// 	int ret;
+IResult<> PAW3395::enable_ripple(const Enable en){
 
-// 	uint8_t temp = SPI_READ_ADDR(&config->bus, PAW3395_REG_RIPPLE_CONTROL);
-// 	// Set bit 7 to 1 to enable ripple
-// 	temp |= 0x80;
-// 	SPI_WRITE_ADDR(&config->bus, PAW3395_REG_RIPPLE_CONTROL, temp);
+	uint8_t temp ;
+	if(const auto res = read_reg(PAW3395_REG_RIPPLE_CONTROL, temp);
+		res.is_err()) return res;
+	
+	const auto temp2 = en == EN ? 
+		(temp | 0x80) : temp & (~0x80);
+	if(const auto res = write_reg(PAW3395_REG_RIPPLE_CONTROL, temp2);
+		res.is_err()) return res;
 
-// 	return;
-// }
+	return Ok();
+}
 
 IResult<> PAW3395::powerup(){
 	/* Write register and data */
@@ -132,13 +140,14 @@ IResult<> PAW3395::powerup(){
 	clock::delay(1ms);
 
 	bool is_susccessfully_inited = false;
+
 	static constexpr size_t MAX_RETRY_TIMES = 60;
 
 	for (size_t retry = 0; retry < MAX_RETRY_TIMES; retry++) {
-		const auto res = read_reg(0x6C).map(
-			[&](uint8_t val) { return (val == 0x80);});
+		uint8_t temp;
+		const auto res = read_reg(0x6C, temp);
 		if(res.is_ok()){
-			is_susccessfully_inited = res.unwrap();
+			is_susccessfully_inited = (temp == 0x80);
 			break;
 		}else{
 			return Err(res.unwrap_err());
@@ -177,15 +186,65 @@ IResult<> PAW3395::powerup(){
 	// 144. 将值0x00写入寄存器0x7F
 	if(const auto res = write_reg(0x7F, 0x00);
 		res.is_err()) return res;
-
-	for (int reg = 0x02; reg <= 0x06; reg++) {
-		if(const auto res = read_reg(reg);
-			res.is_err()) return Err(res.unwrap_err());
-	}
-
 	return Ok();
 }
 
 IResult<> PAW3395::init() {
+	// TODO();
+	if(const auto res = validate();
+		res.is_err()) return res;
+
+	if(const auto res = powerup();
+		res.is_err()) return res;
+	return Ok();
+}
+
+
+IResult<> PAW3395::write_reg(const uint8_t addr, const uint8_t data){
+	const std::array<uint8_t, 2> temp = {
+		uint8_t(addr| 0x80),
+		data
+	};
+
+	if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(temp));
+		res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+
+IResult<> PAW3395::read_reg(const uint8_t addr, uint8_t & data){
+	const std::array<uint8_t, 2> pbuf_tx = {
+		uint8_t(addr| 0x80),
+		0x00
+	};
+
+	std::array<uint8_t, 2> pbuf_rx;
+	if(const auto res = spi_drv_.transceive_burst<uint8_t, 2>(
+		std::span(pbuf_rx), 
+		std::span(pbuf_tx)
+	); res.is_err()) return Err(res.unwrap_err());
+	data = pbuf_rx[1];
+
+	return Ok();
+}
+
+IResult<int16_t> PAW3395::read_i16(const uint8_t addr1, const uint8_t addr2){
+	uint8_t low_byte;
+	uint8_t high_byte;
+
+
+	if(const auto res = read_reg(addr1, low_byte);
+		res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = read_reg(addr2, high_byte);
+		res.is_err()) return Err(res.unwrap_err());
+
+	return Ok(int16_t((high_byte << 8) | low_byte));
+}
+
+IResult<> PAW3395::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
+	for(const auto & [addr, data] : list){
+		if(const auto res = write_reg(addr, data); 
+			res.is_err()) return res;
+	}
 	return Ok();
 }

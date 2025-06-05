@@ -195,7 +195,7 @@ private:
         if(res >= 0) write(res);
     }
 
-    void checked_write(const char * pdata, const size_t len);
+    void checked_write(const char * pbuf, const size_t len);
 
     void print_source_loc(const std::source_location & loc);
 
@@ -211,13 +211,13 @@ private:
         
         // 用于压入数据，当数据溢满时发送数据包
         template<typename Fn>
-        __fast_inline void push(const std::span<const char> pdata, Fn&& fn) {
+        __fast_inline void push(const std::span<const char> pbuf, Fn&& fn) {
             size_t offset = 0;
-            while (offset < pdata.size()) {
+            while (offset < pbuf.size()) {
                 size_t available = OSTREAM_BUF_SIZE - size;
-                size_t copy_size = std::min(available, pdata.size() - offset);
+                size_t copy_size = std::min(available, pbuf.size() - offset);
 
-                std::memcpy(buf + size, pdata.data() + offset, copy_size);
+                std::memcpy(buf + size, pbuf.data() + offset, copy_size);
                 size += static_cast<uint8_t>(copy_size);
                 offset += copy_size;
 
@@ -267,8 +267,8 @@ public:
     void write(const char data) {
         buf_.push(data, [this](const std::span<const char> pbuf){this->sendout(pbuf);});
     }
-    void write(const char * pdata, const size_t len){
-        buf_.push(std::span<const char>(pdata, len),  
+    void write(const char * pbuf, const size_t len){
+        buf_.push(std::span<const char>(pbuf, len),  
         [this](const std::span<const char> pbuf){this->sendout(pbuf);});
 	}
 

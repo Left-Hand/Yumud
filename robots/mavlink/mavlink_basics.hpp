@@ -16,7 +16,7 @@ class Source;
 template<>
 class Sink<uint8_t>{
 public:
-    size_t write(std::span<const uint8_t> pdata);
+    size_t write(std::span<const uint8_t> pbuf);
     size_t pending() const;
 };
 
@@ -25,7 +25,7 @@ using BytesSink = Sink<uint8_t>;
 template<>
 class Source<uint8_t>{
 public:
-    size_t read(std::span<uint8_t> pdata);
+    size_t read(std::span<uint8_t> pbuf);
     size_t available() const;
 };
 

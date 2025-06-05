@@ -11,6 +11,25 @@ class AS5047:public MagEncoderIntf{
 public:
     using Error = EncoderError;
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+public:
+    AS5047(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    AS5047(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        spi_drv_(hal::SpiDrv{spi, index}){;}
+
+    [[nodiscard]]IResult<> init() ;
+
+    [[nodiscard]]IResult<> update();
+    [[nodiscard]]Result<real_t, Error> get_lap_position() {
+        return Ok(lap_position);
+    }
+    uint32_t get_err_cnt() const {return errcnt;}
+private:
 protected:
 
     using RegAddress = uint16_t;
@@ -40,23 +59,10 @@ protected:
     size_t errcnt = 0;
     bool fast_mode = true;
 
-    uint16_t getPositionData();
+    uint16_t get_position_data();
 
-    void write_reg(const RegAddress addr, const uint8_t data);
-    void read_reg(const RegAddress addr, uint8_t & data);
-
-public:
-    AS5047(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    AS5047(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv{spi, index}){;}
-
-    [[nodiscard]]Result<void, Error> init() ;
-
-    [[nodiscard]]Result<void, Error> update();
-    [[nodiscard]]Result<real_t, Error> get_lap_position() {
-        return Ok(lap_position);
-    }
-    uint32_t get_err_cnt() const {return errcnt;}
+    IResult<> write_reg(const RegAddress addr, const uint8_t data);
+    IResult<> read_reg(const RegAddress addr, uint8_t & data);
 
 };
 
