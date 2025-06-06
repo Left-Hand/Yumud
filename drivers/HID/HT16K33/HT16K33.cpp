@@ -60,6 +60,18 @@ IResult<> HT16K33::set_display_byte(
     return Ok();
 }
 
+IResult<bool> HT16K33::any_key_pressed(){
+    if(phy_.has_int_io()){
+        return Ok(phy_.is_int_io_active());
+    }else{
+        // DEBUG_PRINTLN("reading");
+        return get_intreg_status()
+            .map([](const BoolLevel st){
+                return st == HIGH;
+            });
+    }
+}
+
 // IResult<> HT16K33::clear_display_content(){
 //     std::fill(gc_ram_.begin(), gc_ram_.end(), 0);
 //     return commit_gcram_to_displayer();
@@ -88,7 +100,7 @@ IResult<> HT16K33::set_int_pin_func(const IntPinFunc func){
         func
     });
 }
-IResult<BoolLevel> HT16K33::get_int_status(){
+IResult<BoolLevel> HT16K33::get_intreg_status(){
     static constexpr auto INT_FLAG_REGADDR = 0x60;
     uint8_t ret = 0;
     if(const auto res = phy_.read_data(INT_FLAG_REGADDR, ret);

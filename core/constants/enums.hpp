@@ -15,6 +15,11 @@ public:\
     enum class Kind:uint8_t{l, u};\
     using enum Kind;\
     [[nodiscard]] constexpr name(const name & other){kind_ = other.kind_;};\
+    [[nodiscard]] constexpr name(name && other){kind_ = other.kind_;};\
+    constexpr name & operator = (const name & other)\
+        {kind_ = other.kind_; return *this;};\
+    constexpr name & operator = (name && other)\
+        {kind_ = other.kind_; return *this;};\
     [[nodiscard]] constexpr name(const Kind kind){kind_ = kind;};\
     [[nodiscard]] constexpr name(const bool & kind) = delete;\
     [[nodiscard]] constexpr name(bool && kind) = delete;\

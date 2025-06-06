@@ -2,16 +2,41 @@
 
 //这个驱动还未完成
 
-//HT16K33是一款真I2C的Led矩阵扫描/按键扫描芯片 同时带有中断引脚
+//HT16K33是一款使用标准I2C协议的Led矩阵扫描/按键扫描芯片 同时带有中断引脚
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/gpio/gpio_intf.hpp"
 #include "drivers/HID/Event.hpp"
 
+namespace ymd::hal{
+class InterruptInput final{
+public:
+    constexpr InterruptInput(hal::GpioIntf & gpio):
+        gpio_(gpio){;}
 
+    constexpr InterruptInput(const InterruptInput &) = default;
+    constexpr InterruptInput(InterruptInput &&) = default;
+
+
+    [[nodiscard]] bool is_active(){
+        if(active_level_is_high_) return gpio_.read() == HIGH;
+        else return gpio_.read() == LOW;
+    }
+
+    void set_active_level(BoolLevel level){
+        active_level_is_high_ = level == HIGH;
+    }
+private:
+    hal::GpioIntf & gpio_;
+    bool active_level_is_high_ = false;
+    //TODO add exti
+};
+
+}
 namespace ymd::drivers{
 
 struct HT16K33_Collections{
@@ -261,11 +286,12 @@ struct HT16K33_Regs:public HT16K33_Collections{
 
 class HT16K33_Phy final:public HT16K33_Collections{
 public:
-    HT16K33_Phy(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv){;}
-
-    HT16K33_Phy(hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv)){;}
+    HT16K33_Phy(
+        const hal::I2cDrv i2c_drv, 
+        const Option<hal::InterruptInput> int_input
+    ):
+        i2c_drv_(i2c_drv),
+        int_input_(int_input){;}
 
     [[nodiscard]] IResult<> write_command(const Command cmd){
         if(const auto res = i2c_drv_.write_blocks<>(cmd.as_u8(), LSB);
@@ -305,15 +331,44 @@ public:
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
+
+    [[nodiscard]] IResult<> set_int_io_active_level(const BoolLevel level){
+        // if(int_input_.is_some()){
+        //     int_input_.unwrap()
+        //         .set_active_level(level);
+        // }
+
+        return Ok();
+    }
+
+    [[nodiscard]] bool is_int_io_active(){
+        return int_input_.is_some() and 
+            int_input_.unwrap().is_active();
+    }
+
+    [[nodiscard]] bool has_int_io() const{
+        return int_input_.is_some();
+    }
 private:
     hal::I2cDrv i2c_drv_;
+    Option<hal::InterruptInput> int_input_;
 };
 
 class HT16K33 final:public HT16K33_Regs{
 public:
     template<typename Set>
     HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv)
+        phy_(i2c_drv, None)
+    {
+        resetting(std::forward<Set>(set));
+    }
+
+    template<typename Set>
+    HT16K33(Set && set, 
+        const hal::I2cDrv & i2c_drv, 
+        const hal::GpioIntf & int_input_gpio)
+    :
+        phy_(i2c_drv, Some(hal::InterruptInput(int_input_gpio)))
     {
         resetting(std::forward<Set>(set));
     }
@@ -326,19 +381,19 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
 
     // [[nodiscard]] IResult<> reconf(const Config & cfg);
+
+    [[nodiscard]] IResult<bool> any_key_pressed();
     
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> set_int_pin_func(const IntPinFunc func);
 
-    [[nodiscard]] IResult<BoolLevel> get_int_status();
+    [[nodiscard]] IResult<BoolLevel> get_intreg_status();
 
     [[nodiscard]] IResult<> update_displayer(
         const size_t offset, std::span<const uint8_t> pbuf);
 
     [[nodiscard]] IResult<> clear_displayer();
-
-
 
     [[nodiscard]] IResult<KeyData> get_key_data();
 private:

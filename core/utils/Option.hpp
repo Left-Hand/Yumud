@@ -157,6 +157,12 @@ public:
         return get();
     }
 
+    [[nodiscard]] __fast_inline constexpr T & 
+    unwrap(){
+        if(unlikely(exists_ == false)) __builtin_trap();
+        return get();
+    }
+
     [[nodiscard]] __fast_inline constexpr const T & 
     examine(const std::source_location loca = std::source_location::current()) const {
         if (unlikely(!is_some())) {
