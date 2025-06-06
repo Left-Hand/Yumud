@@ -4,15 +4,79 @@
 
 namespace ymd::hid{
 
+namespace details{
+template<typename D>
+struct KeyCodeStorageCrtpBase{
+
+};
+struct SingleKeyCodeStorage{
+    [[nodiscard]] constexpr bool has(const KeyCode code) const {
+        return kind_ == code.kind();
+    }
+
+    [[nodiscard]] constexpr bool has_any(const std::initializer_list<KeyCode> codes){
+        for(const auto& c : codes){
+            if(kind_ == c.kind()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    constexpr void add(const KeyCode code){
+        kind_ = code.kind();
+    }
+
+    constexpr void remove(const KeyCode code){
+        //remove is not supported in single kind button
+        reset();
+    }
+
+    constexpr void emplace(const KeyCode code){
+        kind_ = code.kind();
+    }
+
+    constexpr void emplace(const SingleKeyCodeStorage & other){
+        kind_ = other.kind_;
+    }
+    constexpr void reset(){
+        kind_ = std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE));
+    }
+
+    constexpr Option<KeyCode> first_code() const{
+        if(kind_ == std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE)))
+            return None;
+        else return Some(KeyCode(kind_));
+    }
+
+    friend OutputStream & operator << (
+            OutputStream & os, const SingleKeyCodeStorage & self){
+        return os << self.first_code()
+            .map([](const KeyCode code){return code.to_char();})
+            .flatten();
+    }
+private:
+    KeyCode_Kind kind_;
+
+    static constexpr uint8_t INVALID_CODE = 0xff;
+};
+
+}
+
+using KeyCodes = details::SingleKeyCodeStorage;
 
 template<typename T>
 class ButtonInput final{
 };
 
 
+
+
 template<>
 class ButtonInput<KeyCode>{
 public:
+
+
     constexpr void update(const Option<KeyCode> may_keycode){
         if(may_keycode.is_none()){
             release_all();
@@ -59,16 +123,28 @@ public:
         pressed_.reset();
     }
 
-    [[nodiscard]] constexpr bool pressed(const KeyCode code) const {
-        return pressed_.has(code);
+    // [[nodiscard]] constexpr bool pressed(const KeyCode code) const {
+    //     return pressed_.has(code);
+    // }
+
+    // [[nodiscard]] constexpr bool just_pressed(const KeyCode code) const {
+    //     return just_pressed_.has(code);
+    // }
+
+    // [[nodiscard]] constexpr bool just_released(const KeyCode code) const {
+    //     return just_released_.has(code);
+    // }
+
+    [[nodiscard]] constexpr KeyCodes pressed() const {
+        return pressed_;
     }
 
-    [[nodiscard]] constexpr bool just_pressed(const KeyCode code) const {
-        return just_pressed_.has(code);
+    [[nodiscard]] constexpr KeyCodes just_pressed() const {
+        return just_pressed_;
     }
 
-    [[nodiscard]] constexpr bool just_released(const KeyCode code) const {
-        return just_released_.has(code);
+    [[nodiscard]] constexpr KeyCodes just_released() const {
+        return just_released_;
     }
 
     friend OutputStream & operator << (
@@ -86,59 +162,7 @@ public:
         return os;
     }
 private:
-    struct SingleKeyCodeStorage{
-        [[nodiscard]] constexpr bool has(const KeyCode code) const {
-            return kind_ == code.kind();
-        }
 
-        [[nodiscard]] constexpr bool has_any(const std::initializer_list<KeyCode> codes){
-            for(const auto& c : codes){
-                if(kind_ == c.kind()){
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        constexpr void add(const KeyCode code){
-            kind_ = code.kind();
-        }
-
-        constexpr void remove(const KeyCode code){
-            //remove is not supported in single kind button
-            reset();
-        }
-
-        constexpr void emplace(const KeyCode code){
-            kind_ = code.kind();
-        }
-
-        constexpr void emplace(const SingleKeyCodeStorage & other){
-            kind_ = other.kind_;
-        }
-        constexpr void reset(){
-            kind_ = std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE));
-        }
-
-        constexpr Option<KeyCode> code() const{
-            if(kind_ == std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE)))
-                return None;
-            else return Some(KeyCode(kind_));
-        }
-
-        friend OutputStream & operator << (
-                OutputStream & os, const SingleKeyCodeStorage & self){
-            return os << self.code()
-                .map([](const KeyCode code){return code.to_char();})
-                .flatten();
-        }
-    private:
-        KeyCode_Kind kind_;
-
-        static constexpr uint8_t INVALID_CODE = 0xff;
-    };
-
-    using KeyCodes = SingleKeyCodeStorage;
 
     KeyCodes pressed_;
     KeyCodes just_pressed_;

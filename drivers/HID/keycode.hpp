@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/stream/ostream.hpp"
+#include "core/utils/Option.hpp"
 #include <cstdint>
 
 // https://github.com/bevyengine/bevy/blob/main/crates/bevy_input/src/keyboard.rs#L250
@@ -467,6 +469,10 @@ enum class KeyCode_Kind:uint8_t{
     F35,
 };
 
+
+::ymd::OutputStream & operator <<(::ymd::OutputStream & os, const hid::KeyCode_Kind kind);
+
+
 static constexpr Option<char> to_char(const KeyCode_Kind kind){
     using Kind = KeyCode_Kind;
     switch(kind){
@@ -501,6 +507,8 @@ static constexpr Option<uint8_t> to_digit(const KeyCode_Kind kind){
             return None;
     }
 }
+
+
 
 struct KeyCode{
 public:
@@ -590,8 +598,13 @@ public:
     constexpr bool operator ==(const Kind kind) const {
         return kind_ == kind;
     }
+
+    friend OutputStream & operator <<(OutputStream & os, const KeyCode self){
+        return os << self.kind_;
+    }
 private:
     Kind kind_;
 };
 
 }
+
