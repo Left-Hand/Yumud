@@ -52,9 +52,10 @@ using option_type_t = details::_option_type<T>::type;
 
 template<typename T>
 class [[nodiscard]] Option{
+public:
+    using value_type = T;
 private:
     using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
-    
     // T value_;
 
 
@@ -219,15 +220,6 @@ public:
         return None;
     }
 
-    // // 安全空值传播
-    template<typename Fn>
-    requires requires(Fn fn, T val) { 
-        { fn(val) } -> std::same_as<Option<typename std::invoke_result_t<Fn, T>>>; 
-    }
-    constexpr auto operator>>=(Fn&& fn) const {
-        return this->and_then(std::forward<Fn>(fn));
-    }
-
     // template<typename U, typename Fn>
     // friend auto operator|(const Option<U>& opt, Fn&& fn);
 
@@ -236,6 +228,20 @@ public:
     const Option<T> & inspect(Fn && fn) const {
         if (is_some()) std::forward<Fn>(fn)(unwrap());
         return *this;
+    }
+
+    template<typename Dummy = void>
+    requires (is_option_v<T>)
+    __fast_inline constexpr auto flatten() const {
+        using RT = typename T::value_type;
+        using Ret = Option<RT>;
+        if (is_none()) return Ret(None);
+
+        const auto & inner = unwrap();
+        if(inner.is_some())
+            return Ret(Some(inner.unwrap()));
+        else
+            return Ret(None);
     }
 };
 

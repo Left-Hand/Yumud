@@ -10,8 +10,6 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "core/utils/Reg.hpp"
-
 #include "hal/bus/uart/uarthw.hpp"
 
 // static constexpr __fast_inline 

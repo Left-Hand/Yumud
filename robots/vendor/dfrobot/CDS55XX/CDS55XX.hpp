@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <bits/stl_numeric.h>
 
-#include "core/utils/Reg.hpp"
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"

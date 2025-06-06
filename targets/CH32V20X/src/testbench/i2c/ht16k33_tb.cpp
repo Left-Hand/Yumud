@@ -12,6 +12,12 @@
 
 #include "drivers/HID/keycode.hpp"
 
+#include <atomic>
+#include "core/sync/spinlock.hpp"
+#include "core/sync/barrier.hpp"
+#include <barrier>
+
+
 using namespace ymd;
 using namespace ymd::drivers;
 
@@ -20,9 +26,6 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::PB<1>()
 
 
-namespace ymd::mutask{
-
-};
 
 struct ThisKeyBoardLayout{
 static constexpr hid::KeyCode map(const uint8_t x, const uint8_t y){
@@ -111,19 +114,27 @@ static void HT16K33_tb(HT16K33 & ht16){
 
 
     uint8_t cnt = 0;
+    // sync::SpinLock locker;
+    // locker.lock();
+    // locker.unlock();
+    // locker.lock();
+
+    // std::atomic_bool a{false};
     while(true){
         cnt++;
         auto test_pattern = std::array<uint8_t, 16>{};
         test_pattern.fill(cnt);
         const auto keydata = ht16.get_key_data().examine();
         const auto may_xy = keydata
-            .to_xy();
+            .to_first_xy();
 
         const auto may_token = may_xy 
             .map([](std::tuple<uint8_t, uint8_t> xy){
                 const auto [x,y] = xy;
                 return ThisKeyBoardLayout::map(x,y).to_char();
-            });
+            })
+            .flatten()
+            ;
 
         ht16.update_displayer(0, std::span(test_pattern)).examine();
 
@@ -142,6 +153,7 @@ void ht16k33_main(){
 
     hal::I2cSw i2c = {SCL_GPIO, SDA_GPIO};
     i2c.init(400_KHz);
+
 
     HT16K33 ht16{
         HT16K33::Settings::SOP20Settings{},

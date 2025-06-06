@@ -2,19 +2,18 @@
 
 #include "core/utils/typetraits/size_traits.hpp"
 #include "core/utils/BitField.hpp"
-#include "core/utils/Reg.hpp"
 
 using namespace ymd;
 
-
+#if 0
 
 enum class Num:uint8_t{
     _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16
 };
 
-struct R16_Temp:public RegBase<uint16_t>{
-    using Super = RegBase<uint16_t>;
-    constexpr R16_Temp(uint16_t val) : Super(val) {} 
+struct R16_Temp{
+    // using Super = RegBase<uint16_t>;
+    // constexpr R16_Temp(uint16_t val) : Super(val) {} 
     __inline constexpr
     auto data1() const { return make_bitfield<8, 10>(data); };
 
@@ -85,3 +84,4 @@ void test() {
     }
 }
 
+#endif

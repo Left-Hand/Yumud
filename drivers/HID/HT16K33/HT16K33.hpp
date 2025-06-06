@@ -131,7 +131,7 @@ struct HT16K33_Collections{
             return byte & (1 << (x % 8));
         }
 
-        constexpr Option<std::tuple<uint8_t, uint8_t>> to_xy() const {
+        constexpr Option<std::tuple<uint8_t, uint8_t>> to_first_xy() const {
             const auto it = std::find_if(buf_.begin(), buf_.end(), 
                 [](const uint8_t data){return data != 0x00;}
             );
