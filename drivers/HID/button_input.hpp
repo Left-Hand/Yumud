@@ -82,15 +82,18 @@ public:
             release_all();
             return;
         }
+
         const auto code = may_keycode.unwrap();
         const auto & previous_pressed = pressed_;
         if(not previous_pressed.has(code)){
             just_pressed_.add(code);
             just_released_.reset();
-        }else if(just_pressed_.has(code)){
-            just_pressed_.reset();
-            just_released_.reset();
-        }else if(previous_pressed.has(code)){
+        }else{
+        // }else if(just_pressed_.has(code)){
+        //     just_pressed_.reset();
+        //     just_released_.reset();
+        // }else if(previous_pressed.has(code)){
+
             just_pressed_.reset();
             just_released_.reset();
         }

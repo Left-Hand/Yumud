@@ -46,45 +46,6 @@ struct KeyBoardLayout{
 
 template<>
 struct KeyBoardLayout<HT16K33>{
-static constexpr Option<hid::KeyCode> map_raw(const uint8_t x, const uint8_t y){
-    switch(y){
-        case 0: switch(x){
-            case 0: return Some(hid::KeyCode::from_char<'E'>());
-            case 1: return Some(hid::KeyCode::from_char<'W'>());
-            case 2: return Some(hid::KeyCode::from_char<'Q'>());
-            case 3: return Some(hid::KeyCode::from_char<'-'>());
-            case 4: return Some(hid::KeyCode::from_char<'3'>());
-            case 5: return Some(hid::KeyCode::from_char<'2'>());
-            case 6: return Some(hid::KeyCode::from_char<'1'>());
-            default: break;
-        }
-
-        case 1: switch(x){
-            case 0: return Some(hid::KeyCode::from_char<'D'>());
-            case 1: return Some(hid::KeyCode::from_char<'S'>());
-            case 2: return Some(hid::KeyCode::from_char<'A'>());
-            case 3: return Some(hid::KeyCode::from_char<'.'>());
-            case 4: return Some(hid::KeyCode::from_char<'6'>());
-            case 5: return Some(hid::KeyCode::from_char<'5'>());
-            case 6: return Some(hid::KeyCode::from_char<'4'>());
-            default: break;
-        }
-
-        case 2: switch(x){
-            case 0: return Some(hid::KeyCode::from_char<'C'>());
-            case 1: return Some(hid::KeyCode::from_char<'X'>());
-            case 2: return Some(hid::KeyCode::from_char<'Z'>());
-            case 3: return Some(hid::KeyCode::from_char<'0'>());
-            case 4: return Some(hid::KeyCode::from_char<'9'>());
-            case 5: return Some(hid::KeyCode::from_char<'8'>());
-            case 6: return Some(hid::KeyCode::from_char<'7'>());
-            default: break;
-        } 
-        default: break;
-    }
-    return None;
-}
-
 static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
     switch(y){
         case 0: switch(x){
@@ -170,6 +131,7 @@ public:
             input_.update(None);
             return Ok();
         }
+        // const auto beg = clock::micros();
 
         const auto next_key_data = ({
             const auto res = inst_.get_key_data();
@@ -177,12 +139,14 @@ public:
             res.unwrap();
         });
 
+        // const auto beg = clock::micros();
+
         const auto may_keycode = [&] -> Option<KeyCode>{
             const auto may_xy = next_key_data.to_first_xy();;
             if(may_xy.is_none()) return None;
             const auto [x,y] = may_xy.unwrap();
             const auto may_code = layouter_.map(x,y);
-            DEBUG_PRINTLN("mc", may_code);
+            // DEBUG_PRINTLN("mc", may_code);
             return may_code;
         }();
 
@@ -190,7 +154,9 @@ public:
         //     return code.to_char();
         // }).flatten());
 
+        
         input_.update(may_keycode);
+        // DEBUG_PRINTLN(clock::micros() - beg);
         return Ok();
     }
     constexpr const auto & input() const noexcept { return input_; }
@@ -291,7 +257,8 @@ static void HT16K33_tb(HT16K33 & ht16){
 
 
         // DEBUG_PRINTLN(may_xy, may_token);
-        DEBUG_PRINTLN(comp.input().pressed().first_code());
+        // DEBUG_PRINTLN(comp.input().pressed().first_code());
+        DEBUG_PRINTLN(comp.input());
         clock::delay(40ms);
     }
 }
