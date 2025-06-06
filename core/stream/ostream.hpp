@@ -23,17 +23,24 @@ class StringView;
 class StringStream;
 
 template<typename T>
-struct derive_debug_dispatcher {};
+struct DeriveDebugDispatcher {};
 
 template<typename T>
 concept has_derive_debug_dispatcher = requires(OutputStream& os, const T& value) {
-    derive_debug_dispatcher<T>::call(os, value);
+    DeriveDebugDispatcher<T>::call(os, value);
 };
 
 
 #define DERIVE_DEBUG(type)\
-inline OutputStream& operator<<(OutputStream& os,const type value) {\
-    derive_debug_dispatcher<type>::call(os, value);\
+inline ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const type & value){\
+    ::ymd::DeriveDebugDispatcher<type>::call(os, value);\
+    return os;\
+}\
+
+
+#define FRIEND_DERIVE_DEBUG(type)\
+friend ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const type & value){\
+    ::ymd::DeriveDebugDispatcher<type>::call(os, value);\
     return os;\
 }\
 
@@ -47,43 +54,40 @@ struct Endl{};
 
 
 template <typename T>
-struct __needprint_helper {
+struct _needprint_helper {
     static constexpr bool value = true;
 };
 
 template <>
-struct __needprint_helper<std::ios_base& (*)(std::ios_base&)>{
+struct _needprint_helper<std::ios_base& (*)(std::ios_base&)>{
     static constexpr bool value = false;
 };
 
 template<>
-struct __needprint_helper<std::_Setprecision>{
+struct _needprint_helper<std::_Setprecision>{
     static constexpr bool value = false;
 };
 
 
 template<>
-struct __needprint_helper<std::_Setbase>{
+struct _needprint_helper<std::_Setbase>{
     static constexpr bool value = false;
 };
 
 template<>
-struct __needprint_helper<Splitter>{
+struct _needprint_helper<Splitter>{
     static constexpr bool value = false;
 };
-
-template<typename T>
-static constexpr bool needprint_v = __needprint_helper<std::decay_t<T>>::value;
-
-
 
 template<char c>
 struct Brackets{
     static constexpr char chr = c;
 };
-
-
 }
+
+template<typename T>
+static constexpr bool need_putchar_v = details::_needprint_helper<std::decay_t<T>>::value;
+
 
 class OutputStreamIntf{
 public:
@@ -139,7 +143,7 @@ private:
 
     template<typename T>
     __fast_inline void print_splt_then_entity(T && any){
-        if constexpr(details::needprint_v<T>){
+        if constexpr(need_putchar_v<T>){
             print_splt();
         }
         *this << std::forward<T>(any);
@@ -147,7 +151,7 @@ private:
 
     template<typename T>
     __fast_inline void print_splt_then_entity(const char splt, T && any){
-        if constexpr(details::needprint_v<T>){
+        if constexpr(need_putchar_v<T>){
             write(splt);
         }
         *this << std::forward<T>(any);
@@ -384,7 +388,7 @@ public:
     template<typename T>
     requires has_derive_debug_dispatcher<T>
     OutputStream & operator<<(T && val){
-        derive_debug_dispatcher<T>::call(*this, std::forward<T>(val));
+        DeriveDebugDispatcher<T>::call(*this, std::forward<T>(val));
         return *this;
     }
 
@@ -482,7 +486,7 @@ public:
         print_indent();
         *this << std::forward<First>(first);
 
-        if constexpr(false == details::needprint_v<First>){
+        if constexpr(false == need_putchar_v<First>){
             return prints(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(' ', std::forward<Args>(args)), ...);
@@ -499,7 +503,7 @@ public:
     OutputStream & printt(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == details::needprint_v<First>){
+        if constexpr(false == need_putchar_v<First>){
             return printt(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity('\t', std::forward<Args>(args)), ...);
@@ -516,7 +520,7 @@ public:
     OutputStream & println(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == details::needprint_v<First>){
+        if constexpr(false == need_putchar_v<First>){
             return println(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(std::forward<Args>(args)), ...);

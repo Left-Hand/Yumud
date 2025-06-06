@@ -184,6 +184,7 @@ struct MT9V034_Collections{
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -280,8 +281,4 @@ private:
     }
 };
 
-}
-
-namespace ymd{
-    DERIVE_DEBUG(ymd::drivers::MT9V034_Collections::Error_Kind)
 }

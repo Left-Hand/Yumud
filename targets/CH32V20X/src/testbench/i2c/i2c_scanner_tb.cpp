@@ -37,11 +37,6 @@ struct FoundInfo{
     uint max_bbaud;
 };
 
-Result<void, hal::HalResult> make_result(const hal::HalResult res){
-    if(res.is_ok()) return Ok();
-    else return Err(res); 
-}
-
 #include <coroutine>
 
 // 协程任务模板
@@ -49,13 +44,13 @@ template<typename T>
 
 struct [[nodiscard]] Task {
     struct promise_type {
-        Result<T, hal::HalResult> result;
+        Result<T, hal::HalError> result;
         std::coroutine_handle<> continuation;
 
         Task get_return_object() { return Task{Handle::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
-        void return_value(Result<T, hal::HalResult> res) { result = res; }
+        void return_value(Result<T, hal::HalError> res) { result = res; }
         void unhandled_exception() noexcept {}
     };
 
@@ -72,7 +67,7 @@ struct [[nodiscard]] Task {
             handle.promise().continuation = cont;
             handle.resume();
         }
-        Result<T, hal::HalResult> await_resume() noexcept {
+        Result<T, hal::HalError> await_resume() noexcept {
             return handle.promise().result;
         }
     };
@@ -88,7 +83,7 @@ struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint, hal::HalResult> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint, hal::HalError> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
         auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
 
         const uint max_baud = [&]{
@@ -111,8 +106,10 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, hal::HalResult> validate(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        return make_result(hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate());
+    static Result<void, hal::HalError> validate(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+        const auto res = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate();
+        if(res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
 };

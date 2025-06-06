@@ -50,10 +50,12 @@ enum class ImuError_Kind:uint8_t{
 
     Unreachable
 };
+DERIVE_DEBUG(ImuError_Kind)
 }
-
 DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 }
+
+
 namespace ymd::custom{
     template<typename T>
     struct result_converter<T, drivers::ImuError, hal::HalResult> {
@@ -81,14 +83,5 @@ public:
 
     virtual Result<Vector3<q24>, ImuError> read_mag() = 0;
 };
-
-}
-
-namespace ymd{
-    DERIVE_DEBUG(drivers::details::ImuError_Kind)
-// OutputStream & print_halerr_kind(OutputStream & os, const drivers::details::ImuError_Kind err){
-//     derive_debug_dispatcher<drivers::details::ImuError_Kind>::call(os, err);
-//     return os;
-// }
 
 }
