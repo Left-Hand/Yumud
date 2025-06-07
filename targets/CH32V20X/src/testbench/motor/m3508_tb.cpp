@@ -16,7 +16,7 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void m3508_main(){
-    scexpr size_t cb_freq = 200;
+    scexpr size_t CB_FREQ = 200;
 
     auto & led = portC[14];
     led.outpp(HIGH);
@@ -27,7 +27,7 @@ void m3508_main(){
 
     M3508Port port{can1};
     
-    timer3.init(cb_freq);
+    timer3.init({CB_FREQ});
 
     timer3.bind_cb(TimerIT::Update, [&](){
         port.tick();

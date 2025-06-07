@@ -91,7 +91,7 @@ void mpu6500_tb(hal::I2c & i2c){
         .fs = 200
     }};
 
-    hal::timer1.init(200);
+    hal::timer1.init({200});
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
         mpu.update().examine();
 

@@ -40,7 +40,7 @@ namespace ymd::dsp{
     template<typename FnIn, typename FnFt>
     void run_func(const uint fs, FnIn && fn_in, FnFt && fn_ft){
         
-        hal::timer1.init(fs);
+        hal::timer1.init({fs});
         
         hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
             const auto x = std::forward<FnIn>(fn_in)();
@@ -405,7 +405,7 @@ void dtmf_tb(const uint fs){
         h_filter.reset();
     }
 
-    hal::timer1.init(fs);
+    hal::timer1.init({fs});
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
         const auto t = clock::time();
         dtmf.update(t);

@@ -21,8 +21,8 @@ using namespace ymd::drivers;
 #define UART uart2
 #define SCL_GPIO hal::portB[3]
 #define SDA_GPIO hal::portB[5]
-static constexpr uint FS = 100;
-static constexpr auto INV_FS = (1.0_q24 / FS);
+static constexpr uint ISR_FREQ = 100;
+static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
 // #define MAG_ACTIVATED
 
 
@@ -39,7 +39,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
         gest = gest.slerp(Quat_t<q24>::from_direction(dir), 0.05_r);
     };
 
-    timer1.init(FS);
+    timer1.init({ISR_FREQ});
     timer1.attach(TimerIT::Update, {0,0},[&]{
         measure();
     });

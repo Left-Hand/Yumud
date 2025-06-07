@@ -35,7 +35,7 @@ auto input(){
 void lpf_tb(){
     using Transfer = dsp::LowpassFilter_t<iq_t<20>>;
 
-    const uint fs = 2000;
+    static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
         .fc = 30,
         .fs = 1000
@@ -43,7 +43,7 @@ void lpf_tb(){
 
     Transfer lpf{config};
 
-    hal::timer1.init(fs);
+    hal::timer1.init({ISR_FREQ});
 
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
@@ -58,7 +58,7 @@ void lpf_tb(){
 void hpf_tb(){
     using Transfer = dsp::HighpassFilter_t<iq_t<20>>;
 
-    const uint fs = 2000;
+    static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
         .fc = 30,
         .fs = 1000
@@ -66,7 +66,7 @@ void hpf_tb(){
 
     Transfer hpf{config};
 
-    hal::timer1.init(fs);
+    hal::timer1.init({ISR_FREQ});
 
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
@@ -80,7 +80,7 @@ void hpf_tb(){
 void bpf_tb(){
     using Bpf = dsp::BandpassFilter<iq_t<16>>;
 
-    const uint fs = 2000;
+    static constexpr uint ISR_FREQ = 2000;
     const auto config = Bpf::Config{
         .fl = 100,
         .fh = 200,
@@ -89,7 +89,7 @@ void bpf_tb(){
 
     Bpf bpf{config};
 
-    hal::timer1.init(fs);
+    hal::timer1.init({ISR_FREQ});
 
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
@@ -103,20 +103,17 @@ void bpf_tb(){
 void shock_tb(){
     using Transfer = dsp::LowpassFilter_t<iq_t<16>>;
 
-    const uint fs = 2000;
+    static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
         .fc = 30,
-        .fs = fs
+        .fs = ISR_FREQ
     };
 
     Transfer lpf{config};
-    // dsp::HighpassFilter_t<iq_t<16>> hpf{{
-    //     .fc = 10,
-    //     .fs = fs
-    // }};
+
     Transfer lpf2{config};
 
-    hal::timer1.init(fs);
+    hal::timer1.init({ISR_FREQ});
 
     hal::timer1.attach(TimerIT::Update, {0,0}, [&]{
         const auto x = input();
@@ -133,7 +130,7 @@ void shock_tb(){
 template<typename Fn>
 void dsp_func_test(const uint fs, Fn && fn){
 
-    hal::timer1.init(fs);
+    hal::timer1.init({fs});
 
     hal::timer1.attach(TimerIT::Update, {0,0}, std::forward<Fn>(fn));
 

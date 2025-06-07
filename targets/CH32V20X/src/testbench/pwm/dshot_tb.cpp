@@ -101,7 +101,7 @@ void dshot_main(){
     // timer.enableCvrSync();
 
 
-    timer.init(20_KHz);
+    timer.init({20_KHz});
     auto & oc = timer.oc<1>();
     auto & oc2 = timer.oc<2>();
 

@@ -234,7 +234,7 @@ public:
     }
 
     constexpr void try_insert(const size_t idx, const char chr){
-        if (len_ >= N) return;
+        if (len_ >= N or idx > len_) return;
         // Move characters from the end to make space for the new character
         for (size_t i = len_; i > idx; i--) {
             buf_[i] = buf_[i - 1];
@@ -246,7 +246,7 @@ public:
     }
 
     [[nodiscard]] constexpr Result<void, void> insert(const size_t idx, const char chr){
-        if (len_ >= N) return Err();
+        if (len_ >= N || idx > len_) return Err();
         // Move characters from the end to make space for the new character
         for (size_t i = len_; i > idx; i--) {
             buf_[i] = buf_[i - 1];
@@ -260,17 +260,12 @@ public:
     }
 
     [[nodiscard]] constexpr Result<void, void> erase(const size_t idx){
-        // if(idx > len_) return Err();
-        // if(idx == 0) return Err();
-        // for(size_t i = idx; i < len_; i++){
-        //     buf_[i] = buf_[i + 1];
-        // }
-        // return Ok();
         if (idx > len_) return Err();  // 正确索引检查
         if (len_ == 0) return Err();    // 防止空字符串操作
+        if (idx == 0) return Err();
 
         // 前移字符（注意循环终止条件）
-        for (size_t i = idx; i < len_ - 1; i++) {
+        for (size_t i = idx-1; i < len_ - 1; i++) {
             buf_[i] = buf_[i + 1];
         }
 
@@ -279,6 +274,8 @@ public:
     }
 
     constexpr void clear(){
+        for(size_t i = 0; i < len_; i++)
+            buf_[i] = 0;
         len_ = 0;
     }
 
@@ -293,33 +290,45 @@ private:
     char buf_[N] = {};
     size_t len_;
 
-    // static consteval void static_test(){
-    //     constexpr auto str = FixedString<10>("Hello");
-    //     constexpr auto str2 = []{
-    //         auto _str = FixedString<10>("Hello");
-    //         _str.try_push_back('!');
-    //         return _str;
-    //     }();
+    static consteval void static_test(){
+        constexpr auto str = FixedString<10>("Hello");
+        constexpr auto str2 = []{
+            auto _str = FixedString<10>("Hello");
+            _str.try_push_back('!');
+            return _str;
+        }();
 
-    //     constexpr auto str3 = []{
-    //         auto _str = FixedString<10>("Hello");
-    //         _str.insert(0, '!');
-    //         return _str;
-    //     }();
+        constexpr auto str3 = []{
+            auto _str = FixedString<10>("Hello");
+            _str.insert(0, '!');
+            return _str;
+        }();
 
-    //     constexpr auto str4 = []{
-    //         auto _str = FixedString<10>("Hello");
-    //         _str.erase(4);
-    //         return _str;
-    //     }();
+        constexpr auto str4 = []{
+            auto _str = FixedString<10>("Hello");
+            _str.erase(4);
+            return _str;
+        }();
 
-    //     static_assert(str.length() == 5);
-    //     static_assert(str2.length() == 6);
-    //     static_assert(str3.length() == 6);
-    //     static_assert(str2 == StringView("Hello!"));
-    //     static_assert(str3 == StringView("!Hello"));
-    //     static_assert(str4 == StringView("Hell"));
-    // }
+        static_assert(str.length() == 5);
+        static_assert(str2.length() == 6);
+        static_assert(str3.length() == 6);
+        static_assert(str2 == StringView("Hello!"));
+        static_assert(str3 == StringView("!Hello"));
+        static_assert(str4 == StringView("Hell"));
+
+        // 测试越界插入
+        static_assert([]{
+            auto str = FixedString<5>("Hi");
+            str.try_insert(3, '!');  // 允许在 len_=2 的索引3插入
+            return str == StringView("Hi!");  // ✅ 应成功
+        }());
+
+        // 测试无效插入返回错误
+        static_assert(
+            FixedString<3>("A").insert(5, 'X').is_err()  // ✅ 应返回错误
+        );
+    }
 };
 
 class LineEdit final{
@@ -367,8 +376,13 @@ private:
         [[nodiscard]] constexpr size_t max_limit() const {
             return max_limit_;
         }
+
         [[nodiscard]] constexpr Cursor copy(const uint8_t position) const {
             return Cursor(position, max_limit_);
+        }
+
+        constexpr void set_position(const uint8_t position){
+            position_ = position;
         }
     private:
         uint8_t position_;
@@ -404,7 +418,6 @@ public:
         } else if(code.is_arrow()){
             handle_arrow_input(code);
         }else{
-            // __builtin_unreachable
             switch(code.kind()){
                 case KeyCode::NumpadComma:
                 case KeyCode::NumpadSubtract:
@@ -428,6 +441,7 @@ public:
     }
 
     constexpr void handle_clear(){
+        cursor_.set_position(0);
         str_.clear();
     }
 
@@ -493,7 +507,7 @@ private:
         if(res.is_ok()){
             cursor_ = cursor_.try_shift(-1, str_.length());
         }else{
-            DEBUG_PRINTLN("erase failed");
+            DEBUG_PRINTLN("can't erase");
         }
     }
 
@@ -544,7 +558,7 @@ private:
 
 }
 
-enum class SegCode:uint8_t{
+enum class SegCode_Kind:uint8_t{
 	_0 = 0x3F,  //"0"
     _1 = 0x06,  //"1"
     _2 = 0x5B,  //"2"
@@ -568,7 +582,50 @@ enum class SegCode:uint8_t{
     P = 0x73,  //"P"
     O = 0x5C,  //"o"
     _ = 0x40,  //"-"
+    Dot = 0x80,
     Off = 0x00  //熄灭
+};
+
+struct SegCode{
+    using Kind = SegCode_Kind;
+    using enum Kind;
+
+    constexpr SegCode(Kind kind):kind_(kind){}
+
+    static constexpr Option<SegCode> from_char(char chr){
+        switch(chr){
+            default: return None;
+            case '0': return Some(_0);
+            case '1': return Some(_1);
+            case '2': return Some(_2);
+            case '3': return Some(_3);
+            case '4': return Some(_4);
+            case '5': return Some(_5);
+            case '6': return Some(_6);
+            case '7': return Some(_7);
+
+            case '8': return Some(_8);
+            case '9': return Some(_9);
+            case 'A': return Some(A);
+            case 'B': return Some(B);
+            case 'C': return Some(C);
+            case 'D': return Some(D);
+            case 'E': return Some(E);
+
+            case '-': return Some(_);
+            case '.': return Some(Dot);
+
+            case 0: return Some(Off);
+        }
+    }
+
+    constexpr Kind kind() const{return kind_;}
+
+    constexpr bool operator==(Kind kind_) const{return kind_ == this->kind_;}
+    constexpr bool operator!=(Kind kind_) const{return kind_ != this->kind_;}
+
+private:
+    Kind kind_;
 };
 
 
@@ -603,75 +660,74 @@ static void HT16K33_tb(HT16K33 & ht16){
         //     ;
         comp.update().examine();
 
-        {
-            using Pattern = HT16K33::GcRam;
-            auto test_pattern = Pattern{};
-            // test_pattern.fill(cnt);
+        using Pattern = HT16K33::GcRam;
+        auto test_pattern = Pattern{};
+        // test_pattern.fill(cnt);
 
-            auto correct_display_xy = [](const uint8_t _x, const uint8_t _y)
-                -> std::tuple<uint8_t, uint8_t>{
-                
-                const auto x = [&](){
-                    switch(_x){
-                        case 0: return 3;
-                        case 1: return 6;
-                        case 2: return 2;
-                        case 3: return 5;
-                        case 4: return 4;
-                        case 5: return 1;
-                        case 6: return 0;
-                        default: return 0;
-                    }
-                }();
-
-                const auto y = [&](){
-                    switch(_y){
-                        case 0: return 5;
-                        case 1: return 4;
-                        case 2: return 2;
-                        case 3: return 3;
-                        case 4: return 0;
-                        case 5: return 6;
-                        case 6: return 7;
-                        case 7: return 1;
-                        default: return 0;
-                    }
-                }();
-
-                return {y,x};
-            };
-
-            auto display_segcode = [&](const uint8_t i, const SegCode code){
-                const auto raw = std::bit_cast<uint8_t>(code);
-
-                for(int j = 0; j < 8; j++){
-                    if(not (raw & (1 << j))) continue;
-                    const auto [x,y] = correct_display_xy(i,j);
-                    test_pattern.write_pixel(x, y, true).examine();
+        auto correct_display_xy = [](const uint8_t _x, const uint8_t _y)
+            -> std::tuple<uint8_t, uint8_t>{
+            
+            const auto x = [&](){
+                switch(_x){
+                    case 0: return 3;
+                    case 1: return 6;
+                    case 2: return 2;
+                    case 3: return 5;
+                    case 4: return 4;
+                    case 5: return 1;
+                    case 6: return 0;
+                    default: return 0;
                 }
-            };
+            }();
 
-            // for(int i = 0; i < 7; i++){
-            display_segcode(0, SegCode::_0);
-            display_segcode(1, SegCode::_1);
-            display_segcode(2, SegCode::_2);
-            display_segcode(3, SegCode::_3);
-            display_segcode(4, SegCode::_4);
-            display_segcode(5, SegCode::_5);
-            display_segcode(6, SegCode::_6);
+            const auto y = [&](){
+                switch(_y){
+                    case 0: return 5;
+                    case 1: return 4;
+                    case 2: return 2;
+                    case 3: return 3;
+                    case 4: return 0;
+                    case 5: return 6;
+                    case 6: return 7;
+                    case 7: return 1;
+                    default: return 0;
+                }
+            }();
+
+            return {y,x};
+        };
+
+        auto display_segcode = [&](const uint8_t i, const SegCode code){
+            const auto raw = std::bit_cast<uint8_t>(code);
+
+            for(int j = 0; j < 8; j++){
+                if(not (raw & (1 << j))) continue;
+                const auto [x,y] = correct_display_xy(i,j);
+                test_pattern.write_pixel(x, y, true).examine();
+            }
+        };
+
+        // for(int i = 0; i < 7; i++){
+        // display_segcode(0, SegCode::_0);
+        // display_segcode(1, SegCode::_1);
+        // display_segcode(2, SegCode::_2);
+        // display_segcode(3, SegCode::_3);
+        // display_segcode(4, SegCode::_4);
+        // display_segcode(5, SegCode::_5);
+        // display_segcode(6, SegCode::_6);
+
+        auto display_str = [&](const StringView& str) {
+            for(size_t i = 0; i < str.size(); i++){
+                display_segcode(i, SegCode::from_char(str[i]).examine());
+            }
             ht16.update_displayer(test_pattern).examine();
-            clock::delay(100ms);
-            // }
-        }
+        };
 
-
-        // DEBUG_PRINTLN(may_xy, may_token);
-        // DEBUG_PRINTLN(comp.input().pressed().first_code());
         const auto & input = comp.input();
         const auto may_key = input.just_pressed().first_code();
         may_key.inspect([&](const hid::KeyCode code){
             line_edit.handle_key_input(code); 
-            // DEBUG_PRINTLN(line_edit.str());
+            display_str(line_edit.str());
             DEBUG_PRINTLN(line_edit);
         });
 

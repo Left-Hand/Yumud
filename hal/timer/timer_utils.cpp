@@ -3,9 +3,8 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::hal::internal;
 
-namespace ymd::hal::internal{
+namespace ymd::hal::details{
 bool is_basic_timer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM6

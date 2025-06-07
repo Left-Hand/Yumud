@@ -20,8 +20,8 @@ using namespace ymd::drivers;
 #define UART uart2
 #define SCL_GPIO hal::portB[3]
 #define SDA_GPIO hal::portB[5]
-static constexpr uint FS = 500;
-static constexpr auto INV_FS = (1.0_q24 / FS);
+static constexpr uint ISR_FREQ = 500;
+static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 // #define MAG_ACTIVATED
 
 
@@ -55,10 +55,10 @@ static void icm42688_tb(ICM42688 & imu){
         .kp = 2 * tau,
         .ki = tau * tau,
         // .ki = 0,
-        .fs = FS
+        .fs = ISR_FREQ
     }};
 
-    timer1.init(FS);
+    timer1.init({ISR_FREQ});
     timer1.attach(TimerIT::Update, {0,0},[&]{
         const auto u0 = clock::micros();
         imu.update().unwrap();

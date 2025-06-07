@@ -7,7 +7,7 @@ using namespace ymd::hal;
 
 
 void TimerOut::install_to_pin(const Enable en){
-    Gpio & io = internal::get_pin(instance, idx_);
+    Gpio & io = details::get_pin(instance, idx_);
     if(en == EN)io.afpp();
     else io.inflt();
 }
@@ -109,9 +109,9 @@ void TimerOC::enable_cvr_sync(const Enable en){
 }
 
 Gpio & TimerOC::io(){
-    return internal::get_pin(instance, idx_);
+    return details::get_pin(instance, idx_);
 }
 
 Gpio & TimerOCN::io(){
-    return internal::get_pin(instance, idx_);
+    return details::get_pin(instance, idx_);
 }

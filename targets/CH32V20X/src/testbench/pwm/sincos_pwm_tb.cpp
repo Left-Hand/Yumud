@@ -55,7 +55,7 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc<4>();
 
 
-    timer.init(FREQ, TimerCountMode::CenterAlignedDualTrig);
+    timer.init({FREQ, TimerCountMode::CenterAlignedDualTrig});
     timer.enable_arr_sync();
 
     #if TIM_INDEX == 1

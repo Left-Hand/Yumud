@@ -277,7 +277,7 @@ void BasicTimer::remap(const uint8_t rm){
 }
 
 uint32_t BasicTimer::get_bus_freq(){
-    return internal::is_advanced_timer(instance_) ? 
+    return details::is_advanced_timer(instance_) ? 
         sys::clock::get_apb2_freq() : 
         sys::clock::get_apb1_freq();
 }
@@ -328,18 +328,18 @@ void BasicTimer::set_freq(const uint32_t freq){
 }
 
 
-void BasicTimer::init(const uint32_t freq, const Mode mode, const Enable en){
+void BasicTimer::init(const Config & cfg){
     this->enable_rcc(EN);
 
     TIM_InternalClockConfig(instance_);
 
-    set_freq(internal::is_aligned_count_mode(mode) ? (freq * 2) : (freq));
-    set_count_mode(mode);
+    set_freq(details::is_aligned_count_mode(cfg.mode) ? (cfg.freq * 2) : (cfg.freq));
+    set_count_mode(cfg.mode);
     enable_arr_sync(EN);
 
     TIM_ClearFlag(instance_, 0x1e7f);
     TIM_ClearITPendingBit(instance_, 0x00ff);
-    enable(en);
+    enable(cfg.en);
 }
 
 
@@ -352,7 +352,7 @@ void BasicTimer::deinit(){
 void BasicTimer::enable(const Enable en){
     TIM_Cmd(instance_, en == EN);
     
-    if((en == EN) and internal::is_advanced_timer(instance_)){
+    if((en == EN) and details::is_advanced_timer(instance_)){
         TIM_CtrlPWMOutputs(instance_, en == EN);
     }
 }
@@ -437,7 +437,7 @@ uint8_t AdvancedTimer::calculate_deadzone(const Nanoseconds ns){
 }
 
 void BasicTimer::enable_it(const IT it,const NvicPriority request, const Enable en){
-    NvicPriority::enable(request, internal::it_to_irq(instance_, it), en);
+    NvicPriority::enable(request, details::it_to_irq(instance_, it), en);
     TIM_ITConfig(instance_, std::bit_cast<uint8_t>(it), en == EN);
 }
 

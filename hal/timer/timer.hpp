@@ -128,8 +128,13 @@ protected:
 public:
     BasicTimer(TIM_TypeDef * _base):instance_(_base){;}
 
-    
-    void init(const uint32_t ferq, const Mode mode = Mode::Up, const Enable en = EN);
+    struct Config{
+        const uint32_t freq;
+        const Mode mode = Mode::Up;
+        const Enable en = EN;
+    };
+
+    void init(const Config & cfg);
     void remap(const uint8_t rm);
     void deinit();
 

@@ -56,7 +56,7 @@ void svpwm3_main(){
     auto & pwm_w = timer.oc<3>();
 
 
-    timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig);
+    timer.init({CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig});
     timer.enable_arr_sync();
 
     #if TIM_INDEX == 1
@@ -93,7 +93,7 @@ void svpwm3_main(){
     };
 
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
-    timer.init(20000, TimerCountMode::CenterAlignedUpTrig);
+    timer.init({20000, TimerCountMode::CenterAlignedUpTrig});
 
     timer.oc<4>().init({});
     timer.oc<4>().enable_output(EN);

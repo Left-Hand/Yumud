@@ -61,7 +61,7 @@ void test_sogi(){
     real_t u0;
 
 
-    timer1.init(isr_freq);
+    timer1.init({isr_freq});
 
     auto run_sogi = [&](){
 
@@ -139,7 +139,7 @@ void digipw_main(){
     /*-----------------------*/
 
     constexpr auto CHOPPER_FREQ = 100'000;
-    timer1.init(CHOPPER_FREQ);
+    timer1.init({CHOPPER_FREQ});
     timer1.init_bdtr(10ns);
 
     auto & ch = timer1.oc<1>();
