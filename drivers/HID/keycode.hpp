@@ -517,6 +517,20 @@ public:
 
     constexpr KeyCode(Kind kind):kind_(kind){;}
 
+    static constexpr Option<KeyCode> from_u8(const uint8_t raw){
+        constexpr uint8_t MAX_RAW = std::bit_cast<uint8_t>(Kind::F35);
+        if(raw <= MAX_RAW){
+            return Some(KeyCode(static_cast<Kind>(raw)));
+        }else{
+            return None;
+        }
+    }
+
+    template<uint8_t Raw>
+    static constexpr KeyCode from_u8(){
+        return from_u8(Raw).unwrap();
+    }
+
     static constexpr Option<KeyCode> from_digit(const uint8_t digit) {
         return Some(KeyCode(std::bit_cast<Kind>(uint8_t(
             std::bit_cast<uint8_t>(Digit0)
@@ -591,11 +605,31 @@ public:
         return kind_;
     }
 
-    constexpr bool operator ==(const KeyCode & rhs) const {
+    [[nodiscard]] constexpr bool is_digit() const {
+        return to_digit().is_some();
+    }
+
+    [[nodiscard]] constexpr bool is_arrow() const {
+        switch(kind_){
+            default:
+                return false;
+            case Kind::ArrowUp:
+            case Kind::ArrowDown:
+            case Kind::ArrowLeft:
+            case Kind::ArrowRight:
+                return true;
+        }
+    }
+
+    [[nodiscard]] constexpr bool is_alpha() const {
+        return to_digit().is_some();
+    }
+
+    [[nodiscard]] constexpr bool operator ==(const KeyCode & rhs) const {
         return kind_ == rhs.kind_;
     }
 
-    constexpr bool operator ==(const Kind kind) const {
+    [[nodiscard]] constexpr bool operator ==(const Kind kind) const {
         return kind_ == kind;
     }
 

@@ -89,11 +89,6 @@ public:
             just_pressed_.add(code);
             just_released_.reset();
         }else{
-        // }else if(just_pressed_.has(code)){
-        //     just_pressed_.reset();
-        //     just_released_.reset();
-        // }else if(previous_pressed.has(code)){
-
             just_pressed_.reset();
             just_released_.reset();
         }
@@ -153,14 +148,14 @@ public:
     friend OutputStream & operator << (
             OutputStream & os, const ButtonInput<KeyCode> & self){
         auto print_item = [&os](const char * str, const KeyCodes & codes){
-            os << os.brackets<'{'>() << str << 
-                codes << os.brackets<'}'>();
+            os << str << codes;
         };
 
+        os << os.brackets<'{'>();
         print_item("~:", self.pressed_); os << os.splitter();
         print_item("+:", self.just_pressed_); os << os.splitter();
         print_item("-:", self.just_released_);
-
+        os << os.brackets<'}'>();
 
         return os;
     }

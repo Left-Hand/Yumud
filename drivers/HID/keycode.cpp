@@ -5,7 +5,7 @@ namespace ymd::hid{
 ::ymd::OutputStream & operator <<(::ymd::OutputStream & os, const hid::KeyCode_Kind kind){
     using Kind = hid::KeyCode_Kind;
     const auto guard = os.create_guard();
-    os << std::dec;
+    os << std::dec << os.brackets<'['>();
     switch(kind){
         default: 
             os << "Unprintable Key";
@@ -45,9 +45,24 @@ namespace ymd::hid{
         case Kind::ArrowDown:
             os << "ArrowDown";
             break;
+        case Kind::NumpadBackspace:
+        case Kind::Backspace:
+            os << "Backspace";
+            break;
+
+        case Kind::Enter:
+        case Kind::NumpadEnter:
+            os << "Enter";
+    
+        case Kind::NumpadClear:
+            os << "Clear";
+
+        case Kind::Delete:
+            os << "Delete";
     }
 
-    return os;
+    os << os.brackets<'('>() << std::bit_cast<uint8_t>(kind) << os.brackets<')'>();
+    return os << os.brackets<']'>();
 }
 
 }
