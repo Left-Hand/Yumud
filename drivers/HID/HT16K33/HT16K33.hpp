@@ -112,6 +112,8 @@ struct HT16K33_Collections{
         DisplayBitIndexOutOfRange,
         DisplayByteIndexOutOfRange,
         DisplayPayloadOversize,
+        DisplayXOutOfRange,
+        DisplayYOutOfRange,
         KeyColumnOutOfRange,
         KeyRowOutOfRange,
         UnknownInterruptCode
@@ -278,7 +280,25 @@ struct HT16K33_Regs:public HT16K33_Collections{
 
     static constexpr size_t GC_RAM_SIZE = 16;
     static constexpr size_t KEY_RAM_SIZE = 3;
-    using GcRam = std::array<uint8_t, GC_RAM_SIZE>;
+
+    struct GcRam final{
+        std::array<uint8_t, GC_RAM_SIZE> bytes;
+
+        GcRam() = default;
+
+        constexpr auto as_bytes() const {return std::span(bytes);}
+
+        constexpr IResult<> write_pixel(const uint8_t x, const uint8_t y, const bool val){
+            if(x > 7) return Err(Error::DisplayXOutOfRange);
+            if(y > 15) return Err(Error::DisplayYOutOfRange);
+            const uint8_t idx = x * 2 + (y / 8);
+            const uint8_t mask = 1 << (y % 8); 
+            if(val)bytes[idx] |= mask;
+            else bytes[idx] &= ~mask;
+            return Ok();
+        }
+    };
+    
     using KeyRam = std::array<uint8_t, KEY_RAM_SIZE>;
     
     GcRam gc_ram_;
@@ -390,8 +410,12 @@ public:
 
     [[nodiscard]] IResult<BoolLevel> get_intreg_status();
 
+    [[nodiscard]] IResult<> update_displayer(const GcRam & gc_ram){
+        return update_displayer(0,gc_ram.as_bytes());
+    }
     [[nodiscard]] IResult<> update_displayer(
         const size_t offset, std::span<const uint8_t> pbuf);
+
 
     [[nodiscard]] IResult<> clear_displayer();
 

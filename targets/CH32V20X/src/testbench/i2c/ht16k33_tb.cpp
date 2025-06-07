@@ -45,7 +45,7 @@ struct KeyBoardLayout{
 };
 
 template<>
-struct KeyBoardLayout<HT16K33>{
+struct KeyBoardLayout<HT16K33> final{
 static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
     switch(y){
         case 0: switch(x){
@@ -172,7 +172,18 @@ private:
     ButtonInput<KeyCode> input_;
 };
 
+template<typename T>
+class SegDisplayerComponent{
 
+};
+
+template<>
+class SegDisplayerComponent<HT16K33> final{
+public:
+    SegDisplayerComponent(HT16K33 & inst) : inst_(inst){}
+private:
+    HT16K33 & inst_;
+};
 
 template<size_t N>
 class FixedString{
@@ -533,6 +544,33 @@ private:
 
 }
 
+enum class SegCode:uint8_t{
+	_0 = 0x3F,  //"0"
+    _1 = 0x06,  //"1"
+    _2 = 0x5B,  //"2"
+    _3 = 0x4F,  //"3"
+    _4 = 0x66,  //"4"
+    _5 = 0x6D,  //"5"
+    _6 = 0x7D,  //"6"
+    _7 = 0x07,  //"7"
+    _8 = 0x7F,  //"8"
+    _9 = 0x6F,  //"9"
+    A = 0x77,  //"A"
+    B = 0x7C,  //"B"
+    C = 0x39,  //"C"
+    D = 0x5E,  //"D"
+    E = 0x79,  //"E"
+    F = 0x71,  //"F"
+    H = 0x76,  //"H"
+    L = 0x38,  //"L"
+    n = 0x37,  //"n"
+    u = 0x3E,  //"u"
+    P = 0x73,  //"P"
+    O = 0x5C,  //"o"
+    _ = 0x40,  //"-"
+    Off = 0x00  //熄灭
+};
+
 
 static void HT16K33_tb(HT16K33 & ht16){
     ht16.init({.pulse_duty = HT16K33::PulseDuty::_8_16}).examine();
@@ -566,9 +604,64 @@ static void HT16K33_tb(HT16K33 & ht16){
         comp.update().examine();
 
         {
-            auto test_pattern = std::array<uint8_t, 16>{};
-            test_pattern.fill(cnt);
-            ht16.update_displayer(0, std::span(test_pattern)).examine();
+            using Pattern = HT16K33::GcRam;
+            auto test_pattern = Pattern{};
+            // test_pattern.fill(cnt);
+
+            auto correct_display_xy = [](const uint8_t _x, const uint8_t _y)
+                -> std::tuple<uint8_t, uint8_t>{
+                
+                const auto x = [&](){
+                    switch(_x){
+                        case 0: return 3;
+                        case 1: return 6;
+                        case 2: return 2;
+                        case 3: return 5;
+                        case 4: return 4;
+                        case 5: return 1;
+                        case 6: return 0;
+                        default: return 0;
+                    }
+                }();
+
+                const auto y = [&](){
+                    switch(_y){
+                        case 0: return 5;
+                        case 1: return 4;
+                        case 2: return 2;
+                        case 3: return 3;
+                        case 4: return 0;
+                        case 5: return 6;
+                        case 6: return 7;
+                        case 7: return 1;
+                        default: return 0;
+                    }
+                }();
+
+                return {y,x};
+            };
+
+            auto display_segcode = [&](const uint8_t i, const SegCode code){
+                const auto raw = std::bit_cast<uint8_t>(code);
+
+                for(int j = 0; j < 8; j++){
+                    if(not (raw & (1 << j))) continue;
+                    const auto [x,y] = correct_display_xy(i,j);
+                    test_pattern.write_pixel(x, y, true).examine();
+                }
+            };
+
+            // for(int i = 0; i < 7; i++){
+            display_segcode(0, SegCode::_0);
+            display_segcode(1, SegCode::_1);
+            display_segcode(2, SegCode::_2);
+            display_segcode(3, SegCode::_3);
+            display_segcode(4, SegCode::_4);
+            display_segcode(5, SegCode::_5);
+            display_segcode(6, SegCode::_6);
+            ht16.update_displayer(test_pattern).examine();
+            clock::delay(100ms);
+            // }
         }
 
 
