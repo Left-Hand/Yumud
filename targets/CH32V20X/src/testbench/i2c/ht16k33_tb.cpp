@@ -343,30 +343,14 @@ private:
             position_(position),
             max_limit_(max_limit){;}
 
-        // constexpr Cursor(const Cursor& other): 
-        //     position_(other.position_),
-        //     max_limit_(other.max_limit_) 
-            
-        //     {
-        //         DEBUG_PRINTLN("copy", position_, other.position_);
-        //     }
-
-        // constexpr Cursor operator = (const Cursor& other){
-        //     return Cursor(other);
-        // }
-        // [[nodiscard]] constexpr Cursor try_shift(int delta, const size_t limit = UINT32_MAX) const{
-        //     const auto raw_next_position = int(position_) + delta;
-        //     const auto next_position = CLAMP(raw_next_position, 0, int(MIN(limit, max_limit_)));
-        //     return copy(next_position);
-        // }
-
-        [[nodiscard]] constexpr Cursor try_shift(int delta, size_t _limit = UINT32_MAX) const{
-            const int raw_next_position = int(position_) + delta;
+        [[nodiscard]] constexpr Result<Cursor, void> shift(int delta, size_t _limit = UINT32_MAX) const{
+            const int next_position = int(position_) + delta;
             const int limit = int(MIN(_limit, max_limit_));
-            // ASSERT(raw_next_position >= 0);
-            // ASSERT(raw_next_position < limit); 
-            const auto next_position = CLAMP(raw_next_position, 0, limit);
-            return copy(next_position);
+            // ASSERT(next_position >= 0);
+            if(next_position < 0) return Err();
+            if(next_position > limit) return Err();
+            // ASSERT(next_position < limit); 
+            return Ok(copy(CLAMP(next_position, 0, limit)));
         }
 
         [[nodiscard]] constexpr uint8_t position() const {
@@ -394,8 +378,8 @@ private:
             static_assert(cursor.position() == 0);
             static_assert(cursor.max_limit() == 10);
             static_assert(cursor.copy(1).position() == 1);
-            static_assert(cursor.try_shift(1).position() == 1);
-            static_assert(cursor.try_shift(3).position() == 3);
+            static_assert(cursor.shift(1).unwrap().position() == 1);
+            static_assert(cursor.shift(3).unwrap().position() == 3);
 
             static_assert(Cursor{1,MAX_LENGTH}.position() == 1);
         }
@@ -461,7 +445,7 @@ public:
 
 
 private:
-    static constexpr size_t MAX_LENGTH = 16;
+    static constexpr size_t MAX_LENGTH = 7;
     FixedString<MAX_LENGTH> str_;
 
     Cursor cursor_;
@@ -471,11 +455,15 @@ private:
         switch(code.kind()){
             default: __builtin_unreachable();
             case KeyCode::ArrowLeft:
-                cursor_ =  cursor_.try_shift(-1, str_.length());
+                cursor_ = cursor_
+                    .shift(-1, str_.length())
+                    .unwrap_or(cursor_);
+
                 return;
             case KeyCode::ArrowRight:
-                cursor_ = cursor_.try_shift(1, str_.length());
-                return;
+                cursor_ = cursor_
+                    .shift(1, str_.length())
+                    .unwrap_or(cursor_);
 
             case KeyCode::ArrowUp:
             case KeyCode::ArrowDown:{
@@ -492,7 +480,9 @@ private:
             // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
             // cursor_ = Cursor{1,MAX_LENGTH};
             // cursor_ = Cursor{static_cast<uint8_t>(position + 1), MAX_LENGTH};
-            cursor_ = cursor_.try_shift(1, str_.length());
+            cursor_ = cursor_
+                .shift(1, str_.length())
+                .unwrap_or(cursor_);
             // return next_cursor;
             // __builtin_abort();
         }else{
@@ -505,7 +495,9 @@ private:
         const auto position = cursor_.position();
         const auto res = str_.erase(position);
         if(res.is_ok()){
-            cursor_ = cursor_.try_shift(-1, str_.length());
+            cursor_ = cursor_
+                .shift(-1, str_.length())
+                .unwrap_or(cursor_);
         }else{
             DEBUG_PRINTLN("can't erase");
         }
