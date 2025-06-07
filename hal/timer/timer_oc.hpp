@@ -57,7 +57,9 @@ public:
 
     __fast_inline void set_duty(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
-    __fast_inline operator real_t(){return iq_t<8>(cvr_) / int(arr_);}
+    __fast_inline real_t get_duty(){return iq_t<8>(cvr_) / int(arr_);}
+
+
 };
 
 class TimerOCN final:public TimerOut{
@@ -94,18 +96,15 @@ public:
 };
 
 class TimerOcPair final:public PwmIntf{
-protected:
-    TimerOC & oc_;
-    TimerOC & ocn_;
-    bool inversed = false;
+
 public:
     TimerOcPair(TimerOC & oc, TimerOC & ocn):
         oc_(oc),
         ocn_(ocn){;}
     void set_duty(const real_t value) override{
         const bool is_minus = signbit(value);
-        const auto abs_value = inversed ? (1 - ABS(value)) : ABS(value);
-        const auto zero_value = real_t(inversed);
+        const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
+        const auto zero_value = real_t(is_inversed_);
 
         if(is_minus){
             oc_.set_duty(zero_value);
@@ -118,8 +117,12 @@ public:
     }
 
     void inverse(const Enable en){
-        inversed = en == EN;
+        is_inversed_ = en == EN;
     }
+private:
+    TimerOC & oc_;
+    TimerOC & ocn_;
+    bool is_inversed_ = false;
 };
 
 

@@ -69,7 +69,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
             // u, 
             // v, 
             // w,
-            real_t(timer.oc<1>())
+            timer.oc<1>().get_duty()
         );
         // clock::delay(1ms);
         clock::delay(100us);

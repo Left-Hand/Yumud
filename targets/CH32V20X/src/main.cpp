@@ -78,7 +78,8 @@ int main(){
     // i2c_scanner_main();
     // tca9548_main();
     // eeprom_main();
-    ht16k33_main();
+    // ht16k33_main();
+    mystepper_main();
     // flash_main();
     // digipw_main();
     // uart_main();
