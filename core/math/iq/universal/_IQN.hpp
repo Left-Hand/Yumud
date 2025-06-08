@@ -8,7 +8,7 @@ requires (Q < 32)
 struct _iq{
 private:
     int32_t value_ = 0;
-    __fast_inline constexpr _iq<Q>(const int32_t value):
+    __fast_inline constexpr explicit _iq<Q>(const int32_t value):
         value_(value){
     }
 public:
@@ -33,6 +33,7 @@ public:
     __fast_inline constexpr bool signbit() const{
         return value_ & 0x80000000;
     }
+
     __fast_inline constexpr operator bool() const{return value_;}
 
     template<size_t P>

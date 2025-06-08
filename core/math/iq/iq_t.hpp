@@ -104,15 +104,14 @@ public:
 
     template<typename T>
     requires std::is_integral_v<T>
-    __fast_inline constexpr iq_t(const T intValue) : value_(_iq<Q>::from_i32(intValue << Q)) {;}
+    __fast_inline constexpr iq_t(const T iv):
+        value_(_iq<Q>::from_i32(iv << Q)) {;}
 
-    #ifdef STRICT_IQ
-    __fast_inline consteval explicit iq_t(const float fv):value_((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
-    #else
-    __fast_inline constexpr iq_t(const float fv):value_((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
-    #endif
+    __fast_inline consteval explicit iq_t(const long double dv):
+        value_(_iq<Q>::from_i32(dv * static_cast<long double>(1u << Q))){};
 
-    static __fast_inline constexpr iq_t from (const floating auto fv){return iq_t{__iqdetails::_IQFtoN<Q>(fv)};}
+    static __fast_inline constexpr iq_t from (const floating auto fv){
+        return iq_t{__iqdetails::_IQFtoN<Q>(fv)};}
 
     __fast_inline constexpr iq_t operator+() const {
         return *this;
@@ -227,7 +226,7 @@ public:
     requires std::is_floating_point_v<T>
     __inline constexpr explicit operator T() const{
         if(std::is_constant_evaluated()){
-            return float(to_i32()) / int(1 << Q);
+            return float(to_i32()) / int(1u << Q);
         }else{
             return __iqdetails::_IQNtoF<Q>(value_);
         }
@@ -465,7 +464,7 @@ using q31 = iq_t<31>;
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> abs(const iq_t<P> iq){
     const auto ivalue = iq.to_i32();
-    return iq_t<Q>(_iq<Q>::from_i32(ivalue > 0 ? ivalue : -ivalue));
+    return iq_t<Q>::from_i32(ivalue > 0 ? ivalue : -ivalue);
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -481,13 +480,16 @@ __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32(a.to_i32() % b.to_i32()));}
+__fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){
+    return iq_t<Q>::from_i32(a.to_i32() % b.to_i32());}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){return a * (1 - x) + b * x;}
+__fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){
+    return a * (1 - x) + b * x;}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){return iq_t<Q>(_iq<Q>::from_i32((a.to_i32() + b.to_i32()) >> 1));}
+__fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){
+    return iq_t<Q>::from_i32((a.to_i32() + b.to_i32()) >> 1);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
@@ -498,10 +500,13 @@ template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){return int(iq);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
+__fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){
+    return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>(int(iq + iq_t<Q>::from(0.5)));}
+__fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){
+    static constexpr auto HALF_ONE = iq_t<Q>(0.5);
+    return iq_t<Q>(int(iq + HALF_ONE));}
 
 size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);
 
@@ -512,7 +517,7 @@ size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
 
 template<size_t Q>
 bool not_in_one(const iq_t<Q> qv){
-    // return (qv.to_i32() & (~uint32_t((1 << Q) - 1)));
+    // return (qv.to_i32() & (~uint32_t((1u << Q) - 1)));
     if(qv < iq_t<Q>(-0.001)) return true;
     if(qv > iq_t<Q>(1.001)) return true;
     return false;
