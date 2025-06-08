@@ -100,7 +100,7 @@ public:
 private:
     std::array<Callback, 8> cbs_;
 protected:
-    TIM_TypeDef * instance_;
+    TIM_TypeDef * inst_;
 
     uint32_t get_bus_freq();
     void enable_rcc(const Enable en);
@@ -126,7 +126,7 @@ protected:
     }
 
 public:
-    BasicTimer(TIM_TypeDef * _base):instance_(_base){;}
+    BasicTimer(TIM_TypeDef * _base):inst_(_base){;}
 
     struct Config{
         const uint32_t freq;
@@ -150,10 +150,10 @@ public:
     void enable_arr_sync(const Enable en = EN);
     void enable_psc_sync(const Enable en = EN);
     void enable_cc_ctrl_sync(const Enable en = EN);
-    auto & inst() {return instance_;}
+    auto & inst() {return inst_;}
 
-    volatile uint16_t & cnt(){return instance_->CNT;}
-    volatile uint16_t & arr(){return instance_->ATRLR;}
+    volatile uint16_t & cnt(){return inst_->CNT;}
+    volatile uint16_t & arr(){return inst_->ATRLR;}
 
     template<typename Fn>
     void attach(
@@ -193,10 +193,10 @@ public:
     GenericTimer(TIM_TypeDef * _base):
         BasicTimer(_base),
         channels{
-            TimerOC(instance_, TimerChannel::ChannelIndex::CH1),
-            TimerOC(instance_, TimerChannel::ChannelIndex::CH2),
-            TimerOC(instance_, TimerChannel::ChannelIndex::CH3),
-            TimerOC(instance_, TimerChannel::ChannelIndex::CH4)
+            TimerOC(inst_, TimerChannel::ChannelIndex::CH1),
+            TimerOC(inst_, TimerChannel::ChannelIndex::CH2),
+            TimerOC(inst_, TimerChannel::ChannelIndex::CH3),
+            TimerOC(inst_, TimerChannel::ChannelIndex::CH4)
         }{;}
 
     void init_as_encoder(const Mode mode = Mode::Up);
@@ -207,10 +207,10 @@ public:
     requires(I >= 1 and I <= 4)
     volatile uint16_t & cvr(){
         switch(I){
-            case 1: return instance_->CH1CVR;
-            case 2: return instance_->CH2CVR;
-            case 3: return instance_->CH3CVR;
-            case 4: return instance_->CH4CVR;
+            case 1: return inst_->CH1CVR;
+            case 2: return inst_->CH2CVR;
+            case 3: return inst_->CH3CVR;
+            case 4: return inst_->CH4CVR;
             default: __builtin_unreachable();
         }
     }
@@ -257,15 +257,15 @@ public:
     AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
             n_channels{
-                TimerOCN(instance_, TimerChannel::ChannelIndex::CH1N),
-                TimerOCN(instance_, TimerChannel::ChannelIndex::CH2N),
-                TimerOCN(instance_, TimerChannel::ChannelIndex::CH3N),
+                TimerOCN(inst_, TimerChannel::ChannelIndex::CH1N),
+                TimerOCN(inst_, TimerChannel::ChannelIndex::CH2N),
+                TimerOCN(inst_, TimerChannel::ChannelIndex::CH3N),
             }{;}
 
     void init_bdtr(const Nanoseconds ns, const LockLevel level = LockLevel::Off);
 
     void set_deadzone_ns(const Nanoseconds ns);
-    void set_repeat_times(const uint8_t rep){instance_->RPTCR = rep;}
+    void set_repeat_times(const uint8_t rep){inst_->RPTCR = rep;}
 
     template<size_t I>
     requires(I >= 1 and I <= 4)

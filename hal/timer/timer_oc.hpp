@@ -9,7 +9,8 @@ class Gpio;
 
 class TimerOut: public TimerChannel{
 protected:
-    TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}
+    TimerOut(TIM_TypeDef * inst, const ChannelIndex ch_idx):
+        TimerChannel(inst, ch_idx){;}
     void install_to_pin(const Enable en = EN);
 public:
     void set_valid_level(const BoolLevel level);
@@ -38,10 +39,10 @@ protected:
     volatile uint16_t & cvr_;
     volatile uint16_t & arr_;
 public:
-    TimerOC(TIM_TypeDef * _instance, const ChannelIndex _channel):
-        TimerOut(_instance, _channel), 
-            cvr_(from_channel_to_cvr(_instance, _channel)), 
-            arr_(instance->ATRLR){;}
+    TimerOC(TIM_TypeDef * inst, const ChannelIndex ch_idx):
+        TimerOut(inst, ch_idx), 
+            cvr_(from_channel_to_cvr(inst, ch_idx)), 
+            arr_(inst_->ATRLR){;}
 
     void init(const TimerOcPwmConfig & config);
 
@@ -49,6 +50,7 @@ public:
     void enable_cvr_sync(const Enable en = EN);
     
     Gpio & io();
+
     __fast_inline volatile uint16_t & cvr() {return cvr_;}
     __fast_inline volatile uint16_t & arr() {return arr_;}
 
@@ -64,24 +66,31 @@ public:
 
 class TimerOCN final:public TimerOut{
 public:
-    TimerOCN(TIM_TypeDef * _base, const ChannelIndex _channel):TimerOut(_base, _channel){;}
+    TimerOCN(
+        TIM_TypeDef * _base, 
+        const ChannelIndex ch_idx):
+        TimerOut(_base, ch_idx)
+        {;}
+
     void init(const TimerOcnPwmConfig & cfg);
 
     Gpio & io();
 };
 
+
+//将输出通道和互补输出通道作为一个双极性pwm物理层的两个通道
+//当输入为正时 原始输出通道作业 互补输出通道关闭
+//当输入为负时 原始输出通道关闭 互补输出通道作业
 class TimerOcMirror final:public PwmIntf{
-protected:
-    TimerOC & oc_;
-    TimerOCN & ocn_;
-    bool last_polar = false;
 public:
-    TimerOcMirror(TimerOC & oc, TimerOCN & ocn):
+    TimerOcMirror(
+        TimerOC & oc, 
+        TimerOCN & ocn):
         oc_(oc), ocn_(ocn){;}
     void set_duty(const real_t value){
         const bool polar = value > 0;
-        if(last_polar != polar){
-            last_polar = polar;
+        if(last_polar_ != polar){
+            last_polar_ = polar;
 
             if(polar){
                 oc_.enable_output(EN);
@@ -93,25 +102,33 @@ public:
         }
         oc_.set_duty(abs(value));
     }
+private:
+    TimerOC & oc_;
+    TimerOCN & ocn_;
+    bool last_polar_ = false;
 };
 
-class TimerOcPair final:public PwmIntf{
 
+//将两个输出通道作为一个双极性pwm物理层的两个通道
+//当输入为正时 高端输出通道作业 低端输出通道关闭
+//当输入为负时 高端输出通道关闭 低端输出通道作业
+class TimerOcPair final:public PwmIntf{
 public:
-    TimerOcPair(TimerOC & oc, TimerOC & ocn):
-        oc_(oc),
-        ocn_(ocn){;}
-    void set_duty(const real_t value) override{
+    TimerOcPair(TimerOC & pos_oc, TimerOC & neg_oc):
+        pos_oc_(pos_oc),
+        neg_oc_(neg_oc){;}
+
+    void set_duty(const real_t value){
         const bool is_minus = signbit(value);
         const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
         const auto zero_value = real_t(is_inversed_);
 
         if(is_minus){
-            oc_.set_duty(zero_value);
-            ocn_.set_duty(abs_value);
+            pos_oc_.set_duty(zero_value);
+            neg_oc_.set_duty(abs_value);
         }else{
-            oc_.set_duty(abs_value);
-            ocn_.set_duty(zero_value);
+            pos_oc_.set_duty(abs_value);
+            neg_oc_.set_duty(zero_value);
         }
         
     }
@@ -120,8 +137,8 @@ public:
         is_inversed_ = en == EN;
     }
 private:
-    TimerOC & oc_;
-    TimerOC & ocn_;
+    TimerOC & pos_oc_;
+    TimerOC & neg_oc_;
     bool is_inversed_ = false;
 };
 

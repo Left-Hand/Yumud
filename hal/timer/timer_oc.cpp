@@ -7,15 +7,15 @@ using namespace ymd::hal;
 
 
 void TimerOut::install_to_pin(const Enable en){
-    Gpio & io = details::get_pin(instance, idx_);
+    Gpio & io = details::get_pin(inst_, idx_);
     if(en == EN)io.afpp();
     else io.inflt();
 }
 
 
 void TimerOut::set_valid_level(const BoolLevel level){
-    if(level == LOW) instance->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
-    else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
+    if(level == LOW) inst_->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
+    else inst_->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
 }
 
 void TimerOC::init(const TimerOcPwmConfig & cfg){
@@ -39,51 +39,51 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
     switch(idx_){
         default: ymd::sys::abort();
         case CH1:{
-            uint16_t tmpccmrx = instance->CHCTLR1;
+            uint16_t tmpccmrx = inst_->CHCTLR1;
             const uint16_t m_code = TIM_OC1M;
             const uint16_t s_code = TIM_CC1S;
             tmpccmrx &= uint16_t(~(uint16_t(m_code)));
             tmpccmrx &= uint16_t(~(uint16_t(s_code)));
             tmpccmrx |= uint16_t(raw_code);
-            instance->CHCTLR1 = tmpccmrx;
+            inst_->CHCTLR1 = tmpccmrx;
             break;
         }
         case CH2:{
-            uint16_t tmpccmrx = instance->CHCTLR1;
+            uint16_t tmpccmrx = inst_->CHCTLR1;
             const uint16_t m_code = TIM_OC2M;
             const uint16_t s_code = TIM_CC2S;
             tmpccmrx &= uint16_t(~(uint16_t(m_code)));
             tmpccmrx &= uint16_t(~(uint16_t(s_code)));
             tmpccmrx |= uint16_t(uint16_t(raw_code) << 8);
-            instance->CHCTLR1 = tmpccmrx;
+            inst_->CHCTLR1 = tmpccmrx;
             break;
         }
         case CH3:{
-            uint16_t tmpccmrx = instance->CHCTLR2;
+            uint16_t tmpccmrx = inst_->CHCTLR2;
             const uint16_t m_code = TIM_OC3M;
             const uint16_t s_code = TIM_CC3S;
             tmpccmrx &= uint16_t(~(uint16_t(m_code)));
             tmpccmrx &= uint16_t(~(uint16_t(s_code)));
             tmpccmrx |= uint16_t(raw_code);
-            instance->CHCTLR2 = tmpccmrx;
+            inst_->CHCTLR2 = tmpccmrx;
             break;
         }
         case CH4:{
-            uint16_t tmpccmrx = instance->CHCTLR2;
+            uint16_t tmpccmrx = inst_->CHCTLR2;
             const uint16_t m_code = TIM_OC4M;
             const uint16_t s_code = TIM_CC4S;
             tmpccmrx &= uint16_t(~(uint16_t(m_code << 8)));
             tmpccmrx &= uint16_t(~(uint16_t(s_code)));
             tmpccmrx |= uint16_t(uint16_t(raw_code) << 8);
-            instance->CHCTLR2 = tmpccmrx;
+            inst_->CHCTLR2 = tmpccmrx;
             break;
         }
     }
 
 }
 void TimerOut::enable_output(const Enable en){
-    if(en == EN) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
-    else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
+    if(en == EN) inst_->CCER |= (1 << ((uint8_t)idx_ * 2));
+    else inst_->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
 }
 
 void TimerOC::enable_cvr_sync(const Enable en){
@@ -91,16 +91,16 @@ void TimerOC::enable_cvr_sync(const Enable en){
 
     switch(idx_){
         case CH1:
-            TIM_OC1PreloadConfig(instance, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC1PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH2:
-            TIM_OC2PreloadConfig(instance, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC2PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH3:
-            TIM_OC3PreloadConfig(instance, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC3PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH4:
-            TIM_OC4PreloadConfig(instance, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC4PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         default:
             sys::abort();
@@ -109,9 +109,9 @@ void TimerOC::enable_cvr_sync(const Enable en){
 }
 
 Gpio & TimerOC::io(){
-    return details::get_pin(instance, idx_);
+    return details::get_pin(inst_, idx_);
 }
 
 Gpio & TimerOCN::io(){
-    return details::get_pin(instance, idx_);
+    return details::get_pin(inst_, idx_);
 }

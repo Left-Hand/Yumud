@@ -83,9 +83,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
     }
 }
 
-void phase3pwm_main(void)
-{
-    
+void phase3pwm_main(void){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
     // tb1();
