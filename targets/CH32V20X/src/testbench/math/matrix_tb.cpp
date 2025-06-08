@@ -4,7 +4,6 @@
 #include "core/math/iq/iq_t.hpp"
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/utils/Reg.hpp"
 
 #include "hal/bus/uart/uart.hpp"
 

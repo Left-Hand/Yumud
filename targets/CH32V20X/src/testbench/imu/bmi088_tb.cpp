@@ -45,7 +45,7 @@ static void bmi088_tb(hal::Spi & spi){
         .fs = 200
     }};
 
-    hal::timer1.init(CALC_FREQ_HZ);
+    hal::timer1.init({CALC_FREQ_HZ});
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
 
         const auto begin_m = clock::micros();

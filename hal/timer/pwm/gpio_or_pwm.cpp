@@ -5,13 +5,6 @@
 
 using namespace ymd::hal;
 
-// void GpioOrPwm::init(){
-//     if(std::holds_alternative<GpioRef>(inst_)){
-//         std::get<GpioRef>(inst_).get().outpp();
-//     }else if(std::holds_alternative<PwmRef>(inst_)){
-//         std::get<PwmRef>(inst_).get().init();
-//     };
-// }
 
 bool GpioOrPwm::hasPwm() const {
     return std::holds_alternative<PwmRef>(inst_);

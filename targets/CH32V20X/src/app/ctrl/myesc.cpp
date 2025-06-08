@@ -102,7 +102,7 @@ void myesc_main(){
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
 
-    timer1.init(CHOPPER_FREQ, TimerCountMode::CenterAlignedUpTrig);
+    timer1.init({CHOPPER_FREQ, TimerCountMode::CenterAlignedUpTrig});
 
     static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 150ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;

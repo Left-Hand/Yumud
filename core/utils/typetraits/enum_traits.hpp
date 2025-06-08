@@ -97,11 +97,11 @@ private:
 
 namespace ymd{
 template<typename T>
-struct derive_debug_dispatcher;
+struct DeriveDebugDispatcher;
 
 template<typename E>
 requires std::is_enum_v<E>
-struct derive_debug_dispatcher<E> {
+struct DeriveDebugDispatcher<E> {
     static void call(OutputStream& os, const E value) {
         const auto str_opt = magic::enum_dump<E>::enum_to_str(value);
         if (str_opt.has_value()) {

@@ -21,7 +21,7 @@ using namespace ymd::hal;
 
 void pwm_tb(OutputStream & logger){
 
-    timer1.init(36000);
+    timer1.init({36000});
     #ifdef PWM_TB_GPIO
     GpioPwm pwm{portA[8]};
     pwm.init(32);

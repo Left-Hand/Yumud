@@ -75,7 +75,7 @@ void at8222_tb(){
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻�?
-    timer.init(ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
+    timer.init({ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig});
 
     auto & pwm_pos = timer.oc<1>();
     auto & pwm_neg = timer.oc<2>();

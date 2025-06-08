@@ -32,7 +32,9 @@ enum class EncoderError_Kind:uint8_t{
 };
 }
 
+DERIVE_DEBUG(details::EncoderError_Kind)
 DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
+
 
 class EncoderIntf{
 public:

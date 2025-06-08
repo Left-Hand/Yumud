@@ -229,7 +229,7 @@ void myservo_main(){
 
     while(true){
 
-        hal::timer3.init(TIM_FREQ, TimerCountMode::CenterAlignedUpTrig);
+        hal::timer3.init({TIM_FREQ, TimerCountMode::CenterAlignedUpTrig});
 
         auto & pwm_pos = hal::timer3.oc<1>();
         auto & pwm_neg = hal::timer3.oc<1>();
@@ -304,7 +304,7 @@ void myservo_main(){
     auto & ain2 = adc1.inj<2>();
 
 
-    hal::timer3.init(TIM_FREQ, TimerCountMode::CenterAlignedUpTrig);
+    hal::timer3.init({TIM_FREQ, TimerCountMode::CenterAlignedUpTrig});
 
     real_t sense_raw_volt;
     auto & pwm = hal::timer3.oc<1>();

@@ -107,7 +107,7 @@ public:
 
         #endif
 
-        hal::timer1.init(SERVO_FREQ);
+        hal::timer1.init({SERVO_FREQ});
     }
 
     template<typename Fn>

@@ -106,7 +106,7 @@ namespace ymd::hal{
         ActiveAboveCvr      = 0b111,
     };
 
-    namespace internal{
+    namespace details{
     bool is_basic_timer(const TIM_TypeDef * instance);
 
     bool is_generic_timer(const TIM_TypeDef * instance);

@@ -31,33 +31,45 @@ using IResult = Result<T, Error>;
 #define CHECK_ERR(x, ...) (x)
 #endif
 
-IResult<> HT16K33::set_display_bit(
-    const size_t num, const bool value
-){
-    static constexpr size_t VALUE_WIDTH = 
-        magic::type_to_bits_v<GcRam::value_type>;
+// IResult<> HT16K33::set_display_bit(
+//     const size_t num, const bool value
+// ){
+//     static constexpr size_t VALUE_WIDTH = 
+//         magic::type_to_bits_v<GcRam::value_type>;
 
-    static constexpr size_t MAX_NUM = VALUE_WIDTH * GC_RAM_SIZE;
+//     static constexpr size_t MAX_NUM = VALUE_WIDTH * GC_RAM_SIZE;
 
-    if(num >= MAX_NUM) 
-        return Err(Error::DisplayBitIndexOutOfRange);
+//     if(num >= MAX_NUM) 
+//         return Err(Error::DisplayBitIndexOutOfRange);
 
-    const auto i = num / VALUE_WIDTH;
-    const auto mask = 1 << (num % VALUE_WIDTH);
-    if(value) gc_ram_[i] |= mask;
-    else gc_ram_[i] &= ~mask;
+//     const auto i = num / VALUE_WIDTH;
+//     const auto mask = 1 << (num % VALUE_WIDTH);
+//     if(value) gc_ram_[i] |= mask;
+//     else gc_ram_[i] &= ~mask;
 
-    return Ok();
-}
+//     return Ok();
+// }
 
-IResult<> HT16K33::set_display_byte(
-    const size_t index, const uint8_t value
-){
-    if(index >= GC_RAM_SIZE) 
-        return Err(Error::DisplayByteIndexOutOfRange);
+// IResult<> HT16K33::set_display_byte(
+//     const size_t index, const uint8_t value
+// ){
+//     if(index >= GC_RAM_SIZE) 
+//         return Err(Error::DisplayByteIndexOutOfRange);
 
-    gc_ram_[index] = value;
-    return Ok();
+//     gc_ram_[index] = value;
+//     return Ok();
+// }
+
+IResult<bool> HT16K33::any_key_pressed(){
+    if(phy_.has_int_io()){
+        return Ok(phy_.is_int_io_active());
+    }else{
+        // DEBUG_PRINTLN("reading");
+        return get_intreg_status()
+            .map([](const BoolLevel st){
+                return st == HIGH;
+            });
+    }
 }
 
 // IResult<> HT16K33::clear_display_content(){
@@ -88,7 +100,7 @@ IResult<> HT16K33::set_int_pin_func(const IntPinFunc func){
         func
     });
 }
-IResult<BoolLevel> HT16K33::get_int_status(){
+IResult<BoolLevel> HT16K33::get_intreg_status(){
     static constexpr auto INT_FLAG_REGADDR = 0x60;
     uint8_t ret = 0;
     if(const auto res = phy_.read_data(INT_FLAG_REGADDR, ret);

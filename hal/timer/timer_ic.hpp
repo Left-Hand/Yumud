@@ -11,11 +11,11 @@ public:
     };
 
 protected:
-    TIM_TypeDef * instance;
-    volatile uint16_t & cvr1;
-    volatile uint16_t & cvr2;
+    TIM_TypeDef * inst_;
+    volatile uint16_t & cvr1_;
+    volatile uint16_t & cvr2_;
 
-    const Channel channel;
+    const Channel channel_;
 public:
     
 };

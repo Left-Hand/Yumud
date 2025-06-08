@@ -4,7 +4,6 @@
 
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 #include "core/io/regs.hpp"
-#include "core/utils/Reg.hpp"
 
 namespace ymd::drivers{
 

@@ -45,7 +45,7 @@ public:
     void setup(){
 
 
-        SERVO_PWMGEN_TIMER.init(50);
+        SERVO_PWMGEN_TIMER.init({50});
 
         #ifndef USE_MOCK_SERVO
 
@@ -359,7 +359,7 @@ void nuedc_2023e_main(){
         );
     };
 
-    static constexpr uint FS = 20000;
+    static constexpr uint ISR_FREQ = 20000;
 
     static constexpr auto mc_w = 20.8_q12;
     static CommandShaper1 cs{{
@@ -371,16 +371,16 @@ void nuedc_2023e_main(){
         // .max_acc = 100.0_r,
         // .max_acc = 260.0_r,
         .max_acc = 170.0_r,
-        .fs = FS
+        .fs = ISR_FREQ
     }};
 
     static dsp::Leso leso{dsp::Leso::Config{
         .b0 = 1,
         .w = mc_w / 3,
-        .fs = FS
+        .fs = ISR_FREQ
     }};
 
-    static MockMotor motor{{.fs = FS}};
+    static MockMotor motor{{.fs = ISR_FREQ}};
     // uint32_t exe;
     auto & test_gpio = portC[13];
     test_gpio.outpp();
@@ -441,9 +441,9 @@ void nuedc_2023e_main(){
     
     real_t t = 0.0_r;
 
-    timer1.init(FS);
+    timer1.init({ISR_FREQ});
     timer1.attach(TimerIT::Update, {0,0}, [&]{
-        t += (1.0_r / FS);
+        t += (1.0_r / ISR_FREQ);
         test_leso(t);
 
     });

@@ -3,11 +3,10 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::hal::internal;
 
-namespace ymd::hal::internal{
-bool is_basic_timer(const TIM_TypeDef * instance){
-    switch((uint32_t)instance){
+namespace ymd::hal::details{
+bool is_basic_timer(const TIM_TypeDef * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_TIM6
         case TIM6_BASE: return true;
         #endif
@@ -20,8 +19,8 @@ bool is_basic_timer(const TIM_TypeDef * instance){
     }
 }
 
-bool is_generic_timer(const TIM_TypeDef * instance){
-    switch((uint32_t)instance){
+bool is_generic_timer(const TIM_TypeDef * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_TIM2
         case TIM2_BASE: return true;
         #endif
@@ -43,8 +42,8 @@ bool is_generic_timer(const TIM_TypeDef * instance){
     }
 }
 
-bool is_advanced_timer(const TIM_TypeDef * instance){
-    switch((uint32_t)instance){
+bool is_advanced_timer(const TIM_TypeDef * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE: return true;
         #endif
@@ -66,7 +65,7 @@ bool is_advanced_timer(const TIM_TypeDef * instance){
     }
 }
 
-IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it){
+IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
     using enum TimerChannelIndex;
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
@@ -91,7 +90,7 @@ IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it){
         }\
         break;\
 
-    switch((uint32_t)instance){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_TIM1
         ADVANCED_TIMER_IRQ_TEMPLATE(1)
         #endif
@@ -142,7 +141,7 @@ IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it){
 }
 
 
-Gpio & get_pin(const TIM_TypeDef * instance, const TimerChannelIndex channel){    
+Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelIndex channel){    
     using enum TimerChannelIndex;
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
@@ -181,7 +180,7 @@ Gpio & get_pin(const TIM_TypeDef * instance, const TimerChannelIndex channel){
         }\
         break;\
 
-    switch((uint32_t)instance){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             return NullGpio;
 

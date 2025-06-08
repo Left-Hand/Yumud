@@ -71,7 +71,8 @@ public:
             if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
                 os << value; // 如果可打印，则直接打印
             } else {
-                os << "[Unprintable type]"; // 否则打印提示信息
+                os << os.brackets<'['>() <<  "Unprintable" << os.brackets<']'>(); // 否则打印提示信息
+                os << os.brackets<'<'>() <<  magic::type_name_of<T>() << os.brackets<'>'>(); // 否则打印提示信息
             }
         }, self.value_);
 

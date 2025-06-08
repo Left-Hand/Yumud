@@ -5,17 +5,19 @@
 namespace ymd{
 
 OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind err){
-    derive_debug_dispatcher<hal::HalError::Kind>::call(os, err);
+    DeriveDebugDispatcher<hal::HalError::Kind>::call(os, err);
     return os;
 }
 
 OutputStream & operator << (OutputStream & os, const hal::HalResult & res){
-    if(res.is_ok()) return os << "Ok";
+    if(res.is_ok())
+        os << "Ok";
     else{
-        os << "Err(";
+        os << "Err" << os.brackets<'('>();
         print_halerr_kind(os, res.unwrap_err().kind());
-        return os << ")" << os.endl();
+        os << os.brackets<')'>();
     }
+    return os;
 }
 
 OutputStream & operator << (OutputStream & os, const hal::HalError & err){

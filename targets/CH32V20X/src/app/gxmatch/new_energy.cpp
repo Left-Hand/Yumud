@@ -357,7 +357,7 @@ public:
     void init(){
 
         //因为是中心对齐的顶部触发 所以频率翻倍
-        timer.init(MOTOR_ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig);
+        timer.init({MOTOR_ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig});
 
         pwm_pos.init({
             .cvr_sync_en = EN,
@@ -744,14 +744,14 @@ void app(){
     led.blink(POWERON_BLINK_TIMES);
     gxm::LedTask led_task{led};
 
-    timer1.init(DBG_UARTSW_BAUD);
+    timer1.init({DBG_UARTSW_BAUD});
     timer1.attach(TimerIT::Update, {0,0}, [&]{
         motor_task.tick();
         dbg_uart.tick();
         ab_enc.update();
     });
 
-    timer2.init(TTS_UARTSW_BAUD);
+    timer2.init({TTS_UARTSW_BAUD});
     timer2.attach(TimerIT::Update, {0,0}, [&]{
         tts_uart.tick();
     });
