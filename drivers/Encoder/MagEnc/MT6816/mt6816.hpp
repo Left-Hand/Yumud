@@ -1,5 +1,7 @@
 #pragma once
 
+//不推荐用于新设计 连续读出数据时容易产生误码与毛刺 性价比不高 
+
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
@@ -17,6 +19,10 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
+    struct Config{
+        Enable fast_mode_en = EN;
+    };
+
 public:
     MT6816(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
@@ -27,7 +33,8 @@ public:
     MT6816(hal::Spi & spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    IResult<> init();
+    IResult<> init(const Config & cfg);
+    IResult<> reconf(const Config & cfg);
     IResult<> update();
 
     IResult<real_t> get_lap_position() { return Ok(lap_position_);}
@@ -42,27 +49,34 @@ public:
     }
 
 private:
-    struct Semantic:public Reg16<>{
-        using Reg16::operator=;
-        #pragma pack(push, 1)
+    struct Semantic{
         uint16_t pc:1;
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
-        #pragma pack(pop)
+
+        // constexpr Semantic() : pc(0), no_mag(0), data_14bit(0) {}
+
+        Semantic(uint16_t data){
+            reinterpret_cast<uint16_t &>(*this) = data;
+        }
+
+        q16 to_position() const{
+            return q16::from_i32(data_14bit << 2);
+        }
     };
 
     static_assert(sizeof(Semantic) == 2);
 
-    static constexpr size_t MAX_INIT_RETRY_TIMES = 32;
+
 
     hal::SpiDrv spi_drv_;
 
     real_t lap_position_ = 0;
     size_t err_cnt_ = 0;
-    bool fast_mode_ = true;
-    Semantic last_sema_ = {};
+    bool fast_mode_ = false;
+    Semantic last_sema_ = {0};
 
-    Result<uint16_t, hal::HalResult> get_position_data();
+    IResult<uint16_t> get_position_data();
 };
 
 };

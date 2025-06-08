@@ -116,12 +116,12 @@ constexpr auto type_name_of(){
 	}();
 	constexpr auto type_name_view=fully_name.substr(begin,end-begin);
 	constexpr auto indices=std::make_index_sequence<type_name_view.size()>();
-	constexpr auto type_name=[&]<std::size_t...indices>(std::integer_sequence<std::size_t,indices...>)
+	static constexpr auto type_name=[&]<std::size_t...indices>(std::integer_sequence<std::size_t,indices...>)
 	{
 		constexpr auto str = details::__static_string<type_name_view[indices]...,'\0'>();
 		return str;
 	}(indices);
-	return type_name;
+	return std::string_view(type_name);
 }
 
 
