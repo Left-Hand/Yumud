@@ -1,5 +1,7 @@
 #pragma once
 
+//KTH7823是一款16位磁编码器
+
 #include "core/io/regs.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
 
@@ -31,15 +33,15 @@ struct KTH7823_Collections{
 
 struct KTH7823_Regs:public KTH7823_Collections{
 
-    struct R8_Z_low:public Reg8<>{
+    struct R8_Zero_low:public Reg8<>{
         static constexpr RegAddress address = 0x00;
-        uint8_t z_high;
-    }DEF_R8(z_low_reg)
+        uint8_t data;
+    }DEF_R8(zero_low_reg)
 
-    struct R8_Z_high:public Reg8<>{
+    struct R8_Zero_high:public Reg8<>{
         static constexpr RegAddress address = 0x01;
-        uint8_t z_high;
-    }DEF_R8(z_high_reg)
+        uint8_t data;
+    }DEF_R8(zero_high_reg)
 
     struct R8_GainTrim:public Reg8<>{
         static constexpr RegAddress address = 0x02;
@@ -97,40 +99,23 @@ public:
     KTH7823_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
-    [[nodiscard]] IResult<uint16_t> direct_read(){
-        uint16_t rx;
-        if(const auto res = transceive_u16(rx, 0);
-            res.is_err()) return Err(res.unwrap_err());
+    [[nodiscard]] IResult<uint16_t> direct_read();
 
-        return Ok(rx);
-    }
+    [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr);
 
-    [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr){
-        const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b01'000000) << 8);
-        uint16_t rx;
-        const auto res = transceive_u16(rx, tx);
-        if(res.is_err()) return Err(res.unwrap_err());
-        return Ok(rx >> 8);
-    }
+    [[nodiscard]] IResult<> burn_reg(const uint8_t addr, const uint8_t data);
 
-    [[nodiscard]] IResult<> burn_reg(const uint8_t addr, const uint8_t data){
-        const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b10'000000) << 8) | data;
-        uint16_t rx;
-        const auto res = transceive_u16(rx, tx);
-        if(res.is_err()) return Err(res.unwrap_err());
-        if((rx >> 8) != data) return Err(Error::RegProgramFailed);
+    template<typename T>
+    [[nodiscard]] IResult<> burn_reg(const RegCopy<T> & reg){
+        if(const auto res = burn_reg(reg.address, reg.data); 
+            res.is_err()) return res;
+        reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> disable_reg_oper(){
-        uint16_t dummy;
-        return transceive_u16(dummy, 0b1110'1000'0000'0010);
-    }
+    [[nodiscard]] IResult<> disable_reg_oper();
 
-    [[nodiscard]] IResult<> enable_reg_oper(){
-        uint16_t dummy;
-        return transceive_u16(dummy, 0b1110'1000'0000'0000);
-    }
+    [[nodiscard]] IResult<> enable_reg_oper();
 private:
     hal::SpiDrv spi_drv_;
 
@@ -148,12 +133,13 @@ public:
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<> update();
-
-    [[nodiscard]] IResult<> set_zero_position(const real_t position);
     [[nodiscard]] IResult<real_t> get_lap_position(){
         return Ok(lap_position_);
     }
+
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] IResult<> set_zero_position(const real_t position);
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
 

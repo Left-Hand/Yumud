@@ -21,6 +21,7 @@ enum class EncoderError_Kind:uint8_t{
     MagnetHigh,
     OverSpeed,
     RegProgramFailed,
+    RegProgramResponseFormatInvalid,
     ValueOverflow,
     ValueUnderflow,
     InvalidRxFormat,
