@@ -130,11 +130,18 @@ public:
             pos_oc_.set_duty(abs_value);
             neg_oc_.set_duty(zero_value);
         }
-        
     }
 
     void inverse(const Enable en){
         is_inversed_ = en == EN;
+    }
+
+    auto & pos_channel() {
+        return pos_oc_;
+    }
+
+    auto & neg_channel(){
+        return neg_oc_;
     }
 private:
     TimerOC & pos_oc_;

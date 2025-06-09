@@ -118,19 +118,6 @@ IResult<> MT6816::update(){
         }
 
         if(count % 2 == semantic.pc){
-            // const auto next_lap_position = semantic.to_position();
-
-            // //经常存在翻转错误，这里处理一下
-            // const auto next_lap_position2 = q16::from_i32(
-            //     next_lap_position.to_i32() ^ 0x00000100);
-
-            // const auto last_position = lap_position_;
-
-            // //选择距离最近的新位置
-            // lap_position_ = (ABS(next_lap_position2 - last_position) > 
-            //                 ABS(next_lap_position - last_position))
-            //     ? next_lap_position : next_lap_position2;
-
             lap_position_ = semantic.to_position();
         }else{
             err_cnt_++;

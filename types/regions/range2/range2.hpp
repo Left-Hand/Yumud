@@ -51,11 +51,6 @@ public:
         if(stop < start) std::swap(start, stop);
     }
 
-    template<typename U = T>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_dipole(const T dipole){
-        return Range2<T>{dipole, dipole};
-    } 
-    
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
         const T center, const T length)
     {
@@ -74,6 +69,10 @@ public:
     {
         return {static_cast<T>(center - half_length), 
                 static_cast<T>(center + half_length)};
+    } 
+
+    [[nodiscard]] __fast_inline static constexpr Range2<T> from_center(const T center){
+        return {center, center};
     } 
 
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(

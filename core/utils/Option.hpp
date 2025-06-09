@@ -302,7 +302,7 @@ template<
     typename T, 
     typename Tdecay = std::decay_t<T>
 >
-[[nodiscard]] Option<Tdecay> optcond(bool cond, T&& value){
+[[nodiscard]] constexpr Option<Tdecay> optcond(bool cond, T&& value){
     if(cond) return Some<Tdecay>(std::forward<T>(value));
     else return None;
 }
@@ -311,7 +311,7 @@ template<
     typename T, 
     typename Tdecay = std::decay_t<T>
 >
-[[nodiscard]] Option<Tdecay> optcond(bool cond, Some<T>&& value){
+[[nodiscard]] constexpr Option<Tdecay> optcond(bool cond, Some<T>&& value){
     if(cond) return Some<Tdecay>(std::forward<Some<T>>(value));
     else return None;
 }
