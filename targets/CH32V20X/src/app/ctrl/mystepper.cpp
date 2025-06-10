@@ -125,6 +125,27 @@ using tuple_erase_duplicate_t = typename details::
 
 }
 
+struct AlphaBetaDuty{
+    q16 alpha;
+    q16 beta;
+
+    q16 & operator [](size_t idx){
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+
+
+    const q16 & operator [](size_t idx) const{
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+};
 
 
 //AT8222
@@ -409,9 +430,6 @@ class EncoderCalibrateComponent{
 
     }
 
-
-
-    //保存了
     struct CalibrateDataBlocks{
         // using T = PackedCalibratePoint;
         static constexpr auto MIN_MOVE_THRESHOLD = q16((1.0 / MOTOR_POLES / 4) * 0.3);
@@ -430,7 +448,7 @@ private:
 };
 
 
-struct CoilCheckComponentUtils{
+struct CoilMotionCheckComponentUtils{
     enum class TaskError:uint8_t{
         TaskNotDone,
         RotorIsMovingBeforeChecking,
@@ -444,50 +462,18 @@ struct CoilCheckComponentUtils{
     FRIEND_DERIVE_DEBUG(TaskError)
 
     static constexpr auto DRIVE_DUTY = 0.1_r;
-    // static constexpr auto MINIMAL_MOVING_THRESHOLD = (1.0_r / (MOTOR_POLES * 4)) * 0.3_r;
     static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
-    // static constexpr auto MINIMAL_MOVING_THRESHOLD = 1000.0_r;
     static constexpr auto MINIMAL_STILL_THRESHOLD = 0.0003_r;
     static constexpr auto STILL_CHECK_TICKS = 80u;
     static constexpr auto MOVE_CHECK_TICKS = 1600u;
     static constexpr auto STILL_TICKS = 1000u;
-    static constexpr auto TICKS_PER_SECTOR = 64u;
-    
-
-    struct AlphaBetaDuty{
-        q16 alpha;
-        q16 beta;
-
-        q16 & operator [](size_t idx){
-            switch(idx){
-                case 0: return alpha;
-                case 1: return beta;
-                default: __builtin_unreachable();
-            }
-        }
 
 
-        const q16 & operator [](size_t idx) const{
-            switch(idx){
-                case 0: return alpha;
-                case 1: return beta;
-                default: __builtin_unreachable();
-            }
-        }
-    };
-    // template<typename ... Args>
 
-    //1. 检测转子已经停下
-    //2. 检测A侧能够移动
-    //3. 再次静止以保证下一项检测前停下
-    //4. 检测转子已经停下
-    //3. 检测B侧能够移动
-
-
-    struct StillTask final{
+    struct StallTask final{
 
         struct Config{
-            using Task = StillTask;
+            using Task = StallTask;
 
             bool is_beta;
         };
@@ -497,7 +483,7 @@ struct CoilCheckComponentUtils{
             Option<TaskError> err;
         };
         
-        constexpr StillTask(const Config & cfg){
+        constexpr StallTask(const Config & cfg){
             is_beta_ = cfg.is_beta;
         } 
 
@@ -533,10 +519,10 @@ struct CoilCheckComponentUtils{
         bool is_beta_;
     };
 
-    struct CheckStillTask final{
+    struct CheckStallTask final{
 
         struct Config{
-            using Task = CheckStillTask;
+            using Task = CheckStallTask;
         };
 
         struct Dignosis {
@@ -544,7 +530,7 @@ struct CoilCheckComponentUtils{
             Range2<q16> move_range;
         };
         
-        constexpr CheckStillTask(const Config & cfg){;} 
+        constexpr CheckStallTask(const Config & cfg){;} 
 
         constexpr AlphaBetaDuty resume(const real_t cont_position){
 
@@ -569,7 +555,6 @@ struct CoilCheckComponentUtils{
             const auto move_range = may_move_range_.unwrap();
             
             auto make_err = [&]() -> Option<TaskError>{
-                // DEBUG_PRINTLN(move_range.length());
                 if(move_range.length() > MINIMAL_STILL_THRESHOLD)
                     Some(TaskError::RotorIsMovingBeforeChecking);
                 return None;
@@ -629,13 +614,12 @@ struct CoilCheckComponentUtils{
         }
 
         constexpr Dignosis dignosis() const {
-            ASSERT(may_move_range_.is_some());
+            // ASSERT(may_move_range_.is_some());
 
             const auto move_range = may_move_range_.unwrap();
 
             [[maybe_unused]] auto make_err = [&]() -> Option<TaskError>{
                 const bool is_ok = move_range.length() > MINIMAL_MOVING_THRESHOLD;
-                // DEBUG_PRINTLN(move_range.length(), MINIMAL_MOVING_THRESHOLD, is_ok);
                 if(is_ok)
                     return None;
                 return Some(is_beta_ ? TaskError::CoilBCantMove : TaskError::CoilACantMove);
@@ -654,12 +638,79 @@ struct CoilCheckComponentUtils{
     };
 };
 
+template<typename T>
+using config_to_task_t = typename T::Task;
 
+template<typename ConfigsTuple, typename IndexSeq>
+struct configs_tuple_to_tasks_variant_impl;
 
-class CoilCheckComponent:public CoilCheckComponentUtils{
+template<typename... Configs, std::size_t... Is>
+struct configs_tuple_to_tasks_variant_impl<
+    std::tuple<Configs...>, std::index_sequence<Is...>>
+{
+    using type = magic::tuple_to_variant_t<
+        magic::tuple_erase_duplicate_t<
+            typename std::tuple_element_t<Is, std::tuple<Configs...>>::Task...>>;
+};
+
+template<typename ConfigsTuple>
+using configs_tuple_to_tasks_variant_t = 
+    typename configs_tuple_to_tasks_variant_impl<ConfigsTuple,
+    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>>::type;
+
+template<typename ConfigsTuple, typename IndexSeq>
+struct configs_tuple_to_dignosis_variant_impl;
+
+template<typename... Configs, std::size_t... Is>
+struct configs_tuple_to_dignosis_variant_impl<
+    std::tuple<Configs...>, std::index_sequence<Is...>> {
+    using type = magic::tuple_to_variant_t<
+        magic::tuple_erase_duplicate_t<
+            typename std::tuple_element_t<Is, 
+                std::tuple<Configs...>>::Task::Dignosis...>>;
+};
+
+template<size_t I, typename ConfigsTuple>
+using idx_to_task_t = typename std::tuple_element_t<I, ConfigsTuple>::Task;
+
+template<typename ConfigsTuple>
+using configs_tuple_to_dignosis_variant_t = typename 
+    configs_tuple_to_dignosis_variant_impl<ConfigsTuple,
+    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
+>::type;
+
+class CoilMotionCheckComponent:public CoilMotionCheckComponentUtils{
 public:
 
-    CoilCheckComponent(
+static constexpr auto CONFIGS = std::make_tuple(
+        //令转子停下
+        StallTask::Config{
+            .is_beta = false
+        },
+    
+        // 检测转子已经停下
+        CheckStallTask::Config{},
+
+        // 检测转子是否能够在A相的驱使下运动
+        CheckMovingTask::Config{
+            .is_beta = false
+        },
+
+        //令转子停下
+        StallTask::Config{
+            .is_beta = true
+        },
+
+        // 检测转子已经停下
+        CheckStallTask::Config{},
+
+        // 检测转子是否能够在B相的驱使下运动
+        CheckMovingTask::Config{
+            .is_beta = true
+        }
+    );
+
+    CoilMotionCheckComponent(
         drivers::EncoderIntf & encoder,
         StepperSVPWM & svpwm
     ):
@@ -696,7 +747,6 @@ public:
             return Ok();
 
         const auto [a,b] = task_sequence_.resume(lap_position);
-        DEBUG_PRINTLN(a,b);
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
@@ -717,9 +767,8 @@ private:
     drivers::EncoderIntf & encoder_;
     StepperSVPWM & svpwm_;
 private:
-    #define _constexpr 
     struct TaskSequence{
-        _constexpr AlphaBetaDuty resume(const real_t cont_position){
+        constexpr AlphaBetaDuty resume(const real_t cont_position){
             std::visit([&](auto && task) -> void{
                 if(not task.is_finished()) return;
                 const auto dignosis = task.dignosis();
@@ -740,7 +789,7 @@ private:
             }, tasks_variant_);
         };
 
-        _constexpr Option<TaskError> err() const {
+        constexpr Option<TaskError> err() const {
             if(may_dignosis_variant_.is_none())
                 return None;
             
@@ -749,11 +798,11 @@ private:
             }, may_dignosis_variant_.unwrap());
         }
 
-        _constexpr bool is_finished() const {
+        constexpr bool is_finished() const {
             return is_all_tasks_finished_;
         }
 
-        _constexpr bool is_done() const {
+        constexpr bool is_done() const {
             return is_all_tasks_finished_ and err().is_none();
         }
 
@@ -761,32 +810,32 @@ private:
             return std::tuple_size_v<Configs>;
         }
 
-        _constexpr size_t task_index() const {
+        constexpr size_t task_index() const {
             return task_index_;
         }
     private:
         template<size_t I>
-        constexpr Result<void, void> switch_to_task_impl(){
+        constexpr void switch_to_task_impl(){
             static constexpr size_t N = std::tuple_size_v<Configs>;
-            if constexpr(I >= N){//last task
-                return Err();
-            }else{
-                using Task = idx_to_task_t<I, Configs>;
-                const auto & config = std::get<I>(CONFIGS);
-                tasks_variant_ = Task(config);
-                return Ok();
-            }
+            static_assert(I < N, "Invalid task index");
+            using Task = idx_to_task_t<I, Configs>;
+            const auto & config = std::get<I>(CONFIGS);
+            tasks_variant_ = Task(config);
         }
 
         constexpr Result<void, void> switch_to_task(const size_t i){
             constexpr size_t N = std::tuple_size_v<Configs>;
-            return [&]<size_t... Is>(std::index_sequence<Is...>) {
-                Result<void, void> result = Err();
+
+            if (i >= N)//last task
+                return Err();
+
+            [&]<size_t... Is>(std::index_sequence<Is...>) {
                 (( (Is == i) ? 
-                    (result = switch_to_task_impl<Is>(), 0) : 
+                    (switch_to_task_impl<Is>(), 0) : 
                     0 ), ...);
-                return result;
             }(std::make_index_sequence<N>());
+
+            return Ok();
         }
 
         template<typename Dignosis>
@@ -800,67 +849,6 @@ private:
             if(res.is_ok()) task_index_ = next_task_index;
             return res;
         }
-
-        template<typename T>
-        using config_to_task_t = typename T::Task;
-
-        template<typename ConfigsTuple, typename IndexSeq>
-        struct configs_tuple_to_tasks_variant_impl;
-
-        template<typename... Configs, std::size_t... Is>
-        struct configs_tuple_to_tasks_variant_impl<
-            std::tuple<Configs...>, std::index_sequence<Is...>>
-        {
-            using type = magic::tuple_to_variant_t<
-                magic::tuple_erase_duplicate_t<
-                    typename std::tuple_element_t<Is, std::tuple<Configs...>>::Task...>>;
-        };
-
-        template<typename ConfigsTuple>
-        using configs_tuple_to_tasks_variant_t = 
-            typename configs_tuple_to_tasks_variant_impl<ConfigsTuple,
-            std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>>::type;
-    
-        template<typename ConfigsTuple, typename IndexSeq>
-        struct configs_tuple_to_dignosis_variant_impl;
-
-        template<typename... Configs, std::size_t... Is>
-        struct configs_tuple_to_dignosis_variant_impl<
-            std::tuple<Configs...>, std::index_sequence<Is...>> {
-            using type = magic::tuple_to_variant_t<
-                magic::tuple_erase_duplicate_t<
-                    typename std::tuple_element_t<Is, 
-                        std::tuple<Configs...>>::Task::Dignosis...>>;
-        };
-
-        template<size_t I, typename ConfigsTuple>
-        using idx_to_task_t = typename std::tuple_element_t<I, ConfigsTuple>::Task;
-
-        template<typename ConfigsTuple>
-        using configs_tuple_to_dignosis_variant_t = typename 
-            configs_tuple_to_dignosis_variant_impl<ConfigsTuple,
-            std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
-        >::type;
-    
-
-        static constexpr auto CONFIGS = std::make_tuple(
-            StillTask::Config{
-                .is_beta = false
-            },
-            CheckStillTask::Config{},
-            CheckMovingTask::Config{
-                .is_beta = false
-            },
-            StillTask::Config{
-                .is_beta = true
-            },
-            CheckStillTask::Config{},
-            CheckMovingTask::Config{
-                .is_beta = true
-            }
-        );
-
-
 
         using Configs = std::decay_t<decltype(CONFIGS)>;
         using TasksVariant = configs_tuple_to_tasks_variant_t<Configs>;
@@ -892,7 +880,7 @@ void test_calibrate(){
 
 
 void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
-    auto comp = CoilCheckComponent(encoder, svpwm);
+    auto comp = CoilMotionCheckComponent(encoder, svpwm);
 
     while(true){
         // encoder.update();
