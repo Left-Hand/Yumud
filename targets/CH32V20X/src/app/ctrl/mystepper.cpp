@@ -646,8 +646,8 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
 
 struct CalibrateTasksUtils:public MotorTasksUtils{
     // static constexpr size_t MICROSTEPS = 16;
-    // static constexpr size_t MICROSTEPS = 256;
-    static constexpr size_t MICROSTEPS = 128;
+    static constexpr size_t MICROSTEPS = 256;
+    // static constexpr size_t MICROSTEPS = ;
 
     static constexpr q16 ticks_to_rotations(const size_t ticks){
         return q16(ticks) / MICROSTEPS / MOTOR_POLES / 4;
@@ -698,6 +698,53 @@ struct CalibrateTasksUtils:public MotorTasksUtils{
         size_t tick_cnt_ = 0;
 
         q16 delta_;
+    };
+
+    struct BeepTask final{
+
+        struct Config{
+            using Task = BeepTask;
+
+            // q16 delta;
+            size_t freq;
+            Milliseconds period;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr BeepTask(const Config & cfg):
+            freq_(cfg.freq),
+            period_(cfg.period){
+            ;
+        }
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            tick_cnt_++;
+            const auto targ_lap_position = ticks_to_rotations(tick_cnt_);
+            const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
+            return AlphaBetaDuty{
+                .alpha = DRIVE_DUTY * 2,
+                .beta = s * DRIVE_DUTY * 2
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > period_.count() * 100;
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        size_t freq_;
+        Milliseconds  period_;
     };
 };
 
@@ -909,17 +956,42 @@ private:
 class CalibrateTasks:public CalibrateTasksUtils{
 public:
     static constexpr auto CONFIGS = std::make_tuple(
-        LinearRotateTask::Config{
-            .delta = 20.4_r
+        BeepTask::Config{
+            .freq = 700,
+            .period = 100ms
         },
-    
-        LinearRotateTask::Config{
-            .delta = -0.4_r
+        BeepTask::Config{
+            .freq = 0,
+            .period = 100ms
+        },
+        BeepTask::Config{
+            .freq = 800,
+            .period = 100ms
+        },
+        BeepTask::Config{
+            .freq = 0,
+            .period = 100ms
+        },
+        BeepTask::Config{
+            .freq = 500,
+            .period = 100ms
+        },
+        BeepTask::Config{
+            .freq = 0,
+            .period = 100ms
         },
 
-        LinearRotateTask::Config{
-            .delta = 0.4_r
-        },
+        // LinearRotateTask::Config{
+        //     .delta = 20.4_r
+        // },
+    
+        // LinearRotateTask::Config{
+        //     .delta = -0.4_r
+        // },
+
+        // LinearRotateTask::Config{
+        //     .delta = 0.4_r
+        // },
     
         LinearRotateTask::Config{
             .delta = -0.4_r
@@ -1051,6 +1123,7 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 #define let const auto
 // static constexpr size_t CHOP_FREQ = 30_KHz;
 static constexpr size_t CHOP_FREQ = 20_KHz;
+static constexpr size_t ISR_FREQ = 20_KHz * 2;
 // static constexpr size_t CHOP_FREQ = 100;
 
 
