@@ -654,22 +654,23 @@ void mystepper_main(){
     }).examine();
 
 
-    real_t targ_lappos = 0;
+    q20 targ_lappos = 0;
     real_t meas_lappos = 0;
     timer.attach(hal::TimerIT::Update, {0,0}, [&](){
         // retry(1, [&]{return encoder.update();}).examine();
         retry(2, [&]{return encoder.update();}).examine();
         meas_lappos = encoder.get_lap_position().examine();
         // DEBUG_PRINTLN(drivers::EncoderError::Kind::CantSetup);
-        const auto t = clock::time();
+        // const auto t = clock::time();
         // const auto [st, ct] = sincospu(t * 93);
         // const auto [st, ct] = sincospu(t * 3);
         // const auto [st, ct] = sincospu(10 * sinpu(t));
-        targ_lappos = frac(2.4_r * t);
-        let ref_epos = MOTOR_POLES * targ_lappos;
+
+        targ_lappos += (4 * meas_lappos - 2) * 0.00005_q20;
+        let ref_epos = MOTOR_POLES * q16(targ_lappos);
         const auto [st, ct] = sincospu(ref_epos);
         // const auto [st, ct] = sincospu(sinpu(t));
-        const auto amp = 0.3_r;
+        const auto amp = 0.6_r;
 
         svpwm.set_alpha_beta_duty(ct * amp, st * amp);
     });
@@ -693,7 +694,7 @@ void mystepper_main(){
             // enb_gpio.read().to_bool(),
             // inj_a.get_voltage(),
             // inj_b.get_voltage(),
-            100 * (targ_lappos - frac(2.4_r * clock::time())),
+            100 * (targ_lappos - frac(4.4_r * clock::time())),
             meas_lappos,
             // 100 * (position - targ_lappos),
             // 100 * (position2 - targ_lappos),
@@ -703,6 +704,7 @@ void mystepper_main(){
             
             trig_gpio.read().to_bool()
         );
+
 
         // clock::delay(10us);
         clock::delay(1ms);

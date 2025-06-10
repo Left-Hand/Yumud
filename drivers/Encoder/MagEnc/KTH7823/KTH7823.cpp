@@ -1,4 +1,6 @@
 #include "KTH7823.hpp"
+#include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -88,8 +90,9 @@ IResult<> KTH7823::set_zero_position(const real_t position){
     auto reg_high = RegCopy(zero_high_reg);
     reg_high.data = raw16 >> 8;
 
-    return burn_reg(reg_low)
-    | burn_reg(reg_high);
+    // return Ok();
+    return phy_.burn_reg(reg_low)
+    | phy_.burn_reg(reg_high);
 }
 
 IResult<> KTH7823::set_trim_x(const real_t k){
@@ -113,7 +116,8 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
     reg.mag_high = high;
     reg.mag_low = low;
 
-    return burn_reg(reg);
+    return phy_.burn_reg(reg);
+    // return Ok();
 }
 
 IResult<> KTH7823::set_direction(const bool direction){

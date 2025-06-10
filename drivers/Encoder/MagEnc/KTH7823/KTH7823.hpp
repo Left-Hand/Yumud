@@ -71,8 +71,8 @@ struct KTH7823_Regs:public KTH7823_Collections{
     struct R8_MagAlert:public Reg8<>{
         static constexpr RegAddress address = 0x06;
         uint8_t __resv__:2;
-        uint8_t mag_low:3;
-        uint8_t mag_high:3;
+        MagThreshold mag_low:3;
+        MagThreshold mag_high:3;
     }DEF_R8(mag_alert_reg)
 
     struct R8_Npp:public Reg8<>{
@@ -107,7 +107,7 @@ public:
 
     template<typename T>
     [[nodiscard]] IResult<> burn_reg(const RegCopy<T> & reg){
-        if(const auto res = burn_reg(reg.address, reg.data); 
+        if(const auto res = burn_reg(reg.address, reg.as_val()); 
             res.is_err()) return res;
         reg.apply();
         return Ok();
