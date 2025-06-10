@@ -448,7 +448,7 @@ private:
 };
 
 
-struct CoilMotionCheckComponentUtils{
+struct MotorTasksUtils{
     enum class TaskError:uint8_t{
         TaskNotDone,
         RotorIsMovingBeforeChecking,
@@ -462,13 +462,15 @@ struct CoilMotionCheckComponentUtils{
     FRIEND_DERIVE_DEBUG(TaskError)
 
     static constexpr auto DRIVE_DUTY = 0.1_r;
+};
+
+
+struct CoilCheckTasksUtils:public MotorTasksUtils{
     static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
-    static constexpr auto MINIMAL_STILL_THRESHOLD = 0.0003_r;
-    static constexpr auto STILL_CHECK_TICKS = 80u;
+    static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
+    static constexpr auto STALL_CHECK_TICKS = 80u;
     static constexpr auto MOVE_CHECK_TICKS = 1600u;
-    static constexpr auto STILL_TICKS = 1000u;
-
-
+    static constexpr auto STALL_TICKS = 1000u;
 
     struct StallTask final{
 
@@ -503,7 +505,7 @@ struct CoilMotionCheckComponentUtils{
         }
 
         constexpr bool is_finished(){
-            return tick_cnt_ > STILL_TICKS;
+            return tick_cnt_ > STALL_TICKS;
         }
 
         constexpr Dignosis dignosis() const {
@@ -518,6 +520,8 @@ struct CoilMotionCheckComponentUtils{
 
         bool is_beta_;
     };
+
+
 
     struct CheckStallTask final{
 
@@ -547,7 +551,7 @@ struct CoilMotionCheckComponentUtils{
 
         constexpr bool is_finished(){
 
-            return tick_cnt_ > STILL_CHECK_TICKS;
+            return tick_cnt_ > STALL_CHECK_TICKS;
         }
 
         constexpr Dignosis dignosis() const {
@@ -555,7 +559,7 @@ struct CoilMotionCheckComponentUtils{
             const auto move_range = may_move_range_.unwrap();
             
             auto make_err = [&]() -> Option<TaskError>{
-                if(move_range.length() > MINIMAL_STILL_THRESHOLD)
+                if(move_range.length() > MINIMAL_STALL_THRESHOLD)
                     Some(TaskError::RotorIsMovingBeforeChecking);
                 return None;
             };
@@ -635,6 +639,65 @@ struct CoilMotionCheckComponentUtils{
         size_t tick_cnt_ = 0;
         Option<Range2<q16>> may_move_range_ = None;
         bool is_beta_;
+    };
+};
+
+
+
+struct CalibrateTasksUtils:public MotorTasksUtils{
+    // static constexpr size_t MICROSTEPS = 16;
+    // static constexpr size_t MICROSTEPS = 256;
+    static constexpr size_t MICROSTEPS = 128;
+
+    static constexpr q16 ticks_to_rotations(const size_t ticks){
+        return q16(ticks) / MICROSTEPS / MOTOR_POLES / 4;
+    }
+
+    static constexpr size_t rotations_to_ticks(const q16 rotations){
+        return size_t(rotations * MICROSTEPS) * 4 * MOTOR_POLES;
+    }
+
+    struct LinearRotateTask final{
+
+        struct Config{
+            using Task = LinearRotateTask;
+
+            q16 delta;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr LinearRotateTask(const Config & cfg):
+            delta_(cfg.delta){
+            ;
+        } 
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            tick_cnt_++;
+            const auto targ_lap_position = SIGN_AS(ticks_to_rotations(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
+            return AlphaBetaDuty{
+                .alpha = c * DRIVE_DUTY,
+                .beta = s * DRIVE_DUTY
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > rotations_to_ticks(ABS(delta_));
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        q16 delta_;
     };
 };
 
@@ -784,7 +847,7 @@ private:
 };
 
 
-class CoilMotionCheckTasks:public CoilMotionCheckComponentUtils{
+class CoilMotionCheckTasks:public CoilCheckTasksUtils{
 public:
     static constexpr auto CONFIGS = std::make_tuple(
         //令转子停下
@@ -811,6 +874,55 @@ public:
         // 检测转子是否能够在B相的驱使下运动
         CheckMovingTask::Config{
             .is_beta = true
+        }
+    );
+
+    constexpr AlphaBetaDuty resume(const real_t lap_position){
+        return task_sequence_.resume(lap_position);
+    }
+
+    bool is_finished() const {
+        return task_sequence_.is_finished();
+    }
+
+    size_t task_index() const {
+        return task_sequence_.task_index();
+    }
+
+    auto err() const {
+        return task_sequence_.err();
+    }
+
+private:
+    struct Settings{
+        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using Error = TaskError;
+        using Args = real_t;
+        using Ret = AlphaBetaDuty;
+    };
+
+    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+};
+
+
+
+class CalibrateTasks:public CalibrateTasksUtils{
+public:
+    static constexpr auto CONFIGS = std::make_tuple(
+        LinearRotateTask::Config{
+            .delta = 20.4_r
+        },
+    
+        LinearRotateTask::Config{
+            .delta = -0.4_r
+        },
+
+        LinearRotateTask::Config{
+            .delta = 0.4_r
+        },
+    
+        LinearRotateTask::Config{
+            .delta = -0.4_r
         }
     );
 
@@ -874,7 +986,8 @@ public:
             either_lap_position.unwrap();
         });
 
-        auto & comp = comp_;
+        // auto & comp = coil_motion_check_comp;
+        auto & comp = calibrate_comp_;
         if(const auto may_err = comp.err(); may_err.is_some())
             return Err(Error(may_err.unwrap()));
 
@@ -891,7 +1004,8 @@ private:
     drivers::EncoderIntf & encoder_;
     StepperSVPWM & svpwm_;
 
-    CoilMotionCheckTasks comp_ = {};
+    CoilMotionCheckTasks coil_motion_check_comp = {};
+    CalibrateTasks calibrate_comp_ = {};
 };
 
 
@@ -912,14 +1026,19 @@ void test_calibrate(){
 void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
-    while(true){
-        // encoder.update();
-
-
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         const auto res = motor_system_.resume();
         if(res.is_err()){
             PANIC();
         }
+    });
+
+
+    while(true){
+        // encoder.update();
+
+
+
         clock::delay(1ms);
         // DEBUG_PRINTLN(
         //     clock::millis().count(), 
@@ -1126,7 +1245,7 @@ struct LapCalibrateTable{
 private:
 
     constexpr T forward(const T x) const {
-        const T x_wrapped = fposmodp(x,real_t(50));
+        const T x_wrapped = fposmodp(x,real_t(MOTOR_POLES));
         const uint x_int = int(x_wrapped);
         const T x_frac = x_wrapped - x_int;
 
