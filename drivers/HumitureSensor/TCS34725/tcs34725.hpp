@@ -22,10 +22,11 @@ struct TCS34725_Collections{
         _60x = 0b11 
     };
 
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         WrongChipId
     };
 
+    FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>

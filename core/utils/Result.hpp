@@ -211,7 +211,7 @@ namespace details{
         Data data_;
     };
     
-    struct _Storage_VoidOnly{
+    struct _Storage_VoidOnly {
         using ok_type = void;
         using err_type = void;
 
@@ -219,10 +219,13 @@ namespace details{
             is_ok_(true){}
         __fast_inline constexpr _Storage_VoidOnly(const Err<void> &):
             is_ok_(false){}
-    
+
         __fast_inline constexpr _Storage_VoidOnly(const _Storage_VoidOnly &) = default;
         __fast_inline constexpr _Storage_VoidOnly(_Storage_VoidOnly &&) = default;
-    
+        
+        __fast_inline constexpr _Storage_VoidOnly& operator=(const _Storage_VoidOnly &) = default;
+        __fast_inline constexpr _Storage_VoidOnly& operator=(_Storage_VoidOnly &&) = default;
+
         __fast_inline constexpr bool is_ok() const{return is_ok_;}
         __fast_inline constexpr bool is_err() const{return !is_ok_;}
         __fast_inline constexpr void unwrap() const{}
@@ -274,6 +277,7 @@ public:
     using err_type = Storage::err_type;
     using type = Result<T, E>;
     constexpr Result & operator =(const Result<T, E> &) = default;
+    constexpr Result & operator =(Result<T, E> &&) = default;
 
 private:
     Storage storage_;
@@ -304,6 +308,9 @@ private:
     }
     friend class _Loc;
 public:
+
+    constexpr Result(const Result<T, E> & other) = default;
+    constexpr Result(Result<T, E> && other) = default;
 
     template<typename T2>
     requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)

@@ -28,8 +28,9 @@
 
 using namespace ymd;
 
-#define UART hal::uart1
 
+
+#define UART hal::uart1
 
 template<typename Fn, typename Fn_Dur>
 __inline auto retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
@@ -46,6 +47,85 @@ template<typename Fn>
 __inline auto retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
+
+
+namespace ymd::magic{
+namespace details{
+template<typename Tup>
+struct tuple_to_variant{
+};
+
+template<typename... Ts>
+struct tuple_to_variant<std::tuple<Ts...>> {
+    using type = std::variant<Ts...>;
+};
+
+template<typename Var>
+struct variant_to_tuple{
+};
+
+template<typename... Ts>
+struct variant_to_tuple<std::variant<Ts...>> {
+    using type = std::tuple<Ts...>;
+};
+
+template<size_t I, typename Variant>
+struct variant_get_trait{
+    static constexpr auto get(const Variant & var, size_t index){
+        return std::get<index>(var);
+    }
+};
+
+
+// template<typename Tuple, typename F, size_t... Is>
+// constexpr auto tuple_transform_impl(Tuple&& t, F&& f, std::index_sequence<Is...>) {
+//     return std::make_tuple(f(std::get<Is>(std::forward<Tuple>(t)))...);
+// }
+
+// template<typename Tuple, typename F>
+// constexpr auto tuple_transform(Tuple&& t, F&& f) {
+//     return tuple_transform_impl(std::forward<Tuple>(t), 
+//         std::forward<F>(f),
+//         std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>{});
+// }
+
+
+template <typename T, typename... Ts>
+struct tuple_erase_duplicate : std::type_identity<T> {};
+
+template <typename... Ts, typename U, typename... Us>
+struct tuple_erase_duplicate<std::tuple<Ts...>, U, Us...>
+    : std::conditional_t<(std::is_same_v<U, Ts> || ...)
+    , tuple_erase_duplicate<std::tuple<Ts...>, Us...>
+    , tuple_erase_duplicate<std::tuple<Ts..., U>, Us...>> {};
+
+
+
+}
+
+template<typename Tup>
+using tuple_to_variant_t = typename details::tuple_to_variant<Tup>::type;
+
+template<typename Var>
+using variant_to_tuple_t = typename details::variant_to_tuple<Var>::type;
+
+template<size_t I, typename Variant>
+using variant_element_t = std::tuple_element_t<I, variant_to_tuple_t<Variant>>;
+
+static_assert(std::is_same_v<
+    tuple_to_variant_t<std::tuple<int, float, bool>>,
+    std::variant<int, float, bool>
+>);
+
+
+template <typename... Ts>
+using tuple_erase_duplicate_t = typename details::
+    tuple_erase_duplicate<std::tuple<>, Ts...>::type;
+
+
+}
+
+
 
 //AT8222
 class StepperSVPWM{
@@ -350,30 +430,29 @@ private:
 };
 
 
-
-class CoilCheckComponent{
-public:
-    enum class Error:uint8_t{
+struct CoilCheckComponentUtils{
+    enum class TaskError:uint8_t{
         TaskNotDone,
         RotorIsMovingBeforeChecking,
+        RotorIsMovingBeforeCheckingCoilA,
+        RotorIsMovingBeforeCheckingCoilB,
+        CoilCantMove,
+        CoilACantMove,
+        CoilBCantMove,
     };
+
+    FRIEND_DERIVE_DEBUG(TaskError)
+
     static constexpr auto DRIVE_DUTY = 0.1_r;
-    static constexpr auto MINIMAL_MOVING_THRESHOLD = 1.0_r / MOTOR_POLES;
+    // static constexpr auto MINIMAL_MOVING_THRESHOLD = (1.0_r / (MOTOR_POLES * 4)) * 0.3_r;
+    static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
+    // static constexpr auto MINIMAL_MOVING_THRESHOLD = 1000.0_r;
     static constexpr auto MINIMAL_STILL_THRESHOLD = 0.0003_r;
     static constexpr auto STILL_CHECK_TICKS = 80u;
     static constexpr auto MOVE_CHECK_TICKS = 1600u;
-    static constexpr auto BREAK_TICKS = 1000u;
+    static constexpr auto STILL_TICKS = 1000u;
     static constexpr auto TICKS_PER_SECTOR = 64u;
     
-    // CoilCheckComponent(
-    //     drivers::EncoderIntf & encoder,
-    //     StepperSVPWM & svpwm
-    // ):
-    //     encoder_(encoder){;}
-
-    // constexpr CoilCheckComponent():
-    // {;}
-
 
     struct AlphaBetaDuty{
         q16 alpha;
@@ -396,11 +475,8 @@ public:
             }
         }
     };
-    constexpr AlphaBetaDuty resume(const real_t lappos){
-        return {1,0};
-    }
+    // template<typename ... Args>
 
-private:
     //1. 检测转子已经停下
     //2. 检测A侧能够移动
     //3. 再次静止以保证下一项检测前停下
@@ -408,44 +484,94 @@ private:
     //3. 检测B侧能够移动
 
 
-    struct CheckStillTask final{
+    struct StillTask final{
 
         struct Config{
+            using Task = StillTask;
 
+            bool is_beta;
         };
 
         
         struct Dignosis {
-            Option<Error> err;
+            Option<TaskError> err;
+        };
+        
+        constexpr StillTask(const Config & cfg){
+            is_beta_ = cfg.is_beta;
+        } 
+
+        constexpr AlphaBetaDuty resume(const real_t lappos){
+            tick_cnt_++;
+
+            if(not is_beta_)
+                return AlphaBetaDuty{
+                    .alpha = DRIVE_DUTY,
+                    .beta = 0
+                };
+            else
+                return AlphaBetaDuty{
+                    .alpha = 0,
+                    .beta = DRIVE_DUTY
+                };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > STILL_TICKS;
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        Option<Range2<q16>> may_move_range_ = None;
+
+        bool is_beta_;
+    };
+
+    struct CheckStillTask final{
+
+        struct Config{
+            using Task = CheckStillTask;
+        };
+
+        struct Dignosis {
+            Option<TaskError> err;
             Range2<q16> move_range;
         };
         
         constexpr CheckStillTask(const Config & cfg){;} 
 
-        constexpr AlphaBetaDuty resume(const real_t lappos){
-            if(may_move_range_.is_none())
-                may_move_range_ = Some(Range2<q16>::from_center(lappos));
-            else 
-                may_move_range_ = Some(may_move_range_.unwrap().merge(lappos));
+        constexpr AlphaBetaDuty resume(const real_t cont_position){
 
+            if(may_move_range_.is_none())
+                may_move_range_ = Some(Range2<q16>::from_center(cont_position));
+            else 
+                may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position));
+            tick_cnt_++;
             return AlphaBetaDuty{
-                .alpha = DRIVE_DUTY,
+                .alpha = 0,
                 .beta = 0
             };
         }
 
-        constexpr bool is_done(){
+        constexpr bool is_finished(){
+
             return tick_cnt_ > STILL_CHECK_TICKS;
         }
 
         constexpr Dignosis dignosis() const {
             ASSERT(may_move_range_.is_some());
-
             const auto move_range = may_move_range_.unwrap();
-
-            auto make_err = [&]() -> Option<Error>{
+            
+            auto make_err = [&]() -> Option<TaskError>{
+                // DEBUG_PRINTLN(move_range.length());
                 if(move_range.length() > MINIMAL_STILL_THRESHOLD)
-                    Some(Error::RotorIsMovingBeforeChecking);
+                    Some(TaskError::RotorIsMovingBeforeChecking);
                 return None;
             };
 
@@ -462,11 +588,12 @@ private:
 
     struct CheckMovingTask final{
         struct Config{
+            using Task = CheckMovingTask;
             const bool is_beta;
         };
 
         struct [[nodiscard]] Dignosis {
-            Option<Error> err;
+            Option<TaskError> err;
             Range2<q16> move_range;
         };
 
@@ -474,16 +601,17 @@ private:
             is_beta_ = cfg.is_beta;
         };
 
-        constexpr AlphaBetaDuty resume(const real_t lappos){
+        constexpr AlphaBetaDuty resume(const real_t cont_position){
+
             if(may_move_range_.is_none())
-                may_move_range_ = Some(Range2<q16>::from_center(lappos));
+                may_move_range_ = Some(Range2<q16>::from_center(cont_position));
             else 
-                may_move_range_ = Some(may_move_range_.unwrap().merge(lappos));
+                may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position));
 
             const auto duty = sinpu(LERP(
                 q16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
-            ));
+            )) * DRIVE_DUTY;
 
             auto make_duty = [&]() -> AlphaBetaDuty{
                 if(is_beta_){
@@ -492,12 +620,12 @@ private:
                     return {0, duty};
                 }
             };
-
+            tick_cnt_++;
             return make_duty();
         }
 
-        constexpr bool is_done(){
-            return tick_cnt_ > STILL_CHECK_TICKS;
+        constexpr bool is_finished(){
+            return tick_cnt_ > MOVE_CHECK_TICKS;
         }
 
         constexpr Dignosis dignosis() const {
@@ -505,14 +633,17 @@ private:
 
             const auto move_range = may_move_range_.unwrap();
 
-            auto make_err = [&]() -> Option<Error>{
-                if(move_range.length() > MINIMAL_STILL_THRESHOLD)
-                    Some(Error::RotorIsMovingBeforeChecking);
-                return None;
+            [[maybe_unused]] auto make_err = [&]() -> Option<TaskError>{
+                const bool is_ok = move_range.length() > MINIMAL_MOVING_THRESHOLD;
+                // DEBUG_PRINTLN(move_range.length(), MINIMAL_MOVING_THRESHOLD, is_ok);
+                if(is_ok)
+                    return None;
+                return Some(is_beta_ ? TaskError::CoilBCantMove : TaskError::CoilACantMove);
             };
 
             return Dignosis{
                 .err = make_err(),
+                // .err = Some(TaskError::CoilACantMove),
                 .move_range = move_range
             };
         }
@@ -521,7 +652,228 @@ private:
         Option<Range2<q16>> may_move_range_ = None;
         bool is_beta_;
     };
+};
 
+
+
+class CoilCheckComponent:public CoilCheckComponentUtils{
+public:
+
+    CoilCheckComponent(
+        drivers::EncoderIntf & encoder,
+        StepperSVPWM & svpwm
+    ):
+        encoder_(encoder),
+        svpwm_(svpwm)
+        {;}
+
+    struct Error{
+        Error(TaskError err){
+            PANIC{err};
+        }
+
+        Error(drivers::EncoderError err){
+            PANIC{err};
+        }
+    };
+
+    Result<void, Error> resume(){
+
+        const auto lap_position = ({
+            if(const auto res = retry(2, [&]{return encoder_.update();});
+                res.is_err()) return Err(Error(res.unwrap_err()));
+
+            const auto either_lap_position = encoder_.get_lap_position();
+            if(either_lap_position.is_err())
+                return Err(Error(either_lap_position.unwrap_err()));
+            either_lap_position.unwrap();
+        });
+
+        if(const auto may_err = task_sequence_.err(); may_err.is_some())
+            return Err(Error(may_err.unwrap()));
+
+        if(task_sequence_.is_finished())
+            return Ok();
+
+        const auto [a,b] = task_sequence_.resume(lap_position);
+        DEBUG_PRINTLN(a,b);
+        svpwm_.set_alpha_beta_duty(a,b);
+        return Ok();
+    }
+
+    bool is_finished() const {
+        return task_sequence_.is_finished();
+    }
+
+    size_t task_index() const {
+        return task_sequence_.task_index();
+    }
+
+    auto err() const {
+        return task_sequence_.err();
+    }
+
+private:
+    drivers::EncoderIntf & encoder_;
+    StepperSVPWM & svpwm_;
+private:
+    #define _constexpr 
+    struct TaskSequence{
+        _constexpr AlphaBetaDuty resume(const real_t cont_position){
+            std::visit([&](auto && task) -> void{
+                if(not task.is_finished()) return;
+                const auto dignosis = task.dignosis();
+                if(dignosis.err.is_some()){
+                    save_dignosis(dignosis);
+                    is_all_tasks_finished_ = true;
+                    return;
+                }
+                
+                const auto res = switch_to_next_task();
+                if(res.is_err()){
+                    is_all_tasks_finished_ = true;
+                }
+            }, tasks_variant_);
+
+            return std::visit([&](auto && task) -> AlphaBetaDuty {
+                return task.resume(cont_position);
+            }, tasks_variant_);
+        };
+
+        _constexpr Option<TaskError> err() const {
+            if(may_dignosis_variant_.is_none())
+                return None;
+            
+            return std::visit([&](auto && dignosis) -> Option<TaskError> {
+                return dignosis.err;
+            }, may_dignosis_variant_.unwrap());
+        }
+
+        _constexpr bool is_finished() const {
+            return is_all_tasks_finished_;
+        }
+
+        _constexpr bool is_done() const {
+            return is_all_tasks_finished_ and err().is_none();
+        }
+
+        consteval size_t task_count() const {
+            return std::tuple_size_v<Configs>;
+        }
+
+        _constexpr size_t task_index() const {
+            return task_index_;
+        }
+    private:
+        template<size_t I>
+        constexpr Result<void, void> switch_to_task_impl(){
+            static constexpr size_t N = std::tuple_size_v<Configs>;
+            if constexpr(I >= N){//last task
+                return Err();
+            }else{
+                using Task = idx_to_task_t<I, Configs>;
+                const auto & config = std::get<I>(CONFIGS);
+                tasks_variant_ = Task(config);
+                return Ok();
+            }
+        }
+
+        constexpr Result<void, void> switch_to_task(const size_t i){
+            constexpr size_t N = std::tuple_size_v<Configs>;
+            return [&]<size_t... Is>(std::index_sequence<Is...>) {
+                Result<void, void> result = Err();
+                (( (Is == i) ? 
+                    (result = switch_to_task_impl<Is>(), 0) : 
+                    0 ), ...);
+                return result;
+            }(std::make_index_sequence<N>());
+        }
+
+        template<typename Dignosis>
+        constexpr void save_dignosis(const Dignosis & dignosis){
+            may_dignosis_variant_ = Some(dignosis);
+        }
+
+        constexpr Result<void, void> switch_to_next_task(){
+            const auto next_task_index = task_index_ + 1;
+            const auto res =  switch_to_task(next_task_index);
+            if(res.is_ok()) task_index_ = next_task_index;
+            return res;
+        }
+
+        template<typename T>
+        using config_to_task_t = typename T::Task;
+
+        template<typename ConfigsTuple, typename IndexSeq>
+        struct configs_tuple_to_tasks_variant_impl;
+
+        template<typename... Configs, std::size_t... Is>
+        struct configs_tuple_to_tasks_variant_impl<
+            std::tuple<Configs...>, std::index_sequence<Is...>>
+        {
+            using type = magic::tuple_to_variant_t<
+                magic::tuple_erase_duplicate_t<
+                    typename std::tuple_element_t<Is, std::tuple<Configs...>>::Task...>>;
+        };
+
+        template<typename ConfigsTuple>
+        using configs_tuple_to_tasks_variant_t = 
+            typename configs_tuple_to_tasks_variant_impl<ConfigsTuple,
+            std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>>::type;
+    
+        template<typename ConfigsTuple, typename IndexSeq>
+        struct configs_tuple_to_dignosis_variant_impl;
+
+        template<typename... Configs, std::size_t... Is>
+        struct configs_tuple_to_dignosis_variant_impl<
+            std::tuple<Configs...>, std::index_sequence<Is...>> {
+            using type = magic::tuple_to_variant_t<
+                magic::tuple_erase_duplicate_t<
+                    typename std::tuple_element_t<Is, 
+                        std::tuple<Configs...>>::Task::Dignosis...>>;
+        };
+
+        template<size_t I, typename ConfigsTuple>
+        using idx_to_task_t = typename std::tuple_element_t<I, ConfigsTuple>::Task;
+
+        template<typename ConfigsTuple>
+        using configs_tuple_to_dignosis_variant_t = typename 
+            configs_tuple_to_dignosis_variant_impl<ConfigsTuple,
+            std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
+        >::type;
+    
+
+        static constexpr auto CONFIGS = std::make_tuple(
+            StillTask::Config{
+                .is_beta = false
+            },
+            CheckStillTask::Config{},
+            CheckMovingTask::Config{
+                .is_beta = false
+            },
+            StillTask::Config{
+                .is_beta = true
+            },
+            CheckStillTask::Config{},
+            CheckMovingTask::Config{
+                .is_beta = true
+            }
+        );
+
+
+
+        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using TasksVariant = configs_tuple_to_tasks_variant_t<Configs>;
+        using DignosisVariant = configs_tuple_to_dignosis_variant_t<Configs>;
+
+
+        TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
+        Option<DignosisVariant> may_dignosis_variant_ = None;
+        size_t task_index_ = 0;
+        bool is_all_tasks_finished_ = false;
+    };
+
+    TaskSequence task_sequence_;
 };
 
 
@@ -538,6 +890,26 @@ void test_calibrate(){
     }
 }
 
+
+void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
+    auto comp = CoilCheckComponent(encoder, svpwm);
+
+    while(true){
+        // encoder.update();
+
+        const auto res = comp.resume();
+        if(res.is_err()){
+            PANIC();
+        }
+        clock::delay(1ms);
+        // DEBUG_PRINTLN(
+        //     clock::millis().count(), 
+        //     comp.task_index(), 
+        //     comp.is_finished(),
+        //     comp.err().is_some()
+        // );
+    }
+}
 #define let const auto
 // static constexpr size_t CHOP_FREQ = 30_KHz;
 static constexpr size_t CHOP_FREQ = 20_KHz;
@@ -652,6 +1024,8 @@ void mystepper_main(){
     encoder.init({
         .fast_mode_en = DISEN
     }).examine();
+
+    test_check(encoder, svpwm);
 
 
     q20 targ_lappos = 0;

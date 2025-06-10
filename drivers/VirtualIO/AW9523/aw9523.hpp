@@ -21,6 +21,7 @@ struct AW9523_Collections{
         IndexOutOfRange
     };
 
+    FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>

@@ -12,12 +12,13 @@
 namespace ymd::drivers{
 
 struct LT8920_Collections{
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         WrongChipId,
         NoAvailablePhy
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;

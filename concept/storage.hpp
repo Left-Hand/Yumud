@@ -40,6 +40,8 @@ inline OutputStream &operator << (OutputStream &os, const Address &addr){
     os << "0x" << std::hex << addr.as_u32();
     return os;
 }
+
+
 struct AddressRange{
     Address from;
     Address to;

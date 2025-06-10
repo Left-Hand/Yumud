@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-// #include "core/utils/Result.hpp"
-// #include "core/utils/Errno.hpp"
 
 #include "core/utils/Result.hpp"
 #include "drivers/Encoder/MagEncoder.hpp"
