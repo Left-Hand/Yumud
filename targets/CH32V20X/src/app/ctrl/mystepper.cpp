@@ -679,10 +679,114 @@ using configs_tuple_to_dignosis_variant_t = typename
     std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
 >::type;
 
-class CoilMotionCheckComponent:public CoilMotionCheckComponentUtils{
-public:
 
-static constexpr auto CONFIGS = std::make_tuple(
+
+
+template<typename TaskSettings>
+struct TaskSequence final{
+    using Configs = std::decay_t<typename TaskSettings::Configs>;
+    using TaskError = typename TaskSettings::Error;
+    using Args = typename TaskSettings::Args;
+    using Ret = typename TaskSettings::Ret;
+    using TasksVariant = configs_tuple_to_tasks_variant_t<Configs>;
+    using DignosisVariant = configs_tuple_to_dignosis_variant_t<Configs>;
+
+    constexpr TaskSequence(const Configs & configs):
+        CONFIGS(configs){;}
+    constexpr Ret resume(const Args cont_position){
+        std::visit([&](auto && task) -> void{
+            if(not task.is_finished()) return;
+
+            const auto dignosis = task.dignosis();
+            if(dignosis.err.is_some()){
+                save_dignosis(dignosis);
+                is_all_tasks_finished_ = true;
+                return;
+            }
+            
+            const auto res = switch_to_next_task();
+            if(res.is_err()){
+                is_all_tasks_finished_ = true;
+            }
+        }, tasks_variant_);
+
+        return std::visit([&](auto && task) -> AlphaBetaDuty {
+            return task.resume(cont_position);
+        }, tasks_variant_);
+    };
+
+    constexpr Option<TaskError> err() const {
+        if(may_dignosis_variant_.is_none())
+            return None;
+        
+        return std::visit([&](auto && dignosis) -> Option<TaskError> {
+            return dignosis.err;
+        }, may_dignosis_variant_.unwrap());
+    }
+
+    constexpr bool is_finished() const {
+        return is_all_tasks_finished_;
+    }
+
+    constexpr bool is_done() const {
+        return is_all_tasks_finished_ and err().is_none();
+    }
+
+    consteval size_t task_count() const {
+        return std::tuple_size_v<Configs>;
+    }
+
+    constexpr size_t task_index() const {
+        return task_index_;
+    }
+private:
+    template<size_t I>
+    constexpr void switch_to_task_impl(){
+        static constexpr size_t N = std::tuple_size_v<Configs>;
+        static_assert(I < N, "Invalid task index");
+        using Task = idx_to_task_t<I, Configs>;
+        const auto & config = std::get<I>(CONFIGS);
+        tasks_variant_ = Task(config);
+    }
+
+    constexpr Result<void, void> switch_to_task(const size_t i){
+        constexpr size_t N = std::tuple_size_v<Configs>;
+
+        if (i >= N)//last task
+            return Err();
+
+        [&]<size_t... Is>(std::index_sequence<Is...>) {
+            (( (Is == i) ? 
+                (switch_to_task_impl<Is>(), 0) : 
+                0 ), ...);
+        }(std::make_index_sequence<N>());
+
+        return Ok();
+    }
+
+    template<typename Dignosis>
+    constexpr void save_dignosis(const Dignosis & dignosis){
+        may_dignosis_variant_ = Some(dignosis);
+    }
+
+    constexpr Result<void, void> switch_to_next_task(){
+        const auto next_task_index = task_index_ + 1;
+        const auto res =  switch_to_task(next_task_index);
+        if(res.is_ok()) task_index_ = next_task_index;
+        return res;
+    }
+
+    const Configs CONFIGS;
+    TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
+    Option<DignosisVariant> may_dignosis_variant_ = None;
+    size_t task_index_ = 0;
+    bool is_all_tasks_finished_ = false;
+};
+
+
+class CoilMotionCheckTasks:public CoilMotionCheckComponentUtils{
+public:
+    static constexpr auto CONFIGS = std::make_tuple(
         //令转子停下
         StallTask::Config{
             .is_beta = false
@@ -710,45 +814,8 @@ static constexpr auto CONFIGS = std::make_tuple(
         }
     );
 
-    CoilMotionCheckComponent(
-        drivers::EncoderIntf & encoder,
-        StepperSVPWM & svpwm
-    ):
-        encoder_(encoder),
-        svpwm_(svpwm)
-        {;}
-
-    struct Error{
-        Error(TaskError err){
-            PANIC{err};
-        }
-
-        Error(drivers::EncoderError err){
-            PANIC{err};
-        }
-    };
-
-    Result<void, Error> resume(){
-
-        const auto lap_position = ({
-            if(const auto res = retry(2, [&]{return encoder_.update();});
-                res.is_err()) return Err(Error(res.unwrap_err()));
-
-            const auto either_lap_position = encoder_.get_lap_position();
-            if(either_lap_position.is_err())
-                return Err(Error(either_lap_position.unwrap_err()));
-            either_lap_position.unwrap();
-        });
-
-        if(const auto may_err = task_sequence_.err(); may_err.is_some())
-            return Err(Error(may_err.unwrap()));
-
-        if(task_sequence_.is_finished())
-            return Ok();
-
-        const auto [a,b] = task_sequence_.resume(lap_position);
-        svpwm_.set_alpha_beta_duty(a,b);
-        return Ok();
+    constexpr AlphaBetaDuty resume(const real_t lap_position){
+        return task_sequence_.resume(lap_position);
     }
 
     bool is_finished() const {
@@ -764,104 +831,67 @@ static constexpr auto CONFIGS = std::make_tuple(
     }
 
 private:
-    drivers::EncoderIntf & encoder_;
-    StepperSVPWM & svpwm_;
-private:
-    struct TaskSequence{
-        constexpr AlphaBetaDuty resume(const real_t cont_position){
-            std::visit([&](auto && task) -> void{
-                if(not task.is_finished()) return;
-                const auto dignosis = task.dignosis();
-                if(dignosis.err.is_some()){
-                    save_dignosis(dignosis);
-                    is_all_tasks_finished_ = true;
-                    return;
-                }
-                
-                const auto res = switch_to_next_task();
-                if(res.is_err()){
-                    is_all_tasks_finished_ = true;
-                }
-            }, tasks_variant_);
-
-            return std::visit([&](auto && task) -> AlphaBetaDuty {
-                return task.resume(cont_position);
-            }, tasks_variant_);
-        };
-
-        constexpr Option<TaskError> err() const {
-            if(may_dignosis_variant_.is_none())
-                return None;
-            
-            return std::visit([&](auto && dignosis) -> Option<TaskError> {
-                return dignosis.err;
-            }, may_dignosis_variant_.unwrap());
-        }
-
-        constexpr bool is_finished() const {
-            return is_all_tasks_finished_;
-        }
-
-        constexpr bool is_done() const {
-            return is_all_tasks_finished_ and err().is_none();
-        }
-
-        consteval size_t task_count() const {
-            return std::tuple_size_v<Configs>;
-        }
-
-        constexpr size_t task_index() const {
-            return task_index_;
-        }
-    private:
-        template<size_t I>
-        constexpr void switch_to_task_impl(){
-            static constexpr size_t N = std::tuple_size_v<Configs>;
-            static_assert(I < N, "Invalid task index");
-            using Task = idx_to_task_t<I, Configs>;
-            const auto & config = std::get<I>(CONFIGS);
-            tasks_variant_ = Task(config);
-        }
-
-        constexpr Result<void, void> switch_to_task(const size_t i){
-            constexpr size_t N = std::tuple_size_v<Configs>;
-
-            if (i >= N)//last task
-                return Err();
-
-            [&]<size_t... Is>(std::index_sequence<Is...>) {
-                (( (Is == i) ? 
-                    (switch_to_task_impl<Is>(), 0) : 
-                    0 ), ...);
-            }(std::make_index_sequence<N>());
-
-            return Ok();
-        }
-
-        template<typename Dignosis>
-        constexpr void save_dignosis(const Dignosis & dignosis){
-            may_dignosis_variant_ = Some(dignosis);
-        }
-
-        constexpr Result<void, void> switch_to_next_task(){
-            const auto next_task_index = task_index_ + 1;
-            const auto res =  switch_to_task(next_task_index);
-            if(res.is_ok()) task_index_ = next_task_index;
-            return res;
-        }
-
+    struct Settings{
         using Configs = std::decay_t<decltype(CONFIGS)>;
-        using TasksVariant = configs_tuple_to_tasks_variant_t<Configs>;
-        using DignosisVariant = configs_tuple_to_dignosis_variant_t<Configs>;
-
-
-        TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
-        Option<DignosisVariant> may_dignosis_variant_ = None;
-        size_t task_index_ = 0;
-        bool is_all_tasks_finished_ = false;
+        using Error = TaskError;
+        using Args = real_t;
+        using Ret = AlphaBetaDuty;
     };
 
-    TaskSequence task_sequence_;
+    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+};
+
+class MotorSystem{
+public:
+    MotorSystem(
+        drivers::EncoderIntf & encoder,
+        StepperSVPWM & svpwm
+    ):
+        encoder_(encoder),
+        svpwm_(svpwm)
+        {;}
+
+    struct Error{
+        Error(CoilMotionCheckTasks::TaskError err){
+            PANIC{err};
+        }
+
+        Error(drivers::EncoderError err){
+            PANIC{err};
+        }
+    };
+
+
+    Result<void, Error> resume(){
+
+        const auto lap_position = ({
+            if(const auto res = retry(2, [&]{return encoder_.update();});
+                res.is_err()) return Err(Error(res.unwrap_err()));
+
+            const auto either_lap_position = encoder_.get_lap_position();
+            if(either_lap_position.is_err())
+                return Err(Error(either_lap_position.unwrap_err()));
+            either_lap_position.unwrap();
+        });
+
+        auto & comp = comp_;
+        if(const auto may_err = comp.err(); may_err.is_some())
+            return Err(Error(may_err.unwrap()));
+
+        if(comp.is_finished())
+            return Ok();
+
+        const auto [a,b] = comp.resume(lap_position);
+        svpwm_.set_alpha_beta_duty(a,b);
+        return Ok();
+
+    }
+
+private:
+    drivers::EncoderIntf & encoder_;
+    StepperSVPWM & svpwm_;
+
+    CoilMotionCheckTasks comp_ = {};
 };
 
 
@@ -880,12 +910,13 @@ void test_calibrate(){
 
 
 void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
-    auto comp = CoilMotionCheckComponent(encoder, svpwm);
+    auto motor_system_ = MotorSystem{encoder, svpwm};
 
     while(true){
         // encoder.update();
 
-        const auto res = comp.resume();
+
+        const auto res = motor_system_.resume();
         if(res.is_err()){
             PANIC();
         }
