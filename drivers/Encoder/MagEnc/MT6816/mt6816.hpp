@@ -1,6 +1,6 @@
 #pragma once
 
-//不推荐用于新设计 连续读出数据时容易产生误码与毛刺 性价比不高 
+//不推荐用于新设计 性价比不高 
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"

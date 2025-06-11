@@ -12,12 +12,13 @@ namespace ymd::drivers{
 
 struct AT24CXX_Collections{
 public:
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         DeviceIsBusyStore,
         DeviceIsBusyLoad,
         PayloadOverlength
     };
 
+    FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error,Error_Kind)
 
     template<typename T = void>

@@ -65,15 +65,17 @@ public:
     friend OutputStream & operator <<(OutputStream & os,const SumtypeError & self){
         // 使用 std::visit 遍历 std::variant
         std::visit([&os](const auto& value) {
-            using T = std::decay_t<decltype(value)>;
+            // using T = std::decay_t<decltype(value)>;
 
-            // 检查类型是否可被 OutputStream 打印
-            if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
-                os << value; // 如果可打印，则直接打印
-            } else {
-                os << os.brackets<'['>() <<  "Unprintable" << os.brackets<']'>(); // 否则打印提示信息
-                os << os.brackets<'<'>() <<  magic::type_name_of<T>() << os.brackets<'>'>(); // 否则打印提示信息
-            }
+            // // 检查类型是否可被 OutputStream 打印
+            // if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
+            //     os << value; // 如果可打印，则直接打印
+            // } else {
+            //     os << os.brackets<'['>() <<  "Unprintable" << os.brackets<']'>(); // 否则打印提示信息
+            //     os << os.brackets<'<'>() <<  magic::type_name_of<T>() << os.brackets<'>'>(); // 否则打印提示信息
+            // }
+
+            os << value;
         }, self.value_);
 
         return os;

@@ -91,16 +91,20 @@ void TimerOC::enable_cvr_sync(const Enable en){
 
     switch(idx_){
         case CH1:
-            TIM_OC1PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC1PreloadConfig(inst_, (en == EN) ? 
+                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH2:
-            TIM_OC2PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC2PreloadConfig(inst_, (en == EN) ? 
+                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH3:
-            TIM_OC3PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC3PreloadConfig(inst_, (en == EN) ? 
+                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case CH4:
-            TIM_OC4PreloadConfig(inst_, (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+            TIM_OC4PreloadConfig(inst_, (en == EN) ? 
+                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         default:
             sys::abort();

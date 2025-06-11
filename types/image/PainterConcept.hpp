@@ -26,7 +26,7 @@ class PainterBase{
 public:
     using Cursor = Vector2u;
 
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         ImageNotSet = 1,
         AreaNotExist,
         OutOfBound,
@@ -42,6 +42,7 @@ public:
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
+    FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;

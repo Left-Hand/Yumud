@@ -481,7 +481,7 @@ __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){
-    return iq_t<Q>::from_i32(a.to_i32() % b.to_i32());}
+    return iq_t<Q>(_iq<P>::from_i32(a.to_i32() % b.to_i32()));}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){
@@ -489,15 +489,16 @@ __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){
-    return iq_t<Q>::from_i32((a.to_i32() + b.to_i32()) >> 1);}
+    return iq_t<Q>(_iq<P>::from_i32((a.to_i32() + b.to_i32()) >> 1));}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
-    return iq_t<Q>(_iq<Q>::from_i32((iq.to_i32()) & ((1 << P) - 1)));
+    return iq_t<Q>(_iq<P>::from_i32((iq.to_i32()) & ((1 << P) - 1)));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){return int(iq);}
+__fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){
+    return int(iq);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){

@@ -118,10 +118,10 @@ public:
         pos_oc_(pos_oc),
         neg_oc_(neg_oc){;}
 
-    void set_duty(const real_t value){
+    __fast_inline void set_duty(const real_t value){
         const bool is_minus = signbit(value);
-        const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
         const auto zero_value = real_t(is_inversed_);
+        const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
 
         if(is_minus){
             pos_oc_.set_duty(zero_value);
@@ -130,11 +130,18 @@ public:
             pos_oc_.set_duty(abs_value);
             neg_oc_.set_duty(zero_value);
         }
-        
     }
 
     void inverse(const Enable en){
         is_inversed_ = en == EN;
+    }
+
+    auto & pos_channel() {
+        return pos_oc_;
+    }
+
+    auto & neg_channel(){
+        return neg_oc_;
     }
 private:
     TimerOC & pos_oc_;
