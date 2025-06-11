@@ -518,9 +518,7 @@ public:
         if (likely(is_ok())) {
             return storage_.unwrap();
         } else {
-            #ifdef __DEBUG_INCLUDED
             PANIC_NSRC(std::forward<Args>(args)...);
-            #endif
             sys::abort();
         }
     }
@@ -563,7 +561,10 @@ public:
         const std::source_location & loca = std::source_location::current())
     {
         if (unlikely(!is_ok())) {
-            __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
+            if constexpr (not std::is_same_v<E, void>)
+                __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
+            else
+                __PANIC_EXPLICIT_SOURCE(loca);
         }
         return unwrap();
     }

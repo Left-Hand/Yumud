@@ -25,9 +25,36 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 
+#include <atomic>
+
 
 using namespace ymd;
 
+#define let const auto
+// static constexpr size_t CHOP_FREQ = 30_KHz;
+static constexpr size_t CHOP_FREQ = 20_KHz;
+static constexpr size_t ISR_FREQ = 20_KHz * 2;
+// static constexpr size_t CHOP_FREQ = 100;
+
+static constexpr size_t STEPPER_SECTORS_PER_ROTATION = 4;
+static constexpr size_t BLDC_SECTORS_PER_ROTATION = 6;
+
+enum class MotorType:uint8_t{
+    Bldc,
+    Stepper
+};
+
+struct Nema42MotorSettings{
+    static constexpr MotorType MOTOR_TYPE = MotorType::Stepper;
+    static constexpr size_t MOTOR_POLE_PAIRS = 50;
+    static constexpr size_t SECTORS_PER_ROTATION = STEPPER_SECTORS_PER_ROTATION;
+    static constexpr size_t SECTORS_PER_POSITION = MOTOR_POLE_PAIRS * SECTORS_PER_ROTATION;
+};
+
+using MyMotorSettings = Nema42MotorSettings;
+static constexpr size_t SECTORS_PER_ROTATION = MyMotorSettings::SECTORS_PER_ROTATION;
+static constexpr size_t SECTORS_PER_POSITION = MyMotorSettings::SECTORS_PER_POSITION;
+static constexpr size_t MOTOR_POLE_PAIRS = MyMotorSettings::MOTOR_POLE_PAIRS;
 
 
 #define UART hal::uart1
@@ -236,7 +263,7 @@ struct Elecrad{
 };
 
 
-static constexpr size_t MOTOR_POLES = 50;
+
 
 
 //储存了压缩保存的期望数据和实际数据 用于校准点分析
@@ -295,14 +322,12 @@ private:
     uint16_t targ_packed_data_;
     uint16_t meas_packed_data_;
 
-    static constexpr Option<uint16_t> real_to_packed(const q31 unpacked){
-        constexpr auto SHIFT_BITS = (24-(16 + IGNORE_BITS));
-        if(unpacked > IGNORE_BITS) return None;
-        return Some(q24(unpacked).to_i32() >> SHIFT_BITS);
+    static constexpr Option<uint16_t> real_to_packed(const q16 unpacked){
+        return Some(uint16_t(unpacked.to_i32()));
     }
 
     static constexpr q31 packed_to_real(const uint16_t packed){
-        return q24::from_i32(packed << (8 - IGNORE_BITS));
+        return q16::from_i32(packed);
     }
 };
 
@@ -319,7 +344,7 @@ namespace std {
 }
 
 //储存了完整的校准数据
-using CalibrateDataBlock = std::array<PackedCalibratePoint, MOTOR_POLES>;
+using CalibrateDataBlock = std::array<PackedCalibratePoint, MOTOR_POLE_PAIRS>;
 
 
 //校准数据的视图
@@ -366,7 +391,7 @@ struct CalibrateDataBlockView{
     }
 
     constexpr Iterator end() const noexcept {
-        return Iterator(block_.data(), MOTOR_POLES);
+        return Iterator(block_.data(), MOTOR_POLE_PAIRS);
     }
 
 private:
@@ -377,11 +402,10 @@ private:
 
 //储存了校准过程中不断提交的新数据
 struct CalibrateDataVector{
-public:
-    constexpr CalibrateDataVector() = default;
-
+    constexpr CalibrateDataVector(const size_t capacity):
+        capacity_(capacity){;}
     constexpr Result<void, void> push_back(const q31 targ, const q31 meas){
-        if(len_ == MOTOR_POLES) return Err();
+        if(len_ == capacity_) return Err();
         block_[len_] = ({
             const auto opt = PackedCalibratePoint::from_targ_and_meas(
                 targ, meas
@@ -401,17 +425,17 @@ public:
     }
 
     constexpr bool is_full() const {
-        return len_ == MOTOR_POLES;
+        return len_ == capacity_;
     }
 
     constexpr size_t size() const {
         return len_;
     }
 
-    constexpr Option<CalibrateDataBlockView>
+    constexpr CalibrateDataBlockView
     as_view() const {
-        if(len_ != MOTOR_POLES) return None;
-        return Some(CalibrateDataBlockView(block_));
+        // if(len_ != capacity_) return None;
+        return CalibrateDataBlockView(block_);
     }
 
 
@@ -420,6 +444,7 @@ private:
 
     Block block_;
     size_t len_ = 0;
+    size_t capacity_ = 0;
 };
 
 
@@ -461,7 +486,7 @@ class EncoderCalibrateComponent{
 
     struct CalibrateDataBlocks{
         // using T = PackedCalibratePoint;
-        static constexpr auto MIN_MOVE_THRESHOLD = q16((1.0 / MOTOR_POLES / 4) * 0.3);
+        static constexpr auto MIN_MOVE_THRESHOLD = q16((1.0 / MOTOR_POLE_PAIRS / 4) * 0.3);
 
         using Block = CalibrateDataBlock;
 
@@ -490,30 +515,34 @@ struct MotorTasksUtils{
 
     FRIEND_DERIVE_DEBUG(TaskError)
 
-    static constexpr auto DRIVE_DUTY = 0.1_r;
-    static constexpr size_t MICROSTEPS = 256;
+    // static constexpr auto DRIVE_DUTY = 0.3_r;
+    static constexpr auto CALIBRATE_DRIVE_DUTY = 0.3_r;
+    static constexpr auto STALL_DRIVE_DUTY = 0.3_r;
+    static constexpr auto BEEP_DRIVE_DUTY = 0.3_r;
+
+    static constexpr size_t MICROSTEPS_PER_SECTOR = 256;
 
     // static constexpr q24 ticks_to_seconds(const size_t ticks){
     //     return 
     // }
     static constexpr size_t seconds_to_ticks(const q16 seconds){
-        return seconds * ISR_FREQ;
+        return size_t(seconds * ISR_FREQ);
     }
 
-    static constexpr q16 ticks_to_linear_rotations(const size_t ticks){
-        return q16(ticks) / MICROSTEPS / MOTOR_POLES / 4;
+    static constexpr q16 ticks_to_linear_position(const size_t ticks){
+        return q16(ticks) / MICROSTEPS_PER_SECTOR / MOTOR_POLE_PAIRS / 4;
     }
 
-    static constexpr size_t linear_rotations_to_ticks(const q16 rotations){
-        return size_t(rotations * MICROSTEPS) * 4 * MOTOR_POLES;
+    static constexpr size_t linear_position_to_ticks(const q16 rotations){
+        return size_t(rotations * MICROSTEPS_PER_SECTOR) * 4 * MOTOR_POLE_PAIRS;
     }
 
-    static constexpr q16 ticks_to_accdec_rotations(const size_t ticks){
-        return 
-    }
+    // static constexpr q16 ticks_to_accdec_rotations(const size_t ticks){
+    //     return 
+    // }
 
     static constexpr size_t accdec_rotations_to_ticks(const q16 rotations){
-        return linear_rotations_to_ticks(rotations) * 2;
+        return linear_position_to_ticks(rotations) * 2;
     }
 
     struct StallTask final{
@@ -541,8 +570,8 @@ struct MotorTasksUtils{
             const auto [s,c] = sincospu(targ_elec_rotation_);
 
             return AlphaBetaDuty{
-                .alpha = c * DRIVE_DUTY,
-                .beta = s * DRIVE_DUTY
+                .alpha = c * STALL_DRIVE_DUTY,
+                .beta = s * STALL_DRIVE_DUTY
             };
         }
 
@@ -585,11 +614,11 @@ struct MotorTasksUtils{
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
             tick_cnt_++;
-            const auto targ_lap_position = ticks_to_linear_rotations(tick_cnt_);
+            const auto targ_lap_position = ticks_to_linear_position(tick_cnt_);
             const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
             return AlphaBetaDuty{
-                .alpha = DRIVE_DUTY * 2,
-                .beta = s * DRIVE_DUTY * 2
+                .alpha = BEEP_DRIVE_DUTY * 2,
+                .beta = s * BEEP_DRIVE_DUTY * 2
             };
         }
 
@@ -629,17 +658,17 @@ struct MotorTasksUtils{
         } 
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_rotations(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
             return AlphaBetaDuty{
-                .alpha = c * DRIVE_DUTY,
-                .beta = s * DRIVE_DUTY
+                .alpha = c * STALL_DRIVE_DUTY,
+                .beta = s * STALL_DRIVE_DUTY
             };
         }
 
         constexpr bool is_finished(){
-            return tick_cnt_ > linear_rotations_to_ticks(ABS(delta_));
+            return tick_cnt_ > linear_position_to_ticks(ABS(delta_));
         }
 
         constexpr Dignosis dignosis() const {
@@ -652,6 +681,7 @@ struct MotorTasksUtils{
 
         q16 delta_;
     };
+
 
     struct AccDecRotateTask final{
 
@@ -672,17 +702,17 @@ struct MotorTasksUtils{
         } 
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_rotations(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
             return AlphaBetaDuty{
-                .alpha = c * DRIVE_DUTY,
-                .beta = s * DRIVE_DUTY
+                .alpha = c * STALL_DRIVE_DUTY,
+                .beta = s * STALL_DRIVE_DUTY
             };
         }
 
         constexpr bool is_finished(){
-            return tick_cnt_ > linear_rotations_to_ticks(ABS(delta_));
+            return tick_cnt_ > linear_position_to_ticks(ABS(delta_));
         }
 
         constexpr Dignosis dignosis() const {
@@ -782,7 +812,7 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
             const auto duty = sinpu(LERP(
                 q16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
-            )) * DRIVE_DUTY;
+            )) * STALL_DRIVE_DUTY;
 
             auto make_duty = [&]() -> AlphaBetaDuty{
                 if(is_beta_){
@@ -827,12 +857,101 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
 
 
 struct CalibrateTasksUtils:public MotorTasksUtils{
-    // static constexpr size_t MICROSTEPS = 16;
 
-    // static constexpr size_t MICROSTEPS = ;
+    template<size_t N>
+    struct AverageHelper{
+        constexpr Result<void, void> push_back(const q24 val){
+            if(cnt_ >= N)
+                return Err();
+            sum_ += val;
+            cnt_++;
+            return Ok();
+        }
+
+        constexpr Option<q24> get_avg(){
+            if(cnt_ != N)
+                return None;
+            return Ok(sum_ / N);
+        }
+
+        constexpr void reset(){
+            sum_ = 0;
+            cnt_ = 0;
+        }
+    private:
+        q24 sum_ = 0;
+        size_t cnt_ = 0;
+    };
 
 
+    struct CalibrateRotateTask final{
 
+        struct Config{
+            using Task = CalibrateRotateTask;
+
+            CalibrateDataVector & vector;
+            q16 delta_position;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr CalibrateRotateTask(const Config & cfg):
+            vector_(cfg.vector),
+            delta_position_(cfg.delta_position){
+            ;
+        }
+
+        constexpr CalibrateRotateTask(const CalibrateRotateTask &) = default;
+        constexpr CalibrateRotateTask(CalibrateRotateTask &&) = default;
+
+        constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
+        constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+            
+            tick_cnt_++;
+
+            if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
+                const auto res = push_data(targ_lap_position, meas_lap_position);
+                if(res.is_err()) PANIC(vector_.get().size(), 80);
+                    // .expect(vector_.get().size(), 80);
+            }
+
+
+            return AlphaBetaDuty{
+                .alpha = c * CALIBRATE_DRIVE_DUTY,
+                .beta = s * CALIBRATE_DRIVE_DUTY
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ >= linear_position_to_ticks(ABS(delta_position_));
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+
+    private:
+        constexpr Result<void, void> push_data(
+            const real_t targ_lap_position,
+            const real_t meas_lap_position
+        ){
+            return vector_.get().push_back(targ_lap_position, meas_lap_position);
+        }
+
+        size_t tick_cnt_ = 0;
+        
+        std::reference_wrapper<CalibrateDataVector> vector_;
+        q16 delta_position_;
+    };
 
 };
 
@@ -938,7 +1057,7 @@ private:
     TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
     Option<DignosisVariant> may_dignosis_variant_ = None;
     size_t task_index_ = 0;
-    bool is_all_tasks_finished_ = false;
+    std::atomic<bool> is_all_tasks_finished_ = false;
 };
 
 
@@ -1001,28 +1120,64 @@ private:
     TaskSequence<Settings> task_sequence_ = {CONFIGS};
 };
 
+auto make_calibrate_configs = [](
+        CalibrateDataVector & forward_calibrate_data_vector,
+        CalibrateDataVector & backward_calibrate_data_vector
+    ) -> auto{
+    return std::make_tuple(
+        // LinearRotateTask::Config{
+        //     .delta_position = 0.4_r
+        // },
+    
+        // LinearRotateTask::Config{
+        //     .delta_position = -0.4_r
+        // },
+
+        // CalibrateTasksUtils::LinearRotateTask::Config{
+        //     .delta_position = 0.4_r
+        // },
+    
+        // CalibrateTasksUtils::LinearRotateTask::Config{
+        //     .delta_position = -0.4_r
+        // }
+        // ,
+        CalibrateTasksUtils::CalibrateRotateTask::Config{
+            .vector = forward_calibrate_data_vector,
+            .delta_position = 1_r
+        },
+
+        CalibrateTasksUtils::CalibrateRotateTask::Config{
+            .vector = backward_calibrate_data_vector,
+            .delta_position = -1_r
+        }
+
+
+
+        // CalibrateTasksUtils::CalibrateRotateTask::Config{
+        //     .vector = calibrate_data_vector,
+        //     .delta_position = -0.4_r
+        // }
+    );
+};
 
 
 class CalibrateTasks:public CalibrateTasksUtils{
 public:
-    static constexpr auto CONFIGS = std::make_tuple(
+    template<typename ... Args>
+    static constexpr std::tuple<Args...> make_config(Args && ... args){
+        return std::make_tuple(
+            (std::forward<Args>(args), ...)
+        );
+    }
 
-        LinearRotateTask::Config{
-            .delta_position = 0.4_r
-        },
-    
-        LinearRotateTask::Config{
-            .delta_position = -0.4_r
-        },
-
-        LinearRotateTask::Config{
-            .delta_position = 0.4_r
-        },
-    
-        LinearRotateTask::Config{
-            .delta_position = -0.4_r
-        }
-    );
+    constexpr CalibrateTasks(
+        CalibrateDataVector & forward_calibrate_data_vector,
+        CalibrateDataVector & backward_calibrate_data_vector
+    ):
+        configs_(make_calibrate_configs(
+            forward_calibrate_data_vector,
+            backward_calibrate_data_vector
+        )){;}
 
     constexpr AlphaBetaDuty resume(const real_t lap_position){
         return task_sequence_.resume(lap_position);
@@ -1039,16 +1194,19 @@ public:
     auto err() const {
         return task_sequence_.err();
     }
-
 private:
+    using IConfigs = magic::functor_ret_t<decltype(make_calibrate_configs)>;
+
+    IConfigs configs_;
+
+
     struct Settings{
-        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using Configs = IConfigs;
         using Error = TaskError;
         using Args = real_t;
         using Ret = AlphaBetaDuty;
     };
-
-    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+    TaskSequence<Settings> task_sequence_ = {configs_};
 };
 
 class BeepTasks:public MotorTasksUtils{
@@ -1127,18 +1285,28 @@ public:
         }
     };
 
-
     Result<void, Error> resume(){
 
-        const auto lap_position = ({
+        const auto meas_lap_position = ({
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
 
             const auto either_lap_position = encoder_.get_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
-            either_lap_position.unwrap();
+            1 - either_lap_position.unwrap();
         });
+
+        // if(true){
+        if(false){
+        // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
+            // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+            const auto [s,c] = sincospu(frac((meas_lap_position + 0.0153_r - 0.005_r)) * 50);
+            // const auto [a,b] = sincospu( - 0.004_r);
+            const auto mag = 0.4_r;
+            svpwm_.set_alpha_beta_duty(c * mag,s * mag);
+            return Ok();
+        }
 
         // auto & comp = coil_motion_check_comp_;
         auto & comp = calibrate_comp_;
@@ -1146,14 +1314,45 @@ public:
             return Err(Error(may_err.unwrap()));
 
         if(comp.is_finished()){
-            // DEBUG_PRINTLN("Coil motion check finished", comp.err());
+        //     // DEBUG_PRINTLN("Coil motion check finished", comp.err());
+        //     // ("f");
+            is_comp_finished_ = true;
             return Ok();
         }
 
-        const auto [a,b] = comp.resume(lap_position);
+        is_comp_finished_ = false;
+
+
+        const auto [a,b] = comp.resume(meas_lap_position);
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
+    }
 
+    bool is_comp_finished() const{
+        return is_comp_finished_;
+    }
+
+
+    Result<void, void> print_vec() const {
+        // DEBUG_PRINTLN(calibrate_data_vector_);
+        // const auto view = calibrate_data_vector_.as_view();
+
+        auto print_view = [](auto view){
+            for (const auto & item : view) {
+                const auto targ = item.get_targ();
+                const auto meas = item.get_meas();
+                // DEBUG_PRINTLN(targ, meas, fposmodp(q20(targ - meas), 0.02_q20) * 100);
+                const auto position_err = q20(targ - meas);
+                const auto mod_err = fposmodp(position_err, 0.02_q20);
+                DEBUG_PRINTLN(targ, meas, position_err, mod_err, mod_err * 100);
+                clock::delay(1ms);
+            }
+        };
+
+        print_view(forward_calibrate_data_vector_.as_view());
+        print_view(backward_calibrate_data_vector_.as_view());
+
+        return Ok();
     }
 
 private:
@@ -1161,21 +1360,25 @@ private:
     StepperSVPWM & svpwm_;
 
     CoilMotionCheckTasks coil_motion_check_comp_ = {};
-    CalibrateTasks calibrate_comp_ = {};
+    CalibrateTasks calibrate_comp_ = {
+        forward_calibrate_data_vector_,
+        backward_calibrate_data_vector_
+    };
+
+    CalibrateDataVector forward_calibrate_data_vector_ = {MOTOR_POLE_PAIRS};
+    CalibrateDataVector backward_calibrate_data_vector_ = {MOTOR_POLE_PAIRS};
+    std::atomic<bool> is_comp_finished_ = false;
 };
 
 
 void test_calibrate(){
-    const CalibrateDataVector vec;
+    const CalibrateDataVector vec{MOTOR_POLE_PAIRS};
     // ... fill data ...
-
-    const auto view = vec.as_view().unwrap();
+    const auto view = vec.as_view();
     for (const auto [targ, meas] : view) {
         DEBUG_PRINTLN(targ, meas);
-        // Use targ/meas directly
-        // targ will be get_targ() value
-        // meas will be get_meas() value
     }
+    while(true);
 }
 
 
@@ -1202,14 +1405,17 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     comp.is_finished(),
         //     comp.err().is_some()
         // );
+        // DEBUG_PRINTLN(motor_system_.is_comp_finished());
+        if(motor_system_.is_comp_finished()){
+            motor_system_.print_vec().examine();
+            break;
+        }
     }
-}
-#define let const auto
-// static constexpr size_t CHOP_FREQ = 30_KHz;
-static constexpr size_t CHOP_FREQ = 20_KHz;
-static constexpr size_t ISR_FREQ = 20_KHz * 2;
-// static constexpr size_t CHOP_FREQ = 100;
 
+    // DEBUG_PRINTLN("finished");
+
+    while(true);
+}
 
 
 
@@ -1239,6 +1445,7 @@ static constexpr void static_test(){
 void mystepper_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
+    clock::delay(400ms);
 
     {
         hal::Gpio & ena_gpio = hal::portB[0];
@@ -1336,7 +1543,7 @@ void mystepper_main(){
         // const auto [st, ct] = sincospu(10 * sinpu(t));
 
         targ_lappos += (4 * meas_lappos - 2) * 0.00005_q20;
-        let ref_epos = MOTOR_POLES * q16(targ_lappos);
+        let ref_epos = MOTOR_POLE_PAIRS * q16(targ_lappos);
         const auto [st, ct] = sincospu(ref_epos);
         // const auto [st, ct] = sincospu(sinpu(t));
         const auto amp = 0.6_r;
@@ -1382,7 +1589,7 @@ void mystepper_main(){
 
 struct LapCalibrateTable{
     using T = real_t;
-    using Data = std::array<T, MOTOR_POLES>;
+    using Data = std::array<T, MOTOR_POLE_PAIRS>;
 
 
     Data data; 
@@ -1396,19 +1603,19 @@ struct LapCalibrateTable{
     }
 
     constexpr real_t position_to_elecrad(const real_t lap_pos) const{
-        return real_t(MOTOR_POLES * TAU) * lap_pos;
+        return real_t(MOTOR_POLE_PAIRS * TAU) * lap_pos;
     }
 
 private:
 
     constexpr T forward(const T x) const {
-        const T x_wrapped = fposmodp(x,real_t(MOTOR_POLES));
+        const T x_wrapped = fposmodp(x,real_t(MOTOR_POLE_PAIRS));
         const uint x_int = int(x_wrapped);
         const T x_frac = x_wrapped - x_int;
 
         const auto [ya, yb] = [&] -> std::tuple<real_t, real_t>{
-            if(x_int == MOTOR_POLES - 1){
-                return {data[MOTOR_POLES - 1], data[0]};
+            if(x_int == MOTOR_POLE_PAIRS - 1){
+                return {data[MOTOR_POLE_PAIRS - 1], data[0]};
             }else{
                 return {data[x_int], data[x_int + 1]};
             }
@@ -1418,6 +1625,6 @@ private:
     }
 
     constexpr T forward_uni(const T x) const {
-        return x * MOTOR_POLES;
+        return x * MOTOR_POLE_PAIRS;
     }
 };
