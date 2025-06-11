@@ -30,6 +30,110 @@
 
 using namespace ymd;
 
+namespace ymd::fp{
+// https://www.bluepuni.com/archives/zip-for-cpp20/
+template <std::ranges::input_range ...Views>
+class Zip : public std::ranges::view_interface<Zip<Views...>> {
+public:
+    struct iterator;
+    struct sentinel;
+
+public:
+    Zip() = default;
+    // Views are cheap to copy, but owning views cannot be done. (= delete)
+    constexpr Zip(Views ...vs) noexcept: _views(std::move(vs)...) {}
+    constexpr auto begin() {
+        return std::apply([&](Views &...views) { return iterator(views...); }, _views);
+    }
+    constexpr auto end() requires (std::ranges::random_access_range<Views> && ...) {
+        return sentinel{this};
+    }
+    constexpr auto size() const requires (std::ranges::sized_range<Views> && ...) {
+        return std::apply([&](auto &&...views)
+            { return std::min({std::ranges::size(views)...}); }, _views);
+    }
+
+private:
+    std::tuple<Views...> _views;
+};
+
+template <std::ranges::input_range ...Views>
+struct Zip<Views...>::iterator {
+    friend struct sentinel;
+    // TODO: flexible iterator_concepts.
+    using iterator_concept = std::random_access_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+    using value_type = std::tuple<std::ranges::range_value_t<Views>...>;
+    using difference_type = std::common_type_t<std::ranges::range_difference_t<Views>...>;
+
+    iterator() = default;
+    constexpr iterator(Views &...views): _currents{std::ranges::begin(views)...} {}
+
+    constexpr auto operator*() const {
+        return std::apply([&](auto &&...iters) {
+            // No <auto> decay!
+            // Example: zip(views::iota(1, 5), named_vector_of_int).
+            // Return: std::tuple<int, int&>.
+            return std::tuple<decltype(*iters)...>((*iters)...);
+        }, _currents);
+    }
+
+    constexpr auto operator[](difference_type n) const {
+        auto tmp = *this;
+        tmp.operator+=(n);
+        return tmp;
+    }
+
+    constexpr iterator& operator++() {
+        return this->operator+=(1);
+    }
+
+    constexpr iterator operator++(int) {
+        auto tmp = *this;
+        this->operator+=(1);
+        return tmp;
+    }
+    constexpr iterator& operator+=(difference_type n) {
+        std::apply([&](auto &...iters) { ((iters += n),...); }, _currents);
+        return *this;
+    }
+
+    friend constexpr auto operator<=>(const iterator &x, const iterator &y) = default;
+
+private:
+    std::tuple<std::ranges::iterator_t<Views>...> _currents;
+};
+
+template <std::ranges::input_range ...Views>
+struct Zip<Views...>::sentinel {
+    sentinel() = default;
+    constexpr sentinel(Zip *this_zip) noexcept: _this_zip(this_zip) {}
+
+    friend bool operator==(const iterator &x, const sentinel &y) {
+        return [&]<auto ...Is>(std::index_sequence<Is...>) {
+            return ((std::get<Is>(x._currents)
+                        == std::ranges::end(std::get<Is>(y._this_zip->_views))) || ...);
+        }(std::make_index_sequence<sizeof...(Views)>{});
+    }
+
+private:
+    Zip *_this_zip;
+};
+
+inline constexpr struct Zip_fn {
+    // template <std::ranges::input_range ...Rs>
+    template <typename ...Rs>
+    [[nodiscard]]
+    constexpr auto operator()(Rs &&...rs) const {
+        if constexpr (sizeof...(rs) == 0) {
+            return std::views::empty<std::tuple<>>;
+        } else {
+            return Zip<std::views::all_t<Rs>...>(std::forward<Rs>(rs)...);
+        }
+    }
+} zip;
+}
+
 #define let const auto
 // static constexpr size_t CHOP_FREQ = 30_KHz;
 static constexpr size_t CHOP_FREQ = 20_KHz;
@@ -244,6 +348,10 @@ public:
         channel_a_.set_duty(duty_a);
         channel_b_.set_duty(duty_b);
     }
+
+    // static constexpr std::tuple<q16, q16> map_duty_to_pair(const q16 duty){
+
+    // }
 private:
 
     hal::TimerOcPair channel_a_;
@@ -304,6 +412,10 @@ public:
 
     constexpr q31 get_meas() const {
         return packed_to_real(meas_packed_data_);
+    }
+
+    constexpr q31 to_inaccuracy() const {
+        return fposmodp(q20(get_targ() - get_meas()), 0.02_q20);
     }
 
     template <size_t N>
@@ -395,18 +507,23 @@ struct CalibrateDataBlockView{
     }
 
 private:
-
-
     const Block & block_;
 };
 
 //储存了校准过程中不断提交的新数据
 struct CalibrateDataVector{
     constexpr CalibrateDataVector(const size_t capacity):
-        capacity_(capacity){;}
+        capacity_(capacity){
+            reset();
+        }
     constexpr Result<void, void> push_back(const q31 targ, const q31 meas){
-        if(len_ == capacity_) return Err();
-        block_[len_] = ({
+        //确定原始数据的扇区
+        const auto index = position_to_index(meas);
+        // PANIC(index);
+        if(index >= capacity_) return Err();
+        if(cnts_[index] != 0) return Err(); 
+
+        block_[index] = ({
             const auto opt = PackedCalibratePoint::from_targ_and_meas(
                 targ, meas
             );
@@ -415,45 +532,49 @@ struct CalibrateDataVector{
             opt.unwrap();
         });
 
-        len_ ++;
-
         return Ok();
     }
 
-    constexpr void clear(){
-        len_ = 0;
+    constexpr size_t position_to_index(const q31 position) const{
+        return size_t(q24(position) * capacity_);
+    }
+
+    constexpr PackedCalibratePoint operator[](const size_t idx) const {
+        return block_[idx];
+    }
+
+    constexpr PackedCalibratePoint operator[](const q31 raw_position) const {
+        return block_[position_to_index(raw_position)];
+    }
+
+    constexpr void reset(){
+        block_.fill(PackedCalibratePoint{});
+        cnts_.fill(0);
     }
 
     constexpr bool is_full() const {
-        return len_ == capacity_;
-    }
-
-    constexpr size_t size() const {
-        return len_;
+        // return cnt_ == capacity_;
+        return std::accumulate(cnts_.begin(), cnts_.end(), 0u) == capacity_;
     }
 
     constexpr CalibrateDataBlockView
     as_view() const {
-        // if(len_ != capacity_) return None;
         return CalibrateDataBlockView(block_);
     }
 
 
 private:
     using Block = CalibrateDataBlock;
+    using Cnts = std::array<uint8_t, MOTOR_POLE_PAIRS>;
 
     Block block_;
-    size_t len_ = 0;
+    Cnts cnts_;
     size_t capacity_ = 0;
 };
 
-
-
-
-//提供了对校准数据分析的纯函数
-struct CalibrateDataAnalyzer{
-    // static constexpr 
-
+struct EncoderCorrector{
+private:
+    // using Storage = std::array<>
 };
 
 
@@ -918,7 +1039,8 @@ struct CalibrateTasksUtils:public MotorTasksUtils{
 
             if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
                 const auto res = push_data(targ_lap_position, meas_lap_position);
-                if(res.is_err()) PANIC(vector_.get().size(), 80);
+                // if(res.is_err()) PANIC(vector_.get().as_view());
+                if(res.is_err()) PANIC();
                     // .expect(vector_.get().size(), 80);
             }
 
@@ -1286,27 +1408,17 @@ public:
     };
 
     Result<void, Error> resume(){
+        const auto begin_u = clock::micros();
 
         const auto meas_lap_position = ({
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
-
+            // execution_time_ = clock::micros() - begin_u;
             const auto either_lap_position = encoder_.get_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             1 - either_lap_position.unwrap();
         });
-
-        // if(true){
-        if(false){
-        // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
-            // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
-            const auto [s,c] = sincospu(frac((meas_lap_position + 0.0153_r - 0.005_r)) * 50);
-            // const auto [a,b] = sincospu( - 0.004_r);
-            const auto mag = 0.4_r;
-            svpwm_.set_alpha_beta_duty(c * mag,s * mag);
-            return Ok();
-        }
 
         // auto & comp = coil_motion_check_comp_;
         auto & comp = calibrate_comp_;
@@ -1314,9 +1426,20 @@ public:
             return Err(Error(may_err.unwrap()));
 
         if(comp.is_finished()){
-        //     // DEBUG_PRINTLN("Coil motion check finished", comp.err());
-        //     // ("f");
+
             is_comp_finished_ = true;
+
+            // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
+            // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+            const auto [s,c] = sincospu(frac(
+                // (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
+                (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
+            // const auto [a,b] = sincospu( - 0.004_r);
+            const auto mag = 0.5_r;
+
+            svpwm_.set_alpha_beta_duty(c * mag,s * mag);
+            execution_time_ = clock::micros() - begin_u;
+
             return Ok();
         }
 
@@ -1344,30 +1467,47 @@ public:
                 // DEBUG_PRINTLN(targ, meas, fposmodp(q20(targ - meas), 0.02_q20) * 100);
                 const auto position_err = q20(targ - meas);
                 const auto mod_err = fposmodp(position_err, 0.02_q20);
-                DEBUG_PRINTLN(targ, meas, position_err, mod_err, mod_err * 100);
+                DEBUG_PRINTLN(targ, meas, mod_err * 100);
                 clock::delay(1ms);
             }
         };
 
-        print_view(forward_calibrate_data_vector_.as_view());
-        print_view(backward_calibrate_data_vector_.as_view());
+        print_view(forward_cali_vec_.as_view());
+        print_view(backward_cali_vec_.as_view());
+
+        for(int i = 0; i < 50; i++){
+            const auto raw = real_t(i) / 50;
+            const auto corrected = correct_raw_position(raw);
+            DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
+            clock::delay(1ms);
+        }
 
         return Ok();
     }
 
+    constexpr q16 correct_raw_position(const q16 raw_position) const {
+        const auto corr1 = forward_cali_vec_[raw_position].to_inaccuracy();
+        const auto corr2 = backward_cali_vec_[raw_position].to_inaccuracy();
+
+        return raw_position + mean(corr1, corr2);
+        // return raw_position + corr1;
+    }
+    Microseconds execution_time_ = 0us;
 private:
     drivers::EncoderIntf & encoder_;
     StepperSVPWM & svpwm_;
 
     CoilMotionCheckTasks coil_motion_check_comp_ = {};
     CalibrateTasks calibrate_comp_ = {
-        forward_calibrate_data_vector_,
-        backward_calibrate_data_vector_
+        forward_cali_vec_,
+        backward_cali_vec_
     };
 
-    CalibrateDataVector forward_calibrate_data_vector_ = {MOTOR_POLE_PAIRS};
-    CalibrateDataVector backward_calibrate_data_vector_ = {MOTOR_POLE_PAIRS};
+    CalibrateDataVector forward_cali_vec_ = {MOTOR_POLE_PAIRS};
+    CalibrateDataVector backward_cali_vec_ = {MOTOR_POLE_PAIRS};
     std::atomic<bool> is_comp_finished_ = false;
+
+
 };
 
 
@@ -1398,7 +1538,7 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
 
 
-        clock::delay(1ms);
+        // clock::delay(1ms);
         // DEBUG_PRINTLN(
         //     clock::millis().count(), 
         //     comp.task_index(), 
@@ -1406,10 +1546,11 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     comp.err().is_some()
         // );
         // DEBUG_PRINTLN(motor_system_.is_comp_finished());
-        if(motor_system_.is_comp_finished()){
-            motor_system_.print_vec().examine();
-            break;
-        }
+        // if(motor_system_.is_comp_finished()){
+        //     motor_system_.print_vec().examine();
+        //     break;
+        // }
+        DEBUG_PRINTLN_IDLE(motor_system_.execution_time_.count());
     }
 
     // DEBUG_PRINTLN("finished");

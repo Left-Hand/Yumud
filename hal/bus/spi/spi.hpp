@@ -36,8 +36,16 @@ protected:
     CommStrategy rx_strategy_;
     std::optional<uint8_t> last_index;
 
-    [[nodiscard]] hal::HalResult lead(const LockRequest req);
-    void trail(){
+    [[nodiscard]] __fast_inline hal::HalResult lead(const LockRequest req){
+        const auto index = req.id();
+        if(not cs_port_.is_index_valid(index))
+            return hal::HalResult::NoSelecter;
+        cs_port_[index].clr();
+        last_index = index;
+        return hal::HalResult::Ok();
+    }
+
+    __fast_inline void trail(){
         cs_port_[last_index.value()].set();
         last_index.reset();
     }

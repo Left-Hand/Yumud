@@ -3,13 +3,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-hal::HalResult Spi::lead(const LockRequest req) {
-    const auto index = req.id();
-    if(!cs_port_.is_index_valid(index)) return hal::HalResult::NoSelecter;
-    cs_port_[index].clr();
-    last_index = index;
-    return hal::HalResult::Ok();
-}
+
 
 std::optional<SpiSlaveIndex> Spi::attach_next_cs(hal::GpioIntf & io){
     for(size_t i = 0; i < cs_port_.size(); i++){
