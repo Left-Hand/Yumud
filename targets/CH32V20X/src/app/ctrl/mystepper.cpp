@@ -77,18 +77,6 @@ struct variant_get_trait{
 };
 
 
-// template<typename Tuple, typename F, size_t... Is>
-// constexpr auto tuple_transform_impl(Tuple&& t, F&& f, std::index_sequence<Is...>) {
-//     return std::make_tuple(f(std::get<Is>(std::forward<Tuple>(t)))...);
-// }
-
-// template<typename Tuple, typename F>
-// constexpr auto tuple_transform(Tuple&& t, F&& f) {
-//     return tuple_transform_impl(std::forward<Tuple>(t), 
-//         std::forward<F>(f),
-//         std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>{});
-// }
-
 
 template <typename T, typename... Ts>
 struct tuple_erase_duplicate : std::type_identity<T> {};
@@ -122,8 +110,49 @@ template <typename... Ts>
 using tuple_erase_duplicate_t = typename details::
     tuple_erase_duplicate<std::tuple<>, Ts...>::type;
 
-
 }
+
+template<typename T>
+using config_to_task_t = typename T::Task;
+
+template<typename ConfigsTuple, typename IndexSeq>
+struct configs_tuple_to_tasks_variant_impl;
+
+template<typename... Configs, std::size_t... Is>
+struct configs_tuple_to_tasks_variant_impl<
+    std::tuple<Configs...>, std::index_sequence<Is...>>
+{
+    using type = magic::tuple_to_variant_t<
+        magic::tuple_erase_duplicate_t<
+            typename std::tuple_element_t<Is, std::tuple<Configs...>>::Task...>>;
+};
+
+template<typename ConfigsTuple>
+using configs_tuple_to_tasks_variant_t = 
+    typename configs_tuple_to_tasks_variant_impl<ConfigsTuple,
+    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>>::type;
+
+template<typename ConfigsTuple, typename IndexSeq>
+struct configs_tuple_to_dignosis_variant_impl;
+
+template<typename... Configs, std::size_t... Is>
+struct configs_tuple_to_dignosis_variant_impl<
+    std::tuple<Configs...>, std::index_sequence<Is...>> {
+    using type = magic::tuple_to_variant_t<
+        magic::tuple_erase_duplicate_t<
+            typename std::tuple_element_t<Is, 
+                std::tuple<Configs...>>::Task::Dignosis...>>;
+};
+
+template<size_t I, typename ConfigsTuple>
+using idx_to_task_t = typename std::tuple_element_t<I, ConfigsTuple>::Task;
+
+template<typename ConfigsTuple>
+using configs_tuple_to_dignosis_variant_t = typename 
+    configs_tuple_to_dignosis_variant_impl<ConfigsTuple,
+    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
+>::type;
+
 
 struct AlphaBetaDuty{
     q16 alpha;
@@ -462,22 +491,38 @@ struct MotorTasksUtils{
     FRIEND_DERIVE_DEBUG(TaskError)
 
     static constexpr auto DRIVE_DUTY = 0.1_r;
-};
+    static constexpr size_t MICROSTEPS = 256;
 
+    // static constexpr q24 ticks_to_seconds(const size_t ticks){
+    //     return 
+    // }
+    static constexpr size_t seconds_to_ticks(const q16 seconds){
+        return seconds * ISR_FREQ;
+    }
 
-struct CoilCheckTasksUtils:public MotorTasksUtils{
-    static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
-    static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
-    static constexpr auto STALL_CHECK_TICKS = 80u;
-    static constexpr auto MOVE_CHECK_TICKS = 1600u;
-    static constexpr auto STALL_TICKS = 1000u;
+    static constexpr q16 ticks_to_linear_rotations(const size_t ticks){
+        return q16(ticks) / MICROSTEPS / MOTOR_POLES / 4;
+    }
+
+    static constexpr size_t linear_rotations_to_ticks(const q16 rotations){
+        return size_t(rotations * MICROSTEPS) * 4 * MOTOR_POLES;
+    }
+
+    static constexpr q16 ticks_to_accdec_rotations(const size_t ticks){
+        return 
+    }
+
+    static constexpr size_t accdec_rotations_to_ticks(const q16 rotations){
+        return linear_rotations_to_ticks(rotations) * 2;
+    }
 
     struct StallTask final{
 
         struct Config{
             using Task = StallTask;
 
-            bool is_beta;
+            q16 targ_elec_rotation;
+            size_t timeout_ticks;
         };
 
         
@@ -486,26 +531,23 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
         };
         
         constexpr StallTask(const Config & cfg){
-            is_beta_ = cfg.is_beta;
+            targ_elec_rotation_ = cfg.targ_elec_rotation;
+            ticks_ = cfg.timeout_ticks;
         } 
 
         constexpr AlphaBetaDuty resume(const real_t lappos){
             tick_cnt_++;
 
-            if(not is_beta_)
-                return AlphaBetaDuty{
-                    .alpha = DRIVE_DUTY,
-                    .beta = 0
-                };
-            else
-                return AlphaBetaDuty{
-                    .alpha = 0,
-                    .beta = DRIVE_DUTY
-                };
+            const auto [s,c] = sincospu(targ_elec_rotation_);
+
+            return AlphaBetaDuty{
+                .alpha = c * DRIVE_DUTY,
+                .beta = s * DRIVE_DUTY
+            };
         }
 
         constexpr bool is_finished(){
-            return tick_cnt_ > STALL_TICKS;
+            return tick_cnt_ > ticks_;
         }
 
         constexpr Dignosis dignosis() const {
@@ -516,12 +558,152 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
     private:
         size_t tick_cnt_ = 0;
 
-        Option<Range2<q16>> may_move_range_ = None;
+        q16 targ_elec_rotation_;
+        size_t ticks_;
+    };
 
-        bool is_beta_;
+    struct BeepTask final{
+
+        struct Config{
+            using Task = BeepTask;
+
+            // q16 delta_position;
+            size_t freq;
+            Milliseconds period;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr BeepTask(const Config & cfg):
+            freq_(cfg.freq),
+            period_(cfg.period){
+            ;
+        }
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            tick_cnt_++;
+            const auto targ_lap_position = ticks_to_linear_rotations(tick_cnt_);
+            const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
+            return AlphaBetaDuty{
+                .alpha = DRIVE_DUTY * 2,
+                .beta = s * DRIVE_DUTY * 2
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > period_.count() * 100;
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        size_t freq_;
+        Milliseconds  period_;
     };
 
 
+    struct LinearRotateTask final{
+
+        struct Config{
+            using Task = LinearRotateTask;
+
+            q16 delta_position;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr LinearRotateTask(const Config & cfg):
+            delta_(cfg.delta_position){
+            ;
+        } 
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            tick_cnt_++;
+            const auto targ_lap_position = SIGN_AS(ticks_to_linear_rotations(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
+            return AlphaBetaDuty{
+                .alpha = c * DRIVE_DUTY,
+                .beta = s * DRIVE_DUTY
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > linear_rotations_to_ticks(ABS(delta_));
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        q16 delta_;
+    };
+
+    struct AccDecRotateTask final{
+
+        struct Config{
+            using Task = AccDecRotateTask;
+
+            q16 delta_position;
+        };
+
+        
+        struct Dignosis {
+            Option<TaskError> err;
+        };
+        
+        constexpr AccDecRotateTask(const Config & cfg):
+            delta_(cfg.delta_position){
+            ;
+        } 
+
+        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+            tick_cnt_++;
+            const auto targ_lap_position = SIGN_AS(ticks_to_linear_rotations(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
+            return AlphaBetaDuty{
+                .alpha = c * DRIVE_DUTY,
+                .beta = s * DRIVE_DUTY
+            };
+        }
+
+        constexpr bool is_finished(){
+            return tick_cnt_ > linear_rotations_to_ticks(ABS(delta_));
+        }
+
+        constexpr Dignosis dignosis() const {
+            return Dignosis{
+                .err = None,
+            };
+        }
+    private:
+        size_t tick_cnt_ = 0;
+
+        q16 delta_;
+    };
+};
+
+
+struct CoilCheckTasksUtils:public MotorTasksUtils{
+    static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
+    static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
+    static constexpr auto STALL_CHECK_TICKS = 80u;
+    static constexpr auto MOVE_CHECK_TICKS = 1600u;
+    static constexpr auto STALL_TICKS = 1000u;
 
     struct CheckStallTask final{
 
@@ -646,148 +828,14 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
 
 struct CalibrateTasksUtils:public MotorTasksUtils{
     // static constexpr size_t MICROSTEPS = 16;
-    static constexpr size_t MICROSTEPS = 256;
+
     // static constexpr size_t MICROSTEPS = ;
 
-    static constexpr q16 ticks_to_rotations(const size_t ticks){
-        return q16(ticks) / MICROSTEPS / MOTOR_POLES / 4;
-    }
 
-    static constexpr size_t rotations_to_ticks(const q16 rotations){
-        return size_t(rotations * MICROSTEPS) * 4 * MOTOR_POLES;
-    }
 
-    struct LinearRotateTask final{
 
-        struct Config{
-            using Task = LinearRotateTask;
-
-            q16 delta;
-        };
-
-        
-        struct Dignosis {
-            Option<TaskError> err;
-        };
-        
-        constexpr LinearRotateTask(const Config & cfg):
-            delta_(cfg.delta){
-            ;
-        } 
-
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
-            tick_cnt_++;
-            const auto targ_lap_position = SIGN_AS(ticks_to_rotations(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLES);
-            return AlphaBetaDuty{
-                .alpha = c * DRIVE_DUTY,
-                .beta = s * DRIVE_DUTY
-            };
-        }
-
-        constexpr bool is_finished(){
-            return tick_cnt_ > rotations_to_ticks(ABS(delta_));
-        }
-
-        constexpr Dignosis dignosis() const {
-            return Dignosis{
-                .err = None,
-            };
-        }
-    private:
-        size_t tick_cnt_ = 0;
-
-        q16 delta_;
-    };
-
-    struct BeepTask final{
-
-        struct Config{
-            using Task = BeepTask;
-
-            // q16 delta;
-            size_t freq;
-            Milliseconds period;
-        };
-
-        
-        struct Dignosis {
-            Option<TaskError> err;
-        };
-        
-        constexpr BeepTask(const Config & cfg):
-            freq_(cfg.freq),
-            period_(cfg.period){
-            ;
-        }
-
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
-            tick_cnt_++;
-            const auto targ_lap_position = ticks_to_rotations(tick_cnt_);
-            const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
-            return AlphaBetaDuty{
-                .alpha = DRIVE_DUTY * 2,
-                .beta = s * DRIVE_DUTY * 2
-            };
-        }
-
-        constexpr bool is_finished(){
-            return tick_cnt_ > period_.count() * 100;
-        }
-
-        constexpr Dignosis dignosis() const {
-            return Dignosis{
-                .err = None,
-            };
-        }
-    private:
-        size_t tick_cnt_ = 0;
-
-        size_t freq_;
-        Milliseconds  period_;
-    };
 };
 
-template<typename T>
-using config_to_task_t = typename T::Task;
-
-template<typename ConfigsTuple, typename IndexSeq>
-struct configs_tuple_to_tasks_variant_impl;
-
-template<typename... Configs, std::size_t... Is>
-struct configs_tuple_to_tasks_variant_impl<
-    std::tuple<Configs...>, std::index_sequence<Is...>>
-{
-    using type = magic::tuple_to_variant_t<
-        magic::tuple_erase_duplicate_t<
-            typename std::tuple_element_t<Is, std::tuple<Configs...>>::Task...>>;
-};
-
-template<typename ConfigsTuple>
-using configs_tuple_to_tasks_variant_t = 
-    typename configs_tuple_to_tasks_variant_impl<ConfigsTuple,
-    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>>::type;
-
-template<typename ConfigsTuple, typename IndexSeq>
-struct configs_tuple_to_dignosis_variant_impl;
-
-template<typename... Configs, std::size_t... Is>
-struct configs_tuple_to_dignosis_variant_impl<
-    std::tuple<Configs...>, std::index_sequence<Is...>> {
-    using type = magic::tuple_to_variant_t<
-        magic::tuple_erase_duplicate_t<
-            typename std::tuple_element_t<Is, 
-                std::tuple<Configs...>>::Task::Dignosis...>>;
-};
-
-template<size_t I, typename ConfigsTuple>
-using idx_to_task_t = typename std::tuple_element_t<I, ConfigsTuple>::Task;
-
-template<typename ConfigsTuple>
-using configs_tuple_to_dignosis_variant_t = typename 
-    configs_tuple_to_dignosis_variant_impl<ConfigsTuple,
-    std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
->::type;
 
 
 
@@ -899,7 +947,8 @@ public:
     static constexpr auto CONFIGS = std::make_tuple(
         //令转子停下
         StallTask::Config{
-            .is_beta = false
+            .targ_elec_rotation = 0,
+            .timeout_ticks = STALL_TICKS
         },
     
         // 检测转子已经停下
@@ -912,7 +961,8 @@ public:
 
         //令转子停下
         StallTask::Config{
-            .is_beta = true
+            .targ_elec_rotation = 0,
+            .timeout_ticks = STALL_TICKS
         },
 
         // 检测转子已经停下
@@ -956,6 +1006,54 @@ private:
 class CalibrateTasks:public CalibrateTasksUtils{
 public:
     static constexpr auto CONFIGS = std::make_tuple(
+
+        LinearRotateTask::Config{
+            .delta_position = 0.4_r
+        },
+    
+        LinearRotateTask::Config{
+            .delta_position = -0.4_r
+        },
+
+        LinearRotateTask::Config{
+            .delta_position = 0.4_r
+        },
+    
+        LinearRotateTask::Config{
+            .delta_position = -0.4_r
+        }
+    );
+
+    constexpr AlphaBetaDuty resume(const real_t lap_position){
+        return task_sequence_.resume(lap_position);
+    }
+
+    bool is_finished() const {
+        return task_sequence_.is_finished();
+    }
+
+    size_t task_index() const {
+        return task_sequence_.task_index();
+    }
+
+    auto err() const {
+        return task_sequence_.err();
+    }
+
+private:
+    struct Settings{
+        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using Error = TaskError;
+        using Args = real_t;
+        using Ret = AlphaBetaDuty;
+    };
+
+    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+};
+
+class BeepTasks:public MotorTasksUtils{
+public:
+    static constexpr auto CONFIGS = std::make_tuple(
         BeepTask::Config{
             .freq = 700,
             .period = 100ms
@@ -979,22 +1077,6 @@ public:
         BeepTask::Config{
             .freq = 0,
             .period = 100ms
-        },
-
-        // LinearRotateTask::Config{
-        //     .delta = 20.4_r
-        // },
-    
-        // LinearRotateTask::Config{
-        //     .delta = -0.4_r
-        // },
-
-        // LinearRotateTask::Config{
-        //     .delta = 0.4_r
-        // },
-    
-        LinearRotateTask::Config{
-            .delta = -0.4_r
         }
     );
 
@@ -1058,13 +1140,15 @@ public:
             either_lap_position.unwrap();
         });
 
-        // auto & comp = coil_motion_check_comp;
+        // auto & comp = coil_motion_check_comp_;
         auto & comp = calibrate_comp_;
         if(const auto may_err = comp.err(); may_err.is_some())
             return Err(Error(may_err.unwrap()));
 
-        if(comp.is_finished())
+        if(comp.is_finished()){
+            // DEBUG_PRINTLN("Coil motion check finished", comp.err());
             return Ok();
+        }
 
         const auto [a,b] = comp.resume(lap_position);
         svpwm_.set_alpha_beta_duty(a,b);
@@ -1076,7 +1160,7 @@ private:
     drivers::EncoderIntf & encoder_;
     StepperSVPWM & svpwm_;
 
-    CoilMotionCheckTasks coil_motion_check_comp = {};
+    CoilMotionCheckTasks coil_motion_check_comp_ = {};
     CalibrateTasks calibrate_comp_ = {};
 };
 
