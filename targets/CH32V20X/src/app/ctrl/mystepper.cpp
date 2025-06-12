@@ -30,6 +30,8 @@
 
 using namespace ymd;
 
+
+#define let const auto 
 namespace ymd::fp{
 // https://www.bluepuni.com/archives/zip-for-cpp20/
 template <std::ranges::input_range ...Views>
@@ -134,7 +136,6 @@ inline constexpr struct Zip_fn {
 } zip;
 }
 
-#define let const auto
 // static constexpr size_t CHOP_FREQ = 30_KHz;
 static constexpr size_t CHOP_FREQ = 20_KHz;
 static constexpr size_t ISR_FREQ = 20_KHz * 2;
@@ -166,7 +167,7 @@ static constexpr size_t MOTOR_POLE_PAIRS = MyMotorSettings::MOTOR_POLE_PAIRS;
 template<typename Fn, typename Fn_Dur>
 __inline auto retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
     if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
-    const auto res = std::forward<Fn>(fn)();
+    let res = std::forward<Fn>(fn)();
     using Ret = std::decay_t<decltype(res)>;
     if(res.is_ok()) return Ret(Ok());
     if(!times) return res;
@@ -388,14 +389,14 @@ public:
 
     static constexpr Option<PackedCalibratePoint> 
     from_targ_and_meas(const q31 targ, const q31 meas){
-        const auto targ_packed_data = ({
-            const auto opt = real_to_packed(targ);
+        let targ_packed_data = ({
+            let opt = real_to_packed(targ);
             if(opt.is_none()) return None;
             opt.unwrap();
         });
 
-        const auto meas_packed_data = ({
-            const auto opt = real_to_packed(meas);
+        let meas_packed_data = ({
+            let opt = real_to_packed(meas);
             if(opt.is_none()) return None;
             opt.unwrap();
         });
@@ -518,13 +519,13 @@ struct CalibrateDataVector{
         }
     constexpr Result<void, void> push_back(const q31 targ, const q31 meas){
         //确定原始数据的扇区
-        const auto index = position_to_index(meas);
+        let index = position_to_index(meas);
         // PANIC(index);
         if(index >= capacity_) return Err();
         if(cnts_[index] != 0) return Err(); 
 
         block_[index] = ({
-            const auto opt = PackedCalibratePoint::from_targ_and_meas(
+            let opt = PackedCalibratePoint::from_targ_and_meas(
                 targ, meas
             );
 
@@ -634,6 +635,9 @@ struct MotorTasksUtils{
         CoilBCantMove,
     };
 
+
+
+
     FRIEND_DERIVE_DEBUG(TaskError)
 
     // static constexpr auto DRIVE_DUTY = 0.3_r;
@@ -688,7 +692,7 @@ struct MotorTasksUtils{
         constexpr AlphaBetaDuty resume(const real_t lappos){
             tick_cnt_++;
 
-            const auto [s,c] = sincospu(targ_elec_rotation_);
+            let [s,c] = sincospu(targ_elec_rotation_);
 
             return AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
@@ -735,8 +739,8 @@ struct MotorTasksUtils{
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
             tick_cnt_++;
-            const auto targ_lap_position = ticks_to_linear_position(tick_cnt_);
-            const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
+            let targ_lap_position = ticks_to_linear_position(tick_cnt_);
+            let [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
             return AlphaBetaDuty{
                 .alpha = BEEP_DRIVE_DUTY * 2,
                 .beta = s * BEEP_DRIVE_DUTY * 2
@@ -779,8 +783,8 @@ struct MotorTasksUtils{
         } 
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+            let targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            let [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
@@ -823,8 +827,8 @@ struct MotorTasksUtils{
         } 
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+            let targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            let [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
@@ -848,6 +852,12 @@ struct MotorTasksUtils{
     };
 };
 
+    struct TaskExecuter{
+    template<typename T>
+        static constexpr Result<void, MotorTasksUtils::TaskError>execute(T && obj){
+            return Err(MotorTasksUtils::TaskError::TaskNotDone);
+        }
+    };
 
 struct CoilCheckTasksUtils:public MotorTasksUtils{
     static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
@@ -889,7 +899,7 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
 
         constexpr Dignosis dignosis() const {
             ASSERT(may_move_range_.is_some());
-            const auto move_range = may_move_range_.unwrap();
+            let move_range = may_move_range_.unwrap();
             
             auto make_err = [&]() -> Option<TaskError>{
                 if(move_range.length() > MINIMAL_STALL_THRESHOLD)
@@ -930,7 +940,7 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position));
 
-            const auto duty = sinpu(LERP(
+            let duty = sinpu(LERP(
                 q16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
             )) * STALL_DRIVE_DUTY;
@@ -953,7 +963,7 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
         constexpr Dignosis dignosis() const {
             // ASSERT(may_move_range_.is_some());
 
-            const auto move_range = may_move_range_.unwrap();
+            let move_range = may_move_range_.unwrap();
 
             [[maybe_unused]] auto make_err = [&]() -> Option<TaskError>{
                 const bool is_ok = move_range.length() > MINIMAL_MOVING_THRESHOLD;
@@ -1032,13 +1042,13 @@ struct CalibrateTasksUtils:public MotorTasksUtils{
         constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
 
         constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+            let targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
+            let [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             
             tick_cnt_++;
 
             if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
-                const auto res = push_data(targ_lap_position, meas_lap_position);
+                let res = push_data(targ_lap_position, meas_lap_position);
                 // if(res.is_err()) PANIC(vector_.get().as_view());
                 if(res.is_err()) PANIC();
                     // .expect(vector_.get().size(), 80);
@@ -1096,14 +1106,14 @@ struct TaskSequence final{
         std::visit([&](auto && task) -> void{
             if(not task.is_finished()) return;
 
-            const auto dignosis = task.dignosis();
+            let dignosis = task.dignosis();
             if(dignosis.err.is_some()){
                 save_dignosis(dignosis);
                 is_all_tasks_finished_ = true;
                 return;
             }
             
-            const auto res = switch_to_next_task();
+            let res = switch_to_next_task();
             if(res.is_err()){
                 is_all_tasks_finished_ = true;
             }
@@ -1138,13 +1148,17 @@ struct TaskSequence final{
     constexpr size_t task_index() const {
         return task_index_;
     }
+
+    const TasksVariant & tasks_variant() const {
+        return tasks_variant_;
+    }
 private:
     template<size_t I>
     constexpr void switch_to_task_impl(){
         static constexpr size_t N = std::tuple_size_v<Configs>;
         static_assert(I < N, "Invalid task index");
         using Task = idx_to_task_t<I, Configs>;
-        const auto & config = std::get<I>(CONFIGS);
+        let & config = std::get<I>(CONFIGS);
         tasks_variant_ = Task(config);
     }
 
@@ -1153,11 +1167,9 @@ private:
 
         if (i >= N)//last task
             return Err();
-
         [&]<size_t... Is>(std::index_sequence<Is...>) {
             (( (Is == i) ? 
-                (switch_to_task_impl<Is>(), 0) : 
-                0 ), ...);
+                (switch_to_task_impl<Is>(), 0) : 0 ), ...);
         }(std::make_index_sequence<N>());
 
         return Ok();
@@ -1169,11 +1181,12 @@ private:
     }
 
     constexpr Result<void, void> switch_to_next_task(){
-        const auto next_task_index = task_index_ + 1;
-        const auto res =  switch_to_task(next_task_index);
+        let next_task_index = task_index_ + 1;
+        let res =  switch_to_task(next_task_index);
         if(res.is_ok()) task_index_ = next_task_index;
         return res;
     }
+
 
     const Configs CONFIGS;
     TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
@@ -1292,6 +1305,19 @@ public:
         );
     }
 
+    using IConfigs = magic::functor_ret_t<decltype(make_calibrate_configs)>;
+
+    IConfigs configs_;
+
+
+    struct Settings{
+        using Configs = IConfigs;
+        using Error = TaskError;
+        using Args = real_t;
+        using Ret = AlphaBetaDuty;
+    };
+    TaskSequence<Settings> task_sequence_ = {configs_};
+
     constexpr CalibrateTasks(
         CalibrateDataVector & forward_calibrate_data_vector,
         CalibrateDataVector & backward_calibrate_data_vector
@@ -1313,22 +1339,35 @@ public:
         return task_sequence_.task_index();
     }
 
+    TaskSequence<Settings> & task_sequence(){
+        return task_sequence_;
+    }
+
+    using DignosisVariant = typename TaskSequence<Settings>::DignosisVariant;
+
+    
+    static constexpr size_t TASK_COUNT = std::tuple_size_v<IConfigs>;
+
+    template<size_t I>
+    auto get_task(){
+        static_assert(I < TASK_COUNT);
+        return std::get<
+            typename std::tuple_element_t<I, IConfigs>::Task>(
+            task_sequence_.tasks_variant());
+    }
+    // consteval size_t task_count() const {
+    //     // return std::tuple_size_v<IConfigs>;
+    //     return 2;
+    // }
     auto err() const {
         return task_sequence_.err();
     }
+
+    auto operator >>=(auto && obj){
+        return 0;
+    }
 private:
-    using IConfigs = magic::functor_ret_t<decltype(make_calibrate_configs)>;
 
-    IConfigs configs_;
-
-
-    struct Settings{
-        using Configs = IConfigs;
-        using Error = TaskError;
-        using Args = real_t;
-        using Ret = AlphaBetaDuty;
-    };
-    TaskSequence<Settings> task_sequence_ = {configs_};
 };
 
 class BeepTasks:public MotorTasksUtils{
@@ -1387,8 +1426,31 @@ private:
     TaskSequence<Settings> task_sequence_ = {CONFIGS};
 };
 
+
+struct Reflecter{
+    template<typename T>
+    static constexpr int display(T && obj){
+        return 0;
+    }
+};
+
+struct TaskSpawner{
+    template<typename T>
+    static constexpr auto spawn(T && obj){
+        return 0;
+    }
+};
+
+struct PreoperateTasks{
+
+};
+
+namespace ymd::hal{
+    auto & PROGRAM_FAULT_LED = PC<14>();
+}
 class MotorSystem{
 public:
+    using TaskError = BeepTasks::TaskError;
     MotorSystem(
         drivers::EncoderIntf & encoder,
         StepperSVPWM & svpwm
@@ -1408,34 +1470,70 @@ public:
     };
 
     Result<void, Error> resume(){
-        const auto begin_u = clock::micros();
+        let begin_u = clock::micros();
 
-        const auto meas_lap_position = ({
-            if(const auto res = retry(2, [&]{return encoder_.update();});
+        let meas_lap_position = ({
+            if(let res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            const auto either_lap_position = encoder_.get_lap_position();
+            let either_lap_position = encoder_.get_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             1 - either_lap_position.unwrap();
         });
 
-        // auto & comp = coil_motion_check_comp_;
         auto & comp = calibrate_comp_;
-        if(const auto may_err = comp.err(); may_err.is_some())
-            return Err(Error(may_err.unwrap()));
+        // if(let may_err = comp.err(); may_err.is_some()){
+        if constexpr(false){
+            constexpr let TASK_COUNT = 
+                std::decay_t<decltype(comp)>::TASK_COUNT;
+            let idx = comp.task_index();
+            [&]<auto... Is>(std::index_sequence<Is...>) {
+                DEBUG_PRINTLN((std::move(comp.get_task<Is>().dignosis()).err)...);
+            }(std::make_index_sequence<TASK_COUNT>{});
 
-        if(comp.is_finished()){
+            let diagnosis = [&]<auto ...Is>(std::index_sequence<Is...>) {
+                return (( (Is == idx) ? 
+                (comp.get_task<Is>().dignosis(), 0u) : 
+                0u), ...);
+            }(std::make_index_sequence<TASK_COUNT>{});
+
+            static_assert(std::is_integral_v<
+                std::decay_t<decltype(diagnosis)>>, "can't find task");
+
+            DEBUG_PRINTLN("Error occuared when executing\r\n", 
+                "detailed infomation:", Reflecter::display(diagnosis));
+
+            const auto res = TaskExecuter::execute(TaskSpawner::spawn(
+                CalibrateTasks{forward_cali_vec_, backward_cali_vec_}
+                >>= PreoperateTasks{}
+            )).inspect_err([](const TaskError err){
+                MATCH{err}(
+                    TaskError::CoilCantMove, 
+                        []{PANIC("check motor wire connection before restart");},
+                    TaskError::RotorIsMovingBeforeChecking, 
+                        []{PANIC("please keep rotor of motor still before calibrate");},
+                    None, 
+                        []{
+                            hal::PROGRAM_FAULT_LED = HIGH;
+                            TODO("helper is not done yet");
+                            sys::abort();
+                        }
+                );
+            });
+            return Err(res.unwrap_err());
+        }
+        else if(comp.is_finished()){
 
             is_comp_finished_ = true;
 
-            // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
-            // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
-            const auto [s,c] = sincospu(frac(
+            // let [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
+            // let [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+            let [s,c] = sincospu(frac(
                 // (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
                 (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
-            // const auto [a,b] = sincospu( - 0.004_r);
-            const auto mag = 0.5_r;
+            // let [a,b] = sincospu( - 0.004_r);
+            let mag = 0.5_r;
 
             svpwm_.set_alpha_beta_duty(c * mag,s * mag);
             execution_time_ = clock::micros() - begin_u;
@@ -1446,7 +1544,7 @@ public:
         is_comp_finished_ = false;
 
 
-        const auto [a,b] = comp.resume(meas_lap_position);
+        let [a,b] = comp.resume(meas_lap_position);
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
@@ -1458,15 +1556,15 @@ public:
 
     Result<void, void> print_vec() const {
         // DEBUG_PRINTLN(calibrate_data_vector_);
-        // const auto view = calibrate_data_vector_.as_view();
+        // let view = calibrate_data_vector_.as_view();
 
         auto print_view = [](auto view){
-            for (const auto & item : view) {
-                const auto targ = item.get_targ();
-                const auto meas = item.get_meas();
+            for (let & item : view) {
+                let targ = item.get_targ();
+                let meas = item.get_meas();
                 // DEBUG_PRINTLN(targ, meas, fposmodp(q20(targ - meas), 0.02_q20) * 100);
-                const auto position_err = q20(targ - meas);
-                const auto mod_err = fposmodp(position_err, 0.02_q20);
+                let position_err = q20(targ - meas);
+                let mod_err = fposmodp(position_err, 0.02_q20);
                 DEBUG_PRINTLN(targ, meas, mod_err * 100);
                 clock::delay(1ms);
             }
@@ -1476,8 +1574,8 @@ public:
         print_view(backward_cali_vec_.as_view());
 
         for(int i = 0; i < 50; i++){
-            const auto raw = real_t(i) / 50;
-            const auto corrected = correct_raw_position(raw);
+            let raw = real_t(i) / 50;
+            let corrected = correct_raw_position(raw);
             DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
             clock::delay(1ms);
         }
@@ -1486,8 +1584,8 @@ public:
     }
 
     constexpr q16 correct_raw_position(const q16 raw_position) const {
-        const auto corr1 = forward_cali_vec_[raw_position].to_inaccuracy();
-        const auto corr2 = backward_cali_vec_[raw_position].to_inaccuracy();
+        let corr1 = forward_cali_vec_[raw_position].to_inaccuracy();
+        let corr2 = backward_cali_vec_[raw_position].to_inaccuracy();
 
         return raw_position + mean(corr1, corr2);
         // return raw_position + corr1;
@@ -1514,8 +1612,8 @@ private:
 void test_calibrate(){
     const CalibrateDataVector vec{MOTOR_POLE_PAIRS};
     // ... fill data ...
-    const auto view = vec.as_view();
-    for (const auto [targ, meas] : view) {
+    let view = vec.as_view();
+    for (let [targ, meas] : view) {
         DEBUG_PRINTLN(targ, meas);
     }
     while(true);
@@ -1526,7 +1624,7 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        const auto res = motor_system_.resume();
+        let res = motor_system_.resume();
         if(res.is_err()){
             PANIC();
         }
@@ -1569,8 +1667,8 @@ __fast_inline constexpr T map_nearest(const T value, R && range){
     auto min_diff = ABS(value - nearest);
     
     while(++it != end) {
-        const auto current = *it;
-        const auto diff = ABS(value - current);
+        let current = *it;
+        let diff = ABS(value - current);
         if(diff < min_diff) {
             min_diff = diff;
             nearest = current;
@@ -1678,16 +1776,16 @@ void mystepper_main(){
         retry(2, [&]{return encoder.update();}).examine();
         meas_lappos = encoder.get_lap_position().examine();
         // DEBUG_PRINTLN(drivers::EncoderError::Kind::CantSetup);
-        // const auto t = clock::time();
-        // const auto [st, ct] = sincospu(t * 93);
-        // const auto [st, ct] = sincospu(t * 3);
-        // const auto [st, ct] = sincospu(10 * sinpu(t));
+        // let t = clock::time();
+        // let [st, ct] = sincospu(t * 93);
+        // let [st, ct] = sincospu(t * 3);
+        // let [st, ct] = sincospu(10 * sinpu(t));
 
         targ_lappos += (4 * meas_lappos - 2) * 0.00005_q20;
         let ref_epos = MOTOR_POLE_PAIRS * q16(targ_lappos);
-        const auto [st, ct] = sincospu(ref_epos);
-        // const auto [st, ct] = sincospu(sinpu(t));
-        const auto amp = 0.6_r;
+        let [st, ct] = sincospu(ref_epos);
+        // let [st, ct] = sincospu(sinpu(t));
+        let amp = 0.6_r;
 
         svpwm.set_alpha_beta_duty(ct * amp, st * amp);
     });
@@ -1754,7 +1852,7 @@ private:
         const uint x_int = int(x_wrapped);
         const T x_frac = x_wrapped - x_int;
 
-        const auto [ya, yb] = [&] -> std::tuple<real_t, real_t>{
+        let [ya, yb] = [&] -> std::tuple<real_t, real_t>{
             if(x_int == MOTOR_POLE_PAIRS - 1){
                 return {data[MOTOR_POLE_PAIRS - 1], data[0]};
             }else{
