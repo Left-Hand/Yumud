@@ -16,6 +16,8 @@
 
 namespace ymd{
 
+
+
 struct PositionSensor final{
 
     constexpr void update(const real_t next_raw_lap_position){
@@ -48,6 +50,51 @@ struct PositionSensor final{
 
         return raw_lap_position + mean(corr1, corr2);
     }
+
+    struct CalibrateDataStorage{
+        struct CompressedInaccuracy { 
+            using Raw = uint16_t;
+
+            constexpr CompressedInaccuracy ():
+                raw_(0){;}
+
+            explicit constexpr CompressedInaccuracy (const Raw raw):
+                raw_(raw){;}
+
+            static constexpr Option<CompressedInaccuracy> from(const q16 inaccuracy){
+                if(is_input_valid(inaccuracy)) return None;
+                return Some(CompressedInaccuracy(compress(inaccuracy)));
+            }
+
+            constexpr q16 to_real() const{
+                return decompress(raw_);
+            }
+
+            static constexpr bool is_input_valid(const q16 inaccuracy){
+                return ABS(inaccuracy) < 1;
+            }
+
+            static constexpr uint16_t compress(const q16 count){
+                return uint16_t(count.to_i32());
+            }
+
+            static constexpr q16 decompress(const Raw raw){
+                return q16::from_i32(raw);
+            }
+
+        private:
+            Raw raw_;
+        };
+
+        std::array<CompressedInaccuracy, MOTOR_POLE_PAIRS> buf = {};
+
+        constexpr Result<void, void> load_from_buf(std::span<const uint8_t> pbuf){
+            if(pbuf.size() != sizeof(buf)) return Err();
+
+            std::memcpy(buf.data(), pbuf.data(), sizeof(buf));
+            return Ok();
+        }
+    };
 private:
 
     static constexpr q16 map_lap_postion_to_delta(const q16 last_lap_position, const q16 lap_position){

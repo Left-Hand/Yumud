@@ -195,6 +195,11 @@ struct PreoperateTasks{
 namespace ymd::hal{
     auto & PROGRAM_FAULT_LED = PC<14>();
 }
+
+struct Archive{
+
+};
+
 class MotorSystem{
 public:
     using TaskError = BeepTasks::TaskError;
@@ -292,7 +297,7 @@ public:
             let meas_position = pos_sensor_.position();
             let meas_speed = pos_sensor_.speed();
             let pos_contribute = 0.8_r * (targ_position - meas_position);
-            let speed_contribute = 0.059_r*(targ_speed - meas_speed);
+            let speed_contribute = 0.039_r*(targ_speed - meas_speed);
             let curr = CLAMP2(pos_contribute + speed_contribute, 0.4_r);
             // let curr = 0.2_r;
             let [s,c] = sincospu(frac(
@@ -386,7 +391,27 @@ public:
 };
 
 
+class ArchiveSystem{
 
+    void save(){
+        // at24.load_bytes(0_addr, std::span(rdata)).examine();
+        // while(not at24.is_available()){
+        //     at24.poll().examine();
+        // }
+
+        // DEBUG_PRINTLN(rdata);
+        // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
+        // at24.store_bytes(0_addr, std::span(data)).examine();
+
+        // while(not at24.is_available()){
+        //     at24.poll().examine();
+        // }
+
+        // DEBUG_PRINTLN("done", clock::micros() - begin_u);
+        // while(true);
+    }
+
+};
 
 
 [[maybe_unused]] 
@@ -487,6 +512,13 @@ static constexpr void static_test(){
 void mystepper_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
+    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
+    clock::delay(4ms);
+    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
+    clock::delay(4ms);
+    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
+    // PANIC(ReleaseInfo::from("Rstr", Version{1,0}).unwrap());
+    // PANIC(Author::from("Rstr").unwrap());
 
     clock::delay(400ms);
 

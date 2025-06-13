@@ -4,50 +4,60 @@
 #include "core/string/StringView.hpp"
 
 namespace ymd{
-struct Date{
-    using Year = uint8_t;
-    // using Month = uint8_t;
 
-    struct Month{
-        enum class Kind:uint8_t{
-            Jan = 1,
-            Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
-        };
+using Year = uint8_t;
+// using Month = uint8_t;
 
-
-        using enum Kind;
-
-        static constexpr const char * MONTH_STR[] = 
-            {"Jan","Feb","Mar","Apr","May","Jun",
-            "Jul","Aug","Sep","Oct","Nov","Dec"};
-
-        Kind kind;
-
-        static constexpr Option<Month> from_str(const StringView str){
-            // Parse month abbreviation (first 3 chars)
-
-            for (uint8_t m = 0; m < 12; ++m) {
-                if (str[0] == MONTH_STR[m][0] && 
-                    str[1] == MONTH_STR[m][1] && 
-                    str[2] == MONTH_STR[m][2]) {
-                    return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
-                }
-            }
-        }
-
-        friend OutputStream & operator <<(OutputStream & os, const Month & self){
-            switch(self.kind){
-                case Kind::Jan ... Kind::Dec: {
-                    const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
-                    return os << StringView(str,3);
-
-                }
-                default: __builtin_unreachable();
-            }
-        }
+struct Month{
+    enum class Kind:uint8_t{
+        Jan = 1,
+        Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
     };
 
-    using Day = uint8_t;
+
+    using enum Kind;
+
+    static constexpr const char * MONTH_STR[] = 
+        {"Jan","Feb","Mar","Apr","May","Jun",
+        "Jul","Aug","Sep","Oct","Nov","Dec"};
+
+    Kind kind;
+
+    static constexpr Option<Month> from_str(const StringView str){
+        // Parse month abbreviation (first 3 chars)
+
+        for (uint8_t m = 0; m < 12; ++m) {
+            if (str[0] == MONTH_STR[m][0] && 
+                str[1] == MONTH_STR[m][1] && 
+                str[2] == MONTH_STR[m][2]) {
+                return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
+            }
+        }
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Month & self){
+        switch(self.kind){
+            case Kind::Jan ... Kind::Dec: {
+                const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
+                return os << StringView(str,3);
+
+            }
+            default: __builtin_unreachable();
+        }
+    }
+};
+
+using Day = uint8_t;
+
+using Hour = uint8_t;
+using Minute = uint8_t;
+using Seconds = uint8_t;
+
+
+
+
+struct Date{
+
     
     Year year;
     Month month;
@@ -86,9 +96,6 @@ struct Date{
 };
 
 struct Time{
-    using Hour = uint8_t;
-    using Minute = uint8_t;
-    using Seconds = uint8_t;
 
     Hour hour;
     Minute minute;
@@ -114,20 +121,28 @@ struct Time{
     }
 };
 
-// static constexpr auto t = Time::from_compiler();
-// static constexpr auto d = Date::from_compiler();
 
 struct Author final{
     static constexpr size_t MAX_NAME_LEN = 8;
-    static constexpr Option<Author> from_name(const char * name){
+    static constexpr Option<Author> from(const char * name){
         const auto slen = strlen(name);
         if(slen >= MAX_NAME_LEN) return None;
+        return Some(Author{name});
     }
 
     constexpr StringView name() const{
-        return StringView(name_);
+        return StringView(name_, 8);
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const Author & self){ 
+        return os << "name: " << self.name();
+    }
+
 private:
+    constexpr Author(const char * name){
+        memset(name_, 0, 8);
+        memcpy(name_, name, strlen(name));
+    }
     char name_[MAX_NAME_LEN];
 };
 
@@ -136,6 +151,14 @@ struct Version{
     uint8_t minor;
 
     constexpr auto operator<=>(const Version&) const = default;
+
+    friend OutputStream & operator <<(OutputStream & os, const Version & self){
+        return os << os.brackets<'{'>() 
+                << self.major << os.brackets<':'>()
+                << self.minor
+                << os.brackets<'}'>()
+            ;
+    }
 };
 
 struct ReleaseInfo{
@@ -145,13 +168,13 @@ struct ReleaseInfo{
     Time time;
 
     // Compile-time creation with validation
-    static constexpr Option<ReleaseInfo> create(
+    static constexpr Option<ReleaseInfo> from(
         const char* author_name,
         Version ver,
         Date d = Date::from_compiler(),
         Time t = Time::from_compiler()
     ) {
-        const auto may_author = Author::from_name(author_name);
+        const auto may_author = Author::from(author_name);
         if(may_author.is_none()) return None;
         return Some(ReleaseInfo{
             may_author.unwrap(), 
@@ -160,33 +183,15 @@ struct ReleaseInfo{
             t
         });
     }
+
+    friend OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
+        os << "author:" << self.author;
+        os << " version:" << self.version;
+        os << " date:" << self.date;
+        os << " time:" << self.time ;
+        return os;
+    }
 };
 
 
-
-// [[maybe_unused]] static void test_eeprom(){
-//     hal::I2cSw i2c_sw{hal::portD[1], hal::portD[0]};
-//     i2c_sw.init(800_KHz);
-//     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
-
-//     const auto begin_u = clock::micros();
-//     uint8_t rdata[3] = {0};
-//     at24.load_bytes(0_addr, std::span(rdata)).examine();
-//     while(not at24.is_available()){
-//         at24.poll().examine();
-//     }
-
-//     DEBUG_PRINTLN(rdata);
-//     const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-//     at24.store_bytes(0_addr, std::span(data)).examine();
-
-//     while(not at24.is_available()){
-//         at24.poll().examine();
-//     }
-
-//     DEBUG_PRINTLN("done", clock::micros() - begin_u);
-//     while(true);
-// }
-
-class ArchiveSystem{};
 }
