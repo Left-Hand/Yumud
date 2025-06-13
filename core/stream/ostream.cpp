@@ -84,7 +84,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 int OutputStream::transform_char(const char chr) const{
     if(likely(!config_.flags)) return chr;
 
-    if(unlikely(config_.nospace) and unlikely(chr == ' ')) return -1;
+    if(unlikely(config_.no_space) and unlikely(chr == ' ')) return -1;
     if(unlikely(config_.no_brackets)){
         switch(chr){
             case '(':
@@ -166,31 +166,15 @@ void OutputStream::print_int(const int val){
     PRINT_INT_TEMPLATE(12, StringUtils::itoa);
 }
 
-// void OutputStream::print_u64(const uint64_t val){
-//     PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
-// }
-
-// void OutputStream::print_i64(const int64_t val){
-//     PRINT_INT_TEMPLATE(24, StringUtils::iltoa);
-// }
-void OutputStream::print_int(const uint64_t val){
+void OutputStream::print_u64(const uint64_t val){
     PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
 }
 
-void OutputStream::print_int(const int64_t val){
+void OutputStream::print_i64(const int64_t val){
     PRINT_INT_TEMPLATE(24, StringUtils::iltoa);
 }
 
 #undef PUT_FLOAT_TEMPLATE
-
-OutputStream & OutputStream::operator<<(const bool val){
-    if(config_.boolalpha == false){
-        write(val ? '1' : '0');
-        return *this;
-    }else{
-        return *this << ((val) ? "true" : "false"); 
-    }
-}
 
 
 OutputStream & OutputStream::flush(){
