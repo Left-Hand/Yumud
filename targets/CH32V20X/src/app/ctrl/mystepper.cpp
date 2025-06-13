@@ -1,10 +1,11 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/fp/matchit.hpp"
+// #include "core/fp/matchit.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -21,17 +22,22 @@
 
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
-#include "core/polymorphism/reflect.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
+#include "dsp/controller/adrc/tracking_differentiator.hpp"
+#include "dsp/controller/adrc/command_shaper.hpp"
+#include "dsp/controller/adrc/leso.hpp"
+#include "dsp/controller/adrc/utils.hpp"
 
-#include <atomic>
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
+#include "core/string/StringView.hpp"
+// #include <atomic>
 
 
 using namespace ymd;
 
 
-#define let const auto 
+#define let const auto
 namespace ymd::fp{
 // https://www.bluepuni.com/archives/zip-for-cpp20/
 template <std::ranges::input_range ...Views>
@@ -220,6 +226,12 @@ struct tuple_erase_duplicate<std::tuple<Ts...>, U, Us...>
     , tuple_erase_duplicate<std::tuple<Ts..., U>, Us...>> {};
 
 
+// is_instantiation_of
+template <typename Inst, template <typename...> typename Tmpl>
+struct is_instantiation_of : std::false_type {};
+
+template <template <typename...> typename Tmpl, typename... Args>
+struct is_instantiation_of<Tmpl<Args...>, Tmpl> : std::true_type {};
 
 }
 
@@ -285,6 +297,20 @@ using configs_tuple_to_dignosis_variant_t = typename
     std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
 >::type;
 
+
+template<typename ... Args>
+struct PhantomMarker {
+    // Default constructor
+    constexpr PhantomMarker() noexcept = default;
+
+    // Copy/move constructors and assignments (defaulted)
+    constexpr PhantomMarker(const PhantomMarker&) noexcept = default;
+    constexpr PhantomMarker(PhantomMarker&&) noexcept = default;
+    PhantomMarker& operator=(const PhantomMarker&) noexcept = default;
+    PhantomMarker& operator=(PhantomMarker&&) noexcept = default;
+
+    // No members - empty class
+};
 
 struct AlphaBetaDuty{
     q16 alpha;
@@ -370,7 +396,6 @@ struct RawLapPosition{
 struct Elecrad{
     real_t elecrad;
 };
-
 
 
 
@@ -1192,7 +1217,7 @@ private:
     TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
     Option<DignosisVariant> may_dignosis_variant_ = None;
     size_t task_index_ = 0;
-    std::atomic<bool> is_all_tasks_finished_ = false;
+    bool is_all_tasks_finished_ = false;
 };
 
 
@@ -1426,6 +1451,119 @@ private:
     TaskSequence<Settings> task_sequence_ = {CONFIGS};
 };
 
+struct PositionSensor final{
+
+    constexpr void update(const real_t next_raw_lap_position){
+        let corrected_lap_position = correct_raw_position(next_raw_lap_position);
+        let delta_position = map_lap_postion_to_delta(lap_position_, corrected_lap_position);
+        lap_position_ = corrected_lap_position;
+
+        cont_position_ += delta_position;
+        td_.update(cont_position_);
+    }
+
+    constexpr q20 lap_position() const{
+        return lap_position_;
+    }
+
+    constexpr q20 position() const{
+        return td_.get().position;
+    }
+
+    constexpr q20 speed() const {
+        return td_.get().speed;
+    }
+
+    CalibrateDataVector forward_cali_vec = {MOTOR_POLE_PAIRS};
+    CalibrateDataVector backward_cali_vec = {MOTOR_POLE_PAIRS};
+
+    constexpr q16 correct_raw_position(const q16 raw_lap_position) const {
+        let corr1 = forward_cali_vec[raw_lap_position].to_inaccuracy();
+        let corr2 = backward_cali_vec[raw_lap_position].to_inaccuracy();
+
+        return raw_lap_position + mean(corr1, corr2);
+    }
+private:
+
+    static constexpr q16 map_lap_postion_to_delta(const q16 last_lap_position, const q16 lap_position){
+        let delta = lap_position - last_lap_position;
+        if(delta > 0.5_q16) return delta - 1;
+        else if(delta < -0.5_q16) return delta + 1;
+        return delta;
+    }
+
+    // dsp::Leso leso_{dsp::Leso::Config{
+    //     .b0 = 1,
+    //     .w = MC_W / 3,
+    //     .fs = ISR_FREQ
+    // }};
+    // using Td = dsp::TrackingDifferentiatorByOrders<2>;
+    class MotorTrackingDifferentiator{
+    public:
+        struct Config{
+            q8 r;
+            uint fs;
+        };
+
+        struct State{
+            q20 position;
+            q20 speed;
+
+            constexpr void reset(){
+                position = 0;
+                speed = 0;
+            }
+        };
+        constexpr void reconf(const Config & cfg){
+            r_ = cfg.r;
+            dt_ = 1_q24 / cfg.fs;
+        }
+
+        constexpr MotorTrackingDifferentiator(const Config & cfg){
+            reconf(cfg);
+            reset();
+        }
+
+        constexpr void reset(){
+            state_.reset();
+        }
+
+
+        constexpr void update(const q20 u){
+            let r = r_;
+            let r_2 = r * r;
+
+            let x1 = state_.position;
+            let x2 = state_.speed;
+
+            state_.position += x2 * dt_; 
+            state_.speed += (- 2 * x2 * r - (x1 - u) * r_2) * dt_;
+        }
+
+        constexpr const State & get() const {return state_;}
+    private:
+        q16 r_ = 0;
+        q24 dt_ = 0;
+        // using State = dsp::StateVector<q20, N>;
+
+        State state_;
+    };
+
+    using Td = MotorTrackingDifferentiator;
+    using TdConfig = typename Td::Config;
+
+    static constexpr TdConfig CONFIG{
+        .r = 50,
+        .fs = ISR_FREQ
+    };
+
+    Td td_{
+        CONFIG
+    };
+
+    q16 lap_position_;
+    q16 cont_position_;
+};
 
 struct Reflecter{
     template<typename T>
@@ -1504,8 +1642,9 @@ public:
             DEBUG_PRINTLN("Error occuared when executing\r\n", 
                 "detailed infomation:", Reflecter::display(diagnosis));
 
-            const auto res = TaskExecuter::execute(TaskSpawner::spawn(
-                CalibrateTasks{forward_cali_vec_, backward_cali_vec_}
+            let res = TaskExecuter::execute(TaskSpawner::spawn(
+                CalibrateTasks{pos_sensor_.forward_cali_vec, 
+                    pos_sensor_.backward_cali_vec}
                 >>= PreoperateTasks{}
             )).inspect_err([](const TaskError err){
                 MATCH{err}(
@@ -1526,14 +1665,33 @@ public:
         else if(comp.is_finished()){
 
             is_comp_finished_ = true;
-
+            pos_sensor_.update(meas_lap_position);
             // let [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
             // let [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+            let t = clock::time();
+
+            let input_targ_position = 16 * sin(t);
+            // let targ_speed = 6 * cos(6 * t);
+            
+            // let input_targ_position = 10 * real_t(int(t));
+            // let input_targ_position = 5 * frac(t/2);
+
+            cs_.update(input_targ_position);
+            auto [targ_position, targ_speed] = cs_.get();
+            // static constexpr let SCALE = (6.0_r/9.8_r);
+            // targ_speed*= SCALE;
+            let meas_position = pos_sensor_.position();
+            let meas_speed = pos_sensor_.speed();
+            let pos_contribute = 0.8_r * (targ_position - meas_position);
+            let speed_contribute = 0.059_r*(targ_speed - meas_speed);
+            let curr = CLAMP2(pos_contribute + speed_contribute, 0.4_r);
+            // let curr = 0.2_r;
             let [s,c] = sincospu(frac(
                 // (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
-                (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
+                (pos_sensor_.lap_position() + SIGN_AS(0.007_r, curr))) * 50);
             // let [a,b] = sincospu( - 0.004_r);
-            let mag = 0.5_r;
+            // let mag = 0.5_r;
+            let mag = ABS(curr);
 
             svpwm_.set_alpha_beta_duty(c * mag,s * mag);
             execution_time_ = clock::micros() - begin_u;
@@ -1555,9 +1713,6 @@ public:
 
 
     Result<void, void> print_vec() const {
-        // DEBUG_PRINTLN(calibrate_data_vector_);
-        // let view = calibrate_data_vector_.as_view();
-
         auto print_view = [](auto view){
             for (let & item : view) {
                 let targ = item.get_targ();
@@ -1570,12 +1725,12 @@ public:
             }
         };
 
-        print_view(forward_cali_vec_.as_view());
-        print_view(backward_cali_vec_.as_view());
+        print_view(pos_sensor_.forward_cali_vec.as_view());
+        print_view(pos_sensor_.backward_cali_vec.as_view());
 
         for(int i = 0; i < 50; i++){
             let raw = real_t(i) / 50;
-            let corrected = correct_raw_position(raw);
+            let corrected = pos_sensor_.correct_raw_position(raw);
             DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
             clock::delay(1ms);
         }
@@ -1583,44 +1738,50 @@ public:
         return Ok();
     }
 
-    constexpr q16 correct_raw_position(const q16 raw_position) const {
-        let corr1 = forward_cali_vec_[raw_position].to_inaccuracy();
-        let corr2 = backward_cali_vec_[raw_position].to_inaccuracy();
 
-        return raw_position + mean(corr1, corr2);
-        // return raw_position + corr1;
-    }
     Microseconds execution_time_ = 0us;
-private:
+// private:
+public:
     drivers::EncoderIntf & encoder_;
     StepperSVPWM & svpwm_;
 
     CoilMotionCheckTasks coil_motion_check_comp_ = {};
     CalibrateTasks calibrate_comp_ = {
-        forward_cali_vec_,
-        backward_cali_vec_
+        pos_sensor_.forward_cali_vec,
+        pos_sensor_.backward_cali_vec
     };
 
-    CalibrateDataVector forward_cali_vec_ = {MOTOR_POLE_PAIRS};
-    CalibrateDataVector backward_cali_vec_ = {MOTOR_POLE_PAIRS};
-    std::atomic<bool> is_comp_finished_ = false;
+
+    bool is_comp_finished_ = false;
+
+    static constexpr size_t MC_W = 1000u;
+    static constexpr real_t MC_TAU = 80;
 
 
+
+    using CommandShaper = dsp::CommandShaper1;
+    using CommandShaperConfig = CommandShaper::Config;
+
+    static constexpr CommandShaperConfig CS_CONFIG{
+            .kp = MC_TAU * MC_TAU,
+            .kd = 2 * MC_TAU,
+            .max_spd = 30.0_r,
+            .max_acc = 140.0_r,
+            .fs = ISR_FREQ
+    };
+
+
+    CommandShaper cs_{CS_CONFIG};
+
+    PositionSensor pos_sensor_;
 };
 
 
-void test_calibrate(){
-    const CalibrateDataVector vec{MOTOR_POLE_PAIRS};
-    // ... fill data ...
-    let view = vec.as_view();
-    for (let [targ, meas] : view) {
-        DEBUG_PRINTLN(targ, meas);
-    }
-    while(true);
-}
 
 
-void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
+
+[[maybe_unused]] 
+static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
@@ -1630,11 +1791,9 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         }
     });
 
-
+    DEBUGGER.no_brackets();
     while(true){
         // encoder.update();
-
-
 
         // clock::delay(1ms);
         // DEBUG_PRINTLN(
@@ -1648,11 +1807,202 @@ void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     motor_system_.print_vec().examine();
         //     break;
         // }
-        DEBUG_PRINTLN_IDLE(motor_system_.execution_time_.count());
+        // DEBUG_PRINTLN_IDLE(motor_system_.execution_time_.count());
+
+        // DEBUG_PRINTLN_IDLE(
+            
+        //     motor_system_.pos_sensor_.position(),
+        //     motor_system_.pos_sensor_.speed(),
+        //     motor_system_.execution_time_.count(),
+        //     motor_system_.cs_.get()
+        // );
     }
 
     // DEBUG_PRINTLN("finished");
 
+    while(true);
+}
+
+
+struct Date{
+    using Year = uint8_t;
+    // using Month = uint8_t;
+
+    struct Month{
+        enum class Kind:uint8_t{
+            Jan = 1,
+            Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+        };
+
+
+        using enum Kind;
+
+        static constexpr const char * MONTH_STR[] = 
+            {"Jan","Feb","Mar","Apr","May","Jun",
+            "Jul","Aug","Sep","Oct","Nov","Dec"};
+
+        Kind kind;
+
+        static constexpr Option<Month> from_str(const StringView str){
+            // Parse month abbreviation (first 3 chars)
+
+            for (uint8_t m = 0; m < 12; ++m) {
+                if (str[0] == MONTH_STR[m][0] && 
+                    str[1] == MONTH_STR[m][1] && 
+                    str[2] == MONTH_STR[m][2]) {
+                    return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
+                }
+            }
+        }
+
+        friend OutputStream & operator <<(OutputStream & os, const Month & self){
+            switch(self.kind){
+                case Kind::Jan ... Kind::Dec: {
+                    const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
+                    return os << StringView(str,3);
+
+                }
+                default: __builtin_unreachable();
+            }
+        }
+    };
+
+    using Day = uint8_t;
+    
+    Year year;
+    Month month;
+    Day day;
+
+
+
+    static consteval Date from_compiler(){
+        return from_str(StringView(__DATE__)).unwrap();
+    }
+
+    static constexpr Option<Date> from_str(const StringView str) {
+        // Parse day (next 2 chars, space-padded)
+        uint8_t d = (str[4] == ' ') ? 
+            (str[5] - '0') : 
+            ((str[4] - '0') * 10 + (str[5] - '0'));
+        
+        // Parse year (last 4 chars)
+        uint8_t y = (str[8] - '0') * 100 +
+                        (str[9] - '0') * 10 +
+                        (str[10] - '0');
+        
+        const auto may_month = Month::from_str(str.substr(0,3));
+        if(may_month.is_none()) return None;
+        return Some(Date{y, may_month.unwrap(), d});
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Date & self){
+        return os << os.brackets<'{'>() 
+            << self.month << '/'
+            << self.year << '/' 
+            << self.day
+            << os.brackets<'}'>()
+            ;
+    }
+};
+
+struct Time{
+    using Hour = uint8_t;
+    using Minute = uint8_t;
+    using Seconds = uint8_t;
+
+    Hour hour;
+    Minute minute;
+    Seconds seconds;
+
+    // Compile-time time initialization from __TIME__ macro
+    static constexpr Time from_compiler() {
+        constexpr const char* time_str = __TIME__;
+        return {
+            static_cast<Hour>((time_str[0]-'0')*10 + (time_str[1]-'0')),
+            static_cast<Minute>((time_str[3]-'0')*10 + (time_str[4]-'0')),
+            static_cast<Seconds>((time_str[6]-'0')*10 + (time_str[7]-'0'))
+        };
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Time & self){
+        return os << os.brackets<'{'>() 
+                << self.hour << os.brackets<':'>()
+                << self.minute << os.brackets<':'>()
+                << self.seconds
+                << os.brackets<'}'>()
+            ;
+    }
+};
+
+// static constexpr auto t = Time::from_compiler();
+// static constexpr auto d = Date::from_compiler();
+
+struct Author final{
+    static constexpr size_t MAX_NAME_LEN = 8;
+    static constexpr Option<Author> from_name(const char * name){
+        const auto slen = strlen(name);
+        if(slen >= MAX_NAME_LEN) return None;
+    }
+
+    constexpr StringView name() const{
+        return StringView(name_);
+    }
+private:
+    char name_[MAX_NAME_LEN];
+};
+
+struct Version{
+    uint8_t major;
+    uint8_t minor;
+
+    constexpr auto operator<=>(const Version&) const = default;
+};
+
+struct ReleaseInfo{
+    Author author;
+    Version version;
+    Date date;
+    Time time;
+
+    // Compile-time creation with validation
+    static constexpr Option<ReleaseInfo> create(
+        const char* author_name,
+        Version ver,
+        Date d = Date::from_compiler(),
+        Time t = Time::from_compiler()
+    ) {
+        let may_author = Author::from_name(author_name);
+        if(may_author.is_none()) return None;
+        return Some(ReleaseInfo{
+            may_author.unwrap(), 
+            ver, 
+            d, 
+            t
+        });
+    }
+};
+
+[[maybe_unused]] static void test_eeprom(){
+    hal::I2cSw i2c_sw{hal::portD[1], hal::portD[0]};
+    i2c_sw.init(800_KHz);
+    drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
+
+    const auto begin_u = clock::micros();
+    uint8_t rdata[3] = {0};
+    at24.load_bytes(0_addr, std::span(rdata)).examine();
+    while(not at24.is_available()){
+        at24.poll().examine();
+    }
+
+    DEBUG_PRINTLN(rdata);
+    const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
+    at24.store_bytes(0_addr, std::span(data)).examine();
+
+    while(not at24.is_available()){
+        at24.poll().examine();
+    }
+
+    DEBUG_PRINTLN("done", clock::micros() - begin_u);
     while(true);
 }
 
@@ -1684,6 +2034,7 @@ static constexpr void static_test(){
 void mystepper_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
+
     clock::delay(400ms);
 
     {
@@ -1766,64 +2117,8 @@ void mystepper_main(){
         .fast_mode_en = DISEN
     }).examine();
 
-    test_check(encoder, svpwm);
-
-
-    q20 targ_lappos = 0;
-    real_t meas_lappos = 0;
-    timer.attach(hal::TimerIT::Update, {0,0}, [&](){
-        // retry(1, [&]{return encoder.update();}).examine();
-        retry(2, [&]{return encoder.update();}).examine();
-        meas_lappos = encoder.get_lap_position().examine();
-        // DEBUG_PRINTLN(drivers::EncoderError::Kind::CantSetup);
-        // let t = clock::time();
-        // let [st, ct] = sincospu(t * 93);
-        // let [st, ct] = sincospu(t * 3);
-        // let [st, ct] = sincospu(10 * sinpu(t));
-
-        targ_lappos += (4 * meas_lappos - 2) * 0.00005_q20;
-        let ref_epos = MOTOR_POLE_PAIRS * q16(targ_lappos);
-        let [st, ct] = sincospu(ref_epos);
-        // let [st, ct] = sincospu(sinpu(t));
-        let amp = 0.6_r;
-
-        svpwm.set_alpha_beta_duty(ct * amp, st * amp);
-    });
-
-
-
-    while(true){
-
-        DEBUG_PRINTLN_IDLE(
-            // timer.oc<1>().cvr(), 
-            // timer.oc<2>().cvr(), 
-            // timer.oc<3>().cvr(), 
-            // timer.oc<4>().cvr(), 
-
-            // hal::portA[8].read().to_bool(),
-            // hal::portA[9].read().to_bool(),
-            // hal::portA[10].read().to_bool(),
-            // hal::portA[11].read().to_bool(),
-
-            // ena_gpio.read().to_bool(),
-            // enb_gpio.read().to_bool(),
-            // inj_a.get_voltage(),
-            // inj_b.get_voltage(),
-            100 * (targ_lappos - frac(4.4_r * clock::time())),
-            meas_lappos,
-            // 100 * (position - targ_lappos),
-            // 100 * (position2 - targ_lappos),
-            // 100 * (position3 - targ_lappos),
-            // // 100 * (position4 - targ_lappos),
-            // 100 * best_err,
-            
-            trig_gpio.read().to_bool()
-        );
-
-
-        // clock::delay(10us);
-        clock::delay(1ms);
-    }
+    // test_check(encoder, svpwm);
+    test_eeprom();
 }
 
 struct LapCalibrateTable{

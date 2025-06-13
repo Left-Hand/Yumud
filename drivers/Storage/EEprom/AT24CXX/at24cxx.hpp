@@ -55,15 +55,23 @@ public:
 class AT24CXX final:
     public AT24CXX_Collections{
 public:
-    AT24CXX(const auto & cfg, const hal::I2cDrv & i2c_drv):
+    template<typename TConfig>
+    AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
 
-    AT24CXX(const auto & cfg, hal::I2cDrv && i2c_drv):
+    template<typename TConfig>
+    AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
+
+
+    template<typename TConfig>
+    AT24CXX(TConfig && cfg, hal::I2c & i2c):
+        AT24CXX(std::forward<TConfig>(cfg), 
+        hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     AT24CXX(const AT24CXX &) = delete;
     AT24CXX(AT24CXX &&) = delete;
@@ -191,9 +199,6 @@ private:
             if(const auto res = self.store_bytes_inblock_impl(Address(addr), piece);
                 res.is_err()) return Err(res.unwrap_err());
 
-
-            DEBUG_PRINTLN(operating_, iter_.next(operating_));
-
             const auto next_opt = iter_.next(operating_);
             if(next_opt.is_some()){
                 operating_ = next_opt.unwrap();
@@ -224,8 +229,6 @@ private:
     hal::I2cDrv i2c_drv_;
     AddressDiff capacity_;
     AddressDiff pagesize_;
-
-
 
     struct State final{
         IResult<> poll(AT24CXX & self, const Milliseconds now){

@@ -24,7 +24,7 @@ using Capacity = AddressDiff;
 
 
 struct Address{
-    [[nodiscard]] constexpr explicit Address(const size_t addr):addr_(addr){;}
+    [[nodiscard]] constexpr explicit Address(const uint32_t addr):addr_(addr){;}
     [[nodiscard]] constexpr uint32_t as_u32() const {return addr_;}
 
     [[nodiscard]] constexpr auto operator<=>(const Address &) const = default;
@@ -35,9 +35,14 @@ private:
     uint32_t addr_;
 };
 
+
+consteval Address operator"" _addr(unsigned long long  x){
+    return Address(static_cast<uint32_t>(x));
+}
+
 inline OutputStream &operator << (OutputStream &os, const Address &addr){
     const auto guard = os.create_guard();
-    os << "0x" << std::hex << addr.as_u32();
+    os << std::hex << std::showbase << addr.as_u32();
     return os;
 }
 
@@ -139,7 +144,7 @@ inline OutputStream &operator<<(OutputStream &os, const AddressRange &range){
 
 //     virtual bool is_available() = 0;
 
-//     virtual IResult<size_t> resume() = 0;
+//     virtual IResult<uint32_t> resume() = 0;
 
 // protected:
 //     virtual IResult<> push_operation(const Operation op);
@@ -157,7 +162,7 @@ inline OutputStream &operator<<(OutputStream &os, const AddressRange &range){
 //     const auto & operation() const { return op_; }
 
 //     using DeviceError = BlockDeviceIntf::Error_Kind;
-//     Result<size_t, BlockDeviceIntf::Error> resume(){
+//     Result<uint32_t, BlockDeviceIntf::Error> resume(){
 //         switch(progress_){
 //             case Progress::Pending:{
 //                 if(device_.is_available() == false) break;

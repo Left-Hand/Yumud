@@ -13,7 +13,6 @@
 #include "core/utils/SumtypeEnum.hpp"
 #include "core/utils/Match.hpp"
 #include "core/utils/Unit.hpp"
-#include "core/polymorphism/reflect.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
 using namespace ymd;

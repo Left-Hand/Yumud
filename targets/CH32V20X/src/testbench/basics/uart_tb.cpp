@@ -13,36 +13,10 @@ using namespace ymd;
 using namespace ymd::hal;
 
 #define UART_TB_ECHO
-using std::string;
 
 #define TARG_UART hal::uart2
 
 using namespace ymd;
-
-[[maybe_unused]] static void getline(IOStream & logger, string & str){
-    String temp_str;
-    while(true){
-        if(logger.available()){
-            char chr;
-            logger.read(chr);
-            if(chr == '\n'){
-
-                if(temp_str.length()){
-                    str = temp_str.c_str();
-                    return;
-                }
-                temp_str = "";
-            }else{
-                temp_str.concat(chr);
-            }
-        }
-        else{
-            clock::delay(400ms);
-            logger.print(' ');
-        }
-    }
-}
-
 [[maybe_unused]] static void uart_tb(Uart & uart){
     #ifdef UART_TB_ECHO
 

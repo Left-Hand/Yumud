@@ -28,7 +28,6 @@
 
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
-#include "core/polymorphism/reflect.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 

@@ -154,8 +154,10 @@ OutputStream & OutputStream::operator<<(const double value){
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\
-    if(config_.showpos and val >= 0) this->write('+');\
-    if(config_.showbase and (radix() != 10)){*this << get_basealpha(radix());}\
+    if(unlikely(config_.showpos and val >= 0)) \
+        this->write('+');\
+    if(unlikely(config_.showbase and (radix() != 10))){\
+        *this << get_basealpha(radix());}\
     char str[blen];\
     const auto len = convfunc(val, str, this->config_.radix);\
     this->write(str, len);\
@@ -164,6 +166,13 @@ void OutputStream::print_int(const int val){
     PRINT_INT_TEMPLATE(12, StringUtils::itoa);
 }
 
+// void OutputStream::print_u64(const uint64_t val){
+//     PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
+// }
+
+// void OutputStream::print_i64(const int64_t val){
+//     PRINT_INT_TEMPLATE(24, StringUtils::iltoa);
+// }
 void OutputStream::print_int(const uint64_t val){
     PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
 }

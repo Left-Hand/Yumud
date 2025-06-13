@@ -106,7 +106,7 @@ private:
 class  _TrackingDifferentiatorByOrders_Base{
 public:
     struct Config{
-        q8 r;
+        q16 r;
         uint fs;
     };
 
@@ -116,8 +116,8 @@ public:
     }
 
 protected:
-    q8 r_ = 0;
-    q20 dt_ = 0;
+    q16 r_ = 0;
+    q24 dt_ = 0;
 };
 
 template<size_t N>
@@ -146,7 +146,7 @@ public:
             const auto x2 = state_[1];
 
             state_[0] += x2 * dt; 
-            state_[1] += (- 2 * r * x2 - r_2 * (x1 - u)) * dt;
+            state_[1] += (- 2 * x2 * r - (x1 - u) * r_2) * dt;
 
         }else if constexpr(N == 3){
             const auto x1 = state_[0];

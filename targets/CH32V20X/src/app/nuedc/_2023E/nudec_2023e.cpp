@@ -344,10 +344,10 @@ void nuedc_2023e_main(){
         cs.update(u);
         const auto u1 = clock::micros();
 
-        leso.update(cs.get_states()[0], u);
+        leso.update(cs.get()[0], u);
         DEBUG_PRINTLN(
             u,
-            cs.get_states()[0],
+            cs.get()[0],
             leso.get_disturbance(),
             u1 - u0
         //     cs.get()[0], 
@@ -401,8 +401,8 @@ void nuedc_2023e_main(){
         test_gpio.clr();
 
         cs.update(p0);
-        const auto p = cs.get_states()[0];
-        const auto v = cs.get_states()[1];
+        const auto p = cs.get()[0];
+        const auto v = cs.get()[1];
 
 
         static constexpr auto mc_w2 = mc_w;
