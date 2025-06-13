@@ -18,7 +18,7 @@
 #include "src/testbench/tb.h"
 
 #include "types/regions/range2/range2.hpp"
-
+#include "bitflag.hpp"
 
 
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
