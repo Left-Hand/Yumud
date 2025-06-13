@@ -121,10 +121,14 @@ CyberGear_Result<void> CyberGear::onCtrl2FeedBack(const uint32_t id, const uint6
 
     Payload payload = {data};
 
-    feedback_.rad = real_t(payload.rad());
-    feedback_.omega = real_t(payload.omega());
-    feedback_.torque = real_t(payload.torque());
-    feedback_.temperature = real_t(payload.temperature());
+    feedback_.rad = 
+        real_t(payload.rad().as_val());
+    feedback_.omega = 
+        real_t(payload.omega().as_val());
+    feedback_.torque = 
+        real_t(payload.torque().as_val());
+    feedback_.temperature = 
+        real_t(payload.temperature().as_val());
 
     return Ok();
 }

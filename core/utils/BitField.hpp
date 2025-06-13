@@ -31,12 +31,6 @@ public:
         return *this;
     }
 
-    template<typename T>
-    requires std::is_constructible_v<T, I>
-    [[nodiscard]] __inline explicit 
-    operator T() const{
-        return T(this->as_val());
-    }
 
     [[nodiscard]] __inline constexpr 
     I as_val() const{

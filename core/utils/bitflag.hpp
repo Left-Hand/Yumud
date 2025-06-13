@@ -187,12 +187,14 @@ private:
 
 };
 
-enum class Fault:uint8_t{
-    OverCurrent,
-    OverVoltage,
-    OverTemperature,
-    UnderTemperature
-};
+
+#if 0
+// enum class Fault:uint8_t{
+//     OverCurrent,
+//     OverVoltage,
+//     OverTemperature,
+//     UnderTemperature
+// };
 
 enum class MyEnum { A, B, C };
 
@@ -212,4 +214,6 @@ static_assert(MyBitFlag::Iterator(
     MyBitFlag::enum_to_mask(MyEnum::A) |
     MyBitFlag::enum_to_mask(MyEnum::B)
 ).size()  == 2);
+#endif
+
 }
