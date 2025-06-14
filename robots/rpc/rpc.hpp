@@ -7,63 +7,51 @@
 #include <type_traits>
 
 #include "core/utils/typetraits/function_traits.hpp"
-#include "core/string/string.hpp"
+// #include "core/string/string.hpp"
+#include "core/string/stringView.hpp"
 #include "core/stream/ostream.hpp"
 #include "core/stream/BufStream.hpp"
 #include "core/polymorphism/proxy.hpp"
 
 namespace ymd::rpc{
 
-class CallParam{
+class ParamFromString{
 protected:
     StringView value_;
-    StringView spec_;
 public:
-    CallParam(const char * value):
-        value_(value),
-        spec_(std::nullopt){;}
+    ParamFromString(const char * value):
+        value_(value){;}
 
-    CallParam(const StringView value):
-        value_(value),
-        spec_(std::nullopt){;}
-
-    CallParam(const String && value):
-        value_(std::move(value)),
-        spec_(std::nullopt){;}
-
-    CallParam(const StringView value, const StringView spec):
-        value_(value),
-        spec_(spec){;}
+    ParamFromString(const StringView value):
+        value_(value){;}
 
     template<typename T>
-    CallParam(const T & value): value_(String(value)), spec_(std::nullopt){;}
-
-    const auto value() const{
-        return value_;
-    }
-
-    const auto spec() const{
-        return spec_;
-    }
-
-    template<typename T>
-    operator T() const{
+    requires (std::is_convertible_v<StringView, T>)
+    T to() const{
         return static_cast<T>(value_);
     }
 
-    friend OutputStream & operator << (OutputStream & os, const CallParam & param){
+    template<typename T>
+    Option<T> try_to() const {
+        if constexpr(std::is_convertible_v<StringView, T>) {
+            return Some(static_cast<T>(value_));
+        }
+        return None;
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const ParamFromString & param){
         return os << param.value_;
     }
 };
 
-using Param = CallParam;
-using Params = std::span<const CallParam>;
+using Param = ParamFromString;
+using Params = std::span<const ParamFromString>;
 
 
 class AccessProviderIntf{
 public:
     virtual size_t size() const = 0;
-    virtual CallParam operator[](size_t idx) const = 0;
+    virtual ParamFromString operator[](size_t idx) const = 0;
 };
 
 
@@ -74,9 +62,9 @@ public:
     constexpr SubHelper(const AccessProviderIntf & provider, size_t offset, size_t end): 
         provider_(provider), offset_(offset), end_(end){;}
     size_t size() const {return end_ - offset_;}
-    CallParam operator[](size_t idx) const{
-        if(idx >= size()) while(true);
-        return CallParam(provider_[offset_ + idx]);
+    ParamFromString operator[](size_t idx) const{
+        if(idx >= size()) PANIC("idx out of range");
+        return ParamFromString(provider_[offset_ + idx]);
     }
 private:
     const AccessProviderIntf & provider_;
@@ -107,8 +95,8 @@ public:
         return views_.size();
     }
 
-    CallParam operator [](const size_t idx) const {
-        return CallParam(views_[idx]);
+    ParamFromString operator [](const size_t idx) const {
+        return ParamFromString(views_[idx]);
     }
 private:    
     std::span<const StringView> views_;
@@ -116,104 +104,88 @@ private:
 
 using AccessReponserIntf = OutputStream;
 
-enum class AccessResult: uint8_t{
-    OK,
+
+enum class AccessError: uint8_t{
     Fail,
+    InvalidAccess,
+    NotSupported,
+    NoExists,
+    ExecutionFailed
 };
 
+DERIVE_DEBUG(AccessError)
 
-enum class EntryType:uint8_t{
-    Func,
-    MemFunc,
-    Const,
-    Var,
+template<typename T = void>
+using AccessResult = Result<T, AccessError>;
+
+
+// 主模板定义（处理非模板类和默认情况）
+template <typename T, typename = void>
+struct Visitor {
+    static AccessResult<> visit(T& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+        static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
+        return Err(AccessError::NotSupported);
+    }
 };
 
-namespace details{
-    PRO_DEF_MEM_DISPATCH(MemCall, call);
-    PRO_DEF_MEM_DISPATCH(MemName, name);
+// 辅助类型特征检测
+template <template<typename...> class, typename...>
+struct is_instantiation_of : std::false_type {};
 
-    struct EntryFacade : pro::facade_builder
-        ::add_convention<details::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
-        ::add_convention<details::MemName, StringView()>
-        ::build {};
-}
-using EntryProxy = pro::proxy<details::EntryFacade>;
+template <template<typename...> class U, typename... Ts>
+struct is_instantiation_of<U, U<Ts...>> : std::true_type {};
+
+template <typename T, template<typename...> class U>
+using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
+
 
 template<typename T>
 struct Property final{
-
-public:
-    Property(const StringView name,T & value):
+    Property(const StringView name,T * value):
         name_(name),
-        value_(&value){;}
+        value_(value){;}
 
-    T & value(){
+    // Property(const Property & other) = delete;
+    // Property(Property && other) = delete;
+
+    T & get() const {
         return *value_;
     }
 
     StringView name() const{
         return name_;
     }
-
-    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap){
-
-        if constexpr(!std::is_const_v<T>){
-            if(ap.size()){
-                if(ap.size() == 1){
-                    value() = static_cast<T>(ap[0]);
-                    return AccessResult::OK;
-                }else{
-                    return AccessResult::Fail;
-                }
-            }
-        }else{
-            if(ap.size()){
-                return AccessResult::Fail;
-            }
-        }
-
-        ar << value();
-        return AccessResult::OK;
-
-    }
 private:
     StringView name_;
     T * value_;
 };
 
-
-template<typename T>
-struct MethodArgInfo final{
-protected:
-    T preset_;
-public:
-    MethodArgInfo(const StringView name,T preset):
-        name_(name),
-        preset_(preset){;}
-
-    T preset(){
-        return preset_;
+// Property<T> 非const特化
+template <typename T>
+struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
+    static AccessResult<> visit(const Property<T>& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+        if (ap.size() != 1) return Err(AccessError::InvalidAccess);
+        self.get() = ap[0].template to<std::decay_t<T>>();
+        ar << self.get();
+        return Ok();
     }
+};
 
-    StringView name() const{
-        return name_;
+// Property<T> const特化
+template <typename T>
+struct Visitor<const Property<T>, void> {
+    static AccessResult<> visit(const Property<T>& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+        if (ap.size()) return Err(AccessError::Fail);
+        ar << self.get();
+        return Ok();
     }
-private:
-    StringView name_;
 };
 
 
-
-
-template<typename T>
-static __inline T convert(const Param & param) {
-    return static_cast<T>(param);
-}
-
-template<typename T, std::size_t... Is>
-static T convert_params(const auto & params, std::index_sequence<Is...>) {
-    return std::make_tuple(convert<typename std::tuple_element<Is, T>::type>(params[Is])...);
+template<typename Tuple, std::size_t... Is>
+static Tuple convert_params_to_tuple(const auto & params, std::index_sequence<Is...>) {
+    return std::make_tuple((params[Is]).template to<
+        typename std::tuple_element<Is, Tuple>::type>()...);
 }
 
 
@@ -221,44 +193,55 @@ static T convert_params(const auto & params, std::index_sequence<Is...>) {
 template<typename Ret, typename ... Args>
 struct MethodByLambda final{
 protected:
-    scexpr size_t N = std::tuple_size_v<std::tuple<Args...>>;
+    static constexpr size_t N = sizeof...(Args);
 
     using Callback = std::function<Ret(Args...)>;
 
-    Callback callback_;
 private:
-    StringView name_;
 public:
+    StringView name_;
+    Callback callback_;
     MethodByLambda(const StringView name, const Callback && callback)
         : name_(name), callback_(callback) {}
-    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) {
 
-        if (ap.size() != N) {
-            return AccessResult::Fail;
+    StringView name() const { return name_; }
+};
+
+template <typename Ret, typename... Args>
+struct Visitor<MethodByLambda<Ret, Args...>> {
+    using Self = MethodByLambda<Ret, Args...>;
+    static AccessResult<> visit(const Self & self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
+        if (ap.size() != sizeof...(Args)) {
+            return Err(AccessError::Fail);
         }
 
-        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
+        auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
+            ap, std::index_sequence_for<Args...>{});
 
         if constexpr(std::is_void_v<Ret>){
-            std::apply(callback_, tuple_params);
+            std::apply(self.callback_, tuple_params);
         } else {
-            ar << std::apply(callback_, tuple_params);
+            ar << std::apply(self.callback_, tuple_params);
         }
-        return AccessResult::OK;
+        return Ok();
     }
 };
 
+
 template<typename Obj, typename Ret, typename ... Args>
 struct MethodByMemFunc final{
-protected:
-    scexpr size_t N = std::tuple_size_v<std::tuple<Args...>>;
+
+    static constexpr size_t N = sizeof...(Args);
 
     using Callback = Ret (Obj::*)(Args...);
 
-    Obj * obj_;
-    Callback callback_;
 private:
     StringView name_;
+    Obj * obj_;
+    Callback callback_;
 public:
     MethodByMemFunc(
         const StringView name, 
@@ -267,58 +250,106 @@ public:
     ) : name_(name), 
         obj_(obj),
         callback_(callback) {}
-    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) {
-        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
+
+    StringView name() const{return name_;}
+
+    // 新增的 call 方法
+    template<typename... CallArgs>
+    auto call(CallArgs&&... args) const {
+        static_assert(sizeof...(CallArgs) == sizeof...(Args), "Argument count mismatch");
+        return std::invoke(callback_, obj_, std::forward<CallArgs>(args)...);
+    }
+};
+
+
+// MethodByMemFunc 非const特化
+template <typename Obj, typename Ret, typename ... Args>
+struct Visitor<MethodByMemFunc<Obj, Ret, Args...>> {
+    using Self = MethodByMemFunc<Obj, Ret, Args...>;
+    static AccessResult<> visit(const Self & self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
+        if (ap.size() != sizeof...(Args)) {
+            return Err(AccessError::Fail);
+        }
+
+        auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
+            ap, std::index_sequence_for<Args...>{});
 
         if constexpr(std::is_void_v<Ret>){
-            std::apply([this](Args... args) { (obj_->*callback_)(args...); }, tuple_params);
+            std::apply([&self](Args... args) { self.call(args...); }, tuple_params);
         } else {
-            ar << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
+            ar << std::apply([&self](Args... args) -> Ret { return self.call(args...); }, tuple_params);
         }
-        return AccessResult::OK;
+        return Ok();
     }
 };
 
-
-
+template<typename... Entries>
 struct EntryList final{
-protected:
-    std::vector<EntryProxy> entries_;
+    EntryList(const StringView name):
+    name_(name){;}
+
+    template<typename... Args>
+    EntryList(const StringView name, Args&&... entries) :
+        name_(name),
+        // entries_(std::forward_as_tuple(entries...)) {}
+          entries_(std::forward<Args>(entries)...) {} // Correctly forward arguments
+
+
+    const auto & entries() const { return entries_; } 
+
+    const StringView name() const { return name_; }
 private:
     StringView name_;
-public:
-    EntryList(const StringView name):
-        name_(name){;}
-
-    template<typename ... Args>
-    EntryList(const StringView name, Args&& ... entries) :
-        name_(name)
-        // entries_{(std::forward<Args>(entries)...)}
-    {
-        (entries_.push_back(std::forward<Args>(entries)), ...);
-    }
-
-    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap){
-        const auto head_hash = StringView(ap[0]).hash();
-
-        if(head_hash == "ls"_ha){
-            for(auto & entry:entries_){
-                ar.println(entry->name());
-            }
-            return AccessResult::OK;
-        }
-
-        for(auto & entry:entries_){
-            auto ent_hash = entry->name().hash();
-            if(head_hash == ent_hash){
-                return entry->call(ar, make_sub_provider(ap, 1));
-            }
-        }
-
-        return AccessResult::Fail;
-    }
+    std::tuple<Entries...> entries_;
 };
 
+template<typename... Entries>
+struct Visitor<EntryList<Entries...>> {
+    using Self = EntryList<Entries...>;
+    static AccessResult<> visit(const Self & self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
+        const auto head_hash = ap[0].to<StringView>().hash();
+        // Modify the first block for "ls" command
+        if (head_hash == "ls"_ha) {
+            std::apply([&ar](auto&&... entry) {
+                (ar.println(entry.name()), ...); // Fold expression to call ar.println for each entry
+            }, self.entries());
+            return Ok();
+        }
+
+        // // Modify the second block for hash matching
+        // std::apply([&](auto&&... entry) {
+        //     ( [&](){
+        //             auto ent_hash = entry.name().hash();
+        //             if (head_hash != ent_hash) return;
+        //             return Visitor<std::decay_t<decltype(entry)>>::visit(
+        //                 entry, ar, make_sub_provider(ap, 1));
+                    
+        //         }(), ...
+        //     ); // Fold expression to iterate over all entries
+        // }, self.entries());
+
+        // return res;
+        // Iterate over entries and attempt to find a match
+        return std::apply([&](auto&&... entry) -> AccessResult<> {
+            AccessResult<> res = Err(AccessError::NoExists);
+            ( [&]() -> void {
+                    auto ent_hash = entry.name().hash();
+                    if (head_hash == ent_hash) {
+                        res = Visitor<std::decay_t<decltype(entry)>>::visit(
+                            entry, ar, make_sub_provider(ap, 1));
+                    }
+                }(), ...
+            ); // Fold expression to iterate over all entries
+            return res; // Return the result of the last match or Err(AccessError::NoExists)
+        }, self.entries());
+    }
+};
 
 
 namespace details{
@@ -330,7 +361,7 @@ template<typename Ret, template<typename, typename...>
     class MethodByLambda, typename... Args, typename Lambda>
 struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
     static auto make(const StringView name, Lambda&& lambda) {
-        return pro::make_proxy<details::EntryFacade, MethodByLambda<Ret, Args...>>(
+        return MethodByLambda<Ret, Args...>(
             name,
             std::forward<Lambda>(lambda)
         );
@@ -339,54 +370,52 @@ struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lamb
 
 }
 
+template<typename Lambda>
+auto make_function(const StringView name, Lambda&& lambda) {
+    using DecayedLambda = typename std::decay<Lambda>::type;
 
-// template<typename Lambda>
-// auto make_function(const StringView name, Lambda&& lambda) {
-//     using DecayedLambda = typename std::decay<Lambda>::type;
+    using Ret = typename magic::functor_ret_t<DecayedLambda>;
+    using ArgsTuple = typename magic::functor_args_tuple_t<DecayedLambda>;
 
-//     using Ret = typename magic::functor_ret_t<DecayedLambda>;
-//     using ArgsTuple = typename magic::functor_args_tuple_t<DecayedLambda>;
-
-//     return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
-//         name,
-//         std::forward<Lambda>(lambda)
-//     );
-// }
+    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+        name,
+        std::forward<Lambda>(lambda)
+    );
+}
 
 
-// template<typename Ret, typename ... Args>
-// auto make_function(const StringView name, Ret(*callback)(Args...)) {
-//     return pro::make_proxy<details::EntryFacade, MethodByLambda<Ret, Args...>>(
-//         name,
-//         static_cast<Ret(*)(Args...)>(callback)
-//     );
-// }
+template<typename Ret, typename ... Args>
+auto make_function(const StringView name, Ret(*callback)(Args...)) {
+    return MethodByLambda<Ret, Args...>(
+        name,
+        static_cast<Ret(*)(Args...)>(callback)
+    );
+}
 
-// template<typename Ret, typename ... Args, typename TObj>
-// auto make_function(
-//     const StringView name, 
-//     TObj * pobj, 
-//     Ret(TObj::*member_func_ptr)(Args...)
-// ) {
-//     return pro::make_proxy<details::EntryFacade, 
-//     MethodByMemFunc<TObj, Ret, Args...>>(
-//         name,
-//         pobj,
-//         member_func_ptr
-//     );
-// }
+template<typename Ret, typename ... Args, typename TObj>
+auto make_function(
+    const StringView name, 
+    TObj * pobj, 
+    Ret(TObj::*member_func_ptr)(Args...)
+) {
+    return MethodByMemFunc<TObj, Ret, Args...>(
+        name,
+        pobj,
+        member_func_ptr
+    );
+}
 
 template<typename T>
-auto make_property(const StringView name, T & val){
-    return pro::make_proxy<details::EntryFacade, Property<T>>(
+auto make_property(const StringView name, T * val){
+    return Property<T>(
         name, 
         val
     );
 }
 
 template<typename T>
-auto make_ro_property(const StringView name, const T & val){
-    return pro::make_proxy<details::EntryFacade, Property<const T>>(
+auto make_ro_property(const StringView name, const T * val){
+    return Property<const T>(
         name, 
         val
     );
@@ -395,12 +424,21 @@ auto make_ro_property(const StringView name, const T & val){
 
 template<typename ... Args>
 auto make_list(const StringView name, Args && ... entries){
-    return pro::make_proxy<details::EntryFacade, EntryList>(
+    return EntryList<Args...>(
         name, 
-        // (std::forward<Args>(entries), ...)
-        (entries)...
+        // std::forward<Args>(entries)...
+        entries...
     );
 }
+
+
+// 统一访问接口
+template <typename T>
+AccessResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+    return Visitor<std::remove_cvref_t<T>>::visit(
+        std::forward<T>(self), ar, ap);
+}
+
 }
 
 

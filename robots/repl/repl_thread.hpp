@@ -8,34 +8,26 @@
 #include "robots/rpc/arg_parser.hpp"
 
 namespace ymd::robots{
-class ReplThread{
+
+struct ReplThread final{
 public:
-    ReplThread(ReadCharProxy && is, WriteCharProxy && os, rpc::EntryProxy && root) :
-        is_(std::move(is)), os_(std::move(os)), root_(std::move(root)){}
+    ReplThread(ReadCharProxy && is, WriteCharProxy && os) :
+        is_(std::move(is)), 
+        os_(std::move(os)){;}
+
     void process(const real_t t){
+        
+    }
+        
+        
+    template<typename T>
+    void run(T && obj){
         while(is_->available()){
             char chr;
             is_->read1(chr);
-            splitter_.update(chr, [this](const StringViews strs){
-                if(outen_){
-                    os_.println("------");
-                    os_.prints("Inputs:", strs);
-                }
-
-                const auto res = [&]{
-                    if(!this->outen_){
-                        DummyOutputStream dos{};
-                        return root_ ->call(dos, rpc::AccessProvider_ByStringViews(strs));
-                    }else return root_ ->call(os_, rpc::AccessProvider_ByStringViews(strs));
-                }();
-    
-                if(outen_){
-                    os_.prints("\r\n^^Function exited with return code", uint8_t(res));
-                    os_.println("------");
-                }
-            });
+            splitter_.update(chr, [this, &obj](const StringViews strs){
+                respond(obj, strs);});
         }
-
     }
 
     void set_outen(bool outen){ outen_ = outen; }   
@@ -43,9 +35,29 @@ private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
 
-    rpc::EntryProxy root_;
     ArgSplitter splitter_;
-
     bool outen_ = true;
+    
+    template<typename T>
+    void respond(T && obj, const StringViews strs){
+        if(outen_){
+            os_.println("------");
+            os_.prints("Inputs:", strs);
+        }
+
+        const auto res = [&]{
+            if(!this->outen_){
+                DummyOutputStream dos{};
+                return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
+            }else{
+                return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
+            }
+        }();
+
+        if(outen_){
+            os_.prints("\r\n^^Function exited with result", res);
+            os_.println("------");
+        }
+    }
 };
 }

@@ -406,7 +406,7 @@ void bldc_main(){
     real_t meas_pos = 0;
     real_t meas_spd = 0;
     real_t targ_pos = 0;
-    real_t targ_spd = 0;
+    [[maybe_unused]] real_t targ_spd = 0;
 
     // UvwCurrent uvw_curr = {0,0,0};
     real_t est_rad;
@@ -909,29 +909,28 @@ void bldc_main(){
 
 
 
-    bool can_en = false;
+    [[maybe_unused]] bool can_en = false;
 
-    #if 0
-    auto list = rpc::make_list(
-        "list", 
-        // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
-        // rpc::make_function("spd", [](const real_t duty){}),
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_property("pos", targ_pos),
-        rpc::make_property("spd", targ_spd),
-        rpc::make_ro_property("mpos", meas_pos),
-        rpc::make_ro_property("mspd", meas_spd),
-        rpc::make_property("cen", can_en),
+    // auto l2 = rpc::make_list(
+    //     "l2", 
+    //     rpc::make_ro_property("mpos", meas_pos),
+    //     rpc::make_ro_property("mspd", meas_spd)
+    // );
 
-        rpc::make_list(
-            "l2", 
-            rpc::make_ro_property("mpos", meas_pos),
-            rpc::make_ro_property("mspd", meas_spd)
-        )
-    );
+    // auto list = rpc::make_list(
+    //     "list", 
+    //     // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
+    //     // rpc::make_function("spd", [](const real_t duty){}),
+    //     rpc::make_function("rst", [](){sys::reset();}),
+    //     rpc::make_property("pos", targ_pos),
+    //     rpc::make_property("spd", targ_spd),
+    //     rpc::make_ro_property("mpos", meas_pos),
+    //     rpc::make_ro_property("mspd", meas_spd),
+    //     rpc::make_property("cen", can_en),
+    //     l2
+    // );
 
-    ArgSplitter splitter;
-    #endif
+    // ArgSplitter splitter;
 
     DEBUGGER.set_splitter(',');
     DEBUGGER.no_brackets();

@@ -180,14 +180,14 @@ public:
         apply_radians_to_servos({0,0,0});
     }
 
-    // auto make_rpc_node(const StringView name){
-    //     return rpc::make_list(
-    //         name
-    //         // rpc::make_function("gest",      this, &RRS3_Robot::set_gest),
-    //         // rpc::make_function("set_bias",  this, &RRS3_Robot::set_bias),
-    //         // rpc::make_function("set_zero",  this, &RRS3_Robot::go_home)
-    //     );
-    // }
+    auto make_rpc_node(const StringView name){
+        return rpc::make_list(
+            name,
+            rpc::make_function("gest",      this, &RRS3_Robot::set_gest),
+            rpc::make_function("set_bias",  this, &RRS3_Robot::set_bias),
+            rpc::make_function("set_zero",  this, &RRS3_Robot::go_home)
+        );
+    }
 private:
     RRS3_Kinematics rrs3_kine_;
 
@@ -232,18 +232,21 @@ void rrs3_robot_main(){
     }};
 
     real_t a;
+
+
     robots::ReplThread repl_thread = {
-        &DBG_UART, &DBG_UART,
-        rpc::make_property("rrs3_robot", a)
-        // rpc::make_list(
-        //     "list",
-        //     rpc::make_function("rst", [](){sys::reset();}),
-        //     rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
-        //     rpc::make_function("outdis", [&](){repl_thread.set_outen(false);})
-        //     // ,
-        //     // rrs3_robot.make_rpc_node("rrs3")
-        // )
+        &DBG_UART, &DBG_UART
     };
+
+    auto list = rpc::make_list(
+        "list",
+        rpc::make_function("rst", [](){sys::reset();}),
+        rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+        rrs3_robot.make_rpc_node("rrs")
+    );
+
+    // auto list = rrs3_robot.make_rpc_node("rrs");
 
     auto ctrl = [&]{
         const auto t = clock::time();
@@ -264,6 +267,7 @@ void rrs3_robot_main(){
     while(true){
         const real_t t = clock::time();
         repl_thread.process(t);
+        repl_thread.run(list);
         clock::delay(10ms);
         ctrl();
         // DEBUG_PRINTLN(t);
