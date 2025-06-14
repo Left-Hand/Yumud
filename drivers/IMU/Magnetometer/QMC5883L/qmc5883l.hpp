@@ -171,6 +171,12 @@ private:
         2, 8
     };
 
+    static constexpr auto name = magic::enum_item_name_v<FullScale, FullScale::_2G>;
+    static_assert(name[0] != '(');
+    static_assert(name[0] == '_');
+    static constexpr auto n = magic::enum_count_v<FullScale>;
+    static_assert(n == 2);
+
     EnumScaler<FullScale, q24> scaler_ = {
         FullScale::_2G,
         scaler_mapping_
