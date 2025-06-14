@@ -6,8 +6,8 @@
 namespace ymd::canopen{
 
 struct SdoObjDict:public StaticObjectDictBase{
-    CobId c2s_cobid = 0;
-    CobId s2c_cobid = 0;
+    CobId c2s_cobid = CobId::from_u16(0);
+    CobId s2c_cobid = CobId::from_u16(0);
     uint16_t heartbeat_time = 0;
     uint16_t node_guarding_time = 0;
     uint32_t sync_period = 0;

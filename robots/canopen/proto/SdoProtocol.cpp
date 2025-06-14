@@ -12,7 +12,7 @@ bool SdoProtocol::processMessage(const CanMsg & msg) {
     }
 
     if (msg.size() != 8) {
-        sendAbort(0, 0, SDOABT_GENERAL_ERROR);
+        sendAbort(0, 0, SdoAbortCode::GeneralError);
         return false;
     }
 

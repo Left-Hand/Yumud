@@ -945,12 +945,6 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    [[maybe_unused]] LowpassFilterD_t<iq_t<14>> speed_measurer = {
-        {
-            .fc = 10, 
-            .fs = foc_freq
-        }
-    };
 
     [[maybe_unused]] auto measure_bias = [&]{
         

@@ -28,7 +28,5 @@ struct PdoObjDict:public StaticObjectDictBase{
 
     std::optional<SubEntry> find(const Didx didx) final override;
 };
-        
-    
 
 }

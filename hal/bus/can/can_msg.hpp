@@ -209,6 +209,10 @@ public:
     static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pbuf)
         {return CanMsg(id, pbuf);}
 
+    template<typename T, size_t N>
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t, N> pbuf)
+        {return CanMsg(id, pbuf);}
+
     template<typename T>
     static constexpr CanMsg from_list(details::CanId_t<T> id, const std::initializer_list<uint8_t> pbuf)
         {return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));}

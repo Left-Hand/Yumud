@@ -4,17 +4,7 @@
 
 using namespace ymd::canopen;
 
-struct Mapping{
-    uint8_t bits;
-    uint8_t subindex;
-    uint8_t index;
 
-    Mapping(const int map):
-        bits(map & 0xFF),
-        subindex((map >> 8) & 0xFF),
-        index((map >> 16) & 0xFF){
-    }
-};
 
 
 //从当前pdo的参数构造一个报文
@@ -25,7 +15,7 @@ CanMsg PdoTxSession::buildMessage() const {
     std::array<uint8_t, 8> data;
 
     const int cnt = int(mapping_[0].value());
-    const CobId cobId = int(params_[1].value());
+    const CobId cobId = CobId::from_u16(int(params_[1].value()));
 
     int bits_cnt = 0;
 
@@ -35,10 +25,10 @@ CanMsg PdoTxSession::buildMessage() const {
         const int map = int(mapping_[i].value());
 
         //拆分为条目的比特数 索引
-        const auto [bits, subindex, index] = Mapping(map);
+        const auto [bits, subindex, index] = PdoMapping::from_u32(map);
 
         //获取映射项的值
-        const auto val = int(pdo_.getSubEntry(index, subindex).value());
+        const auto val = int(pdo_.get_sub_entry(index, subindex).unwrap());
 
         //将获得的值复制到data中
         memcpy(data.begin(), &val, bits/8);
@@ -66,7 +56,7 @@ CanMsg PdoTxSession::buildMessage() const {
 
 //将收到的pdo报文写入字典
 bool PdoRxSession::processMessage(const CanMsg& msg){
-    const CobId cobId = int(params_[1].value());
+    const CobId cobId = CobId::from_u16(int(params_[1].value()));
 
     if (cobId.to_stdid() != msg.id()) {
         return false;
@@ -80,10 +70,10 @@ bool PdoRxSession::processMessage(const CanMsg& msg){
         const int map = int(mapping_[i].value());
 
         //拆分为条目的比特数 索引
-        const auto [bits, subindex, index] = Mapping(map);
+        const auto [bits, subindex, index] = PdoMapping::from_u32(map);
     
         //获取映射项
-        SubEntry se = pdo_.getSubEntry(index, subindex).value();
+        SubEntry se = pdo_.get_sub_entry(index, subindex).unwrap();
 
         se.put(msg);
 

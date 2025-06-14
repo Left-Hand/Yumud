@@ -11,7 +11,7 @@ namespace ymd::canopen {
 class SubEntry;
 
 
-enum class EntryAccessType : uint8_t {
+enum class EntryAccessAuthority : uint8_t {
     RW = 0,
     WO = 0x01,
     RO = 0x02,
@@ -50,6 +50,28 @@ public:
     static constexpr Item sdo_parameter{0x22};
     static constexpr Item identity{0x23};
 
+    enum class Kind:uint8_t{
+        Bit,
+        I8,
+        I16,
+        I32,
+        I64,
+        U8,
+        U16,
+        U32,
+        U64,
+        Real32,
+        Real64,
+        Int40,
+        Int48,
+        Int56,
+        Int64,
+        Uint24,
+        PdoMapping,
+        SdoParameter,
+        Identity
+    };
+
     constexpr EntryDataType(Item e) : e_(e) {}
 
     // 类型转换操作符
@@ -84,7 +106,7 @@ public:
     }
 
     template<typename U>
-    static Item from(){
+    static constexpr Item from(){
         using T = std::decay_t<U>;
         if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
             return uint8;
@@ -103,24 +125,78 @@ private:
 
 
 
-class SubEntry {
+struct SubEntry {
 public:
-    using AccessType = EntryAccessType;
+    using AccessAuthority = EntryAccessAuthority;
     using DataType = EntryDataType;
+
+
+    SubEntry(const SubEntry &) = default;
+    SubEntry(SubEntry &&) = default;
+
+    SubEntry & operator = (const SubEntry &) = default;
+    SubEntry & operator = (SubEntry &&) = default;
+
+    template<typename T>
+    constexpr SubEntry(
+        const StringView name, 
+        T && val, 
+        AccessAuthority access_type, 
+        DataType data_type
+    ): 
+        name_(name), 
+        access_authority_(access_type), 
+        data_type_(data_type), 
+        obj_ref_(std::forward<T>(val)){}
+
+    explicit operator int() const ;
+
+    template<integral T>
+    explicit operator T() const{return int(*this);}
+
+
+
+    template<typename T>
+    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
+    SdoAbortCode write_any(const T pbuf){
+        return write_any((&pbuf));
+    }
+
+    template<typename T>
+    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
+    SdoAbortCode read_any(T & pbuf){
+        return read_any((&pbuf));
+    }
+
+
+    SdoAbortCode read(std::span<uint8_t> pbuf) const;
+
+    SdoAbortCode write(const std::span<const uint8_t> pbuf);
+
+    SdoAbortCode read_any(void * pbuf);
+
+    SdoAbortCode write_any(const void * pbuf);
+
+    SubEntry copy() const{return *this;}
+
+	size_t dsize() const {return data_type_.dsize();}
+	size_t size() const {return data_type_.dsize();}
+
+    bool is_readable() const {return access_authority_ != AccessAuthority::WO;}
+    bool is_writeable() const {return access_authority_ == AccessAuthority::RW || access_authority_ == AccessAuthority::WO;}
+    StringView name() const {return StringView(name_);}
+
+    void put(const hal::CanMsg & msg){
+        TODO();
+    }
 private:
 #pragma pack(push, 1)
     StringView name_;
-    AccessType access_type_;
+    AccessAuthority access_authority_;
     DataType data_type_;
 #pragma pack(pop)
-    class ObjRef{
-    private:
-        bool is_ref_ = false;
-        bool is_const_ = false;
-        union{
-            void * pbuf_;
-            uint32_t data32_;
-        };
+    struct ObjRef{
+
     public:
         constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
 
@@ -180,70 +256,16 @@ private:
         requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         explicit constexpr operator T(){return this->read<T>();}
 
+    private:
+        bool is_ref_ = false;
+        bool is_const_ = false;
+        union{
+            void * pbuf_;
+            uint32_t data32_;
+        };
     };
 
     ObjRef obj_ref_;
-
-public:
-    SubEntry(const SubEntry &) = default;
-    SubEntry(SubEntry &&) = default;
-
-    SubEntry & operator = (const SubEntry &) = default;
-    SubEntry & operator = (SubEntry &&) = default;
-
-    template<typename T>
-    constexpr SubEntry(
-        const StringView name, 
-        T && val, 
-        AccessType access_type, 
-        DataType data_type
-    ): 
-        name_(name), 
-        access_type_(access_type), 
-        data_type_(data_type), 
-        obj_ref_(std::forward<T>(val)){}
-
-    explicit operator int() const ;
-
-    template<integral T>
-    explicit operator T() const{return int(*this);}
-
-
-
-    template<typename T>
-    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode write_any(const T pbuf){
-        return write_any((&pbuf));
-    }
-
-    template<typename T>
-    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode read_any(T & pbuf){
-        return read_any((&pbuf));
-    }
-
-
-    SdoAbortCode read(std::span<uint8_t> pbuf) const;
-
-    SdoAbortCode write(const std::span<const uint8_t> pbuf);
-
-    SdoAbortCode read_any(void * pbuf);
-
-    SdoAbortCode write_any(const void * pbuf);
-
-    SubEntry copy() const{return *this;}
-
-	size_t dsize() const {return data_type_.dsize();}
-	size_t size() const {return data_type_.dsize();}
-
-    bool is_readable() const {return access_type_ != AccessType::WO;}
-    bool is_writeable() const {return access_type_ == AccessType::RW || access_type_ == AccessType::WO;}
-    StringView name() const {return StringView(name_);}
-
-    void put(const hal::CanMsg & msg){
-        TODO();
-    }
-
 };
 
 

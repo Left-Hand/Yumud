@@ -11,8 +11,8 @@ namespace ymd::canopen {
 class ProtocolBase {
 public:
     using Driver = CanDriver;
-    // Function Codes defined in the CANopen DS301
 
+    // Function Codes defined in the CANopen DS301
     enum class FuncCode:uint8_t{
         NMT = 0x0,
         SYNC = 0x1,
@@ -39,21 +39,14 @@ public:
         : name_(name), driver_(driver) {
     }
 
-    virtual bool start(){return true;}
 
-    virtual bool stop(){return true;}
-
-    virtual std::optional<SubEntry> getSubEntry(const uint16_t, const uint8_t) = 0;
-
-    StringView name() const{return StringView(name_);}
-
+    virtual Option<SubEntry> get_sub_entry(const uint16_t, const uint8_t) = 0;
     virtual bool processMessage(const CanMsg& msg){return true;}
 
+    StringView name() const{return StringView(name_);}
     void sendMessage(const CanMsg& msg) {
         driver_.write(msg);
     }
-
-    virtual void run(){}
 
 private:
     const String name_;
