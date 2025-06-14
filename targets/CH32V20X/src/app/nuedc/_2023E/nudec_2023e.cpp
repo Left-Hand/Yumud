@@ -241,6 +241,7 @@ void nuedc_2023e_main(){
 
     // auto gimbal_planner = GimbalPlanner(cfg.gimbal_cfg, gimbal_actuator);
 
+    #if 0
 
     robots::ReplThread repl_thread = {
         &DBG_UART, &DBG_UART,
@@ -263,6 +264,8 @@ void nuedc_2023e_main(){
             })
         )
     };
+
+    #endif
 
     world.ready();
 

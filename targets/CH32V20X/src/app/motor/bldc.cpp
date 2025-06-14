@@ -910,6 +910,8 @@ void bldc_main(){
 
 
     bool can_en = false;
+
+    #if 0
     auto list = rpc::make_list(
         "list", 
         // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
@@ -929,6 +931,7 @@ void bldc_main(){
     );
 
     ArgSplitter splitter;
+    #endif
 
     DEBUGGER.set_splitter(',');
     DEBUGGER.no_brackets();

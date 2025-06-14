@@ -10,11 +10,6 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/opa/opa.hpp"
 
-#include "drivers/Encoder/odometer.hpp"
-
-#include "algo/interpolation/cubic.hpp"
-
-#include "robots/rpc/rpc.hpp"
 #include "src/testbench/tb.h"
 
 #include "robots/rpc/arg_parser.hpp"
