@@ -119,10 +119,8 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-void OutputStream::checked_write(const char * pbuf, const size_t len){
+void OutputStream::write_checked(const char * pbuf, const size_t len){
     //将数据分为大块处理提高性能
-
-    Buf buf;
 
     for(size_t i = 0; i < len; i++){
         const auto res = transform_char(pbuf[i]);
@@ -137,9 +135,6 @@ void OutputStream::checked_write(const char * pbuf, const size_t len){
         }
     }
 
-    // if(likely(buf.size)){
-    //     write(buf.buf, buf.size);
-    // }
 }
 
 
@@ -187,5 +182,16 @@ void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
     p_route_->writeN(pbuf.data(), pbuf.size());
 }
 
-OutputStream & OutputStream::operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}
-OutputStream & OutputStream::operator<<(const StringView & str){checked_write(str.data(), str.length()); return * this;}
+OutputStream & OutputStream::operator<<(const String & str){
+    write_checked(str.c_str(), str.length()); return * this;}
+OutputStream & OutputStream::operator<<(const StringView & str){
+    write_checked(str.data(), str.length()); return * this;}
+
+OutputStream & OutputStream::operator<<(const bool val){
+    if(config_.boolalpha == false){
+        write(val ? '1' : '0');
+        return *this;
+    }else{
+        return *this << ((val) ? "true" : "false"); 
+    }
+}

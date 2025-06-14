@@ -54,12 +54,11 @@ public:
     virtual ParamFromString operator[](size_t idx) const = 0;
 };
 
-
-
 // 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
 class SubHelper final : public AccessProviderIntf {
 public:
-    constexpr SubHelper(const AccessProviderIntf & provider, size_t offset, size_t end): 
+    constexpr SubHelper(const AccessProviderIntf & provider, 
+            size_t offset, size_t end): 
         provider_(provider), offset_(offset), end_(end){;}
     size_t size() const {return end_ - offset_;}
     ParamFromString operator[](size_t idx) const{
@@ -75,8 +74,7 @@ private:
 static constexpr SubHelper make_sub_provider(
     const AccessProviderIntf & owner, 
     const size_t offset, 
-    const size_t end)
-{
+    const size_t end){
         return SubHelper(owner, offset, end);
 }
 
@@ -106,11 +104,13 @@ using AccessReponserIntf = OutputStream;
 
 
 enum class AccessError: uint8_t{
-    Fail,
     InvalidAccess,
+    AccessOutOfRange,
     NotSupported,
     NoExists,
-    ExecutionFailed
+    ExecutionFailed,
+    ArgsCountNotMatch,
+    CantModifyConst
 };
 
 DERIVE_DEBUG(AccessError)
@@ -175,7 +175,8 @@ struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
 template <typename T>
 struct Visitor<const Property<T>, void> {
     static AccessResult<> visit(const Property<T>& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
-        if (ap.size()) return Err(AccessError::Fail);
+        if (ap.size()) 
+            return Err(AccessError::CantModifyConst);
         ar << self.get();
         return Ok();
     }
@@ -215,7 +216,7 @@ struct Visitor<MethodByLambda<Ret, Args...>> {
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != sizeof...(Args)) {
-            return Err(AccessError::Fail);
+            return Err(AccessError::ArgsCountNotMatch);
         }
 
         auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
@@ -271,7 +272,7 @@ struct Visitor<MethodByMemFunc<Obj, Ret, Args...>> {
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != sizeof...(Args)) {
-            return Err(AccessError::Fail);
+            return Err(AccessError::ArgsCountNotMatch);
         }
 
         auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
@@ -313,29 +314,15 @@ struct Visitor<EntryList<Entries...>> {
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
+        if(ap.size() < 1) 
+            return Err(AccessError::AccessOutOfRange);
+
         const auto head_hash = ap[0].to<StringView>().hash();
         // Modify the first block for "ls" command
         if (head_hash == "ls"_ha) {
-            std::apply([&ar](auto&&... entry) {
-                (ar.println(entry.name()), ...); // Fold expression to call ar.println for each entry
-            }, self.entries());
+            std::apply([&ar](auto&&... entry) { ar.println(entry.name()...); }, self.entries());
             return Ok();
         }
-
-        // // Modify the second block for hash matching
-        // std::apply([&](auto&&... entry) {
-        //     ( [&](){
-        //             auto ent_hash = entry.name().hash();
-        //             if (head_hash != ent_hash) return;
-        //             return Visitor<std::decay_t<decltype(entry)>>::visit(
-        //                 entry, ar, make_sub_provider(ap, 1));
-                    
-        //         }(), ...
-        //     ); // Fold expression to iterate over all entries
-        // }, self.entries());
-
-        // return res;
-        // Iterate over entries and attempt to find a match
         return std::apply([&](auto&&... entry) -> AccessResult<> {
             AccessResult<> res = Err(AccessError::NoExists);
             ( [&]() -> void {
@@ -345,8 +332,8 @@ struct Visitor<EntryList<Entries...>> {
                             entry, ar, make_sub_provider(ap, 1));
                     }
                 }(), ...
-            ); // Fold expression to iterate over all entries
-            return res; // Return the result of the last match or Err(AccessError::NoExists)
+            );
+            return res; 
         }, self.entries());
     }
 };
@@ -393,7 +380,7 @@ auto make_function(const StringView name, Ret(*callback)(Args...)) {
 }
 
 template<typename Ret, typename ... Args, typename TObj>
-auto make_function(
+auto make_memfunc(
     const StringView name, 
     TObj * pobj, 
     Ret(TObj::*member_func_ptr)(Args...)

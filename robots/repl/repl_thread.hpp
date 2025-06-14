@@ -21,7 +21,7 @@ public:
         
         
     template<typename T>
-    void run(T && obj){
+    void invoke(T && obj){
         while(is_->available()){
             char chr;
             is_->read1(chr);
@@ -40,9 +40,11 @@ private:
     
     template<typename T>
     void respond(T && obj, const StringViews strs){
+        const auto guard = os_.create_guard();
+        os_.force_sync();
         if(outen_){
-            os_.println("------");
-            os_.prints("Inputs:", strs);
+            os_.prints("<<=", strs);
+            // PANIC("xs");
         }
 
         const auto res = [&]{
@@ -54,9 +56,9 @@ private:
             }
         }();
 
+        
         if(outen_){
-            os_.prints("\r\n^^Function exited with result", res);
-            os_.println("------");
+            os_.prints(">>=", res);
         }
     }
 };

@@ -164,6 +164,8 @@ public:
                 uint16_t no_brackets:1;
                 uint16_t no_space:1;
                 uint16_t force_sync:1;
+                uint16_t no_scoped:1;
+                uint16_t no_fieldname:1;
             };
         };
     };
@@ -211,8 +213,12 @@ private:
     __fast_inline void print_end(){
         flush();
         if(unlikely(config_.force_sync)){
-            while(pending()) __nopn(1);
+            blocking_until_less_than(0);
         }
+    }
+
+    __fast_inline void blocking_until_less_than(size_t n){
+        while(pending() > n) __nopn(1);
     }
 
     __fast_inline void print_indent(){
@@ -246,21 +252,20 @@ private:
 
     int transform_char(const char chr) const;
 
-    void checked_write(const char data){
+    void write_checked(const char data){
         const auto res = transform_char(data);
         if(res >= 0) write(res);
     }
 
-    void checked_write(const char * pbuf, const size_t len);
+    void write_checked(const char * pbuf, const size_t len);
 
     void print_source_loc(const std::source_location & loc);
 
-    struct Buf{
-        
-        #ifndef OSTREAM_BUF_SIZE
-        static constexpr size_t OSTREAM_BUF_SIZE = 64;
-        #endif
+    #ifndef OSTREAM_BUF_SIZE
+    static constexpr size_t OSTREAM_BUF_SIZE = 64;
+    #endif
 
+    struct Buf{
         char buf[OSTREAM_BUF_SIZE];
         uint8_t size = 0;
         
@@ -321,11 +326,18 @@ public:
     OutputStream(OutputStream &&) = delete;
     
     void write(const char data) {
-        buf_.push(data, [this](const std::span<const char> pbuf){this->sendout(pbuf);});
+        buf_.push(data, 
+        [this](const std::span<const char> pbuf){
+            this->blocking_until_less_than(OSTREAM_BUF_SIZE - pbuf.size());
+            this->sendout(pbuf);
+        });
     }
     void write(const char * pbuf, const size_t len){
         buf_.push(std::span<const char>(pbuf, len),  
-        [this](const std::span<const char> pbuf){this->sendout(pbuf);});
+        [this](const std::span<const char> pbuf){
+            this->blocking_until_less_than(OSTREAM_BUF_SIZE - pbuf.size());
+            this->sendout(pbuf);
+        });
 	}
 
     OutputStream & set_splitter(const char * splitter){
@@ -364,6 +376,16 @@ public:
         config_.no_brackets = bool(en == EN);
         return *this;
     }
+
+    OutputStream & no_scoped(const Enable en = EN){ 
+        config_.no_scoped = bool(en == EN);
+        return *this;
+    }
+
+    OutputStream & no_fieldname(const Enable en = EN){ 
+        config_.no_fieldname = bool(en == EN);
+        return *this;
+    }
     OutputStream & force_sync(const Enable en = EN){
         config_.force_sync = bool(en == EN);
         return *this;
@@ -377,12 +399,12 @@ public:
 
     OutputStream & operator<<(const bool val);
 
-    __inline OutputStream & operator<<(const char chr){checked_write(chr); return *this;}
-    __inline OutputStream & operator<<(const wchar_t chr){checked_write(chr); return *this;}
-    __inline OutputStream & operator<<(char * str){if(str) checked_write(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const char* str){if(str) checked_write(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const std::string & str){checked_write(str.c_str(),str.length()); return *this;}
-    __inline OutputStream & operator<<(const std::string_view str){checked_write(str.data(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const char chr){write_checked(chr); return *this;}
+    __inline OutputStream & operator<<(const wchar_t chr){write_checked(chr); return *this;}
+    __inline OutputStream & operator<<(char * str){if(str) write_checked(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const char* str){if(str) write_checked(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const std::string & str){write_checked(str.c_str(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const std::string_view str){write_checked(str.data(),str.length()); return *this;}
     OutputStream & operator<<(const String & str);
     OutputStream & operator<<(const StringView & str);
     __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
@@ -653,6 +675,60 @@ public:
     template<char chr>
     [[nodiscard]] __attribute__((const)) 
     static constexpr Brackets<chr> brackets(){return {};}
+
+    struct FieldName final{
+
+        explicit FieldName(OutputStream & os, const std::string_view name):
+            os_(os){
+            if(not os.config().no_fieldname)
+                os << name << ':';
+        }
+
+        FieldName & operator()(OutputStream & os){
+            return *this;
+        }
+
+        __fast_inline friend OutputStream & operator<<(OutputStream & os, const FieldName & fn){ 
+            return os;
+        }
+    private:
+        OutputStream & os_;
+    };
+
+    friend struct FieldName;
+
+
+    struct ScopedInfo{
+        explicit ScopedInfo(OutputStream & os, const std::string_view name):
+            os_(os){
+            if(not os.config().no_scoped){
+                os << name << ':';
+                os << os.brackets<'{'>();
+            }
+        }
+
+        ScopedInfo(const ScopedInfo &) = delete;
+        ScopedInfo(ScopedInfo &&) = delete;
+
+        ScopedInfo & operator()(OutputStream & os){
+            return *this;
+        }
+
+        friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){ 
+            if(not os.config().no_scoped) 
+                os << os.brackets<'}'>();
+            return os;
+        }
+    private:
+        OutputStream & os_;
+    };
+
+
+    [[nodiscard]] ScopedInfo scoped(const std::string_view name){
+        return ScopedInfo(*this, name);}
+
+    [[nodiscard]] FieldName field(const std::string_view name){
+        return FieldName(*this, name);}
 
 
     OutputStream & flush();
