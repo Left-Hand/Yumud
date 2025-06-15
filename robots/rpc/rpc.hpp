@@ -12,6 +12,19 @@
 #include "core/string/stringView.hpp"
 #include "core/stream/ostream.hpp"
 
+namespace ymd::magic{
+// 辅助类型特征检测
+template <template<typename...> class, typename...>
+struct is_instantiation_of : std::false_type {};
+
+template <template<typename...> class U, typename... Ts>
+struct is_instantiation_of<U, U<Ts...>> : std::true_type {};
+
+template <typename T, template<typename...> class U>
+using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
+}
+
+
 namespace ymd::rpc{
 
 class ParamFromString{
@@ -54,9 +67,9 @@ public:
 };
 
 // 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
-class SubHelper final : public AccessProviderIntf {
+class AccessProvider_BySubSpan final : public AccessProviderIntf {
 public:
-    constexpr SubHelper(
+    constexpr AccessProvider_BySubSpan(
         const AccessProviderIntf & provider, 
         size_t offset, 
         size_t end
@@ -77,17 +90,17 @@ private:
     const size_t end_;
 };
 
-static constexpr SubHelper make_sub_provider(
+static constexpr AccessProvider_BySubSpan make_sub_provider(
     const AccessProviderIntf & owner, 
     const size_t offset, 
     const size_t end){
-        return SubHelper(owner, offset, end);
+        return AccessProvider_BySubSpan(owner, offset, end);
 }
 
-static constexpr SubHelper make_sub_provider(
+static constexpr AccessProvider_BySubSpan make_sub_provider(
     const AccessProviderIntf & owner, 
     const size_t offset){
-        return SubHelper(owner, offset, owner.size());
+        return AccessProvider_BySubSpan(owner, offset, owner.size());
 }
 
 class AccessProvider_ByStringViews final: public AccessProviderIntf{
@@ -117,7 +130,9 @@ enum class AccessError: uint8_t{
     NoArgsInput,
     ExecutionFailed,
     ArgsCountNotMatch,
-    CantModifyConst
+    CantModifyConst,
+    ValueIsGreatThanLimit,
+    ValueIsLessThanLimit
 };
 
 DERIVE_DEBUG(AccessError)
@@ -135,15 +150,6 @@ struct Visitor {
     }
 };
 
-// 辅助类型特征检测
-template <template<typename...> class, typename...>
-struct is_instantiation_of : std::false_type {};
-
-template <template<typename...> class U, typename... Ts>
-struct is_instantiation_of<U, U<Ts...>> : std::true_type {};
-
-template <typename T, template<typename...> class U>
-using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
 
 
 template<typename T>
@@ -162,6 +168,33 @@ struct Property final{
 private:
     StringView name_;
     T * value_;
+};
+
+template<typename T>
+struct PropertyWithLimit final{
+    static_assert(std::is_const_v<T> == false, "value must be setable");
+
+    constexpr PropertyWithLimit(
+        const StringView name,
+        T * value, 
+        std::tuple<T, T> limits
+    ):
+        name_(name),
+        value_(value),
+        limits_(limits)
+        {;}
+
+    constexpr T & get() const {
+        return *value_;
+    }
+
+    constexpr StringView name() const{
+        return name_;
+    }
+private:
+    StringView name_;
+    T * value_;
+    std::tuple<T, T> limits_;
 };
 
 // Property<T> 非const特化
@@ -366,6 +399,7 @@ struct Visitor<EntryList<Entries...>> {
     }
 };
 
+//对一个对象提供内存紧凑的反射树
 template<typename Obj>
 struct Object{
 
