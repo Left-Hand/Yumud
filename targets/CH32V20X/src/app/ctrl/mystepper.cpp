@@ -31,6 +31,7 @@
 #include "calibrate_utils.hpp"
 #include <atomic>
 
+#include "robots/repl/repl_thread.hpp"
 
 using namespace ymd;
 
@@ -416,6 +417,8 @@ class ArchiveSystem{
 
 [[maybe_unused]] 
 static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
+    DEBUGGER.no_brackets();
+
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
@@ -425,7 +428,17 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         }
     });
 
-    DEBUGGER.no_brackets();
+    robots::ReplService repl_service = {
+        &UART, &UART
+    };
+
+    auto list = rpc::make_list(
+        "list",
+        rpc::make_function("rst", [](){sys::reset();}),
+        rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_service.set_outen(false);})
+    );
+
     while(true){
         // encoder.update();
 
@@ -450,6 +463,8 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     motor_system_.execution_time_.count(),
         //     motor_system_.cs_.get()
         // );
+
+        repl_service.invoke(list);
     }
 
     // DEBUG_PRINTLN("finished");
@@ -512,14 +527,6 @@ static constexpr void static_test(){
 void mystepper_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
-    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
-    clock::delay(4ms);
-    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
-    clock::delay(4ms);
-    DEBUG_PRINTLN(ReleaseInfo::from("Rs1aN", Version{1,0}));
-    // PANIC(ReleaseInfo::from("Rstr", Version{1,0}).unwrap());
-    // PANIC(Author::from("Rstr").unwrap());
-
     clock::delay(400ms);
 
     {

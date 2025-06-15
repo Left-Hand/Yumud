@@ -9,9 +9,9 @@
 
 namespace ymd::robots{
 
-struct ReplThread final{
+struct ReplService final{
 public:
-    ReplThread(ReadCharProxy && is, WriteCharProxy && os) :
+    ReplService(ReadCharProxy && is, WriteCharProxy && os) :
         is_(std::move(is)), 
         os_(std::move(os)){;}
 
@@ -44,7 +44,6 @@ private:
         os_.force_sync();
         if(outen_){
             os_.prints("<<=", strs);
-            // PANIC("xs");
         }
 
         const auto res = [&]{

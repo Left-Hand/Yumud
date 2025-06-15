@@ -107,7 +107,8 @@ enum class AccessError: uint8_t{
     InvalidAccess,
     AccessOutOfRange,
     NotSupported,
-    NoExists,
+    NoCallableExists,
+    NoArgsInput,
     ExecutionFailed,
     ArgsCountNotMatch,
     CantModifyConst
@@ -314,8 +315,8 @@ struct Visitor<EntryList<Entries...>> {
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
-        if(ap.size() < 1) 
-            return Err(AccessError::AccessOutOfRange);
+        if(ap.size() == 0) 
+            return Err(AccessError::NoArgsInput);
 
         const auto head_hash = ap[0].to<StringView>().hash();
         // Modify the first block for "ls" command
@@ -324,7 +325,7 @@ struct Visitor<EntryList<Entries...>> {
             return Ok();
         }
         return std::apply([&](auto&&... entry) -> AccessResult<> {
-            AccessResult<> res = Err(AccessError::NoExists);
+            AccessResult<> res = Err(AccessError::NoCallableExists);
             ( [&]() -> void {
                     auto ent_hash = entry.name().hash();
                     if (head_hash == ent_hash) {
@@ -336,6 +337,11 @@ struct Visitor<EntryList<Entries...>> {
             return res; 
         }, self.entries());
     }
+};
+
+template<typename Obj>
+struct Object{
+
 };
 
 

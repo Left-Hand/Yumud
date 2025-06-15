@@ -244,7 +244,7 @@ void rrs3_robot_main(){
     real_t a;
 
 
-    robots::ReplThread repl_thread = {
+    robots::ReplService repl_thread = {
         &DBG_UART, &DBG_UART
     };
 
