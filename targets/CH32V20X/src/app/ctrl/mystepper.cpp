@@ -314,6 +314,58 @@ public:
     PositionSensor pos_sensor_;
 };
 
+#if 0
+template<typename T>
+struct Context{
+    static_assert(std::is_copy_assignable_v<T>);
+
+    ReleaseInfo release_info;
+    T obj;
+
+    template<HashAlgo S>
+    friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
+        return hs << self.release_info;
+    }
+};
+
+template<typename T>
+struct Bin{
+    HashCode hashcode;
+    Context<T> context;
+
+    constexpr HashCode calc_hash_of_context() const{
+        return hash(context);
+    } 
+
+    constexpr bool is_verify_passed(){
+        return calc_hash_of_context() == hashcode;
+    } 
+    constexpr const Context<T> * operator ->() const {
+        return context;
+    }
+
+    constexpr size_t size() const {
+        return sizeof(*this);
+    }
+
+    std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>{
+            reinterpret_cast<const uint8_t *>(this), size()};
+    }
+};
+
+#endif
+
+struct Progress{
+    size_t current;
+    size_t total;
+
+    friend OutputStream & operator <<(OutputStream & os, const Progress & self){
+        return os << os.brackets<'['>() << 
+            self.current << os.splitter() << self.total 
+            << os.brackets<']'>();
+    }
+};
 
 class ArchiveSystem{
     ArchiveSystem(drivers::AT24CXX at24):
@@ -330,48 +382,6 @@ class ArchiveSystem{
         Loading,
         Verifying
     };
-
-    #if 0
-    template<typename T>
-    struct Context{
-        static_assert(std::is_copy_assignable_v<T>);
-
-        ReleaseInfo release_info;
-        T obj;
-
-        template<HashAlgo S>
-        friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
-            return hs << self.release_info;
-        }
-    };
-
-    template<typename T>
-    struct Bin{
-        HashCode hashcode;
-        Context<T> context;
-
-        constexpr HashCode calc_hash_of_context() const{
-            return hash(context);
-        } 
-
-        constexpr bool is_verify_passed(){
-            return calc_hash_of_context() == hashcode;
-        } 
-        constexpr const Context<T> * operator ->() const {
-            return context;
-        }
-
-        constexpr size_t size() const {
-            return sizeof(*this);
-        }
-
-        std::span<const uint8_t> as_bytes() const {
-            return std::span<const uint8_t>{
-                reinterpret_cast<const uint8_t *>(this), size()};
-        }
-    };
-
-    #endif
 
     struct Header{
         HashCode hashcode;
@@ -435,16 +445,7 @@ class ArchiveSystem{
         return at24_.is_available();
     }
 
-    struct Progress{
-        size_t current;
-        size_t total;
 
-        friend OutputStream & operator <<(OutputStream & os, const Progress & self){
-            return os << os.brackets<'['>() << 
-                self.current << os.splitter() << self.total 
-                << os.brackets<']'>();
-        }
-    };
 
     Progress progress(){
         return {0,0};
@@ -561,9 +562,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 }
 
 
-
-
-void mystepper_main(){
+void test_curr(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
@@ -580,7 +579,120 @@ void mystepper_main(){
 
     timer.init({
         .freq = CHOP_FREQ,
-        .mode = hal::TimerCountMode::CenterAlignedDualTrig
+        // .mode = hal::TimerCountMode::CenterAlignedDualTrig
+        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+    });
+
+    timer.enable_arr_sync();
+    timer.set_trgo_source(hal::TimerTrgoSource::Update);
+
+
+    auto & pwm_ap = timer.oc<1>();
+    auto & pwm_an = timer.oc<2>();
+    auto & pwm_bp = timer.oc<3>();
+    auto & pwm_bn = timer.oc<4>();
+
+    pwm_ap.init({});
+    pwm_an.init({});
+    pwm_bp.init({});
+    pwm_bn.init({});
+
+    auto convert_pair_duty = [](const real_t duty) -> std::tuple<real_t, real_t>{
+        if(duty > 0){
+            return {1, 1-duty};
+        }else{
+            return {1 + duty, 1};
+        }
+    };
+
+    auto set_alpha_beta_duty = [&](const real_t alpha, const real_t beta){
+        {
+            const auto [ap,an] = convert_pair_duty(alpha);
+            pwm_ap.set_duty(ap);
+            pwm_an.set_duty(an);
+        }
+
+        {
+            const auto [bp,bn] = convert_pair_duty(beta);
+            pwm_bp.set_duty(bp);
+            pwm_bn.set_duty(bn);
+        }
+    };
+
+    auto & adc = hal::adc1;
+    adc.init(
+        {
+            {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
+        },{
+            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
+        }
+    );
+
+    adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
+    adc.enable_auto_inject(DISEN);
+
+    auto & inj_a = adc.inj<1>();
+    auto & inj_b = adc.inj<2>();
+
+    auto & trig_gpio = hal::PC<13>();
+    trig_gpio.outpp();
+
+    real_t a_curr;
+    real_t b_curr;
+    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
+        // trig_gpio.toggle();
+        // DEBUG_PRINTLN_IDLE(millis());
+        // trig_gpio.toggle();
+        // static bool is_a = false;
+        // b_curr = inj_b.get_voltage();
+        // a_curr = inj_a.get_voltage();
+    });
+
+
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+        b_curr = inj_b.get_voltage();
+        a_curr = inj_a.get_voltage();
+        const auto t = clock::time();
+        const auto [s,c] = sincospu(t);
+        constexpr auto mag = 0.4_r;
+        set_alpha_beta_duty(
+            c * mag,
+            s * mag
+        );
+    });
+
+    while(true){
+        DEBUG_PRINTLN_IDLE(
+            a_curr,
+            b_curr,
+            30 * (a_curr * a_curr + b_curr * b_curr)
+        );
+    }
+}
+
+
+
+void mystepper_main(){
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
+    // DEBUG_PRINTLN(hash(.unwrap()));
+    clock::delay(400ms);
+
+    // test_curr();
+
+    {
+        hal::Gpio & ena_gpio = hal::portB[0];
+        hal::Gpio & enb_gpio = hal::portA[7];
+        ena_gpio.outpp(HIGH);
+        enb_gpio.outpp(HIGH);
+    }
+
+    auto & timer = hal::timer1;
+
+    timer.init({
+        .freq = CHOP_FREQ,
+        .mode = hal::TimerCountMode::CenterAlignedDownTrig
     });
 
     timer.enable_arr_sync();
@@ -600,9 +712,8 @@ void mystepper_main(){
         {
             {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelIndex::CH2, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
         }
     );
 
@@ -610,7 +721,7 @@ void mystepper_main(){
     adc.enable_auto_inject(DISEN);
 
     auto & inj_a = adc.inj<1>();
-    auto & inj_b = adc.inj<3>();
+    auto & inj_b = adc.inj<2>();
 
     auto & trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
@@ -618,19 +729,13 @@ void mystepper_main(){
     real_t a_curr;
     real_t b_curr;
     adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // trig_gpio.toggle();
-        // DEBUG_PRINTLN_IDLE(millis());
-        // trig_gpio.toggle();
         static bool is_a = false;
         is_a = !is_a;
+        
         if(is_a){
-            // DEBUG_PRINTLN_IDLE(a_curr);
             b_curr = inj_b.get_voltage();
-            a_curr = inj_a.get_voltage();
         }else{
-            b_curr = inj_b.get_voltage();
             a_curr = inj_a.get_voltage();
-            // DEBUG_PRINTLN_IDLE(b_curr);
         }
     });
 
@@ -649,7 +754,29 @@ void mystepper_main(){
     }).examine();
 
     test_check(encoder, svpwm);
-    test_eeprom();
+    // test_eeprom();
+
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+        const auto t = clock::time();
+        const auto [s,c] = sincospu(t);
+        constexpr auto mag = 0.4_r;
+        svpwm.set_alpha_beta_duty(
+            c * mag,
+            s * mag
+        );
+        // svpwm.set_alpha_beta_duty(
+        //     mag,
+        //     mag
+        // );
+    });
+
+    while(true){
+        DEBUG_PRINTLN_IDLE(
+            a_curr,
+            b_curr,
+            30 * (a_curr * a_curr + b_curr * b_curr)
+        );
+    }
 }
 
 struct LapCalibrateTable{

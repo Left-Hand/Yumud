@@ -48,9 +48,24 @@ struct Month final{
         }
     }
 
+    constexpr bool operator == (const Month & rhs) const{
+        return kind == rhs.kind;
+    }
+
+    constexpr bool operator < (const Month & rhs) const{
+        return std::bit_cast<uint8_t>(kind) < std::bit_cast<uint8_t>(rhs.kind);
+    }
+
     template<HashAlgo S>
     constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
         return hs << uint8_t(self.kind);
+    }
+
+    constexpr bool is_valid() const {
+        switch(kind){
+            case Kind::Jan ... Kind::Dec: return true;
+            default: return false;
+        }
     }
 };
 
@@ -59,9 +74,6 @@ using Day = uint8_t;
 using Hour = uint8_t;
 using Minute = uint8_t;
 using Seconds = uint8_t;
-
-
-
 
 struct Date final{
 
@@ -91,6 +103,34 @@ struct Date final{
         if(may_month.is_none()) return None;
         return Some(Date{y, may_month.unwrap(), d});
     }
+
+
+    constexpr bool is_valid() const {
+        return IN_RANGE(year, 24, 30) //no one will use this shit after 2030
+            and month.is_valid()
+            and IN_RANGE(day, 1, 31);
+    }
+
+    constexpr bool operator == (const Date & rhs){
+        return year == rhs.year and month == rhs.month and day == rhs.day;
+    }
+
+    constexpr bool operator < (const Date & rhs){
+        if(year != rhs.year){
+            return year < rhs.year;
+        }
+
+        if(month != rhs.month){ 
+            return month < rhs.month;
+        }
+
+        return day < rhs.day;
+    }
+
+    constexpr bool is_latest() const {
+        return *this == Date::from_compiler();
+    }
+
 
     friend OutputStream & operator <<(OutputStream & os, const Date & self){
         return os << os.brackets<'{'>() 
@@ -123,6 +163,29 @@ struct Time final{
         };
     }
 
+    constexpr bool is_valid() const {
+        return (hour < 24) && (minute < 60) && (seconds < 60);
+    }
+
+    constexpr bool operator == (const Time & rhs) const{
+        return (hour == rhs.hour) && (minute == rhs.minute) && (seconds == rhs.seconds);
+    }
+
+    constexpr bool operator < (const Time & rhs) const {
+        // 层级比较：小时 → 分钟 → 秒
+        if (hour != rhs.hour) {
+            return hour < rhs.hour;
+        }
+        if (minute != rhs.minute) {
+            return minute < rhs.minute;
+        }
+        return seconds < rhs.seconds;
+    }
+
+    constexpr bool is_latest() const{
+        return *this == Time::from_compiler();
+    }
+
     friend OutputStream & operator <<(OutputStream & os, const Time & self){
         return os << os.brackets<'{'>() 
                 << self.hour << os.brackets<':'>()
@@ -136,6 +199,7 @@ struct Time final{
     constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Time & self){
         return hs << self.hour << self.minute << self.seconds;
     }
+
 };
 
 
