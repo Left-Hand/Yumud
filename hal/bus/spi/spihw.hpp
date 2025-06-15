@@ -21,12 +21,7 @@ namespace ymd::hal{
 
 class Gpio;
 
-enum class SpiMode:uint8_t{
-    _0,
-    _1,
-    _2,
-    _3
-};
+
 
 class SpiHw final:public Spi{
 public:
@@ -34,10 +29,7 @@ public:
     SpiHw(SpiHw && other) = delete;
     SpiHw(chip::SPI_Def * instance):inst_(instance){;}
 
-    void init(
-        const uint32_t baudrate, 
-        const CommStrategy tx_strategy = CommStrategy::Blocking, 
-        const CommStrategy rx_strategy = CommStrategy::Blocking);
+    void init(const Config & cfg);
 
     void enable_hw_cs(const Enable en = EN);
 

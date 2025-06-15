@@ -741,7 +741,7 @@ void mystepper_main(){
 
 
     auto & spi = hal::spi1;
-    spi.init(18_MHz);
+    spi.init({18_MHz});
 
     drivers::MT6816 encoder{{
         spi, 

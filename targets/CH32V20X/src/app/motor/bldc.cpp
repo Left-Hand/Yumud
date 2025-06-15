@@ -356,7 +356,7 @@ void bldc_main(){
     pwm_v.init({});
     pwm_w.init({});
 
-    spi1.init(18_MHz);
+    spi1.init({18_MHz});
 
     const auto ma730_spi_fd = spi1.attach_next_cs(portA[15]).value();
     // spi1.bind_cs_pin(, 2);

@@ -15,7 +15,7 @@ using namespace ymd::drivers;
 void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    spi1.init(9_MHz);
+    spi1.init({9_MHz});
 
     MA730 ma730{spi1, spi1.attach_next_cs(portA[15]).value()};
     ma730.init().unwrap();

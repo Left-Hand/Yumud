@@ -442,7 +442,7 @@ void light_tracking_main(void){
     // spi.bind_cs_pin(lcd_cs, 0);
     const auto spi_fd = spi.attach_next_cs(lcd_cs).value();
     // spi.init(144_MHz, CommStrategy::Blocking);
-    spi.init(LCD_SPI_FREQ_HZ, CommStrategy::Blocking);
+    spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
     (void)spi.set_bitorder(MSB);
     // spi.set_bitorder(LSB);

@@ -21,7 +21,7 @@ void pmw3901_main(){
 
     auto & spi = spi1;
 
-    spi.init(4_MHz);
+    spi.init({4_MHz});
 
     PMW3901 pmw{spi, spi.attach_next_cs(portA[15]).value()};
     pmw.init().unwrap();

@@ -119,7 +119,7 @@ void icm42688_main(){
     // ICM42688 imu = {i2c};
 
     auto & spi = spi1;
-    spi.init(18_MHz);
+    spi.init({18_MHz});
     ICM42688 imu = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
 
     icm42688_tb(imu);

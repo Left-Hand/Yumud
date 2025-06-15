@@ -13,7 +13,7 @@ void ad9959_main(){
 
     SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
     auto & spi = spisw;
-    spi.init(100000);//maxium baud
+    spi.init({100000});//maxium baud
     spi.set_bitorder(LSB);
 
     [[maybe_unused]]

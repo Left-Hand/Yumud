@@ -74,6 +74,6 @@ void bmi088_main(){
     DEBUGGER.no_brackets();
     clock::delay(200ms);
 
-    spi1.init(9_MHz);
+    spi1.init({9_MHz});
     bmi088_tb(hal::spi1);
 }

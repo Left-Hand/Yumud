@@ -444,7 +444,7 @@ void cubic_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    spi.init(144_MHz, CommStrategy::Blocking);
+    spi.init({144_MHz});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
