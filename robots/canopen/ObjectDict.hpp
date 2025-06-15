@@ -117,22 +117,6 @@ public:
 
 
 template<typename T>
-struct reg_decay{
-    // using type = void;
-};
-
-template<typename T>
-requires std::is_base_of_v<__RegBase, T>
-struct reg_decay<T>{
-    using type = T::value_type;
-};
-
-
-template<typename T>
-using reg_decay_t = typename reg_decay<T>::type;
-
-
-template<typename T>
 constexpr SubEntry make_subentry_impl(
         const StringView name, 
         T & val, 

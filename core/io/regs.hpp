@@ -180,4 +180,22 @@ struct type :public Reg16<>{scexpr RegAddress address = addr; uint16_t data;} DE
 #define REG8_QUICK_DEF(addr, type, name)\
 struct type :public Reg8<>{scexpr RegAddress address = addr; uint8_t data;} DEF_R8(name)
 
+
+
+
+template<typename T>
+struct reg_decay{
+    // using type = void;
+};
+
+template<typename T>
+requires std::is_base_of_v<__RegBase, T>
+struct reg_decay<T>{
+    using type = T::value_type;
+};
+
+
+template<typename T>
+using reg_decay_t = typename reg_decay<T>::type;
+
 }

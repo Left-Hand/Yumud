@@ -394,7 +394,7 @@ public:
 
 class ArchiveSystem{
 
-    void save(){
+    // void save(std::span<const uint8_t>){
         // at24.load_bytes(0_addr, std::span(rdata)).examine();
         // while(not at24.is_available()){
         //     at24.poll().examine();
@@ -410,8 +410,34 @@ class ArchiveSystem{
 
         // DEBUG_PRINTLN("done", clock::micros() - begin_u);
         // while(true);
+    // }
+
+    auto poll(){
+        if(not at24_.is_available()){
+            at24_.poll().examine();
+        }
     }
 
+    bool is_available(){
+        return at24_.is_available();
+    }
+
+    struct Progress{
+        size_t current;
+        size_t total;
+
+        friend OutputStream & operator <<(OutputStream & os, const Progress & self){
+            return os << os.brackets<'['>() << 
+                self.current << os.splitter() << self.total 
+                << os.brackets<']'>();
+        }
+    };
+
+    Progress progress(){
+        return {0,0};
+    }
+private:
+    drivers::AT24CXX at24_;
 };
 
 
@@ -422,10 +448,10 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        let res = motor_system_.resume();
-        if(res.is_err()){
-            PANIC();
-        }
+        // let res = motor_system_.resume();
+        // if(res.is_err()){
+        //     PANIC();
+        // }
     });
 
     robots::ReplService repl_service = {
@@ -436,7 +462,8 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
         rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_service.set_outen(false);})
+        rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+        rpc::make_function("now", [&](){return clock::time();})
     );
 
     while(true){
@@ -463,8 +490,8 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     motor_system_.execution_time_.count(),
         //     motor_system_.cs_.get()
         // );
-
         repl_service.invoke(list);
+        clock::delay(1ms);
     }
 
     // DEBUG_PRINTLN("finished");

@@ -19,15 +19,15 @@ class ParamFromString{
 protected:
     StringView value_;
 public:
-    ParamFromString(const char * value):
+    constexpr ParamFromString(const char * value):
         value_(value){;}
 
-    ParamFromString(const StringView value):
+    constexpr ParamFromString(const StringView value):
         value_(value){;}
 
     template<typename T>
     requires (std::is_convertible_v<StringView, T>)
-    T to() const{
+    constexpr T to() const{
         return static_cast<T>(value_);
     }
 
@@ -57,11 +57,18 @@ public:
 // 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
 class SubHelper final : public AccessProviderIntf {
 public:
-    constexpr SubHelper(const AccessProviderIntf & provider, 
-            size_t offset, size_t end): 
-        provider_(provider), offset_(offset), end_(end){;}
-    size_t size() const {return end_ - offset_;}
-    ParamFromString operator[](size_t idx) const{
+    constexpr SubHelper(
+        const AccessProviderIntf & provider, 
+        size_t offset, 
+        size_t end
+    ): 
+        provider_(provider), 
+        offset_(offset), 
+        end_(end){;}
+
+    constexpr size_t size() const {return end_ - offset_;}
+
+    constexpr ParamFromString operator[](size_t idx) const{
         if(idx >= size()) PANIC("idx out of range");
         return ParamFromString(provider_[offset_ + idx]);
     }
@@ -80,10 +87,10 @@ static constexpr SubHelper make_sub_provider(
 
 static constexpr SubHelper make_sub_provider(
     const AccessProviderIntf & owner, 
-    const size_t offset)
-{
+    const size_t offset){
         return SubHelper(owner, offset, owner.size());
 }
+
 class AccessProvider_ByStringViews final: public AccessProviderIntf{
 public: 
     AccessProvider_ByStringViews(const std::span<const StringView> views):
@@ -142,18 +149,15 @@ using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
 
 template<typename T>
 struct Property final{
-    Property(const StringView name,T * value):
+    constexpr Property(const StringView name,T * value):
         name_(name),
         value_(value){;}
 
-    // Property(const Property & other) = delete;
-    // Property(Property && other) = delete;
-
-    T & get() const {
+    constexpr T & get() const {
         return *value_;
     }
 
-    StringView name() const{
+    constexpr StringView name() const{
         return name_;
     }
 private:
@@ -164,7 +168,11 @@ private:
 // Property<T> 非const特化
 template <typename T>
 struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
-    static AccessResult<> visit(const Property<T>& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+    static AccessResult<> visit(
+        const Property<T>& self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
         if (ap.size() != 1) return Err(AccessError::InvalidAccess);
         self.get() = ap[0].template to<std::decay_t<T>>();
         ar << self.get();
@@ -175,7 +183,10 @@ struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
 // Property<T> const特化
 template <typename T>
 struct Visitor<const Property<T>, void> {
-    static AccessResult<> visit(const Property<T>& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+    static AccessResult<> visit(
+        const Property<T>& self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap) {
         if (ap.size()) 
             return Err(AccessError::CantModifyConst);
         ar << self.get();
@@ -185,7 +196,7 @@ struct Visitor<const Property<T>, void> {
 
 
 template<typename Tuple, std::size_t... Is>
-static Tuple convert_params_to_tuple(const auto & params, std::index_sequence<Is...>) {
+static constexpr Tuple convert_params_to_tuple(const auto & params, std::index_sequence<Is...>) {
     return std::make_tuple((params[Is]).template to<
         typename std::tuple_element<Is, Tuple>::type>()...);
 }
@@ -203,10 +214,11 @@ private:
 public:
     StringView name_;
     Callback callback_;
-    MethodByLambda(const StringView name, const Callback && callback)
+
+    constexpr MethodByLambda(const StringView name, const Callback && callback)
         : name_(name), callback_(callback) {}
 
-    StringView name() const { return name_; }
+    constexpr StringView name() const { return name_; }
 };
 
 template <typename Ret, typename... Args>
@@ -245,7 +257,7 @@ private:
     Obj * obj_;
     Callback callback_;
 public:
-    MethodByMemFunc(
+    constexpr MethodByMemFunc(
         const StringView name, 
         Obj * obj, 
         Callback callback
@@ -253,11 +265,11 @@ public:
         obj_(obj),
         callback_(callback) {}
 
-    StringView name() const{return name_;}
+    constexpr StringView name() const{return name_;}
 
     // 新增的 call 方法
     template<typename... CallArgs>
-    auto call(CallArgs&&... args) const {
+    constexpr auto call(CallArgs&&... args) const {
         static_assert(sizeof...(CallArgs) == sizeof...(Args), "Argument count mismatch");
         return std::invoke(callback_, obj_, std::forward<CallArgs>(args)...);
     }
@@ -296,16 +308,32 @@ struct EntryList final{
     template<typename... Args>
     EntryList(const StringView name, Args&&... entries) :
         name_(name),
-        // entries_(std::forward_as_tuple(entries...)) {}
-          entries_(std::forward<Args>(entries)...) {} // Correctly forward arguments
+        entries_(std::forward<Args>(entries)...) {
+            const auto check_res = check_hash_collision(entries...);
+            if(check_res.is_err()) 
+                PANIC("Hash collision detected", check_res.unwrap_err());
+        } 
 
 
-    const auto & entries() const { return entries_; } 
+    constexpr const auto & entries() const { return entries_; } 
 
-    const StringView name() const { return name_; }
+    constexpr StringView name() const { return name_; }
 private:
     StringView name_;
     std::tuple<Entries...> entries_;
+
+    constexpr Result<void, std::tuple<size_t, size_t>> 
+    check_hash_collision(auto... entries) {
+        const std::array hashes = { entries.name().hash()... };
+        for (size_t i = 0; i < hashes.size(); ++i) {
+            for (size_t j = i + 1; j < hashes.size(); ++j) {
+                if (hashes[i] == hashes[j]) {
+                    return Err(std::make_tuple(i, j));
+                }
+            }
+        }
+        return Ok();
+    }
 };
 
 template<typename... Entries>
