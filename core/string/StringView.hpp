@@ -86,7 +86,7 @@ public:
     std::optional<size_t> find(const char ch ) const;
 	std::optional<size_t> find_from(const char ch,const size_t from) const;
 
-    constexpr uint32_t hash() const {return hash_impl(data_, size_);}
+    constexpr uint32_t hash() const {return ymd::hash(*this);}
 
 private:
     const char * data_;

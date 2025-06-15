@@ -8,7 +8,7 @@ namespace ymd{
 using Year = uint8_t;
 // using Month = uint8_t;
 
-struct Month{
+struct Month final{
     enum class Kind:uint8_t{
         Jan = 1,
         Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
@@ -33,6 +33,8 @@ struct Month{
                 return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
             }
         }
+
+        return None;
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
@@ -45,6 +47,11 @@ struct Month{
             default: __builtin_unreachable();
         }
     }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
+        return hs << uint8_t(self.kind);
+    }
 };
 
 using Day = uint8_t;
@@ -56,7 +63,7 @@ using Seconds = uint8_t;
 
 
 
-struct Date{
+struct Date final{
 
     
     Year year;
@@ -93,9 +100,14 @@ struct Date{
             << os.brackets<'}'>()
             ;
     }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
+        return hs << self.year << self.month << self.day;
+    }
 };
 
-struct Time{
+struct Time final{
 
     Hour hour;
     Minute minute;
@@ -119,6 +131,11 @@ struct Time{
                 << os.brackets<'}'>()
             ;
     }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Time & self){
+        return hs << self.hour << self.minute << self.seconds;
+    }
 };
 
 
@@ -131,19 +148,26 @@ struct Author final{
     }
 
     constexpr StringView name() const{
-        return StringView(name_, 8);
+        return StringView(name_.data(), 8);
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Author & self){ 
         return os << "name: " << self.name();
     }
 
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Author & self){
+        return hs << self.name();
+    }
+
 private:
     constexpr Author(const char * name){
-        memset(name_, 0, 8);
-        memcpy(name_, name, strlen(name));
+        name_.fill(0);
+        for(size_t i = 0; i < MAX_NAME_LEN && name[i]; ++i){
+            name_[i] = name[i];
+        }
     }
-    char name_[MAX_NAME_LEN];
+    std::array<char, MAX_NAME_LEN> name_;
 };
 
 struct Version{
@@ -158,6 +182,11 @@ struct Version{
                 << self.minor
                 << os.brackets<'}'>()
             ;
+    }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Version & self){
+        return hs << self.major << self.minor;
     }
 };
 
@@ -185,11 +214,19 @@ struct ReleaseInfo{
     }
 
     friend OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
-        os << "author:" << self.author;
-        os << " version:" << self.version;
-        os << " date:" << self.date;
-        os << " time:" << self.time ;
+        os << os.scoped("release")(
+            os 
+            << os.field("author")(os << self.author)
+            << os.field("version")(os << self.version)
+            << os.field("date")(os << self.date)
+            << os.field("time")(os << self.time)
+        );
         return os;
+    }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
+        return hs << self.author << self.version << self.date << self.time;
     }
 };
 

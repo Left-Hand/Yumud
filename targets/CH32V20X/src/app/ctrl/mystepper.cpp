@@ -315,6 +315,8 @@ public:
 };
 
 
+// MyHasher operator << ()
+
 class ArchiveSystem{
 
     // void save(std::span<const uint8_t>){
@@ -334,6 +336,23 @@ class ArchiveSystem{
         // DEBUG_PRINTLN("done", clock::micros() - begin_u);
         // while(true);
     // }
+
+    template<typename T>
+    struct Bin{
+        static_assert(std::is_copy_assignable_v<T>);
+
+        uint32_t hashcode;
+
+        struct Context{
+            ReleaseInfo release_info;
+            T obj;
+
+            template<HashAlgo S>
+            friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
+                return hs << self.release_info;
+            }
+        };
+    };
 
     auto poll(){
         if(not at24_.is_available()){
@@ -451,32 +470,11 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
 
 
-template<typename T, typename R>
-__fast_inline constexpr T map_nearest(const T value, R && range){
-    auto it = std::begin(range);
-    auto end = std::end(range);
-    
-    T nearest = *it;
-    auto min_diff = ABS(value - nearest);
-    
-    while(++it != end) {
-        let current = *it;
-        let diff = ABS(value - current);
-        if(diff < min_diff) {
-            min_diff = diff;
-            nearest = current;
-        }
-    }
-    return nearest;
-}
-
-static constexpr void static_test(){
-    static_assert(map_nearest(0, std::initializer_list<int>{1,-3,-5}) == 1);
-}
 
 void mystepper_main(){
     UART.init(576000);
     DEBUGGER.retarget(&UART);
+    // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
     {

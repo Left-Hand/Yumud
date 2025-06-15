@@ -117,4 +117,28 @@ using configs_tuple_to_dignosis_variant_t = typename
     std::make_index_sequence<std::tuple_size_v<ConfigsTuple>>
 >::type;
 
+
+template<typename T, typename R>
+__fast_inline constexpr T map_nearest(const T value, R && range){
+    auto it = std::begin(range);
+    auto end = std::end(range);
+    
+    T nearest = *it;
+    auto min_diff = ABS(value - nearest);
+    
+    while(++it != end) {
+        let current = *it;
+        let diff = ABS(value - current);
+        if(diff < min_diff) {
+            min_diff = diff;
+            nearest = current;
+        }
+    }
+    return nearest;
+}
+
+static constexpr void static_test(){
+    static_assert(map_nearest(0, std::initializer_list<int>{1,-3,-5}) == 1);
+}
+
 }
