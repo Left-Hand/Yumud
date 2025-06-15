@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Option.hpp"
-#include "typetraits/size_traits.hpp"
+#include "core/magic/size_traits.hpp"
 
 
 namespace ymd{

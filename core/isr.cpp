@@ -1,6 +1,6 @@
 #include "isr.hpp"
 #include "core/debug/debug.hpp"
-#include "core/utils/typetraits/enum_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 
 #include "arch/riscv/cpu.hpp"
 #include "sdk.hpp"

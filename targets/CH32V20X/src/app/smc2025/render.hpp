@@ -12,11 +12,6 @@
 #include "types/regions/ray2/Ray2.hpp"
 #include "types/regions/line2/Line2.hpp"
 
-template<size_t Q>
-static constexpr iq_t<Q> tpzpup(const iq_t<Q> x){
-    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
-}
-
 // static constexpr Vector2u CAMERA_SIZE = {94/2, 60/2};
 // static constexpr Vector2u CAMERA_SIZE = {94, 60};
 static constexpr Vector2u CAMERA_SIZE = {94 * 3 / 2, 60 * 3 / 2};

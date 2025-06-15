@@ -1,6 +1,6 @@
 #include "hal_result.hpp"
 #include "core/stream/ostream.hpp"
-#include "core/utils/typetraits/enum_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 
 namespace ymd{
 

@@ -5,8 +5,8 @@
 
 #include "Option.hpp"
 
-#include "typetraits/args_traits.hpp"
-#include "typetraits/enum_traits.hpp"
+#include "core/magic/args_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 // #include "hal/bus/bus_error.hpp"
 
 namespace ymd{

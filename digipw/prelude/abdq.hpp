@@ -32,6 +32,7 @@ struct DqValue{
 };
 
 
+
 struct AbValue{
     q20 a = {};
     q20 b = {};
@@ -54,6 +55,29 @@ struct AbValue{
             self.b << os.brackets<')'>();
     }
 };
+
+struct AlphaBetaDuty{
+    q16 alpha;
+    q16 beta;
+
+    q16 & operator [](size_t idx){
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+
+
+    const q16 & operator [](size_t idx) const{
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+};
+
 
 namespace details{
 static constexpr __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const q16 rad){

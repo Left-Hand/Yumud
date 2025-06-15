@@ -66,11 +66,6 @@ static constexpr auto PERIOD_PER_CHAR = 0.2_r;
 
 namespace motorctl{
 
-template<size_t Q>
-static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
-    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
-}
-
 real_t volt_2_current(real_t volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
     return (volt - VOLT_BAIS) *INV_SCALE;

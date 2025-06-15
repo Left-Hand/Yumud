@@ -31,25 +31,15 @@ static constexpr real_t SAMPLE_RES = 0.008_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
 
-template<size_t Q>
-static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
-    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
-}
-
 real_t volt_2_current(real_t volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
     return (volt - VOLT_BAIS) *INV_SCALE;
 }
 
 
-
 using LowpassFilter = dsp::ButterLowpassFilter<q16, 2>;
 using HighpassFilter = dsp::ButterHighpassFilter<q16, 2>;
 using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
-
-
-
-
 
 
 [[maybe_unused]] static 

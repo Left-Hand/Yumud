@@ -6,12 +6,11 @@
 #include <utility>
 #include <type_traits>
 
-#include "core/utils/typetraits/function_traits.hpp"
-// #include "core/string/string.hpp"
+#include "core/magic/function_traits.hpp"
+#include "core/magic/enum_traits.hpp"
+#include "core/utils/Result.hpp"
 #include "core/string/stringView.hpp"
 #include "core/stream/ostream.hpp"
-#include "core/stream/BufStream.hpp"
-#include "core/polymorphism/proxy.hpp"
 
 namespace ymd::rpc{
 

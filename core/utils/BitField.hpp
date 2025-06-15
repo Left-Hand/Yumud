@@ -1,6 +1,6 @@
 #pragma once
 
-#include "typetraits/size_traits.hpp"
+#include "core/magic/size_traits.hpp"
 
 namespace ymd{
 template<typename D,

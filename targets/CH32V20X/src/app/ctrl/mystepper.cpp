@@ -31,7 +31,8 @@
 #include "calibrate_utils.hpp"
 #include <atomic>
 
-#include "robots/repl/repl_thread.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "digipw/prelude/abdq.hpp"
 
 using namespace ymd;
 
@@ -41,42 +42,9 @@ using namespace ymd;
 #define UART hal::uart1
 
 
-template<typename ... Args>
-struct PhantomMarker {
-    // Default constructor
-    constexpr PhantomMarker() noexcept = default;
-
-    // Copy/move constructors and assignments (defaulted)
-    constexpr PhantomMarker(const PhantomMarker&) noexcept = default;
-    constexpr PhantomMarker(PhantomMarker&&) noexcept = default;
-    PhantomMarker& operator=(const PhantomMarker&) noexcept = default;
-    PhantomMarker& operator=(PhantomMarker&&) noexcept = default;
-
-    // No members - empty class
-};
-
-struct AlphaBetaDuty{
-    q16 alpha;
-    q16 beta;
-
-    q16 & operator [](size_t idx){
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
 
 
-    const q16 & operator [](size_t idx) const{
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-};
-
+using digipw::AlphaBetaDuty;
 
 //AT8222
 class StepperSVPWM{
@@ -127,51 +95,6 @@ private:
     hal::TimerOcPair channel_a_;
     hal::TimerOcPair channel_b_;
 };
-
-
-class EncoderCalibrateComponent{
-    static constexpr size_t ACCEL_SECTORS = 15;
-    static constexpr size_t DEACCEL_SECTORS = 15;
-    static constexpr size_t CONSTANT_MOVE_POLES = 5;
-    static constexpr real_t MAX_DUTY = 0.2_r;
-
-    EncoderCalibrateComponent(drivers::EncoderIntf & encoder):
-        encoder_(encoder)
-
-        {;}
-    struct TaskConfig{
-    };
-    
-    struct TaskBase{
-    };
-
-    struct SpeedUpTaskContext{
-        const size_t current_step;
-        const bool is_forward;
-    };
-
-
-    void tick(){
-
-    }
-
-    struct CalibrateDataBlocks{
-        // using T = PackedCalibratePoint;
-        static constexpr auto MIN_MOVE_THRESHOLD = q16((1.0 / MOTOR_POLE_PAIRS / 4) * 0.3);
-
-        using Block = CalibrateDataBlock;
-
-
-        Block forward_block;
-        Block backward_block;
-    };
-
-private:
-    drivers::EncoderIntf & encoder_;
-
-    // static void tick(EncoderCalibrateComponent & self, )
-};
-
 
 
 
@@ -448,10 +371,10 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        // let res = motor_system_.resume();
-        // if(res.is_err()){
-        //     PANIC();
-        // }
+        let res = motor_system_.resume();
+        if(res.is_err()){
+            PANIC();
+        }
     });
 
     robots::ReplService repl_service = {

@@ -5,7 +5,7 @@
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/utils/typetraits/enum_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 
 #include "types/vectors/vector3/Vector3.hpp"
 #include "hal/hal_result.hpp"

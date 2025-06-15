@@ -1,19 +1,19 @@
 #include "src/testbench/tb.h"
 #include "dsp/controller/adrc/leso.hpp"
 
-#include "threads.hpp"
-#include "tests.hpp"
+#include "service.hpp"
+#include "mock.hpp"
+#include "config.hpp"
+#include "dsp/simu/motor.hpp"
+
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
 
 
 using namespace ymd;
 using namespace ymd::hal;
+using namespace ymd::dsp::simu;
 
-#define USE_MOCK_SERVO
-
-
-auto & SERVO_PWMGEN_TIMER = hal::timer3;
-auto & DBG_UART = hal::uart2;
-static constexpr auto CTRL_FREQ = 50;
 
 
 namespace nuedc::_2023E{
@@ -24,14 +24,7 @@ struct AppConfig{
     GimbalPlanner::Config gimbal_cfg;
 };
 
-class HwPortBase{
-public:
-    static auto make_mock_servo(){
-        return tests::MockServo();
-    }
-};
-
-class HwPort:private HwPortBase{
+struct HwPort final{
 public:
     using Config = AppConfig;
 
@@ -91,11 +84,12 @@ public:
 
         SERVO_PWMGEN_TIMER.attach(TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
     }
+private:
+    static tests::MockServo make_mock_servo(){
+        return tests::MockServo();
+    }
 };
 
-struct Dependency{
-
-};
 static constexpr auto make_cfg(){
     return AppConfig{
         .yaw_cfg = ServoConfig{
@@ -127,92 +121,6 @@ static constexpr auto make_cfg(){
 }
 
 
-template<size_t Q>
-static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
-    return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
-}
-
-
-void Kalman_Filter_X(real_t Accel,real_t Gyro)		{
-    static constexpr real_t Q_angle=0.001_r;// 过程噪声的协方差
-	static constexpr real_t Q_gyro=0.003_r;//0.003 过程噪声的协方差 过程噪声的协方差为一个一行两列矩阵
-	static constexpr real_t R_angle=0.5_r;// 测量噪声的协方差 既测量偏差
-	static constexpr real_t dt=0.01_r;//                 
-	static constexpr real_t  C_0 = 1;
-	static real_t Q_bias;
-	static real_t PP[2][2] = { { 1, 0 },{ 0, 1 } };
-    static real_t Angle_Balance_X;
-	Angle_Balance_X+=(Gyro - Q_bias) * dt; //先验估计
-
-	PP[0][0] += Q_angle - PP[0][1] - PP[1][0] * dt;   // Pk-先验估计误差协方差微分的积分
-	PP[0][1] += -PP[1][1] * dt;   // =先验估计误差协方差
-	PP[1][0] += -PP[1][1] * dt;
-	PP[1][1] += Q_gyro * dt;
-		
-	const real_t Angle_err = Accel - Angle_Balance_X;	//zk-先验估计
-	
-	const real_t PCt_0 = C_0 * PP[0][0];
-	const real_t PCt_1 = C_0 * PP[1][0];
-	
-	const real_t E = R_angle + C_0 * PCt_0;
-	const real_t E_inv = 1 / E;
-	const real_t K_0 = PCt_0 * E_inv;
-	const real_t K_1 = PCt_1 * E_inv;
-	
-	const real_t t_0 = PCt_0;
-	const real_t t_1 = C_0 * PP[0][1];
-
-	PP[0][0] -= K_0 * t_0;		 //后验估计误差协方差
-	PP[0][1] -= K_0 * t_1;
-	PP[1][0] -= K_1 * t_0;
-	PP[1][1] -= K_1 * t_1;
-		
-	Angle_Balance_X	+= K_0 * Angle_err;	 //后验估计
-	Q_bias	+= K_1 * Angle_err;	 //后验估计
-	//angle_dot   = Gyro - Q_bias;	 //输出值(后验估计)的微分=角速度
-}
-
-class MockMotor{
-public:
-    struct Config{
-        uint32_t fs;
-    };
-
-    MockMotor(const Config & cfg){reconf(cfg);}
-
-    void reconf(const Config & cfg){
-        dt_ = 1_r / cfg.fs;
-    }
-
-    void update(const real_t u){
-        auto & self = *this;
-        self.state_ = forward(self, state_, u);
-    }
-
-    const auto & get() const {return state_;}
-private:
-    using Self = MockMotor;
-    using State = dsp::StateVector<real_t, 2>;
-
-    State state_;
-    real_t dt_;
-    static constexpr State forward(const Self & self, const State & x, const real_t u_in){
-        // const auto distrb_of_partial = 0;
-        // constexpr auto DAMPING = 0;
-        // const auto distrb_of_damp = DAMPING * x[1];
-        // const auto distrb_of_partial = sinpu(x[0]);
-        // const auto u = u_in + distrb_of_partial - distrb_of_damp;
-        // const auto u = STEP_TO(u_in + distrb_of_partial - distrb_of_damp, q16(0), 100_q16);
-        // const auto u = STEP_TO(u_in + distrb_of_partial - distrb_of_damp, q16(0;
-        const auto u = u_in;
-        return {
-            x[0] + x[1] * self.dt_,
-            x[1] + u * self.dt_
-        };
-    }
-};
-
-
 void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
     DBG_UART.init(576000);
@@ -223,12 +131,12 @@ void nuedc_2023e_main(){
 
     const auto cfg = make_cfg();
 
-    HwPort world{cfg};
-    world.setup();
+    HwPort hwport{cfg};
+    hwport.setup();
 
-    auto servo_yaw = world.make_yaw_servo();
+    auto servo_yaw = hwport.make_yaw_servo();
 
-    auto servo_pitch = world.make_pitch_servo();
+    auto servo_pitch = hwport.make_pitch_servo();
 
     auto gimbal_actuator = GimbalActuatorByLambda({
         .yaw_setter = [&servo_yaw](const MotorCmd cmd){
@@ -241,39 +149,34 @@ void nuedc_2023e_main(){
 
     // auto gimbal_planner = GimbalPlanner(cfg.gimbal_cfg, gimbal_actuator);
 
-    #if 0
-
-    robots::ReplThread repl_thread = {
-        &DBG_UART, &DBG_UART,
-        rpc::make_list(
-            "list",
-            rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
-            rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
-            rpc::make_function("set_rad", [&](const real_t r1, const real_t r2){
-                servo_pitch.set_radian(r1);
-                servo_yaw.set_radian(r2);
-                DEBUG_PRINTLN(r1, r2);
-            }),
-
-            rpc::make_function("get_rad", [&](){
-                DEBUG_PRINTLN(
-                    servo_pitch.get_radian(),
-                    servo_yaw.get_radian()
-                );
-            })
-        )
+    robots::ReplService repl_thread = {
+        &DBG_UART, &DBG_UART
     };
 
-    #endif
+    auto rpc_list =
+        rpc::make_list( "list",
+        rpc::make_function("rst", [](){sys::reset();}),
+        rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+        rpc::make_function("set_rad", [&](const real_t r1, const real_t r2){
+            servo_pitch.set_radian(r1);
+            servo_yaw.set_radian(r2);
+            DEBUG_PRINTLN(r1, r2);
+        }),
 
-    world.ready();
+        rpc::make_function("get_rad", [&](){
+            DEBUG_PRINTLN(
+                servo_pitch.get_radian(),
+                servo_yaw.get_radian()
+            );
+        })
+    );
 
-    // world.register_servo_ctl_callback([&]{
+    hwport.ready();
+
+    // hwport.register_servo_ctl_callback([&]{
     //     gimbal_actuator.set_gest({0,0});
     // });
-
-
 
     TdVec2 td{{
         .kp = tau * tau,
@@ -464,8 +367,8 @@ void nuedc_2023e_main(){
         // test_td(t);
         // test_cs(t);
 
-        // const real_t t = world.time();
-        // repl_thread.process(0);
+        // const real_t t = hwport.time();
+        repl_thread.invoke(rpc_list);
         // t += 0.001_r;
         // test_td(t);
         // DEBUG_PRINTLN(millis());
