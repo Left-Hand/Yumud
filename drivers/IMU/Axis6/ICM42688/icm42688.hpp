@@ -52,7 +52,7 @@ private:
 
     static constexpr q24 calc_gyr_lsb(const GyrFs fs){
         /*Turn Into Radian*/
-        constexpr EnumArray<GyrFs, q24> map = {
+        constexpr EnumArray<GyrFs, q24> map = EnumArray<GyrFs, q24>{
             q24(0.0010652644),
             q24(0.00053263222),
             q24(0.00026631611),

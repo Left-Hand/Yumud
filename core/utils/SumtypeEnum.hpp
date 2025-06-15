@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/utils/typetraits/function_traits.hpp"
+#include "core/magic/function_traits.hpp"
 
 namespace ymd{
 template<typename ... Ts>

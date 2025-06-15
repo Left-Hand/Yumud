@@ -3,6 +3,7 @@
 #include "Entry.hpp"
 #include <map>
 #include "core/utils/Option.hpp"
+#include "utils.hpp"
 
 namespace ymd::canopen{
 
@@ -89,14 +90,14 @@ public:
 // #define ENTRY_NO_NAME
 
 #ifdef ENTRY_NO_NAME
-#define NAME(name) std::nullopt
+#define CANOPEN_NAME(name) std::nullopt
 #else
-#define NAME(name) StringView(name, sizeof(name))
+#define CANOPEN_NAME(name) ({static constexpr StringView str = StringView(name, sizeof(name) - 1); str;})
 #endif
 
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
-    using CobId = uint16_t;
+
     SdoAbortCode _write_any(const void * pbuf, const Didx didx) final override;
     SdoAbortCode _read_any(void * pbuf, const Didx didx) const final override;
 public:
@@ -116,26 +117,10 @@ public:
 
 
 template<typename T>
-struct reg_decay{
-    // using type = void;
-};
-
-template<typename T>
-requires std::is_base_of_v<__RegBase, T>
-struct reg_decay<T>{
-    using type = T::value_type;
-};
-
-
-template<typename T>
-using reg_decay_t = typename reg_decay<T>::type;
-
-
-template<typename T>
 constexpr SubEntry make_subentry_impl(
         const StringView name, 
         T & val, 
-        EntryAccessType access_type = std::is_const_v<T> ? EntryAccessType::RO : EntryAccessType::RW, 
+        EntryAccessAuthority access_type = std::is_const_v<T> ? EntryAccessAuthority::RO : EntryAccessAuthority::RW, 
         EntryDataType data_type = EntryDataType::from<reg_decay_t<T>>()){
     return SubEntry{name, val, access_type, data_type};
 }
@@ -144,14 +129,14 @@ template<typename T>
 constexpr SubEntry make_ro_subentry_impl(
         const StringView name, 
         const T & val, 
-        EntryAccessType access_type = std::is_const_v<T> ? EntryAccessType::RO : EntryAccessType::RW, 
+        EntryAccessAuthority access_type = std::is_const_v<T> ? EntryAccessAuthority::RO : EntryAccessAuthority::RW, 
         EntryDataType data_type = EntryDataType::from<reg_decay_t<T>>()){
     return SubEntry{name, val, access_type, data_type};
 }
 
 
 #define make_subentry(val) make_subentry_impl(NAME(#val), val);
-#define make_ro_subentry(val) make_ro_subentry_impl(NAME(#val), val, EntryAccessType::RO);
+#define make_ro_subentry(val) make_ro_subentry_impl(NAME(#val), val, EntryAccessAuthority::RO);
 #define make_subentry_spec(val, access_type, data_type) make_subentry_impl(NAME(#val), val, access_type, data_type);
 
 }

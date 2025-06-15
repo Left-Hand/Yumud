@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Option.hpp"
-#include "typetraits/size_traits.hpp"
+#include "core/magic/size_traits.hpp"
 
 
 namespace ymd{
@@ -622,6 +622,12 @@ public:
 
 };
 
+template<typename E>
+Result(Err<E> && val) -> Result<void, E>;
+
+template<typename TDummy = void>
+Result() -> Result<void, void>;
+
 template<
     typename T, 
     typename E,
@@ -645,11 +651,23 @@ template<
 }
 
 
-template<typename E>
-Result(Err<E> && val) -> Result<void, E>;
+template<typename Fn, typename Fn_Dur>
+__inline auto retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
+    if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
+    const auto res = std::forward<Fn>(fn)();
+    using Ret = std::decay_t<decltype(res)>;
+    if(res.is_ok()) return Ret(Ok());
+    if(!times) return res;
+    else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
+}
 
-template<typename TDummy = void>
-Result() -> Result<void, void>;
+
+template<typename Fn>
+__inline auto retry(const size_t times, Fn && fn){
+    return retry(times, std::forward<Fn>(fn), nullptr);
+}
+
+
 
 template<typename T, typename E>
 OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {

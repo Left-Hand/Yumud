@@ -11,7 +11,6 @@
 
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-// #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 #include "digipw/SVPWM/svpwm.hpp"
@@ -25,9 +24,6 @@
 #include "core/polymorphism/traits.hpp"
 
 #include "utils.hpp"
-#include "digipw/pll/sogi/sogi.hpp"
-
-#include "ctrl.hpp"
 
 #include "algo/interpolation/cubic.hpp"
 
@@ -38,6 +34,7 @@
 
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
+#include "dsp/controller/pi_ctrl.hpp"
 #include "CurrentSensor.hpp"
 #include "GradeCounter.hpp"
 #include "core/polymorphism/reflect.hpp"
@@ -70,6 +67,45 @@ TRAIT_STRUCT(SensorlessObserverTrait,
 	TRAIT_METHOD(void, update, iq_t<16>, iq_t<16>, iq_t<16>, iq_t<16>),
     TRAIT_METHOD(iq_t<16>, theta)
 )
+
+
+
+void init_adc(){
+
+
+    adc1.init(
+        {
+            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+        },{
+            // {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
+            // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+            // {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
+
+            // {AdcChannelIndex::CH5, AdcSampleCycles::T7_5},
+            // {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
+            // {AdcChannelIndex::CH1, AdcSampleCycles::T7_5},
+            // {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+
+            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+            // {AdcChannelIndex::TEMP, AdcSampleCycles::T7_5},
+            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T7_5},
+            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T41_5},
+        }
+    );
+
+    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
+    // adc1.enableContinous();
+    adc1.enable_auto_inject(DISEN);
+}
+
 
 class SensorlessEncoder:public EncoderIntf{
 protected:
@@ -199,7 +235,7 @@ public:
         const auto cmd_dq_curr = torque_ctrl_.update(cmd_torque);
         const auto cmd_dq_volt = curr_ctrl_.update(cmd_dq_curr, meas_dq_curr);
 
-        const auto cmd_ab_volt = dq_to_ab(cmd_dq_volt, meas_rad);
+        const auto cmd_ab_volt = cmd_dq_volt.to_ab(meas_rad);
 
         svpwm_.set_ab_volt(cmd_ab_volt[0], cmd_ab_volt[1]);
     }
@@ -370,7 +406,7 @@ void bldc_main(){
     real_t meas_pos = 0;
     real_t meas_spd = 0;
     real_t targ_pos = 0;
-    real_t targ_spd = 0;
+    [[maybe_unused]] real_t targ_spd = 0;
 
     // UvwCurrent uvw_curr = {0,0,0};
     real_t est_rad;
@@ -620,7 +656,7 @@ void bldc_main(){
         // const auto d_volt = 0;
         // const auto q_volt = 2;
 
-        ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
+        ab_volt = DqVoltage{d_volt, q_volt}.to_ab(meas_rad);
 
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
@@ -754,7 +790,7 @@ void bldc_main(){
         // ab_volt = {4 * cos(rad), 4 * sin(rad)};
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
-        ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 2.0_r);
+        ab_volt = DqVoltage{d_volt, q_volt}.to_ab(sl_meas_rad + 2.0_r);
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
@@ -849,7 +885,7 @@ void bldc_main(){
         ab_volt = {amp * c, amp * s};
         // ab_volt = {amp, amp};
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-        curr_sens.update(s, c);
+        curr_sens.update(rad);
         // odo.update();
         // const real_t meas_lap = odo.getLapPosition();
 
@@ -873,26 +909,28 @@ void bldc_main(){
 
 
 
-    bool can_en = false;
-    auto list = rpc::make_list(
-        "list", 
-        // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
-        // rpc::make_function("spd", [](const real_t duty){}),
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_property("pos", targ_pos),
-        rpc::make_property("spd", targ_spd),
-        rpc::make_ro_property("mpos", meas_pos),
-        rpc::make_ro_property("mspd", meas_spd),
-        rpc::make_property("cen", can_en),
+    [[maybe_unused]] bool can_en = false;
 
-        rpc::make_list(
-            "l2", 
-            rpc::make_ro_property("mpos", meas_pos),
-            rpc::make_ro_property("mspd", meas_spd)
-        )
-    );
+    // auto l2 = rpc::make_list(
+    //     "l2", 
+    //     rpc::make_ro_property("mpos", meas_pos),
+    //     rpc::make_ro_property("mspd", meas_spd)
+    // );
 
-    ArgSplitter splitter;
+    // auto list = rpc::make_list(
+    //     "list", 
+    //     // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
+    //     // rpc::make_function("spd", [](const real_t duty){}),
+    //     rpc::make_function("rst", [](){sys::reset();}),
+    //     rpc::make_property("pos", targ_pos),
+    //     rpc::make_property("spd", targ_spd),
+    //     rpc::make_ro_property("mpos", meas_pos),
+    //     rpc::make_ro_property("mspd", meas_spd),
+    //     rpc::make_property("cen", can_en),
+    //     l2
+    // );
+
+    // ArgSplitter splitter;
 
     DEBUGGER.set_splitter(',');
     DEBUGGER.no_brackets();
@@ -909,12 +947,6 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    [[maybe_unused]] LowpassFilterD_t<iq_t<14>> speed_measurer = {
-        {
-            .fc = 10, 
-            .fs = foc_freq
-        }
-    };
 
     [[maybe_unused]] auto measure_bias = [&]{
         

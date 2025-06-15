@@ -4,90 +4,13 @@
 #include "core/stream/ostream.hpp"
 #include "core/math/realmath.hpp"
 
+#include "digipw/prelude/abdq.hpp"
+
 namespace ymd::foc{
 
 scexpr uint chopper_freq = 50000;
 scexpr uint foc_freq = chopper_freq / 2;
 
-struct UvwValue{
-    q20 u = {};
-    q20 v = {};
-    q20 w = {};
-
-    q20 operator [](const size_t idx) const {
-        return *(&u + idx);
-    }
-
-    q20 & operator [](const size_t idx){
-        return *(&u + idx);
-    }
-};
-
-struct UvwCurrent: public UvwValue{};
-struct UvwVoltage: public UvwValue{};
-
-
-struct DqValue{
-    #pragma pack(push, 1)
-    q20 d, q;
-    #pragma pack(pop)
-
-    q20 operator [](const size_t idx) const {
-        return *(&d + idx);
-    }
-
-    q20 & operator [](const size_t idx){
-        return *(&d + idx);
-    }
-
-    q20 length() const {
-        return sqrt(d*d + q*q);
-    }
-};
-
-struct DqCurrent: public DqValue{};
-struct DqVoltage: public DqValue{};
-
-struct AbValue{
-    q20 a = {};
-    q20 b = {};
-
-    q20 operator [](const size_t idx) const {
-        return *(&a + idx);
-    }
-
-    q20 & operator [](const size_t idx){
-        return *(&a + idx);
-    }
-
-    q20 length() const {
-        return sqrt(a*a + b*b);
-    }
-};
-
-struct AbCurrent: public AbValue{};
-struct AbVoltage: public AbValue{};
-
-
-__fast_inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
-    static constexpr auto _2_by_3 = q20(2.0/3);
-    static constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
-    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
-};
-
-DqCurrent ab_to_dq(const AbCurrent & ab, const q16 rad);
-DqVoltage ab_to_dq(const AbVoltage & ab, const q16 rad);
-
-AbCurrent dq_to_ab(const DqCurrent & dq, const q16 rad);
-AbVoltage dq_to_ab(const DqVoltage & dq, const q16 rad);
-
-DqCurrent ab_to_dq(const AbCurrent & ab, const q16 s, const q16 c);
-DqVoltage ab_to_dq(const AbVoltage & ab, const q16 s, const q16 c);
-
-AbCurrent dq_to_ab(const DqCurrent & dq, const q16 s, const q16 c);
-AbVoltage dq_to_ab(const DqVoltage & dq, const q16 s, const q16 c);
-
-void init_adc();
 static __inline real_t sign_sqrt(const real_t x){
     return x < 0 ? -sqrt(-x) : sqrt(x);
 };
@@ -98,27 +21,6 @@ static __inline real_t smooth(const real_t x){
 
 
 
-}
-
-namespace ymd{
-    inline OutputStream & operator << (OutputStream & os, const foc::AbValue & ab){
-        return os << os.brackets<'('>() << 
-            ab.a << os.splitter() << 
-            ab.b << os.brackets<')'>();
-    }
-    
-    inline OutputStream & operator << (OutputStream & os, const foc::DqValue & dq){
-        return os << os.brackets<'('>() << 
-            dq.d << os.splitter() << 
-            dq.q << os.brackets<')'>();
-    }
-
-    inline OutputStream & operator << (OutputStream & os, const foc::UvwValue & uvw){
-        return os << os.brackets<'('>() << 
-            uvw.u << os.splitter() << 
-            uvw.v <<  os.splitter() << 
-            uvw.w << os.brackets<')'>();
-    }
 }
 
 // struct TurnSolver{

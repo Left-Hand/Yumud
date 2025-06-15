@@ -1,6 +1,6 @@
 #pragma once
 
-#include "typetraits_details.hpp"
+#include "magic_details.hpp"
 #include "size_traits.hpp"
 #include "args_traits.hpp"
 

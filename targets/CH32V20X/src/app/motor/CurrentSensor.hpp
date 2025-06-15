@@ -5,7 +5,7 @@
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 
 namespace ymd::foc{
-
+using namespace ymd::digipw;
 
 class CurrentSensor{
 protected:
@@ -45,7 +45,7 @@ protected:
         uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
         uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
 
-        ab_curr_ = uvw_to_ab(uvw_curr_);
+        ab_curr_ = AbCurrent::from_uvw(uvw_curr_);
     }
 
 public:
@@ -67,19 +67,12 @@ public:
         dq_curr_ = {0, 0};
     }
 
-
-
-
     void update(const real_t rad){
-        const auto [s, c] = sincos(rad);
-        update(s, c);
-    }
-
-    void update(const real_t s, const real_t c){
-
+        
+            
         capture();
 
-        dq_curr_ = ab_to_dq(ab_curr_, s, c);
+        dq_curr_ = DqCurrent::from_ab(ab_curr_, rad);
     }
 
 

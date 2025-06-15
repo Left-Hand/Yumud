@@ -14,35 +14,11 @@ using CanMsg = hal::CanMsg;
 
 class CanDriver {
 public:
-    // using Can = hal::Can;
-    // using CanMsg = hal::CanMsg;
-
     virtual ~CanDriver() = default;
     virtual bool write(const CanMsg & frame) = 0;
     virtual bool read(CanMsg & frame) = 0;
 };
 
-
-template<typename T>
-class optref{
-private:
-    T * ptr_;
-
-    void check() const{
-        if(ptr_ == nullptr){
-            HALT;
-        }
-    }
-public:
-    optref(T & ptr): ptr_(&ptr){}
-    optref(T * ptr): ptr_(ptr){}
-    optref(std::nullopt_t): ptr_(nullptr){}
-
-    bool has_value() const{return ptr_ != nullptr;}
-
-    T & value() const{check();return *ptr_;}
-    // T & value() const{check();return *ptr_;}
-};
 
 class SubEntry;
 
@@ -73,10 +49,8 @@ struct E_Item {
 struct CobId{
     uint16_t nodeid:7;
     uint16_t fcode:4;
+    uint16_t __resv__ : 5;
 
-    constexpr CobId(const uint16_t id):
-        nodeid(id & 0x7F),
-        fcode((id >> 7) & 0x0f){;}
 
     static constexpr CobId from_u16(const uint16_t id){
         return CobId(id);
@@ -89,10 +63,31 @@ struct CobId{
     constexpr hal::CanStdId to_stdid() const {
         return hal::CanStdId(nodeid | fcode << 7);
     }
+
+    constexpr uint16_t to_u16() const {
+        return std::bit_cast<uint16_t>(*this);
+    }
+
+private:
+    constexpr CobId(const uint16_t id):
+        nodeid(id & 0x7F),
+        fcode((id >> 7) & 0x0f){;}
+
 };
+
+static_assert(sizeof(CobId) == sizeof(uint16_t));
 
 using OdIndex = uint16_t;
 using OdSubIndex = uint8_t;
+
+
+// struct OdIndex{
+//     uint16_t count;
+// };
+
+// struct OdSubIndex{
+//     uint8_t count;
+// };
 
 struct Didx{
     OdIndex idx;
@@ -106,31 +101,13 @@ struct Didx{
         idx(_idx),
         subidx(_subidx){;}
 
-    constexpr bool operator==(const Didx& other) const { return idx == other.idx && subidx == other.subidx; }
-    constexpr bool operator!=(const Didx& other) const { return !(*this == other); }
-
+    constexpr bool operator==(const Didx& other) const { 
+        return idx == other.idx && subidx == other.subidx; }
 };
-
-// enum class EntryAccessError: uint8_t{
-//     None = 0,
-//     InvalidValue = 0x01,
-//     InvalidLength = 0x02,
-//     InvalidType = 0x03,
-//     InvalidSubIndex = 0x04,
-//     InvalidIndex = 0x05,
-//     InvalidAccess = 0x06,
-//     InvalidAccessType = 0x07,
-//     InvalidAccessError = 0x08,
-//     InvalidAccessError2 = 0x09,
-//     ReadOnlyAccess,
-//     WriteOnlyAccess,
-// };
-
-
 
 class SdoAbortCode {
 public:
-    enum Enum : uint32_t {
+    enum Kind : uint32_t {
         None                        = 0x00000000,          // 无错误
         ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
         SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
@@ -148,7 +125,7 @@ public:
         ParameterIncompatibility    = 0x06040043,          // 参数不兼容
         InternalIncompatibility     = 0x06040047,          // 内部不兼容
         HardwareError               = 0x06060000,          // 硬件错误
-        ServiceParameterIncorrect   =0x06070010,          // 服务参数不正确
+        ServiceParameterIncorrect   = 0x06070010,          // 服务参数不正确
         ServiceParameterTooLong     = 0x06070012,          // 服务参数过长
         ServiceParameterTooShort    = 0x06070013,          // 服务参数过短
         SubIndexDoesNotExist        = 0x06090011,          // 子索引不存在
@@ -161,98 +138,67 @@ public:
         NoValidData                 = 0x08000024          // 无可用数据  
     };
 
-    constexpr SdoAbortCode(const Enum e) : e_(e) {;}
-    // constexpr SdoAbortCode(const EntryAccessError e) : e_(SdoAbortCode(e)){;}
-    constexpr operator Enum() const { return e_; }
-    constexpr operator bool() const { return e_ != Enum::None; }
+    constexpr SdoAbortCode(const Kind e) : e_(e) {;}
 
+    constexpr Kind kind() const { return e_; }
+    constexpr uint32_t to_u32() const { return std::bit_cast<uint32_t>(e_); }
+    constexpr bool is_ok() const { return e_ == None; }
+    constexpr bool is_err() const { return e_ != None; }
 private:
-    Enum e_;
+    Kind e_;
 };
 
+enum class SdoCommandType : uint8_t {
+    DownloadSegment = 0x00,  // 下载段
+    InitiateDownload = 0x01,  // 初始化下载
+    InitiateUpload = 0x02,  // 初始化上传
+    UploadSegment = 0x03,  // 上传段
+    AbortTransfer = 0x04,  // 中止传输
+    BlockDownload = 0x05,  // 块下载
+    BlockUpload = 0x06,  // 块上传
+    BlockEnd = 0x07  // 块结束
+};
 
-template<typename Ret, typename Error>
-class Result_t {
-private:
-    std::variant<Ret, Error> result_;
+struct SdoCommandSpecifier {
+    uint8_t command : 3;  // 命令类型，占3位
+    uint8_t sizeIndicator : 1;  // 大小指示位，占1位
+    uint8_t expedited : 1;  // 快速传输指示位，占1位
+    uint8_t reserved : 3;  // 保留位，占3位
+};
 
+struct PdoMapping{
+    uint8_t bits;
+    uint8_t subindex;
+    uint8_t index;
+    static constexpr PdoMapping from_u32(const uint32_t map){
+        PdoMapping self;
+        self.bits = (map & 0xFF);
+        self.subindex = ((map >> 8) & 0xFF);
+        self.index = ((map >> 16) & 0xFF);
+        return self;
+    }
+
+    constexpr uint32_t to_u32(const PdoMapping & map){ 
+        return (map.bits | (map.subindex << 8) | (map.index << 16));
+    }
+
+};
+
+class SdoCommand {
 public:
-    // 构造函数，用于成功情况
-    Result_t(Ret value) : result_(std::move(value)) {}
-
-    // 构造函数，用于错误情况
-    Result_t(Error error) : result_(std::move(error)) {}
-
-    // 检查是否成功
-    bool is_ok() const {
-        return std::holds_alternative<Ret>(result_);
+    // 位域结构体
+    using CommandSpecifier = SdoCommandSpecifier;
+    // 构造函数
+    SdoCommand(const CanMsg & msg) {
+        specifier = std::bit_cast<CommandSpecifier>(msg[0]);
     }
 
-    // 检查是否出错
-    bool is_err() const {
-        return std::holds_alternative<Error>(result_);
-    }
+    auto type() const { return SdoCommandType(specifier.command); }
 
-    // 获取成功值，如果当前是错误状态则抛出异常
-    Ret unwrap() {
-        if (is_ok()) {
-            return std::get<Ret>(result_);
-        } else {
-            HALT
-        }
-    }
-
-    // 获取错误值，如果当前是成功状态则抛出异常
-    Error unwrap_err() {
-        if (is_err()) {
-            return std::get<Error>(result_);
-        } else {
-            HALT
-        }
-    }
-
-    // 获取成功值，如果当前是错误状态则返回默认值
-    Ret unwrap_or(Ret default_value) {
-        if (is_ok()) {
-            return std::get<Ret>(result_);
-        } else {
-            return default_value;
-        }
-    }
-
-    // 获取成功值，如果当前是错误状态则调用提供的函数生成默认值
-    Ret unwrap_or_else(std::function<Ret()> func) {
-        if (is_ok()) {
-            return std::get<Ret>(result_);
-        } else {
-            return func();
-        }
-    }
-
-    // 获取错误值，如果当前是成功状态则调用提供的函数生成错误值
-    Error unwrap_err_or_else(std::function<Error()> func) {
-        if (is_err()) {
-            return std::get<Error>(result_);
-        } else {
-            return func();
-        }
-    }
-
-    // 如果是成功状态，则调用提供的函数处理成功值
-    template<typename Func>
-    void and_then(Func func) {
-        if (is_ok()) {
-            func(std::get<Ret>(result_));
-        }
-    }
-
-    // 如果是错误状态，则调用提供的函数处理错误值
-    template<typename Func>
-    void or_else(Func func) {
-        if (is_err()) {
-            func(std::get<Error>(result_));
-        }
-    }
+private:
+    CommandSpecifier specifier;
 };
+
+
 
 }

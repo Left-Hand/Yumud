@@ -170,7 +170,10 @@ namespace ymd{
         return iq_t<Q>(__iqdetails::_IQNimag<P>(a.qvalue(), a.qvalue()));
     }
     
-    
+    template<size_t Q>
+    static constexpr iq_t<Q> tpzpu(const iq_t<Q> x){
+        return abs(4 * frac(x - iq_t<Q>(0.25)) - 2) - 1;
+    }
 }
 
 

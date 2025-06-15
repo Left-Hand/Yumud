@@ -197,14 +197,15 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
     );
 
     for(auto && [reg, data] : CMDS)
-        if(auto res = write_reg(reg, data); res.is_err()) 
-            return Err(res.unwrap_err());
+        if(const auto res = write_reg(reg, data); 
+            res.is_err()) return Err(res.unwrap_err());
 
     return write_fifo(buf)
-        .and_then([](size_t size) -> Result<size_t, Error>{
+        .and_then([](const size_t size) -> Result<size_t, Error>{
             LT8960L_DEBUG("transmit successfully");
-            return Ok(size);})
-        .inspect_err([](Error err){
+            return Ok(size);
+        })
+        .inspect_err([](const Error err){
             MATCH{err}(
                 Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},
                 Error::PacketOverlength, []{LT8960L_PANIC("ble overlen");},

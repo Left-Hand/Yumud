@@ -16,14 +16,22 @@ public:
     
 
 protected:
-    int extractCmdSpecifier(const CanMsg & msg) {return (msg[0] >> 5);}
-    int extractN2(const CanMsg & msg) {return ((msg[0] >> 2) & 0x03);}
-    int extractCommandSpecifier(const CanMsg & msg) {return ((msg[0] >> 5) & 0x03);}
-    int extractN3(const CanMsg & msg) {return ((msg[0] >> 1) & 0x07);}
-    int extractExpidited(const CanMsg & msg) {return ((msg[0] >> 1) & 0x01);}
-    int extractSizeInd(const CanMsg & msg) {return (msg[0] & 0x01);}
-    int extractEndTrans(const CanMsg & msg) {return (msg[0] & 0x01);}
-    int extractToggle(const CanMsg & msg) {return ((msg[0] >> 4) & 0x01);}
+    constexpr uint8_t extractCmdSpecifier
+        (const CanMsg & msg) {return (msg[0] >> 5);}
+    constexpr uint8_t extractN2
+        (const CanMsg & msg) {return ((msg[0] >> 2) & 0x03);}
+    constexpr uint8_t extractCommandSpecifier
+        (const CanMsg & msg) {return ((msg[0] >> 5) & 0x03);}
+    constexpr uint8_t extractN3
+        (const CanMsg & msg) {return ((msg[0] >> 1) & 0x07);}
+    constexpr uint8_t extractExpidited
+        (const CanMsg & msg) {return ((msg[0] >> 1) & 0x01);}
+    constexpr uint8_t extractSizeInd
+        (const CanMsg & msg) {return (msg[0] & 0x01);}
+    constexpr uint8_t extractEndTrans
+        (const CanMsg & msg) {return (msg[0] & 0x01);}
+    constexpr uint8_t extractToggle
+        (const CanMsg & msg) {return ((msg[0] >> 4) & 0x01);}
 
     SdoProtocol & sdo_;
     const CobId cobid_;

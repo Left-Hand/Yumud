@@ -2,11 +2,11 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/utils/typetraits/size_traits.hpp"
-#include "core/utils/typetraits/function_traits.hpp"
-// #include "core/utils/typetraits/typetraits_details.hpp"
-#include "core/utils/typetraits/serialize_traits.hpp"
-#include "core/utils/typetraits/enum_traits.hpp"
+#include "core/magic/size_traits.hpp"
+#include "core/magic/function_traits.hpp"
+// #include "core/magic/magic_details.hpp"
+#include "core/magic/serialize_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 
 
 #include "hal/bus/i2c/i2csw.hpp"

@@ -12,8 +12,10 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
-#include "robots/repl/repl_thread.hpp"
+#include "robots/repl/repl_service.hpp"
 #include "types/transforms/euler/euler.hpp"
+
+#define MOCK_TEST_ALL
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -24,7 +26,7 @@ static constexpr uint SERVO_FREQ = 50;
 #define SCL_GPIO hal::portB[0]
 #define SDA_GPIO hal::portB[1]
 
-#define MOCK_TEST_ALL
+
 
 #ifdef MOCK_TEST_ALL
 #define USE_MOCK_SERVO
@@ -95,7 +97,7 @@ public:
 
         DBG_UART.init(576000);
         DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.no_brackets();
+        // DEBUGGER.no_brackets();
         DEBUGGER.force_sync();
 
         i2c.init(400_KHz);
@@ -176,16 +178,16 @@ public:
         r_bias_ = {a,b,c};
     }
 
-    void go_home(){
+    void go_idle(){
         apply_radians_to_servos({0,0,0});
     }
 
     auto make_rpc_node(const StringView name){
         return rpc::make_list(
             name,
-            rpc::make_function("gest", this, &RRS3_Robot::set_gest),
-            rpc::make_function("set_bias", this, &RRS3_Robot::set_bias),
-            rpc::make_function("set_zero", this, &RRS3_Robot::go_home)
+            rpc::make_memfunc("gest",      this, &RRS3_Robot::set_gest),
+            rpc::make_memfunc("set_bias",  this, &RRS3_Robot::set_bias),
+            rpc::make_memfunc("go_idle",  this, &RRS3_Robot::go_idle)
         );
     }
 private:
@@ -205,6 +207,14 @@ private:
         );
     }
 };
+
+
+namespace ymd::rpc{
+enum class Shape {rectangle, circular}; 
+
+// DERIVE_DEBUG(Shape)
+}
+
 
 void rrs3_robot_main(){
 
@@ -231,16 +241,25 @@ void rrs3_robot_main(){
         servo_c.set_radian(r3);
     }};
 
-    robots::ReplThread repl_thread = {
-        &DBG_UART, &DBG_UART,
-        rpc::make_list(
-            "list",
-            rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
-            rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
-            rrs3_robot.make_rpc_node("rrs3")
-        )
+    real_t a;
+
+
+    robots::ReplService repl_thread = {
+        &DBG_UART, &DBG_UART
     };
+
+    auto list = rpc::make_list(
+        "list",
+        rpc::make_function("rst", [](){sys::reset();}),
+        rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+        // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
+        rpc::make_function("name", [&](){DEBUG_PRINTLN(
+        );}),
+        rrs3_robot.make_rpc_node("rrs")
+    );
+
+    // auto list = rrs3_robot.make_rpc_node("rrs");
 
     auto ctrl = [&]{
         const auto t = clock::time();
@@ -256,11 +275,12 @@ void rrs3_robot_main(){
     };
 
     hw.ready();
-    rrs3_robot.go_home();
+    rrs3_robot.go_idle();
     
     while(true){
         const real_t t = clock::time();
         repl_thread.process(t);
+        repl_thread.invoke(list);
         clock::delay(10ms);
         ctrl();
         // DEBUG_PRINTLN(t);

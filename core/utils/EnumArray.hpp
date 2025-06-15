@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-#include "core/utils/typetraits/enum_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 #include "core/utils/Option.hpp"
 
 namespace ymd{

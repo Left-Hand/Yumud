@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "typetraits_details.hpp"
+#include "magic_details.hpp"
 
 namespace ymd::magic{
 

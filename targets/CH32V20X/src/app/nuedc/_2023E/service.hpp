@@ -4,16 +4,15 @@
 
 #include "core/stream/stream.hpp"
 #include "core/stream/StringStream.hpp"
-#include "robots/repl/repl_thread.hpp"
 
 namespace nuedc::_2023E{
 
 
 
-class GimbalThread{
+class GimbalService{
 };
 
-class GimbalThreadForMaster final: public GimbalThread{
+class GimbalServiceForMaster final: public GimbalService{
 public:
     void process(const real_t t){
 
@@ -22,7 +21,7 @@ private:
 
 };
 
-class GimbalThreadForSlave final: public GimbalThread{
+class GimbalServiceForSlave final: public GimbalService{
 public:
     void process(const real_t t){
 
