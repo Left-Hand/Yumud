@@ -127,8 +127,8 @@ __fast_inline constexpr T map_nearest(const T value, R && range){
     auto min_diff = ABS(value - nearest);
     
     while(++it != end) {
-        let current = *it;
-        let diff = ABS(value - current);
+        const auto current = *it;
+        const auto diff = ABS(value - current);
         if(diff < min_diff) {
             min_diff = diff;
             nearest = current;

@@ -47,7 +47,7 @@ struct AlphaBetaDuty{
 };
 
 
-struct MotorTasksUtils{
+struct MotorUtils{
     enum class TaskError:uint8_t{
         TaskNotDone,
         RotorIsMovingBeforeChecking,
@@ -60,6 +60,17 @@ struct MotorTasksUtils{
 
     FRIEND_DERIVE_DEBUG(TaskError)
 
+
+    enum class ServiceError:uint8_t{
+        HwErrorSavingArchive,
+        HwErrorLoadingArchive,
+        SavingArchiveHasBeenStarted,
+        LoadingArchiveHasBeenStarted,
+        ArchiveIsCorrupted
+    };
+
+    FRIEND_DERIVE_DEBUG(ServiceError)
+
     // static constexpr auto DRIVE_DUTY = 0.3_r;
     static constexpr auto CALIBRATE_DRIVE_DUTY = 0.3_r;
     static constexpr auto STALL_DRIVE_DUTY = 0.3_r;
@@ -67,9 +78,6 @@ struct MotorTasksUtils{
 
     static constexpr size_t MICROSTEPS_PER_SECTOR = 256;
 
-    // static constexpr q24 ticks_to_seconds(const size_t ticks){
-    //     return 
-    // }
     static constexpr size_t seconds_to_ticks(const q16 seconds){
         return size_t(seconds * ISR_FREQ);
     }
@@ -81,10 +89,6 @@ struct MotorTasksUtils{
     static constexpr size_t linear_position_to_ticks(const q16 rotations){
         return size_t(rotations * MICROSTEPS_PER_SECTOR) * 4 * MOTOR_POLE_PAIRS;
     }
-
-    // static constexpr q16 ticks_to_accdec_rotations(const size_t ticks){
-    //     return 
-    // }
 
     static constexpr size_t accdec_rotations_to_ticks(const q16 rotations){
         return linear_position_to_ticks(rotations) * 2;
@@ -274,12 +278,12 @@ struct MotorTasksUtils{
 
     struct TaskExecuter{
     template<typename T>
-        static constexpr Result<void, MotorTasksUtils::TaskError>execute(T && obj){
-            return Err(MotorTasksUtils::TaskError::TaskNotDone);
+        static constexpr Result<void, MotorUtils::TaskError>execute(T && obj){
+            return Err(MotorUtils::TaskError::TaskNotDone);
         }
     };
 
-struct CoilCheckTasksUtils:public MotorTasksUtils{
+struct CoilCheckTasksUtils:public MotorUtils{
     static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
     static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
     static constexpr auto STALL_CHECK_TICKS = 80u;
@@ -407,7 +411,7 @@ struct CoilCheckTasksUtils:public MotorTasksUtils{
 
 
 
-struct CalibrateTasksUtils:public MotorTasksUtils{
+struct CalibrateTasksUtils:public MotorUtils{
 
     template<size_t N>
     struct AverageHelper{
@@ -790,7 +794,7 @@ private:
 
 };
 
-class BeepTasks:public MotorTasksUtils{
+class BeepTasks:public MotorUtils{
 public:
     static constexpr auto CONFIGS = std::make_tuple(
         BeepTask::Config{

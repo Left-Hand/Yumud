@@ -30,6 +30,7 @@
 
 #include "calibrate_utils.hpp"
 #include <atomic>
+#include <array>
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -308,51 +309,121 @@ public:
             .fs = ISR_FREQ
     };
 
-
     CommandShaper cs_{CS_CONFIG};
 
     PositionSensor pos_sensor_;
 };
 
 
-// MyHasher operator << ()
-
 class ArchiveSystem{
+    ArchiveSystem(drivers::AT24CXX at24):
+        at24_(at24){;}
 
-    // void save(std::span<const uint8_t>){
-        // at24.load_bytes(0_addr, std::span(rdata)).examine();
-        // while(not at24.is_available()){
-        //     at24.poll().examine();
-        // }
+    static constexpr size_t STORAGE_MAX_SIZE = 256;
+    static constexpr size_t HEADER_MAX_SIZE = 32;
+    static constexpr size_t BODY_OFFSET = HEADER_MAX_SIZE;
+    static constexpr size_t BODY_MAX_SIZE = STORAGE_MAX_SIZE - HEADER_MAX_SIZE;
 
-        // DEBUG_PRINTLN(rdata);
-        // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-        // at24.store_bytes(0_addr, std::span(data)).examine();
+    enum class State:uint8_t{
+        Idle,
+        Saving,
+        Loading,
+        Verifying
+    };
 
-        // while(not at24.is_available()){
-        //     at24.poll().examine();
-        // }
+    #if 0
+    template<typename T>
+    struct Context{
+        static_assert(std::is_copy_assignable_v<T>);
 
-        // DEBUG_PRINTLN("done", clock::micros() - begin_u);
-        // while(true);
-    // }
+        ReleaseInfo release_info;
+        T obj;
+
+        template<HashAlgo S>
+        friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
+            return hs << self.release_info;
+        }
+    };
 
     template<typename T>
     struct Bin{
-        static_assert(std::is_copy_assignable_v<T>);
+        HashCode hashcode;
+        Context<T> context;
 
-        uint32_t hashcode;
+        constexpr HashCode calc_hash_of_context() const{
+            return hash(context);
+        } 
 
-        struct Context{
-            ReleaseInfo release_info;
-            T obj;
+        constexpr bool is_verify_passed(){
+            return calc_hash_of_context() == hashcode;
+        } 
+        constexpr const Context<T> * operator ->() const {
+            return context;
+        }
 
-            template<HashAlgo S>
-            friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
-                return hs << self.release_info;
-            }
-        };
+        constexpr size_t size() const {
+            return sizeof(*this);
+        }
+
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>{
+                reinterpret_cast<const uint8_t *>(this), size()};
+        }
     };
+
+    #endif
+
+    struct Header{
+        HashCode hashcode;
+        ReleaseInfo release_info;
+
+        constexpr size_t size() const {
+            return sizeof(*this);
+        }
+
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>{
+                reinterpret_cast<const uint8_t *>(this), size()};
+        }
+    };
+
+    static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
+
+    template<typename T>
+    auto save(T & obj){
+        const auto body_bytes = obj.as_bytes();
+        const Header header = {
+            .hashcode = hash(body_bytes),
+            .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+        };
+
+        auto assign_header_and_obj_to_buf = [&]{
+            std::copy(buf_.begin(), buf_.end(), header.as_bytes());
+            std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
+        };
+
+        assign_header_and_obj_to_buf();
+
+        return at24_.store_bytes(Address(BODY_OFFSET), buf_);
+    }
+
+    template<typename T>
+    auto load(T & obj){
+        // const auto body_bytes = obj.as_bytes();
+        // const Header header = {
+        //     .hashcode = hash(body_bytes),
+        //     .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+        // };
+
+        // auto assign_header_and_obj_to_buf = [&]{
+        //     std::copy(buf_.begin(), buf_.end(), header.as_bytes());
+        //     std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
+        // };
+
+        // assign_header_and_obj_to_buf();
+
+        // return at24_.store_bytes(Address(BODY_OFFSET), buf_);
+    }
 
     auto poll(){
         if(not at24_.is_available()){
@@ -379,9 +450,30 @@ class ArchiveSystem{
         return {0,0};
     }
 private:
-    drivers::AT24CXX at24_;
+    std::atomic<State> state_ = State::Idle;
+
+    drivers::AT24CXX & at24_;
+    std::array<uint8_t, STORAGE_MAX_SIZE> buf_;
 };
 
+
+    // void save(std::span<const uint8_t>){
+        // at24.load_bytes(0_addr, std::span(rdata)).examine();
+        // while(not at24.is_available()){
+        //     at24.poll().examine();
+        // }
+
+        // DEBUG_PRINTLN(rdata);
+        // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
+        // at24.store_bytes(0_addr, std::span(data)).examine();
+
+        // while(not at24.is_available()){
+        //     at24.poll().examine();
+        // }
+
+        // DEBUG_PRINTLN("done", clock::micros() - begin_u);
+        // while(true);
+    // }
 
 [[maybe_unused]] 
 static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
@@ -484,7 +576,6 @@ void mystepper_main(){
         enb_gpio.outpp(HIGH);
     }
 
-    
     auto & timer = hal::timer1;
 
     timer.init({
@@ -558,7 +649,7 @@ void mystepper_main(){
     }).examine();
 
     test_check(encoder, svpwm);
-    // test_eeprom();
+    test_eeprom();
 }
 
 struct LapCalibrateTable{
