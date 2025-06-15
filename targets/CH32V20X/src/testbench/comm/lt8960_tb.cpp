@@ -235,9 +235,9 @@ void lt8960_tb(){
 }
 
 void lt8960_main(){
-    // UART.init(576_KHz);
+    // UART.init({576_KHz});
     // UART.init(1152_KHz);
-    UART.init(6_MHz);
+    UART.init({6_MHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
 

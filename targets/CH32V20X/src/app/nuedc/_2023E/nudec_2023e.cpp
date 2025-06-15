@@ -123,7 +123,7 @@ static constexpr auto make_cfg(){
 
 void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
-    DBG_UART.init(576000);
+    DBG_UART.init({576000});
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets();
     DEBUGGER.force_sync();

@@ -117,7 +117,7 @@ struct I2cTester{
 [[maybe_unused]]
 static void i2c_scanner_functional(){
 
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
 
     // log("i2c_scanner_main") | log("1");
@@ -171,7 +171,7 @@ void test_result(){
     while(true);
 }
 void i2c_scanner_main(){
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.force_sync();
     

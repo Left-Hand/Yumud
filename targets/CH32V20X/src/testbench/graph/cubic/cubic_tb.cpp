@@ -418,7 +418,7 @@ static void precompute_2(const float angle)
 
 void cubic_main(void){
 
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();

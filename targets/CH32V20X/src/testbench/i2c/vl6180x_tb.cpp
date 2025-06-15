@@ -87,7 +87,7 @@ static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){
 }
 
 void vl6180x_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();

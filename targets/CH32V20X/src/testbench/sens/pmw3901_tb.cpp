@@ -14,7 +14,7 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    uart2.init(921600, CommStrategy::Blocking);
+    uart2.init({921600, CommStrategy::Blocking});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.no_brackets();
     DEBUG_PRINTLN(std::setprecision(4));

@@ -59,7 +59,7 @@ OutputStream & operator << (OutputStream & os, const Result<auto, auto> & result
 void ads1115_main()
 {
 
-    hal::uart2.init(576000);
+    hal::uart2.init({576000});
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

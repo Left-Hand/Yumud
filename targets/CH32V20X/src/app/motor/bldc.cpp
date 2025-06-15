@@ -331,7 +331,7 @@ __no_inline void init_opa(){
 // }
 
 void bldc_main(){
-    uart2.init(6_MHz);
+    uart2.init({6_MHz});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

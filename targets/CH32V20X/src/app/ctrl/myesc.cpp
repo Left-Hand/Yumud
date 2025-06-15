@@ -82,7 +82,7 @@ std::array<T, N> ones(const T value){
     return ret;
 }
 void myesc_main(){
-    DEBUG_UART.init(DEBUG_UART_BAUD);
+    DEBUG_UART.init({DEBUG_UART_BAUD});
     DEBUGGER.retarget(&DEBUG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

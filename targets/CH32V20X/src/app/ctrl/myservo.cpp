@@ -198,7 +198,7 @@ class AnalogJoystick{
 static constexpr uint32_t TIM_FREQ = 5000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 void myservo_main(){
-    UART.init(576000);
+    UART.init({576000});
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

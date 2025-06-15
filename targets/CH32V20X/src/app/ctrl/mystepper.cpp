@@ -563,7 +563,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
 
 void test_curr(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
@@ -674,7 +674,7 @@ void test_curr(){
 
 
 void mystepper_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);

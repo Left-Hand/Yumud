@@ -394,7 +394,7 @@ static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 // static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 16;
 void light_tracking_main(void){
 
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();

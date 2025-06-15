@@ -101,7 +101,7 @@ static void icm42688_tb(ICM42688 & imu){
 }
 
 void icm42688_main(){
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);

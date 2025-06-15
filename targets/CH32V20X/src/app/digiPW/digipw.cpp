@@ -108,7 +108,7 @@ void test_sogi(){
     }
 }
 void digipw_main(){
-    DEBUGGER_INST.init(6_MHz);
+    DEBUGGER_INST.init({6_MHz});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

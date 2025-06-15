@@ -554,7 +554,7 @@ void test_pipeline() {
 
 void lazy_main() {
 
-    UART.init(576000);
+    UART.init({576000});
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

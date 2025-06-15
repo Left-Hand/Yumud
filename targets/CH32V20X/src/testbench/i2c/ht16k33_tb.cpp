@@ -730,7 +730,7 @@ static void HT16K33_tb(HT16K33 & ht16){
 
 
 void ht16k33_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
 

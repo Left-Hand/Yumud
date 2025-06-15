@@ -69,7 +69,7 @@ void test(Myclass obj){
 
 
 void metaclass_tb(){
-    hal::uart2.init(576000);
+    hal::uart2.init({576000});
     DEBUGGER.retarget(&hal::uart2);
 
     DEBUG_PRINTLN("\r\nstart");

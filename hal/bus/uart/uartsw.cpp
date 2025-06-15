@@ -4,13 +4,9 @@
 
 using namespace ymd::hal;
 
-void UartSw::init(
-    uint32_t baudrate, 
-    CommStrategy rx_strategy,
-    CommStrategy tx_strategy
-){
-    set_rx_strategy(rx_strategy);
-    set_tx_strategy(tx_strategy);
+void UartSw::init(const Config & cfg){
+    set_rx_strategy(cfg.rx_strategy);
+    set_tx_strategy(cfg.tx_strategy);
 }
 
 void UartSw::tick(){

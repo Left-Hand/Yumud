@@ -25,10 +25,7 @@ public:
 
     UartSw(Gpio & tx_gpio, Gpio & rx_gpio): tx_gpio_(tx_gpio), rx_gpio_(rx_gpio){;}
 
-    void init(
-        uint32_t baudrate, 
-        CommStrategy tx_strategy = CommStrategy::Interrupt,
-        CommStrategy rx_strategy = CommStrategy::Interrupt);
+    void init(const Config & cfg);
 
     void tick();
 

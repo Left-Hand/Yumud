@@ -497,7 +497,7 @@ void pso_tb(){
 
 void dsp_main(){
     // uart2.init(576000, CommStrategy::Blocking);
-    uart2.init(576000);
+    uart2.init({576000});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

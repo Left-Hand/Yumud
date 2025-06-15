@@ -48,7 +48,7 @@
 // #define DBG_UART hal::uart2
 
 // void can_actor_main(){
-//     DBG_UART.init(576000);
+//     DBG_UART.init({576000});
 //     DEBUGGER.retarget(&DBG_UART);
 //     DEBUGGER.set_eps(4);
 //     DEBUGGER.set_splitter(",");

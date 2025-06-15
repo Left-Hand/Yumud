@@ -1666,7 +1666,7 @@ static void calc_tb(OutputStream & logger){
 
 void calc_main(){
     // auto & logger = uart2;
-    uart2.init(576000, CommStrategy::Blocking);
+    uart2.init({576000, CommStrategy::Blocking});
 	DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     calc_tb(DEBUGGER);

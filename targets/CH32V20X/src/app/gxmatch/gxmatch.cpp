@@ -112,7 +112,7 @@ namespace gxm{
 
 void host_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    DEBUGGER_INST.init(576000);
+    DEBUGGER_INST.init({576000});
     auto & logger = DEBUGGER_INST;
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");

@@ -95,7 +95,7 @@ public:
     void setup(){
         // #ifdef USE_MOCK_SERVO
 
-        DBG_UART.init(576000);
+        DBG_UART.init({576000});
         DEBUGGER.retarget(&DBG_UART);
         // DEBUGGER.no_brackets();
         DEBUGGER.force_sync();

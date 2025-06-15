@@ -44,10 +44,11 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 [[maybe_unused]] static 
 void at8222_tb(){
-    hal::UartSw uart{portA[5], NullGpio}; uart.init(19200);
+    hal::UartSw uart{portA[5], NullGpio}; 
+    uart.init({19200});
     // DEBUGGER.retarget(&uart);
 
-    uart2.init(4000000, CommStrategy::Nil);
+    uart2.init({4000000, CommStrategy::Nil});
     // uart2.init(921600);
     // while(true){
     //     // uart2.write1(0x55);

@@ -12,7 +12,7 @@ using namespace ymd::hal;
 using namespace ymd::canopen;
 
 void canopen_main(){
-    DEBUGGER_INST.init(576000);
+    DEBUGGER_INST.init({576000u});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

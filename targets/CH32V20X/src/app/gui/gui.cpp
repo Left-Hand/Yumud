@@ -92,7 +92,7 @@ void gui_main(){
     //     clock::delay(200ms);
     // }
 
-    DEBUGGER_INST.init(576000);
+    DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

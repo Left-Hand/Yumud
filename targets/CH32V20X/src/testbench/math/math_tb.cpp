@@ -54,7 +54,7 @@ logger.println(__VA_ARGS__);\
 
 void math_tb(){
     auto & logger = DEBUGGER;
-    DEBUGGER_INST.init(576000, CommStrategy::Dma);
+    DEBUGGER_INST.init({576000, CommStrategy::Dma});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     

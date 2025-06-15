@@ -10,7 +10,7 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void zdt_main(UartHw & logger){
-    logger.init(576000, CommStrategy::Blocking);
+    logger.init({576000, CommStrategy::Blocking});
     DEBUGGER.retarget(&logger);
     DEBUGGER.set_eps(4);
     

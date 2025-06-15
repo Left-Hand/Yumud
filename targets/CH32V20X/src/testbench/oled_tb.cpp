@@ -121,7 +121,7 @@ static void oled_tb(){
     static constexpr auto I2C_BAUD = 2'000'000;
     // static constexpr auto MONITOR_HZ = 5000;
 
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_splitter(' ');
 

@@ -43,7 +43,7 @@ class DmaChannel;
 class UartHw final:public Uart{
 public:
 protected:
-    USART_TypeDef * instance_;
+    USART_TypeDef * inst_;
 
     void enable_rcc(const Enable en);
     void enable_it(const Enable en);
@@ -60,7 +60,7 @@ protected:
     void invoke_tx_dma();
 
     __fast_inline void on_rxne_interrupt(){
-        this->rx_fifo_.push(uint8_t(instance_->DATAR));
+        this->rx_fifo_.push(uint8_t(inst_->DATAR));
     }
     
     __fast_inline void on_txe_interrupt(){
@@ -78,30 +78,28 @@ protected:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    hal::HalResult lead(const LockRequest req) override;
-    void trail() override;
+    hal::HalResult lead(const LockRequest req);
+    void trail();
 public:
     UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):
-            instance_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}
+            inst_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}
 
-    void init(
-        const uint32_t baudrate, 
-        const CommStrategy rx_strategy = CommStrategy::Dma,
-        const CommStrategy tx_strategy = CommStrategy::Dma
-    );
+
+
+    void init(const Config & cfg);
 
     void enable_single_line_mode(const Enable en = EN);
 
-    void writeN(const char * data_ptr, const size_t len) override;
+    void writeN(const char * data_ptr, const size_t len);
 
-    void write1(const char data) override;
+    void write1(const char data);
     
     void set_tx_strategy(const CommStrategy tx_strategy);
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    Gpio & txio() override;
-    Gpio & rxio() override;
+    Gpio & txio();
+    Gpio & rxio();
 
     #ifdef ENABLE_UART1
     friend void ::USART1_IRQHandler();
