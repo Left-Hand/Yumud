@@ -244,15 +244,15 @@ void rrs3_robot_main(){
     real_t a;
 
 
-    robots::ReplService repl_thread = {
+    robots::ReplService repl_service = {
         &DBG_UART, &DBG_UART
     };
 
     auto list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
         // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
         rpc::make_function("name", [&](){DEBUG_PRINTLN(
         );}),
@@ -279,8 +279,11 @@ void rrs3_robot_main(){
     
     while(true){
         const real_t t = clock::time();
-        repl_thread.process(t);
-        repl_thread.invoke(list);
+        
+        repl_service.process(t);
+        repl_service.invoke(list);
+
+
         clock::delay(10ms);
         ctrl();
         // DEBUG_PRINTLN(t);

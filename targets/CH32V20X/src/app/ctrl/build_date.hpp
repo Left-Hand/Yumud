@@ -37,6 +37,29 @@ struct Month final{
         return None;
     }
 
+
+    constexpr bool operator == (const Month & rhs) const{
+        return kind == rhs.kind;
+    }
+
+    constexpr bool operator < (const Month & rhs) const{
+        return std::bit_cast<uint8_t>(kind) < std::bit_cast<uint8_t>(rhs.kind);
+    }
+
+
+    constexpr bool is_valid() const {
+        switch(kind){
+            case Kind::Jan ... Kind::Dec: return true;
+            default: return false;
+        }
+    }
+
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
+        return hs << uint8_t(self.kind);
+    }
+
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
         switch(self.kind){
             case Kind::Jan ... Kind::Dec: {
@@ -48,25 +71,6 @@ struct Month final{
         }
     }
 
-    constexpr bool operator == (const Month & rhs) const{
-        return kind == rhs.kind;
-    }
-
-    constexpr bool operator < (const Month & rhs) const{
-        return std::bit_cast<uint8_t>(kind) < std::bit_cast<uint8_t>(rhs.kind);
-    }
-
-    template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
-        return hs << uint8_t(self.kind);
-    }
-
-    constexpr bool is_valid() const {
-        switch(kind){
-            case Kind::Jan ... Kind::Dec: return true;
-            default: return false;
-        }
-    }
 };
 
 using Day = uint8_t;

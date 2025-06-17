@@ -109,7 +109,7 @@ void svpwm3_main(){
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
             {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
-        }
+        }, {}
     );
 
     #if TIM_INDEX == 1

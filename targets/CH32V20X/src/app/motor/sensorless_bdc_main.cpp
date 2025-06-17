@@ -82,7 +82,7 @@ void at8222_tb(){
         },{
             // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
             {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
-        }
+        }, {}
     );
 
     adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);

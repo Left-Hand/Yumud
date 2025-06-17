@@ -626,7 +626,7 @@ void test_curr(){
         },{
             {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
             {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
-        }
+        }, {}
     );
 
     adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
@@ -714,7 +714,8 @@ void mystepper_main(){
         },{
             {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
             {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
-        }
+        },
+        {}
     );
 
     adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);

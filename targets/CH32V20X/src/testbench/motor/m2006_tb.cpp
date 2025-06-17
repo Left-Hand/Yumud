@@ -20,7 +20,7 @@ void m2006_main(){
 
     // DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = can1;
-    can.init(CanBaudrate::_1M);
+    can.init({CanBaudrate::_1M});
     can[0].mask(CanID16{0x201, CanRemoteSpec::Data}, CanID16{0xffff, CanRemoteSpec::Remote});
     while(true){
         auto s = real_t(0.07) * sin(4 * clock::time());

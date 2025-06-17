@@ -280,7 +280,8 @@ void myservo_main(){
             },{
                 {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
                 {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
-            }
+            },
+            {}
         );
 
         // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
@@ -290,7 +291,7 @@ void myservo_main(){
     };
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
-    can.init(CanBaudrate::_1M);
+    can.init({CanBaudrate::_1M});
     init_adc();
 
     auto & ain1 = adc1.inj<1>();

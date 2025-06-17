@@ -116,7 +116,7 @@ void adc_tb(OutputStream & logger){
             // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
         },{
             // AdcChannelConfig{AdcChannelEnum::CH0},
-        });
+        }, {});
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
 
