@@ -88,7 +88,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
             if(likely(!bool(pbuf[0]))){
                 // error_fifo.waste(error_fifo.available());
-                return SdoAbortCode::None;
+                return SdoAbortCode::OK;
             }else{
                 return SdoAbortCode::InvalidValue;
             }
@@ -99,7 +99,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
             if(unlikely(sidx) < 1){
                 pbuf[0] = uint8_t(getErrorCnt());
-                return SdoAbortCode::None;
+                return SdoAbortCode::OK;
             }
 
             const auto offset = size_t(sidx) - size_t(base_idx);
@@ -107,7 +107,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
             if(err_opt.has_value()){
                 *(reinterpret_cast<Error *>(pbuf.data())) = err_opt.value();
-                return SdoAbortCode::None;
+                return SdoAbortCode::OK;
             }else{
                 //企图获取超界的错误
                 return SdoAbortCode::NoValidData;
@@ -154,7 +154,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
             memcpy(&str[0], pbuf.data(), pbuf.size());
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         } 
 
 
@@ -162,7 +162,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
             memcpy(pbuf.data(), str.c_str(), pbuf.size());
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         }
     };
 
@@ -249,14 +249,14 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
                 default: saver->saveSpecConfig(uint8_t(sidx)); break;
             }
 
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         } 
 
 
         SdoAbortCode read(const std::span<uint8_t> pbuf, const SubIndex sidx) const {
             //TODO
             // ReadStruct reg = ReadStruct{pbuf};
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         }
     };
 
@@ -307,14 +307,14 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
                 }
             }
 
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         } 
 
 
         SdoAbortCode read(const std::span<uint8_t> pbuf, const SubIndex sidx) const {
             //TODO
             // ReadStruct reg = ReadStruct{pbuf};
-            return SdoAbortCode::None;
+            return SdoAbortCode::OK;
         }
     };
 

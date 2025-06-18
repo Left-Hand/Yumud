@@ -352,7 +352,7 @@ void String::getBytes(uint8_t *buf, size_t bufsize, size_t index) const
 
 
 StringView String::substr(size_t left, size_t right) const{
-	return StringView(*this).substr(left, right);
+	return StringView(*this).substr_by_range(left, right);
 
 }
 

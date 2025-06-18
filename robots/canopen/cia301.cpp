@@ -34,7 +34,7 @@ SdoAbortCode Cia301ObjectDict::write(const std::span<const uint8_t> pbuf, const 
         //     return StaticObjectDictBase::write(pbuf, didx);
     }
 
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }
     
 SdoAbortCode Cia301ObjectDict::read(const std::span<uint8_t> pbuf, const Didx didx) const {
@@ -46,5 +46,5 @@ SdoAbortCode Cia301ObjectDict::read(const std::span<uint8_t> pbuf, const Didx di
         //     return StaticObjectDictBase::read(pbuf, didx);
     }
 
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }

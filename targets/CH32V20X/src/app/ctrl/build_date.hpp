@@ -103,7 +103,7 @@ struct Date final{
                         (str[9] - '0') * 10 +
                         (str[10] - '0');
         
-        const auto may_month = Month::from_str(str.substr(0,3));
+        const auto may_month = Month::from_str(str.substr_by_range(0,3));
         if(may_month.is_none()) return None;
         return Some(Date{y, may_month.unwrap(), d});
     }

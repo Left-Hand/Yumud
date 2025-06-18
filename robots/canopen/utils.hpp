@@ -108,7 +108,7 @@ struct Didx{
 class SdoAbortCode {
 public:
     enum Kind : uint32_t {
-        None                        = 0x00000000,          // 无错误
+        OK                        = 0x00000000,          // 无错误
         ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
         SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
         CommandSpecifierNotValid    = 0x05040001,          // 命令指定符无效
@@ -142,8 +142,8 @@ public:
 
     constexpr Kind kind() const { return e_; }
     constexpr uint32_t to_u32() const { return std::bit_cast<uint32_t>(e_); }
-    constexpr bool is_ok() const { return e_ == None; }
-    constexpr bool is_err() const { return e_ != None; }
+    constexpr bool is_ok() const { return e_ == OK; }
+    constexpr bool is_err() const { return e_ != OK; }
 private:
     Kind e_;
 };

@@ -10,45 +10,31 @@ namespace ymd::robots::asciican{
 
 enum class AsciiCanError{
     NoInput,
-
-    InvalidId,
-    InvalidDataLength,
-    InvalidData,
-    InvalidChecksum,
-
-    InvalidResponse,
-    InvalidResponseLength,
-    InvalidResponseData,
-    InvalidResponseChecksum,
-    InvalidResponseId,
-
+    NoArg,
+    InvalidPayloadLength,
     InvalidCommand,
     InvalidBaud,
     InvalidStdId,
     InvalidExtId,
-    NotSupportedYet,
-    NoArg,
+    ArgTooLong,
+    ArgTooShort,
+    UnsupportedCharInHex,
     DataExistsInRemote,
-    ArgTooLong
+    NotImplemented
 };
-
-template<typename T = void>
-using IResult = Result<T, AsciiCanError>;
-
-
-
 
 class StringCutter{
 public:
-    StringCutter(const StringView str): str_(str){}
+    constexpr StringCutter(const StringView str): 
+        str_(str){}
 
-    StringView fetch_next(const size_t len){
-        const auto res = str_.substr(pos_, len);
+    constexpr StringView fetch_next(const size_t len){
+        const auto res = str_.substr_by_range(pos_, len);
         pos_ += len;
         return res;
     }
 
-    StringView fetch_remaining(){
+    constexpr StringView fetch_remaining(){
         return str_.substr(pos_);
     }
 private:
@@ -108,6 +94,9 @@ class AsciiCanPhy final{
 public:
     using Msg = hal::CanMsg;
     using Error = AsciiCanError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class Flags:uint8_t{
         RxFifoFull,

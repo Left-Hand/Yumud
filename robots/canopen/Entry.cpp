@@ -10,7 +10,7 @@ SdoAbortCode SubEntry::read(std::span<uint8_t> pbuf) const{
     if(unlikely(pbuf.size() > 4)) 
         return SdoAbortCode::GeneralError;
     memcpy(pbuf.data(), obj_ref_.data(), pbuf.size());
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }
 
 SdoAbortCode SubEntry::write(const std::span<const uint8_t> pbuf){
@@ -21,18 +21,18 @@ SdoAbortCode SubEntry::write(const std::span<const uint8_t> pbuf){
     if(unlikely(pbuf.size() > 4)) 
         return SdoAbortCode::GeneralError;
     memcpy(obj_ref_.data(), pbuf.data(), pbuf.size());
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }
 
 
 SdoAbortCode SubEntry::read_any(void * pbuf){
     memcpy(pbuf, obj_ref_.data(), dsize());
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }
 
 SdoAbortCode SubEntry::write_any(const void * pbuf){
     memcpy(obj_ref_.data(), pbuf, dsize());
-    return SdoAbortCode::None;
+    return SdoAbortCode::OK;
 }
 
 SubEntry::operator int() const {

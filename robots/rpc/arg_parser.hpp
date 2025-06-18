@@ -16,28 +16,7 @@ private:
 
     template<typename Fn>
     static constexpr void send_line(const StringView line, const char delimiter, Fn && fn) {
-        // sstl::vector<StringView, STR_MAX_LENGTH> strs;
-    
-        // size_t from = 0;
-        // for(size_t i = 0; i < line.length(); i++) {
-        //     if((i == 0 || line[i - 1] == delimiter) && line[i] != delimiter) {
-        //         from = i;
-        //     }
-    
-        //     // 修改条件判断顺序以避免越界访问
-        //     bool is_end = (i + 1 == line.length());
-        //     if((line[i] != delimiter && is_end) || 
-        //         (!is_end && (line[i + 1] == delimiter || line[i + 1] == '\0'))) {
-        //         strs.push_back(line.substr(from, i - from + 1));
-        //     }
-    
-        //     if(strs.size() == STR_MAX_PIECES) {
-        //         on_pieces_overflow();
-        //         return;
-        //     }
-        // }
-    
-        // std::forward<Fn>(fn)(std::span<StringView>(strs.data(), strs.size()));
+
         sstl::vector<StringView, STR_MAX_LENGTH> strs;
     
         size_t from = 0;
@@ -49,7 +28,7 @@ private:
             
             if(line[i] != delimiter and 
                 (i + 1 >= line.length() or line[i + 1] == delimiter or line[i + 1] == '\0')){
-                strs.push_back(line.substr(from, i+1));
+                strs.push_back(line.substr_by_range(from, i+1));
             }
     
             if((strs.size() == STR_MAX_PIECES)){
