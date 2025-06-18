@@ -30,6 +30,7 @@
 
 #include "calibrate_utils.hpp"
 #include <atomic>
+#include <array>
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -308,14 +309,154 @@ public:
             .fs = ISR_FREQ
     };
 
-
     CommandShaper cs_{CS_CONFIG};
 
     PositionSensor pos_sensor_;
 };
 
+#if 0
+template<typename T>
+struct Context{
+    static_assert(std::is_copy_assignable_v<T>);
+
+    ReleaseInfo release_info;
+    T obj;
+
+    template<HashAlgo S>
+    friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
+        return hs << self.release_info;
+    }
+};
+
+template<typename T>
+struct Bin{
+    HashCode hashcode;
+    Context<T> context;
+
+    constexpr HashCode calc_hash_of_context() const{
+        return hash(context);
+    } 
+
+    constexpr bool is_verify_passed(){
+        return calc_hash_of_context() == hashcode;
+    } 
+    constexpr const Context<T> * operator ->() const {
+        return context;
+    }
+
+    constexpr size_t size() const {
+        return sizeof(*this);
+    }
+
+    std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>{
+            reinterpret_cast<const uint8_t *>(this), size()};
+    }
+};
+
+#endif
+
+struct Progress{
+    size_t current;
+    size_t total;
+
+    friend OutputStream & operator <<(OutputStream & os, const Progress & self){
+        return os << os.brackets<'['>() << 
+            self.current << os.splitter() << self.total 
+            << os.brackets<']'>();
+    }
+};
 
 class ArchiveSystem{
+    ArchiveSystem(drivers::AT24CXX at24):
+        at24_(at24){;}
+
+    static constexpr size_t STORAGE_MAX_SIZE = 256;
+    static constexpr size_t HEADER_MAX_SIZE = 32;
+    static constexpr size_t BODY_OFFSET = HEADER_MAX_SIZE;
+    static constexpr size_t BODY_MAX_SIZE = STORAGE_MAX_SIZE - HEADER_MAX_SIZE;
+
+    enum class State:uint8_t{
+        Idle,
+        Saving,
+        Loading,
+        Verifying
+    };
+
+    struct Header{
+        HashCode hashcode;
+        ReleaseInfo release_info;
+
+        constexpr size_t size() const {
+            return sizeof(*this);
+        }
+
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>{
+                reinterpret_cast<const uint8_t *>(this), size()};
+        }
+    };
+
+    static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
+
+    template<typename T>
+    auto save(T & obj){
+        const auto body_bytes = obj.as_bytes();
+        const Header header = {
+            .hashcode = hash(body_bytes),
+            .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+        };
+
+        auto assign_header_and_obj_to_buf = [&]{
+            std::copy(buf_.begin(), buf_.end(), header.as_bytes());
+            std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
+        };
+
+        assign_header_and_obj_to_buf();
+
+        return at24_.store_bytes(Address(BODY_OFFSET), buf_);
+    }
+
+    template<typename T>
+    auto load(T & obj){
+        // const auto body_bytes = obj.as_bytes();
+        // const Header header = {
+        //     .hashcode = hash(body_bytes),
+        //     .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+        // };
+
+        // auto assign_header_and_obj_to_buf = [&]{
+        //     std::copy(buf_.begin(), buf_.end(), header.as_bytes());
+        //     std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
+        // };
+
+        // assign_header_and_obj_to_buf();
+
+        // return at24_.store_bytes(Address(BODY_OFFSET), buf_);
+    }
+
+    auto poll(){
+        if(not at24_.is_available()){
+            at24_.poll().examine();
+        }
+    }
+
+    bool is_available(){
+        return at24_.is_available();
+    }
+
+
+
+    Progress progress(){
+        return {0,0};
+    }
+private:
+    std::atomic<State> state_ = State::Idle;
+
+    drivers::AT24CXX & at24_;
+    std::array<uint8_t, STORAGE_MAX_SIZE> buf_;
+};
+
 
     // void save(std::span<const uint8_t>){
         // at24.load_bytes(0_addr, std::span(rdata)).examine();
@@ -334,35 +475,6 @@ class ArchiveSystem{
         // DEBUG_PRINTLN("done", clock::micros() - begin_u);
         // while(true);
     // }
-
-    auto poll(){
-        if(not at24_.is_available()){
-            at24_.poll().examine();
-        }
-    }
-
-    bool is_available(){
-        return at24_.is_available();
-    }
-
-    struct Progress{
-        size_t current;
-        size_t total;
-
-        friend OutputStream & operator <<(OutputStream & os, const Progress & self){
-            return os << os.brackets<'['>() << 
-                self.current << os.splitter() << self.total 
-                << os.brackets<']'>();
-        }
-    };
-
-    Progress progress(){
-        return {0,0};
-    }
-private:
-    drivers::AT24CXX at24_;
-};
-
 
 [[maybe_unused]] 
 static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
@@ -450,33 +562,10 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 }
 
 
-
-template<typename T, typename R>
-__fast_inline constexpr T map_nearest(const T value, R && range){
-    auto it = std::begin(range);
-    auto end = std::end(range);
-    
-    T nearest = *it;
-    auto min_diff = ABS(value - nearest);
-    
-    while(++it != end) {
-        let current = *it;
-        let diff = ABS(value - current);
-        if(diff < min_diff) {
-            min_diff = diff;
-            nearest = current;
-        }
-    }
-    return nearest;
-}
-
-static constexpr void static_test(){
-    static_assert(map_nearest(0, std::initializer_list<int>{1,-3,-5}) == 1);
-}
-
-void mystepper_main(){
-    UART.init(576000);
+void test_curr(){
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
+    // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
     {
@@ -486,12 +575,124 @@ void mystepper_main(){
         enb_gpio.outpp(HIGH);
     }
 
-    
     auto & timer = hal::timer1;
 
     timer.init({
         .freq = CHOP_FREQ,
-        .mode = hal::TimerCountMode::CenterAlignedDualTrig
+        // .mode = hal::TimerCountMode::CenterAlignedDualTrig
+        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+    });
+
+    timer.enable_arr_sync();
+    timer.set_trgo_source(hal::TimerTrgoSource::Update);
+
+
+    auto & pwm_ap = timer.oc<1>();
+    auto & pwm_an = timer.oc<2>();
+    auto & pwm_bp = timer.oc<3>();
+    auto & pwm_bn = timer.oc<4>();
+
+    pwm_ap.init({});
+    pwm_an.init({});
+    pwm_bp.init({});
+    pwm_bn.init({});
+
+    auto convert_pair_duty = [](const real_t duty) -> std::tuple<real_t, real_t>{
+        if(duty > 0){
+            return {1, 1-duty};
+        }else{
+            return {1 + duty, 1};
+        }
+    };
+
+    auto set_alpha_beta_duty = [&](const real_t alpha, const real_t beta){
+        {
+            const auto [ap,an] = convert_pair_duty(alpha);
+            pwm_ap.set_duty(ap);
+            pwm_an.set_duty(an);
+        }
+
+        {
+            const auto [bp,bn] = convert_pair_duty(beta);
+            pwm_bp.set_duty(bp);
+            pwm_bn.set_duty(bn);
+        }
+    };
+
+    auto & adc = hal::adc1;
+    adc.init(
+        {
+            {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
+        },{
+            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
+        }, {}
+    );
+
+    adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
+    adc.enable_auto_inject(DISEN);
+
+    auto & inj_a = adc.inj<1>();
+    auto & inj_b = adc.inj<2>();
+
+    auto & trig_gpio = hal::PC<13>();
+    trig_gpio.outpp();
+
+    real_t a_curr;
+    real_t b_curr;
+    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
+        // trig_gpio.toggle();
+        // DEBUG_PRINTLN_IDLE(millis());
+        // trig_gpio.toggle();
+        // static bool is_a = false;
+        // b_curr = inj_b.get_voltage();
+        // a_curr = inj_a.get_voltage();
+    });
+
+
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+        b_curr = inj_b.get_voltage();
+        a_curr = inj_a.get_voltage();
+        const auto t = clock::time();
+        const auto [s,c] = sincospu(t);
+        constexpr auto mag = 0.4_r;
+        set_alpha_beta_duty(
+            c * mag,
+            s * mag
+        );
+    });
+
+    while(true){
+        DEBUG_PRINTLN_IDLE(
+            a_curr,
+            b_curr,
+            30 * (a_curr * a_curr + b_curr * b_curr)
+        );
+    }
+}
+
+
+
+void mystepper_main(){
+    UART.init({576000});
+    DEBUGGER.retarget(&UART);
+    // DEBUG_PRINTLN(hash(.unwrap()));
+    clock::delay(400ms);
+
+    // test_curr();
+
+    {
+        hal::Gpio & ena_gpio = hal::portB[0];
+        hal::Gpio & enb_gpio = hal::portA[7];
+        ena_gpio.outpp(HIGH);
+        enb_gpio.outpp(HIGH);
+    }
+
+    auto & timer = hal::timer1;
+
+    timer.init({
+        .freq = CHOP_FREQ,
+        .mode = hal::TimerCountMode::CenterAlignedDownTrig
     });
 
     timer.enable_arr_sync();
@@ -511,17 +712,17 @@ void mystepper_main(){
         {
             {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelIndex::CH2, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T28_5},
-        }
+            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
+        },
+        {}
     );
 
     adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
     adc.enable_auto_inject(DISEN);
 
     auto & inj_a = adc.inj<1>();
-    auto & inj_b = adc.inj<3>();
+    auto & inj_b = adc.inj<2>();
 
     auto & trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
@@ -529,25 +730,19 @@ void mystepper_main(){
     real_t a_curr;
     real_t b_curr;
     adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // trig_gpio.toggle();
-        // DEBUG_PRINTLN_IDLE(millis());
-        // trig_gpio.toggle();
         static bool is_a = false;
         is_a = !is_a;
+        
         if(is_a){
-            // DEBUG_PRINTLN_IDLE(a_curr);
             b_curr = inj_b.get_voltage();
-            a_curr = inj_a.get_voltage();
         }else{
-            b_curr = inj_b.get_voltage();
             a_curr = inj_a.get_voltage();
-            // DEBUG_PRINTLN_IDLE(b_curr);
         }
     });
 
 
     auto & spi = hal::spi1;
-    spi.init(18_MHz);
+    spi.init({18_MHz});
 
     drivers::MT6816 encoder{{
         spi, 
@@ -561,6 +756,28 @@ void mystepper_main(){
 
     test_check(encoder, svpwm);
     // test_eeprom();
+
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+        const auto t = clock::time();
+        const auto [s,c] = sincospu(t);
+        constexpr auto mag = 0.4_r;
+        svpwm.set_alpha_beta_duty(
+            c * mag,
+            s * mag
+        );
+        // svpwm.set_alpha_beta_duty(
+        //     mag,
+        //     mag
+        // );
+    });
+
+    while(true){
+        DEBUG_PRINTLN_IDLE(
+            a_curr,
+            b_curr,
+            30 * (a_curr * a_curr + b_curr * b_curr)
+        );
+    }
 }
 
 struct LapCalibrateTable{

@@ -62,7 +62,9 @@ void uart_main(){
     //uart6 passed
     //uart8 passed
 
-    TARG_UART.init(576000, CommStrategy::Dma, CommStrategy::Interrupt);
+    TARG_UART.init({
+        576000, CommStrategy::Dma, 
+        CommStrategy::Interrupt});
     DEBUGGER.retarget(&TARG_UART);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommStrategy::Dma, CommStrategy::None);
     uart_tb(TARG_UART);

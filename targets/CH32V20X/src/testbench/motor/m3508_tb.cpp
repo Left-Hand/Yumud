@@ -23,7 +23,7 @@ void m3508_main(){
 
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    can1.init(CanBaudrate::_1M, CanMode::Normal);
+    can1.init({CanBaudrate::_1M, CanMode::Normal});
 
     M3508Port port{can1};
     

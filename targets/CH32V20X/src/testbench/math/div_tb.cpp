@@ -118,7 +118,7 @@ static inline constexpr auto udivc(uint32_t Divisor){
 }
 
 void div_tb() {
-    DEBUGGER_INST.init(576000);
+    DEBUGGER_INST.init({576000});
 
     // i8 a = {0};
 

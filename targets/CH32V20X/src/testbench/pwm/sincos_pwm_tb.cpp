@@ -35,7 +35,7 @@ static constexpr size_t FREQ = 2_KHz;
 // #define TIM1_USE_CC4 1
 
 void sincos_pwm_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
 
     
@@ -111,7 +111,7 @@ void sincos_pwm_main(){
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
             {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
-        }
+        }, {}
     );
 
     #if TIM_INDEX == 1

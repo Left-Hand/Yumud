@@ -18,7 +18,7 @@ using namespace ymd::drivers;
 
 void paj7620_main(){
     auto & logger = DEBUGGER_INST;
-    logger.init(576000);
+    logger.init({576000});
     
     I2cSw i2c = {portD[2], portC[12]};
     i2c.init(400_KHz);

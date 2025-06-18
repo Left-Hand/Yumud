@@ -269,7 +269,7 @@ __no_inline auto func(const real_t x){
     // return mysinpu(x); 
 }
 void sincos_main(){
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
 

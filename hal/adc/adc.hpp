@@ -207,10 +207,15 @@ public:
             AdcInjectedChannel(instance_, AdcChannelIndex::VREF, 4)
         }{;}
 
+
+    struct Config{
+        Mode mode = Mode::Independent;
+    };
+
     void init(
         const std::initializer_list<AdcChannelConfig> & regular_list,
         const std::initializer_list<AdcChannelConfig> & injected_list, 
-        const Mode mode = Mode::Independent);
+        const Config & cfg);
 
     template<size_t I>
     requires ((I >= 1) and (I <= 4))

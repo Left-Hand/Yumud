@@ -3,14 +3,14 @@
 #include "spi.hpp"
 #include "core/clock/clock.hpp"
 
-
 namespace ymd::hal{
+
 class SpiSw final: public Spi{
 protected:
     volatile int8_t occupied = -1;
-    hal::GpioIntf & sclk_gpio;
-    hal::GpioIntf & mosi_gpio;
-    hal::GpioIntf & miso_gpio;
+    hal::GpioIntf & sclk_gpio_;
+    hal::GpioIntf & mosi_gpio_;
+    hal::GpioIntf & miso_gpio_;
 
     uint16_t delays = 100;
     uint8_t data_bits = 8;
@@ -19,34 +19,41 @@ protected:
     __no_inline void delay_dur(){
         clock::delay(Microseconds(delays));
     }
-    hal::HalResult lead(const LockRequest req) override{
+    hal::HalResult lead(const LockRequest req) {
         auto ret = Spi::lead(req);
         delay_dur();
         return ret;
     }
 
-    void trail() override{
-        sclk_gpio.set();
+    void trail() {
+        sclk_gpio_.set();
         delay_dur();
         Spi::trail();
     }
 protected :
 public:
 
-    SpiSw(hal::GpioIntf & _sclk_pin,hal::GpioIntf & _mosi_pin,
-            hal::GpioIntf & _miso_pin):sclk_gpio(_sclk_pin),
-                mosi_gpio(_mosi_pin), miso_gpio(_miso_pin){;}
-    SpiSw(hal::GpioIntf & _sclk_pin,hal::GpioIntf & _mosi_pin,
-            hal::GpioIntf & _miso_pin,hal::GpioIntf & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
-                bind_cs_pin(_cs_pin, 0);
-            }
+    SpiSw(
+        hal::GpioIntf & sclk_gpio,
+        hal::GpioIntf & mosi_gpio,
+        hal::GpioIntf & miso_gpio):
+        sclk_gpio_(sclk_gpio),
+        mosi_gpio_(mosi_gpio), 
+        miso_gpio_(miso_gpio){;}
 
-    DELETE_COPY_AND_MOVE(SpiSw);
+    SpiSw(
+        hal::GpioIntf & sclk_gpio,
+        hal::GpioIntf & mosi_gpio,
+        hal::GpioIntf & miso_gpio,
+        hal::GpioIntf & cs_gpio):
+        SpiSw(sclk_gpio, mosi_gpio, miso_gpio){
+            bind_cs_gpio(cs_gpio, 0);
+        }
 
-    void init(const uint32_t baudrate, 
-        const CommStrategy tx_strategy = CommStrategy::Blocking, 
-        const CommStrategy rx_strategy = CommStrategy::Blocking) override;
+    SpiSw(const SpiSw &) = delete;
+    SpiSw(SpiSw &&) = delete;
 
+    void init(const Config & cfg) ;
 
     hal::HalResult write(const uint32_t data) {
         uint32_t dummy;
@@ -61,7 +68,7 @@ public:
         return hal::HalResult::Ok();
     }
 
-    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) override ;
+    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx)  ;
 
     hal::HalResult set_baudrate(const uint32_t baudrate) {
         if(baudrate == 0){
@@ -73,12 +80,12 @@ public:
         return HalResult::Ok();
     }
 
-    hal::HalResult set_data_width(const uint8_t bits) override {
+    hal::HalResult set_data_width(const uint8_t bits)  {
         data_bits = bits;
         return HalResult::Ok();
     }
 
-    hal::HalResult set_bitorder(const Endian endian) override {
+    hal::HalResult set_bitorder(const Endian endian)  {
         m_msb = (endian == MSB);
         return HalResult::Ok();
     }

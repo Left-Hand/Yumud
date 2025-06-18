@@ -12,12 +12,12 @@ class SdoSession;
 
 class SdoProtocol : public ProtocolBase {
 public:
-    SdoProtocol(Driver & driver, ObjectDict & od1)
+    SdoProtocol(Driver & driver, ObjectDictIntf & od1)
         : ProtocolBase("Sdo", driver), driver_(driver), od1_(od1) {
     }
 
 
-    void sendAbort(int index, int subIndex, SdoAbortCode _abortCode) {
+    void send_abort(int index, int subIndex, SdoAbortCode _abortCode) {
         const auto abortCode = _abortCode.to_u32();
         uint8_t can_data[8] = {
             0x80,
@@ -42,20 +42,20 @@ public:
         );
     }
 
-    bool processMessage(const CanMsg & msg) override;
+    bool processMessage(const CanMsg & msg);
 
-    static int extractIndex(const CanMsg & msg) {
+    static constexpr OdIndex extractIndex(const CanMsg & msg) {
         return (msg[2] << 8) | msg[1] ;
     }
 
-    static int extractSubIndex(const CanMsg& msg) {
+    static constexpr OdSubIndex extractSubIndex(const CanMsg& msg) {
         return msg[3];
     }
 
 
 private:
     Driver & driver_;
-    ObjectDict & od1_;
+    ObjectDictIntf & od1_;
     std::unordered_map<uint16_t, SdoSession * > sessions;
 };
 

@@ -28,7 +28,7 @@ struct FoundInfo{
 namespace ranges = std::ranges;
 
 void functional_main(){
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.force_sync();
     

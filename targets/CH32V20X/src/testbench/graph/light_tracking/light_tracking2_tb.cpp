@@ -394,7 +394,7 @@ static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 // static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 16;
 void light_tracking_main(void){
 
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
@@ -442,7 +442,7 @@ void light_tracking_main(void){
     // spi.bind_cs_pin(lcd_cs, 0);
     const auto spi_fd = spi.attach_next_cs(lcd_cs).value();
     // spi.init(144_MHz, CommStrategy::Blocking);
-    spi.init(LCD_SPI_FREQ_HZ, CommStrategy::Blocking);
+    spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
     (void)spi.set_bitorder(MSB);
     // spi.set_bitorder(LSB);

@@ -36,7 +36,7 @@ void lt8920_main(){
     // auto & spi = spisw;
 
 
-    spi.init(2_MHz);
+    spi.init({2_MHz});
     
 
     LT8920 lt{spi, spi.attach_next_cs(portA[0]).value()};

@@ -12,7 +12,7 @@
 void ekf_main(){
 
     
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     

@@ -37,7 +37,7 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define TIM1_USE_CC4 1
 
 void svpwm3_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
 
     
@@ -109,7 +109,7 @@ void svpwm3_main(){
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
             {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
-        }
+        }, {}
     );
 
     #if TIM_INDEX == 1

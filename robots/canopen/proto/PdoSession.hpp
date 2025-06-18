@@ -74,7 +74,11 @@ private:
     CanMsg buildMessage() const ;
     int transSyncCount = 0;
 public:
-    PdoTxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+    // PdoTxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+    //     : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
+    // }
+
+    PdoTxSession(PdoProtocol & pdo, OdEntry params, OdEntry mapping)
         : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
     }
 
@@ -84,7 +88,7 @@ public:
 
 class PdoRxSession:public PdoSessionBase{
 public:
-    PdoRxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
+    PdoRxSession(PdoProtocol & pdo, OdEntry params, OdEntry mapping)
         : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
     }
     

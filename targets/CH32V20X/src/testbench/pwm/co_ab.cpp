@@ -30,7 +30,7 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 
 
 void co_ab_main(){
-    uart2.init(576000);
+    uart2.init({576000});
     DEBUGGER.retarget(&uart2);
 
     #if TIM_INDEX == 1

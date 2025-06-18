@@ -8,7 +8,7 @@ namespace ymd{
 using Year = uint8_t;
 // using Month = uint8_t;
 
-struct Month{
+struct Month final{
     enum class Kind:uint8_t{
         Jan = 1,
         Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
@@ -33,6 +33,31 @@ struct Month{
                 return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
             }
         }
+
+        return None;
+    }
+
+
+    constexpr bool operator == (const Month & rhs) const{
+        return kind == rhs.kind;
+    }
+
+    constexpr bool operator < (const Month & rhs) const{
+        return std::bit_cast<uint8_t>(kind) < std::bit_cast<uint8_t>(rhs.kind);
+    }
+
+
+    constexpr bool is_valid() const {
+        switch(kind){
+            case Kind::Jan ... Kind::Dec: return true;
+            default: return false;
+        }
+    }
+
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
+        return hs << uint8_t(self.kind);
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
@@ -45,6 +70,7 @@ struct Month{
             default: __builtin_unreachable();
         }
     }
+
 };
 
 using Day = uint8_t;
@@ -53,10 +79,7 @@ using Hour = uint8_t;
 using Minute = uint8_t;
 using Seconds = uint8_t;
 
-
-
-
-struct Date{
+struct Date final{
 
     
     Year year;
@@ -85,6 +108,34 @@ struct Date{
         return Some(Date{y, may_month.unwrap(), d});
     }
 
+
+    constexpr bool is_valid() const {
+        return IN_RANGE(year, 24, 30) //no one will use this shit after 2030
+            and month.is_valid()
+            and IN_RANGE(day, 1, 31);
+    }
+
+    constexpr bool operator == (const Date & rhs){
+        return year == rhs.year and month == rhs.month and day == rhs.day;
+    }
+
+    constexpr bool operator < (const Date & rhs){
+        if(year != rhs.year){
+            return year < rhs.year;
+        }
+
+        if(month != rhs.month){ 
+            return month < rhs.month;
+        }
+
+        return day < rhs.day;
+    }
+
+    constexpr bool is_latest() const {
+        return *this == Date::from_compiler();
+    }
+
+
     friend OutputStream & operator <<(OutputStream & os, const Date & self){
         return os << os.brackets<'{'>() 
             << self.month << '/'
@@ -93,9 +144,14 @@ struct Date{
             << os.brackets<'}'>()
             ;
     }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
+        return hs << self.year << self.month << self.day;
+    }
 };
 
-struct Time{
+struct Time final{
 
     Hour hour;
     Minute minute;
@@ -111,6 +167,29 @@ struct Time{
         };
     }
 
+    constexpr bool is_valid() const {
+        return (hour < 24) && (minute < 60) && (seconds < 60);
+    }
+
+    constexpr bool operator == (const Time & rhs) const{
+        return (hour == rhs.hour) && (minute == rhs.minute) && (seconds == rhs.seconds);
+    }
+
+    constexpr bool operator < (const Time & rhs) const {
+        // 层级比较：小时 → 分钟 → 秒
+        if (hour != rhs.hour) {
+            return hour < rhs.hour;
+        }
+        if (minute != rhs.minute) {
+            return minute < rhs.minute;
+        }
+        return seconds < rhs.seconds;
+    }
+
+    constexpr bool is_latest() const{
+        return *this == Time::from_compiler();
+    }
+
     friend OutputStream & operator <<(OutputStream & os, const Time & self){
         return os << os.brackets<'{'>() 
                 << self.hour << os.brackets<':'>()
@@ -119,6 +198,12 @@ struct Time{
                 << os.brackets<'}'>()
             ;
     }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Time & self){
+        return hs << self.hour << self.minute << self.seconds;
+    }
+
 };
 
 
@@ -131,19 +216,26 @@ struct Author final{
     }
 
     constexpr StringView name() const{
-        return StringView(name_, 8);
+        return StringView(name_.data(), 8);
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Author & self){ 
         return os << "name: " << self.name();
     }
 
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Author & self){
+        return hs << self.name();
+    }
+
 private:
     constexpr Author(const char * name){
-        memset(name_, 0, 8);
-        memcpy(name_, name, strlen(name));
+        name_.fill(0);
+        for(size_t i = 0; i < MAX_NAME_LEN && name[i]; ++i){
+            name_[i] = name[i];
+        }
     }
-    char name_[MAX_NAME_LEN];
+    std::array<char, MAX_NAME_LEN> name_;
 };
 
 struct Version{
@@ -158,6 +250,11 @@ struct Version{
                 << self.minor
                 << os.brackets<'}'>()
             ;
+    }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Version & self){
+        return hs << self.major << self.minor;
     }
 };
 
@@ -185,11 +282,19 @@ struct ReleaseInfo{
     }
 
     friend OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
-        os << "author:" << self.author;
-        os << " version:" << self.version;
-        os << " date:" << self.date;
-        os << " time:" << self.time ;
+        os << os.scoped("release")(
+            os 
+            << os.field("author")(os << self.author)
+            << os.field("version")(os << self.version)
+            << os.field("date")(os << self.date)
+            << os.field("time")(os << self.time)
+        );
         return os;
+    }
+
+    template<HashAlgo S>
+    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
+        return hs << self.author << self.version << self.date << self.time;
     }
 };
 

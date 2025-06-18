@@ -1,7 +1,7 @@
 #include "adc_utils.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-namespace ymd::hal::__adc_internal{
+namespace ymd::hal::adc_details{
 
     void install_pin(const AdcChannelIndex channel, const Enable en){
         uint8_t ch_index = (uint8_t)channel;

@@ -1,16 +1,19 @@
 #include "PdoObjDict.hpp"
 
+using namespace ymd;
 using namespace ymd::canopen;
 
-std::optional<SubEntry> PdoObjDict::find(const Didx didx) {
+Option<SubEntry> PdoObjDict::get_sub_entry(const Didx didx) {
     const auto [idx, subidx] = didx;
 
     switch (idx) {
         case 0x1600: switch (subidx) {
             case 0x00:
-                return SubEntry{CANOPEN_NAME("transmit PDO communication parameter"), tx_param, EntryAccessAuthority::RW, EntryDataType::uint16};
+                return Some(SubEntry::from_u16_rw(
+                    CANOPEN_NAME("transmit PDO communication parameter"), tx_param));
             case 0x01:
-                return SubEntry{CANOPEN_NAME("transmit PDO mapping parameter"), rx_param, EntryAccessAuthority::RW, EntryDataType::uint32};
+                return Some(SubEntry::from_u32_rw(
+                    CANOPEN_NAME("transmit PDO mapping parameter"), rx_param));
             default: break;
             }
         // case 0x1A00: switch (subidx) {
@@ -22,7 +25,6 @@ std::optional<SubEntry> PdoObjDict::find(const Didx didx) {
         //     }
 
         default:
-            break;
+            return None;
     }
-    return std::nullopt;
 }

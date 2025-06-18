@@ -92,7 +92,7 @@ void gui_main(){
     //     clock::delay(200ms);
     // }
 
-    DEBUGGER_INST.init(576000);
+    DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -121,7 +121,7 @@ void gui_main(){
 
 
     const auto spi_fd = spi.attach_next_cs(lcd_cs).value();
-    spi.init(144_MHz, CommStrategy::Blocking);
+    spi.init({144_MHz});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});

@@ -47,7 +47,7 @@ public:
             instance(_instance), channel(_channel), rank(_rank){};
     
     void init(){
-        __adc_internal::install_pin(channel, EN);
+        adc_details::install_pin(channel, EN);
     }
 
     virtual void set_sample_cycles(const SampleCycles cycles) = 0;

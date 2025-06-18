@@ -9,19 +9,25 @@ namespace ymd::hal{
 
 
 class SpiSlaveIndex{
-    public:
-        explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
-            spi_idx_(spi_idx){}
-    
-        uint8_t as_u8() const {return spi_idx_;}
+public:
+    explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
+        spi_idx_(spi_idx){}
 
-        LockRequest to_req() const {
-            return LockRequest(spi_idx_, 0);
-        }
-    private:
-        uint8_t spi_idx_;
-    };
+    uint8_t as_u8() const {return spi_idx_;}
 
+    LockRequest to_req() const {
+        return LockRequest(spi_idx_, 0);
+    }
+private:
+    uint8_t spi_idx_;
+};
+
+enum class SpiMode:uint8_t{
+    _0,
+    _1,
+    _2,
+    _3
+};
 
 class Spi:public BusBase{
 public:
@@ -50,7 +56,7 @@ protected:
         last_index.reset();
     }
 
-    void bind_cs_pin(hal::GpioIntf & gpio, const uint8_t index){
+    void bind_cs_gpio(hal::GpioIntf & gpio, const uint8_t index){
         gpio.outpp(HIGH);
         cs_port_.bind_pin(gpio, index);
     }
@@ -68,10 +74,15 @@ public:
     [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
     [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
 
-    virtual void init(
-        const uint32_t baudrate, 
-        const CommStrategy tx_strategy = CommStrategy::Blocking, 
-        const CommStrategy rx_strategy = CommStrategy::Blocking) = 0;
+
+    struct Config{
+        uint32_t baudrate;
+        SpiMode mode = SpiMode::_3;
+        CommStrategy tx_strategy = CommStrategy::Blocking;
+        CommStrategy rx_strategy = CommStrategy::Blocking;
+    };
+
+    virtual void init(const Config & cfg) = 0;
 
 
     [[nodiscard]]

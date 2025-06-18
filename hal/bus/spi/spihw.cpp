@@ -9,7 +9,9 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void SpiHw::enable_rcc(const Enable en){
-    switch((uint32_t)instance_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
+        default:
+            __builtin_unreachable();
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
@@ -23,15 +25,13 @@ void SpiHw::enable_rcc(const Enable en){
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en == EN);
             break;
         #endif
-        default:
-            break;
     }
 }
 
 Gpio & SpiHw::get_mosi_gpio(){
-    switch((uint32_t)instance_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         default:
-            return NullGpio;
+            __builtin_unreachable();
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MOSI_GPIO;
@@ -50,9 +50,9 @@ Gpio & SpiHw::get_mosi_gpio(){
 }
 
 Gpio & SpiHw::get_miso_gpio(){
-    switch((uint32_t)instance_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         default:
-            return NullGpio;
+            __builtin_unreachable();
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MISO_GPIO;
@@ -71,9 +71,9 @@ Gpio & SpiHw::get_miso_gpio(){
 }
 
 Gpio & SpiHw::get_sclk_gpio(){
-    switch((uint32_t)instance_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         default:
-            return NullGpio;
+            __builtin_unreachable();
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_SCLK_GPIO;
@@ -92,9 +92,9 @@ Gpio & SpiHw::get_sclk_gpio(){
 }
 
 Gpio & SpiHw::get_hw_cs_gpio(){
-    switch((uint32_t)instance_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         default:
-            return NullGpio;
+            __builtin_unreachable();
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_CS_GPIO;
@@ -112,50 +112,14 @@ Gpio & SpiHw::get_hw_cs_gpio(){
     }
 }
 
-uint16_t SpiHw::calculate_prescaler(const uint32_t baudrate){
-
-	uint32_t busFreq = [](const uint32_t base){
-        switch(base) {
-            #ifdef ENABLE_SPI1
-            case SPI1_BASE:
-                return sys::clock::get_apb1_freq();
-                break;
-            #endif
-
-            #ifdef ENABLE_SPI2
-            case SPI2_BASE:
-                return sys::clock::get_apb2_freq();
-                break;
-            #endif
-
-            #ifdef ENABLE_SPI3
-            case SPI3_BASE:
-                return sys::clock::get_apb2_freq();
-                break;
-            #endif
-        
-            default:
-                __builtin_unreachable();
-        }
-    }(uint32_t(instance_));
-	uint32_t real_div = 2;
-    uint8_t i = 0;
-
-	while(real_div * baudrate < busFreq){
-        real_div <<= 1;
-        i++;
-    }
-
-    return i & 0b111;
-}
 
 void SpiHw::install_gpios(){
-    if(bool(tx_strategy_)){
+    if(tx_strategy_ != CommStrategy::Nil){
         Gpio & mosi_pin = get_mosi_gpio();
         mosi_pin.afpp();
     }
 
-    if(bool(rx_strategy_)){
+    if(rx_strategy_ != CommStrategy::Nil){
         Gpio & miso_pin = get_miso_gpio();
         miso_pin.inflt();
     }
@@ -167,14 +131,14 @@ void SpiHw::install_gpios(){
 
 
     if(false == cs_port_.is_index_valid(0)){
-        Gpio & cs_pin = get_hw_cs_gpio();
-        cs_pin.set();
+        Gpio & cs_gpio = get_hw_cs_gpio();
+        cs_gpio.set();
         if(hw_cs_enabled_){
-            cs_pin.afpp();
+            cs_gpio.afpp();
         }else{
-            cs_pin.outpp();
+            cs_gpio.outpp();
         }
-        bind_cs_pin(cs_pin, 0);
+        bind_cs_gpio(cs_gpio, 0);
     }
 
     for(size_t i = 0; i < cs_port_.size(); i++){
@@ -194,18 +158,46 @@ void SpiHw::enable_hw_cs(const Enable en){
         cs_gpio.outpp();
     }
 
-    instance_->enable_soft_cs(!en);
+    inst_->enable_soft_cs(!en);
 }
 
 void SpiHw::enable_rx_it(const Enable en){
 
 }
-void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const CommStrategy rx_strategy){
 
-    tx_strategy_ = tx_strategy;
-    rx_strategy_ = rx_strategy;
+uint32_t SpiHw::get_bus_freq() const {
+    switch(reinterpret_cast<uint32_t>(inst_)) {
+        #ifdef ENABLE_SPI1
+        case SPI1_BASE:
+            return sys::clock::get_apb1_freq();
+            break;
+        #endif
+
+        #ifdef ENABLE_SPI2
+        case SPI2_BASE:
+            return sys::clock::get_apb2_freq();
+            break;
+        #endif
+
+        #ifdef ENABLE_SPI3
+        case SPI3_BASE:
+            return sys::clock::get_apb2_freq();
+            break;
+        #endif
+    
+        default:
+            __builtin_unreachable();
+    }
+}
+
+void SpiHw::init(const Config & cfg){
+
+    tx_strategy_ = cfg.tx_strategy;
+    rx_strategy_ = cfg.rx_strategy;
 	enable_rcc();
     install_gpios();
+
+
 
     const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
@@ -214,40 +206,47 @@ void SpiHw::init(const uint32_t baudrate, const CommStrategy tx_strategy, const 
         .SPI_CPOL = SPI_CPOL_High,
         .SPI_CPHA = SPI_CPHA_2Edge,
         .SPI_NSS = SPI_NSS_Soft,
-        .SPI_BaudRatePrescaler = uint16_t(calculate_prescaler(baudrate) << 3),
-        // .SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2,
+        .SPI_BaudRatePrescaler = uint16_t(calculate_prescaler(
+            get_bus_freq(), cfg.baudrate) << 3),
         .SPI_FirstBit = SPI_FirstBit_MSB,
         .SPI_CRCPolynomial = 7
     };
-    // instance_->enable_dma_txconst
 
+	SPI_Init((SPI_TypeDef *)inst_, &SPI_InitStructure);
 
-	SPI_Init((SPI_TypeDef *)instance_, &SPI_InitStructure);
+    inst_->enable_spi(EN);
+    // uint16_t tmpreg = std::bit_cast<uint16_t>(inst_->CTLR1);
+    // tmpreg &= 0x3040;
+    // tmpreg |= (uint16_t)((uint32_t)SPI_InitStructure.SPI_Direction | SPI_InitStructure.SPI_Mode |
+    //                     SPI_InitStructure.SPI_DataSize | SPI_InitStructure.SPI_CPOL |
+    //                     SPI_InitStructure.SPI_CPHA | SPI_InitStructure.SPI_NSS |
+    //                     SPI_InitStructure.SPI_BaudRatePrescaler | SPI_InitStructure.SPI_FirstBit);
 
-	// SPI_Cmd((SPI_TypeDef *)instance_, ENABLE);
-    instance_->enable_spi(EN);
+    // inst_->CTLR1 = std::bit_cast<decltype(inst_->CTLR1)>(tmpreg);
+    // inst_->CFGR &= 0xF7FF;
+    // inst_->CRCR = SPI_InitStructure.SPI_CRCPolynomial;
 
-    while ((instance_->STATR.TXE) == RESET);
-    instance_->DATAR.DR = 0;
+    while ((inst_->STATR.TXE) == RESET);
+    inst_->DATAR.DR = 0;
 
-    while ((instance_->STATR.RXNE) == RESET);
-    instance_->DATAR.DR;
+    while ((inst_->STATR.RXNE) == RESET);
+    inst_->DATAR.DR;
 }
 
 
 
 hal::HalResult SpiHw::set_data_width(const uint8_t bits){
-    instance_->enable_dualbyte((bits == 16) ? EN : DISEN);
+    inst_->enable_dualbyte((bits == 16) ? EN : DISEN);
     return hal::HalResult::Ok();
 }
 
 hal::HalResult SpiHw::set_baudrate(const uint32_t baudrate){
-    instance_ -> CTLR1.BR = calculate_prescaler(baudrate);
+    inst_ -> CTLR1.BR = calculate_prescaler(get_bus_freq(), baudrate);
     return hal::HalResult::Ok();
 }
 
 hal::HalResult SpiHw::set_bitorder(const Endian endian){
-    instance_ -> CTLR1.LSB = (endian == MSB) ? 0 : 1;
+    inst_ -> CTLR1.LSB = (endian == MSB) ? 0 : 1;
     return hal::HalResult::Ok();
 }
 
@@ -268,6 +267,7 @@ SpiHw spi2{chip::SPI2_Inst};
 void SPI1_IRQHandler(void){
 
 }
+
 #endif
 
 #ifdef ENABLE_SPI2

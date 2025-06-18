@@ -14,14 +14,14 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    uart2.init(921600, CommStrategy::Blocking);
+    uart2.init({921600, CommStrategy::Blocking});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.no_brackets();
     DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = spi1;
 
-    spi.init(4_MHz);
+    spi.init({4_MHz});
 
     PMW3901 pmw{spi, spi.attach_next_cs(portA[15]).value()};
     pmw.init().unwrap();

@@ -66,7 +66,8 @@ static void init_adc(){
             // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T41_5},
             // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T41_5},
             // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T41_5},
-        }
+        },
+        {}
     );
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
@@ -82,7 +83,7 @@ std::array<T, N> ones(const T value){
     return ret;
 }
 void myesc_main(){
-    DEBUG_UART.init(DEBUG_UART_BAUD);
+    DEBUG_UART.init({DEBUG_UART_BAUD});
     DEBUGGER.retarget(&DEBUG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

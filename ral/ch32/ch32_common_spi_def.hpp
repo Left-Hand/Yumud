@@ -130,12 +130,8 @@ namespace ymd::ral::CH32V20x{
             uint8_t BSY:1;
         };
 
-        constexpr void init_spi(){
-        }
 
-        constexpr void init_i2s(){
 
-        }
         constexpr void enable_spi(const Enable en){
             CTLR1.SPE = en == EN;
         }

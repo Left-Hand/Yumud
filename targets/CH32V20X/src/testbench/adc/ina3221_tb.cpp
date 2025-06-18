@@ -22,7 +22,7 @@ static constexpr double SHUNT_RES = 0.1;
 static constexpr double INV_SHUNT_RES = 1 / SHUNT_RES;
 
 void ina3221_main(){
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

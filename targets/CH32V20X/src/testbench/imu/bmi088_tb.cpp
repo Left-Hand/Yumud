@@ -69,11 +69,11 @@ static void bmi088_tb(hal::Spi & spi){
 
 
 void bmi088_main(){
-    UART.init(576_KHz);
+    UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     clock::delay(200ms);
 
-    spi1.init(9_MHz);
+    spi1.init({9_MHz});
     bmi088_tb(hal::spi1);
 }

@@ -14,7 +14,7 @@
 using namespace ymd::drivers;
 
 void w25qxx_main(){
-    hal::uart2.init(576000);
+    hal::uart2.init({576000});
 
     auto & spi = spi1;
     auto & w25_cs = portD[5];

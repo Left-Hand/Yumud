@@ -112,7 +112,7 @@ void area(AreaTrait obj){
 }
 
 void traits_tb(){
-    hal::uart2.init(576000);
+    hal::uart2.init({576000});
     DEBUGGER.retarget(&hal::uart2);
 
     Rectangle rect = {1,1};

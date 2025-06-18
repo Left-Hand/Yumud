@@ -32,8 +32,16 @@ public:
     // }
 
 
+    
+    // virtual Option<OdEntry> operator [](const Index index) = 0;
+
+    // virtual Option<SubEntry> operator [](const Didx id) = 0;
+
     virtual SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) = 0;
     virtual SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const = 0;
+
+    virtual Option<OdEntry> get_entry(const OdIndex idx) = 0;
+    virtual Option<SubEntry> get_sub_entry(const Didx didx) = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
@@ -45,23 +53,26 @@ public:
     virtual StringView ename(const Didx didx) const = 0;
 };
 
+
+#if 0
 class ObjectDict:public ObjectDictIntf{
 private:
     std::map<Index, OdEntry> dict_;
 public:
     ObjectDict() = default;
 
-    std::optional<OdEntry> operator [](const Index index){
-        return (dict_[index]);
+    Option<OdEntry> operator [](const Index index){
+        return Some(dict_[index]);
     }
 
-    std::optional<SubEntry> operator [](const Didx id){
+    Option<SubEntry> operator [](const Didx id){
+        auto & self = *this
         const auto [index, subindex] = id;
-        auto entry_opt = ((*this)[index]);
-        if (entry_opt.has_value()){
-            return entry_opt.value()[subindex];
+        const auto may_entry = (self[index]);
+        if (may_entry.is_some()){
+            return may_entry.unwrap()[subindex];
         }else{
-            return std::nullopt;
+            return None;
         }
     }
 
@@ -86,6 +97,8 @@ public:
 	}
 };
 
+#endif
+
 
 // #define ENTRY_NO_NAME
 
@@ -98,20 +111,18 @@ public:
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
 
-    SdoAbortCode _write_any(const void * pbuf, const Didx didx) final override;
-    SdoAbortCode _read_any(void * pbuf, const Didx didx) const final override;
+    SdoAbortCode _write_any(const void * pbuf, const Didx didx) ;
+    SdoAbortCode _read_any(void * pbuf, const Didx didx) const ;
 public:
     StaticObjectDictBase() = default;
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
     
-    SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) override;
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const Didx didx) ;
     
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const override;
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const Didx didx) const;
 
-    StringView ename(const Didx didx) const final override;
-    
-    virtual std::optional<SubEntry> find(const Didx didx) = 0;
+    StringView ename(const Didx didx) const ;
 };
 
 

@@ -110,7 +110,7 @@ namespace MotorUtils{
         
         uint32_t hash() const {
             // sizeof(Archive);
-            return hash_impl(cali_map);
+            return ymd::hash(cali_map);
         }
 
         auto & map() {return cali_map;}

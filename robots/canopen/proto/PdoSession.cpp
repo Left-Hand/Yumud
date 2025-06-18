@@ -14,15 +14,15 @@ CanMsg PdoTxSession::buildMessage() const {
 
     std::array<uint8_t, 8> data;
 
-    const int cnt = int(mapping_[0].value());
-    const CobId cobId = CobId::from_u16(int(params_[1].value()));
+    const int cnt = int(mapping_[0].unwrap());
+    const CobId cobId = CobId::from_u16(int(params_[1].unwrap()));
 
     int bits_cnt = 0;
 
     for (int i = 1; i <= cnt; i++) {
 
         //获取mapping条目i的子项 得到映射
-        const int map = int(mapping_[i].value());
+        const int map = int(mapping_[i].unwrap());
 
         //拆分为条目的比特数 索引
         const auto [bits, subindex, index] = PdoMapping::from_u32(map);
@@ -56,18 +56,18 @@ CanMsg PdoTxSession::buildMessage() const {
 
 //将收到的pdo报文写入字典
 bool PdoRxSession::processMessage(const CanMsg& msg){
-    const CobId cobId = CobId::from_u16(int(params_[1].value()));
+    const CobId cobId = CobId::from_u16(int(params_[1].unwrap()));
 
     if (cobId.to_stdid() != msg.id()) {
         return false;
     }
 
-    int cnt = int(mapping_[0].value());
+    int cnt = int(mapping_[0].unwrap());
     int bits_cnt = 0;
 
     for (int i = 1; i <= cnt; i++) {
 
-        const int map = int(mapping_[i].value());
+        const int map = int(mapping_[i].unwrap());
 
         //拆分为条目的比特数 索引
         const auto [bits, subindex, index] = PdoMapping::from_u32(map);
@@ -89,7 +89,7 @@ bool PdoRxSession::processMessage(const CanMsg& msg){
 //TODO transfer type的模式匹配问题
 
 bool PdoTxSession::onSyncEvent() {
-    TransferType transType = TransferType(int(params_[2].value()));
+    TransferType transType = TransferType(int(params_[2].unwrap()));
     if (int(transType) >= int(TransferType::SyncMin) and 
         int(transType) <= int(TransferType::SyncMax)) {
         //周期性同步传输 每transType次发生同步事件才发送数据

@@ -18,9 +18,9 @@ void can_ring_main(){
     auto & led = portC[14];
     led.outpp(HIGH);
 
-    DEBUGGER_INST.init(576000, CommStrategy::Blocking);
+    DEBUGGER_INST.init({576000, CommStrategy::Blocking});
     auto & can = can1;
-    can.init(hal::CanBaudrate::_1M, Can::Mode::Internal);
+    can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
 
     can[0].mask(
         CanID16{0x200, CanRemoteSpec::Any}, CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),

@@ -182,7 +182,6 @@ public:
 	StringView substr( size_t beginIndex ) const { return substr(beginIndex, len); };
 	StringView substr( size_t beginIndex, size_t endIndex ) const;
 
-	std::vector<StringView> split(const char chr, const size_t times = 0) const;
     constexpr const char * begin() const {return buffer;}
     constexpr const char * end() const {return buffer + len;}
 	constexpr size_t size() const {return len;}

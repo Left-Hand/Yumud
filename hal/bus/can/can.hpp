@@ -125,7 +125,12 @@ public:
 
     void set_baudrate(const uint32_t baudrate);
 
-    void init(const BaudRate baudrate, const Mode mode = Mode::Normal);
+    struct Config{
+        BaudRate baudrate;
+        Mode mode = Mode::Normal;
+    };
+
+    void init(const Config & cfg);
 
     bool write(const CanMsg & msg);
     [[nodiscard]] CanMsg read();

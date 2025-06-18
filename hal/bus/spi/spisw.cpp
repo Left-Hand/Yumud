@@ -3,11 +3,11 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const CommStrategy rx_strategy ){
-    set_baudrate(baudrate);
+void SpiSw::init(const Config & cfg){
+    set_baudrate(cfg.baudrate);
 
-    mosi_gpio.outpp();
-    sclk_gpio.outpp(HIGH);
+    mosi_gpio_.outpp();
+    sclk_gpio_.outpp(HIGH);
 
     for(size_t i = 0; i < cs_port_.size(); i++){
         if(cs_port_.is_index_valid(i)){
@@ -15,35 +15,35 @@ void SpiSw::init(const uint32_t baudrate, const CommStrategy tx_strategy , const
         }
     }
 
-    miso_gpio.inpd();
+    miso_gpio_.inpd();
 }
 
 
 hal::HalResult SpiSw::transceive(uint32_t & data_rx, const uint32_t data_tx){
     uint32_t ret = 0;
 
-    sclk_gpio.set();
+    sclk_gpio_.set();
 
     for(uint8_t i = 0; i < data_bits; i++){
-        sclk_gpio.set();
+        sclk_gpio_.set();
         delay_dur();
-        mosi_gpio = BoolLevel::from(data_tx & (1 << (i)));
+        mosi_gpio_ = BoolLevel::from(data_tx & (1 << (i)));
         delay_dur();
-        sclk_gpio.clr();
+        sclk_gpio_.clr();
         delay_dur();
 
         if(m_msb){
-            mosi_gpio = BoolLevel::from(data_tx & (1 << (data_bits - 2 - i)));
-            ret <<= 1; ret |= miso_gpio.read().to_bool();
+            mosi_gpio_ = BoolLevel::from(data_tx & (1 << (data_bits - 2 - i)));
+            ret <<= 1; ret |= miso_gpio_.read().to_bool();
             delay_dur();
         }else{
-            mosi_gpio = BoolLevel::from(data_tx & (1 << i));
-            ret >>= 1; ret |= (uint32_t(miso_gpio.read().to_bool()) << (data_bits - 1)) ;
+            mosi_gpio_ = BoolLevel::from(data_tx & (1 << i));
+            ret >>= 1; ret |= (uint32_t(miso_gpio_.read().to_bool()) << (data_bits - 1)) ;
             delay_dur();
         }
     }
 
-    sclk_gpio.set();
+    sclk_gpio_.set();
 
     data_rx = ret;
     return hal::HalResult::Ok();

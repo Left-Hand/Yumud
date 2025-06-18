@@ -2,6 +2,8 @@
 
 using namespace ymd::canopen;
 
+#if 0
+
 std::optional<SubEntry> Cia402ObjectDict::find(const Didx didx) {
 
     const auto [idx, subidx] = didx;
@@ -106,3 +108,6 @@ std::optional<SubEntry> Cia402ObjectDict::find(const Didx didx) {
     }
     return std::nullopt;
 }
+
+
+#endif

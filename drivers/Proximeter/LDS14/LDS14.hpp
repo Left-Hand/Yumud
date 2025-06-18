@@ -49,7 +49,7 @@ public:
     LDS14(hal::Uart & uart):m_uart(uart){;}
 
     void init(){
-        m_uart.init(115200);
+        m_uart.init({115200u});
         m_uart.set_rx_strategy(CommStrategy::Dma);
     }
 

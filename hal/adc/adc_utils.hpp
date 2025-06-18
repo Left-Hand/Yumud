@@ -56,7 +56,7 @@ namespace ymd::hal{
         AWD = ADC_IT_AWD
     };
 
-    namespace __adc_internal{
+    namespace adc_details{
         void install_pin(const AdcChannelIndex channel, const Enable en = EN);
         real_t read_temp();
     }

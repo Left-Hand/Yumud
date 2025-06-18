@@ -18,10 +18,10 @@ static constexpr size_t BAUD = 921600;
 
 void half_line_uart_main(){
 
-    UART.init(BAUD);
+    UART.init({BAUD});
     DEBUGGER.retarget(&UART);
 
-    OTHER_UART.init(BAUD);
+    OTHER_UART.init({BAUD});
     OTHER_UART.enable_single_line_mode();
 
     while(true){

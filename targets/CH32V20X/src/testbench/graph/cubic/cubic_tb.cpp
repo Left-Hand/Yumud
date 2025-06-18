@@ -418,7 +418,7 @@ static void precompute_2(const float angle)
 
 void cubic_main(void){
 
-    UART.init(576000);
+    UART.init({576000});
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
@@ -444,7 +444,7 @@ void cubic_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    spi.init(144_MHz, CommStrategy::Blocking);
+    spi.init({144_MHz});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});

@@ -129,7 +129,7 @@ void leetcode_no11(){
 
 
 void leetcode_main(){
-    hal::uart2.init(576000);
+    hal::uart2.init({576000});
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");

@@ -163,37 +163,37 @@ enum class MotionMode : uint8_t {
 
 
 
-class Cia402ObjectDict:public Cia301ObjectDict{
-protected:
-    struct{
-    #pragma pack(push, 1)
-        uint16_t control_word_;
-        uint16_t status_word_;
-        int8_t modes_of_operation_;
-        int8_t modes_of_operation_display_;
-        int32_t position_actual_value_;
-        int32_t velocity_actual_value_;
-        int16_t torque_actual_value_;
-        int32_t position_demand_value_;
-        int32_t velocity_demand_value_;
-        int16_t torque_demand_value_;
-        int32_t target_position_;
-        int32_t target_velocity_;
-        int16_t target_torque_;
-        int32_t max_profile_velocity_;
-        int16_t max_motor_current_;
-        int32_t max_profile_acceleration_;
-        int32_t max_profile_deceleration_;
-        int32_t software_position_limit_;
-        int32_t software_velocity_limit_;
-        int16_t software_torque_limit_;
-    #pragma pack(pop)
-    };
-public:
-    Cia402ObjectDict() = default;
+// class Cia402ObjectDict:public Cia301ObjectDict{
+// protected:
+//     struct{
+//     #pragma pack(push, 1)
+//         uint16_t control_word_;
+//         uint16_t status_word_;
+//         int8_t modes_of_operation_;
+//         int8_t modes_of_operation_display_;
+//         int32_t position_actual_value_;
+//         int32_t velocity_actual_value_;
+//         int16_t torque_actual_value_;
+//         int32_t position_demand_value_;
+//         int32_t velocity_demand_value_;
+//         int16_t torque_demand_value_;
+//         int32_t target_position_;
+//         int32_t target_velocity_;
+//         int16_t target_torque_;
+//         int32_t max_profile_velocity_;
+//         int16_t max_motor_current_;
+//         int32_t max_profile_acceleration_;
+//         int32_t max_profile_deceleration_;
+//         int32_t software_position_limit_;
+//         int32_t software_velocity_limit_;
+//         int16_t software_torque_limit_;
+//     #pragma pack(pop)
+//     };
+// public:
+//     Cia402ObjectDict() = default;
 
-    std::optional<SubEntry> find(const Didx didx);
-};
+//     std::optional<SubEntry> find(const Didx didx);
+// };
 
 
 

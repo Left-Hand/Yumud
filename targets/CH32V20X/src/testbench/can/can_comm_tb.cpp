@@ -10,7 +10,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
-    can.init(hal::CanBaudrate::_1M, hal::Can::Mode::Normal);
+    can.init({hal::CanBaudrate::_1M, hal::Can::Mode::Normal});
 
     portC[13].outpp();
     portC[14].outpp();

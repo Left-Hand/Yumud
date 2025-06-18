@@ -242,15 +242,15 @@ void Can::enable_rcc(){
     }
 }
 
-void Can::init(const BaudRate baudrate, const Mode _mode){
+void Can::init(const Config & cfg){
     enable_rcc();
     install_gpio();
 
-    const auto setting = baudrate.dump();
+    const auto setting = cfg.baudrate.dump();
 
-    const CAN_InitTypeDef config = {
+    const CAN_InitTypeDef CAN_InitConf = {
         .CAN_Prescaler = setting.prescale,
-        .CAN_Mode = std::bit_cast<uint8_t>(_mode),
+        .CAN_Mode = std::bit_cast<uint8_t>(cfg.mode),
         .CAN_SJW = std::bit_cast<uint8_t>(setting.swj),
         .CAN_BS1 = std::bit_cast<uint8_t>(setting.bs1),
         .CAN_BS2 = std::bit_cast<uint8_t>(setting.bs2),
@@ -263,7 +263,7 @@ void Can::init(const BaudRate baudrate, const Mode _mode){
         .CAN_TXFP = DISABLE,
     };
 
-    CAN_Init(instance_, &config);
+    CAN_Init(instance_, &CAN_InitConf);
     init_it();
 }
 

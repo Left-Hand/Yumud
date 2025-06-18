@@ -97,7 +97,7 @@ void init_adc(){
             // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T41_5},
             // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T41_5},
             // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T41_5},
-        }
+        }, {}
     );
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
@@ -331,7 +331,7 @@ __no_inline void init_opa(){
 // }
 
 void bldc_main(){
-    uart2.init(6_MHz);
+    uart2.init({6_MHz});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -356,14 +356,14 @@ void bldc_main(){
     pwm_v.init({});
     pwm_w.init({});
 
-    spi1.init(18_MHz);
+    spi1.init({18_MHz});
 
     const auto ma730_spi_fd = spi1.attach_next_cs(portA[15]).value();
     // spi1.bind_cs_pin(, 2);
     // spi1.bind_cs_pin(portA[0], 0);
 
 
-    can1.init(CanBaudrate::_1M);
+    can1.init({CanBaudrate::_1M});
 
     // BMI160 bmi{spi1, 0};
 
