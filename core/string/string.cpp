@@ -417,10 +417,6 @@ String & String::toUpperCase(void)
 	}
 	return *this;
 }
-
-std::vector<StringView> String::split(const char delimiter, const size_t times) const{
-	return StringView(*this).split(delimiter, times);
-}
 	
 void String::trim(void)
 {

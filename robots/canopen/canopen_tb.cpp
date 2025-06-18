@@ -11,6 +11,7 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::canopen;
 
+#if 0
 void canopen_main(){
     DEBUGGER_INST.init({576000u});
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -41,3 +42,5 @@ void canopen_main(){
         clock::delay(1ms);
     }
 }   
+
+#endif

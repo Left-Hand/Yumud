@@ -12,11 +12,11 @@ namespace ymd::drivers{
 struct ZdtMotor_Collections{
 
     struct NodeId{
-        static constexpr NodeId from(const uint8_t raw) {
+        static constexpr NodeId from_u8(const uint8_t raw) {
             return NodeId{raw};
         }
 
-        constexpr uint8_t to() const {
+        constexpr uint8_t to_u8() const {
             return id;
         }
 
@@ -35,13 +35,13 @@ struct ZdtMotor_Collections{
             return buf_[idx];
         }
 
-        void append(const uint8_t data){
+        constexpr void append(const uint8_t data){
             ASSERT(size_ + 1 <= N);
             buf_[size_] = data;
             size_ = size_ + 1;
         }
 
-        void append(const std::span<const uint8_t> pbuf){
+        constexpr void append(const std::span<const uint8_t> pbuf){
             ASSERT(size_ + pbuf.size() <= N);
             for(size_t i = 0; i < pbuf.size(); i++){
                 buf_[size_ + i] = pbuf[i];
@@ -54,6 +54,8 @@ struct ZdtMotor_Collections{
         }
 
         constexpr size_t size() const {return size_;}
+
+
     private:
         std::array<uint8_t, N> buf_;
         size_t size_ = 0;
@@ -70,6 +72,8 @@ struct ZdtMotor_Collections{
     enum class FuncCode:uint8_t{
         Activation = 0xf3,
         SetSpeed = 0xf6,
+        // SetCurrent = 0xfb,
+        SetCurrent = 0xf5,
         SetPosition = 0xfd,
         Stop = 0xfe,
         MultiAxisSync = 0xff, 
@@ -85,38 +89,56 @@ struct ZdtMotor_Collections{
         explicit constexpr Bytes2CanMsgIterator(
             const NodeId nodeid, 
             const FuncCode func_code,
-            const Input bytes
+            const Input payload
         ):
             nodeid_(nodeid),
             func_code_(func_code),
-            bytes_(bytes){;}
+            payload_(payload){;}
 
 
         constexpr Option<hal::CanMsg> next(){
-            constexpr size_t CANMSG_PAYLOAD_LENGTH = 7;
+            constexpr size_t CANMSG_PAYLOAD_MAX_LENGTH = 7;
 
             const auto msg_len = MIN(
-                bytes_.size() - offset_, 
-                CANMSG_PAYLOAD_LENGTH);
+                payload_.size() - offset_, 
+                CANMSG_PAYLOAD_MAX_LENGTH);
 
             if(msg_len == 0) return None;
 
-            const auto msg = hal::CanMsg::from_bytes(
-                map_nodeid_to_canid(nodeid_, offset_ / CANMSG_PAYLOAD_LENGTH),
-                std::span<const uint8_t>(bytes_.subspan(offset_, CANMSG_PAYLOAD_LENGTH))
-            );
+            const auto msg = make_canmsg(
+                nodeid_, func_code_, 
+                offset_ / CANMSG_PAYLOAD_MAX_LENGTH,
+                payload_.subspan(offset_, CANMSG_PAYLOAD_MAX_LENGTH)
+            ); 
 
-            offset_ += CANMSG_PAYLOAD_LENGTH;
+            offset_ += CANMSG_PAYLOAD_MAX_LENGTH;
 
             return Some(msg);
         }
 
-        static constexpr hal::CanStdId map_nodeid_to_canid(
-            const NodeId id, 
+        static constexpr hal::CanMsg make_canmsg(
+            const NodeId nodeid,
+            const FuncCode func_code,
+            const uint8_t piece_cnt,
+            const std::span<const uint8_t> bytes
+        ){
+            
+            auto buf = InlineBuf<8>{};
+            buf.append(std::bit_cast<uint8_t>(func_code));
+            buf.append(bytes);
+
+            return hal::CanMsg::from_bytes(
+                map_nodeid_and_piececnt_to_canstdid(nodeid, piece_cnt),
+                buf.to_span()
+            );
+        }
+
+        static constexpr hal::CanStdId map_nodeid_and_piececnt_to_canstdid(
+            const NodeId nodeid, 
             const uint8_t piece
         ){
             return hal::CanStdId::from_raw(
-                uint32_t(id.to() << 8) | 
+                uint32_t(nodeid.to_u8() << 8) | 
                 (piece)
             );
         }
@@ -124,13 +146,12 @@ struct ZdtMotor_Collections{
     private:
         NodeId nodeid_;
         FuncCode func_code_;
-        Input bytes_;
+        Input payload_;
         size_t offset_ = 0;
     };
 
 
     struct VerifyUtils final{
-
         static constexpr uint8_t get_verify_code(
             const VerifyMethod method, 
             const FuncCode func_code,
@@ -179,13 +200,38 @@ struct ZdtMotor_Collections{
 
     };
 
+    struct SpeedData final{
+        static constexpr SpeedData from(const real_t speed){
+            const auto temp = uint16_t(speed * 600);
+            return {BSWAP_16(temp)};
+        }
+        constexpr uint16_t to_u16() const {
+            return raw_;
+        }
+
+        uint16_t raw_;
+    };
+
+    struct PositionData final{
+        static constexpr PositionData from(const real_t position){
+            const auto temp = uint32_t(position * 3600);
+            return {BSWAP_32(temp)};
+        }
+
+        constexpr uint32_t to_u32() const {
+            return raw_;
+        }
+
+        uint32_t raw_;
+    };
+
     struct Payloads{
         struct Actvation final{
             static constexpr FuncCode func_code = FuncCode::Activation;
             //0
             const uint8_t payload = 0xab;
             //1
-            uint8_t en;
+            bool en;
             //2
         }__packed;
 
@@ -193,21 +239,30 @@ struct ZdtMotor_Collections{
             static constexpr FuncCode func_code = FuncCode::SetPosition;
 
             bool is_neg;//2
-            uint16_t spd_data;//3-4
-            uint32_t pos_data;//5-8
+            SpeedData spd_data;//3-4
+            PositionData pos_data;//5-8
             bool is_relative; //9
-            uint8_t sync_flag; //10
+            bool is_sync; //10
         }__packed;
 
-        struct TrigCali{
+        struct TrigCali final{
             static constexpr FuncCode func_code = FuncCode::TrigCali;
             const uint8_t _1 = 0x45;
-            const uint8_t _2 = 0x6b;
 
             static constexpr TrigCali from_default(){
                 return TrigCali{};
             }
         };
+
+        struct SetCurrent{
+            static constexpr FuncCode func_code = FuncCode::SetCurrent;//1
+
+            bool is_neg;//2
+            SpeedData spd_data;//3-4
+            PositionData pos_data;//5-8
+            bool is_relative; //9
+            bool is_sync; //10
+        }__packed;
 
         template<typename Raw, typename T = std::decay_t<Raw>>
         static std::span<const uint8_t> serialize(
@@ -218,14 +273,6 @@ struct ZdtMotor_Collections{
                 sizeof(T)
             );
         }
-    };
-
-    struct SpeedData final{
-
-    };
-
-    struct PositionData final{
-
     };
 };
 
@@ -246,13 +293,19 @@ public:
     void write_bytes(
         const NodeId id, 
         const FuncCode func_code,
-        const std::span<const uint8_t>buf
+        const std::span<const uint8_t> bytes
     ){
 
         if(uart_.is_some()){
-            uart_write_bytes(uart_.unwrap(), id, func_code, std::span<const uint8_t>(buf));
+            uart_write_bytes(
+                uart_.unwrap(), 
+                id, func_code, bytes
+            );
         }else if(can_.is_some()){
-            can_write_bytes(can_.unwrap(), id, func_code, std::span<const uint8_t>(buf));
+            can_write_bytes(
+                can_.unwrap(), 
+                id, func_code, bytes
+            );
         }else{
             PANIC();
         }
@@ -261,14 +314,13 @@ private:
     Option<hal::Uart &> uart_;
     Option<hal::Can &> can_;
 
-
     static void can_write_bytes(
         hal::Can & can, 
         const NodeId id, 
         const FuncCode func_code,
-        const std::span<const uint8_t> buf
+        const std::span<const uint8_t> bytes
     ){
-        auto iter = Bytes2CanMsgIterator(id, func_code, buf);
+        auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
 
         while(true){
             const auto may_msg = iter.next();
@@ -281,32 +333,33 @@ private:
         hal::Uart & uart, 
         const NodeId id, 
         const FuncCode func_code,
-        const std::span<const uint8_t> buf
+        const std::span<const uint8_t> bytes
     ){
-        uart.write1(id.to());
-        uart.writeN(reinterpret_cast<const char *>(buf.data()), buf.size());
+        uart.write1(id.to_u8());
+        uart.write1(std::bit_cast<uint8_t>(func_code));
+        uart.writeN(reinterpret_cast<const char *>(
+            bytes.data()), bytes.size());
     }
 };
+
+
 
 class ZdtMotor final:
     public ZdtMotor_Collections{
 public:
-    ZdtMotor(Some<hal::Can *> &&  can) : 
+    ZdtMotor(Some<hal::Can *> && can) : 
         phy_(std::move(can)){;}
 
     ZdtMotor(Some<hal::Uart *> && uart) : 
         phy_(std::move(uart)){;}
-    void init(){
-        
-    }
 
     void set_target_position(const real_t pos){
         write_payload(Payloads::SetPosition{
             .is_neg = pos < 0,
-            .spd_data = speed_to_speed_data_msb(real_t(2000) / 60),
-            .pos_data = position_to_position_data_msb(pos),
+            .spd_data = SpeedData::from(20),
+            .pos_data = PositionData::from(pos),
             .is_relative = false,
-            .sync_flag = sync_flag_
+            .is_sync = is_sync_
         });        
     }
 
@@ -316,16 +369,7 @@ public:
     }
 
     void set_target_current(const real_t curr){
-        struct Frame{
-            uint8_t head = 0xfb;//1
-            uint8_t head2 = 0xf5;//1
-            uint8_t is_neg;//2
-            uint16_t spd_data;//3-4
-            uint32_t pos_data;//5-8
-            uint8_t is_relative; //9
-            uint8_t sync = 0; //10
-            uint8_t tail = 0x6b;//11
-        }__packed;
+
 
         // Frame frame;
         // frame.is_neg = pos < 0;
@@ -351,16 +395,16 @@ private:
     using Phy = ZdtMotorPhy;
     Phy phy_;
 
-    static constexpr auto DEFAULT_NODE_ID = NodeId::from(0x01);
+    static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId id_ = DEFAULT_NODE_ID;
 
-    uint8_t sync_flag_ = 0x00;
+    bool is_sync_ = false;
     VerifyMethod verify_method_ = DEFAULT_VERIFY_METHOD;
 
 
 
     template<typename Raw, typename T = std::decay_t<Raw>>
-    static constexpr std::span<const uint8_t> map_payload_to_bytes(
+    static constexpr Buf map_payload_to_bytes(
         const VerifyMethod verify_method,
         Raw && obj
     ){
@@ -375,29 +419,21 @@ private:
             bytes
         ));
         
-        return buf.to_span();
+        return buf;
     }
 
     template<typename T>
     void write_payload(const T & obj){
+        const auto buf = map_payload_to_bytes(verify_method_, obj);
+        const auto bytes = buf.to_span();
 
         phy_.write_bytes(
             id_, 
             T::func_code, 
-            map_payload_to_bytes(verify_method_, obj)
+            bytes
         );
     }
 
-    
-    static constexpr uint16_t speed_to_speed_data_msb(const real_t speed){
-        uint16_t speed_data = uint16_t(speed * 600);
-        return BSWAP_16(speed_data);
-    }
-
-    static constexpr uint32_t position_to_position_data_msb(const real_t position){
-        uint32_t position_deg = uint32_t(position * 3600);
-        return BSWAP_32(position_deg);
-    }
 };
 
 }

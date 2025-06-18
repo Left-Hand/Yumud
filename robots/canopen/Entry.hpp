@@ -3,6 +3,7 @@
 
 #include "utils.hpp"
 #include "core/debug/debug.hpp"
+#include "core/utils/Option.hpp"
 
 namespace ymd::canopen {
 
@@ -141,33 +142,55 @@ public:
     constexpr SubEntry(
         const StringView name, 
         T && val, 
-        AccessAuthority access_type, 
+        AccessAuthority access_authority, 
         DataType data_type
     ): 
         name_(name), 
-        access_authority_(access_type), 
+        access_authority_(access_authority), 
         data_type_(data_type), 
         obj_ref_(std::forward<T>(val)){}
+
+
+    template<typename T>
+    static constexpr SubEntry from_u32_rw(
+        const StringView name, 
+        T && val 
+    ){
+        return SubEntry{
+            name, std::forward<T>(val),
+            AccessAuthority::RW,
+            DataType::int32
+        };
+    }
+
+    template<typename T>
+    static constexpr SubEntry from_u16_rw(
+        const StringView name, 
+        T && val
+    ){
+        return SubEntry{
+            name, std::forward<T>(val),
+            AccessAuthority::RW,
+            DataType::int16
+        };
+    }
+
+    template<typename T>
+    static constexpr SubEntry from_u8_rw(
+        const StringView name, 
+        T && val
+    ){
+        return SubEntry{
+            name, std::forward<T>(val),
+            AccessAuthority::RW,
+            DataType::int8
+        };
+    }
 
     explicit operator int() const ;
 
     template<integral T>
     explicit operator T() const{return int(*this);}
-
-
-
-    template<typename T>
-    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode write_any(const T pbuf){
-        return write_any((&pbuf));
-    }
-
-    template<typename T>
-    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    SdoAbortCode read_any(T & pbuf){
-        return read_any((&pbuf));
-    }
-
 
     SdoAbortCode read(std::span<uint8_t> pbuf) const;
 
@@ -269,7 +292,7 @@ private:
 };
 
 
-class OdEntry{
+class OdEntry final{
 private:
     using Index = OdIndex; 
     using SubIndex = OdSubIndex; 
@@ -287,8 +310,7 @@ public:
 	OdEntry(const StringView name):
         name_(name){}
 
-	OdEntry():
-        name_(std::nullopt){}
+	OdEntry(): name_(nullptr){}
     
 	size_t size(){return(subentries_.size());}
 
@@ -296,9 +318,9 @@ public:
 		subentries_.push_back(sub);
 	}
 
-    std::optional<SubEntry> operator [](const SubIndex idx) const {
-    // optref<SubEntry> operator [](const SubIndex idx){
-        return (subentries_[idx]);
+    Option<SubEntry> operator [](const SubIndex idx) const {
+        if(idx >= subentries_.size()) return None;
+        return Some(subentries_[idx]);
     }
 
     StringView name() const {

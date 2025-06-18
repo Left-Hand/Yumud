@@ -15,7 +15,7 @@ struct SdoObjDict:public StaticObjectDictBase{
     uint32_t emergency_consumer_cobid = 0;
     uint32_t emergency_producer_cobid = 0;
 
-    std::optional<SubEntry> find(const Didx didx) final override;
+    Option<SubEntry> get_sub_entry(const Didx didx) ;
 };
 
 
