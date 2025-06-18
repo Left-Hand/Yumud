@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core/math/realmath.hpp"
 #include "core/utils/Option.hpp"
 
@@ -7,7 +9,6 @@
 #include "types/regions/range2/range2.hpp"
 
 namespace ymd::drivers{
-
 
 struct ZdtMotor_Collections{
 
@@ -95,19 +96,16 @@ struct ZdtMotor_Collections{
         LapNearest = 0x00,
         LapDirection = 0x01,
         LapsCollision = 0x02,
-        LapsSwitch = 0x03
+        LapsEndstop = 0x03
     };
 
     static constexpr auto DEFAULT_VERIFY_METHOD = VerifyMethod::X6B;
 
     struct Bytes2CanMsgIterator{
-        using Input = std::span<const uint8_t>;
-        using Output = hal::CanMsg;
-
         explicit constexpr Bytes2CanMsgIterator(
             const NodeId nodeid, 
             const FuncCode func_code,
-            const Input payload
+            const std::span<const uint8_t> payload
         ):
             nodeid_(nodeid),
             func_code_(func_code),
@@ -129,7 +127,7 @@ struct ZdtMotor_Collections{
                 payload_.subspan(offset_, CANMSG_PAYLOAD_MAX_LENGTH)
             ); 
 
-            offset_ += CANMSG_PAYLOAD_MAX_LENGTH;
+            offset_ += msg_len;
 
             return Some(msg);
         }
@@ -140,7 +138,6 @@ struct ZdtMotor_Collections{
             const uint8_t piece_cnt,
             const std::span<const uint8_t> bytes
         ){
-            
             auto buf = InlineBuf<8>{};
             buf.append(std::bit_cast<uint8_t>(func_code));
             buf.append(bytes);
@@ -164,7 +161,7 @@ struct ZdtMotor_Collections{
     private:
         NodeId nodeid_;
         FuncCode func_code_;
-        Input payload_;
+        std::span<const uint8_t> payload_;
         size_t offset_ = 0;
     };
 
@@ -377,22 +374,7 @@ public:
         const NodeId id, 
         const FuncCode func_code,
         const std::span<const uint8_t> bytes
-    ){
-        // DEBUG_PRINTLN(std::hex, "tx", bytes);
-        if(uart_.is_some()){
-            uart_write_bytes(
-                uart_.unwrap(), 
-                id, func_code, bytes
-            );
-        }else if(can_.is_some()){
-            can_write_bytes(
-                can_.unwrap(), 
-                id, func_code, bytes
-            );
-        }else{
-            PANIC();
-        }
-    }
+    );
 private:
     Option<hal::Uart &> uart_;
     Option<hal::Can &> can_;
@@ -402,156 +384,15 @@ private:
         const NodeId id, 
         const FuncCode func_code,
         const std::span<const uint8_t> bytes
-    ){
-        auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
-
-        while(true){
-            const auto may_msg = iter.next();
-            if(may_msg.is_none()) break;
-            can.write(may_msg.unwrap());
-        }
-    }
+    );
 
     static void uart_write_bytes(
         hal::Uart & uart, 
         const NodeId id, 
         const FuncCode func_code,
         const std::span<const uint8_t> bytes
-    ){
-        uart.write1(id.to_u8());
-        uart.write1(std::bit_cast<uint8_t>(func_code));
-        uart.writeN(reinterpret_cast<const char *>(
-            bytes.data()), bytes.size());
-
-        DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
-    }
+    );
 };
 
-
-
-class ZdtMotor final:
-    public ZdtMotor_Collections{
-public:
-    struct Config{
-        NodeId nodeid;
-    };
-
-
-    ZdtMotor(const Config & cfg, Some<hal::Can *> && can) : 
-        phy_(std::move(can)
-    ){
-        reconf(cfg);
-    }
-
-    ZdtMotor(const Config & cfg, Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)
-    ){
-        reconf(cfg);
-    }
-
-
-    void reconf(const Config & cfg){
-        nodeid_ = cfg.nodeid;
-    }
-
-    void set_target_position(const real_t pos){
-        write_payload(Payloads::SetPosition{
-            .is_ccw = pos < 0,
-            .rpm = Rpm::from(0.07_r),
-            .pulse_cnt = PulseCnt::from(ABS(pos)),
-            .is_absolute = false,
-            .is_sync = is_sync_
-        });
-    }
-
-    void set_target_speed(const real_t spd){
-        write_payload(Payloads::SetSpeed{
-            .is_ccw = spd < 0,
-            .rpm = Rpm::from(20),
-            .acc_level = AcclerationLevel::from(0),
-            .is_absolute = false,
-            .is_sync = is_sync_
-        });     
-    }
-
-    void brake(){
-        write_payload(Payloads::Brake{
-            .is_sync = is_sync_
-        });
-    }
-
-    void set_subdivides(const uint16_t subdivides){
-        if(subdivides > 256) PANIC();
-        write_payload(Payloads::SetSubDivides{
-            .subdivides = uint8_t(subdivides & 0xff)
-        });
-    }
-
-    void enable(const Enable en = EN){
-        write_payload(Payloads::Actvation{
-            .en = en == EN,
-            .is_sync = is_sync_
-        });
-    }
-
-
-    void trigger_cali(){
-        write_payload(Payloads::TrigCali::from_default());  
-    }
-
-    void query_homming_paraments(){
-        write_payload(Payloads::QueryHommingParaments{});
-    }
-
-    void trig_homming(const HommingMode mode){
-        write_payload(Payloads::TrigHomming{
-            .homming_mode = mode,
-            .is_sync = is_sync_
-        });
-    }
-private:
-    using Phy = ZdtMotorPhy;
-    Phy phy_;
-
-    static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
-    NodeId nodeid_ = DEFAULT_NODE_ID;
-
-    bool is_sync_ = false;
-    VerifyMethod verify_method_ = DEFAULT_VERIFY_METHOD;
-
-
-
-    template<typename Raw, typename T = std::decay_t<Raw>>
-    static constexpr Buf map_payload_to_bytes(
-        const VerifyMethod verify_method,
-        Raw && obj
-    ){
-        Buf buf;
-
-        const auto bytes = Payloads::serialize(obj);
-
-        buf.append(bytes);
-        buf.append(VerifyUtils::get_verify_code(
-            verify_method,
-            T::func_code,
-            bytes
-        ));
-        
-        return buf;
-    }
-
-    template<typename T>
-    void write_payload(const T & obj){
-        const auto buf = map_payload_to_bytes(verify_method_, obj);
-        const auto bytes = buf.to_span();
-
-        phy_.write_bytes(
-            nodeid_, 
-            T::func_code, 
-            bytes
-        );
-    }
-
-};
 
 }

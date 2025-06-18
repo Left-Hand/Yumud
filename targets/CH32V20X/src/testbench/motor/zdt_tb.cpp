@@ -2,7 +2,7 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "robots/vendor/zdt/ZdtStepper.hpp"
+#include "robots/vendor/zdt/zdt_stepper.hpp"
 
 
 using namespace ymd;
@@ -38,22 +38,20 @@ void zdt_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-
-    
     #if PHY_SEL == PHY_SEL_UART
     COMM_UART.init({921600});
-    ZdtMotor motor{{.nodeid = {1}}, &COMM_UART};
+    ZdtStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({CanBaudrate::_1M});
-    ZdtMotor motor{{.nodeid = {1}}, &COMM_CAN};
+    ZdtStepper motor{{.nodeid = {1}}, &COMM_CAN};
     #endif
     
     clock::delay(10ms);
     motor.enable();
     clock::delay(10ms);
     // motor.set_subdivides(256);
-    // motor.trig_homming(ZdtMotor::HommingMode::LapsCollision);
-    motor.trig_homming(ZdtMotor::HommingMode::LapsSwitch);
+    // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);
+    motor.trig_homming(ZdtStepper::HommingMode::LapsEndstop);
     // motor.query_homming_paraments();
 
     while(true){
@@ -65,7 +63,12 @@ void zdt_main(){
                 recv.push_back(chr);
             }
 
-            DEBUG_PRINTLN("ret", std::hex, std::noshowbase, recv);
+            DEBUG_PRINTLN(
+                "ret", 
+                std::hex, 
+                std::noshowbase, 
+                recv
+            );
         }
     }
 
