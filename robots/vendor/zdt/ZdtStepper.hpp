@@ -50,7 +50,7 @@ struct ZdtMotor_Collections{
         }
 
         constexpr std::span<const uint8_t> to_span() const {
-            return std::span(buf_);
+            return std::span(buf_.data(), size());
         }
 
         constexpr size_t size() const {return size_;}
@@ -75,9 +75,27 @@ struct ZdtMotor_Collections{
         // SetCurrent = 0xfb,
         SetCurrent = 0xf5,
         SetPosition = 0xfd,
-        Stop = 0xfe,
+        Brake = 0xfe,
+        // Stop = 0xfe,
         MultiAxisSync = 0xff, 
-        TrigCali = 0x06
+        TrigCali = 0x06,
+        SetSubDivide = 0x84,
+        TrigHomming = 0x9a,
+        AbortHomming = 0x9c,
+        QueryHommingParaments = 0x22,
+        UpdateHommingParaments = 0x4C,
+        GetHommingFlags = 0x3b
+
+    };
+
+    enum class HommingMode:uint8_t{
+        // 00表示触发单圈就近回零，01表示触发单圈方向回零，
+        // 02表示触发多圈无限位碰撞回零，03表示触发多圈有限位开关回零
+
+        LapNearest = 0x00,
+        LapDirection = 0x01,
+        LapsCollision = 0x02,
+        LapsSwitch = 0x03
     };
 
     static constexpr auto DEFAULT_VERIFY_METHOD = VerifyMethod::X6B;
@@ -200,8 +218,8 @@ struct ZdtMotor_Collections{
 
     };
 
-    struct SpeedData final{
-        static constexpr SpeedData from(const real_t speed){
+    struct Rpm final{
+        static constexpr Rpm from(const real_t speed){
             const auto temp = uint16_t(speed * 600);
             return {BSWAP_16(temp)};
         }
@@ -212,8 +230,8 @@ struct ZdtMotor_Collections{
         uint16_t raw_;
     };
 
-    struct PositionData final{
-        static constexpr PositionData from(const real_t position){
+    struct PulseCnt final{
+        static constexpr PulseCnt from(const real_t position){
             const auto temp = uint32_t(position * 3600);
             return {BSWAP_32(temp)};
         }
@@ -225,24 +243,59 @@ struct ZdtMotor_Collections{
         uint32_t raw_;
     };
 
+    struct AcclerationLevel{
+        static constexpr AcclerationLevel from(const real_t acc_per_second){
+            // TODO
+            return AcclerationLevel{10};
+        }
+        uint8_t raw_;
+    };
+
     struct Payloads{
+        // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
         struct Actvation final{
             static constexpr FuncCode func_code = FuncCode::Activation;
             //0
-            const uint8_t payload = 0xab;
-            //1
-            bool en;
-            //2
+            const uint8_t _0 = 0xab;
+            const bool en;
+            const bool is_sync;
         }__packed;
 
         struct SetPosition final{
             static constexpr FuncCode func_code = FuncCode::SetPosition;
+            bool is_ccw;
+            Rpm rpm;
+            AcclerationLevel acc_level;
+            PulseCnt pulse_cnt;
+            bool is_absolute; //9
+            bool is_sync;
+        }__packed;
 
-            bool is_neg;//2
-            SpeedData spd_data;//3-4
-            PositionData pos_data;//5-8
-            bool is_relative; //9
+        struct SetSpeed final{
+            static constexpr FuncCode func_code = FuncCode::SetSpeed;
+
+            bool is_ccw;//2
+            Rpm rpm;//3-4
+            AcclerationLevel acc_level;
+            bool is_absolute; //9
             bool is_sync; //10
+        }__packed;
+
+        struct SetSubDivides{
+            // 01 84 8A 01 07 6B
+            //  0x84 + 0x8A + 是否存储标志 + 细分值 + 校验字节
+
+            static constexpr FuncCode func_code = FuncCode::SetSubDivide;
+
+            uint8_t _0 = 0x8A;
+            bool is_burned = true;
+            uint8_t subdivides;
+        }__packed;
+
+        struct Brake final{
+            static constexpr FuncCode func_code = FuncCode::Brake;
+            const uint8_t _0 = 0x98;
+            const bool is_sync;
         }__packed;
 
         struct TrigCali final{
@@ -252,17 +305,40 @@ struct ZdtMotor_Collections{
             static constexpr TrigCali from_default(){
                 return TrigCali{};
             }
-        };
+        }__packed;
 
         struct SetCurrent{
             static constexpr FuncCode func_code = FuncCode::SetCurrent;//1
 
-            bool is_neg;//2
-            SpeedData spd_data;//3-4
-            PositionData pos_data;//5-8
-            bool is_relative; //9
+            bool is_ccw;//2
+            Rpm rpm;//3-4
+            PulseCnt pulse_cnt;//5-8
+            bool is_absolute; //9
             bool is_sync; //10
         }__packed;
+
+        struct TrigHomming final{
+            static constexpr FuncCode func_code = FuncCode::TrigHomming;
+
+            HommingMode homming_mode;
+            bool is_sync;
+        }__packed;
+
+        struct QueryHommingParaments final{
+            static constexpr FuncCode func_code = FuncCode::QueryHommingParaments;
+        }__packed;
+
+        static constexpr size_t a = sizeof(QueryHommingParaments);
+        
+        template<typename T>
+        struct sizeof_with_zero_impl{
+            [[no_unique_address]] T _;
+            uint8_t _2;
+        };
+
+        template<typename T>
+        static constexpr size_t sizeof_with_zero_v = sizeof(sizeof_with_zero_impl<T>) - 1;
+
 
         template<typename Raw, typename T = std::decay_t<Raw>>
         static std::span<const uint8_t> serialize(
@@ -270,7 +346,7 @@ struct ZdtMotor_Collections{
         ){
             return std::span(
                 reinterpret_cast<const uint8_t *>(&obj),
-                sizeof(T)
+                sizeof_with_zero_v<T>
             );
         }
     };
@@ -279,15 +355,22 @@ struct ZdtMotor_Collections{
 class ZdtMotorPhy final:
     public ZdtMotor_Collections{
 public:
+
+
     ZdtMotorPhy(Some<hal::Can *> && can) : 
         uart_(ymd::None),
-        can_(std::move(can))
-        {;}
+        can_(std::move(can)
+    ){
+        // reconf(cfg);
+    }
 
     ZdtMotorPhy(Some<hal::Uart *> && uart) : 
         uart_(std::move(uart)),
         can_(ymd::None)
-        {;}
+    {
+        // reconf(cfg);
+
+    }
 
 
     void write_bytes(
@@ -295,7 +378,7 @@ public:
         const FuncCode func_code,
         const std::span<const uint8_t> bytes
     ){
-
+        // DEBUG_PRINTLN(std::hex, "tx", bytes);
         if(uart_.is_some()){
             uart_write_bytes(
                 uart_.unwrap(), 
@@ -339,6 +422,8 @@ private:
         uart.write1(std::bit_cast<uint8_t>(func_code));
         uart.writeN(reinterpret_cast<const char *>(
             bytes.data()), bytes.size());
+
+        DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
     }
 };
 
@@ -347,43 +432,65 @@ private:
 class ZdtMotor final:
     public ZdtMotor_Collections{
 public:
-    ZdtMotor(Some<hal::Can *> && can) : 
-        phy_(std::move(can)){;}
+    struct Config{
+        NodeId nodeid;
+    };
 
-    ZdtMotor(Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)){;}
+
+    ZdtMotor(const Config & cfg, Some<hal::Can *> && can) : 
+        phy_(std::move(can)
+    ){
+        reconf(cfg);
+    }
+
+    ZdtMotor(const Config & cfg, Some<hal::Uart *> && uart) : 
+        phy_(std::move(uart)
+    ){
+        reconf(cfg);
+    }
+
+
+    void reconf(const Config & cfg){
+        nodeid_ = cfg.nodeid;
+    }
 
     void set_target_position(const real_t pos){
         write_payload(Payloads::SetPosition{
-            .is_neg = pos < 0,
-            .spd_data = SpeedData::from(20),
-            .pos_data = PositionData::from(pos),
-            .is_relative = false,
+            .is_ccw = pos < 0,
+            .rpm = Rpm::from(0.07_r),
+            .pulse_cnt = PulseCnt::from(ABS(pos)),
+            .is_absolute = false,
             .is_sync = is_sync_
-        });        
+        });
     }
-
 
     void set_target_speed(const real_t spd){
-        
+        write_payload(Payloads::SetSpeed{
+            .is_ccw = spd < 0,
+            .rpm = Rpm::from(20),
+            .acc_level = AcclerationLevel::from(0),
+            .is_absolute = false,
+            .is_sync = is_sync_
+        });     
     }
 
-    void set_target_current(const real_t curr){
+    void brake(){
+        write_payload(Payloads::Brake{
+            .is_sync = is_sync_
+        });
+    }
 
-
-        // Frame frame;
-        // frame.is_neg = pos < 0;
-        // frame.spd_data = speed_to_speed_data_msb(real_t(2000) / 60);
-        // frame.pos_data = position_to_position_data_msb(pos);
-        // frame.is_relative = false;
-        // write_payload(frame);  
+    void set_subdivides(const uint16_t subdivides){
+        if(subdivides > 256) PANIC();
+        write_payload(Payloads::SetSubDivides{
+            .subdivides = uint8_t(subdivides & 0xff)
+        });
     }
 
     void enable(const Enable en = EN){
-
-
         write_payload(Payloads::Actvation{
-            .en = en == EN
+            .en = en == EN,
+            .is_sync = is_sync_
         });
     }
 
@@ -391,12 +498,23 @@ public:
     void trigger_cali(){
         write_payload(Payloads::TrigCali::from_default());  
     }
+
+    void query_homming_paraments(){
+        write_payload(Payloads::QueryHommingParaments{});
+    }
+
+    void trig_homming(const HommingMode mode){
+        write_payload(Payloads::TrigHomming{
+            .homming_mode = mode,
+            .is_sync = is_sync_
+        });
+    }
 private:
     using Phy = ZdtMotorPhy;
     Phy phy_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
-    NodeId id_ = DEFAULT_NODE_ID;
+    NodeId nodeid_ = DEFAULT_NODE_ID;
 
     bool is_sync_ = false;
     VerifyMethod verify_method_ = DEFAULT_VERIFY_METHOD;
@@ -428,7 +546,7 @@ private:
         const auto bytes = buf.to_span();
 
         phy_.write_bytes(
-            id_, 
+            nodeid_, 
             T::func_code, 
             bytes
         );

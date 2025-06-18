@@ -93,7 +93,7 @@ void m2006_main();
 
 void math_tb(ymd::hal::UartHw & logger);
 
-void zdt_main(ymd::hal::UartHw & logger);
+void zdt_main();
 
 void coro_main();
 void pmw3901_main();
