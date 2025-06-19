@@ -1,7 +1,7 @@
 #include "zdt_stepper.hpp"
 
 using namespace ymd;
-using namespace ymd::drivers;
+using namespace ymd::robots;
 
 void ZdtStepper::set_target_position(const real_t pos){
     write_payload(Payloads::SetPosition{

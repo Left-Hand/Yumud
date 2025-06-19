@@ -10,7 +10,7 @@
 #include "core/math/real.hpp"
 
 
-namespace ymd::rmst{
+namespace ymd::robots{
 
 struct CyberGear_Fault{
 

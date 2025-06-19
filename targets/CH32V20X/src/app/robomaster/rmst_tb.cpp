@@ -17,7 +17,7 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::rmst;
+using namespace ymd::robots;
 
 auto input(){
     const auto t = clock::time();

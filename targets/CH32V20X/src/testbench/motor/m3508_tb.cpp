@@ -13,7 +13,7 @@
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::drivers;
+using namespace ymd::robots;
 
 void m3508_main(){
     scexpr size_t CB_FREQ = 200;

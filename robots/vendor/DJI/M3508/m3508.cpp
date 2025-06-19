@@ -1,6 +1,6 @@
 #include "m3508.hpp"
 
-using namespace ymd::drivers;
+using namespace ymd::robots;
 using namespace ymd::foc;
 
 using M3508 = M3508Port::M3508;

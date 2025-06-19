@@ -8,7 +8,7 @@
 
 #include "types/regions/range2/range2.hpp"
 
-namespace ymd::drivers{
+namespace ymd::robots{
 
 struct ZdtMotor_Collections{
 

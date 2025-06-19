@@ -2,7 +2,7 @@
 
 #include "details/zdt_stepper_utils.hpp"
 
-namespace ymd::drivers{
+namespace ymd::robots{
 
 class ZdtStepper final:
     public ZdtMotor_Collections{

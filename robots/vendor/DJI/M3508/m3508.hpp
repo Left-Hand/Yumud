@@ -10,7 +10,7 @@
 
 #include <bitset>
 
-namespace ymd::drivers{
+namespace ymd::robots{
 using namespace ymd::foc;
 class M3508Port{
 public:
@@ -63,26 +63,26 @@ public:
         Microseconds micros_delta;
 
 
-        class M3508Encoder final: public EncoderIntf{
+        class M3508Encoder final: public drivers::EncoderIntf{
         public:
-            using Error = EncoderError;
+            using Error = drivers::EncoderError;
 
-            M3508Encoder(M3508 & _owner):owner(_owner){;}
+            M3508Encoder(M3508 & owner):owner_(owner){;}
             void init() {}
             Result<void, Error> update(){
                 //pass
                 return Ok();
             }
             Result<real_t, Error> get_lap_position() {
-                return Ok(owner.lap_position);
+                return Ok(owner_.lap_position);
             }
 
         private:
-            M3508 & owner;
+            M3508 & owner_;
         };
 
         M3508Encoder enc_{*this};
-        Odometer odo_{enc_};
+        drivers::Odometer odo_{enc_};
         
         M3508(M3508Port & _port, const size_t _index):
             port(_port), index(_index){reset();}

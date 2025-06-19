@@ -102,7 +102,7 @@ public:
 #pragma pack(pop)
 
 
-using namespace ymd::drivers;
+using namespace ymd::robots;
 
 #define CREATE_FRAME(command, ...) FrameWapper_t(this->id_, command, std::make_tuple(__VA_ARGS__))
 #define WRITE_FRAME(command, ...) this->write_frame(CREATE_FRAME(command, __VA_ARGS__));

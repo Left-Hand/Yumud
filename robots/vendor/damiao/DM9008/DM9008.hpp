@@ -3,7 +3,7 @@
 #include "../utils.hpp"
 
 
-namespace ymd::rmst{
+namespace ymd::robots{
 
 struct DM9008_Fault{
 
@@ -33,7 +33,9 @@ struct DM9008_Fault{
     DM9008_Fault(const Kind kind):kind_(kind){}
 private:
     Kind kind_;
-};static_assert(sizeof(CyberGear_Fault) == 2);
+};
+
+static_assert(sizeof(DM9008_Fault) == 1);
 
 class DM9008{
 public:
@@ -50,19 +52,29 @@ public:
     using NodeId = uint8_t;
 
     struct FrameFactory{
-        static constexpr 
-        make_spd_frame(const NodeId id, const SpdCtrlParams & p){
-            return hal::CanMsg::from_tuple(CanStdId(0x100 | id), std::make_tuple(
-                float(p.spd)
-            ));
+        static constexpr make_spd_frame(
+            const NodeId id, 
+            const SpdCtrlParams & p
+        ){
+            return hal::CanMsg::from_tuple(
+                CanStdId(0x100 | id), 
+                std::make_tuple(
+                    float(p.spd)
+                )
+            );
         }
 
-        static constexpr
-        make_posspd_frame(const NodeId id, const PosSpdCtrlParams & p){
-            return hal::CanMsg::from_tuple(CanStdId(0x200 | id), std::make_tuple(
-                float(p.pos),
-                float(p.spd),
-            ));
+        static constexpr make_posspd_frame(
+            const NodeId id, 
+            const PosSpdCtrlParams & p
+        ){
+            return hal::CanMsg::from_tuple(
+                CanStdId(0x200 | id), 
+                std::make_tuple(
+                    float(p.pos),
+                    float(p.spd),
+                )
+            );
         }
 
         static constexpr 

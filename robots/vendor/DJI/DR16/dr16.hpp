@@ -4,14 +4,7 @@
 #include "hal/adc/adc_channel.hpp"
 
 
-namespace ymd::drivers{
-class Mouse{
-    
-};
-
-class Joystick{
-    
-};
+namespace ymd::robots{
 
 class SBUS{
     
