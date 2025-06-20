@@ -45,7 +45,7 @@ void ZdtStepper::activate(const Enable en){
 }
 
 
-void ZdtStepper::trigger_cali(){
+void ZdtStepper::trig_cali(){
     write_payload(Payloads::TrigCali::from_default());  
 }
 

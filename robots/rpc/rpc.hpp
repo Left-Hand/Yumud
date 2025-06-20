@@ -495,5 +495,6 @@ AccessResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf&
 
 }
 
-
+#define DEF_MAKE_MEMFUNC(func)\
+    rpc::make_memfunc(#func, this, &std::decay_t<decltype(*this)>::func)
 

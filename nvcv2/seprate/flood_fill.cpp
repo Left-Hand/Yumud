@@ -352,12 +352,12 @@ Image<Grayscale> FloodFill::run(const Image<Binary> & src, const BlobFilter & fi
                 bool skip_flag = false;
 
                 {
-                    skip_flag |= not filter.area_range.has(rect.get_area());
+                    skip_flag |= not filter.area_range.contains(rect.get_area());
                 }
 
                 {
-                    skip_flag |= not filter.width_range.has(rect.w());
-                    skip_flag |= not filter.height_range.has(rect.h());
+                    skip_flag |= not filter.width_range.contains(rect.w());
+                    skip_flag |= not filter.height_range.contains(rect.h());
                 }
                 // skip_flag |= rect.h() > 50;
                 // skip_flag |= rect.h < 5;

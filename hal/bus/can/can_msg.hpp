@@ -6,6 +6,8 @@
 #include <span>
 #include <memory.h>
 #include <tuple>
+#include <ranges>
+#include "thirdparty/sstl/include/sstl/vector.h"
 
 namespace ymd{
 class OutputStream;
@@ -208,6 +210,16 @@ public:
     template<typename T>
     static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pbuf)
         {return CanMsg(id, pbuf);}
+
+    template<typename T, std::ranges::range R>
+        requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
+    static constexpr CanMsg from_range(details::CanId_t<T> id, R && range){
+        sstl::vector<uint8_t> pbuf;
+        for(auto && val : range){
+            pbuf.push_back(static_cast<uint8_t>(val));
+        }
+        return CanMsg::from_bytes(id, std::span(pbuf.data(), pbuf.size()));
+    }
 
     template<typename T, size_t N>
     static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t, N> pbuf)

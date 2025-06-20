@@ -68,21 +68,14 @@ void rrs3_tb(){
         .z = 5,
     };
     
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(TAU  / 3)), gest));
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(-TAU / 3)), gest));
-    // DEBUG_PRINTLN(rrs3.get_top_point(cfg, Vector2<T>::RIGHT.rotated(T(0)), gest));
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(TAU  / 3)), gest).unwrap().to_absolute());
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(-TAU / 3)), gest).unwrap().to_absolute());
-    // DEBUG_PRINTLN(rrs3.inverse_single_axis(cfg, Vector2<T>::RIGHT.rotated(T(0)), gest).unwrap().to_absolute());
-    
     DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(TAU  / 3)));
     DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(-TAU / 3)));
 
     const auto u = clock::micros();
-    const auto res_opt = rrs3.inverse(gest);
+    const auto may_res = rrs3.inverse(gest);
     DEBUG_PRINTLN(clock::micros() - u);
-    if(res_opt.is_some()){
-        const auto res = res_opt.unwrap();
+    if(may_res.is_some()){
+        const auto res = may_res.unwrap();
         for(const auto & solu : res){
             const auto [j1, j2] = solu.to_absolute();
             DEBUG_PRINTLN(

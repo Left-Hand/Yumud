@@ -34,7 +34,7 @@ public:
     void brake();
     void set_subdivides(const uint16_t subdivides);
     void activate(const Enable en = EN);
-    void trigger_cali();
+    void trig_cali();
     void query_homming_paraments();
     void trig_homming(const HommingMode mode);
 private:
