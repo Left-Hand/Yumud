@@ -104,11 +104,11 @@ struct ZdtMotor_Collections{
     struct Bytes2CanMsgIterator{
         explicit constexpr Bytes2CanMsgIterator(
             const NodeId nodeid, 
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             const std::span<const uint8_t> payload
         ):
             nodeid_(nodeid),
-            func_code_(FUNC_CODE),
+            func_code_(func_code),
             payload_(payload){;}
 
 
@@ -324,8 +324,6 @@ struct ZdtMotor_Collections{
         struct QueryHommingParaments final{
             static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
         }__packed;
-
-        static constexpr size_t a = sizeof(QueryHommingParaments);
         
         template<typename T>
         struct pure_sizeof_impl{
@@ -373,7 +371,7 @@ public:
 
     void write_bytes(
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 private:
@@ -383,14 +381,14 @@ private:
     static void can_write_bytes(
         hal::Can & can, 
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 
     static void uart_write_bytes(
         hal::Uart & uart, 
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 };

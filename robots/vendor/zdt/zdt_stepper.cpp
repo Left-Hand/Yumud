@@ -37,7 +37,7 @@ void ZdtStepper::set_subdivides(const uint16_t subdivides){
     });
 }
 
-void ZdtStepper::enable(const Enable en){
+void ZdtStepper::activate(const Enable en){
     write_payload(Payloads::Actvation{
         .en = en == EN,
         .is_sync = is_sync_

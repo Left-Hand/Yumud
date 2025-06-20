@@ -33,7 +33,7 @@ public:
     void set_target_speed(const real_t spd);
     void brake();
     void set_subdivides(const uint16_t subdivides);
-    void enable(const Enable en = EN);
+    void activate(const Enable en = EN);
     void trigger_cali();
     void query_homming_paraments();
     void trig_homming(const HommingMode mode);
