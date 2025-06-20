@@ -7,6 +7,7 @@ void ZdtStepper::set_target_position(const real_t pos){
     write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
         .rpm = Rpm::from(0.07_r),
+        .acc_level = AcclerationLevel::from(0),
         .pulse_cnt = PulseCnt::from(ABS(pos)),
         .is_absolute = false,
         .is_sync = is_sync_

@@ -131,15 +131,15 @@ struct ZdtMotor_Collections{
 
             return Some(msg);
         }
-
+    private:
         static constexpr hal::CanMsg make_canmsg(
             const NodeId nodeid,
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             const uint8_t piece_cnt,
             const std::span<const uint8_t> bytes
         ){
             auto buf = InlineBuf<8>{};
-            buf.append(std::bit_cast<uint8_t>(FUNC_CODE));
+            buf.append(std::bit_cast<uint8_t>(func_code));
             buf.append(bytes);
 
             return hal::CanMsg::from_bytes(
@@ -225,7 +225,7 @@ struct ZdtMotor_Collections{
         }
 
         uint16_t raw_;
-    };
+    }__packed;
 
     struct PulseCnt final{
         static constexpr PulseCnt from(const real_t position){
@@ -238,7 +238,7 @@ struct ZdtMotor_Collections{
         }
 
         uint32_t raw_;
-    };
+    }__packed;
 
     struct AcclerationLevel{
         static constexpr AcclerationLevel from(const real_t acc_per_second){
@@ -246,7 +246,7 @@ struct ZdtMotor_Collections{
             return AcclerationLevel{10};
         }
         uint8_t raw_;
-    };
+    }__packed;
 
     struct Payloads{
         // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
@@ -328,13 +328,14 @@ struct ZdtMotor_Collections{
         static constexpr size_t a = sizeof(QueryHommingParaments);
         
         template<typename T>
-        struct sizeof_with_zero_impl{
-            [[no_unique_address]] T _;
+        struct pure_sizeof_impl{
+        private:
+            [[no_unique_address]] T _1;
             uint8_t _2;
         };
 
         template<typename T>
-        static constexpr size_t sizeof_with_zero_v = sizeof(sizeof_with_zero_impl<T>) - 1;
+        static constexpr size_t pure_sizeof_v = sizeof(pure_sizeof_impl<T>) - 1;
 
 
         template<typename Raw, typename T = std::decay_t<Raw>>
@@ -343,7 +344,7 @@ struct ZdtMotor_Collections{
         ){
             return std::span(
                 reinterpret_cast<const uint8_t *>(&obj),
-                sizeof_with_zero_v<T>
+                pure_sizeof_v<T>
             );
         }
     };
