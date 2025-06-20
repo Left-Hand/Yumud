@@ -58,7 +58,7 @@ CanMsg PdoTxSession::buildMessage() const {
 bool PdoRxSession::processMessage(const CanMsg& msg){
     const CobId cobId = CobId::from_u16(int(params_[1].unwrap()));
 
-    if (cobId.to_stdid() != msg.id()) {
+    if (cobId.to_stdid() != hal::CanStdId(msg.id())) {
         return false;
     }
 

@@ -9,6 +9,9 @@
 #include "core/string/StringView.hpp"
 #include "atomic"
 
+
+#include "robots/cannet/slcan/slcan.hpp"
+
 #ifdef ENABLE_UART1
 using namespace ymd;
 using namespace ymd::hal;
@@ -56,7 +59,20 @@ public:
     virtual void deactivate() = 0;
     virtual void set_position(real_t position) = 0;
     virtual void trig_homing() = 0;
+    virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
+
+    auto make_rpc_list(const StringView name){
+        return rpc::make_list(
+            name,
+            DEF_MAKE_MEMFUNC(trig_homing),
+            DEF_MAKE_MEMFUNC(is_homing_done),
+            DEF_MAKE_MEMFUNC(deactivate),
+            DEF_MAKE_MEMFUNC(activate),
+            DEF_MAKE_MEMFUNC(set_position),
+            DEF_MAKE_MEMFUNC(trig_cali)
+        );
+    }
 };
 
 class JointMotorAdapter_Mock final:
@@ -66,6 +82,7 @@ public:
     void deactivate() {}
     void set_position(real_t position) {}
     void trig_homing() {}
+    void trig_cali() {}
     bool is_homing_done() {return true;}
 };
 
@@ -116,17 +133,7 @@ public:
         return (clock::millis() - homing_begin_.unwrap()) > homing_timeout_;
     }
 
-    auto make_rpc_list(const StringView name){
-        return rpc::make_list(
-            name,
-            DEF_MAKE_MEMFUNC(trig_homing),
-            DEF_MAKE_MEMFUNC(is_homing_done),
-            DEF_MAKE_MEMFUNC(deactivate),
-            DEF_MAKE_MEMFUNC(activate),
-            DEF_MAKE_MEMFUNC(set_position),
-            DEF_MAKE_MEMFUNC(trig_cali)
-        );
-    }
+
 private:
     Config cfg_;
     ZdtStepper & stepper_;
@@ -312,8 +319,10 @@ public CanMsgHandlerIntf{
     }
 };
 
+#define MOCK_TEST
 
-static __attribute__((__noreturn__))
+
+[[maybe_unused]] static __attribute__((__noreturn__))
 void polar_robot_main(){
     DBG_UART.init({576000});
 
@@ -322,10 +331,14 @@ void polar_robot_main(){
     DEBUGGER.force_sync(EN);
 
 
+    
+    #ifndef MOCK_TEST
+
     auto & MOTOR1_UART = hal::uart1;
     auto & MOTOR2_UART = hal::uart1;
 
     MOTOR1_UART.init({921600});
+
     ZdtStepper motor1{{.nodeid = {1}}, &MOTOR1_UART};
 
     if(&MOTOR1_UART != &MOTOR2_UART){
@@ -341,6 +354,11 @@ void polar_robot_main(){
     JointMotorAdapter_ZdtStepper joint2 = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor2};
+
+    #else
+    JointMotorAdapter_Mock joint1 = {};
+    JointMotorAdapter_Mock joint2 = {};
+    #endif
 
     PolarRobotActuator robot_actuator = {
         {
@@ -385,8 +403,43 @@ void polar_robot_main(){
     }
 }
 
+[[maybe_unused]] static __attribute__((__noreturn__))
+void slcan_test(){
+    auto & OUT_UART = hal::uart1;
+    OUT_UART.init({576000});
+
+    DEBUGGER.retarget(&OUT_UART);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.force_sync(EN);
+
+    can1.init({hal::Can::BaudRate::_1M});
+    robots::asciican::AsciiCanPhy phy{can1};
+    robots::asciican::Slcan slcan{phy};
+    auto list = rpc::make_list(
+        "slcan",
+        rpc::make_function("tx", [&](const StringView str) {
+            const auto u_begin = clock::micros();
+            const auto res = slcan.on_recv_string(str);
+            const auto u_end = clock::micros();
+            DEBUG_PRINTLN(res, u_end - u_begin);
+            // DEBUG_PRINTLN(res.is_err());
+        })
+    );
+
+    robots::ReplService repl_service = {
+        &OUT_UART, &OUT_UART
+    };
+
+
+    while(true){
+        // DEBUG_PRINTLN(clock::millis());
+        repl_service.invoke(list);
+    }
+}
+
 void zdt_main(){
-    polar_robot_main();
+    // polar_robot_main();
+    slcan_test();
     DBG_UART.init({576000});
 
     DEBUGGER.retarget(&DBG_UART);

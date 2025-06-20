@@ -12,7 +12,7 @@ class CanId_t{
 public:
     static constexpr CanId_t<T> ZERO = CanId_t<T>(0);
 
-    constexpr CanId_t(const T raw):raw_(raw){;}
+    explicit constexpr CanId_t(const T raw):raw_(raw){;}
 
     static constexpr CanId_t from_raw(const T raw){
         return CanId_t(raw);
@@ -20,7 +20,7 @@ public:
 
     constexpr auto operator<=>(const CanId_t<T>& other) const = default;
 
-    constexpr uint16_t as_raw() const {return raw_;}
+    constexpr T as_raw() const {return raw_;}
 private:
     T raw_;
 };

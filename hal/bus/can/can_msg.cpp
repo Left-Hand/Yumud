@@ -15,9 +15,12 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
         << "> ";
 
     os << "id=" << std::hex << std::showbase << uint32_t(msg.id());
-    os << " | buf" 
-        << '[' << std::dec << msg.size() << "]=" 
-        << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
+
+    if(not msg.is_remote()){
+        os << " | buf" 
+            << '[' << std::dec << msg.size() << "]=" 
+            << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
+    }
 
     return os << os.brackets<'}'>();
 }

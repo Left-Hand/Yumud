@@ -163,11 +163,11 @@ private:
     {
         dlc_ = MIN(pbuf.size(), 8);
 
-        for(size_t i = 0; i < size(); i++){
+        for(size_t i = 0; i < dlc_ ; i++){
             buf_[i] = (pbuf[i]);
         }
 
-        for(size_t i = size(); i < 8; i++){
+        for(size_t i = dlc_; i < 8; i++){
             buf_[i] = 0;
         }
     }
@@ -245,7 +245,7 @@ public:
     constexpr const uint8_t operator[](const size_t index) const {return buf_[index];};
     constexpr uint8_t & operator[](const size_t index) {return buf_[index];};
 
-    constexpr size_t size() const {return dlc_ & 0b111;}
+    constexpr size_t size() const {return dlc_;}
     constexpr size_t dlc() const {return dlc_;}
 
     constexpr CanMsg clone(){
