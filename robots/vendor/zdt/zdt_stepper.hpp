@@ -61,7 +61,7 @@ private:
         buf.append(bytes);
         buf.append(VerifyUtils::get_verify_code(
             verify_method,
-            T::func_code,
+            T::FUNC_CODE,
             bytes
         ));
         
@@ -75,7 +75,7 @@ private:
 
         phy_.write_bytes(
             nodeid_, 
-            T::func_code, 
+            T::FUNC_CODE, 
             bytes
         );
     }

@@ -25,8 +25,10 @@ protected:
 
     uint8_t data;
 public:
-    PCF8574(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    PCF8574(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    PCF8574(hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    PCF8574(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
     void write(const uint8_t _data){
         data = _data;

@@ -55,7 +55,7 @@ struct TCS34725_Collections{
 
 struct TCS34725_Regs:public TCS34725_Collections{
     struct R8_Enable:public Reg8<>{
-        static constexpr auto address = RegAddress::Enable;
+        static constexpr auto ADDRESS = RegAddress::Enable;
         uint8_t powerOn : 1;
         uint8_t adcEn : 1;
         uint8_t __resv1__ :1;
@@ -65,33 +65,33 @@ struct TCS34725_Regs:public TCS34725_Collections{
     }DEF_R8(enable_reg)
 
     struct R8_Integration:public Reg8<>{
-        static constexpr auto address = RegAddress::Integration;
+        static constexpr auto ADDRESS = RegAddress::Integration;
         uint8_t data;
     }DEF_R8(integration_reg)
 
     struct R8_IntPersistence:public Reg8<>{
-        static constexpr auto address = RegAddress::IntPersistence;
+        static constexpr auto ADDRESS = RegAddress::IntPersistence;
         using Reg8::operator=;
         uint8_t __resv__ :4;
         uint8_t apers   :4;
     }DEF_R8(int_persistence_reg)
 
     struct R8_LongWait:public Reg8<>{
-        static constexpr auto address = RegAddress::LongWait;
+        static constexpr auto ADDRESS = RegAddress::LongWait;
         uint8_t __resv1__ :1;
         uint8_t waitLong : 1;
         uint8_t __resv2__ :6;
     }DEF_R8(long_wait_reg)
 
     struct R8_Gain:public Reg8<>{
-        static constexpr auto address = RegAddress::Gain;
+        static constexpr auto ADDRESS = RegAddress::Gain;
         using Reg8::operator=;
         Gain gain        :2;
         uint8_t __resv2__   :6;
     }DEF_R8(gain_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr auto address = RegAddress::Status;
+        static constexpr auto ADDRESS = RegAddress::Status;
         uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
         uint8_t interrupt_flag     :1;
@@ -100,22 +100,22 @@ struct TCS34725_Regs:public TCS34725_Collections{
 
 
     struct R8_WaitTime:public Reg8<>{
-        static constexpr auto address = RegAddress::WaitTime;
+        static constexpr auto ADDRESS = RegAddress::WaitTime;
         uint8_t data;
     }DEF_R8(wait_time_reg)
 
     struct R16_LowThr:public Reg16<>{
-        static constexpr auto address = RegAddress::LowThr;
+        static constexpr auto ADDRESS = RegAddress::LowThr;
         uint16_t data;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
-        static constexpr auto address = RegAddress::HighThr;
+        static constexpr auto ADDRESS = RegAddress::HighThr;
         uint16_t data;
     }DEF_R16(high_thr_reg)
 
     struct R8_DeviceId:public Reg8<>{
-        static constexpr auto address = RegAddress::DeviceId;
+        static constexpr auto ADDRESS = RegAddress::DeviceId;
 
         // 0x44 = TCS34721 and TCS34725
         // 0x4D = TCS34723 and TCS34727
@@ -180,7 +180,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            conv_reg_address_repeated(reg.address), 
+            conv_reg_address_repeated(T::ADDRESS), 
             reg.as_val(), LSB);
         res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -190,7 +190,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            conv_reg_address_repeated(reg.address), reg.as_ref(), LSB);
+            conv_reg_address_repeated(T::ADDRESS), reg.as_ref(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -82,7 +82,7 @@ struct ICM45686_Collections{
 struct ICM45686_Regs:public ICM45686_Collections{
 
     struct R8_Int1Config0:public Reg8<>{
-        static constexpr auto address = RegAddress{0x16};
+        static constexpr auto ADDRESS = RegAddress{0x16};
 
         uint8_t en_fifo_full:1;
         uint8_t en_fifo_ths:1;
@@ -95,7 +95,7 @@ struct ICM45686_Regs:public ICM45686_Collections{
     };
 
     struct R8_Int1Config1:public Reg8<>{
-        static constexpr auto address = RegAddress{0x17};
+        static constexpr auto ADDRESS = RegAddress{0x17};
 
         uint8_t en_pll_rdy:1;
         uint8_t en_wom_x:1;

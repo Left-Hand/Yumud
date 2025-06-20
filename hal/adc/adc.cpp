@@ -12,15 +12,18 @@ void AdcPrimary::init(
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);	
     ADC_DeInit(instance_);
-    ADC_InitTypeDef ADC_InitStructure; 
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE;
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-    ADC_InitStructure.ADC_NbrOfChannel = 1;
-    ADC_InitStructure.ADC_OutputBuffer = ADC_OutputBuffer_Disable;
-    ADC_InitStructure.ADC_Pga = ADC_Pga_1;
+
+    const ADC_InitTypeDef ADC_InitStructure = {
+        .ADC_Mode = ADC_Mode_Independent,
+        .ADC_ScanConvMode = DISABLE,
+        .ADC_ContinuousConvMode = DISABLE,
+        .ADC_ExternalTrigConv = ADC_ExternalTrigConv_None,
+        .ADC_DataAlign = ADC_DataAlign_Right,
+        .ADC_NbrOfChannel = 1,
+        .ADC_OutputBuffer = ADC_OutputBuffer_Disable,
+        .ADC_Pga = ADC_Pga_1,
+    };
+
     ADC_Init(instance_, &ADC_InitStructure);
 
     bool temp_verf_activation = false;
@@ -33,12 +36,17 @@ void AdcPrimary::init(
     { 
         set_regular_count(regular_list.size());
         uint8_t i = 0;
-        for(const auto & cfg : regular_list){
+        for(const auto & regular_cfg : regular_list){
             i++;
-            ADC_RegularChannelConfig(instance_,(uint8_t)cfg.channel,i,(uint8_t)cfg.cycles);
-            adc_details::install_pin(cfg.channel);
+            ADC_RegularChannelConfig(
+                instance_,
+                static_cast<uint8_t>(regular_cfg.channel),
+                i,
+                static_cast<uint8_t>(regular_cfg.cycles)
+            );
+            adc_details::install_pin(regular_cfg.channel);
 
-            temp_verf_activation |= channel_is_temp_or_vref(cfg.channel);
+            temp_verf_activation |= channel_is_temp_or_vref(regular_cfg.channel);
 
             if(i > 16) break;
         }
@@ -47,19 +55,22 @@ void AdcPrimary::init(
     {
         set_injected_count(injected_list.size());
         uint8_t i = 0;
-        for(const auto & cfg : injected_list){
+        for(const auto & injected_cfg : injected_list){
             i++;
 
-            ADC_InjectedChannelConfig(instance_,(uint8_t)cfg.channel,i,(uint8_t)cfg.cycles);
-            ADC_SetInjectedOffset(instance_, ADC_InjectedChannel_1 + 
+            ADC_InjectedChannelConfig(
+                instance_,
+                static_cast<uint8_t>(injected_cfg.channel),
+                i,
+                static_cast<uint8_t>(injected_cfg.cycles));
+
+            ADC_SetInjectedOffset(
+                instance_, ADC_InjectedChannel_1 + 
                 (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
                 // offset can`t be negative
-            adc_details::install_pin(cfg.channel);
+            adc_details::install_pin(injected_cfg.channel);
 
-            temp_verf_activation |= (
-                cfg.channel == ChannelIndex::TEMP || 
-                cfg.channel == ChannelIndex::VREF
-            );
+            temp_verf_activation |= channel_is_temp_or_vref(injected_cfg.channel);
 
             if(i > 4) break;
         }

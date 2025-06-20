@@ -334,9 +334,9 @@ public:
     }
     void write(const char * pbuf, const size_t len){
         buf_.push(std::span<const char>(pbuf, len),  
-        [this](const std::span<const char> pbuf){
-            this->blocking_until_less_than(OSTREAM_BUF_SIZE - MIN(pbuf.size(), OSTREAM_BUF_SIZE));
-            this->sendout(pbuf);
+        [this](const std::span<const char> _pbuf){
+            this->blocking_until_less_than(OSTREAM_BUF_SIZE - MIN(_pbuf.size(), OSTREAM_BUF_SIZE));
+            this->sendout(_pbuf);
         });
 	}
 

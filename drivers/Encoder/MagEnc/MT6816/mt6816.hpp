@@ -67,8 +67,6 @@ private:
 
     static_assert(sizeof(Semantic) == 2);
 
-
-
     hal::SpiDrv spi_drv_;
 
     real_t lap_position_ = 0;

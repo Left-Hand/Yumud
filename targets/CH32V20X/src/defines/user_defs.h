@@ -17,6 +17,8 @@
 #define UART_FIFO_BUF_SIZE 512
 #define UART_DMA_BUF_SIZE 256
 
+#define DEBUGGER_INST hal::uart6
+#define DEBUG_UART_BAUD 576000
 
 
 // #include "v3defs.h"

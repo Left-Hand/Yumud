@@ -5,7 +5,6 @@
 #include "hal/bus/spi/spihw.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
-#include "drivers/Memory/Flash/X25QXX.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 

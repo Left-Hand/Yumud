@@ -53,24 +53,24 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct MagXReg:public Reg16i<>{
-        static constexpr auto address = RegAddress::MagX;
+        static constexpr auto ADDRESS = RegAddress::MagX;
         int16_t :16;
     };
 
     struct MagYReg:public Reg16i<>{
-        static constexpr auto address = RegAddress::MagY;
+        static constexpr auto ADDRESS = RegAddress::MagY;
 
         int16_t :16;
     };
 
     struct MagZReg:public Reg16i<>{
-        static constexpr auto address = RegAddress::MagZ;
+        static constexpr auto ADDRESS = RegAddress::MagZ;
 
         int16_t :16;
     };
 
     struct StatusReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Status;
+        static constexpr auto ADDRESS = RegAddress::Status;
 
         uint8_t ready:1;
         uint8_t ovl:1;
@@ -79,13 +79,13 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct TemperatureReg:public Reg16<>{
-        static constexpr auto address = RegAddress::Tempature;
+        static constexpr auto ADDRESS = RegAddress::Tempature;
 
         uint16_t data;
     };
 
     struct ConfigAReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ConfigA;
+        static constexpr auto ADDRESS = RegAddress::ConfigA;
         uint8_t measureMode:2;
         Odr odr:2;
         FullScale fs:2;
@@ -94,7 +94,7 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct ConfigBReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ConfigB;
+        static constexpr auto ADDRESS = RegAddress::ConfigB;
 
         uint8_t intEn:1;
         uint8_t __resv__:5;
@@ -104,13 +104,13 @@ struct QMC5883L_Regs:public QMC5883L_Collections{
     };
 
     struct ResetPeriodReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ResetPeriod;
+        static constexpr auto ADDRESS = RegAddress::ResetPeriod;
         using Reg8::operator=;
         uint8_t data;
     };
 
     struct ChipIDReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ChipID;
+        static constexpr auto ADDRESS = RegAddress::ChipID;
 
         uint8_t data;
     };
@@ -136,10 +136,17 @@ public:
     QMC5883L(const QMC5883L & other) = delete;
     QMC5883L(QMC5883L && other) = delete;
 
-    QMC5883L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    QMC5883L(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    QMC5883L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-            i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    QMC5883L(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+
+    QMC5883L(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+
+    QMC5883L(
+        hal::I2c & i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> init();
 
@@ -171,13 +178,7 @@ private:
         2, 8
     };
 
-    static constexpr auto name = magic::enum_item_name_v<FullScale, FullScale::_2G>;
-    static_assert(name[0] != '(');
-    static_assert(name[0] == '_');
-    static constexpr auto n = magic::enum_count_v<FullScale>;
-    static_assert(n == 2);
-
-    EnumScaler<FullScale, q24> scaler_ = {
+    static constexpr EnumScaler<FullScale, q24> scaler_ = {
         FullScale::_2G,
         scaler_mapping_
     };
@@ -185,7 +186,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(reg.address), reg.as_val(), LSB);
+        if(const auto res = i2c_drv_.write_reg(uint8_t(T::ADDRESS), reg.as_val(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -193,7 +194,7 @@ private:
     
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(reg.address), reg.as_ref(), LSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(T::ADDRESS), reg.as_ref(), LSB);
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();

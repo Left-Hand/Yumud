@@ -79,7 +79,6 @@ class EnumScaler{
 public:
     constexpr EnumScaler(const E init_e, const EnumArray<E, T> & mapping):
         enum_(init_e),
-        // scale_(scale),
         mapping_(mapping)
         {;}
 
@@ -87,11 +86,7 @@ public:
         enum_ = e;
     }
 
-    // constexpr auto to_lsb(){
-    //     return mapping_[enum_] / scale_;
-    // }
-
-    constexpr auto to_fullscale(){
+    constexpr auto to_fullscale() const {
         return mapping_[enum_];
     }
 

@@ -200,10 +200,6 @@ public:
     constexpr FixedString():
         len_(0){;}
 
-    // constexpr operator StringView() const {
-    //     return StringView(buf_, len);
-    // }
-
     constexpr StringView as_view() const {
         return StringView(buf_, len_);
     }
@@ -217,16 +213,6 @@ public:
     [[nodiscard]] constexpr Result<char, void> pop_back(){
         if(len_ == 0) return Err();
         return Ok(buf_[--len_]);
-    }
-
-    constexpr void try_push_back(const char chr){
-        if(len_ >= N) return;
-        buf_[len_++] = chr;
-    }
-
-    [[nodiscard]] constexpr char try_pop_back(){
-        if(len_ == 0);
-        return buf_[--len_];
     }
 
     [[nodiscard]] constexpr size_t length() const{
@@ -290,6 +276,7 @@ private:
     char buf_[N] = {};
     size_t len_;
 
+    #if 0
     static consteval void static_test(){
         constexpr auto str = FixedString<10>("Hello");
         constexpr auto str2 = []{
@@ -329,6 +316,7 @@ private:
             FixedString<3>("A").insert(5, 'X').is_err()  // ✅ 应返回错误
         );
     }
+    #endif
 };
 
 class LineEdit final{
@@ -389,23 +377,24 @@ public:
     constexpr LineEdit():
         str_(),
         cursor_(0, MAX_LENGTH){;}
-    constexpr void handle_key_input(const KeyCode code){
-
-        auto insert_char = [this](const KeyCode code){
-            handle_insert_char(cursor_.position(), code.to_char().unwrap());
-        };
+    constexpr Result<void, void> handle_key_input(const KeyCode code){
+        #define DEF_INSERT_CHAR(_code) {\
+            const auto may_chr = _code.to_char();\
+            if(may_chr.is_none()) return Err();\
+            handle_insert_char(cursor_.position(), may_chr.unwrap());\
+        }\
 
         if(code.is_digit()){
-            insert_char(code);
+            DEF_INSERT_CHAR(code);
         }else if(code.is_alpha()){
-            insert_char(code);
+            DEF_INSERT_CHAR(code);
         } else if(code.is_arrow()){
             handle_arrow_input(code);
         }else{
             switch(code.kind()){
                 case KeyCode::NumpadComma:
                 case KeyCode::NumpadSubtract:
-                    insert_char(code);
+                    DEF_INSERT_CHAR(code);
                     break;
                 case KeyCode::NumpadBackspace:
                     handle_backspace();
@@ -422,7 +411,13 @@ public:
                     DEBUG_PRINTLN("not handled", code);
             }
         }
+
+        return Ok();
+        #undef DEF_INSERT_CHAR
     }
+
+
+
 
     constexpr void handle_clear(){
         cursor_.set_position(0);
@@ -613,8 +608,8 @@ struct SegCode{
 
     constexpr Kind kind() const{return kind_;}
 
-    constexpr bool operator==(Kind kind_) const{return kind_ == this->kind_;}
-    constexpr bool operator!=(Kind kind_) const{return kind_ != this->kind_;}
+    constexpr bool operator==(Kind kind) const{return kind == this->kind_;}
+    constexpr bool operator!=(Kind kind) const{return kind != this->kind_;}
 
 private:
     Kind kind_;
@@ -718,7 +713,7 @@ static void HT16K33_tb(HT16K33 & ht16){
         const auto & input = comp.input();
         const auto may_key = input.just_pressed().first_code();
         may_key.inspect([&](const hid::KeyCode code){
-            line_edit.handle_key_input(code); 
+            line_edit.handle_key_input(code).examine(); 
             display_str(line_edit.str());
             DEBUG_PRINTLN(line_edit);
         });

@@ -176,7 +176,7 @@ typedef struct
 
 
 void ADC_DeInit(ADC_TypeDef* ADCx);
-void ADC_Init(ADC_TypeDef* ADCx, ADC_InitTypeDef* ADC_InitStruct);
+void ADC_Init(ADC_TypeDef* ADCx, const ADC_InitTypeDef* ADC_InitStruct);
 void ADC_StructInit(ADC_InitTypeDef* ADC_InitStruct);
 void ADC_Cmd(ADC_TypeDef* ADCx, FunctionalState NewState);
 void ADC_DMACmd(ADC_TypeDef* ADCx, FunctionalState NewState);

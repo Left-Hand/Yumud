@@ -2,7 +2,6 @@
 
 #include "../core/platform.hpp"
 
-#define DEBUGGER_INST hal::uart6
 
 #define F_CPU 144000000
 #define USE_IQ

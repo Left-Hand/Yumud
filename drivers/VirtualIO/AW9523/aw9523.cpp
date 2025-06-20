@@ -25,7 +25,7 @@ IResult<> AW9523::init(const Config & cfg){
 
 
     auto clear_output = [this]()-> IResult<>{
-        for(size_t i = 0; i < 16; i++){
+        for(size_t i = 0; i < MAX_CHANNELS; i++){
             if(const auto res = set_led_current(std::bit_cast<hal::PinSource>(
                 hal::PinMask::from_index(i).as_u16()), 
                 0); res.is_err()) return Err(res.unwrap_err());
@@ -36,8 +36,6 @@ IResult<> AW9523::init(const Config & cfg){
 
     if(const auto res = clear_output(); 
         res.is_err()) return res;
-    
-
     return Ok();
 }
 
@@ -60,10 +58,7 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
 
     {
         auto reg = RegCopy(dir_reg);
-        if(mode.is_in_mode()) 
-            reg.mask = reg.mask.modify(index, HIGH);
-        else 
-            reg.mask = reg.mask.modify(index, LOW);
+        reg.mask = reg.mask.modify(index, BoolLevel::from(mode.is_in_mode()));
         
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
@@ -87,7 +82,7 @@ IResult<> AW9523::enable_irq_by_index(const size_t index, const Enable en ){
 }
 
 IResult<> AW9523::enable_led_mode(const hal::PinSource pin, const Enable en){
-    uint index = CTZ((uint16_t)pin);
+    uint index = CTZ(std::bit_cast<uint16_t>(pin));
     GUARD_INDEX(index);
     auto reg = RegCopy(led_mode_reg);
     reg.mask = reg.mask.modify(index, BoolLevel::from(en == EN));

@@ -37,13 +37,10 @@
 
 using namespace ymd;
 
-
+#ifdef ENABLE_UART1
 #define let const auto
 
 #define UART hal::uart1
-
-
-
 
 using digipw::AlphaBetaDuty;
 
@@ -821,3 +818,5 @@ private:
         return x * MOTOR_POLE_PAIRS;
     }
 };
+
+#endif

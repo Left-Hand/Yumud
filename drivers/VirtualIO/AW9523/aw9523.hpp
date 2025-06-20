@@ -65,27 +65,28 @@ struct AW9523_Collections{
 
 struct AW9523_Regs:public AW9523_Collections{
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
+    static constexpr size_t MAX_CHANNELS = 16;
     
     struct InputReg  : public Reg16<>{
-        static constexpr auto address = RegAddress::In;
+        static constexpr auto ADDRESS = RegAddress::In;
 
         hal::PinMask mask;
     }DEF_R16(input_reg)
 
     struct OutputReg  : public Reg16<>{
-        static constexpr auto address = RegAddress::Out;
+        static constexpr auto ADDRESS = RegAddress::Out;
 
         hal::PinMask mask;
     }DEF_R16(output_reg)
 
     struct DirReg:public Reg16<>{
-        static constexpr auto address = RegAddress::Dir;
+        static constexpr auto ADDRESS = RegAddress::Dir;
 
         hal::PinMask mask;
     }DEF_R16(dir_reg)
 
     struct CtlReg:Reg8<>{
-        static constexpr auto address = RegAddress::Ctl;
+        static constexpr auto ADDRESS = RegAddress::Ctl;
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
@@ -93,21 +94,21 @@ struct AW9523_Regs:public AW9523_Collections{
     }DEF_R8(ctl_reg)
 
     struct IntEnReg:public Reg16<>{
-        static constexpr auto address = RegAddress::Inten;
+        static constexpr auto ADDRESS = RegAddress::Inten;
 
         hal::PinMask mask;
     }DEF_R16(inten_reg)
 
 
     struct LedModeReg:public Reg16<>{
-        static constexpr auto address = RegAddress::LedMode;
+        static constexpr auto ADDRESS = RegAddress::LedMode;
 
         hal::PinMask mask;
     }DEF_R16(led_mode_reg);
 
 
     struct ChipIdReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ChipId;
+        static constexpr auto ADDRESS = RegAddress::ChipId;
 
         uint8_t id;
     }DEF_R8(chip_id_reg)
@@ -150,9 +151,12 @@ public:
         CurrentLimit current_limit = CurrentLimit::Low;
     };
 
-    AW9523(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
+    AW9523(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    AW9523(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    AW9523(hal::I2c & bus):
+        i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){
@@ -169,19 +173,29 @@ public:
         return write_by_mask(buf_mask_);
     }
 
-    [[nodiscard]] IResult<> write_by_index(const size_t index, const BoolLevel data) ;
+    [[nodiscard]] IResult<> write_by_index(
+        const size_t index, 
+        const BoolLevel data) ;
     
     [[nodiscard]] IResult<BoolLevel> read_by_index(const size_t index) ;
 
-    [[nodiscard]] IResult<> set_mode(const size_t index, const hal::GpioMode mode) ;
+    [[nodiscard]] IResult<> set_mode(
+        const size_t index, 
+        const hal::GpioMode mode) ;
 
-    [[nodiscard]] IResult<> enable_irq_by_index(const size_t index, const Enable en = EN);
+    [[nodiscard]] IResult<> enable_irq_by_index(
+        const size_t index, 
+        const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_led_mode(const hal::PinSource pin, const Enable en = EN);
+    [[nodiscard]] IResult<> enable_led_mode(
+        const hal::PinSource pin, 
+        const Enable en = EN);
 
     [[nodiscard]] IResult<> set_led_current_limit(const CurrentLimit limit);
 
-    [[nodiscard]] IResult<> set_led_current(const hal::PinSource pin, const uint8_t current);
+    [[nodiscard]] IResult<> set_led_current(
+        const hal::PinSource pin, 
+        const uint8_t current);
     
     [[nodiscard]] IResult<> validate();
 
@@ -198,7 +212,7 @@ private:
                 return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP00) + idx));
             case 8 ... 11:
                 return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP10) + idx));
-            case 12 ... 16:
+            case 12 ... 15:
                 return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP14) + idx));
             default:
                 __builtin_unreachable();
@@ -212,7 +226,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -220,7 +234,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
 
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){

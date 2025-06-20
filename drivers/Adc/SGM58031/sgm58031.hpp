@@ -101,7 +101,7 @@ struct SGM58031_Collections{
 
 struct SGM58031_Regs:public SGM58031_Collections{
     struct R16_Config:public Reg16<>{
-        static constexpr auto address = RegAddress::Config;
+        static constexpr auto ADDRESS = RegAddress::Config;
         uint8_t compQue : 2;
         uint8_t compLat : 1;
         uint8_t compPol : 1;
@@ -114,7 +114,7 @@ struct SGM58031_Regs:public SGM58031_Collections{
     }DEF_R16(config_reg)
 
     struct R16_Config1:public Reg16<>{
-        static constexpr auto address = RegAddress::Config1;        
+        static constexpr auto ADDRESS = RegAddress::Config1;        
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
         uint8_t busFlex     :1;
@@ -126,7 +126,7 @@ struct SGM58031_Regs:public SGM58031_Collections{
     }DEF_R16(config1_reg)
 
     struct R16_DeviceId:public Reg16<>{
-        static constexpr auto address = RegAddress::DeviceID;
+        static constexpr auto ADDRESS = RegAddress::DeviceID;
         static constexpr uint16_t KEY = 0x0080; 
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
@@ -136,24 +136,24 @@ struct SGM58031_Regs:public SGM58031_Collections{
     }DEF_R16(device_id_reg)
 
     struct R16_Trim:public Reg16<>{
-        static constexpr auto address = RegAddress::Trim;
+        static constexpr auto ADDRESS = RegAddress::Trim;
         uint16_t gn         :11;
         uint8_t __resv__    :5;
         
     }DEF_R16(trim_reg)
 
     struct R16_Conv:public Reg16<>{
-        static constexpr auto address = RegAddress::Conv;
+        static constexpr auto ADDRESS = RegAddress::Conv;
         uint16_t data;
     }DEF_R16(conv_reg)
 
     struct R16_LowThr:public Reg16<>{
-        static constexpr auto address = RegAddress::LowThr;
+        static constexpr auto ADDRESS = RegAddress::LowThr;
         uint16_t data;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
-        static constexpr auto address = RegAddress::HighThr;
+        static constexpr auto ADDRESS = RegAddress::HighThr;
         uint16_t data;
     }DEF_R16(high_thr_reg)
 };
@@ -186,7 +186,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            uint8_t(reg.address), reg.as_val(), MSB);
+            uint8_t(T::ADDRESS), reg.as_val(), MSB);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -195,7 +195,7 @@ private:
     template<typename T>
     IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            uint8_t(reg.address), reg.as_ref(), MSB);
+            uint8_t(T::ADDRESS), reg.as_ref(), MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

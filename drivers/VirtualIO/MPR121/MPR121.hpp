@@ -13,15 +13,15 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x5A);
-    static constexpr size_t CHANNELS_CNT = 12;
+    static constexpr size_t MAX_CHANNELS = 12;
 
 
-    struct Threshold:public Reg16<>{
+    struct R16_Threshold:public Reg16<>{
         uint8_t press;
         uint8_t release;
     };
 
-    struct FiltteredData:public Reg16<>{
+    struct R16_FiltteredData:public Reg16<>{
         uint16_t value:10;
         uint16_t __resv__:6;
     };
@@ -37,7 +37,7 @@ protected:
         uint8_t toggle;
     };
 
-    struct ChargeTime:public Reg8<>{
+    struct R8_ChargeTime:public Reg8<>{
         uint8_t cdt_a:3;
         uint8_t __resv1__:1;
         uint8_t cdt_b:3;
@@ -52,13 +52,13 @@ protected:
         uint8_t target_level;
     };
 
-    struct TouchStatus:public Reg16<>{
+    struct R16_TouchStatus:public Reg16<>{
         uint16_t ele:13;
         uint16_t __resv__:2;
         uint16_t ovcf:1;
     };
 
-    struct OORStatus:public Reg16<>{
+    struct R16_OORStatus:public Reg16<>{
         uint16_t ele:13;
         uint16_t __resv__:1;
         uint16_t arff:1;
@@ -81,28 +81,34 @@ protected:
     };
 
     struct {
-        TouchStatus touch_status;
-        OORStatus oor_status;
-        FiltteredData filtered_datas[CHANNELS_CNT];
-        Misc misc;
-        Misc elep_misc;
+        R16_TouchStatus         touch_status;
+        R16_OORStatus           oor_status;
+        R16_FiltteredData       filtered_datas[MAX_CHANNELS];
+        Misc                    misc;
+        Misc                    elep_misc;
     
-        uint8_t bassline_values[CHANNELS_CNT];
-        Threshold thresholds[CHANNELS_CNT];
-        uint8_t cdc_conf;
-        uint8_t cdt_conf;
-        uint8_t electrode_conf;
+        uint8_t                 baseline_values[MAX_CHANNELS];
+        R16_Threshold           thresholds[MAX_CHANNELS];
+        uint8_t                 cdc_conf;
+        uint8_t                 cdt_conf;
+        uint8_t                 electrode_conf;
 
-        uint8_t electrode_current[CHANNELS_CNT];
-        ChargeTime charge_times[CHANNELS_CNT/2];
-        GpioCtrl gpio_ctrl;
-        AutoConfig auto_config;
+        uint8_t                 electrode_current[MAX_CHANNELS];
+        R8_ChargeTime           charge_times[MAX_CHANNELS/2];
+        GpioCtrl                gpio_ctrl;
+        AutoConfig              auto_config;
     } Regs;
     
 public: 
-    MPR121(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MPR121(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    MPR121(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    MPR121(hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+
+    MPR121(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+
+    MPR121(hal::I2c & i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
         i2c_drv_{hal::I2cDrv{i2c, addr}}{;}
 };
 

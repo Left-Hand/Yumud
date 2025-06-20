@@ -58,9 +58,15 @@ struct NCA9555_Regs:public NCA9555_Collections{
 class NCA9555 final:public NCA9555_Regs{
 public:
 
-    NCA9555(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    NCA9555(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    NCA9555(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+    NCA9555(hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    NCA9555(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    NCA9555(
+        hal::I2c & i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     IResult<> init();
     IResult<> set_inversion(const hal::PinMask mask);

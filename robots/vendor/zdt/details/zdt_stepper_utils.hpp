@@ -104,11 +104,11 @@ struct ZdtMotor_Collections{
     struct Bytes2CanMsgIterator{
         explicit constexpr Bytes2CanMsgIterator(
             const NodeId nodeid, 
-            const FuncCode func_code,
+            const FuncCode FUNC_CODE,
             const std::span<const uint8_t> payload
         ):
             nodeid_(nodeid),
-            func_code_(func_code),
+            func_code_(FUNC_CODE),
             payload_(payload){;}
 
 
@@ -134,12 +134,12 @@ struct ZdtMotor_Collections{
 
         static constexpr hal::CanMsg make_canmsg(
             const NodeId nodeid,
-            const FuncCode func_code,
+            const FuncCode FUNC_CODE,
             const uint8_t piece_cnt,
             const std::span<const uint8_t> bytes
         ){
             auto buf = InlineBuf<8>{};
-            buf.append(std::bit_cast<uint8_t>(func_code));
+            buf.append(std::bit_cast<uint8_t>(FUNC_CODE));
             buf.append(bytes);
 
             return hal::CanMsg::from_bytes(
@@ -169,7 +169,7 @@ struct ZdtMotor_Collections{
     struct VerifyUtils final{
         static constexpr uint8_t get_verify_code(
             const VerifyMethod method, 
-            const FuncCode func_code,
+            const FuncCode FUNC_CODE,
             std::span<const uint8_t> bytes 
         ){
             switch(method){
@@ -178,10 +178,10 @@ struct ZdtMotor_Collections{
                 case VerifyMethod::X6B:
                     return uint8_t{0x6b};
                 case VerifyMethod::XOR:
-                    return VerifyUtils::by_xor(func_code, bytes);
+                    return VerifyUtils::by_xor(FUNC_CODE, bytes);
                 case VerifyMethod::CRC8:
                     TODO();
-                    // return VerifyUtils::by_crc8(func_code, bytes);
+                    // return VerifyUtils::by_crc8(FUNC_CODE, bytes);
             }
         }
 
@@ -199,7 +199,7 @@ struct ZdtMotor_Collections{
         }
     
         // static constexpr uint8_t by_crc8(
-        //     const FuncCode func_code,
+        //     const FuncCode FUNC_CODE,
         //     const std::span<const uint8_t> bytes
         // ){
         //     uint16_t crc = 0xffff;
@@ -251,7 +251,7 @@ struct ZdtMotor_Collections{
     struct Payloads{
         // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
         struct Actvation final{
-            static constexpr FuncCode func_code = FuncCode::Activation;
+            static constexpr FuncCode FUNC_CODE = FuncCode::Activation;
             //0
             const uint8_t _0 = 0xab;
             const bool en;
@@ -259,7 +259,7 @@ struct ZdtMotor_Collections{
         }__packed;
 
         struct SetPosition final{
-            static constexpr FuncCode func_code = FuncCode::SetPosition;
+            static constexpr FuncCode FUNC_CODE = FuncCode::SetPosition;
             bool is_ccw;
             Rpm rpm;
             AcclerationLevel acc_level;
@@ -269,7 +269,7 @@ struct ZdtMotor_Collections{
         }__packed;
 
         struct SetSpeed final{
-            static constexpr FuncCode func_code = FuncCode::SetSpeed;
+            static constexpr FuncCode FUNC_CODE = FuncCode::SetSpeed;
 
             bool is_ccw;//2
             Rpm rpm;//3-4
@@ -282,7 +282,7 @@ struct ZdtMotor_Collections{
             // 01 84 8A 01 07 6B
             //  0x84 + 0x8A + 是否存储标志 + 细分值 + 校验字节
 
-            static constexpr FuncCode func_code = FuncCode::SetSubDivide;
+            static constexpr FuncCode FUNC_CODE = FuncCode::SetSubDivide;
 
             uint8_t _0 = 0x8A;
             bool is_burned = true;
@@ -290,13 +290,13 @@ struct ZdtMotor_Collections{
         }__packed;
 
         struct Brake final{
-            static constexpr FuncCode func_code = FuncCode::Brake;
+            static constexpr FuncCode FUNC_CODE = FuncCode::Brake;
             const uint8_t _0 = 0x98;
             const bool is_sync;
         }__packed;
 
         struct TrigCali final{
-            static constexpr FuncCode func_code = FuncCode::TrigCali;
+            static constexpr FuncCode FUNC_CODE = FuncCode::TrigCali;
             const uint8_t _1 = 0x45;
 
             static constexpr TrigCali from_default(){
@@ -305,7 +305,7 @@ struct ZdtMotor_Collections{
         }__packed;
 
         struct SetCurrent{
-            static constexpr FuncCode func_code = FuncCode::SetCurrent;//1
+            static constexpr FuncCode FUNC_CODE = FuncCode::SetCurrent;//1
 
             bool is_ccw;//2
             Rpm rpm;//3-4
@@ -315,14 +315,14 @@ struct ZdtMotor_Collections{
         }__packed;
 
         struct TrigHomming final{
-            static constexpr FuncCode func_code = FuncCode::TrigHomming;
+            static constexpr FuncCode FUNC_CODE = FuncCode::TrigHomming;
 
             HommingMode homming_mode;
             bool is_sync;
         }__packed;
 
         struct QueryHommingParaments final{
-            static constexpr FuncCode func_code = FuncCode::QueryHommingParaments;
+            static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
         }__packed;
 
         static constexpr size_t a = sizeof(QueryHommingParaments);
@@ -372,7 +372,7 @@ public:
 
     void write_bytes(
         const NodeId id, 
-        const FuncCode func_code,
+        const FuncCode FUNC_CODE,
         const std::span<const uint8_t> bytes
     );
 private:
@@ -382,14 +382,14 @@ private:
     static void can_write_bytes(
         hal::Can & can, 
         const NodeId id, 
-        const FuncCode func_code,
+        const FuncCode FUNC_CODE,
         const std::span<const uint8_t> bytes
     );
 
     static void uart_write_bytes(
         hal::Uart & uart, 
         const NodeId id, 
-        const FuncCode func_code,
+        const FuncCode FUNC_CODE,
         const std::span<const uint8_t> bytes
     );
 };

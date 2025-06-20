@@ -2,7 +2,6 @@
 
 using namespace ymd::foc;
 
-using Result = CtrlResult;
 using MetaData = MotorUtils::MetaData;
 
 #define ERR_LIMIT 100
@@ -22,7 +21,7 @@ void MetaData::reset(){
     openloop_curr = real_t(0.7);
 }
 
-Result PositionCtrl::update(
+CtrlResult PositionCtrl::update(
         real_t targ_pos, 
         const real_t real_pos, 
         const real_t real_spd)
@@ -51,7 +50,7 @@ Result PositionCtrl::update(
     }
 }
 
-Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
+CtrlResult SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
     // const real_t clamped_targ_spd = CLAMP2(_targ_spd, meta.max_spd);
     
     // soft_targ_spd = STEP_TO(soft_targ_spd, clamped_targ_spd, real_t(meta.max_acc) / foc_freq);

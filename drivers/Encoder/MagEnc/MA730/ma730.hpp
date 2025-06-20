@@ -44,28 +44,28 @@ struct MA730_Collections{
 struct MA730_Regs:public MA730_Collections{
 
     struct ZeroDataLowReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ZeroDataLow;
+        static constexpr auto ADDRESS = RegAddress::ZeroDataLow;
         uint8_t data;
     };
 
     struct ZeroDataHighReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ZeroDataHigh;
+        static constexpr auto ADDRESS = RegAddress::ZeroDataHigh;
         uint8_t data;
     };
 
     struct TrimReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Trim;
+        static constexpr auto ADDRESS = RegAddress::Trim;
         uint8_t trim;
     };
     struct TrimConfigReg:public Reg8<>{
-        static constexpr auto address = RegAddress::TrimConfig;
+        static constexpr auto ADDRESS = RegAddress::TrimConfig;
         uint8_t enableX:1;
         uint8_t enableY:1;
         uint8_t :6;
     };
 
     struct ZParametersReg:public Reg8<>{
-        static constexpr auto address = RegAddress::ZParameters;
+        static constexpr auto ADDRESS = RegAddress::ZParameters;
         uint8_t :2;
         Phase zPhase :2;
         Width zWidth :2;
@@ -73,25 +73,25 @@ struct MA730_Regs:public MA730_Collections{
     };
 
     struct PulsePerTurnReg:public Reg8<>{
-        static constexpr auto address = RegAddress::PulsePerTurn;
+        static constexpr auto ADDRESS = RegAddress::PulsePerTurn;
         uint8_t data;
     };
 
     struct ThresholdReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Threshold;
+        static constexpr auto ADDRESS = RegAddress::Threshold;
         uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
     struct DirectionReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Direction;
+        static constexpr auto ADDRESS = RegAddress::Direction;
         uint8_t :7;
         uint8_t direction :1;
     };
 
     struct MagnitudeReg:public Reg8<>{
-        static constexpr auto address = RegAddress::Magnitude;
+        static constexpr auto ADDRESS = RegAddress::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;
@@ -155,7 +155,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto address = reg.address;
+        const auto address = T::ADDRESS;
         const uint8_t data = reg.as_val();
         const auto tx = uint16_t(
             0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
@@ -169,7 +169,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         uint16_t dummy;
-        const auto addr = std::bit_cast<uint8_t>(reg.address);
+        const auto addr = std::bit_cast<uint8_t>(T::ADDRESS);
         const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
         if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
             res.is_err()) return Err(Error(res.unwrap_err()));

@@ -143,7 +143,7 @@ void ADC_DeInit(ADC_TypeDef *ADCx)
  *
  * @return  none
  */
-void ADC_Init(ADC_TypeDef *ADCx, ADC_InitTypeDef *ADC_InitStruct)
+void ADC_Init(ADC_TypeDef *ADCx, const ADC_InitTypeDef *ADC_InitStruct)
 {
     uint32_t tmpreg1 = 0;
     uint8_t  tmpreg2 = 0;

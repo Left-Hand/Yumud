@@ -4,7 +4,7 @@
 #include "core/clock/time.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 
-
+#ifdef ENABLE_UART1
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
@@ -106,3 +106,4 @@ void zdt_main(){
         // DEBUG_PRINTLN(COMM_CAN.pending(), COMM_CAN.getRxErrCnt(), COMM_CAN.getTxErrCnt());
     }
 }
+#endif

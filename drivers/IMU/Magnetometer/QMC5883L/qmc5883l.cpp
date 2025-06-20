@@ -68,7 +68,7 @@ IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
 }
 
 IResult<> QMC5883L::update(){
-    return read_burst(mag_x_reg.address, std::span(&mag_x_reg.as_ref(), 3));
+    return read_burst(mag_x_reg.ADDRESS, std::span(&mag_x_reg.as_ref(), 3));
 }
 
 IResult<Vector3<q24>> QMC5883L::read_mag(){

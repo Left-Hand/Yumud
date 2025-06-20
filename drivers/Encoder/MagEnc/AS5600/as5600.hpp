@@ -60,39 +60,39 @@ struct AS5600_Collections{
 struct AS5600_Regs:public AS5600_Collections{
 
     struct R8_ProgramTimes:public Reg8<>{
-        static constexpr auto address = RegAddress::ProgramTimes;
+        static constexpr auto ADDRESS = RegAddress::ProgramTimes;
         uint8_t times :2;
         uint8_t __resv__ :6;
         
     };
 
     struct R16_StartAngle:public Reg16<>{
-        static constexpr auto address = RegAddress::StartAngle;
+        static constexpr auto ADDRESS = RegAddress::StartAngle;
         uint16_t data;
     };
 
     struct R16_EndAngle:public Reg16<>{
-        static constexpr auto address = RegAddress::EndAngle;
+        static constexpr auto ADDRESS = RegAddress::EndAngle;
         uint16_t data;
     };
 
     struct R16_AmountAngle:public Reg16<>{
-        static constexpr auto address = RegAddress::AmountAngle;        
+        static constexpr auto ADDRESS = RegAddress::AmountAngle;        
         uint16_t data;
     };
 
     struct R16_RawAngle:public Reg16<>{
-        static constexpr auto address = RegAddress::RawAngle;
+        static constexpr auto ADDRESS = RegAddress::RawAngle;
         uint16_t data;
     };
 
     struct R16_Angle:public Reg16<>{
-        static constexpr auto address = RegAddress::Angle;
+        static constexpr auto ADDRESS = RegAddress::Angle;
         uint16_t data;
     };
 
     struct R16_Config:public Reg16<>{
-        static constexpr auto address = RegAddress::Config;
+        static constexpr auto ADDRESS = RegAddress::Config;
         uint8_t powerMode :2;
         uint8_t hysteresis:2;
         uint8_t outputStage:2;
@@ -104,7 +104,7 @@ struct AS5600_Regs:public AS5600_Collections{
     };
 
     struct R8_Status:public Reg8<>{
-        static constexpr auto address = RegAddress::Status;
+        static constexpr auto ADDRESS = RegAddress::Status;
         
         uint8_t __resv1__ :3;
         uint8_t magHigh:1;
@@ -115,17 +115,17 @@ struct AS5600_Regs:public AS5600_Collections{
     };
 
     struct R8_AutoGain:public Reg8<>{
-        static constexpr auto address = RegAddress::AutoGain;
+        static constexpr auto ADDRESS = RegAddress::AutoGain;
         uint8_t data;
     };
 
     struct R16_Magnitude:public Reg16<>{
-        static constexpr auto address = RegAddress::Magnitude;
+        static constexpr auto ADDRESS = RegAddress::Magnitude;
         uint16_t data;
     };
 
     struct R8_Burn:public Reg8<>{
-        static constexpr auto address = RegAddress::Burn;
+        static constexpr auto ADDRESS = RegAddress::Burn;
 
         uint8_t data;
     };
@@ -147,10 +147,14 @@ class AS5600 final:
     public MagEncoderIntf,
     public AS5600_Regs{
 public:
-    AS5600(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AS5600(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AS5600(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    AS5600(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
-    AS5600(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    AS5600(
+        hal::I2c & i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
             
     [[nodiscard]] IResult<> init();
@@ -195,7 +199,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto err = i2c_drv_.write_reg(
-            std::bit_cast<uint8_t>(reg.address), 
+            std::bit_cast<uint8_t>(T::ADDRESS), 
             reg.as_val(), LSB); 
             err.is_err()) return Err(err.unwrap_err());
         reg.apply();
@@ -205,7 +209,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto err = i2c_drv_.read_reg(
-            std::bit_cast<uint8_t>(reg.address), 
+            std::bit_cast<uint8_t>(T::ADDRESS), 
             reg.as_ref(), LSB); 
             err.is_err()) return Err(err.unwrap_err());
         return Ok();

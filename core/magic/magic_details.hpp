@@ -105,11 +105,11 @@ consteval ReflectionEnumElementInfoV2 dump_enum()  {
             }
         }
 
-        struct Result{
+        struct Res{
             std::size_t e1, s, e2, colon, end;
         };
 
-        return Result{e1, s, e2, colon, end};
+        return Res{e1, s, e2, colon, end};
     }();
 
     // constexpr size_t e1 = result.e1;

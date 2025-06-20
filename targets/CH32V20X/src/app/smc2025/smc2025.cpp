@@ -173,7 +173,7 @@ void smc2025_main(){
     // bkp.init();edRunStatus();
     auto & spi = spi2;
 
-    spi2.init(144_MHz);
+    spi2.init({144_MHz});
     
     auto & lcd_blk = portD[0];
     lcd_blk.outpp(HIGH);
