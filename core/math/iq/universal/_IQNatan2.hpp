@@ -81,9 +81,12 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
         ui8Status |= 4;
         uiq31Input = std::bit_cast<uint32_t>(_UIQdiv<31>(
             _iq<31>::from_i32(uiqNInputX), _iq<31>::from_i32(uiqNInputY)));
-    } else {
+    } else if((uiqNInputX > uiqNInputY)) {
         uiq31Input = std::bit_cast<uint32_t>(_UIQdiv<31>(
             _iq<31>::from_i32(uiqNInputY), _iq<31>::from_i32(uiqNInputX)));
+    }else{
+        // uiq31Input = /0x04000000;
+        uiq31Input = 1u << 31;
     }
 
     /* Calculate the index using the left 8 most bits of the input. */

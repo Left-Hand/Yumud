@@ -68,9 +68,9 @@ protected:
 
         constexpr uint32_t id() const {
             if(is_ext_)
-                return id_;
+                return ext_id_;
             else
-                return id_ >> 18;
+                return ext_id_ >> 18;
         }
 
     // private:
@@ -81,7 +81,7 @@ protected:
         
         //是否为扩展帧
         uint32_t is_ext_:1;
-        uint32_t id_:29;
+        uint32_t ext_id_:29;
     private:
         static constexpr Identifier from_std_id(
             const CanStdId id, 
@@ -90,7 +90,7 @@ protected:
             return Identifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = false, 
-                .id_ = uint32_t(id.as_raw() << 18)
+                .ext_id_ = uint32_t(id.as_raw()) << 18
             };
         }
 
@@ -101,7 +101,7 @@ protected:
             return Identifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = true, 
-                .id_ = id.as_raw()
+                .ext_id_ = id.as_raw()
             };
         }
     };

@@ -162,8 +162,7 @@ void Can::clear_mailbox(const uint8_t mbox){
 Gpio & Can::get_tx_gpio(){
     switch((uint32_t)instance_){
         default:
-            HALT;
-            break;
+            __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_TX_GPIO;
@@ -181,7 +180,7 @@ Gpio & Can::get_tx_gpio(){
 Gpio & Can::get_rx_gpio(){
     switch((uint32_t)instance_){
         default:
-            HALT
+            __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_RX_GPIO;
@@ -263,6 +262,16 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
+    // DEBUG_PRINTLN(
+    //     std::bit_cast<uint8_t>(cfg.mode),
+    //     setting.prescale,
+    //     std::bit_cast<uint8_t>(setting.swj),
+    //     std::bit_cast<uint8_t>(setting.bs1),
+    //     std::bit_cast<uint8_t>(setting.bs2)
+    // );
+
+
+
     CAN_Init(instance_, &CAN_InitConf);
     init_it();
 }
@@ -284,17 +293,17 @@ std::optional<uint8_t> Can::transmit(const CanMsg & msg){
         else return -1;
     }();
 
-    if(transmit_mailbox >= 0){
-        const uint32_t tempmir = msg.identifier_as_u32();
-        const uint64_t data = msg.payload_as_u64();
-        instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDLR = data & UINT32_MAX;
-        instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDHR = data >> 32;
+    if(transmit_mailbox < 0) return std::nullopt;
 
-        instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDTR = uint32_t(0xFFFFFFF0 | msg.size());
-        instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMIR = tempmir;
-    }
+    const uint32_t tempmir = msg.identifier_as_u32();
+    const uint64_t data = msg.payload_as_u64();
+    instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDLR = data & UINT32_MAX;
+    instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDHR = data >> 32;
 
-    return (transmit_mailbox > 0) ? std::optional<uint8_t>(transmit_mailbox) : std::nullopt;
+    instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDTR = uint32_t(0xFFFF0000 | msg.size());
+    instance_->sTxMailBox[uint32_t(transmit_mailbox)].TXMIR = tempmir;
+
+    return transmit_mailbox;
 }
 
 

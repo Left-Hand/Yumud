@@ -8,9 +8,14 @@
 
 #include "core/string/StringView.hpp"
 #include "atomic"
+#include "types/vectors/vector2/Vector2.hpp"
 
 
 #include "robots/cannet/slcan/slcan.hpp"
+#include "data.hpp"
+
+#include "core/sync/timer.hpp"
+
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -24,7 +29,8 @@ using namespace ymd::robots;
 #define PHY_SEL_CAN 0
 #define PHY_SEL_UART 1
 
-#define PHY_SEL PHY_SEL_UART
+// #define PHY_SEL PHY_SEL_UART
+#define PHY_SEL PHY_SEL_CAN
 
 
 struct PolarRobotSolver{
@@ -40,8 +46,8 @@ struct PolarRobotSolver{
 
     static constexpr Solution forward(const Gesture & g){
         return {
-            sqrt(square(g.x_meters) + square(g.y_meters)),
-            atan2(g.y_meters, g.x_meters)
+            .rho_meters = sqrt(square(g.x_meters) + square(g.y_meters)),
+            .phi_radians = atan2(g.y_meters, g.x_meters)
         };
     }
 
@@ -110,8 +116,9 @@ public:
     }
 
     void set_position(real_t position){
-        if(is_homed_ == false) 
-            trip_and_panic("motor not homed");
+        // if(is_homed_ == false) 
+        //     trip_and_panic("motor not homed");
+        // DEBUG_PRINTLN("set_pos");
         stepper_.set_target_position(position);
     }
 
@@ -158,6 +165,7 @@ public:
     struct Config{
         real_t rho_transform_scale;
         real_t phi_transform_scale;
+        real_t center_bias;
 
         Range2<real_t> rho_range;
         Range2<real_t> phi_range;
@@ -176,23 +184,30 @@ public:
         joint_phi_(joint_phi)
     {;}
 
+    void set_polar(const real_t rho_meters, const real_t phi_radians){
+
+        const auto rho_position = rho_meters * cfg_.rho_transform_scale;
+        const auto phi_position = phi_radians * cfg_.phi_transform_scale;
+
+        // DEBUG_PRINTLN(
+        //     // x_meters, 
+        //     // y_meters, 
+        //     rho_position,
+        //     phi_position
+        // );
+
+
+        joint_rho_.set_position(rho_position - cfg_.center_bias);
+        joint_phi_.set_position(phi_position);
+    }
+
     void set_position(const real_t x_meters, const real_t y_meters){
         const auto s = Solver::forward({
             .x_meters = x_meters,
             .y_meters = y_meters
         });
 
-        const auto rho_position = s.rho_meters * cfg_.rho_transform_scale;
-        const auto phi_position = s.phi_radians * cfg_.phi_transform_scale;
-
-        if(not cfg_.rho_range.contains(rho_position))
-            trip_and_panic("rho out of range");
-
-        if(not cfg_.phi_range.contains(phi_position))
-            trip_and_panic("phi out of range");
-
-        joint_rho_.set_position(rho_position);
-        joint_phi_.set_position(phi_position);
+        set_polar(s.rho_meters, s.phi_radians);
     }
 
     void activate(){
@@ -222,7 +237,8 @@ public:
             DEF_MAKE_MEMFUNC(is_homing_done),
             DEF_MAKE_MEMFUNC(deactivate),
             DEF_MAKE_MEMFUNC(activate),
-            DEF_MAKE_MEMFUNC(set_position)
+            DEF_MAKE_MEMFUNC(set_position),
+            DEF_MAKE_MEMFUNC(set_polar)
         );
     }
 
@@ -234,7 +250,7 @@ private:
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
         deactivate();
-        PANIC(std::forward<Args>(args)...);
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
     }
 
 };
@@ -319,20 +335,22 @@ public CanMsgHandlerIntf{
     }
 };
 
-#define MOCK_TEST
+// #define MOCK_TEST
 
 
 [[maybe_unused]] static __attribute__((__noreturn__))
 void polar_robot_main(){
-    DBG_UART.init({576000});
+    auto & OUT_UART = hal::uart2;
+    OUT_UART.init({576000});
 
-    DEBUGGER.retarget(&DBG_UART);
+    DEBUGGER.retarget(&OUT_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
 
     
     #ifndef MOCK_TEST
+    #if PHY_SEL == PHY_SEL_UART
 
     auto & MOTOR1_UART = hal::uart1;
     auto & MOTOR2_UART = hal::uart1;
@@ -347,60 +365,138 @@ void polar_robot_main(){
 
     ZdtStepper motor2{{.nodeid = {2}}, &MOTOR2_UART};
 
-    JointMotorAdapter_ZdtStepper joint1 = {{
-        .homming_mode = ZdtStepper::HommingMode::LapsCollision
-    }, motor1};
 
-    JointMotorAdapter_ZdtStepper joint2 = {{
-        .homming_mode = ZdtStepper::HommingMode::LapsEndstop
-    }, motor2};
 
     #else
-    JointMotorAdapter_Mock joint1 = {};
-    JointMotorAdapter_Mock joint2 = {};
+
+    COMM_CAN.init({
+        .baudrate = CanBaudrate::_1M, 
+        .mode = CanMode::Normal
+    });
+
+    COMM_CAN.enable_hw_retransmit(DISEN);
+    ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
+    ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
+
+    #endif
+
+    JointMotorAdapter_ZdtStepper joint_rho = {{
+        .homming_mode = ZdtStepper::HommingMode::LapsCollision
+    }, motor2};
+
+    JointMotorAdapter_ZdtStepper joint_phi = {{
+        .homming_mode = ZdtStepper::HommingMode::LapsEndstop
+    }, motor1};
+    #else
+    JointMotorAdapter_Mock joint_rho = {};
+    JointMotorAdapter_Mock joint_phi = {};
     #endif
 
     PolarRobotActuator robot_actuator = {
         {
-            .rho_transform_scale = 0.1_r,
-            .phi_transform_scale = 0.1_r,
+            .rho_transform_scale = 25_r,
+            .phi_transform_scale = real_t(9.53 / TAU),
+            .center_bias = 0.0_r,
 
-            .rho_range = {0.0_r, 0.2_r},
-            .phi_range = {0.0_r, 1.0_r}
+            .rho_range = {0.0_r, 0.4_r},
+            .phi_range = {-10_r, 10_r}
         },
-        joint1, joint2
+        joint_rho, joint_phi
     };
 
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
-        joint1.make_rpc_list("joint1"),
-        joint2.make_rpc_list("joint2")
+        joint_rho.make_rpc_list("joint_rho"),
+        joint_phi.make_rpc_list("joint_phi")
     );
 
     robots::ReplService repl_service = {
-        &DBG_UART, &DBG_UART
+        &OUT_UART, &OUT_UART
     };
 
-    while(true){
-        if(COMM_UART.available()){
-            std::vector<uint8_t> recv;
-            while(COMM_UART.available()){
-                char chr;
-                COMM_UART.read1(chr);
-                recv.push_back(chr);
-            }
+    constexpr auto POINT_DUR = 700ms; 
+    // auto rpt = RepeatTimer{POINT_DUR};
 
-            DEBUG_PRINTLN(
-                "ret", 
-                std::hex, 
-                std::noshowbase, 
-                recv
-            );
-        }
+    #if 0
+    while(true){
+        static size_t i = 0;
+
+        rpt.invoke([&]{i++;});
+
+        const auto curr_i = i % data.size();
+        const auto next_i = (i + 1) % data.size();
+
+
+        const auto p1 = data[curr_i];
+        const auto p2 = data[next_i];
+
+        const auto r = real_t(rpt.since_last_invoke().count()) / POINT_DUR.count();
+        const auto p = p1.lerp(p2, r);
+        // const auto p1 = Vector2<real_t>(-0.02_r, -0.17_r);
+        // const auto p2 = Vector2<real_t>(0.17_r, 0.02_r);
+
+        // const auto p = p1.lerp(p2, 0.5_r + 0.5_r * sinpu(clock::time() * 0.1_r));
+        // const auto p = Vector2<real_t>(0.1_r, 0.0_r) + Vector2<real_t>(0, 0.07_r).rotated(clock::time() * 0.2_r);
+
+        // const auto p1 = Vector2<real_t>(-0.02_r, -0.17_r);
+        // const auto p2 = Vector2<real_t>(0.17_r, 0.02_r);
+
+        // const auto p = Vector2<real_t>::RIGHT.rotated(clock::time() * 0.4_r) * 
+        //     ((0.5_r + 0.5_r * sinpu(clock::time() * 0.5_r)) * 0.1_r + 0.1_r);
+        robot_actuator.set_position(p.x, p.y);
+        DEBUG_PRINTLN(p.x, p.y, i, r, rpt.since_last_invoke().count());
+
+        clock::delay(5ms);
+        // if(COMM_UART.available()){
+        //     std::vector<uint8_t> recv;
+        //     while(COMM_UART.available()){
+        //         char chr;
+        //         COMM_UART.read1(chr);
+        //         recv.push_back(chr);
+        //     }
+
+        //     DEBUG_PRINTLN(
+        //         "ret", 
+        //         std::hex, 
+        //         std::noshowbase, 
+        //         recv
+        //     );
+        // }
+
+        // constexpr auto k =  2_r / sqrt(2_r) * 0.1_r;
+        // const auto [s,c] = sincospu(clock::time());
+        // const auto p = atan2(s * k,s * k);
+        // DEBUG_PRINTLN(s * k,c * k,p);
 
         repl_service.invoke(list);
     }
+    #else 
+
+    Vector2<q16> p = data[0];
+
+    size_t i = 0;
+    while(true){
+        
+        const auto curr_i = (i) % data.size();
+
+        
+        const auto p1 = data[curr_i];
+        p = (p * 128).move_toward(p1 * 128, 0.02_r) / 128;
+        // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
+        // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
+
+        // if(ABS(p.x - p1.x) < 0.00001_r) i++;
+        if(p.is_equal_approx(p1)) i++;
+
+        robot_actuator.set_position(p.x, p.y);
+        DEBUG_PRINTLN(p.x, p.y, p1.x, p1.y, i);
+
+        clock::delay(5ms);
+
+        repl_service.invoke(list);
+    }
+    #endif
 }
 
 [[maybe_unused]] static __attribute__((__noreturn__))
@@ -438,8 +534,8 @@ void slcan_test(){
 }
 
 void zdt_main(){
-    // polar_robot_main();
-    slcan_test();
+    polar_robot_main();
+    // slcan_test();
     DBG_UART.init({576000});
 
     DEBUGGER.retarget(&DBG_UART);
@@ -450,16 +546,23 @@ void zdt_main(){
     COMM_UART.init({921600});
     ZdtStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
-    COMM_CAN.init({CanBaudrate::_1M});
-    ZdtStepper motor{{.nodeid = {1}}, &COMM_CAN};
+    COMM_CAN.init({
+        .baudrate = CanBaudrate::_1M, 
+        .mode = CanMode::Normal
+    });
+
+    COMM_CAN.enable_hw_retransmit(DISEN);
+    ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
+    ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
     #endif
     
     clock::delay(10ms);
-    motor.activate();
+    motor1.activate();
+    motor2.activate();
     clock::delay(10ms);
     // motor.set_subdivides(256);
     // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);
-    motor.trig_homming(ZdtStepper::HommingMode::LapsEndstop);
+    // motor.trig_homming(ZdtStepper::HommingMode::LapsEndstop);
     // motor.query_homming_paraments();
 
     robots::ReplService repl_service = {
@@ -473,6 +576,7 @@ void zdt_main(){
     // );
 
     while(true){
+        #if PHY_SEL == PHY_SEL_UART
         if(COMM_UART.available()){
             std::vector<uint8_t> recv;
             while(COMM_UART.available()){
@@ -488,40 +592,26 @@ void zdt_main(){
                 recv
             );
         }
-    }
-
-    clock::delay(10ms);
-
-    // motor.trigger_cali();
-    while(true){
-        const auto t = clock::time();
-        clock::delay(10ms);
-        // motor.enable();
-        const auto targ_pos = 0.1_r * sin(t);
-        motor.set_target_position(targ_pos);
-
-        // motor.set_target_position(sin(clock::time()));    
-        clock::delay(10ms);
-        // DEBUG_PRINTLN(clock::millis());
-
-            
-        #if PHY_SEL == PHY_SEL_UART
-        if(COMM_UART.available()){
-            std::vector<uint8_t> recv;
-            while(COMM_UART.available()){
-                char chr;
-                COMM_UART.read1(chr);
-                recv.push_back(chr);
-            }
-
-            DEBUG_PRINTLN(std::hex, std::noshowbase, recv);
-        }
         #else
-        if(COMM_CAN.available()) DEBUG_PRINTLN(COMM_CAN.read());
-        #endif
-        
+        if(COMM_CAN.available()){
+            DEBUG_PRINTLN("rx", COMM_CAN.read());
+        }
 
-        // DEBUG_PRINTLN(COMM_CAN.pending(), COMM_CAN.getRxErrCnt(), COMM_CAN.getTxErrCnt());
+        // DEBUG_PRINTLN(COMM_CAN.pending());
+
+        // clock::delay(200ms);
+        // motor.activate();
+        const auto d1 = sin(clock::time()*0.7_r);
+        const auto d2 = tpzpu(clock::time()*0.2_r);
+        motor1.set_target_position(d1);
+        clock::delay(5ms);
+        motor2.set_target_position(d2);
+        clock::delay(5ms);
+        DEBUG_PRINTLN(d1, d2);
+        // DEBUG_PRINTLN(clock::millis());
+        #endif
+
     }
+
 }
 #endif

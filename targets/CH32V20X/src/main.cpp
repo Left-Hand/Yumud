@@ -81,6 +81,7 @@ int main(){
     // ht16k33_main();
     // mystepper_main();
     zdt_main();
+    // can_ring_main();
     // rrs3_robot_main();
     // flash_main();
     // digipw_main();

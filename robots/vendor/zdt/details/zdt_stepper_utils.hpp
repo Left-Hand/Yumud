@@ -124,7 +124,7 @@ struct ZdtMotor_Collections{
             const auto msg = make_canmsg(
                 nodeid_, func_code_, 
                 offset_ / CANMSG_PAYLOAD_MAX_LENGTH,
-                payload_.subspan(offset_, CANMSG_PAYLOAD_MAX_LENGTH)
+                payload_.subspan(offset_, msg_len)
             ); 
 
             offset_ += msg_len;
@@ -148,11 +148,11 @@ struct ZdtMotor_Collections{
             );
         }
 
-        static constexpr hal::CanStdId map_nodeid_and_piececnt_to_canstdid(
+        static constexpr hal::CanExtId map_nodeid_and_piececnt_to_canstdid(
             const NodeId nodeid, 
             const uint8_t piece
         ){
-            return hal::CanStdId::from_raw(
+            return hal::CanExtId::from_raw(
                 uint32_t(nodeid.to_u8() << 8) | 
                 (piece)
             );
@@ -229,7 +229,8 @@ struct ZdtMotor_Collections{
 
     struct PulseCnt final{
         static constexpr PulseCnt from(const real_t position){
-            const auto temp = uint32_t(position * 3600);
+            constexpr auto scale = 3200 * (256/16);
+            const auto temp = uint32_t(q12(position) * scale);
             return {BSWAP_32(temp)};
         }
 
@@ -244,6 +245,16 @@ struct ZdtMotor_Collections{
         static constexpr AcclerationLevel from(const real_t acc_per_second){
             // TODO
             return AcclerationLevel{10};
+        }
+
+        static constexpr AcclerationLevel from_zero(){
+            // TODO
+            return AcclerationLevel{0};
+        }
+
+        static constexpr AcclerationLevel from_raw(const uint8_t raw){
+            // TODO
+            return AcclerationLevel{raw};
         }
         uint8_t raw_;
     }__packed;

@@ -9,13 +9,19 @@ struct RepeatTimer final{
         const auto now = clock::millis();
         if(last_.count() / duration_.count() != now.count() / duration_.count()){
             std::forward<Fn>(fn)();
+            last_invoke_ = now;
         }
         last_ = now;
-        
+    }
+
+    Milliseconds since_last_invoke() const {
+        const auto now = clock::millis();
+        return now - last_invoke_;
     }
 private:
     Milliseconds duration_;
     Milliseconds last_ = 0ms;
+    Milliseconds last_invoke_ = 0ms;
 };
 
 struct OnceTimer final {

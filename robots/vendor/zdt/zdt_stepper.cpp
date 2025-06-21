@@ -6,10 +6,11 @@ using namespace ymd::robots;
 void ZdtStepper::set_target_position(const real_t pos){
     write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
-        .rpm = Rpm::from(0.07_r),
-        .acc_level = AcclerationLevel::from(0),
+        // .rpm = Rpm::from(0.07_r),
+        .rpm = Rpm::from(1.07_r),
+        .acc_level = AcclerationLevel::from_raw(0),
         .pulse_cnt = PulseCnt::from(ABS(pos)),
-        .is_absolute = false,
+        .is_absolute = true,
         .is_sync = is_sync_
     });
 }
@@ -67,11 +68,12 @@ void ZdtMotorPhy::can_write_bytes(
     const std::span<const uint8_t> bytes
 ){
     auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
-
+    // DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
     while(true){
         const auto may_msg = iter.next();
         if(may_msg.is_none()) break;
-        can.write(may_msg.unwrap());
+        const auto & msg = may_msg.unwrap();
+        can.write(msg);
     }
 }
 
