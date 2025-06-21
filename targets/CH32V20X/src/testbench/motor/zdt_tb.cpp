@@ -108,27 +108,27 @@ public:
         stepper_(stepper){;}
 
     void activate(){
-        stepper_.activate(EN);
+        stepper_.activate(EN).unwrap();
     }
 
     void deactivate(){
-        stepper_.activate(DISEN);
+        stepper_.activate(DISEN).unwrap();;
     }
 
     void set_position(real_t position){
         // if(is_homed_ == false) 
         //     trip_and_panic("motor not homed");
         // DEBUG_PRINTLN("set_pos");
-        stepper_.set_target_position(position);
+        stepper_.set_target_position(position).unwrap();;
     }
 
     void trig_homing(){
         homing_begin_ = Some(clock::millis());
-        stepper_.trig_homming(cfg_.homming_mode);
+        stepper_.trig_homming(cfg_.homming_mode).unwrap();;
     }
 
     void trig_cali(){ 
-        stepper_.trig_cali();
+        stepper_.trig_cali().unwrap();;
     }
 
     bool is_homing_done(){
@@ -152,7 +152,7 @@ private:
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
         deactivate();
-        PANIC(std::forward<Args>(args)...);
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
     }
 
     struct HomingStrategy_Timeout{
@@ -330,7 +330,7 @@ public CanMsgHandlerIntf{
 class CanHandlerTerminator final: 
 public CanMsgHandlerIntf{ 
     HandleStatus handle(const hal::CanMsg & msg){ 
-        PANIC("uncaught msg", msg);
+        // PANIC("uncaught msg", msg);
         return HandleStatus::from_handled();
     }
 };
@@ -557,8 +557,8 @@ void zdt_main(){
     #endif
     
     clock::delay(10ms);
-    motor1.activate();
-    motor2.activate();
+    motor1.activate().unwrap();
+    motor2.activate().unwrap();
     clock::delay(10ms);
     // motor.set_subdivides(256);
     // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);
@@ -603,9 +603,9 @@ void zdt_main(){
         // motor.activate();
         const auto d1 = sin(clock::time()*0.7_r);
         const auto d2 = tpzpu(clock::time()*0.2_r);
-        motor1.set_target_position(d1);
+        motor1.set_target_position(d1).unwrap();
         clock::delay(5ms);
-        motor2.set_target_position(d2);
+        motor2.set_target_position(d2).unwrap();
         clock::delay(5ms);
         DEBUG_PRINTLN(d1, d2);
         // DEBUG_PRINTLN(clock::millis());

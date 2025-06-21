@@ -3,8 +3,13 @@
 using namespace ymd;
 using namespace ymd::robots;
 
-void ZdtStepper::set_target_position(const real_t pos){
-    write_payload(Payloads::SetPosition{
+using Error = ZdtStepper::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> ZdtStepper::set_target_position(const real_t pos){
+    return write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
         // .rpm = Rpm::from(0.07_r),
         .rpm = Rpm::from(1.07_r),
@@ -15,8 +20,8 @@ void ZdtStepper::set_target_position(const real_t pos){
     });
 }
 
-void ZdtStepper::set_target_speed(const real_t spd){
-    write_payload(Payloads::SetSpeed{
+IResult<> ZdtStepper::set_target_speed(const real_t spd){
+    return write_payload(Payloads::SetSpeed{
         .is_ccw = spd < 0,
         .rpm = Rpm::from(ABS(spd)),
         .acc_level = AcclerationLevel::from(0),
@@ -25,37 +30,38 @@ void ZdtStepper::set_target_speed(const real_t spd){
     });     
 }
 
-void ZdtStepper::brake(){
-    write_payload(Payloads::Brake{
+IResult<> ZdtStepper::brake(){
+    return write_payload(Payloads::Brake{
         .is_sync = is_sync_
     });
 }
 
-void ZdtStepper::set_subdivides(const uint16_t subdivides){
-    if(subdivides > 256) PANIC();
-    write_payload(Payloads::SetSubDivides{
+IResult<> ZdtStepper::set_subdivides(const uint16_t subdivides){
+    if(subdivides > 256) 
+        return Err(Error::SubDivideOverflow);
+    return write_payload(Payloads::SetSubDivides{
         .subdivides = uint8_t(subdivides & 0xff)
     });
 }
 
-void ZdtStepper::activate(const Enable en){
-    write_payload(Payloads::Actvation{
+IResult<> ZdtStepper::activate(const Enable en){
+    return write_payload(Payloads::Actvation{
         .en = en == EN,
         .is_sync = is_sync_
     });
 }
 
 
-void ZdtStepper::trig_cali(){
-    write_payload(Payloads::TrigCali::from_default());  
+IResult<> ZdtStepper::trig_cali(){
+    return write_payload(Payloads::TrigCali::from_default());  
 }
 
-void ZdtStepper::query_homming_paraments(){
-    write_payload(Payloads::QueryHommingParaments{});
+IResult<> ZdtStepper::query_homming_paraments(){
+    return write_payload(Payloads::QueryHommingParaments{});
 }
 
-void ZdtStepper::trig_homming(const HommingMode mode){
-    write_payload(Payloads::TrigHomming{
+IResult<> ZdtStepper::trig_homming(const HommingMode mode){
+    return write_payload(Payloads::TrigHomming{
         .homming_mode = mode,
         .is_sync = is_sync_
     });
@@ -108,6 +114,6 @@ void ZdtMotorPhy::write_bytes(
             id, func_code, bytes
         );
     }else{
-        PANIC();
+        __builtin_unreachable();
     }
 }

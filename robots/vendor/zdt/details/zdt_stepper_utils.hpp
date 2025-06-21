@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/math/realmath.hpp"
-#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+#include "core/magic/enum_traits.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -11,6 +12,15 @@
 namespace ymd::robots{
 
 struct ZdtMotor_Collections{
+    enum class Error:uint8_t{
+        SubDivideOverflow
+    };
+
+    FRIEND_DERIVE_DEBUG(Error)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+    
 
     struct NodeId{
         static constexpr NodeId from_u8(const uint8_t raw) {
