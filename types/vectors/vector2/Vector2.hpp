@@ -139,8 +139,10 @@ struct Vector2{
     }
 
     [[nodiscard]] constexpr T angle() const {return atan2(y, x);}
-	[[nodiscard]] constexpr T angle_to(const Vector2<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
-	[[nodiscard]] constexpr T angle_to_point(const Vector2<T> & p_vector2) const {return atan2(y - p_vector2.y, x - p_vector2.x);}
+	[[nodiscard]] constexpr T angle_to(const Vector2<T> &p_vector2) const {
+        return atan2(cross(p_vector2), dot(p_vector2));}
+	[[nodiscard]] constexpr T angle_to_point(const Vector2<T> & p_vector2) const {
+        return atan2(y - p_vector2.y, x - p_vector2.x);}
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
     [[nodiscard]] constexpr Vector2<T> bounce(const Vector2<T> & n) const;
     [[nodiscard]] constexpr Vector2<T> ceil() const;

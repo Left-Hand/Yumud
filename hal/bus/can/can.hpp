@@ -11,6 +11,12 @@
 #include "can_filter.hpp"
 
 
+//#region switches
+
+// #define CAN_SCE_ENABLED
+
+//#endregion switches
+
 #ifdef ENABLE_CAN1
 extern "C"{
 __interrupt
@@ -22,8 +28,10 @@ void USB_LP_CAN1_RX0_IRQHandler(void);
 __interrupt
 void CAN1_RX1_IRQHandler(void);
 
+#ifdef CAN_SCE_ENABLED
 __interrupt
 void CAN1_SCE_IRQHandler(void);
+#endif
 }
 #endif
 
@@ -38,8 +46,10 @@ void CAN2_RX0_IRQHandler(void);
 __interrupt
 void CAN2_RX1_IRQHandler(void);
 
+#ifdef CAN_SCE_ENABLED
 __interrupt
 void CAN2_SCE_IRQHandler(void);
+#endif
 }
 #endif
 
@@ -56,7 +66,7 @@ public:
 
     using Callback = std::function<void(void)>;
 protected:
-    CAN_TypeDef * instance_;
+    CAN_TypeDef * inst_;
     
     #ifndef CAN_SOFTFIFO_SIZE
     static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
@@ -106,7 +116,9 @@ protected:
 
     friend void ::CAN1_RX1_IRQHandler(void);
 
+    #ifdef CAN_SCE_ENABLED
     friend void ::CAN1_SCE_IRQHandler(void);
+    #endif
     #endif
 
     #ifdef ENABLE_CAN2
@@ -116,10 +128,12 @@ protected:
 
     friend void ::CAN2_RX1_IRQHandler(void);
 
+    #ifdef CAN_SCE_ENABLED
     friend void ::CAN2_SCE_IRQHandler(void);
     #endif
+    #endif
 public:
-    Can(CAN_TypeDef * instance):instance_(instance){;}
+    Can(CAN_TypeDef * instance):inst_(instance){;}
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 

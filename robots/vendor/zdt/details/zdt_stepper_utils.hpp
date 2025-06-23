@@ -13,14 +13,20 @@ namespace ymd::robots{
 
 struct ZdtMotor_Collections{
     enum class Error:uint8_t{
-        SubDivideOverflow
+        SubDivideOverflow,
+        RxNoMsgToDump,
+        RxMsgIdTypeNotMatch,
+        RxMsgNodeIdNotTheSame,
+        RxMsgFuncCodeNotTheSame,
+        RxMsgPieceIsNotSteady,
+        RxMsgVerifyed,
+        RxMsgNoPayload
     };
 
     FRIEND_DERIVE_DEBUG(Error)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
-    
 
     struct NodeId{
         static constexpr NodeId from_u8(const uint8_t raw) {
@@ -100,8 +106,10 @@ struct ZdtMotor_Collections{
     };
 
     enum class HommingMode:uint8_t{
-        // 00表示触发单圈就近回零，01表示触发单圈方向回零，
-        // 02表示触发多圈无限位碰撞回零，03表示触发多圈有限位开关回零
+        // 00表示触发单圈就近回
+        // 01表示触发单圈方向回零
+        // 02表示触发多圈无限位碰撞回零
+        // 03表示触发多圈有限位开关回零
 
         LapNearest = 0x00,
         LapDirection = 0x01,
@@ -153,12 +161,13 @@ struct ZdtMotor_Collections{
             buf.append(bytes);
 
             return hal::CanMsg::from_bytes(
-                map_nodeid_and_piececnt_to_canstdid(nodeid, piece_cnt),
+                map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
                 buf.to_span()
             );
         }
 
-        static constexpr hal::CanExtId map_nodeid_and_piececnt_to_canstdid(
+        //固定为拓展帧
+        static constexpr hal::CanExtId map_nodeid_and_piececnt_to_canid(
             const NodeId nodeid, 
             const uint8_t piece
         ){
@@ -176,10 +185,82 @@ struct ZdtMotor_Collections{
     };
 
 
+    struct CanMsg2BytesDumper{
+        struct DumpInfo{
+            NodeId nodeid;
+            FuncCode func_code;
+            InlineBuf<16> payload;
+        };
+
+        static constexpr IResult<DumpInfo> dump(
+            std::span<const hal::CanMsg> msgs
+        ) {
+            if(msgs.size() == 0)
+                return Err(Error::RxNoMsgToDump);
+            if(msgs[0].is_std())
+                return Err(Error::RxMsgIdTypeNotMatch);
+            
+            DumpInfo info;
+
+            info.nodeid = ({
+                const auto id = map_msg_to_nodeid(msgs[0]);
+                for(size_t i = 1; i < msgs.size(); i++){
+                    const auto next_id = map_msg_to_nodeid(msgs[i]);
+                    if(id != next_id) return Err(Error::RxMsgNodeIdNotTheSame);
+                }
+                NodeId::from_u8(id);
+            });
+
+            for(size_t i = 0; i < msgs.size(); i++){
+                const auto piece_cnt = map_msg_to_piececnt(msgs[i]);
+                if(i != piece_cnt) 
+                    return Err(Error::RxMsgPieceIsNotSteady);
+            }
+
+            info.func_code = ({
+                if(msgs[0].size() == 0) return Err(Error::RxMsgNoPayload);
+                const auto func_code0 = std::bit_cast<FuncCode>(msgs[0][0]);
+                for(size_t i = 0; i < msgs.size(); i++){
+                    const auto & msg = msgs[i];
+                    if(msg.size() == 0) return Err(Error::RxMsgNoPayload);
+                    const auto func_code = std::bit_cast<FuncCode>(msg[0]);
+                    if(func_code != func_code0)
+                        return Err(Error::RxMsgFuncCodeNotTheSame);
+                }
+                func_code0;
+            });
+
+            for(size_t i = 0; i < msgs.size(); i++){
+                const auto & msg = msgs[i];
+                const auto msg_bytes = msg.payload()
+                    .subspan(1,msg.size() - 1);
+                info.payload.append(msg_bytes);
+            }
+
+            //TODO add verify
+
+            return Ok(info);
+        }
+
+        static inline constexpr uint8_t map_msg_to_nodeid(
+            const hal::CanMsg & msg
+        ){
+            return msg.id() >> 8;
+        }
+
+        static inline constexpr uint8_t map_msg_to_piececnt(
+            const hal::CanMsg & msg
+        ){
+            return msg.id() & 0xff;
+        }
+
+    };
+
+
     struct VerifyUtils final{
         static constexpr uint8_t get_verify_code(
             const VerifyMethod method, 
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             std::span<const uint8_t> bytes 
         ){
             switch(method){
@@ -188,10 +269,10 @@ struct ZdtMotor_Collections{
                 case VerifyMethod::X6B:
                     return uint8_t{0x6b};
                 case VerifyMethod::XOR:
-                    return VerifyUtils::by_xor(FUNC_CODE, bytes);
+                    return VerifyUtils::by_xor(func_code, bytes);
                 case VerifyMethod::CRC8:
                     TODO();
-                    // return VerifyUtils::by_crc8(FUNC_CODE, bytes);
+                    // return VerifyUtils::by_crc8(func_code, bytes);
             }
         }
 
@@ -209,7 +290,7 @@ struct ZdtMotor_Collections{
         }
     
         // static constexpr uint8_t by_crc8(
-        //     const FuncCode FUNC_CODE,
+        //     const FuncCode func_code,
         //     const std::span<const uint8_t> bytes
         // ){
         //     uint16_t crc = 0xffff;
@@ -227,7 +308,7 @@ struct ZdtMotor_Collections{
 
     struct Rpm final{
         static constexpr Rpm from(const real_t speed){
-            const auto temp = uint16_t(speed * 600);
+            const uint16_t temp = uint16_t(q16(speed) * 600);
             return {BSWAP_16(temp)};
         }
         constexpr uint16_t to_u16() const {
@@ -238,9 +319,11 @@ struct ZdtMotor_Collections{
     }__packed;
 
     struct PulseCnt final{
+        static constexpr uint32_t SCALE = 3200 * (256/16);
         static constexpr PulseCnt from(const real_t position){
-            constexpr auto scale = 3200 * (256/16);
-            const auto temp = uint32_t(q12(position) * scale);
+            const uint32_t frac_part = uint32_t(frac<12>(position) * SCALE);
+            const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
+            const uint32_t temp = uint32_t(frac_part + int_part);
             return {BSWAP_32(temp)};
         }
 

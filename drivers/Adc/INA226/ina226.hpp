@@ -204,10 +204,14 @@ public:
         return channels[uint8_t(index)];
     }
 
-    [[nodiscard]] auto & get_curr_channel(){return ch(INA226Channel::Index::CURRENT);}
-    [[nodiscard]] auto & get_bus_volt_channel(){return ch(INA226Channel::Index::BUS_VOLT); }
-    [[nodiscard]] auto & get_shunt_volt_channel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
-    [[nodiscard]] auto & get_power_channel(){return ch(INA226Channel::Index::POWER); }
+    [[nodiscard]] auto & get_curr_channel(){
+        return ch(INA226Channel::Index::CURRENT);}
+    [[nodiscard]] auto & get_bus_volt_channel(){
+        return ch(INA226Channel::Index::BUS_VOLT);}
+    [[nodiscard]] auto & get_shunt_volt_channel(){
+        return ch(INA226Channel::Index::SHUNT_VOLT);}
+    [[nodiscard]] auto & get_power_channel(){
+        return ch(INA226Channel::Index::POWER);}
 
 
     [[nodiscard]] IResult<real_t> get_voltage();

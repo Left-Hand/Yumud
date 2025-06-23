@@ -19,7 +19,8 @@ protected:
     Timeout timeout_ = Timeout(10);
     bool discard_ack_ = false;
 
-    I2c(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):scl_gpio_(scl_gpio),sda_gpio_(sda_gpio){}
+    I2c(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
+        scl_gpio_(scl_gpio),sda_gpio_(sda_gpio){}
 public:
     I2c(I2c && other) = default;
 

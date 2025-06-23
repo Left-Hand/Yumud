@@ -37,25 +37,57 @@ struct PolarRobotSolver{
     struct Gesture{
         real_t x_meters;
         real_t y_meters;
+
+        constexpr Vector2<real_t> to_vec2() const {
+            return Vector2(x_meters, y_meters);
+        }
     };
 
     struct Solution{
         real_t rho_meters;
-        real_t phi_radians;
+        real_t theta_radians;
     };
 
-    static constexpr Solution forward(const Gesture & g){
+    static constexpr Gesture inverse(const Solution & sol){
+        const auto [s,c] = sincos(sol.theta_radians);
         return {
-            .rho_meters = sqrt(square(g.x_meters) + square(g.y_meters)),
-            .phi_radians = atan2(g.y_meters, g.x_meters)
+            sol.rho_meters * c,
+            sol.rho_meters * s
         };
     }
 
-    static constexpr Gesture inverse(const Solution & s){
+    static constexpr Solution nearest_forward(
+        const Gesture & last_g, 
+        const Gesture & g
+    ){
+
+        const auto g_vec2 = g.to_vec2();
+        const auto last_g_vec2 = last_g.to_vec2();
+
+        const auto delta_theta = g_vec2.angle_to(last_g_vec2);
+
         return {
-            s.rho_meters * cos(s.phi_radians),
-            s.rho_meters * sin(s.phi_radians)
+            .rho_meters = g_vec2.length(),
+            .theta_radians = last_g_vec2.angle() + delta_theta
         };
+    }
+
+private:
+
+    static constexpr real_t nearest_fmod(
+        const real_t x,
+        const real_t step
+    ){
+        const auto half_step = step / 2;
+        return fposmodp(x + half_step, step) - half_step;
+    }
+    static constexpr real_t wrapped_diff(
+        const real_t last_x,
+        const real_t x,
+        const real_t step
+    ){
+        const auto diff = x - last_x;
+        return nearest_fmod(diff, step);
     }
 };
 
@@ -164,11 +196,16 @@ class PolarRobotActuator{
 public:
     struct Config{
         real_t rho_transform_scale;
-        real_t phi_transform_scale;
+        real_t theta_transform_scale;
         real_t center_bias;
 
         Range2<real_t> rho_range;
-        Range2<real_t> phi_range;
+        Range2<real_t> theta_range;
+    };
+
+    struct Params{
+        Some<JointMotorIntf *> joint_rho;
+        Some<JointMotorIntf *> joint_theta;
     };
 
     using Solver = PolarRobotSolver;
@@ -176,58 +213,64 @@ public:
 
     PolarRobotActuator(
         const Config & cfg, 
-        JointMotorIntf & joint_rho,
-        JointMotorIntf & joint_phi
+        const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(joint_rho),
-        joint_phi_(joint_phi)
+        joint_rho_(params.joint_rho.deref()),
+        joint_theta_(params.joint_theta.deref())
     {;}
 
-    void set_polar(const real_t rho_meters, const real_t phi_radians){
+    void set_polar(const real_t rho_meters, const real_t theta_radians){
 
         const auto rho_position = rho_meters * cfg_.rho_transform_scale;
-        const auto phi_position = phi_radians * cfg_.phi_transform_scale;
+        const auto theta_position = theta_radians * cfg_.theta_transform_scale;
 
         // DEBUG_PRINTLN(
         //     // x_meters, 
         //     // y_meters, 
         //     rho_position,
-        //     phi_position
+        //     theta_position
         // );
 
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
-        joint_phi_.set_position(phi_position);
+        joint_theta_.set_position(theta_position);
     }
 
     void set_position(const real_t x_meters, const real_t y_meters){
-        const auto s = Solver::forward({
+        const auto gest = Solver::Gesture{
             .x_meters = x_meters,
             .y_meters = y_meters
-        });
+        };
 
-        set_polar(s.rho_meters, s.phi_radians);
+        const auto sol = Solver::nearest_forward(
+            last_gest_, gest);
+
+        last_gest_ = gest;
+
+        set_polar(
+            sol.rho_meters, 
+            sol.theta_radians);
     }
 
     void activate(){
         joint_rho_.activate();
-        joint_phi_.activate();
+        joint_theta_.activate();
     }
 
     void deactivate(){
         joint_rho_.deactivate();
-        joint_phi_.deactivate();
+        joint_theta_.deactivate();
     }
 
     void trig_homing(){
         joint_rho_.trig_homing();   
-        joint_phi_.trig_homing();
+        joint_theta_.trig_homing();
     }
 
     bool is_homing_done(){
         return joint_rho_.is_homing_done() 
-            && joint_phi_.is_homing_done();
+            && joint_theta_.is_homing_done();
     }
 
     auto make_rpc_list(const StringView name){
@@ -245,7 +288,9 @@ public:
 private:
     const Config cfg_;
     JointMotorIntf & joint_rho_;
-    JointMotorIntf & joint_phi_;
+    JointMotorIntf & joint_theta_;
+
+    Solver::Gesture last_gest_;
 
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
@@ -384,31 +429,34 @@ void polar_robot_main(){
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    JointMotorAdapter_ZdtStepper joint_phi = {{
+    JointMotorAdapter_ZdtStepper joint_theta = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
     JointMotorAdapter_Mock joint_rho = {};
-    JointMotorAdapter_Mock joint_phi = {};
+    JointMotorAdapter_Mock joint_theta = {};
     #endif
 
     PolarRobotActuator robot_actuator = {
         {
             .rho_transform_scale = 25_r,
-            .phi_transform_scale = real_t(9.53 / TAU),
+            .theta_transform_scale = real_t(9.53 / TAU),
             .center_bias = 0.0_r,
 
             .rho_range = {0.0_r, 0.4_r},
-            .phi_range = {-10_r, 10_r}
+            .theta_range = {-10_r, 10_r}
         },
-        joint_rho, joint_phi
+        {
+            .joint_rho = &joint_rho, 
+            .joint_theta = &joint_theta
+        }
     };
 
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
         joint_rho.make_rpc_list("joint_rho"),
-        joint_phi.make_rpc_list("joint_phi")
+        joint_theta.make_rpc_list("joint_theta")
     );
 
     robots::ReplService repl_service = {

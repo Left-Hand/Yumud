@@ -60,11 +60,7 @@ namespace ymd::hal{
         constexpr explicit CanBaudrate(const uint32_t freq):
             kind_(freq2kind(freq)){}
 
-        constexpr operator Kind() const{return kind_;}
-        constexpr Kind kind() const{
-            return kind_;
-        }
-
+        constexpr Kind kind() const{return kind_;}
         constexpr auto dump() const{
             struct Ret{
                 uint8_t prescale;
@@ -72,7 +68,6 @@ namespace ymd::hal{
                 CanBs1 bs1;
                 CanBs2 bs2;
             };
-
 
             switch(kind_){
                 default: __builtin_unreachable();
@@ -111,7 +106,7 @@ namespace ymd::hal{
 
     enum class CanMode:uint8_t{
         Normal = CAN_Mode_Normal,
-        Silent = CAN_Mode_Silent,
+        SilentListen = CAN_Mode_Silent,
         Internal = CAN_Mode_Silent_LoopBack,
         Loopback = CAN_Mode_LoopBack
     };

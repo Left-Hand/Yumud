@@ -27,7 +27,7 @@ IResult<> ZdtStepper::set_target_speed(const real_t spd){
         .acc_level = AcclerationLevel::from(0),
         .is_absolute = false,
         .is_sync = is_sync_
-    });     
+    });
 }
 
 IResult<> ZdtStepper::brake(){

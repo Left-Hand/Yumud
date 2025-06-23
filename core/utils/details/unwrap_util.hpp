@@ -96,18 +96,22 @@ template<typename T>
 struct Some<T *>{
 public:
     constexpr Some(std::nullptr_t) = delete;
-    constexpr Some(T * val):val_(val){;}
+    constexpr Some(T * ptr):ptr_(ptr){;}
 
-    constexpr T * get(){
-        return val_;
+    constexpr T * get() const {
+        return ptr_;
+    }
+
+    constexpr T & deref() const {
+        return *ptr_;
     }
 private:
-    T * val_;
+    T * ptr_;
 };
 
 //CTAD
 template<typename T>
-Some(T && val) -> Some<std::decay_t<T>>;
+Some(T && ptr) -> Some<std::decay_t<T>>;
 
 template<typename TDummy = void>
 Some() -> Some<void>;
@@ -128,12 +132,6 @@ public:
     requires (std::is_convertible_v<T2, TDecay>) and (std::is_trivially_copy_assignable_v<TDecay>)
     constexpr Ok(T2 && val):val_(static_cast<std::decay_t<T2>>(val)){}
 
-    // template<typename T2>
-    // requires (std::is_convertible_v<T2, TDecay>)
-    // constexpr Ok(T && val):val_(std::move<T>(val)){}
-    // constexpr Ok(const T & val):val_((val)){}
-    
-    
     template<typename T2>
     requires (std::is_convertible_v<T2, TDecay>)
     constexpr Ok(const Ok<T2> & ok_val):val_(static_cast<TDecay>(ok_val.unwrap())){;}
