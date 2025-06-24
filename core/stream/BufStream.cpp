@@ -3,11 +3,6 @@
 using namespace ymd;
 
 
-
-BufStream::operator String() const {
-    return buf_;
-}
-
 BufStream::operator StringView() const {
-    return StringView(buf_);
+    return StringView(buf_, len_);
 }

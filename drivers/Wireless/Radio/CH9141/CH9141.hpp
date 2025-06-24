@@ -3,7 +3,6 @@
 #include "hal/bus/uart/uart.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
-#include "core/string/string.hpp"
 #include "core/clock/clock.hpp"
 
 #include "core/utils/Option.hpp"

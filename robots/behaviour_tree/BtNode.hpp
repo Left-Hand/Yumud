@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "core/string/string.hpp"
 #include "core/string/StringView.hpp"
 
 namespace ymd::btree{
@@ -22,7 +21,7 @@ public:
     using StringView = ymd::StringView;
     using Name = StringView;
 private:
-    String name_;
+    StringView name_;
 public:
     BtNode(const Name name):
         name_(name){;}

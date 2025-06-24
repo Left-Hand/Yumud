@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/stream/ostream.hpp"
-#include "core/string/string.hpp"
+#include "core/string/stringView.hpp"
 
 namespace ymd{
 
@@ -34,8 +34,6 @@ public:
     }
     size_t pending() const {return 0;}
 
-
-    operator String() const;
     operator StringView() const;
 };
 
