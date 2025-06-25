@@ -64,7 +64,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
 
             while(can.available()){
                 CanMsg msg_r = can.read();
-                logger.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
+                logger.println("rx", msg_r);
             }
 
             cnt++;
@@ -74,7 +74,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             logger.println("ava", can.available());
             while(can.available()){
                 CanMsg msg_r = can.read();
-                logger.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
+                logger.println("rx", msg_r);
             }
 
             const auto msg_v = CanMsg::from_tuple(CanStdId(0), std::make_tuple(0x13,0x14));

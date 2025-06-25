@@ -9,33 +9,34 @@
 #include <ranges>
 #include "thirdparty/sstl/include/sstl/vector.h"
 
+#include "core/utils/Option.hpp"
+
 namespace ymd{
 class OutputStream;
 }
 namespace ymd::hal{
 
-namespace CanUtils{
-    template<typename T>
-    concept valid_arg = (sizeof(T) <= 8) 
-        && (std::is_same_v<std::decay_t<T>, T>) 
-    ;
+namespace details{
+template<typename T>
+concept valid_arg = (sizeof(T) <= 8) 
+    && (std::is_same_v<std::decay_t<T>, T>) 
+;
 
-    template<typename ... Args>
-    concept valid_args = 
-        (sizeof(std::tuple<Args...>) <= 8) 
-        && (std::is_same_v<std::decay_t<Args>, Args> && ...)
-    ;
-}
+template<typename ... Args>
+concept valid_args = 
+    (sizeof(std::tuple<Args...>) <= 8) 
+    && (std::is_same_v<std::decay_t<Args>, Args> && ...)
+;
+
+struct CanMsgDetails{
 
 
-struct CanMsg{
-protected:
     #pragma pack(push, 1)
 
-    struct Identifier{
+    struct SXX32_CanIdentifier{
 
         template<typename T>
-        static constexpr Identifier from(
+        static constexpr SXX32_CanIdentifier from(
             const details::CanId_t<T> id,
             const CanRemoteSpec rmt
         ){
@@ -46,8 +47,8 @@ protected:
             }
         }
 
-        static constexpr Identifier from_raw(uint32_t raw){
-            return std::bit_cast<Identifier>(raw);
+        static constexpr SXX32_CanIdentifier from_raw(uint32_t raw){
+            return std::bit_cast<SXX32_CanIdentifier>(raw);
         }
 
         constexpr uint32_t to_raw() const{
@@ -70,10 +71,9 @@ protected:
             if(is_ext_)
                 return ext_id_;
             else
-                return ext_id_ >> 18;
+                return ext_id_ >> (29-11);
         }
 
-    // private:
         const uint32_t __resv__:1 = 1;
         
         //是否为远程帧
@@ -83,22 +83,22 @@ protected:
         uint32_t is_ext_:1;
         uint32_t ext_id_:29;
     private:
-        static constexpr Identifier from_std_id(
+        static constexpr SXX32_CanIdentifier from_std_id(
             const CanStdId id, 
             const CanRemoteSpec is_remote
         ){
-            return Identifier{
+            return SXX32_CanIdentifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = false, 
                 .ext_id_ = uint32_t(id.as_raw()) << 18
             };
         }
 
-        static constexpr Identifier from_ext_id(
+        static constexpr SXX32_CanIdentifier from_ext_id(
             const CanExtId id, 
             const CanRemoteSpec is_remote
         ){
-            return Identifier{
+            return SXX32_CanIdentifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = true, 
                 .ext_id_ = id.as_raw()
@@ -106,8 +106,8 @@ protected:
         }
     };
 
-    Identifier identifier_;
-    static_assert(sizeof(Identifier) == 4);
+
+    static_assert(sizeof(SXX32_CanIdentifier) == 4);
 
     struct Payload{
     public:
@@ -132,65 +132,13 @@ protected:
 
         friend class CanMsg;
     };
-
-    std::array<uint8_t, 8> buf_;
-
-    
-    
-    uint8_t dlc_:4;     /* Specifies the length of the frame that will be received.
-    This parameter can be a value between 0 to 8 */
-    
-    uint8_t mbox_:4;
-    
-    uint8_t fmi_;     /* Specifies the index of the filter the message stored in 
-    the mailbox passes through. This parameter can be a 
-    value between 0 to 0xFF */
     #pragma pack(pop)
-private:
-    template<typename T>
-    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const CanRemoteSpec remote):
-        identifier_(Identifier::from(id, remote))
-    {
-        dlc_ = 0;
-    }
+};
 
-    template<typename T>
-    __fast_inline constexpr CanMsg(
-            const details::CanId_t<T> id, 
-            const std::span<const uint8_t> pbuf
-    ) : 
-        CanMsg(id, CanRemoteSpec::Data)
-    {
-        dlc_ = MIN(pbuf.size(), 8);
+}
 
-        for(size_t i = 0; i < dlc_ ; i++){
-            buf_[i] = (pbuf[i]);
-        }
 
-        for(size_t i = dlc_; i < 8; i++){
-            buf_[i] = 0;
-        }
-    }
-
-    __fast_inline constexpr CanMsg(const uint32_t raw, const uint64_t data, const uint8_t dlc):
-        identifier_(Identifier::from_raw(raw))
-    {
-        const auto buf = std::bit_cast<std::array<uint8_t, 8>>(data);
-        for(size_t i = 0; i < dlc; i++){
-            buf_[i] = buf[i];
-        }
-        dlc_ = dlc;
-    }
-
-    template <typename T, typename... Args>
-    requires CanUtils::valid_args<Args...>
-    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const std::tuple<Args...>& tup):
-        CanMsg(id, CanRemoteSpec::Data)
-    {
-        memcpy(buf_.begin(), &tup, sizeof(tup));
-        dlc_ = sizeof(tup);
-    }
-
+struct alignas(16) CanMsg final:public details::CanMsgDetails{
 public:
     constexpr CanMsg() = default;
 
@@ -202,10 +150,12 @@ public:
 
 
     template<typename T>
-    static constexpr CanMsg empty(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Data);}
+    static constexpr CanMsg empty(details::CanId_t<T> id){
+        return CanMsg(id, CanRemoteSpec::Data);}
 
     template<typename T>
-    static constexpr CanMsg from_remote(details::CanId_t<T> id){return CanMsg(id, CanRemoteSpec::Remote);}
+    static constexpr CanMsg from_remote(details::CanId_t<T> id){
+        return CanMsg(id, CanRemoteSpec::Remote);}
 
     template<typename T>
     static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pbuf)
@@ -222,28 +172,40 @@ public:
     }
 
     template<typename T, size_t N>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t, N> pbuf)
-        {return CanMsg(id, pbuf);}
+    requires (N <= 8)
+    static constexpr CanMsg from_bytes(
+        details::CanId_t<T> id, 
+        const std::span<const uint8_t, N> pbuf
+    ){
+        return CanMsg(id, pbuf);
+    }
 
     template<typename T>
-    static constexpr CanMsg from_list(details::CanId_t<T> id, const std::initializer_list<uint8_t> pbuf)
-        {return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));}
+    static constexpr CanMsg from_list(
+        details::CanId_t<T> id, 
+        const std::initializer_list<uint8_t> pbuf
+    ){
+        return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));
+    }
 
-    static constexpr CanMsg from_regs(uint32_t raw, uint64_t data, uint8_t len){
-        return CanMsg(raw, data, len);}
+    static constexpr CanMsg from_regs(uint32_t raw, uint64_t payload, uint8_t len){
+        return CanMsg(raw, payload, len);}
 
     template<typename ... Ts, typename T>
-    static constexpr CanMsg from_tuple(details::CanId_t<T> id, const std::tuple<Ts...>& tup){
-        return CanMsg(id, tup);}
+    static constexpr CanMsg from_tuple(
+        details::CanId_t<T> id, const std::tuple<Ts...>& tup
+    ){
+        return CanMsg(id, tup);
+    }
 
-    constexpr uint8_t * begin(){return buf_.begin();}
-    constexpr uint8_t * end(){return buf_.end();}
-    constexpr uint8_t * data() {return buf_.data();}
-    constexpr const uint8_t * begin() const {return buf_.begin();}
-    constexpr const uint8_t * end() const {return buf_.end();}
+    constexpr uint8_t * begin(){return payload_.begin();}
+    constexpr uint8_t * end(){return payload_.end();}
+    constexpr uint8_t * data() {return payload_.data();}
+    constexpr const uint8_t * begin() const {return payload_.begin();}
+    constexpr const uint8_t * end() const {return payload_.end();}
 
-    constexpr const uint8_t operator[](const size_t index) const {return buf_[index];};
-    constexpr uint8_t & operator[](const size_t index) {return buf_[index];};
+    constexpr const uint8_t operator[](const size_t index) const {return payload_[index];};
+    constexpr uint8_t & operator[](const size_t index) {return payload_[index];};
 
     constexpr size_t size() const {return dlc_;}
     constexpr size_t dlc() const {return dlc_;}
@@ -269,33 +231,95 @@ public:
     constexpr bool is_remote() const {return identifier_.is_remote();}
     constexpr uint8_t mailbox() const {return mbox_;}
 
-    constexpr uint32_t id() const {
+    constexpr uint32_t id_as_u32() const {
         return identifier_.id();
+    }
+
+    constexpr Option<hal::CanStdId> stdid() const {
+        if(not identifier_.is_std()) return None;
+        return Some(hal::CanStdId::from_raw(identifier_.id()));
+    }
+
+    constexpr Option<hal::CanExtId> extid() const {
+        if(not identifier_.is_ext()) return None;
+        return Some(hal::CanExtId::from_raw(identifier_.id()));
     }
 
 
     template<typename T>
-    requires CanUtils::valid_arg<T>
+    requires details::valid_arg<T>
     constexpr T to() const {
         T ret;
-        memcpy((void *)&ret, &buf_, MIN(sizeof(T), size()));
+        memcpy((void *)&ret, &payload_, MIN(sizeof(T), size()));
         return ret;
     }
 
     constexpr uint64_t payload_as_u64() const {
-        return std::bit_cast<uint64_t>(buf_);
+        return std::bit_cast<uint64_t>(payload_);
     }
 
-    constexpr uint32_t identifier_as_u32() const {
+    constexpr uint32_t sxx32_identifier_as_u32() const {
         return identifier_.to_raw();
     }
 
+private:
+    template<typename T>
+    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const CanRemoteSpec remote):
+        identifier_(SXX32_CanIdentifier::from(id, remote))
+    {
+        dlc_ = 0;
+    }
+
+    template<typename T>
+    __fast_inline constexpr CanMsg(
+            const details::CanId_t<T> id, 
+            const std::span<const uint8_t> pbuf
+    ) : 
+        CanMsg(id, CanRemoteSpec::Data)
+    {
+        dlc_ = MIN(pbuf.size(), 8);
+
+        for(size_t i = 0; i < dlc_ ; i++){
+            payload_[i] = (pbuf[i]);
+        }
+
+        for(size_t i = dlc_; i < 8; i++){
+            payload_[i] = 0;
+        }
+    }
+
+    __fast_inline constexpr CanMsg(const uint32_t raw, const uint64_t data, const uint8_t dlc):
+        identifier_(SXX32_CanIdentifier::from_raw(raw))
+    {
+        const auto buf = std::bit_cast<std::array<uint8_t, 8>>(data);
+        for(size_t i = 0; i < dlc; i++){
+            payload_[i] = buf[i];
+        }
+        dlc_ = dlc;
+    }
+
+    template <typename T, typename... Args>
+    requires details::valid_args<Args...>
+    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const std::tuple<Args...>& tup):
+        CanMsg(id, CanRemoteSpec::Data)
+    {
+        memcpy(payload_.begin(), &tup, sizeof(tup));
+        dlc_ = sizeof(tup);
+    }
+
+    SXX32_CanIdentifier identifier_;
+    std::array<uint8_t, 8> payload_;
+
+    uint8_t dlc_:4;     
+    /* Specifies the length of the frame that will be received.
+    This parameter can be a value between 0 to 8 */
     
-    // constexpr void set_ext(const Enable en){
-    //     is_ext_ = (en ? true : false);
-    // }
+    uint8_t mbox_:4;
     
-    // constexpr void set_size(const size_t size) {dlc_ = size;}
+    uint8_t fmi_;     
+    /* Specifies the index of the filter the message stored in 
+    the mailbox passes through. This parameter can be a 
+    value between 0 to 0xFF */
 };
 
 // static_assert(sizeof(CanMsg) == 16);

@@ -288,7 +288,7 @@ std::optional<uint8_t> Can::transmit(const CanMsg & msg){
 
     if(transmit_mailbox < 0) return std::nullopt;
 
-    const uint32_t tempmir = msg.identifier_as_u32();
+    const uint32_t tempmir = msg.sxx32_identifier_as_u32();
     const uint64_t data = msg.payload_as_u64();
     inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDLR = data & UINT32_MAX;
     inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDHR = data >> 32;

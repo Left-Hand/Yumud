@@ -26,6 +26,7 @@ void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd c
 }
 
 
+#if 0
 bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
     if (!ProtocolBase::processMessage(msg) && (msg.id() != 0)) {
         return false;
@@ -67,6 +68,7 @@ bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
     // notifyListeners(msg);
     return true;
 }
+#endif
 
 
 

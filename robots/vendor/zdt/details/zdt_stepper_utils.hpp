@@ -233,7 +233,7 @@ struct ZdtMotor_Collections{
             for(size_t i = 0; i < msgs.size(); i++){
                 const auto & msg = msgs[i];
                 const auto msg_bytes = msg.payload()
-                    .subspan(1,msg.size() - 1);
+                    .subspan(1);
                 info.payload.append(msg_bytes);
             }
 
@@ -245,13 +245,13 @@ struct ZdtMotor_Collections{
         static inline constexpr uint8_t map_msg_to_nodeid(
             const hal::CanMsg & msg
         ){
-            return msg.id() >> 8;
+            return msg.extid().unwrap().as_raw() >> 8;
         }
 
         static inline constexpr uint8_t map_msg_to_piececnt(
             const hal::CanMsg & msg
         ){
-            return msg.id() & 0xff;
+            return msg.extid().unwrap().as_raw() & 0xff;
         }
 
     };
@@ -307,7 +307,7 @@ struct ZdtMotor_Collections{
     };
 
     struct Rpm final{
-        static constexpr Rpm from(const real_t speed){
+        static constexpr Rpm from_speed(const real_t speed){
             const uint16_t temp = uint16_t(q16(speed) * 600);
             return {BSWAP_16(temp)};
         }
@@ -320,7 +320,7 @@ struct ZdtMotor_Collections{
 
     struct PulseCnt final{
         static constexpr uint32_t SCALE = 3200 * (256/16);
-        static constexpr PulseCnt from(const real_t position){
+        static constexpr PulseCnt from_position(const real_t position){
             const uint32_t frac_part = uint32_t(frac<12>(position) * SCALE);
             const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
             const uint32_t temp = uint32_t(frac_part + int_part);

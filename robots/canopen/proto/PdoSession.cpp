@@ -54,6 +54,7 @@ CanMsg PdoTxSession::buildMessage() const {
     );
 }
 
+#if 0
 //将收到的pdo报文写入字典
 bool PdoRxSession::processMessage(const CanMsg& msg){
     const CobId cobId = CobId::from_u16(int(params_[1].unwrap()));
@@ -85,6 +86,7 @@ bool PdoRxSession::processMessage(const CanMsg& msg){
     }
     return true;
 }
+#endif
 
 //TODO transfer type的模式匹配问题
 

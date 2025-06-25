@@ -24,6 +24,12 @@ struct _PerUnit{
         if(unlikely(value < get_min())) return -1;
         return 0;
     }
+
+    static constexpr bool is_valid(const real_t value){
+        if(unlikely(value > get_max())) return false;
+        if(unlikely(value < get_min())) return false;
+        return true;
+    }
     
 private:
     static constexpr real_t get_min() {return std::get<0>(T::get_range());}

@@ -30,11 +30,12 @@ public:
 
 
     bool update(const hal::CanMsg & msg){
-        auto node_id = msg.id() >> 7;
-        // if(node_id != node_id_ and node_id != 0) return false;
-        if(node_id != node_id_) return false;
-        parseCanmsg(msg);
-        return true;
+        TODO();
+        // auto node_id = msg.id() >> 7;
+        // // if(node_id != node_id_ and node_id != 0) return false;
+        // if(node_id != node_id_) return false;
+        // parseCanmsg(msg);
+        // return true;
     }
 
     hal::Can & can(){

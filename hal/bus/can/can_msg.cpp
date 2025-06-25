@@ -14,7 +14,7 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
         << ((msg.is_remote()) ? 'R' : 'D')
         << "> ";
 
-    os << "id=" << std::hex << std::showbase << uint32_t(msg.id());
+    os << "id=" << std::hex << std::showbase << uint32_t(msg.id_as_u32());
 
     if(not msg.is_remote()){
         os << " | buf" 

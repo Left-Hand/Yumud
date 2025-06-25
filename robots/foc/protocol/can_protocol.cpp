@@ -36,7 +36,13 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         }\
         break;\
     
-    Command command = (Command)(msg.id() & 0x7F);
+    auto stdid = ({
+        const auto may_stdid = msg.stdid();
+        if(may_stdid.is_none()) PANIC();
+        may_stdid.unwrap();
+    });
+
+    Command command = Command(stdid.as_raw() & 0x7F);
     const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
 
     switch(command){

@@ -415,7 +415,7 @@ public CanMsgHandlerIntf{
     HandleStatus handle(const hal::CanMsg & msg){ 
         if(not msg.is_std()) 
             return HandleStatus::from_unhandled();
-        switch(msg.id()){
+        switch(msg.id_as_u32()){
             case 0:
                 DEBUG_PRINTLN("o"); break;
             default:

@@ -12,9 +12,9 @@ IResult<> ZdtStepper::set_target_position(const real_t pos){
     return write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
         // .rpm = Rpm::from(0.07_r),
-        .rpm = Rpm::from(1.07_r),
+        .rpm = Rpm::from_speed(1.07_r),
         .acc_level = AcclerationLevel::from_raw(0),
-        .pulse_cnt = PulseCnt::from(ABS(pos)),
+        .pulse_cnt = PulseCnt::from_position(ABS(pos)),
         .is_absolute = true,
         .is_sync = is_sync_
     });
@@ -23,7 +23,7 @@ IResult<> ZdtStepper::set_target_position(const real_t pos){
 IResult<> ZdtStepper::set_target_speed(const real_t spd){
     return write_payload(Payloads::SetSpeed{
         .is_ccw = spd < 0,
-        .rpm = Rpm::from(ABS(spd)),
+        .rpm = Rpm::from_speed(ABS(spd)),
         .acc_level = AcclerationLevel::from(0),
         .is_absolute = false,
         .is_sync = is_sync_
