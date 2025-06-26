@@ -5,10 +5,7 @@
 namespace ymd::hid{
 
 namespace details{
-template<typename D>
-struct KeyCodeStorageCrtpBase{
 
-};
 struct SingleKeyCodeStorage{
     [[nodiscard]] constexpr bool has(const KeyCode code) const {
         return kind_ == code.kind();
@@ -63,20 +60,17 @@ private:
 
 }
 
-using KeyCodes = details::SingleKeyCodeStorage;
 
 template<typename T>
 class ButtonInput final{
+    //empty unspecialized
 };
-
-
-
 
 template<>
 class ButtonInput<KeyCode>{
 public:
 
-
+    using KeyCodes = details::SingleKeyCodeStorage;
     constexpr void update(const Option<KeyCode> may_keycode){
         if(may_keycode.is_none()){
             release_all();
@@ -94,6 +88,7 @@ public:
         }
         pressed_.emplace(code);
     }
+
     constexpr void press(const KeyCode code){
 
         if(pressed_.has(code))
@@ -121,18 +116,6 @@ public:
         pressed_.reset();
     }
 
-    // [[nodiscard]] constexpr bool pressed(const KeyCode code) const {
-    //     return pressed_.has(code);
-    // }
-
-    // [[nodiscard]] constexpr bool just_pressed(const KeyCode code) const {
-    //     return just_pressed_.has(code);
-    // }
-
-    // [[nodiscard]] constexpr bool just_released(const KeyCode code) const {
-    //     return just_released_.has(code);
-    // }
-
     [[nodiscard]] constexpr KeyCodes pressed() const {
         return pressed_;
     }
@@ -146,7 +129,8 @@ public:
     }
 
     friend OutputStream & operator << (
-            OutputStream & os, const ButtonInput<KeyCode> & self){
+        OutputStream & os, const ButtonInput<KeyCode> & self
+    ){
         auto print_item = [&os](const char * str, const KeyCodes & codes){
             os << str << codes;
         };
@@ -160,8 +144,6 @@ public:
         return os;
     }
 private:
-
-
     KeyCodes pressed_;
     KeyCodes just_pressed_;
     KeyCodes just_released_;
