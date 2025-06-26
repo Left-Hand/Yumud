@@ -112,10 +112,10 @@ IResult<> CyberGear::on_mcu_id_feed_back(const uint32_t id, const uint64_t data,
 IResult<> CyberGear::on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc){
     struct Payload{
         uint64_t data;
-        auto rad() {return make_bitfield<0, 16, CmdRad>(data);}
-        auto omega() {return make_bitfield<16, 32, CmdOmega>(data);}
-        auto torque() {return make_bitfield<32, 48, CmdTorque>(data);}
-        auto temperature() {return make_bitfield<48, 64, Temperature>(data);}
+        auto rad() {            return make_bitfield<0, 16, CmdRad>(data);}
+        auto omega() {          return make_bitfield<16, 32, CmdOmega>(data);}
+        auto torque() {         return make_bitfield<32, 48, CmdTorque>(data);}
+        auto temperature() {    return make_bitfield<48, 64, Temperature>(data);}
     };
 
 
@@ -178,14 +178,20 @@ IResult<> CyberGear::request_read_para(const uint16_t idx){
 IResult<> CyberGear::request_write_para(const uint16_t idx, const uint32_t data){
     return this->transmit(
         CgId::from(CyberGear_Command::WRITE_PARA, host_id_, node_id_).id, 
-            uint64_t(idx) | (uint64_t(data) << 32), 8);
+        uint64_t(idx) | (uint64_t(data) << 32), 
+        8
+    );
 }
 
 IResult<> CyberGear::transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc){
     if (dlc > 8) 
         return Err(CyberGear_Error::RET_DLC_LONGER);
 
-    const auto msg = CanMsg::from_regs(id, payload, dlc);
+    const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
+    const auto msg = CanMsg::from_bytes(
+        hal::CanStdId(id), 
+        std::span(buf.data(), dlc)
+    );
     return this->transmit(msg);
 }
 

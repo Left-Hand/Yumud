@@ -30,17 +30,23 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         real_t data = 0.09_r;
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
-        CanMsg msg = CanMsg::from_tuple(CanExtId::from_raw(id), std::make_tuple(data));
+        CanMsg msg = CanMsg::from_bytes(
+            CanExtId::from_raw(id), 
+            std::bit_cast<std::array<uint8_t, 4>>(data.to_i32())
+        );
         // msg.load(data);
         // auto read = msg.to_vector();
-        logger.println(id, msg.size(), msg.payload(), msg.to<real_t>());
+        logger.println(id, msg.size(), msg.payload());
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
-        const auto msg2 = CanMsg::from_tuple(CanStdId(id), std::make_tuple(data2));
-        logger.println(id, msg2.size(), msg2.payload(), msg2.to<real_t>());
+        const auto msg2 = CanMsg::from_bytes(
+            CanStdId(id), 
+            std::bit_cast<std::array<uint8_t, 4>>(data2.to_i32())
+        );
+        logger.println(id, msg2.size(), msg2.payload());
         for(uint8_t i = 0; i < msg2.size(); i++){
-            logger.println(msg2[i]);
+            logger.println(msg2.payload()[i]);
         }
 
         while(true);
@@ -49,7 +55,10 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     while(1){
         if(tx_role){
             static uint8_t cnt = 0;
-            const auto msg_v = CanMsg::from_tuple(CanStdId(1), std::make_tuple(0x34, 0x37));
+            const auto msg_v = CanMsg::from_list(
+                CanStdId(1), 
+                {0x34, 0x37}
+            );
             can.write(msg_v);
 
             while(can.pending()){
@@ -77,7 +86,10 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
                 logger.println("rx", msg_r);
             }
 
-            const auto msg_v = CanMsg::from_tuple(CanStdId(0), std::make_tuple(0x13,0x14));
+            const auto msg_v = CanMsg::from_list(
+                CanStdId(0), 
+                {0x13,0x14}
+            );
             can.write(msg_v);
 
             clock::delay(200ms);

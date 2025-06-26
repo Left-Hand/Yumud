@@ -393,7 +393,7 @@ template<typename T>
 class RobotMsgCtrp{
     constexpr hal::CanMsg serialize_to_canmsg() const {
         const auto bytes_iter = static_cast<const T *>(this)->iter_bytes();
-        return hal::CanMsg::from_range(bytes_iter);
+        return hal::CanMsg::from_bytes(bytes_iter);
     }
 };
 
@@ -436,7 +436,6 @@ public CanMsgHandlerIntf{
 // #define MOCK_TEST
 
 
-[[maybe_unused]] static __attribute__((__noreturn__))
 void polar_robot_main(){
     auto & OUT_UART = hal::uart2;
     OUT_UART.init({576000});
@@ -516,8 +515,8 @@ void polar_robot_main(){
         &OUT_UART, &OUT_UART
     };
 
-    constexpr auto POINT_DUR = 700ms; 
-    // auto rpt = RepeatTimer{POINT_DUR};
+    constexpr auto SAMPLE_DUR = 700ms; 
+    // auto rpt = RepeatTimer{SAMPLE_DUR};
 
     #if 0
     while(true){
@@ -532,7 +531,7 @@ void polar_robot_main(){
         const auto p1 = data[curr_i];
         const auto p2 = data[next_i];
 
-        const auto r = real_t(rpt.since_last_invoke().count()) / POINT_DUR.count();
+        const auto r = real_t(rpt.since_last_invoke().count()) / SAMPLE_DUR.count();
         const auto p = p1.lerp(p2, r);
         // const auto p1 = Vector2<real_t>(-0.02_r, -0.17_r);
         // const auto p2 = Vector2<real_t>(0.17_r, 0.02_r);

@@ -190,7 +190,7 @@ public:
     using CommandSpecifier = SdoCommandSpecifier;
     // 构造函数
     SdoCommand(const CanMsg & msg) {
-        specifier = std::bit_cast<CommandSpecifier>(msg[0]);
+        specifier = std::bit_cast<CommandSpecifier>(msg.payload()[0]);
     }
 
     auto type() const { return SdoCommandType(specifier.command); }

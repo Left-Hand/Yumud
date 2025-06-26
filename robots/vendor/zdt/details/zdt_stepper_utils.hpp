@@ -219,11 +219,11 @@ struct ZdtMotor_Collections{
 
             info.func_code = ({
                 if(msgs[0].size() == 0) return Err(Error::RxMsgNoPayload);
-                const auto func_code0 = std::bit_cast<FuncCode>(msgs[0][0]);
+                const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].payload()[0]);
                 for(size_t i = 0; i < msgs.size(); i++){
                     const auto & msg = msgs[i];
                     if(msg.size() == 0) return Err(Error::RxMsgNoPayload);
-                    const auto func_code = std::bit_cast<FuncCode>(msg[0]);
+                    const auto func_code = std::bit_cast<FuncCode>(msg.payload()[0]);
                     if(func_code != func_code0)
                         return Err(Error::RxMsgFuncCodeNotTheSame);
                 }
@@ -272,6 +272,7 @@ struct ZdtMotor_Collections{
                     return VerifyUtils::by_xor(func_code, bytes);
                 case VerifyMethod::CRC8:
                     TODO();
+                    // __builtin_unreachable();
                     // return VerifyUtils::by_crc8(func_code, bytes);
             }
         }

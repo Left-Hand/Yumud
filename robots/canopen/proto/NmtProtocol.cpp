@@ -17,10 +17,11 @@ using namespace ymd::canopen;
 
 
 void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd cmd){
+    const std::array payload = {uint8_t(cmd), uint8_t(node_id)};
     sendMessage(
-        CanMsg::from_tuple(
+        CanMsg::from_bytes(
             hal::CanStdId(0x000),
-            std::make_tuple<uint8_t, uint8_t>(uint8_t(cmd), uint8_t(node_id))
+            std::span(payload)
         )
     );
 }
@@ -76,21 +77,23 @@ bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
 // 避免与其他从站 Node-ID 冲突。这个从站必须发出节点上线报文（boot-up），如图 6.3 所示，
 // 节点上线报文的 ID 为 700h+Node-ID，数据为 1 个字节 0。生产者为 CANopen 从站。
 void NmtSlaveProtocol::sendBootUp() {
-    const auto cobid = 0x700 | dev_.NMT_getNodeId();
+    const auto cobid = CobId::from_u16(0x700 | dev_.NMT_getNodeId());
+    const std::array payload = {uint8_t(0)};
     sendMessage(
-        CanMsg::from_tuple(
-            hal::CanStdId(cobid),
-            std::make_tuple<uint8_t>(0)
+        CanMsg::from_bytes(
+            cobid.to_stdid(),
+            std::span(payload)
         )
     );
 }
 
 void NmtSlaveProtocol::sendHeartBeat() {
-    const auto cobid = 0x700 | dev_.NMT_getNodeId();
+    const auto cobid =  CobId::from_u16(0x700 | dev_.NMT_getNodeId());
+    const std::array payload = {std::bit_cast<uint8_t>(dev_.NMT_getState())};
     sendMessage(
-        CanMsg::from_tuple(
-            hal::CanStdId(cobid),
-            std::make_tuple<uint8_t>(std::bit_cast<uint8_t>(dev_.NMT_getState()))
+        CanMsg::from_bytes(
+            cobid.to_stdid(),
+            std::span(payload)
         )
     );
 }

@@ -80,7 +80,8 @@ int main(){
     // eeprom_main();
     // ht16k33_main();
     // mystepper_main();
-    zdt_main();
+    // zdt_main();
+    polar_robot_main();
     // can_ring_main();
     // rrs3_robot_main();
     // flash_main();

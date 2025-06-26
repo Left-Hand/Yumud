@@ -402,7 +402,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
             __builtin_unreachable();
     }
 
-    return CanMsg::from_regs(rxmir, data, dlc);
+    return CanMsg::from_sxx32_regs(rxmir, data, dlc);
 }
 
 

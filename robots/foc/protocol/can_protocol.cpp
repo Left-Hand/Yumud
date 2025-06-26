@@ -6,6 +6,8 @@ using namespace ymd;
 using namespace ymd::foc;
 using namespace ymd::foc::MotorUtils;
 
+#if 0
+
 void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define EXECUTER_BIND(cmd, method, ...)\
     case cmd:\
@@ -87,3 +89,5 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #undef SETTER_BIND_ONE
     #undef SETTER_BIND_VALUE_REAL
 }
+
+#endif

@@ -7,13 +7,9 @@
 #include <memory.h>
 #include <tuple>
 #include <ranges>
-#include "thirdparty/sstl/include/sstl/vector.h"
 
 #include "core/utils/Option.hpp"
 
-namespace ymd{
-class OutputStream;
-}
 namespace ymd::hal{
 
 namespace details{
@@ -158,18 +154,10 @@ public:
         return CanMsg(id, CanRemoteSpec::Remote);}
 
     template<typename T>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, const std::span<const uint8_t> pbuf)
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, 
+        const std::span<const uint8_t> pbuf)
         {return CanMsg(id, pbuf);}
 
-    template<typename T, std::ranges::range R>
-        requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
-    static constexpr CanMsg from_range(details::CanId_t<T> id, R && range){
-        sstl::vector<uint8_t> pbuf;
-        for(auto && val : range){
-            pbuf.push_back(static_cast<uint8_t>(val));
-        }
-        return CanMsg::from_bytes(id, std::span(pbuf.data(), pbuf.size()));
-    }
 
     template<typename T, size_t N>
     requires (N <= 8)
@@ -180,6 +168,19 @@ public:
         return CanMsg(id, pbuf);
     }
 
+
+    template<typename T, std::ranges::range R>
+        requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
+    static constexpr CanMsg from_bytes(details::CanId_t<T> id, R && range){
+        std::array<uint8_t, 8> buf;
+        uint8_t len = 0;
+        for(auto && val : range){
+            buf[len] = (static_cast<uint8_t>(val));
+            len++;
+        }
+        return CanMsg(id, std::span(buf.data(), len));
+    }
+
     template<typename T>
     static constexpr CanMsg from_list(
         details::CanId_t<T> id, 
@@ -188,24 +189,8 @@ public:
         return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));
     }
 
-    static constexpr CanMsg from_regs(uint32_t raw, uint64_t payload, uint8_t len){
+    static constexpr CanMsg from_sxx32_regs(uint32_t raw, uint64_t payload, uint8_t len){
         return CanMsg(raw, payload, len);}
-
-    template<typename ... Ts, typename T>
-    static constexpr CanMsg from_tuple(
-        details::CanId_t<T> id, const std::tuple<Ts...>& tup
-    ){
-        return CanMsg(id, tup);
-    }
-
-    constexpr uint8_t * begin(){return payload_.begin();}
-    constexpr uint8_t * end(){return payload_.end();}
-    constexpr uint8_t * data() {return payload_.data();}
-    constexpr const uint8_t * begin() const {return payload_.begin();}
-    constexpr const uint8_t * end() const {return payload_.end();}
-
-    constexpr const uint8_t operator[](const size_t index) const {return payload_[index];};
-    constexpr uint8_t & operator[](const size_t index) {return payload_[index];};
 
     constexpr size_t size() const {return dlc_;}
     constexpr size_t dlc() const {return dlc_;}
@@ -215,14 +200,14 @@ public:
     }
 
     constexpr std::span<const uint8_t> payload() const{
-        return std::span(begin(), size());
+        return std::span(payload_.begin(), size());
     }
 
     template<size_t N>
     requires (N <= 8)
     constexpr std::span<const uint8_t, N> to_span_with_length() const{
         if(N <= size())
-            return std::span<const uint8_t, N>(begin(), N);
+            return std::span<const uint8_t, N>(payload_.data(), N);
         else __builtin_abort();
     }
 
@@ -243,15 +228,6 @@ public:
     constexpr Option<hal::CanExtId> extid() const {
         if(not identifier_.is_ext()) return None;
         return Some(hal::CanExtId::from_raw(identifier_.id()));
-    }
-
-
-    template<typename T>
-    requires details::valid_arg<T>
-    constexpr T to() const {
-        T ret;
-        memcpy((void *)&ret, &payload_, MIN(sizeof(T), size()));
-        return ret;
     }
 
     constexpr uint64_t payload_as_u64() const {
@@ -296,15 +272,6 @@ private:
             payload_[i] = buf[i];
         }
         dlc_ = dlc;
-    }
-
-    template <typename T, typename... Args>
-    requires details::valid_args<Args...>
-    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const std::tuple<Args...>& tup):
-        CanMsg(id, CanRemoteSpec::Data)
-    {
-        memcpy(payload_.begin(), &tup, sizeof(tup));
-        dlc_ = sizeof(tup);
     }
 
     SXX32_CanIdentifier identifier_;

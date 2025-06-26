@@ -35,16 +35,16 @@ void ak8963_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
     
     if(const auto res = init_mpu6050(mpu); 
-        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().unwrap_as<HalError>());
 
     AK8963 aku{i2c};
-    aku.init().unwrap();
+    aku.init().examine();
     // aku.setAccRange(MPU6050::AccRange::_2G);
 
     while(true){
-        aku.update().unwrap();
+        aku.update().examine();
         clock::delay(5ms);
-        DEBUG_PRINTLN_IDLE(aku.read_mag().unwrap());
+        DEBUG_PRINTLN_IDLE(aku.read_mag().examine());
     }
     while(true);
 }
@@ -53,13 +53,16 @@ void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{i2c};
 
     if(const auto res = init_mpu6050(mpu); 
-        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+        res.is_err()){ 
+        DEBUG_PRINTLN(
+            res.unwrap_err().unwrap_as<HalError>());
+    }
 
     while(true){
-        mpu.update().unwrap();
+        mpu.update().examine();
         DEBUG_PRINTLN_IDLE(
-            mpu.read_acc().unwrap(),
-            mpu.read_gyr().unwrap()
+            mpu.read_acc().examine(),
+            mpu.read_gyr().examine()
         );
     }
 }
@@ -71,15 +74,15 @@ void mpu6500_tb(hal::I2c & i2c){
         AK8963 aku{i2c};
         mpu.set_package(MPU6050::Package::MPU9250);
     #else
-        mpu.setPackage(MPU6050::Package::MPU6050);
+        mpu.set_package(MPU6050::Package::MPU6050);
     #endif
 
-    mpu.init().unwrap();
-    mpu.set_acc_range(MPU6050::AccRange::_2G).unwrap();
-    mpu.enable_direct_mode(EN).unwrap();
+    mpu.init().examine();
+    mpu.set_acc_range(MPU6050::AccRange::_2G).examine();
+    mpu.enable_direct_mode(EN).examine();
 
     #ifdef MAG_ACTIVATED
-        aku.init().unwrap();
+        aku.init().examine();
     #endif
 
     // ImuFusion fusion;
@@ -96,33 +99,33 @@ void mpu6500_tb(hal::I2c & i2c){
         mpu.update().examine();
 
         #ifdef MAG_ACTIVATED
-        aku.update().unwrap();
+        aku.update().examine();
         #endif
 
         // mahony.update9(
-            // mpu.read_gyr().unwrap(), 
-            // mpu.read_acc().unwrap(), 
-            // aku.read_mag().unwrap()
+            // mpu.read_gyr().examine(), 
+            // mpu.read_acc().examine(), 
+            // aku.read_mag().examine()
         // );
 
         // mahony.update(
-        //     mpu.read_gyr().unwrap(), 
-        //     mpu.read_acc().unwrap(),
-        //     aku.read_mag().unwrap()
+        //     mpu.read_gyr().examine(), 
+        //     mpu.read_acc().examine(),
+        //     aku.read_mag().examine()
         // );
 
         const auto begin_m = clock::micros();
 
         // mahony.update(
-        //     mpu.read_gyr().unwrap(), 
-        //     mpu.read_acc().unwrap()
-        //     // aku.read_mag().unwrap()
+        //     mpu.read_gyr().examine(), 
+        //     mpu.read_acc().examine()
+        //     // aku.read_mag().examine()
         // );
 
         
         mahony.update(
-            mpu.read_gyr().unwrap(), 
-            mpu.read_acc().unwrap()
+            mpu.read_gyr().examine(), 
+            mpu.read_acc().examine()
         );
             
         const auto end_m = clock::micros();
@@ -131,7 +134,7 @@ void mpu6500_tb(hal::I2c & i2c){
         // DEBUG_PRINTLN(mahony.result());
         DEBUG_PRINTLN(
             mahony.result(), 
-            // Quat_t<real_t>(Vector3<real_t>(0,0,1), aku.read_mag().unwrap().normalized()), 
+            // Quat_t<real_t>(Vector3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
             end_m - begin_m
         );
     });

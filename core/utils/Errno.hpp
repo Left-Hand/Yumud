@@ -36,6 +36,12 @@ public:
     }
 
     template<typename T>
+    constexpr const T & unwrap_as() const {
+        if(! this->is<T>()) __builtin_abort();
+        return std::get<T>(value_); 
+    }
+
+    template<typename T>
     constexpr Option<const T &> as() const {
         if(! this->is<T>()) return None;
         return Some<const T *>(&std::get<T>(value_)); 
