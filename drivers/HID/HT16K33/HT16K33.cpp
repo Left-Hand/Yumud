@@ -60,7 +60,7 @@ using IResult = Result<T, Error>;
 //     return Ok();
 // }
 
-IResult<bool> HT16K33::any_key_pressed(){
+IResult<bool> HT16K33::is_any_key_pressed(){
     if(phy_.has_int_io()){
         return Ok(phy_.is_int_io_active());
     }else{

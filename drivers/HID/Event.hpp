@@ -3,6 +3,8 @@
 #include "core/utils/Option.hpp"
 #include "types/vectors/vector2/Vector2.hpp"
 
+
+
 namespace ymd::drivers{
 
 struct KeyPlacement{
@@ -42,32 +44,32 @@ public:
 
 
 
-class CharKeyEvent{
-public:
-    constexpr Option<char> key() const {
-        return key_;
-    }
+// class CharKeyEvent{
+// public:
+//     constexpr Option<char> key() const {
+//         return key_;
+//     }
 
-    constexpr CharKeyEvent(Option<char> key):
-        key_(key)
-    {;}
-private:
+//     constexpr CharKeyEvent(Option<char> key):
+//         key_(key)
+//     {;}
+// private:
 
-    Option<char> key_;
-};
+//     Option<char> key_;
+// };
 
-class MouseEvent{
-public:
-    constexpr Option<Vector2i> pos() const {
-        return pos_;
-    }
+// class MouseEvent{
+// public:
+//     constexpr Option<Vector2i> pos() const {
+//         return pos_;
+//     }
 
-    constexpr MouseEvent(Option<Vector2i> pos):
-        pos_(pos)
-    {;}
-private:
+//     constexpr MouseEvent(Option<Vector2i> pos):
+//         pos_(pos)
+//     {;}
+// private:
 
-    Option<Vector2i> pos_;
-};
+//     Option<Vector2i> pos_;
+// };
 
 }

@@ -10,9 +10,10 @@
 #include "drivers/HID/HT16K33/HT16K33.hpp"
 
 
-#include "drivers/HID/keycode.hpp"
-#include "drivers/HID/axis_input.hpp"
-#include "drivers/HID/button_input.hpp"
+#include "drivers/HID/prelude/keycode.hpp"
+#include "drivers/HID/prelude/axis_input.hpp"
+#include "drivers/HID/prelude/segcode.hpp"
+#include "drivers/HID/prelude/button_input.hpp"
 
 #include <atomic>
 #include "core/sync/spinlock.hpp"
@@ -27,11 +28,6 @@ using namespace ymd::drivers;
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 
-
-
-
-
-// static constexpr auto a = ThisKeyBoardLayout::map(0,0).to_char().unwrap();
 
 namespace ymd::hid{
 
@@ -131,7 +127,7 @@ public:
     {;}
 
     IResult<> update(){
-        if(const auto res = inst_.any_key_pressed();
+        if(const auto res = inst_.is_any_key_pressed();
             res.is_err()) return Err(res.unwrap_err());
         else if(res.unwrap() == false){
             input_.update(None);
@@ -545,75 +541,8 @@ private:
 
 }
 
-enum class SegCode_Kind:uint8_t{
-	_0 = 0x3F,  //"0"
-    _1 = 0x06,  //"1"
-    _2 = 0x5B,  //"2"
-    _3 = 0x4F,  //"3"
-    _4 = 0x66,  //"4"
-    _5 = 0x6D,  //"5"
-    _6 = 0x7D,  //"6"
-    _7 = 0x07,  //"7"
-    _8 = 0x7F,  //"8"
-    _9 = 0x6F,  //"9"
-    A = 0x77,  //"A"
-    B = 0x7C,  //"B"
-    C = 0x39,  //"C"
-    D = 0x5E,  //"D"
-    E = 0x79,  //"E"
-    F = 0x71,  //"F"
-    H = 0x76,  //"H"
-    L = 0x38,  //"L"
-    n = 0x37,  //"n"
-    u = 0x3E,  //"u"
-    P = 0x73,  //"P"
-    O = 0x5C,  //"o"
-    _ = 0x40,  //"-"
-    Dot = 0x80,
-    Off = 0x00  //熄灭
-};
 
-struct SegCode{
-    using Kind = SegCode_Kind;
-    using enum Kind;
 
-    constexpr SegCode(Kind kind):kind_(kind){}
-
-    static constexpr Option<SegCode> from_char(char chr){
-        switch(chr){
-            default: return None;
-            case '0': return Some(_0);
-            case '1': return Some(_1);
-            case '2': return Some(_2);
-            case '3': return Some(_3);
-            case '4': return Some(_4);
-            case '5': return Some(_5);
-            case '6': return Some(_6);
-            case '7': return Some(_7);
-
-            case '8': return Some(_8);
-            case '9': return Some(_9);
-            case 'A': return Some(A);
-            case 'B': return Some(B);
-            case 'C': return Some(C);
-            case 'D': return Some(D);
-            case 'E': return Some(E);
-
-            case '-': return Some(_);
-            case '.': return Some(Dot);
-
-            case 0: return Some(Off);
-        }
-    }
-
-    constexpr Kind kind() const{return kind_;}
-
-    constexpr bool operator==(Kind kind) const{return kind == this->kind_;}
-    constexpr bool operator!=(Kind kind) const{return kind != this->kind_;}
-
-private:
-    Kind kind_;
-};
 
 
 static void HT16K33_tb(HT16K33 & ht16){
@@ -684,10 +613,10 @@ static void HT16K33_tb(HT16K33 & ht16){
             return {y,x};
         };
 
-        auto display_segcode = [&](const uint8_t i, const SegCode code){
+        auto display_segcode = [&](const uint8_t i, const hid::SegCode code){
             const auto raw = std::bit_cast<uint8_t>(code);
 
-            for(int j = 0; j < 8; j++){
+            for(size_t j = 0; j < 8; j++){
                 if(not (raw & (1 << j))) continue;
                 const auto [x,y] = correct_display_xy(i,j);
                 test_pattern.write_pixel(x, y, true).examine();
@@ -705,7 +634,7 @@ static void HT16K33_tb(HT16K33 & ht16){
 
         auto display_str = [&](const StringView& str) {
             for(size_t i = 0; i < str.size(); i++){
-                display_segcode(i, SegCode::from_char(str[i]).examine());
+                display_segcode(i, hid::SegCode::from_char(str[i]).examine());
             }
             ht16.update_displayer(test_pattern).examine();
         };
