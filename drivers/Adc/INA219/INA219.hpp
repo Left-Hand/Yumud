@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct INA219_Collections{
+struct INA219_Prelude{
     using RegAddress = uint8_t;
 
     static constexpr auto DEFAULT_I2C_ADDR = 
@@ -46,7 +46,7 @@ struct INA219_Collections{
 };
 
 
-struct INA219_Regs:public INA219_Collections{
+struct INA219_Regs:public INA219_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr RegAddress address = 0x00;
 

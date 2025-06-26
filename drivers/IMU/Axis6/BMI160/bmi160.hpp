@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-struct BMI160_Collections{
+struct BMI160_Prelude{
     using Error = ImuError;
 
     template<typename T = void>
@@ -91,7 +91,7 @@ struct BMI160_Collections{
 };
 
 
-struct BMI160_Regs:public BMI160_Collections{
+struct BMI160_Regs:public BMI160_Prelude{
 
     // #pragma pack(push, 1)
 
@@ -119,9 +119,9 @@ class BMI160 final:
     private BMI160_Regs{
 
 public:
-    using Error = BMI160_Collections::Error;
-    using AccOdr = BMI160_Collections::AccOdr;
-    using GyrOdr = BMI160_Collections::GyrOdr;
+    using Error = BMI160_Prelude::Error;
+    using AccOdr = BMI160_Prelude::AccOdr;
+    using GyrOdr = BMI160_Prelude::GyrOdr;
     BMI160(BoschSensor_Phy && phy):phy_(phy){;}
 
     [[nodiscard]] IResult<> init();

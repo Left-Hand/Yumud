@@ -4,7 +4,7 @@
 // https://blog.csdn.net/cp1300/article/details/86997168
 
 //这个驱动还未实现
-#include "details/LSM303_collections.hpp"
+#include "details/LSM303_Prelude.hpp"
 
 namespace ymd::drivers{
 

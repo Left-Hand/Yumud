@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct CH9431_Collections{
+struct CH9431_Prelude{
     enum class Error_Kind:uint8_t{
 
     };
@@ -21,7 +21,7 @@ struct CH9431_Collections{
     using IResult = Result<T, Error>;
 };
 
-struct CH9431_Regs :public CH9431_Collections{
+struct CH9431_Regs :public CH9431_Prelude{
     enum class WorkMode:uint8_t{
         // 000：正常工作模式； 
         // 001：配置模式； 

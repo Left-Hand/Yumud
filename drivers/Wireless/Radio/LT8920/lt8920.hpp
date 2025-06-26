@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct LT8920_Collections{
+struct LT8920_Prelude{
     enum class Error_Kind:uint8_t{
         WrongChipId,
         NoAvailablePhy
@@ -68,7 +68,7 @@ struct LT8920_Collections{
 };
 
 
-struct LT8920_Regs:public LT8920_Collections{
+struct LT8920_Regs:public LT8920_Prelude{
     #include "lt8920_regs.hpp"
 
     // uint16_t __resv1__[2];

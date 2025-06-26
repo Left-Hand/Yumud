@@ -17,7 +17,7 @@
 namespace ymd::drivers{
 
 
-struct AK09911C_Collections{
+struct AK09911C_Prelude{
     // 0b 0 0 0 1 1 0 1 (CAD)
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001101);
     // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001100);
@@ -79,7 +79,7 @@ struct AK09911C_Collections{
 
 };
 
-struct AK09911C_Regs : public AK09911C_Collections{
+struct AK09911C_Regs : public AK09911C_Prelude{
     struct R8_WIA1:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t KEY = 0x48;

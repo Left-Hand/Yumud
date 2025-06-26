@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct AS5600_Collections{
+struct AS5600_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -57,7 +57,7 @@ struct AS5600_Collections{
 
 };
 
-struct AS5600_Regs:public AS5600_Collections{
+struct AS5600_Regs:public AS5600_Prelude{
 
     struct R8_ProgramTimes:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::ProgramTimes;

@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct SC8721_Collections{
+struct SC8721_Prelude{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
     using RegAddress = uint8_t;
 
@@ -62,7 +62,7 @@ struct SC8721_Collections{
 
 };
 
-struct SC8721_Regs:public SC8721_Collections{
+struct SC8721_Regs:public SC8721_Prelude{
     struct R8_CSO:public Reg8<>{
         scexpr RegAddress address = 0x01;
 

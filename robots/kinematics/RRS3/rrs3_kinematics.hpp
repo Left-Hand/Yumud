@@ -146,7 +146,7 @@ public:
 };
 
 
-struct RRS_Kinematics_Collections{
+struct RRS_Kinematics_Prelude{
     enum class Error_Kind:uint8_t{
         OutOfRange
     };
@@ -156,7 +156,7 @@ struct RRS_Kinematics_Collections{
 
 
 template<arithmetic T>
-class RRS_Kinematics final:public RRS_Kinematics_Collections{
+class RRS_Kinematics final:public RRS_Kinematics_Prelude{
 public:
 
     template<typename U = void>

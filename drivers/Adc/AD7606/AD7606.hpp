@@ -10,14 +10,14 @@
 
 namespace ymd::drivers{
 
-class AD7606_Collections{
+class AD7606_Prelude{
 
 };
 
-class AD7606_Phy final: public AD7606_Collections{
+class AD7606_Phy final: public AD7606_Prelude{
 };
 
-class AD7606 final: public AD7606_Collections{
+class AD7606 final: public AD7606_Prelude{
 private:
     AD7606_Phy phy_;
 };

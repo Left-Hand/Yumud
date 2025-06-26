@@ -10,7 +10,7 @@
 
 
 namespace ymd{
-struct INA228_Collections{
+struct INA228_Prelude{
     using RegAddress = uint8_t;
 
     enum class AverageTimes:uint8_t{
@@ -31,7 +31,7 @@ struct INA228_Collections{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x40); // 16 bit
 };
 
-struct INA228_Regs:public INA228_Collections{
+struct INA228_Regs:public INA228_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr RegAddress address = 0x00;
 

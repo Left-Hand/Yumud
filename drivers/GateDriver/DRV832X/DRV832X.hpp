@@ -15,7 +15,7 @@
 
 namespace ymd::drivers{
 
-struct DRV832X_Collections{
+struct DRV832X_Prelude{
     enum class Error_Kind{
 
     };
@@ -213,7 +213,7 @@ struct DRV832X_Collections{
     };
 };
 
-struct DRV832X_Regs:public DRV832X_Collections{
+struct DRV832X_Regs:public DRV832X_Prelude{
     struct R16_Status1{
         scexpr RegAddress address = 0x00;
 
@@ -335,7 +335,7 @@ struct DRV832X_Regs:public DRV832X_Collections{
 };
 
 
-class DRV8323R_Phy final:public DRV832X_Collections{
+class DRV8323R_Phy final:public DRV832X_Prelude{
 public:
     DRV8323R_Phy(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
@@ -398,7 +398,7 @@ private:
 };
 
 
-class DRV8323H_Phy final:public DRV832X_Collections{
+class DRV8323H_Phy final:public DRV832X_Prelude{
 public:
     struct Params{
         hal::Gpio & gain_gpio;
@@ -466,7 +466,7 @@ private:
 
 
 class DRV8323H final:
-    public DRV832X_Collections{
+    public DRV832X_Prelude{
 public:
 
     template<typename ... Args>

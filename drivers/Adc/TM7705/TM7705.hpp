@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct TM7705_Collections{
+struct TM7705_Prelude{
     enum class Error_Kind{
 
     };
@@ -71,7 +71,7 @@ struct TM7705_Collections{
     using IResult = Result<T, Error>;
 };
 
-class TM7705_Phy final: public TM7705_Collections{
+class TM7705_Phy final: public TM7705_Prelude{
 public:
     struct Config{
         Borrow<hal::Gpio> sclk_gpio;
@@ -102,7 +102,7 @@ private:
 };
 
 
-class TM7705 final: public TM7705_Collections{
+class TM7705 final: public TM7705_Prelude{
 private:
     TM7705_Phy phy_;
 };

@@ -7,12 +7,12 @@
 
 namespace ymd::drivers{
 
-struct Si5351C_Collections{
+struct Si5351C_Prelude{
 
 };
 
 struct Si5351C_Regs:
-    public Si5351C_Collections
+    public Si5351C_Prelude
 {
 
     struct R8_DeviceStatus:public Reg8<>{

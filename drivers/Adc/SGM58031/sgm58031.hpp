@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct SGM58031_Collections{
+struct SGM58031_Prelude{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
     enum class Error_Kind{
         WrongChipId
@@ -99,7 +99,7 @@ struct SGM58031_Collections{
     };
 };
 
-struct SGM58031_Regs:public SGM58031_Collections{
+struct SGM58031_Regs:public SGM58031_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::Config;
         uint8_t compQue : 2;

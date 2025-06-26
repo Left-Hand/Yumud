@@ -20,7 +20,7 @@
 namespace ymd::drivers{
 
 
-struct MLX90393_Collections{
+struct MLX90393_Prelude{
     enum class Error_Kind{
         CantReadData
     };
@@ -91,11 +91,11 @@ struct MLX90393_Collections{
     };
 };
 
-struct MLX90393_Regs:public MLX90393_Collections{
+struct MLX90393_Regs:public MLX90393_Prelude{
 
 };
 
-class MLX90393_Phy final:public MLX90393_Collections{
+class MLX90393_Phy final:public MLX90393_Prelude{
 private:
     MLX90393_Phy(std::optional<hal::I2cDrv> && i2c_drv, std::optional<hal::SpiDrv> && spi_drv):
         i2c_drv_(std::move(i2c_drv)),

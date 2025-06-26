@@ -13,15 +13,15 @@
 namespace ymd::drivers{
 
 
-struct MLX90333_Collections{
+struct MLX90333_Prelude{
 
 };
 
-struct MLX90333_Regs:public MLX90333_Collections{
+struct MLX90333_Regs:public MLX90333_Prelude{
 
 };
 
-class MLX90333_Phy final:public MLX90333_Collections{
+class MLX90333_Phy final:public MLX90333_Prelude{
 
 };
 

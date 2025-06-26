@@ -6,7 +6,7 @@
 namespace ymd::robots{
 
 class ZdtStepper final:
-    public ZdtMotor_Collections{
+    public ZdtMotor_Prelude{
 public:
     struct Config{
         NodeId nodeid;

@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct MMC5603_Collections{
+struct MMC5603_Prelude{
 
     using Error = ImuError;
     template<typename T = void>
@@ -35,7 +35,7 @@ struct MMC5603_Collections{
 };
 
 
-struct MMC5603_Regs:public MMC5603_Collections { 
+struct MMC5603_Regs:public MMC5603_Prelude { 
     using RegAddress = uint8_t;
 
     struct AxisReg:public Reg16<>{

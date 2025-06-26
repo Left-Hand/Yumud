@@ -1,6 +1,6 @@
 #pragma once
 
-#include "details/ICM20948_collections.hpp"
+#include "details/ICM20948_Prelude.hpp"
 
 namespace ymd::drivers{
 class ICM20948:

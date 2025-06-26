@@ -11,7 +11,7 @@
 namespace ymd::drivers{
 
 
-struct CH455_Collections{
+struct CH455_Prelude{
     enum class Error_Kind:uint8_t{
         BrightnessGreaterThanMax,
         BrightnessLessThanMin,
@@ -74,7 +74,7 @@ struct CH455_Collections{
 };
 
 
-class CH455_phy final :public CH455_Collections{
+class CH455_phy final :public CH455_Prelude{
 public:
     CH455_phy(hal::Gpio & scl, hal::Gpio & sda):
         i2c_(scl, sda){;}

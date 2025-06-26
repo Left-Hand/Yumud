@@ -14,7 +14,7 @@
 
 namespace ymd::drivers{
 
-struct TCS34725_Collections{
+struct TCS34725_Prelude{
     enum class Gain:uint8_t{
         _1x = 0b00, 
         _4x = 0b01, 
@@ -53,7 +53,7 @@ struct TCS34725_Collections{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
 };
 
-struct TCS34725_Regs:public TCS34725_Collections{
+struct TCS34725_Regs:public TCS34725_Prelude{
     struct R8_Enable:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Enable;
         uint8_t powerOn : 1;

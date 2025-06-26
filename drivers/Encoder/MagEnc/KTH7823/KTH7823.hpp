@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct KTH7823_Collections{
+struct KTH7823_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -31,7 +31,7 @@ struct KTH7823_Collections{
 
 };
 
-struct KTH7823_Regs:public KTH7823_Collections{
+struct KTH7823_Regs:public KTH7823_Prelude{
 
     struct R8_Zero_low:public Reg8<>{
         static constexpr RegAddress address = 0x00;
@@ -93,7 +93,7 @@ struct KTH7823_Regs:public KTH7823_Collections{
     }DEF_R8(rd_reg)
 };
 
-class KTH7823_Phy final:public KTH7823_Collections{ 
+class KTH7823_Phy final:public KTH7823_Prelude{ 
 public:
     KTH7823_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
     KTH7823_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):

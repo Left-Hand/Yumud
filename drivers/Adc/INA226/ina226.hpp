@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-struct INA226_Collections{
+struct INA226_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
     // ASCII 的 TI。
     static constexpr uint16_t VALID_MANU_ID = 0x5449;
@@ -49,7 +49,7 @@ struct INA226_Collections{
     scexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
 };
 
-struct INA226_Regs:public INA226_Collections{
+struct INA226_Regs:public INA226_Prelude{
     struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 

@@ -17,7 +17,7 @@
 
 namespace ymd::drivers{
 
-struct GP22_Collections{
+struct GP22_Prelude{
     enum class Error_Kind{
         MeasurementNotDone
     };
@@ -30,7 +30,7 @@ struct GP22_Collections{
     using RegAddress = uint8_t;
 };
 
-struct GP22_Regs:public GP22_Collections{
+struct GP22_Regs:public GP22_Prelude{
     enum class TSTO1:uint32_t{
         // 0 = GP2 functionality, FIRE_IN input for 
         // sing-around
@@ -121,7 +121,7 @@ struct GP22_Regs:public GP22_Collections{
 };
 
 class GP22_Phy final:
-    private GP22_Collections{
+    private GP22_Prelude{
 public:
         // TDC硬件初始化
     void reset() {
@@ -146,7 +146,7 @@ private:
 };
 
 class GP22 final:
-    public GP22_Collections{
+    public GP22_Prelude{
 
 public:
 

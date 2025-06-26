@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct MA730_Collections{
+struct MA730_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -41,7 +41,7 @@ struct MA730_Collections{
 
 };
 
-struct MA730_Regs:public MA730_Collections{
+struct MA730_Regs:public MA730_Prelude{
 
     struct ZeroDataLowReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::ZeroDataLow;

@@ -11,7 +11,7 @@
 
 
 namespace ymd::drivers{
-struct PCA9685_Collections{
+struct PCA9685_Prelude{
 public:
 
     enum class RegAddress:uint8_t{
@@ -43,7 +43,7 @@ public:
     };
 };
 
-struct PCA9685_Regs :public PCA9685_Collections{
+struct PCA9685_Regs :public PCA9685_Prelude{
 
     struct Mode1Reg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Mode1;

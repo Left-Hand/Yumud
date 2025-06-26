@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct ADS7830_Collections{
+struct ADS7830_Prelude{
     // 1 0 0 1 0 A1 A0
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1001000);
@@ -144,7 +144,7 @@ struct ADS7830_Collections{
 };
 
 class ADS7830_Phy final:
-    public ADS7830_Collections{
+    public ADS7830_Prelude{
 public:
     ADS7830_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -167,7 +167,7 @@ private:
 
 
 struct ADS7830 final:
-    public ADS7830_Collections{
+    public ADS7830_Prelude{
 public:
     using Phy = ADS7830_Phy;
 

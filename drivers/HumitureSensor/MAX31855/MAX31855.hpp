@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct MAX31855_Collections{
+struct MAX31855_Prelude{
     static constexpr real_t JUNC_TEMP_LSB = 0.0625_r;
     static constexpr real_t THER_TEMP_LSB = 0.25_r;
 
@@ -50,7 +50,7 @@ struct MAX31855_Collections{
     using MAX31855_Result = Result<MAX31855_Payload, hal::HalError>;
 };
 
-class MAX31855 final:public MAX31855_Collections{
+class MAX31855 final:public MAX31855_Prelude{
 public:
     MAX31855(hal::SpiDrv && spi_drv):   
         spi_drv_(std::move(spi_drv)){;}

@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct TCA8418_Collections{
+struct TCA8418_Prelude{
     using RegAddress = uint8_t;
 
     enum class Error_Kind:uint8_t{
@@ -22,7 +22,7 @@ struct TCA8418_Collections{
     template<typename T = void>
     using IResult = Result<T, Error>;
 };
-struct TCA8418_Regs:public TCA8418_Collections{
+struct TCA8418_Regs:public TCA8418_Prelude{
     struct R8_Cfg:public Reg8<>{
         static constexpr RegAddress address = 0x01;
 

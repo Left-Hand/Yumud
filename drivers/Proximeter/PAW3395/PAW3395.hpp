@@ -7,12 +7,12 @@
 
 // https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
 
-#include "details/PAW3395_collections.hpp"
+#include "details/PAW3395_Prelude.hpp"
 
 namespace ymd::drivers{
 
 class PAW3395 final:
-    public PAW3395_Collections{
+    public PAW3395_Prelude{
 public:
 
 public:

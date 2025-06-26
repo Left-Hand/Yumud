@@ -9,7 +9,7 @@
 #include "types/image/image.hpp"
 
 namespace ymd::drivers{
-struct MT9V034_Collections{
+struct MT9V034_Prelude{
     /// Camera i2c address configuration for {S_CTRL_ADR1, S_CTRL_ADR0} inputs
     /// (see Table 6 "address modes" in rev. 7 datasheet)
 
@@ -190,7 +190,7 @@ struct MT9V034_Collections{
     using IResult = Result<T, Error>;
 };
 
-struct MT9V034_Regs:public MT9V034_Collections{
+struct MT9V034_Regs:public MT9V034_Prelude{
     uint16_t rowStartReg = 0x01;
     uint16_t columnStartReg = 0x04;
     uint16_t windowHeightReg = 480;
@@ -212,7 +212,7 @@ struct MT9V034_Regs:public MT9V034_Collections{
     uint16_t agcAecEnableReg = 0x02;
 };
 
-class MT9V034: public MT9V034_Collections{
+class MT9V034: public MT9V034_Prelude{
 public:
     MT9V034(const hal::SccbDrv & sccb_drv):
         sccb_drv_(sccb_drv)

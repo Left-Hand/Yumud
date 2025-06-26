@@ -1,11 +1,11 @@
 #pragma once
 
-#include "TCA8418_collections.hpp"
+#include "TCA8418_Prelude.hpp"
 
 namespace ymd::drivers{
 
 
-class TCA8418_Phy final:public TCA8418_Collections{
+class TCA8418_Phy final:public TCA8418_Prelude{
 public:
     TCA8418_Phy(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}

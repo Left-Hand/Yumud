@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct BMP280_Collections{
+struct BMP280_Prelude{
     enum class Mode:uint8_t{
         Sleep, Single, Cont = 0x03
     };
@@ -47,7 +47,7 @@ struct BMP280_Collections{
     using IResult = Result<T, Error>;
 };
 
-struct BMP280_Regs : public BMP280_Collections {
+struct BMP280_Regs : public BMP280_Prelude {
 
     struct ChipIDReg:public Reg8<>{
         static constexpr RegAddress address=0xD0;

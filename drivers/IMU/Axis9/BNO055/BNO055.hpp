@@ -9,11 +9,11 @@
 
 namespace ymd::drivers{
 
-struct BNO055_Collections{
+struct BNO055_Prelude{
 
 };
 
-struct BNO055_Regs:public BNO055_Collections{
+struct BNO055_Regs:public BNO055_Prelude{
 };
 
 class BNO055:

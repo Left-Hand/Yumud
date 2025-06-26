@@ -22,7 +22,7 @@
 namespace ymd::drivers{
 
 
-struct SC8815_Collections{
+struct SC8815_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
 
     enum class Error_Kind{
@@ -123,7 +123,7 @@ struct SC8815_Collections{
     static_assert(sizeof(Interrupts) == 1);
 };
 
-struct SC8815_Regs:public SC8815_Collections {
+struct SC8815_Regs:public SC8815_Prelude {
 
     struct R8_VbatSet:public Reg8<>{
         static constexpr RegAddress address = 0x00;

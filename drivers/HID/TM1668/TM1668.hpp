@@ -14,7 +14,7 @@
 
 namespace ymd::drivers{
 
-struct TM1668_Collections{
+struct TM1668_Prelude{
     enum class Error_Kind{
 
     };
@@ -25,7 +25,7 @@ struct TM1668_Collections{
     using IResult = Result<T, Error>;
 };
 
-class TM1668_Phy final:public TM1668_Collections{
+class TM1668_Phy final:public TM1668_Prelude{
 public:
 
     TM1668_Phy(hal::I2c & i2c, hal::GpioIntf & scb_io):
@@ -149,7 +149,7 @@ private:
     }
 };
 
-class TM1668 final:public TM1668_Collections{
+class TM1668 final:public TM1668_Prelude{
 public:
     using DisplayCommand = TM1668_Phy::DisplayCommand;
     using KeyEvent = TM1668_Phy::KeyEvent;

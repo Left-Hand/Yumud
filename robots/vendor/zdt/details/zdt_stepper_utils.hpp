@@ -11,7 +11,7 @@
 
 namespace ymd::robots{
 
-struct ZdtMotor_Collections{
+struct ZdtMotor_Prelude{
     enum class Error:uint8_t{
         SubDivideOverflow,
         RxNoMsgToDump,
@@ -454,7 +454,7 @@ struct ZdtMotor_Collections{
 };
 
 class ZdtMotorPhy final:
-    public ZdtMotor_Collections{
+    public ZdtMotor_Prelude{
 public:
 
 

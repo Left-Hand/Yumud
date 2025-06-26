@@ -17,7 +17,7 @@
 
 namespace ymd::drivers{
 
-struct MMC5983_Collections{
+struct MMC5983_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
     using Error = ImuError;
     template<typename T = void>
@@ -57,7 +57,7 @@ struct MMC5983_Collections{
 };
 
 
-struct MMC5983_Regs:public MMC5983_Collections{
+struct MMC5983_Regs:public MMC5983_Prelude{
     struct alignas(sizeof(8)) DataPacket{
         static constexpr uint8_t address = 0;
 
@@ -129,7 +129,7 @@ struct MMC5983_Regs:public MMC5983_Collections{
     }DEF_R8(product_id_reg)
 };
 
-class MMC5983_Phy: public MMC5983_Collections{
+class MMC5983_Phy: public MMC5983_Prelude{
 public:
     MMC5983_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}

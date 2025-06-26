@@ -12,7 +12,7 @@
 // 该控制器工作在24Hz至1526Hz的可编程频率范围内，占空比从0%至100%可调，
 // 允许将LED设为特定的亮度值。所有输出均设为相同的PWM频率。
 
-#include "details/PCA9685_collections.hpp"
+#include "details/PCA9685_Prelude.hpp"
 
 namespace ymd::drivers{
 class PCA9685 final:public PCA9685_Regs{

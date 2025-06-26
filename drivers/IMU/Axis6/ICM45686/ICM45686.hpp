@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-struct ICM45686_Collections{
+struct ICM45686_Prelude{
     using Error = ImuError;
 
     template<typename T = void>
@@ -79,7 +79,7 @@ struct ICM45686_Collections{
     };
 };
 
-struct ICM45686_Regs:public ICM45686_Collections{
+struct ICM45686_Regs:public ICM45686_Prelude{
 
     struct R8_Int1Config0:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress{0x16};
@@ -115,7 +115,7 @@ class ICM45686 final:
     public GyroscopeIntf,
     private ICM45686_Regs{
 public:
-    using Error = ICM45686_Collections::Error;
+    using Error = ICM45686_Prelude::Error;
 
     ICM45686(hal::I2c & i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):

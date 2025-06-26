@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct MCP4725_Collections{
+struct MCP4725_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u8(0b1100'001);
 
@@ -27,7 +27,7 @@ struct MCP4725_Collections{
     using IResult = Result<T, Error>;
 };
 
-class MCP4725 final:public MCP4725_Collections{
+class MCP4725 final:public MCP4725_Prelude{
 public:
     MCP4725(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){}    
 

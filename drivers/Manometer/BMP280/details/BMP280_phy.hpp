@@ -1,8 +1,8 @@
 #pragma once
-#include "BMP280_collections.hpp"
+#include "BMP280_Prelude.hpp"
 
 namespace ymd::drivers{
-class BMP280_Phy final:public BMP280_Collections{
+class BMP280_Phy final:public BMP280_Prelude{
 public:
     BMP280_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
