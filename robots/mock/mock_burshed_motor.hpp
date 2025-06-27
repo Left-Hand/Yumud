@@ -3,14 +3,14 @@
 #include "core/math/realmath.hpp"
 #include "dsp/state_vector.hpp"
 
-namespace ymd::dsp::simu{
-struct MockMotor final{
+namespace ymd::robots::mock{
+struct MockBrushedMotor final{
 public:
     struct Config{
         uint32_t fs;
     };
 
-    MockMotor(const Config & cfg){reconf(cfg);}
+    MockBrushedMotor(const Config & cfg){reconf(cfg);}
 
     void reconf(const Config & cfg){
         dt_ = 1_r / cfg.fs;
@@ -23,7 +23,7 @@ public:
 
     const auto & get() const {return state_;}
 private:
-    using Self = MockMotor;
+    using Self = MockBrushedMotor;
     using State = dsp::StateVector<real_t, 2>;
 
     State state_;

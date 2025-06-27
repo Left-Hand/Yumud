@@ -1,20 +1,33 @@
 #include "src/testbench/tb.h"
 #include "dsp/controller/adrc/leso.hpp"
+#include "dsp/controller/adrc/command_shaper.hpp"
 
 #include "service.hpp"
-#include "mock.hpp"
-#include "config.hpp"
-#include "dsp/simu/motor.hpp"
 
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
+#include "robots/mock/mock_burshed_motor.hpp"
+
+#include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/timer/timer.hpp"
+#include "hal/adc/adcs/adc1.hpp"
+#include "hal/bus/uart/uartsw.hpp"
+
+
+
+
+auto & SERVO_PWMGEN_TIMER = hal::timer3;
+auto & DBG_UART = hal::uart2;
+static constexpr auto CTRL_FREQ = 50;
+
 
 
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::dsp::simu;
+using namespace ymd::robots;
 
-
+#define USE_MOCK_SERVO
 
 namespace nuedc::_2023E{
 
@@ -24,11 +37,11 @@ struct AppConfig{
     GimbalPlanner::Config gimbal_cfg;
 };
 
-struct HwPort final{
+struct Environment final{
 public:
     using Config = AppConfig;
 
-    HwPort(const Config & cfg_):cfg(cfg_){;}
+    Environment(const Config & cfg_):cfg(cfg_){;}
 
     const Config cfg;
 
@@ -85,8 +98,8 @@ public:
         SERVO_PWMGEN_TIMER.attach(TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
     }
 private:
-    static tests::MockServo make_mock_servo(){
-        return tests::MockServo();
+    static mock::MockServo make_mock_servo(){
+        return mock::MockServo();
     }
 };
 
@@ -131,7 +144,7 @@ void nuedc_2023e_main(){
 
     const auto cfg = make_cfg();
 
-    HwPort hwport{cfg};
+    Environment hwport{cfg};
     hwport.setup();
 
     auto servo_yaw = hwport.make_yaw_servo();
@@ -178,7 +191,7 @@ void nuedc_2023e_main(){
     //     gimbal_actuator.set_gest({0,0});
     // });
 
-    TdVec2 td{{
+    dsp::TdVec2 td{{
         .kp = tau * tau,
         .kd = 2 * tau,
         .max_spd = 60.0_r,
@@ -235,7 +248,7 @@ void nuedc_2023e_main(){
             .fs = 1000
         }};
 
-        static CommandShaper1 cs{{
+        static dsp::CommandShaper1 cs{{
             .kp = tau * tau,
             .kd = 2 * tau,
             .max_spd = 40.0_r,
@@ -268,7 +281,7 @@ void nuedc_2023e_main(){
     static constexpr uint ISR_FREQ = 20000;
 
     static constexpr auto mc_w = 20.8_q12;
-    static CommandShaper1 cs{{
+    static dsp::CommandShaper1 cs{{
         .kp = mc_w * mc_w,
         .kd = 2 * mc_w,
         .max_spd = 60.0_r,
@@ -286,7 +299,7 @@ void nuedc_2023e_main(){
         .fs = ISR_FREQ
     }};
 
-    static MockMotor motor{{.fs = ISR_FREQ}};
+    static mock::MockBrushedMotor motor{{.fs = ISR_FREQ}};
     // uint32_t exe;
     auto & test_gpio = portC[13];
     test_gpio.outpp();

@@ -1,6 +1,19 @@
-#include "device.hpp"
+#pragma once
 
-namespace nuedc::_2023E::tests{
+#include "core/math/realmath.hpp"
+#include "dsp/state_vector.hpp"
+
+
+namespace ymd::robots::mock{
+struct MotorCmd{
+    real_t ref_pos;
+    real_t ref_spd;
+};
+
+class MotorIntf{
+    virtual void set_motorcmd(const MotorCmd & cmd);
+};
+
 class MockServo final:public MotorIntf{
 public:
     void set_radian(const real_t rad){

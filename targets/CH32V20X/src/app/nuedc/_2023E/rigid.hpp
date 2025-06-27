@@ -1,66 +1,16 @@
 #pragma once
 
-#include "device.hpp"
-#include "ctrl.hpp"
+
+#include "actuator.hpp"
 
 using namespace ymd;
 namespace nuedc::_2023E{
-
-//描述了一组关节解
-struct GimbalSolution final{
-    real_t yaw_rad;
-    real_t pitch_rad;
-
-    friend OutputStream & operator << (OutputStream & os, const GimbalSolution & self){
-        return os << os.brackets<'('>() 
-            << self.yaw_rad << os.splitter() 
-            << self.pitch_rad << os.brackets<')'>();
-    }
-};
-
-//执行器 封装了对不同执行器的调用 屏蔽底层差异
-class GimbalActuatorIntf{
-public:
-    virtual void set_gest(const GimbalSolution solu) = 0;
-};
-
-
-class GimbalActuatorByMock  final :public GimbalActuatorIntf {
-public:
-    void set_gest(const GimbalSolution solu){
-        DEBUG_PRINTLN(solu);
-    }
-};
-
-class GimbalActuatorByLambda  final :public GimbalActuatorIntf {
-public:
-    using Setter = std::function<void(MotorCmd)>;
-
-    struct Params{
-        Setter yaw_setter;
-        Setter pitch_setter;
-    };
-
-
-    GimbalActuatorByLambda (Params params) :
-        yaw_setter_     (params.yaw_setter), 
-        pitch_setter_   (params.pitch_setter)
-    {}
-
-    void set_gest(const GimbalSolution solu){
-        yaw_setter_     ({solu.yaw_rad, 0});
-        pitch_setter_   ({solu.pitch_rad, 0});
-    }
-private:
-    Setter yaw_setter_;
-    Setter pitch_setter_;
-};
 
 
 //动力学 用于快速追踪目标关节角
 class GimbalDynamics final{
 public:
-    using Config = TdVec2::Config;
+    using Config = dsp::TdVec2::Config;
 
     bool done(){
         TODO();
@@ -95,14 +45,14 @@ public:
     }
 
     void tick(){
-        td_.update({targ_.yaw_rad, targ_.pitch_rad});
+        td_.update({targ_.yaw, targ_.pitch});
         const auto [ref_yaw, ref_pitch] = td_.get()[0];
         ref_ = GimbalSolution{ref_yaw, ref_pitch};
         actuator_.set_gest(ref_);
     }
 private:
     GimbalActuatorIntf & actuator_;
-    TdVec2 td_;
+    dsp::TdVec2 td_;
     GimbalSolution targ_;
     GimbalSolution ref_;
 };
@@ -137,8 +87,8 @@ public:
         const auto pitch_rad = std::atan2(y, dist);
         
         return Solution{
-            .yaw_rad = yaw_rad, 
-            .pitch_rad = pitch_rad
+            .yaw = yaw_rad, 
+            .pitch = pitch_rad
         };
     }
 private:
@@ -168,7 +118,10 @@ public:
     }
 
 public:
-    GimbalPlanner(const Config & cfg, GimbalActuatorIntf & actuator):
+    GimbalPlanner(
+        const Config & cfg, 
+        GimbalActuatorIntf & actuator
+    ):
         actuator_(actuator),
         dynamics_(cfg.dyna_cfg, actuator), 
         kinematics_(cfg.kine_cfg)
@@ -191,5 +144,8 @@ private:
     GimbalDynamics dynamics_;
     GimbalKinematics kinematics_;
 };
+
+
+
 
 }

@@ -121,7 +121,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
 
     struct R16_RxConfig:public Reg16<>{
         scexpr RegAddress address = 0x2A;
-        uint16_t auot_rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
+        uint16_t auto_rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t wakeup_tim :2;
         uint16_t scan_rssi_ch_no:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
     }DEF_R16(rx_config_reg)

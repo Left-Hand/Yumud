@@ -6,39 +6,31 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/timer.hpp"
-#include "hal/adc/adcs/adc1.hpp"
-#include "hal/bus/uart/uartsw.hpp"
 
 
 #include "drivers/GateDriver/AT8222/at8222.hpp"
 
-
 #include "concept/pwm_channel.hpp"
 #include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2/vector2.hpp"
+#include "dsp/filter/rc/LowpassFilter.hpp"
+
+#include "robots/mock/mock_servo.hpp"
+#include "prelude.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
 namespace nuedc::_2023E{
 
+using ymd::robots::mock::MotorCmd;
+
 struct ServoConfig{
     real_t min_radian;
     real_t max_radian;
 };
-
-struct MotorCmd{
-    real_t ref_pos;
-    real_t ref_spd;
-};
-
-class MotorIntf{
-    virtual void set_motorcmd(const MotorCmd & cmd);
-};
-
-class PwmServo final:public MotorIntf{
+// class PwmServo final:public MotorIntf{
+class PwmServo final{
 public:
     using Config = ServoConfig;
 
@@ -79,6 +71,44 @@ private:
     real_t min_radian_;
     real_t max_radian_;
     ymd::hal::PwmIntf & pwm_;
+};
+
+//执行器 封装了对不同执行器的调用 屏蔽底层差异
+class GimbalActuatorIntf{
+public:
+    virtual void set_gest(const GimbalSolution solu) = 0;
+};
+
+
+class GimbalActuatorByMock  final :public GimbalActuatorIntf {
+public:
+    void set_gest(const GimbalSolution solu){
+        DEBUG_PRINTLN(solu);
+    }
+};
+
+class GimbalActuatorByLambda  final :public GimbalActuatorIntf {
+public:
+    using Setter = std::function<void(MotorCmd)>;
+
+    struct Params{
+        Setter yaw_setter;
+        Setter pitch_setter;
+    };
+
+
+    GimbalActuatorByLambda (const Params && params) :
+        yaw_setter_     (std::move(params.yaw_setter)), 
+        pitch_setter_   (std::move(params.pitch_setter))
+    {}
+
+    void set_gest(const GimbalSolution solu){
+        yaw_setter_     ({.ref_pos = solu.yaw, .ref_spd = 0});
+        pitch_setter_   ({.ref_pos = solu.pitch, .ref_spd = 0});
+    }
+private:
+    Setter yaw_setter_;
+    Setter pitch_setter_;
 };
 
 
