@@ -41,7 +41,7 @@ namespace ymd{
 
 template <arithmetic T>
 
-struct Quat_t{
+struct Quat{
     T x;
     T y;
     T z;
@@ -49,18 +49,18 @@ struct Quat_t{
 
 static_assert(not std::is_integral_v<T>);
 
-    __fast_inline constexpr Quat_t() :
+    __fast_inline constexpr Quat() :
             x(0),
             y(0),
             z(0),
             w(1) {
     }
 
-    static constexpr Quat_t<T> IDENTITY = Quat_t<T>(0,0,0,1);
+    static constexpr Quat<T> IDENTITY = Quat<T>(0,0,0,1);
 
     [[nodiscard]]
 
-    __fast_inline constexpr Quat_t(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
+    __fast_inline constexpr Quat(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
             x(static_cast<T>(p_x)),
             y(static_cast<T>(p_y)),
             z(static_cast<T>(p_z)),
@@ -68,10 +68,10 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]]
-    constexpr Quat_t(const Vector3<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
+    constexpr Quat(const Vector3<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
     [[nodiscard]]
-    static constexpr Quat_t from_shortest_arc(const Vector3<T> &v0, const Vector3<T> &v1){
+    static constexpr Quat from_shortest_arc(const Vector3<T> &v0, const Vector3<T> &v1){
         const Vector3<T> n0 = v0.normalized();
         const Vector3<T> n1 = v1.normalized();
 
@@ -79,17 +79,17 @@ static_assert(not std::is_integral_v<T>);
 
         if (std::abs(d) > T(1) - T(CMP_EPSILON)) {
             const auto axis = n0.get_any_perpendicular();
-            return Quat_t<T>(axis.x, axis.y, axis.z, T(0));
+            return Quat<T>(axis.x, axis.y, axis.z, T(0));
         } else {
             Vector3<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T rs = T(1) / s;
-            return Quat_t<T>{c.x * rs, c.y * rs, c.z * rs, s / 2};
+            return Quat<T>{c.x * rs, c.y * rs, c.z * rs, s / 2};
         }
     }
 
     [[nodiscard]]
-    static constexpr Quat_t<T> from_direction(const Vector3<T> & dir){
+    static constexpr Quat<T> from_direction(const Vector3<T> & dir){
         // Default direction is the positive Z-axis
         const Vector3<T> default_dir(0, 0, 1);
         
@@ -101,7 +101,7 @@ static_assert(not std::is_integral_v<T>);
         
         // If the vectors are nearly parallel, return the identity quaternion
         if (std::abs(dot) > T(1) - T(CMP_EPSILON)) {
-            return Quat_t<T>::IDENTITY;
+            return Quat<T>::IDENTITY;
         }
         
         // Calculate the rotation axis using the cross product
@@ -111,26 +111,26 @@ static_assert(not std::is_integral_v<T>);
         T angle = std::acos(dot);
         
         // Create and return the quaternion representing the rotation
-        return Quat_t<T>(axis, angle);
+        return Quat<T>(axis, angle);
     }
 
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
-    static constexpr Quat_t<T> from_euler(const EulerAngle_t<T, P> &euler) {
-        Quat_t<T> ret;
+    static constexpr Quat<T> from_euler(const EulerAngle_t<T, P> &euler) {
+        Quat<T> ret;
         ret.set_euler_xyz({euler.x, euler.y, euler.z});
         return ret;
     }
 
     [[nodiscard]]
-    constexpr Quat_t(const Quat_t &p_q) :
+    constexpr Quat(const Quat &p_q) :
             x(p_q.x),
             y(p_q.y),
             z(p_q.z),
             w(p_q.w) {
     }
 
-    __fast_inline constexpr Quat_t operator=(const Quat_t &p_q) {
+    __fast_inline constexpr Quat operator=(const Quat &p_q) {
         x = p_q.x;
         y = p_q.y;
         z = p_q.z;
@@ -166,33 +166,33 @@ static_assert(not std::is_integral_v<T>);
     constexpr T inv_length() const;
 
     [[nodiscard]]
-    constexpr bool is_equal_approx(const Quat_t & other) const;
+    constexpr bool is_equal_approx(const Quat & other) const;
 
     [[nodiscard]]
     constexpr T length() const;
     constexpr void normalize();
 
     [[nodiscard]]
-    constexpr Quat_t normalized() const;
+    constexpr Quat normalized() const;
 
     [[nodiscard]]
     constexpr bool is_normalized() const;
 
     [[nodiscard]]
-    constexpr Quat_t inverse() const;
+    constexpr Quat inverse() const;
 
     [[nodiscard]]
-    constexpr T dot(const Quat_t &p_q) const;
+    constexpr T dot(const Quat &p_q) const;
 
     [[nodiscard]]
-    constexpr T angle_to(const Quat_t &p_to) const;
+    constexpr T angle_to(const Quat &p_to) const;
 
     constexpr void set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XYZ> &p_euler);
 
     [[nodiscard]]
-    constexpr Quat_t integral(const Vector3<T> & p, const T delta) const {
+    constexpr Quat integral(const Vector3<T> & p, const T delta) const {
         const auto k = delta / 2;
-        return Quat_t<T>(
+        return Quat<T>(
             x + k * (-y * p.z + z * p.y + w * p.x),
             y + k * (x * p.z - z * p.x + w * p.y),
             z + k * (-x * p.y + y * p.x + w * p.z),
@@ -201,18 +201,18 @@ static_assert(not std::is_integral_v<T>);
     }
 
     // [[nodiscard]]
-    // constexpr Quat_t integral(const Quat_t<T> & q, const T delta) const {
+    // constexpr Quat integral(const Quat<T> & q, const T delta) const {
 
     // }
 
     [[nodiscard]]
-    constexpr Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
+    constexpr Quat slerp(const Quat &p_to, const T &p_weight) const;
 
     [[nodiscard]]
-    constexpr Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
+    constexpr Quat slerpni(const Quat &p_to, const T &p_weight) const;
 
     [[nodiscard]]
-    constexpr Quat_t cubic_slerp(const Quat_t &p_b, const Quat_t &p_pre_a, const Quat_t &p_post_b, const T &p_weight) const;
+    constexpr Quat cubic_slerp(const Quat &p_b, const Quat &p_pre_a, const Quat &p_post_b, const T &p_weight) const;
 
     constexpr void set_axis_angle(const Vector3<T> &axis, const T &angle);
     constexpr void get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
@@ -224,17 +224,17 @@ static_assert(not std::is_integral_v<T>);
     }
 
     __fast_inline constexpr 
-    void operator*=(const Quat_t &p_q);
+    void operator*=(const Quat &p_q);
 
     [[nodiscard]] __fast_inline constexpr 
-    Quat_t operator*(Quat_t && p_q) const;
+    Quat operator*(Quat && p_q) const;
 
     [[nodiscard]] __fast_inline constexpr
-    Quat_t operator*(const Quat_t & p_q) const;
+    Quat operator*(const Quat & p_q) const;
 
     // [[nodiscard]] __fast_inline constexpr
-    // Quat_t operator*(const Vector3<T> &v) const {
-    //     return Quat_t(w * v.x + y * v.z - z * v.y,
+    // Quat operator*(const Vector3<T> &v) const {
+    //     return Quat(w * v.x + y * v.z - z * v.y,
     //             w * v.y + z * v.x - x * v.z,
     //             w * v.z + x * v.y - y * v.x,
     //             -x * v.x - y * v.y - z * v.z);
@@ -248,8 +248,8 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Quat_t operator*(const T v) const {
-        return Quat_t(x * v,  y * v, z * v,  w * v);
+    Quat operator*(const T v) const {
+        return Quat(x * v,  y * v, z * v,  w * v);
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -279,10 +279,10 @@ static_assert(not std::is_integral_v<T>);
     }
 
     __fast_inline constexpr
-    Quat_t & operator/=(const T &s){return *this = *this / s;};
+    Quat & operator/=(const T &s){return *this = *this / s;};
 
     [[nodiscard]] __fast_inline constexpr
-    Quat_t operator/(const T &s) const;
+    Quat operator/(const T &s) const;
 
 
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
@@ -322,15 +322,15 @@ static_assert(not std::is_integral_v<T>);
 };
 
 template<arithmetic T>
-[[nodiscard]] __fast_inline constexpr Quat_t<T> operator*(const arithmetic auto & n, const Quat_t<T> & vec){
+[[nodiscard]] __fast_inline constexpr Quat<T> operator*(const arithmetic auto & n, const Quat<T> & vec){
     return vec * n;
 }
 
-[[nodiscard]] __fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_t<arithmetic auto> & b, const arithmetic auto & t){
+[[nodiscard]] __fast_inline constexpr auto lerp(const Quat<arithmetic auto> & a, const Quat<arithmetic auto> & b, const arithmetic auto & t){
     return a.slerp(b, t);
 }
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat_t<auto> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat<auto> & value){
     return os << os.brackets<'('>()
         << value.x << os.splitter()
         << value.y << os.splitter()
@@ -339,23 +339,23 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat_t<aut
 }
 
 template<arithmetic T>
-Quat_t() -> Quat_t<T>;
+Quat() -> Quat<T>;
 }
 
 
 // namespace std{
 //     template<typename T>
-//     struct tuple_size<ymd::Quat_t<T>> {
+//     struct tuple_size<ymd::Quat<T>> {
 //         constexpr static size_t value = 4;
 //     };
 
 //     template<size_t N, typename T>
-//     struct tuple_element<N, ymd::Quat_t<T>> {
+//     struct tuple_element<N, ymd::Quat<T>> {
 //         using type = T;
 //     };
 
 //     template<size_t N, typename T>
-//     auto get(ymd::Quat_t<T> & v){
+//     auto get(ymd::Quat<T> & v){
 //         static_assert(N < 4);
 //         if constexpr (N == 0) return v.x;
 //         else if constexpr (N == 1) return v.y;

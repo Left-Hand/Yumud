@@ -315,11 +315,11 @@ static void mmc5983_test(drivers::MMC5983 & imu){
     // imu.set_mode(MMC5983::Mode::Cont4).unwrap();
     // DEBUG_PRINTLN("app started");
 
-    // Quat_t<q24> gest;
+    // Quat<q24> gest;
     // auto measure = [&](){
     //     imu.update().unwrap();
     //     const auto dir = imu.read_mag().unwrap();
-    //     gest = gest.slerp(Quat_t<q24>::from_direction(dir), 0.05_r);
+    //     gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     // };
 
     // timer1.init(FS);

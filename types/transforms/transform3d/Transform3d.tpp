@@ -109,11 +109,11 @@ Transform3D_t<T> Transform3D_t<T>::interpolate_with(const Transform3D_t<T> &p_tr
 	Transform3D_t<T> interp;
 
 	Vector3<T> src_scale = basis.get_scale();
-	Quat_t<T> src_rot = basis.get_rotation_quaternion();
+	Quat<T> src_rot = basis.get_rotation_quaternion();
 	Vector3<T> src_loc = origin;
 
 	Vector3<T> dst_scale = p_transform.basis.get_scale();
-	Quat_t<T> dst_rot = p_transform.basis.get_rotation_quaternion();
+	Quat<T> dst_rot = p_transform.basis.get_rotation_quaternion();
 	Vector3<T> dst_loc = p_transform.origin;
 
 	interp.basis.set_quaternion_scale(src_rot.slerp(dst_rot, p_c).normalized(), src_scale.lerp(dst_scale, p_c));

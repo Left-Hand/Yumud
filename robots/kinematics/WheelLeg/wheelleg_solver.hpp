@@ -107,7 +107,7 @@ public:
 
     constexpr auto quat_pelvis_to_ground(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
         auto plane = foot_plane(left_feet_pos, right_feet_pos, pitch_rad);
-        return Quat_t<T>(Vector3<T>(0, 1, 0), plane.normal);
+        return Quat<T>(Vector3<T>(0, 1, 0), plane.normal);
     }
 
     constexpr auto transform_pelvis_to_ground(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {

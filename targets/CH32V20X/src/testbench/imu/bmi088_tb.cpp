@@ -20,16 +20,16 @@ using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
 #define UART uart2
-#define ACC_CS_PIN portB[0]
-#define GYR_CS_PIN portB[1]
+#define ACC_CS_GPIO portB[0]
+#define GYR_CS_GPIO portB[1]
 
 static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 
 static void bmi088_tb(hal::Spi & spi){
-    const auto acc_cs_idx = spi.attach_next_cs(ACC_CS_PIN).value();
-    const auto gyr_cs_idx = spi.attach_next_cs(GYR_CS_PIN).value();
+    const auto acc_cs_idx = spi.attach_next_cs(ACC_CS_GPIO).value();
+    const auto gyr_cs_idx = spi.attach_next_cs(GYR_CS_GPIO).value();
     
 
     auto acc_sensor = BMI088_Acc{spi, acc_cs_idx};

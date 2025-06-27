@@ -126,7 +126,7 @@ public:
     void set_gest(const real_t yaw, const real_t pitch, const real_t height){
 
         const Gesture gest{
-            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+            .orientation = Quat<real_t>::from_euler<EulerAnglePolicy::XYZ>({
                 .x = yaw, 
                 .y = pitch, 
                 .z = 0

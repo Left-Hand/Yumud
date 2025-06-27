@@ -54,7 +54,7 @@ void rrs3_tb(){
 
     [[maybe_unused]] 
     constexpr const RRS3 rrs3{cfg};
-    constexpr const auto head = Quat_t<T>::from_shortest_arc(
+    constexpr const auto head = Quat<T>::from_shortest_arc(
         Vector3<T>{0, 0, 1},
         // Vector3<T>{-0.1_r, -0.1_r, 1_r}.normalized()
         Vector3<T>{T(-0.1), T(-0.1), 1}.normalized()

@@ -9,7 +9,7 @@
 namespace ymd{
 class Mahony{
 public:
-    using Quat = Quat_t<q24>;
+    using IQuat = Quat<q24>;
     using V3 = Vector3<q24>;
 protected:
     q24 dt_;
@@ -20,7 +20,7 @@ protected:
     uint fs_;
     V3 gyr_hat_;
     V3 inte_;
-	Quat q;
+	IQuat q;
 public:
     struct Config{
         q24 kp;
@@ -53,7 +53,7 @@ public:
     
     // void update(const V3 & gyr,const V3 & acc, const V3 & mag);
 
-    Quat result() const {return q;}
+    IQuat result() const {return q;}
 };
 
 template<typename T>

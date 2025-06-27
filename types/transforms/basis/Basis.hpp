@@ -94,13 +94,13 @@ public:
 	void rotate(const Vector3<T>&p_euler);
 	Basis_t<T> rotated(const Vector3<T>&p_euler) const;
 
-	void rotate(const Quat_t<T> &p_quat);
-	Basis_t<T> rotated(const Quat_t<T> &p_quat) const;
+	void rotate(const Quat<T> &p_quat);
+	Basis_t<T> rotated(const Quat<T> &p_quat) const;
 
 	Vector3<T>get_rotation_euler() const;
 	void get_rotation_axis_angle(Vector3<T>&p_axis, T &p_angle) const;
 	void get_rotation_axis_angle_local(Vector3<T>&p_axis, T &p_angle) const;
-	Quat_t<T> get_rotation_quat() const;
+	Quat<T> get_rotation_quat() const;
 	Vector3<T>get_rotation() const { return get_rotation_euler(); };
 
 	Vector3<T>rotref_posscale_decomposition(Basis_t<T> &rotref) const;
@@ -123,8 +123,8 @@ public:
 	Vector3<T>get_euler_zyx() const;
 	void set_euler_zyx(const Vector3<T>&p_euler);
 
-	Quat_t<T> get_quat() const;
-	void set_quat(const Quat_t<T> &p_quat);
+	Quat<T> get_quat() const;
+	void set_quat(const Quat<T> &p_quat);
 
 	Vector3<T>get_euler() const { return get_euler_yxz(); }
 	void set_euler(const Vector3<T>&p_euler) { set_euler_yxz(p_euler); }
@@ -144,7 +144,7 @@ public:
 
 	void set_axis_angle_scale(const Vector3<T>&p_axis, T p_phi, const Vector3<T>&p_scale);
 	void set_euler_scale(const Vector3<T>&p_euler, const Vector3<T>&p_scale);
-	void set_quat_scale(const Quat_t<T> &p_quat, const Vector3<T>&p_scale);
+	void set_quat_scale(const Quat<T> &p_quat, const Vector3<T>&p_scale);
 
 	// transposed dot products
 	inline T tdotx(const Vector3<T>&v) const {
@@ -247,10 +247,10 @@ public:
 	bool is_symmetric() const;
 	Basis_t<T> diagonalize();
 
-	operator Quat_t<T>() const { return get_quat(); }
+	operator Quat<T>() const { return get_quat(); }
 
-	Basis_t(const Quat_t<auto> &p_quat) { set_quat(p_quat); };
-	Basis_t(const Quat_t<auto> &p_quat, const Vector3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+	Basis_t(const Quat<auto> &p_quat) { set_quat(p_quat); };
+	Basis_t(const Quat<auto> &p_quat, const Vector3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
 	Basis_t(const Vector3<auto>&p_euler) { 
 		set_euler(static_cast<T>(p_euler)); }

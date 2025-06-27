@@ -134,7 +134,7 @@ void mpu6500_tb(hal::I2c & i2c){
         // DEBUG_PRINTLN(mahony.result());
         DEBUG_PRINTLN(
             mahony.result(), 
-            // Quat_t<real_t>(Vector3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
+            // Quat<real_t>(Vector3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
             end_m - begin_m
         );
     });

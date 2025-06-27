@@ -170,7 +170,7 @@ public:
     };
 
     struct Gesture{
-        Quat_t<T> orientation;
+        Quat<T> orientation;
         T z;
     };
 
@@ -206,7 +206,7 @@ public:
 
     //     const auto center = (p0 + p1 + p2) / 3;
     //     const auto z = center.z;
-    //     const auto ori = Quat_t<T>::from_shortest_arc({0,0,1}, (p0 - center).normalized());
+    //     const auto ori = Quat<T>::from_shortest_arc({0,0,1}, (p0 - center).normalized());
     //     DEBUG_PRINTLN(p0, p1, p2);
     //     DEBUG_PRINTLN((p0 - p1).length(), (p1 - p2).length());
     //     DEBUG_PRINTLN(ori,z);

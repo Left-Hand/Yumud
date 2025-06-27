@@ -19,7 +19,7 @@ void bmi160_main(){
     spi1.init({18000000});
 
 
-    using Quat = Quat_t<real_t>;
+    using Quat = Quat<real_t>;
     
     BMI160 bmi{{spi1, spi1.attach_next_cs(portA[0]).value()}};
     bmi.init().examine();
