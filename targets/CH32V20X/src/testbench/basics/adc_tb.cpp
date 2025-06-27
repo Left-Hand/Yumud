@@ -128,7 +128,7 @@ void adc_tb(OutputStream & logger){
     // auto fn = [&logger](){logger.println("Hi");};
     // void (* fn2)(void) = fn;
     std::array<uint16_t, 16> adc_dma_buf;
-    dma1Ch1.init(DmaMode::toMemCircular, DmaPriority::High);
+    dma1Ch1.init({DmaMode::toMemCircular, DmaPriority::High});
     dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
 
     // adc1.enableContinous();

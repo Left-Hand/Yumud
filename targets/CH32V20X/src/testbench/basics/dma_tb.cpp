@@ -24,7 +24,7 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
     logger.println("dst:", dst);
     logger.println("======");
 
-    channel.init(DmaChannel::Mode::synergy, DmaPriority::High);
+    channel.init({DmaChannel::Mode::synergy, DmaPriority::High});
     logger.println("DMA init done");
 
 

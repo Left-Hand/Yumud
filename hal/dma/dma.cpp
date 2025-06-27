@@ -89,12 +89,12 @@ DMA2_IT_TEMPLATE(11);
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(instance,DMA_Channel_TypeDef)>(x))
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_,DMA_Channel_TypeDef)>(x))
 
 
 void DmaChannel::enable_rcc(Enable en){
     #ifdef ENABLE_DMA2
-    if(instance < DMA2_Channel1){
+    if(inst_ < DMA2_Channel1){
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
     }else{
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en == EN);
@@ -106,34 +106,34 @@ void DmaChannel::enable_rcc(Enable en){
 }
 
 
-void DmaChannel::start(void * dst, const void * src, const size_t size){
+void DmaChannel::start_transfer(void * dst, const void * src, const size_t size){
 
     if(dst_is_periph(mode_)){
-        SDK_INST(instance) -> PADDR = (uint32_t)dst;
-        SDK_INST(instance) -> MADDR = (uint32_t)src;
+        SDK_INST(inst_) -> PADDR = reinterpret_cast<uint32_t>(dst);
+        SDK_INST(inst_) -> MADDR = reinterpret_cast<uint32_t>(src);
     }else{
-        SDK_INST(instance) -> PADDR = (uint32_t)src;
-        SDK_INST(instance) -> MADDR = (uint32_t)dst;
+        SDK_INST(inst_) -> PADDR = reinterpret_cast<uint32_t>(src);
+        SDK_INST(inst_) -> MADDR = reinterpret_cast<uint32_t>(dst);
     }
-    SDK_INST(instance) -> CNTR = size;
+    SDK_INST(inst_) -> CNTR = size;
     resume();
 }
 
 
-void DmaChannel::init(const Mode mode,const Priority priority){
+void DmaChannel::init(const Config & cfg){
     enable_rcc(EN);
-    mode_ = mode;
+    mode_ = cfg.mode;
     DMA_InitTypeDef DMA_InitStructure;
 
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 
-    switch(mode){
+    switch(cfg.mode){
         case Mode::toMemCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
             [[fallthrough]];
         case Mode::toMem:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
+            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -144,8 +144,8 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
             [[fallthrough]];
         case Mode::toPeriph:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
+            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -156,8 +156,8 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
             [[fallthrough]];
         case Mode::synergy:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
+            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
@@ -168,8 +168,8 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
             [[fallthrough]];
         case Mode::distribute:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
+            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
@@ -177,22 +177,32 @@ void DmaChannel::init(const Mode mode,const Priority priority){
             DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
             break;
         case Mode::automatic:
+            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
+            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
+            DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+            DMA_InitStructure.DMA_BufferSize = 0;
+            DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
+            DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
+            DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
             break;
+        default:
+            __builtin_unreachable();
     }
 
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 
-    DMA_InitStructure.DMA_Priority = ((uint32_t)priority) << 12;
+    DMA_InitStructure.DMA_Priority = static_cast<uint32_t>(cfg.priority) << 12;
 
-    DMA_Init(SDK_INST(instance), &DMA_InitStructure);
+    DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
 }
 
 void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
     IRQn irq = IRQn_Type::Software_IRQn;
-    switch(dma_index){
+    switch(dma_index_){
         case 1:
-            irq = (IRQn)((int)DMA1_Channel1_IRQn + ((int)(DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (channel_index - 1)));
+            irq = (IRQn)((int)DMA1_Channel1_IRQn + ((int)(DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * 
+                (channel_index_ - 1)));
             break;
         #ifdef ENABLE_DMA2
         case 2:
@@ -212,38 +222,38 @@ void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
 
 
 void DmaChannel::set_periph_width(const size_t width){
-    uint32_t tmpreg = SDK_INST(instance)->CFGR;
+    uint32_t tmpreg = SDK_INST(inst_)->CFGR;
     tmpreg &= ((~(0b11u << 8)));
     tmpreg |= ((width >> 3) - 1) << 8;
-    SDK_INST(instance)->CFGR = tmpreg;
+    SDK_INST(inst_)->CFGR = tmpreg;
 }
 
 void DmaChannel::set_mem_width(const size_t width){
-    uint32_t tmpreg = SDK_INST(instance)->CFGR;
+    uint32_t tmpreg = SDK_INST(inst_)->CFGR;
     tmpreg &= ((~(0b11u << 10)));
     tmpreg |= ((width >> 3) - 1) << 10;
-    SDK_INST(instance)->CFGR = tmpreg;
+    SDK_INST(inst_)->CFGR = tmpreg;
 }
 
 
 void DmaChannel::resume(){
-    DMA_ClearFlag(done_mask);
-    DMA_ClearFlag(half_mask);
+    DMA_ClearFlag(done_mask_);
+    DMA_ClearFlag(half_mask_);
 
-    DMA_Cmd(SDK_INST(instance), ENABLE);
+    DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
 
 size_t DmaChannel::pending(){
-    return SDK_INST(instance) -> CNTR;
+    return SDK_INST(inst_) -> CNTR;
 }
 
 void DmaChannel::enable_done_it(const Enable en){
-    DMA_ClearITPendingBit(done_mask);
-    DMA_ITConfig(SDK_INST(instance), DMA_IT_TC, en == EN);
+    DMA_ClearITPendingBit(done_mask_);
+    DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, en == EN);
 }
 
 void DmaChannel::enable_half_it(const Enable en){
-    DMA_ClearITPendingBit(half_mask);
-    DMA_ITConfig(SDK_INST(instance), DMA_IT_HT, en == EN);
+    DMA_ClearITPendingBit(half_mask_);
+    DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, en == EN);
 }
 
