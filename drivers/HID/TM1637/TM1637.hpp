@@ -202,7 +202,6 @@ public:
     std::span<const T, N> to_span() const {
         return std::span<const T, N>(buf_);
     }
-
 private:
     std::array<T, N> last_buf_;
     std::array<T, N> buf_;

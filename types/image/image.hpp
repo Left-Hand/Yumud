@@ -41,19 +41,12 @@ public:
             ASSERT(bool(size));
         }
 
-    // [[nodiscard]] static IResult<Image<T>> from_buf(const T * buf, const Vector2u size){
-    //     if(buf == nullptr) return Err(Error::LoadFromNull);
-    //     if(bool(size) == false) return Err(Error::EmptySize);
-    //     auto data = std::make_shared<T[]>(size.x * size.y);
-    //     memcpy(data.get(), buf, size.x * size.y * sizeof(T));
-    //     return Ok(std::move(Image<T>(std::move(data), size)));
-    // }
 
     [[nodiscard]] static Image<T> from_buf(const T * buf, const Vector2u size){
-        // if(buf == nullptr) return Err(Error::LoadFromNull);
-        // if(bool(size) == false) return Err(Error::EmptySize);
         auto data = std::make_shared<T[]>(size.x * size.y);
-        memcpy(data.get(), buf, size.x * size.y * sizeof(T));
+        for(size_t i = 0; i < size.x * size.y; i++){
+            data.get()[i] = buf[i];
+        }
         return Image<T>(std::move(data), size);
     }
 
@@ -78,11 +71,10 @@ public:
     [[nodiscard]] Image<T> clone() const {
         const auto img_size = this->size();
         auto temp = Image<T>(img_size);
-        memcpy(
-            temp.get_data(), 
-            this->get_data(), 
-            img_size.x * img_size.y * sizeof(T)
-        );
+
+        for(size_t i = 0; i < img_size.x * img_size.y; i++){
+            temp.get_data()[i] = this->get_data()[i];
+        }
         return temp;
     }
 

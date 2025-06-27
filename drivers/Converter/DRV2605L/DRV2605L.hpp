@@ -8,8 +8,7 @@
 
 namespace ymd::drivers{
 
-class DRV2605L{
-public:
+struct DRV2605L_Prelude{
     using RegAddress = uint8_t;
 
     enum class Error_Kind:uint8_t{
@@ -30,16 +29,9 @@ public:
     };
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110000);
+};
 
-    DRV2605L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    DRV2605L(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    DRV2605L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
-
-protected:
-
-    hal::I2cDrv i2c_drv_;
-
-
+struct DRV2605L_Regs:public DRV2605L_Prelude{
     enum class Mode:uint8_t{
         // 0: Internal trigger
         // Waveforms are fired by setting the GO bit in register 0x0C.
@@ -359,6 +351,32 @@ protected:
     Control1Reg control1_reg = {};
     Control2Reg control2_reg = {};
 
+};
+
+
+class DRV2605L:public DRV2605L_Regs{
+public:
+    DRV2605L(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    DRV2605L(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    DRV2605L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] IResult<> init();
+    Package get_package();
+    [[nodiscard]] IResult<> set_bemf_gain(const BemfGain gain);
+    [[nodiscard]] IResult<> set_loop_gain(const LoopGain gain);
+    [[nodiscard]] IResult<> play(const uint8_t idx);
+    [[nodiscard]] IResult<> autocal();
+
+private:
+    hal::I2cDrv i2c_drv_;
+
     [[nodiscard]] IResult<> 
     write_reg(const RegAddress address, const uint8_t reg){
         const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
@@ -390,17 +408,6 @@ protected:
 
     [[nodiscard]] IResult<> set_fb_brake_factor(const FbBrakeFactor factor);
     [[nodiscard]] IResult<> set_fb_brake_factor(const int fractor);
-public:
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> validate();
-
-    [[nodiscard]] IResult<> init();
-    Package get_package();
-    [[nodiscard]] IResult<> set_bemf_gain(const BemfGain gain);
-    [[nodiscard]] IResult<> set_loop_gain(const LoopGain gain);
-    [[nodiscard]] IResult<> play(const uint8_t idx);
-    [[nodiscard]] IResult<> autocal();
 };
 
 }

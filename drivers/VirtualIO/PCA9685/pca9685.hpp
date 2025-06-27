@@ -26,6 +26,14 @@ public:
     PCA9685(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_{i2c, addr}{;}
 
+    [[nodiscard]] IResult<> init(const Config & cfg){
+        return init() | reconf(cfg);
+    }
+    [[nodiscard]] IResult<> reconf(const Config & cfg){
+        return set_frequency(cfg.freq, cfg.trim);
+    }
+
+    [[nodiscard]] IResult<> reset();
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
@@ -40,14 +48,6 @@ public:
 
     [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
 
-    [[nodiscard]] IResult<> init(const Config & cfg){
-        return init() | reconf(cfg);
-    }
-    [[nodiscard]] IResult<> reconf(const Config & cfg){
-        return set_frequency(cfg.freq, cfg.trim);
-    }
-
-    [[nodiscard]] IResult<> reset();
 
 
 
@@ -102,12 +102,6 @@ public:
         void set_duty(const real_t duty){
             pca_.set_pwm(channel_, 0, uint16_t(duty << 12)).unwrap();
         }
-
-        // [[nodiscard]]
-        // __fast_inline IResult<> set_duty(const real_t duty) {
-        //     return pca_.set_pwm(channel_, 0, uint16_t(duty << 12));
-        // }
-
         __fast_inline void set() {this->set_duty(real_t(1));}
         __fast_inline void clr() {this->set_duty(real_t(0));}
         __fast_inline void write(const BoolLevel val){

@@ -4,182 +4,17 @@
 
 #include "core/utils/Result.hpp"
 
-#include "details/LT8960L_Phy.hpp"
+#include "details/LT8960L_prelude.hpp"
 #include "details/LT8960L_Regs.hpp"
 
 namespace ymd::drivers{
 
-class LT8960L final{
+class LT8960L final:public details::LT8960L_Prelude{
 public:
-    static constexpr auto DEFAULT_I2C_ADDR = LT8960L_Phy::DEFAULT_I2C_ADDR;
-    static constexpr auto MAX_RX_RETRY = 2;
 
     using Error = LT8960L_Phy::Error;
 
     using Regs = _LT8960L_Regs;
-
-    using RegAddress = Regs::RegAddress;
-    using PacketType = Regs::PacketType;
-    using Power = Regs::Power;
-    using TrailerBits = Regs::TrailerBits;
-
-    using SyncWordBits = Regs::SyncWordBits;
-    using PreambleBits = Regs::PreambleBits;
-    using BrclkSel = Regs::BrclkSel;
-    using DataRate = Regs::DataRate;
-    using Mode = Regs::Mode;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    struct States{
-    public:
-        enum Kind : uint8_t{
-            Idle,
-
-            Transmitting,
-            TransmitFailed,
-            TransmitSucceed,
-
-            Receiving,
-            ReceiveFailed,
-            ReceiveSucceed,
-
-            Sleeping,
-            PowerDown
-        };
-
-        
-    private:
-        Kind status_ = Kind::Idle;
-
-        uint8_t timeout_ = 0;
-    public:
-
-        States & operator = (const Kind status) {
-            transition_to(status);
-            return *this;
-        }
-
-        auto kind() const {return status_;}
-
-        auto & timeout() {return timeout_;}
-        void transition_to(const Kind status);
-    };
-
-    class Channel{
-    public:
-        constexpr explicit Channel (const uint8_t ch):ch_(ch){;}
-
-        constexpr Channel (const Channel & other) = default;
-        constexpr Channel (Channel && other) = default;
-        constexpr Channel & operator = (const Channel & other) = default;
-        constexpr Channel & operator = (Channel && other) = default;
-
-        constexpr auto as_u8() const {
-            return ch_;
-        }
-    private:    
-        uint8_t ch_;
-    };
-
-
-protected:
-    Regs regs_ = {};
-    States states_ = {};
-
-    LT8960L_Phy phy_;
-
-    bool use_hw_pkt_ = false;//使能通过监听引脚判断数据是否发送完成
-
-    DataRate datarate_;
-    bool on_ble_ = false;
-
-    Channel curr_channel_ = Channel(0);
-
-    [[nodiscard]] __fast_inline
-    IResult<> write_reg(const RegAddress address, const uint16_t reg){
-        return phy_.write_reg(address, reg);
-    }
-
-
-    [[nodiscard]] __fast_inline
-    IResult<> read_reg(const RegAddress address, uint16_t & reg){
-        return phy_.read_reg(address, reg);
-    }
-
-
-    template<typename ... Ts>
-    [[nodiscard]] __fast_inline
-    IResult<> write_regs(Ts const & ... reg) {
-        return (phy_.write_reg(reg.address, reg.as_val()) | ...);
-    }
-
-    template<typename ... Ts>
-    [[nodiscard]] __fast_inline
-    IResult<> read_regs(Ts & ... reg) {
-        return (phy_.read_reg(reg.address, reg.as_ref()) | ...);
-    }
-
-    template<typename T>
-    [[nodiscard]] __fast_inline
-    IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg.as_ref());
-    }
-
-
-    [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
-        return phy_.write_burst(Regs::R16_Fifo::address, buf);
-    }
-
-    [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);
-
-    [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
-
-    [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
-
-    [[nodiscard]] IResult<> enable_analog(Enable en = EN);
-
-    [[nodiscard]] IResult<> change_carrier(const Channel ch);
-
-    [[nodiscard]] IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
-    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
-
-    [[nodiscard]] IResult<> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
-    [[nodiscard]] IResult<> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
-    [[nodiscard]] IResult<> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
-
-    
-
-    [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();
-
-    [[nodiscard]] IResult<> ensure_correct_0x08();
-
-    [[nodiscard]] IResult<> begin_receive();
-
-    [[nodiscard]] IResult<> begin_transmit();
-
-    [[nodiscard]] IResult<> start_listen_pkt();
-
-    [[nodiscard]] IResult<> set_radio_mode(const bool isRx);
-
-    [[nodiscard]] IResult<> set_brclk_sel(const BrclkSel brclkSel);
-
-    [[nodiscard]] IResult<> clear_fifo_write_ptr();
-
-    [[nodiscard]] IResult<> clear_fifo_read_ptr();
-
-    [[nodiscard]] IResult<bool> is_rfsynth_locked();
-
-    [[nodiscard]] IResult<> set_fifo_full_threshold(const size_t thd);
-
-    [[nodiscard]] IResult<> set_fifo_empty_threshold(const size_t thd);
-
-
-
-    
 public:
 
     LT8960L(hal::Gpio & scl, hal::Gpio & sda):
@@ -261,6 +96,98 @@ public:
     [[nodiscard]] IResult<> on_interrupt();
 
     [[nodiscard]] IResult<> set_syncword_tolerance_bits(const size_t bits);
+
+private:
+
+    Regs regs_ = {};
+    States states_ = {};
+
+    LT8960L_Phy phy_;
+
+    bool use_hw_pkt_ = false;//使能通过监听引脚判断数据是否发送完成
+
+    DataRate datarate_;
+    bool on_ble_ = false;
+
+    Channel curr_channel_ = Channel(0);
+
+    [[nodiscard]] __fast_inline
+    IResult<> write_reg(const RegAddress address, const uint16_t reg){
+        return phy_.write_reg(address, reg);
+    }
+
+
+    [[nodiscard]] __fast_inline
+    IResult<> read_reg(const RegAddress address, uint16_t & reg){
+        return phy_.read_reg(address, reg);
+    }
+
+
+    template<typename ... Ts>
+    [[nodiscard]] __fast_inline
+    IResult<> write_regs(Ts const & ... reg) {
+        return (phy_.write_reg(reg.address, reg.as_val()) | ...);
+    }
+
+    template<typename ... Ts>
+    [[nodiscard]] __fast_inline
+    IResult<> read_regs(Ts & ... reg) {
+        return (phy_.read_reg(reg.address, reg.as_ref()) | ...);
+    }
+
+    template<typename T>
+    [[nodiscard]] __fast_inline
+    IResult<> read_reg(T & reg){
+        return phy_.read_reg(reg.address, reg.as_ref());
+    }
+
+
+    [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
+        return phy_.write_burst(Regs::R16_Fifo::address, buf);
+    }
+
+    [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);
+
+    [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
+
+    [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
+
+    [[nodiscard]] IResult<> enable_analog(Enable en = EN);
+
+    [[nodiscard]] IResult<> change_carrier(const Channel ch);
+
+    [[nodiscard]] IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
+    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
+
+    [[nodiscard]] IResult<> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
+    [[nodiscard]] IResult<> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
+    [[nodiscard]] IResult<> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
+
+    [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();
+
+    [[nodiscard]] IResult<> ensure_correct_0x08();
+
+    [[nodiscard]] IResult<> begin_receive();
+
+    [[nodiscard]] IResult<> begin_transmit();
+
+    [[nodiscard]] IResult<> start_listen_pkt();
+
+    [[nodiscard]] IResult<> set_radio_mode(const bool isRx);
+
+    [[nodiscard]] IResult<> set_brclk_sel(const BrclkSel brclkSel);
+
+    [[nodiscard]] IResult<> clear_fifo_write_ptr();
+
+    [[nodiscard]] IResult<> clear_fifo_read_ptr();
+
+    [[nodiscard]] IResult<bool> is_rfsynth_locked();
+
+    [[nodiscard]] IResult<> set_fifo_full_threshold(const size_t thd);
+
+    [[nodiscard]] IResult<> set_fifo_empty_threshold(const size_t thd);
 };
 
 }

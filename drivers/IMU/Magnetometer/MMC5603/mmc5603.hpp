@@ -17,7 +17,6 @@ struct MMC5603_Prelude{
     
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
 
-
     enum class DataRate:uint8_t{
         _75,
         _150,
