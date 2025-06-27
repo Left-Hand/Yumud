@@ -1,6 +1,6 @@
 #include "Critical.hpp"
 
-#ifdef RISCV
+#ifdef __riscv
 
 bool __get_PRIMASK(void) {
     uint32_t mstatus = __get_MSTATUS();
@@ -18,13 +18,3 @@ void __set_PRIMASK(bool mask) {
 #elif defined(ARM)
 
 #endif
-
-
-// #ifdef ENABLE_IRQ_COUNTER
-// extern uint32_t irq_counters[];
-// #define COUNT_IRQ(irqn) (++irq_counters[irqn + 14])
-// #define GET_IRQ_COUNTER(irqn) irq_counters[irqn + 14]
-// #else
-// #define COUNT_IRQ(irqn) ((void)0)
-// #define GET_IRQ_COUNTER(irqn) 0
-// #endif

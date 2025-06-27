@@ -5,17 +5,12 @@
 
 namespace ymd::foc{
 
-class GradeCounter{
+struct GradeCounter{
 public:
     struct Config{
         uint step;
         uint threshold;
     };
-private:
-    uint step_;
-    uint threshold_;
-    uint grades_;
-public:
     GradeCounter(const Config & config):
         step_(config.step),
         threshold_(config.threshold),
@@ -42,7 +37,11 @@ public:
     __fast_inline auto grades() const{
         return grades_;
     }
+
+private:
+    uint step_;
+    uint threshold_;
+    uint grades_;
 };
 
-        
 }

@@ -24,7 +24,6 @@ struct CriticalSectionContext {
     CriticalSectionContext(const CriticalSectionContext&&) = delete;
     void operator=(const CriticalSectionContext&) = delete;
     void operator=(const CriticalSectionContext&&) = delete;
-    operator bool() { return true; };
     CriticalSectionContext() : mask_(cpu_enter_critical()) {}
     ~CriticalSectionContext() { cpu_exit_critical(mask_); }
     uint32_t mask_;
@@ -32,4 +31,4 @@ struct CriticalSectionContext {
 };
 
 
-#define CRITICAL_SECTION() if (CriticalSectionContext __critical_section_context{})
+#define CRITICAL_SECTION() if (CriticalSectionContext __critical_section_context{}; true)

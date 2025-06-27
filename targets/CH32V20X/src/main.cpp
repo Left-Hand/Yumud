@@ -5,10 +5,6 @@
 #include "core/debug/debug.hpp"
 
 #include "testbench/tb.h"
-#include "app/gui/gui.hpp"
-#include "app/gxmatch/gxmatch.hpp"
-#include "app/eyetrack/etk.hpp"
-#include "app/digiPW/digipw.hpp"
 
 
 int main(){
