@@ -41,7 +41,7 @@ public:
         switch(kind_){
             case X: return 'X';
             case O: return 'O';
-            default: sys::abort();
+            default: __builtin_unreachable();
         }
     }
 
@@ -69,27 +69,27 @@ private:
     Kind kind_;
 };
 
-class Chess{
+class ChessCell{
 public:
-    Chess() = delete;
+    ChessCell() = delete;
 
     [[nodiscard]]
-    constexpr Chess(const Role kind) : data_(Some(kind)){;}
+    constexpr ChessCell(const Role kind) : data_(Some(kind)){;}
 
     [[nodiscard]]
-    constexpr Chess(const _None_t) : data_(None){;}
+    constexpr ChessCell(const _None_t) : data_(None){;}
 
     [[nodiscard]]
-    static constexpr Chess O() {return Chess(Role::O);}
+    static constexpr ChessCell O() {return ChessCell(Role::O);}
 
     [[nodiscard]]
-    static constexpr Chess X() {return Chess(Role::X);}
+    static constexpr ChessCell X() {return ChessCell(Role::X);}
 
     [[nodiscard]]
-    static constexpr Chess N() {return Chess(None);}
+    static constexpr ChessCell N() {return ChessCell(None);}
 
     [[nodiscard]]
-    static constexpr Option<Chess> from_char(const char chr){
+    static constexpr Option<ChessCell> from_char(const char chr){
         switch(chr){
             case 'X': return Some(X());
             case 'O': return Some(O());
@@ -140,7 +140,7 @@ private:
 class ChessBoard{
 public:
     static constexpr size_t WIDTH = 3;
-    using Row = std::array<Chess, WIDTH>;
+    using Row = std::array<ChessCell, WIDTH>;
     using Data = std::array<Row, WIDTH>;
 
     [[nodiscard]]
@@ -157,11 +157,11 @@ public:
     static constexpr Option<ChessBoard> from_str(const char * str){
         if(strlen(str) != WIDTH * WIDTH) sys::abort();
         auto build_row = [str](size_t row_index) constexpr -> Option<Row> {
-            const auto c0_opt = Chess::from_char(str[row_index * WIDTH + 0]);
+            const auto c0_opt = ChessCell::from_char(str[row_index * WIDTH + 0]);
             if(c0_opt.is_none()) return None;
-            const auto c1_opt = Chess::from_char(str[row_index * WIDTH + 1]);
+            const auto c1_opt = ChessCell::from_char(str[row_index * WIDTH + 1]);
             if(c1_opt.is_none()) return None;
-            const auto c2_opt = Chess::from_char(str[row_index * WIDTH + 2]);
+            const auto c2_opt = ChessCell::from_char(str[row_index * WIDTH + 2]);
             if(c2_opt.is_none()) return None;
 
             return Some(Row{
@@ -209,17 +209,17 @@ public:
     [[nodiscard]] 
     constexpr ChessBoard remove_chess(const Vector2u pos) const {
         if(this->at({pos.x, pos.y}) == None) sys::abort();
-        return modify(pos, Chess::N());
+        return modify(pos, ChessCell::N());
     }
 
     [[nodiscard]] 
     constexpr ChessBoard add_chess(const Vector2u pos, const Role role) const {
         if(this->at({pos.x, pos.y}) != None) sys::abort();
-        return modify(pos, role == Role::X ? Chess::X() : Chess::O());
+        return modify(pos, role == Role::X ? ChessCell::X() : ChessCell::O());
     }
 
     [[nodiscard]]
-    constexpr ChessBoard modify(const Vector2u pos, const Chess chess) const {
+    constexpr ChessBoard modify(const Vector2u pos, const ChessCell chess) const {
 
         if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         auto data = data_;
@@ -229,9 +229,9 @@ public:
 
 private:
     Data data_ = {
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}},
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}},
-        std::array<Chess, WIDTH>{Chess{None}, Chess{None}, Chess{None}}
+        std::array<ChessCell, WIDTH>{ChessCell{None}, ChessCell{None}, ChessCell{None}},
+        std::array<ChessCell, WIDTH>{ChessCell{None}, ChessCell{None}, ChessCell{None}},
+        std::array<ChessCell, WIDTH>{ChessCell{None}, ChessCell{None}, ChessCell{None}}
     };
 
     static constexpr auto DATA_SIZE = sizeof(Data);

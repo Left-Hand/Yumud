@@ -215,7 +215,6 @@ public:
         return calibrate_magfield(std::span(data_));
     }
 
-    
     template<typename T>
     static constexpr T reduce_span(const std::span<const T> data){
             return std::accumulate(data.begin(), data.end(), 0);
@@ -299,7 +298,6 @@ static void mmc5983_test(drivers::MMC5983 & imu){
     std::tie(mean, soft_iron) = calibrator.get_result();
     // DEBUG_PRINTLN(mean, soft_iron);
     PANIC(mean, soft_iron);
-    while(true);
     for(const auto & mag : calibrator.data()){
         DEBUG_PRINTLN(mag);
         clock::delay(1ms);
@@ -311,7 +309,6 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 
         DEBUG_PRINTLN((mag - mean) * soft_iron);
     }
-    while(true);
     // imu.set_mode(MMC5983::Mode::Cont4).unwrap();
     // DEBUG_PRINTLN("app started");
 

@@ -31,19 +31,19 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/string/StringView.hpp"
-#include "core/math/real.hpp"
+#include "core/stream/ostream.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "drivers/HID/Event.hpp"
 
+#include "core/magic/enum_traits.hpp"
+
 namespace ymd::drivers{
 
 
-
-namespace details{
 // TM1637 常用基础工具
 struct _TM1637_Prelude{
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         KeyFormatWrong,
         DisplayLengthTooLong,
         IndexOutOfRange,
@@ -52,6 +52,7 @@ struct _TM1637_Prelude{
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -207,11 +208,10 @@ private:
     std::array<T, N> buf_;
 };
 
-}
 
 //TM1637 物理层接口
 //由于TM1637使用了另类的I2C接口 故特化
-class TM1637_Phy final:public details::_TM1637_Prelude{
+class TM1637_Phy final:public _TM1637_Prelude{
 public:
     TM1637_Phy(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
         scl_gpio_(scl_gpio),
@@ -235,7 +235,7 @@ private:
 };
 
 //TM1637本体
-class TM1637 final:public details::_TM1637_Prelude{
+class TM1637 final:public _TM1637_Prelude{
 public:
     using Phy = TM1637_Phy;
 
@@ -260,7 +260,7 @@ public:
     IResult<> set_display_duty(const real_t duty);
     
 private:
-    using Buf = details::DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
+    using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
 
     Phy phy_;
     Buf buf_;
