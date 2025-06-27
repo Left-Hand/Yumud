@@ -56,7 +56,7 @@ void WS2812_Phy::init(){
     gpio_.outpp();
 }
 
-void WS2812::_update(const Color &color){
+void WS2812::_update(const Color<real_t> &color){
     uint8_t g = uint8_t(CLAMP(int(color.g * color.a * 256), 0, 255));
     uint8_t r = uint8_t(CLAMP(int(color.r * color.a * 256), 0, 255));
     uint8_t b = uint8_t(CLAMP(int(color.b * color.a * 256), 0, 255));

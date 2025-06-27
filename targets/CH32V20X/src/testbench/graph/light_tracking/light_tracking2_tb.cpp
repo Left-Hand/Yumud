@@ -465,17 +465,17 @@ void light_tracking_main(void){
         displayer.setarea_unsafe({0,0, LCD_W, LCD_H}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
-            // row.fill(RGB565(Color_t<real_t>(0,int(y==0),0,0)));
+            // row.fill(RGB565(Color<real_t>(0,int(y==0),0,0)));
             // row[0] = 
             for(size_t x = 0; x < row.size(); x++){
                 auto & item = row[x];
 
-                // constexpr auto c = Color_t<real_t>(1,1,0,0);
+                // constexpr auto c = Color<real_t>(1,1,0,0);
                 // constexpr auto r8 = RGB888(c);
                 // // constexpr auto r = RGB565(c); 
                 // constexpr auto r = RGB565(r8); 
 
-                // item = RGB565(Color_t<real_t>(real_t(y) / LCD_H, st, 0));
+                // item = RGB565(Color<real_t>(real_t(y) / LCD_H, st, 0));
                 // item = RGB565::from_u16(0x003f);
                 // item = RGB565::from_u16(0xff00);
                 // item = RGB565::from_565(y, x, uint8_t(31 * st));
