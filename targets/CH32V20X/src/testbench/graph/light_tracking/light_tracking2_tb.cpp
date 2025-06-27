@@ -166,7 +166,7 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<co
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat_t<real_t> & rotation){
+static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat<real_t> & rotation){
     const auto wi_z = rotation.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
@@ -182,7 +182,7 @@ static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<rea
 }
 
 [[nodiscard]] __pure
-static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & rotation)
+static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat<real_t> & rotation)
 {
     const auto [u0, u1] = rand01_2();
 
@@ -203,7 +203,7 @@ static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> &
 }
 
 [[nodiscard]]
-static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat_t<real_t> & rotation, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat<real_t> & rotation, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
     const auto [u0, u1] = rand01_2();
 
     const auto light_idx = u0 < 0.5_r ? 0 : 1;
@@ -248,10 +248,10 @@ static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & 
 }
 
 // ���ɴ�Ĭ��Z��(0,0,1)��ת�����߷������Ԫ��
-static Quat_t<real_t> quat_from_normal(const Vector3<real_t>& normal)
+static Quat<real_t> quat_from_normal(const Vector3<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
-    return Quat_t<real_t>(
+    return Quat<real_t>(
         -normal.y,
         normal.x,
         0,

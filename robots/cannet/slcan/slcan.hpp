@@ -39,6 +39,8 @@ private:
     IResult<> on_recv_open(const StringView str);
 
     IResult<> on_recv_close(const StringView str);
+
+
 private:
     AsciiCanPhy & phy_;
 };

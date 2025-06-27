@@ -60,12 +60,12 @@ IResult<> CyberGear::init(){
     return Ok{};
 }
 
-IResult<> CyberGear::requestMcuId(){
+IResult<> CyberGear::request_mcu_id(){
     const auto id = CgId::from(CyberGear_Command::GET_DEVICE_ID, host_id_, node_id_).id;
     return this->transmit(id, 0, 0);
 }
 
-IResult<> CyberGear::ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd){
+IResult<> CyberGear::ctrl(const MitParams & params){
 
     struct Payload{
         uint64_t data;
@@ -78,28 +78,29 @@ IResult<> CyberGear::ctrl(const real_t cmd_torque, const real_t cmd_rad, const r
     Payload payload = {0};
 
     {
-        const auto res = CmdTorque::check(cmd_torque) 
-            | CmdRad::check(cmd_rad) 
-            | CmdOmega::check(cmd_omega) 
-            | CmdKp::check(cmd_kp) 
-            | CmdKd::check(cmd_kd) 
+        const auto res = CmdTorque::check(params.torque) 
+            | CmdRad::check(params.rad) 
+            | CmdOmega::check(params.omega) 
+            | CmdKp::check(params.kp) 
+            | CmdKd::check(params.kd) 
         ;
 
         if(res) return Err(CyberGear_Error::INPUT_OUT_OF_RANGE);
     }
 
-    payload.cmd_rad() = CmdRad(cmd_rad);
-    payload.cmd_omega() = CmdOmega(cmd_omega);
-    payload.cmd_kd() = CmdKd(cmd_kd);
-    payload.cmd_kp() = CmdKp(cmd_kp);
+    payload.cmd_rad() = CmdRad(params.rad);
+    payload.cmd_omega() = CmdOmega(params.omega);
+    payload.cmd_kd() = CmdKd(params.kd);
+    payload.cmd_kp() = CmdKp(params.kp);
 
     return this->transmit(
-        CgId::from(CyberGear_Command::SEND_CTRL1, CmdTorque(cmd_torque).data, node_id_).id,
+        CgId::from(CyberGear_Command::SEND_CTRL1, 
+        CmdTorque(params.torque).data, node_id_).id,
         payload.data, sizeof(payload)
     );
 }
 
-IResult<> CyberGear::onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
+IResult<> CyberGear::on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc){
     if (dlc != 8){
         return Err(CyberGear_Error::RET_DLC_SHORTER);
     }
@@ -108,13 +109,13 @@ IResult<> CyberGear::onMcuIdFeedBack(const uint32_t id, const uint64_t data, con
     return Ok();
 }
 
-IResult<> CyberGear::onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc){
+IResult<> CyberGear::on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc){
     struct Payload{
         uint64_t data;
-        auto rad() {return make_bitfield<0, 16, CmdRad>(data);}
-        auto omega() {return make_bitfield<16, 32, CmdOmega>(data);}
-        auto torque() {return make_bitfield<32, 48, CmdTorque>(data);}
-        auto temperature() {return make_bitfield<48, 64, Temperature>(data);}
+        auto rad() {            return make_bitfield<0, 16, CmdRad>(data);}
+        auto omega() {          return make_bitfield<16, 32, CmdOmega>(data);}
+        auto torque() {         return make_bitfield<32, 48, CmdTorque>(data);}
+        auto temperature() {    return make_bitfield<48, 64, Temperature>(data);}
     };
 
 
@@ -150,7 +151,7 @@ IResult<> CyberGear::enable(const Enable en, const bool clear_fault){
 }
 
 
-IResult<> CyberGear::setCurrentAsMachineHome(){
+IResult<> CyberGear::set_current_as_machine_home(){
     return this->transmit(
         CgId::from(CyberGear_Command::SET_MACHINE_HOME, host_id_, node_id_).id, 1, 0);
 }
@@ -161,35 +162,41 @@ IResult<> CyberGear::transmit(const CanMsg & msg){
     return Ok{};
 }
 
-IResult<> CyberGear::changeCanId(const uint8_t can_id){
+IResult<> CyberGear::change_can_id(const uint8_t can_id){
     node_id_ = can_id;
     return this->transmit(
         CgId::from(CyberGear_Command::SET_CAN_ID, host_id_, node_id_).id,
             0, 0);
 }
 
-IResult<> CyberGear::requestReadPara(const uint16_t idx){
+IResult<> CyberGear::request_read_para(const uint16_t idx){
     return this->transmit(
         CgId::from(CyberGear_Command::READ_PARA, host_id_, node_id_).id, 
             uint64_t(idx), 8);
 }
 
-IResult<> CyberGear::requestWritePara(const uint16_t idx, const uint32_t data){
+IResult<> CyberGear::request_write_para(const uint16_t idx, const uint32_t data){
     return this->transmit(
         CgId::from(CyberGear_Command::WRITE_PARA, host_id_, node_id_).id, 
-            uint64_t(idx) | (uint64_t(data) << 32), 8);
+        uint64_t(idx) | (uint64_t(data) << 32), 
+        8
+    );
 }
 
 IResult<> CyberGear::transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc){
     if (dlc > 8) 
         return Err(CyberGear_Error::RET_DLC_LONGER);
 
-    const auto msg = CanMsg::from_regs(id, payload, dlc);
+    const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
+    const auto msg = CanMsg::from_bytes(
+        hal::CanStdId(id), 
+        std::span(buf.data(), dlc)
+    );
     return this->transmit(msg);
 }
 
-IResult<> CyberGear::onReceive(const CanMsg & msg){
-    const auto id = msg.id();
+IResult<> CyberGear::on_receive(const CanMsg & msg){
+    const auto id = msg.stdid().unwrap().as_raw();
     const auto cgid = CgId{id};
     const auto cmd = cgid.cmd().as_val();
 
@@ -198,9 +205,9 @@ IResult<> CyberGear::onReceive(const CanMsg & msg){
 
     switch(cmd){
         case CyberGear_Command::GET_DEVICE_ID:
-            return onMcuIdFeedBack(id, data, dlc);
+            return on_mcu_id_feed_back(id, data, dlc);
         case CyberGear_Command::FBK_CTRL1:
-            return onReadParaFeedBack(id, data, dlc);
+            return on_read_para_feed_back(id, data, dlc);
         case CyberGear_Command::READ_PARA:
             return Err{CyberGear_Error::PRAGRAM_TODO};
             break;

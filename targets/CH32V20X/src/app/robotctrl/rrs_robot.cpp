@@ -39,13 +39,6 @@ static constexpr uint SERVO_FREQ = 50;
 #endif
 
 
-struct ImpureWorldRefs{
-    RadianServoIntf & servo_a;
-    RadianServoIntf & servo_b;
-    RadianServoIntf & servo_c;
-};
-
-
 class MockRadianServo final:public RadianServoIntf{
 protected:
     real_t current_radian_;
@@ -59,23 +52,7 @@ public:
 };
 
 
-class ImpureWorld{
-public:
-    ImpureWorld(const ImpureWorldRefs refs):  
-        refs_(refs){;}
-
-    void set_radian(const std::array<real_t, 3> rads){
-        refs_.servo_a.set_radian(rads[0]);
-        refs_.servo_b.set_radian(rads[1]);
-        refs_.servo_c.set_radian(rads[2]);
-    }
-private:
-    using Refs = ImpureWorldRefs;
-
-    Refs refs_;
-};
-
-class HardwareFactory{
+class Environment{
 public:
     I2cSw i2c = {SCL_GPIO, SDA_GPIO};
     PCA9685 pca{i2c};
@@ -127,7 +104,7 @@ public:
     }
 };
 
-class RRS3_Robot{
+class RRS3_RobotActuator{
 public:
     using RRS3_Kinematics = typename ymd::robots::RRS_Kinematics<real_t>;
     using Gesture = typename RRS3_Kinematics::Gesture;
@@ -139,7 +116,7 @@ public:
     using IResult = RRS3_Kinematics::IResult<T>;
 
     template<typename SetterFn>
-    RRS3_Robot(
+    RRS3_RobotActuator(
         const Config & cfg, 
         SetterFn && servo_setter_fn
     ): 
@@ -149,7 +126,7 @@ public:
     void set_gest(const real_t yaw, const real_t pitch, const real_t height){
 
         const Gesture gest{
-            .orientation = Quat_t<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+            .orientation = Quat<real_t>::from_euler<EulerAnglePolicy::XYZ>({
                 .x = yaw, 
                 .y = pitch, 
                 .z = 0
@@ -159,8 +136,8 @@ public:
         };
 
         
-        if(const auto solu_opt = rrs3_kine_.inverse(gest); solu_opt.is_some()){
-            const auto solu = solu_opt.unwrap();
+        if(const auto may_solu = rrs3_kine_.inverse(gest); may_solu.is_some()){
+            const auto solu = may_solu.unwrap();
 
             const std::array<real_t, 3> r = {
                 solu[0].to_absolute().j1_abs_rad,
@@ -182,12 +159,12 @@ public:
         apply_radians_to_servos({0,0,0});
     }
 
-    auto make_rpc_node(const StringView name){
+    auto make_rpc_list(const StringView name){
         return rpc::make_list(
             name,
-            rpc::make_memfunc("gest",      this, &RRS3_Robot::set_gest),
-            rpc::make_memfunc("set_bias",  this, &RRS3_Robot::set_bias),
-            rpc::make_memfunc("go_idle",  this, &RRS3_Robot::go_idle)
+            rpc::make_memfunc("gest",      this, &RRS3_RobotActuator::set_gest),
+            rpc::make_memfunc("set_bias",  this, &RRS3_RobotActuator::set_bias),
+            rpc::make_memfunc("go_idle",  this, &RRS3_RobotActuator::go_idle)
         );
     }
 private:
@@ -218,7 +195,7 @@ enum class Shape {rectangle, circular};
 
 void rrs3_robot_main(){
 
-    using Config = typename RRS3_Robot::Config;
+    using Config = typename RRS3_RobotActuator::Config;
 
 
     constexpr const Config cfg{
@@ -228,14 +205,14 @@ void rrs3_robot_main(){
         .top_plate_radius = 0.08434_r
     };
 
-    HardwareFactory hw{};
-    hw.setup();
+    Environment env{};
+    env.setup();
 
-    auto & servo_a = hw.servo_a;
-    auto & servo_b = hw.servo_b;
-    auto & servo_c = hw.servo_c;
+    auto & servo_a = env.servo_a;
+    auto & servo_b = env.servo_b;
+    auto & servo_c = env.servo_c;
 
-    RRS3_Robot rrs3_robot{cfg, [&](real_t r1, real_t r2, real_t r3){
+    RRS3_RobotActuator rrs3_robot{cfg, [&](real_t r1, real_t r2, real_t r3){
         servo_a.set_radian(r1);
         servo_b.set_radian(r2);
         servo_c.set_radian(r3);
@@ -256,10 +233,10 @@ void rrs3_robot_main(){
         // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
         rpc::make_function("name", [&](){DEBUG_PRINTLN(
         );}),
-        rrs3_robot.make_rpc_node("rrs")
+        rrs3_robot.make_rpc_list("rrs")
     );
 
-    // auto list = rrs3_robot.make_rpc_node("rrs");
+    // auto list = rrs3_robot.make_rpc_list("rrs");
 
     auto ctrl = [&]{
         const auto t = clock::time();
@@ -274,7 +251,7 @@ void rrs3_robot_main(){
         // DEBUG_PRINTLN("wh");
     };
 
-    hw.ready();
+    env.ready();
     rrs3_robot.go_idle();
     
     while(true){

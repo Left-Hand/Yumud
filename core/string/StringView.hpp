@@ -60,7 +60,8 @@ public:
     template<size_t Q>
     operator iq_t<Q>() const{return StringUtils::atoq<Q>(this->data_, this->size_);}
     constexpr char operator [](const size_t index) const {return data_[index];}
-	__fast_inline constexpr StringView substr(size_t left) const {return substr_by_range(left, size_ - left);};
+	__fast_inline constexpr StringView substr(size_t left) const {
+        return substr_by_range(left, size_);};
 	__fast_inline constexpr StringView substr_by_range(size_t left, size_t right) const {
         if (unlikely(left > right)) std::swap(left, right);
         

@@ -7,16 +7,16 @@
 
 namespace ymd::drivers{
 
-struct TLE5012_Collections{
+struct TLE5012_Prelude{
 
 };
 
-struct TLE5012_Regs final: public TLE5012_Collections{
+struct TLE5012_Regs final: public TLE5012_Prelude{
 
 };
 
 
-class TLE5012_Phy final: public TLE5012_Collections{
+class TLE5012_Phy final: public TLE5012_Prelude{
 
 };
 

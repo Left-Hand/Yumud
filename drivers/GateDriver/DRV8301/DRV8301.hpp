@@ -14,7 +14,7 @@
 namespace ymd::drivers{
 
 
-struct DRV8301_Collections{
+struct DRV8301_Prelude{
     enum class Error_Kind:uint8_t{
 
     };
@@ -91,7 +91,7 @@ struct DRV8301_Collections{
     };
 };
 
-struct DRV8301_Regs:public DRV8301_Collections{
+struct DRV8301_Regs:public DRV8301_Prelude{
     struct Status1Reg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 

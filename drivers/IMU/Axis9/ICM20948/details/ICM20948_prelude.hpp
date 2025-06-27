@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-struct ICM20948_Collections{
+struct ICM20948_Prelude{
     using Error = ImuError;
 
     template<typename T = void>
@@ -219,7 +219,7 @@ struct ICM20948_Collections{
 
 };
 
-struct ICM20948_Regs:public ICM20948_Collections{
+struct ICM20948_Regs:public ICM20948_Prelude{
 
 };
 

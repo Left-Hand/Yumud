@@ -320,11 +320,11 @@ void Basis_t<T>::rotate(const Vector3<T> &p_euler) {
 	(*this) = rotated(p_euler);
 }
 template<arithmetic T>
-Basis_t<T> Basis_t<T>::rotated(const Quat_t<T> &p_quat) const {
+Basis_t<T> Basis_t<T>::rotated(const Quat<T> &p_quat) const {
 	return Basis_t<T>(p_quat) * ((*this));
 }
 template<arithmetic T>
-void Basis_t<T>::rotate(const Quat_t<T> &p_quat) {
+void Basis_t<T>::rotate(const Quat<T> &p_quat) {
 	(*this) = rotated(p_quat);
 }
 template<arithmetic T>
@@ -342,7 +342,7 @@ Vector3<T> Basis_t<T>::get_rotation_euler() const {
 	return m.get_euler();
 }
 template<arithmetic T>
-Quat_t<T> Basis_t<T>::get_rotation_quat() const {
+Quat<T> Basis_t<T>::get_rotation_quat() const {
 	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
 	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
 	// See the comment in get_scale() for further information.
@@ -729,7 +729,7 @@ bool Basis_t<T>::operator!=(const Basis_t<T> &p_matrix) const {
 	return (!((*this) == p_matrix));
 }
 template<arithmetic T>
-Quat_t<T> Basis_t<T>::get_quat() const {
+Quat<T> Basis_t<T>::get_quat() const {
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(!is_rotation(), Quat(), "Basis_t<T> must be normalized in order to be casted to a Quaternion. Use get_rotation_quat() or call orthonormalized() if the Basis_t<T> contains linearly independent vectors.");
 #endif
@@ -762,7 +762,7 @@ Quat_t<T> Basis_t<T>::get_quat() const {
 		temp[k] = (m*(*this)[k][i] + m*(*this)[i][k]) * s;
 	}
 
-	return Quat_t<T>(temp[0], temp[1], temp[2], temp[3]);
+	return Quat<T>(temp[0], temp[1], temp[2], temp[3]);
 }
 template<arithmetic T>
 static Basis_t<T> get_ortho_bases(const size_t index) {
@@ -915,7 +915,7 @@ void Basis_t<T>::get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
 }
 
 template<arithmetic T>
-void Basis_t<T>::set_quat(const Quat_t<T> &p_quat) {
+void Basis_t<T>::set_quat(const Quat<T> &p_quat) {
 	T d = p_quat.length_squared();
 	T s = static_cast<T>(2) / d;
 	T xs = p_quat.x * s, ys = p_quat.y * s, zs = p_quat.z * s;
@@ -968,7 +968,7 @@ void Basis_t<T>::set_euler_scale(const Vector3<T> &p_euler, const Vector3<T> &p_
 	rotate(p_euler);
 }
 template<arithmetic T>
-void Basis_t<T>::set_quat_scale(const Quat_t<T> &p_quat, const Vector3<T> &p_scale) {
+void Basis_t<T>::set_quat_scale(const Quat<T> &p_quat, const Vector3<T> &p_scale) {
 	set_diagonal(p_scale);
 	rotate(p_quat);
 }
@@ -990,8 +990,8 @@ void Basis_t<T>::set_diagonal(const Vector3<T> &p_diag) {
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::slerp(const Basis_t<T> &p_to, const T p_weight) const {
 	//consider scale
-	Quat_t<T> from((*this));
-	Quat_t<T> to(p_to);
+	Quat<T> from((*this));
+	Quat<T> to(p_to);
 
 	Basis_t<T> b(from.slerp(to, p_weight));
 	b*(*this)[0] *= lerp((*this)[0].length(), p_to*(*this)[0].length(), p_weight);

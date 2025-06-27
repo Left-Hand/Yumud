@@ -10,7 +10,6 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_intf.hpp"
-#include "drivers/HID/Event.hpp"
 
 namespace ymd::hal{
 class InterruptInput final{
@@ -39,7 +38,7 @@ private:
 }
 namespace ymd::drivers{
 
-struct HT16K33_Collections{
+struct HT16K33_Prelude{
 
     //  1 1 1 0 A2 A1 A0 0
     static constexpr auto DEFAULT_I2C_ADDR = 
@@ -203,9 +202,7 @@ struct HT16K33_Collections{
     };
 };
 
-
-
-struct HT16K33_Regs:public HT16K33_Collections{
+struct HT16K33_Regs:public HT16K33_Prelude{
     struct SetDataPtrCommand:public Reg8<>{
         uint8_t addr:4;
         const uint8_t __resv__:4 = 0b0000; 
@@ -305,7 +302,7 @@ struct HT16K33_Regs:public HT16K33_Collections{
     GcRam gc_ram_;
 };
 
-class HT16K33_Phy final:public HT16K33_Collections{
+class HT16K33_Phy final:public HT16K33_Prelude{
 public:
     HT16K33_Phy(
         const hal::I2cDrv i2c_drv, 
@@ -401,9 +398,7 @@ public:
 
     [[nodiscard]] IResult<> init(const Config & cfg);
 
-    // [[nodiscard]] IResult<> reconf(const Config & cfg);
-
-    [[nodiscard]] IResult<bool> any_key_pressed();
+    [[nodiscard]] IResult<bool> is_any_key_pressed();
     
     [[nodiscard]] IResult<> validate();
 
@@ -414,6 +409,8 @@ public:
     [[nodiscard]] IResult<> update_displayer(const GcRam & gc_ram){
         return update_displayer(0,gc_ram.as_bytes());
     }
+
+
     [[nodiscard]] IResult<> update_displayer(
         const size_t offset, std::span<const uint8_t> pbuf);
 
@@ -425,12 +422,6 @@ private:
     using Phy = HT16K33_Phy;
     Phy phy_;
     Package package_;
-
-    IResult<> set_display_bit(const size_t num, const bool value);
-
-    IResult<> set_display_byte(const size_t index, const uint8_t value);
-
-    IResult<> clear_display_content();
 
     IResult<> write_command(const Command cmd);
 

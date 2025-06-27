@@ -15,7 +15,7 @@
 #if 0
 namespace ymd::drivers{
 
-struct X25QXX_Collections:public StorageCollections{
+struct X25QXX_Prelude:public StorageCollections{
 
     enum class Command:uint8_t{
         WriteEnable = 0x06,
@@ -82,7 +82,7 @@ class X25QXX_Phy final:public StorageCollections{
     }
 };
 
-class X25QXX_Regs:public X25QXX_Collections{
+class X25QXX_Regs:public X25QXX_Prelude{
 
 };
 

@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct MT6701_Collections{
+struct MT6701_Prelude{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
     using Error = EncoderError;
     template<typename T = void>
@@ -46,7 +46,7 @@ struct MT6701_Collections{
 
 };
 
-class MT6701_Phy:public MT6701_Collections{
+class MT6701_Phy:public MT6701_Prelude{
 public:
     using RegAddress = MT6701_Phy::RegAddress;
 
@@ -98,7 +98,7 @@ private:
     std::optional<hal::SpiDrv> spi_drv_;
 };
 
-struct MT6701_Regs:public MT6701_Collections{
+struct MT6701_Regs:public MT6701_Prelude{
     struct R16_RawAngle : public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::RawAngle;
         uint16_t angle;

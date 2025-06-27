@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct FDC2X1X_Collections{
+struct FDC2X1X_Prelude{
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x54);
 
@@ -94,7 +94,7 @@ struct FDC2X1X_Collections{
 };
 
 
-struct FDC1X2X_Regs:public FDC2X1X_Collections{
+struct FDC1X2X_Regs:public FDC2X1X_Prelude{
 
     struct ConversionDataHighReg:public Reg16<>{
         scexpr RegAddress address =0x00;

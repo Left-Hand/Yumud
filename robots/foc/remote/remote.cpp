@@ -1,6 +1,7 @@
 #include "remote.hpp"
 #include "core/math/float/bf16.hpp"
 
+#if 0
 using namespace ymd;
 using namespace ymd::foc;
 
@@ -59,8 +60,11 @@ void RemoteFOCMotor::reset(){POST(Command::RST, uint16_t(0xff));}
 bool RemoteFOCMotor::isActive() const{return true;}
 volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
 
+#endif
+
+#if 0
 void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
-    Command cmd = (Command)(msg.id() & 0x7F);
+    Command cmd = Command(msg.id() & 0x7F);
     switch(cmd){
         case Command::GET_POS:
             meta.pos = (msg).to<E>();
@@ -86,3 +90,4 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
             break;
     }
 }
+#endif

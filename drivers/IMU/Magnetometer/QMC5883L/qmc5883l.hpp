@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-struct QMC5883L_Collections{
+struct QMC5883L_Prelude{
 
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1a);
 
@@ -39,7 +39,7 @@ struct QMC5883L_Collections{
     };
 };
 
-struct QMC5883L_Regs:public QMC5883L_Collections{
+struct QMC5883L_Regs:public QMC5883L_Prelude{
     enum class RegAddress:uint8_t{
         MagX = 0x00,
         MagY = 0x02,

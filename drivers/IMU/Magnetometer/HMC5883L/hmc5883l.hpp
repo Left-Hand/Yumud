@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct HMC5883L_Collections{
+struct HMC5883L_Prelude{
     using Error = ImuError;
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -33,7 +33,7 @@ struct HMC5883L_Collections{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x3d);
 };
 
-struct HMC5883L_Regs:public HMC5883L_Collections{
+struct HMC5883L_Regs:public HMC5883L_Prelude{
     enum class RegAddress:uint8_t{
         ConfigA = 0x00,
         ConfigB = 0x01,

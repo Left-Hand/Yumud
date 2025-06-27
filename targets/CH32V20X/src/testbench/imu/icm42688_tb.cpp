@@ -75,7 +75,7 @@ static void icm42688_tb(ICM42688 & imu){
         // const auto u1 = clock::micros();
         // const auto acc = imu.read_acc().unwrap();
         // const auto gyr = imu.read_gyr().unwrap();
-        // const auto gest = Quat_t<real_t>::from_shortest_arc(
+        // const auto gest = Quat<real_t>::from_shortest_arc(
         //     acc.normalized(),
         //     {0,0,1}
         // );

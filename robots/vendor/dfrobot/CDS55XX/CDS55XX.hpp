@@ -51,7 +51,7 @@ private:
     size_t size_ = 0;
 };
 
-struct CDS55XX_Collections {
+struct CDS55XX_Prelude {
     class Command{
     public:
         enum class Kind{
@@ -85,7 +85,7 @@ struct CDS55XX_Collections {
 
 };
 
-struct CDS55XX_Regs:public CDS55XX_Collections{
+struct CDS55XX_Regs:public CDS55XX_Prelude{
     using RegAddress = uint8_t;
 
     struct R8_SoftwareVersion:public Reg8<>{
@@ -105,7 +105,7 @@ struct CDS55XX_Regs:public CDS55XX_Collections{
 };
 
 
-struct CDS55XX_MetaUtils:public CDS55XX_Collections{
+struct CDS55XX_MetaUtils:public CDS55XX_Prelude{
 public:
 
     struct FrameFactory{
@@ -173,7 +173,7 @@ private:
     template<size_t N>
     static constexpr std::array<uint8_t, N + 5> assembly_payload(const ServoId id, std::span<const uint8_t, N> payload){
         VectorOnArray<uint8_t, N + 5> ret;
-        ret.insert(ret.begin(), CDS55XX_Collections::HEADER.begin(), CDS55XX_Collections::HEADER.end());
+        ret.insert(ret.begin(), CDS55XX_Prelude::HEADER.begin(), CDS55XX_Prelude::HEADER.end());
         ret.push_back(id.as_u8());
         const auto len = payload.size() + 1;
         ret.push_back(len);
@@ -314,7 +314,7 @@ private:
     // }
 };
 
-class CDS55XX_Phy:public CDS55XX_Collections{
+class CDS55XX_Phy:public CDS55XX_Prelude{
 
     template<typename T>
     struct OperWrapper{

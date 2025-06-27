@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct IST8310_Collections{
+struct IST8310_Prelude{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
     using RegAddress = uint8_t;
 
@@ -27,7 +27,7 @@ struct IST8310_Collections{
     
 };
 
-struct IST8310_Regs:public IST8310_Collections{
+struct IST8310_Regs:public IST8310_Prelude{
     struct R8_WhoAmI:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t expected_value = 0x10;

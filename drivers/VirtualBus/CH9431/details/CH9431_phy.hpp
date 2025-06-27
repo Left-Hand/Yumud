@@ -1,10 +1,10 @@
 #pragma once
 
-#include "CH9431_collections.hpp"
+#include "CH9431_Prelude.hpp"
 
 namespace ymd::drivers{
 
-class CH9431_Phy final:public CH9431_Collections {
+class CH9431_Phy final:public CH9431_Prelude {
 public:
     static constexpr uint8_t WRITE_CMD = 0x03;
     static constexpr uint8_t READ_CMD = 0x02;

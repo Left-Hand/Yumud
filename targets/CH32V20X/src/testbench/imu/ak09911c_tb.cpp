@@ -32,11 +32,11 @@ static void ak09911c_test(drivers::AK09911C & aku){
     aku.set_mode(AK09911C::Mode::Cont4).unwrap();
     DEBUG_PRINTLN("app started");
 
-    Quat_t<q24> gest;
+    Quat<q24> gest;
     auto measure = [&](){
         aku.update().unwrap();
         const auto dir = aku.read_mag().unwrap();
-        gest = gest.slerp(Quat_t<q24>::from_direction(dir), 0.05_r);
+        gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 
     timer1.init({ISR_FREQ});

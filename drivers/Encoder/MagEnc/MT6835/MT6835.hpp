@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-struct MT6835_Collections{
+struct MT6835_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -23,7 +23,7 @@ struct MT6835_Collections{
 
 };
 
-class MT6835_Regs:public MT6835_Collections{
+class MT6835_Regs:public MT6835_Prelude{
     struct UserIdReg:public Reg8<>{
         static constexpr RegAddress address = 0x001;
         uint8_t id:8;

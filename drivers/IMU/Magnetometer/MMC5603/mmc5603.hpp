@@ -9,14 +9,13 @@
 
 namespace ymd::drivers{
 
-struct MMC5603_Collections{
+struct MMC5603_Prelude{
 
     using Error = ImuError;
     template<typename T = void>
     using IResult = Result<T, Error>;
     
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
-
 
     enum class DataRate:uint8_t{
         _75,
@@ -35,7 +34,7 @@ struct MMC5603_Collections{
 };
 
 
-struct MMC5603_Regs:public MMC5603_Collections { 
+struct MMC5603_Regs:public MMC5603_Prelude { 
     using RegAddress = uint8_t;
 
     struct AxisReg:public Reg16<>{

@@ -6,6 +6,8 @@ using namespace ymd;
 using namespace ymd::foc;
 using namespace ymd::foc::MotorUtils;
 
+#if 0
+
 void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define EXECUTER_BIND(cmd, method, ...)\
     case cmd:\
@@ -36,7 +38,13 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         }\
         break;\
     
-    Command command = (Command)(msg.id() & 0x7F);
+    auto stdid = ({
+        const auto may_stdid = msg.stdid();
+        if(may_stdid.is_none()) PANIC();
+        may_stdid.unwrap();
+    });
+
+    Command command = Command(stdid.as_raw() & 0x7F);
     const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
 
     switch(command){
@@ -81,3 +89,5 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #undef SETTER_BIND_ONE
     #undef SETTER_BIND_VALUE_REAL
 }
+
+#endif

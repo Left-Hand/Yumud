@@ -3,57 +3,65 @@
 using namespace ymd;
 using namespace ymd::robots;
 
-void ZdtStepper::set_target_position(const real_t pos){
-    write_payload(Payloads::SetPosition{
+using Error = ZdtStepper::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> ZdtStepper::set_target_position(const real_t pos){
+    return write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
-        .rpm = Rpm::from(0.07_r),
-        .pulse_cnt = PulseCnt::from(ABS(pos)),
-        .is_absolute = false,
+        // .rpm = Rpm::from(0.07_r),
+        .rpm = Rpm::from_speed(1.07_r),
+        .acc_level = AcclerationLevel::from_raw(0),
+        .pulse_cnt = PulseCnt::from_position(ABS(pos)),
+        .is_absolute = true,
         .is_sync = is_sync_
     });
 }
 
-void ZdtStepper::set_target_speed(const real_t spd){
-    write_payload(Payloads::SetSpeed{
+IResult<> ZdtStepper::set_target_speed(const real_t spd){
+    return write_payload(Payloads::SetSpeed{
         .is_ccw = spd < 0,
-        .rpm = Rpm::from(ABS(spd)),
+        .rpm = Rpm::from_speed(ABS(spd)),
         .acc_level = AcclerationLevel::from(0),
         .is_absolute = false,
         .is_sync = is_sync_
-    });     
+    });
 }
 
-void ZdtStepper::brake(){
-    write_payload(Payloads::Brake{
+IResult<> ZdtStepper::brake(){
+    return write_payload(Payloads::Brake{
         .is_sync = is_sync_
     });
 }
 
-void ZdtStepper::set_subdivides(const uint16_t subdivides){
-    if(subdivides > 256) PANIC();
-    write_payload(Payloads::SetSubDivides{
+IResult<> ZdtStepper::set_subdivides(const uint16_t subdivides){
+    if(subdivides > 256) 
+        return Err(Error::SubDivideOverflow);
+    return write_payload(Payloads::SetSubDivides{
         .subdivides = uint8_t(subdivides & 0xff)
     });
 }
 
-void ZdtStepper::enable(const Enable en){
-    write_payload(Payloads::Actvation{
+IResult<> ZdtStepper::activate(const Enable en){
+    return write_payload(Payloads::Actvation{
         .en = en == EN,
         .is_sync = is_sync_
     });
 }
 
 
-void ZdtStepper::trigger_cali(){
-    write_payload(Payloads::TrigCali::from_default());  
+IResult<> ZdtStepper::trig_cali(){
+    return write_payload(Payloads::TrigCali::from_default());  
 }
 
-void ZdtStepper::query_homming_paraments(){
-    write_payload(Payloads::QueryHommingParaments{});
+IResult<> ZdtStepper::query_homming_paraments(){
+    return write_payload(Payloads::QueryHommingParaments{});
 }
 
-void ZdtStepper::trig_homming(const HommingMode mode){
-    write_payload(Payloads::TrigHomming{
+IResult<> ZdtStepper::trig_homming(const HommingMode mode){
+    return write_payload(Payloads::TrigHomming{
         .homming_mode = mode,
         .is_sync = is_sync_
     });
@@ -66,11 +74,12 @@ void ZdtMotorPhy::can_write_bytes(
     const std::span<const uint8_t> bytes
 ){
     auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
-
+    // DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
     while(true){
         const auto may_msg = iter.next();
         if(may_msg.is_none()) break;
-        can.write(may_msg.unwrap());
+        const auto & msg = may_msg.unwrap();
+        can.write(msg);
     }
 }
 
@@ -105,6 +114,6 @@ void ZdtMotorPhy::write_bytes(
             id, func_code, bytes
         );
     }else{
-        PANIC();
+        __builtin_unreachable();
     }
 }

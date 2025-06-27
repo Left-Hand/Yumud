@@ -112,30 +112,38 @@ public:
     CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
         can_drv_(can), host_id_(host_id), node_id_(node_id){;}
 
-    [[nodiscard]]CyberGear_Result<void> init();
+    [[nodiscard]] CyberGear_Result<> init();
 
-    [[nodiscard]] CyberGear_Result<void> transmit(const CanMsg & msg);
+    [[nodiscard]] CyberGear_Result<> transmit(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<void> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
 
-    [[nodiscard]] CyberGear_Result<void> requestMcuId();
+    [[nodiscard]] CyberGear_Result<> request_mcu_id();
 
-    [[nodiscard]] CyberGear_Result<void> ctrl(const real_t cmd_torque, const real_t cmd_rad, const real_t cmd_omega, const real_t cmd_kp, const real_t cmd_kd);
+    struct MitParams{
+        real_t torque;
+        real_t rad;
+        real_t omega; 
+        real_t kp; 
+        real_t kd;
+    };
+
+    [[nodiscard]] CyberGear_Result<> ctrl(const MitParams & params);
 
     
-    [[nodiscard]] CyberGear_Result<void> onReceive(const CanMsg & msg);
+    [[nodiscard]] CyberGear_Result<> on_receive(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<void> enable(const Enable en = EN, const bool clear_fault = true);
+    [[nodiscard]] CyberGear_Result<> enable(const Enable en = EN, const bool clear_fault = true);
 
-    [[nodiscard]] CyberGear_Result<void> setCurrentAsMachineHome();
+    [[nodiscard]] CyberGear_Result<> set_current_as_machine_home();
 
-    [[nodiscard]] CyberGear_Result<void> changeCanId(const uint8_t id);
+    [[nodiscard]] CyberGear_Result<> change_can_id(const uint8_t id);
 
-    [[nodiscard]] CyberGear_Result<void> requestReadPara(const uint16_t idx);
+    [[nodiscard]] CyberGear_Result<> request_read_para(const uint16_t idx);
 
-    [[nodiscard]] CyberGear_Result<void> requestWritePara(const uint16_t idx, const uint32_t data);
+    [[nodiscard]] CyberGear_Result<> request_write_para(const uint16_t idx, const uint32_t data);
 
-    [[nodiscard]] Option<uint64_t> getDeviceMcuId() const {return device_mcu_id_;}
+    [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
 
 private:
     hal::CanDrv can_drv_;
@@ -148,9 +156,9 @@ private:
 
     Feedback feedback_ = {};
 
-    [[nodiscard]] CyberGear_Result<void> onMcuIdFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CyberGear_Result<void> onCtrl2FeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CyberGear_Result<void> onReadParaFeedBack(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] CyberGear_Result<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
 };
 
 }

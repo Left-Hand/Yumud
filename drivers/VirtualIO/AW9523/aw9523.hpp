@@ -15,7 +15,7 @@
 
 
 namespace ymd::drivers{
-struct AW9523_Collections{
+struct AW9523_Prelude{
     enum class Error_Kind:uint8_t{
         WrongChipId,
         IndexOutOfRange
@@ -63,7 +63,7 @@ struct AW9523_Collections{
 
 };
 
-struct AW9523_Regs:public AW9523_Collections{
+struct AW9523_Regs:public AW9523_Prelude{
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
     static constexpr size_t MAX_CHANNELS = 16;
     

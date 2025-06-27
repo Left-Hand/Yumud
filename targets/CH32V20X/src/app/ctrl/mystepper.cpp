@@ -84,10 +84,6 @@ public:
         channel_a_.set_duty(duty_a);
         channel_b_.set_duty(duty_b);
     }
-
-    // static constexpr std::tuple<q16, q16> map_duty_to_pair(const q16 duty){
-
-    // }
 private:
 
     hal::TimerOcPair channel_a_;

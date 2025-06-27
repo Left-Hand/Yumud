@@ -13,7 +13,7 @@
 namespace ymd::drivers{ 
 
 
-struct NCA9555_Collections{
+struct NCA9555_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01000000);
 
     using RegAddress = uint8_t;
@@ -28,7 +28,7 @@ struct NCA9555_Collections{
     using IResult = Result<T, Error>;
 };
 
-struct NCA9555_Regs:public NCA9555_Collections{
+struct NCA9555_Regs:public NCA9555_Prelude{
     struct InputReg:public Reg16<>{
         static constexpr RegAddress address = 0x00;
         hal::PinMask mask;

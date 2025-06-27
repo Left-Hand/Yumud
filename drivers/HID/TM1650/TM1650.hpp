@@ -18,7 +18,7 @@
 
 namespace ymd::drivers{
 
-struct TM1650_Collections{
+struct TM1650_Prelude{
 
     enum class Error_Kind:uint8_t{
         I2cError,
@@ -33,7 +33,7 @@ struct TM1650_Collections{
 };
 
 
-class TM1650_Phy final:public TM1650_Collections{
+class TM1650_Phy final:public TM1650_Prelude{
 private:
     hal::I2cSw i2c_;
 public:
@@ -155,7 +155,7 @@ private:
     }
 };
 
-class TM1650 final:public TM1650_Collections{
+class TM1650 final:public TM1650_Prelude{
 public:
     using Error = TM1650_Phy::Error;
     using DisplayCommand = TM1650_Phy::DisplayCommand;

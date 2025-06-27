@@ -2,13 +2,14 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
-#include "core/string/string.hpp"
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/spi/spisw.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
-#include "hal/gpio/gpio_port.hpp"
+
+#include "core/string/StringView.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -64,14 +65,14 @@ void lt8920_main(){
     if(is_rx){
 
     }else{
-        auto src = String("Hello World!!!");
+        auto src = StringView("Hello World!!!");
         while(true){
             // lt.validate();
             // lt.setDataRate(LT8920::DataRate::Kbps125);
             // DEBUG_PRINTLN(lt.isRfSynthLocked());
 
             lt.write_block(std::span(
-                reinterpret_cast<const uint8_t *>(src.c_str()), 
+                reinterpret_cast<const uint8_t *>(src.data()), 
                 src.length())).examine();
             clock::delay(200ms);
             // DEBUG_PRINTLN(src, lt.receivedAck());

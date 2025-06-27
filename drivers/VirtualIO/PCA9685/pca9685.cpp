@@ -105,7 +105,6 @@ Result<void, Error> PCA9685::init(){
         PCA9685_PANIC("verify failed");
         return res;
     }
-    return Ok();
 
     clock::delay(1ms);
 
@@ -123,7 +122,10 @@ Result<void, Error> PCA9685::init(){
 
 Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
-    return write_reg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr_regs[index]);
+    return write_reg(
+        RegAddress(uint8_t(RegAddress::SubAddr) + index), 
+        sub_addr_regs[index]
+    );
 }
 
 Result<void, Error> PCA9685::reset(){

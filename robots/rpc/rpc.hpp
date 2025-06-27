@@ -81,7 +81,7 @@ public:
     constexpr size_t size() const {return end_ - offset_;}
 
     constexpr ParamFromString operator[](size_t idx) const{
-        if(idx >= size()) PANIC("idx out of range");
+        if(idx >= size()) __builtin_unreachable();
         return ParamFromString(provider_[offset_ + idx]);
     }
 private:
@@ -343,7 +343,8 @@ struct EntryList final{
         entries_(std::forward<Args>(entries)...) {
             const auto check_res = check_hash_collision(entries...);
             if(check_res.is_err()) 
-                PANIC("Hash collision detected", check_res.unwrap_err());
+                // PANIC("Hash collision detected", check_res.unwrap_err());
+                while(true);
         } 
 
 
@@ -495,5 +496,6 @@ AccessResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf&
 
 }
 
-
+#define DEF_RPC_MAKE_MEMFUNC(func)\
+    rpc::make_memfunc(#func, this, &std::decay_t<decltype(*this)>::func)
 

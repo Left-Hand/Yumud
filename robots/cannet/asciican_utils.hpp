@@ -3,12 +3,14 @@
 #include "core/string/String.hpp"
 #include "core/utils/Result.hpp"
 #include "hal/bus/can/can_msg.hpp"
+#include "hal/bus/can/can.hpp"
+#include "core/utils/Errno.hpp"
 
 #include <variant>
 
 namespace ymd::robots::asciican{
 
-enum class AsciiCanError{
+enum class AsciiCanError:uint8_t{
     NoInput,
     NoArg,
     InvalidPayloadLength,
@@ -23,14 +25,16 @@ enum class AsciiCanError{
     NotImplemented
 };
 
+
 class StringCutter{
 public:
     constexpr StringCutter(const StringView str): 
         str_(str){}
 
     constexpr StringView fetch_next(const size_t len){
-        const auto res = str_.substr_by_range(pos_, len);
-        pos_ += len;
+        const auto end = MIN(pos_ + len, str_.length());
+        const auto res = str_.substr_by_range(pos_, end);
+        pos_ = end;
         return res;
     }
 
@@ -58,7 +62,10 @@ public:
         static constexpr SendStr from_str(const StringView strv){
             SendStr ret;
             if(strv.size() > MAX_STR_LEN) sys::abort();
-            memcpy(ret.str, strv.data(), strv.size());
+
+            for(size_t i = 0; i < strv.size(); i++){
+                ret.str[i] = strv[i];
+            }
             return ret;
         }
     };
@@ -104,29 +111,20 @@ public:
         ErrorWaring,
     };
 public:
-    [[nodiscard]] IResult<> send_can_msg(const Msg && msg){
-        return Ok();
-    }
+    AsciiCanPhy(hal::Can & can):
+        can_(can){;}
 
-    [[nodiscard]] IResult<> send_str(const StringView str){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> send_can_msg(const Msg && msg);
 
-    [[nodiscard]] IResult<> set_stream_baud(const uint32_t baud){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> send_str(const StringView str);
 
-    [[nodiscard]] IResult<> set_can_baud(const uint32_t baud){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> set_stream_baud(const uint32_t baud);
 
-    [[nodiscard]] IResult<> open(){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> set_can_baud(const uint32_t baud);
 
-    [[nodiscard]] IResult<> close(){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> open();
+
+    [[nodiscard]] IResult<> close();
 
     [[nodiscard]] constexpr auto oper_send_can_msg(const Msg && msg){
         return Oper::SendCanMsg{msg};
@@ -151,5 +149,9 @@ public:
     [[nodiscard]] constexpr auto oper_close(){
         return Oper::Close{};
     }
+
+    FRIEND_DERIVE_DEBUG(AsciiCanError)
+
+    hal::Can & can_;
 };
 }    

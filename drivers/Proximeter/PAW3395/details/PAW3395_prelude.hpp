@@ -15,7 +15,7 @@
 namespace ymd::drivers{
 
 
-struct PAW3395_Collections{
+struct PAW3395_Prelude{
     /* PAW3395 Product ID value */
     static constexpr  uint8_t PAW3395_PRODUCT_ID = 0x51; /* Verify this value with datasheet */
 
@@ -392,7 +392,7 @@ struct PAW3395_Collections{
 
 
 };
-struct PAW3395_Regs:public PAW3395_Collections{
+struct PAW3395_Regs:public PAW3395_Prelude{
 
 };
 }

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/math/realmath.hpp"
-#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+#include "core/magic/enum_traits.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -10,7 +11,22 @@
 
 namespace ymd::robots{
 
-struct ZdtMotor_Collections{
+struct ZdtMotor_Prelude{
+    enum class Error:uint8_t{
+        SubDivideOverflow,
+        RxNoMsgToDump,
+        RxMsgIdTypeNotMatch,
+        RxMsgNodeIdNotTheSame,
+        RxMsgFuncCodeNotTheSame,
+        RxMsgPieceIsNotSteady,
+        RxMsgVerifyed,
+        RxMsgNoPayload
+    };
+
+    FRIEND_DERIVE_DEBUG(Error)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     struct NodeId{
         static constexpr NodeId from_u8(const uint8_t raw) {
@@ -90,8 +106,10 @@ struct ZdtMotor_Collections{
     };
 
     enum class HommingMode:uint8_t{
-        // 00表示触发单圈就近回零，01表示触发单圈方向回零，
-        // 02表示触发多圈无限位碰撞回零，03表示触发多圈有限位开关回零
+        // 00表示触发单圈就近回
+        // 01表示触发单圈方向回零
+        // 02表示触发多圈无限位碰撞回零
+        // 03表示触发多圈有限位开关回零
 
         LapNearest = 0x00,
         LapDirection = 0x01,
@@ -104,11 +122,11 @@ struct ZdtMotor_Collections{
     struct Bytes2CanMsgIterator{
         explicit constexpr Bytes2CanMsgIterator(
             const NodeId nodeid, 
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             const std::span<const uint8_t> payload
         ):
             nodeid_(nodeid),
-            func_code_(FUNC_CODE),
+            func_code_(func_code),
             payload_(payload){;}
 
 
@@ -124,35 +142,36 @@ struct ZdtMotor_Collections{
             const auto msg = make_canmsg(
                 nodeid_, func_code_, 
                 offset_ / CANMSG_PAYLOAD_MAX_LENGTH,
-                payload_.subspan(offset_, CANMSG_PAYLOAD_MAX_LENGTH)
+                payload_.subspan(offset_, msg_len)
             ); 
 
             offset_ += msg_len;
 
             return Some(msg);
         }
-
+    private:
         static constexpr hal::CanMsg make_canmsg(
             const NodeId nodeid,
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             const uint8_t piece_cnt,
             const std::span<const uint8_t> bytes
         ){
             auto buf = InlineBuf<8>{};
-            buf.append(std::bit_cast<uint8_t>(FUNC_CODE));
+            buf.append(std::bit_cast<uint8_t>(func_code));
             buf.append(bytes);
 
             return hal::CanMsg::from_bytes(
-                map_nodeid_and_piececnt_to_canstdid(nodeid, piece_cnt),
+                map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
                 buf.to_span()
             );
         }
 
-        static constexpr hal::CanStdId map_nodeid_and_piececnt_to_canstdid(
+        //固定为拓展帧
+        static constexpr hal::CanExtId map_nodeid_and_piececnt_to_canid(
             const NodeId nodeid, 
             const uint8_t piece
         ){
-            return hal::CanStdId::from_raw(
+            return hal::CanExtId::from_raw(
                 uint32_t(nodeid.to_u8() << 8) | 
                 (piece)
             );
@@ -166,10 +185,82 @@ struct ZdtMotor_Collections{
     };
 
 
+    struct CanMsg2BytesDumper{
+        struct DumpInfo{
+            NodeId nodeid;
+            FuncCode func_code;
+            InlineBuf<16> payload;
+        };
+
+        static constexpr IResult<DumpInfo> dump(
+            std::span<const hal::CanMsg> msgs
+        ) {
+            if(msgs.size() == 0)
+                return Err(Error::RxNoMsgToDump);
+            if(msgs[0].is_std())
+                return Err(Error::RxMsgIdTypeNotMatch);
+            
+            DumpInfo info;
+
+            info.nodeid = ({
+                const auto id = map_msg_to_nodeid(msgs[0]);
+                for(size_t i = 1; i < msgs.size(); i++){
+                    const auto next_id = map_msg_to_nodeid(msgs[i]);
+                    if(id != next_id) return Err(Error::RxMsgNodeIdNotTheSame);
+                }
+                NodeId::from_u8(id);
+            });
+
+            for(size_t i = 0; i < msgs.size(); i++){
+                const auto piece_cnt = map_msg_to_piececnt(msgs[i]);
+                if(i != piece_cnt) 
+                    return Err(Error::RxMsgPieceIsNotSteady);
+            }
+
+            info.func_code = ({
+                if(msgs[0].size() == 0) return Err(Error::RxMsgNoPayload);
+                const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].payload()[0]);
+                for(size_t i = 0; i < msgs.size(); i++){
+                    const auto & msg = msgs[i];
+                    if(msg.size() == 0) return Err(Error::RxMsgNoPayload);
+                    const auto func_code = std::bit_cast<FuncCode>(msg.payload()[0]);
+                    if(func_code != func_code0)
+                        return Err(Error::RxMsgFuncCodeNotTheSame);
+                }
+                func_code0;
+            });
+
+            for(size_t i = 0; i < msgs.size(); i++){
+                const auto & msg = msgs[i];
+                const auto msg_bytes = msg.payload()
+                    .subspan(1);
+                info.payload.append(msg_bytes);
+            }
+
+            //TODO add verify
+
+            return Ok(info);
+        }
+
+        static inline constexpr uint8_t map_msg_to_nodeid(
+            const hal::CanMsg & msg
+        ){
+            return msg.extid().unwrap().as_raw() >> 8;
+        }
+
+        static inline constexpr uint8_t map_msg_to_piececnt(
+            const hal::CanMsg & msg
+        ){
+            return msg.extid().unwrap().as_raw() & 0xff;
+        }
+
+    };
+
+
     struct VerifyUtils final{
         static constexpr uint8_t get_verify_code(
             const VerifyMethod method, 
-            const FuncCode FUNC_CODE,
+            const FuncCode func_code,
             std::span<const uint8_t> bytes 
         ){
             switch(method){
@@ -178,10 +269,11 @@ struct ZdtMotor_Collections{
                 case VerifyMethod::X6B:
                     return uint8_t{0x6b};
                 case VerifyMethod::XOR:
-                    return VerifyUtils::by_xor(FUNC_CODE, bytes);
+                    return VerifyUtils::by_xor(func_code, bytes);
                 case VerifyMethod::CRC8:
                     TODO();
-                    // return VerifyUtils::by_crc8(FUNC_CODE, bytes);
+                    // __builtin_unreachable();
+                    // return VerifyUtils::by_crc8(func_code, bytes);
             }
         }
 
@@ -199,7 +291,7 @@ struct ZdtMotor_Collections{
         }
     
         // static constexpr uint8_t by_crc8(
-        //     const FuncCode FUNC_CODE,
+        //     const FuncCode func_code,
         //     const std::span<const uint8_t> bytes
         // ){
         //     uint16_t crc = 0xffff;
@@ -216,8 +308,8 @@ struct ZdtMotor_Collections{
     };
 
     struct Rpm final{
-        static constexpr Rpm from(const real_t speed){
-            const auto temp = uint16_t(speed * 600);
+        static constexpr Rpm from_speed(const real_t speed){
+            const uint16_t temp = uint16_t(q16(speed) * 600);
             return {BSWAP_16(temp)};
         }
         constexpr uint16_t to_u16() const {
@@ -225,11 +317,14 @@ struct ZdtMotor_Collections{
         }
 
         uint16_t raw_;
-    };
+    }__packed;
 
     struct PulseCnt final{
-        static constexpr PulseCnt from(const real_t position){
-            const auto temp = uint32_t(position * 3600);
+        static constexpr uint32_t SCALE = 3200 * (256/16);
+        static constexpr PulseCnt from_position(const real_t position){
+            const uint32_t frac_part = uint32_t(frac<12>(position) * SCALE);
+            const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
+            const uint32_t temp = uint32_t(frac_part + int_part);
             return {BSWAP_32(temp)};
         }
 
@@ -238,15 +333,25 @@ struct ZdtMotor_Collections{
         }
 
         uint32_t raw_;
-    };
+    }__packed;
 
     struct AcclerationLevel{
         static constexpr AcclerationLevel from(const real_t acc_per_second){
             // TODO
             return AcclerationLevel{10};
         }
+
+        static constexpr AcclerationLevel from_zero(){
+            // TODO
+            return AcclerationLevel{0};
+        }
+
+        static constexpr AcclerationLevel from_raw(const uint8_t raw){
+            // TODO
+            return AcclerationLevel{raw};
+        }
         uint8_t raw_;
-    };
+    }__packed;
 
     struct Payloads{
         // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
@@ -324,17 +429,16 @@ struct ZdtMotor_Collections{
         struct QueryHommingParaments final{
             static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
         }__packed;
-
-        static constexpr size_t a = sizeof(QueryHommingParaments);
         
         template<typename T>
-        struct sizeof_with_zero_impl{
-            [[no_unique_address]] T _;
+        struct pure_sizeof_impl{
+        private:
+            [[no_unique_address]] T _1;
             uint8_t _2;
         };
 
         template<typename T>
-        static constexpr size_t sizeof_with_zero_v = sizeof(sizeof_with_zero_impl<T>) - 1;
+        static constexpr size_t pure_sizeof_v = sizeof(pure_sizeof_impl<T>) - 1;
 
 
         template<typename Raw, typename T = std::decay_t<Raw>>
@@ -343,14 +447,14 @@ struct ZdtMotor_Collections{
         ){
             return std::span(
                 reinterpret_cast<const uint8_t *>(&obj),
-                sizeof_with_zero_v<T>
+                pure_sizeof_v<T>
             );
         }
     };
 };
 
 class ZdtMotorPhy final:
-    public ZdtMotor_Collections{
+    public ZdtMotor_Prelude{
 public:
 
 
@@ -372,7 +476,7 @@ public:
 
     void write_bytes(
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 private:
@@ -382,14 +486,14 @@ private:
     static void can_write_bytes(
         hal::Can & can, 
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 
     static void uart_write_bytes(
         hal::Uart & uart, 
         const NodeId id, 
-        const FuncCode FUNC_CODE,
+        const FuncCode func_code,
         const std::span<const uint8_t> bytes
     );
 };

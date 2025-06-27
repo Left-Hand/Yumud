@@ -5,7 +5,7 @@
 #include "drivers/IMU/details/AsahiKaseiIMU.hpp"
 
 namespace ymd::drivers{
-struct AK8963_Collections{
+struct AK8963_Prelude{
 
     using Error = ImuError;
 
@@ -37,7 +37,7 @@ struct AK8963_Collections{
     };
 };
 
-struct AK8963_Regs:public AK8963_Collections{ 
+struct AK8963_Regs:public AK8963_Prelude{ 
 
     struct R8_WIA:public Reg8<>{
         scexpr RegAddress address = 0x00;

@@ -7,7 +7,6 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
-#include "core/string/string.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

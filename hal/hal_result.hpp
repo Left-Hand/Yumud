@@ -60,20 +60,29 @@ public:
     }
 
     constexpr HalResult(std::nullopt_t):err_(std::nullopt){;}
-    // constexpr HalResult(const Ok<void> &):err_(std::nullopt){;}
-    constexpr HalResult(const Kind & kind):err_(HalError(kind)){;}
-    constexpr HalResult(Kind && kind):err_(HalError(kind)){;}
-    constexpr HalResult(const HalError & err):err_(err){;}
-    constexpr HalResult(HalError && err):err_(err){;}
-    constexpr HalResult(const HalResult & other):err_(other.err_){;}
-    constexpr HalResult(HalResult && other):err_(other.err_){;}
+    constexpr HalResult(const Kind & kind):
+        err_(HalError(kind)){;}
+    constexpr HalResult(Kind && kind):
+        err_(HalError(kind)){;}
+    constexpr HalResult(const HalError & err):
+        err_(err){;}
+    constexpr HalResult(HalError && err):
+        err_(err){;}
+    constexpr HalResult(const HalResult & other):
+        err_(other.err_){;}
+    constexpr HalResult(HalResult && other):
+        err_(other.err_){;}
 
-    constexpr bool operator ==(const HalResult & other) const {return err_ == other.err_;}
-    constexpr bool operator !=(const HalResult & other) const {return err_ != other.err_;}
+    constexpr bool operator ==(const HalResult & other) const {
+        return err_ == other.err_;}
+    constexpr bool operator !=(const HalResult & other) const {
+        return err_ != other.err_;}
 
 
-    __fast_inline constexpr bool is_err() const {return unlikely(err_.has_value());}
-    __fast_inline constexpr bool is_ok() const {return likely(!err_.has_value());}
+    __fast_inline constexpr bool is_err() const {
+        return unlikely(err_.has_value());}
+    __fast_inline constexpr bool is_ok() const {
+        return likely(!err_.has_value());}
 
     // 链式处理
     template<typename Fn>
@@ -86,9 +95,6 @@ public:
         if(is_err()) return *this;
         else return rhs;
     }
-
-    // constexpr explicit operator HalError() const {return err_.value();}
-    // constexpr HalError kind() const {return err_.value();}
 
     constexpr HalError unwrap_err() const {return err_.value();}
 

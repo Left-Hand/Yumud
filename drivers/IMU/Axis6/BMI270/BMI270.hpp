@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-struct BMI270_Collections{
+struct BMI270_Prelude{
     using Error = ImuError;
 
     template<typename T = void>
@@ -50,7 +50,7 @@ struct BMI270_Collections{
 
 };
 
-struct BMI270_Regs:public BMI270_Collections{
+struct BMI270_Regs:public BMI270_Prelude{
     
     #include "regs.ipp"
 
@@ -73,7 +73,7 @@ class BMI270 final:
     public GyroscopeIntf,
     private BMI270_Regs{
 public:
-    using Error = BMI270_Collections::Error;
+    using Error = BMI270_Prelude::Error;
 
     BMI270(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}

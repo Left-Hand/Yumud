@@ -38,85 +38,11 @@
 
 namespace ymd::drivers{
 
-// DisplayBuf: 显示缓存,能够区分脏数据
-template<typename T, size_t N>
-class DisplayBuf {
-public:
-    struct Element {
-        T value;
-        bool dirty;
 
-        Element(T v, bool d) : value(v), dirty(d) {}
-    };
-
-    class Iterator {
-    public:
-        Iterator(DisplayBuf& owner, size_t index) : owner_(owner), index_(index) {}
-
-        Element operator*() const {
-            return {owner_.buf_[index_], owner_.buf_[index_] != owner_.last_buf_[index_]};
-        }
-
-        Iterator& operator++() {
-            ++index_;
-            return *this;
-        }
-
-        bool operator!=(const Iterator& other) const {
-            return index_ != other.index_;
-        }
-
-    private:
-        DisplayBuf& owner_;
-        size_t index_;
-    };
-
-    DisplayBuf() {
-        last_buf_.fill(T{});
-        buf_.fill(T{});
-    }
-
-    Iterator begin() {
-        return Iterator(*this, 0);
-    }
-
-    Iterator end() {
-        return Iterator(*this, N);
-    }
-
-    void set(size_t index, T value) {
-        if (index < N) {
-            buf_[index] = value;
-        }
-    }
-
-    T get(size_t index) const {
-        if (index < N) {
-            return buf_[index];
-        }
-        return T{};
-    }
-
-    void flush() {
-        last_buf_ = buf_;
-    }
-
-    bool changed() const {
-        return last_buf_ != buf_;
-    }
-
-    std::span<const T, N> to_span() const {
-        return std::span<const T, N>(buf_);
-    }
-
-private:
-    std::array<T, N> last_buf_;
-    std::array<T, N> buf_;
-};
 
 namespace details{
 // TM1637 常用基础工具
-struct _TM1637_Collections{
+struct _TM1637_Prelude{
     enum class Error_Kind{
         KeyFormatWrong,
         DisplayLengthTooLong,
@@ -205,11 +131,87 @@ struct _TM1637_Collections{
 
     static_assert(sizeof(DisplayCommand) == 1);
 };
+
+// DisplayBuf: 显示缓存,能够区分脏数据
+template<typename T, size_t N>
+class DisplayBuf {
+public:
+    struct Element {
+        T value;
+        bool dirty;
+
+        Element(T v, bool d) : value(v), dirty(d) {}
+    };
+
+    class Iterator {
+    public:
+        Iterator(DisplayBuf& owner, size_t index) : owner_(owner), index_(index) {}
+
+        Element operator*() const {
+            return {owner_.buf_[index_], owner_.buf_[index_] != owner_.last_buf_[index_]};
+        }
+
+        Iterator& operator++() {
+            ++index_;
+            return *this;
+        }
+
+        bool operator!=(const Iterator& other) const {
+            return index_ != other.index_;
+        }
+
+    private:
+        DisplayBuf& owner_;
+        size_t index_;
+    };
+
+    DisplayBuf() {
+        last_buf_.fill(T{});
+        buf_.fill(T{});
+    }
+
+    Iterator begin() {
+        return Iterator(*this, 0);
+    }
+
+    Iterator end() {
+        return Iterator(*this, N);
+    }
+
+    void set(size_t index, T value) {
+        if (index < N) {
+            buf_[index] = value;
+        }
+    }
+
+    T get(size_t index) const {
+        if (index < N) {
+            return buf_[index];
+        }
+        return T{};
+    }
+
+    void flush() {
+        last_buf_ = buf_;
+    }
+
+    bool changed() const {
+        return last_buf_ != buf_;
+    }
+
+    std::span<const T, N> to_span() const {
+        return std::span<const T, N>(buf_);
+    }
+private:
+    std::array<T, N> last_buf_;
+    std::array<T, N> buf_;
+};
+
 }
 
 //TM1637 物理层接口
 //由于TM1637使用了另类的I2C接口 故特化
-class TM1637_Phy final:public details::_TM1637_Collections{
+class TM1637_Phy final:public details::_TM1637_Prelude{
 public:
     TM1637_Phy(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
         scl_gpio_(scl_gpio),
@@ -217,23 +219,23 @@ public:
     {;}
 
 
-    Result<void, Error> write_sram(const std::span<const uint8_t> pbuf);
+    IResult<> write_sram(const std::span<const uint8_t> pbuf);
 
     Result<uint8_t, Error> read_key();
-    Result<void, Error> set_display(const DisplayCommand);
-    Result<void, Error> set_data_mode(const DataCommand);
+    IResult<> set_display(const DisplayCommand);
+    IResult<> set_data_mode(const DataCommand);
 private:
-    Result<void, Error> write_byte(const uint8_t data);
-    Result<void, Error> read_byte(uint8_t & data);
-    Result<void, Error> wait_ack();
-    Result<void, Error> iic_start(const uint8_t data);
-    Result<void, Error> iic_stop();
+    IResult<> write_byte(const uint8_t data);
+    IResult<> read_byte(uint8_t & data);
+    IResult<> wait_ack();
+    IResult<> iic_start(const uint8_t data);
+    IResult<> iic_stop();
     hal::Gpio & scl_gpio_;
     hal::Gpio & sda_gpio_;
 };
 
 //TM1637本体
-class TM1637 final:public details::_TM1637_Collections{
+class TM1637 final:public details::_TM1637_Prelude{
 public:
     using Phy = TM1637_Phy;
 
@@ -242,12 +244,12 @@ public:
 
 
     [[nodiscard]]
-    Result<void, Error> flush();
+    IResult<> flush();
     
     [[nodiscard]]
-    Result<Option<KeyPlacement>, Error> read_key();
+    IResult<Option<KeyPlacement>> read_key();
     [[nodiscard]]
-    Result<void, Error> set(const size_t pos, const uint8_t val){
+    IResult<> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
         buf_.set(pos, val);
         return Ok();
@@ -255,18 +257,18 @@ public:
 
 
     [[nodiscard]]
-    Result<void, Error> set_display_duty(const real_t duty);
+    IResult<> set_display_duty(const real_t duty);
     
 private:
-    using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
+    using Buf = details::DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
 
     Phy phy_;
     Buf buf_;
     DisplayCommand disp_cmd_;
     bool is_on_display_else_readkey_ = true;
 
-    [[nodiscard]] Result<void, Error> switch_to_display();
-    [[nodiscard]] Result<void, Error> switch_to_readkey();
+    [[nodiscard]] IResult<> switch_to_display();
+    [[nodiscard]] IResult<> switch_to_readkey();
 
 
 };

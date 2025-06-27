@@ -435,9 +435,8 @@ IResult<> LT8920::init(){
 }
 
 IResult<> LT8920::set_sync_word(const uint64_t syncword){
-    uint16_t words[4] = {0};
-    memcpy(words, &syncword, 8);
-    for(uint8_t i = 0; i < 4; i++){
+    const auto words = std::bit_cast<std::array<uint16_t, 4>>(syncword);
+    for(size_t i = 0; i < words.size(); i++){
         sync_word_regs[i].data = words[i];
         if(const auto res = write_reg(
                 sync_word_regs[i].head_address + i, 

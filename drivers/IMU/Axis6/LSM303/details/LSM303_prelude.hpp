@@ -9,7 +9,7 @@
 
 
 namespace ymd::drivers::details{
-struct LSM303_collections{
+struct LSM303_Prelude{
 
     using Error = ImuError;
     template<typename T = void>
@@ -166,7 +166,7 @@ struct LSM303_collections{
 };
 
 
-struct LSM303_Regs : public LSM303_collections {
+struct LSM303_Regs : public LSM303_Prelude {
     Vector3<int16_t> a; // accelerometer readings
     Vector3<int16_t> m; // magnetometer readings
 

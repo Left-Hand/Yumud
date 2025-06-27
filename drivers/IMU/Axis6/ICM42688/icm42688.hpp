@@ -1,6 +1,6 @@
 #pragma once
 
-#include "details/ICM42688_collections.hpp"
+#include "details/ICM42688_Prelude.hpp"
 #include "core/utils/EnumArray.hpp"
 
 namespace ymd::drivers{

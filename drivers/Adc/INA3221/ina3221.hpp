@@ -47,7 +47,7 @@
 
 namespace ymd::drivers{
 
-struct INA3221_Collections{
+struct INA3221_Prelude{
 public:
     enum class Error_Kind{
         WrongChipId,
@@ -145,7 +145,7 @@ public:
 
 };
 
-struct INA3221_Regs:public INA3221_Collections {
+struct INA3221_Regs:public INA3221_Prelude {
     struct R16_Config:public Reg16<>{
         static constexpr RegAddress address = 0x00;
 
@@ -315,7 +315,7 @@ struct INA3221_Regs:public INA3221_Collections {
     R16_ChipId       chip_id_reg = {};
 };
 
-class INA3221_Phy final : public INA3221_Collections{
+class INA3221_Phy final : public INA3221_Prelude{
 public:
     static constexpr auto ENDIAN = MSB;
 

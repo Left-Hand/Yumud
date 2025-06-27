@@ -7,7 +7,10 @@ using namespace ymd::drivers;
 
 using Error = TM1637_Phy::Error;
 
-Result<void, Error> TM1637_Phy::write_byte(const uint8_t data){
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+IResult<> TM1637_Phy::write_byte(const uint8_t data){
     sda_gpio_.outod();
     for(uint8_t mask = 0x01; mask; mask <<= 1){
         scl_gpio_.clr();
@@ -21,7 +24,7 @@ Result<void, Error> TM1637_Phy::write_byte(const uint8_t data){
 }
 
 
-Result<void, Error> TM1637_Phy::wait_ack(){
+IResult<> TM1637_Phy::wait_ack(){
     sda_gpio_.inpu();
     scl_gpio_.clr();
     clock::delay(5us);
@@ -48,7 +51,7 @@ Result<void, Error> TM1637_Phy::wait_ack(){
     }
 }
 
-Result<void, Error> TM1637_Phy::read_byte(uint8_t & data){
+IResult<> TM1637_Phy::read_byte(uint8_t & data){
     uint8_t ret = 0;
 
     for(uint8_t i = 0; i < 8; i++){
@@ -64,7 +67,7 @@ Result<void, Error> TM1637_Phy::read_byte(uint8_t & data){
     return Ok();
 }
 
-Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
+IResult<> TM1637_Phy::iic_start(const uint8_t data){
     scl_gpio_.outod(HIGH);
     sda_gpio_.outod(HIGH);
     clock::delay(2us);
@@ -74,7 +77,7 @@ Result<void, Error> TM1637_Phy::iic_start(const uint8_t data){
     return Ok();
 }
 
-Result<void, Error> TM1637_Phy::iic_stop(){
+IResult<> TM1637_Phy::iic_stop(){
     scl_gpio_.clr();
     sda_gpio_.outod();
     clock::delay(2us);
@@ -87,7 +90,7 @@ Result<void, Error> TM1637_Phy::iic_stop(){
     return Ok();
 }
 
-Result<void, Error> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
+IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
     if(pbuf.size() > TM1637::CGRAM_MAX_LEN) return Err(Error::DisplayLengthTooLong);
 
     const auto command2 = AddressCommand{
@@ -104,7 +107,7 @@ Result<void, Error> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
 }
 
 
-Result<void, Error> TM1637_Phy::set_display(const DisplayCommand command){
+IResult<> TM1637_Phy::set_display(const DisplayCommand command){
     const auto res = 
         iic_start(command.as_u8()) 
         | iic_stop()
@@ -130,7 +133,7 @@ Result<uint8_t, Error> TM1637_Phy::read_key(){
     return Ok(data);
 }
 
-Result<void, Error> TM1637_Phy::set_data_mode(const DataCommand command1){
+IResult<> TM1637_Phy::set_data_mode(const DataCommand command1){
 
     const auto res = 
         iic_start(command1.as_u8())
@@ -140,7 +143,7 @@ Result<void, Error> TM1637_Phy::set_data_mode(const DataCommand command1){
     return res;
 }
 
-Result<void, Error> TM1637::switch_to_display(){
+IResult<> TM1637::switch_to_display(){
     if(is_on_display_else_readkey_ == true) return Ok();
     is_on_display_else_readkey_ = true;
 
@@ -151,7 +154,7 @@ Result<void, Error> TM1637::switch_to_display(){
         }
     );
 }
-Result<void, Error>  TM1637::switch_to_readkey(){
+IResult<>  TM1637::switch_to_readkey(){
     if(is_on_display_else_readkey_ == false) return Ok();
     is_on_display_else_readkey_ = false;
 
@@ -163,7 +166,7 @@ Result<void, Error>  TM1637::switch_to_readkey(){
     );
 }
 
-Result<void, Error> TM1637::set_display_duty(const real_t duty){
+IResult<> TM1637::set_display_duty(const real_t duty){
     if(duty > 1) return Err(Error::DutyGreatThanOne);
     if(duty < 0) return Err(Error::DutyLessThanZero);
 
@@ -240,7 +243,7 @@ Result<Option<KeyPlacement>, Error> TM1637::read_key(){
     return map_raw_to_keyplace(res.unwrap());
 }
 
-Result<void, Error> TM1637::flush(){
+IResult<> TM1637::flush(){
     //TODO 更换为数据利用率更高的更新算法
 
     const bool changed = buf_.changed();

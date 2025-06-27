@@ -14,10 +14,12 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
         << ((msg.is_remote()) ? 'R' : 'D')
         << "> ";
 
-    os << "id=" << std::hex << std::showbase << uint32_t(msg.id());
-    os << " | buf" 
-        << '[' << std::dec << msg.size() << "]=" 
-        << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
+    os << "id=" << std::hex << std::showbase << msg.id_as_u32();
+
+    if(not msg.is_remote()){
+        os << " | buf[" << std::dec << msg.size() << "]=" 
+            << std::hex << msg.payload();
+    }
 
     return os << os.brackets<'}'>();
 }

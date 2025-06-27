@@ -172,7 +172,7 @@ protected:
 
     void update_inst(const hal::CanMsg & msg, const size_t index){
         M3508_CHECK_INDEX
-        auto rx_data = msg.to<RxData>();
+        auto rx_data = std::bit_cast<RxData>(msg.payload_as_u64());
         auto & inst = inst_[index - 1];
 
         inst.update_measurements(

@@ -1,16 +1,16 @@
 #pragma once
 
+
 #include "details/zdt_stepper_utils.hpp"
 
 namespace ymd::robots{
 
 class ZdtStepper final:
-    public ZdtMotor_Collections{
+    public ZdtMotor_Prelude{
 public:
     struct Config{
         NodeId nodeid;
     };
-
 
     ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
         phy_(std::move(can)
@@ -29,14 +29,14 @@ public:
         nodeid_ = cfg.nodeid;
     }
 
-    void set_target_position(const real_t pos);
-    void set_target_speed(const real_t spd);
-    void brake();
-    void set_subdivides(const uint16_t subdivides);
-    void enable(const Enable en = EN);
-    void trigger_cali();
-    void query_homming_paraments();
-    void trig_homming(const HommingMode mode);
+    IResult<> set_target_position(const real_t pos);
+    IResult<> set_target_speed(const real_t spd);
+    IResult<> brake();
+    IResult<> set_subdivides(const uint16_t subdivides);
+    IResult<> activate(const Enable en = EN);
+    IResult<> trig_cali();
+    IResult<> query_homming_paraments();
+    IResult<> trig_homming(const HommingMode mode);
 private:
     using Phy = ZdtMotorPhy;
     Phy phy_;
@@ -69,7 +69,7 @@ private:
     }
 
     template<typename T>
-    void write_payload(const T & obj){
+    IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(verify_method_, obj);
         const auto bytes = buf.to_span();
 
@@ -78,6 +78,8 @@ private:
             T::FUNC_CODE, 
             bytes
         );
+
+        return Ok();
     }
 
 };

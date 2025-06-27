@@ -5,9 +5,9 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void AdcPrimary::init(
-        const std::initializer_list<AdcChannelConfig> & regular_list,
-        const std::initializer_list<AdcChannelConfig> & injected_list, 
-        const Config & cfg
+    const std::initializer_list<AdcChannelConfig> & regular_list,
+    const std::initializer_list<AdcChannelConfig> & injected_list, 
+    const Config & cfg
 ){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);	

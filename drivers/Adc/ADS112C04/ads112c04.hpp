@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct ADS112C04_Collections{
+struct ADS112C04_Prelude{
 
     // [A1]     [A0]    [I2C ADDRESS]
     // DGND     DGND    100 0000
@@ -124,7 +124,7 @@ struct ADS112C04_Collections{
     using RegAddress = uint8_t;
 };
 
-struct ADS112C04_Regs:public ADS112C04_Collections{
+struct ADS112C04_Regs:public ADS112C04_Prelude{
     struct R8_Config0:public Reg8<>{
         static constexpr RegAddress address = 0;
         uint8_t pga_bypass:1;

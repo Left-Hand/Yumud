@@ -20,13 +20,13 @@
     // ReadKeyBit7VerifyFailed,
 
 
-#include "details/CH455_collections.hpp"
+#include "details/CH455_Prelude.hpp"
 #include "drivers/HID/Event.hpp"
 
 
 namespace ymd::drivers{
 
-class CH455 final:public CH455_Collections{
+class CH455 final:public CH455_Prelude{
 public:
     struct Config{
         Borrow<hal::Gpio> scl_gpio;

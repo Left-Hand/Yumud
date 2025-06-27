@@ -163,13 +163,10 @@ public:
         return other.contains(*this);
     }
 
-    [[nodiscard]] constexpr bool has(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr bool contains(const arithmetic auto & value) const{
         return (this->start <= static_cast<T>(value) 
             && static_cast<T>(value) < this->stop);
     }
-
-    [[nodiscard]] constexpr bool has(const Range2<auto> & other) const{
-        return contains(other);}
 
     [[nodiscard]] constexpr T padding(const Range2<T> other) const {
         if(this->intersects(other)) return 0;

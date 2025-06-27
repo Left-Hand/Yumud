@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-struct AT24CXX_Collections{
+struct AT24CXX_Prelude{
 public:
     enum class Error_Kind:uint8_t{
         DeviceIsBusyStore,
@@ -53,7 +53,7 @@ public:
 
 
 class AT24CXX final:
-    public AT24CXX_Collections{
+    public AT24CXX_Prelude{
 public:
     template<typename TConfig>
     AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):

@@ -1,34 +1,51 @@
 #pragma once
 
+#include "cstdint.h"
+#include <array>
+
 namespace ymd::drivers{
-class TJC{
-private:
-    void end(){
-        constexpr char buf[3] = {char(0xff), char(0xff), char(0xff)};
-        uart_.write(buf, 3);
+
+
+class TJC_Phy{
+public:
+    TJC_Phy(Uart & _uart):uart_(_uart){;}
+
+
+    // template<typename >
+    void print(const StringView & str){
+        uart_.print(str);
+        print_end();
     }
-protected:
+
+
+private:
+
     Uart & uart_;
 
+    void print_end(){
+        constexpr std::array tail = {char(0xff), char(0xff), char(0xff)};
+        uart_.write(tail, tail.size());
+    }
+};
+
+
+struct TJC_Scene{
 public:
-    TJC(Uart & _uart):uart_(_uart){;}
-    void init(){
-        uart_.set_splitter("");
-    }
+    struct Config{
+        StringView name;
+    };
+private:
 
+    StringView name_;
+}
 
-    void print(const String & str){
-        uart_.print(str);
-        end();
-    }
-
-
+struct TJC_Controls{
     class Ctrl{
     protected:
-        TJC & instance;
+        TJC & inst_;
         uint8_t ctrl_id;
 
-        Ctrl(TJC & _instance, const uint8_t _ctrl_id):instance(_instance), ctrl_id(_ctrl_id){;}
+        Ctrl(TJC & inst, const uint8_t _ctrl_id):inst_(inst), ctrl_id(_ctrl_id){;}
     };
 
     class Waveform;
@@ -38,11 +55,11 @@ public:
 
         friend class Waveform;
 
-        WaveWindow(TJC & _instance, const uint8_t _ctrl_id):Ctrl(_instance, _ctrl_id){;}
+        WaveWindow(TJC & inst, const uint8_t _ctrl_id):Ctrl(inst, _ctrl_id){;}
 
-        void addChData(const uint8_t channel_id,const uint8_t data){
-            auto str = String("add " + String(ctrl_id) + ',' + String(channel_id) + ',' + String(data));
-            instance.print(str);
+        void add_ch_data(const uint8_t channel_id,const uint8_t data){
+            auto str = StringView("add " + StringView(ctrl_id) + ',' + StringView(channel_id) + ',' + StringView(data));
+            inst_.print(str);
             // DEBUG_PRINTLN(str);
         }
 
@@ -57,33 +74,25 @@ public:
     public:
         Waveform(WaveWindow & _parent, const uint8_t _channel_id, Range && _range):parent(_parent), channel_id(_channel_id), range(_range){;}
 
-        void addData(const auto & data){
+        void add_data(const auto & data){
             real_t value = data;
             auto ratio = range.invlerp(value);
-            parent.addChData(channel_id, uint8_t((255 * ratio)));
+            parent.add_ch_data(channel_id, uint8_t((255 * ratio)));
         }
     };
 
     class Label{
-    protected:
-        TJC & instance;
-        String scene_name;
-        String tag_name;
-        String text;
-    public:
-        Label(TJC & _instance, const String & _scene_name, const String & _tag_name):instance(_instance), scene_name(_scene_name), tag_name(_tag_name){;}
-
-
-        void setValue(const real_t value){
-            text = String(float(value), 2);
-            setText(text);
-        }
-
-        void setText(const String & _text){
-            instance.print(String(scene_name + '.' + tag_name + ".txt=\"" + _text + '\"'));
-        }
+        StringView tag_name;
     };
 
-};
+    template<typename ... Args>
+    static void serial_print(Args && ...args){
+
+    }
+
+    static void set_label_text(const Label & label, const StringView text){
+        serial_print(StringView(scene_name + '.' + tag_name + ".txt=\"" + text + '\"'));
+    }
+}
 
 }

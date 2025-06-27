@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 
 
-struct ADS111X_Collections{
+struct ADS111X_Prelude{
 
     enum class Error_Kind:uint8_t{
 
@@ -54,7 +54,7 @@ struct ADS111X_Collections{
 
 };
 
-struct ADS111X_Regs:public ADS111X_Collections{ 
+struct ADS111X_Regs:public ADS111X_Prelude{ 
 
     struct ConversionReg:public Reg16<>{
         scexpr RegAddress address = 0b00; 

@@ -28,7 +28,12 @@ void joystick_tb(OutputStream & logger){
         // SPI1_MISO_GPIO = !SPI1_MISO_GPIO;
         // logger.println("??");
         joystick.update();
-        logger.println(joystick.getLeftJoystick(),joystick.getRightJoystick(), joystick.getLeftDirection(), (uint8_t)joystick.id());
+        logger.println(
+            joystick.get_left_joystick(),
+            joystick.get_right_joystick(), 
+            joystick.get_left_direction(), 
+            uint8_t(joystick.id())
+        );
         clock::delay(10ms);
         // clock::delay(100ms);
             // (uint8_t)joystick.id(), joystick.valueof(Event::LX));

@@ -12,14 +12,14 @@ private:
     void trail() final;
 
 protected:
-    I2C_TypeDef * instance;
+    I2C_TypeDef * inst_;
     static hal::Gpio & get_scl(const I2C_TypeDef *);
     static hal::Gpio & get_sda(const I2C_TypeDef *);
 public:
 
-    I2cHw(I2C_TypeDef * _instance):
-            I2c(get_scl(_instance), get_sda(_instance)),
-            instance(_instance){;}
+    I2cHw(I2C_TypeDef * inst):
+            I2c(get_scl(inst), get_sda(inst)),
+            inst_(inst){;}
     
 
     hal::HalResult write(const uint32_t data) final;

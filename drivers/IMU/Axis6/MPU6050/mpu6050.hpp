@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-struct MPU6050_Collections{
+struct MPU6050_Prelude{
     using Error = ImuError;
     
     template<typename T = void>
@@ -47,7 +47,7 @@ struct MPU6050_Collections{
     using RegAddress = uint8_t;   
 };
 
-struct MPU6050_Regs:public MPU6050_Collections{ 
+struct MPU6050_Regs:public MPU6050_Prelude{ 
     struct GyrConfReg:public Reg8<>{
         scexpr RegAddress address = 0x1b;
 

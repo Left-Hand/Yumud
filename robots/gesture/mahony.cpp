@@ -49,7 +49,7 @@ void Mahony::update_v2(const V3 & gyr,const V3 & acc) {
 	const auto e = build_norm_vec3_from_cross_of_vec3(a_norm, v);
 
 	const auto delta = q.xform((gyr + kp_ * e) * (dt_));
-	q = (q * Quat::from_euler<EulerAnglePolicy::XYZ>({delta.x, delta.y, delta.z})).normalized();
+	q = (q * IQuat::from_euler<EulerAnglePolicy::XYZ>({delta.x, delta.y, delta.z})).normalized();
 }
 
 
@@ -62,11 +62,11 @@ void Mahony::myupdate(const V3 & gyr,const V3 & acc) {
 	// state_[1] += (- 2 * r * x2 - r_2 * (x1 - u)) * dt;
 
 
-	// const auto err = Quat(acc) .cross(q.xform_up());
+	// const auto err = IQuat(acc) .cross(q.xform_up());
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
 	// const auto delta = V3<real_t>(0,0,real_t(2 * TAU));
-	const auto pos_err = Quat::from_direction(acc) * q.inverse();
+	const auto pos_err = IQuat::from_direction(acc) * q.inverse();
 	// q = q.integral(gyr_hat_, dt_).slerp(v, 1);
 	// const auto pos_err_euler = pos_err.to_euler();
 	gyr_hat_ = LERP(gyr_hat_, gyr, 0.5_r);
@@ -86,7 +86,7 @@ void Mahony::myupdate_v2(const V3 & gyr,const V3 & acc) {
 	// state_[1] += (- 2 * r * x2 - r_2 * (x1 - u)) * dt;
 
 
-	// const auto err = Quat(acc) .cross(q.xform_up());
+	// const auto err = IQuat(acc) .cross(q.xform_up());
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
 	// const auto delta = V3<real_t>(0,0,real_t(2 * TAU));
@@ -101,7 +101,7 @@ void Mahony::myupdate_v2(const V3 & gyr,const V3 & acc) {
 	//  + 2 * tau * (gyr - gyr_hat_);
 	gyr_hat_ += gyr_hat_d * dt_;
 	//  + V3(pos_err_euler.x, pos_err_euler.y, pos_err_euler.z) * 5000 * dt_;
-	q = q.integral(gyr_hat_, dt_).slerp(Quat::from_direction(acc), 0.017_r);
+	q = q.integral(gyr_hat_, dt_).slerp(IQuat::from_direction(acc), 0.017_r);
 	// q =v;
 }
 

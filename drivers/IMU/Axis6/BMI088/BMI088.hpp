@@ -13,7 +13,7 @@
 
 namespace ymd::drivers{
 
-class _BMI088_Collections{
+class _BMI088_Prelude{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
@@ -71,7 +71,7 @@ protected:
 
 class BMI088_Acc final: 
     public AccelerometerIntf,
-    public _BMI088_Collections{
+    public _BMI088_Prelude{
 public:
 
 protected:
@@ -221,7 +221,7 @@ public:
 
 class BMI088_Gyr final:
     public GyroscopeIntf,
-    public _BMI088_Collections{
+    public _BMI088_Prelude{
 public:
     using Error = ImuError;
 

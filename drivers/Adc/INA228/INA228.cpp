@@ -2,5 +2,4 @@
 
 #include "core/debug/debug.hpp"
 
-namespace ymd::drivers{
-}
+using namespace ymd::drivers;

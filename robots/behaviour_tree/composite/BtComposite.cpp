@@ -44,10 +44,10 @@ const BtNode & BtComposite::operator[](size_t idx) const {
 }
 
 
-String BtComposite::getChildPath(const Wrapper child){
+StringView BtComposite::getChildPath(const Wrapper child){
     return child->getName();
 }
 
-String BtComposite::getChildName(const Wrapper child){
+StringView BtComposite::getChildName(const Wrapper child){
     return child->getName();
 }

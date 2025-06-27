@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-struct ICM42688_Collections{
+struct ICM42688_Prelude{
     static constexpr auto ICM42688_WHO_AM_I = 0x75;
 
     //when ad0 is low
@@ -123,7 +123,7 @@ struct ICM42688_Collections{
     };
 };
 
-struct ICM42688_Regs:public ICM42688_Collections{
+struct ICM42688_Regs:public ICM42688_Prelude{
     struct R8_DEVICE_CONFIG:public Reg8<>{
         static constexpr RegAddress address = 0x11;
         static constexpr Bank bank = Bank::_0;

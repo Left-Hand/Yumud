@@ -43,7 +43,7 @@
 
 namespace ymd::drivers{
 
-struct PAW3805_Collections{
+struct PAW3805_Prelude{
     typedef struct
     {
         uint8_t       rw;         // read or write
@@ -172,7 +172,7 @@ struct PAW3805_Collections{
 
 };
 
-class PAW3805_Phy final:public PAW3805_Collections{
+class PAW3805_Phy final:public PAW3805_Prelude{
 public:
     PAW3805_Phy(hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
@@ -187,7 +187,7 @@ private:
     hal::SpiDrv spi_drv_;
 };
 
-class PAW3805:public PAW3805_Collections{
+class PAW3805:public PAW3805_Prelude{
 public:
     PAW3805(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(spi, index){;}
 

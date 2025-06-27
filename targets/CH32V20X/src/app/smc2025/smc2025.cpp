@@ -129,7 +129,7 @@ class Plotter{
         const auto y_axis = Vector3<real_t>::from_y(arm_length);
         const auto z_axis = Vector3<real_t>::from_z(arm_length);
 
-        const auto rot = Quat_t<real_t>::from_direction(vec3);
+        const auto rot = Quat<real_t>::from_direction(vec3);
         const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](

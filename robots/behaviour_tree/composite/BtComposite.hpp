@@ -30,8 +30,8 @@ public:
         return children_.size();
     }
 
-    String getChildPath(const Wrapper child);
-    String getChildName(const Wrapper child);
+    StringView getChildPath(const Wrapper child);
+    StringView getChildName(const Wrapper child);
 
     BtNode & operator[] (const size_t idx) override;
     const BtNode & operator[](const size_t idx) const override;

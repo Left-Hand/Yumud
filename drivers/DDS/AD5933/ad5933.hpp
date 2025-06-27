@@ -21,13 +21,13 @@
 namespace ymd::drivers{
 
 class AD5933 {
-protected:
-    hal::I2cDrv i2c_drv_;
 public:
-scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x0D);
-public:
-    AD5933(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AD5933(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x0D);
+
+    AD5933(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    AD5933(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
     AD5933(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
@@ -53,9 +53,7 @@ public:
     // Excitation range configuration
     bool setRange(uint8_t);
 
-    // Read registers
-    uint8_t read_register(uint8_t);
-    uint8_t write_register(uint8_t);
+
     uint8_t readStatusRegister(void);
     int readControlRegister(void);
 
@@ -95,6 +93,12 @@ private:
     // Sending/Receiving uint8_t method, for easy re-use
     bool getByte(uint8_t, uint8_t*);
     bool sendByte(uint8_t, uint8_t);
+
+        // Read registers
+    uint8_t read_register(uint8_t);
+    uint8_t write_register(uint8_t);
+    
+    hal::I2cDrv i2c_drv_;
 };
 
 };

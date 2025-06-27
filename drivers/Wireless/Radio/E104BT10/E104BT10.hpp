@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-struct E104BT10_Collections{
+struct E104BT10_Prelude{
     enum class Error_Kind:uint8_t{
         PayloadExceed8Bytes
     };
@@ -60,7 +60,7 @@ struct E104BT10_Collections{
     }
 };
 
-class E104BT10_Phy final:public E104BT10_Collections{
+class E104BT10_Phy final:public E104BT10_Prelude{
 public:
     IResult<> write_bytes(const std::span<const uint8_t> pbuf);
     IResult<> read_bytes(const std::span<uint8_t> pbuf);
@@ -83,7 +83,7 @@ public:
     }
 };
 
-class E104BT10 final:public E104BT10_Collections{
+class E104BT10 final:public E104BT10_Prelude{
 public:
 
 private:
