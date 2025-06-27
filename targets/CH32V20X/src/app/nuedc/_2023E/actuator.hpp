@@ -58,13 +58,6 @@ public:
         const auto duty = LERP(INVLERP(radian, min_radian_, max_radian_), min_duty_, max_duty_);
         pwm_ = duty;
     }
-
-    static PwmServo make_sg90(const Config & cfg, ymd::hal::PwmIntf & pwm){
-        return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
-    }
-    static PwmServo make_mg995(const Config & cfg, ymd::hal::PwmIntf & pwm){
-        return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
-    }
 private:
     real_t min_duty_;
     real_t max_duty_;
@@ -72,6 +65,13 @@ private:
     real_t max_radian_;
     ymd::hal::PwmIntf & pwm_;
 };
+
+PwmServo make_sg90(const ServoConfig & cfg, ymd::hal::PwmIntf & pwm){
+    return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
+}
+PwmServo make_mg995(const ServoConfig & cfg, ymd::hal::PwmIntf & pwm){
+    return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
+}
 
 //执行器 封装了对不同执行器的调用 屏蔽底层差异
 class GimbalActuatorIntf{

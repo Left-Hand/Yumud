@@ -100,13 +100,12 @@ private:
     Filter lpf_{CFG};
 };
 
-class Motor final{
-public:
+class BrushedMotor final{
 public:
     using Chopper = drivers::AT8222;
     using Sensor = CurrentSensor;
 
-    Motor(Chopper & drv, CurrentSensor & cs):
+    BrushedMotor(Chopper & drv, CurrentSensor & cs):
         drv_(drv),
         cs_(cs)
         {;}
@@ -315,9 +314,9 @@ Option<StationName> StationName::from_gbk(std::span<const uint8_t, STR_LEN> code
 
 class MotorService final{
 public:
-    using Motor = motorctl::Motor;
-    using Chopper = Motor::Chopper;
-    using Sensor = Motor::Sensor;
+    using BrushedMotor = motorctl::BrushedMotor;
+    using Chopper = BrushedMotor::Chopper;
+    using Sensor = BrushedMotor::Sensor;
 
     struct Config{
         //开始缓启动的时间
@@ -407,7 +406,7 @@ private:
 
     Sensor sensor_{hal::adc1.inj<1>()};
 
-    Motor motor_{chopper_, sensor_};
+    BrushedMotor motor_{chopper_, sensor_};
 
     //开始缓启动的时间
     real_t start_time_; // S

@@ -101,9 +101,6 @@ PMW3901 create_pmw(){
     pmw_spi.init(9_MHz);
     pmw_spi.bindCsPin(portD[5], 0);
     return {pmw_spi, 0};
-    // PMW3901 pmw{pmw_spi, 0};
-    // pmw.init();
-    // return pmw;
 }
 
 void init_pmw(PMW3901 & pmw){
@@ -153,15 +150,6 @@ void init_displayer(ST7789 & displayer){
     displayer.setInversion(true);
 
     displayer.fill(ColorEnum::BLACK);
-}
-
-
-String getline(InputStream & logger){
-    while(true){
-        if(logger.available()){
-            return logger.readString();
-        }
-    }
 }
 
 void bind_tick_200hz(std::function<void(void)> && func){
