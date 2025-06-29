@@ -38,6 +38,6 @@ real_t Field::to_rot(const Map & map) const {
     }
 }
 
-Ray2_t<real_t> Field::to_ray(const Map & map) const{
+Ray2<real_t> Field::to_ray(const Map & map) const{
     return {to_pos(map), to_rot(map)};
 }

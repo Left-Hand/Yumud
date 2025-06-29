@@ -10,7 +10,7 @@
 
 namespace ymd::robots{
 
-struct Action {
+struct ActionBase {
 public:
     using Callback = std::function<void(void)>;
 
@@ -44,11 +44,11 @@ protected:
         return CLAMP(full_ - sustain_, size_t(0), UINT32_MAX) / 1000;
     }
 public:
-    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain_(MIN(s, INT32_MAX)), full_(sustain_){}
+    ActionBase(const size_t s, Callback &&f) : func_(std::move(f)), sustain_(MIN(s, INT32_MAX)), full_(sustain_){}
 
-    Action(const Action & other) = delete;
-    Action(Action && other) = default;
-    virtual ~Action() = default;
+    ActionBase(const ActionBase & other) = delete;
+    ActionBase(ActionBase && other) = default;
+    virtual ~ActionBase() = default;
 
     bool died() const{
         // return sustain <= 0;
@@ -60,7 +60,7 @@ public:
     }
 
 
-    Action& operator--() {
+    ActionBase& operator--() {
         if (sustain_ > 0) {
             --sustain_;
         }
@@ -86,19 +86,24 @@ public:
     virtual const char * name() = 0;
 };
 
+
+template<typename T>
+concept is_action = std::is_base_of_v<ActionBase, T>;
+
+
 #define ACTION_NAME(nm)\
 const char * name() {return #nm; }
 
-struct DelayAction:public Action{
+struct DelayAction:public ActionBase{
 protected:
     void execute() override {}
 public:
-    DelayAction(const uint dur):Action(dur, nullptr){}
-    // DelayAction(const real-t):Action(dur, nullptr){}
+    DelayAction(const uint dur):ActionBase(dur, nullptr){}
+    // DelayAction(const real-t):ActionBase(dur, nullptr){}
     ACTION_NAME(delay)
 };
 
-struct DebugAction:public Action{
+struct DebugAction:public ActionBase{
 protected:
     // String str_;
     void execute() override {
@@ -108,18 +113,18 @@ protected:
     StringStream ss_;
 public:
     DebugAction(const char * str):
-        Action(1, nullptr){
+        ActionBase(1, nullptr){
             ss_ << str;
         }
 
     DebugAction(const String & str):
-        Action(1, nullptr){
+        ActionBase(1, nullptr){
             ss_ << str;
         }
 
     template <typename... Args>
     DebugAction(Args&&... args):
-        Action(1, nullptr){
+        ActionBase(1, nullptr){
         (this->ss_ << ... << args);
     }
 

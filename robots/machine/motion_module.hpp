@@ -1,7 +1,6 @@
 #pragma once
 
 #include "robots/actions/ActionQueue.hpp"
-#include "robots/autodrive/Navigator.hpp"
 
 
 namespace ymd::robots{
@@ -12,16 +11,16 @@ protected:
 public:
     MotionModule() = default;
 
-    // void addAction(Action * action){actions_ << action;}
+    // void addAction(ActionBase * action){actions_ << action;}
 
-    auto & operator<<(Action * action) {
+    auto & operator<<(ActionBase * action) {
         // action_queue.emplace(Warpper(action));
         actions_ << action;
         return *this;
     }
 
     // template<typename T>
-    // requires std::is_base_of_v<Action, T>
+    // requires std::is_base_of_v<ActionBase, T>
     // auto & operator<<(T && action){
     //     actions_ << std::make_unique<T>(std::move(action));
     //     return *this;

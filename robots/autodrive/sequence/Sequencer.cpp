@@ -7,7 +7,7 @@ using namespace ymd::robots;
 
 using TrapezoidSolver = TrapezoidSolver_t<q16>;
 
-void Sequencer::rotate(Curve & curve, const Ray2_t<q16> & from, const q16 & end_rad){
+void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_rad){
 
     const TrapezoidSolver solver{
         limits_.max_agr, 
@@ -30,7 +30,7 @@ void Sequencer::rotate(Curve & curve, const Ray2_t<q16> & from, const q16 & end_
 
 
 
-void Sequencer::linear(Curve & curve, const Ray2_t<q16> & from, const Vector2q<16> & end_pos){
+void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vector2q<16> & end_pos){
     const auto from_pos = from.org;
     const auto vec = (end_pos - from_pos);
     const auto norm = vec.normalized();
@@ -48,16 +48,16 @@ void Sequencer::linear(Curve & curve, const Ray2_t<q16> & from, const Vector2q<1
     
     for(size_t i = 0; i < n; i++){
         const auto t_val = q16(i) / freq;
-        curve.emplace_back(Ray2_t<q16>(from.org + norm * solver.forward(t_val), from.rad));
+        curve.emplace_back(Ray2<q16>(from.org + norm * solver.forward(t_val), from.rad));
     }
 }
 
 
 
-void Sequencer::arc(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> & to, const q16 & radius){
-    const auto center_opt = calculate_fillet_center(from.normal(), to.normal(), radius);
-    if(!center_opt) return;
-    // const auto center = center_opt.value();
+void Sequencer::arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to, const q16 & radius){
+    const auto may_center = calculate_fillet_center(from.normal(), to.normal(), radius);
+    if(may_center.is_none()) return;
+    // const auto center = may_center.value();
     
     // TrapezoidSolver solver{
     //     limits_.max_agr, 
@@ -77,7 +77,7 @@ void Sequencer::arc(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> &
     // }
 }
 
-void Sequencer::sideways(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> & to){
+void Sequencer::sideways(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to){
     auto from_norm_line = from.normal();
     auto to_norm_line = to.normal();
 
@@ -91,12 +91,12 @@ void Sequencer::sideways(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q
 
     auto mid_p = mid_p_opt.value();
     
-    this->linear(curve, Ray2_t<q16>{from.org, from.rad}, mid_p);
-    this->rotate(curve, Ray2_t<q16>{mid_p, from.rad}, to.rad);
-    this->linear(curve, Ray2_t<q16>{mid_p, to.rad}, to.org);
+    this->linear(curve, Ray2<q16>{from.org, from.rad}, mid_p);
+    this->rotate(curve, Ray2<q16>{mid_p, from.rad}, to.rad);
+    this->linear(curve, Ray2<q16>{mid_p, to.rad}, to.org);
 }
 
-void Sequencer::follow(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> & to){
+void Sequencer::follow(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to){
     const auto from_line = from.to_line();
     const auto to_line = to.to_line();
 
@@ -111,22 +111,22 @@ void Sequencer::follow(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16
     auto mid_p = mid_p_opt.value();
     
     this->rotate(curve, from, from_line.rad);
-    this->linear(curve, Ray2_t<q16>{from.org, from_line.rad}, mid_p);
-    this->rotate(curve, Ray2_t<q16>{mid_p, from_line.rad}, to_line.rad);
-    this->linear(curve, Ray2_t<q16>{mid_p, to_line.rad}, to.org);
-    this->rotate(curve, Ray2_t<q16>{to.org, to_line.rad}, to.rad);
+    this->linear(curve, Ray2<q16>{from.org, from_line.rad}, mid_p);
+    this->rotate(curve, Ray2<q16>{mid_p, from_line.rad}, to_line.rad);
+    this->linear(curve, Ray2<q16>{mid_p, to_line.rad}, to.org);
+    this->rotate(curve, Ray2<q16>{to.org, to_line.rad}, to.rad);
 }
 
-void Sequencer::shift(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> & to){
+void Sequencer::shift(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to){
     this->linear(curve, from, to.org);
 }
 
 
-void Sequencer::spin(Curve & curve, const Ray2_t<q16> & from, const Ray2_t<q16> & to){
+void Sequencer::spin(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to){
     this->rotate(curve, from, to.rad);
 }
 
-void Sequencer::wait(Curve & curve, const Ray2_t<q16> & from, const q16 & dur){
+void Sequencer::wait(Curve & curve, const Ray2<q16> & from, const q16 & dur){
     const auto freq = paras_.freq;
     const auto n = size_t(dur * freq);
     // const auto n = 22;

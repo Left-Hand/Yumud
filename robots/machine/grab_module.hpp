@@ -18,12 +18,12 @@ class GrabModule;
 
 namespace GrabActions{
 
-class GrabAction:public Action{
+class GrabAction:public ActionBase{
 protected:
     using Inst = GrabModule; 
     Inst & inst_;
     GrabAction(size_t s, Callback && func, Inst & inst):
-        Action(s, std::move(func)),
+        ActionBase(s, std::move(func)),
         inst_(inst){;}
 public:
 };

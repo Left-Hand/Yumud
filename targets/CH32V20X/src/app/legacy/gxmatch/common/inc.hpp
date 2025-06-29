@@ -21,7 +21,7 @@ namespace gxm{
     using Vector3 = Vector3<real_t>;
     using Vector3i = Vector3<int>;
     using AABB = AABB_t<real_t>;
-    using Ray = Ray2_t<real_t>;
+    using Ray = Ray2<real_t>;
     
     using Mecanum4Solver = Mecanum4Solver_t<real_t>;
     using Scara5Solver = Scara5Solver_t<real_t>;

@@ -16,12 +16,12 @@ class ChassisModule;
 
 namespace ChassisActions{
 
-class ChassisAction:public Action{
+class ChassisAction:public ActionBase{
 protected:
     using Inst = ChassisModule; 
     Inst & inst_;
     ChassisAction(size_t s, Callback && func, Inst & inst):
-        Action(s, std::move(func)),
+        ActionBase(s, std::move(func)),
         inst_(inst){;}
 public:
 };
