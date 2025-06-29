@@ -26,7 +26,7 @@ std::tuple<Option<Vector2<T>>, Option<Vector2<T>>> calculate_circle_center(
     const T radius_squ = radius * radius;
 
     if (distance_squ_div4 == 0 || distance_squ_div4 > radius_squ) {
-        return {std::nullopt, std::nullopt};
+        return {None, None};
     }
 
     // 计算法线向量
@@ -51,14 +51,6 @@ Option<Vector2<T>> calculate_fillet_center(
 ){
     return None;
 }
-
-
-// scexpr T squ_len = 96;
-// scexpr Vector2 pos_begin = {111, 46};
-// scexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
-// scexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
-// scexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
-
 
 template<arithmetic T>
 

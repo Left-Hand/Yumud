@@ -89,21 +89,24 @@ scexpr RGB get_relect_color(const int8_t i){
 [[nodiscard]]
 static Interaction_t<real_t> make_interaction(
     const Intersection_t<real_t> & intersection, 
-    const Ray3_t<real_t> & ray, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles)
-{
+    const Ray3<real_t> & ray, 
+    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+){
     const auto & surface = co_triangles[intersection.i];
     return Interaction_t<real_t>{
         intersection.i,
         intersection.t,
         surface,
-        ray.start + ray.direction * intersection.t,
+        ray.base + ray.direction * intersection.t,
         (ray.direction.dot(surface.normal) > 0) ? (-surface.normal) : (surface.normal) 
     };
 }
 
 [[nodiscard]]
-static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const TriangleSurfaceCache_t<real_t> & surface){
+static __fast_inline real_t tt_intersect(
+    const Ray3<real_t> & ray, 
+    const TriangleSurfaceCache_t<real_t> & surface
+){
     const auto & E1 = surface.v1 - surface.v0;  // E1 = v1 - v0
     const auto & E2 = surface.v2 - surface.v0;  // E2 = v2 - v0
 
@@ -114,7 +117,7 @@ static __fast_inline real_t tt_intersect(const Ray3_t<real_t> & ray, const Trian
 
     const auto inv_determinant = 1 / determinant;
 
-    const auto vec = ray.start - surface.v0;
+    const auto vec = ray.base - surface.v0;
     const auto u = P.dot(vec) * inv_determinant;
     if (unlikely(not_in_one(u))) return 0;
 
@@ -137,17 +140,20 @@ static __fast_inline bool tb_intersect_impl (const Vector3<real_t> & t0, const V
 
 
 [[nodiscard]] __pure
-static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+static Intersection_t<real_t> intersect(
+    const Ray3<real_t> & ray, 
+    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+){
     Intersection_t<real_t> intersection = {
         -1,
         std::numeric_limits<real_t>::max()
     };
 
-    const auto & start = ray.start;
+    const auto & base = ray.base;
     const auto inv_dir = Vector3<real_t>::from_rcp(ray.direction);
 
-    const Vector3<real_t> t0 = (bbmin - start) * inv_dir;
-    const Vector3<real_t> t1 = (bbmax - start) * inv_dir;
+    const Vector3<real_t> t0 = (bbmin - base) * inv_dir;
+    const Vector3<real_t> t1 = (bbmax - base) * inv_dir;
 
     
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
@@ -166,7 +172,11 @@ static Intersection_t<real_t> intersect(const Ray3_t<real_t> & ray, std::span<co
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<real_t> & interaction, const Ray3_t<real_t> & ray, const Quat<real_t> & rotation){
+static std::optional<std::pair<RGB, real_t>> sample_bsdf(
+    const Interaction_t<real_t> & interaction, 
+    const Ray3<real_t> & ray, 
+    const Quat<real_t> & rotation
+){
     const auto wi_z = rotation.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return std::nullopt;
@@ -182,8 +192,10 @@ static std::optional<std::pair<RGB, real_t>> sample_bsdf(const Interaction_t<rea
 }
 
 [[nodiscard]] __pure
-static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat<real_t> & rotation)
-{
+static Ray3<real_t> cos_weighted_hemi(
+    const __restrict Interaction_t<real_t> & interaction, 
+    const __restrict Quat<real_t> & rotation
+){
     const auto [u0, u1] = rand01_2();
 
     const auto r = sqrtf(u0);
@@ -196,14 +208,18 @@ static Ray3_t<real_t> cos_weighted_hemi(const __restrict Interaction_t<real_t> &
         real_t((sqrtf(1 - u0)))
     );
 
-    return Ray3_t<real_t>::from_start_and_dir(
+    return Ray3<real_t>::from_base_and_dir(
         interaction.position + interaction.normal * EPSILON,
         rotation.xform(v)
     );
 }
 
 [[nodiscard]]
-static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & interaction, const __restrict Quat<real_t> & rotation, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+static std::optional<RGB> sample_light(
+    const __restrict Interaction_t<real_t> & interaction, 
+    const __restrict Quat<real_t> & rotation, 
+    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+){
     const auto [u0, u1] = rand01_2();
 
     const auto light_idx = u0 < 0.5_r ? 0 : 1;
@@ -224,7 +240,7 @@ static std::optional<RGB> sample_light(const __restrict Interaction_t<real_t> & 
         Vector3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
-    const auto ray = Ray3_t<real_t>::from_start_and_stop(
+    const auto ray = Ray3<real_t>::from_start_and_stop(
         interaction.position + interaction.normal * EPSILON,
         light_pos
     );
@@ -260,7 +276,11 @@ static Quat<real_t> quat_from_normal(const Vector3<real_t>& normal)
 }
 
 [[maybe_unused]]
-static RGB sampleRay(RGB sample, Ray3_t<real_t> ray, std::span<const TriangleSurfaceCache_t<real_t>> co_triangles){
+static RGB sampleRay(
+    RGB sample, 
+    Ray3<real_t> ray, 
+    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+){
     auto throughput = RGB{1,1,1};
     uint16_t depth = 0;
     while (1){
@@ -310,7 +330,7 @@ static RGB samplePixel(const uint x, const uint y, std::span<const TriangleSurfa
         sample += 
         sampleRay(
             sample,
-            Ray3_t<real_t>::from_start_and_dir(eye,Vector3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3<real_t>::from_base_and_dir(eye,Vector3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))

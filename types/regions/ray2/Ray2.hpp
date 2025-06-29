@@ -19,9 +19,6 @@ public:
 
     [[nodiscard]] __fast_inline constexpr Ray2(const Vector2<T> & _org, const T & _rad): 
             org(static_cast<Vector2<T>>(_org)), rad(static_cast<T>(_rad)){;}
-
-    [[nodiscard]] __fast_inline constexpr Ray2(const T & _x, const T & _y, const T & _rad): 
-            org(Vector2<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
             
     [[nodiscard]] __fast_inline constexpr Ray2(const Vector2<T> & _from, const Vector2<T> & _to): 
             org(static_cast<Vector2<T>>(_from)), rad((_to - _from).angle()){;}
@@ -81,7 +78,7 @@ public:
         return this->org + Vector2<T>{l, 0}.rotated(this->rad);
     }
     
-    [[nodiscard]] __fast_inline constexpr Segment2_t<T> cut(const T & l) const{
+    [[nodiscard]] __fast_inline constexpr Segment2<T> cut(const T & l) const{
         return {this->org, endpoint(l)};
     }
 

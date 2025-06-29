@@ -11,18 +11,18 @@ namespace ymd::smc::sim{
 
 template<typename T>
 struct CameraViewport2_t{
-    Pose2_t<T> pose;
+    Pose2<T> pose;
     T zoom;
 };
 
 
-class BlueprintBuilder{
+class BlueprintSpawner{
 public:
     struct Config{
         real_t road_width;
     };
 
-    constexpr BlueprintBuilder(const Config & cfg, const Pose2_t<real_t> & entrypoint):
+    constexpr BlueprintSpawner(const Config & cfg, const Pose2<real_t> & entrypoint):
         viewpoint_(entrypoint){
             reconf(cfg);
         }
@@ -30,7 +30,7 @@ public:
     constexpr void reconf(const Config & cfg){
         road_width_ = cfg.road_width;
     }
-    [[nodiscard]] constexpr auto add_annular_sector(const real_t radius, const real_t rotation){
+    [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const real_t rotation){
         ASSERT(radius > 0);
         const auto start_rad = ((rotation > 0) ? 
                 (viewpoint_.rad - real_t(PI/2))
@@ -56,7 +56,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] constexpr auto add_stright(const real_t length){
+    [[nodiscard]] constexpr auto spawn_stright(const real_t length){
         ASSERT(length > 0);
         const auto ret = RotatedRect{
             .width = road_width_,
@@ -71,7 +71,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] constexpr auto add_zebra_stright(const real_t length){
+    [[nodiscard]] constexpr auto spawn_zebra_stright(const real_t length){
         ASSERT(length > 0);
         const auto ret = RotatedZebraRect{
             .width = road_width_,
@@ -86,7 +86,7 @@ public:
         return ret;
     }
 private:
-    Pose2_t<real_t> viewpoint_;
+    Pose2<real_t> viewpoint_;
     real_t road_width_;
 };
 

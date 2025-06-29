@@ -12,6 +12,8 @@
 #include "types/regions/ray2/Ray2.hpp"
 #include "types/regions/line2/Line2.hpp"
 
+#include "types/gesture/pose2.hpp"
+
 // static constexpr Vector2u CAMERA_SIZE = {94/2, 60/2};
 // static constexpr Vector2u CAMERA_SIZE = {94, 60};
 static constexpr Vector2u CAMERA_SIZE = {94 * 3 / 2, 60 * 3 / 2};
@@ -24,70 +26,10 @@ static constexpr uint8_t WHITE_COLOR = 0x9f;
 
 using namespace ymd;
 
-consteval q16 operator"" _deg(long double x){
-    return q16(x * PI / 180);
-}
-consteval q16 operator"" _deg(uint64_t x){
-    return q16(x * PI / 180);
-}
 
 
 
 namespace ymd::smc::sim{
-
-template<typename T>
-struct Pose2_t{
-    Vector2<T> pos;
-    T rad;
-
-    template<typename U = T>
-    constexpr Pose2_t(const Pose2_t<U> & other):
-        pos(other.pos), rad(other.rad){;}
-
-    template<typename U = T>
-    constexpr Pose2_t(const Vector2<U> & _pos, const U _rad):
-        pos(_pos), rad(_rad){;}
-
-    [[nodiscard]] constexpr Pose2_t<T> forward_move(const T length) const {
-        const auto [s, c] = sincos(rad);
-        const auto delta = Vector2<T>{c, s} * length;
-        return {
-            pos + delta,
-            rad
-        };
-    }
-
-    [[nodiscard]] constexpr Pose2_t<T> side_move(const T length) const {
-        const auto [s, c] = sincos(rad + q16(PI/2));
-        const auto delta = Vector2<T>{c, s} * length;
-        return {
-            pos + delta,
-            rad
-        };
-    }
-
-    [[nodiscard]] constexpr Pose2_t<T> revolve_by_radius_and_rotation(
-            const T radius, const T rot) const {
-
-        const auto ar = Vector2<T>::from_idenity_rotation(rad).rotated(
-            rot > 0 ? T(PI/2) : T(-PI/2)
-        ) * radius;
-
-        const auto org = pos + ar;
-        const auto delta = (-ar).rotated(rot);
-        return {org + delta, rad + rot};
-    }
-};
-
-template<typename T>
-Pose2_t(const Vector2<T> & _pos, const T _rad) -> Pose2_t<T>;
-
-template<typename T>
-__fast_inline OutputStream & operator<<(OutputStream & os, const Pose2_t<T> & obj){
-    return os << os.brackets<'('>() 
-        << obj.pos << os.splitter() << 
-        obj.rad << os.brackets<')'>();
-}
 
 using BoundingBox = Rect2<q16>;
 
@@ -132,7 +74,7 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
 }
 
 
-struct AnnularSector{
+struct AnnularSector final{
 
     q16 inner_radius;
     q16 outer_radius;
@@ -212,10 +154,10 @@ struct AnnularSector{
             v2 * outer_radius
         });
 
-        MergeHelper::merge_if_has_radian(bb, {1,0}, v1, v2, is_close);
-        MergeHelper::merge_if_has_radian(bb, {0,1}, v1, v2, is_close);
-        MergeHelper::merge_if_has_radian(bb, {-1,0}, v1, v2, is_close);
-        MergeHelper::merge_if_has_radian(bb, {0,-1}, v1, v2, is_close);
+        BoundingBoxMergeHelper::merge_if_has_radian(bb, {1,0}, v1, v2, is_close);
+        BoundingBoxMergeHelper::merge_if_has_radian(bb, {0,1}, v1, v2, is_close);
+        BoundingBoxMergeHelper::merge_if_has_radian(bb, {-1,0}, v1, v2, is_close);
+        BoundingBoxMergeHelper::merge_if_has_radian(bb, {0,-1}, v1, v2, is_close);
 
         return bb;
     }
@@ -231,14 +173,14 @@ struct AnnularSector{
     const {
         const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
         const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
-        return MergeHelper::has_radian(
+        return BoundingBoxMergeHelper::has_radian(
             offset,
             v1, v2, v2.is_count_clockwise_to(v1)
         );
     }
 private:
 
-    struct MergeHelper{
+    struct BoundingBoxMergeHelper{
         static constexpr bool has_radian(
             const real_t radian,
             const Vector2<real_t> start_norm_vec,
@@ -279,7 +221,7 @@ private:
 
 };
 
-struct RectBlob{
+struct RectBlob final{
     q16 width;
     q16 height;
 
@@ -312,7 +254,7 @@ struct RectBlob{
 };
 
 
-struct Aurora{
+struct SpotLight final{
     q16 radius = 1;
 
     struct Cache{
@@ -479,7 +421,7 @@ struct RotatedZebraRect{
 //将相机像素转换为地面坐标
 static constexpr Vector2q<16> project_pixel_to_ground(
     const Vector2u pixel, 
-    const Pose2_t<q16> viewpoint, 
+    const Pose2<q16> viewpoint, 
     const q16 zoom
 ) {
     const Vector2i pixel_offset = {
@@ -494,7 +436,7 @@ static constexpr Vector2q<16> project_pixel_to_ground(
 
 static constexpr Vector2u project_ground_to_pixel(
     const Vector2q<16>& ground_pos,
-    const Pose2_t<q16> viewpoint,
+    const Pose2<q16> viewpoint,
     const q16 zoom)
 {
     // 1. Remove viewpoint position offset
@@ -537,7 +479,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Pose2_t<q16> viewpoint, const q16 zoom) const = 0;
+    virtual Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -552,7 +494,7 @@ public:
 //         );
 //     }
 
-//     Image<Grayscale> render(const Pose2_t<q16> viewpoint) const {
+//     Image<Grayscale> render(const Pose2<q16> viewpoint) const {
 //         Image<Grayscale> ret{CAMERA_SIZE};
 
 //         const auto org = project_pixel_to_ground({0,0}, viewpoint);
@@ -597,7 +539,7 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Pose2_t<q16> viewpoint, const q16 zoom) const {
+    Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);

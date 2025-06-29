@@ -250,7 +250,7 @@ void smc2025_main(){
         //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
         //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
         [[maybe_unused]]const auto t = clock::time();
-        const auto pose = Pose2_t{
+        const auto pose = Pose2{
             // Vector2<real_t>(0, -1.5_r) + Vector2<real_t>(-1.9_r, 0)
             // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
             // {1.0_r, -0.5_r}, 0.0_r};

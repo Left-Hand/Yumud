@@ -20,12 +20,12 @@ public:
         d(0),
         rad(0){;}
 
-    [[nodiscard]] constexpr Line2(const Segment2_t<auto> & seg):
+    [[nodiscard]] constexpr Line2(const Segment2<auto> & seg):
         d(((seg.from).cross(seg.to)) / (seg.to - seg.from).length()), 
         rad(seg.angle()){;}
 
     [[nodiscard]] constexpr Line2(const Vector2<auto> & _from, const Vector2<auto> & _to): 
-            Line2(Segment2_t<T>(_from, _to)){;}
+            Line2(Segment2<T>(_from, _to)){;}
             
 
     // d = p.x * sin(_rad) - p.y * cos(_rad) 
@@ -260,7 +260,7 @@ public:
         return Vector2<T>{0,0};
     }
 
-    [[nodiscard]] __fast_inline constexpr Segment2_t<T> perpendicular(const Vector2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr Segment2<T> perpendicular(const Vector2<T> & p) const{
         return {p, this->foot_of(p)};
     }
 

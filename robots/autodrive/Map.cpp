@@ -5,35 +5,35 @@ using namespace ymd;
 using namespace ymd::robots;
 
 Vector2<real_t> Field::to_pos(const Map & map) const {
-    switch(type_){
+    switch(kind_){
         default:
             HALT;
-        case FieldType::Billboard:
+        case FieldKind::Billboard:
             return (map.billboard_gest).org;
-        case FieldType::Garbage:
+        case FieldKind::Garbage:
             return (map.garbage_gest).org;
-        case FieldType::RawMaterial:
+        case FieldKind::RawMaterial:
             return (map.raw_material_gest).org;
-        case FieldType::RoughProcess:
+        case FieldKind::RoughProcess:
             return (map.rough_process_gest).org;
-        case FieldType::Staging:
+        case FieldKind::Staging:
             return (map.staging_gest).org;
     }
 }
 
 real_t Field::to_rot(const Map & map) const {
-    switch(type_){
+    switch(kind_){
         default:
             HALT;
-        case FieldType::Billboard:
+        case FieldKind::Billboard:
             return (map.billboard_gest).rad;
-        case FieldType::Garbage:
+        case FieldKind::Garbage:
             return (map.garbage_gest).rad;
-        case FieldType::RawMaterial:
+        case FieldKind::RawMaterial:
             return (map.raw_material_gest).rad;
-        case FieldType::RoughProcess:
+        case FieldKind::RoughProcess:
             return (map.rough_process_gest).rad;
-        case FieldType::Staging:
+        case FieldKind::Staging:
             return (map.staging_gest).rad;
     }
 }

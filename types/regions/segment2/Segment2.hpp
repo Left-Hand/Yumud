@@ -6,19 +6,19 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Segment2_t{
+struct Segment2{
 public:
     Vector2<T> from;
     Vector2<T> to;
 
 public:
-    [[nodiscard]] constexpr Segment2_t(){;}
+    [[nodiscard]] constexpr Segment2(){;}
 
-    [[nodiscard]] constexpr Segment2_t(const Vector2<auto> & _from, const Vector2<auto> & _to): 
+    [[nodiscard]] constexpr Segment2(const Vector2<auto> & _from, const Vector2<auto> & _to): 
             from(static_cast<Vector2<T>>(_from)), to(static_cast<Vector2<T>>(_to)){;}
 
     template<arithmetic U = T>
-    [[nodiscard]] constexpr Segment2_t(const std::tuple<U, U, U, U> & tup) : 
+    [[nodiscard]] constexpr Segment2(const std::tuple<U, U, U, U> & tup) : 
             from((Vector2<T>(std::get<0>(tup), std::get<1>(tup)))),
             to((Vector2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
 
@@ -32,11 +32,11 @@ public:
         return *(&from + idx);
     }
 
-	[[nodiscard]] __fast_inline constexpr bool operator==(const Segment2_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator==(const Segment2 & other) const{
         return from == other.from and to == other.to;
     }
 
-	[[nodiscard]] __fast_inline constexpr bool operator!=(const Segment2_t & other) const{
+	[[nodiscard]] __fast_inline constexpr bool operator!=(const Segment2 & other) const{
         return (*this == other) == false; 
     }
 
@@ -66,15 +66,15 @@ public:
         return sign((from - p).cross(to - p));
     }
 
-    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Segment2_t & other){
+    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Segment2 & other){
         return is_equal_approx(this->diff().cross(other.diff()), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr bool orthogonal_with(const Segment2_t & other){
+    [[nodiscard]] __fast_inline constexpr bool orthogonal_with(const Segment2 & other){
         return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr std::optional<Vector2<T>> intersection(const Segment2_t<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vector2<T>> intersection(const Segment2<T> & other) const{
         if(this->parallel_with(other)) return std::nullopt;
         else if(this->operator==(other)) return std::nullopt;
         
@@ -121,14 +121,14 @@ public:
 
 
 template<size_t Q>
-using Segment2q = Segment2_t<iq_t<Q>>;
-using Segment2f = Segment2_t<float>;
-using Segment2d = Segment2_t<double>;
+using Segment2q = Segment2<iq_t<Q>>;
+using Segment2f = Segment2<float>;
+using Segment2d = Segment2<double>;
 
-using Segment2i = Segment2_t<int>;
-using Segment2u = Segment2_t<uint>;
+using Segment2i = Segment2<int>;
+using Segment2u = Segment2<uint>;
 
-__inline OutputStream & operator <<(OutputStream & os, const Segment2_t<auto> & seg){
+__inline OutputStream & operator <<(OutputStream & os, const Segment2<auto> & seg){
     return os << os.brackets<'('>() << 
         seg.from << os.splitter() << 
         seg.to << os.brackets<')'>();
