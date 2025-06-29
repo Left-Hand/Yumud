@@ -13,8 +13,11 @@ enum FormerLatter:bool{
 
 namespace ymd::drivers{
 
+struct LIS3DH_Prelude{
 
-struct _LIS3DH_Regs{
+    enum class FilteringStrategy:uint8_t{ FIR, IIR};
+    enum class Bandwidth:uint8_t{_440Hz, _235Hz};
+    
     enum class SelfTestMode{
         Normal,
         PositiveSign,
@@ -30,6 +33,9 @@ struct _LIS3DH_Regs{
     };
 
     using RegAddress = uint8_t;
+};
+
+struct _LIS3DH_Regs:public LIS3DH_Prelude{
 
     struct R8_WhoAmI:public Reg8<>{
         scexpr RegAddress address = 0x0F; 
@@ -117,7 +123,9 @@ struct _LIS3DH_Regs{
     }DEF_R8(fifo_src_reg)
 };
 
-class LIS3DH:public AccelerometerIntf{
+class LIS3DH:
+    public LIS3DH_Prelude,
+    public AccelerometerIntf{
 public:
     using Regs      =  _LIS3DH_Regs;
     using Phy       = StmicroImu_Phy;
@@ -131,7 +139,8 @@ public:
 protected:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
-    IResult<> write_reg(const auto & reg);
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg);
 
     IResult<> read_reg(auto & reg);
 
@@ -144,11 +153,16 @@ public:
 
     LIS3DH(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
-    LIS3DH(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    LIS3DH(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    LIS3DH(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    LIS3DH(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS3DH(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS3DH(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    LIS3DH(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    LIS3DH(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    LIS3DH(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    LIS3DH(hal::Spi & spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -158,50 +172,68 @@ public:
     [[nodiscard]] IResult<> clear_flag();
 
     [[nodiscard]] IResult<Vector3<q24>> read_acc();
+    [[nodiscard]] IResult<> sleep(){
+        auto reg = RegCopy(regs_.ctrl1_reg); 
+        reg.norm_mod_en = false; 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> sleep()
-        {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = false; return write_reg(reg);}
-    [[nodiscard]] IResult<> wakeup()
-        {auto & reg = regs_.ctrl1_reg; reg.norm_mod_en = true; return write_reg(reg);}
+    [[nodiscard]] IResult<> wakeup(){
+        auto reg = RegCopy(regs_.ctrl1_reg); 
+        reg.norm_mod_en = true; 
+        return write_reg(reg);
+    }
 
     [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en){
-        auto & reg = regs_.ctrl1_reg; 
+        auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
     [[nodiscard]] IResult<> block_when_update(const Enable en){
-        auto & reg = regs_.ctrl1_reg; 
+        auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
 
-    enum class FilteringStrategy:uint8_t{ FIR, IIR};
-    enum class Bandwidth:uint8_t{_440Hz, _235Hz};
-    
-    [[nodiscard]] IResult<> set_filtering_strategy(const FilteringStrategy st)
-        {auto & reg = regs_.ctrl4_reg; reg.dsp_lp_type = bool(st); return write_reg(reg);}
+    [[nodiscard]] IResult<> set_filtering_strategy(const FilteringStrategy st){
+        auto reg = RegCopy(regs_.ctrl4_reg); 
+        reg.dsp_lp_type = bool(st); 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> set_bandwidth(const Bandwidth bw)
-        {auto & reg = regs_.ctrl4_reg; reg.dsp_bw_sel = bool(bw); return write_reg(reg);}
+    [[nodiscard]] IResult<> set_bandwidth(const Bandwidth bw){
+        auto reg = RegCopy(regs_.ctrl4_reg); 
+        reg.dsp_bw_sel = bool(bw); 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> set_selftest_mode(const SelfTestMode mode)
-        {auto & reg = regs_.ctrl4_reg; reg.selftest_mode = uint8_t(mode); return write_reg(reg);}
+    [[nodiscard]] IResult<> set_selftest_mode(const SelfTestMode mode){
+        auto reg = RegCopy(regs_.ctrl4_reg); 
+        reg.selftest_mode = uint8_t(mode); 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> set_int1_pp_or_od(const FormerLatter sel)
-        {auto & reg = regs_.ctrl4_reg; reg.pp_od_int1 = sel; return write_reg(reg);}
+    [[nodiscard]] IResult<> set_int1_pp_or_od(const FormerLatter sel){
+        auto reg = RegCopy(regs_.ctrl4_reg); 
+        reg.pp_od_int1 = sel; 
+        return write_reg(reg);
+    }
 
-    [[nodiscard]] IResult<> set_int2_pp_or_od(const FormerLatter sel)
-        {auto & reg = regs_.ctrl4_reg; reg.pp_od_int2 = sel; return write_reg(reg);}
+    [[nodiscard]] IResult<> set_int2_pp_or_od(const FormerLatter sel){
+        auto reg = RegCopy(regs_.ctrl4_reg); 
+        reg.pp_od_int2 = sel; 
+        return write_reg(reg);
+    }
         
     [[nodiscard]] IResult<> enable_fifo(const Enable en){
-        auto & reg = regs_.ctrl4_reg; 
+        auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.fifo_en = en == EN; 
         return write_reg(reg);}
 
     [[nodiscard]] IResult<> enable_spi_hw(const Enable en){
-        auto & reg = regs_.ctrl5_reg; 
+        auto reg = RegCopy(regs_.ctrl5_reg); 
         reg.fifo_spi_hs_on = en == EN; 
         return write_reg(reg);
     }
@@ -213,8 +245,12 @@ public:
 
 namespace ymd::drivers{
 
-LIS3DH::IResult<> LIS3DH::write_reg(const auto & reg){
-    return LIS3DH::IResult<>(phy_.write_reg(reg.address, reg.as_val()));
+template<typename T>
+LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
+    const auto res = phy_.write_reg(reg.address, reg.as_val());
+    if(res.is_err()) return res;
+    reg.apply();
+    return Ok();
 }
 
 LIS3DH::IResult<> LIS3DH::read_reg(auto & reg){

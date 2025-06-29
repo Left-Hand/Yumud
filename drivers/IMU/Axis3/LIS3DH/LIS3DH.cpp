@@ -53,16 +53,20 @@ Result<void, Error> LIS3DH::clear_flag(){
 
 Result<void, Error> LIS3DH::validate(){
     auto & reg = regs_.whoami_reg;
-    return verify_phy()
+    if(const auto res = verify_phy()
         | reset()
-        | read_reg(reg)
-        | rescond(reg.as_val() == reg.key, Ok(), Err(Error(Error::WrongWhoAmI)))
-    ;
+        | read_reg(reg);
+        res.is_err()) return res;
+        
+    if(reg.as_val() != reg.key)
+        return Err(Error::WrongWhoAmI);
+    
+    return Ok();
 }
 
 
 Result<void, Error> LIS3DH::reset(){
-    auto & reg = regs_.ctrl1_reg;
+    auto reg = RegCopy(regs_.ctrl1_reg);
     reg.sw_reset = 1;
     auto err = write_reg(reg);
     reg.sw_reset = 0;

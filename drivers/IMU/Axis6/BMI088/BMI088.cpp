@@ -41,8 +41,13 @@ Result<void, Error> BMI088_Acc::reset(){
 }
 
 Result<void, Error> BMI088_Acc::verify_chip_id(){
-    return phy_.read_regs(acc_chipid_reg) 
-        | rescond(acc_chipid_reg.data == ACC_CHIP_ID, Ok(), Err(Error(Error::WrongWhoAmI)));
+    if(const auto res = phy_.read_regs(acc_chipid_reg);
+        res.is_err()) return res;
+
+    if(acc_chipid_reg.data != ACC_CHIP_ID)
+        Err(Error::WrongWhoAmI);
+
+    return Ok();
 }
 
 Result<void, Error> BMI088_Acc::validate(){
