@@ -5,25 +5,11 @@
 
 namespace ymd{
 
-class BufStream:public OutputStream{
-protected:
-    char * buf_;
-    const size_t max_len_;
-    size_t len_ = 0;
-
-    size_t available_for_write() const {
-        return max_len_ - len_;
-    }
+class BufStream final:public OutputStream{
 public:
-    template <typename T>
-    requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
-    BufStream(T& range):
-        buf_(reinterpret_cast<char *>(std::ranges::data(range))),
-        max_len_(std::ranges::size(range)){;}
-
-    BufStream(char * buf, const size_t max_len = UINT32_MAX):
-        buf_(buf),
-        max_len_(max_len){;}
+    BufStream(std::span<char> pbuf):
+        buf_(pbuf.data()),
+        max_len_(pbuf.size()){;}
 
     void sendout(std::span<const char> pbuf){
         if(pbuf.size() > available_for_write()){
@@ -32,9 +18,20 @@ public:
             std::memcpy(buf_, pbuf.data(), pbuf.size());
         }
     }
-    size_t pending() const {return 0;}
 
-    operator StringView() const;
+    constexpr size_t pending() const {return 0;}
+
+    constexpr operator StringView() const {
+        return StringView(buf_, len_);
+    }
+private:
+    char * buf_;
+    const size_t max_len_;
+    size_t len_ = 0;
+
+    size_t available_for_write() const {
+        return max_len_ - len_;
+    }
 };
 
 template<typename ... Args>
