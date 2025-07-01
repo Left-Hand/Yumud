@@ -1,34 +1,34 @@
 #pragma once
 
-#include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf/Fifo_t.hpp"
 #include <vector>
 #include <functional>
 
 namespace gxm{
 
 template<typename T>
-class Topic_t;
+class Topic;
 
 
 template<typename T>
-class Publisher_t{
+class Publisher{
 private:
-    Topic_t<T>& topic_;
+    Topic<T>& topic_;
 
 public:
-    Publisher_t(Topic_t<T>& topic) : topic_(topic) {}
+    Publisher(Topic<T>& topic) : topic_(topic) {}
 
     void publish(const T& message);
 };
 
 template<typename T>
-class Subscriber_t{
+class Subscriber{
 private:
-    using Callback = Topic_t<T>::Callback;
+    using Callback = Topic<T>::Callback;
     Callback callback_;
 
 public:
-    Subscriber_t(const Callback callback)
+    Subscriber(const Callback callback)
         :callback_(callback) {}
 
     Callback getCallback() const {
@@ -41,17 +41,18 @@ public:
 };
 
 template<typename T>
-class Topic_t{
+class Topic{
 public:
     using Callback = std::function<void(const T&)>;
-    using Publisher = Publisher_t<T>;
-    using Subscriber = Subscriber_t<T>;
+    using Publisher = Publisher<T>;
+    using Subscriber = Subscriber<T>;
 protected:
-    Fifo_t<T, 32> fifo_;
+    static constexpr size_t N = 16;
+    Fifo_t<T, N> fifo_;
 
     std::vector<Callback> subscribers_;
 
-    void notifySubscribers() {
+    void notify_subscribers() {
         while (!fifo_.empty()) {
             auto msg = fifo_.pop();
 
@@ -61,7 +62,7 @@ protected:
         }
     }
 public:
-    void publish(const T& msg){
+    void publish(const T & msg){
         fifo_.push(msg);
         notifySubscribers();
     }
@@ -70,18 +71,18 @@ public:
         subscribers_.push_back(callback);
     }
 
-    auto createPublisher(){
-        return Publisher_t<T>(*this);
+    auto create_publisher(){
+        return Publisher<T>(*this);
     }
-    auto createSubscriber(const Callback callback) {
+    auto create_subscriber(const Callback callback) {
         subscribe(callback);
-        return Subscriber_t<T>(callback);
+        return Subscriber<T>(callback);
     }
 };
 
 
 template<typename T>
-void Publisher_t<T>::publish(const T& message) {
+void Publisher<T>::publish(const T& message) {
     topic_.publish(message);
 }
 

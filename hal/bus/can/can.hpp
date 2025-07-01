@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus_base.hpp"
-#include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf/Fifo_t.hpp"
 #include "core/sdk.hpp"
 
 #include "can_utils.hpp"

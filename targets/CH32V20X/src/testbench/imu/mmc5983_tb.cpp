@@ -11,6 +11,7 @@
 #include "robots/gesture/mahony.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
+#include "thirdparty/sstl/include/sstl/vector.h"
 
 using namespace ymd;
 using namespace ymd::hal;

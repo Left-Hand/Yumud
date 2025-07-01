@@ -9,7 +9,7 @@
 
 #include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
-#include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf/Fifo_t.hpp"
 
 
 namespace std{

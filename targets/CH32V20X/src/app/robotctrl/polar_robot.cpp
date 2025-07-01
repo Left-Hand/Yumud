@@ -628,7 +628,7 @@ void polar_robot_main(){
 
         clock::delay(5ms);
 
-        // repl_service.invoke(list);
+        repl_service.invoke(list);
     }
     #endif
 
