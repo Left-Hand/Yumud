@@ -78,7 +78,8 @@ int main(){
     // mystepper_main();
     // zdt_main();
     // polar_robot_main();
-    ads7830_main();
+    // ads7830_main();
+    dsp_main();
     // can_ring_main();
     // rrs3_robot_main();
     // flash_main();

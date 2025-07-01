@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
-
+#include "core/utils/Option.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "FFT.hpp"
@@ -10,6 +10,7 @@
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/sigproc/tunning_filter.hpp"
 
 #include "ParticleSwarmOptimization.hpp"
 #include "core/math/realmath.hpp"
@@ -19,15 +20,17 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-namespace ymd::dsp{
-    template<typename FnIn, typename FnFt>
-    void evaluate_func(const uint times, FnIn && fn_in, FnFt && fn_ft){
+struct Evaluator{
+    Evaluator() = default;
+
+    template<typename FnIn, typename FnProc>
+    static void evaluate_func(const uint times, FnIn && fn_in, FnProc && fn_proc){
         
         const auto begin_m = clock::micros();
 
         for(size_t i = 0; i < times; ++i){
             const auto x = real_t(i) / times;
-            std::forward<FnFt>(fn_ft)(x);
+            std::forward<FnProc>(fn_proc)(x);
         }
 
         const auto end_m = clock::micros();
@@ -37,92 +40,59 @@ namespace ymd::dsp{
         std::terminate();
     }
 
-    template<typename FnIn, typename FnFt>
-    void run_func(const uint fs, FnIn && fn_in, FnFt && fn_ft){
-        
-        hal::timer1.init({fs});
-        
-        hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
-            const auto x = std::forward<FnIn>(fn_in)();
-            const auto y = std::forward<FnFt>(fn_ft)(x);
+    template<typename FnIn, typename FnProc>
+    void run_func(const uint32_t f_isr, FnIn && fn_in, FnProc && fn_proc){
 
-            DEBUG_PRINTLN(x, y);
+
+        hal::timer1.init({
+            // .freq = fs_.expect("you have not set fs yet")
+            .freq = f_isr
+        });
+        hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
+            x_ = std::forward<FnIn>(fn_in)(time_);
+            y_ = std::forward<FnProc>(fn_proc)(x_);
+            time_ += delta_;
         });
         
-        while(true);
     }
 
-    namespace samples{
-        template<arithmetic T>
-        T sinwave(const T t){
-            return std::sin(t);
-        }
+    constexpr auto get_xy() const {
+        return std::make_tuple(x_,y_);
     }
-}
+
+    void set_fs(const uint32_t fs){
+        fs_ = Some(fs);
+        time_ = 0;
+        delta_ = 1_q24 / fs;
+    }
+
+    auto time() const {
+        return time_;
+    }
+
+    auto delta() const {
+        return delta_;
+    }
+
+private:
+    Option<uint32_t> fs_ = None;
+    q24 time_ = 0;
+    q24 delta_ = 0;
+
+    q16 x_;
+    q16 y_;
+};
+
 
 using namespace ymd;
 // using namespace ymd::dsp;
-
-template<typename T, size_t n>
-void butterworth_bandpass_coeff_tb(const T f1f, const T f2f, const bool scale_en = false){
-
-    // n = order of the filter
-    // fc1 = lower cutoff frequency as a fraction of Pi [0,1]
-    // fc2 = upper cutoff frequency as a fraction of Pi [0,1]
-    // sf = 1 to scale c coefficients for normalized response
-    // sf = 0 to not scale c coefficients
-
-    /* calculate the c coefficients */
-    auto ccof = dsp::ccof_bwbp<n>();
-
-    /* calculate the d coefficients */
-    auto dcof = dsp::dcof_bwbp<T, n>(f1f, f2f );
-
-    // const T sf = dsp::sf_bwbp<T, n>(f1f, f2f ); /* scaling factor for the c coefficients */
-
-    DEBUG_PRINTLN(ccof);
-    clock::delay(20ms);
-    DEBUG_PRINTLN(dcof);
-    clock::delay(20ms);
-
-    std::terminate();
-}
-
-template<typename T, size_t n>
-void butterworth_bandpass_tb(auto && fn_in, const T fl, const T fh, const uint fs){
-    using Filter = dsp::ButterBandpassFilter<T, n>;
-    using Config = Filter::Config;
-
-    Filter filter = {Config{
-        .fl = fl,
-        .fh = fh,
-        .fs = fs,
-    }};
-
-    dsp::run_func(fs, fn_in, filter);
-    // dsp::evaluate_func(fs, fn_in, filter);
-}
- 
-template<typename T, size_t n>
-void butterworth_bandstop_tb(auto && fn_in, const T fl, const T fh, const uint fs){
-    using Filter = dsp::ButterBandstopFilter<T, n>;
-    using Config = Filter::Config;
-
-    Filter filter = {Config{
-        .fl = fl,
-        .fh = fh,
-        .fs = fs,
-    }};
-
-    dsp::run_func(fs, fn_in, filter);
-}
 
 
 
 template<arithmetic T>
 class EnvelopeFilter{
 public:
-    using Lpf = dsp::LowpassFilter_t<T>;
+    using Lpf = dsp::LowpassFilter<T>;
     using Config = Lpf::Config;
 
     EnvelopeFilter(const Config & cfg){
@@ -184,7 +154,7 @@ template<arithmetic T, size_t N>
 class EvelopeBandpassFilter{
 public:
     using Bpf = typename dsp::ButterBandpassFilter<T, N>;
-    using Lpf = typename dsp::LowpassFilter_t<T>;
+    using Lpf = typename dsp::LowpassFilter<T>;
     Bpf bpf_;
     Lpf lpf_;
     struct Config{
@@ -233,8 +203,68 @@ private:
 
 };
 
+
+
+
 template<typename T, size_t n>
-void bpsk_tb(auto && fn_in, const T fl, const T fh, const uint fs){
+static void butterworth_bandpass_coeff_tb(const T f1f, const T f2f, const bool scale_en = false){
+
+    // n = order of the filter
+    // fc1 = lower cutoff frequency as a fraction of Pi [0,1]
+    // fc2 = upper cutoff frequency as a fraction of Pi [0,1]
+    // sf = 1 to scale c coefficients for normalized response
+    // sf = 0 to not scale c coefficients
+
+    /* calculate the c coefficients */
+    auto ccof = dsp::ccof_bwbp<n>();
+
+    /* calculate the d coefficients */
+    auto dcof = dsp::dcof_bwbp<T, n>(f1f, f2f );
+
+    // const T sf = dsp::sf_bwbp<T, n>(f1f, f2f ); /* scaling factor for the c coefficients */
+
+    DEBUG_PRINTLN(ccof);
+    clock::delay(20ms);
+    DEBUG_PRINTLN(dcof);
+    clock::delay(20ms);
+
+    std::terminate();
+}
+
+template<typename T, size_t n>
+static auto make_butterworth_bandpass(const T fl, const T fh, const uint fs){
+    using Filter = dsp::ButterBandpassFilter<T, n>;
+    using Config = Filter::Config;
+
+    Filter filter = {Config{
+        .fl = fl,
+        .fh = fh,
+        .fs = fs,
+    }};
+
+    return filter;
+
+    // Evaluator::run_func(fn_in, filter);
+    // dsp::evaluate_func(fs, fn_in, filter);
+}
+
+template<typename T, size_t n>
+static auto make_butterworth_bandstop(const T fl, const T fh, const uint fs){
+    using Filter = dsp::ButterBandstopFilter<T, n>;
+    using Config = Filter::Config;
+
+    Filter filter = {Config{
+        .fl = fl,
+        .fh = fh,
+        .fs = fs,
+    }};
+
+    return filter;
+}
+
+
+template<typename T, size_t n>
+static auto make_bpsk(const T fl, const T fh, const uint fs){
     using Filter = EvelopeBandpassFilter<T, n>;
     using Config = Filter::Config;
 
@@ -258,16 +288,16 @@ void bpsk_tb(auto && fn_in, const T fl, const T fh, const uint fs){
         .fs = fs,
     }};
 
-    dsp::run_func(fs, fn_in, [&](auto && x){
+    return [=](auto && x){
         l_filter.update(x);
         h_filter.update(x);
         return - l_filter.result() + h_filter.result();
-    });
+    };
 }
 
 
 template<typename T, size_t B>
-void butterworth_lowpass_tb(auto && fn_in, const T fc, const uint fs){
+static auto butterworth_lowpass(const T fc, const uint fs){
     using Filter = dsp::ButterLowpassFilter<T, B>;
     using Config = typename Filter::Config;
 
@@ -276,12 +306,11 @@ void butterworth_lowpass_tb(auto && fn_in, const T fc, const uint fs){
         .fs = fs,
     }};
 
-    dsp::run_func(fs, fn_in, filter);
-    // dsp::evaluate_func(fs, fn_in, filter);
+    return filter;
 }
 
 template<typename T, size_t N>
-void butterworth_highpass_tb(auto && fn_in, const T fc, const uint fs){
+static auto make_butterworth_highpass(const T fc, const uint fs){
     using Filter = dsp::ButterHighpassFilter<T, N>;
     using Config = typename Filter::Config;
 
@@ -290,215 +319,26 @@ void butterworth_highpass_tb(auto && fn_in, const T fc, const uint fs){
         .fs = fs,
     }};
 
-    dsp::run_func(fs, fn_in, filter);
-    // dsp::evaluate_func(fs, fn_in, filter);
+    return filter;
+}
+
+template<typename T>
+static auto make_tunning_filter(const T delay){
+    using Filter = dsp::TunningFilter<T>;
+    using Config = typename Filter::Config;
+    Filter filter {Config{
+        .delay = delay,
+    }};
+
+    return filter;
 }
 
 
-
-class DoubleToneMultiFrequencySiggen{
-public:
-    struct Config{
-        std::array<uint16_t, 4> fl_map;
-        std::array<uint16_t, 4> fh_map;
-        uint fs;
-    };
-
-    DoubleToneMultiFrequencySiggen(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
-
-    void reconf(const Config & cfg){
-        fl_map_ = cfg.fl_map;
-        fh_map_ = cfg.fh_map;
-
-        delta_ = real_t(1) / cfg.fs;
-    }
-
-    void reset(){
-        fl_index_ = 0;
-        fh_index_ = 0;
-        // time_ = 0;
-    }
-
-    
-    void update(const real_t time_){
-        // time_ += delta_;
-        // time_ += 0.0001_q24;
-
-        const auto fl_ = fl_map_[fl_index_];
-        const auto fh_ = fh_map_[fh_index_];
-
-        const auto rad = real_t(TAU) * frac(time_);
-        result_ = sin(fl_ * rad) + sin(fh_ * rad);
-
-        // const auto time = real_t(TAU) * myfrac(time_);
-        // result_ = sinpu(fl_ * time) + sinpu(fh_ * time);
-
-        // const auto rad = real_t(TAU) * time_;
-        // result_ = sinpu(fl_ * time) + sinpu(fh_ * time);
-        // result_ = rad;
-        // result_ = time_;
-        // return time_;
-    }
-
-    auto fl() const{
-        return fl_map_[fl_index_];
-    }
-
-    auto fh() const{
-        return fh_map_[fh_index_];
-    }
-
-    auto result() const{
-        return result_;
-    }
-
-    auto operator ()() const{
-        return result();
-    }
-private:
-    uint8_t fl_index_ = 0;
-    uint8_t fh_index_ = 0;
-
-    std::array<uint16_t, 4> fl_map_;
-    std::array<uint16_t, 4> fh_map_;
-
-    // real_t time_;
-    real_t delta_;
-    real_t result_;
-};
-
-void dtmf_tb(const uint fs){
-    using DTMF = DoubleToneMultiFrequencySiggen;
-    DTMF dtmf = {{
-        .fl_map = {70, 77, 85, 94}, 
-        .fh_map = {120, 133, 148, 163}, 
-        .fs = fs
-    }};
-
-    const real_t fl = dtmf.fl();
-    const real_t fh = dtmf.fh();
-    
-    using Filter = dsp::ButterBandpassFilter<real_t, 4>;
-
-    static constexpr auto Qbw = real_t(0.5);
-
-    real_t side_bw = Qbw * (fh - fl) / 2;
-
-    Filter l_filter {{
-        .fl = fl - side_bw,
-        .fh = fl + side_bw,
-        .fs = fs
-    }};
-
-    Filter h_filter = {{
-        .fl = fh - side_bw,
-        .fh = fh + side_bw,
-        .fs = fs
-    }};
-
-    {
-        dtmf.reset();
-        l_filter.reset();
-        h_filter.reset();
-    }
-
-    hal::timer1.init({fs});
-    hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
-        const auto t = clock::time();
-        dtmf.update(t);
-        const auto wave = real_t(dtmf.result());
-
-        l_filter.update(wave);
-        h_filter.update(wave);
-
-        DEBUG_PRINTLN(
-            // CLAMP(wave,0,1),
-            t,
-            wave,
-            h_filter.get(),
-            l_filter.get() 
-        );
-    });
-}
-
-
-using Particle = dsp::Particle<real_t, real_t>;
-
-void pso_tb() __attribute((optimize(3,"Ofast","inline")));
-
-void pso_tb(){
-    using Pso = dsp::ParticleSwarmOptimization<Particle, real_t>;
-    using Config = typename Pso::Config;
-
-
-    // auto eval_func = [&](const Particle & p){
-    //     return -ABS(p.x - 5.5_r + sin(t));
-    //     // return -ABS(p.x - 0.5_r);
-    // };
-
-    Pso pso = {Config{
-        .omega = 0.2_r,
-        .c1 = 2.0_r,
-        .c2 = 2.0_r,
-        // .c1 = 2.0_r,
-        // .c2 = 2.0_r,
-        // .c1 = 1.3_r,
-        // .c2 = 1.3_r,
-        .n = 8,
-        // .eval_func = eval_func
-        
-        // .reset_func = nullptr;
-    }};
-
-    pso.init(-10, 1);
-    auto eval_func = [](const Particle & p){
-        // return -ABS(p.x - 5.5_r + sin(clock::time()));
-        // return -ABS(p.x - 0.5_r);
-        // const auto targ = sin(2 * time());
-        // DEBUG_PRINTLN(targ);
-        // return -ABS(p.x - 102.5_r);
-    
-        // if (ABS(p.x) <= 0.02_r) return 1;
-        // return sin(p.x) / p.x;
-    
-        const auto x = p.x;
-        return x * (2-x);
-        // return -ABS(x);
-        // return sin(x);
-        // return CLAMP(1200 * cos(x) + (120-x) * x, 0, 10000);
-        // return p.x;
-        // return 0;
-    };
-    
-
-    constexpr size_t loops = 200;
-
-    const auto begin_m = clock::micros();
-
-
-    for(size_t i = 0; i < loops; i++){
-
-        pso.update(eval_func);
-
-        // const auto & particles = pso.particles();
-        // for(const auto & p : particles){
-            // DEBUG_PRINT(p.x);
-            // DEBUG_PRINT(DEBUGGER.splitter());
-            // clock::delay(1ms);
-        // }
-        // clock::delay(1ms);
-        // DEBUG_PRINTLN(pso.gbest(), pso.geval());
-    }
-    DEBUG_PRINTLN(pso.gbest(), pso.geval(), clock::micros() - begin_m);
-}
-
+#define DBG_UART hal::uart2
 void dsp_main(){
     // uart2.init(576000, CommStrategy::Blocking);
-    uart2.init({576000});
-    DEBUGGER.retarget(&uart2);
+    DBG_UART.init({576000});
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 
@@ -506,13 +346,16 @@ void dsp_main(){
     // using T = float; 
     using T = iq_t<16>; 
 
-    constexpr T fl = T(50);
-    constexpr T fh = T(100);
-    constexpr uint fs = 1000;
+    [[maybe_unused]] constexpr T FREQ_LOW = T(250);
+    [[maybe_unused]] constexpr T FREQ_HIGH = T(400);
+    constexpr uint FREQ_SAMPLE = 4000;
+    // constexpr uint FREQ_SAMPLE = 1000;
 
-    constexpr size_t n = 4;
+    [[maybe_unused]]
+    constexpr size_t N = 4;
 
-    auto sig_in = [&]() {
+    #if 0
+    auto sig_in = [&](const real_t t) {
         // const T t = T(time());
         // const T rad = T(TAU) * T(time());
 
@@ -525,26 +368,50 @@ void dsp_main(){
         // return 10_r* sin(rad);
         // return 0.002_r;
 
-        const T rad = T(TAU) * T(clock::time());
+        const T rad = T(TAU) * t;
 
         static constexpr uint8_t code = 0x12;
         const auto index = int(10 * rad) % 8;
         const bool out = (code >> index) & 1;
-        if(!out) return sin(fh * rad);
-        return sin(fl * rad);
+        if(!out) return sin(FREQ_HIGH * rad);
+        return sin(FREQ_LOW * rad);
         // return 0.01_r * sin(20 * rad);
         // return 0.0001_r;
     };
+    #else
+    auto sig_in = [](const real_t t){
+        // return sinpu(75 * t);
+        // return sinpu(15 * t);
+        return frac(75 * t) * 0.2_r;
+    };
 
-    butterworth_bandpass_tb<T, n>(sig_in, fl, fh, fs);
-    // butterworth_bandstop_tb<T, n>(sig_in, fl, fh, fs);
+    #endif
 
-    // butterworth_highpass_tb<T, n>(sig_in, fh, fs);
-    // butterworth_lowpass_tb<T, n>(sig_in, fl, fs);
-    // dtmf_tb(fs);
+    auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    // auto && sig_proc = make_tunning_filter<T>(1.0_r);
+
+
+    Evaluator eva;
+    eva.set_fs(FREQ_SAMPLE);
+    eva.run_func(
+        FREQ_SAMPLE / 4,
+        sig_in, 
+        sig_proc
+    );
+
+    while(true){
+        const auto t = eva.time();
+        const auto [x,y] = eva.get_xy();
+        DEBUG_PRINTLN_IDLE(t, x, y);
+    }
+    // butterworth_bandstop_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+
+    // butterworth_highpass_tb<T, n>(sig_in, FREQ_HIGH, FREQ_SAMPLE);
+    // butterworth_lowpass_tb<T, n>(sig_in, FREQ_LOW, FREQ_SAMPLE);
+    // dtmf_tb(FREQ_SAMPLE);
     // pso_tb();
     
-    // bpsk_tb<T, n>(sig_in, fl, fh, fs);
+    // bpsk_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
 
     {
         // /* calculate the d coefficients */

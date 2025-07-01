@@ -88,7 +88,7 @@ __fast_inline constexpr real_t min_rad_diff(real_t from, real_t to){
 
 
 template<typename T>
-class LowPassFilter_t{
+class LowpassFilter{
 public:
     struct Config{
         real_t kf;
@@ -101,7 +101,7 @@ protected:
     bool inited;
     const Config & config_;
 public:
-    LowPassFilter_t(const Config & config):
+    LowpassFilter(const Config & config):
         config_(config){
             reset();
         }

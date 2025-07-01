@@ -6,7 +6,7 @@
 namespace ymd::dsp{
 
 template <arithmetic T>
-class SecondOrderLowpassFilter_t {
+class SecondOrderLowpassFilter {
 
 public:
     struct Config {
@@ -20,11 +20,11 @@ private:
     bool inited_;
 
 public:
-    constexpr SecondOrderLowpassFilter_t(){
+    constexpr SecondOrderLowpassFilter(){
         reset();
     }
 
-    constexpr SecondOrderLowpassFilter_t(const Config & config) {
+    constexpr SecondOrderLowpassFilter(const Config & config) {
         reconf(config);
         reset();
     }

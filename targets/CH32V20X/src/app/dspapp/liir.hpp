@@ -232,8 +232,7 @@ constexpr std::array<T, 4 * N> dcof_bwbp(T f1f, T f2f ){
 
     for(size_t  k = 0; k < N; ++k ){
         const auto parg = T(PI) * (T)(2*k+1)/(T)(2*N);
-        const auto sparg = std::sin(parg);
-        const auto cparg = std::cos(parg);
+        const auto [sparg, cparg] = sincos(parg);
         const auto a = 1 + s2t*sparg;
         rcof[2*k] = c2t/a;
         rcof[2*k+1] = s2t*cparg/a;

@@ -69,7 +69,7 @@
 //     real_t target_curr;
 //     real_t motor_curr_temp;
 //     real_t target_pos;
-//     LowpassFilter_t<real_t, real_t> lpf(10);
+//     LowpassFilter<real_t, real_t> lpf(10);
 //     String temp_str;
 
 //     constexpr int closeloop_freq = 1000;

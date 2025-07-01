@@ -2,40 +2,41 @@
 
 #include "core/platform.hpp"
 
+namespace ymd{
 template <arithmetic T>
-struct Complex_t {
+struct Complex {
 public:
     T real;
     T imag;
 
-    __fast_inline T real_squared() const {return real * real;}
-    __fast_inline T imag_squared() const {return imag * imag;}
-    __fast_inline T norm() const {return real * real + imag * imag;}
-    __fast_inline T abs() const {return sqrt(real * real + imag * imag);}
-    __fast_inline T arg() const {return std::atan2(imag, real);}
-    __fast_inline Complex_t & normalized(){*this /= abs(); return *this;}
+    __fast_inline constexpr T real_squared() const {return real * real;}
+    __fast_inline constexpr T imag_squared() const {return imag * imag;}
+    __fast_inline constexpr T norm() const {return real * real + imag * imag;}
+    __fast_inline constexpr T abs() const {return sqrt(real * real + imag * imag);}
+    __fast_inline constexpr T arg() const {return std::atan2(imag, real);}
+    __fast_inline constexpr Complex & normalized(){*this /= abs(); return *this;}
 
-    __fast_inline explicit Complex_t() : real(T()), imag(T()) {;}
-    __fast_inline explicit Complex_t(const T & im) : real(T()), imag(im) {;}
-    __fast_inline explicit Complex_t(const T & re, const T & im) : real(re), imag(im) {;}
+    __fast_inline constexpr Complex() : real(T(0)), imag(T(0)) {;}
+    __fast_inline constexpr Complex(const T & re, const T & im) : real(re), imag(im) {;}
 
-    template <typename U>
-	__fast_inline Complex_t(const U & im) {
-		imag = static_cast<T>(im);
-	}
+    __fast_inline static constexpr 
+    Complex i() {return Complex(T(0), T(1));}
 
-    template <typename U>
-	__fast_inline Complex_t(const U & re,const U & im) {
-		real = static_cast<T>(re);
-		imag = static_cast<T>(im);
-	}
+    __fast_inline static constexpr 
+    Complex from_imag(const T val) {return Complex(T(0), val);}
 
-    __fast_inline Complex_t operator-() {
-        return Complex_t(-real, -imag);
+    __fast_inline static constexpr 
+    Complex from_polar(const T val) {
+        const auto [s,c] = sincos(val);
+        return Complex(c, s);
+    }
+
+    __fast_inline constexpr Complex operator-() {
+        return Complex(-real, -imag);
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator=(const Complex_t<U>& other) {
+    __fast_inline constexpr Complex& operator=(const Complex<U>& other) {
         if (this != &other) {
             real = static_cast<T>(other.real);
             imag = static_cast<T>(other.imag);
@@ -44,47 +45,47 @@ public:
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator+=(const Complex_t<U>& other) {
+    __fast_inline constexpr Complex& operator+=(const Complex<U>& other) {
         real += static_cast<T>(other.real);
         imag += static_cast<T>(other.imag);
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator+=(const U & other) {
+    __fast_inline constexpr Complex& operator+=(const U & other) {
         real += static_cast<T>(other);
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator-=(const Complex_t<U>& other) {
+    __fast_inline constexpr Complex& operator-=(const Complex<U>& other) {
         real -= static_cast<T>(other.real);
         imag -= static_cast<T>(other.imag);
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator-=(const U & other) {
+    __fast_inline constexpr Complex& operator-=(const U & other) {
         real -= static_cast<T>(other);
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator*=(const U & other) {
+    __fast_inline constexpr Complex& operator*=(const U & other) {
         real *= other;
         imag *= other;
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator/=(const U & other) {
+    __fast_inline constexpr Complex& operator/=(const U & other) {
         real /= other;
         imag /= other;
         return *this;
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator*=(const Complex_t<U>& other) {
+    __fast_inline constexpr Complex& operator*=(const Complex<U>& other) {
         T orgReal = real;
         T orgImag = imag;
         real = static_cast<T>(static_cast<U>(orgReal) * other.real - static_cast<U>(orgImag) * other.imag);
@@ -93,7 +94,7 @@ public:
     }
 
     template <typename U>
-    __fast_inline Complex_t& operator/=(const Complex_t<U>& other) {
+    __fast_inline constexpr Complex& operator/=(const Complex<U>& other) {
         U denominator = other.norm();
         T orgReal = real;
         T orgImag = imag;
@@ -104,12 +105,14 @@ public:
 };
 
 
-namespace ymd{
 
-    __no_inline OutputStream & operator << (OutputStream & os , const Complex_t<auto> & c){
+#include "Complex.tpp"
+
+}
+
+namespace ymd{
+    __no_inline OutputStream & operator << (OutputStream & os , const Complex<auto> & c){
         return os << c.real << os.splitter() << c.imag << 'i';
     }
 }
 
-
-#include "complex_t.tpp"

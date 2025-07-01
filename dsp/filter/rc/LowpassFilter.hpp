@@ -3,7 +3,7 @@
 namespace ymd::dsp{
 //Z域低通滤波器
 template<arithmetic T>
-struct LowpassFilter_t{
+struct LowpassFilter{
 public: 
     struct Config{
         T fc;
@@ -16,11 +16,11 @@ private:
     bool inited_;
 public:
 
-    constexpr LowpassFilter_t(){
+    constexpr LowpassFilter(){
         reset();
     }
 
-    constexpr LowpassFilter_t(const Config & config){
+    constexpr LowpassFilter(const Config & config){
         reconf(config);
         reset();
     }
@@ -105,7 +105,7 @@ public:
         // return last_ * wc_;
     }
 
-    constexpr T result() const {
+    constexpr T get() const {
         return last_ * wc_;
     }
 

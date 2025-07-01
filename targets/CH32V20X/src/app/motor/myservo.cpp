@@ -72,7 +72,7 @@ public:
 
     const State & get() const {return state_;}
 private:
-    using Lpf = dsp::LowpassFilter_t<q24>;
+    using Lpf = dsp::LowpassFilter<q24>;
     // SenseConfig sense_cfg_;
     Lpf curr_lpf_;
     q8 kp_;
@@ -260,7 +260,7 @@ void myservo_main(){
     using ButterLpf = dsp::ButterLowpassFilter<iq_t<16>, 4>;
     using ButterLpfConfig = typename ButterLpf::Config;
 
-    using RcLpf = dsp::LowpassFilter_t<iq_t<20>>;
+    using RcLpf = dsp::LowpassFilter<iq_t<20>>;
     using RcLpfConfig = typename RcLpf::Config;
 
     ButterLpf curr_filter = {ButterLpfConfig{

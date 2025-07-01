@@ -33,7 +33,7 @@ auto input(){
 };
 
 void lpf_tb(){
-    using Transfer = dsp::LowpassFilter_t<iq_t<20>>;
+    using Transfer = dsp::LowpassFilter<iq_t<20>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
@@ -56,7 +56,7 @@ void lpf_tb(){
 
 
 void hpf_tb(){
-    using Transfer = dsp::HighpassFilter_t<iq_t<20>>;
+    using Transfer = dsp::HighpassFilter<iq_t<20>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
@@ -101,7 +101,7 @@ void bpf_tb(){
 }
 
 void shock_tb(){
-    using Transfer = dsp::LowpassFilter_t<iq_t<16>>;
+    using Transfer = dsp::LowpassFilter<iq_t<16>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{

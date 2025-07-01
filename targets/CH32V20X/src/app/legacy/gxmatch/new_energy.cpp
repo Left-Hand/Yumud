@@ -73,7 +73,7 @@ real_t volt_2_current(real_t volt){
 
 class CurrentSensor final{
 public:
-    using Filter = dsp::LowpassFilter_t<q20>;
+    using Filter = dsp::LowpassFilter<q20>;
     using Config = Filter::Config;
     CurrentSensor(
         AnalogInIntf & a_sense

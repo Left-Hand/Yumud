@@ -7,7 +7,7 @@ namespace gxm{
 
 using namespace ymd::drivers;
 
-// using Vector2Lpf = LowPassFilter_t<Vector2>;
+// using Vector2Lpf = LowpassFilter<Vector2>;
 
 // class SpeedObserver{
 // public:

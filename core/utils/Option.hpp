@@ -171,6 +171,16 @@ public:
         return get();
     }
 
+
+    template<typename ... Args>
+    [[nodiscard]] __fast_inline constexpr const T & 
+    expect(Args && ... args) const {
+        if (unlikely(!is_some())) {
+            PANIC_NSRC(std::forward<Args>(args) ...);
+        }
+        return get();
+    }
+
     [[nodiscard]] __fast_inline constexpr const T 
     unwrap_or(const T choice) const {
         if(unlikely(exists_ == false)) return choice;

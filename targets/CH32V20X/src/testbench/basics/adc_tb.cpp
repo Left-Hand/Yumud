@@ -46,7 +46,7 @@ void adc_tb(OutputStream & logger){
     real_t src_data;
     real_t raw_data;
     real_t filt_data;
-    LowpassFilter_t<real_t, real_t> lpf(200);
+    LowpassFilter<real_t, real_t> lpf(200);
 
     timer3.init(40000);
     timer3.oc(4).init();

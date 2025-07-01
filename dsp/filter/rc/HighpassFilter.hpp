@@ -2,7 +2,7 @@
 
 namespace ymd::dsp{
 template<arithmetic T>
-class HighpassFilter_t{
+class HighpassFilter{
 public:
     struct Config{
         T fc;
@@ -13,8 +13,8 @@ public:
     T last = 0;
     T last_x;
 public:
-    HighpassFilter_t() = default;
-    constexpr HighpassFilter_t(const Config & config){
+    HighpassFilter() = default;
+    constexpr HighpassFilter(const Config & config){
         reconf(config);
         reset();
     }

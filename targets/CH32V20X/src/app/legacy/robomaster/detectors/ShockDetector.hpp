@@ -46,8 +46,8 @@ public:
         hpf_.reset();
     }
 private:
-    using Lpf = LowpassFilter_t<T>;
-    using Hpf = HighpassFilter_t<T>;
+    using Lpf = LowpassFilter<T>;
+    using Hpf = HighpassFilter<T>;
 
     Lpf lpf_;
     Hpf hpf_;
@@ -100,7 +100,7 @@ private:
 //         return result_;
 //     }
 // private:
-//     using Lpf = LowpassFilter_t<T>;
+//     using Lpf = LowpassFilter<T>;
 
 //     // Lpf baseline_lpf_ = {};
 //     // Lpf wavegen_lpf_ = {};
