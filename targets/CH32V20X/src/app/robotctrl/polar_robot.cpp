@@ -559,9 +559,6 @@ void polar_robot_main(){
     constexpr auto SAMPLE_DUR = 700ms; 
     // auto rpt = RepeatTimer{SAMPLE_DUR};
 
-
-
-
     #if 0
     while(true){
         static size_t i = 0;

@@ -1,12 +1,14 @@
 #pragma once
 
+//这个驱动已经完成
+//这个驱动已经通过测试
+
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "concept/analog_channel.hpp"
 
 
 namespace ymd::drivers{
@@ -16,11 +18,14 @@ struct ADS7830_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1001000);
 
-    enum class Error_Kind{
+    static constexpr size_t CHANNEL_COUNT = 8;
+
+    enum class Error_Kind:uint8_t{
         WrongChipId,
-        NoChannelComb
+        NoChannelCombination
     };
 
+    FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -33,17 +38,40 @@ struct ADS7830_Prelude{
         RefOn_AdcOn = 0b11,
     };
 
-    enum class ChannelIndex{
-        CH0,
-        CH2,
-        CH1,
-        CH4,
+    struct ChannelIndex{
+        enum class Kind:uint8_t{
+            CH0 = 0,
+            CH1,
+            CH2,
+            CH3,
+            CH4,
+            CH5,
+            CH6,
+            CH7,
+            COM,
+        };
 
-        CH3,
-        CH5,
-        CH6,
-        CH7,
-        COM,
+        using enum Kind;
+
+        constexpr ChannelIndex(Kind kind):kind_(kind){}
+
+        static constexpr Option<ChannelIndex> from_index(uint8_t rank){
+            if(rank >= 8) return None;
+            return Some(ChannelIndex(std::bit_cast<Kind>(rank)));
+        }
+        constexpr Kind kind() const {
+            return kind_;
+        }
+
+        constexpr bool operator == (ChannelIndex const & rhs) const{
+            return kind_ == rhs.kind_;
+        }
+
+        constexpr bool operator == (Kind kind) const {
+            return kind_ == kind;
+        }
+    private:
+        Kind kind_;
     };
 
     class ChannelSelection{
@@ -88,7 +116,7 @@ struct ADS7830_Prelude{
                 map([](const Kind kind){return ChannelSelection(kind);});
         }
 
-        constexpr auto kind() const {return kind_;};
+        constexpr Kind kind() const {return kind_;};
     private:
         Kind kind_;
 
@@ -96,28 +124,24 @@ struct ADS7830_Prelude{
             const ChannelIndex pos,
             const ChannelIndex neg
         ){
-            using enum ChannelIndex;
             constexpr auto map = std::to_array<
-                    std::pair<
-                        std::pair<ChannelIndex, ChannelIndex>,
-                        Kind>
-                    >({
-                std::make_pair(std::make_pair(CH0, CH1), Kind::P0N1),
-                std::make_pair(std::make_pair(CH2, CH3), Kind::P2N3),
-                std::make_pair(std::make_pair(CH4, CH5), Kind::P4N5),
-                std::make_pair(std::make_pair(CH6, CH7), Kind::P6N7),
-                std::make_pair(std::make_pair(CH1, CH0), Kind::P1N0),
-                std::make_pair(std::make_pair(CH3, CH2), Kind::P3N2),
-                std::make_pair(std::make_pair(CH5, CH4), Kind::P5N4),
-                std::make_pair(std::make_pair(CH7, CH6), Kind::P7N6),
-                std::make_pair(std::make_pair(CH0, COM), Kind::P0NC),
-                std::make_pair(std::make_pair(CH2, COM), Kind::P2NC),
-                std::make_pair(std::make_pair(CH4, COM), Kind::P4NC),
-                std::make_pair(std::make_pair(CH6, COM), Kind::P6NC),
-                std::make_pair(std::make_pair(CH1, COM), Kind::P1NC),
-                std::make_pair(std::make_pair(CH3, COM), Kind::P3NC),
-                std::make_pair(std::make_pair(CH5, COM), Kind::P5NC),
-                std::make_pair(std::make_pair(CH7, COM), Kind::P7NC),
+                std::pair<std::pair<ChannelIndex, ChannelIndex>, Kind>>({
+                std::make_pair(std::make_pair(ChannelIndex::CH0, ChannelIndex::CH1), Kind::P0N1),
+                std::make_pair(std::make_pair(ChannelIndex::CH2, ChannelIndex::CH3), Kind::P2N3),
+                std::make_pair(std::make_pair(ChannelIndex::CH4, ChannelIndex::CH5), Kind::P4N5),
+                std::make_pair(std::make_pair(ChannelIndex::CH6, ChannelIndex::CH7), Kind::P6N7),
+                std::make_pair(std::make_pair(ChannelIndex::CH1, ChannelIndex::CH0), Kind::P1N0),
+                std::make_pair(std::make_pair(ChannelIndex::CH3, ChannelIndex::CH2), Kind::P3N2),
+                std::make_pair(std::make_pair(ChannelIndex::CH5, ChannelIndex::CH4), Kind::P5N4),
+                std::make_pair(std::make_pair(ChannelIndex::CH7, ChannelIndex::CH6), Kind::P7N6),
+                std::make_pair(std::make_pair(ChannelIndex::CH0, ChannelIndex::COM), Kind::P0NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH2, ChannelIndex::COM), Kind::P2NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH4, ChannelIndex::COM), Kind::P4NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH6, ChannelIndex::COM), Kind::P6NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH1, ChannelIndex::COM), Kind::P1NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH3, ChannelIndex::COM), Kind::P3NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH5, ChannelIndex::COM), Kind::P5NC),
+                std::make_pair(std::make_pair(ChannelIndex::CH7, ChannelIndex::COM), Kind::P7NC),
             });
 
             for(const auto & [key, value] : map){
@@ -154,7 +178,7 @@ public:
 
     IResult<ConvData> fs_read(const CommandByte cmd){
         ConvData ret;
-        if(const auto res = i2c_drv_.write_reg(
+        if(const auto res = i2c_drv_.read_reg(
             cmd.as_u8(),
             ret 
         ); res.is_err()) return Err(res.unwrap_err());
@@ -171,29 +195,25 @@ struct ADS7830 final:
 public:
     using Phy = ADS7830_Phy;
 
-    ADS7830(Phy && phy):
-        phy_(std::move(phy)){;}
+    ADS7830(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
+        phy_(hal::I2cDrv(i2c.deref(), addr)){;}
 
     IResult<> init();
 
     IResult<> validate();
 
-    IResult<ConvData> read_channel(const ChannelIndex ch){
-        const auto sel = ({
-            const auto s = ChannelSelection::from_pos(ch);
-            if(s.is_none()) return Err(Error::NoChannelComb);
-            s.unwrap().kind();
-        });
+    IResult<ConvData> read_pos_channel(const ChannelIndex ch);
+    IResult<ConvData> read_channel(const ChannelSelection ch);
 
-        const auto cmd = CommandByte{
-            .pd = PowerDownSel::RefOn_AdcOn,
-            .sel = sel 
-        };
-
-        return phy_.fs_read(cmd);
+    void set_pwdn_sel(const PowerDownSel sel){
+        pwdn_sel_ = sel;
     }
 private:
     Phy phy_;
+    PowerDownSel pwdn_sel_ = PowerDownSel::RefOn_AdcOn;
 };
 
 }
