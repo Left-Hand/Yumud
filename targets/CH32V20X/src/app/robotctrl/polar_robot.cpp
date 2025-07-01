@@ -23,8 +23,8 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
 
-#define DBG_UART hal::uart2
-#define COMM_UART hal::uart1
+#define DBG_UART hal::uart1
+#define COMM_UART hal::uart2
 #define COMM_CAN hal::can1
 
 #define PHY_SEL_CAN 0
@@ -434,15 +434,57 @@ public CanMsgHandlerIntf{
 };
 
 // #define MOCK_TEST
+struct QueuePointIterator{
 
+    explicit constexpr QueuePointIterator(
+        const std::span<const Vector2<q16>> data
+    ):
+        data_(data){;}
+
+    [[nodiscard]] constexpr Vector2<q16> next(){
+        // const auto curr_i = i;
+        // const auto p_dest = data_[curr_i];
+        // p = (p * 128).move_toward(p_dest * 128, 0.02_r) / 128;
+
+        // if(p.is_equal_approx(p_dest)){
+        //     const auto next_i = (i + 1) % data_.size();
+        //     i = next_i;
+        // }
+
+        // return p_dest;
+
+        const auto curr_i = (i) % data_.size();
+
+        
+        const auto p1 = data_[curr_i];
+        p = (p * 128).move_toward(p1 * 128, 0.02_r) / 128;
+        // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
+        // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
+
+        // if(ABS(p.x - p1.x) < 0.00001_r) i++;
+        if(p.is_equal_approx(p1)) i++;
+        return p;
+        // return Vector2<q16>(data_[0].x, data_.size());
+        // return Vector2<q16>(i, data_.size());
+    }
+
+    [[nodiscard]] constexpr size_t index() const {
+        return i;
+    }
+private:
+    std::span<const Vector2<q16>> data_;
+    Vector2<q16> p = {};
+    size_t i = 0;
+};
 
 void polar_robot_main(){
-    auto & OUT_UART = hal::uart2;
-    OUT_UART.init({576000});
 
-    DEBUGGER.retarget(&OUT_UART);
+    DBG_UART.init({576000});
+
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
+    DEBUGGER.no_brackets();
 
 
     
@@ -461,7 +503,6 @@ void polar_robot_main(){
     }
 
     ZdtStepper motor2{{.nodeid = {2}}, &MOTOR2_UART};
-
 
 
     #else
@@ -512,11 +553,14 @@ void polar_robot_main(){
     );
 
     robots::ReplService repl_service = {
-        &OUT_UART, &OUT_UART
+        &DBG_UART, &DBG_UART
     };
 
     constexpr auto SAMPLE_DUR = 700ms; 
     // auto rpt = RepeatTimer{SAMPLE_DUR};
+
+
+
 
     #if 0
     while(true){
@@ -573,29 +617,23 @@ void polar_robot_main(){
     }
     #else 
 
-    Vector2<q16> p = data[0];
+    auto it = QueuePointIterator{std::span(curve_data)};
 
-    size_t i = 0;
     while(true){
         
-        const auto curr_i = (i) % data.size();
-
-        
-        const auto p1 = data[curr_i];
-        p = (p * 128).move_toward(p1 * 128, 0.02_r) / 128;
-        // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
-        // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
-
-        // if(ABS(p.x - p1.x) < 0.00001_r) i++;
-        if(p.is_equal_approx(p1)) i++;
+        const auto p = it.next();
 
         robot_actuator.set_position(p.x, p.y);
-        DEBUG_PRINTLN(p.x, p.y, p1.x, p1.y, i);
+        DEBUG_PRINTLN(p.x, p.y);
 
         clock::delay(5ms);
 
-        repl_service.invoke(list);
+        // repl_service.invoke(list);
     }
     #endif
+
+    while(true){
+        DEBUG_PRINTLN(clock::millis());
+    }
 }
 #endif

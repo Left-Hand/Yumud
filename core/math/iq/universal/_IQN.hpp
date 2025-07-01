@@ -7,17 +7,14 @@ template<size_t Q>
 requires (Q < 32)
 struct _iq{
 private:
-    int32_t value_ = 0;
+    int32_t value_;
     __fast_inline constexpr explicit _iq<Q>(const int32_t value):
         value_(value){
     }
 public:
     operator int32_t() = delete;
 
-    // template<size_t P>
-    // constexpr _iq(const _iq<P> other):
-    //     value_(_iq<P>::transform<Q>(other.to_i32()).to_i32()){;}
-
+    constexpr _iq(){;}
     static __fast_inline constexpr _iq<Q> from_i32(const int32_t value){
         return _iq<Q>(value);
     }
