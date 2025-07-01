@@ -265,24 +265,29 @@ template<typename T>
 class Option<T &>{
 public:
     [[nodiscard]] constexpr 
-    Option(Some<T *> && something):
-        value_(something.get()){;}
+    Option(const Some<T *> & something):
+        pobj_(something.get()){;}
 
     [[nodiscard]] constexpr 
-    Option(_None_t): value_(nullptr){;}
+    Option(_None_t): pobj_(nullptr){;}
 
     [[nodiscard]] constexpr 
-    bool is_some() const {return value_ != nullptr;}
+    bool is_some() const {return pobj_ != nullptr;}
     [[nodiscard]] constexpr 
-    bool is_none() const {return value_ == nullptr;}
+    bool is_none() const {return pobj_ == nullptr;}
     
     [[nodiscard]] constexpr 
     T & unwrap(){
-        if(unlikely(value_ == nullptr)){sys::abort();}
-        return *value_;
+        if(unlikely(pobj_ == nullptr)){sys::abort();}
+        return *pobj_;
     }
+
+    // T * operator->(){
+    //     if(unlikely(pobj_ == nullptr)){sys::abort();}
+    //     return pobj_;
+    // }
 private:
-    T * value_;
+    T * pobj_;
 };
 
 

@@ -39,6 +39,7 @@ public:
         StringLengthTooLong,
         PointsTooLess,
         Unfinished,
+        ClipRectIsNone
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
@@ -54,19 +55,20 @@ public:
     PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
         this->set_color(color);
-        if(const auto res = draw_filled_rect(this->get_clip_window());
+        const auto may_rect = this->get_clip_rect();
+        if(may_rect.is_none()) return Err(Error::ClipRectIsNone);
+        if(const auto res = draw_filled_rect(may_rect.unwrap());
             res.is_err()) return res;
-        // return res;
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_ch_font(Font & _chfont){
-        chfont = &_chfont;
+    [[nodiscard]] IResult<> set_ch_font(Some<Font *> chfont){
+        may_chfont_ = chfont;
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_en_font(Font & _enfont){
-        enfont = &_enfont;
+    [[nodiscard]] IResult<> set_en_font(Some<Font *> enfont){
+        may_enfont_ = enfont;
         return Ok();
     }
 
@@ -81,18 +83,18 @@ public:
             }
         };
 
-        return ColorGuard{*this, m_color};
+        return ColorGuard{*this, color_};
     }
 
-    void set_color(RGB888 _color){
-        m_color = _color;
+    void set_color(const RGB888 color){
+        color_ = color;
     }
 
     virtual void draw_pixel(const Vector2u & pos) = 0;
 
     virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
     
-    virtual Rect2u get_clip_window() = 0;
+    virtual Option<Rect2u> get_clip_rect() = 0;
     
     virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
 
@@ -149,14 +151,14 @@ public:
 
 // private:
 protected:
-    Cursor cursor = {0,0};
+    Cursor cursor_ = {0,0};
 
-    RGB888 m_color;
-    Rect2u crop_rect;
+    RGB888 color_;
+    Rect2u crop_rect_;
 
-    Font * enfont = nullptr;
-    Font * chfont = nullptr;
-    int padding = 1;
+    Option<Font &> may_enfont_ = None;
+    Option<Font &> may_chfont_ = None;
+    int padding_ = 1;
 
     [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l){
         auto ins = Rect2u(pos, Vector2u(l, 1));

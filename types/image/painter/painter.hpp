@@ -1,96 +1,57 @@
 #pragma once
 
-#include "PainterConcept.hpp"
+#include "painter_base.hpp"
 #include "core/string/encoding/gbk.hpp"
+#include "core/utils/Option.hpp"
 
 
 namespace ymd{
 
 template<typename ColorType>
 class Painter:public PainterBase{
-protected:
-
-    Image<ColorType> * src_image = nullptr;
-    
+public:
     using Error = typename PainterBase::Error;
+    
     template<typename T = void>
     using IResult = PainterBase::IResult<T>;
 
-    void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
-        src_image -> puttexture_unsafe(rect, color_ptr);
-    }
-
-    __no_inline Result<void, Error> draw_str(
-        const Vector2u & pos, 
-        const char * str_ptr, 
-        const size_t str_len)
-    {
-        GBKIterator iterator(str_ptr);
-
-        for(size_t x = pos.x;;){
-            if(x >= src_image->size().x){
-                // FIXME: in tsubst_copy, at cp/pt.cc:17004
-                // return Err(Error::StringLengthTooLong);
-                return Ok();
-            }
-
-            if(iterator){
-                auto chr = iterator.next();
-                if(const auto res = draw_char(Vector2u(x, pos.y), chr);
-                    res.is_err()) return res;
-                auto font = chr > 0x80 ? chfont : enfont;
-                if(font){
-                    x += font->getSize().x + padding;
-                }else{
-                    //FIXME: in tsubst_copy, at cp/pt.cc:17004
-                    // return Err(Error::NoFontFounded);
-                    return Ok();
-                }
-            }else{
-                break;
-            }
-        }
-
-        return Ok();
-    }
-public:
     Painter():PainterBase(){;}
 
 
-    Rect2u get_clip_window(){
-        return src_image->size().to_rect();
+    Option<Rect2u> get_clip_rect(){
+        return may_src_image_.map([](const Image<ColorType> & image){
+            return image.size().to_rect();
+        });
     }
 
-    // void bind_image(Image<ColorType> & _source){
-    //     src_image = &_source;
-    // }
-
     void set_font_scale(const uint8_t scale){
-        chfont->setScale(scale);
-        enfont->setScale(scale);
+        if(may_chfont_.is_some())
+            may_chfont_.unwrap().set_scale(scale);
+        if(may_enfont_.is_some())
+            may_enfont_.unwrap().set_scale(scale);
     }
 
     #if 0
     void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
-        if(!src_image->size().to_rect().contains(rect)) return;
+        if(!may_src_image->size().to_rect().contains(rect)) return;
         drawtexture_unsafe(rect, color_ptr);
     }
 
     template<typename w_ColorType>
     void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
-        if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
+        if(!may_src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2u(pos, image.size());
-        src_image->setarea_unsafe(rect);
+        may_src_image->setarea_unsafe(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                src_image->putpixel_unsafe(Vector2u(x,y), ptr[i]);
+                may_src_image->putpixel_unsafe(Vector2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
     IResult<> draw_filled_rect(const Rect2u & rect){
-        const auto area = src_image->size().to_rect()
+        const auto area = may_src_image->size().to_rect()
             .intersection(rect)
             .map([](const Rect2u & _rect){return _rect.get_area();})
             .unwrap_or(0);
@@ -229,7 +190,53 @@ public:
         return Ok();
     }
     #endif
+private:
 
+    Option<Image<ColorType> &> may_src_image_ = None;
+    
+
+
+    void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
+        may_src_image_ -> puttexture_unsafe(rect, color_ptr);
+    }
+
+    __no_inline IResult<> draw_str(
+        const Vector2u & pos, 
+        const StringView str)
+    {
+        GBKIterator iterator(str);
+
+        if(may_src_image_.is_none())
+            return Err(Error::ImageNotSet);
+        if(may_chfont_.is_none())
+            return Err(Error::NoChineseFontFounded);
+        if(may_enfont_.is_none())
+            return Err(Error::NoEnglishFontFounded);
+
+        auto & src_image = may_src_image_.unwrap();
+        auto & chfont = may_chfont_.unwrap();
+        auto & enfont = may_enfont_.unwrap();
+
+        for(size_t x = pos.x;;){
+            if(x >= src_image.size().x){
+                // FIXME: in tsubst_copy, at cp/pt.cc:17004
+                // return Err(Error::StringLengthTooLong);
+                return Ok();
+            }
+
+            if(iterator){
+                const auto chr = iterator.next();
+                if(const auto res = draw_char(Vector2u(x, pos.y), chr);
+                    res.is_err()) return res;
+                const auto & font = chr > 0x80 ? chfont : enfont;
+                x += font.get_size().x + padding_;
+            }else{
+                break;
+            }
+        }
+
+        return Ok();
+    }
 };
 
 }

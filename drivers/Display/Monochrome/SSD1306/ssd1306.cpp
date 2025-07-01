@@ -35,9 +35,9 @@ IResult<> SSD13XX::init(){
         res.is_err()) return res;
     if(const auto res = set_offset(offset_); 
         res.is_err()) return res;
-    if(const auto res = enable_flip_x(config_.flip_x_en); 
+    if(const auto res = enable_flip_x(flip_x_en_); 
         res.is_err()) return res;
-    if(const auto res = enable_flip_y(config_.flip_y_en); 
+    if(const auto res = enable_flip_y(flip_y_en_); 
         res.is_err()) return res;
     return Ok();
 }

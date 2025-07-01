@@ -1,4 +1,4 @@
-#include "PainterConcept.hpp"
+#include "painter_base.hpp"
 
 #include "core/string/String.hpp"
 #include "core/string/StringView.hpp"
@@ -39,8 +39,10 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
 
 
 IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radius){
-    if((!(Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
-        .intersects(this->get_clip_window())))) return Ok();
+    if(false == 
+        Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
+        .intersects(this->get_clip_rect().unwrap())
+    ) return Ok();
 
     if(radius == 0) return Ok();
     if(radius < 0) return Err(Error::MinusRadius);
@@ -80,7 +82,7 @@ IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radiu
 
 IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radius){
     if(not Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
-        .is_inside(get_clip_window())) return Ok();
+        .is_inside(get_clip_rect().unwrap())) return Ok();
     
 
     if(radius < 0) return Err(Error::MinusRadius);
@@ -128,7 +130,8 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vector2u & pos, const Vector2u 
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
-    if (!this->get_clip_window().intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
+    if (!this->get_clip_rect().unwrap().
+        intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
     if (rx<2 || ry<2 ) return Ok();
 
     int x0 = pos.x;
@@ -172,7 +175,14 @@ IResult<> PainterBase::draw_filled_ellipse(const Vector2u & pos, const Vector2u 
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
-    if (rx<2 || ry<2|| !this->get_clip_window().intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
+    if (rx<2 || ry<2|| 
+        (
+            false == this->get_clip_rect()
+            .unwrap()
+            .intersects(Rect2u::from_center_and_halfsize(pos, r))
+        )
+    ) 
+        return Ok();
 
     int x0 = pos.x;
     int y0 = pos.y;
