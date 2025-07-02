@@ -404,7 +404,7 @@ void dsp_main(){
     static constexpr size_t BUFFER_SIZE = 512;
     auto buffer = std::vector<q16>(BUFFER_SIZE);
     auto && allpass = dsp::CombAllpass<q16>(std::span(buffer));
-    allpass.set_delay(5_r);
+    allpass.set_delay(10.6_r);
     auto && sig_proc = [&](const real_t t){
         const auto bpf_out = bpf(t);
         return allpass(bpf_out);

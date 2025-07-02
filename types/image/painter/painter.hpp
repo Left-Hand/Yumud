@@ -18,7 +18,7 @@ public:
     Painter():PainterBase(){;}
 
 
-    Option<Rect2u> get_clip_rect(){
+    Option<Rect2u> get_expose_rect(){
         return may_src_image_.map([](const Image<ColorType> & image){
             return image.size().to_rect();
         });

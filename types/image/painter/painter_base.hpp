@@ -39,7 +39,7 @@ public:
         StringLengthTooLong,
         PointsTooLess,
         Unfinished,
-        ClipRectIsNone
+        CropRectIsNone
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
@@ -55,8 +55,8 @@ public:
     PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
         this->set_color(color);
-        const auto may_rect = this->get_clip_rect();
-        if(may_rect.is_none()) return Err(Error::ClipRectIsNone);
+        const auto may_rect = this->get_expose_rect();
+        if(may_rect.is_none()) return Err(Error::CropRectIsNone);
         if(const auto res = draw_filled_rect(may_rect.unwrap());
             res.is_err()) return res;
         return Ok();
@@ -71,8 +71,6 @@ public:
         may_enfont_ = enfont;
         return Ok();
     }
-
-
     [[nodiscard]] auto create_color_guard(){
         struct ColorGuard{
             PainterBase & owner;
@@ -90,17 +88,9 @@ public:
         color_ = color;
     }
 
-    virtual void draw_pixel(const Vector2u & pos) = 0;
 
-    virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
-    
-    virtual Option<Rect2u> get_clip_rect() = 0;
-    
-    virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
 
     [[nodiscard]] IResult<> draw_hollow_rect(const Rect2u & rect);
-
-    virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
 
     [[nodiscard]] IResult<> draw_hollow_circle(const Vector2u & pos, const uint radius);
 
@@ -149,7 +139,26 @@ public:
         return Ok();
     }
 
-// private:
+    virtual void draw_pixel(const Vector2u & pos) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
+    
+    [[nodiscard]] virtual Option<Rect2u> get_expose_rect() = 0;
+    
+    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
+
+    [[nodiscard]] IResult<> set_crop_rect(const Rect2u & rect){
+        crop_rect_ = rect;
+        return Ok();
+    }
+
+    [[nodiscard]] Rect2u get_crop_rect() const{
+        return crop_rect_;
+    }
 protected:
     Cursor cursor_ = {0,0};
 
@@ -158,7 +167,7 @@ protected:
 
     Option<Font &> may_enfont_ = None;
     Option<Font &> may_chfont_ = None;
-    int padding_ = 1;
+    size_t padding_ = 1;
 
     [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l){
         auto ins = Rect2u(pos, Vector2u(l, 1));
@@ -181,8 +190,6 @@ protected:
         auto x_range_regular = x_range.abs();
         return draw_hri_line(Vector2u(x_range_regular.start, y), x_range_regular.length());
     }
-
-    virtual IResult<> draw_str(const Vector2u & pos, const char * str_ptr, const size_t str_len) = 0;
 
     IResult<> draw_gbk_str(const Vector2u & pos, const StringView str){
         TODO();

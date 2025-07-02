@@ -41,7 +41,7 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
 IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radius){
     if(false == 
         Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
-        .intersects(this->get_clip_rect().unwrap())
+        .intersects(this->get_expose_rect().unwrap())
     ) return Ok();
 
     if(radius == 0) return Ok();
@@ -82,7 +82,7 @@ IResult<> PainterBase::draw_hollow_circle(const Vector2u & pos, const uint radiu
 
 IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radius){
     if(not Rect2u::from_center_and_halfsize(pos, Vector2u(radius, radius))
-        .is_inside(get_clip_rect().unwrap())) return Ok();
+        .is_inside(get_expose_rect().unwrap())) return Ok();
     
 
     if(radius < 0) return Err(Error::MinusRadius);
@@ -123,14 +123,14 @@ IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radiu
 }
 
 IResult<> PainterBase::draw_string(const Vector2u & pos, const StringView str){
-    return draw_str(pos, str.data(), str.length());
+    return draw_c_str(pos, str);
 }
 
 IResult<> PainterBase::draw_hollow_ellipse(const Vector2u & pos, const Vector2u & r) {
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
-    if (!this->get_clip_rect().unwrap().
+    if (!this->get_expose_rect().unwrap().
         intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
     if (rx<2 || ry<2 ) return Ok();
 
@@ -177,7 +177,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vector2u & pos, const Vector2u 
     if (rx == ry) return draw_hollow_circle(pos, rx);
     if (rx<2 || ry<2|| 
         (
-            false == this->get_clip_rect()
+            false == this->get_expose_rect()
             .unwrap()
             .intersects(Rect2u::from_center_and_halfsize(pos, r))
         )
