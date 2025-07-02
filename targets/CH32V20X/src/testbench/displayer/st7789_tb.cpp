@@ -3,7 +3,6 @@
 
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
-#include "core/polymorphism/proxy.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"

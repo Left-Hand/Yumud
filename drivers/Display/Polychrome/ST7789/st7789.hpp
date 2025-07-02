@@ -102,7 +102,8 @@ private:
     [[nodiscard]] hal::HalResult phy_write_burst(
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
-        if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+        if (const auto err = spi_
+            .begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
                 return res;
@@ -111,7 +112,7 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]));
+            (void)spi_.fast_write(static_cast<uint16_t>(pbuf[i]));
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 

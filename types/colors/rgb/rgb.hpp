@@ -133,15 +133,15 @@ struct RGB565{
 
     __fast_inline constexpr RGB565() = default;
 
-    constexpr RGB565(const HSV888 & other);
-    __fast_inline constexpr RGB565(const ColorEnum & color):RGB565(RGB888(color)){;}
+    constexpr explicit RGB565(const HSV888 & other);
+    __fast_inline constexpr RGB565(const ColorEnum color):RGB565(RGB888(color)){;}
 
-    __fast_inline constexpr RGB565(const RGB888 & rgb): b(rgb.b >> 3), g(rgb.g >> 2), r(rgb.r >> 3){;}
+    __fast_inline constexpr explicit RGB565(const RGB888 rgb): b(rgb.b >> 3), g(rgb.g >> 2), r(rgb.r >> 3){;}
 
     
-    __fast_inline constexpr RGB565(const Gray & gs);
+    __fast_inline constexpr explicit RGB565(const Gray & gs);
     
-    __fast_inline constexpr RGB565(const Binary & bn);
+    __fast_inline constexpr explicit RGB565(const Binary & bn);
 
     __fast_inline static constexpr 
     RGB565 from_565(const uint8_t r, const uint8_t g, const uint8_t b){
@@ -160,11 +160,11 @@ struct RGB565{
             raw
         );
     }
-    __fast_inline constexpr operator RGB888() const {
+    __fast_inline constexpr explicit operator RGB888() const {
         return RGB888(r << 3, g << 2, b << 3);
     }
 
-    __fast_inline constexpr operator uint16_t() const {return uni(r,g,b);}
+    __fast_inline constexpr explicit operator uint16_t() const {return uni(r,g,b);}
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t data){
         uint8_t _r, _g, _b;
