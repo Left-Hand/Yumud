@@ -37,7 +37,7 @@ public:
 
 class HorizonBinaryImage final: public PackedBinaryImage{
 public:
-    void putpixel_unsafe(const Vector2u & pos, const Binary color){
+    void putpixel_unchecked(const Vector2u & pos, const Binary color){
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
         uint8_t mask = 1 << (point_index % 8);
@@ -48,7 +48,7 @@ public:
         }
 
     }
-    void getpixel_unsafe(const Vector2u & pos, Binary & color) const{
+    void getpixel_unchecked(const Vector2u & pos, Binary & color) const{
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
         color = get_data()[data_index] & (1 << (point_index % 8));
@@ -61,7 +61,7 @@ public:
     HorizonBinaryImage(const Vector2u & _size): 
         PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
-    void putseg_h8_unsafe(const Vector2u & pos, const uint8_t mask, const Binary color){
+    void putseg_h8_unchecked(const Vector2u & pos, const uint8_t mask, const Binary color){
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
         if(data_index % 8){
@@ -88,7 +88,7 @@ public:
 
 class VerticalBinaryImage final: public PackedBinaryImage{
 public:
-    void putpixel_unsafe(const Vector2u & pos, const Binary color){
+    void putpixel_unchecked(const Vector2u & pos, const Binary color){
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
         uint8_t mask = (1 << (pos.y % 8));
 
@@ -98,7 +98,7 @@ public:
             get_data()[data_index] &= (~mask);
         }
     }
-    void getpixel_unsafe(const Vector2u & pos, Binary & color) const{
+    void getpixel_unchecked(const Vector2u & pos, Binary & color) const{
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
         color = Binary(get_data()[data_index] & (PackedBinary)color << (pos.y % 8));
     }
@@ -108,7 +108,7 @@ public:
     VerticalBinaryImage(const Vector2u & _size): 
         PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
-    void putseg_v8_unsafe(const Vector2u & pos, const uint8_t mask, const Binary color){
+    void putseg_v8_unchecked(const Vector2u & pos, const uint8_t mask, const Binary color){
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
         if(pos.y % 8){
             uint16_t datum = (get_data()[data_index + size().x] << 8) | get_data()[data_index];

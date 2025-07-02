@@ -34,19 +34,19 @@ public:
     #if 0
     void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
         if(!may_src_image->size().to_rect().contains(rect)) return;
-        drawtexture_unsafe(rect, color_ptr);
+        drawtexture_unchecked(rect, color_ptr);
     }
 
     template<typename w_ColorType>
     void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
         if(!may_src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2u(pos, image.size());
-        may_src_image->setarea_unsafe(rect);
+        may_src_image->setarea_unchecked(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                may_src_image->putpixel_unsafe(Vector2u(x,y), ptr[i]);
+                may_src_image->putpixel_unchecked(Vector2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
@@ -58,7 +58,7 @@ public:
         if(area == 0) return Ok();
         
         //FIXME use ins rather than rect will cause crash 
-        src_image -> putrect_unsafe(rect, m_color);
+        src_image -> putrect_unchecked(rect, m_color);
 
         return Ok();
     }
@@ -147,7 +147,7 @@ public:
                 }
 
                 if(j % 8 == 7 || j == font_size.y - 1){
-                    src_image->putseg_v8_unsafe(Vector2u(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
+                    src_image->putseg_v8_unchecked(Vector2u(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
                     mask = 0;
                 }
             }
@@ -196,8 +196,8 @@ private:
     
 
 
-    void drawtexture_unsafe(const Rect2u & rect,const ColorType * color_ptr){
-        may_src_image_ -> puttexture_unsafe(rect, color_ptr);
+    void drawtexture_unchecked(const Rect2u & rect,const ColorType * color_ptr){
+        may_src_image_ -> puttexture_unchecked(rect, color_ptr);
     }
 
     __no_inline IResult<> draw_str(

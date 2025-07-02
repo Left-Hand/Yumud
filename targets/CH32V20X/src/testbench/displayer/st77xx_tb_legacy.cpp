@@ -177,11 +177,11 @@ void st77xx_tb(hal::Spi & spi){
     MT9V034 camera(SccbSw);
 
     [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture_unchecked(area, src.data.get());
     };
 
     [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture_unchecked(area, src.data.get());
     };
 
     camera.init();
@@ -241,7 +241,7 @@ void st77xx_tb(hal::Spi & spi){
         // plot_gray(map, map.get_window() + Vector2i{img.size.x, 0});
         // tp.run(img, bina, dummy);
 
-        // tftDisplayer.puttexture_unsafe(img.get_window(), img.data.get());
+        // tftDisplayer.puttexture_unchecked(img.get_window(), img.data.get());
         // plot_gray(camera, Rect2i{Vector2i{188/4, 0}, Vector2i{188/4, 60}});
         // painter.drawImage()
         // tftDisplayer.fill(RGB565::BLACK);

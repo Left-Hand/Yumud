@@ -170,7 +170,7 @@ struct AFIO_Def{
         PCFR1.PD0PD1_RM = remap & 0b1;
     }
 
-    // unsafe
+    // unchecked
     // constexpr void set_swcfg_remap(const uint8_t remap){
     //     PCFR1.SWCFG = remap & 0b111;
     // }
