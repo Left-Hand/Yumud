@@ -234,9 +234,9 @@ void SmartCar::main(){
     element_holder.reset();
 
     constexpr auto pic_size = Vector2i(188, 60);
-    auto pers_gray_image = make_image<Grayscale>(pic_size);
+    auto pers_gray_image = make_image<Gray>(pic_size);
     auto pers_bina_image  = make_bina_mirror(pers_gray_image);
-    auto diff_gray_image = make_image<Grayscale>(pic_size);
+    auto diff_gray_image = make_image<Gray>(pic_size);
     auto diff_bina_image = make_bina_mirror(diff_gray_image);
     auto sketch = make_image<RGB565>(pic_size);
 
@@ -244,7 +244,7 @@ void SmartCar::main(){
     if(switches.plot_de)\
     return;\
 
-    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
         tftDisplayer.puttexture(area.intersection(Rect2i(area.position, src.get_size())), src.get_data());

@@ -10,8 +10,8 @@ real_t template_match(
     const Vector2u & offset);
 
 real_t template_match(
-    __restrict const Image<Grayscale> & src, 
-    __restrict const Image<Grayscale> & tmp, 
+    __restrict const Image<Gray> & src, 
+    __restrict const Image<Gray> & tmp, 
     const Vector2u & offset);
 
 

@@ -46,8 +46,8 @@ real_t template_match(
 }
 
 real_t template_match_ncc(
-    const Image<Grayscale> & src, 
-    const Image<Grayscale> & tmp, 
+    const Image<Gray> & src, 
+    const Image<Gray> & tmp, 
     const Vector2u & offs
 ){
     BOUNDARY_CHECK()
@@ -60,8 +60,8 @@ real_t template_match_ncc(
     uint64_t den_s = 0;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const Grayscale * p_tmp = &tmp[Vector2u{0,y}];
-        const Grayscale * p_src = &src[Vector2u{0,y} + offs];
+        const Gray * p_tmp = &tmp[Vector2u{0,y}];
+        const Gray * p_src = &src[Vector2u{0,y} + offs];
 
         int32_t line_num = 0;
 
@@ -89,7 +89,7 @@ real_t template_match_ncc(
 }
 
 
-real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2u & offs){
+real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const Vector2u & offs){
 
     BOUNDARY_CHECK();
 
@@ -122,7 +122,7 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
     return 1 - u16_to_uni(res);
 }
 
-real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2u & offs){
+real_t template_match(const Image<Gray> & src, const Image<Gray> & tmp, const Vector2u & offs){
     return template_match_ncc(src, tmp, offs);
     // return template_match_squ(src, tmp, offs);
 }

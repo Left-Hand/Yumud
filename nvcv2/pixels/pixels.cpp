@@ -39,7 +39,7 @@ namespace ymd::nvcv2::pixels{
         }
     };
 
-    void conv(Image<RGB565>& dst, const Image<Grayscale>& src) {
+    void conv(Image<RGB565>& dst, const Image<Gray>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = RGB565(src[Vector2u{x, y}]);
@@ -58,7 +58,7 @@ namespace ymd::nvcv2::pixels{
 
     static UniqueRandomGenerator lcg;
 
-    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src){
+    void dyeing(Image<Gray>& dst, const Image<Gray>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = lcg[src[Vector2u{x, y}]];
@@ -66,17 +66,17 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    Grayscale dyeing(const Grayscale in){
+    Gray dyeing(const Gray in){
         return lcg[(uint8_t)in];
     }
 
-    auto dyeing(const Image<Grayscale>& src){
-        Image<Grayscale> tmp{src.size()};
+    auto dyeing(const Image<Gray>& src){
+        Image<Gray> tmp{src.size()};
         dyeing(tmp, src);
         return tmp;
     }
 
-    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold){
+    void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold){
         for (auto x = 0u; x < std::min(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < std::min(dst.size().y, src.size().y); y++) {
                 dst[Vector2u{x, y}] = src[Vector2u{x, y}].to_bina(threshold);
@@ -84,13 +84,13 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold){
+    Image<Binary> binarization(const Image<Gray>& src, const Gray threshold){
         Image<Binary> dst{src.size()};
         binarization(dst, src, threshold);
         return dst;
     }
 
-    void ostu(Image<Binary>& dst, const Image<Grayscale>& src){
+    void ostu(Image<Binary>& dst, const Image<Gray>& src){
         const Vector2u size = src.size();
         std::array<uint, 256> statics;
         statics.fill(0);
@@ -150,7 +150,7 @@ namespace ymd::nvcv2::pixels{
 
     void iter_threshold(
             Image<Binary>& dst, 
-            const Image<Grayscale>& src, 
+            const Image<Gray>& src, 
             const real_t k, 
             const real_t eps
     ){
@@ -206,7 +206,7 @@ namespace ymd::nvcv2::pixels{
         binarization(dst, src, last_i);
     }
 
-    void calc_max_entropy(const Image<Grayscale>& src, const int thresh){
+    void calc_max_entropy(const Image<Gray>& src, const int thresh){
         const Vector2u size = src.size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
@@ -320,7 +320,7 @@ namespace ymd::nvcv2::pixels{
         return Threshold;
     }
 
-    int huang(Image<Binary>& dst, const Image<Grayscale>& src){
+    int huang(Image<Binary>& dst, const Image<Gray>& src){
         // DEBUG_PRINT("huang");
         Histogram hist;
         hist.fill(0);
@@ -337,15 +337,15 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void inverse(Image<Grayscale>& src) {
+    void inverse(Image<Gray>& src) {
         for (auto i = 0u; i < src.size().area(); i++) {
             src[i] = ~uint8_t(src[i]);
         }
     }
 
-    void gamma(Image<Grayscale>& src, const real_t ga) {
+    void gamma(Image<Gray>& src, const real_t ga) {
         static real_t last_ga = 1;
-        static std::array<Grayscale, 256> lut;
+        static std::array<Gray, 256> lut;
 
         if(ga != last_ga){
             last_ga = ga;
@@ -362,22 +362,22 @@ namespace ymd::nvcv2::pixels{
 
 
 
-    void sum_with(Image<Grayscale> & src, Image<Grayscale>& op) {
+    void sum_with(Image<Gray> & src, Image<Gray>& op) {
         for (auto i = 0u; i < src.size().area(); i++) {
             src[i] = MIN((uint8_t)src[i] + (uint8_t)op[i], 255);
         }
     }
 
-    void sub_with(Image<Grayscale> & src, Image<Grayscale>& op) {
+    void sub_with(Image<Gray> & src, Image<Gray>& op) {
         for (auto i = 0u; i < src.size().area(); i++) {
             src[i] = MAX((uint8_t)src[i] - (uint8_t)op[i], 0);
         }
     }
 
 
-    void mask_with(Image<Grayscale> & src, const Image<Binary>& op) {
+    void mask_with(Image<Gray> & src, const Image<Binary>& op) {
         for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
+            src[i] = (uint8_t)op[i] ? src[i] : Gray(0);
         }
     }
 }

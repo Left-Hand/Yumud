@@ -42,6 +42,6 @@ protected:
 public:
     Mnist(){load();}
     ~Mnist(){unload();}
-    Result update(const Image<Grayscale> & img, const Vector2u & pos);
-    Result update(const Image<Grayscale> & img);
+    Result update(const Image<Gray> & img, const Vector2u & pos);
+    Result update(const Image<Gray> & img);
 };

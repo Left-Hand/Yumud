@@ -162,7 +162,7 @@ void gui_main(){
     // camera.init();
     // camera.setExposureValue(1200);
 
-    // [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2u & pos){
+    // [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vector2u & pos){
     //     auto area = Rect2u(pos, src.size());
     //     tft.put_texture(area, src.get_data());
     // };
@@ -227,7 +227,7 @@ void gui_main(){
 
         // // #define CAMERA_TB
         // #ifdef CAMERA_TB
-        // auto sketch = make_image<Grayscale>(camera.size()/2);
+        // auto sketch = make_image<Gray>(camera.size()/2);
         // auto img = Shape::x2(camera);
         // tft.puttexture(img.get_view(), img.get_data());
         // clock::delay(10ms);

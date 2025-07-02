@@ -19,8 +19,8 @@ static void clear_corners(Image<is_monochrome auto> & dst){
 
 
 void convolution(
-    Image<Grayscale> & dst, 
-    const Image<Grayscale> & src, 
+    Image<Gray> & dst, 
+    const Image<Gray> & src, 
     const Matrix_t<int8_t, 3, 3> & core, 
     const size_t div)
 {
@@ -44,19 +44,19 @@ void convolution(
             
             if(div != 1) pixel /= div;
 
-            dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
 
 
-void gauss(Image<Grayscale> & dst, const Image<Grayscale> & src){
+void gauss(Image<Gray> & dst, const Image<Gray> & src){
     clear_corners(dst);
     convolution(dst, src, cores::gauss, 10);
 }
 
 
-void gauss5x5(Image<Grayscale> & dst, const Image<Grayscale> & src){
+void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
@@ -83,18 +83,18 @@ void gauss5x5(Image<Grayscale> & dst, const Image<Grayscale> & src){
                 }
             }
             
-            dst[{x,y}] = Grayscale(CLAMP(sum / core_sum, 0, 255));
+            dst[{x,y}] = Gray(CLAMP(sum / core_sum, 0, 255));
         }
     }
 }
 
-void gauss(Image<Grayscale> & src){
-    auto temp = Image<Grayscale>(src.size());
+void gauss(Image<Gray> & src){
+    auto temp = Image<Gray>(src.size());
     gauss(temp, src);
     pixels::copy(src, temp);
 }
 
-Vector2u find_most(const Image<Grayscale> & src, const Grayscale & tg_color,  const Vector2u & point, const Vector2u & vec){
+Vector2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vector2u & point, const Vector2u & vec){
     Vector2u current_point = point;
     Vector2u delta_point = Vector2u(sign(vec.x), sign(vec.y));
 
@@ -149,7 +149,7 @@ Vector2u find_most(const Image<Grayscale> & src, const Grayscale & tg_color,  co
     }
     // return current_point;
 }
-void sobel_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
+void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
@@ -171,7 +171,7 @@ void sobel_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
                 pixel += src[x +  (y + 1) * w]		* core[2][1];
                 pixel += src[x + 1 + (y + 1) * w]	* core[2][2];
                 
-                dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+                dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
@@ -198,7 +198,7 @@ void sobel_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
     }
 }
 
-void convolution(Image<Grayscale> & dst, const Image<Grayscale> & src, const size_t core[2][2]){
+void convolution(Image<Gray> & dst, const Image<Gray> & src, const size_t core[2][2]){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
@@ -212,7 +212,7 @@ void convolution(Image<Grayscale> & dst, const Image<Grayscale> & src, const siz
             pixel += src[x - 1 + (y) * w]		* core[1][0];
             pixel += src[x +  (y) * w]			* core[1][1];
             
-            dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -464,15 +464,15 @@ void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
     }
 }
 
-auto x4(const Image<Grayscale> & src, const size_t m){
-    Image<Grayscale> dst(src.size() / m);
+auto x4(const Image<Gray> & src, const size_t m){
+    Image<Gray> dst(src.size() / m);
     x4(dst, src, m);
     return dst;
 }
 
 
-Image<Grayscale> x2(const Image<Grayscale> & src){
-    Image<Grayscale> dst(src.size() / 2);
+Image<Gray> x2(const Image<Gray> & src){
+    Image<Gray> dst(src.size() / 2);
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
@@ -716,7 +716,7 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
 }
 #endif
 
-void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
+void convo_roberts_x(Image<Gray> & dst, const Image<Gray> & src){
     if(src.is_shared_with(dst)){
         auto temp = src.clone();
         convo_roberts_x(dst, temp);
@@ -738,9 +738,9 @@ void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
     }
 }
 
-void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
+void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
     if(src.is_shared_with(dst)){
-        auto temp = Image<Grayscale>(src.size());
+        auto temp = Image<Gray>(src.size());
         convo_roberts_xy(temp, src);
         dst = std::move(temp);
         return;
@@ -796,7 +796,7 @@ static __fast_inline Direction xy_to_dir(const int16_t x, const int16_t y){
     #undef TWO_AND_HALF
 } 
 
-void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2<uint16_t> & threshold){
+void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & threshold){
     auto roi = src.size().to_rect();
 
     const auto [low_thresh, high_thresh] = threshold;
@@ -929,7 +929,7 @@ void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range2<uint16_
     }
 }
 
-void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
+void eye(Image<Gray> &dst, const Image<Gray> &src){
 
     using vec_t = Vector2<int8_t>;
     #define square(x) (x * x)
@@ -1032,9 +1032,9 @@ void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
     }
 }
 
-void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
+void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
     if(dst.is_shared_with(src)){
-        auto temp = Image<Grayscale>(src.size());
+        auto temp = Image<Gray>(src.size());
         adaptive_threshold(temp, src);
         dst = std::move(temp);
         return;

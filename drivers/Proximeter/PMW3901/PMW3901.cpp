@@ -145,7 +145,7 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 }
 
 
-// IResult<> PMW3901::read_image(ImageWritable<Grayscale> & img){
+// IResult<> PMW3901::read_image(ImageWritable<Gray> & img){
 //     int count = 0;
 //     scexpr uint8_t MASK = 0x0c; //MASK to take bits 2 and 3 from b
 
@@ -166,7 +166,7 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 //         uint8_t pixel = a; //set pixel to a
 //         pixel = pixel << 2; //push left to 7:2
 //         pixel += (b & MASK); //set lower 2 from b to 1:0
-//         img[count++] = Grayscale(pixel); //put temp value in fbuffer array
+//         img[count++] = Gray(pixel); //put temp value in fbuffer array
 //         //clock::delay(100us);
 //         }
 //     }

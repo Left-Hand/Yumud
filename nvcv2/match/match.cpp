@@ -9,18 +9,18 @@ using namespace ymd::nvcv2;
 
 
 DigitProbability match_numbers(
-        const Image<Grayscale> & src, 
+        const Image<Gray> & src, 
         const Rect2u & roi, 
         const real_t threshold
 ){
     const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2u(roi.position, tmp_size));
-    auto fault_bina = fault.mirror<Grayscale>();
+    auto fault_bina = fault.mirror<Gray>();
 
     DigitProbability digit_p;
     for(size_t i = 0; i < MAX_NUMBERS; i++){
-        Image<Grayscale> tmp = Image<Grayscale>::from_buf(
-            reinterpret_cast<const Grayscale *>(digit_images[i]), 
+        Image<Gray> tmp = Image<Gray>::from_buf(
+            reinterpret_cast<const Gray *>(digit_images[i]), 
             tmp_size
         );
         digit_p[i] = ymd::nvcv2::match::template_match(fault, tmp);
@@ -66,7 +66,7 @@ DigitProbability match_numbers(const Image<Binary> & src, const Rect2u & roi){
 }
 
 
-Option<uint> match_number(const Image<Grayscale> &, const Rect2u & roi){
+Option<uint> match_number(const Image<Gray> &, const Rect2u & roi){
     TODO();
     return Some(0);
 }
@@ -85,7 +85,7 @@ Option<uint> match_number(const Image<Binary> & src, const Rect2u & roi){
 
 
 
-real_t number_match(const Image<Grayscale> &src, const uint index){
+real_t number_match(const Image<Gray> &src, const uint index){
     TODO();
     return real_t();
 }
@@ -109,7 +109,7 @@ real_t number_match(const Image<Grayscale> &src, const uint index){
 
             //     plot_number(clip_window, digit_p);
 
-            //     Painter<Grayscale> pt;
+            //     Painter<Gray> pt;
             //     pt.bindImage(clipped);
             //     pt.drawString({0,0}, toString(digit_p));
 

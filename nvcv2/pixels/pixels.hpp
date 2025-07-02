@@ -3,19 +3,19 @@
 #include "../nvcv2.hpp"
 
 namespace ymd::nvcv2::pixels{
-    void conv(Image<RGB565>& dst, const Image<Grayscale>& src);
+    void conv(Image<RGB565>& dst, const Image<Gray>& src);
 
     void conv(Image<RGB565>& dst, const Image<Binary>& src);
 
 
-    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src);
+    void dyeing(Image<Gray>& dst, const Image<Gray>& src);
 
-    auto dyeing(const Image<Grayscale>& src);
+    auto dyeing(const Image<Gray>& src);
 
-    Grayscale dyeing(const Grayscale in);
+    Gray dyeing(const Gray in);
 
     template<typename T>
-    requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
+    requires (std::is_same_v<T, Gray> || std::is_same_v<T, Binary>)
     void copy(Image<T>& dst, const Image<T>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
@@ -24,7 +24,7 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    __inline void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
+    __inline void fast_diff_opera(Image<Gray> & dst, const Image<Gray> & src) {
         if(dst.is_shared_with(src)){
             auto temp = dst.clone();
             fast_diff_opera(temp, src);
@@ -52,9 +52,9 @@ namespace ymd::nvcv2::pixels{
 
     __inline void fast_bina_opera(
             Image<Binary> & out,
-            const Image<Grayscale> & em, 
+            const Image<Gray> & em, 
             const uint8_t et,
-            const Image<Grayscale>& dm,
+            const Image<Gray>& dm,
             const uint8_t dt) {
 
         const auto area = Vector2<size_t>{
@@ -68,31 +68,31 @@ namespace ymd::nvcv2::pixels{
         }
     }
     
-    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold);
+    void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold);
 
-    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold);
-    void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
+    Image<Binary> binarization(const Image<Gray>& src, const Gray threshold);
+    void ostu(Image<Binary>& dst, const Image<Gray>& src);
 
 
     void iter_threshold(
         Image<Binary>& dst, 
-        const Image<Grayscale>& src, 
+        const Image<Gray>& src, 
         const real_t k = real_t(0.5), 
         const real_t eps = real_t(0.02));
 
-    void max_entropy(const Image<Grayscale>& src,const int thresh);
+    void max_entropy(const Image<Gray>& src,const int thresh);
 
     int get_huang_fuzzy_threshold(Histogram hist);
 
-    int huang(Image<Binary>& dst, const Image<Grayscale>& src);
+    int huang(Image<Binary>& dst, const Image<Gray>& src);
 
 
 
-    void gamma(Image<Grayscale>& src, const real_t ga);
+    void gamma(Image<Gray>& src, const real_t ga);
 
 
     template<typename T>
-    concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Grayscale>;
+    concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Gray>;
 
 
     template<is_monocolour_v T>
@@ -135,9 +135,9 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void mask_with(Image<Grayscale> & src, const Image<Binary>& op);
-    void sum_with(Image<Grayscale> & src, Image<Grayscale>& op);
-    void sub_with(Image<Grayscale> & src, Image<Grayscale>& op);
+    void mask_with(Image<Gray> & src, const Image<Binary>& op);
+    void sum_with(Image<Gray> & src, Image<Gray>& op);
+    void sub_with(Image<Gray> & src, Image<Gray>& op);
 
     
     // constexpr ColorType mean(const Rect2u & view) const;
@@ -149,7 +149,7 @@ namespace ymd::nvcv2::pixels{
 
 
 
-    constexpr uint64_t sum(const Image<Grayscale> & image, const Rect2u & roi){
+    constexpr uint64_t sum(const Image<Gray> & image, const Rect2u & roi){
         uint64_t sum = 0;
         const Range2u x_range = roi.get_x_range();
         const Range2u y_range = roi.get_y_range();
@@ -163,20 +163,20 @@ namespace ymd::nvcv2::pixels{
         return sum;
     }
 
-    constexpr uint64_t sum(const Image<Grayscale> & image){
+    constexpr uint64_t sum(const Image<Gray> & image){
         return sum(image, image.size().to_rect());
     }
 
 
-    constexpr Grayscale mean(const Image<Grayscale> & image, const Rect2u & roi){
+    constexpr Gray mean(const Image<Gray> & image, const Rect2u & roi){
         return sum(image, roi) / (roi.get_area());
     }
 
-    constexpr Grayscale mean(const Image<Grayscale> & image){
+    constexpr Gray mean(const Image<Gray> & image){
         return mean(image, image.size().to_rect());
     }
 
-    __inline Grayscale average(const Image<Grayscale>& src){
+    __inline Gray average(const Image<Gray>& src){
         return pixels::sum(src) / src.size().area();
     }
 

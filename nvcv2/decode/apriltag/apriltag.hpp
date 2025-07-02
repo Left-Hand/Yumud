@@ -21,7 +21,7 @@ class ApriltagDecoder{
 class ApriltagRecognizerIntf{
 public:
     using Vertexs = std::array<Vector2<real_t>, 4>;
-    virtual void update(const Image<Grayscale> src, const Rect2u roi);
+    virtual void update(const Image<Gray> src, const Rect2u roi);
 };
 
 

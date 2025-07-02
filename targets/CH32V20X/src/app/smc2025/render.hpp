@@ -504,7 +504,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
+    virtual Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -519,8 +519,8 @@ public:
 //         );
 //     }
 
-//     Image<Grayscale> render(const Pose2<q16> viewpoint) const {
-//         Image<Grayscale> ret{CAMERA_SIZE};
+//     Image<Gray> render(const Pose2<q16> viewpoint) const {
+//         Image<Gray> ret{CAMERA_SIZE};
 
 //         const auto org = project_pixel_to_ground({0,0}, viewpoint);
 //         const auto y_step = project_pixel_to_ground({0,1}, viewpoint) - org;
@@ -531,7 +531,7 @@ public:
 //             const auto beg = offset;
 //             for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
 //                 const bool covered = this->color_from_point(offset);
-//                 ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
+//                 ret.set_pixel({x,y}, covered ? Gray{255} : Gray{0});
 //                 offset += x_step;
 //             }
 //             offset = beg;
@@ -564,7 +564,7 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const {
+    Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
@@ -609,8 +609,8 @@ public:
         }, objects_);
 
         if(!dirty) std::memset(pbuf.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
-        return Image<Grayscale>(std::move(
-            std::reinterpret_pointer_cast<Grayscale[]>(pbuf)), CAMERA_SIZE);
+        return Image<Gray>(std::move(
+            std::reinterpret_pointer_cast<Gray[]>(pbuf)), CAMERA_SIZE);
     }
 private:
     std::tuple<Objects...> objects_;  // Expanded parameter pack

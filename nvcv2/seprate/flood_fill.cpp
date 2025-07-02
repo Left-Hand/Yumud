@@ -268,19 +268,19 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
 }
 
 
-Image<Grayscale> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter) {
-    static constexpr Grayscale labelable = 255;
+Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter) {
+    static constexpr Gray labelable = 255;
 
     const auto size = src.size();
     const auto nrow = size.x;
     const auto ncol = size.y;
-    Image<Grayscale> map({nrow, ncol});
+    Image<Gray> map({nrow, ncol});
     m_blobs.clear();
 
     for(size_t y = 0u; y < ncol; ++y){
         for(size_t x = 0u; x < nrow; ++x){
             if(src[{x,y}] == Binary::BLACK){
-                map[{x,y}] = Grayscale(0);
+                map[{x,y}] = Gray(0);
             }else{
                 map[{x,y}] = labelable;
             }

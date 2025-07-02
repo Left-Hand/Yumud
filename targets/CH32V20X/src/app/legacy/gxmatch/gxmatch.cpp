@@ -787,7 +787,7 @@ void host_main(){
     // if(true){
     if(false){
         bindSystickCb(nullptr);
-        [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+        [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vector2i & pos){
             const auto area = Rect2i(pos, src.size());
             displayer.putTexture(area, src.get_data());
         };
@@ -822,8 +822,8 @@ void host_main(){
         while(true){
             painter.setColor(ColorEnum::WHITE);
 
-            // Image<Grayscale> img = Shape::x2(camera);
-            Image<Grayscale> img = camera.clone();
+            // Image<Gray> img = Shape::x2(camera);
+            Image<Gray> img = camera.clone();
             auto ave = Pixels::average(img);
             DEBUG_PRINTLN(millis(), uint8_t(ave));
             plot_gray(img, {0, 0});
@@ -835,10 +835,10 @@ void host_main(){
             // Shape::adaptive_threshold(img_ada, img);
             // plot_gray(img_ada, {0, img.size().y * 2});
 
-            auto img_processed = img.space<Grayscale>();
+            auto img_processed = img.space<Gray>();
             // Shape::canny(img_bina, img, {60, 120});
             Shape::eye(img_processed, img);
-            auto img_processed2 = img.space<Grayscale>();
+            auto img_processed2 = img.space<Gray>();
             Shape::eye(img_processed2, img_processed);
             // Pixels::binarization(img_bina, img_ada, 220);
             // Pixels::inverse(img_bina);

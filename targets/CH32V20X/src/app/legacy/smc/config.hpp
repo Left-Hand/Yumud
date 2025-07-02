@@ -19,8 +19,8 @@ namespace SMC{
 
 
 struct GlobalConfig{
-    Grayscale positive_threshold = 255;
-    Grayscale edge_threshold = 2;
+    Gray positive_threshold = 255;
+    Gray edge_threshold = 2;
     int seed_height_base = 5;
     real_t dpv = 1.8;
 

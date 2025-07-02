@@ -208,7 +208,7 @@ void smc2025_main(){
     camera.set_gain(2.4_r).examine();
 
     [[maybe_unused]] auto plot_gray = [&](
-        const Image<Grayscale> & src, 
+        const Image<Gray> & src, 
         const Rect2u & area
     ){
         tft.put_texture(
@@ -223,7 +223,7 @@ void smc2025_main(){
     };
 
     [[maybe_unused]] auto plot_bina = [&](
-        const Image<Grayscale> & src, 
+        const Image<Gray> & src, 
         const Rect2u & area
     ){
         tft.put_texture(

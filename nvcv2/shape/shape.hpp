@@ -23,35 +23,35 @@ namespace ymd::nvcv2::shape{
 
 
     void convolution(
-        __restrict Image<Grayscale> & dst, 
-        __restrict const Image<Grayscale> & src, 
+        __restrict Image<Gray> & dst, 
+        __restrict const Image<Gray> & src, 
         const Matrix_t<int8_t, 3, 3> & core, 
         const int div = 1);
 
     void convolution(
-        Image<Grayscale> & dst, 
-        const Image<Grayscale> & src, 
+        Image<Gray> & dst, 
+        const Image<Gray> & src, 
         const Matrix_t<int8_t, 2, 2> & core);
 
-    void gauss(Image<Grayscale> & dst, const Image<Grayscale> & src);
-    void gauss(Image<Grayscale> &src);
-    void gauss5x5(Image<Grayscale> & dst, const Image<Grayscale> & src);
+    void gauss(Image<Gray> & dst, const Image<Gray> & src);
+    void gauss(Image<Gray> &src);
+    void gauss5x5(Image<Gray> & dst, const Image<Gray> & src);
 
     Vector2i find_most(
-        const Image<Grayscale> & src, 
-        const Grayscale & tg_color, 
+        const Image<Gray> & src, 
+        const Gray & tg_color, 
         const Vector2i & point, 
         const Vector2i & vec);
-    __inline void sobel_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
+    __inline void sobel_x(Image<Gray> & dst, const Image<Gray> & src){
         convolution(dst, src, cores::sobel_x);}
-    __inline void sobel_y(Image<Grayscale> & dst, const Image<Grayscale> & src){
+    __inline void sobel_y(Image<Gray> & dst, const Image<Gray> & src){
         convolution(dst, src, cores::sobel_y);}
-    __inline void scharr_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
+    __inline void scharr_x(Image<Gray> & dst, const Image<Gray> & src){
         convolution(dst, src, cores::scharr_x);}
-    __inline void scharr_y(Image<Grayscale> & dst, const Image<Grayscale> & src){
+    __inline void scharr_y(Image<Gray> & dst, const Image<Gray> & src){
         convolution(dst, src, cores::scharr_y);}
 
-    void sobel_xy(Image<Grayscale> & dst, const Image<Grayscale> & src);
+    void sobel_xy(Image<Gray> & dst, const Image<Gray> & src);
 
 
 
@@ -73,11 +73,11 @@ namespace ymd::nvcv2::shape{
 
     void x4(Image<Binary> & dst, const Image<Binary> & src);
 
-    void x4(Image<Grayscale> & dst, const Image<Grayscale> & src, const int m = 2);
+    void x4(Image<Gray> & dst, const Image<Gray> & src, const int m = 2);
 
-    auto x4(const Image<Grayscale> & src, const int m = 2);
+    auto x4(const Image<Gray> & src, const int m = 2);
 
-    Image<Grayscale> x2(const Image<Grayscale> & src);
+    Image<Gray> x2(const Image<Gray> & src);
 
     void XN(
         __restrict Image<Binary> dst,
@@ -156,18 +156,18 @@ namespace ymd::nvcv2::shape{
         morph_open(src, src);
     }
 
-    void convo_roberts_x(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
+    void convo_roberts_x(__restrict Image<Gray> & dst,__restrict const Image<Gray> & src);
 
-    void convo_roberts_xy(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
+    void convo_roberts_xy(__restrict Image<Gray> & dst,__restrict const Image<Gray> & src);
 
-    void adaptive_threshold(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src);
-    __inline void convo_roberts_y(__restrict Image<Grayscale> & dst,__restrict const Image<Grayscale> & src){
+    void adaptive_threshold(__restrict Image<Gray> & dst,__restrict const Image<Gray> & src);
+    __inline void convo_roberts_y(__restrict Image<Gray> & dst,__restrict const Image<Gray> & src){
         convolution(dst, src, cores::roberts_y);
     }
 
 
-    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range2<uint16_t> & threshold);
-    void eye(Image<Grayscale> & dst, const Image<Grayscale> & src);
+    void canny(Image<Binary> & dst,const Image<Gray> & src, const Range2<uint16_t> & threshold);
+    void eye(Image<Gray> & dst, const Image<Gray> & src);
     class Seed{
         public:            
 

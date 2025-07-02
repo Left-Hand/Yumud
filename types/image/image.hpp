@@ -161,7 +161,7 @@ __inline auto make_image(const Vector2u size){
     return Image<T>(size);
 }
 
-__inline auto make_gray_image(const Vector2u size){return make_image<Grayscale>(size);};
+__inline auto make_gray_image(const Vector2u size){return make_image<Gray>(size);};
 __inline auto make_bina_image(const Vector2u size){return make_image<Binary>(size);};
 
 

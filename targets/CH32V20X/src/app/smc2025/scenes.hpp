@@ -91,9 +91,9 @@ private:
 };
 
 struct Scenes{
-    __no_inline static Image<Grayscale> render_scene1
+    __no_inline static Image<Gray> render_scene1
         (const CameraViewport2_t<real_t> & viewport);    
-    __no_inline static Image<Grayscale> render_scene2
+    __no_inline static Image<Gray> render_scene2
         (const CameraViewport2_t<real_t> & viewport);    
 };
 

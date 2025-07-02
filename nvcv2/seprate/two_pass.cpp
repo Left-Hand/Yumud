@@ -33,7 +33,7 @@ void TwoPass::Union(int x, int y)
 		parent[i] = j;
 }
 
-void TwoPass::twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary> &src){
+void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src){
 	auto [w,h] = src.size();
 
 	int label = 1;
@@ -46,8 +46,8 @@ void TwoPass::twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary>
 			if (src[{x,y}] != 0)
 			{
 				//left and up labels
-				Grayscale left = (x - 1 < 0) ? Grayscale(0) : out.at({x - 1, y});
-				Grayscale up = (y - 1 < 0) ? Grayscale(0) : out.at({x, y-1});
+				Gray left = (x - 1 < 0) ? Gray(0) : out.at({x - 1, y});
+				Gray up = (y - 1 < 0) ? Gray(0) : out.at({x, y-1});
 
 				//at least one label is marked
 				if (left != 0 || up != 0){
@@ -56,9 +56,9 @@ void TwoPass::twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary>
 						//adopt smaller label
 						out[{x,y}] = std::min(left, up);
 						if (left <= up)
-							Union(up, left);
+							Union(uint8_t(up), uint8_t(left));
 						else if (up<left)
-							Union(left, up);
+							Union(uint8_t(left), uint8_t(up));
 					}
 					else{
 						//adopt larger label
@@ -80,13 +80,13 @@ void TwoPass::twoPassConnectComponent(Image<Grayscale> & out,const Image<Binary>
 		for (auto x = 0u; x < w; x++)
 		{
 			if (src[{x,y}] != 0)
-				out[{x,y}] = Find(out[{x,y}]);
+				out[{x,y}] = Find(uint8_t(out[{x,y}]));
 		}
 	}
 }
 
 //find the max label value
-int TwoPass::findMaxLabel(const Image<Grayscale> & out){
+int TwoPass::findMaxLabel(const Image<Gray> & out){
 	const auto [imgH, imgW] = out.size();
 	auto max = INT_FAST32_MIN;
 	for (auto i = 0u; i < imgH; i++)
@@ -102,10 +102,10 @@ int TwoPass::findMaxLabel(const Image<Grayscale> & out){
 	return max;
 }
 
-Image<Grayscale> TwoPass::run(const Image<Binary> & src)
+Image<Gray> TwoPass::run(const Image<Binary> & src)
 {
 	//detect connected-region using two Pass method
-	auto ret = Image<Grayscale>(src.size());
+	auto ret = Image<Gray>(src.size());
 	twoPassConnectComponent(ret, src);
 	return ret;
 	//find the largest label
