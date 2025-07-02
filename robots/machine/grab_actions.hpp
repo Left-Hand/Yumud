@@ -138,10 +138,10 @@ class MoveXYAction:public GrabAction{
 protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
 
-    Vector2q<16> to_;
+    Vector2<q16> to_;
     Vector3<real_t> from_;
     real_t dist_;
-    Vector2q<16> norm_;
+    Vector2<q16> norm_;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
     real_t dur_;
 
@@ -160,7 +160,7 @@ protected:
     }
 public:
     ACTION_NAME(movexy)
-    MoveXYAction(Inst & inst, const Vector2q<16> to):
+    MoveXYAction(Inst & inst, const Vector2<q16> to):
         GrabAction(UINT32_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
                 init(inst_.getPos());

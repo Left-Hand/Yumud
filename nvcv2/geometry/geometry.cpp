@@ -42,31 +42,31 @@ static constexpr InvPerspectiveConfig inv_perspective_config{
     .H8 = q16(-0.00600),
 };
 
-Vector2q<16> perspective(const Vector2q<16> & v){
+Vector2<q16> perspective(const Vector2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (perspective_config.H8*y+q16(1));
     q16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
     q16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
-    Vector2q<16> ret = {_x,_y};
+    Vector2<q16> ret = {_x,_y};
     return ret;
 }
 
 
-Vector2q<16> inv_perspective(const Vector2q<16> & v){
+Vector2<q16> inv_perspective(const Vector2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
     q16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
     q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
-    Vector2q<16> ret = {_x,_y};
+    Vector2<q16> ret = {_x,_y};
     return ret;
 }
 
-Vector2q<16> inv_perspective_fast(const Vector2q<16> & v){
+Vector2<q16> inv_perspective_fast(const Vector2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
     q16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
     q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
-    Vector2q<16> ret = {_x,_y};
+    Vector2<q16> ret = {_x,_y};
 
     return ret;
 }

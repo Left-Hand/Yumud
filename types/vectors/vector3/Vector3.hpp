@@ -407,8 +407,6 @@ using Vector3d = Vector3<double>;
 using Vector3i = Vector3<int>;
 using Vector3u = Vector3<uint>;
 
-template<size_t Q>
-using Vector3q = Vector3<iq_t<Q>>;
 
 }
 

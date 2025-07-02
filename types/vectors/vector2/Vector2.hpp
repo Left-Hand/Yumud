@@ -320,11 +320,6 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2<auto> &
     return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }
 
-
-
-template<size_t Q>
-using Vector2q = Vector2<iq_t<Q>>;
-
 using Vector2f = Vector2<float>;
 using Vector2i = Vector2<int>;
 using Vector2u = Vector2<uint>;

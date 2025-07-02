@@ -39,7 +39,7 @@ struct Placement{
     // q16 rotation = 0;
     // q16 zoom = 1;
 
-    // Vector2q<16> apply_transform(Vector2q<16> p) const {
+    // Vector2<q16> apply_transform(Vector2<q16> p) const {
     // return (p * zoom).rotated(rotation) + pos;
     // }
 };
@@ -444,7 +444,7 @@ struct RotatedZebraRect{
 
 
 //将相机像素转换为地面坐标
-static constexpr Vector2q<16> project_pixel_to_ground(
+static constexpr Vector2<q16> project_pixel_to_ground(
     const Vector2u pixel, 
     const Pose2<q16> viewpoint, 
     const q16 zoom
@@ -453,31 +453,31 @@ static constexpr Vector2q<16> project_pixel_to_ground(
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vector2q<16> camera_offset = Vector2q<16>(pixel_offset) * zoom;
+    const Vector2<q16> camera_offset = Vector2<q16>(pixel_offset) * zoom;
     const auto rot = viewpoint.rad - q16(PI/2);
     return viewpoint.pos + camera_offset.rotated(rot);
 }
 
 
 static constexpr Vector2u project_ground_to_pixel(
-    const Vector2q<16>& ground_pos,
+    const Vector2<q16>& ground_pos,
     const Pose2<q16> viewpoint,
     const q16 zoom)
 {
     // 1. Remove viewpoint position offset
-    const Vector2q<16> relative_pos = ground_pos - viewpoint.pos;
+    const Vector2<q16> relative_pos = ground_pos - viewpoint.pos;
     
     // 2. Calculate inverse rotation (original rotation was viewpoint.rad - PI/2)
     const auto [s, c] = sincos(-(viewpoint.rad - q16(PI/2)));
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
-    const Vector2q<16> unrotated = {
+    const Vector2<q16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y
     };
     
     // 4. Remove scaling and convert to pixel space
-    const Vector2q<16> pixel_offset = unrotated / zoom;
+    const Vector2<q16> pixel_offset = unrotated / zoom;
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return Vector2u{

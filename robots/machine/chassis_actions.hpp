@@ -95,8 +95,8 @@ protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
 
-    Vector2q<16> dest_;
-    Vector2q<16> norm_;
+    Vector2<q16> dest_;
+    Vector2<q16> norm_;
     real_t dist_;
 
     void init(){
@@ -111,7 +111,7 @@ protected:
 public:
     ACTION_NAME(shift)
     
-    ShiftAction(Inst & inst, const Vector2q<16> & dest):
+    ShiftAction(Inst & inst, const Vector2<q16> & dest):
         ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
@@ -208,8 +208,8 @@ protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
 
-    Vector2q<16> dest_;
-    Vector2q<16> norm_;
+    Vector2<q16> dest_;
+    Vector2<q16> norm_;
     real_t dist_;
 
     void init(){
@@ -224,7 +224,7 @@ protected:
 public:
     ACTION_NAME(strict_shift)
     
-    StrictShiftAction(Inst & inst, const Vector2q<16> & dest):
+    StrictShiftAction(Inst & inst, const Vector2<q16> & dest):
         ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();

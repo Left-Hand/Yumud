@@ -52,7 +52,7 @@ void ChassisModule::closeloop(){
             break;
         case CtrlMode::SPIN:{
             auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
-            setCurrent(Ray2q<16>{Vector2q<16>{0,0}, rot_output});    
+            setCurrent(Ray2q<16>{Vector2<q16>{0,0}, rot_output});    
         }
             break;
     }
@@ -146,7 +146,7 @@ void ChassisModule::tick800(){
     if(i == 0){
 
         // auto time = Sys::t;
-        // auto delta = solver.inverse(Vector2q<16>{0, 0.00_r}, 0.7_r);
+        // auto delta = solver.inverse(Vector2<q16>{0, 0.00_r}, 0.7_r);
         // wheels.setCurrent(delta);
         // acc_gyr_sensor_.update();
         // mag_sensor_.update();
@@ -214,7 +214,7 @@ void ChassisModule::straight(const real_t dist){
 }
 
 //平移
-void ChassisModule:: shift(const Vector2q<16> & diff){
+void ChassisModule:: shift(const Vector2<q16> & diff){
     auto & self = *this;
     self << new ShiftAction(self, diff);
 }
@@ -230,7 +230,7 @@ void ChassisModule::strict_spin(const real_t ang){
     self << new StrictSpinAction(self, ang);
 }
 
-void ChassisModule::strict_shift(const Vector2q<16> & offs){
+void ChassisModule::strict_shift(const Vector2<q16> & offs){
     auto & self = *this;
     self << new StrictShiftAction(self, offs);
 }

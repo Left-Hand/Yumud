@@ -244,10 +244,13 @@ public:
 };
 
 using Range2i = Range2<int>;
-using Range2i = Range2<int>;
 using Range2u = Range2<uint>;
 
-__inline OutputStream & operator<<(OutputStream & os, const Range2<auto> & value){
+template<typename T>
+__inline OutputStream & operator<<(
+    OutputStream & os, 
+    const Range2<T> & value
+){
     return os << os.brackets<'['>() << value.start << os.splitter() << value.stop << os.brackets<')'>();
 }
 

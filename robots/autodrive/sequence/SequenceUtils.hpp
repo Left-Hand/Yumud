@@ -31,7 +31,7 @@ public:
     constexpr CurvePoint(const q16 & x, const q16 & y, const q16 & rad):
         x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(rad * RAD_SCALE){;}
 
-    constexpr CurvePoint(const Vector2q<16> & pos, const q16 & rad):
+    constexpr CurvePoint(const Vector2<q16> & pos, const q16 & rad):
         CurvePoint(pos.x, pos.y, rad){;}
         
     constexpr CurvePoint(const Ray2<q16> & ray):
