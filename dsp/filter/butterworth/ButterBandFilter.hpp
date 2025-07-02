@@ -42,60 +42,61 @@ public:
         uint fs;
     };
 
-    ButterBandFilterBase() = default;
+    constexpr ButterBandFilterBase() = default;
 
-    ButterBandFilterBase(const Config & cfg){
+    constexpr ButterBandFilterBase(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         
         // T fl_norm = cfg.fl / (cfg.fs / 2);
         // T fh_norm = cfg.fh / (cfg.fs / 2);
         // T a = std::cos(T(PI)*(fh_norm + fl_norm)) / std::cos(T(PI)*(fh_norm - fl_norm));
         // T b = std::tan(T(PI)*(fh_norm - fl_norm));
-        
-        const T a = std::cos(T(PI)*(cfg.fh+cfg.fl)/cfg.fs) / std::cos(T(PI)*(cfg.fh-cfg.fl)/cfg.fs);
-        const T b = std::tan(T(PI)*(cfg.fh-cfg.fl)/cfg.fs);
+        const auto [s_sum, c_sum] = sincospu(T(cfg.fh+cfg.fl) / (cfg.fs * 2));
+        const auto [s_delta, c_delta] = sincospu(T(cfg.fh-cfg.fl) / (cfg.fs * 2));
+        const T a = c_sum / c_delta;
+        const T b = s_delta / c_delta;
         const T a2 = a*a;
         const T b2 = b*b;
 
         
         for(size_t i = 0; i < N / 4; ++i){
-            r_ = std::sin(T(PI)*(2*i+1)/N);
+            r_ = sinpu(T(2*i+1)/(2 * N));
             s_ = b2 + 2*b*r_ + 1;
-            states_[i].a = 1/s_;
-            states_[i].d1 = 4*a*(1+b*r_)/s_;
-            states_[i].d2 = 2*(b2-2*a2-1)/s_;
-            states_[i].d3 = 4*a*(1-b*r_)/s_;
-            states_[i].d4 = -(b2 - 2*b*r_ + 1)/s_;
+            const auto inv_s = 1 / s_;
+            states_[i].a = 1 * inv_s;
+            states_[i].d1 = 4*a*(1+b*r_) * inv_s;
+            states_[i].d2 = 2*(b2-2*a2-1) * inv_s;
+            states_[i].d3 = 4*a*(1-b*r_) * inv_s;
+            states_[i].d4 = -(b2 - 2*b*r_ + 1) * inv_s;
         }
-        r_ = 4*a;
-        s_ = 4*a2+2;
+
+        r_ = 4 * a;
+        s_ = 4 * a2+2;
     }
 
-    const T & get() const{ return this->result_; }
+    constexpr const T & get() const{ return this->result_; }
 
-    void reset(){
+    constexpr void reset(){
         for(auto & state:states_){
             state.reset();
         }
     }
 
 protected:
-// public:
-// private:
     struct StateVector{
         T a;
         T d1, d2, d3, d4;
         T w0, w1, w2, w3, w4;
 
-        void reset(){
+        __fast_inline constexpr void reset(){
             w0 = w1 = w2 = w3 = w4 = 0;
         }
 
-        T conv(const T x) const {
+        __fast_inline constexpr T conv(const T x) const {
             return (
                 + d1 * w1 
                 + d2 * w2 
@@ -103,17 +104,9 @@ protected:
                 + d4 * w4 
                 + x
             );
-
-            // return dsp::conv<16>(
-            //     d1, w1,
-            //     d2, w2,
-            //     d3, w3,
-            //     d4, w4,
-            //     x
-            // );
         }
 
-        void shift(){
+        __fast_inline constexpr void shift(){
             w4 = w3;
             w3 = w2;
             w2 = w1;
@@ -144,6 +137,8 @@ public:
     void update(T x){
         auto & self = *this;
 
+        
+        #pragma GCC unroll 1
         for(size_t i = 0; i < N / 4; ++i){
             self.states_[i].w0 = self.states_[i].conv(x);
 
@@ -188,6 +183,7 @@ public:
     void update(T x){
         auto & self = *this;
 
+        #pragma GCC unroll 1
         for(size_t i = 0; i < N/4; ++i){
             self.states_[i].w0 = self.states_[i].conv(x);
 

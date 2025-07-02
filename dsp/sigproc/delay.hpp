@@ -1,33 +1,32 @@
 #pragma once
 #include <array>
 #include <cstdint>
-
+#include "core/math/realmath.hpp"
 namespace ymd::dsp {
 
 template<typename T>
 class DelayLine {
 public:
 
-    constexpr DelayLine(std::span<T> & pbuf):
+    constexpr DelayLine(const std::span<T> pbuf):
         pbuf_(pbuf){;}
 
-    constexpr T process(T in){
+    constexpr T operator()(T in){
         write_pos_++;
-        write_pos_ &= kMask;
+        if(write_pos_ >= pbuf_.size()) write_pos_ = 0;
         pbuf_[write_pos_] = in;
         return get_last();
     }
     constexpr void push(T in){
         write_pos_++;
-        write_pos_ &= kMask;
+        if(write_pos_ >= pbuf_.size()) write_pos_ = 0;
         pbuf_[write_pos_] = in;
     }
     constexpr void clear_internal(){
-        std::fill_n(pbuf_.begin(), data.size(), 0);
+        std::fill_n(pbuf_.begin(), pbuf_.size(), 0);
     }
     constexpr T get_last(){
-        const auto read_idx = write_pos_ + data_.size() - delay_;
-        read_idx &= kMask;
+        const auto read_idx = (write_pos_ + pbuf_.size() - delay_) % pbuf_.size();
         return pbuf_[read_idx];
     }
     constexpr void set_delay(size_t delay){
@@ -41,10 +40,6 @@ private:
     size_t write_pos_ = 0;
     size_t delay_ = 0;
 
-    template<typename T>
-    static constexpr my_clamp(T x, T min, T max){
-        return x < min ? min : x > max ? max : x;
-    }
 };
 
 } // namespace dsp

@@ -6,11 +6,14 @@
 
 #include "FFT.hpp"
 #include "liir.hpp"
+
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
+
 #include "dsp/sigproc/tunning_filter.hpp"
+#include "dsp/sigproc/comb_allpass.hpp"
 
 #include "ParticleSwarmOptimization.hpp"
 #include "core/math/realmath.hpp"
@@ -28,6 +31,7 @@ struct Evaluator{
         
         const auto begin_m = clock::micros();
 
+        #pragma GCC unroll 20
         for(size_t i = 0; i < times; ++i){
             const auto x = real_t(i) / times;
             std::forward<FnProc>(fn_proc)(x);
@@ -42,8 +46,6 @@ struct Evaluator{
 
     template<typename FnIn, typename FnProc>
     void run_func(const uint32_t f_isr, FnIn && fn_in, FnProc && fn_proc){
-
-
         hal::timer1.init({
             // .freq = fs_.expect("you have not set fs yet")
             .freq = f_isr
@@ -53,7 +55,6 @@ struct Evaluator{
             y_ = std::forward<FnProc>(fn_proc)(x_);
             time_ += delta_;
         });
-        
     }
 
     constexpr auto get_xy() const {
@@ -81,6 +82,8 @@ private:
 
     q16 x_;
     q16 y_;
+
+    // Microseconds delta_;
 };
 
 
@@ -333,6 +336,12 @@ static auto make_tunning_filter(const T delay){
     return filter;
 }
 
+// template<typename T>
+// static auto make_delay_line(const T delay, const std::span<T> buffer){
+//     return dsp::DelayLine()
+// }
+
+// template<typename T>
 
 #define DBG_UART hal::uart2
 void dsp_main(){
@@ -349,6 +358,7 @@ void dsp_main(){
     [[maybe_unused]] constexpr T FREQ_LOW = T(250);
     [[maybe_unused]] constexpr T FREQ_HIGH = T(400);
     constexpr uint FREQ_SAMPLE = 4000;
+    // constexpr uint FREQ_SAMPLE = 2000;
     // constexpr uint FREQ_SAMPLE = 1000;
 
     [[maybe_unused]]
@@ -387,22 +397,37 @@ void dsp_main(){
 
     #endif
 
-    auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    // auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    auto && bpf = make_butterworth_bandpass<q16, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
     // auto && sig_proc = make_tunning_filter<T>(1.0_r);
+
+    static constexpr size_t BUFFER_SIZE = 512;
+    auto buffer = std::vector<q16>(BUFFER_SIZE);
+    auto && allpass = dsp::CombAllpass<q16>(std::span(buffer));
+    allpass.set_delay(5_r);
+    auto && sig_proc = [&](const real_t t){
+        const auto bpf_out = bpf(t);
+        return allpass(bpf_out);
+    };
 
 
     Evaluator eva;
     eva.set_fs(FREQ_SAMPLE);
     eva.run_func(
-        FREQ_SAMPLE / 4,
+        FREQ_SAMPLE/4,
         sig_in, 
         sig_proc
     );
+    // eva.evaluate_func(
+    //     FREQ_SAMPLE,
+    //     sig_in, 
+    //     sig_proc
+    // );
 
     while(true){
-        const auto t = eva.time();
+        // const auto t = eva.time();
         const auto [x,y] = eva.get_xy();
-        DEBUG_PRINTLN_IDLE(t, x, y);
+        DEBUG_PRINTLN_IDLE(x, y, bpf.get(), y+bpf.get());
     }
     // butterworth_bandstop_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
 
