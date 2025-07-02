@@ -1,22 +1,21 @@
 #pragma once
 
-#include "drivers/Display/DisplayerPhy.hpp"
-#include "types/image/PackedImage.hpp"
+#include "drivers/Display/prelude/prelude.hpp"
+#include "types/image/packed_image.hpp"
 
 namespace ymd::drivers{
 
-struct SSD13XX_Config{
-    bool flip_x_en = false;
-    bool flip_y_en = false;
-};
-
 struct SSD13XX_Presets{
-    struct _72X40   :public SSD13XX_Config{};
-    struct _128X64  :public SSD13XX_Config{};
-    struct _128X32  :public SSD13XX_Config{};
-    struct _88X48   :public SSD13XX_Config{};
-    struct _64X48   :public SSD13XX_Config{};
-    struct _128X80  :public SSD13XX_Config{};
+    #define DEF_SSD13XX_CONFIG     
+        bool flip_x_en = false;\
+        bool flip_y_en = false;\
+    struct _72X40  final {DEF_SSD13XX_CONFIG};
+    struct _128X64 final {DEF_SSD13XX_CONFIG};
+    struct _128X32 final {DEF_SSD13XX_CONFIG};
+    struct _88X48  final {DEF_SSD13XX_CONFIG};
+    struct _64X48  final {DEF_SSD13XX_CONFIG};
+    struct _128X80 final {DEF_SSD13XX_CONFIG};
+    #undef DEF_SSD13XX_CONFIG
 };
 
 
@@ -114,7 +113,6 @@ class SSD13XX final{
 public:
     using Phy = SSD1306_Phy;
     using Error = DisplayerError;
-    using Config = SSD13XX_Config;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -126,7 +124,8 @@ public:
         phy_(std::move(phy)),
         offset_(_oled_preset<T>::offset), 
         cmds_(std::span(_oled_preset<T>::buf)),
-        config_(cfg),
+        flip_x_en_(flip_x_en_),
+        flip_y_en_(flip_y_en_),
         frame_(_oled_preset<T>::size){
         }
 
@@ -153,7 +152,8 @@ private:
 
     const Vector2u16 offset_;
     const std::span<const uint8_t> cmds_;
-    const Config config_;
+    const bool flip_x_en_;
+    const bool flip_y_en_;
     VerticalBinaryImage frame_;
 
     [[nodiscard]] IResult<> putpixel_unsafe(const Vector2u16 pos, const Binary color){

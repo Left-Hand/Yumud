@@ -1,18 +1,57 @@
 #pragma once
 
-#include "drivers/Display/DisplayerPhy.hpp"
+#include "drivers/Display/prelude/prelude.hpp"
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
-enum class ST7789_Presets{
+struct ST7789_Prelude{
+
+// https://docs.rs/st7789/latest/st7789/instruction/enum.Instruction.html
+enum class Instruction:uint8_t{
+    NOP = 0,
+    SWRESET = 1,
+    RDDID = 4,
+    RDDST = 9,
+    SLPIN = 16,
+    SLPOUT = 17,
+    PTLON = 18,
+    NORON = 19,
+    INVOFF = 32,
+    INVON = 33,
+    DISPOFF = 40,
+    DISPON = 41,
+    CASET = 42,
+    RASET = 43,
+    RAMWR = 44,
+    RAMRD = 46,
+    PTLAR = 48,
+    VSCRDER = 51,
+    TEOFF = 52,
+    TEON = 53,
+    MADCTL = 54,
+    VSCAD = 55,
+    COLMOD = 58,
+    VCMOFSET = 197,
+};
+
+using Error = DisplayerError;
+
+template<typename T = void>
+using IResult = Result<void, Error>;
+};
+
+enum class ST7789_Presets:uint8_t{
     _120X80,
     _240X135,
     _320X170
 };
-class ST7789_Phy final{
+
+
+class ST7789_Phy final:
+    ST7789_Prelude{
 public:
     template<typename T = void>
     using IResult = Result<void, drivers::DisplayerError>;
@@ -21,15 +60,17 @@ private:
     hal::SpiSlaveIndex idx_;
 
     hal::Gpio & dc_gpio_;
-    hal::Gpio & res_gpio_;
-    hal::Gpio & blk_gpio_;
+    Option<hal::Gpio &>res_gpio_;
+    Option<hal::Gpio &>blk_gpio_;
 
     static constexpr auto COMMAND_LEVEL = LOW;
     static constexpr auto DATA_LEVEL = HIGH;
 
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_burst(const std::span<const auto> pbuf, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_burst(
+        const std::span<const auto> pbuf, 
+        Continuous cont = DISC) {
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
@@ -53,7 +94,10 @@ private:
     }
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_repeat(
+        const is_stdlayout auto data, 
+        const size_t len, 
+        Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
         if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
@@ -72,7 +116,9 @@ private:
     }
 
     template<hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_single(const is_stdlayout auto data, Continuous cont = DISC) {
+    [[nodiscard]] hal::HalResult phy_write_single(
+        const is_stdlayout auto data, 
+        Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
         if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
@@ -96,37 +142,37 @@ private:
     }
 
 public:
-
-
-    // ST7789_Phy(
-    //     const hal::SpiDrv & spi_drv, 
-    //     hal::Gpio & dc_gpio, 
-    //     hal::Gpio & res_gpio = hal::NullGpio,
-    //     hal::Gpio & blk_gpio = hal::NullGpio
-    // ) : spi_drv_(spi_drv), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio){}
-
-
-    ST7789_Phy(
+    explicit ST7789_Phy(
         hal::SpiHw & bus,
         const hal::SpiSlaveIndex index,
-        hal::Gpio & dc_gpio, 
-        hal::Gpio & res_gpio = hal::NullGpio,
-        hal::Gpio & blk_gpio = hal::NullGpio
-    ):spi_(bus), idx_(index), dc_gpio_(dc_gpio), res_gpio_(res_gpio), blk_gpio_(blk_gpio) {};
+        Some<hal::Gpio *> dc_gpio, 
+        Option<hal::Gpio &> res_gpio = None,
+        Option<hal::Gpio &> blk_gpio = None
+    ):  
+        spi_(bus), 
+        idx_(index), 
+        dc_gpio_(dc_gpio.deref()), 
+        res_gpio_(res_gpio), 
+        blk_gpio_(blk_gpio) {};
 
     [[nodiscard]] IResult<> init(){
         dc_gpio_.outpp();
-        res_gpio_.outpp(HIGH);
-        blk_gpio_.outpp(HIGH);
+        if(res_gpio_.is_some())
+            res_gpio_.unwrap().outpp(HIGH);
+
+        if(blk_gpio_.is_some())
+            blk_gpio_.unwrap().outpp(HIGH);
 
         return reset();
     }
 
     [[nodiscard]] IResult<> reset(){
+        if(res_gpio_.is_none()) return Ok();
+        auto & res_gpio = res_gpio_.unwrap();
         clock::delay(10ms);
-        res_gpio_.clr();
+        res_gpio.clr();
         clock::delay(10ms);
-        res_gpio_.set();
+        res_gpio.set();
         return Ok();
     }
 
@@ -166,14 +212,13 @@ public:
     }
 };
 
-class ST7789 final{
+class ST7789 final:
+    public ST7789_Prelude{
 public:
-    template<typename T = void>
-    using IResult = Result<void, DisplayerError>;
+
 
     class ST7789_ReflashAlgo{
     public:
-
         ST7789_ReflashAlgo(const Vector2<uint16_t> & size):
             size_(size){;}
 
@@ -222,86 +267,101 @@ private:
         return phy_.write_data16(data);
     }
 
-    [[nodiscard]] IResult<> modify_ctrl(const bool yes, const uint8_t pos);
+    [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
 
-protected:
-
-    [[nodiscard]] __fast_inline IResult<> putpixel_unsafe(const Vector2<uint16_t> & pos, const RGB565 color){
-        if(const auto res = setpos_unsafe(pos);
-            res.is_err()) return res;
-        if(const auto res = phy_.write_data16(uint16_t(color));
-            res.is_err()) return res;
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> putrect_unsafe(const Rect2<uint16_t> & rect, const RGB565 color);
-    [[nodiscard]] IResult<> puttexture_unsafe(const Rect2<uint16_t> & rect, const RGB565 * color_ptr);
-    [[nodiscard]] IResult<> putseg_v8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color);
-    [[nodiscard]] IResult<> putseg_h8_unsafe(const Vector2<uint16_t> & pos, const uint8_t mask, const RGB565 color);
 public:
-    ST7789(const ST7789_Phy & phy, const Vector2<uint16_t> & size):
-            phy_(phy),
-            algo_(size){;}
+    ST7789(
+        ST7789_Phy && phy, 
+        const Vector2<uint16_t> & size
+    ):
+        phy_(phy),
+        algo_(size){;}
 
 
     auto size() const {return algo_.size();}
 
     IResult<> init(const ST7789_Presets preset);
     IResult<> fill(const RGB565 color){
-        return putrect_unsafe(size().to_rect(), color);
+        return putrect_unchecked(size().to_rect(), color);
     }
-    IResult<> setpos_unsafe(const Vector2<uint16_t> & pos);
-    IResult<> setarea_unsafe(const Rect2<uint16_t> & rect);
+    IResult<> setpos_unchecked(const Vector2<uint16_t> pos);
+    IResult<> setarea_unchecked(const Rect2<uint16_t> rect);
 
     IResult<> put_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
-        if(const auto res = setarea_unsafe(rect);
+        if(const auto res = setarea_unchecked(rect);
             res.is_err()) return res;
         if(const auto res = put_next_texture(rect, pcolor);
             res.is_err()) return res;
         return Ok();
     }
 
-    IResult<> put_next_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
+    IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
         return phy_.write_burst<uint16_t>(std::span(pcolor, rect.get_area()));
     }
 
-    IResult<> set_display_offset(const Vector2<uint16_t> & _offset){
+    IResult<> set_display_offset(const Vector2<uint16_t> _offset){
         offset_ = _offset;
         return Ok();
     }
     
-    IResult<> set_flip_y(const bool flip){
-        return modify_ctrl(flip, 7);
+    IResult<> enable_flip_y(const Enable flip){
+        return modify_ctrl_reg(flip == EN, 7);
     }
 
-    IResult<> set_flip_x(const bool flip){
-        return modify_ctrl(flip, 6);
+    IResult<> enable_flip_x(const Enable flip){
+        return modify_ctrl_reg(flip == EN, 6);
     }
 
-    IResult<> set_swap_xy(const bool flip){
-        return modify_ctrl(flip, 5);
+    IResult<> enable_swap_xy(const Enable flip){
+        return modify_ctrl_reg(flip == EN, 5);
     }
 
     IResult<> set_flush_dir_v(const bool dir){
-        return modify_ctrl(dir, 4);
+        return modify_ctrl_reg(dir, 4);
     }
 
     IResult<> set_format_rgb(const bool is_rgb){
-        return modify_ctrl(!is_rgb, 3);
+        return modify_ctrl_reg(!is_rgb, 3);
     }
 
     IResult<> set_flush_dir_h(const bool dir){
-        return modify_ctrl(dir, 2);
+        return modify_ctrl_reg(dir, 2);
     }
 
 
-    IResult<> set_inversion(const bool inv){
-        return write_command(0x20 + inv);
+    IResult<> enable_inversion(const Enable inv_en){
+        return write_command((inv_en == EN) ? 0x21 : 0x20);
+    }
+
+    [[nodiscard]] __fast_inline IResult<> putpixel_unchecked(
+        const Vector2<uint16_t> pos, 
+        const RGB565 color
+    ){
+        if(const auto res = setpos_unchecked(pos);
+            res.is_err()) return res;
+        if(const auto res = phy_.write_data16(uint16_t(color));
+            res.is_err()) return res;
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> putrect_unchecked(
+        const Rect2<uint16_t> rect, 
+        const RGB565 color
+    );
+
+    [[nodiscard]] IResult<> puttexture_unchecked(
+        const Rect2<uint16_t> rect, 
+        const RGB565 * pcolor
+    );
+
+    [[nodiscard]] Rect2u get_expose_rect(){
+        return algo_.size().to_rect();
     }
 };
 
 
 
 Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset);
+
 
 };

@@ -40,31 +40,31 @@ namespace ymd{
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-struct Color_t {
+struct Color {
 public:
     T r = T(0);
     T g = T(0);
     T b = T(0);
     T a = T(1);
 
-	Color_t() = default;
+	Color() = default;
 
 	
-	constexpr __fast_inline Color_t(T p_r, T p_g, T p_b, T p_a = T(1)) {
+	constexpr __fast_inline Color(T p_r, T p_g, T p_b, T p_a = T(1)) {
 		r = static_cast<T>(p_r);
 		g = static_cast<T>(p_g);
 		b = static_cast<T>(p_b);
 		a = static_cast<T>(p_a);
 	}
 
-	Color_t(const Color_t &) = default;
-	Color_t(Color_t &&) = default;
+	Color(const Color &) = default;
+	Color(Color &&) = default;
 
-	Color_t &operator=(const Color_t &) = default;
-	Color_t &operator=(Color_t &&) = default;
+	Color &operator=(const Color &) = default;
+	Color &operator=(Color &&) = default;
     
-	constexpr bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
-	constexpr bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
+	constexpr bool operator==(const Color &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
+	constexpr bool operator!=(const Color &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
 
 	constexpr uint32_t to_rgba32() const;
 	constexpr uint32_t to_argb32() const;
@@ -88,10 +88,10 @@ public:
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
 
-	constexpr Color_t operator-() const;
+	constexpr Color operator-() const;
 
     // template <typename U>
-    __fast_inline constexpr Color_t &operator+=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color &operator+=(const Color<auto> &p_Color) {
         r += static_cast<T>(p_Color.r);
         g += static_cast<T>(p_Color.g);
         b += static_cast<T>(p_Color.b);
@@ -100,7 +100,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline constexpr Color_t &operator-=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color &operator-=(const Color<auto> &p_Color) {
         r -= static_cast<T>(p_Color.r);
         g -= static_cast<T>(p_Color.g);
         b -= static_cast<T>(p_Color.b);
@@ -109,7 +109,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline constexpr Color_t &operator*=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color &operator*=(const Color<auto> &p_Color) {
         r *= static_cast<T>(p_Color.r);
         g *= static_cast<T>(p_Color.g);
         b *= static_cast<T>(p_Color.b);
@@ -118,7 +118,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline constexpr Color_t & operator*=(const auto &rvalue) {
+    __fast_inline constexpr Color & operator*=(const auto &rvalue) {
         r = r * rvalue;
         g = g * rvalue;
         b = b * rvalue;
@@ -127,7 +127,7 @@ public:
     }
 
     // template<typename U>
-    __fast_inline constexpr Color_t & operator/=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color & operator/=(const Color<auto> &p_Color) {
         r /= static_cast<T>(p_Color.r);
         g /= static_cast<T>(p_Color.g);
         b /= static_cast<T>(p_Color.b);
@@ -135,7 +135,7 @@ public:
         return *this;
     }
 
-    __fast_inline constexpr Color_t & operator/=(const auto &rvalue) {
+    __fast_inline constexpr Color & operator/=(const auto &rvalue) {
         if (rvalue == 0) {
             r = 1.0;
             g = 1.0;
@@ -150,14 +150,14 @@ public:
         return *this;
     };
 
-	constexpr bool is_equal_approx(const Color_t &p_Color) const;
+	constexpr bool is_equal_approx(const Color &p_Color) const;
 	constexpr void invert();
 	constexpr void contrast();
-	constexpr Color_t inverted() const;
-	constexpr Color_t contrasted() const;
+	constexpr Color inverted() const;
+	constexpr Color contrasted() const;
 
-	__fast_inline constexpr Color_t linear_interpolate(const Color_t &p_to, T p_weight) const {
-		Color_t res = *this;
+	__fast_inline constexpr Color linear_interpolate(const Color &p_to, T p_weight) const {
+		Color res = *this;
 
 		res.r += (p_weight * (p_to.r - r));
 		res.g += (p_weight * (p_to.g - g));
@@ -167,28 +167,28 @@ public:
 		return res;
 	}
 
-	__fast_inline constexpr Color_t darkened(T p_amount) const {
-		Color_t res = *this;
+	__fast_inline constexpr Color darkened(T p_amount) const {
+		Color res = *this;
 		res.r = res.r * (1.0f - p_amount);
 		res.g = res.g * (1.0f - p_amount);
 		res.b = res.b * (1.0f - p_amount);
 		return res;
 	}
 
-	__fast_inline constexpr Color_t lightened(T p_amount) const {
-		Color_t res = *this;
+	__fast_inline constexpr Color lightened(T p_amount) const {
+		Color res = *this;
 		res.r = res.r + (1.0f - res.r) * p_amount;
 		res.g = res.g + (1.0f - res.g) * p_amount;
 		res.b = res.b + (1.0f - res.b) * p_amount;
 		return res;
 	}
 
-	__fast_inline constexpr Color_t blend(const Color_t &p_over) const {
-		Color_t res;
+	__fast_inline constexpr Color blend(const Color &p_over) const {
+		Color res;
 		T sa = 1.0 - p_over.a;
 		res.a = a * sa + p_over.a;
 		if (res.a == 0) {
-			return Color_t(T(), T(), T(), T());
+			return Color(T(), T(), T(), T());
 		} else {
 			res.r = (r * a * sa + p_over.r * p_over.a) / res.a;
 			res.g = (g * a * sa + p_over.g * p_over.a) / res.a;
@@ -197,25 +197,25 @@ public:
 		return res;
 	}
 
-	__fast_inline constexpr Color_t to_linear() const {
-		return Color_t(
+	__fast_inline constexpr Color to_linear() const {
+		return Color(
 				r < 0.04045 ? r * (1.0 / 12.92) : pow((r + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
 				g < 0.04045 ? g * (1.0 / 12.92) : pow((g + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
 				b < 0.04045 ? b * (1.0 / 12.92) : pow((b + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
 				a);
 	}
 
-	__fast_inline constexpr Color_t to_srgb() const {
-		return Color_t(
+	__fast_inline constexpr Color to_srgb() const {
+		return Color(
 				r < 0.0031308 ? 12.92 * r : (1.0 + 0.055) * pow(r, T(1.0f / 2.4f)) - T(0.055),
 				g < 0.0031308 ? 12.92 * g : (1.0 + 0.055) * pow(g, T(1.0f / 2.4f)) - T(0.055),
 				b < 0.0031308 ? 12.92 * b : (1.0 + 0.055) * pow(b, T(1.0f / 2.4f)) - T(0.055), a);
 	}
 
-	constexpr Color_t hex(uint32_t p_hex);
-	constexpr Color_t hex64(uint64_t p_hex);
+	constexpr Color hex(uint32_t p_hex);
+	constexpr Color hex64(uint64_t p_hex);
 
-	constexpr static Color_t<T> from_hsv(const T p_h, const T p_s = 1, const T p_v = 1, const T p_a = 1);
+	constexpr static Color<T> from_hsv(const T p_h, const T p_s = 1, const T p_v = 1, const T p_a = 1);
 
     __fast_inline constexpr operator bool() const{
         return !((a == T(0)) or (r == T(0) and g == T(0) and b == T(0)));
@@ -236,14 +236,14 @@ public:
     }
 };
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const Color<auto> & value){
 	const auto splt = os.splitter();
     return os << os.brackets<'('>() << value.r << splt << value.g << splt << value.b << splt << value.a << os.brackets<')'>();
 }
 
 
 template<arithmetic T>
-Color_t() -> Color_t<T>;
+Color() -> Color<T>;
 
 template<typename T>
 struct RGB_t{

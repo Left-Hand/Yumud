@@ -255,7 +255,7 @@ public:
         uint fs;
     };
 
-    using Lpf = LowpassFilter_t<iq_t<16>>;
+    using Lpf = LowpassFilter<iq_t<16>>;
     using Lpfs = std::array<Lpf, 3>;
 
     Lpfs lpfs_ = {};
@@ -1005,10 +1005,10 @@ void bldc_main(){
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
         // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = foc_freq}};
-        // static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
-        // static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = foc_freq}};
-        static dsp::LowpassFilter_t<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = foc_freq}};
-        static dsp::LowpassFilter_t<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = foc_freq}};
+        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
+        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = foc_freq}};
+        static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = foc_freq}};
+        static dsp::LowpassFilter<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = foc_freq}};
         // static dsp::Highpa<q24> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
         // static dsp::ButterLowpassFilter<q20,  2> hfi_filter_lpf{{.fc = 20, .fs = foc_freq}};
         // static dsp::ButterHighpassFilter<q20, 2> hfi_filter_hpf{{.fc = 600, .fs = foc_freq}};

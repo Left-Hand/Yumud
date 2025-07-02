@@ -204,7 +204,7 @@ public:
         //      - (self.kd_ * spd));
         // DEBUG_PRINTLN(raw_a, self.max_acc_);
 
-        // static dsp::LowpassFilter_t<real_t> lpf = {dsp::LowpassFilter_t<real_t>::Config{
+        // static dsp::LowpassFilter<real_t> lpf = {dsp::LowpassFilter<real_t>::Config{
         //     .fc = 300,
         //     .fs = 1000
         // }};

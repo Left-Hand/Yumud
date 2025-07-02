@@ -31,11 +31,11 @@ class WS2812: public RgbLedConcept{
 protected:
 
     WS2812_Phy phy_;
-    void _update(const Color &color);
+    void _update(const Color<real_t> &color);
 public:
     WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
     void init();
-    WS2812 & operator = (const Color & color) override{
+    WS2812 & operator = (const Color<real_t> & color) override{
         _update(color);
         return *this;
     }
@@ -43,15 +43,14 @@ public:
 
 class WS2812Single: public RgbLedConcept{
 protected:
-    using Color = Color_t<real_t>;
-    void _update(const Color & _color){
+    void _update(const Color<real_t> & _color){
         color = _color;
     }
 public:
-    Color color;
+    Color<real_t> color;
     WS2812Single() = default;
 
-    WS2812Single & operator = (const Color & _color) override{
+    WS2812Single & operator = (const Color<real_t> & _color) override{
         _update(_color);
         return *this;
     }
@@ -61,7 +60,6 @@ public:
 template<size_t N>
 class WS2812Chain{
 protected:
-    using Color = Color_t<real_t>;
     WS2812_Phy phy_;
     std::array<WS2812Single, N> leds;
 

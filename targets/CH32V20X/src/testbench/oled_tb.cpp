@@ -13,14 +13,12 @@
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
 
-#include "types/image/painter.hpp"
-#include "types/image/font/instance.hpp"
+#include "types/image/painter/painter.hpp"
 
+#if 0
 
 using namespace ymd;
 using namespace ymd::drivers;
-
-#if 0
 
 #define UART hal::uart2
 
@@ -45,7 +43,7 @@ protected:
     real_t para = 0;
 public:
     Menu(VerticalBinaryImage & _frame, OutputStream & _os):frame_(_frame), os_(_os){
-        painter_.bind_image(frame_);
+        painter_.bind(&frame_);
         painter_.set_color(Binary(true));
     }
 
@@ -116,8 +114,8 @@ public:
 };
 
 static void oled_tb(){
-    auto & SCL_GPIO = portB[0];
-    auto & SDA_GPIO = portB[1];
+    auto & SCL_GPIO = hal::portB[0];
+    auto & SDA_GPIO = hal::portB[1];
     static constexpr auto I2C_BAUD = 2'000'000;
     // static constexpr auto MONITOR_HZ = 5000;
 
@@ -125,8 +123,8 @@ static void oled_tb(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_splitter(' ');
 
-    Key key_left{portB[2], LOW};
-    Key key_right{portB[1], LOW};
+    Key key_left{hal::portB[2], LOW};
+    Key key_right{hal::portB[1], LOW};
 
     Font8x5 font;
 
@@ -135,7 +133,7 @@ static void oled_tb(){
     clock::delay(100ms);
 
     // I2cSw i2c{portB[13], portB[15]};
-    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c{SCL_GPIO, SDA_GPIO};
     // i2c.init(0);
     i2c.init(I2C_BAUD);
 
@@ -162,8 +160,8 @@ static void oled_tb(){
 
     Painter<Binary> painter;
     
-    painter.set_en_font(font).unwrap();
-    painter.bind_image(oled.fetch_frame());
+    painter.set_en_font(&font).unwrap();
+    painter.bind(oled.fetch_frame());
     painter.set_color(Binary(Binary::WHITE));
 
     while(true){
@@ -173,14 +171,17 @@ static void oled_tb(){
         const Rect2u view = {0,0,128,48};
 
         painter.draw_hollow_rect(view).unwrap();
-        painter.draw_fx(view.shrink(6), [&](const real_t x){
-            return sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
-        }).unwrap();
+        painter.draw_fx(
+            view.shrink(6).unwrap(), 
+            [&](const real_t x){
+                return sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
+            }
+        ).unwrap();
 
         painter.draw_args({0, 52}, clock::millis()).unwrap();
 
         if(const auto res = oled.update(); res.is_err())
-            DEBUG_PRINTLN(res.unwrap_err().as<HalError>().unwrap());
+            DEBUG_PRINTLN(res.unwrap_err().unwrap_as<hal::HalError>());
 
 
         key_left.update();
@@ -199,5 +200,6 @@ static void oled_tb(){
 void oled_main(){
     oled_tb();
 }
+
 
 #endif

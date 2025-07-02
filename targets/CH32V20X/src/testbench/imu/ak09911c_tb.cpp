@@ -23,7 +23,6 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::portB[5]
 static constexpr uint ISR_FREQ = 100;
 static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
-// #define MAG_ACTIVATED
 
 
 static void ak09911c_test(drivers::AK09911C & aku){

@@ -173,27 +173,18 @@ template<
     arithmetic T, 
     size_t N, 
     typename Ret = std::array<T, 2 * N>>
-constexpr  Ret dcof_bwlp(T fcf )
-{
-    T theta;     // T(PI) * fcf / 2
-    T st;        // sine of theta
-    T ct;        // cosine of theta
-    T parg;      // pole angle
-    T sparg;     // sine of the pole angle
-    T cparg;     // cosine of the pole angle
-    T a;         // workspace variable
-
+constexpr  Ret dcof_bwlp(T fcf ){
     Ret rcof;
 
-    theta = T(PI) * fcf;
-    st = std::sin(theta);
-    ct = std::cos(theta);
+    const auto theta = T(PI) * fcf;
+    const auto st = std::sin(theta);
+    const auto ct = std::cos(theta);
 
     for(size_t  k = 0; k < N; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
-        sparg = std::sin(parg);
-        cparg = std::cos(parg);
-        a = 1 + st*sparg;
+        const auto parg = T(PI) * (T)(2*k+1)/(T)(2*N);
+        const auto sparg = std::sin(parg);
+        const auto cparg = std::cos(parg);
+        const auto a = 1 + st*sparg;
         rcof[2*k] = -ct/a;
         rcof[2*k+1] = -st*cparg/a;
     }
@@ -230,11 +221,6 @@ filter. The coefficients are returned as an array of Ts.
 
 template<arithmetic T, size_t N> 
 constexpr std::array<T, 4 * N> dcof_bwbp(T f1f, T f2f ){
-    T parg;      // pole angle
-    T sparg;     // sine of pole angle
-    T cparg;     // cosine of pole angle
-    T a;         // workspace variables
-
     const auto cp = std::cos(T(PI) * (f2f + f1f) / 2);
     const auto theta = T(PI) * (f2f - f1f) / 2;
     const auto [st, ct] = sincos(theta);
@@ -245,10 +231,9 @@ constexpr std::array<T, 4 * N> dcof_bwbp(T f1f, T f2f ){
     std::array<T, 2 * N> tcof;
 
     for(size_t  k = 0; k < N; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
-        sparg = std::sin(parg);
-        cparg = std::cos(parg);
-        a = 1 + s2t*sparg;
+        const auto parg = T(PI) * (T)(2*k+1)/(T)(2*N);
+        const auto [sparg, cparg] = sincos(parg);
+        const auto a = 1 + s2t*sparg;
         rcof[2*k] = c2t/a;
         rcof[2*k+1] = s2t*cparg/a;
         tcof[2*k] = -2*cp*(ct+st*sparg)/a;
@@ -272,10 +257,6 @@ filter. The coefficients are returned as an array of Ts.
 
 template<arithmetic T, size_t N>
 constexpr std::array<T, 2*N> dcof_bwbs(T f1f, T f2f ){
-    T parg;      // pole angle
-    T sparg;     // sine of pole angle
-    T cparg;     // cosine of pole angle
-    T a;         // workspace variables
 
     const auto cp = std::cos(T(PI) * (f2f + f1f) / 2);
     const auto theta = T(PI) * (f2f - f1f) / 2;
@@ -287,10 +268,10 @@ constexpr std::array<T, 2*N> dcof_bwbs(T f1f, T f2f ){
     std::array<T, 2*N> tcof;  
 
     for(size_t  k = 0; k < N; ++k ){
-        parg = T(PI) * (T)(2*k+1)/(T)(2*N);
-        sparg = std::sin(parg);
-        cparg = std::cos(parg);
-        a = 1 + s2t*sparg;
+        const auto parg = T(PI) * (T)(2*k+1)/(T)(2*N);
+        const auto sparg = std::sin(parg);
+        const auto cparg = std::cos(parg);
+        const auto a = 1 + s2t*sparg;
         rcof[2*k] = c2t/a;
         rcof[2*k+1] = -s2t*cparg/a;
         tcof[2*k] = -2*cp*(ct+st*sparg)/a;
@@ -319,7 +300,7 @@ constexpr Ret ccof_bwlp(){
 
     ccof[0] = 1;
     ccof[1] = N;
-    const size_t m = N/2;
+    static constexpr size_t m = N/2;
 
     for(size_t i=2; i <= m; ++i){
         ccof[i] = (N-i+1)*ccof[i-1]/i;
@@ -381,10 +362,9 @@ filter. The coefficients are returned as an array of integers.
 template<arithmetic T, size_t N, typename Ret = std::array<T, 2 * N + 1>>
 constexpr Ret ccof_bwbs(T f1f, T f2f )
 {
-    T alpha;
     size_t i, j;
 
-    alpha = -2 * std::cos(T(PI) * (f2f + f1f) / 2) / std::cos(T(PI) * (f2f - f1f) / 2);
+    const auto alpha = -2 * std::cos(T(PI) * (f2f + f1f) / 2) / std::cos(T(PI) * (f2f - f1f) / 2);
 
     Ret ccof;
 

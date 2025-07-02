@@ -65,7 +65,7 @@ public:
     static constexpr size_t q_num = Q;
 
 
-    __fast_inline constexpr iq_t():value_(_iq<Q>::from_i32(0)){;}
+    __fast_inline constexpr iq_t(){;}
 
     template<size_t P>
     __fast_inline constexpr iq_t(const _iq<P> otherv) : value_(otherv){;}

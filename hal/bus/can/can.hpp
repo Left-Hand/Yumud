@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus_base.hpp"
-#include "core/buffer/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf/Fifo_t.hpp"
 #include "core/sdk.hpp"
 
 #include "can_utils.hpp"
@@ -65,7 +65,47 @@ public:
     using ErrCode = CanError;
 
     using Callback = std::function<void(void)>;
-protected:
+
+public:
+    Can(CAN_TypeDef * instance):inst_(instance){;}
+    Can(const Can & other) = delete;
+    Can(Can && other) = delete;
+
+    void set_baudrate(const uint32_t baudrate);
+
+    struct Config{
+        BaudRate baudrate;
+        Mode mode = Mode::Normal;
+    };
+
+    void init(const Config & cfg);
+
+    bool write(const CanMsg & msg);
+    [[nodiscard]] CanMsg read();
+    [[nodiscard]] size_t pending();
+    [[nodiscard]] size_t available();
+
+    void clear_rx(){while(this->available()){(void)this->read();}}
+    void set_sync(const Enable en){sync_ = en == EN;}
+    [[nodiscard]] bool is_tranmitting();
+    [[nodiscard]] bool is_receiving();
+    void enable_hw_retransmit(const Enable en = EN);
+    void cancel_transmit(const uint8_t mbox);
+    void cancel_all_transmits();
+    void enable_fifo_lock(const Enable en = EN);
+    void enable_index_priority(const Enable en = EN);
+    [[nodiscard]] uint8_t get_tx_errcnt();
+    [[nodiscard]] uint8_t get_rx_errcnt();
+    [[nodiscard]] CanError get_last_error();
+    [[nodiscard]] bool is_busoff();
+
+    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
+    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
+    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+
+    CanFilter operator[](const size_t idx) const ;
+
+private:
     CAN_TypeDef * inst_;
     
     #ifndef CAN_SOFTFIFO_SIZE
@@ -132,44 +172,6 @@ protected:
     friend void ::CAN2_SCE_IRQHandler(void);
     #endif
     #endif
-public:
-    Can(CAN_TypeDef * instance):inst_(instance){;}
-    Can(const Can & other) = delete;
-    Can(Can && other) = delete;
-
-    void set_baudrate(const uint32_t baudrate);
-
-    struct Config{
-        BaudRate baudrate;
-        Mode mode = Mode::Normal;
-    };
-
-    void init(const Config & cfg);
-
-    bool write(const CanMsg & msg);
-    [[nodiscard]] CanMsg read();
-    [[nodiscard]] size_t pending();
-    [[nodiscard]] size_t available();
-
-    void clear_rx(){while(this->available()){(void)this->read();}}
-    void set_sync(const Enable en){sync_ = en == EN;}
-    [[nodiscard]] bool is_tranmitting();
-    [[nodiscard]] bool is_receiving();
-    void enable_hw_retransmit(const Enable en = EN);
-    void cancel_transmit(const uint8_t mbox);
-    void cancel_all_transmits();
-    void enable_fifo_lock(const Enable en = EN);
-    void enable_index_priority(const Enable en = EN);
-    [[nodiscard]] uint8_t get_tx_errcnt();
-    [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] CanError get_last_error();
-    [[nodiscard]] bool is_busoff();
-
-    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
-    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
-    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
-
-    CanFilter operator[](const size_t idx) const ;
 };
 
 #ifdef ENABLE_CAN1

@@ -9,7 +9,7 @@
 
 namespace ymd::foc::StepperComponents{
 
-using Color = ymd::Color_t<real_t>;
+using Color = ymd::Color<real_t>;
 
 
 using namespace ymd::drivers;

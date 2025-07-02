@@ -1,20 +1,28 @@
 #include "src/testbench/tb.h"
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/spi/spihw.hpp"
-#include "types/vectors/quat/Quat.hpp"
 #include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
+#include "types/vectors/quat/Quat.hpp"
+
+#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
+#define DBG_UART DEBUGGER_INST
+
 void bmi160_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    DBG_UART.init({576_KHz});
+    DEBUGGER.retarget(&DBG_UART);
+    DEBUGGER.no_brackets();
+    DEBUGGER.set_eps(4);
+    DEBUGGER.force_sync(EN);
 
     spi1.init({18000000});
 
@@ -35,8 +43,6 @@ void bmi160_main(){
 
     bmi.init().examine();
     while(true){
-        // auto pos = ma730.getLapPosition();
-
         ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
         ledb = BoolLevel::from((clock::millis() % 400).count() > 200);
         ledg = BoolLevel::from((clock::millis() % 800).count() > 400);
@@ -49,6 +55,6 @@ void bmi160_main(){
         acc.z = acc.z >> 10;
         acc.normalize();
         Quat gest = Quat::from_shortest_arc({0,0,1}, acc);
-        DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
+        DEBUG_PRINTLN(gest);
     }
 }

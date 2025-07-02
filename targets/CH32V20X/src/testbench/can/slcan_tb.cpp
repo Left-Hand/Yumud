@@ -12,10 +12,10 @@ using namespace ymd;
 
 [[maybe_unused]] static __attribute__((__noreturn__))
 void slcan_main(){
-    auto & OUT_UART = hal::uart1;
-    OUT_UART.init({576000});
+    auto & DBG_UART = hal::uart1;
+    DBG_UART.init({576000});
 
-    DEBUGGER.retarget(&OUT_UART);
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
@@ -34,7 +34,7 @@ void slcan_main(){
     );
 
     robots::ReplService repl_service = {
-        &OUT_UART, &OUT_UART
+        &DBG_UART, &DBG_UART
     };
 
 

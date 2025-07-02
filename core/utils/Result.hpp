@@ -628,28 +628,6 @@ Result(Err<E> && val) -> Result<void, E>;
 template<typename TDummy = void>
 Result() -> Result<void, void>;
 
-template<
-    typename T, 
-    typename E,
-    typename Tdecay = std::decay_t<T>,
-    typename Edecay = std::decay_t<E>
->
-[[nodiscard]] Result<Tdecay, Edecay> rescond(bool cond, T&& ok, E&& err){
-    if(cond) return Ok<Tdecay>(std::forward<T>(ok));
-    else return Err<Edecay>(std::forward<E>(err));
-}
-
-template<
-    typename T, 
-    typename E,
-    typename Tdecay = std::decay_t<T>,
-    typename Edecay = std::decay_t<E>
->
-[[nodiscard]] Result<Tdecay, Edecay> rescond(bool cond, Ok<T>&& ok, Err<E>&& err){
-    if(cond) return Ok<Tdecay>((ok));
-    else return Err<Edecay>((err));
-}
-
 
 template<typename Fn, typename Fn_Dur>
 __inline auto retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
@@ -682,7 +660,6 @@ OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
     }
 }
 
-// Specialization for std::optional
 template <typename T, typename E>
 struct __unwrap_helper<Result<T, E>> {
     using Obj = Result<T, E>;

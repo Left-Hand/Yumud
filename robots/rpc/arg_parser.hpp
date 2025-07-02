@@ -3,10 +3,12 @@
 #include "core/string/string.hpp"
 #include "core/utils/Option.hpp"
 #include "hal/bus/uart/uarthw.hpp"
+#include "thirdparty/sstl/include/sstl/vector.h"
+
 
 namespace ymd{
 
-class ArgSplitter final{
+struct ArgSplitter final{
 private:
     static constexpr size_t STR_MAX_LENGTH = 64;
     static constexpr size_t STR_MAX_PIECES = 16;
@@ -66,7 +68,7 @@ public:
     ArgSplitter(){;}
 
     template<typename Fn>
-    void update(const char chr, Fn && fn){
+    constexpr void update(const char chr, Fn && fn){
         if(is_valid_char(chr)){
             temp_str_.push_back(chr);
         }

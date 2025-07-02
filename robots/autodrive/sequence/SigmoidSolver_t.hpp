@@ -8,19 +8,7 @@ namespace ymd::robots{
 
 //对当前量与目标量进行梯形位置求解
 template<arithmetic T>
-class SigmoidSolver_t{
-protected:
-    T s_;
-
-    T t_all;
-    bool peaked;
-    
-    __inline T s(const T & x){
-        static constexpr double k = 1.004969823;
-        static constexpr double m = (1.0 - k) / 2;
-        return T(k) * (1/(exp(-(12 * x - 6)) + 1)) + T(b);
-    }
-
+class SigmoidSolver_t final{
 public:
     DELETE_COPY_AND_MOVE(SigmoidSolver_t);
 
@@ -36,6 +24,18 @@ public:
 
     T period() const {
         return t_all;
+    }
+
+private:
+    T s_;
+
+    T t_all;
+    bool peaked;
+    
+    __inline T s(const T & x){
+        static constexpr double k = 1.004969823;
+        static constexpr double m = (1.0 - k) / 2;
+        return T(k) * (1/(exp(-(12 * x - 6)) + 1)) + T(b);
     }
 };
 

@@ -111,7 +111,16 @@ public:
         SIGNAL_LINE_TELEMETRY_ENABLE = 33, // Required 6 times. Enable commands 42 through
     };
 
-protected:
+
+    DShotChannel(hal::TimerOC & oc);
+    DShotChannel(const DShotChannel & other) = delete;
+    DShotChannel(DShotChannel && other) = delete;
+
+    void init();
+
+    DShotChannel & operator = (const real_t duty);
+
+private:
 
     static constexpr uint16_t HIGH_CVR = (234 * 2 / 3);
     static constexpr uint16_t LOW_CVR = (234 * 1 / 3);
@@ -128,14 +137,6 @@ protected:
     static void clear(std::span<uint16_t, DSHOT_LEN> buf);
 
     void invoke();
-public:
-    DShotChannel(hal::TimerOC & oc);
-    DShotChannel(const DShotChannel & other) = delete;
-    DShotChannel(DShotChannel && other) = delete;
-
-    void init();
-
-    DShotChannel & operator = (const real_t duty);
 };
 
 }

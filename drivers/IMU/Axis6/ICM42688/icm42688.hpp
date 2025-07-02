@@ -1,7 +1,7 @@
 #pragma once
 
 #include "details/ICM42688_Prelude.hpp"
-#include "core/utils/EnumArray.hpp"
+#include "core/utils/enum_array.hpp"
 
 namespace ymd::drivers{
 

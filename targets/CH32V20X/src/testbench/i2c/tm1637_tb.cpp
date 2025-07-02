@@ -18,14 +18,13 @@ static void tm1637_tb(){
     TM1637 tm1637{hal::portB[0], hal::portB[1]};
 
     while(true){
-        const auto res = 
-            tm1637.set(0, SegDisplayer::digit_to_seg(   clock::millis().count() / 1000))
-            | tm1637.set(1, SegDisplayer::digit_to_seg( clock::millis().count() / 100))
-            | tm1637.set(2, SegDisplayer::digit_to_seg( clock::millis().count() / 10))
-            | tm1637.set(3, SegDisplayer::digit_to_seg( clock::millis().count() % 10))
-            | tm1637.flush()
-        ;
-        if(res.is_err()) PANIC();
+        (tm1637.set( 0, SegDisplayer::digit_to_seg( clock::millis().count() / 1000))
+        | tm1637.set(1, SegDisplayer::digit_to_seg( clock::millis().count() / 100))
+        | tm1637.set(2, SegDisplayer::digit_to_seg( clock::millis().count() / 10))
+        | tm1637.set(3, SegDisplayer::digit_to_seg( clock::millis().count() % 10))
+        | tm1637.flush())
+        .examine();
+
         DEBUG_PRINTLN(clock::millis());
         clock::delay(20ms);
     }

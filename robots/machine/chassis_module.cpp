@@ -35,7 +35,7 @@ void ChassisModule::closeloop(){
         }
             break;
         case CtrlMode::STRICT_SPIN:{
-            auto p1234 = solver_.inverse(Ray2q<16>{0,0, target_rot_});
+            auto p1234 = solver_.inverse(Ray2q<16>{Vector2<q16>{0,0}, target_rot_});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);

@@ -23,7 +23,8 @@ protected:
     // bool peaked;
     
 public:
-    DELETE_COPY_AND_MOVE(Seg7Solver_t);
+    Seg7Solver_t(const Seg7Solver_t & other) = delete;
+    Seg7Solver_t(Seg7Solver_t && other) = delete;
     Seg7Solver_t(T j, T a, T v, T s): j_(j), a_(a), v_(v), s_(s){
         // t1 = 0;
         // t2 = 0;

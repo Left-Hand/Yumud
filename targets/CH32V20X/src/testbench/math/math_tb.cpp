@@ -194,7 +194,7 @@ void math_tb(){
     #define  LINE_TB
     #ifdef LINE_TB
 
-    using Line = Line2_t<real_t>;
+    using Line = Line2<real_t>;
 
 
     auto line = Line{Vector2<real_t>{1,0}, Vector2<real_t>{0,1}};

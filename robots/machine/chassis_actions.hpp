@@ -257,10 +257,10 @@ public:
 
 class TrimAction:public ChassisAction{
 protected:
-    Ray2_t<real_t> trim_;
+    Ray2<real_t> trim_;
 public:
     ACTION_NAME(trim)
-    TrimAction(Inst & inst, const Ray2_t<real_t> & trim):
+    TrimAction(Inst & inst, const Ray2<real_t> & trim):
         ChassisAction(UINT32_MAX, [this](){
             // if(inst_.arrived()) kill();
             // TODO("csd");

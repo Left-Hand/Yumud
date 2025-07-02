@@ -17,7 +17,7 @@ using namespace ymd::hal;
     drivers::WS2812 led{gpio};
     led.init();
     while(true){
-        led = Color_t<real_t>::from_hsv(0.5_r + 0.5_r * sin(clock::time()),1,1,0.2_r);
+        led = Color<real_t>::from_hsv(0.5_r + 0.5_r * sin(clock::time()),1,1,0.2_r);
         clock::delay(10ms);
     }
 }

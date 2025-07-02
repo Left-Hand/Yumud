@@ -27,8 +27,11 @@ using namespace ymd::hal;
 // #define SDA_GPIO hal::portB[7]
 // #define SCL_GPIO hal::portB[3]
 // #define SDA_GPIO hal::portB[5]
-#define SCL_GPIO hal::portD[2]
-#define SDA_GPIO hal::portC[12]
+// #define SCL_GPIO hal::portD[2]
+// #define SDA_GPIO hal::portC[12]
+
+#define SCL_GPIO hal::portB[0]
+#define SDA_GPIO hal::portB[1]
 // #define SCL_GPIO hal::portC[12]
 // #define SDA_GPIO hal::portD[2]
 #endif
@@ -147,29 +150,6 @@ static auto log(Args && ... args) {
     );
 }
 
-void test_result(){
-    // DEBUG_SOURCE("hahah");
-    // while(1);
-    // using MyResult = Result<void, hal::BusError>;
-    // auto ok = Ok<void>{};
-    // auto ok = Ok();
-    // MyResult res = {ok};
-    // DEBUG_PRINTLN("before");
-    // auto res = Result<uint, hal::BusError>(Err(hal::BusError(hal::BusError::NO_ACK)));
-    // res.loc().expect("Device is not responding", "nmd");
-    // DEBUG_PRINTLN("after");
-
-
-
-    // if(res.ok()){
-        //     DEBUG_PRINTLN("impossiable", res.unwrap());
-    // res.loc().expect("Device is not responding", "nmd", micros());
-    // }else{
-    //     DEBUG_PRINTLN("unreachable");
-    // }
-    // DEBUG_PRINTLN("after");
-    while(true);
-}
 void i2c_scanner_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
@@ -210,45 +190,19 @@ void i2c_scanner_main(){
 
         for(uint8_t i = 0; i < 128; i++){
             const uint8_t read_addr = i << 1;
-            I2cTester::validate(i2c, read_addr)
-                .if_ok([&]{
-                    const auto result = I2cTester::get_max_baudrate(i2c, read_addr);
-                    founded_devices.emplace_back(
-                        read_addr, 
-                        result.loc().expect("unknown bug")
-                    );
-                }).examine();
+            const auto res = I2cTester::validate(i2c, read_addr);
+            (void)res.inspect([&]{
+                const auto baud_res = I2cTester::get_max_baudrate(i2c, read_addr);
+                if(baud_res.is_err()){
+                    PANIC("addr buad can't be measured");
+                }
 
-            // I2cTester::validate(i2c, read_addr)
-            //     .and_then([&i2c, read_addr]() -> Result<FoundInfo, hal::BusError> {
-            //         return I2cTester::get_max_baudrate(i2c, read_addr)
-            //             .map([read_addr](uint baud) {
-            //                 return FoundInfo{read_addr, baud};
-            //             });
-            //     })
-            //     .match(
-            //         [&founded_devices](FoundInfo info) { // 成功分支
-            //             founded_devices.emplace_back(info);
-            //         },
-            //         [](hal::BusError err) { // 失败分支
-            //             PANIC("Address", read_addr, "failed:", err.code());
-            //         }
-            //     );
-
-
-            // I2cTester::validate(i2c, read_addr)
-            // .and_then([&i2c, read_addr] {
-            //     return I2cTester::get_max_baudrate(i2c, read_addr)
-            //         .map([read_addr](uint max_baud) {
-            //             return FoundInfo{read_addr, max_baud};
-            //         });
-            // })
-            // .map([&founded_devices](auto&& info) {
-            //     founded_devices.push_back(std::forward<decltype(info)>(info));
-            // });
-
+                founded_devices.emplace_back(
+                    read_addr, 
+                    baud_res.unwrap()
+                );
+            });
             clock::delay(1ms);
-            // clock::delay(100us);
         }
 
         clock::delay(10ms);
@@ -282,19 +236,3 @@ void i2c_scanner_main(){
 
     while(true);
 }
-
-
-
-
-
-
-//     async_task<void> scan_devices() {
-//     for (uint8_t i : std::views::iota(0, 128)) {
-//         co_await i2c.acquire();
-//         auto result = co_await I2cTester::validate(i2c, i<<1);
-//         if (result) {
-//             auto baud = co_await I2cTester::get_max_baudrate(i2c, i<<1);
-//             founded_devices.emplace_back(i<<1, baud);
-//         }
-//     }
-// }

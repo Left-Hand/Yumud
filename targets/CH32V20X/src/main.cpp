@@ -5,10 +5,6 @@
 #include "core/debug/debug.hpp"
 
 #include "testbench/tb.h"
-#include "app/gui/gui.hpp"
-#include "app/gxmatch/gxmatch.hpp"
-#include "app/eyetrack/etk.hpp"
-#include "app/digiPW/digipw.hpp"
 
 
 int main(){
@@ -81,7 +77,9 @@ int main(){
     // ht16k33_main();
     // mystepper_main();
     // zdt_main();
-    polar_robot_main();
+    // polar_robot_main();
+    // ads7830_main();
+    dsp_main();
     // can_ring_main();
     // rrs3_robot_main();
     // flash_main();

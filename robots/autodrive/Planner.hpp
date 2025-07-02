@@ -28,8 +28,8 @@ public:
     //预设的固定路线类
     struct PlanPreset{
         using Callback = std::function<void(void)>;
-        const FieldType from;
-        const FieldType to;
+        const Field from;
+        const Field to;
         Callback cb;
     };
 

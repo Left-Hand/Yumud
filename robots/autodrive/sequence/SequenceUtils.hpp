@@ -34,11 +34,11 @@ public:
     constexpr CurvePoint(const Vector2q<16> & pos, const q16 & rad):
         CurvePoint(pos.x, pos.y, rad){;}
         
-    constexpr CurvePoint(const Ray2_t<q16> & ray):
+    constexpr CurvePoint(const Ray2<q16> & ray):
         CurvePoint(ray.org.x, ray.org.y, ray.rad){;}
 
-    constexpr Ray2_t<q16> to_ray() const{
-        return Ray2_t<q16>(
+    constexpr Ray2<q16> to_ray() const{
+        return Ray2<q16>(
             Vector2<q16>(
                 q16(x_) >> XY_SHIFT_BITS, 
                 q16(y_) >> XY_SHIFT_BITS), 

@@ -39,8 +39,8 @@
 
 //     real_t adc_fl1, adc_fl2, adc_out, duty;
 //     buckRuntimeValues buck_rv;
-//     LowpassFilter_t<real_t, real_t> lpf(50);
-//     LowpassFilter_t<real_t, real_t> lpf2(30);
+//     LowpassFilter<real_t, real_t> lpf(50);
+//     LowpassFilter<real_t, real_t> lpf2(30);
 
 //     // TIM3->CH4CVR = TIM3->ATRLR >> 1;
 //     // timer3.bindCb(Timer::IT::CC4, [&](){

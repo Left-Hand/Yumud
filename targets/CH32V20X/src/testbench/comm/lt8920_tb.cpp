@@ -45,12 +45,6 @@ void lt8920_main(){
         lt.tick().examine();
     });
 
-    if(lt.validate().is_ok()){
-        DEBUG_PRINTLN("LT8920 founded");
-    }else{
-        DEBUG_PRINTLN("LT8920 not founded, please check your physical connection");
-        PANIC();
-    }
 
     lt.bind_nrst_gpio(portB[0]).examine();
     lt.init().examine();

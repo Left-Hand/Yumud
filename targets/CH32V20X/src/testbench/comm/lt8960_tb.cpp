@@ -4,7 +4,6 @@
 #include "core/clock/time.hpp"
 #include "core/magic/size_traits.hpp"
 #include "core/magic/function_traits.hpp"
-// #include "core/magic/magic_details.hpp"
 #include "core/magic/serialize_traits.hpp"
 #include "core/magic/enum_traits.hpp"
 
@@ -27,15 +26,10 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 
-#define UART hal::uart2
-
-#define MAG_ACTIVATED
-
-#define let const auto
+#define DBG_UART hal::uart2
 
 
-
-scexpr auto ch = LT8960L::Channel(76);
+static constexpr auto ch = LT8960L::Channel(76);
 static constexpr uint32_t master_id = 65536;
 
 // static constexpr size_t TX_FREQ = 500;
@@ -43,27 +37,27 @@ static constexpr size_t TX_FREQ = 4000;
 static constexpr size_t RX_FREQ = TX_FREQ;
 
 
-uint32_t get_id(){
+static uint32_t get_id(){
     // const auto id = uint32_t(sys::Chip::getChipId());
     const auto size = sys::chip::get_flash_size();
     return size;
 }
 
-bool has_tx_authority(){
+static bool has_tx_authority(){
     return get_id() == master_id;
 }
 
-bool has_rx_authority(){
+static bool has_rx_authority(){
     return get_id() == master_id;
 }
 
 
-// 伪隝机庝列生戝器（简坕线性坝馈移佝寄存器�?
 class LFSR {
 public:
-    LFSR(uint32_t seed = 0xACE12345) : state(seed) {}
+    static constexpr uint32_t DEFAULT_SEED = 0xACE12345;
+    constexpr LFSR(uint32_t seed = DEFAULT_SEED) : state(seed) {}
 
-    uint8_t next() {
+    constexpr uint8_t next() {
         uint8_t bit = (state & 1) ^ ((state >> 1) & 1) ^ ((state >> 2) & 1) ^ ((state >> 3) & 1);
         state = (state >> 1) | (bit << 15);
         return bit;
@@ -122,7 +116,8 @@ static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<con
         return None;
     }
 
-    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(pbuf.subspan(0, pbuf.size() - 1)));
+    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(
+        pbuf.subspan(0, pbuf.size() - 1)));
 }
 
 void lt8960_tb(){
@@ -235,10 +230,10 @@ void lt8960_tb(){
 }
 
 void lt8960_main(){
-    // UART.init({576_KHz});
-    // UART.init(1152_KHz);
-    UART.init({6_MHz});
-    DEBUGGER.retarget(&UART);
+    // DBG_UART.init({576_KHz});
+    // DBG_UART.init(1152_KHz);
+    DBG_UART.init({6_MHz});
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets();
 
     lt8960_tb();

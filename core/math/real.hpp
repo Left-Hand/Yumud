@@ -40,6 +40,13 @@ consteval real_t operator"" _r(unsigned long long x){
     return real_t(x);
 }
 
+consteval real_t operator"" _deg(long double x){
+    return real_t(x * PI / 180);
+}
+consteval real_t operator"" _deg(uint64_t x){
+    return real_t(x * PI / 180);
+}
+
 
 __fast_inline constexpr int mean(const int a, const int b){
     return ((a+b) >> 1);

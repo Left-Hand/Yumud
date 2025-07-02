@@ -6,34 +6,29 @@
 namespace ymd::drivers{
 
 class Key final:public KeyIntf{
-protected:
-    using Level = BoolLevel;
-    hal::GpioIntf & m_gpio;
 
-    dsp::DigitalFilter filter;
-    const Level level_= LOW;
-
-    bool last_state = false;
-    bool now_state = false;
 public:
-    Key(hal::GpioIntf & gpio, const Level _level):m_gpio(gpio), level_(_level){;}
+    Key(
+        hal::GpioIntf & gpio, 
+        const BoolLevel level
+    ):gpio_(gpio), level_(level){;}
 
     void init(){
         init(level_);
     }
 
-    void init(const Level level){
+    void init(const BoolLevel level){
         if(level == HIGH){
-            m_gpio.inpd();
+            gpio_.inpd();
         }else{
-            m_gpio.inpu();
+            gpio_.inpu();
         }
     }
 
     void update() {
         last_state = now_state;
-        filter.update(m_gpio.read().to_bool());
-        now_state = filter.result();
+        filter_.update(gpio_.read().to_bool());
+        now_state = filter_.result();
     }
 
     bool just_pressed() const {
@@ -45,8 +40,17 @@ public:
     }
 
     hal::GpioIntf & io(){
-        return m_gpio;
+        return gpio_;
     }
+
+private:
+    hal::GpioIntf & gpio_;
+
+    dsp::DigitalFilter filter_;
+    const BoolLevel level_= LOW;
+
+    bool last_state = false;
+    bool now_state = false;
 };
 
 

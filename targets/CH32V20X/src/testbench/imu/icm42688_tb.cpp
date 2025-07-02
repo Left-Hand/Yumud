@@ -16,15 +16,11 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-// #define UART uart2
-#define UART uart2
+#define DBG_UART uart2
 #define SCL_GPIO hal::portB[3]
 #define SDA_GPIO hal::portB[5]
 static constexpr uint ISR_FREQ = 500;
 static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
-// #define MAG_ACTIVATED
-
-
 
 [[maybe_unused]]
 static void icm42688_tb(ICM42688 & imu){
@@ -101,8 +97,8 @@ static void icm42688_tb(ICM42688 & imu){
 }
 
 void icm42688_main(){
-    UART.init({576_KHz});
-    DEBUGGER.retarget(&UART);
+    DBG_UART.init({576_KHz});
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);

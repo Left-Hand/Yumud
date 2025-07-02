@@ -579,7 +579,7 @@ void UartHw::enable_tx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Tx, en == EN);
 
     if(en == EN){
-        tx_dma_.init(DmaMode::toPeriph, DmaPriority::Medium);
+        tx_dma_.init({DmaMode::toPeriph, DmaPriority::Medium});
         tx_dma_.enable_it({1,1});
         tx_dma_.enable_done_it();
         tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
@@ -588,7 +588,7 @@ void UartHw::enable_tx_dma(const Enable en){
 void UartHw::enable_rx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
     if(en == EN){
-        rx_dma_.init(DmaMode::toMemCircular, DmaPriority::Medium);
+        rx_dma_.init({DmaMode::toMemCircular, DmaPriority::Medium});
         rx_dma_.enable_it({1,1});
         rx_dma_.enable_done_it();
         rx_dma_.enable_half_it();

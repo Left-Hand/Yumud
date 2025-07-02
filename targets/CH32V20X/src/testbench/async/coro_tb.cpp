@@ -1,10 +1,11 @@
 #include "src/testbench/tb.h"
 #include "core/debug/debug.hpp"
 
-#include "src/app/gui/coro_task.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 
+
+#if 0
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::coro;
@@ -80,3 +81,5 @@ void coro_main(){
 
     while(true);
 }
+
+#endif
