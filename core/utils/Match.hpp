@@ -148,7 +148,7 @@ public:
         t_(t){}
 
     template <typename Func>
-    constexpr auto operator=(Func &&func){
+    constexpr auto operator>>=(Func &&func){
         return PatternEquation<Pattern, Func>{t_, func};
     }
 
@@ -180,7 +180,7 @@ constexpr PatternLhs<std::decay_t<T>> operator |(PatternKeyword, T && other){
 
 // };
 
-namespace keywords{
+namespace primitive{
 
 // template<typename T>
 template<typename T>
@@ -298,9 +298,6 @@ static constexpr auto match(const T & value){
     return MatcherEntry<T>{value};
 }
 
-
-
-
-
+namespace fpm = fp::primitive;
 }
 
