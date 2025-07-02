@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 
 #include "core/io/regs.hpp"
@@ -34,4 +35,16 @@ namespace ymd::custom{
             return Err(res.unwrap_err()); 
         }
     };
+}
+
+namespace ymd::drivers::displayer::prelude{
+
+enum class Orientation:uint8_t{
+    Portrait,
+    Landscape,
+    PortraitSwapped,
+    LandscapeSwapped,
+};
+
+
 }

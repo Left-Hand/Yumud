@@ -4,13 +4,6 @@
 #include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
-#include "nvcv2/pixels/pixels.hpp"
-#include "nvcv2/shape/shape.hpp"
-#include "nvcv2/geometry/geometry.hpp"
-#include "nvcv2/two_pass.hpp"
-#include "nvcv2/flood_fill.hpp"
-
-using namespace ymd::nvcv2;
 using namespace ymd::drivers;
 
 #ifdef CH32V30X

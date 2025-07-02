@@ -267,6 +267,9 @@ public:
     [[nodiscard]] constexpr 
     Option(const Some<T *> & something):
         pobj_(something.get()){;}
+    [[nodiscard]] constexpr 
+    Option(T * pobj):
+        pobj_(pobj){;}
 
     [[nodiscard]] constexpr 
     Option(_None_t): pobj_(nullptr){;}

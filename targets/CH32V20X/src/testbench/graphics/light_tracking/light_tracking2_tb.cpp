@@ -408,6 +408,7 @@ void test_res(){
 
 #define UART hal::uart2
 using drivers::ST7789;
+using drivers::ST7789_Phy;
 
 static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 // static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 4;
@@ -469,7 +470,9 @@ void light_tracking_main(void){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 displayer({spi, spi_fd,  lcd_dc, dev_rst}, {240, 135});
+    ST7789 displayer(
+        ST7789_Phy{spi, spi_fd, &lcd_dc, &dev_rst}, 
+        {240, 135});
     DEBUG_PRINTLN("--------------");
     DEBUG_PRINTLN(spi_fd.as_u8());
     drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170).examine();
@@ -481,8 +484,8 @@ void light_tracking_main(void){
     auto fill = [&]{
         // const auto u = micros();
         const auto st = sinpu(clock::time() * 2) * 0.5_r + 0.5_r;
-        // displayer.setpos_unsafe({0,0});
-        displayer.setarea_unsafe({0,0, LCD_W, LCD_H}).examine();
+        // displayer.setpos_unchecked({0,0});
+        displayer.setarea_unchecked({0,0, LCD_W, LCD_H}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
             // row.fill(RGB565(Color<real_t>(0,int(y==0),0,0)));
@@ -532,7 +535,7 @@ void light_tracking_main(void){
     DEBUG_PRINTLN(clock::millis());
     auto render = [&](){
         const auto u = clock::micros();
-        displayer.setarea_unsafe({0,0, LCD_W, LCD_H}).examine();
+        displayer.setarea_unchecked({0,0, LCD_W, LCD_H}).examine();
         for (uint y = 0; y < LCD_H; y++){
 
             std::array<RGB565, LCD_W> row;

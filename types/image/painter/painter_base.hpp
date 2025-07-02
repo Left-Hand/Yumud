@@ -22,8 +22,8 @@ class String;
 
 class StringView;
 
-class PainterBase{
-public:
+
+struct PainterPrelude{
     using Cursor = Vector2u;
 
     enum class Error_Kind:uint8_t{
@@ -47,7 +47,22 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
 
+class PainterDispatcherIntf:public PainterPrelude{
+public:
+    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
+    
+    [[nodiscard]] virtual Option<Rect2u> get_expose_rect() = 0;
+    
+    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
+};
+
+class PainterBase:public PainterPrelude{
 public:
     PainterBase(const PainterBase & other) = delete;
     PainterBase(PainterBase && other) = delete;
@@ -169,27 +184,13 @@ protected:
     Option<Font &> may_chfont_ = None;
     size_t padding_ = 1;
 
-    [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l){
-        auto ins = Rect2u(pos, Vector2u(l, 1));
-        // ins = this->getClipWindow.intersection(ins);
-        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
-        return draw_filled_rect(ins);
-    }
-    [[nodiscard]] IResult<> draw_ver_line(const Vector2u & pos,const int l){
-        auto ins = Rect2u(pos, Vector2u(1, l));
-        // ins = this->getClipWindow.intersection(ins);
-        if(ins.get_area() == 0) return Err(Error::AreaNotExist);
-        return draw_filled_rect(ins);
-    }
-    [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x){
-        auto y_range_regular = y_range.abs();
-        return draw_ver_line(Vector2u(x, y_range_regular.start), y_range_regular.length());
-    }
+    [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l);
 
-    [[nodiscard]] IResult<> draw_hri_line(const Range2u & x_range, const int y){
-        auto x_range_regular = x_range.abs();
-        return draw_hri_line(Vector2u(x_range_regular.start, y), x_range_regular.length());
-    }
+    [[nodiscard]] IResult<> draw_ver_line(const Vector2u & pos,const int l);
+
+    [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x);
+
+    [[nodiscard]] IResult<> draw_hri_line(const Range2u & x_range, const int y);
 
     IResult<> draw_gbk_str(const Vector2u & pos, const StringView str){
         TODO();

@@ -324,3 +324,23 @@ IResult<> PainterBase::draw_roi(const Rect2u & rect){
     return Ok();
 }
 
+
+IResult<> PainterBase::draw_hri_line(const Vector2u & pos,const int l){
+    const auto ins = Rect2u(pos, Vector2u(l, 1));
+    if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+    return draw_filled_rect(ins);
+}
+IResult<> PainterBase::draw_ver_line(const Vector2u & pos,const int l){
+    const auto ins = Rect2u(pos, Vector2u(1, l));
+    if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+    return draw_filled_rect(ins);
+}
+IResult<> PainterBase::draw_ver_line(const Range2u & y_range, const int x){
+    const auto y_range_regular = y_range.abs();
+    return draw_ver_line(Vector2u(x, y_range_regular.start), y_range_regular.length());
+}
+
+IResult<> PainterBase::draw_hri_line(const Range2u & x_range, const int y){
+    const auto x_range_regular = x_range.abs();
+    return draw_hri_line(Vector2u(x_range_regular.start, y), x_range_regular.length());
+}

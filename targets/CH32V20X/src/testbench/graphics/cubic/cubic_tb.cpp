@@ -448,7 +448,14 @@ void cubic_main(void){
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    drivers::ST7789 tft({spi, spi.attach_next_cs(lcd_cs).value(), lcd_dc, dev_rst}, {240, 135});
+    drivers::ST7789 tft(
+		drivers::ST7789_Phy{
+			spi, 
+			spi.attach_next_cs(lcd_cs).value(), 
+			&lcd_dc, 
+			&dev_rst
+		}, 
+		{240, 135});
     DEBUG_PRINTLN("--------------");
 
 	tft.init(drivers::ST7789_Presets::_240X135).examine();
