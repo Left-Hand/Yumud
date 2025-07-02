@@ -1,18 +1,24 @@
 #pragma once
 
-#include "core/magic/function_traits.hpp"
+#include <variant>
+#include <type_traits>
+
+#include "Option.hpp"
+
+#include "core/magic/args_traits.hpp"
+#include "core/magic/enum_traits.hpp"
 
 namespace ymd{
+
 template<typename ... Ts>
-class SumtypeEnum{
+class Sumtype{
 public:
-    using Self = SumtypeEnum<Ts...>;
-    // using Ts...;
+    using Self = Sumtype<Ts...>;
 
     template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
-    constexpr SumtypeEnum(Raw && val):
-        value_(std::in_place_type<T>, static_cast<T>(val)) {
+    constexpr Sumtype(Raw && val):
+        value_(std::in_place_type<T>, static_cast<T>(val)) { // Add std::in_place_type<Raw> to specify variant type
     }
 
     
@@ -30,6 +36,12 @@ public:
     }
 
     template<typename T>
+    constexpr const T & unwrap_as() const {
+        if(! this->is<T>()) __builtin_abort();
+        return std::get<T>(value_); 
+    }
+
+    template<typename T>
     constexpr Option<const T &> as() const {
         if(! this->is<T>()) return None;
         return Some<const T *>(&std::get<T>(value_)); 
@@ -37,6 +49,8 @@ public:
 
 
     constexpr bool operator ==(const Self & other) const {
+        // if(this->var_index() != other.var_index()) return false;
+        // return 
         return this->value_ == other.value_;
     }
 
@@ -53,27 +67,20 @@ public:
         return !(this->operator ==(rhs));
     }
 
-    template<typename Fn, typename Ret = magic::functor_ret_t<Fn>>
-    Ret visit(Fn && fn) const {
-        auto & self = *this;
-        return std::visit([&](const auto & value) {
-            // using T = std::decay_t<decltype(value)>;
-
-            std::forward<Fn>(fn)(value);
-        }, self.value_);
-    }
-
-    friend OutputStream & operator <<(OutputStream & os,const SumtypeEnum & self){
+    friend OutputStream & operator <<(OutputStream & os,const Sumtype & self){
         // 使用 std::visit 遍历 std::variant
         std::visit([&os](const auto& value) {
-            using T = std::decay_t<decltype(value)>;
+            // using T = std::decay_t<decltype(value)>;
 
-            // 检查类型是否可被 OutputStream 打印
-            if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
-                os << value; // 如果可打印，则直接打印
-            } else {
-                os << "[Unprintable type]"; // 否则打印提示信息
-            }
+            // // 检查类型是否可被 OutputStream 打印
+            // if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
+            //     os << value; // 如果可打印，则直接打印
+            // } else {
+            //     os << os.brackets<'['>() <<  "Unprintable" << os.brackets<']'>(); // 否则打印提示信息
+            //     os << os.brackets<'<'>() <<  magic::type_name_of<T>() << os.brackets<'>'>(); // 否则打印提示信息
+            // }
+
+            os << value;
         }, self.value_);
 
         return os;
@@ -84,6 +91,10 @@ private:
     constexpr size_t var_index() const {
         return value_.index();
     }
+
 };
+
+
+
 
 }

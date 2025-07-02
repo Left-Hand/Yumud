@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tuple>
-#include "core/utils/SumtypeEnum.hpp"
+#include "core/utils/sumtype.hpp"
 
 namespace ymd::fp{
 
@@ -214,17 +214,17 @@ struct KeyWord_Unhandled{
 
 
 // template<typename T, typename ... Args>
-// struct Keyword_Is_Dispatcher<T, SumtypeEnum<Args ...>>{
-//     using Obj = SumtypeEnum<Args ...>;
+// struct Keyword_Is_Dispatcher<T, Sumtype<Args ...>>{
+//     using Obj = Sumtype<Args ...>;
 
 //     static constexpr bool is_compatible(const Obj & obj){
 //         return obj.template is<T>();
 //     }
 // };
 template<typename T, typename Obj>
-requires is_template_base_of<SumtypeEnum, Obj>
+requires is_template_base_of<Sumtype, Obj>
 struct Keyword_Is_Dispatcher<T, Obj>{
-    // using Obj = SumtypeEnum<Args ...>;
+    // using Obj = Sumtype<Args ...>;
 
     static constexpr bool is_compatible(const Obj & obj){
         return obj.template is<T>();

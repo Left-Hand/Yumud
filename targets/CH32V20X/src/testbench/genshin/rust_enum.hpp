@@ -10,7 +10,7 @@
 
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 
-#include "core/utils/SumtypeEnum.hpp"
+#include "core/utils/sumtype.hpp"
 #include "core/utils/Match.hpp"
 #include "core/utils/Unit.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -39,13 +39,13 @@ using namespace ymd;
 namespace ymd{
 
 
-// using Shape = SumtypeEnum<Circle, Rectangle>;
+// using Shape = Sumtype<Circle, Rectangle>;
 
 struct Circle{int radius;};
 struct Rectangle{int a; int b;};
 struct Square{int a;};
 
-struct Shape:public SumtypeEnum<Circle, Rectangle>{
+struct Shape:public Sumtype<Circle, Rectangle>{
     using Circle = ::Circle;
     using Rectangle = ::Rectangle;
     using Square = ::Square;

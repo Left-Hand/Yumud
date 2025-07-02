@@ -36,6 +36,8 @@ struct DrawTargetFacade : pro::facade_builder
     ::build {};
 }
 
+
+#if 0
 // 辅助宏：生成单个枚举的别名
 #define IMPORT_ENUM_SINGLE(EnumType) \
 	using enum EnumType;\
@@ -58,23 +60,18 @@ struct DrawTargetFacade : pro::facade_builder
 
 // 确保宏完全展开
 #define EXPAND(...) __VA_ARGS__
+#endif
 
 // IMPORT_ENUMS(ST7789::Error::Kind, PainterBase::Error::Kind, hal::HalError::Kind)
 
-#define DEF_ERROR_WITH_KINDS(name, ...)\
-class name:public SumtypeError<__VA_ARGS__>{\
-public:\
-    using Super = SumtypeError<__VA_ARGS__>;\
-    using Super::Super;\
-};\
+
 
 DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
-// void static_test(){
-// 	constexpr MyError err = ST7789::Error::CantSetup;
-// 	constexpr MyError err2 = PainterBase::Error::CropRectIsNone;
-
-// }
+void static_test(){
+	constexpr MyError err = ST7789::Error::CantSetup;
+	constexpr MyError err2 = PainterBase::Error::CropRectIsNone;
+}
 
 #define DBG_UART hal::uart2
 void st7789_main(void){
