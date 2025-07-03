@@ -71,7 +71,7 @@ void ads1115_main()
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
     i2c.init(400_KHz);
 
-    drivers::ADS1115 ads = {i2c};
+    drivers::ADS1115 ads{&i2c};
 
     ads.set_data_rate(ads.builder().datarate(860).unwrap()).examine();
     ads.set_mux(ads.builder().differential(2,3).unwrap()).examine();

@@ -140,9 +140,9 @@ public:
     TCS34725(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
     TCS34725(
-        hal::I2c & bus, 
+        Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(bus, addr){;}
+        i2c_drv_(i2c, addr){;}
 
     TCS34725(const TCS34725 &) = delete;
     TCS34725(TCS34725 &&) = delete;

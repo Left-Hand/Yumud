@@ -5,7 +5,7 @@
 #include <initializer_list>
 
 #include "sccb.hpp"
-
+#include "core/utils/Option.hpp"
 
 
 namespace ymd::hal{
@@ -15,8 +15,8 @@ private:
     hal::I2c & i2c_;
     hal::I2cSlaveAddr<7> slave_addr_;
 public:
-    SccbDrv(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        i2c_(i2c), slave_addr_(addr){};
+    SccbDrv(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+        i2c_(i2c.deref()), slave_addr_(addr){};
     SccbDrv(const SccbDrv & other) = default;
     SccbDrv(SccbDrv && other) = default;
 

@@ -22,7 +22,7 @@ public:
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7((0x73));
 
-    PAJ7620(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    PAJ7620(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
     PAJ7620(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

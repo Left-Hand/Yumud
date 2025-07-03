@@ -16,8 +16,8 @@ public:
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110100);
 
-    TCA8418(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_({i2c, addr}){;}
+    TCA8418(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, addr}){;}
 
     IResult<> validate();
     IResult<> init();

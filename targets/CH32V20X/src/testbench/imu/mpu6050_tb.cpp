@@ -32,12 +32,12 @@ auto init_mpu6050(MPU6050 & mpu){
 }
 
 void ak8963_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
     
     if(const auto res = init_mpu6050(mpu); 
         res.is_err()) DEBUG_PRINTLN(res.unwrap_err().unwrap_as<HalError>());
 
-    AK8963 aku{i2c};
+    AK8963 aku{&i2c};
     aku.init().examine();
     // aku.setAccRange(MPU6050::AccRange::_2G);
 
@@ -50,7 +50,7 @@ void ak8963_tb(hal::I2c & i2c){
 }
 
 void mpu6050_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
 
     if(const auto res = init_mpu6050(mpu); 
         res.is_err()){ 
@@ -68,10 +68,10 @@ void mpu6050_tb(hal::I2c & i2c){
 }
 
 void mpu6500_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
 
     #ifdef MAG_ACTIVATED
-        AK8963 aku{i2c};
+        AK8963 aku{&i2c};
         mpu.set_package(MPU6050::Package::MPU9250);
     #else
         mpu.set_package(MPU6050::Package::MPU6050);

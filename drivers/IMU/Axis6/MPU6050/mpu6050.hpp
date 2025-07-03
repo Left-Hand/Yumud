@@ -122,8 +122,8 @@ public:
         MPU6050(i2c_drv, Package::MPU6050){;}
     MPU6050(hal::I2cDrv && i2c_drv):
         MPU6050(std::move(i2c_drv), Package::MPU6050){;}
-    MPU6050(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MPU6050(hal::I2cDrv(bus, addr), Package::MPU6050){;}
+    MPU6050(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        MPU6050(hal::I2cDrv(i2c, addr), Package::MPU6050){;}
 
     [[nodiscard]] IResult<> validate();
 

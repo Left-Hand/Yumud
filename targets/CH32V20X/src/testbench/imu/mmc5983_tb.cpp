@@ -347,7 +347,7 @@ void mmc5983_main(){
     clock::delay(200ms);
 
 
-    MMC5983 imu = {i2c};
+    MMC5983 imu{&i2c};
 
     // auto & spi = spi1;
     // spi.init(18_MHz);

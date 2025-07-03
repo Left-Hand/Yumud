@@ -59,7 +59,7 @@ public:
         _100_12_5_Hz = 0b0000
     } ;
 public:
-    L3G4200D(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
+    L3G4200D(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
         :i2c_drv_(hal::I2cDrv(i2c, addr)){}
     L3G4200D(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){}
 

@@ -22,7 +22,11 @@ protected:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
 
 public:
-    BMM150(hal::I2c & bus, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv(bus, addr)){;}
+    BMM150(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
+        phy_(hal::I2cDrv(i2c, addr)){;}
 
 
     void init();

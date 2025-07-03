@@ -71,7 +71,7 @@ public:
     template<typename TConfig>
     AT24CXX(TConfig && cfg, hal::I2c & i2c):
         AT24CXX(std::forward<TConfig>(cfg), 
-        hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 
     AT24CXX(const AT24CXX &) = delete;
     AT24CXX(AT24CXX &&) = delete;

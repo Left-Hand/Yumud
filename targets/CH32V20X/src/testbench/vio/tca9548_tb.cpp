@@ -27,14 +27,14 @@ void tca9548_main()
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
     i2c.init(400_KHz);
 
-    auto tca = drivers::TCA9548A(i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));
+    auto tca = drivers::TCA9548A(&i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));
 
     auto & vi2c = tca[0];   
 
     // auto & act_i2c = i2c;   
     auto & act_i2c = vi2c;   
 
-    auto mpu = drivers::MPU6050{act_i2c};
+    auto mpu = drivers::MPU6050{&act_i2c};
     
     mpu.init().examine();
 

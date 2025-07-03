@@ -199,7 +199,7 @@ public:
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
-        phy_(hal::I2cDrv(i2c.deref(), addr)){;}
+        phy_(hal::I2cDrv(i2c, addr)){;}
 
     IResult<> init();
 

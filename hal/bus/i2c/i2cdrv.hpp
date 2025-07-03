@@ -8,20 +8,16 @@
 
 #include "i2c.hpp"
 #include "core/utils/BytesIterator.hpp"
+#include "core/utils/Result.hpp"
 
 namespace ymd::hal{
 
 class I2cDrv final{
-private:
-    I2c & i2c_;
-    I2cSlaveAddr<7> slave_addr_;
 
-    // uint8_t data_width_ = 8;
-    uint16_t timeout_ = 10;
 public:
 
-    I2cDrv(I2c & i2c, I2cSlaveAddr<7> addr):
-        i2c_(i2c),
+    explicit I2cDrv(Some<I2c *> i2c, I2cSlaveAddr<7> addr):
+        i2c_(i2c.deref()),
         slave_addr_(addr){;}
 
     I2c & bus(){return i2c_;}
@@ -30,6 +26,11 @@ public:
     }
 private:
 
+    I2c & i2c_;
+    I2cSlaveAddr<7> slave_addr_;
+
+    // uint8_t data_width_ = 8;
+    uint16_t timeout_ = 10;
     hal::HalResult write_repeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 

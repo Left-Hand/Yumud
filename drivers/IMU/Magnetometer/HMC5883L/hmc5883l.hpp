@@ -102,7 +102,7 @@ class HMC5883L final:
 public:
     HMC5883L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     HMC5883L(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    HMC5883L(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    HMC5883L(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> init();

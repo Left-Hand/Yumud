@@ -205,7 +205,7 @@ protected:
     static real_t calculate_gyr_scale(const GyrRange range);
 public:
 
-    LIS2DW12(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    LIS2DW12(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
     LIS2DW12(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}

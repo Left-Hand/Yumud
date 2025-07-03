@@ -155,8 +155,8 @@ public:
         i2c_drv_(i2c_drv){;}
     AW9523(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    AW9523(hal::I2c & bus):
-        i2c_drv_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
+    AW9523(Some<hal::I2c *> i2c):
+        i2c_drv_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){

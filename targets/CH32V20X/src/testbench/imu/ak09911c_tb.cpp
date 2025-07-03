@@ -65,7 +65,7 @@ void ak09911c_main(){
     clock::delay(200ms);
 
 
-    AK09911C aku = {i2c};
+    AK09911C aku{&i2c};
 
     // auto & spi = spi1;
     // spi.init(18_MHz);

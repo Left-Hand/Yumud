@@ -24,7 +24,7 @@ void paj7620_main(){
     i2c.init(400_KHz);
 
 
-    PAJ7620 paj{i2c};
+    PAJ7620 paj{&i2c};
 
     paj.init().examine();
 

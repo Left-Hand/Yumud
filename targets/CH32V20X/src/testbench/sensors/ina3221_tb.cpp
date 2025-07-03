@@ -32,7 +32,7 @@ void ina3221_main(){
     auto i2c = hal::I2cSw(SCL_GPIO, SDA_GPIO);
     i2c.init(1200_KHz);
 
-    INA3221 ina = {i2c};
+    INA3221 ina{&i2c};
 
     ina.init().unwrap();
 

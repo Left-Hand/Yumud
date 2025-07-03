@@ -320,7 +320,7 @@ void eeprom_main(){
     using namespace drivers;
     auto at24 = AT24CXX(
         AT24CXX::Config::AT24C02{}, 
-        {i2csw, AT24CXX::DEFAULT_I2C_ADDR}
+        hal::I2cDrv{&i2csw, AT24CXX::DEFAULT_I2C_ADDR}
     );
 
 

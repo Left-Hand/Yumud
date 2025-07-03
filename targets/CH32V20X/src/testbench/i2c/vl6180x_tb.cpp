@@ -96,7 +96,7 @@ void vl6180x_main(){
     i2c.init(400_KHz);
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
-    VL6180X vl6180{i2c};
+    VL6180X vl6180{&i2c};
 
     // vl6180x_range_single_shot_tb(vl6180);
     vl6180x_range_single_shot_scaling_tb(vl6180);

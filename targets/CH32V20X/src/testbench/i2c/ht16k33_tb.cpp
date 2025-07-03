@@ -664,7 +664,7 @@ void ht16k33_main(){
 
     HT16K33 ht16{
         HT16K33::Settings::SOP20Settings{},
-        hal::I2cDrv{i2c, HT16K33::DEFAULT_I2C_ADDR}};
+        hal::I2cDrv{&i2c, HT16K33::DEFAULT_I2C_ADDR}};
 
     HT16K33_tb(ht16);
 }

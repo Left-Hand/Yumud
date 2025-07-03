@@ -87,7 +87,7 @@ struct I2cTester{
     static constexpr auto grow_scale = 2;
     
     static Result<uint, hal::HalError> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
-        auto i2c_drv = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
+        hal::I2cDrv i2c_drv{&i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
 
         const uint max_baud = [&]{
             uint baud = start_freq;
@@ -110,7 +110,7 @@ struct I2cTester{
         return Ok{max_baud};
     }
     static Result<void, hal::HalError> validate(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        const auto res = hal::I2cDrv{i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate();
+        const auto res = hal::I2cDrv{&i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

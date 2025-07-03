@@ -9,8 +9,11 @@ class BMP280 final:private BMP280_Regs{
 public:
     using BMP280_Regs::Error;
 
-    BMP280(hal::I2c & _i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(_i2c, addr)){;}
+    BMP280(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
+        phy_(hal::I2cDrv(i2c, addr)){;}
     ~BMP280(){;}
 
     [[nodiscard]] IResult<> validate();
