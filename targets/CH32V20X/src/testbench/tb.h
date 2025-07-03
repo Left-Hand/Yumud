@@ -167,3 +167,4 @@ void ht16k33_main();
 void mystepper_main();
 void polar_robot_main();
 void ads7830_main();
+void aw9523_main();

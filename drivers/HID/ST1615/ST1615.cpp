@@ -15,7 +15,7 @@ IResult<> ST1615::init(){
     return Ok();
 }
 
-Result<ST1615::GestureInfo, Error> ST1615::get_gesture_info(){
+IResult<ST1615::GestureInfo> ST1615::get_gesture_info(){
     const uint8_t raw = ({
         const auto res = this->read_reg8(ADVANCED_TOUCH_INFO);
         if(res.is_err()) return Err(res.unwrap_err());
@@ -23,14 +23,13 @@ Result<ST1615::GestureInfo, Error> ST1615::get_gesture_info(){
     });
 
     return Ok(GestureInfo {
-        // gesture_type: GestureType::from_u8(raw),
         gesture_type: GestureType::DoubleTab,
         proximity: (raw & 0b0100'0000) != 0,
         water: (raw & 0b0010'0000) != 0,
     });
 }
 
-Result<Option<ST1615::Point>, Error> ST1615::get_point(uint8_t nth) {
+IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
     if (nth > 9) {
         return Err(Error::PointRankOutOfRange); // 最多支持 10 个点
     }
@@ -54,7 +53,7 @@ Result<Option<ST1615::Point>, Error> ST1615::get_point(uint8_t nth) {
 
 
 /// Sensing Counter Registers provide a frame-based scan counter for host to verify current scan rate.
-Result<uint16_t, Error> ST1615::get_sensor_count() {
+IResult<uint16_t> ST1615::get_sensor_count() {
     uint8_t buf[2] = {0};
     const auto res = read_u8(SENSING_COUNTER_L, std::span(buf));
     if (res.is_err()) {
@@ -65,7 +64,7 @@ Result<uint16_t, Error> ST1615::get_sensor_count() {
 }
 
 
-Result<ST1615::Capabilities, Error> ST1615::get_capabilities() {
+IResult<ST1615::Capabilities> ST1615::get_capabilities() {
     const uint8_t max_contacts = ({
         const auto res = read_reg8(CONTACT_COUNT_MAX);
         if (res.is_err()) return Err(res.unwrap_err());

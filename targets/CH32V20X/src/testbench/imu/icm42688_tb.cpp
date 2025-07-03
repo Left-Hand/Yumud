@@ -111,9 +111,6 @@ void icm42688_main(){
 
     clock::delay(200ms);
 
-
-    // ICM42688 imu = {i2c};
-
     auto & spi = spi1;
     spi.init({18_MHz});
     ICM42688 imu = {

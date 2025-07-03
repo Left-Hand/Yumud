@@ -31,7 +31,7 @@ struct AW9523_Prelude{
         Max, High, Medium, Low
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10110000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
 
     enum class RegAddress:uint8_t{
@@ -119,14 +119,12 @@ struct AW9523_Regs:public AW9523_Prelude{
 class AW9523 final:
     public AW9523_Regs{
 public:
-public:
 
     class AW9523Pwm:public hal::PwmIntf{
     protected:
-        AW9523 & aw9523;
-        hal::PinSource pin;
 
-        AW9523Pwm(AW9523 & _aw9523, const hal::PinSource _pin):aw9523(_aw9523), pin(_pin){;}
+
+        AW9523Pwm(AW9523 & aw9523, const hal::PinSource pin):aw9523_(aw9523), pin_(pin){;}
 
         DELETE_COPY_AND_MOVE(AW9523Pwm)
         
@@ -134,12 +132,15 @@ public:
     public:
 
         void init(){
-            aw9523.enable_led_mode(pin).examine();
+            aw9523_.enable_led_mode(pin_).examine();
         }
 
         void set_duty(const real_t duty) {
-            aw9523.set_led_current(pin,int(255 * duty)).examine();
+            aw9523_.set_led_current(pin_,int(255 * duty)).examine();
         }
+    private:
+        AW9523 & aw9523_;
+        hal::PinSource pin_;
     };
 
     class AW9523Port{
@@ -187,14 +188,12 @@ public:
         const size_t index, 
         const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_led_mode(
-        const hal::PinSource pin, 
-        const Enable en = EN);
+    [[nodiscard]] IResult<> enable_led_mode(const hal::PinMask pin);
 
     [[nodiscard]] IResult<> set_led_current_limit(const CurrentLimit limit);
 
     [[nodiscard]] IResult<> set_led_current(
-        const hal::PinSource pin, 
+        const hal::PinMask pin, 
         const uint8_t current);
     
     [[nodiscard]] IResult<> validate();
@@ -208,14 +207,23 @@ private:
 
     static constexpr RegAddress get_dim_addr(const size_t idx){
         switch(idx){
-            case 0 ... 7:
-                return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP00) + idx));
-            case 8 ... 11:
-                return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP10) + idx));
-            case 12 ... 15:
-                return std::bit_cast<RegAddress>(uint8_t(uint8_t(RegAddress::DimP14) + idx));
-            default:
-                __builtin_unreachable();
+            case 0:  return RegAddress::DimP00;
+            case 1:  return RegAddress::DimP01;
+            case 2:  return RegAddress::DimP02;
+            case 3:  return RegAddress::DimP03;
+            case 4:  return RegAddress::DimP04;
+            case 5:  return RegAddress::DimP05;
+            case 6:  return RegAddress::DimP06;
+            case 7:  return RegAddress::DimP07;
+            case 8:  return RegAddress::DimP10;
+            case 9:  return RegAddress::DimP11;
+            case 10: return RegAddress::DimP12;
+            case 11: return RegAddress::DimP13;
+            case 12: return RegAddress::DimP14;
+            case 13: return RegAddress::DimP15;
+            case 14: return RegAddress::DimP16;
+            case 15: return RegAddress::DimP17;
+            default: __builtin_unreachable();
         }
     }
 
@@ -237,11 +245,7 @@ private:
         return read_reg(T::ADDRESS, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
+    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(const RegAddress addr, T & data){
