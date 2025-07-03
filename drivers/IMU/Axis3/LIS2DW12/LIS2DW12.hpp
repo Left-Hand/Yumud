@@ -211,7 +211,7 @@ public:
     LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS2DW12(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();

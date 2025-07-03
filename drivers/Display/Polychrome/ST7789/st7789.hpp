@@ -175,13 +175,13 @@ private:
 
 public:
     explicit ST7789_Phy(
-        hal::SpiHw & bus,
+        Some<hal::SpiHw *> spi,
         const hal::SpiSlaveIndex index,
         Some<hal::Gpio *> dc_gpio, 
         Option<hal::Gpio &> res_gpio = None,
         Option<hal::Gpio &> blk_gpio = None
     ):  
-        spi_(bus), 
+        spi_(spi.deref()), 
         idx_(index), 
         dc_gpio_(dc_gpio.deref()), 
         res_gpio_(res_gpio), 
@@ -249,7 +249,7 @@ class ST7789 final:
 public:
     explicit ST7789(
         ST7789_Phy && phy, 
-        const Vector2<uint16_t> & size
+        const Vector2<uint16_t> size
     ):
         phy_(phy),
         algo_(size){;}

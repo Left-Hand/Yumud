@@ -34,21 +34,24 @@ protected :
 public:
 
     SpiSw(
-        hal::GpioIntf & sclk_gpio,
-        hal::GpioIntf & mosi_gpio,
-        hal::GpioIntf & miso_gpio):
-        sclk_gpio_(sclk_gpio),
-        mosi_gpio_(mosi_gpio), 
-        miso_gpio_(miso_gpio){;}
+        Some<hal::GpioIntf *> sclk_gpio,
+        Some<hal::GpioIntf *> mosi_gpio,
+        Some<hal::GpioIntf *> miso_gpio
+    ):
+        sclk_gpio_(sclk_gpio.deref()),
+        mosi_gpio_(mosi_gpio.deref()), 
+        miso_gpio_(miso_gpio.deref()){;}
 
     SpiSw(
-        hal::GpioIntf & sclk_gpio,
-        hal::GpioIntf & mosi_gpio,
-        hal::GpioIntf & miso_gpio,
-        hal::GpioIntf & cs_gpio):
-        SpiSw(sclk_gpio, mosi_gpio, miso_gpio){
-            bind_cs_gpio(cs_gpio, 0);
-        }
+        Some<hal::GpioIntf *> sclk_gpio,
+        Some<hal::GpioIntf *> mosi_gpio,
+        Some<hal::GpioIntf *> miso_gpio,
+        Some<hal::GpioIntf *> cs_gpio
+    ):
+        SpiSw(sclk_gpio, mosi_gpio, miso_gpio)
+    {
+        bind_cs_gpio(cs_gpio, 0);
+    }
 
     SpiSw(const SpiSw &) = delete;
     SpiSw(SpiSw &&) = delete;

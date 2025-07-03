@@ -2,7 +2,7 @@
 
 #include "spi.hpp"
 #include "core/sdk.hpp"
-
+#include "core/utils/Option.hpp"
 
 #include "ral/chip.hpp"
 
@@ -25,9 +25,10 @@ class Gpio;
 
 class SpiHw final:public Spi{
 public:
+    explicit SpiHw(chip::SPI_Def * instance):inst_(instance){;}
+
     SpiHw(const SpiHw & other) = delete;
     SpiHw(SpiHw && other) = delete;
-    SpiHw(chip::SPI_Def * instance):inst_(instance){;}
 
     void init(const Config & cfg);
 
@@ -49,7 +50,6 @@ public:
     [[nodiscard]] __fast_inline hal::HalResult read(uint32_t & data){
         return transceive(data, 0);
     }
-    
     
     [[nodiscard]] __fast_inline hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx){
         if(bool(tx_strategy_)){

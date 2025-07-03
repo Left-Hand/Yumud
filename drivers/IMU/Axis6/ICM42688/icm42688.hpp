@@ -12,7 +12,7 @@ class ICM42688:
 {
 public:
     ICM42688(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):phy_(i2c, i2c_addr){;}
-    ICM42688(hal::Spi & spi, const hal::SpiSlaveIndex idx):phy_(spi, idx){;}
+    ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):phy_(spi, idx){;}
     ICM42688(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
 
     [[nodiscard]] IResult<> init();

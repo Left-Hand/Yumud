@@ -19,7 +19,7 @@ public:
         spi_drv_(spi_drv){;}
     AS5047(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    AS5047(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]]IResult<> init() ;

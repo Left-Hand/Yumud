@@ -15,12 +15,18 @@ void joystick_tb(OutputStream & logger){
 
     //  using [[maybe_unused]] Event = Ps2Joystick::JoyStickEvent;
 
-    SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
+    hal::SpiSw spisw{
+        &SPI1_SCLK_GPIO, 
+        &SPI1_MOSI_GPIO, 
+        &SPI1_MISO_GPIO, 
+        &SPI1_CS_GPIO
+    };
+
     auto & spi = spisw;
     spi.init({100000});//maxium baud
     spi.set_bitorder(LSB);
 
-    SpiDrv ps2_drv{spi, SpiSlaveIndex(0)};
+    hal::SpiDrv ps2_drv{&spi, hal::SpiSlaveIndex(0)};
     Ps2Joystick joystick{ps2_drv};
     joystick.init();
 

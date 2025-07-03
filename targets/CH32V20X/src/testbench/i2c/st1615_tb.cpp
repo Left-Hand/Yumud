@@ -31,7 +31,7 @@ void st1615_main(){
     DEBUGGER.force_sync();
     
     // test_result();
-    hal::I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     i2c.init(100_KHz);
 
     ST1615 st1615{&i2c};

@@ -137,7 +137,7 @@ public:
         MMC5983_Phy(hal::I2cDrv{i2c, addr}){;}
     MMC5983_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    MMC5983_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    MMC5983_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline
@@ -195,7 +195,7 @@ public:
         phy_(hal::I2cDrv{i2c, addr}){;}
     MMC5983(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    MMC5983(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

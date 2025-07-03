@@ -26,7 +26,7 @@ void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
 void tcs34725_main(){
     DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    I2cSw i2c{portD[0], portD[1]};
+    I2cSw i2c{&portD[0], &portD[1]};
     i2c.init(100000);
     tcs34725_tb(DEBUGGER, i2c);
 }

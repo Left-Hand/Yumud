@@ -125,7 +125,7 @@ static void i2c_scanner_functional(){
 
     // log("i2c_scanner_main") | log("1");
     
-    I2cSw i2c = {portA[12], portA[15]};
+    I2cSw i2c = {&portA[12], &portA[15]};
     i2c.init(100_KHz);
 
     // const uint8_t read_addr = 0x08;
@@ -156,7 +156,7 @@ void i2c_scanner_main(){
     DEBUGGER.force_sync();
     
     // test_result();
-    I2cSw i2c = {SCL_GPIO, SDA_GPIO};
+    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(100_KHz);
     
     // auto data = std::vector{1, 2, 3};

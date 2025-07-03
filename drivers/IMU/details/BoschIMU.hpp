@@ -18,7 +18,7 @@ public:
         BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
     BoschSensor_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    BoschSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    BoschSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline

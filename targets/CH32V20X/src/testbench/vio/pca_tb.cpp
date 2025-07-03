@@ -14,7 +14,7 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void pca_tb(OutputStream & logger){
-    I2cSw i2c = {portD[2], portC[12]};
+    I2cSw i2c = {&portD[2], &portC[12]};
 
     scexpr int servo_freq = 50;
     

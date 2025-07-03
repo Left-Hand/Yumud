@@ -6,20 +6,13 @@
 namespace ymd::hal{
 
 class I2cHw final: public I2c{
-private:
-    void enable_rcc(const Enable enable = EN);
-    hal::HalResult lead(const LockRequest req) final;
-    void trail() final;
-
-protected:
-    I2C_TypeDef * inst_;
-    static hal::Gpio & get_scl(const I2C_TypeDef *);
-    static hal::Gpio & get_sda(const I2C_TypeDef *);
 public:
 
     I2cHw(I2C_TypeDef * inst):
-            I2c(get_scl(inst), get_sda(inst)),
-            inst_(inst){;}
+        I2c(
+            &get_scl(inst, 0), 
+            &get_sda(inst, 0)),
+        inst_(inst){;}
     
 
     hal::HalResult write(const uint32_t data) final;
@@ -29,6 +22,16 @@ public:
     bool locked();
     hal::HalResult unlock_bus();
     void enable_hw_timeout(const Enable en = EN);
+
+private:
+    void enable_rcc(const Enable enable = EN);
+    hal::HalResult lead(const LockRequest req) final;
+    void trail() final;
+
+protected:
+    I2C_TypeDef * inst_;
+    static hal::Gpio & get_scl(const I2C_TypeDef * inst, const uint8_t remap);
+    static hal::Gpio & get_sda(const I2C_TypeDef * inst, const uint8_t remap);
 };
 
 

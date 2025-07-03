@@ -29,13 +29,13 @@ namespace ymd::drivers{
 class CH455 final:public CH455_Prelude{
 public:
     struct Config{
-        Borrow<hal::Gpio> scl_gpio;
-        Borrow<hal::Gpio> sda_gpio;
+        Some<hal::Gpio *> scl_gpio;
+        Some<hal::Gpio *> sda_gpio;
         Option<hal::Gpio &> int_gpio;
     };
 
     CH455(const Config & cfg)
-        : phy_(cfg.scl_gpio.unwrap(), cfg.sda_gpio.unwrap()){;}
+        : phy_(cfg.scl_gpio, cfg.sda_gpio){;}
 
     IResult<> init();
 

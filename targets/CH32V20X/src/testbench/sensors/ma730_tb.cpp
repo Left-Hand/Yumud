@@ -17,7 +17,7 @@ void ma730_main(){
 
     spi1.init({9_MHz});
 
-    MA730 ma730{spi1, spi1.attach_next_cs(portA[15]).value()};
+    MA730 ma730{&spi1, spi1.attach_next_cs(&portA[15]).unwrap()};
     ma730.init().unwrap();
 
     while(true){

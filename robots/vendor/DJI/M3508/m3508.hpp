@@ -121,10 +121,6 @@ protected:
     size_t size = 8;
     std::bitset<8> occupation;
 
-    // using CurrData_t = int16_t;
-    // using AngleData_t = uint16_t;
-    // using SpeedData_t = int16_t;
-    
     struct TxData{
         uint16_t curr_data_msb[4];  
     }__packed;

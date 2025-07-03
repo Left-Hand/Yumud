@@ -53,8 +53,6 @@ public:
         uint32_t data_index = point_index / 8;
         color = Binary(get_data()[data_index] & (1 << (point_index % 8)));
     }
-
-
 public:
     HorizonBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2u & _size): 
         PackedBinaryImage(_data, _size){;}

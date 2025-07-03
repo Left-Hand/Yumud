@@ -148,7 +148,7 @@ void mpu6050_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     // I2cSw i2c{portA[12], portA[15]};
-    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(400_KHz);
     // i2c.init();

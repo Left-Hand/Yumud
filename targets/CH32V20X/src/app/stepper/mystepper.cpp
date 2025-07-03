@@ -531,7 +531,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
 
 [[maybe_unused]] static void test_eeprom(){
-    hal::I2cSw i2c_sw{hal::portD[1], hal::portD[0]};
+    hal::I2cSw i2c_sw{&hal::portD[1], &hal::portD[0]};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
@@ -737,10 +737,10 @@ void mystepper_main(){
     auto & spi = hal::spi1;
     spi.init({18_MHz});
 
-    drivers::MT6816 encoder{{
-        spi, 
-        spi.attach_next_cs(hal::portA[15]).value()
-    }};
+    drivers::MT6816 encoder{
+        &spi, 
+        spi.attach_next_cs(&hal::portA[15]).unwrap()
+    };
 
 
     encoder.init({

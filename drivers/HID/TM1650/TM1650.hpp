@@ -38,7 +38,7 @@ private:
     hal::I2cSw i2c_;
 public:
 
-    TM1650_Phy(hal::Gpio & scl_io, hal::Gpio & sda_io):
+    TM1650_Phy(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
         i2c_{scl_io, sda_io}{;}
 
     enum class PulseWidth:uint8_t{
@@ -107,7 +107,7 @@ public:
         Option<uint8_t> col_;
     };
 
-    Result<void, Error> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
+    IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
         auto res = write_display_cmd(cmd);
 
         for(size_t i = 0; i < pbuf.size(); i++){
@@ -138,11 +138,11 @@ public:
         return Ok(KeyEvent::from_u8(0));
     }
 private:
-    Result<void, Error> write_display_cmd(const DisplayCommand cmd){
+    IResult<> write_display_cmd(const DisplayCommand cmd){
         return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.as_u8());
     }
 
-    Result<void, Error> write_u8x2(const uint8_t payload1, const uint8_t payload2){
+    IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
         TODO();
@@ -150,7 +150,7 @@ private:
         //     .then([&](){return bus_.write(payload2);})
         // ;
 
-        // return Result<void, Error>(res);
+        // return IResult<>(res);
         return Ok();
     }
 };
@@ -163,7 +163,7 @@ public:
 
     static constexpr auto NAME = "TM1650";
 
-    TM1650(hal::Gpio & scl_io, hal::Gpio & sda_io):
+    TM1650(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
         phy_(scl_io, sda_io){;}
 
     class Display final{
@@ -208,7 +208,7 @@ public:
     };
 
 
-    Result<void, Error> write_screen(
+    IResult<> write_screen(
         const DisplayCommand cmd, 
         const std::span<const uint8_t, 4> pbuf){
         

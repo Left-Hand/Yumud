@@ -22,9 +22,6 @@ struct SSD13XX_Presets{
 template<typename T>
 struct _oled_preset;
 
-
-
-
 class SSD1306_Phy final{
 public:
     using Error = DisplayerError;

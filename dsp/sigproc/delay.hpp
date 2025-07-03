@@ -5,10 +5,8 @@
 namespace ymd::dsp {
 
 template<typename T>
-class DelayLine {
-public:
-
-    constexpr DelayLine(const std::span<T> pbuf):
+struct DelayLine {
+    constexpr explicit DelayLine(const std::span<T> pbuf):
         pbuf_(pbuf){;}
 
     constexpr T operator()(T in){

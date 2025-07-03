@@ -157,7 +157,7 @@ public:
 public:
     DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     DRV8301(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV8301(hal::Spi & spi, const hal::SpiSlaveIndex idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
+    DRV8301(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
 
 
     [[nodiscard]] IResult<> init();

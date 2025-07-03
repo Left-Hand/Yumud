@@ -120,7 +120,7 @@ public:
         spi_drv_(spi_drv){;}
     MA730(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    MA730(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    MA730(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
 

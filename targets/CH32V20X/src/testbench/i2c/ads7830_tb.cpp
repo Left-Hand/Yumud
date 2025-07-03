@@ -24,7 +24,7 @@ void ads7830_main(){
     DEBUGGER.no_brackets();
     // DEBUGGER.no_brackets();
 
-    hal::I2cSw i2c = {SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(1400_KHz);
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};

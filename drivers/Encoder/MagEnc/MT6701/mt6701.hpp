@@ -50,7 +50,7 @@ class MT6701_Phy:public MT6701_Prelude{
 public:
     using RegAddress = MT6701_Phy::RegAddress;
 
-    MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
+    MT6701_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
         MT6701_Phy(std::nullopt, hal::SpiDrv(spi, idx)){;}
 
     MT6701_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):

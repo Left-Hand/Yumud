@@ -658,7 +658,7 @@ void ht16k33_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
 
-    hal::I2cSw i2c = {SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(400_KHz);
 
 

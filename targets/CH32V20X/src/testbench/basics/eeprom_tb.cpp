@@ -313,7 +313,7 @@ void eeprom_main(){
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");
 
-    hal::I2cSw i2csw = {hal::PB<13>(), hal::PB<12>()};
+    hal::I2cSw i2csw = {&hal::PB<13>(), &hal::PB<12>()};
     i2csw.init(400000);
 
     

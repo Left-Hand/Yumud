@@ -256,8 +256,8 @@ __inline OutputStream & operator<<(
 
 
 
-class RangeGridIter{
-public:
+struct RangeGridIter{
+
     constexpr RangeGridIter(
         const Range2u range,
         const uint32_t gsize
