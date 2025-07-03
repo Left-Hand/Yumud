@@ -12,7 +12,6 @@
 
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"

@@ -4,6 +4,7 @@
 
 using namespace ymd;
 
+[[maybe_unused]]
 static constexpr std::array curve_data = 
 {Vector2<q16> { 0.045_q16, -0.005_q16 } 
 // , Vector2<q16> { 0.045_q16, 0.002_q16 } 

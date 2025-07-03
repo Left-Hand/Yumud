@@ -82,7 +82,7 @@ void perspective(Image<Gray> & dst,const Image<Gray> & src){
             if(size.has_point(Vector2u{size_t(x),size_t(y)})){
                 dst[{_x,_y}]= src[{size_t(x),size_t(y)}];
             }else{
-                dst[{_x,_y}]=0;
+                dst[{_x,_y}] = Gray(0);
             }
         }
     }

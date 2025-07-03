@@ -36,7 +36,7 @@ real_t template_match(
         const auto * p_tmp = &tmp[Vector2u(0,y)];
         const auto * p_src = &src[Vector2u(0,y) + offs];
         for(size_t x = 0; x < size.w(); x++){
-            score += int32_t(bool(*p_tmp) ^ bool(*p_src));
+            score += int32_t((*p_tmp).is_white() ^ (*p_src).is_white());
             p_tmp++;
             p_src++;
         }
@@ -52,8 +52,8 @@ real_t template_match_ncc(
 ){
     BOUNDARY_CHECK()
 
-    int32_t t_mean = int32_t(pixels::mean(tmp));
-    int32_t s_mean = int32_t(pixels::mean(src, Rect2u(offs, tmp.size())));
+    int32_t t_mean = uint8_t(pixels::mean(tmp));
+    int32_t s_mean = uint8_t(pixels::mean(src, Rect2u(offs, tmp.size())));
 
     int64_t num = 0;
     uint64_t den_t = 0;
@@ -102,8 +102,8 @@ real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, cons
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = *p_tmp;
-            int32_t src_val = *p_src;
+            int32_t tmp_val = uint8_t(*p_tmp);
+            int32_t src_val = uint8_t(*p_src);
 
             line_num += FAST_SQUARE8(tmp_val - src_val);
 

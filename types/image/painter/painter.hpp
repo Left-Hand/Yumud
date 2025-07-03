@@ -19,9 +19,8 @@ public:
 
 
     Option<Rect2u> get_expose_rect(){
-        return may_src_image_.map([](const Image<ColorType> & image){
-            return image.size().to_rect();
-        });
+        if(may_src_image_.is_none()) return None;
+        return Some(may_src_image_.unwrap().size().to_rect());
     }
 
     void set_font_scale(const uint8_t scale){

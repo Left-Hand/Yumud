@@ -33,7 +33,7 @@ void slcan_main(){
         })
     );
 
-    robots::ReplService repl_service = {
+    robots::ReplService repl_service{
         &DBG_UART, &DBG_UART
     };
 

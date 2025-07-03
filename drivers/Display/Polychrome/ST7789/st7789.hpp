@@ -112,7 +112,7 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<uint16_t>(pbuf[i]));
+            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]).to_u16());
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
@@ -247,7 +247,7 @@ public:
 class ST7789 final:
     public ST7789_Prelude{
 public:
-    ST7789(
+    explicit ST7789(
         ST7789_Phy && phy, 
         const Vector2<uint16_t> & size
     ):

@@ -39,13 +39,13 @@ namespace ymd::nvcv2::pixels{
         const auto window = window_opt.unwrap();
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
-                const int a = src[Vector2u{x,y}];
-                const int b = src[Vector2u{x+1,y}];
-                const int c = src[Vector2u{x,y+1}];
-                dst[{x,y}] = uint8_t(CLAMP(std::max(
+                const uint8_t a = uint8_t(src[Vector2u{x,y}]);
+                const uint8_t b = uint8_t(src[Vector2u{x+1,y}]);
+                const uint8_t c = uint8_t(src[Vector2u{x,y+1}]);
+                dst[{x,y}] = Gray(uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
-                ), 0, 255));
+                ), 0, 255)));
             }
         }
     }
@@ -98,7 +98,7 @@ namespace ymd::nvcv2::pixels{
     template<is_monocolour_v T>
     void inverse(Image<T>& src) {
         for (auto i = 0u; i < src.size().x * src.size().y; i++) {
-            src[i] = uint8_t(~uint8_t(src[i]));
+            src[i] = src[i].flip();
         }
     }
 
@@ -169,7 +169,7 @@ namespace ymd::nvcv2::pixels{
 
 
     constexpr Gray mean(const Image<Gray> & image, const Rect2u & roi){
-        return sum(image, roi) / (roi.get_area());
+        return Gray(sum(image, roi) / (roi.get_area()));
     }
 
     constexpr Gray mean(const Image<Gray> & image){
@@ -177,7 +177,7 @@ namespace ymd::nvcv2::pixels{
     }
 
     __inline Gray average(const Image<Gray>& src){
-        return pixels::sum(src) / src.size().area();
+        return Gray(pixels::sum(src) / src.size().area());
     }
 
 

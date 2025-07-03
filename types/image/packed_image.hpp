@@ -51,7 +51,7 @@ public:
     void getpixel_unchecked(const Vector2u & pos, Binary & color) const{
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
-        color = get_data()[data_index] & (1 << (point_index % 8));
+        color = Binary(get_data()[data_index] & (1 << (point_index % 8)));
     }
 
 
@@ -105,7 +105,7 @@ public:
     }
     void getpixel_unchecked(const Vector2u & pos, Binary & color) const{
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
-        color = Binary(get_data()[data_index] & (PackedBinary)color << (pos.y % 8));
+        color = Binary(get_data()[data_index] & (color.is_white() << (pos.y % 8)));
     }
 public:
     VerticalBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2u & _size): 

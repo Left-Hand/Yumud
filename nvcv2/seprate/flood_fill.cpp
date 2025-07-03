@@ -269,7 +269,7 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
 
 
 Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter) {
-    static constexpr Gray labelable = 255;
+    static constexpr Gray labelable{255};
 
     const auto size = src.size();
     const auto nrow = size.x;
@@ -287,7 +287,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
         }
     }
 
-    uint8_t label = 1;
+    Gray label{1};
 
     auto get_neighbor_indices = [&](const size_t row,const size_t col) {
         std::array<Vector2u, 4> result;
@@ -318,7 +318,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
             Blob blob{
                 .rect = Rect2u(Vector2u{row, col}, Vector2u{0,0}),
                 .area = 0,
-                .index = label,
+                .index = uint8_t(label),
             };
 
             for (const auto & neighbor_pos : get_neighbor_indices(row, col)){
@@ -388,7 +388,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
                     m_blobs.push_back(blob);
                     // }
                 }
-                label++;
+                label = Gray(uint8_t(label) + 1);
             }
         }
     }

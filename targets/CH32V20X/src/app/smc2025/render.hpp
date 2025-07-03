@@ -5,7 +5,7 @@
 
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
+#include "types/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 

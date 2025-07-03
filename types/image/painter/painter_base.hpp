@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "image.hpp"
+#include "types/image/image.hpp"
 
 #include "core/string/StringView.hpp"
 #include "core/stream/stream.hpp"
@@ -14,7 +14,7 @@
 #include "types/colors/color/color.hpp"
 #include "types/colors/rgb/rgb.hpp"
 
-#include "font/font.hpp"
+#include "types/image/font/font.hpp"
 
 namespace ymd{
 
@@ -99,8 +99,9 @@ public:
         return ColorGuard{*this, color_};
     }
 
-    void set_color(const RGB888 color){
-        color_ = color;
+    template<typename T>
+    void set_color(const T color){
+        color_ = static_cast<RGB888>(color);
     }
 
 
@@ -154,17 +155,17 @@ public:
         return Ok();
     }
 
-    virtual void draw_pixel(const Vector2u & pos) = 0;
+    virtual void draw_pixel(const Vector2u & pos) {return;}
 
-    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
+    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) {return Ok();}
     
-    [[nodiscard]] virtual Option<Rect2u> get_expose_rect() = 0;
+    [[nodiscard]] virtual Option<Rect2u> get_expose_rect() {return None;}
     
-    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
+    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) {return Ok();}
 
-    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) = 0;
+    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) {return Ok();}
 
-    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
+    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) {return Ok();}
 
     [[nodiscard]] IResult<> set_crop_rect(const Rect2u & rect){
         crop_rect_ = rect;
