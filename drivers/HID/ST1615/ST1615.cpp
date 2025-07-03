@@ -51,37 +51,42 @@ Result<Option<ST1615::Point>, Error> ST1615::get_point(uint8_t nth) {
         return Ok(Some(Point{x, y}));
     }
 }
+
+
 /// Sensing Counter Registers provide a frame-based scan counter for host to verify current scan rate.
 Result<uint16_t, Error> ST1615::get_sensor_count() {
     uint8_t buf[2] = {0};
-    auto res = read_u8(SENSING_COUNTER_L, std::span(buf));
+    const auto res = read_u8(SENSING_COUNTER_L, std::span(buf));
     if (res.is_err()) {
         return Err(res.unwrap_err());
     }
-    uint16_t result = (static_cast<uint16_t>(buf[0]) << 8) | buf[1];
-    return Ok(result);
+    uint16_t count = (static_cast<uint16_t>(buf[0]) << 8) | buf[1];
+    return Ok(count);
 }
+
+
 Result<ST1615::Capabilities, Error> ST1615::get_capabilities() {
-    Result<uint8_t, Error> max_contacts_res = read_reg8(CONTACT_COUNT_MAX);
-    if (max_contacts_res.is_err()) {
-        return Err(max_contacts_res.unwrap_err());
-    }
-    uint8_t max_contacts = max_contacts_res.unwrap();
+    const uint8_t max_contacts = ({
+        const auto res = read_reg8(CONTACT_COUNT_MAX);
+        if (res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
 
-    Result<uint8_t, Error> misc_info_res = read_reg8(MISC_INFO);
-    if (misc_info_res.is_err()) {
-        return Err(misc_info_res.unwrap_err());
-    }
-    uint8_t misc_info = misc_info_res.unwrap();
+    const uint8_t misc_info = ({
+        const auto res = read_reg8(MISC_INFO);
+        if (res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
 
-    uint8_t buf[3] = {0};
-    auto res = read_u8(XY_RESOLUTION_H, std::span(buf));
-    if (res.is_err()) {
+    std::array<uint8_t, 3> buf = {0};
+    
+    if (const auto res = read_u8(XY_RESOLUTION_H, std::span(buf));
+        res.is_err()) {
         return Err(res.unwrap_err());
     }
 
-    uint16_t x_res = ((static_cast<uint16_t>(buf[0]) & 0b01110000) << 4) | buf[1];
-    uint16_t y_res = ((static_cast<uint16_t>(buf[0]) & 0b00001111) << 8) | buf[2];
+    const uint16_t x_res = ((static_cast<uint16_t>(buf[0]) & 0b01110000) << 4) | buf[1];
+    const uint16_t y_res = ((static_cast<uint16_t>(buf[0]) & 0b00001111) << 8) | buf[2];
 
     Capabilities caps = {
         max_contacts,

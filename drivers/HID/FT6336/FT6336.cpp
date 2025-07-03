@@ -2,21 +2,21 @@
 
 // https://www.iotword.com/23534.html
 
-#define FT6636_DEBUG
+#define FT6636_DEBUG_EN
 
-#ifdef FT6636_DEBUG
-#undef FT6636_DEBUG
+#ifdef FT6636_DEBUG_EN
 #define FT6636_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define FT6636_PANIC(...) PANIC(__VA_ARGS__)
 #define FT6636_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define FT6636_DEBUG(...)
-#define FT6636_PANIC(...)  PANIC()
-#define FT6636_ASSERT(cond, ...) ASSERT(cond)
+#define FT6636_PANIC(...)  PANIC_NSRC()
+#define FT6636_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using namespace ymd;
 using namespace ymd::drivers;
+
 using Error = FT6336::Error;
 
 static constexpr size_t CTP_MAX_TOUCH = 2;

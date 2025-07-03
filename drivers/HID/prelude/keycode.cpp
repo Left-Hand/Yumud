@@ -2,7 +2,10 @@
 
 
 namespace ymd::hid{
-::ymd::OutputStream & operator <<(::ymd::OutputStream & os, const hid::KeyCode_Kind kind){
+::ymd::OutputStream & operator <<(
+    ::ymd::OutputStream & os, 
+    const hid::KeyCode_Kind kind
+){
     using Kind = hid::KeyCode_Kind;
     const auto guard = os.create_guard();
     os << std::dec << os.brackets<'['>();

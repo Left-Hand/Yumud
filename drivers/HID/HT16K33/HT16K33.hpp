@@ -39,6 +39,25 @@ private:
 namespace ymd::drivers{
 
 struct HT16K33_Prelude{
+    enum class Error_Kind:uint8_t{
+        DisplayBitIndexOutOfRange,
+        DisplayByteIndexOutOfRange,
+        DisplayPayloadOversize,
+        DisplayXOutOfRange,
+        DisplayYOutOfRange,
+        KeyColumnOutOfRange,
+        KeyRowOutOfRange,
+        UnknownInterruptCode
+    };
+
+    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    using RegAddress = uint8_t;
+
 
     //  1 1 1 0 A2 A1 A0 0
     static constexpr auto DEFAULT_I2C_ADDR = 
@@ -106,26 +125,6 @@ struct HT16K33_Prelude{
         uint8_t raw_;
     };
 
-
-    enum class Error_Kind:uint8_t{
-        DisplayBitIndexOutOfRange,
-        DisplayByteIndexOutOfRange,
-        DisplayPayloadOversize,
-        DisplayXOutOfRange,
-        DisplayYOutOfRange,
-        KeyColumnOutOfRange,
-        KeyRowOutOfRange,
-        UnknownInterruptCode
-    };
-
-    FRIEND_DERIVE_DEBUG(Error_Kind)
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    using RegAddress = uint8_t;
-
     struct Settings{
         struct SOP28Settings{
             static constexpr Package PACKAGE = Package::SOP28;
@@ -149,7 +148,6 @@ struct HT16K33_Prelude{
         //     };
         // }
     };
-
 
     struct KeyData{
         constexpr bool test(const uint8_t x ,const uint8_t y) const {

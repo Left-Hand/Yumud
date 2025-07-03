@@ -24,6 +24,9 @@ public:
     using IResult = Result<T, Error>;
 
     using RegAddress = uint8_t;
+
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
+    static constexpr uint8_t PANEL_ID = 0x11;
 };
 
 
@@ -171,8 +174,7 @@ struct FT6336_Regs:public FT6336_Prelude{
 
 class FT6336:public FT6336_Regs{
 public:
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
-    static constexpr uint8_t PANEL_ID = 0x11;
+
 
     FT6336(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -181,9 +183,9 @@ public:
     FT6336(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    IResult<size_t> get_touch_cnt();
+    [[nodiscard]] IResult<size_t> get_touch_cnt();
 
-    IResult<GestureID> get_gesture_id();
+    [[nodiscard]] IResult<GestureID> get_gesture_id();
 
 private:
     hal::I2cDrv i2c_drv_;
