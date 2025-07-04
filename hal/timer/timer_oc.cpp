@@ -8,8 +8,8 @@ using namespace ymd::hal;
 
 void TimerOut::install_to_pin(const Enable en){
     Gpio & io = details::get_pin(inst_, idx_);
-    if(en == EN)io.afpp();
-    else io.inflt();
+    if(en == EN) io.afpp();
+    // else io.inflt();
 }
 
 

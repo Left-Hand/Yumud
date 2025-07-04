@@ -30,6 +30,7 @@ int main(){
     // oled_main();
     // light_tracking_main();
     // tm1637_main();
+    bldc_main();
     aw9523_main();
 
     // ads1115_main();

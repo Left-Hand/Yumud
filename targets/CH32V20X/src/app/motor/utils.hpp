@@ -8,8 +8,7 @@
 
 namespace ymd::foc{
 
-scexpr uint chopper_freq = 50000;
-scexpr uint foc_freq = chopper_freq / 2;
+
 
 static __inline real_t sign_sqrt(const real_t x){
     return x < 0 ? -sqrt(-x) : sqrt(x);

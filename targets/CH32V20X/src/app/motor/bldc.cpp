@@ -23,7 +23,6 @@
 
 #include "core/polymorphism/traits.hpp"
 
-#include "utils.hpp"
 
 #include "algo/interpolation/cubic.hpp"
 
@@ -49,6 +48,89 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::intp;
 
+scexpr uint CHOPPER_FREQ = 50000;
+scexpr uint FOC_FREQ = CHOPPER_FREQ / 2;
+
+
+
+class CurrentSensor{
+protected:
+    hal::AnalogInIntf & u_sense_;
+    hal::AnalogInIntf & v_sense_;
+    hal::AnalogInIntf & w_sense_;
+
+    UvwCurrent uvw_bias_;
+    UvwCurrent uvw_raw_;
+    UvwCurrent uvw_curr_;
+    real_t mid_curr_;
+    AbCurrent ab_curr_;
+    DqCurrent dq_curr_;
+
+    dsp::ButterLowpassFilter<q16, 2> mid_filter_ = {{
+        .fc = 400,
+        .fs = FOC_FREQ
+    }};
+
+
+    void capture(){
+        uvw_raw_ = {
+            real_t(u_sense_),
+            real_t(v_sense_),
+            real_t(w_sense_)
+        };
+        // uvw_raw_ = {
+        //     real_t(0),
+        //     real_t(0),
+        //     real_t(0)
+        // };
+
+        mid_filter_.update((uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) * q16(1.0/3));
+
+        mid_curr_ = mid_filter_.get();
+        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
+        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
+        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
+
+        ab_curr_ = AbCurrent::from_uvw(uvw_curr_);
+    }
+
+public:
+    CurrentSensor(
+        hal::AnalogInIntf & u_sense,
+        hal::AnalogInIntf & v_sense, 
+        hal::AnalogInIntf & w_sense
+    ): 
+        u_sense_(u_sense),
+        v_sense_(v_sense), 
+        w_sense_(w_sense){
+            reset();
+        }
+
+    void reset(){
+        uvw_curr_ = {0, 0, 0};
+        uvw_bias_ = {0, 0, 0};
+        ab_curr_ = {0, 0};
+        dq_curr_ = {0, 0};
+    }
+
+    void update(const real_t rad){
+        
+            
+        capture();
+
+        dq_curr_ = DqCurrent::from_ab(ab_curr_, rad);
+    }
+
+
+    const auto &  raw()const {return uvw_raw_;}
+    const auto &  mid() const {return mid_curr_;}
+    const auto &  uvw()const{return uvw_curr_;}
+    // auto uvw(){return uvw_curr_;}
+    const auto & ab()const{return ab_curr_;}
+    // auto ab(){return ab_curr_;}
+    const auto & dq()const{return dq_curr_;}
+    // auto dq(){return dq_curr_;}
+};
 
 
 template<size_t N>
@@ -297,7 +379,7 @@ public:
         elapsed_ticks_ ++;
 
         // constexpr auto stable_curr_slewrate = 10.0_r;
-        // constexpr auto stable_threshold = stable_curr_slewrate / foc_freq;
+        // constexpr auto stable_threshold = stable_curr_slewrate / FOC_FREQ;
 
         // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
         // last_midp_curr_ = mid_point;
@@ -331,22 +413,25 @@ __no_inline void init_opa(){
 // }
 
 void bldc_main(){
-    uart2.init({6_MHz});
+    uart2.init({576000});
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
     clock::delay(200ms);
     auto & en_gpio = portA[11];
-    auto & slp_gpio = portA[12];
+    auto & nslp_gpio = portA[12];
 
-    en_gpio.outpp(LOW);
-    slp_gpio.outpp(LOW);
+    en_gpio.outpp(HIGH);
 
-    timer1.init({chopper_freq, TimerCountMode::CenterAlignedUpTrig});
+    nslp_gpio.outpp(LOW);
 
-    auto & pwm_u = timer1.oc<1>(); 
-    auto & pwm_v = timer1.oc<2>(); 
+
+
+    timer1.init({CHOPPER_FREQ, TimerCountMode::CenterAlignedUpTrig});
+
+    auto & pwm_u = timer1.oc<1>();
+    auto & pwm_v = timer1.oc<2>();
     auto & pwm_w = timer1.oc<3>(); 
 
     timer1.oc<4>().init({.install_en = DISEN});
@@ -357,22 +442,24 @@ void bldc_main(){
     pwm_w.init({});
 
     spi1.init({18_MHz});
+    
+    // while(true){
+    //     DEBUG_PRINTLN(
+    //         en_gpio.read().to_bool(),
+    //         nslp_gpio.read().to_bool()
+    //     );
+    //     clock::delay(5ms);
+    // }
 
     const auto ma730_spi_fd = spi1
         .attach_next_cs(&portA[15])
         .unwrap();
-    // spi1.bind_cs_pin(, 2);
-    // spi1.bind_cs_pin(portA[0], 0);
-
-
-    can1.init({CanBaudrate::_1M});
-
-    // BMI160 bmi{spi1, 0};
-
-    // bmi.init();
 
     MA730 ma730{&spi1, ma730_spi_fd};
     ma730.init().unwrap();
+
+    can1.init({CanBaudrate::_1M});
+
 
     // for(size_t i = 0; i < 1000; ++i) {
     //     bmi.update();
@@ -434,7 +521,7 @@ void bldc_main(){
 
 
     en_gpio.set();
-    slp_gpio.set();
+    nslp_gpio.set();
     // uint32_t dt;
 
     // std::array<real_t, 2> ab_volt;
@@ -455,7 +542,7 @@ void bldc_main(){
             .phase_resistance = 1.2_r,
             .observer_gain = 0.2_r,
             .pm_flux_linkage = 3.58e-4_r,
-            .freq = foc_freq,
+            .freq = FOC_FREQ,
         }
     };
 
@@ -695,7 +782,7 @@ void bldc_main(){
 
         curr_sens.update(0);
 
-        // scexpr int fs = chopper_freq / 2;
+        // scexpr int fs = CHOPPER_FREQ / 2;
         // scexpr int test_freq = 200;
         // scexpr int test_freq = 500;
         scexpr real_t test_volt = 0.9_r;
@@ -712,7 +799,7 @@ void bldc_main(){
 
         curr_sens.update(0);
 
-        scexpr int fs = chopper_freq / 2;
+        scexpr int fs = CHOPPER_FREQ / 2;
         // scexpr int test_freq = 200;
         scexpr int test_freq = 500;
         scexpr real_t test_volt = 0.6_r;
@@ -842,7 +929,7 @@ void bldc_main(){
     [[maybe_unused]] auto cb_sing = [&]{
         
         // static q20 mt = 0;
-        // mt += q20(1.0 / foc_freq);
+        // mt += q20(1.0 / FOC_FREQ);
 
         // const auto [s,c] = sincos(mt);
 
@@ -856,9 +943,12 @@ void bldc_main(){
 
     [[maybe_unused]] auto cb_openloop = [&]{
         static q20 mt = 0;
-        mt += q20(1.0 / foc_freq);
+        mt += q20(1.0 / FOC_FREQ);
 
-        scexpr auto omega = real_t(6 * TAU);
+        scexpr auto omega = ({
+            // real_t(6 * TAU);
+            real_t(1);
+        });
         // const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
         const auto max_amp = real_t(2.5);
         auto & ob = lbg_ob;
@@ -874,13 +964,15 @@ void bldc_main(){
 
 
         mg_meas_rad = mt * omega;
-        const auto rad = 
-        // (mt < 0.2_r) ? q16(mg_meas_rad) : 
-        // q20(lbg_ob.theta()) + q20(PI/2);
-        q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.07_r));
-        // q16(mg_meas_rad);
-        // sl_meas_rad + ;
-        // const auto [s,c] = sincos(mt);
+        const auto rad = ({
+            mg_meas_rad;
+            // (mt < 0.2_r) ? q16() : 
+            // q20(lbg_ob.theta()) + q20(PI/2);
+            // q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.07_r));
+            // q16(mg_meas_rad);
+            // sl_meas_rad + ;
+            // const auto [s,c] = sincos(mt);
+        });
         const auto [s,c] = sincos(rad);
         // const auto [s,c] = sincos(mt *8);
         const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
@@ -943,10 +1035,10 @@ void bldc_main(){
     CurrentBiasCalibrater calibrater = {{
         .period_ticks = 10000,
         .fc = 20,
-        .fs = foc_freq
+        .fs = FOC_FREQ
     }};
 
-    // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
+    // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, FOC_FREQ);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
 
@@ -979,9 +1071,9 @@ void bldc_main(){
         // scexpr int hfi_freq = 1024;
         // scexpr int hfi_freq = 512;
         // scexpr int hfi_freq = 256;
-        // scexpr int divider = chopper_freq / 2 / hfi_freq;
+        // scexpr int divider = CHOPPER_FREQ / 2 / hfi_freq;
         scexpr int divider = 16;
-        scexpr size_t hfi_freq = foc_freq / divider;
+        scexpr size_t hfi_freq = FOC_FREQ / divider;
         scexpr real_t hfi_base_volt = 1.2_r;
         scexpr real_t openloop_base_volt = 0.0_r;
         cnt = (cnt + 1) % divider;
@@ -1006,14 +1098,14 @@ void bldc_main(){
         [[maybe_unused]] const real_t mul = curr_sens.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
-        // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = foc_freq}};
-        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
-        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = foc_freq}};
-        static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = foc_freq}};
-        static dsp::LowpassFilter<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = foc_freq}};
-        // static dsp::Highpa<q24> hfi_filter_lpf{{.fc = 2, .fs = foc_freq}};
-        // static dsp::ButterLowpassFilter<q20,  2> hfi_filter_lpf{{.fc = 20, .fs = foc_freq}};
-        // static dsp::ButterHighpassFilter<q20, 2> hfi_filter_hpf{{.fc = 600, .fs = foc_freq}};
+        // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = FOC_FREQ}};
+        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = 2, .fs = FOC_FREQ}};
+        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = FOC_FREQ}};
+        static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = FOC_FREQ}};
+        static dsp::LowpassFilter<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = FOC_FREQ}};
+        // static dsp::Highpa<q24> hfi_filter_lpf{{.fc = 2, .fs = FOC_FREQ}};
+        // static dsp::ButterLowpassFilter<q20,  2> hfi_filter_lpf{{.fc = 20, .fs = FOC_FREQ}};
+        // static dsp::ButterHighpassFilter<q20, 2> hfi_filter_hpf{{.fc = 600, .fs = FOC_FREQ}};
         hfi_filter_lpf.update(curr_sens.ab()[1]);
         hfi_filter_mid_lpf.update(hfi_filter_lpf.get());
         // hfi_filter_hpf.update(hfi_filter_lpf.get());
@@ -1071,19 +1163,27 @@ void bldc_main(){
             // bool(pwm_w.io()),
             // curr_sens.uvw(),
             
-            curr_sens.ab(),
-            curr_sens.dq(),
-            lbg_ob.e_alpha_,
-            lbg_ob.e_beta_,
+            // curr_sens.ab(),
+            // curr_sens.dq(),
+            // lbg_ob.e_alpha_,
+            // lbg_ob.e_beta_,
 
-            square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
+            // square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
             // lbg_ob.theta(),
             // lbg_ob.e_alpha_,
             // lbg_ob.e_beta_,
             // nlr_ob.theta(),
             // fmod(mg_meas_rad, q16(TAU)),
-            sl_meas_rad,
-            exe_micros
+            // timer1.oc<1>().get_duty(),
+            // timer1.oc<2>().get_duty(),
+            // timer1.oc<3>().get_duty(),
+            nslp_gpio.read().to_bool(),
+            en_gpio.read().to_bool(),
+            TIM1_CH1_GPIO.read().to_bool(),
+            TIM1_CH2_GPIO.read().to_bool(),
+            TIM1_CH3_GPIO.read().to_bool()
+            // sl_meas_rad,
+            // exe_micros.count()
             // pll.theta(),
             // clock::micros() * 0.001_r
             // real_t(exe_micros)
