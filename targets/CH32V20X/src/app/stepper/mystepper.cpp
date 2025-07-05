@@ -44,6 +44,7 @@ using namespace ymd;
 
 using digipw::AlphaBetaDuty;
 
+
 //AT8222
 class StepperSVPWM{
 public:
@@ -304,7 +305,13 @@ public:
 
     CommandShaper cs_{CS_CONFIG};
 
-    PositionSensor pos_sensor_;
+    
+    dsp::PositionSensor pos_sensor_{
+        typename dsp::PositionSensor::Config{
+            .r = 50,
+            .fs = ISR_FREQ
+        }
+    };
 };
 
 #if 0

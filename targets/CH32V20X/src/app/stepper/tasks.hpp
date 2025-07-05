@@ -8,6 +8,9 @@
 #include "meta_utils.hpp"
 #include "calibrate_utils.hpp"
 
+static constexpr size_t CHOP_FREQ = 15_KHz;
+static constexpr size_t ISR_FREQ = CHOP_FREQ;
+
 namespace ymd{
 
 template<typename ... Args>

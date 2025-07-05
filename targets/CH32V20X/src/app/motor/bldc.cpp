@@ -40,6 +40,8 @@
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
+#include "app/stepper/ctrl.hpp"
+
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
@@ -49,7 +51,7 @@ using namespace ymd::dsp;
 using namespace ymd::intp;
 
 scexpr uint CHOPPER_FREQ = 50000;
-scexpr uint FOC_FREQ = CHOPPER_FREQ / 2;
+scexpr uint FOC_FREQ = CHOPPER_FREQ;
 
 
 
@@ -491,11 +493,7 @@ void bldc_main(){
 
     // init_opa();
     init_adc();
-
-    real_t meas_pos = 0;
-    real_t meas_spd = 0;
-    real_t targ_pos = 0;
-    [[maybe_unused]] real_t targ_spd = 0;
+    [[maybe_unused]] real_t targ_spd_ = 0;
 
     // UvwCurrent uvw_curr = {0,0,0};
     real_t est_rad;
@@ -549,17 +547,17 @@ void bldc_main(){
 
     real_t hfi_result;
     real_t hfi_mid_result;
-    static int sector_cnt = 0;
 
 
     // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
+    [[maybe_unused]]
     LapPosPll pll = {
         {
             // .kp = real_t(2 * pll_freq),
             .kp = 470.17_r,
             // .ki = real_t(pll_freq * pll_freq),
             .ki = 20.3_r,
-            .fc = 25000
+            .fc = FOC_FREQ
         }
     };
 
@@ -591,25 +589,6 @@ void bldc_main(){
         .out_max = 0.5_r
     }};
 
-    //     static PIController speed_pi_ctrl{
-    // {
-    //     .kp = 2.3_r,
-    //     // .kp = 0,
-    //     .ki = 0.0277_r,
-    //     // .ki = 0.0001_r,
-    //     // .out_min = -0.3_r,
-    //     // .out_max = 0.3_r
-
-    //     // .kp = 2.3_r,
-    //     // .ki = 0.009_r,
-    //     .out_min = -0.07_r,
-    //     .out_max = 0.07_r
-    // }};
-    // class Test{
-    //     operator void (){
-
-    //     }
-    // };
 
 
 
@@ -630,32 +609,23 @@ void bldc_main(){
     }};
 
     AbVoltage ab_volt;
-    Microseconds exe_micros;
-    [[maybe_unused]] auto cb = [&]{
-        odo.update();
+    
+    dsp::PositionSensor pos_sensor_{
+        typename dsp::PositionSensor::Config{
+            .r = 75,
+            .fs = FOC_FREQ
+        }
+    };
 
-        // targ_spd = 0;
-        // targ_pos = 4.25_r * floor(3 * t);
-        // targ_pos = 0.2_r * sin(real_t(50 * TAU)*t);
-        // auto targ_spd = real_t(10 * TAU) * cos(real_t(50 * TAU) * t);
-        // targ_pos = 4 * floor(2*t);
-        // targ_pos = 7*t + sin(7*t);
-        // targ_pos = demo(2*millis());
-        // auto targ_spd = 0.0_r;
-        // targ_pos = 10.0_r*floor(2*t);
-        // targ_pos = sin(t);
-        meas_pos = odo.getPosition();
-        pll.update(meas_pos);
-        meas_spd = odo.getSpeed();
-        // meas_spd = pll.speed();
-        // meas_spd = 0;
-        const real_t meas_lap = odo.getLapPosition();
+    real_t d_volt_ = 0;
+    real_t q_volt_ = 0;
+    real_t meas_rad_ = 0;
+    [[maybe_unused]] auto cb_sensored = [&]{
+        ma730.update().examine();
+        const auto meas_lap = 1-ma730.get_lap_position().examine(); 
+        pos_sensor_.update(meas_lap);
 
         const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
-        mg_meas_rad = meas_rad;
-        curr_sens.update(meas_rad);
-
-        const auto dq_curr = curr_sens.dq();
 
         #define TEST_MODE_Q_SIN_CURR 1
         #define TEST_MODE_VOLT_POS_CTRL 2
@@ -663,8 +633,8 @@ void bldc_main(){
         #define TEST_MODE_POS_SIN 4
         #define TEST_MODE_SQUARE_SWING 5
         // #define TEST_MODE TEST_MODE_Q_SIN_CURR
-        // #define TEST_MODE TEST_MODE_POS_SIN
-        #define TEST_MODE TEST_MODE_SQUARE_SWING
+        #define TEST_MODE TEST_MODE_POS_SIN
+        // #define TEST_MODE TEST_MODE_SQUARE_SWING
 
 
         #if (TEST_MODE == TEST_MODE_Q_SIN_CURR)
@@ -688,14 +658,28 @@ void bldc_main(){
         // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
         #elif (TEST_MODE == TEST_MODE_POS_SIN)
         scexpr real_t omega = 3 * real_t(TAU);
-        scexpr real_t amp = 1.5_r;
-        targ_pos = amp * sin(omega * clock::time());
-        targ_spd = amp * omega * cos(omega * clock::time());
+        // scexpr real_t omega = 1;
+        scexpr real_t amp = 0.0_r;
+        const auto clock_time = clock::time();
+        const auto [targ_pos, targ_spd] = ({
+            std::make_tuple(
+                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+                2 * clock_time, 2
+            );
+        });
 
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd = CLAMP(1.258_r * sign_sqrt(targ_pos - meas_pos) + 0.14_r*(targ_spd - meas_spd), -0.7_r, 0.7_r);
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+        const auto meas_pos = pos_sensor_.position();
+        const auto meas_spd = pos_sensor_.speed();
+
+        const auto d_volt = 0;
+        const auto q_volt = CLAMP2(
+            12.58_r * (targ_pos - meas_pos) +
+            0.38_r * (targ_spd - meas_spd)
+            
+        , 3.7_r);
+        // const auto q_volt = 1.7_r;
+        
+        // const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
 
         #elif (TEST_MODE == TEST_MODE_SQUARE_SWING)
         scexpr real_t omega = 1 * real_t(TAU);
@@ -706,439 +690,29 @@ void bldc_main(){
         const auto q_curr_cmd = SIGN_AS(amp, sin(omega * clock::time()));
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
         #endif
-        // const auto d_volt = 0;
-        // const auto q_volt = q_pi_ctrl.update(0.1_r * sign(sin(t)), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(int(5 * floor(6 * t)) % 60, meas_spd), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(20 * sin(30 * t), meas_spd), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
-        // targ_pos = 0.002_r*sin(80*t);
-        // const auto cmd_spd = 35.8_r * (targ_pos - meas_pos) + 0.7_r*(targ_spd - meas_spd); 
-        // const auto cmd_spd = 35.8_r * (targ_pos - meas_pos); 
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd) + 0.06_r * sin(80 * t), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd), dq_curr.q);
-
-        // struct ShakeParam{
-        //     real_t torque;
-        //     real_t freq;
-        // };
-
-        // const auto base_spd = -7.2_r;
-        // // const auto base_torque = -0.02_r;
-        // const ShakeParam shake_param = {2.9_r * (meas_pos > 0.2_r ? meas_pos : 0), 50.0_r};
-        // const auto addi_torque = shake_param.torque * sin(shake_param.freq * real_t(TAU) * t);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(base_spd, meas_spd) + addi_torque, dq_curr.q);
-
-        // const auto fra_t = frac(t);
-        // const auto q_volt = q_pi_ctrl.update(-0.03_r, dq_curr.q);
-
-        // static int cnt = 0;
-        // cnt ++;
-        // const auto q_volt = (cnt % 2000 <= 2) ?  6.2_r : 0.0_r;
-        // const auto q_volt = q_pi_ctrl.update(base_torque + addi_torque, dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(targ_spd, meas_spd), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.2_r, dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(CLAMP2(0.07_r * (targ_pos - meas_pos),0.3_r), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.3_r * sign(2 * frac(t/2) - 1), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
-
-        // const auto d_volt = 0;
-        // const auto q_volt = 2;
 
         ab_volt = DqVoltage{d_volt, q_volt}.to_ab(meas_rad);
+        // ab_volt = DqVoltage{d_volt, q_volt}.to_ab(-0.0_r);
+        svpwm.set_ab_volt(
+            ab_volt[0], ab_volt[1]
+            // amp * cos(omega * clock_time), amp * sin(omega * clock_time)
+            // 3.0_r, 0.0_r
+        );
 
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-
-
-
-        // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-
-        // const auto ab_curr = curr_sens.ab();
-        // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // pll.update(lbg_ob.theta());
- 
-
-        // sl_meas_rad = pll.theta();
-        // sl_meas_rad = lbg_ob.theta();
+        d_volt_ = d_volt;
+        q_volt_ = q_volt;
+        meas_rad_ = meas_rad;
     };
 
-    // struct Measurer{
-    //     real_t phase_res;
-    //     real_t phase_ind;
-    //     size_t measure_times;
-    // };
+    adc1.attach(AdcIT::JEOC, {0,0}, 
+        cb_sensored
+    );
 
-    // Measurer meas;
-
-    // size_t measure_times = 0;
-    real_t phase_diff = 0;
-
-    real_t phase_res = 0.65_r;
-    real_t phase_ind;
-
-    [[maybe_unused]] auto cb_measure_res = [&]{
-
-        targ_pos = 0;
-
-        curr_sens.update(0);
-
-        // scexpr int fs = CHOPPER_FREQ / 2;
-        // scexpr int test_freq = 200;
-        // scexpr int test_freq = 500;
-        scexpr real_t test_volt = 0.9_r;
-        // scexpr int test_freq = 1000;
-        svpwm.set_ab_volt(test_volt, 0);
-        // phase_res = test_volt / curr_sens.ab().a;
-        // phase_res = test_volt  * 0.66_r / curr_sens.uvw().u;
-        phase_res = test_volt / curr_sens.ab().a;
-    };
-
-    [[maybe_unused]] auto cb_measure_ind = [&]{
-
-        targ_pos = 0;
-
-        curr_sens.update(0);
-
-        scexpr int fs = CHOPPER_FREQ / 2;
-        // scexpr int test_freq = 200;
-        scexpr int test_freq = 500;
-        scexpr real_t test_volt = 0.6_r;
-        // scexpr int test_freq = 1000;
-        static int cnt = 0; 
-        scexpr int div = fs / test_freq;
-
-        static bool upedge_captured = true;
-
-        cnt++;
-        if(cnt >= div){
-            cnt = 0;
-            upedge_captured = false;
-        }
-        scexpr real_t omega = real_t((TAU * test_freq) / fs);
-
-        {
-            static real_t last_curr = 0;
-            real_t this_curr = curr_sens.ab().a;
-            // spll.update(this_curr);
-
-            if(upedge_captured == false and last_curr < 0 and this_curr > 0){                
-                auto phase_diff_pu = (real_t(cnt) / div);
-                if(
-                    phase_diff_pu < real_t(0.25) // RL网络最大滞后90度 即1/4圆
-                    // and phase_diff_pu > real_t(0.03) // 滤除噪声
-                ){
-                    phase_diff = LPFN<4>(phase_diff, phase_diff_pu * real_t(TAU));
-                    // phase_diff = phase_diff_pu * real_t(TAU);
-                }
-                // phase_ind = tan(phase_diff) * phase_res / (real_t(TAU) * test_freq);
-                phase_ind = tan(phase_diff) * phase_res * real_t(1/TAU)/ test_freq;
-
-
-                // phase_ind = spll.theta();
-                // phase_ind = real_t(cnt) / div;
-                // phase_ind = phase_diff;
-                // phase_ind = (real_t(cnt) / div) * real_t(TAU);
-                // upedge_captured = true;
-            }
-            last_curr = this_curr;
-        }
-
-        const auto __res = omega * cnt;
-        ab_volt = {test_volt * sin(__res),0};
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-    };
-
-    [[maybe_unused]] auto cb_sensorless = [&]{
-
-        // targ_pos = real_t(6.0) * sin(2 * t);
-        targ_pos = real_t(1.0) * clock::time();
-
-        const auto & ab_curr = curr_sens.ab();
-        // const auto dq_curr = curr_sens.dq();
-
-        // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // pll.update(lbg_ob.theta());
-        // sl_meas_rad = pll.theta() + 0.3_r;
-        sl_meas_rad = lbg_ob.theta();
-        // curr_sens.update(pll.theta());
-        curr_sens.update(sl_meas_rad);
-        // const auto rad = sl_meas_rad + 3.0_r;
-
-        // const auto d_volt = d_pi_ctrl.update(0.01_r, dq_curr.d);
-        // const auto d_volt = d_pi_ctrl.update(0.01_r, dq_curr.d);
-        const auto d_volt = 0;
-        // const auto d_volt = d_pi_ctrl.update(0.3_r, dq_curr.d);
-        // const auto q_volt = q_pi_ctrl.update(0.3_r + 0.24_r * sin(3 * t), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(0.3_r + 0.24_r * sin(3 * t), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(-0.3_r + 0.2_r * frac(3 * t), dq_curr.q);
-        const auto q_volt = 4;
-        // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
-
-        // ab_volt = {4 * cos(rad), 4 * sin(rad)};
-        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
-        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
-        ab_volt = DqVoltage{d_volt, q_volt}.to_ab(sl_meas_rad + 2.0_r);
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-    };
-
-
-
-
-    [[maybe_unused]] auto cb_pulse = [&]{
-        static int cnt = 0;
-
-        scexpr real_t pulse_volt = 6;
-        scexpr int sustain = (0.0003) * 25000;
-        scexpr int dur = (0.02) * 25000;
-
-        cnt ++;
-        if(cnt >= sustain + dur){
-            cnt = 0;
-            sector_cnt = (sector_cnt + 1) % 6;
-        }
-
-        const int sector = []() -> int{
-            switch(sector_cnt){
-                default:
-                case 0: return 0;
-                case 1: return 3;
-                case 2: return 1;
-                case 3: return 4;
-                case 4: return 2;
-                case 5: return 5;
-            }
-        }();
-
-        real_t pulse_rad = real_t(PI/3) * real_t(sector);
-
-        real_t pulse_s = sin(pulse_rad);
-        real_t pulse_c = cos(pulse_rad);
-
-        real_t pulse_out = (cnt < sustain) ? pulse_volt : real_t(0);
-        // real_t pulse_out = 0;
-
-
-        ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-
-        curr_sens.update(0);
-    };
-
-    [[maybe_unused]] auto cb_sing = [&]{
-        
-        // static q20 mt = 0;
-        // mt += q20(1.0 / FOC_FREQ);
-
-        // const auto [s,c] = sincos(mt);
-
-        // real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
-
-        // ab_volt = {sing_out * sing_c, sing_out * sing_s};
-        // svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-
-        // curr_sens.update(0);
-    };
-
-    [[maybe_unused]] auto cb_openloop = [&]{
-        static q20 mt = 0;
-        mt += q20(1.0 / FOC_FREQ);
-
-        scexpr auto omega = ({
-            // real_t(6 * TAU);
-            real_t(1);
-        });
-        // const auto max_amp = real_t(6.7) + 2 * sin(7*mt);
-        const auto max_amp = real_t(2.5);
-        auto & ob = lbg_ob;
-        // auto & ob = nlr_ob;
-        // const auto max_amp = real_t(8.7);
-
-        const auto begin_m = clock::micros();
-        // const auto max_amp = real_t(2.8) + sin(t);
-        // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        // auto theta = omega * clock::time();
-        // const auto theta = 0;
-        // const auto t = clock::time();
-
-
-        mg_meas_rad = mt * omega;
-        const auto rad = ({
-            mg_meas_rad;
-            // (mt < 0.2_r) ? q16() : 
-            // q20(lbg_ob.theta()) + q20(PI/2);
-            // q16(ob.theta()) + q16(CLAMP(mt * 0.4_r, 0, 0.07_r));
-            // q16(mg_meas_rad);
-            // sl_meas_rad + ;
-            // const auto [s,c] = sincos(mt);
-        });
-        const auto [s,c] = sincos(rad);
-        // const auto [s,c] = sincos(mt *8);
-        const auto amp = CLAMP(2 + mt * 3, 0, max_amp);
-        ab_volt = {amp * c, amp * s};
-        // ab_volt = {amp, amp};
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-        curr_sens.update(rad);
-        // odo.update();
-        // const real_t meas_lap = odo.getLapPosition();
-
-        // const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
-        // mg_meas_rad = meas_rad;
-
-        const auto & ab_curr = curr_sens.ab();
-        ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // pll.update(ob.theta());
-        // sl_meas_rad = pll.theta() + 0.3_r;
-        sl_meas_rad = ob.theta();
-
-        // curr_sens.capture();
-
-        // exe_micros  = uint32_t(clock::micros()) - begin_m;
-        exe_micros = clock::micros() - begin_m;
-    };
-
-
-
-
-    [[maybe_unused]] bool can_en = false;
-
-    // auto l2 = rpc::make_list(
-    //     "l2", 
-    //     rpc::make_ro_property("mpos", meas_pos),
-    //     rpc::make_ro_property("mspd", meas_spd)
-    // );
-
-    // auto list = rpc::make_list(
-    //     "list", 
-    //     // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
-    //     // rpc::make_function("spd", [](const real_t duty){}),
-    //     rpc::make_function("rst", [](){sys::reset();}),
-    //     rpc::make_property("pos", targ_pos),
-    //     rpc::make_property("spd", targ_spd),
-    //     rpc::make_ro_property("mpos", meas_pos),
-    //     rpc::make_ro_property("mspd", meas_spd),
-    //     rpc::make_property("cen", can_en),
-    //     l2
-    // );
-
-    // ArgSplitter splitter;
-
-    DEBUGGER.set_splitter(',');
-    DEBUGGER.no_brackets();
-
-    
-    // OutputStream::Config
-
-    CurrentBiasCalibrater calibrater = {{
-        .period_ticks = 10000,
-        .fc = 20,
-        .fs = FOC_FREQ
-    }};
-
-    // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, FOC_FREQ);
-    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-
-    [[maybe_unused]] auto measure_bias = [&]{
-        
-        // mp6540.enable(false);
-        // curr_sens.capture();
-        calibrater.update(curr_sens.raw(), curr_sens.mid());
-
-        // odo.update();
-        // speed_measurer.update(odo.getPosition());
-
-        // mp6540.enable(true);
-        if(calibrater.is_done()) {
-            // const auto guard = DEBUGGER.createGuard();
-            // DEBUGGER.force_sync();
-            // DEBUG_PRINTLN("Done Current Bias Measure!!");
-            // DEBUG_PRINTLN(calibrater.result());
-            // clock::delay(100ms);
-            // ASSERT(false);
-            // clock::delay(1000ms); sys::reset();
-        }
-    };
-
-    [[maybe_unused]] auto cb_hfi = [&]{
-
-        static int cnt = 0;
-        // scexpr int hfi_freq = 4096;
-        // scexpr int hfi_freq = 2500;
-        // scexpr int hfi_freq = 1024;
-        // scexpr int hfi_freq = 512;
-        // scexpr int hfi_freq = 256;
-        // scexpr int divider = CHOPPER_FREQ / 2 / hfi_freq;
-        scexpr int divider = 16;
-        scexpr size_t hfi_freq = FOC_FREQ / divider;
-        scexpr real_t hfi_base_volt = 1.2_r;
-        scexpr real_t openloop_base_volt = 0.0_r;
-        cnt = (cnt + 1) % divider;
-
-
-        real_t hfi_rad = real_t(TAU) * real_t(cnt) / divider;
-        real_t hfi_c = cos(hfi_rad);
-        real_t hfi_out = hfi_base_volt * hfi_c;
-
-        real_t openloop_rad = -frac(2.1_r * clock::time())*real_t(TAU);
-        const auto [openloop_s, openloop_c] = sincos(openloop_rad);
-        // real_t s = sin(hfi_rad);
-
-        ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
-
-        // curr_sens.updatUVW();
-        // curr_sens.updateAB();
-        // curr_sens.updateDQ(0);
-        curr_sens.update(0);
-        // real_t mul = curr_sens.ab()[1] * s;
-        [[maybe_unused]] const real_t mul = curr_sens.ab()[1] * hfi_c;
-        // real_t last_hfi_result = hfi_result;
-        // hfi_result = LPF(last_hfi_result, mul);
-        // static dsp::ButterBandpassFilter<q16, 4> hfi_filter{{.fl = 1, .fh = 40, .fs = FOC_FREQ}};
-        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = 2, .fs = FOC_FREQ}};
-        // static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq, .fs = FOC_FREQ}};
-        static dsp::LowpassFilter<q20> hfi_filter_lpf{{.fc = hfi_freq * 0.1_r, .fs = FOC_FREQ}};
-        static dsp::LowpassFilter<q20> hfi_filter_mid_lpf{{.fc = 1, .fs = FOC_FREQ}};
-        // static dsp::Highpa<q24> hfi_filter_lpf{{.fc = 2, .fs = FOC_FREQ}};
-        // static dsp::ButterLowpassFilter<q20,  2> hfi_filter_lpf{{.fc = 20, .fs = FOC_FREQ}};
-        // static dsp::ButterHighpassFilter<q20, 2> hfi_filter_hpf{{.fc = 600, .fs = FOC_FREQ}};
-        hfi_filter_lpf.update(curr_sens.ab()[1]);
-        hfi_filter_mid_lpf.update(hfi_filter_lpf.get());
-        // hfi_filter_hpf.update(hfi_filter_lpf.get());
-        // hfi_filter_hpf.update(mul);
-        [[maybe_unused]] const auto temp = hfi_filter_lpf.get();
-        // hfi_result = temp;
-        hfi_result = hfi_filter_lpf.get();
-        hfi_mid_result = hfi_filter_mid_lpf.get();
-        // hfi_result = curr_sens.ab()[1] * hfi_c;
-        // hfi_result = hfi_filter_hpf.get();
-        // hfi_result = LPFN<9>(hfi_result, mul);
-
-        // hfi_result = mul;
-        
-        // dt = clock::micros() - m;
-    };
-
-    // adc1.bindCb(AdcIT::JEOC, cb_pulse);
-    // adc1.bindCb(AdcIT::JEOC, cb_sing);
-    // adc1.bindCb(AdcIT::JEOC, cb_sensorless);
-    // adc1.bindCb(AdcIT::JEOC, cb);
-    // adc1.bindCb(AdcIT::JEOC, cb_openloop);
-    // adc1.attach(AdcIT::JEOC, {0,0}, cb_hfi);
-    
-    // adc1.attach(AdcIT::JEOC, {0,0}, cb_measure_ind);
-    // adc1.attach(AdcIT::JEOC, {0,0}, cb_measure_res);
-    // adc1.bind_cb(AdcIT::JEOC, measure_bias);
-    adc1.attach(AdcIT::JEOC, {0,0}, cb_openloop);
-
-    
     while(true){
         [[maybe_unused]] const auto t = clock::time();
-
+        [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
+        [[maybe_unused]] const auto dq_curr = curr_sens.dq();
+        [[maybe_unused]] const auto ab_curr = curr_sens.ab();
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
         DEBUG_PRINTLN_IDLE(
             // phase_res,
@@ -1177,12 +751,18 @@ void bldc_main(){
             // timer1.oc<1>().get_duty(),
             // timer1.oc<2>().get_duty(),
             // timer1.oc<3>().get_duty(),
-            nslp_gpio.read().to_bool(),
-            en_gpio.read().to_bool(),
-            TIM1_CH1_GPIO.read().to_bool(),
-            TIM1_CH2_GPIO.read().to_bool(),
-            TIM1_CH3_GPIO.read().to_bool()
-            // sl_meas_rad,
+            // nslp_gpio.read().to_bool(),
+            // en_gpio.read().to_bool(),
+            // dq_curr.d,
+            // dq_curr.q,
+            d_volt_,
+            q_volt_,
+            pos_sensor_.position(),
+            pos_sensor_.speed(),
+            meas_rad_
+            // TIM1_CH1_GPIO.read().to_bool(),
+            // TIM1_CH2_GPIO.read().to_bool(),
+            // TIM1_CH3_GPIO.read().to_bool()
             // exe_micros.count()
             // pll.theta(),
             // clock::micros() * 0.001_r
@@ -1196,110 +776,6 @@ void bldc_main(){
         ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
         ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
 
-        // auto _t = real_t(0);
 
-        // DEBUG_PRINTLN(odo.getPosition());
-        // DEBUG_PRINTLN((odo.getPosition()), real_t(u_sense), real_t(v_sense), real_t(w_sense));
-        // DEBUG_PRINTLN_IDLE((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2], real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // DEBUG_PRINTLN_IDLE((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // DEBUG_PRINTLN_IDLE((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
-        // DEBUG_PRINTLN_IDLE((odo.getPosition()), ab_curr[0],ab_curr[1]);
-        // clock::delay(2ms);
-        // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
-        [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
-        [[maybe_unused]] const auto dq_curr = curr_sens.dq();
-        [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-
-
-        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob.e_alpha_, lbg_ob.e_beta_,  dt > 100 ? 1000 + dt : dt);
-        // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
-
-        // DEBUG_PRINTLN_IDLE(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // DEBUG_PRINTLN_IDLE(ab_volt[0], ab_volt[1]);
-        // DEBUG_PRINTLN_IDLE(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
-        // DEBUG_PRINTLN_IDLE(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-        // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1]);
-        // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, uvw_curr.u, uvw_curr.v, uvw_curr.w);
-        // DEBUG_PRINTLN_IDLE(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
-        
-        // DEBUG_PRINTLN_IDLE(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
-        // DEBUG_PRINTLN_IDLE(spll.theta(), ab_curr[0],phase_ind * 1000);
-        // DEBUG_PRINTLN_IDLE(meas_pos, mg_meas_rad, sl_meas_rad, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-        
-        // auto s_curr = [&](){
-            //     return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
-            // }();
-            // DEBUG_PRINTLN_IDLE(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
-            // DEBUG_PRINTLN_IDLE(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
-            
-            // DEBUG_PRINTLN_IDLE(hfi_result);
-            // DEBUG_PRINTLN_IDLE(ab_volt[0]);
-            // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], ab_volt[0]);
-            // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_ob.getTheta(), dt > 100 ? 1000 + dt : dt);
-            // clock::delay(2ms);
-            
-            // DEBUG_PRINTLN_IDLE(rad, sin(rad), cos(rad), atan2(sin(rad), cos(rad)));
-            // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
-            // Sys::Clock::reCalculateTime();
-            
-        // CanMsg msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
-        // if(can1.pending() == 0 and can_en) can1.write(msg);
-
-        
-        // DEBUG_PRINTLN_IDLE(uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr, odo.getPosition()); 
-        // DEBUG_PRINTLN_IDLE(1); 
-            // DEBUG_PRINTLN_IDLE(ab_curr, dq_curr, can1.available(), can1.getTxErrCnt(), std::setbase(2), 11);
-            // DEBUG_PRINTLN_IDLE(ab_curr, dq_curr, can1.available(), can1.getTxErrCnt(), std::setbase(2), CAN1->ERRSR);
-            // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
-        // clock::delay(2ms);
-        // DEBUGGER.no_brackets(true);
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2<real_t>(1,1));
-        // clock::delay(2ms);
-
-        // DEBUGGER.force_sync();
-        // if(false){
-        //     const auto guard = DEBUGGER.createGuard();
-        //     DEBUGGER.no_brackets(false);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2<real_t>(1,1));
-        //     // DEBUGGER.flush();
-        // }
-
-        // if(true){
-        //     const auto guard = DEBUGGER.createGuard();
-        //     // DEBUGGER.set_splitter('|');
-        //     DEBUGGER.no_brackets(true);
-        //     DEBUG_PRINTLN(odo.getPosition(), Vector2<real_t>(1,1));
-        //     // DEBUGGER.flush();
-        // }
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
-        // (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3
-
-        // DEBUG_PRINTLN_IDLE(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3); 
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1], est_rad, rad);
-        // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100), int(uvw_curr[1]*100), int(uvw_curr[2]*100));
-        // DEBUG_PRINTLN(std::setprecision(2), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2]);
-        // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100));
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), real_t(v_sense), real_t(w_sense));
-        // pwm_u = sin(t) * 0.5_r + 0.5_r;
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // clock::delay(5ms);
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), s_lpf_u_curr);
-        // auto [a,b] = Vector2<real_t>{real_t(0), real_t(0.2)}.rotated(open_rad);
-        // DEBUG_PRINTLN(a,b);
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
-        // TIM1->CH4CVR = 1000;
-        // cb();
-        // clock::delay(10ms);
-        // DEBUG_PRINTLN(spi1.cs_port.isIndexValid(0), spi1.cs_port.isIndexValid(1), spi1.cs_port.isIndexValid(2))
-        // DEBUG_PRINTLN("0");
-        // bmi.check();
-        // clock::delay(20ms);
     }
 }
