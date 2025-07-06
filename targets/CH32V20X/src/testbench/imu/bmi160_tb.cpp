@@ -44,7 +44,7 @@ void bmi160_main(){
     ledg.outpp();
     portA[7].inana();
 
-    bmi.init().examine();
+    bmi.init({}).examine();
     while(true){
         ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
         ledb = BoolLevel::from((clock::millis() % 400).count() > 200);

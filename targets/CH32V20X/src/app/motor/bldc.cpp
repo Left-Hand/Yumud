@@ -20,10 +20,13 @@
 #include "app/stepper/ctrl.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
+#include "drivers/GateDriver/DRV8301/DRV8301.hpp"
+
+
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "drivers/GateDriver/DRV8301/DRV8301.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"
@@ -198,7 +201,7 @@ public:
 };
 
 
-enum class MotorId:uint8_t{
+enum class MotorRole:uint8_t{
     Old,
     New
 };
@@ -335,31 +338,40 @@ void bldc_main(){
     pwm_v.init({});
     pwm_w.init({});
 
+
     MA730 ma730{
         &spi,
         spi.attach_next_cs(&hal::portA[15])
             .unwrap()
     };
-    ma730.init().unwrap();
+
+    BMI160 bmi{
+        &spi,
+        spi.attach_next_cs(&hal::portA[0])
+            .unwrap()
+    };
+
+
+    ma730.init().examine();
+    bmi.init({}).examine();
+    bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
 
     can.init({hal::CanBaudrate::_1M});
 
-    const auto motor_id = []{
+    const auto motor_role = []{
         const auto chip_id_crc = sys::chip::get_chip_id_crc();
         switch(chip_id_crc){
             case 207097585:
-                return MotorId::New;
+                return MotorRole::New;
             default:
-                return MotorId::Old;
+                return MotorRole::Old;
         }
     }();
 
-    
-
-    // for(size_t i = 0; i < 1000; ++i) {
-    //     bmi.update();
+    // while(true){
+    //     bmi.update().examine();
     //     // auto [x,y,z] = bmi.read_acc();
-    //     auto [x,y,z] = bmi.read_gyr();
+    //     auto [x,y,z] = bmi.read_acc().examine();
     //     DEBUG_PRINTLN(x,y,z);
     //     clock::delay(2ms);
     //     // DEBUGGER << std::endl;
@@ -404,24 +416,6 @@ void bldc_main(){
 
     en_gpio.set();
     nslp_gpio.set();
-    // uint32_t dt;
-
-    // std::array<real_t, 2> ab_volt;
-
-    // scexpr real_t r_ohms = 7.1_r;
-    // scepxr real_t l_mh = 1.45_r;
-
-    // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
-    [[maybe_unused]]
-    LapPosPll pll = {
-        {
-            // .kp = real_t(2 * pll_freq),
-            .kp = 470.17_r,
-            // .ki = real_t(pll_freq * pll_freq),
-            .ki = 20.3_r,
-            .fc = FOC_FREQ
-        }
-    };
 
 
     real_t mg_meas_rad_;
@@ -440,10 +434,10 @@ void bldc_main(){
 
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(motor_id){
-                case MotorId::New:
+            switch(motor_role){
+                case MotorRole::New:
                     return -0.12_r;
-                case MotorId::Old:
+                case MotorRole::Old:
                     return -0.25_r;
                 default:
                     __builtin_unreachable();

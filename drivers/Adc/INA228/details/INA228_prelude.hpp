@@ -41,7 +41,7 @@ struct INA228_Regs:public INA228_Prelude{
         // 4 ADCRANGE R/W 0h IN+ 和 IN– 之间的分流满量程范围选择。
         // 0h = ±163.84mV
         // 1h = ± 40.96mV
-        uint16_t ACCRANGE:1;
+        uint16_t ADCRANGE:1;
 
         // 5 TEMPCOMP R/W 0h启用外部分流器的温度补偿
         // 0h = 禁用分流温度补偿

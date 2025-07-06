@@ -608,4 +608,23 @@ class BldcMotor{
     //     }
     // };
 
+    // uint32_t dt;
+
+    // std::array<real_t, 2> ab_volt;
+
+    // scexpr real_t r_ohms = 7.1_r;
+    // scepxr real_t l_mh = 1.45_r;
+
+    // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
+    [[maybe_unused]]
+    LapPosPll pll = {
+        {
+            // .kp = real_t(2 * pll_freq),
+            .kp = 470.17_r,
+            // .ki = real_t(pll_freq * pll_freq),
+            .ki = 20.3_r,
+            .fc = FOC_FREQ
+        }
+    };
+
 #endif

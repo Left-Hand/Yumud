@@ -10,15 +10,15 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 template<typename Fn, typename Fn_Dur>
-Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
+IResult<> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
     if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
-    Result<void, Error> res = std::forward<Fn>(fn)();
+    IResult<> res = std::forward<Fn>(fn)();
     if(!times) return res;
     else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
 }
 
 template<typename Fn>
-Result<void, Error> retry(const size_t times, Fn && fn){
+IResult<> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
 
@@ -30,17 +30,17 @@ static constexpr uint8_t ACC_CHIP_ID = 0;
 static constexpr uint8_t GYR_CHIP_ID = 0;
 
 
-Result<void, Error> BMI088_Acc::init(){
+IResult<> BMI088_Acc::init(){
     TODO();
     return Ok();
 }
 
 
-Result<void, Error> BMI088_Acc::reset(){
+IResult<> BMI088_Acc::reset(){
     return phy_.write_command(0xb6);
 }
 
-Result<void, Error> BMI088_Acc::verify_chip_id(){
+IResult<> BMI088_Acc::verify_chip_id(){
     if(const auto res = phy_.read_regs(acc_chipid_reg);
         res.is_err()) return res;
 
@@ -50,7 +50,7 @@ Result<void, Error> BMI088_Acc::verify_chip_id(){
     return Ok();
 }
 
-Result<void, Error> BMI088_Acc::validate(){
+IResult<> BMI088_Acc::validate(){
     return reset()
         | phy_.validate()
         | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);})
@@ -62,14 +62,14 @@ Result<void, Error> BMI088_Acc::validate(){
     ;
 }
 
-Result<void, Error> BMI088_Acc::update(){
+IResult<> BMI088_Acc::update(){
     return phy_.read_burst(
         acc_x_reg.address, 
         &(acc_x_reg.as_ref()), 3
     );
 }
 
-Result<void, Error> BMI088_Gyr::update(){
+IResult<> BMI088_Gyr::update(){
     return phy_.read_burst(
         gyr_x_reg.address, 
         &(gyr_x_reg.as_ref()), 3
@@ -98,47 +98,47 @@ IResult<Vector3<q24>> BMI088_Gyr::read_gyr(){
     ));
 }
 
-Result<void, Error> BMI088_Acc::set_acc_range(const AccRange range){
+IResult<> BMI088_Acc::set_acc_fs(const AccFs range){
     acc_scaler_ = calculate_acc_scale(range).unwrap();
     acc_range_reg.acc_range = uint8_t(range);
     return phy_.write_regs(acc_range_reg);
 }
 
 
-Result<void, Error> BMI088_Acc::set_acc_bwp(const AccBwp bwp){
+IResult<> BMI088_Acc::set_acc_bwp(const AccBwp bwp){
     acc_conf_reg.acc_bwp = uint8_t(bwp);
     return phy_.write_regs(acc_conf_reg);
 }
 
 
-Result<void, Error> BMI088_Acc::set_acc_odr(const AccOdr odr){
+IResult<> BMI088_Acc::set_acc_odr(const AccOdr odr){
     acc_conf_reg.acc_odr = uint8_t(odr);
     return phy_.write_regs(acc_conf_reg);
 }
 
-Result<void, Error> BMI088_Gyr::set_gyr_range(const GyrRange range){
+IResult<> BMI088_Gyr::set_gyr_fs(const GyrFs range){
     gyr_scaler_ = calculate_gyr_scale(range).unwrap();
     gyro_range_reg.data = uint8_t(range);
     return phy_.write_regs(gyro_range_reg);
 }
 
-Result<void, Error> BMI088_Gyr::set_gyr_odr(const GyrOdr odr){
+IResult<> BMI088_Gyr::set_gyr_odr(const GyrOdr odr){
     gyro_bw_reg.data = uint8_t(odr);
     return phy_.write_regs(gyro_range_reg);
 }
 
 
-Result<void, Error> BMI088_Gyr::init(){
+IResult<> BMI088_Gyr::init(){
     TODO();
     return Ok();
 }
 
-Result<void, Error> BMI088_Gyr::reset(){
+IResult<> BMI088_Gyr::reset(){
     TODO();
     return Ok();
 }
 
-Result<void, Error> BMI088_Gyr::validate(){
+IResult<> BMI088_Gyr::validate(){
     TODO();
     return Ok();
 }

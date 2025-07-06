@@ -1,7 +1,7 @@
     using RegAddress = uint8_t;
     struct ChipIdReg:public Reg8<>{
         scexpr RegAddress address = 0x00;
-        scexpr uint8_t correct = 0xD1;
+        scexpr uint8_t CORRECT_ID = 0xD1;
         uint8_t data;
     };
 
@@ -133,27 +133,27 @@
 
     struct AccConfReg:public Reg8<>{
         scexpr RegAddress address = 0x40;
-        uint8_t acc_odr:4;
+        AccOdr acc_odr:4;
         uint8_t acc_bwp:3;
         uint8_t acc_us:1;
     };
     
-    struct AccRangeReg:public Reg8<>{
+    struct AccFsReg:public Reg8<>{
         scexpr RegAddress address = 0x41;
-        uint8_t acc_range:4;
+        AccFs acc_fs:4;
         uint8_t __resv__:4;
     };
 
     struct GyrConfReg:public Reg8<>{
         scexpr RegAddress address = 0x42;
-        uint8_t gyr_odr:4;
+        GyrOdr gyr_odr:4;
         uint8_t gyr_bwp:2;
         uint8_t __resv__:2;
     };
 
-    struct GyrRangeReg:public Reg8<>{
+    struct GyrFsReg:public Reg8<>{
         scexpr RegAddress address = 0x43;
-        uint8_t gyr_range:3;
+        GyrFs gyr_fs:3;
         uint8_t __resv__:5;
     };
 

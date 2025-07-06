@@ -27,7 +27,7 @@ using namespace ymd::drivers;
 auto init_mpu6050(MPU6050 & mpu){
     mpu.set_package(MPU6050::Package::MPU6050);
     return mpu.init() |
-    mpu.set_acc_range(MPU6050::AccRange::_2G) |
+    mpu.set_acc_fs(MPU6050::AccFs::_2G) |
     mpu.enable_direct_mode(EN);
 }
 
@@ -39,7 +39,7 @@ void ak8963_tb(hal::I2c & i2c){
 
     AK8963 aku{&i2c};
     aku.init().examine();
-    // aku.setAccRange(MPU6050::AccRange::_2G);
+    // aku.setAccFs(MPU6050::AccFs::_2G);
 
     while(true){
         aku.update().examine();
@@ -78,7 +78,7 @@ void mpu6500_tb(hal::I2c & i2c){
     #endif
 
     mpu.init().examine();
-    mpu.set_acc_range(MPU6050::AccRange::_2G).examine();
+    mpu.set_acc_fs(MPU6050::AccFs::_2G).examine();
     mpu.enable_direct_mode(EN).examine();
 
     #ifdef MAG_ACTIVATED

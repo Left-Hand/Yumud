@@ -19,6 +19,7 @@ enum class ImuError_Kind:uint8_t{
     UnknownDevice,
     WrongDeviceId,
     WrongCompanyId,
+    WrongPmuMode,
     PhyVerifyFailed,
 
     CantSetup,
