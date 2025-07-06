@@ -12,12 +12,28 @@
 
 
 namespace ymd::drivers{
-class Ps2Joystick{
-public:
+struct Ps2Joystick_Prelude{
     enum class JoyStickEvent:uint8_t{
-        SELECT,L3,R3,START,UP,RIGHT,DOWN,LEFT,
-        L2, R2, L1, R1, DELTA, CIRC, CROSS, SQU,
-        RX, RY, LX, LY
+        SELECT,
+        L3,
+        R3,
+        START,
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT,
+        L2, 
+        R2, 
+        L1, 
+        R1, 
+        DELTA, 
+        CIRC, 
+        CROSS, 
+        SQU,
+        RX, 
+        RY, 
+        LX, 
+        LY
     };
 
 
@@ -30,7 +46,6 @@ public:
         ANAGREEN = 0x53
     };
 
-protected:
     enum class PressLevel:uint8_t{
         Pressed = 0,
         UnPress = 1
@@ -80,9 +95,11 @@ protected:
     DataFrame frame;
 
     static constexpr size_t FRAME_SIZE = sizeof(DataFrame);
-    // static_assert(FRAME_SIZE == 6);
+    static_assert(FRAME_SIZE == 7);
+};
+
+class Ps2Joystick final:public Ps2Joystick_Prelude{
     
-    hal::SpiDrv & spi_drv_;
 public:
     Ps2Joystick(hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     void init(){
@@ -116,7 +133,7 @@ public:
         return frame.dev_id;
     }
 
-    uint8_t valueof(const JoyStickEvent event){
+    uint8_t query(const JoyStickEvent event){
         switch(event){
             case JoyStickEvent::SELECT:
                 return PressLevel::Pressed == frame.modifiers.select;
@@ -192,6 +209,8 @@ public:
 
         return dir;//why?
     }
+private:
+    hal::SpiDrv & spi_drv_;
 };
 
 }

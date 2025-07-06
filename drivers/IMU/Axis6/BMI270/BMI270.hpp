@@ -75,7 +75,7 @@ class BMI270 final:
 public:
     using Error = BMI270_Prelude::Error;
 
-    BMI270(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    BMI270(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
 

@@ -292,7 +292,7 @@ namespace SMC{
         return ret;
     }
 
-    int get_x_edges(const ImageReadable<Grayscale> & src, const int y){
+    int get_x_edges(const ImageReadable<Gray> & src, const int y){
         const auto & size = src.get_size();
         if(y < 0 || y >= size.y) return 0;
         int cnt = 0;
@@ -319,7 +319,7 @@ namespace SMC{
 
     }
 
-    // Boundry CoastUtils::form(const ImageReadable<Grayscale> & src, Vector2i seed_pos, const bool is_right){
+    // Boundry CoastUtils::form(const ImageReadable<Gray> & src, Vector2i seed_pos, const bool is_right){
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point & seed_pos){
 
         Piles ret;

@@ -175,10 +175,10 @@ public:
 
     AK09911C(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     AK09911C(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
-    AK09911C(hal::I2c & bus):phy_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
+    AK09911C(Some<hal::I2c *> i2c):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
     AK09911C(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     AK09911C(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    AK09911C(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
+    AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();

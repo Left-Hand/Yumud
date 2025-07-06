@@ -220,7 +220,7 @@ public:
     MT9V034(hal::SccbDrv && sccb_drv):
         sccb_drv_(std::move(sccb_drv))
         {;}
-    MT9V034(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    MT9V034(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
 
     [[nodiscard]] IResult<> init();
@@ -234,7 +234,7 @@ public:
     [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}
 private:
     hal::SccbDrv sccb_drv_;
-    Image<Grayscale> frame_ = {FRAME_SIZE};
+    Image<Gray> frame_ = {FRAME_SIZE};
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint16_t data);
 

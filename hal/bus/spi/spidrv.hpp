@@ -22,22 +22,12 @@ concept valid_spi_data = (
     and std::is_integral_v<T>);
 
 class SpiDrv final{
-protected:
-    Spi & spi_;
-    SpiSlaveIndex idx_;
-    Endian endian_ = LSB;  
-    uint32_t baudrate_ = 1000000;
-    uint8_t last_width_ = -1;
-
-    using WriteFn = std::function<HalResult(uint32_t)>;
-
-    // WriteFn write_fn_;
 public:
 
     // template<typename T>
     // requires (std::is_base_of_v<Spi, T>)
-    SpiDrv(Spi & spi, const SpiSlaveIndex idx):
-        spi_(spi), 
+    SpiDrv(Some<Spi *> spi, const SpiSlaveIndex idx):
+        spi_(spi.deref()), 
         idx_(idx)
         {;}
 
@@ -132,6 +122,17 @@ public:
         const std::span<T> data_rx, 
         const std::span<const T> data_tx, 
         Continuous cont = DISC);
+
+private:
+    Spi & spi_;
+    SpiSlaveIndex idx_;
+    Endian endian_ = LSB;  
+    uint32_t baudrate_ = 1000000;
+    uint8_t last_width_ = -1;
+
+    using WriteFn = std::function<HalResult(uint32_t)>;
+
+    // WriteFn write_fn_;
 };
 
 template<valid_spi_data T>

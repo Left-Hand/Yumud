@@ -5,7 +5,7 @@
 
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
+#include "types/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 
@@ -39,7 +39,7 @@ struct Placement{
     // q16 rotation = 0;
     // q16 zoom = 1;
 
-    // Vector2q<16> apply_transform(Vector2q<16> p) const {
+    // Vector2<q16> apply_transform(Vector2<q16> p) const {
     // return (p * zoom).rotated(rotation) + pos;
     // }
 };
@@ -444,7 +444,7 @@ struct RotatedZebraRect{
 
 
 //将相机像素转换为地面坐标
-static constexpr Vector2q<16> project_pixel_to_ground(
+static constexpr Vector2<q16> project_pixel_to_ground(
     const Vector2u pixel, 
     const Pose2<q16> viewpoint, 
     const q16 zoom
@@ -453,31 +453,31 @@ static constexpr Vector2q<16> project_pixel_to_ground(
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vector2q<16> camera_offset = Vector2q<16>(pixel_offset) * zoom;
+    const Vector2<q16> camera_offset = Vector2<q16>(pixel_offset) * zoom;
     const auto rot = viewpoint.rad - q16(PI/2);
     return viewpoint.pos + camera_offset.rotated(rot);
 }
 
 
 static constexpr Vector2u project_ground_to_pixel(
-    const Vector2q<16>& ground_pos,
+    const Vector2<q16>& ground_pos,
     const Pose2<q16> viewpoint,
     const q16 zoom)
 {
     // 1. Remove viewpoint position offset
-    const Vector2q<16> relative_pos = ground_pos - viewpoint.pos;
+    const Vector2<q16> relative_pos = ground_pos - viewpoint.pos;
     
     // 2. Calculate inverse rotation (original rotation was viewpoint.rad - PI/2)
     const auto [s, c] = sincos(-(viewpoint.rad - q16(PI/2)));
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
-    const Vector2q<16> unrotated = {
+    const Vector2<q16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y
     };
     
     // 4. Remove scaling and convert to pixel space
-    const Vector2q<16> pixel_offset = unrotated / zoom;
+    const Vector2<q16> pixel_offset = unrotated / zoom;
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return Vector2u{
@@ -504,7 +504,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
+    virtual Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -519,8 +519,8 @@ public:
 //         );
 //     }
 
-//     Image<Grayscale> render(const Pose2<q16> viewpoint) const {
-//         Image<Grayscale> ret{CAMERA_SIZE};
+//     Image<Gray> render(const Pose2<q16> viewpoint) const {
+//         Image<Gray> ret{CAMERA_SIZE};
 
 //         const auto org = project_pixel_to_ground({0,0}, viewpoint);
 //         const auto y_step = project_pixel_to_ground({0,1}, viewpoint) - org;
@@ -531,7 +531,7 @@ public:
 //             const auto beg = offset;
 //             for(size_t x = 0; x < CAMERA_SIZE.x; ++x){
 //                 const bool covered = this->color_from_point(offset);
-//                 ret.set_pixel({x,y}, covered ? Grayscale{255} : Grayscale{0});
+//                 ret.set_pixel({x,y}, covered ? Gray{255} : Gray{0});
 //                 offset += x_step;
 //             }
 //             offset = beg;
@@ -564,7 +564,7 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Grayscale> render(const Pose2<q16> viewpoint, const q16 zoom) const {
+    Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
@@ -609,8 +609,8 @@ public:
         }, objects_);
 
         if(!dirty) std::memset(pbuf.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
-        return Image<Grayscale>(std::move(
-            std::reinterpret_pointer_cast<Grayscale[]>(pbuf)), CAMERA_SIZE);
+        return Image<Gray>(std::move(
+            std::reinterpret_pointer_cast<Gray[]>(pbuf)), CAMERA_SIZE);
     }
 private:
     std::tuple<Objects...> objects_;  // Expanded parameter pack

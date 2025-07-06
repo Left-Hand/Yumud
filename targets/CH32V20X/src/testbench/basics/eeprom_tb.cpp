@@ -313,14 +313,14 @@ void eeprom_main(){
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");
 
-    hal::I2cSw i2csw = {hal::PB<13>(), hal::PB<12>()};
+    hal::I2cSw i2csw = {&hal::PB<13>(), &hal::PB<12>()};
     i2csw.init(400000);
 
     
     using namespace drivers;
     auto at24 = AT24CXX(
         AT24CXX::Config::AT24C02{}, 
-        {i2csw, AT24CXX::DEFAULT_I2C_ADDR}
+        hal::I2cDrv{&i2csw, AT24CXX::DEFAULT_I2C_ADDR}
     );
 
 

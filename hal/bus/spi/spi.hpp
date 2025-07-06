@@ -4,6 +4,7 @@
 #include "hal/bus/bus_base.hpp"
 
 #include <optional>
+#include "core/utils/Option.hpp"
 
 namespace ymd::hal{
 
@@ -56,9 +57,12 @@ protected:
         last_index.reset();
     }
 
-    void bind_cs_gpio(hal::GpioIntf & gpio, const uint8_t index){
-        gpio.outpp(HIGH);
-        cs_port_.bind_pin(gpio, index);
+    void bind_cs_gpio(
+        Some<hal::GpioIntf *> gpio, 
+        const uint8_t index
+    ){
+        gpio.deref().outpp(HIGH);
+        cs_port_.bind_pin(gpio.deref(), index);
     }
 public:
     Spi(){;}
@@ -86,7 +90,7 @@ public:
 
 
     [[nodiscard]]
-    std::optional<SpiSlaveIndex> attach_next_cs(hal::GpioIntf & io);
+    Option<SpiSlaveIndex> attach_next_cs(Some<hal::GpioIntf *> io);
 };
 
 }

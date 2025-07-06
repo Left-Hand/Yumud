@@ -71,7 +71,7 @@ public:
 
 
     template<typename T>
-    requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
+    requires std::is_same_v<T, Binary> || std::is_same_v<T, Gray>
     void transmit(const Image<T> & img, const uint8_t index){
         transmit((const uint8_t *)img.get_data(),img.get_size(), index); 
     }

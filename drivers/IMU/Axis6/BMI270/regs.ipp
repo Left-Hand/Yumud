@@ -136,7 +136,7 @@
         uint8_t acc_filter_perf:1;
     };
 
-    struct AccRangeReg:public Reg8<>{
+    struct AccFsReg:public Reg8<>{
         scexpr RegAddress address = 0x41;
 
         uint8_t acc_range:2;
@@ -152,7 +152,7 @@
         uint8_t gyr_filter_perf:1;
     };
 
-    struct GyrRangeReg:public Reg8<>{
+    struct GyrFsReg:public Reg8<>{
         scexpr RegAddress address = 0x43;
 
         uint8_t gyr_range:3;

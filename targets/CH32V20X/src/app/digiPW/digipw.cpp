@@ -119,7 +119,7 @@ void digipw_main(){
     auto & scl_gpio = portB[15];
     auto & sda_gpio = portB[14];
     
-    I2cSw i2csw{scl_gpio, sda_gpio};
+    I2cSw i2csw{&scl_gpio, &sda_gpio};
     i2csw.init(1000000);
     
     // INA226 ina226{i2csw};

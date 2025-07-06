@@ -27,7 +27,7 @@ void I2cHw::enable_rcc(const Enable en){
 }
 
 
-hal::Gpio & I2cHw::get_scl(const I2C_TypeDef * inst){
+hal::Gpio & I2cHw::get_scl(const I2C_TypeDef * inst, const uint8_t remap){
     switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:
@@ -44,7 +44,7 @@ hal::Gpio & I2cHw::get_scl(const I2C_TypeDef * inst){
     }
 }
 
-hal::Gpio & I2cHw::get_sda(const I2C_TypeDef * inst){
+hal::Gpio & I2cHw::get_sda(const I2C_TypeDef * inst, const uint8_t remap){
     switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_I2C1
         case I2C1_BASE:

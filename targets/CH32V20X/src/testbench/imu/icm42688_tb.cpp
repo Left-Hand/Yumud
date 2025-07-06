@@ -104,19 +104,21 @@ void icm42688_main(){
     DEBUGGER.force_sync(EN);
 
     // I2cSw i2c{portA[12], portA[15]};
-    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(4000_KHz);
     // i2c.init();
 
     clock::delay(200ms);
 
-
-    // ICM42688 imu = {i2c};
-
     auto & spi = spi1;
     spi.init({18_MHz});
-    ICM42688 imu = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
+    ICM42688 imu = {
+        SpiDrv(
+            &spi, 
+            spi.attach_next_cs(&portA[15]).unwrap()
+        )
+    };
 
     icm42688_tb(imu);
 }

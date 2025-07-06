@@ -12,12 +12,12 @@ public:
 
 class SeatInterpolation:public Interpolation{
 protected:
-    static std::tuple<real_t, real_t> get_ab(const Vector2q<16> & handle);
+    static std::tuple<real_t, real_t> get_ab(const Vector2<q16> & handle);
 protected:
     real_t a;
     real_t b;
 public:
-    SeatInterpolation(const Vector2q<16> & handle){
+    SeatInterpolation(const Vector2<q16> & handle){
         std::tie(a,b) = get_ab(handle);
     }
 
@@ -34,7 +34,7 @@ class SeatOddInterpolation:public SeatInterpolation{
 protected:
     int p;
 public:
-    SeatOddInterpolation(const Vector2q<16> & handle, const int n):
+    SeatOddInterpolation(const Vector2<q16> & handle, const int n):
         SeatInterpolation(handle),p(2 * n + 1){}
 
     real_t forward(const real_t x) const override;
@@ -45,7 +45,7 @@ class SymmetricInterpolation:public SeatInterpolation{
 protected:
     int _n;
 public:
-    SymmetricInterpolation(const Vector2q<16> & handle, const int n):
+    SymmetricInterpolation(const Vector2<q16> & handle, const int n):
         SeatInterpolation(handle),_n(n){}
     real_t forward(const real_t x) const override;
 };
@@ -54,7 +54,7 @@ class QuadraticSeatInterpolation:public SeatInterpolation{
 protected:
     int _n;
 public:
-    QuadraticSeatInterpolation(const Vector2q<16> & handle, const int n):
+    QuadraticSeatInterpolation(const Vector2<q16> & handle, const int n):
         SeatInterpolation(handle),_n(n){}
     real_t forward(const real_t x) const override;
 };

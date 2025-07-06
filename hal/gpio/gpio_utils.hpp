@@ -34,7 +34,7 @@ public:
     [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
         raw_(raw){;}
 
-    [[nodiscard]] explicit constexpr PinMask(const PinSource source):
+    [[nodiscard]] constexpr PinMask(const PinSource source):
         raw_(std::bit_cast<uint16_t>(raw_)){;}
 
     [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
@@ -84,6 +84,37 @@ public:
 
     [[nodiscard]] explicit constexpr operator bool() const {
         return raw_;
+    }
+
+    struct Iterator final{
+    public:
+        constexpr Iterator(uint16_t mask) : 
+            mask_(mask), 
+            pos_(next_set_bit(mask_, 0)) {}
+        [[nodiscard]] constexpr bool has_next() const {return pos_ < 16;}
+        constexpr hal::PinSource next(){
+            const uint16_t ret = 1 << pos_;
+            pos_ = next_set_bit(mask_, pos_ + 1);
+            return std::bit_cast<hal::PinSource>(ret);
+        }
+
+        [[nodiscard]] constexpr size_t index() const {
+            return pos_;
+        }
+    private:
+        uint16_t mask_;
+        size_t pos_;
+        
+        static constexpr size_t next_set_bit(uint16_t mask, size_t start) {
+            for (size_t i = start; i < 16; ++i) {
+                if (mask & (1 << i)) return i;
+            }
+            return 16; // End of mask
+        }
+    };
+
+    [[nodiscard]] Iterator iter() const {
+        return Iterator{raw_};
     }
 private:
     uint16_t raw_;

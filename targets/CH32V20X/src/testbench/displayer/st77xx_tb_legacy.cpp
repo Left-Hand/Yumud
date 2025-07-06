@@ -92,14 +92,14 @@ constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p
 //         instance.write((const char *)(data_from), len);
 //     }
 
-//     auto compress_png(const ImageWithData<Grayscale, Grayscale> & img){
+//     auto compress_png(const ImageWithData<Gray, Gray> & img){
 //         std::vector<uint8_t>buffer;
 //         lodepng::State state;
 //         lodepng::encode(buffer, (const uint8_t * )img.data.get(), img.get_size().x, img.get_size().y, state);
 //         return buffer;
 //     }
 
-//     void transmit(const ImageWithData<Grayscale, Grayscale> & img, const uint8_t index){
+//     void transmit(const ImageWithData<Gray, Gray> & img, const uint8_t index){
 //         constexpr size_t mtu = 180;
 //         const auto & img_size = img.get_size();
 //         size_t len = img_size.x * img_size.y;
@@ -176,12 +176,12 @@ void st77xx_tb(hal::Spi & spi){
     SccbSw.init(400000);
     MT9V034 camera(SccbSw);
 
-    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Gray, Gray> & src, const Rect2i & area){
+        tftDisplayer.puttexture_unchecked(area, src.data.get());
     };
 
     [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture_unchecked(area, src.data.get());
     };
 
     camera.init();
@@ -241,7 +241,7 @@ void st77xx_tb(hal::Spi & spi){
         // plot_gray(map, map.get_window() + Vector2i{img.size.x, 0});
         // tp.run(img, bina, dummy);
 
-        // tftDisplayer.puttexture_unsafe(img.get_window(), img.data.get());
+        // tftDisplayer.puttexture_unchecked(img.get_window(), img.data.get());
         // plot_gray(camera, Rect2i{Vector2i{188/4, 0}, Vector2i{188/4, 60}});
         // painter.drawImage()
         // tftDisplayer.fill(RGB565::BLACK);

@@ -48,7 +48,7 @@ protected:
     Blobs m_blobs;
 
 public:
-    Image<Grayscale> run(const Image<Binary> & src, const BlobFilter & filter = BlobFilter());
+    Image<Gray> run(const Image<Binary> & src, const BlobFilter & filter = BlobFilter());
     auto & blobs() const{return m_blobs;}
 };
 

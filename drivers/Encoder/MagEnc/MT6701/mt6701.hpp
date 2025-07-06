@@ -50,10 +50,10 @@ class MT6701_Phy:public MT6701_Prelude{
 public:
     using RegAddress = MT6701_Phy::RegAddress;
 
-    MT6701_Phy(hal::Spi & spi, const hal::SpiSlaveIndex idx):
+    MT6701_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
         MT6701_Phy(std::nullopt, hal::SpiDrv(spi, idx)){;}
 
-    MT6701_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+    MT6701_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
         MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
 
     template<typename T>
@@ -186,7 +186,10 @@ public:
     MT6701(MT6701_Phy && phy):
         phy_(std::move(phy)){;}
 
-    MT6701(hal::I2c & i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    MT6701(
+        Some<hal::I2c *> i2c, 
+        hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
         phy_(MT6701_Phy(i2c, addr)){;}
 
     ~MT6701(){};

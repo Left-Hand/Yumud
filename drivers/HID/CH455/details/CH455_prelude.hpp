@@ -76,7 +76,10 @@ struct CH455_Prelude{
 
 class CH455_phy final :public CH455_Prelude{
 public:
-    CH455_phy(hal::Gpio & scl, hal::Gpio & sda):
+    CH455_phy(
+        Some<hal::Gpio *> scl, 
+        Some<hal::Gpio *> sda
+    ):
         i2c_(scl, sda){;}
 
     IResult<> write_u16(const uint16_t cmd){

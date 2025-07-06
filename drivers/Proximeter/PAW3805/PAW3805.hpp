@@ -177,7 +177,7 @@ public:
     PAW3805_Phy(hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
 
-    PAW3805_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    PAW3805_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
     uint8_t read_reg(uint8_t addr);
@@ -189,7 +189,7 @@ private:
 
 class PAW3805:public PAW3805_Prelude{
 public:
-    PAW3805(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(spi, index){;}
+    PAW3805(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(spi, index){;}
 
     void init(void (*userfn)(void*, uint8_t), void* userdata);
     void enable_Interrupt(bool enabled);

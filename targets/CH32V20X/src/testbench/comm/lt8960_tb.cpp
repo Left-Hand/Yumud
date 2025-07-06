@@ -126,8 +126,8 @@ void lt8960_tb(){
     led.outpp();
 
 
-    LT8960L tx_ltr{portB[6], portB[7]};
-    LT8960L rx_ltr{portA[9], portA[10]};
+    LT8960L tx_ltr{&portB[6], &portB[7]};
+    LT8960L rx_ltr{&portA[9], &portA[10]};
     
     auto common_settings = [](LT8960L & ltr){
         (ltr.set_rf_channel(ch)

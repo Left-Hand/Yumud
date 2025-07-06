@@ -14,12 +14,12 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void pca_tb(OutputStream & logger){
-    I2cSw i2c = {portD[2], portC[12]};
+    I2cSw i2c = {&portD[2], &portC[12]};
 
     scexpr int servo_freq = 50;
     
     i2c.init(100_KHz);
-    PCA9685 pca{i2c};
+    PCA9685 pca{&i2c};
     pca.init({servo_freq, 1.09_r}).unwrap();
 
     MG995 servo_left{pca[0]};

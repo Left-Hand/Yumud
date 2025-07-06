@@ -89,8 +89,8 @@ Result<void, Error> MPU6050::init(){
     RETURN_ON_ERR(write_reg(0x15, 0))
     RETURN_ON_ERR(write_reg(0x17, 0))
     RETURN_ON_ERR(write_reg(0x38, 0x00))
-    RETURN_ON_ERR(set_acc_range(AccRange::_2G))
-    RETURN_ON_ERR(set_gyr_range(GyrRange::_1000deg))
+    RETURN_ON_ERR(set_acc_fs(AccFs::_2G))
+    RETURN_ON_ERR(set_gyr_fs(GyrFs::_1000deg))
     return Ok();
 }
 
@@ -119,7 +119,7 @@ Result<real_t, Error> MPU6050::read_temp(){
     return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) / 340);
 }
 
-Result<void, Error> MPU6050::set_acc_range(const AccRange range){
+Result<void, Error> MPU6050::set_acc_fs(const AccFs range){
     this->acc_scaler_ = this->calculate_acc_scale(range);
 
     auto reg = RegCopy(acc_conf_reg);
@@ -134,7 +134,7 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
     return Ok{Package(whoami_reg.data)};
 }
 
-Result<void, Error> MPU6050::set_gyr_range(const GyrRange range){
+Result<void, Error> MPU6050::set_gyr_fs(const GyrFs range){
     this->gyr_scaler_ = this->calculate_gyr_scale(range);
     auto reg = RegCopy(gyr_conf_reg);
     reg.fs_sel = range;

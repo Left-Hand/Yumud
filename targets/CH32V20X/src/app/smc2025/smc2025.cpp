@@ -14,8 +14,7 @@
 #include "types/vectors/quat/Quat.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
-#include "types/image/font/instance.hpp"
+#include "types/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 
@@ -183,7 +182,10 @@ void smc2025_main(){
 
     const auto spi_fd = spi.attach_next_cs(portD[4]).value();
 
-    drivers::ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 240});
+    drivers::ST7789 tft{
+        drivers::ST7789_Phy{spi, spi_fd, &lcd_dc, &dev_rst}, 
+        {240, 240}
+    };
 
     drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170).examine();
 
@@ -193,11 +195,11 @@ void smc2025_main(){
     I2cSw i2c{hal::portB[3], hal::portB[5]};
     i2c.init(800_KHz);
     
-    drivers::MT9V034 camera{cam_i2c};
+    drivers::MT9V034 camera{&cam_i2c};
 
     camera.init().examine();
 
-    drivers::QMC5883L qmc{i2c};
+    drivers::QMC5883L qmc{&i2c};
     qmc.init().examine();
     
     Image<RGB565> rgb_img{{tft.size().x, 4u}};
@@ -208,7 +210,7 @@ void smc2025_main(){
     camera.set_gain(2.4_r).examine();
 
     [[maybe_unused]] auto plot_gray = [&](
-        const Image<Grayscale> & src, 
+        const Image<Gray> & src, 
         const Rect2u & area
     ){
         tft.put_texture(
@@ -223,7 +225,7 @@ void smc2025_main(){
     };
 
     [[maybe_unused]] auto plot_bina = [&](
-        const Image<Grayscale> & src, 
+        const Image<Gray> & src, 
         const Rect2u & area
     ){
         tft.put_texture(

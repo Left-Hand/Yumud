@@ -11,13 +11,19 @@ using namespace ymd::hal;
 void ad9959_main(){
     auto & cs_gpio = portA[0];
 
-    SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
+    SpiSw spisw{
+        &SPI1_SCLK_GPIO, 
+        &SPI1_MOSI_GPIO, 
+        &SPI1_MISO_GPIO, 
+        &SPI1_CS_GPIO
+    };
+    
     auto & spi = spisw;
     spi.init({100000});//maxium baud
     spi.set_bitorder(LSB);
 
     [[maybe_unused]]
-    const auto spi_fd = spi.attach_next_cs(cs_gpio);
+    const auto spi_fd = spi.attach_next_cs(&cs_gpio);
 
     // timer1.init(1);
     // SpiDrv ad9959_drv{spi, 0};

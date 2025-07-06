@@ -8,8 +8,7 @@ namespace ymd{
 
 // static constexpr size_t CHOP_FREQ = 30_KHz;
 // static constexpr size_t CHOP_FREQ = 20_KHz;
-static constexpr size_t CHOP_FREQ = 15_KHz;
-static constexpr size_t ISR_FREQ = CHOP_FREQ * 2;
+
 // static constexpr size_t CHOP_FREQ = 100;
 
 static constexpr size_t STEPPER_SECTORS_PER_ROTATION = 4;

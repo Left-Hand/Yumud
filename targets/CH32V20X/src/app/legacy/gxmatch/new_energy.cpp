@@ -22,7 +22,6 @@
 #include "drivers/Encoder/ABEncoder.hpp"
 
 #include "core/utils/hash_func.hpp"
-#include "core/utils/immutable.hpp"
 #include "core/utils/Option.hpp"
 
 #include "dsp/controller/pi_ctrl.hpp"

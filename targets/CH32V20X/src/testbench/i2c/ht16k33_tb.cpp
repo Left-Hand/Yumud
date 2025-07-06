@@ -658,13 +658,13 @@ void ht16k33_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
 
-    hal::I2cSw i2c = {SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(400_KHz);
 
 
     HT16K33 ht16{
         HT16K33::Settings::SOP20Settings{},
-        hal::I2cDrv{i2c, HT16K33::DEFAULT_I2C_ADDR}};
+        hal::I2cDrv{&i2c, HT16K33::DEFAULT_I2C_ADDR}};
 
     HT16K33_tb(ht16);
 }

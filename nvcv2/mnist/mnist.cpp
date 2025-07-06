@@ -113,15 +113,15 @@ void Mnist::unload(){
     if(loaded) tm_unload(&mdl);   
 }
 
-Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2u & pos){
+Mnist::Result Mnist::update(const Image<Gray> & img, const Vector2u & pos){
 
-    Image<Grayscale> img_view = img.clone(Rect2u{pos.x, pos.y, 28, 28});
+    Image<Gray> img_view = img.clone(Rect2u{pos.x, pos.y, 28, 28});
     // ymd::nvcv2::Pixels::inverse(img_view);
     // DEBUG_PRINTLN(img_view.mean());
     return update(img_view);
 }
 
-Mnist::Result Mnist::update(const Image<Grayscale> & img){
+Mnist::Result Mnist::update(const Image<Gray> & img){
     tm_mat_t in_uint8 = {3,IMAGE_SIZE.x,IMAGE_SIZE.y,IMAGE_CHANNELS, (mtype_t*)img.get_data()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 

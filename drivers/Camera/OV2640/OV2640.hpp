@@ -17,7 +17,7 @@ public:
         sccb_drv_(sccb_drv){;}
     OV2640(hal::SccbDrv && sccb_drv):
         sccb_drv_(sccb_drv){;}
-    OV2640(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    OV2640(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         OV2640(hal::SccbDrv{i2c, addr}){;}
 
     bool init();

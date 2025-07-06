@@ -20,11 +20,11 @@ void paj7620_main(){
     auto & logger = DEBUGGER_INST;
     logger.init({576000});
     
-    I2cSw i2c = {portD[2], portC[12]};
+    I2cSw i2c = {&portD[2], &portC[12]};
     i2c.init(400_KHz);
 
 
-    PAJ7620 paj{i2c};
+    PAJ7620 paj{&i2c};
 
     paj.init().examine();
 

@@ -22,14 +22,14 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class AccRange:uint8_t{
+    enum class AccFs:uint8_t{
         _3G,
         _6G,
         _12G,
         _24G
     };
 
-    enum class GyrRange:uint8_t{
+    enum class GyrFs:uint8_t{
         _2000deg,
         _1000deg,
         _500deg ,
@@ -116,7 +116,7 @@ protected:
         uint8_t acc_bwp:4;
     }DEF_R8(acc_conf_reg)
 
-    struct R8_AccRange:public Reg8<>{
+    struct R8_AccFs:public Reg8<>{
         scexpr RegAddress address = 0x41;
         uint8_t acc_range:2;
         const uint8_t __resv__:6 = 0;
@@ -178,30 +178,30 @@ protected:
     //     InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
     // };
 
-    static constexpr Option<real_t> calculate_acc_scale(const AccRange range){
+    static constexpr Option<real_t> calculate_acc_scale(const AccFs range){
         constexpr double g = 9.806;
         switch(range){
             default:
                 return None;
-            case AccRange::_3G:
+            case AccFs::_3G:
                 return Some(real_t(g * 3));
-            case AccRange::_6G:
+            case AccFs::_6G:
                 return Some(real_t(g * 6));
-            case AccRange::_12G:
+            case AccFs::_12G:
                 return Some(real_t(g * 12));
-            case AccRange::_24G:
+            case AccFs::_24G:
                 return Some(real_t(g * 24));
         }
     }
 public:
     BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Acc(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Acc(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv{spi, index}){;}
 
 
@@ -213,7 +213,7 @@ public:
     [[nodiscard]] IResult<Vector3<q24>> read_acc();
     [[nodiscard]] IResult<real_t> read_temp();
 
-    [[nodiscard]] IResult<> set_acc_range(const AccRange range);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 };
@@ -271,30 +271,30 @@ protected:
 
     [[nodiscard]] IResult<> verify_chip_id();
 
-    static constexpr Option<real_t> calculate_gyr_scale(const GyrRange range){
+    static constexpr Option<real_t> calculate_gyr_scale(const GyrFs range){
         switch(range){
             default:
                 return None;
-            case GyrRange::_125deg:
+            case GyrFs::_125deg:
                 return Some(real_t(ANGLE2RAD(150)));
-            case GyrRange::_250deg:
+            case GyrFs::_250deg:
                 return Some(real_t(ANGLE2RAD(250)));
-            case GyrRange::_500deg:
+            case GyrFs::_500deg:
                 return Some(real_t(ANGLE2RAD(500)));
-            case GyrRange::_1000deg:
+            case GyrFs::_1000deg:
                 return Some(real_t(ANGLE2RAD(1000)));
-            case GyrRange::_2000deg:
+            case GyrFs::_2000deg:
                 return Some(real_t(ANGLE2RAD(2000)));
         }
     }
 public:
     BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Gyr(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+    BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Gyr(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -304,7 +304,7 @@ public:
     [[nodiscard]] IResult<Vector3<q24>> read_gyr();
 
 
-    [[nodiscard]] IResult<> set_gyr_range(const GyrRange range);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 };
     

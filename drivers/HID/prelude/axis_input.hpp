@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gamepad.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::hid{
 
@@ -21,8 +22,6 @@ public:
     }
 
 private:
-
-
     Axis axis_;
     real_t value_;
 };

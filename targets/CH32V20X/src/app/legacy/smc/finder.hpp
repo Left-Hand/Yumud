@@ -154,7 +154,7 @@ namespace SMC{
         }
 
         bool is_edge(const Vector2i & pos, const Vector2i next_pos){
-            // return (uint8_t)src(next_pos) - (uint8_t)src(pos) > (uint8_t)(Grayscale)(edge_threshold);
+            // return (uint8_t)src(next_pos) - (uint8_t)src(pos) > (uint8_t)(Gray)(edge_threshold);
             // return ((uint8_t)src(next_pos) > positive_threshold) && ((uint8_t)src(pos) < positive_threshold);
 
             //本点为赛道 但下一点为堤岸
@@ -169,7 +169,7 @@ namespace SMC{
 
 
     int get_x_edges(const ImageReadable<Binary> & src, const int y);
-    int get_x_edges(const ImageReadable<Grayscale> & src, const int y);
+    int get_x_edges(const ImageReadable<Gray> & src, const int y);
 
     std::tuple<Point, Range2i> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point);

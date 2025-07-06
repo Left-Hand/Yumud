@@ -3,6 +3,7 @@
 #include "i2c.hpp"
 #include "core/clock/clock.hpp"
 
+
 namespace ymd::hal{
 class I2cSw final: public I2c{
 private:
@@ -20,7 +21,11 @@ protected :
     hal::HalResult unlock_bus();
 public:
 
-    I2cSw(hal::Gpio & scl, hal::Gpio & sda):I2c(scl, sda){;}
+    I2cSw(
+        Some<hal::Gpio *> scl,
+        Some<hal::Gpio *> sda
+    ):
+        I2c(scl, sda){;}
     I2cSw(I2cSw && other) = default;
     
     hal::HalResult write(const uint32_t data) final;

@@ -117,8 +117,9 @@ class ICM45686 final:
 public:
     using Error = ICM45686_Prelude::Error;
 
-    ICM45686(hal::I2c & i2c, 
-        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+    ICM45686(Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         phy_(i2c, i2c_addr){;}
 
     [[nodiscard]] IResult<> init();

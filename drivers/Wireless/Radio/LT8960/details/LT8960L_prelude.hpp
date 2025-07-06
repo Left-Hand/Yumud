@@ -136,13 +136,12 @@ struct LT8960L_Prelude{
 
 }
 
-class LT8960L_Phy final:public details::LT8960L_Prelude{
-public:
-
-
-public:
-    LT8960L_Phy(hal::Gpio & scl_io, hal::Gpio & sda_io):
-        i2c_(hal::I2cSw(scl_io, sda_io)){};
+struct LT8960L_Phy final:public details::LT8960L_Prelude{
+    LT8960L_Phy(
+        Some<hal::Gpio *> scl, 
+        Some<hal::Gpio *> sda
+    ):
+        i2c_(hal::I2cSw(scl, sda)){};
 
     [[nodiscard]] IResult<> init();
 

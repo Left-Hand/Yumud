@@ -30,7 +30,7 @@ void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_ra
 
 
 
-void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vector2q<16> & end_pos){
+void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vector2<q16> & end_pos){
     const auto from_pos = from.org;
     const auto vec = (end_pos - from_pos);
     const auto norm = vec.normalized();

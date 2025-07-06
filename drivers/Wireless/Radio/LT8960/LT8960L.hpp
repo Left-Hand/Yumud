@@ -17,7 +17,7 @@ public:
     using Regs = _LT8960L_Regs;
 public:
 
-    LT8960L(hal::Gpio & scl, hal::Gpio & sda):
+    LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
         phy_(scl, sda){;}
 
 
@@ -43,12 +43,12 @@ public:
 
     [[nodiscard]] IResult<> set_pack_type(const PacketType ptype);
 
-    [[nodiscard]] IResult<> wake();
-
     [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> wakup(){return reset();}
+    [[nodiscard]] IResult<> wakeup(){return reset();}
 
     [[nodiscard]] IResult<> sleep();
+    
+    [[nodiscard]] IResult<> wake();
 
     [[nodiscard]] IResult<> validate();
 

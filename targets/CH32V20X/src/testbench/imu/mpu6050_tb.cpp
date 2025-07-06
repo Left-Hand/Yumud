@@ -27,19 +27,19 @@ using namespace ymd::drivers;
 auto init_mpu6050(MPU6050 & mpu){
     mpu.set_package(MPU6050::Package::MPU6050);
     return mpu.init() |
-    mpu.set_acc_range(MPU6050::AccRange::_2G) |
+    mpu.set_acc_fs(MPU6050::AccFs::_2G) |
     mpu.enable_direct_mode(EN);
 }
 
 void ak8963_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
     
     if(const auto res = init_mpu6050(mpu); 
         res.is_err()) DEBUG_PRINTLN(res.unwrap_err().unwrap_as<HalError>());
 
-    AK8963 aku{i2c};
+    AK8963 aku{&i2c};
     aku.init().examine();
-    // aku.setAccRange(MPU6050::AccRange::_2G);
+    // aku.setAccFs(MPU6050::AccFs::_2G);
 
     while(true){
         aku.update().examine();
@@ -50,7 +50,7 @@ void ak8963_tb(hal::I2c & i2c){
 }
 
 void mpu6050_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
 
     if(const auto res = init_mpu6050(mpu); 
         res.is_err()){ 
@@ -68,17 +68,17 @@ void mpu6050_tb(hal::I2c & i2c){
 }
 
 void mpu6500_tb(hal::I2c & i2c){
-    MPU6050 mpu{i2c};
+    MPU6050 mpu{&i2c};
 
     #ifdef MAG_ACTIVATED
-        AK8963 aku{i2c};
+        AK8963 aku{&i2c};
         mpu.set_package(MPU6050::Package::MPU9250);
     #else
         mpu.set_package(MPU6050::Package::MPU6050);
     #endif
 
     mpu.init().examine();
-    mpu.set_acc_range(MPU6050::AccRange::_2G).examine();
+    mpu.set_acc_fs(MPU6050::AccFs::_2G).examine();
     mpu.enable_direct_mode(EN).examine();
 
     #ifdef MAG_ACTIVATED
@@ -148,7 +148,7 @@ void mpu6050_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
     // I2cSw i2c{portA[12], portA[15]};
-    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(400_KHz);
     // i2c.init();

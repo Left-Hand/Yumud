@@ -3,7 +3,6 @@
 
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
-#include "core/polymorphism/proxy.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -62,15 +61,14 @@ struct DrawTargetFacade : pro::facade_builder
 #define EXPAND(...) __VA_ARGS__
 #endif
 
-// IMPORT_ENUMS(ST7789::Error::Kind, PainterBase::Error::Kind, hal::HalError::Kind)
-
-
-
 DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
 void static_test(){
 	constexpr MyError err = ST7789::Error::CantSetup;
 	constexpr MyError err2 = PainterBase::Error::CropRectIsNone;
+
+	static_assert(err.is<ST7789::Error>());
+	static_assert(err2.is<PainterBase::Error>());
 }
 
 #define DBG_UART hal::uart2
@@ -110,8 +108,8 @@ void st7789_main(void){
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     drivers::ST7789 tft(
 		drivers::ST7789_Phy{
-			spi, 
-			spi.attach_next_cs(lcd_cs).value(), 
+			&spi, 
+			spi.attach_next_cs(&lcd_cs).unwrap(), 
 			&lcd_dc, 
 			&dev_rst
 		}, 

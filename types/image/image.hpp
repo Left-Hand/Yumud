@@ -102,7 +102,7 @@ public:
 
     void putpixel(const Vector2u pos, const T color) {
         assert_pos(pos);
-        putpixel_unsafe(pos, color);
+        putpixel_unchecked(pos, color);
     }
 
     [[nodiscard]] __fast_inline const T & operator[](const size_t index) const { 
@@ -133,9 +133,9 @@ public:
         return data_[pos.x + pos.y * this->size().x]; }
 
 private:
-    void putpixel_unsafe(const Vector2u pos, const T color) 
+    void putpixel_unchecked(const Vector2u pos, const T color) 
         { data_[this->size().x * pos.y + pos.x] = color; }
-    void getpixel_unsafe(const Vector2u pos, T & color) const 
+    void getpixel_unchecked(const Vector2u pos, T & color) const 
         { color = data_[this->size().x * pos.y + pos.x]; }
 
 
@@ -161,7 +161,7 @@ __inline auto make_image(const Vector2u size){
     return Image<T>(size);
 }
 
-__inline auto make_gray_image(const Vector2u size){return make_image<Grayscale>(size);};
+__inline auto make_gray_image(const Vector2u size){return make_image<Gray>(size);};
 __inline auto make_bina_image(const Vector2u size){return make_image<Binary>(size);};
 
 

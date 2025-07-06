@@ -99,15 +99,14 @@ scexpr uint16_t xyz_table[256] = {
 
 namespace ymd{
 template<arithmetic T>
-struct XYZ_t{
+struct XYZ{
     T x,y,z;
 };
 
-using XYZ = XYZ_t<real_t>;
 
 
 //快速计算立方根
-__fast_inline constexpr static float fast_cbrtf(float x) {
+__fast_inline static constexpr float fast_cbrtf(float x) {
     union {
         int ix; float x;
     }
@@ -120,46 +119,52 @@ __fast_inline constexpr static float fast_cbrtf(float x) {
     return v.x;
 }
 
-__fast_inline constexpr static auto xyz_gamma(const real_t x) -> real_t{
-    return (x > 0.008856_r) ? iq_t<16>::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
+__fast_inline static constexpr auto xyz_gamma(const real_t x) -> real_t{
+    return (x > 0.008856_r) ? q16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
-__fast_inline constexpr static auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
+__fast_inline static constexpr auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
     if((x > 0.0031308_r)) 
         return __USAT8(uint8_t(((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)));
     else
         return __USAT8(uint8_t(x * 12.92_r * 255));
 }
 
-__fast_inline constexpr static XYZ rgb888_to_xyz(const RGB888 & rgb){
-    auto [r,g,b] = rgb;
-    
-    real_t r_lin = iq_t<16>(xyz_table[r]) >> 8;
-    real_t g_lin = iq_t<16>(xyz_table[g]) >> 8;
-    real_t b_lin = iq_t<16>(xyz_table[b]) >> 8;
 
-    real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
-    real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);
-    real_t z = ((r_lin * 0.0193_r) + (g_lin * 0.1192_r) + (b_lin * 0.9505_r)) * real_t(1.0f / 108.883f);
+__fast_inline static constexpr std::tuple<real_t, real_t, real_t> lab888_to_xyz(const LAB888 & lab){
+    const auto l = lab.l;
+    const auto a = lab.a;
+    const auto b = lab.b;
+    const real_t x = ((l + 16) * 0.008621_r) + (a * 0.002_r);
+    const real_t y = ((l + 16) * 0.008621_r);
+    const real_t z = ((l + 16) * 0.008621_r) - (b * 0.005_r);
+
+
+    return {
+        ((x > 0.206897_r) ? (x * x * x) : ((0.128419_r * x) - 0.017713_r)) * 095.047_r,
+        ((y > 0.206897_r) ? (y * y * y) : ((0.128419_r * y) - 0.017713_r)) * 100.000_r,
+        ((z > 0.206897_r) ? (z * z * z) : ((0.128419_r * z) - 0.017713_r)) * 108.883_r
+    };
+}
+
+__fast_inline static constexpr XYZ<real_t> rgb888_to_xyz(const RGB888 & rgb){
+    const auto [r,g,b] = rgb;
+    
+    const real_t r_lin = q16(xyz_table[r]) >> 8;
+    const real_t g_lin = q16(xyz_table[g]) >> 8;
+    const real_t b_lin = q16(xyz_table[b]) >> 8;
+
+    const real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
+    const real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);
+    const real_t z = ((r_lin * 0.0193_r) + (g_lin * 0.1192_r) + (b_lin * 0.9505_r)) * real_t(1.0f / 108.883f);
 
 
     return {xyz_gamma(x), xyz_gamma(y), xyz_gamma(z)};
 }
 
-__fast_inline constexpr static XYZ lab888_to_xyz(const LAB888 & lab){
-    auto [l,a,b] = lab;
-    real_t x = ((l + 16) * 0.008621_r) + (a * 0.002_r);
-    real_t y = ((l + 16) * 0.008621_r);
-    real_t z = ((l + 16) * 0.008621_r) - (b * 0.005_r);
 
-    x = ((x > 0.206897_r) ? (x * x * x) : ((0.128419_r * x) - 0.017713_r)) * 095.047_r;
-    y = ((y > 0.206897_r) ? (y * y * y) : ((0.128419_r * y) - 0.017713_r)) * 100.000_r;
-    z = ((z > 0.206897_r) ? (z * z * z) : ((0.128419_r * z) - 0.017713_r)) * 108.883_r;
 
-    return {x,y,z};
-}
-
-__fast_inline constexpr static RGB888 xyz_to_rgb888(const XYZ & xyz){
+__fast_inline static constexpr RGB888 xyz_to_rgb888(const auto & xyz){
     auto [x,y,z] = xyz;
     real_t r_lin = ((x * (+3.2406_r)) + (y * (-1.5372_r)) + (z * (-0.4986_r))) * (0.01_r);
     real_t g_lin = ((x * (-0.9689_r)) + (y * (+1.8758_r)) + (z * (+0.0415_r))) * (0.01_r);
@@ -175,276 +180,25 @@ __fast_inline constexpr static RGB888 xyz_to_rgb888(const XYZ & xyz){
 }
 
 
-__fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ & xyz){
+__fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ<real_t> & xyz){
     auto [xf, yf, zf] = xyz;
 
-    return {
+    return LAB888{
             CLAMP( uint8_t(int(116 * yf) - 16), 0, 100),
             __SSAT8(int8_t(int(500 * (xf - yf)))),
             __SSAT8(int8_t(int(200 * (yf - zf))))
     };
 }
 
-HSV888::HSV888(const RGB888 & rgb){
-
-    enum{
-        HUE_RED = 0,
-        HUE_ORANGE = 32,
-        HUE_YELLOW = 64,
-        HUE_GREEN = 96,
-        HUE_AQUA = 128,
-        HUE_BLUE = 160,
-        HUE_PURPLE = 192,
-        HUE_PINK = 224
-    };
-
-    auto scale8 = [](const uint8_t i, const uint8_t scale) -> uint8_t {return (((uint16_t)i) * (1+(uint16_t)(scale))) >> 8;};
-    auto qsub8 = [](const uint8_t i, const uint8_t j) -> uint8_t {return MAX(int(i) - int(j), 0);};
-    auto qadd8 = [](const uint8_t i, const uint8_t j) -> uint8_t {return MIN(int(i) + int(j), 255);};
-
-    #define FIXFRAC8(N,D) (((N)*256)/(D))
-
-    auto sqrt16 = [](uint16_t x) -> uint8_t
-    {
-        if( x <= 1) {
-            return x;
-        }
-
-        uint8_t low = 1; // lower bound
-        uint8_t hi, mid;
-
-        if( x > 7904) {
-            hi = 255;
-        } else {
-            hi = (x >> 5) + 8; // initial estimate for upper bound
-        }
-
-        do {
-            mid = (low + hi) >> 1;
-            if ((uint16_t)(mid * mid) > x) {
-                hi = mid - 1;
-            } else {
-                if( mid == 255) {
-                    return 255;
-                }
-                low = mid + 1;
-            }
-        } while (hi >= low);
-
-        return low - 1;
-    };
-
-    
-    uint8_t r = rgb.r;
-    uint8_t g = rgb.g;
-    uint8_t b = rgb.b;
-    
-    // find desaturation
-    uint8_t desat = 255;
-    if( r < desat) desat = r;
-    if( g < desat) desat = g;
-    if( b < desat) desat = b;
-    
-    // remove saturation from all channels
-    r -= desat;
-    g -= desat;
-    b -= desat;
-    
-
-    s = 255 - desat;
-    
-    if( s != 255 ) {
-        // undo 'dimming' of saturation
-        s = 255 - sqrt16(uint16_t(255-s) << 8);
-    }
-
-    if( (r + g + b) == 0) {
-        // we pick hue zero for no special reason
-        h = 0;
-        s = 0, 
-        v = 255 - s;
-
-        return;
-    }
-    
-    // scale all channels up to compensate for desaturation
-    if( s < 255) {
-        if( s == 0) s = 1;
-        uint32_t scaleup = 65535 / (s);
-        r = ((uint32_t)(r) * scaleup) >> 8;
-        g = ((uint32_t)(g) * scaleup) >> 8;
-        b = ((uint32_t)(b) * scaleup) >> 8;
-    }
-    
-    uint16_t total = r + g + b;
-    
-
-    if( total < 255) {
-        if( total == 0) total = 1;
-        uint32_t scaleup = 65535 / (total);
-        r = ((uint32_t)(r) * scaleup) >> 8;
-        g = ((uint32_t)(g) * scaleup) >> 8;
-        b = ((uint32_t)(b) * scaleup) >> 8;
-    }
-    
-    if( total > 255 ) {
-        v = 255;
-    } else {
-        v = qadd8(desat,total);
-        // undo 'dimming' of brightness
-        if( v != 255) v = sqrt16(uint16_t(v) << 8);
-        // without lib8tion: real_t ... ew ... sqrt... double ew, or rather, ew ^ 0.5
-        // if( v != 255) v = (256.0 * sqrt( (real_t)(v) / 256.0));
-        
-    }
-    
-    uint8_t highest = r;
-    if( g > highest) highest = g;
-    if( b > highest) highest = b;
-    
-    if( highest == r ) {
-        // Red is highest.
-        // Hue could be Purple/Pink-Red,Red-Orange,Orange-Yellow
-        if( g == 0 ) {
-            // if green is zero, we're in Purple/Pink-Red
-            h = (HUE_PURPLE + HUE_PINK) >> 1;
-            h += scale8( qsub8(r, 128), FIXFRAC8(48,128));
-        } else if ( (r - g) > g) {
-            // if R-G > G then we're in Red-Orange
-            h = HUE_RED;
-            h += scale8( g, FIXFRAC8(32,85));
-        } else {
-            // R-G < G, we're in Orange-Yellow
-            h = HUE_ORANGE;
-            h += scale8( qsub8((g - 85) + (171 - r), 4), FIXFRAC8(32,85)); //221
-        }
-        
-    } else if ( highest == g) {
-        // Green is highest
-        // Hue could be Yellow-Green, Green-Aqua
-        if( b == 0) {
-            // if Blue is zero, we're in Yellow-Green
-            //   G = 171..255
-            //   R = 171..  0
-            h = HUE_YELLOW;
-            uint8_t radj = scale8( qsub8(171,r),   47); //171..0 -> 0..171 -> 0..31
-            uint8_t gadj = scale8( qsub8(g,171),   96); //171..255 -> 0..84 -> 0..31;
-            uint8_t rgadj = radj + gadj;
-            uint8_t hueadv = rgadj >> 1;
-            h += hueadv;
-            //h += scale8( qadd8( 4, qadd8((g - 128), (128 - r))),
-            //             FIXFRAC8(32,255)); //
-        } else {
-            // if Blue is nonzero we're in Green-Aqua
-            if( (g-b) > b) {
-                h = HUE_GREEN;
-                h += scale8( b, FIXFRAC8(32,85));
-            } else {
-                h = HUE_AQUA;
-                h += scale8( qsub8(b, 85), FIXFRAC8(8,42));
-            }
-        }
-        
-    } else /* highest == b */ {
-        // Blue is highest
-        // Hue could be Aqua/Blue-Blue, Blue-Purple, Purple-Pink
-        if( r == 0) {
-            // if red is zero, we're in Aqua/Blue-Blue
-            h = HUE_AQUA + ((HUE_BLUE - HUE_AQUA) >> 2);
-            h += scale8( qsub8(b, 128), FIXFRAC8(24,128));
-        } else if ( (b-r) > r) {
-            // B-R > R, we're in Blue-Purple
-            h = HUE_BLUE;
-            h += scale8( r, FIXFRAC8(32,85));
-        } else {
-            // B-R < R, we're in Purple-Pink
-            h = HUE_PURPLE;
-            h += scale8( qsub8(r, 85), FIXFRAC8(32,85));
-        }
-    }
-    
-    h += 1;
-}
-
-RGB888::RGB888(const HSV888 & hsv){
-    
-    #define APPLY_DIMMING(X) (X)
-    #define HSV_SECTION_6 (0x20)
-    #define HSV_SECTION_3 (0x40)
-    // Convert hue, saturation and brightness ( HSV/HSB ) to RGB
-    // "Dimming" is used on saturation and brightness to make
-    // the output more visually linear.
-
-    // Apply dimming curves
-    uint8_t value = APPLY_DIMMING( hsv.v);
-    uint8_t saturation = hsv.s;
-
-    // The brightness floor is minimum number that all of
-    // R, G, and B will be set to.
-    uint8_t invsat = APPLY_DIMMING( 255 - saturation);
-    uint8_t brightness_floor = (value * invsat) >> 8;
-
-    // The color amplitude is the maximum amount of R, G, and B
-    // that will be added on top of the brightness_floor to
-    // create the specific hue desired.
-    uint8_t color_amplitude = value - brightness_floor;
-
-    // Figure out which section of the hue wheel we're in,
-    // and how far offset we are withing that section
-    uint8_t section = hsv.h / HSV_SECTION_3; // 0..2
-    uint8_t offset = hsv.h % HSV_SECTION_3;  // 0..63
-
-    uint8_t rampup = offset; // 0..63
-    uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
-
-    uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
-    uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
-
-    // add brightness_floor offset to everything
-    uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
-    uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
-    
-    if(section) {
-        if( section == 1) {
-            // section 1: 0x40..0x7F
-            r = brightness_floor;
-            g = rampdown_adj_with_floor;
-            b = rampup_adj_with_floor;
-        } else {
-            // section 2; 0x80..0xBF
-            r = rampup_adj_with_floor;
-            g = brightness_floor;
-            b = rampdown_adj_with_floor;
-        }
-    } else {
-        // section 0: 0x00..0x3F
-        r = rampdown_adj_with_floor;
-        g = rampup_adj_with_floor;
-        b = brightness_floor;
-    }
-
-}
-
-RGB565::RGB565(const HSV888 & hsv):RGB565(RGB888(hsv)){;}
-HSV888::HSV888(const RGB565 & rgb):HSV888(RGB888(rgb)){;}
-
-LAB888::LAB888(const RGB888 & rgb){
-    *this = xyz_to_lab888(rgb888_to_xyz(rgb));
-}
-
-LAB888::operator RGB888() const {
-    return xyz_to_rgb888(lab888_to_xyz(*this));
-}
-
 OutputStream & operator<<(OutputStream & os, const Binary & bn){
-    return os << '(' << bool(bn) << ')';
+    return os << '(' << bn.is_white() << ')';
 }
 
-OutputStream & operator<<(OutputStream & os, const Grayscale & gs){
+OutputStream & operator<<(OutputStream & os, const Gray & gs){
     return os << '(' << uint8_t(gs) << ')';
 }
 
-OutputStream & operator<<(OutputStream & os, const sGrayscale & sgs){
+OutputStream & operator<<(OutputStream & os, const IGray & sgs){
     return os << '(' << int8_t(sgs) << ')';
 }
 
@@ -461,5 +215,15 @@ OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, 
 
 #undef OS_RGB
 #undef OS_XXX
+
+
+LAB888::LAB888(const RGB888 & rgb){
+    *this = xyz_to_lab888(rgb888_to_xyz(rgb));
+}
+
+LAB888::operator RGB888() const {
+    const auto [x,y,z] = lab888_to_xyz(*this);
+    return xyz_to_rgb888(std::make_tuple(x,y,z));
+}
 
 }

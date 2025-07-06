@@ -11,7 +11,7 @@ void AdcPrimary::init(
 ){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);	
-    ADC_DeInit(instance_);
+    ADC_DeInit(inst_);
 
     const ADC_InitTypeDef ADC_InitStructure = {
         .ADC_Mode = ADC_Mode_Independent,
@@ -24,7 +24,7 @@ void AdcPrimary::init(
         .ADC_Pga = ADC_Pga_1,
     };
 
-    ADC_Init(instance_, &ADC_InitStructure);
+    ADC_Init(inst_, &ADC_InitStructure);
 
     bool temp_verf_activation = false;
 
@@ -39,7 +39,7 @@ void AdcPrimary::init(
         for(const auto & regular_cfg : regular_list){
             i++;
             ADC_RegularChannelConfig(
-                instance_,
+                inst_,
                 static_cast<uint8_t>(regular_cfg.channel),
                 i,
                 static_cast<uint8_t>(regular_cfg.cycles)
@@ -59,13 +59,13 @@ void AdcPrimary::init(
             i++;
 
             ADC_InjectedChannelConfig(
-                instance_,
+                inst_,
                 static_cast<uint8_t>(injected_cfg.channel),
                 i,
                 static_cast<uint8_t>(injected_cfg.cycles));
 
             ADC_SetInjectedOffset(
-                instance_, ADC_InjectedChannel_1 + 
+                inst_, ADC_InjectedChannel_1 + 
                 (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
                 // offset can`t be negative
             adc_details::install_pin(injected_cfg.channel);
@@ -85,25 +85,25 @@ void AdcPrimary::init(
     }
 
 
-    ADC_ExternalTrigConvCmd(instance_, ENABLE);
-    ADC_ExternalTrigInjectedConvCmd(instance_, ENABLE);
+    ADC_ExternalTrigConvCmd(inst_, ENABLE);
+    ADC_ExternalTrigInjectedConvCmd(inst_, ENABLE);
 
-    ADC_DMACmd(instance_, DISABLE);
+    ADC_DMACmd(inst_, DISABLE);
     
-    ADC_ClearITPendingBit(instance_, ADC_IT_JEOC | ADC_IT_AWD | ADC_IT_EOC);
+    ADC_ClearITPendingBit(inst_, ADC_IT_JEOC | ADC_IT_AWD | ADC_IT_EOC);
     
-    ADC_AutoInjectedConvCmd(instance_, ENABLE);
+    ADC_AutoInjectedConvCmd(inst_, ENABLE);
 
-    ADC_Cmd(instance_, ENABLE);
+    ADC_Cmd(inst_, ENABLE);
 
     {
-        ADC_BufferCmd(instance_, DISABLE);
-        ADC_ResetCalibration(instance_);
-        while(ADC_GetResetCalibrationStatus(instance_));
-        ADC_StartCalibration(instance_);
-        while(ADC_GetCalibrationStatus(instance_));
-        cali_data = Get_CalibrationValue(instance_);
+        ADC_BufferCmd(inst_, DISABLE);
+        ADC_ResetCalibration(inst_);
+        while(ADC_GetResetCalibrationStatus(inst_));
+        ADC_StartCalibration(inst_);
+        while(ADC_GetCalibrationStatus(inst_));
+        cali_data = Get_CalibrationValue(inst_);
     }
 
-    ADC_BufferCmd(instance_, ENABLE);
+    ADC_BufferCmd(inst_, ENABLE);
 }

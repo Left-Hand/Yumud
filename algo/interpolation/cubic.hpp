@@ -12,7 +12,7 @@ protected:
     q16 _c;
     q16 _d;
 public:
-    CubicInterpolation(const Vector2q<16> & ha,const Vector2q<16> & hb):
+    CubicInterpolation(const Vector2<q16> & ha,const Vector2<q16> & hb):
         _a(ha.x),_b(ha.y),_c(hb.x),_d(hb.y){
             // static constexpr double epsilon = 0.001;
             // static constexpr q16 min_param_a = q16(0 + epsilon);
@@ -41,7 +41,7 @@ protected:
         return y;
     }
 public:
-    static q16 forward(const Vector2q<16> & a,const Vector2q<16> & b, const q16 x);
+    static q16 forward(const Vector2<q16> & a,const Vector2<q16> & b, const q16 x);
 
     q16 forward(const q16 x) const override;
 };
@@ -80,7 +80,7 @@ protected:
     }
 protected:
 public:
-    static q16 forward(const Vector2q<16> & from,const Vector2q<16> & to, const q16 x);
+    static q16 forward(const Vector2<q16> & from,const Vector2<q16> & to, const q16 x);
     q16 forward(const q16 x) const override;
 
 };

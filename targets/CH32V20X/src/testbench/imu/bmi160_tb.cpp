@@ -29,8 +29,11 @@ void bmi160_main(){
 
     using Quat = Quat<real_t>;
     
-    BMI160 bmi{{spi1, spi1.attach_next_cs(portA[0]).value()}};
-    bmi.init().examine();
+    BMI160 bmi{{
+        &spi1, 
+        spi1.attach_next_cs(&portA[0]).unwrap()
+    }};
+
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -41,7 +44,7 @@ void bmi160_main(){
     ledg.outpp();
     portA[7].inana();
 
-    bmi.init().examine();
+    bmi.init({}).examine();
     while(true){
         ledr = BoolLevel::from((clock::millis() % 200).count() > 100);
         ledb = BoolLevel::from((clock::millis() % 400).count() > 200);

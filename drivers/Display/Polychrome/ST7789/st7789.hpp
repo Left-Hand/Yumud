@@ -9,38 +9,69 @@ namespace ymd::drivers{
 
 struct ST7789_Prelude{
 
-// https://docs.rs/st7789/latest/st7789/instruction/enum.Instruction.html
-enum class Instruction:uint8_t{
-    NOP = 0,
-    SWRESET = 1,
-    RDDID = 4,
-    RDDST = 9,
-    SLPIN = 16,
-    SLPOUT = 17,
-    PTLON = 18,
-    NORON = 19,
-    INVOFF = 32,
-    INVON = 33,
-    DISPOFF = 40,
-    DISPON = 41,
-    CASET = 42,
-    RASET = 43,
-    RAMWR = 44,
-    RAMRD = 46,
-    PTLAR = 48,
-    VSCRDER = 51,
-    TEOFF = 52,
-    TEON = 53,
-    MADCTL = 54,
-    VSCAD = 55,
-    COLMOD = 58,
-    VCMOFSET = 197,
-};
+    // https://docs.rs/st7789/latest/st7789/instruction/enum.Instruction.html
+    enum class Instruction:uint8_t{
+        NOP = 0,
+        SWRESET = 1,
+        RDDID = 4,
+        RDDST = 9,
+        SLPIN = 16,
+        SLPOUT = 17,
+        PTLON = 18,
+        NORON = 19,
+        INVOFF = 32,
+        INVON = 33,
+        DISPOFF = 40,
+        DISPON = 41,
+        CASET = 42,
+        RASET = 43,
+        RAMWR = 44,
+        RAMRD = 46,
+        PTLAR = 48,
+        VSCRDER = 51,
+        TEOFF = 52,
+        TEON = 53,
+        MADCTL = 54,
+        VSCAD = 55,
+        COLMOD = 58,
+        VCMOFSET = 197,
+    };
 
-using Error = DisplayerError;
+    using Error = DisplayerError;
 
-template<typename T = void>
-using IResult = Result<void, Error>;
+    template<typename T = void>
+    using IResult = Result<void, Error>;
+
+
+    class ST7789_ReflashAlgo{
+    public:
+        ST7789_ReflashAlgo(const Vector2<uint16_t> & size):
+            size_(size){;}
+
+        __fast_inline constexpr
+        uint32_t get_point_index(const Vector2<uint16_t> p){
+            return (p.x + p.y * size_t(size_.x));
+        }
+
+        __fast_inline constexpr
+        Range2<uint32_t> get_point_index(const Rect2<uint16_t> r){
+            return {
+                get_point_index(r.position), 
+                get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};
+        }
+
+        bool update(const Rect2<uint16_t> rect);
+        bool update(const Vector2<uint16_t> p){
+            return update(Rect2<uint16_t>{p, size_});
+        }
+
+        auto size() const {return size_;}
+    private:
+        const Vector2<uint16_t> size_;
+        Rect2<uint16_t> curr_area_ = {0,0,1,1};
+        uint32_t last_point_ = 0;
+    };
+
 };
 
 enum class ST7789_Presets:uint8_t{
@@ -71,7 +102,8 @@ private:
     [[nodiscard]] hal::HalResult phy_write_burst(
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
-        if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+        if (const auto err = spi_
+            .begin(idx_.to_req()); err.is_err()) return err; 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
                 return res;
@@ -80,7 +112,7 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]));
+            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]).to_u16());
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
@@ -143,13 +175,13 @@ private:
 
 public:
     explicit ST7789_Phy(
-        hal::SpiHw & bus,
+        Some<hal::SpiHw *> spi,
         const hal::SpiSlaveIndex index,
         Some<hal::Gpio *> dc_gpio, 
         Option<hal::Gpio &> res_gpio = None,
         Option<hal::Gpio &> blk_gpio = None
     ):  
-        spi_(bus), 
+        spi_(spi.deref()), 
         idx_(index), 
         dc_gpio_(dc_gpio.deref()), 
         res_gpio_(res_gpio), 
@@ -215,64 +247,9 @@ public:
 class ST7789 final:
     public ST7789_Prelude{
 public:
-
-
-    class ST7789_ReflashAlgo{
-    public:
-        ST7789_ReflashAlgo(const Vector2<uint16_t> & size):
-            size_(size){;}
-
-        __fast_inline constexpr
-        uint32_t get_point_index(const Vector2<uint16_t> p){
-            return (p.x + p.y * size_t(size_.x));
-        }
-
-        __fast_inline constexpr
-        Range2<uint32_t> get_point_index(const Rect2<uint16_t> r){
-            return {
-                get_point_index(r.position), 
-                get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};
-        }
-
-        bool update(const Rect2<uint16_t> rect);
-        bool update(const Vector2<uint16_t> p){
-            return update(Rect2<uint16_t>{p, size_});
-        }
-
-        auto size() const {return size_;}
-    private:
-        const Vector2<uint16_t> size_;
-        Rect2<uint16_t> curr_area_ = {0,0,1,1};
-        uint32_t last_point_ = 0;
-    };
-
-private:
-    using Algo = ST7789_ReflashAlgo;
-
-    ST7789_Phy phy_;
-    Algo algo_;
-
-    Vector2<uint16_t> offset_;
-    uint8_t scr_ctrl_ = 0;
-
-    [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
-        return phy_.write_command(cmd);
-    }
-
-    [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
-        return phy_.write_data8(data);
-    }
-
-    [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
-        return phy_.write_data16(data);
-    }
-
-    [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
-
-public:
-    ST7789(
+    explicit ST7789(
         ST7789_Phy && phy, 
-        const Vector2<uint16_t> & size
+        const Vector2<uint16_t> size
     ):
         phy_(phy),
         algo_(size){;}
@@ -357,6 +334,30 @@ public:
     [[nodiscard]] Rect2u get_expose_rect(){
         return algo_.size().to_rect();
     }
+
+private:
+    using Algo = ST7789_ReflashAlgo;
+
+    ST7789_Phy phy_;
+    Algo algo_;
+
+    Vector2<uint16_t> offset_;
+    uint8_t scr_ctrl_ = 0;
+
+    [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
+        return phy_.write_command(cmd);
+    }
+
+    [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
+        return phy_.write_data8(data);
+    }
+
+    [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
+        return phy_.write_data16(data);
+    }
+
+    [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
+
 };
 
 

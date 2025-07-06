@@ -12,7 +12,7 @@ protected:
 
     void rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_rad);
 
-    void linear(Curve & curve, const Ray2<q16> & from, const Vector2q<16> & end_pos);
+    void linear(Curve & curve, const Ray2<q16> & from, const Vector2<q16> & end_pos);
 public:
     Sequencer(const SequenceLimits & limits, const SequenceParas & paras):
         limits_(limits), paras_(paras){}

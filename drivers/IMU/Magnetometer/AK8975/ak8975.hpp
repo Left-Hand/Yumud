@@ -44,10 +44,10 @@ public:
     static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
     AK8975(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     AK8975(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
-    AK8975(hal::I2c & bus):phy_(hal::I2cDrv(bus, DEFAULT_I2C_ADDR)){;}
+    AK8975(Some<hal::I2c *> i2c):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
     AK8975(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     AK8975(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    AK8975(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
+    AK8975(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();

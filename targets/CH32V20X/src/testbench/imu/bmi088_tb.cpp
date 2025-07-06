@@ -28,12 +28,12 @@ static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 static void bmi088_tb(hal::Spi & spi){
-    const auto acc_cs_idx = spi.attach_next_cs(ACC_CS_GPIO).value();
-    const auto gyr_cs_idx = spi.attach_next_cs(GYR_CS_GPIO).value();
+    const auto acc_cs_idx = spi.attach_next_cs(&ACC_CS_GPIO).unwrap();
+    const auto gyr_cs_idx = spi.attach_next_cs(&GYR_CS_GPIO).unwrap();
     
 
-    auto acc_sensor = BMI088_Acc{spi, acc_cs_idx};
-    auto gyr_sensor = BMI088_Gyr{spi, gyr_cs_idx};
+    auto acc_sensor = BMI088_Acc{&spi, acc_cs_idx};
+    auto gyr_sensor = BMI088_Gyr{&spi, gyr_cs_idx};
 
     acc_sensor.init().unwrap();
     gyr_sensor.init().unwrap();

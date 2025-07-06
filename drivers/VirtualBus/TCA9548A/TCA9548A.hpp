@@ -76,8 +76,8 @@ protected:
 public:
     TCA9548A(hal::I2cDrv && i2c_drv):
         i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
-    TCA9548A(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
-        i2c_(i2c), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    TCA9548A(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+        i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     auto & operator [](const size_t ch){
         if(unlikely(ch >= 8)) while(true);

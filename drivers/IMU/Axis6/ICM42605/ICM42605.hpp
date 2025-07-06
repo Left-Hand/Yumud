@@ -163,7 +163,7 @@ protected:
     Vector3<int16_t> acc_data_;
     Vector3<int16_t> gyr_data_;
 public:
-    ICM42605(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    ICM42605(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     [[nodiscard]] IResult<> init();

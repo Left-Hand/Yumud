@@ -54,14 +54,14 @@ public:
         _3200
     };
     
-    enum class AccRange:uint8_t{
+    enum class AccFs:uint8_t{
         _2G     =   0b0011,
         _4G     =   0b0101,
         _8G     =   0b1000,
         _16G    =   0b1100
     };
 
-    enum class GyrRange:uint8_t{
+    enum class GyrFs:uint8_t{
         _2000deg = 0b0000,
         _1000deg,
         _500deg,
@@ -201,17 +201,17 @@ protected:
 
 
 
-    static real_t calculate_acc_scale(const AccRange range);
-    static real_t calculate_gyr_scale(const GyrRange range);
+    static real_t calculate_acc_scale(const AccFs range);
+    static real_t calculate_gyr_scale(const GyrFs range);
 public:
 
-    LIS2DW12(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    LIS2DW12(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
     LIS2DW12(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS2DW12(hal::Spi & spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();
@@ -221,7 +221,7 @@ public:
     void reset();
 
     void set_acc_odr(const AccOdr odr);
-    void set_acc_range(const AccRange range);
+    void set_acc_fs(const AccFs range);
     real_t set_gyr_odr(const real_t odr);
     
     void set_pmu_mode(const PmuType pum, const PmuMode mode);

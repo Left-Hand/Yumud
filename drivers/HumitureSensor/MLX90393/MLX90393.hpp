@@ -104,10 +104,10 @@ private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
 public:
-    MLX90393_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    MLX90393_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MLX90393_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
 
-    MLX90393_Phy(hal::Spi & spi, const hal::SpiSlaveIndex slave_index):
+    MLX90393_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex slave_index):
         MLX90393_Phy(std::nullopt, hal::SpiDrv(spi, slave_index)){;}
 
     [[nodiscard]] IResult<> transceive(

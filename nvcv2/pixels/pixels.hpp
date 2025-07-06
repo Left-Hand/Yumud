@@ -3,19 +3,19 @@
 #include "../nvcv2.hpp"
 
 namespace ymd::nvcv2::pixels{
-    void conv(Image<RGB565>& dst, const Image<Grayscale>& src);
+    void conv(Image<RGB565>& dst, const Image<Gray>& src);
 
     void conv(Image<RGB565>& dst, const Image<Binary>& src);
 
 
-    void dyeing(Image<Grayscale>& dst, const Image<Grayscale>& src);
+    void dyeing(Image<Gray>& dst, const Image<Gray>& src);
 
-    auto dyeing(const Image<Grayscale>& src);
+    auto dyeing(const Image<Gray>& src);
 
-    Grayscale dyeing(const Grayscale in);
+    Gray dyeing(const Gray in);
 
     template<typename T>
-    requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
+    requires (std::is_same_v<T, Gray> || std::is_same_v<T, Binary>)
     void copy(Image<T>& dst, const Image<T>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
@@ -24,7 +24,7 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    __inline void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
+    __inline void fast_diff_opera(Image<Gray> & dst, const Image<Gray> & src) {
         if(dst.is_shared_with(src)){
             auto temp = dst.clone();
             fast_diff_opera(temp, src);
@@ -39,22 +39,22 @@ namespace ymd::nvcv2::pixels{
         const auto window = window_opt.unwrap();
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
-                const int a = src[Vector2u{x,y}];
-                const int b = src[Vector2u{x+1,y}];
-                const int c = src[Vector2u{x,y+1}];
-                dst[{x,y}] = uint8_t(CLAMP(std::max(
+                const uint8_t a = uint8_t(src[Vector2u{x,y}]);
+                const uint8_t b = uint8_t(src[Vector2u{x+1,y}]);
+                const uint8_t c = uint8_t(src[Vector2u{x,y+1}]);
+                dst[{x,y}] = Gray(uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
-                ), 0, 255));
+                ), 0, 255)));
             }
         }
     }
 
     __inline void fast_bina_opera(
             Image<Binary> & out,
-            const Image<Grayscale> & em, 
+            const Image<Gray> & em, 
             const uint8_t et,
-            const Image<Grayscale>& dm,
+            const Image<Gray>& dm,
             const uint8_t dt) {
 
         const auto area = Vector2<size_t>{
@@ -68,37 +68,37 @@ namespace ymd::nvcv2::pixels{
         }
     }
     
-    void binarization(Image<Binary>& dst, const Image<Grayscale>& src, const Grayscale threshold);
+    void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold);
 
-    Image<Binary> binarization(const Image<Grayscale>& src, const Grayscale threshold);
-    void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
+    Image<Binary> binarization(const Image<Gray>& src, const Gray threshold);
+    void ostu(Image<Binary>& dst, const Image<Gray>& src);
 
 
     void iter_threshold(
         Image<Binary>& dst, 
-        const Image<Grayscale>& src, 
+        const Image<Gray>& src, 
         const real_t k = real_t(0.5), 
         const real_t eps = real_t(0.02));
 
-    void max_entropy(const Image<Grayscale>& src,const int thresh);
+    void max_entropy(const Image<Gray>& src,const int thresh);
 
     int get_huang_fuzzy_threshold(Histogram hist);
 
-    int huang(Image<Binary>& dst, const Image<Grayscale>& src);
+    int huang(Image<Binary>& dst, const Image<Gray>& src);
 
 
 
-    void gamma(Image<Grayscale>& src, const real_t ga);
+    void gamma(Image<Gray>& src, const real_t ga);
 
 
     template<typename T>
-    concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Grayscale>;
+    concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Gray>;
 
 
     template<is_monocolour_v T>
     void inverse(Image<T>& src) {
         for (auto i = 0u; i < src.size().x * src.size().y; i++) {
-            src[i] = uint8_t(~uint8_t(src[i]));
+            src[i] = src[i].flip();
         }
     }
 
@@ -135,9 +135,9 @@ namespace ymd::nvcv2::pixels{
     }
 
 
-    void mask_with(Image<Grayscale> & src, const Image<Binary>& op);
-    void sum_with(Image<Grayscale> & src, Image<Grayscale>& op);
-    void sub_with(Image<Grayscale> & src, Image<Grayscale>& op);
+    void mask_with(Image<Gray> & src, const Image<Binary>& op);
+    void sum_with(Image<Gray> & src, Image<Gray>& op);
+    void sub_with(Image<Gray> & src, Image<Gray>& op);
 
     
     // constexpr ColorType mean(const Rect2u & view) const;
@@ -145,11 +145,11 @@ namespace ymd::nvcv2::pixels{
 
     // constexpr uint64_t sum(const Rect2u & roi) const;
     // constexpr uint64_t sum() const{return sum(this->size().to_rect());}
-    // constexpr ColorType bilinear_interpol(const Vector2q<16> & pos) const;
+    // constexpr ColorType bilinear_interpol(const Vector2<q16> & pos) const;
 
 
 
-    constexpr uint64_t sum(const Image<Grayscale> & image, const Rect2u & roi){
+    constexpr uint64_t sum(const Image<Gray> & image, const Rect2u & roi){
         uint64_t sum = 0;
         const Range2u x_range = roi.get_x_range();
         const Range2u y_range = roi.get_y_range();
@@ -163,30 +163,30 @@ namespace ymd::nvcv2::pixels{
         return sum;
     }
 
-    constexpr uint64_t sum(const Image<Grayscale> & image){
+    constexpr uint64_t sum(const Image<Gray> & image){
         return sum(image, image.size().to_rect());
     }
 
 
-    constexpr Grayscale mean(const Image<Grayscale> & image, const Rect2u & roi){
-        return sum(image, roi) / (roi.get_area());
+    constexpr Gray mean(const Image<Gray> & image, const Rect2u & roi){
+        return Gray(sum(image, roi) / (roi.get_area()));
     }
 
-    constexpr Grayscale mean(const Image<Grayscale> & image){
+    constexpr Gray mean(const Image<Gray> & image){
         return mean(image, image.size().to_rect());
     }
 
-    __inline Grayscale average(const Image<Grayscale>& src){
-        return pixels::sum(src) / src.size().area();
+    __inline Gray average(const Image<Gray>& src){
+        return Gray(pixels::sum(src) / src.size().area());
     }
 
 
 // template<typename ColorType>
-// constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2q<16> & pos) const {
+// constexpr ColorType Image<ColorType>::bilinear_interpol(const Vector2<q16> & pos) const {
 //     Vector2u pos_i = {uint(pos.x), uint(pos.y)};
 //     // return img(pos_i);
 //     if(!this->size().has_point(pos_i) || !this->size().has_point(pos_i + Vector2u{1,1})) return ColorType();
-//     Vector2q<16> pos_frac = {frac(pos.x), frac(pos.y)};
+//     Vector2<q16> pos_frac = {frac(pos.x), frac(pos.y)};
     
 //     const auto & self = *this;
 //     if(pos_frac.x){
@@ -239,24 +239,24 @@ namespace ymd::nvcv2::pixels{
 //     //         LERP(pos_frac.x, operator()(pos_i + Vector2u(0, 1)), operator()(pos_i + Vector2u(1, 1))));
 // }
 
-    __inline Vector2u uv2pixel(const Vector2u size, const Vector2q<16> & uv){
+    __inline Vector2u uv2pixel(const Vector2u size, const Vector2<q16> & uv){
         return Vector2u(
             uint(LERP(0u, size.x, ((uv.x + 1) / 2))), 
             uint(LERP(0u, size.y, (uv.y + 1)/2)));
     }
 
-    __inline Vector2q<16> uv2aero(const Vector2u size, const Vector2q<16> & uv){
-        return Vector2q<16>(((uv.x + 1) * (size.x / 2)), (uv.y + 1) * (size.y / 2));
+    __inline Vector2<q16> uv2aero(const Vector2u size, const Vector2<q16> & uv){
+        return Vector2<q16>(((uv.x + 1) * (size.x / 2)), (uv.y + 1) * (size.y / 2));
     }
 
-    __inline Vector2q<16> pixel2uv(const Vector2u size,const Vector2u & pixel){
-        return Vector2q<16>(
+    __inline Vector2<q16> pixel2uv(const Vector2u size,const Vector2u & pixel){
+        return Vector2<q16>(
             INVLERP(size.x / 2, size.x, real_t(pixel.x)), 
             INVLERP(size.y / 2, size.y, real_t(pixel.y)));
     }
 
-    __inline Vector2q<16> uvstep(const Vector2u size){
-        return Vector2q<16>(real_t(2) / size.x, real_t(2) / size.y);
+    __inline Vector2<q16> uvstep(const Vector2u size){
+        return Vector2<q16>(real_t(2) / size.x, real_t(2) / size.y);
     }
 }
 

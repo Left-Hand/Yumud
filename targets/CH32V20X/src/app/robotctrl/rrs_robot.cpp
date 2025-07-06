@@ -54,8 +54,8 @@ public:
 
 class Environment{
 public:
-    I2cSw i2c = {SCL_GPIO, SDA_GPIO};
-    PCA9685 pca{i2c};
+    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
+    PCA9685 pca{&i2c};
 
 
     #ifndef USE_MOCK_SERVO

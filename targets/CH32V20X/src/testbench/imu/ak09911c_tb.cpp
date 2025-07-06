@@ -57,7 +57,7 @@ void ak09911c_main(){
     DEBUGGER.force_sync(EN);
 
     // I2cSw i2c{portA[12], portA[15]};
-    I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(200_KHz);
     // i2c.init();
@@ -65,7 +65,7 @@ void ak09911c_main(){
     clock::delay(200ms);
 
 
-    AK09911C aku = {i2c};
+    AK09911C aku{&i2c};
 
     // auto & spi = spi1;
     // spi.init(18_MHz);

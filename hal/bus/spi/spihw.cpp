@@ -138,7 +138,7 @@ void SpiHw::install_gpios(){
         }else{
             cs_gpio.outpp();
         }
-        bind_cs_gpio(cs_gpio, 0);
+        bind_cs_gpio(&cs_gpio, 0);
     }
 
     for(size_t i = 0; i < cs_port_.size(); i++){

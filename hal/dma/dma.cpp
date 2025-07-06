@@ -206,10 +206,12 @@ void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
             break;
         #ifdef ENABLE_DMA2
         case 2:
-            if(channel_index <= 5){
-                irq = (IRQn)((int)DMA2_Channel1_IRQn + ((int)(DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1)));
+            if(channel_index_ <= 5){
+                irq = (IRQn)((int)DMA2_Channel1_IRQn + 
+                    ((int)(DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index_ - 1)));
             }else{
-                irq = (IRQn)((int)DMA2_Channel6_IRQn + ((int)(DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index - 6)));
+                irq = (IRQn)((int)DMA2_Channel6_IRQn + 
+                    ((int)(DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index_ - 6)));
             }
             break;
         #endif

@@ -14,11 +14,11 @@ public:
     using Error = ImuError;
     BoschSensor_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    BoschSensor_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr):
+    BoschSensor_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
         BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
     BoschSensor_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    BoschSensor_Phy(hal::Spi & spi, const hal::SpiSlaveIndex index):
+    BoschSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline

@@ -14,16 +14,16 @@ public:
 
 
     void update(
-        const Image<Grayscale> src, 
+        const Image<Gray> src, 
         const Rect2u roi
     ) override {
-        const auto vertexs = find_vertex(src, Grayscale(255), roi);
+        const auto vertexs = find_vertex(src, Gray(255), roi);
 
         uint16_t code = 0;
         for(uint j = 0; j < APRILTAG_SIDE_COUNTS; j++){
             for(uint i = 0; i < APRILTAG_SIDE_COUNTS; i++){
                 uint16_t mask = (0x8000) >> (j * 4 + i);
-                Grayscale val = get_vertex_val(vertexs, {i,j}, src);
+                Gray val = get_vertex_val(vertexs, {i,j}, src);
                 if((uint8_t)val > 173) code |= mask;
             }
         }
@@ -32,36 +32,36 @@ public:
     }
 
 
-    static constexpr Grayscale get_vertex_val(
+    static constexpr Gray get_vertex_val(
         const Vertexs & _vertexs, 
-        const Vector2q<16> & _grid_pos, 
-        const Image<Grayscale> & gs
+        const Vector2<q16> & _grid_pos, 
+        const Image<Gray> & gs
     ){
         // TODO();
         while(true);
-        return Grayscale(0);
+        return Gray(0);
         // return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
     };
 
-    static constexpr Vector2q<16> get_vertex(const Vertexs & __vertexs, const Vector2q<16> & __grid_pos){
-        const Vector2q<16> grid_scale = (__grid_pos + Vector2q<16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
+    static constexpr Vector2<q16> get_vertex(const Vertexs & __vertexs, const Vector2<q16> & __grid_pos){
+        const Vector2<q16> grid_scale = (__grid_pos + Vector2<q16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
 
-        const Vector2q<16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        const Vector2q<16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
+        const Vector2<q16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+        const Vector2<q16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
         return upper_x.lerp(lower_x, grid_scale.y);
     };
 
 
-    static constexpr Vector2q<16> get_vertex_grid(const Vertexs & __vertexs, const Vector2q<16> & __grid_pos){
-        // return get_vertex(__vertexs, __grid_pos + Vector2q<16>{0.5, 0.5});
-        return Vector2q<16>(0,0);
+    static constexpr Vector2<q16> get_vertex_grid(const Vertexs & __vertexs, const Vector2<q16> & __grid_pos){
+        // return get_vertex(__vertexs, __grid_pos + Vector2<q16>{0.5, 0.5});
+        return Vector2<q16>(0,0);
     };
 
 
     static constexpr Vertexs find_vertex(
-        const Image<Grayscale> & __map, 
-        const Grayscale & match, 
+        const Image<Gray> & __map, 
+        const Gray & match, 
         const Rect2u & roi
     ){
         const auto x_range = roi.get_x_range();

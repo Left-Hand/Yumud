@@ -22,9 +22,6 @@ struct SSD13XX_Presets{
 template<typename T>
 struct _oled_preset;
 
-
-
-
 class SSD1306_Phy final{
 public:
     using Error = DisplayerError;
@@ -39,7 +36,7 @@ public:
         p_i2c_drv_(i2c_drv){};
     SSD1306_Phy(hal::I2cDrv && i2c_drv):
         p_i2c_drv_(std::move(i2c_drv)){};
-    SSD1306_Phy(hal::I2c & i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    SSD1306_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
 
     [[nodiscard]] IResult<> init(){
@@ -156,13 +153,13 @@ private:
     const bool flip_y_en_;
     VerticalBinaryImage frame_;
 
-    [[nodiscard]] IResult<> putpixel_unsafe(const Vector2u16 pos, const Binary color){
+    [[nodiscard]] IResult<> putpixel_unchecked(const Vector2u16 pos, const Binary color){
         auto & frame = fetch_frame();
-        frame.putpixel_unsafe(pos, color);
+        frame.putpixel_unchecked(pos, color);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> setpos_unsafe(const Vector2u16 pos) ;
+    [[nodiscard]] IResult<> setpos_unchecked(const Vector2u16 pos) ;
 
     [[nodiscard]] IResult<> set_offset(const Vector2u16 offset);
 
@@ -185,11 +182,11 @@ public:
     using IResult = Result<T, Error>;
 
     // [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2u16 pos, const RGB888 color){
-    //     self.putpixel_unsafe(pos, color);
+    //     self.putpixel_unchecked(pos, color);
     // }
 
     // [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
-    //     self.putpixel_unsafe(pos, color);
+    //     self.putpixel_unchecked(pos, color);
     // }
 
     // [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){

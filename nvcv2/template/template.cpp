@@ -36,7 +36,7 @@ real_t template_match(
         const auto * p_tmp = &tmp[Vector2u(0,y)];
         const auto * p_src = &src[Vector2u(0,y) + offs];
         for(size_t x = 0; x < size.w(); x++){
-            score += int32_t(bool(*p_tmp) ^ bool(*p_src));
+            score += int32_t((*p_tmp).is_white() ^ (*p_src).is_white());
             p_tmp++;
             p_src++;
         }
@@ -46,22 +46,22 @@ real_t template_match(
 }
 
 real_t template_match_ncc(
-    const Image<Grayscale> & src, 
-    const Image<Grayscale> & tmp, 
+    const Image<Gray> & src, 
+    const Image<Gray> & tmp, 
     const Vector2u & offs
 ){
     BOUNDARY_CHECK()
 
-    int32_t t_mean = int32_t(pixels::mean(tmp));
-    int32_t s_mean = int32_t(pixels::mean(src, Rect2u(offs, tmp.size())));
+    int32_t t_mean = uint8_t(pixels::mean(tmp));
+    int32_t s_mean = uint8_t(pixels::mean(src, Rect2u(offs, tmp.size())));
 
     int64_t num = 0;
     uint64_t den_t = 0;
     uint64_t den_s = 0;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const Grayscale * p_tmp = &tmp[Vector2u{0,y}];
-        const Grayscale * p_src = &src[Vector2u{0,y} + offs];
+        const Gray * p_tmp = &tmp[Vector2u{0,y}];
+        const Gray * p_src = &src[Vector2u{0,y} + offs];
 
         int32_t line_num = 0;
 
@@ -89,7 +89,7 @@ real_t template_match_ncc(
 }
 
 
-real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2u & offs){
+real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const Vector2u & offs){
 
     BOUNDARY_CHECK();
 
@@ -102,8 +102,8 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = *p_tmp;
-            int32_t src_val = *p_src;
+            int32_t tmp_val = uint8_t(*p_tmp);
+            int32_t src_val = uint8_t(*p_src);
 
             line_num += FAST_SQUARE8(tmp_val - src_val);
 
@@ -122,7 +122,7 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
     return 1 - u16_to_uni(res);
 }
 
-real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2u & offs){
+real_t template_match(const Image<Gray> & src, const Image<Gray> & tmp, const Vector2u & offs){
     return template_match_ncc(src, tmp, offs);
     // return template_match_squ(src, tmp, offs);
 }

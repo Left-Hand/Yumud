@@ -396,7 +396,7 @@ Result<void, Error> LT8960L::reset(){
     // 第一步：延时20ms//保证初次上电,电路稳定。
 
     while(clock::millis() < 20ms){clock::delay(4ms);}
-    return retry(3, [this](){return this -> wake();});
+    return retry(3, [this](){return this -> wakeup();});
     // return retry(3, [this]() -> Result<void, Error>{return Err(Error::PacketOverlength);});
 }
 
