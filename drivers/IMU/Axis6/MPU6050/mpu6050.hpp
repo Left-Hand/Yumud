@@ -42,6 +42,12 @@ struct MPU6050_Prelude{
     };
 
     using RegAddress = uint8_t;   
+
+    struct Config{
+        Package packge = Package::MPU6050;
+        AccFs acc_fs = AccFs::_2G;
+        GyrFs gyr_fs = GyrFs::_1000deg;
+    };
 };
 
 struct MPU6050_Regs:public MPU6050_Prelude{ 
@@ -115,7 +121,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     
     [[nodiscard]] IResult<> update();
 
@@ -145,6 +151,32 @@ private:
     real_t acc_scaler_ = 0;
     real_t gyr_scaler_ = 0;
 
+    MPU6050(const hal::I2cDrv i2c_drv, const Package package);
+
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
+        return phy_.write_reg(addr, data);
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(reg.address, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
+        return phy_.read_reg(addr, data);
+    }
+
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
+        return phy_.read_burst(addr, pbuf.data(), pbuf.size());
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(reg.address, reg.as_ref());
+    }
 
     static constexpr real_t calculate_acc_scale(const AccFs range){
         constexpr double g = 9.806;
@@ -175,35 +207,6 @@ private:
         }
     }
 
-    MPU6050(const hal::I2cDrv i2c_drv, const Package package);
-
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return phy_.write_reg(addr, data);
-    }
-
-    template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
-            res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return phy_.read_reg(addr, data);
-    }
-
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return phy_.read_burst(addr, pbuf.data(), pbuf.size());
-    }
-
-    template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
-    }
-
-    [[nodiscard]] static constexpr 
-    uint8_t package2whoami(const Package package){return uint8_t(package);}
 };
 
 };

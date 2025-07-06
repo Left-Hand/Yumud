@@ -35,7 +35,7 @@ void tca9548_main()
 
     auto mpu = drivers::MPU6050{&act_i2c};
     
-    mpu.init().examine();
+    mpu.init({}).examine();
 
 
     while(true){

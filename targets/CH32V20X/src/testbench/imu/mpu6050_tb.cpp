@@ -26,7 +26,7 @@ using namespace ymd::drivers;
 
 auto init_mpu6050(MPU6050 & mpu){
     mpu.set_package(MPU6050::Package::MPU6050);
-    return mpu.init() |
+    return mpu.init({}) |
     mpu.set_acc_fs(MPU6050::AccFs::_2G) |
     mpu.enable_direct_mode(EN);
 }
@@ -77,7 +77,7 @@ void mpu6500_tb(hal::I2c & i2c){
         mpu.set_package(MPU6050::Package::MPU6050);
     #endif
 
-    mpu.init().examine();
+    mpu.init({}).examine();
     mpu.set_acc_fs(MPU6050::AccFs::_2G).examine();
     mpu.enable_direct_mode(EN).examine();
 
