@@ -116,16 +116,16 @@ void sincos_pwm_main(){
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
-    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T1CC4);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
     #else
-    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T1TRGO);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T1TRGO);
     #endif
     #elif TIM_INDEX == 2
-    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T2TRGO);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T2TRGO);
     #elif TIM_INDEX == 3
-    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T3CC4);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
     #elif TIM_INDEX == 4
-    adc1.set_injected_trigger(AdcOnChip::InjectedTrigger::T4TRGO);
+    adc1.set_injected_trigger(AdcInjectedTrigger::T4TRGO);
     #endif
 
     adc1.enable_auto_inject(DISEN);

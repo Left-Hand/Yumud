@@ -629,7 +629,7 @@ void test_curr(){
         }, {}
     );
 
-    adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
+    adc.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     adc.enable_auto_inject(DISEN);
 
     auto & inj_a = adc.inj<1>();
@@ -718,7 +718,7 @@ void mystepper_main(){
         {}
     );
 
-    adc.set_injected_trigger(hal::AdcOnChip::InjectedTrigger::T1TRGO);
+    adc.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     adc.enable_auto_inject(DISEN);
 
     auto & inj_a = adc.inj<1>();

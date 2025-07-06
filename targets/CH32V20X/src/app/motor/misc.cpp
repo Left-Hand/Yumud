@@ -422,4 +422,190 @@
         // bmi.check();
         // clock::delay(20ms);
 
+
+        // static PIController pos_pi_ctrl{
+    // {
+    //     .kp = 27.0_r,
+    //     .ki = 0.00_r,
+    //     .out_min = -50.6_r,
+    //     .out_max = 50.6_r
+    // }};
+
+    static PIController speed_pi_ctrl{
+    {
+        .kp = 2.3_r,
+        // .kp = 0,
+        .ki = 0.0277_r,
+        // .ki = 0.0001_r,
+        // .out_min = -0.3_r,
+        // .out_max = 0.3_r
+
+        // .kp = 2.3_r,
+        // .ki = 0.009_r,
+        .out_min = -0.5_r,
+        .out_max = 0.5_r
+    }};
+
+
+
+
+    static PIController d_pi_ctrl{
+    {
+        .kp = 0.0_r,
+        .ki = 0.011_r,
+        .out_min = -6.0_r,
+        .out_max = 6.0_r
+    }};
+
+    static PIController q_pi_ctrl{
+    {
+        .kp = 0.0_r,
+        .ki = 0.011_r,
+        .out_min = -6.0_r,
+        .out_max = 6.0_r
+    }};
+
+class BldcMotor{
+// public:
+//     SVPWM3 & svpwm_;
+//     CurrentSensor & curr_sensor_;
+
+//     BldcMotor(SVPWM3 & svpwm, CurrentSensor & curr_sensor):
+//         svpwm_(svpwm),
+//         odo_(odo),
+//         curr_sensor_(curr_sensor){;}
+
+//     using Torque = real_t;
+//     using Speed = real_t;
+//     using Position = real_t;
+
+//     struct CurrentCtrl{
+//         DqVoltage update(const DqCurrent targ_curr, const DqCurrent meas_curr){
+//             return {
+//                 d_pi_ctrl.update(targ_curr.d, meas_curr.d),
+//                 q_pi_ctrl.update(targ_curr.q, meas_curr.q)
+//             };
+//         }
+
+//         PIController d_pi_ctrl = {
+//         {
+//             .kp = 0.0_r,
+//             .ki = 0.011_r,
+//             .out_min = -6.0_r,
+//             .out_max = 6.0_r
+//         }};
+        
+//         PIController q_pi_ctrl = {
+//         {
+//             .kp = 0.0_r,
+//             .ki = 0.011_r,
+//             .out_min = -6.0_r,
+//             .out_max = 6.0_r
+//         }};
+//     };
+
+//     struct TorqueCtrl{
+//         DqCurrent update(const Torque targ_torque){
+//             return {0, targ_torque};
+//         }
+//     };
+
+//     struct TraditionalSpeedCtrl{
+//         Torque update(const Speed targ_spd, const Speed meas_spd){
+//             return {
+//                 speed_pi_ctrl.update(targ_spd, meas_spd)
+//             };
+//         }
+
+
+//         PIController speed_pi_ctrl = {{
+//             .kp = 2.3_r,
+//             // .kp = 0,
+//             .ki = 0.0277_r,
+//             // .ki = 0.0001_r,
+//             // .out_min = -0.3_r,
+//             // .out_max = 0.3_r
+    
+//             // .kp = 2.3_r,
+//             // .ki = 0.009_r,
+//             .out_min = -0.5_r,
+//             .out_max = 0.5_r
+//         }};
+//     };
+
+//     struct TraditionalPositionCtrl{
+//         Speed update(const Position targ_pos, const Position meas_pos, const Speed meas_spd){
+//             const auto targ_spd = 0;
+//             return {
+//                 35.8_r * (targ_pos - meas_pos) + 0.7_r*(targ_spd - meas_spd)
+//             };
+//         }
+
+
+//         PIController speed_pi_ctrl = {{
+//             .kp = 2.3_r,
+//             // .kp = 0,
+//             .ki = 0.0277_r,
+//             // .ki = 0.0001_r,
+//             // .out_min = -0.3_r,
+//             // .out_max = 0.3_r
+    
+//             // .kp = 2.3_r,
+//             // .ki = 0.009_r,
+//             .out_min = -0.5_r,
+//             .out_max = 0.5_r
+//         }};
+//     };
+
+//     CurrentCtrl curr_ctrl_  = {};
+//     TorqueCtrl torque_ctrl_ = {};
+//     TraditionalSpeedCtrl spd_ctrl_ = {};
+//     TraditionalPositionCtrl pos_ctrl_ = {};
+
+//     void tick(){
+//         odo_.update();
+
+//         const auto targ_pos = real_t(0);
+//         const auto lap_pos = odo_.getLapPosition();
+//         const auto meas_pos = odo_.getPosition();
+//         const auto meas_spd = odo_.getSpeed();
+
+//         const real_t meas_rad = (frac(frac(lap_pos - 0.25_r) * 7) * real_t(TAU));
+
+//         curr_sensor_.update(meas_rad);
+//         const auto meas_dq_curr = curr_sensor_.dq();
+
+//         const auto cmd_spd = pos_ctrl_.update(targ_pos, meas_pos, meas_spd);
+//         const auto cmd_torque = spd_ctrl_.update(cmd_spd, meas_spd);
+//         const auto cmd_dq_curr = torque_ctrl_.update(cmd_torque);
+//         const auto cmd_dq_volt = curr_ctrl_.update(cmd_dq_curr, meas_dq_curr);
+
+//         const auto cmd_ab_volt = cmd_dq_volt.to_ab(meas_rad);
+
+//         svpwm_.set_ab_volt(cmd_ab_volt[0], cmd_ab_volt[1]);
+//     }
+// private:
+
+
+
+// };
+
+    // [[maybe_unused]] auto smo_ob = SmoObserver{{
+    //     0.7_r, 
+    //     0.04_r,
+    //     8.22_r, 
+    //     0.3_r
+    // }};
+    // [[maybe_unused]] RolbgObserver lbg_ob;
+
+    // [[maybe_unused]] NonlinearObserver nlr_ob = {
+    //     {
+    //         .phase_inductance = 1.45E-3_r,
+    //         .phase_resistance = 1.2_r,
+    //         .observer_gain = 0.2_r,
+    //         .pm_flux_linkage = 3.58e-4_r,
+    //         .freq = FOC_FREQ,
+    //     }
+    // };
+
 #endif

@@ -23,8 +23,8 @@ public:
     };
 
     struct State{
-        q20 position;
-        q20 speed;
+        q16 position;
+        q16 speed;
 
         constexpr void reset(){
             position = 0;
@@ -46,7 +46,7 @@ public:
     }
 
 
-    constexpr void update(const q20 u){
+    constexpr void update(const q16 u){
         const auto r = r_;
         const auto r_2 = r * r;
 
@@ -61,7 +61,7 @@ public:
 private:
     q16 r_ = 0;
     q24 dt_ = 0;
-    // using State = dsp::StateVector<q20, N>;
+    // using State = dsp::StateVectorq160, N>;
 
     State state_;
 };
@@ -102,15 +102,19 @@ struct PositionSensor{
         td_.update(cont_position_);
     }
 
-    constexpr q20 lap_position() const{
+    // constexpr void set_base_position(const q16 base_position){
+    //     base_position_ = base_position;
+    // }
+
+    constexpr q16 lap_position() const{
         return lap_position_;
     }
 
-    constexpr q20 position() const{
+    constexpr q16 position() const{
         return td_.get().position;
     }
 
-    constexpr q20 speed() const {
+    constexpr q16 speed() const {
         return td_.get().speed;
     }
 
@@ -121,6 +125,7 @@ struct PositionSensor{
         const auto corr1 = forward_cali_vec[raw_lap_position].to_inaccuracy();
         const auto corr2 = backward_cali_vec[raw_lap_position].to_inaccuracy();
 
+        // return raw_lap_position + mean(corr1, corr2) + base_position_;
         return raw_lap_position + mean(corr1, corr2);
     }
 
@@ -134,18 +139,11 @@ private:
         return delta;
     }
 
-
-
-
-    // static constexpr TdConfig CONFIG{
-    //     .r = 50,
-    //     .fs = ISR_FREQ
-    // };
-
     Td td_;
 
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
+    // q16 base_position_   = 0;
 };
 
 
