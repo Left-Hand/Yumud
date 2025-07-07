@@ -23,7 +23,7 @@ using namespace ymd::drivers;
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    ASSERT{false, #x, ##__VA_ARGS__};\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
@@ -87,12 +87,14 @@ IResult<> BMI160::update(){
 
 IResult<> BMI160::validate(){
     uint8_t dummy;
-    if(const auto res = phy_.read_reg(0x7f, dummy) 
-        | phy_.read_reg(regs_.chip_id_reg.address, regs_.chip_id_reg.data);
+    if(const auto res = phy_.read_reg(0x7f, dummy);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = phy_.read_reg(regs_.chip_id_reg.address, regs_.chip_id_reg.data);
         res.is_err()) return Err(res.unwrap_err());
 
     if(regs_.chip_id_reg.data != regs_.chip_id_reg.CORRECT_ID)
-        return CHECK_ERR(Err(Error::WrongWhoAmI), "chip id verify failed");
+        return CHECK_ERR(Err(Error::WrongWhoAmI), "read id is", regs_.chip_id_reg.data);
 
     return Ok();
 }

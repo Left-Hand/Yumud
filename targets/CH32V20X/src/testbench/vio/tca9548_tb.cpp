@@ -30,8 +30,7 @@ void tca9548_main()
 
     auto & vi2c = tca[0];   
 
-    // auto & act_i2c = i2c;   
-    auto & act_i2c = vi2c;   
+    auto & act_i2c = vi2c;
 
     auto mpu = drivers::MPU6050{&act_i2c};
     

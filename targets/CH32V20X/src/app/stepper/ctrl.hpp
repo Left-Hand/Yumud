@@ -23,8 +23,8 @@ public:
     };
 
     struct State{
-        q16 position;
-        q16 speed;
+        q20 position;
+        q24 speed;
 
         constexpr void reset(){
             position = 0;
@@ -46,7 +46,7 @@ public:
     }
 
 
-    constexpr void update(const q16 u){
+    constexpr void update(const q20 u){
         const auto r = r_;
         const auto r_2 = r * r;
 
@@ -102,9 +102,9 @@ struct PositionSensor{
         td_.update(cont_position_);
     }
 
-    // constexpr void set_base_position(const q16 base_position){
-    //     base_position_ = base_position;
-    // }
+    constexpr void set_base_position(const q16 base_position){
+        base_position_ = base_position;
+    }
 
     constexpr q16 lap_position() const{
         return lap_position_;
@@ -125,7 +125,6 @@ struct PositionSensor{
         const auto corr1 = forward_cali_vec[raw_lap_position].to_inaccuracy();
         const auto corr2 = backward_cali_vec[raw_lap_position].to_inaccuracy();
 
-        // return raw_lap_position + mean(corr1, corr2) + base_position_;
         return raw_lap_position + mean(corr1, corr2);
     }
 
@@ -143,7 +142,7 @@ private:
 
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
-    // q16 base_position_   = 0;
+    q16 base_position_   = 0;
 };
 
 

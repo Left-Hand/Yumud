@@ -22,31 +22,31 @@ struct BMI160_Prelude{
     };
 
     enum class AccOdr:uint8_t{
-        _25_32 = 0b0001,
-        _25_16,
-        _25_8,
-        _25_4,
-        _25_2,
-        _25,
+        _25_32Hz = 0b0001,
+        _25_16Hz,
+        _25_8Hz,
+        _25_4Hz,
+        _25_2Hz,
+        _25Hz,
         
-        _50,
-        _100,
-        _200,
-        _400,
-        _800,
-        _1600
+        _50Hz,
+        _100Hz,
+        _200Hz,
+        _400Hz,
+        _800Hz,
+        _1600Hz
     };
 
     enum class GyrOdr:uint8_t{
-        _25 = 0b0110,
+        _25Hz = 0b0110,
         
-        _50,
-        _100,
-        _200,
-        _400,
-        _800,
-        _1600,
-        _3200
+        _50Hz,
+        _100Hz,
+        _200Hz,
+        _400Hz,
+        _800Hz,
+        _1600Hz,
+        _3200Hz
     };
     
     enum class AccFs:uint8_t{
@@ -91,9 +91,9 @@ struct BMI160_Prelude{
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
 
     struct Config{
-        AccOdr acc_odr = AccOdr::_800;
+        AccOdr acc_odr = AccOdr::_800Hz;
         AccFs acc_fs = AccFs::_8G;
-        GyrOdr gyr_odr = GyrOdr::_800;
+        GyrOdr gyr_odr = GyrOdr::_800Hz;
         GyrFs gyr_fs = GyrFs::_1000deg;
     };
 };

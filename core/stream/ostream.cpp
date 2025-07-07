@@ -82,6 +82,8 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     this->write(str, len);\
 
 int OutputStream::transform_char(const char chr) const{
+    return chr;
+
     if(likely(!config_.flags)) return chr;
 
     if(unlikely(config_.no_space) and unlikely(chr == ' ')) return -1;

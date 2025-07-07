@@ -15,11 +15,6 @@ public:
         is_(std::move(is)), 
         os_(std::move(os)){;}
 
-    void process(const real_t t){
-        
-    }
-        
-        
     template<typename T>
     void invoke(T && obj){
         while(is_->available()){

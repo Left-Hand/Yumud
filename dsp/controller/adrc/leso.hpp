@@ -84,13 +84,13 @@ class Leso{
         constexpr const auto & get_disturbance() const {return this->state_[1];}
     private:
         using Self = Leso;
-        using State = StateVector<q16, 2>;
+        using State = StateVector<q20, 2>;
     
         State state_;
         q8 b0_;
         q20 delta_;
-        q16 g1_;
-        q16 g2_;
+        q20 g1_;
+        q20 g2_;
     
         static constexpr State forward(const Self & self, const q16 y, const q16 u, const State x){
             return {

@@ -255,9 +255,9 @@ void rrs3_robot_main(){
     rrs3_robot.go_idle();
     
     while(true){
+        [[maybe_unused]]
         const real_t t = clock::time();
         
-        repl_service.process(t);
         repl_service.invoke(list);
 
 

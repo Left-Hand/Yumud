@@ -2,6 +2,8 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/polymorphism/traits.hpp"
+#include "core/polymorphism/reflect.hpp"
+#include "core/sync/timer.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -10,14 +12,7 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/opa/opa.hpp"
 
-#include "algo/interpolation/cubic.hpp"
 
-#include "robots/rpc/rpc.hpp"
-#include "src/testbench/tb.h"
-
-#include "robots/rpc/arg_parser.hpp"
-
-#include "app/stepper/ctrl.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
@@ -34,11 +29,21 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
-#include "core/polymorphism/reflect.hpp"
+
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "CurrentSensor.hpp"
 
+
+#include "algo/interpolation/cubic.hpp"
+
+#include "src/testbench/tb.h"
+
+#include "robots/rpc/arg_parser.hpp"
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+
+#include "app/stepper/ctrl.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -47,7 +52,7 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::intp;
 
-scexpr uint32_t CHOPPER_FREQ = 50000;
+scexpr uint32_t CHOPPER_FREQ = 25000;
 scexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 
@@ -202,8 +207,8 @@ public:
 
 
 enum class MotorRole:uint8_t{
-    Old,
-    New
+    Roll,
+    Pitch
 };
 
 
@@ -295,6 +300,19 @@ struct ElecradCompensator{
     }
 };
 
+struct HomePositionCompensator{
+    q16 base;
+
+    struct Input{
+        const q16 position;
+        const q16 lap_position;
+    };
+
+    constexpr q16 operator ()(const Input input) const {
+        return input.lap_position - base;
+    }
+};
+
 void bldc_main(){
     auto & DBG_UART = hal::uart2;
 
@@ -318,7 +336,7 @@ void bldc_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
-    clock::delay(200ms);
+    clock::delay(2ms);
 
     spi.init({18_MHz});
 
@@ -351,31 +369,33 @@ void bldc_main(){
             .unwrap()
     };
 
-
-    ma730.init().examine();
-    bmi.init({}).examine();
-    bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
-
-    can.init({hal::CanBaudrate::_1M});
-
     const auto motor_role = []{
         const auto chip_id_crc = sys::chip::get_chip_id_crc();
         switch(chip_id_crc){
             case 207097585:
-                return MotorRole::New;
+                return MotorRole::Pitch;
             default:
-                return MotorRole::Old;
+                return MotorRole::Roll;
         }
     }();
 
-    // while(true){
-    //     bmi.update().examine();
-    //     // auto [x,y,z] = bmi.read_acc();
-    //     auto [x,y,z] = bmi.read_acc().examine();
-    //     DEBUG_PRINTLN(x,y,z);
-    //     clock::delay(2ms);
-    //     // DEBUGGER << std::endl;
-    // }
+    ma730.init().examine();
+
+    if(
+        // motor_role == MotorRole::
+        // true
+        false
+    ){
+        bmi.init({
+            .acc_odr = BMI160::AccOdr::_400Hz,
+            .acc_fs = BMI160::AccFs::_2G
+        }).examine();
+        bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
+    }
+
+    can.init({hal::CanBaudrate::_1M});
+
+
 
 
     MP6540 mp6540{
@@ -432,13 +452,16 @@ void bldc_main(){
         }
     };
 
+    // pos_sensor_.set_base_position(0.2_r);
+    // pos_sensor_.set_base_position(-0.1_r);
+
     ElecradCompensator elecrad_comp_{
         .base = [&]{
             switch(motor_role){
-                case MotorRole::New:
-                    return -0.12_r;
-                case MotorRole::Old:
-                    return -0.25_r;
+                case MotorRole::Pitch:
+                    return -0.28_r;
+                case MotorRole::Roll:
+                    return -0.243_r;
                 default:
                     __builtin_unreachable();
             }
@@ -446,16 +469,41 @@ void bldc_main(){
         .pole_pairs = 7
     };
 
+    HomePositionCompensator home_comp_{
+        .base = 0.383_r
+    };
+
+
+
     real_t d_volt_ = 0;
     real_t q_volt_ = 0;
     real_t meas_rad_ = 0;
+
+    // [[maybe_unused]] auto cb_imu = [&]{
+    //     bmi.update().examine();
+    // };
+
+
+    dsp::Leso leso{dsp::Leso::Config{
+        .b0 = 1.3_r,
+        .w = 13,
+        .fs = FOC_FREQ
+    }};
+
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730.update().examine();
+        // cb_imu();
+
         const auto meas_lap = 1-ma730.get_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
 
 
         const real_t meas_rad = elecrad_comp_(meas_lap);
+
+
+        // const auto meas_pos = pos_sensor_.position() - 0.3_r;
+        const auto meas_pos = home_comp_({pos_sensor_.position(), meas_lap});
+        const auto meas_spd = pos_sensor_.speed();
 
         #define TEST_MODE_Q_SIN_CURR 1
         #define TEST_MODE_VOLT_POS_CTRL 2
@@ -487,26 +535,26 @@ void bldc_main(){
         // const auto d_volt = d_pi_ctrl.update((MAX(ab_volt.length() * 0.03_r - 0.2_r)), dq_curr.d);
         // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
         #elif (TEST_MODE == TEST_MODE_POS_SIN)
-        scexpr real_t omega = 3 * real_t(TAU);
-        // scexpr real_t omega = 1;
-        scexpr real_t amp = 0.5_r;
+        // scexpr real_t omega = 3 * real_t(TAU);
+        scexpr real_t omega = 1;
+        scexpr real_t amp = 0.1_r;
         const auto clock_time = clock::time();
         const auto [targ_pos, targ_spd] = ({
             std::make_tuple(
                 amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
-                // 2 * clock_time, 2
+                // 0.3_r * clock_time, 0.3_r
+                // 0.0_r, 0_r
             );
         });
 
-        const auto meas_pos = pos_sensor_.position();
-        const auto meas_spd = pos_sensor_.speed();
 
         const auto d_volt = 0;
+        static constexpr auto MAX_VOLT = 4.7_r;
         const auto q_volt = CLAMP2(
-            9.58_r * (targ_pos - meas_pos) +
-            0.38_r * (targ_spd - meas_spd)
-            
-        , 3.7_r);
+            170.58_r * (targ_pos - meas_pos) +
+            30.28_r * (targ_spd - meas_spd)
+            // 0
+        , MAX_VOLT);
         // const auto q_volt = 1.7_r;
         
         // const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
@@ -521,13 +569,19 @@ void bldc_main(){
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
         #endif
 
-        const auto ab_volt = DqVoltage{d_volt, q_volt}.to_ab(meas_rad);
+        const auto ab_volt = DqVoltage{
+            d_volt, 
+            CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
+            // q_volt
+        }.to_ab(meas_rad);
         // ab_volt = DqVoltage{d_volt, q_volt}.to_ab(-0.0_r);
         svpwm.set_ab_volt(
             ab_volt[0], ab_volt[1]
             // amp * cos(omega * clock_time), amp * sin(omega * clock_time)
             // 3.0_r, 0.0_r
         );
+
+        leso.update(meas_spd, q_volt);
 
         d_volt_ = d_volt;
         q_volt_ = q_volt;
@@ -538,12 +592,51 @@ void bldc_main(){
         cb_sensored
     );
 
-    while(true){
+
+    auto can_task = []{
+        static async::RepeatTimer task_timer{5ms};
+        task_timer.invoke_if([]{
+            const auto msg = hal::CanMsg::from_list(
+                hal::CanStdId(0x1234),
+                {1,2,3,4}
+            );
+
+            can.write(msg);
+        });
+    };
+
+    auto blink_task = [&]{
+        static async::RepeatTimer task_timer{10ms};
+        task_timer.invoke_if([&]{
+            ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+            ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+            ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+        });
+    };
+
+    auto repl_task = [&]{
+        robots::ReplService repl_service{&DBG_UART, &DBG_UART};
+
+        static const auto list = rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
+            rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+            rpc::make_function("name", [&](){DEBUG_PRINTLN();})
+        );
+
+        repl_service.invoke(list);
+    };
+
+
+    auto report_task = [&]{ 
         [[maybe_unused]] const auto t = clock::time();
         [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
         [[maybe_unused]] const auto dq_curr = curr_sens.dq();
         [[maybe_unused]] const auto ab_curr = curr_sens.ab();
+        [[maybe_unused]] auto [x,y,z] = bmi.read_acc().examine();
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
+
         DEBUG_PRINTLN_IDLE(
             // phase_res,
             // real_t(adc.inj(1)),
@@ -573,6 +666,7 @@ void bldc_main(){
             // lbg_ob.e_beta_,
 
             // square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
+            // x,y,z,
             // lbg_ob.theta(),
             // lbg_ob.e_alpha_,
             // lbg_ob.e_beta_,
@@ -585,27 +679,25 @@ void bldc_main(){
             // en_gpio.read().to_bool(),
             // dq_curr.d,
             // dq_curr.q,
-            d_volt_,
-            q_volt_,
+            // d_volt_,
+            // q_volt_,
             pos_sensor_.position(),
+            pos_sensor_.lap_position(),
             pos_sensor_.speed(),
-            meas_rad_,
-            sys::chip::get_chip_id_crc()
-            // TIM1_CH1_GPIO.read().to_bool(),
-            // TIM1_CH2_GPIO.read().to_bool(),
-            // TIM1_CH3_GPIO.read().to_bool()
-            // exe_micros.count()
-            // pll.theta(),
-            // clock::micros() * 0.001_r
-            // real_t(exe_micros)
-            // curr_sens.mid()
+            leso.get_disturbance(),
+            meas_rad_
+
         );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
-        ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-        ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-        ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+    };
+
+    while(true){
+        repl_task();
+        can_task();
+        blink_task();
+        report_task();
 
 
     }
