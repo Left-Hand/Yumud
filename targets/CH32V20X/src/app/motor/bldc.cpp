@@ -383,14 +383,23 @@ void bldc_main(){
 
     if(
         // motor_role == MotorRole::
-        // true
-        false
+        true
+        // false
     ){
         bmi.init({
             .acc_odr = BMI160::AccOdr::_400Hz,
             .acc_fs = BMI160::AccFs::_2G
         }).examine();
         bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
+
+        while(true){
+            bmi.update().examine();
+            DEBUG_PRINTLN(
+                bmi.read_acc().examine()
+                // std::bit_cast<uint8_t>(bmi.get_pmu_mode(BMI160::PmuType::ACC).examine())
+            );
+            clock::delay(5ms);
+        }
     }
 
     can.init({hal::CanBaudrate::_1M});
