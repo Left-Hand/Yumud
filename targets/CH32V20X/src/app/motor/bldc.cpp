@@ -271,11 +271,18 @@ public:
         ob_(ob){;}
 };
 
-
-enum class MotorRole:uint8_t{
+enum class JointRole:uint8_t{
     Roll,
     Pitch
 };
+
+OutputStream & operator<<(OutputStream & os, const JointRole & role){ 
+    switch(role){
+        case JointRole::Roll: return os << "Roll";
+        case JointRole::Pitch: return os << "Pitch";
+        default: __builtin_unreachable();
+    }
+}
 
 
 class CurrentBiasCalibrater{
@@ -379,6 +386,16 @@ struct HomePositionCompensator{
     }
 };
 
+struct PdCtrlLaw{
+    real_t kp;
+    real_t kd;
+
+    constexpr real_t operator()(const real_t p_err, const real_t v_err) const {
+        return kp * p_err + kd * v_err;
+    } 
+};
+
+
 void bldc_main(){
     auto & DBG_UART = hal::uart2;
 
@@ -435,15 +452,17 @@ void bldc_main(){
             .unwrap()
     };
 
-    const auto motor_role = []{
+    auto get_joint_role = []{
         const auto chip_id_crc = sys::chip::get_chip_id_crc();
         switch(chip_id_crc){
             case 207097585:
-                return MotorRole::Pitch;
+                return JointRole::Pitch;
             default:
-                return MotorRole::Roll;
+                return JointRole::Roll;
         }
-    }();
+    };
+
+    const auto joint_role = get_joint_role();  
 
     ma730.init().examine();
 
@@ -454,21 +473,6 @@ void bldc_main(){
         .gyr_odr = BMI160::GyrOdr::_200Hz,
         .gyr_fs = BMI160::GyrFs::_2000deg
     }).examine();
-
-    // while(true){
-    //     bmi.update().examine();
-    //     const auto acc = bmi.read_acc().examine();
-    //     const auto gyr = bmi.read_gyr().examine(); 
-    //     const auto stat = uint8_t(bmi.get_pmu_mode(BMI160::PmuType::GYR).examine());
-    //     const auto stat2 = uint8_t(bmi.get_pmu_mode(BMI160::PmuType::ACC).examine());
-    //     DEBUG_PRINTLN(
-    //         acc, 
-    //         gyr, 
-    //         stat,
-    //         stat2
-    //     );
-    //     clock::delay(3ms);
-    // }
 
     can.init({hal::CanBaudrate::_1M});
 
@@ -496,11 +500,7 @@ void bldc_main(){
     init_adc(adc);
     [[maybe_unused]] real_t targ_spd_ = 0;
 
-    // UvwCurrent uvw_curr = {0,0,0};
-    real_t est_rad;
-
     CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
-    // CurrentSensor curr_sens = {adc.inj(1), adc.inj(2), adc.inj(3)};
 
     ledr.outpp(); 
     ledb.outpp(); 
@@ -511,13 +511,8 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-
-    real_t mg_meas_rad_;
-    real_t sl_meas_rad_;
     real_t base_roll_ = 0;
     real_t base_omega_ = 0;
-
-
 
     AbVoltage ab_volt_;
     
@@ -528,43 +523,73 @@ void bldc_main(){
         }
     };
 
-    // pos_sensor_.set_base_position(0.2_r);
-    // pos_sensor_.set_base_position(-0.1_r);
-
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(motor_role){
-                case MotorRole::Pitch:
+            switch(joint_role){
+                case JointRole::Pitch:
                     return -0.28_r;
-                case MotorRole::Roll:
+                case JointRole::Roll:
                     return -0.243_r;
-                default:
-                    __builtin_unreachable();
+                default: __builtin_unreachable();
             }
         }(),
         .pole_pairs = 7
     };
 
-    HomePositionCompensator home_comp_{
-        .base = 0.383_r
-    };
-
+    const auto home_comp_ = [&]{
+        switch(joint_role){
+            case JointRole::Pitch:
+                // return HomePositionCompensator {.base = 0.723_r + 0.25_r};
+                return HomePositionCompensator {.base = 0.223_r};
+            case JointRole::Roll:
+                return HomePositionCompensator {.base = 0.38_r + 0.5_r};
+            default: __builtin_unreachable();
+        }
+    }();
 
 
     real_t d_volt_ = 0;
     real_t q_volt_ = 0;
     real_t meas_rad_ = 0;
 
-    dsp::Leso leso{dsp::Leso::Config{
-        .b0 = 1.3_r,
-        .w = 13,
-        .fs = FOC_FREQ
-    }};
+
+    dsp::Leso leso{
+        [&]{
+            switch(joint_role){
+                case JointRole::Pitch:
+                    return dsp::Leso::Config{
+                        .b0 = 0.2_r,
+                        .w = 4.2_r,
+                        .fs = FOC_FREQ
+                    };
+                case JointRole::Roll:
+                    return dsp::Leso::Config{
+                        .b0 = 1.3_r,
+                        .w = 13,
+                        .fs = FOC_FREQ
+                    };
+                default: __builtin_unreachable();
+            }
+        }()
+    };
+
+    auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
+        switch(joint_role){
+            case JointRole::Pitch:
+                // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
+                // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
+                return PdCtrlLaw{.kp = 16.581_r, .kd = 0.70_r};
+            case JointRole::Roll: 
+                return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
+            default: __builtin_unreachable();
+        }
+    }();
+
+    Microseconds exe_us_;
 
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730.update().examine();
         bmi.update().examine();
-        // cb_imu();
 
         const auto meas_lap = 1-ma730.get_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
@@ -572,8 +597,6 @@ void bldc_main(){
 
         const real_t meas_rad = elecrad_comp_(meas_lap);
 
-
-        // const auto meas_pos = pos_sensor_.position() - 0.3_r;
         const auto meas_pos = home_comp_({pos_sensor_.position(), meas_lap});
         const auto meas_spd = pos_sensor_.speed();
 
@@ -586,37 +609,13 @@ void bldc_main(){
         #define TEST_MODE TEST_MODE_POS_SIN
         // #define TEST_MODE TEST_MODE_SQUARE_SWING
 
-
-        #if (TEST_MODE == TEST_MODE_Q_SIN_CURR)
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(clock::time());
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-        #elif (TEST_MODE == TEST_MODE_VOLT_POS_CTRL)
-
-        #elif (TEST_MODE == TEST_MODE_WEAK_MAG)
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(clock::time());
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-
-        // const auto d_volt = d_pi_ctrl.update(0.2_r, dq_curr.d);
-        // const auto q_volt = q_pi_ctrl.update(-0.6_r, dq_curr.q);
-
-        // const auto d_volt = d_pi_ctrl.update(0.0_r, dq_curr.d);
-        // const auto d_volt = d_pi_ctrl.update((MAX(ab_volt.length() * 0.03_r - 0.2_r)), dq_curr.d);
-        // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
-        #elif (TEST_MODE == TEST_MODE_POS_SIN)
-        // scexpr real_t omega = 3 * real_t(TAU);
-        // scexpr real_t omega = 1;
-        // scexpr real_t amp = 0.1_r;
-        // const auto clock_time = clock::time();
+        [[maybe_unused]] scexpr real_t omega = 1;
+        [[maybe_unused]] scexpr real_t amp = 0.1_r;
+        const auto clock_time = clock::time();
         const auto [targ_pos, targ_spd] = ({
             std::make_tuple(
                 // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
                 base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
-                // 0.3_r * clock_time, 0.3_r
-                // 0.0_r, 0_r
             );
         });
 
@@ -624,35 +623,17 @@ void bldc_main(){
         const auto d_volt = 0;
         static constexpr auto MAX_VOLT = 4.7_r;
         const auto q_volt = CLAMP2(
-            170.58_r * (targ_pos - meas_pos) +
-            25.28_r * (targ_spd - meas_spd)
-            // 0
+            pd_ctrl_law_(targ_pos - meas_pos, targ_spd - meas_spd)
         , MAX_VOLT);
-        // const auto q_volt = 1.7_r;
-        
-        // const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
 
-        #elif (TEST_MODE == TEST_MODE_SQUARE_SWING)
-        scexpr real_t omega = 1 * real_t(TAU);
-        scexpr real_t amp = 0.5_r;
-
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd = SIGN_AS(amp, sin(omega * clock::time()));
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-        #endif
 
         const auto ab_volt = DqVoltage{
             d_volt, 
             CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
             // q_volt
         }.to_ab(meas_rad);
-        // ab_volt = DqVoltage{d_volt, q_volt}.to_ab(-0.0_r);
-        svpwm.set_ab_volt(
-            ab_volt[0], ab_volt[1]
-            // amp * cos(omega * clock_time), amp * sin(omega * clock_time)
-            // 3.0_r, 0.0_r
-        );
+
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
         leso.update(meas_spd, q_volt);
 
@@ -662,17 +643,13 @@ void bldc_main(){
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
-        cb_sensored
+        [&]{
+            const auto m = clock::micros();
+            cb_sensored();
+            exe_us_ = clock::micros() - m;
+        }
     );
 
-
-    // struct RollGestureDetector{
-    //     constexpr operator()(const ){
-
-    //     } 
-    // private:
-    //     ComplementaryFilter<q16> filter_;
-    // };
     auto can_service = []{
         static async::RepeatTimer timer{5ms};
         timer.invoke_if([]{
@@ -682,6 +659,7 @@ void bldc_main(){
             );
 
             can.write(msg);
+            // DEBUG_PRINTLN_IDLE(can.available(), can.pending());
         });
     };
 
@@ -702,20 +680,21 @@ void bldc_main(){
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
             rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
-            rpc::make_function("name", [&](){DEBUG_PRINTLN();})
+            rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
+                pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
+            })
         );
 
         repl_service.invoke(list);
     };
 
     auto gesture_service = [&]{
-        static constexpr auto DELTA_TIME_MS = 5ms;
-        static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
-        static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+        [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
+        [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
+        [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+
         static async::RepeatTimer timer{DELTA_TIME_MS};
         timer.invoke_if([&]{
-                    // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
-
             // Quat<real_t>::from_gravity(),
             const auto acc = bmi.read_acc().examine();
             const auto gyr = bmi.read_gyr().examine();
@@ -724,11 +703,14 @@ void bldc_main(){
             const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
             const auto base_omega_raw = gyr.z;
 
-            static dsp::ComplementaryFilter<q20> comp_filter(typename dsp::ComplementaryFilter<q20>::Config{
-                .kq = 0.87_r,
-                .ko = 0.5_r,
-                .fs = FREQ
-            });
+            static dsp::ComplementaryFilter<q20> comp_filter{
+                    typename dsp::ComplementaryFilter<q20>::Config{
+                    .kq = 0.90_r,
+                    .ko = 0.35_r,
+                    .fs = FREQ
+                }
+            };
+
             const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
             DEBUG_PRINTLN_IDLE(
                 norm_acc.x, norm_acc.y,
@@ -738,6 +720,7 @@ void bldc_main(){
                 pos_sensor_.position(),
                 pos_sensor_.lap_position(),
                 pos_sensor_.speed()
+                // exe_us_
                 // // leso.get_disturbance(),
                 // meas_rad_
 
@@ -754,7 +737,6 @@ void bldc_main(){
         [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
         [[maybe_unused]] const auto dq_curr = curr_sens.dq();
         [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
 
         // DEBUG_PRINTLN_IDLE(
         //     pos_sensor_.position(),
