@@ -175,9 +175,7 @@ struct BMI160_Regs:public BMI160_Prelude{
         static constexpr RegAddress acc_y_address = 0x14;
         static constexpr RegAddress acc_z_address = 0x16;
         
-        int16_t x;
-        int16_t y;
-        int16_t z;
+        Vector3<int16_t> vec;
     };
 
     struct SensorTimeReg:public Reg8<>{
@@ -282,13 +280,13 @@ struct BMI160_Regs:public BMI160_Prelude{
         static constexpr RegAddress address = 0x42;
         GyrOdr gyr_odr:4;
         uint8_t gyr_bwp:2;
-        uint8_t __resv__:2;
+        uint8_t __resv__:2 = 0;
     }DEF_R8(gyr_conf_reg)
 
     struct GyrFsReg:public Reg8<>{
         static constexpr RegAddress address = 0x43;
         GyrFs gyr_fs:3;
-        uint8_t __resv__:5;
+        uint8_t __resv__:5 = 0;
     }DEF_R8(gyr_fs_reg)
 
     struct MagConfReg:public Reg8<>{

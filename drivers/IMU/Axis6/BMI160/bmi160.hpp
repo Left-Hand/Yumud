@@ -54,11 +54,11 @@ private:
 
     [[nodiscard]] static real_t calculate_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return ANGLE2RAD(125);
-            case GyrFs::_250deg:    return ANGLE2RAD(250);
-            case GyrFs::_500deg:    return ANGLE2RAD(500);
-            case GyrFs::_1000deg:   return ANGLE2RAD(1000);
-            case GyrFs::_2000deg:   return ANGLE2RAD(2000);
+            case GyrFs::_125deg:    return 2 * 125_deg;
+            case GyrFs::_250deg:    return 2 * 250_deg;
+            case GyrFs::_500deg:    return 2 * 500_deg;
+            case GyrFs::_1000deg:   return 2 * 1000_deg;
+            case GyrFs::_2000deg:   return 2 * 2000_deg;
             default: __builtin_unreachable();
         }
     }

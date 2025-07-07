@@ -12,8 +12,6 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/opa/opa.hpp"
 
-
-
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
@@ -34,6 +32,7 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "CurrentSensor.hpp"
 
+#include "types/vectors/quat/Quat.hpp"
 
 #include "algo/interpolation/cubic.hpp"
 
@@ -55,7 +54,74 @@ using namespace ymd::intp;
 scexpr uint32_t CHOPPER_FREQ = 25000;
 scexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
+namespace ymd::dsp{
+template<typename T>
+struct ComplementaryFilter{
+    struct Config{
+        T kq;
+        T ko;
+        uint fs;
+    };
+    
 
+    constexpr ComplementaryFilter(const Config & config){
+        reconf(config);
+        reset();
+    }
+
+
+    constexpr void reconf(const Config & cfg){
+        kq_ = cfg.kq;
+        kq_ = cfg.kq;
+        dt_ = T(1) / cfg.fs;
+    }
+
+    constexpr T operator ()(const T rot, const T gyr){
+
+        if(!inited_){
+            rot_ = rot;
+            rot_unfiltered_ = rot;
+            inited_ = true;
+        }else{
+            rot_unfiltered_ += gyr * delta_t_;
+            rot_unfiltered_ = kq_ * rot_ + (1-kq_) * rot;
+            rot_ = ko_ * rot_ + (1-ko_) * rot_unfiltered_;
+        }
+    
+        last_rot_ = rot;
+        last_gyr_ = gyr;
+
+        return rot_;
+    }
+
+    constexpr void reset(){
+        rot_ = 0;
+        rot_unfiltered_ = 0;
+        last_rot_ = 0;
+        last_gyr_ = 0;
+        inited_ = false;
+    }
+
+    constexpr T get() const {
+        return rot_;
+    }
+
+private:
+    T kq_;
+    T ko_;
+    T dt_;
+    T rot_;
+    T rot_unfiltered_;
+    T last_rot_;
+    T last_gyr_;
+    // T last_time;
+
+    uint delta_t_;
+    
+    bool inited_;
+};
+
+}
 
 class CurrentSensor{
 protected:
@@ -381,31 +447,30 @@ void bldc_main(){
 
     ma730.init().examine();
 
-    if(
-        // motor_role == MotorRole::
-        true
-        // false
-    ){
-        bmi.init({
-            .acc_odr = BMI160::AccOdr::_400Hz,
-            .acc_fs = BMI160::AccFs::_2G
-        }).examine();
-        bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
+    
+    bmi.init({
+        .acc_odr = BMI160::AccOdr::_200Hz,
+        .acc_fs = BMI160::AccFs::_16G,
+        .gyr_odr = BMI160::GyrOdr::_200Hz,
+        .gyr_fs = BMI160::GyrFs::_2000deg
+    }).examine();
 
-        while(true){
-            bmi.update().examine();
-            DEBUG_PRINTLN(
-                bmi.read_acc().examine()
-                // std::bit_cast<uint8_t>(bmi.get_pmu_mode(BMI160::PmuType::ACC).examine())
-            );
-            clock::delay(5ms);
-        }
-    }
+    // while(true){
+    //     bmi.update().examine();
+    //     const auto acc = bmi.read_acc().examine();
+    //     const auto gyr = bmi.read_gyr().examine(); 
+    //     const auto stat = uint8_t(bmi.get_pmu_mode(BMI160::PmuType::GYR).examine());
+    //     const auto stat2 = uint8_t(bmi.get_pmu_mode(BMI160::PmuType::ACC).examine());
+    //     DEBUG_PRINTLN(
+    //         acc, 
+    //         gyr, 
+    //         stat,
+    //         stat2
+    //     );
+    //     clock::delay(3ms);
+    // }
 
     can.init({hal::CanBaudrate::_1M});
-
-
-
 
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
@@ -449,6 +514,8 @@ void bldc_main(){
 
     real_t mg_meas_rad_;
     real_t sl_meas_rad_;
+    real_t base_roll_ = 0;
+    real_t base_omega_ = 0;
 
 
 
@@ -488,11 +555,6 @@ void bldc_main(){
     real_t q_volt_ = 0;
     real_t meas_rad_ = 0;
 
-    // [[maybe_unused]] auto cb_imu = [&]{
-    //     bmi.update().examine();
-    // };
-
-
     dsp::Leso leso{dsp::Leso::Config{
         .b0 = 1.3_r,
         .w = 13,
@@ -501,6 +563,7 @@ void bldc_main(){
 
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730.update().examine();
+        bmi.update().examine();
         // cb_imu();
 
         const auto meas_lap = 1-ma730.get_lap_position().examine(); 
@@ -545,12 +608,13 @@ void bldc_main(){
         // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
         #elif (TEST_MODE == TEST_MODE_POS_SIN)
         // scexpr real_t omega = 3 * real_t(TAU);
-        scexpr real_t omega = 1;
-        scexpr real_t amp = 0.1_r;
-        const auto clock_time = clock::time();
+        // scexpr real_t omega = 1;
+        // scexpr real_t amp = 0.1_r;
+        // const auto clock_time = clock::time();
         const auto [targ_pos, targ_spd] = ({
             std::make_tuple(
-                amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+                base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
                 // 0.3_r * clock_time, 0.3_r
                 // 0.0_r, 0_r
             );
@@ -561,7 +625,7 @@ void bldc_main(){
         static constexpr auto MAX_VOLT = 4.7_r;
         const auto q_volt = CLAMP2(
             170.58_r * (targ_pos - meas_pos) +
-            30.28_r * (targ_spd - meas_spd)
+            25.28_r * (targ_spd - meas_spd)
             // 0
         , MAX_VOLT);
         // const auto q_volt = 1.7_r;
@@ -602,9 +666,16 @@ void bldc_main(){
     );
 
 
-    auto can_task = []{
-        static async::RepeatTimer task_timer{5ms};
-        task_timer.invoke_if([]{
+    // struct RollGestureDetector{
+    //     constexpr operator()(const ){
+
+    //     } 
+    // private:
+    //     ComplementaryFilter<q16> filter_;
+    // };
+    auto can_service = []{
+        static async::RepeatTimer timer{5ms};
+        timer.invoke_if([]{
             const auto msg = hal::CanMsg::from_list(
                 hal::CanStdId(0x1234),
                 {1,2,3,4}
@@ -614,16 +685,16 @@ void bldc_main(){
         });
     };
 
-    auto blink_task = [&]{
-        static async::RepeatTimer task_timer{10ms};
-        task_timer.invoke_if([&]{
+    auto blink_service = [&]{
+        static async::RepeatTimer timer{10ms};
+        timer.invoke_if([&]{
             ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
             ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
             ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
         });
     };
 
-    auto repl_task = [&]{
+    auto repl_service = [&]{
         robots::ReplService repl_service{&DBG_UART, &DBG_UART};
 
         static const auto list = rpc::make_list(
@@ -637,77 +708,73 @@ void bldc_main(){
         repl_service.invoke(list);
     };
 
+    auto gesture_service = [&]{
+        static constexpr auto DELTA_TIME_MS = 5ms;
+        static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
+        static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+        static async::RepeatTimer timer{DELTA_TIME_MS};
+        timer.invoke_if([&]{
+                    // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
 
-    auto report_task = [&]{ 
+            // Quat<real_t>::from_gravity(),
+            const auto acc = bmi.read_acc().examine();
+            const auto gyr = bmi.read_gyr().examine();
+            const auto norm_acc = acc.normalized();
+            // const auto base_roll = atan2(norm_acc.x, norm_acc.y) - real_t(PI/2);
+            const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
+            const auto base_omega_raw = gyr.z;
+
+            static dsp::ComplementaryFilter<q20> comp_filter(typename dsp::ComplementaryFilter<q20>::Config{
+                .kq = 0.87_r,
+                .ko = 0.5_r,
+                .fs = FREQ
+            });
+            const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
+            DEBUG_PRINTLN_IDLE(
+                norm_acc.x, norm_acc.y,
+                base_roll_raw,
+                base_omega_raw,
+                base_roll,
+                pos_sensor_.position(),
+                pos_sensor_.lap_position(),
+                pos_sensor_.speed()
+                // // leso.get_disturbance(),
+                // meas_rad_
+
+            );
+
+            base_roll_ = base_roll;
+            base_omega_ = base_omega_raw;
+        });
+    };
+
+    [[maybe_unused]]
+    auto report_service = [&]{ 
         [[maybe_unused]] const auto t = clock::time();
         [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
         [[maybe_unused]] const auto dq_curr = curr_sens.dq();
         [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-        [[maybe_unused]] auto [x,y,z] = bmi.read_acc().examine();
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
 
-        DEBUG_PRINTLN_IDLE(
-            // phase_res,
-            // real_t(adc.inj(1)),
-            // real_t(adc.inj(2)),
-            // real_t(adc.inj(3)),
-            // real_t(adc.inj(4)),
-            // hfi_result * 10,
-            // hfi_mid_result * 10,
-            // phase_ind * 100,
-            // lbg_ob.theta(),
-            // s,c,
-            // t,
-            // frac(t),
-            // sin(t * 10),
-            // SVM(c,s),
-            // real_t(pwm_u), 
-            // real_t(pwm_v),
-            // real_t(pwm_w),
-            // bool(pwm_u.io()),
-            // bool(pwm_v.io()),
-            // bool(pwm_w.io()),
-            // curr_sens.uvw(),
-            
-            // curr_sens.ab(),
-            // curr_sens.dq(),
-            // lbg_ob.e_alpha_,
-            // lbg_ob.e_beta_,
+        // DEBUG_PRINTLN_IDLE(
+        //     pos_sensor_.position(),
+        //     pos_sensor_.lap_position(),
+        //     pos_sensor_.speed()
+        //     // // leso.get_disturbance(),
+        //     // meas_rad_
 
-            // square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
-            // x,y,z,
-            // lbg_ob.theta(),
-            // lbg_ob.e_alpha_,
-            // lbg_ob.e_beta_,
-            // nlr_ob.theta(),
-            // fmod(mg_meas_rad, q16(TAU)),
-            // timer.oc<1>().get_duty(),
-            // timer.oc<2>().get_duty(),
-            // timer.oc<3>().get_duty(),
-            // nslp_gpio.read().to_bool(),
-            // en_gpio.read().to_bool(),
-            // dq_curr.d,
-            // dq_curr.q,
-            // d_volt_,
-            // q_volt_,
-            pos_sensor_.position(),
-            pos_sensor_.lap_position(),
-            pos_sensor_.speed(),
-            leso.get_disturbance(),
-            meas_rad_
-
-        );
+        // );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
     };
 
     while(true){
-        repl_task();
-        can_task();
-        blink_task();
-        report_task();
-
+        repl_service();
+        can_service();
+        blink_service();
+        report_service();
+        gesture_service();
 
     }
 }

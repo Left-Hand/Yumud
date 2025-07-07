@@ -57,7 +57,7 @@ IResult<> BMI160::init(const Config & cfg){
 
     {
         //power up acc
-
+        //向命令寄存器写入0x11,使加速度计处于正常工作模式  
         if(const auto res = set_pmu_mode(PmuType::ACC, PmuMode::NORMAL)		//Acc normal mode
             ;res.is_err()) return res;
         clock::delay(1ms);
@@ -83,7 +83,7 @@ IResult<> BMI160::init(const Config & cfg){
 
     {
         //power up gyr
-
+        //向命令寄存器写入0x15,使陀螺仪处于正常工作模式 
         if(const auto res = set_pmu_mode(PmuType::GYR, PmuMode::NORMAL)		//Gro normal mode
             ;res.is_err()) return res;
         clock::delay(1ms);
@@ -108,20 +108,17 @@ IResult<> BMI160::init(const Config & cfg){
         res.is_err()) return res;
     #endif
 
-    if(const auto res = set_gyr_odr(cfg.gyr_odr)
-        ;res.is_err()) return res;
-    if(const auto res = set_gyr_fs(cfg.gyr_fs)
-        ;res.is_err()) return res;
 
     if(const auto res = set_acc_odr(cfg.acc_odr)
         ;res.is_err()) return res;
     if(const auto res = set_acc_fs(cfg.acc_fs)
         ;res.is_err()) return res;
 
+    if(const auto res = set_gyr_odr(cfg.gyr_odr)
+        ;res.is_err()) return res;
+    if(const auto res = set_gyr_fs(cfg.gyr_fs)
+        ;res.is_err()) return res;
 
-
-
-    clock::delay(1ms);
     return Ok();
 }
 
@@ -199,8 +196,13 @@ IResult<> BMI160::self_test_gyr(){
     return Ok();
 }
 IResult<> BMI160::update(){
-    return phy_.read_burst(regs_.acc_reg.acc_address, &regs_.acc_reg.x, 3) 
-        | phy_.read_burst(regs_.gyr_reg.gyr_address, &regs_.gyr_reg.x, 3);
+    std::array<int16_t, 6> buf;
+
+    if(const auto res = phy_.read_burst(regs_.gyr_reg.gyr_address, buf.data(), buf.size());
+        res.is_err()) return Err(res.unwrap_err());
+
+    regs_.gyr_reg.vec = {buf[0], buf[1], buf[2]};
+    regs_.acc_reg.vec = {buf[3], buf[4], buf[5]};
 }
 
 IResult<> BMI160::validate(){
@@ -222,14 +224,20 @@ IResult<> BMI160::reset(){
 }
 
 IResult<Vector3<q24>> BMI160::read_acc(){
-    auto conv = [&](const int16_t x) -> real_t{
-        return s16_to_uni(x) * acc_scale_;
-    };
+    // auto conv = [&](const int16_t x) -> real_t{
+    //     return s16_to_uni(x) * acc_scale_;
+    // };
     
+    // return Ok{Vector3<q24>{
+    //     conv(regs_.acc_reg.vec.x),
+    //     conv(regs_.acc_reg.vec.y),
+    //     conv(regs_.acc_reg.vec.z)
+    // }};
+
     return Ok{Vector3<q24>{
-        conv(regs_.acc_reg.x),
-        conv(regs_.acc_reg.y),
-        conv(regs_.acc_reg.z)
+        q16(regs_.acc_reg.vec.x) >> 8,
+        q16(regs_.acc_reg.vec.y) >> 8,
+        q16(regs_.acc_reg.vec.z) >> 8
     }};
 }
 
@@ -238,10 +246,11 @@ IResult<Vector3<q24>> BMI160::read_gyr(){
         return s16_to_uni(x) * gyr_scale_;
     };
     
+    // DEBUG_PRINTLN(regs_.gyr_reg.vec);
     return Ok{Vector3<q24>{
-        conv(regs_.gyr_reg.x),
-        conv(regs_.gyr_reg.y),
-        conv(regs_.gyr_reg.z)
+        conv(regs_.gyr_reg.vec.x),
+        conv(regs_.gyr_reg.vec.y),
+        conv(regs_.gyr_reg.vec.z)
     }};
 }
 
@@ -280,10 +289,12 @@ IResult<> BMI160::set_acc_odr(const AccOdr odr){
 }
 
 IResult<> BMI160::set_acc_fs(const AccFs fs){
-    this->acc_scale_ = this->calculate_acc_scale(fs);
     auto reg = RegCopy(regs_.acc_fs_reg);
     reg.acc_fs = fs;
-    return phy_.write_reg(reg);
+    if(const auto res = phy_.write_reg(reg);
+        res.is_err()) return res;
+    this->acc_scale_ = this->calculate_acc_scale(fs);
+    return Ok();
 }
 
 IResult<> BMI160::set_gyr_odr(const GyrOdr odr){
@@ -294,9 +305,11 @@ IResult<> BMI160::set_gyr_odr(const GyrOdr odr){
 
 }
 IResult<> BMI160::set_gyr_fs(const GyrFs fs){
-    this->gyr_scale_ = this->calculate_gyr_scale(fs);
     auto reg = RegCopy(regs_.gyr_fs_reg);
     reg.gyr_fs = fs;
-    return phy_.write_reg(reg);
+    if(const auto res = phy_.write_reg(reg);
+        res.is_err()) return res;
+    this->gyr_scale_ = this->calculate_gyr_scale(fs);
+    return Ok();
 }
 

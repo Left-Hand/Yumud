@@ -94,10 +94,6 @@ public:
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, std::forward<Fn>(fn));
     }
 
-    void ready(){
-        DEBUG_PRINTLN("===========");
-        DEBUG_PRINTLN("app started");
-    }
 
     void loop(){
         
@@ -218,9 +214,6 @@ void rrs3_robot_main(){
         servo_c.set_radian(r3);
     }};
 
-    real_t a;
-
-
     robots::ReplService repl_service = {
         &DBG_UART, &DBG_UART
     };
@@ -251,7 +244,6 @@ void rrs3_robot_main(){
         // DEBUG_PRINTLN("wh");
     };
 
-    env.ready();
     rrs3_robot.go_idle();
     
     while(true){
