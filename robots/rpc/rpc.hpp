@@ -44,7 +44,7 @@ public:
     }
 
     template<typename T>
-    Option<T> try_to() const {
+    constexpr Option<T> try_to() const {
         if constexpr(std::is_convertible_v<StringView, T>) {
             return Some(static_cast<T>(value_));
         }

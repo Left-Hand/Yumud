@@ -20,16 +20,18 @@ using Error = MA730::Error;
 template<typename T = void>
 using IResult = typename MA730::IResult<T>;
 
-IResult<> MA730::init(){
+IResult<> MA730::init(const Config & cfg){
+    if(const auto res = set_direction(cfg.direction);
+        unlikely(res.is_err())) return Err(res.unwrap_err());
     if(const auto res = get_lap_position();
-        res.is_err()) return Err(res.unwrap_err());
+        unlikely(res.is_err())) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<uint16_t> MA730::direct_read(){
     uint16_t data;
     const auto res = spi_drv_.read_single<uint16_t>(data);
-    if(res.is_err()) return Err(Error(res.unwrap_err()));
+    if(unlikely(res.is_err())) return Err(Error(res.unwrap_err()));
     return Ok(data);
 }
 
@@ -61,18 +63,20 @@ IResult<> MA730::set_zero_position(const real_t position){
 
 IResult<MagStatus> MA730::get_mag_status(){
     const auto res = read_reg(magnitude_reg);
-    if(res.is_err()) return Err(res.unwrap_err());
+    if(unlikely(res.is_err())) return Err(res.unwrap_err());
+
     const bool mgl = !(magnitude_reg.mgl1 | magnitude_reg.mgl2);
     const bool mgh = magnitude_reg.magnitudeHigh;
+
     if(mgl) return Ok(MagStatus::Low());
-    if(mgh) return Ok(MagStatus::High());
+    else if(mgh) return Ok(MagStatus::High());
     else return Ok(MagStatus::Proper());
 }
 
 IResult<> MA730::update(){
     const uint16_t data = ({
         const auto res = direct_read();
-        if(res.is_err()) return Err(res.unwrap_err());
+        if(unlikely(res.is_err())) return Err(res.unwrap_err());
         res.unwrap();
     });
     lap_position_ = u16_to_uni(data);
@@ -97,7 +101,7 @@ IResult<> MA730::set_trim_x(const real_t k){
 IResult<> MA730::set_trim_y(const real_t k){
     {
         auto reg = RegCopy(trim_reg);
-        reg.trim = uint8_t((real_t(1) - k) * 258);
+        reg.trim = uint8_t((1.0_r - k) * 258);
         return write_reg(reg);
     }
     {
@@ -122,9 +126,9 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
     return write_reg(reg);
 }
 
-IResult<> MA730::set_direction(const bool direction){
+IResult<> MA730::set_direction(const ClockDirection direction){
     auto reg = RegCopy(direction_reg);
-    reg.direction = direction;
+    reg.direction = direction == CCW;
     return write_reg(reg);
 }
 
@@ -137,24 +141,26 @@ IResult<> MA730::set_zparameters(const Width width, const Phase phase){
 }
 
 IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
-    ppt = CLAMP(ppt - 1, 0, 1023);
+    const auto ppt_u10 = CLAMP(ppt - 1, 0, 1023);
 
     {
-        uint8_t ppt_l = ppt & 0b11;
+        const uint8_t ppt_l = ppt_u10 & 0b11;
 
         auto reg = RegCopy(z_parameters_reg);
         reg.ppt = ppt_l;
+
         if(const auto res = (write_reg(reg));
-            res.is_err()) return Err(res.unwrap_err()); 
+            unlikely(res.is_err())) return Err(res.unwrap_err()); 
     }
 
     {
-        uint8_t ppt_h = ppt >> 2;
+        const uint8_t ppt_h = ppt_u10 >> 2;
 
         auto reg = RegCopy(pulse_per_turn_reg);
         reg.data = ppt_h;
+
         if(const auto res = (write_reg(reg));
-            res.is_err()) return Err(res.unwrap_err());
+            unlikely(res.is_err())) return Err(res.unwrap_err());
     }
 
     return Ok();

@@ -197,7 +197,7 @@ struct ZdtMotor_Prelude{
         ) {
             if(msgs.size() == 0)
                 return Err(Error::RxNoMsgToDump);
-            if(msgs[0].is_std())
+            if(msgs[0].is_standard())
                 return Err(Error::RxMsgIdTypeNotMatch);
             
             DumpInfo info;

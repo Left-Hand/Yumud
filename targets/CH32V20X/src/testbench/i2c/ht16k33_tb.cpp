@@ -1,4 +1,7 @@
 #include "core/debug/debug.hpp"
+#include "core/sync/spinlock.hpp"
+#include "core/sync/barrier.hpp"
+#include "core/string/fixed_string.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -8,16 +11,12 @@
 
 #include "drivers/HID/TM1637/TM1637.hpp"
 #include "drivers/HID/HT16K33/HT16K33.hpp"
-
-
 #include "drivers/HID/prelude/keycode.hpp"
 #include "drivers/HID/prelude/axis_input.hpp"
 #include "drivers/HID/prelude/segcode.hpp"
 #include "drivers/HID/prelude/button_input.hpp"
 
 #include <atomic>
-#include "core/sync/spinlock.hpp"
-#include "core/sync/barrier.hpp"
 #include <barrier>
 
 
@@ -181,139 +180,7 @@ private:
     HT16K33 & inst_;
 };
 
-template<size_t N>
-class FixedString{
-public:
-    constexpr FixedString(const StringView str):
-        len_(MIN(str.length(), N))
-    {
-        // memcpy(buf_, str.data(), len_);
-        for(size_t i = 0; i < len_; i++){
-            buf_[i] = str.data()[i];
-        }
-    }
 
-    constexpr FixedString():
-        len_(0){;}
-
-    constexpr StringView as_view() const {
-        return StringView(buf_, len_);
-    }
-
-    [[nodiscard]] constexpr Result<void, void> push_back(const char chr){
-        if(len_ >= N) return Err();
-        buf_[len_++] = chr;
-        return Ok();
-    }
-
-    [[nodiscard]] constexpr Result<char, void> pop_back(){
-        if(len_ == 0) return Err();
-        return Ok(buf_[--len_]);
-    }
-
-    [[nodiscard]] constexpr size_t length() const{
-        return len_;
-    }
-
-    constexpr void try_insert(const size_t idx, const char chr){
-        if (len_ >= N or idx > len_) return;
-        // Move characters from the end to make space for the new character
-        for (size_t i = len_; i > idx; i--) {
-            buf_[i] = buf_[i - 1];
-        }
-        // Insert the new character at the specified index
-        buf_[idx] = chr;
-        // Increase the length of the string
-        len_++;
-    }
-
-    [[nodiscard]] constexpr Result<void, void> insert(const size_t idx, const char chr){
-        if (len_ >= N || idx > len_) return Err();
-        // Move characters from the end to make space for the new character
-        for (size_t i = len_; i > idx; i--) {
-            buf_[i] = buf_[i - 1];
-        }
-        // Insert the new character at the specified index
-        buf_[idx] = chr;
-        // Increase the length of the string
-        len_++;
-
-        return Ok();
-    }
-
-    [[nodiscard]] constexpr Result<void, void> erase(const size_t idx){
-        if (idx > len_) return Err();  // 正确索引检查
-        if (len_ == 0) return Err();    // 防止空字符串操作
-        if (idx == 0) return Err();
-
-        // 前移字符（注意循环终止条件）
-        for (size_t i = idx-1; i < len_ - 1; i++) {
-            buf_[i] = buf_[i + 1];
-        }
-
-        len_--;  // 必须更新长度
-        return Ok();
-    }
-
-    constexpr void clear(){
-        for(size_t i = 0; i < len_; i++)
-            buf_[i] = 0;
-        len_ = 0;
-    }
-
-    [[nodiscard]]constexpr bool operator==(const StringView & other) const {
-        return len_ == other.length() && std::memcmp(buf_, other.data(), len_) == 0;
-    } 
-
-    // constexpr Result<void, void> 
-    // constexpr char & operator 
-private:
-
-    char buf_[N] = {};
-    size_t len_;
-
-    #if 0
-    static consteval void static_test(){
-        constexpr auto str = FixedString<10>("Hello");
-        constexpr auto str2 = []{
-            auto _str = FixedString<10>("Hello");
-            _str.try_push_back('!');
-            return _str;
-        }();
-
-        constexpr auto str3 = []{
-            auto _str = FixedString<10>("Hello");
-            _str.insert(0, '!');
-            return _str;
-        }();
-
-        constexpr auto str4 = []{
-            auto _str = FixedString<10>("Hello");
-            _str.erase(4);
-            return _str;
-        }();
-
-        static_assert(str.length() == 5);
-        static_assert(str2.length() == 6);
-        static_assert(str3.length() == 6);
-        static_assert(str2 == StringView("Hello!"));
-        static_assert(str3 == StringView("!Hello"));
-        static_assert(str4 == StringView("Hell"));
-
-        // 测试越界插入
-        static_assert([]{
-            auto str = FixedString<5>("Hi");
-            str.try_insert(3, '!');  // 允许在 len_=2 的索引3插入
-            return str == StringView("Hi!");  // ✅ 应成功
-        }());
-
-        // 测试无效插入返回错误
-        static_assert(
-            FixedString<3>("A").insert(5, 'X').is_err()  // ✅ 应返回错误
-        );
-    }
-    #endif
-};
 
 class LineEdit final{
 private:
@@ -465,7 +332,7 @@ private:
     }
 
     constexpr void handle_insert_char(const size_t position, const char chr){
-        const auto res = str_.insert(position, chr);
+        const auto res = str_.try_insert(position, chr);
         if(res.is_ok()){
             // cursor_ = cursor_.try_shift(1, str_.length());
             // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
@@ -484,7 +351,7 @@ private:
 
     constexpr void handle_backspace(){
         const auto position = cursor_.position();
-        const auto res = str_.erase(position);
+        const auto res = str_.try_erase(position);
         if(res.is_ok()){
             cursor_ = cursor_
                 .shift(-1, str_.length())

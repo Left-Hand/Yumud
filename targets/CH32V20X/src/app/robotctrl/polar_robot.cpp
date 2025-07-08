@@ -2,19 +2,20 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/sync/timer.hpp"
+#include "core/string/StringView.hpp"
+
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
+#include "robots/cannet/slcan/slcan.hpp"
+#include "robots/cannet/can_chain.hpp"
 
-#include "core/string/StringView.hpp"
+
 #include "atomic"
 #include "types/vectors/vector2/Vector2.hpp"
-
-
-#include "robots/cannet/slcan/slcan.hpp"
 #include "details/polar_robot_curvedata.hpp"
 
-#include "core/sync/timer.hpp"
 #include "types/colors/color/color.hpp"
 
 
@@ -33,6 +34,7 @@ using namespace ymd::robots;
 // #define PHY_SEL PHY_SEL_UART
 #define PHY_SEL PHY_SEL_CAN
 
+//CAN1 TX/PB9 RX/PB8
 
 class LedService{
 public:
@@ -353,41 +355,20 @@ private:
 
 };
 
-class CanMsgHandlerIntf{ 
-public:
-    struct HandleStatus{
-        static constexpr HandleStatus from_handled() { return HandleStatus{true}; }
-        static constexpr HandleStatus from_unhandled() { return HandleStatus{false}; }
-
-        bool is_handled() const { return is_handled_; }
-    private:
-        constexpr HandleStatus(bool is_handled) : is_handled_(is_handled) {}
-
-        bool is_handled_;
-    };
-
-    virtual HandleStatus handle(const hal::CanMsg & msg) = 0;
-};
-
-class CanMsgHandlerChainlink final: public CanMsgHandlerIntf{ 
-public:
-    CanMsgHandlerChainlink(
-        Some<CanMsgHandlerIntf *> curr, 
-        Option<CanMsgHandlerIntf &> next
-    ):
-        curr_handler_(*curr.get()),
-        next_handler_(next){;}
-
+class CanHandlerAdaptor_PolarRobotActuator final:
+public CanMsgHandlerIntf{
     HandleStatus handle(const hal::CanMsg & msg){ 
-        HandleStatus res = curr_handler_.handle(msg);
-        if(next_handler_.is_none()) return res;
-        return next_handler_.unwrap().handle(msg);
+        if(not msg.is_standard()) 
+            return HandleStatus::from_unhandled();
+        switch(msg.id_as_u32()){
+            case 0:
+                DEBUG_PRINTLN("o"); break;
+            default:
+                return HandleStatus::from_unhandled();
+        }
+        return HandleStatus::from_handled();
     }
-private:
-    CanMsgHandlerIntf & curr_handler_;
-    Option<CanMsgHandlerIntf &> next_handler_ = None;
 };
-
 
 template<typename T>
 class RobotMsgCtrp{
@@ -410,28 +391,7 @@ class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
     } 
 };
 
-class CanHandlerAdaptor_PolarRobotActuator final:
-public CanMsgHandlerIntf{
-    HandleStatus handle(const hal::CanMsg & msg){ 
-        if(not msg.is_std()) 
-            return HandleStatus::from_unhandled();
-        switch(msg.id_as_u32()){
-            case 0:
-                DEBUG_PRINTLN("o"); break;
-            default:
-                return HandleStatus::from_unhandled();
-        }
-        return HandleStatus::from_handled();
-    }
-};
 
-class CanHandlerTerminator final: 
-public CanMsgHandlerIntf{ 
-    HandleStatus handle(const hal::CanMsg & msg){ 
-        // PANIC("uncaught msg", msg);
-        return HandleStatus::from_handled();
-    }
-};
 
 // #define MOCK_TEST
 struct QueuePointIterator{
@@ -512,6 +472,7 @@ void polar_robot_main(){
         .mode = CanMode::Normal
     });
 
+
     COMM_CAN.enable_hw_retransmit(DISEN);
     ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
     ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
@@ -559,75 +520,20 @@ void polar_robot_main(){
     constexpr auto SAMPLE_DUR = 700ms; 
     // auto rpt = RepeatTimer{SAMPLE_DUR};
 
-    #if 0
-    while(true){
-        static size_t i = 0;
-
-        rpt.invoke([&]{i++;});
-
-        const auto curr_i = i % data.size();
-        const auto next_i = (i + 1) % data.size();
-
-
-        const auto p1 = data[curr_i];
-        const auto p2 = data[next_i];
-
-        const auto r = real_t(rpt.since_last_invoke().count()) / SAMPLE_DUR.count();
-        const auto p = p1.lerp(p2, r);
-        // const auto p1 = Vector2<real_t>(-0.02_r, -0.17_r);
-        // const auto p2 = Vector2<real_t>(0.17_r, 0.02_r);
-
-        // const auto p = p1.lerp(p2, 0.5_r + 0.5_r * sinpu(clock::time() * 0.1_r));
-        // const auto p = Vector2<real_t>(0.1_r, 0.0_r) + Vector2<real_t>(0, 0.07_r).rotated(clock::time() * 0.2_r);
-
-        // const auto p1 = Vector2<real_t>(-0.02_r, -0.17_r);
-        // const auto p2 = Vector2<real_t>(0.17_r, 0.02_r);
-
-        // const auto p = Vector2<real_t>::RIGHT.rotated(clock::time() * 0.4_r) * 
-        //     ((0.5_r + 0.5_r * sinpu(clock::time() * 0.5_r)) * 0.1_r + 0.1_r);
-        robot_actuator.set_position(p.x, p.y);
-        DEBUG_PRINTLN(p.x, p.y, i, r, rpt.since_last_invoke().count());
-
-        clock::delay(5ms);
-        // if(COMM_UART.available()){
-        //     std::vector<uint8_t> recv;
-        //     while(COMM_UART.available()){
-        //         char chr;
-        //         COMM_UART.read1(chr);
-        //         recv.push_back(chr);
-        //     }
-
-        //     DEBUG_PRINTLN(
-        //         "ret", 
-        //         std::hex, 
-        //         std::noshowbase, 
-        //         recv
-        //     );
-        // }
-
-        // constexpr auto k =  2_r / sqrt(2_r) * 0.1_r;
-        // const auto [s,c] = sincospu(clock::time());
-        // const auto p = atan2(s * k,s * k);
-        // DEBUG_PRINTLN(s * k,c * k,p);
-
-        repl_service.invoke(list);
-    }
-    #else 
-
     auto it = QueuePointIterator{std::span(curve_data)};
 
     while(true){
-        
-        const auto p = it.next();
+        async::RepeatTimer timer{5ms};
+        timer.invoke_if([&]{
+            const auto p = it.next();
 
-        robot_actuator.set_position(p.x, p.y);
-        DEBUG_PRINTLN(p.x, p.y);
+            robot_actuator.set_position(p.x, p.y);
+            DEBUG_PRINTLN(p.x, p.y);
 
-        clock::delay(5ms);
-
-        repl_service.invoke(list);
+            repl_service.invoke(list);
+        });
     }
-    #endif
+
 
     while(true){
         DEBUG_PRINTLN(clock::millis());

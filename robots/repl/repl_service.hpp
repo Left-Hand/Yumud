@@ -2,6 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/stream/dummy_stream.hpp"
+#include "core/string/fixed_string.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "robots/rpc/rpc.hpp"
@@ -15,16 +16,20 @@ public:
         is_(std::move(is)), 
         os_(std::move(os)){;}
 
-    void process(const real_t t){
-        
-    }
-        
-        
     template<typename T>
     void invoke(T && obj){
         while(is_->available()){
             char chr;
             is_->read1(chr);
+
+            // temp_str_.push_back(chr).unwrap();
+
+            // if(chr == '\n'){
+            //     // DEBUG_PRINTLN(splitter_.temp());
+            //     DEBUG_PRINTLN(temp_str_);
+            //     temp_str_.clear();
+            // }
+
             splitter_.update(chr, [this, &obj](const StringViews strs){
                 respond(obj, strs);});
         }
@@ -36,6 +41,8 @@ private:
     OutputStreamByRoute os_;
 
     ArgSplitter splitter_;
+    // FixedString<64> temp_str_;
+    
     bool outen_ = true;
     
     template<typename T>

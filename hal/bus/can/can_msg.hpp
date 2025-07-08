@@ -51,12 +51,12 @@ struct CanMsgDetails{
             return std::bit_cast<uint32_t>(*this);
         }
 
-        constexpr bool is_ext() const{
+        constexpr bool is_extended() const{
             return is_ext_;
         }
 
-        constexpr bool is_std() const{
-            return !is_ext();
+        constexpr bool is_standard() const{
+            return !is_extended();
         }
 
         constexpr bool is_remote() const {
@@ -211,8 +211,8 @@ public:
         else __builtin_abort();
     }
 
-    constexpr bool is_std() const {return identifier_.is_std();}
-    constexpr bool is_ext() const {return identifier_.is_ext();}
+    constexpr bool is_standard() const {return identifier_.is_standard();}
+    constexpr bool is_extended() const {return identifier_.is_extended();}
     constexpr bool is_remote() const {return identifier_.is_remote();}
     constexpr uint8_t mailbox() const {return mbox_;}
 
@@ -221,12 +221,12 @@ public:
     }
 
     constexpr Option<hal::CanStdId> stdid() const {
-        if(not identifier_.is_std()) return None;
+        if(not identifier_.is_standard()) return None;
         return Some(hal::CanStdId::from_raw(identifier_.id()));
     }
 
     constexpr Option<hal::CanExtId> extid() const {
-        if(not identifier_.is_ext()) return None;
+        if(not identifier_.is_extended()) return None;
         return Some(hal::CanExtId::from_raw(identifier_.id()));
     }
 

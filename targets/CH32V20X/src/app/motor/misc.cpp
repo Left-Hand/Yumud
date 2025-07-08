@@ -627,4 +627,76 @@ class BldcMotor{
         }
     };
 
+
+
+class CurrentBiasCalibrater{
+public:
+    struct Config{
+        uint32_t period_ticks;
+        uint32_t fc;
+        uint32_t fs;
+    };
+
+    using Lpf = LowpassFilter<iq_t<16>>;
+    using Lpfs = std::array<Lpf, 3>;
+
+    Lpfs lpfs_ = {};
+
+protected:
+    uint32_t period_ticks_;
+    uint32_t elapsed_ticks_;
+    uint32_t fs_;
+
+    // real_t last_midp_curr_ = 0;
+public:
+    CurrentBiasCalibrater(const Config & config){
+        reconf(config);
+        reset();
+    }
+
+    void reconf(const Config & config){
+        period_ticks_ = config.period_ticks;
+        fs_ = config.fs;
+
+        // const auto alpha = Lpf::solve_alpha(config.fc, config.fs);
+        lpfs_[0].reconf({config.fc, config.fs});
+        lpfs_[1].reconf({config.fc, config.fs});
+        lpfs_[2].reconf({config.fc, config.fs});
+
+    }
+
+    void reset(){
+        elapsed_ticks_ = 0;
+        for(auto & lpf : lpfs_){
+            lpf.reset();
+        }
+    }
+
+    void update(const UvwCurrent & uvw, const real_t mid_point){
+        lpfs_[0].update(uvw.u);
+        lpfs_[1].update(uvw.v);
+        lpfs_[2].update(uvw.w);
+        elapsed_ticks_ ++;
+
+        // constexpr auto stable_curr_slewrate = 10.0_r;
+        // constexpr auto stable_threshold = stable_curr_slewrate / FOC_FREQ;
+
+        // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
+        // last_midp_curr_ = mid_point;
+
+        // curr_stable_checker.update(mid_point_diff < stable_threshold);
+    }
+
+    bool is_done(){
+        return elapsed_ticks_ >= period_ticks_;
+    }
+
+    UvwCurrent result() const{
+        return {
+            lpfs_[0].get(),
+            lpfs_[1].get(),
+            lpfs_[2].get(),
+        };
+    }
+};
 #endif

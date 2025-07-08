@@ -77,6 +77,30 @@ private:
         return map[fs];
     }
 
+    static constexpr q24 calc_gyr_scale(const GyrFs fs){
+        switch(fs){
+            case GyrFs::_2000DPS  :      return 2000_deg;
+            case GyrFs::_1000DPS  :      return 1000_deg;
+            case GyrFs::_500DPS   :      return 500_deg;
+            case GyrFs::_250DPS   :      return 250_deg;
+            case GyrFs::_125DPS   :      return 125_deg;
+            case GyrFs::_62_5DPS  :      return 62.5_deg;
+            case GyrFs::_31_25DPS :      return 31.25_deg;
+            case GyrFs::_15_625DPS:      return 15.625_deg;
+            default: __builtin_unreachable();
+        }
+    }
+
+    static constexpr q24 calc_acc_scale(const AccFs fs){
+        switch(fs){
+            case AccFs::_16G    :       return GRAVITY_ACC<q24> * 16;
+            case AccFs::_8G     :       return GRAVITY_ACC<q24> * 8;
+            case AccFs::_4G     :       return GRAVITY_ACC<q24> * 4;
+            case AccFs::_2G     :       return GRAVITY_ACC<q24> * 2;
+            default: __builtin_unreachable();
+        }
+    }
+
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);

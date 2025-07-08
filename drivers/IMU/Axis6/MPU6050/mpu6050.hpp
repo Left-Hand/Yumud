@@ -42,6 +42,12 @@ struct MPU6050_Prelude{
     };
 
     using RegAddress = uint8_t;   
+
+    struct Config{
+        Package packge = Package::MPU6050;
+        AccFs acc_fs = AccFs::_2G;
+        GyrFs gyr_fs = GyrFs::_1000deg;
+    };
 };
 
 struct MPU6050_Regs:public MPU6050_Prelude{ 
@@ -115,7 +121,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     
     [[nodiscard]] IResult<> update();
 
@@ -123,8 +129,8 @@ public:
     [[nodiscard]] IResult<Vector3<q24>> read_gyr();
     [[nodiscard]] IResult<real_t> read_temp();
 
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
 
     [[nodiscard]] IResult<> reset();
 
@@ -144,36 +150,6 @@ private:
     Package package_ = Package::MPU6050;
     real_t acc_scaler_ = 0;
     real_t gyr_scaler_ = 0;
-
-
-    static constexpr real_t calculate_acc_scale(const AccFs range){
-        constexpr double g = 9.806;
-        switch(range){
-            default:
-            case AccFs::_2G:
-                return real_t(g * 2);
-            case AccFs::_4G:
-                return real_t(g * 4);
-            case AccFs::_8G:
-                return real_t(g * 8);
-            case AccFs::_16G:
-                return real_t(g * 16);
-        }
-    }
-
-    static constexpr real_t calculate_gyr_scale(const GyrFs range){
-        switch(range){
-            default:
-            case GyrFs::_250deg:
-                return real_t(ANGLE2RAD(250));
-            case GyrFs::_500deg:
-                return real_t(ANGLE2RAD(500));
-            case GyrFs::_1000deg:
-                return real_t(ANGLE2RAD(1000));
-            case GyrFs::_2000deg:
-                return real_t(ANGLE2RAD(2000));
-        }
-    }
 
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 
@@ -202,8 +178,27 @@ private:
         return read_reg(reg.address, reg.as_ref());
     }
 
-    [[nodiscard]] static constexpr 
-    uint8_t package2whoami(const Package package){return uint8_t(package);}
+    static constexpr real_t calculate_acc_scale(const AccFs fs){
+        constexpr double g = 9.806;
+        switch(fs){
+            case AccFs::_2G: return real_t(g * 2);
+            case AccFs::_4G: return real_t(g * 4);
+            case AccFs::_8G: return real_t(g * 8);
+            case AccFs::_16G: return real_t(g * 16);
+            default: __builtin_unreachable();
+        }
+    }
+
+    static constexpr real_t calculate_gyr_scale(const GyrFs fs){
+        switch(fs){
+            case GyrFs::_250deg: return real_t(250_deg);
+            case GyrFs::_500deg: return real_t(500_deg);
+            case GyrFs::_1000deg: return real_t(1000_deg);
+            case GyrFs::_2000deg: return real_t(2000_deg);
+            default: __builtin_unreachable();
+        }
+    }
+
 };
 
 };

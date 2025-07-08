@@ -47,14 +47,9 @@ struct Quat{
     T z;
     T w;
 
-static_assert(not std::is_integral_v<T>);
+    static_assert(not std::is_integral_v<T>);
 
-    __fast_inline constexpr Quat() :
-            x(0),
-            y(0),
-            z(0),
-            w(1) {
-    }
+    __fast_inline constexpr Quat() = default;
 
     static constexpr Quat<T> IDENTITY = Quat<T>(0,0,0,1);
 
@@ -68,7 +63,8 @@ static_assert(not std::is_integral_v<T>);
     }
 
     [[nodiscard]]
-    constexpr Quat(const Vector3<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
+    constexpr Quat(const Vector3<T> &axis, const T &angle) {
+        set_axis_angle(axis, angle); }
 
     [[nodiscard]]
     static constexpr Quat from_shortest_arc(const Vector3<T> &v0, const Vector3<T> &v1){
@@ -113,6 +109,7 @@ static_assert(not std::is_integral_v<T>);
         // Create and return the quaternion representing the rotation
         return Quat<T>(axis, angle);
     }
+
 
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
@@ -216,8 +213,8 @@ static_assert(not std::is_integral_v<T>);
 
     constexpr void set_axis_angle(const Vector3<T> &axis, const T &angle);
     constexpr void get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
-        r_angle = 2.0f * acos(w);
-        T r = (1.0f) / sqrt(1 - w * w);
+        r_angle = 2 * acos(w);
+        T r = isqrt(1 - w * w);
         r_axis.x = x * r;
         r_axis.y = y * r;
         r_axis.z = z * r;
@@ -261,11 +258,10 @@ static_assert(not std::is_integral_v<T>);
 
     [[nodiscard]] __fast_inline constexpr
     Vector3<T> xform_up() const {
-        // �������� v = (0, 0, 1)
         return Vector3<T>(
-            2 * (w * y + z * x),      // x ����
-            2 * (-w * x + z * y),     // y ����
-            2 * (z * z + w * w) - 1   // z ����
+            2 * (w * y + z * x),
+            2 * (-w * x + z * y),
+            2 * (z * z + w * w) - 1
         );
     }
 
@@ -314,10 +310,6 @@ static_assert(not std::is_integral_v<T>);
         angles.z = std::atan2(siny_cosp, cosy_cosp);
     
         return angles;
-        // return {
-        //     .x = std::atan2(sinr_cosp, cosr_cosp);
-        //     .y = 2 * (q.w * q.y - q.z * q.x);
-        // }
     }
 };
 
@@ -341,28 +333,6 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat<auto>
 template<arithmetic T>
 Quat() -> Quat<T>;
 }
-
-
-// namespace std{
-//     template<typename T>
-//     struct tuple_size<ymd::Quat<T>> {
-//         constexpr static size_t value = 4;
-//     };
-
-//     template<size_t N, typename T>
-//     struct tuple_element<N, ymd::Quat<T>> {
-//         using type = T;
-//     };
-
-//     template<size_t N, typename T>
-//     auto get(ymd::Quat<T> & v){
-//         static_assert(N < 4);
-//         if constexpr (N == 0) return v.x;
-//         else if constexpr (N == 1) return v.y;
-//         else if constexpr (N == 2) return v.z;
-//         else return v.w;
-//     }
-// }
 
 
 #include "Quat.tpp"

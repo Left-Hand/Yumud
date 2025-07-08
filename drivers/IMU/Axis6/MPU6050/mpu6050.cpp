@@ -52,14 +52,14 @@ MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     phy_(i2c_drv),
     package_(package){
     }
-    
-Result<void, Error> MPU6050::validate(){
+
+IResult<> MPU6050::validate(){
 
     RETURN_ON_ERR(this->reset())
 
     const auto pkres = this->get_package();
     if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) 
-        return Err(Error(Error::WrongWhoAmI));
+        return Err(Error::WrongWhoAmI);
     
     const auto package = pkres.unwrap();
 
@@ -73,14 +73,12 @@ Result<void, Error> MPU6050::validate(){
                 return Err(Error(Error::UnknownDevice));
             }
         }
-        return Ok();
     }
 
     return Ok();
 }
 
-
-Result<void, Error> MPU6050::init(){
+IResult<> MPU6050::init(const Config & cfg){
     RETURN_ON_ERR(validate())
     RETURN_ON_ERR(write_reg(0x6b, 0))
     RETURN_ON_ERR(write_reg(0x19, 0x00))
@@ -89,12 +87,11 @@ Result<void, Error> MPU6050::init(){
     RETURN_ON_ERR(write_reg(0x15, 0))
     RETURN_ON_ERR(write_reg(0x17, 0))
     RETURN_ON_ERR(write_reg(0x38, 0x00))
-    RETURN_ON_ERR(set_acc_fs(AccFs::_2G))
-    RETURN_ON_ERR(set_gyr_fs(GyrFs::_1000deg))
+    RETURN_ON_ERR(set_acc_fs(cfg.acc_fs))
+    RETURN_ON_ERR(set_gyr_fs(cfg.gyr_fs))
     return Ok();
 }
-
-Result<void, Error> MPU6050::update(){
+IResult<> MPU6050::update(){
     auto res = this->read_burst(
         acc_x_reg.address, std::span(&acc_x_reg.as_ref(), 7));
     data_valid = res.is_ok();
@@ -115,11 +112,10 @@ IResult<Vector3<q24>> MPU6050::read_gyr(){
     return Ok{Vector3<q24>{x, y, z}};
 }
 
-Result<real_t, Error> MPU6050::read_temp(){
+IResult<real_t> MPU6050::read_temp(){
     return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) / 340);
 }
-
-Result<void, Error> MPU6050::set_acc_fs(const AccFs range){
+IResult<> MPU6050::set_acc_fs(const AccFs range){
     this->acc_scaler_ = this->calculate_acc_scale(range);
 
     auto reg = RegCopy(acc_conf_reg);
@@ -133,8 +129,7 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
     }
     return Ok{Package(whoami_reg.data)};
 }
-
-Result<void, Error> MPU6050::set_gyr_fs(const GyrFs range){
+IResult<> MPU6050::set_gyr_fs(const GyrFs range){
     this->gyr_scaler_ = this->calculate_gyr_scale(range);
     auto reg = RegCopy(gyr_conf_reg);
     reg.fs_sel = range;
@@ -142,14 +137,12 @@ Result<void, Error> MPU6050::set_gyr_fs(const GyrFs range){
     return write_reg(reg);
 }
 
-
-Result<void, Error> MPU6050::reset(){
-    const auto berr = phy_.reset();
-    if(berr.is_ok()) return Ok();
-    else return Err(berr.unwrap_err());
+IResult<> MPU6050::reset(){
+    if(const auto res = phy_.reset(); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
-
-Result<void, Error> MPU6050::enable_direct_mode(const Enable en){
+IResult<> MPU6050::enable_direct_mode(const Enable en){
     // int_pin_cfg_reg.bypass_en = bool(en);
     auto reg = RegCopy(int_pin_cfg_reg);
     reg.as_ref() = 0x22;

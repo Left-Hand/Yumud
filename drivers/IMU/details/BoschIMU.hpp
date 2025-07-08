@@ -32,7 +32,7 @@ public:
             );
         }
 
-        PANIC();
+        return Err(Error::NoAvailablePhy);
     }
 
     template<typename T>
@@ -55,7 +55,8 @@ public:
             );
         }
 
-        PANIC();
+
+        return Err(Error::NoAvailablePhy);
     }
 
     [[nodiscard]] __fast_inline
@@ -69,7 +70,7 @@ public:
             );
         }
 
-        PANIC();
+        return Err(Error::NoAvailablePhy);
     }
 
     

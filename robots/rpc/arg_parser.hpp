@@ -9,6 +9,36 @@
 namespace ymd{
 
 struct ArgSplitter final{
+
+public:
+    ArgSplitter(){;}
+
+    template<typename Fn>
+    constexpr void update(const char chr, Fn && fn){
+        if(is_valid_char(chr)){
+            temp_str_.push_back(chr);
+        }
+
+        if(temp_str_.size() >= STR_MAX_LENGTH){
+            on_buf_overflow();
+            temp_str_.clear();
+        }
+
+        if(chr == '\n'){
+            send_line(
+                StringView(temp_str_.data(), temp_str_.size()), 
+                delimiter_,
+                std::forward<Fn>(fn)
+            );
+
+            temp_str_.clear();
+        }
+    }
+
+    StringView temp() const {
+        return StringView{temp_str_.data(), temp_str_.size()};
+    }
+
 private:
     static constexpr size_t STR_MAX_LENGTH = 64;
     static constexpr size_t STR_MAX_PIECES = 16;
@@ -64,30 +94,6 @@ private:
         //TODO
     }
 
-public:
-    ArgSplitter(){;}
-
-    template<typename Fn>
-    constexpr void update(const char chr, Fn && fn){
-        if(is_valid_char(chr)){
-            temp_str_.push_back(chr);
-        }
-
-        if(temp_str_.size() >= STR_MAX_LENGTH){
-            on_buf_overflow();
-            temp_str_.clear();
-        }
-
-        if(chr == '\n'){
-            send_line(
-                StringView(temp_str_.data(), temp_str_.size()), 
-                delimiter_,
-                std::forward<Fn>(fn)
-            );
-
-            temp_str_.clear();
-        }
-    }
 };
 
 }

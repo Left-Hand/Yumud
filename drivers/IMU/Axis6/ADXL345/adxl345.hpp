@@ -8,31 +8,8 @@
 
 namespace ymd::drivers{
 
-class ADXL345:public AccelerometerIntf, public GyroscopeIntf{
-public:
-    using Error = ImuError;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class DataRate:uint8_t{
-        HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,
-        HZ12_5,HZ25,HZ50,HZ100,HZ200,HZ400,HZ800,HZ1600,HZ3200
-    };
-
-    enum class WakeupFreq:uint8_t{
-        HZ8, HZ4, HZ2, HZ1
-    };
-
-    enum class MeasureRange:uint8_t{
-        G2, G4, G8, G16
-    };
-
-    enum class FifoMode:uint8_t{
-        Bypass,Fifo, Stream, Trigger
-    };
-
-protected:
+struct ADXL345_Prelude{
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
 
     enum class RegAddress:uint8_t{
         DeviceID = 0x00,
@@ -67,7 +44,33 @@ protected:
         FifoStatus = 0x38
     };
 
+    using Error = ImuError;
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class DataRate:uint8_t{
+        HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,
+        HZ12_5,HZ25,HZ50,HZ100,HZ200,HZ400,HZ800,HZ1600,HZ3200
+    };
+
+    enum class WakeupFreq:uint8_t{
+        HZ8, HZ4, HZ2, HZ1
+    };
+
+    enum class MeasureRange:uint8_t{
+        G2, G4, G8, G16
+    };
+
+    enum class FifoMode:uint8_t{
+        Bypass,Fifo, Stream, Trigger
+    };
+
+
+
+};
+
+struct ADXL345_Regs final :public ADXL345_Prelude{
     struct DeviceIDReg:public Reg8<>{
         uint8_t data;
     };
@@ -295,16 +298,15 @@ protected:
     DataZ1Reg dataZ1Reg = {};
     FifoCtrlReg fifoCtrlReg = {};
     FifoStatusReg fifoStatusReg = {};
+};
 
-protected:
-    AnalogDeviceIMU_Phy phy_;
+class ADXL345:
+    public AccelerometerIntf, 
+    public GyroscopeIntf,
+    public ADXL345_Prelude
+{
 
-    IResult<> write_reg(const RegAddress reg_address, const uint8_t reg_data);
-
-    IResult<> read_reg(const RegAddress reg_address, uint8_t & reg_data);
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
-
     ADXL345(const hal::I2cDrv & i2c_drv): phy_(i2c_drv){;}
     ADXL345(hal::I2cDrv && i2c_drv): phy_(i2c_drv){;}
     ADXL345(
@@ -323,7 +325,12 @@ public:
 
     IResult<Vector3<q24>> read_acc();
     IResult<Vector3<q24>> read_gyr();
+private:
+    AnalogDeviceIMU_Phy phy_;
 
+    IResult<> write_reg(const RegAddress reg_address, const uint8_t reg_data);
+
+    IResult<> read_reg(const RegAddress reg_address, uint8_t & reg_data);
 };
 
 };

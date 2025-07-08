@@ -2,6 +2,8 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/polymorphism/traits.hpp"
+#include "core/polymorphism/reflect.hpp"
+#include "core/sync/timer.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -9,15 +11,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/opa/opa.hpp"
-
-#include "algo/interpolation/cubic.hpp"
-
-#include "robots/rpc/rpc.hpp"
-#include "src/testbench/tb.h"
-
-#include "robots/rpc/arg_parser.hpp"
-
-#include "app/stepper/ctrl.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
@@ -34,11 +27,24 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
-#include "core/polymorphism/reflect.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+
+
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "CurrentSensor.hpp"
 
+#include "types/vectors/quat/Quat.hpp"
+
+#include "algo/interpolation/cubic.hpp"
+
+#include "src/testbench/tb.h"
+
+#include "robots/rpc/arg_parser.hpp"
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "robots/cannet/can_chain.hpp"
+
+#include "app/stepper/ctrl.hpp"
+#include "utils.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -47,109 +53,21 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::intp;
 
-scexpr uint32_t CHOPPER_FREQ = 50000;
-scexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
+static constexpr uint32_t CHOPPER_FREQ = 25000;
+static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
+static constexpr real_t POSITION_LIMIT = 0.2_r;
 
 
 
-class CurrentSensor{
-protected:
-    hal::AnalogInIntf & u_sense_;
-    hal::AnalogInIntf & v_sense_;
-    hal::AnalogInIntf & w_sense_;
-
-    UvwCurrent uvw_bias_;
-    UvwCurrent uvw_raw_;
-    UvwCurrent uvw_curr_;
-    real_t mid_curr_;
-    AbCurrent ab_curr_;
-    DqCurrent dq_curr_;
-
-    dsp::ButterLowpassFilter<q16, 2> mid_filter_ = {{
-        .fc = 400,
-        .fs = FOC_FREQ
-    }};
 
 
-    void capture(){
-        uvw_raw_ = {
-            real_t(u_sense_),
-            real_t(v_sense_),
-            real_t(w_sense_)
-        };
-        // uvw_raw_ = {
-        //     real_t(0),
-        //     real_t(0),
-        //     real_t(0)
-        // };
 
-        mid_filter_.update((uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) * q16(1.0/3));
-
-        mid_curr_ = mid_filter_.get();
-        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
-        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
-        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
-
-        ab_curr_ = AbCurrent::from_uvw(uvw_curr_);
-    }
-
-public:
-    CurrentSensor(
-        hal::AnalogInIntf & u_sense,
-        hal::AnalogInIntf & v_sense, 
-        hal::AnalogInIntf & w_sense
-    ): 
-        u_sense_(u_sense),
-        v_sense_(v_sense), 
-        w_sense_(w_sense){
-            reset();
-        }
-
-    void reset(){
-        uvw_curr_ = {0, 0, 0};
-        uvw_bias_ = {0, 0, 0};
-        ab_curr_ = {0, 0};
-        dq_curr_ = {0, 0};
-    }
-
-    void update(const real_t rad){
-        
-            
-        capture();
-
-        dq_curr_ = DqCurrent::from_ab(ab_curr_, rad);
-    }
-
-
-    const auto &  raw()const {return uvw_raw_;}
-    const auto &  mid() const {return mid_curr_;}
-    const auto &  uvw()const{return uvw_curr_;}
-    // auto uvw(){return uvw_curr_;}
-    const auto & ab()const{return ab_curr_;}
-    // auto ab(){return ab_curr_;}
-    const auto & dq()const{return dq_curr_;}
-    // auto dq(){return dq_curr_;}
-};
-
-
-template<size_t N>
-__fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
-    constexpr size_t sc = ((1 << N) - 1);
-    return (x * sc + y) >> N;
-}
-
-
-__inline constexpr real_t degrees(const real_t deg){
-    return deg * real_t(TAU / 180);
-}
 
 TRAIT_STRUCT(SensorlessObserverTrait,
     TRAIT_METHOD(void, reset),
 	TRAIT_METHOD(void, update, iq_t<16>, iq_t<16>, iq_t<16>, iq_t<16>),
     TRAIT_METHOD(iq_t<16>, theta)
 )
-
-
 
 void init_adc(hal::AdcPrimary & adc){
 
@@ -201,87 +119,6 @@ public:
 };
 
 
-enum class MotorRole:uint8_t{
-    Old,
-    New
-};
-
-
-class CurrentBiasCalibrater{
-public:
-    struct Config{
-        uint32_t period_ticks;
-        uint32_t fc;
-        uint32_t fs;
-    };
-
-    using Lpf = LowpassFilter<iq_t<16>>;
-    using Lpfs = std::array<Lpf, 3>;
-
-    Lpfs lpfs_ = {};
-
-protected:
-    uint32_t period_ticks_;
-    uint32_t elapsed_ticks_;
-    uint32_t fs_;
-
-    // real_t last_midp_curr_ = 0;
-public:
-    CurrentBiasCalibrater(const Config & config){
-        reconf(config);
-        reset();
-    }
-
-    void reconf(const Config & config){
-        period_ticks_ = config.period_ticks;
-        fs_ = config.fs;
-
-        // const auto alpha = Lpf::solve_alpha(config.fc, config.fs);
-        lpfs_[0].reconf({config.fc, config.fs});
-        lpfs_[1].reconf({config.fc, config.fs});
-        lpfs_[2].reconf({config.fc, config.fs});
-
-    }
-
-    void reset(){
-        elapsed_ticks_ = 0;
-        for(auto & lpf : lpfs_){
-            lpf.reset();
-        }
-    }
-
-    void update(const UvwCurrent & uvw, const real_t mid_point){
-        lpfs_[0].update(uvw.u);
-        lpfs_[1].update(uvw.v);
-        lpfs_[2].update(uvw.w);
-        elapsed_ticks_ ++;
-
-        // constexpr auto stable_curr_slewrate = 10.0_r;
-        // constexpr auto stable_threshold = stable_curr_slewrate / FOC_FREQ;
-
-        // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
-        // last_midp_curr_ = mid_point;
-
-        // curr_stable_checker.update(mid_point_diff < stable_threshold);
-    }
-
-    bool is_done(){
-        return elapsed_ticks_ >= period_ticks_;
-    }
-
-    UvwCurrent result() const{
-        return {
-            lpfs_[0].get(),
-            lpfs_[1].get(),
-            lpfs_[2].get(),
-        };
-    }
-};
-
-class CalibraterOrchestor{
-
-};
-
 __no_inline void init_opa(){
     hal::opa1.init<1,1,1>();
 }
@@ -295,7 +132,114 @@ struct ElecradCompensator{
     }
 };
 
+struct PdCtrlLaw{
+    real_t kp;
+    real_t kd;
+
+    constexpr real_t operator()(const real_t p_err, const real_t v_err) const {
+        return kp * p_err + kd * v_err;
+    } 
+};
+
+
+
+
+
+enum class NodeRole:uint8_t{
+    RollJoint = 1,
+    PitchJoint = 2
+};
+
+
+OutputStream & operator<<(OutputStream & os, const NodeRole & role){ 
+    switch(role){
+        case NodeRole::RollJoint: return os << "RollJoint";
+        case NodeRole::PitchJoint: return os << "PitchJoint";
+        default: __builtin_unreachable();
+    }
+}
+
+namespace ymd{
+
+enum class Command:uint8_t{
+    SetPosition = 0
+};
+
+struct SetPositionCommand{
+    static constexpr auto COMMAND = Command::SetPosition;
+    iq_t<16> position;
+    iq_t<16> speed;
+
+    friend OutputStream & operator<<(OutputStream & os, const SetPositionCommand & self){ 
+        return os << os.scoped("SetPosition")(
+            os 
+            << os.field("position")(os << self.position) << os.splitter()
+            << os.field("speed")(os << self.speed)
+        );
+    }
+};
+
+
+template<>
+struct Serializer<SetPositionCommand> {
+    static constexpr std::array<uint8_t, 8> serialize(const SetPositionCommand& cmd) {
+        const auto posBytes = ::serialize(cmd.position);
+        const auto spdBytes = ::serialize(cmd.speed);
+
+        std::array<uint8_t, 8> result;
+        std::copy(posBytes.begin(), posBytes.end(), result.begin());
+        std::copy(spdBytes.begin(), spdBytes.end(), result.begin() + 4);
+        return result;
+    }
+};
+
+template<>
+struct Deserializer<SetPositionCommand> {
+    static constexpr Result<SetPositionCommand, DeserializeError> 
+    deserialize(std::span<const uint8_t> data) {
+        if (data.size() < 8) {
+            return Err(DeserializeError::BytesLengthShort);
+        }
+
+        auto pos_result = ::deserialize<iq_t<16>>(data.subspan<0, 4>());
+        if (pos_result.is_err()) {
+            return Err(pos_result.unwrap_err());
+        }
+
+        auto speed_result = ::deserialize<iq_t<16>>(data.subspan<4, 4>());
+        if (speed_result.is_err()) {
+            return Err(speed_result.unwrap_err());
+        }
+
+        return Ok(SetPositionCommand{
+            .position = pos_result.unwrap(),
+            .speed = speed_result.unwrap()
+        });
+    }
+};
+
+}
+
+
+static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
+    const auto id_u11 = id.as_raw();
+    return std::make_tuple(
+        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
+        std::bit_cast<Command>(uint8_t(id_u11 >> 7))
+    );
+};
+
+
+static constexpr auto comb_role_and_cmd(const NodeRole role, const Command cmd){
+    const auto id_u11 = uint16_t(
+        std::bit_cast<uint8_t>(role) 
+        | (std::bit_cast<uint8_t>(cmd) << 7));
+    return hal::CanStdId(id_u11);
+};
+
+
 void bldc_main(){
+    // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
     auto & spi = hal::spi1;
@@ -313,12 +257,45 @@ void bldc_main(){
     auto & pwm_v = timer.oc<2>();
     auto & pwm_w = timer.oc<3>(); 
 
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .baudrate = 576000
+    });
+
+
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
-    clock::delay(200ms);
+    // DEBUGGER.force_sync(EN);
+    DEBUGGER.no_fieldname();
+    DEBUGGER.no_scoped();
+
+    clock::delay(2ms);
+
+    can.init({
+        .baudrate = hal::CanBaudrate::_1M, 
+        .mode = hal::CanMode::Normal
+    });
+
+    can[0].mask(
+        {
+            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
+            .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
+        },{
+            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            // .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
+            .mask = hal::CanStdIdMask::ACCEPT_ALL()
+        }
+    );
+
+    auto blink_service = [&]{
+        static async::RepeatTimer timer{10ms};
+        timer.invoke_if([&]{
+            ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+            ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+            ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+        });
+    };
 
     spi.init({18_MHz});
 
@@ -338,6 +315,34 @@ void bldc_main(){
     pwm_v.init({});
     pwm_w.init({});
 
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    hal::portA[7].inana();
+
+    can.init({
+        .baudrate = hal::CanBaudrate::_1M,
+        .mode = hal::CanMode::Normal
+    });
+
+
+
+    auto get_node_role = [] -> Option<NodeRole>{
+        const auto chip_id_crc = sys::chip::get_chip_id_crc();
+        switch(chip_id_crc){
+            case 207097585:
+                return Some(NodeRole::PitchJoint);
+            case 736633164:
+                return Some(NodeRole::RollJoint);
+            default:
+                return None;
+        }
+    };
+
+    
+    const auto node_role = get_node_role().examine();  
+
+
 
     MA730 ma730{
         &spi,
@@ -351,32 +356,24 @@ void bldc_main(){
             .unwrap()
     };
 
-
-    ma730.init().examine();
-    bmi.init({}).examine();
-    bmi.set_acc_fs(BMI160::AccFs::_4G).examine();
-
-    can.init({hal::CanBaudrate::_1M});
-
-    const auto motor_role = []{
-        const auto chip_id_crc = sys::chip::get_chip_id_crc();
-        switch(chip_id_crc){
-            case 207097585:
-                return MotorRole::New;
-            default:
-                return MotorRole::Old;
-        }
-    }();
+    ma730.init({
+        .direction = CW
+    }).examine();
 
     // while(true){
-    //     bmi.update().examine();
-    //     // auto [x,y,z] = bmi.read_acc();
-    //     auto [x,y,z] = bmi.read_acc().examine();
-    //     DEBUG_PRINTLN(x,y,z);
-    //     clock::delay(2ms);
-    //     // DEBUGGER << std::endl;
+    //     ma730.update().examine();
+    //     DEBUG_PRINTLN(ma730.get_lap_position().examine());
+    //     blink_service();
+    //     clock::delay(5ms);
     // }
 
+    
+    bmi.init({
+        .acc_odr = BMI160::AccOdr::_200Hz,
+        .acc_fs = BMI160::AccFs::_16G,
+        .gyr_odr = BMI160::GyrOdr::_200Hz,
+        .gyr_fs = BMI160::GyrFs::_2000deg
+    }).examine();
 
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
@@ -393,20 +390,15 @@ void bldc_main(){
     SVPWM3 svpwm {mp6540};
     
 
-    auto & u_sense = mp6540.ch(1);
-    auto & v_sense = mp6540.ch(2);
-    auto & w_sense = mp6540.ch(3);
+    [[maybe_unused]] auto & u_sense = mp6540.ch(1);
+    [[maybe_unused]] auto & v_sense = mp6540.ch(2);
+    [[maybe_unused]] auto & w_sense = mp6540.ch(3);
     
 
     // init_opa();
     init_adc(adc);
-    [[maybe_unused]] real_t targ_spd_ = 0;
 
-    // UvwCurrent uvw_curr = {0,0,0};
-    real_t est_rad;
-
-    CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
-    // CurrentSensor curr_sens = {adc.inj(1), adc.inj(2), adc.inj(3)};
+    // CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
 
     ledr.outpp(); 
     ledb.outpp(); 
@@ -417,11 +409,8 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-
-    real_t mg_meas_rad_;
-    real_t sl_meas_rad_;
-
-
+    real_t base_roll_ = 0;
+    real_t base_omega_ = 0;
 
     AbVoltage ab_volt_;
     
@@ -432,181 +421,367 @@ void bldc_main(){
         }
     };
 
+    pos_sensor_.set_base_position(
+        [&] -> real_t{
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    return {0.223_r};
+                case NodeRole::RollJoint:
+                    return {0.38_r + 0.5_r};
+                default: __builtin_unreachable();
+            }
+        }()
+    );
+
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(motor_role){
-                case MotorRole::New:
-                    return -0.12_r;
-                case MotorRole::Old:
-                    return -0.25_r;
-                default:
-                    __builtin_unreachable();
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    return -0.282_r;
+                case NodeRole::RollJoint:
+                    return -0.253_r;
+                default: __builtin_unreachable();
             }
         }(),
         .pole_pairs = 7
     };
 
-    real_t d_volt_ = 0;
+
+
+
     real_t q_volt_ = 0;
     real_t meas_rad_ = 0;
+
+    
+    // while(true){
+    //     DEBUG_PRINTLN(node_role,sys::chip::get_chip_id_crc());
+    //     blink_service();
+    //     clock::delay(5ms);
+    // }
+    dsp::Leso leso{
+        [&]{
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    return dsp::Leso::Config{
+                        .b0 = 0.02_r,
+                        .w = 0.2_r,
+                        .fs = FOC_FREQ
+                    };
+                case NodeRole::RollJoint:
+                    return dsp::Leso::Config{
+                        .b0 = 1.3_r,
+                        .w = 13,
+                        .fs = FOC_FREQ
+                    };
+                default: __builtin_unreachable();
+            }
+        }()
+    };
+
+    auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
+        switch(node_role){
+            case NodeRole::PitchJoint:
+                // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
+                // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
+                return PdCtrlLaw{.kp = 16.581_r, .kd = 0.70_r};
+                // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
+            case NodeRole::RollJoint: 
+                return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
+            default: __builtin_unreachable();
+        }
+    }();
+
+    Microseconds exe_us_;
+    real_t track_pos_ = 0;
+    real_t track_spd_ = 0;
+
+    real_t elec_rad_;
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730.update().examine();
+        bmi.update().examine();
+
         const auto meas_lap = 1-ma730.get_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
 
 
         const real_t meas_rad = elecrad_comp_(meas_lap);
-
-        #define TEST_MODE_Q_SIN_CURR 1
-        #define TEST_MODE_VOLT_POS_CTRL 2
-        #define TEST_MODE_WEAK_MAG 3
-        #define TEST_MODE_POS_SIN 4
-        #define TEST_MODE_SQUARE_SWING 5
-        // #define TEST_MODE TEST_MODE_Q_SIN_CURR
-        #define TEST_MODE TEST_MODE_POS_SIN
-        // #define TEST_MODE TEST_MODE_SQUARE_SWING
-
-
-        #if (TEST_MODE == TEST_MODE_Q_SIN_CURR)
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(clock::time());
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-        #elif (TEST_MODE == TEST_MODE_VOLT_POS_CTRL)
-
-        #elif (TEST_MODE == TEST_MODE_WEAK_MAG)
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd =  0.2_r * sin(clock::time());
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-
-        // const auto d_volt = d_pi_ctrl.update(0.2_r, dq_curr.d);
-        // const auto q_volt = q_pi_ctrl.update(-0.6_r, dq_curr.q);
-
-        // const auto d_volt = d_pi_ctrl.update(0.0_r, dq_curr.d);
-        // const auto d_volt = d_pi_ctrl.update((MAX(ab_volt.length() * 0.03_r - 0.2_r)), dq_curr.d);
-        // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
-        #elif (TEST_MODE == TEST_MODE_POS_SIN)
-        scexpr real_t omega = 3 * real_t(TAU);
-        // scexpr real_t omega = 1;
-        scexpr real_t amp = 0.5_r;
-        const auto clock_time = clock::time();
-        const auto [targ_pos, targ_spd] = ({
-            std::make_tuple(
-                amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
-                // 2 * clock_time, 2
-            );
-        });
+        elec_rad_ = meas_rad;
 
         const auto meas_pos = pos_sensor_.position();
         const auto meas_spd = pos_sensor_.speed();
 
-        const auto d_volt = 0;
+        [[maybe_unused]] static constexpr real_t omega = 4;
+        [[maybe_unused]] static constexpr real_t amp = 0.06_r;
+        [[maybe_unused]] const auto clock_time = clock::time();
+
+        const auto [track_pos, track_spd] = ({
+            std::make_tuple(
+                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+                track_pos_, track_spd_
+            );
+        });
+
+        const auto [blance_pos, blance_spd] = ({
+            std::make_tuple(
+                // base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
+                base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
+            );
+        });
+
+        const auto targ_pos = blance_pos + track_pos;
+        const auto targ_spd = blance_spd + track_spd;
+
+
+        static constexpr auto MAX_VOLT = 4.7_r;
         const auto q_volt = CLAMP2(
-            9.58_r * (targ_pos - meas_pos) +
-            0.38_r * (targ_spd - meas_spd)
-            
-        , 3.7_r);
-        // const auto q_volt = 1.7_r;
-        
-        // const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+            pd_ctrl_law_(targ_pos - meas_pos, targ_spd - meas_spd)
+        , MAX_VOLT);
 
-        #elif (TEST_MODE == TEST_MODE_SQUARE_SWING)
-        scexpr real_t omega = 1 * real_t(TAU);
-        scexpr real_t amp = 0.5_r;
 
-        const auto d_curr_cmd = 0.0_r;
-        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
-        const auto q_curr_cmd = SIGN_AS(amp, sin(omega * clock::time()));
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
-        #endif
+        const auto ab_volt = DqVoltage{
+            0, 
+            CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
+        }.to_ab(meas_rad);
 
-        const auto ab_volt = DqVoltage{d_volt, q_volt}.to_ab(meas_rad);
-        // ab_volt = DqVoltage{d_volt, q_volt}.to_ab(-0.0_r);
-        svpwm.set_ab_volt(
-            ab_volt[0], ab_volt[1]
-            // amp * cos(omega * clock_time), amp * sin(omega * clock_time)
-            // 3.0_r, 0.0_r
-        );
+        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        d_volt_ = d_volt;
+        leso.update(meas_spd, q_volt);
+
         q_volt_ = q_volt;
         meas_rad_ = meas_rad;
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
-        cb_sensored
+        [&]{
+            const auto m = clock::micros();
+            cb_sensored();
+            exe_us_ = clock::micros() - m;
+        }
     );
 
-    while(true){
-        [[maybe_unused]] const auto t = clock::time();
-        [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
-        [[maybe_unused]] const auto dq_curr = curr_sens.dq();
-        [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.is_done(), speed_measurer.result());
-        DEBUG_PRINTLN_IDLE(
-            // phase_res,
-            // real_t(adc.inj(1)),
-            // real_t(adc.inj(2)),
-            // real_t(adc.inj(3)),
-            // real_t(adc.inj(4)),
-            // hfi_result * 10,
-            // hfi_mid_result * 10,
-            // phase_ind * 100,
-            // lbg_ob.theta(),
-            // s,c,
-            // t,
-            // frac(t),
-            // sin(t * 10),
-            // SVM(c,s),
-            // real_t(pwm_u), 
-            // real_t(pwm_v),
-            // real_t(pwm_w),
-            // bool(pwm_u.io()),
-            // bool(pwm_v.io()),
-            // bool(pwm_w.io()),
-            // curr_sens.uvw(),
-            
-            // curr_sens.ab(),
-            // curr_sens.dq(),
-            // lbg_ob.e_alpha_,
-            // lbg_ob.e_beta_,
 
-            // square (lbg_ob.e_alpha_) + square(lbg_ob.e_beta_),
-            // lbg_ob.theta(),
-            // lbg_ob.e_alpha_,
-            // lbg_ob.e_beta_,
-            // nlr_ob.theta(),
-            // fmod(mg_meas_rad, q16(TAU)),
-            // timer.oc<1>().get_duty(),
-            // timer.oc<2>().get_duty(),
-            // timer.oc<3>().get_duty(),
-            // nslp_gpio.read().to_bool(),
-            // en_gpio.read().to_bool(),
-            // dq_curr.d,
-            // dq_curr.q,
-            d_volt_,
-            q_volt_,
-            pos_sensor_.position(),
-            pos_sensor_.speed(),
-            meas_rad_,
-            sys::chip::get_chip_id_crc()
-            // TIM1_CH1_GPIO.read().to_bool(),
-            // TIM1_CH2_GPIO.read().to_bool(),
-            // TIM1_CH3_GPIO.read().to_bool()
-            // exe_micros.count()
-            // pll.theta(),
-            // clock::micros() * 0.001_r
-            // real_t(exe_micros)
-            // curr_sens.mid()
+
+    auto is_dest = [&](const hal::CanMsg & msg){
+        const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
+        return role == node_role;
+    };
+
+    Fifo_t<hal::CanMsg, 8> msg_queue;
+
+    auto write_can_msg = [&](const hal::CanMsg & msg){
+        if(msg.is_extended()) PANIC();
+
+        const bool is_local = is_dest(msg);
+
+        if(is_local){
+            msg_queue.push(msg);
+        }else{
+            can.write(msg);
+        }
+    };
+
+    auto read_can_msg = [&] -> Option<hal::CanMsg>{
+        while(can.available()){
+            auto msg = can.read();
+            if(msg.is_extended()) continue;
+            if(not is_dest(msg)) continue;
+            msg_queue.push(msg);
+        }
+
+        if(not msg_queue.available())
+            return None;
+
+        return Some(msg_queue.pop());
+    };
+
+    struct MsgFactory{
+        static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
+            const auto id = comb_role_and_cmd(role, Command::SetPosition);
+            const auto payload = ::serialize(cmd);
+            return hal::CanMsg::from_bytes(id, payload);
+        };
+    };
+
+    auto set_position = [&](const SetPositionCommand & cmd){
+        track_pos_ = cmd.position;
+        track_spd_ = cmd.speed;
+    };
+
+    auto can_subscriber_service = [&]{
+        static async::RepeatTimer timer{5ms};
+
+        timer.invoke_if([&]{
+            auto process_msg = [&](const hal::CanMsg & msg){
+                const auto id = msg.stdid().unwrap();
+                const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
+                if(msg_role != node_role) return;
+                switch(msg_cmd){
+                    case Command::SetPosition:{
+                        const auto cmd = ::deserialize<SetPositionCommand>(msg.payload()).examine();
+                        set_position(cmd);
+                    }
+                        break;
+
+                    default:
+                        DEBUG_PRINTLN("unknown command", std::bit_cast<uint8_t>(msg_cmd));
+                        break;
+                }
+            };
+
+            while(true){
+                const auto may_msg = read_can_msg();
+                if(may_msg.is_none()) break;
+                process_msg(may_msg.unwrap());
+            }
+        });
+    };
+
+    struct TrackInfo{
+        SetPositionCommand roll ;
+        SetPositionCommand pitch;
+    };
+
+    TrackInfo track_info_ = {
+        .roll = {.position = 0, .speed = 0},
+        .pitch = {.position = 0, .speed = 0}
+    };
+
+
+    auto can_publisher_service = [&]{
+        static async::RepeatTimer timer{5ms};
+
+        auto publish_roll_joint = [&]{
+            const auto msg = MsgFactory::set_motor_position(NodeRole::RollJoint, track_info_.roll);
+
+            write_can_msg(msg);
+        };
+
+        auto publish_pitch_joint = [&]{
+            const auto msg = MsgFactory::set_motor_position(NodeRole::PitchJoint, track_info_.pitch);
+
+            write_can_msg(msg);
+        };
+
+        timer.invoke_if([&]{
+
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    break;
+                case NodeRole::RollJoint:{
+                    publish_roll_joint();
+                    publish_pitch_joint();
+                    break;
+                default:
+                    __builtin_unreachable();
+                    break;
+                }
+            }
+        });
+    };
+
+
+    auto repl_service = [&]{
+        static robots::ReplService repl_server{&DBG_UART, &DBG_UART};
+        // repl_server.set_outen(false);
+
+        static const auto list = rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
+            rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
+                pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
+            }),
+
+            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
+
+                track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
+                track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
+            })
         );
+
+        const auto clock_time = clock::time();
+        const auto [s, c] = sincos(clock_time * 5);
+        const auto p1 = c * 0.05_r;
+        const auto p2 = s * 0.05_r;
+
+        track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
+        track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
+        repl_server.invoke(list);
+    };
+
+    auto gesture_service = [&]{
+        [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
+        [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
+        [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+
+        static async::RepeatTimer timer{DELTA_TIME_MS};
+        timer.invoke_if([&]{
+            // Quat<real_t>::from_gravity(),
+            const auto acc = bmi.read_acc().examine();
+            const auto gyr = bmi.read_gyr().examine();
+            const auto norm_acc = acc.normalized();
+            // const auto base_roll = atan2(norm_acc.x, norm_acc.y) - real_t(PI/2);
+            const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
+            const auto base_omega_raw = gyr.z;
+
+            static dsp::ComplementaryFilter<q20> comp_filter{
+                    typename dsp::ComplementaryFilter<q20>::Config{
+                    .kq = 0.90_r,
+                    .ko = 0.35_r,
+                    .fs = FREQ
+                }
+            };
+
+            const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
+            // DEBUG_PRINTLN_IDLE(
+            //     // norm_acc.x, norm_acc.y,
+            //     // base_roll_raw,
+            //     // base_omega_raw,
+            //     // base_roll,
+            //     // pos_sensor_.position(),
+            //     // pos_sensor_.lap_position(),
+            //     // pos_sensor_.speed(),
+            //     ma730.get_lap_position().examine(),
+            //     meas_rad_
+            //     // exe_us_
+            //     // // leso.get_disturbance(),
+            //     // meas_rad_
+
+            // );
+
+            base_roll_ = base_roll;
+            base_omega_ = base_omega_raw;
+        });
+    };
+
+    [[maybe_unused]]
+    auto report_service = [&]{ 
+        // [[maybe_unused]] const auto t = clock::time();
+        // [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
+        // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
+        // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
+
+        // DEBUG_PRINTLN_IDLE(
+        //     pos_sensor_.position(),
+        //     pos_sensor_.lap_position(),
+        //     pos_sensor_.speed()
+        //     // // leso.get_disturbance(),
+        //     // meas_rad_
+
+        // );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
-        ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-        ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-        ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+    };
 
+    while(true){
+        repl_service();
+        can_subscriber_service();
+        can_publisher_service();
+        blink_service();
+        report_service();
+        gesture_service();
 
     }
 }
