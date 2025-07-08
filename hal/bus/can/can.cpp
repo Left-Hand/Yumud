@@ -499,13 +499,13 @@ if (MY_CAN_GetITStatus<FMP_MASK>(reg, uinst)){\
     MY_CAN_ClearITPendingBit<FOV_MASK>(uinst);\
 }\
 
-
 void USB_LP_CAN1_RX0_IRQHandler(void) {
     static constexpr auto FMP_MASK = CAN_IT_FMP0;
     static constexpr auto FF_MASK = CAN_IT_FF0;
     static constexpr auto FOV_MASK = CAN_IT_FOV0;
     static constexpr auto FIFO_NUM = CAN_FIFO0;
     const auto reg = CAN1->INTENR;
+    // DEBUG_PRINTLN("what");
     CAN_RX_HANDLER(can1, CAN1)
 }
 
@@ -515,6 +515,7 @@ void CAN1_RX1_IRQHandler(void){
     static constexpr auto FOV_MASK = CAN_IT_FOV1;
     static constexpr auto FIFO_NUM = CAN_FIFO1;
     const auto reg = CAN1->INTENR;
+    // DEBUG_PRINTLN("what1");
     CAN_RX_HANDLER(can1, CAN1)
 }
 

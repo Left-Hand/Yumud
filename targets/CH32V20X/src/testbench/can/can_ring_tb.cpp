@@ -23,8 +23,8 @@ void can_ring_main(){
 
     auto & can = can1;
     // can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
-    // can.init({hal::CanBaudrate::_1M, Can::Mode::Loopback});
-    can.init({hal::CanBaudrate::_1M, Can::Mode::Normal});
+    can.init({hal::CanBaudrate::_1M, Can::Mode::Loopback});
+    // can.init({hal::CanBaudrate::_1M, Can::Mode::Normal});
 
     can[0].mask(
         {
@@ -42,15 +42,6 @@ void can_ring_main(){
     };
 
     while(true){
-
-        // constexpr auto ids = std::to_array<uint16_t>({0x200, 0x201, 0x401, 0x402, 0x120});
-
-        // for(auto i : ids){
-        //     CanMsg tx_msg = CanMsg::from_bytes(CanStdId(i), std::make_tuple(0x12345678));
-        //     can.write(tx_msg);
-        //     clock::delay(2ms);
-        // }
-        // can.write(CanMsg::from_bytes(CanStdId(0x10), {0, 1}));
         write_msg(CanMsg::from_list(CanStdId(0x10), {0, 1, 3}));
         clock::delay(2ms);
         write_msg(CanMsg::from_bytes(CanStdId(0x20), std::bit_cast<std::array<uint8_t, 4>>(0x12345678)));
@@ -58,11 +49,6 @@ void can_ring_main(){
         write_msg(CanMsg::from_bytes(CanStdId(0x30), std::bit_cast<std::array<uint8_t, 4>>(0x12345678)));
         clock::delay(2ms);
         write_msg(CanMsg::from_bytes(CanExtId(0x40), std::bit_cast<std::array<uint8_t, 4>>(0x12345678)));
-        // {
-        //     CanMsg tx_msg = CanMsg::from_remote(CanStdId(0x201));
-        //     can.write(tx_msg);
-        //     // DEBUG_PRINTLN(tx_msg);
-        // }
 
         clock::delay(100ms);
 
@@ -73,7 +59,7 @@ void can_ring_main(){
                 DEBUG_PRINTLN("rx", rx_msg);
             }
         }else{
-            DEBUG_PRINTLN('N');
+            DEBUG_PRINTLN("no msg received");
         }
     }
 

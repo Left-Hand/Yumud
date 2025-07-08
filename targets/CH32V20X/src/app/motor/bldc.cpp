@@ -397,6 +397,7 @@ struct PdCtrlLaw{
 
 
 void bldc_main(){
+    // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
     auto & spi = hal::spi1;
@@ -419,7 +420,25 @@ void bldc_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
+    DEBUGGER.force_sync(EN);
+
     clock::delay(2ms);
+
+    // can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
+    // can.init({hal::CanBaudrate::_1M, hal::Can::Mode::Loopback});
+    can.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
+
+    can[0].mask(
+        {
+            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
+            .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
+        },{
+            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            // .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
+            .mask = hal::CanStdIdMask::ACCEPT_ALL()
+        }
+    );
+
 
     spi.init({18_MHz});
 
@@ -474,7 +493,14 @@ void bldc_main(){
         .gyr_fs = BMI160::GyrFs::_2000deg
     }).examine();
 
-    can.init({hal::CanBaudrate::_1M});
+    can.init({
+        .baudrate = hal::CanBaudrate::_1M,
+        .mode = hal::CanMode::Normal
+        // .mode = hal::CanMode::Internal
+        // .mode = hal::CanMode::Loopback
+    });
+
+    // test_can(can);
 
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
@@ -655,13 +681,32 @@ void bldc_main(){
     auto can_service = [&]{
         static async::RepeatTimer timer{5ms};
         timer.invoke_if([&]{
+
+
+            if(can.available()){
+                // DEBUG_PRINTLN(can.available());
+                size_t i = 0;
+                while(can.available()){
+                    auto rx_msg = can.read();
+                    DEBUG_PRINTLN(i, std::bit_cast<uint8_t>(joint_role), rx_msg);
+                    i++;
+                }
+            }else{
+                DEBUG_PRINTLN("no msg received");
+            }
+
             const auto msg = hal::CanMsg::from_list(
                 hal::CanStdId(std::bit_cast<uint8_t>(joint_role)),
                 {1,2,3,4}
             );
 
-            can.write(msg);
-            DEBUG_PRINTLN_IDLE(can.available(), can.pending());
+            
+            auto write_can_msg = [&](const hal::CanMsg & msg){
+                can.write(msg);
+                // DEBUG_PRINTLN("tx", msg);
+            };
+            
+            write_can_msg(msg);
         });
     };
 
