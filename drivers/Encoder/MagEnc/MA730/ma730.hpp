@@ -116,6 +116,10 @@ class MA730 final:
     public MagEncoderIntf,
     public MA730_Regs{
 public:
+    struct Config{
+        ClockDirection direction;
+    };
+
     MA730(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
     MA730(hal::SpiDrv && spi_drv):
@@ -124,7 +128,7 @@ public:
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<> set_zero_position(const real_t position);

@@ -20,7 +20,9 @@ using Error = MA730::Error;
 template<typename T = void>
 using IResult = typename MA730::IResult<T>;
 
-IResult<> MA730::init(){
+IResult<> MA730::init(const Config & cfg){
+    if(const auto res = set_direction(cfg.direction);
+        unlikely(res.is_err())) return Err(res.unwrap_err());
     if(const auto res = get_lap_position();
         unlikely(res.is_err())) return Err(res.unwrap_err());
     return Ok();
@@ -126,7 +128,7 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
 
 IResult<> MA730::set_direction(const ClockDirection direction){
     auto reg = RegCopy(direction_reg);
-    reg.direction = direction == CW;
+    reg.direction = direction == CCW;
     return write_reg(reg);
 }
 

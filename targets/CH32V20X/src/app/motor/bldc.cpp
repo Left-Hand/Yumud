@@ -637,7 +637,9 @@ void bldc_main(){
             .unwrap()
     };
 
-    ma730.init().examine();
+    ma730.init({
+        .direction = CW
+    }).examine();
 
     // while(true){
     //     ma730.update().examine();
@@ -789,16 +791,6 @@ void bldc_main(){
     //     clock::delay(5ms);
     // }
     
-    switch(joint_role){
-        case JointRole::Roll:
-            ma730.set_direction(ClockDirection::CCW).examine();
-            break;
-        case JointRole::Pitch:
-            ma730.set_direction(ClockDirection::CCW).examine();
-            break;
-        default:
-            __builtin_unreachable();
-    }
 
     real_t elec_rad_;
     [[maybe_unused]] auto cb_sensored = [&]{
