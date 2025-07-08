@@ -91,6 +91,9 @@ struct PositionSensor{
     }
 
     constexpr void update(const real_t next_raw_lap_position){
+        if(initial_lap_position_.is_none())
+            initial_lap_position_ = Some{next_raw_lap_position};
+            
         const auto corrected_lap_position = correct_raw_position(
             next_raw_lap_position);
 
@@ -99,7 +102,7 @@ struct PositionSensor{
         lap_position_ = corrected_lap_position;
 
         cont_position_ += delta_position;
-        td_.update(cont_position_);
+        td_.update(cont_position_ + initial_lap_position_.unwrap() - base_position_);
     }
 
     constexpr void set_base_position(const q16 base_position){
@@ -143,6 +146,7 @@ private:
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
     q16 base_position_   = 0;
+    Option<q16> initial_lap_position_ = None;
 };
 
 

@@ -28,7 +28,7 @@
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
 
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "CurrentSensor.hpp"
 
@@ -44,6 +44,7 @@
 #include "robots/cannet/can_chain.hpp"
 
 #include "app/stepper/ctrl.hpp"
+#include "utils.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -55,173 +56,18 @@ using namespace ymd::intp;
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t POSITION_LIMIT = 0.2_r;
-namespace ymd::dsp{
-template<typename T>
-struct ComplementaryFilter{
-    struct Config{
-        T kq;
-        T ko;
-        uint fs;
-    };
-    
-
-    constexpr ComplementaryFilter(const Config & config){
-        reconf(config);
-        reset();
-    }
 
 
-    constexpr void reconf(const Config & cfg){
-        kq_ = cfg.kq;
-        kq_ = cfg.kq;
-        dt_ = T(1) / cfg.fs;
-    }
-
-    constexpr T operator ()(const T rot, const T gyr){
-
-        if(!inited_){
-            rot_ = rot;
-            rot_unfiltered_ = rot;
-            inited_ = true;
-        }else{
-            rot_unfiltered_ += gyr * delta_t_;
-            rot_unfiltered_ = kq_ * rot_ + (1-kq_) * rot;
-            rot_ = ko_ * rot_ + (1-ko_) * rot_unfiltered_;
-        }
-    
-        last_rot_ = rot;
-        last_gyr_ = gyr;
-
-        return rot_;
-    }
-
-    constexpr void reset(){
-        rot_ = 0;
-        rot_unfiltered_ = 0;
-        last_rot_ = 0;
-        last_gyr_ = 0;
-        inited_ = false;
-    }
-
-    constexpr T get() const {
-        return rot_;
-    }
-
-private:
-    T kq_;
-    T ko_;
-    T dt_;
-    T rot_;
-    T rot_unfiltered_;
-    T last_rot_;
-    T last_gyr_;
-    // T last_time;
-
-    uint delta_t_;
-    
-    bool inited_;
-};
-
-}
-
-class CurrentSensor{
-protected:
-    hal::AnalogInIntf & u_sense_;
-    hal::AnalogInIntf & v_sense_;
-    hal::AnalogInIntf & w_sense_;
-
-    UvwCurrent uvw_bias_;
-    UvwCurrent uvw_raw_;
-    UvwCurrent uvw_curr_;
-    real_t mid_curr_;
-    AbCurrent ab_curr_;
-    DqCurrent dq_curr_;
-
-    dsp::ButterLowpassFilter<q16, 2> mid_filter_ = {{
-        .fc = 400,
-        .fs = FOC_FREQ
-    }};
 
 
-    void capture(){
-        uvw_raw_ = {
-            real_t(u_sense_),
-            real_t(v_sense_),
-            real_t(w_sense_)
-        };
-        // uvw_raw_ = {
-        //     real_t(0),
-        //     real_t(0),
-        //     real_t(0)
-        // };
-
-        mid_filter_.update((uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) * q16(1.0/3));
-
-        mid_curr_ = mid_filter_.get();
-        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
-        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
-        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
-
-        ab_curr_ = AbCurrent::from_uvw(uvw_curr_);
-    }
-
-public:
-    CurrentSensor(
-        hal::AnalogInIntf & u_sense,
-        hal::AnalogInIntf & v_sense, 
-        hal::AnalogInIntf & w_sense
-    ): 
-        u_sense_(u_sense),
-        v_sense_(v_sense), 
-        w_sense_(w_sense){
-            reset();
-        }
-
-    void reset(){
-        uvw_curr_ = {0, 0, 0};
-        uvw_bias_ = {0, 0, 0};
-        ab_curr_ = {0, 0};
-        dq_curr_ = {0, 0};
-    }
-
-    void update(const real_t rad){
-        
-            
-        capture();
-
-        dq_curr_ = DqCurrent::from_ab(ab_curr_, rad);
-    }
 
 
-    const auto &  raw()const {return uvw_raw_;}
-    const auto &  mid() const {return mid_curr_;}
-    const auto &  uvw()const{return uvw_curr_;}
-    // auto uvw(){return uvw_curr_;}
-    const auto & ab()const{return ab_curr_;}
-    // auto ab(){return ab_curr_;}
-    const auto & dq()const{return dq_curr_;}
-    // auto dq(){return dq_curr_;}
-};
-
-
-template<size_t N>
-__fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
-    constexpr size_t sc = ((1 << N) - 1);
-    return (x * sc + y) >> N;
-}
-
-
-__inline constexpr real_t degrees(const real_t deg){
-    return deg * real_t(TAU / 180);
-}
 
 TRAIT_STRUCT(SensorlessObserverTrait,
     TRAIT_METHOD(void, reset),
 	TRAIT_METHOD(void, update, iq_t<16>, iq_t<16>, iq_t<16>, iq_t<16>),
     TRAIT_METHOD(iq_t<16>, theta)
 )
-
-
 
 void init_adc(hal::AdcPrimary & adc){
 
@@ -286,19 +132,6 @@ struct ElecradCompensator{
     }
 };
 
-struct HomePositionCompensator{
-    q16 base;
-
-    struct Input{
-        const q16 position;
-        const q16 lap_position;
-    };
-
-    constexpr q16 operator ()(const Input input) const {
-        return input.lap_position - base;
-    }
-};
-
 struct PdCtrlLaw{
     real_t kp;
     real_t kd;
@@ -306,94 +139,6 @@ struct PdCtrlLaw{
     constexpr real_t operator()(const real_t p_err, const real_t v_err) const {
         return kp * p_err + kd * v_err;
     } 
-};
-
-
-
-
-template<typename From, typename Protocol = void>
-struct Serializer{};
-
-template<typename From, typename Protocol = void>
-struct Deserializer{};
-
-
-struct Serialize{
-    template<typename T, typename Protocol = void>
-    static constexpr auto serialize(T && obj){
-        return Serializer<std::decay_t<T>, Protocol>::serialize(std::forward<T>(obj));
-    }
-};
-
-enum class DeserializeError:uint8_t{
-    BytesLengthShort
-};
-
-
-struct Deserialize {
-
-    template<typename T, typename Protocol = void>
-    static constexpr Result<T, DeserializeError> deserialize(std::span<const uint8_t> data) {
-        return Deserializer<T, Protocol>::deserialize(data);
-    }
-};
-
-template<size_t N>
-struct Serializer<iq_t<N>>{
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<N> num){
-        const auto inum = num.to_i32();
-        return std::bit_cast<std::array<uint8_t, 4>>(inum);
-    } 
-};
-
-template<size_t N>
-struct Deserializer<iq_t<N>> {
-    static constexpr Result<iq_t<N>, DeserializeError> 
-    deserialize(std::span<const uint8_t> pbuf) {
-        if(pbuf.size() < 4) return Err(DeserializeError::BytesLengthShort);
-        int32_t val = std::bit_cast<int32_t>(
-            std::array<uint8_t, 4>{pbuf[0], pbuf[1], pbuf[2], pbuf[3]});
-        return Ok(iq_t<N>::from_i32(val));
-    }
-};
-
-template<typename T>
-requires std::is_integral_v<T>
-struct Serializer<T> {
-    static constexpr size_t N = sizeof(T);
-    static constexpr std::array<uint8_t, N> serialize(const T inum) {
-        return std::bit_cast<std::array<uint8_t, N>>(inum);
-    }
-};
-
-template<typename T>
-requires std::is_integral_v<T>
-struct Deserializer<T> {
-    static constexpr Result<T, DeserializeError> 
-    deserialize(std::span<const uint8_t> data) {
-        if (data.size() < sizeof(T)) {
-            return Err(DeserializeError::BytesLengthShort);
-        }
-
-        std::array<uint8_t, sizeof(T)> bytes{};
-        std::copy_n(data.data(), sizeof(T), bytes.begin());
-        return Ok(std::bit_cast<T>(bytes));
-    }
-};
-
-template<typename T>
-requires std::is_floating_point_v<T>
-struct Deserializer<T> {
-    static constexpr Result<T, DeserializeError> 
-    deserialize(std::span<const uint8_t> data) {
-        if (data.size() < sizeof(T)) {
-            return Err(DeserializeError::BytesLengthShort);
-        }
-
-        std::array<uint8_t, sizeof(T)> bytes{};
-        std::copy_n(data.data(), sizeof(T), bytes.begin());
-        return Ok(std::bit_cast<T>(bytes));
-    }
 };
 
 
@@ -414,7 +159,7 @@ OutputStream & operator<<(OutputStream & os, const NodeRole & role){
     }
 }
 
-
+namespace ymd{
 
 enum class Command:uint8_t{
     SetPosition = 0
@@ -435,13 +180,11 @@ struct SetPositionCommand{
 };
 
 
-
-
 template<>
 struct Serializer<SetPositionCommand> {
     static constexpr std::array<uint8_t, 8> serialize(const SetPositionCommand& cmd) {
-        const auto posBytes = Serialize::serialize(cmd.position);
-        const auto spdBytes = Serialize::serialize(cmd.speed);
+        const auto posBytes = ::serialize(cmd.position);
+        const auto spdBytes = ::serialize(cmd.speed);
 
         std::array<uint8_t, 8> result;
         std::copy(posBytes.begin(), posBytes.end(), result.begin());
@@ -458,12 +201,12 @@ struct Deserializer<SetPositionCommand> {
             return Err(DeserializeError::BytesLengthShort);
         }
 
-        auto pos_result = Deserialize::deserialize<iq_t<16>>(data.subspan<0, 4>());
+        auto pos_result = ::deserialize<iq_t<16>>(data.subspan<0, 4>());
         if (pos_result.is_err()) {
             return Err(pos_result.unwrap_err());
         }
 
-        auto speed_result = Deserialize::deserialize<iq_t<16>>(data.subspan<4, 4>());
+        auto speed_result = ::deserialize<iq_t<16>>(data.subspan<4, 4>());
         if (speed_result.is_err()) {
             return Err(speed_result.unwrap_err());
         }
@@ -474,6 +217,8 @@ struct Deserializer<SetPositionCommand> {
         });
     }
 };
+
+}
 
 
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
@@ -676,6 +421,18 @@ void bldc_main(){
         }
     };
 
+    pos_sensor_.set_base_position(
+        [&] -> real_t{
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    return {0.223_r};
+                case NodeRole::RollJoint:
+                    return {0.38_r + 0.5_r};
+                default: __builtin_unreachable();
+            }
+        }()
+    );
+
     ElecradCompensator elecrad_comp_{
         .base = [&]{
             switch(node_role){
@@ -689,15 +446,7 @@ void bldc_main(){
         .pole_pairs = 7
     };
 
-    const auto home_comp_ = [&]{
-        switch(node_role){
-            case NodeRole::PitchJoint:
-                return HomePositionCompensator {.base = 0.223_r};
-            case NodeRole::RollJoint:
-                return HomePositionCompensator {.base = 0.38_r + 0.5_r};
-            default: __builtin_unreachable();
-        }
-    }();
+
 
 
     real_t q_volt_ = 0;
@@ -758,7 +507,7 @@ void bldc_main(){
         const real_t meas_rad = elecrad_comp_(meas_lap);
         elec_rad_ = meas_rad;
 
-        const auto meas_pos = home_comp_({pos_sensor_.position(), meas_lap});
+        const auto meas_pos = pos_sensor_.position();
         const auto meas_spd = pos_sensor_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
@@ -848,7 +597,7 @@ void bldc_main(){
     struct MsgFactory{
         static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
             const auto id = comb_role_and_cmd(role, Command::SetPosition);
-            const auto payload = Serialize::serialize(cmd);
+            const auto payload = ::serialize(cmd);
             return hal::CanMsg::from_bytes(id, payload);
         };
     };
@@ -868,7 +617,7 @@ void bldc_main(){
                 if(msg_role != node_role) return;
                 switch(msg_cmd){
                     case Command::SetPosition:{
-                        const auto cmd = Deserialize::deserialize<SetPositionCommand>(msg.payload()).examine();
+                        const auto cmd = ::deserialize<SetPositionCommand>(msg.payload()).examine();
                         set_position(cmd);
                     }
                         break;
@@ -933,7 +682,7 @@ void bldc_main(){
 
     auto repl_service = [&]{
         static robots::ReplService repl_server{&DBG_UART, &DBG_UART};
-        repl_server.set_outen(false);
+        // repl_server.set_outen(false);
 
         static const auto list = rpc::make_list(
             "list",

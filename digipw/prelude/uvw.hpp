@@ -11,11 +11,11 @@ struct UvwValue{
     q20 v = {};
     q20 w = {};
 
-    q20 operator [](const size_t idx) const {
+    constexpr q20 operator [](const size_t idx) const {
         return *(&u + idx);
     }
 
-    q20 & operator [](const size_t idx){
+    constexpr q20 & operator [](const size_t idx){
         return *(&u + idx);
     }
 

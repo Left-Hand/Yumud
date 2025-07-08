@@ -17,12 +17,12 @@ public:
         uint fs;
     };
 
-    ButterSideFilterBase(const Config & cfg){
+    constexpr ButterSideFilterBase(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         const T a = std::tan((T(PI) * cfg.fc) / cfg.fs);
         const T a2 = a*a;
 
@@ -37,7 +37,7 @@ public:
         }
     }
 
-    void reset(){
+    constexpr void reset(){
         for(auto & state : states){
             state.reset();
         }
@@ -53,15 +53,15 @@ protected:
         T w1;
         T w2;
 
-        void reset(){
+        constexpr void reset(){
             w0 = w1 = w2 = 0;
         }
 
-        T conv(const T x) const {
+        constexpr T conv(const T x) const {
             return d1 * w1 + d2 * w2 + x;
         }
         
-        void shift(){
+        constexpr void shift(){
             w2 = w1;
             w1 = w0;
         }
@@ -76,9 +76,10 @@ template<arithmetic T, size_t N>
 class ButterHighpassFilter : public details::ButterSideFilterBase<T, N>{
 public:
     using Super = details::ButterSideFilterBase<T, N>;
-    using Super::Super;
-
-    void update(T x){
+    using Config = typename Super::Config;
+    constexpr ButterHighpassFilter(const Config & cfg):
+        Super(cfg){;}
+    constexpr void update(T x){
         for(auto & state : this->states){
             state.w0 = state.conv(x);
 
@@ -93,10 +94,10 @@ public:
         this->result_ = x;
     }
 
-    const T & get() const {
+    constexpr const T & get() const {
         return this->result_;
     }
-    T operator()(const T x){
+    constexpr T operator()(const T x){
         update(x);
         return get();
     }
@@ -107,9 +108,10 @@ template<arithmetic T, size_t N>
 class ButterLowpassFilter : public details::ButterSideFilterBase<T, N>{
 public:
     using Super = details::ButterSideFilterBase<T, N>;
-    using Super::Super;
-
-    void update(T x){
+    using Config = typename Super::Config;
+    constexpr ButterLowpassFilter(const Config & cfg):
+        Super(cfg){;}
+    constexpr void update(T x){
         for(auto & state : this->states){
             state.w0 = state.conv(x);
 
@@ -124,10 +126,10 @@ public:
         this->result_ = x;
     }
 
-    const T & get() const {
+    constexpr const T & get() const {
         return this->result_;
     }
-    T operator()(const T x){
+    constexpr T operator()(const T x){
         update(x);
         return get();
     }
