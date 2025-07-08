@@ -52,9 +52,9 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::intp;
 
-scexpr uint32_t CHOPPER_FREQ = 25000;
-scexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
-
+static constexpr uint32_t CHOPPER_FREQ = 25000;
+static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
+static constexpr real_t POSITION_LIMIT = 0.2_r;
 namespace ymd::dsp{
 template<typename T>
 struct ComplementaryFilter{
@@ -272,94 +272,6 @@ public:
         ob_(ob){;}
 };
 
-enum class JointRole:uint8_t{
-    Roll,
-    Pitch
-};
-
-OutputStream & operator<<(OutputStream & os, const JointRole & role){ 
-    switch(role){
-        case JointRole::Roll: return os << "Roll";
-        case JointRole::Pitch: return os << "Pitch";
-        default: __builtin_unreachable();
-    }
-}
-
-
-class CurrentBiasCalibrater{
-public:
-    struct Config{
-        uint32_t period_ticks;
-        uint32_t fc;
-        uint32_t fs;
-    };
-
-    using Lpf = LowpassFilter<iq_t<16>>;
-    using Lpfs = std::array<Lpf, 3>;
-
-    Lpfs lpfs_ = {};
-
-protected:
-    uint32_t period_ticks_;
-    uint32_t elapsed_ticks_;
-    uint32_t fs_;
-
-    // real_t last_midp_curr_ = 0;
-public:
-    CurrentBiasCalibrater(const Config & config){
-        reconf(config);
-        reset();
-    }
-
-    void reconf(const Config & config){
-        period_ticks_ = config.period_ticks;
-        fs_ = config.fs;
-
-        // const auto alpha = Lpf::solve_alpha(config.fc, config.fs);
-        lpfs_[0].reconf({config.fc, config.fs});
-        lpfs_[1].reconf({config.fc, config.fs});
-        lpfs_[2].reconf({config.fc, config.fs});
-
-    }
-
-    void reset(){
-        elapsed_ticks_ = 0;
-        for(auto & lpf : lpfs_){
-            lpf.reset();
-        }
-    }
-
-    void update(const UvwCurrent & uvw, const real_t mid_point){
-        lpfs_[0].update(uvw.u);
-        lpfs_[1].update(uvw.v);
-        lpfs_[2].update(uvw.w);
-        elapsed_ticks_ ++;
-
-        // constexpr auto stable_curr_slewrate = 10.0_r;
-        // constexpr auto stable_threshold = stable_curr_slewrate / FOC_FREQ;
-
-        // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
-        // last_midp_curr_ = mid_point;
-
-        // curr_stable_checker.update(mid_point_diff < stable_threshold);
-    }
-
-    bool is_done(){
-        return elapsed_ticks_ >= period_ticks_;
-    }
-
-    UvwCurrent result() const{
-        return {
-            lpfs_[0].get(),
-            lpfs_[1].get(),
-            lpfs_[2].get(),
-        };
-    }
-};
-
-class CalibraterOrchestor{
-
-};
 
 __no_inline void init_opa(){
     hal::opa1.init<1,1,1>();
@@ -395,6 +307,9 @@ struct PdCtrlLaw{
         return kp * p_err + kd * v_err;
     } 
 };
+
+
+
 
 template<typename From, typename Protocol = void>
 struct Serializer{};
@@ -481,10 +396,46 @@ struct Deserializer<T> {
     }
 };
 
+
+
+
+
+enum class NodeRole:uint8_t{
+    RollJoint = 1,
+    PitchJoint = 2
+};
+
+
+OutputStream & operator<<(OutputStream & os, const NodeRole & role){ 
+    switch(role){
+        case NodeRole::RollJoint: return os << "RollJoint";
+        case NodeRole::PitchJoint: return os << "PitchJoint";
+        default: __builtin_unreachable();
+    }
+}
+
+
+
+enum class Command:uint8_t{
+    SetPosition = 0
+};
+
 struct SetPositionCommand{
+    static constexpr auto COMMAND = Command::SetPosition;
     iq_t<16> position;
     iq_t<16> speed;
+
+    friend OutputStream & operator<<(OutputStream & os, const SetPositionCommand & self){ 
+        return os << os.scoped("SetPosition")(
+            os 
+            << os.field("position")(os << self.position) << os.splitter()
+            << os.field("speed")(os << self.speed)
+        );
+    }
 };
+
+
+
 
 template<>
 struct Serializer<SetPositionCommand> {
@@ -525,6 +476,22 @@ struct Deserializer<SetPositionCommand> {
 };
 
 
+static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
+    const auto id_u11 = id.as_raw();
+    return std::make_tuple(
+        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
+        std::bit_cast<Command>(uint8_t(id_u11 >> 7))
+    );
+};
+
+
+static constexpr auto comb_role_and_cmd(const NodeRole role, const Command cmd){
+    const auto id_u11 = uint16_t(
+        std::bit_cast<uint8_t>(role) 
+        | (std::bit_cast<uint8_t>(cmd) << 7));
+    return hal::CanStdId(id_u11);
+};
+
 
 void bldc_main(){
     // my_can_ring_main();
@@ -545,18 +512,25 @@ void bldc_main(){
     auto & pwm_v = timer.oc<2>();
     auto & pwm_w = timer.oc<3>(); 
 
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .baudrate = 576000
+    });
+
+
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
-    DEBUGGER.force_sync(EN);
+    // DEBUGGER.force_sync(EN);
+    DEBUGGER.no_fieldname();
+    DEBUGGER.no_scoped();
 
     clock::delay(2ms);
 
-    // can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
-    // can.init({hal::CanBaudrate::_1M, hal::Can::Mode::Loopback});
-    can.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
+    can.init({
+        .baudrate = hal::CanBaudrate::_1M, 
+        .mode = hal::CanMode::Normal
+    });
 
     can[0].mask(
         {
@@ -608,20 +582,20 @@ void bldc_main(){
 
 
 
-    auto get_joint_role = [] -> Option<JointRole>{
+    auto get_node_role = [] -> Option<NodeRole>{
         const auto chip_id_crc = sys::chip::get_chip_id_crc();
         switch(chip_id_crc){
             case 207097585:
-                return Some(JointRole::Pitch);
+                return Some(NodeRole::PitchJoint);
             case 736633164:
-                return Some(JointRole::Roll);
+                return Some(NodeRole::RollJoint);
             default:
                 return None;
         }
     };
 
     
-    const auto joint_role = get_joint_role().examine();  
+    const auto node_role = get_node_role().examine();  
 
 
 
@@ -678,7 +652,6 @@ void bldc_main(){
 
     // init_opa();
     init_adc(adc);
-    [[maybe_unused]] real_t targ_spd_ = 0;
 
     // CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
 
@@ -705,10 +678,10 @@ void bldc_main(){
 
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(joint_role){
-                case JointRole::Pitch:
+            switch(node_role){
+                case NodeRole::PitchJoint:
                     return -0.282_r;
-                case JointRole::Roll:
+                case NodeRole::RollJoint:
                     return -0.253_r;
                 default: __builtin_unreachable();
             }
@@ -717,10 +690,10 @@ void bldc_main(){
     };
 
     const auto home_comp_ = [&]{
-        switch(joint_role){
-            case JointRole::Pitch:
+        switch(node_role){
+            case NodeRole::PitchJoint:
                 return HomePositionCompensator {.base = 0.223_r};
-            case JointRole::Roll:
+            case NodeRole::RollJoint:
                 return HomePositionCompensator {.base = 0.38_r + 0.5_r};
             default: __builtin_unreachable();
         }
@@ -732,20 +705,20 @@ void bldc_main(){
 
     
     // while(true){
-    //     DEBUG_PRINTLN(joint_role,sys::chip::get_chip_id_crc());
+    //     DEBUG_PRINTLN(node_role,sys::chip::get_chip_id_crc());
     //     blink_service();
     //     clock::delay(5ms);
     // }
     dsp::Leso leso{
         [&]{
-            switch(joint_role){
-                case JointRole::Pitch:
+            switch(node_role){
+                case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.02_r,
                         .w = 0.2_r,
                         .fs = FOC_FREQ
                     };
-                case JointRole::Roll:
+                case NodeRole::RollJoint:
                     return dsp::Leso::Config{
                         .b0 = 1.3_r,
                         .w = 13,
@@ -757,13 +730,13 @@ void bldc_main(){
     };
 
     auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
-        switch(joint_role){
-            case JointRole::Pitch:
+        switch(node_role){
+            case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
                 return PdCtrlLaw{.kp = 16.581_r, .kd = 0.70_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
-            case JointRole::Roll: 
+            case NodeRole::RollJoint: 
                 return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
             default: __builtin_unreachable();
         }
@@ -772,25 +745,6 @@ void bldc_main(){
     Microseconds exe_us_;
     real_t track_pos_ = 0;
     real_t track_spd_ = 0;
-
-    // while(true){
-    //     ma730.update().examine();
-    //     DEBUG_PRINTLN(
-    //         ma730.get_lap_position().examine()
-    //     );
-
-    //     clock::delay(5ms);
-    // }
-
-    // while(true){
-    //     bmi.update().examine();
-    //     DEBUG_PRINTLN(
-    //         bmi.read_acc().examine()
-    //     );
-
-    //     clock::delay(5ms);
-    // }
-    
 
     real_t elec_rad_;
     [[maybe_unused]] auto cb_sensored = [&]{
@@ -807,8 +761,8 @@ void bldc_main(){
         const auto meas_pos = home_comp_({pos_sensor_.position(), meas_lap});
         const auto meas_spd = pos_sensor_.speed();
 
-        [[maybe_unused]] scexpr real_t omega = 4;
-        [[maybe_unused]] scexpr real_t amp = 0.06_r;
+        [[maybe_unused]] static constexpr real_t omega = 4;
+        [[maybe_unused]] static constexpr real_t amp = 0.06_r;
         [[maybe_unused]] const auto clock_time = clock::time();
 
         const auto [track_pos, track_spd] = ({
@@ -838,7 +792,6 @@ void bldc_main(){
         const auto ab_volt = DqVoltage{
             0, 
             CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
-            // 2
         }.to_ab(meas_rad);
 
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
@@ -857,68 +810,155 @@ void bldc_main(){
         }
     );
 
-    auto can_service = [&]{
+
+
+    auto is_dest = [&](const hal::CanMsg & msg){
+        const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
+        return role == node_role;
+    };
+
+    Fifo_t<hal::CanMsg, 8> msg_queue;
+
+    auto write_can_msg = [&](const hal::CanMsg & msg){
+        if(msg.is_extended()) PANIC();
+
+        const bool is_local = is_dest(msg);
+
+        if(is_local){
+            msg_queue.push(msg);
+        }else{
+            can.write(msg);
+        }
+    };
+
+    auto read_can_msg = [&] -> Option<hal::CanMsg>{
+        while(can.available()){
+            auto msg = can.read();
+            if(msg.is_extended()) continue;
+            if(not is_dest(msg)) continue;
+            msg_queue.push(msg);
+        }
+
+        if(not msg_queue.available())
+            return None;
+
+        return Some(msg_queue.pop());
+    };
+
+    struct MsgFactory{
+        static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
+            const auto id = comb_role_and_cmd(role, Command::SetPosition);
+            const auto payload = Serialize::serialize(cmd);
+            return hal::CanMsg::from_bytes(id, payload);
+        };
+    };
+
+    auto set_position = [&](const SetPositionCommand & cmd){
+        track_pos_ = cmd.position;
+        track_spd_ = cmd.speed;
+    };
+
+    auto can_subscriber_service = [&]{
         static async::RepeatTimer timer{5ms};
 
+        timer.invoke_if([&]{
+            auto process_msg = [&](const hal::CanMsg & msg){
+                const auto id = msg.stdid().unwrap();
+                const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
+                if(msg_role != node_role) return;
+                switch(msg_cmd){
+                    case Command::SetPosition:{
+                        const auto cmd = Deserialize::deserialize<SetPositionCommand>(msg.payload()).examine();
+                        set_position(cmd);
+                    }
+                        break;
 
-        struct CanSubscriber {
-            using Ret = HandleStatus;
+                    default:
+                        DEBUG_PRINTLN("unknown command", std::bit_cast<uint8_t>(msg_cmd));
+                        break;
+                }
+            };
 
-            Ret on_event(const hal::CanMsg msg){
-                if(msg.is_extended()) return Ret::from_unhandled();
+            while(true){
+                const auto may_msg = read_can_msg();
+                if(may_msg.is_none()) break;
+                process_msg(may_msg.unwrap());
             }
+        });
+    };
+
+    struct TrackInfo{
+        SetPositionCommand roll ;
+        SetPositionCommand pitch;
+    };
+
+    TrackInfo track_info_ = {
+        .roll = {.position = 0, .speed = 0},
+        .pitch = {.position = 0, .speed = 0}
+    };
+
+
+    auto can_publisher_service = [&]{
+        static async::RepeatTimer timer{5ms};
+
+        auto publish_roll_joint = [&]{
+            const auto msg = MsgFactory::set_motor_position(NodeRole::RollJoint, track_info_.roll);
+
+            write_can_msg(msg);
         };
 
-        struct CanPublisher {
+        auto publish_pitch_joint = [&]{
+            const auto msg = MsgFactory::set_motor_position(NodeRole::PitchJoint, track_info_.pitch);
 
+            write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
 
-
-            if(can.available()){
-                // DEBUG_PRINTLN(can.available());
-                size_t i = 0;
-                while(can.available()){
-                    auto rx_msg = can.read();
-                    DEBUG_PRINTLN(i, std::bit_cast<uint8_t>(joint_role), rx_msg);
-                    i++;
+            switch(node_role){
+                case NodeRole::PitchJoint:
+                    break;
+                case NodeRole::RollJoint:{
+                    publish_roll_joint();
+                    publish_pitch_joint();
+                    break;
+                default:
+                    __builtin_unreachable();
+                    break;
                 }
-            }else{
-                DEBUG_PRINTLN("no msg received");
             }
-
-            const auto msg = hal::CanMsg::from_list(
-                hal::CanStdId(std::bit_cast<uint8_t>(joint_role)),
-                {1,2,3,4}
-            );
-
-            
-            auto write_can_msg = [&](const hal::CanMsg & msg){
-                can.write(msg);
-                // DEBUG_PRINTLN("tx", msg);
-            };
-            
-            write_can_msg(msg);
         });
     };
 
 
-
     auto repl_service = [&]{
-        robots::ReplService repl_service{&DBG_UART, &DBG_UART};
+        static robots::ReplService repl_server{&DBG_UART, &DBG_UART};
+        repl_server.set_outen(false);
 
         static const auto list = rpc::make_list(
             "list",
             rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
-            rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
             rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
                 pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
+            }),
+
+            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
+
+                track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
+                track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
             })
         );
 
-        repl_service.invoke(list);
+        const auto clock_time = clock::time();
+        const auto [s, c] = sincos(clock_time * 5);
+        const auto p1 = c * 0.05_r;
+        const auto p2 = s * 0.05_r;
+
+        track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
+        track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
+        repl_server.invoke(list);
     };
 
     auto gesture_service = [&]{
@@ -988,7 +1028,8 @@ void bldc_main(){
 
     while(true){
         repl_service();
-        can_service();
+        can_subscriber_service();
+        can_publisher_service();
         blink_service();
         report_service();
         gesture_service();

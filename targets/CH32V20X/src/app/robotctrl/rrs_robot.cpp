@@ -208,7 +208,7 @@ void rrs3_robot_main(){
     auto & servo_b = env.servo_b;
     auto & servo_c = env.servo_c;
 
-    RRS3_RobotActuator rrs3_robot{cfg, [&](real_t r1, real_t r2, real_t r3){
+    RRS3_RobotActuator robot_actuator{cfg, [&](real_t r1, real_t r2, real_t r3){
         servo_a.set_radian(r1);
         servo_b.set_radian(r2);
         servo_c.set_radian(r3);
@@ -226,17 +226,17 @@ void rrs3_robot_main(){
         // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
         rpc::make_function("name", [&](){DEBUG_PRINTLN(
         );}),
-        rrs3_robot.make_rpc_list("rrs")
+        robot_actuator.make_rpc_list("rrs")
     );
 
-    // auto list = rrs3_robot.make_rpc_list("rrs");
+    // auto list = robot_actuator.make_rpc_list("rrs");
 
     auto ctrl = [&]{
         const auto t = clock::time();
         const auto [s,c] = sincospu(0.7_r * t);
         // set_gest(5.0_r * s, 5.0_r * c, 0.14_r + 0.02_r * s);
         // set_gest(15.0_r * s, 15.0_r * c, 0.14_r);
-        rrs3_robot.set_gest(
+        robot_actuator.set_gest(
             ANGLE2RAD(3.0_r * s), 
             ANGLE2RAD(3.0_r * c), 
             0.14_r
@@ -244,7 +244,7 @@ void rrs3_robot_main(){
         // DEBUG_PRINTLN("wh");
     };
 
-    rrs3_robot.go_idle();
+    robot_actuator.go_idle();
     
     while(true){
         [[maybe_unused]]
