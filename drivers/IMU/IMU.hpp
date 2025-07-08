@@ -71,6 +71,9 @@ namespace ymd::custom{
 namespace ymd::drivers{
 class AccelerometerIntf{
 public:
+    template<typename T>
+    static constexpr T GRAVITY_ACC = T(9.80665);
+
     virtual Result<Vector3<q24>, ImuError> read_acc() = 0;
 };
 

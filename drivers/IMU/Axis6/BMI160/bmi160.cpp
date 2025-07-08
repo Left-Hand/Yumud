@@ -195,6 +195,7 @@ IResult<> BMI160::self_test_gyr(){
 
     return Ok();
 }
+
 IResult<> BMI160::update(){
     std::array<int16_t, 6> buf;
 
@@ -227,20 +228,14 @@ IResult<> BMI160::reset(){
 }
 
 IResult<Vector3<q24>> BMI160::read_acc(){
-    // auto conv = [&](const int16_t x) -> real_t{
-    //     return s16_to_uni(x) * acc_scale_;
-    // };
+    auto conv = [&](const int16_t x) -> real_t{
+        return s16_to_uni(x) * acc_scale_;
+    };
     
-    // return Ok{Vector3<q24>{
-    //     conv(regs_.acc_reg.vec.x),
-    //     conv(regs_.acc_reg.vec.y),
-    //     conv(regs_.acc_reg.vec.z)
-    // }};
-
     return Ok{Vector3<q24>{
-        q16(regs_.acc.x) >> 8,
-        q16(regs_.acc.y) >> 8,
-        q16(regs_.acc.z) >> 8
+        conv(regs_.acc.x),
+        conv(regs_.acc.y),
+        conv(regs_.acc.z)
     }};
 }
 

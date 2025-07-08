@@ -558,8 +558,8 @@ void bldc_main(){
             switch(joint_role){
                 case JointRole::Pitch:
                     return dsp::Leso::Config{
-                        .b0 = 0.2_r,
-                        .w = 4.2_r,
+                        .b0 = 0.02_r,
+                        .w = 0.2_r,
                         .fs = FOC_FREQ
                     };
                 case JointRole::Roll:
@@ -579,6 +579,7 @@ void bldc_main(){
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
                 return PdCtrlLaw{.kp = 16.581_r, .kd = 0.70_r};
+                // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case JointRole::Roll: 
                 return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
             default: __builtin_unreachable();
@@ -600,24 +601,25 @@ void bldc_main(){
         const auto meas_pos = home_comp_({pos_sensor_.position(), meas_lap});
         const auto meas_spd = pos_sensor_.speed();
 
-        #define TEST_MODE_Q_SIN_CURR 1
-        #define TEST_MODE_VOLT_POS_CTRL 2
-        #define TEST_MODE_WEAK_MAG 3
-        #define TEST_MODE_POS_SIN 4
-        #define TEST_MODE_SQUARE_SWING 5
-        // #define TEST_MODE TEST_MODE_Q_SIN_CURR
-        #define TEST_MODE TEST_MODE_POS_SIN
-        // #define TEST_MODE TEST_MODE_SQUARE_SWING
-
-        [[maybe_unused]] scexpr real_t omega = 1;
-        [[maybe_unused]] scexpr real_t amp = 0.1_r;
+        [[maybe_unused]] scexpr real_t omega = 4;
+        [[maybe_unused]] scexpr real_t amp = 0.06_r;
         const auto clock_time = clock::time();
-        const auto [targ_pos, targ_spd] = ({
+
+        const auto [track_pos, track_spd] = ({
             std::make_tuple(
-                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+                amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
+            );
+        });
+
+        const auto [blance_pos, blance_spd] = ({
+            std::make_tuple(
+                // base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
                 base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
             );
         });
+
+        const auto targ_pos = blance_pos + track_pos;
+        const auto targ_spd = blance_spd + track_spd;
 
 
         const auto d_volt = 0;
@@ -650,16 +652,16 @@ void bldc_main(){
         }
     );
 
-    auto can_service = []{
+    auto can_service = [&]{
         static async::RepeatTimer timer{5ms};
-        timer.invoke_if([]{
+        timer.invoke_if([&]{
             const auto msg = hal::CanMsg::from_list(
-                hal::CanStdId(0x1234),
+                hal::CanStdId(std::bit_cast<uint8_t>(joint_role)),
                 {1,2,3,4}
             );
 
             can.write(msg);
-            // DEBUG_PRINTLN_IDLE(can.available(), can.pending());
+            DEBUG_PRINTLN_IDLE(can.available(), can.pending());
         });
     };
 
@@ -712,19 +714,19 @@ void bldc_main(){
             };
 
             const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
-            DEBUG_PRINTLN_IDLE(
-                norm_acc.x, norm_acc.y,
-                base_roll_raw,
-                base_omega_raw,
-                base_roll,
-                pos_sensor_.position(),
-                pos_sensor_.lap_position(),
-                pos_sensor_.speed()
-                // exe_us_
-                // // leso.get_disturbance(),
-                // meas_rad_
+            // DEBUG_PRINTLN_IDLE(
+            //     norm_acc.x, norm_acc.y,
+            //     base_roll_raw,
+            //     base_omega_raw,
+            //     base_roll,
+            //     pos_sensor_.position(),
+            //     pos_sensor_.lap_position(),
+            //     pos_sensor_.speed()
+            //     // exe_us_
+            //     // // leso.get_disturbance(),
+            //     // meas_rad_
 
-            );
+            // );
 
             base_roll_ = base_roll;
             base_omega_ = base_omega_raw;

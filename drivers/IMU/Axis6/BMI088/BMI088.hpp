@@ -13,7 +13,7 @@
 
 namespace ymd::drivers{
 
-class _BMI088_Prelude{
+struct BMI088_Prelude{
 public:
     scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
 
@@ -54,7 +54,6 @@ public:
         _1600Hz
     };
 
-
     enum class GyrOdr:uint8_t{
         _2000Hz_High = 0x00,
         _2000Hz = 0x01,
@@ -64,14 +63,12 @@ public:
         _100Hz,
     };
 
-
-protected:
     using RegAddress = uint8_t;
 };
 
 class BMI088_Acc final: 
     public AccelerometerIntf,
-    public _BMI088_Prelude{
+    public BMI088_Prelude{
 public:
 
 protected:
@@ -221,7 +218,7 @@ public:
 
 class BMI088_Gyr final:
     public GyroscopeIntf,
-    public _BMI088_Prelude{
+    public BMI088_Prelude{
 public:
     using Error = ImuError;
 
@@ -290,11 +287,13 @@ protected:
 public:
     BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
     BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+    BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
 
 
     [[nodiscard]] IResult<> init();
