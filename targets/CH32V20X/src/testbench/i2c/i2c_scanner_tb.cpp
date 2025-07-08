@@ -37,7 +37,7 @@ using namespace ymd::hal;
 #endif
 struct FoundInfo{
     uint8_t addr;
-    uint max_bbaud;
+    uint32_t max_bbaud;
 };
 
 #include <coroutine>
@@ -83,17 +83,17 @@ struct [[nodiscard]] Task {
 };
 
 struct I2cTester{
-    static constexpr uint start_freq = 200_KHz;
+    static constexpr uint32_t start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint, hal::HalError> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
+    static Result<uint32_t, hal::HalError> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
         hal::I2cDrv i2c_drv{&i2c, I2cSlaveAddr<7>::from_u8(read_addr)};
 
-        const uint max_baud = [&]{
-            uint baud = start_freq;
+        const uint32_t max_baud = [&]{
+            uint32_t baud = start_freq;
             while(baud < 10_MHz){
-                // i2c_drv.set_baudrate(uint(baud * grow_scale));
-                i2c.set_baudrate(uint(baud * grow_scale));
+                // i2c_drv.set_baudrate(uint32_t(baud * grow_scale));
+                i2c.set_baudrate(uint32_t(baud * grow_scale));
                 const auto err = i2c_drv.validate();
                 if(err.is_err()) break;
 
@@ -109,7 +109,7 @@ struct I2cTester{
 
         return Ok{max_baud};
     }
-    static Result<void, hal::HalError> validate(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+    static Result<void, hal::HalError> validate(I2c & i2c, const uint8_t read_addr, const uint32_t bbaud = start_freq){
         const auto res = hal::I2cDrv{&i2c, I2cSlaveAddr<7>::from_u8(read_addr)}.validate();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -132,7 +132,7 @@ static void i2c_scanner_functional(){
 
     
     // I2cTester::get_max_baudrate(i2c, read_addr)
-    //     .then([](uint baud) -> Result<uint, hal::BusError>{ 
+    //     .then([](uint32_t baud) -> Result<uint32_t, hal::BusError>{ 
     //         if (baud > 100_KHz) return Ok(baud);
     //         else return Err(hal::BusError::OCCUPIED); 
     //     })

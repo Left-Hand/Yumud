@@ -36,7 +36,7 @@ public:
             return Ok();
         }
 
-        PANIC();
+        return Err(ImuError::NoAvailablePhy);
     }
 
     [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data) {
@@ -52,7 +52,7 @@ public:
             return Ok();
         }
 
-        PANIC();
+        return Err(ImuError::NoAvailablePhy);
     }
 
     [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
@@ -68,7 +68,7 @@ public:
             return Ok();
         }
 
-        PANIC();
+        return Err(ImuError::NoAvailablePhy);
     }
 
     [[nodiscard]] Result<void, ImuError> validate(){
@@ -84,7 +84,7 @@ public:
         }
 
 
-        PANIC();
+        return Err(ImuError::NoAvailablePhy);
     }
 };
     

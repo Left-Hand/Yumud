@@ -3,32 +3,37 @@
 #include "core/utils/Option.hpp"
 
 namespace ymd::async{
-struct RepeatTimer final{
-    explicit constexpr RepeatTimer(Milliseconds duration):
-        duration_(duration){;}
+struct RepeatTimer final {
+    explicit RepeatTimer(Milliseconds duration):
+        duration_(duration),
+        next_trigger_(clock::millis() + duration) {}
 
     template<typename Fn>
-    void invoke_if(Fn && fn){
+    void invoke_if(Fn && fn) {
         const auto now = clock::millis();
-        if(last_.count() / duration_.count() != now.count() / duration_.count()){
+        if (now >= next_trigger_) {
             std::forward<Fn>(fn)();
             last_invoke_ = now;
+            // 计算下一个触发点，考虑可能已经错过多个周期的情况
+            next_trigger_ = now + duration_;
         }
         last_ = now;
     }
 
     [[nodiscard]] Milliseconds since_last_invoke() const {
-        const auto now = clock::millis();
-        return now - last_invoke_;
+        return clock::millis() - last_invoke_;
     }
 
     void reset() {
         start_ = Some(clock::millis());
+        next_trigger_ = start_.unwrap_or(clock::millis()) + duration_;
     }
+
 private:
     Milliseconds duration_;
     Milliseconds last_ = 0ms;
     Milliseconds last_invoke_ = 0ms;
+    Milliseconds next_trigger_ = 0ms;
     Option<Milliseconds> start_ = None;
 };
 

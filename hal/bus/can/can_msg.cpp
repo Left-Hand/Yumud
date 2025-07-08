@@ -10,7 +10,7 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
     os << os.brackets<'{'>();
 
     os << '<'
-        << ((msg.is_std()) ? 'S' : 'E')
+        << ((msg.is_standard()) ? 'S' : 'E')
         << ((msg.is_remote()) ? 'R' : 'D')
         << "> ";
 

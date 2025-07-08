@@ -2,19 +2,20 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/sync/timer.hpp"
+#include "core/string/StringView.hpp"
+
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
+#include "robots/cannet/slcan/slcan.hpp"
+#include "robots/cannet/can_chain.hpp"
 
-#include "core/string/StringView.hpp"
+
 #include "atomic"
 #include "types/vectors/vector2/Vector2.hpp"
-
-
-#include "robots/cannet/slcan/slcan.hpp"
 #include "details/polar_robot_curvedata.hpp"
 
-#include "core/sync/timer.hpp"
 #include "types/colors/color/color.hpp"
 
 
@@ -354,41 +355,20 @@ private:
 
 };
 
-class CanMsgHandlerIntf{ 
-public:
-    struct HandleStatus{
-        static constexpr HandleStatus from_handled() { return HandleStatus{true}; }
-        static constexpr HandleStatus from_unhandled() { return HandleStatus{false}; }
-
-        bool is_handled() const { return is_handled_; }
-    private:
-        constexpr HandleStatus(bool is_handled) : is_handled_(is_handled) {}
-
-        bool is_handled_;
-    };
-
-    virtual HandleStatus handle(const hal::CanMsg & msg) = 0;
-};
-
-class CanMsgHandlerChainlink final: public CanMsgHandlerIntf{ 
-public:
-    CanMsgHandlerChainlink(
-        Some<CanMsgHandlerIntf *> curr, 
-        Option<CanMsgHandlerIntf &> next
-    ):
-        curr_handler_(*curr.get()),
-        next_handler_(next){;}
-
+class CanHandlerAdaptor_PolarRobotActuator final:
+public CanMsgHandlerIntf{
     HandleStatus handle(const hal::CanMsg & msg){ 
-        HandleStatus res = curr_handler_.handle(msg);
-        if(next_handler_.is_none()) return res;
-        return next_handler_.unwrap().handle(msg);
+        if(not msg.is_standard()) 
+            return HandleStatus::from_unhandled();
+        switch(msg.id_as_u32()){
+            case 0:
+                DEBUG_PRINTLN("o"); break;
+            default:
+                return HandleStatus::from_unhandled();
+        }
+        return HandleStatus::from_handled();
     }
-private:
-    CanMsgHandlerIntf & curr_handler_;
-    Option<CanMsgHandlerIntf &> next_handler_ = None;
 };
-
 
 template<typename T>
 class RobotMsgCtrp{
@@ -411,28 +391,7 @@ class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
     } 
 };
 
-class CanHandlerAdaptor_PolarRobotActuator final:
-public CanMsgHandlerIntf{
-    HandleStatus handle(const hal::CanMsg & msg){ 
-        if(not msg.is_std()) 
-            return HandleStatus::from_unhandled();
-        switch(msg.id_as_u32()){
-            case 0:
-                DEBUG_PRINTLN("o"); break;
-            default:
-                return HandleStatus::from_unhandled();
-        }
-        return HandleStatus::from_handled();
-    }
-};
 
-class CanHandlerTerminator final: 
-public CanMsgHandlerIntf{ 
-    HandleStatus handle(const hal::CanMsg & msg){ 
-        // PANIC("uncaught msg", msg);
-        return HandleStatus::from_handled();
-    }
-};
 
 // #define MOCK_TEST
 struct QueuePointIterator{
