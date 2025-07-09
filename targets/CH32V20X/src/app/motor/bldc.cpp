@@ -455,8 +455,8 @@ void bldc_main(){
             switch(node_role){
                 case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
-                        .b0 = 0.02_r,
-                        .w = 0.2_r,
+                        .b0 = 0.2_r,
+                        .w = 2.2_r,
                         .fs = FOC_FREQ
                     };
                 case NodeRole::RollJoint:
@@ -475,7 +475,7 @@ void bldc_main(){
             case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 16.581_r, .kd = 0.70_r};
+                return PdCtrlLaw{.kp = 8.581_r, .kd = 0.90_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case NodeRole::RollJoint: 
                 return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
@@ -695,7 +695,7 @@ void bldc_main(){
             const auto clock_time = clock::time();
             const auto [s, c] = sincos(clock_time * 5);
             const auto p1 = c * 0.05_r;
-            const auto p2 = s * 0.05_r;
+            const auto p2 = s * 0.15_r;
 
             track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
             track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
@@ -759,10 +759,11 @@ void bldc_main(){
         // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
 
         DEBUG_PRINTLN_IDLE(
-            // pos_sensor_.position(),
-            // pos_sensor_.lap_position(),
-            // pos_sensor_.speed()
-            // // leso.get_disturbance(),
+            pos_sensor_.position(),
+            pos_sensor_.cont_position(),
+            pos_sensor_.lap_position(),
+            pos_sensor_.speed(),
+            leso.get_disturbance(),
             // meas_rad_
             exe_us_.count()
         );
