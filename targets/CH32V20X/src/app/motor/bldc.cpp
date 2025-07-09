@@ -447,17 +447,9 @@ void bldc_main(){
     };
 
 
-
-
     real_t q_volt_ = 0;
     real_t meas_rad_ = 0;
 
-    
-    // while(true){
-    //     DEBUG_PRINTLN(node_role,sys::chip::get_chip_id_crc());
-    //     blink_service();
-    //     clock::delay(5ms);
-    // }
     dsp::Leso leso{
         [&]{
             switch(node_role){
@@ -762,14 +754,14 @@ void bldc_main(){
         // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
         // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
 
-        // DEBUG_PRINTLN_IDLE(
-        //     pos_sensor_.position(),
-        //     pos_sensor_.lap_position(),
-        //     pos_sensor_.speed()
-        //     // // leso.get_disturbance(),
-        //     // meas_rad_
-
-        // );
+        DEBUG_PRINTLN_IDLE(
+            // pos_sensor_.position(),
+            // pos_sensor_.lap_position(),
+            // pos_sensor_.speed()
+            // // leso.get_disturbance(),
+            // meas_rad_
+            exe_us_.count()
+        );
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
 
