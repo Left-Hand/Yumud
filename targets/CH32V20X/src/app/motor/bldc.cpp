@@ -673,8 +673,7 @@ void bldc_main(){
 
 
     auto repl_service = [&]{
-        static robots::ReplService repl_server{&DBG_UART, &DBG_UART};
-        // repl_server.set_outen(false);
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
         static const auto list = rpc::make_list(
             "list",
@@ -692,13 +691,18 @@ void bldc_main(){
             })
         );
 
-        const auto clock_time = clock::time();
-        const auto [s, c] = sincos(clock_time * 5);
-        const auto p1 = c * 0.05_r;
-        const auto p2 = s * 0.05_r;
+        auto plan_joints = [&]() -> void { 
+            const auto clock_time = clock::time();
+            const auto [s, c] = sincos(clock_time * 5);
+            const auto p1 = c * 0.05_r;
+            const auto p2 = s * 0.05_r;
 
-        track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
-        track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
+            track_info_.roll.position   = CLAMP2(p1, POSITION_LIMIT);
+            track_info_.pitch.position  = CLAMP2(p2, POSITION_LIMIT);
+        };
+
+        plan_joints();
+
         repl_server.invoke(list);
     };
 

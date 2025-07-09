@@ -489,15 +489,15 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         }
     });
 
-    robots::ReplService repl_service = {
+    robots::ReplServer repl_server = {
         &UART, &UART
     };
 
     auto list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
         rpc::make_function("now", [&](){return clock::time();})
     );
 
@@ -525,7 +525,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     motor_system_.execution_time_.count(),
         //     motor_system_.cs_.get()
         // );
-        repl_service.invoke(list);
+        repl_server.invoke(list);
         clock::delay(1ms);
     }
 

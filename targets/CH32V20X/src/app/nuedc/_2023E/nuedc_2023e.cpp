@@ -175,15 +175,15 @@ void nuedc_2023e_main(){
     [[maybe_unused]]
     auto gimbal_planner = GimbalPlanner(cfg.gimbal_planner_cfg, gimbal_actuator);
 
-    robots::ReplService repl_thread = {
+    robots::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
     auto rpc_list =
         rpc::make_list( "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_thread.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_thread.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
         rpc::make_function("set_rad", [&](const real_t r1, const real_t r2){
             servo_pitch.set_radian(r1);
             servo_yaw.set_radian(r2);

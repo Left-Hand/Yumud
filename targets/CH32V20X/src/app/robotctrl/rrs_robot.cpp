@@ -214,15 +214,15 @@ void rrs3_robot_main(){
         servo_c.set_radian(r3);
     }};
 
-    robots::ReplService repl_service = {
+    robots::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
     auto list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
         // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
         rpc::make_function("name", [&](){DEBUG_PRINTLN(
         );}),
@@ -250,7 +250,7 @@ void rrs3_robot_main(){
         [[maybe_unused]]
         const real_t t = clock::time();
         
-        repl_service.invoke(list);
+        repl_server.invoke(list);
 
 
         clock::delay(10ms);

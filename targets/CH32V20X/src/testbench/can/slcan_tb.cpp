@@ -33,13 +33,13 @@ void slcan_main(){
         })
     );
 
-    robots::ReplService repl_service{
+    robots::ReplServer repl_server{
         &DBG_UART, &DBG_UART
     };
 
 
     while(true){
         // DEBUG_PRINTLN(clock::millis());
-        repl_service.invoke(list);
+        repl_server.invoke(list);
     }
 }

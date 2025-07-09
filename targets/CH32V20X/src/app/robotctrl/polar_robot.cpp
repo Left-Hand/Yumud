@@ -513,12 +513,11 @@ void polar_robot_main(){
         joint_theta.make_rpc_list("joint_theta")
     );
 
-    robots::ReplService repl_service = {
+    robots::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
     constexpr auto SAMPLE_DUR = 700ms; 
-    // auto rpt = RepeatTimer{SAMPLE_DUR};
 
     auto it = QueuePointIterator{std::span(curve_data)};
 
@@ -530,7 +529,7 @@ void polar_robot_main(){
             robot_actuator.set_position(p.x, p.y);
             DEBUG_PRINTLN(p.x, p.y);
 
-            repl_service.invoke(list);
+            repl_server.invoke(list);
         });
     }
 
