@@ -9,7 +9,7 @@
 #include "core/magic/function_traits.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/stringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd::magic{

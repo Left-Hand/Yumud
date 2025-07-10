@@ -1,10 +1,10 @@
-#include "StringUtils.hpp"
+#include "strconv.hpp"
 #include <array>
 
 using namespace ymd;
-using namespace ymd::StringUtils;
+using namespace ymd::strconv;
 
-scexpr uint32_t scale_map[] = {
+static constexpr  uint32_t scale_map[] = {
     1UL, 
     10UL, 
     100UL, 
@@ -35,7 +35,7 @@ __fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
 
 
 template<integral T>
-size_t _itoa_impl(T value, char * str, uint8_t radix){
+static size_t _itoa_impl(T value, char * str, uint8_t radix){
     const bool minus = value < 0;
     if(minus) value = -value;
 
@@ -59,9 +59,9 @@ size_t _itoa_impl(T value, char * str, uint8_t radix){
 
 
 //TODO eps为5时计算会溢出 暂时限制eps=5的情况
-size_t ymd::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q){
+size_t strconv::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q){
     //TODO 支持除了Q16格式外其他格式转换到字符串的函数 
-    scexpr size_t Q = 16;
+    static constexpr  size_t Q = 16;
 
 
     value = RSHIFT(value, _Q - Q);
@@ -97,12 +97,12 @@ size_t ymd::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q)
     return end + 1 + eps;
 }
 
-size_t StringUtils::itoa(int32_t value, char *str, uint8_t radix){
+size_t strconv::itoa(int32_t value, char *str, uint8_t radix){
     return _itoa_impl<int32_t>(value, str, radix);
 }
 
 
-size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
+size_t strconv::iutoa(uint64_t value,char *str,uint8_t radix){
     // if(value > INT32_MAX or value < INT32_MIN){
     //     return _itoa_impl<int32_t>(value, str, radix);
     // }
@@ -112,12 +112,12 @@ size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
 }
 
 
-size_t StringUtils::iltoa(int64_t value, char * str, uint8_t radix){
+size_t strconv::iltoa(int64_t value, char * str, uint8_t radix){
     // return _itoa_impl<int64_t>(value, str, radix);
     return _itoa_impl<int32_t>(value, str, radix);
 }
 
-size_t StringUtils::ftoa(float number,char *buf, uint8_t eps)
+size_t strconv::ftoa(float number,char *buf, uint8_t eps)
 {
     char str_int[12] = {0};
     char str_float[12] = {0};

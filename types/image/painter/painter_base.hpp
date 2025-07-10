@@ -3,7 +3,7 @@
 
 #include "types/image/image.hpp"
 
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/stream/stream.hpp"
 #include "core/stream/StringStream.hpp"
 #include "core/utils/Result.hpp"

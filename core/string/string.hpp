@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "core/platform.hpp"
 
 
-#include "StringView.hpp"
-#include "core/string/utils/StringUtils.hpp"
+#include "string_view.hpp"
+#include "core/string/utils/strconv.hpp"
 
 namespace ymd{
 	

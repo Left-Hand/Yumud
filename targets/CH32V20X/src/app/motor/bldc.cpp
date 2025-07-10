@@ -725,7 +725,7 @@ void bldc_main(){
             const auto command = SetPositionCommand{2, 18};
             const auto iter = make_serialize_iter<RawBytes>(command);
             // const auto iter = make_serialize_iter();
-            // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
+            DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
 
 
             // for(const auto item: range){

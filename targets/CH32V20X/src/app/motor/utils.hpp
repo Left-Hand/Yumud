@@ -69,6 +69,7 @@ private:
 
 
 struct RawBytes;
+struct ReadableAscii;
 
 
 template<typename Protocol, typename T>
@@ -93,7 +94,7 @@ struct SerializeIterMaker{
 
 
 template<typename Protocol, typename T>
-struct DeserializeMaker{
+struct DeserializerMaker{
     static constexpr auto make(){
         return Deserializer<Protocol, T>{};
     }
@@ -115,11 +116,17 @@ static constexpr auto make_serialize_iter(const T & obj){
 
 
 template<typename Protocol, typename T>
-static constexpr auto make_deserialize(auto && pbuf) {
-    return DeserializeMaker<Protocol, T>::make()
-        .deserialize(std::forward<std::decay_t<decltype(pbuf)>>(pbuf))
-    ;
+static constexpr auto make_deserializer() {
+    return DeserializerMaker<Protocol, T>::make();
 }
+
+
+template<typename Protocol, typename T>
+static constexpr auto make_deserialize(auto && pbuf) {
+    return make_deserializer<Protocol, T>()
+        .deserialize(std::forward<std::decay_t<decltype(pbuf)>>(pbuf));
+}
+
 
 template<size_t Q>
 struct SerializeIter<RawBytes, iq_t<Q>>{

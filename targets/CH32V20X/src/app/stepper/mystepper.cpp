@@ -22,7 +22,7 @@
 
 
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "build_date.hpp"
 #include "meta_utils.hpp"
 #include "tasks.hpp"

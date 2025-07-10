@@ -11,6 +11,7 @@
 #include "core/stream/CharOpTraits.hpp"
 #include "core/container/ringbuf/Fifo_t.hpp"
 #include "core/utils/stdrange.hpp"
+#include "core/math/iq/iq_t.hpp"
 
 
 namespace std{
@@ -45,9 +46,6 @@ friend ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const type & valu
     return os;\
 }\
 
-
-template<size_t Q>
-struct iq_t;
 
 namespace details{
 struct Splitter{};
@@ -177,145 +175,6 @@ private:
     
     template<char c>
     using Brackets = details::Brackets<c>;
-
-
-    uint8_t sp_len;
-
-    scexpr Config DEFAULT_CONFIG = {
-        .splitter = ", ",
-        .radix = 10,
-        .eps = 3,
-        .indent = 0,
-        .flags = 0,
-    };
-
-    Config config_;
-
-    __fast_inline void print_splt(){
-        write(config_.splitter, sp_len);
-    }
-
-    template<typename T>
-    __fast_inline void print_splt_then_entity(T && any){
-        if constexpr(details::need_display_v<T>){
-            print_splt();
-        }
-        *this << std::forward<T>(any);
-    }
-
-    template<typename T>
-    __fast_inline void print_splt_then_entity(const char splt, T && any){
-        if constexpr(details::need_display_v<T>){
-            write(splt);
-        }
-        *this << std::forward<T>(any);
-    }
-
-    __fast_inline void print_end(){
-        flush();
-        if(unlikely(config_.force_sync)){
-            blocking_until_less_than(0);
-        }
-    }
-
-    __fast_inline void blocking_until_less_than(size_t n){
-        while(pending() > n) __nopn(1);
-    }
-
-    __fast_inline void print_indent(){
-        if(likely(config_.indent == 0)) return;
-        for(size_t i = 0; i < config_.indent; i++){
-            write('\t');
-        }
-    }
-
-    __fast_inline void print_endl(){
-        scexpr const char * enter_str = "\r\n";
-        scexpr size_t enter_str_len = 2;
-        
-        write(enter_str, enter_str_len);
-        print_end();
-    }
-
-    scexpr const char * get_basealpha(const size_t _radix){
-        switch(_radix){
-            default:
-            case 10:
-                return "";
-            case 2:
-                return "0b";
-            case 8:
-                return "0";
-            case 16:
-                return "0x";
-        }
-    }
-
-    int transform_char(const char chr) const;
-
-    void write_checked(const char data){
-        const auto res = transform_char(data);
-        if(res >= 0) write(res);
-    }
-
-    void write_checked(const char * pbuf, const size_t len);
-
-    void print_source_loc(const std::source_location & loc);
-
-    #ifndef OSTREAM_BUF_SIZE
-    static constexpr size_t OSTREAM_BUF_SIZE = 64;
-    #endif
-
-    struct Buf{
-        char buf[OSTREAM_BUF_SIZE];
-        uint8_t size = 0;
-        
-        
-        // 用于压入数据，当数据溢满时发送数据包
-        template<typename Fn>
-        __fast_inline void push(const std::span<const char> pbuf, Fn&& fn) {
-            size_t offset = 0;
-            while (offset < pbuf.size()) {
-                size_t available = OSTREAM_BUF_SIZE - size;
-                size_t copy_size = std::min(available, pbuf.size() - offset);
-
-                std::memcpy(buf + size, pbuf.data() + offset, copy_size);
-                size += static_cast<uint8_t>(copy_size);
-                offset += copy_size;
-
-                if (size == OSTREAM_BUF_SIZE) {
-                    fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
-                    clear();  // 发送后重置缓冲区
-                }
-            }
-        }
-
-        // 用于压入数据，当数据溢满时发送数据包
-        template<typename Fn>
-        __fast_inline void push(char data, Fn&& fn) {
-            buf[size++] = data;
-            if (size == OSTREAM_BUF_SIZE) {
-                fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
-                clear();  // 发送后重置缓冲区
-            }
-        }
-
-        // 强制刷新缓冲区（发送剩余数据）
-        template<typename Fn>
-        __fast_inline void flush(Fn&& fn) {
-            if (size > 0) {
-                fn(std::span<const char>(buf, size));  // 发送缓冲区数据
-                clear();  // 发送后重置缓冲区
-            }
-        }
-
-        // 清空缓冲区（不发送数据）
-        __fast_inline void clear() {
-            size = 0;
-        }
-    };
-
-    Buf buf_;
 public:
     OutputStream(){
         reconf(DEFAULT_CONFIG);
@@ -399,6 +258,7 @@ public:
 
 
     OutputStream & operator<<(const bool val);
+    OutputStream & operator<<(const uint8_t val);
 
     __inline OutputStream & operator<<(const char chr){write_checked(chr); return *this;}
     __inline OutputStream & operator<<(const wchar_t chr){write_checked(chr); return *this;}
@@ -477,13 +337,13 @@ private:
         if(config_.showpos and pos) *this << '+';
         this->write(str, len);
     }
+
+    void print_q16(const q16 val);
 public:
 
     template<size_t Q>
     OutputStream & operator<<(const iq_t<Q> & val){
-        char str[12] = {0};
-        const auto len = qtoa<Q>(val, str, this->eps());
-        print_numeric(str, len, val >= 0);
+        print_q16(q16(val));
         return *this;
     }
 
@@ -781,6 +641,145 @@ public:
 
     [[nodiscard]] __Guard create_guard(){
         return __Guard(*this);
+    }
+
+private:
+
+    uint8_t sp_len;
+
+    scexpr Config DEFAULT_CONFIG = {
+        .splitter = ", ",
+        .radix = 10,
+        .eps = 3,
+        .indent = 0,
+        .flags = 0,
+    };
+
+    Config config_;
+
+    __fast_inline void print_splt(){
+        write(config_.splitter, sp_len);
+    }
+
+    template<typename T>
+    __fast_inline void print_splt_then_entity(T && any){
+        if constexpr(details::need_display_v<T>){
+            print_splt();
+        }
+        *this << std::forward<T>(any);
+    }
+
+    template<typename T>
+    __fast_inline void print_splt_then_entity(const char splt, T && any){
+        if constexpr(details::need_display_v<T>){
+            write(splt);
+        }
+        *this << std::forward<T>(any);
+    }
+
+    __fast_inline void print_end(){
+        flush();
+        if(unlikely(config_.force_sync)){
+            blocking_until_less_than(0);
+        }
+    }
+
+    __fast_inline void blocking_until_less_than(size_t n){
+        while(pending() > n) __nopn(1);
+    }
+
+    __fast_inline void print_indent(){
+        if(likely(config_.indent == 0)) return;
+        for(size_t i = 0; i < config_.indent; i++){
+            write('\t');
+        }
+    }
+
+    __fast_inline void print_endl(){
+        scexpr const char * enter_str = "\r\n";
+        scexpr size_t enter_str_len = 2;
+        
+        write(enter_str, enter_str_len);
+        print_end();
+    }
+
+    scexpr const char * get_basealpha(const size_t _radix){
+        switch(_radix){
+            default:
+            case 10:
+                return "";
+            case 2:
+                return "0b";
+            case 8:
+                return "0";
+            case 16:
+                return "0x";
+        }
+    }
+
+    void print_source_loc(const std::source_location & loc);
+
+    #ifndef OSTREAM_BUF_SIZE
+    static constexpr size_t OSTREAM_BUF_SIZE = 64;
+    #endif
+
+    struct Buf{
+        char buf[OSTREAM_BUF_SIZE];
+        uint8_t size = 0;
+        
+        
+        // 用于压入数据，当数据溢满时发送数据包
+        template<typename Fn>
+        __fast_inline void push(const std::span<const char> pbuf, Fn&& fn) {
+            size_t offset = 0;
+            while (offset < pbuf.size()) {
+                size_t available = OSTREAM_BUF_SIZE - size;
+                size_t copy_size = std::min(available, pbuf.size() - offset);
+
+                std::memcpy(buf + size, pbuf.data() + offset, copy_size);
+                size += static_cast<uint8_t>(copy_size);
+                offset += copy_size;
+
+                if (size == OSTREAM_BUF_SIZE) {
+                    fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                    clear();  // 发送后重置缓冲区
+                }
+            }
+        }
+
+        // 用于压入数据，当数据溢满时发送数据包
+        template<typename Fn>
+        __fast_inline void push(char data, Fn&& fn) {
+            buf[size++] = data;
+            if (size == OSTREAM_BUF_SIZE) {
+                fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                clear();  // 发送后重置缓冲区
+            }
+        }
+
+        // 强制刷新缓冲区（发送剩余数据）
+        template<typename Fn>
+        __fast_inline void flush(Fn&& fn) {
+            if (size > 0) {
+                fn(std::span<const char>(buf, size));  // 发送缓冲区数据
+                clear();  // 发送后重置缓冲区
+            }
+        }
+
+        // 清空缓冲区（不发送数据）
+        __fast_inline void clear() {
+            size = 0;
+        }
+    };
+
+    Buf buf_;
+
+    void write_checked(const char *pstr, size_t len){
+        return write(pstr, len);
+    }
+
+    void write_checked(const char chr){ 
+        return write(chr);
     }
 };
 

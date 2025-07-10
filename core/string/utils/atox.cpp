@@ -1,9 +1,9 @@
-#include "StringUtils.hpp"
+#include "strconv.hpp"
 
 
 using namespace ymd;
 
-int StringUtils::atoi(const char * str, const size_t len) {
+int strconv::atoi(const char * str, const size_t len) {
 	int ret = 0;
 	bool minus = false;
 
@@ -27,7 +27,7 @@ int StringUtils::atoi(const char * str, const size_t len) {
 	return minus ? (-ret) : ret;
 }
 
-float StringUtils::atof(const char * str, const size_t len) {
+float strconv::atof(const char * str, const size_t len) {
     auto [int_part, frac_part, scale] = disassemble_fstr(str, len);
     return(int_part + float(frac_part) / scale);
 }

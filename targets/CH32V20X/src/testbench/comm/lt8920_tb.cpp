@@ -9,7 +9,7 @@
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
 
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

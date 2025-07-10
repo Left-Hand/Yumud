@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/stream/ostream.hpp"
-#include "core/string/stringView.hpp"
+#include "core/string/string_view.hpp"
 
 namespace ymd{
 

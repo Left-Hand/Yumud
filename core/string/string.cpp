@@ -372,7 +372,7 @@ void String::replace(char find, char replace)
 // {
 //     int dst_len = match.length();
 //     if(dst_len != (int)replace.length()) return *this;
-// 	StringUtils::str_replace(
+// 	strconv::str_replace(
 //             this->c_str(),this -> length(),
 //             match.c_str(),replace.c_str(),dst_len);
 //     return *this;
@@ -437,7 +437,7 @@ void String::alphanum(void){
 	len = 0;
 	for(size_t i = 0; i < len0; i++){
 		char chr = buffer[i];
-		if(StringUtils::is_alpha(chr) || StringUtils::is_digit(chr) 
+		if(strconv::is_alpha(chr) || strconv::is_digit(chr) 
 			|| chr == ' ' || chr == '+' || chr == '-' || chr == '.' 
 			|| chr == '_'
 		){
@@ -451,5 +451,5 @@ void String::alphanum(void){
 	delete new_buf;
 }
 
-bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str(), len);}
-bool String::isDigit(void) const {return StringUtils::is_digit(c_str(), len);}
+bool String::isNumeric(void) const {return strconv::is_numeric(c_str(), len);}
+bool String::isDigit(void) const {return strconv::is_digit(c_str(), len);}

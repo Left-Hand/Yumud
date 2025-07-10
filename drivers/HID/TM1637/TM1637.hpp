@@ -30,7 +30,7 @@
 
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/stream/ostream.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"

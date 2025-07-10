@@ -509,12 +509,6 @@ __fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){
     static constexpr auto HALF_ONE = iq_t<Q>(0.5);
     return iq_t<Q>(int(iq + HALF_ONE));}
 
-size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);
-
-template<size_t Q>
-size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
-    return _qtoa_impl(qv.to_i32(), str, eps, Q);
-}
 
 template<size_t Q>
 bool not_in_one(const iq_t<Q> qv){

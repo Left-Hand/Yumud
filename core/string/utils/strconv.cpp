@@ -1,8 +1,8 @@
-#include "StringUtils.hpp"
+#include "strconv.hpp"
 
 using namespace ymd;
 
-void StringUtils::reverse_str(char * str, size_t len){
+void strconv::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
@@ -13,7 +13,7 @@ void StringUtils::reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const size_t len){
+std::tuple<int, int, int> strconv::disassemble_fstr(const char * str, const size_t len){
 	
     int int_part = 0;
 	int frac_part = 0;
@@ -79,7 +79,7 @@ ret:
 	return {int_part, frac_part, scale};
 }
 
-bool StringUtils::is_numeric(const char* str, const size_t len) {
+bool strconv::is_numeric(const char* str, const size_t len) {
 	bool hasDigit = false;
 	bool hasDot = false;
 	bool hasSign = false;
@@ -107,69 +107,11 @@ bool StringUtils::is_numeric(const char* str, const size_t len) {
 	return hasDigit;
 }
 
-bool StringUtils::is_digit(const char * str, const size_t len){
+bool strconv::is_digit(const char * str, const size_t len){
     for(size_t i = 0; i < len; i++){
 		char chr = str[i];
         if(!is_digit(chr)) return false;
 		if(chr == '\0') break;
     }
     return true;
-}
-int StringUtils::kmp_find(char *src, const size_t src_len, const char *match, const size_t match_len) {
-	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
-	size_t i = 0, j = 1;
-	table[0] = 0;
-	while (j < match_len) {
-		if (match[i] == match[j]) {
-			table[j] = i + 1;
-			i++; j++;
-		} else {
-			if (i != 0) {
-				i = table[i - 1];
-			} else {
-				table[j] = 0;
-				j++;
-			}
-		}
-	}
-	
-	i = 0;
-	j = 0;
-	while (i < src_len && j < match_len) {
-		if (src[i] == match[j]) {
-			i++; j++;
-		} else {
-			if (j != 0) {
-				j = table[j - 1];
-			} else {
-				i++;
-			}
-		}
-	}
-	
-	free(table);
-	
-	if (j == match_len) {
-		return i - j;
-	} else {
-		return -1;
-	}
-}
-
-void StringUtils::str_replace(char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
-	char * find_ptr = src;
-	size_t find_len = src_len;
-	const char * replace_ptr = match;
-	
-	while(1){
-		int pos = kmp_find(find_ptr, find_len, replace_ptr, dst_len);
-		if(pos < 0) break;
-		else{
-			find_ptr += pos;
-			for(size_t i = 0; i < dst_len; i++){
-				find_ptr[i] = replace[i];
-			}
-			find_ptr += dst_len;
-		}
-	}
 }
