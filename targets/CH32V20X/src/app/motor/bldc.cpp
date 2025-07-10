@@ -5,6 +5,7 @@
 #include "core/polymorphism/reflect.hpp"
 #include "core/sync/timer.hpp"
 #include "core/utils/sumtype.hpp"
+#include "core/string/utils/strconv2.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -723,9 +724,32 @@ void bldc_main(){
             const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.03_r;
 
             const auto command = SetPositionCommand{2, 18};
-            const auto iter = make_serialize_iter<RawBytes>(command);
+            // const auto iter = make_serialize_iter<RawBytes>(command);
             // const auto iter = make_serialize_iter();
-            DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
+
+            std::array<char, 16> arr{};
+
+            const auto u_begin = clock::micros();
+            const auto v = 20 * sin(7 * clock::time());
+            // const auto v = 10.1_r;
+            // const auto v = 10;
+
+            for(size_t i = 0; i < 100; i++){
+                strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+            }
+            const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+            // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
+            // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
+            // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
+            // uint8_t res = 100;
+            // DEBUG_PRINTLN(;
+            // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
+            DEBUG_PRINTLN((clock::micros() - u_begin).count(), 
+                StringView(arr.data()), 
+                uint8_t(arr[0]), 
+                rem_str.size(), 
+                strconv2::iq_from_str<16>(arr.data()).examine()
+            );
 
 
             // for(const auto item: range){

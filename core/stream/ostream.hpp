@@ -22,6 +22,7 @@ namespace ymd{
 
 class String;
 class StringView;
+class StringRef;
 class StringStream;
 
 template<typename T>
@@ -260,14 +261,22 @@ public:
     OutputStream & operator<<(const bool val);
     OutputStream & operator<<(const uint8_t val);
 
-    __inline OutputStream & operator<<(const char chr){write_checked(chr); return *this;}
-    __inline OutputStream & operator<<(const wchar_t chr){write_checked(chr); return *this;}
-    __inline OutputStream & operator<<(char * str){if(str) write_checked(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const char* str){if(str) write_checked(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const std::string & str){write_checked(str.c_str(),str.length()); return *this;}
-    __inline OutputStream & operator<<(const std::string_view str){write_checked(str.data(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const char chr){
+        write_checked(chr); return *this;}
+    __inline OutputStream & operator<<(const wchar_t chr){
+        write_checked(chr); return *this;}
+    __inline OutputStream & operator<<(char * str){ 
+        write_checked(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const char* str){ 
+        write_checked(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const std::string & str){
+        write_checked(str.c_str(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const std::string_view str){
+        write_checked(str.data(),str.length()); return *this;}
+
     OutputStream & operator<<(const String & str);
-    OutputStream & operator<<(const StringView & str);
+    OutputStream & operator<<(const StringView str);
+    OutputStream & operator<<(const StringRef str);
     __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);

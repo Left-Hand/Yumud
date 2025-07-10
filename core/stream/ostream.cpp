@@ -3,6 +3,7 @@
 #include "core/clock/clock.hpp"
 #include "core/string/String.hpp"
 #include "core/string/string_view.hpp"
+#include "core/string/string_ref.hpp"
 
 #include <source_location>
 
@@ -154,7 +155,11 @@ void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
 
 OutputStream & OutputStream::operator<<(const String & str){
     write_checked(str.c_str(), str.length()); return * this;}
-OutputStream & OutputStream::operator<<(const StringView & str){
+
+OutputStream & OutputStream::operator<<(const StringView str){
+    write_checked(str.data(), str.length()); return * this;}
+
+OutputStream & OutputStream::operator<<(const StringRef str){
     write_checked(str.data(), str.length()); return * this;}
 
 OutputStream & OutputStream::operator<<(const bool val){
