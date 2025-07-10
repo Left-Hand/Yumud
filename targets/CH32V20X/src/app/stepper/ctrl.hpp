@@ -31,6 +31,7 @@ public:
             speed = 0;
         }
     };
+
     constexpr void reconf(const Config & cfg){
         r_ = cfg.r;
         dt_ = 1_q24 / cfg.fs;
@@ -44,7 +45,6 @@ public:
     constexpr void reset(){
         state_.reset();
     }
-
 
     constexpr void update(const q16 u){
         const auto r = r_;
@@ -61,7 +61,6 @@ public:
 private:
     q8 r_ = 0;
     q24 dt_ = 0;
-    // using State = dsp::StateVectorq160, N>;
 
     State state_;
 };

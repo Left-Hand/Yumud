@@ -64,11 +64,6 @@ static constexpr IResult<uint32_t> parse_hex(const StringView str){
     return Ok(ret);
 }
 
-// using SerializeBuf = char[20];
-// static constexpr SerializeBuf serialize(const hal::CanMsg & msg){
-
-// }
-
 static constexpr IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() == 0)
         RET_ERR(Error::NoArg);

@@ -10,6 +10,7 @@
 #include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
 #include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/utils/stdrange.hpp"
 
 
 namespace std{
@@ -546,11 +547,11 @@ private:
     }
 
     template<typename T>
-    void print_span(const T * _begin, const size_t _size){
+    void print_span(const T * begin, const size_t size){
         *this << this->brackets<'['>();
-        if(_size > 0){
-            for(size_t i = 0; i < size_t(_size - 1); ++i) *this << _begin[i] << ',';
-            *this << _begin[_size - 1];
+        if(size > 0){
+            for(size_t i = 0; i < size_t(size - 1); ++i) *this << begin[i] << ',';
+            *this << begin[size - 1];
         }else{
             *this << '\\';
         }
@@ -590,6 +591,32 @@ public:
     OutputStream & operator<<(const T& range) {
         print_span(std::ranges::data(range), std::ranges::size(range));
         return *this;
+    }
+
+    template<typename T>
+    requires is_next_based_iter_v<T>
+    OutputStream& operator<<(const T& iter) {
+        auto & self = *this;
+        self << brackets<'['>();
+        
+        bool first = true;
+        auto temp_iter = iter; // 创建副本以避免修改原迭代器
+        
+        while (temp_iter.has_next()) {
+            if (!first) {
+                self << ',';
+            }
+            self << temp_iter.next();
+            first = false;
+        }
+        
+        // 如果没有任何元素，可以输出特定标记（如原代码中的'\'）
+        if (first) {
+            self << '\\';
+        }
+        
+        self << self.template brackets<']'>();
+        return self;
     }
     //#endregion
 

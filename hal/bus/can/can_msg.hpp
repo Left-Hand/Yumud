@@ -189,6 +189,41 @@ public:
         return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));
     }
 
+    template<typename T, typename Iter>
+    requires is_next_based_iter_v<Iter>
+    static constexpr Option<CanMsg> from_iter(details::CanId_t<T> id, Iter iter) {
+        std::array<uint8_t, 8> buf{};
+        size_t len = 0;
+        
+        while(iter.has_next() && len < buf.size()) {
+            buf[len] = iter.next();
+            len++;
+        }
+        
+        // 检查是否还有剩余数据未读取
+        if(iter.has_next()) {
+            return None;  // 数据太长，无法放入8字节缓冲区
+        }
+        
+        // 使用数组视图构造CanMsg
+        return Some(CanMsg::from_bytes(id, std::span{buf.data(), len}));
+    }
+
+    template<typename T, typename Iter>
+    requires is_next_based_iter_v<Iter>
+    static constexpr CanMsg from_iter_unchecked(details::CanId_t<T> id, Iter iter) {
+        std::array<uint8_t, 8> buf{};
+        size_t len = 0;
+        
+        // 无条件读取最多8个字节
+        while(len < buf.size() && iter.has_next()) {
+            buf[len++] = iter.next();
+        }
+
+        // 使用unsafe方式构造CanMsg（假设调用者保证有效性）
+        return CanMsg::from_bytes(id, std::span{buf.data(), len});
+    }
+
     static constexpr CanMsg from_sxx32_regs(uint32_t raw, uint64_t payload, uint8_t len){
         return CanMsg(raw, payload, len);}
 
