@@ -7,7 +7,7 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/timer.hpp"

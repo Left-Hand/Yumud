@@ -98,13 +98,3 @@ public:
 };
 
 }
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::PMW3901::Error, hal::HalResult> {
-        static Result<T, drivers::PMW3901::Error> convert(const hal::HalResult res){
-            if(res.is_ok()) return Ok();
-            return Err(drivers::PMW3901::Error(res.unwrap_err())); 
-        }
-    };
-}

@@ -37,7 +37,7 @@ public:
     IResult<> reconf(const Config & cfg);
     IResult<> update();
 
-    IResult<real_t> get_lap_position() { return Ok(lap_position_);}
+    IResult<real_t> read_lap_position() { return Ok(lap_position_);}
     uint32_t get_err_cnt() const {return err_cnt_;}
 
     IResult<MagStatus> get_mag_status() {

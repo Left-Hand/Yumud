@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <tuple>
 
-#include "core/string/String.hpp"
 
 namespace ymd::canopen{
 
@@ -57,7 +56,7 @@ struct CobId{
     }
 
     static constexpr CobId from_stdid(const hal::CanStdId id){
-        return CobId(id.as_raw());
+        return CobId(id.to_u11());
     }
 
     constexpr hal::CanStdId to_stdid() const {

@@ -14,16 +14,12 @@ namespace ymd::drivers{
 
 namespace details{
 enum class ImuError_Kind:uint8_t{
-    WrongWhoAmI,
     PackageNotMatch,
     UnknownDevice,
-    WrongDeviceId,
+    WrongWhoAmI,
     WrongCompanyId,
     WrongPmuMode,
-    PhyVerifyFailed,
 
-    CantSetup,
-    
     AccCantSetup,
     GyrCantSetup,
     MagCantSetup,
@@ -45,9 +41,9 @@ enum class ImuError_Kind:uint8_t{
     AxisZOverflow,
 
     NoAvailablePhy,
-    I2cPhyIsNotSupportedYet,
-    I3cPhyIsNotSupportedYet,
-    SpiPhyIsNotSupportedYet,
+    I2cPhyIsNotImplementedYet,
+    I3cPhyIsNotImplementedYet,
+    SpiPhyIsNotImplementedYet,
 
     Unreachable
 };
@@ -56,17 +52,6 @@ DERIVE_DEBUG(ImuError_Kind)
 DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 }
 
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::ImuError, hal::HalResult> {
-        static Result<T, drivers::ImuError> convert(const hal::HalResult res){
-            
-            if(res.is_ok()) return Ok();
-            return Err(res.unwrap_err()); 
-        }
-    };
-}
 
 namespace ymd::drivers{
 class AccelerometerIntf{

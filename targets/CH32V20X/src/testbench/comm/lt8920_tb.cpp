@@ -9,7 +9,7 @@
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
 
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -40,7 +40,7 @@ void lt8920_main(){
     spi.init({2_MHz});
     
 
-    LT8920 lt{&spi, spi.attach_next_cs(&portA[0]).unwrap()};
+    LT8920 lt{&spi, spi.allocate_cs_gpio(&portA[0]).unwrap()};
     bindSystickCb([&](){
         lt.tick().examine();
     });

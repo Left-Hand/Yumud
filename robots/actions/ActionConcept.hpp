@@ -103,33 +103,33 @@ public:
     ACTION_NAME(delay)
 };
 
-struct DebugAction:public ActionBase{
-protected:
-    // String str_;
-    void execute() override {
-        DEBUG_PRINTLN(String(ss_));
-    }
+// struct DebugAction:public ActionBase{
+// protected:
+//     // String str_;
+//     void execute() override {
+//         DEBUG_PRINTLN(String(ss_));
+//     }
 
-    StringStream ss_;
-public:
-    DebugAction(const char * str):
-        ActionBase(1, nullptr){
-            ss_ << str;
-        }
+//     StringStream ss_;
+// public:
+//     DebugAction(const char * str):
+//         ActionBase(1, nullptr){
+//             ss_ << str;
+//         }
 
-    DebugAction(const String & str):
-        ActionBase(1, nullptr){
-            ss_ << str;
-        }
+//     DebugAction(const String & str):
+//         ActionBase(1, nullptr){
+//             ss_ << str;
+//         }
 
-    template <typename... Args>
-    DebugAction(Args&&... args):
-        ActionBase(1, nullptr){
-        (this->ss_ << ... << args);
-    }
+//     template <typename... Args>
+//     DebugAction(Args&&... args):
+//         ActionBase(1, nullptr){
+//         (this->ss_ << ... << args);
+//     }
 
-    ACTION_NAME(debug)
-};
+//     ACTION_NAME(debug)
+// };
 
 
 

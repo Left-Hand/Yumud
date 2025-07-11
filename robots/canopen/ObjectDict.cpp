@@ -1,5 +1,5 @@
 #include "ObjectDict.hpp"
-#include "core/string/string.hpp"
+#include "core/string/string_view.hpp"
 
 
 using namespace ymd::canopen;

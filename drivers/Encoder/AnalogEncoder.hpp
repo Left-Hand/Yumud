@@ -19,7 +19,7 @@ public:
         pos_range_(cfg.pos_range)
     {}
 
-    [[nodiscard]] Result<real_t, EncoderError> get_lap_position(){
+    [[nodiscard]] Result<real_t, EncoderError> read_lap_position(){
         return Ok(last_pos_);
     }
 

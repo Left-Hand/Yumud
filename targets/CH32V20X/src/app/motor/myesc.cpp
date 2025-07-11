@@ -142,7 +142,7 @@ void myesc_main(){
 
     // drivers::DRV8323H  mosdrv{hal::SpiDrv{
     //     spi1, 
-    //     spi1.attach_next_cs(portA[15]).value()
+    //     spi1.allocate_cs_gpio(portA[15]).value()
     // }};
 
     auto & mode_gpio = hal::portB[4];

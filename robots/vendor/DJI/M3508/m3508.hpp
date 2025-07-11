@@ -73,7 +73,7 @@ public:
                 //pass
                 return Ok();
             }
-            Result<real_t, Error> get_lap_position() {
+            Result<real_t, Error> read_lap_position() {
                 return Ok(owner_.lap_position);
             }
 

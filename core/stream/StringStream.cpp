@@ -1,6 +1,6 @@
 #include "StringStream.hpp"
 
-
+#if 0
 using namespace ymd;
 
 
@@ -15,3 +15,4 @@ StringStream::operator String() const {
 StringStream::operator StringView() const {
     return StringView(str_);
 }
+#endif

@@ -59,7 +59,7 @@ IResult<> MT6816::init(const Config & cfg) {
         if(const auto res = this->update();
             res.is_err()) return res;
 
-        if(const auto res = this->get_lap_position();
+        if(const auto res = this->read_lap_position();
             res.is_ok()) return Ok();
         else if(i == MAX_INIT_RETRY_TIMES)
             return CHECK_ERR(Err(res.unwrap_err()));
@@ -76,16 +76,12 @@ IResult<> MT6816::reconf(const Config & cfg){
 
 IResult<uint16_t> MT6816::get_position_data(){
     const uint16_t tx[2] = {
-        (0x80 | 0x04) << 8,
-        (0x80 | 0x03) << 8,
+        uint16_t((0x80 | 0x04) << 8),
+        uint16_t((0x80 | 0x03) << 8),
     };
 
     uint16_t rx[2] = {0, 0};
 
-    // if(const auto res = spi_drv_.transceive_single(rx[0], tx[0]);
-    //     res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-    // if(const auto res = spi_drv_.transceive_single(rx[1], tx[1]);
-    //     res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
     if(const auto res = spi_drv_.transceive_burst(
             std::span(rx), std::span(tx));
         res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));

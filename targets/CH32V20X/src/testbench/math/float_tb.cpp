@@ -13,7 +13,7 @@ void float_main(){
     DEBUGGER_INST.init({576000, CommStrategy::Blocking});
 
     while(true){
-        bf16 i = sin(clock::time());
+        bf16 i = bf16(sin(clock::time()));
         bf16 o = i;
 
         const auto mic = clock::micros();

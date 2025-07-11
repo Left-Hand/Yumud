@@ -8,6 +8,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "types/regions/range2/range2.hpp"
+#include "core/container/inline_vector.hpp"
 
 namespace ymd::robots{
 
@@ -40,45 +41,8 @@ struct ZdtMotor_Prelude{
         uint8_t id;
     };
 
-    template<size_t N>
-    struct InlineBuf{
-        constexpr uint8_t & operator [](const size_t idx){
-            ASSERT(idx < size_);
-            return buf_[idx];
-        }
 
-        constexpr uint8_t operator [](const size_t idx) const {
-            ASSERT(idx < size_);
-            return buf_[idx];
-        }
-
-        constexpr void append(const uint8_t data){
-            ASSERT(size_ + 1 <= N);
-            buf_[size_] = data;
-            size_ = size_ + 1;
-        }
-
-        constexpr void append(const std::span<const uint8_t> pbuf){
-            ASSERT(size_ + pbuf.size() <= N);
-            for(size_t i = 0; i < pbuf.size(); i++){
-                buf_[size_ + i] = pbuf[i];
-            }
-            size_ += pbuf.size();
-        }
-
-        constexpr std::span<const uint8_t> to_span() const {
-            return std::span(buf_.data(), size());
-        }
-
-        constexpr size_t size() const {return size_;}
-
-
-    private:
-        std::array<uint8_t, N> buf_;
-        size_t size_ = 0;
-    };
-
-    using Buf = InlineBuf<16>;
+    using Buf = InlineVector<uint8_t, 16>;
 
     enum class VerifyMethod:uint8_t{
         X6B,
@@ -156,9 +120,9 @@ struct ZdtMotor_Prelude{
             const uint8_t piece_cnt,
             const std::span<const uint8_t> bytes
         ){
-            auto buf = InlineBuf<8>{};
-            buf.append(std::bit_cast<uint8_t>(func_code));
-            buf.append(bytes);
+            auto buf = InlineVector<uint8_t, 8>{};
+            buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
+            buf.append_unchecked(bytes);
 
             return hal::CanMsg::from_bytes(
                 map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
@@ -171,7 +135,7 @@ struct ZdtMotor_Prelude{
             const NodeId nodeid, 
             const uint8_t piece
         ){
-            return hal::CanExtId::from_raw(
+            return hal::CanExtId(
                 uint32_t(nodeid.to_u8() << 8) | 
                 (piece)
             );
@@ -189,7 +153,7 @@ struct ZdtMotor_Prelude{
         struct DumpInfo{
             NodeId nodeid;
             FuncCode func_code;
-            InlineBuf<16> payload;
+            InlineVector<uint8_t, 16> payload;
         };
 
         static constexpr IResult<DumpInfo> dump(
@@ -234,24 +198,24 @@ struct ZdtMotor_Prelude{
                 const auto & msg = msgs[i];
                 const auto msg_bytes = msg.payload()
                     .subspan(1);
-                info.payload.append(msg_bytes);
+                info.payload.append_unchecked(msg_bytes);
             }
 
             //TODO add verify
 
-            return Ok(info);
+            return Ok<DumpInfo>(info);
         }
 
         static inline constexpr uint8_t map_msg_to_nodeid(
             const hal::CanMsg & msg
         ){
-            return msg.extid().unwrap().as_raw() >> 8;
+            return msg.extid().unwrap().to_u29() >> 8;
         }
 
         static inline constexpr uint8_t map_msg_to_piececnt(
             const hal::CanMsg & msg
         ){
-            return msg.extid().unwrap().as_raw() & 0xff;
+            return msg.extid().unwrap().to_u29() & 0xff;
         }
 
     };
@@ -271,9 +235,9 @@ struct ZdtMotor_Prelude{
                 case VerifyMethod::XOR:
                     return VerifyUtils::by_xor(func_code, bytes);
                 case VerifyMethod::CRC8:
-                    TODO();
+                    // TODO();
                     // __builtin_unreachable();
-                    // return VerifyUtils::by_crc8(func_code, bytes);
+                    return VerifyUtils::by_crc8(func_code, bytes);
             }
         }
 
@@ -290,20 +254,20 @@ struct ZdtMotor_Prelude{
             return code;
         }
     
-        // static constexpr uint8_t by_crc8(
-        //     const FuncCode func_code,
-        //     const std::span<const uint8_t> bytes
-        // ){
-        //     uint16_t crc = 0xffff;
-        //     for(size_t i = 0; i < bytes.size(); i++){
-        //         crc ^= uint16_t(bytes[i]) << 8;
-        //         for(uint8_t j = 0; j < 8; j++){
-        //             if(crc & 0x8000) crc ^= 0x1021;
-        //             crc <<= 1;
-        //         }
-        //     }
-        //     return uint8_t(crc >> 8);
-        // }
+        static constexpr uint8_t by_crc8(
+            const FuncCode func_code,
+            const std::span<const uint8_t> bytes
+        ){
+            uint16_t crc = 0xffff;
+            for(size_t i = 0; i < bytes.size(); i++){
+                crc ^= uint16_t(bytes[i]) << 8;
+                for(uint8_t j = 0; j < 8; j++){
+                    if(crc & 0x8000) crc ^= 0x1021;
+                    crc <<= 1;
+                }
+            }
+            return uint8_t(crc >> 8);
+        }
 
     };
 

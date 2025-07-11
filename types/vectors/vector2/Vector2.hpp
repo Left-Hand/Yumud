@@ -185,8 +185,8 @@ struct Vector2{
     
     [[nodiscard]] constexpr T length_squared() const {return (x*x + y*y);}
     
-    [[nodiscard]] __fast_inline constexpr Vector2<T> lerp(const Vector2<T> & b, const arithmetic auto & t) const;
-    [[nodiscard]] __fast_inline constexpr Vector2<T> move_toward(const Vector2<T> & to, const arithmetic auto & delta) const;
+    [[nodiscard]] __fast_inline constexpr Vector2<T> lerp(const Vector2<T> & b, const T t) const;
+    [[nodiscard]] __fast_inline constexpr Vector2<T> move_toward(const Vector2<T> & to, const T delta) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> center(const Vector2<T> other) const 
         {return {(this->x + other.x) / 2, (this->y + other.y) / 2};}
 
@@ -197,7 +197,7 @@ struct Vector2{
     [[nodiscard]] __fast_inline constexpr Vector2<T> reflect(const Vector2<T> & n) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> round() const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> sign() const;
-    [[nodiscard]] __fast_inline constexpr Vector2<T> slerp(const Vector2<T> & b, const arithmetic auto & t) const;
+    [[nodiscard]] __fast_inline constexpr Vector2<T> slerp(const Vector2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> slide(const Vector2<T>  & n) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> snapped(const Vector2<T> & by) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> cw() const {return Vector2<T>(-y, x);}

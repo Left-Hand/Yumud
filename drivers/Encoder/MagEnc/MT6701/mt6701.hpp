@@ -198,7 +198,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<real_t> get_lap_position();
+    [[nodiscard]] IResult<real_t> read_lap_position();
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
@@ -276,9 +276,9 @@ private:
 
 
     MT6701_Phy phy_;
-    Semantic semantic = {0, 0};
-    real_t lap_position = real_t(0);
-    bool fast_mode = true;
+    Semantic semantic_ = {0, 0};
+    real_t lap_position_ = real_t(0);
+    bool fast_mode_ = true;
 
 };
 

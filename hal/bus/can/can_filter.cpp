@@ -2,7 +2,7 @@
 
 #include "core/platform.hpp"
 #include "core/sdk.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

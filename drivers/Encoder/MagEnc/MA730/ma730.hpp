@@ -132,7 +132,7 @@ public:
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<> set_zero_position(const real_t position);
-    [[nodiscard]] IResult<real_t> get_lap_position(){
+    [[nodiscard]] IResult<real_t> read_lap_position(){
         return Ok(lap_position_);
     }
 

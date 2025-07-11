@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/stream/StringStream.hpp"
+#include "core/stream/BufStream.hpp"
 
 #include "core/polymorphism/proxy.hpp"
 #include "core/math/real.hpp"
@@ -132,7 +132,8 @@ using DrawableProxy = pro::proxy<Drawable>;
 void proxy_tb(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
-    StringStream ss;
+    std::array<char, 1000> buf;
+    BufStream ss{std::span(buf)};
     Microseconds dur;
     {
 
@@ -173,13 +174,12 @@ void proxy_tb(){
         }
 
 
-        ss.reserve(1000);
         const auto m = clock::micros();
         
         char buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            qtoa(clock::time(), buf, 4);
+            strconv::qtoa(clock::time(), buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

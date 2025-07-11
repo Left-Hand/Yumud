@@ -90,7 +90,7 @@ public:
 
 
     [[nodiscard]]
-    Option<SpiSlaveIndex> attach_next_cs(Some<hal::GpioIntf *> io);
+    Option<SpiSlaveIndex> allocate_cs_gpio(Some<hal::GpioIntf *> io);
 };
 
 }

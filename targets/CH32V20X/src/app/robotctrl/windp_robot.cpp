@@ -6,7 +6,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/utils/bitflag.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
@@ -69,20 +69,20 @@ public:
         channel_a_.inverse(EN);
         channel_b_.inverse(DISEN);
 
-        static constexpr hal::TimerOcPwmConfig pwm_noinv_c_rg = {
+        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
             .cvr_sync_en = EN,
             .valid_level = HIGH
         };
 
-        static constexpr hal::TimerOcPwmConfig pwm_inv_c_rg = {
+        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
             .cvr_sync_en = EN,
             .valid_level = LOW,
         };
         
-        channel_a_.pos_channel().init(pwm_noinv_c_rg);
-        channel_a_.neg_channel().init(pwm_noinv_c_rg);
-        channel_b_.pos_channel().init(pwm_inv_c_rg);
-        channel_b_.neg_channel().init(pwm_inv_c_rg);
+        channel_a_.pos_channel().init(pwm_noinv_cfg);
+        channel_a_.neg_channel().init(pwm_noinv_cfg);
+        channel_b_.pos_channel().init(pwm_inv_cfg);
+        channel_b_.neg_channel().init(pwm_inv_cfg);
 
     }
 
@@ -112,16 +112,12 @@ private:
 static constexpr real_t DELTA = 0.01_r;
 
 struct RobotMetaData{
-    // Vector3 gravity = Vector3();
     Vector3<real_t> accel;
     Vector3<real_t> gyro;
 
     Quat<real_t> gravity_of_rs;
     Vector3<real_t> gyro_of_rs;
 
-
-
-    // Vector2 targetPoint = Vector2();
     Vector2<real_t> dir;
     real_t rot_bias = 0;
 };

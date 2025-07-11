@@ -1,8 +1,8 @@
 #include "ostream.hpp"
 
 #include "core/clock/clock.hpp"
-#include "core/string/String.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
+#include "core/string/string_ref.hpp"
 
 #include <source_location>
 
@@ -81,32 +81,6 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     if(config_.showpos and value >= 0) *this << '+';\
     this->write(str, len);\
 
-int OutputStream::transform_char(const char chr) const{
-    return chr;
-
-    if(likely(!config_.flags)) return chr;
-
-    if(unlikely(config_.no_space) and unlikely(chr == ' ')) return -1;
-    if(unlikely(config_.no_brackets)){
-        switch(chr){
-            case '(':
-            case ')':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-            case '<':
-            case '>':
-                return -1;
-                // return chr;
-            default:
-                return chr;
-        }
-    }
-
-    return chr;
-}
-
 
 void OutputStream::print_source_loc(const std::source_location & loc){
     const auto guard = this->create_guard();
@@ -121,32 +95,13 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-void OutputStream::write_checked(const char * pbuf, const size_t len){
-    //将数据分为大块处理提高性能
-
-    for(size_t i = 0; i < len; i++){
-        const auto res = transform_char(pbuf[i]);
-        if(likely(res) >= 0){
-            // if(unlikely(buf.full())){
-            //     write(buf.buf, buf.buf_cap);
-            //     buf.clear();
-            // }else{
-            //     buf.push_back(res);
-            // }
-            write(char(res));
-        }
-    }
-
-}
-
-
 OutputStream & OutputStream::operator<<(const float value){
-    PRINT_FLOAT_TEMPLATE(StringUtils::ftoa);
+    PRINT_FLOAT_TEMPLATE(strconv::ftoa);
     return *this;
 }
 
 OutputStream & OutputStream::operator<<(const double value){
-    PRINT_FLOAT_TEMPLATE(StringUtils::ftoa);
+    PRINT_FLOAT_TEMPLATE(strconv::ftoa);
     return *this;
 }
 
@@ -159,19 +114,32 @@ OutputStream & OutputStream::operator<<(const double value){
     const auto len = convfunc(val, str, this->config_.radix);\
     this->write(str, len);\
 
+
+OutputStream & OutputStream::operator<<(const uint8_t val){
+    PRINT_INT_TEMPLATE(3, strconv::itoa);
+    return *this;
+}
+
 void OutputStream::print_int(const int val){
-    PRINT_INT_TEMPLATE(12, StringUtils::itoa);
+    PRINT_INT_TEMPLATE(12, strconv::itoa);
 }
 
 void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
+    PRINT_INT_TEMPLATE(24, strconv::iutoa);
 }
 
 void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(24, StringUtils::iltoa);
+    PRINT_INT_TEMPLATE(24, strconv::iltoa);
+}
+
+void OutputStream::print_q16(const q16 val){
+    char str[12] = {0};
+    const auto len = strconv::qtoa<16>(val, str, this->eps());
+    print_numeric(str, len, val >= 0);
 }
 
 #undef PUT_FLOAT_TEMPLATE
+
 
 
 OutputStream & OutputStream::flush(){
@@ -184,9 +152,15 @@ void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
     p_route_->writeN(pbuf.data(), pbuf.size());
 }
 
+#if 0
 OutputStream & OutputStream::operator<<(const String & str){
     write_checked(str.c_str(), str.length()); return * this;}
-OutputStream & OutputStream::operator<<(const StringView & str){
+#endif
+
+OutputStream & OutputStream::operator<<(const StringView str){
+    write_checked(str.data(), str.length()); return * this;}
+
+OutputStream & OutputStream::operator<<(const StringRef str){
     write_checked(str.data(), str.length()); return * this;}
 
 OutputStream & OutputStream::operator<<(const bool val){

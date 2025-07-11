@@ -7,7 +7,9 @@ using namespace ymd::drivers;
 
 #define MY_OS_PRINTS(...)
 
-void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
+
+#if 0
+void FOCMotor::AsciiProtocol::parseArgs(const std::span<const StringView> args){
 
     auto targ_pos_setter = [&](const real_t arg, const real_t offset){
         if(args.size() > 1){
@@ -256,3 +258,4 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
     }
 }
 
+#endif

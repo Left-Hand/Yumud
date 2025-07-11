@@ -479,7 +479,7 @@ void light_tracking_main(void){
 
     test_res();
     // spi.bind_cs_pin(lcd_cs, 0);
-    const auto spi_fd = spi.attach_next_cs(&lcd_cs).unwrap();
+    const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
     // spi.init(144_MHz, CommStrategy::Blocking);
     spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);

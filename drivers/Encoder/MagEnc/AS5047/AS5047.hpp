@@ -25,7 +25,7 @@ public:
     [[nodiscard]]IResult<> init() ;
 
     [[nodiscard]]IResult<> update();
-    [[nodiscard]]Result<real_t, Error> get_lap_position() {
+    [[nodiscard]]Result<real_t, Error> read_lap_position() {
         return Ok(lap_position);
     }
     uint32_t get_err_cnt() const {return errcnt;}

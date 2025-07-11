@@ -10,9 +10,9 @@
 
 namespace ymd::robots{
 
-struct ReplService final{
+struct ReplServer final{
 public:
-    ReplService(ReadCharProxy && is, WriteCharProxy && os) :
+    ReplServer(ReadCharProxy && is, WriteCharProxy && os) :
         is_(std::move(is)), 
         os_(std::move(os)){;}
 
@@ -30,7 +30,7 @@ public:
             //     temp_str_.clear();
             // }
 
-            splitter_.update(chr, [this, &obj](const StringViews strs){
+            splitter_.update(chr, [this, &obj](const std::span<const StringView> strs){
                 respond(obj, strs);});
         }
     }
@@ -46,7 +46,7 @@ private:
     bool outen_ = true;
     
     template<typename T>
-    void respond(T && obj, const StringViews strs){
+    void respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
         os_.force_sync();
         if(outen_){

@@ -67,7 +67,7 @@ IResult<> MMC5983::validate(){
         res.is_err()) return res;
     
     if(product_id_reg.product_id != product_id_reg.KEY)
-        return CHECK_ERR(Err(Error::WrongDeviceId));
+        return CHECK_ERR(Err(Error::WrongWhoAmI));
 
     return Ok();
 }

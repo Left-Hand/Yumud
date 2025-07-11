@@ -196,7 +196,7 @@ IResult<> CyberGear::transmit(const uint32_t id, const uint64_t payload, const u
 }
 
 IResult<> CyberGear::on_receive(const CanMsg & msg){
-    const auto id = msg.stdid().unwrap().as_raw();
+    const auto id = msg.stdid().unwrap().to_u11();
     const auto cgid = CgId{id};
     const auto cmd = cgid.cmd().as_val();
 

@@ -30,13 +30,13 @@ using namespace ymd::hal;
 
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 
-class RenderTrait{
+class RenderIntf{
 public:
     virtual void render(PainterBase & painter) = 0;
 };
 
 
-class Icon:public RenderTrait{
+class Icon:public RenderIntf{
 protected:
     Rect2u rect_ = {0,0,30,30};
     String name_ = "nil";
@@ -50,7 +50,7 @@ public:
     }
 };
 
-class Menu:public RenderTrait{
+class Menu:public RenderIntf{
 protected:
     using Items = std::vector<Icon *>;
 
@@ -116,10 +116,8 @@ void gui_main(){
     lcd_blk.outpp(HIGH);
     #endif
 
-    
 
-
-    const auto spi_fd = spi.attach_next_cs(lcd_cs).value();
+    const auto spi_fd = spi.allocate_cs_gpio(lcd_cs).unwrap();
     spi.init({144_MHz});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 

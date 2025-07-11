@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    const String name_;
+    const StringView name_;
     Driver& driver_;
 };
 

@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "types/vectors/vector2/Vector2.hpp"
 
 #include "core/sync/timer.hpp"

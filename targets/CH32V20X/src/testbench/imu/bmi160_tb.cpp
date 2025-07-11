@@ -31,7 +31,7 @@ void bmi160_main(){
     
     BMI160 bmi{{
         &spi1, 
-        spi1.attach_next_cs(&portA[0]).unwrap()
+        spi1.allocate_cs_gpio(&portA[0]).unwrap()
     }};
 
 

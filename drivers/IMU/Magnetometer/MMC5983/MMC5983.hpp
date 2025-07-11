@@ -143,34 +143,37 @@ public:
     [[nodiscard]] __fast_inline
     IResult<> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
-            return IResult<>(i2c_drv_->write_reg(addr, data));
+            if(const auto res = i2c_drv_->write_reg(addr, data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotSupportedYet);
-        }else{
-            return Err(Error::NoAvailablePhy);
+            return Err(Error::SpiPhyIsNotImplementedYet);
         }
+        return Err(Error::NoAvailablePhy);
     }
 
     [[nodiscard]] __fast_inline
     IResult<> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
-            return IResult<>(i2c_drv_->read_reg(uint8_t(addr), data));
+            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotSupportedYet);
-        }else{
-            return Err(Error::NoAvailablePhy);
+            return Err(Error::SpiPhyIsNotImplementedYet);
         }
+        return Err(Error::NoAvailablePhy);
     }
 
     [[nodiscard]] __fast_inline
     IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
-            return IResult<>(i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf));
+            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotSupportedYet);
-        }else{
-            return Err(Error::NoAvailablePhy);
+            return Err(Error::SpiPhyIsNotImplementedYet);
         }
+        return Err(Error::NoAvailablePhy);
     }
 
     

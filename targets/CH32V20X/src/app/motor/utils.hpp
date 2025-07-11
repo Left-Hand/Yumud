@@ -3,27 +3,13 @@
 #include "core/math/real.hpp"
 #include "core/stream/ostream.hpp"
 #include "core/math/realmath.hpp"
+#include "core/utils/stdrange.hpp"
 
 #include "digipw/prelude/abdq.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 
 
-namespace ymd::foc{
-
-
-
-static __inline real_t sign_sqrt(const real_t x){
-    return x < 0 ? -sqrt(-x) : sqrt(x);
-};
-
-static __inline real_t smooth(const real_t x){
-    return x - sin(x);
-}
-
-
-
-}
 
 namespace ymd{
 
@@ -82,87 +68,6 @@ private:
 };
 
 
-
-template<typename From, typename Protocol = void>
-struct Serializer{};
-
-template<typename From, typename Protocol = void>
-struct Deserializer{};
-
-
-template<typename T, typename Protocol = void>
-static constexpr auto serialize(T && obj){
-    return Serializer<std::decay_t<T>, Protocol>::serialize(std::forward<T>(obj));
-}
-
-
-enum class DeserializeError:uint8_t{
-    BytesLengthShort
-};
-
-
-template<typename T, typename Protocol = void>
-static constexpr Result<T, DeserializeError> deserialize(std::span<const uint8_t> data) {
-    return Deserializer<T, Protocol>::deserialize(data);
-}
-
-template<size_t N>
-struct Serializer<iq_t<N>>{
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<N> num){
-        const auto inum = num.to_i32();
-        return std::bit_cast<std::array<uint8_t, 4>>(inum);
-    } 
-};
-
-template<size_t N>
-struct Deserializer<iq_t<N>> {
-    static constexpr Result<iq_t<N>, DeserializeError> 
-    deserialize(std::span<const uint8_t> pbuf) {
-        if(pbuf.size() < 4) return Err(DeserializeError::BytesLengthShort);
-        int32_t val = std::bit_cast<int32_t>(
-            std::array<uint8_t, 4>{pbuf[0], pbuf[1], pbuf[2], pbuf[3]});
-        return Ok(iq_t<N>::from_i32(val));
-    }
-};
-
-template<typename T>
-requires std::is_integral_v<T>
-struct Serializer<T> {
-    static constexpr size_t N = sizeof(T);
-    static constexpr std::array<uint8_t, N> serialize(const T inum) {
-        return std::bit_cast<std::array<uint8_t, N>>(inum);
-    }
-};
-
-template<typename T>
-requires std::is_integral_v<T>
-struct Deserializer<T> {
-    static constexpr Result<T, DeserializeError> 
-    deserialize(std::span<const uint8_t> data) {
-        if (data.size() < sizeof(T)) {
-            return Err(DeserializeError::BytesLengthShort);
-        }
-
-        std::array<uint8_t, sizeof(T)> bytes{};
-        std::copy_n(data.data(), sizeof(T), bytes.begin());
-        return Ok(std::bit_cast<T>(bytes));
-    }
-};
-
-template<typename T>
-requires std::is_floating_point_v<T>
-struct Deserializer<T> {
-    static constexpr Result<T, DeserializeError> 
-    deserialize(std::span<const uint8_t> data) {
-        if (data.size() < sizeof(T)) {
-            return Err(DeserializeError::BytesLengthShort);
-        }
-
-        std::array<uint8_t, sizeof(T)> bytes{};
-        std::copy_n(data.data(), sizeof(T), bytes.begin());
-        return Ok(std::bit_cast<T>(bytes));
-    }
-};
 
 }
 

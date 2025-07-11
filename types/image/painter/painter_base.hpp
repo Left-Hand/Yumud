@@ -3,7 +3,7 @@
 
 #include "types/image/image.hpp"
 
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/stream/stream.hpp"
 #include "core/stream/StringStream.hpp"
 #include "core/utils/Result.hpp"
@@ -129,12 +129,14 @@ public:
 
     [[nodiscard]] IResult<> draw_roi(const Rect2u & rect);
 
+    #if 0
     template<typename ... Ts>
     [[nodiscard]] IResult<> draw_args(const Vector2u pos, Ts && ... args){
         StringStream ss;
         ss.print(std::forward<Ts>(args)...);
         return draw_string(pos, StringView(std::move(ss).move_str()));
     }
+    #endif
     
     template<typename Fn>
     [[nodiscard]]

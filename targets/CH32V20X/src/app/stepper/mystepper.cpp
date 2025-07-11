@@ -22,7 +22,7 @@
 
 
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "build_date.hpp"
 #include "meta_utils.hpp"
 #include "tasks.hpp"
@@ -147,7 +147,7 @@ public:
             if(let res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            let either_lap_position = encoder_.get_lap_position();
+            let either_lap_position = encoder_.read_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             1 - either_lap_position.unwrap();
@@ -489,15 +489,15 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         }
     });
 
-    robots::ReplService repl_service = {
+    robots::ReplServer repl_server = {
         &UART, &UART
     };
 
     auto list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_service.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_service.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
+        rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
         rpc::make_function("now", [&](){return clock::time();})
     );
 
@@ -525,7 +525,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     motor_system_.execution_time_.count(),
         //     motor_system_.cs_.get()
         // );
-        repl_service.invoke(list);
+        repl_server.invoke(list);
         clock::delay(1ms);
     }
 
@@ -746,7 +746,7 @@ void mystepper_main(){
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.attach_next_cs(&hal::portA[15]).unwrap()
+        spi.allocate_cs_gpio(&hal::portA[15]).unwrap()
     };
 
 

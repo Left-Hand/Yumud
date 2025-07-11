@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 #include "core/stream/ostream.hpp"
 #include "core/string/string.hpp"
 
@@ -36,3 +37,5 @@ public:
 };
 
 };
+
+#endif

@@ -9,7 +9,7 @@
 #include "core/magic/function_traits.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/stringView.hpp"
+#include "core/string/string_view.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd::magic{
@@ -122,31 +122,29 @@ private:
 using AccessReponserIntf = OutputStream;
 
 
-enum class AccessError: uint8_t{
-    InvalidAccess,
-    AccessOutOfRange,
-    NotSupported,
-    NoCallableExists,
-    NoArgsInput,
-    ExecutionFailed,
+enum class EntryAccessError: uint8_t{
+    NoArgForSetter,
+    NotImplemented,
+    NoCallableFounded,
+    EmptyArgs,
     ArgsCountNotMatch,
-    CantModifyConst,
+    CantModifyReadOnly,
     ValueIsGreatThanLimit,
     ValueIsLessThanLimit
 };
 
-DERIVE_DEBUG(AccessError)
+DERIVE_DEBUG(EntryAccessError)
 
 template<typename T = void>
-using AccessResult = Result<T, AccessError>;
+using AccessResult = Result<T, EntryAccessError>;
 
 
 // 主模板定义（处理非模板类和默认情况）
 template <typename T, typename = void>
-struct Visitor {
+struct EntryVisitor {
     static AccessResult<> visit(T& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
         static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
-        return Err(AccessError::NotSupported);
+        return Err(EntryAccessError::NotImplemented);
     }
 };
 
@@ -199,13 +197,13 @@ private:
 
 // Property<T> 非const特化
 template <typename T>
-struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
+struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
     static AccessResult<> visit(
         const Property<T>& self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
-        if (ap.size() != 1) return Err(AccessError::InvalidAccess);
+        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         self.get() = ap[0].template to<std::decay_t<T>>();
         ar << self.get();
         return Ok();
@@ -214,13 +212,13 @@ struct Visitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
 
 // Property<T> const特化
 template <typename T>
-struct Visitor<const Property<T>, void> {
+struct EntryVisitor<const Property<T>, void> {
     static AccessResult<> visit(
         const Property<T>& self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap) {
         if (ap.size()) 
-            return Err(AccessError::CantModifyConst);
+            return Err(EntryAccessError::CantModifyReadOnly);
         ar << self.get();
         return Ok();
     }
@@ -254,14 +252,14 @@ public:
 };
 
 template <typename Ret, typename... Args>
-struct Visitor<MethodByLambda<Ret, Args...>> {
+struct EntryVisitor<MethodByLambda<Ret, Args...>> {
     using Self = MethodByLambda<Ret, Args...>;
     static AccessResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != sizeof...(Args)) {
-            return Err(AccessError::ArgsCountNotMatch);
+            return Err(EntryAccessError::ArgsCountNotMatch);
         }
 
         auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
@@ -310,14 +308,14 @@ public:
 
 // MethodByMemFunc 非const特化
 template <typename Obj, typename Ret, typename ... Args>
-struct Visitor<MethodByMemFunc<Obj, Ret, Args...>> {
+struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> {
     using Self = MethodByMemFunc<Obj, Ret, Args...>;
     static AccessResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != sizeof...(Args)) {
-            return Err(AccessError::ArgsCountNotMatch);
+            return Err(EntryAccessError::ArgsCountNotMatch);
         }
 
         auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
@@ -370,14 +368,14 @@ private:
 };
 
 template<typename... Entries>
-struct Visitor<EntryList<Entries...>> {
+struct EntryVisitor<EntryList<Entries...>> {
     using Self = EntryList<Entries...>;
     static AccessResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
         if(ap.size() == 0) 
-            return Err(AccessError::NoArgsInput);
+            return Err(EntryAccessError::EmptyArgs);
 
         const auto head_hash = ap[0].to<StringView>().hash();
         // Modify the first block for "ls" command
@@ -386,11 +384,11 @@ struct Visitor<EntryList<Entries...>> {
             return Ok();
         }
         return std::apply([&](auto&&... entry) -> AccessResult<> {
-            AccessResult<> res = Err(AccessError::NoCallableExists);
+            AccessResult<> res = Err(EntryAccessError::NoCallableFounded);
             ( [&]() -> void {
                     auto ent_hash = entry.name().hash();
                     if (head_hash == ent_hash) {
-                        res = Visitor<std::decay_t<decltype(entry)>>::visit(
+                        res = EntryVisitor<std::decay_t<decltype(entry)>>::visit(
                             entry, ar, make_sub_provider(ap, 1));
                     }
                 }(), ...
@@ -490,12 +488,12 @@ auto make_list(const StringView name, Args && ... entries){
 // 统一访问接口
 template <typename T>
 AccessResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
-    return Visitor<std::remove_cvref_t<T>>::visit(
+    return EntryVisitor<std::remove_cvref_t<T>>::visit(
         std::forward<T>(self), ar, ap);
 }
 
 }
 
-#define DEF_RPC_MAKE_MEMFUNC(func)\
+#define DEF_RPC_MEMFUNC(func)\
     rpc::make_memfunc(#func, this, &std::decay_t<decltype(*this)>::func)
 

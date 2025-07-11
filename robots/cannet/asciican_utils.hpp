@@ -1,10 +1,12 @@
 #pragma once
 
-#include "core/string/String.hpp"
+#include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
+
 #include "hal/bus/can/can_msg.hpp"
 #include "hal/bus/can/can.hpp"
-#include "core/utils/Errno.hpp"
 
 #include <variant>
 

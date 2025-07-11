@@ -24,9 +24,9 @@ public:
     [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
-    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
+    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
 
-    [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pum);
+    [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pmu);
 
     [[nodiscard]] IResult<Vector3<q24>> read_acc();
     [[nodiscard]] IResult<Vector3<q24>> read_gyr();
@@ -41,7 +41,8 @@ private:
 
     [[nodiscard]] IResult<> self_test_acc();
     [[nodiscard]] IResult<> self_test_gyr();
-    [[nodiscard]] static constexpr real_t calculate_acc_scale(const AccFs fs){
+    [[nodiscard]] static constexpr 
+    real_t calculate_acc_scale(const AccFs fs){
         constexpr auto g = real_t(9.806);
         switch(fs){
             case AccFs::_2G:    return g * 4;
@@ -52,7 +53,8 @@ private:
         }
     }
 
-    [[nodiscard]] static real_t calculate_gyr_scale(const GyrFs fs){
+    [[nodiscard]] static constexpr 
+    real_t calculate_gyr_scale(const GyrFs fs){
         switch(fs){
             case GyrFs::_125deg:    return 2 * 125_deg;
             case GyrFs::_250deg:    return 2 * 250_deg;

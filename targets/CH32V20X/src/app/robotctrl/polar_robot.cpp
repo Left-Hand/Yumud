@@ -3,7 +3,9 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/sync/timer.hpp"
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
+#include "core/utils/serde.hpp"
+
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
@@ -17,15 +19,15 @@
 #include "details/polar_robot_curvedata.hpp"
 
 #include "types/colors/color/color.hpp"
-
+#include "types/vectors/polar/polar.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
 
-#define DBG_UART hal::uart1
-#define COMM_UART hal::uart2
+#define DBG_UART hal::uart2
+#define COMM_UART hal::uart1
 #define COMM_CAN hal::can1
 
 #define PHY_SEL_CAN 0
@@ -87,6 +89,16 @@ private:
     hal::Gpio & gpio_;
 };
 
+template<typename T>
+static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
+    const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
+    return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
+}
+
+template<typename T>
+static constexpr T vec_angle(const Vector2<T> a){
+    return atan2(a.y, a.x);
+}
 
 struct PolarRobotSolver{
     struct Gesture{
@@ -119,11 +131,11 @@ struct PolarRobotSolver{
         const auto g_vec2 = g.to_vec2();
         const auto last_g_vec2 = last_g.to_vec2();
 
-        const auto delta_theta = g_vec2.angle_to(last_g_vec2);
+        const auto delta_theta = vec_angle_diff(g_vec2, last_g_vec2);
 
         return {
             .rho_meters = g_vec2.length(),
-            .theta_radians = last_g_vec2.angle() + delta_theta
+            .theta_radians = vec_angle(last_g_vec2) + delta_theta
         };
     }
 
@@ -146,11 +158,77 @@ private:
     }
 };
 
+
+struct AxisIterator{
+    struct State{
+        real_t position;
+        real_t speed;
+    };
+
+    // State next(const real_t x, const real_t step){
+
+    // }
+private:
+    State state_;
+};
+
+struct PolarRobotSolverIterator{
+    struct Config{
+        real_t max_joint_spd;
+        real_t max_joint_acc;
+
+        real_t rho_transform_scale;
+        real_t theta_transform_scale;
+        real_t center_bias;
+
+        Range2<real_t> rho_range;
+        Range2<real_t> theta_range;
+
+        real_t r;
+    };
+
+    struct MachineState{
+        Vector2<real_t> position;
+        Vector2<real_t> speed;
+    };
+
+    struct JointState{
+        real_t position;
+        real_t speed;
+    };
+
+    struct State{
+        MachineState machine;
+        JointState rho_joint;
+        JointState theta_joint;
+    };
+
+    struct Solution{
+        real_t rho_joint_rotation;
+        real_t theta_joint_rotation;
+    };
+
+    Solution forward(const Vector2<real_t> target_pos, const real_t delta_t){
+        State state = state_;
+        // Vector2<real_t> expect_pos = 
+        // real_t expect_rho_joint_rotation = 
+        // real_t expect_theta_joint_rotation =
+        return {
+            .rho_joint_rotation = state.rho_joint.position, 
+            .theta_joint_rotation = state.theta_joint.position
+        };
+    }
+
+private:
+    State state_;
+};
+
 class JointMotorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
     virtual void set_position(real_t position) = 0;
+    virtual real_t get_last_position() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -158,17 +236,17 @@ public:
     auto make_rpc_list(const StringView name){
         return rpc::make_list(
             name,
-            DEF_RPC_MAKE_MEMFUNC(trig_homing),
-            DEF_RPC_MAKE_MEMFUNC(is_homing_done),
-            DEF_RPC_MAKE_MEMFUNC(deactivate),
-            DEF_RPC_MAKE_MEMFUNC(activate),
-            DEF_RPC_MAKE_MEMFUNC(set_position),
-            DEF_RPC_MAKE_MEMFUNC(trig_cali)
+            DEF_RPC_MEMFUNC(trig_homing),
+            DEF_RPC_MEMFUNC(is_homing_done),
+            DEF_RPC_MEMFUNC(deactivate),
+            DEF_RPC_MEMFUNC(activate),
+            DEF_RPC_MEMFUNC(set_position),
+            DEF_RPC_MEMFUNC(trig_cali)
         );
     }
 };
 
-class JointMotorAdapter_Mock final:
+class MockJointMotor final:
     public JointMotorIntf{
 public:
     void activate() {}
@@ -177,9 +255,11 @@ public:
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
+    real_t get_last_position(){return 0;}
 };
 
-class JointMotorAdapter_ZdtStepper final
+
+class ZdtJointMotor final
     :public JointMotorIntf{
 public:
 
@@ -187,7 +267,7 @@ public:
         ZdtStepper::HommingMode homming_mode;
     };
 
-    JointMotorAdapter_ZdtStepper(
+    ZdtJointMotor(
         const Config & cfg, 
         ZdtStepper & stepper
     ):
@@ -203,10 +283,12 @@ public:
     }
 
     void set_position(real_t position){
-        // if(is_homed_ == false) 
-        //     trip_and_panic("motor not homed");
-        // DEBUG_PRINTLN("set_pos");
-        stepper_.set_target_position(position).unwrap();;
+        last_position_ = position;
+        stepper_.set_target_position(position).unwrap();
+    }
+
+    real_t get_last_position(){
+        return last_position_ ;
     }
 
     void trig_homing(){
@@ -224,7 +306,7 @@ public:
             return false;
         }
 
-        return (clock::millis() - homing_begin_.unwrap()) > homing_timeout_;
+        return (clock::millis() - homing_begin_.unwrap()) > HOMING_TIMEOUT_;
     }
 
 
@@ -232,7 +314,8 @@ private:
     Config cfg_;
     ZdtStepper & stepper_;
 
-    static constexpr Milliseconds homing_timeout_ = 5000ms;
+    real_t last_position_;
+    static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 
@@ -259,39 +342,32 @@ public:
     };
 
     struct Params{
-        Some<JointMotorIntf *> joint_rho;
-        Some<JointMotorIntf *> joint_theta;
+        Some<JointMotorIntf *> rho_joint;
+        Some<JointMotorIntf *> theta_joint;
     };
 
     using Solver = PolarRobotSolver;
-
 
     PolarRobotActuator(
         const Config & cfg, 
         const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(params.joint_rho.deref()),
-        joint_theta_(params.joint_theta.deref())
+        joint_rho_(params.rho_joint.deref()),
+        joint_theta_(params.theta_joint.deref())
     {;}
+
 
     void set_polar(const real_t rho_meters, const real_t theta_radians){
 
         const auto rho_position = rho_meters * cfg_.rho_transform_scale;
         const auto theta_position = theta_radians * cfg_.theta_transform_scale;
 
-        // DEBUG_PRINTLN(
-        //     // x_meters, 
-        //     // y_meters, 
-        //     rho_position,
-        //     theta_position
-        // );
-
-
         joint_rho_.set_position(rho_position - cfg_.center_bias);
         joint_theta_.set_position(theta_position);
     }
 
+    
     void set_position(const real_t x_meters, const real_t y_meters){
         const auto gest = Solver::Gesture{
             .x_meters = x_meters,
@@ -305,7 +381,8 @@ public:
 
         set_polar(
             sol.rho_meters, 
-            sol.theta_radians);
+            -ABS(sol.theta_radians)
+        );
     }
 
     void activate(){
@@ -331,12 +408,12 @@ public:
     auto make_rpc_list(const StringView name){
         return rpc::make_list(
             name,
-            DEF_RPC_MAKE_MEMFUNC(trig_homing),
-            DEF_RPC_MAKE_MEMFUNC(is_homing_done),
-            DEF_RPC_MAKE_MEMFUNC(deactivate),
-            DEF_RPC_MAKE_MEMFUNC(activate),
-            DEF_RPC_MAKE_MEMFUNC(set_position),
-            DEF_RPC_MAKE_MEMFUNC(set_polar)
+            DEF_RPC_MEMFUNC(trig_homing),
+            DEF_RPC_MEMFUNC(is_homing_done),
+            DEF_RPC_MEMFUNC(deactivate),
+            DEF_RPC_MEMFUNC(activate),
+            DEF_RPC_MEMFUNC(set_position),
+            DEF_RPC_MEMFUNC(set_polar)
         );
     }
 
@@ -394,58 +471,57 @@ class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
 
 
 // #define MOCK_TEST
+
 struct QueuePointIterator{
 
     explicit constexpr QueuePointIterator(
-        const std::span<const Vector2<q16>> data
+        const std::span<const Vector2<bf16>> data
     ):
         data_(data){;}
 
-    [[nodiscard]] constexpr Vector2<q16> next(){
-        // const auto curr_i = i;
-        // const auto p_dest = data_[curr_i];
-        // p = (p * 128).move_toward(p_dest * 128, 0.02_r) / 128;
-
-        // if(p.is_equal_approx(p_dest)){
-        //     const auto next_i = (i + 1) % data_.size();
-        //     i = next_i;
-        // }
-
-        // return p_dest;
+    [[nodiscard]] Vector2<q24> next(const q24 step){
 
         const auto curr_i = (i) % data_.size();
 
         
-        const auto p1 = data_[curr_i];
-        p = (p * 128).move_toward(p1 * 128, 0.02_r) / 128;
+        const auto p1 = Vector2{
+            q24::from(float(data_[curr_i].x)), 
+            q24::from(float(data_[curr_i].y))
+        };
+
+        p = p.move_toward(p1, step);
         // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
         // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
 
         // if(ABS(p.x - p1.x) < 0.00001_r) i++;
         if(p.is_equal_approx(p1)) i++;
+        // DEBUG_PRINTLN(p);
         return p;
-        // return Vector2<q16>(data_[0].x, data_.size());
-        // return Vector2<q16>(i, data_.size());
+        // return Vector2<q24>(data_[0].x, data_.size());
+        // return Vector2<q24>(i, data_.size());
     }
 
     [[nodiscard]] constexpr size_t index() const {
         return i;
     }
 private:
-    std::span<const Vector2<q16>> data_;
-    Vector2<q16> p = {};
+    std::span<const Vector2<bf16>> data_;
+    Vector2<q24> p = {};
     size_t i = 0;
 };
 
 void polar_robot_main(){
 
     DBG_UART.init({576000});
-
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    // DEBUGGER.force_sync(EN);
     DEBUGGER.no_brackets();
-
+    
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(5ms);
+    // }
 
     
     #ifndef MOCK_TEST
@@ -479,16 +555,16 @@ void polar_robot_main(){
 
     #endif
 
-    JointMotorAdapter_ZdtStepper joint_rho = {{
+    ZdtJointMotor rho_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    JointMotorAdapter_ZdtStepper joint_theta = {{
+    ZdtJointMotor theta_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    JointMotorAdapter_Mock joint_rho = {};
-    JointMotorAdapter_Mock joint_theta = {};
+    MockJointMotor rho_joint = {};
+    MockJointMotor theta_joint = {};
     #endif
 
     PolarRobotActuator robot_actuator = {
@@ -501,42 +577,54 @@ void polar_robot_main(){
             .theta_range = {-10_r, 10_r}
         },
         {
-            .joint_rho = &joint_rho, 
-            .joint_theta = &joint_theta
+            .rho_joint = &rho_joint, 
+            .theta_joint = &theta_joint
         }
     };
 
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
-        joint_rho.make_rpc_list("joint_rho"),
-        joint_theta.make_rpc_list("joint_theta")
+        rho_joint.make_rpc_list("rho_joint"),
+        theta_joint.make_rpc_list("theta_joint")
     );
 
-    robots::ReplService repl_service = {
+    robots::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
     constexpr auto SAMPLE_DUR = 700ms; 
-    // auto rpt = RepeatTimer{SAMPLE_DUR};
 
-    auto it = QueuePointIterator{std::span(curve_data)};
+    auto it = QueuePointIterator{std::span(CURVE_DATA)};
 
-    while(true){
-        async::RepeatTimer timer{5ms};
+    // PANIC(std::span(CURVE_DATA).subspan(0, 10));
+
+    auto main_service = [&]{
+        static async::RepeatTimer timer{2ms};
         timer.invoke_if([&]{
-            const auto p = it.next();
+            const auto p = it.next(0.0001_q24);
 
             robot_actuator.set_position(p.x, p.y);
-            DEBUG_PRINTLN(p.x, p.y);
+            DEBUG_PRINTLN(
+                p.x, 
+                p.y, 
+                it.index(), 
+                rho_joint.get_last_position(), 
+                theta_joint.get_last_position()
+            );
 
-            repl_service.invoke(list);
+            repl_server.invoke(list);
         });
-    }
-
+    };
 
     while(true){
-        DEBUG_PRINTLN(clock::millis());
+        main_service();
+        // const auto clock_time = clock::time();
+        // const auto [s0,c0] = sincos(clock_time);
+        // const auto [s,c] = std::make_tuple(s0, s0);
+        // const auto vec = Vector2{s,c};
+        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<real_t>(vec, vec.rotated(1.6_r*s0)));
+        // clock::delay(1ms);
     }
 }
 #endif

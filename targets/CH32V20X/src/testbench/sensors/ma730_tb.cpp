@@ -17,13 +17,13 @@ void ma730_main(){
 
     spi1.init({9_MHz});
 
-    MA730 ma730{&spi1, spi1.attach_next_cs(&portA[15]).unwrap()};
+    MA730 ma730{&spi1, spi1.allocate_cs_gpio(&portA[15]).unwrap()};
     ma730.init({
         .direction = CW
     }).unwrap();
 
     while(true){
         ma730.update().unwrap();
-        DEBUG_PRINTLN(ma730.get_lap_position().unwrap());
+        DEBUG_PRINTLN(ma730.read_lap_position().unwrap());
     }
 }

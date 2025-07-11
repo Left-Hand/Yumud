@@ -23,14 +23,15 @@ public:
     };
 
     struct State{
-        q20 position;
-        q24 speed;
+        q21 position;
+        q22 speed;
 
         constexpr void reset(){
             position = 0;
             speed = 0;
         }
     };
+
     constexpr void reconf(const Config & cfg){
         r_ = cfg.r;
         dt_ = 1_q24 / cfg.fs;
@@ -45,23 +46,21 @@ public:
         state_.reset();
     }
 
-
-    constexpr void update(const q20 u){
+    constexpr void update(const q16 u){
         const auto r = r_;
         const auto r_2 = r * r;
 
         const auto x1 = state_.position;
         const auto x2 = state_.speed;
 
-        state_.position += x2 * dt_; 
-        state_.speed += (- 2 * x2 * r - (x1 - u) * r_2) * dt_;
+        state_.position += dt_ * x2; 
+        state_.speed += dt_ * (q16(- 2 * x2) * r + (q16(u - x1) * r_2));
     }
 
     constexpr const State & get() const {return state_;}
 private:
-    q16 r_ = 0;
+    q8 r_ = 0;
     q24 dt_ = 0;
-    // using State = dsp::StateVectorq160, N>;
 
     State state_;
 };
@@ -115,6 +114,10 @@ struct PositionSensor{
 
     constexpr q16 position() const{
         return td_.get().position;
+    }
+
+    constexpr q16 cont_position() const {
+        return cont_position_;
     }
 
     constexpr q16 speed() const {

@@ -180,7 +180,7 @@ void smc2025_main(){
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    const auto spi_fd = spi.attach_next_cs(portD[4]).value();
+    const auto spi_fd = spi.allocate_cs_gpio(portD[4]).value();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{spi, spi_fd, &lcd_dc, &dev_rst}, 

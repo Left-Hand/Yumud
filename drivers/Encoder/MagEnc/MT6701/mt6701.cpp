@@ -39,7 +39,7 @@ IResult<> MT6701::init(){
 
 IResult<> MT6701::update(){
     const auto res = phy_.read_reg(raw_angle_reg);
-    lap_position = u16_to_uni(raw_angle_reg.angle);
+    lap_position_ = u16_to_uni(raw_angle_reg.angle);
     return res;
     // else if(spi_drv){
 
@@ -62,8 +62,8 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<real_t> MT6701::get_lap_position(){
-    return Ok(lap_position);
+IResult<real_t> MT6701::read_lap_position(){
+    return Ok(lap_position_);
 }
 
 
@@ -129,7 +129,7 @@ IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
 }
 
 IResult<> MT6701::enable_fast_mode(const Enable en){
-    fast_mode = en == EN;
+    fast_mode_ = en == EN;
     return Ok();
 }
 

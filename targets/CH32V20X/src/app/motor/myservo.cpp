@@ -136,7 +136,7 @@ class ServoCtrlSystem{
 public:
     void update(){
         // encoder_.update().unwrap();
-        // const auto lap_pos_raw = encoder_.get_lap_position().unwrap();
+        // const auto lap_pos_raw = encoder_.read_lap_position().unwrap();
         // fb_pos_td_.update(lap_pos_raw);
 
         // const auto pos_meas = fb_pos_td_.get()[0];

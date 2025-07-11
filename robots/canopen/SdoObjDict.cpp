@@ -1,12 +1,9 @@
 #include "SdoObjDict.hpp"
-#include "core/string/string.hpp"
+#include "core/string/string_view.hpp"
 
 
 using namespace ymd::canopen;
 using namespace ymd;
-
-
-
 
 Option<SubEntry> SdoObjDict::get_sub_entry(const Didx didx) {
     const auto [idx, subidx] = didx;

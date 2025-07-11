@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/utils/StringUtils.hpp"
+#include "core/string/utils/strconv.hpp"
 #include "core/utils/hash_func.hpp"
 
 #include <span>
@@ -21,7 +21,6 @@ public:
 
     constexpr StringView(const std::string_view str): data_(str.data()), size_(str.length()) {}
     constexpr StringView(const char* str) : data_(str), size_(str ? strlen(str) : 0) {}
-    constexpr StringView(std::nullptr_t) : data_(nullptr), size_(0) {}
     constexpr StringView(const char* str, size_t size) : data_(str), size_(size) {}
     constexpr StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
     constexpr StringView(StringView && other): data_(other.data_), size_(other.size_){;}
@@ -42,6 +41,7 @@ public:
         return size_ == other.size_ && memcmp(data_, other.data_, size_) == 0; }
 
     constexpr const char * begin() const {return data_;}
+    constexpr const char * c_str() const {return data_;}
     constexpr const char * end() const {return data_ + size_;}
 
     constexpr size_t size() const { return size_; }
@@ -52,13 +52,13 @@ public:
     constexpr const char* data() const { return data_; }
 
     template<integral T>
-    constexpr explicit operator T() const {return StringUtils::atoi(this->data(), this->length());}
+    constexpr explicit operator T() const {return strconv::atoi(this->data(), this->length());}
 
     template<floating T>
-    constexpr explicit operator T() const {return StringUtils::atof(this->data(), this->length());}
+    constexpr explicit operator T() const {return strconv::atof(this->data(), this->length());}
 
     template<size_t Q>
-    operator iq_t<Q>() const{return StringUtils::atoq<Q>(this->data_, this->size_);}
+    operator iq_t<Q>() const{return strconv::atoq<Q>(this->data_, this->size_);}
     constexpr char operator [](const size_t index) const {return data_[index];}
 	__fast_inline constexpr StringView substr(size_t left) const {
         return substr_by_range(left, size_);};

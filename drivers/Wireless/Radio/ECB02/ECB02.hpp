@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/StringView.hpp"
+#include "core/string/string_view.hpp"
 #include "hal/bus/uart/uart.hpp"
 
 namespace ymd::drivers{

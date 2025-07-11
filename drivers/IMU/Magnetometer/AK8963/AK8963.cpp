@@ -77,9 +77,8 @@ IResult<> AK8963::init(){
 
 IResult<> AK8963::validate(){
 
-    if (!phy_.validate().is_ok()){
-        return Err{Error::PhyVerifyFailed};
-    }
+    if (const auto res = phy_.validate();
+        res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = read_reg(wia_reg.address, wia_reg.data);
         res.is_err()) return Err(res.unwrap_err());

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "robots/rpc/ascii_proto.hpp"
 #include "robots/rpc/can_proto.hpp"
 
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
-#include "drivers/Encoder/OdometerPoles.hpp"
 
+#include "drivers/Encoder/OdometerPoles.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd::foc{
 using namespace ymd::hal;
@@ -122,13 +122,13 @@ protected:
 
 
 public:
-    class AsciiProtocol:public AsciiProtocolConcept{
+    class AsciiProtocol{
     protected:
         FOCMotor & motor;
         using Command = MotorUtils::Command;
-        void parseArgs(const StringViews args) override;
+        void parseArgs(const std::span<const StringView> args);
     public:
-        AsciiProtocol(hal::UartHw & _logger, FOCMotor & _motor):AsciiProtocolConcept(_logger), motor(_motor){;}
+        AsciiProtocol(hal::UartHw & _logger, FOCMotor & _motor):motor(_motor){;}
     };
 
     friend class AsciiProtocol;
