@@ -2,7 +2,7 @@
 
 #include "robots/foc/focmotor.hpp"
 #include "robots/foc/motor_utils.hpp"
-
+#include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd::foc{
 class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
@@ -20,7 +20,7 @@ protected:
 
     void parseCanmsg(const CanMsg & msg) override;
     
-    UartHw & logger;
+    hal::UartHw & logger;
     
     using CanProtocolConcept::E;
     using CanProtocolConcept::E_2;
@@ -30,7 +30,7 @@ public:
     RemoteFOCMotor(const RemoteFOCMotor & other) = delete;
     RemoteFOCMotor(RemoteFOCMotor && other) = delete;
 
-    RemoteFOCMotor(UartHw & _logger, Can & _can, NodeId _id):
+    RemoteFOCMotor(hal::UartHw & _logger, Can & _can, NodeId _id):
             FOCMotorConcept(_id), CanProtocolConcept(_can, _id), logger(_logger){;}
 
             

@@ -67,6 +67,16 @@ TRAIT_STRUCT(SensorlessObserverTrait,
     TRAIT_METHOD(iq_t<16>, theta)
 )
 
+class SensorlessEncoder:public EncoderIntf{
+protected:
+    SensorlessObserverTrait & ob_;
+public:
+    SensorlessEncoder(
+        SensorlessObserverTrait & ob
+    ):
+        ob_(ob){;}
+};
+
 void init_adc(hal::AdcPrimary & adc){
 
     using hal::AdcChannelIndex;
@@ -88,15 +98,7 @@ void init_adc(hal::AdcPrimary & adc){
 }
 
 
-class SensorlessEncoder:public EncoderIntf{
-protected:
-    SensorlessObserverTrait & ob_;
-public:
-    SensorlessEncoder(
-        SensorlessObserverTrait & ob
-    ):
-        ob_(ob){;}
-};
+
 
 
 __no_inline void init_opa(){
@@ -128,7 +130,13 @@ struct PdCtrlLaw{
 
 enum class NodeRole:uint8_t{
     RollJoint = 1,
-    PitchJoint = 2
+    PitchJoint = 2,
+    XJoint = 3,
+    YJoint = 4,
+    ZJoint = 5,
+    LeftWheel = 6,
+    RightWheel = 7,
+    Master = 0x0f,
 };
 
 
@@ -162,8 +170,6 @@ struct SetKpKdCommand{
 
 DERIVE_SERIALIZE_AS_TUPLE(SetKpKdCommand)
 DERIVE_DEBUG_AS_DISPLAY(SetKpKdCommand)
-
-
 
 template<>
 struct serde::Deserializer<serde::RawBytes, SetPositionCommand> {

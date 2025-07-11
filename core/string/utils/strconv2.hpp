@@ -10,6 +10,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/iq/iq_t.hpp"
 #include "core/string/string_ref.hpp"
+#include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
 
@@ -17,25 +18,13 @@
 namespace ymd::strconv2 {
 
 
-
-void reverse_str(StringRef str){
-	auto len = str.length();
-
-	if(unlikely(len == 0)) return;
-
-	len -= 1;
-	for(size_t i = 0; i < len / 2 + (len % 2); i++){
-		std::swap(str[i],str[len - i]);
-	}
-}
-
 struct FstrDump final{
     int32_t digit_part;
 	int32_t frac_part;
 	uint32_t scale;
 
-	static constexpr DestringResult<FstrDump> from_str(const std::string_view str) {
-		if (str.empty()) {
+	static constexpr DestringResult<FstrDump> from_str(const StringView str) {
+		if (str.length() == 0) {	
 			return Err(DestringError::EmptyString);
 		}
 
@@ -127,7 +116,7 @@ __fast_inline static constexpr char digit2char(uint8_t digit) noexcept {
 }
 
 
-static constexpr bool is_numeric(const std::string_view str) {
+static constexpr bool is_numeric(const StringView str) {
 	const auto len = str.length();
 	bool has_digit = false;
 	bool has_dot = false;
@@ -156,7 +145,7 @@ static constexpr bool is_numeric(const std::string_view str) {
 	return has_digit;
 }
 
-static constexpr bool is_digit(const std::string_view str){
+static constexpr bool is_digit(const StringView str){
 	const auto len = str.length();
     for(size_t i = 0; i < len; i++){
 		char chr = str[i];
@@ -216,7 +205,7 @@ __fast_inline constexpr uint32_t fast_exp10(const size_t n){
 
 template<integral T>
 struct IntFromStringHelper{
-	static constexpr DestringResult<int> conv(const std::string_view str) {
+	static constexpr DestringResult<int> conv(const StringView str) {
 		const auto len = str.length();
 		uint32_t ret = 0;
 		bool is_negtive = false;
@@ -246,7 +235,7 @@ struct IntFromStringHelper{
 
 template<size_t Q>
 struct IqFromStringHelper{
-	static constexpr DestringResult<iq_t<Q>> conv(const std::string_view str){
+	static constexpr DestringResult<iq_t<Q>> conv(const StringView str){
 		const auto dump = ({
 			const auto res = FstrDump::from_str(str);
 			if(res.is_err()) return Err(res.unwrap_err());
@@ -442,7 +431,7 @@ static constexpr TostringResult<StringRef> to_str(iq_t<Q> value, StringRef str, 
 }
 
 template<size_t Q>
-static constexpr DestringResult<iq_t<Q>> iq_from_str(std::string_view str){
+static constexpr DestringResult<iq_t<Q>> iq_from_str(StringView str){
 	return details::IqFromStringHelper<Q>::conv(str);
 }
 

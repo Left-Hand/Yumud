@@ -34,24 +34,24 @@ private:
     }
 };
 
-template<typename ... Args>
-__inline size_t snprintf(char * buf, size_t len, Args && ... args){
-    BufStream os(buf, len);
-    (os << ... << std::forward<Args>(args));
-    return os.pending();
-}
+// template<typename ... Args>
+// __inline size_t snprintf(char * buf, size_t len, Args && ... args){
+//     BufStream os(buf, len);
+//     (os << ... << std::forward<Args>(args));
+//     return os.pending();
+// }
 
-template <typename T, typename ... Args>
-requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
-__inline size_t snprintf(T & range, Args && ... args){
-    BufStream os(range);
-    (os << ... << std::forward<Args>(args));
-    return os.pending();
-}
+// template <typename T, typename ... Args>
+// requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
+// __inline size_t snprintf(T & range, Args && ... args){
+//     BufStream os(range);
+//     (os << ... << std::forward<Args>(args));
+//     return os.pending();
+// }
 
-template<typename ... Args>
-__inline size_t snprintf(OutputStream & os, Args && ... args){
-    (os << ... << std::forward<Args>(args));
-    return os.pending();
-}
+// template<typename ... Args>
+// __inline size_t snprintf(OutputStream & os, Args && ... args){
+//     (os << ... << std::forward<Args>(args));
+//     return os.pending();
+// }
 };

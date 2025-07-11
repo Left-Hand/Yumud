@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <tuple>
 
-#include "core/string/String.hpp"
 
 namespace ymd::canopen{
 

@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "core/debug/debug.hpp"
 #include "core/utils/Option.hpp"
+#include "core/string/string_view.hpp"
 
 namespace ymd::canopen {
 

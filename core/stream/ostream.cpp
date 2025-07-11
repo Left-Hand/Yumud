@@ -1,7 +1,6 @@
 #include "ostream.hpp"
 
 #include "core/clock/clock.hpp"
-#include "core/string/String.hpp"
 #include "core/string/string_view.hpp"
 #include "core/string/string_ref.hpp"
 
@@ -153,8 +152,10 @@ void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
     p_route_->writeN(pbuf.data(), pbuf.size());
 }
 
+#if 0
 OutputStream & OutputStream::operator<<(const String & str){
     write_checked(str.c_str(), str.length()); return * this;}
+#endif
 
 OutputStream & OutputStream::operator<<(const StringView str){
     write_checked(str.data(), str.length()); return * this;}

@@ -129,12 +129,14 @@ public:
 
     [[nodiscard]] IResult<> draw_roi(const Rect2u & rect);
 
+    #if 0
     template<typename ... Ts>
     [[nodiscard]] IResult<> draw_args(const Vector2u pos, Ts && ... args){
         StringStream ss;
         ss.print(std::forward<Ts>(args)...);
         return draw_string(pos, StringView(std::move(ss).move_str()));
     }
+    #endif
     
     template<typename Fn>
     [[nodiscard]]

@@ -41,6 +41,7 @@ public:
         return size_ == other.size_ && memcmp(data_, other.data_, size_) == 0; }
 
     constexpr const char * begin() const {return data_;}
+    constexpr const char * c_str() const {return data_;}
     constexpr const char * end() const {return data_ + size_;}
 
     constexpr size_t size() const { return size_; }

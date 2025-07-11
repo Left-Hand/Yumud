@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/string.hpp"
+#include "core/string/string_view.hpp"
 #include "core/utils/Option.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
