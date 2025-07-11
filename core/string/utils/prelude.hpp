@@ -6,18 +6,22 @@
 namespace ymd::strconv2{
 
 enum class DestringError:uint8_t{
-    InvalidNumber,          // Numeric parsing failed (like C++ atoi/atof failures)
+    InvalidNumber,
     InvalidBoolean,         // Boolean parsing failed
     InvalidChar,            // Single character parsing failed
     InvalidDigit,
-	InvalidPositive,
-	InvalidNegtive,
-	InvalidPoint,
+	UnexpectedPositive,
+	UnexpectedNegative,
+	// InvalidPoint,
+	MultipleDot,
+	UnexpectedChar,
 	NoDigit,
     PosOverflow,
     DigitOverflow,
 	FracOverflow,
 	NoDigits,
+	OnlySignFounded,
+	NoDigitsAfterSign,
     NegOverflow,
     EmptyString,
 };

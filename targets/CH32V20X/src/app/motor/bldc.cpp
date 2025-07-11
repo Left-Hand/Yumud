@@ -746,9 +746,8 @@ void bldc_main(){
             // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
             DEBUG_PRINTLN((clock::micros() - u_begin).count(), 
                 StringView(arr.data()), 
-                uint8_t(arr[0]), 
-                rem_str.size(), 
-                strconv2::iq_from_str<16>(arr.data()).examine()
+                rem_str.size()
+                // strconv2::iq_from_str<16>("+.").examine()
             );
 
 
