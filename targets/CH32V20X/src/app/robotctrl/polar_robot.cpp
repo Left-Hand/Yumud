@@ -4,6 +4,8 @@
 #include "core/clock/time.hpp"
 #include "core/sync/timer.hpp"
 #include "core/string/string_view.hpp"
+#include "core/utils/serde.hpp"
+
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
@@ -17,7 +19,7 @@
 #include "details/polar_robot_curvedata.hpp"
 
 #include "types/colors/color/color.hpp"
-
+#include "types/vectors/polar/polar.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -339,6 +341,83 @@ private:
     }
 };
 
+
+struct AxisIterator{
+    struct State{
+        real_t position;
+        real_t speed;
+    };
+
+    // State next(const real_t x, const real_t step){
+
+    // }
+private:
+    State state_;
+};
+
+struct PolarRobotSolverIterator{
+    struct Config{
+        real_t max_joint_spd;
+        real_t max_joint_acc;
+
+        real_t rho_transform_scale;
+        real_t theta_transform_scale;
+        real_t center_bias;
+
+        Range2<real_t> rho_range;
+        Range2<real_t> theta_range;
+
+        real_t r;
+    };
+
+    struct MachineState{
+        Vector2<real_t> position;
+        Vector2<real_t> speed;
+    };
+
+    struct JointState{
+        real_t position;
+        real_t speed;
+    };
+
+    struct State{
+        MachineState machine;
+        JointState rho_joint;
+        JointState theta_joint;
+    };
+
+    struct Solution{
+        real_t rho_joint_rotation;
+        real_t theta_joint_rotation;
+    };
+
+    Solution forward(const Vector2<real_t> target_pos, const real_t delta_t){
+        State state = state_;
+        // Vector2<real_t> expect_pos = 
+        // real_t expect_rho_joint_rotation = 
+        // real_t expect_theta_joint_rotation =
+        return {
+            .rho_joint_rotation = state.rho_joint.position, 
+            .theta_joint_rotation = state.theta_joint.position
+        };
+    }
+
+    
+
+    
+    // static constexpr Gesture inverse(const Solution & sol){
+    //     const auto [s,c] = sincos(sol.theta_radians);
+    //     return {
+    //         sol.rho_meters * c,
+    //         sol.rho_meters * s
+    //     };
+    // }
+
+
+private:
+    State state_;
+};
+
 class JointMotorIntf{
 public:
     virtual void activate() = 0;
@@ -373,6 +452,7 @@ public:
     bool is_homing_done() {return true;}
     real_t get_last_position(){return 0;}
 };
+
 
 class JointMotorAdapter_ZdtStepper final
     :public JointMotorIntf{
@@ -463,7 +543,6 @@ public:
 
     using Solver = PolarRobotSolver;
 
-
     PolarRobotActuator(
         const Config & cfg, 
         const Params & params
@@ -473,23 +552,17 @@ public:
         joint_theta_(params.theta_joint.deref())
     {;}
 
+
     void set_polar(const real_t rho_meters, const real_t theta_radians){
 
         const auto rho_position = rho_meters * cfg_.rho_transform_scale;
         const auto theta_position = theta_radians * cfg_.theta_transform_scale;
 
-        // DEBUG_PRINTLN(
-        //     // x_meters, 
-        //     // y_meters, 
-        //     rho_position,
-        //     theta_position
-        // );
-
-
         joint_rho_.set_position(rho_position - cfg_.center_bias);
         joint_theta_.set_position(theta_position);
     }
 
+    
     void set_position(const real_t x_meters, const real_t y_meters){
         const auto gest = Solver::Gesture{
             .x_meters = x_meters,

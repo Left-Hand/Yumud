@@ -6,6 +6,7 @@
 #include "core/sync/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/string/utils/strconv2.hpp"
+#include "core/utils/serde.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -165,19 +166,19 @@ DERIVE_DEBUG_AS_DISPLAY(SetKpKdCommand)
 
 
 template<>
-struct Deserializer<RawBytes, SetPositionCommand> {
-    static constexpr Result<SetPositionCommand, DeserializeError> 
+struct serde::Deserializer<serde::RawBytes, SetPositionCommand> {
+    static constexpr Result<SetPositionCommand, serde::DeserializeError> 
     deserialize(std::span<const uint8_t> data) {
         if (data.size() < 8) {
             return Err(DeserializeError::BytesLengthShort);
         }
 
-        auto pos_result = make_deserialize<RawBytes, iq_t<16>>(data.subspan<0, 4>());
+        auto pos_result = make_deserialize<serde::RawBytes, iq_t<16>>(data.subspan<0, 4>());
         if (pos_result.is_err()) {
             return Err(pos_result.unwrap_err());
         }
 
-        auto speed_result = make_deserialize<RawBytes, iq_t<16>>(data.subspan<4, 4>());
+        auto speed_result = make_deserialize<serde::RawBytes, iq_t<16>>(data.subspan<4, 4>());
         if (speed_result.is_err()) {
             return Err(speed_result.unwrap_err());
         }
@@ -211,7 +212,7 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
 struct MsgFactory{
     static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
         const auto id = comb_role_and_cmd(role, CommandKind::SetPosition);
-        const auto iter = make_serialize_iter<RawBytes>(cmd);
+        const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
         return hal::CanMsg::from_iter(id, iter).unwrap();
         // return hal::CanMsg::from_list(id, {0});
     };
@@ -582,7 +583,8 @@ void bldc_main(){
                 if(msg_role != node_role) return;
                 switch(msg_cmd){
                     case CommandKind::SetPosition:{
-                        const auto cmd = make_deserialize<RawBytes, SetPositionCommand>(msg.payload()).examine();
+                        const auto cmd = serde::make_deserialize<serde::RawBytes,
+                            SetPositionCommand>(msg.payload()).examine();
                         set_position(cmd);
                     }
                         break;
