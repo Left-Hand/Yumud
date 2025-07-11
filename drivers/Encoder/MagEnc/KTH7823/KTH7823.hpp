@@ -134,7 +134,7 @@ public:
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<real_t> get_lap_position(){
+    [[nodiscard]] IResult<real_t> read_lap_position(){
         return Ok(lap_position_);
     }
 

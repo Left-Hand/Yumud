@@ -2,41 +2,45 @@
 
 #include <cstdint>
 #include <compare>
+#include "core/utils/Option.hpp"
 
 namespace ymd::hal{
 
-namespace details{
+struct CanStdId{
+    explicit constexpr CanStdId(const uint16_t raw):raw_(raw){;}
 
-template<typename T>
-class CanId_t{
-public:
-    static constexpr CanId_t<T> ZERO = CanId_t<T>(0);
+    constexpr CanStdId(const CanStdId & other) = default;
+    constexpr CanStdId(CanStdId && other) = default;
 
-    explicit constexpr CanId_t(const T raw):raw_(raw){;}
-
-    static constexpr CanId_t from_raw(const T raw){
-        return CanId_t(raw);
+    static constexpr Option<CanStdId> from_u11(const uint16_t raw){
+        if(raw > 0x7ff) return None;
+        return Some(CanStdId(raw));
     }
 
-    constexpr auto operator<=>(const CanId_t<T>& other) const = default;
+    constexpr auto operator<=>(const CanStdId& other) const = default;
 
-    constexpr T as_raw() const {return raw_;}
+    constexpr uint16_t to_u11() const {return raw_;}
 private:
-    T raw_;
+    uint16_t raw_;
 };
 
-class CanRawId{
-public:
-    CanRawId(const uint32_t raw):raw_(raw){;}
-    uint32_t as_raw() const {return raw_;}
+struct CanExtId{
+
+    explicit constexpr CanExtId(const uint32_t raw):raw_(raw){;}
+
+    constexpr CanExtId(const CanExtId & other) = default;
+    constexpr CanExtId(CanExtId && other) = default;
+    static constexpr Option<CanExtId> from_u29(const uint32_t raw){
+        if(raw > 0x1fffffff) return None;
+        return Some(CanExtId(raw));
+    }
+
+    constexpr auto operator<=>(const CanExtId& other) const = default;
+
+    constexpr uint32_t to_u29() const {return raw_;}
 private:
     uint32_t raw_;
 };
-
-}
-
-using CanStdId = details::CanId_t<uint16_t>;
-using CanExtId = details::CanId_t<uint32_t>;
 
 
 }

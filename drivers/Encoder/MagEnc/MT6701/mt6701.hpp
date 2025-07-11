@@ -198,7 +198,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<real_t> get_lap_position();
+    [[nodiscard]] IResult<real_t> read_lap_position();
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 

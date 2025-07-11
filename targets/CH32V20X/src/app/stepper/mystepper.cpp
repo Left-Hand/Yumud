@@ -147,7 +147,7 @@ public:
             if(let res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            let either_lap_position = encoder_.get_lap_position();
+            let either_lap_position = encoder_.read_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             1 - either_lap_position.unwrap();
@@ -746,7 +746,7 @@ void mystepper_main(){
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.attach_next_cs(&hal::portA[15]).unwrap()
+        spi.allocate_cs_gpio(&hal::portA[15]).unwrap()
     };
 
 

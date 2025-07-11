@@ -69,7 +69,7 @@ void ak09911c_main(){
 
     // auto & spi = spi1;
     // spi.init(18_MHz);
-    // AK09911C aku = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
+    // AK09911C aku = {SpiDrv(spi, spi.allocate_cs_gpio(portA[15]).value())};
 
     ak09911c_test(aku);
 }

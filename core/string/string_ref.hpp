@@ -20,6 +20,9 @@ struct StringRef{
     [[nodiscard]] constexpr const char * begin() const {return data_;}
     [[nodiscard]] constexpr char * begin(){return data_;} 
 
+    [[nodiscard]] constexpr const char * c_str() const {return data_;}
+    [[nodiscard]] constexpr char * c_str(){return data_;} 
+
     [[nodiscard]] constexpr const char * end() const {return data_ + size_;}
     [[nodiscard]] constexpr char * end(){return data_ + size_;}
 

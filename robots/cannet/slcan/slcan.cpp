@@ -84,7 +84,7 @@ static constexpr IResult<hal::CanStdId> parse_std_id(const StringView str){
 }
 
 #if SLCAN_DEBUG_EN == 0
-static_assert(parse_std_id("123").unwrap().as_raw() == 0x123);
+static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
 static_assert(parse_std_id("923").unwrap_err() == Error::InvalidStdId);
 static_assert(parse_std_id("9scd").unwrap_err() == Error::ArgTooLong);
 static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedCharInHex);
@@ -172,10 +172,11 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
     auto parse_id = [](const StringView str) -> IResult<uint32_t>{
         if constexpr(is_ext){
             return parse_ext_id(str).
-                map([](const hal::CanExtId id) -> uint32_t{return id.as_raw();}); 
-        } 
-        else return parse_std_id(str).
-            map([](const hal::CanStdId id) -> uint32_t{return id.as_raw();}); 
+                map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
+        } else {
+            return parse_std_id(str).
+                map([](const hal::CanStdId id) -> uint32_t{return id.to_u11();}); 
+        }
     };
 
     const uint32_t id = ({

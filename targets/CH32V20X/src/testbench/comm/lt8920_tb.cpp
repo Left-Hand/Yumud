@@ -40,7 +40,7 @@ void lt8920_main(){
     spi.init({2_MHz});
     
 
-    LT8920 lt{&spi, spi.attach_next_cs(&portA[0]).unwrap()};
+    LT8920 lt{&spi, spi.allocate_cs_gpio(&portA[0]).unwrap()};
     bindSystickCb([&](){
         lt.tick().examine();
     });

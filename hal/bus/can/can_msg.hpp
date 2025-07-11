@@ -24,19 +24,25 @@ concept valid_args =
     && (std::is_same_v<std::decay_t<Args>, Args> && ...)
 ;
 
-struct CanMsgDetails{
+template<typename T>
+concept is_canid = 
+    (std::is_same_v<std::decay_t<T>, CanStdId> 
+    || std::is_same_v<std::decay_t<T>, CanExtId>)
+;
+
+struct CanMsg_Prelude{
 
 
     #pragma pack(push, 1)
 
     struct SXX32_CanIdentifier{
 
-        template<typename T>
+        template<details::is_canid ID>
         static constexpr SXX32_CanIdentifier from(
-            const details::CanId_t<T> id,
+            const ID id,
             const CanRemoteSpec rmt
         ){
-            if constexpr(std::is_same_v<details::CanId_t<T>, CanStdId>){
+            if constexpr(std::is_same_v<ID, CanStdId>){
                 return from_std_id(id, rmt);
             }else{
                 return from_ext_id(id, rmt);
@@ -86,7 +92,7 @@ struct CanMsgDetails{
             return SXX32_CanIdentifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = false, 
-                .ext_id_ = uint32_t(id.as_raw()) << 18
+                .ext_id_ = uint32_t(id.to_u11()) << 18
             };
         }
 
@@ -97,7 +103,7 @@ struct CanMsgDetails{
             return SXX32_CanIdentifier{
                 .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
                 .is_ext_ = true, 
-                .ext_id_ = id.as_raw()
+                .ext_id_ = id.to_u29()
             };
         }
     };
@@ -134,7 +140,7 @@ struct CanMsgDetails{
 }
 
 
-struct alignas(16) CanMsg final:public details::CanMsgDetails{
+struct alignas(16) CanMsg final:public details::CanMsg_Prelude{
 public:
     constexpr CanMsg() = default;
 
@@ -145,33 +151,33 @@ public:
     constexpr CanMsg & operator = (CanMsg && other) = default;
 
 
-    template<typename T>
-    static constexpr CanMsg empty(details::CanId_t<T> id){
+    template<details::is_canid ID>
+    static constexpr CanMsg empty(ID id){
         return CanMsg(id, CanRemoteSpec::Data);}
 
-    template<typename T>
-    static constexpr CanMsg from_remote(details::CanId_t<T> id){
+    template<details::is_canid ID>
+    static constexpr CanMsg from_remote(ID id){
         return CanMsg(id, CanRemoteSpec::Remote);}
 
-    template<typename T>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, 
+    template<details::is_canid ID>
+    static constexpr CanMsg from_bytes(ID id, 
         const std::span<const uint8_t> pbuf)
         {return CanMsg(id, pbuf);}
 
 
-    template<typename T, size_t N>
+    template<details::is_canid ID, size_t N>
     requires (N <= 8)
     static constexpr CanMsg from_bytes(
-        details::CanId_t<T> id, 
+        ID id, 
         const std::span<const uint8_t, N> pbuf
     ){
         return CanMsg(id, pbuf);
     }
 
 
-    template<typename T, std::ranges::range R>
+    template<details::is_canid ID, std::ranges::range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
-    static constexpr CanMsg from_bytes(details::CanId_t<T> id, R && range){
+    static constexpr CanMsg from_bytes(ID id, R && range){
         std::array<uint8_t, 8> buf;
         uint8_t len = 0;
         for(auto && val : range){
@@ -181,17 +187,17 @@ public:
         return CanMsg(id, std::span(buf.data(), len));
     }
 
-    template<typename T>
+    template<details::is_canid ID>
     static constexpr CanMsg from_list(
-        details::CanId_t<T> id, 
+        ID id, 
         const std::initializer_list<uint8_t> pbuf
     ){
         return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));
     }
 
-    template<typename T, typename Iter>
+    template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr Option<CanMsg> from_iter(details::CanId_t<T> id, Iter iter) {
+    static constexpr Option<CanMsg> from_iter(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -209,9 +215,9 @@ public:
         return Some(CanMsg::from_bytes(id, std::span{buf.data(), len}));
     }
 
-    template<typename T, typename Iter>
+    template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr CanMsg from_iter_unchecked(details::CanId_t<T> id, Iter iter) {
+    static constexpr CanMsg from_iter_unchecked(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -257,12 +263,12 @@ public:
 
     constexpr Option<hal::CanStdId> stdid() const {
         if(not identifier_.is_standard()) return None;
-        return Some(hal::CanStdId::from_raw(identifier_.id()));
+        return Some(hal::CanStdId(identifier_.id()));
     }
 
     constexpr Option<hal::CanExtId> extid() const {
         if(not identifier_.is_extended()) return None;
-        return Some(hal::CanExtId::from_raw(identifier_.id()));
+        return Some(hal::CanExtId(identifier_.id()));
     }
 
     constexpr uint64_t payload_as_u64() const {
@@ -274,16 +280,16 @@ public:
     }
 
 private:
-    template<typename T>
-    __fast_inline constexpr CanMsg(const details::CanId_t<T> id, const CanRemoteSpec remote):
+    template<details::is_canid ID>
+    __fast_inline constexpr CanMsg(const ID id, const CanRemoteSpec remote):
         identifier_(SXX32_CanIdentifier::from(id, remote))
     {
         dlc_ = 0;
     }
 
-    template<typename T>
+    template<details::is_canid ID>
     __fast_inline constexpr CanMsg(
-            const details::CanId_t<T> id, 
+            const ID id, 
             const std::span<const uint8_t> pbuf
     ) : 
         CanMsg(id, CanRemoteSpec::Data)

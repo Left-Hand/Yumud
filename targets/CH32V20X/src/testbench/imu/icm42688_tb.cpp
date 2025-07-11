@@ -116,7 +116,7 @@ void icm42688_main(){
     ICM42688 imu = {
         SpiDrv(
             &spi, 
-            spi.attach_next_cs(&portA[15]).unwrap()
+            spi.allocate_cs_gpio(&portA[15]).unwrap()
         )
     };
 

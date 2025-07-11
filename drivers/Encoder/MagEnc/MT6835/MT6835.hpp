@@ -136,7 +136,7 @@ public:
     [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<real_t> get_lap_position(){return Ok(lap_position_);}
+    [[nodiscard]] IResult<real_t> read_lap_position(){return Ok(lap_position_);}
     [[nodiscard]] uint32_t get_err_cnt() const {return errcnt_;}
 private:
     hal::SpiDrv spi_drv_;

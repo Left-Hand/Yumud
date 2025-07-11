@@ -451,7 +451,7 @@ void cubic_main(void){
     drivers::ST7789 tft{
 		drivers::ST7789_Phy{
 			&spi, 
-			spi.attach_next_cs(&lcd_cs).unwrap(), 
+			spi.allocate_cs_gpio(&lcd_cs).unwrap(), 
 			&lcd_dc, 
 			&dev_rst
 		},

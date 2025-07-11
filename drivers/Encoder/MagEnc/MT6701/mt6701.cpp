@@ -62,7 +62,7 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<real_t> MT6701::get_lap_position(){
+IResult<real_t> MT6701::read_lap_position(){
     return Ok(lap_position);
 }
 

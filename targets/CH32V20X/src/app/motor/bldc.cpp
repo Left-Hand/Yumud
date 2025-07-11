@@ -193,7 +193,7 @@ struct Deserializer<RawBytes, SetPositionCommand> {
 
 
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
-    const auto id_u11 = id.as_raw();
+    const auto id_u11 = id.to_u11();
     return std::make_tuple(
         std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
         std::bit_cast<CommandKind>(uint8_t(id_u11 >> 7))
@@ -325,13 +325,13 @@ void bldc_main(){
 
     MA730 ma730{
         &spi,
-        spi.attach_next_cs(&hal::portA[15])
+        spi.allocate_cs_gpio(&hal::portA[15])
             .unwrap()
     };
 
     BMI160 bmi{
         &spi,
-        spi.attach_next_cs(&hal::portA[0])
+        spi.allocate_cs_gpio(&hal::portA[0])
             .unwrap()
     };
 
@@ -341,7 +341,7 @@ void bldc_main(){
 
     // while(true){
     //     ma730.update().examine();
-    //     DEBUG_PRINTLN(ma730.get_lap_position().examine());
+    //     DEBUG_PRINTLN(ma730.read_lap_position().examine());
     //     blink_service();
     //     clock::delay(5ms);
     // }
@@ -471,7 +471,7 @@ void bldc_main(){
         ma730.update().examine();
         bmi.update().examine();
 
-        const auto meas_lap = 1-ma730.get_lap_position().examine(); 
+        const auto meas_lap = 1-ma730.read_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
 
 
@@ -713,7 +713,7 @@ void bldc_main(){
             //     // pos_sensor_.position(),
             //     // pos_sensor_.lap_position(),
             //     // pos_sensor_.speed(),
-            //     ma730.get_lap_position().examine(),
+            //     ma730.read_lap_position().examine(),
             //     meas_rad_
             //     // exe_us_
             //     // // leso.get_disturbance(),
@@ -722,34 +722,6 @@ void bldc_main(){
             // );
             const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
             const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.03_r;
-
-            const auto command = SetPositionCommand{2, 18};
-            // const auto iter = make_serialize_iter<RawBytes>(command);
-            // const auto iter = make_serialize_iter();
-
-            std::array<char, 16> arr{};
-
-            const auto u_begin = clock::micros();
-            const auto v = 20 * sin(7 * clock::time());
-            // const auto v = 10.1_r;
-            // const auto v = 10;
-
-            for(size_t i = 0; i < 100; i++){
-                strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
-            }
-            const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
-            // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
-            // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
-            // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
-            // uint8_t res = 100;
-            // DEBUG_PRINTLN(;
-            // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
-            DEBUG_PRINTLN((clock::micros() - u_begin).count(), 
-                StringView(arr.data()), 
-                rem_str.size()
-                // strconv2::iq_from_str<16>("+.").examine()
-            );
-
 
             // for(const auto item: range){
             //     DEBUG_PRINTLN_IDLE(item, '?');
@@ -797,6 +769,35 @@ void bldc_main(){
         blink_service();
         report_service();
         gesture_service();
+
+
+        const auto command = SetPositionCommand{2, 18};
+        // const auto iter = make_serialize_iter<RawBytes>(command);
+        // const auto iter = make_serialize_iter();
+
+        std::array<char, 16> arr{};
+
+        const auto u_begin = clock::micros();
+        const auto v = 20 * sin(7 * clock::time());
+        // const auto v = 10.1_r;
+        // const auto v = 10;
+
+        for(size_t i = 0; i < 100; i++){
+            strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+        }
+        const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+        // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
+        // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
+        // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
+        // uint8_t res = 100;
+        // DEBUG_PRINTLN(;
+        // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
+        DEBUG_PRINTLN(
+            (clock::micros() - u_begin).count(), 
+            StringView(arr.data()), 
+            rem_str.size()
+            // strconv2::iq_from_str<16>("+.").examine()
+        );
 
     }
 }

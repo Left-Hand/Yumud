@@ -171,7 +171,7 @@ struct ZdtMotor_Prelude{
             const NodeId nodeid, 
             const uint8_t piece
         ){
-            return hal::CanExtId::from_raw(
+            return hal::CanExtId(
                 uint32_t(nodeid.to_u8() << 8) | 
                 (piece)
             );
@@ -245,13 +245,13 @@ struct ZdtMotor_Prelude{
         static inline constexpr uint8_t map_msg_to_nodeid(
             const hal::CanMsg & msg
         ){
-            return msg.extid().unwrap().as_raw() >> 8;
+            return msg.extid().unwrap().to_u29() >> 8;
         }
 
         static inline constexpr uint8_t map_msg_to_piececnt(
             const hal::CanMsg & msg
         ){
-            return msg.extid().unwrap().as_raw() & 0xff;
+            return msg.extid().unwrap().to_u29() & 0xff;
         }
 
     };

@@ -15,7 +15,7 @@ void Odometer::reset(){
 
 void Odometer::update(){
     encoder.update().unwrap();
-    real_t undiredRawLapPostion = encoder.get_lap_position().unwrap();
+    real_t undiredRawLapPostion = encoder.read_lap_position().unwrap();
     if (rsv){
         rawLapPosition = real_t(1) - undiredRawLapPostion;
     }else{

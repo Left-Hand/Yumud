@@ -5,7 +5,7 @@ using namespace ymd::hal;
 
 
 
-Option<SpiSlaveIndex> Spi::attach_next_cs(Some<hal::GpioIntf *> p_io){
+Option<SpiSlaveIndex> Spi::allocate_cs_gpio(Some<hal::GpioIntf *> p_io){
     auto & io = p_io.deref();
     for(size_t i = 0; i < cs_port_.size(); i++){
         if(cs_port_.is_index_empty(i)){

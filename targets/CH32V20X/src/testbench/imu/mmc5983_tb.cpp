@@ -351,7 +351,7 @@ void mmc5983_main(){
 
     // auto & spi = spi1;
     // spi.init(18_MHz);
-    // MMC5983 imu = {SpiDrv(spi, spi.attach_next_cs(portA[15]).value())};
+    // MMC5983 imu = {SpiDrv(spi, spi.allocate_cs_gpio(portA[15]).value())};
 
     mmc5983_test(imu);
 }

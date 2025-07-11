@@ -7,22 +7,21 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
 
-void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
-    can.init({hal::CanBaudrate::_1M, hal::Can::Mode::Normal});
+void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
+    can.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
 
-    portC[13].outpp();
-    portC[14].outpp();
+    hal::portC[13].outpp();
+    hal::portC[14].outpp();
 
     {
-        auto data = std::to_array<uint8_t>({uint8_t(3),uint8_t(4)}); 
         const uint32_t id = 0x1314;
-        CanMsg msg = CanMsg::from_bytes(hal::CanStdId(id), std::span(data));
+        hal::CanMsg msg = hal::CanMsg::from_list(
+            hal::CanStdId(id), {3,4});
 
         // constexpr auto a = sizeof(msg);
-        auto read = msg.payload();
-        logger.println(id, data, read);
+        auto payload = msg.payload();
+        logger.println(id, payload);
 
     }
 
@@ -30,8 +29,8 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
         real_t data = 0.09_r;
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
-        CanMsg msg = CanMsg::from_bytes(
-            CanExtId::from_raw(id), 
+        const auto msg = hal::CanMsg::from_bytes(
+            hal::CanExtId(id), 
             std::bit_cast<std::array<uint8_t, 4>>(data.to_i32())
         );
         // msg.load(data);
@@ -40,8 +39,8 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
-        const auto msg2 = CanMsg::from_bytes(
-            CanStdId(id), 
+        const auto msg2 = hal::CanMsg::from_bytes(
+            hal::CanStdId(id), 
             std::bit_cast<std::array<uint8_t, 4>>(data2.to_i32())
         );
         logger.println(id, msg2.size(), msg2.payload());
@@ -53,10 +52,10 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
     }
 
     while(1){
-        if(tx_role){
+        if(is_tx){
             static uint8_t cnt = 0;
-            const auto msg_v = CanMsg::from_list(
-                CanStdId(1), 
+            const auto msg_v = hal::CanMsg::from_list(
+                hal::CanStdId(1), 
                 {0x34, 0x37}
             );
             can.write(msg_v);
@@ -72,28 +71,28 @@ void can_tb(OutputStream & logger, hal::Can & can, bool tx_role){
             }
 
             while(can.available()){
-                CanMsg msg_r = can.read();
+                hal::CanMsg msg_r = can.read();
                 logger.println("rx", msg_r);
             }
 
             cnt++;
             clock::delay(200ms);
-            portC[13].toggle();
+            hal::portC[13].toggle();
         }else{
             logger.println("ava", can.available());
             while(can.available()){
-                CanMsg msg_r = can.read();
+                const hal::CanMsg msg_r = can.read();
                 logger.println("rx", msg_r);
             }
 
-            const auto msg_v = CanMsg::from_list(
-                CanStdId(0), 
+            const auto msg_v = hal::CanMsg::from_list(
+                hal::CanStdId(0), 
                 {0x13,0x14}
             );
             can.write(msg_v);
 
             clock::delay(200ms);
-            portC[14].toggle();
+            hal::portC[14].toggle();
         }
     }
 }
