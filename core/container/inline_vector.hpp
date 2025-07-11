@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include <cstdint>
 #include <algorithm>
@@ -7,8 +7,6 @@
 #include <utility>
 
 namespace ymd{
-
-
 
 template<typename T, size_t N>
 class InlineVector {
@@ -45,9 +43,27 @@ public:
         return *this;
     }
 
-    // 删除拷贝操作
-    InlineVector(const InlineVector&) = delete;
-    InlineVector& operator=(const InlineVector&) = delete;
+    // Safe copy constructor
+    constexpr InlineVector(const InlineVector& other) {
+        size_ = 0; // Initialize in case constructor throws
+        for (size_t i = 0; i < other.size_; ++i) {
+            new (&data_[i]) T(other.data_[i]); // Copy construct each element
+            ++size_; // Only increment after successful construction
+        }
+    }
+
+    // Safe copy assignment operator
+    constexpr InlineVector& operator=(const InlineVector& other) {
+        if (this != &other) {
+            clear(); // Destroy existing elements
+            size_ = 0;
+            for (size_t i = 0; i < other.size_; ++i) {
+                new (&data_[i]) T(other.data_[i]); // Copy construct each element
+                ++size_;
+            }
+        }
+        return *this;
+    }
 
     // 元素访问 - constexpr
     constexpr T& operator[](size_t index) {
@@ -103,6 +119,24 @@ public:
     template<typename... Args>
     constexpr void emplace_back(Args&&... args) {
         new (&data_[size_++]) T(std::forward<Args>(args)...);
+    }
+
+    constexpr void append_unchecked(const uint8_t data){
+        // ASSERT(size_ + 1 <= N);
+        data_[size_] = data;
+        size_ = size_ + 1;
+    }
+
+    constexpr void append_unchecked(const std::span<const uint8_t> pbuf){
+        // ASSERT(size_ + pbuf.size() <= N);
+        for(size_t i = 0; i < pbuf.size(); i++){
+            data_[size_ + i] = pbuf[i];
+        }
+        size_ += pbuf.size();
+    }
+
+    constexpr std::span<const uint8_t> to_span() const {
+        return std::span(data_, size_);
     }
 
     constexpr void pop_back() {

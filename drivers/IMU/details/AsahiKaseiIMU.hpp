@@ -13,13 +13,15 @@ class AsahiKaseiSensor_Phy final{
 public:
     [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
-            return Result<void, ImuError>(i2c_drv_->write_reg(uint8_t(addr), data));
+            if(const auto res = i2c_drv_->write_reg(uint8_t(addr), data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT); 
-                err.is_err()) return Result<void, ImuError>(err);
-            if(const auto err = spi_drv_->write_single<uint8_t>(data); 
-                err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(hal::HalResult::Ok());
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT); 
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->write_single<uint8_t>(data); 
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         return Err(ImuError::NoAvailablePhy);
@@ -27,11 +29,15 @@ public:
 
     [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
-            return Result<void, ImuError>(i2c_drv_->read_reg(uint8_t(addr), data));
+            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT); 
-                err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(spi_drv_->read_single<uint8_t>(data));
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT); 
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_single<uint8_t>(data);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }
 
         return Err(ImuError::NoAvailablePhy);
@@ -39,13 +45,15 @@ public:
 
     [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
         if(i2c_drv_){
-            return Result<void, ImuError>(
-                i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
+            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
         }else if(spi_drv_){
-            if(const auto err = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-                err.is_err()) return Result<void, ImuError>(err);
-            return Result<void, ImuError>(
-                spi_drv_->read_burst<int16_t>(std::span(datas, len)));
+            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_drv_->read_burst<int16_t>(std::span(datas, len));
+                res.is_err()) return Err(res.unwrap_err()); 
+            return Ok();
         }
 
         return Err(ImuError::NoAvailablePhy);
@@ -56,7 +64,7 @@ public:
     }
 
     [[nodiscard]] Result<void, ImuError> validate(){
-        return Result<void, ImuError>(hal::HalResult::Ok());
+        return Ok();
     }
 public:
     AsahiKaseiSensor_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}

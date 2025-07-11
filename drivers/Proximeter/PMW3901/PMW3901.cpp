@@ -129,19 +129,30 @@ static constexpr auto INIT_LIST2 = std::to_array({
 scexpr real_t scale = real_t(13.0/2000);
 
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT)
-    | spi_drv_.write_single<uint8_t>(data));
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
+        res.is_err()) return Err(res.unwrap_err());
+        
+    if(const auto res = spi_drv_.write_single<uint8_t>(data);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
 }
 
 
 IResult<> PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_single<uint8_t>(data));
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = spi_drv_.read_single<uint8_t>(data);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
-    return IResult<>(spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT)
-    | spi_drv_.read_burst<uint8_t>(pbuf));
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = spi_drv_.read_burst<uint8_t>(pbuf);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 
@@ -261,8 +272,8 @@ IResult<> PMW3901::init() {
 
 
 
-    if(const auto err = spi_drv_.release(); err.is_err()) 
-        return IResult<>(err);
+    if(const auto res = spi_drv_.release(); res.is_err()) 
+        return Err(res.unwrap_err());
     
     if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 
         res.is_err()) return res; 

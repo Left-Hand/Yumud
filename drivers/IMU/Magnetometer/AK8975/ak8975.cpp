@@ -88,7 +88,7 @@ IResult<> AK8975::validate(){
         }
     }
 
-    if(readed == false) return Err(Error::CantSetup); 
+    if(readed == false) return Err(Error::MagCantSetup); 
 
     //5
     if(const auto res = update();

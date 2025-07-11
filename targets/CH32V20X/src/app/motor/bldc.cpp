@@ -779,7 +779,7 @@ void bldc_main(){
         gesture_service();
 
 
-        const auto command = SetPositionCommand{2, 18};
+        // const auto command = SetPositionCommand{2, 18};
         // const auto iter = make_serialize_iter<RawBytes>(command);
         // const auto iter = make_serialize_iter();
 

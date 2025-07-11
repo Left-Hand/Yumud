@@ -58,8 +58,8 @@ private:
 
         const auto bytes = Payloads::serialize(obj);
 
-        buf.append(bytes);
-        buf.append(VerifyUtils::get_verify_code(
+        buf.append_unchecked(bytes);
+        buf.append_unchecked(VerifyUtils::get_verify_code(
             verify_method,
             T::FUNC_CODE,
             bytes
