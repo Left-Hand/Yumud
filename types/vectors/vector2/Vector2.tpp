@@ -95,13 +95,13 @@ constexpr Vector2<T> Vector2<T>::bounce(const Vector2<T> & n) const {
 }
 
 template<arithmetic T>
-constexpr Vector2<T> Vector2<T>::lerp(const Vector2<T> & b, const arithmetic auto & _t) const{
+constexpr Vector2<T> Vector2<T>::lerp(const Vector2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
     return *this * (1-_t)+b * _t;
 }
 
 template<arithmetic T>
-constexpr Vector2<T> Vector2<T>::slerp(const Vector2<T> & b, const arithmetic auto & _t) const{
+constexpr Vector2<T> Vector2<T>::slerp(const Vector2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
     return lerp(b, sin(static_cast<T>(PI / 2) * _t));
 }
@@ -147,7 +147,7 @@ constexpr bool Vector2<T>::has_point(const Vector2<auto> & _v) const{
 }
 
 template<arithmetic T>
-constexpr Vector2<T> Vector2<T>::move_toward(const Vector2<T> & b, const arithmetic auto & delta) const{
+constexpr Vector2<T> Vector2<T>::move_toward(const Vector2<T> & b, const T delta) const{
     if (!is_equal_approx(b)){
         Vector2<T> d = b - *this;
         return *this + d.clampmax(delta);

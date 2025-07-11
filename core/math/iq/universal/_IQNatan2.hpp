@@ -38,7 +38,23 @@ namespace __iqdetails{
 template<const size_t Q, const uint8_t type>
 constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
 {
-    uint8_t ui8Status = 0;
+    /*
+     * Extract the sign from the inputs and set the following status bits:
+     *
+     *      status = xxxxxTQS
+     *      x = unused
+     *      T = transform was applied
+     *      Q = 2nd or 3rd quadrant (-x)
+     *      S = sign bit needs to be set (-y)
+     */
+
+    struct Status{
+        uint8_t y_is_neg:1;
+        uint8_t x_is_neg:1;
+        uint8_t applied:1;
+    };
+
+    Status status = {0};
     uint8_t ui8Index;
 
     uint32_t uiqNInputX;
@@ -49,21 +65,13 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
     const int32_t *piq32Coeffs;
     uint32_t uiq31Input;
 
-    /*
-     * Extract the sign from the inputs and set the following status bits:
-     *
-     *      ui8Status = xxxxxTQS
-     *      x = unused
-     *      T = transform was applied
-     *      Q = 2nd or 3rd quadrant (-x)
-     *      S = sign bit needs to be set (-y)
-     */
+
     if (iqNInputY < 0) {
-        ui8Status |= 1;
+        status.y_is_neg = 1;
         iqNInputY = -iqNInputY;
     }
     if (iqNInputX < 0) {
-        ui8Status |= 2;
+        status.x_is_neg = 1;
         iqNInputX = -iqNInputX;
     }
 
@@ -78,15 +86,15 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
      *     iq31 = _IQ31div(iqN, iqN);
      */
     if (uiqNInputX < uiqNInputY) {
-        ui8Status |= 4;
-        uiq31Input = std::bit_cast<uint32_t>(_UIQdiv<31>(
+        status.applied = 1;
+        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
             _iq<31>::from_i32(uiqNInputX), _iq<31>::from_i32(uiqNInputY)));
     } else if((uiqNInputX > uiqNInputY)) {
-        uiq31Input = std::bit_cast<uint32_t>(_UIQdiv<31>(
+        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
             _iq<31>::from_i32(uiqNInputY), _iq<31>::from_i32(uiqNInputX)));
     }else{
-        // uiq31Input = /0x04000000;
-        uiq31Input = 1u << 31;
+        uiq32ResultPU = 0x20000000;
+        goto end_series;
     }
 
     /* Calculate the index using the left 8 most bits of the input. */
@@ -94,7 +102,7 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
     ui8Index = ui8Index & 0x00fc;
 
     /* Set the coefficient pointer. */
-    piq32Coeffs = &_IQ32atan_coeffs[ui8Index];
+    piq32Coeffs = &__iqdetails::_IQ32atan_coeffs[ui8Index];
 
 
     /*
@@ -120,21 +128,21 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
 
     /* ((c3*x + c2)*x + c1)*x + c0 */
     uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
-
+end_series:
     /* Check if we applied the transformation. */
-    if (ui8Status & 4) {
+    if (status.applied) {
         /* atan(y/x) = pi/2 - uiq32ResultPU */
         uiq32ResultPU = (uint32_t)(0x40000000 - uiq32ResultPU);
     }
 
     /* Check if the result needs to be mirrored to the 2nd/3rd quadrants. */
-    if (ui8Status & 2) {
+    if (status.x_is_neg) {
         /* atan(y/x) = pi - uiq32ResultPU */
         uiq32ResultPU = (uint32_t)(0x80000000 - uiq32ResultPU);
     }
 
     /* Round and convert result to correct format (radians/PU and iqN type). */
-    if constexpr(type == TYPE_PU) {
+    if constexpr(type ==  TYPE_PU) {
         uiq32ResultPU += (uint32_t)1 << (31 - Q);
         iqNResult = uiq32ResultPU >> (32 - Q);
     } else {
@@ -143,7 +151,7 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
          *
          *     iq31mpy(iq32, iq28) = iq29
          */
-        iq29Result = __mpyf_l(uiq32ResultPU, _iq28_twoPi);
+        iq29Result = __mpyf_l(uiq32ResultPU, __iqdetails::_iq28_twoPi);
 
         /* Only round IQ formats < 29 */
         if constexpr(Q < 29) {
@@ -158,7 +166,7 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
 
 
     /* Set the sign bit and result to correct quadrant. */
-    if (ui8Status & 1) {
+    if (status.y_is_neg) {
         return -iqNResult;
     } else {
         return iqNResult;

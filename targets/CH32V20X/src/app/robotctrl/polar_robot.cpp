@@ -24,8 +24,8 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
 
-#define DBG_UART hal::uart1
-#define COMM_UART hal::uart2
+#define DBG_UART hal::uart2
+#define COMM_UART hal::uart1
 #define COMM_CAN hal::can1
 
 #define PHY_SEL_CAN 0
@@ -35,6 +35,189 @@ using namespace ymd::robots;
 #define PHY_SEL PHY_SEL_CAN
 
 //CAN1 TX/PB9 RX/PB8
+
+
+#if 0
+namespace expr{
+static constexpr auto TYPE_PU         = (0);
+static constexpr auto TYPE_RAD        = (1);
+
+/**
+ * @brief Compute the 4-quadrant arctangent of the IQN input
+ *        and return the result.
+ *
+ * @param iqNInputY       IQN type input y.
+ * @param iqNInputX       IQN type input x.
+ * @param type            Specifies radians or per-unit operation.
+ * @param Q         IQ format.
+ *
+ * @return                IQN type result of 4-quadrant arctangent.
+ */
+/*
+ * Calculate atan2 using a 3rd order Taylor series. The coefficients are stored
+ * in a lookup table with 17 ranges to give an accuracy of XX bits.
+ *
+ * The input to the Taylor series is the ratio of the two inputs and must be
+ * in the range of 0 <= input <= 1. If the y argument is larger than the x
+ * argument we must apply the following transformation:
+ *
+ *     atan(y/x) = pi/2 - atan(x/y)
+ */
+template<const size_t Q, const uint8_t type>
+constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
+{
+    /*
+     * Extract the sign from the inputs and set the following status bits:
+     *
+     *      status = xxxxxTQS
+     *      x = unused
+     *      T = transform was applied
+     *      Q = 2nd or 3rd quadrant (-x)
+     *      S = sign bit needs to be set (-y)
+     */
+
+    struct Status{
+        uint8_t y_is_neg:1;
+        uint8_t x_is_neg:1;
+        uint8_t applied:1;
+    };
+
+    Status status = {0};
+    uint8_t ui8Index;
+
+    uint32_t uiqNInputX;
+    uint32_t uiqNInputY;
+    uint32_t uiq32ResultPU;
+    int32_t iqNResult;
+    int32_t iq29Result;
+    const int32_t *piq32Coeffs;
+    uint32_t uiq31Input;
+
+
+    if (iqNInputY < 0) {
+        status.y_is_neg = 1;
+        iqNInputY = -iqNInputY;
+    }
+    if (iqNInputX < 0) {
+        status.x_is_neg = 1;
+        iqNInputX = -iqNInputX;
+    }
+
+    /* Save inputs to unsigned iqN formats. */
+    uiqNInputX = (uint32_t)iqNInputX;
+    uiqNInputY = (uint32_t)iqNInputY;
+
+    /*
+     * Calcualte the ratio of the inputs in iq31. When using the iq31 div
+     * fucntions with inputs of matching type the result will be iq31:
+     *
+     *     iq31 = _IQ31div(iqN, iqN);
+     */
+    if (uiqNInputX < uiqNInputY) {
+        status.applied = 1;
+        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
+            _iq<31>::from_i32(uiqNInputX), _iq<31>::from_i32(uiqNInputY)));
+    } else if((uiqNInputX > uiqNInputY)) {
+        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
+            _iq<31>::from_i32(uiqNInputY), _iq<31>::from_i32(uiqNInputX)));
+    }else{
+        uiq32ResultPU = 0x20000000;
+        goto end_series;
+    }
+
+    /* Calculate the index using the left 8 most bits of the input. */
+    ui8Index = (uint16_t)(uiq31Input >> 24);
+    ui8Index = ui8Index & 0x00fc;
+
+    /* Set the coefficient pointer. */
+    piq32Coeffs = &__iqdetails::_IQ32atan_coeffs[ui8Index];
+
+
+    /*
+     * Calculate atan(x) using the following Taylor series:
+     *
+     *     atan(x) = ((c3*x + c2)*x + c1)*x + c0
+     */
+
+    /* c3*x */
+    uiq32ResultPU = __mpyf_l(uiq31Input, *piq32Coeffs++);
+
+    /* c3*x + c2 */
+    uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
+
+    /* (c3*x + c2)*x */
+    uiq32ResultPU = __mpyf_l(uiq31Input, uiq32ResultPU);
+
+    /* (c3*x + c2)*x + c1 */
+    uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
+
+    /* ((c3*x + c2)*x + c1)*x */
+    uiq32ResultPU = __mpyf_l(uiq31Input, uiq32ResultPU);
+
+    /* ((c3*x + c2)*x + c1)*x + c0 */
+    uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
+end_series:
+    /* Check if we applied the transformation. */
+    if (status.applied) {
+        /* atan(y/x) = pi/2 - uiq32ResultPU */
+        uiq32ResultPU = (uint32_t)(0x40000000 - uiq32ResultPU);
+    }
+
+    /* Check if the result needs to be mirrored to the 2nd/3rd quadrants. */
+    if (status.x_is_neg) {
+        /* atan(y/x) = pi - uiq32ResultPU */
+        uiq32ResultPU = (uint32_t)(0x80000000 - uiq32ResultPU);
+    }
+
+    /* Round and convert result to correct format (radians/PU and iqN type). */
+    if constexpr(type ==  TYPE_PU) {
+        uiq32ResultPU += (uint32_t)1 << (31 - Q);
+        iqNResult = uiq32ResultPU >> (32 - Q);
+    } else {
+        /*
+         * Multiply the per-unit result by 2*pi:
+         *
+         *     iq31mpy(iq32, iq28) = iq29
+         */
+        iq29Result = __mpyf_l(uiq32ResultPU, __iqdetails::_iq28_twoPi);
+
+        /* Only round IQ formats < 29 */
+        if constexpr(Q < 29) {
+            iq29Result += (uint32_t)1 << (28 - Q);
+            iqNResult = iq29Result >> (29 - Q);
+        }else if constexpr (Q == 29){
+            iqNResult = iq29Result;
+        }else{
+            iqNResult = iq29Result << (Q - 29);
+        }
+    }
+
+
+    /* Set the sign bit and result to correct quadrant. */
+    if (status.y_is_neg) {
+        return -iqNResult;
+    } else {
+        return iqNResult;
+    }
+}
+
+
+template<const size_t Q>
+constexpr _iq<Q> _IQNatan2(_iq<Q> iqNInputY, _iq<Q> iqNInputX){
+    return _iq<Q>::from_i32(__IQNatan2_impl<Q, TYPE_RAD>(
+        std::bit_cast<int32_t>(iqNInputY), 
+        std::bit_cast<int32_t>(iqNInputX))
+    );
+}
+
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+requires (Q < 30)
+__fast_inline constexpr iq_t<Q> atan2(const iq_t<P> a, const iq_t<P> b) {
+    return iq_t<Q>(_iq<Q>(_IQNatan2<P>(a.qvalue(),b.qvalue())));
+}
+}
+#endif
 
 class LedService{
 public:
@@ -87,6 +270,16 @@ private:
     hal::Gpio & gpio_;
 };
 
+template<typename T>
+static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
+    const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
+    return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
+}
+
+template<typename T>
+static constexpr T vec_angle(const Vector2<T> a){
+    return atan2(a.y, a.x);
+}
 
 struct PolarRobotSolver{
     struct Gesture{
@@ -119,11 +312,11 @@ struct PolarRobotSolver{
         const auto g_vec2 = g.to_vec2();
         const auto last_g_vec2 = last_g.to_vec2();
 
-        const auto delta_theta = g_vec2.angle_to(last_g_vec2);
+        const auto delta_theta = vec_angle_diff(g_vec2, last_g_vec2);
 
         return {
             .rho_meters = g_vec2.length(),
-            .theta_radians = last_g_vec2.angle() + delta_theta
+            .theta_radians = vec_angle(last_g_vec2) + delta_theta
         };
     }
 
@@ -151,6 +344,7 @@ public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
     virtual void set_position(real_t position) = 0;
+    virtual real_t get_last_position() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -177,6 +371,7 @@ public:
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
+    real_t get_last_position(){return 0;}
 };
 
 class JointMotorAdapter_ZdtStepper final
@@ -203,10 +398,12 @@ public:
     }
 
     void set_position(real_t position){
-        // if(is_homed_ == false) 
-        //     trip_and_panic("motor not homed");
-        // DEBUG_PRINTLN("set_pos");
-        stepper_.set_target_position(position).unwrap();;
+        last_position_ = position;
+        stepper_.set_target_position(position).unwrap();
+    }
+
+    real_t get_last_position(){
+        return last_position_ ;
     }
 
     void trig_homing(){
@@ -224,7 +421,7 @@ public:
             return false;
         }
 
-        return (clock::millis() - homing_begin_.unwrap()) > homing_timeout_;
+        return (clock::millis() - homing_begin_.unwrap()) > HOMING_TIMEOUT_;
     }
 
 
@@ -232,7 +429,8 @@ private:
     Config cfg_;
     ZdtStepper & stepper_;
 
-    static constexpr Milliseconds homing_timeout_ = 5000ms;
+    real_t last_position_;
+    static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 
@@ -259,8 +457,8 @@ public:
     };
 
     struct Params{
-        Some<JointMotorIntf *> joint_rho;
-        Some<JointMotorIntf *> joint_theta;
+        Some<JointMotorIntf *> rho_joint;
+        Some<JointMotorIntf *> theta_joint;
     };
 
     using Solver = PolarRobotSolver;
@@ -271,8 +469,8 @@ public:
         const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(params.joint_rho.deref()),
-        joint_theta_(params.joint_theta.deref())
+        joint_rho_(params.rho_joint.deref()),
+        joint_theta_(params.theta_joint.deref())
     {;}
 
     void set_polar(const real_t rho_meters, const real_t theta_radians){
@@ -305,7 +503,8 @@ public:
 
         set_polar(
             sol.rho_meters, 
-            sol.theta_radians);
+            -ABS(sol.theta_radians)
+        );
     }
 
     void activate(){
@@ -394,58 +593,57 @@ class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
 
 
 // #define MOCK_TEST
+
 struct QueuePointIterator{
 
     explicit constexpr QueuePointIterator(
-        const std::span<const Vector2<q16>> data
+        const std::span<const Vector2<bf16>> data
     ):
         data_(data){;}
 
-    [[nodiscard]] constexpr Vector2<q16> next(){
-        // const auto curr_i = i;
-        // const auto p_dest = data_[curr_i];
-        // p = (p * 128).move_toward(p_dest * 128, 0.02_r) / 128;
-
-        // if(p.is_equal_approx(p_dest)){
-        //     const auto next_i = (i + 1) % data_.size();
-        //     i = next_i;
-        // }
-
-        // return p_dest;
+    [[nodiscard]] Vector2<q24> next(const q24 step){
 
         const auto curr_i = (i) % data_.size();
 
         
-        const auto p1 = data_[curr_i];
-        p = (p * 128).move_toward(p1 * 128, 0.02_r) / 128;
+        const auto p1 = Vector2{
+            q24::from(float(data_[curr_i].x)), 
+            q24::from(float(data_[curr_i].y))
+        };
+
+        p = p.move_toward(p1, step);
         // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
         // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
 
         // if(ABS(p.x - p1.x) < 0.00001_r) i++;
         if(p.is_equal_approx(p1)) i++;
+        // DEBUG_PRINTLN(p);
         return p;
-        // return Vector2<q16>(data_[0].x, data_.size());
-        // return Vector2<q16>(i, data_.size());
+        // return Vector2<q24>(data_[0].x, data_.size());
+        // return Vector2<q24>(i, data_.size());
     }
 
     [[nodiscard]] constexpr size_t index() const {
         return i;
     }
 private:
-    std::span<const Vector2<q16>> data_;
-    Vector2<q16> p = {};
+    std::span<const Vector2<bf16>> data_;
+    Vector2<q24> p = {};
     size_t i = 0;
 };
 
 void polar_robot_main(){
 
     DBG_UART.init({576000});
-
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    // DEBUGGER.force_sync(EN);
     DEBUGGER.no_brackets();
-
+    
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(5ms);
+    // }
 
     
     #ifndef MOCK_TEST
@@ -479,16 +677,16 @@ void polar_robot_main(){
 
     #endif
 
-    JointMotorAdapter_ZdtStepper joint_rho = {{
+    JointMotorAdapter_ZdtStepper rho_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    JointMotorAdapter_ZdtStepper joint_theta = {{
+    JointMotorAdapter_ZdtStepper theta_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    JointMotorAdapter_Mock joint_rho = {};
-    JointMotorAdapter_Mock joint_theta = {};
+    JointMotorAdapter_Mock rho_joint = {};
+    JointMotorAdapter_Mock theta_joint = {};
     #endif
 
     PolarRobotActuator robot_actuator = {
@@ -501,16 +699,16 @@ void polar_robot_main(){
             .theta_range = {-10_r, 10_r}
         },
         {
-            .joint_rho = &joint_rho, 
-            .joint_theta = &joint_theta
+            .rho_joint = &rho_joint, 
+            .theta_joint = &theta_joint
         }
     };
 
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
-        joint_rho.make_rpc_list("joint_rho"),
-        joint_theta.make_rpc_list("joint_theta")
+        rho_joint.make_rpc_list("rho_joint"),
+        theta_joint.make_rpc_list("theta_joint")
     );
 
     robots::ReplServer repl_server = {
@@ -519,23 +717,36 @@ void polar_robot_main(){
 
     constexpr auto SAMPLE_DUR = 700ms; 
 
-    auto it = QueuePointIterator{std::span(curve_data)};
+    auto it = QueuePointIterator{std::span(CURVE_DATA)};
 
-    while(true){
-        async::RepeatTimer timer{5ms};
+    // PANIC(std::span(CURVE_DATA).subspan(0, 10));
+
+    auto main_service = [&]{
+        static async::RepeatTimer timer{2ms};
         timer.invoke_if([&]{
-            const auto p = it.next();
+            const auto p = it.next(0.0001_q24);
 
             robot_actuator.set_position(p.x, p.y);
-            DEBUG_PRINTLN(p.x, p.y);
+            DEBUG_PRINTLN(
+                p.x, 
+                p.y, 
+                it.index(), 
+                rho_joint.get_last_position(), 
+                theta_joint.get_last_position()
+            );
 
             repl_server.invoke(list);
         });
-    }
-
+    };
 
     while(true){
-        DEBUG_PRINTLN(clock::millis());
+        main_service();
+        // const auto clock_time = clock::time();
+        // const auto [s0,c0] = sincos(clock_time);
+        // const auto [s,c] = std::make_tuple(s0, s0);
+        // const auto vec = Vector2{s,c};
+        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<real_t>(vec, vec.rotated(1.6_r*s0)));
+        // clock::delay(1ms);
     }
 }
 #endif
