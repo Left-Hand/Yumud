@@ -2,6 +2,8 @@
 
 #include "core/utils/Option.hpp"
 #include "core/string/string_view.hpp"
+#include "core/utils/serde.hpp"
+#include <utility>
 
 namespace ymd{
 
@@ -14,12 +16,7 @@ struct Month final{
         Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
     };
 
-
     using enum Kind;
-
-    static constexpr const char * MONTH_STR[] = 
-        {"Jan","Feb","Mar","Apr","May","Jun",
-        "Jul","Aug","Sep","Oct","Nov","Dec"};
 
     Kind kind;
 
@@ -71,6 +68,30 @@ struct Month final{
         }
     }
 
+private:
+    template<size_t... Is>
+    static constexpr std::array<uint32_t, sizeof...(Is)> make_month_hashes(std::index_sequence<Is...>) {
+        return {{hash(Month::MONTH_STR[Is])...}};
+    }
+
+    static constexpr const char * MONTH_STR[] = 
+        {"Jan","Feb","Mar","Apr","May","Jun",
+        "Jul","Aug","Sep","Oct","Nov","Dec"};
+
+    // static constexpr std::array<uint32_t, 12> HASH_TABLE = {
+    //     "Jan"_ha, 
+    //     "Feb"_ha,
+    //     "Mar"_ha,
+    //     "Apr"_ha,
+    //     "May"_ha,
+    //     "Jun"_ha,
+    //     "Jul"_ha,
+    //     "Aug"_ha,
+    //     "Sep"_ha,
+    //     "Oct"_ha,
+    //     "Nov"_ha,
+    //     "Dec"_ha
+    // };
 };
 
 using Day = uint8_t;
@@ -80,13 +101,9 @@ using Minute = uint8_t;
 using Seconds = uint8_t;
 
 struct Date final{
-
-    
     Year year;
     Month month;
     Day day;
-
-
 
     static consteval Date from_compiler(){
         return from_str(StringView(__DATE__)).unwrap();
@@ -151,6 +168,8 @@ struct Date final{
     }
 };
 
+// DERIVE_SERIALIZE_AS_TUPLE(Date)
+
 struct Time final{
 
     Hour hour;
@@ -207,6 +226,8 @@ struct Time final{
 };
 
 
+// DERIVE_SERIALIZE_AS_TUPLE(Date)
+
 struct Author final{
     static constexpr size_t MAX_NAME_LEN = 8;
     static constexpr Option<Author> from(const char * name){
@@ -238,6 +259,8 @@ private:
     std::array<char, MAX_NAME_LEN> name_;
 };
 
+// DERIVE_SERIALIZE_AS_TUPLE(Author)
+
 struct Version{
     uint8_t major;
     uint8_t minor;
@@ -257,6 +280,8 @@ struct Version{
         return hs << self.major << self.minor;
     }
 };
+
+// DERIVE_SERIALIZE_AS_TUPLE(Version)
 
 struct ReleaseInfo{
     Author author;

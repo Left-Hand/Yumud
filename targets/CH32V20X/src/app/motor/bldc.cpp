@@ -48,6 +48,7 @@
 
 #include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
+#include <atomic>
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -196,6 +197,33 @@ struct serde::Deserializer<serde::RawBytes, SetPositionCommand> {
     }
 };
 
+
+
+namespace ymd::async{
+namespace details{
+PRO_DEF_MEM_DISPATCH(_Memfunc_Push, push);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Pending, pending);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Freeleft, freeleft);
+
+PRO_DEF_MEM_DISPATCH(_Memfunc_Pop, pop);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Available, available);
+
+}
+
+// template<typename T>
+// struct SinkFacade : pro::facade_builder
+//     ::add_convention<details::_Memfunc_Push, void()>
+//     ::add_convention<details::_Memfunc_Pending, size_t(void) const>
+//     ::add_convention<details::_Memfunc_Freeleft, size_t(void) const>
+//     ::build {};
+    
+// struct SourceFacade : pro::facade_builder
+//     ::add_convention<details::_Memfunc_ReadChar, void(char &)>
+//     ::add_convention<details::_Memfunc_ReadChars, void(char *, size_t)>
+//     ::add_convention<details::_Memfunc_Available, size_t(void) const>
+//     ::build {};
+
+}
 }
 
 
@@ -215,6 +243,9 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
     return hal::CanStdId(id_u11);
 };
 
+
+
+
 struct MsgFactory{
     static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
         const auto id = comb_role_and_cmd(role, CommandKind::SetPosition);
@@ -223,6 +254,37 @@ struct MsgFactory{
         // return hal::CanMsg::from_list(id, {0});
     };
 };
+
+
+struct MoveCommand{
+    float x;
+    float y;
+};
+
+struct PressCommand{
+    float z;
+};
+
+struct ReleaseCommand{
+    float z;
+};
+
+struct ReplaceCommand{
+    float x1, y1;
+    float x2, y2;
+};
+
+struct AbortCommand{
+    float z;
+};
+
+using VCommand = std::variant<
+    MoveCommand,
+    PressCommand,
+    ReleaseCommand,
+    ReplaceCommand,
+    AbortCommand
+>;
 
 void bldc_main(){
     // my_can_ring_main();

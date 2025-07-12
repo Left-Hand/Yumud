@@ -97,8 +97,6 @@ void st7789_main(void){
     auto & dev_rst = hal::portA[12];
 
 
-    
-    
     lcd_blk.outpp(HIGH);
     #endif
 

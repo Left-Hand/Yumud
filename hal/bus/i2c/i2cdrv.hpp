@@ -55,16 +55,16 @@ private:
     __fast_inline
     hal::HalResult write_payloads(Endian endian, const std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return hal::HalResult::Ok();
-        else{hal::HalResult err = write_payload(first, endian);
-            return err.is_err() ? err : write_payloads<Ts...>(endian, rest...);}
+        else{hal::HalResult res = write_payload(first, endian);
+            return res.is_err() ? res : write_payloads<Ts...>(endian, rest...);}
     }
 
     template<typename T, typename... Ts>   //TODO 改写为Y组合子
     __fast_inline
     hal::HalResult read_payloads(Endian endian, const std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return hal::HalResult::Ok();
-        else{hal::HalResult err = read_payload(first, endian);
-            return err.is_err() ? err : read_payloads<Ts...>(endian, rest...);}
+        else{hal::HalResult res = read_payload(first, endian);
+            return res.is_err() ? res : read_payloads<Ts...>(endian, rest...);}
     }
 
     template<valid_i2c_data T>
@@ -72,7 +72,7 @@ private:
         return iterate_bytes(
             pbuf, endian, 
             [&](const uint8_t byte, const bool is_end) -> hal::HalResult{ return i2c_.write(uint32_t(byte)); },
-            [](const hal::HalResult err) -> bool {return err.is_err();},
+            [](const hal::HalResult res) -> bool {return res.is_err();},
             []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
     }
@@ -80,8 +80,12 @@ private:
     template<valid_i2c_data Tfirst, valid_i2c_data ... Trest>
     hal::HalResult operate_payloads(const std::span<Tfirst> pfirst, const std::span<Trest>... prest, const Endian endian){
         if constexpr(std::is_const_v<Tfirst>) {
-            if(const auto err = this->write_payload(pfirst, endian); err.is_err()) return err;}
-        else {if(const auto err = this->read_payload(pfirst, endian); err.is_err()) return err;}
+            if(const auto res = this->write_payload(pfirst, endian); 
+                res.is_err()) return res;
+        }else {
+            if(const auto res = this->read_payload(pfirst, endian); 
+                res.is_err()) return res;
+        }
 
         if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(prest..., endian);
         else return hal::HalResult::Ok();
@@ -92,7 +96,7 @@ private:
         return iterate_bytes(
             data, len, endian, 
             [&](const uint8_t byte, const bool is_end) -> hal::HalResult{ return i2c_.write(uint32_t(byte)); },
-            [](const hal::HalResult err) -> bool {return err.is_err();},
+            [](const hal::HalResult res) -> bool {return res.is_err();},
             []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
     }
@@ -104,8 +108,8 @@ private:
         return iterate_bytes(
             pbuf, endian, 
             [&](uint8_t & byte, const bool is_end) -> hal::HalResult{
-                uint32_t dummy = 0; auto err = i2c_.read(dummy, is_end ? NACK : ACK); byte = uint8_t(dummy); return err;},
-            [](const hal::HalResult err) -> bool {return err.is_err();},
+                uint32_t dummy = 0; auto res = i2c_.read(dummy, is_end ? NACK : ACK); byte = uint8_t(dummy); return res;},
+            [](const hal::HalResult res) -> bool {return res.is_err();},
             []() -> hal::HalResult {return hal::HalResult::Ok();}
         );
         
@@ -118,8 +122,8 @@ private:
         Fn && fn
     ){
         const auto guard = i2c_.create_guard();
-        if(const auto err = i2c_.begin(slave_addr_.to_write_req()); err.is_err()) return err;
-        if(const auto err = this->write_payload(std::span(&addr, 1), endian); err.is_err()) return err;
+        if(const auto res = i2c_.begin(slave_addr_.to_write_req()); res.is_err()) return res;
+        if(const auto res = this->write_payload(std::span(&addr, 1), endian); res.is_err()) return res;
         return std::forward<Fn>(fn)();
     }
 
