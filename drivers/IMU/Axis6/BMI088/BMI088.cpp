@@ -64,7 +64,8 @@ IResult<> BMI088_Acc::validate(){
         // | interrupts[0].enable_output(EN)
         // | interrupts[1].enable_output(EN)
         // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);})
-    ;
+
+    return Ok();
 }
 
 IResult<> BMI088_Acc::update(){

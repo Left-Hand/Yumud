@@ -201,7 +201,7 @@ IResult<> PMW3901::set_led(bool ledOn){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = write_reg(0x7f, 0x00);
         res.is_err()) return Err(res.unwrap_err());
-    ;
+    return Ok();
 }
 
 IResult<> PMW3901::read_data(){

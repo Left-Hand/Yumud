@@ -1,19 +1,35 @@
 #pragma once
 
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/vport.hpp"
-#include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "concept/pwm_channel.hpp"
 #include "core/io/regs.hpp"
-#include "types/vectors/vector2/vector2.hpp"
 
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/vport.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
+#include "drivers/CommonIO/Led/rgbLed.hpp"
+#include "types/vectors/vector2/vector2.hpp"
+
+#include "core/utils/result.hpp"
+#include "core/utils/Errno.hpp"
+
+// https://blog.csdn.net/weixin_44793491/article/details/105781595
 
 namespace ymd::drivers{
 struct Ps2Joystick_Prelude{
-    enum class JoyStickEvent:uint8_t{
+    enum class Error_Kind:uint8_t{
+        CantParseAtDigitMode,
+        Unreachable
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    FRIEND_DERIVE_DEBUG(Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class JoyStickChannel:uint8_t{
         SELECT,
         L3,
         R3,
@@ -37,7 +53,7 @@ struct Ps2Joystick_Prelude{
     };
 
 
-    enum class DevID:uint8_t{
+    enum class DevId:uint8_t{
         UNINIT = 0,
         NONE = 0x01,
         DIGIT = 0x41,
@@ -46,14 +62,39 @@ struct Ps2Joystick_Prelude{
         ANAGREEN = 0x53
     };
 
+    friend OutputStream & operator<<(OutputStream & os, const DevId dev_id){
+        const auto pstr = [=] -> const char * {
+            switch(dev_id){
+                case DevId::UNINIT:
+                    return "UNINIT";
+                case DevId::NONE:
+                    return "NONE";
+                case DevId::DIGIT:
+                    return "DIGIT";
+                case DevId::NEGCON:
+                    return "NEGCON";
+                case DevId::ANARED:
+                    return "ANARED";
+                case DevId::ANAGREEN:
+                    return "ANAGREEN";
+                default:
+                    return nullptr;
+            }
+        }();
+
+        if(pstr == nullptr){
+            return os << "UNKNOWN(" << static_cast<uint8_t>(dev_id) << ")";
+        }
+        return os << pstr;
+    }
+
     enum class PressLevel:uint8_t{
         Pressed = 0,
         UnPress = 1
     };
 
-    struct DataFrame{
+    struct RxPayload{
         #pragma pack(push, 1)
-        DevID dev_id = DevID::NONE;
 
         struct Modifiers{
             PressLevel select:1;
@@ -74,143 +115,139 @@ struct Ps2Joystick_Prelude{
             PressLevel circ:1;
             PressLevel cross:1;
             PressLevel squ:1;
+
+            constexpr std::bitset<16> to_bitset() const {
+                return std::bitset<16>(std::bit_cast<uint16_t>(*this));
+            }
         };
 
         static_assert(sizeof(Modifiers) == 2);
 
         Modifiers modifiers;
 
-        uint8_t rx;
-        uint8_t ry;
-        uint8_t lx;
-        uint8_t ly;
+        // uint8_t rx;
+        // uint8_t ry;
+        // uint8_t lx;
+        // uint8_t ly;
+
+        struct JoystickPosition{
+            uint8_t x;
+            uint8_t y;
+
+            constexpr Vector2<real_t> to_position() const{
+                constexpr auto SCALE = real_t(1.0/510);
+                return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
+                // return {x,y};
+            }
+        };
+
+        JoystickPosition right_joystick;
+        JoystickPosition left_joystick;
 
         #pragma pack(pop)
 
-        std::span<uint8_t> to_bytes() {
+        constexpr uint8_t query_channel(const JoyStickChannel event) const {
+            switch(event){
+                case JoyStickChannel::SELECT:
+                    return bool(PressLevel::Pressed == modifiers.select);
+                case JoyStickChannel::L3:
+                    return bool(PressLevel::Pressed == modifiers.l3);
+                case JoyStickChannel::R3:
+                    return bool(PressLevel::Pressed == modifiers.r3);
+                case JoyStickChannel::START:
+                    return bool(PressLevel::Pressed == modifiers.start);
+                case JoyStickChannel::UP:
+                    return bool(PressLevel::Pressed == modifiers.up);
+                case JoyStickChannel::RIGHT:
+                    return bool(PressLevel::Pressed == modifiers.right);
+                case JoyStickChannel::DOWN:
+                    return bool(PressLevel::Pressed == modifiers.down);
+                case JoyStickChannel::LEFT:
+                    return bool(PressLevel::Pressed == modifiers.left);
+
+
+                case JoyStickChannel::L2:
+                    return bool(PressLevel::Pressed == modifiers.l2);
+                case JoyStickChannel::R2:
+                    return bool(PressLevel::Pressed == modifiers.r2);
+                case JoyStickChannel::L1:
+                    return bool(PressLevel::Pressed == modifiers.l1);
+                case JoyStickChannel::R1:
+                    return bool(PressLevel::Pressed == modifiers.r1);
+                case JoyStickChannel::DELTA:
+                    return bool(PressLevel::Pressed == modifiers.delta);
+                case JoyStickChannel::CIRC:
+                    return bool(PressLevel::Pressed == modifiers.circ);
+                case JoyStickChannel::CROSS:
+                    return bool(PressLevel::Pressed == modifiers.cross);
+                case JoyStickChannel::SQU:
+                    return bool(PressLevel::Pressed == modifiers.squ);
+
+
+                case JoyStickChannel::RX:
+                    return right_joystick.x;
+                case JoyStickChannel::RY:
+                    return right_joystick.y;
+                case JoyStickChannel::LX:
+                    return left_joystick.x;
+                case JoyStickChannel::LY:
+                    return left_joystick.y;
+
+                default:
+                    __builtin_unreachable();
+            }
+        }
+
+        constexpr Vector2i left_direction() const{
+            Vector2i dir;
+
+            if(PressLevel::Pressed == modifiers.left) 
+                dir += Vector2i::LEFT;
+            if(PressLevel::Pressed == modifiers.right) 
+                dir += Vector2i::RIGHT;
+            if(PressLevel::Pressed == modifiers.up) 
+                dir += Vector2i::UP;
+            if(PressLevel::Pressed == modifiers.down) 
+                dir += Vector2i::DOWN;
+
+            return dir;
+        }
+
+        std::span<uint8_t> as_bytes() {
             return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(*this));
         }
+
     };
 
-    DataFrame frame;
 
-    static constexpr size_t FRAME_SIZE = sizeof(DataFrame);
-    static_assert(FRAME_SIZE == 7);
+
+    static constexpr size_t FRAME_SIZE = sizeof(RxPayload);
+    static_assert(FRAME_SIZE == 6);
+};
+
+struct Ps2Joystick_Phy:public Ps2Joystick_Prelude{
+    #if 0
+
+    #endif
 };
 
 class Ps2Joystick final:public Ps2Joystick_Prelude{
-    
 public:
-    Ps2Joystick(hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    void init(){
-        // Initialize the PS2 controller and set up the necessary pins
-        // Configure the SPI interface and enable the controller
+    explicit Ps2Joystick(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit Ps2Joystick(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+        
+    IResult<> init();
+    IResult<> update();
+    IResult<DevId> devid() const {
+        return Ok(dev_id_);
     }
-
-    void update(){
-        // Read and process data from the PS2 controller
-        // Update the 'frame' struct with the new data
-
-        DataFrame new_frame;
-        spi_drv_.write_single<uint8_t>((uint8_t)0x01).unwrap_err();
-
-        spi_drv_.transceive_single<uint8_t>(
-            reinterpret_cast<uint8_t &>(frame.dev_id), 
-            (uint8_t)0x42).unwrap_err();
-        new_frame.dev_id = frame.dev_id;
-
-        uint8_t permit;
-        spi_drv_.transceive_single<uint8_t>(permit, uint8_t(0x00)).unwrap_err();
-
-        spi_drv_.read_burst<uint8_t>(new_frame.to_bytes()).unwrap_err();
-
-        if(permit == 0x5a){
-            frame = new_frame;
-        }
-    }
-
-    DevID id(){
-        return frame.dev_id;
-    }
-
-    uint8_t query(const JoyStickEvent event){
-        switch(event){
-            case JoyStickEvent::SELECT:
-                return PressLevel::Pressed == frame.modifiers.select;
-            case JoyStickEvent::L3:
-                return PressLevel::Pressed == frame.modifiers.l3;
-            case JoyStickEvent::R3:
-                return PressLevel::Pressed == frame.modifiers.r3;
-            case JoyStickEvent::START:
-                return PressLevel::Pressed == frame.modifiers.start;
-            case JoyStickEvent::UP:
-                return PressLevel::Pressed == frame.modifiers.up;
-            case JoyStickEvent::RIGHT:
-                return PressLevel::Pressed == frame.modifiers.right;
-            case JoyStickEvent::DOWN:
-                return PressLevel::Pressed == frame.modifiers.down;
-            case JoyStickEvent::LEFT:
-                return PressLevel::Pressed == frame.modifiers.left;
-
-
-            case JoyStickEvent::L2:
-                return PressLevel::Pressed == frame.modifiers.l2;
-            case JoyStickEvent::R2:
-                return PressLevel::Pressed == frame.modifiers.r2;
-            case JoyStickEvent::L1:
-                return PressLevel::Pressed == frame.modifiers.l1;
-            case JoyStickEvent::R1:
-                return PressLevel::Pressed == frame.modifiers.r1;
-            case JoyStickEvent::DELTA:
-                return PressLevel::Pressed == frame.modifiers.delta;
-            case JoyStickEvent::CIRC:
-                return PressLevel::Pressed == frame.modifiers.circ;
-            case JoyStickEvent::CROSS:
-                return PressLevel::Pressed == frame.modifiers.cross;
-            case JoyStickEvent::SQU:
-                return PressLevel::Pressed == frame.modifiers.squ;
-
-
-            case JoyStickEvent::RX:
-                return frame.rx;
-            case JoyStickEvent::RY:
-                return frame.ry;
-            case JoyStickEvent::LX:
-                return frame.lx;
-            case JoyStickEvent::LY:
-                return frame.ly;
-
-            default:
-                __builtin_unreachable();
-        }
-    }
-
-    Vector2<real_t> get_left_joystick() const {
-        return Vector2<real_t>{frame.lx-127, 127-frame.ly}/128;
-    }
-
-    Vector2<real_t> get_right_joystick() const {
-        return Vector2<real_t>{frame.rx-127, 127-frame.ry}/128;
-    }
-
-    Vector2i get_left_direction() const{
-        Vector2i dir;
-
-        if(PressLevel::Pressed == frame.modifiers.left) 
-            dir += Vector2i::LEFT;
-        if(PressLevel::Pressed == frame.modifiers.right) 
-            dir += Vector2i::RIGHT;
-        if(PressLevel::Pressed == frame.modifiers.up) 
-            dir += Vector2i::UP;
-        if(PressLevel::Pressed == frame.modifiers.down) 
-            dir += Vector2i::DOWN;
-
-        // return dir;
-
-        return dir;//why?
-    }
+    IResult<RxPayload> read_info() const;
 private:
-    hal::SpiDrv & spi_drv_;
+    hal::SpiDrv spi_drv_;
+    DevId dev_id_ = DevId::NONE;
+    RxPayload rx_payload_;
 };
 
 }

@@ -40,7 +40,7 @@ void gpio_tb(ymd::hal::GpioIntf & gpio);
 void pca_main();
 void st77xx_tb(ymd::hal::Spi & spi);
 
-void joystick_tb(ymd::OutputStream & logger);
+void joystick_main();
 
 void dma_tb(ymd::OutputStream & logger, ymd::hal::DmaChannel & channel);
 

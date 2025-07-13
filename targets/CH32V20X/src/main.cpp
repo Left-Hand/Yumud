@@ -32,7 +32,8 @@ int main(){
     // tm1637_main();
     // ads7830_main();
     // polar_robot_main();
-    bldc_main();
+    // bldc_main();
+    joystick_main();
     // rrs3_robot_main();
     // can_ring_main();
     // aw9523_main();

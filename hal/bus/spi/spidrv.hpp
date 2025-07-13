@@ -54,7 +54,6 @@ public:
     void set_endian(const Endian endian){endian_ = endian;}
     void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 
-    uint8_t index_;
 public:
     [[nodiscard]]
     hal::HalResult release(){
@@ -277,7 +276,6 @@ hal::HalResult SpiDrv::transceive_burst(
     {
         const auto N = pbuf_rx.size();
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
-        uint32_t ret = 0;
         for(size_t i = 0; i < N; i++) {
             uint32_t dummy = 0;
             spi_.transceive(dummy, pbuf_tx[i]);
