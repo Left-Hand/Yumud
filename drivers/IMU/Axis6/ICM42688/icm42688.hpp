@@ -15,7 +15,7 @@ public:
     ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):phy_(spi, idx){;}
     ICM42688(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
 
-    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> init(const Config & cfg);
     
     [[nodiscard]] IResult<> update();
 
@@ -38,10 +38,14 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+            res.is_err()) return res;
+        reg.apply();
+        return Ok();
     }
 
     [[nodiscard]] IResult<> read_reg(auto & reg){
@@ -50,43 +54,16 @@ private:
         return phy_.read_reg(reg.address, reg.as_ref());
     };
 
-    static constexpr q24 calc_gyr_lsb(const GyrFs fs){
-        /*Turn Into Radian*/
-        constexpr EnumArray<GyrFs, q24> map = EnumArray<GyrFs, q24>{
-            q24(0.0010652644),
-            q24(0.00053263222),
-            q24(0.00026631611),
-            q24(0.00013315805),
-            q24(0.000066579027),
-            q24(0.000066579027/2),
-            q24(0.000066579027/4),
-            q24(0.000066579027/8)
-        };
-
-        return map[fs];
-    }
-
-    static constexpr q24 calc_acc_lsb(const AccFs fs){
-        constexpr EnumArray<AccFs, q24> map = {
-            q24( 0.0047856934),
-            q24( 0.0023928467),
-            q24( 0.0011964233),
-            q24(0.00059821167)
-        };
-
-        return map[fs];
-    }
-
     static constexpr q24 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000DPS  :      return 2000_deg;
-            case GyrFs::_1000DPS  :      return 1000_deg;
-            case GyrFs::_500DPS   :      return 500_deg;
-            case GyrFs::_250DPS   :      return 250_deg;
-            case GyrFs::_125DPS   :      return 125_deg;
-            case GyrFs::_62_5DPS  :      return 62.5_deg;
-            case GyrFs::_31_25DPS :      return 31.25_deg;
-            case GyrFs::_15_625DPS:      return 15.625_deg;
+            case GyrFs::_2000deg  :      return 2000_deg;
+            case GyrFs::_1000deg  :      return 1000_deg;
+            case GyrFs::_500deg   :      return 500_deg;
+            case GyrFs::_250deg   :      return 250_deg;
+            case GyrFs::_125deg   :      return 125_deg;
+            case GyrFs::_62_5deg  :      return 62.5_deg;
+            case GyrFs::_31_25deg :      return 31.25_deg;
+            case GyrFs::_15_625deg:      return 15.625_deg;
             default: __builtin_unreachable();
         }
     }
@@ -106,8 +83,8 @@ private:
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     
-    q24 lsb_acc_;
-    q24 lsb_gyr_;
+    q24 acc_scale_;
+    q24 gyr_scale_;
 };
 
 }

@@ -241,6 +241,7 @@ IResult<> PainterBase::draw_polygon(const std::span<const Vector2u> points){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = draw_line(points[0], points[count - 1]);
         res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 IResult<> PainterBase::draw_hollow_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){
@@ -260,16 +261,16 @@ IResult<> PainterBase::draw_filled_triangle(const Vector2u & p0,const Vector2u &
     int y2 = p2.y;
 
     if (y0 > y1) {
-        SWAP(y0, y1);
-        SWAP(x0, x1);
+        std::swap(y0, y1);
+        std::swap(x0, x1);
     }
     if (y1 > y2) {
-        SWAP(y2, y1);
-        SWAP(x2, x1);
+        std::swap(y2, y1);
+        std::swap(x2, x1);
     }
     if (y0 > y1) {
-        SWAP(y0, y1);
-        SWAP(x0, x1);
+        std::swap(y0, y1);
+        std::swap(x0, x1);
     }
 
     if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing

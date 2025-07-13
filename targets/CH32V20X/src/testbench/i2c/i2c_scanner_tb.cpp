@@ -30,8 +30,8 @@ using namespace ymd::hal;
 // #define SCL_GPIO hal::portD[2]
 // #define SDA_GPIO hal::portC[12]
 
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::portB[3]
+#define SDA_GPIO hal::portB[5]
 // #define SCL_GPIO hal::portC[12]
 // #define SDA_GPIO hal::portD[2]
 #endif

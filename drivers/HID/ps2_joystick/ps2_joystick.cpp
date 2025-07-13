@@ -61,6 +61,8 @@ IResult<> Ps2Joystick::update(){
 
     if(permit == 0x5a){
         rx_payload_ = rx_payload;
+    }else{
+        // PANIC{permit};
     }
 
     return Ok();

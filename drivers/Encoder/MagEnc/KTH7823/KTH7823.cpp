@@ -71,6 +71,7 @@ IResult<> KTH7823::update(){
         res.unwrap();
     });
 
+
     lap_position_ = u16_to_uni(data);
 
     return Ok();

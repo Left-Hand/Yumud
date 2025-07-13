@@ -128,8 +128,8 @@ class KTH7823 final:
 public:
     using Phy = KTH7823_Phy;
 public:
-    KTH7823(const Phy && phy):
-        phy_(std::move(phy)){;}
+    KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
+        phy_(Phy{spi, idx}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();

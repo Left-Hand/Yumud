@@ -791,7 +791,7 @@ void bldc_main(){
 
             // );
             const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.03_r;
+            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
 
             // for(const auto item: range){
             //     DEBUG_PRINTLN_IDLE(item, '?');
@@ -862,10 +862,12 @@ void bldc_main(){
         // uint8_t res = 100;
         // DEBUG_PRINTLN(;
         // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
-        DEBUG_PRINTLN(
-            (clock::micros() - u_begin).count(), 
-            StringView(arr.data()), 
-            rem_str.size()
+        DEBUG_PRINTLN_IDLE(
+            // (clock::micros() - u_begin).count(), 
+            // StringView(arr.data()), 
+            // rem_str.size(),
+            base_roll_,
+            base_omega_
             // strconv2::iq_from_str<16>("+.").examine()
         );
 

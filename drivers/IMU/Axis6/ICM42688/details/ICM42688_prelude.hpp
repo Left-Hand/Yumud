@@ -24,53 +24,59 @@ struct ICM42688_Prelude{
         _2G,
     };
 
-    enum class AccOdr:uint8_t
-    {
-        _32000HZ = 1,
-        _16000HZ,
-        _8000HZ,
-        _4000HZ,
-        _2000HZ,
-        _1000HZ,// default
-        _200HZ,
-        _100HZ,
-        _50HZ,
-        _25HZ,
-        _12_5HZ,
-        _6_25HZ,
-        _3_125HZ,
-        _1_5625HZ,
-        _500HZ,
+    enum class AccOdr:uint8_t{
+        _32000Hz = 1,
+        _16000Hz,
+        _8000Hz,
+        _4000Hz,
+        _2000Hz,
+        _1000Hz,// default
+        _200Hz,
+        _100Hz,
+        _50Hz,
+        _25Hz,
+        _12_5Hz,
+        _6_25Hz,
+        _3_125Hz,
+        _1_5625Hz,
+        _500Hz,
     };
 
 
     enum class GyrFs:uint8_t{
-        _2000DPS,// default
-        _1000DPS,
-        _500DPS,
-        _250DPS,
-        _125DPS,
-        _62_5DPS,
-        _31_25DPS,
-        _15_625DPS,
+        _2000deg,// default
+        _1000deg,
+        _500deg,
+        _250deg,
+        _125deg,
+        _62_5deg,
+        _31_25deg,
+        _15_625deg,
     };
 
     enum class GyrOdr:uint8_t{
-        _32000HZ,
-        _16000HZ,
-        _8000HZ,
-        _4000HZ,
-        _2000HZ,
-        _1000HZ,// default
-        _200HZ,
-        _100HZ,
-        _50HZ,
-        _25HZ,
-        _12_5HZ,
-        _X0HZ,
-        _X1HZ,
-        _X2HZ,
-        _500HZ,
+        _32000Hz,
+        _16000Hz,
+        _8000Hz,
+        _4000Hz,
+        _2000Hz,
+        _1000Hz,// default
+        _200Hz,
+        _100Hz,
+        _50Hz,
+        _25Hz,
+        _12_5Hz,
+        _X0Hz,
+        _X1Hz,
+        _X2Hz,
+        _500Hz,
+    };
+
+    struct Config{
+        AccOdr acc_odr = AccOdr::_1000Hz;
+        AccFs acc_fs = AccFs::_8G;
+        GyrOdr gyr_odr = GyrOdr::_1000Hz;
+        GyrFs gyr_fs = GyrFs::_1000deg;
     };
 
     enum class TempFiltBw:uint8_t{
@@ -163,45 +169,10 @@ struct ICM42688_Regs:public ICM42688_Prelude{
         uint16_t data;
     }DEF_R16(tempbuf_reg)
 
-    // #pragma pack(push, 1)
-    // struct R16_ACCEL_DATA_X:public Reg16<>{
-    //     static constexpr RegAddress address = 0x1f;
-    //     int16_t data;
-    // }DEF_R16(accel_data_x_reg)
-
-    // struct R16_ACCEL_DATA_Y:public Reg16<>{
-    //     static constexpr RegAddress address = 0x21;
-    //     int16_t data;
-    // }DEF_R16(accel_data_y_reg)
-
-    // struct R16_ACCEL_DATA_Z:public Reg16<>{
-    //     static constexpr RegAddress address = 0x23;
-    //     int16_t data;
-    // }DEF_R16(accel_data_z_reg)
-
-    // struct R16_GYRO_DATA_X:public Reg16<>{
-    //     static constexpr RegAddress address = 0x25;
-    //     int16_t data;
-    // }DEF_R16(gyro_data_x_reg)
-
-    // struct R16_GYRO_DATA_Y:public Reg16<>{
-    //     static constexpr RegAddress address = 0x27;
-    //     int16_t data;
-    // }DEF_R16(gyro_data_y_reg)
-
-    // struct R16_GYRO_DATA_Z:public Reg16<>{
-    //     static constexpr RegAddress address = 0x29;
-    //     int16_t data;
-    // }DEF_R16(gyro_data_z_reg)
-    // #pragma pack(pop)
-
     #pragma pack(push, 1)
     Vector3<int16_t> acc_data_;
     Vector3<int16_t> gyr_data_;
     #pragma pack(pop)
-
-    static_assert(sizeof(acc_data_) == 6);
-    static_assert(sizeof(gyr_data_) == 6);
     
     struct R16_TMST_FSYNC:public Reg16<>{
         static constexpr RegAddress address = 0x2B;

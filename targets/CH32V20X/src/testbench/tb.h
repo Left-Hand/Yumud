@@ -168,3 +168,4 @@ void mystepper_main();
 void polar_robot_main();
 void ads7830_main();
 void aw9523_main();
+void kth7823_main();
