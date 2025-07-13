@@ -10,13 +10,14 @@ namespace ymd::drivers{
 struct ICM42688_Prelude{
     static constexpr auto ICM42688_WHO_AM_I = 0x75;
 
-    //when ad0 is low
-    // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101000); 
+    struct I2cSlaveAddrMaker{
+        BoolLevel ad0_level;
 
-    //when ad0 is high
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001); 
+        constexpr hal::I2cSlaveAddr<7> to_i2c_addr() const {
+            return hal::I2cSlaveAddr<7>::from_u7(0b1101000 | (ad0_level == HIGH));
+        }
+    };
 
-    // static constexpr 
     enum class AccFs:uint8_t{
         _16G,// default
         _8G,

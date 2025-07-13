@@ -24,7 +24,9 @@ static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 
 #define PHY_SEL_I2C 0
 #define PHY_SEL_SPI 1
+
 #define PHY_SEL PHY_SEL_I2C
+// #define PHY_SEL PHY_SEL_SPI
 
 [[maybe_unused]]
 static void icm42688_tb(ICM42688 & imu){
@@ -32,7 +34,12 @@ static void icm42688_tb(ICM42688 & imu){
     DEBUG_PRINTLN("init started");
 
 
-    imu.init({}).examine();
+    imu.init({
+        .acc_odr = ICM42688::AccOdr::_200Hz,
+        .acc_fs = ICM42688::AccFs::_4G,
+        .gyr_odr = ICM42688::GyrOdr::_200Hz,
+        .gyr_fs = ICM42688::GyrFs::_1000deg
+    }).examine();
 
     q24 z = 0;
     Microseconds exe = 0us;
@@ -81,7 +88,8 @@ static void icm42688_tb(ICM42688 & imu){
         DEBUG_PRINTLN(
             // 0
             // ,gest
-            acc_, gyr_
+            // acc_, gyr_
+            gyr_, z
             // ,euler
             // ,acc
         //     ,gyr
@@ -110,10 +118,11 @@ void icm42688_main(){
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
-    // i2c.init(2000_KHz);
+    i2c.init(2000_KHz);
 
     ICM42688 imu = {
-        &i2c
+        &i2c,
+        ICM42688::I2cSlaveAddrMaker{.ad0_level = HIGH}.to_i2c_addr()
     };
     #elif PHY_SEL == PHY_SEL_SPI
 

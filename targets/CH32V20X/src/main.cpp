@@ -35,8 +35,8 @@ int main(){
     // bldc_main();
     // kth7823_main();
     // joystick_main();
-    // icm42688_main();
-    mmc5983_main();
+    icm42688_main();
+    // mmc5983_main();
     i2c_scanner_main();
     // rrs3_robot_main();
     // can_ring_main();
