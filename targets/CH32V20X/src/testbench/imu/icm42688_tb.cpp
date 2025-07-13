@@ -22,6 +22,10 @@ using namespace ymd::drivers;
 static constexpr uint ISR_FREQ = 500;
 static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 
+#define PHY_SEL_I2C 0
+#define PHY_SEL_SPI 1
+#define PHY_SEL PHY_SEL_I2C
+
 [[maybe_unused]]
 static void icm42688_tb(ICM42688 & imu){
 
@@ -100,25 +104,30 @@ void icm42688_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
+    clock::delay(200ms);
+
+    #if PHY_SEL == PHY_SEL_I2C
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     // i2c.init(2000_KHz);
 
-    clock::delay(200ms);
+    ICM42688 imu = {
+        &i2c
+    };
+    #elif PHY_SEL == PHY_SEL_SPI
 
     auto & spi = spi1;
     spi.init({18_MHz});
 
-    // ICM42688 imu = {
-    //     SpiDrv(
-    //         &spi, 
-    //         spi.allocate_cs_gpio(&portA[15]).unwrap()
-    //     )
-    // };
     ICM42688 imu = {
-        &i2c
+        SpiDrv(
+            &spi, 
+            spi.allocate_cs_gpio(&portA[15]).unwrap()
+        )
     };
 
+    #endif
+    
     icm42688_tb(imu);
 }

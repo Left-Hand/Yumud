@@ -42,7 +42,8 @@ template<typename T = void>
 using IResult = Result<T, Error>; 
 
 IResult<> ICM42688::init(const Config & cfg){
-	if(const auto res = validate();
+	static constexpr size_t MAX_RETRY_TIMES = 20;
+	if(const auto res = retry(MAX_RETRY_TIMES, [&]{return validate();});
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*软重启*/

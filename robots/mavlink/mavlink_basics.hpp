@@ -5,7 +5,7 @@
 #include "core/math/real.hpp"
 #include "core/polymorphism/reflect.hpp"
 
-namespace ymd::net::mavlink{
+namespace ymd::mavlink{
 
 template<typename T>
 class Sink;

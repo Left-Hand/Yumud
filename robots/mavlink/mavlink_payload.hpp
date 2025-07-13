@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "core/polymorphism/reflect.hpp"
 
-namespace ymd::net::mavlink::payload{
+namespace ymd::mavlink::payload{
     
 struct Heartbeat {
     uint8_t type;

@@ -125,7 +125,7 @@ struct MMC5983_Regs:public MMC5983_Prelude{
     struct R8_ProductID:public Reg8<>{
         static constexpr RegAddress address = 0x2F;
         static constexpr uint8_t KEY = 0b00110000;
-        uint8_t product_id:8;
+        uint8_t product_id;
     }DEF_R8(product_id_reg)
 };
 
@@ -176,7 +176,14 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    
+    [[nodiscard]] __fast_inline 
+    IResult<> release(){
+        if(i2c_drv_){
+            if(const auto res = i2c_drv_->release();
+                res.is_err()) return Err(res.unwrap_err());
+        }
+        return Ok();
+    }
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;

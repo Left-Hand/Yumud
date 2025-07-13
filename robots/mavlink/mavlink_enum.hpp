@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ymd::net::mavlink {
+namespace ymd::mavlink {
 
 
 enum class MAV_TYPE:uint8_t{

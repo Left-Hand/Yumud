@@ -38,6 +38,7 @@ public:
     [[nodiscard]] IResult<> reset();
 
     [[nodiscard]] IResult<> init();
+
     [[nodiscard]] IResult<> validate();
     
     [[nodiscard]] IResult<> set_frequency(const uint freq, const real_t trim);
