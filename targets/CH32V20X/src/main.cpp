@@ -30,11 +30,12 @@ int main(){
     // oled_main();
     // light_tracking_main();
     // tm1637_main();
-    polar_robot_main();
-    // bldc_main();
+    // ads7830_main();
+    // polar_robot_main();
+    bldc_main();
     // rrs3_robot_main();
     // can_ring_main();
-    aw9523_main();
+    // aw9523_main();
 
     // ads1115_main();
     // embd_main();

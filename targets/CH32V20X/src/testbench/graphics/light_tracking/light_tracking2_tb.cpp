@@ -386,42 +386,6 @@ static void render_row(
 }
 
 
-
-Result<void, HalError> test_res1(){
-    DEBUG_PRINTLN("res1");
-    if(sys::chip::get_chip_id() == 0) return Ok();
-    return Err(HalError::NoSelecter);
-}
-
-Result<void, HalError> test_res2(){
-    DEBUG_PRINTLN("res2");
-    if(sys::chip::get_chip_id() == 0) return Ok();
-    return Err(HalError::NoSelecter);
-}
-
-void test_res(){
-    // if((test_res1() | test_res2()).is_ok()){
-    //     DEBUG_PRINTLN("res ok");
-    // }else{
-    //     DEBUG_PRINTLN("res fail");
-    // }
-    auto com_res = [] -> Result<void, HalError>{
-        // if(const auto res = test_res1(); res.is_err()) return res;
-        // if(const auto res = test_res2(); res.is_err()) return res;
-        // return Ok();
-
-        if((test_res1() | test_res2()).is_ok()) return Ok();
-        else return Err(HalError::NoSelecter);
-    }();
-
-    if(com_res.is_ok()){
-        DEBUG_PRINTLN("res ok");
-    }else{
-        DEBUG_PRINTLN("res fail");
-    }
-}
-
-
 // #if 0
 
 #define UART hal::uart2
@@ -477,7 +441,6 @@ void light_tracking_main(void){
     //     clock::delay(20us);
     // }
 
-    test_res();
     // spi.bind_cs_pin(lcd_cs, 0);
     const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
     // spi.init(144_MHz, CommStrategy::Blocking);

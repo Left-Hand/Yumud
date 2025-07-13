@@ -165,11 +165,11 @@ IResult<> AK09911C::selftest(){
 
 IResult<> AK09911C::validate(){
     auto check_vendor = [&] -> IResult<> {
-        if(const auto res = read_reg(wia1_reg) | read_reg(wia2_reg);
+        if(const auto res = read_reg(wia1_reg).then([this]{return read_reg(wia2_reg);});
             res.is_err()) return CHECK_RES(
                 res, 
                 "failed to read reg when validate, check RSTN pin is HIGH",
-                "error is", res.unwrap_err().as<hal::HalError>().unwrap());
+                "error is", res.unwrap_err());
 
         if(wia1_reg.as_val() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.as_val());

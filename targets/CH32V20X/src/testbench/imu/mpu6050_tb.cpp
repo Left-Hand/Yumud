@@ -24,18 +24,21 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::portB[1]
 #define MAG_ACTIVATED
 
-auto init_mpu6050(MPU6050 & mpu){
+auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
     mpu.set_package(MPU6050::Package::MPU6050);
-    return mpu.init({}) |
-    mpu.set_acc_fs(MPU6050::AccFs::_2G) |
-    mpu.enable_direct_mode(EN);
+    if(const auto res = mpu.init({});
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = mpu.set_acc_fs(MPU6050::AccFs::_2G);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = mpu.enable_direct_mode(EN);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 void ak8963_tb(hal::I2c & i2c){
     MPU6050 mpu{&i2c};
     
-    if(const auto res = init_mpu6050(mpu); 
-        res.is_err()) DEBUG_PRINTLN(res.unwrap_err().unwrap_as<HalError>());
+    init_mpu6050(mpu).examine();
 
     AK8963 aku{&i2c};
     aku.init().examine();
@@ -52,11 +55,7 @@ void ak8963_tb(hal::I2c & i2c){
 void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{&i2c};
 
-    if(const auto res = init_mpu6050(mpu); 
-        res.is_err()){ 
-        DEBUG_PRINTLN(
-            res.unwrap_err().unwrap_as<HalError>());
-    }
+    init_mpu6050(mpu).examine();
 
     while(true){
         mpu.update().examine();

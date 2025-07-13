@@ -62,27 +62,46 @@ IResult<> VL53L0X::init(){
 		write_byte_data(VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, data);
 		res.is_err()) return Err(res.unwrap_err());
 #endif
-	return write_byte_data(0x88, 0x00)
-	| write_byte_data(0x80, 0x01)
-	| write_byte_data(0xFF, 0x01)
-	| write_byte_data(0x00, 0x00)
-	| read_byte_data(0x91, data)
-	| write_byte_data(0x91, 0x3c)
-	| write_byte_data(0x00, 0x01)
-	| write_byte_data(0xFF, 0x00)
-	| write_byte_data(0x80, 0x00);
+	if(const auto res = write_byte_data(0x88, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x80, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = read_byte_data(0x91, data);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x91, 0x3c);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x80, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	return Ok();
 }
 
 IResult<> VL53L0X::start_conv(){	
 	if(!continuous_en_){
-		return write_byte_data(0x80, 0x01)
-			| write_byte_data(0xFF, 0x01)
-			| write_byte_data(0x00, 0x00)
-			| write_byte_data(0x91, 0x3c)
-			| write_byte_data(0x00, 0x01)
-			| write_byte_data(0xFF, 0x00)
-			| write_byte_data(0x80, 0x00)
-			| write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
+		if(const auto res = write_byte_data(0x80, 0x01);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0xFF, 0x01);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0x00, 0x00);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0x91, 0x3c);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0x00, 0x01);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0xFF, 0x00);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(0x80, 0x00);
+			res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
+			res.is_err()) return Err(res.unwrap_err());
+		return Ok();
     }else{
 		return write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_BACKTOBACK);
 	}	
@@ -91,7 +110,7 @@ IResult<> VL53L0X::start_conv(){
 IResult<bool> VL53L0X::is_busy(){
 	uint8_t data;
     if(const auto err = read_byte_data(VL53L0X_REG_SYSRANGE_START, data); err.is_err())
-		return Err(Error(err.unwrap_err()));
+		return Err(err.unwrap_err());
 	return Ok(data & 0x01);
 }
 
@@ -111,14 +130,19 @@ IResult<> VL53L0X::enable_cont_mode(const Enable en){
 }
 
 IResult<> VL53L0X::stop(){
-	return 
-		write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_SINGLESHOT)
-		| write_byte_data(0xFF, 0x01)
-		| write_byte_data(0x00, 0x00)
-		| write_byte_data(0x91, 0x00)
-		| write_byte_data(0x00, 0x01)
-		| write_byte_data(0xFF, 0x00)
-	;
+	if(const auto res = write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_SINGLESHOT);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x91, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	return Ok();
 }
 
 IResult<> VL53L0X::update(){

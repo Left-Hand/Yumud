@@ -23,7 +23,7 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while tx");
-            return Err(Error(Error::InvalidState));
+            return Err(Error::InvalidState);
 
         case States::TransmitFailed:
             LT8960L_PANIC("transmit failed");
@@ -34,35 +34,42 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const uint8_t> buf){
             [[fallthrough]];
 
         case States::Idle:{
-            return (exit_tx_rx()
-            | clear_fifo_write_and_read_ptr()
-            | start_listen_pkt()
-            | ensure_correct_0x08()
-            | enter_tx())
-            .to(0u)
-            .if_ok(
-                [&]{states_ = States::Transmitting;}
-            )
-            ;
+            if(const auto res = exit_tx_rx();
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = clear_fifo_write_and_read_ptr();
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = start_listen_pkt();
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = ensure_correct_0x08();
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = enter_tx();
+                res.is_err()) return Err(res.unwrap_err());
+            states_ = States::Transmitting;
+
+            return Ok(0u);
         }
 
         case States::Transmitting:{
 
-            const auto pkt_res = is_pkt_ready();
-            if (pkt_res.is_err()) return Err(pkt_res.unwrap_err());
-            if (false == pkt_res.unwrap()) return Ok(0u);
+            if(const auto res = is_pkt_ready(); 
+                res.is_err()) return Err(res.unwrap_err());
+            else if(res.unwrap() == false) return Ok(0u);
 
-            auto write_res = write_fifo(buf);
-            if(write_res.is_err()) return Err(write_res.unwrap_err());
+            if(const auto res = write_fifo(buf);
+                res.is_err()) return Err(res.unwrap_err());
 
 
             {
                 // auto cont_res = clear_fifo_write_ptr() | enter_tx() | start_listen_pkt();
-                auto cont_res = clear_fifo_write_ptr() | enter_tx() | start_listen_pkt();
-                if(cont_res.is_err()) return Err(cont_res.unwrap_err());
+                if(const auto res = clear_fifo_write_ptr();
+                    res.is_err()) return Err(res.unwrap_err());
+                if(const auto res = enter_tx();
+                    res.is_err()) return Err(res.unwrap_err());
+                if(const auto res = start_listen_pkt();
+                    res.is_err()) return Err(res.unwrap_err());
             }
     
-            return write_res;
+            return Ok(0u);
         }
     }
 }
@@ -71,7 +78,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while rx", uint8_t(states_.kind()));
-            return Err(Error(Error::InvalidState));
+            return Err(Error::InvalidState);
 
         case States::ReceiveFailed:
             LT8960L_DEBUG("receive failed");
@@ -100,25 +107,26 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
             //     if(res.unwrap() == true) return Ok(0u);
             // }
     
-            auto read_res =  read_fifo(buf);
-            
-            if (read_res.is_ok()){
-                auto continue_rx_res = 
-                        enter_rx() 
-                    | start_listen_pkt();
+            const auto len = ({
+                const auto res = read_fifo(buf);
+                if(res.is_err()){
+                    states_.timeout()++;
+                    if(states_.timeout() > MAX_RX_RETRY){
+                        states_ = States::ReceiveFailed;
+                        states_.timeout() = 0;
 
-                if(continue_rx_res.is_err()) return Err(continue_rx_res.unwrap_err());
-            }else{            
-                states_.timeout()++;
-                if(states_.timeout() > MAX_RX_RETRY){
-                    states_ = States::ReceiveFailed;
-                    states_.timeout() = 0;
-
-                    return Err(Error(Error::ReceiveTimeout));
+                        return Err(Error::ReceiveTimeout);
+                    }
                 }
-            }
+                res.unwrap();
+            });
+                
+            if(const auto res = enter_rx() ;
+                res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = start_listen_pkt();
+                res.is_err()) return Err(res.unwrap_err());
 
-            return read_res;
+            return Ok(len);
         }
     }
 }
@@ -169,23 +177,39 @@ Result<void, Error> LT8960L::init_ble(const Power power){
 
 
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
-    return validate()
-        | write_reg(1, 0x5781)
-        | write_reg(26, 0x3A00)
-        | set_tx_power(power)
-        | write_reg(28, 0x1800)    //频偏微调 0x1800~0x1807
-        | write_reg(35, 0x0300)    //重发3次=发1包 重发2包  最大15包
-        | write_reg(40, 0x4402)        //允错1位
-        | write_reg(41, 0xB000)        //打开CRC校验 FIFO首字节是长度信息
-        | write_reg(42, 0xFDB0)    
-        | write_reg(52, 0x8080)
-        | write_reg(15, 0xec4c) // 开启ble模式
-        | write_reg(32, 0x4A00)
-        | write_reg(36, 0xBED6) // 接入地址
-        | write_reg(39, 0x8E89)
-        | write_reg(44, 0x0101) // 1Mbps
-        | write_reg(45, 0x0080)
-    ;
+    if(const auto res = validate();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(1, 0x5781);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(26, 0x3A00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_tx_power(power);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(28, 0x1800);    //频偏微调 0x1800~0x1807
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(35, 0x0300);    //重发3次=发1包 重发2包  最大15包
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(40, 0x4402);        //允错1位
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(41, 0xB000);        //打开CRC校验 FIFO首字节是长度信息
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(42, 0xFDB0);    
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(52, 0x8080);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(15, 0xec4c); // 开启ble模式
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(32, 0x4A00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(36, 0xBED6); // 接入地址
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(39, 0x8E89);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(44, 0x0101); // 1Mbps
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(45, 0x0080);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 
@@ -297,76 +321,107 @@ Result<size_t, Error> LT8960L::receive_ble(std::span<uint8_t> buf){
 Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
-    return phy_.init() 
-    | validate()
+    if(const auto res = phy_.init();
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = validate();
+        res.is_err()) return Err(res.unwrap_err());
 
     // 无具体寄存器说明 直接参考手册
-    | write_reg(1, 0x5781)
+    if(const auto res = write_reg(1, 0x5781);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 无具体寄存器说明 直接参考手册
-    | write_reg(26, 0x3A00)
+    if(const auto res = write_reg(26, 0x3A00);
+        res.is_err()) return Err(res.unwrap_err());
 
-    | set_tx_power(power)
+    if(const auto res = set_tx_power(power);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 频偏微调 0x1800~0x1807
-    | write_reg(28, 0x1800)
+    if(const auto res = write_reg(28, 0x1800);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 数据包配置3Byte前导 32bits同步字 NRZ格式
-    | set_preamble_bytes(3)
-    | set_syncword_bytes(4)
-    | set_pack_type(PacketType::Manchester)
+    if(const auto res = set_preamble_bytes(3);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_syncword_bytes(4);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_pack_type(PacketType::Manchester);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 重发3次=发1包 重发2包  最大15包
-    | set_retrans_time(3) 
+    if(const auto res = set_retrans_time(3) ;
+        res.is_err()) return Err(res.unwrap_err());
 
-    | set_syncword(syncword)
+    if(const auto res = set_syncword(syncword);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 允错1位
-    | set_fifo_empty_threshold(8)
-    | set_fifo_full_threshold(16)
-    | set_syncword_tolerance_bits(1)
+    if(const auto res = set_fifo_empty_threshold(8);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_fifo_full_threshold(16);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_syncword_tolerance_bits(1);
+        res.is_err()) return Err(res.unwrap_err());
 
     // 打开CRC校验 FIFO首字节是长度信息
-    | write_reg(41, 0xB000)
-    | write_reg(42, 0xFDB0) 
+    if(const auto res = write_reg(41, 0xB000);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(42, 0xFDB0) ;
+        res.is_err()) return Err(res.unwrap_err());
 
 
-    | set_datarate(DataRate::_62_5K)
-    | clear_fifo_write_and_read_ptr()
-    | enable_gain_weaken(EN)
-    ;
+    if(const auto res = set_datarate(DataRate::_62_5K);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = clear_fifo_write_and_read_ptr();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = enable_gain_weaken(EN);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 Result<void, Error> LT8960L::init_rf(){
-    return Result<void, Error>(Ok())
         // REG 0x01 写0x5781,
-        | write_reg(0x01, 0x5781)
+    if(const auto res = write_reg(0x01, 0x5781);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x08 写0x6C50,
-        | write_reg(0x08, 0x6c50)
+    if(const auto res = write_reg(0x08, 0x6c50);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x26 写0x3A00, //调制幅度
-        | write_reg(0x26, 0x3a00)
+    if(const auto res = write_reg(0x26, 0x3a00);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x09 写0x7830， //发射功率
-        | write_reg(0x09, 0x7830)
+    if(const auto res = write_reg(0x09, 0x7830);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x2C 写0x1001, //调制速率62.5Kbps
-        | write_reg(0x2c, 0x1001)
+    if(const auto res = write_reg(0x2c, 0x1001);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x2D 写0x0552, //调制速率62.5Kbps
-        | write_reg(0x2d, 0x0552)
+    if(const auto res = write_reg(0x2d, 0x0552);
+        res.is_err()) return Err(res.unwrap_err());
         // REG 0x36 写 用户定义段
         // REG 0x39 写 用户定义段
         // REG 0x24 写0x8080, //重置FIFO
-        | write_reg(0x24, 0x8080)
-    ;
+    if(const auto res = write_reg(0x24, 0x8080);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 
 Result<void, Error> LT8960L::begin_receive(){
-    return (exit_tx_rx()
-    | ensure_correct_0x08()
-    | clear_fifo_write_and_read_ptr()
-    | enter_rx()
-    | start_listen_pkt())
-    .if_ok([&]{states_ = States::Receiving;})
-    ;
+    if(const auto res = exit_tx_rx();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = ensure_correct_0x08();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = clear_fifo_write_and_read_ptr();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = enter_rx();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = start_listen_pkt();
+        res.is_err()) return Err(res.unwrap_err());
+    states_ = States::Receiving;
+    return Ok();
 }
 
 Result<void, Error> LT8960L::begin_transmit(){
@@ -377,5 +432,6 @@ Result<void, Error> LT8960L::begin_transmit(){
     // .to(0u)
     // .if_ok([&]{is_receiving_ = true;})
     // ;
+    TODO();
     return Ok();
 }

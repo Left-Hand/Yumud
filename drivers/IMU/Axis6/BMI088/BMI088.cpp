@@ -51,11 +51,16 @@ IResult<> BMI088_Acc::verify_chip_id(){
 }
 
 IResult<> BMI088_Acc::validate(){
-    return reset()
-        | phy_.validate()
-        | retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);})
-        | set_acc_odr(AccOdr::_200Hz)
-        | set_acc_bwp(AccBwp::Normal)
+    if(const auto res = reset();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = phy_.validate();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);});
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_acc_odr(AccOdr::_200Hz);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_acc_bwp(AccBwp::Normal);
+        res.is_err()) return Err(res.unwrap_err());
         // | interrupts[0].enable_output(EN)
         // | interrupts[1].enable_output(EN)
         // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);})

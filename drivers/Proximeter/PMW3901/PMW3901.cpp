@@ -195,9 +195,12 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 
 
 IResult<> PMW3901::set_led(bool ledOn){
-    return write_reg(0x7f, 0x14)
-    | write_reg(0x6f, ledOn ? 0x1c : 0x00)
-    | write_reg(0x7f, 0x00)
+    if(const auto res = write_reg(0x7f, 0x14);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x6f, ledOn ? 0x1c : 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x7f, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
     ;
 }
 
@@ -260,11 +263,14 @@ IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list)
 }
 
 IResult<> PMW3901::validate(){
-    const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6)
-    | assert_reg(PMW3901_REG_Product_ID, 0x49);
+    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6);
+        res.is_err()) return Err(res.unwrap_err());
+    else if(res.unwrap() == false) return Err(Error::WrongChipId);
 
-    if(res.is_err()) return Err(res.unwrap_err());
-    if(res.unwrap() == false) return Err(Error::WrongChipId);
+    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49);
+        res.is_err()) return Err(res.unwrap_err());
+    else if(res.unwrap() == false) return Err(Error::WrongChipId);
+
     return Ok();
 }
 

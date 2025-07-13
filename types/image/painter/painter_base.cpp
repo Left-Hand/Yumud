@@ -101,11 +101,15 @@ IResult<> PainterBase::draw_filled_circle(const Vector2u & pos, const uint radiu
 
     while (x>=y) {
         // if(src_image->has_point(x0 - y))
-        const auto res = draw_hri_line(Vector2u(x0 - x, y0 + y), 2*x)
-        | draw_hri_line(Vector2u(x0 - y, y0 + x), 2*y)
-        | draw_hri_line(Vector2u(x0 - x, y0 - y), 2*x)
-        | draw_hri_line(Vector2u(x0 - y, y0 - x), 2*y);
-        if(res.is_err()) return res;
+        if(const auto res = draw_hri_line(Vector2u(x0 - x, y0 + y), 2*x);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = draw_hri_line(Vector2u(x0 - y, y0 + x), 2*y);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = draw_hri_line(Vector2u(x0 - x, y0 - y), 2*x);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = draw_hri_line(Vector2u(x0 - y, y0 - x), 2*y);
+            res.is_err()) return Err(res.unwrap_err());
+    
         if (err<=0) {
             y++;
             err += dy;
@@ -233,8 +237,10 @@ IResult<> PainterBase::draw_polyline(const std::span<const Vector2u> points){
 
 IResult<> PainterBase::draw_polygon(const std::span<const Vector2u> points){
     const auto count = points.size();
-    return draw_polyline(points) |
-    draw_line(points[0], points[count - 1]);
+    if(const auto res = draw_polyline(points);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = draw_line(points[0], points[count - 1]);
+        res.is_err()) return Err(res.unwrap_err());
 }
 
 IResult<> PainterBase::draw_hollow_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2){

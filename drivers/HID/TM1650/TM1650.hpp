@@ -30,16 +30,6 @@ struct TM1650_Prelude{
 
     template<typename T = void>
     using IResult = Result<T, Error>;
-};
-
-
-class TM1650_Phy final:public TM1650_Prelude{
-private:
-    hal::I2cSw i2c_;
-public:
-
-    TM1650_Phy(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
-        i2c_{scl_io, sda_io}{;}
 
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -83,7 +73,7 @@ public:
 
     static_assert(sizeof(DisplayCommand) == 1);
 
-    class KeyEvent{
+    struct KeyEvent{
     public:
         constexpr Option<uint8_t> row() const {return row_;}
         constexpr Option<uint8_t> col() const {return col_;}
@@ -107,21 +97,33 @@ public:
         Option<uint8_t> col_;
     };
 
+
+};
+
+
+class TM1650_Phy final:public TM1650_Prelude{
+private:
+    hal::I2cSw i2c_;
+public:
+
+    TM1650_Phy(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
+        i2c_{scl_io, sda_io}{;}
+
     IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
-        auto res = write_display_cmd(cmd);
+        if(const auto res = write_display_cmd(cmd);
+            res.is_err()) return Err(res.unwrap_err());
 
         for(size_t i = 0; i < pbuf.size(); i++){
-            if(res.is_err()) return res;
-            res = res | write_u8x2(
+            if(const auto res = write_u8x2(
                 AddressCommand::from_idx(i).as_u8(),
                 pbuf[i]
-            );
+            ); res.is_err()) return Err(res.unwrap_err());
         }
 
         return Ok();
     }
 
-    Result<KeyEvent, Error> read_key(){
+    IResult<KeyEvent> read_key(){
         // const auto guard = bus_.create_guard();
         // uint32_t buf;
         // auto res = bus_.begin(uint8_t(DataCommand::READ_KEY))

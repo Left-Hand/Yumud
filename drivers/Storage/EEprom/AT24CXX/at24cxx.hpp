@@ -92,13 +92,19 @@ public:
 
     IResult<> store_bytes(const Address begin, const std::span<const uint8_t> pbuf){
         const auto now = clock::millis();
-        return state_.add_store_task(begin, pbuf, pagesize_, now) 
-            | state_.initial(*this, now);
+        if(const auto res = state_.add_store_task(begin, pbuf, pagesize_, now);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = state_.initial(*this, now);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
     IResult<> load_bytes(const Address begin, const std::span<uint8_t> pbuf){
         const auto now = clock::millis();
-        return state_.add_load_task(begin, pbuf, pagesize_, now) 
-            | state_.initial(*this, now);
+        if(const auto res = state_.add_load_task(begin, pbuf, pagesize_, now);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = state_.initial(*this, now);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 private:
 

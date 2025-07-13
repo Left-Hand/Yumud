@@ -97,14 +97,14 @@ public:
     };
 
     IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
-        auto res = write_display_cmd(cmd);
+        if(const auto res = write_display_cmd(cmd);
+            res.is_err()) return Err(res.unwrap_err());
 
         for(size_t i = 0; i < pbuf.size(); i++){
-            if(res.is_err()) return res;
-            res = res | write_u8x2(
+            if(const auto res = write_u8x2(
                 AddressCommand::from_idx(i).as_u8(),
                 pbuf[i]
-            );
+            ); res.is_err()) return Err(res.unwrap_err());
         }
 
         return Ok();

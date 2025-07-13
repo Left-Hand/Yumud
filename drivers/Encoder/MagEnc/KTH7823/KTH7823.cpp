@@ -91,8 +91,11 @@ IResult<> KTH7823::set_zero_position(const real_t position){
     reg_high.data = raw16 >> 8;
 
     // return Ok();
-    return phy_.burn_reg(reg_low)
-    | phy_.burn_reg(reg_high);
+    if(const auto res = phy_.burn_reg(reg_low); 
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = phy_.burn_reg(reg_high); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 IResult<> KTH7823::set_trim_x(const real_t k){
