@@ -197,26 +197,44 @@ void DmaChannel::init(const Config & cfg){
     DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
 }
 
-void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
-    IRQn irq = IRQn_Type::Software_IRQn;
-    switch(dma_index_){
+static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t channel_index){
+    switch(dma_index){
+        #ifdef ENABLE_DMA1
         case 1:
-            irq = (IRQn)((int)DMA1_Channel1_IRQn + ((int)(DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * 
-                (channel_index_ - 1)));
-            break;
+            switch(channel_index){
+                case 1: return DMA1_Channel1_IRQn;
+                case 2: return DMA1_Channel2_IRQn;
+                case 3: return DMA1_Channel3_IRQn;
+                case 4: return DMA1_Channel4_IRQn;
+                case 5: return DMA1_Channel5_IRQn;
+                case 6: return DMA1_Channel6_IRQn;
+                case 7: return DMA1_Channel7_IRQn;
+                default: __builtin_unreachable();
+            }
+        #endif
         #ifdef ENABLE_DMA2
         case 2:
-            if(channel_index_ <= 5){
-                irq = (IRQn)((int)DMA2_Channel1_IRQn + 
-                    ((int)(DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index_ - 1)));
-            }else{
-                irq = (IRQn)((int)DMA2_Channel6_IRQn + 
-                    ((int)(DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index_ - 6)));
+            switch(channel_index){
+                case 1: return DMA2_Channel1_IRQn;
+                case 2: return DMA2_Channel2_IRQn;
+                case 3: return DMA2_Channel3_IRQn;
+                case 4: return DMA2_Channel4_IRQn;
+                case 5: return DMA2_Channel5_IRQn;
+                case 6: return DMA2_Channel6_IRQn;
+                case 7: return DMA2_Channel7_IRQn;
+                case 8: return DMA2_Channel8_IRQn;
+                case 9: return DMA2_Channel9_IRQn;
+                case 10: return DMA2_Channel10_IRQn;
+                case 11: return DMA2_Channel11_IRQn;
+                default: __builtin_unreachable();
             }
-            break;
         #endif
+        default: __builtin_unreachable();
     }
 
+}
+void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
+    const IRQn irq = map_inst_to_irq(dma_index_, channel_index_);
     NvicPriority::enable(_priority, IRQn(irq), en);
 }
 

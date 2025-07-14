@@ -53,10 +53,13 @@ Result<void, Error> LIS3DH::clear_flag(){
 
 Result<void, Error> LIS3DH::validate(){
     auto & reg = regs_.whoami_reg;
-    if(const auto res = verify_phy()
-        | reset()
-        | read_reg(reg);
-        res.is_err()) return res;
+
+    if(const auto res = verify_phy();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = reset();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
         
     if(reg.as_val() != reg.key)
         return Err(Error::WrongWhoAmI);

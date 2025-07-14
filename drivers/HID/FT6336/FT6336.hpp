@@ -14,10 +14,15 @@ namespace ymd::drivers{
 
 struct FT6336_Prelude{
 public:
-    enum class Error_Kind{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x38);
+    static constexpr auto MAX_I2C_BAUDRATE = 200000;
+    static constexpr uint8_t PANEL_ID = 0x11;
+    
+    enum class Error_Kind:uint8_t{
         Unspecified
     };
 
+    FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -25,8 +30,58 @@ public:
 
     using RegAddress = uint8_t;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x38);
-    static constexpr uint8_t PANEL_ID = 0x11;
+
+
+    static constexpr size_t CTP_MAX_TOUCH = 2;
+    typedef enum {
+        working_mode = 0b000,
+        factory_mode = 0b100,
+    } DEVICE_MODE_Enum;
+
+    typedef enum {
+        pollingMode = 0,
+        triggerMode = 1,
+    } G_MODE_Enum;
+
+
+    typedef enum {
+        keep_active_mode = 0,
+        switch_to_monitor_mode = 1,
+    } CTRL_MODE_Enum;
+    typedef enum {
+        touch = 0,
+        stream,
+        release,
+    } TouchStatusEnum;
+    typedef struct {
+        TouchStatusEnum status;
+        uint16_t x;
+        uint16_t y;
+    } TouchPointType;
+    typedef struct {
+        uint8_t touch_count;
+        TouchPointType tp[2];
+    } FT6336U_TouchPointType;
+
+    typedef struct
+    {
+        uint8_t ptNum                    : 4;
+        uint8_t tpDown                   : 1;
+        uint8_t tpPress                  : 1;
+        uint8_t res                      : 2;
+    } Status_bit;
+
+    typedef struct
+    {
+        uint16_t xpox[CTP_MAX_TOUCH];
+        uint16_t ypox[CTP_MAX_TOUCH];
+        union
+        {
+            uint8_t status;
+            Status_bit status_bit;
+        };
+    }stru_pos;
+
 };
 
 
@@ -172,21 +227,73 @@ struct FT6336_Regs:public FT6336_Prelude{
     }DEF_R8(offset_left_reg)
 };
 
-class FT6336:public FT6336_Regs{
+class FT6336U:public FT6336_Regs{
 public:
-    FT6336(const hal::I2cDrv & i2c_drv):
+    FT6336U(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    FT6336(hal::I2cDrv && i2c_drv):
+    FT6336U(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    FT6336(
+    FT6336U(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    [[nodiscard]] IResult<size_t> get_touch_cnt();
+    [[nodiscard]] IResult<> init();
+
 
     [[nodiscard]] IResult<GestureID> get_gesture_id();
+
+    IResult<uint8_t> get_device_mode();
+    IResult<>    set_device_mode(DEVICE_MODE_Enum);
+    IResult<uint8_t> get_td_status();
+    IResult<uint8_t> get_touch_number();
+    IResult<uint16_t> get_touch1_x();
+    IResult<uint16_t> get_touch1_y();
+    IResult<uint8_t> get_touch1_event();
+    IResult<uint8_t> get_touch1_id();
+    IResult<uint8_t> get_touch1_weight();
+    IResult<uint8_t> get_touch1_misc();
+    IResult<uint16_t> get_touch2_x();
+    IResult<uint16_t> get_touch2_y();
+    IResult<uint8_t> get_touch2_event();
+    IResult<uint8_t> get_touch2_id();
+    IResult<uint8_t> get_touch2_weight();
+    IResult<uint8_t> get_touch2_misc();
+
+    // Mode Parameter Register
+    IResult<uint8_t> get_touch_threshold();
+    IResult<uint8_t> get_filter_coefficient();
+    IResult<uint8_t> get_ctrl_mode();
+    IResult<> set_ctrl_mode(CTRL_MODE_Enum mode);
+    IResult<uint8_t> get_time_period_enter_monitor();
+    IResult<uint8_t> get_active_rate();
+    IResult<uint8_t> get_monitor_rate();
+
+    // Gestrue Parameter Register
+    IResult<uint8_t> get_radian_value();
+    IResult<> set_radian_value(uint8_t val);
+    IResult<uint8_t> get_offset_left_right();
+    IResult<> set_offset_left_right(uint8_t val);
+    IResult<uint8_t> get_offset_up_down();
+    IResult<> set_offset_up_down(uint8_t val);
+    IResult<uint8_t> get_distance_left_right();
+    IResult<> set_distance_left_right(uint8_t val);
+    IResult<uint8_t> get_distance_up_down();
+    IResult<> set_distance_up_down(uint8_t val);
+    IResult<uint8_t> get_distance_zoom();
+    IResult<> set_distance_zoom(uint8_t val);
+
+    // System Information
+    IResult<uint16_t> get_library_version();
+    IResult<uint8_t> get_chip_id();
+    IResult<uint8_t> get_g_mode();
+    IResult<> set_g_mode(G_MODE_Enum mode);
+    IResult<uint8_t> get_pwrmode();
+    IResult<uint8_t> get_firmware_id();
+    IResult<uint8_t> get_focaltech_id();
+    IResult<uint8_t> get_release_code_id();
+    IResult<uint8_t> get_state();
 
 private:
     hal::I2cDrv i2c_drv_;
@@ -196,10 +303,10 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){return write_reg(T::ADDRESS, reg);}
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr);
 
-    template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(T::ADDRESS, reg);}
+    // template<typename T>
+    // [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(T::ADDRESS, reg);}
 
     [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, int16_t * datas, const size_t len);
 };

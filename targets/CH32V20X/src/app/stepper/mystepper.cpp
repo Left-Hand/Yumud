@@ -1,7 +1,14 @@
+#include <atomic>
+#include <array>
+
+
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 // #include "core/fp/matchit.hpp"
+#include "core/utils/bitflag.hpp"
+#include "core/string/string_view.hpp"
+#include "core/utils/build_date.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -14,23 +21,17 @@
 
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
 #include "src/testbench/tb.h"
 
 #include "types/regions/range2/range2.hpp"
-#include "core/utils/bitflag.hpp"
 
-
-#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
-#include "core/string/string_view.hpp"
-#include "build_date.hpp"
 #include "meta_utils.hpp"
 #include "tasks.hpp"
 #include "ctrl.hpp"
 
 #include "calibrate_utils.hpp"
-#include <atomic>
-#include <array>
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"

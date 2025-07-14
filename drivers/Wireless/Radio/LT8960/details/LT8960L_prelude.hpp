@@ -13,7 +13,7 @@ namespace details{
 struct LT8960L_Prelude{
     static constexpr auto MAX_RX_RETRY = 2;
 
-    enum Error_Kind:uint8_t{
+    enum class Error_Kind:uint8_t{
         TransmitTimeout,
         PacketOverlength,
         ChipIdMismatch,
@@ -22,7 +22,8 @@ struct LT8960L_Prelude{
         Unspecified = 0xff
     };
 
-    
+    FRIEND_DERIVE_DEBUG(Error_Kind)
+
     enum class PacketType:uint8_t{
         NrzLaw = 0, 
         Manchester,
@@ -76,8 +77,6 @@ struct LT8960L_Prelude{
 
     template<typename T = void>
     using IResult = Result<T, Error>;
-
-
 
     struct States{
     public:

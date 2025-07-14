@@ -40,7 +40,7 @@ void gpio_tb(ymd::hal::GpioIntf & gpio);
 void pca_main();
 void st77xx_tb(ymd::hal::Spi & spi);
 
-void joystick_tb(ymd::OutputStream & logger);
+void joystick_main();
 
 void dma_tb(ymd::OutputStream & logger, ymd::hal::DmaChannel & channel);
 
@@ -168,3 +168,6 @@ void mystepper_main();
 void polar_robot_main();
 void ads7830_main();
 void aw9523_main();
+void kth7823_main();
+void st1615_main();
+void ft6336_main();

@@ -108,12 +108,12 @@ IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
 
 
 IResult<> TM1637_Phy::set_display(const DisplayCommand command){
-    const auto res = 
-        iic_start(command.as_u8()) 
-        | iic_stop()
-    ;
+    if(const auto res = iic_start(command.as_u8());
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = iic_stop();
+        res.is_err()) return Err(res.unwrap_err());
 
-    return res;
+    return Ok();
 }
 Result<uint8_t, Error> TM1637_Phy::read_key(){
     const auto command1 = DataCommand{
@@ -123,24 +123,24 @@ Result<uint8_t, Error> TM1637_Phy::read_key(){
 
     uint8_t data;
 
-    const auto res = 
-        iic_start(command1.as_u8())
-        | read_byte(data)
-        | iic_stop()
-    ;
-
-    if(res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = iic_start(command1.as_u8());
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = read_byte(data);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = iic_stop();
+        res.is_err()) return Err(res.unwrap_err());
     return Ok(data);
+
 }
 
 IResult<> TM1637_Phy::set_data_mode(const DataCommand command1){
 
-    const auto res = 
-        iic_start(command1.as_u8())
-        | iic_stop()
-    ;
+    if(const auto res = iic_start(command1.as_u8());
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = iic_stop();
+        res.is_err()) return Err(res.unwrap_err());
 
-    return res;
+    return Ok();
 }
 
 IResult<> TM1637::switch_to_display(){

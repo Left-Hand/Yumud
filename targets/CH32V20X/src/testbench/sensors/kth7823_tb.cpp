@@ -5,31 +5,32 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
-#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/Encoder/MagEnc/KTH7823/KTH7823.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
 
 
-void ma730_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+void kth7823_main(){
     DEBUGGER_INST.init({576_KHz});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     auto & spi = hal::spi1;
     spi.init({9_MHz});
 
-    MA730 ma730{&spi, spi.allocate_cs_gpio(&hal::portA[15]).examine()};
-    ma730.init({
-        .direction = CW
-    }).examine();
+    KTH7823 kth7823{
+        &spi, 
+        spi.allocate_cs_gpio(&hal::portA[15]).examine()
+    };
 
     while(true){
-        ma730.update().examine();
-        DEBUG_PRINTLN(ma730.read_lap_position().examine());
+        kth7823.update().examine();
+        DEBUG_PRINTLN(kth7823.read_lap_position().examine());
+        clock::delay(10ms);
     }
 }

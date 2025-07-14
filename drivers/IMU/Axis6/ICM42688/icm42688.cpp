@@ -12,9 +12,9 @@
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
-    const auto && __err_check_err = (x);\
-    ASSERT{false, #x, ##__VA_ARGS__};\
+#define CHECK_ERR(e, ...) ({\
+    const auto && __err_check_err = (e);\
+    PANIC{e.unwrap(), ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
@@ -41,8 +41,9 @@ using Error = ICM42688::Error;
 template<typename T = void>
 using IResult = Result<T, Error>; 
 
-IResult<> ICM42688::init(){
-	if(const auto res = validate();
+IResult<> ICM42688::init(const Config & cfg){
+	static constexpr size_t MAX_RETRY_TIMES = 20;
+	if(const auto res = retry(MAX_RETRY_TIMES, [&]{return validate();});
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*软重启*/
@@ -52,18 +53,18 @@ IResult<> ICM42688::init(){
 	clock::delay(30ms);
 
 	/*Gyr设置*/
-	if(const auto res = set_gyr_fs(GyrFs::_2000DPS);
+	if(const auto res = set_gyr_fs(cfg.gyr_fs);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-	if(const auto res = set_gyr_odr(GyrOdr::_2000HZ);
+	if(const auto res = set_gyr_odr(cfg.gyr_odr);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*Acc设置*/
 
-	if(const auto res = set_acc_fs(AccFs::_16G);
+	if(const auto res = set_acc_fs(cfg.acc_fs);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
-	if(const auto res = set_acc_odr(AccOdr::_1000HZ);
+	if(const auto res = set_acc_odr(cfg.acc_odr);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*电源管理*/
@@ -169,43 +170,49 @@ IResult<> ICM42688::set_gyr_odr(const GyrOdr odr){
 	return write_reg(reg);
 }
 IResult<> ICM42688::set_gyr_fs(const GyrFs fs){
-	auto & reg = gyro_config0_reg;
+	auto reg = RegCopy(gyro_config0_reg);
 	reg.gyro_fs = fs;
-	lsb_gyr_ = calc_gyr_lsb(fs);
+	gyr_scale_ = calc_gyr_scale(fs);
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::set_acc_odr(const AccOdr odr){
-	auto & reg = accel_config0_reg;
+	auto reg = RegCopy(accel_config0_reg);
 	reg.accel_odr = odr;
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::set_acc_fs(const AccFs fs){
-	auto & reg = accel_config0_reg;
+	auto reg = RegCopy(accel_config0_reg);
 	reg.accel_fs = fs;
-	lsb_acc_ = calc_acc_lsb(fs);
+	acc_scale_ = calc_acc_scale(fs);
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::reset(){
-	auto & reg = device_config_reg;
+	auto reg = RegCopy(device_config_reg);
 	reg.soft_reset_config = 1;
-	const auto res = write_reg(reg);
+	if(const auto res = write_reg(reg);
+		res.is_err()) return Err(res.unwrap_err());
 	reg.soft_reset_config = 0;
-	if(res.is_err()){
-		DEBUG_PRINTLN(res.unwrap_err().as<hal::HalError>().unwrap());
-	}
-	return res;
+	reg.apply();
+	return Ok();
 }
 
 IResult<>  ICM42688::update(){
-	return phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
+	int16_t buf[6];
+	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
+		res.is_err()) return Err(res.unwrap_err());
+	
+	acc_data_ = {buf[0], buf[1], buf[2]};
+	gyr_data_ = {buf[3], buf[4], buf[5]};
+
+	return Ok();
 	// const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
 	// if(res.is_err()) return res;
 	// int16_t buf[6] = {0};
 	// phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
-	// // DEBUG_PRINTLN(buf, q16(lsb_acc_) * (buf[0]), lsb_acc_.to_i32() * buf[0]);
+	// // DEBUG_PRINTLN(buf, q16(acc_scale_) * (buf[0]), acc_scale_.to_i32() * buf[0]);
 	// DEBUG_PRINTLN((buf[0]) * q16(0.001_r), (buf[0]) * q16(0.001_r) - 0.5_r);
 	// return Ok();
 }
@@ -224,12 +231,9 @@ IResult<>  ICM42688::validate(){
 
 IResult<Vector3<q24>> ICM42688::read_acc(){
     return Ok{Vector3<q24>{
-		// acc_data_.x, 
-		// acc_data_.y, 
-		// acc_data_.z, 
-		lsb_acc_ * acc_data_.x, 
-		lsb_acc_ * acc_data_.y, 
-		lsb_acc_ * acc_data_.z, 
+		acc_scale_ * q24(q16(acc_data_.x) >> 16), 
+		acc_scale_ * q24(q16(acc_data_.y) >> 16), 
+		acc_scale_ * q24(q16(acc_data_.z) >> 16), 
 	}};
 }
 
@@ -237,11 +241,8 @@ IResult<Vector3<q24>> ICM42688::read_acc(){
 IResult<Vector3<q24>> ICM42688::read_gyr(){
 
     return Ok{Vector3<q24>{
-		lsb_gyr_ * gyr_data_.x,
-		lsb_gyr_ * gyr_data_.y,
-		lsb_gyr_ * gyr_data_.z
-		// 0.005_q24 * gyr_data_.x,
-		// 0.005_q24 * gyr_data_.y,
-		// 0.005_q24 * gyr_data_.z
+		gyr_scale_ * q24(q16(gyr_data_.x) >> 16),
+		gyr_scale_ * q24(q16(gyr_data_.y) >> 16),
+		gyr_scale_ * q24(q16(gyr_data_.z) >> 16)
 	}};
 }

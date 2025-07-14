@@ -48,6 +48,7 @@
 
 #include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
+#include <atomic>
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -61,21 +62,7 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
 
 
-TRAIT_STRUCT(SensorlessObserverTrait,
-    TRAIT_METHOD(void, reset),
-	TRAIT_METHOD(void, update, iq_t<16>, iq_t<16>, iq_t<16>, iq_t<16>),
-    TRAIT_METHOD(iq_t<16>, theta)
-)
 
-class SensorlessEncoder:public EncoderIntf{
-protected:
-    SensorlessObserverTrait & ob_;
-public:
-    SensorlessEncoder(
-        SensorlessObserverTrait & ob
-    ):
-        ob_(ob){;}
-};
 
 void init_adc(hal::AdcPrimary & adc){
 
@@ -154,16 +141,96 @@ enum class CommandKind:uint8_t{
 };
 
 struct SetPositionCommand{
-    static constexpr auto COMMAND_KIND = CommandKind::SetPosition;
     iq_t<16> position;
     iq_t<16> speed;
 };
 
 DERIVE_SERIALIZE_AS_TUPLE(SetPositionCommand)
 DERIVE_DEBUG_AS_DISPLAY(SetPositionCommand)
+DERIVE_RAW_BYTES_DESERIALIZER(SetPositionCommand)
+
+template<>
+struct reflecter::MemberPtrReflecter<SetPositionCommand> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SetPositionCommand::position;
+        else if constexpr (N == 1) return &SetPositionCommand::speed;
+    }();
+};
+
+struct StrightForwardCommand{
+    iq_t<16> delta_position;
+};
+
+struct StrightForwardUntilEndstopCommand{
+
+};
+
+struct SetSteerCommand{
+    iq_t<16> steer;
+};
+
+struct SpinCommand{
+    iq_t<16> delta_rotation;
+};
+
+DERIVE_SERIALIZE_AS_TUPLE(SpinCommand)
+DERIVE_DEBUG_AS_DISPLAY(SpinCommand)
+DERIVE_RAW_BYTES_DESERIALIZER(SpinCommand)
+
+struct NestU8Command{
+    std::array<uint8_t, 8> buf;
+};
+
+DERIVE_SERIALIZE_AS_TUPLE(NestU8Command)
+DERIVE_DEBUG_AS_DISPLAY(NestU8Command)
+DERIVE_RAW_BYTES_DESERIALIZER(NestU8Command)
+
+template<>
+struct reflecter::MemberPtrReflecter<NestU8Command> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &NestU8Command::buf;
+    }();
+};
+
+struct SetPositionXYZCommand{
+    iq_t<16> x;
+    iq_t<16> y;
+    iq_t<16> z;
+};
+
+DERIVE_SERIALIZE_AS_TUPLE(SetPositionXYZCommand)
+DERIVE_DEBUG_AS_DISPLAY(SetPositionXYZCommand)
+DERIVE_RAW_BYTES_DESERIALIZER(SetPositionXYZCommand)
+
+template<>
+struct reflecter::MemberPtrReflecter<SetPositionXYZCommand> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SetPositionXYZCommand::x;
+        else if constexpr (N == 1) return &SetPositionXYZCommand::y;
+        else if constexpr (N == 2) return &SetPositionXYZCommand::z;
+    }();
+};
+
+template<>
+struct reflecter::MemberPtrReflecter<SpinCommand> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SpinCommand::delta_rotation;
+    }();
+};
+
+
+
+
 
 struct SetKpKdCommand{
-    static constexpr auto COMMAND_KIND = CommandKind::SetKpKd;
     iq_t<16> kp;
     iq_t<16> kd;
 };
@@ -171,31 +238,35 @@ struct SetKpKdCommand{
 DERIVE_SERIALIZE_AS_TUPLE(SetKpKdCommand)
 DERIVE_DEBUG_AS_DISPLAY(SetKpKdCommand)
 
-template<>
-struct serde::Deserializer<serde::RawBytes, SetPositionCommand> {
-    static constexpr Result<SetPositionCommand, serde::DeserializeError> 
-    deserialize(std::span<const uint8_t> data) {
-        if (data.size() < 8) {
-            return Err(DeserializeError::BytesLengthShort);
-        }
 
-        auto pos_result = make_deserialize<serde::RawBytes, iq_t<16>>(data.subspan<0, 4>());
-        if (pos_result.is_err()) {
-            return Err(pos_result.unwrap_err());
-        }
 
-        auto speed_result = make_deserialize<serde::RawBytes, iq_t<16>>(data.subspan<4, 4>());
-        if (speed_result.is_err()) {
-            return Err(speed_result.unwrap_err());
-        }
 
-        return Ok(SetPositionCommand{
-            .position = pos_result.unwrap(),
-            .speed = speed_result.unwrap()
-        });
-    }
-};
 
+namespace ymd::async{
+namespace details{
+PRO_DEF_MEM_DISPATCH(_Memfunc_Push, push);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Pending, pending);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Freeleft, freeleft);
+
+PRO_DEF_MEM_DISPATCH(_Memfunc_Pop, pop);
+PRO_DEF_MEM_DISPATCH(_Memfunc_Available, available);
+
+}
+
+// template<typename T>
+// struct SinkFacade : pro::facade_builder
+//     ::add_convention<details::_Memfunc_Push, void()>
+//     ::add_convention<details::_Memfunc_Pending, size_t(void) const>
+//     ::add_convention<details::_Memfunc_Freeleft, size_t(void) const>
+//     ::build {};
+    
+// struct SourceFacade : pro::facade_builder
+//     ::add_convention<details::_Memfunc_ReadChar, void(char &)>
+//     ::add_convention<details::_Memfunc_ReadChars, void(char *, size_t)>
+//     ::add_convention<details::_Memfunc_Available, size_t(void) const>
+//     ::build {};
+
+}
 }
 
 
@@ -215,14 +286,80 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
     return hal::CanStdId(id_u11);
 };
 
+
+
+
 struct MsgFactory{
-    static constexpr hal::CanMsg set_motor_position(const NodeRole role, const SetPositionCommand cmd){
+    const NodeRole role;
+
+    template<typename T>
+    constexpr hal::CanMsg operator()(const T cmd){
         const auto id = comb_role_and_cmd(role, CommandKind::SetPosition);
         const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
         return hal::CanMsg::from_iter(id, iter).unwrap();
-        // return hal::CanMsg::from_list(id, {0});
     };
 };
+
+
+struct MoveCommand{
+    float x;
+    float y;
+};
+
+struct PressCommand{
+    float z;
+};
+
+struct ReleaseCommand{
+    float z;
+};
+
+struct ReplaceCommand{
+    float x1, y1;
+    float x2, y2;
+};
+
+struct AbortCommand{
+    float z;
+};
+
+using VCommand = std::variant<
+    MoveCommand,
+    PressCommand,
+    ReleaseCommand,
+    ReplaceCommand,
+    AbortCommand
+>;
+
+template<typename Iter>
+static constexpr size_t count_iter(Iter && iter){
+    size_t cnt = 0;
+    while(true){
+        if(iter.has_next()){
+            cnt++;
+        }else{
+            break;
+        }
+        (void)iter.next();
+    }
+    return cnt;
+}
+
+template<size_t N>
+struct MyIter{
+    constexpr uint8_t next() {
+        cnt_++;
+        return 0;
+    }
+
+    constexpr bool has_next() const {
+        bool ok =  cnt_ < N;
+        return ok;
+    }
+private:
+    size_t cnt_ = 0;
+};
+
 
 void bldc_main(){
     // my_can_ring_main();
@@ -572,9 +709,7 @@ void bldc_main(){
         return Some(msg_queue.pop());
     };
 
-
-
-    auto set_position = [&](const SetPositionCommand & cmd){
+    [[maybe_unused]] auto set_position = [&](const SetPositionCommand & cmd){
         track_pos_ = cmd.position;
         track_spd_ = cmd.speed;
     };
@@ -589,9 +724,9 @@ void bldc_main(){
                 if(msg_role != node_role) return;
                 switch(msg_cmd){
                     case CommandKind::SetPosition:{
-                        const auto cmd = serde::make_deserialize<serde::RawBytes,
-                            SetPositionCommand>(msg.payload()).examine();
-                        set_position(cmd);
+                        // const auto cmd = serde::make_deserialize<serde::RawBytes,
+                        //     SetPositionCommand>(msg.payload()).examine();
+                        // set_position(cmd);
                     }
                         break;
 
@@ -624,13 +759,13 @@ void bldc_main(){
         static async::RepeatTimer timer{5ms};
 
         auto publish_roll_joint = [&]{
-            const auto msg = MsgFactory::set_motor_position(NodeRole::RollJoint, track_info_.roll);
+            const auto msg = MsgFactory{NodeRole::RollJoint}(track_info_.roll);
 
             write_can_msg(msg);
         };
 
         auto publish_pitch_joint = [&]{
-            const auto msg = MsgFactory::set_motor_position(NodeRole::PitchJoint, track_info_.pitch);
+            const auto msg = MsgFactory{NodeRole::PitchJoint}(track_info_.pitch);
 
             write_can_msg(msg);
         };
@@ -729,7 +864,7 @@ void bldc_main(){
 
             // );
             const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.03_r;
+            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
 
             // for(const auto item: range){
             //     DEBUG_PRINTLN_IDLE(item, '?');
@@ -793,19 +928,93 @@ void bldc_main(){
         for(size_t i = 0; i < 100; i++){
             strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
         }
-        const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+
+        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionCommand{0, 1});
+        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionCommand>();
+        // static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
+        // const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionCommand{13 *256 + 12, 11});
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<real_t, real_t>(13 *256 + 12, 11));
+        auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
+            (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
         // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
         // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
         // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
         // uint8_t res = 100;
         // DEBUG_PRINTLN(;
         // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
-        DEBUG_PRINTLN(
-            (clock::micros() - u_begin).count(), 
-            StringView(arr.data()), 
-            rem_str.size()
+        DEBUG_PRINTLN_IDLE(
+            // (clock::micros() - u_begin).count(), 
+            // StringView(arr.data()), 
+            // rem_str.size(),
+            // base_roll_,
+            // base_omega_,
+            iter,
+            
+            // count_iter(iter),
+            count_iter(MyIter<8>{})
+            // (MsgFactory{NodeRole::Master})(SetPositionCommand{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()
         );
 
     }
+}
+
+
+// template>class Tx{
+//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
+
+//     size_t write(std::span<const uint8_t> pbuf){
+//         fifo_.push(pbuf);
+//         return pbuf.size();
+//     }
+
+//     size_t pending() const {
+//         return fifo_.available();
+//     }
+// };
+
+
+// class Rx{
+//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
+
+//     size_t read(std::span<uint8_t> pbuf){
+//         fifo_.pop(pbuf);
+//         return pbuf.size();
+//     }
+
+//     size_t awailable() const {
+//         return fifo_.available();
+//     }
+// };
+
+
+[[maybe_unused]]
+static void static_test(){
+    #define STATIC_TEST_SEL 5
+    #if STATIC_TEST_SEL == 0
+    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionCommand{0, 1});
+    static_assert(msg.size() == 8);
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionCommand>();
+    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
+    // static_assert(may_cmd.is_ok());
+    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
+    #elif STATIC_TEST_SEL ==1
+    static constexpr auto msg = (MsgFactory{NodeRole::Master})(SpinCommand{1});
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SpinCommand>();
+    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
+    static constexpr auto cmd = may_cmd.unwrap();
+    static constexpr auto rot = cmd.delta_rotation;
+    static_assert(msg.size() == 4);
+    static_assert(rot == 1.0_q16);
+    // static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
+    #elif STATIC_TEST_SEL == 2
+    // static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionXYZCommand{0, 1, 2});
+    static constexpr hal::CanMsg msg = hal::CanMsg::from_iter(hal::CanStdId(0), MyIter<8>{}).unwrap();
+    static_assert(msg.size() == 12);
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionXYZCommand>();
+    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
+    // static_assert(may_cmd.is_ok());
+    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
+    #endif
 }

@@ -8,13 +8,13 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
 
 
     struct R16_ChipId:public Reg16<>{
-        scexpr RegAddress address = 0x00;
-        scexpr uint16_t key = 0x6fe0;
+        static constexpr RegAddress address = 0x00;
+        static constexpr uint16_t key = 0x6fe0;
         uint16_t chip_id;
     }DEF_R16(chip_id_reg)
     
     struct R16_RfSynthLock:public Reg16<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
         uint16_t i2c_soft_rstn:1;//软件复位标志
         uint16_t __resv1__ :8;
         uint16_t fifo_flag_txrx:1;//fifo状态指示
@@ -25,7 +25,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(rf_synthlock_reg)
 
     struct R16_RfConfig:public Reg16<>{
-        scexpr RegAddress address = 7;
+        static constexpr RegAddress address = 7;
         
         uint16_t rf_channel_no :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
         uint16_t rx_en:1;//使芯片进入 TX状态，1 有效
@@ -36,7 +36,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     REG16_QUICK_DEF(8, R16_Lambda8, reg8)
     
     struct R16_PaConfig:public Reg16<>{
-        scexpr RegAddress address = 9;
+        static constexpr RegAddress address = 9;
 
         uint16_t __resv1__ :7;
         uint16_t pa_gain:4;//PA增益控制
@@ -45,7 +45,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(pa_config_reg)
     
     struct R16_FuncConf:public Reg16<>{
-        scexpr RegAddress address = 15;
+        static constexpr RegAddress address = 15;
 
         uint16_t sda_pullup_sel:1;
         uint16_t cw_mode:1;
@@ -58,7 +58,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(func_conf_reg)
     
     struct R16_FreqOffs:public Reg16<>{
-        scexpr RegAddress address = 0x1c;
+        static constexpr RegAddress address = 0x1c;
 
         uint16_t offs:14;
         uint16_t __resv__:2;
@@ -66,7 +66,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
 
 
     struct R16_Config1:public Reg16<>{
-        scexpr RegAddress address = 0x20;
+        static constexpr RegAddress address = 0x20;
 
         uint16_t __resv1__ :1;
         uint16_t brclkSel:3;//时钟选择
@@ -79,7 +79,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
 
 
     struct R16_Config2:public Reg16<>{
-        scexpr RegAddress address = 0x23;
+        static constexpr RegAddress address = 0x23;
 
         uint16_t scramable_data :7;//Scramble data 的种子，收发两边必须一致
         uint16_t misoTri :1; //当 SPI_SS=1 时，MISO 保持三态/低阻
@@ -91,24 +91,24 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(config2_reg)
 
     struct R16_SyncWord0:public Reg16<>{
-        scexpr RegAddress address = 0x24;
+        static constexpr RegAddress address = 0x24;
         uint8_t word[2];
     }DEF_R16(sync_word0_reg)
 
     struct R16_SyncWord1:public Reg16<>{
-        scexpr RegAddress address = 0x27;
+        static constexpr RegAddress address = 0x27;
         uint8_t word[2];
     }DEF_R16(sync_word1_reg)
 
     struct R16_Threshold:public Reg16<>{
-        scexpr RegAddress address = 0x28;
+        static constexpr RegAddress address = 0x28;
         uint16_t syncword_threshold:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
         uint16_t fifo_full_threshold:5;//认为 FIFO 为满的阈值
         uint16_t fifo_empty_threshold:5;//认为 FIFO 为空的阈值
     }DEF_R16(threshold_reg)
     
     struct R16_Config3:public Reg16<>{
-        scexpr RegAddress address = 0x29;
+        static constexpr RegAddress address = 0x29;
         uint16_t crc_inital_data:8;//CRC 计算初始值。
         uint16_t __resv1__ :2;
         uint16_t pkt_fifo_polarity:1; //PKT flag, FIFO flag 低有效.
@@ -120,32 +120,32 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(config3_reg)
 
     struct R16_RxConfig:public Reg16<>{
-        scexpr RegAddress address = 0x2A;
+        static constexpr RegAddress address = 0x2A;
         uint16_t auto_rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t wakeup_tim :2;
         uint16_t scan_rssi_ch_no:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
     }DEF_R16(rx_config_reg)
 
     struct R16_DataRate:public Reg16<>{
-        scexpr RegAddress address = 0x2C;
+        static constexpr RegAddress address = 0x2C;
         uint16_t __resv__ :8;
         uint16_t data_rate:8;//透传速率
     }DEF_R16(data_rate_reg)
 
     struct R16_ModemOption:public Reg16<>{
-        scexpr RegAddress address = 0x2D;
+        static constexpr RegAddress address = 0x2D;
         uint16_t option;//透传速率
     }DEF_R16(modem_option_reg)
 
     struct R16_ChiIndex:public Reg16<>{
-        scexpr RegAddress address = 0x2E;
+        static constexpr RegAddress address = 0x2E;
         uint16_t __resv__ :8;
         uint16_t chi_index:6;//透传速率
         uint16_t __resv2__ :2;
     }DEF_R16(chi_index_reg)
 
     struct R16_Flag:public Reg16<>{
-        scexpr RegAddress address = 0x30;
+        static constexpr RegAddress address = 0x30;
         uint16_t __resv__ :5;
         uint16_t fifo_flag:1;
         uint16_t pkt_flag:1;
@@ -156,12 +156,12 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(flag_reg)
 
     struct R16_Fifo:public Reg16<>{
-        scexpr RegAddress address = 0x32;
+        static constexpr RegAddress address = 0x32;
         uint16_t data;
     }DEF_R16(fifo_reg)
 
     struct R16_FifoPtr:public Reg16<>{
-        scexpr RegAddress address = 52;
+        static constexpr RegAddress address = 52;
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。
         //当 PKT 拉高后，读此寄存器，如果为 0，即收到 ack。
@@ -176,7 +176,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(fifo_ptr_reg)
 
     struct R16_I2cOper:public Reg16<>{
-        scexpr RegAddress address = 0x38;
+        static constexpr RegAddress address = 0x38;
         uint16_t wakeup_i2c:1;
         uint16_t soft_rst:1;
         uint16_t __resv__:14;

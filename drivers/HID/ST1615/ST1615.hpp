@@ -10,11 +10,16 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "types/vectors/vector2/Vector2.hpp"
+#include "core/magic/enum_traits.hpp"
 
 namespace ymd::drivers{
 
 struct ST1615_Prelude{
-    static constexpr const auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x55);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x55);
+    static constexpr auto MAX_I2C_BAUDRATE = 18_KHz;
+    static constexpr size_t MAX_POINTS_COUNT = 9;
+    
     using RegAddress = uint8_t;
 
     static constexpr RegAddress STATUS = 0x01;
@@ -30,16 +35,14 @@ struct ST1615_Prelude{
 
     static constexpr RegAddress ADVANCED_TOUCH_INFO = 0x10;
 
-    static constexpr size_t MAX_BLOCKING_TIMES = 20;
-
 
     enum class Error_Kind:uint8_t{
         PointRankOutOfRange,
         RetryTimeout
     };
 
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
     FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -60,13 +63,27 @@ struct ST1615_Prelude{
         Drag = 12,
     };
 
+    FRIEND_DERIVE_DEBUG(GestureType)
+
     struct Capabilities {
         /// Maximum Number of Contacts Support Register
-        uint8_t max_touches;
+        uint8_t max_touches = 8;
         // XY resolution
-        uint16_t max_x;
-        uint16_t max_y;
-        bool smart_wake_up;
+        uint16_t max_x = 0xffff;
+        uint16_t max_y = 0xffff;
+        bool smart_wake_up = false;
+
+        constexpr bool is_point_valid(const Vector2<uint16_t> point){
+            return (point.x <= max_x) && (point.y <= max_y);
+        }
+
+        friend OutputStream & operator<<(OutputStream & os, const Capabilities & self){ 
+            return os << os.scoped("Capabilities")(os 
+                << os.field("max_touches")(os << self.max_touches) << os.splitter()
+                << os.field("max_x")(os << self.max_x) << os.splitter()
+                << os.field("max_y")(os << self.max_y)
+            );
+        }
     };
 
 
@@ -74,12 +91,17 @@ struct ST1615_Prelude{
         GestureType gesture_type;
         bool proximity;
         bool water;
+
+        friend OutputStream & operator<<(OutputStream & os, const GestureInfo & self){ 
+            return os << os.scoped("GestureType")(os 
+                << os.field("gesture_type")(os << self.gesture_type) << os.splitter()
+                << os.field("proximity")(os << self.proximity) << os.splitter()
+                << os.field("water")(os << self.water)
+            );
+        }
     };
 
-    struct Point{
-        uint16_t x;
-        uint16_t y;
-    };
+    using Point = Vector2<uint16_t>;
 };
 
 struct ST1615 final:public ST1615_Prelude{
@@ -104,6 +126,7 @@ struct ST1615 final:public ST1615_Prelude{
 
 private:
     hal::I2cDrv i2c_drv_;
+    Capabilities capabilities_;
 
     [[nodiscard]] IResult<uint8_t> read_reg8(uint8_t reg){
         std::array<uint8_t, 2>buf = {0, 1};
@@ -112,7 +135,7 @@ private:
         return Ok(buf[0]);
     }
 
-    [[nodiscard]] IResult<> read_u8(uint8_t reg, std::span<uint8_t> buf){ 
+    [[nodiscard]] IResult<> read_burst(uint8_t reg, std::span<uint8_t> buf){ 
         if(const auto res = i2c_drv_.read_burst<uint8_t>(reg, buf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

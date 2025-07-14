@@ -22,26 +22,24 @@ using namespace ymd::drivers;
 static constexpr uint ISR_FREQ = 500;
 static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 
+#define PHY_SEL_I2C 0
+#define PHY_SEL_SPI 1
+
+#define PHY_SEL PHY_SEL_I2C
+// #define PHY_SEL PHY_SEL_SPI
+
 [[maybe_unused]]
 static void icm42688_tb(ICM42688 & imu){
 
-    // while(true){
-    //     auto test_fn = [&]{
-    //         return drv.write_single<uint8_t>(uint8_t(0), CONT)
-    //         | drv.write_single<uint8_t>(uint8_t(0));
-    //     };
-
-    //     if(const auto res = test_fn();  
-    //         res.is_err()) DEBUG_PRINTLN(res.unwrap_err()); 
-    //     else{
-    //         DEBUG_PRINTLN("ok");
-    //     }
-    //     clock::delay(1ms);
-    // }
     DEBUG_PRINTLN("init started");
 
 
-    imu.init().unwrap();
+    imu.init({
+        .acc_odr = ICM42688::AccOdr::_200Hz,
+        .acc_fs = ICM42688::AccFs::_4G,
+        .gyr_odr = ICM42688::GyrOdr::_200Hz,
+        .gyr_fs = ICM42688::GyrFs::_1000deg
+    }).examine();
 
     q24 z = 0;
     Microseconds exe = 0us;
@@ -55,14 +53,23 @@ static void icm42688_tb(ICM42688 & imu){
     }};
 
     timer1.init({ISR_FREQ});
+
+    Vector3<q24> gyr_;
+    Vector3<q24> acc_;
     timer1.attach(TimerIT::Update, {0,0},[&]{
         const auto u0 = clock::micros();
-        imu.update().unwrap();
-        z = z + INV_FS * imu.read_gyr().unwrap().z;
-        // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
-        // mahony.update(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
-        mahony.myupdate_v2(imu.read_gyr().unwrap(), imu.read_acc().unwrap());
+        imu.update().examine();
+        const auto gyr = imu.read_gyr().examine();
+        const auto acc = imu.read_acc().examine();
+
+        z = z + INV_FS * gyr.z;
+        // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
+        // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
+        mahony.myupdate_v2(gyr, acc);
         exe = clock::micros() - u0;
+
+        gyr_ = gyr;
+        acc_ = acc;
     });
 
     while(true){
@@ -76,18 +83,20 @@ static void icm42688_tb(ICM42688 & imu){
         //     {0,0,1}
         // );
 
-        const auto gest = mahony.result();
+        // const auto gest = mahony.result();
         // const auto euler = gest.to_euler();
         DEBUG_PRINTLN(
-            0
-            ,gest
+            // 0
+            // ,gest
+            // acc_, gyr_
+            gyr_, z
             // ,euler
             // ,acc
         //     ,gyr
         //     // ,imu.read_gyr().unwrap()
         //     // ,z, exe
         );
-        clock::delay(1ms);
+        clock::delay(5ms);
         // DEBUG_PRINTLN(mahony.result().normalized(), z, exe);
         // DEBUG_PRINTLN(mahony.result().to_euler(), z, exe);
         // DEBUG_PRINTLN(z);
@@ -103,16 +112,23 @@ void icm42688_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
+    clock::delay(200ms);
+
+    #if PHY_SEL == PHY_SEL_I2C
     // I2cSw i2c{portA[12], portA[15]};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
-    i2c.init(4000_KHz);
-    // i2c.init();
+    i2c.init(2000_KHz);
 
-    clock::delay(200ms);
+    ICM42688 imu = {
+        &i2c,
+        ICM42688::I2cSlaveAddrMaker{.ad0_level = HIGH}.to_i2c_addr()
+    };
+    #elif PHY_SEL == PHY_SEL_SPI
 
     auto & spi = spi1;
     spi.init({18_MHz});
+
     ICM42688 imu = {
         SpiDrv(
             &spi, 
@@ -120,5 +136,7 @@ void icm42688_main(){
         )
     };
 
+    #endif
+    
     icm42688_tb(imu);
 }

@@ -4,20 +4,20 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define MMC5983_DEBUG_EN
+// #define MMC5983_DEBUG_EN
 
 #ifdef MMC5983_DEBUG_EN
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    ASSERT{__res_check_res.is_ok(), __res_check_res.unwrap_err(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    ASSERT{false, #x, ##__VA_ARGS__};\
+    PANIC{x.unwrap(), ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
@@ -63,11 +63,14 @@ IResult<> MMC5983::init(const Config & cfg){
 }
 
 IResult<> MMC5983::validate(){
+    if(const auto res = phy_.release(); 
+        res.is_err()) return CHECK_RES(res);
+        
     if(const auto res = read_reg(product_id_reg); 
-        res.is_err()) return res;
+        res.is_err()) return CHECK_RES(res);
     
     if(product_id_reg.product_id != product_id_reg.KEY)
-        return CHECK_ERR(Err(Error::WrongWhoAmI));
+        return CHECK_ERR(Err(Error::WrongWhoAmI), product_id_reg.product_id);
 
     return Ok();
 }

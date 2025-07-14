@@ -129,30 +129,37 @@ void lt8960_tb(){
     LT8960L tx_ltr{&portB[6], &portB[7]};
     LT8960L rx_ltr{&portA[9], &portA[10]};
     
-    auto common_settings = [](LT8960L & ltr){
-        (ltr.set_rf_channel(ch)
-        | ltr.enable_use_hw_pkt(EN)
-        | ltr.set_datarate(LT8960L::DataRate::_250K)
-        // | ltr.set_datarate(LT8960L::DataRate::_62_5K)
-        // | ltr.set_datarate(LT8960L::DataRate::_1M)
-        | ltr.enable_gain_weaken(EN)
-        // | ltr.set_syncword_tolerance_bits(1)
-        | ltr.set_syncword_tolerance_bits(0)
-        | ltr.set_pack_type(LT8960L::PacketType::Manchester)
-        // | ltr.set_retrans_time(3)
-        // | ltr.enable_autoack(false)
-
-        ).unwrap();
+    auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
+        static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;
+        static constexpr auto TOLERANCE = 1;
+        static constexpr auto PACKET_TYPE = LT8960L::PacketType::Manchester;
+        if(const auto res = ltr.set_rf_channel(ch);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.enable_use_hw_pkt(EN);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.set_datarate(DATA_RATE);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.enable_gain_weaken(EN);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.set_syncword_tolerance_bits(TOLERANCE);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.set_pack_type(PACKET_TYPE);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.set_retrans_time(3);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = ltr.enable_autoack(DISEN);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     };
 
     if(has_rx_authority()) {
         rx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).loc().expect("RX init failed!");
-        common_settings(rx_ltr);
+        common_settings(rx_ltr).loc().expect("RX common settings failed!");
     }
     if(has_tx_authority()){
         tx_ltr.init(LT8960L::Power::_n13_Db, 0x12345678).loc().expect("TX init failed!");
 
-        common_settings(tx_ltr);
+        common_settings(tx_ltr).examine();
     }
 
     DEBUG_PRINTLN("LT8960L init done");

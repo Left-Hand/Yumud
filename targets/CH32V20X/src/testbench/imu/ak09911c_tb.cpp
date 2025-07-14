@@ -27,14 +27,14 @@ static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
 
 static void ak09911c_test(drivers::AK09911C & aku){
 
-    aku.init().unwrap();
-    aku.set_mode(AK09911C::Mode::Cont4).unwrap();
+    aku.init().examine();
+    aku.set_mode(AK09911C::Mode::Cont4).examine();
     DEBUG_PRINTLN("app started");
 
     Quat<q24> gest;
     auto measure = [&](){
-        aku.update().unwrap();
-        const auto dir = aku.read_mag().unwrap();
+        aku.update().examine();
+        const auto dir = aku.read_mag().examine();
         gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 

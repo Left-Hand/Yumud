@@ -6,7 +6,9 @@
 
 namespace ymd{
 
-
+template<std::ranges::range Range, typename T>
+static constexpr bool is_range_value_convertible_v = 
+    (std::is_convertible_v<std::ranges::range_value_t<Range>, T>);
 using HashCode = uint32_t;
 
 static constexpr HashCode HASHDJB_SEED = 5381;
@@ -46,7 +48,7 @@ namespace hashfunc{
      * @return 计算后的新哈希值
      */
     template <std::ranges::range Range>
-        requires std::convertible_to<std::ranges::range_value_t<Range>, uint8_t>
+    requires (is_range_value_convertible_v<Range, uint8_t> || is_range_value_convertible_v<Range, char>)
     __inline static constexpr HashCode hash_djb(Range && range, HashCode last = HASHDJB_SEED) {
         for (const auto& byte : range) {
             last = (last * 33) ^ static_cast<uint8_t>(byte);

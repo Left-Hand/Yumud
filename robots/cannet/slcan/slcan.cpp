@@ -157,6 +157,17 @@ static constexpr IResult<size_t> parse_len(const StringView str){
 }
 
 template<bool is_ext>
+static constexpr auto parse_id(const StringView str) -> IResult<uint32_t>{
+    if constexpr(is_ext){
+        return parse_ext_id(str).
+            map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
+    } else {
+        return parse_std_id(str).
+            map([](const hal::CanStdId id) -> uint32_t{return id.to_u11();}); 
+    }
+};
+
+template<bool is_ext>
 static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rmt){
     if(str.size() == 0) 
         RET_ERR(Error::NoArg);
@@ -169,18 +180,8 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
 
     auto cutter = StringCutter{str};
 
-    auto parse_id = [](const StringView str) -> IResult<uint32_t>{
-        if constexpr(is_ext){
-            return parse_ext_id(str).
-                map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
-        } else {
-            return parse_std_id(str).
-                map([](const hal::CanStdId id) -> uint32_t{return id.to_u11();}); 
-        }
-    };
-
     const uint32_t id = ({
-        const auto res = parse_id(cutter.fetch_next(ID_LEN));
+        const auto res = parse_id<is_ext>(cutter.fetch_next(ID_LEN));
         if(res.is_err()) RET_ERR(res.unwrap_err());
         res.unwrap();
     });

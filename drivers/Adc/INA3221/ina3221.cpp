@@ -87,17 +87,23 @@ IResult<> INA3221::validate(){
 }
 
 IResult<> INA3221::update(const ChannelIndex index){
+    #define READ_DUAL_REG(r1, r2)\
+        if(const auto res = read_reg(r1); res.is_err()) return CHECKRES(res);\
+        if(const auto res = read_reg(r2); res.is_err()) return CHECKRES(res);\
+        return Ok();\
 
     // update bus and shunt
     switch(index){
         default: __builtin_unreachable();
         case ChannelIndex::CH1: 
-            return read_reg(shuntvolt1_reg) | read_reg(busvolt1_reg);
+            READ_DUAL_REG(shuntvolt1_reg, busvolt1_reg);
         case ChannelIndex::CH2: 
-            return read_reg(shuntvolt2_reg) | read_reg(busvolt2_reg);
+            READ_DUAL_REG(shuntvolt2_reg, busvolt2_reg);
         case ChannelIndex::CH3: 
-            return read_reg(shuntvolt3_reg) | read_reg(busvolt3_reg);
+            READ_DUAL_REG(shuntvolt3_reg, busvolt3_reg);
     }
+
+    #undef READ_DUAL_REG
 } 
 
 IResult<> INA3221::set_average_times(const AverageTimes times){

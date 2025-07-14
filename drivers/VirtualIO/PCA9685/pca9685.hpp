@@ -27,7 +27,9 @@ public:
         i2c_drv_{i2c, addr}{;}
 
     [[nodiscard]] IResult<> init(const Config & cfg){
-        return init() | reconf(cfg);
+        if(const auto res = init(); res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = reconf(cfg); res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
     [[nodiscard]] IResult<> reconf(const Config & cfg){
         return set_frequency(cfg.freq, cfg.trim);
@@ -36,6 +38,7 @@ public:
     [[nodiscard]] IResult<> reset();
 
     [[nodiscard]] IResult<> init();
+
     [[nodiscard]] IResult<> validate();
     
     [[nodiscard]] IResult<> set_frequency(const uint freq, const real_t trim);

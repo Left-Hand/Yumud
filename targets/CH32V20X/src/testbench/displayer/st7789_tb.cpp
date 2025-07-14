@@ -63,7 +63,8 @@ struct DrawTargetFacade : pro::facade_builder
 
 DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
-void static_test(){
+[[maybe_unused]]
+static void static_test(){
 	constexpr MyError err = ST7789::Error::CantSetup;
 	constexpr MyError err2 = PainterBase::Error::CropRectIsNone;
 
@@ -97,8 +98,6 @@ void st7789_main(void){
     auto & dev_rst = hal::portA[12];
 
 
-    
-    
     lcd_blk.outpp(HIGH);
     #endif
 

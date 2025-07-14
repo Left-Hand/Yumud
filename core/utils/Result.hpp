@@ -342,20 +342,6 @@ public:
     Result(const S & other):Result(custom::result_converter<T, E, S>::convert(other)){}
 
 
-    template<typename T2>
-    [[nodiscard]] __fast_inline constexpr
-    Result<T2, E> operator |(Result<T2, E> && rhs) const {
-        if(is_ok()) return rhs;
-        else return Err(this->unwrap_err());
-    }
-
-    template<typename T2>
-    [[nodiscard]] __fast_inline constexpr
-    Result<T2, E> operator |(const Result<T2, E> & rhs) const {
-        if(is_ok()) return rhs;
-        else return Err(this->unwrap_err());
-    }
-
     template<
         typename Fn,
         typename FDecay = std::decay_t<Fn>,
@@ -569,8 +555,9 @@ public:
         return unwrap();
     }
 
+    template<typename U = T>
     __fast_inline constexpr 
-    T unwrap_or(auto && val) const {
+    T unwrap_or(const U & val) const {
         if (likely(is_ok())) {
             return storage_.unwrap();
         } else {

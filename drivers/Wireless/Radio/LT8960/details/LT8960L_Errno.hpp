@@ -25,42 +25,7 @@ namespace ymd::drivers{
 
 using Error = drivers::LT8960L::Error;
 
-// scexpr size_t packet_len = 64;
-static constexpr size_t LT8960L_PACKET_SIZE = 12;
-static constexpr size_t LT8960L_FIFO_SIZE = 16;
-
-class Tx{
-    Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
-
-    size_t write(std::span<const uint8_t> pbuf){
-        fifo_.push(pbuf);
-        return pbuf.size();
-    }
-
-    size_t pending() const {
-        return fifo_.available();
-    }
-};
-
-
-class Rx{
-    Fifo_t<uint8_t, LT8960L_FIFO_SIZE> fifo_;
-
-    size_t read(std::span<uint8_t> pbuf){
-        fifo_.pop(pbuf);
-        return pbuf.size();
-    }
-
-    size_t awailable() const {
-        return fifo_.available();
-    }
-};
-
-
-
-template<typename Fn>
-__inline Result<void, Error> wait(const size_t timeout, Fn && fn){
-    return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
-}
+static constexpr size_t LT8960L_MAX_PACKET_SIZE = 12;
+static constexpr size_t LT8960L_MAX_FIFO_SIZE = 16;
 
 }
