@@ -4,7 +4,6 @@
 #include "core/clock/time.hpp"
 #include "core/sync/timer.hpp"
 #include "core/string/string_view.hpp"
-#include "core/utils/serde.hpp"
 
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"

@@ -63,8 +63,7 @@ IResult<> BMI160::init(const Config & cfg){
         clock::delay(1ms);
 
         //wait for power up acc
-        if(const auto res = 
-        retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
+        if(const auto pw_res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             if(const auto res = (get_pmu_mode(PmuType::ACC));
                 unlikely(res.is_err())) return Err(res.unwrap_err());
             else if (res.unwrap() != PmuMode::NORMAL){
@@ -73,7 +72,7 @@ IResult<> BMI160::init(const Config & cfg){
             return Ok();
         }, []{clock::delay(1ms);}); 
             
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        unlikely(pw_res.is_err())) return Err(pw_res.unwrap_err());
     }
     
     #ifdef SELFTEST_EN

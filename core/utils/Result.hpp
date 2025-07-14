@@ -555,8 +555,9 @@ public:
         return unwrap();
     }
 
+    template<typename U = T>
     __fast_inline constexpr 
-    T unwrap_or(auto && val) const {
+    T unwrap_or(const U & val) const {
         if (likely(is_ok())) {
             return storage_.unwrap();
         } else {

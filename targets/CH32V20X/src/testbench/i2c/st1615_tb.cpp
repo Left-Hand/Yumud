@@ -22,23 +22,72 @@ using namespace ymd;
 using drivers::ST1615;
 
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+// #define UART hal::uart6
+#define SCL_GPIO hal::PB<3>()
+#define SDA_GPIO hal::PB<5>()
 
 void st1615_main(){
-    UART.init({576_KHz});
+    // UART.init({576_KHz});
+    UART.init({
+        .baudrate = 576000,
+        .tx_strategy = CommStrategy::Dma
+    });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.force_sync();
+
     
+    auto & led = hal::PA<15>();
+    led.outpp();
+
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(30ms);
+    //     led.toggle();
+    // }
+
     // test_result();
     hal::I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
-    i2c.init(100_KHz);
+    i2c.init(ST1615::MAX_I2C_BAUDRATE);
+
+    auto & nrst_gpio = hal::PB<0>();
+    nrst_gpio.set_mode(hal::GpioMode::OutPP);
+    nrst_gpio.clr();
+    clock::delay(1ms);
+    nrst_gpio.set();
+    clock::delay(100ms);
 
     ST1615 st1615{&i2c};
     st1615.init().examine();
 
+
+    std::array<Vector2i, ST1615::MAX_POINTS_COUNT> points;
     while(true){
-        st1615.get_sensor_count().examine();
-        clock::delay(5ms);
+        led.toggle();
+        for(size_t i = 0; i < 1; ++i){
+            st1615.get_point(i).examine().inspect([&](Vector2i point) {
+                points[i] = point;
+            });
+        }
+
+        // pos.inspect([&](Vector2i point) {
+        //     // st1615.draw_point(point, 0xffff).examine();
+        //     DEBUG_PRINTLN(
+        //         // clock::millis(),
+        //         // st1615.get_sensor_count().examine()
+
+        //         // .unwrap_or<Vector2<int>>(Vector2{0, 0})
+        //         point.x, point.y
+        //         // st1615.get_gesture_info().examine()
+        //     );
+        // });
+
+        DEBUG_PRINTLN(
+            // pos, 
+            std::span(points.data(), 2),
+            // st1615.get_gesture_info().examine()
+            // st1615.get_sensor_count().examine(),
+            st1615.get_capabilities().examine()
+        );
+
+        clock::delay(30ms);
     }
 }

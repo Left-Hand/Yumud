@@ -175,15 +175,18 @@ private:
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
-                return (uint32_t(inst) - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
+                return (reinterpret_cast<uint32_t>(inst) - DMA1_Channel1_BASE) / 
+                    (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
             #endif
 
             #ifdef ENABLE_DMA2
             case 2:
-                if(uint32_t(inst) < DMA2_Channel7_BASE){ 
-                    return (uint32_t(inst) - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
+                if(reinterpret_cast<uint32_t>(inst) < DMA2_Channel7_BASE){ 
+                    return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel1_BASE) / 
+                        (DMA2_Channel2_BASE - DMA2_Channel1_BASE)) + 1;
                 }else{
-                    return (uint32_t(inst) - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
+                    return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel7_BASE) / 
+                        (DMA2_Channel8_BASE - DMA2_Channel7_BASE)) + 7;
                 }
             #endif
             default:
@@ -211,7 +214,7 @@ private:
             #endif
             #ifdef ENABLE_DMA2
             case 2:
-                if(uint32_t(inst) <= DMA2_Channel7_BASE){ 
+                if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
                 }else{
                     return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
@@ -234,7 +237,7 @@ private:
             #endif
             #ifdef ENABLE_DMA2
             case 2:
-                if(uint32_t(inst) <= DMA2_Channel7_BASE){ 
+                if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
                 }else{
                     return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (channel_index - 8))) | (uint32_t)(0x20000000);

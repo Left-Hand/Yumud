@@ -35,9 +35,13 @@ int main(){
     // bldc_main();
     // kth7823_main();
     // joystick_main();
-    icm42688_main();
+    // icm42688_main();
     // mmc5983_main();
-    i2c_scanner_main();
+    // i2c_scanner_main();
+    // bldc_main();
+    // st1615_main();
+    ft6336_main();
+    // i2c_scanner_main();
     // rrs3_robot_main();
     // can_ring_main();
     // aw9523_main();
@@ -162,7 +166,9 @@ int main(){
     // gui_main();
     // light_tracking_main();
     // cubic_main();
-    smc2025_main();
+    // smc2025_main();
+    // st1615_main();
+
     
     // sdc_main();
     // proxy_tb();

@@ -154,7 +154,7 @@ void I2cSw::init(const uint32_t baudrate){
     scl().outod();
     #endif
 
-    set_baudrate(40'000);
+    set_baudrate(10'000);
     for(size_t i = 0; i < 4; i++){
         end();
     }
