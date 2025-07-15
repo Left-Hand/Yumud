@@ -31,38 +31,50 @@ struct FstrDump final{
 		int32_t digit_part = 0;
 		int32_t frac_part = 0;
 		uint32_t scale = 1;
-		bool passed_point = false;
-		bool is_negative = false;
+
+		struct Status{
+			uint8_t passed_dot:1 = false;
+			uint8_t has_pre_dot_digits:1 = false;
+			uint8_t has_post_dot_digits:1 = false;
+			uint8_t is_negative:1 = false;
+		};
+
+		Status status;
 		const auto len = str.size();
 		size_t index = 0;
 
+		// 略过空格
+		while (index < len && str[index] == ' ') {
+			index++;
+		}
+
 		// 处理符号
-		if (str[0] == '+' || str[0] == '-') {
-			is_negative = (str[0] == '-');
+		if (str[index] == '+' || str[index] == '-') {
+			status.is_negative = (str[0] == '-');
 			++ index;
 			if (len == 1) {
 				return Err(DestringError::OnlySignFounded);  // 只有符号没有数字
 			}
 		}
 
-		// 主解析循环
-		bool has_digits = false;
 		while (index < len) {
 			const char chr = str[index];
 			
 			switch (chr) {
 				case '0' ... '9':{  // Digit case (GCC/Clang extension)
-					has_digits = true;
+
 					const uint8_t digit = chr - '0';
 					
 					constexpr int32_t MAX_INT_NUM = (std::numeric_limits<int32_t>::max() - 9) / 10;
-					if (!passed_point) {
+					if (!status.passed_dot) {
+						status.has_pre_dot_digits = true;
 						// Check integer part overflow
 						if (digit_part > MAX_INT_NUM) {
 							return Err(DestringError::DigitOverflow);
 						}
 						digit_part = digit_part * 10 + digit;
 					} else {
+						status.has_post_dot_digits = true;
 						// Check fractional part overflow
 						if (scale > MAX_INT_NUM) {
 							return Err(DestringError::FracOverflow);
@@ -78,25 +90,35 @@ struct FstrDump final{
 					return Err(DestringError::UnexpectedPositive);
 				case '-':
 					return Err(DestringError::UnexpectedNegative);
-				case '.':  // Handle decimal point
-					if (passed_point) {
-						return Err(DestringError::MultipleDot);  // Multiple decimal points
+				case '.':  // Handle decimal dot
+					if (status.passed_dot) {
+						return Err(DestringError::MultipleDot);  // Multiple decimal dots
 					}
-					passed_point = true;
+					status.passed_dot = true;
 					++index;
-					continue;
+					break;
+				case 'a' ... 'z':
+					return Err(DestringError::UnexpectedAlpha);
+				case 'A' ... 'Z':
+					return Err(DestringError::UnexpectedAlpha);
 				default:  // Invalid characters
 					return Err(DestringError::UnexpectedChar);
 			}
 		}
 
-		if (!has_digits) {
-			return Err(DestringError::NoDigitsAfterSign);  // 没有有效数字
+		if(status.passed_dot){//有小数的情况
+			if((!status.has_post_dot_digits))
+				return Err(DestringError::NoDigitsAfterDot);
+		}else{//只有整数的情况
+			if (!status.has_pre_dot_digits) {
+				return Err(DestringError::NoDigitsAfterSign);  // 没有有效数字
+			}
 		}
 
-
-		digit_part ^= (is_negative << 31);
-		frac_part ^= (is_negative << 31);
+		if(status.is_negative){
+			digit_part = -digit_part;
+			frac_part = -frac_part;
+		}
 
 		return Ok(FstrDump{
 			.digit_part = digit_part,
@@ -106,7 +128,8 @@ struct FstrDump final{
 	}
 };
 
-__fast_inline static constexpr bool is_digit(const char chr){return chr >= '0' && chr <= '9';}
+__fast_inline static constexpr bool is_digit(const char chr){
+		return chr >= '0' && chr <= '9';}
 __fast_inline static constexpr bool is_alpha(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }

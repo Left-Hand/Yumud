@@ -115,10 +115,10 @@ struct DeserializerMaker{
 
 
 template<typename Protocol, typename T>
-struct serialize_iter_support_sso:std::false_type{};
+struct serialize_iter_support_sbo:std::false_type{};
 
 template<typename Protocol, typename T>
-static constexpr bool serialize_iter_sso_v = serialize_iter_support_sso<Protocol, T>::value;
+static constexpr bool serialize_iter_sbo_v = serialize_iter_support_sbo<Protocol, T>::value;
 
 
 template<typename Protocol, typename T>
@@ -164,7 +164,7 @@ private:
 };
 
 template<typename Protocol, size_t Q>
-struct serialize_iter_support_sso<Protocol, iq_t<Q>>:std::true_type{};
+struct serialize_iter_support_sbo<Protocol, iq_t<Q>>:std::true_type{};
 
 
 template<typename T>
@@ -215,7 +215,7 @@ private:
 
 template<typename Protocol, typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
-struct serialize_iter_support_sso<Protocol, T>:std::true_type{;};
+struct serialize_iter_support_sbo<Protocol, T>:std::true_type{;};
 
 
 // 枚举类型特化
@@ -245,7 +245,7 @@ private:
 
 template<typename Protocol, typename T>
 requires(std::is_enum_v<T>)
-struct serialize_iter_support_sso<Protocol, T>:std::true_type{;};
+struct serialize_iter_support_sbo<Protocol, T>:std::true_type{;};
 
 template <typename T>
 requires requires(const T& t) {
@@ -373,7 +373,7 @@ private:
             [&]<size_t I>{
                 using RawType = std::tuple_element_t<I, std::tuple<Ts...>>;
                 using ElemType = std::decay_t<RawType>;
-                if constexpr (serialize_iter_sso_v<Protocol, ElemType>) {
+                if constexpr (serialize_iter_sbo_v<Protocol, ElemType>) {
                     return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
                 } else {
                     return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};

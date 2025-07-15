@@ -27,15 +27,24 @@ struct FixedString{
         return StringView(buf_, len_);
     }
 
-    [[nodiscard]] constexpr Result<void, void> try_push_back(const char chr){
+    [[nodiscard]] constexpr const char * data() const {
+        return buf_;
+    }
+
+    [[nodiscard]] constexpr Result<void, void> push_back(const char chr){
         if(len_ >= N) return Err();
         buf_[len_++] = chr;
         return Ok();
     }
 
-    [[nodiscard]] constexpr Result<char, void> try_pop_back(){
+    [[nodiscard]] constexpr Result<char, void> pop_back(){
         if(len_ == 0) return Err();
         return Ok(buf_[--len_]);
+    }
+
+    constexpr void push_back_unchecked(const char chr){
+        if(len_ >= N) return;
+        buf_[len_++] = chr;
     }
 
     [[nodiscard]] constexpr size_t length() const{
@@ -46,7 +55,7 @@ struct FixedString{
         return len_;
     }
 
-    constexpr void insert(const size_t idx, const char chr){
+    constexpr void insert_unchecked(const size_t idx, const char chr){
         if (len_ >= N or idx > len_) return;
         // Move characters from the end to make space for the new character
         for (size_t i = len_; i > idx; i--) {
@@ -58,7 +67,7 @@ struct FixedString{
         len_++;
     }
 
-    [[nodiscard]] constexpr Result<void, void> try_insert(const size_t idx, const char chr){
+    [[nodiscard]] constexpr Result<void, void> insert(const size_t idx, const char chr){
         if (len_ >= N || idx > len_) return Err();
         // Move characters from the end to make space for the new character
         for (size_t i = len_; i > idx; i--) {
@@ -72,7 +81,7 @@ struct FixedString{
         return Ok();
     }
 
-    [[nodiscard]] constexpr Result<void, void> try_erase(const size_t idx){
+    [[nodiscard]] constexpr Result<void, void> erase(const size_t idx){
         if (idx > len_) return Err();  // 正确索引检查
         if (len_ == 0) return Err();    // 防止空字符串操作
         if (idx == 0) return Err();
@@ -110,7 +119,7 @@ private:
         constexpr auto str = FixedString<10>("Hello");
         constexpr auto str2 = []{
             auto _str = FixedString<10>("Hello");
-            _str.try_push_back('!');
+            _str.push_back('!');
             return _str;
         }();
 
@@ -136,7 +145,7 @@ private:
         // 测试越界插入
         static_assert([]{
             auto str = FixedString<5>("Hi");
-            str.try_insert(3, '!');  // 允许在 len_=2 的索引3插入
+            str.insert(3, '!');  // 允许在 len_=2 的索引3插入
             return str == StringView("Hi!");  // ✅ 应成功
         }());
 

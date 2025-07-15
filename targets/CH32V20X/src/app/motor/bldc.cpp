@@ -42,12 +42,12 @@
 
 #include "CurrentSensor.hpp"
 
-#include "robots/rpc/arg_parser.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
+#include "core/string/utils/streamed_string_splitter.hpp"
 
 
 using namespace ymd;
@@ -157,8 +157,6 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
         | (std::bit_cast<uint8_t>(cmd) << 7));
     return hal::CanStdId(id_u11);
 };
-
-
 
 
 struct MsgFactory{
@@ -781,7 +779,7 @@ void bldc_main(){
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
         //     (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
         // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
-        auto iter =             serde::make_serialize_iter<serde::RawBytes>(
+        auto iter = serde::make_serialize_iter<serde::RawBytes>(
                 robots::machine_cmds::Replace{
                     .x1 = 0_bf16,
                     .y1 = 1_bf16,
@@ -790,7 +788,7 @@ void bldc_main(){
                 }
             );
 
-        auto msg = hal::CanMsg::from_iter(hal::CanStdId(0),iter).unwrap();
+        [[maybe_unused]] auto msg = hal::CanMsg::from_iter(hal::CanStdId(0),iter).unwrap();
         // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
         // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
         // uint8_t res = 100;

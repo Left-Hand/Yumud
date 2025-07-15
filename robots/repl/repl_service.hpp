@@ -3,10 +3,10 @@
 #include "core/math/real.hpp"
 #include "core/stream/dummy_stream.hpp"
 #include "core/string/fixed_string.hpp"
+#include "core/string/utils/streamed_string_splitter.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "robots/rpc/rpc.hpp"
-#include "robots/rpc/arg_parser.hpp"
 
 namespace ymd::robots{
 
@@ -40,7 +40,7 @@ private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
 
-    ArgSplitter splitter_;
+    StreamedStringSplitter splitter_;
     // FixedString<64> temp_str_;
     
     bool outen_ = true;
