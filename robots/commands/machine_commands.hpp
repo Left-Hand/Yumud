@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/utils/serde.hpp"
+
 namespace ymd{
 namespace robots::machine_cmds{
 

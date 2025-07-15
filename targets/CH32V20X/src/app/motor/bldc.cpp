@@ -1,3 +1,9 @@
+#include "src/testbench/tb.h"
+#include "app/stepper/ctrl.hpp"
+#include "utils.hpp"
+#include <atomic>
+
+
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
@@ -20,6 +26,7 @@
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 #include "drivers/GateDriver/DRV8301/DRV8301.hpp"
 
+#include "types/vectors/quat/Quat.hpp"
 
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -30,34 +37,24 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
-
-
 #include "dsp/filter/rc/LowpassFilter.hpp"
+
+
 #include "CurrentSensor.hpp"
-
-#include "types/vectors/quat/Quat.hpp"
-
-#include "algo/interpolation/cubic.hpp"
-
-#include "src/testbench/tb.h"
 
 #include "robots/rpc/arg_parser.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
+#include "robots/commands/joint_commands.hpp"
+#include "robots/commands/machine_commands.hpp"
 
-#include "app/stepper/ctrl.hpp"
-#include "utils.hpp"
-#include "joint_commands.hpp"
-#include "machine_commands.hpp"
-#include <atomic>
 
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
-using namespace ymd::intp;
 using namespace ymd::robots::joint_cmds;
 using namespace ymd::robots::machine_cmds;
 
@@ -787,11 +784,13 @@ void bldc_main(){
         auto iter =             serde::make_serialize_iter<serde::RawBytes>(
                 robots::machine_cmds::Replace{
                     .x1 = 0_bf16,
-                    .y1 = 0_bf16,
+                    .y1 = 1_bf16,
                     .x2 = 0_bf16,
                     .y2 = 0_bf16
                 }
             );
+
+        auto msg = hal::CanMsg::from_iter(hal::CanStdId(0),iter).unwrap();
         // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
         // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
         // uint8_t res = 100;
@@ -803,7 +802,12 @@ void bldc_main(){
             // rem_str.size(),
             // base_roll_,
             // base_omega_,
-            iter
+            // iter,
+            msg.iter_payload(),
+            serde::make_deserializer<serde::RawBytes, robots::machine_cmds::Replace>()
+                .deserialize(msg.iter_payload()).examine()
+
+
             // count_iter(iter),
             // (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()

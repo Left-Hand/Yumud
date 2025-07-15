@@ -40,7 +40,8 @@ int main(){
     // i2c_scanner_main();
     // bldc_main();
     // st1615_main();
-    ft6336_main();
+    bldc_main();
+    // ft6336_main();
     // i2c_scanner_main();
     // rrs3_robot_main();
     // can_ring_main();

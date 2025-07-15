@@ -17,21 +17,21 @@ public:
 
 protected:
     constexpr uint8_t extractCmdSpecifier
-        (const CanMsg & msg) {return (msg.payload()[0] >> 5);}
+        (const CanMsg & msg) {return (msg.iter_payload()[0] >> 5);}
     constexpr uint8_t extractN2
-        (const CanMsg & msg) {return ((msg.payload()[0] >> 2) & 0x03);}
+        (const CanMsg & msg) {return ((msg.iter_payload()[0] >> 2) & 0x03);}
     constexpr uint8_t extractCommandSpecifier
-        (const CanMsg & msg) {return ((msg.payload()[0] >> 5) & 0x03);}
+        (const CanMsg & msg) {return ((msg.iter_payload()[0] >> 5) & 0x03);}
     constexpr uint8_t extractN3
-        (const CanMsg & msg) {return ((msg.payload()[0] >> 1) & 0x07);}
+        (const CanMsg & msg) {return ((msg.iter_payload()[0] >> 1) & 0x07);}
     constexpr uint8_t extractExpidited
-        (const CanMsg & msg) {return ((msg.payload()[0] >> 1) & 0x01);}
+        (const CanMsg & msg) {return ((msg.iter_payload()[0] >> 1) & 0x01);}
     constexpr uint8_t extractSizeInd
-        (const CanMsg & msg) {return (msg.payload()[0] & 0x01);}
+        (const CanMsg & msg) {return (msg.iter_payload()[0] & 0x01);}
     constexpr uint8_t extractEndTrans
-        (const CanMsg & msg) {return (msg.payload()[0] & 0x01);}
+        (const CanMsg & msg) {return (msg.iter_payload()[0] & 0x01);}
     constexpr uint8_t extractToggle
-        (const CanMsg & msg) {return ((msg.payload()[0] >> 4) & 0x01);}
+        (const CanMsg & msg) {return ((msg.iter_payload()[0] >> 4) & 0x01);}
 
     SdoProtocol & sdo_;
     const CobId cobid_;

@@ -111,4 +111,6 @@ namespace std{
     struct is_arithmetic<ymd::bf16> : std::true_type {};
     template<>
     struct is_floating_point<ymd::bf16> : std::true_type {};
+    template<>
+    struct is_signed<ymd::bf16> : std::true_type {};
 }

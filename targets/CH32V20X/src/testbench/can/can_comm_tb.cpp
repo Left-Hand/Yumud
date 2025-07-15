@@ -20,7 +20,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             hal::CanStdId(id), {3,4});
 
         // constexpr auto a = sizeof(msg);
-        auto payload = msg.payload();
+        auto payload = msg.iter_payload();
         logger.println(id, payload);
 
     }
@@ -35,7 +35,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         );
         // msg.load(data);
         // auto read = msg.to_vector();
-        logger.println(id, msg.size(), msg.payload());
+        logger.println(id, msg.size(), msg.iter_payload());
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
@@ -43,9 +43,9 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             hal::CanStdId(id), 
             std::bit_cast<std::array<uint8_t, 4>>(data2.to_i32())
         );
-        logger.println(id, msg2.size(), msg2.payload());
+        logger.println(id, msg2.size(), msg2.iter_payload());
         for(uint8_t i = 0; i < msg2.size(); i++){
-            logger.println(msg2.payload()[i]);
+            logger.println(msg2.iter_payload()[i]);
         }
 
         while(true);
