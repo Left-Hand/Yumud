@@ -38,7 +38,7 @@ public:
     }
 
     IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
-        return phy_.write_burst<uint16_t>(std::span(pcolor, rect.get_area()));
+        return phy_.write_burst_pixels(std::span(pcolor, rect.get_area()));
     }
 
     IResult<> set_display_offset(const Vector2<uint16_t> _offset){
@@ -81,7 +81,7 @@ public:
     ){
         if(const auto res = setpos_unchecked(pos);
             res.is_err()) return res;
-        if(const auto res = phy_.write_data16(uint16_t(color));
+        if(const auto res = phy_.write_data16(color.as_u16());
             res.is_err()) return res;
         return Ok();
     }

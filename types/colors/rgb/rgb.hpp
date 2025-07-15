@@ -164,9 +164,7 @@ struct RGB565{
         return RGB888(r << 3, g << 2, b << 3);
     }
 
-    __fast_inline constexpr explicit operator uint16_t() const {return uni(r,g,b);}
-
-    __fast_inline constexpr uint16_t to_u16() const {
+    __fast_inline constexpr uint16_t as_u16() const {
         return uni(r,g,b);
     }
 
@@ -184,10 +182,13 @@ struct RGB565{
         return *this;
     }
 private:
-    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
-    static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
+    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){
+        return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
+    static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){
+        return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
 
-    __fast_inline constexpr RGB565(const uint8_t _r, const uint8_t _g, const uint8_t _b): b(_b & 0b11111), g(_g & 0b111111), r(_r & 0b11111){;}
+    __fast_inline constexpr RGB565(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
+        b(_b & 0b11111), g(_g & 0b111111), r(_r & 0b11111){;}
 };
 
 static_assert(sizeof(RGB565) == 2);

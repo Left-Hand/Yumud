@@ -109,7 +109,7 @@ IResult<> ST7789::setpos_unchecked(const Vector2<uint16_t> pos){
 IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 color){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
-    if(const auto res = phy_.write_repeat<uint16_t>(
+    if(const auto res = phy_.write_repeat_pixels(
             color, rect.get_area());
         res.is_err()) return res;
     return Ok();
@@ -118,7 +118,7 @@ IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 col
 IResult<> ST7789::puttexture_unchecked(const Rect2<uint16_t> rect, const RGB565 * color_ptr){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
-    if(const auto res = phy_.write_burst<uint16_t>(
+    if(const auto res = phy_.write_burst_pixels(
             std::span<const RGB565>(color_ptr, rect.get_area()));
         res.is_err()) return res;
     return Ok();

@@ -44,10 +44,6 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_back_light_brightness(const real_t brightness){
-        return Ok();
-    }
-
     [[nodiscard]] IResult<> write_command(const uint8_t cmd){
         dc_gpio_.clr();
         return IResult<>(phy_write_single<uint8_t>(cmd));
@@ -63,16 +59,14 @@ public:
         return IResult<>(phy_write_single<uint16_t>(data));
     }
 
-    template<typename U>
-    [[nodiscard]] IResult<> write_burst(std::span<const auto> pbuf){
-        dc_gpio_.set();
-        return IResult<>(phy_write_burst<U>(pbuf));
+    template<typename T>
+    [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
+        return IResult<>(phy_write_burst<uint16_t>(pbuf));
     }
 
-    template<typename U>
-    [[nodiscard]] IResult<> write_repeat(const auto & data, size_t len){
+    [[nodiscard]] IResult<> write_repeat_pixels(const auto & data, size_t len){
         dc_gpio_.set();
-        return IResult<>(phy_write_repeat<U>(data, len));
+        return IResult<>(phy_write_repeat<uint16_t>(data, len));
     }
 private:
     hal::SpiHw & spi_;
@@ -95,7 +89,7 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]).to_u16());
+            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]).as_u16());
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
@@ -120,7 +114,7 @@ private:
                 return res;
         }
         for (size_t i = 0; i < len; i++){
-            if(const auto res = spi_.write(uint32_t(static_cast<T>(data)));
+            if(const auto res = spi_.write((data).as_u16());
                 res.is_err()) return res;
         } 
         if (cont == DISC) spi_.end();
