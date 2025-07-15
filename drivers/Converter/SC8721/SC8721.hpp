@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 
 struct SC8721_Prelude{
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
     using RegAddress = uint8_t;
 
     enum class Error_Kind{

@@ -2,6 +2,7 @@
 
 #include "fp32.hpp"
 #include "core/math/real.hpp"
+
 #include <cstdint>
 #include <bit>
 
@@ -25,7 +26,7 @@ struct bf16 {
             sign(val >> 15){;}
 
 
-        constexpr uint16_t to_u16() const{
+        constexpr uint16_t as_u16() const{
             return std::bit_cast<uint16_t>(*this);
         }
 
@@ -55,18 +56,18 @@ struct bf16 {
 
     template<typename T>
     requires(std::is_floating_point_v<T>)
-    explicit constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
+    constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
 
     template<size_t Q>
-    explicit constexpr bf16(iq_t<Q> qv) : bf16(float(qv)) {}
-    explicit constexpr bf16(int iv) : bf16(float(iv)) {}
+    constexpr bf16(iq_t<Q> qv) : bf16(float(qv)) {}
+    constexpr bf16(int iv) : bf16(float(iv)) {}
     constexpr bf16 operator -() const{
-        return from_u16(raw.to_u16() ^ 0x8000);
+        return from_u16(raw.as_u16() ^ 0x8000);
     }
 
     // bf16 -> float
     explicit constexpr operator float() const {
-        uint32_t f32_bits = uint32_t(raw.to_u16()) << 16;
+        uint32_t f32_bits = uint32_t(raw.as_u16()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
@@ -82,7 +83,7 @@ struct bf16 {
     friend OutputStream & operator << (OutputStream & os, const bf16 v);
 
     constexpr uint16_t as_u16() const {
-        return raw.to_u16();
+        return raw.as_u16();
     }
 
     static constexpr bf16 from_u16(const uint16_t _raw){
@@ -110,4 +111,6 @@ namespace std{
     struct is_arithmetic<ymd::bf16> : std::true_type {};
     template<>
     struct is_floating_point<ymd::bf16> : std::true_type {};
+    template<>
+    struct is_signed<ymd::bf16> : std::true_type {};
 }

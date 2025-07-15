@@ -240,7 +240,7 @@ public:
         return *this;
     }
 
-    constexpr std::span<const uint8_t> payload() const{
+    constexpr std::span<const uint8_t> iter_payload() const{
         return std::span(payload_.begin(), size());
     }
 

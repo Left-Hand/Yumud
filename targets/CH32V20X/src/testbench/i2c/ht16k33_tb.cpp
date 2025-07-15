@@ -332,7 +332,7 @@ private:
     }
 
     constexpr void handle_insert_char(const size_t position, const char chr){
-        const auto res = str_.try_insert(position, chr);
+        const auto res = str_.insert(position, chr);
         if(res.is_ok()){
             // cursor_ = cursor_.try_shift(1, str_.length());
             // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
@@ -351,7 +351,7 @@ private:
 
     constexpr void handle_backspace(){
         const auto position = cursor_.position();
-        const auto res = str_.try_erase(position);
+        const auto res = str_.erase(position);
         if(res.is_ok()){
             cursor_ = cursor_
                 .shift(-1, str_.length())

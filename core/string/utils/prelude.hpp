@@ -12,9 +12,9 @@ enum class DestringError:uint8_t{
     InvalidDigit,
 	UnexpectedPositive,
 	UnexpectedNegative,
-	// InvalidPoint,
 	MultipleDot,
 	UnexpectedChar,
+	UnexpectedAlpha,
 	NoDigit,
     PosOverflow,
     DigitOverflow,
@@ -22,6 +22,7 @@ enum class DestringError:uint8_t{
 	NoDigits,
 	OnlySignFounded,
 	NoDigitsAfterSign,
+	NoDigitsAfterDot,
     NegOverflow,
     EmptyString,
 };

@@ -28,7 +28,8 @@ struct ADS112C04_Prelude{
     // SCL      SDA     100 1110
     // SCL      SCL     100 1111
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10000000);
+    static constexpr auto DEFAULT_I2C_ADDR = 
+        hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
     enum class Error_Kind:uint8_t{
 

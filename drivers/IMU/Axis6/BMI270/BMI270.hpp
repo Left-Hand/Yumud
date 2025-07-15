@@ -11,7 +11,7 @@ struct BMI270_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
     using RegAddress = uint8_t;
 

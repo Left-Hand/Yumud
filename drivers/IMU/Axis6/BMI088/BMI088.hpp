@@ -15,7 +15,7 @@ namespace ymd::drivers{
 
 struct BMI088_Prelude{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xd0);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xd0 >> 1);
 
     using Error = ImuError;
     

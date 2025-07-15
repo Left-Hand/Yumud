@@ -45,12 +45,12 @@ public:
     bool processMessage(const CanMsg & msg);
 
     static constexpr OdIndex extractIndex(const CanMsg & msg) {
-        const auto payload = msg.payload();
+        const auto payload = msg.iter_payload();
         return (payload[2] << 8) | payload[1] ;
     }
 
     static constexpr OdSubIndex extractSubIndex(const CanMsg& msg) {
-        return msg.payload()[3];
+        return msg.iter_payload()[3];
     }
 
 

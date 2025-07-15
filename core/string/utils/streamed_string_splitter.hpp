@@ -2,21 +2,22 @@
 
 #include "core/string/string_view.hpp"
 #include "core/utils/Option.hpp"
+#include "core/string/fixed_string.hpp"
+
 #include "hal/bus/uart/uarthw.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
 
 
 namespace ymd{
 
-struct ArgSplitter final{
-
+struct StreamedStringSplitter final{
 public:
-    ArgSplitter(){;}
+    constexpr StreamedStringSplitter(){;}
 
     template<typename Fn>
     constexpr void update(const char chr, Fn && fn){
         if(is_valid_char(chr)){
-            temp_str_.push_back(chr);
+            temp_str_.push_back_unchecked(chr);
         }
 
         if(temp_str_.size() >= STR_MAX_LENGTH){
@@ -35,7 +36,7 @@ public:
         }
     }
 
-    StringView temp() const {
+    constexpr StringView temp() const {
         return StringView{temp_str_.data(), temp_str_.size()};
     }
 
@@ -43,7 +44,7 @@ private:
     static constexpr size_t STR_MAX_LENGTH = 64;
     static constexpr size_t STR_MAX_PIECES = 16;
 
-    sstl::vector<char, STR_MAX_LENGTH> temp_str_;
+    FixedString<STR_MAX_LENGTH> temp_str_;
     char delimiter_ = ' ';
 
     template<typename Fn>
@@ -73,17 +74,7 @@ private:
     }
 
     static constexpr bool is_valid_char(const char c){
-        switch(c){
-            case ' ': return true;
-            case '0'...'9': return true;
-            case 'a'...'z': return true;
-            case 'A'...'Z': return true;
-            case '.': return true;
-            case '-': return true;
-            case '_': return true;
-            case '+': return true;
-            default: return false;
-        }
+        return (c >= 32) and (c <= 126);
     }
 
     static constexpr void on_buf_overflow(){

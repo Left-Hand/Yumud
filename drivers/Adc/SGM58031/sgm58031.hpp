@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 
 struct SGM58031_Prelude{
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b0100000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0100000 >> 1);
     enum class Error_Kind{
         WrongChipId
     };

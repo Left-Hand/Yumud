@@ -15,7 +15,7 @@ struct INA219_Prelude{
     using RegAddress = uint8_t;
 
     static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u8(0x80);
+        hal::I2cSlaveAddr<7>::from_u7(0x80 >> 1);
 
     enum class Error_Kind:uint8_t{
 

@@ -221,8 +221,8 @@ void rrs3_robot_main(){
     auto list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
-        rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
+        rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
         // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
         rpc::make_function("name", [&](){DEBUG_PRINTLN(
         );}),

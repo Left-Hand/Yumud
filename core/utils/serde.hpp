@@ -3,6 +3,8 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/reflecter.hpp"
 
+#include "core/math/float/bf16.hpp"
+
 namespace ymd::serde{
 
 struct RawBytes;
@@ -14,10 +16,11 @@ struct SerializeIter{};
 
 enum class DeserializeError:uint8_t{
     BytesLengthShort,
-    BytesLengthShortWhileParsingIq,
-    BytesLengthShortWhileParsingInt,
-    BytesLengthShortWhileParsingFloating,
-    BytesLengthShortWhileParsingElement,
+    BytesLengthShortParsingIq,
+    BytesLengthShortParsingInt,
+    BytesLengthShortParsingFloating,
+    BytesLengthShortParsingBf16,
+    BytesLengthShortParsingElement,
     BytesLengthLong,
     BytesLengthMismatch
 };
@@ -80,7 +83,7 @@ struct StructDeserializer<RawBytes, T>{
         using MemberType = typename reflecter::Reflecter<T>::template member_t<N>;
 
         if(pbuf.size() < sizeof(MemberType))
-            return Err(DeserializeError::BytesLengthShortWhileParsingElement);
+            return Err(DeserializeError::BytesLengthShortParsingElement);
         const auto res = Deserializer<RawBytes, MemberType>
             ::deserialize(pbuf.subspan(0, sizeof(MemberType)));
         
@@ -94,14 +97,6 @@ struct StructDeserializer<RawBytes, T>{
 };
 
 
-#define DERIVE_RAW_BYTES_DESERIALIZER(Type) \
-template<> \
-struct serde::DeserializerMaker<serde::RawBytes, Type> { \
-    static constexpr Deserializer<RawBytes, Type> \
-    make() { \
-        return Deserializer<RawBytes, Type>(); \
-    } \
-};
 
 template<typename Protocol, typename T>
 struct SerializeIterMaker{
@@ -120,10 +115,10 @@ struct DeserializerMaker{
 
 
 template<typename Protocol, typename T>
-struct serialize_iter_support_sso:std::false_type{};
+struct serialize_iter_support_sbo:std::false_type{};
 
 template<typename Protocol, typename T>
-static constexpr bool serialize_iter_sso_v = serialize_iter_support_sso<Protocol, T>::value;
+static constexpr bool serialize_iter_sbo_v = serialize_iter_support_sbo<Protocol, T>::value;
 
 
 template<typename Protocol, typename T>
@@ -169,7 +164,7 @@ private:
 };
 
 template<typename Protocol, size_t Q>
-struct serialize_iter_support_sso<Protocol, iq_t<Q>>:std::true_type{};
+struct serialize_iter_support_sbo<Protocol, iq_t<Q>>:std::true_type{};
 
 
 template<typename T>
@@ -195,9 +190,32 @@ private:
     size_t pos_ = 0;
 };
 
+template<>
+struct SerializeIter<RawBytes, bf16>{
+    static constexpr size_t N = sizeof(bf16);
+    constexpr explicit SerializeIter(const bf16 num):
+        buf_(serialize(num)){;}
+
+    constexpr bool has_next() const {
+        return pos_ < N;
+    }
+    constexpr uint8_t next() {
+        return buf_[pos_++];
+    }
+
+    static constexpr std::array<uint8_t, N> serialize(const bf16 num){
+        return std::bit_cast<std::array<uint8_t, N>>(num.as_u16());
+    } 
+private:
+    using Buf = std::array<uint8_t, N>;
+    Buf buf_;
+    size_t pos_ = 0;
+};
+
+
 template<typename Protocol, typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
-struct serialize_iter_support_sso<Protocol, T>:std::true_type{;};
+struct serialize_iter_support_sbo<Protocol, T>:std::true_type{;};
 
 
 // 枚举类型特化
@@ -227,7 +245,7 @@ private:
 
 template<typename Protocol, typename T>
 requires(std::is_enum_v<T>)
-struct serialize_iter_support_sso<Protocol, T>:std::true_type{;};
+struct serialize_iter_support_sbo<Protocol, T>:std::true_type{;};
 
 template <typename T>
 requires requires(const T& t) {
@@ -355,7 +373,7 @@ private:
             [&]<size_t I>{
                 using RawType = std::tuple_element_t<I, std::tuple<Ts...>>;
                 using ElemType = std::decay_t<RawType>;
-                if constexpr (serialize_iter_sso_v<Protocol, ElemType>) {
+                if constexpr (serialize_iter_sbo_v<Protocol, ElemType>) {
                     return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
                 } else {
                     return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
@@ -383,7 +401,7 @@ struct Deserializer<RawBytes, iq_t<Q>> {
 
     [[nodiscard]] static constexpr Result<iq_t<Q>, DeserializeError> 
     deserialize(std::span<const uint8_t> pbuf) {
-        if(pbuf.size() < N) return Err(DeserializeError::BytesLengthShortWhileParsingIq);
+        if(pbuf.size() < N) return Err(DeserializeError::BytesLengthShortParsingIq);
         int32_t val = std::bit_cast<int32_t>(
             std::array<uint8_t, N>{pbuf[0], pbuf[1], pbuf[2], pbuf[3]});
         return Ok(iq_t<Q>::from_i32(val));
@@ -408,9 +426,9 @@ struct Deserializer<RawBytes, T> {
     deserialize(std::span<const uint8_t> pbuf) {
         if (pbuf.size() < N) {
             if constexpr(std::is_integral_v<T>)
-                return Err(DeserializeError::BytesLengthShortWhileParsingInt);
+                return Err(DeserializeError::BytesLengthShortParsingInt);
             else 
-                return Err(DeserializeError::BytesLengthShortWhileParsingFloating);
+                return Err(DeserializeError::BytesLengthShortParsingFloating);
         }
 
         std::array<uint8_t, N> bytes{};
@@ -419,6 +437,29 @@ struct Deserializer<RawBytes, T> {
     }
 };
 
+template<>
+struct Deserializer<RawBytes, bf16> {
+    static constexpr size_t N = sizeof(bf16);
+    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
+        return N;
+    }
+
+    [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
+    take(std::span<const uint8_t> pbuf){
+        return pbuf.subspan(size(pbuf));
+    }
+
+    [[nodiscard]] static constexpr Result<bf16, DeserializeError> 
+    deserialize(std::span<const uint8_t> pbuf) {
+        if (pbuf.size() < N) {
+            return Err(DeserializeError::BytesLengthShortParsingBf16);
+        }
+
+        std::array<uint8_t, N> bytes{};
+        std::copy_n(pbuf.data(), N, bytes.begin());
+        return Ok(bf16::from_u16(std::bit_cast<uint16_t>(bytes)));
+    }
+};
 
 template<typename Protocol, typename... Ts>
 struct Deserializer<Protocol, std::tuple<Ts...>> {
@@ -471,7 +512,7 @@ private:
 
 
 
-#define DERIVE_SERIALIZE_AS_TUPLE(T)\
+#define DEF_DERIVE_SERIALIZE_AS_TUPLE(T)\
 template<typename Protocol>\
 struct serde::SerializeIterMaker<Protocol, T>{\
     static constexpr auto make(T obj){\
@@ -479,11 +520,23 @@ struct serde::SerializeIterMaker<Protocol, T>{\
     }\
 };
 
+#define DEF_DERIVE_RAW_BYTES_DESERIALIZER(T) \
+template<> \
+struct serde::DeserializerMaker<serde::RawBytes, T> { \
+    static constexpr serde::Deserializer<RawBytes, T> \
+    make() { \
+        return serde::Deserializer<RawBytes, T>(); \
+    } \
+};
 
-#define DERIVE_DEBUG_AS_DISPLAY(T)\
+
+#define DEF_DERIVE_DEBUG_AS_DISPLAY(T)\
 OutputStream & operator<<(OutputStream & os, const T & self){ \
     return reflecter::Displayer<T>::display(os, self);\
 }
+
+
+
 
 
 }

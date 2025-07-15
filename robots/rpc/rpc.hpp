@@ -10,6 +10,7 @@
 #include "core/magic/enum_traits.hpp"
 #include "core/utils/Result.hpp"
 #include "core/string/string_view.hpp"
+#include "core/string/utils/strconv2.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd::magic{
@@ -27,33 +28,53 @@ using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
 
 namespace ymd::rpc{
 
-class ParamFromString{
-protected:
-    StringView value_;
-public:
-    constexpr ParamFromString(const char * value):
-        value_(value){;}
+enum class EntryAccessError: uint8_t{
+    NoArgForSetter,
+    NotImplemented,
+    NoCallableFounded,
+    EmptyArgs,
+    ArgsCountNotMatch,
+    CantModifyReadOnly
+};
 
-    constexpr ParamFromString(const StringView value):
-        value_(value){;}
+
+DERIVE_DEBUG(EntryAccessError)
+
+
+enum class EntryInteractError: uint8_t{
+    ValueIsGreaterThanLimit,
+    ValueIsLessThanLimit
+};
+
+DERIVE_DEBUG(EntryInteractError)
+
+DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DestringError)
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
+struct ParamFromString final{
+    constexpr explicit ParamFromString(const char * str):
+        str_(str){;}
+
+    constexpr explicit ParamFromString(const StringView str):
+        str_(str){;}
 
     template<typename T>
-    requires (std::is_convertible_v<StringView, T>)
-    constexpr T to() const{
-        return static_cast<T>(value_);
-    }
-
-    template<typename T>
-    constexpr Option<T> try_to() const {
-        if constexpr(std::is_convertible_v<StringView, T>) {
-            return Some(static_cast<T>(value_));
-        }
-        return None;
+    constexpr IResult<T> to() const{
+        const auto res = strconv2::from_str<T>(str_);
+        if(res.is_err()) return Err(res.unwrap_err());
+        return Ok(res.unwrap());
     }
 
     friend OutputStream & operator << (OutputStream & os, const ParamFromString & param){
-        return os << param.value_;
+        return os << param.str_;
     }
+
+    constexpr StringView str() const{return str_;}
+private:
+    StringView str_;
 };
 
 using Param = ParamFromString;
@@ -122,27 +143,14 @@ private:
 using AccessReponserIntf = OutputStream;
 
 
-enum class EntryAccessError: uint8_t{
-    NoArgForSetter,
-    NotImplemented,
-    NoCallableFounded,
-    EmptyArgs,
-    ArgsCountNotMatch,
-    CantModifyReadOnly,
-    ValueIsGreatThanLimit,
-    ValueIsLessThanLimit
-};
 
-DERIVE_DEBUG(EntryAccessError)
 
-template<typename T = void>
-using AccessResult = Result<T, EntryAccessError>;
 
 
 // 主模板定义（处理非模板类和默认情况）
 template <typename T, typename = void>
 struct EntryVisitor {
-    static AccessResult<> visit(T& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+    static IResult<> visit(T& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
         static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
         return Err(EntryAccessError::NotImplemented);
     }
@@ -151,12 +159,12 @@ struct EntryVisitor {
 
 
 template<typename T>
-struct Property final{
+struct Property{
     constexpr Property(const StringView name,T * value):
         name_(name),
         value_(value){;}
 
-    constexpr T & get() const {
+    constexpr T & deref() const {
         return *value_;
     }
 
@@ -169,43 +177,40 @@ private:
 };
 
 template<typename T>
-struct PropertyWithLimit final{
+struct PropertyWithLimit final:public Property<T>{
     static_assert(std::is_const_v<T> == false, "value must be setable");
 
     constexpr PropertyWithLimit(
         const StringView name,
         T * value, 
-        std::tuple<T, T> limits
+        std::pair<T, T> limits
     ):
-        name_(name),
-        value_(value),
+        Property<T>(name, value),
         limits_(limits)
         {;}
 
-    constexpr T & get() const {
-        return *value_;
+    constexpr T min() const {
+        return limits_.first;
     }
 
-    constexpr StringView name() const{
-        return name_;
+    constexpr T max() const {
+        return limits_.second;
     }
 private:
-    StringView name_;
-    T * value_;
-    std::tuple<T, T> limits_;
+    std::pair<T, T> limits_;
 };
 
 // Property<T> 非const特化
 template <typename T>
 struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
-    static AccessResult<> visit(
+    static IResult<> visit(
         const Property<T>& self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
-        self.get() = ap[0].template to<std::decay_t<T>>();
-        ar << self.get();
+        self.deref() = ap[0].template to<std::decay_t<T>>();
+        ar << self.deref() << ar.endl();
         return Ok();
     }
 };
@@ -213,25 +218,103 @@ struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
 // Property<T> const特化
 template <typename T>
 struct EntryVisitor<const Property<T>, void> {
-    static AccessResult<> visit(
+    static IResult<> visit(
         const Property<T>& self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap) {
         if (ap.size()) 
             return Err(EntryAccessError::CantModifyReadOnly);
-        ar << self.get();
+        ar << self.deref() << ar.endl();
+        return Ok();
+    }
+};
+
+// Property<T> 非const特化
+template <typename T>
+struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>> {
+    static IResult<> visit(
+        const PropertyWithLimit<T>& self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
+        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
+        const auto val = ({
+            const auto res = ap[0].template to<std::decay_t<T>>();
+            if(unlikely(res.is_err())) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+        if(unlikely(val < self.min()))
+            return Err(EntryInteractError::ValueIsLessThanLimit);
+        if(unlikely(val > self.max()))
+            return Err(EntryInteractError::ValueIsGreaterThanLimit);
+        self.deref() = val;
+        ar << self.deref() << ar.endl();
         return Ok();
     }
 };
 
 
+// 递归转换辅助类
+
+template<typename Tuple>
+struct ConvertHelper {
+    // 递归情况：处理至少一个索引
+    template <size_t I, size_t... Js, typename... Args>
+    static constexpr Result<Tuple, Error>
+    apply(const auto& params, std::index_sequence<I, Js...>, Args&&... args) {
+        // 转换当前参数
+        using Element = std::tuple_element_t<I, Tuple>;
+        static_assert(is_result_v<Element> == false);
+        Result<Element, Error> res = ParamFromString(params[I]).template to<Element>();
+        if (res.is_err()) {
+            return Err(res.unwrap_err());  // 遇到错误立即返回
+        }
+        // 递归处理剩余参数
+        return apply(params, std::index_sequence<Js...>{}, 
+                        std::forward<Args>(args)..., res.unwrap());
+    }
+
+    // 终止条件：所有索引处理完成
+    template <typename... Args>
+    static constexpr Result<Tuple, Error>
+    apply(const auto& /*params*/, std::index_sequence<>, Args&&... args) {
+        // 使用完美转发构造目标元组
+        return Ok(Tuple{std::forward<Args>(args)...});
+    }
+
+
+};
 template<typename Tuple, std::size_t... Is>
-static constexpr Tuple convert_params_to_tuple(const auto & params, std::index_sequence<Is...>) {
-    return std::make_tuple((params[Is]).template to<
-        typename std::tuple_element<Is, Tuple>::type>()...);
+static constexpr Result<Tuple, Error>
+convert_params_to_tuple(const auto& params, std::index_sequence<Is...>) 
+{
+    // 参数数量检查
+    if (params.size() != sizeof...(Is)) {
+        return Err(rpc::EntryAccessError::ArgsCountNotMatch);
+    }
+
+    // 开始递归转换
+    return ConvertHelper<Tuple>::apply(params, std::index_sequence<Is...>{});
 }
 
+[[maybe_unused]] static void static_test(){
+    {
+        constexpr std::array params = {"1", "2"}; 
 
+        constexpr auto result = convert_params_to_tuple<std::tuple<int, int>>(params, std::make_index_sequence<2>{});    
+        static_assert(result.is_ok());
+        static_assert(std::get<0>(result.unwrap()) == 1);
+        static_assert(std::get<1>(result.unwrap()) == 2);
+    }
+
+    {
+        constexpr std::array params = {"1"}; 
+
+        constexpr auto result = convert_params_to_tuple<std::tuple<int>>(params, std::make_index_sequence<1>{});    
+        static_assert(result.is_ok());
+        static_assert(std::get<0>(result.unwrap()) == 1);
+    }
+}
 
 template<typename Ret, typename ... Args>
 struct MethodByLambda final{
@@ -251,10 +334,25 @@ public:
     constexpr StringView name() const { return name_; }
 };
 
+
+
 template <typename Ret, typename... Args>
 struct EntryVisitor<MethodByLambda<Ret, Args...>> {
     using Self = MethodByLambda<Ret, Args...>;
-    static AccessResult<> visit(const Self & self, 
+    using Tup = std::tuple<Args...>;
+    static IResult<Tup> dump( 
+        const AccessProviderIntf& ap){
+        if constexpr (std::is_same_v<Tup, std::tuple<>>)
+            return Ok(Tup{});
+        else return ({
+            const auto res = convert_params_to_tuple<Tup>(
+                ap, std::index_sequence_for<Args...>{});
+            if(res.is_err()) return Err(res.unwrap_err());
+            Ok(res.unwrap());
+        });
+    }
+
+    static IResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
@@ -262,8 +360,11 @@ struct EntryVisitor<MethodByLambda<Ret, Args...>> {
             return Err(EntryAccessError::ArgsCountNotMatch);
         }
 
-        auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
-            ap, std::index_sequence_for<Args...>{});
+        const Tup tuple_params = ({
+            const auto res = dump(ap);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        });
 
         if constexpr(std::is_void_v<Ret>){
             std::apply(self.callback_, tuple_params);
@@ -310,7 +411,20 @@ public:
 template <typename Obj, typename Ret, typename ... Args>
 struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> {
     using Self = MethodByMemFunc<Obj, Ret, Args...>;
-    static AccessResult<> visit(const Self & self, 
+    using Tup = std::tuple<Args...>;
+    static IResult<Tup> dump( 
+        const AccessProviderIntf& ap){
+        if constexpr (std::is_same_v<Tup, std::tuple<>>)
+            return Ok(Tup{});
+        else return ({
+            const auto res = convert_params_to_tuple<Tup>(
+                ap, std::index_sequence_for<Args...>{});
+            if(res.is_err()) return Err(res.unwrap_err());
+            Ok(res.unwrap());
+        });
+    }
+
+    static IResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
@@ -318,8 +432,12 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> {
             return Err(EntryAccessError::ArgsCountNotMatch);
         }
 
-        auto tuple_params = convert_params_to_tuple<std::tuple<Args...>>(
-            ap, std::index_sequence_for<Args...>{});
+        const Tup tuple_params = ({
+            const auto res = dump(ap);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+
 
         if constexpr(std::is_void_v<Ret>){
             std::apply([&self](Args... args) { self.call(args...); }, tuple_params);
@@ -370,21 +488,21 @@ private:
 template<typename... Entries>
 struct EntryVisitor<EntryList<Entries...>> {
     using Self = EntryList<Entries...>;
-    static AccessResult<> visit(const Self & self, 
+    static IResult<> visit(const Self & self, 
         AccessReponserIntf& ar, 
         const AccessProviderIntf& ap
     ) {
         if(ap.size() == 0) 
             return Err(EntryAccessError::EmptyArgs);
 
-        const auto head_hash = ap[0].to<StringView>().hash();
+        const auto head_hash = ap[0].str().hash();
         // Modify the first block for "ls" command
         if (head_hash == "ls"_ha) {
             std::apply([&ar](auto&&... entry) { ar.println(entry.name()...); }, self.entries());
             return Ok();
         }
-        return std::apply([&](auto&&... entry) -> AccessResult<> {
-            AccessResult<> res = Err(EntryAccessError::NoCallableFounded);
+        return std::apply([&](auto&&... entry) -> IResult<> {
+            IResult<> res = Err(EntryAccessError::NoCallableFounded);
             ( [&]() -> void {
                     auto ent_hash = entry.name().hash();
                     if (head_hash == ent_hash) {
@@ -467,6 +585,16 @@ auto make_property(const StringView name, T * val){
 }
 
 template<typename T>
+requires (not std::is_const_v<T>)
+auto make_property_with_limit(const StringView name, T * val, auto min, auto max){
+    return PropertyWithLimit<T>(
+        name, 
+        val,
+        std::make_pair(static_cast<T>(min), static_cast<T>(max))
+    );
+}
+
+template<typename T>
 auto make_ro_property(const StringView name, const T * val){
     return Property<const T>(
         name, 
@@ -487,7 +615,7 @@ auto make_list(const StringView name, Args && ... entries){
 
 // 统一访问接口
 template <typename T>
-AccessResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+IResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
     return EntryVisitor<std::remove_cvref_t<T>>::visit(
         std::forward<T>(self), ar, ap);
 }

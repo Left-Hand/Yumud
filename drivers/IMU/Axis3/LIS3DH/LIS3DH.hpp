@@ -137,7 +137,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>; 
 protected:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg);

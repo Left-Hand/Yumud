@@ -94,7 +94,7 @@ public:
     };
 
 protected:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
 
     using Phy = StmicroImu_Phy;
     Phy phy_;

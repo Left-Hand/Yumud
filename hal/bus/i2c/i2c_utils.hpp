@@ -19,11 +19,6 @@ enum class I2cRole:uint8_t{
 template<size_t N, I2cRole R>
 class _I2cAddr{
 public:
-
-    static constexpr _I2cAddr<N, R> from_u8(const uint8_t i2c_addr){
-        return {std::bitset<N>(i2c_addr >> 1)};
-    }
-
     static constexpr _I2cAddr<N, R> from_u7(const uint8_t i2c_addr){
         return {std::bitset<N>(i2c_addr)};
     }
@@ -38,7 +33,7 @@ public:
             (i2c_addr_.to_ulong() << 1), 1);
     }
 
-    constexpr uint8_t as_u8() const {return i2c_addr_.to_ulong() << 1;}
+    constexpr uint8_t to_u7() const {return i2c_addr_.to_ulong();}
 
     constexpr _I2cAddr(const _I2cAddr<N, R> & other) = default;
     constexpr _I2cAddr(_I2cAddr<N, R> && other) = default;

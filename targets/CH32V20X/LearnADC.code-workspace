@@ -116,7 +116,8 @@
             "format": "cpp",
             "queue": "cpp",
             "stack": "cpp",
-            "barrier": "cpp"
+            "barrier": "cpp",
+            "cerrno": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

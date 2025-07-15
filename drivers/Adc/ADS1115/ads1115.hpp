@@ -28,7 +28,7 @@ struct ADS111X_Prelude{
     // VDD 1001001
     // SDA 1001010
     // SCL 1001011
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b10010000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1001000);
 
     template<typename T = void>
     using IResult = Result<T, Error>;

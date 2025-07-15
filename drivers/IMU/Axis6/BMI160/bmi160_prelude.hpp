@@ -116,7 +116,7 @@ struct BMI160_Prelude{
         FAST_SETUP      = 0b11
     };
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b11010010);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
 
     struct Config{
         AccOdr acc_odr = AccOdr::_800Hz;

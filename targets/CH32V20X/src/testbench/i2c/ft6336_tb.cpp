@@ -32,6 +32,7 @@ void ft6336_main(){
         .tx_strategy = CommStrategy::Dma
     });
     DEBUGGER.retarget(&UART);
+    DEBUGGER.no_brackets();
 
     
     auto & led = hal::PA<15>();
@@ -55,9 +56,8 @@ void ft6336_main(){
 
     while(true){
         DEBUG_PRINTLN(
-            ft6336.get_touch_number().examine(),
-            ft6336.get_touch1_x().examine(),
-            ft6336.get_touch1_y().examine()
+            // ft6336.get_gesture_id().examine(),
+            ft6336.get_touch_points().examine().iter()
         );
 
         clock::delay(5ms);

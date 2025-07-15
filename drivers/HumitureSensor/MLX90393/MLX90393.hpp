@@ -29,7 +29,7 @@ struct MLX90393_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x0C);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0C >> 1);
     /** Register map. */
     static constexpr uint8_t MLX90393_REG_SB = (0x10);  /**< Start burst mode. */
     static constexpr uint8_t MLX90393_REG_SW = (0x20);  /**< Start wakeup on change mode. */

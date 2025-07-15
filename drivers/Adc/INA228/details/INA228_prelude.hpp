@@ -28,7 +28,7 @@ struct INA228_Prelude{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
     
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x40); // 16 bit
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x40 >> 1); // 16 bit
 };
 
 struct INA228_Regs:public INA228_Prelude{

@@ -3,10 +3,9 @@
 #include "core/math/real.hpp"
 #include "core/stream/dummy_stream.hpp"
 #include "core/string/fixed_string.hpp"
+#include "core/string/utils/streamed_string_splitter.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
 #include "robots/rpc/rpc.hpp"
-#include "robots/rpc/arg_parser.hpp"
 
 namespace ymd::robots{
 
@@ -22,38 +21,34 @@ public:
             char chr;
             is_->read1(chr);
 
-            // temp_str_.push_back(chr).unwrap();
-
-            // if(chr == '\n'){
-            //     // DEBUG_PRINTLN(splitter_.temp());
-            //     DEBUG_PRINTLN(temp_str_);
-            //     temp_str_.clear();
-            // }
-
-            splitter_.update(chr, [this, &obj](const std::span<const StringView> strs){
-                respond(obj, strs);});
+            splitter_.update(chr, 
+                [this, &obj](const std::span<const StringView> strs){
+                const auto res = respond(obj, strs);
+                if(outen_){
+                    os_.prints(">>=", res);
+                }
+            });
         }
     }
 
-    void set_outen(bool outen){ outen_ = outen; }   
+    void set_outen(Enable outen){ outen_ = outen == EN; }   
 private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
 
-    ArgSplitter splitter_;
-    // FixedString<64> temp_str_;
+    StreamedStringSplitter splitter_;
     
     bool outen_ = true;
     
     template<typename T>
-    void respond(T && obj, const std::span<const StringView> strs){
+    auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
-        os_.force_sync();
         if(outen_){
+            os_.force_sync();
             os_.prints("<<=", strs);
         }
 
-        const auto res = [&]{
+        return [&]{
             if(!this->outen_){
                 DummyOutputStream dos{};
                 return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
@@ -61,11 +56,6 @@ private:
                 return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
             }
         }();
-
-        
-        if(outen_){
-            os_.prints(">>=", res);
-        }
     }
 };
 }
