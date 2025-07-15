@@ -635,17 +635,21 @@ void bldc_main(){
         static const auto list = rpc::make_list(
             "list",
             rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_server.set_outen(true);}),
-            rpc::make_function("outdis", [&](){repl_server.set_outen(false);}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
             rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
                 pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
             }),
+
+            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
+            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
 
             rpc::make_function("pp", [&](const real_t p1, const real_t p2){
 
                 track_info_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
                 track_info_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
             })
+            
         );
 
         auto plan_joints = [&]() -> void { 

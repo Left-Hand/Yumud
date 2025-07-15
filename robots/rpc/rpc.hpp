@@ -34,12 +34,21 @@ enum class EntryAccessError: uint8_t{
     NoCallableFounded,
     EmptyArgs,
     ArgsCountNotMatch,
-    CantModifyReadOnly,
-    ValueIsGreatThanLimit,
+    CantModifyReadOnly
+};
+
+
+DERIVE_DEBUG(EntryAccessError)
+
+
+enum class EntryInteractError: uint8_t{
+    ValueIsGreaterThanLimit,
     ValueIsLessThanLimit
 };
 
-DEF_ERROR_WITH_KINDS(Error, EntryAccessError, strconv2::DestringError)
+DERIVE_DEBUG(EntryInteractError)
+
+DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DestringError)
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -136,8 +145,6 @@ using AccessReponserIntf = OutputStream;
 
 
 
-DERIVE_DEBUG(EntryAccessError)
-
 
 
 // 主模板定义（处理非模板类和默认情况）
@@ -152,12 +159,12 @@ struct EntryVisitor {
 
 
 template<typename T>
-struct Property final{
+struct Property{
     constexpr Property(const StringView name,T * value):
         name_(name),
         value_(value){;}
 
-    constexpr T & get() const {
+    constexpr T & deref() const {
         return *value_;
     }
 
@@ -170,30 +177,27 @@ private:
 };
 
 template<typename T>
-struct PropertyWithLimit final{
+struct PropertyWithLimit final:public Property<T>{
     static_assert(std::is_const_v<T> == false, "value must be setable");
 
     constexpr PropertyWithLimit(
         const StringView name,
         T * value, 
-        std::tuple<T, T> limits
+        std::pair<T, T> limits
     ):
-        name_(name),
-        value_(value),
+        Property<T>(name, value),
         limits_(limits)
         {;}
 
-    constexpr T & get() const {
-        return *value_;
+    constexpr T min() const {
+        return limits_.first;
     }
 
-    constexpr StringView name() const{
-        return name_;
+    constexpr T max() const {
+        return limits_.second;
     }
 private:
-    StringView name_;
-    T * value_;
-    std::tuple<T, T> limits_;
+    std::pair<T, T> limits_;
 };
 
 // Property<T> 非const特化
@@ -205,8 +209,8 @@ struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
         const AccessProviderIntf& ap
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
-        self.get() = ap[0].template to<std::decay_t<T>>();
-        ar << self.get();
+        self.deref() = ap[0].template to<std::decay_t<T>>();
+        ar << self.deref() << ar.endl();
         return Ok();
     }
 };
@@ -220,7 +224,31 @@ struct EntryVisitor<const Property<T>, void> {
         const AccessProviderIntf& ap) {
         if (ap.size()) 
             return Err(EntryAccessError::CantModifyReadOnly);
-        ar << self.get();
+        ar << self.deref() << ar.endl();
+        return Ok();
+    }
+};
+
+// Property<T> 非const特化
+template <typename T>
+struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>> {
+    static IResult<> visit(
+        const PropertyWithLimit<T>& self, 
+        AccessReponserIntf& ar, 
+        const AccessProviderIntf& ap
+    ) {
+        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
+        const auto val = ({
+            const auto res = ap[0].template to<std::decay_t<T>>();
+            if(unlikely(res.is_err())) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+        if(unlikely(val < self.min()))
+            return Err(EntryInteractError::ValueIsLessThanLimit);
+        if(unlikely(val > self.max()))
+            return Err(EntryInteractError::ValueIsGreaterThanLimit);
+        self.deref() = val;
+        ar << self.deref() << ar.endl();
         return Ok();
     }
 };
@@ -553,6 +581,16 @@ auto make_property(const StringView name, T * val){
     return Property<T>(
         name, 
         val
+    );
+}
+
+template<typename T>
+requires (not std::is_const_v<T>)
+auto make_property_with_limit(const StringView name, T * val, auto min, auto max){
+    return PropertyWithLimit<T>(
+        name, 
+        val,
+        std::make_pair(static_cast<T>(min), static_cast<T>(max))
     );
 }
 
