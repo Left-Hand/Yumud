@@ -30,7 +30,7 @@ struct BMP280_Prelude{
         OFF, FC2, FC4, FC8, FC16
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xec);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xec >> 1);
     scexpr uint8_t VALID_CHIPID = 0x58;
     scexpr uint8_t RESET_KEY = 0xB6;
 

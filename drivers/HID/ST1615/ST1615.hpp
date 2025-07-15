@@ -37,7 +37,8 @@ struct ST1615_Prelude{
 
 
     enum class Error_Kind:uint8_t{
-        PointRankOutOfRange,
+        PointNthOutOfRange,
+        InvalidGestureId,
         RetryTimeout
     };
 
@@ -47,23 +48,58 @@ struct ST1615_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class GestureType:uint8_t{
-        None = 0,
-        DoubleTab = 1,
-        ZoomIn = 2,
-        ZoomOut = 3,
-        SlideLeftToRight = 4,
-        SlideRightToLeft = 5,
-        SlideTopToBottom = 6,
-        SlideBottomToTop = 7,
-        Palm = 8,
-        SingleTap = 9,
-        LongPress = 10,
-        EndOfLongPress = 11,
-        Drag = 12,
+        struct GestureId{
+        enum class Kind:uint8_t{
+            DoubleTab = 1,
+            ZoomIn = 2,
+            ZoomOut = 3,
+            SlideLeftToRight = 4,
+            SlideRightToLeft = 5,
+            SlideTopToBottom = 6,
+            SlideBottomToTop = 7,
+            Palm = 8,
+            SingleTap = 9,
+            LongPress = 10,
+            EndOfLongPress = 11,
+            Drag = 12,
+        };
+
+        FRIEND_DERIVE_DEBUG(Kind)
+
+        using enum Kind;
+
+        constexpr GestureId(Kind kind):kind_(std::bit_cast<uint8_t>(kind)) {;}
+        constexpr GestureId(_None_t):kind_(0) {;}
+
+        static constexpr IResult<GestureId> from_u8(const uint8_t raw){
+            switch(raw){
+                case k_None: return Ok(GestureId(None));
+                case int(DoubleTab) ... int(Drag): 
+                    return Ok(GestureId(std::bit_cast<Kind>(raw)));
+                default:    return Err(Error::InvalidGestureId);
+            }
+        }
+
+        constexpr bool is_some() const { return kind_ != k_None; }
+        constexpr bool is_none() const { return kind_ == k_None; }
+
+        constexpr Kind unwrap() const { 
+            if(is_none()) __builtin_trap();
+            return std::bit_cast<Kind>(kind_);
+        }
+
+        friend OutputStream & operator<<(OutputStream & os, GestureId id){
+            if(id.is_some()){
+                return os << id.unwrap();
+            }else{
+                return os << "None";
+            }
+        }
+    private:
+        static constexpr uint8_t k_None = 0x00;
+        uint8_t kind_;
     };
 
-    FRIEND_DERIVE_DEBUG(GestureType)
 
     struct Capabilities {
         /// Maximum Number of Contacts Support Register
@@ -88,13 +124,13 @@ struct ST1615_Prelude{
 
 
     struct GestureInfo {
-        GestureType gesture_type;
+        GestureId gesture_id;
         bool proximity;
         bool water;
 
         friend OutputStream & operator<<(OutputStream & os, const GestureInfo & self){ 
-            return os << os.scoped("GestureType")(os 
-                << os.field("gesture_type")(os << self.gesture_type) << os.splitter()
+            return os << os.scoped("GestureId")(os 
+                << os.field("gesture_id")(os << self.gesture_id) << os.splitter()
                 << os.field("proximity")(os << self.proximity) << os.splitter()
                 << os.field("water")(os << self.water)
             );

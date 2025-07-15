@@ -14,7 +14,7 @@ namespace ymd::drivers{
 
 
 struct NCA9555_Prelude{
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01000000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01000000 >> 1);
 
     using RegAddress = uint8_t;
 

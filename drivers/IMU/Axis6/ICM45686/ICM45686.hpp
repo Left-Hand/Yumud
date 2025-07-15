@@ -13,7 +13,7 @@ struct ICM45686_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x68);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
     // enum class RegAddress{
     //     Config0 = 0x16
     // };

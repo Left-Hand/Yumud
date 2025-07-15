@@ -36,7 +36,11 @@ IResult<ST1615::GestureInfo> ST1615::get_gesture_info(){
     });
 
     return Ok(GestureInfo {
-        gesture_type: GestureType::DoubleTab,
+        gesture_id: ({
+            const auto res = GestureId::from_u8(raw);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        }),
         proximity: (raw & 0b0100'0000) != 0,
         water: (raw & 0b0010'0000) != 0,
     });
@@ -44,7 +48,7 @@ IResult<ST1615::GestureInfo> ST1615::get_gesture_info(){
 
 IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
     if (nth > MAX_POINTS_COUNT) {
-        return Err(Error::PointRankOutOfRange); // 最多支持 10 个点
+        return Err(Error::PointNthOutOfRange); // 最多支持 10 个点
     }
 
     uint8_t start_reg = 0x12 + 4 * nth;

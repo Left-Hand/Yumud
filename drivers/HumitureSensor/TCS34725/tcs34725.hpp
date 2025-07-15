@@ -50,7 +50,7 @@ struct TCS34725_Prelude{
         BlueData = 0x1A
     };
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x52);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
 };
 
 struct TCS34725_Regs:public TCS34725_Prelude{

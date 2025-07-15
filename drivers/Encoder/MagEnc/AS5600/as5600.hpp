@@ -15,7 +15,7 @@ struct AS5600_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x1e);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1e >> 1);
 
     enum class PowerMode:uint8_t{
         Norm = 0, Pol5Ms, Pol10Ms, Pol100Ms

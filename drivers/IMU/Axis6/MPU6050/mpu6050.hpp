@@ -24,7 +24,7 @@ struct MPU6050_Prelude{
 
 
     static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u8(0b11010000);
+        hal::I2cSlaveAddr<7>::from_u7(0b1101000);
 
 
     enum class AccFs:uint8_t{

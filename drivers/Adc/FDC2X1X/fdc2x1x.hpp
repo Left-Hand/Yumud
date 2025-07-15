@@ -10,7 +10,7 @@ namespace ymd::drivers{
 
 struct FDC2X1X_Prelude{
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x54);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x54 >> 1);
 
     enum class Package:uint8_t{
         FDC2112,

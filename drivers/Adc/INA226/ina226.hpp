@@ -11,7 +11,7 @@
 namespace ymd::drivers{
 
 struct INA226_Prelude{
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x80);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x80 >> 1);
     // ASCII 的 TI。
     static constexpr uint16_t VALID_MANU_ID = 0x5449;
 

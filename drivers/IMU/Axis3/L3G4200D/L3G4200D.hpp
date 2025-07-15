@@ -28,7 +28,7 @@ namespace ymd::drivers{
 
 class L3G4200D:public AccelerometerIntf{
 public:
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0xD0);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xD0 >> 1);
 
     using Error = ImuError;
     

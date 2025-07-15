@@ -14,7 +14,7 @@ struct AK8963_Prelude{
 
     using RegAddress = uint8_t;
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b00011000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b00011000 >> 1);
 
     enum class Mode:uint8_t{
 

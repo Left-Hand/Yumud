@@ -12,7 +12,7 @@ class MPR121{
 protected:
     hal::I2cDrv i2c_drv_;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x5A);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5A >> 1);
     static constexpr size_t MAX_CHANNELS = 12;
 
 

@@ -15,7 +15,7 @@ struct MMC5603_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
     
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
 
     enum class DataRate:uint8_t{
         _75,

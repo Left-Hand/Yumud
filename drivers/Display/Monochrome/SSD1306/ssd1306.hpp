@@ -30,7 +30,7 @@ public:
 
     static constexpr uint8_t CMD_TOKEN = 0x00;
     static constexpr uint8_t DATA_TOKEN = 0x40;
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x78 >> 1);
 
     SSD1306_Phy(const hal::I2cDrv & i2c_drv):
         p_i2c_drv_(i2c_drv){};
@@ -114,7 +114,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x78);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x78 >> 1);
 
     template<typename Cfg, typename T = std::decay_t<Cfg>>
     SSD13XX(Phy && phy, Cfg && cfg):

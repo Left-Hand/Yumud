@@ -25,7 +25,7 @@ public:
     using IResult = Result<T, Error>;
 
     static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u8(0b10100000); 
+        hal::I2cSlaveAddr<7>::from_u7(0b10100000 >> 1); 
 
 
     struct Config{

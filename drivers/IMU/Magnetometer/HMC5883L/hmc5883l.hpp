@@ -30,7 +30,7 @@ struct HMC5883L_Prelude{
         Single = 1
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x3d);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d >> 1);
 };
 
 struct HMC5883L_Regs:public HMC5883L_Prelude{

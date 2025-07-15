@@ -178,7 +178,7 @@ protected:
 
 public:
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01100000);
+    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
 
     MP2980(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     MP2980(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}

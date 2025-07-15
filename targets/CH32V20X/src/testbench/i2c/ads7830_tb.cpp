@@ -28,7 +28,7 @@ void ads7830_main(){
     i2c.init(1400_KHz);
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
-    ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u8(0b10010110)};
+    ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};
     
     ads7830.init().examine();
     while(true){
