@@ -1,128 +1,13 @@
 #pragma once 
 
 #include "st7789_prelude.hpp"
-
+#include "core/utils/bitsqueue.hpp"
+#include "core/utils/dataiter.hpp"
 
 namespace ymd{
 
-struct BitsQueue{
-    constexpr explicit BitsQueue() = default;
-    constexpr bool pop_bit(){
-        const auto ret = buf_ & 0x01;
-        length_ -= 1;
-        buf_ = buf_ >> 1;
-        return ret;
-    }
-
-    template<size_t N>
-    constexpr uint32_t pop_bits(){
-        constexpr uint32_t MASK = (1 << N) - 1;
-        const auto ret = buf_ & MASK;
-        length_ -= N;
-        buf_ = buf_ >> N;
-        return ret;
-    }
-
-    constexpr void push_bit(bool bit){
-        buf_ = buf_ | (bit << (length_++));
-    }
-
-    template<size_t N>
-    constexpr void push_bits(const uint32_t bits){
-        buf_ = buf_ | (bits << (length_++));
-    }
-
-    constexpr uint32_t pop_remaining(){
-        length_ = 0;
-        return buf_;
-    }
-
-    constexpr uint32_t as_u64() const {
-        return buf_;
-    }
-
-    constexpr size_t available() const {
-        return length_;
-    }
-
-    constexpr size_t available_for_write() const {
-        return 32 - length_;
-    }
-private:
-    uint64_t buf_ = 0;
-    size_t length_ = 0;
-
-    static void static_test(){
-        {
-            constexpr auto queue = []{
-                auto q = BitsQueue{};
-                q.push_bits<5>(0b10111);
-                q.pop_bits<2>();
-                return q;
-            }();
-            static_assert(queue.as_u64() == 0b101);
-        }
-    }
-};
 
 
-
-template<typename T>
-struct RepeatIter{
-    constexpr explicit RepeatIter(const T value, size_t size):
-        value_(value), size_(size){;}
-
-    constexpr T next(){
-        const auto ret = value_;
-        index_ ++;
-        return ret;
-    }
-    constexpr bool has_next() const {
-        return index_ + 1 >= size_;
-    }
-private:
-    T value_;
-    const size_t size_;
-    size_t index_ = 0;
-};
-
-template<typename T>
-struct OnceIter{
-    constexpr explicit OnceIter(const T value):
-        value_(value){;}
-    constexpr T next(){
-        const auto ret = value_;
-        is_done_ = true;
-        return ret;
-    }
-
-    constexpr bool has_next() const{
-        return is_done_ == false;
-    }
-private:
-    T value_;
-    bool is_done_ = false;
-};
-
-
-template<typename T>
-struct BurstIter{
-    constexpr explicit BurstIter(const std::span<const T> pbuf):
-        pbuf_(pbuf){;}
-
-    constexpr T next(){
-        const auto ret = pbuf_[index_];
-        index_ ++;
-        return ret;
-    }
-    
-    constexpr bool has_next() const {
-        return index_ + 1 >= pbuf_.size();
-    }
-private:
-    const std::span<const T> pbuf_;
-    size_t index_ = 0;
-};
 
 }
 namespace ymd::drivers{
