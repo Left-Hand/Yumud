@@ -552,9 +552,9 @@ void bldc_main(){
         return Some(msg_queue.pop());
     };
 
-    [[maybe_unused]] auto set_position = [&](const SetPositionCommand & cmd){
-        track_pos_ = cmd.position;
-        track_spd_ = cmd.speed;
+    [[maybe_unused]] auto set_position = [&](const SetPositionAndSpeed & cmd){
+        track_pos_ = real_t(cmd.position);
+        track_spd_ = real_t(cmd.speed);
     };
 
     auto can_subscriber_service = [&]{
@@ -568,7 +568,7 @@ void bldc_main(){
                 switch(msg_cmd){
                     case CommandKind::SetPosition:{
                         // const auto cmd = serde::make_deserialize<serde::RawBytes,
-                        //     SetPositionCommand>(msg.payload()).examine();
+                        //     SetPositionAndSpeed>(msg.payload()).examine();
                         // set_position(cmd);
                     }
                         break;
@@ -588,8 +588,8 @@ void bldc_main(){
     };
 
     struct TrackInfo{
-        SetPositionCommand roll ;
-        SetPositionCommand pitch;
+        robots::joint_cmds::SetPositionAndSpeed roll ;
+        robots::joint_cmds::SetPositionAndSpeed pitch;
     };
 
     TrackInfo track_info_ = {
@@ -757,7 +757,7 @@ void bldc_main(){
         gesture_service();
 
 
-        // const auto command = SetPositionCommand{2, 18};
+        // const auto command = SetPositionAndSpeed{2, 18};
         // const auto iter = make_serialize_iter<RawBytes>(command);
         // const auto iter = make_serialize_iter();
 
@@ -772,17 +772,17 @@ void bldc_main(){
             strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
         }
 
-        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionCommand{0, 1});
-        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionCommand>();
+        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionAndSpeed{0, 1});
+        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
         // static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
         // const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
-        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionCommand{13 *256 + 12, 11});
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionAndSpeed{13 *256 + 12, 11});
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<real_t, real_t>(13 *256 + 12, 11));
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
         //     (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
         // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
         auto iter =             serde::make_serialize_iter<serde::RawBytes>(
-                robots::ReplaceCommand{
+                robots::machine_cmds::Replace{
                     .x1 = 0_bf16,
                     .y1 = 0_bf16,
                     .x2 = 0_bf16,
@@ -802,7 +802,7 @@ void bldc_main(){
             // base_omega_,
             iter
             // count_iter(iter),
-            // (MsgFactory{NodeRole::Master})(SetPositionCommand{0, 1}).payload()
+            // (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()
         );
 
@@ -842,9 +842,9 @@ void bldc_main(){
 static void static_test(){
     #define STATIC_TEST_SEL 5
     #if STATIC_TEST_SEL == 0
-    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionCommand{0, 1});
+    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1});
     static_assert(msg.size() == 8);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionCommand>();
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
     static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
     // static_assert(may_cmd.is_ok());
     static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));

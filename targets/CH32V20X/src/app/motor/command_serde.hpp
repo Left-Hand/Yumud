@@ -4,86 +4,134 @@
 #include "command.hpp"
 
 namespace ymd{
-using namespace robots;
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(SetPositionCommand)
-DEF_DERIVE_DEBUG_AS_DISPLAY(SetPositionCommand)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetPositionCommand)
+using namespace robots::joint_cmds;
 
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetPosition)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetPosition)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetPosition)
 
 template<>
-struct reflecter::MemberPtrReflecter<SetPositionCommand> {
+struct reflecter::MemberPtrReflecter<SetPosition> {
     
     template<size_t N>
     static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SetPositionCommand::position;
-        else if constexpr (N == 1) return &SetPositionCommand::speed;
-    }();
-};
-
-DEF_DERIVE_SERIALIZE_AS_TUPLE(SpinCommand)
-DEF_DERIVE_DEBUG_AS_DISPLAY(SpinCommand)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(SpinCommand)
-
-
-DEF_DERIVE_SERIALIZE_AS_TUPLE(SetPositionXYZCommand)
-DEF_DERIVE_DEBUG_AS_DISPLAY(SetPositionXYZCommand)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetPositionXYZCommand)
-
-DEF_DERIVE_SERIALIZE_AS_TUPLE(ReplaceCommand)
-DEF_DERIVE_DEBUG_AS_DISPLAY(ReplaceCommand)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(ReplaceCommand)
-
-template<>
-struct reflecter::MemberPtrReflecter<SetPositionXYZCommand> {
-    
-    template<size_t N>
-    static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SetPositionXYZCommand::x;
-        else if constexpr (N == 1) return &SetPositionXYZCommand::y;
-        else if constexpr (N == 2) return &SetPositionXYZCommand::z;
+        if constexpr (N == 0) return &SetPosition::position;
     }();
 };
 
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(NestU8Command)
-DEF_DERIVE_DEBUG_AS_DISPLAY(NestU8Command)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(NestU8Command)
-
-
-DEF_DERIVE_SERIALIZE_AS_TUPLE(SetKpKdCommand)
-DEF_DERIVE_DEBUG_AS_DISPLAY(SetKpKdCommand)
-
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetSpeed)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetSpeed)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetSpeed)
 
 template<>
-struct reflecter::MemberPtrReflecter<SpinCommand> {
+struct reflecter::MemberPtrReflecter<SetSpeed> {
     
     template<size_t N>
     static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SpinCommand::delta_rotation;
+        if constexpr (N == 0) return &SetSpeed::speed;
+    }();
+};
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetPositionAndSpeed)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetPositionAndSpeed)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetPositionAndSpeed)
+
+template<>
+struct reflecter::MemberPtrReflecter<SetPositionAndSpeed> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SetPositionAndSpeed::position;
+        else if constexpr (N == 1) return &SetPositionAndSpeed::speed;
+    }();
+};
+
+
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetTrapzoid)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetTrapzoid)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetTrapzoid)
+
+template<>
+struct reflecter::MemberPtrReflecter<SetTrapzoid> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SetTrapzoid::position;
+        else if constexpr (N == 1) return &SetTrapzoid::speed;
+        else if constexpr (N == 2) return &SetTrapzoid::acceleration;
+        else if constexpr (N == 3) return &SetTrapzoid::deceleration;
+    }();
+};
+
+
+using namespace robots::machine_cmds;
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(Spin)
+DEF_DERIVE_DEBUG_AS_DISPLAY(Spin)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(Spin)
+
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetPositionXYZ)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetPositionXYZ)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(SetPositionXYZ)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(Replace)
+DEF_DERIVE_DEBUG_AS_DISPLAY(Replace)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(Replace)
+
+template<>
+struct reflecter::MemberPtrReflecter<SetPositionXYZ> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &SetPositionXYZ::x;
+        else if constexpr (N == 1) return &SetPositionXYZ::y;
+        else if constexpr (N == 2) return &SetPositionXYZ::z;
+    }();
+};
+
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(NestU8)
+DEF_DERIVE_DEBUG_AS_DISPLAY(NestU8)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(NestU8)
+
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(SetKpKd)
+DEF_DERIVE_DEBUG_AS_DISPLAY(SetKpKd)
+
+
+template<>
+struct reflecter::MemberPtrReflecter<Spin> {
+    
+    template<size_t N>
+    static constexpr auto member_ptr_v = [] {
+        if constexpr (N == 0) return &Spin::delta_rotation;
     }();
 };
 
 
 template<>
-struct reflecter::MemberPtrReflecter<NestU8Command> {
+struct reflecter::MemberPtrReflecter<NestU8> {
     
     template<size_t N>
     static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &NestU8Command::buf;
+        if constexpr (N == 0) return &NestU8::buf;
     }();
 };
 
 
 template<>
-struct reflecter::MemberPtrReflecter<ReplaceCommand> {
+struct reflecter::MemberPtrReflecter<Replace> {
     
     template<size_t N>
     static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &ReplaceCommand::x1;
-        else if constexpr (N == 1) return &ReplaceCommand::y1;
-        else if constexpr (N == 2) return &ReplaceCommand::x2;
-        else if constexpr (N == 3) return &ReplaceCommand::y2;
+        if constexpr (N == 0) return &Replace::x1;
+        else if constexpr (N == 1) return &Replace::y1;
+        else if constexpr (N == 2) return &Replace::x2;
+        else if constexpr (N == 3) return &Replace::y2;
     }();
 };
 

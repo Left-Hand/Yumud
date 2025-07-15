@@ -56,11 +56,11 @@ struct bf16 {
 
     template<typename T>
     requires(std::is_floating_point_v<T>)
-    explicit constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
+    constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
 
     template<size_t Q>
-    explicit constexpr bf16(iq_t<Q> qv) : bf16(float(qv)) {}
-    explicit constexpr bf16(int iv) : bf16(float(iv)) {}
+    constexpr bf16(iq_t<Q> qv) : bf16(float(qv)) {}
+    constexpr bf16(int iv) : bf16(float(iv)) {}
     constexpr bf16 operator -() const{
         return from_u16(raw.as_u16() ^ 0x8000);
     }
