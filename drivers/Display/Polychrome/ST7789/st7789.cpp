@@ -29,7 +29,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
     }
 } 
 
-IResult<> ST7789::init(const ST7789_Presets preset){
+IResult<> ST7789::init(){
     if(const auto res = phy_.init(); 
         res.is_err())  return res;
     clock::delay(50us);
@@ -51,8 +51,6 @@ IResult<> ST7789::init(const ST7789_Presets preset){
 	if(const auto res = write_command(0x13); 
         res.is_err())  return res;
 	if(const auto res = write_command(0x29); 
-        res.is_err())  return res;
-    if(const auto res = init_lcd(*this, preset); 
         res.is_err())  return res;
     return Ok();
 }
@@ -139,96 +137,3 @@ IResult<> ST7789::modify_ctrl_reg(const bool is_high,const uint8_t pos){
 
     return Ok();
 }
-
-
-namespace ymd::drivers{
-
-Result<void, DisplayerError> init_lcd(ST7789 & displayer, const ST7789_Presets preset){
-    using enum ST7789_Presets;
-    switch(preset){
-        case _120X80:
-            if(const auto res = displayer.enable_flip_x(DISEN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_flip_y(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_swap_xy(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_display_offset({40, 52}); 
-                res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_inversion(EN);
-                res.is_err()) return res;
-            break;
-        case _240X135:
-            if(const auto res = displayer.enable_flip_x(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_flip_y(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_swap_xy(DISEN);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_display_offset({52, 40}); 
-                res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_inversion(EN);
-                res.is_err()) return res;
-
-
-            // displayer.enable_flip_x(false);
-            // displayer.enable_flip_y(true);
-            // if(true){
-            //     displayer.enable_swap_xy(true);
-            //     displayer.set_display_offset({40, 52}); 
-            // }else{
-            //     displayer.enable_swap_xy(false);
-            //     displayer.set_display_offset({52, 40}); 
-            // }
-            // displayer.set_format_rgb(true);
-            // displayer.set_flush_dir_h(false);
-            // displayer.set_flush_dir_v(false);
-            // displayer.enable_inversion(true);
-    
-            // displayer.fill(ColorEnum::BLACK);
-            break;
-        case _320X170:
-            // displayer.enable_flip_x(false);
-            // displayer.enable_flip_y(false);
-            // displayer.enable_swap_xy(true);
-            // displayer.set_display_offset({-30, 30}); 
-            // displayer.set_format_rgb(true);
-            // displayer.set_flush_dir_h(false);
-            // displayer.set_flush_dir_v(false);
-            // displayer.enable_inversion(true);
-
-            if(const auto res = displayer.enable_flip_x(DISEN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_flip_y(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_swap_xy(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_display_offset({0, 35}); 
-                res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_inversion(EN);
-                res.is_err()) return res;
-            break;
-    }
-    return Ok();
-}
-
-}
-

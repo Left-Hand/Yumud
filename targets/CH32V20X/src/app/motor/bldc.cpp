@@ -48,6 +48,8 @@
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
 #include "core/string/utils/streamed_string_splitter.hpp"
+#include "core/container/inline_vector.hpp"
+#include "core/utils/enum_dict.hpp"
 
 
 using namespace ymd;
@@ -62,8 +64,21 @@ static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
 
+namespace ymd{
+template<typename E, typename T>
+struct command_to_kind{};
+
+template<typename E, E K>
+struct kind_to_command{};
 
 
+
+template<typename E, typename T>
+static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
+
+template<typename E, E K>
+using kind_to_command_t = typename kind_to_command<E, K>::type;
+}
 
 void init_adc(hal::AdcPrimary & adc){
 
@@ -113,14 +128,16 @@ struct PdCtrlLaw{
 
 
 enum class NodeRole:uint8_t{
-    RollJoint = 1,
-    PitchJoint = 2,
-    XJoint = 3,
-    YJoint = 4,
-    ZJoint = 5,
-    LeftWheel = 6,
-    RightWheel = 7,
-    Master = 0x0f,
+    Master = 0,
+    RollJoint,
+    PitchJoint,
+    YawJoint,
+    AxisX,
+    AxisY,
+    AxisZ,
+    LeftWheel,
+    RightWheel,
+    Computer = 0x0f,
 };
 
 
@@ -134,9 +151,30 @@ OutputStream & operator<<(OutputStream & os, const NodeRole & role){
 
 
 enum class CommandKind:uint8_t{
-    SetPosition = 0,
+    SetPosition,
+    SetPositionAndSpeed,
+    SetSpeed,
     SetKpKd
 };
+
+#define DEF_COMMAND_BIND(K, T) \
+template<> \
+struct command_to_kind<CommandKind, T>{ \
+    static constexpr CommandKind KIND = K; \
+};\
+template<> \
+struct kind_to_command<CommandKind, K>{ \
+    using type = T; \
+};
+
+
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, robots::joint_cmds::NAME)
+
+DEF_QUICK_COMMAND_BIND(SetPosition)
+DEF_QUICK_COMMAND_BIND(SetPositionAndSpeed)
+DEF_QUICK_COMMAND_BIND(SetSpeed)
+DEF_QUICK_COMMAND_BIND(SetKpKd)
+
 
 
 }
@@ -159,12 +197,37 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
 };
 
 
+namespace ymd::can_repl{
+
+template<typename Obj, typename E, typename M>
+struct MsgDispatcher {
+
+};
+
+// template<typename E>
+// struct Tag {
+
+// };
+
+
+template<typename E>
+requires (std::is_enum_v<E> and std::is_same_v<std::underlying_type_t<E>, uint8_t>)
+struct ReplDict{
+    static constexpr size_t N = ymd::magic::enum_count_v<E>;
+private:
+    // InlinveVector<CanMsgDispatcher<E>, N> dict_;
+    // EnumDict<E> dict_;
+};
+
+
+}
+
 struct MsgFactory{
     const NodeRole role;
 
     template<typename T>
     constexpr hal::CanMsg operator()(const T cmd){
-        const auto id = comb_role_and_cmd(role, CommandKind::SetPosition);
+        const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
         return hal::CanMsg::from_iter(id, iter).unwrap();
     };

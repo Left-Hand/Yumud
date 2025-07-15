@@ -187,7 +187,7 @@ void smc2025_main(){
         {240, 240}
     };
 
-    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170).examine();
+    drivers::init_lcd(tft, drivers::st7789_preset::_320X170).examine();
 
     I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
     cam_i2c.init(100_KHz);

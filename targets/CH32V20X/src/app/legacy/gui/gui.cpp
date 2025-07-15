@@ -124,7 +124,7 @@ void gui_main(){
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 135});
 
-    drivers::init_lcd(tft, ST7789_Presets::_240X135).examine();
+    drivers::init_lcd(tft, st7789_preset::_240X135).examine();
 
     // Painter<RGB565> painter = Painter<RGB565>();
 
