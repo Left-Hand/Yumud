@@ -63,17 +63,24 @@ public:
 template<typename T>
 requires std::is_aggregate_v<std::decay_t<T>>
 struct Displayer{
+    using AggregateType = std::decay_t<T>;
+    static constexpr size_t N = reflect::size<AggregateType>();
+    static constexpr auto NAME = reflect::type_name<AggregateType>();
     static OutputStream& display(OutputStream& os, const T & value) {
-        using AggregateType = std::decay_t<T>;
-        os.scoped(reflect::type_name<AggregateType>())([&]<size_t... Is>(std::index_sequence<Is...>) -> OutputStream& {
-            // Fold expression with conditional splitter insertion
-            bool first = true;
-            return(..., [&](const auto& field) -> OutputStream& {
-                if (!first) os << os.splitter();
-                first = false;
-                return os << os.field(reflect::member_name<Is>(value))(os << reflect::get<Is>(value));
-            }(reflect::get<Is>(value)));
-        }(std::make_index_sequence<reflect::size<AggregateType>()>{}));
+
+
+        if constexpr (N == 0) return os << os.scoped(NAME);
+        else {
+            os.scoped(NAME)([&]<size_t... Is>(std::index_sequence<Is...>) -> OutputStream& {
+                // Fold expression with conditional splitter insertion
+                bool first = true;
+                return(..., [&](const auto& field) -> OutputStream& {
+                    if (!first) os << os.splitter();
+                    first = false;
+                    return os << os.field(reflect::member_name<Is>(value))(os << reflect::get<Is>(value));
+                }(reflect::get<Is>(value)));
+            }(std::make_index_sequence<N>{}));
+        }
         
         return os;
     }
@@ -96,6 +103,15 @@ struct Displayer{
 #define DEF_CONCAT_INNER(a, b) a ## b
 
 // 定义不同参数数量的实现
+#define DEF_DERIVE_MEM_REFLECTER_0(T) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        return nullptr;\
+    }(); \
+};
+
 #define DEF_DERIVE_MEM_REFLECTER_1(T, m0) \
 template<> \
 struct reflecter::MemberPtrReflecter<T> { \

@@ -36,7 +36,6 @@ struct Rotate{
 };
 
 struct Abort{
-    bf16 z;
 };
 }
 
@@ -68,5 +67,10 @@ DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::machine_cmds::Rotate)
 DEF_DERIVE_DEBUG_AS_DISPLAY(robots::machine_cmds::Rotate)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::machine_cmds::Rotate)
 DEF_DERIVE_MEM_REFLECTER_1(robots::machine_cmds::Rotate, rotation)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::machine_cmds::Abort)
+DEF_DERIVE_DEBUG_AS_DISPLAY(robots::machine_cmds::Abort)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::machine_cmds::Abort)
+DEF_DERIVE_MEM_REFLECTER_0(robots::machine_cmds::Abort)
 
 }
