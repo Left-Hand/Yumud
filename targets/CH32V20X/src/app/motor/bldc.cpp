@@ -796,6 +796,7 @@ void bldc_main(){
         // uint8_t res = 100;
         // DEBUG_PRINTLN(;
         // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
+        #if 0
         DEBUG_PRINTLN_IDLE(
             // (clock::micros() - u_begin).count(), 
             // StringView(arr.data()), 
@@ -812,6 +813,7 @@ void bldc_main(){
             // (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()
         );
+        #endif
 
     }
 }

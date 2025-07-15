@@ -435,4 +435,15 @@ static constexpr DestringResult<iq_t<Q>> iq_from_str(StringView str){
 	return details::IqFromStringHelper<Q>::conv(str);
 }
 
+
+template<typename T>
+static constexpr DestringResult<T> from_str(StringView str){
+	if constexpr (std::is_same_v<StringView, T>)
+		return Ok(str);
+	if constexpr (is_fixed_point_v<T>)
+		return iq_from_str<T::q_num>(str);
+	else if constexpr(std::is_integral_v<T>)
+		return details::IntFromStringHelper<T>::conv(str);
+}
+
 }
