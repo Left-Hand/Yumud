@@ -1,14 +1,9 @@
 #pragma once
 
 #include "st7789_phy.hpp"
+#include "st7789v3_phy.hpp"
 
 namespace ymd::drivers{
-
-
-
-
-
-
 class ST7789 final:
     public ST7789_Prelude{
 public:

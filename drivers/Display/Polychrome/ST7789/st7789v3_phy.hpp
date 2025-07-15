@@ -86,13 +86,14 @@ private:
     size_t index_ = 0;
 };
 
-template<typename>
+template<typename T>
 struct OnceIter{
     constexpr explicit OnceIter(const T value):
         value_(value){;}
     constexpr T next(){
         const auto ret = value_;
         is_done_ = true;
+        return ret;
     }
 
     constexpr bool has_next() const{
@@ -115,8 +116,8 @@ struct BurstIter{
         return ret;
     }
     
-    constexpr bool has_next(const size_t idx) const {
-        return idx + 1 >= size_;
+    constexpr bool has_next() const {
+        return index_ + 1 >= pbuf_.size();
     }
 private:
     const std::span<const T> pbuf_;
@@ -136,14 +137,14 @@ public:
     struct U18BurstPixelDataIter{
         static constexpr bool DATA_BIT = 1;
 
-        constexpr explicit U18BurstPixelDataIter(const std::span<const T> pbuf):
-            pbuf_(pbuf) {}
+        constexpr explicit U18BurstPixelDataIter(const Iter iter):
+            iter_(iter) {}
 
         constexpr bool has_next() const {
             return is_runout_ == false;
         };
 
-        constexpr uint16_t next() const {
+        constexpr uint16_t next() {
             if((queue_.available_for_write() > 18) and iter_.has_next()){
                 const uint16_t next = iter_.next().as_u16();
                 queue_.push_bit(DATA_BIT);
@@ -166,9 +167,6 @@ public:
         BitsQueue queue_;
         bool is_runout_ = false;
     };
-
-    // template<typename T>
-    // U18BurstPixelDataIter(const std::span<const T> pbuf) -> U18BurstPixelDataIter<T>;
 
     explicit ST7789V3_Phy(
         Some<hal::SpiHw *> spi,
@@ -226,31 +224,33 @@ public:
 
     template<typename T>
     [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
-        return IResult<>(write_by_iter<uint16_t>(BurstIter<T>(pbuf)));
+        return IResult<>(write_by_iter<uint16_t>(U18BurstPixelDataIter(BurstIter<T>(pbuf))));
     }
 
 
     template<typename T, typename Iter>
     [[nodiscard]] IResult<> write_by_iter(Iter iter){
-        using T = uint16_t;
-        if (const auto err = spi_
-            .begin(idx_.to_req()); err.is_err()) return err; 
+        if (const auto res = spi_
+            .begin(idx_.to_req()); 
+            res.is_err()) 
+            return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
-                return res;
+                return Err(res.unwrap_err());
         }
 
         while(iter.has_next()){
             (void)spi_.fast_write(iter.next());
         }
 
-        if (cont == DISC) spi_.end();
+        spi_.end();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_data_width(8); 
+                res.is_err()) return Err(res.unwrap_err());
         }
 
-        return hal::HalResult::Ok();
+        return Ok();
     }
 private:
     hal::SpiHw & spi_;
