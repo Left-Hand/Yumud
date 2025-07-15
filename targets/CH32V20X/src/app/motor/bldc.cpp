@@ -48,7 +48,8 @@
 
 #include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
-#include "command_serde.hpp"
+#include "joint_commands.hpp"
+#include "machine_commands.hpp"
 #include <atomic>
 
 using namespace ymd;
@@ -57,6 +58,8 @@ using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::intp;
+using namespace ymd::robots::joint_cmds;
+using namespace ymd::robots::machine_cmds;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;

@@ -80,4 +80,65 @@ struct Displayer{
 };
 
 
+
+
+
+// 辅助宏：计算参数数量
+#define DEF_GET_NTH_ARG(_1, _2, _3, _4, _5, N, ...) N
+#define DEF_COUNT_ARGS(...) DEF_GET_NTH_ARG(__VA_ARGS__, 5, 4, 3, 2, 1)
+
+// 宏重载分发器
+#define DEF_DERIVE_MEM_REFLECTER(...) \
+    DEF_CONCAT(DEF_DERIVE_MEM_REFLECTER_, DEF_COUNT_ARGS(__VA_ARGS__))(__VA_ARGS__)
+
+// 连接宏
+#define DEF_CONCAT(a, b) DEF_CONCAT_INNER(a, b)
+#define DEF_CONCAT_INNER(a, b) a ## b
+
+// 定义不同参数数量的实现
+#define DEF_DERIVE_MEM_REFLECTER_1(T, m0) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else static_assert(N < 1, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_2(T, m0, m1) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else static_assert(N < 2, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_3(T, m0, m1, m2) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else static_assert(N < 3, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_4(T, m0, m1, m2, m3) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else static_assert(N < 4, "Index out of bounds"); \
+    }(); \
+};
 }
