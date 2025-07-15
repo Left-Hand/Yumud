@@ -3,6 +3,8 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/reflecter.hpp"
 
+#include "core/math/float/bf16.hpp"
+
 namespace ymd::serde{
 
 struct RawBytes;
@@ -94,14 +96,6 @@ struct StructDeserializer<RawBytes, T>{
 };
 
 
-#define DERIVE_RAW_BYTES_DESERIALIZER(Type) \
-template<> \
-struct serde::DeserializerMaker<serde::RawBytes, Type> { \
-    static constexpr Deserializer<RawBytes, Type> \
-    make() { \
-        return Deserializer<RawBytes, Type>(); \
-    } \
-};
 
 template<typename Protocol, typename T>
 struct SerializeIterMaker{
@@ -194,6 +188,29 @@ private:
     Buf buf_;
     size_t pos_ = 0;
 };
+
+template<>
+struct SerializeIter<RawBytes, bf16>{
+    static constexpr size_t N = sizeof(bf16);
+    constexpr explicit SerializeIter(const bf16 num):
+        buf_(serialize(num)){;}
+
+    constexpr bool has_next() const {
+        return pos_ < N;
+    }
+    constexpr uint8_t next() {
+        return buf_[pos_++];
+    }
+
+    static constexpr std::array<uint8_t, N> serialize(const bf16 num){
+        return std::bit_cast<std::array<uint8_t, N>>(num.as_u16());
+    } 
+private:
+    using Buf = std::array<uint8_t, N>;
+    Buf buf_;
+    size_t pos_ = 0;
+};
+
 
 template<typename Protocol, typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
@@ -471,7 +488,7 @@ private:
 
 
 
-#define DERIVE_SERIALIZE_AS_TUPLE(T)\
+#define DEF_DERIVE_SERIALIZE_AS_TUPLE(T)\
 template<typename Protocol>\
 struct serde::SerializeIterMaker<Protocol, T>{\
     static constexpr auto make(T obj){\
@@ -479,8 +496,17 @@ struct serde::SerializeIterMaker<Protocol, T>{\
     }\
 };
 
+#define DEF_DERIVE_RAW_BYTES_DESERIALIZER(T) \
+template<> \
+struct serde::DeserializerMaker<serde::RawBytes, T> { \
+    static constexpr serde::Deserializer<RawBytes, T> \
+    make() { \
+        return serde::Deserializer<RawBytes, T>(); \
+    } \
+};
 
-#define DERIVE_DEBUG_AS_DISPLAY(T)\
+
+#define DEF_DERIVE_DEBUG_AS_DISPLAY(T)\
 OutputStream & operator<<(OutputStream & os, const T & self){ \
     return reflecter::Displayer<T>::display(os, self);\
 }

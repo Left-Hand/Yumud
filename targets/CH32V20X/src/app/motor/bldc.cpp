@@ -6,7 +6,7 @@
 #include "core/sync/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/string/utils/strconv2.hpp"
-#include "core/utils/serde.hpp"
+
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -48,6 +48,7 @@
 
 #include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
+#include "command_serde.hpp"
 #include <atomic>
 
 using namespace ymd;
@@ -83,10 +84,6 @@ void init_adc(hal::AdcPrimary & adc){
     adc.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
     adc.enable_auto_inject(DISEN);
 }
-
-
-
-
 
 __no_inline void init_opa(){
     hal::opa1.init<1,1,1>();
@@ -135,138 +132,13 @@ OutputStream & operator<<(OutputStream & os, const NodeRole & role){
     }
 }
 
+
 enum class CommandKind:uint8_t{
     SetPosition = 0,
     SetKpKd
 };
 
-struct SetPositionCommand{
-    iq_t<16> position;
-    iq_t<16> speed;
-};
 
-DERIVE_SERIALIZE_AS_TUPLE(SetPositionCommand)
-DERIVE_DEBUG_AS_DISPLAY(SetPositionCommand)
-DERIVE_RAW_BYTES_DESERIALIZER(SetPositionCommand)
-
-template<>
-struct reflecter::MemberPtrReflecter<SetPositionCommand> {
-    
-    template<size_t N>
-    static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SetPositionCommand::position;
-        else if constexpr (N == 1) return &SetPositionCommand::speed;
-    }();
-};
-
-struct StrightForwardCommand{
-    iq_t<16> delta_position;
-};
-
-struct StrightForwardUntilEndstopCommand{
-
-};
-
-struct SetSteerCommand{
-    iq_t<16> steer;
-};
-
-struct SpinCommand{
-    iq_t<16> delta_rotation;
-};
-
-DERIVE_SERIALIZE_AS_TUPLE(SpinCommand)
-DERIVE_DEBUG_AS_DISPLAY(SpinCommand)
-DERIVE_RAW_BYTES_DESERIALIZER(SpinCommand)
-
-struct NestU8Command{
-    std::array<uint8_t, 8> buf;
-};
-
-DERIVE_SERIALIZE_AS_TUPLE(NestU8Command)
-DERIVE_DEBUG_AS_DISPLAY(NestU8Command)
-DERIVE_RAW_BYTES_DESERIALIZER(NestU8Command)
-
-template<>
-struct reflecter::MemberPtrReflecter<NestU8Command> {
-    
-    template<size_t N>
-    static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &NestU8Command::buf;
-    }();
-};
-
-struct SetPositionXYZCommand{
-    iq_t<16> x;
-    iq_t<16> y;
-    iq_t<16> z;
-};
-
-DERIVE_SERIALIZE_AS_TUPLE(SetPositionXYZCommand)
-DERIVE_DEBUG_AS_DISPLAY(SetPositionXYZCommand)
-DERIVE_RAW_BYTES_DESERIALIZER(SetPositionXYZCommand)
-
-template<>
-struct reflecter::MemberPtrReflecter<SetPositionXYZCommand> {
-    
-    template<size_t N>
-    static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SetPositionXYZCommand::x;
-        else if constexpr (N == 1) return &SetPositionXYZCommand::y;
-        else if constexpr (N == 2) return &SetPositionXYZCommand::z;
-    }();
-};
-
-template<>
-struct reflecter::MemberPtrReflecter<SpinCommand> {
-    
-    template<size_t N>
-    static constexpr auto member_ptr_v = [] {
-        if constexpr (N == 0) return &SpinCommand::delta_rotation;
-    }();
-};
-
-
-
-
-
-struct SetKpKdCommand{
-    iq_t<16> kp;
-    iq_t<16> kd;
-};
-
-DERIVE_SERIALIZE_AS_TUPLE(SetKpKdCommand)
-DERIVE_DEBUG_AS_DISPLAY(SetKpKdCommand)
-
-
-
-
-
-namespace ymd::async{
-namespace details{
-PRO_DEF_MEM_DISPATCH(_Memfunc_Push, push);
-PRO_DEF_MEM_DISPATCH(_Memfunc_Pending, pending);
-PRO_DEF_MEM_DISPATCH(_Memfunc_Freeleft, freeleft);
-
-PRO_DEF_MEM_DISPATCH(_Memfunc_Pop, pop);
-PRO_DEF_MEM_DISPATCH(_Memfunc_Available, available);
-
-}
-
-// template<typename T>
-// struct SinkFacade : pro::facade_builder
-//     ::add_convention<details::_Memfunc_Push, void()>
-//     ::add_convention<details::_Memfunc_Pending, size_t(void) const>
-//     ::add_convention<details::_Memfunc_Freeleft, size_t(void) const>
-//     ::build {};
-    
-// struct SourceFacade : pro::facade_builder
-//     ::add_convention<details::_Memfunc_ReadChar, void(char &)>
-//     ::add_convention<details::_Memfunc_ReadChars, void(char *, size_t)>
-//     ::add_convention<details::_Memfunc_Available, size_t(void) const>
-//     ::build {};
-
-}
 }
 
 
@@ -301,35 +173,6 @@ struct MsgFactory{
 };
 
 
-struct MoveCommand{
-    float x;
-    float y;
-};
-
-struct PressCommand{
-    float z;
-};
-
-struct ReleaseCommand{
-    float z;
-};
-
-struct ReplaceCommand{
-    float x1, y1;
-    float x2, y2;
-};
-
-struct AbortCommand{
-    float z;
-};
-
-using VCommand = std::variant<
-    MoveCommand,
-    PressCommand,
-    ReleaseCommand,
-    ReplaceCommand,
-    AbortCommand
->;
 
 template<typename Iter>
 static constexpr size_t count_iter(Iter && iter){
@@ -935,9 +778,17 @@ void bldc_main(){
         // const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionCommand{13 *256 + 12, 11});
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<real_t, real_t>(13 *256 + 12, 11));
-        auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
-            (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
+        //     (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
         // DEBUG_PRINTLN(command, iter, SetKpKdCommand{.kp = 1, .kd = 1});
+        auto iter =             serde::make_serialize_iter<serde::RawBytes>(
+                robots::ReplaceCommand{
+                    .x1 = 0_bf16,
+                    .y1 = 0_bf16,
+                    .x2 = 0_bf16,
+                    .y2 = 0_bf16
+                }
+            );
         // auto res = strconv2::to_str<uint8_t>(100, StringRef{arr.data(), arr.size()});
         // auto res = strconv2::TostringResult(Ok(uint8_t(100)));
         // uint8_t res = 100;
@@ -949,10 +800,8 @@ void bldc_main(){
             // rem_str.size(),
             // base_roll_,
             // base_omega_,
-            iter,
-            
+            iter
             // count_iter(iter),
-            count_iter(MyIter<8>{})
             // (MsgFactory{NodeRole::Master})(SetPositionCommand{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()
         );
