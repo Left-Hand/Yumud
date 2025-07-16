@@ -14,7 +14,7 @@
 #include "drivers/HID/prelude/segcode.hpp"
 #include "drivers/HID/prelude/button_input.hpp"
 #include "drivers/HID/FT6336/FT6336.hpp"
-
+#include "drivers/Display/Polychrome/ST7789/st7789v3_phy.hpp"
 #include "core/debug/debug.hpp"
 
 using namespace ymd;
@@ -22,8 +22,46 @@ using drivers::FT6336U;
 
 #define UART hal::uart2
 // #define UART hal::uart6
-#define SCL_GPIO hal::PB<3>()
-#define SDA_GPIO hal::PB<5>()
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
+
+template<typename T, typename Iter>
+struct MyU18BurstPixelDataIter{
+    static constexpr bool DATA_BIT = 1;
+
+    constexpr explicit MyU18BurstPixelDataIter(const Iter iter):
+        iter_(iter) {}
+
+    constexpr bool has_next() const {
+        return is_runout_ == false;
+    };
+
+    constexpr uint16_t next() {
+        const bool iter_has_next = iter_.has_next();
+        if((queue_.available_for_write() > 18) and iter_has_next){
+            const uint16_t next_u16 = iter_.next();
+            queue_.push_bit(DATA_BIT);
+            queue_.push_bits<8>(next_u16 >> 8);
+            queue_.push_bit(DATA_BIT);
+            queue_.push_bits<8>(next_u16 & 0xff);
+        }
+
+
+        {
+            const auto ava = queue_.available();
+            if(ava >= 16){
+                return queue_.pop_bits<16>();
+            }else{
+                if(not iter_has_next) is_runout_ = true;
+                return queue_.pop_remaining() << (16 - ava);
+            }
+        }
+    };
+private:
+    Iter iter_;
+    BitsQueue queue_;
+    bool is_runout_ = false;
+};
 
 void ft6336_main(){
     // UART.init({576_KHz});
@@ -57,7 +95,13 @@ void ft6336_main(){
     while(true){
         DEBUG_PRINTLN(
             // ft6336.get_gesture_id().examine(),
-            ft6336.get_touch_points().examine().iter()
+            // ft6336.get_touch_points().examine().iter()
+            std::hex, 
+            std::showbase,
+            // RepeatIter<uint16_t>{0X5555, 3}
+            // OnceIter(0X5555)
+            // RepeatIter<uint16_t>{0X5555, 3},
+            MyU18BurstPixelDataIter<uint16_t, RepeatIter<uint16_t>>(RepeatIter<uint16_t>{0X5555, 2})
         );
 
         clock::delay(5ms);

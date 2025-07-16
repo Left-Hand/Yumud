@@ -29,9 +29,10 @@ IResult<> MP2980::set_feed_back_vref(const real_t vref){
     return set_feed_back_vref_mv(int(vref * 1000));
 }
 
-IResult<> MP2980::set_feed_back_vref_mv(const uint vref_mv){
-    ref_reg.set(vref_mv);
-    return write_reg(ref_reg);
+IResult<> MP2980::set_feed_back_vref_mv(const uint32_t vref_mv){
+    auto reg = RegCopy(regs_.ref_reg);
+    reg.set(vref_mv);
+    return write_reg(reg);
 }
 
 // Enables power switching. 
@@ -46,8 +47,9 @@ IResult<> MP2980::enable_power_switching(const Enable en){
     // ENPWR = 0. The host must re-write VREF again if the system requires 
     // the previous VOUT value after ENPWR = 0. 
     // After ENPWER is set to 0, the discharge function works for 200ms. 
-    ctrl1_reg.en_pwr = en == EN;
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
+    reg.en_pwr = en == EN;
+    return write_reg(reg);
 }
 
 // Enables the VREF change function. 
@@ -68,9 +70,9 @@ IResult<> MP2980::enable_vref_change_func(const Enable en){
     // DISCHG bit setting. This helps pull VOUT from high to low under light-load 
     // conditions. After GO_BIT resets to 0, the discharge continues and turn off 
     // after a 20ms delay. 
-
-    ctrl1_reg.go_bit = en == EN;
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
+    reg.go_bit = en == EN;
+    return write_reg(reg);
 }
 
 IResult<> MP2980::set_png_state(const bool state){
@@ -80,13 +82,15 @@ IResult<> MP2980::set_png_state(const bool state){
     // voltage range 
     // 1’b 1: The PNG bit status latches to 1 once VOUT exceeds the power good 
     // voltage range 
-    ctrl1_reg.png_latch = state;
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
+    reg.png_latch = state;
+    return write_reg(reg);
 }
 
 IResult<> MP2980::enable_dither(const Enable en){
-    ctrl1_reg.dither = en == EN;
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
+    reg.dither = en == EN;
+    return write_reg(reg);
 }
 
 // enum class DischargePath{
@@ -98,14 +102,16 @@ IResult<> MP2980::enable_dither(const Enable en){
 // }
 
 IResult<> MP2980::set_vref_slew_rate(const VrefSlewRate slewrate){
-    ctrl1_reg.sr = uint8_t(slewrate);
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
+    reg.sr = uint8_t(slewrate);
+    return write_reg(reg);
 }
 
 
 IResult<> MP2980::set_ovp_mode(const OvpMode mode){
-    ctrl2_reg.ovp_mode = uint8_t(mode);
-    return write_reg(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
+    reg.ovp_mode = uint8_t(mode);
+    return write_reg(reg);
 }
 
 enum class OcpMode:uint8_t{
@@ -115,40 +121,46 @@ enum class OcpMode:uint8_t{
 };
 
 IResult<> MP2980::set_ocp_mode(const OcpMode mode){
-    ctrl2_reg.ocp_mode = uint8_t(mode);
-    return write_reg(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
+    reg.ocp_mode = uint8_t(mode);
+    return write_reg(reg);
 }
 
 
 IResult<> MP2980::set_fsw(const Fsw fsw){
-    ctrl2_reg.fsw = uint8_t(fsw);
-    return write_reg(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
+    reg.fsw = uint8_t(fsw);
+    return write_reg(reg);
 }
 
 IResult<> MP2980::set_buck_boost_fsw(const BuckBoostFsw fsw){
-    ctrl2_reg.bb_fsw = uint8_t(fsw);
-    return write_reg(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
+    reg.bb_fsw = uint8_t(fsw);
+    return write_reg(reg);
 }
 
 IResult<> MP2980::set_curr_limit_threshold(const CurrLimitThreshold threshold){
-    ilim_reg.ilim = uint8_t(threshold);
-    return write_reg(ilim_reg);
+    auto reg = RegCopy(regs_.ilim_reg);
+    reg.ilim = uint8_t(threshold);
+    return write_reg(reg);
 }
 
 IResult<MP2980::Interrupts> MP2980::interrupts(){
-    if(const auto res = read_reg(status_reg);
+    auto reg = RegCopy(regs_.status_reg);
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(Interrupts(status_reg));
+    return Ok(Interrupts(reg.interrupts));
 }
 
 IResult<> MP2980::set_interrupt_mask(const Interrupts mask){
-    mask_reg = std::bit_cast<uint8_t>(mask);
-    return write_reg(mask_reg);
+    auto reg = RegCopy(regs_.mask_reg);
+    reg.interrupts_mask = mask;
+    return write_reg(reg);
 }
 
 IResult<> MP2980::set_output_volt(const real_t output_volt){
-    const uint output_mv = int(output_volt * 1000);
-    const uint fb_mv = (output_mv * fb_down_res_ohms) / (fb_up_res_ohms + fb_down_res_ohms);
+    const uint32_t output_mv = uint32_t(output_volt * 1000);
+    const uint32_t fb_mv = (output_mv * fb_down_res_ohms) / (fb_up_res_ohms + fb_down_res_ohms);
     return set_feed_back_vref_mv(fb_mv);
 }
 

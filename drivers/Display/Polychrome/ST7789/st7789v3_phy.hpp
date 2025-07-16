@@ -4,16 +4,10 @@
 #include "core/utils/bitsqueue.hpp"
 #include "core/utils/dataiter.hpp"
 
-namespace ymd{
 
-
-
-
-}
 namespace ymd::drivers{
-class ST7789V3_Phy final:
+struct ST7789V3_Phy final:
     ST7789_Prelude{
-public:
     template<typename T = void>
     using IResult = Result<void, drivers::DisplayerError>;
     
@@ -31,7 +25,7 @@ public:
 
         constexpr uint16_t next() {
             if((queue_.available_for_write() > 18) and iter_.has_next()){
-                const uint16_t next = iter_.next().as_u16();
+                const uint16_t next = iter_.next();
                 queue_.push_bit(DATA_BIT);
                 queue_.push_bits<8>(next >> 8);
                 queue_.push_bit(DATA_BIT);

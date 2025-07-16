@@ -12,9 +12,13 @@
 
 namespace ymd::drivers{
 
-class MP2980{
-public:
-    enum class Error_Kind{
+
+struct MP2980_Prelude{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
+
+    using RegAddress = uint8_t;
+
+    enum class Error_Kind:uint8_t{
 
     };
 
@@ -64,17 +68,24 @@ public:
         _62_8_mV,
         _68_7_mV,
     };
-protected:
-    using RegAddress = uint8_t;
-    uint fb_up_res_ohms = 90.9 * 1000;
-    uint fb_down_res_ohms = 10 * 1000;
 
-    hal::I2cDrv i2c_drv_;
+    struct Interrupts final{
+        uint8_t png:1;
+        uint8_t ocp:1;
+        uint8_t ovp:1;
+        uint8_t :1;
+        uint8_t otp:1;
+        uint8_t :3;
+    };
+
+};
+
+struct MP2980_Regs:public MP2980_Prelude{
 
     struct RefReg:public Reg16<>{
-        scexpr RegAddress address = 0x00;
+        static constexpr RegAddress REG_ADDR = 0x00;
 
-        uint16_t :16;
+        uint16_t data;
 
         RefReg & set(const uint16_t data){
             auto & self = *this;
@@ -86,12 +97,13 @@ protected:
 
         uint16_t get() const {
             auto & self = *this;
-            return (uint8_t(self.as_bytes()[1]) << 3) | uint8_t(self.as_bytes()[0]);
+            return (uint8_t(self.as_bytes()[1]) << 3) 
+                | uint8_t(self.as_bytes()[0]);
         }
     };
 
     struct Ctrl1Reg:public Reg8<>{
-        scexpr RegAddress address = 0x02;
+        static constexpr RegAddress REG_ADDR = 0x02;
 
         uint8_t en_pwr:1;
         uint8_t go_bit:1;
@@ -103,7 +115,7 @@ protected:
     };
 
     struct Ctrl2Reg:public Reg8<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress REG_ADDR = 0x03;
 
         uint8_t ovp_mode:1;
         uint8_t ocp_mode:1;
@@ -113,28 +125,21 @@ protected:
     };
 
     struct IlimReg:public Reg8<>{
-        scexpr RegAddress address = 0x04;
+        static constexpr RegAddress REG_ADDR = 0x04;
 
         uint8_t ilim:3;
         uint8_t :5;
     };
 
-    struct Interrupts{
-        uint8_t png:1;
-        uint8_t ocp:1;
-        uint8_t ovp:1;
-        uint8_t :1;
-        uint8_t otp:1;
-        uint8_t :3;
+
+    struct StatusReg:public Reg8<>{
+        static constexpr RegAddress REG_ADDR = 0x05;
+        Interrupts interrupts;
     };
 
-    struct StatusReg:public Reg8<>, public Interrupts{
-        scexpr RegAddress address = 0x05;
-    };
-
-    struct MaskReg:public Reg8<>, public Interrupts{
-        using Reg8::operator =;
-        scexpr RegAddress address = 0x06;
+    struct MaskReg:public Reg8<>{
+        static constexpr RegAddress REG_ADDR = 0x06;
+        Interrupts interrupts_mask;
     };
 
     RefReg ref_reg = {};
@@ -143,49 +148,19 @@ protected:
     IlimReg ilim_reg = {};
     MaskReg mask_reg = {};
     StatusReg status_reg = {};
+};
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint16_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint16_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg, LSB);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    [[nodiscard]] IResult<> write_reg(const auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
-
-    [[nodiscard]] IResult<> read_reg(auto & reg){
-        return write_reg(reg.address, reg.as_val());
-    }
-
+class MP2980 : public MP2980_Prelude{
 public:
-
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
-
-    MP2980(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MP2980(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MP2980(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit MP2980(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit MP2980(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    explicit MP2980(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> set_feed_back_vref(const real_t vref);
-    [[nodiscard]] IResult<> set_feed_back_vref_mv(const uint vref_mv);
+    [[nodiscard]] IResult<> set_feed_back_vref_mv(const uint32_t vref_mv);
     [[nodiscard]] IResult<> enable_power_switching(const Enable en = EN);
     [[nodiscard]] IResult<> enable_vref_change_func(const Enable en = EN);
     [[nodiscard]] IResult<> set_png_state(const bool state);
@@ -200,6 +175,41 @@ public:
     [[nodiscard]] IResult<> set_interrupt_mask(const Interrupts mask);
     [[nodiscard]] IResult<> set_output_volt(const real_t output_volt);
     [[nodiscard]] IResult<> init();
+private:
+    hal::I2cDrv i2c_drv_;
+    MP2980_Regs regs_;
+    uint32_t fb_up_res_ohms = 90.9 * 1000;
+    uint32_t fb_down_res_ohms = 10 * 1000;
+
+
+    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(T::REG_ADDR, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        if(const auto res = write_reg(T::REG_ADDR, reg.as_ref());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
+
 };
 
 }

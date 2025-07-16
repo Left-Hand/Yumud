@@ -17,7 +17,7 @@ struct RepeatIter{
         return ret;
     }
     constexpr bool has_next() const {
-        return index_ + 1 >= size_;
+        return index_ < size_;
     }
 private:
     T value_;
