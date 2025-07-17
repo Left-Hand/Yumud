@@ -34,7 +34,7 @@ struct ZdtMotor_Prelude{
             return NodeId{raw};
         }
 
-        constexpr uint8_t to_u8() const {
+        constexpr uint8_t as_u8() const {
             return id;
         }
 
@@ -136,7 +136,7 @@ struct ZdtMotor_Prelude{
             const uint8_t piece
         ){
             return hal::CanExtId(
-                uint32_t(nodeid.to_u8() << 8) | 
+                uint32_t(nodeid.as_u8() << 8) | 
                 (piece)
             );
         }
@@ -306,12 +306,10 @@ struct ZdtMotor_Prelude{
         }
 
         static constexpr AcclerationLevel from_zero(){
-            // TODO
             return AcclerationLevel{0};
         }
 
-        static constexpr AcclerationLevel from_raw(const uint8_t raw){
-            // TODO
+        static constexpr AcclerationLevel from_u8(const uint8_t raw){
             return AcclerationLevel{raw};
         }
         uint8_t raw_;

@@ -25,7 +25,13 @@ struct Polar{
     constexpr Polar from_vec2(const Vector2<T> & v){
         return Polar(v.length(), v.angle());
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const Polar & p){
+        return os << os.brackets<'('>() << p.radius << os.splitter() << p.phi << os.brackets<')'>();
+    }
 };
 
+template<arithmetic T>
+Polar() -> Polar<T>;
 
 }

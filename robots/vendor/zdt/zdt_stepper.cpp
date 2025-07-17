@@ -9,11 +9,13 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> ZdtStepper::set_target_position(const real_t pos){
+    static constexpr auto RPM = Rpm::from_speed(0.47_r);
     return write_payload(Payloads::SetPosition{
         .is_ccw = pos < 0,
         // .rpm = Rpm::from(0.07_r),
-        .rpm = Rpm::from_speed(1.07_r),
-        .acc_level = AcclerationLevel::from_raw(0),
+        .rpm = RPM,
+        // .acc_level = AcclerationLevel::from_u8(7),
+        .acc_level = AcclerationLevel::from_u8(0),
         .pulse_cnt = PulseCnt::from_position(ABS(pos)),
         .is_absolute = true,
         .is_sync = is_sync_
@@ -89,12 +91,12 @@ void ZdtMotorPhy::uart_write_bytes(
     const FuncCode func_code,
     const std::span<const uint8_t> bytes
 ){
-    uart.write1(id.to_u8());
+    uart.write1(id.as_u8());
     uart.write1(std::bit_cast<uint8_t>(func_code));
     uart.writeN(reinterpret_cast<const char *>(
         bytes.data()), bytes.size());
 
-    DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
+    // DEBUG_PRINTLN(id.as_u8(), std::bit_cast<uint8_t>(func_code), bytes);
 }
 
 void ZdtMotorPhy::write_bytes(

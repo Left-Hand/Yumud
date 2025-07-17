@@ -13,7 +13,7 @@
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
-
+#include "core/stream/ostream.hpp"
 
 namespace ymd::strconv2 {
 
@@ -125,6 +125,11 @@ struct FstrDump final{
 			.frac_part = frac_part,
 			.scale = scale
 		});
+	}
+
+	friend OutputStream & operator<<(OutputStream & os, const FstrDump & dump) {
+		os << dump.digit_part << os.splitter() << dump.frac_part << os.splitter() << dump.scale;
+		return os;
 	}
 };
 
@@ -265,8 +270,9 @@ struct IqFromStringHelper{
 			res.unwrap();
 		});
 		
-		const iq_t<Q> ret = iq_t<Q>(dump.digit_part) 
-			+ iq_t<Q>::from_i32((dump.frac_part << Q) / dump.scale);
+		const iq_t<Q> ret = 
+			iq_t<Q>(dump.digit_part) 
+			+ iq_t<Q>::from_i32((int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale));
 
 		return Ok(ret);
 	}

@@ -88,11 +88,34 @@ private:
     hal::Gpio & gpio_;
 };
 
+// template<typename T>
+// static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
+//     const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
+//     return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
+// }
+
 template<typename T>
-static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
-    const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
-    return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
+static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b) {
+    const T angle_a = atan2(a.y, a.x);
+    const T angle_b = atan2(b.y, b.x);
+    T diff = angle_b - angle_a;
+    
+    // 规范化到 [-π, π]
+    while (diff > T(M_PI)) diff -= T(2 * M_PI);
+    while (diff <= -T(M_PI)) diff += T(2 * M_PI);
+    
+    return diff;
 }
+
+// template<typename T>
+// static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b) {
+//     // 叉积的z分量（sinθ）
+//     const T cross_z = a.x * b.y - a.y * b.x;
+//     // 点积（cosθ）
+//     const T dot = a.x * b.x + a.y * b.y;
+    
+//     return atan2(cross_z, dot);
+// }
 
 template<typename T>
 static constexpr T vec_angle(const Vector2<T> a){
@@ -129,12 +152,12 @@ struct PolarRobotSolver{
 
         const auto g_vec2 = g.to_vec2();
         const auto last_g_vec2 = last_g.to_vec2();
-
-        const auto delta_theta = vec_angle_diff(g_vec2, last_g_vec2);
+        const auto last_angle = vec_angle(last_g_vec2);
+        const auto delta_angle = vec_angle_diff(g_vec2, last_g_vec2);
 
         return {
             .rho_meters = g_vec2.length(),
-            .theta_radians = vec_angle(last_g_vec2) + delta_theta
+            .theta_radians = last_angle + delta_angle
         };
     }
 
@@ -363,26 +386,10 @@ public:
         const auto theta_position = theta_radians * cfg_.theta_transform_scale;
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
-        joint_theta_.set_position(theta_position);
+        joint_theta_.set_position(-theta_position);
     }
 
     
-    void set_position(const real_t x_meters, const real_t y_meters){
-        const auto gest = Solver::Gesture{
-            .x_meters = x_meters,
-            .y_meters = y_meters
-        };
-
-        const auto sol = Solver::nearest_forward(
-            last_gest_, gest);
-
-        last_gest_ = gest;
-
-        set_polar(
-            sol.rho_meters, 
-            -ABS(sol.theta_radians)
-        );
-    }
 
     void activate(){
         joint_rho_.activate();
@@ -411,7 +418,6 @@ public:
             DEF_RPC_MEMFUNC(is_homing_done),
             DEF_RPC_MEMFUNC(deactivate),
             DEF_RPC_MEMFUNC(activate),
-            DEF_RPC_MEMFUNC(set_position),
             DEF_RPC_MEMFUNC(set_polar)
         );
     }
@@ -421,7 +427,8 @@ private:
     JointMotorIntf & joint_rho_;
     JointMotorIntf & joint_theta_;
 
-    Solver::Gesture last_gest_;
+    Option<Solver::Gesture> may_last_gest_ = None;
+    Option<real_t> may_last_theta_ = Some(real_t(0));
 
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
@@ -429,6 +436,122 @@ private:
         DEBUG_PRINTLN(std::forward<Args>(args)...);
     }
 
+};
+
+
+struct PolarRobotKinePlanner{
+
+    explicit PolarRobotKinePlanner(PolarRobotActuator & act):
+        act_(act){;}
+
+    void set_position(const Vector2<q16> pos){
+        // if(x_meters == 0 && y_meters == 0) return;
+        // auto apply = [&](const Solver::Solution & sol, const Solver::Gesture & gest){
+
+        //     set_polar(
+        //         sol.rho_meters, 
+        //         sol.theta_radians
+        //     );
+
+
+        //     may_last_gest_ = Some(gest);
+        //     may_last_theta_ = Some(sol.theta_radians);
+        // };
+
+        // const auto gest = Solver::Gesture{
+        //     .x_meters = pos.x,
+        //     .y_meters = pos.y
+        // };
+
+        // const auto gest_vec2 = gest.to_vec2();
+        const auto gest_vec2 = pos;
+        // if(may_last_gest_.is_none()){
+        //     const auto sol = Solver::Solution{
+        //         .rho_meters = gest_vec2.length(),
+        //         .theta_radians = gest_vec2.angle()
+        //     };
+        //     apply(sol, gest);
+        //     return;
+        // }
+
+        // auto last_theta = ({
+        //     if(may_last_theta_.is_none()) PANIC();
+        //     may_last_theta_.unwrap();
+        // });
+
+        // if(last_theta > 25){
+        //     last_theta = 0;
+        // }
+
+        // const auto last_gest_vec2 = may_last_gest_.unwrap().to_vec2();
+        // const auto delta_theta = vec_angle_diff(gest_vec2, last_gest_vec2);
+        // const auto radius = gest_vec2.length();
+        // const auto sol = Solver::Solution{
+        //     .rho_meters = radius,
+        //     .theta_radians = last_theta + delta_theta
+        // };
+
+        
+        // DEBUG_PRINTLN(
+        //     sol.rho_meters,
+        //     sol.theta_radians,
+
+        //     x_meters,
+        //     y_meters,
+        //     last_theta,
+        //     delta_theta
+        // );
+
+        // apply(sol, gest);
+        // may_last_gest_ = Some(gest);
+        // may_last_theta_ = Some(sol.theta_radians);
+
+        act_.set_polar(
+            gest_vec2.length(),
+            gest_vec2.angle()
+        );
+    }
+private:
+    PolarRobotActuator & act_;
+};
+
+
+struct ContinuousPolarIter final {
+    struct State {
+        Vector2<q16> position;
+        q16 theta;  // 累积角度
+    };
+
+    Polar<q16> operator()(const Vector2<q16> position) {
+        if (may_last_state_.is_none()) {
+            // 第一次调用，初始化状态
+            may_last_state_ = Some(State{
+                .position = position,
+                .theta = position.angle()  // 初始角度
+            });
+            return Polar<q16>{position.length(), position.angle()};
+        }
+
+        // 获取上次状态
+        const auto last_state = may_last_state_.unwrap();
+        
+        // 计算角度变化
+        const q16 delta_theta = vec_angle_diff(last_state.position, position);
+        const q16 new_theta = last_state.theta + delta_theta;
+
+        // DEBUG_PRINTLN(last_state.position, position, delta_theta);
+
+        // 更新状态
+        may_last_state_ = Some(State{
+            .position = position,
+            .theta = new_theta  // 存储累积角度
+        });
+
+        return Polar<q16>{position.length(), new_theta};
+    }
+
+private:
+    Option<State> may_last_state_ = None;
 };
 
 class CanHandlerAdaptor_PolarRobotActuator final:
@@ -480,7 +603,7 @@ struct QueuePointIterator{
 
     [[nodiscard]] Vector2<q24> next(const q24 step){
 
-        const auto curr_i = (i) % data_.size();
+        const auto curr_i = i_;
 
         
         const auto p1 = Vector2{
@@ -492,21 +615,22 @@ struct QueuePointIterator{
         // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
         // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
 
-        // if(ABS(p.x - p1.x) < 0.00001_r) i++;
-        if(p.is_equal_approx(p1)) i++;
+        if(p.is_equal_approx(p1)){
+            i_ = (i_ + 1) % data_.size();
+        }
         // DEBUG_PRINTLN(p);
         return p;
         // return Vector2<q24>(data_[0].x, data_.size());
-        // return Vector2<q24>(i, data_.size());
+        // return Vector2<q24>(i_, data_.size());
     }
 
     [[nodiscard]] constexpr size_t index() const {
-        return i;
+        return i_;
     }
 private:
     std::span<const Vector2<bf16>> data_;
     Vector2<q24> p = {};
-    size_t i = 0;
+    size_t i_ = 0;
 };
 
 void polar_robot_main(){
@@ -581,43 +705,64 @@ void polar_robot_main(){
         }
     };
 
+    PolarRobotKinePlanner robot_planner = PolarRobotKinePlanner{
+        robot_actuator
+    };
+
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
         rho_joint.make_rpc_list("rho_joint"),
-        theta_joint.make_rpc_list("theta_joint")
+        theta_joint.make_rpc_list("theta_joint"),
+
+        rpc::make_function("setp", [&](const real_t x, const real_t y){
+            robot_planner.set_position({x,y});
+        }),
+        rpc::make_function("next", [&](){
+            static Vector2<q16> position = {0.1_r, 0};
+            position = position.cw();
+            robot_planner.set_position(position);
+        })
     );
 
-    robots::ReplServer repl_server = {
-        &DBG_UART, &DBG_UART
-    };
 
     constexpr auto SAMPLE_DUR = 700ms; 
-
-    auto it = QueuePointIterator{std::span(CURVE_DATA)};
-
-    // PANIC(std::span(CURVE_DATA).subspan(0, 10));
-
-    auto main_service = [&]{
+    auto drawcurve_service = [&]{
         static async::RepeatTimer timer{2ms};
         timer.invoke_if([&]{
+            static auto it = QueuePointIterator{std::span(CURVE_DATA)};
+            static auto p_it = ContinuousPolarIter();
+
             const auto p = it.next(0.0001_q24);
+            // const auto p = it.next(0.001_q24);
+            // const auto p = it.next(0.01_q24);
 
-            robot_actuator.set_position(p.x, p.y);
-            DEBUG_PRINTLN(
-                p.x, 
-                p.y, 
-                it.index(), 
-                rho_joint.get_last_position(), 
-                theta_joint.get_last_position()
-            );
+            robot_planner.set_position(p);
 
-            repl_server.invoke(list);
+            DEBUG_PRINTLN(p, p_it(p));
+            // DEBUG_PRINTLN(
+            //     p.x, 
+            //     p.y, 
+            //     it.index(), 
+            //     rho_joint.get_last_position(), 
+            //     theta_joint.get_last_position()
+            // );
+
         });
     };
 
+    robot_actuator.trig_homing();
+    [[maybe_unused]]auto repl_service = [&](){ 
+        
+        static robots::ReplServer repl_server = {
+            &DBG_UART, &DBG_UART
+        };
+        repl_server.invoke(list);
+    };
+
     while(true){
-        main_service();
+        drawcurve_service();
+        repl_service();
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);

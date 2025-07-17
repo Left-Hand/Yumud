@@ -42,7 +42,8 @@ int main(){
     // st1615_main();
     // bldc_main();
 
-    ft6336_main();
+    // ft6336_main();
+    polar_robot_main();
     // i2c_scanner_main();
     // rrs3_robot_main();
     // can_ring_main();
