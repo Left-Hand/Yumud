@@ -20,6 +20,8 @@
 #include "types/colors/color/color.hpp"
 #include "types/vectors/polar/polar.hpp"
 
+#include "common_service.hpp"
+
 #ifdef ENABLE_UART1
 using namespace ymd;
 using namespace ymd::hal;
@@ -37,62 +39,7 @@ using namespace ymd::robots;
 
 //CAN1 TX/PB9 RX/PB8
 
-class LedService{
-public:
-    enum class BreathMethod:uint8_t{
-        Sine = 0,
-        Saw,
-        Square,
-        Triangle
-    };
-protected:
-    struct Blink{
-        Milliseconds on;
-        Milliseconds off;
-        size_t times;
-    };
 
-    struct Pulse{
-        Milliseconds on;
-    };
-
-public:
-
-    void resume();
-
-private:
-    // void set_color(const Color<real_t> & color){
-
-    // }
-};
-
-class BeepService{
-public:
-    struct Config{
-
-    };
-
-    explicit BeepService(
-        Some<hal::Gpio *> gpio
-    ): gpio_(gpio.deref()){;}
-
-    void push_pulse(const Milliseconds period){
-
-    };
-
-    void resume(){
-
-    }
-
-private:
-    hal::Gpio & gpio_;
-};
-
-// template<typename T>
-// static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
-//     const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
-//     return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
-// }
 
 template<typename T>
 static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b) {
@@ -112,74 +59,12 @@ static constexpr T vec_angle(const Vector2<T> a){
     return atan2(a.y, a.x);
 }
 
-struct PolarRobotSolver{
-    struct Gesture{
-        real_t x_meters;
-        real_t y_meters;
-
-        constexpr Vector2<real_t> to_vec2() const {
-            return Vector2(x_meters, y_meters);
-        }
-    };
-
-    struct Solution{
-        real_t rho_meters;
-        real_t theta_radians;
-    };
-
-    static constexpr Gesture inverse(const Solution & sol){
-        const auto [s,c] = sincos(sol.theta_radians);
-        return {
-            sol.rho_meters * c,
-            sol.rho_meters * s
-        };
-    }
-
-    static constexpr Solution nearest_forward(
-        const Gesture & last_g, 
-        const Gesture & g
-    ){
-
-        const auto g_vec2 = g.to_vec2();
-        const auto last_g_vec2 = last_g.to_vec2();
-        const auto last_angle = vec_angle(last_g_vec2);
-        const auto delta_angle = vec_angle_diff(g_vec2, last_g_vec2);
-
-        return {
-            .rho_meters = g_vec2.length(),
-            .theta_radians = last_angle + delta_angle
-        };
-    }
-
-private:
-
-    static constexpr real_t nearest_fmod(
-        const real_t x,
-        const real_t step
-    ){
-        const auto half_step = step / 2;
-        return fposmodp(x + half_step, step) - half_step;
-    }
-    static constexpr real_t wrapped_diff(
-        const real_t last_x,
-        const real_t x,
-        const real_t step
-    ){
-        const auto diff = x - last_x;
-        return nearest_fmod(diff, step);
-    }
-};
-
-
 struct AxisIterator{
     struct State{
         real_t position;
         real_t speed;
     };
 
-    // State next(const real_t x, const real_t step){
-
-    // }
 private:
     State state_;
 };
@@ -358,7 +243,6 @@ public:
         Some<JointMotorIntf *> theta_joint;
     };
 
-    using Solver = PolarRobotSolver;
 
     PolarRobotActuator(
         const Config & cfg, 
@@ -370,16 +254,15 @@ public:
     {;}
 
 
-    void set_polar(const real_t rho_meters, const real_t theta_radians){
+    // void set_coord(const real_t p.radius, const real_t p.theta){
+    void set_coord(const Polar<q16> p){
 
-        const auto rho_position = rho_meters * cfg_.rho_transform_scale;
-        const auto theta_position = theta_radians * cfg_.theta_transform_scale;
+        const auto rho_position = p.radius * cfg_.rho_transform_scale;
+        const auto theta_position = p.theta * cfg_.theta_transform_scale;
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
         joint_theta_.set_position(-theta_position);
     }
-
-    
 
     void activate(){
         joint_rho_.activate();
@@ -407,8 +290,8 @@ public:
             DEF_RPC_MEMFUNC(trig_homing),
             DEF_RPC_MEMFUNC(is_homing_done),
             DEF_RPC_MEMFUNC(deactivate),
-            DEF_RPC_MEMFUNC(activate),
-            DEF_RPC_MEMFUNC(set_polar)
+            DEF_RPC_MEMFUNC(activate)
+            // DEF_RPC_MEMFUNC(set_coord)
         );
     }
 
@@ -417,9 +300,6 @@ private:
     JointMotorIntf & joint_rho_;
     JointMotorIntf & joint_theta_;
 
-    Option<Solver::Gesture> may_last_gest_ = None;
-    Option<real_t> may_last_theta_ = Some(real_t(0));
-
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
         deactivate();
@@ -427,84 +307,6 @@ private:
     }
 
 };
-
-
-struct PolarRobotKinePlanner{
-
-    explicit PolarRobotKinePlanner(PolarRobotActuator & act):
-        act_(act){;}
-
-    void set_position(const Vector2<q16> pos){
-        // if(x_meters == 0 && y_meters == 0) return;
-        // auto apply = [&](const Solver::Solution & sol, const Solver::Gesture & gest){
-
-        //     set_polar(
-        //         sol.rho_meters, 
-        //         sol.theta_radians
-        //     );
-
-
-        //     may_last_gest_ = Some(gest);
-        //     may_last_theta_ = Some(sol.theta_radians);
-        // };
-
-        // const auto gest = Solver::Gesture{
-        //     .x_meters = pos.x,
-        //     .y_meters = pos.y
-        // };
-
-        // const auto gest_vec2 = gest.to_vec2();
-        const auto gest_vec2 = pos;
-        // if(may_last_gest_.is_none()){
-        //     const auto sol = Solver::Solution{
-        //         .rho_meters = gest_vec2.length(),
-        //         .theta_radians = gest_vec2.angle()
-        //     };
-        //     apply(sol, gest);
-        //     return;
-        // }
-
-        // auto last_theta = ({
-        //     if(may_last_theta_.is_none()) PANIC();
-        //     may_last_theta_.unwrap();
-        // });
-
-        // if(last_theta > 25){
-        //     last_theta = 0;
-        // }
-
-        // const auto last_gest_vec2 = may_last_gest_.unwrap().to_vec2();
-        // const auto delta_theta = vec_angle_diff(gest_vec2, last_gest_vec2);
-        // const auto radius = gest_vec2.length();
-        // const auto sol = Solver::Solution{
-        //     .rho_meters = radius,
-        //     .theta_radians = last_theta + delta_theta
-        // };
-
-        
-        // DEBUG_PRINTLN(
-        //     sol.rho_meters,
-        //     sol.theta_radians,
-
-        //     x_meters,
-        //     y_meters,
-        //     last_theta,
-        //     delta_theta
-        // );
-
-        // apply(sol, gest);
-        // may_last_gest_ = Some(gest);
-        // may_last_theta_ = Some(sol.theta_radians);
-
-        act_.set_polar(
-            gest_vec2.length(),
-            gest_vec2.angle()
-        );
-    }
-private:
-    PolarRobotActuator & act_;
-};
-
 
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
@@ -543,6 +345,83 @@ struct Cartesian2ContinuousPolarRegulator final {
 private:
     Option<State> may_last_state_ = None;
 };
+
+struct PolarRobotKinePlanner{
+
+    explicit PolarRobotKinePlanner(PolarRobotActuator & act):
+        act_(act){;}
+
+    void set_position(const Vector2<q16> pos){
+        // if(x_meters == 0 && y_meters == 0) return;
+        // auto apply = [&](const Solver::Solution & sol, const Solver::Gesture & gest){
+
+        //     set_coord(
+        //         sol.p.radius, 
+        //         sol.p.theta
+        //     );
+
+
+        //     may_last_gest_ = Some(gest);
+        //     may_last_theta_ = Some(sol.p.theta);
+        // };
+
+        // const auto gest = Solver::Gesture{
+        //     .x_meters = pos.x,
+        //     .y_meters = pos.y
+        // };
+
+        // const auto gest_vec2 = gest.to_vec2();
+        // if(may_last_gest_.is_none()){
+        //     const auto sol = Solver::Solution{
+        //         .p.radius = gest_vec2.length(),
+        //         .p.theta = gest_vec2.angle()
+        //     };
+        //     apply(sol, gest);
+        //     return;
+        // }
+
+        // auto last_theta = ({
+        //     if(may_last_theta_.is_none()) PANIC();
+        //     may_last_theta_.unwrap();
+        // });
+
+        // if(last_theta > 25){
+        //     last_theta = 0;
+        // }
+
+        // const auto last_gest_vec2 = may_last_gest_.unwrap().to_vec2();
+        // const auto delta_theta = vec_angle_diff(gest_vec2, last_gest_vec2);
+        // const auto radius = gest_vec2.length();
+        // const auto sol = Solver::Solution{
+        //     .p.radius = radius,
+        //     .p.theta = last_theta + delta_theta
+        // };
+
+        
+        // DEBUG_PRINTLN(
+        //     sol.p.radius,
+        //     sol.p.theta,
+
+        //     x_meters,
+        //     y_meters,
+        //     last_theta,
+        //     delta_theta
+        // );
+
+        // apply(sol, gest);
+        // may_last_gest_ = Some(gest);
+        // may_last_theta_ = Some(sol.p.theta);
+
+        const auto p = regu_(pos);
+        act_.set_coord(p);
+    }
+private:
+    PolarRobotActuator & act_;
+    Cartesian2ContinuousPolarRegulator regu_;
+};
+
+
+
 
 class CanHandlerAdaptor_PolarRobotActuator final:
 public CanMsgHandlerIntf{
@@ -705,8 +584,11 @@ void polar_robot_main(){
         rho_joint.make_rpc_list("rho_joint"),
         theta_joint.make_rpc_list("theta_joint"),
 
-        rpc::make_function("setp", [&](const real_t x, const real_t y){
+        rpc::make_function("pxy", [&](const real_t x, const real_t y){
             robot_planner.set_position({x,y});
+        }),
+        rpc::make_function("prt", [&](const real_t radius, const real_t theta){
+            robot_actuator.set_coord({radius,theta});
         }),
         rpc::make_function("next", [&](){
             static Vector2<q16> position = {0.1_r, 0};
@@ -715,26 +597,22 @@ void polar_robot_main(){
         })
     );
 
-    auto drawcurve_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(2ms);
-        timer.invoke_if([&]{
-            static auto it = QueuePointIterator{std::span(CURVE_DATA)};
-            static auto p_it = Cartesian2ContinuousPolarRegulator();
+    auto draw_curve_service = [&]{
+        static constexpr uint32_t CALL_FREQ = 500;
+        static constexpr auto CALL_DURATION_MS = 1000ms / CALL_FREQ;
+        static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
+        static constexpr auto DELTA_PER_CALL = MAX_MOVE_SPEED / CALL_FREQ;
 
-            const auto p = it.next(0.0001_q24);
-            // const auto p = it.next(0.001_q24);
-            // const auto p = it.next(0.01_q24);
+        static auto timer = async::RepeatTimer::from_duration(CALL_DURATION_MS);
+        static auto it = QueuePointIterator{std::span(CURVE_DATA)};
+
+        timer.invoke_if([&]{
+
+            const auto p = it.next(DELTA_PER_CALL);
 
             robot_planner.set_position(p);
 
-            DEBUG_PRINTLN(p, p_it(p));
-            // DEBUG_PRINTLN(
-            //     p.x, 
-            //     p.y, 
-            //     it.index(), 
-            //     rho_joint.get_last_position(), 
-            //     theta_joint.get_last_position()
-            // );
+            DEBUG_PRINTLN(p);
 
         });
     };
@@ -749,7 +627,7 @@ void polar_robot_main(){
     };
 
     while(true){
-        drawcurve_service();
+        draw_curve_service();
         repl_service();
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);

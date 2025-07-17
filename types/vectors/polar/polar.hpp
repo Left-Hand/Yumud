@@ -14,10 +14,8 @@ struct Polar{
     T radius;
     T theta;
     constexpr Polar(){;}
-    constexpr explicit Polar(const T _radius, const T _theta) : 
+    constexpr Polar(const T _radius, const T _theta) : 
         radius(_radius), theta(_theta) {;}
-
-
 
     constexpr Polar from_vec2(const Vector2<T> & v){
         return Polar(v.length(), v.angle());

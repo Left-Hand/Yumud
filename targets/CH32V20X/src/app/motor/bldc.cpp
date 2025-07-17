@@ -230,10 +230,10 @@ struct GestureEstimator{
         //     // pos_sensor_.lap_position(),
         //     // pos_sensor_.speed(),
         //     ma730_.read_lap_position().examine(),
-        //     meas_rad_
+        //     meas_elecrad_
         //     // exe_us_
         //     // // leso.get_disturbance(),
-        //     // meas_rad_
+        //     // meas_elecrad_
         // );
 
         const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
@@ -490,7 +490,7 @@ void bldc_main(){
 
 
     real_t q_volt_ = 0;
-    real_t meas_rad_ = 0;
+    real_t meas_elecrad_ = 0;
 
     dsp::Leso leso{
         [&]{
@@ -526,8 +526,8 @@ void bldc_main(){
     }();
 
     Microseconds exe_us_ = 0us;
-    real_t track_pos_ = 0;
-    real_t track_spd_ = 0;
+    real_t axis_target_position_ = 0;
+    real_t axis_target_speed_ = 0;
 
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730_.update().examine();
@@ -537,19 +537,19 @@ void bldc_main(){
         pos_sensor_.update(meas_lap);
 
 
-        const real_t meas_rad = elecrad_comp_(meas_lap);
+        const real_t meas_elecrad = elecrad_comp_(meas_lap);
 
         const auto meas_pos = pos_sensor_.position();
         const auto meas_spd = pos_sensor_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
         [[maybe_unused]] static constexpr real_t amp = 0.06_r;
-        [[maybe_unused]] const auto clock_time = clock::time();
+        [[maybe_unused]] const auto ctime = clock::time();
 
-        const auto [track_pos, track_spd] = ({
+        const auto [axis_target_position, axis_target_speed] = ({
             std::make_tuple(
-                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
-                track_pos_, track_spd_
+                // amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
+                axis_target_position_, axis_target_speed_
             );
         });
 
@@ -560,8 +560,8 @@ void bldc_main(){
             );
         });
 
-        const auto targ_pos = blance_pos + track_pos;
-        const auto targ_spd = blance_spd + track_spd;
+        const auto targ_pos = blance_pos + axis_target_position;
+        const auto targ_spd = blance_spd + axis_target_speed;
 
 
         static constexpr auto MAX_VOLT = 2.7_r;
@@ -573,14 +573,14 @@ void bldc_main(){
         const auto ab_volt = DqVoltage{
             0, 
             CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
-        }.to_ab(meas_rad);
+        }.to_alpha_beta(meas_elecrad);
 
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
 
         leso.update(meas_spd, q_volt);
 
         q_volt_ = q_volt;
-        meas_rad_ = meas_rad;
+        meas_elecrad_ = meas_elecrad;
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
@@ -621,14 +621,14 @@ void bldc_main(){
     };
 
 
-    TrackTarget track_target_ = {
+    [[maybe_unused]] TrackTarget track_target_ = {
         .roll = {.position = 0, .speed = 0},
         .pitch = {.position = 0, .speed = 0}
     };
 
     [[maybe_unused]] auto set_target = [&](const SetPositionAndSpeed & cmd){
-        track_pos_ = real_t(cmd.position);
-        track_spd_ = real_t(cmd.speed);
+        axis_target_position_ = real_t(cmd.position);
+        axis_target_speed_ = real_t(cmd.speed);
     };
 
     [[maybe_unused]] auto can_subscriber_service = [&]{
@@ -724,8 +724,8 @@ void bldc_main(){
 
     [[maybe_unused]] auto demo_track_service = [&]{ 
         auto update_joint_target = [&]() -> void { 
-            const auto clock_time = clock::time();
-            const auto [s, c] = sincos(clock_time * 5);
+            const auto ctime = clock::time();
+            const auto [s, c] = sincos(ctime * 5);
             const auto p1 = c * 0.00_r;
             const auto p2 = s * 0.00_r;
 
@@ -855,7 +855,7 @@ void bldc_main(){
         //     // len_acc,
         //     alpha,
         //     // iter,
-        //     // meas_rad_
+        //     // meas_elecrad_
         //     exe_us_.count()
         // );
 
