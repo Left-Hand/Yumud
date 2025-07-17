@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "core/container/buffer.hpp"
 
 #include <bits/ios_base.h>
 #include <iomanip>

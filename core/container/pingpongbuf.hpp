@@ -3,7 +3,7 @@
 #include "../buffer.hpp"
 
 template<typename T, uint32_t _size>
-class PingPongBuf_t:public StaticBuffer_t<T, _size>{
+class PingPongBuf:public StaticBuffer_t<T, _size>{
 protected:
     volatile T * write_ptr;
     volatile bool sect;
@@ -13,7 +13,7 @@ protected:
     }
 
 public:
-    PingPongBuf_t():write_ptr(this->buf), read_ptr(this->buf){;}
+    PingPongBuf():write_ptr(this->buf), read_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
@@ -52,4 +52,4 @@ public:
 };
 
 template<uint32_t size>
-using PingPongBuf = PingPongBuf_t<uint8_t, size>;
+using PingPongBuf = PingPongBuf<uint8_t, size>;

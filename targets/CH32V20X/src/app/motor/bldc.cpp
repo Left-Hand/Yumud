@@ -192,7 +192,7 @@ struct MsgFactory{
 
 
 
-static constexpr bool is_ringback(const hal::CanMsg & msg, const NodeRole self_node_role){
+static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole self_node_role){
     const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
     return role == self_node_role;
 };
@@ -270,7 +270,7 @@ private:
 //     void write{const hal:: CanMsg & msg}{
 //         if(msg.is_extended()) PANIC();
 
-//         const bool is_local = is_ringback(msg, self_node_role_);
+//         const bool is_local = is_ringback_msg(msg, self_node_role_);
 
 //         if(is_local){
 //             msg_queue_.push(msg);
@@ -592,14 +592,14 @@ void bldc_main(){
     );
 
 
-    Fifo_t<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     auto write_can_msg = [&](const hal::CanMsg & msg){
         if(msg.is_extended()) PANIC();
 
-        const bool is_local = is_ringback(msg, self_node_role_);
+        const bool is_ringback = is_ringback_msg(msg, self_node_role_);
 
-        if(is_local){
+        if(is_ringback){
             msg_queue_.push(msg);
         }else{
             can.write(msg);
@@ -610,7 +610,7 @@ void bldc_main(){
         while(can.available()){
             auto msg = can.read();
             if(msg.is_extended()) continue;
-            if(not is_ringback(msg, self_node_role_)) continue;
+            if(not is_ringback_msg(msg, self_node_role_)) continue;
             msg_queue_.push(msg);
         }
 

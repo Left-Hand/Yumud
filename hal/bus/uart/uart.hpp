@@ -7,7 +7,7 @@
 #include "hal/bus/bus_base.hpp"
 #include "uart_utils.hpp"
 
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf.hpp"
 
 
 namespace ymd::hal{
@@ -47,8 +47,8 @@ protected:
     CommStrategy rx_strategy_;
 
 
-    Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo_;
-    Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo_;
+    RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
+    RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
 
     Uart(){;}
 

@@ -17,9 +17,9 @@
 
 // template<typename T, size_t N>
 // requires (std::has_single_bit(N))
-// class Fifo_t{
+// class RingBuf{
 // public:
-//     Fifo_t() noexcept{;}
+//     RingBuf() noexcept{;}
 
 //     __fast_inline constexpr size_t size() const noexcept{
 //         return N;
@@ -166,7 +166,7 @@
 //     }
 // };
 // template<uint32_t size>
-// using RingBuf = Fifo_t<uint8_t, size>;
+// using RingBuf = RingBuf<uint8_t, size>;
 
 // }
 
@@ -178,7 +178,7 @@
 namespace ymd{
 
 template<typename T, size_t N>
-class Fifo_t{
+class RingBuf{
 protected:
     T buf[N];
     using Pointer = T *;
@@ -198,7 +198,7 @@ public:
     Pointer read_ptr;
     Pointer write_ptr;
 
-    Fifo_t():read_ptr(this->buf), write_ptr(this->buf){;}
+    RingBuf():read_ptr(this->buf), write_ptr(this->buf){;}
 
     __fast_inline constexpr size_t size() const {
         return N;
@@ -301,7 +301,6 @@ public:
         return;
     }
 };
-template<uint32_t size>
-using RingBuf = Fifo_t<uint8_t, size>;
+
 
 }

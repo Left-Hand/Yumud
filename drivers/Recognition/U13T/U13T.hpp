@@ -50,7 +50,7 @@ public:
 // private:
 // private:
 
-    RingBuf<32> recv;
+    RingBuf<uint8_t, 32> recv;
     int8_t dead_ticks = 0;
     const int8_t dead_limit = 3;
 

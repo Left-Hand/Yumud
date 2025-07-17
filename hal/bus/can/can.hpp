@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/bus_base.hpp"
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf.hpp"
 #include "core/sdk.hpp"
 
 #include "can_utils.hpp"
@@ -112,8 +112,8 @@ private:
     static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
     #endif
 
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
+    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback cb_txok_;
     Callback cb_txfail_;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf/Fifo.hpp"
 #include <vector>
 #include <functional>
 
@@ -48,7 +48,7 @@ public:
     using Subscriber = Subscriber<T>;
 protected:
     static constexpr size_t N = 16;
-    Fifo_t<T, N> fifo_;
+    Fifo<T, N> fifo_;
 
     std::vector<Callback> subscribers_;
 
