@@ -142,6 +142,39 @@ private:
 }
 
 
+namespace ymd{
+template<typename E, typename T>
+struct command_to_kind{};
+
+template<typename E, E K>
+struct kind_to_command{};
+
+
+
+template<typename E, typename T>
+static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
+
+template<typename E, E K>
+using kind_to_command_t = typename kind_to_command<E, K>::type;
+}
+
+
+
+template<typename Iter>
+static constexpr size_t count_iter(Iter && iter){
+    size_t cnt = 0;
+    while(true){
+        if(iter.has_next()){
+            cnt++;
+        }else{
+            break;
+        }
+        (void)iter.next();
+    }
+    return cnt;
+}
+
+
 // struct TurnSolver{
 //     uint16_t ta = 0;
 //     uint16_t tb = 0;

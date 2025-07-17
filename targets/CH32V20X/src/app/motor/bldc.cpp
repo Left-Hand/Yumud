@@ -63,22 +63,7 @@ using namespace ymd::robots::machine_cmds;
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
-
-namespace ymd{
-template<typename E, typename T>
-struct command_to_kind{};
-
-template<typename E, E K>
-struct kind_to_command{};
-
-
-
-template<typename E, typename T>
-static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
-
-template<typename E, E K>
-using kind_to_command_t = typename kind_to_command<E, K>::type;
-}
+static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
 void init_adc(hal::AdcPrimary & adc){
 
@@ -175,10 +160,13 @@ DEF_QUICK_COMMAND_BIND(SetPositionAndSpeed)
 DEF_QUICK_COMMAND_BIND(SetSpeed)
 DEF_QUICK_COMMAND_BIND(SetKpKd)
 
-
-
 }
 
+
+struct TrackTarget{
+    robots::joint_cmds::SetPositionAndSpeed roll ;
+    robots::joint_cmds::SetPositionAndSpeed pitch;
+};
 
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
     const auto id_u11 = id.to_u11();
@@ -197,30 +185,7 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
 };
 
 
-namespace ymd::can_repl{
 
-template<typename Obj, typename E, typename M>
-struct MsgDispatcher {
-
-};
-
-// template<typename E>
-// struct Tag {
-
-// };
-
-
-template<typename E>
-requires (std::is_enum_v<E> and std::is_same_v<std::underlying_type_t<E>, uint8_t>)
-struct ReplDict{
-    static constexpr size_t N = ymd::magic::enum_count_v<E>;
-private:
-    // InlinveVector<CanMsgDispatcher<E>, N> dict_;
-    // EnumDict<E> dict_;
-};
-
-
-}
 
 struct MsgFactory{
     const NodeRole role;
@@ -235,35 +200,79 @@ struct MsgFactory{
 
 
 
-template<typename Iter>
-static constexpr size_t count_iter(Iter && iter){
-    size_t cnt = 0;
-    while(true){
-        if(iter.has_next()){
-            cnt++;
-        }else{
-            break;
-        }
-        (void)iter.next();
-    }
-    return cnt;
-}
-
-template<size_t N>
-struct MyIter{
-    constexpr uint8_t next() {
-        cnt_++;
-        return 0;
-    }
-
-    constexpr bool has_next() const {
-        bool ok =  cnt_ < N;
-        return ok;
-    }
-private:
-    size_t cnt_ = 0;
+static constexpr bool is_ringback(const hal::CanMsg & msg, const NodeRole self_node_role){
+    const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
+    return role == self_node_role;
 };
 
+struct GestureEstimator{
+    struct Config{
+        uint32_t fs;
+    };
+
+    constexpr explicit GestureEstimator(const Config & cfg):
+        delta_time_(1_r / cfg.fs),
+        comp_filter_(make_comp_filter_config(cfg.fs)){;}
+
+    constexpr void process(const Vector3<q24> & acc,const Vector3<q24> & gyr){
+
+        const auto len_acc = acc.length();
+        const auto norm_acc = acc / len_acc;
+        const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
+        const auto base_omega_raw = gyr.z;
+
+        if(inited_ == false){
+            theta_ = base_roll_raw;
+            omega_ = base_omega_raw;
+            inited_ = true;
+            return;
+        }
+
+        // const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
+        // DEBUG_PRINTLN_IDLE(
+        //     // norm_acc.x, norm_acc.y,
+        //     // base_roll_raw,
+        //     // base_omega_raw,
+        //     // base_roll,
+        //     // pos_sensor_.position(),
+        //     // pos_sensor_.lap_position(),
+        //     // pos_sensor_.speed(),
+        //     ma730.read_lap_position().examine(),
+        //     meas_rad_
+        //     // exe_us_
+        //     // // leso.get_disturbance(),
+        //     // meas_rad_
+        // );
+
+        const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
+
+        const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
+
+        theta_ += (base_roll_raw - theta_) * alpha + (base_omega_raw * delta_time_) * (1 - alpha);
+        omega_ = base_omega_raw;
+    }
+
+    auto theta_and_omega() const {
+        return std::make_pair(theta_, omega_);
+    }
+
+private:
+    using CompFilter = dsp::ComplementaryFilter<q20>;
+    real_t delta_time_;
+    CompFilter comp_filter_;
+    real_t theta_ = 0;
+    real_t omega_ = 0;
+    bool inited_ = false;
+
+    static constexpr typename CompFilter::Config
+    make_comp_filter_config(const uint32_t fs){
+        return {
+            .kq = 0.90_r,
+            .ko = 0.25_r,
+            .fs = fs
+        };
+    }
+};
 
 void bldc_main(){
     // my_can_ring_main();
@@ -367,7 +376,7 @@ void bldc_main(){
     };
 
     
-    const auto node_role = get_node_role().examine();  
+    const auto self_node_role_ = get_node_role().examine();  
 
 
 
@@ -436,8 +445,8 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t base_roll_ = 0;
-    real_t base_omega_ = 0;
+    real_t base_roll_theta_ = 0;
+    real_t base_roll_omega_ = 0;
 
     AbVoltage ab_volt_;
     
@@ -450,7 +459,7 @@ void bldc_main(){
 
     pos_sensor_.set_base_position(
         [&] -> real_t{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     return {0.193_r};
                 case NodeRole::RollJoint:
@@ -462,7 +471,7 @@ void bldc_main(){
 
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     return -0.282_r;
                 case NodeRole::RollJoint:
@@ -479,7 +488,7 @@ void bldc_main(){
 
     dsp::Leso leso{
         [&]{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.5_r,
@@ -498,7 +507,7 @@ void bldc_main(){
     };
 
     auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
-        switch(node_role){
+        switch(self_node_role_){
             case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
@@ -510,21 +519,19 @@ void bldc_main(){
         }
     }();
 
-    Microseconds exe_us_;
+    Microseconds exe_us_ = 0us;
     real_t track_pos_ = 0;
     real_t track_spd_ = 0;
 
-    real_t elec_rad_;
     [[maybe_unused]] auto cb_sensored = [&]{
         ma730.update().examine();
         bmi.update().examine();
 
-        const auto meas_lap = 1-ma730.read_lap_position().examine(); 
+        const auto meas_lap = 1 - ma730.read_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
 
 
         const real_t meas_rad = elecrad_comp_(meas_lap);
-        elec_rad_ = meas_rad;
 
         const auto meas_pos = pos_sensor_.position();
         const auto meas_spd = pos_sensor_.speed();
@@ -542,8 +549,8 @@ void bldc_main(){
 
         const auto [blance_pos, blance_spd] = ({
             std::make_tuple(
-                // base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
-                base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
+                // base_roll_theta_ * real_t(-1/TAU), base_roll_omega_ * real_t(-1/TAU)
+                base_roll_theta_ * real_t(-1/TAU), base_roll_omega_ * real_t(-1/TAU)
             );
         });
 
@@ -579,21 +586,15 @@ void bldc_main(){
     );
 
 
-
-    auto is_dest = [&](const hal::CanMsg & msg){
-        const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
-        return role == node_role;
-    };
-
-    Fifo_t<hal::CanMsg, 8> msg_queue;
+    Fifo_t<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     auto write_can_msg = [&](const hal::CanMsg & msg){
         if(msg.is_extended()) PANIC();
 
-        const bool is_local = is_dest(msg);
+        const bool is_local = is_ringback(msg, self_node_role_);
 
         if(is_local){
-            msg_queue.push(msg);
+            msg_queue_.push(msg);
         }else{
             can.write(msg);
         }
@@ -603,39 +604,45 @@ void bldc_main(){
         while(can.available()){
             auto msg = can.read();
             if(msg.is_extended()) continue;
-            if(not is_dest(msg)) continue;
-            msg_queue.push(msg);
+            if(not is_ringback(msg, self_node_role_)) continue;
+            msg_queue_.push(msg);
         }
 
-        if(not msg_queue.available())
+        if(not msg_queue_.available())
             return None;
 
-        return Some(msg_queue.pop());
+        return Some(msg_queue_.pop());
     };
 
-    [[maybe_unused]] auto set_position = [&](const SetPositionAndSpeed & cmd){
+
+    TrackTarget track_target = {
+        .roll = {.position = 0, .speed = 0},
+        .pitch = {.position = 0, .speed = 0}
+    };
+
+    [[maybe_unused]] auto set_target = [&](const SetPositionAndSpeed & cmd){
         track_pos_ = real_t(cmd.position);
         track_spd_ = real_t(cmd.speed);
     };
 
-    auto can_subscriber_service = [&]{
+    [[maybe_unused]] auto can_subscriber_service = [&]{
         static async::RepeatTimer timer{5ms};
 
         timer.invoke_if([&]{
             auto process_msg = [&](const hal::CanMsg & msg){
                 const auto id = msg.stdid().unwrap();
                 const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
-                if(msg_role != node_role) return;
+                if(msg_role != self_node_role_) return;
                 switch(msg_cmd){
-                    case CommandKind::SetPosition:{
-                        // const auto cmd = serde::make_deserialize<serde::RawBytes,
-                        //     SetPositionAndSpeed>(msg.payload()).examine();
-                        // set_position(cmd);
+                    case CommandKind::SetPositionAndSpeed:{
+                        const auto cmd = serde::make_deserialize<serde::RawBytes,
+                            SetPositionAndSpeed>(msg.iter_payload()).examine();
+                        set_target(cmd);
                     }
                         break;
 
                     default:
-                        DEBUG_PRINTLN("unknown command", std::bit_cast<uint8_t>(msg_cmd));
+                        PANIC("unknown command", std::bit_cast<uint8_t>(msg_cmd));
                         break;
                 }
             };
@@ -648,40 +655,30 @@ void bldc_main(){
         });
     };
 
-    struct TrackInfo{
-        robots::joint_cmds::SetPositionAndSpeed roll ;
-        robots::joint_cmds::SetPositionAndSpeed pitch;
-    };
 
-    TrackInfo track_info_ = {
-        .roll = {.position = 0, .speed = 0},
-        .pitch = {.position = 0, .speed = 0}
-    };
-
-
-    auto can_publisher_service = [&]{
+    [[maybe_unused]] auto can_publisher_service = [&]{
         static async::RepeatTimer timer{5ms};
 
-        auto publish_roll_joint = [&]{
-            const auto msg = MsgFactory{NodeRole::RollJoint}(track_info_.roll);
+        auto publish_roll_joint_target = [&]{
+            const auto msg = MsgFactory{NodeRole::RollJoint}(track_target.roll);
 
             write_can_msg(msg);
         };
 
-        auto publish_pitch_joint = [&]{
-            const auto msg = MsgFactory{NodeRole::PitchJoint}(track_info_.pitch);
+        auto publish_pitch_joint_target = [&]{
+            const auto msg = MsgFactory{NodeRole::PitchJoint}(track_target.pitch);
 
             write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
 
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     break;
                 case NodeRole::RollJoint:{
-                    publish_roll_joint();
-                    publish_pitch_joint();
+                    publish_roll_joint_target();
+                    publish_pitch_joint_target();
                     break;
                 default:
                     __builtin_unreachable();
@@ -692,7 +689,7 @@ void bldc_main(){
     };
 
 
-    auto repl_service = [&]{
+    [[maybe_unused]] auto repl_service = [&]{
         static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
         static const auto list = rpc::make_list(
@@ -700,128 +697,66 @@ void bldc_main(){
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-            rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
-                pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
-            }),
 
             rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
             rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
 
             rpc::make_function("pp", [&](const real_t p1, const real_t p2){
 
-                track_info_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-                track_info_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+                track_target.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+                track_target.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
             })
             
         );
 
-        auto plan_joints = [&]() -> void { 
+        repl_server.invoke(list);
+    };
+
+    [[maybe_unused]] auto demo_track_service = [&]{ 
+        auto update_joint_target = [&]() -> void { 
             const auto clock_time = clock::time();
             const auto [s, c] = sincos(clock_time * 5);
             const auto p1 = c * 0.00_r;
             const auto p2 = s * 0.00_r;
 
-            track_info_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-            track_info_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+            track_target.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+            track_target.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
         };
 
-        plan_joints();
+        update_joint_target();
+    };  
 
-        repl_server.invoke(list);
-    };
-
-    auto gesture_service = [&]{
+    [[maybe_unused]] auto gesture_calc_service = [&]{
         [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
         [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
 
         static async::RepeatTimer timer{DELTA_TIME_MS};
+        static auto gesture_estimator = GestureEstimator({.fs = FREQ});
+
         timer.invoke_if([&]{
-            // Quat<real_t>::from_gravity(),
             const auto acc = bmi.read_acc().examine();
             const auto gyr = bmi.read_gyr().examine();
-            const auto len_acc = acc.length();
-            const auto norm_acc = acc / len_acc;
-            // const auto base_roll = atan2(norm_acc.x, norm_acc.y) - real_t(PI/2);
-            const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
-            const auto base_omega_raw = gyr.z;
-            // const auto base_omega_raw = 0;
 
-            static dsp::ComplementaryFilter<q20> comp_filter{
-                    typename dsp::ComplementaryFilter<q20>::Config{
-                    .kq = 0.90_r,
-                    .ko = 0.25_r,
-                    .fs = FREQ
-                }
-            };
+            gesture_estimator.process(acc, gyr);
 
-            // const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
-            // DEBUG_PRINTLN_IDLE(
-            //     // norm_acc.x, norm_acc.y,
-            //     // base_roll_raw,
-            //     // base_omega_raw,
-            //     // base_roll,
-            //     // pos_sensor_.position(),
-            //     // pos_sensor_.lap_position(),
-            //     // pos_sensor_.speed(),
-            //     ma730.read_lap_position().examine(),
-            //     meas_rad_
-            //     // exe_us_
-            //     // // leso.get_disturbance(),
-            //     // meas_rad_
-
-            // );
-            const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
-
-            // for(const auto item: range){
-            //     DEBUG_PRINTLN_IDLE(item, '?');
-            // }
-
-            // // static constexpr auto a = sizeof(iter);
-            // DEBUG_PRINTLN_IDLE(
-            //     // pos_sensor_.position(),
-            //     // pos_sensor_.cont_position(),
-            //     // pos_sensor_.lap_position(),
-            //     // pos_sensor_.speed(),
-            //     // leso.get_disturbance(),
-            //     base_roll_raw,
-            //     base_roll_,
-            //     range,
-            //     // base_omega_,
-            //     // len_acc,
-            //     alpha,
-            //     // iter,
-            //     // meas_rad_
-            //     exe_us_.count()
-            // );
-
-            base_roll_ += (base_roll_raw - base_roll_) * alpha + (base_omega_raw * DELTA_TIME) * (1 - alpha);
-            base_omega_ = base_omega_raw;
+            std::tie(base_roll_theta_, base_roll_omega_) = gesture_estimator.theta_and_omega();
         });
     };
 
-    [[maybe_unused]]
-    auto report_service = [&]{ 
-        // [[maybe_unused]] const auto t = clock::time();
-        // [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
-        // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
-        // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
-        // if(false)
-
-    };
 
     while(true){
         repl_service();
-        can_subscriber_service();
+        demo_track_service();
+        gesture_calc_service();
+
         can_publisher_service();
+        can_subscriber_service();
+
         blink_service();
-        report_service();
-        gesture_service();
 
 
+        #if 0
         // const auto command = SetPositionAndSpeed{2, 18};
         // const auto iter = make_serialize_iter<RawBytes>(command);
         // const auto iter = make_serialize_iter();
@@ -861,13 +796,15 @@ void bldc_main(){
         // uint8_t res = 100;
         // DEBUG_PRINTLN(;
         // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
+        #endif
+
         #if 0
         DEBUG_PRINTLN_IDLE(
             // (clock::micros() - u_begin).count(), 
             // StringView(arr.data()), 
             // rem_str.size(),
-            // base_roll_,
-            // base_omega_,
+            // base_roll_theta_,
+            // base_roll_omega_,
             // iter,
             msg.iter_payload(),
             serde::make_deserializer<serde::RawBytes, robots::machine_cmds::Replace>()
@@ -880,36 +817,42 @@ void bldc_main(){
         );
         #endif
 
+        #if 0
+        // for(const auto item: range){
+        //     DEBUG_PRINTLN_IDLE(item, '?');
+        // }
+
+        // [[maybe_unused]] const auto t = clock::time();
+        // [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
+        // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
+        // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
+
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
+        // if(false)
+
+
+        // // static constexpr auto a = sizeof(iter);
+        // DEBUG_PRINTLN_IDLE(
+        //     // pos_sensor_.position(),
+        //     // pos_sensor_.cont_position(),
+        //     // pos_sensor_.lap_position(),
+        //     // pos_sensor_.speed(),
+        //     // leso.get_disturbance(),
+        //     base_roll_raw,
+        //     base_roll_theta_,
+        //     range,
+        //     // base_roll_omega_,
+        //     // len_acc,
+        //     alpha,
+        //     // iter,
+        //     // meas_rad_
+        //     exe_us_.count()
+        // );
+
+        #endif
     }
 }
 
-
-// template>class Tx{
-//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
-
-//     size_t write(std::span<const uint8_t> pbuf){
-//         fifo_.push(pbuf);
-//         return pbuf.size();
-//     }
-
-//     size_t pending() const {
-//         return fifo_.available();
-//     }
-// };
-
-
-// class Rx{
-//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
-
-//     size_t read(std::span<uint8_t> pbuf){
-//         fifo_.pop(pbuf);
-//         return pbuf.size();
-//     }
-
-//     size_t awailable() const {
-//         return fifo_.available();
-//     }
-// };
 
 
 [[maybe_unused]]
