@@ -42,7 +42,7 @@ struct ST1615_Prelude{
         RetryTimeout
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -64,7 +64,7 @@ struct ST1615_Prelude{
             Drag = 12,
         };
 
-        FRIEND_DERIVE_DEBUG(Kind)
+        DEF_FRIEND_DERIVE_DEBUG(Kind)
 
         using enum Kind;
 
@@ -142,7 +142,7 @@ struct ST1615_Prelude{
 
 struct ST1615 final:public ST1615_Prelude{
 
-    ST1615(
+    explicit ST1615(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):

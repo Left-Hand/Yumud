@@ -226,7 +226,7 @@ struct StationName final{
     static constexpr
     Option<StationName> from_gbk(std::span<const uint8_t, STR_LEN> code);
 
-    FRIEND_DERIVE_DEBUG(Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Kind)
     friend OutputStream & operator << (OutputStream & os, const StationName & self){
         return os << self.kind_;
     }

@@ -43,7 +43,7 @@ struct PainterPrelude{
     };
 
     DEF_ERROR_WITH_KIND(Error, Error_Kind)
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;

@@ -152,7 +152,7 @@ public:
         return Oper::Close{};
     }
 
-    FRIEND_DERIVE_DEBUG(AsciiCanError)
+    DEF_FRIEND_DERIVE_DEBUG(AsciiCanError)
 
     hal::Can & can_;
 };

@@ -21,7 +21,7 @@ public:
     Image(const Vector2u size):
         size_(size),
         data_(std::make_shared<T[]>(size.x * size.y)){
-            ASSERT(bool(size));
+            ASSERT(not size.is_zero());
         }
 
     // IResult<Image> from_size(const Vector2u size){

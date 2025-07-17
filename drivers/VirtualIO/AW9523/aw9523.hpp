@@ -21,7 +21,7 @@ struct AW9523_Prelude{
         IndexOutOfRange
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -114,16 +114,29 @@ struct AW9523_Regs:public AW9523_Prelude{
     }DEF_R8(chip_id_reg)
 
 
+
+
+
+    struct Config{
+        CurrentLimit current_limit = CurrentLimit::Low;
+    };
+
 };
 
 class AW9523 final:
     public AW9523_Regs{
 public:
 
+    explicit AW9523(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit AW9523(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    explicit AW9523(Some<hal::I2c *> i2c):
+        i2c_drv_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+
+
     class AW9523Pwm:public hal::PwmIntf{
     protected:
-
-
         AW9523Pwm(AW9523 & aw9523, const hal::PinSource pin):aw9523_(aw9523), pin_(pin){;}
 
         DELETE_COPY_AND_MOVE(AW9523Pwm)
@@ -146,19 +159,7 @@ public:
     class AW9523Port{
 
     };
-
-
-    struct Config{
-        CurrentLimit current_limit = CurrentLimit::Low;
-    };
-
-    AW9523(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv){;}
-    AW9523(hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv)){;}
-    AW9523(Some<hal::I2c *> i2c):
-        i2c_drv_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
-
+    
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){
         return write_reg(RegAddress::SwRst, (uint8_t)0x00);

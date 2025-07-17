@@ -31,7 +31,7 @@ enum class EncoderError_Kind:uint8_t{
     NoSupportedPhy,
     Unreachable
 };
-DERIVE_DEBUG(EncoderError_Kind)
+DEF_DERIVE_DEBUG(EncoderError_Kind)
 }
 
 DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
@@ -42,7 +42,7 @@ public:
     virtual Result<real_t, EncoderError> read_lap_position() = 0;
     virtual Result<void, EncoderError> update() = 0;
 
-    // FRIEND_DERIVE_DEBUG(details::EncoderError_Kind);
+    // DEF_FRIEND_DERIVE_DEBUG(details::EncoderError_Kind);
     virtual ~EncoderIntf() = default;
 };
 

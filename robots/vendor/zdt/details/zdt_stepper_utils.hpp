@@ -24,7 +24,7 @@ struct ZdtMotor_Prelude{
         RxMsgNoPayload
     };
 
-    FRIEND_DERIVE_DEBUG(Error)
+    DEF_FRIEND_DERIVE_DEBUG(Error)
 
     template<typename T = void>
     using IResult = Result<T, Error>;

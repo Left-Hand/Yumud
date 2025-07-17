@@ -30,14 +30,14 @@ __fast_inline static void spin_until(Fn && fn) {
     }
 }
 
-class OffInterruptSectionGuard {
+class CriticalSectionGuard {
 public:
-    OffInterruptSectionGuard() { utils::disable_interrupts(); }
-    ~OffInterruptSectionGuard() { utils::enable_interrupts(); }
+    CriticalSectionGuard() { utils::disable_interrupts(); }
+    ~CriticalSectionGuard() { utils::enable_interrupts(); }
     // Copy/move operations deleted
 
-    OffInterruptSectionGuard(const OffInterruptSectionGuard&) = delete;
-    OffInterruptSectionGuard(OffInterruptSectionGuard&&) = delete;
+    CriticalSectionGuard(const CriticalSectionGuard&) = delete;
+    CriticalSectionGuard(CriticalSectionGuard&&) = delete;
 };
 
 class CountingSemaphore {
@@ -45,7 +45,7 @@ public:
     explicit CountingSemaphore(size_t initial = 0) : count_(initial) {}
 
     Result<void, void> acquire() {
-        OffInterruptSectionGuard cs;
+        CriticalSectionGuard cs;
         if (count_ > 0) {
             --count_;
             return Ok();
@@ -60,10 +60,12 @@ public:
 private:
     std::atomic<size_t> count_;
 };
+
+
 class BinarySemaphore {
 public:
     Result<void, void> take() {
-        OffInterruptSectionGuard cs;
+        CriticalSectionGuard cs;
         if (flag_) {
             flag_ = false;
             return Ok();
@@ -83,7 +85,7 @@ template<typename T>
 class Mailbox {
 public:
     Result<void, void> send(const T& msg) {
-        OffInterruptSectionGuard cs;
+        CriticalSectionGuard cs;
         if (ctx_.is_none()) {
             ctx_ = Some(msg);
             return Ok();
@@ -92,7 +94,7 @@ public:
     }
 
     Option<T> receive() {
-        OffInterruptSectionGuard cs;
+        CriticalSectionGuard cs;
         return ctx_;
     }
 
@@ -104,7 +106,7 @@ class ReadWriteLock {
 public:
     void read_lock() {
         while (true) {
-            OffInterruptSectionGuard cs;
+            CriticalSectionGuard cs;
             if (writers_ == 0) {
                 ++readers_;
                 break;

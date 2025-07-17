@@ -125,15 +125,7 @@ enum class NodeRole:uint8_t{
     Computer = 0x0f,
 };
 
-
-OutputStream & operator<<(OutputStream & os, const NodeRole & role){ 
-    switch(role){
-        case NodeRole::RollJoint: return os << "RollJoint";
-        case NodeRole::PitchJoint: return os << "PitchJoint";
-        default: __builtin_unreachable();
-    }
-}
-
+DEF_DERIVE_DEBUG(NodeRole)
 
 enum class CommandKind:uint8_t{
     SetPosition,
@@ -237,7 +229,7 @@ struct GestureEstimator{
         //     // pos_sensor_.position(),
         //     // pos_sensor_.lap_position(),
         //     // pos_sensor_.speed(),
-        //     ma730.read_lap_position().examine(),
+        //     ma730_.read_lap_position().examine(),
         //     meas_rad_
         //     // exe_us_
         //     // // leso.get_disturbance(),
@@ -273,6 +265,22 @@ private:
         };
     }
 };
+
+// class CanMsgSink{
+//     void write{const hal:: CanMsg & msg}{
+//         if(msg.is_extended()) PANIC();
+
+//         const bool is_local = is_ringback(msg, self_node_role_);
+
+//         if(is_local){
+//             msg_queue_.push(msg);
+//         }else{
+//             can.write(msg);
+//         }
+//     }
+// private:
+
+// }
 
 void bldc_main(){
     // my_can_ring_main();
@@ -325,7 +333,7 @@ void bldc_main(){
     );
 
     auto blink_service = [&]{
-        static async::RepeatTimer timer{10ms};
+        static auto timer = async::RepeatTimer::from_duration(10ms);
         timer.invoke_if([&]{
             ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
             ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
@@ -378,33 +386,31 @@ void bldc_main(){
     
     const auto self_node_role_ = get_node_role().examine();  
 
-
-
-    MA730 ma730{
+    MA730 ma730_{
         &spi,
         spi.allocate_cs_gpio(&hal::portA[15])
             .unwrap()
     };
 
-    BMI160 bmi{
+    BMI160 bmi160_{
         &spi,
         spi.allocate_cs_gpio(&hal::portA[0])
             .unwrap()
     };
 
-    ma730.init({
+    ma730_.init({
         .direction = CW
     }).examine();
 
     // while(true){
-    //     ma730.update().examine();
-    //     DEBUG_PRINTLN(ma730.read_lap_position().examine());
+    //     ma730_.update().examine();
+    //     DEBUG_PRINTLN(ma730_.read_lap_position().examine());
     //     blink_service();
     //     clock::delay(5ms);
     // }
 
     
-    bmi.init({
+    bmi160_.init({
         .acc_odr = BMI160::AccOdr::_200Hz,
         .acc_fs = BMI160::AccFs::_16G,
         .gyr_odr = BMI160::GyrOdr::_200Hz,
@@ -445,8 +451,8 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t base_roll_theta_ = 0;
-    real_t base_roll_omega_ = 0;
+    real_t self_blance_theta = 0;
+    real_t self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
     
@@ -524,10 +530,10 @@ void bldc_main(){
     real_t track_spd_ = 0;
 
     [[maybe_unused]] auto cb_sensored = [&]{
-        ma730.update().examine();
-        bmi.update().examine();
+        ma730_.update().examine();
+        bmi160_.update().examine();
 
-        const auto meas_lap = 1 - ma730.read_lap_position().examine(); 
+        const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
         pos_sensor_.update(meas_lap);
 
 
@@ -549,8 +555,8 @@ void bldc_main(){
 
         const auto [blance_pos, blance_spd] = ({
             std::make_tuple(
-                // base_roll_theta_ * real_t(-1/TAU), base_roll_omega_ * real_t(-1/TAU)
-                base_roll_theta_ * real_t(-1/TAU), base_roll_omega_ * real_t(-1/TAU)
+                // self_blance_theta * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                self_blance_theta * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
             );
         });
 
@@ -615,7 +621,7 @@ void bldc_main(){
     };
 
 
-    TrackTarget track_target = {
+    TrackTarget track_target_ = {
         .roll = {.position = 0, .speed = 0},
         .pitch = {.position = 0, .speed = 0}
     };
@@ -626,25 +632,28 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto can_subscriber_service = [&]{
-        static async::RepeatTimer timer{5ms};
-
+        static auto timer = async::RepeatTimer::from_duration(5ms);
         timer.invoke_if([&]{
+            auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
+                switch(cmd){
+                case CommandKind::SetPositionAndSpeed:{
+                    const auto cmd = serde::make_deserialize<serde::RawBytes,
+                        SetPositionAndSpeed>(payload).examine();
+                    set_target(cmd);
+                }
+                    break;
+
+                default:
+                    PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
+                    break;
+                }
+            };
+
             auto process_msg = [&](const hal::CanMsg & msg){
                 const auto id = msg.stdid().unwrap();
                 const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
                 if(msg_role != self_node_role_) return;
-                switch(msg_cmd){
-                    case CommandKind::SetPositionAndSpeed:{
-                        const auto cmd = serde::make_deserialize<serde::RawBytes,
-                            SetPositionAndSpeed>(msg.iter_payload()).examine();
-                        set_target(cmd);
-                    }
-                        break;
-
-                    default:
-                        PANIC("unknown command", std::bit_cast<uint8_t>(msg_cmd));
-                        break;
-                }
+                dispatch_msg(msg_cmd, msg.iter_payload());
             };
 
             while(true){
@@ -657,16 +666,16 @@ void bldc_main(){
 
 
     [[maybe_unused]] auto can_publisher_service = [&]{
-        static async::RepeatTimer timer{5ms};
+        static auto timer = async::RepeatTimer::from_duration(5ms);
 
-        auto publish_roll_joint_target = [&]{
-            const auto msg = MsgFactory{NodeRole::RollJoint}(track_target.roll);
+        auto publish_roll_joint_target = [&](const robots::joint_cmds::SetPositionAndSpeed & cmd){
+            const auto msg = MsgFactory{NodeRole::RollJoint}(cmd);
 
             write_can_msg(msg);
         };
 
-        auto publish_pitch_joint_target = [&]{
-            const auto msg = MsgFactory{NodeRole::PitchJoint}(track_target.pitch);
+        auto publish_pitch_joint_target = [&](const robots::joint_cmds::SetPositionAndSpeed & cmd){
+            const auto msg = MsgFactory{NodeRole::PitchJoint}(cmd);
 
             write_can_msg(msg);
         };
@@ -677,8 +686,8 @@ void bldc_main(){
                 case NodeRole::PitchJoint:
                     break;
                 case NodeRole::RollJoint:{
-                    publish_roll_joint_target();
-                    publish_pitch_joint_target();
+                    publish_roll_joint_target(track_target_.roll);
+                    publish_pitch_joint_target(track_target_.pitch);
                     break;
                 default:
                     __builtin_unreachable();
@@ -699,12 +708,13 @@ void bldc_main(){
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
 
             rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
+
             rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
 
             rpc::make_function("pp", [&](const real_t p1, const real_t p2){
 
-                track_target.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-                track_target.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+                track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+                track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
             })
             
         );
@@ -719,8 +729,8 @@ void bldc_main(){
             const auto p1 = c * 0.00_r;
             const auto p2 = s * 0.00_r;
 
-            track_target.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-            track_target.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+            track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+            track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
         };
 
         update_joint_target();
@@ -731,16 +741,16 @@ void bldc_main(){
         [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
 
-        static async::RepeatTimer timer{DELTA_TIME_MS};
+        static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
         static auto gesture_estimator = GestureEstimator({.fs = FREQ});
 
         timer.invoke_if([&]{
-            const auto acc = bmi.read_acc().examine();
-            const auto gyr = bmi.read_gyr().examine();
+            const auto acc = bmi160_.read_acc().examine();
+            const auto gyr = bmi160_.read_gyr().examine();
 
             gesture_estimator.process(acc, gyr);
 
-            std::tie(base_roll_theta_, base_roll_omega_) = gesture_estimator.theta_and_omega();
+            std::tie(self_blance_theta, self_blance_omega_) = gesture_estimator.theta_and_omega();
         });
     };
 
@@ -803,8 +813,8 @@ void bldc_main(){
             // (clock::micros() - u_begin).count(), 
             // StringView(arr.data()), 
             // rem_str.size(),
-            // base_roll_theta_,
-            // base_roll_omega_,
+            // self_blance_theta,
+            // self_blance_omega_,
             // iter,
             msg.iter_payload(),
             serde::make_deserializer<serde::RawBytes, robots::machine_cmds::Replace>()
@@ -839,9 +849,9 @@ void bldc_main(){
         //     // pos_sensor_.speed(),
         //     // leso.get_disturbance(),
         //     base_roll_raw,
-        //     base_roll_theta_,
+        //     self_blance_theta,
         //     range,
-        //     // base_roll_omega_,
+        //     // self_blance_omega_,
         //     // len_acc,
         //     alpha,
         //     // iter,

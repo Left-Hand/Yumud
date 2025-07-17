@@ -38,7 +38,7 @@ enum class EntryAccessError: uint8_t{
 };
 
 
-DERIVE_DEBUG(EntryAccessError)
+DEF_DERIVE_DEBUG(EntryAccessError)
 
 
 enum class EntryInteractError: uint8_t{
@@ -46,7 +46,7 @@ enum class EntryInteractError: uint8_t{
     ValueIsLessThanLimit
 };
 
-DERIVE_DEBUG(EntryInteractError)
+DEF_DERIVE_DEBUG(EntryInteractError)
 
 DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DestringError)
 

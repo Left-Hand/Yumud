@@ -20,7 +20,7 @@ enum class DisplayerError_Kind:uint8_t{
     CantSetup,
     NoAvailablePhy
 };
-DERIVE_DEBUG(DisplayerError_Kind)
+DEF_DERIVE_DEBUG(DisplayerError_Kind)
 }
 DEF_ERROR_SUMWITH_HALERROR(DisplayerError, details::DisplayerError_Kind)
 }

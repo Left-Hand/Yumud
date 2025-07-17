@@ -8,11 +8,11 @@ class BMI160 final:
     public GyroscopeIntf,
     public BMI160_Prelude{
 public:
-    BMI160(const hal::SpiDrv & spi_drv):
+    explicit BMI160(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    BMI160(hal::SpiDrv && spi_drv):
+    explicit BMI160(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

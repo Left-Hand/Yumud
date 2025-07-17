@@ -61,7 +61,7 @@ struct MotorUtils{
         CoilBCantMove,
     };
 
-    FRIEND_DERIVE_DEBUG(TaskError)
+    DEF_FRIEND_DERIVE_DEBUG(TaskError)
 
 
     enum class ServiceError:uint8_t{
@@ -72,7 +72,7 @@ struct MotorUtils{
         ArchiveIsCorrupted
     };
 
-    FRIEND_DERIVE_DEBUG(ServiceError)
+    DEF_FRIEND_DERIVE_DEBUG(ServiceError)
 
     // static constexpr auto DRIVE_DUTY = 0.3_r;
     static constexpr auto CALIBRATE_DRIVE_DUTY = 0.3_r;

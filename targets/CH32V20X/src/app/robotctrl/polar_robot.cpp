@@ -107,16 +107,6 @@ static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b) {
     return diff;
 }
 
-// template<typename T>
-// static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b) {
-//     // 叉积的z分量（sinθ）
-//     const T cross_z = a.x * b.y - a.y * b.x;
-//     // 点积（cosθ）
-//     const T dot = a.x * b.x + a.y * b.y;
-    
-//     return atan2(cross_z, dot);
-// }
-
 template<typename T>
 static constexpr T vec_angle(const Vector2<T> a){
     return atan2(a.y, a.x);
@@ -516,7 +506,7 @@ private:
 };
 
 
-struct ContinuousPolarIter final {
+struct Cartesian2ContinuousPolarRegulator final {
     struct State {
         Vector2<q16> position;
         q16 theta;  // 累积角度
@@ -725,13 +715,11 @@ void polar_robot_main(){
         })
     );
 
-
-    constexpr auto SAMPLE_DUR = 700ms; 
     auto drawcurve_service = [&]{
-        static async::RepeatTimer timer{2ms};
+        static auto timer = async::RepeatTimer::from_duration(2ms);
         timer.invoke_if([&]{
             static auto it = QueuePointIterator{std::span(CURVE_DATA)};
-            static auto p_it = ContinuousPolarIter();
+            static auto p_it = Cartesian2ContinuousPolarRegulator();
 
             const auto p = it.next(0.0001_q24);
             // const auto p = it.next(0.001_q24);

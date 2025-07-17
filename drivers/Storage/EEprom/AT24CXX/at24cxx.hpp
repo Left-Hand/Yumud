@@ -18,7 +18,7 @@ public:
         PayloadOverlength
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error,Error_Kind)
 
     template<typename T = void>
@@ -56,20 +56,20 @@ class AT24CXX final:
     public AT24CXX_Prelude{
 public:
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
+    explicit AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
 
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
+    explicit AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
 
 
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, hal::I2c & i2c):
+    explicit AT24CXX(TConfig && cfg, hal::I2c & i2c):
         AT24CXX(std::forward<TConfig>(cfg), 
         hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 

@@ -28,7 +28,7 @@ public:
         PointsCountGreatThan2
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -88,7 +88,7 @@ public:
             ZoomOut = 0x49,
         };
 
-        FRIEND_DERIVE_DEBUG(Kind)
+        DEF_FRIEND_DERIVE_DEBUG(Kind)
 
         using enum Kind;
 
@@ -360,11 +360,11 @@ struct FT6336_Regs:public FT6336_Prelude{
 
 class FT6336U:public FT6336_Prelude{
 public:
-    FT6336U(const hal::I2cDrv & i2c_drv):
+    explicit FT6336U(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    FT6336U(hal::I2cDrv && i2c_drv):
+    explicit FT6336U(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    FT6336U(
+    explicit FT6336U(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):

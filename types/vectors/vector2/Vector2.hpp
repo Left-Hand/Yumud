@@ -89,10 +89,22 @@ struct Vector2{
 
     [[nodiscard]] const T & operator [](const size_t index) const {return *(&this->x + index);}
 
-    [[nodiscard]] constexpr Vector2<T> normalize(){
-        static_assert(std::is_integral_v<T> == false);
-        (*this) = (*this) * this->inv_length();
-    }
+
+    [[nodiscard]] static constexpr bool sort_by_x(const Vector2 & a, const Vector2 & b){
+        return a.x < b.x;
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_y(const Vector2 & a, const Vector2 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_length(const Vector2 & a, const Vector2 & b){
+        return a.length_squared() < b.length_squared();
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_angle(const Vector2 & a, const Vector2 & b){
+        return a.cross(b) > 0;
+    };
 
     [[nodiscard]] constexpr Vector2<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vector2<T> & other) const;
@@ -111,22 +123,6 @@ struct Vector2{
     [[nodiscard]] __fast_inline constexpr Vector2<T> abs() const;
 
 
-    [[nodiscard]] static bool sort_by_x(const Vector2 & a, const Vector2 & b){
-        return a.x < b.x;
-    };
-
-    [[nodiscard]] static bool sort_by_y(const Vector2 & a, const Vector2 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]] static bool sort_by_length(const Vector2 & a, const Vector2 & b){
-        return a.length_squared() < b.length_squared();
-    };
-
-    [[nodiscard]] static bool sort_by_angle(const Vector2 & a, const Vector2 & b){
-        return a.cross(b) > 0;
-    };
-
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr Vector2<T> increase_x(const U & v){
@@ -138,11 +134,19 @@ struct Vector2{
         return {x, y + v};
     }
 
-    [[nodiscard]] constexpr T angle() const {return atan2(y, x);}
-	[[nodiscard]] constexpr T angle_to(const Vector2<T> &p_vector2) const {
-        return atan2(cross(p_vector2), dot(p_vector2));}
-	[[nodiscard]] constexpr T angle_to_point(const Vector2<T> & p_vector2) const {
-        return atan2(y - p_vector2.y, x - p_vector2.x);}
+    [[nodiscard]] constexpr T angle() const {
+            return atan2(y, x);}
+	[[nodiscard]] constexpr T angle_between(const Vector2<T> & b) const {
+        const auto & a = *this;
+        const T cross_z = a.x * b.y - a.y * b.x;
+        // 点积（cosθ）
+        const T dot = a.x * b.x + a.y * b.y;
+        if(is_equal_approx(dot, T(0))){
+            return (dot >= 0) ? T(0) : T(PI);
+        }
+        return atan2(cross_z, dot);
+    }
+
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
     [[nodiscard]] constexpr Vector2<T> bounce(const Vector2<T> & n) const;
     [[nodiscard]] constexpr Vector2<T> ceil() const;
@@ -187,7 +191,7 @@ struct Vector2{
     
     [[nodiscard]] __fast_inline constexpr Vector2<T> lerp(const Vector2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vector2<T> move_toward(const Vector2<T> & to, const T delta) const;
-    [[nodiscard]] __fast_inline constexpr Vector2<T> center(const Vector2<T> other) const 
+    [[nodiscard]] __fast_inline constexpr Vector2<T> midpoint_with(const Vector2<T> other) const 
         {return {(this->x + other.x) / 2, (this->y + other.y) / 2};}
 
     [[nodiscard]] __fast_inline constexpr Vector2<T> posmod(const arithmetic auto & mod) const;
@@ -264,31 +268,33 @@ struct Vector2{
         return ret /= n;
     }
 
-    [[nodiscard]] constexpr explicit operator bool() const {
+    [[nodiscard]] constexpr bool is_zero() const {
         if constexpr(std::is_integral<T>::value){
-            return x != 0 || y != 0;
+            return x == 0 and y == 0;
         }else{
-            return !is_equal_approx(x, T(0)) || !is_equal_approx(y, T(0));
+            return is_equal_approx(x, T(0)) and is_equal_approx(y, T(0));
         }
     }
 
 
-    [[nodiscard]] __fast_inline static constexpr Vector2<T> ones(const T & len){
+    [[nodiscard]] __fast_inline static constexpr Vector2<T> from_ones(const T & len){
         return {len, len};
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> form_rect(const Vector2<auto> & other) const {
+    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect_with_another_corner(const Vector2<auto> & other) const {
         auto rect = Rect2<T>(other, other - *this);
         return rect.abs();
+    }
+
+    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
+        return Rect2<T>(ZERO, *this);
     }
 
     [[nodiscard]] __fast_inline constexpr T area() const {
         return x * y;
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
-        return Rect2<T>(ZERO, *this);
-    }
+
 
     [[nodiscard]] __fast_inline constexpr Rect2<T> overlap_as_rect(const Vector2<T> & other) const {
         return Rect2<T>({0,0}, {MIN(x, other.x), MIN(y, other.y)});

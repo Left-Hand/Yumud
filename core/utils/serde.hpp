@@ -135,9 +135,9 @@ static constexpr auto make_deserializer() {
 
 
 template<typename Protocol, typename T>
-static constexpr auto make_deserialize(auto && pbuf) {
+static constexpr auto make_deserialize(const auto & pbuf) {
     return make_deserializer<Protocol, T>()
-        .deserialize(std::forward<std::decay_t<decltype(pbuf)>>(pbuf));
+        .deserialize(pbuf);
 }
 
 

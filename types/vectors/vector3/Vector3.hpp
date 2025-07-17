@@ -64,7 +64,10 @@ public:
     [[nodiscard]] __fast_inline constexpr Vector3(const Vector3<arithmetic auto>& v) :
         x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) {;}
 
-    [[nodiscard]] __fast_inline constexpr Vector3(const Vector2<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
+    [[nodiscard]] __fast_inline constexpr Vector3(
+        const Vector2<arithmetic auto>& v, const arithmetic auto z_) : 
+        
+        x(v.x), y(v.y), z(z_) {;}
 
     [[nodiscard]] __fast_inline constexpr Vector3(const auto & _x, const auto & _y, const auto & _z): 
         x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
@@ -79,13 +82,13 @@ public:
     [[nodiscard]] __fast_inline static constexpr Vector3 from_rcp(const Vector3<arithmetic auto>& v){
         return Vector3<T>(1/v.x, 1/v.y, 1/v.z);}
 
-    [[nodiscard]] __fast_inline static constexpr Vector3 from_x(T _x){
+    [[nodiscard]] __fast_inline static constexpr Vector3 from_x00(T _x){
         return Vector3<T>(_x, T(0), T(0));}
 
-    [[nodiscard]] __fast_inline static constexpr Vector3 from_y(T _y){
+    [[nodiscard]] __fast_inline static constexpr Vector3 from_0y0(T _y){
         return Vector3<T>(T(0), _y, T(0));}
 
-    [[nodiscard]] __fast_inline static constexpr Vector3 from_z(T _z){
+    [[nodiscard]] __fast_inline static constexpr Vector3 from_00z(T _z){
         return Vector3<T>(T(0), T(0), _z);}
 
     template<arithmetic U = T>
@@ -102,6 +105,27 @@ public:
         z = static_cast<T>(v.z);
         return *this;
     };
+
+    [[nodiscard]]
+    static constexpr bool sort_by_x(const Vector3 & a, const Vector3 & b){
+
+        return a.x < b.x;
+    };
+    [[nodiscard]]
+    static constexpr bool sort_by_y(const Vector3 & a, const Vector3 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]]
+    static constexpr bool sort_by_z(const Vector3 & a, const Vector3 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]]
+    static constexpr bool sort_by_length(const Vector3 & a, const Vector3 & b){
+        return a.length_squared() < b.length_square();
+    };
+
 
     template<arithmetic U>
     __fast_inline constexpr 
@@ -131,20 +155,20 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr 
-    Vector3<T> increase_x(const U & v){
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3<T> increase_x(const U & v) const {
         return {x + v, y, z};
     }
 
     template<arithmetic U>
-    __fast_inline constexpr 
-    Vector3<T> increase_y(const U & v){
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3<T> increase_y(const U & v) const {
         return {x, y + v, z};
     }
 
     template<arithmetic U>
-    __fast_inline constexpr 
-    Vector3<T> increase_z(const U & v){
+    [[nodiscard]] __fast_inline constexpr 
+    Vector3<T> increase_z(const U & v) const {
         return {x, y, z + v};
     }
 
@@ -350,29 +374,16 @@ public:
     }
 
     [[nodiscard]]
-    constexpr operator bool() const {
-        return bool(x) or bool(y) or bool(z);
+    constexpr bool is_zero() const {
+        if constexpr(std::is_integral<T>::value){
+            return x == 0 and y == 0 and z == 0;
+        }else{
+            return is_equal_approx(x, T(0)) 
+                and is_equal_approx(y, T(0))
+                and is_equal_approx(z, T(0));
+        }
     }
 
-    [[nodiscard]]
-    static constexpr bool sort_by_x(const Vector3 & a, const Vector3 & b){
-
-        return a.x < b.x;
-    };
-    [[nodiscard]]
-    static constexpr bool sort_by_y(const Vector3 & a, const Vector3 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]]
-    static constexpr bool sort_by_z(const Vector3 & a, const Vector3 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]]
-    static constexpr bool sort_by_length(const Vector3 & a, const Vector3 & b){
-        return a.length_squared() < b.length_square();
-    };
 
 };
 
@@ -409,25 +420,3 @@ using Vector3u = Vector3<uint>;
 
 
 }
-
-// namespace std{
-//     template<typename T>
-//     struct tuple_size<ymd::Vector3<T>> {
-//         constexpr static size_t value = 3;
-//     };
-
-//     template<size_t N, typename T>
-//     struct tuple_element<N, ymd::Vector3<T>> {
-//         using type = T;
-//     };
-
-//     template<size_t N, typename T>
-//     auto get(ymd::Vector3<T> & v){
-//         static_assert(N < 3);
-//         if constexpr (N == 0) return v.x;
-//         else if constexpr (N == 1) return v.y;
-//         else return v.z;
-//     }
-// }
-
-#include "vector3.tpp"

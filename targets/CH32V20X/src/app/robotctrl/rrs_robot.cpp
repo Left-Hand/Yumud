@@ -185,7 +185,7 @@ private:
 namespace ymd::rpc{
 enum class Shape {rectangle, circular}; 
 
-// DERIVE_DEBUG(Shape)
+// DEF_DERIVE_DEBUG(Shape)
 }
 
 

@@ -7,32 +7,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
-class PAJ7620 final{
-public:
-    enum class Error_Kind:uint8_t{
-        Data0ValidateFailed,
-        Data1ValidateFailed
-    };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7((0x73));
-
-    PAJ7620(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-
-    PAJ7620(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    PAJ7620(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-
-
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
-
+struct PAJ7620_Prelude{
     struct Flags{
         uint8_t right:1;
         uint8_t left:1;
@@ -49,6 +25,38 @@ public:
     };
 
     static_assert(sizeof(Flags) == 1);
+
+    enum class Error_Kind:uint8_t{
+        Data0ValidateFailed,
+        Data1ValidateFailed
+    };
+
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+
+};
+
+class PAJ7620 final:
+    public PAJ7620_Prelude{
+public:
+
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7((0x73));
+
+    explicit PAJ7620(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+
+    explicit PAJ7620(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    explicit PAJ7620(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+
+
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
+
 
     [[nodiscard]] IResult<Flags> detect();
 
