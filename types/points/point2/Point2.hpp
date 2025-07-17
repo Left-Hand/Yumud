@@ -22,6 +22,6 @@ struct Point2<T>{
     template<arithmetic U = T>
     constexpr Point2(const Vector2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
-    operator Vector2<T>() const{ return Vector2<T>{this->x, this->y}};
+    constexpr operator Vector2<T>() const{ return Vector2<T>{this->x, this->y}};
 };
 }

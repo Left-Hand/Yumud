@@ -32,7 +32,7 @@
 
 namespace ymd{
 template<arithmetic T>
-Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
+Transform2D<T>::Transform2D(T xx, T xy, T yx, T yy, T ox, T oy) {
 	elements[0][0] = xx;
 	elements[0][1] = xy;
 	elements[1][0] = yx;
@@ -42,7 +42,7 @@ Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
 }
 
 template<arithmetic T>
-Transform2D_t<T>::Transform2D_t(T p_rot, const Vector2<T> &p_position) {
+Transform2D<T>::Transform2D(T p_rot, const Vector2<T> &p_position) {
 	auto [sr, cr] = sincos(p_rot);
 	elements[0][0] = cr;
 	elements[0][1] = sr;
@@ -53,21 +53,21 @@ Transform2D_t<T>::Transform2D_t(T p_rot, const Vector2<T> &p_position) {
 
 
 template<arithmetic T>
-Vector2<T> Transform2D_t<T>::basis_xform(const Vector2<T> &v) const {
+Vector2<T> Transform2D<T>::basis_xform(const Vector2<T> &v) const {
 	return Vector2<T>(
 			tdotx(v),
 			tdoty(v));
 }
 
 template<arithmetic T>
-Vector2<T> Transform2D_t<T>::basis_xform_inv(const Vector2<T> &v) const {
+Vector2<T> Transform2D<T>::basis_xform_inv(const Vector2<T> &v) const {
 	return Vector2<T>(
 			elements[0].dot(v),
 			elements[1].dot(v));
 }
 
 template<arithmetic T>
-Vector2<T> Transform2D_t<T>::xform(const Vector2<T> &v) const {
+Vector2<T> Transform2D<T>::xform(const Vector2<T> &v) const {
 	return Vector2<T>(
 				   tdotx(v),
 				   tdoty(v)) +
@@ -75,7 +75,7 @@ Vector2<T> Transform2D_t<T>::xform(const Vector2<T> &v) const {
 }
 
 template<arithmetic T>
-Vector2<T> Transform2D_t<T>::xform_inv(const Vector2<T> &p_vec) const {
+Vector2<T> Transform2D<T>::xform_inv(const Vector2<T> &p_vec) const {
 	Vector2<T> v = p_vec - elements[2];
 
 	return Vector2<T>(
@@ -84,7 +84,7 @@ Vector2<T> Transform2D_t<T>::xform_inv(const Vector2<T> &p_vec) const {
 }
 
 template<arithmetic T>
-Rect2<T> Transform2D_t<T>::xform(const Rect2<T> &p_rect) const {
+Rect2<T> Transform2D<T>::xform(const Rect2<T> &p_rect) const {
 	Vector2<T> x = elements[0] * p_rect.size.x;
 	Vector2<T> y = elements[1] * p_rect.size.y;
 	Vector2<T> position = xform(p_rect.position);
@@ -99,7 +99,7 @@ Rect2<T> Transform2D_t<T>::xform(const Rect2<T> &p_rect) const {
 
 
 template<arithmetic T>
-void Transform2D_t<T>::set_rotation_and_scale(T p_rot, const Vector2<T> &p_scale) {
+void Transform2D<T>::set_rotation_and_scale(T p_rot, const Vector2<T> &p_scale) {
 	auto [sr, cr] = sincos(p_rot);
 	
 	elements[0][0] = cr * p_scale.x;
@@ -110,7 +110,7 @@ void Transform2D_t<T>::set_rotation_and_scale(T p_rot, const Vector2<T> &p_scale
 
 
 template<arithmetic T>
-Rect2<T> Transform2D_t<T>::xform_inv(const Rect2<T> &p_rect) const {
+Rect2<T> Transform2D<T>::xform_inv(const Rect2<T> &p_rect) const {
 	Vector2<T> ends[4] = {
 		xform_inv(p_rect.position),
 		xform_inv(Vector2<T>(p_rect.position.x, p_rect.position.y + p_rect.size.y)),
@@ -128,22 +128,22 @@ Rect2<T> Transform2D_t<T>::xform_inv(const Rect2<T> &p_rect) const {
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::invert() {
+void Transform2D<T>::invert() {
 	// FIXME: this function assumes the basis is a rotation matrix, with no scaling.
-	// Transform2D_t<T>::affine_inverse can handle matrices with scaling, so GDScript should eventually use that.
+	// Transform2D<T>::affine_inverse can handle matrices with scaling, so GDScript should eventually use that.
 	std::swap(elements[0][1], elements[1][0]);
 	elements[2] = basis_xform(-elements[2]);
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::inverse() const {
-	Transform2D_t inv = *this;
+Transform2D<T> Transform2D<T>::inverse() const {
+	Transform2D inv = *this;
 	inv.invert();
 	return inv;
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::affine_invert() {
+void Transform2D<T>::affine_invert() {
 	T det = basis_determinant();
 	ERR_FAIL_COND(det == 0);
 	T idet = T(1) / det;
@@ -156,21 +156,21 @@ void Transform2D_t<T>::affine_invert() {
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::affine_inverse() const {
-	Transform2D_t inv = *this;
+Transform2D<T> Transform2D<T>::affine_inverse() const {
+	Transform2D inv = *this;
 	inv.affine_invert();
 	return inv;
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::rotate(T p_phi) {
-	*this = Transform2D_t(p_phi, Vector2<T>()) * (*this);
+void Transform2D<T>::rotate(T p_phi) {
+	*this = Transform2D(p_phi, Vector2<T>()) * (*this);
 }
 
 template<arithmetic T>
-T Transform2D_t<T>::get_rotation() const {
+T Transform2D<T>::get_rotation() const {
 	T det = basis_determinant();
-	Transform2D_t m = orthonormalized();
+	Transform2D m = orthonormalized();
 	if (det < 0) {
 		m.scale_basis(Vector2<T>(-1, -1));
 	}
@@ -179,7 +179,7 @@ T Transform2D_t<T>::get_rotation() const {
 
 
 template<arithmetic T>
-void Transform2D_t<T>::set_rotation(T p_rot) {
+void Transform2D<T>::set_rotation(T p_rot) {
 
 	auto [sr, cr] = sincos(p_rot);
 	elements[0][0] = cr;
@@ -190,19 +190,19 @@ void Transform2D_t<T>::set_rotation(T p_rot) {
 
 
 template<arithmetic T>
-Vector2<T> Transform2D_t<T>::get_scale() const {
+Vector2<T> Transform2D<T>::get_scale() const {
 	T det_sign = basis_determinant() > 0 ? 1 : -1;
 	return det_sign * Vector2<T>(elements[0].length(), elements[1].length());
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::scale(const Vector2<T> &p_scale) {
+void Transform2D<T>::scale(const Vector2<T> &p_scale) {
 	scale_basis(p_scale);
 	elements[2] *= p_scale;
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::scale_basis(const Vector2<T> &p_scale) {
+void Transform2D<T>::scale_basis(const Vector2<T> &p_scale) {
 	elements[0][0] *= p_scale.x;
 	elements[0][1] *= p_scale.y;
 	elements[1][0] *= p_scale.x;
@@ -210,17 +210,17 @@ void Transform2D_t<T>::scale_basis(const Vector2<T> &p_scale) {
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::translate(T p_tx, T p_ty) {
+void Transform2D<T>::translate(T p_tx, T p_ty) {
 	translate(Vector2<T>(p_tx, p_ty));
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::translate(const Vector2<T> &p_translation) {
+void Transform2D<T>::translate(const Vector2<T> &p_translation) {
 	elements[2] += basis_xform(p_translation);
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::orthonormalize() {
+void Transform2D<T>::orthonormalize() {
 	// Gram-Schmidt Process
 
 	Vector2<T> x = elements[0];
@@ -235,14 +235,14 @@ void Transform2D_t<T>::orthonormalize() {
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::orthonormalized() const {
-	Transform2D_t on = *this;
+Transform2D<T> Transform2D<T>::orthonormalized() const {
+	Transform2D on = *this;
 	on.orthonormalize();
 	return on;
 }
 
 template<arithmetic T>
-bool Transform2D_t<T>::operator==(const Transform2D_t &p_transform) const {
+bool Transform2D<T>::operator==(const Transform2D &p_transform) const {
 	for (int i = 0; i < 3; i++) {
 		if (elements[i] != p_transform.elements[i])
 			return false;
@@ -252,7 +252,7 @@ bool Transform2D_t<T>::operator==(const Transform2D_t &p_transform) const {
 }
 
 template<arithmetic T>
-bool Transform2D_t<T>::operator!=(const Transform2D_t &p_transform) const {
+bool Transform2D<T>::operator!=(const Transform2D &p_transform) const {
 	for (int i = 0; i < 3; i++) {
 		if (elements[i] != p_transform.elements[i])
 			return true;
@@ -262,7 +262,7 @@ bool Transform2D_t<T>::operator!=(const Transform2D_t &p_transform) const {
 }
 
 template<arithmetic T>
-void Transform2D_t<T>::operator*=(const Transform2D_t &p_transform) {
+void Transform2D<T>::operator*=(const Transform2D &p_transform) {
 	elements[2] = xform(p_transform.elements[2]);
 
 	T x0, x1, y0, y1;
@@ -279,54 +279,54 @@ void Transform2D_t<T>::operator*=(const Transform2D_t &p_transform) {
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::operator*(const Transform2D_t &p_transform) const {
-	Transform2D_t _t = *this;
+Transform2D<T> Transform2D<T>::operator*(const Transform2D &p_transform) const {
+	Transform2D _t = *this;
 	_t *= p_transform;
 	return _t;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::scaled(const Vector2<T> &p_scale) const {
-	Transform2D_t copy = *this;
+Transform2D<T> Transform2D<T>::scaled(const Vector2<T> &p_scale) const {
+	Transform2D copy = *this;
 	copy.scale(p_scale);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::basis_scaled(const Vector2<T> &p_scale) const {
-	Transform2D_t copy = *this;
+Transform2D<T> Transform2D<T>::basis_scaled(const Vector2<T> &p_scale) const {
+	Transform2D copy = *this;
 	copy.scale_basis(p_scale);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::untranslated() const {
-	Transform2D_t copy = *this;
+Transform2D<T> Transform2D<T>::untranslated() const {
+	Transform2D copy = *this;
 	copy.elements[2] = Vector2<T>();
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::translated(const Vector2<T> &p_offset) const {
-	Transform2D_t copy = *this;
+Transform2D<T> Transform2D<T>::translated(const Vector2<T> &p_offset) const {
+	Transform2D copy = *this;
 	copy.translate(p_offset);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::rotated(T p_phi) const {
-	Transform2D_t copy = *this;
+Transform2D<T> Transform2D<T>::rotated(T p_phi) const {
+	Transform2D copy = *this;
 	copy.rotate(p_phi);
 	return copy;
 }
 
 template<arithmetic T>
-T Transform2D_t<T>::basis_determinant() const {
+T Transform2D<T>::basis_determinant() const {
 	return elements[0].x * elements[1].y - elements[0].y * elements[1].x;
 }
 
 template<arithmetic T>
-Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_transform, T p_c) const {
+Transform2D<T> Transform2D<T>::interpolate_with(const Transform2D &p_transform, T p_c) const {
 	//extract parameters
 	Vector2<T> p1 = get_origin();
 	Vector2<T> p2 = p_transform.get_origin();
@@ -361,7 +361,7 @@ Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_trans
 	}
 
 	//construct matrix
-	Transform2D_t res(::atan2(v.y, v.x), Vector2<T>::linear_interpolate(p1, p2, p_c));
+	Transform2D res(::atan2(v.y, v.x), Vector2<T>::linear_interpolate(p1, p2, p_c));
 	res.scale_basis(Vector2<T>::linear_interpolate(s1, s2, p_c));
 	return res;
 }

@@ -60,9 +60,9 @@ void math_tb(){
     
 
     // using Vector3 = Vector3<real_t>;
-    // using Plane = Plane_t<real_t>;
-    // using Basis = Basis_t<real_t>;
-    // using Transform3D = Transform3D_t<real_t>;
+    // using Plane = Plane<real_t>;
+    // using Basis = Basis<real_t>;
+    // using Transform3D = Transform3D<real_t>;
 
     // sdi.init();
 
@@ -107,9 +107,9 @@ void math_tb(){
 
     
     #ifdef TRANFORM_TB
-    var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
+    var a = AABB<float>(Vector3(0,0,0), Vector3(1,1,1));
 
-    Transform2D_t<real_t> transform2d;
+    Transform2D<real_t> transform2d;
 
     // 遍历整数序列
     for (auto i : std::ranges::iota_view(0, 8)) {
@@ -198,22 +198,22 @@ void math_tb(){
 
 
     auto line = Line{Vector2<real_t>{1,0}, Vector2<real_t>{0,1}};
-    auto other = Line::from_point_and_rad(Vector2<real_t>{0,0}, real_t(PI/4));
+    auto other = Line::from_point_and_angle(Vector2<real_t>{0,0}, real_t(PI/4));
     print("line", line);
     print("other",other);
 
-    print(line.xfromy(1));
-    print(line.yfromx(-1));
+    print(line.x_at_y(1));
+    print(line.y_at_x(-1));
     print("abc:", line.abc());
     print("angle:", line.angle());
     print("abs", line.abs());
     print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.5_r}));
     print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line::from_point_and_rad(Vector2<real_t>{0,0}, atan(real_t(0.3333_r)))));
+    print("intersection", line.intersection(Line::from_point_and_angle(Vector2<real_t>{0,0}, atan(real_t(0.3333_r)))));
     print("foot", line.foot_of(Vector2<real_t>{0, 0.5_r}));
     print("mirror", line.mirror(Vector2<real_t>{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vector2<real_t>{0, 0.5_r}));
-    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_rad(Vector2<real_t>{0,0}, real_t(PI/4))));
+    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_angle(Vector2<real_t>{0,0}, real_t(PI/4))));
     print("unit", line.unit());
     print("rebase", line.rebase(Vector2<real_t>{-1,0}));
     print("rotated", line.rotated(Vector2<real_t>{-1,0}, real_t(PI/4)));

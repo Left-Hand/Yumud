@@ -10,12 +10,12 @@ using namespace ymd::hal;
 
 template<arithmetic T, size_t N_X, size_t N_Y>
 class AdaptiveEKF {
-    using MatrixXX = Matrix_t<T, N_X, N_X>;
-    using MatrixYX = Matrix_t<T, N_Y, N_X>;
-    using MatrixXY = Matrix_t<T, N_X, N_Y>;
-    using MatrixYY = Matrix_t<T, N_Y, N_Y>;
-    using VectorX = Matrix_t<T, N_X, 1>;
-    using VectorY = Matrix_t<T, N_Y, 1>;
+    using MatrixXX = Matrix<T, N_X, N_X>;
+    using MatrixYX = Matrix<T, N_Y, N_X>;
+    using MatrixXY = Matrix<T, N_X, N_Y>;
+    using MatrixYY = Matrix<T, N_Y, N_Y>;
+    using VectorX = Matrix<T, N_X, 1>;
+    using VectorY = Matrix<T, N_Y, 1>;
 
 public:
     explicit AdaptiveEKF(const VectorX &X0 = VectorX::Zero())
@@ -24,12 +24,12 @@ public:
 
     template<typename Fn>
     VectorX predict(Fn && fn) {
-        Jet_t<T, N_X> Xe_auto_jet[N_X];
+        Jet<T, N_X> Xe_auto_jet[N_X];
         for (size_t i = 0; i < N_X; i++) {
             Xe_auto_jet[i].a = Xe.at(0, i);
             Xe_auto_jet[i].v.at(0, i) = 1;
         }
-        Jet_t<T, N_X> Xp_auto_jet[N_X];
+        Jet<T, N_X> Xp_auto_jet[N_X];
         std::forward<Fn>(fn)(Xe_auto_jet, Xp_auto_jet);
         for (size_t i = 0; i < N_X; i++) {
             Xp.at(0, i) = Xp_auto_jet[i].a;
@@ -42,12 +42,12 @@ public:
 
     template<typename Fn>
     VectorX update(Fn && fn, const VectorY & Y) {
-        Jet_t<T, N_X> Xp_auto_jet[N_X];
+        Jet<T, N_X> Xp_auto_jet[N_X];
         for (size_t i = 0; i < N_X; i++) {
             Xp_auto_jet[i].a = Xp[i];
             Xp_auto_jet[i].v[i] = 1;
         }
-        Jet_t<T, N_X> Yp_auto_jet[N_Y];
+        Jet<T, N_X> Yp_auto_jet[N_Y];
         std::forward<Fn>(fn)(Xp_auto_jet, Yp_auto_jet);
         for (size_t i = 0; i < N_Y; i++) {
             Yp[i] = Yp_auto_jet[i].a;

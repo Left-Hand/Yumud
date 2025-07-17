@@ -26,7 +26,7 @@ static void clear_corners(Image<T> & dst){
 void convolution(
     Image<Gray> & dst, 
     const Image<Gray> & src, 
-    const Matrix_t<int8_t, 3, 3> & core, 
+    const Matrix<int8_t, 3, 3> & core, 
     const size_t div)
 {
     const auto size = dst.size();

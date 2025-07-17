@@ -37,7 +37,7 @@
 namespace ymd{
 
 template <arithmetic T>
-class Basis_t {
+class Basis {
 public:
     
 	Vector3<T> x, y, z;
@@ -50,27 +50,27 @@ public:
 	}
 
 	consteval size_t size() const {return 3;}
-	__fast_inline constexpr Vector3<T> * begin(){return (*this);}
-	__fast_inline constexpr const Vector3<T> * begin() const {return (*this);}
-	__fast_inline constexpr Vector3<T> * end(){return (*this) + size();}
-	__fast_inline constexpr const Vector3<T> * end() const {return (*this) + size();}
+	__fast_inline constexpr Vector3<T> * begin(){return (&x);}
+	__fast_inline constexpr const Vector3<T> * begin() const {return (&x);}
+	__fast_inline constexpr Vector3<T> * end(){return (&x) + size();}
+	__fast_inline constexpr const Vector3<T> * end() const {return (&x) + size();}
 
 	void invert();
 	void transpose();
 
-	Basis_t<T> inverse() const;
-	Basis_t<T> transposed() const;
+	Basis<T> inverse() const;
+	Basis<T> transposed() const;
 
 	inline T determinant() const;
 
 	void from_z(const Vector3<T>&p_z);
 
 	inline Vector3<T>get_axis(size_t p_axis) const {
-		// get actual Basis_t<T> axis ((*this) is transposed for performance)
+		// get actual Basis<T> axis ((*this) is transposed for performance)
 		return Vector3<T>((*this)[0][p_axis], (*this)[1][p_axis], (*this)[2][p_axis]);
 	}
 	inline void set_axis(size_t p_axis, const Vector3<T>&p_value) {
-		// get actual Basis_t<T> axis ((*this) is transposed for performance)
+		// get actual Basis<T> axis ((*this) is transposed for performance)
 		(*this)[0][p_axis] = p_value.x;
 		(*this)[1][p_axis] = p_value.y;
 		(*this)[2][p_axis] = p_value.z;
@@ -81,21 +81,21 @@ public:
 	// Multiplies the matrix from left by the rotation matrix: M -> R.M
 	// Note that this does *not* rotate the matrix itself.
 	//
-	// The main use of Basis_t<T> is as Transform.Basis_t<T>, which is used a the transformation matrix
+	// The main use of Basis<T> is as Transform.Basis<T>, which is used a the transformation matrix
 	// of 3D object. Rotate here refers to rotation of the object (which is R * ((*this))),
 	// not the matrix itself (which is R * ((*this)) * R.transposed()).
-	Basis_t<T> rotated(const Vector3<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
-		return Basis_t<T>(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi)) * ((*this));
+	Basis<T> rotated(const Vector3<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
+		return Basis<T>(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi)) * ((*this));
 	}
 
 	void rotate_local(const Vector3<T>&p_axis, T p_phi);
-	Basis_t<T> rotated_local(const Vector3<T>&p_axis, T p_phi) const;
+	Basis<T> rotated_local(const Vector3<T>&p_axis, T p_phi) const;
 
 	void rotate(const Vector3<T>&p_euler);
-	Basis_t<T> rotated(const Vector3<T>&p_euler) const;
+	Basis<T> rotated(const Vector3<T>&p_euler) const;
 
 	void rotate(const Quat<T> &p_quat);
-	Basis_t<T> rotated(const Quat<T> &p_quat) const;
+	Basis<T> rotated(const Quat<T> &p_quat) const;
 
 	Vector3<T>get_rotation_euler() const;
 	void get_rotation_axis_angle(Vector3<T>&p_axis, T &p_angle) const;
@@ -103,7 +103,7 @@ public:
 	Quat<T> get_rotation_quat() const;
 	Vector3<T>get_rotation() const { return get_rotation_euler(); };
 
-	Vector3<T>rotref_posscale_decomposition(Basis_t<T> &rotref) const;
+	Vector3<T>rotref_posscale_decomposition(Basis<T> &rotref) const;
 
 	Vector3<T>get_euler_xyz() const;
 	void set_euler_xyz(const Vector3<T>&p_euler);
@@ -133,10 +133,10 @@ public:
 	void set_axis_angle(const Vector3<T>&p_axis, T p_phi);
 
 	void scale(const Vector3<T>&p_scale);
-	Basis_t<T> scaled(const Vector3<T>&p_scale) const;
+	Basis<T> scaled(const Vector3<T>&p_scale) const;
 
 	void scale_local(const Vector3<T>&p_scale);
-	Basis_t<T> scaled_local(const Vector3<T>&p_scale) const;
+	Basis<T> scaled_local(const Vector3<T>&p_scale) const;
 
 	Vector3<T>get_scale() const;
 	Vector3<T>get_scale_abs() const;
@@ -157,24 +157,24 @@ public:
 		return (*this)[0][2] * v[0] + (*this)[1][2] * v[1] + (*this)[2][2] * v[2];
 	}
 
-	bool is_equal_approx(const Basis_t<T> & other) const;
+	bool is_equal_approx(const Basis<T> & other) const;
 	// For complicated reasons, the second argument is always discarded. See #45062.
-	bool is_equal_approx(const Basis_t<T> &a, const Basis_t<T> &b) const { return is_equal_approx(a); }
-	bool is_equal_approx_ratio(const Basis_t<T> &a, const Basis_t<T> &b, T p_epsilon = CMP_EPSILON) const;
+	bool is_equal_approx(const Basis<T> &a, const Basis<T> &b) const { return is_equal_approx(a); }
+	bool is_equal_approx_ratio(const Basis<T> &a, const Basis<T> &b, T p_epsilon = CMP_EPSILON) const;
 
-	bool operator==(const Basis_t<T> &p_matrix) const;
-	bool operator!=(const Basis_t<T> &p_matrix) const;
+	bool operator==(const Basis<T> &p_matrix) const;
+	bool operator!=(const Basis<T> &p_matrix) const;
 
 	inline Vector3<T>xform(const Vector3<T>&p_vector) const;
 	inline Vector3<T>xform_inv(const Vector3<T>&p_vector) const;
-	inline void operator*=(const Basis_t<T> &p_matrix);
-	inline Basis_t<T> operator*(const Basis_t<T> &p_matrix) const;
-	inline void operator+=(const Basis_t<T> &p_matrix);
-	inline Basis_t<T> operator+(const Basis_t<T> &p_matrix) const;
-	inline void operator-=(const Basis_t<T> &p_matrix);
-	inline Basis_t<T> operator-(const Basis_t<T> &p_matrix) const;
+	inline void operator*=(const Basis<T> &p_matrix);
+	inline Basis<T> operator*(const Basis<T> &p_matrix) const;
+	inline void operator+=(const Basis<T> &p_matrix);
+	inline Basis<T> operator+(const Basis<T> &p_matrix) const;
+	inline void operator-=(const Basis<T> &p_matrix);
+	inline Basis<T> operator-(const Basis<T> &p_matrix) const;
 	inline void operator*=(T p_val);
-	inline Basis_t<T> operator*(T p_val) const;
+	inline Basis<T> operator*(T p_val) const;
 
 	size_t get_orthogonal_index() const;
 	void set_orthogonal_index(size_t p_index);
@@ -185,7 +185,7 @@ public:
 	bool is_diagonal() const;
 	bool is_rotation() const;
 
-	Basis_t<T> slerp(const Basis_t<T> &p_to, const T p_weight) const;
+	Basis<T> slerp(const Basis<T> &p_to, const T p_weight) const;
 
 	/* create / set */
 
@@ -228,8 +228,8 @@ public:
 		(*this)[2].zero();
 	}
 
-	inline Basis_t<T> transpose_xform(const Basis_t<T> &m) const {
-		return Basis_t<T>(
+	inline Basis<T> transpose_xform(const Basis<T> &m) const {
+		return Basis<T>(
 				(*this)[0].x * m[0].x + (*this)[1].x * m[1].x + (*this)[2].x * m[2].x,
 				(*this)[0].x * m[0].y + (*this)[1].x * m[1].y + (*this)[2].x * m[2].y,
 				(*this)[0].x * m[0].z + (*this)[1].x * m[1].z + (*this)[2].x * m[2].z,
@@ -242,42 +242,42 @@ public:
 	}
 
 	void orthonormalize();
-	Basis_t<T> orthonormalized() const;
+	Basis<T> orthonormalized() const;
 
 	bool is_symmetric() const;
-	Basis_t<T> diagonalize();
+	Basis<T> diagonalize();
 
 	operator Quat<T>() const { return get_quat(); }
 
-	Basis_t(const Quat<auto> &p_quat) { set_quat(p_quat); };
-	Basis_t(const Quat<auto> &p_quat, const Vector3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+	Basis(const Quat<auto> &p_quat) { set_quat(p_quat); };
+	Basis(const Quat<auto> &p_quat, const Vector3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	Basis_t(const Vector3<auto>&p_euler) { 
+	Basis(const Vector3<auto>&p_euler) { 
 		set_euler(static_cast<T>(p_euler)); }
-	Basis_t(const Vector3<auto>&p_euler, const Vector3<T>&p_scale){ 
+	Basis(const Vector3<auto>&p_euler, const Vector3<T>&p_scale){ 
 		set_euler_scale(static_cast<T>(p_euler), static_cast<T>(p_scale)); }
 
-	Basis_t(const Vector3<auto>&p_axis, arithmetic auto p_phi) { 
+	Basis(const Vector3<auto>&p_axis, arithmetic auto p_phi) { 
 		set_axis_angle(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi)); }
 
-	Basis_t(const Vector3<auto>&p_axis, arithmetic auto p_phi, const Vector3<auto>&p_scale) { 
+	Basis(const Vector3<auto>&p_axis, arithmetic auto p_phi, const Vector3<auto>&p_scale) { 
 		set_axis_angle_scale(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi), static_cast<T>(p_scale));}
 
-	__fast_inline constexpr Basis_t<T>():
+	__fast_inline constexpr Basis<T>():
 		x(Vector3<T>(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0))),
 		y(Vector3<T>(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0))),
 		z(Vector3<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)))
 	{}
 
 	template<arithmetic U = T>
-	__fast_inline constexpr Basis_t<T>(const U xx, const U xy,const U xz,const U yx,const U yy,const U yz,const U zx,const U zy,const U zz):
+	__fast_inline constexpr Basis<T>(const U xx, const U xy,const U xz,const U yx,const U yy,const U yz,const U zx,const U zy,const U zz):
 		x(Vector3<T>(static_cast<T>(xx), static_cast<T>(xy), static_cast<T>(xz))),
 		y(Vector3<T>(static_cast<T>(yx), static_cast<T>(yy), static_cast<T>(yz))),
 		z(Vector3<T>(static_cast<T>(zx), static_cast<T>(zy), static_cast<T>(zz)))
 	{}
 
 	template<arithmetic U = T>
-	__fast_inline constexpr  Basis_t<T>(const Vector3<U>&row0, const Vector3<U>&row1, const Vector3<U>&row2):
+	__fast_inline constexpr  Basis<T>(const Vector3<U>&row0, const Vector3<U>&row1, const Vector3<U>&row2):
 		x(row0),
 		y(row1),
 		z(row2)
@@ -285,79 +285,79 @@ public:
 };
 
 template<arithmetic T>
-inline void Basis_t<T>::operator*=(const Basis_t<T> &p_matrix) {
+inline void Basis<T>::operator*=(const Basis<T> &p_matrix) {
 	set(
 			p_matrix.tdotx((*this)[0]), p_matrix.tdoty((*this)[0]), p_matrix.tdotz((*this)[0]),
 			p_matrix.tdotx((*this)[1]), p_matrix.tdoty((*this)[1]), p_matrix.tdotz((*this)[1]),
 			p_matrix.tdotx((*this)[2]), p_matrix.tdoty((*this)[2]), p_matrix.tdotz((*this)[2]));
 }
 template<arithmetic T>
-inline Basis_t<T> Basis_t<T>::operator*(const Basis_t<T> &p_matrix) const {
-	return Basis_t<T>(
+inline Basis<T> Basis<T>::operator*(const Basis<T> &p_matrix) const {
+	return Basis<T>(
 			p_matrix.tdotx((*this)[0]), p_matrix.tdoty((*this)[0]), p_matrix.tdotz((*this)[0]),
 			p_matrix.tdotx((*this)[1]), p_matrix.tdoty((*this)[1]), p_matrix.tdotz((*this)[1]),
 			// real_t(0), real_t(0), real_t(0),
 			p_matrix.tdotx((*this)[2]), p_matrix.tdoty((*this)[2]), p_matrix.tdotz((*this)[2]));
 }
 template<arithmetic T>
-inline void Basis_t<T>::operator+=(const Basis_t<T> &p_matrix) {
+inline void Basis<T>::operator+=(const Basis<T> &p_matrix) {
 	(*this)[0] += p_matrix[0];
 	(*this)[1] += p_matrix[1];
 	(*this)[2] += p_matrix[2];
 }
 template<arithmetic T>
-inline Basis_t<T> Basis_t<T>::operator+(const Basis_t<T> &p_matrix) const {
-	Basis_t<T> ret((*this));
+inline Basis<T> Basis<T>::operator+(const Basis<T> &p_matrix) const {
+	Basis<T> ret((*this));
 	ret += p_matrix;
 	return ret;
 }
 template<arithmetic T>
-inline void Basis_t<T>::operator-=(const Basis_t<T> &p_matrix) {
+inline void Basis<T>::operator-=(const Basis<T> &p_matrix) {
 	(*this)[0] -= p_matrix[0];
 	(*this)[1] -= p_matrix[1];
 	(*this)[2] -= p_matrix[2];
 }
 template<arithmetic T>
-inline Basis_t<T> Basis_t<T>::operator-(const Basis_t<T> &p_matrix) const {
-	Basis_t<T> ret((*this));
+inline Basis<T> Basis<T>::operator-(const Basis<T> &p_matrix) const {
+	Basis<T> ret((*this));
 	ret -= p_matrix;
 	return ret;
 }
 template<arithmetic T>
-inline void Basis_t<T>::operator*=(T p_val) {
+inline void Basis<T>::operator*=(T p_val) {
 	(*this)[0] *= p_val;
 	(*this)[1] *= p_val;
 	(*this)[2] *= p_val;
 }
 template<arithmetic T>
-inline Basis_t<T> Basis_t<T>::operator*(T p_val) const {
-	Basis_t<T> ret((*this));
+inline Basis<T> Basis<T>::operator*(T p_val) const {
+	Basis<T> ret((*this));
 	ret *= p_val;
 	return ret;
 }
 template<arithmetic T>
-Vector3<T> Basis_t<T>::xform(const Vector3<T>&p_vector) const {
+Vector3<T> Basis<T>::xform(const Vector3<T>&p_vector) const {
 	return Vector3<T>(
 			(*this)[0].dot(p_vector),
 			(*this)[1].dot(p_vector),
 			(*this)[2].dot(p_vector));
 }
 template<arithmetic T>
-Vector3<T> Basis_t<T>::xform_inv(const Vector3<T>&p_vector) const {
+Vector3<T> Basis<T>::xform_inv(const Vector3<T>&p_vector) const {
 	return Vector3<T>(
 			((*this)[0][0] * p_vector.x) + ((*this)[1][0] * p_vector.y) + ((*this)[2][0] * p_vector.z),
 			((*this)[0][1] * p_vector.x) + ((*this)[1][1] * p_vector.y) + ((*this)[2][1] * p_vector.z),
 			((*this)[0][2] * p_vector.x) + ((*this)[1][2] * p_vector.y) + ((*this)[2][2] * p_vector.z));
 }
 template<arithmetic T>
-T Basis_t<T>::determinant() const {
+T Basis<T>::determinant() const {
 	return (*this)[0][0] * ((*this)[1][1] * (*this)[2][2] - (*this)[2][1] * (*this)[1][2]) -
 			(*this)[1][0] * ((*this)[0][1] * (*this)[2][2] - (*this)[2][1] * (*this)[0][2]) +
 			(*this)[2][0] * ((*this)[0][1] * (*this)[1][2] - (*this)[1][1] * (*this)[0][2]);
 }
 
 template<arithmetic T>
-__inline OutputStream & operator<<(OutputStream & os, const Basis_t<T> & mat){
+__inline OutputStream & operator<<(OutputStream & os, const Basis<T> & mat){
 	const auto splt = os.splitter();
     os << os.brackets<'('>();
 	os << mat[0] << splt;

@@ -6,7 +6,7 @@
 using namespace ymd::robots;
 using namespace ChassisActions;
 
-void ChassisModule::recalibrate(const Ray2q<16> & ray){
+void ChassisModule::recalibrate(const Ray2<q16> & ray){
     TODO();
 }
 
@@ -25,7 +25,7 @@ void ChassisModule::closeloop(){
             break;
 
         case CtrlMode::STRICT_SHIFT:{
-            auto p1234 = solver_.inverse(Ray2q<16>{target_jny_.org, 0});
+            auto p1234 = solver_.inverse(Ray2<q16>{target_jny_.org, 0});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
@@ -35,7 +35,7 @@ void ChassisModule::closeloop(){
         }
             break;
         case CtrlMode::STRICT_SPIN:{
-            auto p1234 = solver_.inverse(Ray2q<16>{Vector2<q16>{0,0}, target_rot_});
+            auto p1234 = solver_.inverse(Ray2<q16>{Vector2<q16>{0,0}, target_rot_});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
@@ -47,12 +47,12 @@ void ChassisModule::closeloop(){
         case CtrlMode::SHIFT:{
             auto rot_output = rot_ctrl_.update(0, this->rad(), this->gyr());
             auto pos_output = pos_ctrl_.update(target_jny_.org, this->jny().org, this->spd());
-            setCurrent(Ray2q<16>{pos_output, rot_output});
+            setCurrent(Ray2<q16>{pos_output, rot_output});
         }
             break;
         case CtrlMode::SPIN:{
             auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
-            setCurrent(Ray2q<16>{Vector2<q16>{0,0}, rot_output});    
+            setCurrent(Ray2<q16>{Vector2<q16>{0,0}, rot_output});    
         }
             break;
     }
@@ -83,14 +83,14 @@ void ChassisModule::entry_strict_shift(){
     reset_journey();
 }
 
-void ChassisModule::setCurrent(const Ray2q<16> & ray){
+void ChassisModule::setCurrent(const Ray2<q16> & ray){
     auto && curr = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
     wheels_.setCurrent(curr);
     // wheels_.setSpeed(curr);
 }
 
-void ChassisModule::setPosition(const Ray2q<16> & ray){
+void ChassisModule::setPosition(const Ray2<q16> & ray){
     // DEBUG_PRINTLN("!!!!", ray);
     auto && pos = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
@@ -105,7 +105,7 @@ void ChassisModule::setPosition(const std::tuple<real_t, real_t, real_t, real_t>
 
 
 
-void ChassisModule::trim(const Ray2q<16> & ray){
+void ChassisModule::trim(const Ray2<q16> & ray){
     auto & self = *this;
     self << new TrimAction(self, ray);
 }
@@ -171,7 +171,7 @@ void ChassisModule::tick800(){
 
         gyr_sum_ += gyr_;
 
-        auto calculate_journey = [this]() -> Ray2q<16>{
+        auto calculate_journey = [this]() -> Ray2<q16>{
             return solver_.forward(
                 wheels_[0].readPosition() - last_motor_positions[0],
                 wheels_[1].readPosition() - last_motor_positions[1],
@@ -240,12 +240,15 @@ void ChassisModule::strict_shift(const Vector2<q16> & offs){
 //     self << new DelayAction(int(dur * 1000));
 // }
 
-void ChassisModule::follow(const Ray2q<16> & to){
+void ChassisModule::follow(const Ray2<q16> & to){
     auto & self = *this;
-    auto from = Ray2q<16>{{0,0}, real_t(PI/2)};
+    const auto from = Ray2<q16>{{0,0}, real_t(PI/2)};
 
-    auto p_opt = from.intersection(to);
-    auto p = p_opt.value();
+    const auto may_p = from.intersection(to);
+    const auto p = ({
+        if(may_p.is_none()) return;
+        may_p.unwrap();
+    });
 
     self.straight(p.y);
     self.spin(min_rad_diff(real_t(PI/2), to.rad));

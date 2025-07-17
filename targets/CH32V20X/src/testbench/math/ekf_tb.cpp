@@ -23,7 +23,7 @@ void ekf_main(){
     // Measure<real_t> measure;
     
     // while(true){
-    //     ekf.update(measure, Matrix_t<real_t,3,1>{3,4,5});
+    //     ekf.update(measure, Matrix<real_t,3,1>{3,4,5});
     //     ekf.predict(predict);
     // }
 

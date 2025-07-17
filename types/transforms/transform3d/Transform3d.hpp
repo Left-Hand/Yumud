@@ -40,82 +40,82 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Transform3D_t{
-	Basis_t<T> basis;
+struct Transform3D{
+	Basis<T> basis;
 	Vector3<T> origin;
 
 	void invert();
-	Transform3D_t<T> inverse() const;
+	Transform3D<T> inverse() const;
 
 	void affine_invert();
-	Transform3D_t<T> affine_inverse() const;
+	Transform3D<T> affine_inverse() const;
 
-	Transform3D_t<T> rotated(const Vector3<T> &p_axis, T p_angle) const;
-	Transform3D_t<T> rotated_local(const Vector3<T> &p_axis, T p_angle) const;
+	Transform3D<T> rotated(const Vector3<T> &p_axis, T p_angle) const;
+	Transform3D<T> rotated_local(const Vector3<T> &p_axis, T p_angle) const;
 
 	void rotate(const Vector3<T> &p_axis, T p_angle);
 	void rotate_basis(const Vector3<T> &p_axis, T p_angle);
 
 	void set_look_at(const Vector3<T> &p_eye, const Vector3<T> &p_target, const Vector3<T> &p_up = Vector3<T>(0, 1, 0), bool p_use_model_front = false);
-	Transform3D_t<T> looking_at(const Vector3<T> &p_target, const Vector3<T> &p_up = Vector3<T>(0, 1, 0), bool p_use_model_front = false) const;
+	Transform3D<T> looking_at(const Vector3<T> &p_target, const Vector3<T> &p_up = Vector3<T>(0, 1, 0), bool p_use_model_front = false) const;
 
 	void scale(const Vector3<T> &p_scale);
-	Transform3D_t<T> scaled(const Vector3<T> &p_scale) const;
-	Transform3D_t<T> scaled_local(const Vector3<T> &p_scale) const;
+	Transform3D<T> scaled(const Vector3<T> &p_scale) const;
+	Transform3D<T> scaled_local(const Vector3<T> &p_scale) const;
 	void scale_basis(const Vector3<T> &p_scale);
 	void translate_local(T p_tx, T p_ty, T p_tz);
 	void translate_local(const Vector3<T> &p_translation);
-	Transform3D_t<T> translated(const Vector3<T> &p_translation) const;
-	Transform3D_t<T> translated_local(const Vector3<T> &p_translation) const;
+	Transform3D<T> translated(const Vector3<T> &p_translation) const;
+	Transform3D<T> translated_local(const Vector3<T> &p_translation) const;
 
-	const Basis_t<T> &get_basis() const { return basis; }
-	void set_basis(const Basis_t<T> &p_basis) { basis = p_basis; }
+	const Basis<T> &get_basis() const { return basis; }
+	void set_basis(const Basis<T> &p_basis) { basis = p_basis; }
 
 	const Vector3<T> &get_origin() const { return origin; }
 	void set_origin(const Vector3<T> &p_origin) { origin = p_origin; }
 
 	void orthonormalize();
-	Transform3D_t<T> orthonormalized() const;
+	Transform3D<T> orthonormalized() const;
 	void orthogonalize();
-	Transform3D_t<T> orthogonalized() const;
-	bool is_equal_approx(const Transform3D_t<T> &p_transform) const;
+	Transform3D<T> orthogonalized() const;
+	bool is_equal_approx(const Transform3D<T> &p_transform) const;
 	bool is_finite() const;
 
-	bool operator==(const Transform3D_t<T> &p_transform) const;
-	bool operator!=(const Transform3D_t<T> &p_transform) const;
+	bool operator==(const Transform3D<T> &p_transform) const;
+	bool operator!=(const Transform3D<T> &p_transform) const;
 
 	__fast_inline Vector3<T> xform(const Vector3<T> &p_vector) const;
-	__fast_inline AABB_t<T> xform(const AABB_t<T> &p_aabb) const;
+	__fast_inline AABB<T> xform(const AABB<T> &p_aabb) const;
 	__fast_inline std::vector<Vector3<T>> xform(const std::vector<Vector3<T>> &p_array) const;
 
 	// NOTE: These are UNSAFE with non-uniform scaling, and will produce incorrect results.
 	// They use the transpose.
 	// For safe inverse transforms, xform by the affine_inverse.
 	__fast_inline Vector3<T> xform_inv(const Vector3<T> &p_vector) const;
-	__fast_inline AABB_t<T> xform_inv(const AABB_t<T> &p_aabb) const;
+	__fast_inline AABB<T> xform_inv(const AABB<T> &p_aabb) const;
 	__fast_inline std::vector<Vector3<T>> xform_inv(const std::vector<Vector3<T>> &p_array) const;
 
 	// Safe with non-uniform scaling (uses affine_inverse).
-	__fast_inline Plane_t<T> xform(const Plane_t<T> &p_plane) const;
-	__fast_inline Plane_t<T> xform_inv(const Plane_t<T> &p_plane) const;
+	__fast_inline Plane<T> xform(const Plane<T> &p_plane) const;
+	__fast_inline Plane<T> xform_inv(const Plane<T> &p_plane) const;
 
 	// These fast versions use precomputed affine inverse, and should be used in bottleneck areas where
 	// multiple planes are to be transformed.
-	__fast_inline Plane_t<T> xform_fast(const Plane_t<T> &p_plane, const Basis_t<T> &p_basis_inverse_transpose) const;
-	static __fast_inline Plane_t<T> xform_inv_fast(const Plane_t<T> &p_plane, const Transform3D_t<T> &p_inverse, const Basis_t<T> &p_basis_transpose);
+	__fast_inline Plane<T> xform_fast(const Plane<T> &p_plane, const Basis<T> &p_basis_inverse_transpose) const;
+	static __fast_inline Plane<T> xform_inv_fast(const Plane<T> &p_plane, const Transform3D<T> &p_inverse, const Basis<T> &p_basis_transpose);
 
-	void operator*=(const Transform3D_t<T> &p_transform);
-	Transform3D_t<T> operator*(const Transform3D_t<T> &p_transform) const;
+	void operator*=(const Transform3D<T> &p_transform);
+	Transform3D<T> operator*(const Transform3D<T> &p_transform) const;
 	void operator*=(T p_val);
-	Transform3D_t<T> operator*(T p_val) const;
+	Transform3D<T> operator*(T p_val) const;
 	void operator/=(T p_val);
-	Transform3D_t<T> operator/(T p_val) const;
+	Transform3D<T> operator/(T p_val) const;
 
-	Transform3D_t<T> interpolate_with(const Transform3D_t<T> &p_transform, T p_c) const;
+	Transform3D<T> interpolate_with(const Transform3D<T> &p_transform, T p_c) const;
 
-	__fast_inline Transform3D_t<T> inverse_xform(const Transform3D_t<T> & other) const {
+	__fast_inline Transform3D<T> inverse_xform(const Transform3D<T> & other) const {
 		Vector3<T> v = other.origin - origin;
-		return Transform3D_t<T>(basis.transpose_xform(other.basis),
+		return Transform3D<T>(basis.transpose_xform(other.basis),
 				basis.xform(v));
 	}
 
@@ -126,14 +126,14 @@ struct Transform3D_t{
 		origin.z = p_tz;
 	}
 
-	Transform3D_t() {}
-	Transform3D_t(const Basis_t<T> &p_basis, const Vector3<T> &p_origin = Vector3<T>());
-	Transform3D_t(const Vector3<T> &p_x, const Vector3<T> &p_y, const Vector3<T> &p_z, const Vector3<T> &p_origin);
-	Transform3D_t(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_ox, T p_oy, T p_oz);
+	Transform3D() {}
+	Transform3D(const Basis<T> &p_basis, const Vector3<T> &p_origin = Vector3<T>());
+	Transform3D(const Vector3<T> &p_x, const Vector3<T> &p_y, const Vector3<T> &p_z, const Vector3<T> &p_origin);
+	Transform3D(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_ox, T p_oy, T p_oz);
 };
 
 template<arithmetic T>
-__fast_inline Vector3<T> Transform3D_t<T>::xform(const Vector3<T> &p_vector) const {
+__fast_inline Vector3<T> Transform3D<T>::xform(const Vector3<T> &p_vector) const {
 	return Vector3<T>(
 			basis[0].dot(p_vector) + origin.x,
 			basis[1].dot(p_vector) + origin.y,
@@ -141,7 +141,7 @@ __fast_inline Vector3<T> Transform3D_t<T>::xform(const Vector3<T> &p_vector) con
 }
 
 template<arithmetic T>
-__fast_inline Vector3<T> Transform3D_t<T>::xform_inv(const Vector3<T> &p_vector) const {
+__fast_inline Vector3<T> Transform3D<T>::xform_inv(const Vector3<T> &p_vector) const {
 	Vector3<T> v = p_vector - origin;
 
 	return Vector3<T>(
@@ -157,23 +157,23 @@ __fast_inline Vector3<T> Transform3D_t<T>::xform_inv(const Vector3<T> &p_vector)
 
 
 template<arithmetic T>
-__fast_inline Plane_t<T> Transform3D_t<T>::xform(const Plane_t<T> &p_plane) const {
-	Basis_t<T> b = basis.inverse();
+__fast_inline Plane<T> Transform3D<T>::xform(const Plane<T> &p_plane) const {
+	Basis<T> b = basis.inverse();
 	b.transpose();
 	return xform_fast(p_plane, b);
 }
 
 
 template<arithmetic T>
-__fast_inline Plane_t<T> Transform3D_t<T>::xform_inv(const Plane_t<T> &p_plane) const {
-	Transform3D_t<T> inv = affine_inverse();
-	Basis_t<T> basis_transpose = basis.transposed();
+__fast_inline Plane<T> Transform3D<T>::xform_inv(const Plane<T> &p_plane) const {
+	Transform3D<T> inv = affine_inverse();
+	Basis<T> basis_transpose = basis.transposed();
 	return xform_inv_fast(p_plane, inv, basis_transpose);
 }
 
 
 template<arithmetic T>
-__fast_inline AABB_t<T> Transform3D_t<T>::xform(const AABB_t<T> &p_aabb) const {
+__fast_inline AABB<T> Transform3D<T>::xform(const AABB<T> &p_aabb) const {
 	/* https://dev.theomader.com/transform-bounding-boxes/ */
 	Vector3<T> min = p_aabb.position;
 	Vector3<T> max = p_aabb.position + p_aabb.size;
@@ -192,7 +192,7 @@ __fast_inline AABB_t<T> Transform3D_t<T>::xform(const AABB_t<T> &p_aabb) const {
 			}
 		}
 	}
-	AABB_t<T> r_aabb;
+	AABB<T> r_aabb;
 	r_aabb.position = tmin;
 	r_aabb.size = tmax - tmin;
 	return r_aabb;
@@ -200,7 +200,7 @@ __fast_inline AABB_t<T> Transform3D_t<T>::xform(const AABB_t<T> &p_aabb) const {
 
 
 template<arithmetic T>
-__fast_inline AABB_t<T> Transform3D_t<T>::xform_inv(const AABB_t<T> &p_aabb) const {
+__fast_inline AABB<T> Transform3D<T>::xform_inv(const AABB<T> &p_aabb) const {
 	/* define vertices */
 	Vector3<T> vertices[8] = {
 		Vector3<T>(p_aabb.position.x + p_aabb.size.x, p_aabb.position.y + p_aabb.size.y, p_aabb.position.z + p_aabb.size.z),
@@ -213,7 +213,7 @@ __fast_inline AABB_t<T> Transform3D_t<T>::xform_inv(const AABB_t<T> &p_aabb) con
 		Vector3<T>(p_aabb.position.x, p_aabb.position.y, p_aabb.position.z)
 	};
 
-	AABB_t<T> ret;
+	AABB<T> ret;
 
 	ret.position = xform_inv(vertices[0]);
 
@@ -226,7 +226,7 @@ __fast_inline AABB_t<T> Transform3D_t<T>::xform_inv(const AABB_t<T> &p_aabb) con
 
 
 template<arithmetic T>
-std::vector<Vector3<T>> Transform3D_t<T>::xform(const std::vector<Vector3<T>> &p_array) const {
+std::vector<Vector3<T>> Transform3D<T>::xform(const std::vector<Vector3<T>> &p_array) const {
 	std::vector<Vector3<T>> array;
 	array.resize(p_array.size());
 
@@ -239,7 +239,7 @@ std::vector<Vector3<T>> Transform3D_t<T>::xform(const std::vector<Vector3<T>> &p
 
 
 template<arithmetic T>
-std::vector<Vector3<T>> Transform3D_t<T>::xform_inv(const std::vector<Vector3<T>> &p_array) const {
+std::vector<Vector3<T>> Transform3D<T>::xform_inv(const std::vector<Vector3<T>> &p_array) const {
 	std::vector<Vector3<T>> array;
 	array.resize(p_array.size());
 
@@ -252,7 +252,7 @@ std::vector<Vector3<T>> Transform3D_t<T>::xform_inv(const std::vector<Vector3<T>
 
 
 template<arithmetic T>
-__fast_inline Plane_t<T> Transform3D_t<T>::xform_fast(const Plane_t<T> &p_plane, const Basis_t<T> &p_basis_inverse_transpose) const {
+__fast_inline Plane<T> Transform3D<T>::xform_fast(const Plane<T> &p_plane, const Basis<T> &p_basis_inverse_transpose) const {
 	// Transform a single point on the plane.
 	Vector3<T> point = p_plane.normal * p_plane.d;
 	point = xform(point);
@@ -262,12 +262,12 @@ __fast_inline Plane_t<T> Transform3D_t<T>::xform_fast(const Plane_t<T> &p_plane,
 	normal.normalize();
 
 	T d = normal.dot(point);
-	return Plane_t<T>(normal, d);
+	return Plane<T>(normal, d);
 }
 
 
 template<arithmetic T>
-__fast_inline Plane_t<T> Transform3D_t<T>::xform_inv_fast(const Plane_t<T> &p_plane, const Transform3D_t<T> &p_inverse, const Basis_t<T> &p_basis_transpose) {
+__fast_inline Plane<T> Transform3D<T>::xform_inv_fast(const Plane<T> &p_plane, const Transform3D<T> &p_inverse, const Basis<T> &p_basis_transpose) {
 	// Transform a single point on the plane.
 	Vector3<T> point = p_plane.normal * p_plane.d;
 	point = p_inverse.xform(point);
@@ -284,12 +284,12 @@ __fast_inline Plane_t<T> Transform3D_t<T>::xform_inv_fast(const Plane_t<T> &p_pl
 	normal.normalize();
 
 	T d = normal.dot(point);
-	return Plane_t<T>(normal, d);
+	return Plane<T>(normal, d);
 }
 
 
 template<arithmetic T>
-__inline OutputStream & operator<<(OutputStream & os, const Transform3D_t<T> & transform){
+__inline OutputStream & operator<<(OutputStream & os, const Transform3D<T> & transform){
     os << os.brackets<'('>();
 	os << transform.basis << os.splitter();
 	os << transform.origin << os.brackets<')'>();

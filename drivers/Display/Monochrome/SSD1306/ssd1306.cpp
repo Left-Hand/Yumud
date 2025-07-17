@@ -5,6 +5,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = SSD13XX::Error;
+using Vector2u16 = Vector2<uint16_t>;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -26,7 +27,7 @@ IResult<> SSD13XX::set_flush_pos(const Vector2u16 pos){
     return Ok();
 }
 IResult<> SSD13XX::init(){   
-    // DEBUG_PRINTLN(std::showbase, std::hex, cmds_);
+    // DEBUG_PRINTLN(std::showbase, std::hex, init_cmds_list_);
     if(const auto res = phy_.init() ; 
         res.is_err()) return res;
     if(const auto res = preinit_by_cmds(); 
@@ -78,8 +79,8 @@ IResult<> SSD13XX::update(){
 }
 
 IResult<> SSD13XX::preinit_by_cmds(){
-    // DEBUG_PRINTLN(cmds_);
-    for(const auto cmd:cmds_){
+    // DEBUG_PRINTLN(init_cmds_list_);
+    for(const auto cmd:init_cmds_list_){
         if(const auto res = phy_.write_command(cmd);
             res.is_err()) return res;
     }

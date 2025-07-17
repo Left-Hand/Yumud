@@ -16,7 +16,7 @@ struct Edge{
 };
 
 template<typename T, size_t X_N, size_t Y_N>
-struct Matrix_t{
+struct Matrix{
 	using Row = std::array<T, X_N>;
 	using Mat = std::array<Row, Y_N>;
 	
@@ -82,8 +82,8 @@ struct Matrix_t{
 scexpr auto W = 7u;
 scexpr auto H = 7u;
 
-using MatrixR = Matrix_t<size_t, W, H>;
-using MatrixS = Matrix_t<real_t, W, H>;
+using MatrixR = Matrix<size_t, W, H>;
+using MatrixS = Matrix<real_t, W, H>;
 using Path = std::vector<size_t>;
 
 struct Topology{

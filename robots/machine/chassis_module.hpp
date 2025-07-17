@@ -68,7 +68,7 @@ protected:
     drivers::GyroscopeIntf & gyr_sensor_;
     drivers::MagnetometerIntf & mag_sensor_;
 
-    Ray2q<16> current_jny_;
+    Ray2<q16> current_jny_;
     real_t gyr_;
     real_t gyr_sum_;
 
@@ -79,7 +79,7 @@ protected:
 
     CtrlMode ctrl_mode_ = CtrlMode::NONE;
 
-    Ray2q<16> target_jny_;
+    Ray2<q16> target_jny_;
     real_t target_rot_;
 
     Vector2<q16> spd_;
@@ -104,14 +104,14 @@ public:
 
     void reset_rot();
     void reset_journey();
-    void trim(const Ray2q<16> & ray);
+    void trim(const Ray2<q16> & ray);
 
-    void recalibrate(const Ray2q<16> & ray);
+    void recalibrate(const Ray2<q16> & ray);
     void init();
     void tick800();
 
-    void setCurrent(const Ray2q<16> & ray);
-    void setPosition(const Ray2q<16> & ray);
+    void setCurrent(const Ray2<q16> & ray);
+    void setPosition(const Ray2<q16> & ray);
     void setPosition(const std::tuple<real_t, real_t, real_t, real_t> pos);
 
     void setMode(const CtrlMode mode){
@@ -139,7 +139,7 @@ public:
     //平移
     void shift(const Vector2<q16> & diff);
 
-    void follow(const Ray2q<16> & to);
+    void follow(const Ray2<q16> & to);
 
     //旋转
     void spin(const real_t ang);
@@ -152,7 +152,7 @@ public:
         this->target_rot_ = rad;
     }
 
-    void set_target_jny(const Ray2q<16> & jny){
+    void set_target_jny(const Ray2<q16> & jny){
         this->target_jny_ = jny;
     }
 

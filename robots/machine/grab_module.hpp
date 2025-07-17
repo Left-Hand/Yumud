@@ -46,7 +46,7 @@ public:
 
         Vector3<q16> home_xyz;
 
-        AABB_t<real_t> safe_aabb;
+        AABB<real_t> safe_aabb;
         real_t max_spd;
         real_t max_acc;
 

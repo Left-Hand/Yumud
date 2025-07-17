@@ -26,19 +26,19 @@ static constexpr size_t MAX_ITER = 150;
 
 // Function to solve the Discrete Algebraic Riccati Equation (DARE)
 template <typename T, size_t Xn, size_t Un>
-constexpr Matrix_t<T, Xn, Xn> solve_DARE(
-    const Matrix_t<T, Xn, Xn>& A,  // State transition matrix
-    const Matrix_t<T, Xn, Un>& B,  // Control matrix
-    const Matrix_t<T, Xn, Xn>& Q,  // State cost matrix
-    const Matrix_t<T, Un, Un>& R,  // Control cost matrix
+constexpr Matrix<T, Xn, Xn> solve_DARE(
+    const Matrix<T, Xn, Xn>& A,  // State transition matrix
+    const Matrix<T, Xn, Un>& B,  // Control matrix
+    const Matrix<T, Xn, Xn>& Q,  // State cost matrix
+    const Matrix<T, Un, Un>& R,  // Control cost matrix
     size_t max_iter = MAX_ITER,         // Maximum number of iterations
     T tolerance = T(EPS)) {          // Convergence tolerance
 
-    Matrix_t<T, Xn, Xn> P = Q;     // Initialize the cost matrix
+    Matrix<T, Xn, Xn> P = Q;     // Initialize the cost matrix
 
     for (size_t iter = 0; iter < max_iter; ++iter) {
         // Compute the next iteration of P
-        // Matrix_t<T, Xn, Xn> Pn = A.transpose() * P * A -
+        // Matrix<T, Xn, Xn> Pn = A.transpose() * P * A -
         //                          A.transpose() * P * B *
         //                          (R + (B.transpose() * P * B)).inverse() *
         //                          B.transpose() * P * A + Q;
@@ -69,11 +69,11 @@ constexpr Matrix_t<T, Xn, Xn> solve_DARE(
 // LQR求解函数
 template <typename T, size_t Xn, size_t Un>
 constexpr 
-Matrix_t<T, Un, Xn> solveLQR(
-    const Matrix_t<T, Xn, Xn>& A,  // 状态转移矩阵
-    const Matrix_t<T, Xn, Un>& B,  // 控制矩阵
-    const Matrix_t<T, Xn, Xn>& Q,  // 状态代价矩阵
-    const Matrix_t<T, Un, Un>& R,  // 控制代价矩阵
+Matrix<T, Un, Xn> solveLQR(
+    const Matrix<T, Xn, Xn>& A,  // 状态转移矩阵
+    const Matrix<T, Xn, Un>& B,  // 控制矩阵
+    const Matrix<T, Xn, Xn>& Q,  // 状态代价矩阵
+    const Matrix<T, Un, Un>& R,  // 控制代价矩阵
     size_t max_iter = MAX_ITER,       // 最大迭代次数
     T tolerance = T(EPS)) {        // 收敛容差
 

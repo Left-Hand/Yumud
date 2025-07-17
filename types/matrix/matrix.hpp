@@ -1,5 +1,5 @@
 /*************************************************************************************************************
- * MatrixX_t Class
+ * DynMatrix Class
  *  Contain the matrix class definition and operation.
  * 
  *  Notes:
@@ -18,10 +18,10 @@
  *       Accessing index start from 0 until i16row/i16col, that is:
  *          (0 <= idxRow < i16row)     and     (0 <= idxRow < i16col).
  * 
- *    See below at "Data structure of MatrixX_t class" at private member class definition for more information!
+ *    See below at "Data structure of DynMatrix class" at private member class definition for more information!
  * 
  * 
- * Class MatrixX_t Versioning:
+ * Class DynMatrix Versioning:
  *    v0.10 (2020-04-29), {PNb}:
  *      - Add NoInitMatZero for _outp matrix initialization in ForwardSubtitution.
  *      - Fixing bug in HouseholderTransformQR function where _outp & _vectTemp need to be initialized
@@ -140,30 +140,30 @@ namespace ymd{
 
 
 template<arithmetic T>
-class MatrixX_t
+class DynMatrix
 {
 public:
 
-    /* --------------------------------------------- Basic MatrixX_t Class functions --------------------------------------------- */
+    /* --------------------------------------------- Basic DynMatrix Class functions --------------------------------------------- */
     /* Init empty matrix size _i16row x _i16col */
-    constexpr MatrixX_t(const int16_t _i16row, const int16_t _i16col);
+    constexpr DynMatrix(const int16_t _i16row, const int16_t _i16col);
 
     /* Init matrix size _i16row x _i16col with entries initData */
-    constexpr MatrixX_t(const int16_t _i16row, const int16_t _i16col, const T* initData);
+    constexpr DynMatrix(const int16_t _i16row, const int16_t _i16col, const T* initData);
 
     /* Copy constructor (for this operation --> A(B)) (copy B into A) */
-    constexpr MatrixX_t(const MatrixX_t& old_obj);
+    constexpr DynMatrix(const DynMatrix& old_obj);
 
     
     /* Assignment operator (for this operation --> A = B) (copy B into A) */
-    constexpr MatrixX_t& operator = (const MatrixX_t & other);
+    constexpr DynMatrix& operator = (const DynMatrix & other);
 
     /* Get internal state */
     __fast_inline constexpr int16_t rows(void) const { return this->i16row; }
     __fast_inline constexpr int16_t cols(void) const { return this->i16col; }
     
     
-    /* ------------------------------------------- MatrixX_t entry accessing functions ------------------------------------------- */
+    /* ------------------------------------------- DynMatrix entry accessing functions ------------------------------------------- */
     /* For example: A(1,2) access the 1st row and 2nd column data of matrix A <--- The preferred way to access the matrix */
     T & operator () (const int16_t _row, const int16_t _col);
     const T & operator () (const int16_t _row, const int16_t _col) const;
@@ -183,73 +183,73 @@ public:
 
             int16_t maxCol;
 
-            friend class MatrixX_t;
+            friend class DynMatrix;
     };
     Proxy operator [] (const int16_t _row);
     const Proxy operator [] (const int16_t _row) const;
     
     
-    /* ----------------------------------------- MatrixX_t checking function declaration ----------------------------------------- */
+    /* ----------------------------------------- DynMatrix checking function declaration ----------------------------------------- */
     operator bool(void) const;
     void invalid(void);
-    /* --------------------------------------------- MatrixX_t elementary operations --------------------------------------------- */
-    bool operator == (const MatrixX_t& _compare) const;
-    bool operator != (const MatrixX_t& _compare) const;
-    MatrixX_t operator - (void) const;
-    MatrixX_t operator + (const T _scalar) const;
-    MatrixX_t operator - (const T _scalar) const;
-    MatrixX_t operator * (const T _scalar) const;
-    MatrixX_t operator / (const T _scalar) const;
-    MatrixX_t operator + (const MatrixX_t& _matAdd) const;
-    MatrixX_t operator - (const MatrixX_t& _matSub) const;
-    MatrixX_t operator * (const MatrixX_t& _matMul) const;
+    /* --------------------------------------------- DynMatrix elementary operations --------------------------------------------- */
+    bool operator == (const DynMatrix& _compare) const;
+    bool operator != (const DynMatrix& _compare) const;
+    DynMatrix operator - (void) const;
+    DynMatrix operator + (const T _scalar) const;
+    DynMatrix operator - (const T _scalar) const;
+    DynMatrix operator * (const T _scalar) const;
+    DynMatrix operator / (const T _scalar) const;
+    DynMatrix operator + (const DynMatrix& _matAdd) const;
+    DynMatrix operator - (const DynMatrix& _matSub) const;
+    DynMatrix operator * (const DynMatrix& _matMul) const;
 
-    /* ----------------------------------------------- Simple MatrixX_t operations ----------------------------------------------- */
+    /* ----------------------------------------------- Simple DynMatrix operations ----------------------------------------------- */
     void vRoundingElementToZero(const int16_t _i, const int16_t _j);
-    MatrixX_t RoundingMatrixToZero(void);
+    DynMatrix RoundingMatrixToZero(void);
     void vSetHomogen(const T _val);
     void setZero(void);
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
     void vSetDiag(const T _val);
     void vSetIdentity(void);
-    MatrixX_t transpose(void);
+    DynMatrix transpose(void);
     bool bNormVector(void);
-    /* ------------------------------------------ MatrixX_t/Vector insertion operations ------------------------------------------ */
-    MatrixX_t InsertVector(const MatrixX_t& _Vector, const int16_t _posCol);
-    MatrixX_t InsertSubMatrix(const MatrixX_t& _subMatrix, const int16_t _posRow, const int16_t _posCol);
-    MatrixX_t InsertSubMatrix(const MatrixX_t& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    /* ------------------------------------------ DynMatrix/Vector insertion operations ------------------------------------------ */
+    DynMatrix InsertVector(const DynMatrix& _Vector, const int16_t _posCol);
+    DynMatrix InsertSubMatrix(const DynMatrix& _subMatrix, const int16_t _posRow, const int16_t _posCol);
+    DynMatrix InsertSubMatrix(const DynMatrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _lenRow, const int16_t _lenColumn);
-    MatrixX_t InsertSubMatrix(const MatrixX_t& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    DynMatrix InsertSubMatrix(const DynMatrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _posRowSub, const int16_t _posColSub,
                            const int16_t _lenRow, const int16_t _lenColumn);
     /* ---------------------------------------------------- Big operations ---------------------------------------------------- */
-    /* MatrixX_t invertion using Gauss-Jordan algorithm */
-    MatrixX_t inverse(void) const;
+    /* DynMatrix invertion using Gauss-Jordan algorithm */
+    DynMatrix inverse(void) const;
     /* Check the definiteness of a matrix */
     bool bMatrixIsPositiveDefinite(const bool checkPosSemidefinite = false) const;
     /* Return the vector (Mx1 matrix) correspond with the diagonal entries of 'this' */
-    MatrixX_t GetDiagonalEntries(void) const;
+    DynMatrix GetDiagonalEntries(void) const;
     /* Do the Cholesky Decomposition using Cholesky-Crout algorithm, return 'L' matrix */
-    MatrixX_t CholeskyDec(void) const;
+    DynMatrix CholeskyDec(void) const;
     /* Do Householder Transformation for QR Decomposition operation */
-    MatrixX_t HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
+    DynMatrix HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
     /* Do QR Decomposition for matrix using Householder Transformation */
-    bool QRDec(MatrixX_t & Qt, MatrixX_t & R) const;
+    bool QRDec(DynMatrix & Qt, DynMatrix & R) const;
     /* Do back-subtitution for upper triangular matrix A & column matrix B:
      * x = BackSubtitution(&A, &B)          ; for Ax = B
      */
-    MatrixX_t BackSubtitution(const MatrixX_t& A, const MatrixX_t& B) const;
+    DynMatrix BackSubtitution(const DynMatrix& A, const DynMatrix& B) const;
     /* Do forward-subtitution for lower triangular matrix A & column matrix B:
      * x = ForwardSubtitution(&A, &B)       ; for Ax = B
      */
-    MatrixX_t ForwardSubtitution(const MatrixX_t& A, const MatrixX_t& B) const;
-    /* ----------------------------------------------- MatrixX_t printing function ----------------------------------------------- */
+    DynMatrix ForwardSubtitution(const DynMatrix& A, const DynMatrix& B) const;
+    /* ----------------------------------------------- DynMatrix printing function ----------------------------------------------- */
 
     T & at(const int16_t _row, const int16_t _col) { return this->floatData[_row][_col]; }
     const T & at(const int16_t _row, const int16_t _col) const { return this->floatData[_row][_col]; }
     
 private:
-    /* Data structure of MatrixX_t class:
+    /* Data structure of DynMatrix class:
      *  0 <= i16row <= MATRIX_MAXIMUM_SIZE      ; i16row is the row of the matrix. i16row is invalid if (i16row == -1)
      *  0 <= i16col <= MATRIX_MAXIMUM_SIZE      ; i16col is the column of the matrix. i16col is invalid if (i16col == -1)
      * 
@@ -278,26 +278,26 @@ private:
 };
 
 template<arithmetic T>
-inline MatrixX_t<T> operator + (const T _scalar, const MatrixX_t<T>& _mat);
+inline DynMatrix<T> operator + (const T _scalar, const DynMatrix<T>& _mat);
 
 template<arithmetic T>
-inline MatrixX_t<T> operator - (const T _scalar, const MatrixX_t<T>& _mat);
+inline DynMatrix<T> operator - (const T _scalar, const DynMatrix<T>& _mat);
 
 template<arithmetic T>
-inline MatrixX_t<T> operator * (const T _scalar, const MatrixX_t<T>& _mat);
+inline DynMatrix<T> operator * (const T _scalar, const DynMatrix<T>& _mat);
 
 template<arithmetic T>
-inline MatrixX_t<T> MatIdentity(const int16_t _i16size);
+inline DynMatrix<T> MatIdentity(const int16_t _i16size);
 
 template<arithmetic T>
-constexpr MatrixX_t<T>::MatrixX_t(const int16_t _i16row, const int16_t _i16col) {
+constexpr DynMatrix<T>::DynMatrix(const int16_t _i16row, const int16_t _i16col) {
     this->i16row = _i16row;
     this->i16col = _i16col;
 }
 
 
 template<arithmetic T>
-constexpr MatrixX_t<T>::MatrixX_t(const int16_t _i16row, const int16_t _i16col, const T* initData) {
+constexpr DynMatrix<T>::DynMatrix(const int16_t _i16row, const int16_t _i16col, const T* initData) {
     this->i16row = _i16row;
     this->i16col = _i16col;
     
@@ -310,7 +310,7 @@ constexpr MatrixX_t<T>::MatrixX_t(const int16_t _i16row, const int16_t _i16col, 
 }
 
 template<arithmetic T>
-constexpr MatrixX_t<T>::MatrixX_t(const MatrixX_t<T>& old_obj) {
+constexpr DynMatrix<T>::DynMatrix(const DynMatrix<T>& old_obj) {
     /* For copy contructor, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = old_obj.i16row;
     this->i16col = old_obj.i16col;
@@ -327,7 +327,7 @@ constexpr MatrixX_t<T>::MatrixX_t(const MatrixX_t<T>& old_obj) {
 }
 
 template<arithmetic T>
-constexpr MatrixX_t<T>& MatrixX_t<T>::operator = (const MatrixX_t<T>& obj) {
+constexpr DynMatrix<T>& DynMatrix<T>::operator = (const DynMatrix<T>& obj) {
     /* For assignment operator, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = obj.i16row;
     this->i16col = obj.i16col;
@@ -345,29 +345,29 @@ constexpr MatrixX_t<T>& MatrixX_t<T>::operator = (const MatrixX_t<T>& obj) {
     return *this;
 }
 
-/* ---------------------------------------- MatrixX_t entry accessing functions ---------------------------------------- */
-/* ---------------------------------------- MatrixX_t entry accessing functions ---------------------------------------- */
+/* ---------------------------------------- DynMatrix entry accessing functions ---------------------------------------- */
+/* ---------------------------------------- DynMatrix entry accessing functions ---------------------------------------- */
 
 /* The preferred method to access the matrix data (boring code) */
 
 template<arithmetic T>
-inline T& MatrixX_t<T>::operator () (const int16_t _row, const int16_t _col) {
+inline T& DynMatrix<T>::operator () (const int16_t _row, const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at row evaluation)");
+               "DynMatrix index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at column _column)");
+               "DynMatrix index out-of-bounds (at column _column)");
     #endif
     return this->floatData[_row][_col];
 }
 
 template<arithmetic T>
-inline const T & MatrixX_t<T>::operator () (const int16_t _row, const int16_t _col) const {
+inline const T & DynMatrix<T>::operator () (const int16_t _row, const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at row evaluation)");
+               "DynMatrix index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at column _column)");
+               "DynMatrix index out-of-bounds (at column _column)");
     #endif
     return this->floatData[_row][_col];
 }
@@ -377,48 +377,48 @@ inline const T & MatrixX_t<T>::operator () (const int16_t _row, const int16_t _c
  */
 
 template<arithmetic T>
-inline T & MatrixX_t<T>::Proxy::operator [] (const int16_t _col) {
+inline T & DynMatrix<T>::Proxy::operator [] (const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
-                "MatrixX_t index out-of-bounds (at column evaluation)");
+                "DynMatrix index out-of-bounds (at column evaluation)");
     #endif
     return _array.ptr[_col];
 }
 
 template<arithmetic T>
-inline T MatrixX_t<T>::Proxy::operator [] (const int16_t _col) const {
+inline T DynMatrix<T>::Proxy::operator [] (const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
-                "MatrixX_t index out-of-bounds (at column evaluation)");
+                "DynMatrix index out-of-bounds (at column evaluation)");
     #endif
     return _array.cptr[_col];
 }
 
 template<arithmetic T>
-inline MatrixX_t<T>::Proxy MatrixX_t<T>::operator [] (const int16_t _row) {
+inline DynMatrix<T>::Proxy DynMatrix<T>::operator [] (const int16_t _row) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at row evaluation)");
+               "DynMatrix index out-of-bounds (at row evaluation)");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
 
 template<arithmetic T>
 
-inline const MatrixX_t<T>::Proxy MatrixX_t<T>::operator [] (const int16_t _row) const {
+inline const DynMatrix<T>::Proxy DynMatrix<T>::operator [] (const int16_t _row) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "MatrixX_t index out-of-bounds (at row evaluation)");
+               "DynMatrix index out-of-bounds (at row evaluation)");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
 
 
-/* -------------------------------------- MatrixX_t checking function declaration -------------------------------------- */
-/* -------------------------------------- MatrixX_t checking function declaration -------------------------------------- */
+/* -------------------------------------- DynMatrix checking function declaration -------------------------------------- */
+/* -------------------------------------- DynMatrix checking function declaration -------------------------------------- */
 
 template<arithmetic T>
-inline MatrixX_t<T>::operator bool(void) const{
+inline DynMatrix<T>::operator bool(void) const{
     /* Check whether the matrix is valid or not */
     if ((this->i16row > 0) && (this->i16row <= MATRIX_MAXIMUM_SIZE) &&
         (this->i16col > 0) && (this->i16col <= MATRIX_MAXIMUM_SIZE))
@@ -430,20 +430,20 @@ inline MatrixX_t<T>::operator bool(void) const{
 }
 
 template<arithmetic T>
-inline void MatrixX_t<T>::invalid(void) {
+inline void DynMatrix<T>::invalid(void) {
     this->i16row = -1;
     this->i16col = -1;
 }
 
-/* ------------------------------------------ MatrixX_t elementary operations ------------------------------------------ */
-/* ------------------------------------------ MatrixX_t elementary operations ------------------------------------------ */
+/* ------------------------------------------ DynMatrix elementary operations ------------------------------------------ */
+/* ------------------------------------------ DynMatrix elementary operations ------------------------------------------ */
 /* TODO: We could do loop unrolling here for elementary, simple, and matrix insertion operations. It *might* speed up
  *        the computation time up to 20-30% for processor with FMAC and cached CPU (I still mull on this because
  *        the code will be awful).
  */
 
 template<arithmetic T>
-inline bool MatrixX_t<T>::operator == (const MatrixX_t<T> & _compare) const {
+inline bool DynMatrix<T>::operator == (const DynMatrix<T> & _compare) const {
     if ((this->i16row != _compare.i16row) || (this->i16col != _compare.i16col)) {
         return false;
     }
@@ -459,13 +459,13 @@ inline bool MatrixX_t<T>::operator == (const MatrixX_t<T> & _compare) const {
 }
 
 template<arithmetic T>
-inline bool MatrixX_t<T>::operator != (const MatrixX_t<T> & _compare) const {
+inline bool DynMatrix<T>::operator != (const DynMatrix<T> & _compare) const {
     return (!(*this == _compare));
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator - (void) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> DynMatrix<T>::operator - (void) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col, DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -476,8 +476,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator - (void) const {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator + (const T _scalar) const {
-    MatrixX_t _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> DynMatrix<T>::operator + (const T _scalar) const {
+    DynMatrix _outp(this->i16row, this->i16col, DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -488,8 +488,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator + (const T _scalar) const {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator - (const T _scalar) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> DynMatrix<T>::operator - (const T _scalar) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col, DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -500,8 +500,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator - (const T _scalar) const {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator * (const T _scalar) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> DynMatrix<T>::operator * (const T _scalar) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col, DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -512,8 +512,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator * (const T _scalar) const {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator / (const T _scalar) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> DynMatrix<T>::operator / (const T _scalar) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col, DynMatrix<T>::NoInitMatZero);
 
     if (ABS(_scalar) < T(1e-5)) {
         _outp.invalid();
@@ -528,8 +528,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator / (const T _scalar) const {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> operator + (const T _scalar, const MatrixX_t<T>& _mat) {
-    MatrixX_t<T> _outp(_mat.rows()(), _mat.cols()(), MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> operator + (const T _scalar, const DynMatrix<T>& _mat) {
+    DynMatrix<T> _outp(_mat.rows()(), _mat.cols()(), DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
         for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
@@ -540,8 +540,8 @@ inline MatrixX_t<T> operator + (const T _scalar, const MatrixX_t<T>& _mat) {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> operator - (const T _scalar, const MatrixX_t<T>& _mat) {
-    MatrixX_t<T> _outp(_mat.rows()(), _mat.cols()(), MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> operator - (const T _scalar, const DynMatrix<T>& _mat) {
+    DynMatrix<T> _outp(_mat.rows()(), _mat.cols()(), DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
         for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
@@ -552,8 +552,8 @@ inline MatrixX_t<T> operator - (const T _scalar, const MatrixX_t<T>& _mat) {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> operator * (const T _scalar, const MatrixX_t<T>& _mat) {
-    MatrixX_t<T> _outp(_mat.rows()(), _mat.cols()(), MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> operator * (const T _scalar, const DynMatrix<T>& _mat) {
+    DynMatrix<T> _outp(_mat.rows()(), _mat.cols()(), DynMatrix<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
         for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
@@ -564,8 +564,8 @@ inline MatrixX_t<T> operator * (const T _scalar, const MatrixX_t<T>& _mat) {
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator + (const MatrixX_t<T>& _matAdd) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col);
+inline DynMatrix<T> DynMatrix<T>::operator + (const DynMatrix<T>& _matAdd) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col);
     if ((this->i16row != _matAdd.i16row) || (this->i16col != _matAdd.i16col)) {
         _outp.invalid();
         return _outp;
@@ -580,8 +580,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator + (const MatrixX_t<T>& _matAdd) const
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator - (const MatrixX_t<T>& _matSub) const {
-    MatrixX_t<T> _outp(this->i16row, this->i16col);
+inline DynMatrix<T> DynMatrix<T>::operator - (const DynMatrix<T>& _matSub) const {
+    DynMatrix<T> _outp(this->i16row, this->i16col);
     if ((this->i16row != _matSub.i16row) || (this->i16col != _matSub.i16col)) {
         _outp.invalid();
         return _outp;
@@ -596,8 +596,8 @@ inline MatrixX_t<T> MatrixX_t<T>::operator - (const MatrixX_t<T>& _matSub) const
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::operator * (const MatrixX_t<T>& _matMul) const {
-    MatrixX_t<T> _outp(this->i16row, _matMul.i16col);
+inline DynMatrix<T> DynMatrix<T>::operator * (const DynMatrix<T>& _matMul) const {
+    DynMatrix<T> _outp(this->i16row, _matMul.i16col);
     if ((this->i16col != _matMul.i16row)) {
         _outp.invalid();
         return _outp;
@@ -615,18 +615,18 @@ inline MatrixX_t<T> MatrixX_t<T>::operator * (const MatrixX_t<T>& _matMul) const
 }
 
 
-/* -------------------------------------------- Simple MatrixX_t operations -------------------------------------------- */
-/* -------------------------------------------- Simple MatrixX_t operations -------------------------------------------- */
+/* -------------------------------------------- Simple DynMatrix operations -------------------------------------------- */
+/* -------------------------------------------- Simple DynMatrix operations -------------------------------------------- */
 
 template<arithmetic T>
-inline void MatrixX_t<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
+inline void DynMatrix<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
     if (ABS((*this)(_i,_j)) < T(1e-5)) {
         (*this)(_i,_j) = T(0);
     }
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::RoundingMatrixToZero(void) {
+inline DynMatrix<T> DynMatrix<T>::RoundingMatrixToZero(void) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (ABS((*this)(_i,_j)) < T(1e-5)) {
@@ -638,7 +638,7 @@ inline MatrixX_t<T> MatrixX_t<T>::RoundingMatrixToZero(void) {
 }
 
 template<arithmetic T>
-inline void MatrixX_t<T>::vSetHomogen(const T _val) {
+inline void DynMatrix<T>::vSetHomogen(const T _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = _val;
@@ -647,12 +647,12 @@ inline void MatrixX_t<T>::vSetHomogen(const T _val) {
 }
 
 template<typename T>
-inline void MatrixX_t<T>::setZero(void) {
+inline void DynMatrix<T>::setZero(void) {
     this->vSetHomogen(T(0));
 }
 
 template<arithmetic T>
-inline void MatrixX_t<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
+inline void DynMatrix<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = T((rand() % (_maxRand - _minRand + 1)) + _minRand);
@@ -661,7 +661,7 @@ inline void MatrixX_t<T>::vSetRandom(const int32_t _maxRand, const int32_t _minR
 }
 
 template<arithmetic T>
-inline void MatrixX_t<T>::vSetDiag(const T _val) {
+inline void DynMatrix<T>::vSetDiag(const T _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (_i == _j) {
@@ -674,13 +674,13 @@ inline void MatrixX_t<T>::vSetDiag(const T _val) {
 }
 
 template<arithmetic T>
-inline void MatrixX_t<T>::vSetIdentity(void) {
+inline void DynMatrix<T>::vSetIdentity(void) {
     this->vSetDiag(T(1));
 }
 
 template<arithmetic T>
-inline MatrixX_t<T> MatIdentity(const int16_t _i16size) {
-    MatrixX_t _outp(_i16size, _i16size, MatrixX_t<T>::NoInitMatZero);
+inline DynMatrix<T> MatIdentity(const int16_t _i16size) {
+    DynMatrix _outp(_i16size, _i16size, DynMatrix<T>::NoInitMatZero);
     _outp.vSetDiag(T(1));   
     return _outp;
 }
@@ -688,8 +688,8 @@ inline MatrixX_t<T> MatIdentity(const int16_t _i16size) {
 
 /* Return the transpose of the matrix */
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::transpose(void) {
-    MatrixX_t<T> _outp(this->i16col, this->i16row);
+inline DynMatrix<T> DynMatrix<T>::transpose(void) {
+    DynMatrix<T> _outp(this->i16col, this->i16row);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             _outp(_j,_i) = (*this)(_i,_j);
@@ -700,7 +700,7 @@ inline MatrixX_t<T> MatrixX_t<T>::transpose(void) {
 
 /* Normalize the vector */
 template<arithmetic T>
-inline bool MatrixX_t<T>::bNormVector(void) {
+inline bool DynMatrix<T>::bNormVector(void) {
     T _normM = T(0);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -722,11 +722,11 @@ inline bool MatrixX_t<T>::bNormVector(void) {
 }
 
 
-/* --------------------------------------- MatrixX_t/Vector insertion operations --------------------------------------- */
-/* --------------------------------------- MatrixX_t/Vector insertion operations --------------------------------------- */
+/* --------------------------------------- DynMatrix/Vector insertion operations --------------------------------------- */
+/* --------------------------------------- DynMatrix/Vector insertion operations --------------------------------------- */
 
 /* Insert vector into matrix at _posCol position
- * Example: A = MatrixX_t 3x3, B = Vector 3x1
+ * Example: A = DynMatrix 3x3, B = Vector 3x1
  *
  *  C = A.InsertVector(B, 1);
  *
@@ -739,8 +739,8 @@ inline bool MatrixX_t<T>::bNormVector(void) {
  *      [A20  B20  A22]
  */
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::InsertVector(const MatrixX_t& _Vector, const int16_t _posCol) {
-    MatrixX_t<T> _outp(*this);
+inline DynMatrix<T> DynMatrix<T>::InsertVector(const DynMatrix& _Vector, const int16_t _posCol) {
+    DynMatrix<T> _outp(*this);
     if ((_Vector.i16row > this->i16row) || (_Vector.i16col+_posCol > this->i16col)) {
         /* Return false */
         _outp.invalid();
@@ -753,7 +753,7 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertVector(const MatrixX_t& _Vector, const i
 }
 
 /* Insert submatrix into matrix at _posRow & _posCol position
- * Example: A = MatrixX_t 4x4, B = MatrixX_t 2x3
+ * Example: A = DynMatrix 4x4, B = DynMatrix 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1);
  *
@@ -770,8 +770,8 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertVector(const MatrixX_t& _Vector, const i
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t& _subMatrix, const int16_t _posRow, const int16_t _posCol) {
-    MatrixX_t<T> _outp(*this);
+inline DynMatrix<T> DynMatrix<T>::InsertSubMatrix(const DynMatrix& _subMatrix, const int16_t _posRow, const int16_t _posCol) {
+    DynMatrix<T> _outp(*this);
     if (((_subMatrix.i16row+_posRow) > this->i16row) || ((_subMatrix.i16col+_posCol) > this->i16col)) {
         /* Return false */
         _outp.invalid();
@@ -788,7 +788,7 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t& _subMatrix, c
 /* Insert the first _lenRow-th and first _lenColumn-th submatrix into matrix;
  *  at the matrix's _posRow and _posCol position.
  * 
- * Example: A = MatrixX_t 4x4, B = MatrixX_t 2x3
+ * Example: A = DynMatrix 4x4, B = DynMatrix 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1, 2, 2);
  *
@@ -804,10 +804,10 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t& _subMatrix, c
  *      [A30  A31  A32  A33]
  */
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline DynMatrix<T> DynMatrix<T>::InsertSubMatrix(const DynMatrix<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                                       const int16_t _lenRow, const int16_t _lenColumn)
 {
-    MatrixX_t _outp(*this);
+    DynMatrix _outp(*this);
     if (((_lenRow+_posRow) > this->i16row) || ((_lenColumn+_posCol) > this->i16col) ||
         (_lenRow > _subMatrix.i16row) || (_lenColumn > _subMatrix.i16col))
     {
@@ -826,7 +826,7 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t<T>& _subMatrix
 /* Insert the _lenRow & _lenColumn submatrix, start from _posRowSub & _posColSub submatrix;
  *  into matrix at the matrix's _posRow and _posCol position.
  * 
- * Example: A = MatrixX_t 4x4, B = MatrixX_t 2x3
+ * Example: A = DynMatrix 4x4, B = DynMatrix 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1, 0, 1, 1, 2);
  *
@@ -841,11 +841,11 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t<T>& _subMatrix
  *      [A30  A31  A32  A33]
  */
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline DynMatrix<T> DynMatrix<T>::InsertSubMatrix(const DynMatrix<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                         const int16_t _posRowSub, const int16_t _posColSub,
                         const int16_t _lenRow, const int16_t _lenColumn)
 {
-    MatrixX_t _outp(*this);
+    DynMatrix _outp(*this);
     if (((_lenRow+_posRow) > this->i16row) || ((_lenColumn+_posCol) > this->i16col) ||
         ((_posRowSub+_lenRow) > _subMatrix.i16row) || ((_posColSub+_lenColumn) > _subMatrix.i16col))
     {
@@ -868,16 +868,16 @@ inline MatrixX_t<T> MatrixX_t<T>::InsertSubMatrix(const MatrixX_t<T>& _subMatrix
 /* inverse operation using Gauss-Jordan algorithm */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
-    MatrixX_t _outp(this->i16row, this->i16col);
-    MatrixX_t _temp(*this);
+inline DynMatrix<T> DynMatrix<T>::inverse(void) const {
+    DynMatrix _outp(this->i16row, this->i16col);
+    DynMatrix _temp(*this);
     _outp.vSetIdentity();
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
             if (ABS(_temp(_j,_j)) < T(1e-7)) {
-                /* MatrixX_t is non-invertible */
+                /* DynMatrix is non-invertible */
                 _outp.invalid();
                 return _outp;
             }
@@ -911,7 +911,7 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
     for (int16_t _j = (_temp.i16row)-1; _j > 0; _j--) {
         for (int16_t _i = _j-1; _i >= 0; _i--) {
             if (ABS(_temp(_j,_j)) < T(1e-7)) {
-                /* MatrixX_t is non-invertible */
+                /* DynMatrix is non-invertible */
                 _outp.invalid();
                 return _outp;
             }
@@ -931,7 +931,7 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
     /* Normalization */
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
         if (ABS(_temp(_i,_i)) < T(1e-7)) {
-            /* MatrixX_t is non-invertible */
+            /* DynMatrix is non-invertible */
             _outp.invalid();
             return _outp;
         }
@@ -954,9 +954,9 @@ inline MatrixX_t<T> MatrixX_t<T>::inverse(void) const {
  */
 
 template<arithmetic T>
-inline bool MatrixX_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) const {
+inline bool DynMatrix<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) const {
     bool _posDef, _posSemiDef;
-    MatrixX_t _temp(*this);
+    DynMatrix _temp(*this);
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
@@ -1013,8 +1013,8 @@ inline bool MatrixX_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefin
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::GetDiagonalEntries(void) const {
-    MatrixX_t _temp(this->i16row, 1);
+inline DynMatrix<T> DynMatrix<T>::GetDiagonalEntries(void) const {
+    DynMatrix _temp(this->i16row, 1);
     
     if (this->i16row != this->i16col) {
         _temp.invalid();
@@ -1042,11 +1042,11 @@ inline MatrixX_t<T> MatrixX_t<T>::GetDiagonalEntries(void) const {
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
+inline DynMatrix<T> DynMatrix<T>::CholeskyDec(void) const {
     T _tempFloat;
 
     /* Note that _outp need to be initialized as zero matrix */
-    MatrixX_t _outp(this->i16row, this->i16col);
+    DynMatrix _outp(this->i16row, this->i16col);
     _outp.setZero();
     if (this->i16row != this->i16col) {
         _outp.invalid();
@@ -1060,7 +1060,7 @@ inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_i,_k));
                 }
                 if (_tempFloat < -T(1e-7)) {
-                    /* MatrixX_t is not positif (semi)definit */
+                    /* DynMatrix is not positif (semi)definit */
                     _outp.invalid();
                     return _outp;
                 }
@@ -1074,7 +1074,7 @@ inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_j,_k));
                 }
                 if (ABS(_outp(_j,_j)) < T(1e-7)) {
-                    /* MatrixX_t is not positif definit */
+                    /* DynMatrix is not positif definit */
                     _outp.invalid();
                     return _outp;
                 }
@@ -1090,7 +1090,7 @@ inline MatrixX_t<T> MatrixX_t<T>::CholeskyDec(void) const {
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
+inline DynMatrix<T> DynMatrix<T>::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
     T _tempFloat;
     T _xLen;
     T _x1;
@@ -1098,9 +1098,9 @@ inline MatrixX_t<T> MatrixX_t<T>::HouseholderTransformQR(const int16_t _rowTrans
     T _vLen2;
     
     /* Note that _outp & _vectTemp need to be initialized as zero matrix */
-    MatrixX_t _outp(this->i16row, this->i16row);
+    DynMatrix _outp(this->i16row, this->i16row);
     _outp.setZero();
-    MatrixX_t _vectTemp(this->i16row, 1);
+    DynMatrix _vectTemp(this->i16row, 1);
     _vectTemp.setZero();
     
     if ((_rowTransform >= this->i16row) || (_colTransform >= this->i16col)) {
@@ -1175,8 +1175,8 @@ inline MatrixX_t<T> MatrixX_t<T>::HouseholderTransformQR(const int16_t _rowTrans
  */
 
 template<arithmetic T>
-inline bool MatrixX_t<T>::QRDec(MatrixX_t<T>& Qt, MatrixX_t<T>& R) const {
-    MatrixX_t Qn(Qt.i16row, Qt.i16col);
+inline bool DynMatrix<T>::QRDec(DynMatrix<T>& Qt, DynMatrix<T>& R) const {
+    DynMatrix Qn(Qt.i16row, Qt.i16col);
     if ((this->i16row < this->i16col) || (Qt.i16roow != Qt.i16col) || (Qt.i16row != this->i16row) ||
         (R.i16row != this->i16row) || (R.i16col != this->i16col))
     {
@@ -1222,8 +1222,8 @@ inline bool MatrixX_t<T>::QRDec(MatrixX_t<T>& Qt, MatrixX_t<T>& R) const {
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::BackSubtitution(const MatrixX_t<T>& A, const MatrixX_t<T>& B) const {
-    MatrixX_t _outp(A.i16row, 1);
+inline DynMatrix<T> DynMatrix<T>::BackSubtitution(const DynMatrix<T>& A, const DynMatrix<T>& B) const {
+    DynMatrix _outp(A.i16row, 1);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.invalid();
         return _outp;
@@ -1254,8 +1254,8 @@ inline MatrixX_t<T> MatrixX_t<T>::BackSubtitution(const MatrixX_t<T>& A, const M
  */
 
 template<arithmetic T>
-inline MatrixX_t<T> MatrixX_t<T>::ForwardSubtitution(const MatrixX_t<T> & A, const MatrixX_t<T> & B) const {
-    MatrixX_t _outp(A.i16row, 1);
+inline DynMatrix<T> DynMatrix<T>::ForwardSubtitution(const DynMatrix<T> & A, const DynMatrix<T> & B) const {
+    DynMatrix _outp(A.i16row, 1);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.invalid();
         return _outp;
@@ -1276,7 +1276,7 @@ inline MatrixX_t<T> MatrixX_t<T>::ForwardSubtitution(const MatrixX_t<T> & A, con
 }
 
 template<arithmetic T>
-__inline OutputStream & operator<<(OutputStream & os, const MatrixX_t<T> & mat){
+__inline OutputStream & operator<<(OutputStream & os, const DynMatrix<T> & mat){
     os << "[ ";
 	for (int16_t _i = 0; _i < mat.rows(); _i++) {
         if(_i != 0) os << "  ";
@@ -1294,9 +1294,9 @@ __inline OutputStream & operator<<(OutputStream & os, const MatrixX_t<T> & mat){
     return os;
 }
 
-using MatrixX = MatrixX_t<real_t>;
-using MatrixXf = MatrixX_t<float>;
-using MatrixXd = MatrixX_t<float>;
+using MatrixX = DynMatrix<real_t>;
+using MatrixXf = DynMatrix<float>;
+using MatrixXd = DynMatrix<float>;
     
 }
 

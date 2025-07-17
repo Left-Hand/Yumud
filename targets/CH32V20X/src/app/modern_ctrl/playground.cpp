@@ -10,19 +10,19 @@ void test_lqr(){
     constexpr size_t Un = 1; // Control input dimension
 
     // State transition matrix A
-    constexpr Matrix_t<double, Xn, Xn> A{
+    constexpr Matrix<double, Xn, Xn> A{
         0.0, 1.0,
         10.0, 0.0
     };
 
     // Control matrix B
-    constexpr Matrix_t<double, Xn, Un> B{
+    constexpr Matrix<double, Xn, Un> B{
         0.0,
         -1.0
     };
 
     // State cost matrix Q
-    constexpr Matrix_t<double, Xn, Xn> Q{
+    constexpr Matrix<double, Xn, Xn> Q{
         1.0, 0.0,
         0.0, 0.1
     };
@@ -30,7 +30,7 @@ void test_lqr(){
 
 
     // Control cost matrix R
-    constexpr Matrix_t<double, Un, Un> R{
+    constexpr Matrix<double, Un, Un> R{
         1.0
     };
 

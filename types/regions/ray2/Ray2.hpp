@@ -62,24 +62,24 @@ public:
         return is_equal_approx(this->rad, other.rad);
     }
 
-    [[nodiscard]] __fast_inline constexpr std::optional<Vector2<T>> intersection(const Ray2<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr Option<Vector2<T>> intersection(const Ray2<T> & other) const{
         return this->to_line().intersection(other.to_line());
     }
 
     [[nodiscard]] __fast_inline constexpr Line2<T> normal() const{
-        return Line2<T>::from_point_and_rad(this->org, this->rad + T(PI/2));
+        return Line2<T>::from_point_and_angle(this->org, this->rad + T(PI/2));
     }
 
     [[nodiscard]] __fast_inline constexpr Ray2<T> rotated(const T & r) const{
         return {this->org, this->rad + r};
     }
     
-    [[nodiscard]] __fast_inline constexpr Vector2<T> endpoint(const T & l) const{
+    [[nodiscard]] __fast_inline constexpr Vector2<T> endpoint_at_length(const T & l) const{
         return this->org + Vector2<T>{l, 0}.rotated(this->rad);
     }
     
-    [[nodiscard]] __fast_inline constexpr Segment2<T> cut(const T & l) const{
-        return {this->org, endpoint(l)};
+    [[nodiscard]] __fast_inline constexpr Segment2<T> cut_by_length(const T & l) const{
+        return {this->org, endpoint_at_length(l)};
     }
 
     [[nodiscard]] __fast_inline constexpr std::tuple<T, T, T> abc() const{
@@ -98,13 +98,11 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Line2<T> to_line() const{
-        return Line2<T>::from_point_and_rad(this->org, this->rad);
+        return Line2<T>::from_point_and_angle(this->org, this->rad);
     }
 };
 
 
-template<size_t Q>
-using Ray2q = Ray2<iq_t<Q>>;
 using Ray2f = Ray2<float>;
 using Ray2d = Ray2<double>;
 
