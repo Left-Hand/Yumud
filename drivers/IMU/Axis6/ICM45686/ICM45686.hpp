@@ -135,9 +135,6 @@ public:
 private:
     InvensenseSensor_Phy phy_;
     
-
-
-    
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return phy_.write_reg(addr, data);
     }

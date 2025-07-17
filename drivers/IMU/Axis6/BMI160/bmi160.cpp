@@ -129,14 +129,14 @@ IResult<> BMI160::self_test_acc(){
         reg.acc_odr = AccOdr::_1600Hz;
         reg.acc_bwp= 2;
         reg.acc_us = 0;
-        if(const auto res = phy_.write_reg(reg);
+        if(const auto res = write_reg(reg);
             unlikely(res.is_err())) return res;
     }
 
     {
         auto reg = RegCopy(regs_.self_test);
         reg.acc_self_test_en = 1;
-        if(const auto res = phy_.write_reg(reg);
+        if(const auto res = write_reg(reg);
             unlikely(res.is_err())) return res;
     }
 
@@ -150,7 +150,7 @@ IResult<> BMI160::self_test_acc(){
     {
         auto reg = RegCopy(regs_.self_test);
         reg.acc_self_test_en = 0;
-        if(const auto res = phy_.write_reg(reg);
+        if(const auto res = write_reg(reg);
             unlikely(res.is_err())) return res;
     }
 
@@ -167,14 +167,14 @@ IResult<> BMI160::self_test_gyr(){
     {
         auto reg = RegCopy(regs_.self_test);
         reg.gyr_self_test_en = 1;
-        if(const auto res = phy_.write_reg(reg);
+        if(const auto res = write_reg(reg);
             unlikely(res.is_err())) return res;
     }
 
     if(const auto res = 
         retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             auto & reg = regs_.status;
-            if(const auto res = (phy_.read_regs(reg));
+            if(const auto res = (read_reg(reg));
                 unlikely(res.is_err())) return Err(res.unwrap_err());
 
             if (reg.gyr_self_test_ok != 1){
@@ -188,7 +188,7 @@ IResult<> BMI160::self_test_gyr(){
     {
         auto reg = RegCopy(regs_.self_test);
         reg.gyr_self_test_en = 1;
-        if(const auto res = phy_.write_reg(reg);
+        if(const auto res = write_reg(reg);
             unlikely(res.is_err())) return res;
     }
 
@@ -209,11 +209,11 @@ IResult<> BMI160::update(){
 
 IResult<> BMI160::validate(){
     uint8_t dummy;
-    if(const auto res = phy_.read_reg(0x7f, dummy);
+    if(const auto res = read_reg(0x7f, dummy);
         unlikely(res.is_err())) return Err(res.unwrap_err());
 
     auto & reg = regs_.chip_id;
-    if(const auto res = phy_.read_reg(reg.address, reg.data);
+    if(const auto res = read_reg(reg);
         unlikely(res.is_err())) return Err(res.unwrap_err());
 
     if(reg.data != reg.CORRECT_ID)
@@ -223,7 +223,7 @@ IResult<> BMI160::validate(){
 }
 
 IResult<> BMI160::reset(){
-    return phy_.write_command(uint8_t(Command::SOFT_RESET));
+    return write_command(std::bit_cast<uint8_t>(Command::SOFT_RESET));
 }
 
 IResult<Vector3<q24>> BMI160::read_acc(){
@@ -265,13 +265,13 @@ IResult<> BMI160::set_pmu_mode(const PmuType pmu, const PmuMode mode){
         }
     }();
 
-    return phy_.write_command(cmd);
+    return write_command(cmd);
 }
 
 IResult<BMI160::PmuMode> BMI160::get_pmu_mode(const PmuType type){
     auto & reg = regs_.pmu_status;
 
-    if(const auto res = phy_.read_regs(reg);
+    if(const auto res = read_reg(reg);
         unlikely(res.is_err())) return Err(res.unwrap_err());
 
     switch(type){
@@ -286,15 +286,15 @@ IResult<> BMI160::set_acc_odr(const AccOdr odr){
     auto reg = RegCopy(regs_.acc_conf);
     reg.acc_odr = odr;
     reg.acc_bwp = 0b010;
-    return phy_.write_reg(reg);
+    return write_reg(reg);
 }
 
 IResult<> BMI160::set_acc_fs(const AccFs fs){
     auto reg = RegCopy(regs_.acc_fs);
     reg.acc_fs = fs;
-    if(const auto res = phy_.write_reg(reg);
+    if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->acc_scale_ = this->calculate_acc_scale(fs);
+    this->acc_scale_ = this->accfs_to_scale(fs);
     return Ok();
 }
 
@@ -302,15 +302,15 @@ IResult<> BMI160::set_gyr_odr(const GyrOdr odr){
     auto reg = RegCopy(regs_.gyr_conf);
     reg.gyr_odr = odr;
     reg.gyr_bwp = 0b010;
-    return phy_.write_reg(reg);
+    return write_reg(reg);
 
 }
 IResult<> BMI160::set_gyr_fs(const GyrFs fs){
     auto reg = RegCopy(regs_.gyr_fs);
     reg.gyr_fs = fs;
-    if(const auto res = phy_.write_reg(reg);
+    if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->gyr_scale_ = this->calculate_gyr_scale(fs);
+    this->gyr_scale_ = this->gyrfs_to_scale(fs);
     return Ok();
 }
 

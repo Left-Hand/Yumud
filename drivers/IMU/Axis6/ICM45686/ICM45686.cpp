@@ -19,28 +19,6 @@ using Error = ICM45686::Error;
 #endif
 
 
-
-template<typename Fn, typename Fn_Dur>
-__inline Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
-    if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
-    Result<void, Error> res = std::forward<Fn>(fn)();
-    if(res.is_ok()) return Ok();
-    if(!times) return res;
-    else return retry(times - 1, std::forward<Fn>(fn), std::forward<Fn_Dur>(fn_dur));
-}
-
-
-template<typename Fn>
-__inline Result<void, Error> retry(const size_t times, Fn && fn){
-    return retry(times, std::forward<Fn>(fn), nullptr);
-}
-
-template<typename Fn>
-__inline Result<void, Error> wait(const size_t timeout, Fn && fn){
-    return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
-}
-
-
 Result<void, Error> ICM45686::validate(){
     uint8_t Product_ID = 0x00;
 

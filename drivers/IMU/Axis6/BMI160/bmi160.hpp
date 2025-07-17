@@ -33,28 +33,46 @@ public:
 
 private:
     using  Regs = BMI160_Regs;
-    Regs regs_;
     BoschSensor_Phy phy_;
+    Regs regs_;
 
-    real_t acc_scale_ = 0;
-    real_t gyr_scale_ = 0;
+    q20 acc_scale_ = 0;
+    q20 gyr_scale_ = 0;
+
+    [[nodiscard]] IResult<> write_command(uint8_t cmd){
+        return phy_.write_command(std::bit_cast<uint8_t>(cmd));
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        return phy_.write_reg(reg);
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return phy_.read_reg(reg);
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, T & data){
+        return phy_.read_reg(addr, data);
+    }
 
     [[nodiscard]] IResult<> self_test_acc();
     [[nodiscard]] IResult<> self_test_gyr();
     [[nodiscard]] static constexpr 
-    real_t calculate_acc_scale(const AccFs fs){
-        constexpr auto g = real_t(9.806);
+    q20 accfs_to_scale(const AccFs fs){
         switch(fs){
-            case AccFs::_2G:    return g * 4;
-            case AccFs::_4G:    return g * 8;
-            case AccFs::_8G:    return g * 16;
-            case AccFs::_16G:   return g * 32;
+            case AccFs::_2G:    return GRAVITY_ACC<q20> * 4;
+            case AccFs::_4G:    return GRAVITY_ACC<q20> * 8;
+            case AccFs::_8G:    return GRAVITY_ACC<q20> * 16;
+            case AccFs::_16G:   return GRAVITY_ACC<q20> * 32;
             default: __builtin_unreachable();
         }
     }
 
     [[nodiscard]] static constexpr 
-    real_t calculate_gyr_scale(const GyrFs fs){
+    q20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
             case GyrFs::_125deg:    return 2 * 125_deg;
             case GyrFs::_250deg:    return 2 * 250_deg;

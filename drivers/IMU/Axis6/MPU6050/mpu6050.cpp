@@ -79,22 +79,33 @@ IResult<> MPU6050::validate(){
 }
 
 IResult<> MPU6050::init(const Config & cfg){
-    RETURN_ON_ERR(validate())
-    RETURN_ON_ERR(write_reg(0x6b, 0))
-    RETURN_ON_ERR(write_reg(0x19, 0x00))
-    RETURN_ON_ERR(write_reg(0x1a, 0x00))
-    RETURN_ON_ERR(write_reg(0x13, 0))
-    RETURN_ON_ERR(write_reg(0x15, 0))
-    RETURN_ON_ERR(write_reg(0x17, 0))
-    RETURN_ON_ERR(write_reg(0x38, 0x00))
-    RETURN_ON_ERR(set_acc_fs(cfg.acc_fs))
-    RETURN_ON_ERR(set_gyr_fs(cfg.gyr_fs))
+    if(const auto res = validate();
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x6b, 0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x19, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x1a, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x13, 0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x15, 0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x17, 0);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x38, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_acc_fs(cfg.acc_fs);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = set_gyr_fs(cfg.gyr_fs);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
+
 IResult<> MPU6050::update(){
     auto res = this->read_burst(
         acc_x_reg.address, std::span(&acc_x_reg.as_ref(), 7));
-    data_valid = res.is_ok();
+    is_data_valid_ = res.is_ok();
     return res;
 }
 
@@ -113,8 +124,10 @@ IResult<Vector3<q24>> MPU6050::read_gyr(){
 }
 
 IResult<real_t> MPU6050::read_temp(){
-    return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) / 340);
+    static constexpr auto INV_340 = real_t(1.0 / 340);
+    return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) * INV_340);
 }
+
 IResult<> MPU6050::set_acc_fs(const AccFs range){
     this->acc_scaler_ = this->calculate_acc_scale(range);
 
@@ -129,6 +142,7 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
     }
     return Ok{Package(whoami_reg.data)};
 }
+
 IResult<> MPU6050::set_gyr_fs(const GyrFs range){
     this->gyr_scaler_ = this->calculate_gyr_scale(range);
     auto reg = RegCopy(gyr_conf_reg);
