@@ -96,10 +96,10 @@ struct ComplementaryFilter{
 
     constexpr T operator ()(const T rot, const T gyr){
 
-        if(!inited_){
+        if(!is_inited_){
             rot_ = rot;
             rot_unfiltered_ = rot;
-            inited_ = true;
+            is_inited_ = true;
         }else{
             rot_unfiltered_ += gyr * delta_t_;
             rot_unfiltered_ = kq_ * rot_ + (1-kq_) * rot;
@@ -117,7 +117,7 @@ struct ComplementaryFilter{
         rot_unfiltered_ = 0;
         last_rot_ = 0;
         last_gyr_ = 0;
-        inited_ = false;
+        is_inited_ = false;
     }
 
     constexpr T get() const {
@@ -136,7 +136,7 @@ private:
 
     uint delta_t_;
     
-    bool inited_;
+    bool is_inited_;
 };
 
 }

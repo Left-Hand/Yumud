@@ -28,7 +28,7 @@
 
 #include "types/vectors/quat/Quat.hpp"
 
-#include "digipw/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm_.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
@@ -213,10 +213,10 @@ struct GestureEstimator{
         const auto axis_theta_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
         const auto axis_omega_raw = gyr.z;
 
-        if(inited_ == false){
+        if(is_inited_ == false){
             theta_ = axis_theta_raw;
             omega_ = axis_omega_raw;
-            inited_ = true;
+            is_inited_ = true;
             return;
         }
 
@@ -232,7 +232,7 @@ struct GestureEstimator{
         //     ma730_.read_lap_position().examine(),
         //     meas_elecrad_
         //     // exe_us_
-        //     // // leso.get_disturbance(),
+        //     // // leso_.get_disturbance(),
         //     // meas_elecrad_
         // );
 
@@ -250,13 +250,15 @@ struct GestureEstimator{
 
 private:
     using CompFilter = dsp::ComplementaryFilter<q20>;
+    using CompFilterConfig = typename CompFilter::Config;
+
     real_t delta_time_;
     CompFilter comp_filter_;
     real_t theta_ = 0;
     real_t omega_ = 0;
-    bool inited_ = false;
+    bool is_inited_ = false;
 
-    static constexpr typename CompFilter::Config
+    static constexpr CompFilterConfig
     make_comp_filter_config(const uint32_t fs){
         return {
             .kq = 0.90_r,
@@ -267,7 +269,31 @@ private:
 };
 
 
+struct Gesture{
+    real_t roll;
+    real_t pitch;
+
+    constexpr Gesture lerp(const Gesture & other, const real_t ratio) const{
+        return Gesture{
+            .roll = roll + (other.roll - roll) * ratio,
+            .pitch = pitch + (other.pitch - pitch) * ratio
+        };
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const Gesture & gesture){
+        return os << "roll: " << gesture.roll << ", pitch: " << gesture.pitch;
+    }
+};
+
+struct CircularGestureCurve{
+
+};
+
+struct GesturePlanner{
+};
+
 void bldc_main(){
+    static constexpr auto UART_BAUD = 115200 * 2;
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
@@ -291,7 +317,7 @@ void bldc_main(){
     ledg.outpp();
     
     DBG_UART.init({
-        .baudrate = 576000
+        .baudrate = UART_BAUD
     });
 
 
@@ -428,7 +454,7 @@ void bldc_main(){
     mp6540.init();
     mp6540.set_so_res(10'000);
     
-    SVPWM3 svpwm {mp6540};
+    SVPWM3 svpwm_ {mp6540};
     
 
     [[maybe_unused]] auto & u_sense = mp6540.ch(1);
@@ -445,7 +471,7 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t self_blance_theta = 0;
+    real_t self_blance_theta_ = 0;
     real_t self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
@@ -482,7 +508,7 @@ void bldc_main(){
         .pole_pairs = 7
     };
 
-    dsp::Leso leso{
+    dsp::Leso leso_{
         [&]{
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
@@ -507,7 +533,7 @@ void bldc_main(){
             case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 34.281_r, .kd = 1.9_r};
+                return PdCtrlLaw{.kp = 36.281_r, .kd = 2.3_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case NodeRole::RollJoint: 
                 return PdCtrlLaw{.kp = 190.581_r, .kd = 30.38_r};
@@ -519,11 +545,12 @@ void bldc_main(){
     real_t q_volt_ = 0;
     real_t meas_elecrad_ = 0;
 
-    Microseconds exe_us_ = 0us;
     real_t axis_target_position_ = 0;
     real_t axis_target_speed_ = 0;
+    
+    Microseconds exe_us_ = 0us;
 
-    [[maybe_unused]] auto cb_sensored = [&]{
+    [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
         bmi160_.update().examine();
 
@@ -549,8 +576,8 @@ void bldc_main(){
 
         const auto [blance_pos, blance_spd] = ({
             std::make_tuple(
-                // self_blance_theta * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
-                self_blance_theta * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                // self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
             );
         });
 
@@ -566,12 +593,12 @@ void bldc_main(){
 
         const auto ab_volt = DqVoltage{
             0, 
-            CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
+            CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
+        svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        leso.update(meas_spd, q_volt);
+        leso_.update(meas_spd, q_volt);
 
         q_volt_ = q_volt;
         meas_elecrad_ = meas_elecrad;
@@ -580,7 +607,7 @@ void bldc_main(){
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
         [&]{
             const auto m = clock::micros();
-            cb_sensored();
+            sensored_foc_cb();
             exe_us_ = clock::micros() - m;
         }
     );
@@ -634,11 +661,17 @@ void bldc_main(){
             rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
 
-            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
+            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 240),
 
-            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
+            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 30),
 
-            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
+            // rpc::make_function("vxy", [&](const real_t p1, const real_t p2){
+
+            //     track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+            //     track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+            // }),
+
+            rpc::make_function("pxy", [&](const real_t p1, const real_t p2){
 
                 track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
                 track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
@@ -703,7 +736,6 @@ void bldc_main(){
 
             switch(adjunct_node_role_){
                 case NodeRole::Master:{
-                    DEBUG_PRINTLN("Master");
                     publish_roll_joint_target(track_target_.roll);
                     publish_pitch_joint_target(track_target_.pitch);
                     break;
@@ -716,10 +748,11 @@ void bldc_main(){
 
     [[maybe_unused]] auto update_demo_track_service = [&]{ 
         auto update_joint_target = [&]() -> void { 
+            static constexpr auto amp = 0.05_r;
             const auto ctime = clock::time();
             const auto [s, c] = sincos(ctime * 5);
-            const auto p1 = c * 0.00_r;
-            const auto p2 = s * 0.00_r;
+            const auto p1 = c * amp;
+            const auto p2 = s * amp;
 
             track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
             track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
@@ -742,14 +775,14 @@ void bldc_main(){
 
             gesture_estimator.process(acc, gyr);
 
-            std::tie(self_blance_theta, self_blance_omega_) = gesture_estimator.theta_and_omega();
+            std::tie(self_blance_theta_, self_blance_omega_) = gesture_estimator.theta_and_omega();
         });
     };
 
 
     while(true){
         repl_service();
-        update_demo_track_service();
+        // update_demo_track_service();
         gesture_calc_service();
 
         can_publisher_service();
@@ -805,7 +838,7 @@ void bldc_main(){
             // (clock::micros() - u_begin).count(), 
             // StringView(arr.data()), 
             // rem_str.size(),
-            // self_blance_theta,
+            // self_blance_theta_,
             // self_blance_omega_,
             // iter,
             msg.iter_payload(),
@@ -839,9 +872,9 @@ void bldc_main(){
         //     // pos_filter_.cont_position(),
         //     // pos_filter_.lap_position(),
         //     // pos_filter_.speed(),
-        //     // leso.get_disturbance(),
+        //     // leso_.get_disturbance(),
         //     axis_theta_raw,
-        //     self_blance_theta,
+        //     self_blance_theta_,
         //     range,
         //     // self_blance_omega_,
         //     // len_acc,
