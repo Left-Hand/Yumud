@@ -374,6 +374,16 @@ void bldc_main(){
 
     
     const auto self_node_role_ = get_node_role().examine();  
+    const auto adjunct_node_role_ = [&] -> NodeRole{
+        switch(self_node_role_){
+            case NodeRole::RollJoint:
+                return NodeRole::Master;
+            // case NodeRole::PitchJoint:
+            //     return NodeRole::PitchJoint;
+            default:
+                return self_node_role_;
+        }
+    }();
 
     MA730 ma730_{
         &spi,
@@ -429,9 +439,6 @@ void bldc_main(){
     // init_opa();
     init_adc(adc);
 
-    // CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
-
-
     hal::portA[7].inana();
 
 
@@ -456,7 +463,7 @@ void bldc_main(){
                 case NodeRole::PitchJoint:
                     return {0.243_r};
                 case NodeRole::RollJoint:
-                    return {0.383_r + 0.5_r};
+                    return {0.389_r + 0.5_r};
                 default: __builtin_unreachable();
             }
         }()
@@ -503,7 +510,7 @@ void bldc_main(){
                 return PdCtrlLaw{.kp = 34.281_r, .kd = 1.9_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case NodeRole::RollJoint: 
-                return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
+                return PdCtrlLaw{.kp = 190.581_r, .kd = 30.38_r};
             default: __builtin_unreachable();
         }
     }();
@@ -618,6 +625,31 @@ void bldc_main(){
         axis_target_speed_ = real_t(cmd.speed);
     };
 
+    [[maybe_unused]] auto repl_service = [&]{
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+
+        static const auto list = rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+
+            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
+
+            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
+
+            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
+
+                track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+                track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+            })
+            
+        );
+
+        repl_server.invoke(list);
+    };
+
+
     [[maybe_unused]] auto can_subscriber_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
         timer.invoke_if([&]{
@@ -669,47 +701,20 @@ void bldc_main(){
 
         timer.invoke_if([&]{
 
-            switch(self_node_role_){
-                case NodeRole::PitchJoint:
-                    break;
-                case NodeRole::RollJoint:{
+            switch(adjunct_node_role_){
+                case NodeRole::Master:{
+                    DEBUG_PRINTLN("Master");
                     publish_roll_joint_target(track_target_.roll);
                     publish_pitch_joint_target(track_target_.pitch);
                     break;
                 default:
-                    __builtin_unreachable();
                     break;
                 }
             }
         });
     };
 
-
-    [[maybe_unused]] auto repl_service = [&]{
-        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
-
-        static const auto list = rpc::make_list(
-            "list",
-            rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-
-            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
-
-            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
-
-            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
-
-                track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-                track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-            })
-            
-        );
-
-        repl_server.invoke(list);
-    };
-
-    [[maybe_unused]] auto demo_track_service = [&]{ 
+    [[maybe_unused]] auto update_demo_track_service = [&]{ 
         auto update_joint_target = [&]() -> void { 
             const auto ctime = clock::time();
             const auto [s, c] = sincos(ctime * 5);
@@ -744,7 +749,7 @@ void bldc_main(){
 
     while(true){
         repl_service();
-        demo_track_service();
+        update_demo_track_service();
         gesture_calc_service();
 
         can_publisher_service();

@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    enum class Kind{
+    enum class Kind:uint8_t{
         MagnetHigh,
         MagnetLow,
         MagnetProper,
