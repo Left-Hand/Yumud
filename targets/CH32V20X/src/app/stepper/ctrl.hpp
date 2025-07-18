@@ -66,7 +66,7 @@ private:
 };
 
 
-struct PositionSensor{
+struct PositionFilter{
     using Td = MotorTrackingDifferentiator;
     using TdConfig = typename Td::Config;
 
@@ -75,7 +75,7 @@ struct PositionSensor{
         uint32_t fs;
     };
 
-    constexpr PositionSensor(const Config & cfg):
+    constexpr PositionFilter(const Config & cfg):
         td_(Td{TdConfig{
             .r = cfg.r,
             .fs = cfg.fs
@@ -90,9 +90,12 @@ struct PositionSensor{
     }
 
     constexpr void update(const real_t next_raw_lap_position){
-        if(initial_lap_position_.is_none())
-            initial_lap_position_ = Some{next_raw_lap_position};
-            
+        if(unlikely(inited_ == false)){
+            position_offset = map_lap_to_nearest(
+                frac(next_raw_lap_position - base_lap_position_));
+            inited_ = true;
+        }
+
         const auto corrected_lap_position = correct_raw_position(
             next_raw_lap_position);
 
@@ -101,11 +104,11 @@ struct PositionSensor{
         lap_position_ = corrected_lap_position;
 
         cont_position_ += delta_position;
-        td_.update(cont_position_ + initial_lap_position_.unwrap() - base_position_);
+        td_.update(cont_position_ + position_offset);
     }
 
-    constexpr void set_base_position(const q16 base_position){
-        base_position_ = base_position;
+    constexpr void set_base_lap_position(const q16 base_lap_position){
+        base_lap_position_ = base_lap_position;
     }
 
     constexpr q16 lap_position() const{
@@ -124,9 +127,6 @@ struct PositionSensor{
         return td_.get().speed;
     }
 
-    CalibrateDataVector forward_cali_vec = {MOTOR_POLE_PAIRS};
-    CalibrateDataVector backward_cali_vec = {MOTOR_POLE_PAIRS};
-
     constexpr q16 correct_raw_position(const q16 raw_lap_position) const {
         const auto corr1 = forward_cali_vec[raw_lap_position].to_inaccuracy();
         const auto corr2 = backward_cali_vec[raw_lap_position].to_inaccuracy();
@@ -134,9 +134,14 @@ struct PositionSensor{
         return raw_lap_position + mean(corr1, corr2);
     }
 
+    CalibrateDataVector forward_cali_vec = {MOTOR_POLE_PAIRS};
+    CalibrateDataVector backward_cali_vec = {MOTOR_POLE_PAIRS};
 
 private:
-
+    static constexpr q16 map_lap_to_nearest(const q16 x){
+        if(x > 0.5_r) return x - 1;
+        return x;
+    }
     static constexpr q16 map_lap_postion_to_delta(const q16 last_lap_position, const q16 lap_position){
         const auto delta = lap_position - last_lap_position;
         if(delta > 0.5_q16) return delta - 1;
@@ -148,8 +153,9 @@ private:
 
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
-    q16 base_position_   = 0;
-    Option<q16> initial_lap_position_ = None;
+    q16 base_lap_position_   = 0;
+    q16 position_offset = 0;
+    bool inited_ = false;
 };
 
 

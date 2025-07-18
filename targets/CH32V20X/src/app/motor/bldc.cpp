@@ -210,25 +210,25 @@ struct GestureEstimator{
 
         const auto len_acc = acc.length();
         const auto norm_acc = acc / len_acc;
-        const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
-        const auto base_omega_raw = gyr.z;
+        const auto axis_theta_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
+        const auto axis_omega_raw = gyr.z;
 
         if(inited_ == false){
-            theta_ = base_roll_raw;
-            omega_ = base_omega_raw;
+            theta_ = axis_theta_raw;
+            omega_ = axis_omega_raw;
             inited_ = true;
             return;
         }
 
-        // const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
+        // const auto base_roll = comp_filter(axis_theta_raw, axis_omega_raw);
         // DEBUG_PRINTLN_IDLE(
         //     // norm_acc.x, norm_acc.y,
-        //     // base_roll_raw,
-        //     // base_omega_raw,
+        //     // axis_theta_raw,
+        //     // axis_omega_raw,
         //     // base_roll,
-        //     // pos_sensor_.position(),
-        //     // pos_sensor_.lap_position(),
-        //     // pos_sensor_.speed(),
+        //     // pos_filter_.position(),
+        //     // pos_filter_.lap_position(),
+        //     // pos_filter_.speed(),
         //     ma730_.read_lap_position().examine(),
         //     meas_elecrad_
         //     // exe_us_
@@ -238,10 +238,10 @@ struct GestureEstimator{
 
         const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
 
-        const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
+        const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.04_r;
 
-        theta_ += (base_roll_raw - theta_) * alpha + (base_omega_raw * delta_time_) * (1 - alpha);
-        omega_ = base_omega_raw;
+        theta_ += (axis_theta_raw - theta_) * alpha + (axis_omega_raw * delta_time_) * (1 - alpha);
+        omega_ = axis_omega_raw;
     }
 
     auto theta_and_omega() const {
@@ -266,21 +266,6 @@ private:
     }
 };
 
-// class CanMsgSink{
-//     void write{const hal:: CanMsg & msg}{
-//         if(msg.is_extended()) PANIC();
-
-//         const bool is_local = is_ringback_msg(msg, self_node_role_);
-
-//         if(is_local){
-//             msg_queue_.push(msg);
-//         }else{
-//             can.write(msg);
-//         }
-//     }
-// private:
-
-// }
 
 void bldc_main(){
     // my_can_ring_main();
@@ -301,6 +286,10 @@ void bldc_main(){
     auto & pwm_v = timer.oc<2>();
     auto & pwm_w = timer.oc<3>(); 
 
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    
     DBG_UART.init({
         .baudrate = 576000
     });
@@ -442,9 +431,7 @@ void bldc_main(){
 
     // CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
 
-    ledr.outpp(); 
-    ledb.outpp(); 
-    ledg.outpp();
+
     hal::portA[7].inana();
 
 
@@ -456,20 +443,20 @@ void bldc_main(){
 
     AbVoltage ab_volt_;
     
-    dsp::PositionSensor pos_sensor_{
-        typename dsp::PositionSensor::Config{
+    dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
             .r = 85,
             .fs = FOC_FREQ
         }
     };
 
-    pos_sensor_.set_base_position(
+    pos_filter_.set_base_lap_position(
         [&] -> real_t{
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
-                    return {0.193_r};
+                    return {0.243_r};
                 case NodeRole::RollJoint:
-                    return {0.38_r + 0.5_r};
+                    return {0.383_r + 0.5_r};
                 default: __builtin_unreachable();
             }
         }()
@@ -481,16 +468,12 @@ void bldc_main(){
                 case NodeRole::PitchJoint:
                     return -0.282_r;
                 case NodeRole::RollJoint:
-                    return -0.253_r;
+                    return -0.233_r;
                 default: __builtin_unreachable();
             }
         }(),
         .pole_pairs = 7
     };
-
-
-    real_t q_volt_ = 0;
-    real_t meas_elecrad_ = 0;
 
     dsp::Leso leso{
         [&]{
@@ -517,13 +500,17 @@ void bldc_main(){
             case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 24.281_r, .kd = 0.9_r};
+                return PdCtrlLaw{.kp = 34.281_r, .kd = 1.9_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case NodeRole::RollJoint: 
                 return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
             default: __builtin_unreachable();
         }
     }();
+
+
+    real_t q_volt_ = 0;
+    real_t meas_elecrad_ = 0;
 
     Microseconds exe_us_ = 0us;
     real_t axis_target_position_ = 0;
@@ -534,13 +521,13 @@ void bldc_main(){
         bmi160_.update().examine();
 
         const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
-        pos_sensor_.update(meas_lap);
+        pos_filter_.update(meas_lap);
 
 
         const real_t meas_elecrad = elecrad_comp_(meas_lap);
 
-        const auto meas_pos = pos_sensor_.position();
-        const auto meas_spd = pos_sensor_.speed();
+        const auto meas_pos = pos_filter_.position();
+        const auto meas_spd = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
         [[maybe_unused]] static constexpr real_t amp = 0.06_r;
@@ -843,12 +830,12 @@ void bldc_main(){
 
         // // static constexpr auto a = sizeof(iter);
         // DEBUG_PRINTLN_IDLE(
-        //     // pos_sensor_.position(),
-        //     // pos_sensor_.cont_position(),
-        //     // pos_sensor_.lap_position(),
-        //     // pos_sensor_.speed(),
+        //     // pos_filter_.position(),
+        //     // pos_filter_.cont_position(),
+        //     // pos_filter_.lap_position(),
+        //     // pos_filter_.speed(),
         //     // leso.get_disturbance(),
-        //     base_roll_raw,
+        //     axis_theta_raw,
         //     self_blance_theta,
         //     range,
         //     // self_blance_omega_,

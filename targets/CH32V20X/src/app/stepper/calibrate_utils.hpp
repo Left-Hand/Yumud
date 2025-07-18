@@ -23,7 +23,31 @@ struct Elecrad{
     real_t elecrad;
 };
 
+struct CalibratePoint{
+    constexpr CalibratePoint():
+        expected_(0),
+        measured_(0){;}
+    constexpr q31 expected() const {
+        return (expected_);
+    }
 
+    constexpr q31 measured() const {
+        return (measured_);
+    }
+
+    template <size_t N>
+    constexpr auto get() const {
+        if constexpr (N == 0) return expected();
+        else if constexpr (N == 1) return measured();
+    }
+
+    constexpr q31 to_inaccuracy() const {
+        return fposmodp(q20(expected() - measured()), 0.02_q20);
+    }
+private:
+    q31 expected_;
+    q31 measured_;
+};
 
 
 //储存了压缩保存的期望数据和实际数据 用于校准点分析
@@ -35,56 +59,56 @@ public:
     // static constexpr q24 MAX_ERR = q24(1.0 / (1 << IGNORE_BITS));
 
     constexpr PackedCalibratePoint():
-        targ_packed_data_(0),
-        meas_packed_data_(0){;}
+        expected_packed_data_(0),
+        measured_packed_data_(0){;}
 
     static constexpr Option<PackedCalibratePoint> 
-    from_targ_and_meas(const q31 targ, const q31 meas){
-        const auto targ_packed_data = ({
-            const auto opt = real_to_packed(targ);
+    from_expected_and_measure(const q31 expected, const q31 measured){
+        const auto expected_packed_data = ({
+            const auto opt = real_to_packed(expected);
             if(opt.is_none()) return None;
             opt.unwrap();
         });
 
-        const auto meas_packed_data = ({
-            const auto opt = real_to_packed(meas);
+        const auto measured_packed_data = ({
+            const auto opt = real_to_packed(measured);
             if(opt.is_none()) return None;
             opt.unwrap();
         });
 
         return Some(PackedCalibratePoint(
-            targ_packed_data,
-            meas_packed_data
+            expected_packed_data,
+            measured_packed_data
         ));
     }
 
-    constexpr q31 get_targ() const {
-        return packed_to_real(targ_packed_data_);
+    constexpr q31 expected() const {
+        return packed_to_real(expected_packed_data_);
     }
 
-    constexpr q31 get_meas() const {
-        return packed_to_real(meas_packed_data_);
+    constexpr q31 measured() const {
+        return packed_to_real(measured_packed_data_);
     }
 
     constexpr q31 to_inaccuracy() const {
-        return fposmodp(q20(get_targ() - get_meas()), 0.02_q20);
+        return fposmodp(q20(expected() - measured()), 0.02_q20);
     }
 
     template <size_t N>
     constexpr auto get() const {
-        if constexpr (N == 0) return get_targ();
-        else if constexpr (N == 1) return get_meas();
+        if constexpr (N == 0) return expected();
+        else if constexpr (N == 1) return measured();
     }
 private:
     constexpr PackedCalibratePoint(
-        const uint16_t targ_packed, 
-        const uint16_t meas_packed
+        const uint16_t expected_packed, 
+        const uint16_t measured_packed
     ):
-        targ_packed_data_(targ_packed),
-        meas_packed_data_(meas_packed){;}
+        expected_packed_data_(expected_packed),
+        measured_packed_data_(measured_packed){;}
 
-    uint16_t targ_packed_data_;
-    uint16_t meas_packed_data_;
+    uint16_t expected_packed_data_;
+    uint16_t measured_packed_data_;
 
     static constexpr Option<uint16_t> real_to_packed(const q16 unpacked){
         return Some(uint16_t(unpacked.to_i32()));
@@ -158,34 +182,35 @@ struct CalibrateDataVector{
         capacity_(capacity){
             reset();
         }
-    constexpr Result<void, void> push_back(const q31 targ, const q31 meas){
+
+    [[nodiscard]] constexpr Result<void, void> push_back(const q31 expected, const q31 measured){
         //确定原始数据的扇区
-        const auto index = position_to_index(meas);
+        const auto index = position_to_index(measured);
         // PANIC(index);
         if(index >= capacity_) return Err();
         if(cnts_[index] != 0) return Err(); 
 
         block_[index] = ({
-            const auto opt = PackedCalibratePoint::from_targ_and_meas(
-                targ, meas
+            const auto may_calipoint = PackedCalibratePoint::from_expected_and_measure(
+                expected, measured
             );
 
-            if(opt.is_none()) return Err();
-            opt.unwrap();
+            if(may_calipoint.is_none()) return Err();
+            may_calipoint.unwrap();
         });
 
         return Ok();
     }
 
-    constexpr size_t position_to_index(const q31 position) const{
+    [[nodiscard]] constexpr size_t position_to_index(const q31 position) const{
         return size_t(q24(position) * capacity_);
     }
 
-    constexpr PackedCalibratePoint operator[](const size_t idx) const {
+    [[nodiscard]] constexpr PackedCalibratePoint operator[](const size_t idx) const {
         return block_[idx];
     }
 
-    constexpr PackedCalibratePoint operator[](const q31 raw_position) const {
+    [[nodiscard]] constexpr PackedCalibratePoint operator[](const q31 raw_position) const {
         return block_[position_to_index(raw_position)];
     }
 
@@ -194,13 +219,13 @@ struct CalibrateDataVector{
         cnts_.fill(0);
     }
 
-    constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const {
         // return cnt_ == capacity_;
         return std::accumulate(cnts_.begin(), cnts_.end(), 0u) == capacity_;
     }
 
-    constexpr CalibrateDataBlockView
-    as_view() const {
+    [[nodiscard]] constexpr CalibrateDataBlockView
+    iter() const {
         return CalibrateDataBlockView(block_);
     }
 

@@ -139,6 +139,10 @@ public:
         Error(drivers::EncoderError err){
             PANIC{err};
         }
+
+        friend OutputStream & operator<<(OutputStream & os, const Error & err){ 
+            return os;
+        }
     };
 
     Result<void, Error> resume(){
@@ -177,8 +181,8 @@ public:
                 "detailed infomation:", Reflecter::display(diagnosis));
 
             let res = TaskExecuter::execute(TaskSpawner::spawn(
-                CalibrateTasks{pos_sensor_.forward_cali_vec, 
-                    pos_sensor_.backward_cali_vec}
+                CalibrateTasks{pos_filter_.forward_cali_vec, 
+                    pos_filter_.backward_cali_vec}
                 >>= PreoperateTasks{}
             )).inspect_err([](const TaskError err){
                 MATCH{err}(
@@ -199,7 +203,7 @@ public:
         else if(comp.is_finished()){
 
             is_comp_finished_ = true;
-            pos_sensor_.update(meas_lap_position);
+            pos_filter_.update(meas_lap_position);
             // let [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
             // let [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
             let t = clock::time();
@@ -214,15 +218,15 @@ public:
             auto [targ_position, targ_speed] = cs_.get();
             // static constexpr let SCALE = (6.0_r/9.8_r);
             // targ_speed*= SCALE;
-            let meas_position = pos_sensor_.position();
-            let meas_speed = pos_sensor_.speed();
+            let meas_position = pos_filter_.position();
+            let meas_speed = pos_filter_.speed();
             let pos_contribute = 0.8_r * (targ_position - meas_position);
             let speed_contribute = 0.039_r*(targ_speed - meas_speed);
             let curr = CLAMP2(pos_contribute + speed_contribute, 0.4_r);
             // let curr = 0.2_r;
             let [s,c] = sincospu(frac(
                 // (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
-                (pos_sensor_.lap_position() + SIGN_AS(0.007_r, curr))) * 50);
+                (pos_filter_.lap_position() + SIGN_AS(0.007_r, curr))) * 50);
             // let [a,b] = sincospu( - 0.004_r);
             // let mag = 0.5_r;
             let mag = ABS(curr);
@@ -249,22 +253,22 @@ public:
     Result<void, void> print_vec() const {
         auto print_view = [](auto view){
             for (let & item : view) {
-                let targ = item.get_targ();
-                let meas = item.get_meas();
-                // DEBUG_PRINTLN(targ, meas, fposmodp(q20(targ - meas), 0.02_q20) * 100);
-                let position_err = q20(targ - meas);
+                let expected = item.expected();
+                let measured = item.measured();
+                // DEBUG_PRINTLN(expected, measured, fposmodp(q20(expected - measured), 0.02_q20) * 100);
+                let position_err = q20(expected - measured);
                 let mod_err = fposmodp(position_err, 0.02_q20);
-                DEBUG_PRINTLN(targ, meas, mod_err * 100);
+                DEBUG_PRINTLN(expected, measured, mod_err * 100);
                 clock::delay(1ms);
             }
         };
 
-        print_view(pos_sensor_.forward_cali_vec.as_view());
-        print_view(pos_sensor_.backward_cali_vec.as_view());
+        print_view(pos_filter_.forward_cali_vec.iter());
+        print_view(pos_filter_.backward_cali_vec.iter());
 
-        for(int i = 0; i < 50; i++){
+        for(size_t i = 0; i < 50; i++){
             let raw = real_t(i) / 50;
-            let corrected = pos_sensor_.correct_raw_position(raw);
+            let corrected = pos_filter_.correct_raw_position(raw);
             DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
             clock::delay(1ms);
         }
@@ -281,17 +285,14 @@ public:
 
     CoilMotionCheckTasks coil_motion_check_comp_ = {};
     CalibrateTasks calibrate_comp_ = {
-        pos_sensor_.forward_cali_vec,
-        pos_sensor_.backward_cali_vec
+        pos_filter_.forward_cali_vec,
+        pos_filter_.backward_cali_vec
     };
 
 
     bool is_comp_finished_ = false;
 
-    static constexpr size_t MC_W = 1000u;
     static constexpr real_t MC_TAU = 80;
-
-
 
     using CommandShaper = dsp::CommandShaper1;
     using CommandShaperConfig = CommandShaper::Config;
@@ -307,8 +308,8 @@ public:
     CommandShaper cs_{CS_CONFIG};
 
     
-    dsp::PositionSensor pos_sensor_{
-        typename dsp::PositionSensor::Config{
+    dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
             .r = 50,
             .fs = ISR_FREQ
         }
@@ -446,8 +447,6 @@ class ArchiveSystem{
         return at24_.is_available();
     }
 
-
-
     Progress progress(){
         return {0,0};
     }
@@ -484,10 +483,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     auto motor_system_ = MotorSystem{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        let res = motor_system_.resume();
-        if(res.is_err()){
-            PANIC();
-        }
+        motor_system_.resume().examine();
     });
 
     robots::ReplServer repl_server = {
@@ -521,8 +517,8 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
         // DEBUG_PRINTLN_IDLE(
             
-        //     motor_system_.pos_sensor_.position(),
-        //     motor_system_.pos_sensor_.speed(),
+        //     motor_system_.pos_filter_.position(),
+        //     motor_system_.pos_filter_.speed(),
         //     motor_system_.execution_time_.count(),
         //     motor_system_.cs_.get()
         // );
