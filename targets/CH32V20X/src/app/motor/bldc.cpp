@@ -24,11 +24,10 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
-#include "drivers/GateDriver/DRV8301/DRV8301.hpp"
 
 #include "types/vectors/quat/Quat.hpp"
 
-#include "digipw/SVPWM/svpwm_.hpp"
+#include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
 #include "dsp/observer/smo/SmoObserver.hpp"
@@ -47,9 +46,6 @@
 #include "robots/cannet/can_chain.hpp"
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
-#include "core/string/utils/streamed_string_splitter.hpp"
-#include "core/container/inline_vector.hpp"
-#include "core/utils/enum_dict.hpp"
 
 
 using namespace ymd;

@@ -96,7 +96,7 @@ struct PolarRobotSolverIterator{
 
     struct State{
         MachineState machine;
-        JointState rho_joint;
+        JointState radius_joint;
         JointState theta_joint;
     };
 
@@ -111,7 +111,7 @@ struct PolarRobotSolverIterator{
         // real_t expect_rho_joint_rotation = 
         // real_t expect_theta_joint_rotation =
         return {
-            .rho_joint_rotation = state.rho_joint.position, 
+            .rho_joint_rotation = state.radius_joint.position, 
             .theta_joint_rotation = state.theta_joint.position
         };
     }
@@ -239,7 +239,7 @@ public:
     };
 
     struct Params{
-        Some<JointMotorIntf *> rho_joint;
+        Some<JointMotorIntf *> radius_joint;
         Some<JointMotorIntf *> theta_joint;
     };
 
@@ -249,7 +249,7 @@ public:
         const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(params.rho_joint.deref()),
+        joint_rho_(params.radius_joint.deref()),
         joint_theta_(params.theta_joint.deref())
     {;}
 
@@ -547,7 +547,7 @@ void polar_robot_main(){
 
     #endif
 
-    ZdtJointMotor rho_joint = {{
+    ZdtJointMotor radius_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
@@ -555,7 +555,7 @@ void polar_robot_main(){
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    MockJointMotor rho_joint = {};
+    MockJointMotor radius_joint = {};
     MockJointMotor theta_joint = {};
     #endif
 
@@ -569,7 +569,7 @@ void polar_robot_main(){
             .theta_range = {-10_r, 10_r}
         },
         {
-            .rho_joint = &rho_joint, 
+            .radius_joint = &radius_joint, 
             .theta_joint = &theta_joint
         }
     };
@@ -581,7 +581,7 @@ void polar_robot_main(){
     auto list = rpc::make_list(
         "polar_robot",
         robot_actuator.make_rpc_list("actuator"),
-        rho_joint.make_rpc_list("rho_joint"),
+        radius_joint.make_rpc_list("radius_joint"),
         theta_joint.make_rpc_list("theta_joint"),
 
         rpc::make_function("pxy", [&](const real_t x, const real_t y){
@@ -597,7 +597,7 @@ void polar_robot_main(){
         })
     );
 
-    auto draw_curve_service = [&]{
+    [[maybe_unused]] auto draw_curve_service = [&]{
         static constexpr uint32_t CALL_FREQ = 500;
         static constexpr auto CALL_DURATION_MS = 1000ms / CALL_FREQ;
         static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
@@ -612,13 +612,13 @@ void polar_robot_main(){
 
             robot_planner.set_position(p);
 
-            DEBUG_PRINTLN(p);
+            DEBUG_PRINTLN(p, radius_joint.get_last_position(), theta_joint.get_last_position());
 
         });
     };
 
     robot_actuator.trig_homing();
-    [[maybe_unused]]auto repl_service = [&](){ 
+    [[maybe_unused]] auto repl_service = [&](){ 
         
         static robots::ReplServer repl_server = {
             &DBG_UART, &DBG_UART
