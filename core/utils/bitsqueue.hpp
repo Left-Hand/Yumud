@@ -44,7 +44,7 @@ struct BitsQueue{
         return length_;
     }
 
-    constexpr size_t available_for_write() const {
+    constexpr size_t writable_capacity() const {
         return 32 - length_;
     }
 private:

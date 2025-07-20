@@ -24,7 +24,7 @@ struct ST7789V3_Phy final:
         };
 
         constexpr uint16_t next() {
-            if((queue_.available_for_write() > 18) and iter_.has_next()){
+            if((queue_.writable_capacity() > 18) and iter_.has_next()){
                 const uint16_t next = iter_.next();
                 queue_.push_bit(DATA_BIT);
                 queue_.push_bits<8>(next >> 8);

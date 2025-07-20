@@ -12,7 +12,7 @@ public:
         max_len_(pbuf.size()){;}
 
     void sendout(std::span<const char> pbuf){
-        if(pbuf.size() > available_for_write()){
+        if(pbuf.size() > writable_capacity()){
             while(true);
         }else{
             std::memcpy(buf_, pbuf.data(), pbuf.size());
@@ -29,7 +29,7 @@ private:
     const size_t max_len_;
     size_t len_ = 0;
 
-    size_t available_for_write() const {
+    size_t writable_capacity() const {
         return max_len_ - len_;
     }
 };

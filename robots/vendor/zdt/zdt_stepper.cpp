@@ -81,7 +81,7 @@ void ZdtMotorPhy::can_write_bytes(
         const auto may_msg = iter.next();
         if(may_msg.is_none()) break;
         const auto & msg = may_msg.unwrap();
-        can.write(msg);
+        can.write(msg).examine();
     }
 }
 

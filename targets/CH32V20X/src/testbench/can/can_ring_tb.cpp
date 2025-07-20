@@ -37,7 +37,7 @@ void can_ring_main(){
     );
 
     auto write_msg = [&](const hal::CanMsg & msg){
-        can.write(msg);
+        can.write(msg).examine();
         DEBUG_PRINTLN("tx", msg);
     };
 

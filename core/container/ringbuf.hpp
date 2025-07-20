@@ -211,7 +211,7 @@ public:
         new (porg) T(std::forward<Args>(args)...);
     }
 
-    size_t push(std::span<const T> pdata){
+    [[nodiscard]] size_t push(std::span<const T> pdata){
         T * p_org = write_ptr;
         const size_t len = pdata.size();
         const int over = (write_ptr + len - N - this->buf);
@@ -239,7 +239,7 @@ public:
         return len;
     }
 
-    size_t pop(std::span<T> pdata){
+    [[nodiscard]] size_t pop(std::span<T> pdata){
         T * p_org = (read_ptr);
         const size_t len = pdata.size();
         const int over = (read_ptr + len - N - this->buf);
@@ -261,7 +261,7 @@ public:
         return len;
     }
 
-    __fast_inline const T && pop(){
+    [[nodiscard]] __fast_inline const T && pop(){
         const T * ret_ptr = read_ptr;
         read_ptr = advance(read_ptr, 1);
         return std::move(*ret_ptr);
@@ -273,11 +273,11 @@ public:
         new (porg) T(data);
     }
 
-    __fast_inline const T & front() {
+    [[nodiscard]] __fast_inline const T & front() {
         return *read_ptr;
     }
 
-    __fast_inline size_t available() const {
+    [[nodiscard]] __fast_inline size_t available() const {
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
@@ -285,7 +285,11 @@ public:
         }
     }
 
-    __fast_inline size_t straight() const{
+    [[nodiscard]] __fast_inline size_t writable_capacity() const {
+        return N - available();
+    }
+
+    [[nodiscard]] __fast_inline size_t safe_dma_length() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{
@@ -293,10 +297,8 @@ public:
         }
     }
 
-    __fast_inline const T foresee(const size_t idx) const{
-        return *advance(read_ptr, idx);
-    }
-    __fast_inline void vent(const size_t len){
+
+    __fast_inline void waste(const size_t len){
         read_ptr = advance(read_ptr, len);
         return;
     }

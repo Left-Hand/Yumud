@@ -625,7 +625,7 @@ void bldc_main(){
         if(is_ringback){
             msg_queue_.push(msg);
         }else{
-            can.write(msg);
+            can.write(msg).examine();
         }
     };
 
