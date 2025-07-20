@@ -51,7 +51,11 @@ private:
     );
 };
 
-struct ZdtMotorServer{
+struct ZdtMotorCanSink{
+
+};
+
+struct ZdtMotorCanSource{
 
 };
 

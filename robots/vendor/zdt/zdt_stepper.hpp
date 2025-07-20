@@ -12,7 +12,6 @@ public:
     using VerifyMethod = prelude::VerifyMethod;
     using Buf = prelude::Buf;
     using Error = prelude::Error;
-    using Payloads = prelude::Payloads;
     using VerifyUtils = prelude::VerifyUtils;
 
     template<typename T = void>
@@ -66,7 +65,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = Payloads::serialize(obj);
+        const auto bytes = payloads::serialize(obj);
 
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(
@@ -81,12 +80,11 @@ private:
     template<typename T>
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(verify_method_, obj);
-        const auto bytes = buf.to_span();
 
         phy_.write_bytes(
             nodeid_, 
             T::FUNC_CODE, 
-            bytes
+            buf.iter()
         );
 
         return Ok();

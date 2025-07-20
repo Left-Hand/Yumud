@@ -153,7 +153,6 @@ private:
     real_t position_ = 0;
 };
 
-
 class ZdtJointMotorActuator final
     :public JointMotorActuatorIntf{
 public:
@@ -418,9 +417,6 @@ private:
     Cartesian2ContinuousPolarRegulator regu_;
 };
 
-
-
-
 class CanHandlerAdaptor_PolarRobotActuator final:
 public CanMsgHandlerIntf{
     HandleStatus handle(const hal::CanMsg & msg){ 
@@ -456,7 +452,6 @@ class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
         return std::bit_cast<std::array<uint8_t, 8>>(raw);
     } 
 };
-
 
 
 // #define MOCK_TEST

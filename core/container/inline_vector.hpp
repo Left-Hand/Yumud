@@ -90,6 +90,14 @@ public:
         return data_[size_ - 1];
     }
 
+    constexpr T * data() noexcept{
+        return data_;
+    }
+    constexpr const T * data() const noexcept{
+        return data_;
+    }
+
+
     // 容量相关 - constexpr
     constexpr size_t size() const noexcept {
         return size_;
@@ -135,7 +143,7 @@ public:
         size_ += pbuf.size();
     }
 
-    constexpr std::span<const uint8_t> to_span() const {
+    constexpr std::span<const uint8_t> iter() const {
         return std::span(data_, size_);
     }
 

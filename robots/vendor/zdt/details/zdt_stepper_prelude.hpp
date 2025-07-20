@@ -13,7 +13,9 @@
 namespace ymd::robots{
 
 
-namespace zdtmotor::prelude{
+namespace zdtmotor{
+
+namespace prelude{
 enum class Error:uint8_t{
     SubDivideOverflow,
     RxNoMsgToDump,
@@ -42,9 +44,9 @@ struct NodeId{
     uint8_t id;
 };
 
-static constexpr size_t MAX_PACKET_SIZE = 16;
+static constexpr size_t MAX_PACKET_BYTES = 16;
 
-using Buf = InlineVector<uint8_t, MAX_PACKET_SIZE>;
+using Buf = InlineVector<uint8_t, MAX_PACKET_BYTES>;
 
 enum class VerifyMethod:uint8_t{
     X6B,
@@ -96,24 +98,24 @@ struct Bytes2CanMsgIterator{
         payload_(payload){;}
 
 
-    constexpr Option<hal::CanMsg> next(){
-        constexpr size_t CANMSG_PAYLOAD_MAX_LENGTH = 7;
-
+    constexpr bool has_next(){
+        return payload_.size() - offset_;
+    }
+    constexpr hal::CanMsg next(){
+        constexpr size_t MAX_PAYLOAD_LENGTH = 7;
         const auto msg_len = MIN(
             payload_.size() - offset_, 
-            CANMSG_PAYLOAD_MAX_LENGTH);
-
-        if(msg_len == 0) return None;
+            MAX_PAYLOAD_LENGTH);
 
         const auto msg = make_canmsg(
             nodeid_, func_code_, 
-            offset_ / CANMSG_PAYLOAD_MAX_LENGTH,
+            offset_ / MAX_PAYLOAD_LENGTH,
             payload_.subspan(offset_, msg_len)
         ); 
 
         offset_ += msg_len;
 
-        return Some(msg);
+        return msg;
     }
 private:
     static constexpr hal::CanMsg make_canmsg(
@@ -122,13 +124,14 @@ private:
         const uint8_t piece_cnt,
         const std::span<const uint8_t> bytes
     ){
-        auto buf = InlineVector<uint8_t, 8>{};
+        constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
+        auto buf = InlineVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
         return hal::CanMsg::from_bytes(
             map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
-            buf.to_span()
+            buf.iter()
         );
     }
 
@@ -317,7 +320,10 @@ struct AcclerationLevel{
     uint8_t raw_;
 }__packed;
 
-struct Payloads{
+}
+
+namespace payloads{
+    using namespace prelude;
     // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
     struct Actvation final{
         static constexpr FuncCode FUNC_CODE = FuncCode::Activation;
@@ -404,7 +410,7 @@ struct Payloads{
             magic::pure_sizeof_v<T>
         );
     }
-};
+}
+}
 
-};
 }
