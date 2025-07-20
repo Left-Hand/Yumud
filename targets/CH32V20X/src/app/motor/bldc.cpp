@@ -675,11 +675,7 @@ void bldc_main(){
             //     track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
             // }),
 
-            rpc::make_function("pxy", [&](const real_t p1, const real_t p2){
-
-                track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-                track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-            })
+            rpc::make_function("pxy", update_joint_target)
             
         );
 

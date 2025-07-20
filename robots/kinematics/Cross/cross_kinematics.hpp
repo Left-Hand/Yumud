@@ -6,7 +6,7 @@
 namespace ymd::robots{
     
 template<typename T>
-class CrossSolver_t{
+class CrossKinematics{
 public:
     struct Config{
         const T xoffs_length_meter;
@@ -24,12 +24,12 @@ protected:
         return x*x;
     }
 public:
-    constexpr CrossSolver_t(const Config & config):
+    constexpr CrossKinematics(const Config & config):
         config_(config){;}
 
 
-    constexpr CrossSolver_t(const CrossSolver_t<T> & other) = delete;
-    constexpr CrossSolver_t(CrossSolver_t<T> && other) = delete;
+    constexpr CrossKinematics(const CrossKinematics<T> & other) = delete;
+    constexpr CrossKinematics(CrossKinematics<T> && other) = delete;
 
 
     T forward(const T rad){

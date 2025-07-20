@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
@@ -21,13 +23,13 @@
 #include "types/shapes/Bezier2/Bezier2.hpp"
 
 
-#include "robots/kinematics/Scara5/scara5_solver.hpp"
-#include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
-#include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
+#include "robots/kinematics/Scara5/scara5_kinematics.hpp"
+#include "robots/kinematics/Mecanum4/mecanum4_kinematics.hpp"
+#include "robots/kinematics/WheelLeg/wheelleg_kinematics.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 
-#include <ranges>
+
 
 using namespace ymd;
 using namespace ymd::hal;

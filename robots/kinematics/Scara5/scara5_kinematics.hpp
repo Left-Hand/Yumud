@@ -5,7 +5,7 @@
 
 namespace ymd{
 template<typename T>
-class Scara5Solver_t{
+class Scara5Kinematics{
 public:
     struct Config{
         const T should_length_meter;
@@ -16,7 +16,7 @@ public:
 protected:
     const Config & config;
 public:
-    constexpr Scara5Solver_t(const Config & _config): config(_config){;}
+    constexpr Scara5Kinematics(const Config & _config): config(_config){;}
     Vector2<T> forward(const T left_rad,const T right_rad){
         auto l_pos = Vector2<T>(-config.should_length_meter / 2, 0);
         auto r_pos = Vector2<T>(config.should_length_meter / 2, 0);

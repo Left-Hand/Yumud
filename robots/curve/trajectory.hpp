@@ -1,11 +1,12 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include "core/clock/clock.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
 
 
 namespace ymd{
-struct TrajectoryItem{
+struct PackedTrajectoryPoint{
     uint32_t x:10;
     uint32_t y:10;
     uint32_t z:8;
@@ -15,33 +16,28 @@ struct TrajectoryItem{
 
 class Trajectory{
 public:
-    scexpr uint record_fps = 50;
-    scexpr uint record_dur = 1000 / record_fps;
-    scexpr uint record_seconds = 60;
-    scexpr uint record_len = (record_fps * record_seconds);
+    scexpr uint RECORD_FPS = 50;
+    scexpr Milliseconds RECORD_DURATION = 1000ms / RECORD_FPS;
+    scexpr uint32_t RECORD_SECONDS = 60;
+    scexpr uint RECORD_LENGTH = (RECORD_FPS * RECORD_SECONDS);
 
-    using E = TrajectoryItem;
-    using Container = sstl::vector<E, record_len>;
-    
-    Container data;
-
+    using E = PackedTrajectoryPoint;
     class TrajectoryIterator{
-        protected:
+    public:
+        TrajectoryIterator(const Trajectory& _trajectory, uint32_t _index):trajectory(_trajectory), index(_index){}
+        TrajectoryIterator& operator++(){
+            index++;
+            return *this;
+        }
 
-            const Trajectory& trajectory;
-            uint32_t index;
+        TrajectoryIterator& operator--(){
+            index--;
+            return *this;
+        }
+    private:
 
-        public:
-            TrajectoryIterator(const Trajectory& _trajectory, uint32_t _index):trajectory(_trajectory), index(_index){}
-            TrajectoryIterator& operator++(){
-                index++;
-                return *this;
-            }
-
-            TrajectoryIterator& operator--(){
-                index--;
-                return *this;
-            }
+        const Trajectory& trajectory;
+        uint32_t index;
     };
 
     // TrajectoryIterator begin() const{
@@ -75,21 +71,27 @@ public:
         return data.capacity();
     }
     void push(const uint x, const uint y, const uint z, const bool nz){
-        TrajectoryItem item;
+        PackedTrajectoryPoint item;
         item.x = x;
         item.y = y;
         item.z = z;
         item.nz = nz;
-        if(data.size() < record_len) data.push_back(item);
+        if(data.size() < RECORD_LENGTH) data.push_back(item);
     }
 
     const E & operator[](uint index) const {
-        return data[MIN(index, record_len - 1)];
+        return data[MIN(index, RECORD_LENGTH - 1)];
     }
+private:
+
+    using Container = sstl::vector<E, RECORD_LENGTH>;
+    
+    Container data;
+
 };
 
 struct OutputStream;
 
-OutputStream & operator<<(OutputStream & os, const TrajectoryItem item);
+OutputStream & operator<<(OutputStream & os, const PackedTrajectoryPoint item);
 
 }

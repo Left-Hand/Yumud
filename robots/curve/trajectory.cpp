@@ -3,8 +3,14 @@
 
 
 namespace ymd{
-OutputStream & operator<<(OutputStream & os, const TrajectoryItem item){
-    return os << '[' << item.x << ',' << item.y << ',' << item.z << ',' << item.nz << ']'; 
+OutputStream & operator<<(OutputStream & os, const PackedTrajectoryPoint point){
+    return os << os.brackets<'['>() 
+            << point.x << os.splitter() 
+            << point.y << os.splitter() 
+            << point.z << os.splitter() 
+            << point.nz << os.splitter() 
+        << os.brackets<']'>();
+
 }
 
 

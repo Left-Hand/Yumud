@@ -13,7 +13,7 @@
 namespace ymd{
 
 template<typename T>
-class WheelLegSolver_t{
+class WheelLegKinematics{
 public:
     struct Config{
         const T pelvis_length_meter;
@@ -53,19 +53,19 @@ protected:
     }
 
     struct Viewer{    
-        const WheelLegSolver_t<T> & solver;
-        Viewer(const WheelLegSolver_t<T> & _solver):solver(_solver) {;}
+        const WheelLegKinematics<T> & solver;
+        Viewer(const WheelLegKinematics<T> & _solver):solver(_solver) {;}
     };
 
     struct GroundViewer:public Viewer{
-        GroundViewer(const WheelLegSolver_t<T> & _solver):Viewer(_solver) {;}
+        GroundViewer(const WheelLegKinematics<T> & _solver):Viewer(_solver) {;}
         auto get_pelvis_transform(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
             return Viewer::solver.transform_ground_to_pelvis(left_feet_pos, right_feet_pos, pitch_rad);
         }
     };
 
     struct PelvisViewer:public Viewer{
-        PelvisViewer(const WheelLegSolver_t<T> & _solver):Viewer(_solver) {;}
+        PelvisViewer(const WheelLegKinematics<T> & _solver):Viewer(_solver) {;}
         auto get_ground_transform(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
             return Viewer::solver.transform_pelvis_to_ground(left_feet_pos, right_feet_pos, pitch_rad);
         }
@@ -75,7 +75,7 @@ protected:
     friend class PelvisViewer;
 
 public:
-    constexpr WheelLegSolver_t(const Config & _config): config(_config){;}
+    constexpr WheelLegKinematics(const Config & _config): config(_config){;}
 
     constexpr auto d3_forward_leg(const T hip_rad, const T knee_rad, bool is_right) const {
         auto hip_pos = Vector3<T>(is_right ? (config.pelvis_length_meter / 2) : (- config.pelvis_length_meter / 2), 0, 0);

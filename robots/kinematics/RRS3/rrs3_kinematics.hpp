@@ -10,52 +10,25 @@
 #include "types/vectors/quat/Quat.hpp"
 #include "types/regions/plane/plane.hpp"
 
-// #include "core/debug/debug.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
 namespace ymd::robots{
 
 
-template<arithmetic T>
-struct Degrees final{
-public:
-    static constexpr Degrees<T> from_radians(T rad){
-        Degrees<T> self;
-        self.value_ = (rad * T(180.0 / PI));
-        return self;
-    }
-    constexpr T to_radians() const { return value_ * T(PI / 180.0); }
 
-    friend OutputStream & operator<<(OutputStream & os, const Degrees<T>& self){
-        // return os << self.value_ << "'C";
-        // return os << self.value_ << char(248);
-        return os << self.value_ << '\'';
-    }
-private:
-    T value_;
-};
 
 template<arithmetic T>
-static constexpr Degrees<T> to_degrees(const T rad){
-    return Degrees<T>::from_radians(rad);
-}
-
-template<arithmetic T>
-// class Kinematics<T, 2, KinematicPairs::Revolute, KinematicPairs::Revolute>{
 class RR2_Kinematics final{
 public:
-    // static constexpr auto name = "Cylindrical";
-    // static constexpr auto num_joints = 2;
-    // static constexpr auto num_links = 3;
-    // static constexpr auto num_dofs = 1;
-    // static constexpr auto num_params = 0;
-
-    // static constexpr auto joint_types = std::array{JointType::Revolute, JointType::Prismatic};
 
     struct Config{
         T base_length;
         T link_length;
+    };
+
+    struct Gesture{
+        const Vector2<T> shift_position;
     };
 
     struct Solution{
@@ -105,16 +78,16 @@ public:
     };
 
 
-    static constexpr Vector2<T> forward(const Config & cfg, const Solution & solu, const Vector2<T> org){
+    static constexpr Gesture forward(const Config & cfg, const Solution & solu){
         const auto B = cfg.base_length;
         const auto L = cfg.link_length;
         const auto R1 = solu.to_absolute().j1_abs_rad;
         const auto R2 = solu.to_absolute().j2_abs_rad;
-        return org + Vector2<T>(B, 0).rotated(R1) + Vector2<T>(L, 0).rotated(R2);
+        return {Vector2<T>(B, 0).rotated(R1) + Vector2<T>(L, 0).rotated(R2)};
     }
 
-    static constexpr Option<Solution> inverse(const Config & cfg, const Vector2<T> dest, const Vector2<T> org){
-        const auto pos = dest - org;
+    static constexpr Option<Solution> inverse(const Config & cfg, const Gesture & gest){
+        const auto pos = gest.shift_position;
         const T L_squ = pos.length_squared();
         const T L = std::sqrt(L_squ);
         //关节活动超出约束空间(远区)
@@ -146,19 +119,13 @@ public:
 };
 
 
-struct RRS_Kinematics_Prelude{
-    enum class Error_Kind:uint8_t{
-        OutOfRange
-    };
-    
-    DEF_ERROR_WITH_KIND(Error, Error_Kind)
-};
+
 
 
 template<arithmetic T>
-class RRS_Kinematics final:public RRS_Kinematics_Prelude{
+class RRS_Kinematics final{
 public:
-
+    using Error = kinematics::prelude::Error;
     template<typename U = void>
     using IResult = Result<U, Error>;
 
@@ -182,7 +149,6 @@ public:
         reconf(cfg);
     }
 
-    //evil fn
     constexpr Option<Solution> inverse(const Gesture & gest) const{
         const auto vars_0 = inverse_single_axis(cfg_, norms_[0], gest);
         const auto vars_1 = inverse_single_axis(cfg_, norms_[1], gest);
@@ -311,7 +277,11 @@ private:
 
     //pure fn
     //通过计算底部，顶部铰链位置和切片圆的半径 将问题转换为二维平面上的双转动副问题
-    static constexpr Option<Solution2> inverse_single_axis(const Config & cfg, const Vector2<T> xy_norm, const Gesture & gest){
+    static constexpr Option<Solution2> inverse_single_axis(
+        const Config & cfg, 
+        const Vector2<T> xy_norm, 
+        const Gesture & gest
+    ){
         const auto sphere = get_top_sphere(cfg, xy_norm, gest);
         const auto circle_opt = project_sphere_to_circle(sphere, xy_norm);
         if(circle_opt.is_none()) return None;
@@ -323,9 +293,7 @@ private:
             {.base_length = cfg.base_length, .link_length = circle.radius}, 
 
             //目的位置
-            Vector2<T>{r_to_org, circle.org.z},
-            //基位置
-            Vector2<T>{cfg.base_plate_radius, 0}
+            {.shift_position = Vector2<T>{r_to_org, circle.org.z} - Vector2<T>{cfg.base_plate_radius, 0}}
         );
     }
 

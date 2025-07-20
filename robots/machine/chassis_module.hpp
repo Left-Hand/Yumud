@@ -2,7 +2,8 @@
 
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 
-#include "types/regions/ray2/Ray2.hpp"
+#include "types/gesture/pose2.hpp"
+#include "types/gesture/twist2.hpp"
 #include "types/vectors/vector2/Vector2.hpp"
 
 #include "chassis_ctrl.hpp"
@@ -35,7 +36,7 @@ public:
 
 
     struct Config{
-        Mecanum4Solver_t<real_t>::Config solver_config;
+        Mecanum4Kinematics<real_t>::Config solver_config;
         // Estimator::Config est_config;
 
         RotationCtrl::Config rot_ctrl_config;
@@ -62,13 +63,13 @@ public:
 protected:
     const Config & config_;
     Wheels wheels_;
-    Mecanum4Solver_t<real_t> solver_{config_.solver_config};
+    Mecanum4Kinematics<real_t> solver_{config_.solver_config};
 
     drivers::AccelerometerIntf & acc_sensor_;
     drivers::GyroscopeIntf & gyr_sensor_;
     drivers::MagnetometerIntf & mag_sensor_;
 
-    Ray2<q16> current_jny_;
+    Pose2<q16> current_jny_;
     real_t gyr_;
     real_t gyr_sum_;
 
@@ -79,7 +80,7 @@ protected:
 
     CtrlMode ctrl_mode_ = CtrlMode::NONE;
 
-    Ray2<q16> target_jny_;
+    Pose2<q16> target_jny_;
     real_t target_rot_;
 
     Vector2<q16> spd_;
@@ -104,14 +105,14 @@ public:
 
     void reset_rot();
     void reset_journey();
-    void trim(const Ray2<q16> & ray);
+    void trim(const Pose2<q16> & pose);
 
-    void recalibrate(const Ray2<q16> & ray);
+    void recalibrate(const Pose2<q16> & pose);
     void init();
     void tick800();
 
-    void setCurrent(const Ray2<q16> & ray);
-    void setPosition(const Ray2<q16> & ray);
+    void setCurrent(const Pose2<q16> & pose);
+    void setPosition(const Pose2<q16> & pose);
     void setPosition(const std::tuple<real_t, real_t, real_t, real_t> pos);
 
     void setMode(const CtrlMode mode){
@@ -121,7 +122,7 @@ public:
     real_t rad(){return gyr_sum_ * real_t(0.005);}
     real_t gyr(){return gyr_;}
     auto jny(){return current_jny_;}
-    auto diff(){return current_jny_.org;}
+    auto diff(){return current_jny_.position;}
     auto spd(){return spd_;}
 
     void entry_spin();
@@ -139,7 +140,7 @@ public:
     //平移
     void shift(const Vector2<q16> & diff);
 
-    void follow(const Ray2<q16> & to);
+    void follow(const Pose2<q16> & to);
 
     //旋转
     void spin(const real_t ang);
@@ -152,7 +153,7 @@ public:
         this->target_rot_ = rad;
     }
 
-    void set_target_jny(const Ray2<q16> & jny){
+    void set_target_jny(const Pose2<q16> & jny){
         this->target_jny_ = jny;
     }
 

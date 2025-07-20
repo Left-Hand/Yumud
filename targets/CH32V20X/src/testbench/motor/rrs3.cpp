@@ -7,7 +7,7 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "rrs3_kinematics.hpp"
+#include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
 
 using namespace ymd;
 
@@ -28,12 +28,12 @@ void rr2_tb(){
         .link_length = 2
     };
 
-    const auto solu = RR2::inverse(cfg, {0_r, 2_r}, {0, 0});
+    const auto solu = RR2::inverse(cfg, {Vector2{0_r, 2_r}});
     if(solu.is_some()){
         const auto [j1, j2] = solu.unwrap().to_absolute();
         DEBUG_PRINTLN(
-            robots::to_degrees(j1),
-            robots::to_degrees(j2)
+            RAD2ANGLE(j1),
+            RAD2ANGLE(j2)
         );
     }
     else DEBUG_PRINTLN("/");
@@ -79,8 +79,8 @@ void rrs3_tb(){
         for(const auto & solu : res){
             const auto [j1, j2] = solu.to_absolute();
             DEBUG_PRINTLN(
-                robots::to_degrees(j1),
-                robots::to_degrees(j2)
+                RAD2ANGLE(j1),
+                RAD2ANGLE(j2)
             );
         }
     }
