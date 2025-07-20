@@ -466,13 +466,13 @@ template<arithmetic T>
 void AABB<T>::quantize(T p_unit) {
 	size += position;
 
-	position.x -= fposmodp(position.x, p_unit);
-	position.y -= fposmodp(position.y, p_unit);
-	position.z -= fposmodp(position.z, p_unit);
+	position.x -= fposmod(position.x, p_unit);
+	position.y -= fposmod(position.y, p_unit);
+	position.z -= fposmod(position.z, p_unit);
 
-	size.x -= fposmodp(size.x, p_unit);
-	size.y -= fposmodp(size.y, p_unit);
-	size.z -= fposmodp(size.z, p_unit);
+	size.x -= fposmod(size.x, p_unit);
+	size.y -= fposmod(size.y, p_unit);
+	size.z -= fposmod(size.z, p_unit);
 
 	size.x += p_unit;
 	size.y += p_unit;

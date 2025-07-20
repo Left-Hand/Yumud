@@ -49,7 +49,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Ray2 regular() const{
-        return Ray2{this->org, fposmodp(this->rad, T(TAU))};
+        return Ray2{this->org, fposmod(this->rad, T(TAU))};
     }
 
 

@@ -133,13 +133,13 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 template<const size_t Q>
 constexpr _iq<Q> _IQNdiv(_iq<Q> a, _iq<Q> b)
 {
-    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_DEFAULT>(a.to_i32(), b.to_i32()));
+    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_DEFAULT>(a.as_i32(), b.as_i32()));
 }
 
 template<const size_t Q>
 constexpr _iq<Q> _UIQdiv(_iq<Q> a, _iq<Q> b)
 {
-    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_UNSIGNED>(a.to_i32(), b.to_i32()));
+    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_UNSIGNED>(a.as_i32(), b.as_i32()));
 }
 
 }

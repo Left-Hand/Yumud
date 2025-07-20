@@ -10,7 +10,7 @@ using namespace ymd::rmst;
 // }
 
 // static constexpr real_t wrap_tau(const Radian rad){
-//     return fposmodp(real_t(rad), real_t(TAU));
+//     return fposmod(real_t(rad), real_t(TAU));
 // }
 
 

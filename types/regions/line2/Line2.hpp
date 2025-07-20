@@ -62,7 +62,7 @@ public:
     Line2<T> abs() const {
         if(T(0) <= rad and rad < T(PI)) return *this; 
 
-        auto m = fposmodp(rad, T(TAU));
+        auto m = fposmod(rad, T(TAU));
 
         if(d < 0){
             m = m > T(PI) ? m - T(PI) : m + T(PI);
@@ -110,7 +110,7 @@ public:
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (is_equal_approx(regular.d, other_regular.d)) and 
-                is_equal_approx(fposmodp(other_regular.rad - regular.rad, T(PI)), T(0));
+                is_equal_approx(fposmod(other_regular.rad - regular.rad, T(PI)), T(0));
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -203,8 +203,8 @@ public:
     //是否与另一条直线正交
     [[nodiscard]] __fast_inline constexpr
     bool is_orthogonal_with(const Line2<T> & other) const {
-        return is_equal_approx(fposmodp(other.rad - this->rad, T(PI)), T(PI/2));
-        // return fposmodp(other.rad - this->rad, T(PI));
+        return is_equal_approx(fposmod(other.rad - this->rad, T(PI)), T(PI/2));
+        // return fposmod(other.rad - this->rad, T(PI));
     }
 
     [[nodiscard]] __fast_inline constexpr

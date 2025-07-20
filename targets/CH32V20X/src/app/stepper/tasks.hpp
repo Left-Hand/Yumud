@@ -8,46 +8,13 @@
 #include "meta_utils.hpp"
 #include "calibrate_utils.hpp"
 
+#include "digipw/prelude/abdq.hpp"
+
+
 static constexpr size_t CHOP_FREQ = 15_KHz;
 static constexpr size_t ISR_FREQ = CHOP_FREQ;
 
 namespace ymd{
-
-template<typename ... Args>
-struct PhantomMarker {
-    // Default constructor
-    constexpr PhantomMarker() noexcept = default;
-
-    // Copy/move constructors and assignments (defaulted)
-    constexpr PhantomMarker(const PhantomMarker&) noexcept = default;
-    constexpr PhantomMarker(PhantomMarker&&) noexcept = default;
-    PhantomMarker& operator=(const PhantomMarker&) noexcept = default;
-    PhantomMarker& operator=(PhantomMarker&&) noexcept = default;
-
-    // No members - empty class
-};
-
-struct AlphaBetaDuty{
-    q16 alpha;
-    q16 beta;
-
-    q16 & operator [](size_t idx){
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-
-
-    const q16 & operator [](size_t idx) const{
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-};
 
 
 struct MotorUtils{
@@ -116,12 +83,12 @@ struct MotorUtils{
             ticks_ = cfg.timeout_ticks;
         } 
 
-        constexpr AlphaBetaDuty resume(const real_t lappos){
+        constexpr digipw::AlphaBetaDuty resume(const real_t lappos){
             tick_cnt_++;
 
             const auto [s,c] = sincospu(targ_elec_rotation_);
 
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
                 .beta = s * STALL_DRIVE_DUTY
             };
@@ -164,11 +131,11 @@ struct MotorUtils{
             ;
         }
 
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
             tick_cnt_++;
             const auto targ_lap_position = ticks_to_linear_position(tick_cnt_);
             const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = BEEP_DRIVE_DUTY * 2,
                 .beta = s * BEEP_DRIVE_DUTY * 2
             };
@@ -209,11 +176,11 @@ struct MotorUtils{
             ;
         } 
 
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
             const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
             const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
                 .beta = s * STALL_DRIVE_DUTY
             };
@@ -253,11 +220,11 @@ struct MotorUtils{
             ;
         } 
 
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
             const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
             const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
                 .beta = s * STALL_DRIVE_DUTY
             };
@@ -306,14 +273,14 @@ struct CoilCheckTasksUtils:public MotorUtils{
         
         constexpr CheckStallTask(const Config & cfg){;} 
 
-        constexpr AlphaBetaDuty resume(const real_t cont_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<q16>::from_center(cont_position));
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position));
             tick_cnt_++;
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = 0,
                 .beta = 0
             };
@@ -360,7 +327,7 @@ struct CoilCheckTasksUtils:public MotorUtils{
             is_beta_ = cfg.is_beta;
         };
 
-        constexpr AlphaBetaDuty resume(const real_t cont_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<q16>::from_center(cont_position));
@@ -372,7 +339,7 @@ struct CoilCheckTasksUtils:public MotorUtils{
                 -0.5_r, 0.5_r
             )) * STALL_DRIVE_DUTY;
 
-            auto make_duty = [&]() -> AlphaBetaDuty{
+            auto make_duty = [&]() -> digipw::AlphaBetaDuty{
                 if(is_beta_){
                     return {duty, 0};
                 }else{
@@ -447,7 +414,7 @@ struct CalibrateTasksUtils:public MotorUtils{
         struct Config{
             using Task = CalibrateRotateTask;
 
-            CalibrateDataVector & vector;
+            dsp::CalibrateTable & table;
             q16 delta_position;
         };
 
@@ -457,7 +424,7 @@ struct CalibrateTasksUtils:public MotorUtils{
         };
         
         constexpr CalibrateRotateTask(const Config & cfg):
-            vector_(cfg.vector),
+            table_(cfg.table),
             delta_position_(cfg.delta_position){
             ;
         }
@@ -468,7 +435,7 @@ struct CalibrateTasksUtils:public MotorUtils{
         constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
         constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
 
-        constexpr AlphaBetaDuty resume(const real_t meas_lap_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
             const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
             const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
             
@@ -476,13 +443,13 @@ struct CalibrateTasksUtils:public MotorUtils{
 
             if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
                 const auto res = push_data(targ_lap_position, meas_lap_position);
-                // if(res.is_err()) PANIC(vector_.get().as_view());
+                // if(res.is_err()) PANIC(table_.get().as_view());
                 if(res.is_err()) PANIC();
-                    // .expect(vector_.get().size(), 80);
+                    // .expect(table_.get().size(), 80);
             }
 
 
-            return AlphaBetaDuty{
+            return digipw::AlphaBetaDuty{
                 .alpha = c * CALIBRATE_DRIVE_DUTY,
                 .beta = s * CALIBRATE_DRIVE_DUTY
             };
@@ -503,12 +470,12 @@ struct CalibrateTasksUtils:public MotorUtils{
             const real_t targ_lap_position,
             const real_t meas_lap_position
         ){
-            return vector_.get().push_back(targ_lap_position, meas_lap_position);
+            return table_.get().push_back(targ_lap_position, meas_lap_position);
         }
 
         size_t tick_cnt_ = 0;
         
-        std::reference_wrapper<CalibrateDataVector> vector_;
+        std::reference_wrapper<dsp::CalibrateTable> table_;
         q16 delta_position_;
     };
 
@@ -528,7 +495,7 @@ struct TaskSequence final{
     using DignosisVariant = configs_tuple_to_dignosis_variant_t<Configs>;
 
     constexpr TaskSequence(const Configs & configs):
-        CONFIGS(configs){;}
+        CONFIGS_QUEUE(configs){;}
     constexpr Ret resume(const Args cont_position){
         std::visit([&](auto && task) -> void{
             if(not task.is_finished()) return;
@@ -546,7 +513,7 @@ struct TaskSequence final{
             }
         }, tasks_variant_);
 
-        return std::visit([&](auto && task) -> AlphaBetaDuty {
+        return std::visit([&](auto && task) -> digipw::AlphaBetaDuty {
             return task.resume(cont_position);
         }, tasks_variant_);
     };
@@ -585,7 +552,7 @@ private:
         static constexpr size_t N = std::tuple_size_v<Configs>;
         static_assert(I < N, "Invalid task index");
         using Task = idx_to_task_t<I, Configs>;
-        const auto & config = std::get<I>(CONFIGS);
+        const auto & config = std::get<I>(CONFIGS_QUEUE);
         tasks_variant_ = Task(config);
     }
 
@@ -615,8 +582,8 @@ private:
     }
 
 
-    const Configs CONFIGS;
-    TasksVariant tasks_variant_ = {std::get<0>(CONFIGS)};
+    const Configs CONFIGS_QUEUE;
+    TasksVariant tasks_variant_ = {std::get<0>(CONFIGS_QUEUE)};
     Option<DignosisVariant> may_dignosis_variant_ = None;
     size_t task_index_ = 0;
     bool is_all_tasks_finished_ = false;
@@ -625,7 +592,7 @@ private:
 
 class CoilMotionCheckTasks:public CoilCheckTasksUtils{
 public:
-    static constexpr auto CONFIGS = std::make_tuple(
+    static constexpr auto CONFIGS_QUEUE = std::make_tuple(
         //令转子停下
         StallTask::Config{
             .targ_elec_rotation = 0,
@@ -655,7 +622,7 @@ public:
         }
     );
 
-    constexpr AlphaBetaDuty resume(const real_t lap_position){
+    constexpr digipw::AlphaBetaDuty resume(const real_t lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -673,18 +640,18 @@ public:
 
 private:
     struct Settings{
-        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
         using Args = real_t;
-        using Ret = AlphaBetaDuty;
+        using Ret = digipw::AlphaBetaDuty;
     };
 
-    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+    TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};
 };
 
 auto make_calibrate_configs = [](
-        CalibrateDataVector & forward_calibrate_data_vector,
-        CalibrateDataVector & backward_calibrate_data_vector
+        dsp::CalibrateTable & forward_calibrate_table,
+        dsp::CalibrateTable & backward_calibrate_table
     ) -> auto{
     return std::make_tuple(
         // LinearRotateTask::Config{
@@ -704,19 +671,19 @@ auto make_calibrate_configs = [](
         // }
         // ,
         CalibrateTasksUtils::CalibrateRotateTask::Config{
-            .vector = forward_calibrate_data_vector,
+            .table = forward_calibrate_table,
             .delta_position = 1_r
         },
 
         CalibrateTasksUtils::CalibrateRotateTask::Config{
-            .vector = backward_calibrate_data_vector,
+            .table = backward_calibrate_table,
             .delta_position = -1_r
         }
 
 
 
         // CalibrateTasksUtils::CalibrateRotateTask::Config{
-        //     .vector = calibrate_data_vector,
+        //     .table = calibrate_table,
         //     .delta_position = -0.4_r
         // }
     );
@@ -741,20 +708,20 @@ public:
         using Configs = IConfigs;
         using Error = TaskError;
         using Args = real_t;
-        using Ret = AlphaBetaDuty;
+        using Ret = digipw::AlphaBetaDuty;
     };
     TaskSequence<Settings> task_sequence_ = {configs_};
 
     constexpr CalibrateTasks(
-        CalibrateDataVector & forward_calibrate_data_vector,
-        CalibrateDataVector & backward_calibrate_data_vector
+        dsp::CalibrateTable & forward_calibrate_table,
+        dsp::CalibrateTable & backward_calibrate_table
     ):
         configs_(make_calibrate_configs(
-            forward_calibrate_data_vector,
-            backward_calibrate_data_vector
+            forward_calibrate_table,
+            backward_calibrate_table
         )){;}
 
-    constexpr AlphaBetaDuty resume(const real_t lap_position){
+    constexpr digipw::AlphaBetaDuty resume(const real_t lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -799,7 +766,7 @@ private:
 
 class BeepTasks:public MotorUtils{
 public:
-    static constexpr auto CONFIGS = std::make_tuple(
+    static constexpr auto CONFIGS_QUEUE = std::make_tuple(
         BeepTask::Config{
             .freq = 700,
             .period = 100ms
@@ -826,7 +793,7 @@ public:
         }
     );
 
-    constexpr AlphaBetaDuty resume(const real_t lap_position){
+    constexpr digipw::AlphaBetaDuty resume(const real_t lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -844,13 +811,13 @@ public:
 
 private:
     struct Settings{
-        using Configs = std::decay_t<decltype(CONFIGS)>;
+        using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
         using Args = real_t;
-        using Ret = AlphaBetaDuty;
+        using Ret = digipw::AlphaBetaDuty;
     };
 
-    TaskSequence<Settings> task_sequence_ = {CONFIGS};
+    TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};
 };
 
 

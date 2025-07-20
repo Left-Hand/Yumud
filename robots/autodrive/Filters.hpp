@@ -79,8 +79,8 @@ public:
 };
 
 __fast_inline constexpr real_t min_rad_diff(real_t from, real_t to){
-    from = fposmodp(from, real_t(TAU));
-    to = fposmodp(to, real_t(TAU));
+    from = fposmod(from, real_t(TAU));
+    to = fposmod(to, real_t(TAU));
 
     const auto diff = to - from;
     return diff > real_t(PI) ? (diff - real_t(TAU)) : diff;

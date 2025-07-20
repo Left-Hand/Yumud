@@ -48,6 +48,9 @@
 #include "robots/commands/machine_commands.hpp"
 #include "robots/commands/nmt_commands.hpp"
 
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
+
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;

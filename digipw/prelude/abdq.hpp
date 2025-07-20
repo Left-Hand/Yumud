@@ -4,7 +4,27 @@
 
 
 namespace ymd::digipw{
+struct AlphaBetaDuty{
+    q16 alpha;
+    q16 beta;
 
+    q16 & operator [](size_t idx){
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+
+
+    const q16 & operator [](size_t idx) const{
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+};
 
 
 struct DqValue{
@@ -54,27 +74,6 @@ struct AbValue{
     }
 };
 
-struct AlphaBetaDuty{
-    q16 alpha;
-    q16 beta;
-
-    q16 & operator [](size_t idx){
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-
-
-    const q16 & operator [](size_t idx) const{
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-};
 
 
 namespace details{

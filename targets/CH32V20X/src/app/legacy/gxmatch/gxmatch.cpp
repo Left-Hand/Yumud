@@ -655,7 +655,7 @@ void host_main(){
                 // const auto [x,y] = flow_sensor_.getPosition();
 
                 // DEBUG_PRINTLN(rot, gyr_raw, x, y);
-                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmodp(rot_raw, real_t(PI/2)));
+                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmod(rot_raw, real_t(PI/2)));
                 // DEBUG_PRINTLN(gyr_raw);
                 clock::delay(5ms);
             }

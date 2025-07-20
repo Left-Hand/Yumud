@@ -28,7 +28,7 @@ template<size_t Q>
 __fast_inline constexpr 
 uint8_t get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
     static_assert(sizeof(ymd::iq_t<Q>) <= 8, "Size of iq_t<Q> must be less than 8");
-    const auto raw = arg.to_i32();
+    const auto raw = arg.as_i32();
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 

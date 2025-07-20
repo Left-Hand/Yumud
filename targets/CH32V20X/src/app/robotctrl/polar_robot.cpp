@@ -432,26 +432,6 @@ public CanMsgHandlerIntf{
     }
 };
 
-template<typename T>
-class RobotMsgCtrp{
-    constexpr hal::CanMsg serialize_to_canmsg() const {
-        const auto bytes_iter = static_cast<const T *>(this)->iter_bytes();
-        return hal::CanMsg::from_bytes(bytes_iter);
-    }
-};
-
-class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
-    real_t x;
-    real_t y;
-
-    constexpr std::array<uint8_t, 8> iter_bytes() const {
-        uint64_t raw;
-        raw |= std::bit_cast<uint32_t>(y.to_i32());
-        raw <<= 32;
-        raw |= std::bit_cast<uint32_t>(x.to_i32());
-        return std::bit_cast<std::array<uint8_t, 8>>(raw);
-    } 
-};
 
 
 // #define MOCK_TEST

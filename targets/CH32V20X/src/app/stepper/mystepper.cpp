@@ -35,6 +35,11 @@
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
+#include "digipw/pwmgen/stepper_pwmgen.hpp"
+#include "core/utils/progress.hpp"
+
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
 
 using namespace ymd;
 
@@ -46,60 +51,9 @@ using namespace ymd;
 using digipw::AlphaBetaDuty;
 
 
-//AT8222
-class StepperSVPWM{
-public:
-    StepperSVPWM(
-        hal::TimerOC & pwm_ap,
-        hal::TimerOC & pwm_an,
-        hal::TimerOC & pwm_bp,
-        hal::TimerOC & pwm_bn
-    ):
-        channel_a_(pwm_ap, pwm_an),
-        channel_b_(pwm_bp, pwm_bn)
-    {;}
-
-    void init_channels(){
-        // oc.init({.valid_level = LOW});
-
-        channel_a_.inverse(EN);
-        channel_b_.inverse(DISEN);
-
-        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = HIGH
-        };
-
-        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = LOW,
-        };
-        
-        channel_a_.pos_channel().init(pwm_noinv_cfg);
-        channel_a_.neg_channel().init(pwm_noinv_cfg);
-        channel_b_.pos_channel().init(pwm_inv_cfg);
-        channel_b_.neg_channel().init(pwm_inv_cfg);
-
-    }
-
-    void set_alpha_beta_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_duty(duty_a);
-        channel_b_.set_duty(duty_b);
-    }
-private:
-
-    hal::TimerOcPair channel_a_;
-    hal::TimerOcPair channel_b_;
-};
 
 
 
-struct Reflecter{
-    template<typename T>
-    static constexpr int display(T && obj){
-        return 0;
-    }
-};
 
 struct TaskSpawner{
     template<typename T>
@@ -112,20 +66,17 @@ struct PreoperateTasks{
 
 };
 
-namespace ymd::hal{
-    auto & PROGRAM_FAULT_LED = PC<14>();
-}
 
 struct Archive{
 
 };
 
-class MotorSystem{
+class MotorFibre{
 public:
     using TaskError = BeepTasks::TaskError;
-    MotorSystem(
+    MotorFibre(
         drivers::EncoderIntf & encoder,
-        StepperSVPWM & svpwm
+        digipw::StepperSVPWM & svpwm
     ):
         encoder_(encoder),
         svpwm_(svpwm)
@@ -160,7 +111,7 @@ public:
 
         auto & comp = calibrate_comp_;
         // if(let may_err = comp.err(); may_err.is_some()){
-        if constexpr(false){
+        #if 0
             constexpr let TASK_COUNT = 
                 std::decay_t<decltype(comp)>::TASK_COUNT;
             let idx = comp.task_index();
@@ -199,8 +150,8 @@ public:
                 );
             });
             return Err(res.unwrap_err());
-        }
-        else if(comp.is_finished()){
+        #endif
+        if(comp.is_finished()){
 
             is_comp_finished_ = true;
             pos_filter_.update(meas_lap_position);
@@ -255,20 +206,25 @@ public:
             for (let & item : view) {
                 let expected = item.expected();
                 let measured = item.measured();
-                // DEBUG_PRINTLN(expected, measured, fposmodp(q20(expected - measured), 0.02_q20) * 100);
+                // DEBUG_PRINTLN(expected, measured, fposmod(q20(expected - measured), 0.02_q20) * 100);
                 let position_err = q20(expected - measured);
-                let mod_err = fposmodp(position_err, 0.02_q20);
+                let mod_err = fposmod(position_err, 0.02_q20);
                 DEBUG_PRINTLN(expected, measured, mod_err * 100);
                 clock::delay(1ms);
             }
         };
 
-        print_view(pos_filter_.forward_cali_vec.iter());
-        print_view(pos_filter_.backward_cali_vec.iter());
+        print_view(forward_cali_table_.iter());
+        print_view(backward_cali_table_.iter());
+
+        auto corrector = dsp::PositionCorrector{{
+            .forward_cali_table = forward_cali_table_, 
+            .backward_cali_table = backward_cali_table_
+        }};
 
         for(size_t i = 0; i < 50; i++){
             let raw = real_t(i) / 50;
-            let corrected = pos_filter_.correct_raw_position(raw);
+            let corrected = corrector.correct_raw_position(raw);
             DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
             clock::delay(1ms);
         }
@@ -280,13 +236,20 @@ public:
     Microseconds execution_time_ = 0us;
 // private:
 public:
-    drivers::EncoderIntf & encoder_;
-    StepperSVPWM & svpwm_;
+    using CommandShaper = dsp::CommandShaper1;
+    using CommandShaperConfig = CommandShaper::Config;
 
-    CoilMotionCheckTasks coil_motion_check_comp_ = {};
+    drivers::EncoderIntf & encoder_;
+    digipw::StepperSVPWM & svpwm_;
+
+    CoilMotionCheckTasks coil_motion_check_comp_{};
+
+    dsp::CalibrateTable forward_cali_table_{50};
+    dsp::CalibrateTable backward_cali_table_{50};
+
     CalibrateTasks calibrate_comp_ = {
-        pos_filter_.forward_cali_vec,
-        pos_filter_.backward_cali_vec
+        forward_cali_table_,
+        backward_cali_table_
     };
 
 
@@ -294,8 +257,6 @@ public:
 
     static constexpr real_t MC_TAU = 80;
 
-    using CommandShaper = dsp::CommandShaper1;
-    using CommandShaperConfig = CommandShaper::Config;
 
     static constexpr CommandShaperConfig CS_CONFIG{
             .kp = MC_TAU * MC_TAU,
@@ -358,16 +319,6 @@ struct Bin{
 
 #endif
 
-struct Progress{
-    size_t current;
-    size_t total;
-
-    friend OutputStream & operator <<(OutputStream & os, const Progress & self){
-        return os << os.brackets<'['>() << 
-            self.current << os.splitter() << self.total 
-            << os.brackets<']'>();
-    }
-};
 
 class ArchiveSystem{
     ArchiveSystem(drivers::AT24CXX at24):
@@ -477,10 +428,10 @@ private:
     // }
 
 [[maybe_unused]] 
-static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
+static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & svpwm){
     DEBUGGER.no_brackets();
 
-    auto motor_system_ = MotorSystem{encoder, svpwm};
+    auto motor_system_ = MotorFibre{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         motor_system_.resume().examine();
@@ -534,7 +485,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 
 
 
-[[maybe_unused]] static void test_eeprom(){
+[[maybe_unused]] static void eeprom_tb(){
     hal::I2cSw i2c_sw{&hal::portD[1], &hal::portD[0]};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
@@ -559,7 +510,7 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
 }
 
 
-void test_curr(){
+[[maybe_unused]] static void currentloop_tb(){
     UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
@@ -632,15 +583,15 @@ void test_curr(){
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & trig_gpio = hal::PC<13>();
-    trig_gpio.outpp();
+    auto & isr_trig_gpio = hal::PC<13>();
+    isr_trig_gpio.outpp();
 
     real_t a_curr;
     real_t b_curr;
     adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // trig_gpio.toggle();
+        // isr_trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
-        // trig_gpio.toggle();
+        // isr_trig_gpio.toggle();
         // static bool is_a = false;
         // b_curr = inj_b.get_voltage();
         // a_curr = inj_a.get_voltage();
@@ -671,12 +622,13 @@ void test_curr(){
 
 
 void mystepper_main(){
+
     UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
-    // test_curr();
+    // currentloop_tb();
 
     {
         hal::Gpio & ena_gpio = hal::portB[0];
@@ -695,7 +647,7 @@ void mystepper_main(){
     timer.enable_arr_sync();
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
-    StepperSVPWM svpwm{
+    digipw::StepperSVPWM svpwm{
         timer.oc<1>(),
         timer.oc<2>(),
         timer.oc<3>(),
@@ -721,8 +673,10 @@ void mystepper_main(){
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & trig_gpio = hal::PC<13>();
-    trig_gpio.outpp();
+    [[maybe_unused]] auto & isr_trig_gpio = hal::PC<13>();
+    [[maybe_unused]] auto & PROGRAM_FAULT_LED = hal::PC<14>();
+
+    isr_trig_gpio.outpp();
 
     real_t a_curr;
     real_t b_curr;
@@ -751,8 +705,8 @@ void mystepper_main(){
         .fast_mode_en = DISEN
     }).examine();
 
-    test_check(encoder, svpwm);
-    // test_eeprom();
+    motorcheck_tb(encoder, svpwm);
+    // eeprom_tb();
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         const auto t = clock::time();
@@ -799,7 +753,7 @@ struct LapCalibrateTable{
 private:
 
     constexpr T forward(const T x) const {
-        const T x_wrapped = fposmodp(x,real_t(MOTOR_POLE_PAIRS));
+        const T x_wrapped = fposmod(x,real_t(MOTOR_POLE_PAIRS));
         const uint x_int = int(x_wrapped);
         const T x_frac = x_wrapped - x_int;
 

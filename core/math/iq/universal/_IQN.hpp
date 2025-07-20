@@ -19,11 +19,11 @@ public:
         return _iq<Q>(value);
     }
 
-    __fast_inline constexpr int32_t to_i32() const {
+    __fast_inline constexpr int32_t as_i32() const {
         return value_;
     }
 
-    __fast_inline constexpr uint32_t to_u32() const {
+    __fast_inline constexpr uint32_t as_u32() const {
         return std::bit_cast<uint32_t>(value_);
     }
 
