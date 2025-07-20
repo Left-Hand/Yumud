@@ -41,6 +41,7 @@
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "core/utils/data_iter.hpp"
+#include "core/utils/release_info.hpp"
 
 using namespace ymd;
 
@@ -53,24 +54,12 @@ using digipw::AlphaBetaDuty;
 
 
 
-
-
-
-struct TaskSpawner{
-    template<typename T>
-    static constexpr auto spawn(T && obj){
-        return 0;
-    }
-};
-
 struct PreoperateTasks{
 
 };
 
 
-struct Archive{
 
-};
 
 class MotorFibre{
 public:
@@ -322,6 +311,13 @@ struct Bin{
 
 
 namespace archive{
+static constexpr size_t STORAGE_MAX_SIZE = 256;
+static constexpr size_t HEADER_MAX_SIZE = 32;
+static constexpr size_t CONTEXT_PLACE_OFFSET = HEADER_MAX_SIZE;
+static constexpr size_t CONTEXT_MAX_SIZE = STORAGE_MAX_SIZE - CONTEXT_PLACE_OFFSET;
+
+using Bin = std::array<uint8_t, STORAGE_MAX_SIZE>;
+
 struct Header{
     HashCode hashcode;
     ReleaseInfo release_info;
@@ -336,75 +332,32 @@ struct Header{
     }
 };
 
+static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
+
 template<typename Iter>
-auto generate_header(Iter && iter) -> Header{ 
+static constexpr auto generate_header(Iter && iter) -> Header{ 
     return Header{
         .hashcode = hash(iter),
-        .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+        .release_info = ReleaseInfo::from("Rstr1aN", ReleaseVersion{0,1})
     };
 }
 
+struct Context{ 
+};
+
+static constexpr Bin generate_bin(const Header & header, const Context & context){
+    Bin bin;
+
+    return bin;
+};
 }
 
-[[maybe_unused]] static void static_test(){
-    auto count_iter_size = [](auto iter) -> size_t{
-        size_t size = 0;
-        while(iter.has_next()){
-            (void)iter.next();
-            size++;
-        }
-        return size;
-    };
-
-    {
-        static constexpr auto msg = [] -> hal::CanMsg{
-            auto iter = RepeatIter(5,3);
-            return hal::CanMsg::from_iter(hal::CanStdId(0), iter).unwrap();
-        }();
-
-        static_assert(msg.iter_payload()[0] == 5);
-        static_assert(msg.size() == 3);
-    }
-    {
-        static constexpr std::array buf = {uint8_t(0x1234), uint8_t(0x5678)};
-        static constexpr auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
-        static constexpr auto iter_size = count_iter_size(iter);
-        static_assert(iter_size == 2);
-    }
-
-    {
-        static constexpr std::array buf = {uint32_t(0x1234), uint32_t(0x5678), uint32_t(0x5678)};
-        static constexpr auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
-        static constexpr auto iter_size = count_iter_size(iter);
-        static_assert(iter_size == 12);
-    }
-
-    {
-        static constexpr auto iter = RepeatIter(0, 4);
-        static constexpr auto iter_size = count_iter_size(iter);
-        static_assert(iter_size == 4);
-    }
-    {
-        static constexpr std::array buf = {uint16_t(0x1234), uint16_t(0x5678)};
-        static constexpr auto msg = [] -> hal::CanMsg{
-            auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
-            return hal::CanMsg::from_iter(hal::CanStdId(0), iter).unwrap();
-        }();
-
-        static_assert(msg.iter_payload()[0] == 0X34);
-        static_assert(msg.size() == 4);
-    }
-}
-
+#if 0
 class MotorArchiveSystem{
     MotorArchiveSystem(drivers::AT24CXX at24):
         at24_(at24){;}
 
-    static constexpr size_t STORAGE_MAX_SIZE = 256;
-    using ArchiveBuf = std::array<uint8_t, STORAGE_MAX_SIZE>;
-    static constexpr size_t HEADER_MAX_SIZE = 32;
-    static constexpr size_t BODY_OFFSET = HEADER_MAX_SIZE;
-    static constexpr size_t BODY_MAX_SIZE = STORAGE_MAX_SIZE - HEADER_MAX_SIZE;
+
 
     enum class State:uint8_t{
         Idle,
@@ -467,6 +420,7 @@ private:
     drivers::AT24CXX & at24_;
     std::array<uint8_t, STORAGE_MAX_SIZE> buf_;
 };
+#endif
 
 
     // void save(std::span<const uint8_t>){

@@ -17,7 +17,7 @@ static constexpr size_t ISR_FREQ = CHOP_FREQ;
 namespace ymd{
 
 
-struct MotorUtils{
+struct MotorTaskPrelude{
     enum class TaskError:uint8_t{
         TaskNotDone,
         RotorIsMovingBeforeChecking,
@@ -131,10 +131,10 @@ struct MotorUtils{
             ;
         }
 
-        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
+        constexpr digipw::AlphaBetaDuty resume(const real_t measured_lap_position){
             tick_cnt_++;
-            const auto targ_lap_position = ticks_to_linear_position(tick_cnt_);
-            const auto [s,c] = sincospu(0.25_r * sinpu(targ_lap_position * freq_));
+            const auto expected_lap_position = ticks_to_linear_position(tick_cnt_);
+            const auto [s,c] = sincospu(0.25_r * sinpu(expected_lap_position * freq_));
             return digipw::AlphaBetaDuty{
                 .alpha = BEEP_DRIVE_DUTY * 2,
                 .beta = s * BEEP_DRIVE_DUTY * 2
@@ -176,9 +176,9 @@ struct MotorUtils{
             ;
         } 
 
-        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+        constexpr digipw::AlphaBetaDuty resume(const real_t measured_lap_position){
+            const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return digipw::AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
@@ -220,9 +220,9 @@ struct MotorUtils{
             ;
         } 
 
-        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
+        constexpr digipw::AlphaBetaDuty resume(const real_t measured_lap_position){
+            const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
+            const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return digipw::AlphaBetaDuty{
                 .alpha = c * STALL_DRIVE_DUTY,
@@ -248,12 +248,12 @@ struct MotorUtils{
 
     struct TaskExecuter{
     template<typename T>
-        static constexpr Result<void, MotorUtils::TaskError>execute(T && obj){
-            return Err(MotorUtils::TaskError::TaskNotDone);
+        static constexpr Result<void, MotorTaskPrelude::TaskError>execute(T && obj){
+            return Err(MotorTaskPrelude::TaskError::TaskNotDone);
         }
     };
 
-struct CoilCheckTasksUtils:public MotorUtils{
+struct CoilCheckTasksPrelude:public MotorTaskPrelude{
     static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
     static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
     static constexpr auto STALL_CHECK_TICKS = 80u;
@@ -381,108 +381,108 @@ struct CoilCheckTasksUtils:public MotorUtils{
 
 
 
-struct CalibrateTasksUtils:public MotorUtils{
+struct CalibrateTasksPrelude:public MotorTaskPrelude{
+using Error = dsp::CalibrateError;
 
-    template<size_t N>
-    struct AverageHelper{
-        constexpr Result<void, void> push_back(const q24 val){
-            if(cnt_ >= N)
-                return Err();
-            sum_ += val;
-            cnt_++;
-            return Ok();
-        }
+template<size_t N>
+struct AverageHelper{
+    constexpr Result<void, void> push_back(const q24 val){
+        if(cnt_ >= N)
+            return Err();
+        sum_ += val;
+        cnt_++;
+        return Ok();
+    }
 
-        constexpr Option<q24> get_avg(){
-            if(cnt_ != N)
-                return None;
-            return Ok(sum_ / N);
-        }
+    constexpr Option<q24> get_avg(){
+        if(cnt_ != N)
+            return None;
+        return Ok(sum_ / N);
+    }
 
-        constexpr void reset(){
-            sum_ = 0;
-            cnt_ = 0;
-        }
-    private:
-        q24 sum_ = 0;
-        size_t cnt_ = 0;
-    };
-
-
-    struct CalibrateRotateTask final{
-
-        struct Config{
-            using Task = CalibrateRotateTask;
-
-            dsp::CalibrateTable & table;
-            q16 delta_position;
-        };
-
-        
-        struct Dignosis {
-            Option<TaskError> err;
-        };
-        
-        constexpr CalibrateRotateTask(const Config & cfg):
-            table_(cfg.table),
-            delta_position_(cfg.delta_position){
-            ;
-        }
-
-        constexpr CalibrateRotateTask(const CalibrateRotateTask &) = default;
-        constexpr CalibrateRotateTask(CalibrateRotateTask &&) = default;
-
-        constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
-        constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
-
-        constexpr digipw::AlphaBetaDuty resume(const real_t meas_lap_position){
-            const auto targ_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
-            const auto [s,c] = sincospu(targ_lap_position * MOTOR_POLE_PAIRS);
-            
-            tick_cnt_++;
-
-            if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
-                const auto res = push_data(targ_lap_position, meas_lap_position);
-                // if(res.is_err()) PANIC(table_.get().as_view());
-                if(res.is_err()) PANIC();
-                    // .expect(table_.get().size(), 80);
-            }
-
-
-            return digipw::AlphaBetaDuty{
-                .alpha = c * CALIBRATE_DRIVE_DUTY,
-                .beta = s * CALIBRATE_DRIVE_DUTY
-            };
-        }
-
-        constexpr bool is_finished(){
-            return tick_cnt_ >= linear_position_to_ticks(ABS(delta_position_));
-        }
-
-        constexpr Dignosis dignosis() const {
-            return Dignosis{
-                .err = None,
-            };
-        }
-
-    private:
-        constexpr Result<void, void> push_data(
-            const real_t targ_lap_position,
-            const real_t meas_lap_position
-        ){
-            return table_.get().push_back(targ_lap_position, meas_lap_position);
-        }
-
-        size_t tick_cnt_ = 0;
-        
-        std::reference_wrapper<dsp::CalibrateTable> table_;
-        q16 delta_position_;
-    };
-
+    constexpr void reset(){
+        sum_ = 0;
+        cnt_ = 0;
+    }
+private:
+    q24 sum_ = 0;
+    size_t cnt_ = 0;
 };
 
 
+struct CalibrateRotateTask final{
+    using Error = dsp::CalibrateError;
+    
+    struct Config{
+        using Task = CalibrateRotateTask;
 
+        dsp::CalibrateTable & table;
+        q16 delta_position;
+    };
+
+    
+    struct Dignosis {
+        Option<TaskError> err;
+    };
+    
+    constexpr CalibrateRotateTask(const Config & cfg):
+        table_(cfg.table),
+        delta_position_(cfg.delta_position){
+        ;
+    }
+
+    constexpr CalibrateRotateTask(const CalibrateRotateTask &) = default;
+    constexpr CalibrateRotateTask(CalibrateRotateTask &&) = default;
+
+    constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
+    constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
+
+    constexpr digipw::AlphaBetaDuty resume(const real_t measured_lap_position){
+        const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
+        const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
+        
+        tick_cnt_++;
+
+        if(tick_cnt_ % (MICROSTEPS_PER_SECTOR * 4) == 0){
+            const auto res = push_data(
+                expected_lap_position, measured_lap_position);
+            // if(res.is_err()) PANIC(table_.get().as_view());
+            if(res.is_err()) PANIC();
+                // .expect(table_.get().size(), 80);
+        }
+
+
+        return digipw::AlphaBetaDuty{
+            .alpha = c * CALIBRATE_DRIVE_DUTY,
+            .beta = s * CALIBRATE_DRIVE_DUTY
+        };
+    }
+
+    constexpr bool is_finished(){
+        return tick_cnt_ >= linear_position_to_ticks(ABS(delta_position_));
+    }
+
+    constexpr Dignosis dignosis() const {
+        return Dignosis{
+            .err = None,
+        };
+    }
+
+private:
+    constexpr Result<void, Error> push_data(
+        const real_t expected_lap_position,
+        const real_t measured_lap_position
+    ){
+        return table_.get().push_back(expected_lap_position, measured_lap_position);
+    }
+
+    size_t tick_cnt_ = 0;
+    
+    std::reference_wrapper<dsp::CalibrateTable> table_;
+    q16 delta_position_;
+};
+
+};
 
 
 template<typename TaskSettings>
@@ -590,65 +590,6 @@ private:
 };
 
 
-class CoilMotionCheckTasks:public CoilCheckTasksUtils{
-public:
-    static constexpr auto CONFIGS_QUEUE = std::make_tuple(
-        //令转子停下
-        StallTask::Config{
-            .targ_elec_rotation = 0,
-            .timeout_ticks = STALL_TICKS
-        },
-    
-        // 检测转子已经停下
-        CheckStallTask::Config{},
-
-        // 检测转子是否能够在A相的驱使下运动
-        CheckMovingTask::Config{
-            .is_beta = false
-        },
-
-        //令转子停下
-        StallTask::Config{
-            .targ_elec_rotation = 0,
-            .timeout_ticks = STALL_TICKS
-        },
-
-        // 检测转子已经停下
-        CheckStallTask::Config{},
-
-        // 检测转子是否能够在B相的驱使下运动
-        CheckMovingTask::Config{
-            .is_beta = true
-        }
-    );
-
-    constexpr digipw::AlphaBetaDuty resume(const real_t lap_position){
-        return task_sequence_.resume(lap_position);
-    }
-
-    bool is_finished() const {
-        return task_sequence_.is_finished();
-    }
-
-    size_t task_index() const {
-        return task_sequence_.task_index();
-    }
-
-    auto err() const {
-        return task_sequence_.err();
-    }
-
-private:
-    struct Settings{
-        using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
-        using Error = TaskError;
-        using Args = real_t;
-        using Ret = digipw::AlphaBetaDuty;
-    };
-
-    TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};
-};
-
 auto make_calibrate_configs = [](
         dsp::CalibrateTable & forward_calibrate_table,
         dsp::CalibrateTable & backward_calibrate_table
@@ -662,27 +603,27 @@ auto make_calibrate_configs = [](
         //     .delta_position = -0.4_r
         // },
 
-        // CalibrateTasksUtils::LinearRotateTask::Config{
+        // CalibrateTasksPrelude::LinearRotateTask::Config{
         //     .delta_position = 0.4_r
         // },
     
-        // CalibrateTasksUtils::LinearRotateTask::Config{
+        // CalibrateTasksPrelude::LinearRotateTask::Config{
         //     .delta_position = -0.4_r
         // }
         // ,
-        CalibrateTasksUtils::CalibrateRotateTask::Config{
+        CalibrateTasksPrelude::CalibrateRotateTask::Config{
             .table = forward_calibrate_table,
             .delta_position = 1_r
         },
 
-        CalibrateTasksUtils::CalibrateRotateTask::Config{
+        CalibrateTasksPrelude::CalibrateRotateTask::Config{
             .table = backward_calibrate_table,
             .delta_position = -1_r
         }
 
 
 
-        // CalibrateTasksUtils::CalibrateRotateTask::Config{
+        // CalibrateTasksPrelude::CalibrateRotateTask::Config{
         //     .table = calibrate_table,
         //     .delta_position = -0.4_r
         // }
@@ -690,7 +631,7 @@ auto make_calibrate_configs = [](
 };
 
 
-class CalibrateTasks:public CalibrateTasksUtils{
+class CalibrateTasks:public CalibrateTasksPrelude{
 public:
     template<typename ... Args>
     static constexpr std::tuple<Args...> make_config(Args && ... args){
@@ -749,10 +690,7 @@ public:
             typename std::tuple_element_t<I, IConfigs>::Task>(
             task_sequence_.tasks_variant());
     }
-    // consteval size_t task_count() const {
-    //     // return std::tuple_size_v<IConfigs>;
-    //     return 2;
-    // }
+
     auto err() const {
         return task_sequence_.err();
     }
@@ -764,7 +702,71 @@ private:
 
 };
 
-class BeepTasks:public MotorUtils{
+
+
+class CoilMotionCheckTasks:public CoilCheckTasksPrelude{
+public:
+    static constexpr auto CONFIGS_QUEUE = std::make_tuple(
+        //令转子停下
+        StallTask::Config{
+            .targ_elec_rotation = 0,
+            .timeout_ticks = STALL_TICKS
+        },
+    
+        // 检测转子已经停下
+        CheckStallTask::Config{},
+
+        // 检测转子是否能够在A相的驱使下运动
+        CheckMovingTask::Config{
+            .is_beta = false
+        },
+
+        //令转子停下
+        StallTask::Config{
+            .targ_elec_rotation = 0,
+            .timeout_ticks = STALL_TICKS
+        },
+
+        // 检测转子已经停下
+        CheckStallTask::Config{},
+
+        // 检测转子是否能够在B相的驱使下运动
+        CheckMovingTask::Config{
+            .is_beta = true
+        }
+    );
+
+    constexpr digipw::AlphaBetaDuty resume(const real_t lap_position){
+        return task_sequence_.resume(lap_position);
+    }
+
+    bool is_finished() const {
+        return task_sequence_.is_finished();
+    }
+
+    size_t task_index() const {
+        return task_sequence_.task_index();
+    }
+
+    auto err() const {
+        return task_sequence_.err();
+    }
+
+private:
+    struct Settings{
+        using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
+        using Error = TaskError;
+        using Args = real_t;
+        using Ret = digipw::AlphaBetaDuty;
+    };
+
+    TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};
+};
+
+
+
+
+class BeepTasks:public MotorTaskPrelude{
 public:
     static constexpr auto CONFIGS_QUEUE = std::make_tuple(
         BeepTask::Config{

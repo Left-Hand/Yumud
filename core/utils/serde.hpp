@@ -4,6 +4,7 @@
 #include "core/utils/reflecter.hpp"
 
 #include "core/math/float/bf16.hpp"
+#include "core/string/string_view.hpp"
 
 namespace ymd::serde{
 
@@ -118,7 +119,8 @@ template<typename Protocol, typename T>
 struct serialize_iter_support_sbo:std::false_type{};
 
 template<typename Protocol, typename T>
-static constexpr bool serialize_iter_sbo_v = serialize_iter_support_sbo<Protocol, T>::value;
+static constexpr bool serialize_iter_support_sbo_v = 
+    serialize_iter_support_sbo<Protocol, T>::value;
 
 
 template<typename Protocol, typename T>
@@ -300,6 +302,37 @@ struct SerializeIterMaker<Protocol, std::span<const T, N>>{
     }
 };
 
+template<typename Protocol, typename T, size_t N>
+struct SerializeIterMaker<Protocol, std::array<T, N>>{
+    static constexpr auto make(const std::array<T, N> & obj){
+        return SerializeIter<Protocol, std::span<const T>>(std::span<const T>(obj));
+    }
+};
+
+template<typename Protocol, typename T, size_t N>
+struct SerializeIterMaker<Protocol, T[N]>{
+    static constexpr auto make(const T (&obj)[N]) {
+        return SerializeIter<Protocol, std::span<const T>>(std::span<const T>(obj));
+    }
+};
+
+template<typename Protocol>
+struct SerializeIterMaker<Protocol, StringView>{
+    static constexpr auto make(const StringView str) {
+        return SerializeIter<Protocol, std::span<const char>>(
+            std::span<const char>(str.data(), str.length()));
+    }
+};
+
+template<typename Protocol, typename T>
+struct SerializeIterMaker<Protocol, std::initializer_list<T>> {
+    static constexpr auto make(std::initializer_list<T> obj) {
+        return SerializeIter<Protocol, std::span<const T>>(
+            std::span<const T>(obj.begin(), obj.size())
+        );
+    }
+};
+
 template<typename Protocol, typename ... Ts>
 struct SerializeIter<Protocol, std::tuple<Ts ... >> {
     static constexpr size_t N = sizeof...(Ts);
@@ -356,10 +389,10 @@ private:
             [&]<size_t I>{
                 using RawType = std::tuple_element_t<I, std::tuple<Ts...>>;
                 using ElemType = std::decay_t<RawType>;
-                if constexpr (serialize_iter_sbo_v<Protocol, ElemType>) {
-                    return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
+                if constexpr (serialize_iter_support_sbo_v<Protocol, ElemType>) {
+                    return SerializeIterMaker<Protocol, ElemType>::make(std::get<I>(tup));
                 } else {
-                    return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
+                    return SerializeIterMaker<Protocol, ElemType>::make(std::get<I>(tup));
                 }
             }.template operator()<Is>()...
         };

@@ -2,8 +2,14 @@
 
 #include "core/math/iq/iq_t.hpp"
 #include "core/utils/Option.hpp"
+#include "core/utils/serde.hpp"
 
 namespace ymd::dsp{
+enum class CalibrateError:uint8_t{
+    SampleIndexOutOfRange,
+    DuplicatedSectorSampleDetected,
+    ExpectedAndMeasuredExceedLimit
+};
 
 template<size_t N>
 static __fast_inline constexpr iq_t<N> errmod(const iq_t<N> x, const iq_t<N> s){
@@ -57,15 +63,15 @@ public:
     static constexpr Option<PackedCalibrateSample> 
     from_expected_and_measure(const q31 expected, const q31 measured){
         const auto expected_packed_data = ({
-            const auto opt = real_to_packed(expected);
-            if(opt.is_none()) return None;
-            opt.unwrap();
+            const auto may = real_to_packed(expected);
+            if(may.is_none()) return None;
+            may.unwrap();
         });
 
         const auto measured_packed_data = ({
-            const auto opt = real_to_packed(measured);
-            if(opt.is_none()) return None;
-            opt.unwrap();
+            const auto may = real_to_packed(measured);
+            if(may.is_none()) return None;
+            may.unwrap();
         });
 
         return Some(PackedCalibrateSample(
@@ -93,11 +99,11 @@ public:
     }
 private:
     constexpr PackedCalibrateSample(
-        const uint16_t expected_packed, 
-        const uint16_t measured_packed
+        const uint16_t expected_packed_data, 
+        const uint16_t measured_packed_data
     ):
-        expected_packed_data_(expected_packed),
-        measured_packed_data_(measured_packed){;}
+        expected_packed_data_(expected_packed_data),
+        measured_packed_data_(measured_packed_data){;}
 
     uint16_t expected_packed_data_;
     uint16_t measured_packed_data_;
@@ -111,7 +117,44 @@ private:
     }
 };
 
+
+struct CompressedInaccuracy { 
+    using Raw = uint16_t;
+
+    constexpr CompressedInaccuracy ():
+        raw_(0){;}
+
+    static constexpr Option<CompressedInaccuracy> from_inaccuracy(const q16 inaccuracy){
+        if(is_input_valid(inaccuracy)) return None;
+        return Some(CompressedInaccuracy(compress(inaccuracy)));
+    }
+
+    constexpr q16 to_real() const{
+        return decompress(raw_);
+    }
+
+    static constexpr bool is_input_valid(const q16 inaccuracy){
+        return ABS(inaccuracy) < 1;
+    }
+
+    static constexpr Raw compress(const q16 count){
+        return Raw(count.as_i32());
+    }
+
+    static constexpr q16 decompress(const Raw raw){
+        return q16::from_i32(raw);
+    }
+
+private:
+    constexpr CompressedInaccuracy (Raw raw):
+        raw_(raw){;}
+
+    Raw raw_;
+};
+
 }
+
+
 
 namespace std {
     template <>
