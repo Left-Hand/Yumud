@@ -1,5 +1,4 @@
 #include "src/testbench/tb.h"
-#include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
 #include <atomic>
 
@@ -30,6 +29,9 @@
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
+
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"
 #include "dsp/observer/nonlinear/NonlinearObserver.hpp"
@@ -37,19 +39,17 @@
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
-
+#include "dsp/controller/adrc/leso.hpp"
 
 #include "CurrentSensor.hpp"
 
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
+
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
 #include "robots/commands/nmt_commands.hpp"
-
-#include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -432,14 +432,7 @@ void bldc_main(){
         .direction = CW
     }).examine();
 
-    // while(true){
-    //     ma730_.update().examine();
-    //     DEBUG_PRINTLN(ma730_.read_lap_position().examine());
-    //     blink_service();
-    //     clock::delay(5ms);
-    // }
 
-    
     bmi160_.init({
         .acc_odr = BMI160::AccOdr::_200Hz,
         .acc_fs = BMI160::AccFs::_16G,

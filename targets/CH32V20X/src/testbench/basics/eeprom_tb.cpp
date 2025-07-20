@@ -341,7 +341,7 @@ void eeprom_main(){
         while(true){
             at24.poll().examine();
             clock::delay(1ms);
-            if(at24.is_available())
+            if(at24.is_idle())
                 break;
         }
 

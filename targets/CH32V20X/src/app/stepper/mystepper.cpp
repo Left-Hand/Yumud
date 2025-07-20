@@ -40,6 +40,7 @@
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "core/utils/data_iter.hpp"
 
 using namespace ymd;
 
@@ -320,11 +321,87 @@ struct Bin{
 #endif
 
 
-class ArchiveSystem{
-    ArchiveSystem(drivers::AT24CXX at24):
+namespace archive{
+struct Header{
+    HashCode hashcode;
+    ReleaseInfo release_info;
+
+    constexpr size_t size() const {
+        return sizeof(*this);
+    }
+
+    std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>{
+            reinterpret_cast<const uint8_t *>(this), size()};
+    }
+};
+
+template<typename Iter>
+auto generate_header(Iter && iter) -> Header{ 
+    return Header{
+        .hashcode = hash(iter),
+        .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
+    };
+}
+
+}
+
+[[maybe_unused]] static void static_test(){
+    auto count_iter_size = [](auto iter) -> size_t{
+        size_t size = 0;
+        while(iter.has_next()){
+            (void)iter.next();
+            size++;
+        }
+        return size;
+    };
+
+    {
+        static constexpr auto msg = [] -> hal::CanMsg{
+            auto iter = RepeatIter(5,3);
+            return hal::CanMsg::from_iter(hal::CanStdId(0), iter).unwrap();
+        }();
+
+        static_assert(msg.iter_payload()[0] == 5);
+        static_assert(msg.size() == 3);
+    }
+    {
+        static constexpr std::array buf = {uint8_t(0x1234), uint8_t(0x5678)};
+        static constexpr auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
+        static constexpr auto iter_size = count_iter_size(iter);
+        static_assert(iter_size == 2);
+    }
+
+    {
+        static constexpr std::array buf = {uint32_t(0x1234), uint32_t(0x5678), uint32_t(0x5678)};
+        static constexpr auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
+        static constexpr auto iter_size = count_iter_size(iter);
+        static_assert(iter_size == 12);
+    }
+
+    {
+        static constexpr auto iter = RepeatIter(0, 4);
+        static constexpr auto iter_size = count_iter_size(iter);
+        static_assert(iter_size == 4);
+    }
+    {
+        static constexpr std::array buf = {uint16_t(0x1234), uint16_t(0x5678)};
+        static constexpr auto msg = [] -> hal::CanMsg{
+            auto iter = serde::make_serialize_iter<serde::RawBytes>(std::span(buf));
+            return hal::CanMsg::from_iter(hal::CanStdId(0), iter).unwrap();
+        }();
+
+        static_assert(msg.iter_payload()[0] == 0X34);
+        static_assert(msg.size() == 4);
+    }
+}
+
+class MotorArchiveSystem{
+    MotorArchiveSystem(drivers::AT24CXX at24):
         at24_(at24){;}
 
     static constexpr size_t STORAGE_MAX_SIZE = 256;
+    using ArchiveBuf = std::array<uint8_t, STORAGE_MAX_SIZE>;
     static constexpr size_t HEADER_MAX_SIZE = 32;
     static constexpr size_t BODY_OFFSET = HEADER_MAX_SIZE;
     static constexpr size_t BODY_MAX_SIZE = STORAGE_MAX_SIZE - HEADER_MAX_SIZE;
@@ -336,30 +413,13 @@ class ArchiveSystem{
         Verifying
     };
 
-    struct Header{
-        HashCode hashcode;
-        ReleaseInfo release_info;
 
-        constexpr size_t size() const {
-            return sizeof(*this);
-        }
-
-        std::span<const uint8_t> as_bytes() const {
-            return std::span<const uint8_t>{
-                reinterpret_cast<const uint8_t *>(this), size()};
-        }
-    };
-
-    static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
+    static_assert(sizeof(archive::Header) <= HEADER_MAX_SIZE);
 
     template<typename T>
     auto save(T & obj){
         const auto body_bytes = obj.as_bytes();
-        const Header header = {
-            .hashcode = hash(body_bytes),
-            .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
-        };
-
+        const auto header = archive::generate_header(body_bytes);
         auto assign_header_and_obj_to_buf = [&]{
             std::copy(buf_.begin(), buf_.end(), header.as_bytes());
             std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
@@ -389,13 +449,13 @@ class ArchiveSystem{
     }
 
     auto poll(){
-        if(not at24_.is_available()){
+        if(not at24_.is_idle()){
             at24_.poll().examine();
         }
     }
 
-    bool is_available(){
-        return at24_.is_available();
+    bool is_idle(){
+        return at24_.is_idle();
     }
 
     Progress progress(){
@@ -411,7 +471,7 @@ private:
 
     // void save(std::span<const uint8_t>){
         // at24.load_bytes(0_addr, std::span(rdata)).examine();
-        // while(not at24.is_available()){
+        // while(not at24.is_idle()){
         //     at24.poll().examine();
         // }
 
@@ -419,7 +479,7 @@ private:
         // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
         // at24.store_bytes(0_addr, std::span(data)).examine();
 
-        // while(not at24.is_available()){
+        // while(not at24.is_idle()){
         //     at24.poll().examine();
         // }
 
@@ -482,7 +542,20 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     while(true);
 }
 
+template<typename Fn>
+static Milliseconds measure_elapsed_ms(Fn && fn){
+    const Milliseconds start = clock::millis();
+    std::forward<Fn>(fn)();
+    return clock::millis() - start;
+}
 
+
+template<typename Fn>
+static Microseconds measure_elapsed_us(Fn && fn){
+    const Microseconds start = clock::micros();
+    std::forward<Fn>(fn)();
+    return clock::micros() - start;
+}
 
 
 [[maybe_unused]] static void eeprom_tb(){
@@ -491,21 +564,24 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
     const auto begin_u = clock::micros();
-    uint8_t rdata[3] = {0};
-    at24.load_bytes(0_addr, std::span(rdata)).examine();
-    while(not at24.is_available()){
-        at24.poll().examine();
-    }
+    const auto elapsed = measure_elapsed_us(
+        [&]{
+            uint8_t rdata[3] = {0};
+            at24.load_bytes(0_addr, std::span(rdata)).examine();
+            while(not at24.is_idle()){
+                at24.poll().examine();
+            }
 
-    DEBUG_PRINTLN(rdata);
-    const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-    at24.store_bytes(0_addr, std::span(data)).examine();
+            DEBUG_PRINTLN(rdata);
+            const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
+            at24.store_bytes(0_addr, std::span(data)).examine();
 
-    while(not at24.is_available()){
-        at24.poll().examine();
-    }
-
-    DEBUG_PRINTLN("done", clock::micros() - begin_u);
+            while(not at24.is_idle()){
+                at24.poll().examine();
+            }
+        }
+    );
+    DEBUG_PRINTLN("done", elapsed);
     while(true);
 }
 
@@ -730,47 +806,5 @@ void mystepper_main(){
         );
     }
 }
-
-struct LapCalibrateTable{
-    using T = real_t;
-    using Data = std::array<T, MOTOR_POLE_PAIRS>;
-
-
-    Data data; 
-
-    constexpr real_t error_at(const real_t raw) const {
-        return forward_uni(raw);
-    }
-
-    constexpr real_t correct_position(const real_t raw_position) const{
-        return raw_position + error_at(raw_position);
-    }
-
-    constexpr real_t position_to_elecrad(const real_t lap_pos) const{
-        return real_t(MOTOR_POLE_PAIRS * TAU) * lap_pos;
-    }
-
-private:
-
-    constexpr T forward(const T x) const {
-        const T x_wrapped = fposmod(x,real_t(MOTOR_POLE_PAIRS));
-        const uint x_int = int(x_wrapped);
-        const T x_frac = x_wrapped - x_int;
-
-        let [ya, yb] = [&] -> std::tuple<real_t, real_t>{
-            if(x_int == MOTOR_POLE_PAIRS - 1){
-                return {data[MOTOR_POLE_PAIRS - 1], data[0]};
-            }else{
-                return {data[x_int], data[x_int + 1]};
-            }
-        }();
-
-        return LERP(ya, yb, x_frac);
-    }
-
-    constexpr T forward_uni(const T x) const {
-        return x * MOTOR_POLE_PAIRS;
-    }
-};
 
 #endif

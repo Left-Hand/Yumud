@@ -7,6 +7,28 @@ namespace ymd{
 
 
 template<typename T>
+struct OnceIter{
+    constexpr explicit OnceIter(const T value):
+        value_(value){;}
+    constexpr T next(){
+        const auto ret = value_;
+        is_done_ = true;
+        return ret;
+    }
+
+    constexpr bool has_next() const{
+        return is_done_ == false;
+    }
+private:
+    T value_;
+    bool is_done_ = false;
+};
+
+//ctad
+template<typename T>
+OnceIter(T) -> OnceIter<T>;
+
+template<typename T>
 struct RepeatIter{
     constexpr explicit RepeatIter(const T value, size_t size):
         value_(value), size_(size){;}
@@ -25,24 +47,9 @@ private:
     size_t index_ = 0;
 };
 
+//ctad
 template<typename T>
-struct OnceIter{
-    constexpr explicit OnceIter(const T value):
-        value_(value){;}
-    constexpr T next(){
-        const auto ret = value_;
-        is_done_ = true;
-        return ret;
-    }
-
-    constexpr bool has_next() const{
-        return is_done_ == false;
-    }
-private:
-    T value_;
-    bool is_done_ = false;
-};
-
+RepeatIter(T, size_t) -> RepeatIter<T>;
 
 template<typename T>
 struct BurstIter{
@@ -62,4 +69,8 @@ private:
     const std::span<const T> pbuf_;
     size_t index_ = 0;
 };
+
+//ctad
+template<typename T>
+BurstIter(const std::span<const T>) -> BurstIter<T>;
 }

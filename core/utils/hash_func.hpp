@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include "core/utils/stdrange.hpp"
 #include <span>
 
 
@@ -77,6 +78,13 @@ public:
         requires std::convertible_to<std::ranges::range_value_t<Range>, uint8_t>
     constexpr Hasher & operator << (Range && range){
         code_ =  hashfunc::hash_djb(range, code_);
+        return *this;
+    }
+
+    template <typename Iter>
+    requires (is_next_based_iter_v<Iter>)
+    constexpr Hasher & operator << (Iter && iter){
+        code_ =  hashfunc::hash_djb(StdRange(iter), code_);
         return *this;
     }
 
