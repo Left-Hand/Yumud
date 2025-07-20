@@ -69,14 +69,10 @@ private:
     State state_;
 };
 
-struct PolarRobotSolverIterator{
+struct PolarRobotGestureIterator{
     struct Config{
         real_t max_joint_spd;
         real_t max_joint_acc;
-
-        real_t rho_transform_scale;
-        real_t theta_transform_scale;
-        real_t center_bias;
 
         Range2<real_t> rho_range;
         Range2<real_t> theta_range;
@@ -84,20 +80,20 @@ struct PolarRobotSolverIterator{
         real_t r;
     };
 
-    struct MachineState{
+    struct MachineStates{
         Vector2<real_t> position;
         Vector2<real_t> speed;
     };
 
-    struct JointState{
+    struct JointStates{
         real_t position;
         real_t speed;
     };
 
     struct State{
-        MachineState machine;
-        JointState radius_joint;
-        JointState theta_joint;
+        MachineStates machine;
+        JointStates radius_joint;
+        JointStates theta_joint;
     };
 
     struct Solution{
@@ -107,9 +103,6 @@ struct PolarRobotSolverIterator{
 
     Solution forward(const Vector2<real_t> target_pos, const real_t delta_t){
         State state = state_;
-        // Vector2<real_t> expect_pos = 
-        // real_t expect_rho_joint_rotation = 
-        // real_t expect_theta_joint_rotation =
         return {
             .rho_joint_rotation = state.radius_joint.position, 
             .theta_joint_rotation = state.theta_joint.position
@@ -120,7 +113,7 @@ private:
     State state_;
 };
 
-class JointMotorIntf{
+class JointMotorActuatorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
@@ -143,28 +136,32 @@ public:
     }
 };
 
-class MockJointMotor final:
-    public JointMotorIntf{
+class MockJointMotorActuator final:
+    public JointMotorActuatorIntf{
 public:
     void activate() {}
     void deactivate() {}
-    void set_position(real_t position) {}
+    void set_position(real_t position) {
+        position = position_;
+    }
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
     real_t get_last_position(){return 0;}
+private:
+    real_t position_ = 0;
 };
 
 
-class ZdtJointMotor final
-    :public JointMotorIntf{
+class ZdtJointMotorActuator final
+    :public JointMotorActuatorIntf{
 public:
 
     struct Config{
         ZdtStepper::HommingMode homming_mode;
     };
 
-    ZdtJointMotor(
+    ZdtJointMotorActuator(
         const Config & cfg, 
         ZdtStepper & stepper
     ):
@@ -239,8 +236,8 @@ public:
     };
 
     struct Params{
-        Some<JointMotorIntf *> radius_joint;
-        Some<JointMotorIntf *> theta_joint;
+        Some<JointMotorActuatorIntf *> radius_joint;
+        Some<JointMotorActuatorIntf *> theta_joint;
     };
 
 
@@ -297,8 +294,8 @@ public:
 
 private:
     const Config cfg_;
-    JointMotorIntf & joint_rho_;
-    JointMotorIntf & joint_theta_;
+    JointMotorActuatorIntf & joint_rho_;
+    JointMotorActuatorIntf & joint_theta_;
 
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
@@ -547,16 +544,16 @@ void polar_robot_main(){
 
     #endif
 
-    ZdtJointMotor radius_joint = {{
+    ZdtJointMotorActuator radius_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    ZdtJointMotor theta_joint = {{
+    ZdtJointMotorActuator theta_joint = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    MockJointMotor radius_joint = {};
-    MockJointMotor theta_joint = {};
+    MockJointMotorActuator radius_joint = {};
+    MockJointMotorActuator theta_joint = {};
     #endif
 
     PolarRobotActuator robot_actuator = {

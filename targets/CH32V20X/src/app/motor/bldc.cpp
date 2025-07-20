@@ -46,15 +46,13 @@
 #include "robots/cannet/can_chain.hpp"
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
-
+#include "robots/commands/nmt_commands.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
-using namespace ymd::robots::joint_cmds;
-using namespace ymd::robots::machine_cmds;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
@@ -124,11 +122,18 @@ enum class NodeRole:uint8_t{
 DEF_DERIVE_DEBUG(NodeRole)
 
 enum class CommandKind:uint8_t{
+    ResetNode,
     SetPosition,
-    SetPositionAndSpeed,
+    SetPositionWithFwdSpeed,
     SetSpeed,
     SetKpKd
 };
+
+namespace commands{ 
+    using namespace robots::joint_commands;
+    using namespace robots::nmt_commands;
+}
+
 
 #define DEF_COMMAND_BIND(K, T) \
 template<> \
@@ -141,10 +146,11 @@ struct kind_to_command<CommandKind, K>{ \
 };
 
 
-#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, robots::joint_cmds::NAME)
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
 
+DEF_QUICK_COMMAND_BIND(ResetNode)
 DEF_QUICK_COMMAND_BIND(SetPosition)
-DEF_QUICK_COMMAND_BIND(SetPositionAndSpeed)
+DEF_QUICK_COMMAND_BIND(SetPositionWithFwdSpeed)
 DEF_QUICK_COMMAND_BIND(SetSpeed)
 DEF_QUICK_COMMAND_BIND(SetKpKd)
 
@@ -152,8 +158,8 @@ DEF_QUICK_COMMAND_BIND(SetKpKd)
 
 
 struct TrackTarget{
-    robots::joint_cmds::SetPositionAndSpeed roll ;
-    robots::joint_cmds::SetPositionAndSpeed pitch;
+    commands::SetPositionWithFwdSpeed roll ;
+    commands::SetPositionWithFwdSpeed pitch;
 };
 
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
@@ -643,9 +649,11 @@ void bldc_main(){
         .pitch = {.position = 0, .speed = 0}
     };
 
-    [[maybe_unused]] auto set_target = [&](const SetPositionAndSpeed & cmd){
-        axis_target_position_ = real_t(cmd.position);
-        axis_target_speed_ = real_t(cmd.speed);
+
+
+    auto update_joint_target = [&](const real_t p1, const real_t p2) -> void { 
+        track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+        track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
     };
 
     [[maybe_unused]] auto repl_service = [&]{
@@ -681,13 +689,20 @@ void bldc_main(){
 
     [[maybe_unused]] auto can_subscriber_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
+        [[maybe_unused]] auto set_target_by_command = [&](const commands::SetPositionWithFwdSpeed & cmd){
+            axis_target_position_ = real_t(cmd.position);
+            axis_target_speed_ = real_t(cmd.speed);
+        };
         timer.invoke_if([&]{
             auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
                 switch(cmd){
-                case CommandKind::SetPositionAndSpeed:{
+                case CommandKind::ResetNode:
+                    sys::reset();
+                    break;
+                case CommandKind::SetPositionWithFwdSpeed:{
                     const auto cmd = serde::make_deserialize<serde::RawBytes,
-                        SetPositionAndSpeed>(payload).examine();
-                    set_target(cmd);
+                        commands::SetPositionWithFwdSpeed>(payload).examine();
+                    set_target_by_command(cmd);
                 }
                     break;
 
@@ -716,13 +731,13 @@ void bldc_main(){
     [[maybe_unused]] auto can_publisher_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
-        auto publish_roll_joint_target = [&](const robots::joint_cmds::SetPositionAndSpeed & cmd){
+        auto publish_roll_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
             const auto msg = MsgFactory{NodeRole::RollJoint}(cmd);
 
             write_can_msg(msg);
         };
 
-        auto publish_pitch_joint_target = [&](const robots::joint_cmds::SetPositionAndSpeed & cmd){
+        auto publish_pitch_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
             const auto msg = MsgFactory{NodeRole::PitchJoint}(cmd);
 
             write_can_msg(msg);
@@ -743,18 +758,13 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto update_demo_track_service = [&]{ 
-        auto update_joint_target = [&]() -> void { 
-            static constexpr auto amp = 0.05_r;
-            const auto ctime = clock::time();
-            const auto [s, c] = sincos(ctime * 5);
-            const auto p1 = c * amp;
-            const auto p2 = s * amp;
+        static constexpr auto amp = 0.05_r;
+        const auto ctime = clock::time();
+        const auto [s, c] = sincos(ctime * 5);
+        const auto p1 = c * amp;
+        const auto p2 = s * amp;
 
-            track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-            track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-        };
-
-        update_joint_target();
+        update_joint_target(p1, p2);
     };  
 
     [[maybe_unused]] auto gesture_calc_service = [&]{
@@ -788,7 +798,7 @@ void bldc_main(){
 
 
         #if 0
-        // const auto command = SetPositionAndSpeed{2, 18};
+        // const auto command = SetPositionWithFwdSpeed{2, 18};
         // const auto iter = make_serialize_iter<RawBytes>(command);
         // const auto iter = make_serialize_iter();
 
@@ -803,11 +813,11 @@ void bldc_main(){
             strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
         }
 
-        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionAndSpeed{0, 1});
-        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
+        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionWithFwdSpeed{0, 1});
+        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
         // static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
         // const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
-        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionAndSpeed{13 *256 + 12, 11});
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionWithFwdSpeed{13 *256 + 12, 11});
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<real_t, real_t>(13 *256 + 12, 11));
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
         //     (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
@@ -843,7 +853,7 @@ void bldc_main(){
 
 
             // count_iter(iter),
-            // (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1}).payload()
+            // (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1}).payload()
             // strconv2::iq_from_str<16>("+.").examine()
         );
         #endif
@@ -890,9 +900,9 @@ void bldc_main(){
 static void static_test(){
     #define STATIC_TEST_SEL 5
     #if STATIC_TEST_SEL == 0
-    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1});
+    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1});
     static_assert(msg.size() == 8);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
     static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
     // static_assert(may_cmd.is_ok());
     static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
