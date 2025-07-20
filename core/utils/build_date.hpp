@@ -77,21 +77,6 @@ private:
     static constexpr const char * MONTH_STR[] = 
         {"Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"};
-
-    // static constexpr std::array<uint32_t, 12> HASH_TABLE = {
-    //     "Jan"_ha, 
-    //     "Feb"_ha,
-    //     "Mar"_ha,
-    //     "Apr"_ha,
-    //     "May"_ha,
-    //     "Jun"_ha,
-    //     "Jul"_ha,
-    //     "Aug"_ha,
-    //     "Sep"_ha,
-    //     "Oct"_ha,
-    //     "Nov"_ha,
-    //     "Dec"_ha
-    // };
 };
 
 
@@ -191,13 +176,18 @@ struct Time final{
     Seconds seconds;
 
     // Compile-time time initialization from __TIME__ macro
-    static constexpr Time from_compiler() {
+    static consteval Time from_compiler() {
         constexpr const char* time_str = __TIME__;
         return {
             static_cast<Hour>((time_str[0]-'0')*10 + (time_str[1]-'0')),
             static_cast<Minute>((time_str[3]-'0')*10 + (time_str[4]-'0')),
             static_cast<Seconds>((time_str[6]-'0')*10 + (time_str[7]-'0'))
         };
+    }
+
+    static constexpr Option<Time> from_str(const StringView str){
+        //TODO
+        return None;
     }
 
     constexpr bool is_valid() const {

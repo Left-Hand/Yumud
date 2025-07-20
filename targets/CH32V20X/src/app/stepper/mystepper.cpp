@@ -335,20 +335,48 @@ struct Header{
 static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
 
 template<typename Iter>
-static constexpr auto generate_header(Iter && iter) -> Header{ 
+static constexpr auto make_header(Iter iter) -> Header{ 
+    const auto hashcode = hash(iter);
+    const auto release_info = ReleaseInfo::from("Rstr1aN", ReleaseVersion{0,1}).unwrap();
     return Header{
-        .hashcode = hash(iter),
-        .release_info = ReleaseInfo::from("Rstr1aN", ReleaseVersion{0,1})
+        .hashcode = hashcode,
+        .release_info = release_info
     };
 }
+
 
 struct Context{ 
 };
 
-static constexpr Bin generate_bin(const Header & header, const Context & context){
+static constexpr Bin make_bin(const Header & header, const Context & context){
     Bin bin;
 
     return bin;
+};
+
+static void static_test(){
+    static constexpr auto header = []{
+        auto payload_iter = RepeatIter<uint8_t>(0, 1);
+        return make_header(payload_iter);
+    }();
+
+    static_assert(header.release_info.version == ReleaseVersion{0,1});
+    static_assert(header.release_info.author.name()[0] == 'R');
+    static_assert(header.release_info.author.name()[1] == 's');
+    static_assert(header.release_info.author.name()[2] == 't');
+
+    // static_assert(header.hashcode == 0);
+}
+
+}
+
+namespace ymd{
+template<>
+struct serde::SerializeIterMaker<serde::RawBytes, archive::Header>{
+    static constexpr auto make(const archive::Header & header){
+        return serde::make_serialize_iter<serde::RawBytes>(
+            std::make_tuple(header.hashcode, header.release_info));
+    }
 };
 }
 

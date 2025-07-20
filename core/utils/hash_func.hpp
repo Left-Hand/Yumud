@@ -56,6 +56,15 @@ namespace hashfunc{
         }
         return last;
     }
+
+    template<typename Iter>
+    requires (is_next_based_iter_v<Iter>)
+    __inline static constexpr HashCode hash_djb(Iter iter, HashCode last = HASHDJB_SEED){
+        while(iter.has_next()){
+            last = (last * 33) ^ std::bit_cast<uint8_t>(iter.next());
+        }
+        return last;
+    }
 };
 
 
@@ -74,17 +83,9 @@ public:
 
     constexpr HashCode code() const{return code_;} 
 
-    template <std::ranges::range Range>
-        requires std::convertible_to<std::ranges::range_value_t<Range>, uint8_t>
-    constexpr Hasher & operator << (Range && range){
-        code_ =  hashfunc::hash_djb(range, code_);
-        return *this;
-    }
-
-    template <typename Iter>
-    requires (is_next_based_iter_v<Iter>)
-    constexpr Hasher & operator << (Iter && iter){
-        code_ =  hashfunc::hash_djb(StdRange(iter), code_);
+    template <typename T>
+    constexpr Hasher & operator << (T && obj){
+        code_ =  hashfunc::hash_djb(obj, code_);
         return *this;
     }
 

@@ -13,6 +13,10 @@ struct ReleaseVersion final{
     uint8_t major;
     uint8_t minor;
 
+    constexpr auto operator == (const ReleaseVersion & other) const {
+        return (major == other.major) and (minor == other.minor);
+    }
+
     constexpr auto operator<=>(const ReleaseVersion & other) const{
         if(major != other.major) return major <=> other.major;
         else return minor <=> other.minor;
@@ -34,7 +38,7 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseVersion & self){
 
 template<>
 struct serde::SerializeIterMaker<serde::RawBytes, ReleaseVersion>{
-    static constexpr auto make(ReleaseVersion & version){
+    static constexpr auto make(const ReleaseVersion & version){
         return make_serialize_iter<serde::RawBytes>(
             std::make_tuple(version.major, version.minor));
     }
@@ -79,5 +83,14 @@ template<HashAlgo S>
 constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
     return hs << self.author << self.version << self.date << self.time;
 }
+
+
+template<>
+struct serde::SerializeIterMaker<serde::RawBytes, ReleaseInfo>{
+    static constexpr auto make(const ReleaseInfo & info){
+        return serde::make_serialize_iter<serde::RawBytes>(
+            std::make_tuple(info.author, info.version, info.date, info.time));
+    }
+};
 
 }
