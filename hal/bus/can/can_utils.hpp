@@ -132,15 +132,6 @@ enum class CanMode:uint8_t{
     Loopback = CAN_Mode_LoopBack
 };
 
-/* CAN_Error_Code_constants */
-// #define CAN_ErrorCode_NoErr                 ((uint8_t)0x00) /* No Error */
-// #define CAN_ErrorCode_StuffErr              ((uint8_t)0x10) /* Stuff Error */
-// #define CAN_ErrorCode_FormErr               ((uint8_t)0x20) /* Form Error */
-// #define CAN_ErrorCode_ACKErr                ((uint8_t)0x30) /* Acknowledgment Error */
-// #define CAN_ErrorCode_BitRecessiveErr       ((uint8_t)0x40) /* Bit Recessive Error */
-// #define CAN_ErrorCode_BitDominantErr        ((uint8_t)0x50) /* Bit Dominant Error */
-// #define CAN_ErrorCode_CRCErr                ((uint8_t)0x60) /* CRC Error  */
-// #define CAN_ErrorCode_SoftwareSetErr        ((uint8_t)0x70) /* Software Set Error */
 enum class CanFault:uint8_t{
     Stuff = 0x10,
     Form = 0x20,

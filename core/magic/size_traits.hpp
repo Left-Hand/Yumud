@@ -142,4 +142,15 @@ bool is_under_bits(const size_t bits, const D && val){
 }
 
 
+namespace details{
+template<typename T>
+struct pure_sizeof_impl{
+private:
+    [[no_unique_address]] T _1;
+    uint8_t _2;
+};
+}
+
+template<typename T>
+static constexpr size_t pure_sizeof_v = sizeof(details::pure_sizeof_impl<T>) - 1;
 }

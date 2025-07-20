@@ -1,12 +1,8 @@
 #include "zdt_stepper.hpp"
 
 using namespace ymd;
-using namespace ymd::robots;
-
-using Error = ZdtStepper::Error;
-
-template<typename T = void>
-using IResult = Result<T, Error>;
+using namespace ymd::robots::zdtmotor;
+using namespace ymd::robots::zdtmotor::prelude;
 
 IResult<> ZdtStepper::set_target_position(const real_t pos){
     static constexpr auto RPM = Rpm::from_speed(0.47_r);
@@ -76,7 +72,6 @@ void ZdtMotorPhy::can_write_bytes(
     const std::span<const uint8_t> bytes
 ){
     auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
-    // DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
     while(true){
         const auto may_msg = iter.next();
         if(may_msg.is_none()) break;
@@ -96,7 +91,6 @@ void ZdtMotorPhy::uart_write_bytes(
     uart.writeN(reinterpret_cast<const char *>(
         bytes.data()), bytes.size());
 
-    // DEBUG_PRINTLN(id.as_u8(), std::bit_cast<uint8_t>(func_code), bytes);
 }
 
 void ZdtMotorPhy::write_bytes(

@@ -3,22 +3,32 @@
 
 #include "details/zdt_stepper_utils.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::zdtmotor{
 
-class ZdtStepper final:
-    public ZdtMotor_Prelude{
+class ZdtStepper final{
 public:
+    using HommingMode = prelude::HommingMode;
+    using NodeId = prelude::NodeId;
+    using VerifyMethod = prelude::VerifyMethod;
+    using Buf = prelude::Buf;
+    using Error = prelude::Error;
+    using Payloads = prelude::Payloads;
+    using VerifyUtils = prelude::VerifyUtils;
+
+    template<typename T = void>
+    using IResult = prelude::IResult<T>;
+
     struct Config{
         NodeId nodeid;
     };
 
-    ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
+    explicit ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
         phy_(std::move(can)
     ){
         reconf(cfg);
     }
 
-    ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
+    explicit ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
         phy_(std::move(uart)
     ){
         reconf(cfg);
@@ -45,7 +55,7 @@ private:
     NodeId nodeid_ = DEFAULT_NODE_ID;
 
     bool is_sync_ = false;
-    VerifyMethod verify_method_ = DEFAULT_VERIFY_METHOD;
+    VerifyMethod verify_method_ = prelude::DEFAULT_VERIFY_METHOD;
 
 
 

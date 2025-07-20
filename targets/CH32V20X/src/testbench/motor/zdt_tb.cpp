@@ -14,6 +14,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
+using robots::zdtmotor::ZdtStepper;
 
 #define DBG_UART hal::uart2
 #define COMM_UART hal::uart1
