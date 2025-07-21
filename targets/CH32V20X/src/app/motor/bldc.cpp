@@ -35,11 +35,9 @@
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"
 #include "dsp/observer/nonlinear/NonlinearObserver.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
-#include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/controller/adrc/leso.hpp"
+#include "robots/gesture/comp_est.hpp"
 
 #include "CurrentSensor.hpp"
 
@@ -62,29 +60,19 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
 static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
-void init_adc(hal::AdcPrimary & adc){
 
-    using hal::AdcChannelIndex;
-    using hal::AdcSampleCycles;
+#define DEF_COMMAND_BIND(K, T) \
+template<> \
+struct command_to_kind<CommandKind, T>{ \
+    static constexpr CommandKind KIND = K; \
+};\
+template<> \
+struct kind_to_command<CommandKind, K>{ \
+    using type = T; \
+};
 
-    adc.init(
-        {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
-        },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
-        }, {}
-    );
 
-    adc.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
-    adc.enable_auto_inject(DISEN);
-}
-
-__no_inline void init_opa(){
-    hal::opa1.init<1,1,1>();
-}
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
 
 
 
@@ -138,19 +126,6 @@ namespace commands{
 }
 
 
-#define DEF_COMMAND_BIND(K, T) \
-template<> \
-struct command_to_kind<CommandKind, T>{ \
-    static constexpr CommandKind KIND = K; \
-};\
-template<> \
-struct kind_to_command<CommandKind, K>{ \
-    using type = T; \
-};
-
-
-#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
-
 DEF_QUICK_COMMAND_BIND(ResetNode)
 DEF_QUICK_COMMAND_BIND(SetPosition)
 DEF_QUICK_COMMAND_BIND(SetPositionWithFwdSpeed)
@@ -181,9 +156,6 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
     return hal::CanStdId(id_u11);
 };
 
-
-
-
 struct MsgFactory{
     const NodeRole role;
 
@@ -202,76 +174,7 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
     return role == self_node_role;
 };
 
-struct GestureEstimator{
-    struct Config{
-        uint32_t fs;
-    };
 
-    constexpr explicit GestureEstimator(const Config & cfg):
-        delta_time_(1_r / cfg.fs),
-        comp_filter_(make_comp_filter_config(cfg.fs)){;}
-
-    constexpr void process(const Vector3<q24> & acc,const Vector3<q24> & gyr){
-
-        const auto len_acc = acc.length();
-        const auto norm_acc = acc / len_acc;
-        const auto axis_theta_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
-        const auto axis_omega_raw = gyr.z;
-
-        if(is_inited_ == false){
-            theta_ = axis_theta_raw;
-            omega_ = axis_omega_raw;
-            is_inited_ = true;
-            return;
-        }
-
-        // const auto base_roll = comp_filter(axis_theta_raw, axis_omega_raw);
-        // DEBUG_PRINTLN_IDLE(
-        //     // norm_acc.x, norm_acc.y,
-        //     // axis_theta_raw,
-        //     // axis_omega_raw,
-        //     // base_roll,
-        //     // pos_filter_.position(),
-        //     // pos_filter_.lap_position(),
-        //     // pos_filter_.speed(),
-        //     ma730_.read_lap_position().examine(),
-        //     meas_elecrad_
-        //     // exe_us_
-        //     // // leso_.get_disturbance(),
-        //     // meas_elecrad_
-        // );
-
-        const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-
-        const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.04_r;
-
-        theta_ += (axis_theta_raw - theta_) * alpha + (axis_omega_raw * delta_time_) * (1 - alpha);
-        omega_ = axis_omega_raw;
-    }
-
-    auto theta_and_omega() const {
-        return std::make_pair(theta_, omega_);
-    }
-
-private:
-    using CompFilter = dsp::ComplementaryFilter<q20>;
-    using CompFilterConfig = typename CompFilter::Config;
-
-    real_t delta_time_;
-    CompFilter comp_filter_;
-    real_t theta_ = 0;
-    real_t omega_ = 0;
-    bool is_inited_ = false;
-
-    static constexpr CompFilterConfig
-    make_comp_filter_config(const uint32_t fs){
-        return {
-            .kq = 0.90_r,
-            .ko = 0.25_r,
-            .fs = fs
-        };
-    }
-};
 
 
 struct Gesture{
@@ -296,6 +199,33 @@ struct CircularGestureCurve{
 
 struct GesturePlanner{
 };
+
+
+[[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
+
+    using hal::AdcChannelIndex;
+    using hal::AdcSampleCycles;
+
+    adc.init(
+        {
+            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+        },{
+            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+        }, {}
+    );
+
+    adc.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
+    adc.enable_auto_inject(DISEN);
+}
+
+[[maybe_unused]]  static void init_opa(){
+    hal::opa1.init<1,1,1>();
+}
+
+
 
 void bldc_main(){
     static constexpr auto UART_BAUD = 115200 * 2;
@@ -765,7 +695,8 @@ void bldc_main(){
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
 
         static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
-        static auto gesture_estimator = GestureEstimator({.fs = FREQ});
+        static auto gesture_estimator = robots::ComplementaryGestureEstimator(
+            {.fs = FREQ});
 
         timer.invoke_if([&]{
             const auto acc = bmi160_.read_acc().examine();

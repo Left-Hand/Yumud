@@ -119,18 +119,7 @@ public:
         rrs3_kine_{cfg},
         servo_setter_(std::forward<SetterFn>(servo_setter_fn)){;}
 
-    void set_gest(const real_t yaw, const real_t pitch, const real_t height){
-
-        const Gesture gest{
-            .orientation = Quat<real_t>::from_euler<EulerAnglePolicy::XYZ>({
-                .x = yaw, 
-                .y = pitch, 
-                .z = 0
-            }),
-
-            .z = height,
-        };
-
+    void set_gest(const Gesture gest){
         
         if(const auto may_solu = rrs3_kine_.inverse(gest); may_solu.is_some()){
             const auto solu = may_solu.unwrap();
@@ -147,7 +136,7 @@ public:
         }
     };
 
-    void set_bias(const real_t a, const real_t b, const real_t c){
+    constexpr void set_bias(const real_t a, const real_t b, const real_t c){
         r_bias_ = {a,b,c};
     }
 
@@ -158,7 +147,12 @@ public:
     auto make_rpc_list(const StringView name){
         return rpc::make_list(
             name,
-            rpc::make_memfunc("gest",      this, &RRS3_RobotActuator::set_gest),
+            rpc::make_function("gest",  
+                [&](const real_t yaw, const real_t pitch, const real_t height){
+                    this->set_gest(Gesture::from({
+                        .yaw = yaw, .pitch = pitch, .height = height}));
+                }
+            ),
             rpc::make_memfunc("set_bias",  this, &RRS3_RobotActuator::set_bias),
             rpc::make_memfunc("go_idle",  this, &RRS3_RobotActuator::go_idle)
         );
@@ -172,7 +166,7 @@ private:
 
     ServoSetter servo_setter_;
 
-    void apply_radians_to_servos(const std::array<real_t,3> & rads){
+    void apply_radians_to_servos(const std::array<real_t,3> rads){
         servo_setter_(
             rads[0] + r_bias_[0], 
             rads[1] + r_bias_[1], 
@@ -180,14 +174,6 @@ private:
         );
     }
 };
-
-
-namespace ymd::rpc{
-enum class Shape {rectangle, circular}; 
-
-// DEF_DERIVE_DEBUG(Shape)
-}
-
 
 void rrs3_robot_main(){
 
@@ -218,30 +204,29 @@ void rrs3_robot_main(){
         &DBG_UART, &DBG_UART
     };
 
-    auto list = rpc::make_list(
+    auto rpc_list = rpc::make_list(
         "list",
         rpc::make_function("rst", [](){sys::reset();}),
         rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
         rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        // rpc::make_function("name", [&](){DEBUG_PRINTLN(dump_enum<Shape, Shape::rectangle>().value_fullname);}),
-        rpc::make_function("name", [&](){DEBUG_PRINTLN(
-        );}),
+        rpc::make_function("name", [&](){
+            DEBUG_PRINTLN("hello i am a robot");
+        }),
         robot_actuator.make_rpc_list("rrs")
     );
 
-    // auto list = robot_actuator.make_rpc_list("rrs");
 
     auto ctrl = [&]{
         const auto t = clock::time();
         const auto [s,c] = sincospu(0.7_r * t);
-        // set_gest(5.0_r * s, 5.0_r * c, 0.14_r + 0.02_r * s);
-        // set_gest(15.0_r * s, 15.0_r * c, 0.14_r);
+        
         robot_actuator.set_gest(
-            ANGLE2RAD(3.0_r * s), 
-            ANGLE2RAD(3.0_r * c), 
-            0.14_r
+            RRS3_RobotActuator::Gesture::from({
+                .yaw = ANGLE2RAD(3.0_r * s), 
+                .pitch = ANGLE2RAD(3.0_r * c), 
+                .height = 0.14_r
+            })
         );
-        // DEBUG_PRINTLN("wh");
     };
 
     robot_actuator.go_idle();
@@ -250,7 +235,7 @@ void rrs3_robot_main(){
         [[maybe_unused]]
         const real_t t = clock::time();
         
-        repl_server.invoke(list);
+        repl_server.invoke(rpc_list);
 
 
         clock::delay(10ms);

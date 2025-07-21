@@ -141,7 +141,7 @@ struct Vector2{
         const T cross_z = a.x * b.y - a.y * b.x;
         // 点积（cosθ）
         const T dot = a.x * b.x + a.y * b.y;
-        if(is_equal_approx(dot, T(0))){
+        if(ymd::is_equal_approx(dot, T(0))){
             return (dot >= 0) ? T(0) : T(PI);
         }
         return atan2(cross_z, dot);

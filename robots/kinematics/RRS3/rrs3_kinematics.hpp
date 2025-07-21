@@ -139,6 +139,26 @@ public:
     struct Gesture{
         Quat<T> orientation;
         T z;
+
+        struct Initializer{
+            real_t yaw;
+            real_t pitch;
+            real_t height;
+        };
+
+        static constexpr Gesture from(const Initializer & iz){
+            const Gesture gest{
+                .orientation = Quat<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+                    .x = iz.yaw, 
+                    .y = iz.pitch, 
+                    .z = 0
+                }),
+
+                .z = iz.height,
+            };
+
+            return gest;
+        }
     };
 
 

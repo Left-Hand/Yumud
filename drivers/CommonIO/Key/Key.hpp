@@ -1,7 +1,7 @@
 #pragma once
 
 #include "KeyTrait.hpp"
-#include "dsp/filter/homebrew/DigitalFilter.hpp"
+#include "dsp/filter/homebrew/debounce_filter.hpp"
 
 namespace ymd::drivers{
 
@@ -28,7 +28,7 @@ public:
     void update() {
         last_state = now_state;
         filter_.update(gpio_.read().to_bool());
-        now_state = filter_.result();
+        now_state = filter_.is_high();
     }
 
     bool just_pressed() const {
@@ -46,7 +46,7 @@ public:
 private:
     hal::GpioIntf & gpio_;
 
-    dsp::DigitalFilter filter_;
+    dsp::DebounceFilter filter_{dsp::DebounceFilter::Config{}};
     const BoolLevel level_= LOW;
 
     bool last_state = false;
