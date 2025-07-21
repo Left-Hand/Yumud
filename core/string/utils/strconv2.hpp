@@ -123,7 +123,7 @@ struct FstrDump final{
 		return Ok(FstrDump{
 			.digit_part = digit_part,
 			.frac_part = frac_part,
-			.scale = scale
+			.scale = (status.has_post_dot_digits ? scale : 0)
 		});
 	}
 
@@ -272,7 +272,10 @@ struct IqFromStringHelper{
 		
 		const iq_t<Q> ret = 
 			iq_t<Q>(dump.digit_part) 
-			+ iq_t<Q>::from_i32((int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale));
+			+ (dump.scale ? 
+				iq_t<Q>::from_i32((int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale))
+				: 0)
+			;
 
 		return Ok(ret);
 	}

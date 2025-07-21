@@ -11,8 +11,11 @@ namespace ymd::gcode{
 enum class GcodeParseError:uint8_t{
     NoLetterFounded,
     NoStringSegmentFounded,
-    GcodeHasNoMajorNumber,
-    GcodeHasNoMinorNumber,
+    NoMajorNumber,
+    NoMinorNumber,
+    MajorNumberOverflow,
+    MinorNumberOverflow,
+
     NoMnemonicFounded,
     InvalidMnemonic,
 };
@@ -49,6 +52,14 @@ struct Mnemonic final{
         }
     }
 
+    template<char letter>
+    static consteval Mnemonic from_letter(){
+        return from_letter(letter).unwrap();
+    }
+
+    constexpr Mnemonic(const Kind kind):
+        kind_(kind){;}
+
     constexpr bool operator==(const Mnemonic & other) const{
         return kind_ == other.kind_;
     }
@@ -79,7 +90,6 @@ struct Mnemonic final{
     constexpr Mnemonic(const Mnemonic & other) = default; 
     constexpr Mnemonic(Mnemonic && other) = default; 
 private:
-    explicit constexpr Mnemonic(Kind kind):kind_(kind){}
     Kind kind_;
 public:
     using enum Kind;
@@ -87,24 +97,6 @@ public:
     friend OutputStream & operator<<(OutputStream & os, const Mnemonic self){
         return os << self.kind();
     }
-};
-struct LineText{
-    explicit LineText(const StringView text):text_(text){}
-    
-    constexpr StringView text(){
-        return text_;
-    };
-private:
-    StringView text_;
-
-};
-
-struct MultiLineText{
-    Option<StringView> get_line(const size_t line_nth) const {
-        //TODO
-        return None;
-    }
-private:
 };
 
 struct SourceLocation{
@@ -136,52 +128,54 @@ struct GcodeLine{
     constexpr explicit GcodeLine(StringView line):
         line_(line){;}
 
-    IResult<Mnemonic> query_mnemonic(const char letter) const {
-        return query_tmp<Mnemonic>(letter, 
-        [](const StringView str) -> Result<Mnemonic, Error>{
-            if(str.length() < 1) 
-                return Err(GcodeParseError::NoMnemonicFounded);
-            return ({
-                auto may_mnemoic = Mnemonic::from_letter(str[0]);
-                if(may_mnemoic.is_none()) 
-                    return Err(GcodeParseError::InvalidMnemonic);
-                Ok(may_mnemoic.unwrap());
-            });
+    constexpr IResult<Mnemonic> query_mnemonic() const {
+        if(line_.length() < 1) 
+            return Err(GcodeParseError::NoMnemonicFounded);
+        return ({
+            auto may_mnemoic = Mnemonic::from_letter(line_[0]);
+            if(may_mnemoic.is_none()) 
+                return Err(GcodeParseError::InvalidMnemonic);
+            Ok(may_mnemoic.unwrap());
         });
     }
 
-    IResult<uint8_t> query_major(Mnemonic mnemoic) const {
-        return query_tmp<uint8_t>(mnemoic.to_letter(), 
-        [](const StringView str) -> Result<uint8_t, Error>{
+    constexpr IResult<uint16_t> query_major(Mnemonic mnemoic) const {
+        return query_tmp<uint16_t>(mnemoic.to_letter(), 
+        [](const StringView str) -> Result<uint16_t, Error>{
             const auto res = (strconv2::FstrDump::from_str(str.substr(1)));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
-            return Ok(uint8_t(dump.digit_part));
+            if(dump.digit_part > std::numeric_limits<uint16_t>::max())
+                return Err(GcodeParseError::MajorNumberOverflow);
+            return Ok(uint16_t(dump.digit_part));
         });
     };
 
-    IResult<uint8_t> query_minor(Mnemonic mnemoic) const {
-        return query_tmp<uint8_t>(mnemoic.to_letter(), 
-        [](const StringView str) -> Result<uint8_t, Error>{
+    constexpr IResult<uint16_t> query_minor(Mnemonic mnemoic) const {
+        return query_tmp<uint16_t>(mnemoic.to_letter(), 
+        [](const StringView str) -> Result<uint16_t, Error>{
             const auto res = (strconv2::FstrDump::from_str(str.substr(1)));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
-            if(dump.scale == 0) return Err(GcodeParseError::GcodeHasNoMinorNumber);
-            return Ok(uint8_t(dump.frac_part));
+            if(dump.scale == 0) return Err(GcodeParseError::NoMinorNumber);
+            if(dump.frac_part > std::numeric_limits<uint16_t>::max())
+                return Err(GcodeParseError::MinorNumberOverflow);
+            return Ok(uint16_t(dump.frac_part));
         });
     };
 
-    IResult<q16> query_arg_value(const char letter) const {
+    constexpr IResult<q16> query_arg_value(const char letter) const {
         return query_tmp<q16>(letter, [](const StringView str) -> IResult<q16>{
-            const auto res = (strconv2::str_to_iq<16>(str));
+            const auto res = (strconv2::str_to_iq<16>(str.substr(1)));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });
     }
 
 private:
+    StringView line_;
 
-    IResult<StringView> query_value_str(const char letter) const {
+    constexpr IResult<StringView> query_value_str(const char letter) const {
         auto value_position = ({
             const auto may_index = line_.find(letter);
             if(may_index.is_none()) 
@@ -199,16 +193,32 @@ private:
     }
 
     template<typename T, typename Fn>
-    IResult<T> query_tmp(const char letter, Fn && fn) const {
+    constexpr IResult<T> query_tmp(const char letter, Fn && fn) const {
         const auto either_str = query_value_str(letter);
         if(either_str.is_err()) return Err(either_str.unwrap_err());
         const auto str = either_str.unwrap();
         return std::forward<Fn>(fn)(str);
     }
-    StringView line_;
-};
 
-struct GCodeCommandSpawner{
 
 };
+
+
+namespace test{
+
+static inline void static_test(){
+    // 测试助记符解析
+    static_assert(GcodeLine("G28").query_mnemonic().unwrap() == Mnemonic::General);
+    static_assert(GcodeLine("M106").query_mnemonic().unwrap() == Mnemonic::Miscellaneous);
+    // static_assert(GcodeLine("X10").query_mnemonic().unwrap().to_letter() == ' '); // 假设X不是合法助记符
+
+    // 测试主/次编号
+    static_assert(GcodeLine("G28").query_major(Mnemonic::General).unwrap() == 28);
+    static_assert(GcodeLine("G28.3").query_minor(Mnemonic::General).unwrap() == 3);
+    static_assert(GcodeLine("G1").query_minor(Mnemonic::General).is_err()); // 无次编号
+
+}
+
+
+}
 }

@@ -84,7 +84,6 @@ public:
     {;}
 
 
-    // void set_coord(const real_t p.radius, const real_t p.theta){
     void set_coord(const Polar<q16> p){
 
         const auto rho_position = p.radius * cfg_.rho_transform_scale;
@@ -176,21 +175,6 @@ private:
     Option<State> may_last_state_ = None;
 };
 
-struct PolarRobotKinePlanner{
-
-    explicit PolarRobotKinePlanner(PolarRobotActuator & act):
-        act_(act){;}
-
-    [[nodiscard]] constexpr auto set_position(const Vector2<q16> pos){
-        return [=, this]{
-            const auto p = regu_(pos);
-            act_.set_coord(p);
-        };
-    }
-private:
-    PolarRobotActuator & act_;
-    Cartesian2ContinuousPolarRegulator regu_;
-};
 
 
 struct QueuePointIterator{
@@ -234,13 +218,13 @@ private:
 
 struct StepPointIterator{
     struct Config{
-        Vector2<q24> intial_position;
+        Vector2<q24> initial_position;
     };
 
     explicit constexpr StepPointIterator(
         const Config & cfg
     ):
-        current_position_(cfg.intial_position){;}
+        current_position_(cfg.initial_position){;}
 
     constexpr void set_target_position(
         const Vector2<q24> target_position
@@ -259,10 +243,46 @@ struct StepPointIterator{
             || current_position_.is_equal_approx(target_position_.unwrap())
         ;
     }
+
+    [[nodiscard]] constexpr bool has_next() const {
+        return not is_done();
+    }
 private:
     Vector2<q24> current_position_ = {};
     Option<Vector2<q24>> target_position_ = None;
 };
+
+
+struct PolarRobotCurveGenerator{
+    struct Config{
+        uint32_t fs;
+        real_t speed;
+        Vector2<q24> initial_position = {0,0};
+    };
+
+    explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
+        delta_position_(cfg.speed / cfg.fs),
+        step_iter_(StepPointIterator{StepPointIterator::Config{
+            .initial_position = cfg.initial_position
+        }}){;}
+
+    constexpr void set_target_position(const Vector2<q24> position){
+        step_iter_.set_target_position(position);
+    }
+
+    constexpr bool has_next(){
+        return step_iter_.has_next();
+    }
+
+    constexpr Vector2<q24> next(){
+        return step_iter_.next(delta_position_);
+    }
+private:    
+    uint32_t fs_;
+    q24 delta_position_;
+    StepPointIterator step_iter_;
+};
+
 
 void polar_robot_main(){
 
@@ -335,9 +355,37 @@ void polar_robot_main(){
             .theta_joint = &theta_joint
         }
     };
+    Cartesian2ContinuousPolarRegulator regu_;
 
-    PolarRobotKinePlanner robot_planner = PolarRobotKinePlanner{
-        robot_actuator
+    static constexpr uint32_t POINT_GEN_FREQ = 500;
+    static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
+    static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
+
+    const auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
+        .fs = 500,
+        .speed = MAX_MOVE_SPEED
+    };
+
+    PolarRobotCurveGenerator robot_curve_generator{GEN_CONFIG};
+
+    [[maybe_unused]] auto process_gcode_line = [&](const StringView str){
+        auto line = gcode::GcodeLine(str);
+        ASSERT(line.query_mnemonic().examine().to_letter() == 'G');
+        switch(line.query_major(gcode::Mnemonic::from_letter<'G'>()).examine()){
+            case 0://rapid move
+                break;
+            case 1://linear move
+                break;
+            case 21://UseMillimetersUnits
+                break;
+            case 90:
+                break;
+        }
+        DEBUG_PRINTLN(
+            line.query_mnemonic(),
+            line.query_major(gcode::Mnemonic::from_letter('G').unwrap()),
+            line.query_minor(gcode::Mnemonic::from_letter('G').unwrap())
+        );
     };
 
     auto list = rpc::make_list(
@@ -347,7 +395,7 @@ void polar_robot_main(){
         theta_joint.make_rpc_list("theta_joint"),
 
         rpc::make_function("pxy", [&](const real_t x, const real_t y){
-            robot_planner.set_position({x,y})();
+            robot_actuator.set_coord(regu_({x,y}));
 
         }),
         rpc::make_function("prt", [&](const real_t radius, const real_t theta){
@@ -356,26 +404,27 @@ void polar_robot_main(){
         rpc::make_function("next", [&](){
             static Vector2<q16> position = {0.1_r, 0};
             position = position.cw();
-            robot_planner.set_position(position)();
+            robot_actuator.set_coord(regu_(position));
         })
     );
 
-    [[maybe_unused]] auto draw_curve_service = [&]{
-        static constexpr uint32_t CALL_FREQ = 500;
-        static constexpr auto CALL_DURATION_MS = 1000ms / CALL_FREQ;
-        static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
-        static constexpr auto DELTA_PER_CALL = MAX_MOVE_SPEED / CALL_FREQ;
 
-        static auto timer = async::RepeatTimer::from_duration(CALL_DURATION_MS);
-        static auto it = QueuePointIterator{{.points = std::span(CURVE_DATA)}};
+    [[maybe_unused]] auto draw_curve_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(POINT_GEN_DURATION_MS);
+        // static auto it = QueuePointIterator{{.points = std::span(CURVE_DATA)}};
+
 
         timer.invoke_if([&]{
+            if(not robot_curve_generator.has_next()) return;
+            const auto p = robot_curve_generator.next();
 
-            const auto p = it.next(DELTA_PER_CALL);
+            robot_actuator.set_coord(regu_(p));
 
-            robot_planner.set_position(p)();
-
-            DEBUG_PRINTLN(p, radius_joint.get_last_position(), theta_joint.get_last_position());
+            // DEBUG_PRINTLN(
+            //     p, 
+            //     radius_joint.get_last_position(), 
+            //     theta_joint.get_last_position()
+            // );
 
         });
     };
