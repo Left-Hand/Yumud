@@ -24,6 +24,7 @@
 #include "common_service.hpp"
 #include "joints.hpp"
 #include "gcode.hpp"
+#include "gcode_data.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -229,29 +230,45 @@ struct StepPointIterator{
     constexpr void set_target_position(
         const Vector2<q24> target_position
     ) {
-        target_position_ = Some(target_position);
+        may_end_position_ = Some(target_position);
     }
 
     [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
-        if(target_position_.is_none()) return current_position_;
-        current_position_ = current_position_.move_toward(target_position_.unwrap(), step);
+        if(may_end_position_.is_none()) return current_position_;
+        current_position_ = current_position_.move_toward(may_end_position_.unwrap(), step);
         return current_position_;
     }
 
-    [[nodiscard]] constexpr bool is_done() const {
-        return target_position_.is_none() 
-            || current_position_.is_equal_approx(target_position_.unwrap())
-        ;
-    }
-
     [[nodiscard]] constexpr bool has_next() const {
-        return not is_done();
+        return may_end_position_.is_some() and 
+            (not current_position_.is_equal_approx(may_end_position_.unwrap()));
     }
 private:
     Vector2<q24> current_position_ = {};
-    Option<Vector2<q24>> target_position_ = None;
+    Option<Vector2<q24>> may_end_position_ = None;
 };
 
+struct History{
+    static constexpr auto X_LIMIT = 0.2_r;
+    static constexpr auto Y_LIMIT = 0.2_r;
+    real_t max_speed = 0.02_r;
+    real_t speed;
+    real_t x;
+    real_t y;
+    bool is_rapid;
+
+    constexpr void set_speed(const real_t _speed){
+        speed = MIN(_speed / 1000, max_speed);
+    }
+
+    constexpr void set_x_by_mm(const real_t _x){
+        x = CLAMP2(_x / 1000, X_LIMIT);
+    }
+
+    constexpr void set_y_by_mm(const real_t _y){
+        y = CLAMP2(_y / 1000, Y_LIMIT);
+    }
+};
 
 struct PolarRobotCurveGenerator{
     struct Config{
@@ -261,13 +278,18 @@ struct PolarRobotCurveGenerator{
     };
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
+        fs_(cfg.fs),
         delta_position_(cfg.speed / cfg.fs),
         step_iter_(StepPointIterator{StepPointIterator::Config{
             .initial_position = cfg.initial_position
         }}){;}
 
-    constexpr void set_target_position(const Vector2<q24> position){
+    constexpr void add_end_position(const Vector2<q24> position){
         step_iter_.set_target_position(position);
+    }
+
+    constexpr void set_move_speed(const q24 speed){
+        delta_position_ = (speed / fs_);
     }
 
     constexpr bool has_next(){
@@ -361,31 +383,91 @@ void polar_robot_main(){
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
     static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
 
-    const auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
-        .fs = 500,
+    static constexpr auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
+        .fs = POINT_GEN_FREQ,
         .speed = MAX_MOVE_SPEED
     };
 
-    PolarRobotCurveGenerator robot_curve_generator{GEN_CONFIG};
+    PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
 
-    [[maybe_unused]] auto process_gcode_line = [&](const StringView str){
+    [[maybe_unused]] auto get_next_gcode_line = [] -> Option<StringView>{
+        static strconv2::StringSplitIter line_iter{gcode_lines, '\n'};
+        if(not line_iter.has_next()) return None;
+        return Some(line_iter.next());
+    };
+
+    [[maybe_unused]] auto dispatch_gcode_line = [&](const StringView str){
         auto line = gcode::GcodeLine(str);
-        ASSERT(line.query_mnemonic().examine().to_letter() == 'G');
-        switch(line.query_major(gcode::Mnemonic::from_letter<'G'>()).examine()){
+
+        ASSERT(line.query_mnemonic().examine().to_letter() == 'G', 
+            "only G gcode is supported");
+
+        static History history_;
+
+        auto parse_g_command = [&](const gcode::GcodeArg & arg){
+            const uint16_t major = int(arg.value);
+            switch(major){
             case 0://rapid move
+                curve_gen_.set_move_speed(history_.max_speed);
+                curve_gen_.add_end_position({history_.x, history_.y});
                 break;
             case 1://linear move
+                curve_gen_.set_move_speed(history_.speed);
+                curve_gen_.add_end_position({history_.x, history_.y});
                 break;
             case 21://UseMillimetersUnits
                 break;
-            case 90:
+            case 90://Use abs position
                 break;
+            default:
+                PANIC("not impleted gcode", major);
+                break;
+            }
+        };
+
+        auto parse_arg = [&](const gcode::GcodeArg & arg){
+            switch(arg.letter){
+            case 'X': 
+                // history_.x = arg.value;
+                history_.set_x_by_mm(arg.value);
+                break;
+            case 'Y':
+                // history_.y = arg.value;
+                history_.set_y_by_mm(arg.value);
+                break;
+            case 'F':
+                // history_.speed = arg.value;
+                history_.set_speed(arg.value);
+                break;
+            case 'G':
+                parse_g_command(arg);
+                break;
+            }
+        };
+
+
+        {
+            auto iter = gcode::GcodeArgsIter(str);
+            while(iter.has_next()){
+                const auto arg = iter.next().examine();
+                // DEBUG_PRINTLN(arg);
+                parse_arg(arg);
+            }
         }
-        DEBUG_PRINTLN(
-            line.query_mnemonic(),
-            line.query_major(gcode::Mnemonic::from_letter('G').unwrap()),
-            line.query_minor(gcode::Mnemonic::from_letter('G').unwrap())
-        );
+
+        // DEBUG_PRINTLN(
+        //     line.query_mnemonic(),
+        //     line.query_major(gcode::Mnemonic::from_letter('G').unwrap()),
+        //     line.query_minor(gcode::Mnemonic::from_letter('G').unwrap())
+        // );
+    };
+
+    [[maybe_unused]] auto poll_gcode = [&]{
+        const auto may_line_str = get_next_gcode_line();
+        if(may_line_str.is_none()) return;
+        const auto line = may_line_str.unwrap().trim();
+
+        dispatch_gcode_line(line);
     };
 
     auto list = rpc::make_list(
@@ -409,22 +491,28 @@ void polar_robot_main(){
     );
 
 
+
     [[maybe_unused]] auto draw_curve_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(POINT_GEN_DURATION_MS);
         // static auto it = QueuePointIterator{{.points = std::span(CURVE_DATA)}};
 
 
         timer.invoke_if([&]{
-            if(not robot_curve_generator.has_next()) return;
-            const auto p = robot_curve_generator.next();
+            if(not curve_gen_.has_next()){
+                poll_gcode();
+            }
+
+            const auto p = curve_gen_.next();
+
+            // DEBUG_PRINTLN(p);
 
             robot_actuator.set_coord(regu_(p));
 
-            // DEBUG_PRINTLN(
-            //     p, 
-            //     radius_joint.get_last_position(), 
-            //     theta_joint.get_last_position()
-            // );
+            DEBUG_PRINTLN(
+                p, 
+                radius_joint.get_last_position(), 
+                theta_joint.get_last_position()
+            );
 
         });
     };

@@ -138,13 +138,23 @@ struct Vector2{
             return atan2(y, x);}
 	[[nodiscard]] constexpr T angle_between(const Vector2<T> & b) const {
         const auto & a = *this;
-        const T cross_z = a.x * b.y - a.y * b.x;
-        // 点积（cosθ）
-        const T dot = a.x * b.x + a.y * b.y;
-        if(ymd::is_equal_approx(dot, T(0))){
-            return (dot >= 0) ? T(0) : T(PI);
-        }
-        return atan2(cross_z, dot);
+        // const T cross_z = a.x * b.y - a.y * b.x;
+        // // 点积（cosθ）
+        // const T dot = a.x * b.x + a.y * b.y;
+        // if(ymd::is_equal_approx(dot, T(0))){
+        //     return (dot >= 0) ? T(0) : T(PI);
+        // }
+        // return atan2(cross_z, dot);
+
+        const T angle_a = atan2(a.y, a.x);
+        const T angle_b = atan2(b.y, b.x);
+        T diff = angle_b - angle_a;
+        
+        // 规范化到 [-π, π]
+        while (diff > T(PI)) diff -= T(2 * PI);
+        while (diff <= -T(PI)) diff += T(2 * PI);
+        
+        return diff;
     }
 
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}

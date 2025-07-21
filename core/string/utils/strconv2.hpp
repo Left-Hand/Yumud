@@ -101,6 +101,8 @@ struct FstrDump final{
 					return Err(DestringError::UnexpectedAlpha);
 				case 'A' ... 'Z':
 					return Err(DestringError::UnexpectedAlpha);
+				case ' ':
+					return Err(DestringError::UnexpectedSpace);
 				default:  // Invalid characters
 					return Err(DestringError::UnexpectedChar);
 			}

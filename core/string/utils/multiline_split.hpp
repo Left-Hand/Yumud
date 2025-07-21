@@ -26,12 +26,10 @@ struct StringSplitIter {
 private:
     constexpr void seek_next_line() {
         end_ = start_;
-        while (end_ < text_.size() && text_[end_] != '\n') {
+        while (end_ < text_.size() && text_[end_] != delimiter_) {
             ++end_;
         }
     }
-
-
 
     const StringView text_;
     const char delimiter_;

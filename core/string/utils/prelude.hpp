@@ -13,6 +13,7 @@ enum class DestringError:uint8_t{
 	UnexpectedPositive,
 	UnexpectedNegative,
 	MultipleDot,
+	UnexpectedSpace,
 	UnexpectedChar,
 	UnexpectedAlpha,
 	NoDigit,

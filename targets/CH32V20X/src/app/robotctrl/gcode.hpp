@@ -15,9 +15,10 @@ enum class GcodeParseError:uint8_t{
     NoMinorNumber,
     MajorNumberOverflow,
     MinorNumberOverflow,
-
+    UnknownHeadLetter,
     NoMnemonicFounded,
     InvalidMnemonic,
+    InvalidArgumentLetter
 };
 
 DEF_DERIVE_DEBUG(GcodeParseError)
@@ -55,6 +56,19 @@ struct Mnemonic final{
     template<char letter>
     static consteval Mnemonic from_letter(){
         return from_letter(letter).unwrap();
+    }
+
+
+    static constexpr bool is_letter_valid(const char letter){
+        switch(letter){
+            case 'G':
+            case 'M':
+            case 'T':
+            case 'N':
+                return true;
+            default: 
+                return false;
+        }
     }
 
     constexpr Mnemonic(const Kind kind):
@@ -115,13 +129,82 @@ struct SourceLocation{
 
 struct Word{
     char letter;
-    float value;
+    q16 value;
     SourceLocation source;
 };
 
 struct GcodeArg{
     char letter;
     q16 value;
+
+    static constexpr bool is_letter_valid(const char letter){
+        switch(letter){
+            case 'X':
+            case 'Y':
+            case 'F':
+                return true;
+
+            case 'G':
+            case 'M':
+            case 'P':
+            case 'T':
+                return true;
+            default: 
+                return false;
+        }
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const GcodeArg & self){
+        return os << os.brackets<'('>() 
+            << self.letter << os.splitter()
+            << self.value
+        << os.brackets<')'>();
+    }
+};
+
+
+struct GcodeArgsIter {
+    constexpr explicit GcodeArgsIter(StringView line)
+        : arg_str_iter_(line, ' ') {}
+
+    constexpr bool has_next() const {
+        // No more arguments -> return None
+        return arg_str_iter_.has_next();
+    }
+
+    constexpr Result<GcodeArg, Error> next() {
+        while (arg_str_iter_.has_next()) {
+            const auto token_str = arg_str_iter_.next();
+            if (token_str.is_empty()) continue; // Skip empty tokens (e.g., multiple spaces)
+
+            const char letter = token_str[0];
+            // if (Mnemonic::is_letter_valid(letter))
+            //     continue;
+            if (!GcodeArg::is_letter_valid(letter)) {
+                // Invalid letter (e.g., "@100") -> return Error
+                return Err(GcodeParseError::InvalidArgumentLetter);
+            }
+
+            // Parse value (skip letter)
+            const auto value_str = token_str.substr(1);
+            const auto res = strconv2::str_to_iq<16>(value_str);
+            if (res.is_err()) {
+                // Value parsing failed (e.g., "X1.2.3") -> return Error
+                return Err(res.unwrap_err());
+            }
+
+            // Valid argument -> return Ok(GcodeArg)
+            return Ok(GcodeArg{
+                .letter = letter,
+                .value = res.unwrap()
+            });
+        }
+
+        __builtin_unreachable();
+    }
+
+private:
+    strconv2::StringSplitIter arg_str_iter_;
 };
 
 struct GcodeLine{
@@ -216,6 +299,8 @@ static inline void static_test(){
     static_assert(GcodeLine("G28").query_major(Mnemonic::General).unwrap() == 28);
     static_assert(GcodeLine("G28.3").query_minor(Mnemonic::General).unwrap() == 3);
     static_assert(GcodeLine("G1").query_minor(Mnemonic::General).is_err()); // 无次编号
+
+    // static_assert(GcodeLine("G1 F1000").query_major(Mnemonic::General).is_ok());
 
 }
 
