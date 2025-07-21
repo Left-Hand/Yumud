@@ -5,7 +5,7 @@
 #include <ranges>
 #include <optional>
 
-namespace ymd {
+namespace ymd::strconv2{
 
 class StringView;
 

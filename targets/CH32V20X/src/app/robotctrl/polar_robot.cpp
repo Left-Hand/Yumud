@@ -19,6 +19,7 @@
 
 #include "types/colors/color/color.hpp"
 #include "types/vectors/polar/polar.hpp"
+#include "core/string/utils/multiline_split.hpp"
 
 #include "common_service.hpp"
 #include "joints.hpp"
@@ -321,7 +322,6 @@ public:
         return os << self.kind();
     }
 };
-
 struct LineText{
     explicit LineText(const StringView text):text_(text){}
     
@@ -368,20 +368,16 @@ struct GcCode{
     SourceLocation source;
 };
 
-struct GcodeValue{
-
-};
-
-struct GcodePair{
-    char key;
-    GcodeValue value;
-};
 
 struct GcodeCommand{
     char code;
 };
 
+struct GCodeCommandSpawner{
+
+};
 }
+
 
 
 void polar_robot_main(){
