@@ -198,11 +198,12 @@ void UartHw::on_rxidle_interrupt(){
         case CommStrategy::Dma:{
             const size_t index = UART_RX_DMA_BUF_SIZE - rx_dma_.pending();
             if(unlikely(index >= UART_RX_DMA_BUF_SIZE)) while(true);
-            if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
-                this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], (index - rx_dma_buf_index_))); 
+            if((index != (UART_RX_DMA_BUF_SIZE / 2)) and (index != UART_RX_DMA_BUF_SIZE)){
+                (void)this->rx_fifo_.push(std::span(
+                    &rx_dma_buf_[rx_dma_buf_index_], (index - rx_dma_buf_index_))); 
             }
             rx_dma_buf_index_ = index;
-            call_post_rx_callback();
+            invoke_post_rx_callback();
         }; 
             break;
 
@@ -366,13 +367,19 @@ void UartHw::invoke_tx_it(){
 void UartHw::on_rx_dma_done(){
     //将数据从当前索引填充至末尾
     // rx_dma_.resume();
-    this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_)); 
+    (void)this->rx_fifo_.push(std::span(
+        &rx_dma_buf_[rx_dma_buf_index_], 
+        UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_
+    )); 
     rx_dma_buf_index_ = 0;
 }
 
 void UartHw::on_rx_dma_half(){
     //将数据从当前索引填充至半满
-    this->rx_fifo_.push(std::span(&rx_dma_buf_[rx_dma_buf_index_], (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index_)); 
+    (void)this->rx_fifo_.push(std::span(
+        &rx_dma_buf_[rx_dma_buf_index_], 
+        (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index_
+    )); 
     rx_dma_buf_index_ = UART_RX_DMA_BUF_SIZE / 2;
 }
 
@@ -390,10 +397,13 @@ void UartHw::invoke_tx_dma(){
     if(tx_dma_.pending() == 0){
         if(tx_fifo_.available()){
             const size_t tx_amount = tx_fifo_.available();
-            tx_fifo_.pop(std::span(tx_dma_buf_.begin(), tx_amount));
-            tx_dma_.transfer_mem2pph<char>((&inst_->DATAR), tx_dma_buf_.begin(), tx_amount);
+            (void)tx_fifo_.pop(std::span(tx_dma_buf_.begin(), tx_amount));
+            tx_dma_.transfer_mem2pph<char>(
+                (&inst_->DATAR), 
+                tx_dma_buf_.begin(), tx_amount
+            );
         }else{
-            call_post_tx_callback();
+            invoke_post_tx_callback();
         }
     }
 }
@@ -479,21 +489,12 @@ void UartHw::init(const Config & cfg){
     set_rx_strategy(cfg.rx_strategy);
 }
 
-hal::HalResult UartHw::lead(const LockRequest req){
-    while((inst_->STATR & USART_FLAG_TXE) == RESET);
-    return hal::HalResult::Ok();
-}
-
-void UartHw::trail(){
-    while((inst_->STATR & USART_FLAG_TC) == RESET);
-}
-
 void UartHw::writeN(const char * pbuf, const size_t len){
     switch(tx_strategy_){
         case CommStrategy::Blocking:
             inst_->DATAR;
 
-            tx_fifo_.push(std::span(pbuf, len));
+            (void)tx_fifo_.push(std::span(pbuf, len));
             while(tx_fifo_.available()){
                 inst_->DATAR = tx_fifo_.pop();
                 while((inst_->STATR & USART_FLAG_TXE) == RESET);
@@ -502,12 +503,12 @@ void UartHw::writeN(const char * pbuf, const size_t len){
             
             break;
         case CommStrategy::Interrupt:
-            tx_fifo_.push(std::span(pbuf, len));
+            (void)tx_fifo_.push(std::span(pbuf, len));
             invoke_tx_it();
 
             break;
         case CommStrategy::Dma:
-            tx_fifo_.push(std::span(pbuf, len));
+            (void)tx_fifo_.push(std::span(pbuf, len));
             invoke_tx_dma();
             break;
         default:

@@ -2,13 +2,15 @@
 
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
+#include "core/container/inline_vector.hpp"
+#include "core/utils/nodeid.hpp"
 #include "core/magic/enum_traits.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "types/regions/range2/range2.hpp"
-#include "core/container/inline_vector.hpp"
+
 
 namespace ymd::robots{
 
@@ -32,17 +34,6 @@ DEF_DERIVE_DEBUG(Error)
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-struct NodeId{
-    static constexpr NodeId from_u8(const uint8_t raw) {
-        return NodeId{raw};
-    }
-
-    constexpr uint8_t as_u8() const {
-        return id;
-    }
-
-    uint8_t id;
-};
 
 static constexpr size_t MAX_PACKET_BYTES = 16;
 
@@ -55,22 +46,22 @@ enum class VerifyMethod:uint8_t{
 };
 
 enum class FuncCode:uint8_t{
-    Activation = 0xf3,
-    SetSpeed = 0xf6,
-    // SetCurrent = 0xfb,
-    SetCurrent = 0xf5,
-    SetPosition = 0xfd,
-    Brake = 0xfe,
-    // Stop = 0xfe,
-    MultiAxisSync = 0xff, 
     TrigCali = 0x06,
+    QueryHommingParaments = 0x22,
+    QueryHommingStatus = 0x3B,
+    UpdateHommingParaments = 0x4C,
     SetSubDivide = 0x84,
     TrigHomming = 0x9a,
     AbortHomming = 0x9c,
-    QueryHommingParaments = 0x22,
-    UpdateHommingParaments = 0x4C,
-    GetHommingFlags = 0x3b
 
+    Activation = 0xf3,
+    SetCurrent = 0xf5,
+    SetSpeed = 0xf6,
+    // SetCurrent = 0xfb,
+    SetPosition = 0xfd,
+    Brake = 0xfe,
+    // Stop = 0xfe,
+    MultiAxisSync = 0xff
 };
 
 enum class HommingMode:uint8_t{
@@ -84,6 +75,21 @@ enum class HommingMode:uint8_t{
     LapsCollision = 0x02,
     LapsEndstop = 0x03
 };
+
+struct HommingStatus{
+    // 编码器就绪状态标志位     = 0x03 & 0x01 = 0x01
+    // 校准表就绪状态标志位     = 0x03 & 0x02 = 0x01
+    // 正在回零标志位            = 0x03 & 0x04 = 0x00
+    // 回零失败标志位               = 0x03 & 0x08 = 0x00
+
+    uint8_t encoder_ready:1;
+    uint8_t cali_table_ready:1;
+    uint8_t homing_in_progress:1;
+    uint8_t homing_failed:1;
+    uint8_t :4;
+};
+
+static_assert(sizeof(HommingStatus) == 1); 
 
 static constexpr auto DEFAULT_VERIFY_METHOD = VerifyMethod::X6B;
 
@@ -397,6 +403,11 @@ namespace payloads{
     }__packed;
 
     struct QueryHommingParaments final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
+    }__packed;
+    
+
+    struct QueryHommingStatus final{
         static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
     }__packed;
     

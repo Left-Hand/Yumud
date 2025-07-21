@@ -78,8 +78,6 @@ protected:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    hal::HalResult lead(const LockRequest req);
-    void trail();
 public:
     UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):
             inst_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}

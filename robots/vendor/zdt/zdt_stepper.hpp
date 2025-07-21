@@ -8,7 +8,6 @@ namespace ymd::robots::zdtmotor{
 class ZdtStepper final{
 public:
     using HommingMode = prelude::HommingMode;
-    using NodeId = prelude::NodeId;
     using VerifyMethod = prelude::VerifyMethod;
     using Buf = prelude::Buf;
     using Error = prelude::Error;

@@ -31,7 +31,7 @@ static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 #endif
 
 
-class Uart:public BusBase{
+class Uart{
 
 public:
     using Mode = CommDirection;
@@ -52,8 +52,8 @@ protected:
 
     Uart(){;}
 
-    __fast_inline void call_post_tx_callback(){EXECUTE(post_tx_cb_);}
-    __fast_inline void call_post_rx_callback(){EXECUTE(post_rx_cb_);}
+    __fast_inline void invoke_post_tx_callback(){EXECUTE(post_tx_cb_);}
+    __fast_inline void invoke_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
     hal::HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return hal::HalResult::Ok();};

@@ -24,11 +24,11 @@ struct CanStdIdMask{
     #pragma pack(pop)
 
     static constexpr CanStdIdMask from_accept_all(){
-        return {0, CanRemoteSpec::Data};
+        return {0, CanRemoteSpec::Any};
     }
 
     static constexpr  CanStdIdMask from_reject_all(){
-        return {0xffff, CanRemoteSpec::Remote};
+        return {0xffff, CanRemoteSpec::Specified};
     }
 
     static constexpr CanStdIdMask from_ignore_high(const size_t len, const CanRemoteSpec rmt){

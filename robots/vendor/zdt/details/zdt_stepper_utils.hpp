@@ -7,7 +7,6 @@ namespace ymd::robots::zdtmotor{
 
 class ZdtMotorPhy final{
 public:
-    using NodeId = prelude::NodeId;
     using FuncCode = prelude::FuncCode;
     
 

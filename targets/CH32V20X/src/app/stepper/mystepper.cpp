@@ -354,7 +354,7 @@ static constexpr Bin make_bin(const Header & header, const Context & context){
     return bin;
 };
 
-static void static_test(){
+[[maybe_unused]] static void static_test(){
     static constexpr auto header = []{
         auto payload_iter = RepeatIter<uint8_t>(0, 1);
         return make_header(payload_iter);

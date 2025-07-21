@@ -59,7 +59,7 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
-class Can: public BusBase{
+class Can final{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
@@ -126,12 +126,6 @@ private:
 
     Gpio & get_tx_gpio();
     Gpio & get_rx_gpio();
-
-    hal::HalResult lead(const hal::LockRequest req){
-        return hal::HalResult::Ok();
-    };
-
-    void trail(){};
 
     void install_gpio();
     void enable_rcc();

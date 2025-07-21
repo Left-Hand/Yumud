@@ -70,8 +70,8 @@ public:
     };
 
     struct Params{
-        Some<JointMotorActuatorIntf *> radius_joint;
-        Some<JointMotorActuatorIntf *> theta_joint;
+        Some<JointMotorActuatorIntf *> radius_joint_;
+        Some<JointMotorActuatorIntf *> theta_joint_;
     };
 
 
@@ -80,8 +80,8 @@ public:
         const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(params.radius_joint.deref()),
-        joint_theta_(params.theta_joint.deref())
+        joint_rho_(params.radius_joint_.deref()),
+        joint_theta_(params.theta_joint_.deref())
     {;}
 
 
@@ -204,7 +204,6 @@ struct QueuePointIterator{
         }
 
         return current_position;
-
     }
 
     [[nodiscard]] constexpr size_t index() const {
@@ -314,12 +313,6 @@ void polar_robot_main(){
     // DEBUGGER.force_sync(EN);
     DEBUGGER.no_brackets();
     
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(5ms);
-    // }
-
-    
     #ifndef MOCK_TEST
     #if PHY_SEL == PHY_SEL_UART
 
@@ -344,26 +337,35 @@ void polar_robot_main(){
         .mode = CanMode::Normal
     });
 
-
     COMM_CAN.enable_hw_retransmit(DISEN);
+
+    COMM_CAN[0].mask({
+            .id = CanStdIdMask{0x200, CanRemoteSpec::Any}, 
+            .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
+        },{
+            .id = CanStdIdMask{0x000, CanRemoteSpec::Any}, 
+            .mask = CanStdIdMask::from_accept_all()
+        }
+    );
+
     ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
     ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
 
     #endif
 
-    ZdtJointMotorActuator radius_joint = {{
+    ZdtJointMotorActuator radius_joint_ = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    ZdtJointMotorActuator theta_joint = {{
+    ZdtJointMotorActuator theta_joint_ = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    MockJointMotorActuator radius_joint = {};
-    MockJointMotorActuator theta_joint = {};
+    MockJointMotorActuator radius_joint_ = {};
+    MockJointMotorActuator theta_joint_ = {};
     #endif
 
-    PolarRobotActuator robot_actuator = {
+    PolarRobotActuator actuator_ = {
         {
             .rho_transform_scale = 25_r,
             .theta_transform_scale = real_t(9.53 / TAU),
@@ -373,15 +375,15 @@ void polar_robot_main(){
             .theta_range = {-10_r, 10_r}
         },
         {
-            .radius_joint = &radius_joint, 
-            .theta_joint = &theta_joint
+            .radius_joint_ = &radius_joint_, 
+            .theta_joint_ = &theta_joint_
         }
     };
     Cartesian2ContinuousPolarRegulator regu_;
 
     static constexpr uint32_t POINT_GEN_FREQ = 500;
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
-    static constexpr auto MAX_MOVE_SPEED = 0.05_q24; // 5cm / s
+    static constexpr auto MAX_MOVE_SPEED = 0.02_q24; // 5cm / s
 
     static constexpr auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
         .fs = POINT_GEN_FREQ,
@@ -428,15 +430,12 @@ void polar_robot_main(){
         auto parse_arg = [&](const gcode::GcodeArg & arg){
             switch(arg.letter){
             case 'X': 
-                // history_.x = arg.value;
                 history_.set_x_by_mm(arg.value);
                 break;
             case 'Y':
-                // history_.y = arg.value;
                 history_.set_y_by_mm(arg.value);
                 break;
             case 'F':
-                // history_.speed = arg.value;
                 history_.set_speed(arg.value);
                 break;
             case 'G':
@@ -454,12 +453,6 @@ void polar_robot_main(){
                 parse_arg(arg);
             }
         }
-
-        // DEBUG_PRINTLN(
-        //     line.query_mnemonic(),
-        //     line.query_major(gcode::Mnemonic::from_letter('G').unwrap()),
-        //     line.query_minor(gcode::Mnemonic::from_letter('G').unwrap())
-        // );
     };
 
     [[maybe_unused]] auto poll_gcode = [&]{
@@ -472,52 +465,47 @@ void polar_robot_main(){
 
     auto list = rpc::make_list(
         "polar_robot",
-        robot_actuator.make_rpc_list("actuator"),
-        radius_joint.make_rpc_list("radius_joint"),
-        theta_joint.make_rpc_list("theta_joint"),
+        actuator_.make_rpc_list("actuator"),
+        radius_joint_.make_rpc_list("radius_joint_"),
+        theta_joint_.make_rpc_list("theta_joint_"),
 
         rpc::make_function("pxy", [&](const real_t x, const real_t y){
-            robot_actuator.set_coord(regu_({x,y}));
+            actuator_.set_coord(regu_({x,y}));
 
         }),
         rpc::make_function("prt", [&](const real_t radius, const real_t theta){
-            robot_actuator.set_coord({radius,theta});
+            actuator_.set_coord({radius,theta});
         }),
         rpc::make_function("next", [&](){
             static Vector2<q16> position = {0.1_r, 0};
             position = position.cw();
-            robot_actuator.set_coord(regu_(position));
+            actuator_.set_coord(regu_(position));
         })
     );
 
 
-
     [[maybe_unused]] auto draw_curve_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(POINT_GEN_DURATION_MS);
-        // static auto it = QueuePointIterator{{.points = std::span(CURVE_DATA)}};
-
+        static auto timer = async::RepeatTimer
+            ::from_duration(POINT_GEN_DURATION_MS);
 
         timer.invoke_if([&]{
             if(not curve_gen_.has_next()){
                 poll_gcode();
             }
 
-            const auto p = curve_gen_.next();
+            const auto position = curve_gen_.next();
 
-            // DEBUG_PRINTLN(p);
-
-            robot_actuator.set_coord(regu_(p));
+            actuator_.set_coord(regu_(position));
 
             DEBUG_PRINTLN(
-                p, 
-                radius_joint.get_last_position(), 
-                theta_joint.get_last_position()
+                position, 
+                radius_joint_.get_last_position(), 
+                theta_joint_.get_last_position()
             );
 
         });
     };
 
-    robot_actuator.trig_homing();
     [[maybe_unused]] auto repl_service = [&](){ 
         
         static robots::ReplServer repl_server = {
@@ -526,9 +514,23 @@ void polar_robot_main(){
         repl_server.invoke(list);
     };
 
+    [[maybe_unused]] auto can_watch_service = [&]{
+        while(COMM_CAN.available()){
+            DEBUG_PRINTLN(COMM_CAN.read());
+        }
+
+        // static size_t cnt = 0;
+        // cnt++;
+        // if(cnt > 10) PANIC();
+    };
+
+    actuator_.trig_homing();
+
     while(true){
         draw_curve_service();
         repl_service();
+        can_watch_service();
+
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
