@@ -65,7 +65,6 @@ using namespace fp;
 // constexpr auto rf1 = pattern_as_int_f1.execute();
 // constexpr auto re3 = pattern_as_int_e3.execute();
 
-constexpr auto me = match(1);
 
 constexpr auto shape = Shape(Shape::Circle(1));
 // constexpr auto shape = Circle(1);

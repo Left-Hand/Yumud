@@ -180,66 +180,6 @@ struct PolarRobotKinePlanner{
         act_(act){;}
 
     [[nodiscard]] constexpr auto set_position(const Vector2<q16> pos){
-        // if(x_meters == 0 && y_meters == 0) return;
-        // auto apply = [&](const Solver::Solution & sol, const Solver::Gesture & gest){
-
-        //     set_coord(
-        //         sol.p.radius, 
-        //         sol.p.theta
-        //     );
-
-
-        //     may_last_gest_ = Some(gest);
-        //     may_last_theta_ = Some(sol.p.theta);
-        // };
-
-        // const auto gest = Solver::Gesture{
-        //     .x_meters = pos.x,
-        //     .y_meters = pos.y
-        // };
-
-        // const auto gest_vec2 = gest.to_vec2();
-        // if(may_last_gest_.is_none()){
-        //     const auto sol = Solver::Solution{
-        //         .p.radius = gest_vec2.length(),
-        //         .p.theta = gest_vec2.angle()
-        //     };
-        //     apply(sol, gest);
-        //     return;
-        // }
-
-        // auto last_theta = ({
-        //     if(may_last_theta_.is_none()) PANIC();
-        //     may_last_theta_.unwrap();
-        // });
-
-        // if(last_theta > 25){
-        //     last_theta = 0;
-        // }
-
-        // const auto last_gest_vec2 = may_last_gest_.unwrap().to_vec2();
-        // const auto delta_theta = vec_angle_diff(gest_vec2, last_gest_vec2);
-        // const auto radius = gest_vec2.length();
-        // const auto sol = Solver::Solution{
-        //     .p.radius = radius,
-        //     .p.theta = last_theta + delta_theta
-        // };
-
-        
-        // DEBUG_PRINTLN(
-        //     sol.p.radius,
-        //     sol.p.theta,
-
-        //     x_meters,
-        //     y_meters,
-        //     last_theta,
-        //     delta_theta
-        // );
-
-        // apply(sol, gest);
-        // may_last_gest_ = Some(gest);
-        // may_last_theta_ = Some(sol.p.theta);
-
         return [=, this]{
             const auto p = regu_(pos);
             act_.set_coord(p);
@@ -252,43 +192,196 @@ private:
 
 
 struct QueuePointIterator{
+    struct Config{
+        std::span<const Vector2<bf16>> points;
+    };
 
     explicit constexpr QueuePointIterator(
-        const std::span<const Vector2<bf16>> data
+        const Config & cfg
     ):
-        data_(data){;}
+        points_(cfg.points){;}
 
-    [[nodiscard]] Vector2<q24> next(const q24 step){
+    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
 
-        const auto curr_i = i_;
+        const auto curr_index = index_;
 
-        
         const auto p1 = Vector2{
-            q24::from(float(data_[curr_i].x)), 
-            q24::from(float(data_[curr_i].y))
+            q24::from(float(points_[curr_index].x)), 
+            q24::from(float(points_[curr_index].y))
         };
 
-        p = p.move_toward(p1, step);
-        // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
-        // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
+        current_position = current_position.move_toward(p1, step);
 
-        if(p.is_equal_approx(p1)){
-            i_ = (i_ + 1) % data_.size();
+        if(current_position.is_equal_approx(p1)){
+            index_ = (index_ + 1) % points_.size();
         }
-        // DEBUG_PRINTLN(p);
-        return p;
-        // return Vector2<q24>(data_[0].x, data_.size());
-        // return Vector2<q24>(i_, data_.size());
+
+        return current_position;
+
     }
 
     [[nodiscard]] constexpr size_t index() const {
-        return i_;
+        return index_;
     }
 private:
-    std::span<const Vector2<bf16>> data_;
-    Vector2<q24> p = {};
-    size_t i_ = 0;
+    std::span<const Vector2<bf16>> points_;
+    Vector2<q24> current_position = {};
+    size_t index_ = 0;
 };
+
+
+struct StepPointIterator{
+    struct Config{
+        Vector2<q24> intial_position;
+    };
+
+    explicit constexpr StepPointIterator(
+        const Config & cfg
+    ):
+        current_position_(cfg.intial_position){;}
+
+    constexpr void set_target_position(
+        const Vector2<q24> target_position
+    ) {
+        target_position_ = Some(target_position);
+    }
+
+    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
+        if(target_position_.is_none()) return current_position_;
+        current_position_ = current_position_.move_toward(target_position_.unwrap(), step);
+        return current_position_;
+    }
+
+    [[nodiscard]] constexpr bool is_done() const {
+        return target_position_.is_none() 
+            || current_position_.is_equal_approx(target_position_.unwrap())
+        ;
+    }
+private:
+    Vector2<q24> current_position_ = {};
+    Option<Vector2<q24>> target_position_ = None;
+};
+
+struct GcodeValue{
+
+};
+
+namespace ymd::gcode{
+namespace details{
+
+}
+
+
+struct Mnemonic final{
+    enum class Kind:uint8_t {
+        General = 0,
+        Miscellaneous = 1,
+        ProgramNumber = 2,
+        ToolChange = 3,
+    };
+
+    DEF_FRIEND_DERIVE_DEBUG(Kind);
+
+    static constexpr Option<Mnemonic> from_letter(const char letter){
+        switch(letter){
+            case 'G':
+                return Some(Mnemonic{Kind::General});
+            case 'M':
+                return Some(Mnemonic{Kind::Miscellaneous});
+            case 'T':
+                return Some(Mnemonic{Kind::ToolChange});
+            case 'N':
+                return Some(Mnemonic{Kind::ProgramNumber});
+            default:
+                return None;
+        }
+    }
+
+    constexpr bool operator==(const Mnemonic & other) const{
+        return kind_ == other.kind_;
+    }
+
+    constexpr bool operator==(const Kind kind) const {
+        return kind_ == kind;
+    }
+
+    constexpr Kind kind() const {
+        return kind_;
+    }
+
+    constexpr Mnemonic(const Mnemonic & other) = default; 
+    constexpr Mnemonic(Mnemonic && other) = default; 
+private:
+    explicit constexpr Mnemonic(Kind kind):kind_(kind){}
+    Kind kind_;
+public:
+    using enum Kind;
+
+    friend OutputStream & operator<<(OutputStream & os, const Mnemonic self){
+        return os << self.kind();
+    }
+};
+
+struct LineText{
+    explicit LineText(const StringView text):text_(text){}
+    
+    constexpr StringView text(){
+        return text_;
+    };
+private:
+    StringView text_;
+
+};
+
+struct MultiLineText{
+    Option<StringView> get_line(const size_t line_nth) const {
+        //TODO
+        return None;
+    }
+private:
+};
+
+struct SourceLocation{
+    uint8_t start;    // Starting column
+    uint8_t end;      // Ending column  
+    uint16_t line;    // Line number
+    
+    friend OutputStream& operator<<(OutputStream& os, const SourceLocation self) {
+        return os << os.brackets<'('>() 
+            << self.start << os.splitter()
+            << self.end << os.splitter()
+            << self.line
+            << os.brackets<')'>();
+    }
+};
+
+struct Word{
+    char letter;
+    float value;
+    SourceLocation source;
+};
+
+struct GcCode{
+    Mnemonic mnemonic;
+    uint8_t major_number;
+    uint8_t minor_number;
+    SourceLocation source;
+};
+
+struct GcodeValue{
+
+};
+
+struct GcodePair{
+    char key;
+    GcodeValue value;
+};
+
+struct GcodeCommand{
+    char code;
+};
+
+}
 
 
 void polar_robot_main(){
@@ -394,7 +487,7 @@ void polar_robot_main(){
         static constexpr auto DELTA_PER_CALL = MAX_MOVE_SPEED / CALL_FREQ;
 
         static auto timer = async::RepeatTimer::from_duration(CALL_DURATION_MS);
-        static auto it = QueuePointIterator{std::span(CURVE_DATA)};
+        static auto it = QueuePointIterator{{.points = std::span(CURVE_DATA)}};
 
         timer.invoke_if([&]{
 
