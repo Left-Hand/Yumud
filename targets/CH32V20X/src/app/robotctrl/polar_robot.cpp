@@ -23,6 +23,7 @@
 
 #include "common_service.hpp"
 #include "joints.hpp"
+#include "gcode.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -262,123 +263,6 @@ private:
     Vector2<q24> current_position_ = {};
     Option<Vector2<q24>> target_position_ = None;
 };
-
-struct GcodeValue{
-
-};
-
-namespace ymd::gcode{
-namespace details{
-
-}
-
-
-struct Mnemonic final{
-    enum class Kind:uint8_t {
-        General = 0,
-        Miscellaneous = 1,
-        ProgramNumber = 2,
-        ToolChange = 3,
-    };
-
-    DEF_FRIEND_DERIVE_DEBUG(Kind);
-
-    static constexpr Option<Mnemonic> from_letter(const char letter){
-        switch(letter){
-            case 'G':
-                return Some(Mnemonic{Kind::General});
-            case 'M':
-                return Some(Mnemonic{Kind::Miscellaneous});
-            case 'T':
-                return Some(Mnemonic{Kind::ToolChange});
-            case 'N':
-                return Some(Mnemonic{Kind::ProgramNumber});
-            default:
-                return None;
-        }
-    }
-
-    constexpr bool operator==(const Mnemonic & other) const{
-        return kind_ == other.kind_;
-    }
-
-    constexpr bool operator==(const Kind kind) const {
-        return kind_ == kind;
-    }
-
-    constexpr Kind kind() const {
-        return kind_;
-    }
-
-    constexpr Mnemonic(const Mnemonic & other) = default; 
-    constexpr Mnemonic(Mnemonic && other) = default; 
-private:
-    explicit constexpr Mnemonic(Kind kind):kind_(kind){}
-    Kind kind_;
-public:
-    using enum Kind;
-
-    friend OutputStream & operator<<(OutputStream & os, const Mnemonic self){
-        return os << self.kind();
-    }
-};
-struct LineText{
-    explicit LineText(const StringView text):text_(text){}
-    
-    constexpr StringView text(){
-        return text_;
-    };
-private:
-    StringView text_;
-
-};
-
-struct MultiLineText{
-    Option<StringView> get_line(const size_t line_nth) const {
-        //TODO
-        return None;
-    }
-private:
-};
-
-struct SourceLocation{
-    uint8_t start;    // Starting column
-    uint8_t end;      // Ending column  
-    uint16_t line;    // Line number
-    
-    friend OutputStream& operator<<(OutputStream& os, const SourceLocation self) {
-        return os << os.brackets<'('>() 
-            << self.start << os.splitter()
-            << self.end << os.splitter()
-            << self.line
-            << os.brackets<')'>();
-    }
-};
-
-struct Word{
-    char letter;
-    float value;
-    SourceLocation source;
-};
-
-struct GcCode{
-    Mnemonic mnemonic;
-    uint8_t major_number;
-    uint8_t minor_number;
-    SourceLocation source;
-};
-
-
-struct GcodeCommand{
-    char code;
-};
-
-struct GCodeCommandSpawner{
-
-};
-}
-
-
 
 void polar_robot_main(){
 

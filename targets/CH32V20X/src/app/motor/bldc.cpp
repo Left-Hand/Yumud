@@ -763,7 +763,7 @@ void bldc_main(){
 
             // count_iter(iter),
             // (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1}).payload()
-            // strconv2::iq_from_str<16>("+.").examine()
+            // strconv2::str_to_iq<16>("+.").examine()
         );
         #endif
 

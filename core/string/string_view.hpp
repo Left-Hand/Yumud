@@ -2,7 +2,7 @@
 
 #include "core/string/utils/strconv.hpp"
 #include "core/utils/hash_func.hpp"
-
+#include "core/utils/option.hpp"
 #include <span>
 #include <vector>
 #include <string>
@@ -69,16 +69,49 @@ public:
         return substr_by_range(left, left + len);
     }
     
-    std::optional<size_t> find(const char ch ) const;
-	std::optional<size_t> find_from(const char ch, const size_t from) const;
+    constexpr Option<size_t> find(char c) const{
+        return find_from(c, 0);
+    }
+
+    constexpr Option<size_t> find_from(char ch, size_t from) const{
+        if (from >= size_) return None;
+        for(size_t i = from; i < size_; i++){
+            if(data_[i] == ch) return Some(i);
+        }
+        return None;
+    }
+
 
     constexpr uint32_t hash() const {return ymd::hash(*this);}
 
+    constexpr StringView trim() const {
+        auto & self = *this;
+        auto is_whitespace = [](char c) {
+            return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+        };
+
+        if (self.is_empty()) {
+            return self;
+        }
+
+        // Find first non-whitespace character
+        size_t start = 0;
+        while (start < self.size() && is_whitespace(self[start])) {
+            ++start;
+        }
+
+        // Find last non-whitespace character
+        size_t end = self.size();
+        while (end > start && is_whitespace(self[end - 1])) {
+            --end;
+        }
+
+        return self.substr_by_len(start, end - start);
+    }
 private:
     const char * data_;
     size_t size_;
 };
 
-using StringViews = std::span<const StringView>;
 
 }

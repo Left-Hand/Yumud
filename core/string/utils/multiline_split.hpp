@@ -5,38 +5,10 @@
 namespace ymd::strconv2{
 
 
-static constexpr StringView trim_str(const StringView str){
-    auto is_whitespace = [](char c) {
-        return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-    };
-
-    if (str.is_empty()) {
-        return str;
-    }
-
-    // Find first non-whitespace character
-    size_t start = 0;
-    while (start < str.size() && is_whitespace(str[start])) {
-        ++start;
-    }
-
-    // Find last non-whitespace character
-    size_t end = str.size();
-    while (end > start && is_whitespace(str[end - 1])) {
-        --end;
-    }
-
-    return str.substr_by_len(start, end - start);
-
-}
-
-
-struct MultiLineIter {
-    constexpr explicit MultiLineIter(const StringView text)
+struct StringSplitIter {
+    constexpr explicit StringSplitIter(const StringView text, const char delimiter)
         : text_(text), 
-            start_(0),
-            end_(0) 
-    {
+        delimiter_(delimiter){
         seek_next_line();
     }
 
@@ -45,14 +17,10 @@ struct MultiLineIter {
     }
 
     constexpr StringView next() {
-        if (!has_next()) {
-            return StringView(nullptr, 0); // or throw/return empty view
-        }
-
         const StringView line = text_.substr_by_len(start_, end_ - start_);
         start_ = end_ + 1; // Skip the newline character
         seek_next_line();
-        return trim_str(line);
+        return line;
     }
 
 private:
@@ -66,8 +34,9 @@ private:
 
 
     const StringView text_;
-    size_t start_;  // Start of current line
-    size_t end_;    // End of current line (points to '\n' or text_.size())
+    const char delimiter_;
+    size_t start_   = 0;  // Start of current line
+    size_t end_     = 0;    // End of current line (points to '\n' or text_.size())
 };
 
 [[maybe_unused]] static void static_test_multi_line_iter(){
@@ -84,7 +53,7 @@ private:
     static_assert([&]()  {
         // Test empty string
         StringView empty = StringView("");
-        MultiLineIter empty_iter(empty);
+        StringSplitIter empty_iter(empty, '\n');
         if (empty_iter.has_next()) return false;
         return true;
     }(), "Empty string test failed");
@@ -92,7 +61,7 @@ private:
     static_assert([&]()  {
         // Test single line
         StringView single = "hello";
-        MultiLineIter single_iter(single);
+        StringSplitIter single_iter(single, '\n');
         if (!single_iter.has_next()) return false;
         if (!test_string_view_equal(single_iter.next(), "hello")) return false;
         if (single_iter.has_next()) return false;
@@ -102,7 +71,7 @@ private:
     static_assert([&]()  {
         // Test multi-line string
         StringView multi = "line1\nline2\nline3";
-        MultiLineIter multi_iter(multi);
+        StringSplitIter multi_iter(multi, '\n');
         
         if (!multi_iter.has_next()) return false;
         if (!test_string_view_equal(multi_iter.next(), "line1")) return false;
@@ -120,7 +89,7 @@ private:
     static_assert([&]()  {
         // Test empty lines
         StringView with_empty = "\nline\n\n";
-        MultiLineIter iter(with_empty);
+        StringSplitIter iter(with_empty, '\n');
         
         if (!iter.has_next()) return false;
         if (!test_string_view_equal(iter.next(), "")) return false;
@@ -138,11 +107,11 @@ private:
     static_assert([&]()  {
         // Test trimming
         StringView to_trim = "  hello \t\n";
-        StringView trimmed = trim_str(to_trim);
+        StringView trimmed = to_trim.trim();
         if (!test_string_view_equal(trimmed, "hello")) return false;
         
         StringView all_ws = " \t\r\n ";
-        trimmed = trim_str(all_ws);
+        trimmed = all_ws.trim();
         if (!trimmed.is_empty()) return false;
         return true;
     }(), "Trim test failed");
@@ -150,14 +119,14 @@ private:
     static_assert([&]()  {
         // Test line iterator with trimming
         StringView text = "  line1  \n  line2  \n";
-        MultiLineIter iter(text);
+        StringSplitIter iter(text, '\n');
         
         if (!iter.has_next()) return false;
-        StringView line1 = trim_str(iter.next());
+        StringView line1 = iter.next().trim();
         if (!test_string_view_equal(line1, "line1")) return false;
         
         if (!iter.has_next()) return false;
-        StringView line2 = trim_str(iter.next());
+        StringView line2 = iter.next().trim();
         if (!test_string_view_equal(line2, "line2")) return false;
         
         if (iter.has_next()) return false;

@@ -460,7 +460,7 @@ static constexpr TostringResult<StringRef> to_str(iq_t<Q> value, StringRef str, 
 }
 
 template<size_t Q>
-static constexpr DestringResult<iq_t<Q>> iq_from_str(StringView str){
+static constexpr DestringResult<iq_t<Q>> str_to_iq(StringView str){
 	return details::IqFromStringHelper<Q>::conv(str);
 }
 
@@ -470,7 +470,7 @@ static constexpr DestringResult<T> from_str(StringView str){
 	if constexpr (std::is_same_v<StringView, T>)
 		return Ok(str);
 	if constexpr (is_fixed_point_v<T>)
-		return iq_from_str<T::q_num>(str);
+		return str_to_iq<T::q_num>(str);
 	else if constexpr(std::is_integral_v<T>)
 		return details::IntFromStringHelper<T>::conv(str);
 }
