@@ -62,7 +62,14 @@ struct DirAndPulseCounter final{
     }
 private:
     int32_t count_ = 0;
-    dsp::DebounceFilter filter_{dsp::DebounceFilter::Config{}};
+
+    static constexpr dsp::DebounceFilter::Config DEBOUNCE_CONFIG{
+        .pipe_length = 8,
+        .threshold = 2,
+        .polarity = true
+    };
+
+    dsp::DebounceFilter filter_{DEBOUNCE_CONFIG};
     bool last_state_ = false;
 
     constexpr void update(const BoolLevel level, const bool is_backward){
@@ -90,6 +97,7 @@ struct PwmAndDirPhy_WithFg final{
     };
 
     explicit PwmAndDirPhy_WithFg(const Config & cfg):
+        deducation_(cfg.deduction),
         phy_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
         fg_gpio_(cfg.fg_gpio.deref())
     {}
@@ -100,6 +108,7 @@ struct PwmAndDirPhy_WithFg final{
     }
 
     void tick_10khz(){
+        if(last_duty_ == 0) return;
         if(last_duty_ > 0)
             counter_.forward_update(fg_gpio_.read());
         else 
@@ -107,10 +116,10 @@ struct PwmAndDirPhy_WithFg final{
     }
 
     constexpr q16 get_position() const {
-        return q16::from_i32(counter_.count() / deducation);
+        return q16::from_i32((counter_.count() * (1 << 16)) / deducation_);
     }
 private:
-    uint32_t deducation;
+    uint32_t deducation_;
     PwmAndDirPhy phy_;
     hal::GpioIntf & fg_gpio_;
     DirAndPulseCounter counter_;
@@ -138,8 +147,16 @@ void diffspd_vehicle_main(){
     auto & timer = hal::timer1;
     timer.init({PWM_FREQ});
     timer.enable_arr_sync();
-    timer.oc<1>().init({});
-    timer.oc<2>().init({});
+
+    auto & pwm1 = timer.oc<1>();
+    auto & pwm2 = timer.oc<2>();
+    
+    auto init_pwm = [](hal::TimerOC & pwm){
+        pwm.init({.valid_level = LOW});
+    };
+
+    init_pwm(pwm1);
+    init_pwm(pwm2);
 
     PwmAndDirPhy_WithFg motor_phy{{
         .pwm = &timer.oc<1>(),

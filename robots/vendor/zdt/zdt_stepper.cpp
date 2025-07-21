@@ -4,26 +4,23 @@ using namespace ymd;
 using namespace ymd::robots::zdtmotor;
 using namespace ymd::robots::zdtmotor::prelude;
 
-IResult<> ZdtStepper::set_target_position(const real_t pos){
-    static constexpr auto RPM = Rpm::from_speed(0.47_r);
+IResult<> ZdtStepper::set_position(ZdtStepper::PositionSetpoint targ){
     return write_payload(payloads::SetPosition{
-        .is_ccw = pos < 0,
-        // .rpm = Rpm::from(0.07_r),
-        .rpm = RPM,
-        // .acc_level = AcclerationLevel::from_u8(7),
+        .is_ccw = (targ.position < 0),
+        .rpm = Rpm::from_speed(targ.speed),
         .acc_level = AcclerationLevel::from_u8(0),
-        .pulse_cnt = PulseCnt::from_position(ABS(pos)),
+        .pulse_cnt = PulseCnt::from_position(ABS(targ.position)),
         .is_absolute = true,
         .is_sync = is_sync_
     });
 }
 
-IResult<> ZdtStepper::set_target_speed(const real_t spd){
+IResult<> ZdtStepper::set_speed(ZdtStepper::SpeedSetpoint targ){
     return write_payload(payloads::SetSpeed{
-        .is_ccw = spd < 0,
-        .rpm = Rpm::from_speed(ABS(spd)),
+        .is_ccw = targ.speed < 0,
+        .rpm = Rpm::from_speed(ABS(targ.speed)),
         .acc_level = AcclerationLevel::from(0),
-        .is_absolute = false,
+        .is_absolute = true,
         .is_sync = is_sync_
     });
 }

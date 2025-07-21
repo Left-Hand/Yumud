@@ -90,9 +90,9 @@ void zdt_main(){
         // motor.activate();
         const auto d1 = sin(clock::time()*0.7_r);
         const auto d2 = tpzpu(clock::time()*0.2_r);
-        motor1.set_target_position(d1).unwrap();
+        motor1.set_position({.position = d1, .speed = 0}).unwrap();
         clock::delay(5ms);
-        motor2.set_target_position(d2).unwrap();
+        motor2.set_position({.position = d2, .speed = 0}).unwrap();
         clock::delay(5ms);
         DEBUG_PRINTLN(d1, d2);
         // DEBUG_PRINTLN(clock::millis());

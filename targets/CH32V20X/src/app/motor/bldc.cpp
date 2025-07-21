@@ -32,6 +32,7 @@
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"
 #include "dsp/observer/nonlinear/NonlinearObserver.hpp"
@@ -87,14 +88,6 @@ struct ElecradCompensator{
     }
 };
 
-struct PdCtrlLaw{
-    real_t kp;
-    real_t kd;
-
-    constexpr real_t operator()(const real_t p_err, const real_t v_err) const {
-        return kp * p_err + kd * v_err;
-    } 
-};
 
 
 enum class NodeRole:uint8_t{
@@ -191,13 +184,6 @@ struct Gesture{
     friend OutputStream & operator << (OutputStream & os, const Gesture & gesture){
         return os << "roll: " << gesture.roll << ", pitch: " << gesture.pitch;
     }
-};
-
-struct CircularGestureCurve{
-
-};
-
-struct GesturePlanner{
 };
 
 
@@ -488,8 +474,8 @@ void bldc_main(){
 
         const real_t meas_elecrad = elecrad_comp_(meas_lap);
 
-        const auto meas_pos = pos_filter_.position();
-        const auto meas_spd = pos_filter_.speed();
+        const auto meas_position = pos_filter_.position();
+        const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
         [[maybe_unused]] static constexpr real_t amp = 0.06_r;
@@ -502,20 +488,20 @@ void bldc_main(){
             );
         });
 
-        const auto [blance_pos, blance_spd] = ({
+        const auto [blance_position, blance_speed] = ({
             std::make_tuple(
                 // self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
                 self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
             );
         });
 
-        const auto targ_pos = blance_pos + axis_target_position;
-        const auto targ_spd = blance_spd + axis_target_speed;
+        const auto targ_position = blance_position + axis_target_position;
+        const auto targ_speed = blance_speed + axis_target_speed;
 
 
         static constexpr auto MAX_VOLT = 2.7_r;
         const auto q_volt = CLAMP2(
-            pd_ctrl_law_(targ_pos - meas_pos, targ_spd - meas_spd)
+            pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , MAX_VOLT);
 
 
@@ -526,7 +512,7 @@ void bldc_main(){
 
         svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        leso_.update(meas_spd, q_volt);
+        leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
         meas_elecrad_ = meas_elecrad;

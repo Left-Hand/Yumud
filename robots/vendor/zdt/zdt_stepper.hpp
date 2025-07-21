@@ -38,8 +38,17 @@ public:
         nodeid_ = cfg.nodeid;
     }
 
-    IResult<> set_target_position(const real_t pos);
-    IResult<> set_target_speed(const real_t spd);
+    struct PositionSetpoint{
+        real_t position;
+        real_t speed;
+    };
+
+    struct SpeedSetpoint{
+        real_t speed;
+    };
+
+    IResult<> set_position(const PositionSetpoint pos);
+    IResult<> set_speed(const SpeedSetpoint spd);
     IResult<> brake();
     IResult<> set_subdivides(const uint16_t subdivides);
     IResult<> activate(const Enable en = EN);

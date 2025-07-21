@@ -50,7 +50,7 @@ class ZdtJointMotorActuator final
     :public JointMotorActuatorIntf{
 public:
     using ZdtStepper = zdtmotor::ZdtStepper;
-    
+
     struct Config{
         ZdtStepper::HommingMode homming_mode;
     };
@@ -72,7 +72,10 @@ public:
 
     void set_position(real_t position){
         last_position_ = position;
-        stepper_.set_target_position(position).unwrap();
+        stepper_.set_position({
+            .position = position,
+            .speed = 0.47_r
+        }).unwrap();
     }
 
     real_t get_last_position(){
