@@ -284,7 +284,7 @@ struct PolarRobotCurveGenerator{
         }}){;}
 
     constexpr void add_end_position(const Vector2<q24> position){
-        step_iter_.set_target_position(position);
+        step_iter_.set_target_position(position.flip_y());
     }
 
     constexpr void set_move_speed(const q24 speed){
@@ -381,7 +381,7 @@ void polar_robot_main(){
     };
     Cartesian2ContinuousPolarRegulator regu_;
 
-    static constexpr uint32_t POINT_GEN_FREQ = 500;
+    static constexpr uint32_t POINT_GEN_FREQ = 400;
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
     static constexpr auto MAX_MOVE_SPEED = 0.02_q24; // 5cm / s
 
@@ -393,9 +393,14 @@ void polar_robot_main(){
     PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
 
     [[maybe_unused]] auto get_next_gcode_line = [] -> Option<StringView>{
-        static strconv2::StringSplitIter line_iter{gcode_lines, '\n'};
-        if(not line_iter.has_next()) return None;
-        return Some(line_iter.next());
+        static strconv2::StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
+        while(line_iter.has_next()){
+            const auto next_line = line_iter.next();
+            if(next_line.trim().length() == 0)
+                continue;
+            return Some(next_line); 
+        }
+        return None;
     };
 
     [[maybe_unused]] auto dispatch_gcode_line = [&](const StringView str){
@@ -416,6 +421,8 @@ void polar_robot_main(){
             case 1://linear move
                 curve_gen_.set_move_speed(history_.speed);
                 curve_gen_.add_end_position({history_.x, history_.y});
+                break;
+            case 4:
                 break;
             case 21://UseMillimetersUnits
                 break;
@@ -501,6 +508,10 @@ void polar_robot_main(){
                 position, 
                 radius_joint_.get_last_position(), 
                 theta_joint_.get_last_position()
+                // COMM_CAN.available(),
+                // COMM_CAN.get_last_fault(),
+                // COMM_CAN.get_rx_errcnt(),
+                // COMM_CAN.get_rx_errcnt()
             );
 
         });
@@ -529,7 +540,7 @@ void polar_robot_main(){
     while(true){
         draw_curve_service();
         repl_service();
-        can_watch_service();
+        // can_watch_service();
 
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);

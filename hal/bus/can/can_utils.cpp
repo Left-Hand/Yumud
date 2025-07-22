@@ -2,8 +2,7 @@
 #include "core/stream/ostream.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
-
+namespace ymd::hal{
 OutputStream & operator<<(OutputStream & os, const CanFault & fault){
     switch(fault){
         case CanFault::Stuff: return os << "Stuff";
@@ -23,4 +22,5 @@ OutputStream & operator<<(OutputStream & os, const CanError & error){
         case CanError::SoftFifoOverflow: return os << "SoftFifoOverflow";
         default: __builtin_unreachable();
     }
+}
 }

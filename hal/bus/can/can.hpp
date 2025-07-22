@@ -102,9 +102,14 @@ public:
     [[nodiscard]] Option<CanFault> get_last_fault();
     [[nodiscard]] bool is_busoff();
 
-    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
-    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
-    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+    template<typename Fn>
+    void bind_tx_ok_cb(Fn && cb){cb_txok_ = std::forward<Fn>(cb);}
+
+    template<typename Fn>
+    void bind_tx_fail_cb(Fn && cb){cb_txfail_ = std::forward<Fn>(cb);}
+
+    template<typename Fn>
+    void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
 
@@ -119,6 +124,7 @@ private:
     RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback cb_txok_;
+    // std::function<void(hal::CanMsg)> cb_txfail_;
     Callback cb_txfail_;
     Callback cb_rx_;
 
