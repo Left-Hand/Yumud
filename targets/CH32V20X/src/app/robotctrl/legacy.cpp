@@ -67,6 +67,42 @@ public CanMsgHandlerIntf{
         return HandleStatus::from_handled();
     }
 };
+struct QueuePointIterator{
+    struct Config{
+        std::span<const Vector2<bf16>> points;
+    };
 
+    explicit constexpr QueuePointIterator(
+        const Config & cfg
+    ):
+        points_(cfg.points){;}
+
+    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
+
+        const auto curr_index = index_;
+
+        const auto p1 = Vector2{
+            q24::from(float(points_[curr_index].x)), 
+            q24::from(float(points_[curr_index].y))
+        };
+
+
+        current_position = vec_step_to(current_position, p1, step);
+
+        if(current_position.is_equal_approx(p1)){
+            index_ = (index_ + 1) % points_.size();
+        }
+
+        return current_position;
+    }
+
+    [[nodiscard]] constexpr size_t index() const {
+        return index_;
+    }
+private:
+    std::span<const Vector2<bf16>> points_;
+    Vector2<q24> current_position = {};
+    size_t index_ = 0;
+};
 
 #endif

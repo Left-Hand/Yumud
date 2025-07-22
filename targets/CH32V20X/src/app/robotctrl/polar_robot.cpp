@@ -177,43 +177,29 @@ private:
 };
 
 
+template<typename T>
+constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step){
+    Vector2<T> delta = to - from;
+    T distance = delta.length();
+    if (distance <= step) return to;  // 如果步长足够大，直接到达目标
+    return from + delta * (step / distance);  // 按比例移动
+}
 
-struct QueuePointIterator{
-    struct Config{
-        std::span<const Vector2<bf16>> points;
-    };
+// template<typename T>
+// constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step) {
+//     const Vector2<T> delta = to - from;
+//     const T distance_sq = delta.length_squared();  // 避免开平方
+//     const T step_sq = step * step;
+    
+//     if (distance_sq <= step_sq || distance_sq == T(0)) {
+//         return to;
+//     }
+    
+//     // 计算 sqrt(distance_sq) 并执行比例步长
+//     const T distance = sqrt(distance_sq);  // 或使用定点数优化的快速开方
+//     return from + delta * (step / distance);
+// }
 
-    explicit constexpr QueuePointIterator(
-        const Config & cfg
-    ):
-        points_(cfg.points){;}
-
-    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
-
-        const auto curr_index = index_;
-
-        const auto p1 = Vector2{
-            q24::from(float(points_[curr_index].x)), 
-            q24::from(float(points_[curr_index].y))
-        };
-
-        current_position = current_position.move_toward(p1, step);
-
-        if(current_position.is_equal_approx(p1)){
-            index_ = (index_ + 1) % points_.size();
-        }
-
-        return current_position;
-    }
-
-    [[nodiscard]] constexpr size_t index() const {
-        return index_;
-    }
-private:
-    std::span<const Vector2<bf16>> points_;
-    Vector2<q24> current_position = {};
-    size_t index_ = 0;
-};
 
 
 struct StepPointIterator{
@@ -234,7 +220,7 @@ struct StepPointIterator{
 
     [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
         if(may_end_position_.is_none()) return current_position_;
-        current_position_ = current_position_.move_toward(may_end_position_.unwrap(), step);
+        current_position_ = vec_step_to(current_position_, may_end_position_.unwrap(), step);
         return current_position_;
     }
 
@@ -246,6 +232,7 @@ private:
     Vector2<q24> current_position_ = {};
     Option<Vector2<q24>> may_end_position_ = None;
 };
+
 
 struct History{
     static constexpr auto X_LIMIT = 0.2_r;
@@ -278,7 +265,7 @@ struct PolarRobotCurveGenerator{
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
         fs_(cfg.fs),
-        delta_position_(cfg.speed / cfg.fs),
+        delta_dist_(cfg.speed / cfg.fs),
         step_iter_(StepPointIterator{StepPointIterator::Config{
             .initial_position = cfg.initial_position
         }}){;}
@@ -288,7 +275,7 @@ struct PolarRobotCurveGenerator{
     }
 
     constexpr void set_move_speed(const q24 speed){
-        delta_position_ = (speed / fs_);
+        delta_dist_ = (speed / fs_);
     }
 
     constexpr bool has_next(){
@@ -296,11 +283,17 @@ struct PolarRobotCurveGenerator{
     }
 
     constexpr Vector2<q24> next(){
-        return step_iter_.next(delta_position_);
+        position_ = step_iter_.next(delta_dist_);
+        return position_;
+    }
+
+    constexpr Vector2<q24> last_position() const {
+        return position_;
     }
 private:    
     uint32_t fs_;
-    q24 delta_position_;
+    q24 delta_dist_;
+    Vector2<q24> position_;
     StepPointIterator step_iter_;
 };
 
@@ -472,17 +465,25 @@ void polar_robot_main(){
 
     auto list = rpc::make_list(
         "polar_robot",
+        rpc::make_function("reset", [&]{
+            sys::reset();
+        }),
+
         actuator_.make_rpc_list("actuator"),
         radius_joint_.make_rpc_list("radius_joint_"),
         theta_joint_.make_rpc_list("theta_joint_"),
 
         rpc::make_function("pxy", [&](const real_t x, const real_t y){
-            actuator_.set_coord(regu_({x,y}));
+            curve_gen_.add_end_position({
+                CLAMP2(x, 0.14_r),
+                CLAMP2(y, 0.14_r)
+            });
+        }),
 
-        }),
-        rpc::make_function("prt", [&](const real_t radius, const real_t theta){
-            actuator_.set_coord({radius,theta});
-        }),
+        // rpc::make_function("prt", [&](const real_t radius, const real_t theta){
+        //     actuator_.set_coord({radius,theta});
+        // }),
+
         rpc::make_function("next", [&](){
             static Vector2<q16> position = {0.1_r, 0};
             position = position.cw();
@@ -490,32 +491,12 @@ void polar_robot_main(){
         })
     );
 
-
-    [[maybe_unused]] auto draw_curve_service = [&]{
-        static auto timer = async::RepeatTimer
-            ::from_duration(POINT_GEN_DURATION_MS);
-
-        timer.invoke_if([&]{
-            if(not curve_gen_.has_next()){
-                poll_gcode();
-            }
-
-            const auto position = curve_gen_.next();
-
-            actuator_.set_coord(regu_(position));
-
-            DEBUG_PRINTLN(
-                position, 
-                radius_joint_.get_last_position(), 
-                theta_joint_.get_last_position()
-                // COMM_CAN.available(),
-                // COMM_CAN.get_last_fault(),
-                // COMM_CAN.get_rx_errcnt(),
-                // COMM_CAN.get_rx_errcnt()
-            );
-
-        });
+    [[maybe_unused]] auto poll_curve_service = [&]{
+        if(not curve_gen_.has_next()){
+            poll_gcode();
+        }
     };
+
 
     [[maybe_unused]] auto repl_service = [&](){ 
         
@@ -535,11 +516,40 @@ void polar_robot_main(){
         // if(cnt > 10) PANIC();
     };
 
+    [[maybe_unused]] auto report_service = [&]{
+
+    };
+
     actuator_.trig_homing();
 
     while(true){
-        draw_curve_service();
+        poll_curve_service();
+
+
+        static auto timer = async::RepeatTimer
+            ::from_duration(POINT_GEN_DURATION_MS);
+
+        timer.invoke_if([&]{
+
+
+            const auto position = curve_gen_.next();
+
+            actuator_.set_coord(regu_(position));
+        });
+
         repl_service();
+        // report_service();
+
+        DEBUG_PRINTLN_IDLE(
+            curve_gen_.last_position(), 
+            radius_joint_.get_last_position(), 
+            theta_joint_.get_last_position()
+            // COMM_CAN.available(),
+            // COMM_CAN.get_last_fault(),
+            // COMM_CAN.get_rx_errcnt(),
+            // COMM_CAN.get_rx_errcnt()
+        );
+
         // can_watch_service();
 
         // const auto clock_time = clock::time();
