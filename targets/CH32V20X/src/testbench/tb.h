@@ -171,3 +171,4 @@ void aw9523_main();
 void kth7823_main();
 void st1615_main();
 void ft6336_main();
+void diffspd_vehicle_main();

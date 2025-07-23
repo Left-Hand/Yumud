@@ -38,7 +38,7 @@ public:
     Image(std::shared_ptr<T[]> data, const Vector2u size):
         size_(size),
         data_(data){
-            ASSERT(bool(size));
+            ASSERT(not size.is_zero());
         }
 
 

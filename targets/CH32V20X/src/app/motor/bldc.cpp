@@ -392,8 +392,8 @@ void bldc_main(){
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
-            .r = 85,
-            .fs = FOC_FREQ
+            .fs = FOC_FREQ,
+            .r = 85
         }
     };
 

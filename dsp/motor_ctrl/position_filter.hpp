@@ -10,23 +10,23 @@ struct PositionFilter{
     using TdConfig = typename Td::Config;
 
     struct Config{
-        q8 r;
         uint32_t fs;
+        q8 r;
         Option<PositionCorrector &> corrector = None;
     };
 
     constexpr PositionFilter(const Config & cfg):
         td_(Td{TdConfig{
-            .r = cfg.r,
-            .fs = cfg.fs
+            .fs = cfg.fs,
+            .r = cfg.r
         }}),
         may_corrector_(cfg.corrector){
     }
 
     constexpr void reconf(const Config & cfg){
         td_.reconf(TdConfig{
-            .r = cfg.r,
-            .fs = cfg.fs
+            .fs = cfg.fs,
+            .r = cfg.r
         });
     }
 
@@ -70,6 +70,10 @@ struct PositionFilter{
 
     constexpr q16 speed() const {
         return td_.get().speed;
+    }
+
+    constexpr std::tuple<q16, q16> get_position_and_speed() const {
+        return std::make_tuple(position(), speed());
     }
 
 private:

@@ -194,7 +194,7 @@ void rrs3_robot_main(){
     auto & servo_b = env.servo_b;
     auto & servo_c = env.servo_c;
 
-    RRS3_RobotActuator robot_actuator{cfg, [&](real_t r1, real_t r2, real_t r3){
+    RRS3_RobotActuator actuator_{cfg, [&](real_t r1, real_t r2, real_t r3){
         servo_a.set_radian(r1);
         servo_b.set_radian(r2);
         servo_c.set_radian(r3);
@@ -212,7 +212,7 @@ void rrs3_robot_main(){
         rpc::make_function("name", [&](){
             DEBUG_PRINTLN("hello i am a robot");
         }),
-        robot_actuator.make_rpc_list("rrs")
+        actuator_.make_rpc_list("rrs")
     );
 
 
@@ -220,7 +220,7 @@ void rrs3_robot_main(){
         const auto t = clock::time();
         const auto [s,c] = sincospu(0.7_r * t);
         
-        robot_actuator.set_gest(
+        actuator_.set_gest(
             RRS3_RobotActuator::Gesture::from({
                 .yaw = ANGLE2RAD(3.0_r * s), 
                 .pitch = ANGLE2RAD(3.0_r * c), 
@@ -229,7 +229,7 @@ void rrs3_robot_main(){
         );
     };
 
-    robot_actuator.go_idle();
+    actuator_.go_idle();
     
     while(true){
         [[maybe_unused]]

@@ -54,7 +54,12 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
         uint8_t applied:1;
     };
 
-    Status status = {0};
+    Status status = {
+        0,
+        0,
+        0
+    };
+
     uint8_t ui8Index;
 
     uint32_t uiqNInputX;

@@ -8,8 +8,8 @@ namespace ymd::dsp{
 class MotorTrackingDifferentiator{
 public:
     struct Config{
-        q8 r;
         uint32_t fs;
+        q8 r;
     };
 
     struct State{

@@ -15,7 +15,9 @@
 #include "robots/repl/repl_service.hpp"
 #include "types/transforms/euler/euler.hpp"
 #include "dsp/filter/homebrew/debounce_filter.hpp"
-
+#include "dsp/motor_ctrl/tracking_differentiator.hpp"
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/ctrl_law.hpp"
 
 using namespace ymd;
 
@@ -69,13 +71,14 @@ private:
         .polarity = true
     };
 
-    dsp::DebounceFilter filter_{DEBOUNCE_CONFIG};
+    // dsp::DebounceFilter filter_{DEBOUNCE_CONFIG};
     bool last_state_ = false;
 
     constexpr void update(const BoolLevel level, const bool is_backward){
-        filter_.update(level.to_bool());
+        // filter_.update(level.to_bool());
 
-        const auto state = filter_.is_high();
+        // const auto state = filter_.is_high();
+        const auto state = level.to_bool();
         const bool is_just_upedge = (last_state_ == false) and (state == true);
 
         if(is_just_upedge){
@@ -90,9 +93,9 @@ private:
 struct PwmAndDirPhy_WithFg final{
 
     struct Config{
-        uint32_t deduction;
         Some<hal::TimerOC *> pwm;
         Some<hal::GpioIntf *> dir_gpio;
+        uint32_t deduction;
         Some<hal::GpioIntf *> fg_gpio;
     };
 
@@ -108,15 +111,20 @@ struct PwmAndDirPhy_WithFg final{
     }
 
     void tick_10khz(){
-        if(last_duty_ == 0) return;
-        if(last_duty_ > 0)
+        if(last_duty_ > 0){
             counter_.forward_update(fg_gpio_.read());
-        else 
+        }else if(last_duty_ < 0) {
             counter_.backward_update(fg_gpio_.read());
+        }
     }
 
     constexpr q16 get_position() const {
-        return q16::from_i32((counter_.count() * (1 << 16)) / deducation_);
+        return q16(counter_.count()) / deducation_;
+        // return q16(counter_.count()) >> 6;
+    }
+
+    constexpr int32_t count() const {
+        return counter_.count();
     }
 private:
     uint32_t deducation_;
@@ -126,59 +134,139 @@ private:
     real_t last_duty_ = 0;
 };
 
+// struct GM25BldcMotor{
+// private:
+//     PwmAndDirPhy_WithFg & phy_;
+// };
+
 void diffspd_vehicle_main(){
-    static constexpr auto UART_BAUD = 115200 * 2;
-    static constexpr auto PWM_FREQ = 10 * 1000;
+    //PA6 TIM3CH1   左pwm
+    //PA7 TIM3CH2   右pwm
+    // static constexpr auto UART_BAUD = 115200 * 2;
+    static constexpr auto UART_BAUD = 576000;
+    static constexpr auto PWM_FREQ = 2 * 1000;
+    // static constexpr auto PWM_FREQ = 1000;
+    static constexpr auto MOTOR_CTRL_FREQ = PWM_FREQ; 
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
-
-    
     DBG_UART.init({
         .baudrate = UART_BAUD
     });
-
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
 
-    auto & timer = hal::timer1;
+    auto & timer = hal::timer3;
     timer.init({PWM_FREQ});
     timer.enable_arr_sync();
 
-    auto & pwm1 = timer.oc<1>();
-    auto & pwm2 = timer.oc<2>();
+    auto & LEFT_PWM = timer.oc<1>();
+    auto & RIGHT_PWM = timer.oc<2>();
+
+    auto & LEFT_FG_GPIO = hal::PA<5>();
+    auto & RIGHT_FG_GPIO = hal::PB<1>();
+
+    auto & LEFT_DIR_GPIO = hal::PA<1>();
+    auto & RIGHT_DIR_GPIO = hal::PB<8>();
     
     auto init_pwm = [](hal::TimerOC & pwm){
         pwm.init({.valid_level = LOW});
     };
 
-    init_pwm(pwm1);
-    init_pwm(pwm2);
+    auto init_fg_gpio = [](hal::GpioIntf & gpio){
+        gpio.inpu();
+    };
+
+    auto init_dir_gpio = [](hal::GpioIntf & gpio){
+        gpio.outpp(LOW);
+    };
+
+    init_pwm(LEFT_PWM);
+    init_pwm(RIGHT_PWM);
+
+    init_fg_gpio(LEFT_FG_GPIO);
+    init_fg_gpio(RIGHT_FG_GPIO);
+
+    init_dir_gpio(LEFT_DIR_GPIO);
+    init_dir_gpio(RIGHT_DIR_GPIO);
+
 
     PwmAndDirPhy_WithFg motor_phy{{
-        .pwm = &timer.oc<1>(),
-        .dir_gpio = &hal::PA<7>(),
-        .fg_gpio = &hal::PA<8>()
+        .pwm = &LEFT_PWM,
+        .dir_gpio = &LEFT_DIR_GPIO,
+        .deduction = 60,
+        .fg_gpio = &LEFT_FG_GPIO
     }};
+
+    // PwmAndDirPhy_WithFg motor_phy{{
+    //     .pwm = &RIGHT_PWM,
+    //     .dir_gpio = &RIGHT_DIR_GPIO,
+    //     .deduction = 60,
+    //     .fg_gpio = &RIGHT_FG_GPIO
+    // }};
+
+    dsp::PositionFilter motor_td_{
+        typename dsp::PositionFilter::Config{
+            .fs = MOTOR_CTRL_FREQ,
+            .r = 45
+        }
+    };
 
     auto motor_pulse_detect_cb = [&]{
         motor_phy.tick_10khz();
     };
 
-    auto sine_openloop_test_motor_service = [&]{
-        const auto ctime = clock::time();
-        const auto s = sinpu(ctime);
-        motor_phy.set_duty(s);
+    dsp::PdCtrlLaw ctrl_law_{
+        .kp = 7,
+        .kd = 0.3_r
     };
 
-    timer.attach(hal::TimerIT::Update, {0,0}, motor_pulse_detect_cb);
+    auto motor_ctrl_cb = [&](){
+        motor_td_.update(motor_phy.get_position());
+
+        const auto ctime = clock::time();
+        const auto freq = 0.2_r;
+        // const auto amp = 0.5_r;
+        const auto amp = 1.0_r;
+        const auto [targ_position, targ_speed] = std::make_tuple(
+            amp * sinpu(ctime * freq) + 9,
+            freq * amp * cospu(ctime * freq)
+        );
+
+        const auto [position, speed] = motor_td_.get_position_and_speed();
+
+        const auto duty = CLAMP2(
+            ctrl_law_(targ_position - position, targ_speed - speed),
+            0.97_r
+        );
+        motor_phy.set_duty(duty);
+        // motor_phy.set_duty(amp * sinpu(ctime * freq));
+    };
+
+
+
+    auto report_motor_service = [&]{
+
+        const auto [position, speed] = motor_td_.get_position_and_speed();
+        DEBUG_PRINTLN_IDLE(
+            motor_phy.get_position(),
+            motor_phy.count(),
+            position, speed
+        );
+    };
+
+    timer.attach(hal::TimerIT::Update, {0,0}, [&]{
+        motor_pulse_detect_cb();
+        motor_ctrl_cb();
+    });
 
     while(true){
-        sine_openloop_test_motor_service();
+        report_motor_service();
 
-        DEBUG_PRINTLN(clock::millis(), motor_phy.get_position());
+
+        // clock::delay(5ms);
     }
 }
