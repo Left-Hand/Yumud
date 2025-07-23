@@ -61,15 +61,32 @@ enum class PositoinCtrlStatus:uint8_t{
     Completed
 };
 
+enum class MotivationState:uint8_t{
+    Failed,
+    Stopped,
+    Acc,
+    Deacc,
+    FullSpeed,
+    Zero
+};
+
 
 enum class FuncCode:uint8_t{
     GetMultiLapEncoderValue = 0x30,
     // GetMultiLEncoderValue = 0x31,
     GetRealtimeSpeed = 0x32,
     GetAccumulatedPulses = 0x33,
+    GetIoPortStatus = 0x34,
     GetPositionErr = 0x39,
     GetEnableStatus = 0x3a,
-    PositionCtrl3 = 0xf5
+    GetPowerOnHommingStatus = 0x3b,
+    EscapeStallState = 0x3d,
+    GetStallFlag = 0x3e,
+    TrigCalibrateEncoder = 0x80, 
+    SetGroupAddr = 0x8d,
+    SetKeyLocked = 0x8f,
+    PositionCtrl3 = 0xf5,
+    SpeedCtrl = 0xf6
 };
 
 
@@ -90,13 +107,17 @@ struct VerifyUtils final{
 
 struct Rpm final{
     static constexpr Rpm from_speed(const real_t speed){
-        return {uint16_t(speed)};
+        return {int16_t(speed * 60)};
     }
-    constexpr uint16_t as_u16() const {
+    constexpr int16_t as_i16() const {
         return raw_;
     }
 
-    uint16_t raw_;
+    constexpr real_t to_speed() const {
+        return raw_ / 60.0_r;
+    }
+
+    int16_t raw_;
 }__packed;
 
 static_assert(sizeof(Rpm) == 2);
@@ -142,17 +163,17 @@ namespace payloads{
 
     struct SetPositionMode3 final{
         static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
-        Rpm speed;
+        Rpm rpm;
         AcclerationLevel acc_level;
-        PulseCnt abs_position;
+        PulseCnt abs_pulse_cnt;
     }__packed;
 
     struct StopPositionMode3 final{
         static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
 
-        const Rpm speed = Rpm::from_speed(0);
+        const Rpm rpm = Rpm::from_speed(0);
         AcclerationLevel acc_level;
-        const PulseCnt abs_position = PulseCnt::from_pulses(0);
+        const PulseCnt abs_pulse_cnt = PulseCnt::from_pulses(0);
     }__packed;
 
     template<typename Raw, typename T = std::decay_t<Raw>>
