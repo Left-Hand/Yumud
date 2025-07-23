@@ -20,7 +20,7 @@ struct PositionCorrector{
         const auto corr1 = forward_cali_table_[raw_lap_position].to_inaccuracy();
         const auto corr2 = backward_cali_table_[raw_lap_position].to_inaccuracy();
 
-        return raw_lap_position + ((corr1 + corr2) >> 1);
+        return frac(raw_lap_position + ((corr1 + corr2) >> 1));
     }
 
     constexpr auto & forward(){

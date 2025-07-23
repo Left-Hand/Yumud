@@ -11,15 +11,7 @@ enum class CalibrateError:uint8_t{
     ExpectedAndMeasuredExceedLimit
 };
 
-template<size_t N>
-static __fast_inline constexpr iq_t<N> errmod(const iq_t<N> x, const iq_t<N> s){
-    const auto s_by_2 = s >> 1;
-    iq_t<N> value = fmod(x + s_by_2, s) - s_by_2;
-    if (value < 0) {
-        value += s;
-    }
-    return value;
-}
+
 
 struct CalibrateSample{
     constexpr CalibrateSample():

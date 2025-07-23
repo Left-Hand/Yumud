@@ -33,7 +33,7 @@ struct PositionFilter{
     constexpr void update(const q16 next_raw_lap_position){
         if(unlikely(inited_ == false)){
             position_offset = map_lap_to_nearest(
-                frac(next_raw_lap_position - base_lap_position_));
+                frac(next_raw_lap_position - base_raw_lap_position_));
             inited_ = true;
         }
 
@@ -53,7 +53,7 @@ struct PositionFilter{
     }
 
     constexpr void set_base_lap_position(const q16 base_lap_position){
-        base_lap_position_ = base_lap_position;
+        base_raw_lap_position_ = base_lap_position;
     }
 
     constexpr q16 lap_position() const{
@@ -92,7 +92,7 @@ private:
     Option<PositionCorrector &> may_corrector_;
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
-    q16 base_lap_position_   = 0;
+    q16 base_raw_lap_position_   = 0;
     q16 position_offset = 0;
     bool inited_ = false;
 };
