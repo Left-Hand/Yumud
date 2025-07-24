@@ -39,10 +39,12 @@ public:
     struct PositionSetpoint{
         real_t position;
         real_t speed;
+        real_t accerlation = 0;
     };
 
     struct SpeedSetpoint{
         real_t speed;
+        real_t accerlation = 0;
     };
 
     IResult<> set_position(const PositionSetpoint pos);
@@ -73,9 +75,10 @@ private:
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(
             nodeid,
+            T::FUNC_CODE,
             bytes
         ));
-        
+        // buf.append_unchecked(0x34);
         return buf;
     }
 
@@ -83,7 +86,7 @@ private:
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(nodeid_, obj);
 
-        phy_.write_can_msg(nodeid_, buf);
+        phy_.write_can_msg(nodeid_, buf.iter());
 
         return Ok();
     }

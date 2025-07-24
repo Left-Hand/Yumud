@@ -8,13 +8,16 @@ using namespace ymd::robots::mksmotor::prelude;
 IResult<> MksStepper::set_position(const MksStepper::PositionSetpoint pos){
     return write_payload(payloads::SetPositionMode3{
         .rpm = Rpm::from_speed(pos.speed),
-        .acc_level = AcclerationLevel::from(0),
+        .acc_level = AcclerationLevel::from(pos.accerlation),
         .abs_pulse_cnt = PulseCnt::from_position(pos.position)
     });
 }
 
 IResult<> MksStepper::set_speed(const MksStepper::SpeedSetpoint spd){
-    return Ok();
+    return write_payload(payloads::SetSpeed{
+        .rpm = iRpm::from_speed(spd.speed),
+        .acc_level = AcclerationLevel::from(spd.accerlation)
+    });
 }
 
 IResult<> MksStepper::brake(){
@@ -22,11 +25,17 @@ IResult<> MksStepper::brake(){
 }
 
 IResult<> MksStepper::set_subdivides(const uint16_t subdivides){
-    return Ok();
+    if(subdivides > 256) 
+        return Err(Error::SubDivideOverflow);
+    return write_payload(payloads::SetSubdivides{
+        .subdivides = uint8_t(subdivides & 0xff)
+    });
 }
 
 IResult<> MksStepper::activate(const Enable en){
-    return Ok();
+    return write_payload(payloads::SetEnableStatus{
+        .enable = en.to_bool()
+    });
 }
 
 IResult<> MksStepper::trig_cali(){

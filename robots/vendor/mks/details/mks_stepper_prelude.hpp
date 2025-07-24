@@ -17,6 +17,8 @@ namespace ymd::robots{
 namespace mksmotor{
 
 namespace prelude{
+
+
 enum class Error:uint8_t{
     SubDivideOverflow,
     RxNoMsgToDump,
@@ -55,10 +57,18 @@ enum class HommingDirection:uint8_t{
     Clockwise = 0,
     CounterClockwise = 1
 };
-enum class PositoinCtrlStatus:uint8_t{
+
+
+enum class PositionCtrlStatus:uint8_t{
     Failed,
     Started,
     Completed
+};
+
+enum class EndstopHomingStatus:uint8_t{ 
+    Failed = 0,
+    Started = 1,
+    Completed = 2
 };
 
 enum class MotivationState:uint8_t{
@@ -68,6 +78,21 @@ enum class MotivationState:uint8_t{
     Deacc,
     FullSpeed,
     Zero
+};
+
+enum class WorkMode:uint8_t{
+    PulseOpenloop,
+    PulseCloseloop,
+    PulseFoc,
+    SerialOpenloop,
+    SerialCloseloop,
+    SerialFoc,
+};
+
+enum class CanBitrate:uint8_t{
+    _125K,
+    _250K,
+    _500K
 };
 
 
@@ -83,8 +108,12 @@ enum class FuncCode:uint8_t{
     EscapeStallState = 0x3d,
     GetStallFlag = 0x3e,
     TrigCalibrateEncoder = 0x80, 
+    SetSubdivides = 0x84,
     SetGroupAddr = 0x8d,
     SetKeyLocked = 0x8f,
+    SetEndstopParaments = 0x90,
+    EndstopHomming = 0x91,
+    SetEnableStatus = 0xf3,
     PositionCtrl3 = 0xf5,
     SpeedCtrl = 0xf6
 };
@@ -93,14 +122,16 @@ enum class FuncCode:uint8_t{
 struct VerifyUtils final{
     static constexpr uint8_t get_verify_code(
         const NodeId nodeid,
+        const FuncCode funccode,
         std::span<const uint8_t> bytes 
     ){
         uint32_t sum = nodeid.as_u8();
+        sum += std::bit_cast<uint8_t>(funccode);
         for(const auto byte: bytes){
             sum += byte;
         }
 
-        return static_cast<uint8_t>(isqrt(sum));
+        return static_cast<uint8_t>(sum);
     }
 
 };
@@ -114,7 +145,22 @@ struct Rpm final{
     }
 
     constexpr real_t to_speed() const {
-        return raw_ / 60.0_r;
+        return real_t(raw_) / 60;
+    }
+
+    int16_t raw_;
+}__packed;
+
+struct iRpm final{
+    static constexpr iRpm from_speed(const real_t speed){
+        return {int16_t(int16_t(speed * 60) & int16_t(0x8fff))};
+    }
+    constexpr int16_t as_i16() const {
+        return raw_;
+    }
+
+    constexpr real_t to_speed() const {
+        return real_t(raw_) / 60;
     }
 
     int16_t raw_;
@@ -174,6 +220,34 @@ namespace payloads{
         const Rpm rpm = Rpm::from_speed(0);
         AcclerationLevel acc_level;
         const PulseCnt abs_pulse_cnt = PulseCnt::from_pulses(0);
+    }__packed;
+
+    struct SetSpeed final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::SpeedCtrl;
+        iRpm rpm;
+        AcclerationLevel acc_level;
+    }__packed;
+
+    struct SetEnableStatus final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::SetEnableStatus;
+        bool enable;
+    }__packed;
+
+
+    struct SetSubdivides final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::SetSubdivides;
+        uint8_t subdivides;
+    }__packed;
+
+    struct SetEndstopParaments final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::SetEndstopParaments;
+        bool is_high;
+        bool is_ccw;
+        Rpm rpm;
+    };
+
+    struct EndstopHomming final{
+        static constexpr FuncCode FUNC_CODE = FuncCode::EndstopHomming;
     }__packed;
 
     template<typename Raw, typename T = std::decay_t<Raw>>

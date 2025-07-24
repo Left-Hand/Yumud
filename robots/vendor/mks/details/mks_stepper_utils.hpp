@@ -33,7 +33,9 @@ public:
         );
 
         if(can_.is_some()){
-            can_.unwrap().write(msg).examine();
+            // can_.unwrap().write(msg).examine();
+
+            DEBUG_PRINTLN(msg);
         }else{
             PANIC("uart_ is None");
         }

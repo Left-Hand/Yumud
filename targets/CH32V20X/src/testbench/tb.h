@@ -172,3 +172,4 @@ void kth7823_main();
 void st1615_main();
 void ft6336_main();
 void diffspd_vehicle_main();
+void mks_stepper_main();
