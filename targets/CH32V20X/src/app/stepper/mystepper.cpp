@@ -99,7 +99,7 @@ public:
             1 - either_lap_position.unwrap();
         });
 
-        auto & comp = calibrate_comp_;
+        auto & comp = calibrate_tasks_;
         // if(const auto may_err = comp.err(); may_err.is_some()){
         #if 0
             constexpr const auto TASK_COUNT = 
@@ -142,54 +142,10 @@ public:
             return Err(res.unwrap_err());
         #endif
         if(comp.is_finished()){
-
             is_component_finished_ = true;
-            pos_filter_.update(meas_lap_position);
-            // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
-            // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
-            
-            // const auto input_targ_position = 16 * sin(ctime);
-            // const auto targ_speed = 6 * cos(6 * ctime);
-            
-            // const auto input_targ_position = 10 * real_t(int(ctime));
-            const auto ctime = clock::time();
-            // const auto input_targ_position = 5 * sin(ctime/2);
-
-            // command_shaper_.update(input_targ_position);
-            // auto [targ_position, targ_speed] = std::make_tuple(
-            //     command_shaper_.update(input_targ_position),
-            //     command_shaper_.speed()
-            // );
-
-            const auto omega = 1.0_r * real_t(TAU);
-            // const auto omega = 1.0_r;
-            // const auto amp = 0.5_r;
-            const auto amp = 0.05_r;
-            const auto [targ_position, targ_speed] = std::make_tuple<q16, q16>(
-                amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
-                // int(ctime * omega), 0
-            );
-            const auto meas_position = pos_filter_.position();
-            const auto meas_speed = pos_filter_.speed();
-            
-            static constexpr dsp::PdCtrlLaw pd_ctrl_law{
-                8.8_r, 0.239_r
-            };
-            
-            const auto curr = CLAMP2(pd_ctrl_law(
-                targ_position - meas_position,
-                targ_speed - meas_speed
-            ), 0.5_r);
-            
-            // const auto mag = 0.5_r * sinpu(ctime);
-            const auto mag = ABS(curr);
-            const auto tangles = (1 + MIN(ABS(meas_speed) * real_t(1.0 / 40), 0.15_r));
-
-            const auto [s,c] = sincospu(
-            (pos_filter_.lap_position() + SIGN_AS(0.005_r * tangles, curr)) * 50);
-            
-            svpwm_.set_alpha_beta_duty(c * mag,s * mag);
-            execution_time_ = clock::micros() - begin_u;
+            execution_time_ = measure_elapsed_us([&]{                
+                ctrl(meas_lap_position);
+            });
 
             return Ok();
         }
@@ -207,8 +163,59 @@ public:
     }
 
 
+    void ctrl(q16 meas_lap_position){
+
+        pos_filter_.update(meas_lap_position);
+        // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
+        // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+        
+        // const auto input_targ_position = 16 * sin(ctime);
+        // const auto targ_speed = 6 * cos(6 * ctime);
+        
+        // const auto input_targ_position = 10 * real_t(int(ctime));
+        const auto ctime = clock::time();
+        // const auto input_targ_position = 5 * sin(ctime/2);
+
+        // command_shaper_.update(input_targ_position);
+        // auto [targ_position, targ_speed] = std::make_tuple(
+        //     command_shaper_.update(input_targ_position),
+        //     command_shaper_.speed()
+        // );
+
+        const auto omega = 1.0_r * real_t(TAU);
+        // const auto omega = 1.0_r;
+        // const auto amp = 0.5_r;
+        const auto amp = 0.05_r;
+        const auto [targ_position, targ_speed] = std::make_tuple<q16, q16>(
+            amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
+            // int(ctime * omega), 0
+        );
+        const auto meas_position = pos_filter_.position();
+        const auto meas_speed = pos_filter_.speed();
+        
+        static constexpr dsp::PdCtrlLaw pd_ctrl_law{
+            8.8_r, 0.239_r
+        };
+        
+        const auto curr = CLAMP2(pd_ctrl_law(
+            targ_position - meas_position,
+            targ_speed - meas_speed
+        ), 0.5_r);
+        
+        // const auto mag = 0.5_r * sinpu(ctime);
+        const auto mag = ABS(curr);
+        const auto tangles = (1 + MIN(ABS(meas_speed) * real_t(1.0 / 40), 0.15_r));
+
+        const auto [s,c] = sincospu(
+        (pos_filter_.lap_position() + SIGN_AS(0.005_r * tangles, curr)) * 50);
+        
+        svpwm_.set_alpha_beta_duty(c * mag,s * mag);
+
+
+    }
+
     Result<void, void> print_vec() const {
-        auto print_view = [](auto view){
+        [[maybe_unused]] auto print_view = [](auto view){
             for (const auto & item : view) {
                 const auto expected = item.expected();
                 const auto measured = item.measured();
@@ -253,11 +260,14 @@ public:
         .backward_cali_table = backward_cali_table_
     }};
 
-    CalibrateTasks calibrate_comp_{
-        forward_cali_table_,
-        backward_cali_table_
-    };
 
+    dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
+            .fs = ISR_FREQ,
+            .r = 120,
+            .corrector = &corrector_
+        }
+    };
 
     bool is_component_finished_ = false;
 
@@ -274,166 +284,12 @@ public:
 
     CommandShaper command_shaper_{CS_CONFIG};
 
-    dsp::PositionFilter pos_filter_{
-        typename dsp::PositionFilter::Config{
-            .fs = ISR_FREQ,
-            .r = 120,
-            .corrector = &corrector_
-        }
+
+    CalibrateTasks calibrate_tasks_{
+        forward_cali_table_,
+        backward_cali_table_
     };
 };
-
-#if 0
-template<typename T>
-struct Context{
-    static_assert(std::is_copy_assignable_v<T>);
-
-    ReleaseInfo release_info;
-    T obj;
-
-    template<HashAlgo S>
-    friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
-        return hs << self.release_info;
-    }
-};
-
-template<typename T>
-struct Bin{
-    HashCode hashcode;
-    Context<T> context;
-
-    constexpr HashCode calc_hash_of_context() const{
-        return hash(context);
-    } 
-
-    constexpr bool is_verify_passed(){
-        return calc_hash_of_context() == hashcode;
-    } 
-    constexpr const Context<T> * operator ->() const {
-        return context;
-    }
-
-    constexpr size_t size() const {
-        return sizeof(*this);
-    }
-
-    std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>{
-            reinterpret_cast<const uint8_t *>(this), size()};
-    }
-};
-
-#endif
-
-
-
-
-#if 0
-class MotorArchiveSystem{
-    MotorArchiveSystem(drivers::AT24CXX at24):
-        at24_(at24){;}
-
-
-
-    enum class State:uint8_t{
-        Idle,
-        Saving,
-        Loading,
-        Verifying
-    };
-
-
-    static_assert(sizeof(archive::Header) <= HEADER_MAX_SIZE);
-
-    template<typename T>
-    auto save(T & obj){
-        const auto body_bytes = obj.as_bytes();
-        const auto header = archive::generate_header(body_bytes);
-        auto assign_header_and_obj_to_buf = [&]{
-            std::copy(buf_.begin(), buf_.end(), header.as_bytes());
-            std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
-        };
-
-        assign_header_and_obj_to_buf();
-
-        return at24_.store_bytes(Address(BODY_OFFSET), buf_);
-    }
-
-    template<typename T>
-    auto load(T & obj){
-        // const auto body_bytes = obj.as_bytes();
-        // const Header header = {
-        //     .hashcode = hash(body_bytes),
-        //     .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
-        // };
-
-        // auto assign_header_and_obj_to_buf = [&]{
-        //     std::copy(buf_.begin(), buf_.end(), header.as_bytes());
-        //     std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
-        // };
-
-        // assign_header_and_obj_to_buf();
-
-        // return at24_.store_bytes(Address(BODY_OFFSET), buf_);
-    }
-
-    auto poll(){
-        if(not at24_.is_idle()){
-            at24_.poll().examine();
-        }
-    }
-
-    bool is_idle(){
-        return at24_.is_idle();
-    }
-
-    Progress progress(){
-        return {0,0};
-    }
-private:
-    std::atomic<State> state_ = State::Idle;
-
-    drivers::AT24CXX & at24_;
-    std::array<uint8_t, STORAGE_MAX_SIZE> buf_;
-};
-#endif
-
-
-    // void save(std::span<const uint8_t>){
-        // at24.load_bytes(0_addr, std::span(rdata)).examine();
-        // while(not at24.is_idle()){
-        //     at24.poll().examine();
-        // }
-
-        // DEBUG_PRINTLN(rdata);
-        // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-        // at24.store_bytes(0_addr, std::span(data)).examine();
-
-        // while(not at24.is_idle()){
-        //     at24.poll().examine();
-        // }
-
-        // DEBUG_PRINTLN("done", clock::micros() - begin_u);
-        // while(true);
-    // }
-
-
-
-template<typename Fn>
-static Milliseconds measure_elapsed_ms(Fn && fn){
-    const Milliseconds start = clock::millis();
-    std::forward<Fn>(fn)();
-    return clock::millis() - start;
-}
-
-
-template<typename Fn>
-static Microseconds measure_elapsed_us(Fn && fn){
-    const Microseconds start = clock::micros();
-    std::forward<Fn>(fn)();
-    return clock::micros() - start;
-}
-
 
 
 [[maybe_unused]] 
