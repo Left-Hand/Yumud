@@ -55,7 +55,8 @@ int main(){
     // canopen_main();
     // bldc_main();
     // polar_robot_main();
-    mks_stepper_main();
+    // mks_stepper_main();
+    ads7830_main();
     // mystepper_main();
     // diffspd_vehicle_main();
     // ws2812_main();

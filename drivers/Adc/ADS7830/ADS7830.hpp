@@ -55,10 +55,11 @@ struct ADS7830_Prelude{
 
         constexpr ChannelIndex(Kind kind):kind_(kind){}
 
-        static constexpr Option<ChannelIndex> from_index(uint8_t rank){
-            if(rank >= 8) return None;
-            return Some(ChannelIndex(std::bit_cast<Kind>(rank)));
+        static constexpr Option<ChannelIndex> from_index(uint8_t nth){
+            if(nth >= 8) return None;
+            return Some(ChannelIndex(std::bit_cast<Kind>(nth)));
         }
+
         constexpr Kind kind() const {
             return kind_;
         }
