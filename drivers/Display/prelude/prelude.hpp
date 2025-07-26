@@ -23,18 +23,9 @@ enum class DisplayerError_Kind:uint8_t{
 DEF_DERIVE_DEBUG(DisplayerError_Kind)
 }
 DEF_ERROR_SUMWITH_HALERROR(DisplayerError, details::DisplayerError_Kind)
-}
 
-
-namespace ymd::custom{
-    template<typename T>
-    struct result_converter<T, drivers::DisplayerError, hal::HalResult> {
-        static Result<T, drivers::DisplayerError> convert(const hal::HalResult res){
-            
-            if(res.is_ok()) return Ok();
-            return Err(res.unwrap_err()); 
-        }
-    };
+template<typename T>
+struct DrawTarget;
 }
 
 namespace ymd::drivers::displayer::prelude{

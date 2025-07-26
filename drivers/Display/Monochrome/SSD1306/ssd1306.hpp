@@ -44,18 +44,21 @@ public:
     }
 
     [[nodiscard]] IResult<> write_command(const uint32_t cmd){
-        if(p_i2c_drv_.has_value()) 
-            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
-        else if(p_spi_drv_.has_value()){
+        if(p_i2c_drv_.has_value()){
+            if(const auto res = p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd));
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
+        }else if(p_spi_drv_.has_value()){
             // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
         }
         return Err(Error(Error::NoAvailablePhy));
     }
 
     [[nodiscard]] IResult<> write_data(const uint32_t data){
-        if(p_i2c_drv_.has_value()) 
-            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
-        else if(p_spi_drv_.has_value()){
+        if(p_i2c_drv_.has_value()) {
+            if(const auto res = p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data));
+                res.is_err()) return Err(res.unwrap_err());
+        }else if(p_spi_drv_.has_value()){
             // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
         }
         return Err(Error(Error::NoAvailablePhy));
@@ -65,9 +68,13 @@ public:
     [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf){
         if(p_i2c_drv_.has_value()){
             if constexpr(sizeof(T) != 1){
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB));
+                if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB);
+                    res.is_err()) return Err(res.unwrap_err());
+                return Ok();
             }else {
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf));
+                if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf);
+                    res.is_err()) return Err(res.unwrap_err());
+                return Ok();
             }
         }else if(p_spi_drv_.has_value()){
             // if constexpr(sizeof(T) != 1){
@@ -159,6 +166,18 @@ private:
         return Ok();
     }
 
+    [[nodiscard]] IResult<> putrect_unchecked(const Rect2u16 rect, const Binary color){
+        auto & frame = fetch_frame();
+        frame.putpixel_unchecked(rect.position, color);
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> puttexture_unchecked(const Rect2u16 rect, const Binary * pcolor){
+        auto & frame = fetch_frame();
+        frame.putpixel_unchecked(rect.position, pcolor[0]);
+        return Ok();
+    }
+
     [[nodiscard]] IResult<> setpos_unchecked(const Vector2<uint16_t> pos) ;
 
     [[nodiscard]] IResult<> set_offset(const Vector2<uint16_t> offset);
@@ -168,31 +187,36 @@ private:
     [[nodiscard]] IResult<> preinit_by_cmds();
 
     friend class SSD13XX_DrawDispacther;
+
+    template<typename T>
+    friend class DrawTarget;
 };
 
+class SSD13XX_DrawDispacther{
+public:
+    static constexpr bool IS_BUFFERED = true;
 
-// struct BufferedDrawDispather;
+    using Error = DisplayerError;
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
-// class SSD13XX_DrawDispacther{
-// public:
-//     static constexpr bool IS_BUFFERED = true;
+    [[nodiscard]] static IResult<> putpixel_unchecked(
+        SSD13XX & self, const Vector2<uint16_t> pos, const Binary color){
+        return self.putpixel_unchecked(pos, color);
+    }
 
-//     using Error = DisplayerError;
-//     template<typename T = void>
-//     using IResult = Result<T, Error>;
+    [[nodiscard]] static IResult<> putrect_unchecked(
+        SSD13XX & self, const Rect2u16 rect, const Binary color){
+        return self.putrect_unchecked(rect, color);
+    }
 
-//     [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2<uint16_t> pos, const RGB888 color){
-//         self.putpixel_unchecked(pos, color);
-//     }
+    [[nodiscard]] static IResult<> puttexture_unchecked(
+        SSD13XX & self, const Rect2u16 rect, const Binary * pcolor){
+        return self.puttexture_unchecked(rect, pcolor);
+    }
 
-//     [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
-//         self.putpixel_unchecked(pos, color);
-//     }
 
-//     [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){
-
-//     }
-// };
+};
 
 
 

@@ -76,14 +76,15 @@ private:
     Option<hal::Gpio &>res_gpio_;
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_burst(
+    [[nodiscard]] IResult<> phy_write_burst(
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
-        if (const auto err = spi_
-            .begin(idx_.to_req()); err.is_err()) return err; 
+        if (const auto res = spi_
+            .begin(idx_.to_req()); res.is_err()) 
+                return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
-                return res;
+                return Err(res.unwrap_err());
         }
 
         const auto len = pbuf.size();
@@ -96,58 +97,58 @@ private:
         if (cont == DISC) spi_.end();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
         }
 
-        return hal::HalResult::Ok();
+        return Ok();
     }
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_repeat(
+    [[nodiscard]] IResult<> phy_write_repeat(
         const is_stdlayout auto data, 
         const size_t len, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-        if (const auto err = spi_.begin(idx_.to_req()); err.is_err()) return err; 
+        if (const auto res = spi_.begin(idx_.to_req()); res.is_err()) return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
-                return res;
+                return Err(res.unwrap_err());
         }
         for (size_t i = 0; i < len; i++){
             if(const auto res = spi_.write((data).as_u16());
-                res.is_err()) return res;
+                res.is_err()) return Err(res.unwrap_err());
         } 
         if (cont == DISC) spi_.end();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
         }
-        return hal::HalResult::Ok();
+        return Ok();
     }
 
     template<hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_single(
+    [[nodiscard]] IResult<> phy_write_single(
         const is_stdlayout auto data, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
-                return res;
+                return Err(res.unwrap_err());
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return res;
+            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return Err(res.unwrap_err());
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
+            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return Err(res.unwrap_err());
         }
 
         if (cont == DISC) spi_.end();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
         }
 
-        return hal::HalResult::Ok();
+        return Ok();
     }
 
 };

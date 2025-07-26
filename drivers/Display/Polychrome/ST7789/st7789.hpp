@@ -4,6 +4,10 @@
 // #include "st7789v3_phy.hpp"
 
 namespace ymd::drivers{
+
+
+
+
 class ST7789 final:
     public ST7789_Prelude{
 public:
@@ -118,6 +122,36 @@ private:
 
     [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
 
+    template<typename T>
+    friend class DrawTarget;
+};
+
+
+template<>
+struct DrawTarget<ST7789>{
+    [[nodiscard]] static auto putpixel_unchecked(
+        ST7789 & self,
+        const Vector2<uint16_t> pos, 
+        const RGB565 color
+    ){
+        return self.putpixel_unchecked(pos, color);
+    }
+
+    [[nodiscard]] static auto putrect_unchecked(
+        ST7789 & self,
+        const Rect2<uint16_t> rect, 
+        const RGB565 color
+    ){
+        return self.putrect_unchecked(rect, color);
+    }
+
+    [[nodiscard]] static auto puttexture_unchecked(
+        ST7789 & self,
+        const Rect2<uint16_t> rect, 
+        const RGB565 * pcolor
+    ){
+        return self.puttexture_unchecked(rect, pcolor);
+    }
 };
 
 
