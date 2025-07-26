@@ -51,16 +51,20 @@ struct RGB888 {
     uint8_t g;
     uint8_t b;
 
-public:
-    __fast_inline constexpr explicit RGB888() = default;
-
-    __fast_inline constexpr explicit RGB888(const ColorEnum & color): RGB888(int(color)){;}
-
-    __fast_inline constexpr explicit RGB888(const int _data): 
+    __fast_inline constexpr explicit RGB888(const uint32_t _data): 
         r(_data),
         g(_data >> 8),
         b(_data >> 16)     
     {;}
+
+public:
+    __fast_inline constexpr explicit RGB888() = default;
+
+    __fast_inline constexpr explicit RGB888(const ColorEnum & color): RGB888(uint32_t(color)){;}
+
+    __fast_inline static constexpr RGB888 from_u32(const uint32_t _data){
+        return RGB888(_data);
+    }
     
     __fast_inline constexpr RGB888(const RGB888 & other): 
         r(other.r),
@@ -70,9 +74,15 @@ public:
 
     constexpr explicit RGB888(const HSV888 & other);
 
-    __fast_inline constexpr explicit RGB888(const uint8_t _r, const uint8_t _g, const uint8_t _b):r(_r), g(_g), b(_b){;}
+    __fast_inline static constexpr RGB888 from_r8g8b8(uint8_t r, uint8_t g, uint8_t b){
+        return RGB888(r, g, b);
+    }
 
-    __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(r | (g << 8) | (b << 16));}
+    __fast_inline constexpr uint24_t as_u24() const {return uint24_t(r | (g << 8) | (b << 16));}
+private:
+
+    __fast_inline constexpr explicit RGB888(const uint8_t _r, const uint8_t _g, const uint8_t _b):
+        r(_r), g(_g), b(_b){;}
 };
 
 struct LAB888 {
@@ -83,7 +93,8 @@ struct LAB888 {
 
 public:
     __fast_inline constexpr explicit LAB888() = default;
-    __fast_inline constexpr explicit LAB888(const LAB888 & other): 
+
+    __fast_inline constexpr LAB888(const LAB888 & other): 
         l(other.l),
         a(other.a),
         b(other.b)
@@ -93,8 +104,15 @@ public:
 
     explicit operator RGB888() const;
     
+    __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
+
+    __fast_inline static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
+        return LAB888(l, a, b);
+    } 
+private:
     __fast_inline constexpr explicit LAB888(const uint8_t _l, const int8_t _a, const int8_t _b):l(_l), a(_a), b(_b){;}
-    __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(l | (a << 8) | (b << 16));}
+
+
 };
 
 
@@ -113,14 +131,20 @@ struct RGB332{
 
     __fast_inline constexpr explicit RGB332() : data(0){;}
 
-    __fast_inline constexpr explicit RGB332(const int & _data): data((uint8_t)_data){;}
+    __fast_inline constexpr explicit RGB332(const uint8_t _data): data(_data){;}
 
-    __fast_inline constexpr explicit RGB332(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
-
-    __fast_inline constexpr explicit RGB332(const uint8_t & _data): data(_data){;}
+    __fast_inline static constexpr RGB332 from_r3g3b2(uint8_t r, uint8_t g, uint8_t b){
+        return RGB332(r,g,b);
+    } 
 
     __fast_inline constexpr explicit operator uint8_t() const {return data;}
 
+    __fast_inline constexpr uint8_t as_u8() const {
+        return data;
+    }
+private:
+    __fast_inline constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
+        b(_b), g(_g), r(_r){;}
 };
 
 
@@ -144,7 +168,7 @@ struct RGB565{
     __fast_inline constexpr explicit RGB565(const Binary & bn);
 
     __fast_inline static constexpr 
-    RGB565 from_565(const uint8_t r, const uint8_t g, const uint8_t b){
+    RGB565 from_r5g6b5(const uint8_t r, const uint8_t g, const uint8_t b){
         RGB565 ret;
         ret.b = b & 0b11111; 
         ret.g = g & 0b111111; 
@@ -154,14 +178,14 @@ struct RGB565{
 
     __fast_inline static constexpr 
     RGB565 from_u16(const uint16_t raw){
-        return  from_565(
+        return  from_r5g6b5(
             raw >> 11,
             raw >> 5,
             raw
         );
     }
     __fast_inline constexpr explicit operator RGB888() const {
-        return RGB888(r << 3, g << 2, b << 3);
+        return RGB888::from_r8g8b8(r << 3, g << 2, b << 3);
     }
 
     __fast_inline constexpr uint16_t as_u16() const {
@@ -182,7 +206,8 @@ struct RGB565{
         return *this;
     }
 private:
-    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){
+    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>
+    seprate(const uint16_t data){
         return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
     static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){
         return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
@@ -219,9 +244,9 @@ public:
         h(uint8_t(_h)), s(uint8_t(_s)), v(uint8_t(_v))
     {;}
 
-    __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(
-        uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v)
-    );}
+    __fast_inline constexpr uint24_t as_u24() const {
+        return uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
+    }
 
 };
 
@@ -286,7 +311,9 @@ struct Binary{
         return Binary(uint8_t(ret));
     }
     __fast_inline constexpr uint8_t to_raw() const {return data;}
-    __fast_inline constexpr explicit operator RGB888() const {return RGB888{data, data, data};}
+    __fast_inline constexpr explicit operator RGB888() const {
+        return RGB888::from_r8g8b8(data, data, data);
+    }
 };
 
 
@@ -303,11 +330,14 @@ struct Gray{
 
     __fast_inline constexpr explicit Gray(const RGB565 & rgb);
     __fast_inline constexpr explicit operator uint8_t() const {return data;}
-    __fast_inline constexpr explicit operator RGB888() const {return RGB888{data, data, data};}
+    __fast_inline constexpr explicit operator RGB888() const {
+        return RGB888::from_r8g8b8(data, data, data);}
     __fast_inline constexpr explicit operator bool() const {return data;}
 
-    __fast_inline constexpr auto operator <=> (const Gray & other) const {return data <=> other.data;}
-    __fast_inline constexpr bool operator == (const Gray & other) const {return data == other.data;}
+    __fast_inline constexpr auto operator <=> (const Gray & other) const {
+        return data <=> other.data;}
+    __fast_inline constexpr bool operator == (const Gray & other) const {
+        return data == other.data;}
 
 
     __fast_inline constexpr bool is_white() const {return data == uint8_t(0xff);}
@@ -360,11 +390,14 @@ struct IGray{
 using RGB24 = RGB888;
 
 
-__fast_inline constexpr Gray::Gray(const RGB565 & rgb):data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
+__fast_inline constexpr Gray::Gray(const RGB565 & rgb):
+    data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
 
-__fast_inline constexpr RGB565::RGB565(const Gray & gs): b(uint8_t(gs) >> 3), g(uint8_t(gs) >> 2), r(uint8_t(gs) >> 3){;}
+__fast_inline constexpr RGB565::RGB565(const Gray & gs): 
+    b(uint8_t(gs) >> 3), g(uint8_t(gs) >> 2), r(uint8_t(gs) >> 3){;}
 
-__fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565(RGB565::from_u16(bn.is_white() ? 0xffff : 0)){;}
+__fast_inline constexpr RGB565::RGB565(const Binary & bn): 
+    RGB565(RGB565::from_u16(bn.is_white() ? 0xffff : 0)){;}
 
 constexpr HSV888::HSV888(const RGB888 & rgb){
 

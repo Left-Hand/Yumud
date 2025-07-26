@@ -173,26 +173,26 @@ private:
 
 // struct BufferedDrawDispather;
 
-class SSD13XX_DrawDispacther{
-public:
-    static constexpr bool IS_BUFFERED = true;
+// class SSD13XX_DrawDispacther{
+// public:
+//     static constexpr bool IS_BUFFERED = true;
 
-    using Error = DisplayerError;
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+//     using Error = DisplayerError;
+//     template<typename T = void>
+//     using IResult = Result<T, Error>;
 
-    // [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2<uint16_t> pos, const RGB888 color){
-    //     self.putpixel_unchecked(pos, color);
-    // }
+//     [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2<uint16_t> pos, const RGB888 color){
+//         self.putpixel_unchecked(pos, color);
+//     }
 
-    // [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
-    //     self.putpixel_unchecked(pos, color);
-    // }
+//     [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
+//         self.putpixel_unchecked(pos, color);
+//     }
 
-    // [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){
+//     [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){
 
-    // }
-};
+//     }
+// };
 
 
 

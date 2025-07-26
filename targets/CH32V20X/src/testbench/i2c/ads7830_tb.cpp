@@ -52,7 +52,7 @@ void ads7830_main(){
             result[i] = read_channel(i - 4);
         }
 
-        return result;
+        return result;        
     };
 
 
