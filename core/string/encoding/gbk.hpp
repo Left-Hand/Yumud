@@ -3,22 +3,19 @@
 #include "core/string/string_view.hpp"
 namespace ymd{
 
-class GBKIterator {
+class GBKIterator final{
 
 public:
 	constexpr GBKIterator(const StringView str) : 
 		str_(str), 
 		current_index_(0) {}
 	
-	constexpr operator bool() const {
+	constexpr bool has_next() const {
 		return str_[current_index_] != '\0' and str_.size() > current_index_;
 	}
 	
 	constexpr wchar_t next() {
-		if (this->operator bool() == false) {
-			return -1;
-		}
-		
+
 		auto ch = str_[unsigned(current_index_)];
 		int unicodeValue;
 		

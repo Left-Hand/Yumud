@@ -173,8 +173,8 @@ IResult<> BMI160::self_test_gyr(){
     if(const auto res = 
         retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             auto & reg = regs_.status;
-            if(const auto res = (read_reg(reg));
-                unlikely(res.is_err())) return Err(res.unwrap_err());
+            if(const auto _res = (read_reg(reg));
+                unlikely(_res.is_err())) return Err(_res.unwrap_err());
 
             if (reg.gyr_self_test_ok != 1){
                 return Err(Error::GyrCantSetup);

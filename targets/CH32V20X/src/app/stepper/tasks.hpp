@@ -16,24 +16,6 @@ static constexpr size_t ISR_FREQ = CHOP_FREQ * 2;
 
 namespace ymd{
 
-    
-template<typename Fn>
-static Milliseconds measure_elapsed_ms(Fn && fn){
-    const Milliseconds start = clock::millis();
-    std::forward<Fn>(fn)();
-    return clock::millis() - start;
-}
-
-
-template<typename Fn>
-static Microseconds measure_elapsed_us(Fn && fn){
-    const Microseconds start = clock::micros();
-    std::forward<Fn>(fn)();
-    return clock::micros() - start;
-}
-
-
-
 
 struct MotorTaskPrelude{
     enum class TaskError:uint8_t{

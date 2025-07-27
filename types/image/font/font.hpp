@@ -8,29 +8,26 @@ namespace ymd{
 class Font{
 protected:
 
-    Vector2i size;
+    Vector2<uint8_t> size;
     uint8_t scale;
-    virtual bool _getpixel(const wchar_t chr, const Vector2i & offset) const = 0;
-public:
-    constexpr Font(Vector2i _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
-    bool get_pixel(const wchar_t chr, const Vector2i & offset) const{
-        return _getpixel(chr, {offset.x / scale, offset.y / scale});
-    }
-
+    public:
+    constexpr Font(Vector2<uint8_t> _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
+    
+    virtual bool get_pixel(const wchar_t chr, const Vector2<uint8_t> offset) const = 0;
     void set_scale(const uint8_t _scale){scale = _scale;}
-    Vector2i get_size() const { return size * scale; }
+    Vector2<uint8_t> get_size() const { return size * scale; }
 };
 
 
 
 
 class Font8x5:public Font{
-    bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
+    bool get_pixel(const wchar_t chr, const Vector2<uint8_t> offset) const override{
         if (!size.has_point(offset)) return false;
         return font_res::enfont_8x5[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
 public:
-    constexpr Font8x5():Font( Vector2i(5,8)){;}
+    constexpr Font8x5():Font( Vector2<uint8_t>(5,8)){;}
 };
 
 
@@ -58,8 +55,8 @@ protected:
         return nullptr;
     }
 public:
-    constexpr Font7x7():Font(Vector2i{7,7}){;}
-	bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
+    constexpr Font7x7():Font(Vector2<uint8_t>{7,7}){;}
+	bool get_pixel(const wchar_t chr, const Vector2<uint8_t> offset) const override{
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
 		static wchar_t last_chr = 0;
@@ -91,8 +88,8 @@ public:
 class Font16x8:public Font{
 public:
     static constexpr auto & RES = font_res::enfont_16x8;
-    constexpr Font16x8():Font(Vector2i(8,16)){;}
-    bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
+    constexpr Font16x8():Font(Vector2<uint8_t>(8,16)){;}
+    bool get_pixel(const wchar_t chr, const Vector2<uint8_t> offset) const override{
         if (!size.has_point(offset)) return false;
 
         return RES[MAX(chr - ' ', 0)][offset.y] & (1 << offset.x);

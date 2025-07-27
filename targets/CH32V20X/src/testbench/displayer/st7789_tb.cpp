@@ -36,31 +36,6 @@ struct DrawTargetFacade : pro::facade_builder
 }
 
 
-#if 0
-// 辅助宏：生成单个枚举的别名
-#define IMPORT_ENUM_SINGLE(EnumType) \
-	using enum EnumType;\
-
-// 递归终止条件（无参数时）
-#define IMPORT_ENUMS(...) \
-    EXPAND(IMPORT_ENUMS_IMPL(__VA_ARGS__))
-
-// 递归展开宏
-#define IMPORT_ENUMS_IMPL(FirstEnum, ...) \
-    IMPORT_ENUM_SINGLE(FirstEnum) \
-    IF_HAS_ARGS(__VA_ARGS__)(IMPORT_ENUMS_IMPL)(__VA_ARGS__)
-
-// 辅助宏：检查是否有剩余参数
-#define IF_HAS_ARGS(...) IF_HAS_ARGS_IMPL(__VA_ARGS__)
-#define IF_HAS_ARGS_IMPL(...) ARG_SECOND(__VA_ARGS__, HAS_ARGS, NO_ARGS)
-#define ARG_SECOND(_, Second, ...) Second
-#define HAS_ARGS(...) EXPAND
-#define NO_ARGS(...)
-
-// 确保宏完全展开
-#define EXPAND(...) __VA_ARGS__
-#endif
-
 DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
 [[maybe_unused]]
@@ -73,6 +48,8 @@ static void static_test(){
 }
 
 #define DBG_UART hal::uart2
+
+
 void st7789_main(void){
 
     DBG_UART.init({576000});
@@ -82,14 +59,14 @@ void st7789_main(void){
 
 
     #ifdef CH32V30X
-    auto & spi = spi2;
-    auto & lcd_blk = portC[7];
+    auto & spi = hal::spi2;
+    auto & lcd_blk = hal::portC[7];
     
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_cs = portD[6];
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_cs = hal::portD[6];
+    auto & lcd_dc = hal::portD[7];
+    auto & dev_rst = hal::portB[7];
     #else
     auto & spi = hal::spi1;
     auto & lcd_blk = hal::portA[10];
@@ -127,6 +104,6 @@ void st7789_main(void){
 	while (1){
 		auto m = clock::millis();
 
-		DEBUG_PRINTLN(clock::millis());
+		// DEBUG_PRINTLN(clock::millis());
 	}
 }

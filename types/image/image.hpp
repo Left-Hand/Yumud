@@ -101,7 +101,7 @@ public:
     }
 
     void putpixel(const Vector2u pos, const T color) {
-        assert_pos(pos);
+        assert_pos_is_inrange(pos);
         putpixel_unchecked(pos, color);
     }
 
@@ -121,29 +121,30 @@ public:
 
     template<typename ToColorType>
     [[nodiscard]] __fast_inline ToColorType at(const Vector2u pos) const {
-        assert_pos(pos);
+        assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline T & at(const Vector2u pos){
-        assert_pos(pos);
+        assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline const T & at(const Vector2u pos)const{
-        assert_pos(pos);
+        assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
-private:
     void putpixel_unchecked(const Vector2u pos, const T color) 
         { data_[this->size().x * pos.y + pos.x] = color; }
     void getpixel_unchecked(const Vector2u pos, T & color) const 
         { color = data_[this->size().x * pos.y + pos.x]; }
+
+private:
 
 
     Vector2u size_;
 
     std::shared_ptr<T[]> data_;
 
-    __fast_inline void assert_pos(const Vector2u pos){
+    __fast_inline void assert_pos_is_inrange(const Vector2u pos){
         ASSERT(size_.x > pos.x and size_.y > pos.y);
     }
 

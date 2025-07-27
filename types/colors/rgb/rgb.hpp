@@ -60,7 +60,7 @@ struct RGB888 {
 public:
     __fast_inline constexpr explicit RGB888() = default;
 
-    __fast_inline constexpr explicit RGB888(const ColorEnum & color): RGB888(uint32_t(color)){;}
+    __fast_inline constexpr RGB888(const ColorEnum color): RGB888(uint32_t(color)){;}
 
     __fast_inline static constexpr RGB888 from_u32(const uint32_t _data){
         return RGB888(_data);

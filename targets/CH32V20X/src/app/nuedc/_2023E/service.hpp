@@ -3,7 +3,6 @@
 #include "rigid.hpp"
 
 #include "core/stream/stream.hpp"
-#include "core/stream/StringStream.hpp"
 
 namespace nuedc::_2023E{
 

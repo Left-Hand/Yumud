@@ -46,27 +46,28 @@ public:
 
     [[nodiscard]] IResult<> write_command(const uint8_t cmd){
         dc_gpio_.clr();
-        return IResult<>(phy_write_single<uint8_t>(cmd));
+        return phy_write_single<uint8_t>(cmd);
     }
 
     [[nodiscard]] IResult<> write_data8(const uint8_t data){
         dc_gpio_.set();
-        return IResult<>(phy_write_single<uint8_t>(data));
+        return phy_write_single<uint8_t>(data);
     }
 
     [[nodiscard]] IResult<> write_data16(const uint16_t data){
         dc_gpio_.set();
-        return IResult<>(phy_write_single<uint16_t>(data));
+        return phy_write_single<uint16_t>(data);
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
-        return IResult<>(phy_write_burst<uint16_t>(pbuf));
+        dc_gpio_.set();
+        return spi_fast_write_burst<uint16_t>(pbuf);
     }
 
     [[nodiscard]] IResult<> write_repeat_pixels(const auto & data, size_t len){
         dc_gpio_.set();
-        return IResult<>(phy_write_repeat<uint16_t>(data, len));
+        return spi_fast_write_repeat<uint16_t>(data, len);
     }
 private:
     hal::SpiHw & spi_;
@@ -76,7 +77,7 @@ private:
     Option<hal::Gpio &>res_gpio_;
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] IResult<> phy_write_burst(
+    [[nodiscard]] IResult<> spi_fast_write_burst(
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_
@@ -104,7 +105,7 @@ private:
     }
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] IResult<> phy_write_repeat(
+    [[nodiscard]] IResult<> spi_fast_write_repeat(
         const is_stdlayout auto data, 
         const size_t len, 
         Continuous cont = DISC) {

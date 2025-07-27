@@ -174,3 +174,4 @@ void ft6336_main();
 void diffspd_vehicle_main();
 void mks_stepper_main();
 void slcan_main();
+void st7789_main();

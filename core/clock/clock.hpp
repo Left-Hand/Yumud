@@ -82,8 +82,25 @@ inline auto now(){
 
 namespace ymd{
 void bindSystickCb(std::function<void(void)> && cb);
+
+
+
+template<typename Fn>
+inline Milliseconds measure_elapsed_ms(Fn && fn){
+    const Milliseconds start = clock::millis();
+    std::forward<Fn>(fn)();
+    return clock::millis() - start;
 }
 
+
+template<typename Fn>
+inline Microseconds measure_elapsed_us(Fn && fn){
+    const Microseconds start = clock::micros();
+    std::forward<Fn>(fn)();
+    return clock::micros() - start;
+}
+
+}
 
 
 extern "C"{

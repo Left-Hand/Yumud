@@ -315,7 +315,7 @@ Result<void, CanError> Can::write(const CanMsg & msg){
         }
         return Err(CanError::BlockingTransmitTimeout);
     }else{
-        auto push_buf = [this](const CanMsg & msg) -> Result<void, CanError>{ 
+        auto push_buf = [this, &msg]() -> Result<void, CanError>{ 
             if(tx_fifo_.writable_capacity() > 0){
                 tx_fifo_.push(msg);
                 return Ok();
@@ -326,10 +326,10 @@ Result<void, CanError> Can::write(const CanMsg & msg){
             if(transmit(msg).is_some()){
                 return Ok();
             }else{
-                return push_buf(msg);
+                return push_buf();
             }
         }else{
-            return push_buf(msg);
+            return push_buf();
         }
     }
 }

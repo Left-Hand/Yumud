@@ -5,10 +5,9 @@
 
 #include "core/string/string_view.hpp"
 #include "core/stream/stream.hpp"
-#include "core/stream/StringStream.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-
+#include "core/utils/scope_guard.hpp"
 
 #include "types/regions/rect2/rect2.hpp"
 #include "types/colors/color/color.hpp"
@@ -51,7 +50,7 @@ struct PainterPrelude{
 
 class PainterDispatcherIntf:public PainterPrelude{
 public:
-    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) = 0;
+    [[nodiscard]] virtual IResult<> draw_wchar(const Vector2u & pos,const wchar_t chr) = 0;
     
     [[nodiscard]] virtual Option<Rect2u> get_expose_rect() = 0;
     
@@ -69,6 +68,11 @@ public:
 
     PainterBase() = default;
     [[nodiscard]] IResult<> fill(const RGB888 & color){
+        const auto orginal_color = get_color();
+        auto guard = make_scope_guard([&]{
+            set_color(orginal_color);
+        });
+
         this->set_color(color);
         const auto may_rect = this->get_expose_rect();
         if(may_rect.is_none()) return Err(Error::CropRectIsNone);
@@ -104,7 +108,9 @@ public:
         color_ = static_cast<RGB888>(color);
     }
 
-
+    RGB888 get_color() const{
+        return color_;
+    }
 
     [[nodiscard]] IResult<> draw_hollow_rect(const Rect2u & rect);
 
@@ -112,8 +118,6 @@ public:
 
     [[nodiscard]] IResult<> draw_filled_circle(const Vector2u & pos, const uint radius);
 
-
-    [[nodiscard]] IResult<> draw_string(const Vector2u & pos, const StringView str);
 
     [[nodiscard]] IResult<> draw_hollow_ellipse(const Vector2u & pos, const Vector2u & r);
 
@@ -148,7 +152,7 @@ public:
         real_t x = 0;
         for(size_t i = size_t(x_range.start); i < size_t(x_range.stop); i++){
             const auto y = std::forward<Fn>(fn)(x);
-            draw_pixel({uint(i),uint(
+            putpixel_unchecked({uint(i),uint(
                 y * (y_range.length()) + y_range.start
             )});
             x = x + x_step;
@@ -157,17 +161,21 @@ public:
         return Ok();
     }
 
-    virtual void draw_pixel(const Vector2u & pos) {return;}
+    virtual void putpixel_unchecked(const Vector2<uint16_t> pos);
 
-    [[nodiscard]] virtual IResult<> draw_char(const Vector2u & pos,const wchar_t chr) {return Ok();}
-    
+    [[nodiscard]] virtual IResult<> draw_wchar(const Vector2u & pos,const wchar_t chr) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_gbk_str(const Vector2u & pos, const StringView str) = 0;
+
+    [[nodiscard]] virtual IResult<> draw_ascii_str(const Vector2u & pos, const StringView str) = 0;
+
     [[nodiscard]] virtual Option<Rect2u> get_expose_rect() {return None;}
     
-    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) {return Ok();}
+    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
 
-    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) {return Ok();}
 
-    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) {return Ok();}
+
+    [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
 
     [[nodiscard]] IResult<> set_crop_rect(const Rect2u & rect){
         crop_rect_ = rect;
@@ -194,17 +202,6 @@ protected:
     [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x);
 
     [[nodiscard]] IResult<> draw_hri_line(const Range2u & x_range, const int y);
-
-    IResult<> draw_gbk_str(const Vector2u & pos, const StringView str){
-        TODO();
-        return Ok();
-    }
-
-    IResult<> draw_utf8_str(const Vector2u & pos, const StringView str){
-        TODO();
-        return Ok();
-    }
-
 };
 
 }
