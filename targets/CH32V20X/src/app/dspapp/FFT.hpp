@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/realmath.hpp"
+#include "core/math/iq/iqmath.hpp"
 
 namespace ymd::dsp{
 /**********************************************************************
@@ -20,7 +21,7 @@ namespace details{
 template<arithmetic T, int isign>
 constexpr void _FFT(std::span<T> c){
     size_t n, nb, j,i0, i1;
-    T wr, wi, wrk, wik;
+    T wrk, wik;
     T d, dr, di, d0r, d0i, d1r, d1i;
     T *cp;
 
@@ -47,8 +48,8 @@ constexpr void _FFT(std::span<T> c){
     }
 
     for(size_t k = 2; n <= N; n = n << 1 ){
-        wr = std::cos(T(TAU) / n );
-        wi = std::sin(T(TAU) / n );
+
+        const auto [wi, wr] = sincospu(T(1) / n);
         if constexpr( isign == 1 ) wi = -wi;
         cp = c;
         nb = N / n;

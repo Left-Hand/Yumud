@@ -89,11 +89,10 @@ IResult<> BMI160::init(const Config & cfg){
 
         //wait for power up gyr
 
-        if(const auto res = 
-        retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
-            if(const auto res = (get_pmu_mode(PmuType::GYR));
-                unlikely(res.is_err())) return Err(res.unwrap_err());
-            else if (res.unwrap() != PmuMode::NORMAL){
+        if(const auto res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
+            if(const auto _res = (get_pmu_mode(PmuType::GYR));
+                unlikely(_res.is_err())) return Err(_res.unwrap_err());
+            else if (_res.unwrap() != PmuMode::NORMAL){
                 return Err(Error::GyrCantSetup);
             }
             return Ok();

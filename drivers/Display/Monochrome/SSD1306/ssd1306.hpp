@@ -43,68 +43,15 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_command(const uint32_t cmd){
-        if(p_i2c_drv_.has_value()){
-            if(const auto res = p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd));
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else if(p_spi_drv_.has_value()){
-            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
-        }
-        return Err(Error(Error::NoAvailablePhy));
-    }
+    [[nodiscard]] IResult<> write_command(const uint32_t cmd);
 
-    [[nodiscard]] IResult<> write_data(const uint32_t data){
-        if(p_i2c_drv_.has_value()) {
-            if(const auto res = p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data));
-                res.is_err()) return Err(res.unwrap_err());
-        }else if(p_spi_drv_.has_value()){
-            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
-        }
-        return Err(Error(Error::NoAvailablePhy));
-    }
+    [[nodiscard]] IResult<> write_data(const uint32_t data);
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf){
-        if(p_i2c_drv_.has_value()){
-            if constexpr(sizeof(T) != 1){
-                if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB);
-                    res.is_err()) return Err(res.unwrap_err());
-                return Ok();
-            }else {
-                if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf);
-                    res.is_err()) return Err(res.unwrap_err());
-                return Ok();
-            }
-        }else if(p_spi_drv_.has_value()){
-            // if constexpr(sizeof(T) != 1){
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
-            // }else {
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
-            // }
-        }
-        // return IResult<>(Err(Error(Error::NoAvailablePhy)));
-        PANIC();
-    }
+    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf);
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_repeat(const T data, size_t len){
-        if(p_i2c_drv_.has_value()){
-            if constexpr(sizeof(data) != 1){
-                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, LSB));
-            }else {
-                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
-            }
-        }else if(p_spi_drv_.has_value()){
-            // if constexpr(sizeof(data) != 1){
-            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
-            // }else {
-            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len));
-            // }
-        }
-        PANIC();
-    }
-
+    [[nodiscard]] IResult<> write_repeat(const T data, size_t len);
 private:
     std::optional<hal::I2cDrv> p_i2c_drv_;
     std::optional<hal::SpiDrv> p_spi_drv_;
@@ -186,13 +133,12 @@ private:
 
     [[nodiscard]] IResult<> preinit_by_cmds();
 
-    friend class SSD13XX_DrawDispacther;
-
     template<typename T>
     friend class DrawTarget;
 };
 
-class SSD13XX_DrawDispacther{
+template<>
+class DrawTarget<SSD13XX>{
 public:
     static constexpr bool IS_BUFFERED = true;
 

@@ -9,6 +9,71 @@ using Vector2u16 = Vector2<uint16_t>;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
+
+IResult<> SSD1306_Phy::write_command(const uint32_t cmd){
+    if(p_i2c_drv_.has_value()){
+        if(const auto res = p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(p_spi_drv_.has_value()){
+        // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+    }
+    return Err(Error(Error::NoAvailablePhy));
+}
+
+IResult<> SSD1306_Phy::write_data(const uint32_t data){
+    if(p_i2c_drv_.has_value()) {
+        if(const auto res = p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data));
+            res.is_err()) return Err(res.unwrap_err());
+    }else if(p_spi_drv_.has_value()){
+        // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
+    }
+    return Err(Error(Error::NoAvailablePhy));
+}
+
+template<is_stdlayout T>
+IResult<> SSD1306_Phy::write_burst(const std::span<const T> pbuf){
+    if(p_i2c_drv_.has_value()){
+        if constexpr(sizeof(T) != 1){
+            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
+        }else {
+            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf);
+                res.is_err()) return Err(res.unwrap_err());
+            return Ok();
+        }
+    }else if(p_spi_drv_.has_value()){
+        // if constexpr(sizeof(T) != 1){
+        //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
+        // }else {
+        //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
+        // }
+    }
+    // return IResult<>(Err(Error(Error::NoAvailablePhy)));
+    return Err(Error(Error::Kind::NoAvailablePhy));
+}
+
+template<is_stdlayout T>
+IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
+    if(p_i2c_drv_.has_value()){
+        if constexpr(sizeof(data) != 1){
+            return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, LSB));
+        }else {
+            return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
+        }
+    }else if(p_spi_drv_.has_value()){
+        // if constexpr(sizeof(data) != 1){
+        //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
+        // }else {
+        //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len));
+        // }
+    }
+    return Err(Error(Error::NoAvailablePhy));
+}
+
+template<typename T = void>
+using IResult = Result<T, Error>;
 IResult<> SSD13XX::set_offset(const Vector2u16 offset){
     if(const auto res = phy_.write_command(0xD3); res.is_err()) return res; 
     if(const auto res = phy_.write_command(offset.y); res.is_err()) return res;

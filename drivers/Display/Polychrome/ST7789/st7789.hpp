@@ -5,9 +5,6 @@
 
 namespace ymd::drivers{
 
-
-
-
 class ST7789 final:
     public ST7789_Prelude{
 public:

@@ -38,8 +38,8 @@ static constexpr auto make_scene1(){
         ,spawner.spawn_annular_sector(0.5_r, 180_deg)
         ,spawner.spawn_stright(1.43_r)
         ,spawner.spawn_zebra_stright(0.12_r)
-        ,SpotLight{} | Placement{.pos = {1.0_r, -0.8_r}}
-        ,SpotLight{} | Placement{.pos = {-2.0_r, -2.8_r}}
+        ,SpotLight{} | Placement{.position = {1.0_r, -0.8_r}}
+        ,SpotLight{} | Placement{.position = {-2.0_r, -2.8_r}}
 
     );
 }
@@ -80,8 +80,8 @@ static constexpr auto make_scene2(){
         ,spawner.spawn_annular_sector(0.5_r, 180_deg)
         ,spawner.spawn_stright(1.43_r)
         ,spawner.spawn_zebra_stright(0.12_r)
-        ,SpotLight{} | Placement{.pos = {1.0_r, -0.8_r}}
-        ,SpotLight{} | Placement{.pos = {-2.0_r, -2.8_r}}
+        ,SpotLight{} | Placement{.position = {1.0_r, -0.8_r}}
+        ,SpotLight{} | Placement{.position = {-2.0_r, -2.8_r}}
 
     );
 }

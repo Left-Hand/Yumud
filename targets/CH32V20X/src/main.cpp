@@ -140,6 +140,7 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();
+    slcan_main();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
@@ -147,7 +148,7 @@ int main(){
 
     // curve_tb();
 
-    // math_tb(uart2);
+    // math_tb(hal::uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();

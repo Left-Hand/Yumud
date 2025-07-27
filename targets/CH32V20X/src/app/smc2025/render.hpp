@@ -34,13 +34,13 @@ namespace ymd::smc::sim{
 using BoundingBox = Rect2<q16>;
 
 struct Placement{
-    Vector2<q16> pos;
+    Vector2<q16> position;
 
     // q16 rotation = 0;
     // q16 zoom = 1;
 
     // Vector2<q16> apply_transform(Vector2<q16> p) const {
-    // return (p * zoom).rotated(rotation) + pos;
+    // return (p * zoom).rotated(rotation) + position;
     // }
 };
 
@@ -82,8 +82,8 @@ struct AnnularSector final{
     q16 start_rad;
     q16 stop_rad;
 
-    constexpr bool does_contains_rad(const q16 rad) const {
-        return IN_RANGE(rad, start_rad, stop_rad);
+    constexpr bool does_contains_rad(const q16 orientation) const {
+        return IN_RANGE(orientation, start_rad, stop_rad);
     }
 
     constexpr Rect2<q16> get_bounding_box() const {
@@ -446,7 +446,7 @@ struct RotatedZebraRect{
 //将相机像素转换为地面坐标
 static constexpr Vector2<q16> project_pixel_to_ground(
     const Vector2u pixel, 
-    const Pose2<q16> viewpoint, 
+    const Pose2<q16> pose, 
     const q16 zoom
 ) {
     const Vector2i pixel_offset = {
@@ -454,21 +454,21 @@ static constexpr Vector2<q16> project_pixel_to_ground(
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
     const Vector2<q16> camera_offset = Vector2<q16>(pixel_offset) * zoom;
-    const auto rot = viewpoint.rad - q16(PI/2);
-    return viewpoint.pos + camera_offset.rotated(rot);
+    const auto rot = pose.orientation - q16(PI/2);
+    return pose.position + camera_offset.rotated(rot);
 }
 
 
 static constexpr Vector2u project_ground_to_pixel(
     const Vector2<q16>& ground_pos,
-    const Pose2<q16> viewpoint,
+    const Pose2<q16> pose,
     const q16 zoom)
 {
-    // 1. Remove viewpoint position offset
-    const Vector2<q16> relative_pos = ground_pos - viewpoint.pos;
+    // 1. Remove pose position offset
+    const Vector2<q16> relative_pos = ground_pos - pose.position;
     
-    // 2. Calculate inverse rotation (original rotation was viewpoint.rad - PI/2)
-    const auto [s, c] = sincos(-(viewpoint.rad - q16(PI/2)));
+    // 2. Calculate inverse rotation (original rotation was pose.orientation - PI/2)
+    const auto [s, c] = sincos(-(pose.orientation - q16(PI/2)));
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
     const Vector2<q16> unrotated = {
@@ -504,7 +504,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const = 0;
+    virtual Image<Gray> render(const Pose2<q16> pose, const q16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -519,12 +519,12 @@ public:
 //         );
 //     }
 
-//     Image<Gray> render(const Pose2<q16> viewpoint) const {
+//     Image<Gray> render(const Pose2<q16> pose) const {
 //         Image<Gray> ret{CAMERA_SIZE};
 
-//         const auto org = project_pixel_to_ground({0,0}, viewpoint);
-//         const auto y_step = project_pixel_to_ground({0,1}, viewpoint) - org;
-//         const auto x_step = project_pixel_to_ground({1,0}, viewpoint) - org;
+//         const auto org = project_pixel_to_ground({0,0}, pose);
+//         const auto y_step = project_pixel_to_ground({0,1}, pose) - org;
+//         const auto x_step = project_pixel_to_ground({1,0}, pose) - org;
         
 //         auto offset = org;
 //         for(size_t y = 0; y < CAMERA_SIZE.y; ++y){
@@ -564,18 +564,18 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Gray> render(const Pose2<q16> viewpoint, const q16 zoom) const {
+    Image<Gray> render(const Pose2<q16> pose, const q16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
-        const auto org =    project_pixel_to_ground({0,0}, viewpoint, zoom);
-        const auto y_step = project_pixel_to_ground({0,1}, viewpoint, zoom) - org;
-        const auto x_step = project_pixel_to_ground({1,0}, viewpoint, zoom) - org;
+        const auto org =    project_pixel_to_ground({0,0}, pose, zoom);
+        const auto y_step = project_pixel_to_ground({0,1}, pose, zoom) - org;
+        const auto x_step = project_pixel_to_ground({1,0}, pose, zoom) - org;
 
         const auto ground_region = Rect2<q16>::from_minimal_bounding_box({
             org, 
-            project_pixel_to_ground({CAMERA_SIZE.x,0},    viewpoint, zoom),
-            project_pixel_to_ground({0,CAMERA_SIZE.y},    viewpoint, zoom),
-            project_pixel_to_ground(CAMERA_SIZE,          viewpoint, zoom)
+            project_pixel_to_ground({CAMERA_SIZE.x,0},    pose, zoom),
+            project_pixel_to_ground({0,CAMERA_SIZE.y},    pose, zoom),
+            project_pixel_to_ground(CAMERA_SIZE,          pose, zoom)
         });
 
             
@@ -601,10 +601,10 @@ public:
 
         std::apply([&](const auto&... object){
             (apply_render(
-                ground_region.intersects(object.bounding_box.shift(object.placement.pos)),
+                ground_region.intersects(object.bounding_box.shift(object.placement.position)),
                 // true,
                 [&](const Vector2<q16> local_pos) { 
-                    return object.cache.color_from_point(local_pos - object.placement.pos); 
+                    return object.cache.color_from_point(local_pos - object.placement.position); 
                 }), ...);
         }, objects_);
 

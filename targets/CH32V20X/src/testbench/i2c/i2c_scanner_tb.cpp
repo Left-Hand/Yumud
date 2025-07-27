@@ -17,7 +17,8 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-#define UART DEBUGGER_INST
+// #define UART DEBUGGER_INST
+#define UART hal::uart2
 
 #if 0
 #define SCL_GPIO hal::portD[1]
@@ -40,47 +41,6 @@ struct FoundInfo{
     uint32_t max_bbaud;
 };
 
-#include <coroutine>
-
-// 协程任务模板
-template<typename T>
-
-struct [[nodiscard]] Task {
-    struct promise_type {
-        Result<T, hal::HalError> result;
-        std::coroutine_handle<> continuation;
-
-        Task get_return_object() { return Task{Handle::from_promise(*this)}; }
-        std::suspend_always initial_suspend() noexcept { return {}; }
-        std::suspend_always final_suspend() noexcept { return {}; }
-        void return_value(Result<T, hal::HalError> res) { result = res; }
-        void unhandled_exception() noexcept {}
-    };
-
-    using Handle = std::coroutine_handle<promise_type>;
-
-    explicit Task(Handle h) : handle(h) {}
-    ~Task() { if (handle) handle.destroy(); }
-
-    struct Awaiter {
-        Handle handle;
-        
-        bool await_ready() const noexcept { return false; }
-        void await_suspend(std::coroutine_handle<> cont) noexcept {
-            handle.promise().continuation = cont;
-            handle.resume();
-        }
-        Result<T, hal::HalError> await_resume() noexcept {
-            return handle.promise().result;
-        }
-    };
-
-    Awaiter operator co_await() noexcept {
-        return Awaiter{handle};
-    }
-
-    Handle handle;
-};
 
 struct I2cTester{
     static constexpr uint32_t start_freq = 200_KHz;
@@ -117,45 +77,14 @@ struct I2cTester{
 
 };
 
-[[maybe_unused]]
-static void i2c_scanner_functional(){
-
-    UART.init({576_KHz});
-    DEBUGGER.retarget(&UART);
-
-    // log("i2c_scanner_main") | log("1");
-    
-    I2cSw i2c = {&portA[12], &portA[15]};
-    i2c.init(100_KHz);
-
-    // const uint8_t read_addr = 0x08;
-
-    
-    // I2cTester::get_max_baudrate(i2c, read_addr)
-    //     .then([](uint32_t baud) -> Result<uint32_t, hal::BusError>{ 
-    //         if (baud > 100_KHz) return Ok(baud);
-    //         else return Err(hal::BusError::OCCUPIED); 
-    //     })
-        ;
-}
-
-
-template<typename ... Args>
-static auto log(Args && ... args) {
-    return std::views::transform(
-        [&args...](auto&& value) {
-            DEBUG_PRINTS(std::forward<Args>(args)..., value);
-            return std::forward<decltype(value)>(value);
-        }
-    );
-}
 
 void i2c_scanner_main(){
-    UART.init({576_KHz});
+    UART.init({
+        .baudrate = 576_KHz,
+    });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.force_sync();
+    // DEBUGGER.force_sync();
     
-    // test_result();
     I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(100_KHz);
     
@@ -167,17 +96,19 @@ void i2c_scanner_main(){
     // Value: 2
     // Value: 3
 
-    // namespace views = std::views;
-    // std::vector<int> data { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    // auto result { data
-    //    | views::filter([](const auto& value) { return value % 2 == 0; })/* 2 4 6 8 10 */
-    //    | views::transform([](const auto& value) { return value * 2.0; })/* 4 8 12 16 20 */
-    //    | views::drop(2)                                                 /* 12 16 20 */
-    //    | views::reverse                                                 /* 20 16 12 */
-    // //    | views::transform([](int i) { return to_string(i); })           /* "20" "16" "12" */
-    // };
+    namespace views = std::views;
+    std::vector<int> data { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    auto result = data
+       | views::filter([](const auto& value) { return value % 2 == 0; })/* 2 4 6 8 10 */
+       | views::transform([](const auto& value) { return value * 2; })/* 4 8 12 16 20 */
+       | views::drop(2)                                                 /* 12 16 20 */
+       | views::reverse                                                 /* 20 16 12 */
+    //    | views::transform([](int i) { return to_string(i); })           /* "20" "16" "12" */
+    ;
 
-    // DEBUG_PRINTLN();
+    for(const auto item:result){
+        DEBUG_PRINTLN(item);
+    }
 
 
     DEBUG_PRINTLN();

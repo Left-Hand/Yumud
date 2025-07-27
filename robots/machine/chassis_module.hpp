@@ -1,6 +1,5 @@
 #pragma once
 
-#include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 
 #include "types/gesture/pose2.hpp"
 #include "types/gesture/twist2.hpp"

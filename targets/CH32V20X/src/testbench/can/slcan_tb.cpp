@@ -10,9 +10,9 @@
 using namespace ymd;
 
 
-[[maybe_unused]] static __attribute__((__noreturn__))
+
 void slcan_main(){
-    auto & DBG_UART = hal::uart1;
+    auto & DBG_UART = hal::uart2;
     DBG_UART.init({576000});
 
     DEBUGGER.retarget(&DBG_UART);
