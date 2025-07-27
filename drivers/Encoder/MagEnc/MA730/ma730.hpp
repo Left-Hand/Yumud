@@ -43,28 +43,28 @@ struct MA730_Prelude{
 
 struct MA730_Regs:public MA730_Prelude{
 
-    struct ZeroDataLowReg:public Reg8<>{
+    struct R8_ZeroDataLow:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::ZeroDataLow;
         uint8_t data;
     };
 
-    struct ZeroDataHighReg:public Reg8<>{
+    struct R8_ZeroDataHigh:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::ZeroDataHigh;
         uint8_t data;
     };
 
-    struct TrimReg:public Reg8<>{
+    struct R8_Trim:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Trim;
         uint8_t trim;
     };
-    struct TrimConfigReg:public Reg8<>{
+    struct R8_TrimConfig:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::TrimConfig;
         uint8_t enableX:1;
         uint8_t enableY:1;
         uint8_t :6;
     };
 
-    struct ZParametersReg:public Reg8<>{
+    struct R8_ZParameters:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::ZParameters;
         uint8_t :2;
         Phase zPhase :2;
@@ -72,25 +72,25 @@ struct MA730_Regs:public MA730_Prelude{
         uint8_t ppt:2;
     };
 
-    struct PulsePerTurnReg:public Reg8<>{
+    struct R8_PulsePerTurn:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::PulsePerTurn;
         uint8_t data;
     };
 
-    struct ThresholdReg:public Reg8<>{
+    struct R8_Threshold:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Threshold;
         uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
-    struct DirectionReg:public Reg8<>{
+    struct R8_Direction:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Direction;
         uint8_t :7;
         uint8_t direction :1;
     };
 
-    struct MagnitudeReg:public Reg8<>{
+    struct R8_Magnitude:public Reg8<>{
         static constexpr auto ADDRESS = RegAddress::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;
@@ -100,16 +100,16 @@ struct MA730_Regs:public MA730_Prelude{
         uint8_t magnitudeHigh :1;
     };
 
-    ZeroDataLowReg zero_data_low_reg = {};
-    ZeroDataHighReg zero_data_high_reg = {};
-    TrimReg trim_reg = {};
+    R8_ZeroDataLow zero_data_low_reg = {};
+    R8_ZeroDataHigh zero_data_high_reg = {};
+    R8_Trim trim_reg = {};
 
-    TrimConfigReg trim_config_reg = {};
-    ZParametersReg z_parameters_reg = {};
-    PulsePerTurnReg pulse_per_turn_reg = {};
-    ThresholdReg threshold_reg = {};
-    DirectionReg direction_reg = {};
-    MagnitudeReg magnitude_reg = {};
+    R8_TrimConfig trim_config_reg = {};
+    R8_ZParameters z_parameters_reg = {};
+    R8_PulsePerTurn pulse_per_turn_reg = {};
+    R8_Threshold threshold_reg = {};
+    R8_Direction direction_reg = {};
+    R8_Magnitude magnitude_reg = {};
 };
 
 class MA730 final:
@@ -120,11 +120,11 @@ public:
         ClockDirection direction;
     };
 
-    MA730(const hal::SpiDrv & spi_drv):
+    explicit MA730(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    MA730(hal::SpiDrv && spi_drv):
+    explicit MA730(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    MA730(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
@@ -155,7 +155,7 @@ public:
     IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
-    real_t lap_position_ = {};
+    real_t lap_position_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

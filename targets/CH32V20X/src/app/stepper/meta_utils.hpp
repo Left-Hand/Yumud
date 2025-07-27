@@ -119,7 +119,7 @@ using configs_tuple_to_dignosis_variant_t = typename
 
 
 template<typename T, typename R>
-__fast_inline constexpr T map_nearest(const T value, R && range){
+__fast_inline constexpr T map_to_nearest(const T value, R && range){
     auto it = std::begin(range);
     auto end = std::end(range);
     
@@ -137,8 +137,10 @@ __fast_inline constexpr T map_nearest(const T value, R && range){
     return nearest;
 }
 
+namespace details{
 static constexpr void static_test(){
-    static_assert(map_nearest(0, std::initializer_list<int>{1,-3,-5}) == 1);
+    static_assert(map_to_nearest(0, std::initializer_list<int>{1,-3,-5}) == 1);
+}
 }
 
 }

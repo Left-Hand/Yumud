@@ -18,7 +18,7 @@ public:
         PayloadOverlength
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error,Error_Kind)
 
     template<typename T = void>
@@ -56,20 +56,20 @@ class AT24CXX final:
     public AT24CXX_Prelude{
 public:
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
+    explicit AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
 
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
+    explicit AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)), 
         capacity_(cfg.CAPACITY), 
         pagesize_(cfg.PAGE_SIZE){;}
 
 
     template<typename TConfig>
-    AT24CXX(TConfig && cfg, hal::I2c & i2c):
+    explicit AT24CXX(TConfig && cfg, hal::I2c & i2c):
         AT24CXX(std::forward<TConfig>(cfg), 
         hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 
@@ -82,8 +82,8 @@ public:
 
     AddressDiff capacity(){return capacity_;}
 
-    bool is_available(){
-        return state_.is_available(clock::millis());
+    bool is_idle(){
+        return state_.is_idle(clock::millis());
     }
 
     auto poll(){
@@ -238,7 +238,7 @@ private:
 
     struct State final{
         IResult<> poll(AT24CXX & self, const Milliseconds now){
-            if(is_available(now) == true){
+            if(is_idle(now) == true){
                 may_tasks_ = std::nullopt;
                 return Ok();
             }
@@ -249,7 +249,7 @@ private:
             return res;
         }
 
-        bool is_available(const Milliseconds now) const {
+        bool is_idle(const Milliseconds now) const {
             if(not may_tasks_.has_value())
                 return true;
             const auto & tasks = may_tasks_.value();
@@ -264,7 +264,7 @@ private:
             const AddressDiff gsize,
             const Milliseconds now
         ){
-            if(not is_available(now)) 
+            if(not is_idle(now)) 
                 return Err(map_currtask_to_err(may_tasks_.value()));
             may_tasks_.emplace(Tasks(StoreTask(begin.as_u32(), pbuf, gsize.as_u32())));
             return Ok();
@@ -277,7 +277,7 @@ private:
             const AddressDiff gsize,
             const Milliseconds now
         ){
-            if(not is_available(now)) 
+            if(not is_idle(now)) 
                 return Err(map_currtask_to_err(may_tasks_.value()));
             may_tasks_.emplace(Tasks(LoadTask(begin.as_u32(), pbuf, gsize.as_u32())));
             return Ok();

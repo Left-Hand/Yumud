@@ -52,7 +52,7 @@ struct MPU6050_Prelude{
 
 struct MPU6050_Regs:public MPU6050_Prelude{ 
     struct GyrConfReg:public Reg8<>{
-        scexpr RegAddress address = 0x1b;
+        static constexpr RegAddress address = 0x1b;
 
         const uint8_t __resv__:3 = 0;
         GyrFs fs_sel:2;
@@ -63,7 +63,7 @@ struct MPU6050_Regs:public MPU6050_Prelude{
     
 
     struct AccConfReg:public Reg8<>{
-        scexpr RegAddress address = 0x1c;
+        static constexpr RegAddress address = 0x1c;
 
         const uint8_t __resv__:3 = 0;
         AccFs afs_sel:2;
@@ -84,7 +84,7 @@ struct MPU6050_Regs:public MPU6050_Prelude{
     
 
     struct IntPinCfgReg:public Reg8<>{
-        scexpr RegAddress address = 55;
+        static constexpr RegAddress address = 55;
 
         const uint8_t __resv__:1 = 0;
         uint8_t bypass_en:1 = 0;
@@ -99,26 +99,26 @@ struct MPU6050_Regs:public MPU6050_Prelude{
     }DEF_R8(int_pin_cfg_reg)
 
     struct WhoAmIReg:public Reg8<>{
-        scexpr RegAddress address = 0x75;
+        static constexpr RegAddress address = 0x75;
         uint8_t data;
     } DEF_R8(whoami_reg)
 };
 
-class MPU6050:
+class MPU6050 final:
     public AccelerometerIntf, 
     public GyroscopeIntf,
     public MPU6050_Regs{
 public:
-    MPU6050(const MPU6050 & other) = delete;
-    MPU6050(MPU6050 && other) = delete;
 
-    MPU6050(const hal::I2cDrv & i2c_drv):
+    explicit MPU6050(const hal::I2cDrv & i2c_drv):
         MPU6050(i2c_drv, Package::MPU6050){;}
-    MPU6050(hal::I2cDrv && i2c_drv):
+    explicit MPU6050(hal::I2cDrv && i2c_drv):
         MPU6050(std::move(i2c_drv), Package::MPU6050){;}
-    MPU6050(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit MPU6050(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MPU6050(hal::I2cDrv(i2c, addr), Package::MPU6050){;}
 
+    MPU6050(const MPU6050 & other) = delete;
+    MPU6050(MPU6050 && other) = delete;
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -145,11 +145,11 @@ private:
 
     using Phy = InvensenseSensor_Phy;
     Phy phy_;
-
-    bool data_valid = false;
-    Package package_ = Package::MPU6050;
     real_t acc_scaler_ = 0;
     real_t gyr_scaler_ = 0;
+
+    bool is_data_valid_ = false;
+    Package package_ = Package::MPU6050;
 
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 

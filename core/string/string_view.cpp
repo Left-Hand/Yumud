@@ -22,17 +22,6 @@ using namespace ymd;
 //     return strs;
 // }
 
-std::optional<size_t> StringView::find(char c) const{
-	return find_from(c, 0);
-}
-
-std::optional<size_t> StringView::find_from(char ch, size_t from) const{
-	if (from >= size_) return std::nullopt;
-    for(size_t i = from; i < size_; i++){
-        if(data_[i] == ch) return i;
-    }
-    return std::nullopt;
-}
 
 // int StringView::lastIndexOf( char theChar ) const
 // {

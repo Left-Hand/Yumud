@@ -60,7 +60,7 @@ size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _
 
 template<size_t Q>
 size_t qtoa(const iq_t<Q> & qv, char * str, uint8_t eps){
-    return _qtoa_impl(qv.to_i32(), str, eps, Q);
+    return _qtoa_impl(qv.as_i32(), str, eps, Q);
 }
 
 }

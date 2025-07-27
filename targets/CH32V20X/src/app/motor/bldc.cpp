@@ -1,5 +1,4 @@
 #include "src/testbench/tb.h"
-#include "app/stepper/ctrl.hpp"
 #include "utils.hpp"
 #include <atomic>
 
@@ -24,48 +23,171 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
-#include "drivers/GateDriver/DRV8301/DRV8301.hpp"
 
 #include "types/vectors/quat/Quat.hpp"
 
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
+
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/observer/smo/SmoObserver.hpp"
 #include "dsp/observer/lbg/RolbgObserver.hpp"
 #include "dsp/observer/nonlinear/NonlinearObserver.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
-#include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
-
+#include "dsp/controller/adrc/leso.hpp"
+#include "robots/gesture/comp_est.hpp"
 
 #include "CurrentSensor.hpp"
 
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
+
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
-#include "core/string/utils/streamed_string_splitter.hpp"
-
+#include "robots/commands/nmt_commands.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
-using namespace ymd::robots::joint_cmds;
-using namespace ymd::robots::machine_cmds;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
+static constexpr size_t CANMSG_QUEUE_SIZE = 8;
+
+
+#define DEF_COMMAND_BIND(K, T) \
+template<> \
+struct command_to_kind<CommandKind, T>{ \
+    static constexpr CommandKind KIND = K; \
+};\
+template<> \
+struct kind_to_command<CommandKind, K>{ \
+    using type = T; \
+};
+
+
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
+
+
+
+namespace ymd{
+
+struct ElecradCompensator{
+    q16 base;
+    uint32_t pole_pairs;
+
+    constexpr q16 operator ()(const q16 lap_position) const {
+        return (frac(frac(lap_position + base) * pole_pairs) * real_t(TAU));
+    }
+};
+
+
+
+enum class NodeRole:uint8_t{
+    Master = 0,
+    RollJoint,
+    PitchJoint,
+    YawJoint,
+    AxisX,
+    AxisY,
+    AxisZ,
+    LeftWheel,
+    RightWheel,
+    Computer = 0x0f,
+};
+
+DEF_DERIVE_DEBUG(NodeRole)
+
+enum class CommandKind:uint8_t{
+    ResetNode,
+    SetPosition,
+    SetPositionWithFwdSpeed,
+    SetSpeed,
+    SetKpKd
+};
+
+namespace commands{ 
+    using namespace robots::joint_commands;
+    using namespace robots::nmt_commands;
+}
+
+
+DEF_QUICK_COMMAND_BIND(ResetNode)
+DEF_QUICK_COMMAND_BIND(SetPosition)
+DEF_QUICK_COMMAND_BIND(SetPositionWithFwdSpeed)
+DEF_QUICK_COMMAND_BIND(SetSpeed)
+DEF_QUICK_COMMAND_BIND(SetKpKd)
+
+}
+
+
+struct TrackTarget{
+    commands::SetPositionWithFwdSpeed roll ;
+    commands::SetPositionWithFwdSpeed pitch;
+};
+
+static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
+    const auto id_u11 = id.to_u11();
+    return std::make_tuple(
+        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
+        std::bit_cast<CommandKind>(uint8_t(id_u11 >> 7))
+    );
+};
+
+
+static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind cmd){
+    const auto id_u11 = uint16_t(
+        std::bit_cast<uint8_t>(role) 
+        | (std::bit_cast<uint8_t>(cmd) << 7));
+    return hal::CanStdId(id_u11);
+};
+
+struct MsgFactory{
+    const NodeRole role;
+
+    template<typename T>
+    constexpr hal::CanMsg operator()(const T cmd){
+        const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
+        const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
+        return hal::CanMsg::from_iter(id, iter).unwrap();
+    };
+};
+
+
+
+static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole self_node_role){
+    const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
+    return role == self_node_role;
+};
 
 
 
 
-void init_adc(hal::AdcPrimary & adc){
+struct Gesture{
+    real_t roll;
+    real_t pitch;
+
+    constexpr Gesture lerp(const Gesture & other, const real_t ratio) const{
+        return Gesture{
+            .roll = roll + (other.roll - roll) * ratio,
+            .pitch = pitch + (other.pitch - pitch) * ratio
+        };
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const Gesture & gesture){
+        return os << "roll: " << gesture.roll << ", pitch: " << gesture.pitch;
+    }
+};
+
+
+[[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
     using hal::AdcChannelIndex;
     using hal::AdcSampleCycles;
@@ -85,124 +207,14 @@ void init_adc(hal::AdcPrimary & adc){
     adc.enable_auto_inject(DISEN);
 }
 
-__no_inline void init_opa(){
+[[maybe_unused]]  static void init_opa(){
     hal::opa1.init<1,1,1>();
 }
 
 
 
-namespace ymd{
-
-struct ElecradCompensator{
-    q16 base;
-    uint32_t pole_pairs;
-
-    constexpr q16 operator ()(const q16 lap_position) const {
-        return (frac(frac(lap_position + base) * pole_pairs) * real_t(TAU));
-    }
-};
-
-struct PdCtrlLaw{
-    real_t kp;
-    real_t kd;
-
-    constexpr real_t operator()(const real_t p_err, const real_t v_err) const {
-        return kp * p_err + kd * v_err;
-    } 
-};
-
-
-enum class NodeRole:uint8_t{
-    RollJoint = 1,
-    PitchJoint = 2,
-    XJoint = 3,
-    YJoint = 4,
-    ZJoint = 5,
-    LeftWheel = 6,
-    RightWheel = 7,
-    Master = 0x0f,
-};
-
-
-OutputStream & operator<<(OutputStream & os, const NodeRole & role){ 
-    switch(role){
-        case NodeRole::RollJoint: return os << "RollJoint";
-        case NodeRole::PitchJoint: return os << "PitchJoint";
-        default: __builtin_unreachable();
-    }
-}
-
-
-enum class CommandKind:uint8_t{
-    SetPosition = 0,
-    SetKpKd
-};
-
-
-}
-
-
-static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
-    const auto id_u11 = id.to_u11();
-    return std::make_tuple(
-        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
-        std::bit_cast<CommandKind>(uint8_t(id_u11 >> 7))
-    );
-};
-
-
-static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind cmd){
-    const auto id_u11 = uint16_t(
-        std::bit_cast<uint8_t>(role) 
-        | (std::bit_cast<uint8_t>(cmd) << 7));
-    return hal::CanStdId(id_u11);
-};
-
-
-struct MsgFactory{
-    const NodeRole role;
-
-    template<typename T>
-    constexpr hal::CanMsg operator()(const T cmd){
-        const auto id = comb_role_and_cmd(role, CommandKind::SetPosition);
-        const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
-        return hal::CanMsg::from_iter(id, iter).unwrap();
-    };
-};
-
-
-
-template<typename Iter>
-static constexpr size_t count_iter(Iter && iter){
-    size_t cnt = 0;
-    while(true){
-        if(iter.has_next()){
-            cnt++;
-        }else{
-            break;
-        }
-        (void)iter.next();
-    }
-    return cnt;
-}
-
-template<size_t N>
-struct MyIter{
-    constexpr uint8_t next() {
-        cnt_++;
-        return 0;
-    }
-
-    constexpr bool has_next() const {
-        bool ok =  cnt_ < N;
-        return ok;
-    }
-private:
-    size_t cnt_ = 0;
-};
-
-
 void bldc_main(){
+    static constexpr auto UART_BAUD = 115200 * 2;
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
@@ -221,8 +233,12 @@ void bldc_main(){
     auto & pwm_v = timer.oc<2>();
     auto & pwm_w = timer.oc<3>(); 
 
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    
     DBG_UART.init({
-        .baudrate = 576000
+        .baudrate = UART_BAUD
     });
 
 
@@ -244,16 +260,16 @@ void bldc_main(){
     can[0].mask(
         {
             .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
+            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
         },{
             .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::IGNORE_LOW(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::ACCEPT_ALL()
+            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+            .mask = hal::CanStdIdMask::from_accept_all()
         }
     );
 
     auto blink_service = [&]{
-        static async::RepeatTimer timer{10ms};
+        static auto timer = async::RepeatTimer::from_duration(10ms);
         timer.invoke_if([&]{
             ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
             ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
@@ -304,35 +320,36 @@ void bldc_main(){
     };
 
     
-    const auto node_role = get_node_role().examine();  
+    const auto self_node_role_ = get_node_role().examine();  
+    const auto adjunct_node_role_ = [&] -> NodeRole{
+        switch(self_node_role_){
+            case NodeRole::RollJoint:
+                return NodeRole::Master;
+            // case NodeRole::PitchJoint:
+            //     return NodeRole::PitchJoint;
+            default:
+                return self_node_role_;
+        }
+    }();
 
-
-
-    MA730 ma730{
+    MA730 ma730_{
         &spi,
         spi.allocate_cs_gpio(&hal::portA[15])
             .unwrap()
     };
 
-    BMI160 bmi{
+    BMI160 bmi160_{
         &spi,
         spi.allocate_cs_gpio(&hal::portA[0])
             .unwrap()
     };
 
-    ma730.init({
+    ma730_.init({
         .direction = CW
     }).examine();
 
-    // while(true){
-    //     ma730.update().examine();
-    //     DEBUG_PRINTLN(ma730.read_lap_position().examine());
-    //     blink_service();
-    //     clock::delay(5ms);
-    // }
 
-    
-    bmi.init({
+    bmi160_.init({
         .acc_odr = BMI160::AccOdr::_200Hz,
         .acc_fs = BMI160::AccFs::_16G,
         .gyr_odr = BMI160::GyrOdr::_200Hz,
@@ -351,7 +368,7 @@ void bldc_main(){
     mp6540.init();
     mp6540.set_so_res(10'000);
     
-    SVPWM3 svpwm {mp6540};
+    SVPWM3 svpwm_ {mp6540};
     
 
     [[maybe_unused]] auto & u_sense = mp6540.ch(1);
@@ -362,36 +379,31 @@ void bldc_main(){
     // init_opa();
     init_adc(adc);
 
-    // CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
-
-    ledr.outpp(); 
-    ledb.outpp(); 
-    ledg.outpp();
     hal::portA[7].inana();
 
 
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t base_roll_ = 0;
-    real_t base_omega_ = 0;
+    real_t self_blance_theta_ = 0;
+    real_t self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
     
-    dsp::PositionSensor pos_sensor_{
-        typename dsp::PositionSensor::Config{
-            .r = 85,
-            .fs = FOC_FREQ
+    dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
+            .fs = FOC_FREQ,
+            .r = 85
         }
     };
 
-    pos_sensor_.set_base_position(
+    pos_filter_.set_base_lap_position(
         [&] -> real_t{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
-                    return {0.193_r};
+                    return {0.243_r};
                 case NodeRole::RollJoint:
-                    return {0.38_r + 0.5_r};
+                    return {0.389_r + 0.5_r};
                 default: __builtin_unreachable();
             }
         }()
@@ -399,24 +411,20 @@ void bldc_main(){
 
     ElecradCompensator elecrad_comp_{
         .base = [&]{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     return -0.282_r;
                 case NodeRole::RollJoint:
-                    return -0.253_r;
+                    return -0.233_r;
                 default: __builtin_unreachable();
             }
         }(),
         .pole_pairs = 7
     };
 
-
-    real_t q_volt_ = 0;
-    real_t meas_rad_ = 0;
-
-    dsp::Leso leso{
+    dsp::Leso leso_{
         [&]{
-            switch(node_role){
+            switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.5_r,
@@ -435,104 +443,101 @@ void bldc_main(){
     };
 
     auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
-        switch(node_role){
+        switch(self_node_role_){
             case NodeRole::PitchJoint:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 24.281_r, .kd = 0.9_r};
+                return PdCtrlLaw{.kp = 36.281_r, .kd = 2.3_r};
                 // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
             case NodeRole::RollJoint: 
-                return PdCtrlLaw{.kp = 170.581_r, .kd = 25.38_r};
+                return PdCtrlLaw{.kp = 190.581_r, .kd = 30.38_r};
             default: __builtin_unreachable();
         }
     }();
 
-    Microseconds exe_us_;
-    real_t track_pos_ = 0;
-    real_t track_spd_ = 0;
 
-    real_t elec_rad_;
-    [[maybe_unused]] auto cb_sensored = [&]{
-        ma730.update().examine();
-        bmi.update().examine();
+    real_t q_volt_ = 0;
+    real_t meas_elecrad_ = 0;
 
-        const auto meas_lap = 1-ma730.read_lap_position().examine(); 
-        pos_sensor_.update(meas_lap);
+    real_t axis_target_position_ = 0;
+    real_t axis_target_speed_ = 0;
+    
+    Microseconds exe_us_ = 0us;
+
+    [[maybe_unused]] auto sensored_foc_cb = [&]{
+        ma730_.update().examine();
+        bmi160_.update().examine();
+
+        const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
+        pos_filter_.update(meas_lap);
 
 
-        const real_t meas_rad = elecrad_comp_(meas_lap);
-        elec_rad_ = meas_rad;
+        const real_t meas_elecrad = elecrad_comp_(meas_lap);
 
-        const auto meas_pos = pos_sensor_.position();
-        const auto meas_spd = pos_sensor_.speed();
+        const auto meas_position = pos_filter_.position();
+        const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
         [[maybe_unused]] static constexpr real_t amp = 0.06_r;
-        [[maybe_unused]] const auto clock_time = clock::time();
+        [[maybe_unused]] const auto ctime = clock::time();
 
-        const auto [track_pos, track_spd] = ({
+        const auto [axis_target_position, axis_target_speed] = ({
             std::make_tuple(
-                // amp * sin(omega * clock_time), amp * omega * cos(omega * clock_time)
-                track_pos_, track_spd_
+                // amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
+                axis_target_position_, axis_target_speed_
             );
         });
 
-        const auto [blance_pos, blance_spd] = ({
+        const auto [blance_position, blance_speed] = ({
             std::make_tuple(
-                // base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
-                base_roll_ * real_t(-1/TAU), base_omega_ * real_t(-1/TAU)
+                // self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
             );
         });
 
-        const auto targ_pos = blance_pos + track_pos;
-        const auto targ_spd = blance_spd + track_spd;
+        const auto targ_position = blance_position + axis_target_position;
+        const auto targ_speed = blance_speed + axis_target_speed;
 
 
         static constexpr auto MAX_VOLT = 2.7_r;
         const auto q_volt = CLAMP2(
-            pd_ctrl_law_(targ_pos - meas_pos, targ_spd - meas_spd)
+            pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , MAX_VOLT);
 
 
         const auto ab_volt = DqVoltage{
             0, 
-            CLAMP2(q_volt - leso.get_disturbance(), MAX_VOLT)
-        }.to_ab(meas_rad);
+            CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
+        }.to_alpha_beta(meas_elecrad);
 
-        svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
+        svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
 
-        leso.update(meas_spd, q_volt);
+        leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_rad_ = meas_rad;
+        meas_elecrad_ = meas_elecrad;
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
         [&]{
             const auto m = clock::micros();
-            cb_sensored();
+            sensored_foc_cb();
             exe_us_ = clock::micros() - m;
         }
     );
 
 
-
-    auto is_dest = [&](const hal::CanMsg & msg){
-        const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
-        return role == node_role;
-    };
-
-    Fifo_t<hal::CanMsg, 8> msg_queue;
+    RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     auto write_can_msg = [&](const hal::CanMsg & msg){
         if(msg.is_extended()) PANIC();
 
-        const bool is_local = is_dest(msg);
+        const bool is_ringback = is_ringback_msg(msg, self_node_role_);
 
-        if(is_local){
-            msg_queue.push(msg);
+        if(is_ringback){
+            msg_queue_.push(msg);
         }else{
-            can.write(msg);
+            can.write(msg).examine();
         }
     };
 
@@ -540,41 +545,86 @@ void bldc_main(){
         while(can.available()){
             auto msg = can.read();
             if(msg.is_extended()) continue;
-            if(not is_dest(msg)) continue;
-            msg_queue.push(msg);
+            if(not is_ringback_msg(msg, self_node_role_)) continue;
+            msg_queue_.push(msg);
         }
 
-        if(not msg_queue.available())
+        if(not msg_queue_.available())
             return None;
 
-        return Some(msg_queue.pop());
+        return Some(msg_queue_.pop());
     };
 
-    [[maybe_unused]] auto set_position = [&](const SetPositionAndSpeed & cmd){
-        track_pos_ = real_t(cmd.position);
-        track_spd_ = real_t(cmd.speed);
+
+    [[maybe_unused]] TrackTarget track_target_ = {
+        .roll = {.position = 0, .speed = 0},
+        .pitch = {.position = 0, .speed = 0}
     };
 
-    auto can_subscriber_service = [&]{
-        static async::RepeatTimer timer{5ms};
 
+
+    auto update_joint_target = [&](const real_t p1, const real_t p2) -> void { 
+        track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+        track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+    };
+
+    [[maybe_unused]] auto repl_service = [&]{
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+
+        static const auto list = rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+
+            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 240),
+
+            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 30),
+
+            // rpc::make_function("vxy", [&](const real_t p1, const real_t p2){
+
+            //     track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
+            //     track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+            // }),
+
+            rpc::make_function("pxy", update_joint_target)
+            
+        );
+
+        repl_server.invoke(list);
+    };
+
+
+    [[maybe_unused]] auto can_subscriber_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(5ms);
+        [[maybe_unused]] auto set_target_by_command = [&](const commands::SetPositionWithFwdSpeed & cmd){
+            axis_target_position_ = real_t(cmd.position);
+            axis_target_speed_ = real_t(cmd.speed);
+        };
         timer.invoke_if([&]{
+            auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
+                switch(cmd){
+                case CommandKind::ResetNode:
+                    sys::reset();
+                    break;
+                case CommandKind::SetPositionWithFwdSpeed:{
+                    const auto cmd = serde::make_deserialize<serde::RawBytes,
+                        commands::SetPositionWithFwdSpeed>(payload).examine();
+                    set_target_by_command(cmd);
+                }
+                    break;
+
+                default:
+                    PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
+                    break;
+                }
+            };
+
             auto process_msg = [&](const hal::CanMsg & msg){
                 const auto id = msg.stdid().unwrap();
                 const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
-                if(msg_role != node_role) return;
-                switch(msg_cmd){
-                    case CommandKind::SetPosition:{
-                        // const auto cmd = serde::make_deserialize<serde::RawBytes,
-                        //     SetPositionAndSpeed>(msg.payload()).examine();
-                        // set_position(cmd);
-                    }
-                        break;
-
-                    default:
-                        DEBUG_PRINTLN("unknown command", std::bit_cast<uint8_t>(msg_cmd));
-                        break;
-                }
+                if(msg_role != self_node_role_) return;
+                dispatch_msg(msg_cmd, msg.iter_payload());
             };
 
             while(true){
@@ -585,181 +635,79 @@ void bldc_main(){
         });
     };
 
-    struct TrackInfo{
-        robots::joint_cmds::SetPositionAndSpeed roll ;
-        robots::joint_cmds::SetPositionAndSpeed pitch;
-    };
 
-    TrackInfo track_info_ = {
-        .roll = {.position = 0, .speed = 0},
-        .pitch = {.position = 0, .speed = 0}
-    };
+    [[maybe_unused]] auto can_publisher_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(5ms);
 
-
-    auto can_publisher_service = [&]{
-        static async::RepeatTimer timer{5ms};
-
-        auto publish_roll_joint = [&]{
-            const auto msg = MsgFactory{NodeRole::RollJoint}(track_info_.roll);
+        auto publish_roll_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
+            const auto msg = MsgFactory{NodeRole::RollJoint}(cmd);
 
             write_can_msg(msg);
         };
 
-        auto publish_pitch_joint = [&]{
-            const auto msg = MsgFactory{NodeRole::PitchJoint}(track_info_.pitch);
+        auto publish_pitch_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
+            const auto msg = MsgFactory{NodeRole::PitchJoint}(cmd);
 
             write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
 
-            switch(node_role){
-                case NodeRole::PitchJoint:
-                    break;
-                case NodeRole::RollJoint:{
-                    publish_roll_joint();
-                    publish_pitch_joint();
+            switch(adjunct_node_role_){
+                case NodeRole::Master:{
+                    publish_roll_joint_target(track_target_.roll);
+                    publish_pitch_joint_target(track_target_.pitch);
                     break;
                 default:
-                    __builtin_unreachable();
                     break;
                 }
             }
         });
     };
 
+    [[maybe_unused]] auto update_demo_track_service = [&]{ 
+        static constexpr auto amp = 0.05_r;
+        const auto ctime = clock::time();
+        const auto [s, c] = sincos(ctime * 5);
+        const auto p1 = c * amp;
+        const auto p2 = s * amp;
 
-    auto repl_service = [&]{
-        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+        update_joint_target(p1, p2);
+    };  
 
-        static const auto list = rpc::make_list(
-            "list",
-            rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-            rpc::make_function("kpkd", [&](const real_t kp, const real_t kd){
-                pd_ctrl_law_ = PdCtrlLaw{.kp = kp, .kd = kd};
-            }),
-
-            rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 10),
-            rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 10),
-
-            rpc::make_function("pp", [&](const real_t p1, const real_t p2){
-
-                track_info_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-                track_info_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-            })
-            
-        );
-
-        auto plan_joints = [&]() -> void { 
-            const auto clock_time = clock::time();
-            const auto [s, c] = sincos(clock_time * 5);
-            const auto p1 = c * 0.00_r;
-            const auto p2 = s * 0.00_r;
-
-            track_info_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-            track_info_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-        };
-
-        plan_joints();
-
-        repl_server.invoke(list);
-    };
-
-    auto gesture_service = [&]{
+    [[maybe_unused]] auto gesture_calc_service = [&]{
         [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
         [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
 
-        static async::RepeatTimer timer{DELTA_TIME_MS};
+        static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
+        static auto gesture_estimator = robots::ComplementaryGestureEstimator(
+            {.fs = FREQ});
+
         timer.invoke_if([&]{
-            // Quat<real_t>::from_gravity(),
-            const auto acc = bmi.read_acc().examine();
-            const auto gyr = bmi.read_gyr().examine();
-            const auto len_acc = acc.length();
-            const auto norm_acc = acc / len_acc;
-            // const auto base_roll = atan2(norm_acc.x, norm_acc.y) - real_t(PI/2);
-            const auto base_roll_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
-            const auto base_omega_raw = gyr.z;
-            // const auto base_omega_raw = 0;
+            const auto acc = bmi160_.read_acc().examine();
+            const auto gyr = bmi160_.read_gyr().examine();
 
-            static dsp::ComplementaryFilter<q20> comp_filter{
-                    typename dsp::ComplementaryFilter<q20>::Config{
-                    .kq = 0.90_r,
-                    .ko = 0.25_r,
-                    .fs = FREQ
-                }
-            };
+            gesture_estimator.process(acc, gyr);
 
-            // const auto base_roll = comp_filter(base_roll_raw, base_omega_raw);
-            // DEBUG_PRINTLN_IDLE(
-            //     // norm_acc.x, norm_acc.y,
-            //     // base_roll_raw,
-            //     // base_omega_raw,
-            //     // base_roll,
-            //     // pos_sensor_.position(),
-            //     // pos_sensor_.lap_position(),
-            //     // pos_sensor_.speed(),
-            //     ma730.read_lap_position().examine(),
-            //     meas_rad_
-            //     // exe_us_
-            //     // // leso.get_disturbance(),
-            //     // meas_rad_
-
-            // );
-            const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-            const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.07_r;
-
-            // for(const auto item: range){
-            //     DEBUG_PRINTLN_IDLE(item, '?');
-            // }
-
-            // // static constexpr auto a = sizeof(iter);
-            // DEBUG_PRINTLN_IDLE(
-            //     // pos_sensor_.position(),
-            //     // pos_sensor_.cont_position(),
-            //     // pos_sensor_.lap_position(),
-            //     // pos_sensor_.speed(),
-            //     // leso.get_disturbance(),
-            //     base_roll_raw,
-            //     base_roll_,
-            //     range,
-            //     // base_omega_,
-            //     // len_acc,
-            //     alpha,
-            //     // iter,
-            //     // meas_rad_
-            //     exe_us_.count()
-            // );
-
-            base_roll_ += (base_roll_raw - base_roll_) * alpha + (base_omega_raw * DELTA_TIME) * (1 - alpha);
-            base_omega_ = base_omega_raw;
+            std::tie(self_blance_theta_, self_blance_omega_) = gesture_estimator.theta_and_omega();
         });
     };
 
-    [[maybe_unused]]
-    auto report_service = [&]{ 
-        // [[maybe_unused]] const auto t = clock::time();
-        // [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
-        // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
-        // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
-
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
-        // if(false)
-
-    };
 
     while(true){
         repl_service();
-        can_subscriber_service();
+        // update_demo_track_service();
+        gesture_calc_service();
+
         can_publisher_service();
+        can_subscriber_service();
+
         blink_service();
-        report_service();
-        gesture_service();
 
 
-        // const auto command = SetPositionAndSpeed{2, 18};
+        #if 0
+        // const auto command = SetPositionWithFwdSpeed{2, 18};
         // const auto iter = make_serialize_iter<RawBytes>(command);
         // const auto iter = make_serialize_iter();
 
@@ -774,11 +722,11 @@ void bldc_main(){
             strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
         }
 
-        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionAndSpeed{0, 1});
-        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
+        // static constexpr auto msg = MsgFactory{NodeRole::Master}(SetPositionWithFwdSpeed{0, 1});
+        // static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
         // static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
         // const auto rem_str = strconv2::to_str(v, StringRef{arr.data(), arr.size()}).examine();
-        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionAndSpeed{13 *256 + 12, 11});
+        // auto iter = serde::make_serialize_iter<serde::RawBytes>(SetPositionWithFwdSpeed{13 *256 + 12, 11});
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<real_t, real_t>(13 *256 + 12, 11));
         // auto iter = serde::make_serialize_iter<serde::RawBytes>(std::make_tuple<int32_t, int32_t>(
         //     (15 << 24) + (14 << 16) + 13 *256 + 12, 11));
@@ -798,13 +746,15 @@ void bldc_main(){
         // uint8_t res = 100;
         // DEBUG_PRINTLN(;
         // DEBUG_PRINTLN(StringView(arr.data(), arr.size()));
+        #endif
+
         #if 0
         DEBUG_PRINTLN_IDLE(
             // (clock::micros() - u_begin).count(), 
             // StringView(arr.data()), 
             // rem_str.size(),
-            // base_roll_,
-            // base_omega_,
+            // self_blance_theta_,
+            // self_blance_omega_,
             // iter,
             msg.iter_payload(),
             serde::make_deserializer<serde::RawBytes, robots::machine_cmds::Replace>()
@@ -812,50 +762,56 @@ void bldc_main(){
 
 
             // count_iter(iter),
-            // (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1}).payload()
-            // strconv2::iq_from_str<16>("+.").examine()
+            // (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1}).payload()
+            // strconv2::str_to_iq<16>("+.").examine()
         );
         #endif
 
+        #if 0
+        // for(const auto item: range){
+        //     DEBUG_PRINTLN_IDLE(item, '?');
+        // }
+
+        // [[maybe_unused]] const auto t = clock::time();
+        // [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
+        // [[maybe_unused]] const auto dq_curr = curr_sens.dq();
+        // [[maybe_unused]] const auto ab_curr = curr_sens.ab();
+
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
+        // if(false)
+
+
+        // // static constexpr auto a = sizeof(iter);
+        // DEBUG_PRINTLN_IDLE(
+        //     // pos_filter_.position(),
+        //     // pos_filter_.cont_position(),
+        //     // pos_filter_.lap_position(),
+        //     // pos_filter_.speed(),
+        //     // leso_.get_disturbance(),
+        //     axis_theta_raw,
+        //     self_blance_theta_,
+        //     range,
+        //     // self_blance_omega_,
+        //     // len_acc,
+        //     alpha,
+        //     // iter,
+        //     // meas_elecrad_
+        //     exe_us_.count()
+        // );
+
+        #endif
     }
 }
 
-
-// template>class Tx{
-//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
-
-//     size_t write(std::span<const uint8_t> pbuf){
-//         fifo_.push(pbuf);
-//         return pbuf.size();
-//     }
-
-//     size_t pending() const {
-//         return fifo_.available();
-//     }
-// };
-
-
-// class Rx{
-//     Fifo_t<uint8_t, LT8960L_MAX_FIFO_SIZE> fifo_;
-
-//     size_t read(std::span<uint8_t> pbuf){
-//         fifo_.pop(pbuf);
-//         return pbuf.size();
-//     }
-
-//     size_t awailable() const {
-//         return fifo_.available();
-//     }
-// };
 
 
 [[maybe_unused]]
 static void static_test(){
     #define STATIC_TEST_SEL 5
     #if STATIC_TEST_SEL == 0
-    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionAndSpeed{0, 1});
+    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1});
     static_assert(msg.size() == 8);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionAndSpeed>();
+    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
     static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
     // static_assert(may_cmd.is_ok());
     static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));

@@ -17,11 +17,11 @@ constexpr float _IQNtoF(_iq<Q> iqNInput)
     /* Save the sign of the iqN input to the exponent construction. */
     if (iqNInput.signbit()) {
         ui16Exp |= 0x8000;
-        uiq31Input = -iqNInput.to_u32();
-    } else if (iqNInput.to_i32() == 0) {
+        uiq31Input = -iqNInput.as_u32();
+    } else if (iqNInput.as_i32() == 0) {
         return (0);
     } else {
-        uiq31Input = iqNInput.to_u32();
+        uiq31Input = iqNInput.as_u32();
     }
 
     /* Scale the iqN input to uiq31 by keeping track of the exponent. */

@@ -43,61 +43,15 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_command(const uint32_t cmd){
-        if(p_i2c_drv_.has_value()) 
-            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
-        else if(p_spi_drv_.has_value()){
-            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
-        }
-        return Err(Error(Error::NoAvailablePhy));
-    }
+    [[nodiscard]] IResult<> write_command(const uint32_t cmd);
 
-    [[nodiscard]] IResult<> write_data(const uint32_t data){
-        if(p_i2c_drv_.has_value()) 
-            return IResult<>(p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
-        else if(p_spi_drv_.has_value()){
-            // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
-        }
-        return Err(Error(Error::NoAvailablePhy));
-    }
+    [[nodiscard]] IResult<> write_data(const uint32_t data);
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf){
-        if(p_i2c_drv_.has_value()){
-            if constexpr(sizeof(T) != 1){
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB));
-            }else {
-                return IResult<>(p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf));
-            }
-        }else if(p_spi_drv_.has_value()){
-            // if constexpr(sizeof(T) != 1){
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
-            // }else {
-            //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
-            // }
-        }
-        // return IResult<>(Err(Error(Error::NoAvailablePhy)));
-        PANIC();
-    }
+    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf);
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_repeat(const T data, size_t len){
-        if(p_i2c_drv_.has_value()){
-            if constexpr(sizeof(data) != 1){
-                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, LSB));
-            }else {
-                return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
-            }
-        }else if(p_spi_drv_.has_value()){
-            // if constexpr(sizeof(data) != 1){
-            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
-            // }else {
-            //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len));
-            // }
-        }
-        PANIC();
-    }
-
+    [[nodiscard]] IResult<> write_repeat(const T data, size_t len);
 private:
     std::optional<hal::I2cDrv> p_i2c_drv_;
     std::optional<hal::SpiDrv> p_spi_drv_;
@@ -120,7 +74,7 @@ public:
     SSD13XX(Phy && phy, Cfg && cfg):
         phy_(std::move(phy)),
         offset_(_oled_preset<T>::offset), 
-        cmds_(std::span(_oled_preset<T>::buf)),
+        init_cmds_list_(std::span(_oled_preset<T>::buf)),
         flip_x_en_(flip_x_en_),
         flip_y_en_(flip_y_en_),
         frame_(_oled_preset<T>::size){
@@ -140,40 +94,51 @@ public:
     [[nodiscard]] IResult<> enable_inversion(const bool inv = true){
         return phy_.write_command(0xA7 - inv);}  
 
-    [[nodiscard]] Vector2u16 size() const {return frame_.size();}
+    [[nodiscard]] Vector2<uint16_t> size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
 
 private:
 
     Phy phy_;
 
-    const Vector2u16 offset_;
-    const std::span<const uint8_t> cmds_;
+    const Vector2<uint16_t> offset_;
+    const std::span<const uint8_t> init_cmds_list_;
     const bool flip_x_en_;
     const bool flip_y_en_;
     VerticalBinaryImage frame_;
 
-    [[nodiscard]] IResult<> putpixel_unchecked(const Vector2u16 pos, const Binary color){
+    [[nodiscard]] IResult<> putpixel_unchecked(const Vector2<uint16_t> pos, const Binary color){
         auto & frame = fetch_frame();
         frame.putpixel_unchecked(pos, color);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> setpos_unchecked(const Vector2u16 pos) ;
+    [[nodiscard]] IResult<> putrect_unchecked(const Rect2u16 rect, const Binary color){
+        auto & frame = fetch_frame();
+        frame.putpixel_unchecked(rect.position, color);
+        return Ok();
+    }
 
-    [[nodiscard]] IResult<> set_offset(const Vector2u16 offset);
+    [[nodiscard]] IResult<> puttexture_unchecked(const Rect2u16 rect, const Binary * pcolor){
+        auto & frame = fetch_frame();
+        frame.putpixel_unchecked(rect.position, pcolor[0]);
+        return Ok();
+    }
 
-    [[nodiscard]] IResult<> set_flush_pos(const Vector2u16 pos);
+    [[nodiscard]] IResult<> setpos_unchecked(const Vector2<uint16_t> pos) ;
+
+    [[nodiscard]] IResult<> set_offset(const Vector2<uint16_t> offset);
+
+    [[nodiscard]] IResult<> set_flush_pos(const Vector2<uint16_t> pos);
 
     [[nodiscard]] IResult<> preinit_by_cmds();
 
-    friend class SSD13XX_DrawDispacther;
+    template<typename T>
+    friend class DrawTarget;
 };
 
-
-// struct BufferedDrawDispather;
-
-class SSD13XX_DrawDispacther{
+template<>
+class DrawTarget<SSD13XX>{
 public:
     static constexpr bool IS_BUFFERED = true;
 
@@ -181,36 +146,41 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    // [[nodiscard]] static IResult<> draw_pixel(SSD13XX & self, const Vector2u16 pos, const RGB888 color){
-    //     self.putpixel_unchecked(pos, color);
-    // }
+    [[nodiscard]] static IResult<> putpixel_unchecked(
+        SSD13XX & self, const Vector2<uint16_t> pos, const Binary color){
+        return self.putpixel_unchecked(pos, color);
+    }
 
-    // [[nodiscard]] static IResult<> draw_rect(SSD13XX & self, const Rect2u16 rect, const RGB888 color){
-    //     self.putpixel_unchecked(pos, color);
-    // }
+    [[nodiscard]] static IResult<> putrect_unchecked(
+        SSD13XX & self, const Rect2u16 rect, const Binary color){
+        return self.putrect_unchecked(rect, color);
+    }
 
-    // [[nodiscard]] static IResult<> draw_texture(SSD13XX & self, const Rect2u16 rect){
+    [[nodiscard]] static IResult<> puttexture_unchecked(
+        SSD13XX & self, const Rect2u16 rect, const Binary * pcolor){
+        return self.puttexture_unchecked(rect, pcolor);
+    }
 
-    // }
+
 };
 
 
 
 namespace details{
 template<typename T>
-static constexpr Vector2u16 oled_display_size_v = _oled_preset<T>::size;
+static constexpr Vector2<uint16_t> oled_display_size_v = _oled_preset<T>::size;
 
 template<typename T>
-static constexpr Vector2u16 oled_display_offset_v = _oled_preset<T>::size;
+static constexpr Vector2<uint16_t> oled_display_offset_v = _oled_preset<T>::size;
 
 template<typename T>
-static constexpr Vector2u16 oled_initcmd_v = _oled_preset<T>::initcmd;
+static constexpr Vector2<uint16_t> oled_initcmd_v = _oled_preset<T>::initcmd;
 }
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_72X40>{
-    static constexpr Vector2u16 size = Vector2u16(72, 40);
-    static constexpr Vector2u16 offset = Vector2u16(28, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(72, 40);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(28, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0xD5,0xF0,0xA8,0X27,0XD3,0X00,0X40,
         0X8D,0X14,0X20,0X02,0XA1,0XC8,0XDA,0X12,
@@ -221,8 +191,8 @@ struct _oled_preset<SSD13XX_Presets::_72X40>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X64>{
-    static constexpr Vector2u16 size = Vector2u16(128, 64);
-    static constexpr Vector2u16 offset = Vector2u16(0, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(128, 64);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(0, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         // 0xAE, 0xD5, 0xF0, 0xA8, 0X27, 0XD3, 0X00, 0X40,
         // 0X8D, 0X14, 0X20, 0X02, 0XA1, 0XC8, 0XDA, 0X12,
@@ -267,8 +237,8 @@ struct _oled_preset<SSD13XX_Presets::_128X64>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X32>{
-    static constexpr Vector2u16 size = Vector2u16(128, 32);
-    static constexpr Vector2u16 offset = Vector2u16(2, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(128, 32);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE, 0x00, 0x10, 0x00, 0xB0, 0X81, 0XFF, 0XA1, 0XA6,
         0XA8, 0X1F, 0XC8, 0XD3, 0X00, 0XD5, 0X80, 0XD9,
@@ -278,8 +248,8 @@ struct _oled_preset<SSD13XX_Presets::_128X32>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_88X48>{
-    static constexpr Vector2u16 size = Vector2u16(88, 48);
-    static constexpr Vector2u16 offset = Vector2u16(2, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(88, 48);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
@@ -289,8 +259,8 @@ struct _oled_preset<SSD13XX_Presets::_88X48>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_64X48>{
-    static constexpr Vector2u16 size = Vector2u16(64, 48);
-    static constexpr Vector2u16 offset = Vector2u16(2, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(64, 48);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
@@ -301,8 +271,8 @@ struct _oled_preset<SSD13XX_Presets::_64X48>{
 
 template<>
 struct _oled_preset<SSD13XX_Presets::_128X80>{
-    static constexpr Vector2u16 size = Vector2u16(128, 80);
-    static constexpr Vector2u16 offset = Vector2u16(2, 0);
+    static constexpr Vector2<uint16_t> size = Vector2<uint16_t>(128, 80);
+    static constexpr Vector2<uint16_t> offset = Vector2<uint16_t>(2, 0);
     static constexpr auto buf = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,

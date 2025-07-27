@@ -9,7 +9,7 @@
 
 #include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/iq/iq_t.hpp"
 
@@ -34,14 +34,14 @@ concept has_derive_debug_dispatcher = requires(OutputStream& os, const T& value)
 };
 
 
-#define DERIVE_DEBUG(type)\
+#define DEF_DERIVE_DEBUG(type)\
 inline ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const type & value){\
     ::ymd::DeriveDebugDispatcher<type>::call(os, value);\
     return os;\
 }\
 
 
-#define FRIEND_DERIVE_DEBUG(type)\
+#define DEF_FRIEND_DERIVE_DEBUG(type)\
 friend ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const type & value){\
     ::ymd::DeriveDebugDispatcher<type>::call(os, value);\
     return os;\

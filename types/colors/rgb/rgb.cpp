@@ -172,22 +172,22 @@ __fast_inline static constexpr RGB888 xyz_to_rgb888(const auto & xyz){
 
 
 
-    return RGB888{
+    return RGB888::from_r8g8b8(
         inv_xyz_gamma_to8(r_lin),
         inv_xyz_gamma_to8(g_lin),
-        inv_xyz_gamma_to8(b_lin),
-    };
+        inv_xyz_gamma_to8(b_lin)
+    );
 }
 
 
 __fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ<real_t> & xyz){
     auto [xf, yf, zf] = xyz;
 
-    return LAB888{
+    return LAB888::from_l8a8b8(
             CLAMP( uint8_t(int(116 * yf) - 16), 0, 100),
             __SSAT8(int8_t(int(500 * (xf - yf)))),
             __SSAT8(int8_t(int(200 * (yf - zf))))
-    };
+    );
 }
 
 OutputStream & operator<<(OutputStream & os, const Binary & bn){

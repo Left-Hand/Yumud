@@ -318,7 +318,6 @@ IResult<> Slcan::on_recv_send_std_msg(const StringView str, const bool is_rmt){
     return phy_.send_can_msg(res.unwrap());
 }
 
-// Riiiiiiiil\r, 发送扩展远程帧, 如 r1234567F2 表示发送 0x1234567F 且 DLC=2 的 远程帧
 IResult<> Slcan::on_recv_send_ext_msg(const StringView str, const bool is_rmt){
     const auto res = parse_msg<true>(str, is_rmt);
     if(res.is_err()) RET_ERR(res.unwrap_err());

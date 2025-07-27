@@ -24,7 +24,7 @@ void matrix_main(){
 
 
 
-    // static constexpr Matrix_t<real_t, 3, 3> m = Matrix_t<real_t, 3, 3>{
+    // static constexpr Matrix<real_t, 3, 3> m = Matrix<real_t, 3, 3>{
     //     1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 }

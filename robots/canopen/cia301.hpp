@@ -57,26 +57,23 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         static constexpr Index idx = 0x1003;
         static constexpr SubIndex subidx = 0x0;
 
-        #ifndef CANOPEN_PERDEF_ERROR_MAX_CNT
-        #define CANOPEN_PERDEF_ERROR_MAX_CNT 8
+        #ifndef CANOPEN_MAX_PERDEF_ERROR_CNT
+        static constexpr size_t CANOPEN_MAX_PERDEF_ERROR_CNT = 8;
         #endif
     
-        static constexpr size_t max_cnt = CANOPEN_PERDEF_ERROR_MAX_CNT;
 
         using Error = uint32_t;
         using AbortCode = uint32_t;
         
-
-
-        void addError(const Error error){error_fifo.push(error);}
-        uint8_t getErrorCnt() const{return error_fifo.available();}
+        void addError(const Error error){error_queue_.push(error);}
+        uint8_t getErrorCnt() const{return error_queue_.available();}
 
         std::optional<Error> getError(const size_t _idx) const {
-            if(_idx >= error_fifo.available()){
+            if(_idx >= error_queue_.available()){
                 return std::nullopt;
             }else{
                 TODO();
-                // return error_fifo.foresee(_idx);
+                // return error_queue_.foresee(_idx);
             }
         }
 
@@ -87,7 +84,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
                 return SdoAbortCode::InvalidValue;
 
             if(likely(!bool(pbuf[0]))){
-                // error_fifo.waste(error_fifo.available());
+                // error_queue_.waste(error_queue_.available());
                 return SdoAbortCode::OK;
             }else{
                 return SdoAbortCode::InvalidValue;
@@ -103,10 +100,10 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             }
 
             const auto offset = size_t(sidx) - size_t(base_idx);
-            const auto err_opt = getError(offset);
+            const auto may_err = getError(offset);
 
-            if(err_opt.has_value()){
-                *(reinterpret_cast<Error *>(pbuf.data())) = err_opt.value();
+            if(may_err.has_value()){
+                *(reinterpret_cast<Error *>(pbuf.data())) = may_err.value();
                 return SdoAbortCode::OK;
             }else{
                 //企图获取超界的错误
@@ -114,7 +111,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
             }
         }
     private:
-        Fifo_t<Error, max_cnt> error_fifo;
+        RingBuf<Error, CANOPEN_MAX_PERDEF_ERROR_CNT> error_queue_;
     };
 
     struct CobidSyncMsgReg:public Reg32<>{

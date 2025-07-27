@@ -35,97 +35,38 @@
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
+#include "digipw/pwmgen/stepper_pwmgen.hpp"
+#include "core/utils/progress.hpp"
+
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "core/utils/data_iter.hpp"
+#include "core/utils/release_info.hpp"
+#include "dsp/motor_ctrl/ctrl_law.hpp"
 
 using namespace ymd;
 
 #ifdef ENABLE_UART1
-#define let const auto
 
 #define UART hal::uart1
 
 using digipw::AlphaBetaDuty;
 
 
-//AT8222
-class StepperSVPWM{
-public:
-    StepperSVPWM(
-        hal::TimerOC & pwm_ap,
-        hal::TimerOC & pwm_an,
-        hal::TimerOC & pwm_bp,
-        hal::TimerOC & pwm_bn
-    ):
-        channel_a_(pwm_ap, pwm_an),
-        channel_b_(pwm_bp, pwm_bn)
-    {;}
-
-    void init_channels(){
-        // oc.init({.valid_level = LOW});
-
-        channel_a_.inverse(EN);
-        channel_b_.inverse(DISEN);
-
-        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = HIGH
-        };
-
-        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = LOW,
-        };
-        
-        channel_a_.pos_channel().init(pwm_noinv_cfg);
-        channel_a_.neg_channel().init(pwm_noinv_cfg);
-        channel_b_.pos_channel().init(pwm_inv_cfg);
-        channel_b_.neg_channel().init(pwm_inv_cfg);
-
-    }
-
-    void set_alpha_beta_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_duty(duty_a);
-        channel_b_.set_duty(duty_b);
-    }
-private:
-
-    hal::TimerOcPair channel_a_;
-    hal::TimerOcPair channel_b_;
-};
-
-
-
-struct Reflecter{
-    template<typename T>
-    static constexpr int display(T && obj){
-        return 0;
-    }
-};
-
-struct TaskSpawner{
-    template<typename T>
-    static constexpr auto spawn(T && obj){
-        return 0;
-    }
-};
 
 struct PreoperateTasks{
 
 };
 
-namespace ymd::hal{
-    auto & PROGRAM_FAULT_LED = PC<14>();
-}
 
-struct Archive{
 
-};
 
-class MotorSystem{
+class MotorFibre{
 public:
     using TaskError = BeepTasks::TaskError;
-    MotorSystem(
+    MotorFibre(
         drivers::EncoderIntf & encoder,
-        StepperSVPWM & svpwm
+        digipw::StepperSVPWM & svpwm
     ):
         encoder_(encoder),
         svpwm_(svpwm)
@@ -139,32 +80,36 @@ public:
         Error(drivers::EncoderError err){
             PANIC{err};
         }
+
+        friend OutputStream & operator<<(OutputStream & os, const Error & err){ 
+            return os;
+        }
     };
 
     Result<void, Error> resume(){
-        let begin_u = clock::micros();
+        const auto begin_u = clock::micros();
 
-        let meas_lap_position = ({
-            if(let res = retry(2, [&]{return encoder_.update();});
+        const auto meas_lap_position = ({
+            if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            let either_lap_position = encoder_.read_lap_position();
+            const auto either_lap_position = encoder_.read_lap_position();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             1 - either_lap_position.unwrap();
         });
 
-        auto & comp = calibrate_comp_;
-        // if(let may_err = comp.err(); may_err.is_some()){
-        if constexpr(false){
-            constexpr let TASK_COUNT = 
+        auto & comp = calibrate_tasks_;
+        // if(const auto may_err = comp.err(); may_err.is_some()){
+        #if 0
+            constexpr const auto TASK_COUNT = 
                 std::decay_t<decltype(comp)>::TASK_COUNT;
-            let idx = comp.task_index();
+            const auto idx = comp.task_index();
             [&]<auto... Is>(std::index_sequence<Is...>) {
                 DEBUG_PRINTLN((std::move(comp.get_task<Is>().dignosis()).err)...);
             }(std::make_index_sequence<TASK_COUNT>{});
 
-            let diagnosis = [&]<auto ...Is>(std::index_sequence<Is...>) {
+            const auto diagnosis = [&]<auto ...Is>(std::index_sequence<Is...>) {
                 return (( (Is == idx) ? 
                 (comp.get_task<Is>().dignosis(), 0u) : 
                 0u), ...);
@@ -176,9 +121,9 @@ public:
             DEBUG_PRINTLN("Error occuared when executing\r\n", 
                 "detailed infomation:", Reflecter::display(diagnosis));
 
-            let res = TaskExecuter::execute(TaskSpawner::spawn(
-                CalibrateTasks{pos_sensor_.forward_cali_vec, 
-                    pos_sensor_.backward_cali_vec}
+            const auto res = TaskExecuter::execute(TaskSpawner::spawn(
+                CalibrateTasks{pos_filter_.forward_cali_vec, 
+                    pos_filter_.backward_cali_vec}
                 >>= PreoperateTasks{}
             )).inspect_err([](const TaskError err){
                 MATCH{err}(
@@ -195,77 +140,100 @@ public:
                 );
             });
             return Err(res.unwrap_err());
-        }
-        else if(comp.is_finished()){
-
-            is_comp_finished_ = true;
-            pos_sensor_.update(meas_lap_position);
-            // let [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
-            // let [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
-            let t = clock::time();
-
-            let input_targ_position = 16 * sin(t);
-            // let targ_speed = 6 * cos(6 * t);
-            
-            // let input_targ_position = 10 * real_t(int(t));
-            // let input_targ_position = 5 * frac(t/2);
-
-            cs_.update(input_targ_position);
-            auto [targ_position, targ_speed] = cs_.get();
-            // static constexpr let SCALE = (6.0_r/9.8_r);
-            // targ_speed*= SCALE;
-            let meas_position = pos_sensor_.position();
-            let meas_speed = pos_sensor_.speed();
-            let pos_contribute = 0.8_r * (targ_position - meas_position);
-            let speed_contribute = 0.039_r*(targ_speed - meas_speed);
-            let curr = CLAMP2(pos_contribute + speed_contribute, 0.4_r);
-            // let curr = 0.2_r;
-            let [s,c] = sincospu(frac(
-                // (correct_raw_position(meas_lap_position) - 0.007_r)) * 50);
-                (pos_sensor_.lap_position() + SIGN_AS(0.007_r, curr))) * 50);
-            // let [a,b] = sincospu( - 0.004_r);
-            // let mag = 0.5_r;
-            let mag = ABS(curr);
-
-            svpwm_.set_alpha_beta_duty(c * mag,s * mag);
-            execution_time_ = clock::micros() - begin_u;
+        #endif
+        if(comp.is_finished()){
+            is_component_finished_ = true;
+            execution_time_ = measure_elapsed_us([&]{                
+                ctrl(meas_lap_position);
+            });
 
             return Ok();
         }
 
-        is_comp_finished_ = false;
+        is_component_finished_ = false;
 
 
-        let [a,b] = comp.resume(meas_lap_position);
+        const auto [a,b] = comp.resume(meas_lap_position);
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
 
-    bool is_comp_finished() const{
-        return is_comp_finished_;
+    bool is_component_finished() const{
+        return is_component_finished_;
     }
 
 
+    void ctrl(q16 meas_lap_position){
+
+        pos_filter_.update(meas_lap_position);
+        // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
+        // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+        
+        // const auto input_targ_position = 16 * sin(ctime);
+        // const auto targ_speed = 6 * cos(6 * ctime);
+        
+        // const auto input_targ_position = 10 * real_t(int(ctime));
+        const auto ctime = clock::time();
+        // const auto input_targ_position = 5 * sin(ctime/2);
+
+        // command_shaper_.update(input_targ_position);
+        // auto [targ_position, targ_speed] = std::make_tuple(
+        //     command_shaper_.update(input_targ_position),
+        //     command_shaper_.speed()
+        // );
+
+        const auto omega = 1.0_r * real_t(TAU);
+        // const auto omega = 1.0_r;
+        // const auto amp = 0.5_r;
+        const auto amp = 0.05_r;
+        const auto [targ_position, targ_speed] = std::make_tuple<q16, q16>(
+            amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
+            // int(ctime * omega), 0
+        );
+        const auto meas_position = pos_filter_.position();
+        const auto meas_speed = pos_filter_.speed();
+        
+        static constexpr dsp::PdCtrlLaw pd_ctrl_law{
+            8.8_r, 0.239_r
+        };
+        
+        const auto curr = CLAMP2(pd_ctrl_law(
+            targ_position - meas_position,
+            targ_speed - meas_speed
+        ), 0.5_r);
+        
+        // const auto mag = 0.5_r * sinpu(ctime);
+        const auto mag = ABS(curr);
+        const auto tangles = (1 + MIN(ABS(meas_speed) * real_t(1.0 / 40), 0.15_r));
+
+        const auto [s,c] = sincospu(
+        (pos_filter_.lap_position() + SIGN_AS(0.005_r * tangles, curr)) * 50);
+        
+        svpwm_.set_alpha_beta_duty(c * mag,s * mag);
+
+
+    }
+
     Result<void, void> print_vec() const {
-        auto print_view = [](auto view){
-            for (let & item : view) {
-                let targ = item.get_targ();
-                let meas = item.get_meas();
-                // DEBUG_PRINTLN(targ, meas, fposmodp(q20(targ - meas), 0.02_q20) * 100);
-                let position_err = q20(targ - meas);
-                let mod_err = fposmodp(position_err, 0.02_q20);
-                DEBUG_PRINTLN(targ, meas, mod_err * 100);
+        [[maybe_unused]] auto print_view = [](auto view){
+            for (const auto & item : view) {
+                const auto expected = item.expected();
+                const auto measured = item.measured();
+                const auto inacc = item.to_inaccuracy();
+                DEBUG_PRINTLN(expected, measured, inacc * 1000);
                 clock::delay(1ms);
             }
         };
 
-        print_view(pos_sensor_.forward_cali_vec.as_view());
-        print_view(pos_sensor_.backward_cali_vec.as_view());
+        // print_view(forward_cali_table_.iter());
+        // print_view(backward_cali_table_.iter());
 
-        for(int i = 0; i < 50; i++){
-            let raw = real_t(i) / 50;
-            let corrected = pos_sensor_.correct_raw_position(raw);
-            DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 100);
+
+
+        for(size_t i = 0; i < 50; i++){
+            const auto raw = real_t(i) / 50;
+            const auto corrected = corrector_.correct_raw_position(raw);
+            DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 1000);
             clock::delay(1ms);
         }
 
@@ -276,25 +244,35 @@ public:
     Microseconds execution_time_ = 0us;
 // private:
 public:
-    drivers::EncoderIntf & encoder_;
-    StepperSVPWM & svpwm_;
-
-    CoilMotionCheckTasks coil_motion_check_comp_ = {};
-    CalibrateTasks calibrate_comp_ = {
-        pos_sensor_.forward_cali_vec,
-        pos_sensor_.backward_cali_vec
-    };
-
-
-    bool is_comp_finished_ = false;
-
-    static constexpr size_t MC_W = 1000u;
-    static constexpr real_t MC_TAU = 80;
-
-
-
     using CommandShaper = dsp::CommandShaper1;
     using CommandShaperConfig = CommandShaper::Config;
+
+    drivers::EncoderIntf & encoder_;
+    digipw::StepperSVPWM & svpwm_;
+
+    CoilMotionCheckTasks coil_motion_check_comp_{};
+
+    dsp::CalibrateTable forward_cali_table_{50};
+    dsp::CalibrateTable backward_cali_table_{50};
+
+    dsp::PositionCorrector corrector_{{
+        .forward_cali_table = forward_cali_table_, 
+        .backward_cali_table = backward_cali_table_
+    }};
+
+
+    dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
+            .fs = ISR_FREQ,
+            .r = 120,
+            .corrector = &corrector_
+        }
+    };
+
+    bool is_component_finished_ = false;
+
+    static constexpr real_t MC_TAU = 80;
+
 
     static constexpr CommandShaperConfig CS_CONFIG{
             .kp = MC_TAU * MC_TAU,
@@ -304,190 +282,24 @@ public:
             .fs = ISR_FREQ
     };
 
-    CommandShaper cs_{CS_CONFIG};
+    CommandShaper command_shaper_{CS_CONFIG};
 
-    
-    dsp::PositionSensor pos_sensor_{
-        typename dsp::PositionSensor::Config{
-            .r = 50,
-            .fs = ISR_FREQ
-        }
+
+    CalibrateTasks calibrate_tasks_{
+        forward_cali_table_,
+        backward_cali_table_
     };
 };
 
-#if 0
-template<typename T>
-struct Context{
-    static_assert(std::is_copy_assignable_v<T>);
-
-    ReleaseInfo release_info;
-    T obj;
-
-    template<HashAlgo S>
-    friend Hasher<S> & operator << (Hasher<S> & hs, const Context & self){
-        return hs << self.release_info;
-    }
-};
-
-template<typename T>
-struct Bin{
-    HashCode hashcode;
-    Context<T> context;
-
-    constexpr HashCode calc_hash_of_context() const{
-        return hash(context);
-    } 
-
-    constexpr bool is_verify_passed(){
-        return calc_hash_of_context() == hashcode;
-    } 
-    constexpr const Context<T> * operator ->() const {
-        return context;
-    }
-
-    constexpr size_t size() const {
-        return sizeof(*this);
-    }
-
-    std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>{
-            reinterpret_cast<const uint8_t *>(this), size()};
-    }
-};
-
-#endif
-
-struct Progress{
-    size_t current;
-    size_t total;
-
-    friend OutputStream & operator <<(OutputStream & os, const Progress & self){
-        return os << os.brackets<'['>() << 
-            self.current << os.splitter() << self.total 
-            << os.brackets<']'>();
-    }
-};
-
-class ArchiveSystem{
-    ArchiveSystem(drivers::AT24CXX at24):
-        at24_(at24){;}
-
-    static constexpr size_t STORAGE_MAX_SIZE = 256;
-    static constexpr size_t HEADER_MAX_SIZE = 32;
-    static constexpr size_t BODY_OFFSET = HEADER_MAX_SIZE;
-    static constexpr size_t BODY_MAX_SIZE = STORAGE_MAX_SIZE - HEADER_MAX_SIZE;
-
-    enum class State:uint8_t{
-        Idle,
-        Saving,
-        Loading,
-        Verifying
-    };
-
-    struct Header{
-        HashCode hashcode;
-        ReleaseInfo release_info;
-
-        constexpr size_t size() const {
-            return sizeof(*this);
-        }
-
-        std::span<const uint8_t> as_bytes() const {
-            return std::span<const uint8_t>{
-                reinterpret_cast<const uint8_t *>(this), size()};
-        }
-    };
-
-    static_assert(sizeof(Header) <= HEADER_MAX_SIZE);
-
-    template<typename T>
-    auto save(T & obj){
-        const auto body_bytes = obj.as_bytes();
-        const Header header = {
-            .hashcode = hash(body_bytes),
-            .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
-        };
-
-        auto assign_header_and_obj_to_buf = [&]{
-            std::copy(buf_.begin(), buf_.end(), header.as_bytes());
-            std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
-        };
-
-        assign_header_and_obj_to_buf();
-
-        return at24_.store_bytes(Address(BODY_OFFSET), buf_);
-    }
-
-    template<typename T>
-    auto load(T & obj){
-        // const auto body_bytes = obj.as_bytes();
-        // const Header header = {
-        //     .hashcode = hash(body_bytes),
-        //     .release_info = ReleaseInfo::from("Rstr1aN", {0,1})
-        // };
-
-        // auto assign_header_and_obj_to_buf = [&]{
-        //     std::copy(buf_.begin(), buf_.end(), header.as_bytes());
-        //     std::copy(buf_.begin() + BODY_OFFSET, buf_.end(), obj.as_bytes());
-        // };
-
-        // assign_header_and_obj_to_buf();
-
-        // return at24_.store_bytes(Address(BODY_OFFSET), buf_);
-    }
-
-    auto poll(){
-        if(not at24_.is_available()){
-            at24_.poll().examine();
-        }
-    }
-
-    bool is_available(){
-        return at24_.is_available();
-    }
-
-
-
-    Progress progress(){
-        return {0,0};
-    }
-private:
-    std::atomic<State> state_ = State::Idle;
-
-    drivers::AT24CXX & at24_;
-    std::array<uint8_t, STORAGE_MAX_SIZE> buf_;
-};
-
-
-    // void save(std::span<const uint8_t>){
-        // at24.load_bytes(0_addr, std::span(rdata)).examine();
-        // while(not at24.is_available()){
-        //     at24.poll().examine();
-        // }
-
-        // DEBUG_PRINTLN(rdata);
-        // const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-        // at24.store_bytes(0_addr, std::span(data)).examine();
-
-        // while(not at24.is_available()){
-        //     at24.poll().examine();
-        // }
-
-        // DEBUG_PRINTLN("done", clock::micros() - begin_u);
-        // while(true);
-    // }
 
 [[maybe_unused]] 
-static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
+static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & svpwm){
     DEBUGGER.no_brackets();
 
-    auto motor_system_ = MotorSystem{encoder, svpwm};
+    auto motor_system_ = MotorFibre{encoder, svpwm};
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        let res = motor_system_.resume();
-        if(res.is_err()){
-            PANIC();
-        }
+        motor_system_.resume().examine();
     });
 
     robots::ReplServer repl_server = {
@@ -512,20 +324,23 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
         //     comp.is_finished(),
         //     comp.err().is_some()
         // );
-        // DEBUG_PRINTLN(motor_system_.is_comp_finished());
-        // if(motor_system_.is_comp_finished()){
-        //     motor_system_.print_vec().examine();
-        //     break;
-        // }
+        // DEBUG_PRINTLN(motor_system_.is_component_finished());
+        if(0){
+            static bool printed = false;
+            if(printed == false and motor_system_.is_component_finished()){
+                printed = true;
+                motor_system_.print_vec().examine();
+            }
+        }
         // DEBUG_PRINTLN_IDLE(motor_system_.execution_time_.count());
 
-        // DEBUG_PRINTLN_IDLE(
+        DEBUG_PRINTLN_IDLE(
             
-        //     motor_system_.pos_sensor_.position(),
-        //     motor_system_.pos_sensor_.speed(),
-        //     motor_system_.execution_time_.count(),
-        //     motor_system_.cs_.get()
-        // );
+            motor_system_.pos_filter_.position() * 10,
+            motor_system_.pos_filter_.speed()
+            // motor_system_.execution_time_.count(),
+            // motor_system_.command_shaper_.get()
+        );
         repl_server.invoke(list);
         clock::delay(1ms);
     }
@@ -535,35 +350,35 @@ static void test_check(drivers::EncoderIntf & encoder,StepperSVPWM & svpwm){
     while(true);
 }
 
-
-
-
-[[maybe_unused]] static void test_eeprom(){
+[[maybe_unused]] static void eeprom_tb(){
     hal::I2cSw i2c_sw{&hal::portD[1], &hal::portD[0]};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
     const auto begin_u = clock::micros();
-    uint8_t rdata[3] = {0};
-    at24.load_bytes(0_addr, std::span(rdata)).examine();
-    while(not at24.is_available()){
-        at24.poll().examine();
-    }
+    const auto elapsed = measure_elapsed_us(
+        [&]{
+            uint8_t rdata[3] = {0};
+            at24.load_bytes(0_addr, std::span(rdata)).examine();
+            while(not at24.is_idle()){
+                at24.poll().examine();
+            }
 
-    DEBUG_PRINTLN(rdata);
-    const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
-    at24.store_bytes(0_addr, std::span(data)).examine();
+            DEBUG_PRINTLN(rdata);
+            const uint8_t data[] = {uint8_t(rdata[0]+1),2,3};
+            at24.store_bytes(0_addr, std::span(data)).examine();
 
-    while(not at24.is_available()){
-        at24.poll().examine();
-    }
-
-    DEBUG_PRINTLN("done", clock::micros() - begin_u);
+            while(not at24.is_idle()){
+                at24.poll().examine();
+            }
+        }
+    );
+    DEBUG_PRINTLN("done", elapsed);
     while(true);
 }
 
 
-void test_curr(){
+[[maybe_unused]] static void currentloop_tb(){
     UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
@@ -636,15 +451,15 @@ void test_curr(){
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & trig_gpio = hal::PC<13>();
-    trig_gpio.outpp();
+    auto & isr_trig_gpio = hal::PC<13>();
+    isr_trig_gpio.outpp();
 
     real_t a_curr;
     real_t b_curr;
     adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // trig_gpio.toggle();
+        // isr_trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
-        // trig_gpio.toggle();
+        // isr_trig_gpio.toggle();
         // static bool is_a = false;
         // b_curr = inj_b.get_voltage();
         // a_curr = inj_a.get_voltage();
@@ -675,12 +490,13 @@ void test_curr(){
 
 
 void mystepper_main(){
+
     UART.init({576000});
     DEBUGGER.retarget(&UART);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
-    // test_curr();
+    // currentloop_tb();
 
     {
         hal::Gpio & ena_gpio = hal::portB[0];
@@ -699,7 +515,7 @@ void mystepper_main(){
     timer.enable_arr_sync();
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
-    StepperSVPWM svpwm{
+    digipw::StepperSVPWM svpwm{
         timer.oc<1>(),
         timer.oc<2>(),
         timer.oc<3>(),
@@ -725,8 +541,10 @@ void mystepper_main(){
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & trig_gpio = hal::PC<13>();
-    trig_gpio.outpp();
+    [[maybe_unused]] auto & isr_trig_gpio = hal::PC<13>();
+    [[maybe_unused]] auto & PROGRAM_FAULT_LED = hal::PC<14>();
+
+    isr_trig_gpio.outpp();
 
     real_t a_curr;
     real_t b_curr;
@@ -755,8 +573,8 @@ void mystepper_main(){
         .fast_mode_en = DISEN
     }).examine();
 
-    test_check(encoder, svpwm);
-    // test_eeprom();
+    motorcheck_tb(encoder, svpwm);
+    // eeprom_tb();
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         const auto t = clock::time();
@@ -780,47 +598,5 @@ void mystepper_main(){
         );
     }
 }
-
-struct LapCalibrateTable{
-    using T = real_t;
-    using Data = std::array<T, MOTOR_POLE_PAIRS>;
-
-
-    Data data; 
-
-    constexpr real_t error_at(const real_t raw) const {
-        return forward_uni(raw);
-    }
-
-    constexpr real_t correct_position(const real_t raw_position) const{
-        return raw_position + error_at(raw_position);
-    }
-
-    constexpr real_t position_to_elecrad(const real_t lap_pos) const{
-        return real_t(MOTOR_POLE_PAIRS * TAU) * lap_pos;
-    }
-
-private:
-
-    constexpr T forward(const T x) const {
-        const T x_wrapped = fposmodp(x,real_t(MOTOR_POLE_PAIRS));
-        const uint x_int = int(x_wrapped);
-        const T x_frac = x_wrapped - x_int;
-
-        let [ya, yb] = [&] -> std::tuple<real_t, real_t>{
-            if(x_int == MOTOR_POLE_PAIRS - 1){
-                return {data[MOTOR_POLE_PAIRS - 1], data[0]};
-            }else{
-                return {data[x_int], data[x_int + 1]};
-            }
-        }();
-
-        return LERP(ya, yb, x_frac);
-    }
-
-    constexpr T forward_uni(const T x) const {
-        return x * MOTOR_POLE_PAIRS;
-    }
-};
 
 #endif

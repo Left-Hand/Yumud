@@ -57,7 +57,7 @@ public:
         if(action_queue_.size()){
             auto & action = *action_queue_.front();
             action.invoke();
-            if (action.died() == true) {
+            if (action.is_finished() == true) {
                 action_queue_.pop();
                 // DEBUG_PRINTLN("action poped");
             }else{

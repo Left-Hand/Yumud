@@ -7,14 +7,13 @@
 #include "types/regions/aabb/aabb.hpp"
 #include "types/transforms/transform3d/transform3d.hpp"
 
-#define SQU(x) ((x) * (x)) 
 
 
 
 namespace ymd{
 
 template<typename T>
-class WheelLegSolver_t{
+class WheelLegKinematics{
 public:
     struct Config{
         const T pelvis_length_meter;
@@ -33,7 +32,7 @@ protected:
     }
 
     constexpr auto d2_inverse_leg(const Vector2<T> & foot_pos) const {
-        auto knee_temp = (SQU(config.thigh_length_meter) + SQU(config.shin_length_meter) - foot_pos.length_squared()) / 
+        auto knee_temp = (square(config.thigh_length_meter) + square(config.shin_length_meter) - foot_pos.length_squareared()) / 
             (2 * config.thigh_length_meter * config.shin_length_meter);
         if(ABS(knee_temp) > 1 + T(CMP_EPSILON)) return std::nullopt;
         
@@ -41,7 +40,7 @@ protected:
             knee_temp
         );
 
-        auto hip_temp = (SQU(config.thigh_length_meter) + foot_pos.length_squared() - SQU(config.shin_length_meter)) / 
+        auto hip_temp = (square(config.thigh_length_meter) + foot_pos.length_squareared() - square(config.shin_length_meter)) / 
             (2 * config.thigh_length_meter * foot_pos.length());
 
         if(ABS(hip_temp) > 1 + T(CMP_EPSILON)) return std::nullopt;
@@ -54,19 +53,19 @@ protected:
     }
 
     struct Viewer{    
-        const WheelLegSolver_t<T> & solver;
-        Viewer(const WheelLegSolver_t<T> & _solver):solver(_solver) {;}
+        const WheelLegKinematics<T> & solver;
+        Viewer(const WheelLegKinematics<T> & _solver):solver(_solver) {;}
     };
 
     struct GroundViewer:public Viewer{
-        GroundViewer(const WheelLegSolver_t<T> & _solver):Viewer(_solver) {;}
+        GroundViewer(const WheelLegKinematics<T> & _solver):Viewer(_solver) {;}
         auto get_pelvis_transform(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
             return Viewer::solver.transform_ground_to_pelvis(left_feet_pos, right_feet_pos, pitch_rad);
         }
     };
 
     struct PelvisViewer:public Viewer{
-        PelvisViewer(const WheelLegSolver_t<T> & _solver):Viewer(_solver) {;}
+        PelvisViewer(const WheelLegKinematics<T> & _solver):Viewer(_solver) {;}
         auto get_ground_transform(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
             return Viewer::solver.transform_pelvis_to_ground(left_feet_pos, right_feet_pos, pitch_rad);
         }
@@ -76,7 +75,7 @@ protected:
     friend class PelvisViewer;
 
 public:
-    constexpr WheelLegSolver_t(const Config & _config): config(_config){;}
+    constexpr WheelLegKinematics(const Config & _config): config(_config){;}
 
     constexpr auto d3_forward_leg(const T hip_rad, const T knee_rad, bool is_right) const {
         auto hip_pos = Vector3<T>(is_right ? (config.pelvis_length_meter / 2) : (- config.pelvis_length_meter / 2), 0, 0);
@@ -98,11 +97,11 @@ public:
     constexpr auto foot_plane(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
         auto d2_helper_point = Vector2<T>(1,0).rotated(pitch_rad);
         auto helper_point = Vector3<T>(0, d2_helper_point.y, -d2_helper_point.x);
-        return Plane_t<T>(left_feet_pos, right_feet_pos, left_feet_pos + helper_point);
+        return Plane<T>(left_feet_pos, right_feet_pos, left_feet_pos + helper_point);
     }
 
     constexpr auto body_aabb(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos) const {
-        return AABB_t<T>(left_feet_pos).expand(right_feet_pos);
+        return AABB<T>(left_feet_pos).expand(right_feet_pos);
     }
 
     constexpr auto quat_pelvis_to_ground(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
@@ -112,7 +111,7 @@ public:
 
     constexpr auto transform_pelvis_to_ground(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
         auto midpoint_pos = (left_feet_pos + right_feet_pos)/2;
-        return Transform3D_t<T>(Basis_t<T>(quat_pelvis_to_ground(left_feet_pos, right_feet_pos, pitch_rad)), midpoint_pos);
+        return Transform3D<T>(Basis<T>(quat_pelvis_to_ground(left_feet_pos, right_feet_pos, pitch_rad)), midpoint_pos);
     }
 
     constexpr auto quat_ground_to_pelvis(const Vector3<T> & left_feet_pos, const Vector3<T> & right_feet_pos, const T pitch_rad) const {
@@ -133,5 +132,3 @@ public:
 };
 
 }
-
-#undef SQU

@@ -37,12 +37,12 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Transform2D_t{
-	// static const Transform2D_t IDENTITY;
-	// static const Transform2D_t FLIP_X;
-	// static const Transform2D_t FLIP_Y;
+struct Transform2D{
+	// static const Transform2D IDENTITY;
+	// static const Transform2D FLIP_X;
+	// static const Transform2D FLIP_Y;
 
-	// Warning #1: basis of Transform2D_t is stored differently from Basis. In terms of elements array, the basis matrix looks like "on paper":
+	// Warning #1: basis of Transform2D is stored differently from Basis. In terms of elements array, the basis matrix looks like "on paper":
 	// M = (elements[0][0] elements[1][0])
 	//     (elements[0][1] elements[1][1])
 	// This is such that the columns, which can be interpreted as basis vectors of the coordinate system "painted" on the object, can be accessed as elements[i].
@@ -55,17 +55,17 @@ struct Transform2D_t{
 
 	Vector2<T> elements[3];
 
-	__fast_inline Transform2D_t(const T xx, const T xy, const T yx, const T yy, const T ox, const T oy);
+	__fast_inline Transform2D(const T xx, const T xy, const T yx, const T yy, const T ox, const T oy);
 
-	__fast_inline Transform2D_t(const T p_rot, const Vector2<T> &p_pos);
-	__fast_inline Transform2D_t() {
+	__fast_inline Transform2D(const T p_rot, const Vector2<T> &p_pos);
+	__fast_inline Transform2D() {
 		elements[0][0] = T(1);
 		elements[1][1] = T(1);
 	}
 	
-	static constexpr Transform2D_t<T> IDENTITY = Transform2D_t(1, 0, 0, 1, 0, 0);
-	static constexpr Transform2D_t<T> FLIP_X = Transform2D_t(-1, 0, 0, 1, 0, 0);
-	static constexpr Transform2D_t<T> FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
+	static constexpr Transform2D<T> IDENTITY = Transform2D(1, 0, 0, 1, 0, 0);
+	static constexpr Transform2D<T> FLIP_X = Transform2D(-1, 0, 0, 1, 0, 0);
+	static constexpr Transform2D<T> FLIP_Y = Transform2D(1, 0, 0, -1, 0, 0);
 
 
 	inline T tdotx(const Vector2<T> &v) const { return elements[0][0] * v.x + elements[1][0] * v.y; }
@@ -82,10 +82,10 @@ struct Transform2D_t{
 	}
 
 	void invert();
-	Transform2D_t inverse() const;
+	Transform2D inverse() const;
 
 	void affine_invert();
-	Transform2D_t affine_inverse() const;
+	Transform2D affine_inverse() const;
 
 	void set_rotation(T p_phi);
 	T get_rotation() const;
@@ -104,23 +104,23 @@ struct Transform2D_t{
 	inline const Vector2<T> &get_origin() const { return elements[2]; }
 	inline void set_origin(const Vector2<T> &p_origin) { elements[2] = p_origin; }
 
-	Transform2D_t scaled(const Vector2<T> &p_scale) const;
-	Transform2D_t basis_scaled(const Vector2<T> &p_scale) const;
-	Transform2D_t translated(const Vector2<T> &p_offset) const;
-	Transform2D_t rotated(T p_phi) const;
+	Transform2D scaled(const Vector2<T> &p_scale) const;
+	Transform2D basis_scaled(const Vector2<T> &p_scale) const;
+	Transform2D translated(const Vector2<T> &p_offset) const;
+	Transform2D rotated(T p_phi) const;
 
-	Transform2D_t untranslated() const;
+	Transform2D untranslated() const;
 
 	void orthonormalize();
-	Transform2D_t orthonormalized() const;
+	Transform2D orthonormalized() const;
 
-	bool operator==(const Transform2D_t &p_transform) const;
-	bool operator!=(const Transform2D_t &p_transform) const;
+	bool operator==(const Transform2D &p_transform) const;
+	bool operator!=(const Transform2D &p_transform) const;
 
-	void operator*=(const Transform2D_t &p_transform);
-	Transform2D_t operator*(const Transform2D_t &p_transform) const;
+	void operator*=(const Transform2D &p_transform);
+	Transform2D operator*(const Transform2D &p_transform) const;
 
-	Transform2D_t interpolate_with(const Transform2D_t &p_transform, T p_c) const;
+	Transform2D interpolate_with(const Transform2D &p_transform, T p_c) const;
 
 	Vector2<T> basis_xform(const Vector2<T> &p_vec) const;
 	Vector2<T> basis_xform_inv(const Vector2<T> &p_vec) const;

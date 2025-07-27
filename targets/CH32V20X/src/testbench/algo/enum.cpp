@@ -28,7 +28,7 @@ enum class Fruit:uint8_t{
 };
 
 namespace ymd{
-DERIVE_DEBUG(Fruit)
+DEF_DERIVE_DEBUG(Fruit)
 }
 
 

@@ -69,76 +69,40 @@ private:
 
 
 
+
 }
 
 
-namespace ymd::dsp{
-template<typename T>
-struct ComplementaryFilter{
-    struct Config{
-        T kq;
-        T ko;
-        uint fs;
-    };
-    
+namespace ymd{
+template<typename E, typename T>
+struct command_to_kind{};
 
-    constexpr ComplementaryFilter(const Config & config){
-        reconf(config);
-        reset();
-    }
+template<typename E, E K>
+struct kind_to_command{};
 
 
-    constexpr void reconf(const Config & cfg){
-        kq_ = cfg.kq;
-        kq_ = cfg.kq;
-        dt_ = T(1) / cfg.fs;
-    }
 
-    constexpr T operator ()(const T rot, const T gyr){
+template<typename E, typename T>
+static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
 
-        if(!inited_){
-            rot_ = rot;
-            rot_unfiltered_ = rot;
-            inited_ = true;
+template<typename E, E K>
+using kind_to_command_t = typename kind_to_command<E, K>::type;
+}
+
+
+
+template<typename Iter>
+static constexpr size_t count_iter(Iter && iter){
+    size_t cnt = 0;
+    while(true){
+        if(iter.has_next()){
+            cnt++;
         }else{
-            rot_unfiltered_ += gyr * delta_t_;
-            rot_unfiltered_ = kq_ * rot_ + (1-kq_) * rot;
-            rot_ = ko_ * rot_ + (1-ko_) * rot_unfiltered_;
+            break;
         }
-    
-        last_rot_ = rot;
-        last_gyr_ = gyr;
-
-        return rot_;
+        (void)iter.next();
     }
-
-    constexpr void reset(){
-        rot_ = 0;
-        rot_unfiltered_ = 0;
-        last_rot_ = 0;
-        last_gyr_ = 0;
-        inited_ = false;
-    }
-
-    constexpr T get() const {
-        return rot_;
-    }
-
-private:
-    T kq_;
-    T ko_;
-    T dt_;
-    T rot_;
-    T rot_unfiltered_;
-    T last_rot_;
-    T last_gyr_;
-    // T last_time;
-
-    uint delta_t_;
-    
-    bool inited_;
-};
-
+    return cnt;
 }
 
 

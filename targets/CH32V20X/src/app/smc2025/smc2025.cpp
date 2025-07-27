@@ -124,9 +124,9 @@ class Plotter{
         static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vector3<real_t>::from_x(arm_length);
-        const auto y_axis = Vector3<real_t>::from_y(arm_length);
-        const auto z_axis = Vector3<real_t>::from_z(arm_length);
+        const auto x_axis = Vector3<real_t>::from_x00(arm_length);
+        const auto y_axis = Vector3<real_t>::from_0y0(arm_length);
+        const auto z_axis = Vector3<real_t>::from_00z(arm_length);
 
         const auto rot = Quat<real_t>::from_direction(vec3);
         const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
@@ -187,7 +187,7 @@ void smc2025_main(){
         {240, 240}
     };
 
-    drivers::init_lcd(tft, drivers::ST7789_Presets::_320X170).examine();
+    drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
 
     I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
     cam_i2c.init(100_KHz);

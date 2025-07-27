@@ -176,10 +176,10 @@ void proxy_tb(){
 
         const auto m = clock::micros();
         
-        char buf[16] = {0};
+        char str_buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            strconv::qtoa(clock::time(), buf, 4);
+            strconv::qtoa(clock::time(), str_buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

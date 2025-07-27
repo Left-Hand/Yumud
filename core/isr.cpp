@@ -25,7 +25,7 @@ enum class FaultMcause:uint8_t{
     Reserved,
 };
 
-DERIVE_DEBUG(FaultMcause)
+DEF_DERIVE_DEBUG(FaultMcause)
 
 
 void NMI_Handler(void){

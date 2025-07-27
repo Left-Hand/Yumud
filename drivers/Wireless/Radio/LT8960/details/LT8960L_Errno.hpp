@@ -2,7 +2,7 @@
 
 #include "../LT8960L.hpp"
 #include "core/debug/debug.hpp"
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf.hpp"
 
 #include "hal/gpio/gpio.hpp"
 

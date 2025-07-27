@@ -86,4 +86,16 @@ namespace ymd{
     __fast_inline constexpr real_t normal(const real_t & a, const real_t & b){
         return SIGN(b - a);
     }
+
+    template<size_t N>
+    static __fast_inline constexpr iq_t<N> errmod(const iq_t<N> x, const iq_t<N> s) {
+        const auto s_by_2 = s >> 1;
+        iq_t<N> value = fmod(x, s);
+        if (value > s_by_2) {
+            value -= s;
+        } else if (value <= -s_by_2) {
+            value += s;
+        }
+        return value;
+    }
 }

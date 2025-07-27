@@ -40,8 +40,10 @@ int main(){
     // i2c_scanner_main();
     // bldc_main();
     // st1615_main();
-    bldc_main();
+    // bldc_main();
+
     // ft6336_main();
+    // polar_robot_main();
     // i2c_scanner_main();
     // rrs3_robot_main();
     // can_ring_main();
@@ -52,6 +54,11 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
+    // polar_robot_main();
+    // mks_stepper_main();
+    ads7830_main();
+    // mystepper_main();
+    // diffspd_vehicle_main();
     // ws2812_main();
     // digipw_main();
     // enum_main();
@@ -133,6 +140,7 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();
+    slcan_main();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
@@ -140,7 +148,7 @@ int main(){
 
     // curve_tb();
 
-    // math_tb(uart2);
+    // math_tb(hal::uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();

@@ -1,18 +1,11 @@
 #pragma once
 
-#include "types/regions/ray2/ray2.hpp"
+#include "types/gesture/pose2.hpp"
+#include "types/gesture/twist2.hpp"
 
 namespace ymd{
-
 template<arithmetic T>
-struct PoseVelocity2D_t{
-    Vector2<T> velocity;
-    T spinrate;
-};
-
-
-template<arithmetic T>
-class Mecanum4Solver_t{
+class Mecanum4Kinematics{
 public:
     using T4 = std::tuple<T, T, T, T>;
     
@@ -55,29 +48,17 @@ protected:
     }
 
 public:
-    Mecanum4Solver_t(const Config & _config):config(_config) {}
+    Mecanum4Kinematics(const Config & _config):config(_config) {}
 
-    Ray2<T> forward(const T4 & spd4){
+    Twist2<T> forward(const T4 & spd4){
         return {get_velocity_from_wheels(spd4), get_spinrate_from_wheels(spd4)};
     }
     
-    Ray2<T> forward(const T w1, const T w2, const T w3, const T w4){
-        return forward({w1,w2,w3,w4});
-    }
-
-    T4 inverse(const Ray2<T> & pv){
-        return get_wheels_from_status(pv.org, pv.rad);
-    }
-
-    T4 inverse(const Vector2<T> & velocity, const T spinrate){
-        return get_wheels_from_status(velocity, spinrate);
+    T4 inverse(const Twist2<T> & pv){
+        return get_wheels_from_status(pv.linear, pv.angular);
     }
 };
 
-template<arithmetic T>
-OutputStream & operator<<(OutputStream & os, const PoseVelocity2D_t<T> & pv){
-    return os << '(' << pv.velocity << ',' << pv.spinrate << ')';
-}
 
 
 }

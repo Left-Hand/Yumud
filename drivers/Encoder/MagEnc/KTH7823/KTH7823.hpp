@@ -127,8 +127,7 @@ class KTH7823 final:
     public KTH7823_Regs{
 public:
     using Phy = KTH7823_Phy;
-public:
-    KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
+    explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
         phy_(Phy{spi, idx}){;}
 
     [[nodiscard]] IResult<> init();

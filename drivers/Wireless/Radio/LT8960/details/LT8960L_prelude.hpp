@@ -22,7 +22,7 @@ struct LT8960L_Prelude{
         Unspecified = 0xff
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 
     enum class PacketType:uint8_t{
         NrzLaw = 0, 

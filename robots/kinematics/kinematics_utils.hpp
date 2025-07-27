@@ -2,6 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/utils/option.hpp"
+#include "prelude.hpp"
 
 namespace ymd::robots{
 

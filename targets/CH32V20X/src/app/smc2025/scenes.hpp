@@ -33,11 +33,11 @@ public:
     [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const real_t rotation){
         ASSERT(radius > 0);
         const auto start_rad = ((rotation > 0) ? 
-                (viewpoint_.rad - real_t(PI/2))
-                : (viewpoint_.rad + rotation + real_t(PI/2)));
+                (viewpoint_.orientation - real_t(PI/2))
+                : (viewpoint_.orientation + rotation + real_t(PI/2)));
         const auto stop_rad = ((rotation > 0) ? 
-                (viewpoint_.rad + rotation - real_t(PI/2))
-                : (viewpoint_.rad + real_t(PI/2)));
+                (viewpoint_.orientation + rotation - real_t(PI/2))
+                : (viewpoint_.orientation + real_t(PI/2)));
 
         const auto ret = AnnularSector{
             .inner_radius = radius - road_width_ / 2,
@@ -46,7 +46,7 @@ public:
             .start_rad = start_rad,
             .stop_rad = stop_rad,
         } | Placement{
-            .pos = viewpoint_.side_move((rotation > 0) ? (radius) : (-radius)).pos
+            .position = viewpoint_.side_move((rotation > 0) ? (radius) : (-radius)).position
         };
 
         viewpoint_ = viewpoint_.revolve_by_radius_and_rotation(
@@ -61,9 +61,9 @@ public:
         const auto ret = RotatedRect{
             .width = road_width_,
             .height = length,
-            .rotation = viewpoint_.rad - real_t(PI / 2)
+            .rotation = viewpoint_.orientation - real_t(PI / 2)
         } | Placement{
-            .pos = viewpoint_.forward_move(length / 2).pos,
+            .position = viewpoint_.forward_move(length / 2).position,
         };
 
         viewpoint_ = viewpoint_.forward_move(length);
@@ -76,9 +76,9 @@ public:
         const auto ret = RotatedZebraRect{
             .width = road_width_,
             .height = length,
-            .rotation = viewpoint_.rad - real_t(PI / 2)
+            .rotation = viewpoint_.orientation - real_t(PI / 2)
         } | Placement{
-            .pos = viewpoint_.forward_move(length / 2).pos,
+            .position = viewpoint_.forward_move(length / 2).position,
         };
 
         viewpoint_ = viewpoint_.forward_move(length);

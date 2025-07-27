@@ -29,15 +29,15 @@ void can_ring_main(){
     can[0].mask(
         {
             .id = CanStdIdMask{0x200, CanRemoteSpec::Any}, 
-            .mask = CanStdIdMask::IGNORE_LOW(7, CanRemoteSpec::Any)
+            .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
         },{
             .id = CanStdIdMask{0x000, CanRemoteSpec::Any}, 
-            .mask = CanStdIdMask::IGNORE_LOW(7, CanRemoteSpec::Any)
+            .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
         }
     );
 
     auto write_msg = [&](const hal::CanMsg & msg){
-        can.write(msg);
+        can.write(msg).examine();
         DEBUG_PRINTLN("tx", msg);
     };
 

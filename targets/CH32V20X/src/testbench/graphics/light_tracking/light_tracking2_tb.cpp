@@ -364,7 +364,7 @@ static RGB565 draw3drt(
     // const real_t uy = y * INV_LCD_H;
     // const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
 
-    return RGB565::from_565(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
+    return RGB565::from_r5g6b5(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
     // return RGB565::(sample);
 }
 
@@ -464,7 +464,8 @@ void light_tracking_main(void){
 
     DEBUG_PRINTLN("--------------");
     DEBUG_PRINTLN(spi_fd.as_u8());
-    drivers::init_lcd(displayer, drivers::ST7789_Presets::_320X170).examine();
+    displayer.init().examine();
+    drivers::st7789_preset::init(displayer, drivers::st7789_preset::_320X170{}).examine();
 
     displayer.fill(ColorEnum::PINK).examine();
     clock::delay(200ms);
@@ -490,8 +491,8 @@ void light_tracking_main(void){
                 // item = RGB565(Color<real_t>(real_t(y) / LCD_H, st, 0));
                 // item = RGB565::from_u16(0x003f);
                 // item = RGB565::from_u16(0xff00);
-                // item = RGB565::from_565(y, x, uint8_t(31 * st));
-                item = RGB565::from_565(y, x, uint8_t(31 * st));
+                // item = RGB565::from_r5g6b5(y, x, uint8_t(31 * st));
+                item = RGB565::from_r5g6b5(y, x, uint8_t(31 * st));
                     // real_t(x) * INV_LCD_W,
                     // x % 2,
                     // 1,

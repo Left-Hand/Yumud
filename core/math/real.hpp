@@ -135,7 +135,7 @@ __fast_inline constexpr T sign(const T fv){
 
 
 template<arithmetic T>
-__fast_inline constexpr T fposmodp(T p_x, T p_y) {
+__fast_inline constexpr T fposmod(T p_x, T p_y) {
     T value = fmod(p_x, p_y);
     if (value < 0) {
         value += p_y;
@@ -185,9 +185,9 @@ __fast_inline constexpr real_t s16_to_uni(const int16_t data){
 template<size_t Q>
 __fast_inline constexpr uint16_t uni_to_u16(const iq_t<Q> qv){
     uint16_t data;
-    if constexpr (Q >= 16) data = qv.to_i32() >> (Q - 16);
-    else data = qv.to_i32() << (16 - Q);
-    if(data == 0 && (qv.to_i32() != 0)) data = 0xffff;
+    if constexpr (Q >= 16) data = qv.as_i32() >> (Q - 16);
+    else data = qv.as_i32() << (16 - Q);
+    if(data == 0 && (qv.as_i32() != 0)) data = 0xffff;
     return data;
 }
 

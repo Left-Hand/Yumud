@@ -460,7 +460,8 @@ void cubic_main(void){
 
     DEBUG_PRINTLN("--------------");
 
-	tft.init(drivers::ST7789_Presets::_240X135).examine();
+	tft.init().examine();
+	drivers::st7789_preset::init(tft, drivers::st7789_preset::_240X135{}).examine();
     tft.fill(RGB565(ColorEnum::PINK)).examine();
     clock::delay(200ms);
 	precompute_1();

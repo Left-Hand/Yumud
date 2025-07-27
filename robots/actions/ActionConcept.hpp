@@ -14,14 +14,7 @@ struct ActionBase {
 public:
     using Callback = std::function<void(void)>;
 
-// protected:
-private:
-    Callback func_ = nullptr;
-    
-    int sustain_ = 0;
-    const size_t full_;
-    volatile bool executed_ = false;
-    volatile bool decreased_ = false;
+
 protected:
     virtual void execute(){
         EXECUTE(func_);
@@ -29,7 +22,7 @@ protected:
 
 
     bool first() const {
-        return executed_ == false;
+        return is_executed_ == false;
     }
 
     real_t progress() const {
@@ -37,22 +30,25 @@ protected:
     }
 
     void kill(){
-        decreased_ = true;
+        is_finished_ = true;
     }
 
     real_t time() const {
         return CLAMP(full_ - sustain_, size_t(0), UINT32_MAX) / 1000;
     }
 public:
-    ActionBase(const size_t s, Callback &&f) : func_(std::move(f)), sustain_(MIN(s, INT32_MAX)), full_(sustain_){}
+    ActionBase(const size_t s, Callback &&f) : 
+        func_(std::move(f)), 
+        sustain_(MIN(s, INT32_MAX)), full_(sustain_){}
 
     ActionBase(const ActionBase & other) = delete;
     ActionBase(ActionBase && other) = default;
+
     virtual ~ActionBase() = default;
 
-    bool died() const{
+    bool is_finished() const{
         // return sustain <= 0;
-        return decreased_;
+        return is_finished_;
     }
 
     void live(const uint rem){
@@ -67,7 +63,7 @@ public:
         return *this;
     }
 
-    int remain() const {
+    int32_t remain() const {
         return sustain_;
     }
 
@@ -78,12 +74,19 @@ public:
             execute();
             // DEBUG_PRINTLN(sustain);
             if(sustain_) sustain_ --;
-            if(sustain_ <= 0) decreased_ = true;
-            executed_ = true;
+            if(sustain_ <= 0) is_finished_ = true;
+            is_executed_ = true;
         }
     }
 
     virtual const char * name() = 0;
+private:
+    Callback func_ = nullptr;
+    
+    int32_t sustain_ = 0;
+    const size_t full_;
+    volatile bool is_executed_ = false;
+    volatile bool is_finished_ = false;
 };
 
 

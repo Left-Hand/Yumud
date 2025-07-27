@@ -19,11 +19,18 @@
 
 #include "types/colors/color/color.hpp"
 #include "types/vectors/polar/polar.hpp"
+#include "core/string/utils/multiline_split.hpp"
+
+#include "common_service.hpp"
+#include "joints.hpp"
+#include "gcode.hpp"
+#include "gcode_data.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::robots;
+using robots::zdtmotor::ZdtStepper;
 
 #define DBG_UART hal::uart2
 #define COMM_UART hal::uart1
@@ -37,297 +44,19 @@ using namespace ymd::robots;
 
 //CAN1 TX/PB9 RX/PB8
 
-class LedService{
-public:
-    enum class BreathMethod:uint8_t{
-        Sine = 0,
-        Saw,
-        Square,
-        Triangle
-    };
-protected:
-    struct Blink{
-        Milliseconds on;
-        Milliseconds off;
-        size_t times;
-    };
-
-    struct Pulse{
-        Milliseconds on;
-    };
-
-public:
-
-    void resume();
-
-private:
-    // void set_color(const Color<real_t> & color){
-
-    // }
-};
-
-class BeepService{
-public:
-    struct Config{
-
-    };
-
-    explicit BeepService(
-        Some<hal::Gpio *> gpio
-    ): gpio_(gpio.deref()){;}
-
-    void push_pulse(const Milliseconds period){
-
-    };
-
-    void resume(){
-
-    }
-
-private:
-    hal::Gpio & gpio_;
-};
-
-template<typename T>
-static constexpr T vec_angle_diff(const Vector2<T> a, const Vector2<T> b){
-    const auto angle = atan2(b.y, b.x) - atan2(a.y, a.x);
-    return fposmodp(angle + T(PI/2), T(PI)) - T(PI/2);
-}
-
-template<typename T>
-static constexpr T vec_angle(const Vector2<T> a){
-    return atan2(a.y, a.x);
-}
-
-struct PolarRobotSolver{
-    struct Gesture{
-        real_t x_meters;
-        real_t y_meters;
-
-        constexpr Vector2<real_t> to_vec2() const {
-            return Vector2(x_meters, y_meters);
-        }
-    };
-
-    struct Solution{
-        real_t rho_meters;
-        real_t theta_radians;
-    };
-
-    static constexpr Gesture inverse(const Solution & sol){
-        const auto [s,c] = sincos(sol.theta_radians);
-        return {
-            sol.rho_meters * c,
-            sol.rho_meters * s
-        };
-    }
-
-    static constexpr Solution nearest_forward(
-        const Gesture & last_g, 
-        const Gesture & g
-    ){
-
-        const auto g_vec2 = g.to_vec2();
-        const auto last_g_vec2 = last_g.to_vec2();
-
-        const auto delta_theta = vec_angle_diff(g_vec2, last_g_vec2);
-
-        return {
-            .rho_meters = g_vec2.length(),
-            .theta_radians = vec_angle(last_g_vec2) + delta_theta
-        };
-    }
-
-private:
-
-    static constexpr real_t nearest_fmod(
-        const real_t x,
-        const real_t step
-    ){
-        const auto half_step = step / 2;
-        return fposmodp(x + half_step, step) - half_step;
-    }
-    static constexpr real_t wrapped_diff(
-        const real_t last_x,
-        const real_t x,
-        const real_t step
-    ){
-        const auto diff = x - last_x;
-        return nearest_fmod(diff, step);
-    }
+#define DEF_COMMAND_BIND(K, T) \
+template<> \
+struct command_to_kind<CommandKind, T>{ \
+    static constexpr CommandKind KIND = K; \
+};\
+template<> \
+struct kind_to_command<CommandKind, K>{ \
+    using type = T; \
 };
 
 
-struct AxisIterator{
-    struct State{
-        real_t position;
-        real_t speed;
-    };
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
 
-    // State next(const real_t x, const real_t step){
-
-    // }
-private:
-    State state_;
-};
-
-struct PolarRobotSolverIterator{
-    struct Config{
-        real_t max_joint_spd;
-        real_t max_joint_acc;
-
-        real_t rho_transform_scale;
-        real_t theta_transform_scale;
-        real_t center_bias;
-
-        Range2<real_t> rho_range;
-        Range2<real_t> theta_range;
-
-        real_t r;
-    };
-
-    struct MachineState{
-        Vector2<real_t> position;
-        Vector2<real_t> speed;
-    };
-
-    struct JointState{
-        real_t position;
-        real_t speed;
-    };
-
-    struct State{
-        MachineState machine;
-        JointState rho_joint;
-        JointState theta_joint;
-    };
-
-    struct Solution{
-        real_t rho_joint_rotation;
-        real_t theta_joint_rotation;
-    };
-
-    Solution forward(const Vector2<real_t> target_pos, const real_t delta_t){
-        State state = state_;
-        // Vector2<real_t> expect_pos = 
-        // real_t expect_rho_joint_rotation = 
-        // real_t expect_theta_joint_rotation =
-        return {
-            .rho_joint_rotation = state.rho_joint.position, 
-            .theta_joint_rotation = state.theta_joint.position
-        };
-    }
-
-private:
-    State state_;
-};
-
-class JointMotorIntf{
-public:
-    virtual void activate() = 0;
-    virtual void deactivate() = 0;
-    virtual void set_position(real_t position) = 0;
-    virtual real_t get_last_position() = 0;
-    virtual void trig_homing() = 0;
-    virtual void trig_cali() = 0;
-    virtual bool is_homing_done() = 0;
-
-    auto make_rpc_list(const StringView name){
-        return rpc::make_list(
-            name,
-            DEF_RPC_MEMFUNC(trig_homing),
-            DEF_RPC_MEMFUNC(is_homing_done),
-            DEF_RPC_MEMFUNC(deactivate),
-            DEF_RPC_MEMFUNC(activate),
-            DEF_RPC_MEMFUNC(set_position),
-            DEF_RPC_MEMFUNC(trig_cali)
-        );
-    }
-};
-
-class MockJointMotor final:
-    public JointMotorIntf{
-public:
-    void activate() {}
-    void deactivate() {}
-    void set_position(real_t position) {}
-    void trig_homing() {}
-    void trig_cali() {}
-    bool is_homing_done() {return true;}
-    real_t get_last_position(){return 0;}
-};
-
-
-class ZdtJointMotor final
-    :public JointMotorIntf{
-public:
-
-    struct Config{
-        ZdtStepper::HommingMode homming_mode;
-    };
-
-    ZdtJointMotor(
-        const Config & cfg, 
-        ZdtStepper & stepper
-    ):
-        cfg_(cfg),
-        stepper_(stepper){;}
-
-    void activate(){
-        stepper_.activate(EN).unwrap();
-    }
-
-    void deactivate(){
-        stepper_.activate(DISEN).unwrap();;
-    }
-
-    void set_position(real_t position){
-        last_position_ = position;
-        stepper_.set_target_position(position).unwrap();
-    }
-
-    real_t get_last_position(){
-        return last_position_ ;
-    }
-
-    void trig_homing(){
-        homing_begin_ = Some(clock::millis());
-        stepper_.trig_homming(cfg_.homming_mode).unwrap();;
-    }
-
-    void trig_cali(){ 
-        stepper_.trig_cali().unwrap();;
-    }
-
-    bool is_homing_done(){
-        if(homing_begin_.is_none()){
-            trip_and_panic("Homing not started");
-            return false;
-        }
-
-        return (clock::millis() - homing_begin_.unwrap()) > HOMING_TIMEOUT_;
-    }
-
-
-private:
-    Config cfg_;
-    ZdtStepper & stepper_;
-
-    real_t last_position_;
-    static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
-    Option<Milliseconds> homing_begin_ = None;
-    std::atomic<bool> is_homed_ = false;
-
-    template<typename ... Args>
-    void trip_and_panic(Args && ... args){
-        deactivate();
-        DEBUG_PRINTLN(std::forward<Args>(args)...);
-    }
-
-    struct HomingStrategy_Timeout{
-
-    };
-};
 
 class PolarRobotActuator{
 public:
@@ -341,47 +70,28 @@ public:
     };
 
     struct Params{
-        Some<JointMotorIntf *> rho_joint;
-        Some<JointMotorIntf *> theta_joint;
+        Some<JointMotorActuatorIntf *> radius_joint_;
+        Some<JointMotorActuatorIntf *> theta_joint_;
     };
 
-    using Solver = PolarRobotSolver;
 
     PolarRobotActuator(
         const Config & cfg, 
         const Params & params
     ):
         cfg_(cfg),
-        joint_rho_(params.rho_joint.deref()),
-        joint_theta_(params.theta_joint.deref())
+        joint_rho_(params.radius_joint_.deref()),
+        joint_theta_(params.theta_joint_.deref())
     {;}
 
 
-    void set_polar(const real_t rho_meters, const real_t theta_radians){
+    void set_coord(const Polar<q16> p){
 
-        const auto rho_position = rho_meters * cfg_.rho_transform_scale;
-        const auto theta_position = theta_radians * cfg_.theta_transform_scale;
+        const auto rho_position = p.radius * cfg_.rho_transform_scale;
+        const auto theta_position = p.theta * cfg_.theta_transform_scale;
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
-        joint_theta_.set_position(theta_position);
-    }
-
-    
-    void set_position(const real_t x_meters, const real_t y_meters){
-        const auto gest = Solver::Gesture{
-            .x_meters = x_meters,
-            .y_meters = y_meters
-        };
-
-        const auto sol = Solver::nearest_forward(
-            last_gest_, gest);
-
-        last_gest_ = gest;
-
-        set_polar(
-            sol.rho_meters, 
-            -ABS(sol.theta_radians)
-        );
+        joint_theta_.set_position(-theta_position);
     }
 
     void activate(){
@@ -410,18 +120,15 @@ public:
             DEF_RPC_MEMFUNC(trig_homing),
             DEF_RPC_MEMFUNC(is_homing_done),
             DEF_RPC_MEMFUNC(deactivate),
-            DEF_RPC_MEMFUNC(activate),
-            DEF_RPC_MEMFUNC(set_position),
-            DEF_RPC_MEMFUNC(set_polar)
+            DEF_RPC_MEMFUNC(activate)
+            // DEF_RPC_MEMFUNC(set_coord)
         );
     }
 
 private:
     const Config cfg_;
-    JointMotorIntf & joint_rho_;
-    JointMotorIntf & joint_theta_;
-
-    Solver::Gesture last_gest_;
+    JointMotorActuatorIntf & joint_rho_;
+    JointMotorActuatorIntf & joint_theta_;
 
     template<typename ... Args>
     void trip_and_panic(Args && ... args){
@@ -431,83 +138,165 @@ private:
 
 };
 
-class CanHandlerAdaptor_PolarRobotActuator final:
-public CanMsgHandlerIntf{
-    HandleStatus handle(const hal::CanMsg & msg){ 
-        if(not msg.is_standard()) 
-            return HandleStatus::from_unhandled();
-        switch(msg.id_as_u32()){
-            case 0:
-                DEBUG_PRINTLN("o"); break;
-            default:
-                return HandleStatus::from_unhandled();
+struct Cartesian2ContinuousPolarRegulator final {
+    struct State {
+        Vector2<q16> position;
+        q16 theta;  // 累积角度
+    };
+
+    Polar<q16> operator()(const Vector2<q16> position) {
+        if (may_last_state_.is_none()) {
+            // 第一次调用，初始化状态
+            may_last_state_ = Some(State{
+                .position = position,
+                .theta = position.angle()  // 初始角度
+            });
+            return Polar<q16>{position.length(), position.angle()};
         }
-        return HandleStatus::from_handled();
+
+        // 获取上次状态
+        const auto last_state = may_last_state_.unwrap();
+        
+        // 计算角度变化
+        const q16 delta_theta = last_state.position.angle_between(position);
+        const q16 new_theta = last_state.theta + delta_theta;
+
+        // DEBUG_PRINTLN(last_state.position, position, delta_theta);
+
+        // 更新状态
+        may_last_state_ = Some(State{
+            .position = position,
+            .theta = new_theta  // 存储累积角度
+        });
+
+        return Polar<q16>{position.length(), new_theta};
     }
+
+private:
+    Option<State> may_last_state_ = None;
 };
+
 
 template<typename T>
-class RobotMsgCtrp{
-    constexpr hal::CanMsg serialize_to_canmsg() const {
-        const auto bytes_iter = static_cast<const T *>(this)->iter_bytes();
-        return hal::CanMsg::from_bytes(bytes_iter);
-    }
-};
+constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step){
+    Vector2<T> delta = to - from;
+    T distance = delta.length();
+    if (distance <= step) return to;  // 如果步长足够大，直接到达目标
+    return from + delta * (step / distance);  // 按比例移动
+}
 
-class RobotMsgMoveXy final:public RobotMsgCtrp<RobotMsgMoveXy>{
-    real_t x;
-    real_t y;
+// template<typename T>
+// constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step) {
+//     const Vector2<T> delta = to - from;
+//     const T distance_sq = delta.length_squared();  // 避免开平方
+//     const T step_sq = step * step;
+    
+//     if (distance_sq <= step_sq || distance_sq == T(0)) {
+//         return to;
+//     }
+    
+//     // 计算 sqrt(distance_sq) 并执行比例步长
+//     const T distance = sqrt(distance_sq);  // 或使用定点数优化的快速开方
+//     return from + delta * (step / distance);
+// }
 
-    constexpr std::array<uint8_t, 8> iter_bytes() const {
-        uint64_t raw;
-        raw |= std::bit_cast<uint32_t>(y.to_i32());
-        raw <<= 32;
-        raw |= std::bit_cast<uint32_t>(x.to_i32());
-        return std::bit_cast<std::array<uint8_t, 8>>(raw);
-    } 
-};
 
 
+struct StepPointIterator{
+    struct Config{
+        Vector2<q24> initial_position;
+    };
 
-// #define MOCK_TEST
-
-struct QueuePointIterator{
-
-    explicit constexpr QueuePointIterator(
-        const std::span<const Vector2<bf16>> data
+    explicit constexpr StepPointIterator(
+        const Config & cfg
     ):
-        data_(data){;}
+        current_position_(cfg.initial_position){;}
 
-    [[nodiscard]] Vector2<q24> next(const q24 step){
-
-        const auto curr_i = (i) % data_.size();
-
-        
-        const auto p1 = Vector2{
-            q24::from(float(data_[curr_i].x)), 
-            q24::from(float(data_[curr_i].y))
-        };
-
-        p = p.move_toward(p1, step);
-        // p.x = STEP_TO(p.x, p1.x, 0.0002_r);
-        // p.y = STEP_TO(p.y, p1.y, 0.0002_r);
-
-        // if(ABS(p.x - p1.x) < 0.00001_r) i++;
-        if(p.is_equal_approx(p1)) i++;
-        // DEBUG_PRINTLN(p);
-        return p;
-        // return Vector2<q24>(data_[0].x, data_.size());
-        // return Vector2<q24>(i, data_.size());
+    constexpr void set_target_position(
+        const Vector2<q24> target_position
+    ) {
+        may_end_position_ = Some(target_position);
     }
 
-    [[nodiscard]] constexpr size_t index() const {
-        return i;
+    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
+        if(may_end_position_.is_none()) return current_position_;
+        current_position_ = vec_step_to(current_position_, may_end_position_.unwrap(), step);
+        return current_position_;
+    }
+
+    [[nodiscard]] constexpr bool has_next() const {
+        return may_end_position_.is_some() and 
+            (not current_position_.is_equal_approx(may_end_position_.unwrap()));
     }
 private:
-    std::span<const Vector2<bf16>> data_;
-    Vector2<q24> p = {};
-    size_t i = 0;
+    Vector2<q24> current_position_ = {};
+    Option<Vector2<q24>> may_end_position_ = None;
 };
+
+
+struct History{
+    static constexpr auto X_LIMIT = 0.2_r;
+    static constexpr auto Y_LIMIT = 0.2_r;
+    real_t max_speed = 0.02_r;
+    real_t speed;
+    real_t x;
+    real_t y;
+    bool is_rapid;
+
+    constexpr void set_speed(const real_t _speed){
+        speed = MIN(_speed / 1000, max_speed);
+    }
+
+    constexpr void set_x_by_mm(const real_t _x){
+        x = CLAMP2(_x / 1000, X_LIMIT);
+    }
+
+    constexpr void set_y_by_mm(const real_t _y){
+        y = CLAMP2(_y / 1000, Y_LIMIT);
+    }
+};
+
+struct PolarRobotCurveGenerator{
+    struct Config{
+        uint32_t fs;
+        real_t speed;
+        Vector2<q24> initial_position = {0,0};
+    };
+
+    explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
+        fs_(cfg.fs),
+        delta_dist_(cfg.speed / cfg.fs),
+        step_iter_(StepPointIterator{StepPointIterator::Config{
+            .initial_position = cfg.initial_position
+        }}){;}
+
+    constexpr void add_end_position(const Vector2<q24> position){
+        step_iter_.set_target_position(position.flip_y());
+    }
+
+    constexpr void set_move_speed(const q24 speed){
+        delta_dist_ = (speed / fs_);
+    }
+
+    constexpr bool has_next(){
+        return step_iter_.has_next();
+    }
+
+    constexpr Vector2<q24> next(){
+        position_ = step_iter_.next(delta_dist_);
+        return position_;
+    }
+
+    constexpr Vector2<q24> last_position() const {
+        return position_;
+    }
+private:    
+    uint32_t fs_;
+    q24 delta_dist_;
+    Vector2<q24> position_;
+    StepPointIterator step_iter_;
+};
+
 
 void polar_robot_main(){
 
@@ -516,12 +305,6 @@ void polar_robot_main(){
     DEBUGGER.set_eps(4);
     // DEBUGGER.force_sync(EN);
     DEBUGGER.no_brackets();
-    
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(5ms);
-    // }
-
     
     #ifndef MOCK_TEST
     #if PHY_SEL == PHY_SEL_UART
@@ -547,26 +330,35 @@ void polar_robot_main(){
         .mode = CanMode::Normal
     });
 
-
     COMM_CAN.enable_hw_retransmit(DISEN);
+
+    COMM_CAN[0].mask({
+            .id = CanStdIdMask{0x200, CanRemoteSpec::Any}, 
+            .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
+        },{
+            .id = CanStdIdMask{0x000, CanRemoteSpec::Any}, 
+            .mask = CanStdIdMask::from_accept_all()
+        }
+    );
+
     ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
     ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
 
     #endif
 
-    ZdtJointMotor rho_joint = {{
+    ZdtJointMotorActuator radius_joint_ = {{
         .homming_mode = ZdtStepper::HommingMode::LapsCollision
     }, motor2};
 
-    ZdtJointMotor theta_joint = {{
+    ZdtJointMotorActuator theta_joint_ = {{
         .homming_mode = ZdtStepper::HommingMode::LapsEndstop
     }, motor1};
     #else
-    MockJointMotor rho_joint = {};
-    MockJointMotor theta_joint = {};
+    MockJointMotorActuator radius_joint_ = {};
+    MockJointMotorActuator theta_joint_ = {};
     #endif
 
-    PolarRobotActuator robot_actuator = {
+    PolarRobotActuator actuator_ = {
         {
             .rho_transform_scale = 25_r,
             .theta_transform_scale = real_t(9.53 / TAU),
@@ -576,48 +368,190 @@ void polar_robot_main(){
             .theta_range = {-10_r, 10_r}
         },
         {
-            .rho_joint = &rho_joint, 
-            .theta_joint = &theta_joint
+            .radius_joint_ = &radius_joint_, 
+            .theta_joint_ = &theta_joint_
         }
+    };
+    Cartesian2ContinuousPolarRegulator regu_;
+
+    static constexpr uint32_t POINT_GEN_FREQ = 400;
+    static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
+    static constexpr auto MAX_MOVE_SPEED = 0.02_q24; // 5cm / s
+
+    static constexpr auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
+        .fs = POINT_GEN_FREQ,
+        .speed = MAX_MOVE_SPEED
+    };
+
+    PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
+
+    [[maybe_unused]] auto get_next_gcode_line = [] -> Option<StringView>{
+        static strconv2::StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
+        while(line_iter.has_next()){
+            const auto next_line = line_iter.next();
+            if(next_line.trim().length() == 0)
+                continue;
+            return Some(next_line); 
+        }
+        return None;
+    };
+
+    [[maybe_unused]] auto dispatch_gcode_line = [&](const StringView str){
+        auto line = gcode::GcodeLine(str);
+
+        ASSERT(line.query_mnemonic().examine().to_letter() == 'G', 
+            "only G gcode is supported");
+
+        static History history_;
+
+        auto parse_g_command = [&](const gcode::GcodeArg & arg){
+            const uint16_t major = int(arg.value);
+            switch(major){
+            case 0://rapid move
+                curve_gen_.set_move_speed(history_.max_speed);
+                curve_gen_.add_end_position({history_.x, history_.y});
+                break;
+            case 1://linear move
+                curve_gen_.set_move_speed(history_.speed);
+                curve_gen_.add_end_position({history_.x, history_.y});
+                break;
+            case 4:
+                break;
+            case 21://UseMillimetersUnits
+                break;
+            case 90://Use abs position
+                break;
+            default:
+                PANIC("not impleted gcode", major);
+                break;
+            }
+        };
+
+        auto parse_arg = [&](const gcode::GcodeArg & arg){
+            switch(arg.letter){
+            case 'X': 
+                history_.set_x_by_mm(arg.value);
+                break;
+            case 'Y':
+                history_.set_y_by_mm(arg.value);
+                break;
+            case 'F':
+                history_.set_speed(arg.value);
+                break;
+            case 'G':
+                parse_g_command(arg);
+                break;
+            }
+        };
+
+
+        {
+            auto iter = gcode::GcodeArgsIter(str);
+            while(iter.has_next()){
+                const auto arg = iter.next().examine();
+                // DEBUG_PRINTLN(arg);
+                parse_arg(arg);
+            }
+        }
+    };
+
+    [[maybe_unused]] auto poll_gcode = [&]{
+        const auto may_line_str = get_next_gcode_line();
+        if(may_line_str.is_none()) return;
+        const auto line = may_line_str.unwrap().trim();
+
+        dispatch_gcode_line(line);
     };
 
     auto list = rpc::make_list(
         "polar_robot",
-        robot_actuator.make_rpc_list("actuator"),
-        rho_joint.make_rpc_list("rho_joint"),
-        theta_joint.make_rpc_list("theta_joint")
+        rpc::make_function("reset", [&]{
+            sys::reset();
+        }),
+
+        actuator_.make_rpc_list("actuator"),
+        radius_joint_.make_rpc_list("radius_joint_"),
+        theta_joint_.make_rpc_list("theta_joint_"),
+
+        rpc::make_function("pxy", [&](const real_t x, const real_t y){
+            curve_gen_.add_end_position({
+                CLAMP2(x, 0.14_r),
+                CLAMP2(y, 0.14_r)
+            });
+        }),
+
+        // rpc::make_function("prt", [&](const real_t radius, const real_t theta){
+        //     actuator_.set_coord({radius,theta});
+        // }),
+
+        rpc::make_function("next", [&](){
+            static Vector2<q16> position = {0.1_r, 0};
+            position = position.cw();
+            actuator_.set_coord(regu_(position));
+        })
     );
 
-    robots::ReplServer repl_server = {
-        &DBG_UART, &DBG_UART
+    [[maybe_unused]] auto poll_curve_service = [&]{
+        if(not curve_gen_.has_next()){
+            poll_gcode();
+        }
     };
 
-    constexpr auto SAMPLE_DUR = 700ms; 
 
-    auto it = QueuePointIterator{std::span(CURVE_DATA)};
-
-    // PANIC(std::span(CURVE_DATA).subspan(0, 10));
-
-    auto main_service = [&]{
-        static async::RepeatTimer timer{2ms};
-        timer.invoke_if([&]{
-            const auto p = it.next(0.0001_q24);
-
-            robot_actuator.set_position(p.x, p.y);
-            DEBUG_PRINTLN(
-                p.x, 
-                p.y, 
-                it.index(), 
-                rho_joint.get_last_position(), 
-                theta_joint.get_last_position()
-            );
-
-            repl_server.invoke(list);
-        });
+    [[maybe_unused]] auto repl_service = [&](){ 
+        
+        static robots::ReplServer repl_server = {
+            &DBG_UART, &DBG_UART
+        };
+        repl_server.invoke(list);
     };
+
+    [[maybe_unused]] auto can_watch_service = [&]{
+        while(COMM_CAN.available()){
+            DEBUG_PRINTLN(COMM_CAN.read());
+        }
+
+        // static size_t cnt = 0;
+        // cnt++;
+        // if(cnt > 10) PANIC();
+    };
+
+    [[maybe_unused]] auto report_service = [&]{
+
+    };
+
+    actuator_.trig_homing();
 
     while(true){
-        main_service();
+        poll_curve_service();
+
+
+        static auto timer = async::RepeatTimer
+            ::from_duration(POINT_GEN_DURATION_MS);
+
+        timer.invoke_if([&]{
+
+
+            const auto position = curve_gen_.next();
+
+            actuator_.set_coord(regu_(position));
+        });
+
+        repl_service();
+        // report_service();
+
+        DEBUG_PRINTLN_IDLE(
+            curve_gen_.last_position(), 
+            radius_joint_.get_last_position(), 
+            theta_joint_.get_last_position()
+            // COMM_CAN.available(),
+            // COMM_CAN.get_last_fault(),
+            // COMM_CAN.get_rx_errcnt(),
+            // COMM_CAN.get_rx_errcnt()
+        );
+
+        // can_watch_service();
+
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);

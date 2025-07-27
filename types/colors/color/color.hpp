@@ -221,7 +221,7 @@ public:
         return !((a == T(0)) or (r == T(0) and g == T(0) and b == T(0)));
     }
     __fast_inline constexpr operator RGB565() const {
-        return RGB565::from_565(
+        return RGB565::from_r5g6b5(
             uint8_t(r * a * 31),
             uint8_t(g * a * 63),
             uint8_t(b * a * 31)

@@ -8,11 +8,11 @@
 
 namespace ymd{
 template<arithmetic T, size_t R, size_t C>
-class Matrix_t{
+class Matrix{
 public:
-    __fast_inline constexpr Matrix_t(){}
+    __fast_inline constexpr Matrix(){}
 
-    __fast_inline constexpr Matrix_t(const arithmetic auto * _data){
+    __fast_inline constexpr Matrix(const arithmetic auto * _data){
         for(size_t i = 0; i < size(); i++){
             begin()[i] = static_cast<T>(_data[i]);
         }
@@ -21,7 +21,7 @@ public:
     template<typename ... Args>
     requires (sizeof...(Args) == R * C) 
     explicit __fast_inline constexpr
-    Matrix_t(Args... args) {
+    Matrix(Args... args) {
         static_assert(sizeof...(args) == R * C);
         auto ptr = begin();
         auto values = std::array<T, R * C>{{static_cast<T>(args)...}};
@@ -29,15 +29,15 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix_t& operator = (const Matrix_t & other){
+    __fast_inline constexpr Matrix& operator = (const Matrix & other){
         for(size_t i = 0; i < size(); i++){
             begin()[i] = static_cast<T>(other.data_[i]);
         }
         return *this;
     }
 
-    __fast_inline constexpr static Matrix_t Zero(){
-        Matrix_t result;
+    __fast_inline constexpr static Matrix Zero(){
+        Matrix result;
         result.fill(0);
         return result;
     }
@@ -74,7 +74,7 @@ public:
     }
 
     template<size_t R2, size_t C2>
-    __fast_inline constexpr Matrix_t<T, R2, C2> block(const size_t row_start, const size_t col_start) const{   
+    __fast_inline constexpr Matrix<T, R2, C2> block(const size_t row_start, const size_t col_start) const{   
         static_assert(R2 <= R and C2 <= C);
 
         if(std::is_constant_evaluated()){
@@ -85,7 +85,7 @@ public:
             // static_assert(col_start <= col_end && col_end <= C);
         }
 
-        Matrix_t<T, R2, C2> result;
+        Matrix<T, R2, C2> result;
 
         for (size_t i = 0; i < R2; ++i) {
             for (size_t j = 0; j < C2; ++j) {
@@ -97,7 +97,7 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix_t & operator += (const Matrix_t<U, R, C> & other){
+    __fast_inline constexpr Matrix & operator += (const Matrix<U, R, C> & other){
         auto ptr = begin();
         auto other_ptr = other.begin();
         for(size_t i = 0; i < size(); i++){
@@ -108,8 +108,8 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix_t operator + (const Matrix_t<U, R, C> & other) const {
-        Matrix_t ret;
+    __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & other) const {
+        Matrix ret;
         auto ptr = begin();
         auto ret_ptr = ret.begin();
         auto other_ptr = other.begin();
@@ -121,7 +121,7 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix_t & operator -= (const Matrix_t<U, R, C> & other){
+    __fast_inline constexpr Matrix & operator -= (const Matrix<U, R, C> & other){
         auto ptr = begin();
         auto other_ptr = other.begin();
         for(size_t i = 0; i < size(); i++){
@@ -132,8 +132,8 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix_t operator - (const Matrix_t<U, R, C> & other) const {
-        Matrix_t ret;
+    __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & other) const {
+        Matrix ret;
         auto ptr = begin();
         auto ret_ptr = ret.begin();
         auto other_ptr = other.begin();
@@ -144,8 +144,8 @@ public:
         return ret;
     }
 
-    __fast_inline constexpr Matrix_t operator - () const {
-        Matrix_t ret;
+    __fast_inline constexpr Matrix operator - () const {
+        Matrix ret;
         auto ptr = begin();
         auto ret_ptr = ret.begin();
         for(size_t i = 0; i < size(); i++){
@@ -156,8 +156,8 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix_t operator * (const arithmetic auto & scalar) const{
-        Matrix_t ret;
+    __fast_inline constexpr Matrix operator * (const arithmetic auto & scalar) const{
+        Matrix ret;
         auto ptr = begin();
         auto ret_ptr = ret.begin();
         for(size_t i = 0; i < size(); i++){
@@ -167,8 +167,8 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix_t operator / (const arithmetic auto & scalar) const{
-        Matrix_t ret;
+    __fast_inline constexpr Matrix operator / (const arithmetic auto & scalar) const{
+        Matrix ret;
         auto ptr = begin();
         auto ret_ptr = ret.begin();
         for(size_t i = 0; i < size(); i++){
@@ -180,8 +180,8 @@ public:
 
 
     template<size_t C2>
-    __fast_inline constexpr Matrix_t<T, R, C2> operator * (const Matrix_t<T, C, C2> & other) const{
-        Matrix_t<T, R, C2> result;
+    __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & other) const{
+        Matrix<T, R, C2> result;
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C2; j++) {
                 T sum = 0;
@@ -195,8 +195,8 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix_t<T, C, R> transpose() const{
-        Matrix_t<T, C, R> result;
+    __fast_inline constexpr Matrix<T, C, R> transpose() const{
+        Matrix<T, C, R> result;
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C; j++) {
                 result.at(j, i) = this->at(i, j);
@@ -205,10 +205,10 @@ public:
         return result;
     }
 
-    // __fast_inline constexpr Matrix_t<T, R, R> guassian_inverse() const{
+    // __fast_inline constexpr Matrix<T, R, R> guassian_inverse() const{
 
-    //     Matrix_t<T, R, 2 * R> W;
-    //     Matrix_t<T, R, R> result;
+    //     Matrix<T, R, 2 * R> W;
+    //     Matrix<T, R, R> result;
     //     T tem_1, tem_2, tem_3;
     
     //     // 对矩阵右半部分进行扩增
@@ -284,12 +284,12 @@ public:
     //     }
     //     return result;
     // }
-    __fast_inline constexpr Matrix_t<T, R, R> lu_inverse() const{
+    __fast_inline constexpr Matrix<T, R, R> lu_inverse() const{
         // https://blog.csdn.net/weixin_46207279/article/details/120374064
 
         T L[R][R], U[R][R], L_n[R][R], U_n[R][R];
         const auto & W = *this;
-        Matrix_t<T, R, R> W_n;
+        Matrix<T, R, R> W_n;
         // int k, d;
         T s;
     
@@ -398,11 +398,11 @@ public:
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_arithmetic_v<U>, int> = 0>
-    __fast_inline constexpr Matrix_t<T, R, R> inverse() const{
+    __fast_inline constexpr Matrix<T, R, R> inverse() const{
         static_assert(R == C);
         // return this->transpose() / this->determinant();
         // return lu_inverse();
-        Matrix_t<T, R, 2 * R> augmented;
+        Matrix<T, R, 2 * R> augmented;
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < R; j++) {
                 augmented.at(i, j) = this->at(i, j);
@@ -445,7 +445,7 @@ public:
         }
 
         // 提取逆矩阵部分
-        Matrix_t<T, R, R> result;
+        Matrix<T, R, R> result;
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < R; j++) {
                 result.at(i, j) = augmented.at(i, j + R);
@@ -456,10 +456,10 @@ public:
     }
 
     // 单位矩阵生成函数
-    __fast_inline constexpr static Matrix_t<T, R, C> Identity(){
+    __fast_inline constexpr static Matrix<T, R, C> Identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
-        Matrix_t<T, R, C> result;
+        Matrix<T, R, C> result;
 
         for (size_t i = 0; i < R; ++i) {
             for (size_t j = 0; j < C; ++j) {
@@ -498,7 +498,7 @@ private:
 
 
 template<arithmetic T, size_t R, size_t C>
-__inline OutputStream & operator<<(OutputStream & os, const Matrix_t<T, R, C> & mat){
+__inline OutputStream & operator<<(OutputStream & os, const Matrix<T, R, C> & mat){
     const auto splt = os.splitter();
     os << "[";
 	for (size_t _i = 0; _i < mat.rows(); _i++) {

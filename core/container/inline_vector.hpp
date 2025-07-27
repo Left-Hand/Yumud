@@ -90,6 +90,14 @@ public:
         return data_[size_ - 1];
     }
 
+    constexpr T * data() noexcept{
+        return data_;
+    }
+    constexpr const T * data() const noexcept{
+        return data_;
+    }
+
+
     // 容量相关 - constexpr
     constexpr size_t size() const noexcept {
         return size_;
@@ -135,7 +143,33 @@ public:
         size_ += pbuf.size();
     }
 
-    constexpr std::span<const uint8_t> to_span() const {
+    constexpr Result<void, void> append(const uint8_t data){
+        if(size_ + 1 > N) return Err();
+        data_[size_] = data;
+        size_ = size_ + 1;
+        return Ok();
+    }
+
+    constexpr Result<void, void> append(const std::span<const uint8_t> pbuf){
+        if(size_ + pbuf.size() > N) return Err();
+        for(size_t i = 0; i < pbuf.size(); i++){
+            data_[size_ + i] = pbuf[i];
+        }
+        size_ += pbuf.size();
+        return Ok();
+    }
+
+    template<typename Iter>
+    requires (is_std_iter_v<Iter>)
+    constexpr Result<void, void> append_unchecked(Iter && iter){ 
+        while(iter.has_next()){
+            if(size_ + 1 > N) return Err();
+            append_unchecked(iter.next());
+        }
+        return Ok();
+    }
+
+    constexpr std::span<const uint8_t> iter() const {
         return std::span(data_, size_);
     }
 

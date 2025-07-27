@@ -47,7 +47,7 @@ void m2006_main(){
             )
         );
         DEBUG_PRINTLN(can1.read());
-        can1.write(msg);
+        can1.write(msg).examine();
         clock::delay(10ms);
     }
 }

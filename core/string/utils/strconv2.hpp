@@ -13,7 +13,7 @@
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
-
+#include "core/stream/ostream.hpp"
 
 namespace ymd::strconv2 {
 
@@ -101,6 +101,8 @@ struct FstrDump final{
 					return Err(DestringError::UnexpectedAlpha);
 				case 'A' ... 'Z':
 					return Err(DestringError::UnexpectedAlpha);
+				case ' ':
+					return Err(DestringError::UnexpectedSpace);
 				default:  // Invalid characters
 					return Err(DestringError::UnexpectedChar);
 			}
@@ -123,8 +125,13 @@ struct FstrDump final{
 		return Ok(FstrDump{
 			.digit_part = digit_part,
 			.frac_part = frac_part,
-			.scale = scale
+			.scale = (status.has_post_dot_digits ? scale : 0)
 		});
+	}
+
+	friend OutputStream & operator<<(OutputStream & os, const FstrDump & dump) {
+		os << dump.digit_part << os.splitter() << dump.frac_part << os.splitter() << dump.scale;
+		return os;
 	}
 };
 
@@ -265,8 +272,12 @@ struct IqFromStringHelper{
 			res.unwrap();
 		});
 		
-		const iq_t<Q> ret = iq_t<Q>(dump.digit_part) 
-			+ iq_t<Q>::from_i32((dump.frac_part << Q) / dump.scale);
+		const iq_t<Q> ret = 
+			iq_t<Q>(dump.digit_part) 
+			+ (dump.scale ? 
+				iq_t<Q>::from_i32((int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale))
+				: 0)
+			;
 
 		return Ok(ret);
 	}
@@ -454,7 +465,7 @@ static constexpr TostringResult<StringRef> to_str(iq_t<Q> value, StringRef str, 
 }
 
 template<size_t Q>
-static constexpr DestringResult<iq_t<Q>> iq_from_str(StringView str){
+static constexpr DestringResult<iq_t<Q>> str_to_iq(StringView str){
 	return details::IqFromStringHelper<Q>::conv(str);
 }
 
@@ -464,7 +475,7 @@ static constexpr DestringResult<T> from_str(StringView str){
 	if constexpr (std::is_same_v<StringView, T>)
 		return Ok(str);
 	if constexpr (is_fixed_point_v<T>)
-		return iq_from_str<T::q_num>(str);
+		return str_to_iq<T::q_num>(str);
 	else if constexpr(std::is_integral_v<T>)
 		return details::IntFromStringHelper<T>::conv(str);
 }

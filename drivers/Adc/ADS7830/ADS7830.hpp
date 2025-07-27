@@ -25,7 +25,7 @@ struct ADS7830_Prelude{
         NoChannelCombination
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -55,10 +55,11 @@ struct ADS7830_Prelude{
 
         constexpr ChannelIndex(Kind kind):kind_(kind){}
 
-        static constexpr Option<ChannelIndex> from_index(uint8_t rank){
-            if(rank >= 8) return None;
-            return Some(ChannelIndex(std::bit_cast<Kind>(rank)));
+        static constexpr Option<ChannelIndex> from_index(uint8_t nth){
+            if(nth >= 8) return None;
+            return Some(ChannelIndex(std::bit_cast<Kind>(nth)));
         }
+
         constexpr Kind kind() const {
             return kind_;
         }
@@ -195,7 +196,7 @@ struct ADS7830 final:
 public:
     using Phy = ADS7830_Phy;
 
-    ADS7830(
+    explicit ADS7830(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):

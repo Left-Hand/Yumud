@@ -4,13 +4,31 @@
 
 
 namespace ymd::digipw{
+struct AlphaBetaDuty{
+    q16 alpha;
+    q16 beta;
 
+    q16 & operator [](size_t idx){
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+
+
+    const q16 & operator [](size_t idx) const{
+        switch(idx){
+            case 0: return alpha;
+            case 1: return beta;
+            default: __builtin_unreachable();
+        }
+    }
+};
 
 
 struct DqValue{
-    #pragma pack(push, 1)
     q20 d, q;
-    #pragma pack(pop)
 
     constexpr q20 operator [](const size_t idx) const {
         return *(&d + idx);
@@ -21,7 +39,7 @@ struct DqValue{
     }
 
     constexpr q20 length() const {
-        return sqrt(d*d + q*q);
+        return mag(d,q);
     }
 
     friend OutputStream & operator << (OutputStream & os, const DqValue & self){
@@ -56,27 +74,6 @@ struct AbValue{
     }
 };
 
-struct AlphaBetaDuty{
-    q16 alpha;
-    q16 beta;
-
-    q16 & operator [](size_t idx){
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-
-
-    const q16 & operator [](size_t idx) const{
-        switch(idx){
-            case 0: return alpha;
-            case 1: return beta;
-            default: __builtin_unreachable();
-        }
-    }
-};
 
 
 namespace details{
@@ -98,13 +95,13 @@ struct AbCurrent: public AbValue{
         constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
         return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
     };
-    // constexpr AbCurrent to_ab() const {
+    // constexpr AbCurrent to_alpha_beta() const {
     //     AbCurrent ab;
     //     return details::__dq_to_ab(ab, *this)
     // }
 };
 struct AbVoltage: public AbValue{
-    // constexpr AbCurrent to_ab() const {
+    // constexpr AbCurrent to_alpha_beta() const {
     //     AbCurrent ab;
     //     return details::__dq_to_ab(ab, *this)
     // }
@@ -114,24 +111,24 @@ struct AbVoltage: public AbValue{
 
 
 struct DqCurrent: public DqValue{
-    static constexpr DqCurrent from_ab(const AbCurrent & ab, const q16 rad){
+    static constexpr DqCurrent from_alpha_beta(const AbCurrent & ab, const q16 rad){
         DqCurrent self;
         details::__ab_to_dq(self, ab, rad);
         return self;
     }
-    constexpr AbCurrent to_ab(const q16 rad) const {
+    constexpr AbCurrent to_alpha_beta(const q16 rad) const {
         AbCurrent ab;
         details::__dq_to_ab(ab, *this, rad);
         return ab;
     }
 };
 struct DqVoltage: public DqValue{
-    static constexpr DqVoltage from_ab(const AbVoltage & ab, const q16 rad){
+    static constexpr DqVoltage from_alpha_beta(const AbVoltage & ab, const q16 rad){
         DqVoltage self;
         details::__ab_to_dq(self, ab, rad);
         return self;
     }
-    constexpr AbVoltage to_ab(const q16 rad) const {
+    constexpr AbVoltage to_alpha_beta(const q16 rad) const {
         AbVoltage ab;
         details::__dq_to_ab(ab, *this, rad);
         return ab;

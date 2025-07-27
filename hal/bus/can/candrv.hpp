@@ -10,8 +10,8 @@ class CanDrv{
 
         CanDrv(hal::Can & can):can_(can){;}
     
-        void transmit(const CanMsg & msg){
-            can_.write(msg);
+        Result<void, CanError> transmit(const CanMsg & msg){
+            return can_.write(msg);
         }
     
     private:

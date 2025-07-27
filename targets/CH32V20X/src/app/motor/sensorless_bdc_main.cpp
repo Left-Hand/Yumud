@@ -17,7 +17,7 @@
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 
-#include "dsp/filter/homebrew/DigitalFilter.hpp"
+#include "dsp/filter/homebrew/debounce_filter.hpp"
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/homebrew/edge_counter.hpp"

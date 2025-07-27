@@ -11,7 +11,7 @@ using IResult = Result<T, Error>;
 
 IResult<> AsciiCanPhy::send_can_msg(const Msg && msg){
     // DEBUG_PRINTLN("send can msg", msg);
-    can_.write(msg);
+    can_.write(msg).examine();
     return Ok();
 }
 

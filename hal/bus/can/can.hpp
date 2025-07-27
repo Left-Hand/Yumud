@@ -1,7 +1,8 @@
 #pragma once
 
 #include "hal/bus/bus_base.hpp"
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/utils/Result.hpp"
+#include "core/container/ringbuf.hpp"
 #include "core/sdk.hpp"
 
 #include "can_utils.hpp"
@@ -58,13 +59,19 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
-class Can: public BusBase{
+class Can final{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
-    using ErrCode = CanError;
+    using Fault = CanFault;
+    using Error = CanError;
 
     using Callback = std::function<void(void)>;
+
+    struct Config{
+        BaudRate baudrate;
+        Mode mode = Mode::Normal;
+    };
 
 public:
     Can(CAN_TypeDef * instance):inst_(instance){;}
@@ -73,20 +80,16 @@ public:
 
     void set_baudrate(const uint32_t baudrate);
 
-    struct Config{
-        BaudRate baudrate;
-        Mode mode = Mode::Normal;
-    };
 
     void init(const Config & cfg);
 
-    bool write(const CanMsg & msg);
+    [[nodiscard]] Result<void, CanError> write(const CanMsg & msg);
     [[nodiscard]] CanMsg read();
     [[nodiscard]] size_t pending();
     [[nodiscard]] size_t available();
 
     void clear_rx(){while(this->available()){(void)this->read();}}
-    void set_sync(const Enable en){sync_ = en == EN;}
+    void enable_blocking_write(const Enable en){blocking_write_en_ = en == EN;}
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
     void enable_hw_retransmit(const Enable en = EN);
@@ -96,12 +99,17 @@ public:
     void enable_index_priority(const Enable en = EN);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] CanError get_last_error();
+    [[nodiscard]] Option<CanFault> get_last_fault();
     [[nodiscard]] bool is_busoff();
 
-    void bind_tx_ok_cb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
-    void bind_tx_fail_cb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
-    void bind_rx_cb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+    template<typename Fn>
+    void bind_tx_ok_cb(Fn && cb){cb_txok_ = std::forward<Fn>(cb);}
+
+    template<typename Fn>
+    void bind_tx_fail_cb(Fn && cb){cb_txfail_ = std::forward<Fn>(cb);}
+
+    template<typename Fn>
+    void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
 
     CanFilter operator[](const size_t idx) const ;
 
@@ -112,23 +120,18 @@ private:
     static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
     #endif
 
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
+    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback cb_txok_;
+    // std::function<void(hal::CanMsg)> cb_txfail_;
     Callback cb_txfail_;
     Callback cb_rx_;
 
-    bool sync_ = false;
+    bool blocking_write_en_ = false;
 
     Gpio & get_tx_gpio();
     Gpio & get_rx_gpio();
-
-    hal::HalResult lead(const hal::LockRequest req){
-        return hal::HalResult::Ok();
-    };
-
-    void trail(){};
 
     void install_gpio();
     void enable_rcc();
@@ -144,7 +147,7 @@ private:
 
 
 
-    [[nodiscard]] std::optional<uint8_t> transmit(const CanMsg & msg);
+    [[nodiscard]] Option<CanMailBox> transmit(const CanMsg & msg);
     [[nodiscard]] CanMsg receive(const uint8_t fifo_num);
 
     friend class CanFilter;

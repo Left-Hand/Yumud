@@ -13,6 +13,7 @@ enum class DestringError:uint8_t{
 	UnexpectedPositive,
 	UnexpectedNegative,
 	MultipleDot,
+	UnexpectedSpace,
 	UnexpectedChar,
 	UnexpectedAlpha,
 	NoDigit,
@@ -27,13 +28,13 @@ enum class DestringError:uint8_t{
     EmptyString,
 };
 
-DERIVE_DEBUG(DestringError)
+DEF_DERIVE_DEBUG(DestringError)
 
 enum class TostringError:uint8_t{
 	OutOfMemory
 };
 
-DERIVE_DEBUG(TostringError)
+DEF_DERIVE_DEBUG(TostringError)
 
 template<typename T = void>
 using DestringResult = Result<T,DestringError>;

@@ -158,11 +158,11 @@ constexpr _iq<29> _IQNasin(_iq<Q> iqNInput){
 
     if constexpr (Q > 29){
         return std::bit_cast<_iq<29>>(
-            _IQNasin<29>(_iq<29>(_iq<29>(iqNInput).to_i32()))
+            _IQNasin<29>(_iq<29>(_iq<29>(iqNInput).as_i32()))
         );
     }else{
         return std::bit_cast<_iq<29>>(
-            __IQNasin<Q>(iqNInput.to_i32())
+            __IQNasin<Q>(iqNInput.as_i32())
         );
     }
 }

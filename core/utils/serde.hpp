@@ -4,6 +4,7 @@
 #include "core/utils/reflecter.hpp"
 
 #include "core/math/float/bf16.hpp"
+#include "core/string/string_view.hpp"
 
 namespace ymd::serde{
 
@@ -118,7 +119,8 @@ template<typename Protocol, typename T>
 struct serialize_iter_support_sbo:std::false_type{};
 
 template<typename Protocol, typename T>
-static constexpr bool serialize_iter_sbo_v = serialize_iter_support_sbo<Protocol, T>::value;
+static constexpr bool serialize_iter_support_sbo_v = 
+    serialize_iter_support_sbo<Protocol, T>::value;
 
 
 template<typename Protocol, typename T>
@@ -135,9 +137,9 @@ static constexpr auto make_deserializer() {
 
 
 template<typename Protocol, typename T>
-static constexpr auto make_deserialize(auto && pbuf) {
+static constexpr auto make_deserialize(const auto & pbuf) {
     return make_deserializer<Protocol, T>()
-        .deserialize(std::forward<std::decay_t<decltype(pbuf)>>(pbuf));
+        .deserialize(pbuf);
 }
 
 
@@ -248,74 +250,88 @@ requires(std::is_enum_v<T>)
 struct serialize_iter_support_sbo<Protocol, T>:std::true_type{;};
 
 template <typename T>
-requires requires(const T& t) {
-    std::begin(t);
-    std::end(t);
-    requires !std::is_enum_v<T>;
-}
-struct SerializeIter<RawBytes, T> {
-    using SizeType = uint32_t;
+struct SerializeIter<RawBytes, std::span<const T>> {
+    using ElementIter = SerializeIter<RawBytes, T>;
     
-    constexpr explicit SerializeIter(const T& container)
-        : state_(State::Size),
-            size_iter_(static_cast<SizeType>(std::distance(std::begin(container), std::end(container)))),
-            current_(std::begin(container)),
-            end_(std::end(container)) {
-                
-        if (current_ != end_) {
-            element_iter_.emplace(*current_);
+    constexpr explicit SerializeIter(const std::span<const T> pbuf)
+        : pbuf_(pbuf), index_(0) 
+    {
+        if (pbuf_.size()) {
+            element_iter_ = ElementIter(pbuf_[0]); // 使用 placement new 初始化
+        }
+    }
+
+    // 必须手动管理 union 成员的析构
+    constexpr ~SerializeIter() {
+        if (pbuf_.size()) {
+            element_iter_.~ElementIter(); // 手动调用析构
         }
     }
 
     constexpr bool has_next() const {
-        if (state_ == State::Size && size_iter_.has_next()) return true;
-        if (state_ == State::Elements) {
-            if (element_iter_ && element_iter_->has_next()) return true;
-            if (std::next(current_) != end_) return true;
-        }
-        return false;
+        if(index_ >= pbuf_.size()) return false;
+        else if(index_ + 1 == pbuf_.size()) return element_iter_.has_next();    
+        return true;
     }
     
     constexpr uint8_t next() {
-        if (state_ == State::Size) {
-            if (size_iter_.has_next()) {
-                return size_iter_.next();
-            }
-            state_ = State::Elements;
-        }
-        
-        if (state_ == State::Elements) {
-            if (!element_iter_) {
-                if (++current_ != end_) {
-                    element_iter_.emplace(*current_);
-                    return next();
-                }
-                state_ = State::Done;
-                return 0; // 或者抛出异常
+        if (!element_iter_.has_next()) {
+            element_iter_.~ElementIter(); // 先销毁当前对象
+            
+            if (++index_ >= pbuf_.size()) {
+                // 错误处理：可以 throw 或返回特殊值
+                return 0; 
             }
             
-            if (element_iter_->has_next()) {
-                return element_iter_->next();
-            }
-            
-            element_iter_.reset();
-            return next(); // 递归处理下一个元素
+            element_iter_ = ElementIter(pbuf_[index_]); // 重建新对象
         }
-        
-        return 0; // Done状态
+        return element_iter_.next();
     }
 
 private:
-    enum class State { Size, Elements, Done };
-    
-    State state_ = State::Size;
-    SerializeIter<RawBytes, SizeType> size_iter_;
-    typename T::const_iterator current_;
-    typename T::const_iterator end_;
-    std::optional<SerializeIter<RawBytes, std::iter_value_t<T>>> element_iter_;
+    std::span<const T> pbuf_;
+    size_t index_;
+    union {
+        ElementIter element_iter_;
+    };
+};
+template<typename Protocol, typename T, size_t N>
+struct SerializeIterMaker<Protocol, std::span<const T, N>>{
+    static constexpr auto make(const std::span<const T, N> obj){
+        return SerializeIter<Protocol, std::span<const T>>(std::span<const T>(obj));
+    }
 };
 
+template<typename Protocol, typename T, size_t N>
+struct SerializeIterMaker<Protocol, std::array<T, N>>{
+    static constexpr auto make(const std::array<T, N> & obj){
+        return SerializeIter<Protocol, std::span<const T>>(std::span<const T>(obj));
+    }
+};
 
+template<typename Protocol, typename T, size_t N>
+struct SerializeIterMaker<Protocol, T[N]>{
+    static constexpr auto make(const T (&obj)[N]) {
+        return SerializeIter<Protocol, std::span<const T>>(std::span<const T>(obj));
+    }
+};
+
+template<typename Protocol>
+struct SerializeIterMaker<Protocol, StringView>{
+    static constexpr auto make(const StringView str) {
+        return SerializeIter<Protocol, std::span<const char>>(
+            std::span<const char>(str.data(), str.length()));
+    }
+};
+
+template<typename Protocol, typename T>
+struct SerializeIterMaker<Protocol, std::initializer_list<T>> {
+    static constexpr auto make(std::initializer_list<T> obj) {
+        return SerializeIter<Protocol, std::span<const T>>(
+            std::span<const T>(obj.begin(), obj.size())
+        );
+    }
+};
 
 template<typename Protocol, typename ... Ts>
 struct SerializeIter<Protocol, std::tuple<Ts ... >> {
@@ -373,10 +389,10 @@ private:
             [&]<size_t I>{
                 using RawType = std::tuple_element_t<I, std::tuple<Ts...>>;
                 using ElemType = std::decay_t<RawType>;
-                if constexpr (serialize_iter_sbo_v<Protocol, ElemType>) {
-                    return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
+                if constexpr (serialize_iter_support_sbo_v<Protocol, ElemType>) {
+                    return SerializeIterMaker<Protocol, ElemType>::make(std::get<I>(tup));
                 } else {
-                    return SerializeIter<Protocol, ElemType>{std::get<I>(tup)};
+                    return SerializeIterMaker<Protocol, ElemType>::make(std::get<I>(tup));
                 }
             }.template operator()<Is>()...
         };

@@ -35,14 +35,14 @@
 #include "types/vectors/vector3/vector3.hpp"
 
 /**
- * AABB_t (Axis Aligned Bounding Box)
+ * AABB (Axis Aligned Bounding Box)
  * This is implemented by a point (position) and the box size.
  */
 
 namespace ymd{
 
 template<arithmetic T>
-struct AABB_t{
+struct AABB{
 	Vector3<T> position;
 	Vector3<T> size;
 
@@ -60,18 +60,18 @@ struct AABB_t{
 	const Vector3<T> & get_size() const { return size; }
 	void set_size(const Vector3<T> & p_size) { size = p_size; }
 
-	bool operator==(const AABB_t<T> &p_rval) const;
-	bool operator!=(const AABB_t<T> &p_rval) const;
+	bool operator==(const AABB<T> &p_rval) const;
+	bool operator!=(const AABB<T> &p_rval) const;
 
-	bool is_equal_approx(const AABB_t<T> &p_aabb) const;
+	bool is_equal_approx(const AABB<T> &p_aabb) const;
 	bool is_finite() const;
-	__fast_inline bool intersects(const AABB_t<T> &p_aabb) const; /// Both AABBs overlap
-	__fast_inline bool intersects_inclusive(const AABB_t<T> &p_aabb) const; /// Both AABBs (or their faces) overlap
-	__fast_inline bool encloses(const AABB_t<T> &p_aabb) const; /// p_aabb is completely inside this
+	__fast_inline bool intersects(const AABB<T> &p_aabb) const; /// Both AABBs overlap
+	__fast_inline bool intersects_inclusive(const AABB<T> &p_aabb) const; /// Both AABBs (or their faces) overlap
+	__fast_inline bool encloses(const AABB<T> &p_aabb) const; /// p_aabb is completely inside this
 
-	AABB_t merge(const AABB_t<T> &p_with) const;
-	void merge_with(const AABB_t<T> &p_aabb); ///merge with another AABB_t
-	AABB_t intersection(const AABB_t<T> &p_aabb) const; ///get box where two intersect, empty if no intersection occurs
+	AABB merge(const AABB<T> &p_with) const;
+	void merge_with(const AABB<T> &p_aabb); ///merge with another AABB
+	AABB intersection(const AABB<T> &p_aabb) const; ///get box where two intersect, empty if no intersection occurs
 	__fast_inline bool smits_intersect_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, T p_t0, T p_t1) const;
 
 	bool intersects_segment(const Vector3<T> & p_from, const Vector3<T> & p_to, Vector3<T> *r_intersection_point = nullptr, Vector3<T> *r_normal = nullptr) const;
@@ -81,9 +81,9 @@ struct AABB_t{
 	}
 	bool find_intersects_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, bool &r_inside, Vector3<T> *r_intersection_point = nullptr, Vector3<T> *r_normal = nullptr) const;
 
-	__fast_inline bool intersects_convex_shape(const Plane_t<T> *p_planes, int p_plane_count, const Vector3<T> *p_points, int p_point_count) const;
-	__fast_inline bool inside_convex_shape(const Plane_t<T> *p_planes, int p_plane_count) const;
-	bool intersects_plane(const Plane_t<T> &p_plane) const;
+	__fast_inline bool intersects_convex_shape(const Plane<T> *p_planes, int p_plane_count, const Vector3<T> *p_points, int p_point_count) const;
+	__fast_inline bool inside_convex_shape(const Plane<T> *p_planes, int p_plane_count) const;
+	bool intersects_plane(const Plane<T> &p_plane) const;
 
 	__fast_inline bool has_point(const Vector3<T> & p_point) const;
 	__fast_inline Vector3<T> get_support(const Vector3<T> & p_normal) const;
@@ -96,34 +96,34 @@ struct AABB_t{
 	int get_shortest_axis_index() const;
 	__fast_inline T get_shortest_axis_size() const;
 
-	AABB_t grow(T p_by) const;
+	AABB grow(T p_by) const;
 	__fast_inline void grow_by(T p_amount);
 
 	void get_edge(int p_edge, Vector3<T> &r_from, Vector3<T> &r_to) const;
 	__fast_inline Vector3<T> get_endpoint(int p_point) const;
 
-	AABB_t expand(const Vector3<T> & p_vector) const;
+	AABB expand(const Vector3<T> & p_vector) const;
 
 	template<typename... Args>
 	requires std::conjunction_v<std::is_same_v<Vector3<T>, Args>...>
-	AABB_t<T> expand(const Args&... points) const {
-		AABB_t<T> aabb = *this;
+	AABB<T> expand(const Args&... points) const {
+		AABB<T> aabb = *this;
 		(aabb.expand_to(points), ...);
 		return aabb;
 	}
 
-	__fast_inline void project_range_in_plane(const Plane_t<T> &p_plane, T &r_min, T &r_max) const;
+	__fast_inline void project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const;
 	__fast_inline void expand_to(const Vector3<T> & p_vector); /** expand to contain a point if necessary */
 
-	__fast_inline AABB_t abs() const {
-		return AABB_t(position + size.minf(0), size.abs());
+	__fast_inline AABB abs() const {
+		return AABB(position + size.minf(0), size.abs());
 	}
 
 	std::optional<Vector3<T>> intersects_segment_bind(const Vector3<T> & p_from, const Vector3<T> & p_to) const;
 	std::optional<Vector3<T>> intersects_ray_bind(const Vector3<T> & p_from, const Vector3<T> & p_dir) const;
 
 	__fast_inline void quantize(T p_unit);
-	__fast_inline AABB_t quantized(T p_unit) const;
+	__fast_inline AABB quantized(T p_unit) const;
 
 	__fast_inline void set_end(const Vector3<T> & p_end) {
 		size = p_end - position;
@@ -137,15 +137,15 @@ struct AABB_t{
 		return position + (size * T(static_cast<T>(0.5f)));
 	}
 
-	__fast_inline constexpr AABB_t() {}
-	__fast_inline constexpr AABB_t(const Vector3<T> & p_pos, const Vector3<T> & p_size) :
+	__fast_inline constexpr AABB() {}
+	__fast_inline constexpr AABB(const Vector3<T> & p_pos, const Vector3<T> & p_size) :
 			position(p_pos),
 			size(p_size) {
 	}
 };
 
 template<arithmetic T>
-inline bool AABB_t<T>::intersects(const AABB_t<T> &p_aabb) const {
+inline bool AABB<T>::intersects(const AABB<T> &p_aabb) const {
 	if (position.x >= (p_aabb.position.x + p_aabb.size.x)) {
 		return false;
 	}
@@ -170,7 +170,7 @@ inline bool AABB_t<T>::intersects(const AABB_t<T> &p_aabb) const {
 
 
 template<arithmetic T>
-inline bool AABB_t<T>::intersects_inclusive(const AABB_t<T> &p_aabb) const {
+inline bool AABB<T>::intersects_inclusive(const AABB<T> &p_aabb) const {
 	if (position.x > (p_aabb.position.x + p_aabb.size.x)) {
 		return false;
 	}
@@ -194,7 +194,7 @@ inline bool AABB_t<T>::intersects_inclusive(const AABB_t<T> &p_aabb) const {
 }
 
 template<arithmetic T>
-inline bool AABB_t<T>::encloses(const AABB_t<T> &p_aabb) const {
+inline bool AABB<T>::encloses(const AABB<T> &p_aabb) const {
 	Vector3<T> src_min = position;
 	Vector3<T> src_max = position + size;
 	Vector3<T> dst_min = p_aabb.position;
@@ -210,7 +210,7 @@ inline bool AABB_t<T>::encloses(const AABB_t<T> &p_aabb) const {
 }
 
 template<arithmetic T>
-Vector3<T> AABB_t<T>::get_support(const Vector3<T> & p_normal) const {
+Vector3<T> AABB<T>::get_support(const Vector3<T> & p_normal) const {
 	Vector3<T> half_extents = size * static_cast<T>(0.5f);
 	Vector3<T> ofs = position + half_extents;
 
@@ -222,7 +222,7 @@ Vector3<T> AABB_t<T>::get_support(const Vector3<T> & p_normal) const {
 }
 
 template<arithmetic T>
-Vector3<T> AABB_t<T>::get_endpoint(int p_point) const {
+Vector3<T> AABB<T>::get_endpoint(int p_point) const {
 	switch (p_point) {
 		default:
 			HALT;
@@ -246,12 +246,12 @@ Vector3<T> AABB_t<T>::get_endpoint(int p_point) const {
 }
 
 template<arithmetic T>
-bool AABB_t<T>::intersects_convex_shape(const Plane_t<T> *p_planes, int p_plane_count, const Vector3<T> *p_points, int p_point_count) const {
+bool AABB<T>::intersects_convex_shape(const Plane<T> *p_planes, int p_plane_count, const Vector3<T> *p_points, int p_point_count) const {
 	Vector3<T> half_extents = size * static_cast<T>(0.5f);
 	Vector3<T> ofs = position + half_extents;
 
 	for (int i = 0; i < p_plane_count; i++) {
-		const Plane_t<T> &p = p_planes[i];
+		const Plane<T> &p = p_planes[i];
 		Vector3<T> point(
 				(p.normal.x > 0) ? -half_extents.x : half_extents.x,
 				(p.normal.y > 0) ? -half_extents.y : half_extents.y,
@@ -262,7 +262,7 @@ bool AABB_t<T>::intersects_convex_shape(const Plane_t<T> *p_planes, int p_plane_
 		}
 	}
 
-	// Make sure all points in the shape aren't fully separated from the AABB_t on
+	// Make sure all points in the shape aren't fully separated from the AABB on
 	// each axis.
 	int bad_point_counts_positive[3] = { 0 };
 	int bad_point_counts_negative[3] = { 0 };
@@ -289,12 +289,12 @@ bool AABB_t<T>::intersects_convex_shape(const Plane_t<T> *p_planes, int p_plane_
 }
 
 template<arithmetic T>
-bool AABB_t<T>::inside_convex_shape(const Plane_t<T> *p_planes, int p_plane_count) const {
+bool AABB<T>::inside_convex_shape(const Plane<T> *p_planes, int p_plane_count) const {
 	Vector3<T> half_extents = size * static_cast<T>(0.5f);
 	Vector3<T> ofs = position + half_extents;
 
 	for (int i = 0; i < p_plane_count; i++) {
-		const Plane_t<T> &p = p_planes[i];
+		const Plane<T> &p = p_planes[i];
 		Vector3<T> point(
 				(p.normal.x < 0) ? -half_extents.x : half_extents.x,
 				(p.normal.y < 0) ? -half_extents.y : half_extents.y,
@@ -309,7 +309,7 @@ bool AABB_t<T>::inside_convex_shape(const Plane_t<T> *p_planes, int p_plane_coun
 }
 
 template<arithmetic T>
-bool AABB_t<T>::has_point(const Vector3<T> & p_point) const {
+bool AABB<T>::has_point(const Vector3<T> & p_point) const {
 	if (p_point.x < position.x) {
 		return false;
 	}
@@ -333,7 +333,7 @@ bool AABB_t<T>::has_point(const Vector3<T> & p_point) const {
 }
 
 template<arithmetic T>
-inline void AABB_t<T>::expand_to(const Vector3<T> & p_vector) {
+inline void AABB<T>::expand_to(const Vector3<T> & p_vector) {
 	Vector3<T> begin = position;
 	Vector3<T> end = position + size;
 
@@ -362,7 +362,7 @@ inline void AABB_t<T>::expand_to(const Vector3<T> & p_vector) {
 }
 
 template<arithmetic T>
-void AABB_t<T>::project_range_in_plane(const Plane_t<T> &p_plane, T &r_min, T &r_max) const {
+void AABB<T>::project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const {
 	Vector3<T> half_extents(size.x * static_cast<T>(static_cast<T>(0.5f)), size.y * static_cast<T>(static_cast<T>(0.5f)), size.z * static_cast<T>(static_cast<T>(0.5f)));
 	Vector3<T> center(position.x + half_extents.x, position.y + half_extents.y, position.z + half_extents.z);
 
@@ -373,7 +373,7 @@ void AABB_t<T>::project_range_in_plane(const Plane_t<T> &p_plane, T &r_min, T &r
 }
 
 template<arithmetic T>
-inline T AABB_t<T>::get_longest_axis_size() const {
+inline T AABB<T>::get_longest_axis_size() const {
 	T max_size = size.x;
 
 	if (size.y > max_size) {
@@ -388,7 +388,7 @@ inline T AABB_t<T>::get_longest_axis_size() const {
 }
 
 template<arithmetic T>
-inline T AABB_t<T>::get_shortest_axis_size() const {
+inline T AABB<T>::get_shortest_axis_size() const {
 	T max_size = size.x;
 
 	if (size.y < max_size) {
@@ -403,7 +403,7 @@ inline T AABB_t<T>::get_shortest_axis_size() const {
 }
 
 template<arithmetic T>
-bool AABB_t<T>::smits_intersect_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, T p_t0, T p_t1) const {
+bool AABB<T>::smits_intersect_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, T p_t0, T p_t1) const {
 	T divx = static_cast<T>(1) / p_dir.x;
 	T divy = static_cast<T>(1) / p_dir.y;
 	T divz = static_cast<T>(1) / p_dir.z;
@@ -453,7 +453,7 @@ bool AABB_t<T>::smits_intersect_ray(const Vector3<T> & p_from, const Vector3<T> 
 }
 
 template<arithmetic T>
-void AABB_t<T>::grow_by(T p_amount) {
+void AABB<T>::grow_by(T p_amount) {
 	position.x -= p_amount;
 	position.y -= p_amount;
 	position.z -= p_amount;
@@ -463,16 +463,16 @@ void AABB_t<T>::grow_by(T p_amount) {
 }
 
 template<arithmetic T>
-void AABB_t<T>::quantize(T p_unit) {
+void AABB<T>::quantize(T p_unit) {
 	size += position;
 
-	position.x -= fposmodp(position.x, p_unit);
-	position.y -= fposmodp(position.y, p_unit);
-	position.z -= fposmodp(position.z, p_unit);
+	position.x -= fposmod(position.x, p_unit);
+	position.y -= fposmod(position.y, p_unit);
+	position.z -= fposmod(position.z, p_unit);
 
-	size.x -= fposmodp(size.x, p_unit);
-	size.y -= fposmodp(size.y, p_unit);
-	size.z -= fposmodp(size.z, p_unit);
+	size.x -= fposmod(size.x, p_unit);
+	size.y -= fposmod(size.y, p_unit);
+	size.z -= fposmod(size.z, p_unit);
 
 	size.x += p_unit;
 	size.y += p_unit;
@@ -482,14 +482,14 @@ void AABB_t<T>::quantize(T p_unit) {
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::quantized(T p_unit) const {
-	AABB_t<T> ret = *this;
+AABB<T> AABB<T>::quantized(T p_unit) const {
+	AABB<T> ret = *this;
 	ret.quantize(p_unit);
 	return ret;
 }
 
 template<arithmetic T>
-__inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
+__inline OutputStream & operator<<(OutputStream & os, const AABB<T> & aabb){
 	const auto splt = os.splitter();
     os << "(";
 	os << aabb.position << splt;

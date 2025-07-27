@@ -120,7 +120,7 @@ void icm42688_main(){
     // i2c.init(400_KHz);
     i2c.init(2000_KHz);
 
-    ICM42688 imu = {
+    auto imu = ICM42688{
         &i2c,
         ICM42688::I2cSlaveAddrMaker{.ad0_level = HIGH}.to_i2c_addr()
     };

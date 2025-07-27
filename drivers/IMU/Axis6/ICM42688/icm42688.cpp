@@ -162,9 +162,6 @@ IResult<> ICM42688::init(const Config & cfg){
 }
 
 IResult<> ICM42688::set_gyr_odr(const GyrOdr odr){
-	// auto & reg = gyro_config0_reg;
-	// reg.gyro_odr = odr;
-	// return write_reg(reg);
 	auto reg = RegCopy(gyro_config0_reg);
 	reg.gyro_odr = odr;
 	return write_reg(reg);
@@ -208,13 +205,6 @@ IResult<>  ICM42688::update(){
 	gyr_data_ = {buf[3], buf[4], buf[5]};
 
 	return Ok();
-	// const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, &acc_data_.x, 6);
-	// if(res.is_err()) return res;
-	// int16_t buf[6] = {0};
-	// phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
-	// // DEBUG_PRINTLN(buf, q16(acc_scale_) * (buf[0]), acc_scale_.to_i32() * buf[0]);
-	// DEBUG_PRINTLN((buf[0]) * q16(0.001_r), (buf[0]) * q16(0.001_r) - 0.5_r);
-	// return Ok();
 }
 
 

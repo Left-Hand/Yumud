@@ -8,30 +8,30 @@
 
 namespace ymd::nvcv2::shape{
     namespace cores{
-        static constexpr auto roberts_x      = Matrix_t<int8_t, 2, 2>{-1, 0, 0, 1};
-        static constexpr auto roberts_y      = Matrix_t<int8_t, 2, 2>{0, -1, 1, 0};
-        static constexpr auto prewiit_x      = Matrix_t<int8_t, 3, 3>{-1, 0, 1, -1, 0, 1, -1, 0, 1};
-        static constexpr auto prewiit_y      = Matrix_t<int8_t, 3, 3>{-1, -1, -1, 0, 0, 0, 1, 1, 1};
-        static constexpr auto sobel_x        = Matrix_t<int8_t, 3, 3>{-1, 0, 1, -2, 0, 2, -1, 0, 1};
-        static constexpr auto sobel_y        = Matrix_t<int8_t, 3, 3>{-1, -2, -1, 0, 0, 0, 1, 2, 1};
-        static constexpr auto scharr_x       = Matrix_t<int8_t, 3, 3>{-3, 0, 3, -10, 0, 10, -3, 0, 3};
-        static constexpr auto scharr_y       = Matrix_t<int8_t, 3, 3>{-3, -10, -3, 0, 0, 0, 3, 10, 3};
-        static constexpr auto laplacian_4    = Matrix_t<int8_t, 3, 3>{0, -1, 0, -1, 4, -1, 0, -1, 0};
-        static constexpr auto laplacian_8    = Matrix_t<int8_t, 3, 3>{-1, -1, -1, -1, 8, -1, -1, -1, -1};
-        static constexpr auto gauss          = Matrix_t<int8_t, 3, 3>{1, 1, 1, 1, 2, 1, 1, 1, 1};
+        static constexpr auto roberts_x      = Matrix<int8_t, 2, 2>{-1, 0, 0, 1};
+        static constexpr auto roberts_y      = Matrix<int8_t, 2, 2>{0, -1, 1, 0};
+        static constexpr auto prewiit_x      = Matrix<int8_t, 3, 3>{-1, 0, 1, -1, 0, 1, -1, 0, 1};
+        static constexpr auto prewiit_y      = Matrix<int8_t, 3, 3>{-1, -1, -1, 0, 0, 0, 1, 1, 1};
+        static constexpr auto sobel_x        = Matrix<int8_t, 3, 3>{-1, 0, 1, -2, 0, 2, -1, 0, 1};
+        static constexpr auto sobel_y        = Matrix<int8_t, 3, 3>{-1, -2, -1, 0, 0, 0, 1, 2, 1};
+        static constexpr auto scharr_x       = Matrix<int8_t, 3, 3>{-3, 0, 3, -10, 0, 10, -3, 0, 3};
+        static constexpr auto scharr_y       = Matrix<int8_t, 3, 3>{-3, -10, -3, 0, 0, 0, 3, 10, 3};
+        static constexpr auto laplacian_4    = Matrix<int8_t, 3, 3>{0, -1, 0, -1, 4, -1, 0, -1, 0};
+        static constexpr auto laplacian_8    = Matrix<int8_t, 3, 3>{-1, -1, -1, -1, 8, -1, -1, -1, -1};
+        static constexpr auto gauss          = Matrix<int8_t, 3, 3>{1, 1, 1, 1, 2, 1, 1, 1, 1};
     }
 
 
     void convolution(
         __restrict Image<Gray> & dst, 
         __restrict const Image<Gray> & src, 
-        const Matrix_t<int8_t, 3, 3> & core, 
+        const Matrix<int8_t, 3, 3> & core, 
         const int div = 1);
 
     void convolution(
         Image<Gray> & dst, 
         const Image<Gray> & src, 
-        const Matrix_t<int8_t, 2, 2> & core);
+        const Matrix<int8_t, 2, 2> & core);
 
     void gauss(Image<Gray> & dst, const Image<Gray> & src);
     void gauss(Image<Gray> &src);

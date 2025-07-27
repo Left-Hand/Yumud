@@ -50,7 +50,7 @@ struct HT16K33_Prelude{
         UnknownInterruptCode
     };
 
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
@@ -373,14 +373,14 @@ private:
 class HT16K33 final:public HT16K33_Regs{
 public:
     template<typename Set>
-    HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
+    explicit HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
         phy_(i2c_drv, None)
     {
         resetting(std::forward<Set>(set));
     }
 
     template<typename Set>
-    HT16K33(Set && set, 
+    explicit HT16K33(Set && set, 
         const hal::I2cDrv & i2c_drv, 
         const hal::GpioIntf & int_input_gpio)
     :
@@ -421,13 +421,13 @@ private:
     Phy phy_;
     Package package_;
 
-    IResult<> write_command(const Command cmd);
+    [[nodiscard]] IResult<> write_command(const Command cmd);
 
-    IResult<> setup_system(const Enable en = EN);
+    [[nodiscard]] IResult<> setup_system(const Enable en = EN);
 
-    IResult<> setup_displayer(const BlinkFreq freq, const Enable en = EN);
+    [[nodiscard]] IResult<> setup_displayer(const BlinkFreq freq, const Enable en = EN);
 
-    IResult<> set_pulse_duty(const PulseDuty duty);
+    [[nodiscard]] IResult<> set_pulse_duty(const PulseDuty duty);
 
 };
 }

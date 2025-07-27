@@ -7,7 +7,7 @@
 #include "hal/bus/bus_base.hpp"
 #include "uart_utils.hpp"
 
-#include "core/container/ringbuf/Fifo_t.hpp"
+#include "core/container/ringbuf.hpp"
 
 
 namespace ymd::hal{
@@ -31,7 +31,7 @@ static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 #endif
 
 
-class Uart:public BusBase{
+class Uart{
 
 public:
     using Mode = CommDirection;
@@ -47,22 +47,21 @@ protected:
     CommStrategy rx_strategy_;
 
 
-    Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo_;
-    Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo_;
+    RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
+    RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
 
     Uart(){;}
 
-    __fast_inline void call_post_tx_callback(){EXECUTE(post_tx_cb_);}
-    __fast_inline void call_post_rx_callback(){EXECUTE(post_rx_cb_);}
+    __fast_inline void invoke_post_tx_callback(){EXECUTE(post_tx_cb_);}
+    __fast_inline void invoke_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
     hal::HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return hal::HalResult::Ok();};
+
     hal::HalResult write(const uint32_t data) {
         write1(char(data)); return hal::HalResult::Ok();};
 
-    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) {write1(char(data_tx)); return hal::HalResult::Ok();};
-
-    virtual void writeN(const char * data_ptr, const size_t len) = 0;
+    virtual void writeN(const char * pdata, const size_t len) = 0;
 
     virtual void write1(const char data) = 0;
 

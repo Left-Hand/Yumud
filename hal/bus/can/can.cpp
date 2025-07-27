@@ -104,7 +104,7 @@ void Can::init_it(){
     CAN_ClearITPendingBit(inst_, it_mask);
     CAN_ITConfig(inst_, it_mask, ENABLE);
 
-    switch(uint32_t(inst_)){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
@@ -277,7 +277,7 @@ size_t Can::pending(){
     else return 3;
 }
 
-std::optional<uint8_t> Can::transmit(const CanMsg & msg){
+Option<CanMailBox> Can::transmit(const CanMsg & msg){
     const auto transmit_mailbox = [this] -> int{
         const uint32_t tempreg = inst_->TSTATR;
         if((tempreg & CAN_TSTATR_TME0)) return 0;
@@ -286,7 +286,7 @@ std::optional<uint8_t> Can::transmit(const CanMsg & msg){
         else return -1;
     }();
 
-    if(transmit_mailbox < 0) return std::nullopt;
+    if(transmit_mailbox < 0) return None;
 
     const uint32_t tempmir = msg.sxx32_identifier_as_u32();
     const uint64_t data = msg.payload_as_u64();
@@ -296,7 +296,9 @@ std::optional<uint8_t> Can::transmit(const CanMsg & msg){
     inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDTR = uint32_t(0xFFFF0000 | msg.size());
     inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMIR = tempmir;
 
-    return transmit_mailbox;
+    return Some(
+        std::bit_cast<CanMailBox>(uint8_t(transmit_mailbox))
+    );
 }
 
 
@@ -305,22 +307,29 @@ void Can::enable_hw_retransmit(const Enable en){
     else    inst_->CTLR |=  CAN_CTLR_NART;
 }
 
-bool Can::write(const CanMsg & msg){
-    if(this->sync_){
+Result<void, CanError> Can::write(const CanMsg & msg){
+    if(this->blocking_write_en_){
         const auto begin_ms = clock::millis();
         while(clock::millis() - begin_ms < 10ms){
-            if(transmit(msg)) return true;
+            if(transmit(msg).is_some()) return Ok();
         }
-        return false;
+        return Err(CanError::BlockingTransmitTimeout);
     }else{
-        if(pending() < 3){
-            return transmit(msg).has_value();
-        }else{
-            if(tx_fifo_.available() < tx_fifo_.size()){
+        auto push_buf = [this](const CanMsg & msg) -> Result<void, CanError>{ 
+            if(tx_fifo_.writable_capacity() > 0){
                 tx_fifo_.push(msg);
-                return true;
+                return Ok();
             }
-            return false;
+            return Err(CanError::SoftFifoOverflow);
+        };
+        if(pending() < 3){
+            if(transmit(msg).is_some()){
+                return Ok();
+            }else{
+                return push_buf(msg);
+            }
+        }else{
+            return push_buf(msg);
         }
     }
 }
@@ -341,8 +350,10 @@ uint8_t Can::get_tx_errcnt(){
     return inst_->ERRSR >> 16;
 }
 
-Can::ErrCode Can::get_last_error(){
-    return (ErrCode)CAN_GetLastErrorCode(inst_);
+Option<Can::Fault> Can::get_last_fault(){
+    const auto code = CAN_GetLastErrorCode(inst_);
+    if(code == 0) return None;
+    return Some(std::bit_cast<Can::Fault>(code));
 }
 
 bool Can::is_tranmitting(){

@@ -5,11 +5,11 @@
 #if 0
 
 template<typename T>
-class Lifo_t:public DynamicBuffer_t<T>{
+class Lifo:public DynamicBuffer_t<T>{
 protected:
     volatile T * data_ptr;
 public:
-    Lifo_t():DynamicBuffer_t<T>(), data_ptr(this->buf){;}
+    Lifo():DynamicBuffer_t<T>(), data_ptr(this->buf){;}
 
     __fast_inline void add_data(const T & data) override{
         *data_ptr = data;
@@ -42,6 +42,6 @@ public:
     }
 };
 
-typedef Lifo_t<uint8_t> Stack;
+typedef Lifo<uint8_t> Stack;
 
 #endif

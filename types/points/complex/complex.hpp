@@ -9,16 +9,14 @@ public:
     T real;
     T imag;
 
-    __fast_inline constexpr T real_squared() const {return real * real;}
-    __fast_inline constexpr T imag_squared() const {return imag * imag;}
-    __fast_inline constexpr T norm() const {return real * real + imag * imag;}
-    __fast_inline constexpr T abs() const {return sqrt(real * real + imag * imag);}
-    __fast_inline constexpr T arg() const {return std::atan2(imag, real);}
+
     __fast_inline constexpr Complex & normalized(){*this /= abs(); return *this;}
 
     __fast_inline constexpr Complex() : real(T(0)), imag(T(0)) {;}
     __fast_inline constexpr Complex(const T & re, const T & im) : real(re), imag(im) {;}
 
+
+    
     __fast_inline static constexpr 
     Complex i() {return Complex(T(0), T(1));}
 
@@ -26,10 +24,16 @@ public:
     Complex from_imag(const T val) {return Complex(T(0), val);}
 
     __fast_inline static constexpr 
-    Complex from_polar(const T val) {
+    Complex from_angle(const T val) {
         const auto [s,c] = sincos(val);
         return Complex(c, s);
     }
+
+    [[nodiscard]] __fast_inline constexpr T real_squared() const {return real * real;}
+    [[nodiscard]] __fast_inline constexpr T imag_squared() const {return imag * imag;}
+    [[nodiscard]] __fast_inline constexpr T norm() const {return real * real + imag * imag;}
+    [[nodiscard]] __fast_inline constexpr T abs() const {return sqrt(real * real + imag * imag);}
+    [[nodiscard]] __fast_inline constexpr T arg() const {return std::atan2(imag, real);}
 
     __fast_inline constexpr Complex operator-() {
         return Complex(-real, -imag);
@@ -140,7 +144,7 @@ __fast_inline bool operator!=(const Complex<T>& lhs, const Complex<T>& rhs) {
     return !(lhs == rhs);
 }
 
-#define COMPLEX_COMPARE_IM_OPERATOR(op) \
+#define DEF_COMPLEX_COMPARE_IM_OPERATOR(op) \
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const Complex<T>& lhs, const U& rhs) { \
@@ -154,14 +158,14 @@ __fast_inline bool operator op (const U& lhs, const Complex<T>& rhs) { \
     return (abslhs * abslhs) op (rhs.norm()); \
 }
 
-COMPLEX_COMPARE_IM_OPERATOR(<)
-COMPLEX_COMPARE_IM_OPERATOR(<=)
-COMPLEX_COMPARE_IM_OPERATOR(>)
-COMPLEX_COMPARE_IM_OPERATOR(>=)
-COMPLEX_COMPARE_IM_OPERATOR(==)
-COMPLEX_COMPARE_IM_OPERATOR(!=)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(<)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(<=)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(>)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(>=)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(==)
+DEF_COMPLEX_COMPARE_IM_OPERATOR(!=)
 
-#undef COMPLEX_COMPARE_IM_OPERATOR
+#undef DEF_COMPLEX_COMPARE_IM_OPERATOR
 
 template <typename T>
 __fast_inline Complex<T> proj(const Complex<T> & m){

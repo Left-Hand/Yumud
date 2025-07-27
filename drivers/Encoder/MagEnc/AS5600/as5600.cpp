@@ -14,7 +14,7 @@ static constexpr q16 _12bits_2_pos(const uint16_t data){
 }
 
 static constexpr uint16_t pos_2_12bits(const q16 pos){
-    return pos.to_i32() >> 4; 
+    return pos.as_i32() >> 4; 
 }
 
 IResult<> AS5600::set_power_mode(const PowerMode _power_mode){

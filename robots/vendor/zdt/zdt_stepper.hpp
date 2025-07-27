@@ -3,22 +3,30 @@
 
 #include "details/zdt_stepper_utils.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::zdtmotor{
 
-class ZdtStepper final:
-    public ZdtMotor_Prelude{
+class ZdtStepper final{
 public:
+    using HommingMode = prelude::HommingMode;
+    using VerifyMethod = prelude::VerifyMethod;
+    using Buf = prelude::Buf;
+    using Error = prelude::Error;
+    using VerifyUtils = prelude::VerifyUtils;
+
+    template<typename T = void>
+    using IResult = prelude::IResult<T>;
+
     struct Config{
         NodeId nodeid;
     };
 
-    ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
+    explicit ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
         phy_(std::move(can)
     ){
         reconf(cfg);
     }
 
-    ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
+    explicit ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
         phy_(std::move(uart)
     ){
         reconf(cfg);
@@ -29,8 +37,17 @@ public:
         nodeid_ = cfg.nodeid;
     }
 
-    IResult<> set_target_position(const real_t pos);
-    IResult<> set_target_speed(const real_t spd);
+    struct PositionSetpoint{
+        real_t position;
+        real_t speed;
+    };
+
+    struct SpeedSetpoint{
+        real_t speed;
+    };
+
+    IResult<> set_position(const PositionSetpoint pos);
+    IResult<> set_speed(const SpeedSetpoint spd);
     IResult<> brake();
     IResult<> set_subdivides(const uint16_t subdivides);
     IResult<> activate(const Enable en = EN);
@@ -45,7 +62,7 @@ private:
     NodeId nodeid_ = DEFAULT_NODE_ID;
 
     bool is_sync_ = false;
-    VerifyMethod verify_method_ = DEFAULT_VERIFY_METHOD;
+    VerifyMethod verify_method_ = prelude::DEFAULT_VERIFY_METHOD;
 
 
 
@@ -56,7 +73,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = Payloads::serialize(obj);
+        const auto bytes = payloads::serialize(obj);
 
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(
@@ -71,12 +88,11 @@ private:
     template<typename T>
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(verify_method_, obj);
-        const auto bytes = buf.to_span();
 
         phy_.write_bytes(
             nodeid_, 
             T::FUNC_CODE, 
-            bytes
+            buf.iter()
         );
 
         return Ok();

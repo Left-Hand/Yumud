@@ -184,7 +184,7 @@ struct MT9V034_Prelude{
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-    FRIEND_DERIVE_DEBUG(Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -214,13 +214,13 @@ struct MT9V034_Regs:public MT9V034_Prelude{
 
 class MT9V034: public MT9V034_Prelude{
 public:
-    MT9V034(const hal::SccbDrv & sccb_drv):
+    explicit MT9V034(const hal::SccbDrv & sccb_drv):
         sccb_drv_(sccb_drv)
         {;}
-    MT9V034(hal::SccbDrv && sccb_drv):
+    explicit MT9V034(hal::SccbDrv && sccb_drv):
         sccb_drv_(std::move(sccb_drv))
         {;}
-    MT9V034(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit MT9V034(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
 
     [[nodiscard]] IResult<> init();

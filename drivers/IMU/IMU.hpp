@@ -47,7 +47,7 @@ enum class ImuError_Kind:uint8_t{
 
     Unreachable
 };
-DERIVE_DEBUG(ImuError_Kind)
+DEF_DERIVE_DEBUG(ImuError_Kind)
 }
 DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 }

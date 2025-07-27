@@ -214,5 +214,5 @@ private:
 }
 
 namespace ymd{
-DERIVE_DEBUG(drivers::VL6180X::Error_Kind );
+DEF_DERIVE_DEBUG(drivers::VL6180X::Error_Kind );
 }

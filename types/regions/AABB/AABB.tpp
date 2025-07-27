@@ -33,22 +33,22 @@
 namespace ymd{
 
 template<arithmetic T>
-T AABB_t<T>::get_volume() const {
+T AABB<T>::get_volume() const {
 	return size.x * size.y * size.z;
 }
 
 template<arithmetic T>
-bool AABB_t<T>::operator==(const AABB_t<T> & p_rval) const {
+bool AABB<T>::operator==(const AABB<T> & p_rval) const {
 	return ((position == p_rval.position) && (size == p_rval.size));
 }
 
 template<arithmetic T>
-bool AABB_t<T>::operator!=(const AABB_t<T> & p_rval) const {
+bool AABB<T>::operator!=(const AABB<T> & p_rval) const {
 	return ((position != p_rval.position) || (size != p_rval.size));
 }
 
 template<arithmetic T>
-void AABB_t<T>::merge_with(const AABB_t<T> & p_aabb) {
+void AABB<T>::merge_with(const AABB<T> & p_aabb) {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0 || p_aabb.size.x < 0 || p_aabb.size.y < 0 || p_aabb.size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -76,17 +76,17 @@ void AABB_t<T>::merge_with(const AABB_t<T> & p_aabb) {
 }
 
 template<arithmetic T>
-bool AABB_t<T>::is_equal_approx(const AABB_t<T> & p_aabb) const {
+bool AABB<T>::is_equal_approx(const AABB<T> & p_aabb) const {
 	return position.is_equal_approx(p_aabb.position) && size.is_equal_approx(p_aabb.size);
 }
 
 template<arithmetic T>
-bool AABB_t<T>::is_finite() const {
+bool AABB<T>::is_finite() const {
 	return position.is_finite() && size.is_finite();
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::intersection(const AABB_t<T> & p_aabb) const {
+AABB<T> AABB<T>::intersection(const AABB<T> & p_aabb) const {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0 || p_aabb.size.x < 0 || p_aabb.size.y < 0 || p_aabb.size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -100,21 +100,21 @@ AABB_t<T> AABB_t<T>::intersection(const AABB_t<T> & p_aabb) const {
 	Vector3<T> min, max;
 
 	if (src_min.x > dst_max.x || src_max.x < dst_min.x) {
-		return AABB_t<T>();
+		return AABB<T>();
 	} else {
 		min.x = (src_min.x > dst_min.x) ? src_min.x : dst_min.x;
 		max.x = (src_max.x < dst_max.x) ? src_max.x : dst_max.x;
 	}
 
 	if (src_min.y > dst_max.y || src_max.y < dst_min.y) {
-		return AABB_t<T>();
+		return AABB<T>();
 	} else {
 		min.y = (src_min.y > dst_min.y) ? src_min.y : dst_min.y;
 		max.y = (src_max.y < dst_max.y) ? src_max.y : dst_max.y;
 	}
 
 	if (src_min.z > dst_max.z || src_max.z < dst_min.z) {
-		return AABB_t<T>();
+		return AABB<T>();
 	} else {
 		min.z = (src_min.z > dst_min.z) ? src_min.z : dst_min.z;
 		max.z = (src_max.z < dst_max.z) ? src_max.z : dst_max.z;
@@ -129,7 +129,7 @@ AABB_t<T> AABB_t<T>::intersection(const AABB_t<T> & p_aabb) const {
 // backtracked intersection, or use p_from as the intersection, and
 // carry on progressing without e.g. reflecting against the normal.
 template<arithmetic T>
-bool AABB_t<T>::find_intersects_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, bool &r_inside, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
+bool AABB<T>::find_intersects_ray(const Vector3<T> & p_from, const Vector3<T> & p_dir, bool &r_inside, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -193,7 +193,7 @@ bool AABB_t<T>::find_intersects_ray(const Vector3<T> & p_from, const Vector3<T> 
 }
 
 template<arithmetic T>
-bool AABB_t<T>::intersects_segment(const Vector3<T> & p_from, const Vector3<T> & p_to, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
+bool AABB<T>::intersects_segment(const Vector3<T> & p_from, const Vector3<T> & p_to, Vector3<T> *r_intersection_point, Vector3<T> *r_normal) const {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -259,7 +259,7 @@ bool AABB_t<T>::intersects_segment(const Vector3<T> & p_from, const Vector3<T> &
 }
 
 template<arithmetic T>
-bool AABB_t<T>::intersects_plane(const Plane_t<T> &p_plane) const {
+bool AABB<T>::intersects_plane(const Plane<T> &p_plane) const {
 	Vector3<T> points[8] = {
 		Vector3<T>(position.x, position.y, position.z),
 		Vector3<T>(position.x, position.y, position.z + size.z),
@@ -286,7 +286,7 @@ bool AABB_t<T>::intersects_plane(const Plane_t<T> &p_plane) const {
 }
 
 template<arithmetic T>
-Vector3<T> AABB_t<T>::get_longest_axis() const {
+Vector3<T> AABB<T>::get_longest_axis() const {
 	Vector3<T> axis(1, 0, 0);
 	T max_size = size.x;
 
@@ -303,7 +303,7 @@ Vector3<T> AABB_t<T>::get_longest_axis() const {
 }
 
 template<arithmetic T>
-int AABB_t<T>::get_longest_axis_index() const {
+int AABB<T>::get_longest_axis_index() const {
 	int axis = 0;
 	T max_size = size.x;
 
@@ -320,7 +320,7 @@ int AABB_t<T>::get_longest_axis_index() const {
 }
 
 template<arithmetic T>
-Vector3<T> AABB_t<T>::get_shortest_axis() const {
+Vector3<T> AABB<T>::get_shortest_axis() const {
 	Vector3<T> axis(1, 0, 0);
 	T min_size = size.x;
 
@@ -337,7 +337,7 @@ Vector3<T> AABB_t<T>::get_shortest_axis() const {
 }
 
 template<arithmetic T>
-int AABB_t<T>::get_shortest_axis_index() const {
+int AABB<T>::get_shortest_axis_index() const {
 	int axis = 0;
 	T min_size = size.x;
 
@@ -354,28 +354,28 @@ int AABB_t<T>::get_shortest_axis_index() const {
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::merge(const AABB_t<T> & p_with) const {
-	AABB_t<T> aabb = *this;
+AABB<T> AABB<T>::merge(const AABB<T> & p_with) const {
+	AABB<T> aabb = *this;
 	aabb.merge_with(p_with);
 	return aabb;
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::expand(const Vector3<T> & p_vector) const {
-	AABB_t<T> aabb = *this;
+AABB<T> AABB<T>::expand(const Vector3<T> & p_vector) const {
+	AABB<T> aabb = *this;
 	aabb.expand_to(p_vector);
 	return aabb;
 }
 
 template<arithmetic T>
-AABB_t<T> AABB_t<T>::grow(T p_by) const {
-	AABB_t<T> aabb = *this;
+AABB<T> AABB<T>::grow(T p_by) const {
+	AABB<T> aabb = *this;
 	aabb.grow_by(p_by);
 	return aabb;
 }
 
 template<arithmetic T>
-void AABB_t<T>::get_edge(int p_edge, Vector3<T> &r_from, Vector3<T> &r_to) const {
+void AABB<T>::get_edge(int p_edge, Vector3<T> &r_from, Vector3<T> &r_to) const {
 	switch (p_edge) {
 		default:
 		    HALT;
@@ -439,7 +439,7 @@ void AABB_t<T>::get_edge(int p_edge, Vector3<T> &r_from, Vector3<T> &r_to) const
 }
 
 template<arithmetic T>
-std::optional<Vector3<T>> AABB_t<T>::intersects_segment_bind(const Vector3<T> & p_from, const Vector3<T> & p_to) const {
+std::optional<Vector3<T>> AABB<T>::intersects_segment_bind(const Vector3<T> & p_from, const Vector3<T> & p_to) const {
 	Vector3<T> inters;
 	if (intersects_segment(p_from, p_to, &inters)) {
 		return inters;
@@ -448,7 +448,7 @@ std::optional<Vector3<T>> AABB_t<T>::intersects_segment_bind(const Vector3<T> & 
 }
 
 template<arithmetic T>
-std::optional<Vector3<T>> AABB_t<T>::intersects_ray_bind(const Vector3<T> & p_from, const Vector3<T> & p_dir) const {
+std::optional<Vector3<T>> AABB<T>::intersects_ray_bind(const Vector3<T> & p_from, const Vector3<T> & p_dir) const {
 	Vector3<T> inters;
 	bool inside = false;
 

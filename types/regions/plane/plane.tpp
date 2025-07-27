@@ -1,16 +1,16 @@
 namespace ymd{
 
 template<arithmetic T>
-void Plane_t<T>::set_normal(const Vector3<auto> &p_normal) {
+void Plane<T>::set_normal(const Vector3<auto> &p_normal) {
 	normal = p_normal;
 }
 
 
 template<arithmetic T>
-void Plane_t<T>::normalize() {
+void Plane<T>::normalize() {
 	T l = normal.length();
 	if (l == 0) {
-		*this = Plane_t<T>(0, 0, 0, 0);
+		*this = Plane<T>(0, 0, 0, 0);
 		return;
 	}
 	normal /= l;
@@ -19,15 +19,15 @@ void Plane_t<T>::normalize() {
 
 
 template<arithmetic T>
-Plane_t<T> Plane_t<T>::normalized() const {
-	Plane_t<T> p = *this;
+Plane<T> Plane<T>::normalized() const {
+	Plane<T> p = *this;
 	p.normalize();
 	return p;
 }
 
 
 template<arithmetic T>
-Vector3<T> Plane_t<T>::get_any_perpendicular_normal() const {
+Vector3<T> Plane<T>::get_any_perpendicular_normal() const {
 	scexpr auto p1 = Vector3<T>(1, 0, 0);
 	scexpr auto p2 = Vector3<T>(0, 1, 0);
 	Vector3<T> p;
@@ -47,8 +47,8 @@ Vector3<T> Plane_t<T>::get_any_perpendicular_normal() const {
 /* intersections */
 
 template<arithmetic T>
-bool Plane_t<T>::intersect_3(const Plane_t<T> &p_plane1, const Plane_t<T> &p_plane2, Vector3<T> & r_result) const {
-	const Plane_t<T> &p_plane0 = *this;
+bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, Vector3<T> & r_result) const {
+	const Plane<T> &p_plane0 = *this;
 	Vector3<T> normal0 = p_plane0.normal;
 	Vector3<T> normal1 = p_plane1.normal;
 	Vector3<T> normal2 = p_plane2.normal;
@@ -69,7 +69,7 @@ bool Plane_t<T>::intersect_3(const Plane_t<T> &p_plane1, const Plane_t<T> &p_pla
 
 
 template<arithmetic T>
-bool Plane_t<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir, Vector3<T> & p_intersection) const {
+bool Plane<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir, Vector3<T> & p_intersection) const {
 	Vector3<T> segment = p_dir;
 	T den = normal.dot(segment);
 
@@ -92,7 +92,7 @@ bool Plane_t<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_di
 
 
 template<arithmetic T>
-bool Plane_t<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end, Vector3<T> & p_intersection) const {
+bool Plane<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end, Vector3<T> & p_intersection) const {
 	Vector3<T> segment = p_begin - p_end;
 	T den = normal.dot(segment);
 	if (is_equal_approx(0, den)) {
@@ -112,7 +112,7 @@ bool Plane_t<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> 
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane_t<T>::intersect_3(const Plane_t<T> &p_plane1, const Plane_t<T> &p_plane2) const {
+std::optional<Vector3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const {
 	Vector3<T> inters;
 	if (intersect_3(p_plane1, p_plane2, inters)) {
 		return inters;
@@ -123,7 +123,7 @@ std::optional<Vector3<T>> Plane_t<T>::intersect_3(const Plane_t<T> &p_plane1, co
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane_t<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir) const {
+std::optional<Vector3<T>> Plane<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir) const {
 	Vector3<T> inters;
 	if (intersects_ray(p_from, p_dir, inters)) {
 		return inters;
@@ -134,7 +134,7 @@ std::optional<Vector3<T>> Plane_t<T>::intersects_ray(const Vector3<T> &p_from, c
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane_t<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end) const {
+std::optional<Vector3<T>> Plane<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end) const {
 	Vector3<T> inters;
 	if (intersects_segment(p_begin, p_end, inters)) {
 		return inters;
@@ -146,19 +146,19 @@ std::optional<Vector3<T>> Plane_t<T>::intersects_segment(const Vector3<T> &p_beg
 /* misc */
 
 template<arithmetic T>
-bool Plane_t<T>::is_equal_approx_any_side(const Plane_t<T> &p_plane) const {
+bool Plane<T>::is_equal_approx_any_side(const Plane<T> &p_plane) const {
 	return (normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d)) || (normal.is_equal_approx(-p_plane.normal) && is_equal_approx(d, -p_plane.d));
 }
 
 
 template<arithmetic T>
-bool Plane_t<T>::is_equal_approx(const Plane_t<T> &p_plane) const {
+bool Plane<T>::is_equal_approx(const Plane<T> &p_plane) const {
 	return normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d);
 }
 
 
 template<arithmetic T>
-bool Plane_t<T>::is_finite() const {
+bool Plane<T>::is_finite() const {
 	return normal.is_finite() && is_finite(d);
 }
 

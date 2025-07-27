@@ -77,21 +77,15 @@ private:
     static constexpr const char * MONTH_STR[] = 
         {"Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"};
+};
 
-    // static constexpr std::array<uint32_t, 12> HASH_TABLE = {
-    //     "Jan"_ha, 
-    //     "Feb"_ha,
-    //     "Mar"_ha,
-    //     "Apr"_ha,
-    //     "May"_ha,
-    //     "Jun"_ha,
-    //     "Jul"_ha,
-    //     "Aug"_ha,
-    //     "Sep"_ha,
-    //     "Oct"_ha,
-    //     "Nov"_ha,
-    //     "Dec"_ha
-    // };
+
+template<>
+struct serde::SerializeIterMaker<serde::RawBytes, Month>{
+    static constexpr auto make(const Month & month){
+        return make_serialize_iter<serde::RawBytes>(
+            month.kind);
+    }
 };
 
 using Day = uint8_t;
@@ -152,23 +146,28 @@ struct Date final{
         return *this == Date::from_compiler();
     }
 
-
-    friend OutputStream & operator <<(OutputStream & os, const Date & self){
-        return os << os.brackets<'{'>() 
-            << self.month << '/'
-            << self.year << '/' 
-            << self.day
-            << os.brackets<'}'>()
-            ;
-    }
-
-    template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
-        return hs << self.year << self.month << self.day;
-    }
 };
 
-// DERIVE_SERIALIZE_AS_TUPLE(Date)
+OutputStream & operator <<(OutputStream & os, const Date & self){
+    return os << os.brackets<'{'>() 
+        << self.month << '/'
+        << self.year << '/' 
+        << self.day
+        << os.brackets<'}'>()
+        ;
+}
+
+template<HashAlgo S>
+constexpr Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
+    return hs << self.year << self.month << self.day;
+}
+
+template<>
+struct serde::SerializeIterMaker<serde::RawBytes, Date>{
+    static constexpr auto make(const Date & date){
+        return make_serialize_iter<serde::RawBytes>(std::make_tuple(date.year, date.month, date.day));
+    }
+};
 
 struct Time final{
 
@@ -177,13 +176,18 @@ struct Time final{
     Seconds seconds;
 
     // Compile-time time initialization from __TIME__ macro
-    static constexpr Time from_compiler() {
+    static consteval Time from_compiler() {
         constexpr const char* time_str = __TIME__;
         return {
             static_cast<Hour>((time_str[0]-'0')*10 + (time_str[1]-'0')),
             static_cast<Minute>((time_str[3]-'0')*10 + (time_str[4]-'0')),
             static_cast<Seconds>((time_str[6]-'0')*10 + (time_str[7]-'0'))
         };
+    }
+
+    static constexpr Option<Time> from_str(const StringView str){
+        //TODO
+        return None;
     }
 
     constexpr bool is_valid() const {
@@ -226,102 +230,13 @@ struct Time final{
 };
 
 
-// DERIVE_SERIALIZE_AS_TUPLE(Date)
-
-struct Author final{
-    static constexpr size_t MAX_NAME_LEN = 8;
-    static constexpr Option<Author> from(const char * name){
-        const auto slen = strlen(name);
-        if(slen >= MAX_NAME_LEN) return None;
-        return Some(Author{name});
-    }
-
-    constexpr StringView name() const{
-        return StringView(name_.data(), 8);
-    }
-
-    friend OutputStream & operator<<(OutputStream & os, const Author & self){ 
-        return os << "name: " << self.name();
-    }
-
-    template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Author & self){
-        return hs << self.name();
-    }
-
-private:
-    constexpr Author(const char * name){
-        name_.fill(0);
-        for(size_t i = 0; i < MAX_NAME_LEN && name[i]; ++i){
-            name_[i] = name[i];
-        }
-    }
-    std::array<char, MAX_NAME_LEN> name_;
-};
-
-// DERIVE_SERIALIZE_AS_TUPLE(Author)
-
-struct Version{
-    uint8_t major;
-    uint8_t minor;
-
-    constexpr auto operator<=>(const Version&) const = default;
-
-    friend OutputStream & operator <<(OutputStream & os, const Version & self){
-        return os << os.brackets<'{'>() 
-                << self.major << os.brackets<':'>()
-                << self.minor
-                << os.brackets<'}'>()
-            ;
-    }
-
-    template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Version & self){
-        return hs << self.major << self.minor;
+template<>
+struct serde::SerializeIterMaker<serde::RawBytes, Time>{
+    static constexpr auto make(const Time time){
+        return make_serialize_iter<serde::RawBytes>(std::make_tuple(
+            time.hour, time.minute, time.seconds
+        ));
     }
 };
-
-// DERIVE_SERIALIZE_AS_TUPLE(Version)
-
-struct ReleaseInfo{
-    Author author;
-    Version version;
-    Date date;
-    Time time;
-
-    // Compile-time creation with validation
-    static constexpr Option<ReleaseInfo> from(
-        const char* author_name,
-        Version ver,
-        Date d = Date::from_compiler(),
-        Time t = Time::from_compiler()
-    ) {
-        const auto may_author = Author::from(author_name);
-        if(may_author.is_none()) return None;
-        return Some(ReleaseInfo{
-            may_author.unwrap(), 
-            ver, 
-            d, 
-            t
-        });
-    }
-
-    friend OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
-        os << os.scoped("release")(
-            os 
-            << os.field("author")(os << self.author)
-            << os.field("version")(os << self.version)
-            << os.field("date")(os << self.date)
-            << os.field("time")(os << self.time)
-        );
-        return os;
-    }
-
-    template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
-        return hs << self.author << self.version << self.date << self.time;
-    }
-};
-
 
 }

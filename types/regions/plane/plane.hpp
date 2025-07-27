@@ -37,22 +37,22 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Plane_t {
+struct Plane {
 	Vector3<T> normal;
 	T d = 0;
 
 
-	__fast_inline constexpr Plane_t(const Vector3<auto> & p_normal, const arithmetic auto p_d) :
+	__fast_inline constexpr Plane(const Vector3<auto> & p_normal, const arithmetic auto p_d) :
 			normal(p_normal),
 			d(p_d) {
 	}
 
-	__fast_inline constexpr Plane_t(const Vector3<auto> & p_normal, const Vector3<auto> & p_point) :
+	__fast_inline constexpr Plane(const Vector3<auto> & p_normal, const Vector3<auto> & p_point) :
 			normal(p_normal),
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane_t(const Vector3<auto> &p_point1, const Vector3<auto> &p_point2, const Vector3<auto> &p_point3,const ClockDirection p_dir = CW) {
+	__fast_inline constexpr Plane(const Vector3<auto> &p_point1, const Vector3<auto> &p_point2, const Vector3<auto> &p_point3,const ClockDirection p_dir = CW) {
 		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {
@@ -67,7 +67,7 @@ struct Plane_t {
 	__fast_inline Vector3<T> get_normal() const { return normal; };
 
 	void normalize();
-	Plane_t normalized() const;
+	Plane normalized() const;
 
 	/* Plane-Point operations */
 
@@ -80,12 +80,12 @@ struct Plane_t {
 
 	/* intersections */
 
-	bool intersect_3(const Plane_t & p_plane1, const Plane_t & p_plane2, Vector3<T> & r_result) const;
+	bool intersect_3(const Plane & p_plane1, const Plane & p_plane2, Vector3<T> & r_result) const;
 	bool intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir, Vector3<T> & p_intersection) const;
 	bool intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end, Vector3<T> & p_intersection) const;
 
 	// For Variant bindings.
-	std::optional<Vector3<T>> intersect_3(const Plane_t & p_plane1, const Plane_t & p_plane2) const;
+	std::optional<Vector3<T>> intersect_3(const Plane & p_plane1, const Plane & p_plane2) const;
 	std::optional<Vector3<T>> intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir) const;
 	std::optional<Vector3<T>> intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end) const;
 
@@ -96,32 +96,32 @@ struct Plane_t {
 	/* misc */
 
 	// Plane operator-() const { return Plane(Vector3<T>(-normal), static_cast<T>(-d));}
-	bool is_equal_approx(const Plane_t & p_plane) const;
-	bool is_equal_approx_any_side(const Plane_t & p_plane) const;
+	bool is_equal_approx(const Plane & p_plane) const;
+	bool is_equal_approx_any_side(const Plane & p_plane) const;
 	bool is_finite() const;
 
-	__fast_inline bool operator==(const Plane_t & p_plane) const;
-	__fast_inline bool operator!=(const Plane_t & p_plane) const;
+	__fast_inline bool operator==(const Plane & p_plane) const;
+	__fast_inline bool operator!=(const Plane & p_plane) const;
 
-	__fast_inline Plane_t() {}
-	__fast_inline Plane_t(const auto & p_a, const auto & p_b, const auto & p_c, const auto & p_d) :
+	__fast_inline Plane() {}
+	__fast_inline Plane(const auto & p_a, const auto & p_b, const auto & p_c, const auto & p_d) :
 			normal(Vector3<T>{p_a, p_b, p_c}),
 			d(static_cast<T>(p_d)) {}
 
 };
 
 template<arithmetic T>
-bool Plane_t<T>::is_point_over(const Vector3<T> &p_point) const {
+bool Plane<T>::is_point_over(const Vector3<T> &p_point) const {
 	return (normal.dot(p_point) > d);
 }
 
 template<arithmetic T>
-T Plane_t<T>::distance_to(const Vector3<T> &p_point) const {
+T Plane<T>::distance_to(const Vector3<T> &p_point) const {
 	return (normal.dot(p_point) - d);
 }
 
 template<arithmetic T>
-bool Plane_t<T>::has_point(const Vector3<T> &p_point, const T p_tolerance) const {
+bool Plane<T>::has_point(const Vector3<T> &p_point, const T p_tolerance) const {
 	T dist = normal.normalized().dot(p_point) - d;
 	dist = ABS(dist);
 	return (dist <= p_tolerance);
@@ -130,21 +130,21 @@ bool Plane_t<T>::has_point(const Vector3<T> &p_point, const T p_tolerance) const
 
 
 template<arithmetic T>
-bool Plane_t<T>::operator==(const Plane_t<T> &p_plane) const {
+bool Plane<T>::operator==(const Plane<T> &p_plane) const {
 	return normal == p_plane.normal && d == p_plane.d;
 }
 
 template<arithmetic T>
-bool Plane_t<T>::operator!=(const Plane_t<T> &p_plane) const {
+bool Plane<T>::operator!=(const Plane<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
-using PlaneR = Plane_t<real_t>;
-using PlaneF = Plane_t<float>;
-using PlaneD = Plane_t<double>;
+using PlaneR = Plane<real_t>;
+using PlaneF = Plane<float>;
+using PlaneD = Plane<double>;
 
 template<arithmetic T>
-__fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & value){
     return os << os.brackets<'('>() << 
 		value.normal << os.splitter() << 
 		value.d << os.brackets<')'>();

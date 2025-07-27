@@ -57,7 +57,7 @@ void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vector2<q16>
 void Sequencer::arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to, const q16 & radius){
     const auto may_center = calculate_fillet_center(from.normal(), to.normal(), radius);
     if(may_center.is_none()) return;
-    // const auto center = may_center.value();
+    // const auto center = may_center.unwrap();
     
     // TrapezoidSolver solver{
     //     limits_.max_agr, 
@@ -86,10 +86,10 @@ void Sequencer::sideways(Curve & curve, const Ray2<q16> & from, const Ray2<q16> 
         return;
     }
 
-    auto mid_p_opt = from_norm_line.intersection(to_norm_line);
-    if(!mid_p_opt) return;
+    auto may_mid_point = from_norm_line.intersection(to_norm_line);
+    if(may_mid_point.is_none()) return;
 
-    auto mid_p = mid_p_opt.value();
+    auto mid_p = may_mid_point.unwrap();
     
     this->linear(curve, Ray2<q16>{from.org, from.rad}, mid_p);
     this->rotate(curve, Ray2<q16>{mid_p, from.rad}, to.rad);
@@ -105,10 +105,10 @@ void Sequencer::follow(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & 
         return;
     }
 
-    auto mid_p_opt = from_line.intersection(to_line);
-    if(!mid_p_opt) return;
+    auto may_mid_point = from_line.intersection(to_line);
+    if(may_mid_point.is_none()) return;
 
-    auto mid_p = mid_p_opt.value();
+    auto mid_p = may_mid_point.unwrap();
     
     this->rotate(curve, from, from_line.rad);
     this->linear(curve, Ray2<q16>{from.org, from_line.rad}, mid_p);

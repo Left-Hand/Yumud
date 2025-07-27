@@ -47,6 +47,15 @@ public:
         return Ok();
     }
 
+
+    template<typename T>
+    [[nodiscard]] __fast_inline
+    Result<void, Error> read_reg(T & reg){
+        if(const auto res = read_reg(reg.address, reg.as_ref());
+            res.is_err()) return res;
+        return Ok();
+    }
+
     [[nodiscard]] __fast_inline
     Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){

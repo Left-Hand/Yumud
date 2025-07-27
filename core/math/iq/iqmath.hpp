@@ -19,38 +19,38 @@ namespace ymd{
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> sinf(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.to_i32(), 
+        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
             __iqdetails::__IQ31getSinDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> cosf(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.to_i32(), 
+        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
             __iqdetails::__IQ31getCosDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr std::array<iq_t<Q>, 2> sincos(const iq_t<P> iq_x){
-        auto res = (__iqdetails::__IQNgetCosSinTemplate<Q>(iq_x.to_i32(), 
+        auto res = (__iqdetails::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), 
             __iqdetails::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> sinpu(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), 
+        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
             __iqdetails::__IQ31getSinDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> cospu(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), 
+        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
             __iqdetails::__IQ31getCosDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr std::array<iq_t<Q>, 2> sincospu(const iq_t<P> iq_x){
-        auto res = (__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.to_i32(), 
+        auto res = (__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
             __iqdetails::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }

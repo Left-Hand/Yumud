@@ -31,7 +31,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         uint32_t id = 0x5678;
         const auto msg = hal::CanMsg::from_bytes(
             hal::CanExtId(id), 
-            std::bit_cast<std::array<uint8_t, 4>>(data.to_i32())
+            std::bit_cast<std::array<uint8_t, 4>>(data.as_i32())
         );
         // msg.load(data);
         // auto read = msg.to_vector();
@@ -41,7 +41,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         // auto read2 = msg.to_array<8>();
         const auto msg2 = hal::CanMsg::from_bytes(
             hal::CanStdId(id), 
-            std::bit_cast<std::array<uint8_t, 4>>(data2.to_i32())
+            std::bit_cast<std::array<uint8_t, 4>>(data2.as_i32())
         );
         logger.println(id, msg2.size(), msg2.iter_payload());
         for(uint8_t i = 0; i < msg2.size(); i++){
@@ -54,18 +54,18 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     while(1){
         if(is_tx){
             static uint8_t cnt = 0;
-            const auto msg_v = hal::CanMsg::from_list(
+            const auto msg = hal::CanMsg::from_list(
                 hal::CanStdId(1), 
                 {0x34, 0x37}
             );
-            can.write(msg_v);
+            can.write(msg).examine();
 
             while(can.pending()){
                 logger.println("err", 
                     can.get_tx_errcnt(), 
                     can.get_rx_errcnt(), 
                     can.is_busoff(), 
-                    std::bit_cast<uint8_t>(can.get_last_error())
+                    can.get_last_fault()
                 );
                 clock::delay(2ms);
             }
@@ -85,11 +85,12 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
                 logger.println("rx", msg_r);
             }
 
-            const auto msg_v = hal::CanMsg::from_list(
+            const auto msg = hal::CanMsg::from_list(
                 hal::CanStdId(0), 
                 {0x13,0x14}
             );
-            can.write(msg_v);
+
+            can.write(msg).examine();
 
             clock::delay(200ms);
             hal::portC[14].toggle();

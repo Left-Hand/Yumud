@@ -2,7 +2,7 @@
 
 #include "zaxis.hpp"
 #include "jointlr.hpp"
-#include "robots/kinematics/Cross/CrossSolver_t.hpp"
+#include "robots/kinematics/Cross/cross_kinematics.hpp"
 
 
 namespace ymd::drivers{
@@ -14,7 +14,7 @@ class ZAxisCross:public ZAxis{
 public:
     using Motor = JointLR;
     // using Motor = SG90;
-    using Solver = CrossSolver_t<real_t>;
+    using Solver = CrossKinematics<real_t>;
 
     struct Config:public ZAxis::Config{
         Solver::Config solver_config;    

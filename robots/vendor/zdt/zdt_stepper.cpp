@@ -1,37 +1,32 @@
 #include "zdt_stepper.hpp"
 
 using namespace ymd;
-using namespace ymd::robots;
+using namespace ymd::robots::zdtmotor;
+using namespace ymd::robots::zdtmotor::prelude;
 
-using Error = ZdtStepper::Error;
-
-template<typename T = void>
-using IResult = Result<T, Error>;
-
-IResult<> ZdtStepper::set_target_position(const real_t pos){
-    return write_payload(Payloads::SetPosition{
-        .is_ccw = pos < 0,
-        // .rpm = Rpm::from(0.07_r),
-        .rpm = Rpm::from_speed(1.07_r),
-        .acc_level = AcclerationLevel::from_raw(0),
-        .pulse_cnt = PulseCnt::from_position(ABS(pos)),
+IResult<> ZdtStepper::set_position(ZdtStepper::PositionSetpoint targ){
+    return write_payload(payloads::SetPosition{
+        .is_ccw = (targ.position < 0),
+        .rpm = Rpm::from_speed(targ.speed),
+        .acc_level = AcclerationLevel::from_u8(0),
+        .pulse_cnt = PulseCnt::from_position(ABS(targ.position)),
         .is_absolute = true,
         .is_sync = is_sync_
     });
 }
 
-IResult<> ZdtStepper::set_target_speed(const real_t spd){
-    return write_payload(Payloads::SetSpeed{
-        .is_ccw = spd < 0,
-        .rpm = Rpm::from_speed(ABS(spd)),
+IResult<> ZdtStepper::set_speed(ZdtStepper::SpeedSetpoint targ){
+    return write_payload(payloads::SetSpeed{
+        .is_ccw = targ.speed < 0,
+        .rpm = Rpm::from_speed(ABS(targ.speed)),
         .acc_level = AcclerationLevel::from(0),
-        .is_absolute = false,
+        .is_absolute = true,
         .is_sync = is_sync_
     });
 }
 
 IResult<> ZdtStepper::brake(){
-    return write_payload(Payloads::Brake{
+    return write_payload(payloads::Brake{
         .is_sync = is_sync_
     });
 }
@@ -39,13 +34,13 @@ IResult<> ZdtStepper::brake(){
 IResult<> ZdtStepper::set_subdivides(const uint16_t subdivides){
     if(subdivides > 256) 
         return Err(Error::SubDivideOverflow);
-    return write_payload(Payloads::SetSubDivides{
+    return write_payload(payloads::SetSubDivides{
         .subdivides = uint8_t(subdivides & 0xff)
     });
 }
 
 IResult<> ZdtStepper::activate(const Enable en){
-    return write_payload(Payloads::Actvation{
+    return write_payload(payloads::Actvation{
         .en = en == EN,
         .is_sync = is_sync_
     });
@@ -53,15 +48,15 @@ IResult<> ZdtStepper::activate(const Enable en){
 
 
 IResult<> ZdtStepper::trig_cali(){
-    return write_payload(Payloads::TrigCali::from_default());  
+    return write_payload(payloads::TrigCali::from_default());  
 }
 
 IResult<> ZdtStepper::query_homming_paraments(){
-    return write_payload(Payloads::QueryHommingParaments{});
+    return write_payload(payloads::QueryHommingParaments{});
 }
 
 IResult<> ZdtStepper::trig_homming(const HommingMode mode){
-    return write_payload(Payloads::TrigHomming{
+    return write_payload(payloads::TrigHomming{
         .homming_mode = mode,
         .is_sync = is_sync_
     });
@@ -74,12 +69,9 @@ void ZdtMotorPhy::can_write_bytes(
     const std::span<const uint8_t> bytes
 ){
     auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
-    // DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
-    while(true){
-        const auto may_msg = iter.next();
-        if(may_msg.is_none()) break;
-        const auto & msg = may_msg.unwrap();
-        can.write(msg);
+    while(iter.has_next()){
+        const auto msg = iter.next();
+        can.write(msg).examine();
     }
 }
 
@@ -89,12 +81,15 @@ void ZdtMotorPhy::uart_write_bytes(
     const FuncCode func_code,
     const std::span<const uint8_t> bytes
 ){
-    uart.write1(id.to_u8());
-    uart.write1(std::bit_cast<uint8_t>(func_code));
-    uart.writeN(reinterpret_cast<const char *>(
-        bytes.data()), bytes.size());
+    Buf buf;
+    buf.append_unchecked(id.as_u8());
+    buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
+    buf.append_unchecked(bytes);
 
-    DEBUG_PRINTLN(id.to_u8(), std::bit_cast<uint8_t>(func_code), bytes);
+    uart.writeN(
+        reinterpret_cast<const char *>(buf.data()),
+        buf.size()
+    );
 }
 
 void ZdtMotorPhy::write_bytes(
