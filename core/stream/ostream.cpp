@@ -95,9 +95,8 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-OutputStream & OutputStream::operator<<(const float value){
-    PRINT_FLOAT_TEMPLATE(strconv::ftoa);
-    return *this;
+OutputStream & OutputStream::operator<<(const float _value){
+    return (*this) << q16::from(_value);
 }
 
 OutputStream & OutputStream::operator<<(const double value){

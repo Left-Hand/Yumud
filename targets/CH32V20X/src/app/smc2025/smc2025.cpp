@@ -169,7 +169,10 @@ void smc2025_main(){
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
-
+    while(true){
+        DEBUG_PRINTLN(clock::millis());
+        clock::delay(5ms);
+    }
 
     // bkp.init();edRunStatus();
     auto & spi = spi2;

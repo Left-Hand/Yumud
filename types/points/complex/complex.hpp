@@ -32,7 +32,6 @@ public:
     [[nodiscard]] __fast_inline constexpr T real_squared() const {return real * real;}
     [[nodiscard]] __fast_inline constexpr T imag_squared() const {return imag * imag;}
     [[nodiscard]] __fast_inline constexpr T norm() const {return real * real + imag * imag;}
-    [[nodiscard]] __fast_inline constexpr T abs() const {return sqrt(real * real + imag * imag);}
     [[nodiscard]] __fast_inline constexpr T arg() const {return std::atan2(imag, real);}
 
     __fast_inline constexpr Complex operator-() {
@@ -105,6 +104,10 @@ public:
         real = static_cast<T>((static_cast<U>(orgReal) * other.real + static_cast<U>(orgImag) * other.imag) / denominator);
         imag = static_cast<T>((static_cast<U>(orgImag) * other.real - static_cast<U>(orgReal) * other.imag) / denominator);
         return *this;
+    }
+
+    __fast_inline constexpr T abs() const {
+        return mag(real, imag);
     }
 };
 
@@ -184,8 +187,10 @@ __fast_inline Complex<T> conj(const Complex<T> & m){
 }
 
 namespace ymd{
-    __no_inline OutputStream & operator << (OutputStream & os , const Complex<auto> & c){
-        return os << c.real << os.splitter() << c.imag << 'i';
+    template<typename T>
+    __no_inline OutputStream & operator << (OutputStream & os , const Complex<T> & c){
+        // return os << c.real << os.splitter() << c.imag << 'i';
+        return os << c.real << os.splitter() << c.imag;
     }
 }
 
