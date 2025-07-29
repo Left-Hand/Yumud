@@ -173,33 +173,7 @@ struct Gesture{
 
 
 void bldc_main(){
-    const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
-    auto get_node_role = [](const uint32_t chip_id_crc) -> Option<NodeRole>{
-        switch(chip_id_crc){
-            case 207097585:
-                return Some(NodeRole::PitchJoint);
-            case 736633164:
-                return Some(NodeRole::RollJoint);
-            case 1874498751:
-                return Some(NodeRole::LeftWheel);
-            case 0xF2A51D93:
-                return Some(NodeRole::RightWheel);
-            default:
-                return None;
-        }
-    };
 
-    const auto self_node_role_ = get_node_role(chip_id_crc_)
-        .expect(chip_id_crc_);
-
-    const auto node_is_master = [&] -> bool{
-        switch(self_node_role_){
-            case NodeRole::RollJoint:
-                return true;
-            default:
-                return false;
-        }
-    }();
 
     static constexpr auto UART_BAUD = 576000;
     // my_can_ring_main();
@@ -228,6 +202,47 @@ void bldc_main(){
     ledb.outpp(); 
     ledg.outpp();
     
+    auto blink_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(10ms);
+        timer.invoke_if([&]{
+            ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+            ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+            ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+        });
+    };
+
+
+    const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
+    auto get_node_role = [](const uint32_t chip_id_crc) -> Option<NodeRole>{
+        switch(chip_id_crc){
+            case 207097585:
+                return Some(NodeRole::PitchJoint);
+            case 736633164:
+                return Some(NodeRole::RollJoint);
+            case 1874498751:
+                return Some(NodeRole::LeftWheel);
+            case 0xF2A51D93:
+                return Some(NodeRole::RightWheel);
+            default:
+                return Some(NodeRole::RightWheel);
+                return None;
+        }
+    };
+
+    const auto self_node_role_ = get_node_role(chip_id_crc_)
+        .expect(chip_id_crc_);
+
+    const auto node_is_master = [&] -> bool{
+        switch(self_node_role_){
+            case NodeRole::RollJoint:
+                return true;
+            case NodeRole::RightWheel:
+                return true;
+            default:
+                return false;
+        }
+    }();
+
     DBG_UART.init({
         .baudrate = UART_BAUD
     });
@@ -259,14 +274,7 @@ void bldc_main(){
         }
     );
 
-    auto blink_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(10ms);
-        timer.invoke_if([&]{
-            ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-            ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-            ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
-        });
-    };
+
 
     spi.init({18_MHz});
 
@@ -309,7 +317,7 @@ void bldc_main(){
             switch(self_node_role_){
                 case NodeRole::LeftWheel:
                 case NodeRole::RightWheel:
-                    return CCW;
+                    return CW;
                 default:
                     return CW;
             }
@@ -354,7 +362,7 @@ void bldc_main(){
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
             .fs = FOC_FREQ,
-            .r = 85
+            .r = 105
         }
     };
 
@@ -383,9 +391,9 @@ void bldc_main(){
                 case NodeRole::RollJoint:
                     return -0.233_r;
                 case NodeRole::LeftWheel:
-                    return -0.5_r;
+                    return -0.203_r;
                 case NodeRole::RightWheel: 
-                    return -0.5_r;
+                    return -0.233_r;
                 default:
                     PANIC();
             }
@@ -397,7 +405,6 @@ void bldc_main(){
                 case NodeRole::RollJoint:
                     return 7;
                 case NodeRole::LeftWheel:
-                    return 7;
                 case NodeRole::RightWheel: 
                     return 7;
                 default:
@@ -424,8 +431,8 @@ void bldc_main(){
                 case NodeRole::LeftWheel:
                 case NodeRole::RightWheel:
                     return dsp::Leso::Config{
-                        .b0 = 1.3_r,
-                        .w = 13,
+                        .b0 = 0.3_r,
+                        .w = 1,
                         .fs = FOC_FREQ
                     };
                 default:
@@ -447,7 +454,7 @@ void bldc_main(){
             case NodeRole::RightWheel:
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
                 // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 36.281_r, .kd = 2.3_r};
+                return PdCtrlLaw{.kp = 36.281_r, .kd = 1.1_r};
             default: 
                 PANIC();
         }
@@ -465,23 +472,25 @@ void bldc_main(){
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
 
-        const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
-        pos_filter_.update(meas_lap);
+        // const auto meas_lap_position = 1 - ma730_.read_lap_position().examine(); 
+        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
+        pos_filter_.update(meas_lap_position);
 
 
-        const real_t meas_elecrad = elecrad_comp_(meas_lap);
+        const real_t meas_elecrad = elecrad_comp_(meas_lap_position);
 
         const auto meas_position = pos_filter_.position();
         const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 4;
-        [[maybe_unused]] static constexpr real_t amp = 0.06_r;
+        [[maybe_unused]] static constexpr real_t amp = 0.16_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
             std::make_tuple(
                 // amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
-                axis_target_position_, axis_target_speed_
+                floor(4 * ctime) * 0.25_r, 0.0_r
+                // axis_target_position_, axis_target_speed_
             );
         });
 
@@ -496,9 +505,9 @@ void bldc_main(){
         [[maybe_unused]] const auto targ_speed = blance_speed + axis_target_speed;
 
 
-        static constexpr auto MAX_VOLT = 2.7_r;
+        static constexpr auto MAX_VOLT = 3.2_r;
 
-        #if 1
+        #if 0
         const auto q_volt = 1.3_r;
         #else
         const auto q_volt = CLAMP2(
@@ -512,7 +521,7 @@ void bldc_main(){
         }.to_alpha_beta(meas_elecrad);
 
         
-        #if 1
+        #if 0
         {
             const auto [s,c] = sincospu(3.5_r * ctime);
             const auto amp = 2.3_r;
@@ -638,7 +647,8 @@ void bldc_main(){
             while(true){
                 const auto may_msg = read_can_msg();
                 if(may_msg.is_none()) break;
-                process_msg(may_msg.unwrap());
+                const auto & msg = may_msg.unwrap();
+                process_msg(msg);
             }
         });
     };
@@ -647,23 +657,17 @@ void bldc_main(){
     [[maybe_unused]] auto can_publisher_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
-        auto publish_roll_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
-            const auto msg = MsgFactory<CommandKind>{NodeRole::RollJoint}(cmd);
-
-            write_can_msg(msg);
-        };
-
-        auto publish_pitch_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
-            const auto msg = MsgFactory<CommandKind>{NodeRole::PitchJoint}(cmd);
-
+        auto publish_joint_target = [&]<NodeRole Role>(const commands::SetPositionWithFwdSpeed & cmd){
+            const auto msg = MsgFactory<CommandKind>{Role}(cmd);
             write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
-
             if(node_is_master){
-                publish_roll_joint_target(track_target_.roll);
-                publish_pitch_joint_target(track_target_.pitch);
+                publish_joint_target.operator()<NodeRole::RollJoint>(track_target_.roll);
+                publish_joint_target.operator()<NodeRole::PitchJoint>(track_target_.pitch);
+                publish_joint_target.operator()<NodeRole::LeftWheel>(track_target_.roll);
+                publish_joint_target.operator()<NodeRole::RightWheel>(track_target_.pitch);
             }
         });
     };
@@ -682,7 +686,13 @@ void bldc_main(){
     [[maybe_unused]] auto report_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
         timer.invoke_if([&]{
-            DEBUG_PRINTLN(pos_filter_.cont_position());
+            DEBUG_PRINTLN(
+                pos_filter_.cont_position(), 
+                pos_filter_.speed(),
+                meas_elecrad_,
+                q_volt_
+                // , self_node_role_
+            );
         });
     };
 
