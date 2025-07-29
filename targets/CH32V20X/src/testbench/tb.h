@@ -176,3 +176,4 @@ void mks_stepper_main();
 void slcan_main();
 void st7789_main();
 void fft_main();
+void embd_main();

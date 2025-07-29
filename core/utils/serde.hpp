@@ -547,7 +547,7 @@ struct serde::DeserializerMaker<serde::RawBytes, T> { \
 
 
 #define DEF_DERIVE_DEBUG_AS_DISPLAY(T)\
-OutputStream & operator<<(OutputStream & os, const T & self){ \
+inline OutputStream & operator<<(OutputStream & os, const T & self){ \
     return reflecter::Displayer<T>::display(os, self);\
 }
 

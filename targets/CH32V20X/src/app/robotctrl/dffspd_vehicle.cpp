@@ -98,13 +98,9 @@ private:
         .polarity = true
     };
 
-    // dsp::DebounceFilter filter_{DEBOUNCE_CONFIG};
     bool last_state_ = false;
 
     constexpr void update(const BoolLevel level, const bool is_backward){
-        // filter_.update(level.to_bool());
-
-        // const auto state = filter_.is_high();
         const auto state = level.to_bool();
         const bool is_just_upedge = (last_state_ == false) and (state == true);
 
@@ -207,6 +203,7 @@ void diffspd_vehicle_main(){
     // static constexpr auto UART_BAUD = 115200 * 2;
     static constexpr auto UART_BAUD = 576000;
     static constexpr auto PWM_FREQ = 2 * 1000;
+    static constexpr auto TD_CUTOFF_FREQ = 60;
     // static constexpr auto PWM_FREQ = 1000;
     static constexpr auto MOTOR_CTRL_FREQ = PWM_FREQ; 
     // my_can_ring_main();
@@ -222,7 +219,12 @@ void diffspd_vehicle_main(){
     DEBUGGER.no_brackets();
 
     auto & timer = hal::timer3;
-    timer.init({PWM_FREQ});
+
+    timer.init({
+        .freq = PWM_FREQ,
+        .mode = hal::TimerCountMode::Up
+    });
+
     timer.enable_arr_sync();
 
 
@@ -262,7 +264,7 @@ void diffspd_vehicle_main(){
         return PwmAndDirPhy_WithFg{{
             .pwm = &LEFT_PWM,
             .dir_gpio = &LEFT_DIR_GPIO,
-            .deduction = 60,
+            .deduction = TD_CUTOFF_FREQ,
             .fg_gpio = &LEFT_FG_GPIO
         }};
     };

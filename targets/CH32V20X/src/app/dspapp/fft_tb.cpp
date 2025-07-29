@@ -233,7 +233,7 @@ void fft_main(){
     constexpr size_t N = 1024;
     // constexpr size_t N = 512;
 
-    auto make_sin_samples = []() -> std::array<T, N>{
+    [[maybe_unused]] auto make_sin_samples = []() -> std::array<T, N>{
         std::array<T, N> ret;
         const auto freq = q16(256.97) / N;
         for(size_t i = 0; i < N; ++i){
@@ -242,7 +242,7 @@ void fft_main(){
         return ret;
     };
 
-    auto make_am_samples = []() -> std::array<T, N>{
+    [[maybe_unused]] auto make_am_samples = []() -> std::array<T, N>{
         std::array<T, N> ret;
         constexpr auto modu_freq = q16(8.97) / N;
         constexpr auto carry_freq = q16(56.97) / N;

@@ -213,7 +213,7 @@ struct Gesture{
 
 
 
-void bldc_main(){
+void embd_main(){
     static constexpr auto UART_BAUD = 115200 * 2;
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
@@ -338,11 +338,23 @@ void bldc_main(){
             .unwrap()
     };
 
+    BMI160 bmi160_{
+        &spi,
+        spi.allocate_cs_gpio(&hal::portA[0])
+            .unwrap()
+    };
 
     ma730_.init({
         .direction = CW
     }).examine();
 
+
+    bmi160_.init({
+        .acc_odr = BMI160::AccOdr::_200Hz,
+        .acc_fs = BMI160::AccFs::_16G,
+        .gyr_odr = BMI160::GyrOdr::_200Hz,
+        .gyr_fs = BMI160::GyrFs::_500deg
+    }).examine();
 
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
@@ -454,6 +466,7 @@ void bldc_main(){
 
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
+        bmi160_.update().examine();
 
         const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
         pos_filter_.update(meas_lap);
@@ -547,6 +560,8 @@ void bldc_main(){
         .roll = {.position = 0, .speed = 0},
         .pitch = {.position = 0, .speed = 0}
     };
+
+
 
     auto update_joint_target = [&](const real_t p1, const real_t p2) -> void { 
         track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
@@ -658,11 +673,32 @@ void bldc_main(){
         const auto p2 = s * amp;
 
         update_joint_target(p1, p2);
+    };  
+
+    [[maybe_unused]] auto gesture_calc_service = [&]{
+        [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
+        [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
+        [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+
+        static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
+        static auto gesture_estimator = robots::ComplementaryGestureEstimator(
+            {.fs = FREQ});
+
+        timer.invoke_if([&]{
+            const auto acc = bmi160_.read_acc().examine();
+            const auto gyr = bmi160_.read_gyr().examine();
+
+            gesture_estimator.process(acc, gyr);
+
+            std::tie(self_blance_theta_, self_blance_omega_) = gesture_estimator.theta_and_omega();
+        });
     };
 
 
     while(true){
         repl_service();
+        // update_demo_track_service();
+        gesture_calc_service();
 
         can_publisher_service();
         can_subscriber_service();
@@ -767,34 +803,3 @@ void bldc_main(){
     }
 }
 
-
-
-[[maybe_unused]]
-static void static_test(){
-    #define STATIC_TEST_SEL 5
-    #if STATIC_TEST_SEL == 0
-    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1});
-    static_assert(msg.size() == 8);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    // static_assert(may_cmd.is_ok());
-    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #elif STATIC_TEST_SEL ==1
-    static constexpr auto msg = (MsgFactory{NodeRole::Master})(SpinCommand{1});
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SpinCommand>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    static constexpr auto cmd = may_cmd.unwrap();
-    static constexpr auto rot = cmd.delta_rotation;
-    static_assert(msg.size() == 4);
-    static_assert(rot == 1.0_q16);
-    // static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #elif STATIC_TEST_SEL == 2
-    // static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionXYZCommand{0, 1, 2});
-    static constexpr hal::CanMsg msg = hal::CanMsg::from_iter(hal::CanStdId(0), MyIter<8>{}).unwrap();
-    static_assert(msg.size() == 12);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionXYZCommand>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    // static_assert(may_cmd.is_ok());
-    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #endif
-}
