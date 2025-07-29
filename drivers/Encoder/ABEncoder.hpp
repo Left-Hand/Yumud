@@ -136,23 +136,20 @@ class AbEncoderByGpio final{
 public: 
 
     struct Config{
-        hal::Gpio & a_gpio; 
-        hal::Gpio & b_gpio;
+        Some<hal::Gpio *> a_gpio; 
+        Some<hal::Gpio *> b_gpio;
     };
 
-    AbEncoderByGpio(hal::Gpio & a_gpio, hal::Gpio & b_gpio):
-        a_gpio_(a_gpio), b_gpio_(b_gpio){;}
+    AbEncoderByGpio(const Config & cfg):
+        a_gpio_(cfg.a_gpio.deref()), 
+        b_gpio_(cfg.b_gpio.deref()){;}
 
     void init(){
-        hal::portA[0].inpu();
-        hal::portA[1].inpu();    
+        a_gpio_.inpu();
+        b_gpio_.inpu();    
     }
 
     uint8_t get_code() const {
-        
-        // const auto m = millis();
-        // const auto a = (m % 100) > 50; 
-        // const auto b = ((m+25) % 100) > 50; 
 
         const auto a = a_gpio_.read().to_bool(); 
         const auto b = b_gpio_.read().to_bool(); 
@@ -160,15 +157,15 @@ public:
         return uint8_t(uint8_t(b) << 1) | uint8_t(a);
     }
 
-    const auto & get_cnt() const{
+    constexpr const auto & count() const{
         return cnt_;
     }
 
-    const auto & get_err_cnt() const{
+    constexpr const auto & get_err_cnt() const{
         return err_cnt_;
     }
 
-    void update(){
+    void tick(){
         static constexpr std::array<uint8_t, 4> INC_MAP = {
             0b01,//00
             0b11,//01
@@ -184,6 +181,7 @@ public:
         };
 
         const auto this_code = get_code();
+
         if(last_code_ == UNSET){
             last_code_ = this_code;
             return;
@@ -196,6 +194,7 @@ public:
         else if(this_code != last_code_){err_cnt_++;}
         last_code_ = this_code;
     }
+
 private:
     static constexpr uint8_t UNSET = 0xFF;
     hal::Gpio & a_gpio_;

@@ -18,7 +18,7 @@ using namespace ymd;
 
 
 
-namespace fft_optimized {
+namespace ymd::dsp {
 
 template <typename T, size_t N>
 struct TwiddleFactors {
@@ -31,6 +31,7 @@ struct TwiddleFactors {
         }
         return ret;
     }();
+
     static constexpr std::array<T, N/2> sin = []{
         std::array<T, N/2> ret;
         for (size_t k = 0; k < N/2; ++k) {
@@ -210,10 +211,11 @@ static constexpr void rfft(std::span<Complex<T>, N> out, std::span<const T, N> i
     FFT_Impl<T, N>::calc(out, in);
 }
 
-} // namespace fft_optimized
+} // namespace dsp
 
 
-#define UART hal::uart6
+#define UART hal::uart2
+
 
 void fft_main(){
     UART.init({576_KHz});
@@ -223,43 +225,57 @@ void fft_main(){
     DEBUGGER.force_sync(EN);
 
 
-
     using T = float; 
     // using T = iq_t<16>; 
 
     [[maybe_unused]]
-    constexpr size_t N = 256;
+    // constexpr size_t N = 256;
+    constexpr size_t N = 1024;
     // constexpr size_t N = 512;
 
     auto make_sin_samples = []() -> std::array<T, N>{
         std::array<T, N> ret;
-        const auto freq = q16(40.97) / N;
+        const auto freq = q16(256.97) / N;
         for(size_t i = 0; i < N; ++i){
             ret[i] = T(sinpu(freq * i));
         }
         return ret;
     };
 
-    const auto sin_samples = make_sin_samples();
+    auto make_am_samples = []() -> std::array<T, N>{
+        std::array<T, N> ret;
+        constexpr auto modu_freq = q16(8.97) / N;
+        constexpr auto carry_freq = q16(56.97) / N;
+        constexpr auto modu_depth = 0.4_r;
+        for(size_t i = 0; i < N; ++i){
+            ret[i] = T(sinpu(carry_freq * i) * (1 + modu_depth * sinpu(modu_freq * i)));
+        }
+        return ret;
+    };
+
+    // const auto samples = make_sin_samples();
+    const auto samples = make_am_samples();
     std::array<Complex<T>, N> out;
 
-    fft_optimized::rfft(
-        std::span(out), 
-        std::span(sin_samples)
-    );
-    
-    // DEBUG_PRINTLN(sin_samples);
+    const auto elapsed_us = measure_elapsed_us([&]{
+        dsp::rfft(
+            std::span(out), 
+            std::span(samples)
+        );
+    });
+    // DEBUG_PRINTLN(samples);
     // DEBUG_PRINTLN(out.real, out.imag);
 
     for(size_t i = 0; i < N; i++){
         DEBUG_PRINTLN(
             out[i], 
-            sin_samples[i],
+            samples[i],
             out[i].abs()
             // out | std::views::transform([](const Complex<auto> & x){return x.abs();})
         );
     }
 
+    DEBUG_PRINTLN(elapsed_us);
 
     while(true){
         // DEBUG_PRINTLN(clock::millis());
