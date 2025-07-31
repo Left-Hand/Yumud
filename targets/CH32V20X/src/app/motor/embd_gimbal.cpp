@@ -1,3 +1,5 @@
+#if 0
+
 #include "src/testbench/tb.h"
 #include "utils.hpp"
 #include <atomic>
@@ -50,6 +52,7 @@
 #include "robots/commands/machine_commands.hpp"
 #include "robots/commands/nmt_commands.hpp"
 #include "robots/nodes/msg_factory.hpp"
+
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -758,3 +761,4 @@ void embd_main(){
     }
 }
 
+#endif

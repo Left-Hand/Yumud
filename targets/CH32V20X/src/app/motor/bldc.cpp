@@ -63,7 +63,7 @@ using robots::MsgFactory;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
-static constexpr real_t JOINT_POSITION_LIMIT = 0.2_r;
+static constexpr real_t PITCH_JOINT_POSITION_LIMIT = 0.2_r;
 static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
 
@@ -99,7 +99,9 @@ enum class CommandKind:uint8_t{
     SetPosition,
     SetPositionWithFwdSpeed,
     SetSpeed,
-    SetKpKd
+    SetKpKd,
+    Deactivate,
+    Activate
 };
 
 namespace commands{ 
@@ -113,15 +115,18 @@ DEF_QUICK_COMMAND_BIND(SetPosition)
 DEF_QUICK_COMMAND_BIND(SetPositionWithFwdSpeed)
 DEF_QUICK_COMMAND_BIND(SetSpeed)
 DEF_QUICK_COMMAND_BIND(SetKpKd)
+DEF_QUICK_COMMAND_BIND(Activate)
+DEF_QUICK_COMMAND_BIND(Deactivate)
 
 }
 
 
 struct TrackTarget{
-    commands::SetPositionWithFwdSpeed roll ;
+    commands::SetPositionWithFwdSpeed yaw ;
     commands::SetPositionWithFwdSpeed pitch;
 };
 
+using commands::SetPositionWithFwdSpeed;
 
 
 static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole self_node_role){
@@ -130,18 +135,18 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
 };
 
 struct Gesture{
-    real_t roll;
+    real_t yaw;
     real_t pitch;
 
     constexpr Gesture lerp(const Gesture & other, const real_t ratio) const{
         return Gesture{
-            .roll = roll + (other.roll - roll) * ratio,
+            .yaw = yaw + (other.yaw - yaw) * ratio,
             .pitch = pitch + (other.pitch - pitch) * ratio
         };
     }
 
     friend OutputStream & operator << (OutputStream & os, const Gesture & gesture){
-        return os << "roll: " << gesture.roll << ", pitch: " << gesture.pitch;
+        return os << "yaw: " << gesture.yaw << ", pitch: " << gesture.pitch;
     }
 };
 
@@ -179,6 +184,19 @@ void bldc_main(){
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
 
+    DBG_UART.init({
+        .baudrate = UART_BAUD
+    });
+
+
+    DEBUGGER.retarget(&DBG_UART);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets();
+    // DEBUGGER.force_sync(EN);
+    // DEBUGGER.no_fieldname();
+    // DEBUGGER.no_scoped();
+
     auto & spi = hal::spi1;
     auto & timer = hal::timer1;
     auto & can = hal::can1;
@@ -213,18 +231,17 @@ void bldc_main(){
 
 
     const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
+
     auto get_node_role = [](const uint32_t chip_id_crc) -> Option<NodeRole>{
         switch(chip_id_crc){
-            case 207097585:
-                return Some(NodeRole::PitchJoint);
-            case 736633164:
-                return Some(NodeRole::RollJoint);
+
             case 1874498751:
-                return Some(NodeRole::LeftWheel);
+                return Some(NodeRole::YawJoint);
             case 0xF2A51D93:
-                return Some(NodeRole::RightWheel);
+                return Some(NodeRole::PitchJoint);
+            case 0x110E3BFE:
+                return Some(NodeRole::PitchJoint);
             default:
-                return Some(NodeRole::RightWheel);
                 return None;
         }
     };
@@ -234,27 +251,15 @@ void bldc_main(){
 
     const auto node_is_master = [&] -> bool{
         switch(self_node_role_){
-            case NodeRole::RollJoint:
-                return true;
-            case NodeRole::RightWheel:
+            case NodeRole::YawJoint:
+                return false;
+            case NodeRole::PitchJoint:
                 return true;
             default:
-                return false;
+                PANIC();
         }
     }();
 
-    DBG_UART.init({
-        .baudrate = UART_BAUD
-    });
-
-
-    DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
-    // DEBUGGER.force_sync(EN);
-    // DEBUGGER.no_fieldname();
-    // DEBUGGER.no_scoped();
 
     clock::delay(2ms);
 
@@ -311,17 +316,24 @@ void bldc_main(){
             .unwrap()
     };
 
+    
+    BMI160 bmi160_{
+        &spi,
+        spi.allocate_cs_gpio(&hal::portA[0])
+            .unwrap()
+    };
+
+    if(self_node_role_ == NodeRole::YawJoint){
+        bmi160_.init({
+            .acc_odr = BMI160::AccOdr::_200Hz,
+            .acc_fs = BMI160::AccFs::_16G,
+            .gyr_odr = BMI160::GyrOdr::_200Hz,
+            .gyr_fs = BMI160::GyrFs::_500deg
+        }).examine();
+    }
 
     ma730_.init({
-        .direction = [&]{
-            switch(self_node_role_){
-                case NodeRole::LeftWheel:
-                case NodeRole::RightWheel:
-                    return CW;
-                default:
-                    return CW;
-            }
-        }()
+        .direction = CW
     }).examine();
 
 
@@ -369,14 +381,10 @@ void bldc_main(){
     pos_filter_.set_base_lap_position(
         [&] -> real_t{
             switch(self_node_role_){
+                case NodeRole::YawJoint:
+                    return {0.389_r + 0.5_r};
                 case NodeRole::PitchJoint:
                     return {0.243_r};
-                case NodeRole::RollJoint:
-                    return {0.389_r + 0.5_r};
-                case NodeRole::LeftWheel:
-                    return {0.5_r};
-                case NodeRole::RightWheel: 
-                    return {0.5_r};
                 default:
                     PANIC();
             }
@@ -386,55 +394,35 @@ void bldc_main(){
     ElecradCompensator elecrad_comp_{
         .base = [&]{
             switch(self_node_role_){
+                case NodeRole::YawJoint:
+                    return -0.211_r;
                 case NodeRole::PitchJoint:
-                    return -0.282_r;
-                case NodeRole::RollJoint:
-                    return -0.233_r;
-                case NodeRole::LeftWheel:
-                    return -0.203_r;
-                case NodeRole::RightWheel: 
-                    return -0.233_r;
+                    return -0.22_r;
                 default:
                     PANIC();
             }
         }(),
         .pole_pairs = [&] -> uint32_t{
-            switch(self_node_role_){
-                case NodeRole::PitchJoint:
-                    return 7;
-                case NodeRole::RollJoint:
-                    return 7;
-                case NodeRole::LeftWheel:
-                case NodeRole::RightWheel: 
-                    return 7;
-                default:
-                    PANIC();
-            }
+            return 7;
         }(),
     };
 
     dsp::Leso leso_{
         [&]{
             switch(self_node_role_){
-                case NodeRole::PitchJoint:
+                case NodeRole::YawJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.5_r,
-                        .w = 1.2_r,
+                        .w = 0.2_r,
                         .fs = FOC_FREQ
                     };
-                case NodeRole::RollJoint:
+                case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
-                        .b0 = 1.3_r,
-                        .w = 13,
+                        .b0 = 0.4_r,
+                        .w = 3.2_r,
                         .fs = FOC_FREQ
                     };
-                case NodeRole::LeftWheel:
-                case NodeRole::RightWheel:
-                    return dsp::Leso::Config{
-                        .b0 = 0.3_r,
-                        .w = 1,
-                        .fs = FOC_FREQ
-                    };
+
                 default:
                     PANIC();
             }
@@ -443,18 +431,10 @@ void bldc_main(){
 
     auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
         switch(self_node_role_){
+            case NodeRole::YawJoint: 
+                return PdCtrlLaw{.kp = 146.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
-                // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
-                // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 36.281_r, .kd = 2.3_r};
-                // return PdCtrlLaw{.kp = 12.581_r, .kd = 0.38_r};
-            case NodeRole::RollJoint: 
-                return PdCtrlLaw{.kp = 190.581_r, .kd = 30.38_r};
-            case NodeRole::LeftWheel:
-            case NodeRole::RightWheel:
-                // return PdCtrlLaw{.kp = 20.581_r, .kd = 0.78_r};
-                // return PdCtrlLaw{.kp = 20.581_r, .kd = 1.00_r};
-                return PdCtrlLaw{.kp = 36.281_r, .kd = 1.1_r};
+                return PdCtrlLaw{.kp = 46.281_r, .kd = 0.4_r};
             default: 
                 PANIC();
         }
@@ -471,8 +451,10 @@ void bldc_main(){
 
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
+        if(self_node_role_ == NodeRole::YawJoint){
+            bmi160_.update().examine();
+        }
 
-        // const auto meas_lap_position = 1 - ma730_.read_lap_position().examine(); 
         const auto meas_lap_position = ma730_.read_lap_position().examine(); 
         pos_filter_.update(meas_lap_position);
 
@@ -482,14 +464,14 @@ void bldc_main(){
         const auto meas_position = pos_filter_.position();
         const auto meas_speed = pos_filter_.speed();
 
-        [[maybe_unused]] static constexpr real_t omega = 4;
-        [[maybe_unused]] static constexpr real_t amp = 0.16_r;
+        [[maybe_unused]] static constexpr real_t omega = 1;
+        [[maybe_unused]] static constexpr real_t amp = 0.02_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
             std::make_tuple(
-                // amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
-                floor(4 * ctime) * 0.25_r, 0.0_r
+                amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
+                // floor(4 * ctime) * 0.25_r, 0.0_r
                 // axis_target_position_, axis_target_speed_
             );
         });
@@ -505,7 +487,7 @@ void bldc_main(){
         [[maybe_unused]] const auto targ_speed = blance_speed + axis_target_speed;
 
 
-        static constexpr auto MAX_VOLT = 3.2_r;
+        static constexpr auto MAX_VOLT = 3.27_r;
 
         #if 0
         const auto q_volt = 1.3_r;
@@ -518,6 +500,7 @@ void bldc_main(){
         [[maybe_unused]] const auto ab_volt = DqVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
+            // CLAMP2(q_volt, MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
         
@@ -529,6 +512,7 @@ void bldc_main(){
         }
         #else
         svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
+        // svpwm_.set_ab_volt(3.0_r, 0.0_r);
         #endif
 
         leso_.update(meas_speed, q_volt);
@@ -576,13 +560,28 @@ void bldc_main(){
 
 
     [[maybe_unused]] TrackTarget track_target_ = {
-        .roll = {.position = 0, .speed = 0},
+        .yaw = {.position = 0, .speed = 0},
         .pitch = {.position = 0, .speed = 0}
     };
 
     auto update_joint_target = [&](const real_t p1, const real_t p2) -> void { 
-        track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-        track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
+        track_target_.yaw.position   = CLAMP2(p1, PITCH_JOINT_POSITION_LIMIT);
+        track_target_.pitch.position  = CLAMP2(p2, PITCH_JOINT_POSITION_LIMIT);
+    };
+
+    auto update_joint_target_with_speed = [&](
+        const real_t p1, const real_t v1, 
+        const real_t p2, const real_t v2
+    ) -> void { 
+        track_target_.yaw = SetPositionWithFwdSpeed{
+            .position = p1,
+            .speed = v1
+        };
+
+        track_target_.pitch = SetPositionWithFwdSpeed{
+            .position = p2,
+            .speed = v2
+        };
     };
 
     [[maybe_unused]] auto repl_service = [&]{
@@ -598,19 +597,13 @@ void bldc_main(){
 
             rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 30),
 
-            // rpc::make_function("vxy", [&](const real_t p1, const real_t p2){
+            rpc::make_function("setp", update_joint_target),
 
-            //     track_target_.roll.position   = CLAMP2(p1, JOINT_POSITION_LIMIT);
-            //     track_target_.pitch.position  = CLAMP2(p2, JOINT_POSITION_LIMIT);
-            // }),
-
-            rpc::make_function("pxy", update_joint_target)
-            
+            rpc::make_function("setps", update_joint_target_with_speed)
         );
 
         repl_server.invoke(list);
     };
-
 
     [[maybe_unused]] auto can_subscriber_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -657,17 +650,15 @@ void bldc_main(){
     [[maybe_unused]] auto can_publisher_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
-        auto publish_joint_target = [&]<NodeRole Role>(const commands::SetPositionWithFwdSpeed & cmd){
+        auto publish_joint_position_with_fwd_speed = [&]<NodeRole Role>(const commands::SetPositionWithFwdSpeed & cmd){
             const auto msg = MsgFactory<CommandKind>{Role}(cmd);
             write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
             if(node_is_master){
-                publish_joint_target.operator()<NodeRole::RollJoint>(track_target_.roll);
-                publish_joint_target.operator()<NodeRole::PitchJoint>(track_target_.pitch);
-                publish_joint_target.operator()<NodeRole::LeftWheel>(track_target_.roll);
-                publish_joint_target.operator()<NodeRole::RightWheel>(track_target_.pitch);
+                publish_joint_position_with_fwd_speed.operator()<NodeRole::YawJoint>(track_target_.yaw);
+                publish_joint_position_with_fwd_speed.operator()<NodeRole::PitchJoint>(track_target_.pitch);
             }
         });
     };
@@ -682,6 +673,7 @@ void bldc_main(){
         update_joint_target(p1, p2);
     };
 
+    real_t yaw_angle_ = 0;
 
     [[maybe_unused]] auto report_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -690,12 +682,27 @@ void bldc_main(){
                 pos_filter_.cont_position(), 
                 pos_filter_.speed(),
                 meas_elecrad_,
-                q_volt_
-                // , self_node_role_
+                q_volt_,
+                yaw_angle_
+                // ,
+                // self_node_role_
             );
         });
     };
 
+    [[maybe_unused]] auto yaw_service = [&]{ 
+
+
+        [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
+        [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
+        [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+
+        static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
+        timer.invoke_if([&]{
+            const auto yaw_gyr = bmi160_.read_gyr().examine().z;
+            yaw_angle_ += yaw_gyr * DELTA_TIME;
+        });
+    };
 
     while(true){
         repl_service();
@@ -706,6 +713,10 @@ void bldc_main(){
         blink_service();
 
         report_service();
+
+        if(self_node_role_ == NodeRole::YawJoint){
+            yaw_service();
+        }
 
     }
 }

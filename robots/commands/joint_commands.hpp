@@ -43,6 +43,14 @@ struct SetKpKiKd{
     bf16 kd;
 };
 
+struct Deactivate{
+
+};
+
+struct Activate{
+
+};
+
 }
 
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetPosition)
@@ -70,6 +78,14 @@ DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::SetKpKd, kp, kd)
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetKpKiKd)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetKpKiKd)
 DEF_DERIVE_MEM_REFLECTER_3(robots::joint_commands::SetKpKiKd, kp, ki, kd)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::Deactivate)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::Deactivate)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Deactivate)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::Activate)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::Activate)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Activate)
 
 
 }

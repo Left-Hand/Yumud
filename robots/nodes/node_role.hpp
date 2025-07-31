@@ -6,6 +6,7 @@
 namespace ymd::robots{
 
 enum class NodeRole:uint8_t{
+    YawJoint,
     RollJoint,
     PitchJoint,
     // YawJoint,
