@@ -12,29 +12,27 @@
 
 #include "src/testbench/tb.h"
 #include "core/math/realmath.hpp"
-
+#include "core/sync/timer.hpp"
+#include "robots/repl/repl_service.hpp"
 
 using namespace ymd;
 // using namespace ymd::hal;
 
 
-#define UART hal::uart2
+#define DBG_UART hal::uart2
 static constexpr uint32_t TIM_FREQ = 5000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 
 
 void laser_ctl_main(){
-    UART.init({576000});
-    DEBUGGER.retarget(&UART);
+    DBG_UART.init({576000});
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
     DEBUG_PRINTLN("powerup");
 
     auto & led = hal::portB[8];
     led.outpp(HIGH);
-
-
-
 
     auto & can = hal::can1;
     can.init({hal::CanBaudrate::_1M});
@@ -43,8 +41,6 @@ void laser_ctl_main(){
     [[maybe_unused]] auto & mode1_gpio   = hal::portB[1];
     [[maybe_unused]] auto & phase_gpio   = hal::portA[7];
     phase_gpio.outpp();
-
-
 
     hal::timer3.init({TIM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
 
@@ -61,14 +57,58 @@ void laser_ctl_main(){
         pwm.set_duty(ABS(duty));
     };
 
+    [[maybe_unused]] auto repl_service = [&]{
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
+        static const auto list = rpc::make_list(
+            "list",
+            rpc::make_function("rst", [](){sys::reset();}),
+            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            rpc::make_function("dty", [&](const real_t duty){set_duty(duty);})
+        );
+
+        repl_server.invoke(list);
+    };
+
+    [[maybe_unused]] auto blink_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(200ms);
+        timer.invoke_if([&]{
+            static BoolLevel last_state = LOW;
+            led.write(last_state);
+            last_state = last_state;
+        });
+    };
+
+    static constexpr auto CAN_ID_TURNON = hal::CanStdId(0x233);
+    static constexpr auto CAN_ID_TURNOFF = hal::CanStdId(0x234);
+
+    [[maybe_unused]] auto can_service = [&]{
+        if(can.available() == 0) return;
+        const auto msg = can.read();
+
+        if(not msg.is_standard()) return;
+        const auto id = msg.stdid().unwrap();
+
+        switch(id.to_u11()){
+            case CAN_ID_TURNON.to_u11():
+                set_duty(0.99_r);
+                break;
+            case CAN_ID_TURNOFF.to_u11():
+                set_duty(0.0_r);
+                break;
+            default:
+                break;
+        }
+    };
 
     while(true){
-        DEBUG_PRINTLN("laser_ctl_main", clock::time());
-        clock::delay(5ms);
-        // const auto ctime = clock::time();
-        // const auto duty = sinpu(ctime) * 0.5_r;
-        // set_duty(duty);
-        // clock::delay(1ms);
+        repl_service();
+        blink_service();
+        can_service();
+        static auto timer = async::RepeatTimer::from_duration(5ms);
+        timer.invoke_if([&]{
+            // DEBUG_PRINTLN("laser_ctl_main", clock::time());
+        });
     }
 }
