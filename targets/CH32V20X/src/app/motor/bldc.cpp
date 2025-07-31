@@ -366,7 +366,7 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t self_blance_theta_ = 0;
+    real_t self_blance_angle_ = 0;
     real_t self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
@@ -384,7 +384,8 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
                 case NodeRole::PitchJoint:
-                    return {0.243_r};
+                    // return {0.583_r};
+                    return {0.523_r};
                 default:
                     PANIC();
             }
@@ -397,7 +398,7 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return -0.211_r;
                 case NodeRole::PitchJoint:
-                    return -0.22_r;
+                    return -0.275_r;
                 default:
                     PANIC();
             }
@@ -419,7 +420,7 @@ void bldc_main(){
                 case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.4_r,
-                        .w = 3.2_r,
+                        .w = 0.2_r,
                         .fs = FOC_FREQ
                     };
 
@@ -429,12 +430,14 @@ void bldc_main(){
         }()
     };
 
-    auto pd_ctrl_law_ = [&] -> PdCtrlLaw{ 
+    auto pd_ctrl_law_ = [&]{ 
         switch(self_node_role_){
             case NodeRole::YawJoint: 
-                return PdCtrlLaw{.kp = 146.581_r, .kd = 2.4_r};
+                // return PdCtrlLaw{.kp = 246.581_r, .kd = 15.4_r};
+                // return PdCtrlLaw{.kp = 126.581_r, .kd = 2.4_r};
+                return PdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
-                return PdCtrlLaw{.kp = 46.281_r, .kd = 0.4_r};
+                return PdCtrlLaw{.kp = 76.281_r, .kd = 0.4_r};
             default: 
                 PANIC();
         }
@@ -448,7 +451,7 @@ void bldc_main(){
     real_t axis_target_speed_ = 0;
     
     Microseconds exe_us_ = 0us;
-
+    q22 yaw_angle_ = 0;
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
         if(self_node_role_ == NodeRole::YawJoint){
@@ -478,8 +481,8 @@ void bldc_main(){
 
         const auto [blance_position, blance_speed] = ({
             std::make_tuple(
-                // self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
-                self_blance_theta_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                // self_blance_angle_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
+                self_blance_angle_ * real_t(-1/TAU), self_blance_omega_ * real_t(-1/TAU)
             );
         });
 
@@ -605,45 +608,43 @@ void bldc_main(){
         repl_server.invoke(list);
     };
 
-    [[maybe_unused]] auto can_subscriber_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(5ms);
+    auto can_subscriber_service = [&]{
         [[maybe_unused]] auto set_target_by_command = [&](const commands::SetPositionWithFwdSpeed & cmd){
             axis_target_position_ = real_t(cmd.position);
             axis_target_speed_ = real_t(cmd.speed);
         };
-        timer.invoke_if([&]{
-            auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
-                switch(cmd){
-                case CommandKind::ResetNode:
-                    sys::reset();
-                    break;
-                case CommandKind::SetPositionWithFwdSpeed:{
-                    const auto cmd = serde::make_deserialize<serde::RawBytes,
-                        commands::SetPositionWithFwdSpeed>(payload).examine();
-                    set_target_by_command(cmd);
-                }
-                    break;
-
-                default:
-                    PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
-                    break;
-                }
-            };
-
-            auto process_msg = [&](const hal::CanMsg & msg){
-                const auto id = msg.stdid().unwrap();
-                const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
-                if(msg_role != self_node_role_) return;
-                dispatch_msg(msg_cmd, msg.iter_payload());
-            };
-
-            while(true){
-                const auto may_msg = read_can_msg();
-                if(may_msg.is_none()) break;
-                const auto & msg = may_msg.unwrap();
-                process_msg(msg);
+        auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
+            switch(cmd){
+            case CommandKind::ResetNode:
+                sys::reset();
+                break;
+            case CommandKind::SetPositionWithFwdSpeed:{
+                const auto cmd = serde::make_deserialize<serde::RawBytes,
+                    commands::SetPositionWithFwdSpeed>(payload).examine();
+                set_target_by_command(cmd);
             }
-        });
+                break;
+
+            default:
+                PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
+                break;
+            }
+        };
+
+        auto process_msg = [&](const hal::CanMsg & msg){
+            const auto id = msg.stdid().unwrap();
+            const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
+            if(msg_role != self_node_role_) return;
+            // DEBUG_PRINTLN(msg);
+            dispatch_msg(msg_cmd, msg.iter_payload());
+        };
+
+        while(true){
+            const auto may_msg = read_can_msg();
+            if(may_msg.is_none()) break;
+            const auto & msg = may_msg.unwrap();
+            process_msg(msg);
+        }
     };
 
 
@@ -673,7 +674,7 @@ void bldc_main(){
         update_joint_target(p1, p2);
     };
 
-    real_t yaw_angle_ = 0;
+
 
     [[maybe_unused]] auto report_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -683,25 +684,29 @@ void bldc_main(){
                 pos_filter_.speed(),
                 meas_elecrad_,
                 q_volt_,
-                yaw_angle_
-                // ,
-                // self_node_role_
+                yaw_angle_,
+                pos_filter_.lap_position()
             );
         });
     };
 
     [[maybe_unused]] auto yaw_service = [&]{ 
-
-
         [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
         [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
-
+        static constexpr auto yaw_gyr_bias = 0.0020_q24;
         static auto timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
         timer.invoke_if([&]{
-            const auto yaw_gyr = bmi160_.read_gyr().examine().z;
+            const auto yaw_gyr = -(
+                bmi160_.read_gyr().examine().z + 
+                yaw_gyr_bias)
+            ;
             yaw_angle_ += yaw_gyr * DELTA_TIME;
+
+            self_blance_angle_ = yaw_angle_;
+            self_blance_omega_ = yaw_gyr;
         });
+
     };
 
     while(true){
