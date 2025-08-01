@@ -255,4 +255,26 @@ struct PerspectiveRect{
     }
 };
 
+
+// 映射 (u, v) -> (x, y)
+
+template<typename T>
+static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3> & H, Vector2<T> uv){
+    // const auto H = compute_homography();
+    const T u = uv.x;
+    const T v = uv.y;
+
+    // 计算 H * [u, v, 1]^T
+    const T x_prime = H[0][0] * u + H[0][1] * v + H[0][2];
+    const T y_prime = H[1][0] * u + H[1][1] * v + H[1][2];
+    const T w_prime = H[2][0] * u + H[2][1] * v + H[2][2];
+
+    // 归一化
+    return Vector2<T>{
+        x_prime / w_prime,
+        y_prime / w_prime
+    };
+}
+
+
 }

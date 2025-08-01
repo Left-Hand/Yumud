@@ -117,8 +117,19 @@ using Vector2q16 = Vector2<q16>;
 // struct LaserOff{
 //     static constexpr LaserCommand KIND = LaserCommand::Off;
 // };
+static constexpr auto A4_WIDTH = 0.210_r;
+static constexpr auto A4_HEIGHT = 0.297_r;    
+static constexpr Vector2<q16> a4_coord_to_uv_coord(const Vector2<q16> a4_coord){
+    constexpr auto INV_A4_WIDTH = 1 / A4_WIDTH;
+    constexpr auto INV_A4_HEIGHT = 1 / A4_HEIGHT;    
+    return {a4_coord.x * INV_A4_WIDTH, a4_coord.y * INV_A4_HEIGHT};
+}
 
+static constexpr Vector2<q16> uv_coord_to_a4_coord(const Vector2<q16> uv_coord){
+    return {uv_coord.x * A4_WIDTH, uv_coord.y * A4_HEIGHT};
+}
 
+static constexpr auto A4_CENTER_COORD = uv_coord_to_a4_coord(Vector2<q16>(0.5_r, 0.5_r));
 
 // 主函数
 static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view str) {
@@ -451,7 +462,7 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    real_t self_blance_angle_ = 0;
+    real_t self_blance_angle_ = 0; 
     real_t self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
@@ -469,8 +480,8 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
                 case NodeRole::PitchJoint:
-                    // return {0.783_r};
-                    return {0.523_r};
+                    return {0.723_r};
+                    // return {0.223_r};
                 default:
                     PANIC();
             }
@@ -888,8 +899,6 @@ void bldc_main(){
     };
 
 
-
-
     [[maybe_unused]] auto report_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
         
@@ -929,7 +938,6 @@ void bldc_main(){
             self_blance_omega_ = yaw_gyr;
         });
     };
-
 
     auto blink_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(10ms);
@@ -973,12 +981,9 @@ void bldc_main(){
         });
     };
 
-
     [[maybe_unused]] auto on_gimbal_idle = [&]{
         publish_laser_en(false);
     };
-
-
 
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
         publish_laser_en(false);
@@ -1005,6 +1010,9 @@ void bldc_main(){
                 const auto expect_uv_coord = Vector2{0.4_r, 0.5_r};
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
                     .center();
+
+                const auto ctime = clock::time();
+                const auto route_percent = frac(ctime / 5);
                 const auto err_coord = track_target_uv_coord - expect_uv_coord;
         
                 static constexpr auto YAW_KP = 0.05_r / GIMBAL_CTRL_FREQ;
@@ -1066,29 +1074,9 @@ void bldc_main(){
         if(self_node_role_ == NodeRole::YawJoint){
             yaw_selftrack_service();
         }
-
     }
 }
 
-// 映射 (u, v) -> (x, y)
-
-template<typename T>
-static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3> & H, Vector2<T> uv){
-    // const auto H = compute_homography();
-    const T u = uv.x;
-    const T v = uv.y;
-
-    // 计算 H * [u, v, 1]^T
-    const T x_prime = H[0][0] * u + H[0][1] * v + H[0][2];
-    const T y_prime = H[1][0] * u + H[1][1] * v + H[1][2];
-    const T w_prime = H[2][0] * u + H[2][1] * v + H[2][2];
-
-    // 归一化
-    return Vector2<T>{
-        x_prime / w_prime,
-        y_prime / w_prime
-    };
-}
 
 void static_test(){
     // using T = float;
