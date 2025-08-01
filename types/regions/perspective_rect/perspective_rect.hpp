@@ -21,6 +21,43 @@ struct PerspectiveRect{
         }
     }
 
+
+    // 从uint8坐标构造（自动归一化到[0,1]范围）
+    constexpr PerspectiveRect(std::array<std::tuple<uint8_t, uint8_t>, 4> u8points) {
+        for (size_t i = 0; i < 4; ++i) {
+            points[i] = Vector2<T>{
+                std::get<0>(u8points[i]) * T(1.0 / 255),
+                std::get<1>(u8points[i]) * T(1.0 / 255)
+            };
+        }
+    }
+
+    constexpr auto to_u8points() const -> std::array<std::tuple<uint8_t, uint8_t>, 4> { 
+        return std::array<std::tuple<uint8_t, uint8_t>, 4>{
+            std::make_tuple(uint8_t(points[0].x * 255), uint8_t(points[0].y * 255)),
+            std::make_tuple(uint8_t(points[1].x * 255), uint8_t(points[1].y * 255)),
+            std::make_tuple(uint8_t(points[2].x * 255), uint8_t(points[2].y * 255)),
+            std::make_tuple(uint8_t(points[3].x * 255), uint8_t(points[3].y * 255)),
+        };
+    }
+
+    constexpr auto to_u8x8() const -> std::array<uint8_t, 8>{
+        std::array<uint8_t, 8> result;
+        for (size_t i = 0; i < 4; ++i) {
+            result[i * 2] = uint8_t(points[i].x * 255);
+            result[i * 2 + 1] = uint8_t(points[i].y * 255);
+        }
+        return result;
+    }
+
+    static constexpr auto from_u8x8(const std::span<const uint8_t, 8> u8x8) -> PerspectiveRect { 
+        std::array<Vector2<uint8_t>, 4> u8points;
+        for (size_t i = 0; i < 4; ++i) {
+            u8points[i] = Vector2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
+        }
+        return PerspectiveRect(u8points);
+    }
+
     // 添加以下函数到 PerspectiveRect 结构体中
     static constexpr PerspectiveRect from_clockwise_points(std::array<Vector2<T>, 4> f32points) {
         // 如果点不是顺时针排列，则交换它们以确保顺时针顺序

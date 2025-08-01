@@ -406,13 +406,13 @@ private:
 template<size_t Q>
 struct Deserializer<RawBytes, iq_t<Q>> {
     static constexpr size_t N = sizeof(iq_t<Q>);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
-        return Q;
+    [[nodiscard]] static constexpr size_t size(){
+        return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<iq_t<Q>, DeserializeError> 
@@ -429,13 +429,13 @@ template<typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
 struct Deserializer<RawBytes, T> {
     static constexpr size_t N = sizeof(T);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
+    [[nodiscard]] static constexpr size_t size(){
         return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<T, DeserializeError> 
@@ -456,13 +456,13 @@ struct Deserializer<RawBytes, T> {
 template<>
 struct Deserializer<RawBytes, bf16> {
     static constexpr size_t N = sizeof(bf16);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
+    [[nodiscard]] static constexpr size_t size(){
         return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<bf16, DeserializeError> 

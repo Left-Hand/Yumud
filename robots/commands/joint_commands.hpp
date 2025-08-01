@@ -59,6 +59,11 @@ struct StopTracking{
 
 };
 
+struct PerspectiveRectInfo{
+    // std::array<Vector2<uint8_t>, 4> points;
+    std::array<uint8_t, 8> data;
+};
+
 }
 
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetPosition)
@@ -102,6 +107,10 @@ DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StartSeeking)
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StopTracking)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StopTracking)
 DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StopTracking)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::PerspectiveRectInfo)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::PerspectiveRectInfo)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::PerspectiveRectInfo, data)
 
 
 }

@@ -173,11 +173,12 @@ enum class CommandKind:uint8_t{
     SetSpeed,
     SetKpKd,
     Deactivate,
-    Activate
+    Activate,
+    PerspectiveRectInfo
 };
 
 enum class LaserCommand:uint8_t{
-    On,
+    On = 0x33,
     Off
 };
 
@@ -195,6 +196,7 @@ DEF_QUICK_COMMAND_BIND(SetSpeed)
 DEF_QUICK_COMMAND_BIND(SetKpKd)
 DEF_QUICK_COMMAND_BIND(Activate)
 DEF_QUICK_COMMAND_BIND(Deactivate)
+DEF_QUICK_COMMAND_BIND(PerspectiveRectInfo)
 
 }
 
@@ -263,49 +265,6 @@ enum class BlinkPattern:uint8_t{
 
 
 void bldc_main(){
-
-
-    static constexpr auto UART_BAUD = 576000;
-    // my_can_ring_main();
-    auto & DBG_UART = hal::uart2;
-
-    DBG_UART.init({
-        .baudrate = UART_BAUD
-    });
-
-
-    DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
-    // DEBUGGER.force_sync(EN);
-    // DEBUGGER.no_fieldname();
-    // DEBUGGER.no_scoped();
-
-    auto & spi = hal::spi1;
-    auto & timer = hal::timer1;
-    auto & can = hal::can1;
-    auto & adc = hal::adc1;
-
-    auto & ledb = hal::PC<13>();
-    auto & ledr = hal::PC<14>();
-    auto & ledg = hal::PC<15>();
-    
-    // auto & en_gpio = hal::portA[11];
-    // auto & nslp_gpio = hal::portA[12];
-    
-    auto & en_gpio = hal::PB<15>();
-    auto & nslp_gpio = hal::PB<14>();
-
-    auto & pwm_u = timer.oc<1>();
-    auto & pwm_v = timer.oc<2>();
-    auto & pwm_w = timer.oc<3>(); 
-
-    ledr.outpp(); 
-    ledb.outpp(); 
-    ledg.outpp();
-    
-
     const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
 
     auto get_node_role = [](const uint32_t chip_id_crc) -> Option<NodeRole>{
@@ -322,10 +281,57 @@ void bldc_main(){
         }
     };
 
+    const auto UART_BAUD = [&] -> uint32_t{
+        switch(get_node_role(chip_id_crc_).unwrap()){
+            case NodeRole::YawJoint:
+                return 576000;
+            case NodeRole::PitchJoint:
+                return 115200;
+            default:
+                __builtin_unreachable();
+        }
+    }();
+
+    // my_can_ring_main();
+    auto & DBG_UART = hal::uart2;
+
+    DBG_UART.init({
+        .baudrate = UART_BAUD
+    });
+
+
+    DEBUGGER.retarget(&DBG_UART);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets();
+
+    auto & spi = hal::spi1;
+    auto & timer = hal::timer1;
+    auto & can = hal::can1;
+    auto & adc = hal::adc1;
+
+    auto & ledb = hal::PC<13>();
+    auto & ledr = hal::PC<14>();
+    auto & ledg = hal::PC<15>();
+
+    auto & en_gpio = hal::PB<15>();
+    auto & nslp_gpio = hal::PB<14>();
+
+    auto & pwm_u = timer.oc<1>();
+    auto & pwm_v = timer.oc<2>();
+    auto & pwm_w = timer.oc<3>(); 
+
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    
+
+
+
     const auto self_node_role_ = get_node_role(chip_id_crc_)
         .expect(chip_id_crc_);
 
-    const auto node_is_master = [&] -> bool{
+    const auto node_is_master_ = [&] -> bool{
         switch(self_node_role_){
             case NodeRole::YawJoint:
                 return false;
@@ -437,8 +443,8 @@ void bldc_main(){
     init_adc(adc);
 
     hal::portA[7].inana();
+    // bool motor_is_actived_ = true;
     bool motor_is_actived_ = false;
-    // bool motor_is_actived_ = false;
 
     en_gpio.set();
     nslp_gpio.set();
@@ -620,7 +626,8 @@ void bldc_main(){
     RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     auto write_can_msg = [&](const hal::CanMsg & msg){
-        if(msg.is_extended()) PANIC();
+        // if(msg.is_extended()) PANIC();
+        if(msg.is_extended()) return;
 
         const bool is_ringback = is_ringback_msg(msg, self_node_role_);
 
@@ -671,11 +678,27 @@ void bldc_main(){
         };
     };
 
-    auto set_motor_is_actived = [&](bool is_actived) -> void { 
+    auto publish_to_both_joints = [&]<typename T>
+    (const T & cmd){
+        {
+            const auto msg = MsgFactory<CommandKind>{NodeRole::PitchJoint}(cmd);
+            write_can_msg(msg);
+        }
+        {
+            const auto msg = MsgFactory<CommandKind>{NodeRole::YawJoint}(cmd);
+            write_can_msg(msg);
+        }
+    };
+    auto publish_motor_is_actived = [&](bool is_actived) -> void { 
+        if(is_actived) publish_to_both_joints(commands::Activate{});
+        else publish_to_both_joints(commands::Deactivate{});
+    };
+
+    auto set_self_motor_is_actived = [&](bool is_actived) -> void { 
         motor_is_actived_ = is_actived;
     };
 
-    auto set_laser = [&](const bool on){
+    auto publish_laser_en = [&](const bool on){
 
         const auto msg_id = [&]{
             // const auto factory = MsgFactory<LaserCommand>{NodeRole::Laser};
@@ -698,6 +721,17 @@ void bldc_main(){
 
     bool report_en_ = false;
     
+    Option<PerspectiveRect<q16>> may_a4_rect_ = None;
+    auto on_a4_founded = [&](const PerspectiveRect<q16> rect){
+        may_a4_rect_ = Some(rect);
+    };
+
+    auto on_a4_lost = [&]{
+        may_a4_rect_ = None;
+    };
+
+    
+
     [[maybe_unused]] auto repl_service = [&]{
         static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
@@ -715,15 +749,21 @@ void bldc_main(){
 
             rpc::make_function("setps", update_joint_target_with_speed),
             rpc::make_function("a4c", [&](StringView str){ 
-                DEBUG_PRINTLN("a4c", str, defmt_u8x4(str));
+                auto may_rect = defmt_u8x4(str);
+                if(may_rect.is_none()) return;
+                on_a4_founded(may_rect.unwrap());
+            }),
+
+            rpc::make_function("a4n", [&](){ 
+                on_a4_lost();
             }),
 
             rpc::make_function("act", [&](){ 
-                set_motor_is_actived(true);
+                publish_motor_is_actived(true);
             }),
 
             rpc::make_function("deact", [&](){ 
-                set_motor_is_actived(false);
+                publish_motor_is_actived(false);
             }),
 
             rpc::make_function("stk", [&](){ 
@@ -735,7 +775,7 @@ void bldc_main(){
             }),
 
             rpc::make_function("lsr", [&](const bool on){
-                set_laser(on);
+                publish_laser_en(on);
             }),
 
             rpc::make_function("rpen", [&](){
@@ -755,27 +795,36 @@ void bldc_main(){
             axis_target_position_ = real_t(cmd.position);
             axis_target_speed_ = real_t(cmd.speed);
         };
+
         auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
+
             switch(cmd){
             case CommandKind::ResetNode:
                 sys::reset();
                 break;
                 
             case CommandKind::SetPositionWithFwdSpeed:{
-                const auto cmd = serde::make_deserialize<serde::RawBytes,
-                    commands::SetPositionWithFwdSpeed>(payload).examine();
-                set_target_by_command(cmd);
+                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                    commands::SetPositionWithFwdSpeed>(payload);
+                if(may_cmd.is_ok()) set_target_by_command(may_cmd.unwrap());
             }
                 break;
 
             case CommandKind::Activate:
-                set_motor_is_actived(true);
+                set_self_motor_is_actived(true);
                 break;
             case CommandKind::Deactivate:
-                set_motor_is_actived(false);
+                set_self_motor_is_actived(false);
                 break;
+            case CommandKind::PerspectiveRectInfo:{
+                // may_a4_rect_ =       
+                if(payload.size() != 8) break;          
+                may_a4_rect_ = Some(PerspectiveRect<q16>::from_u8x8(
+                    std::span<const uint8_t, 8>(payload.data(), payload.size())));
+                break;
+            }
             default:
-                PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
+                // PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
                 break;
             }
         };
@@ -796,21 +845,12 @@ void bldc_main(){
         }
     };
 
-
-    [[maybe_unused]] auto can_publisher_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(5ms);
-
-        auto publish_joint_position_with_fwd_speed = [&]<NodeRole Role>(const commands::SetPositionWithFwdSpeed & cmd){
-            const auto msg = MsgFactory<CommandKind>{Role}(cmd);
-            write_can_msg(msg);
-        };
-
-        timer.invoke_if([&]{
-            if(node_is_master){
-                publish_joint_position_with_fwd_speed.operator()<NodeRole::YawJoint>(track_target_.yaw);
-                publish_joint_position_with_fwd_speed.operator()<NodeRole::PitchJoint>(track_target_.pitch);
-            }
-        });
+    auto publish_joint_position_with_fwd_speed = [&](
+        const NodeRole node_role, 
+        const commands::SetPositionWithFwdSpeed & cmd
+    ){
+        const auto msg = MsgFactory<CommandKind>{node_role}(cmd);
+        write_can_msg(msg);
     };
 
     [[maybe_unused]] auto update_demo_track_service = [&]{ 
@@ -830,10 +870,12 @@ void bldc_main(){
             DEBUG_PRINTLN(
                 pos_filter_.cont_position(), 
                 pos_filter_.speed(),
-                meas_elecrad_,
-                q_volt_,
-                yaw_angle_,
-                pos_filter_.lap_position()
+                // meas_elecrad_,
+                // q_volt_,
+                // yaw_angle_,
+                // pos_filter_.lap_position(),
+                // run_status_.state
+                may_a4_rect_
             );
         });
     };
@@ -856,37 +898,9 @@ void bldc_main(){
         });
     };
 
-    [[maybe_unused]] auto on_gimbal_idle = [&]{
 
-    };
 
-    [[maybe_unused]] auto on_gimbal_seeking = [&]{
-        // static auto timer = async::RepeatTimer::from_duration(100ms);
-        // timer.invoke_if([&]{
-        //     led_pin_.toggle();
-        // });
-    };
 
-    [[maybe_unused]] auto on_gimbal_tracking = [&]{
-        // static auto timer = async::RepeatTimer::from_duration(100ms);
-        // timer.invoke_if([&]{
-        //     led_pin_.toggle();
-        // });
-    };
-
-    [[maybe_unused]] auto gimbal_service = [&]{ 
-        switch(run_status_.state){
-            case RunState::Idle: 
-                on_gimbal_idle();
-                break;
-            case RunState::Seeking: 
-                on_gimbal_seeking();
-                break;
-            case RunState::Tracking: 
-                on_gimbal_tracking();
-                break;
-        }
-    };
 
     auto blink_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(10ms);
@@ -933,14 +947,65 @@ void bldc_main(){
         });
     };
 
+
+    [[maybe_unused]] auto on_gimbal_idle = [&]{
+        publish_laser_en(false);
+    };
+
+    struct SeekingStatus{
+
+    };
+
+    [[maybe_unused]] auto on_gimbal_seeking = [&]{
+        publish_laser_en(false);
+
+    };
+
+    [[maybe_unused]] auto on_gimbal_tracking = [&]{
+        publish_laser_en(true);
+
+
+        if(may_a4_rect_.is_some()){
+            publish_to_both_joints(commands::PerspectiveRectInfo{
+                may_a4_rect_.unwrap().to_u8x8()
+            });
+        }
+
+        publish_joint_position_with_fwd_speed(
+            NodeRole::YawJoint, track_target_.yaw);
+        publish_joint_position_with_fwd_speed(
+            NodeRole::PitchJoint, track_target_.pitch);
+    };
+
+    [[maybe_unused]] auto gimbal_service = [&]{ 
+        static auto timer = async::RepeatTimer::from_duration(5ms);
+        timer.invoke_if([&]{
+            switch(run_status_.state){
+                case RunState::Idle: 
+                    on_gimbal_idle();
+                    break;
+                case RunState::Seeking: 
+                    on_gimbal_seeking();
+                    break;
+                case RunState::Tracking: 
+                    on_gimbal_tracking();
+                    break;
+            }
+        });
+
+    };
+
+    run_status_.state = RunState::Seeking;
+
     while(true){
         repl_service();
 
-        can_publisher_service();
         can_subscriber_service();
 
         blink_service();
-        gimbal_service();
+        if(node_is_master_){
+            gimbal_service();
+        }
 
         if(report_en_){
             report_service();

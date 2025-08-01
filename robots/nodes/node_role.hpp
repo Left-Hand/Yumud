@@ -7,7 +7,7 @@ namespace ymd::robots{
 
 enum class NodeRole:uint8_t{
     YawJoint = 0x01,
-    RollJoint,
+    // RollJoint,
     PitchJoint,
     Laser,
     // YawJoint,

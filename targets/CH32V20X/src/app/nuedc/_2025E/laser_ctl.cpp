@@ -29,7 +29,7 @@ static constexpr uint32_t TIM_FREQ = 5000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 
 enum class Command:uint8_t{
-    On,
+    On = 0x33,
     Off
 };
 
@@ -52,8 +52,9 @@ void laser_ctl_main(){
 
     can[0].mask(
         {
-            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+            .mask = hal::CanStdIdMask::from_accept_all()
         },{
             .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
@@ -153,7 +154,7 @@ void laser_ctl_main(){
             return;
         }
         const auto msg = can.read();
-        DEBUG_PRINTLN(msg);
+        // DEBUG_PRINTLN(msg);
         if(not msg.is_standard()) return;
         const auto id = msg.stdid().unwrap();
 
@@ -171,7 +172,6 @@ void laser_ctl_main(){
     };
 
 
-    set_duty(1);
 
     while(true){
         repl_service();
