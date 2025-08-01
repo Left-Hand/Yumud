@@ -1,0 +1,134 @@
+#pragma once
+
+#include "types/vectors/vector2/Vector2.hpp"
+
+namespace ymd{
+
+
+template<typename T>
+struct PerspectiveRect{
+
+    std::array<Vector2<T>, 4> points;
+    
+
+    // 从uint8坐标构造（自动归一化到[0,1]范围）
+    constexpr PerspectiveRect(std::array<Vector2<uint8_t>, 4> u8points) {
+        for (size_t i = 0; i < 4; ++i) {
+            points[i] = Vector2<T>{
+                u8points[i].x * T(1.0 / 255),
+                u8points[i].y * T(1.0 / 255)
+            };
+        }
+    }
+
+    // 添加以下函数到 PerspectiveRect 结构体中
+    static constexpr PerspectiveRect from_clockwise_points(std::array<Vector2<T>, 4> f32points) {
+        // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
+        // 检查前三个点的叉积来判断方向
+        auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
+            return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        };
+        
+        // 检查第一个三个点的方向
+        T cr = cross(f32points[0], f32points[1], f32points[2]);
+        
+        // 如果是逆时针，则反转数组（除了第一个点）
+        if (cr > 0) {
+            return PerspectiveRect(std::array<Vector2<T>, 4>{
+                f32points[0], f32points[3], f32points[2], f32points[1]
+            });
+        }
+        
+        return PerspectiveRect(f32points);
+    }
+
+    // 从浮点坐标直接构造
+    constexpr PerspectiveRect(std::array<Vector2<T>, 4> f32points)
+        : points(f32points) {}
+
+    // 计算透视中心点（两条对角线的交点）
+    constexpr Vector2<T> center() const {
+        // 对于四边形，中心点应该是两条对角线的交点
+        // 对角线1: 从 points[0] 到 points[2]
+        // 对角线2: 从 points[1] 到 points[3]
+        
+        const Vector2<T>& p0 = points[0];
+        const Vector2<T>& p1 = points[1];
+        const Vector2<T>& p2 = points[2];
+        const Vector2<T>& p3 = points[3];
+        
+        // 计算两条对角线的交点
+        // 对角线1: P0 + t1 * (P2 - P0)
+        // 对角线2: P1 + t2 * (P3 - P1)
+        
+        T denominator = (p2.x - p0.x) * (p3.y - p1.y) - (p2.y - p0.y) * (p3.x - p1.x);
+        
+        if (std::abs(denominator) < T(1e-5)) {
+            // 如果分母接近0，说明是平行线，退化为简单平均
+            return Vector2<T>{(p0.x + p1.x + p2.x + p3.x) * T(0.25),
+                            (p0.y + p1.y + p2.y + p3.y) * T(0.25)};
+        }
+        
+        T t = ((p1.x - p0.x) * (p3.y - p1.y) - (p1.y - p0.y) * (p3.x - p1.x)) / denominator;
+        
+        // 返回对角线1上的点作为中心点
+        return Vector2<T>{p0.x + t * (p2.x - p0.x),
+                        p0.y + t * (p2.y - p0.y)};
+    }
+
+    // 计算面积（使用鞋带公式）
+    constexpr T area() const {
+        T a = 0;
+        for (size_t i = 0; i < 4; ++i) {
+            size_t j = (i + 1) % 4;
+            a += points[i].x * points[j].y - points[j].x * points[i].y;
+        }
+        return std::abs(a) * T(0.5f);
+    }
+
+    // 平移变换
+    constexpr PerspectiveRect shifted(Vector2<T> offset) const {
+        std::array<Vector2<T>, 4> new_points;
+        for (size_t i = 0; i < 4; ++i) {
+            new_points[i] = points[i] + offset;
+        }
+        return PerspectiveRect(new_points);
+    }
+
+    // 缩放变换（以中心点为原点）
+    constexpr PerspectiveRect scaled(T factor) const {
+        const auto c = center();
+        std::array<Vector2<T>, 4> new_points;
+        for (size_t i = 0; i < 4; ++i) {
+            new_points[i] = c + (points[i] - c) * factor;
+        }
+        return PerspectiveRect(new_points);
+    }
+
+    // 检查是否是凸四边形
+    constexpr bool is_convex() const {
+        auto cross = [](Vector2<T> a, Vector2<T> b, Vector2<T> c) {
+            return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
+        };
+
+        bool sign = false;
+        for (size_t i = 0; i < 4; ++i) {
+            size_t a = i;
+            size_t b = (i + 1) % 4;
+            size_t c = (i + 2) % 4;
+            T cr = cross(points[a], points[b], points[c]);
+            if (i == 0) {
+                sign = cr > 0;
+            } else if ((cr > 0) != sign) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const PerspectiveRect & rect){
+        return os << rect.points;
+    }
+};
+
+}

@@ -51,6 +51,8 @@
 #include "robots/commands/nmt_commands.hpp"
 #include "robots/nodes/msg_factory.hpp"
 
+#include "types/regions/perspective_rect/perspective_rect.hpp"
+
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
@@ -101,82 +103,19 @@ constexpr Option<uint8_t> parse_u8_hex_pair(char c1, char c2) {
 using Vector2u8 = Vector2<uint8_t>;
 using Vector2q16 = Vector2<q16>;
 
-// struct PerspectiveRect{
-//     std::array<Vector2q16, 4> points;
-    
+// template<>
+// struct command_to_kind<CommandKind, T>{
+//     static constexpr CommandKind KIND = K;
+// }
+// template<>
+// struct kind_to_command<CommandKind, K>{
+//     using type = T;
+// };
+// DEF_COMMAND_BIND(LaserCommand, )
+// static constexpr LaserCommand KIND = LaserCommand::On;
 
-//     // 从uint8坐标构造（自动归一化到[0,1]范围）
-//     constexpr PerspectiveRect(std::array<Vector2u8, 4> u8points) {
-//         for (size_t i = 0; i < 4; ++i) {
-//             points[i] = Vector2f32{
-//                 u8points[i].x / 255.0f,
-//                 u8points[i].y / 255.0f
-//             };
-//         }
-//     }
-
-//     // 从浮点坐标直接构造
-//     constexpr PerspectiveRect(std::array<Vector2f32, 4> f32points)
-//         : points(f32points) {}
-
-//     // 计算中心点
-//     constexpr Vector2f32 center() const {
-//         Vector2f32 sum{0,0};
-//         for (const auto& p : points) {
-//             sum = sum + p;
-//         }
-//         return sum * 0.25f;
-//     }
-
-//     // 计算面积（使用鞋带公式）
-//     constexpr float area() const {
-//         float a = 0;
-//         for (size_t i = 0; i < 4; ++i) {
-//             size_t j = (i + 1) % 4;
-//             a += points[i].x * points[j].y - points[j].x * points[i].y;
-//         }
-//         return std::abs(a) * 0.5f;
-//     }
-
-//     // 平移变换
-//     constexpr PerspectiveRect translated(Vector2f32 offset) const {
-//         std::array<Vector2f32, 4> new_points;
-//         for (size_t i = 0; i < 4; ++i) {
-//             new_points[i] = points[i] + offset;
-//         }
-//         return PerspectiveRect(new_points);
-//     }
-
-//     // 缩放变换（以中心点为原点）
-//     constexpr PerspectiveRect scaled(float factor) const {
-//         const auto c = center();
-//         std::array<Vector2f32, 4> new_points;
-//         for (size_t i = 0; i < 4; ++i) {
-//             new_points[i] = c + (points[i] - c) * factor;
-//         }
-//         return PerspectiveRect(new_points);
-//     }
-
-//     // 检查是否是凸四边形
-//     constexpr bool is_convex() const {
-//         auto cross = [](Vector2f32 a, Vector2f32 b, Vector2f32 c) {
-//             return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
-//         };
-
-//         bool sign = false;
-//         for (size_t i = 0; i < 4; ++i) {
-//             size_t a = i;
-//             size_t b = (i + 1) % 4;
-//             size_t c = (i + 2) % 4;
-//             float cr = cross(points[a], points[b], points[c]);
-//             if (i == 0) {
-//                 sign = cr > 0;
-//             } else if ((cr > 0) != sign) {
-//                 return false;
-//             }
-//         }
-//         return true;
-//     }
+// struct LaserOff{
+//     static constexpr LaserCommand KIND = LaserCommand::Off;
 // };
 
 
@@ -185,7 +124,7 @@ using Vector2q16 = Vector2<q16>;
 static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view str) {
     if (str.size() != 16) return None;
 
-    std::array<Vector2u8, 4> result{};
+    std::array<Vector2u8, 4> points{};
 
     for (size_t i = 0; i < 4; ++i) {
         size_t offset = i * 4;
@@ -197,10 +136,10 @@ static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view st
             return None;
         }
 
-        result[i] = Vector2u8{x.unwrap(), y.unwrap()};
+        points[i] = Vector2u8{x.unwrap(), y.unwrap()};
     }
 
-    return Some(result);
+    return Some(points);
 }
 
 enum class RunState:uint8_t{
@@ -235,6 +174,12 @@ enum class CommandKind:uint8_t{
     Deactivate,
     Activate
 };
+
+enum class LaserCommand:uint8_t{
+    On,
+    Off
+};
+
 
 namespace commands{ 
     using namespace robots::joint_commands;
@@ -517,8 +462,8 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
                 case NodeRole::PitchJoint:
-                    // return {0.583_r};
-                    return {0.523_r};
+                    // return {0.783_r};
+                    return {0.023_r};
                 default:
                     PANIC();
             }
@@ -531,7 +476,7 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return -0.211_r;
                 case NodeRole::PitchJoint:
-                    return -0.265_r;
+                    return -0.244_r;
                 default:
                     PANIC();
             }
@@ -547,12 +492,12 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return dsp::Leso::Config{
                         .b0 = 0.5_r,
-                        .w = 0.2_r,
+                        .w = 0.4_r,
                         .fs = FOC_FREQ
                     };
                 case NodeRole::PitchJoint:
                     return dsp::Leso::Config{
-                        .b0 = 0.4_r,
+                        .b0 = 1.4_r,
                         .w = 0.2_r,
                         .fs = FOC_FREQ
                     };
@@ -566,12 +511,12 @@ void bldc_main(){
     auto pd_ctrl_law_ = [&]{ 
         switch(self_node_role_){
             case NodeRole::YawJoint: 
-                // return PdCtrlLaw{.kp = 246.581_r, .kd = 15.4_r};
+                return PdCtrlLaw{.kp = 78.581_r, .kd = 6.7_r};
                 // return PdCtrlLaw{.kp = 126.581_r, .kd = 2.4_r};
-                return PdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
+                // return SqrtPdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
-                // return PdCtrlLaw{.kp = 76.281_r, .kd = 0.4_r};
-                return PdCtrlLaw{.kp = 166.281_r, .kd = 4.4_r};
+                return PdCtrlLaw{.kp = 26.281_r, .kd = 1.4_r};
+                // return SqrtPdCtrlLaw{.kp = 166.281_r, .ks = 20.0_r, .kd = 30.4_r};
             default: 
                 PANIC();
         }
@@ -604,7 +549,7 @@ void bldc_main(){
         const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 1;
-        [[maybe_unused]] static constexpr real_t amp = 0.005_r;
+        [[maybe_unused]] static constexpr real_t amp = 0.000_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
@@ -626,7 +571,7 @@ void bldc_main(){
         [[maybe_unused]] const auto targ_speed = blance_speed + axis_target_speed;
 
 
-        static constexpr auto MAX_VOLT = 3.27_r;
+        static constexpr auto MAX_VOLT = 3.87_r;
 
         #if 0
         const auto q_volt = 1.3_r;
@@ -731,6 +676,19 @@ void bldc_main(){
         motor_is_actived_ = is_actived;
     };
 
+    auto set_laser = [&](const bool on){
+
+        const auto msg_id = [&]{
+            // const auto factory = MsgFactory<LaserCommand>{NodeRole::Laser};
+            // if(on) return factory(LaserOn{});
+            // return factory(LaserOff{});
+            if(on) return comb_role_and_cmd(NodeRole::Laser, LaserCommand::On);
+            else return comb_role_and_cmd(NodeRole::Laser, LaserCommand::Off);
+        }();
+
+        write_can_msg(hal::CanMsg::from_list(msg_id, {}));
+    };
+
     auto gimbal_start_seeking = [&]{
         run_status_.state = RunState::Seeking;
     };
@@ -774,6 +732,10 @@ void bldc_main(){
 
             rpc::make_function("stp", [&](){ 
                 gimbal_stop_tracking();
+            }),
+
+            rpc::make_function("lsr", [&](const bool on){
+                set_laser(on);
             })
         );
 

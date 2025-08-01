@@ -170,6 +170,9 @@ void laser_ctl_main(){
         }
     };
 
+
+    set_duty(1);
+
     while(true){
         repl_service();
         blink_service();
