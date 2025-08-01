@@ -73,17 +73,6 @@ void laser_ctl_main(){
         else led.clr();
     };
 
-
-    // while(true){
-    //     set_led(1);
-    //     clock::delay(200ms);
-    //     set_led(0);
-    //     clock::delay(200ms);
-    // }
-
-
-
-
     can[0].mask(
         {
             .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
@@ -108,6 +97,7 @@ void laser_ctl_main(){
     bool duty_is_forward = false;
 
     auto set_duty = [&](real_t duty){
+        DEBUG_PRINTLN("duty", duty);
         duty = CLAMP2(duty, 0.99_r);
         duty_is_forward = duty > 0.0_r;
         phase_gpio = BoolLevel::from(duty_is_forward);
@@ -141,20 +131,19 @@ void laser_ctl_main(){
         });
     };
 
-    static constexpr auto CAN_ID_TURNON = 
-        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
+    static constexpr auto CAN_ID_TURNON = hal::CanStdId(0x183);
+        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
 
-    static constexpr auto CAN_ID_TURNOFF = 
-        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
+    static constexpr auto CAN_ID_TURNOFF = hal::CanStdId(0x184);
+        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
 
 
     [[maybe_unused]] auto can_service = [&]{
         if(can.available() == 0){
-            // DEBUG_PRINTLN("no msg", can.get_last_fault());
             return;
         }
+
         const auto msg = can.read();
-        // DEBUG_PRINTLN(msg);
         if(not msg.is_standard()) return;
         const auto id = msg.stdid().unwrap();
 

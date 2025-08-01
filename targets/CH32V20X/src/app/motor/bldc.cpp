@@ -551,7 +551,7 @@ void bldc_main(){
     q22 yaw_angle_ = 0;
 
     RunStatus run_status_;
-    run_status_.state = RunState::Seeking;
+    run_status_.state = RunState::Idle;
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
         if(self_node_role_ == NodeRole::YawJoint){
@@ -699,27 +699,19 @@ void bldc_main(){
             write_can_msg(msg);
         }
     };
-    // auto publish_motor_is_actived = [&](bool is_actived) -> void { 
-    //     if(is_actived) publish_to_both_joints(commands::Activate{});
-    //     else publish_to_both_joints(commands::Deactivate{});
-    // };
-
-    // auto set_self_motor_is_actived = [&](bool is_actived) -> void { 
-    //     motor_is_actived_ = is_actived;
-    // };
 
     auto publish_laser_en = [&](const bool on){
 
         const auto msg_id = [&]{
-            // const auto factory = MsgFactory<LaserCommand>{NodeRole::Laser};
-            // if(on) return factory(LaserOn{});
-            // return factory(LaserOff{});
-            if(on) return comb_role_and_cmd(NodeRole::Laser, LaserCommand::On);
-            else return comb_role_and_cmd(NodeRole::Laser, LaserCommand::Off);
+            // if(on) return comb_role_and_cmd(NodeRole::Laser, LaserCommand::On);
+            // else return comb_role_and_cmd(NodeRole::Laser, LaserCommand::Off);
+            if(on) return hal::CanStdId(0x183);
+            else return hal::CanStdId(0x184);
         }();
 
-        write_can_msg(hal::CanMsg::from_list(msg_id, {}));
-
+        const auto msg = hal::CanMsg::from_list(msg_id, {});
+        write_can_msg(msg);
+        DEBUG_PRINTLN(msg);
     };
 
 
@@ -982,11 +974,11 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_idle = [&]{
-        publish_laser_en(false);
+        // publish_laser_en(false);
     };
 
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
-        publish_laser_en(false);
+        // publish_laser_en(false);
 
         if(may_a4_rect_.is_some()){
             run_status_.state = RunState::Tracking;
@@ -998,7 +990,7 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_tracking = [&]{
-        publish_laser_en(true);
+        // publish_laser_en(true);
 
         static auto timer = async::RepeatTimer::from_duration(5ms);
         timer.invoke_if([&]{
@@ -1064,6 +1056,7 @@ void bldc_main(){
         if(node_is_master_){
             gimbal_sm_service();
         }
+
 
         if(report_en_){
             report_service();
