@@ -50,31 +50,39 @@ public:
     }
 
 
-    __fast_inline consteval size_t rows() const { return R;}
-    __fast_inline consteval size_t cols() const { return C;}
-    __fast_inline constexpr std::span<T> operator[](const size_t row) {return std::span<T>(&data_[row * C], C);}
-    __fast_inline constexpr std::span<const T> operator[](const size_t row) const {return std::span<const T>(&data_[row * C], C);}
-    __fast_inline constexpr T & at(const size_t row, const size_t col) { return data_[row * C + col];}
-    __fast_inline constexpr const T & at(const size_t row, const size_t col) const { return data_[row * C + col];}
+    __fast_inline constexpr size_t rows() const { return R;}
+    __fast_inline constexpr size_t cols() const { return C;}
+    __fast_inline constexpr std::span<T> operator[](const size_t row) 
+        {return std::span<T>(&data_[row * C], C);}
+
+    __fast_inline constexpr std::span<const T> operator[](const size_t row) const 
+        {return std::span<const T>(&data_[row * C], C);}
+
+    __fast_inline constexpr T & at(const size_t row, const size_t col) 
+        { return data_[row * C + col];}
+    __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
+        { return data_[row * C + col];}
     __fast_inline constexpr size_t size() const { return R*C;}
 
     __fast_inline constexpr T * begin() { return static_cast<T *>(&data_[0]);}
-    __fast_inline constexpr const T * begin() const { return static_cast<const T *>(&data_[0]);}
+    __fast_inline constexpr const T * begin() const 
+        { return static_cast<const T *>(&data_[0]);}
     __fast_inline constexpr T * end() { return begin() + size();}
     __fast_inline constexpr const T * end() const { return begin() + size();}
 
     __fast_inline constexpr auto & data() { return data_;}
     __fast_inline constexpr const auto & data() const { return data_; }
 
-    __fast_inline constexpr void setZero() {
-        auto ptr = begin();
-        for(size_t i = 0; i < size(); i++){
-            ptr[i] = static_cast<T>(0);
-        }
-    }
+    // __fast_inline constexpr void setZero() {
+    //     auto ptr = begin();
+    //     for(size_t i = 0; i < size(); i++){
+    //         ptr[i] = static_cast<T>(0);
+    //     }
+    // }
 
     template<size_t R2, size_t C2>
-    __fast_inline constexpr Matrix<T, R2, C2> block(const size_t row_start, const size_t col_start) const{   
+    __fast_inline constexpr Matrix<T, R2, C2> block(
+        const size_t row_start, const size_t col_start) const{   
         static_assert(R2 <= R and C2 <= C);
 
         if(std::is_constant_evaluated()){

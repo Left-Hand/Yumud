@@ -12,6 +12,11 @@ struct SetPosition{
 };
 
 
+struct DeltaPosition{
+    real_t delta_position;
+};
+
+
 struct SetSpeed{
     bf16 speed;
 };
@@ -74,6 +79,10 @@ DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::SetPosition, position)
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetSpeed)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetSpeed)
 DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::SetSpeed, speed)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::DeltaPosition)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::DeltaPosition)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::DeltaPosition, delta_position)
 
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetPositionWithFwdSpeed)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetPositionWithFwdSpeed)

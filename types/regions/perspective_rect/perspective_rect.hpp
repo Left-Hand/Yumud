@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types/vectors/vector2/Vector2.hpp"
+#include "types/matrix/matrix_static.hpp"
 
 namespace ymd{
 
@@ -59,7 +60,8 @@ struct PerspectiveRect{
     }
 
     // 添加以下函数到 PerspectiveRect 结构体中
-    static constexpr PerspectiveRect from_clockwise_points(std::array<Vector2<T>, 4> f32points) {
+    static constexpr PerspectiveRect from_clockwise_points(
+        std::array<Vector2<T>, 4> f32points) {
         // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
         // 检查前三个点的叉积来判断方向
         auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
@@ -162,6 +164,91 @@ struct PerspectiveRect{
         }
         return true;
     }
+
+
+    // 计算单应性矩阵 H（3x3）
+    constexpr Matrix<T, 3, 3> compute_homography() const {
+        // 源点（单位正方形）
+        constexpr std::array<Vector2<T>, 4> src = {
+            Vector2<T>{0, 0},
+            Vector2<T>{1, 0},
+            Vector2<T>{1, 1},
+            Vector2<T>{0, 1}
+        };
+
+        // 构造线性方程组 A * h = b（8x8）
+        std::array<std::array<T, 9>, 8> augmented{};
+
+        for (size_t i = 0; i < 4; ++i) {
+            T u = src[i].x;
+            T v = src[i].y;
+            T x = points[i].x;
+            T y = points[i].y;
+
+            // 方程 1: h11*u + h12*v + h13 - x*(h31*u + h32*v) = x
+            augmented[2*i] = {
+                u, v, 1, 0, 0, 0, -x*u, -x*v, x
+            };
+
+            // 方程 2: h21*u + h22*v + h23 - y*(h31*u + h32*v) = y
+            augmented[2*i + 1] = {
+                0, 0, 0, u, v, 1, -y*u, -y*v, y
+            };
+        }
+
+        // 高斯消元法（constexpr）
+        constexpr auto solve = [](auto& mat) {
+            constexpr size_t N = 8;
+            for (size_t col = 0; col < N; ++col) {
+                // 找主元
+                size_t max_row = col;
+                for (size_t row = col + 1; row < N; ++row) {
+                    if (std::abs(mat[row][col]) > std::abs(mat[max_row][col])) {
+                        max_row = row;
+                    }
+                }
+
+                // 交换行
+                if (max_row != col) {
+                    std::swap(mat[col], mat[max_row]);
+                }
+
+                // 消元
+                for (size_t row = col + 1; row < N; ++row) {
+                    T factor = mat[row][col] / mat[col][col];
+                    for (size_t k = col; k <= N; ++k) {
+                        mat[row][k] -= factor * mat[col][k];
+                    }
+                }
+            }
+
+            // 回代
+            std::array<T, N> h{};
+
+            for (size_t row = N; row > 0; --row) {
+                size_t i = row - 1;
+                // Use 'i' instead of 'row' in the loop body
+                h[i] = mat[i][N];
+                for (size_t col = i + 1; col < N; ++col) {
+                    h[i] -= mat[i][col] * h[col];
+                }
+                h[i] /= mat[i][i];
+            }
+            return h;
+        };
+
+        // 解方程组
+        auto h = solve(augmented);
+
+        // 构造 3x3 单应性矩阵
+        return Matrix<T, 3, 3>(
+            h[0], h[1], h[2],
+            h[3], h[4], h[5],
+            h[6], h[7], 1
+        );
+    }
+
+
 
     friend OutputStream & operator << (OutputStream & os, const PerspectiveRect & rect){
         return os << rect.points;

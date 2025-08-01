@@ -155,7 +155,7 @@ struct SerializeIter<RawBytes, iq_t<Q>>{
     }
 
     static constexpr std::array<uint8_t, 4> serialize(const iq_t<Q> num){
-        const auto inum = num.to_i32();
+        const auto inum = num.as_i32();
         return std::bit_cast<std::array<uint8_t, 4>>(inum);
     } 
 private:
