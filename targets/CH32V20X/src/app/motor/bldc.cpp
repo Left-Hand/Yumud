@@ -148,6 +148,7 @@ enum class RunState:uint8_t{
     Tracking
 };
 
+DEF_DERIVE_DEBUG(RunState)
 struct RunStatus{
     using State = RunState;
     RunState state = RunState::Idle;
@@ -253,6 +254,13 @@ struct Gesture{
 }
 
 
+enum class BlinkPattern:uint8_t{
+    RGB,
+    RED,
+    GREEN,
+    BLUE
+};
+
 
 void bldc_main(){
 
@@ -279,9 +287,9 @@ void bldc_main(){
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
-    auto & ledr = hal::portC[13];
-    auto & ledb = hal::portC[14];
-    auto & ledg = hal::portC[15];
+    auto & ledb = hal::PC<13>();
+    auto & ledr = hal::PC<14>();
+    auto & ledg = hal::PC<15>();
     
     // auto & en_gpio = hal::portA[11];
     // auto & nslp_gpio = hal::portA[12];
@@ -297,15 +305,6 @@ void bldc_main(){
     ledb.outpp(); 
     ledg.outpp();
     
-    auto blink_service = [&]{
-        static auto timer = async::RepeatTimer::from_duration(10ms);
-        timer.invoke_if([&]{
-            ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-            ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-            ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
-        });
-    };
-
 
     const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
 
@@ -438,8 +437,8 @@ void bldc_main(){
     init_adc(adc);
 
     hal::portA[7].inana();
+    bool motor_is_actived_ = false;
     // bool motor_is_actived_ = false;
-    bool motor_is_actived_ = true;
 
     en_gpio.set();
     nslp_gpio.set();
@@ -697,7 +696,8 @@ void bldc_main(){
         run_status_.state = RunState::Idle;
     };
 
-
+    bool report_en_ = false;
+    
     [[maybe_unused]] auto repl_service = [&]{
         static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
@@ -736,6 +736,14 @@ void bldc_main(){
 
             rpc::make_function("lsr", [&](const bool on){
                 set_laser(on);
+            }),
+
+            rpc::make_function("rpen", [&](){
+                report_en_ = true;
+            }),
+
+            rpc::make_function("rpdis", [&](){
+                report_en_ = false;
             })
         );
 
@@ -848,6 +856,10 @@ void bldc_main(){
         });
     };
 
+    [[maybe_unused]] auto on_gimbal_idle = [&]{
+
+    };
+
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
         // static auto timer = async::RepeatTimer::from_duration(100ms);
         // timer.invoke_if([&]{
@@ -865,6 +877,7 @@ void bldc_main(){
     [[maybe_unused]] auto gimbal_service = [&]{ 
         switch(run_status_.state){
             case RunState::Idle: 
+                on_gimbal_idle();
                 break;
             case RunState::Seeking: 
                 on_gimbal_seeking();
@@ -875,6 +888,51 @@ void bldc_main(){
         }
     };
 
+    auto blink_service = [&]{
+        static auto timer = async::RepeatTimer::from_duration(10ms);
+        const auto blink_pattern = [&] -> BlinkPattern{
+            if(not motor_is_actived_){
+                return BlinkPattern::RED;
+            }
+
+            switch(run_status_.state){
+                case RunState::Idle: 
+                    return BlinkPattern::RED;
+                case RunState::Seeking: 
+                    return BlinkPattern::BLUE;
+                case RunState::Tracking: 
+                    return BlinkPattern::GREEN;
+                default:
+                    __builtin_unreachable();
+            }
+        }();
+
+        timer.invoke_if([&]{
+            switch(blink_pattern){
+                case BlinkPattern::RED:
+                    ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                    ledb = LOW;
+                    ledg = LOW;
+                    break;
+                case BlinkPattern::BLUE:
+                    ledr = LOW;
+                    ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                    ledg = LOW;
+                    break;
+                case BlinkPattern::GREEN:
+                    ledr = LOW;
+                    ledb = LOW;
+                    ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                    break;
+                case BlinkPattern::RGB:
+                    ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+                    ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                    ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+                    break;
+            }
+        });
+    };
+
     while(true){
         repl_service();
 
@@ -882,8 +940,12 @@ void bldc_main(){
         can_subscriber_service();
 
         blink_service();
+        gimbal_service();
 
-        report_service();
+        if(report_en_){
+            report_service();
+        }
+
         update_demo_track_service();
 
         if(self_node_role_ == NodeRole::YawJoint){
