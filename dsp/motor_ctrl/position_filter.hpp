@@ -60,7 +60,7 @@ struct PositionFilter{
         return lap_position_;
     }
 
-    constexpr q16 position() const{
+    constexpr q20 position() const{
         return td_.get().position;
     }
 
@@ -68,7 +68,7 @@ struct PositionFilter{
         return cont_position_;
     }
 
-    constexpr q16 speed() const {
+    constexpr q20 speed() const {
         return td_.get().speed;
     }
 
