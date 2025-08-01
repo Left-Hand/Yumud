@@ -454,8 +454,6 @@ void bldc_main(){
     en_gpio.set();
     nslp_gpio.set();
 
-    q20 self_blance_angle_ = 0; 
-    q20 self_blance_omega_ = 0;
 
     AbVoltage ab_volt_;
     
@@ -988,7 +986,6 @@ void bldc_main(){
     };
     
     [[maybe_unused]] auto on_joint_ctl = [&]{
-        static constexpr auto PITCH_KP = 0.35_q20 / GIMBAL_CTRL_FREQ;
         static constexpr auto YAW_KP = 1.55_q20 / GIMBAL_CTRL_FREQ;
         
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1014,15 +1011,14 @@ void bldc_main(){
                     [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
                     [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
                     static constexpr auto yaw_gyr_bias = 0.0020_q24;
-                    // const auto yaw_gyr = -(
-                    //     bmi160_.read_gyr().examine().z + 
-                    //     yaw_gyr_bias)
-                    // ;
-                    const auto yaw_gyr = 0;
+                    const auto yaw_gyr = -(
+                        bmi160_.read_gyr().examine().z + 
+                        yaw_gyr_bias)
+                    ;
 
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
-                            .delta_position = YAW_KP * q20(-err_position_.x) + q20(yaw_gyr) * DELTA_TIME
+                            .delta_position = YAW_KP * q20(-err_position_.x) + q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU)
                         });
                     break;
                 } 
