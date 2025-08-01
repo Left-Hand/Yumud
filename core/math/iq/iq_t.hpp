@@ -158,7 +158,7 @@ public:
 
     //#region division
     __fast_inline constexpr iq_t & operator/=(const integral auto other) {
-        return *this = iq_t(_iq<Q>::from_i32((as_i32() / other)));
+        return *this = iq_t(_iq<Q>::from_i32((as_i32() / int32_t(other))));
     }
 
     template<size_t P>

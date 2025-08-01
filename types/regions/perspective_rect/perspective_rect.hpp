@@ -115,6 +115,17 @@ struct PerspectiveRect{
                         p0.y + t * (p2.y - p0.y)};
     }
 
+    
+    constexpr Vector2<T> average() const {
+        return Vector2<T>{
+            points[0] +
+            points[1] +
+            points[2] +
+            points[3]
+        } * T(0.25);
+    }
+
+
     // 计算面积（使用鞋带公式）
     constexpr T area() const {
         T a = 0;
