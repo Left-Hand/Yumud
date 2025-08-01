@@ -602,7 +602,7 @@ void bldc_main(){
             // CLAMP2(q_volt, MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
-        [[maybe_unused]] const auto ctime = clock::time();
+        // [[maybe_unused]] const auto ctime = clock::time();
         #if 0
         {
             const auto [s,c] = sincospu(3.5_r * ctime);
@@ -610,12 +610,11 @@ void bldc_main(){
             svpwm_.set_ab_volt(c * amp, s * amp);
         }
         #else
-        // if(run_status_.state != RunState::Idle){
+        if(run_status_.state != RunState::Idle){
             svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
-        // }else{
-        //     svpwm_.set_ab_volt(0, 0);
-        // }
-        // svpwm_.set_ab_volt(3.0_r, 0.0_r);
+        }else{
+            svpwm_.set_ab_volt(0, 0);
+        }
         #endif
 
         leso_.update(meas_speed, q_volt);
@@ -999,19 +998,25 @@ void bldc_main(){
                     may_a4_rect_.unwrap().to_u8x8()
                 });
 
-                const auto expect_uv_coord = Vector2{0.4_r, 0.5_r};
+                const auto expect_center_uv_coord = Vector2{0.4_r, 0.5_r};
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
                     .center();
 
                 const auto ctime = clock::time();
-                const auto route_percent = frac(ctime / 5);
+                const auto route_play_ratio = frac(ctime / 5);
+                const auto route_play_coord = a4_coord_to_uv_coord(A4_CENTER_COORD + Vector2<q16>{0.06_r, 0}
+                    .rotated(route_play_ratio));
+                    
+                const auto expect_uv_coord = 
+                    expect_center_uv_coord + route_play_coord;
+                
                 const auto err_coord = track_target_uv_coord - expect_uv_coord;
         
-                static constexpr auto YAW_KP = 0.05_r / GIMBAL_CTRL_FREQ;
+                static constexpr auto YAW_KP = 0.05_q24 / GIMBAL_CTRL_FREQ;
 
                 publish_joint_delta_position(
                     NodeRole::YawJoint, commands::DeltaPosition{
-                        .delta_position = YAW_KP * err_coord.x
+                        .delta_position = YAW_KP * (err_coord.x > 0 ? 1 : -1)
                     }
                 );
             }
