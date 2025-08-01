@@ -154,13 +154,25 @@ void Can::clear_mailbox(const uint8_t mbox){
 }
 
 
-Gpio & Can::get_tx_gpio(){
+Gpio & Can::get_tx_gpio(const uint8_t remap){
     switch(reinterpret_cast<uint32_t>(inst_)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
-            return CAN1_TX_GPIO;
+            switch(remap){
+                case 0:
+                    return CAN1_RM0_TX_GPIO;
+                case 1:
+                    if(sys::chip::get_flash_size() < 64_KB){
+                        return CAN1_RM0_TX_GPIO;
+                    }
+                    return CAN1_RM1_TX_GPIO;
+                case 3:
+                    return CAN1_RM3_TX_GPIO;
+                default:
+                    __builtin_unreachable();
+            }
         #endif
 
         #ifdef ENABLE_CAN2
@@ -172,13 +184,26 @@ Gpio & Can::get_tx_gpio(){
     }
 }
 
-Gpio & Can::get_rx_gpio(){
+Gpio & Can::get_rx_gpio(const uint8_t remap){
     switch(reinterpret_cast<uint32_t>(inst_)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
-            return CAN1_RX_GPIO;
+            // return CAN1_RX_GPIO;
+            switch(remap){
+                case 0:
+                    return CAN1_RM0_RX_GPIO;
+                case 1:
+                    if(sys::chip::get_flash_size() < 64_KB){
+                        return CAN1_RM0_RX_GPIO;
+                    }
+                    return CAN1_RM1_RX_GPIO;
+                case 3:
+                    return CAN1_RM3_RX_GPIO;
+                default:
+                    __builtin_unreachable();
+            }
         #endif
 
         #ifdef ENABLE_CAN2
@@ -188,18 +213,17 @@ Gpio & Can::get_rx_gpio(){
     }
 }
 
-void Can::install_gpio(){
-    get_tx_gpio().afpp();
-    get_rx_gpio().afpp();
+void Can::install_gpio(const uint8_t remap){
+    get_tx_gpio(remap).afpp();
+    get_rx_gpio(remap).afpp();
 }
 
 
-void Can::enable_rcc(){
+void Can::enable_rcc(const uint8_t remap){
     switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
-            uint8_t remap = CAN1_REMAP;
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
@@ -237,8 +261,8 @@ void Can::enable_rcc(){
 }
 
 void Can::init(const Config & cfg){
-    enable_rcc();
-    install_gpio();
+    enable_rcc(cfg.remap);
+    install_gpio(cfg.remap);
 
     const auto setting = cfg.baudrate.dump();
 

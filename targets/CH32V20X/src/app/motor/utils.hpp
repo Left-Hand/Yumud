@@ -74,19 +74,7 @@ private:
 
 
 namespace ymd{
-template<typename E, typename T>
-struct command_to_kind{};
 
-template<typename E, E K>
-struct kind_to_command{};
-
-
-
-template<typename E, typename T>
-static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
-
-template<typename E, E K>
-using kind_to_command_t = typename kind_to_command<E, K>::type;
 }
 
 

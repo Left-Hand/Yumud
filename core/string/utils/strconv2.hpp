@@ -263,6 +263,36 @@ struct IntFromStringHelper{
 	}
 };
 
+template<>
+struct IntFromStringHelper<bool>{
+	static constexpr DestringResult<bool> conv(const StringView str) {
+		const auto len = str.length();
+		uint32_t ret = 0;
+		bool is_negtive = false;
+
+		for(size_t i = 0; i < len; i++){
+			char chr = str[i];
+
+			switch(chr){
+				case '\0':
+					break;
+				case '-':
+					if(is_negtive) break;
+					is_negtive = true;
+					break;
+				case '0' ... '9':
+					ret *= 10;
+					ret += chr - '0';
+					break;
+			}
+		}
+
+		if(ret < 0) ret = INT32_MAX;
+		if(is_negtive) ret = - ret;
+		return Ok(bool(ret));
+	}
+};
+
 template<size_t Q>
 struct IqFromStringHelper{
 	static constexpr DestringResult<iq_t<Q>> conv(const StringView str){

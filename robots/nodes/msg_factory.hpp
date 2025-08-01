@@ -2,8 +2,29 @@
 
 #include "node_role.hpp"
 #include "hal/bus/can/can_msg.hpp"
+#include "core/utils/serde.hpp"
+
+
+namespace ymd{
+template<typename E, typename T>
+struct command_to_kind{};
+
+template<typename E, E K>
+struct kind_to_command{};
+
+
+
+template<typename E, typename T>
+static constexpr auto command_to_kind_v = command_to_kind<E, T>::KIND;
+
+template<typename E, E K>
+using kind_to_command_t = typename kind_to_command<E, K>::type;
+
+};
 
 namespace ymd::robots{
+
+
 
 template<typename CommandKind>
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){

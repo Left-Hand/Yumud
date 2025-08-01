@@ -81,6 +81,138 @@ struct kind_to_command<CommandKind, K>{ \
 #define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
 
 
+// 将单个 16 进制字符转换为数值 (constexpr)
+constexpr uint8_t hex_char_to_u8(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+    if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+    return 0xFF; // 无效字符标记
+}
+
+// 将两个 16 进制字符转换为 u8 (constexpr)
+constexpr Option<uint8_t> parse_u8_hex_pair(char c1, char c2) {
+    uint8_t high = hex_char_to_u8(c1);
+    uint8_t low = hex_char_to_u8(c2);
+    if (high == 0xFF || low == 0xFF) return None;
+    return Some(static_cast<uint8_t>((high << 4) | low));
+}
+
+
+using Vector2u8 = Vector2<uint8_t>;
+using Vector2q16 = Vector2<q16>;
+
+// struct PerspectiveRect{
+//     std::array<Vector2q16, 4> points;
+    
+
+//     // 从uint8坐标构造（自动归一化到[0,1]范围）
+//     constexpr PerspectiveRect(std::array<Vector2u8, 4> u8points) {
+//         for (size_t i = 0; i < 4; ++i) {
+//             points[i] = Vector2f32{
+//                 u8points[i].x / 255.0f,
+//                 u8points[i].y / 255.0f
+//             };
+//         }
+//     }
+
+//     // 从浮点坐标直接构造
+//     constexpr PerspectiveRect(std::array<Vector2f32, 4> f32points)
+//         : points(f32points) {}
+
+//     // 计算中心点
+//     constexpr Vector2f32 center() const {
+//         Vector2f32 sum{0,0};
+//         for (const auto& p : points) {
+//             sum = sum + p;
+//         }
+//         return sum * 0.25f;
+//     }
+
+//     // 计算面积（使用鞋带公式）
+//     constexpr float area() const {
+//         float a = 0;
+//         for (size_t i = 0; i < 4; ++i) {
+//             size_t j = (i + 1) % 4;
+//             a += points[i].x * points[j].y - points[j].x * points[i].y;
+//         }
+//         return std::abs(a) * 0.5f;
+//     }
+
+//     // 平移变换
+//     constexpr PerspectiveRect translated(Vector2f32 offset) const {
+//         std::array<Vector2f32, 4> new_points;
+//         for (size_t i = 0; i < 4; ++i) {
+//             new_points[i] = points[i] + offset;
+//         }
+//         return PerspectiveRect(new_points);
+//     }
+
+//     // 缩放变换（以中心点为原点）
+//     constexpr PerspectiveRect scaled(float factor) const {
+//         const auto c = center();
+//         std::array<Vector2f32, 4> new_points;
+//         for (size_t i = 0; i < 4; ++i) {
+//             new_points[i] = c + (points[i] - c) * factor;
+//         }
+//         return PerspectiveRect(new_points);
+//     }
+
+//     // 检查是否是凸四边形
+//     constexpr bool is_convex() const {
+//         auto cross = [](Vector2f32 a, Vector2f32 b, Vector2f32 c) {
+//             return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
+//         };
+
+//         bool sign = false;
+//         for (size_t i = 0; i < 4; ++i) {
+//             size_t a = i;
+//             size_t b = (i + 1) % 4;
+//             size_t c = (i + 2) % 4;
+//             float cr = cross(points[a], points[b], points[c]);
+//             if (i == 0) {
+//                 sign = cr > 0;
+//             } else if ((cr > 0) != sign) {
+//                 return false;
+//             }
+//         }
+//         return true;
+//     }
+// };
+
+
+
+// 主函数
+static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view str) {
+    if (str.size() != 16) return None;
+
+    std::array<Vector2u8, 4> result{};
+
+    for (size_t i = 0; i < 4; ++i) {
+        size_t offset = i * 4;
+
+        auto x = parse_u8_hex_pair(str[offset], str[offset + 1]);
+        auto y = parse_u8_hex_pair(str[offset + 2], str[offset + 3]);
+
+        if (!x.is_some() || !y.is_some()) {
+            return None;
+        }
+
+        result[i] = Vector2u8{x.unwrap(), y.unwrap()};
+    }
+
+    return Some(result);
+}
+
+enum class RunState:uint8_t{
+    Idle,
+    Seeking,
+    Tracking
+};
+
+struct RunStatus{
+    using State = RunState;
+    RunState state = RunState::Idle;
+};
 
 namespace ymd{
 
@@ -361,7 +493,8 @@ void bldc_main(){
     init_adc(adc);
 
     hal::portA[7].inana();
-
+    // bool motor_is_actived_ = false;
+    bool motor_is_actived_ = true;
 
     en_gpio.set();
     nslp_gpio.set();
@@ -398,7 +531,7 @@ void bldc_main(){
                 case NodeRole::YawJoint:
                     return -0.211_r;
                 case NodeRole::PitchJoint:
-                    return -0.275_r;
+                    return -0.265_r;
                 default:
                     PANIC();
             }
@@ -437,7 +570,8 @@ void bldc_main(){
                 // return PdCtrlLaw{.kp = 126.581_r, .kd = 2.4_r};
                 return PdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
-                return PdCtrlLaw{.kp = 76.281_r, .kd = 0.4_r};
+                // return PdCtrlLaw{.kp = 76.281_r, .kd = 0.4_r};
+                return PdCtrlLaw{.kp = 166.281_r, .kd = 4.4_r};
             default: 
                 PANIC();
         }
@@ -452,6 +586,8 @@ void bldc_main(){
     
     Microseconds exe_us_ = 0us;
     q22 yaw_angle_ = 0;
+
+    RunStatus run_status_;
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
         if(self_node_role_ == NodeRole::YawJoint){
@@ -468,7 +604,7 @@ void bldc_main(){
         const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr real_t omega = 1;
-        [[maybe_unused]] static constexpr real_t amp = 0.02_r;
+        [[maybe_unused]] static constexpr real_t amp = 0.005_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
@@ -514,7 +650,11 @@ void bldc_main(){
             svpwm_.set_ab_volt(c * amp, s * amp);
         }
         #else
-        svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
+        if(motor_is_actived_){
+            svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
+        }else{
+            svpwm_.set_ab_volt(0, 0);
+        }
         // svpwm_.set_ab_volt(3.0_r, 0.0_r);
         #endif
 
@@ -587,6 +727,19 @@ void bldc_main(){
         };
     };
 
+    auto set_motor_is_actived = [&](bool is_actived) -> void { 
+        motor_is_actived_ = is_actived;
+    };
+
+    auto gimbal_start_seeking = [&]{
+        run_status_.state = RunState::Seeking;
+    };
+
+    auto gimbal_stop_tracking = [&]{
+        run_status_.state = RunState::Idle;
+    };
+
+
     [[maybe_unused]] auto repl_service = [&]{
         static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
@@ -602,7 +755,26 @@ void bldc_main(){
 
             rpc::make_function("setp", update_joint_target),
 
-            rpc::make_function("setps", update_joint_target_with_speed)
+            rpc::make_function("setps", update_joint_target_with_speed),
+            rpc::make_function("a4c", [&](StringView str){ 
+                DEBUG_PRINTLN("a4c", str, defmt_u8x4(str));
+            }),
+
+            rpc::make_function("act", [&](){ 
+                set_motor_is_actived(true);
+            }),
+
+            rpc::make_function("deact", [&](){ 
+                set_motor_is_actived(false);
+            }),
+
+            rpc::make_function("stk", [&](){ 
+                gimbal_start_seeking();
+            }),
+
+            rpc::make_function("stp", [&](){ 
+                gimbal_stop_tracking();
+            })
         );
 
         repl_server.invoke(list);
@@ -618,6 +790,7 @@ void bldc_main(){
             case CommandKind::ResetNode:
                 sys::reset();
                 break;
+                
             case CommandKind::SetPositionWithFwdSpeed:{
                 const auto cmd = serde::make_deserialize<serde::RawBytes,
                     commands::SetPositionWithFwdSpeed>(payload).examine();
@@ -625,6 +798,12 @@ void bldc_main(){
             }
                 break;
 
+            case CommandKind::Activate:
+                set_motor_is_actived(true);
+                break;
+            case CommandKind::Deactivate:
+                set_motor_is_actived(false);
+                break;
             default:
                 PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
                 break;
@@ -665,7 +844,7 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto update_demo_track_service = [&]{ 
-        static constexpr auto amp = 0.05_r;
+        static constexpr auto amp = 0.005_r;
         const auto ctime = clock::time();
         const auto [s, c] = sincos(ctime * 5);
         const auto p1 = c * amp;
@@ -673,7 +852,6 @@ void bldc_main(){
 
         update_joint_target(p1, p2);
     };
-
 
 
     [[maybe_unused]] auto report_service = [&]{
@@ -690,7 +868,7 @@ void bldc_main(){
         });
     };
 
-    [[maybe_unused]] auto yaw_service = [&]{ 
+    [[maybe_unused]] auto yaw_selftrack_service = [&]{ 
         [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
         [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_r;
         [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
@@ -706,7 +884,33 @@ void bldc_main(){
             self_blance_angle_ = yaw_angle_;
             self_blance_omega_ = yaw_gyr;
         });
+    };
 
+    [[maybe_unused]] auto on_gimbal_seeking = [&]{
+        // static auto timer = async::RepeatTimer::from_duration(100ms);
+        // timer.invoke_if([&]{
+        //     led_pin_.toggle();
+        // });
+    };
+
+    [[maybe_unused]] auto on_gimbal_tracking = [&]{
+        // static auto timer = async::RepeatTimer::from_duration(100ms);
+        // timer.invoke_if([&]{
+        //     led_pin_.toggle();
+        // });
+    };
+
+    [[maybe_unused]] auto gimbal_service = [&]{ 
+        switch(run_status_.state){
+            case RunState::Idle: 
+                break;
+            case RunState::Seeking: 
+                on_gimbal_seeking();
+                break;
+            case RunState::Tracking: 
+                on_gimbal_tracking();
+                break;
+        }
     };
 
     while(true){
@@ -718,9 +922,10 @@ void bldc_main(){
         blink_service();
 
         report_service();
+        update_demo_track_service();
 
         if(self_node_role_ == NodeRole::YawJoint){
-            yaw_service();
+            yaw_selftrack_service();
         }
 
     }
