@@ -104,6 +104,29 @@ private:
     bool just_activated_ = false;  // 是否刚刚触发（用于 is_just_active）
 };
 
+
+class DelayedSemphr final{
+public:
+    DelayedSemphr(const Milliseconds delay_ms):
+        delay_ms_(delay_ms){;}
+
+    void give(){
+        last_millis_ = Milliseconds(clock::millis());
+    }
+
+    bool take(){
+        if(last_millis_.has_value() and last_millis_.value() + delay_ms_ < clock::millis()){
+            last_millis_ = std::nullopt;
+            return true;
+        }
+        return false;
+    }
+    private:
+        Milliseconds delay_ms_ = 0ms;
+        std::optional<Milliseconds> last_millis_ = std::nullopt;
+};
+
+
 #define DEF_COMMAND_BIND(K, T) \
 template<> \
 struct command_to_kind<CommandKind, T>{ \
@@ -336,8 +359,11 @@ void bldc_main(){
         }
     }();
 
+    bool is_still_mode_ = false;
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
+    Option<real_t> position_when_stk_ = None;
+    Option<Milliseconds> advanced_start_ms_ = None;
 
     DBG_UART.init({
         .baudrate = UART_BAUD
@@ -941,6 +967,7 @@ void bldc_main(){
         write_can_msg(msg);
     };
 
+    bool is_fn3_mode_ = false;
 
     [[maybe_unused]] auto report_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1029,26 +1056,53 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_tracking = [&]{ 
-        // const auto squ_err = Vector2<q24>(err_position_).length_squared();
-        
-
         if(laser_is_oneshot_){
-            static Option<Milliseconds> last_ms_ = None;
+            // static Option<Milliseconds> last_ms_ = None;
 
-            if(laser_onshot_ == true){
-                if((ABS(err_position_.x) < 0.002_q20) and (ABS(err_position_.y) < 0.002_q20)){
-                    publish_laser_en(true);
-                    last_ms_ = Some(clock::millis());
-                    laser_onshot_ = false;
-                }
-            }else{
-                if(last_ms_.is_some()){
-                    if(clock::millis() - last_ms_.unwrap() > 50ms){
-                        publish_laser_en(false);
-                    }
+            static DelayedSemphr semphr_ = DelayedSemphr(800ms);
+            static Option<Milliseconds> last_shot_ms_ = None;
+
+            // if(laser_onshot_ == true){
+            if((ABS(err_position_.x) < 0.003_q20) and (ABS(err_position_.y) < 0.003_q20)){
+                if(laser_onshot_ == true){
+                    semphr_.give();
                 }
             }
+
+            const bool shot_en = [&]{
+                if(semphr_.take() and laser_onshot_ == true) return true;
+                if(stk_millis_.is_some()){
+                    if(position_when_stk_.is_some() 
+                        and (pos_filter_.position() - position_when_stk_.unwrap()) > 0.3_r 
+                        and clock::millis() - stk_millis_.unwrap() > 3700ms){
+                            stk_millis_ = None;
+                            position_when_stk_ = None;
+                            return true;
+                        }
+
+                    else if(clock::millis() - stk_millis_.unwrap() > 1700ms){
+                        stk_millis_ = None;
+                        return true;
+                    }
+                }
+                return false;
+            }();
             
+            auto shot = [&]{
+                if(last_shot_ms_.is_some()) return;
+                last_shot_ms_ = Some(clock::millis());
+                publish_laser_en(true);
+            };
+
+            if(shot_en){
+                shot();
+            }
+
+            if(last_shot_ms_.is_some() and clock::millis() - last_shot_ms_.unwrap() > 200ms){
+                publish_laser_en(false);
+                last_shot_ms_ = None;
+            }
+
 
         }else{
             publish_laser_en(true);
@@ -1073,10 +1127,8 @@ void bldc_main(){
                 const auto route_play_coord = Vector2{0.0006_q20, 0_q20}
                     .rotated(route_play_ratio * real_t(TAU));
                     
-                const auto expect_uv_coord = 
-                    expect_center_uv_coord
-                        + route_play_coord
-                ;
+                auto expect_uv_coord = expect_center_uv_coord;
+                if(is_fn3_mode_)expect_uv_coord += route_play_coord;
                 
                 const auto err_position = (track_target_uv_coord - expect_uv_coord);
 
@@ -1088,6 +1140,12 @@ void bldc_main(){
             }
         });
     };
+
+
+    [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
+    [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
+    [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
+    
     
     [[maybe_unused]] auto on_joint_seeking_ctl = [&]{ 
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1103,9 +1161,13 @@ void bldc_main(){
                         });
                     break;
                 case NodeRole::YawJoint:{
+                    const auto ctime = clock::time();
+                    if(may_a4_rect_.is_some()) break;
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
-                            .delta_position = - 0.3_q20 * ((1.25_q20 + q20(sinpu(2 * ctime))) / GIMBAL_CTRL_FREQ),
+                            // .delta_position = (- 0.3_q20 * (1.35_r + sin ( 6 * real_t(PI) * ctime)) / GIMBAL_CTRL_FREQ)
+                            .delta_position = (- 0.3_q20 * (1.35_r + sin ( 6 * real_t(PI) * ctime)) / GIMBAL_CTRL_FREQ)
+                            // .delta_position = 0
                         });
                     break;
                 } 
@@ -1116,36 +1178,38 @@ void bldc_main(){
         });
     };
 
-    [[maybe_unused]] auto on_joint_tracking_ctl = [&]{
-        static constexpr auto YAW_KP = 1.55_q20 / GIMBAL_CTRL_FREQ;
+
+
+    [[maybe_unused]] auto on_joint_still_tracking_ctl = [&]{
+        static constexpr auto YAW_KP = 1.85_q20 / GIMBAL_CTRL_FREQ;
+        static constexpr auto PITCH_KP = 0.75_q20 / GIMBAL_CTRL_FREQ;
         
         static auto timer = async::RepeatTimer::from_duration(5ms);
+
+        if(advanced_start_ms_.is_some()){
+            if(clock::millis() - advanced_start_ms_.unwrap() < 15000ms){
+                publish_laser_en(false);
+            }else{
+                publish_laser_en(true);
+                advanced_start_ms_ = None;
+            }
+        }
 
         timer.invoke_if([&]{
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     publish_joint_delta_position(NodeRole::PitchJoint, 
                         commands::DeltaPosition{
-                            // .delta_position = - PITCH_KP * err_position_.y
-                            //kp的系数
-                            .delta_position = -q24(err_position_.y) * 0.0024_q24
-                        });
+                            .delta_position = -q20(err_position_.y) * PITCH_KP
+                        }
+                    );
                     break;
+
                 case NodeRole::YawJoint:{
-                    [[maybe_unused]] static constexpr auto DELTA_TIME_MS = 5ms;
-                    [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
-                    [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
-                    static constexpr auto yaw_gyr_bias = 0.0020_q24;
-                    //imu补偿
-                    const auto yaw_gyr = -(
-                        bmi160_.read_gyr().examine().z + 
-                        yaw_gyr_bias)
-                    ;
 
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
-                            .delta_position = YAW_KP * q20(-err_position_.x) + 
-                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.11)
+                            .delta_position = YAW_KP * q20(-err_position_.x)
                         });
                     break;
                 }
@@ -1156,6 +1220,88 @@ void bldc_main(){
         });
     };
 
+    [[maybe_unused]] auto on_joint_dyna_tracking_ctl = [&]{
+        // static constexpr auto YAW_KP = 1.55_q20 / GIMBAL_CTRL_FREQ;
+        static constexpr auto YAW_KP = 1.85_q20 / GIMBAL_CTRL_FREQ;
+        static constexpr auto PITCH_KP = 0.55_q20 / GIMBAL_CTRL_FREQ;
+        
+        static auto timer = async::RepeatTimer::from_duration(5ms);
+
+        if(advanced_start_ms_.is_some()){
+            if(clock::millis() - advanced_start_ms_.unwrap() < 15000ms){
+                publish_laser_en(false);
+            }else{
+                publish_laser_en(true);
+                advanced_start_ms_ = None;
+            }
+        }
+
+        timer.invoke_if([&]{
+            switch(self_node_role_){
+                case NodeRole::PitchJoint:
+                    publish_joint_delta_position(NodeRole::PitchJoint, 
+                        commands::DeltaPosition{
+                            // .delta_position = - PITCH_KP * err_position_.y
+                            //kp的系数
+                            .delta_position = -q24(err_position_.y) * PITCH_KP
+                        });
+                    break;
+                case NodeRole::YawJoint:{
+
+                    static constexpr auto yaw_gyr_bias = 0.0020_q24;
+                    //imu补偿
+                    const auto yaw_gyr = -(
+                        bmi160_.read_gyr().examine().z + 
+                        yaw_gyr_bias)
+                    ;
+
+                    // static q24 inte = 0;
+                    // static constexpr q24 INTE_MAX = 0.02_r;
+                    // static constexpr q24 KI = 0.015_q20 / GIMBAL_CTRL_FREQ;
+
+                    // inte = CLAMP2(inte + KI * (-err_position_.x), INTE_MAX);
+
+                    publish_joint_delta_position(NodeRole::YawJoint, 
+                        commands::DeltaPosition{
+                            .delta_position = YAW_KP * q20(-err_position_.x) + 
+                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.0)
+                        });
+                    break;
+                }
+                
+                default:
+                    PANIC();
+            }
+        });
+    };
+
+
+    // [[maybe_unused]] auto on_joint_still_seeking_ctl = [&]{ 
+    //     static auto timer = async::RepeatTimer::from_duration(5ms);
+    //     const auto ctime = clock::time();
+
+    //     timer.invoke_if([&]{
+    //         switch(self_node_role_){
+    //             case NodeRole::PitchJoint:
+    //                 publish_joint_position(NodeRole::PitchJoint, 
+    //                     //10度
+    //                     commands::SetPosition{
+    //                         .position = 0.02_r
+    //                     });
+    //                 break;
+    //             case NodeRole::YawJoint:{
+    //                 publish_joint_delta_position(NodeRole::YawJoint, 
+    //                     commands::DeltaPosition{
+    //                         .delta_position = - 0.3_q20 * ((1.25_q20 + q20(sinpu(2 * ctime))) / GIMBAL_CTRL_FREQ),
+    //                     });
+    //                 break;
+    //             } 
+                
+    //             default:
+    //                 PANIC();
+    //         }
+    //     });
+    // };
 
     [[maybe_unused]] auto gimbal_sm_service = [&]{ 
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1173,6 +1319,7 @@ void bldc_main(){
             }
         });
     };
+
 
 
     [[maybe_unused]] auto repl_service = [&]{
@@ -1211,7 +1358,9 @@ void bldc_main(){
             }),
 
             rpc::make_function("stk", [&](){ 
+                position_when_stk_ = Some(pos_filter_.position());
                 publish_gimbal_start_seeking();
+                is_still_mode_ = true;
                 laser_is_oneshot_ = true;
                 laser_onshot_ = true;
                 publish_laser_en(false);
@@ -1242,17 +1391,21 @@ void bldc_main(){
             }),
 
             rpc::make_function("fn2", [&](){
+                is_fn3_mode_ = false;
+                is_still_mode_ = false;
                 publish_gimbal_start_tracking();
                 laser_is_oneshot_ = false;
                 laser_onshot_ = false;
-                // publish_laser_en(en);
+                // advanced_start_ms_ = Some(clock::millis());
             }),
 
             rpc::make_function("fn3", [&](){
+                is_fn3_mode_ = true;
+                is_still_mode_ = false;
                 publish_gimbal_start_tracking();
                 laser_is_oneshot_ = false;
                 laser_onshot_ = false;
-                // publish_laser_en(en);
+                // advanced_start_ms_ = Some(clock::millis());
             })
         );
 
@@ -1271,12 +1424,20 @@ void bldc_main(){
             on_gimbal_ctl();
         }
 
+        if(run_status_.state == RunState::Seeking){
+            if(may_a4_rect_.is_some()) run_status_.state = RunState::Tracking;
+        }
+
         switch(run_status_.state){
             case RunState::Seeking:
                 on_joint_seeking_ctl();
                 break;
             case RunState::Tracking:
-                on_joint_tracking_ctl();
+                if(is_still_mode_){
+                    on_joint_still_tracking_ctl();
+                }else{
+                    on_joint_dyna_tracking_ctl();
+                }
                 break;
             default:
                 break;
