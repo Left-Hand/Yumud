@@ -174,6 +174,7 @@ enum class CommandKind:uint8_t{
     // Activate,
     PerspectiveRectInfo,
     StartSeeking,
+    StartTracking,
     StopTracking,
     DeltaPosition,
     ErrPosition
@@ -201,6 +202,7 @@ DEF_QUICK_COMMAND_BIND(SetSpeed)
 DEF_QUICK_COMMAND_BIND(SetKpKd)
 DEF_QUICK_COMMAND_BIND(PerspectiveRectInfo)
 DEF_QUICK_COMMAND_BIND(StartSeeking)
+DEF_QUICK_COMMAND_BIND(StartTracking)
 DEF_QUICK_COMMAND_BIND(StopTracking)
 DEF_QUICK_COMMAND_BIND(DeltaPosition)
 DEF_QUICK_COMMAND_BIND(ErrPosition)
@@ -519,7 +521,7 @@ void bldc_main(){
     auto pd_ctrl_law_ = [&]{ 
         switch(self_node_role_){
             case NodeRole::YawJoint: 
-                return PdCtrlLaw{.kp = 78.581_r, .kd = 6.7_r};
+                return PdCtrlLaw{.kp = 128.581_r, .kd = 10.7_r};
                 // return PdCtrlLaw{.kp = 126.581_r, .kd = 2.4_r};
                 // return SqrtPdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
@@ -567,18 +569,9 @@ void bldc_main(){
             );
         });
 
-        const auto [imu_comp_position, imu_comp_speed] = ({
-            std::make_tuple(
-                // self_blance_angle_ * q20(-1/TAU), self_blance_omega_ * q20(-1/TAU)
-                q20(0), q20(0)
-            );
-        });
 
-
-        [[maybe_unused]] const auto targ_position = 
-            imu_comp_position + axis_target_position;
-        [[maybe_unused]] const auto targ_speed = 
-            imu_comp_speed + axis_target_speed;
+        [[maybe_unused]] const auto targ_position = axis_target_position;
+        [[maybe_unused]] const auto targ_speed = axis_target_speed;
 
 
         static constexpr auto MAX_VOLT = 3.87_r;
@@ -712,6 +705,10 @@ void bldc_main(){
         publish_to_both_joints(commands::StartSeeking{});
     };
 
+    auto publish_gimbal_start_tracking = [&]{
+        publish_to_both_joints(commands::StartTracking{});
+    };
+
     auto publish_err_position = [&](const commands::ErrPosition errpos){
         publish_to_both_joints(errpos);
     };
@@ -726,6 +723,10 @@ void bldc_main(){
     auto gimbal_start_seeking = [&]{
         may_a4_rect_ = None;
         run_status_.state = RunState::Seeking;
+    };
+
+    auto gimbal_start_tracking = [&]{
+        run_status_.state = RunState::Tracking;
     };
 
     auto gimbal_stop_tracking = [&]{
@@ -758,7 +759,6 @@ void bldc_main(){
     auto can_subscriber_service = [&]{
         [[maybe_unused]] auto delta_target_by_command = 
             [&](const commands::DeltaPosition & cmd){
-            // DEBUG_PRINTLN(cmd.delta_position);
             switch(self_node_role_){
                 case NodeRole::YawJoint:{
                     const auto cmd_delta_position = q20(cmd.delta_position);
@@ -778,7 +778,27 @@ void bldc_main(){
                 default:
                     __builtin_unreachable();
             }
+        };
 
+        [[maybe_unused]] auto set_target_by_command = 
+            [&](const commands::SetPosition & cmd){
+            switch(self_node_role_){
+                case NodeRole::YawJoint:{
+                    axis_target_speed_ = 0;
+                    axis_target_position_ = q20(cmd.position);
+                    break;
+                }
+                case NodeRole::PitchJoint:{
+                    axis_target_speed_ = 0;
+                    axis_target_position_ = CLAMP(
+                        q20(cmd.position),
+                        PITCH_MIN_POSITION, PITCH_MAX_POSITION
+                    );
+                    break;
+                }
+                default:
+                    __builtin_unreachable();
+            }
         };
 
         auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
@@ -796,6 +816,13 @@ void bldc_main(){
             }
                 break;
 
+            case CommandKind::SetPosition:{
+                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                    commands::SetPosition>(payload);
+                if(may_cmd.is_ok()) set_target_by_command(may_cmd.unwrap());
+                break;
+            }
+
             case CommandKind::PerspectiveRectInfo:{
                 
                 // may_a4_rect_ =       
@@ -809,6 +836,10 @@ void bldc_main(){
                 gimbal_start_seeking();
                 break;
 
+            case CommandKind::StartTracking:
+                gimbal_start_tracking();
+                break;
+
             case CommandKind::StopTracking:
                 gimbal_stop_tracking();
                 break;
@@ -816,6 +847,7 @@ void bldc_main(){
                 const auto may_cmd = serde::make_deserialize<serde::RawBytes,
                     commands::ErrPosition>(payload);
                 if(may_cmd.is_ok()) set_err_position(may_cmd.unwrap().to_vec2());
+                break;
             }
             default:
                 // PANIC("unknown command", std::bit_cast<uint8_t>(cmd));
@@ -849,6 +881,14 @@ void bldc_main(){
     [[maybe_unused]] auto publish_joint_delta_position = [&](
         const NodeRole node_role, 
         const commands::DeltaPosition & cmd
+    ){
+        const auto msg = MsgFactory<CommandKind>{node_role}(cmd);
+        write_can_msg(msg);
+    };
+
+    [[maybe_unused]] auto publish_joint_position = [&](
+        const NodeRole node_role, 
+        const commands::SetPosition & cmd
     ){
         const auto msg = MsgFactory<CommandKind>{node_role}(cmd);
         write_can_msg(msg);
@@ -937,18 +977,16 @@ void bldc_main(){
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
         publish_laser_en(false);
 
+
         if(may_a4_rect_.is_some()){
+            publish_gimbal_start_tracking();
             run_status_.state = RunState::Tracking;
         }
-
-        // publish_joint_position_with_fwd_speed(
-        //     NodeRole::YawJoint, track_target_.yaw);
-        // publish_joint_position_with_fwd_speed(
-        //     NodeRole::PitchJoint, track_target_.pitch);
     };
 
     [[maybe_unused]] auto on_gimbal_tracking = [&]{ 
-        publish_laser_en(true);
+        const auto squ_err = err_position_.length_squared();
+        publish_laser_en(squ_err < 0.00008_q20);
     };
 
     [[maybe_unused]] auto on_gimbal_ctl = [&]{
@@ -959,8 +997,8 @@ void bldc_main(){
                     may_a4_rect_.unwrap().to_u8x8()
                 });
 
-                // const auto expect_center_uv_coord = Vector2{106.2_q20 / 255, 49.0_q20 / 255};
-                const auto expect_center_uv_coord = Vector2{112.2_q20 / 255, 95.0_q20 / 255};
+                const auto expect_center_uv_coord = Vector2{108.2_q20 / 255, 95.0_q20 / 255};
+                // const auto expect_center_uv_coord = Vector2{112.2_q20 / 255, 95.0_q20 / 255};
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
                     .center();
 
@@ -985,7 +1023,33 @@ void bldc_main(){
         });
     };
     
-    [[maybe_unused]] auto on_joint_ctl = [&]{
+    [[maybe_unused]] auto on_joint_seeking_ctl = [&]{ 
+        static auto timer = async::RepeatTimer::from_duration(5ms);
+        const auto ctime = clock::time();
+
+        timer.invoke_if([&]{
+            switch(self_node_role_){
+                case NodeRole::PitchJoint:
+                    publish_joint_position(NodeRole::PitchJoint, 
+                        commands::SetPosition{
+                            .position = 0
+                        });
+                    break;
+                case NodeRole::YawJoint:{
+                    publish_joint_delta_position(NodeRole::YawJoint, 
+                        commands::DeltaPosition{
+                            .delta_position = - 0.4_q20 * ((1.25_q20 + q20(sinpu(2 * ctime))) / GIMBAL_CTRL_FREQ),
+                        });
+                    break;
+                } 
+                
+                default:
+                    PANIC();
+            }
+        });
+    };
+
+    [[maybe_unused]] auto on_joint_tracking_ctl = [&]{
         static constexpr auto YAW_KP = 1.55_q20 / GIMBAL_CTRL_FREQ;
         
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1018,7 +1082,8 @@ void bldc_main(){
 
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
-                            .delta_position = YAW_KP * q20(-err_position_.x) + q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU)
+                            .delta_position = YAW_KP * q20(-err_position_.x) + 
+                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.17)
                         });
                     break;
                 } 
@@ -1078,14 +1143,6 @@ void bldc_main(){
                 DEBUG_PRINTLN(axis_target_position_, pos_filter_.position());
             }),
 
-            // rpc::make_function("act", [&](){ 
-            //     publish_motor_is_actived(true);
-            // }),
-
-            // rpc::make_function("deact", [&](){ 
-            //     publish_motor_is_actived(false);
-            // }),
-
             rpc::make_function("stk", [&](){ 
                 publish_gimbal_start_seeking();
             }),
@@ -1124,11 +1181,21 @@ void bldc_main(){
         can_subscriber_service();
 
         blink_service();
-        on_joint_ctl();
 
         if(node_is_master_){
             gimbal_sm_service();
             on_gimbal_ctl();
+        }
+
+        switch(run_status_.state){
+            case RunState::Seeking:
+                on_joint_seeking_ctl();
+                break;
+            case RunState::Tracking:
+                on_joint_tracking_ctl();
+                break;
+            default:
+                break;
         }
 
         if(report_en_){

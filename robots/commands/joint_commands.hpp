@@ -60,7 +60,13 @@ struct StartSeeking{
 
 };
 
+
 struct StopTracking{
+
+};
+
+
+struct StartTracking{
 
 };
 
@@ -128,6 +134,10 @@ DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StartSeeking)
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StopTracking)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StopTracking)
 DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StopTracking)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StartTracking)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StartTracking)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StartTracking)
 
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::PerspectiveRectInfo)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::PerspectiveRectInfo)
