@@ -753,7 +753,6 @@ void bldc_main(){
         publish_to_both_joints(commands::StopTracking{});
     };
 
-    // bool update_stopped_ = false;
     // auto publish_gimbal_stop_updating = [&]{
     //     publish_to_both_joints(commands::StopUpdating{});
     // };
@@ -959,13 +958,13 @@ void bldc_main(){
                 // pos_filter_.speed(),
                 // meas_elecrad_,
                 // q_volt_,
-                pos_filter_.position(),
-                pos_filter_.speed(),
-                axis_target_position_,
-                axis_target_speed_,
+                // pos_filter_.position(),
+                // pos_filter_.speed(),
+                // axis_target_position_,
+                // axis_target_speed_,
                 err_position_recv_count_,
-                err_position_,
-                sinpu(ctime) / GIMBAL_CTRL_FREQ * 0.2_r
+                err_position_
+                // sinpu(ctime) / GIMBAL_CTRL_FREQ * 0.2_r
                 // may_a4_rect_
                 // yaw_angle_,
                 // pos_filter_.lap_position(),
@@ -1023,16 +1022,6 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
-        // 
-
-        // if(stk_millis_.is_some()){
-        //     if(clock::millis() - stk_millis_.unwrap() > 1700ms){
-        //         publish_laser_en(true);
-        //         stk_millis_ = None;
-        //     }
-        // }
-
-
         if(may_a4_rect_.is_some()){
             publish_gimbal_start_tracking();
             run_status_.state = RunState::Tracking;
@@ -1062,7 +1051,6 @@ void bldc_main(){
             
 
         }else{
-            // update_stopped_ = false;
             publish_laser_en(true);
         }
     };
@@ -1080,14 +1068,14 @@ void bldc_main(){
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
                     .center();
 
-                // const auto ctime = clock::time();
-                // const auto route_play_ratio = frac(ctime / 5);
-                // const auto route_play_coord = a4_coord_to_uv_coord(A4_CENTER_COORD + Vector2<q20>{0.06_r, 0}
-                //     .rotated(route_play_ratio));
+                const auto ctime = clock::time();
+                const auto route_play_ratio = q24(frac(ctime * 0.1_r));
+                const auto route_play_coord = Vector2{0.0006_q20, 0_q20}
+                    .rotated(route_play_ratio * real_t(TAU));
                     
                 const auto expect_uv_coord = 
                     expect_center_uv_coord
-                    //  + route_play_coord
+                        + route_play_coord
                 ;
                 
                 const auto err_position = (track_target_uv_coord - expect_uv_coord);
@@ -1134,12 +1122,12 @@ void bldc_main(){
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
         timer.invoke_if([&]{
-            // if(update_stopped_) return;
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     publish_joint_delta_position(NodeRole::PitchJoint, 
                         commands::DeltaPosition{
                             // .delta_position = - PITCH_KP * err_position_.y
+                            //kp的系数
                             .delta_position = -q24(err_position_.y) * 0.0024_q24
                         });
                     break;
@@ -1148,6 +1136,7 @@ void bldc_main(){
                     [[maybe_unused]] static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
                     [[maybe_unused]] static constexpr size_t FREQ = 1000ms / DELTA_TIME_MS;
                     static constexpr auto yaw_gyr_bias = 0.0020_q24;
+                    //imu补偿
                     const auto yaw_gyr = -(
                         bmi160_.read_gyr().examine().z + 
                         yaw_gyr_bias)
@@ -1159,7 +1148,7 @@ void bldc_main(){
                                 q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.11)
                         });
                     break;
-                } 
+                }
                 
                 default:
                     PANIC();
@@ -1256,10 +1245,14 @@ void bldc_main(){
                 publish_gimbal_start_tracking();
                 laser_is_oneshot_ = false;
                 laser_onshot_ = false;
-                publish_laser_en(en);
+                // publish_laser_en(en);
             }),
 
             rpc::make_function("fn3", [&](){
+                publish_gimbal_start_tracking();
+                laser_is_oneshot_ = false;
+                laser_onshot_ = false;
+                // publish_laser_en(en);
             })
         );
 
