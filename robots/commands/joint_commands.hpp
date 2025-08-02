@@ -60,6 +60,9 @@ struct StartSeeking{
 
 };
 
+struct StopUpdating{
+
+};
 
 struct StopTracking{
 
@@ -126,6 +129,10 @@ DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Deactivate)
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::Activate)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::Activate)
 DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Activate)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StopUpdating)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StopUpdating)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StopUpdating)
 
 DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StartSeeking)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StartSeeking)

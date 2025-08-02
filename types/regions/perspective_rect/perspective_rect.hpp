@@ -259,7 +259,22 @@ struct PerspectiveRect{
         );
     }
 
+    constexpr PerspectiveRect operator *(const T rhs) const {
+        return PerspectiveRect::from_clockwise_points(
+            { rhs * points[0], rhs * points[1], rhs * points[2], rhs * points[3] }
+        );
+    }
 
+    constexpr PerspectiveRect operator +(const PerspectiveRect & other) const {
+        return PerspectiveRect::from_clockwise_points(
+            { 
+                other.points[0] + points[0], 
+                other.points[1] + points[1], 
+                other.points[2] + points[2], 
+                other.points[3] + points[3]
+            }
+        );
+    }
 
     friend OutputStream & operator << (OutputStream & os, const PerspectiveRect & rect){
         return os << rect.points;

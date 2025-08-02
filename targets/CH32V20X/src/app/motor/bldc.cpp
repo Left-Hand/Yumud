@@ -68,6 +68,41 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr q20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
 static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
+struct ComboCounter {
+    ComboCounter(const size_t times_threshold) 
+        : times_threshold_(times_threshold) {}
+
+    void update(const bool matched) {
+        if (matched) {
+            current_streak_++;
+            if (current_streak_ >= times_threshold_) {
+                is_active_ = true;
+                just_activated_ = true;
+            }
+        } else {
+            // 只要有一次不匹配，立即重置
+            current_streak_ = 0;
+            is_active_ = false;
+            just_activated_ = false;
+        }
+    }
+
+    bool is_just_active() {
+        if (just_activated_) {
+            just_activated_ = false; // 只返回一次 true
+            return true;
+        }
+        return false;
+    }
+
+    bool is_active() { return is_active_; }
+
+private:
+    size_t times_threshold_;  // 需要连续匹配的次数
+    size_t current_streak_ = 0;  // 当前连续匹配次数
+    bool is_active_ = false;  // 是否已触发
+    bool just_activated_ = false;  // 是否刚刚触发（用于 is_just_active）
+};
 
 #define DEF_COMMAND_BIND(K, T) \
 template<> \
@@ -309,6 +344,7 @@ void bldc_main(){
     });
 
 
+    Option<Milliseconds> stk_millis_ = None;
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -335,7 +371,7 @@ void bldc_main(){
     ledg.outpp();
     
 
-
+    ComboCounter laser_in_range_counter_(30);
 
     const auto self_node_role_ = get_node_role(chip_id_crc_)
         .expect(chip_id_crc_);
@@ -521,7 +557,7 @@ void bldc_main(){
     auto pd_ctrl_law_ = [&]{ 
         switch(self_node_role_){
             case NodeRole::YawJoint: 
-                return PdCtrlLaw{.kp = 128.581_r, .kd = 10.7_r};
+                return PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
                 // return PdCtrlLaw{.kp = 126.581_r, .kd = 2.4_r};
                 // return SqrtPdCtrlLaw{.kp = 96.581_r, .kd = 2.4_r};
             case NodeRole::PitchJoint:
@@ -717,6 +753,11 @@ void bldc_main(){
         publish_to_both_joints(commands::StopTracking{});
     };
 
+    // bool update_stopped_ = false;
+    // auto publish_gimbal_stop_updating = [&]{
+    //     publish_to_both_joints(commands::StopUpdating{});
+    // };
+
     bool report_en_ = false;
     
     Option<PerspectiveRect<q20>> may_a4_rect_ = None;
@@ -733,6 +774,11 @@ void bldc_main(){
         run_status_.state = RunState::Idle;
     };
 
+    auto publish_dall = [&]{
+        publish_gimbal_stop_tracking();
+        publish_laser_en(false);
+    };
+
 
     auto on_a4_founded = [&](const PerspectiveRect<q20> rect){
         may_a4_rect_ = Some(rect);
@@ -746,13 +792,15 @@ void bldc_main(){
 
     static constexpr size_t GIMBAL_CTRL_FREQ = 200;
     Vector2<q20> err_position_ = {0, 0};
+    bool laser_is_oneshot_ = false;
+    bool laser_onshot_ = true;
 
     size_t err_position_recv_count_ = 0;
     auto set_err_position = [&](Vector2<q20> err_position){
-        err_position_ = Vector2<q20>{
-            CLAMP2(err_position.x ,1), 
-            CLAMP2(err_position.y ,1)
-        };
+        static constexpr real_t alpha_x = 0.8_r;
+        static constexpr real_t alpha_y = 0.5_r;
+        err_position_.x = err_position_.x * alpha_x + err_position.x * (1 - alpha_x);
+        err_position_.y = err_position_.y * alpha_y + err_position.y * (1 - alpha_y);
         err_position_recv_count_ ++;
     };
 
@@ -975,7 +1023,14 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_seeking = [&]{
-        publish_laser_en(false);
+        // 
+
+        // if(stk_millis_.is_some()){
+        //     if(clock::millis() - stk_millis_.unwrap() > 1700ms){
+        //         publish_laser_en(true);
+        //         stk_millis_ = None;
+        //     }
+        // }
 
 
         if(may_a4_rect_.is_some()){
@@ -985,8 +1040,31 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto on_gimbal_tracking = [&]{ 
-        const auto squ_err = err_position_.length_squared();
-        publish_laser_en(squ_err < 0.00008_q20);
+        // const auto squ_err = Vector2<q24>(err_position_).length_squared();
+        
+
+        if(laser_is_oneshot_){
+            static Option<Milliseconds> last_ms_ = None;
+
+            if(laser_onshot_ == true){
+                if((ABS(err_position_.x) < 0.002_q20) and (ABS(err_position_.y) < 0.002_q20)){
+                    publish_laser_en(true);
+                    last_ms_ = Some(clock::millis());
+                    laser_onshot_ = false;
+                }
+            }else{
+                if(last_ms_.is_some()){
+                    if(clock::millis() - last_ms_.unwrap() > 50ms){
+                        publish_laser_en(false);
+                    }
+                }
+            }
+            
+
+        }else{
+            // update_stopped_ = false;
+            publish_laser_en(true);
+        }
     };
 
     [[maybe_unused]] auto on_gimbal_ctl = [&]{
@@ -997,7 +1075,7 @@ void bldc_main(){
                     may_a4_rect_.unwrap().to_u8x8()
                 });
 
-                const auto expect_center_uv_coord = Vector2{108.2_q20 / 255, 95.0_q20 / 255};
+                const auto expect_center_uv_coord = Vector2{105.2_q20 / 255, 95.0_q20 / 255};
                 // const auto expect_center_uv_coord = Vector2{112.2_q20 / 255, 95.0_q20 / 255};
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
                     .center();
@@ -1031,14 +1109,15 @@ void bldc_main(){
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     publish_joint_position(NodeRole::PitchJoint, 
+                        //10度
                         commands::SetPosition{
-                            .position = 0
+                            .position = 0.02_r
                         });
                     break;
                 case NodeRole::YawJoint:{
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
-                            .delta_position = - 0.4_q20 * ((1.25_q20 + q20(sinpu(2 * ctime))) / GIMBAL_CTRL_FREQ),
+                            .delta_position = - 0.3_q20 * ((1.25_q20 + q20(sinpu(2 * ctime))) / GIMBAL_CTRL_FREQ),
                         });
                     break;
                 } 
@@ -1055,19 +1134,13 @@ void bldc_main(){
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
         timer.invoke_if([&]{
+            // if(update_stopped_) return;
             switch(self_node_role_){
                 case NodeRole::PitchJoint:
                     publish_joint_delta_position(NodeRole::PitchJoint, 
                         commands::DeltaPosition{
                             // .delta_position = - PITCH_KP * err_position_.y
-                            .delta_position = [&] -> q24{
-                                const auto abs_y = std::abs(err_position_.y);
-                                if(abs_y > 0.25_r) {
-                                    return err_position_.y > 0 ? -0.00032_q24 : 0.00032_q24; 
-                                }else{ 
-                                    return err_position_.y > 0 ? -0.0002_q24 : 0.0002_q24;
-                                }
-                            }()
+                            .delta_position = -q24(err_position_.y) * 0.0024_q24
                         });
                     break;
                 case NodeRole::YawJoint:{
@@ -1083,7 +1156,7 @@ void bldc_main(){
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
                             .delta_position = YAW_KP * q20(-err_position_.x) + 
-                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.17)
+                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.11)
                         });
                     break;
                 } 
@@ -1093,6 +1166,7 @@ void bldc_main(){
             }
         });
     };
+
 
     [[maybe_unused]] auto gimbal_sm_service = [&]{ 
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1121,6 +1195,10 @@ void bldc_main(){
             rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
 
+            rpc::make_function("dall", [&](){
+                publish_dall();
+            }),
+
             rpc::make_property_with_limit("kp", &pd_ctrl_law_.kp, 0, 240),
 
             rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 30),
@@ -1145,6 +1223,10 @@ void bldc_main(){
 
             rpc::make_function("stk", [&](){ 
                 publish_gimbal_start_seeking();
+                laser_is_oneshot_ = true;
+                laser_onshot_ = true;
+                publish_laser_en(false);
+                stk_millis_ = Some(clock::millis());
             }),
 
             rpc::make_function("stp", [&](){ 
@@ -1164,11 +1246,20 @@ void bldc_main(){
             }),
 
             rpc::make_function("dt", [&](const real_t dt){
-                // std::vector<std::string> list;
                 publish_joint_delta_position(self_node_role_, 
                 commands::DeltaPosition{
                     .delta_position = dt
                 });
+            }),
+
+            rpc::make_function("fn2", [&](){
+                publish_gimbal_start_tracking();
+                laser_is_oneshot_ = false;
+                laser_onshot_ = false;
+                publish_laser_en(en);
+            }),
+
+            rpc::make_function("fn3", [&](){
             })
         );
 
