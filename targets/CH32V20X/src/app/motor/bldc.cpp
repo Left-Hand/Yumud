@@ -1181,7 +1181,7 @@ void bldc_main(){
 
 
     [[maybe_unused]] auto on_joint_still_tracking_ctl = [&]{
-        static constexpr auto YAW_KP = 1.85_q20 / GIMBAL_CTRL_FREQ;
+        static constexpr auto YAW_KP = 2.85_q20 / GIMBAL_CTRL_FREQ;
         static constexpr auto PITCH_KP = 0.75_q20 / GIMBAL_CTRL_FREQ;
         
         static auto timer = async::RepeatTimer::from_duration(5ms);
@@ -1264,7 +1264,7 @@ void bldc_main(){
                     publish_joint_delta_position(NodeRole::YawJoint, 
                         commands::DeltaPosition{
                             .delta_position = YAW_KP * q20(-err_position_.x) + 
-                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.0)
+                                q20(yaw_gyr) * DELTA_TIME * q20(-1.0 / TAU * 1.03)
                         });
                     break;
                 }
@@ -1396,16 +1396,16 @@ void bldc_main(){
                 publish_gimbal_start_tracking();
                 laser_is_oneshot_ = false;
                 laser_onshot_ = false;
-                // advanced_start_ms_ = Some(clock::millis());
+                advanced_start_ms_ = Some(clock::millis());
             }),
 
             rpc::make_function("fn3", [&](){
-                is_fn3_mode_ = true;
+                is_fn3_mode_ = false;
                 is_still_mode_ = false;
                 publish_gimbal_start_tracking();
                 laser_is_oneshot_ = false;
                 laser_onshot_ = false;
-                // advanced_start_ms_ = Some(clock::millis());
+                advanced_start_ms_ = Some(clock::millis());
             })
         );
 
