@@ -281,23 +281,6 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
     return role == self_node_role;
 };
 
-struct Gesture{
-    q20 yaw;
-    q20 pitch;
-
-    constexpr Gesture lerp(const Gesture & other, const q20 ratio) const{
-        return Gesture{
-            .yaw = yaw + (other.yaw - yaw) * ratio,
-            .pitch = pitch + (other.pitch - pitch) * ratio
-        };
-    }
-
-    friend OutputStream & operator << (OutputStream & os, const Gesture & gesture){
-        return os << "yaw: " << gesture.yaw << ", pitch: " << gesture.pitch;
-    }
-};
-
-
 [[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
     using hal::AdcChannelIndex;
@@ -975,10 +958,9 @@ void bldc_main(){
         timer.invoke_if([&]{
             const auto may_center = may_a4_rect_
                 .map([&](const PerspectiveRect<q20> rect){
-                    return rect.center();
+                    return rect.perspective_center();
                 });
 
-            const auto ctime = clock::time();
 
             DEBUG_PRINTLN(
                 // pos_filter_.cont_position(), 
@@ -1120,7 +1102,7 @@ void bldc_main(){
                 const auto expect_center_uv_coord = Vector2{105.2_q20 / 255, 95.0_q20 / 255};
                 // const auto expect_center_uv_coord = Vector2{112.2_q20 / 255, 95.0_q20 / 255};
                 const auto track_target_uv_coord = may_a4_rect_.unwrap()
-                    .center();
+                    .perspective_center();
 
                 const auto ctime = clock::time();
                 const auto route_play_ratio = q24(frac(ctime * 0.1_r));
@@ -1149,7 +1131,6 @@ void bldc_main(){
     
     [[maybe_unused]] auto on_joint_seeking_ctl = [&]{ 
         static auto timer = async::RepeatTimer::from_duration(5ms);
-        const auto ctime = clock::time();
 
         timer.invoke_if([&]{
             switch(self_node_role_){
@@ -1346,7 +1327,7 @@ void bldc_main(){
             rpc::make_function("a4c", [&](StringView str){ 
                 auto may_rect = defmt_u8x4(str);
                 if(may_rect.is_none()) return;
-                on_a4_founded(may_rect.unwrap());
+                on_a4_founded(PerspectiveRect<q20>::from_u8points(may_rect.unwrap()));
             }),
 
             rpc::make_function("a4n", [&](){ 

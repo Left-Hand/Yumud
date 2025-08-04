@@ -1,11 +1,11 @@
 #include "core/debug/debug.hpp"
-#include "core/container/vectorx.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "src/testbench/tb.h"
+#include "types/vectors/vectorx.hpp"
 
 #include "drivers/Adc/ADS7830/ads7830.hpp"
 

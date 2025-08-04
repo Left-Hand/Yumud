@@ -2,37 +2,173 @@
 
 #include "types/vectors/vector2/Vector2.hpp"
 #include "types/matrix/matrix_static.hpp"
+#include "types/vectors/vectorx.hpp"
 
 namespace ymd{
 
+// Concept for types that can be decomposed into two uint8_t values
+template<typename U>
+concept StructurableToU8Pair = requires(U u) {
+    { std::get<0>(u) } -> std::convertible_to<uint8_t>;
+    { std::get<1>(u) } -> std::convertible_to<uint8_t>;
+} || requires(U u) {
+    { u.x } -> std::convertible_to<uint8_t>;
+    { u.y } -> std::convertible_to<uint8_t>;
+};
+
+template<typename T>
+static constexpr Matrix3x3<T> compute_homography_unit_rect_to_quad(
+    const std::span<const Vector2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
+) {
+    const auto [x0, y0] = dst[0];
+    const auto [x1, y1] = dst[1];
+    const auto [x2, y2] = dst[2];
+    const auto [x3, y3] = dst[3];
+
+    // 计算单应性矩阵的 8 个参数（解析解）
+    const T h31 = x0 - x1 + x2 - x3;  // g
+    const T h32 = y0 - y1 + y2 - y3;  // h
+    const T h33 = x1*y0 - x0*y1 + x3*y2 - x2*y3;  // 1 (归一化因子)
+
+    Matrix3x3<T> H;
+
+    // 第一行: a, b, c
+    H.data[0][0] = x1 - x0 + h31 * x1;  // a
+    H.data[0][1] = x3 - x0 + h32 * x3;  // b
+    H.data[0][2] = x0;                  // c
+
+    // 第二行: d, e, f
+    H.data[1][0] = y1 - y0 + h31 * y1;  // d
+    H.data[1][1] = y3 - y0 + h32 * y3;  // e
+    H.data[1][2] = y0;                  // f
+
+    // 第三行: g, h, 1
+    H.data[2][0] = h31;                 // g
+    H.data[2][1] = h32;                 // h
+    H.data[2][2] = h33;                 // 1 (归一化因子)
+
+    return H / h33;
+}
+
+// 计算单应性矩阵 H（3x3）
+template<typename T>
+static constexpr Matrix<T, 3, 3> compute_homography(
+    std::span<const Vector2<T>, 4> src, 
+    std::span<const Vector2<T>, 4> dst
+){
+    // 构造线性方程组 A * h = b（8x8）
+    std::array<std::array<T, 9>, 8> augmented{};
+
+    for (size_t i = 0; i < 4; ++i) {
+        T u = src[i].x;
+        T v = src[i].y;
+        T x = dst[i].x;
+        T y = dst[i].y;
+
+        // 方程 1: h11*u + h12*v + h13 - x*(h31*u + h32*v) = x
+        augmented[2*i] = {
+            u, v, 1, 0, 0, 0, -x*u, -x*v, x
+        };
+
+        // 方程 2: h21*u + h22*v + h23 - y*(h31*u + h32*v) = y
+        augmented[2*i + 1] = {
+            0, 0, 0, u, v, 1, -y*u, -y*v, y
+        };
+    }
+
+    // 高斯消元法（constexpr）
+    constexpr auto solve = [](auto& mat) {
+        constexpr size_t N = 8;
+        for (size_t col = 0; col < N; ++col) {
+            // 找主元
+            size_t max_row = col;
+            for (size_t row = col + 1; row < N; ++row) {
+                if (std::abs(mat[row][col]) > std::abs(mat[max_row][col])) {
+                    max_row = row;
+                }
+            }
+
+            // 交换行
+            if (max_row != col) {
+                std::swap(mat[col], mat[max_row]);
+            }
+
+            // 消元
+            for (size_t row = col + 1; row < N; ++row) {
+                T factor = mat[row][col] / mat[col][col];
+                for (size_t k = col; k <= N; ++k) {
+                    mat[row][k] -= factor * mat[col][k];
+                }
+            }
+        }
+
+        // 回代
+        std::array<T, N> h{};
+
+        for (size_t row = N; row > 0; --row) {
+            size_t i = row - 1;
+            // Use 'i' instead of 'row' in the loop body
+            h[i] = mat[i][N];
+            for (size_t col = i + 1; col < N; ++col) {
+                h[i] -= mat[i][col] * h[col];
+            }
+            h[i] /= mat[i][i];
+        }
+        return h;
+    };
+
+    // 解方程组
+    auto h = solve(augmented);
+
+    // 构造 3x3 单应性矩阵
+    return Matrix<T, 3, 3>(
+        h[0], h[1], h[2],
+        h[3], h[4], h[5],
+        h[6], h[7], 1
+    );
+}
 
 template<typename T>
 struct PerspectiveRect{
-
-    std::array<Vector2<T>, 4> points;
+public:
+    static constexpr size_t N = 4;
+    using Points = VectorX<Vector2<T>, N>;
+    Points points;
     
+private:
+    constexpr PerspectiveRect():
+        points(Points::from_uninitialized()){;}
+public:
+    // 从坐标直接构造
+    constexpr PerspectiveRect(std::span<const Vector2<T>, 4> _points)
+        : points(_points) {}
 
-    // 从uint8坐标构造（自动归一化到[0,1]范围）
-    constexpr PerspectiveRect(std::array<Vector2<uint8_t>, 4> u8points) {
-        for (size_t i = 0; i < 4; ++i) {
-            points[i] = Vector2<T>{
-                u8points[i].x * T(1.0 / 255),
-                u8points[i].y * T(1.0 / 255)
-            };
-        }
+    static constexpr PerspectiveRect from_uninitialized() {
+        return PerspectiveRect();
     }
 
-
-    // 从uint8坐标构造（自动归一化到[0,1]范围）
-    constexpr PerspectiveRect(std::array<std::tuple<uint8_t, uint8_t>, 4> u8points) {
+    // Replace the two constructors with this single static method
+    static constexpr PerspectiveRect from_u8points(const std::array<StructurableToU8Pair auto, 4>& u8points) {
+        std::array<Vector2<T>, 4> converted_points;
+        
         for (size_t i = 0; i < 4; ++i) {
-            points[i] = Vector2<T>{
-                std::get<0>(u8points[i]) * T(1.0 / 255),
-                std::get<1>(u8points[i]) * T(1.0 / 255)
-            };
+            if constexpr (requires { u8points[i].x; u8points[i].y; }) {
+                // Handle Vector2-like types
+                converted_points[i] = Vector2<T>{
+                    u8points[i].x * T(1.0 / 255),
+                    u8points[i].y * T(1.0 / 255)
+                };
+            } else {
+                // Handle tuple-like types
+                converted_points[i] = Vector2<T>{
+                    std::get<0>(u8points[i]) * T(1.0 / 255),
+                    std::get<1>(u8points[i]) * T(1.0 / 255)
+                };
+            }
         }
+        
+        return PerspectiveRect(converted_points);
     }
-
     constexpr auto to_u8points() const -> std::array<std::tuple<uint8_t, uint8_t>, 4> { 
         return std::array<std::tuple<uint8_t, uint8_t>, 4>{
             std::make_tuple(uint8_t(points[0].x * 255), uint8_t(points[0].y * 255)),
@@ -56,12 +192,12 @@ struct PerspectiveRect{
         for (size_t i = 0; i < 4; ++i) {
             u8points[i] = Vector2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
         }
-        return PerspectiveRect(u8points);
+        return PerspectiveRect::from_u8points(u8points);
     }
 
     // 添加以下函数到 PerspectiveRect 结构体中
     static constexpr PerspectiveRect from_clockwise_points(
-        std::array<Vector2<T>, 4> f32points) {
+        std::array<Vector2<T>, 4> _points) {
         // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
         // 检查前三个点的叉积来判断方向
         auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
@@ -69,24 +205,22 @@ struct PerspectiveRect{
         };
         
         // 检查第一个三个点的方向
-        T cr = cross(f32points[0], f32points[1], f32points[2]);
+        T cr = cross(_points[0], _points[1], _points[2]);
         
         // 如果是逆时针，则反转数组（除了第一个点）
         if (cr > 0) {
             return PerspectiveRect(std::array<Vector2<T>, 4>{
-                f32points[0], f32points[3], f32points[2], f32points[1]
+                _points[0], _points[3], _points[2], _points[1]
             });
         }
         
-        return PerspectiveRect(f32points);
+        return PerspectiveRect(_points);
     }
 
-    // 从浮点坐标直接构造
-    constexpr PerspectiveRect(std::array<Vector2<T>, 4> f32points)
-        : points(f32points) {}
+
 
     // 计算透视中心点（两条对角线的交点）
-    constexpr Vector2<T> center() const {
+    constexpr Vector2<T> perspective_center() const {
         // 对于四边形，中心点应该是两条对角线的交点
         // 对角线1: 从 points[0] 到 points[2]
         // 对角线2: 从 points[1] 到 points[3]
@@ -147,7 +281,7 @@ struct PerspectiveRect{
 
     // 缩放变换（以中心点为原点）
     constexpr PerspectiveRect scaled(T factor) const {
-        const auto c = center();
+        const auto c = perspective_center();
         std::array<Vector2<T>, 4> new_points;
         for (size_t i = 0; i < 4; ++i) {
             new_points[i] = c + (points[i] - c) * factor;
@@ -178,85 +312,18 @@ struct PerspectiveRect{
 
 
     // 计算单应性矩阵 H（3x3）
-    constexpr Matrix<T, 3, 3> compute_homography() const {
+    constexpr Matrix<T, 3, 3> homography() const {
         // 源点（单位正方形）
-        constexpr std::array<Vector2<T>, 4> src = {
+        [[maybe_unused]] constexpr std::array<Vector2<T>, 4> src = {
             Vector2<T>{0, 0},
             Vector2<T>{1, 0},
             Vector2<T>{1, 1},
             Vector2<T>{0, 1}
         };
 
-        // 构造线性方程组 A * h = b（8x8）
-        std::array<std::array<T, 9>, 8> augmented{};
+        // return compute_homography(src, points);
+        compute_homography_unit_rect_to_quad(points);
 
-        for (size_t i = 0; i < 4; ++i) {
-            T u = src[i].x;
-            T v = src[i].y;
-            T x = points[i].x;
-            T y = points[i].y;
-
-            // 方程 1: h11*u + h12*v + h13 - x*(h31*u + h32*v) = x
-            augmented[2*i] = {
-                u, v, 1, 0, 0, 0, -x*u, -x*v, x
-            };
-
-            // 方程 2: h21*u + h22*v + h23 - y*(h31*u + h32*v) = y
-            augmented[2*i + 1] = {
-                0, 0, 0, u, v, 1, -y*u, -y*v, y
-            };
-        }
-
-        // 高斯消元法（constexpr）
-        constexpr auto solve = [](auto& mat) {
-            constexpr size_t N = 8;
-            for (size_t col = 0; col < N; ++col) {
-                // 找主元
-                size_t max_row = col;
-                for (size_t row = col + 1; row < N; ++row) {
-                    if (std::abs(mat[row][col]) > std::abs(mat[max_row][col])) {
-                        max_row = row;
-                    }
-                }
-
-                // 交换行
-                if (max_row != col) {
-                    std::swap(mat[col], mat[max_row]);
-                }
-
-                // 消元
-                for (size_t row = col + 1; row < N; ++row) {
-                    T factor = mat[row][col] / mat[col][col];
-                    for (size_t k = col; k <= N; ++k) {
-                        mat[row][k] -= factor * mat[col][k];
-                    }
-                }
-            }
-
-            // 回代
-            std::array<T, N> h{};
-
-            for (size_t row = N; row > 0; --row) {
-                size_t i = row - 1;
-                // Use 'i' instead of 'row' in the loop body
-                h[i] = mat[i][N];
-                for (size_t col = i + 1; col < N; ++col) {
-                    h[i] -= mat[i][col] * h[col];
-                }
-                h[i] /= mat[i][i];
-            }
-            return h;
-        };
-
-        // 解方程组
-        auto h = solve(augmented);
-
-        // 构造 3x3 单应性矩阵
-        return Matrix<T, 3, 3>(
-            h[0], h[1], h[2],
-            h[3], h[4], h[5],
-            h[6], h[7], 1
-        );
     }
 
     constexpr PerspectiveRect operator *(const T rhs) const {

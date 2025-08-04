@@ -524,4 +524,7 @@ __inline OutputStream & operator<<(OutputStream & os, const Matrix<T, R, C> & ma
     return os;
 }
 
+
+template<typename T>
+using Matrix3x3 = Matrix<T,3,3>;
 }
