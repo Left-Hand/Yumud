@@ -257,7 +257,7 @@ void fft_main(){
     const auto samples = make_am_samples();
     std::array<Complex<T>, N> out;
 
-    const auto elapsed_us = measure_elapsed_us([&]{
+    const auto elapsed_us = measure_total_elapsed_ms([&]{
         dsp::rfft(
             std::span(out), 
             std::span(samples)

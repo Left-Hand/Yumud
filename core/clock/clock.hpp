@@ -86,18 +86,18 @@ void bindSystickCb(std::function<void(void)> && cb);
 
 
 template<typename Fn>
-inline Milliseconds measure_elapsed_ms(Fn && fn){
+inline Milliseconds measure_total_elapsed_ms(Fn && fn, const size_t times = 1){
     const Milliseconds start = clock::millis();
-    std::forward<Fn>(fn)();
-    return clock::millis() - start;
+    for(size_t i = 0; i < times; i++) std::forward<Fn>(fn)();
+    return (clock::millis() - start);
 }
 
 
 template<typename Fn>
-inline Microseconds measure_elapsed_us(Fn && fn){
+inline Microseconds measure_total_elapsed_us(Fn && fn, const size_t times = 1){
     const Microseconds start = clock::micros();
-    std::forward<Fn>(fn)();
-    return clock::micros() - start;
+    for(size_t i = 0; i < times; i++) std::forward<Fn>(fn)();
+    return (clock::micros() - start);
 }
 
 }

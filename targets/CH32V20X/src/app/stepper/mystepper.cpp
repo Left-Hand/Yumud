@@ -143,7 +143,7 @@ public:
         #endif
         if(comp.is_finished()){
             is_component_finished_ = true;
-            execution_time_ = measure_elapsed_us([&]{                
+            execution_time_ = measure_total_elapsed_us([&]{                
                 ctrl(meas_lap_position);
             });
 
@@ -356,7 +356,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
     const auto begin_u = clock::micros();
-    const auto elapsed = measure_elapsed_us(
+    const auto elapsed = measure_total_elapsed_us(
         [&]{
             uint8_t rdata[3] = {0};
             at24.load_bytes(0_addr, std::span(rdata)).examine();

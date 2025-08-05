@@ -477,7 +477,6 @@ public:
         return result;
     }
 
-
     __fast_inline constexpr
     const T & operator()(const size_t i, const size_t j) const {
         return this->at(i,j);
@@ -508,19 +507,19 @@ private:
 template<arithmetic T, size_t R, size_t C>
 __inline OutputStream & operator<<(OutputStream & os, const Matrix<T, R, C> & mat){
     const auto splt = os.splitter();
-    os << "[";
+    os << os.brackets<'['>();
 	for (size_t _i = 0; _i < mat.rows(); _i++) {
-		os << "[";
+		os << os.brackets<'['>();
 		for (size_t _j = 0; _j < mat.cols(); _j++) {
 			os << mat.at(_i,_j);
             if(_j == mat.cols() - 1) break;
             os << splt;
 		}
-		os << "]";
+		os << os.brackets<']'>();
         if(_i == mat.rows() - 1) break;
         os << splt;
 	}
-    os << "]";
+    os << os.brackets<']'>();
     return os;
 }
 

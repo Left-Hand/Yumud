@@ -58,7 +58,7 @@ DEBUGGER.println(__VA_ARGS__);\
 void math_main(){
     DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.set_eps(3);
+    DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
 
@@ -94,16 +94,23 @@ void math_main(){
     constexpr std::array<Vector2<real_t>, 4> dst = {
         Vector2<real_t>{0, 0},
         Vector2<real_t>{1, 0},
-        Vector2<real_t>{4, 4},
+        Vector2<real_t>{3, 4},
         Vector2<real_t>{0, 1}
     };
     
+    volatile size_t n = 0;
     constexpr auto H = compute_homography_from_unit_rect(
         std::span(dst));
 
-        
+    const auto elapsed = measure_total_elapsed_us([&]{
+        compute_homography_from_unit_rect(
+            std::span(dst)
+        );
+        n++;
+    }, 10000);
+
     while(true){
-        DEBUG_PRINTLN(H, map_uv(H, {0.5_r, 1.0_r}));
+        DEBUG_PRINTLN(H, map_uv(H, {0.5_r, 0.5_r}), elapsed, n);
         clock::delay(5ms);
     }
     #endif
