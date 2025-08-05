@@ -307,7 +307,6 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
 
 
 enum class BlinkPattern:uint8_t{
-    RGB,
     RED,
     GREEN,
     BLUE
@@ -668,7 +667,6 @@ void bldc_main(){
     RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     auto write_can_msg = [&](const hal::CanMsg & msg){
-        // if(msg.is_extended()) PANIC();
         if(msg.is_extended()) return;
 
         const bool is_ringback = is_ringback_msg(msg, self_node_role_);
@@ -693,32 +691,6 @@ void bldc_main(){
 
         return Some(msg_queue_.pop());
     };
-
-
-    // [[maybe_unused]] TrackTarget track_target_ = {
-    //     .yaw = {.position = 0, .speed = 0},
-    //     .pitch = {.position = 0, .speed = 0}
-    // };
-
-    // auto update_joint_target = [&](const q20 p1, const q20 p2) -> void { 
-    //     track_target_.yaw.position   = CLAMP2(p1, PITCH_JOINT_POSITION_LIMIT);
-    //     track_target_.pitch.position  = CLAMP2(p2, PITCH_JOINT_POSITION_LIMIT);
-    // };
-
-    // auto update_joint_target_with_speed = [&](
-    //     const q20 p1, const q20 v1, 
-    //     const q20 p2, const q20 v2
-    // ) -> void { 
-    //     track_target_.yaw = SetPositionWithFwdSpeed{
-    //         .position = p1,
-    //         .speed = v1
-    //     };
-
-    //     track_target_.pitch = SetPositionWithFwdSpeed{
-        //     .position = p2,
-        //     .speed = v2
-        // };
-    // };
 
     auto publish_to_both_joints = [&]<typename T>
     (const T & cmd){
@@ -1016,11 +988,6 @@ void bldc_main(){
                     ledr = LOW;
                     ledb = LOW;
                     ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-                    break;
-                case BlinkPattern::RGB:
-                    ledr = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-                    ledb = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-                    ledg = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
                     break;
             }
         });

@@ -91,7 +91,7 @@ void uart_main();
 void m3508_main();
 void m2006_main();
 
-void math_tb(ymd::hal::UartHw & logger);
+void math_main();
 
 void zdt_main();
 

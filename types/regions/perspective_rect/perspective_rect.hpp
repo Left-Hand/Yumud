@@ -16,39 +16,7 @@ concept StructurableToU8Pair = requires(U u) {
     { u.y } -> std::convertible_to<uint8_t>;
 };
 
-template<typename T>
-static constexpr Matrix3x3<T> compute_homography_unit_rect_to_quad(
-    const std::span<const Vector2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
-) {
-    const auto [x0, y0] = dst[0];
-    const auto [x1, y1] = dst[1];
-    const auto [x2, y2] = dst[2];
-    const auto [x3, y3] = dst[3];
 
-    // 计算单应性矩阵的 8 个参数（解析解）
-    const T h31 = x0 - x1 + x2 - x3;  // g
-    const T h32 = y0 - y1 + y2 - y3;  // h
-    const T h33 = x1*y0 - x0*y1 + x3*y2 - x2*y3;  // 1 (归一化因子)
-
-    Matrix3x3<T> H;
-
-    // 第一行: a, b, c
-    H.data[0][0] = x1 - x0 + h31 * x1;  // a
-    H.data[0][1] = x3 - x0 + h32 * x3;  // b
-    H.data[0][2] = x0;                  // c
-
-    // 第二行: d, e, f
-    H.data[1][0] = y1 - y0 + h31 * y1;  // d
-    H.data[1][1] = y3 - y0 + h32 * y3;  // e
-    H.data[1][2] = y0;                  // f
-
-    // 第三行: g, h, 1
-    H.data[2][0] = h31;                 // g
-    H.data[2][1] = h32;                 // h
-    H.data[2][2] = h33;                 // 1 (归一化因子)
-
-    return H / h33;
-}
 
 // 计算单应性矩阵 H（3x3）
 template<typename T>
@@ -129,6 +97,59 @@ static constexpr Matrix<T, 3, 3> compute_homography(
 }
 
 template<typename T>
+static constexpr Matrix3x3<T> compute_homography_from_unit_rect(
+    const std::span<const Vector2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
+) {
+    const auto [x0, y0] = dst[0];
+    const auto [x1, y1] = dst[1];
+    const auto [x2, y2] = dst[2];
+    const auto [x3, y3] = dst[3];
+
+    // Step 2: Calculate intermediate values
+    const T A = x2 - x1;
+    const T B = x2 - x3;
+    const T C = x1 + x3 - x0 - x2;
+    const T D = y2 - y1;
+    const T E = y2 - y3;
+    const T F = y1 + y3 - y0 - y2;
+
+    // Step 3: Calculate determinant
+    const T det = A * E - B * D;
+    
+    // Check for degenerate case (optional safety check)
+    // constexpr T epsilon = std::numeric_limits<T>::epsilon();
+    if (std::abs(det) < T(1e-6)) {
+        // Return identity matrix for degenerate case
+        return Matrix3x3<T>(
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        );
+    }
+
+    const T inv_det = T(1) / det;
+
+    // Step 5: Calculate g and h
+    const T g = (C * E - B * F) * inv_det;
+    const T h = (A * F - C * D) * inv_det;
+
+    // Step 6: Calculate other parameters
+    const T a = x1 * (g + 1) - x0;
+    const T b = x3 * (h + 1) - x0;
+    const T c = x0;
+    const T d = y1 * (g + 1) - y0;
+    const T e = y3 * (h + 1) - y0;
+    const T f = y0;
+
+    // Step 7: Return the homography matrix
+    return Matrix3x3<T>(
+        a, b, c,
+        d, e, f,
+        g, h, 1
+    );
+}
+
+template<typename T>
 struct PerspectiveRect{
 public:
     static constexpr size_t N = 4;
@@ -145,6 +166,28 @@ public:
 
     static constexpr PerspectiveRect from_uninitialized() {
         return PerspectiveRect();
+    }
+
+    // 添加以下函数到 PerspectiveRect 结构体中
+    static constexpr PerspectiveRect from_clockwise_points(
+        std::array<Vector2<T>, 4> _points) {
+        // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
+        // 检查前三个点的叉积来判断方向
+        auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
+            return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        };
+        
+        // 检查第一个三个点的方向
+        T cr = cross(_points[0], _points[1], _points[2]);
+        
+        // 如果是逆时针，则反转数组（除了第一个点）
+        if (cr > 0) {
+            return PerspectiveRect(std::array<Vector2<T>, 4>{
+                _points[0], _points[3], _points[2], _points[1]
+            });
+        }
+        
+        return PerspectiveRect(_points);
     }
 
     // Replace the two constructors with this single static method
@@ -195,27 +238,6 @@ public:
         return PerspectiveRect::from_u8points(u8points);
     }
 
-    // 添加以下函数到 PerspectiveRect 结构体中
-    static constexpr PerspectiveRect from_clockwise_points(
-        std::array<Vector2<T>, 4> _points) {
-        // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
-        // 检查前三个点的叉积来判断方向
-        auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
-            return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-        };
-        
-        // 检查第一个三个点的方向
-        T cr = cross(_points[0], _points[1], _points[2]);
-        
-        // 如果是逆时针，则反转数组（除了第一个点）
-        if (cr > 0) {
-            return PerspectiveRect(std::array<Vector2<T>, 4>{
-                _points[0], _points[3], _points[2], _points[1]
-            });
-        }
-        
-        return PerspectiveRect(_points);
-    }
 
 
 
@@ -236,7 +258,7 @@ public:
         
         T denominator = (p2.x - p0.x) * (p3.y - p1.y) - (p2.y - p0.y) * (p3.x - p1.x);
         
-        if (std::abs(denominator) < T(1e-5)) {
+        if (std::abs(denominator) < T(1e-6)) {
             // 如果分母接近0，说明是平行线，退化为简单平均
             return Vector2<T>{(p0.x + p1.x + p2.x + p3.x) * T(0.25),
                             (p0.y + p1.y + p2.y + p3.y) * T(0.25)};
@@ -322,7 +344,7 @@ public:
         };
 
         // return compute_homography(src, points);
-        compute_homography_unit_rect_to_quad(points);
+        compute_homography_from_unit_rect(points);
 
     }
 
@@ -349,18 +371,25 @@ public:
 };
 
 
-// 映射 (u, v) -> (x, y)
-
 template<typename T>
-static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3> & H, Vector2<T> uv){
-    // const auto H = compute_homography();
+static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3>& H, Vector2<T> uv) {
     const T u = uv.x;
     const T v = uv.y;
 
     // 计算 H * [u, v, 1]^T
-    const T x_prime = H[0][0] * u + H[0][1] * v + H[0][2];
-    const T y_prime = H[1][0] * u + H[1][1] * v + H[1][2];
-    const T w_prime = H[2][0] * u + H[2][1] * v + H[2][2];
+    // 注意：H[y][x] 表示第 y 行、第 x 列
+    const T x_prime = H[0][0] * u + H[0][1] * v + H[0][2]; // 第 0 行: h00, h01, h02
+    const T y_prime = H[1][0] * u + H[1][1] * v + H[1][2]; // 第 1 行: h10, h11, h12
+    const T w_prime = H[2][0] * u + H[2][1] * v + H[2][2]; // 第 2 行: h20, h21, h22
+
+    // 检查 w_prime 是否为零（避免除以零）
+    if (std::abs(w_prime) < T(1e-6)) {
+        // 忽略透视分量，退化为仿射变换
+        return Vector2<T>{
+            H[0][0]*u + H[0][1]*v + H[0][2],
+            H[1][0]*u + H[1][1]*v + H[1][2]
+        };
+    }
 
     // 归一化
     return Vector2<T>{
@@ -368,6 +397,5 @@ static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3> & H, Vector2<T> uv){
         y_prime / w_prime
     };
 }
-
 
 }
