@@ -326,18 +326,13 @@ void bldc_main(){
         }
     }();
 
-    bool is_still_mode_ = false;
     auto & DBG_UART = hal::uart2;
-    Option<real_t> position_when_stk_ = None;
-    Option<Milliseconds> advanced_start_ms_ = None;
 
     DBG_UART.init({
         .baudrate = UART_BAUD
     });
 
 
-
-    Option<Milliseconds> start_fire_ms__ = None;
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -368,7 +363,7 @@ void bldc_main(){
     const auto self_node_role_ = get_node_role(chip_id_crc_)
         .expect(chip_id_crc_);
 
-    const bool node_is_master_ = [&] -> bool{
+    const bool chip_is_master_ = [&] -> bool{
         switch(self_node_role_){
             case NodeRole::YawJoint:
                 return false;
@@ -572,6 +567,8 @@ void bldc_main(){
 
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
+
+    
     [[maybe_unused]] auto sensored_foc_cb = [&]{
         ma730_.update().examine();
         if(self_node_role_ == NodeRole::YawJoint){
@@ -673,6 +670,16 @@ void bldc_main(){
         return Some(msg_queue_.pop());
     };
 
+
+    bool is_still_mode_ = false;
+
+    Option<real_t> position_when_stk_ = None;
+    Option<Milliseconds> advanced_start_ms_ = None;
+    Option<Milliseconds> start_fire_ms_ = None;
+
+
+
+
     auto publish_to_both_joints = [&]<typename T>
     (const T & cmd){
         {
@@ -764,7 +771,8 @@ void bldc_main(){
                 case NodeRole::YawJoint:{
                     const auto cmd_delta_position = q20(cmd.delta_position);
                     axis_target_speed_ = q20(cmd_delta_position * GIMBAL_CTRL_FREQ);
-                    axis_target_position_ = (pos_filter_.position() + cmd_delta_position);
+                    // axis_target_position_ = (pos_filter_.position() + cmd_delta_position);
+                    axis_target_position_ = (axis_target_position_ + cmd_delta_position);
                     break;
                 }
                 case NodeRole::PitchJoint:{
@@ -992,17 +1000,17 @@ void bldc_main(){
 
             const bool shot_en = [&]{
                 if(semphr_.take() and laser_onshot_ == true) return true;
-                if(start_fire_ms__.is_some()){
+                if(start_fire_ms_.is_some()){
                     if(position_when_stk_.is_some() 
                         and (pos_filter_.position() - position_when_stk_.unwrap()) > 0.3_r 
-                        and clock::millis() - start_fire_ms__.unwrap() > 3700ms){
-                            start_fire_ms__ = None;
+                        and clock::millis() - start_fire_ms_.unwrap() > 3700ms){
+                            start_fire_ms_ = None;
                             position_when_stk_ = None;
                             return true;
                         }
 
-                    else if(clock::millis() - start_fire_ms__.unwrap() > 1700ms){
-                        start_fire_ms__ = None;
+                    else if(clock::millis() - start_fire_ms_.unwrap() > 1700ms){
+                        start_fire_ms_ = None;
                         return true;
                     }
                 }
@@ -1177,7 +1185,7 @@ void bldc_main(){
         laser_is_oneshot_ = true;
         laser_onshot_ = true;
         laser_.set_en(false);
-        start_fire_ms__ = Some(clock::millis());
+        start_fire_ms_ = Some(clock::millis());
     };
 
     [[maybe_unused]] auto repl_service = [&]{
@@ -1273,7 +1281,7 @@ void bldc_main(){
 
         blink_service();
 
-        if(node_is_master_){
+        if(chip_is_master_){
             gimbal_sm_service();
             gimbal_proc_err_position();
         }
