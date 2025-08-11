@@ -56,7 +56,12 @@ int main(){
     // bldc_main();
     // polar_robot_main();
     // mks_stepper_main();
-    ads7830_main();
+    // ads7830_main();
+    // math_main();
+    nuedc_2025e_main();
+    // bldc_main();
+    // laser_ctl_main();
+    // diffspd_vehicle_main();
     // mystepper_main();
     // diffspd_vehicle_main();
     // ws2812_main();
@@ -140,7 +145,7 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // i2c_scanner_main();
-    slcan_main();
+    // slcan_main();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
@@ -169,7 +174,9 @@ int main(){
     // uart_tb(logger);
     // pmw3901_main();
     // ch9141_tb(logger, uart7);
-    // st77xx_tb(spi2);
+    // st7789_main();
+    // smc2025_main();
+    fft_main();
     // embd_main();
     // mpu6050_main();
     // gui_main();

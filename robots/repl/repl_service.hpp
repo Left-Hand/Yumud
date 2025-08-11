@@ -38,7 +38,7 @@ private:
 
     StreamedStringSplitter splitter_;
     
-    bool outen_ = true;
+    bool outen_ = false;
     
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){

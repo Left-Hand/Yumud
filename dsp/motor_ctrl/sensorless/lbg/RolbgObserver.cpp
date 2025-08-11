@@ -8,20 +8,20 @@ namespace ymd::foc{
 //     : h(_h), Ls(_Ls), Rs(_Rs), Tc(_Tc), omega(_omega){}
 
 
-scexpr double freq = 25000;
-scexpr double T = 1.0 / freq;
-scexpr double R = 0.2;
-scexpr double L = 0.14E-3;
+static constexpr double freq = 25000;
+static constexpr double T = 1.0 / freq;
+static constexpr double R = 0.2;
+static constexpr double L = 0.14E-3;
 
-scexpr double l1 = -22000;
-scexpr double l2 = 82000;
-// scexpr double l1 = -10;
-// scexpr double l2 =100;
+static constexpr double l1 = -22000;
+static constexpr double l2 = 82000;
+// static constexpr double l1 = -10;
+// static constexpr double l2 =100;
 
-scexpr auto Tr_L = q20(- T * R / L);
-scexpr auto T_L  = q20(T / L);
-scexpr auto l1T  = q20(l1 * T);
-scexpr auto l2T  = q20(l2 * T);
+static constexpr auto Tr_L = q20(- T * R / L);
+static constexpr auto T_L  = q20(T / L);
+static constexpr auto l1T  = q20(l1 * T);
+static constexpr auto l2T  = q20(l2 * T);
 
 
 void RolbgObserver::reset() {

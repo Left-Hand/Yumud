@@ -338,7 +338,8 @@ public:
 
     //#region print integer
 private:
-    void print_int(const int val);
+    void print_u32(const uint32_t val);
+    void print_i32(const uint32_t val);
     void print_u64(const uint64_t val);
     void print_i64(const int64_t val);
     
@@ -360,11 +361,17 @@ public:
     requires std::is_integral_v<T>
     OutputStream & operator<<(const T val){
         if constexpr(sizeof(T) <= 4){
-            print_int(int(val));
-        }else if constexpr (std::is_signed_v<T>){
-            print_i64(int64_t(val));
+            if constexpr (std::is_signed_v<T>){
+                print_i32(int32_t(val));
+            }else{
+                print_u32(uint32_t(val));
+            }
         }else{
-            print_u64(uint64_t(val));
+            if constexpr (std::is_signed_v<T>){
+                print_i64(int64_t(val));
+            }else{
+                print_u64(uint64_t(val));
+            }
         }
         return *this;
     }

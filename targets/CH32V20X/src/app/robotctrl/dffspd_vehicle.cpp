@@ -14,10 +14,12 @@
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "types/transforms/euler/euler.hpp"
+
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 #include "dsp/motor_ctrl/tracking_differentiator.hpp"
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
+#include "drivers/Encoder/ABEncoder.hpp"
 
 using namespace ymd;
 
@@ -50,6 +52,31 @@ private:
     hal::GpioIntf & dir_gpio_;
 };
 
+struct DualPwmPhy final{
+    struct Config{
+        Some<hal::TimerOC *> pwm_pos;
+        Some<hal::TimerOC *> pwm_neg;
+    };
+
+    explicit DualPwmPhy(const Config & cfg):
+            pwm_pos_(cfg.pwm_pos.deref()),
+            pwm_neg_(cfg.pwm_neg.deref())
+        {;}
+
+    void set_duty(const q31 duty){
+        if(duty > 0){
+            pwm_pos_.set_duty(duty);
+            pwm_neg_.set_duty(0);
+        }else{
+            pwm_pos_.set_duty(0);
+            pwm_neg_.set_duty(-duty);
+        }
+    }
+private:
+    hal::TimerOC & pwm_pos_;
+    hal::TimerOC & pwm_neg_;
+};
+
 struct DirAndPulseCounter final{
     constexpr DirAndPulseCounter(){;}
     constexpr void forward_update(const BoolLevel level){
@@ -71,13 +98,9 @@ private:
         .polarity = true
     };
 
-    // dsp::DebounceFilter filter_{DEBOUNCE_CONFIG};
     bool last_state_ = false;
 
     constexpr void update(const BoolLevel level, const bool is_backward){
-        // filter_.update(level.to_bool());
-
-        // const auto state = filter_.is_high();
         const auto state = level.to_bool();
         const bool is_just_upedge = (last_state_ == false) and (state == true);
 
@@ -88,7 +111,6 @@ private:
         last_state_ = state;
     }
 };
-
 
 struct PwmAndDirPhy_WithFg final{
 
@@ -119,7 +141,7 @@ struct PwmAndDirPhy_WithFg final{
     }
 
     constexpr q16 get_position() const {
-        return q16(counter_.count()) / deducation_;
+        return q16::from_i32((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
         // return q16(counter_.count()) >> 6;
     }
 
@@ -134,10 +156,46 @@ private:
     real_t last_duty_ = 0;
 };
 
-// struct GM25BldcMotor{
-// private:
-//     PwmAndDirPhy_WithFg & phy_;
-// };
+struct DualPwmMotorPhy_WithAbEnc final{
+
+    struct Config{
+        Some<hal::TimerOC *> pwm_pos;
+        Some<hal::TimerOC *> pwm_neg;
+        uint32_t deduction;
+        Some<hal::Gpio *> line_a;
+        Some<hal::Gpio *> line_b;
+    };
+
+    explicit DualPwmMotorPhy_WithAbEnc(const Config & cfg):
+        deducation_(cfg.deduction),
+        phy_(DualPwmPhy{{cfg.pwm_pos, cfg.pwm_neg}}),
+        encoder_(drivers::AbEncoderByGpio{
+                drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
+    {}
+
+    void set_duty(const q31 duty){ 
+        phy_.set_duty(duty);
+        last_duty_ = duty;
+    }
+
+    void tick_10khz(){
+        encoder_.tick();
+    }
+
+    constexpr q16 get_position() const {
+        return q16::from_i32((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
+        // return q16(encoder_.count()) >> 6;
+    }
+
+    constexpr int32_t count() const {
+        return encoder_.count();
+    }
+private:
+    uint32_t deducation_;
+    DualPwmPhy phy_;
+    drivers::AbEncoderByGpio encoder_;
+    real_t last_duty_ = 0;
+};
 
 void diffspd_vehicle_main(){
     //PA6 TIM3CH1   左pwm
@@ -145,6 +203,7 @@ void diffspd_vehicle_main(){
     // static constexpr auto UART_BAUD = 115200 * 2;
     static constexpr auto UART_BAUD = 576000;
     static constexpr auto PWM_FREQ = 2 * 1000;
+    static constexpr auto TD_CUTOFF_FREQ = 60;
     // static constexpr auto PWM_FREQ = 1000;
     static constexpr auto MOTOR_CTRL_FREQ = PWM_FREQ; 
     // my_can_ring_main();
@@ -160,18 +219,15 @@ void diffspd_vehicle_main(){
     DEBUGGER.no_brackets();
 
     auto & timer = hal::timer3;
-    timer.init({PWM_FREQ});
+
+    timer.init({
+        .freq = PWM_FREQ,
+        .mode = hal::TimerCountMode::Up
+    });
+
     timer.enable_arr_sync();
 
-    auto & LEFT_PWM = timer.oc<1>();
-    auto & RIGHT_PWM = timer.oc<2>();
 
-    auto & LEFT_FG_GPIO = hal::PA<5>();
-    auto & RIGHT_FG_GPIO = hal::PB<1>();
-
-    auto & LEFT_DIR_GPIO = hal::PA<1>();
-    auto & RIGHT_DIR_GPIO = hal::PB<8>();
-    
     auto init_pwm = [](hal::TimerOC & pwm){
         pwm.init({.valid_level = LOW});
     };
@@ -184,29 +240,60 @@ void diffspd_vehicle_main(){
         gpio.outpp(LOW);
     };
 
-    init_pwm(LEFT_PWM);
-    init_pwm(RIGHT_PWM);
 
-    init_fg_gpio(LEFT_FG_GPIO);
-    init_fg_gpio(RIGHT_FG_GPIO);
+    [[maybe_unused]] auto make_gm25_phy = [&]{
+        auto & LEFT_PWM = timer.oc<1>();
+        auto & RIGHT_PWM = timer.oc<2>();
 
-    init_dir_gpio(LEFT_DIR_GPIO);
-    init_dir_gpio(RIGHT_DIR_GPIO);
+        auto & LEFT_FG_GPIO = hal::PA<5>();
+        auto & RIGHT_FG_GPIO = hal::PB<1>();
+
+        auto & LEFT_DIR_GPIO = hal::PA<1>();
+        auto & RIGHT_DIR_GPIO = hal::PB<8>();
+        
+        init_pwm(LEFT_PWM);
+        init_pwm(RIGHT_PWM);
+
+        init_fg_gpio(LEFT_FG_GPIO);
+        init_fg_gpio(RIGHT_FG_GPIO);
+
+        init_dir_gpio(LEFT_DIR_GPIO);
+        init_dir_gpio(RIGHT_DIR_GPIO);
 
 
-    PwmAndDirPhy_WithFg motor_phy{{
-        .pwm = &LEFT_PWM,
-        .dir_gpio = &LEFT_DIR_GPIO,
-        .deduction = 60,
-        .fg_gpio = &LEFT_FG_GPIO
-    }};
+        return PwmAndDirPhy_WithFg{{
+            .pwm = &LEFT_PWM,
+            .dir_gpio = &LEFT_DIR_GPIO,
+            .deduction = TD_CUTOFF_FREQ,
+            .fg_gpio = &LEFT_FG_GPIO
+        }};
+    };
 
-    // PwmAndDirPhy_WithFg motor_phy{{
-    //     .pwm = &RIGHT_PWM,
-    //     .dir_gpio = &RIGHT_DIR_GPIO,
-    //     .deduction = 60,
-    //     .fg_gpio = &RIGHT_FG_GPIO
-    // }};
+    [[maybe_unused]] auto make_310_phy = [&]{ 
+        auto & POS_PWM = timer.oc<1>();
+        auto & NEG_PWM = timer.oc<2>();
+
+        auto & POS_FG_GPIO = hal::PA<0>();
+        auto & NEG_FG_GPIO = hal::PA<1>();
+        
+        init_pwm(POS_PWM);
+        init_pwm(NEG_PWM);
+
+        init_fg_gpio(POS_FG_GPIO);
+        init_fg_gpio(NEG_FG_GPIO);
+
+
+        return DualPwmMotorPhy_WithAbEnc{{
+            .pwm_pos = &POS_PWM,
+            .pwm_neg = &NEG_PWM,
+            .deduction = 60,
+            .line_a = &POS_FG_GPIO,
+            .line_b = &NEG_FG_GPIO
+        }};
+    };
+
+    // auto motor_phy = make_gm25_phy();
+    auto motor_phy = make_310_phy();
 
     dsp::PositionFilter motor_td_{
         typename dsp::PositionFilter::Config{

@@ -21,6 +21,7 @@
 
 #include "types/shapes/Arc2/Arc2.hpp"
 #include "types/shapes/Bezier2/Bezier2.hpp"
+#include "types/regions/perspective_rect/perspective_rect.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_kinematics.hpp"
@@ -39,8 +40,8 @@ do{\
     auto _a = (a);\
     auto _b = (b);\
     if(is_equal_approx(a,b) == false) \
-        logger.prints("!!!assert failed:", #a, "\r\n\r\n\t", _a, "!=", _b, "\r\n");\
-    else logger.prints(__LINE__, "passed\r\n");\
+        DEBUGGER.prints("!!!assert failed:", #a, "\r\n\r\n\t", _a, "!=", _b, "\r\n");\
+    else DEBUGGER.prints(__LINE__, "passed\r\n");\
 }while(false);\
 
 
@@ -48,18 +49,18 @@ do{\
 
 
 #define print(...)\
-logger.println(__VA_ARGS__);\
+DEBUGGER.println(__VA_ARGS__);\
 
-#define float real_t
+// #define real_t real_t
 #define var auto
 
 
-void math_tb(){
-    auto & logger = DEBUGGER;
-    DEBUGGER_INST.init({576000, CommStrategy::Dma});
+void math_main(){
+    DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
-    
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets();
 
     // using Vector3 = Vector3<real_t>;
     // using Plane = Plane<real_t>;
@@ -76,7 +77,7 @@ void math_tb(){
     //     print(millis());
         
     //     for(size_t i = 0; i < cnt; i++){
-    //         cnts.push_back(logger.pending());
+    //         cnts.push_back(DEBUGGER.pending());
     //         clock::delay(1ms);
     //     }
         
@@ -87,6 +88,33 @@ void math_tb(){
 
     // #define  WHEELLEG_TB
 
+    #define PPR_TB
+
+    #ifdef PPR_TB
+    constexpr std::array<Vector2<real_t>, 4> dst = {
+        Vector2<real_t>{0, 0},
+        Vector2<real_t>{1, 0},
+        Vector2<real_t>{3, 4},
+        Vector2<real_t>{0, 1}
+    };
+    
+    volatile size_t n = 0;
+    constexpr auto H = compute_homography_from_unit_rect(
+        std::span(dst));
+
+    const auto elapsed = measure_total_elapsed_us([&]{
+        compute_homography_from_unit_rect(
+            std::span(dst)
+        );
+        n++;
+    }, 10000);
+
+    while(true){
+        DEBUG_PRINTLN(H, map_uv(H, {0.5_r, 0.5_r}), elapsed, n);
+        clock::delay(5ms);
+    }
+    #endif
+    
 
     #ifdef PLANE_TB
     EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
@@ -94,10 +122,10 @@ void math_tb(){
     print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
     // EQUAL_ASSERT(real_t(0.2), real_t(0.1));
     
-    print(Plane(Vector3(1,1,1), sqrt(float(3))).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
-    print(Plane(Vector3(1,1,1), sqrt(float(3))));
-    print(Plane(Vector3(1,1,1), sqrt(float(3))).normalized());
-    print(Plane(Vector3(1,1,1), sqrt(float(3))).get_center());
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))));
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).normalized());
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center());
 	// print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized().has_point(Vector3(1,1,1)));
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized());
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized().has_point(Vector3(1,1,1)));
@@ -109,7 +137,7 @@ void math_tb(){
 
     
     #ifdef TRANFORM_TB
-    var a = AABB<float>(Vector3(0,0,0), Vector3(1,1,1));
+    var a = AABB<real_t>(Vector3(0,0,0), Vector3(1,1,1));
 
     Transform2D<real_t> transform2d;
 
@@ -121,7 +149,7 @@ void math_tb(){
     var transform = Transform3D();
 
     transform.origin = Vector3(5, 5, 5);
-    var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
+    var b = Basis().rotated(Vector3(0, 1, 0), real_t(PI / 4));
     print(b)
     #endif
     
@@ -226,4 +254,118 @@ void math_tb(){
 
 
     while(true);
+}
+
+
+
+// // 测试工具函数
+// template<typename T>
+// constexpr bool matrix_near(const Matrix3x3<T>& a, const Matrix3x3<T>& b, T epsilon = 1e-6) {
+//     for (size_t i = 0; i < 3; ++i)
+//         for (size_t j = 0; j < 3; ++j)
+//             if (std::abs(a[i][j] - b[i][j]) > epsilon)
+//                 return false;
+//     return true;
+// }
+
+// // 测试用例1：单位矩形到放大矩形的变换
+// constexpr bool test_unit_rect_scaling() {
+//     constexpr std::array<Vector2<float>, 4> dst = {
+//         Vector2<float>{0, 0},
+//         Vector2<float>{2, 0},
+//         Vector2<float>{2, 2},
+//         Vector2<float>{0, 2}
+//     };
+
+//     constexpr std::array<Vector2<float>, 4> src = {
+//         Vector2<float>{0, 0},
+//         Vector2<float>{1, 0},
+//         Vector2<float>{1, 1},
+//         Vector2<float>{0, 1}
+//     };
+    
+//     // constexpr auto H = compute_homography_from_unit_rect(
+//     //     std::span<const Vector2<float>, 4>(dst));
+//     constexpr auto H = compute_homography(
+//         std::span(src), std::span(dst));
+    
+//     // constexpr auto expected = Matrix3x3<float>{
+//     //     2, 0, 0,
+//     //     0, 2, 0,
+//     //     0, 0, 1
+//     // };
+    
+//     return matrix_near(H);
+// }
+
+// // 测试用例2：仿射变换验证
+// constexpr bool test_affine_transform() {
+//     constexpr std::array<Vector2<double>, 4> src = {
+//         Vector2<double>{0, 0},
+//         Vector2<double>{1, 0},
+//         Vector2<double>{1, 1},
+//         Vector2<double>{0, 1}
+//     };
+    
+//     constexpr std::array<Vector2<double>, 4> dst = {
+//         Vector2<double>{0, 0},
+//         Vector2<double>{2, 0},
+//         Vector2<double>{2, 3},
+//         Vector2<double>{0, 3}
+//     };
+    
+//     constexpr auto H = compute_homography(
+//         std::span<const Vector2<double>, 4>(src),
+//         std::span<const Vector2<double>, 4>(dst));
+    
+//     constexpr auto expected = Matrix3x3<double>{
+//         2, 0, 0,
+//         0, 3, 0,
+//         0, 0, 1
+//     };
+    
+//     return matrix_near(H, expected);
+// }
+
+// // 测试用例3：透视变换验证
+// constexpr bool test_perspective_transform() {
+//     constexpr std::array<Vector2<float>, 4> src = {
+//         Vector2<float>{0, 0},
+//         Vector2<float>{1, 0},
+//         Vector2<float>{1, 1},
+//         Vector2<float>{0, 1}
+//     };
+    
+//     constexpr std::array<Vector2<float>, 4> dst = {
+//         Vector2<float>{0, 0},
+//         Vector2<float>{1, 0},
+//         Vector2<float>{0.5f, 1},
+//         Vector2<float>{0.5f, 1}
+//     };
+    
+//     constexpr auto H = compute_homography(
+//         std::span<const Vector2<float>, 4>(src),
+//         std::span<const Vector2<float>, 4>(dst));
+    
+//     // 预期结果需要根据实际计算确定
+//     constexpr auto expected = Matrix3x3<real_t>{
+//         1, 0.5f, 0,
+//         0, 1, 0,
+//         0, 1, 1
+//     };
+    
+//     return matrix_near(H, expected);
+// }
+
+[[maybe_unused]] static void  ppr_test() {
+    // 编译时测试
+    // static_assert(test_unit_rect_scaling(), 
+    //     "Unit rectangle to quad scaling failed");
+    
+    // static_assert(test_affine_transform(), 
+    //     "Affine transform test failed");
+    
+    // static_assert(test_perspective_transform(), 
+    //     "Perspective transform test failed");
+
 }

@@ -71,6 +71,7 @@ public:
     struct Config{
         BaudRate baudrate;
         Mode mode = Mode::Normal;
+        uint8_t remap = CAN1_REMAP;
     };
 
 public:
@@ -130,11 +131,11 @@ private:
 
     bool blocking_write_en_ = false;
 
-    Gpio & get_tx_gpio();
-    Gpio & get_rx_gpio();
+    Gpio & get_tx_gpio(const uint8_t remap);
+    Gpio & get_rx_gpio(const uint8_t remap);
 
-    void install_gpio();
-    void enable_rcc();
+    void install_gpio(const uint8_t remap);
+    void enable_rcc(const uint8_t remap);
     bool is_mail_box_done(const uint8_t mbox);
     void clear_mailbox(const uint8_t mbox);
     void init_it();

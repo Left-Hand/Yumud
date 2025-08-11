@@ -34,7 +34,7 @@ namespace ymd{
     
     template<floating T>
     __fast_inline constexpr T sinpu(const T val){
-        return sin(val * (1 / TAU));
+        return std::sin(float(val * float(TAU)));
     }
     
     template<floating T>
@@ -54,7 +54,7 @@ namespace ymd{
     
     template<floating T>
     __fast_inline constexpr  T mag(const T a, const T b){
-        return sqrt(a * a + b * b);
+        return std::sqrt(a * a + b * b);
     }
 
     template<floating T>

@@ -2,7 +2,7 @@
 
 
 namespace ymd{
-template<arithmetic T, size_t N>
+template<typename T, size_t N>
 class VectorX final{
     using Storage = std::array<T, N>;
 private:
@@ -14,6 +14,14 @@ public:
     }
 
     explicit constexpr VectorX(const std::initializer_list<T>& init) {
+        size_t i = 0;
+        for (const auto& value : init) {
+            if (i >= N) break;
+            sto_[i++] = value;
+        }
+    }
+
+    explicit constexpr VectorX(const std::span<const T, N>& init) {
         size_t i = 0;
         for (const auto& value : init) {
             if (i >= N) break;

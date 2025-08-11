@@ -4,6 +4,7 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"
+#include "core/stream/fixed_string_stream.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -17,6 +18,7 @@
 #include "types/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
+#include "nvcv2/pixels/pixels.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
@@ -100,13 +102,13 @@ class Plotter{
 
     IResult<> plot_pixels(const Pixels & pts){
         for(const auto pixel : pts){
-            painter_.draw_pixel(pixel);
+            painter_.putpixel_unchecked(pixel);
         }
         return Ok();
     };
 
     IResult<> plot_dot(const Vector2u pos, const uint radius = 2){
-        painter_.draw_pixel(pos);
+        painter_.putpixel_unchecked(pos);
 
         return Ok();
     };
@@ -167,7 +169,10 @@ void smc2025_main(){
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
-
+    while(true){
+        DEBUG_PRINTLN(clock::millis());
+        clock::delay(5ms);
+    }
 
     // bkp.init();edRunStatus();
     auto & spi = spi2;
@@ -187,27 +192,24 @@ void smc2025_main(){
         {240, 240}
     };
 
+    tft.init().examine();
     drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
 
     I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
     cam_i2c.init(100_KHz);
 
     I2cSw i2c{&hal::portB[3], &hal::portB[5]};
-    i2c.init(800_KHz);
+    i2c.init(400_KHz);
     
-    drivers::MT9V034 camera{&cam_i2c};
+    // drivers::MT9V034 camera{&cam_i2c};
 
-    camera.init().examine();
+    // camera.init().examine();
+    // camera.set_exposure_value(1200).examine();
+    // camera.set_gain(2.4_r).examine();
 
     drivers::QMC5883L qmc{&i2c};
-    qmc.init().examine();
+    retry(2, [&]{return qmc.init();}).examine();
     
-    Image<RGB565> rgb_img{{tft.size().x, 4u}};
-    // Painter<RGB565> painter = {};
-
-
-    camera.set_exposure_value(1200).examine();
-    camera.set_gain(2.4_r).examine();
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Gray> & src, 
@@ -239,43 +241,77 @@ void smc2025_main(){
         ).examine();
     };
 
-
-    while(true){
-        // qmc.update().examine();
-        // painter.bind_image(rgb_img);
-        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        // painter.draw_pixel(Vector2u(0, 0));
-        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
-
-        // const auto gray_img = camera.frame().clone();
-        // const auto pose = Pose_t<real_t>{
-        //     {sinpu(clock::time() / 3) * 2.8_r + 2.3_r, sinpu(clock::time() / 2) * 0.3_r}, 
-        //     real_t(PI/2) + 0.09_r * sinpu(clock::time())};
+    [[maybe_unused]] auto test_render = [&]{
+    
         [[maybe_unused]]const auto t = clock::time();
         const auto pose = Pose2{
-            // Vector2<real_t>(0, -1.5_r) + Vector2<real_t>(-1.9_r, 0)
-            // .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
+            Vector2<real_t>(0, -1.5_r) + Vector2<real_t>(-1.9_r, 0)
+            .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
             // {1.0_r, -0.5_r}, 0.0_r};
-            {-1.0_r, -1.81_r}, 1.57_r};
+            // {-1.0_r, -1.81_r}, 1.57_r};
+            // {0, 0}, 1.57_r};
 
         const auto mbegin = clock::micros();
         // const auto gray_img = Scenes::render_scene2(pose, 0.02_r);
-        const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
-        // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
+        // const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
+        const auto gray_img = Scenes::render_scene1({pose, 0.02_r});
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 
-        // DEBUG_PRINTLN(rgb_img.at(0, 0));
-        tft.put_texture(rgb_img.size().to_rect(), rgb_img.get_data()).examine();
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
         const auto rect = gray_img.size().to_rect();
         const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
-        DEBUG_PRINTLN(render_use.count(), gray_img.size(), rect.position.x, rect.size.x, range);
+
+        DEBUG_PRINTLN(
+            render_use.count(), 
+            gray_img.size(), 
+            rect.position.x, 
+            rect.size.x, 
+            range 
+        );
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
         // DEBUG_PRINTLN(render_use.count(), pose);
+    };
+
+
+    [[maybe_unused]] auto test_fill = [&]{
+        tft.fill(ColorEnum::BRRED).examine();
+    };
+
+    Image<RGB565> rgb_img{{tft.size().x, 20u}};
+    Painter<RGB565> painter;
+    Font7x7 enfont;
+    painter.set_src_image(&rgb_img);
+    [[maybe_unused]] auto test_paint = [&]{
+        painter.set_color(ColorEnum::WHITE);
+        painter.set_en_font(&enfont).examine();
+        painter.fill(ColorEnum::BLACK).examine();
+
+        FixedStringStream<64> ss;
+        ss.println("helloword", clock::time());
+        painter.draw_ascii_str({0,0}, StringView(ss)).examine();
+        DEBUG_PRINTLN(StringView(ss));
+        // painter.draw_hollow_rect({0,0,7,7}).examine();
+        tft.put_texture(
+            Rect2u16::from_size(rgb_img.size()),
+            rgb_img.get_data()
+        ).examine();
+
+    };
+
+    while(true){
+        // test_fill();
+        // test_render();
+        test_paint();
+        // test_paint();
+        // qmc.update().examine();
+        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        // painter.draw_pixel(Vector2u(0, 0));
+        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
+
     }
 
     // timer4.init(24000);
@@ -305,17 +341,6 @@ void smc2025_main(){
     // tft.setFlushDirV(false);
     // tft.setInversion(true);
 
-    // painter.bindImage(tft);
-    // uint8_t camera_init_retry_times = 0;
-    // constexpr uint8_t camera_retry_timeout = 7;
-    // sccb.init(10000);
-    // while(!camera.init()){
-    //     camera_init_retry_times++;
-    //     if(camera_init_retry_times >= camera_retry_timeout){
-    //         DEBUG_LOG("camera init failed");
-    //         while(true);
-    //     }
-    // }
 
     // cali();
 

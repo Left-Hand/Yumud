@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render.hpp"
+#include "types/gesture/camview2.hpp"
 
 
 static constexpr real_t PIXELS_PER_METER = 10;
@@ -9,11 +10,6 @@ static constexpr real_t METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
 
 namespace ymd::smc::sim{
 
-template<typename T>
-struct CameraViewport2_t{
-    Pose2<T> pose;
-    T zoom;
-};
 
 
 class BlueprintSpawner{
@@ -92,9 +88,9 @@ private:
 
 struct Scenes{
     __no_inline static Image<Gray> render_scene1
-        (const CameraViewport2_t<real_t> & viewport);    
+        (const CamView2<real_t> & viewport);    
     __no_inline static Image<Gray> render_scene2
-        (const CameraViewport2_t<real_t> & viewport);    
+        (const CamView2<real_t> & viewport);    
 };
 
 }

@@ -9,8 +9,6 @@ namespace ymd::robots{
 namespace ChassisActions{
 
 
-scexpr real_t safe_wait_time = 0.4_r;
-
 class StraightAction:public ChassisAction{
 protected:
     using CtrlMode = ChassisModule::CtrlMode;

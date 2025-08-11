@@ -155,7 +155,7 @@ struct SerializeIter<RawBytes, iq_t<Q>>{
     }
 
     static constexpr std::array<uint8_t, 4> serialize(const iq_t<Q> num){
-        const auto inum = num.to_i32();
+        const auto inum = num.as_i32();
         return std::bit_cast<std::array<uint8_t, 4>>(inum);
     } 
 private:
@@ -406,13 +406,13 @@ private:
 template<size_t Q>
 struct Deserializer<RawBytes, iq_t<Q>> {
     static constexpr size_t N = sizeof(iq_t<Q>);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
-        return Q;
+    [[nodiscard]] static constexpr size_t size(){
+        return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<iq_t<Q>, DeserializeError> 
@@ -429,13 +429,13 @@ template<typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
 struct Deserializer<RawBytes, T> {
     static constexpr size_t N = sizeof(T);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
+    [[nodiscard]] static constexpr size_t size(){
         return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<T, DeserializeError> 
@@ -456,13 +456,13 @@ struct Deserializer<RawBytes, T> {
 template<>
 struct Deserializer<RawBytes, bf16> {
     static constexpr size_t N = sizeof(bf16);
-    [[nodiscard]] static constexpr size_t size(std::span<const uint8_t>){
+    [[nodiscard]] static constexpr size_t size(){
         return N;
     }
 
     [[nodiscard]] __fast_inline static constexpr std::span<const uint8_t>
     take(std::span<const uint8_t> pbuf){
-        return pbuf.subspan(size(pbuf));
+        return pbuf.subspan(size());
     }
 
     [[nodiscard]] static constexpr Result<bf16, DeserializeError> 
@@ -547,7 +547,7 @@ struct serde::DeserializerMaker<serde::RawBytes, T> { \
 
 
 #define DEF_DERIVE_DEBUG_AS_DISPLAY(T)\
-OutputStream & operator<<(OutputStream & os, const T & self){ \
+inline OutputStream & operator<<(OutputStream & os, const T & self){ \
     return reflecter::Displayer<T>::display(os, self);\
 }
 

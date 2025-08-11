@@ -90,11 +90,11 @@ static constexpr auto make_scene2(){
 
 
 
-Image<Gray> Scenes::render_scene1(const CameraViewport2_t<real_t> & viewport){
+Image<Gray> Scenes::render_scene1(const CamView2<real_t> & viewport){
     static constexpr auto scene = make_scene1();
     return scene.render(viewport.pose, viewport.zoom);
 } 
-Image<Gray> Scenes::render_scene2(const CameraViewport2_t<real_t> & viewport){
+Image<Gray> Scenes::render_scene2(const CamView2<real_t> & viewport){
     static constexpr auto scene = make_scene2();
     return scene.render(viewport.pose, viewport.zoom);
 }

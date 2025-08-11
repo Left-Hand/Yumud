@@ -1,3 +1,5 @@
+#if 0
+
 #include "src/testbench/tb.h"
 #include "utils.hpp"
 #include <atomic>
@@ -49,12 +51,18 @@
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
 #include "robots/commands/nmt_commands.hpp"
+#include "robots/nodes/msg_factory.hpp"
+
 
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
+using namespace ymd::robots;
+
+using robots::NodeRole;
+using robots::MsgFactory;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
@@ -89,22 +97,6 @@ struct ElecradCompensator{
 };
 
 
-
-enum class NodeRole:uint8_t{
-    Master = 0,
-    RollJoint,
-    PitchJoint,
-    YawJoint,
-    AxisX,
-    AxisY,
-    AxisZ,
-    LeftWheel,
-    RightWheel,
-    Computer = 0x0f,
-};
-
-DEF_DERIVE_DEBUG(NodeRole)
-
 enum class CommandKind:uint8_t{
     ResetNode,
     SetPosition,
@@ -133,37 +125,8 @@ struct TrackTarget{
     commands::SetPositionWithFwdSpeed pitch;
 };
 
-static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
-    const auto id_u11 = id.to_u11();
-    return std::make_tuple(
-        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
-        std::bit_cast<CommandKind>(uint8_t(id_u11 >> 7))
-    );
-};
-
-
-static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind cmd){
-    const auto id_u11 = uint16_t(
-        std::bit_cast<uint8_t>(role) 
-        | (std::bit_cast<uint8_t>(cmd) << 7));
-    return hal::CanStdId(id_u11);
-};
-
-struct MsgFactory{
-    const NodeRole role;
-
-    template<typename T>
-    constexpr hal::CanMsg operator()(const T cmd){
-        const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
-        const auto iter = serde::make_serialize_iter<serde::RawBytes>(cmd);
-        return hal::CanMsg::from_iter(id, iter).unwrap();
-    };
-};
-
-
-
 static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole self_node_role){
-    const auto [role, cmd] = dump_role_and_cmd(msg.stdid().unwrap());
+    const auto [role, cmd] = dump_role_and_cmd<CommandKind>(msg.stdid().unwrap());
     return role == self_node_role;
 };
 
@@ -195,7 +158,7 @@ struct Gesture{
     adc.init(
         {
             {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
-        },{
+        }, {
             {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
             {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
             {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
@@ -213,7 +176,7 @@ struct Gesture{
 
 
 
-void bldc_main(){
+void embd_main(){
     static constexpr auto UART_BAUD = 115200 * 2;
     // my_can_ring_main();
     auto & DBG_UART = hal::uart2;
@@ -321,14 +284,14 @@ void bldc_main(){
 
     
     const auto self_node_role_ = get_node_role().examine();  
-    const auto adjunct_node_role_ = [&] -> NodeRole{
+    const auto node_is_master = [&] -> bool{
         switch(self_node_role_){
             case NodeRole::RollJoint:
-                return NodeRole::Master;
+                return true;
             // case NodeRole::PitchJoint:
             //     return NodeRole::PitchJoint;
             default:
-                return self_node_role_;
+                return false;
         }
     }();
 
@@ -622,7 +585,7 @@ void bldc_main(){
 
             auto process_msg = [&](const hal::CanMsg & msg){
                 const auto id = msg.stdid().unwrap();
-                const auto [msg_role, msg_cmd] = dump_role_and_cmd(id);
+                const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
                 if(msg_role != self_node_role_) return;
                 dispatch_msg(msg_cmd, msg.iter_payload());
             };
@@ -640,27 +603,22 @@ void bldc_main(){
         static auto timer = async::RepeatTimer::from_duration(5ms);
 
         auto publish_roll_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
-            const auto msg = MsgFactory{NodeRole::RollJoint}(cmd);
+            const auto msg = MsgFactory<CommandKind>{NodeRole::RollJoint}(cmd);
 
             write_can_msg(msg);
         };
 
         auto publish_pitch_joint_target = [&](const commands::SetPositionWithFwdSpeed & cmd){
-            const auto msg = MsgFactory{NodeRole::PitchJoint}(cmd);
+            const auto msg = MsgFactory<CommandKind>{NodeRole::PitchJoint}(cmd);
 
             write_can_msg(msg);
         };
 
         timer.invoke_if([&]{
 
-            switch(adjunct_node_role_){
-                case NodeRole::Master:{
-                    publish_roll_joint_target(track_target_.roll);
-                    publish_pitch_joint_target(track_target_.pitch);
-                    break;
-                default:
-                    break;
-                }
+            if(node_is_master){
+                publish_roll_joint_target(track_target_.roll);
+                publish_pitch_joint_target(track_target_.pitch);
             }
         });
     };
@@ -803,34 +761,4 @@ void bldc_main(){
     }
 }
 
-
-
-[[maybe_unused]]
-static void static_test(){
-    #define STATIC_TEST_SEL 5
-    #if STATIC_TEST_SEL == 0
-    static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionWithFwdSpeed{0, 1});
-    static_assert(msg.size() == 8);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionWithFwdSpeed>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    // static_assert(may_cmd.is_ok());
-    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #elif STATIC_TEST_SEL ==1
-    static constexpr auto msg = (MsgFactory{NodeRole::Master})(SpinCommand{1});
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SpinCommand>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    static constexpr auto cmd = may_cmd.unwrap();
-    static constexpr auto rot = cmd.delta_rotation;
-    static_assert(msg.size() == 4);
-    static_assert(rot == 1.0_q16);
-    // static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #elif STATIC_TEST_SEL == 2
-    // static constexpr hal::CanMsg msg = (MsgFactory{NodeRole::Master})(SetPositionXYZCommand{0, 1, 2});
-    static constexpr hal::CanMsg msg = hal::CanMsg::from_iter(hal::CanStdId(0), MyIter<8>{}).unwrap();
-    static_assert(msg.size() == 12);
-    static constexpr auto des = serde::make_deserializer<serde::RawBytes, SetPositionXYZCommand>();
-    static constexpr auto may_cmd = des.deserialize(std::span(msg.payload().data(), msg.size()));
-    // static_assert(may_cmd.is_ok());
-    static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
-    #endif
-}
+#endif

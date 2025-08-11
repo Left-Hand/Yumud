@@ -91,7 +91,7 @@ void uart_main();
 void m3508_main();
 void m2006_main();
 
-void math_tb(ymd::hal::UartHw & logger);
+void math_main();
 
 void zdt_main();
 
@@ -174,3 +174,8 @@ void ft6336_main();
 void diffspd_vehicle_main();
 void mks_stepper_main();
 void slcan_main();
+void st7789_main();
+void fft_main();
+void embd_main();
+void laser_ctl_main();
+void nuedc_2025e_main();

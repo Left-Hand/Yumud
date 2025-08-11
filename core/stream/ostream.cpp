@@ -95,9 +95,8 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-OutputStream & OutputStream::operator<<(const float value){
-    PRINT_FLOAT_TEMPLATE(strconv::ftoa);
-    return *this;
+OutputStream & OutputStream::operator<<(const float _value){
+    return (*this) << q16::from(_value);
 }
 
 OutputStream & OutputStream::operator<<(const double value){
@@ -120,10 +119,12 @@ OutputStream & OutputStream::operator<<(const uint8_t val){
     return *this;
 }
 
-void OutputStream::print_int(const int val){
+void OutputStream::print_u32(const uint32_t val){
     PRINT_INT_TEMPLATE(12, strconv::itoa);
 }
-
+void OutputStream::print_i32(const uint32_t val){
+    PRINT_INT_TEMPLATE(12, strconv::iutoa);
+}
 void OutputStream::print_u64(const uint64_t val){
     PRINT_INT_TEMPLATE(24, strconv::iutoa);
 }

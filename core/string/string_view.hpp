@@ -108,6 +108,8 @@ public:
 
         return self.substr_by_len(start, end - start);
     }
+
+    constexpr operator std::string_view() const { return std::string_view(data_, size_); }
 private:
     const char * data_;
     size_t size_;

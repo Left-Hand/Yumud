@@ -4,25 +4,23 @@
 
 namespace ymd {
 
-class UnicodeIterator {
-private:
-    const char* utf8String;
-    size_t currentIndex;
-    size_t length;
+class UnicodeIterator final{
 
 public:
-    UnicodeIterator(const char* _utf8String) : utf8String(_utf8String), currentIndex(0) {
+    constexpr UnicodeIterator(const char* _utf8String) : 
+        utf8String(_utf8String), 
+        currentIndex(0) {
         length = 0;
         while (utf8String[length] != '\0') {
             ++length;
         }
     }
 
-    operator bool() const {
+    constexpr bool has_next() const {
         return currentIndex < length;
     }
 
-    uint32_t next() {
+    constexpr uint32_t next() {
         if (this->operator bool() == false) {
             return -1;
         }
@@ -59,6 +57,11 @@ public:
 
         return unicodeValue;
     }
+private:
+    const char* utf8String;
+    size_t currentIndex;
+    size_t length;
+
 };
 
 }
