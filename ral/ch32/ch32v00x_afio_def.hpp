@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V00x::AFIO_Regs{
+namespace ymd::ral::CH32V00x::AFIO_Regs{
 
 
 struct EXTICR_Reg{

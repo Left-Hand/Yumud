@@ -2,7 +2,7 @@
 
 #include <cstdint> 
 
-namespace hwspec::CH32V00x::SLTM_Regs{
+namespace ymd::ral::CH32V00x::SLTM_Regs{
 
 struct CLTR_Reg{
     uint32_t CEN:1;

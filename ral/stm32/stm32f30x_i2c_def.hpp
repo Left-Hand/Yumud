@@ -4,7 +4,7 @@
 
 #define __IO volatile
 
-namespace hwspec::STM32F30x::I2C_Regs{
+namespace ymd::ral::STM32F30x::I2C_Regs{
 
 typedef struct
 {

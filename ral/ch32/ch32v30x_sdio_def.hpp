@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V30x::SDIO_Regs{
+namespace ymd::ral::CH32V30x::SDIO_Regs{
 
 struct POWER_Reg{
     uint32_t PWRCTRL:2;

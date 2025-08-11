@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #define __IO volatile
-namespace hwspec::STM32F30x::HRTIM_Regs{
+namespace ymd::ral::STM32F30x::HRTIM_Regs{
 
 struct MCR_Reg{
     uint32_t CKPSC:3;//0~2

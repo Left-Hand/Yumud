@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hwspec/chip.hpp"
+#include "ymd::ral/chip.hpp"
 #include <span>
 
 namespace ymd::hal{

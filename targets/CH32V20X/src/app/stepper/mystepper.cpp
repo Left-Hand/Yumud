@@ -264,8 +264,7 @@ public:
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
             .fs = ISR_FREQ,
-            .r = 120,
-            .corrector = &corrector_
+            .r = 120
         }
     };
 

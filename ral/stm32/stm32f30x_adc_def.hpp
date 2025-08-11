@@ -5,7 +5,7 @@
 #define __IO volatile
 
 
-namespace hwspec::STM32F30x::ADC{
+namespace ymd::ral::STM32F30x::ADC{
 
     typedef struct
     {

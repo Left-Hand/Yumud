@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec{
+namespace ymd::ral{
     namespace STM32F30x::RCC_Def{
         typedef struct
         {

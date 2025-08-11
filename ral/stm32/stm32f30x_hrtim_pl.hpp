@@ -2,7 +2,7 @@
 
 #include "stm32f30x_hrtim_def.hpp"
 
-namespace hwspec::STM32F30x::PL{
+namespace ymd::ral::STM32F30x::PL{
 using namespace STM32F30x::HRTIM_Regs;
 
 void init_hrpwm(HRTIM_TypeDef * HRTIM1){

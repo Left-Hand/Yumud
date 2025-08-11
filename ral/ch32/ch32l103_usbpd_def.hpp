@@ -2,7 +2,7 @@
 
 #include <core/io/regs.hpp>
 
-namespace hwspec::CH32L103::USBPD_Defs{
+namespace ymd::ral::CH32L103::USBPD_Defs{
 
 struct R16_CONFIG{
     static constexpr uint32_t offset = 0x00;
