@@ -22,7 +22,7 @@ void SmoObserver::reset(){
 
 
 // 更新函数
-void SmoObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta) {
+void SmoObserver::update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta) {
 
     // 滑模电流观测器
     EstIalpha = (f_para_ * EstIalpha) + (g_para_ * (Valpha - Ealpha - Zalpha));

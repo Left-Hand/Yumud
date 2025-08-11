@@ -14,10 +14,10 @@ public:
     SmoObserver(SmoObserver && other) = default;
 
     struct  Config{
-        iq_t<16> f_para;
-        iq_t<16> g_para;
-        iq_t<16> kslide;   
-        iq_t<16> kslf;   
+        q16 f_para;
+        q16 g_para;
+        q16 kslide;   
+        q16 kslf;   
     };
 
     SmoObserver(const Config & cfg);
@@ -32,32 +32,32 @@ public:
     void reset();
 
     // 更新函数
-    void update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta);
+    void update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta);
 
     // 获取估计的转子角度
-    iq_t<16> theta() const {return Theta;}
+    q16 theta() const {return Theta;}
 
 private:
-    iq_t<16> f_para_;
-    iq_t<16> g_para_;
-    iq_t<16> Kslide_;
-    iq_t<16> Kslf_;
+    q16 f_para_;
+    q16 g_para_;
+    q16 Kslide_;
+    q16 Kslf_;
 public:
-    iq_t<16> Ealpha;
-    iq_t<16> Ebeta;
+    q16 Ealpha;
+    q16 Ebeta;
 
-    iq_t<16> Zalpha;
-    iq_t<16> Zbeta;
+    q16 Zalpha;
+    q16 Zbeta;
     
-    iq_t<16> EstIalpha;
-    iq_t<16> EstIbeta;
+    q16 EstIalpha;
+    q16 EstIbeta;
 
-    iq_t<16> Theta;
+    q16 Theta;
 
     // 滑模阈值
-    static constexpr iq_t<16> E0 = iq_t<16>(1.5);
+    static constexpr q16 E0 = q16(1.5);
     // 滑模阈值的倒数
-    static constexpr iq_t<16> invE0 = iq_t<16>(1/1.5);
+    static constexpr q16 invE0 = q16(1/1.5);
 };
 
 } // namespace ymd

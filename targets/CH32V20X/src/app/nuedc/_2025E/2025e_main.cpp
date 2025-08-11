@@ -27,15 +27,8 @@
 
 #include "types/vectors/quat/Quat.hpp"
 
-#include "digipw/SVPWM/svpwm.hpp"
-#include "digipw/SVPWM/svpwm3.hpp"
-
-
 
 #include "robots/gesture/comp_est.hpp"
-
-#include "CurrentSensor.hpp"
-
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
@@ -47,20 +40,19 @@
 
 #include "types/regions/perspective_rect/perspective_rect.hpp"
 
-
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
-#include "dsp/observer/smo/SmoObserver.hpp"
-#include "dsp/observer/lbg/RolbgObserver.hpp"
-#include "dsp/observer/nonlinear/NonlinearObserver.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/controller/adrc/leso.hpp"
 
+#include "digipw/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
+
+
 using namespace ymd;
 using namespace ymd::drivers;
-using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::robots;
@@ -298,7 +290,7 @@ private:
 
 
 
-void bldc_main(){
+void nuedc_2025e_main(){
     const auto chip_id_crc_ = sys::chip::get_chip_id_crc();
 
     auto get_node_role = [](const uint32_t chip_id_crc) -> Option<NodeRole>{
@@ -1096,7 +1088,6 @@ void bldc_main(){
         }
 
     };
-
 
 
     [[maybe_unused]] auto on_joint_still_tracking_ctl = [&]{

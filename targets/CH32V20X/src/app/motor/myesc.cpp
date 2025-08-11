@@ -15,9 +15,8 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
-#include "dsp/observer/smo/SmoObserver.hpp"
-#include "dsp/observer/lbg/RolbgObserver.hpp"
-#include "dsp/observer/nonlinear/NonlinearObserver.hpp"
+#include "dsp/motor_ctrl/sensorless/smo/SmoObserver.hpp"
+#include "dsp/motor_ctrl/sensorless/lbg/RolbgObserver.hpp"
 
 #include "core/polymorphism/traits.hpp"
 

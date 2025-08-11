@@ -44,7 +44,7 @@ struct TwiddleFactors {
 };
 
 template <typename T, size_t N>
-constexpr auto twiddle_factors = TwiddleFactors<T, N>{};
+constexpr auto twiddle_factors_v = TwiddleFactors<T, N>{};
 
 
 
@@ -102,8 +102,8 @@ struct FFT_Impl{
                         const size_t idx2 = idx1 + half;
                         const size_t tw_idx = pair * step;
                         
-                        const T tw_cos = twiddle_factors<T, N>.cos[tw_idx];
-                        const T tw_sin = twiddle_factors<T, N>.sin[tw_idx];
+                        const T tw_cos = twiddle_factors_v<T, N>.cos[tw_idx];
+                        const T tw_sin = twiddle_factors_v<T, N>.sin[tw_idx];
                         
                         const T temp_real = out[idx2].real * tw_cos - out[idx2].imag * tw_sin;
                         const T temp_imag = out[idx2].real * tw_sin + out[idx2].imag * tw_cos;
@@ -127,8 +127,8 @@ struct FFT_Impl{
                         const size_t idx2 = idx1 + half;
                         const size_t tw_idx = j * step;
                         
-                        const T tw_cos = twiddle_factors<T, N>.cos[tw_idx];
-                        const T tw_sin = twiddle_factors<T, N>.sin[tw_idx];
+                        const T tw_cos = twiddle_factors_v<T, N>.cos[tw_idx];
+                        const T tw_sin = twiddle_factors_v<T, N>.sin[tw_idx];
                         
                         const T temp_real = out[idx2].real * tw_cos - out[idx2].imag * tw_sin;
                         const T temp_imag = out[idx2].real * tw_sin + out[idx2].imag * tw_cos;

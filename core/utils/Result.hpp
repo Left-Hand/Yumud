@@ -543,7 +543,8 @@ public:
     }
 
     template<typename ... Args>
-    __fast_inline T examine(
+    __fast_inline constexpr
+    T examine(
         const std::source_location & loca = std::source_location::current())
     {
         if (unlikely(!is_ok())) {
