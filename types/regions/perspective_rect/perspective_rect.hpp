@@ -190,21 +190,22 @@ public:
     }
 
     // Replace the two constructors with this single static method
-    static constexpr PerspectiveRect from_u8points(const std::array<StructurableToU8Pair auto, 4>& u8points) {
+    static constexpr PerspectiveRect from_u8points(
+        const std::array<StructurableToU8Pair auto, 4>& u8_points) {
         std::array<Vector2<T>, 4> converted_points;
         
         for (size_t i = 0; i < 4; ++i) {
-            if constexpr (requires { u8points[i].x; u8points[i].y; }) {
+            if constexpr (requires { u8_points[i].x; u8_points[i].y; }) {
                 // Handle Vector2-like types
                 converted_points[i] = Vector2<T>{
-                    u8points[i].x * T(1.0 / 255),
-                    u8points[i].y * T(1.0 / 255)
+                    u8_points[i].x * T(1.0 / 255),
+                    u8_points[i].y * T(1.0 / 255)
                 };
             } else {
                 // Handle tuple-like types
                 converted_points[i] = Vector2<T>{
-                    std::get<0>(u8points[i]) * T(1.0 / 255),
-                    std::get<1>(u8points[i]) * T(1.0 / 255)
+                    std::get<0>(u8_points[i]) * T(1.0 / 255),
+                    std::get<1>(u8_points[i]) * T(1.0 / 255)
                 };
             }
         }
@@ -229,12 +230,14 @@ public:
         return result;
     }
 
-    static constexpr auto from_u8x8(const std::span<const uint8_t, 8> u8x8) -> PerspectiveRect { 
-        std::array<Vector2<uint8_t>, 4> u8points;
+    static constexpr PerspectiveRect from_u8x8(
+        const std::span<const uint8_t, 8> u8x8)
+    { 
+        std::array<Vector2<uint8_t>, 4> u8_points;
         for (size_t i = 0; i < 4; ++i) {
-            u8points[i] = Vector2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
+            u8_points[i] = Vector2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
         }
-        return PerspectiveRect::from_u8points(u8points);
+        return PerspectiveRect::from_u8points(u8_points);
     }
 
 

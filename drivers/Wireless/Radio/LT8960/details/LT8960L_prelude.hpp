@@ -11,7 +11,8 @@ namespace ymd::drivers{
 namespace details{
 
 struct LT8960L_Prelude{
-    static constexpr auto MAX_RX_RETRY = 2;
+
+    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x1A;
 
     enum class Error_Kind:uint8_t{
         TransmitTimeout,
@@ -23,6 +24,11 @@ struct LT8960L_Prelude{
     };
 
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     enum class PacketType:uint8_t{
         NrzLaw = 0, 
@@ -69,14 +75,6 @@ struct LT8960L_Prelude{
     enum class Mode:uint8_t{
         Rx, Tx, CarrierWave, Sleep
     };
-
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x1A;
-
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
 
     struct States{
     public:

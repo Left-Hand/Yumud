@@ -27,5 +27,5 @@ using Error = drivers::LT8960L::Error;
 
 static constexpr size_t LT8960L_MAX_PACKET_SIZE = 12;
 static constexpr size_t LT8960L_MAX_FIFO_SIZE = 16;
-
+static constexpr size_t LT8960L_MAX_RX_RETRY_TIMES = 2;
 }
