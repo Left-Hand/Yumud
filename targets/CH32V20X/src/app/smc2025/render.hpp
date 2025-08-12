@@ -6,6 +6,9 @@
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter/painter.hpp"
+#include "types/shapes/box_rect.hpp"
+#include "types/shapes/annular_sector.hpp"
+#include "types/shapes/rotated_rect.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 
@@ -27,6 +30,13 @@ static constexpr uint8_t WHITE_COLOR = 0x9f;
 using namespace ymd;
 
 
+template<typename T>
+struct cache_of{
+    using type = typename T::Cache;
+};
+
+template<typename T>
+using cache_of_t = cache_of<T>::type;
 
 
 namespace ymd::smc::sim{
@@ -44,13 +54,6 @@ struct Placement{
     // }
 };
 
-template<typename T>
-struct cache_of{
-    using type = typename T::Cache;
-};
-
-template<typename T>
-using cache_of_t = cache_of<T>::type;
 
 template<typename T>
 struct ElementWithPlacement{
@@ -73,185 +76,6 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
     };
 }
 
-
-struct AnnularSector final{
-
-    q16 inner_radius;
-    q16 outer_radius;
-    
-    q16 start_rad;
-    q16 stop_rad;
-
-    constexpr bool does_contains_rad(const q16 orientation) const {
-        return IN_RANGE(orientation, start_rad, stop_rad);
-    }
-
-    constexpr Rect2<q16> get_bounding_box() const {
-        const bool x_reached_left = does_contains_rad(q16(PI));
-        const bool x_reached_right = does_contains_rad(q16(0));
-        const bool y_reached_top = does_contains_rad(q16(PI/2));
-        const bool y_reached_bottom = does_contains_rad(q16(-PI/2));
-
-        const auto p1 = Vector2<q16>::from_idenity_rotation(start_rad) * outer_radius;
-        const auto p2 = Vector2<q16>::from_idenity_rotation(stop_rad) * outer_radius;
-
-        const auto x_min = x_reached_left ? (-outer_radius) : MIN(p1.x, p2.x);
-        const auto x_max = x_reached_right ? (outer_radius) : MAX(p1.x, p2.x);
-        const auto y_min = y_reached_top ? (-outer_radius) : MIN(p1.y, p2.y);
-        const auto y_max = y_reached_bottom ? (outer_radius) : MAX(p1.y, p2.y);
-
-        return Rect2<q16>(x_min, x_max, y_min, y_max);
-    }
-
-    struct alignas(4) Cache{
-        q16 squ_inner_radius;
-        q16 squ_outer_radius;
-        Vector2<q16> start_norm_vec;
-        Vector2<q16> stop_norm_vec;
-        bool is_close;
-
-
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
-            const auto len_squ = offset.length_squared();
-
-            if (len_squ < self.squ_inner_radius || 
-                len_squ > self.squ_outer_radius) {
-                return false;
-            }
-
-            return (self.is_close 
-                ? (offset.is_count_clockwise_to(self.start_norm_vec) && 
-                offset.is_clockwise_to(self.stop_norm_vec))
-                : (offset.is_count_clockwise_to(self.start_norm_vec) || 
-                offset.is_clockwise_to(self.stop_norm_vec))) ? WHITE_COLOR : 0;
-        } 
-    };
-
-    constexpr auto to_cache() const {
-        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
-        return Cache{
-            .squ_inner_radius = square(inner_radius),
-            .squ_outer_radius = square(outer_radius),
-            .start_norm_vec = v1,
-            .stop_norm_vec = v2,
-            .is_close = v2.is_count_clockwise_to(v1)
-        };
-    }
-
-    constexpr auto to_bounding_box() const {
-        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
-        const bool is_close = v2.is_count_clockwise_to(v1);
-        Rect2<real_t> bb = Rect2<real_t>::from_minimal_bounding_box({
-            v1 * inner_radius,
-            v1 * outer_radius,
-            v2 * inner_radius,
-            v2 * outer_radius
-        });
-
-        BoundingBoxMergeHelper::merge_if_has_radian(bb, {1,0}, v1, v2, is_close);
-        BoundingBoxMergeHelper::merge_if_has_radian(bb, {0,1}, v1, v2, is_close);
-        BoundingBoxMergeHelper::merge_if_has_radian(bb, {-1,0}, v1, v2, is_close);
-        BoundingBoxMergeHelper::merge_if_has_radian(bb, {0,-1}, v1, v2, is_close);
-
-        return bb;
-    }
-
-    __fast_inline constexpr bool has_radian(
-        const real_t radian)
-    const {
-        return has_radian(Vector2<q16>::from_idenity_rotation(radian));
-    }
-
-    __fast_inline constexpr bool has_radian(
-        const Vector2<real_t> offset)
-    const {
-        const auto v1 = Vector2<q16>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<q16>::from_idenity_rotation(stop_rad);
-        return BoundingBoxMergeHelper::has_radian(
-            offset,
-            v1, v2, v2.is_count_clockwise_to(v1)
-        );
-    }
-private:
-
-    struct BoundingBoxMergeHelper{
-        static constexpr bool has_radian(
-            const real_t radian,
-            const Vector2<real_t> start_norm_vec,
-            const Vector2<real_t> stop_norm_vec,
-            const bool is_close
-        ){
-            return has_radian(
-                Vector2<q16>::from_idenity_rotation(radian), 
-                start_norm_vec, stop_norm_vec, 
-                is_close
-            );
-        }
-
-        static constexpr bool has_radian(
-            const Vector2<real_t> offset,
-            const Vector2<real_t> start_norm_vec,
-            const Vector2<real_t> stop_norm_vec,
-            const bool is_close
-        ){
-            const auto b1 = offset.is_count_clockwise_to(start_norm_vec);
-            const auto b2 = offset.is_clockwise_to(stop_norm_vec);
-            if(is_close) return b1 and b2;
-            else return b1 or b2;
-        }
-
-        static constexpr void merge_if_has_radian(
-            BoundingBox & box,
-            const Vector2<real_t> offset,
-            const Vector2<real_t> start_norm_vec,
-            const Vector2<real_t> stop_norm_vec,
-            const bool is_close
-        ){
-            if(has_radian(offset, start_norm_vec, stop_norm_vec, is_close)){
-                box = box.merge(offset);
-            }
-        }
-    };
-
-};
-
-struct RectBlob final{
-    q16 width;
-    q16 height;
-
-    struct Cache{
-        q16 half_width;
-        q16 half_height;
-
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
-            return 
-                ((abs(offset.x) - (self.half_width) <= 0)
-                and (abs(offset.y) - (self.half_height) <= 0)) ? WHITE_COLOR : 0;
-            ;
-        }
-    };
-
-    constexpr auto to_cache() const {
-        return Cache{
-            .half_width = width / 2,
-            .half_height = height / 2,
-        };
-    }
-
-    constexpr auto to_bounding_box() const {
-        return BoundingBox{-width/2,-height/2, width, height};
-    }
-};
 
 enum class TextAlignment:uint8_t{
     Left,
@@ -309,70 +133,7 @@ struct SpotLight final{
     }
 };
 
-struct RotatedRect{
-    q16 width;
-    q16 height;
-    q16 rotation;
 
-    struct alignas(4) Cache{
-        q16 half_width;
-        q16 half_height;
-        q16 s;
-        q16 c;
-
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vector2<q16> offset){
-            // -s * p.x + c * p.y;
-            // -c * p.x - s * p.y;
-            return 
-                ((abs(-self.s * offset.x + self.c * offset.y)
-                    <= self.half_height) and
-                (abs(-self.c * offset.x - self.s * offset.y) 
-                    <= self.half_width))
-                    
-                ? WHITE_COLOR : 0
-            ;
-        }
-    };
-
-    constexpr auto to_cache() const {
-        const auto [s,c] = sincos(rotation);
-        return Cache{
-            .half_width = width / 2,
-            .half_height = height / 2,
-            .s = s,
-            .c = c
-        };
-    }
-
-    constexpr BoundingBox to_bounding_box() const {
-        const auto rot = Vector2<q16>::from_idenity_rotation(rotation);
-        const std::array<Vector2<q16>, 4> points = {
-            get_raw_point<0>().improduct(rot),
-            get_raw_point<1>().improduct(rot),
-            get_raw_point<2>().improduct(rot),
-            get_raw_point<3>().improduct(rot)
-        };
-
-        return BoundingBox::from_minimal_bounding_box(std::span(points));
-    }
-
-    template<size_t I>
-    requires ((0 <= I) and (I < 4))
-    constexpr Vector2<q16> get_raw_point() const {
-        switch(I){
-            case 0: return {-width / 2, height / 2};
-            case 1: return {width / 2, height / 2};
-            case 2: return {-width / 2, -height / 2};
-            case 3: return {width / 2, -height / 2};
-            default: __builtin_unreachable();
-        }
-    }
-};
 
 struct RotatedZebraRect{
     q16 width;

@@ -54,7 +54,7 @@ public:
 
     [[nodiscard]] constexpr auto spawn_stright(const real_t length){
         ASSERT(length > 0);
-        const auto ret = RotatedRect{
+        const auto ret = RotatedRect<real_t>{
             .width = road_width_,
             .height = length,
             .rotation = viewpoint_.orientation - real_t(PI / 2)

@@ -240,9 +240,9 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
     adc.enable_auto_inject(DISEN);
 }
 
-[[maybe_unused]]  static void init_opa(){
-    hal::opa1.init<1,1,1>();
-}
+// [[maybe_unused]]  static void init_opa(){
+//     hal::opa1.init<1,1,1>();
+// }
 
 
 enum class BlinkPattern:uint8_t{

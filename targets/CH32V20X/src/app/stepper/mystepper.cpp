@@ -5,7 +5,8 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-// #include "core/fp/matchit.hpp"
+#include "core/utils/data_iter.hpp"
+#include "core/utils/release_info.hpp"
 #include "core/utils/bitflag.hpp"
 #include "core/string/string_view.hpp"
 #include "core/utils/build_date.hpp"
@@ -40,8 +41,7 @@
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
-#include "core/utils/data_iter.hpp"
-#include "core/utils/release_info.hpp"
+#include "dsp/motor_ctrl/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 
 using namespace ymd;
@@ -99,19 +99,19 @@ public:
             1 - either_lap_position.unwrap();
         });
 
-        auto & comp = calibrate_tasks_;
-        // if(const auto may_err = comp.err(); may_err.is_some()){
+        auto & subprogress = calibrate_tasks_;
+        // if(const auto may_err = subprogress.err(); may_err.is_some()){
         #if 0
             constexpr const auto TASK_COUNT = 
-                std::decay_t<decltype(comp)>::TASK_COUNT;
-            const auto idx = comp.task_index();
+                std::decay_t<decltype(subprogress)>::TASK_COUNT;
+            const auto idx = subprogress.task_index();
             [&]<auto... Is>(std::index_sequence<Is...>) {
-                DEBUG_PRINTLN((std::move(comp.get_task<Is>().dignosis()).err)...);
+                DEBUG_PRINTLN((std::move(subprogress.get_task<Is>().dignosis()).err)...);
             }(std::make_index_sequence<TASK_COUNT>{});
 
             const auto diagnosis = [&]<auto ...Is>(std::index_sequence<Is...>) {
                 return (( (Is == idx) ? 
-                (comp.get_task<Is>().dignosis(), 0u) : 
+                (subprogress.get_task<Is>().dignosis(), 0u) : 
                 0u), ...);
             }(std::make_index_sequence<TASK_COUNT>{});
 
@@ -141,8 +141,8 @@ public:
             });
             return Err(res.unwrap_err());
         #endif
-        if(comp.is_finished()){
-            is_component_finished_ = true;
+        if(subprogress.is_finished()){
+            is_subprogress_finished_ = true;
             execution_time_ = measure_total_elapsed_us([&]{                
                 ctrl(meas_lap_position);
             });
@@ -150,16 +150,16 @@ public:
             return Ok();
         }
 
-        is_component_finished_ = false;
+        is_subprogress_finished_ = false;
 
 
-        const auto [a,b] = comp.resume(meas_lap_position);
+        const auto [a,b] = subprogress.resume(meas_lap_position);
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
 
-    bool is_component_finished() const{
-        return is_component_finished_;
+    bool is_subprogress_finished() const{
+        return is_subprogress_finished_;
     }
 
 
@@ -268,7 +268,7 @@ public:
         }
     };
 
-    bool is_component_finished_ = false;
+    bool is_subprogress_finished_ = false;
 
     static constexpr real_t MC_TAU = 80;
 
@@ -319,14 +319,14 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
         // clock::delay(1ms);
         // DEBUG_PRINTLN(
         //     clock::millis().count(), 
-        //     comp.task_index(), 
-        //     comp.is_finished(),
-        //     comp.err().is_some()
+        //     subprogress.task_index(), 
+        //     subprogress.is_finished(),
+        //     subprogress.err().is_some()
         // );
-        // DEBUG_PRINTLN(motor_system_.is_component_finished());
+        // DEBUG_PRINTLN(motor_system_.is_subprogress_finished());
         if(0){
             static bool printed = false;
-            if(printed == false and motor_system_.is_component_finished()){
+            if(printed == false and motor_system_.is_subprogress_finished()){
                 printed = true;
                 motor_system_.print_vec().examine();
             }
