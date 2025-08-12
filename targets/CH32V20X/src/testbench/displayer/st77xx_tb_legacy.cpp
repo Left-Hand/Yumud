@@ -154,7 +154,7 @@ void st77xx_tb(hal::Spi & spi){
     SpiDrv SpiDrvLcd = SpiDrv(spi, 0);
     DisplayerPhySpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
 
-    ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
+    ST7789 tftDisplayer(SpiInterfaceLcd, Vec2i(135, 240));
 
     {//init tft
         tftDisplayer.init();
@@ -223,26 +223,26 @@ void st77xx_tb(hal::Spi & spi){
 
         // Pixels::gamma(img, 0.1);
         plot_gray(img, img.get_window());
-        // plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
+        // plot_bina(bina, bina.get_window() + Vec2i{0, img.size.y});
         // int dummy = 0;
 
-        plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
+        plot_bina(bina, bina.get_window() + Vec2i{0, img.size.y});
 
         Shape::FloodFill ff;
         auto map = ff.run(bina);
 
         // Pixels::dyeing(map, map);
-        // plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
+        // plot_gray(map, map.get_window() + Vec2i{0, img.size.y * 2});
 
         // Shape::TwoPass tp(bina.w * bina.h);
         // map = tp.run(bina);
 
         // Pixels::dyeing(map, map);
-        // plot_gray(map, map.get_window() + Vector2i{img.size.x, 0});
+        // plot_gray(map, map.get_window() + Vec2i{img.size.x, 0});
         // tp.run(img, bina, dummy);
 
         // tftDisplayer.puttexture_unchecked(img.get_window(), img.data.get());
-        // plot_gray(camera, Rect2i{Vector2i{188/4, 0}, Vector2i{188/4, 60}});
+        // plot_gray(camera, Rect2i{Vec2i{188/4, 0}, Vec2i{188/4, 60}});
         // painter.drawImage()
         // tftDisplayer.fill(RGB565::BLACK);
         // tftDisplayer.fill(RGB565::RED);
@@ -265,8 +265,8 @@ void st77xx_tb(hal::Spi & spi){
         }
 
         trans.transmit(piece, 0);
-        painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
-        // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
+        painter.drawString(Vec2i{0,230-60}, toString(vl.getDistance()));
+        // painter.drawString(Vec2i{0,230-50}, toString(trans.compress_png(piece).size()));
 
         // clock::delay(300ms);
 

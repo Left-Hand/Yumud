@@ -71,8 +71,8 @@ IResult<> QMC5883L::update(){
     return read_burst(mag_x_reg.ADDRESS, std::span(&mag_x_reg.as_ref(), 3));
 }
 
-IResult<Vector3<q24>> QMC5883L::read_mag(){
-    return Ok{Vector3<q24>{
+IResult<Vec3<q24>> QMC5883L::read_mag(){
+    return Ok{Vec3<q24>{
         uni(mag_x_reg.as_val()) * scaler_.to_fullscale(),
         uni(mag_y_reg.as_val()) * scaler_.to_fullscale(),
         uni(mag_z_reg.as_val()) * scaler_.to_fullscale()

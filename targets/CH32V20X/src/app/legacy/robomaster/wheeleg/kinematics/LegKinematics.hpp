@@ -50,11 +50,11 @@ class LegKinematics{
         shank_length_ = cfg.shank_length;
     }
 
-    Option<Vector2<real_t>> forward(const Radian l_rad, const Radian r_rad){
+    Option<Vec2<real_t>> forward(const Radian l_rad, const Radian r_rad){
         return _forward(l_rad, r_rad);
     }
 
-    Option<RadianPair> inverse(Vector2<real_t> const pos){
+    Option<RadianPair> inverse(Vec2<real_t> const pos){
         return _inverse(pos);
     }
 private:
@@ -63,11 +63,11 @@ private:
     real_t thigh_length_;
     real_t shank_length_;
 
-    Option<Vector2<real_t>> _forward(const Radian l_rad, const Radian r_rad) const{
-        return Some(Vector2<real_t>(0,0));
+    Option<Vec2<real_t>> _forward(const Radian l_rad, const Radian r_rad) const{
+        return Some(Vec2<real_t>(0,0));
     }
     
-    Option<RadianPair> _inverse(Vector2<real_t> const pos) const;
+    Option<RadianPair> _inverse(Vec2<real_t> const pos) const;
 };
 // }
 

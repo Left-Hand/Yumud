@@ -58,7 +58,7 @@ IResult<> AK8963::init(){
             return ((iq_t<16>(_coeff - 128) >> 8) + 1);
         };
 
-        adj_scale_ = Vector3<q24>(
+        adj_scale_ = Vec3<q24>(
             coeff2adj(coeff.x), coeff2adj(coeff.y), coeff2adj(coeff.z)
         );
     }
@@ -92,8 +92,8 @@ IResult<> AK8963::validate(){
     }
     return Ok();
 }
-Result<Vector3<uint8_t>, Error> AK8963::get_coeff(){
-    // Vector3 coeff = {};
+Result<Vec3<uint8_t>, Error> AK8963::get_coeff(){
+    // Vec3 coeff = {};
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(asax_reg);
@@ -102,7 +102,7 @@ Result<Vector3<uint8_t>, Error> AK8963::get_coeff(){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(asaz_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vector3<uint8_t>{asax_reg.data, asay_reg.data, asaz_reg.data});
+    return Ok(Vec3<uint8_t>{asax_reg.data, asay_reg.data, asaz_reg.data});
 }
 
 IResult<> AK8963::reset(){
@@ -138,8 +138,8 @@ IResult<> AK8963::update(){
     data_valid_ &= !st2_reg.hofl;
     return Ok();
 }
-IResult<Vector3<q24>> AK8963::read_mag(){
-    return Ok(Vector3<q24>{
+IResult<Vec3<q24>> AK8963::read_mag(){
+    return Ok(Vec3<q24>{
         conv_data_to_ut(mag_x_reg.as_val(), data_is_16_bits_) * adj_scale_.x,
         conv_data_to_ut(mag_y_reg.as_val(), data_is_16_bits_) * adj_scale_.y,
         conv_data_to_ut(mag_z_reg.as_val(), data_is_16_bits_) * adj_scale_.z}

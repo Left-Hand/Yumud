@@ -84,12 +84,12 @@ IResult<> IST8310::set_y_average_times(const AverageTimes times){
 
 
 
-IResult<Vector3<q24>> IST8310::read_mag(){
+IResult<Vec3<q24>> IST8310::read_mag(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Ok{Vector3<q24>{
+    return Ok{Vec3<q24>{
         conv(axis_x_reg.as_val()),
         conv(axis_y_reg.as_val()),
         conv(axis_z_reg.as_val())

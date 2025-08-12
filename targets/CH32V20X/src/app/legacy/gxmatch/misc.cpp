@@ -31,13 +31,13 @@ void initDisplayer(ST7789 & tftDisplayer){
 
 Ray canvas_transform(const Ray & ray){
     scexpr auto meter = int{2};
-    scexpr auto size = Vector2{100,100};
-    scexpr auto org =  Vector2{12,12};
+    scexpr auto size = Vec2{100,100};
+    scexpr auto org =  Vec2{12,12};
     scexpr auto area = Rect2i{org,size};
     
     auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
     auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
-    return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
+    return Ray{Vec2{x,y} + Vec2::ones(12), ray.rad};
 };
 
 
@@ -63,9 +63,9 @@ void draw_turtle(PainterConcept & painter, const Ray & ray){
     scexpr real_t len = 7;
     auto [org, rad] = canvas_transform(ray);
     rad = -rad;//flipy
-    auto pf = org + Vector2::from_angle(len, rad);
-    auto p1 = org + Vector2::from_angle(len, rad + real_t(  PI * 0.8));
-    auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
+    auto pf = org + Vec2::from_angle(len, rad);
+    auto p1 = org + Vec2::from_angle(len, rad + real_t(  PI * 0.8));
+    auto p2 = org + Vec2::from_angle(len, rad + real_t(- PI * 0.8));
 
     // painter.setColor(ColorEnum::RED);
     painter.setColor(RGB888(HSV888(int(time() * 64),255,255)));

@@ -9,23 +9,23 @@ namespace ymd{
 template<arithmetic T>
 struct Ray2{
 public:
-    Vector2<T> org;
+    Vec2<T> org;
     T rad;
 
 public:
     [[nodiscard]] __fast_inline constexpr Ray2():
-        org(Vector2<T>(0,0)),
+        org(Vec2<T>(0,0)),
         rad(T(0)){;}
 
-    [[nodiscard]] __fast_inline constexpr Ray2(const Vector2<T> & _org, const T & _rad): 
-            org(static_cast<Vector2<T>>(_org)), rad(static_cast<T>(_rad)){;}
+    [[nodiscard]] __fast_inline constexpr Ray2(const Vec2<T> & _org, const T & _rad): 
+            org(static_cast<Vec2<T>>(_org)), rad(static_cast<T>(_rad)){;}
             
-    [[nodiscard]] __fast_inline constexpr Ray2(const Vector2<T> & _from, const Vector2<T> & _to): 
-            org(static_cast<Vector2<T>>(_from)), rad((_to - _from).angle()){;}
+    [[nodiscard]] __fast_inline constexpr Ray2(const Vec2<T> & _from, const Vec2<T> & _to): 
+            org(static_cast<Vec2<T>>(_from)), rad((_to - _from).angle()){;}
 
     template<arithmetic U = T>
     [[nodiscard]] __fast_inline constexpr Ray2(const std::tuple<U, U, U> & tup) : 
-            org((Vector2<T>(std::get<0>(tup), std::get<1>(tup)))),
+            org((Vec2<T>(std::get<0>(tup), std::get<1>(tup)))),
             rad(std::get<3>(tup)){;}
 
 	[[nodiscard]] __fast_inline constexpr bool operator==(const Ray2 & other) const{
@@ -54,7 +54,7 @@ public:
 
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2<T> & pt) const{
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & pt) const{
         return is_equal_approx(distance_to(pt), 0);
     }
 
@@ -62,7 +62,7 @@ public:
         return is_equal_approx(this->rad, other.rad);
     }
 
-    [[nodiscard]] __fast_inline constexpr Option<Vector2<T>> intersection(const Ray2<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr Option<Vec2<T>> intersection(const Ray2<T> & other) const{
         return this->to_line().intersection(other.to_line());
     }
 
@@ -74,8 +74,8 @@ public:
         return {this->org, this->rad + r};
     }
     
-    [[nodiscard]] __fast_inline constexpr Vector2<T> endpoint_at_length(const T & l) const{
-        return this->org + Vector2<T>{l, 0}.rotated(this->rad);
+    [[nodiscard]] __fast_inline constexpr Vec2<T> endpoint_at_length(const T & l) const{
+        return this->org + Vec2<T>{l, 0}.rotated(this->rad);
     }
     
     [[nodiscard]] __fast_inline constexpr Segment2<T> cut_by_length(const T & l) const{

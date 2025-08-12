@@ -38,21 +38,21 @@ namespace ymd{
 
 template<arithmetic T>
 struct Plane {
-	Vector3<T> normal;
+	Vec3<T> normal;
 	T d = 0;
 
 
-	__fast_inline constexpr Plane(const Vector3<auto> & p_normal, const arithmetic auto p_d) :
+	__fast_inline constexpr Plane(const Vec3<auto> & p_normal, const arithmetic auto p_d) :
 			normal(p_normal),
 			d(p_d) {
 	}
 
-	__fast_inline constexpr Plane(const Vector3<auto> & p_normal, const Vector3<auto> & p_point) :
+	__fast_inline constexpr Plane(const Vec3<auto> & p_normal, const Vec3<auto> & p_point) :
 			normal(p_normal),
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane(const Vector3<auto> &p_point1, const Vector3<auto> &p_point2, const Vector3<auto> &p_point3,const ClockDirection p_dir = CW) {
+	__fast_inline constexpr Plane(const Vec3<auto> &p_point1, const Vec3<auto> &p_point2, const Vec3<auto> &p_point3,const ClockDirection p_dir = CW) {
 		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {
@@ -63,39 +63,39 @@ struct Plane {
 		d = normal.dot(p_point1);
 	}
 	
-	void set_normal(const Vector3<auto> &p_normal);
-	__fast_inline Vector3<T> get_normal() const { return normal; };
+	void set_normal(const Vec3<auto> &p_normal);
+	__fast_inline Vec3<T> get_normal() const { return normal; };
 
 	void normalize();
 	Plane normalized() const;
 
 	/* Plane-Point operations */
 
-	__fast_inline Vector3<T> get_center() const { return normal * d; }
-	Vector3<T> get_any_perpendicular_normal() const;
+	__fast_inline Vec3<T> get_center() const { return normal * d; }
+	Vec3<T> get_any_perpendicular_normal() const;
 
-	__fast_inline bool is_point_over(const Vector3<T> &p_point) const; ///< Point is over plane
-	__fast_inline T distance_to(const Vector3<T> &p_point) const;
-	__fast_inline bool has_point(const Vector3<T> &p_point,const T p_tolerance = static_cast<T>(CMP_EPSILON)) const;
+	__fast_inline bool is_point_over(const Vec3<T> &p_point) const; ///< Point is over plane
+	__fast_inline T distance_to(const Vec3<T> &p_point) const;
+	__fast_inline bool has_point(const Vec3<T> &p_point,const T p_tolerance = static_cast<T>(CMP_EPSILON)) const;
 
 	/* intersections */
 
-	bool intersect_3(const Plane & p_plane1, const Plane & p_plane2, Vector3<T> & r_result) const;
-	bool intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir, Vector3<T> & p_intersection) const;
-	bool intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end, Vector3<T> & p_intersection) const;
+	bool intersect_3(const Plane & p_plane1, const Plane & p_plane2, Vec3<T> & r_result) const;
+	bool intersects_ray(const Vec3<T> &p_from, const Vec3<T> &p_dir, Vec3<T> & p_intersection) const;
+	bool intersects_segment(const Vec3<T> &p_begin, const Vec3<T> &p_end, Vec3<T> & p_intersection) const;
 
 	// For Variant bindings.
-	std::optional<Vector3<T>> intersect_3(const Plane & p_plane1, const Plane & p_plane2) const;
-	std::optional<Vector3<T>> intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir) const;
-	std::optional<Vector3<T>> intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end) const;
+	std::optional<Vec3<T>> intersect_3(const Plane & p_plane1, const Plane & p_plane2) const;
+	std::optional<Vec3<T>> intersects_ray(const Vec3<T> &p_from, const Vec3<T> &p_dir) const;
+	std::optional<Vec3<T>> intersects_segment(const Vec3<T> &p_begin, const Vec3<T> &p_end) const;
 
-	__fast_inline Vector3<T> project(const Vector3<T> &p_point) const {
+	__fast_inline Vec3<T> project(const Vec3<T> &p_point) const {
 		return p_point - normal * distance_to(p_point);
 	}
 
 	/* misc */
 
-	// Plane operator-() const { return Plane(Vector3<T>(-normal), static_cast<T>(-d));}
+	// Plane operator-() const { return Plane(Vec3<T>(-normal), static_cast<T>(-d));}
 	bool is_equal_approx(const Plane & p_plane) const;
 	bool is_equal_approx_any_side(const Plane & p_plane) const;
 	bool is_finite() const;
@@ -105,23 +105,23 @@ struct Plane {
 
 	__fast_inline Plane() {}
 	__fast_inline Plane(const auto & p_a, const auto & p_b, const auto & p_c, const auto & p_d) :
-			normal(Vector3<T>{p_a, p_b, p_c}),
+			normal(Vec3<T>{p_a, p_b, p_c}),
 			d(static_cast<T>(p_d)) {}
 
 };
 
 template<arithmetic T>
-bool Plane<T>::is_point_over(const Vector3<T> &p_point) const {
+bool Plane<T>::is_point_over(const Vec3<T> &p_point) const {
 	return (normal.dot(p_point) > d);
 }
 
 template<arithmetic T>
-T Plane<T>::distance_to(const Vector3<T> &p_point) const {
+T Plane<T>::distance_to(const Vec3<T> &p_point) const {
 	return (normal.dot(p_point) - d);
 }
 
 template<arithmetic T>
-bool Plane<T>::has_point(const Vector3<T> &p_point, const T p_tolerance) const {
+bool Plane<T>::has_point(const Vec3<T> &p_point, const T p_tolerance) const {
 	T dist = normal.normalized().dot(p_point) - d;
 	dist = ABS(dist);
 	return (dist <= p_tolerance);
@@ -157,7 +157,7 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & valu
 namespace ymd{
 
 template<arithmetic T>
-void Plane<T>::set_normal(const Vector3<auto> &p_normal) {
+void Plane<T>::set_normal(const Vec3<auto> &p_normal) {
 	normal = p_normal;
 }
 
@@ -183,10 +183,10 @@ Plane<T> Plane<T>::normalized() const {
 
 
 template<arithmetic T>
-Vector3<T> Plane<T>::get_any_perpendicular_normal() const {
-	scexpr auto p1 = Vector3<T>(1, 0, 0);
-	scexpr auto p2 = Vector3<T>(0, 1, 0);
-	Vector3<T> p;
+Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
+	scexpr auto p1 = Vec3<T>(1, 0, 0);
+	scexpr auto p2 = Vec3<T>(0, 1, 0);
+	Vec3<T> p;
 
 	if (ABS(normal.dot(p1)) > static_cast<T>(0.99f)) { // if too similar to p1
 		p = p2; // use p2
@@ -203,11 +203,11 @@ Vector3<T> Plane<T>::get_any_perpendicular_normal() const {
 /* intersections */
 
 template<arithmetic T>
-bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, Vector3<T> & r_result) const {
+bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, Vec3<T> & r_result) const {
 	const Plane<T> &p_plane0 = *this;
-	Vector3<T> normal0 = p_plane0.normal;
-	Vector3<T> normal1 = p_plane1.normal;
-	Vector3<T> normal2 = p_plane2.normal;
+	Vec3<T> normal0 = p_plane0.normal;
+	Vec3<T> normal1 = p_plane1.normal;
+	Vec3<T> normal2 = p_plane2.normal;
 
 	T denom = (normal0.corss(normal1)).dot(normal2);
 
@@ -225,8 +225,8 @@ bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, V
 
 
 template<arithmetic T>
-bool Plane<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir, Vector3<T> & p_intersection) const {
-	Vector3<T> segment = p_dir;
+bool Plane<T>::intersects_ray(const Vec3<T> &p_from, const Vec3<T> &p_dir, Vec3<T> & p_intersection) const {
+	Vec3<T> segment = p_dir;
 	T den = normal.dot(segment);
 
 	if (is_equal_approx(0, den)) {
@@ -248,8 +248,8 @@ bool Plane<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir,
 
 
 template<arithmetic T>
-bool Plane<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end, Vector3<T> & p_intersection) const {
-	Vector3<T> segment = p_begin - p_end;
+bool Plane<T>::intersects_segment(const Vec3<T> &p_begin, const Vec3<T> &p_end, Vec3<T> & p_intersection) const {
+	Vec3<T> segment = p_begin - p_end;
 	T den = normal.dot(segment);
 	if (is_equal_approx(0, den)) {
 		return false;
@@ -268,8 +268,8 @@ bool Plane<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const {
-	Vector3<T> inters;
+std::optional<Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const {
+	Vec3<T> inters;
 	if (intersect_3(p_plane1, p_plane2, inters)) {
 		return inters;
 	} else {
@@ -279,8 +279,8 @@ std::optional<Vector3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const 
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane<T>::intersects_ray(const Vector3<T> &p_from, const Vector3<T> &p_dir) const {
-	Vector3<T> inters;
+std::optional<Vec3<T>> Plane<T>::intersects_ray(const Vec3<T> &p_from, const Vec3<T> &p_dir) const {
+	Vec3<T> inters;
 	if (intersects_ray(p_from, p_dir, inters)) {
 		return inters;
 	} else {
@@ -290,8 +290,8 @@ std::optional<Vector3<T>> Plane<T>::intersects_ray(const Vector3<T> &p_from, con
 
 
 template<arithmetic T>
-std::optional<Vector3<T>> Plane<T>::intersects_segment(const Vector3<T> &p_begin, const Vector3<T> &p_end) const {
-	Vector3<T> inters;
+std::optional<Vec3<T>> Plane<T>::intersects_segment(const Vec3<T> &p_begin, const Vec3<T> &p_end) const {
+	Vec3<T> inters;
 	if (intersects_segment(p_begin, p_end, inters)) {
 		return inters;
 	} else {

@@ -93,25 +93,25 @@ struct kind_to_command<CommandKind, K>{ \
 
 
 
-using Vector2u8 = Vector2<uint8_t>;
-using Vector2q20 = Vector2<q20>;
+using Vec2u8 = Vec2<uint8_t>;
+using Vec2q20 = Vec2<q20>;
 
 
 
-static constexpr Vector2<q20> a4_coord_to_uv_coord(const Vector2<q20> a4_coord){
+static constexpr Vec2<q20> a4_coord_to_uv_coord(const Vec2<q20> a4_coord){
     constexpr auto INV_A4_WIDTH = 1 / A4_WIDTH;
     constexpr auto INV_A4_HEIGHT = 1 / A4_HEIGHT;    
     return {a4_coord.x * INV_A4_WIDTH, a4_coord.y * INV_A4_HEIGHT};
 }
 
-static constexpr Vector2<q20> uv_coord_to_a4_coord(const Vector2<q20> uv_coord){
+static constexpr Vec2<q20> uv_coord_to_a4_coord(const Vec2<q20> uv_coord){
     return {uv_coord.x * A4_WIDTH, uv_coord.y * A4_HEIGHT};
 }
 
-static constexpr auto A4_CENTER_COORD = uv_coord_to_a4_coord(Vector2<q20>(0.5_r, 0.5_r));
+static constexpr auto A4_CENTER_COORD = uv_coord_to_a4_coord(Vec2<q20>(0.5_r, 0.5_r));
 
 // 主函数
-static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view str) {
+static constexpr Option<std::array<Vec2u8, 4>> defmt_u8x4(std::string_view str) {
     if (str.size() != 16) return None;
 
 
@@ -131,7 +131,7 @@ static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view st
         return Some(static_cast<uint8_t>((high << 4) | low));
     };
 
-    std::array<Vector2u8, 4> points{};
+    std::array<Vec2u8, 4> points{};
 
     for (size_t i = 0; i < 4; ++i) {
         size_t offset = i * 4;
@@ -143,7 +143,7 @@ static constexpr Option<std::array<Vector2u8, 4>> defmt_u8x4(std::string_view st
             return None;
         }
 
-        points[i] = Vector2u8{x.unwrap(), y.unwrap()};
+        points[i] = Vec2u8{x.unwrap(), y.unwrap()};
     }
 
     return Some(points);
@@ -740,18 +740,18 @@ void nuedc_2025e_main(){
 
     
     
-    Vector2<q20> err_position_ = {0, 0};
+    Vec2<q20> err_position_ = {0, 0};
     bool laser_is_oneshot_ = false;
     bool laser_onshot_ = true;
 
-    auto update_err_position = [&](Vector2<q20> err_position){
+    auto update_err_position = [&](Vec2<q20> err_position){
         static constexpr real_t alpha_x = 0.8_r;
         static constexpr real_t alpha_y = 0.5_r;
         err_position_.x = err_position_.x * alpha_x + err_position.x * (1 - alpha_x);
         err_position_.y = err_position_.y * alpha_y + err_position.y * (1 - alpha_y);
     };
 
-    auto set_err_position = [&](Vector2<q20> err_position){
+    auto set_err_position = [&](Vec2<q20> err_position){
         err_position_.x = err_position.x;
         err_position_.y = err_position.y;
     };
@@ -1040,14 +1040,14 @@ void nuedc_2025e_main(){
             may_a4_rect_.unwrap().to_u8x8()
         });
 
-        const auto expect_center_uv_coord = Vector2{105.2_q20 / 255, 95.0_q20 / 255};
-        // const auto expect_center_uv_coord = Vector2{112.2_q20 / 255, 95.0_q20 / 255};
+        const auto expect_center_uv_coord = Vec2{105.2_q20 / 255, 95.0_q20 / 255};
+        // const auto expect_center_uv_coord = Vec2{112.2_q20 / 255, 95.0_q20 / 255};
         const auto track_target_uv_coord = may_a4_rect_.unwrap()
             .perspective_center();
 
         const auto ctime = clock::time();
         const auto route_play_ratio = q24(frac(ctime * 0.1_r));
-        const auto route_play_coord = Vector2{0.0006_q20, 0_q20}
+        const auto route_play_coord = Vec2{0.0006_q20, 0_q20}
             .rotated(route_play_ratio * real_t(TAU));
             
         auto expect_uv_coord = expect_center_uv_coord;

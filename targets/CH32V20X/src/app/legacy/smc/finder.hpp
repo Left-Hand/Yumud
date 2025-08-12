@@ -25,7 +25,7 @@ namespace SMC{
     using Boundry = std::map<int, int>;
     using Pile = std::pair<int, Range2i>;
     using Piles = std::map<int, Range2i>;
-    using Point = Vector2i; 
+    using Point = Vec2i; 
     using ymd::nvcv2::Shape::Seed;
     using Segment = std::pair<const Point & ,const Point &>;
 
@@ -33,8 +33,8 @@ namespace SMC{
     scexpr int max_item_size = 64;
     scexpr int max_ranges_size = 16;
 
-    using CoastItem = Vector2<uint8_t>;
-    using Points = sstl::vector<Vector2<int16_t>, max_item_size>;
+    using CoastItem = Vec2<uint8_t>;
+    using Points = sstl::vector<Vec2<int16_t>, max_item_size>;
     using Coast = sstl::vector<CoastItem, max_item_size>;
     using Coasts = sstl::vector<Coast, 4>;
     using Ranges = sstl::vector<Range2<int16_t>, max_ranges_size>;
@@ -90,7 +90,7 @@ namespace SMC{
             //定义上方的最高点 当回落超过阈值时停止寻找
 
             scexpr auto fallback_threshold = 3;
-            auto min_y = Vector2i(m_seed).y;
+            auto min_y = Vec2i(m_seed).y;
 
             while(seed.jounrey() < step_limit && src.has_point(seed)){
                 switch(status){
@@ -123,13 +123,13 @@ namespace SMC{
 
                             seed.forward();
                             if(src.has_point(seed)){
-                                coast.push_back(Vector2i(seed));
+                                coast.push_back(Vec2i(seed));
                             }
                             break;
                         }
                     }
 
-                auto now_y = Vector2i(seed).y;
+                auto now_y = Vec2i(seed).y;
                 min_y = std::min(min_y, now_y);
                 if(now_y - min_y > fallback_threshold){
                     break;
@@ -149,11 +149,11 @@ namespace SMC{
             return ret;
         }
 
-        bool is_positive(const Vector2i & pos){
+        bool is_positive(const Vec2i & pos){
             return (uint8_t)src[pos];
         }
 
-        bool is_edge(const Vector2i & pos, const Vector2i next_pos){
+        bool is_edge(const Vec2i & pos, const Vec2i next_pos){
             // return (uint8_t)src(next_pos) - (uint8_t)src(pos) > (uint8_t)(Gray)(edge_threshold);
             // return ((uint8_t)src(next_pos) > positive_threshold) && ((uint8_t)src(pos) < positive_threshold);
 
@@ -171,9 +171,9 @@ namespace SMC{
     int get_x_edges(const ImageReadable<Binary> & src, const int y);
     int get_x_edges(const ImageReadable<Gray> & src, const int y);
 
-    std::tuple<Point, Range2i> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
+    std::tuple<Point, Range2i> get_entry(const ImageReadable<Binary> &, const Vec2i &, const AlignMode);
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point);
-    Range2i get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
+    Range2i get_h_range(const ImageReadable<Binary> & src, const Vec2i & pos);
     Range2i get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode);
 
     namespace PileUtils{
@@ -195,7 +195,7 @@ namespace SMC{
     
         Point which_in_window(const Coast & coast, const Rect2i & window);
 
-        Point which_in_window(const Coast & coast, const Vector2i & window_size);
+        Point which_in_window(const Coast & coast, const Vec2i & window_size);
 
         bool is_ccw(const Coast & coast, const bool);
 
@@ -207,14 +207,14 @@ namespace SMC{
 
         // Points v_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
 
-        Coast trim(const Coast & coast, const Vector2i & window_size);
-        Coast form(const ImageReadable<Binary> &, const Vector2i &, const LR);
+        Coast trim(const Coast & coast, const Vec2i & window_size);
+        Coast form(const ImageReadable<Binary> &, const Vec2i &, const LR);
         Coast constrain(const Coast & coast, const Rect2i & rect);
-        Coast shrink(const Coast & line, const real_t width, const Vector2i & window_size);
+        Coast shrink(const Coast & line, const real_t width, const Vec2i & window_size);
 
         Coast douglas_peucker(const Coast & line, const real_t epsilon);
 
-        __inline bool dir_until(const Coast & coast, const Vector2i & point,const Vector2i & dir){
+        __inline bool dir_until(const Coast & coast, const Vec2i & point,const Vec2i & dir){
             if(coast.size() < 2) return false;
 
             bool ret = true;
@@ -228,20 +228,20 @@ namespace SMC{
             return false;
         }
 
-        __inline bool ul_until(const Coast & coast, const Vector2i & point){
-            return dir_until(coast, point, Vector2i(-1, -1));
+        __inline bool ul_until(const Coast & coast, const Vec2i & point){
+            return dir_until(coast, point, Vec2i(-1, -1));
         }
 
-        __inline bool ur_until(const Coast & coast, const Vector2i & point){
-            return dir_until(coast, point, Vector2i(1, -1));
+        __inline bool ur_until(const Coast & coast, const Vec2i & point){
+            return dir_until(coast, point, Vec2i(1, -1));
         }
 
-        __inline bool dl_until(const Coast & coast, const Vector2i & point){
-            return dir_until(coast, point, Vector2i(-1, 1));
+        __inline bool dl_until(const Coast & coast, const Vec2i & point){
+            return dir_until(coast, point, Vec2i(-1, 1));
         }
 
-        __inline bool dr_until(const Coast & coast, const Vector2i & point){
-            return dir_until(coast, point, Vector2i(1, 1));
+        __inline bool dr_until(const Coast & coast, const Vec2i & point){
+            return dir_until(coast, point, Vec2i(1, 1));
         }
     }
 
@@ -250,7 +250,7 @@ namespace SMC{
     namespace SegmentUtils{
         Segment constrain(const Segment &, const Rect2i &);
         Segment shift(const Segment &, const Point &);
-        Vector2i vec(const Segment &);
+        Vec2i vec(const Segment &);
     };
 
     namespace BoundryUtils{
@@ -269,11 +269,11 @@ namespace SMC{
     };
 
     struct Circle{
-            Vector2 pos;
+            Vec2 pos;
             real_t r;
     };
 
-    Circle calculate_cicular(const Vector2 &, const Vector2 &, const Vector2 &);
+    Circle calculate_cicular(const Vec2 &, const Vec2 &, const Vec2 &);
 
     Circle calculate_cicular(const Coast &, const int, const int);
 
@@ -281,13 +281,13 @@ namespace SMC{
         scexpr real_t scale = 0.014;
         scexpr int blind_rows = 15;
     
-        __fast_inline Vector2 position(const Point & point){
-            Vector2i centered = {point.x - 94, (-point.y + 45) + blind_rows};
+        __fast_inline Vec2 position(const Point & point){
+            Vec2i centered = {point.x - 94, (-point.y + 45) + blind_rows};
             return centered * scale;
         }
 
 
-        __fast_inline Vector2 displacement(const Point & p1, const Point & p2 = {0,0}){
+        __fast_inline Vec2 displacement(const Point & p1, const Point & p2 = {0,0}){
             return ((p2 - p1) * scale);
         }
         __fast_inline real_t distance(const Point & p1, const Point & p2 = {0,0}){
@@ -303,7 +303,7 @@ namespace SMC{
             return l / scale;
         }
         
-        __fast_inline real_t pixels(const Vector2 & p1, const Vector2 & p2 = {0,0}){
+        __fast_inline real_t pixels(const Vec2 & p1, const Vec2 & p2 = {0,0}){
             return pixels((p2 - p1).length());
         }
 

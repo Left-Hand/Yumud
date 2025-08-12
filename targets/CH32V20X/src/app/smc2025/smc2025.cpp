@@ -38,7 +38,7 @@ using namespace ymd::hal;
 static constexpr size_t MAX_COAST_ITEMS = 64;
 using Pile = Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
-using Pixel = Vector2<uint8_t>;
+using Pixel = Vec2<uint8_t>;
 using PixelSegment = std::pair<Pixel ,Pixel>;
 using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
 
@@ -107,37 +107,37 @@ class Plotter{
         return Ok();
     };
 
-    IResult<> plot_dot(const Vector2u pos, const uint radius = 2){
+    IResult<> plot_dot(const Vec2u pos, const uint radius = 2){
         painter_.putpixel_unchecked(pos);
 
         return Ok();
     };
 
 
-    IResult<> plot_vec3(const Vector3<real_t> & vec3,  const Vector2u pos){
+    IResult<> plot_vec3(const Vec3<real_t> & vec3,  const Vec2u pos){
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
-        static constexpr auto X_UNIT = Vector2<real_t>::RIGHT;
-        static constexpr auto Y_UNIT = Vector2<real_t>::RIGHT.rotated(real_t(PI / 3));
-        static constexpr auto Z_UNIT = Vector2<real_t>::DOWN;
+        static constexpr auto X_UNIT = Vec2<real_t>::RIGHT;
+        static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(real_t(PI / 3));
+        static constexpr auto Z_UNIT = Vec2<real_t>::DOWN;
         
         static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
         static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
         static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vector3<real_t>::from_x00(arm_length);
-        const auto y_axis = Vector3<real_t>::from_0y0(arm_length);
-        const auto z_axis = Vector3<real_t>::from_00z(arm_length);
+        const auto x_axis = Vec3<real_t>::from_x00(arm_length);
+        const auto y_axis = Vec3<real_t>::from_0y0(arm_length);
+        const auto z_axis = Vec3<real_t>::from_00z(arm_length);
 
         const auto rot = Quat<real_t>::from_direction(vec3);
-        const Vector2u center_point = pos + Vector2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
+        const Vec2u center_point = pos + Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
-            const Vector3<real_t> & axis, const char chr, const RGB565 color)
+            const Vec3<real_t> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            const Vector3<real_t> end = rot.xform(axis);
-            const Vector2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
+            const Vec3<real_t> end = rot.xform(axis);
+            const Vec2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
                 res.is_err()) return res;
@@ -146,7 +146,7 @@ class Plotter{
         };
 
         const auto guard = painter_.create_color_guard();
-        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vector2u{WINDOW_LENGTH, WINDOW_LENGTH}});
+        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vec2u{WINDOW_LENGTH, WINDOW_LENGTH}});
             res.is_err()) return res;
         if(const auto res = plot_vec3_to_plane(x_axis, 'X', X_COLOR);
             res.is_err()) return res;
@@ -245,7 +245,7 @@ void smc2025_main(){
     
         [[maybe_unused]]const auto t = clock::time();
         const auto pose = Pose2{
-            Vector2<real_t>(0, -1.5_r) + Vector2<real_t>(-1.9_r, 0)
+            Vec2<real_t>(0, -1.5_r) + Vec2<real_t>(-1.9_r, 0)
             .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
@@ -309,7 +309,7 @@ void smc2025_main(){
         // test_paint();
         // qmc.update().examine();
         // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        // painter.draw_pixel(Vector2u(0, 0));
+        // painter.draw_pixel(Vec2u(0, 0));
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
     }

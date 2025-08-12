@@ -16,8 +16,8 @@ struct EtkToken:public Reg8<>{
     uint8_t up:1;
     uint8_t :4;
 
-    operator Vector2i() const {
-        return Vector2i{
+    operator Vec2i() const {
+        return Vec2i{
             int(right) - int(left),
             int(up) - int(down)
         };

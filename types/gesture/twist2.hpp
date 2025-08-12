@@ -6,7 +6,7 @@ namespace ymd{
 
 template<typename T>
 class Twist2 final{
-    Vector2<T> linear;
+    Vec2<T> linear;
     T angular;
 };
 

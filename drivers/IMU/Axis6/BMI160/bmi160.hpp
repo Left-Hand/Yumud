@@ -28,8 +28,8 @@ public:
 
     [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pmu);
 
-    [[nodiscard]] IResult<Vector3<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
 
 private:
     using  Regs = BMI160_Regs;

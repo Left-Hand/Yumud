@@ -17,13 +17,13 @@
 
 #include "types/gesture/pose2.hpp"
 
-// static constexpr Vector2u CAMERA_SIZE = {94/2, 60/2};
-// static constexpr Vector2u CAMERA_SIZE = {94, 60};
-static constexpr Vector2u CAMERA_SIZE = {94 * 3 / 2, 60 * 3 / 2};
-// static constexpr Vector2u CAMERA_SIZE = {188, 120};
-// static constexpr Vector2u CAMERA_SIZE = {120, 80};
-// static constexpr Vector2u CAMERA_SIZE = {120, 80};
-static constexpr Vector2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
+// static constexpr Vec2u CAMERA_SIZE = {94/2, 60/2};
+// static constexpr Vec2u CAMERA_SIZE = {94, 60};
+static constexpr Vec2u CAMERA_SIZE = {94 * 3 / 2, 60 * 3 / 2};
+// static constexpr Vec2u CAMERA_SIZE = {188, 120};
+// static constexpr Vec2u CAMERA_SIZE = {120, 80};
+// static constexpr Vec2u CAMERA_SIZE = {120, 80};
+static constexpr Vec2u HALF_CAMERA_SIZE = CAMERA_SIZE / 2;
 static constexpr uint8_t WHITE_COLOR = 0x9f;
 
 
@@ -44,7 +44,7 @@ namespace ymd::smc::sim{
 using BoundingBox = Rect2<q16>;
 
 struct Placement{
-    Vector2<q16> position;
+    Vec2<q16> position;
 };
 
 
@@ -78,11 +78,11 @@ struct SpotLight final{
     struct Cache{
         q16 squ_radius;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
-        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<q16> offset){
+        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vec2<q16> offset){
             const auto len_squ = offset.length_squared();
             // const auto temp = MAX(9 * len_squ, 1);
             // return uint8_t(130 / temp);
@@ -115,12 +115,12 @@ struct RotatedZebraRect{
         q16 s;
         q16 c;
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<q16> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
         __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vector2<q16> offset){
+            const Cache & self, const Vec2<q16> offset){
             // -s * p.x + c * p.y;
             // -c * p.x - s * p.y;
             const auto x_offset = - self.c * offset.x - self.s * offset.y;
@@ -148,8 +148,8 @@ struct RotatedZebraRect{
     }
 
     constexpr BoundingBox to_bounding_box() const {
-        const auto rot = Vector2<q16>::from_idenity_rotation(rotation);
-        const std::array<Vector2<q16>, 4> points = {
+        const auto rot = Vec2<q16>::from_idenity_rotation(rotation);
+        const std::array<Vec2<q16>, 4> points = {
             get_raw_point<0>().improduct(rot),
             get_raw_point<1>().improduct(rot),
             get_raw_point<2>().improduct(rot),
@@ -161,7 +161,7 @@ struct RotatedZebraRect{
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vector2<q16> get_raw_point() const {
+    constexpr Vec2<q16> get_raw_point() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -174,43 +174,43 @@ struct RotatedZebraRect{
 
 
 //将相机像素转换为地面坐标
-static constexpr Vector2<q16> project_pixel_to_ground(
-    const Vector2u pixel, 
+static constexpr Vec2<q16> project_pixel_to_ground(
+    const Vec2u pixel, 
     const Pose2<q16> pose, 
     const q16 zoom
 ) {
-    const Vector2i pixel_offset = {
+    const Vec2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vector2<q16> camera_offset = Vector2<q16>(pixel_offset) * zoom;
+    const Vec2<q16> camera_offset = Vec2<q16>(pixel_offset) * zoom;
     const auto rot = pose.orientation - q16(PI/2);
     return pose.position + camera_offset.rotated(rot);
 }
 
 
-static constexpr Vector2u project_ground_to_pixel(
-    const Vector2<q16>& ground_pos,
+static constexpr Vec2u project_ground_to_pixel(
+    const Vec2<q16>& ground_pos,
     const Pose2<q16> pose,
     const q16 zoom)
 {
     // 1. Remove pose position offset
-    const Vector2<q16> relative_pos = ground_pos - pose.position;
+    const Vec2<q16> relative_pos = ground_pos - pose.position;
     
     // 2. Calculate inverse rotation (original rotation was pose.orientation - PI/2)
     const auto [s, c] = sincos(-(pose.orientation - q16(PI/2)));
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
-    const Vector2<q16> unrotated = {
+    const Vec2<q16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y
     };
     
     // 4. Remove scaling and convert to pixel space
-    const Vector2<q16> pixel_offset = unrotated / zoom;
+    const Vec2<q16> pixel_offset = unrotated / zoom;
     
     // 5. Convert to camera coordinates and clamp to pixel grid
-    return Vector2u{
+    return Vec2u{
         static_cast<uint>(round(pixel_offset.x + HALF_CAMERA_SIZE.x)),
         static_cast<uint>(round(HALF_CAMERA_SIZE.y - pixel_offset.y))
     };
@@ -221,7 +221,7 @@ namespace details{
 
     struct ElementFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::none>
-        ::add_convention<MemIsCovered, bool(const Vector2<q16>) const>
+        ::add_convention<MemIsCovered, bool(const Vec2<q16>) const>
         ::build {};
 }
 
@@ -273,7 +273,7 @@ public:
 // private:
 //     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-//     bool color_from_point(const Vector2<q16> offset) const{
+//     bool color_from_point(const Vec2<q16> offset) const{
 //         for(const auto & element : elements_){
 //             if(element->color_from_point(offset)){
 //                 return true;
@@ -333,7 +333,7 @@ public:
             (apply_render(
                 ground_region.intersects(object.bounding_box.shift(object.placement.position)),
                 // true,
-                [&](const Vector2<q16> local_pos) { 
+                [&](const Vec2<q16> local_pos) { 
                     return object.cache.color_from_point(local_pos - object.placement.position); 
                 }), ...);
         }, objects_);

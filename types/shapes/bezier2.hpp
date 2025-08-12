@@ -7,22 +7,22 @@ namespace ymd{
 template <typename T>
 class Bezier2 {
 public:
-    Vector2<T> p0;  // 起始点
-    Vector2<T> p1;  // 控制点
-    Vector2<T> p2;  // 结束点
+    Vec2<T> p0;  // 起始点
+    Vec2<T> p1;  // 控制点
+    Vec2<T> p2;  // 结束点
 
 public:
     // 构造函数
     constexpr explicit Bezier2(
-        const Vector2<T>& _p0, 
-        const Vector2<T>& _p1, 
-        const Vector2<T>& _p2
+        const Vec2<T>& _p0, 
+        const Vec2<T>& _p1, 
+        const Vec2<T>& _p2
     )
         : p0(_p0), p1(_p1), p2(_p2) {}
 
 
     // 在t处计算曲线上的点 (t ∈ [0, 1])
-    constexpr Vector2<T> evaluate(T t) const {
+    constexpr Vec2<T> evaluate(T t) const {
         T oneMinusT = 1 - t;
         return oneMinusT * oneMinusT * p0 + 
                2 * oneMinusT * t * p1 + 
@@ -30,14 +30,14 @@ public:
     }
 
     // 计算t处的切线向量（一阶导数）
-    constexpr Vector2<T> tangent(T t) const {
+    constexpr Vec2<T> tangent(T t) const {
         return 2 * (1 - t) * (p1 - p0) + 2 * t * (p2 - p1);
     }
 
     // 计算t处的曲率
     constexpr T curvature(T t) const {
-        Vector2<T> d1 = tangent(t);
-        Vector2<T> d2 = 2 * (p2 - 2 * p1 + p0);  // 二阶导数
+        Vec2<T> d1 = tangent(t);
+        Vec2<T> d2 = 2 * (p2 - 2 * p1 + p0);  // 二阶导数
         
         T crossProduct = d1.x * d2.y - d1.y * d2.x;
         T d1Length = std::sqrt(d1.x * d1.x + d1.y * d1.y);
@@ -47,9 +47,9 @@ public:
 
     // 将曲线分割为两部分
     constexpr std::pair<Bezier2<T>, Bezier2<T>> split(T t) const {
-        Vector2<T> q0 = p0 + t * (p1 - p0);
-        Vector2<T> q1 = p1 + t * (p2 - p1);
-        Vector2<T> r = q0 + t * (q1 - q0);
+        Vec2<T> q0 = p0 + t * (p1 - p0);
+        Vec2<T> q1 = p1 + t * (p2 - p1);
+        Vec2<T> r = q0 + t * (q1 - q0);
 
         return {
             Bezier2<T>(p0, q0, r),  // 第一段曲线
@@ -62,11 +62,11 @@ public:
         if (samples < 2) samples = 2;
         
         T length = 0;
-        Vector2<T> prev = p0;
+        Vec2<T> prev = p0;
         
         for (size_t i = 1; i <= samples; ++i) {
             T t = static_cast<T>(i) / samples;
-            Vector2<T> current = evaluate(t);
+            Vec2<T> current = evaluate(t);
             length += (current - prev).length();
             prev = current;
         }
@@ -76,7 +76,7 @@ public:
 
     // 获取曲线的包围盒
     constexpr Rect2<T> bounding_box() const {
-        Vector2<T> min, max;
+        Vec2<T> min, max;
         min.x = std::min(std::min(p0.x, p1.x), p2.x);
         min.y = std::min(std::min(p0.y, p1.y), p2.y);
         max.x = std::max(std::max(p0.x, p1.x), p2.x);
@@ -87,7 +87,7 @@ public:
 
 
     // 检查点是否在曲线上（带容差）
-    constexpr bool is_oncurve(const Vector2<T> point, T tolerance) const {
+    constexpr bool is_oncurve(const Vec2<T> point, T tolerance) const {
         // 简单实现：检查点与曲线上最近点的距离
         // 更精确的实现可能需要解方程
         const size_t samples = 20;
@@ -101,7 +101,7 @@ public:
     }
 
     // 与 lerp 函数保持兼容
-    constexpr Vector2<T> lerp(T t) const {
+    constexpr Vec2<T> lerp(T t) const {
         return evaluate(t);
     }
 };

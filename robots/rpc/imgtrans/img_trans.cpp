@@ -23,7 +23,7 @@ void ImageTransmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data
     instance.write((const char *)(data_from), len);
 }
 
-void ImageTransmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const uint8_t index){
+void ImageTransmitter::transmit(const uint8_t *buf, const Vec2i &img_size, const uint8_t index){
     if(!enabled) return;
     size_t len = img_size.x * img_size.y;
     uint8_t block_total = len / mtu + bool(len % mtu);

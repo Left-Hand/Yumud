@@ -48,13 +48,13 @@ public:
     PositionCtrl(const PositionCtrl & other) = delete;
     PositionCtrl(PositionCtrl && other) = delete;
 
-    Vector2<q16> update(const Vector2<q16> & targ_pos, const Vector2<q16> & pos, const Vector2<q16> & spd);
+    Vec2<q16> update(const Vec2<q16> & targ_pos, const Vec2<q16> & pos, const Vec2<q16> & spd);
 };
 
 
 class FeedBacker{
 public:
-    virtual Vector2<q16> pos() = 0;
+    virtual Vec2<q16> pos() = 0;
     virtual real_t rad() = 0;
 };
 

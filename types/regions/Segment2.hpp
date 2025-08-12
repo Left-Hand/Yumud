@@ -8,26 +8,26 @@ namespace ymd{
 template<arithmetic T>
 struct Segment2{
 public:
-    Vector2<T> from;
-    Vector2<T> to;
+    Vec2<T> from;
+    Vec2<T> to;
 
 public:
     [[nodiscard]] constexpr Segment2(){;}
 
-    [[nodiscard]] constexpr Segment2(const Vector2<auto> & _from, const Vector2<auto> & _to): 
-            from(static_cast<Vector2<T>>(_from)), to(static_cast<Vector2<T>>(_to)){;}
+    [[nodiscard]] constexpr Segment2(const Vec2<auto> & _from, const Vec2<auto> & _to): 
+            from(static_cast<Vec2<T>>(_from)), to(static_cast<Vec2<T>>(_to)){;}
 
     template<arithmetic U = T>
     [[nodiscard]] constexpr Segment2(const std::tuple<U, U, U, U> & tup) : 
-            from((Vector2<T>(std::get<0>(tup), std::get<1>(tup)))),
-            to((Vector2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
+            from((Vec2<T>(std::get<0>(tup), std::get<1>(tup)))),
+            to((Vec2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
 
-    [[nodiscard]] __fast_inline constexpr const Vector2<T> & operator [](const size_t idx) const {
+    [[nodiscard]] __fast_inline constexpr const Vec2<T> & operator [](const size_t idx) const {
         if(idx > 2) HALT;
         return *(&from + idx);
     }
 
-    [[nodiscard]] __fast_inline constexpr Vector2<T> & operator [](const size_t idx){
+    [[nodiscard]] __fast_inline constexpr Vec2<T> & operator [](const size_t idx){
         if(idx > 2) HALT;
         return *(&from + idx);
     }
@@ -40,11 +40,11 @@ public:
         return (*this == other) == false; 
     }
 
-    [[nodiscard]] __fast_inline constexpr Vector2<T> get_center() const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> get_center() const{
         return (this->from + this->to)/2;
     }
 
-    [[nodiscard]] __fast_inline constexpr T distance_to(const Vector2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr T distance_to(const Vec2<T> & p) const{
         const auto diff1 = from - p;
         const auto diff2 = to - p;
         const auto diff3 = to - from;
@@ -58,11 +58,11 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & p) const{
         return is_equal_approx(distance_to(p), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr int sign(const Vector2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr int sign(const Vec2<T> & p) const{
         return sign((from - p).cross(to - p));
     }
 
@@ -74,7 +74,7 @@ public:
         return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr std::optional<Vector2<T>> intersection(const Segment2<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr std::optional<Vec2<T>> intersection(const Segment2<T> & other) const{
         if(this->parallel_with(other)) return std::nullopt;
         else if(this->operator==(other)) return std::nullopt;
         
@@ -90,7 +90,7 @@ public:
         return {this->d - other.d};
     }
 
-    [[nodiscard]] __fast_inline constexpr Vector2<T> diff() const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> diff() const{
         return to - from;
     }
 

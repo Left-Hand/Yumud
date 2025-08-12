@@ -82,8 +82,8 @@ protected:
     Pose2<q16> target_jny_;
     real_t target_rot_;
 
-    Vector2<q16> spd_;
-    Vector2<q16> last_pos_;
+    Vec2<q16> spd_;
+    Vec2<q16> last_pos_;
     
 
     void closeloop();
@@ -137,14 +137,14 @@ public:
     void straight(const real_t dist);
 
     //平移
-    void shift(const Vector2<q16> & diff);
+    void shift(const Vec2<q16> & diff);
 
     void follow(const Pose2<q16> & to);
 
     //旋转
     void spin(const real_t ang);
     void strict_spin(const real_t ang);
-    void strict_shift(const Vector2<q16> & offs);
+    void strict_shift(const Vec2<q16> & offs);
 
     // void wait(const real_t dur);
 

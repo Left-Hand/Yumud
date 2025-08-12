@@ -187,7 +187,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vector3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<q24>> read_mag();
 
     [[nodiscard]] IResult<bool> is_data_ready();
     [[nodiscard]] IResult<bool> is_data_overrun();
@@ -199,7 +199,7 @@ public:
 private:
     
     AsahiKaseiSensor_Phy phy_;
-    Option<Vector3<q24>> scale_ = None; 
+    Option<Vec3<q24>> scale_ = None; 
     
     [[nodiscard]] IResult<> selftest();
     [[nodiscard]] IResult<> blocking_update();
@@ -226,11 +226,11 @@ private:
         return phy_.read_burst(addr, pbuf.data(), pbuf.size());
     }
 
-    [[nodiscard]] IResult<Vector3<int8_t>> get_coeff();
+    [[nodiscard]] IResult<Vec3<int8_t>> get_coeff();
 
-    [[nodiscard]] static constexpr Vector3<q24> 
-    transform_coeff_into_scale(const Vector3<int8_t> coeff){
-        return Vector3<q24>(coeff) / 128 + Vector3<q24>(1, 1, 1); 
+    [[nodiscard]] static constexpr Vec3<q24> 
+    transform_coeff_into_scale(const Vec3<int8_t> coeff){
+        return Vec3<q24>(coeff) / 128 + Vec3<q24>(1, 1, 1); 
     }
     
 };

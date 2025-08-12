@@ -75,17 +75,17 @@ struct StartTracking{
 
 
 struct PerspectiveRectInfo{
-    // std::array<Vector2<uint8_t>, 4> points;
+    // std::array<Vec2<uint8_t>, 4> points;
     std::array<uint8_t, 8> data;
 };
 
 struct ErrPosition{
-    // std::array<Vector2<uint8_t>, 4> points;
+    // std::array<Vec2<uint8_t>, 4> points;
     bf16 x;
     bf16 y;
 
-    constexpr Vector2<real_t> to_vec2() const {
-        return Vector2<real_t>(real_t(x), real_t(y));
+    constexpr Vec2<real_t> to_vec2() const {
+        return Vec2<real_t>(real_t(x), real_t(y));
     }
 };
 

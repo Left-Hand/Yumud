@@ -6,6 +6,6 @@
 namespace ymd::drivers{
     class FlowSensorIntf{
     public:
-        virtual Vector2<real_t> get_position() = 0;
+        virtual Vec2<real_t> get_position() = 0;
     };
 }

@@ -22,8 +22,8 @@ struct AnnularSector final{
         const bool y_reached_top = contains_angle(T(PI/2));
         const bool y_reached_bottom = contains_angle(T(-PI/2));
 
-        const auto p1 = Vector2<T>::from_idenity_rotation(start_rad) * outer_radius;
-        const auto p2 = Vector2<T>::from_idenity_rotation(stop_rad) * outer_radius;
+        const auto p1 = Vec2<T>::from_idenity_rotation(start_rad) * outer_radius;
+        const auto p2 = Vec2<T>::from_idenity_rotation(stop_rad) * outer_radius;
 
         const auto x_min = x_reached_left ? (-outer_radius) : MIN(p1.x, p2.x);
         const auto x_max = x_reached_right ? (outer_radius) : MAX(p1.x, p2.x);
@@ -36,16 +36,16 @@ struct AnnularSector final{
     struct alignas(4) Cache{
         T squ_inner_radius;
         T squ_outer_radius;
-        Vector2<T> start_norm_vec;
-        Vector2<T> stop_norm_vec;
+        Vec2<T> start_norm_vec;
+        Vec2<T> stop_norm_vec;
         bool is_close;
 
 
-        __fast_inline constexpr uint8_t color_from_point(const Vector2<T> offset) const {
+        __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
             return s_color_from_point(*this, offset);
         }
     private:
-        static constexpr uint8_t s_color_from_point(const Cache & self, const Vector2<T> offset){
+        static constexpr uint8_t s_color_from_point(const Cache & self, const Vec2<T> offset){
             const auto len_squ = offset.length_squared();
 
             if (len_squ < self.squ_inner_radius || 
@@ -62,8 +62,8 @@ struct AnnularSector final{
     };
 
     constexpr auto to_cache() const {
-        const auto v1 = Vector2<T>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<T>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vec2<T>::from_idenity_rotation(start_rad);
+        const auto v2 = Vec2<T>::from_idenity_rotation(stop_rad);
         return Cache{
             .squ_inner_radius = square(inner_radius),
             .squ_outer_radius = square(outer_radius),
@@ -74,8 +74,8 @@ struct AnnularSector final{
     }
 
     constexpr auto to_bounding_box() const {
-        const auto v1 = Vector2<T>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<T>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vec2<T>::from_idenity_rotation(start_rad);
+        const auto v2 = Vec2<T>::from_idenity_rotation(stop_rad);
         const bool is_close = v2.is_count_clockwise_to(v1);
         Rect2<T> bb = Rect2<T>::from_minimal_bounding_box({
             v1 * inner_radius,
@@ -95,14 +95,14 @@ struct AnnularSector final{
     __fast_inline constexpr bool has_radian(
         const T radian)
     const {
-        return has_radian(Vector2<T>::from_idenity_rotation(radian));
+        return has_radian(Vec2<T>::from_idenity_rotation(radian));
     }
 
     __fast_inline constexpr bool has_radian(
-        const Vector2<T> offset)
+        const Vec2<T> offset)
     const {
-        const auto v1 = Vector2<T>::from_idenity_rotation(start_rad);
-        const auto v2 = Vector2<T>::from_idenity_rotation(stop_rad);
+        const auto v1 = Vec2<T>::from_idenity_rotation(start_rad);
+        const auto v2 = Vec2<T>::from_idenity_rotation(stop_rad);
         return BoundingBoxMergeHelper::has_radian(
             offset,
             v1, v2, v2.is_count_clockwise_to(v1)
@@ -113,21 +113,21 @@ private:
     struct BoundingBoxMergeHelper{
         static constexpr bool has_radian(
             const T radian,
-            const Vector2<T> start_norm_vec,
-            const Vector2<T> stop_norm_vec,
+            const Vec2<T> start_norm_vec,
+            const Vec2<T> stop_norm_vec,
             const bool is_close
         ){
             return has_radian(
-                Vector2<T>::from_idenity_rotation(radian), 
+                Vec2<T>::from_idenity_rotation(radian), 
                 start_norm_vec, stop_norm_vec, 
                 is_close
             );
         }
 
         static constexpr bool has_radian(
-            const Vector2<T> offset,
-            const Vector2<T> start_norm_vec,
-            const Vector2<T> stop_norm_vec,
+            const Vec2<T> offset,
+            const Vec2<T> start_norm_vec,
+            const Vec2<T> stop_norm_vec,
             const bool is_close
         ){
             const auto b1 = offset.is_count_clockwise_to(start_norm_vec);
@@ -138,9 +138,9 @@ private:
 
         static constexpr void merge_if_has_radian(
             Rect2<T> & box,
-            const Vector2<T> offset,
-            const Vector2<T> start_norm_vec,
-            const Vector2<T> stop_norm_vec,
+            const Vec2<T> offset,
+            const Vec2<T> start_norm_vec,
+            const Vec2<T> stop_norm_vec,
             const bool is_close
         ){
             if(has_radian(offset, start_norm_vec, stop_norm_vec, is_close)){

@@ -8,7 +8,7 @@
 
 namespace ymd::intp{
 // class Mapping{
-//     // virtual real_t mapping(const Vector2 & from,const Vector2 & to, const real_t x) = 0;
+//     // virtual real_t mapping(const Vec2 & from,const Vec2 & to, const real_t x) = 0;
 // };
 
 // class Gradient:public Mapping{

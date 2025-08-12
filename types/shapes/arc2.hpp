@@ -9,12 +9,12 @@ namespace ymd{
 template<arithmetic T>
 struct Arc2{
 public:
-	Vector2<T> center;
+	Vec2<T> center;
 	T radius;
 	Range2<T> angle_range;
 public:
 	__fast_inline constexpr Arc2(
-		const Vector2<T> & _org, 
+		const Vec2<T> & _org, 
 		const T & _r, 
 		const Range2<T> _range
 	):

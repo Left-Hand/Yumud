@@ -5,7 +5,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = SSD13XX::Error;
-using Vector2u16 = Vector2<uint16_t>;
+using Vec2u16 = Vec2<uint16_t>;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -74,14 +74,14 @@ IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
 
 template<typename T = void>
 using IResult = Result<T, Error>;
-IResult<> SSD13XX::set_offset(const Vector2u16 offset){
+IResult<> SSD13XX::set_offset(const Vec2u16 offset){
     if(const auto res = phy_.write_command(0xD3); res.is_err()) return res; 
     if(const auto res = phy_.write_command(offset.y); res.is_err()) return res;
     return Ok();
 }
 
 
-IResult<> SSD13XX::set_flush_pos(const Vector2u16 pos){
+IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
     const auto [x, y] = pos + offset_;
     if(const auto res = phy_.write_command(0xb0 | size_t(y / 8));
         res.is_err()) return res;
@@ -131,7 +131,7 @@ IResult<> SSD13XX::enable_display(const Enable en){
 IResult<> SSD13XX::update(){
     auto & frame = fetch_frame();
     for(size_t y = 0; y < size().y; y += 8){
-        if(const auto res = set_flush_pos(Vector2u16(0, y)); 
+        if(const auto res = set_flush_pos(Vec2u16(0, y)); 
             res.is_err()) return res;
 
         const auto line = std::span<const uint8_t>(

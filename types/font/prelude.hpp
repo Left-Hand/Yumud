@@ -18,10 +18,10 @@ enum class TextBaseline:uint8_t{
 };
 
 struct CornerRadii final{
-    Vector2<uint8_t> top_left;
-    Vector2<uint8_t> top_right;
-    Vector2<uint8_t> bottom_right;
-    Vector2<uint8_t> bottom_left;
+    Vec2<uint8_t> top_left;
+    Vec2<uint8_t> top_right;
+    Vec2<uint8_t> bottom_right;
+    Vec2<uint8_t> bottom_left;
 };
 
 struct RoundedRectangle final{

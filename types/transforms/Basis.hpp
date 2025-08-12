@@ -40,20 +40,20 @@ template <arithmetic T>
 class Basis {
 public:
     
-	Vector3<T> x, y, z;
+	Vec3<T> x, y, z;
 
-	__fast_inline constexpr const Vector3<T> & operator[](size_t axis) const {
+	__fast_inline constexpr const Vec3<T> & operator[](size_t axis) const {
 		return (&x)[axis];
 	}
-	__fast_inline constexpr Vector3<T> & operator[](size_t axis) {
+	__fast_inline constexpr Vec3<T> & operator[](size_t axis) {
 		return (&x)[axis];
 	}
 
 	consteval size_t size() const {return 3;}
-	__fast_inline constexpr Vector3<T> * begin(){return (&x);}
-	__fast_inline constexpr const Vector3<T> * begin() const {return (&x);}
-	__fast_inline constexpr Vector3<T> * end(){return (&x) + size();}
-	__fast_inline constexpr const Vector3<T> * end() const {return (&x) + size();}
+	__fast_inline constexpr Vec3<T> * begin(){return (&x);}
+	__fast_inline constexpr const Vec3<T> * begin() const {return (&x);}
+	__fast_inline constexpr Vec3<T> * end(){return (&x) + size();}
+	__fast_inline constexpr const Vec3<T> * end() const {return (&x) + size();}
 
 	void invert();
 	void transpose();
@@ -63,20 +63,20 @@ public:
 
 	inline T determinant() const;
 
-	void from_z(const Vector3<T>&p_z);
+	void from_z(const Vec3<T>&p_z);
 
-	inline Vector3<T>get_axis(size_t p_axis) const {
+	inline Vec3<T>get_axis(size_t p_axis) const {
 		// get actual Basis<T> axis ((*this) is transposed for performance)
-		return Vector3<T>((*this)[0][p_axis], (*this)[1][p_axis], (*this)[2][p_axis]);
+		return Vec3<T>((*this)[0][p_axis], (*this)[1][p_axis], (*this)[2][p_axis]);
 	}
-	inline void set_axis(size_t p_axis, const Vector3<T>&p_value) {
+	inline void set_axis(size_t p_axis, const Vec3<T>&p_value) {
 		// get actual Basis<T> axis ((*this) is transposed for performance)
 		(*this)[0][p_axis] = p_value.x;
 		(*this)[1][p_axis] = p_value.y;
 		(*this)[2][p_axis] = p_value.z;
 	}
 
-	void rotate(const Vector3<T>&p_axis, T p_phi);
+	void rotate(const Vec3<T>&p_axis, T p_phi);
 
 	// Multiplies the matrix from left by the rotation matrix: M -> R.M
 	// Note that this does *not* rotate the matrix itself.
@@ -84,76 +84,76 @@ public:
 	// The main use of Basis<T> is as Transform.Basis<T>, which is used a the transformation matrix
 	// of 3D object. Rotate here refers to rotation of the object (which is R * ((*this))),
 	// not the matrix itself (which is R * ((*this)) * R.transposed()).
-	Basis<T> rotated(const Vector3<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
-		return Basis<T>(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi)) * ((*this));
+	Basis<T> rotated(const Vec3<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
+		return Basis<T>(static_cast<Vec3<T>>(p_axis), static_cast<T>(p_phi)) * ((*this));
 	}
 
-	void rotate_local(const Vector3<T>&p_axis, T p_phi);
-	Basis<T> rotated_local(const Vector3<T>&p_axis, T p_phi) const;
+	void rotate_local(const Vec3<T>&p_axis, T p_phi);
+	Basis<T> rotated_local(const Vec3<T>&p_axis, T p_phi) const;
 
-	void rotate(const Vector3<T>&p_euler);
-	Basis<T> rotated(const Vector3<T>&p_euler) const;
+	void rotate(const Vec3<T>&p_euler);
+	Basis<T> rotated(const Vec3<T>&p_euler) const;
 
 	void rotate(const Quat<T> &p_quat);
 	Basis<T> rotated(const Quat<T> &p_quat) const;
 
-	Vector3<T>get_rotation_euler() const;
-	void get_rotation_axis_angle(Vector3<T>&p_axis, T &p_angle) const;
-	void get_rotation_axis_angle_local(Vector3<T>&p_axis, T &p_angle) const;
+	Vec3<T>get_rotation_euler() const;
+	void get_rotation_axis_angle(Vec3<T>&p_axis, T &p_angle) const;
+	void get_rotation_axis_angle_local(Vec3<T>&p_axis, T &p_angle) const;
 	Quat<T> get_rotation_quat() const;
-	Vector3<T>get_rotation() const { return get_rotation_euler(); };
+	Vec3<T>get_rotation() const { return get_rotation_euler(); };
 
-	Vector3<T>rotref_posscale_decomposition(Basis<T> &rotref) const;
+	Vec3<T>rotref_posscale_decomposition(Basis<T> &rotref) const;
 
-	Vector3<T>get_euler_xyz() const;
-	void set_euler_xyz(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_xyz() const;
+	void set_euler_xyz(const Vec3<T>&p_euler);
 
-	Vector3<T>get_euler_xzy() const;
-	void set_euler_xzy(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_xzy() const;
+	void set_euler_xzy(const Vec3<T>&p_euler);
 
-	Vector3<T>get_euler_yzx() const;
-	void set_euler_yzx(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_yzx() const;
+	void set_euler_yzx(const Vec3<T>&p_euler);
 
-	Vector3<T>get_euler_yxz() const;
-	void set_euler_yxz(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_yxz() const;
+	void set_euler_yxz(const Vec3<T>&p_euler);
 
-	Vector3<T>get_euler_zxy() const;
-	void set_euler_zxy(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_zxy() const;
+	void set_euler_zxy(const Vec3<T>&p_euler);
 
-	Vector3<T>get_euler_zyx() const;
-	void set_euler_zyx(const Vector3<T>&p_euler);
+	Vec3<T>get_euler_zyx() const;
+	void set_euler_zyx(const Vec3<T>&p_euler);
 
 	Quat<T> get_quat() const;
 	void set_quat(const Quat<T> &p_quat);
 
-	Vector3<T>get_euler() const { return get_euler_yxz(); }
-	void set_euler(const Vector3<T>&p_euler) { set_euler_yxz(p_euler); }
+	Vec3<T>get_euler() const { return get_euler_yxz(); }
+	void set_euler(const Vec3<T>&p_euler) { set_euler_yxz(p_euler); }
 
-	void get_axis_angle(Vector3<T>&r_axis, T &r_angle) const;
-	void set_axis_angle(const Vector3<T>&p_axis, T p_phi);
+	void get_axis_angle(Vec3<T>&r_axis, T &r_angle) const;
+	void set_axis_angle(const Vec3<T>&p_axis, T p_phi);
 
-	void scale(const Vector3<T>&p_scale);
-	Basis<T> scaled(const Vector3<T>&p_scale) const;
+	void scale(const Vec3<T>&p_scale);
+	Basis<T> scaled(const Vec3<T>&p_scale) const;
 
-	void scale_local(const Vector3<T>&p_scale);
-	Basis<T> scaled_local(const Vector3<T>&p_scale) const;
+	void scale_local(const Vec3<T>&p_scale);
+	Basis<T> scaled_local(const Vec3<T>&p_scale) const;
 
-	Vector3<T>get_scale() const;
-	Vector3<T>get_scale_abs() const;
-	Vector3<T>get_scale_local() const;
+	Vec3<T>get_scale() const;
+	Vec3<T>get_scale_abs() const;
+	Vec3<T>get_scale_local() const;
 
-	void set_axis_angle_scale(const Vector3<T>&p_axis, T p_phi, const Vector3<T>&p_scale);
-	void set_euler_scale(const Vector3<T>&p_euler, const Vector3<T>&p_scale);
-	void set_quat_scale(const Quat<T> &p_quat, const Vector3<T>&p_scale);
+	void set_axis_angle_scale(const Vec3<T>&p_axis, T p_phi, const Vec3<T>&p_scale);
+	void set_euler_scale(const Vec3<T>&p_euler, const Vec3<T>&p_scale);
+	void set_quat_scale(const Quat<T> &p_quat, const Vec3<T>&p_scale);
 
 	// transposed dot products
-	inline T tdotx(const Vector3<T>&v) const {
+	inline T tdotx(const Vec3<T>&v) const {
 		return (*this)[0][0] * v[0] + (*this)[1][0] * v[1] + (*this)[2][0] * v[2];
 	}
-	inline T tdoty(const Vector3<T>&v) const {
+	inline T tdoty(const Vec3<T>&v) const {
 		return (*this)[0][1] * v[0] + (*this)[1][1] * v[1] + (*this)[2][1] * v[2];
 	}
-	inline T tdotz(const Vector3<T>&v) const {
+	inline T tdotz(const Vec3<T>&v) const {
 		return (*this)[0][2] * v[0] + (*this)[1][2] * v[1] + (*this)[2][2] * v[2];
 	}
 
@@ -165,8 +165,8 @@ public:
 	bool operator==(const Basis<T> &p_matrix) const;
 	bool operator!=(const Basis<T> &p_matrix) const;
 
-	inline Vector3<T>xform(const Vector3<T>&p_vector) const;
-	inline Vector3<T>xform_inv(const Vector3<T>&p_vector) const;
+	inline Vec3<T>xform(const Vec3<T>&p_vector) const;
+	inline Vec3<T>xform_inv(const Vec3<T>&p_vector) const;
 	inline void operator*=(const Basis<T> &p_matrix);
 	inline Basis<T> operator*(const Basis<T> &p_matrix) const;
 	inline void operator+=(const Basis<T> &p_matrix);
@@ -179,7 +179,7 @@ public:
 	size_t get_orthogonal_index() const;
 	void set_orthogonal_index(size_t p_index);
 
-	void set_diagonal(const Vector3<T>&p_diag);
+	void set_diagonal(const Vec3<T>&p_diag);
 
 	bool is_orthogonal() const;
 	bool is_diagonal() const;
@@ -200,23 +200,23 @@ public:
 		(*this)[2][1] = zy;
 		(*this)[2][2] = zz;
 	}
-	inline void set(const Vector3<T>&p_x, const Vector3<T>&p_y, const Vector3<T>&p_z) {
+	inline void set(const Vec3<T>&p_x, const Vec3<T>&p_y, const Vec3<T>&p_z) {
 		set_axis(0, p_x);
 		set_axis(1, p_y);
 		set_axis(2, p_z);
 	}
-	inline Vector3<T>get_column(size_t i) const {
-		return Vector3<T>((*this)[0][i], (*this)[1][i], (*this)[2][i]);
+	inline Vec3<T>get_column(size_t i) const {
+		return Vec3<T>((*this)[0][i], (*this)[1][i], (*this)[2][i]);
 	}
 
-	inline Vector3<T>get_row(size_t i) const {
-		return Vector3<T>((*this)[i][0], (*this)[i][1], (*this)[i][2]);
+	inline Vec3<T>get_row(size_t i) const {
+		return Vec3<T>((*this)[i][0], (*this)[i][1], (*this)[i][2]);
 	}
-	inline Vector3<T>get_main_diagonal() const {
-		return Vector3<T>((*this)[0][0], (*this)[1][1], (*this)[2][2]);
+	inline Vec3<T>get_main_diagonal() const {
+		return Vec3<T>((*this)[0][0], (*this)[1][1], (*this)[2][2]);
 	}
 
-	inline void set_row(size_t i, const Vector3<T>&p_row) {
+	inline void set_row(size_t i, const Vec3<T>&p_row) {
 		(*this)[i][0] = p_row.x;
 		(*this)[i][1] = p_row.y;
 		(*this)[i][2] = p_row.z;
@@ -250,34 +250,34 @@ public:
 	operator Quat<T>() const { return get_quat(); }
 
 	Basis(const Quat<auto> &p_quat) { set_quat(p_quat); };
-	Basis(const Quat<auto> &p_quat, const Vector3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+	Basis(const Quat<auto> &p_quat, const Vec3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	Basis(const Vector3<auto>&p_euler) { 
+	Basis(const Vec3<auto>&p_euler) { 
 		set_euler(static_cast<T>(p_euler)); }
-	Basis(const Vector3<auto>&p_euler, const Vector3<T>&p_scale){ 
+	Basis(const Vec3<auto>&p_euler, const Vec3<T>&p_scale){ 
 		set_euler_scale(static_cast<T>(p_euler), static_cast<T>(p_scale)); }
 
-	Basis(const Vector3<auto>&p_axis, arithmetic auto p_phi) { 
-		set_axis_angle(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi)); }
+	Basis(const Vec3<auto>&p_axis, arithmetic auto p_phi) { 
+		set_axis_angle(static_cast<Vec3<T>>(p_axis), static_cast<T>(p_phi)); }
 
-	Basis(const Vector3<auto>&p_axis, arithmetic auto p_phi, const Vector3<auto>&p_scale) { 
-		set_axis_angle_scale(static_cast<Vector3<T>>(p_axis), static_cast<T>(p_phi), static_cast<T>(p_scale));}
+	Basis(const Vec3<auto>&p_axis, arithmetic auto p_phi, const Vec3<auto>&p_scale) { 
+		set_axis_angle_scale(static_cast<Vec3<T>>(p_axis), static_cast<T>(p_phi), static_cast<T>(p_scale));}
 
 	__fast_inline constexpr Basis<T>():
-		x(Vector3<T>(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0))),
-		y(Vector3<T>(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0))),
-		z(Vector3<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)))
+		x(Vec3<T>(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0))),
+		y(Vec3<T>(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0))),
+		z(Vec3<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)))
 	{}
 
 	template<arithmetic U = T>
 	__fast_inline constexpr Basis<T>(const U xx, const U xy,const U xz,const U yx,const U yy,const U yz,const U zx,const U zy,const U zz):
-		x(Vector3<T>(static_cast<T>(xx), static_cast<T>(xy), static_cast<T>(xz))),
-		y(Vector3<T>(static_cast<T>(yx), static_cast<T>(yy), static_cast<T>(yz))),
-		z(Vector3<T>(static_cast<T>(zx), static_cast<T>(zy), static_cast<T>(zz)))
+		x(Vec3<T>(static_cast<T>(xx), static_cast<T>(xy), static_cast<T>(xz))),
+		y(Vec3<T>(static_cast<T>(yx), static_cast<T>(yy), static_cast<T>(yz))),
+		z(Vec3<T>(static_cast<T>(zx), static_cast<T>(zy), static_cast<T>(zz)))
 	{}
 
 	template<arithmetic U = T>
-	__fast_inline constexpr  Basis<T>(const Vector3<U>&row0, const Vector3<U>&row1, const Vector3<U>&row2):
+	__fast_inline constexpr  Basis<T>(const Vec3<U>&row0, const Vec3<U>&row1, const Vec3<U>&row2):
 		x(row0),
 		y(row1),
 		z(row2)
@@ -336,15 +336,15 @@ inline Basis<T> Basis<T>::operator*(T p_val) const {
 	return ret;
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::xform(const Vector3<T>&p_vector) const {
-	return Vector3<T>(
+Vec3<T> Basis<T>::xform(const Vec3<T>&p_vector) const {
+	return Vec3<T>(
 			(*this)[0].dot(p_vector),
 			(*this)[1].dot(p_vector),
 			(*this)[2].dot(p_vector));
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::xform_inv(const Vector3<T>&p_vector) const {
-	return Vector3<T>(
+Vec3<T> Basis<T>::xform_inv(const Vec3<T>&p_vector) const {
+	return Vec3<T>(
 			((*this)[0][0] * p_vector.x) + ((*this)[1][0] * p_vector.y) + ((*this)[2][0] * p_vector.z),
 			((*this)[0][1] * p_vector.x) + ((*this)[1][1] * p_vector.y) + ((*this)[2][1] * p_vector.z),
 			((*this)[0][2] * p_vector.x) + ((*this)[1][2] * p_vector.y) + ((*this)[2][2] * p_vector.z));
@@ -376,19 +376,19 @@ namespace ymd{
 
 
 template<arithmetic T>
-void Basis<T>::from_z(const Vector3<T> &p_z) {
+void Basis<T>::from_z(const Vec3<T> &p_z) {
 	if (fabs(p_z.z) > SQRT12) {
 		// choose p in y-z plane
 		T a = p_z[1] * p_z[1] + p_z[2] * p_z[2];
 		T k = 1 / sqrtf(a);
-		(*this)[0] = Vector3<T>(0, -p_z[2] * k, p_z[1] * k);
-		(*this)[1] = Vector3<T>(a * k, -p_z[0] * (*this)[0][2], p_z[0] * (*this)[0][1]);
+		(*this)[0] = Vec3<T>(0, -p_z[2] * k, p_z[1] * k);
+		(*this)[1] = Vec3<T>(a * k, -p_z[0] * (*this)[0][2], p_z[0] * (*this)[0][1]);
 	} else {
 		// choose p in x-y plane
 		T a = p_z.x * p_z.x + p_z.y * p_z.y;
 		T k = 1 / sqrtf(a);
-		(*this)[0] = Vector3<T>(-p_z.y * k, p_z.x * k, 0);
-		(*this)[1] = Vector3<T>(-p_z.z * (*this)[0].y, p_z.z * (*this)[0].x, a * k);
+		(*this)[0] = Vec3<T>(-p_z.y * k, p_z.x * k, 0);
+		(*this)[1] = Vec3<T>(-p_z.z * (*this)[0].y, p_z.z * (*this)[0].x, a * k);
 	}
 	(*this)[2] = p_z;
 }
@@ -410,9 +410,9 @@ template<arithmetic T>
 void Basis<T>::orthonormalize() {
 	// Gram-Schmidt Process
 
-	Vector3<T> _x = get_axis(0);
-	Vector3<T> _y = get_axis(1);
-	Vector3<T> _z = get_axis(2);
+	Vec3<T> _x = get_axis(0);
+	Vec3<T> _y = get_axis(1);
+	Vec3<T> _z = get_axis(2);
 
 	_x.normalize();
 	_y = (_y - _x * (_x.dot(_y)));
@@ -542,7 +542,7 @@ Basis<T> Basis<T>::transposed() const {
 // Multiplies the matrix from left by the scaling matrix: M -> S.M
 // See the comment for Basis<T>::rotated for further explanation.
 template<arithmetic T>
-void Basis<T>::scale(const Vector3<T> &p_scale) {
+void Basis<T>::scale(const Vec3<T> &p_scale) {
 	(*this)[0][0] *= p_scale.x;
 	(*this)[0][1] *= p_scale.x;
 	(*this)[0][2] *= p_scale.x;
@@ -554,40 +554,40 @@ void Basis<T>::scale(const Vector3<T> &p_scale) {
 	(*this)[2][2] *= p_scale.z;
 }
 template<arithmetic T>
-Basis<T> Basis<T>::scaled(const Vector3<T> &p_scale) const {
+Basis<T> Basis<T>::scaled(const Vec3<T> &p_scale) const {
 	Basis<T> m = (*this);
 	m.scale(p_scale);
 	return m;
 }
 template<arithmetic T>
-void Basis<T>::scale_local(const Vector3<T> &p_scale) {
+void Basis<T>::scale_local(const Vec3<T> &p_scale) {
 	// performs a scaling in object-local coordinate system:
 	// M -> (M.S.Minv).M = M.S.
 	(*this) = scaled_local(p_scale);
 }
 template<arithmetic T>
-Basis<T> Basis<T>::scaled_local(const Vector3<T> &p_scale) const {
+Basis<T> Basis<T>::scaled_local(const Vec3<T> &p_scale) const {
 	Basis<T> b;
 	b.set_diagonal(p_scale);
 
 	return ((*this)) * b;
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_scale_abs() const {
-	return Vector3<T>(
-			Vector3<T>((*this)[0][0], (*this)[1][0], (*this)[2][0]).length(),
-			Vector3<T>((*this)[0][1], (*this)[1][1], (*this)[2][1]).length(),
-			Vector3<T>((*this)[0][2], (*this)[1][2], (*this)[2][2]).length());
+Vec3<T> Basis<T>::get_scale_abs() const {
+	return Vec3<T>(
+			Vec3<T>((*this)[0][0], (*this)[1][0], (*this)[2][0]).length(),
+			Vec3<T>((*this)[0][1], (*this)[1][1], (*this)[2][1]).length(),
+			Vec3<T>((*this)[0][2], (*this)[1][2], (*this)[2][2]).length());
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_scale_local() const {
+Vec3<T> Basis<T>::get_scale_local() const {
 	T det_sign = SGN(determinant());
-	return Vector3<T>((*this)[0].length(), (*this)[1].length(), (*this)[2].length()) * det_sign;
+	return Vec3<T>((*this)[0].length(), (*this)[1].length(), (*this)[2].length()) * det_sign;
 }
 
 // get_scale works with get_rotation, use get_scale_abs if you need to enforce positive signature.
 template<arithmetic T>
-Vector3<T> Basis<T>::get_scale() const {
+Vec3<T> Basis<T>::get_scale() const {
 	// FIXME: We are assuming M = R.S (R is rotation and S is scaling), and use polar decomposition to extract R and S.
 	// A polar decomposition is M = O.P, where O is an orthogonal matrix (meaning rotation and reflection) and
 	// P is a positive semi-definite matrix (meaning it contains absolute values of scaling along its diagonal).
@@ -613,22 +613,22 @@ Vector3<T> Basis<T>::get_scale() const {
 }
 
 // Decomposes a Basis<T> into a rotation-reflection matrix (an element of the group O(3)) and a positive scaling matrix as B = O.S.
-// Returns the rotation-reflection matrix via reference argument, and scaling information is returned as a Vector3<T>.
+// Returns the rotation-reflection matrix via reference argument, and scaling information is returned as a Vec3<T>.
 // This (internal) function is too specific and named too ugly to expose to users, and probably there's no need to do so.
 template<arithmetic T>
-Vector3<T> Basis<T>::rotref_posscale_decomposition(Basis<T> &rotref) const {
+Vec3<T> Basis<T>::rotref_posscale_decomposition(Basis<T> &rotref) const {
 #ifdef MATH_CHECKS
-	ERR_FAIL_COND_V(determinant() == 0, Vector3<T>());
+	ERR_FAIL_COND_V(determinant() == 0, Vec3<T>());
 
 	Basis<T> m = transposed() * ((*this));
-	ERR_FAIL_COND_V(!m.is_diagonal(), Vector3<T>());
+	ERR_FAIL_COND_V(!m.is_diagonal(), Vec3<T>());
 #endif
-	Vector3<T> scale = get_scale();
+	Vec3<T> scale = get_scale();
 	Basis<T> inv_scale = Basis<T>().scaled(scale.inverse()); // this will also absorb the sign of scale
 	rotref = ((*this)) * inv_scale;
 
 #ifdef MATH_CHECKS
-	ERR_FAIL_COND_V(!rotref.is_orthogonal(), Vector3<T>());
+	ERR_FAIL_COND_V(!rotref.is_orthogonal(), Vec3<T>());
 #endif
 	return scale.abs();
 }
@@ -636,25 +636,25 @@ Vector3<T> Basis<T>::rotref_posscale_decomposition(Basis<T> &rotref) const {
 
 
 template<arithmetic T>
-void Basis<T>::rotate(const Vector3<T> &p_axis, T p_phi) {
+void Basis<T>::rotate(const Vec3<T> &p_axis, T p_phi) {
 	(*this) = rotated(p_axis, p_phi);
 }
 template<arithmetic T>
-void Basis<T>::rotate_local(const Vector3<T> &p_axis, T p_phi) {
+void Basis<T>::rotate_local(const Vec3<T> &p_axis, T p_phi) {
 	// performs a rotation in object-local coordinate system:
 	// M -> (M.R.Minv).M = M.R.
 	(*this) = rotated_local(p_axis, p_phi);
 }
 template<arithmetic T>
-Basis<T> Basis<T>::rotated_local(const Vector3<T> &p_axis, T p_phi) const {
+Basis<T> Basis<T>::rotated_local(const Vec3<T> &p_axis, T p_phi) const {
 	return ((*this)) * Basis<T>(p_axis, p_phi);
 }
 template<arithmetic T>
-Basis<T> Basis<T>::rotated(const Vector3<T> &p_euler) const {
+Basis<T> Basis<T>::rotated(const Vec3<T> &p_euler) const {
 	return Basis<T>(p_euler) * ((*this));
 }
 template<arithmetic T>
-void Basis<T>::rotate(const Vector3<T> &p_euler) {
+void Basis<T>::rotate(const Vec3<T> &p_euler) {
 	(*this) = rotated(p_euler);
 }
 template<arithmetic T>
@@ -666,7 +666,7 @@ void Basis<T>::rotate(const Quat<T> &p_quat) {
 	(*this) = rotated(p_quat);
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_rotation_euler() const {
+Vec3<T> Basis<T>::get_rotation_euler() const {
 	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
 	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
 	// See the comment in get_scale() for further information.
@@ -674,7 +674,7 @@ Vector3<T> Basis<T>::get_rotation_euler() const {
 	T det = m.determinant();
 	if (det < 0) {
 		// Ensure that the determinant is 1, such that result is a proper rotation matrix which can be represented by Euler angles.
-		m.scale(Vector3<T>(-1, -1, -1));
+		m.scale(Vec3<T>(-1, -1, -1));
 	}
 
 	return m.get_euler();
@@ -688,13 +688,13 @@ Quat<T> Basis<T>::get_rotation_quat() const {
 	T det = m.determinant();
 	if (det < 0) {
 		// Ensure that the determinant is 1, such that result is a proper rotation matrix which can be represented by Euler angles.
-		m.scale(Vector3<T>(-1, -1, -1));
+		m.scale(Vec3<T>(-1, -1, -1));
 	}
 
 	return m.get_quat();
 }
 template<arithmetic T>
-void Basis<T>::get_rotation_axis_angle(Vector3<T> &p_axis, T &p_angle) const {
+void Basis<T>::get_rotation_axis_angle(Vec3<T> &p_axis, T &p_angle) const {
 	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
 	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
 	// See the comment in get_scale() for further information.
@@ -702,13 +702,13 @@ void Basis<T>::get_rotation_axis_angle(Vector3<T> &p_axis, T &p_angle) const {
 	T det = m.determinant();
 	if (det < 0) {
 		// Ensure that the determinant is 1, such that result is a proper rotation matrix which can be represented by Euler angles.
-		m.scale(Vector3<T>(-1, -1, -1));
+		m.scale(Vec3<T>(-1, -1, -1));
 	}
 
 	m.get_axis_angle(p_axis, p_angle);
 }
 template<arithmetic T>
-void Basis<T>::get_rotation_axis_angle_local(Vector3<T> &p_axis, T &p_angle) const {
+void Basis<T>::get_rotation_axis_angle_local(Vec3<T> &p_axis, T &p_angle) const {
 	// Assumes that the matrix can be decomposed into a proper rotation and scaling matrix as M = R.S,
 	// and returns the Euler angles corresponding to the rotation part, complementing get_scale().
 	// See the comment in get_scale() for further information.
@@ -717,7 +717,7 @@ void Basis<T>::get_rotation_axis_angle_local(Vector3<T> &p_axis, T &p_angle) con
 	T det = m.determinant();
 	if (det < 0) {
 		// Ensure that the determinant is 1, such that result is a proper rotation matrix which can be represented by Euler angles.
-		m.scale(Vector3<T>(-1, -1, -1));
+		m.scale(Vec3<T>(-1, -1, -1));
 	}
 
 	m.get_axis_angle(p_axis, p_angle);
@@ -735,7 +735,7 @@ void Basis<T>::get_rotation_axis_angle_local(Vector3<T> &p_axis, T &p_angle) con
 // the angles in the decomposition R = X(a1).Y(a2).Z(a3) where Z(a) rotates
 // around the z-axis by a and so on.
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_xyz() const {
+Vec3<T> Basis<T>::get_euler_xyz() const {
 	// Euler angles in XYZ convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
@@ -743,7 +743,7 @@ Vector3<T> Basis<T>::get_euler_xyz() const {
 	//        cz*sx*sy+cx*sz  cx*cz-sx*sy*sz -cy*sx
 	//       -cx*cz*sy+sx*sz  cz*sx+cx*sy*sz  cx*cy
 
-	Vector3<T> euler;
+	Vec3<T> euler;
 	T sy = (*this)[0][2];
 	if (sy < (T(1 - CMP_EPSILON))) {
 		if (sy > -(T(1 - CMP_EPSILON))) {
@@ -776,7 +776,7 @@ Vector3<T> Basis<T>::get_euler_xyz() const {
 // and similar for other axes.
 // The current implementation uses XYZ convention (Z is the first rotation).
 template<arithmetic T>
-void Basis<T>::set_euler_xyz(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_xyz(const Vec3<T> &p_euler) {
 
 	T c, s;
 
@@ -793,7 +793,7 @@ void Basis<T>::set_euler_xyz(const Vector3<T> &p_euler) {
 	(*this) = xmat * (ymat * zmat);
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_xzy() const {
+Vec3<T> Basis<T>::get_euler_xzy() const {
 	// Euler angles in XZY convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
@@ -801,7 +801,7 @@ Vector3<T> Basis<T>::get_euler_xzy() const {
 	//        sx*sy+cx*cy*sz    cx*cz           cx*sz*sy-cy*sx
 	//        cy*sx*sz          cz*sx           cx*cy+sx*sz*sy
 
-	Vector3<T> euler;
+	Vec3<T> euler;
 	T sz = (*this)[0][1];
 	if (sz < (1 - CMP_EPSILON)) {
 		if (sz > -(1 - CMP_EPSILON)) {
@@ -823,7 +823,7 @@ Vector3<T> Basis<T>::get_euler_xzy() const {
 	return euler;
 }
 template<arithmetic T>
-void Basis<T>::set_euler_xzy(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_xzy(const Vec3<T> &p_euler) {
 	T c, s;
 
 	std::tie(c,s) = sincos(p_euler.x);
@@ -837,7 +837,7 @@ void Basis<T>::set_euler_xzy(const Vector3<T> &p_euler) {
 	(*this) = xmat * zmat * ymat;
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_yzx() const {
+Vec3<T> Basis<T>::get_euler_yzx() const {
 	// Euler angles in YZX convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
@@ -845,7 +845,7 @@ Vector3<T> Basis<T>::get_euler_yzx() const {
 	//        sz                cz*cx              -cz*sx
 	//        -cz*sy            cy*sx+cx*sy*sz     cy*cx-sy*sz*sx
 
-	Vector3<T> euler;
+	Vec3<T> euler;
 	T sz = (*this)[1][0];
 	if (sz < (1 - CMP_EPSILON)) {
 		if (sz > -(1 - CMP_EPSILON)) {
@@ -867,7 +867,7 @@ Vector3<T> Basis<T>::get_euler_yzx() const {
 	return euler;
 }
 template<arithmetic T>
-void Basis<T>::set_euler_yzx(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_yzx(const Vec3<T> &p_euler) {
 	T c, s;
 
 	std::tie(c,s) = sincos(p_euler.x);
@@ -883,9 +883,9 @@ void Basis<T>::set_euler_yzx(const Vector3<T> &p_euler) {
 
 // get_euler_yxz returns a vector containing the Euler angles in the YXZ convention,
 // as in first-Z, then-X, last-Y. The angles for X, Y, and Z rotations are returned
-// as the x, y, and z components of a Vector3<T> respectively.
+// as the x, y, and z components of a Vec3<T> respectively.
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_yxz() const {
+Vec3<T> Basis<T>::get_euler_yxz() const {
 	// Euler angles in YXZ convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
@@ -893,7 +893,7 @@ Vector3<T> Basis<T>::get_euler_yxz() const {
 	//        cx*sz             cx*cz                 -sx
 	//        cy*sx*sz-cz*sy    cy*cz*sx+sy*sz        cy*cx
 
-	Vector3<T> euler;
+	Vec3<T> euler;
 
 	T m12 = (*this)[1][2];
 
@@ -929,7 +929,7 @@ Vector3<T> Basis<T>::get_euler_yxz() const {
 // and similar for other axes.
 // The current implementation uses YXZ convention (Z is the first rotation).
 template<arithmetic T>
-void Basis<T>::set_euler_yxz(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_yxz(const Vec3<T> &p_euler) {
 	T c, s;
 
 	std::tie(c,s) = sincos(p_euler.x);
@@ -945,14 +945,14 @@ void Basis<T>::set_euler_yxz(const Vector3<T> &p_euler) {
 	(*this) = ymat * xmat * zmat;
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_zxy() const {
+Vec3<T> Basis<T>::get_euler_zxy() const {
 	// Euler angles in ZXY convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
 	// rot =  cz*cy-sz*sx*sy    -cx*sz                cz*sy+cy*sz*sx
 	//        cy*sz+cz*sx*sy    cz*cx                 sz*sy-cz*cy*sx
 	//        -cx*sy            sx                    cx*cy
-	Vector3<T> euler;
+	Vec3<T> euler;
 	T sx = (*this)[2][1];
 	if (sx < (1 - CMP_EPSILON)) {
 		if (sx > -(1 - CMP_EPSILON)) {
@@ -974,7 +974,7 @@ Vector3<T> Basis<T>::get_euler_zxy() const {
 	return euler;
 }
 template<arithmetic T>
-void Basis<T>::set_euler_zxy(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_zxy(const Vec3<T> &p_euler) {
 	T c, s;
 
 	std::tie(c,s) = sincos(p_euler.x);
@@ -988,14 +988,14 @@ void Basis<T>::set_euler_zxy(const Vector3<T> &p_euler) {
 	(*this) = zmat * xmat * ymat;
 }
 template<arithmetic T>
-Vector3<T> Basis<T>::get_euler_zyx() const {
+Vec3<T> Basis<T>::get_euler_zyx() const {
 	// Euler angles in ZYX convention.
 	// See https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
 	//
 	// rot =  cz*cy             cz*sy*sx-cx*sz        sz*sx+cz*cx*cy
 	//        cy*sz             cz*cx+sz*sy*sx        cx*sz*sy-cz*sx
 	//        -sy               cy*sx                 cy*cx
-	Vector3<T> euler;
+	Vec3<T> euler;
 	T sy = (*this)[2][0];
 	if (sy < (1 - CMP_EPSILON)) {
 		if (sy > -(1 - CMP_EPSILON)) {
@@ -1017,7 +1017,7 @@ Vector3<T> Basis<T>::get_euler_zyx() const {
 	return euler;
 }
 template<arithmetic T>
-void Basis<T>::set_euler_zyx(const Vector3<T> &p_euler) {
+void Basis<T>::set_euler_zyx(const Vec3<T> &p_euler) {
 	T c, s;
 
 	c = cosf(p_euler.x);
@@ -1167,7 +1167,7 @@ void Basis<T>::set_orthogonal_index(size_t p_index) {
 }
 
 template<arithmetic T>
-void Basis<T>::get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
+void Basis<T>::get_axis_angle(Vec3<T> &r_axis, T &r_angle) const {
 	/* checking this is a bad idea, because obtaining from scaled transform is a valid use case
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND(!is_rotation());
@@ -1186,7 +1186,7 @@ void Basis<T>::get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
 		//  in leading diagonaland zero in other terms
 		if ((fabs((*this)[1][0] + (*this)[0][1]) < epsilon2) && (fabs((*this)[2][0] + (*this)[0][2]) < epsilon2) && (fabs((*this)[2][1] + (*this)[1][2]) < epsilon2) && (fabs((*this)[0][0] + (*this)[1][1] + (*this)[2][2] - 3) < epsilon2)) {
 			// this singularity is identity matrix so angle = 0
-			r_axis = Vector3<T>(0, 1, 0);
+			r_axis = Vec3<T>(0, 1, 0);
 			r_angle = 0;
 			return;
 		}
@@ -1229,7 +1229,7 @@ void Basis<T>::get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
 				_y = yz / _z;
 			}
 		}
-		r_axis = Vector3<T>(_x, _y, _z);
+		r_axis = Vec3<T>(_x, _y, _z);
 		r_angle = angle;
 		return;
 	}
@@ -1248,7 +1248,7 @@ void Basis<T>::get_axis_angle(Vector3<T> &r_axis, T &r_angle) const {
 	_y = ((*this)[0][2] - (*this)[2][0]) / s;
 	_z = ((*this)[1][0] - (*this)[0][1]) / s;
 
-	r_axis = Vector3<T>(_x, _y, _z);
+	r_axis = Vec3<T>(_x, _y, _z);
 	r_angle = angle;
 }
 
@@ -1266,12 +1266,12 @@ void Basis<T>::set_quat(const Quat<T> &p_quat) {
 }
 
 template<arithmetic T>
-void Basis<T>::set_axis_angle(const Vector3<T> &p_axis, T p_phi) {
+void Basis<T>::set_axis_angle(const Vec3<T> &p_axis, T p_phi) {
 // Rotation matrix from axis and angle, see https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_angle
 #ifdef MATH_CHECKS
-	ERR_FAIL_COND_MSG(!p_axis.is_normalized(), "The axis Vector3<T> must be normalized.");
+	ERR_FAIL_COND_MSG(!p_axis.is_normalized(), "The axis Vec3<T> must be normalized.");
 #endif
-	Vector3<T> axis_sq(p_axis.x * p_axis.x, p_axis.y * p_axis.y, p_axis.z * p_axis.z);
+	Vec3<T> axis_sq(p_axis.x * p_axis.x, p_axis.y * p_axis.y, p_axis.z * p_axis.z);
 	T cosine = cosf(p_phi);
 	(*this)[0][0] = axis_sq.x + cosine * (1 - axis_sq.x);
 	(*this)[1][1] = axis_sq.y + cosine * (1 - axis_sq.y);
@@ -1296,22 +1296,22 @@ void Basis<T>::set_axis_angle(const Vector3<T> &p_axis, T p_phi) {
 	(*this)[2][1] = xyzt + zyxs;
 }
 template<arithmetic T>
-void Basis<T>::set_axis_angle_scale(const Vector3<T> &p_axis, T p_phi, const Vector3<T> &p_scale) {
+void Basis<T>::set_axis_angle_scale(const Vec3<T> &p_axis, T p_phi, const Vec3<T> &p_scale) {
 	set_diagonal(p_scale);
 	rotate(p_axis, p_phi);
 }
 template<arithmetic T>
-void Basis<T>::set_euler_scale(const Vector3<T> &p_euler, const Vector3<T> &p_scale) {
+void Basis<T>::set_euler_scale(const Vec3<T> &p_euler, const Vec3<T> &p_scale) {
 	set_diagonal(p_scale);
 	rotate(p_euler);
 }
 template<arithmetic T>
-void Basis<T>::set_quat_scale(const Quat<T> &p_quat, const Vector3<T> &p_scale) {
+void Basis<T>::set_quat_scale(const Quat<T> &p_quat, const Vec3<T> &p_scale) {
 	set_diagonal(p_scale);
 	rotate(p_quat);
 }
 template<arithmetic T>
-void Basis<T>::set_diagonal(const Vector3<T> &p_diag) {
+void Basis<T>::set_diagonal(const Vec3<T> &p_diag) {
 	(*this)[0][0] = p_diag.x;
 	(*this)[0][1] = 0;
 	(*this)[0][2] = 0;

@@ -83,8 +83,8 @@ IResult<> BMI088_Gyr::update(){
 }
 
 
-IResult<Vector3<q24>> BMI088_Acc::read_acc(){
-    return Ok(Vector3<q24>(
+IResult<Vec3<q24>> BMI088_Acc::read_acc(){
+    return Ok(Vec3<q24>(
         acc_x_reg.as_val() * acc_scaler_,
         acc_y_reg.as_val() * acc_scaler_,
         acc_z_reg.as_val() * acc_scaler_
@@ -96,8 +96,8 @@ IResult<real_t> BMI088_Acc::read_temp(){
     return Ok(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
 }
 
-IResult<Vector3<q24>> BMI088_Gyr::read_gyr(){
-    return Ok(Vector3<q24>(
+IResult<Vec3<q24>> BMI088_Gyr::read_gyr(){
+    return Ok(Vec3<q24>(
         gyr_x_reg.as_val() * gyr_scaler_,
         gyr_y_reg.as_val() * gyr_scaler_,
         gyr_z_reg.as_val() * gyr_scaler_

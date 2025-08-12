@@ -27,7 +27,7 @@ std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src
         // DEBUG_PRINTLN(new_x_range, road_valid_pixels.from);
         //如果最长的区域都小于路�? 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
-            return {Vector2i{}, Range2i{}};
+            return {Vec2i{}, Range2i{}};
             // return {last_seed_pos, last_road_window};
         }
 
@@ -37,7 +37,7 @@ std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src
 
         //如果最长的区域都小于路�? 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
-            return {Vector2i{}, Range2i{}};
+            return {Vec2i{}, Range2i{}};
         }
     }
     //能到这里 说明找到可行的区域了
@@ -48,9 +48,9 @@ std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src
 
 
         if(align_right){
-            new_seed_pos = Vector2i(new_x_range.to - int(road_align_pixels/2),y);
+            new_seed_pos = Vec2i(new_x_range.to - int(road_align_pixels/2),y);
         }else{
-            new_seed_pos = Vector2i(new_x_range.from + int(road_align_pixels/2), y);
+            new_seed_pos = Vec2i(new_x_range.from + int(road_align_pixels/2), y);
         }
 
         if(last_seed_pos.x != 0)//如果上次有找�? 那么进行简单的均值滤�? 否则直接赋�?
@@ -62,7 +62,7 @@ std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src
     //不应该运行到这里
     //如果找不到种�? 就返回空
     // ASSERT_WITH_HALT(false, "should not run here");
-    return {Vector2i(), Range2i()};
+    return {Vec2i(), Range2i()};
 }
 
 void SmartCar::reset(){
@@ -233,7 +233,7 @@ void SmartCar::main(){
     init_it();
     element_holder.reset();
 
-    constexpr auto pic_size = Vector2i(188, 60);
+    constexpr auto pic_size = Vec2i(188, 60);
     auto pers_gray_image = make_image<Gray>(pic_size);
     auto pers_bina_image  = make_bina_mirror(pers_gray_image);
     auto diff_gray_image = make_image<Gray>(pic_size);
@@ -263,7 +263,7 @@ void SmartCar::main(){
         tftDisplayer.puttexture(area, sketch.get_data());
     };
 
-    [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
+    [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vec2i & pos, const RGB565 & color = RGB565::RED){
         if(coast.size() <= 1){
             return;
         }
@@ -280,7 +280,7 @@ void SmartCar::main(){
         }
     };
 
-    [[maybe_unused]] auto plot_coast_colored = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::WHITE){
+    [[maybe_unused]] auto plot_coast_colored = [&](const Coast & coast,  const Vec2i & pos, const RGB565 & color = RGB565::WHITE){
 
         if(coast.size() <= 2){
             return;
@@ -298,7 +298,7 @@ void SmartCar::main(){
         }
     };
 
-    [[maybe_unused]] auto plot_segment = [&](const Segment seg,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
+    [[maybe_unused]] auto plot_segment = [&](const Segment seg,  const Vec2i & pos, const RGB565 & color = RGB565::RED){
 
 
         painter.bindImage(sketch);
@@ -307,7 +307,7 @@ void SmartCar::main(){
         painter.drawLine(seg.first + pos, seg.second + pos);
     };
 
-    [[maybe_unused]] auto plot_points = [&](const Points & pts,  const Vector2i & pos, const RGB565 & color = RGB565::PINK){
+    [[maybe_unused]] auto plot_points = [&](const Points & pts,  const Vec2i & pos, const RGB565 & color = RGB565::PINK){
         painter.bindImage(sketch);
         painter.setColor(color);
         for(const auto & pt : pts){
@@ -316,7 +316,7 @@ void SmartCar::main(){
     };
 
 
-    [[maybe_unused]] auto plot_coast_points = [&](const Coast & pts,  const Vector2i & pos, const RGB565 & color = RGB565::PINK){
+    [[maybe_unused]] auto plot_coast_points = [&](const Coast & pts,  const Vec2i & pos, const RGB565 & color = RGB565::PINK){
         painter.bindImage(sketch);
         painter.setColor(color);
         for(const auto & pt : pts){
@@ -324,14 +324,14 @@ void SmartCar::main(){
         }
     };
 
-    [[maybe_unused]] auto plot_bound = [&](const Boundry & bound,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
+    [[maybe_unused]] auto plot_bound = [&](const Boundry & bound,  const Vec2i & pos, const RGB565 & color = RGB565::RED){
         painter.bindImage(sketch);
         for(auto && pt : bound){
-            painter.drawPixel(Vector2i{pt.second, pt.first}+ pos, color);
+            painter.drawPixel(Vec2i{pt.second, pt.first}+ pos, color);
         }
     };
 
-    [[maybe_unused]] auto plot_point = [&](const Vector2i & pos, const RGB565 & color = RGB565::RED, const int & radius = 2){
+    [[maybe_unused]] auto plot_point = [&](const Vec2i & pos, const RGB565 & color = RGB565::RED, const int & radius = 2){
         painter.bindImage(sketch);
         painter.setColor(color);
         painter.drawPixel(pos, color);
@@ -339,22 +339,22 @@ void SmartCar::main(){
 
     [[maybe_unused]] auto plot_pile = [&](const Pile & bound, const RGB565 & color = RGB565::RED){
         painter.bindImage(sketch);
-        painter.drawLine(Vector2i{bound.second.from, bound.first}, {bound.second.to, bound.first});
+        painter.drawLine(Vec2i{bound.second.from, bound.first}, {bound.second.to, bound.first});
     }; 
 
 
-    [[maybe_unused]] auto plot_vec3 = [&](const Vector3 & vec3,  const Vector2i & pos){
+    [[maybe_unused]] auto plot_vec3 = [&](const Vec3 & vec3,  const Vec2i & pos){
         scexpr auto square_length = 50;
         auto arm_length = vec3.length();
 
         scexpr auto radius = 3;
-        scexpr auto x_unit = Vector2(1, 0);
-        scexpr auto y_unit = Vector2(0.5, -0.73);
-        scexpr auto z_unit = Vector2(0, -1);
+        scexpr auto x_unit = Vec2(1, 0);
+        scexpr auto y_unit = Vec2(0.5, -0.73);
+        scexpr auto z_unit = Vec2(0, -1);
 
-        auto x_axis = Vector3(arm_length, 0, 0);
-        auto y_axis = Vector3(0, arm_length, 0);
-        auto z_axis = Vector3(0, 0, arm_length);
+        auto x_axis = Vec3(arm_length, 0, 0);
+        auto y_axis = Vec3(0, arm_length, 0);
+        auto z_axis = Vec3(0, 0, arm_length);
 
         scexpr auto x_color = RGB565::RED;
         scexpr auto y_color = RGB565::GREEN;
@@ -362,12 +362,12 @@ void SmartCar::main(){
         scexpr auto bg_color = RGB565::BLACK;
 
         auto vec3n = vec3.normalized();
-        const Quat rot = Quat(Vector3(0, 0, -1), vec3n);
-        const Vector2i center_point = pos + Vector2i(square_length, square_length) / 2;
+        const Quat rot = Quat(Vec3(0, 0, -1), vec3n);
+        const Vec2i center_point = pos + Vec2i(square_length, square_length) / 2;
 
-        auto plot_vec3_to_plane = [&](const Vector3 & axis, const char & chr, const RGB565 & color){
-            Vector3 end = rot.xform(axis);
-            Vector2i end_point = center_point + (x_unit * end.x + y_unit * end.y + z_unit * end.z);
+        auto plot_vec3_to_plane = [&](const Vec3 & axis, const char & chr, const RGB565 & color){
+            Vec3 end = rot.xform(axis);
+            Vec2i end_point = center_point + (x_unit * end.x + y_unit * end.y + z_unit * end.z);
             painter.setColor(color);
             painter.drawLine(center_point, end_point);
             painter.drawFilledCircle(end_point, radius);
@@ -375,7 +375,7 @@ void SmartCar::main(){
 
         painter.bindImage(tftDisplayer);
 
-        painter.drawFilledRect(Rect2i{pos, Vector2i{square_length, square_length}}, bg_color);
+        painter.drawFilledRect(Rect2i{pos, Vec2i{square_length, square_length}}, bg_color);
         plot_vec3_to_plane(x_axis, 'X', x_color);
         plot_vec3_to_plane(y_axis, 'Y', y_color);
         plot_vec3_to_plane(z_axis, 'Z', z_color);
@@ -388,13 +388,13 @@ void SmartCar::main(){
 
         painter.setColor(RGB565::WHITE);
         
-        [[maybe_unused]] auto pos = Vector2i{190, 180};
+        [[maybe_unused]] auto pos = Vec2i{190, 180};
 
         #define DRAW_STR(str)\
             painter.drawString(pos, str);\
-            pos += Vector2i(0, 9);
+            pos += Vec2i(0, 9);
         
-        painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
+        painter.drawFilledRect(Rect2i(pos, Vec2i{60, 60}),RGB565::BLACK);
 
 
 
@@ -498,11 +498,11 @@ void SmartCar::main(){
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
-        Vector2i new_seed_pos;
+        Vec2i new_seed_pos;
         Range2i new_road_window;
         std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
 
-        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.seed_pos.x, 0});
+        auto ccd_range = get_h_range(ccd_bina, Vec2i{measurer.seed_pos.x, 0});
         // if(ccd_range){
         //     if(bool(new_seed_pos) == false || img_bina[new_seed_pos] == false){
         //         new_seed_pos = {ccd_range.get_center(), 60 - config.seed_height_base};
@@ -525,7 +525,7 @@ void SmartCar::main(){
         
         // {
 
-        auto get_coast = [&](const Vector2i & seed_pos, const LR side) -> Coast{
+        auto get_coast = [&](const Vec2i & seed_pos, const LR side) -> Coast{
             auto ret = CoastUtils::form(img_bina, seed_pos, side);
             ret = CoastUtils::trim(ret, img.get_size());
             return ret;
@@ -630,7 +630,7 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto barrier_beg_detect = [&]() -> DetectResult {
-           [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vector2i {
+           [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vec2i {
                 //少于两个拐点 没法判断有没有障�?
                 if(_corners.size() < 2) return {0,0};
 
@@ -646,12 +646,12 @@ void SmartCar::main(){
                 //能够找到a角点和v角点
                 if(bool(a_corner_ptr) && bool(v_corner_ptr)){
                     scexpr int ignore_y = 28;
-                    if(Vector2i(*a_corner_ptr).y < ignore_y) return {0,0};
+                    if(Vec2i(*a_corner_ptr).y < ignore_y) return {0,0};
 
                     scexpr int max_y_diff = 5;
                     scexpr int min_x_diff = 7;
 
-                    Vector2i diff = Vector2i(v_corner_ptr->point) - Vector2i(a_corner_ptr->point);
+                    Vec2i diff = Vec2i(v_corner_ptr->point) - Vec2i(a_corner_ptr->point);
                     //A角点出现在V角点之前
                     if(a_corner_ptr < v_corner_ptr){
                         
@@ -667,8 +667,8 @@ void SmartCar::main(){
                 return {0,0};
             };
 
-            Vector2i left_detected = side_barrier_detect(left_corners, LR::LEFT);
-            Vector2i right_detected = side_barrier_detect(right_corners, LR::RIGHT);
+            Vec2i left_detected = side_barrier_detect(left_corners, LR::LEFT);
+            Vec2i right_detected = side_barrier_detect(right_corners, LR::RIGHT);
 
             scexpr int least_y_diff = 20;
 
@@ -719,7 +719,7 @@ void SmartCar::main(){
             scexpr int min_x_diff = 6;
             if(first_is_a){
                 const auto * ret = &(corner->point);
-                const Vector2i diff = Vector2i(track[2]) - Vector2i(track[1]);
+                const Vec2i diff = Vec2i(track[2]) - Vec2i(track[1]);
                 // if(diff.y < min_y_diff) return nullptr;
                 switch(side){
                     case LEFT:
@@ -750,7 +750,7 @@ void SmartCar::main(){
 
                                 if(_track.size() < 3) return nullptr;
 
-                                auto vec_diff = Vector2i(_track[2]) - Vector2i(_track[1]);
+                                auto vec_diff = Vec2i(_track[2]) - Vec2i(_track[1]);
 
                                 if(side == LR::LEFT){
                                     if(vec_diff.x > -_min_x_diff) return nullptr;
@@ -1088,7 +1088,7 @@ void SmartCar::main(){
                 scexpr real_t k = 1.2;
 
                 auto coast_point_valid = [](const CoastItem & host, const CoastItem & guest, const LR _is_right) -> bool{
-                    Vector2i delta = Vector2i(guest) - Vector2i(host);
+                    Vec2i delta = Vec2i(guest) - Vec2i(host);
 
                     //如果两个点坐标一�? 那么通过
                     if(delta.x == 0 && delta.y == 0) return true;
@@ -1148,13 +1148,13 @@ void SmartCar::main(){
                         const auto & secondary_point = coast[secondary_index];
                         const auto & orignal_first_point = coast[0];
 
-                        auto vec_go_until_y = [&](const Point & start_p, const Vector2i vec, const int y) -> Point{
+                        auto vec_go_until_y = [&](const Point & start_p, const Vec2i vec, const int y) -> Point{
 
                             if(vec.y == 0) return start_p;
                             else return (start_p + vec * (y - start_p.y) / vec.y);
                         };
 
-                        auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vector2i{1, k} : Vector2i{-1, k}, orignal_first_point.y);
+                        auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vec2i{1, k} : Vec2i{-1, k}, orignal_first_point.y);
 
                         ret.push_back(replaced_first_point);
                         for(size_t i = 1; i < coast.size(); ++i){
@@ -1194,23 +1194,23 @@ void SmartCar::main(){
         if(true){
             do{
                 if(left_track.size() >= 2 and right_track.size() >= 2){
-                    auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
+                    auto vec_valid = [](const Vec2 & vec){return bool(vec) && vec.length() > 5;}; 
                     auto road_align_pixels = WorldUtils::pixels(config.road_width);
                     Segment seg_left = SegmentUtils::shift({
                             left_track.front(), *std::next(left_track.begin())}, 
-                            Vector2i(int(road_align_pixels/2), 0));
+                            Vec2i(int(road_align_pixels/2), 0));
 
                     Segment seg_right = SegmentUtils::shift({
                             right_track.front(), *std::next(right_track.begin())}, 
-                            Vector2i(-int(road_align_pixels/2), 0));
+                            Vec2i(-int(road_align_pixels/2), 0));
 
                     // plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
                     // plot_segment(seg_right, {0, 0}, RGB565::GREEN);
 
                     //提取根向�?
-                    Vector2 left_root_vec = SegmentUtils::vec(seg_left);
-                    Vector2 right_root_vec = SegmentUtils::vec(seg_right);
-                    Vector2 root_vec;
+                    Vec2 left_root_vec = SegmentUtils::vec(seg_left);
+                    Vec2 right_root_vec = SegmentUtils::vec(seg_right);
+                    Vec2 root_vec;
 
                     //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干�?) 那么进行根向量合�? 否则根据吸附的左右选择对应的根向量
                     bool left_valid = vec_valid(left_root_vec);
@@ -1290,7 +1290,7 @@ void SmartCar::main(){
 
                     // DEBUG_PRINTLN(measurer.get_dir());
 
-                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
+                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vec2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
                 }
             }while(false);
         }

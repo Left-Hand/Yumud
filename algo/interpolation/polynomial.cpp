@@ -20,7 +20,7 @@ real_t CosineInterpolation::forward(real_t x) const {
 }
 
 
-std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2<q16> & handle){
+std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vec2<q16> & handle){
 
     static constexpr double epsilon = 0.001;
     static constexpr real_t min_param_a = real_t(0.0 + epsilon);

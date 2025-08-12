@@ -53,7 +53,7 @@ void hive_main(){
 
     DEBUG_PRINTLN(total, clock::micros() - begin_m);
 
-    // DEBUG_PRINTLN(Vector2(1,2));
+    // DEBUG_PRINTLN(Vec2(1,2));
     std::terminate();
     DEBUG_PRINTLN("Hello?");
     while(true);

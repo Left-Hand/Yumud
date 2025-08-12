@@ -10,7 +10,7 @@ namespace nuedc::_2024E{
 
 // 棋盘扩展操作（constexpr 方法）
 struct BoardHelper {
-    static constexpr ChessBoard with_move(const ChessBoard& b, Vector2u pos, Role role) {
+    static constexpr ChessBoard with_move(const ChessBoard& b, Vec2u pos, Role role) {
         ChessBoard::Data new_data{};
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
@@ -34,7 +34,7 @@ struct Minimax {
         int best_value = IsMaximizing ? -1000 : 1000;
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-                Vector2u pos{x, y};
+                Vec2u pos{x, y};
                 if (b.at(pos) == None) {
                     ChessBoard next_board = BoardHelper::with_move(b, pos, 
                         IsMaximizing ? current_role : current_role.get_opponent());
@@ -63,7 +63,7 @@ struct Minimax<true> {
         int best = -1000;
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-                Vector2u pos{x, y};
+                Vec2u pos{x, y};
                 if (b.at(pos) == None) {
                     ChessBoard next_board = BoardHelper::with_move(b, pos, current_role);
                     best = std::max(best, Minimax<false>::run(next_board, current_role.get_opponent()));
@@ -84,7 +84,7 @@ struct Minimax<false> {
         int best = 1000;
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-                Vector2u pos{x, y};
+                Vec2u pos{x, y};
                 if (b.at(pos) == None) {
                     ChessBoard next_board = BoardHelper::with_move(b, pos, current_role.get_opponent());
                     best = std::min(best, Minimax<true>::run(next_board, current_role.get_opponent()));
@@ -99,7 +99,7 @@ struct Minimax<false> {
 // @param role 玩家角色
 // @ChessBoard board 棋盘
 // @return 最优的下一步棋的位置
-static constexpr Vector2u chess_forward_minimax(const Role role, const ChessBoard& board) {
+static constexpr Vec2u chess_forward_minimax(const Role role, const ChessBoard& board) {
     // 获取对手角色（constexpr Lambda）
     constexpr auto get_opponent = [](Role r) {
         return r == Role::X ? Role::O : Role::X;
@@ -132,12 +132,12 @@ static constexpr Vector2u chess_forward_minimax(const Role role, const ChessBoar
 
 
     // 寻找最佳移动位置
-    Vector2u best_pos{0, 0};
+    Vec2u best_pos{0, 0};
     int best_score = -1000;
 
     for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
         for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-            Vector2u pos{x, y};
+            Vec2u pos{x, y};
             if (board.at(pos) == None) {
                 ChessBoard next_board = BoardHelper::with_move(board, pos, role);
                 int score = Minimax<false>::run(next_board, role.get_opponent());

@@ -42,31 +42,31 @@ static constexpr InvPerspectiveConfig inv_perspective_config{
     .H8 = q16(-0.00600),
 };
 
-Vector2<q16> perspective(const Vector2<q16> & v){
+Vec2<q16> perspective(const Vec2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (perspective_config.H8*y+q16(1));
     q16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
     q16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
-    Vector2<q16> ret = {_x,_y};
+    Vec2<q16> ret = {_x,_y};
     return ret;
 }
 
 
-Vector2<q16> inv_perspective(const Vector2<q16> & v){
+Vec2<q16> inv_perspective(const Vec2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
     q16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
     q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
-    Vector2<q16> ret = {_x,_y};
+    Vec2<q16> ret = {_x,_y};
     return ret;
 }
 
-Vector2<q16> inv_perspective_fast(const Vector2<q16> & v){
+Vec2<q16> inv_perspective_fast(const Vec2<q16> & v){
     auto [x,y] = v;
     q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
     q16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
     q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
-    Vector2<q16> ret = {_x,_y};
+    Vec2<q16> ret = {_x,_y};
 
     return ret;
 }
@@ -79,7 +79,7 @@ void perspective(Image<Gray> & dst,const Image<Gray> & src){
 
         for(size_t _x = 0; _x < size.x; _x++){
             x += x_step;
-            if(size.has_point(Vector2u{size_t(x),size_t(y)})){
+            if(size.has_point(Vec2u{size_t(x),size_t(y)})){
                 dst[{_x,_y}]= src[{size_t(x),size_t(y)}];
             }else{
                 dst[{_x,_y}] = Gray(0);

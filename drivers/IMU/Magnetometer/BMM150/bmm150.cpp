@@ -25,7 +25,7 @@ void BMM150::reset(){
 
 }
 
-IResult<Vector3<q24>> BMM150::read_mag(){
+IResult<Vec3<q24>> BMM150::read_mag(){
     TODO();
-    return Ok{Vector3<q24>{0,0,0}};
+    return Ok{Vec3<q24>{0,0,0}};
 }

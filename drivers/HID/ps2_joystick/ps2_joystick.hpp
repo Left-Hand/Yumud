@@ -134,7 +134,7 @@ struct Ps2Joystick_Prelude{
             uint8_t x;
             uint8_t y;
 
-            constexpr Vector2<real_t> to_position() const{
+            constexpr Vec2<real_t> to_position() const{
                 constexpr auto SCALE = real_t(1.0/510);
                 return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
                 // return {x,y};
@@ -198,17 +198,17 @@ struct Ps2Joystick_Prelude{
             }
         }
 
-        constexpr Vector2i left_direction() const{
-            Vector2i dir;
+        constexpr Vec2i left_direction() const{
+            Vec2i dir;
 
             if(PressLevel::Pressed == modifiers.left) 
-                dir += Vector2i::LEFT;
+                dir += Vec2i::LEFT;
             if(PressLevel::Pressed == modifiers.right) 
-                dir += Vector2i::RIGHT;
+                dir += Vec2i::RIGHT;
             if(PressLevel::Pressed == modifiers.up) 
-                dir += Vector2i::UP;
+                dir += Vec2i::UP;
             if(PressLevel::Pressed == modifiers.down) 
-                dir += Vector2i::DOWN;
+                dir += Vec2i::DOWN;
 
             return dir;
         }

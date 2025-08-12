@@ -29,17 +29,17 @@ void test_burshed_motor(){
 
     [[maybe_unused]]
     auto test_td = [&](const auto t){
-        // const auto u = 6 * Vector2<q16>::RIGHT.rotated(real_t(TAU) * t);
+        // const auto u = 6 * Vec2<q16>::RIGHT.rotated(real_t(TAU) * t);
         // const auto [x,y] = sincos(real_t(TAU) * t);
         // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
-        // const auto u = Vector2<q16>{10 * frac(t * 3), 0};
-        const auto u = Vector2<q16>{10 * frac(t), 0};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vec2<q16>{10 * frac(t * 3), 0};
+        const auto u = Vec2<q16>{10 * frac(t), 0};
         
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vector2<q16>{6 * x, 0};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vec2<q16>{6 * x, 0};
 
         const auto u0 = clock::micros();
         td.update(u);
@@ -50,12 +50,12 @@ void test_burshed_motor(){
     [[maybe_unused]]
     auto test_cs = [&](const auto t){
         const auto tau = 80.0_r;
-        // const auto u = 6 * Vector2<q16>::RIGHT.rotated(real_t(TAU) * t);
+        // const auto u = 6 * Vec2<q16>::RIGHT.rotated(real_t(TAU) * t);
         // const auto [x,y] = sincos(real_t(TAU) * t);
         // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
         
         // const auto u = 10 * frac(t);
         // const auto u = 10 * sinpu(t);
@@ -65,8 +65,8 @@ void test_burshed_motor(){
         // const auto u = 5 * frac(t);
         const auto u = 10 * sign(sin(3 * t));
 
-        // const auto u = Vector2<q16>{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vector2<q16>{6 * x, 0};
+        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vec2<q16>{6 * x, 0};
 
         static dsp::Leso leso{dsp::Leso::Config{
             .b0 = 1,

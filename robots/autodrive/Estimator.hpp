@@ -7,7 +7,7 @@ namespace gxm{
 
 using namespace ymd::drivers;
 
-// using Vector2Lpf = LowpassFilter<Vector2>;
+// using Vec2Lpf = LowpassFilter<Vec2>;
 
 // class SpeedObserver{
 // public:
@@ -71,7 +71,7 @@ using namespace ymd::drivers;
 //     //偏置
 //     struct Bias{
 //         Quat acc;
-//         Vector3 gyr;
+//         Vec3 gyr;
 //         Quat mag;
 //         real_t rot;
 //     };
@@ -82,7 +82,7 @@ using namespace ymd::drivers;
 //         Bias pre_bias;//偏置
 
 //         ComplementaryFilter::Config rot_obs_config;
-//         Vector2Lpf::Config spd_lpf_config;
+//         Vec2Lpf::Config spd_lpf_config;
 //     };
 // // protected:
 // public:
@@ -94,30 +94,30 @@ using namespace ymd::drivers;
 
 //     // ComplementaryFilter rot_obs_{config_.rot_obs_config};
 //     RotationObserver rot_obs_{config_.rot_obs_config};
-//     Vector2Lpf spd_lpf_{config_.spd_lpf_config};
+//     Vec2Lpf spd_lpf_{config_.spd_lpf_config};
     
 //     Bias bias_;
 
-//     Vector3 acc3_raw;
-//     Vector3 gyr3_raw;
-//     Vector3 mag3_raw;
+//     Vec3 acc3_raw;
+//     Vec3 gyr3_raw;
+//     Vec3 mag3_raw;
 
-//     Vector3 acc3_;
-//     Vector3 gyr3_;
-//     Vector3 mag3_;
+//     Vec3 acc3_;
+//     Vec3 gyr3_;
+//     Vec3 mag3_;
 
-//     Vector2 acc_;
+//     Vec2 acc_;
 //     real_t gyr_;
 //     real_t rot_;
     
-//     Vector3 euler_;
+//     Vec3 euler_;
 
-//     Vector2 pos_;
-//     Vector2 spd_;
+//     Vec2 pos_;
+//     Vec2 spd_;
 
 //     real_t last_time;
 
-//     real_t calculate_raw_dir(const Vector3 & mag) const;
+//     real_t calculate_raw_dir(const Vec3 & mag) const;
 // public:
 //     Estimator(const Estimator & other) = delete;
 //     Estimator(Estimator && other) = delete;
@@ -136,11 +136,11 @@ using namespace ymd::drivers;
 //     void reset();
 //     void calibrate();
 
-//     void recalibrate(const Vector2 & _pos, const real_t _rot);
+//     void recalibrate(const Vec2 & _pos, const real_t _rot);
 //     void update(const real_t time);
 
 //     Quat calculateAccBias();
-//     Vector3 calculateGyrBias();
+//     Vec3 calculateGyrBias();
 //     Quat calculateMagBias();
 
 //     auto acc() const{return acc_;}

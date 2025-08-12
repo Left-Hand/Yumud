@@ -21,8 +21,8 @@ concept StructurableToU8Pair = requires(U u) {
 // 计算单应性矩阵 H（3x3）
 template<typename T>
 static constexpr Matrix<T, 3, 3> compute_homography(
-    std::span<const Vector2<T>, 4> src, 
-    std::span<const Vector2<T>, 4> dst
+    std::span<const Vec2<T>, 4> src, 
+    std::span<const Vec2<T>, 4> dst
 ){
     // 构造线性方程组 A * h = b（8x8）
     std::array<std::array<T, 9>, 8> augmented{};
@@ -98,7 +98,7 @@ static constexpr Matrix<T, 3, 3> compute_homography(
 
 template<typename T>
 static constexpr Matrix3x3<T> compute_homography_from_unit_rect(
-    const std::span<const Vector2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
+    const std::span<const Vec2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
 ) {
     const auto [x0, y0] = dst[0];
     const auto [x1, y1] = dst[1];
@@ -152,7 +152,7 @@ template<typename T>
 struct PerspectiveRect{
 public:
     static constexpr size_t N = 4;
-    using Points = VectorX<Vector2<T>, N>;
+    using Points = VectorX<Vec2<T>, N>;
     Points points;
     
 private:
@@ -160,7 +160,7 @@ private:
         points(Points::from_uninitialized()){;}
 public:
     // 从坐标直接构造
-    constexpr PerspectiveRect(std::span<const Vector2<T>, 4> _points)
+    constexpr PerspectiveRect(std::span<const Vec2<T>, 4> _points)
         : points(_points) {}
 
     static constexpr PerspectiveRect from_uninitialized() {
@@ -169,10 +169,10 @@ public:
 
     // 添加以下函数到 PerspectiveRect 结构体中
     static constexpr PerspectiveRect from_clockwise_points(
-        std::array<Vector2<T>, 4> _points) {
+        std::array<Vec2<T>, 4> _points) {
         // 如果点不是顺时针排列，则交换它们以确保顺时针顺序
         // 检查前三个点的叉积来判断方向
-        auto cross = [](const Vector2<T>& a, const Vector2<T>& b, const Vector2<T>& c) {
+        auto cross = [](const Vec2<T>& a, const Vec2<T>& b, const Vec2<T>& c) {
             return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
         };
         
@@ -181,7 +181,7 @@ public:
         
         // 如果是逆时针，则反转数组（除了第一个点）
         if (cr > 0) {
-            return PerspectiveRect(std::array<Vector2<T>, 4>{
+            return PerspectiveRect(std::array<Vec2<T>, 4>{
                 _points[0], _points[3], _points[2], _points[1]
             });
         }
@@ -192,18 +192,18 @@ public:
     // Replace the two constructors with this single static method
     static constexpr PerspectiveRect from_u8points(
         const std::array<StructurableToU8Pair auto, 4>& u8_points) {
-        std::array<Vector2<T>, 4> converted_points;
+        std::array<Vec2<T>, 4> converted_points;
         
         for (size_t i = 0; i < 4; ++i) {
             if constexpr (requires { u8_points[i].x; u8_points[i].y; }) {
-                // Handle Vector2-like types
-                converted_points[i] = Vector2<T>{
+                // Handle Vec2-like types
+                converted_points[i] = Vec2<T>{
                     u8_points[i].x * T(1.0 / 255),
                     u8_points[i].y * T(1.0 / 255)
                 };
             } else {
                 // Handle tuple-like types
-                converted_points[i] = Vector2<T>{
+                converted_points[i] = Vec2<T>{
                     std::get<0>(u8_points[i]) * T(1.0 / 255),
                     std::get<1>(u8_points[i]) * T(1.0 / 255)
                 };
@@ -233,9 +233,9 @@ public:
     static constexpr PerspectiveRect from_u8x8(
         const std::span<const uint8_t, 8> u8x8)
     { 
-        std::array<Vector2<uint8_t>, 4> u8_points;
+        std::array<Vec2<uint8_t>, 4> u8_points;
         for (size_t i = 0; i < 4; ++i) {
-            u8_points[i] = Vector2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
+            u8_points[i] = Vec2<uint8_t>(u8x8[i * 2], u8x8[i * 2 + 1]);
         }
         return PerspectiveRect::from_u8points(u8_points);
     }
@@ -244,15 +244,15 @@ public:
 
 
     // 计算透视中心点（两条对角线的交点）
-    constexpr Vector2<T> perspective_center() const {
+    constexpr Vec2<T> perspective_center() const {
         // 对于四边形，中心点应该是两条对角线的交点
         // 对角线1: 从 points[0] 到 points[2]
         // 对角线2: 从 points[1] 到 points[3]
         
-        const Vector2<T>& p0 = points[0];
-        const Vector2<T>& p1 = points[1];
-        const Vector2<T>& p2 = points[2];
-        const Vector2<T>& p3 = points[3];
+        const Vec2<T>& p0 = points[0];
+        const Vec2<T>& p1 = points[1];
+        const Vec2<T>& p2 = points[2];
+        const Vec2<T>& p3 = points[3];
         
         // 计算两条对角线的交点
         // 对角线1: P0 + t1 * (P2 - P0)
@@ -262,20 +262,20 @@ public:
         
         if (std::abs(denominator) < T(1e-6)) {
             // 如果分母接近0，说明是平行线，退化为简单平均
-            return Vector2<T>{(p0.x + p1.x + p2.x + p3.x) * T(0.25),
+            return Vec2<T>{(p0.x + p1.x + p2.x + p3.x) * T(0.25),
                             (p0.y + p1.y + p2.y + p3.y) * T(0.25)};
         }
         
         T t = ((p1.x - p0.x) * (p3.y - p1.y) - (p1.y - p0.y) * (p3.x - p1.x)) / denominator;
         
         // 返回对角线1上的点作为中心点
-        return Vector2<T>{p0.x + t * (p2.x - p0.x),
+        return Vec2<T>{p0.x + t * (p2.x - p0.x),
                         p0.y + t * (p2.y - p0.y)};
     }
 
     
-    constexpr Vector2<T> average() const {
-        return Vector2<T>{
+    constexpr Vec2<T> average() const {
+        return Vec2<T>{
             points[0] +
             points[1] +
             points[2] +
@@ -295,8 +295,8 @@ public:
     }
 
     // 平移变换
-    constexpr PerspectiveRect shifted(Vector2<T> offset) const {
-        std::array<Vector2<T>, 4> new_points;
+    constexpr PerspectiveRect shifted(Vec2<T> offset) const {
+        std::array<Vec2<T>, 4> new_points;
         for (size_t i = 0; i < 4; ++i) {
             new_points[i] = points[i] + offset;
         }
@@ -306,7 +306,7 @@ public:
     // 缩放变换（以中心点为原点）
     constexpr PerspectiveRect scaled(T factor) const {
         const auto c = perspective_center();
-        std::array<Vector2<T>, 4> new_points;
+        std::array<Vec2<T>, 4> new_points;
         for (size_t i = 0; i < 4; ++i) {
             new_points[i] = c + (points[i] - c) * factor;
         }
@@ -315,7 +315,7 @@ public:
 
     // 检查是否是凸四边形
     constexpr bool is_convex() const {
-        auto cross = [](Vector2<T> a, Vector2<T> b, Vector2<T> c) {
+        auto cross = [](Vec2<T> a, Vec2<T> b, Vec2<T> c) {
             return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
         };
 
@@ -338,11 +338,11 @@ public:
     // 计算单应性矩阵 H（3x3）
     constexpr Matrix<T, 3, 3> homography() const {
         // 源点（单位正方形）
-        [[maybe_unused]] constexpr std::array<Vector2<T>, 4> src = {
-            Vector2<T>{0, 0},
-            Vector2<T>{1, 0},
-            Vector2<T>{1, 1},
-            Vector2<T>{0, 1}
+        [[maybe_unused]] constexpr std::array<Vec2<T>, 4> src = {
+            Vec2<T>{0, 0},
+            Vec2<T>{1, 0},
+            Vec2<T>{1, 1},
+            Vec2<T>{0, 1}
         };
 
         // return compute_homography(src, points);
@@ -374,7 +374,7 @@ public:
 
 
 template<typename T>
-static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3>& H, Vector2<T> uv) {
+static constexpr Vec2<T> map_uv(const Matrix<T, 3, 3>& H, Vec2<T> uv) {
     const T u = uv.x;
     const T v = uv.y;
 
@@ -387,14 +387,14 @@ static constexpr Vector2<T> map_uv(const Matrix<T, 3, 3>& H, Vector2<T> uv) {
     // 检查 w_prime 是否为零（避免除以零）
     if (std::abs(w_prime) < T(1e-6)) {
         // 忽略透视分量，退化为仿射变换
-        return Vector2<T>{
+        return Vec2<T>{
             H[0][0]*u + H[0][1]*v + H[0][2],
             H[1][0]*u + H[1][1]*v + H[1][2]
         };
     }
 
     // 归一化
-    return Vector2<T>{
+    return Vec2<T>{
         x_prime / w_prime,
         y_prime / w_prime
     };

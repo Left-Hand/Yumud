@@ -171,8 +171,8 @@ struct ICM42688_Regs:public ICM42688_Prelude{
     }DEF_R16(tempbuf_reg)
 
     #pragma pack(push, 1)
-    Vector3<int16_t> acc_data_;
-    Vector3<int16_t> gyr_data_;
+    Vec3<int16_t> acc_data_;
+    Vec3<int16_t> gyr_data_;
     #pragma pack(pop)
     
     struct R16_TMST_FSYNC:public Reg16<>{

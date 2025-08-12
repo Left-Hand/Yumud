@@ -219,8 +219,8 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-IResult<Vector3<q24>> ICM42688::read_acc(){
-    return Ok{Vector3<q24>{
+IResult<Vec3<q24>> ICM42688::read_acc(){
+    return Ok{Vec3<q24>{
 		acc_scale_ * q24(q16(acc_data_.x) >> 16), 
 		acc_scale_ * q24(q16(acc_data_.y) >> 16), 
 		acc_scale_ * q24(q16(acc_data_.z) >> 16), 
@@ -228,9 +228,9 @@ IResult<Vector3<q24>> ICM42688::read_acc(){
 }
 
 
-IResult<Vector3<q24>> ICM42688::read_gyr(){
+IResult<Vec3<q24>> ICM42688::read_gyr(){
 
-    return Ok{Vector3<q24>{
+    return Ok{Vec3<q24>{
 		gyr_scale_ * q24(q16(gyr_data_.x) >> 16),
 		gyr_scale_ * q24(q16(gyr_data_.y) >> 16),
 		gyr_scale_ * q24(q16(gyr_data_.z) >> 16)

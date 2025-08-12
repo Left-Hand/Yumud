@@ -160,8 +160,8 @@ protected:
     real_t lsb_gyr_x256;
 
     
-    Vector3<int16_t> acc_data_;
-    Vector3<int16_t> gyr_data_;
+    Vec3<int16_t> acc_data_;
+    Vec3<int16_t> gyr_data_;
 public:
     ICM42605(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
@@ -174,8 +174,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vector3<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
 };
 
 }

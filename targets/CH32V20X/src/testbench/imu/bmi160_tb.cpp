@@ -52,7 +52,7 @@ void bmi160_main(){
 
         clock::delay(20ms);
         bmi.update().examine();
-        Vector3<real_t> acc = bmi.read_acc().unwrap();
+        Vec3<real_t> acc = bmi.read_acc().unwrap();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

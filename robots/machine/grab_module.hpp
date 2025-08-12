@@ -34,17 +34,17 @@ public:
 class GrabModule:public MotionModule{
 public:
     struct Config{
-        std::array<Vector2<q16>, 3> tray_xy;
+        std::array<Vec2<q16>, 3> tray_xy;
         real_t tray_z;
         real_t free_z;
         real_t catch_z;
         real_t z_bias;
         
-        std::array<Vector2<q16>, 3> catch_xy;
-        Vector3<q16> inspect_xyz;
-        Vector3<q16> idle_xyz;
+        std::array<Vec2<q16>, 3> catch_xy;
+        Vec3<q16> inspect_xyz;
+        Vec3<q16> idle_xyz;
 
-        Vector3<q16> home_xyz;
+        Vec3<q16> home_xyz;
 
         AABB<real_t> safe_aabb;
         real_t max_spd;
@@ -75,9 +75,9 @@ public:
 // protected:
     void goHome();//进行坐标归位
     // void moveZ(const real_t pos);//只改变Z轴坐标
-    // void moveXY(const Vector2<q16> & pos);//只改变XY坐标
-    void rapid(const Vector3<q16> & pos);//改变所有坐标
-    Vector3<q16> getPos();
+    // void moveXY(const Vec2<q16> & pos);//只改变XY坐标
+    void rapid(const Vec3<q16> & pos);//改变所有坐标
+    Vec3<q16> getPos();
     void meta_air_inspect();
     void meta_to_air();
     void meta_press();
@@ -92,8 +92,8 @@ public:
         {}
 
     void init();
-    void move(const Vector3<q16> & pos);
-    void move_xy(const Vector2<q16> & pos);
+    void move(const Vec3<q16> & pos);
+    void move_xy(const Vec2<q16> & pos);
     void move_z(const real_t z);
     void inspect();
     void idle();

@@ -34,7 +34,7 @@ public:
 
     static constexpr Gray get_vertex_val(
         const Vertexs & _vertexs, 
-        const Vector2<q16> & _grid_pos, 
+        const Vec2<q16> & _grid_pos, 
         const Image<Gray> & gs
     ){
         // TODO();
@@ -43,19 +43,19 @@ public:
         // return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
     };
 
-    static constexpr Vector2<q16> get_vertex(const Vertexs & __vertexs, const Vector2<q16> & __grid_pos){
-        const Vector2<q16> grid_scale = (__grid_pos + Vector2<q16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
+    static constexpr Vec2<q16> get_vertex(const Vertexs & __vertexs, const Vec2<q16> & __grid_pos){
+        const Vec2<q16> grid_scale = (__grid_pos + Vec2<q16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
 
-        const Vector2<q16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        const Vector2<q16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
+        const Vec2<q16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+        const Vec2<q16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
         return upper_x.lerp(lower_x, grid_scale.y);
     };
 
 
-    static constexpr Vector2<q16> get_vertex_grid(const Vertexs & __vertexs, const Vector2<q16> & __grid_pos){
-        // return get_vertex(__vertexs, __grid_pos + Vector2<q16>{0.5, 0.5});
-        return Vector2<q16>(0,0);
+    static constexpr Vec2<q16> get_vertex_grid(const Vertexs & __vertexs, const Vec2<q16> & __grid_pos){
+        // return get_vertex(__vertexs, __grid_pos + Vec2<q16>{0.5, 0.5});
+        return Vec2<q16>(0,0);
     };
 
 
@@ -76,7 +76,7 @@ public:
 
         #define COMP(s1, s2, i)\
         if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
-        ret[i] = Vector2u(x,y);\
+        ret[i] = Vec2u(x,y);\
 
         for(auto y = y_range.start; y < y_range.stop; ++y){
             for(auto x = x_range.start; x < x_range.stop; ++x){

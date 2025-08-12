@@ -23,7 +23,7 @@ class StringView;
 
 
 struct PainterPrelude{
-    using Cursor = Vector2u;
+    using Cursor = Vec2u;
 
     enum class Error_Kind:uint8_t{
         ImageNotSet = 1,
@@ -50,13 +50,13 @@ struct PainterPrelude{
 
 class PainterDispatcherIntf:public PainterPrelude{
 public:
-    [[nodiscard]] virtual IResult<> draw_wchar(const Vector2u & pos,const wchar_t chr) = 0;
+    [[nodiscard]] virtual IResult<> draw_wchar(const Vec2u & pos,const wchar_t chr) = 0;
     
     [[nodiscard]] virtual Option<Rect2u> get_expose_rect() = 0;
     
-    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
+    [[nodiscard]] virtual IResult<> draw_line(const Vec2u & start, const Vec2u & stop) = 0;
 
-    [[nodiscard]] virtual IResult<> draw_c_str(const Vector2u & pos, const StringView str) = 0;
+    [[nodiscard]] virtual IResult<> draw_c_str(const Vec2u & pos, const StringView str) = 0;
 
     [[nodiscard]] virtual IResult<> draw_filled_rect(const Rect2u & rect) = 0;
 };
@@ -114,28 +114,28 @@ public:
 
     [[nodiscard]] IResult<> draw_hollow_rect(const Rect2u & rect);
 
-    [[nodiscard]] IResult<> draw_hollow_circle(const Vector2u & pos, const uint radius);
+    [[nodiscard]] IResult<> draw_hollow_circle(const Vec2u & pos, const uint radius);
 
-    [[nodiscard]] IResult<> draw_filled_circle(const Vector2u & pos, const uint radius);
+    [[nodiscard]] IResult<> draw_filled_circle(const Vec2u & pos, const uint radius);
 
 
-    [[nodiscard]] IResult<> draw_hollow_ellipse(const Vector2u & pos, const Vector2u & r);
+    [[nodiscard]] IResult<> draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r);
 
-    [[nodiscard]] IResult<> draw_filled_ellipse(const Vector2u & pos, const Vector2u & r);
+    [[nodiscard]] IResult<> draw_filled_ellipse(const Vec2u & pos, const Vec2u & r);
 
-    [[nodiscard]] IResult<> draw_polyline(std::span<const Vector2u> points);
+    [[nodiscard]] IResult<> draw_polyline(std::span<const Vec2u> points);
 
-    [[nodiscard]] IResult<> draw_polygon(std::span<const Vector2u> points);
+    [[nodiscard]] IResult<> draw_polygon(std::span<const Vec2u> points);
 
-    [[nodiscard]] IResult<> draw_hollow_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2);
+    [[nodiscard]] IResult<> draw_hollow_triangle(const Vec2u & p0,const Vec2u & p1,const Vec2u & p2);
 
-    [[nodiscard]] IResult<> draw_filled_triangle(const Vector2u & p0,const Vector2u & p1,const Vector2u & p2);
+    [[nodiscard]] IResult<> draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,const Vec2u & p2);
 
     [[nodiscard]] IResult<> draw_roi(const Rect2u & rect);
 
     #if 0
     template<typename ... Ts>
-    [[nodiscard]] IResult<> draw_args(const Vector2u pos, Ts && ... args){
+    [[nodiscard]] IResult<> draw_args(const Vec2u pos, Ts && ... args){
         StringStream ss;
         ss.print(std::forward<Ts>(args)...);
         return draw_string(pos, StringView(std::move(ss).move_str()));
@@ -161,17 +161,17 @@ public:
         return Ok();
     }
 
-    virtual void putpixel_unchecked(const Vector2<uint16_t> pos);
+    virtual void putpixel_unchecked(const Vec2<uint16_t> pos);
 
-    [[nodiscard]] virtual IResult<> draw_wchar(const Vector2u & pos,const wchar_t chr) = 0;
+    [[nodiscard]] virtual IResult<> draw_wchar(const Vec2u & pos,const wchar_t chr) = 0;
 
-    [[nodiscard]] virtual IResult<> draw_gbk_str(const Vector2u & pos, const StringView str) = 0;
+    [[nodiscard]] virtual IResult<> draw_gbk_str(const Vec2u & pos, const StringView str) = 0;
 
-    [[nodiscard]] virtual IResult<> draw_ascii_str(const Vector2u & pos, const StringView str) = 0;
+    [[nodiscard]] virtual IResult<> draw_ascii_str(const Vec2u & pos, const StringView str) = 0;
 
     [[nodiscard]] virtual Option<Rect2u> get_expose_rect() {return None;}
     
-    [[nodiscard]] virtual IResult<> draw_line(const Vector2u & start, const Vector2u & stop) = 0;
+    [[nodiscard]] virtual IResult<> draw_line(const Vec2u & start, const Vec2u & stop) = 0;
 
 
 
@@ -195,9 +195,9 @@ protected:
     Option<Font &> may_chfont_ = None;
     size_t padding_ = 1;
 
-    [[nodiscard]] IResult<> draw_hri_line(const Vector2u & pos,const int l);
+    [[nodiscard]] IResult<> draw_hri_line(const Vec2u & pos,const int l);
 
-    [[nodiscard]] IResult<> draw_ver_line(const Vector2u & pos,const int l);
+    [[nodiscard]] IResult<> draw_ver_line(const Vec2u & pos,const int l);
 
     [[nodiscard]] IResult<> draw_ver_line(const Range2u & y_range, const int x);
 

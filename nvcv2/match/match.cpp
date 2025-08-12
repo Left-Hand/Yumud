@@ -72,7 +72,7 @@ Option<uint> match_number(const Image<Gray> &, const Rect2u & roi){
 }
 
 Option<uint> match_number(const Image<Binary> & src, const Rect2u & roi){
-    // using Vertex = std::array<Vector2i, 4>;
+    // using Vertex = std::array<Vec2i, 4>;
 
     // Vertex vertex;
 
@@ -95,7 +95,7 @@ real_t number_match(const Image<Gray> &src, const uint index){
 
 
             //     auto char_pos = rect.get_center();
-            //     const Vector2i tmp_size = {8, 12};
+            //     const Vec2i tmp_size = {8, 12};
             //     const Rect2u clip_window = Rect2u::from_center(char_pos, tmp_size);
             //     auto clipped = img.clone(clip_window);
 
@@ -105,7 +105,7 @@ real_t number_match(const Image<Gray> &src, const uint index){
             //     painter.setColor(RGB565::BLUE);
             //     painter.drawRoi(clip_window);
 
-            //     auto digit_p = matcher.number(tmp, Rect2u(Vector2i(0,0), tmp_size));
+            //     auto digit_p = matcher.number(tmp, Rect2u(Vec2i(0,0), tmp_size));
 
             //     plot_number(clip_window, digit_p);
 

@@ -28,7 +28,7 @@ void rr2_tb(){
         .link_length = 2
     };
 
-    const auto solu = RR2::inverse(cfg, {Vector2{0_r, 2_r}});
+    const auto solu = RR2::inverse(cfg, {Vec2{0_r, 2_r}});
     if(solu.is_some()){
         const auto [j1, j2] = solu.unwrap().to_absolute();
         DEBUG_PRINTLN(
@@ -55,10 +55,10 @@ void rrs3_tb(){
     [[maybe_unused]] 
     constexpr const RRS3 rrs3{cfg};
     constexpr const auto head = Quat<T>::from_shortest_arc(
-        Vector3<T>{0, 0, 1},
-        // Vector3<T>{-0.1_r, -0.1_r, 1_r}.normalized()
-        Vector3<T>{T(-0.1), T(-0.1), 1}.normalized()
-        // Vector3<T>{T(0), T(0), 1}.normalized()
+        Vec3<T>{0, 0, 1},
+        // Vec3<T>{-0.1_r, -0.1_r, 1_r}.normalized()
+        Vec3<T>{T(-0.1), T(-0.1), 1}.normalized()
+        // Vec3<T>{T(0), T(0), 1}.normalized()
     );
 
 
@@ -68,8 +68,8 @@ void rrs3_tb(){
         .z = 5,
     };
     
-    DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(TAU  / 3)));
-    DEBUG_PRINTLN(Vector2<T>::RIGHT.rotated(T(-TAU / 3)));
+    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(T(TAU  / 3)));
+    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(T(-TAU / 3)));
 
     const auto u = clock::micros();
     const auto may_res = rrs3.inverse(gest);

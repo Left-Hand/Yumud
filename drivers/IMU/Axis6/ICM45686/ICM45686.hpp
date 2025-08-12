@@ -106,8 +106,8 @@ struct ICM45686_Regs:public ICM45686_Prelude{
         uint8_t en_apex_event:1;
     };
 
-    Vector3<int16_t> acc_data_;
-    Vector3<int16_t> gyr_data_;
+    Vec3<int16_t> acc_data_;
+    Vec3<int16_t> gyr_data_;
 };
 
 class ICM45686 final:
@@ -130,8 +130,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vector3<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
 private:
     InvensenseSensor_Phy phy_;
     

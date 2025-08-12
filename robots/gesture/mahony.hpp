@@ -10,7 +10,7 @@ namespace ymd{
 class Mahony{
 public:
     using IQuat = Quat<q24>;
-    using V3 = Vector3<q24>;
+    using V3 = Vec3<q24>;
 protected:
     q24 dt_;
 

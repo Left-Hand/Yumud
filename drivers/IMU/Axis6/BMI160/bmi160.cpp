@@ -225,25 +225,25 @@ IResult<> BMI160::reset(){
     return write_command(std::bit_cast<uint8_t>(Command::SOFT_RESET));
 }
 
-IResult<Vector3<q24>> BMI160::read_acc(){
+IResult<Vec3<q24>> BMI160::read_acc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale_;
     };
     
-    return Ok{Vector3<q24>{
+    return Ok{Vec3<q24>{
         conv(regs_.acc.x),
         conv(regs_.acc.y),
         conv(regs_.acc.z)
     }};
 }
 
-IResult<Vector3<q24>> BMI160::read_gyr(){
+IResult<Vec3<q24>> BMI160::read_gyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale_;
     };
     
     // DEBUG_PRINTLN(regs_.gyr_reg.vec);
-    return Ok{Vector3<q24>{
+    return Ok{Vec3<q24>{
         conv(regs_.gyr.x),
         conv(regs_.gyr.y),
         conv(regs_.gyr.z)

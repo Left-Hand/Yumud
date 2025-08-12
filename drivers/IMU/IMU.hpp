@@ -59,18 +59,18 @@ public:
     template<typename T>
     static constexpr T GRAVITY_ACC = T(9.80665);
 
-    virtual Result<Vector3<q24>, ImuError> read_acc() = 0;
+    virtual Result<Vec3<q24>, ImuError> read_acc() = 0;
 };
 
 class GyroscopeIntf{
 public:
-    virtual Result<Vector3<q24>, ImuError> read_gyr() = 0;
+    virtual Result<Vec3<q24>, ImuError> read_gyr() = 0;
 };
 
 class MagnetometerIntf{
 public:
 
-    virtual Result<Vector3<q24>, ImuError> read_mag() = 0;
+    virtual Result<Vec3<q24>, ImuError> read_mag() = 0;
 };
 
 }

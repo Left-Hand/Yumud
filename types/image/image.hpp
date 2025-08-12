@@ -18,13 +18,13 @@ public:
     template<typename U = void>
     using IResult = Result<U, Error>;
 
-    Image(const Vector2u size):
+    Image(const Vec2u size):
         size_(size),
         data_(std::make_shared<T[]>(size.x * size.y)){
             ASSERT(not size.is_zero());
         }
 
-    // IResult<Image> from_size(const Vector2u size){
+    // IResult<Image> from_size(const Vec2u size){
     //     auto raw = new (std::nothrow) T[size.x * size.y];
     //     if (!raw) {
     //         return Err(Error::OutOfMemory);
@@ -35,14 +35,14 @@ public:
     //     );
     // }
 
-    Image(std::shared_ptr<T[]> data, const Vector2u size):
+    Image(std::shared_ptr<T[]> data, const Vec2u size):
         size_(size),
         data_(data){
             ASSERT(not size.is_zero());
         }
 
 
-    [[nodiscard]] static Image<T> from_buf(const T * buf, const Vector2u size){
+    [[nodiscard]] static Image<T> from_buf(const T * buf, const Vec2u size){
         auto data = std::make_shared<T[]>(size.x * size.y);
         for(size_t i = 0; i < size.x * size.y; i++){
             data.get()[i] = buf[i];
@@ -56,7 +56,7 @@ public:
         if (not this->is_shared_with(other)) {
             this->size_ = std::move(other.size_);
             this->data_ = std::move(other.data_);
-            other.size_ = Vector2u{0,0};
+            other.size_ = Vec2u{0,0};
             other.data_ = nullptr;
         }
         return *this;
@@ -82,7 +82,7 @@ public:
         auto temp = Image<T>(view.size);
         for(size_t j = 0; j < view.h(); j++) {
             for(size_t i = 0; i < view.w(); i++) {
-                temp[Vector2u{i,j}] = this->operator[](Vector2u{i + view.x(), j + view.y()});
+                temp[Vec2u{i,j}] = this->operator[](Vec2u{i + view.x(), j + view.y()});
             }
         }
         return temp;
@@ -100,7 +100,7 @@ public:
         return data_ == other.data_;
     }
 
-    void putpixel(const Vector2u pos, const T color) {
+    void putpixel(const Vec2u pos, const T color) {
         assert_pos_is_inrange(pos);
         putpixel_unchecked(pos, color);
     }
@@ -112,44 +112,44 @@ public:
     [[nodiscard]] __fast_inline T & operator[](const size_t index) {
         return data_[index]; }
 
-    [[nodiscard]] __fast_inline T & operator[](const Vector2u pos) {
+    [[nodiscard]] __fast_inline T & operator[](const Vec2u pos) {
         return data_[pos.x + pos.y * this->size().x]; }
 
-    [[nodiscard]] __fast_inline const T & operator[](const Vector2u pos) const {
+    [[nodiscard]] __fast_inline const T & operator[](const Vec2u pos) const {
         return data_[pos.x + pos.y * this->size().x]; }
 
 
     template<typename ToColorType>
-    [[nodiscard]] __fast_inline ToColorType at(const Vector2u pos) const {
+    [[nodiscard]] __fast_inline ToColorType at(const Vec2u pos) const {
         assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
-    [[nodiscard]] __fast_inline T & at(const Vector2u pos){
+    [[nodiscard]] __fast_inline T & at(const Vec2u pos){
         assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
-    [[nodiscard]] __fast_inline const T & at(const Vector2u pos)const{
+    [[nodiscard]] __fast_inline const T & at(const Vec2u pos)const{
         assert_pos_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
-    void putpixel_unchecked(const Vector2u pos, const T color) 
+    void putpixel_unchecked(const Vec2u pos, const T color) 
         { data_[this->size().x * pos.y + pos.x] = color; }
-    void getpixel_unchecked(const Vector2u pos, T & color) const 
+    void getpixel_unchecked(const Vec2u pos, T & color) const 
         { color = data_[this->size().x * pos.y + pos.x]; }
 
 private:
 
 
-    Vector2u size_;
+    Vec2u size_;
 
     std::shared_ptr<T[]> data_;
 
-    __fast_inline void assert_pos_is_inrange(const Vector2u pos){
+    __fast_inline void assert_pos_is_inrange(const Vec2u pos){
         ASSERT(size_.x > pos.x and size_.y > pos.y);
     }
 
 public:
-    constexpr Vector2u size() const { return size_; }
+    constexpr Vec2u size() const { return size_; }
 
     constexpr auto get_data() const {return this->data_.get();}
     constexpr auto get_ptr() const {return this->data_;}
@@ -158,12 +158,12 @@ public:
 
 
 template<typename T>
-__inline auto make_image(const Vector2u size){
+__inline auto make_image(const Vec2u size){
     return Image<T>(size);
 }
 
-__inline auto make_gray_image(const Vector2u size){return make_image<Gray>(size);};
-__inline auto make_bina_image(const Vector2u size){return make_image<Binary>(size);};
+__inline auto make_gray_image(const Vec2u size){return make_image<Gray>(size);};
+__inline auto make_bina_image(const Vec2u size){return make_image<Binary>(size);};
 
 
 }

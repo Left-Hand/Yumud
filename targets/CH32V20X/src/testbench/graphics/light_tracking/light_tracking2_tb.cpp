@@ -131,12 +131,12 @@ static __fast_inline real_t tt_intersect(
 };
 
 [[nodiscard]]
-static __fast_inline bool bb_intersect_impl(const Vector3<real_t> & t0, const Vector3<real_t> & t1){
+static __fast_inline bool bb_intersect_impl(const Vec3<real_t> & t0, const Vec3<real_t> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 [[nodiscard]]
-static __fast_inline bool tb_intersect_impl (const Vector3<real_t> & t0, const Vector3<real_t> & t1){
+static __fast_inline bool tb_intersect_impl (const Vec3<real_t> & t0, const Vec3<real_t> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
@@ -152,10 +152,10 @@ static Intersection_t<real_t> intersect(
     };
 
     const auto & base = ray.base;
-    const auto inv_dir = Vector3<real_t>::from_rcp(ray.direction);
+    const auto inv_dir = Vec3<real_t>::from_rcp(ray.direction);
 
-    const Vector3<real_t> t0 = (bbmin - base) * inv_dir;
-    const Vector3<real_t> t1 = (bbmax - base) * inv_dir;
+    const Vec3<real_t> t0 = (bbmin - base) * inv_dir;
+    const Vec3<real_t> t1 = (bbmax - base) * inv_dir;
 
     
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
@@ -204,7 +204,7 @@ static Ray3<real_t> cos_weighted_hemi(
     const auto azimuth = u1 * real_t(TAU);
     const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vector3<real_t>(
+    const auto v = Vec3<real_t>(
         real_t((r * cos_a)), 
         real_t((r * sin_a)), 
         real_t((sqrtf(1 - u0)))
@@ -230,16 +230,16 @@ static std::optional<RGB> sample_light(
 
     const auto & light = co_triangles[light_idx];
 
-    const auto linear_t = Vector3(
+    const auto linear_t = Vec3(
         (1 - su),
         (1 - u1) * su,
         u1 * su
     );
 
-    const auto light_pos = Vector3{
-        Vector3(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
-        Vector3(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
-        Vector3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
+    const auto light_pos = Vec3{
+        Vec3(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
+        Vec3(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
+        Vec3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
     const auto ray = Ray3<real_t>::from_start_and_stop(
@@ -266,7 +266,7 @@ static std::optional<RGB> sample_light(
 }
 
 // ���ɴ�Ĭ��Z��(0,0,1)��ת�����߷������Ԫ��
-static Quat<real_t> quat_from_normal(const Vector3<real_t>& normal)
+static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
     return Quat<real_t>(
@@ -336,7 +336,7 @@ static RGB samplePixel(
         sample += 
         sampleRay(
             sample,
-            Ray3<real_t>::from_base_and_dir(eye,Vector3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3<real_t>::from_base_and_dir(eye,Vec3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))
@@ -503,10 +503,10 @@ void light_tracking_main(void){
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
             
             // const auto u = micros();
-            displayer.put_next_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data()).examine();
+            displayer.put_next_texture(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data()).examine();
             // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
 
-            // displayer.put_rect(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), ColorEnum::WHITE);
+            // displayer.put_rect(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), ColorEnum::WHITE);
             // renderer.draw_rect(Rect2u(20, 0, 20, 40));
         }
 
@@ -533,7 +533,7 @@ void light_tracking_main(void){
             std::array<RGB565, LCD_W> row;
             render_row(row, y, co_triangles);
 
-            displayer.put_texture(Rect2u(Vector2i(0,y), Vector2i(LCD_W, 1)), row.data())
+            displayer.put_texture(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data())
                 .examine();
         }
 

@@ -36,7 +36,7 @@ public:
     }
 
     template<typename w_ColorType>
-    void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const Vec2u & pos = Vec2u(0,0)){
         if(!may_src_imageget_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2u(pos, image.size());
         may_src_imagesetarea_unchecked(rect);
@@ -44,11 +44,11 @@ public:
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                may_src_imageputpixel_unchecked(Vector2u(x,y), ptr[i]);
+                may_src_imageputpixel_unchecked(Vec2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
-    IResult<> draw_char(const Vector2u & pos,const wchar_t chr){
+    IResult<> draw_char(const Vec2u & pos,const wchar_t chr){
         const Font * font = chr > 0x80 ? chfont : enfont;
         // if(font == nullptr){
         //     return Err(Error::NoChineseFontFounded);
@@ -56,8 +56,8 @@ public:
         
         if(font == nullptr) return Ok();
 
-        const Rect2u image_area = Rect2u{Vector2u{0,0}, src_image->size()};
-        const Vector2u font_size = font->getSize();
+        const Rect2u image_area = Rect2u{Vec2u{0,0}, src_image->size()};
+        const Vec2u font_size = font->getSize();
         const auto char_rect_opt = Rect2u(pos, font_size)
             .intersection(image_area);
         if(char_rect_opt.is_none()) return Ok();
@@ -69,14 +69,14 @@ public:
  
                 if(j % 8 == 0) mask = 0;
 
-                Vector2u offs = Vector2u(i - char_rect.position.x ,j);
+                Vec2u offs = Vec2u(i - char_rect.position.x ,j);
                 if(font->getpixel(chr, offs)){
                 // if(true){
                     mask |= (0x01 << (j % 8));
                 }
 
                 if(j % 8 == 7 || j == font_size.y - 1){
-                    src_image->putseg_v8_unchecked(Vector2u(i, (j & (~(8 - 1))) + pos.y), mask, );
+                    src_image->putseg_v8_unchecked(Vec2u(i, (j & (~(8 - 1))) + pos.y), mask, );
                     mask = 0;
                 }
             }
@@ -90,7 +90,7 @@ public:
     }
 
     template<typename w_ColorType>
-    void draw_image(Image<w_ColorType> & image, const Vector2u & pos = Vector2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const Vec2u & pos = Vec2u(0,0)){
         TODO();
     }
 
@@ -118,14 +118,14 @@ public:
         return Ok();
     }
 
-    void putpixel_unchecked(const Vector2<uint16_t> pos){
+    void putpixel_unchecked(const Vec2<uint16_t> pos){
         auto & src_image = may_src_image_.unwrap();
         if(not src_image.size().has_point(pos)) return;
         src_image.putpixel_unchecked(pos, ColorType(color_));
     }
 
     [[nodiscard]]
-    IResult<> draw_line(const Vector2u & from, const Vector2u & to){
+    IResult<> draw_line(const Vec2u & from, const Vec2u & to){
         if(may_src_image_.is_none()) 
             return Err(Error(Error_Kind::ImageNotSet));
 
@@ -169,7 +169,7 @@ public:
     }
     
     [[nodiscard]]
-    IResult<> draw_wchar(const Vector2u & pos, const wchar_t chr){
+    IResult<> draw_wchar(const Vec2u & pos, const wchar_t chr){
         if(may_src_image_.is_none())
             return Err(Error(Error_Kind::ImageNotSet));
         if(may_enfont_.is_none())
@@ -185,7 +185,7 @@ public:
             for(size_t y = 0; y < enfont_size.y; y++){
                 if(enfont.get_pixel(chr, {uint8_t(x),uint8_t(y)})){
                     src_image.putpixel_unchecked(
-                        pos + Vector2u{x, y}, 
+                        pos + Vec2u{x, y}, 
                         ColorType(color_)
                     );
                 }
@@ -196,7 +196,7 @@ public:
     }
 
     __no_inline IResult<> draw_ascii_str(
-        const Vector2u & pos, 
+        const Vec2u & pos, 
         const StringView str)
     {
         AsciiIterator iter(str);
@@ -216,7 +216,7 @@ public:
             if(not iter.has_next()) break;
 
             const auto chr = iter.next();
-            if(const auto res = draw_wchar(Vector2u(x, pos.y), chr);
+            if(const auto res = draw_wchar(Vec2u(x, pos.y), chr);
                 res.is_err()) return res;
             x += (enfont.get_size().x + padding_);
         }
@@ -225,7 +225,7 @@ public:
     }
 
     __no_inline IResult<> draw_gbk_str(
-        const Vector2u & pos, 
+        const Vec2u & pos, 
         const StringView str)
     {
         GBKIterator iter(str);
@@ -249,7 +249,7 @@ public:
             if(not iter.has_next()) break;
 
             const auto chr = iter.next();
-            if(const auto res = draw_wchar(Vector2u(x, pos.y), chr);
+            if(const auto res = draw_wchar(Vec2u(x, pos.y), chr);
                 res.is_err()) return res;
             const auto & font = chr > 0x80 ? chfont : enfont;
             x += font.get_size().x + padding_;

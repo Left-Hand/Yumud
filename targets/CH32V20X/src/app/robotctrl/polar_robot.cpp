@@ -140,11 +140,11 @@ private:
 
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
-        Vector2<q16> position;
+        Vec2<q16> position;
         q16 theta;  // 累积角度
     };
 
-    Polar<q16> operator()(const Vector2<q16> position) {
+    Polar<q16> operator()(const Vec2<q16> position) {
         if (may_last_state_.is_none()) {
             // 第一次调用，初始化状态
             may_last_state_ = Some(State{
@@ -178,16 +178,16 @@ private:
 
 
 template<typename T>
-constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step){
-    Vector2<T> delta = to - from;
+constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step){
+    Vec2<T> delta = to - from;
     T distance = delta.length();
     if (distance <= step) return to;  // 如果步长足够大，直接到达目标
     return from + delta * (step / distance);  // 按比例移动
 }
 
 // template<typename T>
-// constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T step) {
-//     const Vector2<T> delta = to - from;
+// constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step) {
+//     const Vec2<T> delta = to - from;
 //     const T distance_sq = delta.length_squared();  // 避免开平方
 //     const T step_sq = step * step;
     
@@ -204,7 +204,7 @@ constexpr Vector2<T> vec_step_to(const Vector2<T> from, const Vector2<T> to, T s
 
 struct StepPointIterator{
     struct Config{
-        Vector2<q24> initial_position;
+        Vec2<q24> initial_position;
     };
 
     explicit constexpr StepPointIterator(
@@ -213,12 +213,12 @@ struct StepPointIterator{
         current_position_(cfg.initial_position){;}
 
     constexpr void set_target_position(
-        const Vector2<q24> target_position
+        const Vec2<q24> target_position
     ) {
         may_end_position_ = Some(target_position);
     }
 
-    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
+    [[nodiscard]] constexpr Vec2<q24> next(const q24 step){
         if(may_end_position_.is_none()) return current_position_;
         current_position_ = vec_step_to(current_position_, may_end_position_.unwrap(), step);
         return current_position_;
@@ -229,8 +229,8 @@ struct StepPointIterator{
             (not current_position_.is_equal_approx(may_end_position_.unwrap()));
     }
 private:
-    Vector2<q24> current_position_ = {};
-    Option<Vector2<q24>> may_end_position_ = None;
+    Vec2<q24> current_position_ = {};
+    Option<Vec2<q24>> may_end_position_ = None;
 };
 
 
@@ -260,7 +260,7 @@ struct PolarRobotCurveGenerator{
     struct Config{
         uint32_t fs;
         real_t speed;
-        Vector2<q24> initial_position = {0,0};
+        Vec2<q24> initial_position = {0,0};
     };
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
@@ -270,7 +270,7 @@ struct PolarRobotCurveGenerator{
             .initial_position = cfg.initial_position
         }}){;}
 
-    constexpr void add_end_position(const Vector2<q24> position){
+    constexpr void add_end_position(const Vec2<q24> position){
         step_iter_.set_target_position(position.flip_y());
     }
 
@@ -282,18 +282,18 @@ struct PolarRobotCurveGenerator{
         return step_iter_.has_next();
     }
 
-    constexpr Vector2<q24> next(){
+    constexpr Vec2<q24> next(){
         position_ = step_iter_.next(delta_dist_);
         return position_;
     }
 
-    constexpr Vector2<q24> last_position() const {
+    constexpr Vec2<q24> last_position() const {
         return position_;
     }
 private:    
     uint32_t fs_;
     q24 delta_dist_;
-    Vector2<q24> position_;
+    Vec2<q24> position_;
     StepPointIterator step_iter_;
 };
 
@@ -374,9 +374,9 @@ void polar_robot_main(){
     };
     Cartesian2ContinuousPolarRegulator regu_;
 
-    static constexpr uint32_t POINT_GEN_FREQ = 400;
+    static constexpr uint32_t POINT_GEN_FREQ = 500;
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
-    static constexpr auto MAX_MOVE_SPEED = 0.02_q24; // 5cm / s
+    static constexpr auto MAX_MOVE_SPEED = 0.002_q24; // 2cm / s
 
     static constexpr auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
         .fs = POINT_GEN_FREQ,
@@ -470,8 +470,8 @@ void polar_robot_main(){
         }),
 
         actuator_.make_rpc_list("actuator"),
-        radius_joint_.make_rpc_list("radius_joint_"),
-        theta_joint_.make_rpc_list("theta_joint_"),
+        radius_joint_.make_rpc_list("radius_joint"),
+        theta_joint_.make_rpc_list("theta_joint"),
 
         rpc::make_function("pxy", [&](const real_t x, const real_t y){
             curve_gen_.add_end_position({
@@ -480,12 +480,8 @@ void polar_robot_main(){
             });
         }),
 
-        // rpc::make_function("prt", [&](const real_t radius, const real_t theta){
-        //     actuator_.set_coord({radius,theta});
-        // }),
-
         rpc::make_function("next", [&](){
-            static Vector2<q16> position = {0.1_r, 0};
+            static Vec2<q16> position = {0.1_r, 0};
             position = position.cw();
             actuator_.set_coord(regu_(position));
         })
@@ -525,7 +521,6 @@ void polar_robot_main(){
     while(true){
         poll_curve_service();
 
-
         static auto timer = async::RepeatTimer
             ::from_duration(POINT_GEN_DURATION_MS);
 
@@ -555,7 +550,7 @@ void polar_robot_main(){
         // const auto clock_time = clock::time();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
-        // const auto vec = Vector2{s,c};
+        // const auto vec = Vec2{s,c};
         // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<real_t>(vec, vec.rotated(1.6_r*s0)));
         // clock::delay(1ms);
     }

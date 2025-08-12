@@ -14,28 +14,28 @@ class [[nodiscard]] Rect2{
 public:
     using Tsigned = std::make_signed_t<T>;
 
-    Vector2<T> position;
-    Vector2<T> size;
+    Vec2<T> position;
+    Vec2<T> size;
 
     static constexpr Rect2<T> INF = {
-        Vector2<T>{std::numeric_limits<T>::lowest(), std::numeric_limits<T>::lowest()},
-        Vector2<T>{std::numeric_limits<T>::max(), std::numeric_limits<T>::max()}
+        Vec2<T>{std::numeric_limits<T>::lowest(), std::numeric_limits<T>::lowest()},
+        Vec2<T>{std::numeric_limits<T>::max(), std::numeric_limits<T>::max()}
     };
 
     [[nodiscard]] __fast_inline constexpr Rect2():
-        position(Vector2<T>(static_cast<T>(0),static_cast<T>(0))), 
-        size(Vector2<T>(static_cast<T>(0),static_cast<T>(0))){;}
+        position(Vec2<T>(static_cast<T>(0),static_cast<T>(0))), 
+        size(Vec2<T>(static_cast<T>(0),static_cast<T>(0))){;}
 
     [[nodiscard]] constexpr Rect2(
         const T _x,const T _y,const T _width,const T _height
     ):
-        position(Vector2<T>(_x,_y)),
-        size(Vector2<T>(_width, _height)){;}
+        position(Vec2<T>(_x,_y)),
+        size(Vec2<T>(_width, _height)){;}
 
     template<typename U>
     [[nodiscard]] __fast_inline constexpr Rect2(const Rect2<U> & other):
-        position(static_cast<Vector2<T>>(other.position)), 
-        size(static_cast<Vector2<T>>(other.size)){;}
+        position(static_cast<Vec2<T>>(other.position)), 
+        size(static_cast<Vec2<T>>(other.size)){;}
 
     constexpr Rect2<T> & operator=(const Rect2<T> & other){
         this->position = other.position;
@@ -44,41 +44,41 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Rect2(
-        const Vector2<T> & _position,
-        const Vector2<T> & _size
+        const Vec2<T> & _position,
+        const Vec2<T> & _size
     ):
-        position(static_cast<Vector2<T>>(_position)), 
-        size(static_cast<Vector2<T>>(_size)){;}
+        position(static_cast<Vec2<T>>(_position)), 
+        size(static_cast<Vec2<T>>(_size)){;}
 
     [[nodiscard]] __fast_inline constexpr Rect2(
         const Range2<T> & x_range,
         const Range2<T> & y_range
     ):
-        position(Vector2<T>(x_range.from, y_range.from)), 
-        size(Vector2<T>(x_range.length(), y_range.length())){;}
+        position(Vec2<T>(x_range.from, y_range.from)), 
+        size(Vec2<T>(x_range.length(), y_range.length())){;}
 
 
     [[nodiscard]] __fast_inline static constexpr Rect2 from_center_and_halfsize(
-        const Vector2<T> & center, const Vector2<T> & half_size){
+        const Vec2<T> & center, const Vec2<T> & half_size){
         return Rect2<T>(center - half_size, half_size * 2);
     }
 
     [[nodiscard]] __fast_inline static constexpr Rect2 from_center_and_size(
-        const Vector2<T> & center, const Vector2<T> & size){
+        const Vec2<T> & center, const Vec2<T> & size){
         return Rect2<T>(center - size, size);
     }
 
     [[nodiscard]] __fast_inline static constexpr Rect2 from_corners(
-        const Vector2<T> & a, const Vector2<T> & b){
+        const Vec2<T> & a, const Vec2<T> & b){
         return Rect2<T>(a, b-a).abs();
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_size(const Vector2<T> _size){
+    [[nodiscard]] __fast_inline static constexpr Rect2 from_size(const Vec2<T> _size){
         return Rect2<T>({0,0}, _size);
     }
 
     [[nodiscard]] __fast_inline static constexpr Rect2 from_minimal_bounding_box(
-            const std::span<const Vector2<T>> points){
+            const std::span<const Vec2<T>> points){
         if(points.size() == 0) __builtin_abort();
 
         const auto & first_point = points[0];
@@ -99,7 +99,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline static constexpr Rect2 from_minimal_bounding_box(
-        const std::initializer_list<Vector2<T>> & points){
+        const std::initializer_list<Vec2<T>> & points){
             return from_minimal_bounding_box(std::span(points.begin(), points.end()));
         }
 
@@ -118,9 +118,9 @@ public:
 
     [[nodiscard]] __fast_inline constexpr T get_area() const {
         return ABS(size.x * size.y);}
-    [[nodiscard]] __fast_inline constexpr Vector2<T> get_center() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> get_center() const {
         return(position + size / 2);}
-    [[nodiscard]] __fast_inline constexpr Vector2<T> get_end() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> get_end() const {
         return(position + size);}
     
     [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> expand(const T val) const {
@@ -143,8 +143,8 @@ private:
             const Tsigned new_size_y = Tsigned(size.y) - 2 * Tsigned(val);
             if(new_size_x < 0 || new_size_y < 0) return None;
             return Some(Rect2<T>{
-                position + Vector2<T>{val, val}, 
-                Vector2<T>{
+                position + Vec2<T>{val, val}, 
+                Vec2<T>{
                     static_cast<T>(new_size_x), 
                     static_cast<T>(new_size_y)}});
         }else{
@@ -152,20 +152,20 @@ private:
             const T new_size_y = size.y - 2 * val;
             if(new_size_x < 0 || new_size_y < 0) return None;
             return Some(Rect2<T>{
-                position + Vector2<T>{val, val}, 
-                Vector2<T>{new_size_x, new_size_y}});
+                position + Vec2<T>{val, val}, 
+                Vec2<T>{new_size_x, new_size_y}});
         }
     }
 public:
     
     template<size_t I>
     requires(I < 4)
-    [[nodiscard]] __fast_inline constexpr Vector2<T> get_corner() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> get_corner() const {
         switch(I){
             case 0: return position;
-            case 1: return Vector2<T>(position.x + size.x, position.y);
+            case 1: return Vec2<T>(position.x + size.x, position.y);
             case 2: return position + size;
-            case 3: return Vector2<T>(position.x, position.y + size.y);
+            case 3: return Vec2<T>(position.x, position.y + size.y);
             default: __builtin_unreachable();
         }
     }
@@ -190,7 +190,7 @@ public:
     }
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vector2<T> & point) const {
+    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & point) const {
         return IN_RANGE(point.x, position.x, position.x + size.x)
             and IN_RANGE(point.y, position.y, position.y + size.y);
     }
@@ -239,7 +239,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Rect2<T> shift(
-        const Vector2<T> & other
+        const Vec2<T> & other
     ) const{
         Rect2<T> ret = (*this);
         ret.position += other;
@@ -248,12 +248,12 @@ public:
 
     [[nodiscard]] constexpr Option<Rect2<T>> intersection(const Rect2<T> & other) const{
 
-        const auto ins_position = Vector2<T>(
+        const auto ins_position = Vec2<T>(
             MAX(T(this->x()), T(other.x())),
             MAX(T(this->y()), T(other.y()))
         );
 
-        const auto ins_size = Vector2<T>(
+        const auto ins_size = Vec2<T>(
             MIN(T(this->x() + this->w()), T(other.x() + other.w())) - ins_position.x,
             MIN(T(this->y() + this->h()), T(other.y() + other.h())) - ins_position.y
         );
@@ -268,7 +268,7 @@ public:
         return Rect2<T>(range_x, range_y);
     }
 
-    [[nodiscard]] constexpr Rect2<T> merge(const Vector2<T> & point) const{
+    [[nodiscard]] constexpr Rect2<T> merge(const Vec2<T> & point) const{
         const auto & self = *this;
 
         auto x_min = MIN(self.x(), point.x);
@@ -279,8 +279,8 @@ public:
         return Rect2<T>(x_min, y_min, x_max - x_min, y_max - y_min);
     }
 
-    [[nodiscard]] constexpr Vector2<T> constrain(const Vector2<T> & point) const{
-        Vector2<T> ret;
+    [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const{
+        Vec2<T> ret;
         ret.x() = this->get_x_range().clamp(point.x);
         ret.y() = this->get_y_range().clamp(point.y);
         return ret;

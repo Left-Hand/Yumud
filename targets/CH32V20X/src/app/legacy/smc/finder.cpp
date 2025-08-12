@@ -7,7 +7,7 @@ using namespace ymd::nvcv2;
 namespace SMC{
 
 
-    Range2i get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos){
+    Range2i get_h_range(const ImageReadable<Binary> & src, const Vec2i & pos){
         auto size = src.get_size();
         Range2i current_window = {0,size.x - 1};
 
@@ -96,8 +96,8 @@ namespace SMC{
         }
     }
 
-    Vector2i SegmentUtils::vec(const Segment & segment){
-        return Vector2i(segment.second.x - segment.first.x, segment.first.y - segment.second.y);//inverse y
+    Vec2i SegmentUtils::vec(const Segment & segment){
+        return Vec2i(segment.second.x - segment.first.x, segment.first.y - segment.second.y);//inverse y
     }
 
 
@@ -130,18 +130,18 @@ namespace SMC{
         return false;
     }
 
-    Vector2i CoastUtils::which_in_window(const Coast & coast, const Rect2i & window){
+    Vec2i CoastUtils::which_in_window(const Coast & coast, const Rect2i & window){
         if(coast.size() < 1){
-            return Vector2i{0, 0};
+            return Vec2i{0, 0};
         }
 
         for(const auto & point : coast){
             if(not window.has_point(point)) return point;
         }
-        return Vector2i{0, 0};
+        return Vec2i{0, 0};
     }
 
-    Point CoastUtils::which_in_window(const Coast & coast, const Vector2i & window_size){
+    Point CoastUtils::which_in_window(const Coast & coast, const Vec2i & window_size){
         return CoastUtils::which_in_window(coast, window_size.form_rect());
     }
 
@@ -153,9 +153,9 @@ namespace SMC{
         for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); it++){
 
 
-            Vector2 lastpoint = *std::prev(it);
-            Vector2 currpoint = *it;
-            Vector2 nextpoint = *std::next(it);
+            Vec2 lastpoint = *std::prev(it);
+            Vec2 currpoint = *it;
+            Vec2 nextpoint = *std::next(it);
 
 
             auto v1 = lastpoint - currpoint;
@@ -209,7 +209,7 @@ namespace SMC{
     //     return ret;
     // }
 
-    Coast CoastUtils::trim(const Coast & coast, const Vector2i & window_size){
+    Coast CoastUtils::trim(const Coast & coast, const Vec2i & window_size){
         if(!coast.size()) return {{}};
 
         const auto & first = coast.front();
@@ -243,7 +243,7 @@ namespace SMC{
             return Rect2i{};
         }
 
-        Rect2i ret = {Vector2i(coast.front()), Vector2i{}};
+        Rect2i ret = {Vec2i(coast.front()), Vec2i{}};
 
         if(coast.size() < 2){
             return ret;
@@ -287,7 +287,7 @@ namespace SMC{
         if(y < 0 || y >= size.y) return 0;
         int ret = 0;
         for(int x = ((size.x-1)/2)-35; x < ((size.x-1)/2+35); x++){
-            if(bool(src[Vector2i{x,y}]) ^ bool(src[Vector2i{x + 1, y}])) ret++;
+            if(bool(src[Vec2i{x,y}]) ^ bool(src[Vec2i{x + 1, y}])) ret++;
         }
         return ret;
     }
@@ -297,14 +297,14 @@ namespace SMC{
         if(y < 0 || y >= size.y) return 0;
         int cnt = 0;
         for(int x = (size.x-1)/2-20; x < (size.x-1)/2+20; x++){
-            auto color = uint8_t(src[Vector2i{x,y}]);
-            auto next_color = uint8_t(src[Vector2i{x+1,y}]);
+            auto color = uint8_t(src[Vec2i{x,y}]);
+            auto next_color = uint8_t(src[Vec2i{x+1,y}]);
             cnt += std::abs(next_color - color);
         }
         return cnt;
     }
 
-    Coast CoastUtils::form(const ImageReadable<Binary> & src, const Vector2i & _seed_pos, const LR is_right){
+    Coast CoastUtils::form(const ImageReadable<Binary> & src, const Vec2i & _seed_pos, const LR is_right){
 
         using namespace ymd::nvcv2::Shape;
 
@@ -319,14 +319,14 @@ namespace SMC{
 
     }
 
-    // Boundry CoastUtils::form(const ImageReadable<Gray> & src, Vector2i seed_pos, const bool is_right){
+    // Boundry CoastUtils::form(const ImageReadable<Gray> & src, Vec2i seed_pos, const bool is_right){
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point & seed_pos){
 
         Piles ret;
         Seed seed{seed_pos};
-        while(src.has_point(seed_pos) and bool(src[Vector2i(seed_pos)]) == false){
+        while(src.has_point(seed_pos) and bool(src[Vec2i(seed_pos)]) == false){
             seed.forward();
-            ret[Vector2i(seed).y] = get_h_range(src, Vector2i(seed));
+            ret[Vec2i(seed).y] = get_h_range(src, Vec2i(seed));
         }
 
         return ret;
@@ -355,7 +355,7 @@ namespace SMC{
     Coast BoundryUtils::to_coast(const Boundry & bound){
         Coast coast;
         for(auto [y, x]:bound){
-            if(y != 0) coast.push_back(Vector2i(x,y));
+            if(y != 0) coast.push_back(Vec2i(x,y));
         }
         return coast;
     }
@@ -444,7 +444,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 	real_t ay = pvy - dsy;
 
 	// return sqrt(pow(ax, 2.0) + pow(ay, 2.0));
-    return Vector2(ax, ay).length();
+    return Vec2(ax, ay).length();
 }
 
 
@@ -686,14 +686,14 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         return ret;
     }
 
-    Coast CoastUtils::shrink(const Coast & line, const real_t width, const Vector2i & window_size){
+    Coast CoastUtils::shrink(const Coast & line, const real_t width, const Vec2i & window_size){
         if(line.size() == 1){
             DEBUG_WARN("only one point");
         }else if(line.size() == 2){
-            Rect2i window = Rect2i(Vector2i(), window_size);
+            Rect2i window = Rect2i(Vec2i(), window_size);
 
             auto diff = line.front() - line.back();
-            auto offset = Vector2i(diff.y, -diff.x).normalized() * width;
+            auto offset = Vec2i(diff.y, -diff.x).normalized() * width;
 
             Segment seg{line.front() + offset, line.back() + offset};
             SegmentUtils::constrain(seg, window);
@@ -705,7 +705,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         while(it != line.end()){
             auto & currpoint = *it;
 
-            Vector2 diff;
+            Vec2 diff;
             if(it == line.begin()){
                 auto & nextpoint = *std::next(it);
                 diff = nextpoint - currpoint;
@@ -717,7 +717,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
                 auto & nextpoint = *std::next(it);
                 diff = nextpoint - lastpoint;
             } 
-            Vector2i new_point = Vector2{diff.y, -diff.x}.normalized() * width + currpoint;
+            Vec2i new_point = Vec2{diff.y, -diff.x}.normalized() * width + currpoint;
                 ret.push_back(new_point);
             ++it;
         }
@@ -725,7 +725,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         return ret;
     }
 
-    Circle calculate_cicular(const Vector2 & px1, const Vector2 & px2, const Vector2 & px3)
+    Circle calculate_cicular(const Vec2 & px1, const Vec2 & px2, const Vec2 & px3)
     {
         real_t x1, y1, x2, y2, x3, y3;
         real_t a, b, c, g, e, f;
@@ -751,13 +751,13 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
     bool CoastUtils::is_ccw(const Coast & coast, const bool ccw){
         if(coast.size() < 3) return false;
         for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); ++it){
-            Vector2i p1 = *std::prev(it);
-            Vector2i p2 = *it;
-            Vector2i p3 = *std::next(it);
+            Vec2i p1 = *std::prev(it);
+            Vec2i p2 = *it;
+            Vec2i p3 = *std::next(it);
 
-            Vector2i a = (p3 - p2);
+            Vec2i a = (p3 - p2);
             a.y = -a.y;
-            Vector2i b = p2 - p1;
+            Vec2i b = p2 - p1;
             b.y = -b.y;
 
             int product = a.cross(b);
@@ -775,10 +775,10 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         int N = End- S;
 
         if (N < 3) {
-            return {Vector2{0, 0}, std::numeric_limits<real_t>::infinity()};
+            return {Vec2{0, 0}, std::numeric_limits<real_t>::infinity()};
         }
 
-        Vector2 center;
+        Vec2 center;
         real_t r;
         
         real_t sumX = 0.0; 
@@ -831,7 +831,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         real_t r2 = r * r;
 
         for(int pId = S; pId < End; ++pId){
-            Vector2 point = coast[pId];
+            Vec2 point = coast[pId];
             e = (point - center).length_squared() - r2;
             if (e > err) {
                 err = e;

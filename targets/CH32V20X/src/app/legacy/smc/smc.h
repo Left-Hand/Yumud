@@ -72,7 +72,7 @@ scexpr uint ctrl_freq = 50;
 scexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
 scexpr uint window_y = 32;
-scexpr Vector2i window_half_size = {20, 20};
+scexpr Vec2i window_half_size = {20, 20};
 scexpr real_t startup_meters = 0.6;
 
 class SmartCar;
@@ -125,14 +125,14 @@ public:
 
     struct{
         Quat acc;
-        Vector3 gyr;
+        Vec3 gyr;
         Quat magnet;
     }drift;
     
     struct{
-        Vector3 acc;
-        Vector3 gyr;
-        Vector3 magnet;
+        Vec3 acc;
+        Vec3 gyr;
+        Vec3 magnet;
     }msm;
 
     real_t travel;
@@ -140,9 +140,9 @@ public:
 
     Range2i road_window;
 
-    Vector2i seed_pos;
+    Vec2i seed_pos;
 protected:
-    void set_drift(const Quat & _acc_drift, const Vector3 & _gyr_drift, const Quat & _magent_drift){
+    void set_drift(const Quat & _acc_drift, const Vec3 & _gyr_drift, const Quat & _magent_drift){
         drift.acc = _acc_drift;
         drift.gyr = _gyr_drift;
         drift.magnet = _magent_drift;
@@ -156,9 +156,9 @@ protected:
         mpu.update();
         qml.update();
 
-        msm.acc = drift.acc.xform(Vector3(mpu.read_acc()));
-        msm.gyr = (Vector3(mpu.read_gyr()) - drift.gyr);
-        msm.magnet = drift.magnet.xform(Vector3(qml.read_mag()));
+        msm.acc = drift.acc.xform(Vec3(mpu.read_acc()));
+        msm.gyr = (Vec3(mpu.read_gyr()) - drift.gyr);
+        msm.magnet = drift.magnet.xform(Vec3(qml.read_mag()));
 
         real_t delta_t = t - last_t;
         last_t = t;
@@ -197,24 +197,24 @@ public:
     void cali(){
         scexpr int cali_times = 100;
 
-        Vector3 temp_gravity = Vector3();
-        Vector3 temp_gyr_offs = Vector3();
-        Vector3 temp_magent = Vector3();
+        Vec3 temp_gravity = Vec3();
+        Vec3 temp_gyr_offs = Vec3();
+        Vec3 temp_magent = Vec3();
         
         for(int i = 0; i < cali_times; ++i){
-            temp_gravity += Vector3(mpu.read_acc());
-            temp_gyr_offs += Vector3(mpu.read_gyr());    
-            temp_magent += Vector3(qml.read_mag());
+            temp_gravity += Vec3(mpu.read_acc());
+            temp_gyr_offs += Vec3(mpu.read_gyr());    
+            temp_magent += Vec3(qml.read_mag());
             clock::delay(5ms);
         }
 
-        Vector3 g = temp_gravity / cali_times;
-        Vector3 m = temp_magent / cali_times;
+        Vec3 g = temp_gravity / cali_times;
+        Vec3 m = temp_magent / cali_times;
 
         set_drift(
-            Quat(Vector3(0,0,-1),g/g.length()).inverse(),
+            Quat(Vec3(0,0,-1),g/g.length()).inverse(),
             temp_gyr_offs / cali_times,
-            Quat(Vector3(0,0,-1), m/m.length()).inverse()
+            Quat(Vec3(0,0,-1), m/m.length()).inverse()
         );
     }
 
@@ -265,7 +265,7 @@ public:
     }
 
     auto get_view(const Image<Binary> & src){
-        auto window_center = Vector2i(seed_pos.x, window_y);
+        auto window_center = Vec2i(seed_pos.x, window_y);
         return src.clone(Rect2i::from_center(window_center, window_half_size));
     }
 
@@ -354,7 +354,7 @@ protected:
     CentripetalCtrl centripetal_ctrl;
 
     DisplayerPhySpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
-    ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
+    ST7789 tftDisplayer {SpiInterfaceLcd, Vec2i(240, 240)};
     Painter<RGB565> painter = Painter<RGB565>{};
 
     I2cSw sccb      {portD[2], portC[12]};
