@@ -7,7 +7,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/magic/enum_traits.hpp"
 
-#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/vector3.hpp"
 #include "hal/hal_result.hpp"
 
 namespace ymd::drivers{

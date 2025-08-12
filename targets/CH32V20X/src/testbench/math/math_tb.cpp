@@ -10,18 +10,18 @@
 
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
-#include "types/regions/plane/plane.hpp"
-#include "types/regions/aabb/aabb.hpp"
-#include "types/regions/segment2/Segment2.hpp"
-#include "types/regions/Line2/Line2.hpp"
-#include "types/regions/Ray2/Ray2.hpp"
+#include "types/regions/plane.hpp"
+#include "types/regions/aabb.hpp"
+#include "types/regions/segment2.hpp"
+#include "types/regions/line2.hpp"
+#include "types/regions/ray2.hpp"
 
-#include "types/transforms/transform3d/transform3d.hpp"
-#include "types/transforms/transform2d/transform2d.hpp"
+#include "types/transforms/transform3d.hpp"
+#include "types/transforms/transform2d.hpp"
 
-#include "types/shapes/Arc2/Arc2.hpp"
-#include "types/shapes/Bezier2/Bezier2.hpp"
-#include "types/regions/perspective_rect/perspective_rect.hpp"
+#include "types/shapes/Arc2.hpp"
+#include "types/shapes/Bezier2.hpp"
+#include "types/regions/perspective_rect.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_kinematics.hpp"

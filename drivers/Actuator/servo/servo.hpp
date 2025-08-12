@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 namespace ymd::drivers{
 

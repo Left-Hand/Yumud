@@ -9,7 +9,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
 
-#include "types/regions/rect2/rect2.hpp"
+#include "types/regions/rect2.hpp"
 #include "types/colors/color/color.hpp"
 #include "types/colors/rgb/rgb.hpp"
 

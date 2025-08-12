@@ -26,7 +26,7 @@
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"

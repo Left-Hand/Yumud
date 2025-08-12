@@ -13,7 +13,7 @@
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "types/transforms/euler/euler.hpp"
+#include "types/transforms/euler.hpp"
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 #include "dsp/motor_ctrl/tracking_differentiator.hpp"

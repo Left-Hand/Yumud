@@ -9,7 +9,7 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 
 namespace ymd::robots{

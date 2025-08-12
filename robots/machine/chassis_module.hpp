@@ -3,7 +3,7 @@
 
 #include "types/gesture/pose2.hpp"
 #include "types/gesture/twist2.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 #include "chassis_ctrl.hpp"
 #include "drivers/IMU/IMU.hpp"

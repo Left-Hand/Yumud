@@ -3,7 +3,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/realmath.hpp"
 
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 #include "meta_utils.hpp"
 #include "calibrate_utils.hpp"

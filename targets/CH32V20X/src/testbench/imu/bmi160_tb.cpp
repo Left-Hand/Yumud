@@ -7,7 +7,7 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 

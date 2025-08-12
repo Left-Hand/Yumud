@@ -7,7 +7,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "../GateDriverIntf.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 
 

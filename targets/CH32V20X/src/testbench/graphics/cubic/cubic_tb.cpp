@@ -14,7 +14,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
-#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/vector3.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 

@@ -8,8 +8,8 @@
 #include "scara/nozzle.hpp"
 #include "scara/scara.hpp"
 
-#include "types/vectors/vector3/Vector3.hpp"
-#include "types/regions/aabb/AABB.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/regions/aabb.hpp"
 
 
 namespace ymd::robots{

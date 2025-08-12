@@ -10,7 +10,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 #include "core/magic/enum_traits.hpp"
 
 namespace ymd::drivers{

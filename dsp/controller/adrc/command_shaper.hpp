@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 #include "tracking_differentiator.hpp"
 
 namespace std{

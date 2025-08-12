@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 
 

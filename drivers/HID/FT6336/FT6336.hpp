@@ -11,7 +11,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 namespace ymd::drivers{
 

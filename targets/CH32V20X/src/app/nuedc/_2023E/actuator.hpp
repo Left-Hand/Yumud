@@ -11,8 +11,8 @@
 #include "drivers/GateDriver/AT8222/at8222.hpp"
 
 #include "concept/pwm_channel.hpp"
-#include "types/vectors/vector2/vector2.hpp"
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "robots/mock/mock_servo.hpp"

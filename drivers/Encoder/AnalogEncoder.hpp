@@ -2,7 +2,7 @@
 
 #include "Encoder.hpp"
 #include "concept/analog_channel.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 namespace ymd::drivers{
 class AnalogEncoder final:public EncoderIntf{

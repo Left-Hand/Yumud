@@ -13,9 +13,9 @@
 #include "../targets/CH32V20X/src/testbench/tb.h"
 #include "../hal/bkp/bkp.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
-#include "types/vectors/vector2/vector2.hpp"
-#include "types/vectors/vector3/vector3.hpp"
+#include "types/vectors/quat.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/vectors/vector3.hpp"
 
 #include "ctrl.hpp"
 #include "body.hpp"

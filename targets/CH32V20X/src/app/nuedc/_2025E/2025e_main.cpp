@@ -25,7 +25,7 @@
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 
 #include "robots/gesture/comp_est.hpp"
@@ -38,7 +38,7 @@
 #include "robots/commands/nmt_commands.hpp"
 #include "robots/nodes/msg_factory.hpp"
 
-#include "types/regions/perspective_rect/perspective_rect.hpp"
+#include "types/regions/perspective_rect.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"

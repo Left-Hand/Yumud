@@ -26,7 +26,7 @@
 
 #include "src/testbench/tb.h"
 
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 #include "meta_utils.hpp"
 #include "tasks.hpp"

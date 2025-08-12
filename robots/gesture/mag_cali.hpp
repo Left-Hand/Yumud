@@ -2,8 +2,8 @@
 
 #include "core/container/inline_vector.hpp"
 
-#include "types/vectors/vector3/vector3.hpp"
-#include "types/vectors/quat/quat.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/vectors/quat.hpp"
 
 namespace ymd::robots{
 

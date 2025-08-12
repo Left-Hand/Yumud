@@ -23,10 +23,10 @@
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
 
-#include "types/regions/range2/range2.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
-#include "types/vectors/vector3/Vector3.hpp"
-#include "types/vectors/quat/Quat.hpp"
+#include "types/regions/range2.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"

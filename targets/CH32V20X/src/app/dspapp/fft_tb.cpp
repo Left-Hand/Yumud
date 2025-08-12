@@ -8,7 +8,7 @@
 #include "liir.hpp"
 
 #include "core/math/realmath.hpp"
-#include "types/points/complex/complex.hpp"
+#include "types/points/complex.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "func_eval.hpp"

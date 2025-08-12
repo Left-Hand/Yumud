@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/vector3.hpp"
 
 using namespace ymd;
 

@@ -12,8 +12,8 @@
 
 #include "nvcv2/shape/shape.hpp"
 
-#include "types/regions/ray2/Ray2.hpp"
-#include "types/regions/line2/Line2.hpp"
+#include "types/regions/ray2.hpp"
+#include "types/regions/line2.hpp"
 
 #include "types/gesture/pose2.hpp"
 

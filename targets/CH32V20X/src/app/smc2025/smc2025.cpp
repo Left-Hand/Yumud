@@ -12,7 +12,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter/painter.hpp"

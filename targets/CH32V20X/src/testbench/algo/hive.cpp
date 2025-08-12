@@ -7,7 +7,7 @@
 #include "core/clock/clock.hpp"
 
 #include "core/utils/cpp_stl/hive.hpp"
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 
 #include "hal/bus/uart/uarthw.hpp"

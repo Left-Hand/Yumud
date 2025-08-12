@@ -4,7 +4,7 @@
 #include "core/clock/time.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "core/string/string_view.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 #include "core/sync/timer.hpp"
 #include "types/colors/color/color.hpp"

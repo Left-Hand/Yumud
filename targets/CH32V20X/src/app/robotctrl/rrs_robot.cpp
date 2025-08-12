@@ -13,7 +13,7 @@
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "types/transforms/euler/euler.hpp"
+#include "types/transforms/euler.hpp"
 
 #define MOCK_TEST_ALL
 

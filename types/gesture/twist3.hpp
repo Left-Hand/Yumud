@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector2/Vector3.hpp"
+#include "types/vectors/Vector3.hpp"
 
 namespace ymd{
 

@@ -9,7 +9,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/Errno.hpp"

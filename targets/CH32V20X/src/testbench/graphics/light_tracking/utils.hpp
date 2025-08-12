@@ -5,7 +5,7 @@
 
 #include "types.hpp"
 #include "core/clock/time.hpp"
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 static constexpr auto vec3_compMax(auto v) {return MAX(v.x,v.y,v.z);}
 static constexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
