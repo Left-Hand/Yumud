@@ -269,7 +269,7 @@ static std::optional<RGB> sample_light(
 static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
-    return Quat<real_t>(
+    return Quat<real_t>::from_xyzw(
         -normal.y,
         normal.x,
         0,

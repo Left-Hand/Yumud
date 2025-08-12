@@ -10,32 +10,32 @@ __fast_inline constexpr
 auto build_norm_vec3_from_quat_xfrom_top(
     const T x, const T y, const T z, const T w){
 
-    return Vec3<Norm_t<T>>(
-        Norm_t(2 * (qconv(Norm_t(x) , Norm_t(z) , Norm_t(- w), Norm_t(y)))),
-        Norm_t(2 * (qconv(Norm_t(w) , Norm_t(x) , Norm_t(  y), Norm_t(z)))),
-        Norm_t(qsqu(Norm_t(w)) - qsqu(Norm_t(x)) - qsqu(Norm_t(y)) + qsqu(Norm_t(z)))
+    return Vec3<Norm<T>>(
+        Norm(2 * (qconv(Norm(x) , Norm(z) , Norm(- w), Norm(y)))),
+        Norm(2 * (qconv(Norm(w) , Norm(x) , Norm(  y), Norm(z)))),
+        Norm(qsqu(Norm(w)) - qsqu(Norm(x)) - qsqu(Norm(y)) + qsqu(Norm(z)))
     );
 }
 
 template<arithmetic T>
 __fast_inline constexpr
-Vec3<Norm_t<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
+Vec3<Norm<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
 	const auto ilen = isqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-	return Vec3<Norm_t<T>>(
-		Norm_t(vec.x * ilen),
-		Norm_t(vec.y * ilen),
-		Norm_t(vec.z * ilen)
+	return Vec3<Norm<T>>(
+		Norm(vec.x * ilen),
+		Norm(vec.y * ilen),
+		Norm(vec.z * ilen)
 	);
 }
 
 
 template<arithmetic T>
 __fast_inline constexpr
-Vec3<Norm_t<T>> build_norm_vec3_from_cross_of_vec3(Vec3<Norm_t<T>> const & v1, Vec3<Norm_t<T>> const & v2){
-	return Vec3<Norm_t<T>>(
-		Norm_t(qconv(v1.y, v2.z, - v1.z, v2.y)),
-		Norm_t(qconv(v1.z, v2.x, - v1.x, v2.z)), 
-		Norm_t(qconv(v1.x, v2.y, - v1.y, v2.x))
+Vec3<Norm<T>> build_norm_vec3_from_cross_of_vec3(Vec3<Norm<T>> const & v1, Vec3<Norm<T>> const & v2){
+	return Vec3<Norm<T>>(
+		Norm(qconv(v1.y, v2.z, - v1.z, v2.y)),
+		Norm(qconv(v1.z, v2.x, - v1.x, v2.z)), 
+		Norm(qconv(v1.x, v2.y, - v1.y, v2.x))
 	);
 }
 

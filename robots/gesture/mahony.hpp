@@ -57,7 +57,7 @@ public:
 };
 
 template<typename T>
-__fast_inline OutputStream & operator<<(OutputStream & os, const Norm_t<T> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const Norm<T> & value){
     return os << T(value);
 }
 

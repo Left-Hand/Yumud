@@ -49,22 +49,38 @@ struct Quat{
 
     static_assert(not std::is_integral_v<T>);
 
+    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(0,0,0,1);
+    // static constexpr Quat<T> IDENTITY = Quat<T>(0,0,0,1);
+
     __fast_inline constexpr Quat() = default;
 
-    static constexpr Quat<T> IDENTITY = Quat<T>(0,0,0,1);
+
 
     [[nodiscard]]
 
-    __fast_inline constexpr Quat(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
-            x(static_cast<T>(p_x)),
-            y(static_cast<T>(p_y)),
-            z(static_cast<T>(p_z)),
-            w(static_cast<T>(p_w)) {
+    __fast_inline static constexpr Quat from_xyzw(
+        const T p_x, const T p_y, const T p_z, const T p_w){
+        Quat<T> ret;
+        ret.x = p_x;
+        ret.y = p_y;
+        ret.z = p_z;
+        ret.w = p_w;
+        return ret;
+    }
+
+    [[nodiscard]] 
+    __fast_inline static constexpr Quat from_array(
+        std::array<T, 4> p_array
+    ){
+        return from_xyzw(p_array[0], p_array[1], p_array[2], p_array[3]);
     }
 
     [[nodiscard]]
-    constexpr Quat(const Vec3<T> &axis, const T &angle) {
-        set_axis_angle(axis, angle); }
+    __fast_inline static constexpr Quat from_axis_angle(const Vec3<T> &axis, const T &angle) {
+        Quat ret;
+        ret.set_axis_angle(axis, angle);
+        return ret;
+    }
 
     [[nodiscard]]
     static constexpr Quat from_shortest_arc(const Vec3<T> &v0, const Vec3<T> &v1){
@@ -75,12 +91,12 @@ struct Quat{
 
         if (std::abs(d) > T(1) - T(CMP_EPSILON)) {
             const auto axis = n0.get_any_perpendicular();
-            return Quat<T>(axis.x, axis.y, axis.z, T(0));
+            return Quat<T>::from_xyzw(axis.x, axis.y, axis.z, T(0));
         } else {
             Vec3<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T rs = T(1) / s;
-            return Quat<T>{c.x * rs, c.y * rs, c.z * rs, s / 2};
+            return Quat<T>::from_xyzw(c.x * rs, c.y * rs, c.z * rs, s / 2);
         }
     }
 
@@ -107,7 +123,7 @@ struct Quat{
         T angle = std::acos(dot);
         
         // Create and return the quaternion representing the rotation
-        return Quat<T>(axis, angle);
+        return Quat<T>::from_axis_angle(axis, angle);
     }
 
 
@@ -189,7 +205,7 @@ struct Quat{
     [[nodiscard]]
     constexpr Quat integral(const Vec3<T> & p, const T delta) const {
         const auto k = delta / 2;
-        return Quat<T>(
+        return Quat<T>::from_xyzw(
             x + k * (-y * p.z + z * p.y + w * p.x),
             y + k * (x * p.z - z * p.x + w * p.y),
             z + k * (-x * p.y + y * p.x + w * p.z),
@@ -246,7 +262,7 @@ struct Quat{
 
     [[nodiscard]] __fast_inline constexpr
     Quat operator*(const T v) const {
-        return Quat(x * v,  y * v, z * v,  w * v);
+        return Quat::from_xyzw(x * v,  y * v, z * v,  w * v);
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -500,7 +516,7 @@ constexpr Quat<T> Quat<T>::inverse() const {
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat<T>(), "The Quat<T> must be normalized.");
 #endif
-	return Quat<T>(-x, -y, -z, w);
+	return Quat<T>::from_xyzw(-x, -y, -z, w);
 }
 template<typename T>
 constexpr Quat<T> Quat<T>::slerp(const Quat<T> &p_to, const T &p_weight) const {
@@ -540,7 +556,7 @@ constexpr Quat<T> Quat<T>::slerp(const Quat<T> &p_to, const T &p_weight) const {
 		scale1 = p_weight;
 	}
 	// calculate final values
-	return Quat<T>(
+	return Quat<T>::from_xyzw(
 			scale0 * x + scale1 * to1.x,
 			scale0 * y + scale1 * to1.y,
 			scale0 * z + scale1 * to1.z,
