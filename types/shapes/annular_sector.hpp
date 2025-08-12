@@ -10,18 +10,17 @@ struct AnnularSector final{
     T inner_radius;
     T outer_radius;
     
-    T start_rad;
-    T stop_rad;
+    Range2<T> angle_range;
 
-    constexpr bool does_contains_rad(const T orientation) const {
-        return IN_RANGE(orientation, start_rad, stop_rad);
+    constexpr bool contains_angle(const T orientation) const {
+        return angle_range.contains(orientation);
     }
 
     constexpr Rect2<T> get_bounding_box() const {
-        const bool x_reached_left = does_contains_rad(T(PI));
-        const bool x_reached_right = does_contains_rad(T(0));
-        const bool y_reached_top = does_contains_rad(T(PI/2));
-        const bool y_reached_bottom = does_contains_rad(T(-PI/2));
+        const bool x_reached_left = contains_angle(T(PI));
+        const bool x_reached_right = contains_angle(T(0));
+        const bool y_reached_top = contains_angle(T(PI/2));
+        const bool y_reached_bottom = contains_angle(T(-PI/2));
 
         const auto p1 = Vector2<T>::from_idenity_rotation(start_rad) * outer_radius;
         const auto p2 = Vector2<T>::from_idenity_rotation(stop_rad) * outer_radius;

@@ -1,3 +1,5 @@
+#if 0
+
 #include "src/testbench/tb.h"
 #include "utils.hpp"
 #include <atomic>
@@ -11,7 +13,8 @@
 #include "core/sync/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/string/utils/strconv2.hpp"
-
+#include "core/utils/combo_counter.hpp"
+#include "core/utils/delayed_semphr.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -26,22 +29,8 @@
 
 #include "types/vectors/quat.hpp"
 
-#include "digipw/SVPWM/svpwm.hpp"
-#include "digipw/SVPWM/svpwm3.hpp"
 
-
-#include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
-#include "dsp/motor_ctrl/ctrl_law.hpp"
-#include "dsp/observer/smo/SmoObserver.hpp"
-#include "dsp/observer/lbg/RolbgObserver.hpp"
-#include "dsp/observer/nonlinear/NonlinearObserver.hpp"
-#include "dsp/controller/pi_ctrl.hpp"
-#include "dsp/controller/adrc/leso.hpp"
 #include "robots/gesture/comp_est.hpp"
-
-#include "CurrentSensor.hpp"
-
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/cannet/can_chain.hpp"
@@ -49,10 +38,23 @@
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
 #include "robots/commands/nmt_commands.hpp"
+#include "robots/nodes/msg_factory.hpp"
+
+#include "types/regions/perspective_rect.hpp"
+
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "dsp/motor_ctrl/ctrl_law.hpp"
+#include "dsp/motor_ctrl/elecrad_compsator.hpp"
+#include "dsp/controller/pi_ctrl.hpp"
+#include "dsp/controller/adrc/leso.hpp"
+
+#include "digipw/SVPWM/svpwm.hpp"
+#include "digipw/SVPWM/svpwm3.hpp"
+
 
 using namespace ymd;
 using namespace ymd::drivers;
-using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 
@@ -78,16 +80,6 @@ struct kind_to_command<CommandKind, K>{ \
 
 
 namespace ymd{
-
-struct ElecradCompensator{
-    q16 base;
-    uint32_t pole_pairs;
-
-    constexpr q16 operator ()(const q16 lap_position) const {
-        return (frac(frac(lap_position + base) * pole_pairs) * real_t(TAU));
-    }
-};
-
 
 
 enum class NodeRole:uint8_t{
@@ -834,3 +826,5 @@ static void static_test(){
     static_assert(int(may_cmd.unwrap_err()) == int(serde::DeserializeError::BytesLengthLong));
     #endif
 }
+
+#endif

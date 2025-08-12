@@ -68,7 +68,8 @@ public:
         return Rect2<T>(center - size, size);
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_corners(const Vector2<T> & a, const Vector2<T> & b){
+    [[nodiscard]] __fast_inline static constexpr Rect2 from_corners(
+        const Vector2<T> & a, const Vector2<T> & b){
         return Rect2<T>(a, b-a).abs();
     }
 
@@ -134,7 +135,9 @@ public:
         return shrink_impl(static_cast<Tsigned>(val));
     }
 private:
-    [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> shrink_impl(const Tsigned val) const {
+    [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> shrink_impl(
+        const Tsigned val
+    ) const {
         if constexpr(std::is_integral_v<T>){
             const Tsigned new_size_x = Tsigned(size.x) - 2 * Tsigned(val);
             const Tsigned new_size_y = Tsigned(size.y) - 2 * Tsigned(val);
@@ -217,7 +220,9 @@ public:
             || (this->size != other.size));
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> scale_around_corner(const arithmetic auto & ratio) const{
+    [[nodiscard]] __fast_inline constexpr Rect2<T> scale_around_corner(
+        const arithmetic auto & ratio
+    ) const{
         Rect2<T> ret = (*this);
         ret.position *= ratio;
         ret.size *= ratio;
@@ -233,7 +238,9 @@ public:
                 (other.y() < self.y() + self.h());
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> shift(const Vector2<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr Rect2<T> shift(
+        const Vector2<T> & other
+    ) const{
         Rect2<T> ret = (*this);
         ret.position += other;
         return ret;
@@ -241,18 +248,18 @@ public:
 
     [[nodiscard]] constexpr Option<Rect2<T>> intersection(const Rect2<T> & other) const{
 
-        const auto _position = Vector2<T>(
+        const auto ins_position = Vector2<T>(
             MAX(T(this->x()), T(other.x())),
             MAX(T(this->y()), T(other.y()))
         );
 
-        const auto _size = Vector2<T>(
-            MIN(T(this->x() + this->w()), T(other.x() + other.w())) - _position.x,
-            MIN(T(this->y() + this->h()), T(other.y() + other.h())) - _position.y
+        const auto ins_size = Vector2<T>(
+            MIN(T(this->x() + this->w()), T(other.x() + other.w())) - ins_position.x,
+            MIN(T(this->y() + this->h()), T(other.y() + other.h())) - ins_position.y
         );
 
-        if(_size.x < 0 || _size.y < 0) return None;
-        return Some(Rect2<T>{_position, _size});
+        if(ins_size.x < 0 || ins_size.y < 0) return None;
+        return Some(Rect2<T>{ins_position, ins_size});
     }
 
     [[nodiscard]] constexpr Rect2<T> merge(const Rect2<T> & other) const{
@@ -262,7 +269,8 @@ public:
     }
 
     [[nodiscard]] constexpr Rect2<T> merge(const Vector2<T> & point) const{
-        auto & self = *this;
+        const auto & self = *this;
+
         auto x_min = MIN(self.x(), point.x);
         auto x_max = MAX(self.x() + self.w(), point.x);
         auto y_min = MIN(self.y(), point.y);

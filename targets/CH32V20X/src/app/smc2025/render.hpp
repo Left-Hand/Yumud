@@ -45,13 +45,6 @@ using BoundingBox = Rect2<q16>;
 
 struct Placement{
     Vector2<q16> position;
-
-    // q16 rotation = 0;
-    // q16 zoom = 1;
-
-    // Vector2<q16> apply_transform(Vector2<q16> p) const {
-    // return (p * zoom).rotated(rotation) + position;
-    // }
 };
 
 
@@ -77,30 +70,6 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
 }
 
 
-enum class TextAlignment:uint8_t{
-    Left,
-    Center,
-    Right,
-};
-
-enum class TextBaseline:uint8_t{
-    Top,
-    Bottom,
-    Middle,
-    Alphabetic,
-};
-
-struct CornerRadii final{
-    Vector2<uint8_t> top_left;
-    Vector2<uint8_t> top_right;
-    Vector2<uint8_t> bottom_right;
-    Vector2<uint8_t> bottom_left;
-};
-
-struct RoundedRectangle final{
-    Rect2i rectangle;
-    CornerRadii corners;
-};
 
 
 struct SpotLight final{
