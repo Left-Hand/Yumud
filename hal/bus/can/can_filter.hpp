@@ -5,7 +5,7 @@
 
 #include "core/io/regs.hpp"
 #include "can_utils.hpp"
-
+#include "can_id.hpp"
 
 namespace ymd{
     class StringView;
@@ -24,26 +24,26 @@ struct CanStdIdMask{
     #pragma pack(pop)
 
     static constexpr CanStdIdMask from_accept_all(){
-        return {0, CanRemoteSpec::Any};
+        return {CanStdId(0), CanRemoteSpec::Any};
     }
 
     static constexpr  CanStdIdMask from_reject_all(){
-        return {0xffff, CanRemoteSpec::Specified};
+        return {CanStdId(0x7ff), CanRemoteSpec::Specified};
     }
 
     static constexpr CanStdIdMask from_ignore_high(const size_t len, const CanRemoteSpec rmt){
-        return {uint16_t((1 << len) - 1), rmt};
+        return {CanStdId(uint16_t((1 << len) - 1)), rmt};
     }
 
     static constexpr CanStdIdMask from_ignore_low(const size_t len, const CanRemoteSpec rmt){
-        return {uint16_t(~(uint16_t(1 << len) - 1)), rmt};
+        return {CanStdId(uint16_t(~(uint16_t(1 << len) - 1))), rmt};
     }
 
     constexpr uint16_t as_u16() const{
         return std::bit_cast<uint16_t>(*this);
     }
-    constexpr CanStdIdMask(const uint16_t _id, const CanRemoteSpec rmt):
-        rtr(uint8_t(rmt)), id(_id){;}
+    constexpr CanStdIdMask(const hal::CanStdId _id, const CanRemoteSpec rmt):
+        rtr(uint8_t(rmt)), id(_id.to_u11()){;}
 
     constexpr CanStdIdMask(const CanStdIdMask & other) = default;
     constexpr CanStdIdMask(CanStdIdMask && other) = default;
@@ -63,19 +63,19 @@ struct CanExtIdMask{
     #pragma pack(pop)
 
     static constexpr CanExtIdMask from_accept_all(){
-        return {0, CanRemoteSpec::Data};
+        return {CanExtId(0), CanRemoteSpec::Data};
     }
 
     static constexpr CanExtIdMask from_reject_all(){
-        return {0xffffffff, CanRemoteSpec::Remote};
+        return {CanExtId(0x1fffffff), CanRemoteSpec::Remote};
     }
 
     static constexpr CanExtIdMask from_ignore_high(const size_t len, const CanRemoteSpec rmt){
-        return {uint32_t((1 << len) - 1), rmt};
+        return {CanExtId(uint32_t((1 << len) - 1)), rmt};
     }
 
     static constexpr CanExtIdMask from_ignore_low(const size_t len, const CanRemoteSpec rmt){
-        return {~uint32_t(uint32_t(1 << len) - 1), rmt};
+        return {CanExtId(~uint32_t(uint32_t(1 << len) - 1)), rmt};
     }
 
 
@@ -83,8 +83,8 @@ struct CanExtIdMask{
     constexpr uint32_t as_u32() const{
         return std::bit_cast<uint32_t>(*this);
     }
-    constexpr CanExtIdMask(const uint32_t _id, const CanRemoteSpec rmt):
-        rtr(uint8_t(rmt)), id(_id){;}
+    constexpr CanExtIdMask(const CanExtId _id, const CanRemoteSpec rmt):
+        rtr(uint8_t(rmt)), id(_id.to_u29()){;}
     constexpr CanExtIdMask(const CanExtIdMask & other) = default;
     constexpr CanExtIdMask(CanExtIdMask && other) = default;
 private:
@@ -132,8 +132,8 @@ public:
     };
 
     static constexpr StdIdMaskPair STD_ALL_PASS = {
-        CanStdIdMask{0xffff,CanRemoteSpec::Remote}, 
-        CanStdIdMask{0xffff,CanRemoteSpec::Remote}
+        CanStdIdMask{CanStdId(0x7ff),CanRemoteSpec::Remote}, 
+        CanStdIdMask{CanStdId(0x7ff),CanRemoteSpec::Remote}
     };
 
     void mask(const StdIdMaskPair & pair){

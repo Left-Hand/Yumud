@@ -79,14 +79,15 @@ struct PerspectiveRectInfo{
     std::array<uint8_t, 8> data;
 };
 
-struct ErrPosition{
-    // std::array<Vec2<uint8_t>, 4> points;
-    bf16 x;
-    bf16 y;
 
-    constexpr Vec2<real_t> to_vec2() const {
-        return Vec2<real_t>(real_t(x), real_t(y));
-    }
+struct ErrXY{
+    bf16 px;
+    bf16 py;
+};
+
+struct FwdXY{
+    bf16 fx;
+    bf16 fy;
 };
 
 
@@ -150,9 +151,13 @@ DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::PerspectiveRectInfo)
 DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::PerspectiveRectInfo)
 DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::PerspectiveRectInfo, data)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::ErrPosition)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::ErrPosition)
-DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::ErrPosition, x, y)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::ErrXY)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::ErrXY)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::ErrXY, px, py)
+
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::FwdXY)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::FwdXY)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::FwdXY, fx, fy)
 
 
 }

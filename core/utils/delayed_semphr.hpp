@@ -9,6 +9,10 @@ public:
     DelayedSemphr(const Milliseconds delay_ms):
         delay_ms_(delay_ms){;}
 
+    void reset(){
+        last_millis_ = std::nullopt;
+    }
+
     void give(){
         last_millis_ = Milliseconds(clock::millis());
     }
@@ -20,9 +24,9 @@ public:
         }
         return false;
     }
-    private:
-        Milliseconds delay_ms_ = 0ms;
-        std::optional<Milliseconds> last_millis_ = std::nullopt;
+private:
+    Milliseconds delay_ms_ = 0ms;
+    std::optional<Milliseconds> last_millis_ = std::nullopt;
 };
 
 }

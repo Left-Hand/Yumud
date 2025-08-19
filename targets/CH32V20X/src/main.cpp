@@ -58,8 +58,10 @@ int main(){
     // mks_stepper_main();
     // ads7830_main();
     // math_main();
-    polar_robot_main();
+    // polar_robot_main();
     nuedc_2025e_main();
+    // laser_ctl_main();
+
     // bldc_main();
     // laser_ctl_main();
     // diffspd_vehicle_main();

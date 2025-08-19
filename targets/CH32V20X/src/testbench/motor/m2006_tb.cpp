@@ -23,8 +23,8 @@ void m2006_main(){
     can.init({CanBaudrate::_1M});
     can[0].mask(
         {   
-            .id = CanStdIdMask{0x201, CanRemoteSpec::Data}, 
-            .mask = CanStdIdMask{0xffff, CanRemoteSpec::Remote}
+            .id = CanStdIdMask{CanStdId(0x201), CanRemoteSpec::Data}, 
+            .mask = CanStdIdMask{CanStdId(0xffff), CanRemoteSpec::Remote}
         }
     );
     while(true){

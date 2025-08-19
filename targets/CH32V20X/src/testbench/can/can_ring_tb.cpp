@@ -28,10 +28,10 @@ void can_ring_main(){
 
     can[0].mask(
         {
-            .id = CanStdIdMask{0x200, CanRemoteSpec::Any}, 
+            .id = CanStdIdMask{CanStdId(0x200), CanRemoteSpec::Any}, 
             .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
         },{
-            .id = CanStdIdMask{0x000, CanRemoteSpec::Any}, 
+            .id = CanStdIdMask{CanStdId(0x000), CanRemoteSpec::Any}, 
             .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
         }
     );

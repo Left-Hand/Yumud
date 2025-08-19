@@ -29,7 +29,7 @@ struct PositionFilter{
 
     constexpr void update(const q16 next_lap_position){
         if(unlikely(inited_ == false)){
-            position_offset = map_lap_to_nearest(
+            position_offset_ = map_lap_to_nearest(
                 frac(next_lap_position - base_lap_position_));
             inited_ = true;
         }
@@ -39,7 +39,7 @@ struct PositionFilter{
         lap_position_ = next_lap_position;
 
         cont_position_ += delta_position;
-        td_.update(cont_position_ + position_offset);
+        td_.update(cont_position_ + position_offset_);
     }
 
     constexpr void set_base_lap_position(const q16 base_lap_position){
@@ -54,16 +54,8 @@ struct PositionFilter{
         return td_.get().position;
     }
 
-    constexpr q16 cont_position() const {
-        return cont_position_;
-    }
-
     constexpr q20 speed() const {
         return td_.get().speed;
-    }
-
-    constexpr std::tuple<q16, q16> get_position_and_speed() const {
-        return std::make_tuple(position(), speed());
     }
 
 private:
@@ -82,7 +74,7 @@ private:
     q16 lap_position_       = 0;
     q16 cont_position_      = 0;
     q16 base_lap_position_   = 0;
-    q16 position_offset = 0;
+    q16 position_offset_ = 0;
     bool inited_ = false;
 };
 

@@ -30,8 +30,8 @@ template<typename CommandKind>
 static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
     const auto id_u11 = id.to_u11();
     return std::make_tuple(
-        std::bit_cast<NodeRole>(uint8_t(id_u11 & 0x7f)),
-        std::bit_cast<CommandKind>(uint8_t(id_u11 >> 7))
+        std::bit_cast<NodeRole>(uint8_t(id_u11 >> 7)),
+        std::bit_cast<CommandKind>(uint8_t(id_u11 & 0x7f))
     );
 };
 
@@ -39,8 +39,8 @@ static constexpr auto dump_role_and_cmd(const hal::CanStdId id){
 template<typename CommandKind>
 static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind cmd){
     const auto id_u11 = uint16_t(
-        std::bit_cast<uint8_t>(role) 
-        | (std::bit_cast<uint8_t>(cmd) << 7));
+        uint16_t(uint16_t(std::bit_cast<uint8_t>(role)) << 7) 
+        | uint16_t(std::bit_cast<uint8_t>(cmd) & 0x7f));
     return hal::CanStdId(id_u11);
 };
 

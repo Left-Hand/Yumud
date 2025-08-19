@@ -42,6 +42,10 @@ public:
         this->state_ = forward(*this, y, u, this->state_);
     }
 
+    constexpr void reset(){
+        this->state_ = State{0, 0};
+    }
+
     constexpr const auto & get() const {return this->state_;}
     constexpr const auto & get_disturbance() const {return this->state_[1];}
 private:

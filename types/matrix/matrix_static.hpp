@@ -77,22 +77,8 @@ public:
     __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
     __fast_inline constexpr size_t size() const { return R*C;}
-
-    // __fast_inline constexpr T * data() { return static_cast<T *>(&data_[0]);}
-    // __fast_inline constexpr const T * data() const 
-    //     { return static_cast<const T *>(&data_[0]);}
-    // __fast_inline constexpr T * end() { return data() + size();}
-    // __fast_inline constexpr const T * end() const { return data() + size();}
-
     __fast_inline constexpr T * data() { return storage_.data();}
     __fast_inline constexpr const T * data() const { return storage_.data(); }
-
-    // __fast_inline constexpr void setZero() {
-    //     auto ptr = data();
-    //     for(size_t i = 0; i < size(); i++){
-    //         ptr[i] = static_cast<T>(0);
-    //     }
-    // }
 
     template<size_t R2, size_t C2>
     __fast_inline constexpr Matrix<T, R2, C2> block(
@@ -487,9 +473,11 @@ public:
         static_assert(R == C, "Determinant can only be calculated for square matrices.");
 
         if constexpr (R == 1) {
-            return this->at(0, 0);
+            // return this->at(0, 0);
+            return storage_[0];
         } else if constexpr (R == 2) {
-            return this->at(0, 0) * this->at(1, 1) - this->at(0, 1) * this->at(1, 0);
+            // return this->at(0, 0) * this->at(1, 1) - this->at(0, 1) * this->at(1, 0);
+            return storage_[0] * storage_[3] - storage_[1] * storage_[2];
         } else {
             T det = 0;
             for (size_t j = 0; j < C; ++j) {
@@ -497,6 +485,11 @@ public:
             }
             return det;
         }
+    }
+
+    __fast_inline constexpr 
+    T abs() const {
+        return determinant();
     }
 private:
     // std::array<std::array<T, C>, R> storage_;

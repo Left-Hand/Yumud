@@ -333,10 +333,10 @@ void polar_robot_main(){
     COMM_CAN.enable_hw_retransmit(DISEN);
 
     COMM_CAN[0].mask({
-            .id = CanStdIdMask{0x200, CanRemoteSpec::Any}, 
+            .id = CanStdIdMask{CanStdId(0x200), CanRemoteSpec::Any}, 
             .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
         },{
-            .id = CanStdIdMask{0x000, CanRemoteSpec::Any}, 
+            .id = CanStdIdMask{CanStdId(0x000), CanRemoteSpec::Any}, 
             .mask = CanStdIdMask::from_accept_all()
         }
     );

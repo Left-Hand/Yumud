@@ -323,7 +323,8 @@ void diffspd_vehicle_main(){
             freq * amp * cospu(ctime * freq)
         );
 
-        const auto [position, speed] = motor_td_.get_position_and_speed();
+        const auto position = motor_td_.position();
+        const auto speed = motor_td_.speed();
 
         const auto duty = CLAMP2(
             ctrl_law_(targ_position - position, targ_speed - speed),
@@ -337,7 +338,8 @@ void diffspd_vehicle_main(){
 
     auto report_motor_service = [&]{
 
-        const auto [position, speed] = motor_td_.get_position_and_speed();
+        const auto position = motor_td_.position();
+        const auto speed = motor_td_.speed();
         DEBUG_PRINTLN_IDLE(
             motor_phy.get_position(),
             motor_phy.count(),

@@ -125,28 +125,28 @@ public:
 };
 
 
-template<typename T>
-std::tuple<T, T> id_and_mask(const code_parser::parse_result & result){
+// template<typename T>
+// std::tuple<T, T> id_and_mask(const code_parser::parse_result & result){
 
-    switch(result.rm_sel){
-        default:
-        case remote_selection::any:
-            return {
-                T(result.id, CanRemoteSpec::Any), 
-                T(result.mask, CanRemoteSpec::Any)
-            };
-        case remote_selection::data:
-            return {
-                T(result.id, CanRemoteSpec::Data), 
-                T(result.mask, CanRemoteSpec::Specified)
-            };
-        case remote_selection::remote:
-            return {
-                T(result.id, CanRemoteSpec::Remote), 
-                T(result.mask, CanRemoteSpec::Specified)
-            };
-    }
-};
+//     switch(result.rm_sel){
+//         default:
+//         case remote_selection::any:
+//             return {
+//                 T(result.id, CanRemoteSpec::Any), 
+//                 T(result.mask, CanRemoteSpec::Any)
+//             };
+//         case remote_selection::data:
+//             return {
+//                 T(result.id, CanRemoteSpec::Data), 
+//                 T(result.mask, CanRemoteSpec::Specified)
+//             };
+//         case remote_selection::remote:
+//             return {
+//                 T(result.id, CanRemoteSpec::Remote), 
+//                 T(result.mask, CanRemoteSpec::Specified)
+//             };
+//     }
+// };
 
 
 static auto parse_str(const StringView & str){
@@ -255,28 +255,28 @@ void CanFilter::deinit(){
 
 
 
-bool CanFilter::bystr(const StringView & str){
-    auto result = parse_str(str);
+// bool CanFilter::bystr(const StringView & str){
+//     auto result = parse_str(str);
 
-    if(result.valid == false){
-        return false;
-    }
+//     if(result.valid == false){
+//         return false;
+//     }
 
-    auto & self = *this;
+//     auto & self = *this;
 
-    switch(result.size){
-        case 11:{
-                auto && [id, mask] = id_and_mask<CanStdIdMask>(result);
-                self.mask({id, mask});
-            }
-            break;
-        case 29:{
-                auto && [id, mask] = id_and_mask<CanExtIdMask>(result);
-                self.mask({id, mask});
-            }
-            break;
-        default:
-            return false;
-    }
-    return true;
-}
+//     switch(result.size){
+//         case 11:{
+//                 auto && [id, mask] = id_and_mask<CanStdIdMask>(result);
+//                 self.mask({id, mask});
+//             }
+//             break;
+//         case 29:{
+//                 auto && [id, mask] = id_and_mask<CanExtIdMask>(result);
+//                 self.mask({id, mask});
+//             }
+//             break;
+//         default:
+//             return false;
+//     }
+//     return true;
+// }

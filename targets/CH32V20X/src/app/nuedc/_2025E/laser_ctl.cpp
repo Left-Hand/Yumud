@@ -25,13 +25,10 @@ using namespace ymd::robots;
 
 
 #define DBG_UART hal::uart2
-static constexpr uint32_t TIM_FREQ = 5000;
-static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
+static constexpr uint32_t PWM_FREQ = 10000;
+static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
-enum class Command:uint8_t{
-    On = 0x33,
-    Off
-};
+using Command = LaserCommand;
 
 // static constexpr
 
@@ -52,11 +49,11 @@ void laser_ctl_main(){
 
     can[0].mask(
         {
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
             .mask = hal::CanStdIdMask::from_accept_all()
         },{
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
             .mask = hal::CanStdIdMask::from_accept_all()
         }
@@ -75,10 +72,10 @@ void laser_ctl_main(){
 
     can[0].mask(
         {
-            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
+            .id = hal::CanStdIdMask{hal::CanStdId(0x200), hal::CanRemoteSpec::Any}, 
             .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
         },{
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
+            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
             .mask = hal::CanStdIdMask::from_accept_all()
         }
@@ -90,7 +87,7 @@ void laser_ctl_main(){
     phase_gpio.outpp();
 
 
-    hal::timer3.init({TIM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
+    hal::timer3.init({PWM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
     auto & pwm = hal::timer3.oc<1>();
     pwm.init({});
 
@@ -131,11 +128,11 @@ void laser_ctl_main(){
         });
     };
 
-    static constexpr auto CAN_ID_TURNON = hal::CanStdId(0x183);
-        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
+    static constexpr auto CAN_ID_TURNON =
+        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
 
-    static constexpr auto CAN_ID_TURNOFF = hal::CanStdId(0x184);
-        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
+    static constexpr auto CAN_ID_TURNOFF = 
+        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
 
 
     [[maybe_unused]] auto can_service = [&]{
@@ -149,7 +146,7 @@ void laser_ctl_main(){
 
         switch(id.to_u11()){
             case CAN_ID_TURNON.to_u11():
-                set_duty(0.99_r);
+                set_duty(0.89_r);
                 break;
             case CAN_ID_TURNOFF.to_u11():
                 set_duty(0.0_r);
