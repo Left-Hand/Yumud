@@ -11,21 +11,19 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-using Can = hal::Can;
 void can_ring_main(){
     DEBUGGER_INST.init({576000, CommStrategy::Blocking});
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
     
-    auto & led = portC[14];
+    auto & led = hal::PC<14>();
     led.outpp(HIGH);
 
     auto & can = can1;
     // can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
     can.init({hal::CanBaudrate::_1M, Can::Mode::Loopback});
     // can.init({hal::CanBaudrate::_1M, Can::Mode::Normal});
-    const auto bytes = b"csdcsd";
 
     can[0].mask(
         {
