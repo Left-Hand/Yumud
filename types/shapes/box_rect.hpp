@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types/shapes/prelude.hpp"
 #include "types/regions/rect2.hpp"
 
 namespace ymd{

@@ -38,9 +38,9 @@ using namespace ymd::hal;
 static constexpr size_t MAX_COAST_ITEMS = 64;
 using Pile = Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
-using Pixel = Vec2<uint8_t>;
-using PixelSegment = std::pair<Pixel ,Pixel>;
-using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
+// using Pixel = Vec2<uint8_t>;
+// using PixelSegment = std::pair<Pixel ,Pixel>;
+// using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
 
 
 struct HwPort{
@@ -69,27 +69,27 @@ class Plotter{
         return Ok();
     };
 
-    IResult<> plot_coast(const Pixels & coast){
-        if(coast.size() < 2){
-            return Err(Error::PointsTooLess);
-        }
+    // IResult<> plot_coast(const Pixels & coast){
+    //     if(coast.size() < 2){
+    //         return Err(Error::PointsTooLess);
+    //     }
 
-        for(auto it = coast.begin(); 
-            it != std::prev(coast.end()); 
-            it = std::next(it)
-        ){
-            const auto & p_curr = *it;
-            const auto & p_next = *std::next(it);
-            if(const auto res = painter_.draw_line(p_curr, p_next);
-                res.is_err()) return res;
-        }
+    //     for(auto it = coast.begin(); 
+    //         it != std::prev(coast.end()); 
+    //         it = std::next(it)
+    //     ){
+    //         const auto & p_curr = *it;
+    //         const auto & p_next = *std::next(it);
+    //         if(const auto res = painter_.draw_line(p_curr, p_next);
+    //             res.is_err()) return res;
+    //     }
 
-        return Ok();
-    };
+    //     return Ok();
+    // };
 
-    IResult<> plot_segment(const PixelSegment seg){
-        return painter_.draw_line(seg.first, seg.second);
-    };
+    // IResult<> plot_segment(const PixelSegment seg){
+    //     return painter_.draw_line(seg.first, seg.second);
+    // };
 
     template<typename T>
     IResult<> plot_dots(const std::span<const T> pts){
@@ -100,12 +100,12 @@ class Plotter{
     };
 
 
-    IResult<> plot_pixels(const Pixels & pts){
-        for(const auto pixel : pts){
-            painter_.putpixel_unchecked(pixel);
-        }
-        return Ok();
-    };
+    // IResult<> plot_pixels(const Pixels & pts){
+    //     for(const auto pixel : pts){
+    //         painter_.putpixel_unchecked(pixel);
+    //     }
+    //     return Ok();
+    // };
 
     IResult<> plot_dot(const Vec2u pos, const uint radius = 2){
         painter_.putpixel_unchecked(pos);

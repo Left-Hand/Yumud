@@ -28,19 +28,18 @@ public:
     }
     [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const real_t rotation){
         ASSERT(radius > 0);
-        const auto start_rad = ((rotation > 0) ? 
+        const auto start_angle = ((rotation > 0) ? 
                 (viewpoint_.orientation - real_t(PI/2))
                 : (viewpoint_.orientation + rotation + real_t(PI/2)));
-        const auto stop_rad = ((rotation > 0) ? 
+        const auto stop_angle = ((rotation > 0) ? 
                 (viewpoint_.orientation + rotation - real_t(PI/2))
                 : (viewpoint_.orientation + real_t(PI/2)));
 
-        const auto ret = AnnularSector{
+        const auto ret = AnnularSector<q16>{
             .inner_radius = radius - road_width_ / 2,
             .outer_radius = radius + road_width_ / 2,
             
-            .start_rad = start_rad,
-            .stop_rad = stop_rad,
+            .angle_range = {start_angle, stop_angle}
         } | Placement{
             .position = viewpoint_.side_move((rotation > 0) ? (radius) : (-radius)).position
         };

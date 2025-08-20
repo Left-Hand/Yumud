@@ -29,19 +29,138 @@ static constexpr uint8_t WHITE_COLOR = 0x9f;
 
 using namespace ymd;
 
-
 template<typename T>
-struct cache_of{
-    using type = typename T::Cache;
-};
-
-template<typename T>
-using cache_of_t = cache_of<T>::type;
+using cache_of_t = CacheOf<T, bool>;
 
 
-namespace ymd::smc::sim{
+
 
 using BoundingBox = Rect2<q16>;
+
+namespace ymd{
+struct RotatedZebraRect{
+    q16 width;
+    q16 height;
+    q16 rotation;
+
+
+    template<size_t I>
+    requires ((0 <= I) and (I < 4))
+    constexpr Vec2<q16> get_corner() const {
+        switch(I){
+            case 0: return {-width / 2, height / 2};
+            case 1: return {width / 2, height / 2};
+            case 2: return {-width / 2, -height / 2};
+            case 3: return {width / 2, -height / 2};
+            default: __builtin_unreachable();
+        }
+    }
+};
+
+template<>
+struct alignas(4) CacheOf<RotatedZebraRect, bool>{
+    using Self = CacheOf<RotatedZebraRect, bool>;
+
+    q16 half_width;
+    q16 half_height;
+    q16 s;
+    q16 c;
+
+    static constexpr Self from(const RotatedZebraRect & obj){
+        const auto [s,c] = sincos(obj.rotation);
+        return Self{
+            .half_width = obj.width / 2,
+            .half_height = obj.height / 2,
+            .s = s,
+            .c = c
+        };
+    }
+
+    __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
+        return s_color_from_point(*this, offset);
+    }
+private:
+    __fast_inline static constexpr uint8_t s_color_from_point(
+        const Self & self, const Vec2<q16> offset){
+        // -s * p.x + c * p.y;
+        // -c * p.x - s * p.y;
+        const auto x_offset = - self.c * offset.x - self.s * offset.y;
+        
+        return 
+            ((abs(-self.s * offset.x + self.c * offset.y)
+                <= self.half_height) and
+            (abs(x_offset) 
+                <= self.half_width))
+                
+            // ? (static_cast<uint8_t>(CLAMP(sinpu(x_offset * 15) * 3 + 1, 0, 2) * WHITE_COLOR / 2)) : 0
+            ? (WHITE_COLOR) : 0
+        ;
+    }
+};
+
+template<>
+struct BoundingBoxOf<RotatedZebraRect>{
+
+
+    static constexpr BoundingBox to_bounding_box(const RotatedZebraRect & obj){
+        const auto rot = Vec2<q16>::from_idenity_rotation(obj.rotation);
+        const std::array<Vec2<q16>, 4> points = {
+            obj.get_corner<0>().improduct(rot),
+            obj.get_corner<1>().improduct(rot),
+            obj.get_corner<2>().improduct(rot),
+            obj.get_corner<3>().improduct(rot)
+        };
+
+        return BoundingBox::from_minimal_bounding_box(std::span(points));
+    }
+
+};
+
+
+
+
+struct SpotLight final{
+    q16 radius = 1;
+
+};
+
+template<>
+struct CacheOf<SpotLight, bool>{
+    using Self = CacheOf<SpotLight, bool>;
+
+    q16 squ_radius;
+
+    static constexpr auto from(const SpotLight & obj) {
+        return CacheOf{obj.radius * obj.radius};
+    }
+
+    __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
+        return s_color_from_point(*this, offset);
+    }
+private:
+    __fast_inline static constexpr uint8_t s_color_from_point(
+        const Self & self, 
+        const Vec2<q16> offset
+    ){
+        const auto len_squ = offset.length_squared();
+        // const auto temp = MAX(9 * len_squ, 1);
+        // return uint8_t(130 / temp);
+        const auto temp = CLAMP(2 - 3 * len_squ,0, 1);
+        return uint8_t(130 * temp);
+    }
+};
+
+template<>
+struct BoundingBoxOf<SpotLight>{
+    static constexpr auto to_bounding_box(const SpotLight & obj){
+        return BoundingBox{-obj.radius, -obj.radius, 2 * obj.radius, 2 * obj.radius};
+    }
+};
+
+
+}
+
+namespace ymd::smc::sim{
 
 struct Placement{
     Vec2<q16> position;
@@ -56,121 +175,18 @@ struct ElementWithPlacement{
     Placement placement;
     BoundingBox bounding_box;
     Cache cache;
-    // T element;
 };
 
 template<typename T>
 constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& placement){
     return ElementWithPlacement<T>{
         .placement = placement,
-        .bounding_box = element.to_bounding_box(),
-        .cache = element.to_cache(),
-        // .element = element,
+        .bounding_box = BoundingBoxOf<T>::to_bounding_box(element),
+        .cache = CacheOf<T, bool>::from(element),
     };
 }
 
 
-
-
-struct SpotLight final{
-    q16 radius = 1;
-
-    struct Cache{
-        q16 squ_radius;
-
-        __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        __fast_inline static constexpr uint8_t s_color_from_point(const Cache & self, const Vec2<q16> offset){
-            const auto len_squ = offset.length_squared();
-            // const auto temp = MAX(9 * len_squ, 1);
-            // return uint8_t(130 / temp);
-            const auto temp = CLAMP(2 - 3 * len_squ,0, 1);
-            return uint8_t(130 * temp);
-        }
-    };
-
-    constexpr auto to_cache() const {
-        return Cache{
-            .squ_radius = square(radius)
-        };
-    }
-
-    constexpr auto to_bounding_box() const {
-        return BoundingBox{-radius, -radius, 2 * radius, 2 * radius};
-    }
-};
-
-
-
-struct RotatedZebraRect{
-    q16 width;
-    q16 height;
-    q16 rotation;
-
-    struct alignas(4) Cache{
-        q16 half_width;
-        q16 half_height;
-        q16 s;
-        q16 c;
-
-        __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vec2<q16> offset){
-            // -s * p.x + c * p.y;
-            // -c * p.x - s * p.y;
-            const auto x_offset = - self.c * offset.x - self.s * offset.y;
-            
-            return 
-                ((abs(-self.s * offset.x + self.c * offset.y)
-                    <= self.half_height) and
-                (abs(x_offset) 
-                    <= self.half_width))
-                    
-                // ? (static_cast<uint8_t>(CLAMP(sinpu(x_offset * 15) * 3 + 1, 0, 2) * WHITE_COLOR / 2)) : 0
-                ? (WHITE_COLOR) : 0
-            ;
-        }
-    };
-
-    constexpr auto to_cache() const {
-        const auto [s,c] = sincos(rotation);
-        return Cache{
-            .half_width = width / 2,
-            .half_height = height / 2,
-            .s = s,
-            .c = c
-        };
-    }
-
-    constexpr BoundingBox to_bounding_box() const {
-        const auto rot = Vec2<q16>::from_idenity_rotation(rotation);
-        const std::array<Vec2<q16>, 4> points = {
-            get_raw_point<0>().improduct(rot),
-            get_raw_point<1>().improduct(rot),
-            get_raw_point<2>().improduct(rot),
-            get_raw_point<3>().improduct(rot)
-        };
-
-        return BoundingBox::from_minimal_bounding_box(std::span(points));
-    }
-
-    template<size_t I>
-    requires ((0 <= I) and (I < 4))
-    constexpr Vec2<q16> get_raw_point() const {
-        switch(I){
-            case 0: return {-width / 2, height / 2};
-            case 1: return {width / 2, height / 2};
-            case 2: return {-width / 2, -height / 2};
-            case 3: return {width / 2, -height / 2};
-            default: __builtin_unreachable();
-        }
-    }
-};
 
 
 //将相机像素转换为地面坐标

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "types/shapes/prelude.hpp"
 #include "types/regions/rect2.hpp"
 
 namespace ymd{
+
 
 template<typename T>
 struct RotatedRect{
@@ -10,56 +12,10 @@ struct RotatedRect{
     T height;
     T rotation;
 
-    struct alignas(4) Cache{
-        T half_width;
-        T half_height;
-        T s;
-        T c;
-
-        __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
-            return s_color_from_point(*this, offset);
-        }
-    private:
-        __fast_inline static constexpr uint8_t s_color_from_point(
-            const Cache & self, const Vec2<T> offset){
-            // -s * p.x + c * p.y;
-            // -c * p.x - s * p.y;
-            return 
-                ((abs(-self.s * offset.x + self.c * offset.y)
-                    <= self.half_height) and
-                (abs(-self.c * offset.x - self.s * offset.y) 
-                    <= self.half_width))
-                    
-                ? 0xff : 0
-            ;
-        }
-    };
-
-    constexpr auto to_cache() const {
-        const auto [s,c] = sincos(rotation);
-        return Cache{
-            .half_width = width / 2,
-            .half_height = height / 2,
-            .s = s,
-            .c = c
-        };
-    }
-
-    constexpr Rect2<T> to_bounding_box() const {
-        const auto rot = Vec2<T>::from_idenity_rotation(rotation);
-        const std::array<Vec2<T>, 4> points = {
-            get_raw_point<0>().improduct(rot),
-            get_raw_point<1>().improduct(rot),
-            get_raw_point<2>().improduct(rot),
-            get_raw_point<3>().improduct(rot)
-        };
-
-        return Rect2<T>::from_minimal_bounding_box(std::span(points));
-    }
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vec2<T> get_raw_point() const {
+    constexpr Vec2<T> get_corner() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -69,5 +25,67 @@ struct RotatedRect{
         }
     }
 };
+
+template<typename T>
+struct CacheOf<RotatedRect<T>, bool>{
+    using Object = RotatedRect<T>;
+    using Self = CacheOf<Object, bool>;
+
+    T half_width;
+    T half_height;
+    T s;
+    T c;
+
+
+    static constexpr Self from(const Object & obj){
+        const auto [s,c] = sincos(obj.rotation);
+        return Self{
+            .half_width = obj.width / 2,
+            .half_height = obj.height / 2,
+            .s = s,
+            .c = c
+        };
+    }
+
+    __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
+        return s_color_from_point(*this, offset);
+    }
+private:
+    __fast_inline static constexpr uint8_t s_color_from_point(
+        const Self & self, const Vec2<T> offset
+    ){
+        // -s * p.x + c * p.y;
+        // -c * p.x - s * p.y;
+        return 
+            ((abs(-self.s * offset.x + self.c * offset.y)
+                <= self.half_height) and
+            (abs(-self.c * offset.x - self.s * offset.y) 
+                <= self.half_width))
+                
+            ? 0xff : 0
+        ;
+    }
+};
+
+
+template<typename T>
+struct BoundingBoxOf<RotatedRect<T>>{
+
+    using Object = RotatedRect<T>;
+    using Self =  BoundingBoxOf<Object>;
+
+    static constexpr Rect2<T> to_bounding_box(const Object & obj){
+        const auto rot = Vec2<T>::from_idenity_rotation(obj.rotation);
+        const std::array<Vec2<T>, 4> points = {
+            obj.template get_corner<0>().improduct(rot),
+            obj.template get_corner<1>().improduct(rot),
+            obj.template get_corner<2>().improduct(rot),
+            obj.template get_corner<3>().improduct(rot)
+        };
+
+        return Rect2<T>::from_minimal_bounding_box(std::span(points));
+    }
+};
+
 
 }
