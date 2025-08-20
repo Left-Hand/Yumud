@@ -25,6 +25,7 @@ void can_ring_main(){
     // can.init({hal::CanBaudrate::_1M, Can::Mode::Internal});
     can.init({hal::CanBaudrate::_1M, Can::Mode::Loopback});
     // can.init({hal::CanBaudrate::_1M, Can::Mode::Normal});
+    const auto bytes = b"csdcsd";
 
     can[0].mask(
         {

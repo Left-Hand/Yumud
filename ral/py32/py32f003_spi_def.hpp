@@ -7,7 +7,7 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace ymd::ral::CH32V20x{
+namespace ymd::ral::py32f003{
     struct R16_SPI_CTLR1{
         uint16_t CPHA:1;
         uint16_t CPOL:1;
