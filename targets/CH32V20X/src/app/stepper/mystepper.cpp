@@ -423,14 +423,14 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     auto set_alpha_beta_duty = [&](const real_t alpha, const real_t beta){
         {
             const auto [ap,an] = convert_pair_duty(alpha);
-            pwm_ap.set_duty(ap);
-            pwm_an.set_duty(an);
+            pwm_ap.set_dutycycle(ap);
+            pwm_an.set_dutycycle(an);
         }
 
         {
             const auto [bp,bn] = convert_pair_duty(beta);
-            pwm_bp.set_duty(bp);
-            pwm_bn.set_duty(bn);
+            pwm_bp.set_dutycycle(bp);
+            pwm_bn.set_dutycycle(bn);
         }
     };
 

@@ -41,8 +41,8 @@ public:
     }
 
     void set_alpha_beta_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_duty(duty_a);
-        channel_b_.set_duty(duty_b);
+        channel_a_.set_dutycycle(duty_a);
+        channel_b_.set_dutycycle(duty_b);
     }
 private:
 

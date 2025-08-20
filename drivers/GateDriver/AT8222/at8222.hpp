@@ -29,14 +29,14 @@ public:
 
 AT8222 & AT8222::operator = (const real_t duty){
     if(duty > 0){
-        forward_pwm_.set_duty(real_t(0));
-        backward_pwm_.set_duty(CLAMP(duty, 0, 1));
+        forward_pwm_.set_dutycycle(real_t(0));
+        backward_pwm_.set_dutycycle(CLAMP(duty, 0, 1));
     }else if(duty < 0){
-        forward_pwm_.set_duty(CLAMP(-duty, 0, 1));
-        backward_pwm_.set_duty(real_t(0));
+        forward_pwm_.set_dutycycle(CLAMP(-duty, 0, 1));
+        backward_pwm_.set_dutycycle(real_t(0));
     }else{
-        forward_pwm_.set_duty(real_t(0));
-        backward_pwm_.set_duty(real_t(0));
+        forward_pwm_.set_dutycycle(real_t(0));
+        backward_pwm_.set_dutycycle(real_t(0));
     }
     return *this;
 }

@@ -70,14 +70,14 @@ void pfm_zvs_main(){
     while(true){
         const auto t = clock::time();
         const auto st = sinpu(t * 100);
-        pwm_p.set_duty(st * 0.4_r + 0.5_r);
+        pwm_p.set_dutycycle(st * 0.4_r + 0.5_r);
 
         static constexpr auto arr_base = 144_MHz / 20_KHz;
         const auto arr = uint16_t(arr_base * (1 + 0.5_r * st));
         timer.set_arr(arr);
 
-        const auto dead_zone_ns = uint16_t(1000 * (1 + 0.5_r * st));
-        timer.set_deadzone_ns(Nanoseconds(dead_zone_ns));
+        const auto dead_zone_ns = Nanoseconds(uint16_t(1000 * (1 + 0.5_r * st)));
+        timer.set_deadzone_ns(dead_zone_ns);
         DEBUG_PRINTLN(arr);
 
         clock::delay(300us);

@@ -122,8 +122,8 @@ public:
         cs_.update();
         const auto meas_current = cs_.get();
         ctrl_.update(targ_current_, meas_current);
-        // set_duty(ctrl_.get());
-        set_duty(0.7_r);
+        // set_dutycycle(ctrl_.get());
+        set_dutycycle(0.7_r);
     }
 
     const auto & get_duty() const {
@@ -131,7 +131,7 @@ public:
     }
 
 private:
-    void set_duty(const real_t duty){
+    void set_dutycycle(const real_t duty){
         drv_ = CLAMP(duty, MIN_DUTY, MAX_DUTY);
     }
 

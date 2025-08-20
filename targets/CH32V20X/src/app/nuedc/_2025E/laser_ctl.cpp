@@ -93,12 +93,12 @@ void laser_ctl_main(){
 
     bool duty_is_forward = false;
 
-    auto set_duty = [&](real_t duty){
+    auto set_dutycycle = [&](real_t duty){
         DEBUG_PRINTLN("duty", duty);
         duty = CLAMP2(duty, 0.99_r);
         duty_is_forward = duty > 0.0_r;
         phase_gpio = BoolLevel::from(duty_is_forward);
-        pwm.set_duty(ABS(duty));
+        pwm.set_dutycycle(ABS(duty));
     };
 
 
@@ -110,7 +110,7 @@ void laser_ctl_main(){
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-            rpc::make_function("dty", [&](const real_t duty){set_duty(duty);}),
+            rpc::make_function("dty", [&](const real_t duty){set_dutycycle(duty);}),
             rpc::make_function("led", [&](const bool l){set_led(l);})
 
 
@@ -146,10 +146,10 @@ void laser_ctl_main(){
 
         switch(id.to_u11()){
             case CAN_ID_TURNON.to_u11():
-                set_duty(0.89_r);
+                set_dutycycle(0.89_r);
                 break;
             case CAN_ID_TURNOFF.to_u11():
-                set_duty(0.0_r);
+                set_dutycycle(0.0_r);
                 break;
             default:
 

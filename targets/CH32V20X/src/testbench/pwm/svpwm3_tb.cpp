@@ -150,9 +150,9 @@ void svpwm3_main(){
         const auto [st,ct] = sincos(t);
         const auto [u, v, w] = digipw::SVM(st * 0.5_r, ct * 0.5_r);
 
-        pwm_u.set_duty(u);
-        pwm_v.set_duty(v);
-        pwm_w.set_duty(w);
+        pwm_u.set_dutycycle(u);
+        pwm_v.set_dutycycle(v);
+        pwm_w.set_dutycycle(w);
 
         DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
     }

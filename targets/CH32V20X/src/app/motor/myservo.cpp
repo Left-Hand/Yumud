@@ -159,7 +159,7 @@ public:
         // });
 
         // const auto duty = electric_.get().duty;
-        // pwm_.set_duty(duty);
+        // pwm_.set_dutycycle(duty);
     }
 
     ServoCtrlSystem(hal::AnalogInIntf & ana, hal::PwmIntf & pwm):
@@ -226,15 +226,15 @@ void myservo_main(){
         auto & pwm_pos = hal::timer3.oc<1>();
         auto & pwm_neg = hal::timer3.oc<1>();
 
-        auto set_duty = [&](real_t duty){
+        auto set_dutycycle = [&](real_t duty){
             duty = CLAMP2(duty, 0.8_r);
             const auto duty_is_forward = duty > 0.0_r;
             if(duty_is_forward){
-                pwm_pos.set_duty(duty);
-                pwm_neg.set_duty(0.0_r);
+                pwm_pos.set_dutycycle(duty);
+                pwm_neg.set_dutycycle(0.0_r);
             }else{
-                pwm_pos.set_duty(0.0_r);
-                pwm_neg.set_duty(-duty);
+                pwm_pos.set_dutycycle(0.0_r);
+                pwm_neg.set_dutycycle(-duty);
             }
         };
         pwm_pos.init({});
@@ -243,7 +243,7 @@ void myservo_main(){
         while(true){
             const auto t = clock::time();
             const auto duty = sin(t) * 0.5_r;
-            set_duty(duty);
+            set_dutycycle(duty);
             clock::delay(1ms);
         }
     }
@@ -304,17 +304,17 @@ void myservo_main(){
     auto & pwm_trig = hal::timer3.oc<4>();
     pwm.init({});
     pwm_trig.init({.install_en = DISEN});
-    pwm_trig.set_duty(0.001_r);
+    pwm_trig.set_dutycycle(0.001_r);
     hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);
 
     // real_t curr_cmd = 0;
 
     bool duty_is_forward = false;
-    auto set_duty = [&](real_t duty){
+    auto set_dutycycle = [&](real_t duty){
         duty = CLAMP2(duty, 0.8_r);
         duty_is_forward = duty > 0.0_r;
         phase_gpio = BoolLevel::from(duty_is_forward);
-        pwm.set_duty(ABS(duty));
+        pwm.set_dutycycle(ABS(duty));
     };
 
     hal::adc1.attach(AdcIT::JEOC, {0,0}, [&]{
@@ -340,12 +340,12 @@ void myservo_main(){
         const auto pos_cmd = 0.81_r * sin(clock::time() * 3);
         const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
         // const auto duty_cmd = 0.4_r * sign(sinpu(clock::time() * 10));
-        set_duty(duty_cmd);
+        set_dutycycle(duty_cmd);
         // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);
-        // pwm.set_duty(ABS(duty));
+        // pwm.set_dutycycle(ABS(duty));
         // duty = CLAMP(ain2.get_voltage() / 3.3_r, 0, 0.9_r);
-        // pwm.set_duty(duty);
+        // pwm.set_dutycycle(duty);
 
         // led = HIGH;
         // clock::delay(200ms);

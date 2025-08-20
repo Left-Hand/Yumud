@@ -198,7 +198,7 @@ struct I2C_Def{
         CTLR1.NOSTRETCH = !set;
     }
 
-    constexpr void set_duty_16_9(const bool set){
+    constexpr void set_dutycycle_16_9(const bool set){
         CKCFRG.DUTY = set;
     }
 

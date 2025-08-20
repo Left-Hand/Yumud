@@ -38,13 +38,13 @@ struct PwmAndDirPhy final{
             dir_gpio_(cfg.dir_gpio.deref())
         {;}
 
-    void set_duty(const q31 duty){
+    void set_dutycycle(const q31 duty){
         if(duty > 0){
             dir_gpio_.set();
-            pwm_.set_duty(duty);
+            pwm_.set_dutycycle(duty);
         }else{
             dir_gpio_.clr();
-            pwm_.set_duty(-duty);
+            pwm_.set_dutycycle(-duty);
         }
     }
 private:
@@ -63,13 +63,13 @@ struct DualPwmPhy final{
             pwm_neg_(cfg.pwm_neg.deref())
         {;}
 
-    void set_duty(const q31 duty){
+    void set_dutycycle(const q31 duty){
         if(duty > 0){
-            pwm_pos_.set_duty(duty);
-            pwm_neg_.set_duty(0);
+            pwm_pos_.set_dutycycle(duty);
+            pwm_neg_.set_dutycycle(0);
         }else{
-            pwm_pos_.set_duty(0);
-            pwm_neg_.set_duty(-duty);
+            pwm_pos_.set_dutycycle(0);
+            pwm_neg_.set_dutycycle(-duty);
         }
     }
 private:
@@ -127,8 +127,8 @@ struct PwmAndDirPhy_WithFg final{
         fg_gpio_(cfg.fg_gpio.deref())
     {}
 
-    void set_duty(const q31 duty){ 
-        phy_.set_duty(duty);
+    void set_dutycycle(const q31 duty){ 
+        phy_.set_dutycycle(duty);
         last_duty_ = duty;
     }
 
@@ -173,8 +173,8 @@ struct DualPwmMotorPhy_WithAbEnc final{
                 drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
     {}
 
-    void set_duty(const q31 duty){ 
-        phy_.set_duty(duty);
+    void set_dutycycle(const q31 duty){ 
+        phy_.set_dutycycle(duty);
         last_duty_ = duty;
     }
 
@@ -330,8 +330,8 @@ void diffspd_vehicle_main(){
             ctrl_law_(targ_position - position, targ_speed - speed),
             0.97_r
         );
-        motor_phy.set_duty(duty);
-        // motor_phy.set_duty(amp * sinpu(ctime * freq));
+        motor_phy.set_dutycycle(duty);
+        // motor_phy.set_dutycycle(amp * sinpu(ctime * freq));
     };
 
 

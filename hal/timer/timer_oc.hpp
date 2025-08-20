@@ -57,7 +57,7 @@ public:
     __fast_inline volatile uint16_t cvr() const {return cvr_;}
     __fast_inline volatile uint16_t arr() const {return arr_;}
 
-    __fast_inline void set_duty(const real_t duty){cvr_ = int(duty * arr_);}
+    __fast_inline void set_dutycycle(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
     __fast_inline real_t get_duty(){return iq_t<8>(cvr_) / int(arr_);}
 
@@ -87,7 +87,7 @@ public:
         TimerOC & oc, 
         TimerOCN & ocn):
         oc_(oc), ocn_(ocn){;}
-    void set_duty(const real_t value){
+    void set_dutycycle(const real_t value){
         const bool polar = value > 0;
         if(last_polar_ != polar){
             last_polar_ = polar;
@@ -100,7 +100,7 @@ public:
                 ocn_.enable_output(EN);
             }
         }
-        oc_.set_duty(abs(value));
+        oc_.set_dutycycle(abs(value));
     }
 private:
     TimerOC & oc_;
@@ -118,17 +118,17 @@ public:
         pos_oc_(pos_oc),
         neg_oc_(neg_oc){;}
 
-    __fast_inline void set_duty(const real_t value){
+    __fast_inline void set_dutycycle(const real_t value){
         const bool is_minus = signbit(value);
         const auto zero_value = real_t(is_inversed_);
         const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
 
         if(is_minus){
-            pos_oc_.set_duty(zero_value);
-            neg_oc_.set_duty(abs_value);
+            pos_oc_.set_dutycycle(zero_value);
+            neg_oc_.set_dutycycle(abs_value);
         }else{
-            pos_oc_.set_duty(abs_value);
-            neg_oc_.set_duty(zero_value);
+            pos_oc_.set_dutycycle(abs_value);
+            neg_oc_.set_dutycycle(zero_value);
         }
     }
 

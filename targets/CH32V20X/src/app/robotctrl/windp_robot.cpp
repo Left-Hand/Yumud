@@ -86,9 +86,9 @@ public:
 
     }
 
-    void set_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_duty(duty_a);
-        channel_b_.set_duty(duty_b);
+    void set_dutycycle(const real_t duty_a, const real_t duty_b){
+        channel_a_.set_dutycycle(duty_a);
+        channel_b_.set_dutycycle(duty_b);
     }
 private:
 
@@ -100,10 +100,11 @@ class RobotDynamics{
 
     void move(const Vec2<real_t> dir){
         static real_t left = 0;
-        left = (left*0.2_r + CLAMP2(-dir.y,0.19_r)*0.8_r);
         static real_t right = 0;
+
+        left = (left*0.2_r + CLAMP2(-dir.y,0.19_r)*0.8_r);
         right = (right*0.2_r + CLAMP2(dir.x,0.19_r)*0.8_r);
-        jetpwm_.set_duty(left,right);
+        jetpwm_.set_dutycycle(left,right);
     }
 private:
     JetPwm jetpwm_;

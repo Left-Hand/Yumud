@@ -11,7 +11,7 @@ using namespace ymd::drivers;
 //     return *this;
 // }
 
-void LedGpio::set_duty(const real_t duty){
+void LedGpio::set_dutycycle(const real_t duty){
     inst_ = BoolLevel::from((duty > real_t(0.5)) ^ inversed);
 }
 
@@ -22,7 +22,7 @@ void LedGpio::toggle() {
 }
 
 
-// void LedPwm::set_duty(const real_t duty){
+// void LedPwm::set_dutycycle(const real_t duty){
 //     inst = inversed ? 1 - duty : duty;
 // }
 

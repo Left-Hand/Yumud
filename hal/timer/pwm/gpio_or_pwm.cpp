@@ -12,7 +12,7 @@ bool GpioOrPwm::hasPwm() const {
 bool GpioOrPwm::hasGpio() const {
     return std::holds_alternative<GpioRef>(inst_);
 }
-void GpioOrPwm::set_duty(const real_t duty){
+void GpioOrPwm::set_dutycycle(const real_t duty){
     if(std::holds_alternative<GpioRef>(inst_)){
         std::get<GpioRef>(inst_).get() = BoolLevel::from(duty > real_t(0.5));
     }else if(std::holds_alternative<PwmRef>(inst_)){

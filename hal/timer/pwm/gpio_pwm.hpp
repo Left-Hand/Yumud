@@ -32,7 +32,7 @@ public:
     __inline void setThreshold(const uint16_t val){cvr_ = val - 1;}
     __inline void setPeriod(const uint16_t val){arr_ = val - 1;}
 
-    void set_duty(const real_t duty) override{
+    void set_dutycycle(const real_t duty) override{
         if(duty == real_t(0)) {cvr_ = 0;}
         else if(duty == real_t(1)) {cvr_ = arr_ - 1;}
         else {cvr_ = int(duty * arr_);}

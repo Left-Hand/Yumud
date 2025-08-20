@@ -47,7 +47,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 
         static constexpr const real_t depth = 0.7_r;
         const auto [u, v, w] = digipw::SVM(st * depth, ct * depth);
-        pwm_gen.set_duty({u, v, w});
+        pwm_gen.set_dutycycle({u, v, w});
     });
 
     timer.attach(TimerIT::CC4, {0,0}, [&]{
@@ -73,8 +73,8 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         );
         // clock::delay(1ms);
         clock::delay(100us);
-        // pwm_gen.set_duty({0.2_r, 0.4_r, 0.6_r});
-        // pwm_gen.set_duty({0.6_r, 0.8_r, 0.9_r});
+        // pwm_gen.set_dutycycle({0.2_r, 0.4_r, 0.6_r});
+        // pwm_gen.set_dutycycle({0.6_r, 0.8_r, 0.9_r});
 
         // DEBUG_PRINTLN(t, real_t(pwm_trig_));
         // if(trig_occasion_opt_.is_some())

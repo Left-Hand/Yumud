@@ -151,8 +151,8 @@ void sincos_pwm_main(){
         const auto t = clock::time() * real_t(3 * TAU);
         const auto [st, ct] = sincospu(t);
         
-        pwm_a.set_duty(st);
-        pwm_b.set_duty(ct);
+        pwm_a.set_dutycycle(st);
+        pwm_b.set_dutycycle(ct);
 
         DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
     }
