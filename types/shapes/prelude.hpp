@@ -6,19 +6,46 @@
 namespace ymd{
 
 
-template<typename T, typename Policy>
+template<typename Obj, typename Policy>
 struct CacheOf{
 
 };
 
-template<typename T>
+template<typename Obj>
 struct BoundingBoxOf{
 
 };
 
-
 template<typename T>
+struct ScanLine{
+    Range2<T> x_range;
+    T y;
+};
+
+template<typename Obj>
 struct is_placed_t:std::false_type{};
+
+
+template<typename Obj, typename T>
+requires (is_placed_t<Obj>::value == false)
+struct WithPosition final{
+    const Obj & object;
+    Vec2<T> position;
+};
+
+
+template<typename Obj, typename T>
+struct is_placed_t<WithPosition<Obj, T>>:std::true_type{};
+
+template<typename Obj, typename T>
+requires (is_placed_t<Obj>::value == false)
+struct BoundingBoxOf<WithPosition<Obj, T>>{
+    [[nodiscard]] __fast_inline static constexpr auto to_bounding_box(
+        const WithPosition<Obj, T> & shape
+    ){
+        return BoundingBoxOf<Obj>::to_bounding_box(shape.object).shift(shape.position);
+    }
+};
 
 
 template<
