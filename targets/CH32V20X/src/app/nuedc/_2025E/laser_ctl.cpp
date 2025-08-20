@@ -21,7 +21,6 @@
 
 using namespace ymd;
 using namespace ymd::robots;
-// using namespace ymd::hal;
 
 
 #define DBG_UART hal::uart2
@@ -30,11 +29,11 @@ static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
 using Command = LaserCommand;
 
-// static constexpr
-
-
 void laser_ctl_main(){
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .baudrate = 576000
+    });
+    
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
@@ -47,16 +46,9 @@ void laser_ctl_main(){
         .remap = 0
     });
 
-    can[0].mask(
-        {
-            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        },{
-            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        }
+
+    can.filter(0).apply(
+        hal::CanFilterConfig::from_accept_all()
     );
 
 
@@ -69,17 +61,6 @@ void laser_ctl_main(){
         if(l) led.set();
         else led.clr();
     };
-
-    can[0].mask(
-        {
-            .id = hal::CanStdIdMask{hal::CanStdId(0x200), hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-        },{
-            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        }
-    );
 
 
     [[maybe_unused]] auto & mode1_gpio   = hal::portB[1];

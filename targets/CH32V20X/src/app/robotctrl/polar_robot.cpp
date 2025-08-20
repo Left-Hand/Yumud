@@ -305,6 +305,8 @@ void polar_robot_main(){
     DEBUGGER.set_eps(4);
     // DEBUGGER.force_sync(EN);
     DEBUGGER.no_brackets();
+
+    auto & can = COMM_CAN;
     
     #ifndef MOCK_TEST
     #if PHY_SEL == PHY_SEL_UART
@@ -325,20 +327,15 @@ void polar_robot_main(){
 
     #else
 
-    COMM_CAN.init({
+    can.init({
         .baudrate = CanBaudrate::_1M, 
         .mode = CanMode::Normal
     });
 
-    COMM_CAN.enable_hw_retransmit(DISEN);
+    can.enable_hw_retransmit(DISEN);
 
-    COMM_CAN[0].mask({
-            .id = CanStdIdMask{CanStdId(0x200), CanRemoteSpec::Any}, 
-            .mask = CanStdIdMask::from_ignore_low(7, CanRemoteSpec::Any)
-        },{
-            .id = CanStdIdMask{CanStdId(0x000), CanRemoteSpec::Any}, 
-            .mask = CanStdIdMask::from_accept_all()
-        }
+    can.filter(0).apply(
+        hal::CanFilterConfig::from_accept_all()
     );
 
     ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};

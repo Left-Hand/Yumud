@@ -112,7 +112,7 @@ public:
     template<typename Fn>
     void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
 
-    CanFilter operator[](const size_t idx) const ;
+    CanFilter filter(const size_t idx) const ;
 
 private:
     CAN_TypeDef * inst_;
@@ -125,7 +125,6 @@ private:
     RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback cb_txok_;
-    // std::function<void(hal::CanMsg)> cb_txfail_;
     Callback cb_txfail_;
     Callback cb_rx_;
 

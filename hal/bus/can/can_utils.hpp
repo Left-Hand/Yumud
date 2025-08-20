@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/sdk.hpp"
+#include "core/utils/Option.hpp"
 #include <memory>
 #include <functional>
 
@@ -57,70 +58,72 @@ public:
 
     using enum Kind;
 
+    struct Setting{
+        uint8_t prescale;
+        CanSwj swj;
+        CanBs1 bs1;
+        CanBs2 bs2;
+    };
+
     constexpr CanBaudrate(Kind kind):kind_(kind){}
-    constexpr explicit CanBaudrate(const uint32_t freq):
-        kind_(freq2kind(freq)){}
+    static constexpr Option<CanBaudrate> from_freq(const uint32_t freq){
+        const auto may_kind = freq2kind(freq);
+        if(may_kind.is_none()) return None;
+        return Some(CanBaudrate(may_kind.unwrap()));
+    }
 
     constexpr Kind kind() const{return kind_;}
-    constexpr auto dump() const{
-        struct Ret{
-            uint8_t prescale;
-            CanSwj swj;
-            CanBs1 bs1;
-            CanBs2 bs2;
-        };
-
+    constexpr Setting dump() const{
         switch(kind_){
-        case Kind::_125K:
-            return Ret{
-                .prescale = 96, 
-                .swj = CanSwj::_2, 
-                .bs1 = CanBs1::_6, 
-                .bs2 = CanBs2::_5
-            };
-        case Kind::_250K:
-            return Ret{
-                .prescale = 48, 
-                .swj = CanSwj::_2, 
-                .bs1 = CanBs1::_6, 
-                .bs2 = CanBs2::_5
-            };
-        case Kind::_500K:
-            return Ret{
-                .prescale = 24, 
-                .swj = CanSwj::_2, 
-                .bs1 = CanBs1::_6, 
-                .bs2 = CanBs2::_5
-            };
-        case Kind::_1M:
-            return Ret{
-                .prescale = 12, 
-                .swj = CanSwj::_2, 
-                .bs1 = CanBs1::_6, 
-                .bs2 = CanBs2::_5
-            };
-        default: __builtin_unreachable();
+            case Kind::_125K:
+                return Setting{
+                    .prescale = 96, 
+                    .swj = CanSwj::_2, 
+                    .bs1 = CanBs1::_6, 
+                    .bs2 = CanBs2::_5
+                };
+            case Kind::_250K:
+                return Setting{
+                    .prescale = 48, 
+                    .swj = CanSwj::_2, 
+                    .bs1 = CanBs1::_6, 
+                    .bs2 = CanBs2::_5
+                };
+            case Kind::_500K:
+                return Setting{
+                    .prescale = 24, 
+                    .swj = CanSwj::_2, 
+                    .bs1 = CanBs1::_6, 
+                    .bs2 = CanBs2::_5
+                };
+            case Kind::_1M:
+                return Setting{
+                    .prescale = 12, 
+                    .swj = CanSwj::_2, 
+                    .bs1 = CanBs1::_6, 
+                    .bs2 = CanBs2::_5
+                };
+            default: __builtin_unreachable();
         };
     }
 private:
     Kind kind_;
 
-    static constexpr Kind freq2kind(uint32_t freq){
+    static constexpr Option<Kind> freq2kind(uint32_t freq){
         switch(freq){
-            default: while(true);
-            case 125000: return _125K;
-            case 250000: return _250K;
-            case 500000: return _500K;
-            case 1000000: return _1M;
+            default: return None;
+            case 125'000: return Some(Kind::_125K);
+            case 250'000: return Some(Kind::_250K);
+            case 500'000: return Some(Kind::_500K);
+            case 1000'000: return Some(Kind::_1M);
         }
     }
     static constexpr uint32_t kind2freq(const Kind kind){
         switch(kind){
-            default: __builtin_unreachable();
-            case Kind::_125K: return 125000;
-            case Kind::_250K: return 250000;
-            case Kind::_500K: return 500000;
-            case Kind::_1M: return 1000000;
+            case Kind::_125K: return 125'000;
+            case Kind::_250K: return 250'000;
+            case Kind::_500K: return 500'000;
+            case Kind::_1M: return 1000'000;
         }
     }
 };
@@ -158,11 +161,11 @@ enum class CanMailBox:uint8_t{
     _2 = 2
 };
 
-enum class CanRemoteSpec:uint8_t{
+enum class CanRtr:uint8_t{
     Data = 0,
-    Any = 0,
+    // Any = 0,
     Remote = 1,
-    Specified = 1
+    // Specified = 1
 };  
 
 };

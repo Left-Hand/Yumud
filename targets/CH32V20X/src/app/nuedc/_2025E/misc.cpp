@@ -309,11 +309,11 @@
 
 //     can[0].mask(
 //         {
-//             .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-//             .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+//             .id = hal::CanStdIdMask{0x200, hal::CanRtr::Any}, 
+//             .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRtr::Any)
 //         },{
-//             .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-//             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+//             .id = hal::CanStdIdMask{0x000, hal::CanRtr::Any}, 
+//             // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRtr::Any)
 //             .mask = hal::CanStdIdMask::from_accept_all()
 //         }
 //     );

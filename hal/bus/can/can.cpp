@@ -441,7 +441,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
 }
 
 
-CanFilter Can::operator[](const size_t idx) const {
+CanFilter Can::filter(const size_t idx) const {
     if(idx > 13) HALT;
     return CanFilter(this->inst_, idx);
 }

@@ -335,34 +335,18 @@ void nuedc_2025e_main(){
         .mode = hal::CanMode::Normal
     });
 
-
-    // can[0].mask(
-    //     {
-    //         .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-    //         .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-    //     },{
-    //         .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-    //         // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-    //         .mask = hal::CanStdIdMask::from_accept_all()
-    //     }
-    // );
-
-    can[0].mask(
-        {
-            .id = hal::CanStdIdMask{
+    can.filter(0) 
+        .apply(hal::CanFilterConfig::from_pair(
+            hal::CanStdIdMaskPair::from_id_and_mask(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanRemoteSpec::Any
-            }, 
-            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-        },{
-            .id = hal::CanStdIdMask{hal::CanStdId(0x000), hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::from_reject_all()
-        }
-    );
+                hal::CanStdId(0b111100000), hal::CanRtrSpecfier::Discard
+            ))
+        )
+    ;
 
-
-
-    spi.init({18_MHz});
+    spi.init({
+        .baudrate = 18_MHz
+    });
 
     mp6540_en_gpio_.outpp(HIGH);
 
