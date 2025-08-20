@@ -39,5 +39,8 @@ struct BoxRect final{
     }
 };
 
+template<typename T>
+struct is_placed_t<BoxRect<T>>:std::false_type{;};
+
 
 }

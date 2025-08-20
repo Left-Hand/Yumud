@@ -42,6 +42,15 @@ struct AnnularSector final{
         return Rect2<T>(x_min, x_max, y_min, y_max);
     }
 
+    __fast_inline constexpr bool has_point(
+        const Vec2<T>& p
+    ) const{
+        const auto p_r_squ = p.length_squared();
+        if(p_r_squ < square(inner_radius)) return false;
+        if(p_r_squ > square(outer_radius)) return false;
+        return has_angle(p.angle());
+    }
+
     __fast_inline constexpr bool has_angle(
         const T angle)
     const {

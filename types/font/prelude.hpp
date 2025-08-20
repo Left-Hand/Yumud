@@ -17,16 +17,11 @@ enum class TextBaseline:uint8_t{
     Alphabetic,
 };
 
-struct CornerRadii final{
-    Vec2<uint8_t> top_left;
-    Vec2<uint8_t> top_right;
-    Vec2<uint8_t> bottom_right;
-    Vec2<uint8_t> bottom_left;
-};
 
-struct RoundedRectangle final{
-    Rect2i rectangle;
-    CornerRadii corners;
-};
+
+// struct RoundedRectangle final{
+//     Rect2i rectangle;
+//     CornerRadii corners;
+// };
 
 }

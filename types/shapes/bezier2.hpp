@@ -47,13 +47,13 @@ public:
 
     // 将曲线分割为两部分
     constexpr std::pair<Bezier2<T>, Bezier2<T>> split(T t) const {
-        Vec2<T> q0 = p0 + t * (p1 - p0);
-        Vec2<T> q1 = p1 + t * (p2 - p1);
-        Vec2<T> r = q0 + t * (q1 - q0);
+        Vec2<T> _q0 = p0 + t * (p1 - p0);
+        Vec2<T> _q1 = p1 + t * (p2 - p1);
+        Vec2<T> r = _q0 + t * (_q1 - _q0);
 
         return {
-            Bezier2<T>(p0, q0, r),  // 第一段曲线
-            Bezier2<T>(r, q1, p2)   // 第二段曲线
+            Bezier2<T>(p0, _q0, r),  // 第一段曲线
+            Bezier2<T>(r, _q1, p2)   // 第二段曲线
         };
     }
 

@@ -16,8 +16,30 @@ struct BoundingBoxOf{
 
 };
 
+
+template<typename T>
+struct is_placed_t:std::false_type{};
+
+
+template<
+    typename Target, 
+    typename Shape
+>
+requires (is_placed_t<Shape>::value)
+struct DrawDispatcher final{
+    //
+};
+
+struct CornerRadii final{
+    uint8_t top_left;
+    uint8_t top_right;
+    uint8_t bottom_right;
+    uint8_t bottom_left;
+};
+
+
 template<typename C>
-struct Pixel{
+struct Pixel final{
     Vec2u position;
     C color;
 };

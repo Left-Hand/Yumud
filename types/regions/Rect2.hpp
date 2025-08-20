@@ -73,28 +73,44 @@ public:
         return Rect2<T>(a, b-a).abs();
     }
 
+    [[nodiscard]] __fast_inline static constexpr Rect2 from_top_left(
+        const Vec2<T> & top_left
+    ){
+        return Rect2<T>(top_left, Vec2<T>::ZERO);
+    }
+
     [[nodiscard]] __fast_inline static constexpr Rect2 from_size(const Vec2<T> _size){
         return Rect2<T>({0,0}, _size);
     }
 
+    template<typename Range>
+    requires requires(Range r) {
+        requires std::ranges::input_range<Range>;
+        requires std::same_as<std::ranges::range_value_t<Range>, Vec2<T>>;
+    }
     [[nodiscard]] __fast_inline static constexpr Rect2 from_minimal_bounding_box(
-            const std::span<const Vec2<T>> points){
-        if(points.size() == 0) __builtin_abort();
+            Range&& range){
 
-        const auto & first_point = points[0];
+        auto first = std::ranges::begin(range);
+        auto last = std::ranges::end(range);
+
+        if(first == last) return Rect2<T>();
+
+        const auto & first_point = *first;
+
         auto x_min = first_point.x;
         auto x_max = first_point.x;
         auto y_min = first_point.y;
         auto y_max = first_point.y;
 
-        for(size_t i = 1; i < points.size(); i++){
-            x_min = MIN(x_min, points[i].x);
-            x_max = MAX(x_max, points[i].x);
+        for(auto it = std::next(first); it != last; ++it){
+            x_min = MIN(x_min, it->x);
+            x_max = MAX(x_max, it->x);
 
-            y_min = MIN(y_min, points[i].y);
-            y_max = MAX(y_max, points[i].y);
+            y_min = MIN(y_min, it->y);
+            y_max = MAX(y_max, it->y);
         }
-    
+
         return from_corners({x_min, y_min}, {x_max, y_max});
     }
 

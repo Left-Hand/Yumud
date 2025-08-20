@@ -87,5 +87,7 @@ struct BoundingBoxOf<RotatedRect<T>>{
     }
 };
 
+template<typename T>
+struct is_placed_t<RotatedRect<T>>:std::false_type {};
 
 }
