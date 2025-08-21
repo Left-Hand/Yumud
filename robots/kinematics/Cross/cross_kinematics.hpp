@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 #include "core/math/realmath.hpp"
 
 namespace ymd::robots{
@@ -33,15 +33,15 @@ public:
 
 
     T forward(const T rad){
-        auto base_pos = Vector2<T>{-config_.xoffs_length_meter, 0};
-        auto jpos = base_pos + Vector2<T>{config_.upperarm_length_meter, 0}.rotated(rad);
+        auto base_pos = Vec2<T>{-config_.xoffs_length_meter, 0};
+        auto jpos = base_pos + Vec2<T>{config_.upperarm_length_meter, 0}.rotated(rad);
 
         auto delta_h = sqrt(square(config_.forearm_length_meter) - square(jpos.x));
         return jpos.y + delta_h;
     }
 
     T inverse(const T height){
-        auto bevel = Vector2<T>{config_.xoffs_length_meter, height};
+        auto bevel = Vec2<T>{config_.xoffs_length_meter, height};
         auto bevel_length = bevel.length();
 
         auto alpha = atan2(bevel.y, bevel.x);

@@ -214,8 +214,8 @@ namespace ymd::ral::CH32V20x{
     };
 
 
-[[maybe_unused]]static inline SPI_Def * SPI1_Inst = (SPI_Def *)(0x40013000);
-[[maybe_unused]]static inline SPI_Def * SPI2_Inst = (SPI_Def *)(0x40003800);
-[[maybe_unused]]static inline SPI_Def * SPI3_Inst = (SPI_Def *)(0x40003C00);
+[[maybe_unused]] static inline SPI_Def * SPI1_Inst = reinterpret_cast<SPI_Def *>(0x40013000);
+[[maybe_unused]] static inline SPI_Def * SPI2_Inst = reinterpret_cast<SPI_Def *>(0x40003800);
+[[maybe_unused]] static inline SPI_Def * SPI3_Inst = reinterpret_cast<SPI_Def *>(0x40003C00);
 
 }

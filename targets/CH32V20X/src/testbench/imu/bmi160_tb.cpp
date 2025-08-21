@@ -7,7 +7,7 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
@@ -52,7 +52,7 @@ void bmi160_main(){
 
         clock::delay(20ms);
         bmi.update().examine();
-        Vector3<real_t> acc = bmi.read_acc().unwrap();
+        Vec3<real_t> acc = bmi.read_acc().unwrap();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

@@ -84,7 +84,7 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
             for(int dy = -core_radius; dy <= int(core_radius); ++dy){
                 for(int dx = -core_radius; dx <= int(core_radius); ++dx){
                     sum += 
-                        uint8_t(src[Vector2u{size_t(x + dx), size_t(y + dy)}]) 
+                        uint8_t(src[Vec2u{size_t(x + dx), size_t(y + dy)}]) 
                         * uint8_t(core[size_t(dy + core_radius)][size_t(dx + core_radius)]);
                 }
             }
@@ -100,9 +100,9 @@ void gauss(Image<Gray> & src){
     pixels::copy(src, temp);
 }
 
-Vector2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vector2u & point, const Vector2u & vec){
-    Vector2u current_point = point;
-    Vector2u delta_point = Vector2u(sign(vec.x), sign(vec.y));
+Vec2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vec2u & point, const Vec2u & vec){
+    Vec2u current_point = point;
+    Vec2u delta_point = Vec2u(sign(vec.x), sign(vec.y));
 
     {
         while(true){
@@ -119,16 +119,16 @@ Vector2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vector
         }
     }
 
-    auto eve = [](const Vector2u & _point, const Vector2u & _vec) -> int{
+    auto eve = [](const Vec2u & _point, const Vec2u & _vec) -> int{
         return _point.dot(_vec);
     };
 
     int current_eve = eve(current_point, vec);
     while(true){
-        Vector2u next_x_vec = current_point + Vector2u(sign(vec.x), 0);
-        Vector2u next_y_vec = current_point + Vector2u(0, sign(vec.y));
+        Vec2u next_x_vec = current_point + Vec2u(sign(vec.x), 0);
+        Vec2u next_y_vec = current_point + Vec2u(0, sign(vec.y));
 
-        Vector2u * next_point = &current_point;
+        Vec2u * next_point = &current_point;
         current_eve = eve(current_point, vec);
 
         if(src[next_x_vec] == tg_color){
@@ -590,14 +590,14 @@ void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real
 
     for(size_t y = 0; y < h / m; y++){
         for(size_t x = 0; x < w / m; x++){
-            Vector2u base = Vector2u(x, y)* m;
+            Vec2u base = Vec2u(x, y)* m;
             size_t pixel = 0;
             for(size_t j = 0; j < m; j++){
                 for(size_t i = 0; i < m; i++){
-                    Vector2u src_pos = base + Vector2u(i, j);
+                    Vec2u src_pos = base + Vec2u(i, j);
                     pixel += src[src_pos].is_white();
                 }
-            Vector2u dst_pos = Vector2u(x,y);
+            Vec2u dst_pos = Vec2u(x,y);
             dst[dst_pos] = Binary(bool(pixel > n));
             }
         }
@@ -627,19 +627,19 @@ void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
 
         for (size_t y = 0; y < h; ++y) {
             for (size_t x = 0; x < w; ++x) {
-                const Vector2u p{x,y};
+                const Vec2u p{x,y};
                 // const Binary * p = &temp[x + y * w];
                 
                 if (temp[p] == 0) continue;
                 
-                Binary p1 = temp[p + Vector2i{0, -1}];
-                Binary p2 = temp[p + Vector2i{1, -1}];
-                Binary p3 = temp[p + Vector2i{1, 0}];
-                Binary p4 = temp[p + Vector2i{1, 1}];
-                Binary p5 = temp[p + Vector2i{0, 1}];
-                Binary p6 = temp[p + Vector2i{-1, 1}];
-                Binary p7 = temp[p + Vector2i{-1, 0}];
-                Binary p8 = temp[p + Vector2i{-1, -1}];
+                Binary p1 = temp[p + Vec2i{0, -1}];
+                Binary p2 = temp[p + Vec2i{1, -1}];
+                Binary p3 = temp[p + Vec2i{1, 0}];
+                Binary p4 = temp[p + Vec2i{1, 1}];
+                Binary p5 = temp[p + Vec2i{0, 1}];
+                Binary p6 = temp[p + Vec2i{-1, 1}];
+                Binary p7 = temp[p + Vec2i{-1, 0}];
+                Binary p8 = temp[p + Vec2i{-1, -1}];
 
 
                 size_t A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
@@ -691,18 +691,18 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
                     if((x + y) % 2 == 0) continue;
                 }
 
-                const Vector2u base = Vector2u(x, y);
+                const Vec2u base = Vec2u(x, y);
                 bool p1 = temp[base];
                 if (p1 == 0) continue;
 
-                bool p2 = temp[base + Vector2u(0, -1)];
-                bool p3 = temp[base + Vector2u(1, -1)];
-                bool p4 = temp[base + Vector2u(1, 0)];
-                bool p5 = temp[base + Vector2u(1, 1)];
-                bool p6 = temp[base + Vector2u(0, 1)];
-                bool p7 = temp[base + Vector2u(-1, 1)];
-                bool p8 = temp[base + Vector2u(-1, 0)];
-                bool p9 = temp[base + Vector2u(-1, -1)];
+                bool p2 = temp[base + Vec2u(0, -1)];
+                bool p3 = temp[base + Vec2u(1, -1)];
+                bool p4 = temp[base + Vec2u(1, 0)];
+                bool p5 = temp[base + Vec2u(1, 1)];
+                bool p6 = temp[base + Vec2u(0, 1)];
+                bool p7 = temp[base + Vec2u(-1, 1)];
+                bool p8 = temp[base + Vec2u(-1, 0)];
+                bool p9 = temp[base + Vec2u(-1, -1)];
 
                 size_t B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
                 size_t C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
@@ -941,7 +941,7 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 
 void eye(Image<Gray> &dst, const Image<Gray> &src){
 
-    using vec_t = Vector2<int8_t>;
+    using vec_t = Vec2<int8_t>;
     #define square(x) (x * x)
     scexpr size_t shift_bits = 3;
 
@@ -1050,7 +1050,7 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
         return;
     }
 
-    const auto [w,h] = Vector2u{
+    const auto [w,h] = Vec2u{
         MIN(src.size().x, dst.size().x),
         MIN(src.size().y, dst.size().y),
     };

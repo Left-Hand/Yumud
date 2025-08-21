@@ -192,7 +192,7 @@ public:
 
     [[nodiscard]] IResult<> inhibit_channels(bool x, bool y, bool z);
 
-    [[nodiscard]] IResult<Vector3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<q24>> read_mag();
 
 protected:
 

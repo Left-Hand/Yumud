@@ -14,7 +14,7 @@ public:
         dir_(_dir),
         curr_ch_(_curr_ch){;}
 
-    __fast_inline void set_duty(const real_t duty){
+    __fast_inline void set_dutycycle(const real_t duty){
         if(duty >= 0){
             pwm_ = MIN(duty, 1);
             dir_.set();

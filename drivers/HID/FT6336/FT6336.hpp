@@ -11,7 +11,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 namespace ymd::drivers{
 
@@ -61,7 +61,7 @@ public:
         Release,
     } ;
 
-    using Point = Vector2<uint16_t>;
+    using Point = Vec2<uint16_t>;
 
     // struct PointWithStatus{
     //     TouchStatus status;
@@ -378,8 +378,8 @@ public:
     [[nodiscard]] IResult<>             set_device_mode(DeviceMode);
     [[nodiscard]] IResult<uint8_t>      get_touch_count(); 
     [[nodiscard]] IResult<Points>       get_touch_points(); 
-    [[nodiscard]] IResult<Vector2<uint16_t>> get_touch1_position();
-    [[nodiscard]] IResult<Vector2<uint16_t>> get_touch2_position();
+    [[nodiscard]] IResult<Vec2<uint16_t>> get_touch1_position();
+    [[nodiscard]] IResult<Vec2<uint16_t>> get_touch2_position();
     [[nodiscard]] IResult<uint8_t>      get_touch1_event();
     [[nodiscard]] IResult<uint8_t>      get_touch1_id();
     [[nodiscard]] IResult<uint8_t>      get_touch1_weight();

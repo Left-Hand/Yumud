@@ -60,7 +60,7 @@ void co_ab_main(){
         auto prog = sin(6 * clock::time());
         // pwm_gpio = bool(prog > 0.5_r);
         // pwm_p = prog;
-        pwm_mirror.set_duty(prog);
+        pwm_mirror.set_dutycycle(prog);
         // clock::delay(200ms);
     }    
 }

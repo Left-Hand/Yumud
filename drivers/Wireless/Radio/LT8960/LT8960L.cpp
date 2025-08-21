@@ -5,6 +5,12 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
+using Error = LT8960L::Error;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
 template<typename First, typename ... Ts>
 constexpr std::array<First, sizeof...(Ts)> make_array(
     Ts && ... args
@@ -19,7 +25,7 @@ void LT8960L::States::transition_to(const Kind status){
     // LT8960L_DEBUG(uint8_t(status));
 };
 
-Result<size_t, Error> LT8960L::transmit_rf(std::span<const uint8_t> buf){
+IResult<size_t> LT8960L::transmit_rf(std::span<const uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while tx");
@@ -74,7 +80,7 @@ Result<size_t, Error> LT8960L::transmit_rf(std::span<const uint8_t> buf){
     }
 }
 
-Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
+IResult<size_t> LT8960L::receive_rf(std::span<uint8_t> buf){
     switch(states_.kind()){
         default:
             LT8960L_PANIC("Invalid state while rx", uint8_t(states_.kind()));
@@ -111,7 +117,7 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
                 const auto res = read_fifo(buf);
                 if(res.is_err()){
                     states_.timeout()++;
-                    if(states_.timeout() > MAX_RX_RETRY){
+                    if(states_.timeout() > LT8960L_MAX_RX_RETRY_TIMES){
                         states_ = States::ReceiveFailed;
                         states_.timeout() = 0;
 
@@ -133,10 +139,10 @@ Result<size_t, Error> LT8960L::receive_rf(std::span<uint8_t> buf){
 
 
 
-Result<void, Error> LT8960L::init_ble(const Power power){
+IResult<> LT8960L::init_ble(const Power power){
     // LT8960L Datasheet v1.1 Page17
 
-    // return Result<void, Error>(Ok())
+    // return IResult<>(Ok())
 
     //     // 基础寄存器配置
     //     // REG 0x01 写入0x5781：配置通用模式寄存器（启用射频校准和时钟模式）
@@ -213,7 +219,7 @@ Result<void, Error> LT8960L::init_ble(const Power power){
 }
 
 
-auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error>{
+auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
     using RP = std::pair<uint8_t, uint16_t>;
     static constexpr auto CMDS = make_array<RP>(
         RP{7 , 0x0000},
@@ -225,7 +231,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
             res.is_err()) return Err(res.unwrap_err());
 
     return write_fifo(buf)
-        .and_then([](const size_t size) -> Result<size_t, Error>{
+        .and_then([](const size_t size) -> IResult<size_t>{
             LT8960L_DEBUG("transmit successfully");
             return Ok(size);
         })
@@ -284,7 +290,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> Result<size_t, Error
     return Ok(0u);
 }
 
-Result<size_t, Error> LT8960L::receive_ble(std::span<uint8_t> buf){
+IResult<size_t> LT8960L::receive_ble(std::span<uint8_t> buf){
     TODO();
     // uint8_t i, len;
     // LT8960L_start();
@@ -318,7 +324,7 @@ Result<size_t, Error> LT8960L::receive_ble(std::span<uint8_t> buf){
 }
 
 
-Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
+IResult<> LT8960L::init(const Power power, const uint32_t syncword){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
     if(const auto res = phy_.init();
@@ -381,7 +387,7 @@ Result<void, Error> LT8960L::init(const Power power, const uint32_t syncword){
     return Ok();
 }
 
-Result<void, Error> LT8960L::init_rf(){
+IResult<> LT8960L::init_rf(){
         // REG 0x01 写0x5781,
     if(const auto res = write_reg(0x01, 0x5781);
         res.is_err()) return Err(res.unwrap_err());
@@ -409,7 +415,7 @@ Result<void, Error> LT8960L::init_rf(){
 }
 
 
-Result<void, Error> LT8960L::begin_receive(){
+IResult<> LT8960L::begin_receive(){
     if(const auto res = exit_tx_rx();
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = ensure_correct_0x08();
@@ -424,7 +430,7 @@ Result<void, Error> LT8960L::begin_receive(){
     return Ok();
 }
 
-Result<void, Error> LT8960L::begin_transmit(){
+IResult<> LT8960L::begin_transmit(){
     // return (set_rf_channel_and_exit_tx_rx(ch)
     // | ensure_correct_0x08()
     // | clear_fifo_write_and_read_ptr()

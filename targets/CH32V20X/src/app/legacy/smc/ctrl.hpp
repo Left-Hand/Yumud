@@ -3,7 +3,7 @@
 #include "../core/system.hpp"
 
 #include "core/math/real.hpp"
-#include "types/regions/rect2/rect2.hpp"
+#include "types/regions/rect2.hpp"
 #include "types/rgb.h"
 #include "body.hpp"
 

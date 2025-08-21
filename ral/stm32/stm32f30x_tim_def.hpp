@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::STM32F30x{
+namespace ymd::ral::STM32F30x{
     namespace TIM_Regs{
     }
 }

@@ -58,7 +58,7 @@ IResult<> PAW3395::set_lift_off(bool height){
 	return Ok();
 }
 
-IResult<Vector2i> PAW3395::sample_fetch(){
+IResult<Vec2i> PAW3395::sample_fetch(){
 
 	const bool motion = ({
 		uint8_t temp = 0;
@@ -68,7 +68,7 @@ IResult<Vector2i> PAW3395::sample_fetch(){
 	});
 	
 	if(motion == false) return
-		Ok(Vector2i(0,0));
+		Ok(Vec2i(0,0));
 
 	const int16_t x = ({
 		const auto res = read_i16(PAW3395_REG_DELTA_X_L, PAW3395_REG_DELTA_X_H);
@@ -82,7 +82,7 @@ IResult<Vector2i> PAW3395::sample_fetch(){
 		res.unwrap();
 	});
 
-	return Ok(Vector2i{x,y});
+	return Ok(Vec2i{x,y});
 }
 
 // IResult<> paw3395_channel_get(

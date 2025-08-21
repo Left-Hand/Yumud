@@ -9,7 +9,7 @@
 
 namespace ymd::ral::CH32V203{
 
-    
+
 struct R16_I2C_CTLR1{
     uint16_t PE:1;
     uint16_t SMBUS:1;
@@ -247,7 +247,7 @@ struct I2C_Def{
         CTLR1.NOSTRETCH = !set;
     }
 
-    constexpr void set_duty_16_9(const bool set){
+    constexpr void set_dutycycle_16_9(const bool set){
         CKCFRG.DUTY = set;
     }
 
@@ -318,7 +318,7 @@ struct I2C_Def{
 };
 
 
-[[maybe_unused]] static inline I2C_Def * I2C1_Inst = (I2C_Def *)(0x40005400);
-[[maybe_unused]] static inline I2C_Def * I2C2_Inst = (I2C_Def *)(0x40005800);
+[[maybe_unused]] static inline I2C_Def * I2C1_Inst = reinterpret_cast<I2C_Def *>(0x40005400);
+[[maybe_unused]] static inline I2C_Def * I2C2_Inst = reinterpret_cast<I2C_Def *>(0x40005800);
 
 }

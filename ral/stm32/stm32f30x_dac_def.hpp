@@ -5,7 +5,7 @@
 #define __IO volatile
 
 
-namespace hwspec::STM32F30x::DAC{
+namespace ymd::ral::STM32F30x::DAC{
 
 typedef struct
 {

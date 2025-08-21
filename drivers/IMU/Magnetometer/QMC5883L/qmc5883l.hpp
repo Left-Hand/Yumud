@@ -160,7 +160,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vector3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
     
     [[nodiscard]] IResult<> validate();
 

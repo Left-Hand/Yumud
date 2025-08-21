@@ -9,7 +9,7 @@ static __fast_inline T square(const T x){
     return x * x;
 }
 
-bool ArcInterpolation::IsPerpendicular(const Vector2<q16> & pt1,const Vector2<q16> & pt2,const Vector2<q16> & pt3) const {
+bool ArcInterpolation::IsPerpendicular(const Vec2<q16> & pt1,const Vec2<q16> & pt2,const Vec2<q16> & pt3) const {
     const auto [pt1x, pt1y] = pt1;
     const auto [pt2x, pt2y] = pt2;
     const auto [pt3x, pt3y] = pt3;
@@ -39,7 +39,7 @@ bool ArcInterpolation::IsPerpendicular(const Vector2<q16> & pt1,const Vector2<q1
     else return false;
 }
 
-std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (const Vector2<q16> & pt1,const Vector2<q16> & pt2,const Vector2<q16> & pt3) const {
+std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (const Vec2<q16> & pt1,const Vec2<q16> & pt2,const Vec2<q16> & pt3) const {
     const auto [pt1x, pt1y] = pt1;
     const auto [pt2x, pt2y] = pt2;
     const auto [pt3x, pt3y] = pt3;
@@ -82,7 +82,7 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
     };
 }
 
-ArcInterpolation::ArcInterpolation(const Vector2<q16> & handle):
+ArcInterpolation::ArcInterpolation(const Vec2<q16> & handle):
     _a(handle.x), _b(handle.y){
         scexpr real_t pt1x = 0;
         scexpr real_t pt1y = 0;
@@ -91,18 +91,18 @@ ArcInterpolation::ArcInterpolation(const Vector2<q16> & handle):
         scexpr real_t pt3x = 1;
         scexpr real_t pt3y = 1;
         auto && result = [&]() -> std::tuple<real_t, real_t, real_t> {
-            if      (!IsPerpendicular(Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt3x,pt3y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt3x,pt3y});	
-            else if (!IsPerpendicular(Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt2x,pt2y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt2x,pt2y});	
-            else if (!IsPerpendicular(Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt3x,pt3y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt3x,pt3y});	
-            else if (!IsPerpendicular(Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt1x,pt1y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt1x,pt1y});	
-            else if (!IsPerpendicular(Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt1x,pt1y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt2x,pt2y}, Vector2<q16>{pt1x,pt1y});	
-            else if (!IsPerpendicular(Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt2x,pt2y}))		
-                calcCircleFrom3Points (Vector2<q16>{pt3x,pt3y}, Vector2<q16>{pt1x,pt1y}, Vector2<q16>{pt2x,pt2y});	
+            if      (!IsPerpendicular(Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y});	
+            else if (!IsPerpendicular(Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt2x,pt2y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt2x,pt2y});	
+            else if (!IsPerpendicular(Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt3x,pt3y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt3x,pt3y});	
+            else if (!IsPerpendicular(Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt1x,pt1y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt1x,pt1y});	
+            else if (!IsPerpendicular(Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt1x,pt1y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt1x,pt1y});	
+            else if (!IsPerpendicular(Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y}))		
+                calcCircleFrom3Points (Vec2<q16>{pt3x,pt3y}, Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y});	
             return {0,0,0};
         }();
 
@@ -166,10 +166,10 @@ static real_t linetopoint (real_t a, real_t b, real_t c, real_t ptx, real_t pty)
 // L2 (p3 to p4) with radius R.  
 // 
 void CircularFilletInterpoation::computeFilletParameters (
-        const Vector2<q16> & pt1,
-        const Vector2<q16> & pt2,
-        const Vector2<q16> & pt3,
-        const Vector2<q16> & pt4,
+        const Vec2<q16> & pt1,
+        const Vec2<q16> & pt2,
+        const Vec2<q16> & pt3,
+        const Vec2<q16> & pt4,
         real_t r) {
 
     auto [p1x, p1y] = pt1;

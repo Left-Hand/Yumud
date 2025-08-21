@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vectors/quat/quat.hpp"
+#include "types/vectors/quat.hpp"
 
 
 #include "core/math/fast/conv.hpp"
@@ -10,7 +10,7 @@ namespace ymd{
 class Mahony{
 public:
     using IQuat = Quat<q24>;
-    using V3 = Vector3<q24>;
+    using V3 = Vec3<q24>;
 protected:
     q24 dt_;
 
@@ -57,7 +57,7 @@ public:
 };
 
 template<typename T>
-__fast_inline OutputStream & operator<<(OutputStream & os, const Norm_t<T> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const Norm<T> & value){
     return os << T(value);
 }
 

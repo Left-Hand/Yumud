@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/regions/rect2/rect2.hpp"
+#include "types/regions/rect2.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace etk{
@@ -8,7 +8,7 @@ namespace etk{
 using namespace ymd::drivers;
 
 struct EyeInfo{
-    Vector2<real_t> pos;
+    Vec2<real_t> pos;
 };
 
 struct EyelidInfo{
@@ -75,8 +75,8 @@ public:
 class Eyes{
 public:
     struct Config{
-        Vector2i l_center;
-        Vector2i r_center;
+        Vec2i l_center;
+        Vec2i r_center;
 
         size_t eye_radius;
         size_t iris_radius;
@@ -94,7 +94,7 @@ public:
             config_(config),
             eyes_phy_{refs}{}
 
-    void solve(const Vector2i & raw_lpos, const Vector2i & raw_rpos){
+    void solve(const Vec2i & raw_lpos, const Vec2i & raw_rpos){
 
     }
 

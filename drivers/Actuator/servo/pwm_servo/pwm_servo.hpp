@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/Actuator/servo/servo.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 #include "concept/pwm_channel.hpp"
 
 namespace ymd::drivers{
@@ -21,10 +21,10 @@ public:
 
     void enable(const Enable en = EN){
         enabled = en == EN;
-        if(en == DISEN) this->set_duty(0);
+        if(en == DISEN) this->set_dutycycle(0);
     }
 
-    void set_duty(const real_t duty) override {
+    void set_dutycycle(const real_t duty) override {
         if(false == enabled){
             instance_ = 0;
         }else{
@@ -44,7 +44,7 @@ private:
     real_t last_rad;
 
     void set_global_radian(const real_t rad) override{
-        instance_.set_duty((rad) * real_t(1 / PI));
+        instance_.set_dutycycle((rad) * real_t(1 / PI));
         last_rad = rad;
     }
 
@@ -67,15 +67,15 @@ protected:
 
     void set_speed_directly(const real_t rps) override{
         expect_speed_ = rps;
-        set_duty(rps / max_turns_per_second_);
+        set_dutycycle(rps / max_turns_per_second_);
     }
 
     real_t get_speed() override{
         return expect_speed_;
     }
 
-    void set_duty(const real_t duty){
-        instance_.set_duty((duty + 1) * real_t(0.5));
+    void set_dutycycle(const real_t duty){
+        instance_.set_dutycycle((duty + 1) * real_t(0.5));
     }
 public:
     PwmSpeedServo(hal::PwmIntf & instance, const real_t max_turns_per_second = 2):

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "types/vectors/vector3/vector3.hpp"
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/vectors/vector2.hpp"
 
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Cross/CrossSolver_t.hpp"
 
-#include "types/Ray2/Ray2.hpp"
-#include "types/aabb/AABB.hpp"
+#include "types/ray2.hpp"
+#include "types/aabb.hpp"
 
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
@@ -18,8 +18,8 @@ namespace gxm{
     using namespace ymd;
     using namespace ymd::drivers;
 
-    using Vector3 = Vector3<real_t>;
-    using Vector3i = Vector3<int>;
+    using Vec3 = Vec3<real_t>;
+    using Vec3i = Vec3<int>;
     using AABB = AABB<real_t>;
     using Ray = Ray2<real_t>;
     

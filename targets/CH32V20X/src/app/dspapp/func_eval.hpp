@@ -9,8 +9,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd{
-struct Evaluator{
-    Evaluator() = default;
+struct TransferSysEvaluator{
+    TransferSysEvaluator() = default;
 
     template<typename FnIn, typename FnProc>
     static void evaluate_func(const uint times, FnIn && fn_in, FnProc && fn_proc){
@@ -37,17 +37,17 @@ struct Evaluator{
             .freq = f_isr
         });
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-            x_ = std::forward<FnIn>(fn_in)(time_);
-            y_ = std::forward<FnProc>(fn_proc)(x_);
+            input_ = std::forward<FnIn>(fn_in)(time_);
+            output_ = std::forward<FnProc>(fn_proc)(input_);
             time_ += delta_;
         });
     }
 
-    constexpr auto get_xy() const {
-        return std::make_tuple(x_,y_);
+    constexpr auto get_input_and_output() const {
+        return std::make_tuple(input_,output_);
     }
 
-    void set_fs(const uint32_t fs){
+    void set_sample_freq(const uint32_t fs){
         fs_ = Some(fs);
         time_ = 0;
         delta_ = 1_q24 / fs;
@@ -66,8 +66,8 @@ private:
     q24 time_ = 0;
     q24 delta_ = 0;
 
-    q16 x_;
-    q16 y_;
+    q16 input_;
+    q16 output_;
 
     // Microseconds delta_;
 };

@@ -10,18 +10,18 @@
 
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
-#include "types/regions/plane/plane.hpp"
-#include "types/regions/aabb/aabb.hpp"
-#include "types/regions/segment2/Segment2.hpp"
-#include "types/regions/Line2/Line2.hpp"
-#include "types/regions/Ray2/Ray2.hpp"
+#include "types/regions/plane.hpp"
+#include "types/regions/aabb.hpp"
+#include "types/regions/segment2.hpp"
+#include "types/regions/line2.hpp"
+#include "types/regions/ray2.hpp"
 
-#include "types/transforms/transform3d/transform3d.hpp"
-#include "types/transforms/transform2d/transform2d.hpp"
+#include "types/transforms/transform3d.hpp"
+#include "types/transforms/transform2d.hpp"
 
-#include "types/shapes/Arc2/Arc2.hpp"
-#include "types/shapes/Bezier2/Bezier2.hpp"
-#include "types/regions/perspective_rect/perspective_rect.hpp"
+#include "types/shapes/Arc2.hpp"
+#include "types/shapes/Bezier2.hpp"
+#include "types/regions/perspective_rect.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_kinematics.hpp"
@@ -62,7 +62,7 @@ void math_main(){
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
 
-    // using Vector3 = Vector3<real_t>;
+    // using Vec3 = Vec3<real_t>;
     // using Plane = Plane<real_t>;
     // using Basis = Basis<real_t>;
     // using Transform3D = Transform3D<real_t>;
@@ -91,11 +91,11 @@ void math_main(){
     #define PPR_TB
 
     #ifdef PPR_TB
-    constexpr std::array<Vector2<real_t>, 4> dst = {
-        Vector2<real_t>{0, 0},
-        Vector2<real_t>{1, 0},
-        Vector2<real_t>{3, 4},
-        Vector2<real_t>{0, 1}
+    constexpr std::array<Vec2<real_t>, 4> dst = {
+        Vec2<real_t>{0, 0},
+        Vec2<real_t>{1, 0},
+        Vec2<real_t>{3, 4},
+        Vec2<real_t>{0, 1}
     };
     
     volatile size_t n = 0;
@@ -117,27 +117,27 @@ void math_main(){
     
 
     #ifdef PLANE_TB
-    EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
+    EQUAL_ASSERT(Plane(Vec3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))).get_center())
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))).get_center())
     // EQUAL_ASSERT(real_t(0.2), real_t(0.1));
     
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))));
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).normalized());
-    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center());
-	// print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized().has_point(Vector3(1,1,1)));
-	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized());
-	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).normalized().has_point(Vector3(1,1,1)));
-    print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)));
-	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
-    print(Vector3(0,0,0)- Vector3(10,10,10));
-    // print(Transform3D(Basis(), Vector3(0,0,0)))
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))).intersects_segment(Vec3(0,0,0), Vec3(10,10,10)));
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))));
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))).normalized());
+    print(Plane(Vec3(1,1,1), sqrt(real_t(3))).get_center());
+	// print(Plane(Vec3(3,0,0), Vec3(0,3,0), Vec3(0,0,3)).normalized().has_point(Vec3(1,1,1)));
+	print(Plane(Vec3(3,0,0), Vec3(0,3,0), Vec3(0,0,3)).normalized());
+	print(Plane(Vec3(3,0,0), Vec3(0,3,0), Vec3(0,0,3)).normalized().has_point(Vec3(1,1,1)));
+    print(Plane(Vec3(3,0,0), Vec3(0,3,0), Vec3(0,0,3)));
+	print(Plane(Vec3(3,0,0), Vec3(0,3,0), Vec3(0,0,3)).intersects_segment(Vec3(0,0,0), Vec3(10,10,10)));
+    print(Vec3(0,0,0)- Vec3(10,10,10));
+    // print(Transform3D(Basis(), Vec3(0,0,0)))
     #endif
 
     
     #ifdef TRANFORM_TB
-    var a = AABB<real_t>(Vector3(0,0,0), Vector3(1,1,1));
+    var a = AABB<real_t>(Vec3(0,0,0), Vec3(1,1,1));
 
     Transform2D<real_t> transform2d;
 
@@ -148,8 +148,8 @@ void math_main(){
 
     var transform = Transform3D();
 
-    transform.origin = Vector3(5, 5, 5);
-    var b = Basis().rotated(Vector3(0, 1, 0), real_t(PI / 4));
+    transform.origin = Vec3(5, 5, 5);
+    var b = Basis().rotated(Vec3(0, 1, 0), real_t(PI / 4));
     print(b)
     #endif
     
@@ -198,8 +198,8 @@ void math_main(){
     
     while(true){
 
-        auto left_pos = Vector3<real_t>(real_t(-0.1), real_t(-0.2), 0);
-        auto right_pos = Vector3<real_t>(real_t(0.1), real_t(-0.1), real_t(0.02));
+        auto left_pos = Vec3<real_t>(real_t(-0.1), real_t(-0.2), 0);
+        auto right_pos = Vec3<real_t>(real_t(0.1), real_t(-0.1), real_t(0.02));
         auto pitch_rad = real_t(0.143);
         // print(wls.foot_plane(left_pos, right_pos, pitch_rad));
 
@@ -227,8 +227,8 @@ void math_main(){
     using Line = Line2<real_t>;
 
 
-    auto line = Line{Vector2<real_t>{1,0}, Vector2<real_t>{0,1}};
-    auto other = Line::from_point_and_angle(Vector2<real_t>{0,0}, real_t(PI/4));
+    auto line = Line{Vec2<real_t>{1,0}, Vec2<real_t>{0,1}};
+    auto other = Line::from_point_and_angle(Vec2<real_t>{0,0}, real_t(PI/4));
     print("line", line);
     print("other",other);
 
@@ -237,17 +237,17 @@ void math_main(){
     print("abc:", line.abc());
     print("angle:", line.angle());
     print("abs", line.abs());
-    print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.5_r}));
-    print("dist", line.distance_to(Vector2<real_t>{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line::from_point_and_angle(Vector2<real_t>{0,0}, atan(real_t(0.3333_r)))));
-    print("foot", line.foot_of(Vector2<real_t>{0, 0.5_r}));
-    print("mirror", line.mirror(Vector2<real_t>{0, 0.5_r}));
-    print("perpendicular", line.perpendicular(Vector2<real_t>{0, 0.5_r}));
-    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_angle(Vector2<real_t>{0,0}, real_t(PI/4))));
+    print("dist", line.distance_to(Vec2<real_t>{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vec2<real_t>{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line::from_point_and_angle(Vec2<real_t>{0,0}, atan(real_t(0.3333_r)))));
+    print("foot", line.foot_of(Vec2<real_t>{0, 0.5_r}));
+    print("mirror", line.mirror(Vec2<real_t>{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vec2<real_t>{0, 0.5_r}));
+    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_angle(Vec2<real_t>{0,0}, real_t(PI/4))));
     print("unit", line.unit());
-    print("rebase", line.rebase(Vector2<real_t>{-1,0}));
-    print("rotated", line.rotated(Vector2<real_t>{-1,0}, real_t(PI/4)));
-    print("normal", line.normal(Vector2<real_t>{-1,0}));
+    print("rebase", line.rebase(Vec2<real_t>{-1,0}));
+    print("rotated", line.rotated(Vec2<real_t>{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vec2<real_t>{-1,0}));
     #endif
 
     #define MATRIX_TB
@@ -270,22 +270,22 @@ void math_main(){
 
 // // 测试用例1：单位矩形到放大矩形的变换
 // constexpr bool test_unit_rect_scaling() {
-//     constexpr std::array<Vector2<float>, 4> dst = {
-//         Vector2<float>{0, 0},
-//         Vector2<float>{2, 0},
-//         Vector2<float>{2, 2},
-//         Vector2<float>{0, 2}
+//     constexpr std::array<Vec2<float>, 4> dst = {
+//         Vec2<float>{0, 0},
+//         Vec2<float>{2, 0},
+//         Vec2<float>{2, 2},
+//         Vec2<float>{0, 2}
 //     };
 
-//     constexpr std::array<Vector2<float>, 4> src = {
-//         Vector2<float>{0, 0},
-//         Vector2<float>{1, 0},
-//         Vector2<float>{1, 1},
-//         Vector2<float>{0, 1}
+//     constexpr std::array<Vec2<float>, 4> src = {
+//         Vec2<float>{0, 0},
+//         Vec2<float>{1, 0},
+//         Vec2<float>{1, 1},
+//         Vec2<float>{0, 1}
 //     };
     
 //     // constexpr auto H = compute_homography_from_unit_rect(
-//     //     std::span<const Vector2<float>, 4>(dst));
+//     //     std::span<const Vec2<float>, 4>(dst));
 //     constexpr auto H = compute_homography(
 //         std::span(src), std::span(dst));
     
@@ -300,23 +300,23 @@ void math_main(){
 
 // // 测试用例2：仿射变换验证
 // constexpr bool test_affine_transform() {
-//     constexpr std::array<Vector2<double>, 4> src = {
-//         Vector2<double>{0, 0},
-//         Vector2<double>{1, 0},
-//         Vector2<double>{1, 1},
-//         Vector2<double>{0, 1}
+//     constexpr std::array<Vec2<double>, 4> src = {
+//         Vec2<double>{0, 0},
+//         Vec2<double>{1, 0},
+//         Vec2<double>{1, 1},
+//         Vec2<double>{0, 1}
 //     };
     
-//     constexpr std::array<Vector2<double>, 4> dst = {
-//         Vector2<double>{0, 0},
-//         Vector2<double>{2, 0},
-//         Vector2<double>{2, 3},
-//         Vector2<double>{0, 3}
+//     constexpr std::array<Vec2<double>, 4> dst = {
+//         Vec2<double>{0, 0},
+//         Vec2<double>{2, 0},
+//         Vec2<double>{2, 3},
+//         Vec2<double>{0, 3}
 //     };
     
 //     constexpr auto H = compute_homography(
-//         std::span<const Vector2<double>, 4>(src),
-//         std::span<const Vector2<double>, 4>(dst));
+//         std::span<const Vec2<double>, 4>(src),
+//         std::span<const Vec2<double>, 4>(dst));
     
 //     constexpr auto expected = Matrix3x3<double>{
 //         2, 0, 0,
@@ -329,23 +329,23 @@ void math_main(){
 
 // // 测试用例3：透视变换验证
 // constexpr bool test_perspective_transform() {
-//     constexpr std::array<Vector2<float>, 4> src = {
-//         Vector2<float>{0, 0},
-//         Vector2<float>{1, 0},
-//         Vector2<float>{1, 1},
-//         Vector2<float>{0, 1}
+//     constexpr std::array<Vec2<float>, 4> src = {
+//         Vec2<float>{0, 0},
+//         Vec2<float>{1, 0},
+//         Vec2<float>{1, 1},
+//         Vec2<float>{0, 1}
 //     };
     
-//     constexpr std::array<Vector2<float>, 4> dst = {
-//         Vector2<float>{0, 0},
-//         Vector2<float>{1, 0},
-//         Vector2<float>{0.5f, 1},
-//         Vector2<float>{0.5f, 1}
+//     constexpr std::array<Vec2<float>, 4> dst = {
+//         Vec2<float>{0, 0},
+//         Vec2<float>{1, 0},
+//         Vec2<float>{0.5f, 1},
+//         Vec2<float>{0.5f, 1}
 //     };
     
 //     constexpr auto H = compute_homography(
-//         std::span<const Vector2<float>, 4>(src),
-//         std::span<const Vector2<float>, 4>(dst));
+//         std::span<const Vec2<float>, 4>(src),
+//         std::span<const Vec2<float>, 4>(dst));
     
 //     // 预期结果需要根据实际计算确定
 //     constexpr auto expected = Matrix3x3<real_t>{

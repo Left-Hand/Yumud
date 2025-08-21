@@ -26,7 +26,7 @@ protected:
     using RunStatus = MotorUtils::RunStatus;
     using CtrlType = MotorUtils::CtrlType;
 
-    RgbLedConcept & led;
+    RgbLedIntf & led;
 
     Color color_a = {};
     Color color_b = {};
@@ -37,7 +37,7 @@ protected:
     volatile RunStatus & run_status;
     volatile CtrlType & ctrl_type;
 public:
-    StatLed(RgbLedConcept & _led, 
+    StatLed(RgbLedIntf & _led, 
         volatile RunStatus & _run_status, volatile CtrlType & _ctrl_type) : 
         led(_led), run_status(_run_status), ctrl_type(_ctrl_type) {;}
 

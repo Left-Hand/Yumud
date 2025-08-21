@@ -63,7 +63,7 @@ protected:
     scexpr uint16_t header = 0x54A8;
     scexpr size_t mtu = 320;
     uint8_t time_stamp = 0;
-    void transmit(const uint8_t * img_buf, const Vector2i & img_size, const uint8_t index);
+    void transmit(const uint8_t * img_buf, const Vec2i & img_size, const uint8_t index);
 
     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 public:

@@ -73,12 +73,12 @@ IResult<> HMC5883L::set_mode(const Mode mode){
     return write_reg(reg);
 }
 
-IResult<Vector3<q24>> HMC5883L::read_mag(){
+IResult<Vec3<q24>> HMC5883L::read_mag(){
     real_t x = transform_raw_to_gauss(magXReg, lsb_);
     real_t y = transform_raw_to_gauss(magYReg, lsb_);
     real_t z = transform_raw_to_gauss(magZReg, lsb_);
 
-    return Ok(Vector3<q24>(x,y,z));
+    return Ok(Vec3<q24>(x,y,z));
 }
 
 IResult<> HMC5883L::validate(){

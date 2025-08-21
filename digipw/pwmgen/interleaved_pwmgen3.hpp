@@ -187,14 +187,14 @@ public:
             .install_en = EN,
         });
 
-        pwm_trig_.set_duty(TWO_BY_3);
+        pwm_trig_.set_dutycycle(TWO_BY_3);
         test_gpio.outpp();
         timer_.enable();
     }
 
     using Duty = std::array<real_t, 3>;
 
-    __no_inline void set_duty(const Duty duty){
+    __no_inline void set_dutycycle(const Duty duty){
         duty_cmd_shadow_[0] = duty[0];
         duty_cmd_shadow_[1] = duty[1];
         duty_cmd_shadow_[2] = duty[2];
@@ -259,11 +259,11 @@ public:
             }
         }();
 
-        pwm_trig_.set_duty(next_duty);
+        pwm_trig_.set_dutycycle(next_duty);
 
         const auto tim_arr = timer_.arr();
 
-        pwm_u_.set_duty(duty_cmd_[0]);
+        pwm_u_.set_dutycycle(duty_cmd_[0]);
         set_pwm_shift_120(pwm_v_, duty_cmd_[1], curr_occasion, tim_arr);
         set_pwm_shift_240(pwm_w_, duty_cmd_[2], curr_occasion, tim_arr);
 

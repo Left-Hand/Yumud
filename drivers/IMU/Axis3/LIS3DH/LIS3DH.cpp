@@ -78,8 +78,8 @@ Result<void, Error> LIS3DH::reset(){
 
 
 
-IResult<Vector3<q24>> LIS3DH::read_acc(){
-    return Ok(Vector3<q24>());
+IResult<Vec3<q24>> LIS3DH::read_acc(){
+    return Ok(Vec3<q24>());
 
 }
 

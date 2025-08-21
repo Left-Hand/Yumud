@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../GateDriverIntf.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 #include <optional>
 

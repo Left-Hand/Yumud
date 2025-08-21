@@ -35,7 +35,7 @@ public:
 
     PwmRef pwm();
     GpioRef gpio();
-    void set_duty(const real_t duty) override;
+    void set_dutycycle(const real_t duty) override;
 };
 
 };

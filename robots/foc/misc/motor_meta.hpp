@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vectors/vector2/vector2.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/regions/range2.hpp"
 
 #include "motor_scexpr.hpp"
 

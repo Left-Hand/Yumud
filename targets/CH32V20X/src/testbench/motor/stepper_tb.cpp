@@ -27,7 +27,6 @@
 // #include "dsp/filter/EKF.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::intp;
@@ -143,11 +142,11 @@ void stepper_tb(UartHw & logger_inst){
     // can.enableHwReTransmit();
     
     can[0].mask(
-        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteSpec::Any},
-        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any),
+        CanID16{uint16_t(uint16_t(node_id) << 7), CanRtr::Any},
+        CanID16::IGNORE_LOW(7, CanRtr::Any),
         
-        CanID16{0x000, CanRemoteSpec::Any}, 
-        CanID16::IGNORE_LOW(7, CanRemoteSpec::Any));
+        CanID16{0x000, CanRtr::Any}, 
+        CanID16::IGNORE_LOW(7, CanRtr::Any));
 
     FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger_inst, stp};

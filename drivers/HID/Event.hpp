@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 
 
@@ -60,16 +60,16 @@ public:
 
 // class MouseEvent{
 // public:
-//     constexpr Option<Vector2i> pos() const {
+//     constexpr Option<Vec2i> pos() const {
 //         return pos_;
 //     }
 
-//     constexpr MouseEvent(Option<Vector2i> pos):
+//     constexpr MouseEvent(Option<Vec2i> pos):
 //         pos_(pos)
 //     {;}
 // private:
 
-//     Option<Vector2i> pos_;
+//     Option<Vec2i> pos_;
 // };
 
 }

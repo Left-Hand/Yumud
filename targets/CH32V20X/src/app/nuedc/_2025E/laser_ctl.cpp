@@ -17,27 +17,23 @@
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"
 
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 using namespace ymd;
 using namespace ymd::robots;
-// using namespace ymd::hal;
 
 
 #define DBG_UART hal::uart2
-static constexpr uint32_t TIM_FREQ = 5000;
-static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
+static constexpr uint32_t PWM_FREQ = 10000;
+static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
-enum class Command:uint8_t{
-    On = 0x33,
-    Off
-};
-
-// static constexpr
-
+using Command = LaserCommand;
 
 void laser_ctl_main(){
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .baudrate = 576000
+    });
+    
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
@@ -50,16 +46,9 @@ void laser_ctl_main(){
         .remap = 0
     });
 
-    can[0].mask(
-        {
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        },{
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        }
+
+    can.filter(0).apply(
+        hal::CanFilterConfig::from_accept_all()
     );
 
 
@@ -73,35 +62,24 @@ void laser_ctl_main(){
         else led.clr();
     };
 
-    can[0].mask(
-        {
-            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-        },{
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
-            .mask = hal::CanStdIdMask::from_accept_all()
-        }
-    );
-
 
     [[maybe_unused]] auto & mode1_gpio   = hal::portB[1];
     [[maybe_unused]] auto & phase_gpio   = hal::portA[7];
     phase_gpio.outpp();
 
 
-    hal::timer3.init({TIM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
+    hal::timer3.init({PWM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
     auto & pwm = hal::timer3.oc<1>();
     pwm.init({});
 
     bool duty_is_forward = false;
 
-    auto set_duty = [&](real_t duty){
+    auto set_dutycycle = [&](real_t duty){
         DEBUG_PRINTLN("duty", duty);
         duty = CLAMP2(duty, 0.99_r);
         duty_is_forward = duty > 0.0_r;
         phase_gpio = BoolLevel::from(duty_is_forward);
-        pwm.set_duty(ABS(duty));
+        pwm.set_dutycycle(ABS(duty));
     };
 
 
@@ -113,7 +91,7 @@ void laser_ctl_main(){
             rpc::make_function("rst", [](){sys::reset();}),
             rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
             rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-            rpc::make_function("dty", [&](const real_t duty){set_duty(duty);}),
+            rpc::make_function("dty", [&](const real_t duty){set_dutycycle(duty);}),
             rpc::make_function("led", [&](const bool l){set_led(l);})
 
 
@@ -131,11 +109,11 @@ void laser_ctl_main(){
         });
     };
 
-    static constexpr auto CAN_ID_TURNON = hal::CanStdId(0x183);
-        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
+    static constexpr auto CAN_ID_TURNON =
+        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::On);
 
-    static constexpr auto CAN_ID_TURNOFF = hal::CanStdId(0x184);
-        // robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
+    static constexpr auto CAN_ID_TURNOFF = 
+        robots::comb_role_and_cmd<Command>(NodeRole::Laser,Command::Off);
 
 
     [[maybe_unused]] auto can_service = [&]{
@@ -149,10 +127,10 @@ void laser_ctl_main(){
 
         switch(id.to_u11()){
             case CAN_ID_TURNON.to_u11():
-                set_duty(0.99_r);
+                set_dutycycle(0.89_r);
                 break;
             case CAN_ID_TURNOFF.to_u11():
-                set_duty(0.0_r);
+                set_dutycycle(0.0_r);
                 break;
             default:
 

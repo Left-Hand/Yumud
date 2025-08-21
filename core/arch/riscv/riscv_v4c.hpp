@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::V4C{
+namespace ymd::ral::V4C{
 
 struct CFGR_Reg{
     uint32_t :7;

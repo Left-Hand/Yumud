@@ -13,13 +13,13 @@ namespace ymd::hal{
 
 namespace ymd::drivers{
 
-class LedConcept{
+class LedIntf{
 public:
     virtual void toggle() = 0;
-    virtual void set_duty(const real_t duty) = 0;
+    virtual void set_dutycycle(const real_t duty) = 0;
 };
 
-class LedGpio:public LedConcept{
+class LedGpio:public LedIntf{
 protected:
     hal::GpioIntf & inst_;
     bool state = false;
@@ -30,13 +30,13 @@ public:
 
     void toggle() override;
 
-    void set_duty(const real_t duty);
+    void set_dutycycle(const real_t duty);
 
     explicit operator bool() const{return state ^ inversed;}
     explicit operator real_t() const{return state ^ inversed;}
 };
 
-class LedAnalog : public LedConcept{
+class LedAnalog : public LedIntf{
 protected:
     hal::GpioOrPwm inst;
     real_t last_duty_ = 0;
@@ -48,12 +48,12 @@ public:
 
     void toggle() override {
         last_duty_ = 1 - last_duty_;
-        this->set_duty(last_duty_);
+        this->set_dutycycle(last_duty_);
     }
 
-    void set_duty(const real_t duty){
+    void set_dutycycle(const real_t duty){
         last_duty_ = inversed ? 1 - duty : duty;
-        inst.set_duty(last_duty_);
+        inst.set_dutycycle(last_duty_);
     }
 };
 

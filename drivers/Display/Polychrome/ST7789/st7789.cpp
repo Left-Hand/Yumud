@@ -2,7 +2,7 @@
 
 
 #include "st7789.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 #include "core/debug/debug.hpp"
 
 using namespace ymd;
@@ -62,8 +62,8 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     if(!need) return;
     #endif
 
-    const Vector2<uint16_t> p1 = offset_ + rect.position;
-    const Vector2<uint16_t> p2 = offset_ + rect.get_end() - Vector2<uint16_t>(1,1);
+    const Vec2<uint16_t> p1 = offset_ + rect.top_left();
+    const Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - Vec2<uint16_t>(1,1);
 
     if(const auto res = write_command(0x2a);
         res.is_err()) return res;
@@ -83,7 +83,7 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     return Ok();
 }
 
-IResult<> ST7789::setpos_unchecked(const Vector2<uint16_t> pos){
+IResult<> ST7789::setpos_unchecked(const Vec2<uint16_t> pos){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP_EN
     bool need = algo_.update(rect);

@@ -21,6 +21,11 @@ enum class NodeRole:uint8_t{
 
 }
 
+enum class LaserCommand:uint8_t{
+    On = 0x33,
+    Off
+};
+
 namespace ymd{
 
 DEF_DERIVE_DEBUG(robots::NodeRole)

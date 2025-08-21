@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V20x::I2C_Regs{
+namespace ymd::ral::CH32V20x::I2C_Regs{
 
 struct CTLR1_Reg{
     uint16_t PE:1;

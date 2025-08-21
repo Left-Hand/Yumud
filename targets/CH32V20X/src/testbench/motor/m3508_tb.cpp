@@ -5,7 +5,7 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
-#include "types/transforms/basis/Basis.hpp"
+#include "types/transforms/Basis.hpp"
 
 #include "robots/vendor/DJI/M3508/m3508.hpp"
 #include "robots/vendor/DJI/DR16/DR16.hpp"

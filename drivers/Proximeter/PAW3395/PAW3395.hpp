@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<Vector2i> sample_fetch();
+    [[nodiscard]] IResult<Vec2i> sample_fetch();
 
     [[nodiscard]] IResult<> update();
 

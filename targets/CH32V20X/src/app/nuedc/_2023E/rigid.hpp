@@ -60,7 +60,7 @@ private:
 //运动学 用于求解目标关节角
 class GimbalKinematics final{
 public:
-    using Gesture = ymd::Vector2<real_t>;
+    using Gesture = ymd::Vec2<real_t>;
     using Solution = GimbalSolution;
 
     struct Config{
@@ -104,8 +104,8 @@ public:
     };
 
     struct LineAction{
-        Vector2<real_t> start;
-        Vector2<real_t> stop;
+        Vec2<real_t> start;
+        Vec2<real_t> stop;
     };
 
     struct DelayAction{

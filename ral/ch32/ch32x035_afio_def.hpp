@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V20x::AFIO_Regs{
+namespace ymd::ral::CH32V20x::AFIO_Regs{
 
 struct PCFR1_Reg{
     // SPI1 的重映射。该位可由用户读写。它控制 SPI1

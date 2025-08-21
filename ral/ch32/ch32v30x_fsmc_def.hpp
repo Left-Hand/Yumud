@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V30x::FSMC_Regs{
+namespace ymd::ral::CH32V30x::FSMC_Regs{
 
 struct BCR1_Reg {
     uint32_t MBKEN:1;

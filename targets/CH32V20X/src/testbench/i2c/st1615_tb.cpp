@@ -59,22 +59,22 @@ void st1615_main(){
     st1615.init().examine();
 
 
-    std::array<Vector2i, ST1615::MAX_POINTS_COUNT> points;
+    std::array<Vec2i, ST1615::MAX_POINTS_COUNT> points;
     while(true){
         led.toggle();
         for(size_t i = 0; i < 1; ++i){
-            st1615.get_point(i).examine().inspect([&](Vector2i point) {
+            st1615.get_point(i).examine().inspect([&](Vec2i point) {
                 points[i] = point;
             });
         }
 
-        // pos.inspect([&](Vector2i point) {
+        // pos.inspect([&](Vec2i point) {
         //     // st1615.draw_point(point, 0xffff).examine();
         //     DEBUG_PRINTLN(
         //         // clock::millis(),
         //         // st1615.get_sensor_count().examine()
 
-        //         // .unwrap_or<Vector2<int>>(Vector2{0, 0})
+        //         // .unwrap_or<Vec2<int>>(Vec2{0, 0})
         //         point.x, point.y
         //         // st1615.get_gesture_info().examine()
         //     );

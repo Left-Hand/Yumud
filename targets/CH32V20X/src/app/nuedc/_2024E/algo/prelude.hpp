@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 using namespace ymd;
 
@@ -186,13 +186,13 @@ public:
     }
     
     [[nodiscard]]
-    constexpr auto & at(const Vector2u pos){
+    constexpr auto & at(const Vec2u pos){
         if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         return data_[pos.y][pos.x];
     }
     
     [[nodiscard]]
-    constexpr const auto & at(const Vector2u pos) const{
+    constexpr const auto & at(const Vec2u pos) const{
         if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         return data_[pos.y][pos.x];
     }
@@ -207,19 +207,19 @@ public:
     }
 
     [[nodiscard]] 
-    constexpr ChessBoard remove_chess(const Vector2u pos) const {
+    constexpr ChessBoard remove_chess(const Vec2u pos) const {
         if(this->at({pos.x, pos.y}) == None) sys::abort();
         return modify(pos, ChessCell::N());
     }
 
     [[nodiscard]] 
-    constexpr ChessBoard add_chess(const Vector2u pos, const Role role) const {
+    constexpr ChessBoard add_chess(const Vec2u pos, const Role role) const {
         if(this->at({pos.x, pos.y}) != None) sys::abort();
         return modify(pos, role == Role::X ? ChessCell::X() : ChessCell::O());
     }
 
     [[nodiscard]]
-    constexpr ChessBoard modify(const Vector2u pos, const ChessCell chess) const {
+    constexpr ChessBoard modify(const Vec2u pos, const ChessCell chess) const {
 
         if(not (pos.x < WIDTH and pos.y < WIDTH)) sys::abort();
         auto data = data_;

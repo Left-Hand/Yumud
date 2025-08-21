@@ -175,7 +175,7 @@ int main(){
         }
 
         //内部有多种向量数据类型(多维向量与四元数等)，为机器人学奠定基础
-        gimbal.move_to(Vector2(1, 0).rotated(angle));
+        gimbal.move_to(Vec2(1, 0).rotated(angle));
     }
 }
 

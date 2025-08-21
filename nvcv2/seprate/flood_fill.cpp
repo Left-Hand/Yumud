@@ -14,13 +14,13 @@ __fast_inline constexpr T saturate_cast(const auto & v) {
 namespace ymd::nvcv2::Shape{
 
 
-static constexpr std::array<Vector2i,4> OFFSETS_4 = { 
-    Vector2i{-1, 0}, 
-    Vector2i{0, -1}, 
-    Vector2i{0, 1}, 
-    Vector2i{1, 0}
+static constexpr std::array<Vec2i,4> OFFSETS_4 = { 
+    Vec2i{-1, 0}, 
+    Vec2i{0, -1}, 
+    Vec2i{0, 1}, 
+    Vec2i{1, 0}
 };
-// const std::array<Vector2u,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
+// const std::array<Vec2u,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
 
 template<typename _Tp, class _EqPredicate> int
@@ -290,7 +290,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
     Gray label{1};
 
     auto get_neighbor_indices = [&](const size_t row,const size_t col) {
-        std::array<Vector2u, 4> result;
+        std::array<Vec2u, 4> result;
         uint8_t i = 0;
         for (const auto& offset : OFFSETS_4) {
             const size_t x = row + offset.x;
@@ -312,11 +312,11 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
             }
 
             // Perform flood fill starting from (row, col)
-            // sstl::vector<Vector2<uint8_t>, 256> current_indices;
-            std::vector<Vector2<uint8_t>> current_indices;
+            // sstl::vector<Vec2<uint8_t>, 256> current_indices;
+            std::vector<Vec2<uint8_t>> current_indices;
             map[{row,col}] = label;
             Blob blob{
-                .rect = Rect2u(Vector2u{row, col}, Vector2u{0,0}),
+                .rect = Rect2u(Vec2u{row, col}, Vec2u{0,0}),
                 .area = 0,
                 .index = uint8_t(label),
             };

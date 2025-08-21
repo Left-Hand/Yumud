@@ -137,18 +137,18 @@ IResult<FT6336U::Points> FT6336U::get_touch_points(){
     }
 }
 
-IResult<Vector2<uint16_t>> FT6336U::get_touch1_position() {
+IResult<Vec2<uint16_t>> FT6336U::get_touch1_position() {
     uint16_t buf[2];
     if(const auto res = read_burst_u12(FT6336U_ADDR_TOUCH1_X, buf);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vector2<uint16_t>(buf[0], buf[1]));
+    return Ok(Vec2<uint16_t>(buf[0], buf[1]));
 }
 
-IResult<Vector2<uint16_t>> FT6336U::get_touch2_position(){
+IResult<Vec2<uint16_t>> FT6336U::get_touch2_position(){
     uint16_t buf[2];
     if(const auto res = read_burst_u12(FT6336U_ADDR_TOUCH2_X, buf);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vector2<uint16_t>(buf[0], buf[1]));
+    return Ok(Vec2<uint16_t>(buf[0], buf[1]));
 }
 
 IResult<uint8_t> FT6336U::get_touch1_event() {

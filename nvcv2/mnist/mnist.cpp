@@ -113,7 +113,7 @@ void Mnist::unload(){
     if(loaded) tm_unload(&mdl);   
 }
 
-Mnist::Result Mnist::update(const Image<Gray> & img, const Vector2u & pos){
+Mnist::Result Mnist::update(const Image<Gray> & img, const Vec2u & pos){
 
     Image<Gray> img_view = img.clone(Rect2u{pos.x, pos.y, 28, 28});
     // ymd::nvcv2::Pixels::inverse(img_view);

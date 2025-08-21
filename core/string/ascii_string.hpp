@@ -142,8 +142,10 @@ public:
             std::memcmp(c_str(), other.c_str(), length_) == 0;
     }
 
+    
     constexpr const_iterator begin() const {
         return const_iterator{is_sso_ ? sso_buffer : dynamic_data->data};}
+
     constexpr const_iterator end() const {
         return const_iterator{(is_sso_ ? sso_buffer : dynamic_data->data) + length_};}
 

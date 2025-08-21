@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V20x::IWDG_Regs{
+namespace ymd::ral::CH32V20x::IWDG_Regs{
 
 struct CTLR_Reg {
     uint32_t T:7;

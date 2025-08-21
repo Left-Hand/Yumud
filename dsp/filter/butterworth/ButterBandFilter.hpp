@@ -4,6 +4,7 @@
 
 namespace ymd::dsp{
 
+namespace details{
 template<size_t N>
 __inline constexpr
 int64_t _conv(const _iq<N> x){
@@ -23,10 +24,13 @@ int64_t _conv(const _iq<N> x, const _iq<N> h, auto&& ... rest){
     return _conv(x,h) + _conv((rest) ...);
 }
 
+
+}
+
 template<size_t N>
 __inline constexpr
 iq_t<N> conv(auto&& ... args){
-    return iq_t<N>(_iq<N>::from_i32(_conv((args.value)...) >> N));
+    return iq_t<N>(_iq<N>::from_i32(details::_conv((args.value)...) >> N));
 }
 
 
@@ -37,9 +41,9 @@ requires (N % 4 == 0)
 class ButterBandFilterBase{
 public:
     struct Config{
+        uint fs;
         T fl;
         T fh;
-        uint fs;
     };
 
     constexpr ButterBandFilterBase() = default;
@@ -78,7 +82,7 @@ public:
         s_ = 4 * a2+2;
     }
 
-    constexpr const T & get() const{ return this->result_; }
+    constexpr const T & output() const{ return this->output_; }
 
     constexpr void reset(){
         for(auto & state:states_){
@@ -118,7 +122,7 @@ protected:
 
     T r_;
     T s_;
-    T result_;
+    T output_;
 };
 
 }
@@ -132,9 +136,9 @@ public:
     using Config = typename Super::Config;
     using StateVector = typename Super::StateVector;
 
-    ButterBandstopFilter() = default;
-    ButterBandstopFilter(const Config & cfg):Super(cfg){}
-    void update(T x){
+    constexpr ButterBandstopFilter() = default;
+    constexpr ButterBandstopFilter(const Config & cfg):Super(cfg){}
+    constexpr void update(T x){
         auto & self = *this;
 
         
@@ -153,19 +157,19 @@ public:
             self.states_[i].shift();
         }
 
-        self.result_ = x;
+        self.output_ = x;
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         Super::reconf(cfg);
     }
     
-    T operator ()(const T x){
+    constexpr T operator ()(const T x){
         update(x);
-        return this->result_;
+        return this->output_;
     }
 
-    const T & get() const{ return this->result_; }
+    constexpr const T & output() const{ return this->output_; }
 };
 
 template<arithmetic T, size_t N>
@@ -177,10 +181,10 @@ public:
     using Config = typename Super::Config;
     using StateVector = typename Super::StateVector;
 
-    ButterBandpassFilter() = default;
-    ButterBandpassFilter(const Config & cfg):Super(cfg){}
+    constexpr ButterBandpassFilter() = default;
+    constexpr ButterBandpassFilter(const Config & cfg):Super(cfg){}
     
-    void update(T x){
+    constexpr void update(T x){
         auto & self = *this;
 
         #pragma GCC unroll 1
@@ -196,19 +200,19 @@ public:
             self.states_[i].shift();
         }
 
-        self.result_ = x;
+        self.output_ = x;
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         Super::reconf(cfg);
     }
 
-    T operator ()(const T x){
+    constexpr T operator ()(const T x){
         update(x);
-        return this->result_;
+        return this->output_;
     }
     
-    const T & get() const{ return this->result_; }
+    constexpr const T & output() const{ return this->output_; }
 };
 
 }

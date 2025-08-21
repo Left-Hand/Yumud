@@ -17,15 +17,15 @@ public:
         auto v = delay_line_.get_last();
         auto t = in - alpha_ * v;
         delay_line_.push(t);
-        last_ = v + alpha_ * t;
-        return last_;
+        output_ = v + alpha_ * t;
+        return output_;
     }
 
-    constexpr void  clear_internal(){delay_line_.clear_internal();}
-    constexpr void  set_delay(T delay){
+    constexpr void clear_internal(){delay_line_.clear_internal();}
+    constexpr void set_delay_ticks(T delay){
         const auto int_part = size_t(delay);
         const auto frac_part = delay - int_part;
-        delay_line_.set_delay(int_part);
+        delay_line_.set_delay_ticks(int_part);
         alpha_ = map_delay_to_alpha(frac_part);
     }
 
@@ -45,11 +45,11 @@ public:
     }
     constexpr T delay() const { return delay_line_.delay(); }
     constexpr T alpha() const { return alpha_; }
-    constexpr T last() const { return last_; }
+    constexpr T output() const { return output_; }
 private:
     DelayLine<T> delay_line_;
     T alpha_{0};
-    T last_{0};
+    T output_{0};
 };
 
 }

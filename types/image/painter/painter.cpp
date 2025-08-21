@@ -3,7 +3,7 @@
 using namespace ymd;
 
 
-// void Painter::drawLine(const Vector2u & from, const Vector2u & to){
+// void Painter::drawLine(const Vec2u & from, const Vec2u & to){
 //     if(!src_image->size().has_point(from)){
 //         // ASSERT_WITH_HALT(false, "start point lost: ", from);
 //         return;

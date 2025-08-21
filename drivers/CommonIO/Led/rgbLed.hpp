@@ -8,7 +8,7 @@
 class GpioIntf;
 
 namespace ymd::drivers{
-class RgbLedConcept{
+class RgbLedIntf{
 protected:
     real_t brightness = real_t(1);
 public:
@@ -16,12 +16,12 @@ public:
         brightness = _brightness;
     }
 
-    virtual ~RgbLedConcept() = default;
+    virtual ~RgbLedIntf() = default;
 
-    virtual RgbLedConcept & operator = (const Color<real_t> & color) = 0;
+    virtual RgbLedIntf & operator = (const Color<real_t> & color) = 0;
 };
 
-class RgbLedDigital:public RgbLedConcept{
+class RgbLedDigital:public RgbLedIntf{
 protected:
     hal::GpioIntf & red_gpio_;
     hal::GpioIntf & green_gpio_;
@@ -45,7 +45,7 @@ public:
 };
 
 
-class RgbLedAnalog:public RgbLedConcept{
+class RgbLedAnalog:public RgbLedIntf{
 public:
     LedAnalog red;
     LedAnalog green;
@@ -55,9 +55,9 @@ public:
         red(_red_ch), green(_green_ch), blue(_blue_ch){;}
 
     RgbLedAnalog & operator = (const Color<real_t> & color) override{
-        red.set_duty(color.r);    
-        green.set_duty(color.g);    
-        blue.set_duty(color.b);    
+        red.set_dutycycle(color.r);    
+        green.set_dutycycle(color.g);    
+        blue.set_dutycycle(color.b);    
         return *this;
     }
 };

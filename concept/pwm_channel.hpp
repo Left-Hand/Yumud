@@ -4,9 +4,9 @@
 namespace ymd::hal{
 class PwmIntf{
 public:
-    virtual void set_duty(const real_t duty) = 0;
+    virtual void set_dutycycle(const real_t duty) = 0;
     virtual PwmIntf & operator = (const real_t duty) final{
-        this->set_duty(duty);
+        this->set_dutycycle(duty);
         return *this;
     }
 };

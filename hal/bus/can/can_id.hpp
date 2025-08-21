@@ -7,6 +7,9 @@
 namespace ymd::hal{
 
 struct CanStdId{
+    static constexpr uint16_t MAX_VALUE = 0x7ff;
+    static constexpr size_t LENGTH = 11;
+
     explicit constexpr CanStdId(const uint16_t raw):raw_(raw){;}
 
     constexpr CanStdId(const CanStdId & other) = default;
@@ -25,6 +28,8 @@ private:
 };
 
 struct CanExtId{
+    static constexpr uint32_t MAX_VALUE = 0x1fffffff;
+    static constexpr size_t LENGTH = 29;
 
     explicit constexpr CanExtId(const uint32_t raw):raw_(raw){;}
 

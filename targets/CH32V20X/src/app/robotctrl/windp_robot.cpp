@@ -23,10 +23,10 @@
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
 
-#include "types/regions/range2/range2.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
-#include "types/vectors/vector3/Vector3.hpp"
-#include "types/vectors/quat/Quat.hpp"
+#include "types/regions/range2.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -86,9 +86,9 @@ public:
 
     }
 
-    void set_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_duty(duty_a);
-        channel_b_.set_duty(duty_b);
+    void set_dutycycle(const real_t duty_a, const real_t duty_b){
+        channel_a_.set_dutycycle(duty_a);
+        channel_b_.set_dutycycle(duty_b);
     }
 private:
 
@@ -98,12 +98,13 @@ private:
 
 class RobotDynamics{
 
-    void move(const Vector2<real_t> dir){
+    void move(const Vec2<real_t> dir){
         static real_t left = 0;
-        left = (left*0.2_r + CLAMP2(-dir.y,0.19_r)*0.8_r);
         static real_t right = 0;
+
+        left = (left*0.2_r + CLAMP2(-dir.y,0.19_r)*0.8_r);
         right = (right*0.2_r + CLAMP2(dir.x,0.19_r)*0.8_r);
-        jetpwm_.set_duty(left,right);
+        jetpwm_.set_dutycycle(left,right);
     }
 private:
     JetPwm jetpwm_;
@@ -112,24 +113,24 @@ private:
 static constexpr real_t DELTA = 0.01_r;
 
 struct RobotMetaData{
-    Vector3<real_t> accel;
-    Vector3<real_t> gyro;
+    Vec3<real_t> accel;
+    Vec3<real_t> gyro;
 
     Quat<real_t> gravity_of_rs;
-    Vector3<real_t> gyro_of_rs;
+    Vec3<real_t> gyro_of_rs;
 
-    Vector2<real_t> dir;
+    Vec2<real_t> dir;
     real_t rot_bias = 0;
 };
 
 struct TaskBase{
     struct Input{
-        Vector2<real_t> a;
-        Vector2<real_t> w;
-        Vector2<real_t> p;
+        Vec2<real_t> a;
+        Vec2<real_t> w;
+        Vec2<real_t> p;
     };
 
-    using Output = Vector2<real_t>;
+    using Output = Vec2<real_t>;
 };
 
 struct TaskCenter:public TaskBase{
@@ -146,8 +147,8 @@ struct TaskCircle:public TaskBase{
         const auto p = input.p;
         const auto a = input.a; 
         const auto w = input.w;
-        const Vector2 vec_norm = p.normalized();
-        const Vector2 vec_tan = vec_norm.rotated(real_t(PI*0.5));
+        const Vec2 vec_norm = p.normalized();
+        const Vec2 vec_tan = vec_norm.rotated(real_t(PI*0.5));
         
         const real_t q = atan2(W, H);
         const real_t theta = acos(cos(p.x)*cos(p.y));
@@ -156,8 +157,8 @@ struct TaskCircle:public TaskBase{
         const real_t targ_w = sin(q)*sqrt(g/(x*cos(q)));
         const real_t d_w = targ_w - abs(w.dot(vec_tan));
         
-        const Vector2 dir_t = 0.23_r*d_w*vec_tan*sign(w.dot(vec_tan));
-        const Vector2 dir_n = 2.2_r*(q-theta - 0.07_r*a.dot(vec_norm))*vec_norm*
+        const Vec2 dir_t = 0.23_r*d_w*vec_tan*sign(w.dot(vec_tan));
+        const Vec2 dir_n = 2.2_r*(q-theta - 0.07_r*a.dot(vec_norm))*vec_norm*
             (pow(abs(q-theta),0.8_r));
 
 
@@ -173,12 +174,12 @@ struct TaskLine:public TaskBase{
         const auto a = input.a; 
         const auto w = input.w;
 
-        const Vector2 vec_norm = Vector2(0.0_r, 1.0_r).rotated(theta);
-        const Vector2 vec_tan = Vector2(1.0_r, 0.0_r).rotated(theta);
+        const Vec2 vec_norm = Vec2(0.0_r, 1.0_r).rotated(theta);
+        const Vec2 vec_tan = Vec2(1.0_r, 0.0_r).rotated(theta);
         
         const real_t d1 = input.w.cross(vec_tan);
         const real_t d2 = input.a.cross(vec_tan);
-        const Vector2 dir_n = (0.027_r*d2 + 0.37_r*d1)*vec_norm;
+        const Vec2 dir_n = (0.027_r*d2 + 0.37_r*d1)*vec_norm;
 
         const real_t E_targ = M*g*x*(1.0_r - H / sqrt(H*H + W*W));
         
@@ -186,7 +187,7 @@ struct TaskLine:public TaskBase{
         const real_t E_k = 0.5_r * J * (w.project(vec_tan)).length_squared();
         const real_t E = E_p + E_k;
 
-        Vector2 dir_t = 15_r*(E_targ - E + 0.00037_r*abs(a.dot(vec_tan))) 
+        Vec2 dir_t = 15_r*(E_targ - E + 0.00037_r*abs(a.dot(vec_tan))) 
             * vec_tan * sign(w.dot(vec_tan));
         return dir_n + dir_t;
     }
@@ -200,7 +201,7 @@ struct TaskLine:public TaskBase{
 #include <array>
 #include <SSD1315_72_40.hpp>
 #include <SSD1315_128_32.hpp>
-#include <Vector2.hpp>
+#include <Vec2.hpp>
 #include <PID.hpp>
 #include <math.h>
 #include <Basis.hpp>
@@ -241,16 +242,16 @@ void sysCali(){
     using namespace GlobalCon_rig;
     static constexpr uint8_t n = 8;
 
-    Vector3 temp_gravity = Vector3();
-    Vector3 temp_gyro_of_rs = Vector3();
+    Vec3 temp_gravity = Vec3();
+    Vec3 temp_gyro_of_rs = Vec3();
     
     for(uint8_t i = 0;i < n;i++){
         temp_gravity += mpu.get_accel();
         temp_gyro_of_rs += mpu.get_gyro();    
         delay(5);
     }
-    Vector3 gravity = temp_gravity / (real_t)n;
-    gravity_of_rs = Quat(Vector3(0,0,-1),gravity/gravity.length()).inverse();
+    Vec3 gravity = temp_gravity / (real_t)n;
+    gravity_of_rs = Quat(Vec3(0,0,-1),gravity/gravity.length()).inverse();
     gyro_of_rs = temp_gyro_of_rs / (real_t)n;
 }
 
@@ -267,25 +268,25 @@ void getPos(){
     DELTA = (micros() - last_us)*1E-6;
     last_us = micros();
 
-    w = Vector2(gyro.x, gyro.y);
-    static Vector2 last_w = Vector2();
-    Vector2 a_temp = (w - last_w)/DELTA;
+    w = Vec2(gyro.x, gyro.y);
+    static Vec2 last_w = Vec2();
+    Vec2 a_temp = (w - last_w)/DELTA;
     last_w = w;
 
     static constexpr real_t k1 = 0.85;
     static constexpr real_t k2 = 1.0 - k1;
 
-    static Vector2 a_filted = Vector2(0,0);
+    static Vec2 a_filted = Vec2(0,0);
     a_filted = k1*a_filted + k2*a_temp;
     a = a_filted;
 
-    Vector3 g_fixed = Vector3(a.x, a.y, w.length_squared())*L_s + accel;
-    Quat pose = Quat(g_fixed.normalized(), Vector3(0,0,-1));
+    Vec3 g_fixed = Vec3(a.x, a.y, w.length_squared())*L_s + accel;
+    Quat pose = Quat(g_fixed.normalized(), Vec3(0,0,-1));
 
     Basis pose_basis = pose; 
-    Vector3 pos3 = pose_basis.get_euler_xyz();
+    Vec3 pos3 = pose_basis.get_euler_xyz();
 
-    p = Vector2(-pos3.y, pos3.x);
+    p = Vec2(-pos3.y, pos3.x);
 }
 
 // void 
@@ -299,30 +300,30 @@ void displayOled(){
     Frame & frame = *oled.fetch_rrame();
     frame.clear();
     
-    frame.drawStringRow(Vector2i(0,0),"x:"+String(accel.x));
-    frame.drawStringRow(Vector2i(0,1),"y:"+String(accel.y));
-    frame.drawStringRow(Vector2i(0,2),"z:"+String(accel.z));
-    frame.drawStringRow(Vector2i(0,3),"l:"+String(accel.length()));
+    frame.drawStringRow(Vec2i(0,0),"x:"+String(accel.x));
+    frame.drawStringRow(Vec2i(0,1),"y:"+String(accel.y));
+    frame.drawStringRow(Vec2i(0,2),"z:"+String(accel.z));
+    frame.drawStringRow(Vec2i(0,3),"l:"+String(accel.length()));
 
-    frame.drawStringRow(Vector2i(64,0),"x:"+String(gyro.x));
-    frame.drawStringRow(Vector2i(64,1),"y:"+String(gyro.y));
-    frame.drawStringRow(Vector2i(64,2),"z:"+String(gyro.z));
-    frame.drawStringRow(Vector2i(64,3),"l:"+String(gyro.length()));
+    frame.drawStringRow(Vec2i(64,0),"x:"+String(gyro.x));
+    frame.drawStringRow(Vec2i(64,1),"y:"+String(gyro.y));
+    frame.drawStringRow(Vec2i(64,2),"z:"+String(gyro.z));
+    frame.drawStringRow(Vec2i(64,3),"l:"+String(gyro.length()));
 
-    // frame.drawStringRow(Vector2i(0,4),"x:"+String(pos.x));
-    // frame.drawStringRow(Vector2i(0,5),"y:"+String(pos.y));
-    // frame.drawStringRow(Vector2i(0,7),"l:"+String(pos.length()));
+    // frame.drawStringRow(Vec2i(0,4),"x:"+String(pos.x));
+    // frame.drawStringRow(Vec2i(0,5),"y:"+String(pos.y));
+    // frame.drawStringRow(Vec2i(0,7),"l:"+String(pos.length()));
 
-    frame.drawChar(Vector2i(96, 48), '*');
-    static std::vector<Vector2i> tails;
-    i_r(framen % 4 == 0)tails.push_back(Vector2i(96-32*p.y, 48-32*p.x));
+    frame.drawChar(Vec2i(96, 48), '*');
+    static std::vector<Vec2i> tails;
+    i_r(framen % 4 == 0)tails.push_back(Vec2i(96-32*p.y, 48-32*p.x));
     i_r(tails.size()>=8) tails.erase(tails.begin());
-    for (Vector2i tail:tails){
+    for (Vec2i tail:tails){
         i_r (tail!= tails.back()) frame.drawChar(tail,'.');
         else frame.drawChar(tail, '+');
     }
 
-    frame.drawChar(Vector2i(32-32*dir.y, 48-32*dir.x), '+');
+    frame.drawChar(Vec2i(32-32*dir.y, 48-32*dir.x), '+');
     oled.pushStream();
 }
 
@@ -344,7 +345,7 @@ void loop() {
     displayOled();
     // Wire.setClock
     // displayOled();
-    // move(Vector2(-0.05,0.05));
+    // move(Vec2(-0.05,0.05));
     // controlPoint();
 
     i_r (Serial.available()) {  // 如果串口上有可用数据

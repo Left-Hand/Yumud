@@ -148,7 +148,7 @@ public:
             aw9523_.enable_led_mode(pin_).examine();
         }
 
-        void set_duty(const real_t duty) {
+        void set_dutycycle(const real_t duty) {
             aw9523_.set_led_current(pin_,int(255 * duty)).examine();
         }
     private:
@@ -156,9 +156,6 @@ public:
         hal::PinSource pin_;
     };
 
-    class AW9523Port{
-
-    };
     
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){

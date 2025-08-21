@@ -36,7 +36,7 @@ public:
 
     void reset();
 
-    IResult<Vector3<q24>> read_mag();
+    IResult<Vec3<q24>> read_mag();
 };
 
 

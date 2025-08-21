@@ -13,16 +13,6 @@
 namespace ymd::hal{
 
 namespace details{
-template<typename T>
-concept valid_arg = (sizeof(T) <= 8) 
-    && (std::is_same_v<std::decay_t<T>, T>) 
-;
-
-template<typename ... Args>
-concept valid_args = 
-    (sizeof(std::tuple<Args...>) <= 8) 
-    && (std::is_same_v<std::decay_t<Args>, Args> && ...)
-;
 
 template<typename T>
 concept is_canid = 
@@ -40,7 +30,7 @@ struct CanMsg_Prelude{
         template<details::is_canid ID>
         static constexpr SXX32_CanIdentifier from(
             const ID id,
-            const CanRemoteSpec rmt
+            const CanRtr rmt
         ){
             if constexpr(std::is_same_v<ID, CanStdId>){
                 return from_std_id(id, rmt);
@@ -87,10 +77,10 @@ struct CanMsg_Prelude{
     private:
         static constexpr SXX32_CanIdentifier from_std_id(
             const CanStdId id, 
-            const CanRemoteSpec is_remote
+            const CanRtr is_remote
         ){
             return SXX32_CanIdentifier{
-                .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
+                .is_remote_ = (is_remote == CanRtr::Remote), 
                 .is_ext_ = false, 
                 .ext_id_ = uint32_t(id.to_u11()) << 18
             };
@@ -98,10 +88,10 @@ struct CanMsg_Prelude{
 
         static constexpr SXX32_CanIdentifier from_ext_id(
             const CanExtId id, 
-            const CanRemoteSpec is_remote
+            const CanRtr is_remote
         ){
             return SXX32_CanIdentifier{
-                .is_remote_ = (is_remote == CanRemoteSpec::Remote), 
+                .is_remote_ = (is_remote == CanRtr::Remote), 
                 .is_ext_ = true, 
                 .ext_id_ = id.to_u29()
             };
@@ -153,11 +143,11 @@ public:
 
     template<details::is_canid ID>
     static constexpr CanMsg empty(ID id){
-        return CanMsg(id, CanRemoteSpec::Data);}
+        return CanMsg(id, CanRtr::Data);}
 
     template<details::is_canid ID>
     static constexpr CanMsg from_remote(ID id){
-        return CanMsg(id, CanRemoteSpec::Remote);}
+        return CanMsg(id, CanRtr::Remote);}
 
     template<details::is_canid ID>
     static constexpr CanMsg from_bytes(ID id, 
@@ -281,7 +271,7 @@ public:
 
 private:
     template<details::is_canid ID>
-    __fast_inline constexpr CanMsg(const ID id, const CanRemoteSpec remote):
+    __fast_inline constexpr CanMsg(const ID id, const CanRtr remote):
         identifier_(SXX32_CanIdentifier::from(id, remote))
     {
         dlc_ = 0;
@@ -292,7 +282,7 @@ private:
             const ID id, 
             const std::span<const uint8_t> pbuf
     ) : 
-        CanMsg(id, CanRemoteSpec::Data)
+        CanMsg(id, CanRtr::Data)
     {
         dlc_ = MIN(pbuf.size(), 8);
 

@@ -24,7 +24,7 @@ class VisionModule:public AsciiProtocolConcept{
 protected:
     // UartHw & uart_;
     std::optional<MaterialColor> color_;
-    std::optional<Vector2> offset_;
+    std::optional<Vec2> offset_;
 
     enum class Mode:uint8_t{
         CLOSED,
@@ -63,7 +63,7 @@ public:
 
             case "offset"_ha:
                 if(args.size() == 3){
-                    offset_ = Vector2{
+                    offset_ = Vec2{
                         real_t(args[1]),
                         real_t(args[2])
                     };
@@ -359,11 +359,11 @@ void host_main(){
             Scara5Solver solver{config.scara_config.solver_config};
             CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
-                // auto pos = Vector2(-0.007_r, 0.144_r);//center
-                auto pos = Vector2(-0.101_r, 0.144_r);//left
-                // auto pos = Vector2(0.085_r, 0.144_r);//right
-                // auto pos = Vector2(0.0_r, 0.245_r);//inspect
-                // auto pos = Vector2(0.0_r, 0.265_r);//catch
+                // auto pos = Vec2(-0.007_r, 0.144_r);//center
+                auto pos = Vec2(-0.101_r, 0.144_r);//left
+                // auto pos = Vec2(0.085_r, 0.144_r);//right
+                // auto pos = Vec2(0.0_r, 0.245_r);//inspect
+                // auto pos = Vec2(0.0_r, 0.265_r);//catch
 
                 auto inv_rad = solver.inverse(pos);
 
@@ -385,10 +385,10 @@ void host_main(){
         //#region 测试机械臂位置反馈
         if(false){
             while(true){
-                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(time());
+                auto pos = Vec2(0, 0.19_r) + Vec2(0.10_r, 0).rotated(time());
                 auto height = LERP(0.12_r, 0.17_r, (sin(time()) + 1) >> 1);
 
-                grab_module.rapid(Vector3(pos.x, pos.y, height));
+                grab_module.rapid(Vec3(pos.x, pos.y, height));
 
                 auto p3 = grab_module.getPos();
                 DEBUG_PRINTLN(pos.x, pos.y, height, p3.x, p3.y, p3.z);
@@ -404,7 +404,7 @@ void host_main(){
             grab_module.init();
             // getline(logger);
             // size_t i = 0;
-            // scexpr auto pos_arr = std::to_array<Vector3>({
+            // scexpr auto pos_arr = std::to_array<Vec3>({
             //     {0.02_r, 0.2_r, 0.12_r},
             //     {-0.04_r, 0.2_r, 0.12_r},
             //     {-0.09_r, 0.2_r, 0.12_r},
@@ -642,8 +642,8 @@ void host_main(){
                 acc_gyr_sensor_.update();
                 mag_sensor_.update();
 
-                const auto gyr3_raw = Vector3{acc_gyr_sensor_.read_gyr()};
-                const auto mag3_raw = Vector3{mag_sensor_.read_mag()};
+                const auto gyr3_raw = Vec3{acc_gyr_sensor_.read_gyr()};
+                const auto mag3_raw = Vec3{mag_sensor_.read_mag()};
 
                 const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
                 const auto gyr_raw = gyr3_raw.z;
@@ -701,7 +701,7 @@ void host_main(){
 
             wheels.init();
 
-            // auto delta = solver.inverse(Vector2{0, 0}, 0.7_r*sin(t));
+            // auto delta = solver.inverse(Vec2{0, 0}, 0.7_r*sin(t));
 
             real_t ang;
             bind_tick_200hz(
@@ -711,19 +711,19 @@ void host_main(){
                 // can_master.update();
                 acc_gyr_sensor_.update();
         
-                ang += Vector3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
-                // auto delta = solver.inverse(Vector2{0.4_r*sin(t), 0}, 0);
+                ang += Vec3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
+                // auto delta = solver.inverse(Vec2{0.4_r*sin(t), 0}, 0);
 
                 // scexpr real_t delta = {0.003_r};
-                // auto delta = solver.inverse(Vector2{0, 0.0003_r}, 0);
-                // auto delta = solver.inverse(Vector2{0, 0.3_r * sin(t)}, 0);
+                // auto delta = solver.inverse(Vec2{0, 0.0003_r}, 0);
+                // auto delta = solver.inverse(Vec2{0, 0.3_r * sin(t)}, 0);
                 
-                // auto delta = solver.inverse(Vector2{0._r, 0.0_r}, 0);
-                // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
-                // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
-                // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
-                // auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
-                auto delta = solver.inverse(Vector2{0, 0.00_r}, CLAMP2((1-ang) * real_t(9), 1));
+                // auto delta = solver.inverse(Vec2{0._r, 0.0_r}, 0);
+                // auto delta = solver.inverse(Vec2{0, 0}, 0.005_r);
+                // auto delta = solver.inverse(Vec2{0.003_r, 0.003_r}, 0);
+                // auto delta = solver.inverse(Vec2{-0.003_r, 0.00_r}, 0);
+                // auto delta = solver.inverse(Vec2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
+                auto delta = solver.inverse(Vec2{0, 0.00_r}, CLAMP2((1-ang) * real_t(9), 1));
                 // DEBUG_PRINTLN(millis());
                 // wheels.setCurrent(delta);
                 // DEBUG_PRINTLN(std::get<0>(delta));
@@ -735,8 +735,8 @@ void host_main(){
             );
 
             while(true){
-                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
-                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                // delta = solver.inverse(Vec2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vec2{0, 1.7_r*sin(t)});
                 
                 // DEBUG_PRINTLN(std::get<0>(delta));
                 // DEBUG_PRINTLN(delta);
@@ -755,18 +755,18 @@ void host_main(){
                 [&](){
                 flow_sensor_.update();
         
-                py = Vector2(flow_sensor_.getPosition()).y;
-                // py = Vector2(flow_sensor_.getPosition()).x;
+                py = Vec2(flow_sensor_.getPosition()).y;
+                // py = Vec2(flow_sensor_.getPosition()).x;
                 
-                auto delta = solver.inverse(Vector2{0, CLAMP2((0.2_r-py) * real_t(20), 0.8_r)}, 0);
-                // auto delta = solver.inverse(Vector2{0, 1}, 0);
+                auto delta = solver.inverse(Vec2{0, CLAMP2((0.2_r-py) * real_t(20), 0.8_r)}, 0);
+                // auto delta = solver.inverse(Vec2{0, 1}, 0);
                 // DEBUG_PRINTLN(delta);
                 wheels.setCurrent(delta);
             });
 
             while(true){
-                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
-                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                // delta = solver.inverse(Vec2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vec2{0, 1.7_r*sin(t)});
                 
                 // DEBUG_PRINTLN(std::get<0>(delta));
                 // DEBUG_PRINTLN(delta);
@@ -787,17 +787,17 @@ void host_main(){
     // if(true){
     if(false){
         bindSystickCb(nullptr);
-        [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vector2i & pos){
+        [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vec2i & pos){
             const auto area = Rect2i(pos, src.size());
             displayer.putTexture(area, src.get_data());
         };
 
-        [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+        [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vec2i & pos){
             const auto area = Rect2i(pos, src.size());
             displayer.putTexture(area, src.get_data());
         };
 
-        [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+        [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vec2i & pos){
             const auto area = Rect2i(pos, src.size());
             displayer.putTexture(area, src.get_data());
         };
@@ -1071,7 +1071,7 @@ void host_main(){
                     // if(vision.offset().has_value()){
                     if(true){
                         vision.close();
-                        chassis.strict_shift((Vector2{0, 0.04_r}));
+                        chassis.strict_shift((Vec2{0, 0.04_r}));
                         process = Process::MOVE;
                     }
                     break;
@@ -1084,7 +1084,7 @@ void host_main(){
                 case Process::GIVE_CENTER:
                     if(grab.pending() == 0){
                         // grab.take(TrayIndex::Center);
-                        chassis.strict_shift(Vector2{-g_width, 0});
+                        chassis.strict_shift(Vec2{-g_width, 0});
                         process = Process::MOVE_LEFT;
                     }
                     break;
@@ -1096,7 +1096,7 @@ void host_main(){
                     break;
                 case Process::GIVE_LEFT:
                     if(grab.pending() == 0){
-                        chassis.strict_shift(Vector2{g_width * 2, 0});
+                        chassis.strict_shift(Vec2{g_width * 2, 0});
                         process = Process::MOVE_RIGHT;
                     }
                     break;

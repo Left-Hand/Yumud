@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector2/vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 namespace ymd{
 
@@ -17,11 +17,11 @@ struct Point2<T>{
     constexpr Point2(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
     template<arithmetic U = T>
-    constexpr Point2(const Vector2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    constexpr Point2(const Vec2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     template<arithmetic U = T>
-    constexpr Point2(const Vector2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    constexpr Point2(const Vec2<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
-    constexpr operator Vector2<T>() const{ return Vector2<T>{this->x, this->y}};
+    constexpr operator Vec2<T>() const{ return Vec2<T>{this->x, this->y}};
 };
 }

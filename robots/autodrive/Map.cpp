@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::robots;
 
-Vector2<real_t> Field::to_pos(const Map & map) const {
+Vec2<real_t> Field::to_pos(const Map & map) const {
     switch(kind_){
         default:
             HALT;

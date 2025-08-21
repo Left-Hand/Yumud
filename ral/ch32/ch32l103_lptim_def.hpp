@@ -266,4 +266,6 @@ struct LPTIM_Def{
 
 static constexpr LPTIM_Def * LPTIM1 = reinterpret_cast<LPTIM_Def *>(0x40007C00);
 
+
+#undef LPTIM_EVENTS
 }

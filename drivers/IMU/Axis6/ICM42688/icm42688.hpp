@@ -26,8 +26,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vector3<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;

@@ -112,13 +112,13 @@ IResult<> MMC5983::enable_yz(const Enable en){
     return write_reg(reg);
 }
 
-IResult<Vector3<q24>> MMC5983::read_mag(){
+IResult<Vec3<q24>> MMC5983::read_mag(){
     static constexpr auto LSB_18BIT = 0.0000625_q24;
 
     const auto mag3i = data_packet_.to_vec3();
     // DEBUG_PRINTLN(mag3i);
     
-    return Ok(Vector3<q24>{
+    return Ok(Vec3<q24>{
         LSB_18BIT * mag3i.x,
         LSB_18BIT * mag3i.y,
         LSB_18BIT * mag3i.z
@@ -199,11 +199,11 @@ static auto do_setreset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
 };
 
 
-MMC5983::IResult<Vector3<q24>> MMC5983::do_magset(){
+MMC5983::IResult<Vec3<q24>> MMC5983::do_magset(){
     return do_setreset(*this, [this](Enable en){return enable_magset(en);});
 }
 
-MMC5983::IResult<Vector3<q24>> MMC5983::do_magreset(){
+MMC5983::IResult<Vec3<q24>> MMC5983::do_magreset(){
     return do_setreset(*this, [this](Enable en){return enable_magreset(en);});
 }
 

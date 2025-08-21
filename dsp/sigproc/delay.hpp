@@ -27,7 +27,7 @@ struct DelayLine {
         const auto read_idx = (write_pos_ + pbuf_.size() - delay_) % pbuf_.size();
         return pbuf_[read_idx];
     }
-    constexpr void set_delay(size_t delay){
+    constexpr void set_delay_ticks(size_t delay){
         delay_ = (delay);
     }
     constexpr T delay() const { 

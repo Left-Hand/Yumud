@@ -323,8 +323,8 @@ public:
     //     return deviceIDReg.data;
     // }
 
-    IResult<Vector3<q24>> read_acc();
-    IResult<Vector3<q24>> read_gyr();
+    IResult<Vec3<q24>> read_acc();
+    IResult<Vec3<q24>> read_gyr();
 private:
     AnalogDeviceIMU_Phy phy_;
 

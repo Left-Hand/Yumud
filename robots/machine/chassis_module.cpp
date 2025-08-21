@@ -35,7 +35,7 @@ void ChassisModule::closeloop(){
         }
             break;
         case CtrlMode::STRICT_SPIN:{
-            auto p1234 = solver_.inverse({Vector2<q16>{0,0}, target_rot_});
+            auto p1234 = solver_.inverse({Vec2<q16>{0,0}, target_rot_});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
@@ -52,7 +52,7 @@ void ChassisModule::closeloop(){
             break;
         case CtrlMode::SPIN:{
             auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
-            setCurrent(Pose2<q16>{Vector2<q16>{0,0}, rot_output});    
+            setCurrent(Pose2<q16>{Vec2<q16>{0,0}, rot_output});    
         }
             break;
     }
@@ -146,22 +146,22 @@ void ChassisModule::tick800(){
     if(i == 0){
 
         // auto time = Sys::t;
-        // auto delta = solver.inverse(Vector2<q16>{0, 0.00_r}, 0.7_r);
+        // auto delta = solver.inverse(Vec2<q16>{0, 0.00_r}, 0.7_r);
         // wheels.setCurrent(delta);
         // acc_gyr_sensor_.update();
         // mag_sensor_.update();
 
-        // auto mag = Vector3<real_t>(mag_sensor_.read_mag());
-        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.0035);
-        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.005);
-        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.002);
-        auto gyr_raw = Vector3<real_t>(gyr_sensor_.read_gyr().unwrap()).z + real_t(0.00113);
-        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z;
-        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00625);
-        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00525);
-        // gyr_ = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
-        // auto gyr_raw = Vector3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.134);
+        // auto mag = Vec3<real_t>(mag_sensor_.read_mag());
+        // gyr_ = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.0035);
+        // gyr_ = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.005);
+        // gyr_ = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.002);
+        auto gyr_raw = Vec3<real_t>(gyr_sensor_.read_gyr().unwrap()).z + real_t(0.00113);
+        // auto gyr_raw = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z;
+        // auto gyr_raw = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00625);
+        // auto gyr_raw = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z + real_t(0.00525);
+        // gyr_ = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.009);
+        // auto gyr_raw = Vec3<real_t>(acc_gyr_sensor_.read_gyr()).z - real_t(0.134);
 
         static KalmanFilter_t<real_t> kf{10,0.01_r};
         gyr_ = ABS(gyr_raw) > 3 ? real_t(0) : kf.update(gyr_raw);
@@ -214,7 +214,7 @@ void ChassisModule::straight(const real_t dist){
 }
 
 //平移
-void ChassisModule:: shift(const Vector2<q16> & diff){
+void ChassisModule:: shift(const Vec2<q16> & diff){
     auto & self = *this;
     self << new ShiftAction(self, diff);
 }
@@ -230,7 +230,7 @@ void ChassisModule::strict_spin(const real_t ang){
     self << new StrictSpinAction(self, ang);
 }
 
-void ChassisModule::strict_shift(const Vector2<q16> & offs){
+void ChassisModule::strict_shift(const Vec2<q16> & offs){
     auto & self = *this;
     self << new StrictShiftAction(self, offs);
 }

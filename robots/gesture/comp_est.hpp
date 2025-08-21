@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector3/Vector3.hpp"
+#include "types/vectors/vector3.hpp"
 #include "dsp/filter/homebrew/ComplementaryFilter.hpp"
 
 namespace ymd::robots{
@@ -13,7 +13,7 @@ struct ComplementaryGestureEstimator{
         delta_time_(1_r / cfg.fs),
         comp_filter_(make_comp_filter_config(cfg.fs)){;}
 
-    constexpr void process(const Vector3<q24> & acc,const Vector3<q24> & gyr){
+    constexpr void process(const Vec3<q24> & acc,const Vec3<q24> & gyr){
 
         const auto len_acc = acc.length();
         const auto norm_acc = acc / len_acc;

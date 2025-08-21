@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace CH32V20x{
+namespace ymd::ral::py32{
 
 struct R16_STATR{
     uint32_t PE:1;
@@ -181,11 +181,11 @@ struct USART_Def{
     
 };
 
-static inline USART_Def * UART1_Inst = (USART_Def *)(0x40013800);
-static inline USART_Def * UART2_Inst = (USART_Def *)(0x40004400);
-static inline USART_Def * UART3_Inst = (USART_Def *)(0x40014800);
-static inline USART_Def * UART4_Inst = (USART_Def *)(0x40004C00);
-static inline USART_Def * UART5_Inst = (USART_Def *)(0x40015000);
-static inline USART_Def * UART6_Inst = (USART_Def *)(0x40001800);
-static inline USART_Def * UART7_Inst = (USART_Def *)(0x40011C00);
+static inline USART_Def * UART1_Inst = reinterpret_cast<USART_Def *>(0x40013800);
+static inline USART_Def * UART2_Inst = reinterpret_cast<USART_Def *>(0x40004400);
+static inline USART_Def * UART3_Inst = reinterpret_cast<USART_Def *>(0x40014800);
+static inline USART_Def * UART4_Inst = reinterpret_cast<USART_Def *>(0x40004C00);
+static inline USART_Def * UART5_Inst = reinterpret_cast<USART_Def *>(0x40015000);
+static inline USART_Def * UART6_Inst = reinterpret_cast<USART_Def *>(0x40001800);
+static inline USART_Def * UART7_Inst = reinterpret_cast<USART_Def *>(0x40011C00);
 }

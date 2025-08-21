@@ -5,8 +5,8 @@
 
 #include "core/utils/Result.hpp"
 
-#include "types/vectors/vector2/vector2.hpp"
-#include "types/regions/rect2/rect2.hpp"
+#include "types/vectors/vector2.hpp"
+#include "types/regions/rect2.hpp"
 #include "types/colors/color/color.hpp"
 #include "types/colors/rgb/rgb.hpp"
 

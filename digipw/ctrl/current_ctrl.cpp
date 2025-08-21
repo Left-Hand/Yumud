@@ -1,5 +1,5 @@
 #include "current_ctrl.hpp"
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 using namespace ymd;
 

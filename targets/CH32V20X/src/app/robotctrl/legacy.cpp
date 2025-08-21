@@ -21,8 +21,8 @@ struct PolarRobotGestureIterator{
     };
 
     struct MachineStates{
-        Vector2<real_t> position;
-        Vector2<real_t> speed;
+        Vec2<real_t> position;
+        Vec2<real_t> speed;
     };
 
     struct JointStates{
@@ -41,7 +41,7 @@ struct PolarRobotGestureIterator{
         real_t theta_joint_rotation;
     };
 
-    Solution forward(const Vector2<real_t> target_pos, const real_t delta_t){
+    Solution forward(const Vec2<real_t> target_pos, const real_t delta_t){
         State state = state_;
         return {
             .rho_joint_rotation = state.radius_joint.position, 
@@ -69,7 +69,7 @@ public CanMsgHandlerIntf{
 };
 struct QueuePointIterator{
     struct Config{
-        std::span<const Vector2<bf16>> points;
+        std::span<const Vec2<bf16>> points;
     };
 
     explicit constexpr QueuePointIterator(
@@ -77,11 +77,11 @@ struct QueuePointIterator{
     ):
         points_(cfg.points){;}
 
-    [[nodiscard]] constexpr Vector2<q24> next(const q24 step){
+    [[nodiscard]] constexpr Vec2<q24> next(const q24 step){
 
         const auto curr_index = index_;
 
-        const auto p1 = Vector2{
+        const auto p1 = Vec2{
             q24::from(float(points_[curr_index].x)), 
             q24::from(float(points_[curr_index].y))
         };
@@ -100,8 +100,8 @@ struct QueuePointIterator{
         return index_;
     }
 private:
-    std::span<const Vector2<bf16>> points_;
-    Vector2<q24> current_position = {};
+    std::span<const Vec2<bf16>> points_;
+    Vec2<q24> current_position = {};
     size_t index_ = 0;
 };
 

@@ -40,7 +40,7 @@
 //     real_t yt = 0;
 
 //     if((i == 0) || (i == 2) || (i == 4))
-//         yt = cubicBezier(_t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
+//         yt = cubicBezier(_t, Vec2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vec2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
 //     else
 //         yt = _t;
 

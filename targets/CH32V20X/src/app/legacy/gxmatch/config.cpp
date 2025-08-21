@@ -57,9 +57,9 @@ SysConfig gxm::create_default_config(){
 
         .grab_config = {
             .tray_xy = {
-                Vector2{-0.0983_r    ,   0.144_r},
-                Vector2{-0.004_r     ,   0.144_r},
-                Vector2{0.0905_r     ,   0.144_r}
+                Vec2{-0.0983_r    ,   0.144_r},
+                Vec2{-0.004_r     ,   0.144_r},
+                Vec2{0.0905_r     ,   0.144_r}
             },
 
             .tray_z = 0.1333_r,
@@ -71,19 +71,19 @@ SysConfig gxm::create_default_config(){
             .z_bias = 0.00005_r,
         
             .catch_xy = {
-                Vector2{-0.0_r, 0.24_r},
-                Vector2{-0.0_r, 0.24_r},
-                Vector2{0.0_r, 0.24_r},
+                Vec2{-0.0_r, 0.24_r},
+                Vec2{-0.0_r, 0.24_r},
+                Vec2{0.0_r, 0.24_r},
             },
             
-            .inspect_xyz = Vector3{0, 0.24_r, 0.16_r},
-            .idle_xyz = Vector3{0, 0.145_r, 0.16_r},
+            .inspect_xyz = Vec3{0, 0.24_r, 0.16_r},
+            .idle_xyz = Vec3{0, 0.145_r, 0.16_r},
             
-            .home_xyz = Vector3(0, 0.24_r, 0.16_r),
+            .home_xyz = Vec3(0, 0.24_r, 0.16_r),
 
             .safe_aabb = AABB{
-                Vector3{-0.13_r, 0.12_r, 0.0_r},
-                Vector3{0.26_r, 0.15_r, 0.17_r}
+                Vec3{-0.13_r, 0.12_r, 0.0_r},
+                Vec3{0.26_r, 0.15_r, 0.17_r}
             },
 
             .max_spd = 1.03_r,

@@ -46,7 +46,7 @@ public:
     void render(PainterBase & painter) override{
         painter.set_color(ColorEnum::WHITE);
         painter.draw_filled_rect(rect_).examine();
-        // painter.drawString(rect_ + Vector2u{0, -10}, name_);
+        // painter.drawString(rect_ + Vec2u{0, -10}, name_);
     }
 };
 
@@ -57,7 +57,7 @@ protected:
     Items items_;
 
     int item_padding_ = 10;
-    Vector2u item_org_ = {10,10};
+    Vec2u item_org_ = {10,10};
 
     void draw_otherwides(PainterBase & painter){
         painter.set_color(ColorEnum::WHITE);
@@ -159,17 +159,17 @@ void gui_main(){
     // camera.init();
     // camera.setExposureValue(1200);
 
-    // [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vector2u & pos){
+    // [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vec2u & pos){
     //     auto area = Rect2u(pos, src.size());
     //     tft.put_texture(area, src.get_data());
     // };
 
-    // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2u & pos){
+    // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vec2u & pos){
     //     auto area = Rect2u(pos, src.size());
     //     tft.put_texture(area, src.get_data());
     // };
 
-    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2u & pos){
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vec2u & pos){
         auto area = Rect2<uint16_t>(pos, src.size());
         tft.put_texture(area, src.get_data()).examine();
     };
@@ -185,7 +185,7 @@ void gui_main(){
     while(true){
         painter.bind_image(img);
         painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        painter.draw_pixel(Vector2u(0, 0));
+        painter.draw_pixel(Vec2u(0, 0));
         painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 
         tft.put_texture(img.size().to_rect(), img.get_data()).examine();

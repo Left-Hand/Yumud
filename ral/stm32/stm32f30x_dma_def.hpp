@@ -5,7 +5,7 @@
 #define __IO volatile
 
 
-namespace hwspec::STM32F30x::DMA{
+namespace ymd::ral::STM32F30x::DMA{
 
 typedef struct
 {

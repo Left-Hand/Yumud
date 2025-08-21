@@ -125,8 +125,8 @@ public:
     
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vector3<q24>> read_acc();
-    [[nodiscard]] IResult<Vector3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
     [[nodiscard]] IResult<real_t> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);

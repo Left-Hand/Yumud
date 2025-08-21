@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32X035::OPA{
+namespace ymd::ral::CH32X035::OPA{
 
 struct CFGR1_Reg{
     uint16_t POLL_EN1:1;

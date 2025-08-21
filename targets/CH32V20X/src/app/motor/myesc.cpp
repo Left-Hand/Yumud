@@ -177,7 +177,7 @@ void myesc_main(){
     auto & sob = adc1.inj<2>();
     auto & soc = adc1.inj<3>();
 
-    pwm_u.set_duty(0.06_r);
+    pwm_u.set_dutycycle(0.06_r);
 
     real_t u_curr;
     real_t v_curr;
@@ -199,9 +199,9 @@ void myesc_main(){
         // const auto mag = 0.02_r;
         // const auto [u, v, w] = SVM(s * mag, c * mag);
         const auto [u, v, w] = ones<3>(0.2_r);
-        pwm_u.set_duty(u);
-        pwm_v.set_duty(v);
-        pwm_w.set_duty(w);
+        pwm_u.set_dutycycle(u);
+        pwm_v.set_dutycycle(v);
+        pwm_w.set_dutycycle(w);
 
 
     });

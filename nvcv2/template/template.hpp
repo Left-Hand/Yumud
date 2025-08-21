@@ -7,12 +7,12 @@ namespace ymd::nvcv2::match{
 real_t template_match(
     __restrict const Image<Binary> & src, 
     __restrict const Image<Binary> & tmp, 
-    const Vector2u & offset);
+    const Vec2u & offset);
 
 real_t template_match(
     __restrict const Image<Gray> & src, 
     __restrict const Image<Gray> & tmp, 
-    const Vector2u & offset);
+    const Vec2u & offset);
 
 
 template<is_monochrome T>

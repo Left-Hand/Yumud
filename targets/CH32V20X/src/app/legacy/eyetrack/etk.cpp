@@ -98,8 +98,8 @@ using namespace etk;
 
 
 //     auto eye_conf =         Eyes::Config{
-//             .l_center = Vector2i{60, 62},
-//             .r_center = Vector2i{180, 62},
+//             .l_center = Vec2i{60, 62},
+//             .r_center = Vec2i{180, 62},
 
 //             .eye_radius = 40,
 //             .iris_radius = 13,
@@ -146,14 +146,14 @@ using namespace etk;
 //             }
 
 //             eye.update(
-//                 {Vector2<real_t>(Vector2i(tk).flipy())}, 
+//                 {Vec2<real_t>(Vec2i(tk).flipy())}, 
 //                 std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
 //             );
 
 //             eye.move();
 
-//             auto vec = Vector2<real_t>(eye.eyeInfo().pos) * real_t(0.2);
-//             vec = Vector2<real_t>(real_t(PI/2), real_t(PI - 0.2)) + Vector2<real_t>(-vec.x, vec.y);
+//             auto vec = Vec2<real_t>(eye.eyeInfo().pos) * real_t(0.2);
+//             vec = Vec2<real_t>(real_t(PI/2), real_t(PI - 0.2)) + Vec2<real_t>(-vec.x, vec.y);
                                                                                                                                                                                                                                                                                     
 //             servo_x.set_radian(+vec.x);
 //             servo_y.set_radian(+vec.y);

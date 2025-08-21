@@ -10,7 +10,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "types/regions/range2/range2.hpp"
+#include "types/regions/range2.hpp"
 
 
 

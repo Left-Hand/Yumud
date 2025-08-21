@@ -2,14 +2,14 @@
 
 template<arithmetic T>
 struct Line_t{
-    Vector2<T> from;
-    Vector2<T> to;
+    Vec2<T> from;
+    Vec2<T> to;
 };
 
 
 template<arithmetic T>
 struct Circle_t{
-    Vector2<T> org;
+    Vec2<T> org;
     real_t to;
 };
 

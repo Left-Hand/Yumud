@@ -2,7 +2,7 @@
 
 #include <cstdint> 
 
-namespace hwspec::CH32V20x::USBPD_Regs{
+namespace ymd::ral::CH32V20x::USBPD_Regs{
 
 struct CONFIG_Reg{
     uint32_t PD_FILT_EN:1;

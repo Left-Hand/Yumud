@@ -111,9 +111,9 @@ void at8222_tb(){
     BandpassFilter bpf{BandpassFilter::Config{
         // .fl = 300,
         // .fh = 800,
+        .fs = ISR_FREQ,
         .fl = 150,
-        .fh = 400,
-        .fs = ISR_FREQ
+        .fh = 400
     }};
 
 
@@ -210,7 +210,7 @@ void at8222_tb(){
         bpf.update(curr_raw);
         curr_mid = lpf_mid.get();
 
-        ect.update(bool(bpf.get() > 0));
+        ect.update(bool(bpf.output() > 0));
 
         const auto pos = ect.count() * 0.01_r;
         td.update(pos);
@@ -224,10 +224,10 @@ void at8222_tb(){
         // pwm_pos = 0.87_r * abs(sinpu(time()));
         // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
         // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
-        pwm_pos.set_duty(0_r);
+        pwm_pos.set_dutycycle(0_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
-        pwm_neg.set_duty(0.9_r);
+        pwm_neg.set_dutycycle(0.9_r);
 
 
 

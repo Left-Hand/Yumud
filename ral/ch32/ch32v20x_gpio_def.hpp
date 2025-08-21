@@ -3,7 +3,7 @@
 #include <cstdint>
 
 
-namespace hwspec::CH32V20x{
+namespace ymd::ral::CH32V20x{
     struct GPIO_Def{
         struct CFGLR{
 

@@ -27,7 +27,7 @@ PRO_DEF_MEM_DISPATCH(_Memfunc_PutRect, putrect_unchecked);
 template<typename TColor>
 struct DrawTargetFacade : pro::facade_builder
     ::add_convention<details::_Memfunc_PutPixel, 
-    Result<void, DisplayerError>(const Vector2<uint16_t> pos, const TColor color)>
+    Result<void, DisplayerError>(const Vec2<uint16_t> pos, const TColor color)>
     ::add_convention<details::_Memfunc_PutTexture, 
     Result<void, DisplayerError>(const Rect2<uint16_t> rect, const TColor * pcolor)>
     ::add_convention<details::_Memfunc_PutRect, 

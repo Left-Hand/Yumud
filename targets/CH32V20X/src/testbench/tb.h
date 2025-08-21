@@ -179,3 +179,5 @@ void fft_main();
 void embd_main();
 void laser_ctl_main();
 void nuedc_2025e_main();
+
+void render_main();

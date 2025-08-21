@@ -13,7 +13,7 @@ class Mnist{
 public:
     
     static constexpr uint N = 10; 
-    static constexpr Vector2u IMAGE_SIZE = {28, 28};
+    static constexpr Vec2u IMAGE_SIZE = {28, 28};
     static constexpr uint IMAGE_CHANNELS = 1;
 
     using Choices = std::array<real_t, N>;
@@ -42,6 +42,6 @@ protected:
 public:
     Mnist(){load();}
     ~Mnist(){unload();}
-    Result update(const Image<Gray> & img, const Vector2u & pos);
+    Result update(const Image<Gray> & img, const Vec2u & pos);
     Result update(const Image<Gray> & img);
 };

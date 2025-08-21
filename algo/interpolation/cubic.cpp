@@ -8,8 +8,8 @@ q16 CubicInterpolation::forward(const q16 x) const {
 }
 
 q16 CubicInterpolation::forward(
-        const Vector2<q16> & a,
-        const Vector2<q16> & b, 
+        const Vec2<q16> & a,
+        const Vec2<q16> & b, 
         const q16 x){
 
     static constexpr q16 y0a = 0; // initial y
@@ -49,8 +49,8 @@ q16 NearCubicInterpolation::forward(const q16 x) const {
 
 
 q16 NearCubicInterpolation::forward(
-        const Vector2<q16> & from,
-        const Vector2<q16> & to, 
+        const Vec2<q16> & from,
+        const Vec2<q16> & to, 
         const q16 x){
     auto [a,b] = from;
     const auto [c,d] = to;

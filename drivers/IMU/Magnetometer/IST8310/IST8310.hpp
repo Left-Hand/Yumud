@@ -147,7 +147,7 @@ public:
 
     [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
 
-    [[nodiscard]] IResult<Vector3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
 
 protected:
 

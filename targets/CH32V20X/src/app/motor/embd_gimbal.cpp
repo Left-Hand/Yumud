@@ -26,7 +26,7 @@
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
-#include "types/vectors/quat/Quat.hpp"
+#include "types/vectors/quat.hpp"
 
 #include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -222,11 +222,11 @@ void embd_main(){
 
     can[0].mask(
         {
-            .id = hal::CanStdIdMask{0x200, hal::CanRemoteSpec::Any}, 
-            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+            .id = hal::CanStdIdMask{0x200, hal::CanRtr::Any}, 
+            .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRtr::Any)
         },{
-            .id = hal::CanStdIdMask{0x000, hal::CanRemoteSpec::Any}, 
-            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRemoteSpec::Any)
+            .id = hal::CanStdIdMask{0x000, hal::CanRtr::Any}, 
+            // .mask = hal::CanStdIdMask::from_ignore_low(7, hal::CanRtr::Any)
             .mask = hal::CanStdIdMask::from_accept_all()
         }
     );

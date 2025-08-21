@@ -5,9 +5,9 @@
     //     painter.drawPolygon(vertex.begin(), vertex.size());
     //     auto rect = Rect2i(vertex.begin(), vertex.size());
     //     painter.setColor(RGB565::RED);
-    //     painter.drawString(rect.position + Vector2i{4,4}, toString(index));
+    //     painter.drawString(rect.position + Vec2i{4,4}, toString(index));
 
     //     painter.setColor(RGB565::BLUE);
-    //     painter.drawFilledCircle(rect.get_center() + Vector2(12, 0).rotated(dir), 3);
+    //     painter.drawFilledCircle(rect.get_center() + Vec2(12, 0).rotated(dir), 3);
     //     painter.bindImage(tftDisplayer);
     // };

@@ -30,7 +30,7 @@ public:
     ImageView(ImageView & other, const Rect2u & _window):
         instance(other.instance), 
         window(Rect2u(other.window.position + _window.position, other.window.size)
-        .intersection(Vector2u(), other.instance.get_size())){;}
+        .intersection(Vec2u(), other.instance.get_size())){;}
     Rect2u rect() const {return window;}
 };
 

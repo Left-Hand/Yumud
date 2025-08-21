@@ -10,7 +10,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "types/vectors/vector2/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 #include "core/magic/enum_traits.hpp"
 
 namespace ymd::drivers{
@@ -109,7 +109,7 @@ struct ST1615_Prelude{
         uint16_t max_y = 0xffff;
         bool smart_wake_up = false;
 
-        constexpr bool is_point_valid(const Vector2<uint16_t> point){
+        constexpr bool is_point_valid(const Vec2<uint16_t> point){
             return (point.x <= max_x) && (point.y <= max_y);
         }
 
@@ -137,7 +137,7 @@ struct ST1615_Prelude{
         }
     };
 
-    using Point = Vector2<uint16_t>;
+    using Point = Vec2<uint16_t>;
 };
 
 struct ST1615 final:public ST1615_Prelude{

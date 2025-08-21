@@ -27,7 +27,7 @@ private:
 };
 
 
-class WS2812: public RgbLedConcept{
+class WS2812: public RgbLedIntf{
 protected:
 
     WS2812_Phy phy_;
@@ -41,7 +41,7 @@ public:
     }
 };
 
-class WS2812Single: public RgbLedConcept{
+class WS2812Single: public RgbLedIntf{
 protected:
     void _update(const Color<real_t> & _color){
         color = _color;
@@ -86,9 +86,9 @@ public:
             uni_to_u16(led.color.g, g);
             uni_to_u16(led.color.b, b);
 
-            phy_.send_byte(CLAMP(uint8_t(r * 256), 0, 255));
-            phy_.send_byte(CLAMP(uint8_t(g * 256), 0, 255));
-            phy_.send_byte(CLAMP(uint8_t(b * 256), 0, 255));
+            phy_.send_byte(CLAMP(uint8_t(r * 255), 0, 255));
+            phy_.send_byte(CLAMP(uint8_t(g * 255), 0, 255));
+            phy_.send_byte(CLAMP(uint8_t(b * 255), 0, 255));
 
         }
 

@@ -11,7 +11,7 @@
 #define ASSERT_REG_IS_16BIT(name) static_assert((sizeof(name) == 2),  #name " is not 2 bytes"); 
 #endif
 
-namespace hwspec::CH32V20x::IWDGs{
+namespace ymd::ral::CH32V20x::IWDGs{
 
 struct R16_IWDG_CTLR {
     uint32_t KEY:16;

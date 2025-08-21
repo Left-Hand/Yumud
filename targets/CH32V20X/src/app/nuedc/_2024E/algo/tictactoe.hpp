@@ -11,10 +11,10 @@ namespace nuedc::_2024E{
 // @param role 玩家角色
 // @ChessBoard board 棋盘
 // @return 最优的下一步棋的位置
-[[nodiscard]] static constexpr Vector2u 
+[[nodiscard]] static constexpr Vec2u 
 chess_forward_ai(const Role role, const ChessBoard & board){
     // 判断指定位置是否能让指定角色获胜
-    auto is_winning_move = [&board](const Vector2u& pos, Role check_role) -> bool {
+    auto is_winning_move = [&board](const Vec2u& pos, Role check_role) -> bool {
         {
             // 检查行
             size_t cnt = 0;
@@ -59,10 +59,10 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     };
 
     // 寻找可立即获胜的位置
-    auto find_winning_move = [is_winning_move, &board](const Role check_role) -> std::optional<Vector2u> {
+    auto find_winning_move = [is_winning_move, &board](const Role check_role) -> std::optional<Vec2u> {
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-                Vector2u pos{x, y};
+                Vec2u pos{x, y};
                 if (board.at(pos) == None && is_winning_move(pos, check_role)) {
                     return pos;
                 }
@@ -82,13 +82,13 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     if (board.at({1,1}) == None) return {1,1};
 
     // 4. 占领四个角落
-    constexpr std::array<Vector2u, 4> corners = {{{0,0}, {0,2}, {2,0}, {2,2}}};
+    constexpr std::array<Vec2u, 4> corners = {{{0,0}, {0,2}, {2,0}, {2,2}}};
     for (const auto& pos : corners) {
         if (board.at(pos) == None) return pos;
     }
 
     // 5. 占领边缘（非中心非角落）
-    constexpr std::array<Vector2u, 4> edges = {{{0,1}, {1,0}, {1,2}, {2,1}}};
+    constexpr std::array<Vec2u, 4> edges = {{{0,1}, {1,0}, {1,2}, {2,1}}};
     for (const auto& pos : edges) {
         if (board.at(pos) == None) return pos;
     }
@@ -98,7 +98,7 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     // 6. 最后兜底（理论上不会执行到此处）
     for (size_t y = 0; y < ChessBoard::WIDTH; ++y) {
         for (size_t x = 0; x < ChessBoard::WIDTH; ++x) {
-            const Vector2u pos{x, y};
+            const Vec2u pos{x, y};
             if (board.at(pos) == None) return pos;
         }
     }

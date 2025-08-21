@@ -88,8 +88,8 @@ IResult<> MMC5603::enable_contious(const Enable en){
 }
 
 
-IResult<Vector3<q24>> MMC5603::read_mag(){
-    return Ok{Vector3<q24>{
+IResult<Vec3<q24>> MMC5603::read_mag(){
+    return Ok{Vec3<q24>{
         s16_to_uni(x_reg.as_val()),
         s16_to_uni(y_reg.as_val()),
         s16_to_uni(z_reg.as_val())

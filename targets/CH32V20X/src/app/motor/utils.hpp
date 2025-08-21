@@ -104,7 +104,7 @@ static constexpr size_t count_iter(Iter && iter){
 // };
 
 // [[maybe_unused]] static real_t demo(uint milliseconds){
-//     // using Vector2<real_t> = CubicInterpolation::Vector2<real_t>;
+//     // using Vec2<real_t> = CubicInterpolation::Vec2<real_t>;
 //     static TurnSolver turnSolver;
     
 //     uint32_t turnCnt = milliseconds % 2667;
@@ -145,8 +145,8 @@ static constexpr size_t count_iter(Iter && iter){
 
 //     if((i == 0) || (i == 2) || (i == 4))
 //         yt = CubicInterpolation::forward(
-//             Vector2<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
-//             Vector2<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+//             Vec2<real_t>{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, 
+//             Vec2<real_t>(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
 //     else
 //         yt = _t;
 

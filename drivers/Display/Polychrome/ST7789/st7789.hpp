@@ -10,7 +10,7 @@ class ST7789 final:
 public:
     explicit ST7789(
         ST7789_Phy && phy, 
-        const Vector2<uint16_t> size
+        const Vec2<uint16_t> size
     ):
         phy_(phy),
         algo_(size){;}
@@ -22,7 +22,7 @@ public:
     IResult<> fill(const RGB565 color){
         return putrect_unchecked(size().to_rect(), color);
     }
-    IResult<> setpos_unchecked(const Vector2<uint16_t> pos);
+    IResult<> setpos_unchecked(const Vec2<uint16_t> pos);
     IResult<> setarea_unchecked(const Rect2<uint16_t> rect);
 
     IResult<> put_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
@@ -37,7 +37,7 @@ public:
         return phy_.write_burst_pixels(std::span(pcolor, rect.get_area()));
     }
 
-    IResult<> set_display_offset(const Vector2<uint16_t> _offset){
+    IResult<> set_display_offset(const Vec2<uint16_t> _offset){
         offset_ = _offset;
         return Ok();
     }
@@ -72,7 +72,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline IResult<> putpixel_unchecked(
-        const Vector2<uint16_t> pos, 
+        const Vec2<uint16_t> pos, 
         const RGB565 color
     ){
         if(const auto res = setpos_unchecked(pos);
@@ -102,7 +102,7 @@ private:
     ST7789_Phy phy_;
     Algo algo_;
 
-    Vector2<uint16_t> offset_;
+    Vec2<uint16_t> offset_;
     uint8_t scr_ctrl_ = 0;
 
     [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
@@ -128,7 +128,7 @@ template<>
 struct DrawTarget<ST7789>{
     [[nodiscard]] static auto putpixel_unchecked(
         ST7789 & self,
-        const Vector2<uint16_t> pos, 
+        const Vec2<uint16_t> pos, 
         const RGB565 color
     ){
         return self.putpixel_unchecked(pos, color);
