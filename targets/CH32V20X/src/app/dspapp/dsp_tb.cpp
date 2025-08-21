@@ -171,15 +171,15 @@ static auto make_butterworth_bandpass(const T fl, const T fh, const uint fs){
     using Config = Filter::Config;
 
     Filter filter = {Config{
+        .fs = fs,
         .fl = fl,
         .fh = fh,
-        .fs = fs,
     }};
 
     return filter;
 
-    // Evaluator::run_func(fn_in, filter);
-    // dsp::evaluate_func(fs, fn_in, filter);
+    // TransferSysevtluator::run_func(fn_in, filter);
+    // dsp::evtluate_func(fs, fn_in, filter);
 }
 
 template<typename T, size_t n>
@@ -288,9 +288,9 @@ void dsp_main(){
 
     [[maybe_unused]] constexpr T FREQ_LOW = T(250);
     [[maybe_unused]] constexpr T FREQ_HIGH = T(400);
-    constexpr uint FREQ_SAMPLE = 4000;
-    // constexpr uint FREQ_SAMPLE = 2000;
-    // constexpr uint FREQ_SAMPLE = 1000;
+    constexpr uint SAMPLE_FREQ = 4000;
+    // constexpr uint SAMPLE_FREQ = 2000;
+    // constexpr uint SAMPLE_FREQ = 1000;
 
     [[maybe_unused]]
     constexpr size_t N = 4;
@@ -328,46 +328,46 @@ void dsp_main(){
 
     #endif
 
-    // auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
-    auto && bpf = make_butterworth_bandpass<q16, N>(FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    // auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
+    auto && bpf = make_butterworth_bandpass<q16, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
     // auto && sig_proc = make_tunning_filter<T>(1.0_r);
 
     static constexpr size_t BUFFER_SIZE = 512;
     auto buffer = std::vector<q16>(BUFFER_SIZE);
     auto && allpass = dsp::CombAllpass<q16>(std::span(buffer));
-    allpass.set_delay(10.6_r);
+    allpass.set_delay_ticks(10.6_r);
     auto && sig_proc = [&](const real_t t){
         const auto bpf_out = bpf(t);
         return allpass(bpf_out);
     };
 
 
-    Evaluator eva;
-    eva.set_fs(FREQ_SAMPLE);
-    eva.run_func(
-        FREQ_SAMPLE/4,
+    TransferSysEvaluator evt;
+    evt.set_sample_freq(SAMPLE_FREQ);
+    evt.run_func(
+        SAMPLE_FREQ/4,
         sig_in, 
         sig_proc
     );
-    // eva.evaluate_func(
-    //     FREQ_SAMPLE,
+    // evt.evtluate_func(
+    //     SAMPLE_FREQ,
     //     sig_in, 
     //     sig_proc
     // );
 
     while(true){
-        // const auto t = eva.time();
-        const auto [x,y] = eva.get_xy();
-        DEBUG_PRINTLN_IDLE(x, y, bpf.get(), y+bpf.get());
+        // const auto t = evt.time();
+        const auto [input,output] = evt.get_input_and_output();
+        DEBUG_PRINTLN_IDLE(input, output, bpf.output(), output+bpf.output());
     }
-    // butterworth_bandstop_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    // butterworth_bandstop_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
 
-    // butterworth_highpass_tb<T, n>(sig_in, FREQ_HIGH, FREQ_SAMPLE);
-    // butterworth_lowpass_tb<T, n>(sig_in, FREQ_LOW, FREQ_SAMPLE);
-    // dtmf_tb(FREQ_SAMPLE);
+    // butterworth_highpass_tb<T, n>(sig_in, FREQ_HIGH, SAMPLE_FREQ);
+    // butterworth_lowpass_tb<T, n>(sig_in, FREQ_LOW, SAMPLE_FREQ);
+    // dtmf_tb(SAMPLE_FREQ);
     // pso_tb();
     
-    // bpsk_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, FREQ_SAMPLE);
+    // bpsk_tb<T, n>(sig_in, FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
 
     {
         // /* calculate the d coefficients */
