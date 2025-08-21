@@ -293,6 +293,7 @@ struct Binary{
     __fast_inline constexpr Binary(const Binary & other) = default;
     __fast_inline constexpr Binary(Binary && other) = default;
 
+    __fast_inline constexpr Binary & operator = (const Kind kind) { data = kind; return *this; }
     __fast_inline constexpr Binary & operator = (const Binary & other) = default;
     __fast_inline constexpr Binary & operator = (Binary && other) = default;
     __fast_inline constexpr explicit Binary(const RGB888 & rgb): 

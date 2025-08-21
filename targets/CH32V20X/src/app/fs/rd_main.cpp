@@ -114,7 +114,19 @@ struct FrameSpan{
     }
 
     constexpr auto iter() {
-        return ToLineSpanIter(*this);
+        return ToLineSpanIter(buf_.data(), {0, size_.y}, size_.x);
+    }
+
+    // Add a new iter method for partial iteration
+    constexpr auto iter(Range2u y_range) {
+        // auto y_start = y_range.start;
+        // auto y_stop = y_range.start;
+
+        // if (y_stop > size_.y) y_stop = size_.y;
+        // if (y_start >= y_stop) y_start = y_stop;
+        // return ToLineSpanIter(buf_.data(), {y_start, y_stop}, size_.x);
+
+        return ToLineSpanIter(buf_.data(), y_range, size_.x);
     }
 
     constexpr LineSpan<Color> operator [](const size_t y){
@@ -131,15 +143,17 @@ private:
     Vec2u size_;
 
     struct ToLineSpanIter{
-        constexpr ToLineSpanIter(FrameSpan<Color> & frame):
-            pbuf_(frame.buf_.data()),
-            size_(frame.size_) 
+        constexpr ToLineSpanIter(Color * pbuf, Range2u y_range, size_t width):
+            pbuf_(pbuf),
+            y_(y_range.start),
+            y_stop_(y_range.stop),
+            width_(width)
         {}
 
         constexpr LineSpan<Color> next(){
-            const auto offset = y_ * size_.x;
+            const auto offset = y_ * width_;
             const auto ret = LineSpan<Color>(
-                std::span<Color>(pbuf_ + offset, pbuf_ + offset + size_.x),
+                std::span<Color>(pbuf_ + offset, pbuf_ + offset + width_),
                 y_
             );
 
@@ -149,34 +163,64 @@ private:
         }
 
         constexpr bool has_next() const{
-            return (y_ < size_.y);
+            return (y_ < y_stop_);
         }
 
     private:
         Color * pbuf_;
-        const Vec2u size_;
-        size_t y_ = 0;
+        size_t y_;
+        size_t y_stop_;
+        size_t width_;
     };
 
-    friend class ToLineSpanIter;
 };
 
 
-template<typename T>
+template<typename T, typename Iter = LineSpan<T>::ToLineSpanIter>
 requires requires(OutputStream& os, const LineSpan<T>& line_span) {
     os << line_span;
 }
-OutputStream & operator << (OutputStream & os, FrameSpan<T> & frame_span){
-    for(auto line_span : StdRange(frame_span.iter())){
+OutputStream & operator << (OutputStream & os, Iter && iter){
+    for(auto line_span : StdRange(iter)){
         os.println(line_span);
     }
     return os;
 }
 
+
+template<typename T>
+OutputStream & operator << (OutputStream & os, FrameSpan<T> & frame_span){
+    return os << frame_span.iter();
+}
+
+
+
+template<typename Iter>
+static constexpr size_t count_iter(Iter && iter){
+    size_t cnt = 0;
+    while(true){
+        if(iter.has_next()){
+            (void)iter.next();
+            cnt++;
+        }else{
+            break;
+        }
+    }
+
+    return cnt;
+}
+
+
 static constexpr auto UART_BAUD = 576000u;
 
-static constexpr auto IMG_WIDTH = 32u;
-static constexpr auto IMG_HEIGHT = 18u;
+// static constexpr auto IMG_WIDTH = 32u;
+// static constexpr auto IMG_HEIGHT = 18u;
+
+// static constexpr auto IMG_WIDTH = 8u;
+// static constexpr auto IMG_HEIGHT = 6u;
+
+static constexpr auto IMG_WIDTH = 6u;
+static constexpr auto IMG_HEIGHT = 4u;
 
 void render_main(){
 
@@ -201,27 +245,25 @@ void render_main(){
     auto frame_span = FrameSpan<Binary>::from_ptr_and_size(
         buffer.data(), {IMG_WIDTH, IMG_HEIGHT}).unwrap();
 
-    
+    auto draw = [&]{
+        frame_span[1][1] = Binary::WHITE;
+        frame_span[2][1] = Binary::WHITE;
+        frame_span[3][3] = Binary::WHITE;
+    };
+
+    draw();
+
     while(true){
-        DEBUG_PRINTLN(frame_span);
+        // DEBUG_PRINTLN(frame_span.iter({0, 2}));
+        // DEBUG_PRINTLN(count_iter(frame_span.iter({0, 2})));
+        // DEBUG_PRINTLN(count_iter(frame_span.iter()));
+        DEBUG_PRINTLN(frame_span.iter());
+        // DEBUG_PRINTLN(frame_span);
         clock::delay(5ms);
     }
 };
 
-template<typename Iter>
-static constexpr size_t count_iter(Iter && iter){
-    size_t cnt = 0;
-    while(true){
-        if(iter.has_next()){
-            (void)iter.next();
-            cnt++;
-        }else{
-            break;
-        }
-    }
 
-    return cnt;
-}
 
 
 #if 0
