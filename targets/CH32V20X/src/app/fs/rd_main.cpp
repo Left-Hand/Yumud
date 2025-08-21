@@ -20,12 +20,21 @@
 #include "types/colors/rgb/rgb.hpp"
 #include "types/regions/rect2.hpp"
 #include "core/utils/stdrange.hpp"
+#include "core/utils/data_iter.hpp"
 
 using namespace ymd;
+
+struct Infallible{};
+
+OutputStream & operator << (OutputStream & os, const Infallible){
+    return os << "Infallible";
+}
 
 template<typename Color>
 struct LineSpan{
 public:
+    using Error = Infallible;
+
     constexpr explicit LineSpan(
         const std::span<Color> buf,
         size_t y
@@ -58,7 +67,35 @@ public:
 
     constexpr Color & operator[](const size_t index) {return buf_[index];}
 
-    constexpr Rect2u to_bounding_box() const {return Rect2u(0, y_, buf_.size(), 1);}
+    constexpr Rect2u16 to_bounding_box() const {return Rect2u16(0, y_, buf_.size(), 1);}
+
+    template<typename PixelsIter>
+    constexpr Result<void, Error> draw_iter(PixelsIter && iter){
+        for(const auto pixel : StdRange(iter)){
+            const auto [x, y] = pixel.position;
+            if(y != y_) continue;
+            buf_[x] = static_cast<Color>(pixel.color);
+        }
+
+        return Ok();
+    };
+
+    template<typename ColorsIter>
+    constexpr Result<void, Error> fill_contiguous(
+        const Rect2u16 area,
+        ColorsIter && iter
+    ){
+        return Ok();
+    }
+
+    template<typename DestColor>
+    constexpr Result<void, Error> fill_solid(
+        const Rect2u16 area,
+        const DestColor color
+    ){
+        return Ok();
+    }
+
 private:
     std::span<Color> buf_;
     size_t y_;
@@ -79,6 +116,8 @@ OutputStream & operator << (OutputStream & os, const LineSpan<Binary> & line){
 
 template<typename Color>
 struct FrameSpan{
+    using Error = Infallible;
+
     static constexpr Option<FrameSpan> from_ptr_and_size(
         Color * ptr, Vec2u size
     ){
@@ -119,12 +158,6 @@ struct FrameSpan{
 
     // Add a new iter method for partial iteration
     constexpr auto iter(Range2u y_range) {
-        // auto y_start = y_range.start;
-        // auto y_stop = y_range.start;
-
-        // if (y_stop > size_.y) y_stop = size_.y;
-        // if (y_start >= y_stop) y_start = y_stop;
-        // return ToLineSpanIter(buf_.data(), {y_start, y_stop}, size_.x);
 
         return ToLineSpanIter(buf_.data(), y_range, size_.x);
     }
@@ -135,8 +168,75 @@ struct FrameSpan{
         return LineSpan<Color>(std::span<Color>(pdata + y * width, width), y);
     }
 
-    constexpr Rect2u to_bounding_box() const {
-        return Rect2u::from_size(size_);
+    constexpr Rect2u16 to_bounding_box() const {
+        return Rect2u16::from_size(size_);
+    }
+
+    template<typename PixelsIter>
+    constexpr Result<void, Error> draw_iter(PixelsIter && iter){
+        auto & self = *this;
+        while(true){
+            if(iter.has_next() == false) return Ok();
+            const auto pixel = iter.next();
+            const auto [x, y] = pixel.position;
+            const auto offset = x * self.size_.x + y;
+            if(offset >= buf_.size()) continue;
+            buf_[offset] = static_cast<Color>(pixel.color);
+        }
+        return Ok();
+    };
+
+    template<typename ColorsIter>
+    constexpr Result<void, Error> fill_contiguous(
+        const Rect2u16 area,
+        ColorsIter && iter
+    ){
+        auto & self = *this;
+        const auto x_range = area.get_x_range();
+        const auto y_range = area.get_y_range();
+
+        for(size_t y = y_range.start; y < y_range.stop; y++){
+            const auto offset_base = y * self.size_.x;
+            for(
+                size_t x = x_range.start; 
+                x < x_range.stop; 
+                x++
+            ){
+                const size_t offset = offset_base + x;
+                
+                // Check if iterator has more elements
+                if (!iter.has_next()) {
+                    return Ok(); // or return an error if preferred
+                }
+                
+                // Get next color from iterator
+                auto color = iter.next();
+                buf_[offset] = static_cast<Color>(color);
+            }
+        }
+        return Ok();
+    }
+
+    template<typename DestColor>
+    constexpr Result<void, Error> fill_solid(
+        const Rect2u16 area,
+        const DestColor color
+    ){
+        auto & self = *this;
+        const auto x_range = area.get_x_range();
+        const auto y_range = area.get_y_range();
+
+        for(size_t y = y_range.start; y < y_range.stop; y++){
+            const auto offset_base = y * self.size_.x;
+            for(
+                size_t offset = offset_base + x_range.start; 
+                offset < offset_base + x_range.stop; 
+                offset++
+            ){
+                buf_[offset] = static_cast<Color>(color);
+            }
+        }
+        return Ok();
     }
 private:
     std::span<Color> buf_;
@@ -246,9 +346,12 @@ void render_main(){
         buffer.data(), {IMG_WIDTH, IMG_HEIGHT}).unwrap();
 
     auto draw = [&]{
-        frame_span[1][1] = Binary::WHITE;
-        frame_span[2][1] = Binary::WHITE;
-        frame_span[3][3] = Binary::WHITE;
+        // frame_span[1][1] = Binary::WHITE;
+        // frame_span[2][1] = Binary::WHITE;
+        // frame_span[3][3] = Binary::WHITE;
+
+        // frame_span.fill_solid(Rect2u16(1,1,2,2), Binary::WHITE).examine();
+        frame_span.fill_contiguous(Rect2u16(1,1,2,2), RepeatIter(Binary::WHITE, 3)).examine();
     };
 
     draw();

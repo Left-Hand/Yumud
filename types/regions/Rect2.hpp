@@ -134,10 +134,15 @@ public:
 
     [[nodiscard]] __fast_inline constexpr T get_area() const {
         return ABS(size.x * size.y);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> get_center() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> center() const {
         return(position + size / 2);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> get_end() const {
-        return(position + size);}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> bottom_right() const {
+        return(position + size);
+    }
+
+    [[nodiscard]] __fast_inline constexpr Vec2<T> top_left() const {
+        return(position);
+    }
     
     [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> expand(const T val) const {
         if constexpr(std::is_integral_v<T> and std::is_signed_v<T>)

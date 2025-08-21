@@ -319,7 +319,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,co
 }
 
 IResult<> PainterBase::draw_roi(const Rect2u & rect){
-    Vec2u center = rect.get_center();
+    Vec2u center = rect.center();
     if(const auto res = draw_hollow_rect(rect); res.is_err()) return res;
     if(const auto res = draw_hri_line(center+Vec2u(-2,0), 5); res.is_err()) return res;
     if(const auto res = draw_ver_line(center+Vec2u(0,-2), 5); res.is_err()) return res;

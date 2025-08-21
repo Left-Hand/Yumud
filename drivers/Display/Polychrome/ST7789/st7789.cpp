@@ -62,8 +62,8 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     if(!need) return;
     #endif
 
-    const Vec2<uint16_t> p1 = offset_ + rect.position;
-    const Vec2<uint16_t> p2 = offset_ + rect.get_end() - Vec2<uint16_t>(1,1);
+    const Vec2<uint16_t> p1 = offset_ + rect.top_left();
+    const Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - Vec2<uint16_t>(1,1);
 
     if(const auto res = write_command(0x2a);
         res.is_err()) return res;

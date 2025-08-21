@@ -14,7 +14,7 @@ public:
 
 
     void update(
-        const Image<Gray> src, 
+        const Image<Gray> & src, 
         const Rect2u roi
     ) override {
         const auto vertexs = find_vertex(src, Gray(255), roi);
@@ -68,7 +68,7 @@ public:
         const auto y_range = roi.get_y_range();
 
         Vertexs ret;
-        auto center = roi.get_center();
+        auto center = roi.center();
 
         for(auto & item : ret){
             item = center;
