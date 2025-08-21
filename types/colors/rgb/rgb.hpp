@@ -41,7 +41,6 @@ struct Binary;
 struct HSV888;
 struct LAB888;
 struct XYZ888;
-struct Binary;
 struct Gray;
 struct IGray;
 

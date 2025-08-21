@@ -6,12 +6,12 @@
 namespace ymd{
 
 
-template<typename Obj, typename Policy>
+template<typename Shape, typename Policy>
 struct CacheOf{
 
 };
 
-template<typename Obj>
+template<typename Shape>
 struct BoundingBoxOf{
 
 };
@@ -22,31 +22,38 @@ struct ScanLine{
     T y;
 };
 
-template<typename Obj>
+template<typename Shape>
 struct is_placed_t:std::false_type{};
 
 
-template<typename Obj, typename T>
-requires (is_placed_t<Obj>::value == false)
+template<typename Shape, typename T>
+requires (is_placed_t<Shape>::value == false)
 struct WithPosition final{
-    const Obj & object;
+    const Shape & object;
     Vec2<T> position;
 };
 
 
-template<typename Obj, typename T>
-struct is_placed_t<WithPosition<Obj, T>>:std::true_type{};
+template<typename Shape, typename T>
+struct is_placed_t<WithPosition<Shape, T>>:std::true_type{};
 
-template<typename Obj, typename T>
-requires (is_placed_t<Obj>::value == false)
-struct BoundingBoxOf<WithPosition<Obj, T>>{
+template<typename Shape, typename T>
+requires (is_placed_t<Shape>::value == false)
+struct BoundingBoxOf<WithPosition<Shape, T>>{
     [[nodiscard]] __fast_inline static constexpr auto to_bounding_box(
-        const WithPosition<Obj, T> & shape
+        const WithPosition<Shape, T> & shape
     ){
-        return BoundingBoxOf<Obj>::to_bounding_box(shape.object).shift(shape.position);
+        return BoundingBoxOf<Shape>::to_bounding_box(shape.object).shift(shape.position);
     }
 };
 
+
+template<typename Shape>
+struct ScanLineIterator{
+    //static constexpr from(const Shape & shape);
+    //bool has_next() const;
+    //Option<ScanLine> next();
+};
 
 template<
     typename Target, 

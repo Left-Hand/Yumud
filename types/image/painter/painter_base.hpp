@@ -22,27 +22,31 @@ class String;
 class StringView;
 
 
+enum class RenderErrorKind:uint8_t{
+    ImageNotSet = 1,
+    AreaNotExist,
+    OutOfBound,
+    StartPointOutOfBound,
+    EndPointOutOfBound,
+    NegativeRadius,
+
+    NoFontFounded,  
+    NoEnglishFontFounded,
+    NoChineseFontFounded,
+    
+    StringLengthTooLong,
+    PointsTooLess,
+    Unfinished,
+    CropRectIsNone
+};
+
+DEF_ERROR_WITH_KIND(RenderError, RenderErrorKind)
+DEF_DERIVE_DEBUG(RenderErrorKind)
+
+
 struct PainterPrelude{
     using Cursor = Vec2u;
-
-    enum class Error_Kind:uint8_t{
-        ImageNotSet = 1,
-        AreaNotExist,
-        OutOfBound,
-        StartPointOutOfBound,
-        EndPointOutOfBound,
-        MinusRadius,
-        NoFontFounded,  
-        NoEnglishFontFounded,
-        NoChineseFontFounded,
-        StringLengthTooLong,
-        PointsTooLess,
-        Unfinished,
-        CropRectIsNone
-    };
-
-    DEF_ERROR_WITH_KIND(Error, Error_Kind)
-    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
+    using Error = RenderError;
 
     template<typename T = void>
     using IResult = Result<T, Error>;

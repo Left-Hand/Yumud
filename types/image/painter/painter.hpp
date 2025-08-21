@@ -97,7 +97,7 @@ public:
     [[nodiscard]]
     IResult<> draw_filled_rect(const Rect2u & rect){
         if(may_src_image_.is_none()) 
-            return Err(Error(Error_Kind::ImageNotSet));
+            return Err(Error(Error::Kind::ImageNotSet));
         auto & src_image = may_src_image_.unwrap();
         const Rect2u region = ({
             const auto may_region = src_image.size()
@@ -127,7 +127,7 @@ public:
     [[nodiscard]]
     IResult<> draw_line(const Vec2u & from, const Vec2u & to){
         if(may_src_image_.is_none()) 
-            return Err(Error(Error_Kind::ImageNotSet));
+            return Err(Error(Error::Kind::ImageNotSet));
 
         auto [x0, y0] = from;
         auto [x1, y1] = to;
@@ -171,9 +171,9 @@ public:
     [[nodiscard]]
     IResult<> draw_wchar(const Vec2u & pos, const wchar_t chr){
         if(may_src_image_.is_none())
-            return Err(Error(Error_Kind::ImageNotSet));
+            return Err(Error(Error::Kind::ImageNotSet));
         if(may_enfont_.is_none())
-            return Err(Error(Error_Kind::NoEnglishFontFounded));
+            return Err(Error(Error::Kind::NoEnglishFontFounded));
         auto & src_image = may_src_image_.unwrap();
         auto & enfont = may_enfont_.unwrap();
 
@@ -201,16 +201,16 @@ public:
     {
         AsciiIterator iter(str);
         if(may_src_image_.is_none())
-            return Err(Error(Error_Kind::ImageNotSet));
+            return Err(Error(Error::Kind::ImageNotSet));
         if(may_enfont_.is_none())
-            return Err(Error(Error_Kind::NoEnglishFontFounded));
+            return Err(Error(Error::Kind::NoEnglishFontFounded));
 
         auto & src_image = may_src_image_.unwrap();
         auto & enfont = may_enfont_.unwrap();
 
         for(size_t x = pos.x;;){
             if(x >= src_image.size().x){
-                return Err(Error(Error_Kind::StringLengthTooLong));
+                return Err(Error(Error::Kind::StringLengthTooLong));
             }
 
             if(not iter.has_next()) break;
@@ -231,11 +231,11 @@ public:
         GBKIterator iter(str);
 
         if(may_src_image_.is_none())
-            return Err(Error(Error_Kind::ImageNotSet));
+            return Err(Error(Error::Kind::ImageNotSet));
         if(may_chfont_.is_none())
-            return Err(Error(Error_Kind::NoChineseFontFounded));
+            return Err(Error(Error::Kind::NoChineseFontFounded));
         if(may_enfont_.is_none())
-            return Err(Error(Error_Kind::NoEnglishFontFounded));
+            return Err(Error(Error::Kind::NoEnglishFontFounded));
 
         auto & src_image = may_src_image_.unwrap();
         auto & chfont = may_chfont_.unwrap();
@@ -243,7 +243,7 @@ public:
 
         for(size_t x = pos.x;;){
             if(x >= src_image.size().x){
-                return Err(Error(Error_Kind::StringLengthTooLong));
+                return Err(Error(Error::Kind::StringLengthTooLong));
             }
 
             if(not iter.has_next()) break;

@@ -59,7 +59,8 @@ int main(){
     // ads7830_main();
     // math_main();
     // polar_robot_main();
-    nuedc_2025e_main();
+    // nuedc_2025e_main();
+    render_main();
     // laser_ctl_main();
 
     // bldc_main();
