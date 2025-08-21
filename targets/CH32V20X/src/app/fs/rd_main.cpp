@@ -117,6 +117,12 @@ struct FrameSpan{
         return ToLineSpanIter(*this);
     }
 
+    constexpr LineSpan<Color> operator [](const size_t y){
+        const auto pdata = buf_.data();
+        const auto width = size_.x;
+        return LineSpan<Color>(std::span<Color>(pdata + y * width, width), y);
+    }
+
     constexpr Rect2u to_bounding_box() const {
         return Rect2u::from_size(size_);
     }
@@ -167,12 +173,14 @@ OutputStream & operator << (OutputStream & os, FrameSpan<T> & frame_span){
     return os;
 }
 
-void render_main(){
-    static constexpr auto UART_BAUD = 576000u;
+static constexpr auto UART_BAUD = 576000u;
 
-    static constexpr auto IMG_WIDTH = 32u;
-    static constexpr auto IMG_HEIGHT = 18u;
-    
+static constexpr auto IMG_WIDTH = 32u;
+static constexpr auto IMG_HEIGHT = 18u;
+
+void render_main(){
+
+
     auto init_debugger = []{
         auto & DBG_UART = hal::uart2;
 
@@ -199,3 +207,39 @@ void render_main(){
         clock::delay(5ms);
     }
 };
+
+template<typename Iter>
+static constexpr size_t count_iter(Iter && iter){
+    size_t cnt = 0;
+    while(true){
+        if(iter.has_next()){
+            (void)iter.next();
+            cnt++;
+        }else{
+            break;
+        }
+    }
+
+    return cnt;
+}
+
+
+#if 0
+[[maybe_unused]] static void static_test(){
+    {
+        static constexpr auto len = []{
+            std::array<Binary, IMG_WIDTH * IMG_HEIGHT> buffer;
+
+            auto frame_span = FrameSpan<Binary>::from_ptr_and_size(
+                buffer.data(), {IMG_WIDTH, IMG_HEIGHT}).unwrap();
+
+            auto iter = frame_span.iter();
+
+            return count_iter(iter);
+        }();
+
+        static_assert(len == IMG_HEIGHT);
+    }
+}
+
+#endif
