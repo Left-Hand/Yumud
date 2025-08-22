@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 #include "core/stream/ostream.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/dma/dma.hpp"
 
@@ -27,12 +27,12 @@ void adc_tb(OutputStream & logger){
 
     adc1.init(
         {
-            AdcChannelConfig{AdcChannelEnum::CH0},
+            AdcChannelConfig{AdcChannelNth::CH0},
         },{
-            AdcChannelConfig{AdcChannelEnum::TEMP, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::TEMP, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::VREF, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::CH0, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::CH1, AdcCycleEnum::T239_5},
         });
 
     adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
@@ -81,10 +81,10 @@ void adc_tb(OutputStream & logger){
     #ifdef ADC_TB_REGULAR_BLOCKING
     adc1.init(
         {
-            AdcChannelConfig{AdcChannelEnum::TEMP, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::TEMP, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelNth::VREF, AdcCycleEnum::T239_5},
         },{
-            // AdcChannelConfig{AdcChannelEnum::CH0},
+            // AdcChannelConfig{AdcChannelNth::CH0},
         });
 
     while(true){
@@ -112,10 +112,10 @@ void adc_tb(OutputStream & logger){
         {
             AdcChannelConfig{AdcChannelNth::TEMP, AdcSampleCycles::T239_5},
             AdcChannelConfig{AdcChannelNth::VREF, AdcSampleCycles::T239_5},
-            // AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
-            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
+            // AdcChannelConfig{AdcChannelNth::CH0, AdcCycleEnum::T239_5},
+            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycleEnum::T239_5},
         },{
-            // AdcChannelConfig{AdcChannelEnum::CH0},
+            // AdcChannelConfig{AdcChannelNth::CH0},
         }, {});
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);

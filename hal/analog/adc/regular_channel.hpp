@@ -14,8 +14,8 @@ protected:
     friend class AdcCompanion;
 
 public:
-    AdcRegularChannel(ADC_TypeDef * _instance,const ChannelNth _channel, const uint8_t _rank):
-        AdcChannelOnChip(_instance, _channel, _rank){;}
+    AdcRegularChannel(ADC_TypeDef * _instance,const ChannelNth nth, const uint8_t _rank):
+        AdcChannelOnChip(_instance, nth, _rank){;}
 
 
     real_t uni() override{
@@ -23,7 +23,7 @@ public:
     }
 
     void set_sample_cycles(const SampleCycles cycles) override{
-        ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
+        ADC_RegularChannelConfig(inst_, std::bit_cast<uint8_t>(nth_), rank, (uint8_t)cycles);
     }
 
 };

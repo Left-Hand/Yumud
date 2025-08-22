@@ -8,8 +8,8 @@ class AdcInjectedChannel: public AdcChannelOnChip{
 protected:
     uint8_t mask;
 
-    void setCaliData(const uint16_t _cali_data){
-        ADC_SetInjectedOffset(instance, mask, _cali_data);
+    void set_cali_data(const uint16_t _cali_data){
+        ADC_SetInjectedOffset(inst_, mask, _cali_data);
     }
 
     friend class AdcOnChip;

@@ -90,7 +90,7 @@ struct AdcChannelConfig{
     using ChannelNth = AdcChannelNth;
     using SampleCycles = AdcSampleCycles;
 
-    ChannelNth channel;
+    ChannelNth nth;
     SampleCycles cycles;
 };
 
@@ -277,9 +277,9 @@ protected:
         injected_cnt = cnt;
     }
 
-    void set_regular_sample_time(const ChannelNth channel,  const SampleCycles _sample_time){
+    void set_regular_sample_time(const ChannelNth nth,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
-        uint8_t ch = (uint8_t)channel;
+        uint8_t ch = std::bit_cast<uint8_t>(nth);
         uint8_t offset = ch % 10;
         offset *= 3;
 

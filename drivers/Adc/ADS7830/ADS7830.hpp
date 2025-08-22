@@ -206,7 +206,7 @@ public:
 
     IResult<> validate();
 
-    IResult<ConvData> read_pos_channel(const ChannelNth ch);
+    IResult<ConvData> read_pos_channel(const ChannelNth nth);
     IResult<ConvData> read_channel(const ChannelSelection ch);
 
     void set_pwdn_sel(const PowerDownSel sel){

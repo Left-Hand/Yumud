@@ -1,5 +1,5 @@
 #include "src/testbench/tb.h"
-#include "hal/bus/usb/usbfs/usbfs.hpp"
+#include "hal/usb/usbfs/usbfs.hpp"
 
 #include "core/clock/clock.hpp"
 

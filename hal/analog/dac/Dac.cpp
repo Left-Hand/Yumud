@@ -40,7 +40,7 @@ DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
 
 
 
-uint32_t DacChannel::get_channel_mask(const ChannelNth idx){
+uint32_t DacChannel::get_channel_mask(const ChannelNth nth){
     switch(idx){
         default:
         case ChannelNth::_1:

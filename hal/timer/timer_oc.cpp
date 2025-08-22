@@ -7,15 +7,15 @@ using namespace ymd::hal;
 
 
 void TimerOut::install_to_pin(const Enable en){
-    Gpio & io = details::get_pin(inst_, idx_);
+    Gpio & io = details::get_pin(inst_, nth_);
     if(en == EN) io.afpp();
     // else io.inflt();
 }
 
 
 void TimerOut::set_valid_level(const BoolLevel level){
-    if(level == LOW) inst_->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
-    else inst_->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
+    if(level == LOW) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2 + 1));
+    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2 + 1)));
 }
 
 void TimerOC::init(const TimerOcPwmConfig & cfg){
@@ -36,7 +36,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
 
     const uint8_t raw_code = uint8_t(mode) << 4;
 
-    switch(idx_){
+    switch(nth_){
         default: ymd::sys::abort();
         case CH1:{
             uint16_t tmpccmrx = inst_->CHCTLR1;
@@ -82,14 +82,14 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
 
 }
 void TimerOut::enable_output(const Enable en){
-    if(en == EN) inst_->CCER |= (1 << ((uint8_t)idx_ * 2));
-    else inst_->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
+    if(en == EN) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2));
+    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2)));
 }
 
 void TimerOC::enable_cvr_sync(const Enable en){
     using enum ChannelNth;
 
-    switch(idx_){
+    switch(nth_){
         case CH1:
             TIM_OC1PreloadConfig(inst_, (en == EN) ? 
                 TIM_OCPreload_Enable : TIM_OCPreload_Disable);
@@ -113,9 +113,9 @@ void TimerOC::enable_cvr_sync(const Enable en){
 }
 
 Gpio & TimerOC::io(){
-    return details::get_pin(inst_, idx_);
+    return details::get_pin(inst_, nth_);
 }
 
 Gpio & TimerOCN::io(){
-    return details::get_pin(inst_, idx_);
+    return details::get_pin(inst_, nth_);
 }

@@ -14,11 +14,11 @@
 #include "core/utils/delayed_semphr.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/opa/opa.hpp"
+#include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
@@ -291,7 +291,7 @@ void nuedc_2025e_main(){
     DEBUGGER.no_brackets();
 
     auto & spi = hal::spi1;
-    auto & timer = hal::timer1;
+    auto & timer1 = hal::timer1;
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
@@ -303,9 +303,9 @@ void nuedc_2025e_main(){
     auto & mp6540_nslp_gpio_ = hal::PB<14>();
     auto & mp6540_nfault_gpio_ = hal::PA<7>();
 
-    auto & pwm_u = timer.oc<1>();
-    auto & pwm_v = timer.oc<2>();
-    auto & pwm_w = timer.oc<3>(); 
+    auto & pwm_u = timer1.oc<1>();
+    auto & pwm_v = timer1.oc<2>();
+    auto & pwm_w = timer1.oc<3>(); 
 
     led_red_gpio_.outpp(); 
     led_blue_gpio_.outpp(); 
@@ -352,13 +352,13 @@ void nuedc_2025e_main(){
 
     mp6540_nslp_gpio_.outpp(LOW);
 
-    timer.init({
+    timer1.init({
         .freq = CHOPPER_FREQ, 
         .mode = hal::TimerCountMode::CenterAlignedUpTrig
     });
 
-    timer.oc<4>().init({.install_en = DISEN});
-    timer.oc<4>().cvr() = timer.arr() - 1;
+    timer1.oc<4>().init({.install_en = DISEN});
+    timer1.oc<4>().cvr() = timer1.arr() - 1;
 
     pwm_u.init({});
     pwm_v.init({});
@@ -757,9 +757,9 @@ void nuedc_2025e_main(){
             }
         };
 
-        auto dispatch_msg = [&](const CommandKind cmd,const std::span<const uint8_t> payload){
+        auto dispatch_msg = [&](const CommandKind kind,const std::span<const uint8_t> payload){
 
-            switch(cmd){
+            switch(kind){
             case CommandKind::ResetNode:
                 sys::reset();
                 break;

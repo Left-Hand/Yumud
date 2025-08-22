@@ -23,14 +23,14 @@ public:
 protected:
     TIM_TypeDef * inst_;
 
-    const ChannelNth idx_;
+    const ChannelNth nth_;
 
     static volatile uint16_t & from_channel_to_cvr(
-        TIM_TypeDef * timer, const ChannelNth _channel);
+        TIM_TypeDef * timer, const ChannelNth nth);
 
-    TimerChannel(TIM_TypeDef * inst, const ChannelNth idx):
+    TimerChannel(TIM_TypeDef * inst, const ChannelNth nth):
         inst_(inst), 
-        idx_(idx){;}
+        nth_(nth){;}
 };
 
 }

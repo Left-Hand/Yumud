@@ -7,13 +7,13 @@ AdcInjectedChannel::AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannel
         mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
 
 void AdcInjectedChannel::set_sample_cycles(const AdcSampleCycles cycles){
-    ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
+    ADC_InjectedChannelConfig(inst_, mask, rank, (uint8_t)cycles);
 }
 
 uint16_t AdcInjectedChannel::data(){
-    return ADC_GetInjectedConversionValue(instance, mask);
+    return ADC_GetInjectedConversionValue(inst_, mask);
 }
 
 real_t AdcInjectedChannel::uni(){
-    return iq_t<18>(ADC_GetInjectedConversionValue(instance, mask)) >> 12;
+    return iq_t<18>(ADC_GetInjectedConversionValue(inst_, mask)) >> 12;
 }

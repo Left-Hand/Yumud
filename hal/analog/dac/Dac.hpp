@@ -13,7 +13,7 @@ public:
     using Alignment = DacUtils::Alignment;
 protected:
     DAC_TypeDef * instance_;
-    const ChannelNth idx_;
+    const ChannelNth nth;
     const uint32_t channel_mask_;
     Alignment align_ = Alignment::R12;
 
@@ -28,8 +28,8 @@ protected:
 
     void settle();
 
-    static uint32_t get_channel_mask(const ChannelNth idx);
-    // static uint32_t get_channel_mask(const ChannelNth idx);
+    static uint32_t get_channel_mask(const ChannelNth nth);
+    // static uint32_t get_channel_mask(const ChannelNth nth);
 
 public:
     void init();

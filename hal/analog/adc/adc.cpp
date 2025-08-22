@@ -28,9 +28,9 @@ void AdcPrimary::init(
 
     bool temp_verf_activation = false;
 
-    auto channel_is_temp_or_vref = [](const ChannelNth channel_index){
-        return channel_index == ChannelNth::TEMP or
-                channel_index == ChannelNth::VREF;
+    auto channel_is_temp_or_vref = [](const ChannelNth nth){
+        return nth == ChannelNth::TEMP or
+                nth == ChannelNth::VREF;
     };
 
     { 
@@ -40,13 +40,13 @@ void AdcPrimary::init(
             i++;
             ADC_RegularChannelConfig(
                 inst_,
-                static_cast<uint8_t>(regular_cfg.channel),
+                static_cast<uint8_t>(regular_cfg.nth),
                 i,
                 static_cast<uint8_t>(regular_cfg.cycles)
             );
-            adc_details::install_pin(regular_cfg.channel);
+            adc_details::install_pin(regular_cfg.nth);
 
-            temp_verf_activation |= channel_is_temp_or_vref(regular_cfg.channel);
+            temp_verf_activation |= channel_is_temp_or_vref(regular_cfg.nth);
 
             if(i > 16) break;
         }
@@ -60,7 +60,7 @@ void AdcPrimary::init(
 
             ADC_InjectedChannelConfig(
                 inst_,
-                static_cast<uint8_t>(injected_cfg.channel),
+                static_cast<uint8_t>(injected_cfg.nth),
                 i,
                 static_cast<uint8_t>(injected_cfg.cycles));
 
@@ -68,9 +68,9 @@ void AdcPrimary::init(
                 inst_, ADC_InjectedChannel_1 + 
                 (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
                 // offset can`t be negative
-            adc_details::install_pin(injected_cfg.channel);
+            adc_details::install_pin(injected_cfg.nth);
 
-            temp_verf_activation |= channel_is_temp_or_vref(injected_cfg.channel);
+            temp_verf_activation |= channel_is_temp_or_vref(injected_cfg.nth);
 
             if(i > 4) break;
         }

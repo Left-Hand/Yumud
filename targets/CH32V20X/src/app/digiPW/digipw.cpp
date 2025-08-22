@@ -15,7 +15,7 @@
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
 
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
