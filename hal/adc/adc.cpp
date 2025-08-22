@@ -28,9 +28,9 @@ void AdcPrimary::init(
 
     bool temp_verf_activation = false;
 
-    auto channel_is_temp_or_vref = [](const ChannelIndex channel_index){
-        return channel_index == ChannelIndex::TEMP or
-                channel_index == ChannelIndex::VREF;
+    auto channel_is_temp_or_vref = [](const ChannelNth channel_index){
+        return channel_index == ChannelNth::TEMP or
+                channel_index == ChannelNth::VREF;
     };
 
     { 

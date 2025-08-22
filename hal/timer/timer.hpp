@@ -193,10 +193,10 @@ public:
     GenericTimer(TIM_TypeDef * _base):
         BasicTimer(_base),
         channels{
-            TimerOC(inst_, TimerChannel::ChannelIndex::CH1),
-            TimerOC(inst_, TimerChannel::ChannelIndex::CH2),
-            TimerOC(inst_, TimerChannel::ChannelIndex::CH3),
-            TimerOC(inst_, TimerChannel::ChannelIndex::CH4)
+            TimerOC(inst_, TimerChannel::ChannelNth::CH1),
+            TimerOC(inst_, TimerChannel::ChannelNth::CH2),
+            TimerOC(inst_, TimerChannel::ChannelNth::CH3),
+            TimerOC(inst_, TimerChannel::ChannelNth::CH4)
         }{;}
 
     void init_as_encoder(const Mode mode = Mode::Up);
@@ -257,9 +257,9 @@ public:
     AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
             n_channels{
-                TimerOCN(inst_, TimerChannel::ChannelIndex::CH1N),
-                TimerOCN(inst_, TimerChannel::ChannelIndex::CH2N),
-                TimerOCN(inst_, TimerChannel::ChannelIndex::CH3N),
+                TimerOCN(inst_, TimerChannel::ChannelNth::CH1N),
+                TimerOCN(inst_, TimerChannel::ChannelNth::CH2N),
+                TimerOCN(inst_, TimerChannel::ChannelNth::CH3N),
             }{;}
 
     void init_bdtr(const Nanoseconds ns, const LockLevel level = LockLevel::Off);

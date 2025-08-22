@@ -437,10 +437,10 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     auto & adc = hal::adc1;
     adc.init(
         {
-            {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
         }, {}
     );
 
@@ -526,10 +526,10 @@ void mystepper_main(){
     auto & adc = hal::adc1;
     adc.init(
         {
-            {hal::AdcChannelIndex::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelIndex::CH3, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelIndex::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
         },
         {}
     );

@@ -24,7 +24,7 @@ struct FDC2X1X_Prelude{
     };
 
     enum class Error_Kind:uint8_t{
-        ChannelIndexOutOfRange
+        ChannelNthOutOfRange
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -247,7 +247,7 @@ public:
     }
 
     IResult<bool> is_conv_done(uint8_t idx){
-        if(idx > 3) return Err(Error::ChannelIndexOutOfRange);
+        if(idx > 3) return Err(Error::ChannelNthOutOfRange);
 
         if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
             res.is_err()) return Err(res.unwrap_err());
@@ -267,7 +267,7 @@ public:
     }
 
     IResult<uint32_t> get_data(uint8_t idx){
-        if(idx > 3)  return Err(Error::ChannelIndexOutOfRange);
+        if(idx > 3)  return Err(Error::ChannelNthOutOfRange);
 
         uint32_t ret = 0;
         auto & highreg = conv_data_regs[idx].high;

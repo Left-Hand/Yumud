@@ -42,11 +42,11 @@ IResult<> INA3221::init(const Config & cfg){
     if(const auto res = this->validate(); 
         res.is_err()) return CHECKRES(res, "INA3221 verify failed");
 
-    if(const auto res = this->enable_channel(ChannelIndex::CH1);
+    if(const auto res = this->enable_channel(ChannelNth::CH1);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelIndex::CH2);
+    if(const auto res = this->enable_channel(ChannelNth::CH2);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelIndex::CH3);
+    if(const auto res = this->enable_channel(ChannelNth::CH3);
         res.is_err()) return res;
     if(const auto res = this->reconf(cfg);
         res.is_err()) return res;
@@ -86,7 +86,7 @@ IResult<> INA3221::validate(){
     return Ok();
 }
 
-IResult<> INA3221::update(const ChannelIndex index){
+IResult<> INA3221::update(const ChannelNth index){
     #define READ_DUAL_REG(r1, r2)\
         if(const auto res = read_reg(r1); res.is_err()) return CHECKRES(res);\
         if(const auto res = read_reg(r2); res.is_err()) return CHECKRES(res);\
@@ -95,11 +95,11 @@ IResult<> INA3221::update(const ChannelIndex index){
     // update bus and shunt
     switch(index){
         default: __builtin_unreachable();
-        case ChannelIndex::CH1: 
+        case ChannelNth::CH1: 
             READ_DUAL_REG(shuntvolt1_reg, busvolt1_reg);
-        case ChannelIndex::CH2: 
+        case ChannelNth::CH2: 
             READ_DUAL_REG(shuntvolt2_reg, busvolt2_reg);
-        case ChannelIndex::CH3: 
+        case ChannelNth::CH3: 
             READ_DUAL_REG(shuntvolt3_reg, busvolt3_reg);
     }
 
@@ -112,17 +112,17 @@ IResult<> INA3221::set_average_times(const AverageTimes times){
     return write_reg(reg);
 }
 
-IResult<> INA3221::enable_channel(const ChannelIndex index, const Enable en){
+IResult<> INA3221::enable_channel(const ChannelNth index, const Enable en){
     auto reg = RegCopy(config_reg);
     switch(index){
         default: __builtin_unreachable();
-        case ChannelIndex::CH1:
+        case ChannelNth::CH1:
             reg.ch1_en = en == EN;
             break;
-        case ChannelIndex::CH2:
+        case ChannelNth::CH2:
             reg.ch2_en = en == EN;
             break;
-        case ChannelIndex::CH3:
+        case ChannelNth::CH3:
             reg.ch3_en = en == EN;
             break;
     }
@@ -152,15 +152,15 @@ IResult<> INA3221::reset(){
 }
 
 
-IResult<int> INA3221::get_shunt_volt_uv(const ChannelIndex index){
+IResult<int> INA3221::get_shunt_volt_uv(const ChannelNth index){
 
     // RegAddress addr;
     const R16_ShuntVolt & reg = [&]() -> const R16_ShuntVolt &{
         switch(index){
             default: __builtin_unreachable();
-            case ChannelIndex::CH1:return shuntvolt1_reg;
-            case ChannelIndex::CH2:return shuntvolt2_reg;
-            case ChannelIndex::CH3:return shuntvolt3_reg;
+            case ChannelNth::CH1:return shuntvolt1_reg;
+            case ChannelNth::CH2:return shuntvolt2_reg;
+            case ChannelNth::CH3:return shuntvolt3_reg;
         }
     }();
 
@@ -171,14 +171,14 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelIndex index){
 
 
 
-IResult<int> INA3221::get_bus_volt_mv(const ChannelIndex index){
+IResult<int> INA3221::get_bus_volt_mv(const ChannelNth index){
     // RegAddress addr;
     const R16_BusVolt & reg = [&]() -> const R16_BusVolt &{
         switch(index){
             default: __builtin_unreachable();
-            case ChannelIndex::CH1:return busvolt1_reg;
-            case ChannelIndex::CH2:return busvolt2_reg;
-            case ChannelIndex::CH3:return busvolt3_reg;
+            case ChannelNth::CH1:return busvolt1_reg;
+            case ChannelNth::CH2:return busvolt2_reg;
+            case ChannelNth::CH3:return busvolt3_reg;
         }
     }();
 
@@ -189,25 +189,25 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelIndex index){
 }
 
 
-IResult<real_t> INA3221::get_shunt_volt(const ChannelIndex index){
+IResult<real_t> INA3221::get_shunt_volt(const ChannelNth index){
     const auto res = get_shunt_volt_uv(index);
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok(iq_t<16>(iq_t<8>(res.unwrap()) / 100) / 10000);
 }
 
-IResult<real_t> INA3221::get_bus_volt(const ChannelIndex index){
+IResult<real_t> INA3221::get_bus_volt(const ChannelNth index){
     const auto res = get_bus_volt_mv(index);
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok(real_t(res.unwrap()) / 1000);
 }
 
 
-IResult<> INA3221::set_instant_ovc(const ChannelIndex index, const real_t volt){
+IResult<> INA3221::set_instant_ovc(const ChannelNth index, const real_t volt){
     const RegAddress addr = [&]{
         switch(index){
-            case ChannelIndex::CH1: return instant_ovc1_reg.address; 
-            case ChannelIndex::CH2: return instant_ovc1_reg.address; 
-            case ChannelIndex::CH3: return instant_ovc1_reg.address; 
+            case ChannelNth::CH1: return instant_ovc1_reg.address; 
+            case ChannelNth::CH2: return instant_ovc1_reg.address; 
+            case ChannelNth::CH3: return instant_ovc1_reg.address; 
             default: __builtin_unreachable();
         }
     }();
@@ -216,12 +216,12 @@ IResult<> INA3221::set_instant_ovc(const ChannelIndex index, const real_t volt){
 }
 
 
-IResult<> INA3221::set_constant_ovc(const ChannelIndex index, const real_t volt){
+IResult<> INA3221::set_constant_ovc(const ChannelNth index, const real_t volt){
     const RegAddress addr = [&]{
         switch(index){
-            case ChannelIndex::CH1: return constant_ovc1_reg.address; 
-            case ChannelIndex::CH2: return constant_ovc1_reg.address; 
-            case ChannelIndex::CH3: return constant_ovc1_reg.address; 
+            case ChannelNth::CH1: return constant_ovc1_reg.address; 
+            case ChannelNth::CH2: return constant_ovc1_reg.address; 
+            case ChannelNth::CH3: return constant_ovc1_reg.address; 
             default: __builtin_unreachable();
         }
     }();

@@ -365,9 +365,9 @@ public:
         
         adc1.init(
             {
-                {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+                {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
             },{
-                {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+                {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
             }, {}
         );
 

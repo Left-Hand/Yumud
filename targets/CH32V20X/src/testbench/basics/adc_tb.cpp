@@ -110,8 +110,8 @@ void adc_tb(OutputStream & logger){
 
     hal::adc1.init(
         {
-            AdcChannelConfig{AdcChannelIndex::TEMP, AdcSampleCycles::T239_5},
-            AdcChannelConfig{AdcChannelIndex::VREF, AdcSampleCycles::T239_5},
+            AdcChannelConfig{AdcChannelNth::TEMP, AdcSampleCycles::T239_5},
+            AdcChannelConfig{AdcChannelNth::VREF, AdcSampleCycles::T239_5},
             // AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
             // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
         },{

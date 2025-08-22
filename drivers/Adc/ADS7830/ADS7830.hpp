@@ -38,7 +38,7 @@ struct ADS7830_Prelude{
         RefOn_AdcOn = 0b11,
     };
 
-    struct ChannelIndex{
+    struct ChannelNth{
         enum class Kind:uint8_t{
             CH0 = 0,
             CH1,
@@ -53,18 +53,18 @@ struct ADS7830_Prelude{
 
         using enum Kind;
 
-        constexpr ChannelIndex(Kind kind):kind_(kind){}
+        constexpr ChannelNth(Kind kind):kind_(kind){}
 
-        static constexpr Option<ChannelIndex> from_index(uint8_t nth){
+        static constexpr Option<ChannelNth> from_index(uint8_t nth){
             if(nth >= 8) return None;
-            return Some(ChannelIndex(std::bit_cast<Kind>(nth)));
+            return Some(ChannelNth(std::bit_cast<Kind>(nth)));
         }
 
         constexpr Kind kind() const {
             return kind_;
         }
 
-        constexpr bool operator == (ChannelIndex const & rhs) const{
+        constexpr bool operator == (ChannelNth const & rhs) const{
             return kind_ == rhs.kind_;
         }
 
@@ -104,16 +104,16 @@ struct ADS7830_Prelude{
 
         static constexpr Option<ChannelSelection> 
             from_pos(
-            const ChannelIndex pos){
-            return from_pos_and_neg(pos, ChannelIndex::COM);
+            const ChannelNth pos){
+            return from_pos_and_neg(pos, ChannelNth::COM);
         }
 
         static constexpr Option<ChannelSelection> 
             from_pos_and_neg(
-            const ChannelIndex pos, 
-            const ChannelIndex neg
+            const ChannelNth pos, 
+            const ChannelNth neg
         ){
-            return posneg2kind(pos, ChannelIndex::COM).
+            return posneg2kind(pos, ChannelNth::COM).
                 map([](const Kind kind){return ChannelSelection(kind);});
         }
 
@@ -122,27 +122,27 @@ struct ADS7830_Prelude{
         Kind kind_;
 
         static constexpr Option<Kind> posneg2kind(
-            const ChannelIndex pos,
-            const ChannelIndex neg
+            const ChannelNth pos,
+            const ChannelNth neg
         ){
             constexpr auto map = std::to_array<
-                std::pair<std::pair<ChannelIndex, ChannelIndex>, Kind>>({
-                std::make_pair(std::make_pair(ChannelIndex::CH0, ChannelIndex::CH1), Kind::P0N1),
-                std::make_pair(std::make_pair(ChannelIndex::CH2, ChannelIndex::CH3), Kind::P2N3),
-                std::make_pair(std::make_pair(ChannelIndex::CH4, ChannelIndex::CH5), Kind::P4N5),
-                std::make_pair(std::make_pair(ChannelIndex::CH6, ChannelIndex::CH7), Kind::P6N7),
-                std::make_pair(std::make_pair(ChannelIndex::CH1, ChannelIndex::CH0), Kind::P1N0),
-                std::make_pair(std::make_pair(ChannelIndex::CH3, ChannelIndex::CH2), Kind::P3N2),
-                std::make_pair(std::make_pair(ChannelIndex::CH5, ChannelIndex::CH4), Kind::P5N4),
-                std::make_pair(std::make_pair(ChannelIndex::CH7, ChannelIndex::CH6), Kind::P7N6),
-                std::make_pair(std::make_pair(ChannelIndex::CH0, ChannelIndex::COM), Kind::P0NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH2, ChannelIndex::COM), Kind::P2NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH4, ChannelIndex::COM), Kind::P4NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH6, ChannelIndex::COM), Kind::P6NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH1, ChannelIndex::COM), Kind::P1NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH3, ChannelIndex::COM), Kind::P3NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH5, ChannelIndex::COM), Kind::P5NC),
-                std::make_pair(std::make_pair(ChannelIndex::CH7, ChannelIndex::COM), Kind::P7NC),
+                std::pair<std::pair<ChannelNth, ChannelNth>, Kind>>({
+                std::make_pair(std::make_pair(ChannelNth::CH0, ChannelNth::CH1), Kind::P0N1),
+                std::make_pair(std::make_pair(ChannelNth::CH2, ChannelNth::CH3), Kind::P2N3),
+                std::make_pair(std::make_pair(ChannelNth::CH4, ChannelNth::CH5), Kind::P4N5),
+                std::make_pair(std::make_pair(ChannelNth::CH6, ChannelNth::CH7), Kind::P6N7),
+                std::make_pair(std::make_pair(ChannelNth::CH1, ChannelNth::CH0), Kind::P1N0),
+                std::make_pair(std::make_pair(ChannelNth::CH3, ChannelNth::CH2), Kind::P3N2),
+                std::make_pair(std::make_pair(ChannelNth::CH5, ChannelNth::CH4), Kind::P5N4),
+                std::make_pair(std::make_pair(ChannelNth::CH7, ChannelNth::CH6), Kind::P7N6),
+                std::make_pair(std::make_pair(ChannelNth::CH0, ChannelNth::COM), Kind::P0NC),
+                std::make_pair(std::make_pair(ChannelNth::CH2, ChannelNth::COM), Kind::P2NC),
+                std::make_pair(std::make_pair(ChannelNth::CH4, ChannelNth::COM), Kind::P4NC),
+                std::make_pair(std::make_pair(ChannelNth::CH6, ChannelNth::COM), Kind::P6NC),
+                std::make_pair(std::make_pair(ChannelNth::CH1, ChannelNth::COM), Kind::P1NC),
+                std::make_pair(std::make_pair(ChannelNth::CH3, ChannelNth::COM), Kind::P3NC),
+                std::make_pair(std::make_pair(ChannelNth::CH5, ChannelNth::COM), Kind::P5NC),
+                std::make_pair(std::make_pair(ChannelNth::CH7, ChannelNth::COM), Kind::P7NC),
             });
 
             for(const auto & [key, value] : map){
@@ -206,7 +206,7 @@ public:
 
     IResult<> validate();
 
-    IResult<ConvData> read_pos_channel(const ChannelIndex ch);
+    IResult<ConvData> read_pos_channel(const ChannelNth ch);
     IResult<ConvData> read_channel(const ChannelSelection ch);
 
     void set_pwdn_sel(const PowerDownSel sel){

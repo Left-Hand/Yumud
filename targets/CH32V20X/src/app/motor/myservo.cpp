@@ -275,10 +275,10 @@ void myservo_main(){
     auto init_adc = []{
         adc1.init(
             {
-                {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+                {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
             },{
-                {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
-                {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
+                {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
+                {AdcChannelNth::CH1, AdcSampleCycles::T28_5},
             },
             {}
         );

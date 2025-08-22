@@ -14,7 +14,7 @@ protected:
     friend class AdcCompanion;
 
 public:
-    AdcRegularChannel(ADC_TypeDef * _instance,const ChannelIndex _channel, const uint8_t _rank):
+    AdcRegularChannel(ADC_TypeDef * _instance,const ChannelNth _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank){;}
 
 

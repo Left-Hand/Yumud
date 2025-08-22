@@ -9,7 +9,7 @@ class Gpio;
 
 class TimerOut: public TimerChannel{
 protected:
-    TimerOut(TIM_TypeDef * inst, const ChannelIndex ch_idx):
+    TimerOut(TIM_TypeDef * inst, const ChannelNth ch_idx):
         TimerChannel(inst, ch_idx){;}
     void install_to_pin(const Enable en = EN);
 public:
@@ -39,7 +39,7 @@ protected:
     volatile uint16_t & cvr_;
     volatile uint16_t & arr_;
 public:
-    TimerOC(TIM_TypeDef * inst, const ChannelIndex ch_idx):
+    TimerOC(TIM_TypeDef * inst, const ChannelNth ch_idx):
         TimerOut(inst, ch_idx), 
             cvr_(from_channel_to_cvr(inst, ch_idx)), 
             arr_(inst_->ATRLR){;}
@@ -68,7 +68,7 @@ class TimerOCN final:public TimerOut{
 public:
     TimerOCN(
         TIM_TypeDef * _base, 
-        const ChannelIndex ch_idx):
+        const ChannelNth ch_idx):
         TimerOut(_base, ch_idx)
         {;}
 

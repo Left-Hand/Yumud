@@ -108,9 +108,9 @@ void sincos_pwm_main(){
 
     adc1.init(
         {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T28_5},
         }, {}
     );
 

@@ -190,17 +190,17 @@ static constexpr bool is_ringback_msg(const hal::CanMsg & msg, const NodeRole se
 
 [[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
-    using hal::AdcChannelIndex;
+    using hal::AdcChannelNth;
     using hal::AdcSampleCycles;
 
     adc.init(
         {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
         }, {}
     );
 

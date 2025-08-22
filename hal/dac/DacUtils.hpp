@@ -5,7 +5,7 @@
 
 namespace ymd::hal::DacUtils{
 
-enum class ChannelIndex:uint8_t{
+enum class ChannelNth:uint8_t{
     _1,
     _2
 };

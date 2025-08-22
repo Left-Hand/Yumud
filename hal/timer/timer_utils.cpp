@@ -66,7 +66,7 @@ bool is_advanced_timer(const TIM_TypeDef * inst){
 }
 
 IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
-    using enum TimerChannelIndex;
+    using enum TimerChannelNth;
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
     case TIM##x##_BASE:\
@@ -141,8 +141,8 @@ IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
 }
 
 
-Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelIndex channel){    
-    using enum TimerChannelIndex;
+Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelNth channel){    
+    using enum TimerChannelNth;
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
     case TIM##x##_BASE:\

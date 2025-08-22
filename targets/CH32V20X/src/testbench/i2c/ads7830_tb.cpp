@@ -40,7 +40,7 @@ void ads7830_main(){
 
         auto read_channel = [&](size_t i) -> uint8_t{
             return ads7830.read_pos_channel(
-                ADS7830::ChannelIndex::from_index(i).unwrap()
+                ADS7830::ChannelNth::from_index(i).unwrap()
             ).examine();
         };
     

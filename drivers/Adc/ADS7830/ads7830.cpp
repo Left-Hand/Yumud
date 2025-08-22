@@ -26,7 +26,7 @@ IResult<ADS7830::ConvData> ADS7830::read_channel(const ChannelSelection sel){
     return phy_.fs_read(cmd);
 }
 
-IResult<ADS7830::ConvData> ADS7830::read_pos_channel(const ChannelIndex ch){
+IResult<ADS7830::ConvData> ADS7830::read_pos_channel(const ChannelNth ch){
     const auto sel = ({
         const auto may_sel = ChannelSelection::from_pos(ch);
         if(may_sel.is_none()) return Err(Error::NoChannelCombination);
