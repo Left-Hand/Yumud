@@ -1,4 +1,4 @@
-#include "FT6336.hpp"
+#include "ft6336u.hpp"
 
 // https://www.iotword.com/23534.html
 // https://github.com/aselectroworks/Arduino-FT6336U/blob/master/src/FT6336U.h
@@ -109,7 +109,7 @@ IResult<uint8_t> FT6336U::get_touch_count() {
     return Ok(uint8_t(reg.touch_cnt));
 }
 
-IResult<FT6336U::Points> FT6336U::get_touch_points(){
+IResult<FT6336U::TouchPoints> FT6336U::get_touch_points(){
     uint8_t buf[9] = {0};
     if(const auto res = read_burst(regs_.td_status.ADDRESS, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
@@ -119,102 +119,95 @@ IResult<FT6336U::Points> FT6336U::get_touch_points(){
         return (uint16_t(b1) << 8 | uint16_t(b2)) & 0x0fff;
     };
     
-    const Point p1 = Point{
+    const TouchPoint p1 = TouchPoint{
         u12_from_be_bytes(buf[1], buf[2]), 
         u12_from_be_bytes(buf[3], buf[4])
     };
 
-    const Point p2 = Point{
+    const TouchPoint p2 = TouchPoint{
         u12_from_be_bytes(buf[5], buf[6]), 
         u12_from_be_bytes(buf[7], buf[8])
     };
 
     switch(touch_cnt){
-        case 0: return Ok(points_ = points_.map_to_next(Points{}));
-        case 1: return Ok(points_ = points_.map_to_next(Points{p1}));
-        case 2: return Ok(points_ = points_.map_to_next(Points{p1, p2}));
-        default: return Err(Error::PointsCountGreatThan2);
+        case 0: return Ok(points_ = points_.map_to_next(TouchPoints::from_none()));
+        case 1: return Ok(points_ = points_.map_to_next(TouchPoints{p1}));
+        case 2: return Ok(points_ = points_.map_to_next(TouchPoints{p1, p2}));
+        default: return Err(Error::NthGreatThan1);
     }
 }
 
-IResult<Vec2<uint16_t>> FT6336U::get_touch1_position() {
-    uint16_t buf[2];
-    if(const auto res = read_burst_u12(FT6336U_ADDR_TOUCH1_X, buf);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vec2<uint16_t>(buf[0], buf[1]));
-}
+IResult<uint8_t> FT6336U::get_touch_event(const ChannelNth nth) {
+    const auto reg_addr = [&]{
+        switch(nth){
+            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_EVENT;
+            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_EVENT;
+            default: __builtin_unreachable();
+        }
+    }();
 
-IResult<Vec2<uint16_t>> FT6336U::get_touch2_position(){
-    uint16_t buf[2];
-    if(const auto res = read_burst_u12(FT6336U_ADDR_TOUCH2_X, buf);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vec2<uint16_t>(buf[0], buf[1]));
-}
-
-IResult<uint8_t> FT6336U::get_touch1_event() {
     return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH1_EVENT);
+        const auto res = read_reg(reg_addr);
         if(res.is_err()) return Err(res.unwrap_err());
         Ok(res.unwrap() >> 6);
     });
 }
 
-IResult<uint8_t> FT6336U::get_touch1_id() {
+IResult<uint8_t> FT6336U::get_touch_id(const ChannelNth nth) {
+    const auto reg_addr = [&]{
+        switch(nth){
+            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_ID;
+            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_ID;
+            default: __builtin_unreachable();
+        }
+    }();
+
     return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH1_ID);
+        const auto res = read_reg(reg_addr);
         if(res.is_err()) return Err(res.unwrap_err());
         Ok(res.unwrap() >> 4);
     });
 }
 
 
-IResult<uint8_t> FT6336U::get_touch1_weight() {
-    return read_reg(FT6336U_ADDR_TOUCH1_WEIGHT);
+IResult<uint8_t> FT6336U::get_touch_weight(const ChannelNth nth) {
+    const auto reg_addr = [&]{
+        switch(nth){
+            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_WEIGHT;
+            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_WEIGHT;
+            default: __builtin_unreachable();
+        }
+    }();
+
+    return read_reg(reg_addr);
 }
 
 
-IResult<uint8_t> FT6336U::get_touch1_misc() {
+IResult<uint8_t> FT6336U::get_touch_misc(const ChannelNth nth) {
+    const auto reg_addr = [&]{
+        switch(nth){
+            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_MISC;
+            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_MISC;
+            default: __builtin_unreachable();
+        }
+    }();
+
     return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH1_MISC);
+        const auto res = read_reg(reg_addr);
         if(res.is_err()) return Err(res.unwrap_err());
         Ok(res.unwrap() >> 4);
     });
 }
-// Touch 2 functions
 
-IResult<uint8_t> FT6336U::get_touch2_event() {
-    return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH2_EVENT);
-        if(res.is_err()) return Err(res.unwrap_err());
-        Ok(res.unwrap() >> 6);
-    });
-}
 
-IResult<uint8_t> FT6336U::get_touch2_id() {
-    return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH2_ID);
-        if(res.is_err()) return Err(res.unwrap_err());
-        Ok(res.unwrap() >> 4);
-    });
-}
-
-IResult<uint8_t> FT6336U::get_touch2_weight() {
-    return read_reg(FT6336U_ADDR_TOUCH2_WEIGHT);
-}
-
-IResult<uint8_t> FT6336U::get_touch2_misc() {
-    return ({
-        const auto res = read_reg(FT6336U_ADDR_TOUCH2_MISC);
-        if(res.is_err()) return Err(res.unwrap_err());
-        Ok(res.unwrap() >> 4);
-    });
-}
 IResult<uint8_t> FT6336U::get_touch_threshold() {
     return read_reg(FT6336U_ADDR_THRESHOLD);
 }
+
 IResult<uint8_t> FT6336U::get_filter_coefficient() {
     return read_reg(FT6336U_ADDR_FILTER_COE);
 }
+
 IResult<uint8_t> FT6336U::get_ctrl_mode() {
     return read_reg(FT6336U_ADDR_CTRL);
 }
@@ -222,12 +215,15 @@ IResult<uint8_t> FT6336U::get_ctrl_mode() {
 IResult<uint8_t> FT6336U::get_time_period_enter_monitor() {
     return read_reg(FT6336U_ADDR_TIME_ENTER_MONITOR);
 }
+
 IResult<uint8_t> FT6336U::get_active_rate() {
     return read_reg(FT6336U_ADDR_ACTIVE_MODE_RATE);
 }
+
 IResult<uint8_t> FT6336U::get_monitor_rate() {
     return read_reg(FT6336U_ADDR_MONITOR_MODE_RATE);
 }
+
 
 // Gesture Parameters
 IResult<uint8_t> FT6336U::get_radian_value() {

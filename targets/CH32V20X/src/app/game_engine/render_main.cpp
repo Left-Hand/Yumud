@@ -114,6 +114,7 @@ OutputStream & operator << (OutputStream & os, const LineSpan<Binary> & line){
     return os;
 }
 
+
 template<typename Color>
 struct FrameSpan{
     using Error = Infallible;
