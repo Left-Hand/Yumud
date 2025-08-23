@@ -11,9 +11,6 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "../DistanceSensor.hpp"
-
-
 namespace ymd::drivers{
 
 class VL53L0X final{
