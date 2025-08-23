@@ -266,8 +266,8 @@ void bldc_main(){
     q20 q_volt_ = 0;
     q20 meas_elecrad_ = 0;
 
-    q20 axis_target_position_ = 0;
-    q20 axis_target_speed_ = 0;
+    [[maybe_unused]] q20 axis_target_position_ = 0;
+    [[maybe_unused]] q20 axis_target_speed_ = 0;
     
     Microseconds exe_us_ = 0us;
 
