@@ -339,7 +339,7 @@ void nuedc_2025e_main(){
         .apply(hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_id_and_mask(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanStdId(0b111100000), hal::CanRtrSpecfier::Discard
+                hal::CanStdId(0b1111'000'0000), hal::CanRtrSpecfier::Discard
             ))
         )
     ;
@@ -348,9 +348,6 @@ void nuedc_2025e_main(){
         .baudrate = 18_MHz
     });
 
-    mp6540_en_gpio_.outpp(HIGH);
-
-    mp6540_nslp_gpio_.outpp(LOW);
 
     timer1.init({
         .freq = CHOPPER_FREQ, 
@@ -430,8 +427,8 @@ void nuedc_2025e_main(){
 
     hal::portA[7].inana();
 
-    mp6540_en_gpio_.set();
-    mp6540_nslp_gpio_.set();
+    mp6540_en_gpio_.outpp(HIGH);
+    mp6540_nslp_gpio_.outpp(HIGH);
 
 
     AbVoltage ab_volt_;

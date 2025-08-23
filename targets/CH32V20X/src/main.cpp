@@ -60,7 +60,8 @@ int main(){
     // math_main();
     // polar_robot_main();
     // nuedc_2025e_main();
-    render_main();
+    // render_main();
+    bldc_main();
     // laser_ctl_main();
 
     // bldc_main();
