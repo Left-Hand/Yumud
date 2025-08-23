@@ -16,6 +16,27 @@ public:
 
     using Regs = _LT8960L_Regs;
 public:
+    struct Config{
+        Power tx_power;
+        uint8_t preamble_bytes;
+        uint8_t syncword_bytes;
+        PacketType packet_type;
+        uint8_t retrans_times;
+        uint32_t syncword;
+        DataRate datarate;
+
+        static constexpr Config from_default(){
+            return Config{
+                .tx_power = Power::_8_Db,
+                .preamble_bytes = 3,
+                .syncword_bytes = 4,
+                .packet_type = PacketType::Manchester,
+                .retrans_times = 3,
+                .syncword = 0xAABBCCDD,
+                .datarate = DataRate::_62_5K
+            };
+        }
+    };
 
     LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
         phy_(scl, sda){;}
@@ -29,7 +50,7 @@ public:
 
     [[nodiscard]] IResult<> enable_autoack(const Enable en = EN);
 
-    [[nodiscard]] IResult<> init(const Power power, uint32_t syncword);
+    [[nodiscard]] IResult<> init(const Config & cfg);
 
     [[nodiscard]] IResult<> init_rf();
     

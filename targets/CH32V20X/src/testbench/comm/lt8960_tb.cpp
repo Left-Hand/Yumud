@@ -153,11 +153,12 @@ void lt8960_tb(){
     };
 
     if(has_rx_authority()) {
-        rx_ltr.init(LT8960L::Power::_8_Db, 0x12345678).loc().expect("RX init failed!");
-        common_settings(rx_ltr).loc().expect("RX common settings failed!");
+        rx_ltr.init(LT8960L::Config::from_default()).examine();
+        common_settings(rx_ltr).examine();
     }
+
     if(has_tx_authority()){
-        tx_ltr.init(LT8960L::Power::_n13_Db, 0x12345678).loc().expect("TX init failed!");
+        tx_ltr.init(LT8960L::Config::from_default()).examine();
 
         common_settings(tx_ltr).examine();
     }

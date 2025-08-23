@@ -324,7 +324,7 @@ IResult<size_t> LT8960L::receive_ble(std::span<uint8_t> buf){
 }
 
 
-IResult<> LT8960L::init(const Power power, const uint32_t syncword){
+IResult<> LT8960L::init(const Config & cfg){
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
     if(const auto res = phy_.init();
@@ -341,7 +341,7 @@ IResult<> LT8960L::init(const Power power, const uint32_t syncword){
     if(const auto res = write_reg(26, 0x3A00);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = set_tx_power(power);
+    if(const auto res = set_tx_power(cfg.tx_power);
         res.is_err()) return Err(res.unwrap_err());
 
     // 频偏微调 0x1800~0x1807
@@ -349,18 +349,18 @@ IResult<> LT8960L::init(const Power power, const uint32_t syncword){
         res.is_err()) return Err(res.unwrap_err());
 
     // 数据包配置3Byte前导 32bits同步字 NRZ格式
-    if(const auto res = set_preamble_bytes(3);
+    if(const auto res = set_preamble_bytes(cfg.preamble_bytes);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = set_syncword_bytes(4);
+    if(const auto res = set_syncword_bytes(cfg.syncword_bytes);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = set_pack_type(PacketType::Manchester);
+    if(const auto res = set_pack_type(cfg.packet_type);
         res.is_err()) return Err(res.unwrap_err());
 
     // 重发3次=发1包 重发2包  最大15包
-    if(const auto res = set_retrans_time(3) ;
+    if(const auto res = set_retrans_time(cfg.retrans_times) ;
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = set_syncword(syncword);
+    if(const auto res = set_syncword(cfg.syncword);
         res.is_err()) return Err(res.unwrap_err());
 
     // 允错1位
@@ -378,7 +378,7 @@ IResult<> LT8960L::init(const Power power, const uint32_t syncword){
         res.is_err()) return Err(res.unwrap_err());
 
 
-    if(const auto res = set_datarate(DataRate::_62_5K);
+    if(const auto res = set_datarate(cfg.datarate);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = clear_fifo_write_and_read_ptr();
         res.is_err()) return Err(res.unwrap_err());
