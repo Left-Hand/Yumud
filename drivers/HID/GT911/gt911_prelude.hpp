@@ -12,14 +12,14 @@
 namespace ymd::drivers{
 
 
-struct Gt911_Prelude{
+struct GT9XX_Prelude{
 protected:
     using RegAddr = uint16_t;
-    static constexpr uint8_t GT911_I2C_ADDR_BA  = 0x5D;
-    static constexpr RegAddr GT911_PRODUCT_ID_REG  = 0x8140;
-    static constexpr RegAddr GT911_TOUCHPOINT_STATUS_REG  = 0x814E;
-    static constexpr RegAddr GT911_TOUCHPOINT_1_REG  = 0x814F;
-    static constexpr RegAddr GT911_COMMAND_REG  = 0x8040;
+    static constexpr uint8_t GT9XX_I2C_ADDR_BA  = 0x5D;
+    static constexpr RegAddr GT9XX_PRODUCT_ID_REG  = 0x8140;
+    static constexpr RegAddr GT9XX_TOUCHPOINT_STATUS_REG  = 0x814E;
+    static constexpr RegAddr GT9XX_TOUCHPOINT_1_REG  = 0x814F;
+    static constexpr RegAddr GT9XX_COMMAND_REG  = 0x8040;
 
     static constexpr size_t MAX_NUM_TOUCHPOINTS  = 5;
 
@@ -56,12 +56,17 @@ public:
 
     DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
 
+    struct FamilySpecific { 
+        char name[4];
+        size_t max_points_count;
+    };
+
 protected:
     static constexpr TouchPoint decode_point(
         const std::span<const uint8_t, TOUCHPOINT_ENTRY_LEN> pbuf
     ) {
 
-        Gt911_Prelude::TouchPoint point;
+        GT9XX_Prelude::TouchPoint point;
         point.track_id = pbuf[0];
         point.x = static_cast<uint16_t>(pbuf[1] | (pbuf[2] << 8));  // Little endian
         point.y = static_cast<uint16_t>(pbuf[3] | (pbuf[4] << 8));  // Little endian
@@ -81,7 +86,7 @@ protected:
     static constexpr RegAddr map_nth_to_addr(
         const Nth nth
     ){
-        return GT911_TOUCHPOINT_1_REG + nth.count() * TOUCHPOINT_ENTRY_LEN;
+        return GT9XX_TOUCHPOINT_1_REG + nth.count() * TOUCHPOINT_ENTRY_LEN;
     }
 
     enum class WorkMode:uint8_t{
@@ -90,7 +95,7 @@ protected:
         Sleep
     };
 
-    enum class InterruptTriggerMethod:uint8-t{
+    enum class InterruptTriggerMethod:uint8_t{
         RisingEdge,
         FallingEdge,
         LowLevel,
@@ -99,7 +104,7 @@ protected:
 };
 
 
-struct Gt911_Regs:public Gt911_Prelude{
+struct GT9XX_Regs:public GT9XX_Prelude{
     struct R32_ProductId{
         static constexpr RegAddr ADDRESS = 0x8140;
         uint8_t id[4];

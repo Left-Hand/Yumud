@@ -1,12 +1,19 @@
 #pragma once
 
+// GT911 是专为7”~8”设计的新一代5点电容触控方案，拥有26个驱动通道和14个感
+// 应通道，以满足更高的touch精度要求。 
+// GT911 可同时识别5个触摸点位的实时准确位置，移动轨迹及触摸面积。并可根据主
+// 控需要，读取相应点数的触摸信息。
+
+// https://aitendo3.sakura.ne.jp/aitendo_data/product_img/ic/touch/GT911/GT911%20Datasheet_20130319.pdf
+
 #include "gt911_prelude.hpp"
 #include "core/container/inline_vector.hpp"
 
 
 namespace ymd::drivers{
 
-struct GT911:public Gt911_Prelude{ 
+struct GT9XX:public GT9XX_Prelude{ 
 public:
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -32,6 +39,7 @@ private:
     hal::I2cDrv i2c_drv_;
 
     IResult<TouchPoint> get_touch_point_unchecked(const Nth nth);
+    IResult<> clear_status();
 
     IResult<> write(const uint16_t addr, const uint8_t val){
         if(const auto res = i2c_drv_.write_reg(addr, val, MSB);

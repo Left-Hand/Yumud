@@ -73,7 +73,7 @@ DmaChannel & TimerChannel::dma() const {
         }\
         break;\
         
-    switch((uint32_t)inst_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_TIM1
         FULL_DMA_CASE(1)
         #endif
