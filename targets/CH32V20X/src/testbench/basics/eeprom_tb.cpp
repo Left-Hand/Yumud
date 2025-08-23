@@ -2,7 +2,7 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/flash/flash.hpp"
+#include "hal/storage/flash/flash.hpp"
 #include "hal/bkp/bkp.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"

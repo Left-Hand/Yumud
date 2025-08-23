@@ -13,7 +13,7 @@
 #include "hal/timer/timer.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
 #include "drivers/GateDriver/AT8222/at8222.hpp"
@@ -28,7 +28,6 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
 
 static constexpr auto DBG_UARTSW_BAUD = 38400; 
 static constexpr auto TTS_UARTSW_BAUD = 9600; 
@@ -38,7 +37,7 @@ static constexpr size_t STAT_COUNT = 16;
 static constexpr size_t STR_LEN = 16;
 
 //防止短期内多次触发 设定最小死区时间
-static constexpr auto DETECT_DEAD_ZONE = 300ms;
+static constexpr auto DETECT_BLANKING = 300ms;
 static constexpr auto RESPONSE_DELAY = 0ms;
 
 static constexpr uint8_t U13T_HEADER_TOKEN = 0x7f;
@@ -365,9 +364,9 @@ public:
         
         adc1.init(
             {
-                {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+                {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
             },{
-                {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+                {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
             }, {}
         );
 
@@ -587,7 +586,7 @@ private:
         }else if(is_identity_payload(payload)){
             const auto line = (std::span(payload).subspan<9,16>());
 
-            if(clock::millis() > last_detected_ms_ + DETECT_DEAD_ZONE){
+            if(clock::millis() > last_detected_ms_ + DETECT_BLANKING){
                 last_detected_ms_ = clock::millis();
                 last_sta_ = match_context(line);
             }

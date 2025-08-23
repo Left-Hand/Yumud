@@ -17,11 +17,11 @@
 #include "core/utils/delayed_semphr.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/opa/opa.hpp"
+#include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
@@ -181,17 +181,17 @@ struct Gesture{
 
 [[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
-    using hal::AdcChannelIndex;
+    using hal::AdcChannelNth;
     using hal::AdcSampleCycles;
 
     adc.init(
         {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
         }, {}
     );
 

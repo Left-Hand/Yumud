@@ -7,7 +7,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 
@@ -106,9 +106,9 @@ void svpwm3_main(){
 
     adc1.init(
         {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T28_5},
         }, {}
     );
 

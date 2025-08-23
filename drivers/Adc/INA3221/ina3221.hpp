@@ -14,7 +14,7 @@
 // ina.init().unwrap();
 
 // while(true){
-//     const auto ch = INA3221::ChannelIndex::CH1;
+//     const auto ch = INA3221::ChannelNth::CH1;
 //     ina.update(ch).unwrap();
 //     DEBUG_PRINTLN(
 //         ina.get_bus_volt(ch).unwrap(), 
@@ -72,7 +72,7 @@ public:
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
-    enum class ChannelIndex:uint8_t{
+    enum class ChannelNth:uint8_t{
         CH1 = 0,
         CH2,
         CH3
@@ -377,10 +377,10 @@ public:
     protected:
         INA3221 & parent_;
         ChannelType ch_;
-        ChannelIndex idx_;
+        ChannelNth nth_;
     public:
-        INA3221Channel(INA3221 & parent, const ChannelType ch, const ChannelIndex idx):
-                parent_(parent), ch_(ch), idx_(idx){}
+        INA3221Channel(INA3221 & parent, const ChannelType ch, const ChannelNth nth):
+                parent_(parent), ch_(ch), nth_(nth){}
 
         INA3221Channel(const INA3221Channel & other) = delete;
         INA3221Channel(INA3221Channel && other) = delete;
@@ -391,9 +391,9 @@ public:
         IResult<real_t> get_volt(){
             switch(ch_){
                 case ChannelType::Shunt:
-                    return parent_.get_shunt_volt(idx_);
+                    return parent_.get_shunt_volt(nth_);
                 case ChannelType::BusBar:
-                    return parent_.get_bus_volt(idx_);
+                    return parent_.get_bus_volt(nth_);
                 default: __builtin_unreachable();
             }
         }
@@ -417,7 +417,7 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg = DEFAULT_CONFIG);
     [[nodiscard]] IResult<> reconf(const Config & cfg);
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> update(const ChannelIndex index);
+    [[nodiscard]] IResult<> update(const ChannelNth nth);
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
@@ -425,19 +425,19 @@ public:
     [[nodiscard]] IResult<> enable_measure_shunt(const Enable en = EN);
     [[nodiscard]] IResult<> enable_continuous(const Enable en = EN);
 
-    [[nodiscard]] IResult<> enable_channel(const ChannelIndex index, const Enable en = EN);
+    [[nodiscard]] IResult<> enable_channel(const ChannelNth nth, const Enable en = EN);
 
     [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
     [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelIndex index);
-    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelIndex index);
+    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelNth nth);
+    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelNth nth);
 
-    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelIndex index);
-    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelIndex index);
+    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelNth nth);
+    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelNth nth);
 
-    [[nodiscard]] IResult<> set_instant_ovc(const ChannelIndex index, const real_t volt);
-    [[nodiscard]] IResult<> set_constant_ovc(const ChannelIndex index, const real_t volt);
+    [[nodiscard]] IResult<> set_instant_ovc(const ChannelNth nth, const real_t volt);
+    [[nodiscard]] IResult<> set_constant_ovc(const ChannelNth nth, const real_t volt);
 private:
     INA3221_Phy phy_;
 
@@ -465,12 +465,12 @@ private:
 
 
     std::array<INA3221Channel, 6> channels = {
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH2},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH2},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelIndex::CH3},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelIndex::CH3},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH3},
+        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH3},
     };
 };
 

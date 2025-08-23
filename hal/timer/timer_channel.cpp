@@ -4,10 +4,10 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelIndex _channel){
-    using enum ChannelIndex;
+volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelNth nth){
+    using enum ChannelNth;
 
-    switch(_channel){
+    switch(nth){
         default:
         case CH1:
         case CH1N:
@@ -25,11 +25,11 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const
 
 
 TimerChannel & TimerChannel::enable_dma(const Enable en){
-    using enum ChannelIndex;
+    using enum ChannelNth;
 
     uint16_t source = 0;
 
-    switch(idx_){
+    switch(nth_){
         case CH1:
             source = TIM_DMA_CC1;
             break;
@@ -53,13 +53,13 @@ TimerChannel & TimerChannel::enable_dma(const Enable en){
 
 
 DmaChannel & TimerChannel::dma() const {
-    using enum ChannelIndex;
+    using enum ChannelNth;
 
     #define DMA_NULL dma1Ch1
 
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\
-        switch(idx_){\
+        switch(nth_){\
             case CH1:\
                 return TIM##x##_CH1_DMA_CH;\
             case CH2:\
@@ -73,7 +73,7 @@ DmaChannel & TimerChannel::dma() const {
         }\
         break;\
         
-    switch((uint32_t)inst_){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_TIM1
         FULL_DMA_CASE(1)
         #endif
@@ -84,7 +84,7 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM3
         case TIM3_BASE:
-        switch(idx_){
+        switch(nth_){
             case CH1:
                 return TIM3_CH1_DMA_CH;
             case CH3:
@@ -99,7 +99,7 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM4
         case TIM4_BASE:
-        switch(idx_){
+        switch(nth_){
             case CH1:
                 return TIM4_CH1_DMA_CH;
             case CH2:

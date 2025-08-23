@@ -130,7 +130,7 @@ struct AD9959_Regs{
 
 class AD9959{
 protected:
-    enum class ChannelIndex:uint8_t{
+    enum class ChannelNth:uint8_t{
         Nil = 0,
         _0    = 0x10,
         _1    = 0x20,
@@ -271,7 +271,7 @@ protected:
     uint32_t              reciprocal;             // 2^(64-shift)/core_clock
     uint8_t               shift;                  // (2<<shift) < core_clock, but just (28 or less)
     #endif
-    ChannelIndex               last_channels;
+    ChannelNth               last_channels;
     scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
     hal::SpiDrv spi_drv_;
     hal::GpioIntf &         reset_gpio;               // Reset pin (active = high)
@@ -309,27 +309,27 @@ public:
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta
     uint32_t frequency_delta(uint32_t freq) const;
 
-    void set_frequency(ChannelIndex chan, uint32_t freq);
+    void set_frequency(ChannelNth chan, uint32_t freq);
 
-    void set_delta(ChannelIndex chan, uint32_t delta);
+    void set_delta(ChannelNth chan, uint32_t delta);
 
-    void set_amplitude(ChannelIndex chan, uint16_t amplitude);        // Maximum amplitude value is 1024
+    void set_amplitude(ChannelNth chan, uint16_t amplitude);        // Maximum amplitude value is 1024
 
-    void set_phase(ChannelIndex chan, uint16_t phase);                // Maximum phase value is 16383
+    void set_phase(ChannelNth chan, uint16_t phase);                // Maximum phase value is 16383
 
     void update();
 
-    void sweep_frequency(ChannelIndex chan, uint32_t freq, bool follow = true);      // Target frequency
+    void sweep_frequency(ChannelNth chan, uint32_t freq, bool follow = true);      // Target frequency
 
-    void sweep_delta(ChannelIndex chan, uint32_t delta, bool follow = true);
+    void sweep_delta(ChannelNth chan, uint32_t delta, bool follow = true);
 
-    void sweep_amplitude(ChannelIndex chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
+    void sweep_amplitude(ChannelNth chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
 
-    void sweep_phase(ChannelIndex chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
+    void sweep_phase(ChannelNth chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
 
-    void sweep_rates(ChannelIndex chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
+    void sweep_rates(ChannelNth chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
 
-    void set_channels(ChannelIndex chan);
+    void set_channels(ChannelNth chan);
     // To read channel registers, you must first use setChannels to select exactly one channel!
     uint32_t read(Register reg);
     protected:

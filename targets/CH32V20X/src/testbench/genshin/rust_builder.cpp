@@ -8,7 +8,6 @@
 
 #include "core/magic/size_traits.hpp"
 #include "core/magic/function_traits.hpp"
-// #include "core/magic/magic_details.hpp"
 #include "core/magic/serialize_traits.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "rust_enum.hpp"

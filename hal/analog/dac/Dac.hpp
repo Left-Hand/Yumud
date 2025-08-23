@@ -9,15 +9,15 @@ namespace ymd::hal{
 
 class DacChannel{
 public:
-    using ChannelIndex = DacUtils::ChannelIndex;
+    using ChannelNth = DacUtils::ChannelNth;
     using Alignment = DacUtils::Alignment;
 protected:
     DAC_TypeDef * instance_;
-    const ChannelIndex idx_;
+    const ChannelNth nth;
     const uint32_t channel_mask_;
     Alignment align_ = Alignment::R12;
 
-    DacChannel(DAC_TypeDef * instance, ChannelIndex idx):
+    DacChannel(DAC_TypeDef * instance, ChannelNth idx):
         instance_(instance),
         idx_(idx),
         channel_mask_(get_channel_mask(idx)){
@@ -28,8 +28,8 @@ protected:
 
     void settle();
 
-    static uint32_t get_channel_mask(const ChannelIndex idx);
-    // static uint32_t get_channel_mask(const ChannelIndex idx);
+    static uint32_t get_channel_mask(const ChannelNth nth);
+    // static uint32_t get_channel_mask(const ChannelNth nth);
 
 public:
     void init();

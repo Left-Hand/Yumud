@@ -80,17 +80,17 @@ struct Adc_Prelude{
     using RegularTrigger = AdcRegularTrigger;
     using InjectedTrigger = AdcInjectedTrigger;
     
-    using ChannelIndex = AdcChannelIndex;
+    using ChannelNth = AdcChannelNth;
     using SampleCycles = AdcSampleCycles;
     using Mode = AdcMode;
     using IT = AdcIT;
 };
 
 struct AdcChannelConfig{
-    using ChannelIndex = AdcChannelIndex;
+    using ChannelNth = AdcChannelNth;
     using SampleCycles = AdcSampleCycles;
 
-    ChannelIndex channel;
+    ChannelNth nth;
     SampleCycles cycles;
 };
 
@@ -102,10 +102,10 @@ public:
     explicit AdcPrimary(ADC_TypeDef * inst):
         inst_(inst),
         injected_channels{
-            AdcInjectedChannel(inst_, AdcChannelIndex::VREF, 1),
-            AdcInjectedChannel(inst_, AdcChannelIndex::VREF, 2),
-            AdcInjectedChannel(inst_, AdcChannelIndex::VREF, 3),
-            AdcInjectedChannel(inst_, AdcChannelIndex::VREF, 4)
+            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 1),
+            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 2),
+            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 3),
+            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 4)
         }{;}
 
 
@@ -277,9 +277,9 @@ protected:
         injected_cnt = cnt;
     }
 
-    void set_regular_sample_time(const ChannelIndex channel,  const SampleCycles _sample_time){
+    void set_regular_sample_time(const ChannelNth nth,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
-        uint8_t ch = (uint8_t)channel;
+        uint8_t ch = std::bit_cast<uint8_t>(nth);
         uint8_t offset = ch % 10;
         offset *= 3;
 

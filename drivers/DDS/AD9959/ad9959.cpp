@@ -9,7 +9,7 @@ using namespace ymd;
 
 void AD9959::init(){
     core_clock = 0;
-    last_channels = ChannelIndex::All;
+    last_channels = ChannelNth::All;
     // Ensure that the SPI device is initialised
     // "setting SCK, MOSI, and SS to outputs, pulling SCK and MOSI low, and SS high"
 
@@ -39,11 +39,11 @@ void AD9959::reset(CFR_Bits cfr){
     pulse(update_gpio);
 
     // Apply the requested CFR bits
-    last_channels = ChannelIndex::Nil;        // Ensure channels get set, not optimised out
-    set_channels(ChannelIndex::All);
+    last_channels = ChannelNth::Nil;        // Ensure channels get set, not optimised out
+    set_channels(ChannelNth::All);
     write(Register::CFR, uint8_t(cfr));
 
-    set_channels(ChannelIndex::Nil);           // Disable all channels, set 3-wire MSB mode:
+    set_channels(ChannelNth::Nil);           // Disable all channels, set 3-wire MSB mode:
     pulse(update_gpio);                   // Apply the changes
     set_clock();                         // Set the PLL going
     // It will take up to a millisecond before the PLL locks and stabilises.
@@ -98,16 +98,16 @@ uint32_t AD9959::frequency_delta(uint32_t freq) const{
     #endif
 }
 
-void AD9959::set_frequency(ChannelIndex chan, uint32_t freq){
+void AD9959::set_frequency(ChannelNth chan, uint32_t freq){
     set_delta(chan, frequency_delta(freq));
 }
 
-void AD9959::set_delta(ChannelIndex chan, uint32_t delta){
+void AD9959::set_delta(ChannelNth chan, uint32_t delta){
     set_channels(chan);
     write(Register::CFTW, delta);
 }
 
-void AD9959::set_amplitude(ChannelIndex chan, uint16_t amplitude){        // Maximum amplitude value is 1024
+void AD9959::set_amplitude(ChannelNth chan, uint16_t amplitude){        // Maximum amplitude value is 1024
 
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
@@ -123,7 +123,7 @@ void AD9959::set_amplitude(ChannelIndex chan, uint16_t amplitude){        // Max
     UNWRAP_OR_PANIC(spi_drv_.write_single<uint8_t>(uint8_t(amplitude&0xFF)));       // Bottom 8 bits of amplitude
 }
 
-void AD9959::set_phase(ChannelIndex chan, uint16_t phase){                // Maximum phase value is 16383
+void AD9959::set_phase(ChannelNth chan, uint16_t phase){                // Maximum phase value is 16383
     set_channels(chan);
     write(Register::CPOW, phase & 0x3FFF);        // Phase wraps around anyway
 }
@@ -132,11 +132,11 @@ void AD9959::update(){
     pulse(update_gpio);
 }
 
-void AD9959::sweep_frequency(ChannelIndex chan, uint32_t freq, bool follow){       // Target frequency
+void AD9959::sweep_frequency(ChannelNth chan, uint32_t freq, bool follow){       // Target frequency
     sweep_delta(chan, frequency_delta(freq), follow);
 }
 
-void AD9959::sweep_delta(ChannelIndex chan, uint32_t delta, bool follow){
+void AD9959::sweep_delta(ChannelNth chan, uint32_t delta, bool follow){
     set_channels(chan);
     // Set up for frequency sweep
     write(
@@ -151,7 +151,7 @@ void AD9959::sweep_delta(ChannelIndex chan, uint32_t delta, bool follow){
     write(Register::CW1, delta);
 }
 
-void AD9959::sweep_amplitude(ChannelIndex chan, uint16_t amplitude, bool follow){  // Target amplitude (half)
+void AD9959::sweep_amplitude(ChannelNth chan, uint16_t amplitude, bool follow){  // Target amplitude (half)
     set_channels(chan);
 
     // Set up for amplitude sweep
@@ -168,7 +168,7 @@ void AD9959::sweep_amplitude(ChannelIndex chan, uint16_t amplitude, bool follow)
     write(Register::CW1, ((uint32_t)amplitude) * (0x1<<(32-10)));
 }
 
-void AD9959::sweep_phase(ChannelIndex chan, uint16_t phase, bool follow){          // Target phase (180 degrees)
+void AD9959::sweep_phase(ChannelNth chan, uint16_t phase, bool follow){          // Target phase (180 degrees)
     set_channels(chan);
 
     // Set up for phase sweep
@@ -185,7 +185,7 @@ void AD9959::sweep_phase(ChannelIndex chan, uint16_t phase, bool follow){       
     write(Register::CW1, ((uint32_t)phase) * (0x1<<(32-14)));
 }
 
-void AD9959::sweep_rates(ChannelIndex chan, uint32_t increment, uint8_t up_rate, uint32_t decrement, uint8_t down_rate){
+void AD9959::sweep_rates(ChannelNth chan, uint32_t increment, uint8_t up_rate, uint32_t decrement, uint8_t down_rate){
 
     set_channels(chan);
     write(Register::RDW, increment);                      // Rising Sweep Delta Word
@@ -193,7 +193,7 @@ void AD9959::sweep_rates(ChannelIndex chan, uint32_t increment, uint8_t up_rate,
     write(Register::LSRR, (down_rate<<8) | up_rate);      // Linear Sweep Ramp Rate
 }
 
-void AD9959::set_channels(ChannelIndex chan){
+void AD9959::set_channels(ChannelNth chan){
     if (last_channels != chan){
         write(Register::CSR, (uint8_t)chan|(uint8_t)CSR_Bits::MSB_First|(uint8_t)CSR_Bits::IO3Wire);
         last_channels = chan;

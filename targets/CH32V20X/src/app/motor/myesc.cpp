@@ -4,11 +4,11 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/opa/opa.hpp"
+#include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/odometer.hpp"
 #include "digipw/SVPWM/svpwm.hpp"
@@ -43,28 +43,28 @@ static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
 static void init_adc(){
 
     adc1.init({
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            // {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
-            // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
-            // {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
+            // {AdcChannelNth::CH5, AdcSampleCycles::T28_5},
+            // {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
+            // {AdcChannelNth::CH1, AdcSampleCycles::T28_5},
 
-            // {AdcChannelIndex::CH5, AdcSampleCycles::T7_5},
-            // {AdcChannelIndex::CH4, AdcSampleCycles::T7_5},
-            // {AdcChannelIndex::CH1, AdcSampleCycles::T7_5},
-            // {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
+            // {AdcChannelNth::CH5, AdcSampleCycles::T7_5},
+            // {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
+            // {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
+            // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
 
-            {AdcChannelIndex::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelIndex::CH1, AdcSampleCycles::T13_5},
-            // {AdcChannelIndex::VREF, AdcSampleCycles::T7_5},
-            // {AdcChannelIndex::TEMP, AdcSampleCycles::T7_5},
-            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T7_5},
-            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T28_5},
-            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T28_5},
-            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T41_5},
-            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T41_5},
-            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T41_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
+            // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
+            // {AdcChannelNth::TEMP, AdcSampleCycles::T7_5},
+            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T7_5},
+            // AdcChannelConfig{AdcChannelNth::CH4, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelNth::CH5, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelNth::CH4, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelNth::CH5, AdcCycles::T41_5},
         },
         {}
     );

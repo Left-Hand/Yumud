@@ -13,7 +13,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 #include "types/image/painter/painter.hpp"
@@ -113,6 +113,7 @@ OutputStream & operator << (OutputStream & os, const LineSpan<Binary> & line){
 
     return os;
 }
+
 
 template<typename Color>
 struct FrameSpan{

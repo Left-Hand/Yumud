@@ -37,10 +37,10 @@ void ina3221_main(){
     ina.init().unwrap();
 
     while(true){
-        const auto ch = INA3221::ChannelIndex::CH1;
+        const auto ch = INA3221::ChannelNth::CH1;
         ina.update(ch).unwrap();
-        ina.update(INA3221::ChannelIndex::CH2).unwrap();
-        ina.update(INA3221::ChannelIndex::CH3).unwrap();
+        ina.update(INA3221::ChannelNth::CH2).unwrap();
+        ina.update(INA3221::ChannelNth::CH3).unwrap();
         DEBUG_PRINTLN(
             ina.get_bus_volt(ch).unwrap(), 
             ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)

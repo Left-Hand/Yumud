@@ -8,7 +8,7 @@
 
 namespace ymd::hal{
 
-    enum class AdcChannelIndex:uint8_t{
+    enum class AdcChannelNth:uint8_t{
         CH0, CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, TEMP, VREF
     };
 
@@ -57,7 +57,7 @@ namespace ymd::hal{
     };
 
     namespace adc_details{
-        void install_pin(const AdcChannelIndex channel, const Enable en = EN);
+        void install_pin(const AdcChannelNth channel, const Enable en = EN);
         real_t read_temp();
     }
 }

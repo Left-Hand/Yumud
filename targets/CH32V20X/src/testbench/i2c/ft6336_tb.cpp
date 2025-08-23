@@ -13,7 +13,7 @@
 #include "drivers/HID/prelude/axis_input.hpp"
 #include "drivers/HID/prelude/segcode.hpp"
 #include "drivers/HID/prelude/button_input.hpp"
-#include "drivers/HID/FT6336/FT6336.hpp"
+#include "drivers/HID/ft6336u/ft6336u.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789v3_phy.hpp"
 #include "core/debug/debug.hpp"
 
@@ -21,7 +21,7 @@ using namespace ymd;
 using drivers::FT6336U;
 
 #define UART hal::uart2
-// #define UART hal::uart6
+
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 
@@ -95,7 +95,7 @@ void ft6336_main(){
     while(true){
         DEBUG_PRINTLN(
             // ft6336.get_gesture_id().examine(),
-            // ft6336.get_touch_points().examine().iter()
+            ft6336.get_touch_points().examine().iter(),
             std::hex, 
             std::showbase,
             // RepeatIter<uint16_t>{0X5555, 3}

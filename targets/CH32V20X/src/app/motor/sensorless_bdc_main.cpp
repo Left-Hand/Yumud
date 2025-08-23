@@ -9,7 +9,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 
@@ -78,10 +78,10 @@ void at8222_tb(){
 
     adc1.init(
         {
-            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
         },{
-            // {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
-            {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+            // {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
         }, {}
     );
 

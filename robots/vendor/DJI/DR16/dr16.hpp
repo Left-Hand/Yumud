@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/uart/uart.hpp"
-#include "hal/adc/adc_channel.hpp"
+#include "hal/analog/adc/adc_channel.hpp"
 
 
 namespace ymd::robots{

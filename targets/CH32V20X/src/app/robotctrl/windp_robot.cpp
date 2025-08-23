@@ -10,12 +10,12 @@
 #include "core/utils/bitflag.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/opa/opa.hpp"
+#include "hal/analog/opa/opa.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "drivers/Encoder/odometer.hpp"

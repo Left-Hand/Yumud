@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TempSensor.hpp"
-#include "hal/adc/adc_channel.hpp"
+#include "hal/analog/adc/adc_channel.hpp"
 
 namespace ymd::drivers{
 
@@ -14,7 +14,7 @@ protected:
 
     real_t last_temp = 0;
 
-    hal::AdcChannelConcept & channel_;
+    hal::AdcChannelIntf & channel_;
     uint B_ = 3950;
     
     real_t get_uniV(){
@@ -23,7 +23,7 @@ protected:
 
 public:
 
-    NTC(hal::AdcChannelConcept & channel, const uint B = 3950):channel_(channel), B_(B){;}
+    NTC(hal::AdcChannelIntf & channel, const uint B = 3950):channel_(channel), B_(B){;}
 
     void update();
 

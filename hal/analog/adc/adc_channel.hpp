@@ -16,7 +16,7 @@ class AdcOnChip;
 class AdcPrimary;
 class AdcCompanion;
 
-class AdcChannelConcept:public hal::AnalogInIntf{
+class AdcChannelIntf:public hal::AnalogInIntf{
 public:
     virtual real_t uni() = 0;
     virtual uint16_t data() = 0;
@@ -30,24 +30,24 @@ public:
     }
 };
 
-class AdcChannelOnChip: public AdcChannelConcept{
+class AdcChannelOnChip: public AdcChannelIntf{
 protected:
-    using ChannelIndex = AdcChannelIndex;
+    using ChannelNth = AdcChannelNth;
     using SampleCycles = AdcSampleCycles;
 
-    ADC_TypeDef * instance;
-    ChannelIndex channel;
+    ADC_TypeDef * inst_;
+    ChannelNth nth_;
     uint8_t rank;
 
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    AdcChannelOnChip(ADC_TypeDef * _instance, const ChannelIndex _channel, const uint8_t _rank):
-            instance(_instance), channel(_channel), rank(_rank){};
+    AdcChannelOnChip(ADC_TypeDef * _inst, const ChannelNth nth, const uint8_t _rank):
+            inst_(_inst), nth_(nth), rank(_rank){};
     
     void init(){
-        adc_details::install_pin(channel, EN);
+        adc_details::install_pin(nth_, EN);
     }
 
     virtual void set_sample_cycles(const SampleCycles cycles) = 0;

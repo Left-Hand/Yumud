@@ -6,7 +6,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/adcs/adc1.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
