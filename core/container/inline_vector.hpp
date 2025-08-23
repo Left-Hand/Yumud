@@ -129,13 +129,13 @@ public:
         new (&data_[size_++]) T(std::forward<Args>(args)...);
     }
 
-    constexpr void append_unchecked(const uint8_t data){
+    constexpr void append_unchecked(const T data){
         // ASSERT(size_ + 1 <= N);
         data_[size_] = data;
         size_ = size_ + 1;
     }
 
-    constexpr void append_unchecked(const std::span<const uint8_t> pbuf){
+    constexpr void append_unchecked(const std::span<const T> pbuf){
         // ASSERT(size_ + pbuf.size() <= N);
         for(size_t i = 0; i < pbuf.size(); i++){
             data_[size_ + i] = pbuf[i];
@@ -143,14 +143,14 @@ public:
         size_ += pbuf.size();
     }
 
-    constexpr Result<void, void> append(const uint8_t data){
+    constexpr Result<void, void> append(const T data){
         if(size_ + 1 > N) return Err();
         data_[size_] = data;
         size_ = size_ + 1;
         return Ok();
     }
 
-    constexpr Result<void, void> append(const std::span<const uint8_t> pbuf){
+    constexpr Result<void, void> append(const std::span<const T> pbuf){
         if(size_ + pbuf.size() > N) return Err();
         for(size_t i = 0; i < pbuf.size(); i++){
             data_[size_ + i] = pbuf[i];
@@ -169,7 +169,7 @@ public:
         return Ok();
     }
 
-    constexpr std::span<const uint8_t> iter() const {
+    constexpr std::span<const T> iter() const {
         return std::span(data_, size_);
     }
 

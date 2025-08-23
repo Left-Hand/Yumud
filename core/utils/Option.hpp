@@ -99,13 +99,19 @@ public:
     constexpr 
     Option & operator = (const Option<T> & other) = default;
 
-
+    
     [[nodiscard]] constexpr 
     Option(Option<T> && other):
         exists_(other.exists_)
     {
-        if(other.exists_) std::construct_at(&storage_, other.storage_);
+        this->exists_ = other.exists_;
+        
+        if(other.exists_){
+            std::construct_at(&storage_, other.storage_);
+            std::destroy_at(&other.storage_);
+        }
         other.exists_ = false;
+
     }
 
         
@@ -118,7 +124,13 @@ public:
         return *this;
     }
 
-
+    constexpr 
+    Option & operator = (const Some<T> & something){ 
+        if (exists_) std::destroy_at(&storage_);
+        std::construct_at(&storage_, something.get());
+        exists_ = true;
+        return *this;
+    }
 
     constexpr ~Option() {
         if (exists_) {
