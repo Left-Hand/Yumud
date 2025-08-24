@@ -40,9 +40,9 @@ protected:
         MP6540CurrentChannel(const MP6540CurrentChannel & other) = delete;
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;
 
-        void setRatio(const real_t ratio){ratio_ = ratio;}
-        operator real_t() override{
-            return - (real_t(ain_) * ratio_);
+        void set_ratio(const real_t ratio){ratio_ = ratio;}
+        real_t get_voltage() {
+            return - (ain_.get_voltage() * ratio_);
         }
     };
 

@@ -77,7 +77,7 @@ void MP6540::set_so_res(const uint so_res_ohms){
     const auto volt_to_curr_ratio = curr_mirror_ratio / so_res_ohms;
 
     for(auto & ch : chs){
-        ch.setRatio(volt_to_curr_ratio);
+        ch.set_ratio(volt_to_curr_ratio);
     }
 }
 

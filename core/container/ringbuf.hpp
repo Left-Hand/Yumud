@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.hpp"
+#include <cstdint>
 #include <span>
 
 #ifndef likely
@@ -15,12 +15,12 @@
 namespace ymd{
 
 template<typename T, size_t N>
-class RingBuf{
-protected:
+class RingBuf final{
+private:
     T buf[N];
     using Pointer = T *;
 
-    __fast_inline bool over(Pointer ptr, const size_t step){
+    inline bool over(Pointer ptr, const size_t step){
         return ptr + step >= this->buf + N;
     }
 
@@ -37,7 +37,7 @@ public:
 
     RingBuf():read_ptr(this->buf), write_ptr(this->buf){;}
 
-    __fast_inline constexpr size_t size() const {
+    inline constexpr size_t size() const {
         return N;
     }
 
@@ -98,23 +98,23 @@ public:
         return len;
     }
 
-    [[nodiscard]] __fast_inline const T && pop(){
+    [[nodiscard]] inline const T && pop(){
         const T * ret_ptr = read_ptr;
         read_ptr = advance(read_ptr, 1);
         return std::move(*ret_ptr);
     }
 
-    __fast_inline void push(const T & data){
+    inline void push(const T & data){
         T * porg = write_ptr;
         write_ptr = advance(write_ptr, 1);
         new (porg) T(data);
     }
 
-    [[nodiscard]] __fast_inline const T & front() {
+    [[nodiscard]] inline const T & front() {
         return *read_ptr;
     }
 
-    [[nodiscard]] __fast_inline size_t available() const {
+    [[nodiscard]] inline size_t available() const {
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
@@ -122,11 +122,11 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline size_t writable_capacity() const {
+    [[nodiscard]] inline size_t writable_capacity() const {
         return N - available();
     }
 
-    [[nodiscard]] __fast_inline size_t safe_dma_length() const{
+    [[nodiscard]] inline size_t safe_dma_length() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{
@@ -135,7 +135,7 @@ public:
     }
 
 
-    __fast_inline void waste(const size_t len){
+    inline void waste(const size_t len){
         read_ptr = advance(read_ptr, len);
         return;
     }

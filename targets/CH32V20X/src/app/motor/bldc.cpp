@@ -440,9 +440,9 @@ void bldc_main(){
                     // pos_filter_.speed(),
                     // meas_elecrad_,
                     // q_volt_,
-                    pwm_u.get_duty(),
-                    pwm_v.get_duty(),
-                    pwm_w.get_duty()
+                    pwm_u.get_dutycycle(),
+                    pwm_v.get_dutycycle(),
+                    pwm_w.get_dutycycle()
                     // pos_filter_.position(),
                     // pos_filter_.speed(),
                     // axis_target_position_,

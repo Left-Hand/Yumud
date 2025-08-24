@@ -146,7 +146,7 @@ public:
 
         INA226Channel(const INA226Channel & other) = delete;
         INA226Channel(INA226Channel && other) = delete;
-        operator real_t() override{
+        real_t get_voltage() override{
             switch(ch_){
                 case Index::SHUNT_VOLT:
                     return parent_.get_shunt_voltage().unwrap();
@@ -157,7 +157,7 @@ public:
                 case Index::POWER:
                     return parent_.get_power().unwrap();
                 default:
-                    return real_t(0);
+                    __builtin_unreachable();
             }
         }
     };

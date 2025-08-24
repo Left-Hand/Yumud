@@ -59,7 +59,7 @@ public:
 
     __fast_inline void set_dutycycle(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
-    __fast_inline real_t get_duty(){return iq_t<8>(cvr_) / int(arr_);}
+    __fast_inline real_t get_dutycycle(){return iq_t<8>(cvr_) / int(arr_);}
 
 
 };

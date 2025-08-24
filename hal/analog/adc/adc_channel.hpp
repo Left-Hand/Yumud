@@ -16,21 +16,7 @@ class AdcOnChip;
 class AdcPrimary;
 class AdcCompanion;
 
-class AdcChannelIntf:public hal::AnalogInIntf{
-public:
-    virtual real_t uni() = 0;
-    virtual uint16_t data() = 0;
-
-    operator real_t() override{
-        return real_t(3.3f) * uni();
-    }
-
-    operator uint16_t(){
-        return data();
-    }
-};
-
-class AdcChannelOnChip: public AdcChannelIntf{
+class AdcChannelOnChip: public AnalogInIntf{
 protected:
     using ChannelNth = AdcChannelNth;
     using SampleCycles = AdcSampleCycles;
@@ -51,6 +37,11 @@ public:
     }
 
     virtual void set_sample_cycles(const SampleCycles cycles) = 0;
+    virtual uint16_t get_raw() = 0;
+
+    real_t get_voltage(){
+        return (real_t(3.3f) * get_raw()) >> 12 ;
+    }
 };
 
 }
