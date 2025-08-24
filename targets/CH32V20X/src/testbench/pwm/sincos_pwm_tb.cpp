@@ -135,7 +135,6 @@ void sincos_pwm_main(){
     auto & trig_gpio = portC[13];
     trig_gpio.outpp();
 
-    
     adc1.attach(AdcIT::JEOC, {0,0}, [&]{
         trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());

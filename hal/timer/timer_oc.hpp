@@ -119,11 +119,11 @@ public:
         neg_oc_(neg_oc){;}
 
     __fast_inline void set_dutycycle(const real_t value){
-        const bool is_minus = signbit(value);
+        const bool is_negative = signbit(value);
         const auto zero_value = real_t(is_inversed_);
         const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
 
-        if(is_minus){
+        if(is_negative){
             pos_oc_.set_dutycycle(zero_value);
             neg_oc_.set_dutycycle(abs_value);
         }else{

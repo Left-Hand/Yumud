@@ -30,14 +30,14 @@ struct MAX31855_Prelude{
 
         real_t ther_temperature() const{
             const real_t uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
-            const bool is_minus = (ther_temp & (1 << 13)) != 0;
-            return is_minus ? (-uns_ther_temp) : uns_ther_temp;
+            const bool is_negative = (ther_temp & (1 << 13)) != 0;
+            return is_negative ? (-uns_ther_temp) : uns_ther_temp;
         }
 
         real_t junc_temperature() const{
             const real_t uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
-            const bool is_minus = (junc_temp & (1 << 11)) != 0;
-            return is_minus ? (-uns_junc_temp) : uns_junc_temp;
+            const bool is_negative = (junc_temp & (1 << 11)) != 0;
+            return is_negative ? (-uns_junc_temp) : uns_junc_temp;
         }
 
         std::span<uint16_t> to_u16_span(){
