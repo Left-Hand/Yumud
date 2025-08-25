@@ -40,6 +40,8 @@
 #include "types/shapes/box_rect.hpp"
 
 #include "types/regions/Segment2.hpp"
+#include "types/shapes/triangle2.hpp"  
+#include "types/shapes/line_iter.hpp"
 
 namespace ymd{
 template<typename T>
@@ -426,6 +428,23 @@ struct RoundedRect2{
 
 
 template<typename T>
+constexpr bool is_points_clockwise(const std::span<const Vec2<T>> points) {
+    if (points.size() < 3) return false;
+    
+    T cross_sum = T{0};
+    for (size_t i = 0; i < points.size(); ++i) {
+        const size_t j = (i + 1) % points.size();
+        cross_sum += (points[j].x - points[i].x) * (points[j].y + points[i].y);
+        // 或者如果 Vec2<T> 有 cross() 方法：cross_sum += points[i].cross(points[j]);
+    }
+    
+    // 正和：逆时针，负和：顺时针
+    return cross_sum > 0;  // 修正符号
+}
+
+
+
+template<typename T>
 requires (std::is_integral_v<T>)
 struct DrawDispatchIterator<Rect2<T>> {
     using Shape = Rect2<T>;
@@ -483,157 +502,6 @@ private:
     T y_;
 };
 
-template<std::integral T>
-struct BresenhamIterator {
-    using Point = Vec2<T>;
-    using Segment = Segment2<T>;
-    using SignedT = std::make_signed_t<T>;
-
-    constexpr BresenhamIterator(const Segment& segment)
-        : start_(segment.start),
-            stop_(segment.stop),
-            current_y_(std::min(segment.start.y, segment.stop.y)),
-            max_y_(std::max(segment.start.y, segment.stop.y)) {
-        
-        // 初始化 Bresenham 算法参数
-        SignedT dx = static_cast<SignedT>(stop_.x) - static_cast<SignedT>(start_.x);
-        SignedT dy = static_cast<SignedT>(stop_.y) - static_cast<SignedT>(start_.y);
-        
-        dx_ = std::abs(dx);
-        dy_ = std::abs(dy);
-        sx_ = (dx > 0) ? 1 : -1;
-        sy_ = (dy > 0) ? 1 : -1;
-        
-        // 初始化 Bresenham 状态
-        current_x_ = start_.x;
-        bresenham_y_ = start_.y;
-        err_ = dx_ - dy_;
-        
-        // 如果起始点不是最小y值，需要推进到正确的行
-        if (start_.y != current_y_) {
-            advance_to_row(current_y_);
-        }
-    }
-
-    constexpr bool has_next() const {
-        return current_y_ <= max_y_;
-    }
-
-    constexpr Range2<T> current() const {
-        if (!has_next()) return Range2<T>{0, 0};
-        return Range2<T>::from_start_and_length(current_x_, 1);
-    }
-
-    constexpr void advance() {
-        if (!has_next()) return;
-        
-        current_y_++;
-        if (current_y_ <= max_y_) {
-            advance_to_row(current_y_);
-        }
-    }
-
-private:
-    constexpr void advance_to_row(T target_y) {
-        // 推进 Bresenham 算法直到达到目标行
-        while (bresenham_y_ != target_y && has_next()) {
-            SignedT e2 = 2 * err_;
-            
-            if (e2 > -static_cast<SignedT>(dy_)) {
-                err_ -= static_cast<SignedT>(dy_);
-                current_x_ += sx_;
-            }
-            
-            if (e2 < static_cast<SignedT>(dx_)) {
-                err_ += static_cast<SignedT>(dx_);
-                bresenham_y_ += sy_;
-                
-                // 检查是否超过了目标行
-                if ((sy_ > 0 && bresenham_y_ > target_y) || 
-                    (sy_ < 0 && bresenham_y_ < target_y)) {
-                    break;
-                }
-            }
-        }
-    }
-
-private:
-    Point start_;
-    Point stop_;
-    T current_y_;      // 当前处理的行号
-    T current_x_;      // 当前行的 x 坐标
-    T bresenham_y_;    // Bresenham 算法当前的 y 坐标
-    T max_y_;          // 最大 y 坐标
-    T dx_;             // x 方向绝对值
-    T dy_;             // y 方向绝对值
-    SignedT sx_;       // x 方向符号
-    SignedT sy_;       // y 方向符号
-    SignedT err_;      // 误差项
-};
-
-
-// template<typename T>
-// struct LineDDAIterator{
-//     using Point = Vec2<uint16_t>;
-//     using Segment = Segment2<uint16_t>;
-
-//     constexpr LineDDAIterator(const Segment& segment):
-//         segment_(segment.swap_if_inverted()),
-//         current_y_(segment_.start.y){;}
-
-//     constexpr bool has_next() const {
-//         return current_y_ <= segment_.stop.y;
-//         // return true;
-//     }
-
-//     constexpr Range2<T> current() const {
-//         return {segment_.x_at_y(current_y_), segment_.x_at_y(current_y_ + 1)};
-//     }
-
-//     constexpr void advance(){
-//         current_y_ += 1;    
-//     }
-
-// private:
-//     Segment segment_;
-//     uint16_t current_y_;
-// };
-
-template<typename T>
-struct LineDDAIterator{
-    using Point = Vec2<uint16_t>;
-    using Segment = Segment2<uint16_t>;
-
-    constexpr LineDDAIterator(const Segment& segment){
-        auto & self = *this;
-        const auto fixed_segment = segment.swap_if_inverted();
-
-        self.x_step_ = Segment2<q16>(fixed_segment).x_delta_per_y(1);
-        self.current_x_ = fixed_segment.start.x;
-        self.current_y_ = fixed_segment.start.y;
-        self.stop_y_ = fixed_segment.stop.y;
-    }
-
-    constexpr bool has_next() const {
-        return current_y_ <= stop_y_;
-    }
-
-    constexpr Range2<T> current() const {
-        // return {T(current_x_), T(current_x_ + x_step_)};
-        return {T(current_x_-3), T(current_x_ + x_step_+3)};
-    }
-
-    constexpr void advance(){
-        current_y_ += 1;    
-        current_x_ += x_step_;
-    }
-
-private:
-    q16 x_step_;
-    q16 current_x_;
-    uint16_t current_y_;
-    uint16_t stop_y_;
-};
 
 
 // DrawDispatchIterator 特化
@@ -644,16 +512,16 @@ struct DrawDispatchIterator<Segment2<T>> {
     using Iterator = LineDDAIterator<T>;
 
     constexpr DrawDispatchIterator(const Segment& segment)
-        : iterator_(segment){}
+        : iter_(segment){}
 
     // 检查是否还有下一行
     constexpr bool has_next() const {
-        return iterator_.has_next();
+        return iter_.has_next();
     }
 
     // 推进到下一行
     constexpr void forward() {
-        iterator_.advance();
+        iter_.advance();
     }
 
     // 绘制当前行的所有点
@@ -662,7 +530,10 @@ struct DrawDispatchIterator<Segment2<T>> {
         if (!has_next()) return Ok();
         
         // 绘制当前行的范围
-        auto res = target.fill_x_range(iterator_.current(), color);
+        const auto x_range = iter_.x_range();
+        // const auto x_range = Range2u16(
+        //     iter_.x(), iter_.x() + 3);
+        auto res = target.fill_x_range(x_range, color);
         if (res.is_err()) return Err(res.unwrap_err());
         
         return Ok();
@@ -674,13 +545,58 @@ struct DrawDispatchIterator<Segment2<T>> {
         return draw_filled(target, color);
     }
 
-    // 获取当前行号
-    constexpr T current_row() const {
-        return iterator_.current_row();
+
+private:
+    Iterator iter_;
+};
+
+
+
+// DrawDispatchIterator 特化
+template<std::integral T>
+struct DrawDispatchIterator<Triangle2<T>> {
+    using Triangle = Triangle2<T>;
+    using Iterator = TriangleIterator<T>;
+
+    constexpr DrawDispatchIterator(const Triangle & triangle):
+        iter_(triangle.to_sorted_by_y()){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iter_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iter_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto x_range = iter_.current_filled();
+        auto res = target.fill_x_range(x_range, color);
+        if (res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    // 空心绘制（对于线段来说和填充一样）
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        if (!has_next()) return Ok();
+        
+        // 绘制当前行的范围
+        const auto [left_x_range, right_x_range] = iter_.current_left_and_right();
+        if(const auto res = target.fill_x_range(left_x_range, color);
+            res.is_err()) return res;
+        if(const auto res = target.fill_x_range(right_x_range, color);
+            res.is_err()) return res;
+        return Ok();
     }
 
 private:
-    Iterator iterator_;
+    TriangleIterator<T> iter_;
 };
 
 void render_main(){
@@ -743,8 +659,9 @@ void render_main(){
 
     while(true){
         const auto ctime = clock::time();
+        // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
         [[maybe_unused]] const auto [s,c] = sincospu(ctime);
-        const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 50 * c), uint16_t(80 + 50 * s));
+        const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 20 * c), uint16_t(80 + 20 * s));
 
 
         // const auto shapes = std::to_array<Rect2u16>({
@@ -756,7 +673,17 @@ void render_main(){
         // });
         using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,20,20};
-        auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{160,160}};
+        // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
+        
+        auto shape =  Triangle2<uint16_t>{
+            .points = {
+                Vec2u16{shape_x,shape_y},
+                Vec2u16{160,130},
+                Vec2u16{20,150}
+                // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
+                // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
+            }
+        };
         // using Shape = decltype(shape);
         auto shape_bb = shape.to_bounding_box();
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
@@ -783,9 +710,10 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        for(size_t j = 0; j < 200; j++){
+                        for(size_t j = 0; j < 20; j++){
 
                             render_iter.draw_filled(line_span, RGB565::RED).examine();
+                            render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
                         }
                         // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
 

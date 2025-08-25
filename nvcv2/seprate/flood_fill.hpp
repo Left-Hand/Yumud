@@ -19,9 +19,9 @@ struct Blob{
 };
 
 struct BlobFilter{
-    Range2<uint32_t> area_range =     {0, UINT32_MAX};
-    Range2<uint32_t> width_range =    {0, UINT32_MAX};
-    Range2<uint32_t> height_range =   {0, UINT32_MAX};
+    Range2<uint32_t> area_range =     Range2<uint32_t>{uint32_t(0), UINT32_MAX};
+    Range2<uint32_t> width_range =    Range2<uint32_t>{uint32_t(0), UINT32_MAX};
+    Range2<uint32_t> height_range =   Range2<uint32_t>{uint32_t(0), UINT32_MAX};
 
     // static BlobFilter clamp_width(const uint32_t min_width, const uint32_t max_width = UINT32_MAX){
     //     BlobFilter filter;

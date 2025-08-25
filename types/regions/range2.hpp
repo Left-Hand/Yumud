@@ -25,8 +25,10 @@ public:
         start(static_cast<T>(0)),
         stop(static_cast<T>(0)){;}
 
-    [[nodiscard]] __fast_inline constexpr Range2(const T _from, const T _to): 
-    start(_from), stop(_to) {
+
+    template<typename U, typename V>
+    [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop): 
+    start(static_cast<T>(_start)), stop(static_cast<T>(_stop)) {
         if(stop < start) std::swap(start, stop);
     }
 
@@ -51,14 +53,15 @@ public:
         if(stop < start) std::swap(start, stop);
     }
 
+    template<typename U>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
-        const T center, const T length)
+        const U center, const U length)
     {
-        if constexpr(std::is_integral_v<T>){
-            const auto half_length = length / 2;
+        if constexpr(std::is_integral_v<U>){
+            const auto half_length = length >> 1;
             return {center - half_length, center + half_length};
         }else{
-            constexpr T HALF_ONE = static_cast<T>(0.5);
+            constexpr U HALF_ONE = static_cast<U>(0.5);
             const auto half_length = (length * HALF_ONE);
             return {center - half_length, center + half_length};
         }
@@ -75,11 +78,23 @@ public:
         return {center, center};
     } 
 
+    template<typename U, typename V>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
-        const T start, const T length)
+        const U start, const V length)
     {
-        return {start, static_cast<T>(start + length)};
+        return {
+            static_cast<T>(start), 
+            static_cast<T>(start + length)
+        };
     } 
+
+    [[nodiscard]] __fast_inline constexpr Range2<T> swap() const {
+        return {stop, start};
+    }
+
+    [[nodiscard]] __fast_inline constexpr Range2<T> swap_if_inversed() const {
+        return start > stop ? swap() : *this;
+    }
     
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_gridsize(
         const T start, const T grid_size)
@@ -245,6 +260,9 @@ public:
 
 using Range2i = Range2<int>;
 using Range2u = Range2<uint>;
+using Range2u8 = Range2<uint8_t>;
+using Range2u16 = Range2<uint16_t>;
+using Range2u32 = Range2<uint32_t>;
 
 template<typename T>
 __inline OutputStream & operator<<(
