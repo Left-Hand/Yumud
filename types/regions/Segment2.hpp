@@ -15,6 +15,10 @@ public:
 public:
     [[nodiscard]] constexpr Segment2(){;}
 
+    template<typename U>
+    [[nodiscard]] constexpr explicit Segment2(const Segment2<U> & segment):
+        start(Vec2<T>(segment.start)), stop(Vec2<T>(segment.stop)){;}
+
     [[nodiscard]] constexpr Segment2(const Vec2<auto> & _start, const Vec2<auto> & _stop): 
             start(static_cast<Vec2<T>>(_start)), stop(static_cast<Vec2<T>>(_stop)){;}
 
@@ -136,6 +140,30 @@ public:
             return {stop, start};
         }
         return *this;
+    }
+
+    [[nodiscard]] __fast_inline constexpr bool is_horizontal() const{
+        return start.y == stop.y;
+    }
+
+    [[nodiscard]] __fast_inline constexpr bool is_vertical() const{
+        return start.x == stop.x;
+    }
+
+    [[nodiscard]] __fast_inline constexpr Segment2 swap() const {
+        return {stop, start};
+    }
+
+    [[nodiscard]] __fast_inline constexpr Vec2<T> midpoint() const {
+        return {(start.x + stop.x) / 2, (start.y + stop.y) / 2};
+    }
+
+    [[nodiscard]] __fast_inline constexpr T x_delta_per_y(const T y_unit) const {
+        static_assert(not std::is_integral_v<T>);
+        if (start.y == stop.y) {
+            return T{0}; // No change in x per y unit for horizontal lines
+        }
+        return (stop.x - start.x) * y_unit / (stop.y - start.y);
     }
 };
 

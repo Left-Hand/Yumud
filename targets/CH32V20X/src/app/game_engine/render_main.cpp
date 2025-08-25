@@ -572,31 +572,67 @@ private:
 };
 
 
+// template<typename T>
+// struct LineDDAIterator{
+//     using Point = Vec2<uint16_t>;
+//     using Segment = Segment2<uint16_t>;
+
+//     constexpr LineDDAIterator(const Segment& segment):
+//         segment_(segment.swap_if_inverted()),
+//         current_y_(segment_.start.y){;}
+
+//     constexpr bool has_next() const {
+//         return current_y_ <= segment_.stop.y;
+//         // return true;
+//     }
+
+//     constexpr Range2<T> current() const {
+//         return {segment_.x_at_y(current_y_), segment_.x_at_y(current_y_ + 1)};
+//     }
+
+//     constexpr void advance(){
+//         current_y_ += 1;    
+//     }
+
+// private:
+//     Segment segment_;
+//     uint16_t current_y_;
+// };
+
 template<typename T>
 struct LineDDAIterator{
     using Point = Vec2<uint16_t>;
     using Segment = Segment2<uint16_t>;
 
-    constexpr LineDDAIterator(const Segment& segment):
-        segment_(segment.swap_if_inverted()),
-        current_y_(segment_.start.y){;}
+    constexpr LineDDAIterator(const Segment& segment){
+        auto & self = *this;
+        const auto fixed_segment = segment.swap_if_inverted();
+
+        self.x_step_ = Segment2<q16>(fixed_segment).x_delta_per_y(1);
+        self.current_x_ = fixed_segment.start.x;
+        self.current_y_ = fixed_segment.start.y;
+        self.stop_y_ = fixed_segment.stop.y;
+    }
 
     constexpr bool has_next() const {
-        return current_y_ <= segment_.stop.y;
-        // return true;
+        return current_y_ <= stop_y_;
     }
 
     constexpr Range2<T> current() const {
-        return {segment_.x_at_y(current_y_), segment_.x_at_y(current_y_ + 1)};
+        // return {T(current_x_), T(current_x_ + x_step_)};
+        return {T(current_x_-3), T(current_x_ + x_step_+3)};
     }
 
     constexpr void advance(){
         current_y_ += 1;    
+        current_x_ += x_step_;
     }
 
 private:
-    Segment segment_;
+    q16 x_step_;
+    q16 current_x_;
     uint16_t current_y_;
+    uint16_t stop_y_;
 };
 
 
@@ -721,7 +757,7 @@ void render_main(){
         using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,20,20};
         auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{160,160}};
-        using Shape = decltype(shape);
+        // using Shape = decltype(shape);
         auto shape_bb = shape.to_bounding_box();
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
         auto render_iter = make_draw_dispatch_iterator(shape);
@@ -747,8 +783,12 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        // render_iter.draw_filled(line_span, RGB565::RED).examine();
-                        render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
+                        for(size_t j = 0; j < 200; j++){
+
+                            render_iter.draw_filled(line_span, RGB565::RED).examine();
+                        }
+                        // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
+
                         render_iter.forward();
                     }{
 
