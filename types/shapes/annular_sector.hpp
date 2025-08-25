@@ -143,7 +143,7 @@ private:
 
 template<typename T>
 struct BoundingBoxOf<AnnularSector<T>> {
-    static constexpr Rect2<T> to_bounding_box(const AnnularSector<T> & obj){
+    static constexpr Rect2<T> bounding_box(const AnnularSector<T> & obj){
         const auto v1 = Vec2<T>::from_idenity_rotation(obj.angle_range.start);
         const auto v2 = Vec2<T>::from_idenity_rotation(obj.angle_range.stop);
         const bool is_close = v2.is_count_clockwise_to(v1);

@@ -94,7 +94,7 @@ public:
 
     constexpr Color & operator[](const size_t index) {return buf_[index];}
 
-    constexpr Rect2u16 to_bounding_box() const {return Rect2u16(0, y_, buf_.size(), 1);}
+    constexpr Rect2u16 bounding_box() const {return Rect2u16(0, y_, buf_.size(), 1);}
 
     constexpr ScanLine to_scanline() const {
         return ScanLine{
@@ -257,7 +257,7 @@ struct FrameBufferSpan{
         return LineBufferSpan<Color>(std::span<Color>(pdata + y * width, width), y);
     }
 
-    constexpr Rect2u16 to_bounding_box() const {
+    constexpr Rect2u16 bounding_box() const {
         return Rect2u16::from_size(size_);
     }
 
@@ -531,8 +531,6 @@ struct DrawDispatchIterator<Segment2<T>> {
         
         // 绘制当前行的范围
         const auto x_range = iter_.x_range();
-        // const auto x_range = Range2u16(
-        //     iter_.x(), iter_.x() + 3);
         auto res = target.fill_x_range(x_range, color);
         if (res.is_err()) return Err(res.unwrap_err());
         
@@ -551,6 +549,107 @@ private:
 };
 
 
+// DrawDispatchIterator 特化
+template<std::integral T>
+struct DrawDispatchIterator<Circle2<T>> {
+    using Shape = Circle2<T>;
+    using Iterator = CircleBresenhamIterator<T>;
+
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : iter_(shape){}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iter_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iter_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto x_range = iter_.x_range();
+        auto res = target.fill_x_range(x_range, color);
+        if (res.is_err()) return Err(res.unwrap_err());
+        
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto [left_x_range, right_x_range] = iter_.left_and_right();
+        if(const auto res = target.fill_x_range(left_x_range, color);
+            res.is_err()) return res;
+        if(const auto res = target.fill_x_range(right_x_range, color);
+            res.is_err()) return res;
+        return Ok();
+    }
+
+
+private:
+    Iterator iter_;
+};
+
+
+template<std::integral T>
+struct DrawDispatchIterator<HorizonOval2<T>> {
+    using Shape = HorizonOval2<T>;
+    using Iterator = CircleBresenhamIterator<T>;
+
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : iter_(Circle2<T>{.center = shape.left_center, .radius = shape.radius}),
+            length_(shape.length){}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iter_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iter_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto x_range = iter_.x_range();
+        if(auto res = target.fill_x_range({x_range.start, x_range.stop + length_}, color);
+            res.is_err()) return res;
+        
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        if(iter_.is_y_at_edge()){
+            const auto x_range = iter_.x_range();
+            if(const auto res = target.fill_x_range({x_range.start, x_range.stop + length_}, color);
+                res.is_err()) return res;
+            return Ok();
+        }else{
+            const auto [left_x_range, right_x_range] = iter_.left_and_right();
+            if(const auto res = target.fill_x_range(left_x_range, color);
+                res.is_err()) return res;
+            if(const auto res = target.fill_x_range(right_x_range.shift(length_), color);
+                res.is_err()) return res;
+            return Ok();
+        }
+
+    }
+
+
+private:
+    Iterator iter_;
+    T length_;
+};
 
 // DrawDispatchIterator 特化
 template<std::integral T>
@@ -584,10 +683,8 @@ struct DrawDispatchIterator<Triangle2<T>> {
     // 空心绘制（对于线段来说和填充一样）
     template<DrawTargetConcept Target, typename Color>
     Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
-        if (!has_next()) return Ok();
-        
         // 绘制当前行的范围
-        const auto [left_x_range, right_x_range] = iter_.current_left_and_right();
+        const auto [left_x_range, right_x_range] = iter_.left_and_right();
         if(const auto res = target.fill_x_range(left_x_range, color);
             res.is_err()) return res;
         if(const auto res = target.fill_x_range(right_x_range, color);
@@ -648,9 +745,9 @@ void render_main(){
         const std::span<RGB565> & src, 
         const ScanLine line
     ){
-        // DEBUG_PRINTLN(line.to_bounding_box());
+        // DEBUG_PRINTLN(line.bounding_box());
         tft.put_texture(
-            line.to_bounding_box(),
+            line.bounding_box(),
             src.data()
         ).examine();
     };
@@ -674,18 +771,21 @@ void render_main(){
         using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,20,20};
         // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
+        // auto shape =  Circle2<uint16_t>{Vec2u16{shape_x,shape_y},30};
+        auto shape =  HorizonOval2<uint16_t>{
+            .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
         
-        auto shape =  Triangle2<uint16_t>{
-            .points = {
-                Vec2u16{shape_x,shape_y},
-                Vec2u16{160,130},
-                Vec2u16{20,150}
-                // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
-                // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
-            }
-        };
+        // auto shape =  Triangle2<uint16_t>{
+        //     .points = {
+        //         Vec2u16{shape_x,shape_y},
+        //         Vec2u16{160,130},
+        //         Vec2u16{20,150}
+        //         // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
+        //         // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
+        //     }
+        // };
         // using Shape = decltype(shape);
-        auto shape_bb = shape.to_bounding_box();
+        auto shape_bb = shape.bounding_box();
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
         auto render_iter = make_draw_dispatch_iterator(shape);
 
@@ -710,7 +810,8 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        for(size_t j = 0; j < 20; j++){
+                        // for(size_t j = 0; j < 20; j++){
+                        for(size_t j = 0; j < 1; j++){
 
                             render_iter.draw_filled(line_span, RGB565::RED).examine();
                             render_iter.draw_hollow(line_span, RGB565::BLUE).examine();

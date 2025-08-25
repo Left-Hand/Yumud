@@ -18,7 +18,7 @@ struct BoxRect final{
     //     };
     // }
 
-    constexpr auto to_bounding_box() const {
+    constexpr auto bounding_box() const {
         return Rect2<T>{-width/2,-height/2, width, height};
     }
 };
@@ -43,7 +43,7 @@ template<typename T>
 struct BoundingBoxOf<Rect2<T>> {
     using Object = Rect2<T>;
 
-    static constexpr auto to_bounding_box(const Object & obj){
+    static constexpr auto bounding_box(const Object & obj){
         return obj;
     }
 };

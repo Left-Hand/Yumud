@@ -102,7 +102,7 @@ template<>
 struct BoundingBoxOf<RotatedZebraRect>{
 
 
-    static constexpr BoundingBox to_bounding_box(const RotatedZebraRect & obj){
+    static constexpr BoundingBox bounding_box(const RotatedZebraRect & obj){
         const auto rot = Vec2<q16>::from_idenity_rotation(obj.rotation);
         const std::array<Vec2<q16>, 4> points = {
             obj.get_corner<0>().improduct(rot),
@@ -152,7 +152,7 @@ private:
 
 template<>
 struct BoundingBoxOf<SpotLight>{
-    static constexpr auto to_bounding_box(const SpotLight & obj){
+    static constexpr auto bounding_box(const SpotLight & obj){
         return BoundingBox{-obj.radius, -obj.radius, 2 * obj.radius, 2 * obj.radius};
     }
 };
@@ -181,7 +181,7 @@ template<typename T>
 constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& placement){
     return ElementWithPlacement<T>{
         .placement = placement,
-        .bounding_box = BoundingBoxOf<T>::to_bounding_box(element),
+        .bounding_box = BoundingBoxOf<T>::bounding_box(element),
         .cache = CacheOf<T, bool>::from(element),
     };
 }

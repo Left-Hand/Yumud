@@ -93,7 +93,7 @@ struct Triangle2{
         return result;
     }
 
-    constexpr Rect2<T> to_bounding_box() const {
+    constexpr Rect2<T> bounding_box() const {
         return Rect2<T>::from_minimal_bounding_box(points);
     }
 

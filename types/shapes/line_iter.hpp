@@ -2,6 +2,7 @@
 
 #include "prelude.hpp"
 #include "triangle2.hpp"
+#include "circle2.hpp"
 
 namespace ymd{
 
@@ -175,7 +176,7 @@ public:
         return {left_iter(self).x(), right_iter(self).x()};
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> current_left_and_right() const {
+    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
         auto & self = *this;
         return {
             left_iter(self).x_range(),
@@ -227,5 +228,68 @@ private:
     T mid_y_;
     T stop_y_;
 };
+
+
+
+template<typename T>
+struct CircleBresenhamIterator{
+public:
+    constexpr CircleBresenhamIterator(const Circle2<T> & circle):
+        x0_(circle.center.x),
+        err_(1 - 2 * circle.radius),
+        y_(-circle.radius),
+        radius_(circle.radius),
+        radius_squ_(square(circle.radius))
+    {
+        replace_x();
+    }
+
+    constexpr void advance(){
+        y_++;
+        replace_x();
+    }
+
+    constexpr bool has_next() const {
+        return y_ < radius_;
+    }
+
+    constexpr Range2u16 x_range() const{
+        return Range2u16{x0_ + x_, x0_ - x_};
+        // return Range2u16{x0_ - 3, x0_ + 3};
+    }
+
+    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+        return {
+            Range2u16{x0_ + x_, x0_ + x_ + 1},
+            Range2u16{x0_ - x_, x0_ - x_ + 1}
+        };
+    }
+
+    constexpr bool is_y_at_edge() const {
+        return y_ == (radius_ - 1) || y_ == (-radius_);
+    }
+private:
+    int16_t x0_;
+    int16_t err_;
+    int16_t y_;
+    
+    int16_t radius_;
+    uint16_t radius_squ_;
+
+    int16_t x_ = 0;
+
+
+    constexpr void replace_x(){
+        x_ = -radius_;
+        while(x_ * x_ + y_ * y_ > radius_squ_){
+            x_++;
+        }
+    }
+
+};
+
+
+                // let delta = Point::new(*x, y) * 2 - self.center_2x;
+                // (delta.length_squared() as u32) < self.threshold
 
 }

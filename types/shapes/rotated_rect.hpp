@@ -74,7 +74,7 @@ struct BoundingBoxOf<RotatedRect<T>>{
     using Object = RotatedRect<T>;
     using Self =  BoundingBoxOf<Object>;
 
-    static constexpr Rect2<T> to_bounding_box(const Object & obj){
+    static constexpr Rect2<T> bounding_box(const Object & obj){
         const auto rot = Vec2<T>::from_idenity_rotation(obj.rotation);
         const std::array<Vec2<T>, 4> points = {
             obj.template get_corner<0>().improduct(rot),

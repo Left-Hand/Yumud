@@ -22,7 +22,7 @@ struct ScanLine{
     Range2<uint16_t> x_range;
     uint16_t y;
 
-    Rect2u16 to_bounding_box() const{
+    Rect2u16 bounding_box() const{
         return Rect2u16(x_range.start, y, x_range.length(), 1);
     }
 };
@@ -90,10 +90,10 @@ constexpr WithPosition<Shape> operator | (const Shape & shape, AddPosition adder
 template<typename Shape>
 requires (is_placed_t<Shape>::value == false)
 struct BoundingBoxOf<WithPosition<Shape>>{
-    [[nodiscard]] __fast_inline static constexpr auto to_bounding_box(
+    [[nodiscard]] __fast_inline static constexpr auto bounding_box(
         const WithPosition<Shape> & shape
     ){
-        return BoundingBoxOf<Shape>::to_bounding_box(shape.object).shift(shape.position);
+        return BoundingBoxOf<Shape>::bounding_box(shape.object).shift(shape.position);
     }
 };
 

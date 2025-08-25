@@ -123,7 +123,7 @@ public:
         return (stop - start).angle();
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_bounding_box() const{
+    [[nodiscard]] __fast_inline constexpr Rect2<T> bounding_box() const{
         const auto points = std::to_array({start, stop});
         return Rect2<T>::from_minimal_bounding_box(points);
     }
