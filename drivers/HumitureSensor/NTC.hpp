@@ -7,8 +7,8 @@ namespace ymd::drivers{
 
 class NTC:public TempSensor{
 protected:
-    scexpr real_t R_kOhms = 100;
-    scexpr real_t R0_kOhms = 10;
+    static constexpr real_t R_kOhms = 100;
+    static constexpr real_t R0_kOhms = 10;
 
     uint8_t index;
 

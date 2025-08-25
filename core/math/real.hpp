@@ -26,10 +26,10 @@ using real_t = ymd::iq_t<IQ_DEFAULT_Q>;
 
 namespace ymd{
 
-scexpr real_t pi_4 = real_t(PI/4);
-scexpr real_t pi_2 = real_t(PI/2);
-scexpr real_t pi = real_t(PI);
-scexpr real_t tau = real_t(TAU);
+static constexpr real_t pi_4 = real_t(PI/4);
+static constexpr real_t pi_2 = real_t(PI/2);
+static constexpr real_t pi = real_t(PI);
+static constexpr real_t tau = real_t(TAU);
 
 
 consteval real_t operator"" _r(long double x){

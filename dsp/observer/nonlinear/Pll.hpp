@@ -82,7 +82,7 @@ public:
     
 // protected:
 public:
-    scexpr int shift_bits = 5;
+    static constexpr int shift_bits = 5;
 
     iq_t<16> kp_;
     iq_t<16> ki_;

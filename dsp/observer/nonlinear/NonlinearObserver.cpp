@@ -4,11 +4,11 @@
 using namespace ymd;
 using namespace ymd::foc;
 
-// scexpr __fast_inline q16 wrap_pm_pi(const q16 x){
+// static constexpr __fast_inline q16 wrap_pm_pi(const q16 x){
 //     return fposmod(x + q16(PI), q16(TAU)) - q16(PI);
 // }
 
-scexpr __fast_inline q16 sq(const q16 x){
+static constexpr __fast_inline q16 sq(const q16 x){
     return x * x;
 }
 

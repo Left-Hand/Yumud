@@ -126,7 +126,7 @@ static constexpr auto INIT_LIST2 = std::to_array({
 });static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-scexpr real_t scale = real_t(13.0/2000);
+static constexpr real_t scale = real_t(13.0/2000);
 
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
@@ -158,7 +158,7 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 
 // IResult<> PMW3901::read_image(ImageWritable<Gray> & img){
 //     int count = 0;
-//     scexpr uint8_t MASK = 0x0c; //MASK to take bits 2 and 3 from b
+//     static constexpr uint8_t MASK = 0x0c; //MASK to take bits 2 and 3 from b
 
 //     for (int ii = 0; ii < 1225; ii++) { //for 1 frame of 1225 pixels (35*35)
 //         uint8_t a,b, hold;

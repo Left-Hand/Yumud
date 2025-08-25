@@ -51,7 +51,7 @@ IResult<> AK8975::validate(){
     // (5) Read measurement data (HXL to HZH) 
     // (6) Write “0” to SELF bit of ASTC register
 
-    scexpr auto TIME_OUT_MS = 10ms;
+    static constexpr auto TIME_OUT_MS = 10ms;
 
     
     {
@@ -134,7 +134,7 @@ IResult<> AK8975::disable_i2c(){
 }
 
 IResult<Vec3<q24>> AK8975::read_mag(){
-    scexpr real_t max_mT = real_t(1.229);
+    static constexpr real_t max_mT = real_t(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
     return Ok{Vec3<q24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV

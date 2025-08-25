@@ -20,9 +20,9 @@ struct SequenceParas{
 //压缩储存的位置和朝向 与Ray互转
 struct CurvePoint {
 protected:
-    scexpr int XY_SHIFT_BITS = 10;
-    scexpr q16 RAD_SCALE = q16(1024 / TAU);
-    scexpr q16 INV_RAD_SCALE = q16(TAU / 1024);
+    static constexpr int XY_SHIFT_BITS = 10;
+    static constexpr q16 RAD_SCALE = q16(1024 / TAU);
+    static constexpr q16 INV_RAD_SCALE = q16(TAU / 1024);
     
     uint32_t x_:11;
     uint32_t y_:11;

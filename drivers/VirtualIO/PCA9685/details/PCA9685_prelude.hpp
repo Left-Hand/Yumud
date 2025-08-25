@@ -25,8 +25,8 @@ public:
         Prescale = 0xfe
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
-    scexpr auto CHANNELS_COUNT = 16;
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
+    static constexpr auto CHANNELS_COUNT = 16;
 
     enum class Error_Kind{
         IndexOutOfRange

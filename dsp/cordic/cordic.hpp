@@ -14,7 +14,7 @@ protected:
 		T y;
 	};
 
-	scexpr std::array<_iq, N> sine{[]{
+	static constexpr std::array<_iq, N> sine{[]{
         std::array<_iq, N> temp = {};
         for(size_t i = 0; i < N; ++i) {
             temp[i] = _iq(cem::sin(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));
@@ -22,7 +22,7 @@ protected:
         return temp;
     }()};
 
-	scexpr std::array<_iq, N> cosine{[]{
+	static constexpr std::array<_iq, N> cosine{[]{
         std::array<_iq, N> temp = {};
         for(size_t i = 0; i < N; ++i) {
             temp[i] = _iq(cem::cos(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));

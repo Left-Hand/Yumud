@@ -344,22 +344,22 @@ void SmartCar::main(){
 
 
     [[maybe_unused]] auto plot_vec3 = [&](const Vec3 & vec3,  const Vec2i & pos){
-        scexpr auto square_length = 50;
+        static constexpr auto square_length = 50;
         auto arm_length = vec3.length();
 
-        scexpr auto radius = 3;
-        scexpr auto x_unit = Vec2(1, 0);
-        scexpr auto y_unit = Vec2(0.5, -0.73);
-        scexpr auto z_unit = Vec2(0, -1);
+        static constexpr auto radius = 3;
+        static constexpr auto x_unit = Vec2(1, 0);
+        static constexpr auto y_unit = Vec2(0.5, -0.73);
+        static constexpr auto z_unit = Vec2(0, -1);
 
         auto x_axis = Vec3(arm_length, 0, 0);
         auto y_axis = Vec3(0, arm_length, 0);
         auto z_axis = Vec3(0, 0, arm_length);
 
-        scexpr auto x_color = RGB565::RED;
-        scexpr auto y_color = RGB565::GREEN;
-        scexpr auto z_color = RGB565::BLUE;
-        scexpr auto bg_color = RGB565::BLACK;
+        static constexpr auto x_color = RGB565::RED;
+        static constexpr auto y_color = RGB565::GREEN;
+        static constexpr auto z_color = RGB565::BLUE;
+        static constexpr auto bg_color = RGB565::BLACK;
 
         auto vec3n = vec3.normalized();
         const Quat rot = Quat(Vec3(0, 0, -1), vec3n);
@@ -645,11 +645,11 @@ void SmartCar::main(){
 
                 //能够找到a角点和v角点
                 if(bool(a_corner_ptr) && bool(v_corner_ptr)){
-                    scexpr int ignore_y = 28;
+                    static constexpr int ignore_y = 28;
                     if(Vec2i(*a_corner_ptr).y < ignore_y) return {0,0};
 
-                    scexpr int max_y_diff = 5;
-                    scexpr int min_x_diff = 7;
+                    static constexpr int max_y_diff = 5;
+                    static constexpr int min_x_diff = 7;
 
                     Vec2i diff = Vec2i(v_corner_ptr->point) - Vec2i(a_corner_ptr->point);
                     //A角点出现在V角点之前
@@ -670,7 +670,7 @@ void SmartCar::main(){
             Vec2i left_detected = side_barrier_detect(left_corners, LR::LEFT);
             Vec2i right_detected = side_barrier_detect(right_corners, LR::RIGHT);
 
-            scexpr int least_y_diff = 20;
+            static constexpr int least_y_diff = 20;
 
             if(left_detected && right_detected) {
                 switch(sign_with_dead_zone(left_detected.y, right_detected.y,least_y_diff)){
@@ -715,8 +715,8 @@ void SmartCar::main(){
 
             const auto * corner = CornerUtils::find_a(_corners);
             bool first_is_a = bool(corner == _corners.begin());
-            // scexpr int min_y_diff = 4;
-            scexpr int min_x_diff = 6;
+            // static constexpr int min_y_diff = 4;
+            static constexpr int min_x_diff = 6;
             if(first_is_a){
                 const auto * ret = &(corner->point);
                 const Vec2i diff = Vec2i(track[2]) - Vec2i(track[1]);
@@ -746,7 +746,7 @@ void SmartCar::main(){
                     case LEFT:
                     case RIGHT:
                         if(point == _corners.begin() && point->point.y > 38){
-                                scexpr int _min_x_diff = 2;
+                                static constexpr int _min_x_diff = 2;
 
                                 if(_track.size() < 3) return nullptr;
 
@@ -777,8 +777,8 @@ void SmartCar::main(){
             const auto & left_point = left_detected->point;
             const auto & right_point = right_detected->point;
 
-            scexpr int max_y_diff = 10;
-            scexpr int min_x_diff = 17;
+            static constexpr int max_y_diff = 10;
+            static constexpr int min_x_diff = 17;
             
             if(std::abs(left_point.y - right_point.y) >= max_y_diff) return {false};
             if(std::abs(left_point.x - right_point.x) <= min_x_diff) return {false};
@@ -857,7 +857,7 @@ void SmartCar::main(){
             // const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
             if(track.size() < 3) return false;
 
-            scexpr auto least_x_diff = 10;
+            static constexpr auto least_x_diff = 10;
 
 
             if(known_side == LR::RIGHT) if((track[2] - track[1]) < -least_x_diff) return {true};
@@ -1085,7 +1085,7 @@ void SmartCar::main(){
         //进行引导修正
         if(false){
             [[maybe_unused]]auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
-                scexpr real_t k = 1.2;
+                static constexpr real_t k = 1.2;
 
                 auto coast_point_valid = [](const CoastItem & host, const CoastItem & guest, const LR _is_right) -> bool{
                     Vec2i delta = Vec2i(guest) - Vec2i(host);

@@ -22,7 +22,7 @@ bool isInInterruptContext() {
     // bool inInterrupt = (mpp == 1 || mpp == 3);        // 如果 mpp 为 1 或 3，则在中断上下文中
     
     // return inInterrupt;
-    // scexpr uint32_t address = 0xE000E04C;
+    // static constexpr uint32_t address = 0xE000E04C;
     // return * (uint32_t *)(address) & (0b01'0000'0000);
     return QingKeV4::isIntrruptActing();
 }

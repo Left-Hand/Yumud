@@ -19,11 +19,11 @@ void initDisplayer(ST7789 & tftDisplayer);
 
 Ray canvas_transform(const Ray & ray);
 
-void draw_curve(PainterConcept & painter, const Curve & curve);
+void draw_curve(PainterIntf & painter, const Curve & curve);
 
 void print_curve(OutputStream & logger, const Curve & curve);
 
-void draw_turtle(PainterConcept & painter, const Ray & ray);
+void draw_turtle(PainterIntf & painter, const Ray & ray);
 
 void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func);
 

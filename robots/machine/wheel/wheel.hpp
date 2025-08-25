@@ -13,7 +13,7 @@ public:
         real_t max_aps;
     };
     
-    // using Motor = ymd::foc::FOCMotorConcept;
+    // using Motor = ymd::foc::FOCMotorIntf;
     using Motor = ymd::foc::RemoteFOCMotor;
 protected:
     bool inversed_ = false;

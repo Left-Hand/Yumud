@@ -69,7 +69,7 @@ void math_main(){
 
     // sdi.init();
 
-    // scexpr auto cnt = 200;
+    // static constexpr auto cnt = 200;
     // sstl::vector<int, cnt> cnts;
     // while(true){
     //     // sdi.println(millis());

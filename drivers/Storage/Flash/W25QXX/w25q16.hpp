@@ -13,8 +13,8 @@ class W25Q16:public StoragePaged{
 protected:
     hal::SpiDrv spi_drv;
 
-    scexpr size_t _m_size = 16 * 1024 * 1024;
-    scexpr size_t _pagesize = 4 * 1024;
+    static constexpr size_t _m_size = 16 * 1024 * 1024;
+    static constexpr size_t _pagesize = 4 * 1024;
     
     enum class Commands:uint8_t{
         WriteEnable = 0x06,

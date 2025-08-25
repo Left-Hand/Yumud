@@ -110,15 +110,15 @@ static constexpr size_t count_iter(Iter && iter){
 //     uint32_t turnCnt = milliseconds % 2667;
 //     uint32_t turns = milliseconds / 2667;
     
-//     scexpr real_t velPoints[7] = {
+//     static constexpr real_t velPoints[7] = {
 //         real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
 //     };
     
-//     scexpr real_t posPoints[7] = {
+//     static constexpr real_t posPoints[7] = {
 //         real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
 //     };
 
-//     scexpr uint tickPoints[7] = {
+//     static constexpr uint tickPoints[7] = {
 //         0, 300, 400, 500, 2210, 2567, 2667 
 //     };
 

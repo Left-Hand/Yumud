@@ -12,7 +12,7 @@ namespace ymd::drivers{
 
 struct QMC5883L_Prelude{
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1a >> 1);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1a >> 1);
 
     using Error = ImuError;
     template<typename T = void>

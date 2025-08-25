@@ -19,11 +19,11 @@
 
         curr_sens.update(0);
 
-        // scexpr int fs = CHOPPER_FREQ / 2;
-        // scexpr int test_freq = 200;
-        // scexpr int test_freq = 500;
-        scexpr real_t test_volt = 0.9_r;
-        // scexpr int test_freq = 1000;
+        // static constexpr int fs = CHOPPER_FREQ / 2;
+        // static constexpr int test_freq = 200;
+        // static constexpr int test_freq = 500;
+        static constexpr real_t test_volt = 0.9_r;
+        // static constexpr int test_freq = 1000;
         svpwm.set_ab_volt(test_volt, 0);
         // phase_res = test_volt / curr_sens.ab().a;
         // phase_res = test_volt  * 0.66_r / curr_sens.uvw().u;
@@ -36,13 +36,13 @@
 
         curr_sens.update(0);
 
-        scexpr int fs = CHOPPER_FREQ / 2;
-        // scexpr int test_freq = 200;
-        scexpr int test_freq = 500;
-        scexpr real_t test_volt = 0.6_r;
-        // scexpr int test_freq = 1000;
+        static constexpr int fs = CHOPPER_FREQ / 2;
+        // static constexpr int test_freq = 200;
+        static constexpr int test_freq = 500;
+        static constexpr real_t test_volt = 0.6_r;
+        // static constexpr int test_freq = 1000;
         static int cnt = 0; 
-        scexpr int div = fs / test_freq;
+        static constexpr int div = fs / test_freq;
 
         static bool upedge_captured = true;
 
@@ -51,7 +51,7 @@
             cnt = 0;
             upedge_captured = false;
         }
-        scexpr real_t omega = real_t((TAU * test_freq) / fs);
+        static constexpr real_t omega = real_t((TAU * test_freq) / fs);
 
         {
             static real_t last_curr = 0;
@@ -126,9 +126,9 @@
     [[maybe_unused]] auto cb_pulse = [&]{
         static int cnt = 0;
 
-        scexpr real_t pulse_volt = 6;
-        scexpr int sustain = (0.0003) * 25000;
-        scexpr int dur = (0.02) * 25000;
+        static constexpr real_t pulse_volt = 6;
+        static constexpr int sustain = (0.0003) * 25000;
+        static constexpr int dur = (0.02) * 25000;
 
         cnt ++;
         if(cnt >= sustain + dur){
@@ -182,7 +182,7 @@
         static q20 mt = 0;
         mt += q20(1.0 / FOC_FREQ);
 
-        scexpr auto omega = ({
+        static constexpr auto omega = ({
             // real_t(6 * TAU);
             real_t(1);
         });
@@ -285,16 +285,16 @@
     [[maybe_unused]] auto cb_hfi = [&]{
 
         static int cnt = 0;
-        // scexpr int hfi_freq = 4096;
-        // scexpr int hfi_freq = 2500;
-        // scexpr int hfi_freq = 1024;
-        // scexpr int hfi_freq = 512;
-        // scexpr int hfi_freq = 256;
-        // scexpr int divider = CHOPPER_FREQ / 2 / hfi_freq;
-        scexpr int divider = 16;
-        scexpr size_t hfi_freq = FOC_FREQ / divider;
-        scexpr real_t hfi_base_volt = 1.2_r;
-        scexpr real_t openloop_base_volt = 0.0_r;
+        // static constexpr int hfi_freq = 4096;
+        // static constexpr int hfi_freq = 2500;
+        // static constexpr int hfi_freq = 1024;
+        // static constexpr int hfi_freq = 512;
+        // static constexpr int hfi_freq = 256;
+        // static constexpr int divider = CHOPPER_FREQ / 2 / hfi_freq;
+        static constexpr int divider = 16;
+        static constexpr size_t hfi_freq = FOC_FREQ / divider;
+        static constexpr real_t hfi_base_volt = 1.2_r;
+        static constexpr real_t openloop_base_volt = 0.0_r;
         cnt = (cnt + 1) % divider;
 
 
@@ -612,10 +612,10 @@ class BldcMotor{
 
     // std::array<real_t, 2> ab_volt;
 
-    // scexpr real_t r_ohms = 7.1_r;
+    // static constexpr real_t r_ohms = 7.1_r;
     // scepxr real_t l_mh = 1.45_r;
 
-    // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
+    // static constexpr iq_t<16> pll_freq = iq_t<16>(0.2);
     [[maybe_unused]]
     LapPosPll pll = {
         {

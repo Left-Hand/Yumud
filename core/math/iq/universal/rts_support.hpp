@@ -7,10 +7,6 @@
 #define __fast_inline __attribute__((always_inline))
 #endif
 
-#ifndef scexpr
-#define scexpr static constexpr
-#endif
-
 
 ////////////////////////////////////////////////////////////
 //                                                        //

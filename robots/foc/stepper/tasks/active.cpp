@@ -4,7 +4,7 @@ using namespace ymd::foc;
 
 void FOCStepper::active_task(){
     using Result = CtrlResult;
-    scexpr auto ratio = real_t(0.5);
+    static constexpr auto ratio = real_t(0.5);
 
     if(ctrl_type == CtrlType::VECTOR){
         svpwm.setDuty(meta.openloop_curr * ratio, odo.position2rad(meta.targ_pos) + meta.radfix);
@@ -21,7 +21,7 @@ void FOCStepper::active_task(){
 
     {
         auto is_pos_outrange = [&]() -> bool{
-            scexpr real_t dead_zone = real_t(0.003);
+            static constexpr real_t dead_zone = real_t(0.003);
             return ((meta.pos >= meta.pos_limit.stop - dead_zone and meta.targ_spd > 0)
                 or (meta.pos <= meta.pos_limit.start + dead_zone and meta.targ_spd < 0)) ;
         };
@@ -54,7 +54,7 @@ void FOCStepper::active_task(){
                 real_t max_current = meta.targ_curr;
                 real_t spd = getSpeed();
                 real_t abs_spd = ABS(spd);
-                scexpr real_t deadzone = real_t(0.23);
+                static constexpr real_t deadzone = real_t(0.23);
                 if(abs_spd < deadzone){
                     result = {0, 0}; 
                 }else{

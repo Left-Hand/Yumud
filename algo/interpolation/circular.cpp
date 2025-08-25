@@ -18,7 +18,7 @@ bool ArcInterpolation::IsPerpendicular(const Vec2<q16> & pt1,const Vec2<q16> & p
     const real_t xDelta_a = pt2x - pt1x;
     const real_t yDelta_b = pt3y - pt2y;
     const real_t xDelta_b = pt3x - pt2x;
-    scexpr real_t epsilon = real_t(0.001);
+    static constexpr real_t epsilon = real_t(0.001);
 
     // checking whether the line of the two pts are vertical
     if (std::abs(xDelta_a) <= epsilon && std::abs(yDelta_b) <= epsilon){
@@ -48,7 +48,7 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
     const real_t xDelta_a = pt2x - pt1x;
     const real_t yDelta_b = pt3y - pt2y;
     const real_t xDelta_b = pt3x - pt2x;
-    scexpr real_t epsilon = real_t(0.001);
+    static constexpr real_t epsilon = real_t(0.001);
 
     if (std::abs(xDelta_a) <= epsilon && std::abs(yDelta_b) <= epsilon){
         // m_Centerx = (pt2x + pt3x) / 2;
@@ -84,12 +84,12 @@ std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (cons
 
 ArcInterpolation::ArcInterpolation(const Vec2<q16> & handle):
     _a(handle.x), _b(handle.y){
-        scexpr real_t pt1x = 0;
-        scexpr real_t pt1y = 0;
+        static constexpr real_t pt1x = 0;
+        static constexpr real_t pt1y = 0;
         real_t pt2x = _a;
         real_t pt2y = _b;
-        scexpr real_t pt3x = 1;
-        scexpr real_t pt3y = 1;
+        static constexpr real_t pt3x = 1;
+        static constexpr real_t pt3y = 1;
         auto && result = [&]() -> std::tuple<real_t, real_t, real_t> {
             if      (!IsPerpendicular(Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y}))		
                 calcCircleFrom3Points (Vec2<q16>{pt1x,pt1y}, Vec2<q16>{pt2x,pt2y}, Vec2<q16>{pt3x,pt3y});	
@@ -111,11 +111,11 @@ ArcInterpolation::ArcInterpolation(const Vec2<q16> & handle):
 
 
 real_t ArcInterpolation::forward(real_t x) const {
-    scexpr real_t epsilon = real_t(0.001);
-    // scexpr real_t min_param_a = real_t(0 + epsilon);
-    // scexpr real_t max_param_a = real_t(1 - epsilon);
-    // scexpr real_t min_param_b = real_t(0 + epsilon);
-    // scexpr real_t max_param_b = real_t(1 - epsilon);
+    static constexpr real_t epsilon = real_t(0.001);
+    // static constexpr real_t min_param_a = real_t(0 + epsilon);
+    // static constexpr real_t max_param_a = real_t(1 - epsilon);
+    // static constexpr real_t min_param_b = real_t(0 + epsilon);
+    // static constexpr real_t max_param_b = real_t(1 - epsilon);
 
     // auto [a,b] = handle;
     // a = MIN(max_param_a, MAX(min_param_a, a));
@@ -283,11 +283,11 @@ real_t arcRadius;
 //--------------------------------------------------------
 real_t CircularFilletInterpoation::forward(real_t x) const {
   
-//   scexpr real_t epsilon = real_t(0.001);
-//   scexpr real_t min_param_a = real_t(0 + epsilon);
-//   scexpr real_t max_param_a = real_t(1 - epsilon);
-//   scexpr real_t min_param_b = real_t(0 + epsilon);
-//   scexpr real_t max_param_b = real_t(1 - epsilon);
+//   static constexpr real_t epsilon = real_t(0.001);
+//   static constexpr real_t min_param_a = real_t(0 + epsilon);
+//   static constexpr real_t max_param_a = real_t(1 - epsilon);
+//   static constexpr real_t min_param_b = real_t(0 + epsilon);
+//   static constexpr real_t max_param_b = real_t(1 - epsilon);
 
 //   auto [a,b] = handle;
 

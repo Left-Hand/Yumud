@@ -22,7 +22,7 @@ namespace ymd::drivers{
 
 class AD5933 {
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x0D);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x0D);
 
     AD5933(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}

@@ -6,14 +6,14 @@
 namespace ymd::utils{
 
 template<typename T>
-class GetterConcept_t{
+class GetterIntf_t{
 public:
-    GetterConcept_t(const GetterConcept_t & other) = delete;
-    GetterConcept_t(GetterConcept_t && other) = default;
+    GetterIntf_t(const GetterIntf_t & other) = delete;
+    GetterIntf_t(GetterIntf_t && other) = default;
 
-    GetterConcept_t() = default;
+    GetterIntf_t() = default;
 
-    virtual ~GetterConcept_t() = default;
+    virtual ~GetterIntf_t() = default;
 
     virtual T operator()() = 0;
 
@@ -24,7 +24,7 @@ public:
 
 
 template<typename T>
-class LambdaGetter_t: public GetterConcept_t<T>{
+class LambdaGetter_t: public GetterIntf_t<T>{
 public:
     using Getter = std::function<T(void)>;
 protected:

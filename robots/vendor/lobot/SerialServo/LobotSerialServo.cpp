@@ -51,7 +51,7 @@ protected:
                 command(_command), content(std::forward<U>(_content)), 
                 checksum(CalculateCheckSum(reinterpret_cast<const uint8_t *>(this), length)) {;}
 
-        scexpr uint8_t CalculateCheckSum(const uint8_t * buf, const size_t len) {
+        static constexpr uint8_t CalculateCheckSum(const uint8_t * buf, const size_t len) {
             uint16_t temp = 0;
             
             for (size_t i = 0; i < len; i++) {

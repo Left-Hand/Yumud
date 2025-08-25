@@ -10,19 +10,19 @@ concept Functor = requires(T f, real_t x) {
 };
 
 template<typename T>
-class CurveConcept_t{
+class CurveIntf{
 protected:
     const T _from;
     const T _delta;
 public:
     using Type = T;
-    CurveConcept_t(const CurveConcept_t & other) = default;
-    CurveConcept_t(CurveConcept_t && other) = default;
+    CurveIntf(const CurveIntf & other) = default;
+    CurveIntf(CurveIntf && other) = default;
 
-    CurveConcept_t(const T & from,const T & to):
+    CurveIntf(const T & from,const T & to):
         _from(from), _delta(to - from) {}
 
-    virtual ~CurveConcept_t() = default;
+    virtual ~CurveIntf() = default;
 
     virtual T forward(const real_t t) const = 0;
 
@@ -35,15 +35,15 @@ public:
 };
 
 // template<typename T>
-// concept is_curve = std::is_base_of_v<CurveConcept_t<T::Type>, T>;
+// concept is_curve = std::is_base_of_v<CurveIntf<T::Type>, T>;
 
 template<typename T, Functor U>
-class CurveFunctor_t:public CurveConcept_t<T>{
+class CurveFunctor_t:public CurveIntf<T>{
     const real_t _dur;
     const U _functor; 
 public:
     CurveFunctor_t(const T & from,const T & to, const real_t dur, auto && functor) :
-        CurveConcept_t<T>(from, to),
+        CurveIntf<T>(from, to),
         _dur(dur),
         _functor(functor)
         {}
@@ -54,15 +54,15 @@ public:
     real_t period() const override{ return _dur; }
 };
 
-template<typename T, Functor U>
-auto make_curve(const T & from, const T & to, const real_t dur, U && functor) {
-    using Func = std::remove_reference_t<decltype(functor)>;
-    return CurveFunctor_t<std::conditional_t<std::is_arithmetic_v<T>, real_t, T>, Func>(from, to, dur, std::forward<Func>(functor));
-}
+// template<typename T, Functor U>
+// auto make_curve(const T & from, const T & to, const real_t dur, U && functor) {
+//     using Func = std::remove_reference_t<decltype(functor)>;
+//     return CurveFunctor_t<std::conditional_t<std::is_arithmetic_v<T>, real_t, T>, Func>(from, to, dur, std::forward<Func>(functor));
+// }
 
-template<template<typename> class CurveType, typename T>
-auto make_curve(const T & from, const T & to, auto && ... args) {
-    return CurveType<std::conditional_t<std::is_arithmetic_v<T>, real_t, T>>{from, to, std::forward<decltype(args)>(args)...};
-}
+// template<template<typename> class CurveType, typename T>
+// auto make_curve(const T & from, const T & to, auto && ... args) {
+//     return CurveType<std::conditional_t<std::is_arithmetic_v<T>, real_t, T>>{from, to, std::forward<decltype(args)>(args)...};
+// }
 
 }

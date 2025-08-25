@@ -45,12 +45,12 @@ using namespace ymd::digipw;
 #define UARt DEBUGGER_INST
 
 void test_sogi(){
-    scexpr int ac_freq = 50;
-    // scexpr int ac_freq = 25;
-    // scexpr int ac_freq = 5;
-    // scexpr int isr_freq = 16384/4;
-    // scexpr int isr_freq = 16384;
-    scexpr int isr_freq = 8192;
+    static constexpr int ac_freq = 50;
+    // static constexpr int ac_freq = 25;
+    // static constexpr int ac_freq = 5;
+    // static constexpr int isr_freq = 16384/4;
+    // static constexpr int isr_freq = 16384;
+    static constexpr int isr_freq = 8192;
 
     Spll spll = {
         isr_freq, ac_freq,
@@ -68,7 +68,7 @@ void test_sogi(){
     };
 
     if(true){
-        scexpr size_t times = 10000;
+        static constexpr size_t times = 10000;
 
         DEBUG_PRINTLN("--------------");
         DEBUG_PRINTLN("start");
@@ -77,7 +77,7 @@ void test_sogi(){
         real_t tm = 0;
 
         for(size_t i = 0; i < times; i++){
-            scexpr real_t dt = real_t(1) / isr_freq;
+            static constexpr real_t dt = real_t(1) / isr_freq;
             tm += dt;
     
             raw_theta = real_t(TAU) * frac(ac_freq * tm);

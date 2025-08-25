@@ -13,7 +13,7 @@ protected:
 
     uint8_t data;
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01000000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0b01000000);
 
     PCF8575(hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}

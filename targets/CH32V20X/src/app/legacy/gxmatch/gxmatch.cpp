@@ -20,7 +20,7 @@ using namespace gxm;
 
 #define MY_OS_PRINTLN(...)
 
-class VisionModule:public AsciiProtocolConcept{
+class VisionModule:public AsciiProtocolIntf{
 protected:
     // UartHw & uart_;
     std::optional<MaterialColor> color_;
@@ -35,7 +35,7 @@ protected:
     Mode mode_ = Mode::CLOSED;
 public: 
     VisionModule(UartHw & uart):
-        AsciiProtocolConcept(uart){;}
+        AsciiProtocolIntf(uart){;}
 
     void parseArgs(const StringViews args) override{
         // DEBUG_PRINTLN(args);
@@ -404,7 +404,7 @@ void host_main(){
             grab_module.init();
             // getline(logger);
             // size_t i = 0;
-            // scexpr auto pos_arr = std::to_array<Vec3>({
+            // static constexpr auto pos_arr = std::to_array<Vec3>({
             //     {0.02_r, 0.2_r, 0.12_r},
             //     {-0.04_r, 0.2_r, 0.12_r},
             //     {-0.09_r, 0.2_r, 0.12_r},
@@ -714,7 +714,7 @@ void host_main(){
                 ang += Vec3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
                 // auto delta = solver.inverse(Vec2{0.4_r*sin(t), 0}, 0);
 
-                // scexpr real_t delta = {0.003_r};
+                // static constexpr real_t delta = {0.003_r};
                 // auto delta = solver.inverse(Vec2{0, 0.0003_r}, 0);
                 // auto delta = solver.inverse(Vec2{0, 0.3_r * sin(t)}, 0);
                 
@@ -1039,8 +1039,8 @@ void host_main(){
 
         Process process = Process::INIT;
 
-        scexpr real_t g_width = 0.15_r;
-        scexpr real_t g_back = 0.15_r;
+        static constexpr real_t g_width = 0.15_r;
+        static constexpr real_t g_back = 0.15_r;
 
         auto process_field = [&](){
             return;

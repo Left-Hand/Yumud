@@ -31,7 +31,7 @@ struct AW9523_Prelude{
         Max, High, Medium, Low
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
 
     enum class RegAddress:uint8_t{

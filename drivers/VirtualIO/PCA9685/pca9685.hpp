@@ -118,7 +118,7 @@ public:
         void set_mode(const hal::GpioMode mode){}
     };
 private:
-    scexpr uint8_t VALID_CHIP_ID = 0x23;
+    static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
     hal::I2cDrv i2c_drv_;
 

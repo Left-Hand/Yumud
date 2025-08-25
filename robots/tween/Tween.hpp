@@ -3,6 +3,7 @@
 #include "core/utils/setget/Setter.hpp"
 #include "robots/curve/CurveConcept_t.hpp"
 
+#if 0
 
 namespace ymd::tween{
 
@@ -20,10 +21,10 @@ namespace internal{
 using TweenerProxy = pro::proxy<internal::TweenerFacade>;
 
 template<typename T>
-class TweenerConcept_t{
+class TweenerIntf{
 public:
-    using Setter = ymd::utils::SetterConcept_t<T>;
-    using Curve = ymd::curve::CurveConcept_t<T>;
+    using Setter = ymd::utils::SetterIntf_t<T>;
+    using Curve = ymd::curve::CurveIntf<T>;
 
     virtual void update(const real_t time) = 0;
     virtual real_t period() const = 0;
@@ -35,16 +36,16 @@ public:
 
 
 template<typename T>
-// class TweenerStatic_t{
-class TweenerStatic_t:public TweenerConcept_t<T>{
+// class TweenerStatic{
+class TweenerStatic:public TweenerIntf<T>{
 public:
-    using Setter = TweenerConcept_t<T>::Setter;
-    using Curve = TweenerConcept_t<T>::Curve;
+    using Setter = TweenerIntf<T>::Setter;
+    using Curve = TweenerIntf<T>::Curve;
 
     Setter & _setter;
     Curve & _curve; 
 public:
-    TweenerStatic_t(Setter & setter, Curve & curve):
+    TweenerStatic(Setter & setter, Curve & curve):
         _setter(setter),
         _curve(curve){}
 
@@ -61,10 +62,10 @@ public:
 
 
 template<typename T>
-class Tweener_t:public TweenerConcept_t<T>{
+class Tweener_t:public TweenerIntf<T>{
 public:
-    using Setter = TweenerConcept_t<T>::Setter;
-    using Curve = TweenerConcept_t<T>::Curve;
+    using Setter = TweenerIntf<T>::Setter;
+    using Curve = TweenerIntf<T>::Curve;
 
     using SetterWrapper = std::unique_ptr<Setter>;
     using CurveWrapper = std::unique_ptr<Curve>;
@@ -147,7 +148,6 @@ auto make_twproxy(
     return pro::make_proxy<internal::TweenerFacade, Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>>(
         std::move(setter), std::move(curve));
 }
-
-
-
 }
+
+#endif

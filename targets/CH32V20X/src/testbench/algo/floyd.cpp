@@ -77,10 +77,9 @@ struct Matrix{
 	}
 };
 
-#define scexpr static constexpr
 
-scexpr auto W = 7u;
-scexpr auto H = 7u;
+static constexpr auto W = 7u;
+static constexpr auto H = 7u;
 
 using MatrixR = Matrix<size_t, W, H>;
 using MatrixS = Matrix<real_t, W, H>;

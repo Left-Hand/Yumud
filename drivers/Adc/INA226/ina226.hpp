@@ -46,12 +46,12 @@ struct INA226_Prelude{
 
     using RegAddress = uint8_t;
 
-    scexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
+    static constexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
 };
 
 struct INA226_Regs:public INA226_Prelude{
     struct ConfigReg:public Reg16<>{
-        scexpr RegAddress address = 0x00;
+        static constexpr RegAddress address = 0x00;
 
         uint16_t shunt_voltage_enable :1;
         uint16_t bus_voltage_enable :1;
@@ -64,32 +64,32 @@ struct INA226_Regs:public INA226_Prelude{
     }DEF_R16(config_reg)
 
     struct ShuntVoltReg:public Reg16<>{
-        scexpr RegAddress address = 0x01;
+        static constexpr RegAddress address = 0x01;
         uint16_t data;
     }DEF_R16(shunt_volt_reg)
 
     struct BusVoltReg:public Reg16<>{
-        scexpr RegAddress address = 0x02;
+        static constexpr RegAddress address = 0x02;
         uint16_t data;
     }DEF_R16(bus_volt_reg)
 
     struct PowerReg:public Reg16i<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
         int16_t data;
     }DEF_R16(power_reg)
 
     struct CurrentReg:public Reg16i<>{
-        scexpr RegAddress address = 0x04;
+        static constexpr RegAddress address = 0x04;
         int16_t data;
     }DEF_R16(current_reg)
     
     struct CalibrationReg:public Reg16i<>{
-        scexpr RegAddress address = 0x05;
+        static constexpr RegAddress address = 0x05;
         int16_t data;
     }DEF_R16(calibration_reg)
     
     struct MaskReg:public Reg16<>{
-        scexpr RegAddress address = 0x06;
+        static constexpr RegAddress address = 0x06;
 
         uint16_t alert_latch_enable:1;
         uint16_t alert_polarity:1;
@@ -106,17 +106,17 @@ struct INA226_Regs:public INA226_Prelude{
     }DEF_R16(mask_reg)
 
     struct AlertLimitReg:public Reg16<>{
-        scexpr RegAddress address = 0x07;
+        static constexpr RegAddress address = 0x07;
         uint16_t data;
     }DEF_R16(alert_limit_reg)
 
     struct ManufactureReg:public Reg16<>{
-        scexpr RegAddress address = 0xfe;
+        static constexpr RegAddress address = 0xfe;
         uint16_t data;
     }DEF_R16(manufacture_reg)
 
     struct ChipIdReg:public Reg16<>{
-        scexpr RegAddress address = 0xff;
+        static constexpr RegAddress address = 0xff;
         uint16_t data;
     }DEF_R16(chip_id_reg)
 };
@@ -131,7 +131,7 @@ public:
 
     class INA226Channel:public hal::AnalogInIntf{
     public:
-        enum class Index:uint8_t{
+        enum class Nth:uint8_t{
             SHUNT_VOLT,
             BUS_VOLT,
             CURRENT,
@@ -140,21 +140,21 @@ public:
 
     protected:
         INA226 & parent_;
-        Index ch_;
+        Nth ch_;
     public:
-        INA226Channel(INA226 & _parent, const Index _ch):parent_(_parent), ch_(_ch){}
+        INA226Channel(INA226 & _parent, const Nth _ch):parent_(_parent), ch_(_ch){}
 
         INA226Channel(const INA226Channel & other) = delete;
         INA226Channel(INA226Channel && other) = delete;
         real_t get_voltage() override{
             switch(ch_){
-                case Index::SHUNT_VOLT:
+                case Nth::SHUNT_VOLT:
                     return parent_.get_shunt_voltage().unwrap();
-                case Index::BUS_VOLT:
+                case Nth::BUS_VOLT:
                     return parent_.get_voltage().unwrap();
-                case Index::CURRENT:
+                case Nth::CURRENT:
                     return parent_.get_current().unwrap();
-                case Index::POWER:
+                case Nth::POWER:
                     return parent_.get_power().unwrap();
                 default:
                     __builtin_unreachable();
@@ -164,14 +164,14 @@ public:
 
 
     std::array<INA226Channel, 4> channels = {
-        INA226Channel{*this, INA226Channel::Index::SHUNT_VOLT},
-        INA226Channel{*this, INA226Channel::Index::BUS_VOLT},
-        INA226Channel{*this, INA226Channel::Index::CURRENT},
-        INA226Channel{*this, INA226Channel::Index::POWER}
+        INA226Channel{*this, INA226Channel::Nth::SHUNT_VOLT},
+        INA226Channel{*this, INA226Channel::Nth::BUS_VOLT},
+        INA226Channel{*this, INA226Channel::Nth::CURRENT},
+        INA226Channel{*this, INA226Channel::Nth::POWER}
     };
     
 public:
-    using Index = INA226Channel::Index;
+    using Nth = INA226Channel::Nth;
     
     struct Config{
         const uint average_times = 16;
@@ -200,18 +200,18 @@ public:
 
     [[nodiscard]] IResult<> set_average_times(const uint16_t times);
 
-    [[nodiscard]] auto & ch(const Index index){
+    [[nodiscard]] auto & ch(const Nth index){
         return channels[uint8_t(index)];
     }
 
     [[nodiscard]] auto & get_curr_channel(){
-        return ch(INA226Channel::Index::CURRENT);}
+        return ch(INA226Channel::Nth::CURRENT);}
     [[nodiscard]] auto & get_bus_volt_channel(){
-        return ch(INA226Channel::Index::BUS_VOLT);}
+        return ch(INA226Channel::Nth::BUS_VOLT);}
     [[nodiscard]] auto & get_shunt_volt_channel(){
-        return ch(INA226Channel::Index::SHUNT_VOLT);}
+        return ch(INA226Channel::Nth::SHUNT_VOLT);}
     [[nodiscard]] auto & get_power_channel(){
-        return ch(INA226Channel::Index::POWER);}
+        return ch(INA226Channel::Nth::POWER);}
 
 
     [[nodiscard]] IResult<real_t> get_voltage();

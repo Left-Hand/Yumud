@@ -11,7 +11,7 @@
 
 namespace ymd::utils{
 // template<typename T>
-// class GetterConcept_t;
+// class GetterIntf_t;
 
 
 namespace internal{
@@ -26,23 +26,23 @@ namespace internal{
 }
 
 template<typename T>
-class SetterConcept_t{
+class SetterIntf_t{
 public:
     using Type = T;
-    SetterConcept_t(const SetterConcept_t & other) = default;
-    SetterConcept_t(SetterConcept_t && other) = default;
+    SetterIntf_t(const SetterIntf_t & other) = default;
+    SetterIntf_t(SetterIntf_t && other) = default;
 
-    SetterConcept_t() = default;
+    SetterIntf_t() = default;
 
-    virtual ~SetterConcept_t() = default;
+    virtual ~SetterIntf_t() = default;
     
-    SetterConcept_t & operator =(const T & value){
+    SetterIntf_t & operator =(const T & value){
         auto & self = *this;
         self(value);
         return self;
     }
 
-    SetterConcept_t & operator =(GetterConcept_t<T> & getter){
+    SetterIntf_t & operator =(GetterIntf_t<T> & getter){
         auto & self = *this;
         self = getter();
         return self;
@@ -52,11 +52,11 @@ public:
 };
 
 template<typename T>
-class LambdaSetter_t: public SetterConcept_t<T>{
+class LambdaSetter_t: public SetterIntf_t<T>{
 public:
     using Setter = std::function<void(T)>;
-    // scexpr auto a = sizeof(std::function<void(real_t)>);
-    using SetterConcept_t<T>::operator =;
+    // static constexpr auto a = sizeof(std::function<void(real_t)>);
+    using SetterIntf_t<T>::operator =;
 
 protected:
     Setter _setter;

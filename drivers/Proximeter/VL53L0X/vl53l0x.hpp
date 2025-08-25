@@ -15,7 +15,7 @@ namespace ymd::drivers{
 
 class VL53L0X final{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
 
     enum class Error_Kind:uint8_t{
         VerifyFailed,

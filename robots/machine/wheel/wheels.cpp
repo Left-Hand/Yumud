@@ -16,7 +16,7 @@ void Wheels::init(){
     for(Wheel & wheel : instances_){
         auto & motor = wheel.motor();
         motor.locateRelatively(0);
-        scexpr auto curr = 0.0_r;
+        static constexpr auto curr = 0.0_r;
         motor.setOpenLoopCurrent(curr);
         motor.setCurrentLimit(curr);
     }

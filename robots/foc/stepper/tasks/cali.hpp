@@ -30,7 +30,7 @@ protected:
 
     struct CircularTracker{
     protected:
-        scexpr auto circ = inv_poles;
+        static constexpr auto circ = inv_poles;
         real_t last_err = 0;
     public:
         CircularTracker(){;}
@@ -39,10 +39,10 @@ protected:
             last_err = 0;
         }
 
-        scexpr real_t h_fmod(const real_t x, const real_t b){
+        static constexpr real_t h_fmod(const real_t x, const real_t b){
             return fmod(x + b/2, b) - b/2;
         }
-        scexpr real_t calculate_err(const real_t input){
+        static constexpr real_t calculate_err(const real_t input){
             real_t ret = h_fmod(input, circ);
             return ret;
         }
@@ -68,17 +68,17 @@ protected:
         }
     };
 
-    scexpr int forward_precycles = 15;
-    scexpr int forward_cycles = 100;
-    scexpr int backward_precycles = forward_precycles;
-    scexpr int backward_cycles = forward_cycles;
+    static constexpr int forward_precycles = 15;
+    static constexpr int forward_cycles = 100;
+    static constexpr int backward_precycles = forward_precycles;
+    static constexpr int backward_cycles = forward_cycles;
 
-    scexpr int subdivide_micros = 512;
-    scexpr int cogging_samples = 16;
-    scexpr int align_ms = 200;
+    static constexpr int subdivide_micros = 512;
+    static constexpr int cogging_samples = 16;
+    static constexpr int align_ms = 200;
 
-    scexpr real_t cali_duty= real_t(0.6);
-    scexpr real_t align_duty= real_t(0.6);
+    static constexpr real_t cali_duty= real_t(0.6);
+    static constexpr real_t align_duty= real_t(0.6);
 
     SubState sub_state = SubState::DONE;
     CircularTracker tracker;

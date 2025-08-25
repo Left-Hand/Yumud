@@ -184,8 +184,8 @@ Plane<T> Plane<T>::normalized() const {
 
 template<arithmetic T>
 Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
-	scexpr auto p1 = Vec3<T>(1, 0, 0);
-	scexpr auto p2 = Vec3<T>(0, 1, 0);
+	static constexpr auto p1 = Vec3<T>(1, 0, 0);
+	static constexpr auto p2 = Vec3<T>(0, 1, 0);
 	Vec3<T> p;
 
 	if (ABS(normal.dot(p1)) > static_cast<T>(0.99f)) { // if too similar to p1

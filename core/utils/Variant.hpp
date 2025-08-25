@@ -54,7 +54,7 @@ class Variant{
 public:
 
 protected:
-    scexpr size_t N = 32;
+    static constexpr size_t N = 32;
 
     VariantType type_ = VariantType::NIL;
     uint8_t data_[32];

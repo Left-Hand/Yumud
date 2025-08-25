@@ -5,11 +5,11 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-scexpr size_t count_ones(const uint16_t val){
+static constexpr size_t count_ones(const uint16_t val){
     return __builtin_popcount(val);
 }
 
-scexpr bool is_odd(const uint16_t val){
+static constexpr bool is_odd(const uint16_t val){
     return count_ones(val) & 0b1;
 }
 

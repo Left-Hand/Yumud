@@ -40,8 +40,9 @@ struct MAX31855_Prelude{
             return is_negative ? (-uns_junc_temp) : uns_junc_temp;
         }
 
-        std::span<uint16_t> to_u16_span(){
-            return std::span<uint16_t>(reinterpret_cast<uint16_t *>(this), 2);
+        std::span<uint16_t, 2> as_u16_slice(){
+            static_assert(sizeof(MAX31855_Payload) == 4);
+            return std::span<uint16_t, 2>(reinterpret_cast<uint16_t *>(this), 2);
         }
     };
 
@@ -58,7 +59,7 @@ public:
     MAX31855_Result read(){
         MAX31855_Payload payload;
         // if(const auto res = spi_drv_.)
-        const auto raw_span = payload.to_u16_span();
+        const auto raw_span = payload.as_u16_slice();
         if(const auto res = spi_drv_.read_burst<uint16_t>(
                 std::span(raw_span)
             );

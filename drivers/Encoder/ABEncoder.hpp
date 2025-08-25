@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-// class ABEncoderConcept:public AbsoluteEncoder{
+// class ABEncoderIntf:public AbsoluteEncoder{
 // protected:
 //     // real_t scale;
 //     uint16_t cnt = 0;
@@ -24,7 +24,7 @@ namespace ymd::drivers{
 // //     }
 // };
 
-// class ABEncoderTimer:public ABEncoderConcept{
+// class ABEncoderTimer:public ABEncoderIntf{
 // protected:
 //     GenericTimer & inst;
 //     const uint lines = 1 << 4;
@@ -45,7 +45,7 @@ namespace ymd::drivers{
 //     }
 // };
 
-// class ABEncoderExti:public ABEncoderConcept{
+// class ABEncoderExti:public ABEncoderIntf{
 // protected:
 //     Gpio & trigGpioA;
 //     Gpio & trigGpioB;
@@ -96,7 +96,7 @@ namespace ymd::drivers{
 // };
 
 
-// class ABZEncoder:public ABEncoderConcept{
+// class ABZEncoder:public ABEncoderIntf{
 
 // };
 

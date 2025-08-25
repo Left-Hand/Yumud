@@ -7,9 +7,9 @@ namespace ymd::foc{
 using namespace ymd::drivers;
 class SelfCheckTasker{
 protected:
-    scexpr int subdivide_micros = 1024;
-    scexpr int check_times = 2;
-    scexpr real_t minimal_motion = inv_poles / 8 * real_t(0.9);
+    static constexpr int subdivide_micros = 1024;
+    static constexpr int check_times = 2;
+    static constexpr real_t minimal_motion = inv_poles / 8 * real_t(0.9);
     
     enum class SubState{
         INIT,

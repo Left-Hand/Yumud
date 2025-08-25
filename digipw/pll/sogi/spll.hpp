@@ -9,11 +9,11 @@ public:
 private:
     // SPLL_1PH_SOGI spll1;
 
-    scexpr real_t default_ac_freq = 50.0_r;
-    scexpr real_t default_b0_lpf = 222.2862_r;
-    scexpr real_t default_b1_lpf = -222.034_r;
-    scexpr int volt_scale_bits = 3;
-    // scexpr int volt_scale_bits = 0;
+    static constexpr real_t default_ac_freq = 50.0_r;
+    static constexpr real_t default_b0_lpf = 222.2862_r;
+    static constexpr real_t default_b1_lpf = -222.034_r;
+    static constexpr int volt_scale_bits = 3;
+    // static constexpr int volt_scale_bits = 0;
     struct Coeff{
         real_t osg_b0;
         real_t osg_b2;

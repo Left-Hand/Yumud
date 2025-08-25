@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 
 struct MT6701_Prelude{
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
     using Error = EncoderError;
     template<typename T = void>
     using IResult = Result<T, Error>;

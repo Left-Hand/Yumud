@@ -23,12 +23,12 @@ protected:
         Milliseconds sustain_ms;
     };
 
-    scexpr real_t tone_current = real_t(0.15);
+    static constexpr real_t tone_current = real_t(0.15);
 
 
     using enum Tones;
     
-    scexpr auto tones = std::to_array<Tone>({
+    static constexpr auto tones = std::to_array<Tone>({
         // {.freq_hz = A4,.sustain_ms = 100},  // 6
         // {.freq_hz = D5,.sustain_ms = 100},  // 2
         // {.freq_hz = E5,.sustain_ms = 100},  // 3

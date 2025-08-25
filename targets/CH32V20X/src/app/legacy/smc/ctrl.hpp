@@ -78,7 +78,7 @@ struct SideCtrl{
         intergal = CLAMP(intergal + (t - last_t) * ki, -intergal_clamp, intergal_clamp);
         real_t ki_contribute = ki * intergal;
 
-        scexpr real_t eps_dir = real_t(0.01);
+        static constexpr real_t eps_dir = real_t(0.01);
         if(abs(error_dir) < eps_dir){
             intergal /= 2;
         }

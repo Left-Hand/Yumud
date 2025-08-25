@@ -75,9 +75,9 @@
 //   real_t MajorPeakParabola();
 
 // private:
-//     scexpr real_t twoPi = 6.28318531;
-//     scexpr real_t fourPi = 12.56637061;
-//     scexpr real_t sixPi = 18.84955593;
+//     static constexpr real_t twoPi = 6.28318531;
+//     static constexpr real_t fourPi = 12.56637061;
+//     static constexpr real_t sixPi = 18.84955593;
 //   /* Variables */
 //   uint16_t _samples;
 //   real_t _samplingFrequency;

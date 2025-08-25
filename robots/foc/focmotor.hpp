@@ -12,7 +12,7 @@ namespace ymd::foc{
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-class FOCMotorConcept{ 
+class FOCMotorIntf{ 
 public:
     // using namespace ymd::drivers;
 
@@ -42,7 +42,7 @@ protected:
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCMotorConcept(const NodeId _id):node_id(_id){;}
+    FOCMotorIntf(const NodeId _id):node_id(_id){;}
     
 
 
@@ -84,7 +84,7 @@ public:
 
 };
 
-class FOCMotor:public FOCMotorConcept {
+class FOCMotor:public FOCMotorIntf {
 protected:
     using Archive = MotorUtils::Archive;
     Archive archive_;
@@ -134,14 +134,14 @@ public:
     friend class AsciiProtocol;
 
 
-    class CanProtocol:public CanProtocolConcept{
+    class CanProtocol:public CanProtocolIntf{
     protected:
         using Command = MotorUtils::Command;
         FOCMotor & motor;
 
     public:
         CanProtocol(hal::Can & _can, FOCMotor & _motor):
-            CanProtocolConcept(_can, _motor.id()),
+            CanProtocolIntf(_can, _motor.id()),
             motor(_motor){;}
 
         void parseCanmsg(const CanMsg & msg) override;
@@ -154,7 +154,7 @@ public:
     CanProtocol * can_protocol;
 
     FOCMotor(const NodeId _id, digipw::SVPWM & _svpwm, EncoderIntf & encoder, const size_t _poles, Memory & _memory):
-            FOCMotorConcept(_id),
+            FOCMotorIntf(_id),
             svpwm(_svpwm), odo(encoder, _poles), memory(_memory){;}
 
     virtual bool loadArchive() = 0;

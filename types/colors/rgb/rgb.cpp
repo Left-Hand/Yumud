@@ -30,7 +30,7 @@ static inline uint32_t next_power_of_2(uint32_t x) {
 #define __SSAT8(x) CLAMP(int8_t(x), -127, 127)
 #define __USAT8(x) CLAMP(uint8_t(x), 0, 255)
 
-scexpr uint16_t xyz_table[256] = {
+static constexpr uint16_t xyz_table[256] = {
     uint16_t(0.000000f  * 256), uint16_t( 0.030353f * 256), uint16_t( 0.060705f * 256), uint16_t( 0.091058f * 256), 
     uint16_t( 0.121411f * 256), uint16_t( 0.151763f * 256), uint16_t( 0.182116f * 256), uint16_t( 0.212469f * 256),
     uint16_t(0.242822f  * 256), uint16_t( 0.273174f * 256), uint16_t( 0.303527f * 256), uint16_t( 0.334654f * 256), 

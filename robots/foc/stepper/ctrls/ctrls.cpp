@@ -27,7 +27,7 @@ CtrlResult PositionCtrl::update(
         const real_t real_spd)
     {
 
-    scexpr real_t inquater_radius = real_t(inv_poles / 4);
+    static constexpr real_t inquater_radius = real_t(inv_poles / 4);
 
 
     real_t pos_err = CLAMP2(targ_pos - real_pos, ERR_LIMIT);
@@ -39,7 +39,7 @@ CtrlResult PositionCtrl::update(
 
     real_t w_elapsed = config.kp * SIGN_AS(sqrt(abs_pos_err), pos_err);
 
-    scexpr auto ki = real_t(0.01);
+    static constexpr auto ki = real_t(0.01);
     real_t signed_curr = CLAMP2(w_elapsed + w_k_change, meta.max_curr) + ki * pos_err;
     real_t curr = ABS(signed_curr);
 

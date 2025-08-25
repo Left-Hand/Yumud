@@ -11,7 +11,7 @@ namespace ymd::drivers{
 struct AD9959_Regs{
     using RegAddress = uint8_t;
     struct R8_ChannelSelect:public Reg8<>{
-        scexpr RegAddress address = 0x00;
+        static constexpr RegAddress address = 0x00;
 
         uint8_t lsb_first:1;
         uint8_t serial_io_mode:2;
@@ -23,7 +23,7 @@ struct AD9959_Regs{
     } DEF_R8(channel_select)
 
     // struct R32_Funtion1:public Reg32<>{
-    //     scexpr RegAddress address = 0x01;
+    //     static constexpr RegAddress address = 0x01;
 
     //     uint8_t manual_software_sync:1;
     //     uint8_t manual_hardware_sync:1;
@@ -43,7 +43,7 @@ struct AD9959_Regs{
     // } DEF_R32(function1);
 
     struct R16_Funtion2:public Reg16<>{
-        scexpr RegAddress address = 0x02;
+        static constexpr RegAddress address = 0x02;
 
         uint8_t system_clock_offset:2;
         uint8_t open:2;
@@ -60,7 +60,7 @@ struct AD9959_Regs{
     } DEF_R16(function2);
 
     struct R32_ChannelFunction:public Reg32<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
 
         uint8_t sinewave_output_en:1;
         uint8_t clr_phase_accu:1;
@@ -81,12 +81,12 @@ struct AD9959_Regs{
     };
 
     struct R32_ChannelFreqencyTuning:public Reg32<>{
-        scexpr RegAddress address = 0x04;
+        static constexpr RegAddress address = 0x04;
         uint32_t data;
     };
 
     struct R32_AmplitudeControl:public Reg32<>{
-        scexpr RegAddress address = 0x06;
+        static constexpr RegAddress address = 0x06;
 
         uint32_t factor:10;
         uint32_t load_addr_at_io_update:1;
@@ -101,7 +101,7 @@ struct AD9959_Regs{
 
 
     struct R32_RisingDeltaWord:public Reg32<>{
-        scexpr RegAddress address = 0x04;
+        static constexpr RegAddress address = 0x04;
 
         uint16_t data;
     };
@@ -109,19 +109,19 @@ struct AD9959_Regs{
 
 
     struct R16_LinearSweepRate:public Reg16<>{
-        scexpr RegAddress address = 0x07;
+        static constexpr RegAddress address = 0x07;
 
         uint16_t data;
     };
 
     struct R32_FallingDeltaWord:public Reg32<>{
-        scexpr RegAddress address = 0x08;
+        static constexpr RegAddress address = 0x08;
 
         uint32_t data;
     };
 
     struct R32_ChannelWord:public Reg32<>{
-        scexpr RegAddress address = 0x09;
+        static constexpr RegAddress address = 0x09;
         uint32_t data;
     };
 
@@ -272,7 +272,7 @@ protected:
     uint8_t               shift;                  // (2<<shift) < core_clock, but just (28 or less)
     #endif
     ChannelNth               last_channels;
-    scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
+    static constexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
     hal::SpiDrv spi_drv_;
     hal::GpioIntf &         reset_gpio;               // Reset pin (active = high)
     hal::GpioIntf &         update_gpio;              // I/O_UPDATE: Apply config changes
