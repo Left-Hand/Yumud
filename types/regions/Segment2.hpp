@@ -2,38 +2,39 @@
 
 #include "core/math/real.hpp"
 #include "types/vectors/vector2.hpp"
+#include "types/regions/Rect2.hpp"
 
 namespace ymd{
 
 template<arithmetic T>
 struct Segment2{
 public:
-    Vec2<T> from;
-    Vec2<T> to;
+    Vec2<T> start;
+    Vec2<T> stop;
 
 public:
     [[nodiscard]] constexpr Segment2(){;}
 
-    [[nodiscard]] constexpr Segment2(const Vec2<auto> & _from, const Vec2<auto> & _to): 
-            from(static_cast<Vec2<T>>(_from)), to(static_cast<Vec2<T>>(_to)){;}
+    [[nodiscard]] constexpr Segment2(const Vec2<auto> & _start, const Vec2<auto> & _stop): 
+            start(static_cast<Vec2<T>>(_start)), stop(static_cast<Vec2<T>>(_stop)){;}
 
     template<arithmetic U = T>
     [[nodiscard]] constexpr Segment2(const std::tuple<U, U, U, U> & tup) : 
-            from((Vec2<T>(std::get<0>(tup), std::get<1>(tup)))),
-            to((Vec2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
+            start((Vec2<T>(std::get<0>(tup), std::get<1>(tup)))),
+            stop((Vec2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
 
     [[nodiscard]] __fast_inline constexpr const Vec2<T> & operator [](const size_t idx) const {
         if(idx > 2) HALT;
-        return *(&from + idx);
+        return *(&start + idx);
     }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> & operator [](const size_t idx){
         if(idx > 2) HALT;
-        return *(&from + idx);
+        return *(&start + idx);
     }
 
 	[[nodiscard]] __fast_inline constexpr bool operator==(const Segment2 & other) const{
-        return from == other.from and to == other.to;
+        return start == other.start and stop == other.stop;
     }
 
 	[[nodiscard]] __fast_inline constexpr bool operator!=(const Segment2 & other) const{
@@ -41,13 +42,13 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> get_center() const{
-        return (this->from + this->to)/2;
+        return (this->start + this->stop)/2;
     }
 
     [[nodiscard]] __fast_inline constexpr T distance_to(const Vec2<T> & p) const{
-        const auto diff1 = from - p;
-        const auto diff2 = to - p;
-        const auto diff3 = to - from;
+        const auto diff1 = start - p;
+        const auto diff2 = stop - p;
+        const auto diff3 = stop - start;
 
         if(diff1.dot(diff3) > 0){
             return diff1.length();
@@ -63,7 +64,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr int sign(const Vec2<T> & p) const{
-        return sign((from - p).cross(to - p));
+        return sign((start - p).cross(stop - p));
     }
 
     [[nodiscard]] __fast_inline constexpr bool parallel_with(const Segment2 & other){
@@ -91,7 +92,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> diff() const{
-        return to - from;
+        return stop - start;
     }
 
     [[nodiscard]] __fast_inline constexpr std::tuple<T, T, T> abc() const{
@@ -103,25 +104,43 @@ public:
 
         //a=y2-y1, b=x1-x2, c=y1*x2-x1*y2
 
-        return {from.y - to.y, to.x - from.x, from.cross(to)};
+        return {start.y - stop.y, stop.x - start.x, start.cross(stop)};
     }
 
     [[nodiscard]] __fast_inline constexpr T length() const {
-        return (to - from).length();
+        return (stop - start).length();
     }
 
     [[nodiscard]] __fast_inline constexpr T length_squared() const{
-        return (to - from).length_squared();
+        return (stop - start).length_squared();
     }
 
     [[nodiscard]] __fast_inline constexpr T angle() const {
-        return (to - from).angle();
+        return (stop - start).angle();
+    }
+
+    [[nodiscard]] __fast_inline constexpr Rect2<T> to_bounding_box() const{
+        const auto points = std::to_array({start, stop});
+        return Rect2<T>::from_minimal_bounding_box(points);
+    }
+
+    [[nodiscard]] __fast_inline constexpr T x_at_y(const T y) const{
+        if (start.y == stop.y) {
+            return start.x; // For horizontal lines, return the x-coordinate
+        }
+        return start.x + (stop.x - start.x) * (y - start.y) / (stop.y - start.y);
+    }
+
+    [[nodiscard]] __fast_inline constexpr Segment2 swap_if_inverted() const {
+        if(start.y > stop.y){
+            return {stop, start};
+        }
+        return *this;
     }
 };
 
 
 template<size_t Q>
-using Segment2q = Segment2<iq_t<Q>>;
 using Segment2f = Segment2<float>;
 using Segment2d = Segment2<double>;
 
@@ -130,8 +149,8 @@ using Segment2u = Segment2<uint>;
 
 __inline OutputStream & operator <<(OutputStream & os, const Segment2<auto> & seg){
     return os << os.brackets<'('>() << 
-        seg.from << os.splitter() << 
-        seg.to << os.brackets<')'>();
+        seg.start << os.splitter() << 
+        seg.stop << os.brackets<')'>();
 }
 
 }

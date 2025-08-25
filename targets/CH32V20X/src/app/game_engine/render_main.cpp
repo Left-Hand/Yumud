@@ -39,6 +39,12 @@
 #include "types/shapes/rotated_rect.hpp"
 #include "types/shapes/box_rect.hpp"
 
+#include "types/regions/Segment2.hpp"
+
+namespace ymd{
+template<typename T>
+struct is_placed_t<Segment2<T>>:std::true_type{};
+}
 
 
 using namespace ymd;
@@ -151,6 +157,16 @@ public:
         for(size_t x = area.x(); x < dest_x; ++x){
             buf_[x] = static_cast<Color>(color);
         }
+        return Ok();
+    }
+
+    template<typename DestColor>
+    constexpr Result<void, Error> draw_x(
+        const size_t x,
+        const DestColor color
+    ){
+        if(x >= buf_.size()) return Ok();
+        buf_[x] = static_cast<Color>(color);
         return Ok();
     }
 
@@ -280,7 +296,7 @@ struct FrameBufferSpan{
                     return Ok(); // or return an error if preferred
                 }
                 
-                // Get next color from iterator
+                // Get next color start iterator
                 auto color = iter.next();
                 buf_[offset] = static_cast<Color>(color);
             }
@@ -395,11 +411,18 @@ static constexpr auto LCD_HEIGHT = 170u;
 
 
 
+
 template<typename Shape>
 // auto make_DrawDispatchIterator
 auto make_draw_dispatch_iterator(Shape && shape){
     return DrawDispatchIterator<std::decay_t<Shape>>(shape);
 }
+
+template<typename T>
+struct RoundedRect2{
+    Rect2<T> rect;
+    T radius;
+};
 
 
 template<typename T>
@@ -454,10 +477,174 @@ struct DrawDispatchIterator<Rect2<T>> {
         }
     }
 
-// private:
+private:
     Range2<T> x_range_;
     Range2<T> y_range_;
     T y_;
+};
+
+template<std::integral T>
+struct BresenhamIterator {
+    using Point = Vec2<T>;
+    using Segment = Segment2<T>;
+    using SignedT = std::make_signed_t<T>;
+
+    constexpr BresenhamIterator(const Segment& segment)
+        : start_(segment.start),
+            stop_(segment.stop),
+            current_y_(std::min(segment.start.y, segment.stop.y)),
+            max_y_(std::max(segment.start.y, segment.stop.y)) {
+        
+        // 初始化 Bresenham 算法参数
+        SignedT dx = static_cast<SignedT>(stop_.x) - static_cast<SignedT>(start_.x);
+        SignedT dy = static_cast<SignedT>(stop_.y) - static_cast<SignedT>(start_.y);
+        
+        dx_ = std::abs(dx);
+        dy_ = std::abs(dy);
+        sx_ = (dx > 0) ? 1 : -1;
+        sy_ = (dy > 0) ? 1 : -1;
+        
+        // 初始化 Bresenham 状态
+        current_x_ = start_.x;
+        bresenham_y_ = start_.y;
+        err_ = dx_ - dy_;
+        
+        // 如果起始点不是最小y值，需要推进到正确的行
+        if (start_.y != current_y_) {
+            advance_to_row(current_y_);
+        }
+    }
+
+    constexpr bool has_next() const {
+        return current_y_ <= max_y_;
+    }
+
+    constexpr Range2<T> current() const {
+        if (!has_next()) return Range2<T>{0, 0};
+        return Range2<T>::from_start_and_length(current_x_, 1);
+    }
+
+    constexpr void advance() {
+        if (!has_next()) return;
+        
+        current_y_++;
+        if (current_y_ <= max_y_) {
+            advance_to_row(current_y_);
+        }
+    }
+
+private:
+    constexpr void advance_to_row(T target_y) {
+        // 推进 Bresenham 算法直到达到目标行
+        while (bresenham_y_ != target_y && has_next()) {
+            SignedT e2 = 2 * err_;
+            
+            if (e2 > -static_cast<SignedT>(dy_)) {
+                err_ -= static_cast<SignedT>(dy_);
+                current_x_ += sx_;
+            }
+            
+            if (e2 < static_cast<SignedT>(dx_)) {
+                err_ += static_cast<SignedT>(dx_);
+                bresenham_y_ += sy_;
+                
+                // 检查是否超过了目标行
+                if ((sy_ > 0 && bresenham_y_ > target_y) || 
+                    (sy_ < 0 && bresenham_y_ < target_y)) {
+                    break;
+                }
+            }
+        }
+    }
+
+private:
+    Point start_;
+    Point stop_;
+    T current_y_;      // 当前处理的行号
+    T current_x_;      // 当前行的 x 坐标
+    T bresenham_y_;    // Bresenham 算法当前的 y 坐标
+    T max_y_;          // 最大 y 坐标
+    T dx_;             // x 方向绝对值
+    T dy_;             // y 方向绝对值
+    SignedT sx_;       // x 方向符号
+    SignedT sy_;       // y 方向符号
+    SignedT err_;      // 误差项
+};
+
+
+template<typename T>
+struct LineDDAIterator{
+    using Point = Vec2<uint16_t>;
+    using Segment = Segment2<uint16_t>;
+
+    constexpr LineDDAIterator(const Segment& segment):
+        segment_(segment.swap_if_inverted()),
+        current_y_(segment_.start.y){;}
+
+    constexpr bool has_next() const {
+        return current_y_ <= segment_.stop.y;
+        // return true;
+    }
+
+    constexpr Range2<T> current() const {
+        return {segment_.x_at_y(current_y_), segment_.x_at_y(current_y_ + 1)};
+    }
+
+    constexpr void advance(){
+        current_y_ += 1;    
+    }
+
+private:
+    Segment segment_;
+    uint16_t current_y_;
+};
+
+
+// DrawDispatchIterator 特化
+template<std::integral T>
+struct DrawDispatchIterator<Segment2<T>> {
+    using Segment = Segment2<T>;
+    // using Iterator = BresenhamIterator<T>;
+    using Iterator = LineDDAIterator<T>;
+
+    constexpr DrawDispatchIterator(const Segment& segment)
+        : iterator_(segment){}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iterator_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iterator_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        if (!has_next()) return Ok();
+        
+        // 绘制当前行的范围
+        auto res = target.fill_x_range(iterator_.current(), color);
+        if (res.is_err()) return Err(res.unwrap_err());
+        
+        return Ok();
+    }
+
+    // 空心绘制（对于线段来说和填充一样）
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return draw_filled(target, color);
+    }
+
+    // 获取当前行号
+    constexpr T current_row() const {
+        return iterator_.current_row();
+    }
+
+private:
+    Iterator iterator_;
 };
 
 void render_main(){
@@ -531,10 +718,11 @@ void render_main(){
         //     Rect2u16{shape_x,uint16_t(shape_y- 10),5,5},
         //     Rect2u16{uint16_t(shape_x - 10),shape_y,5,5}
         // });
-
-        auto shape =  Rect2u16{shape_x,shape_y,20,20};
+        using Vec2u16 = Vec2<uint16_t>;
+        // auto shape =  Rect2u16{shape_x,shape_y,20,20};
+        auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{160,160}};
         using Shape = decltype(shape);
-        auto shape_bb = shape;
+        auto shape_bb = shape.to_bounding_box();
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
         auto render_iter = make_draw_dispatch_iterator(shape);
 
@@ -558,9 +746,9 @@ void render_main(){
                     }
 
                     if(render_iter.has_next()){
-                        ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        render_iter.draw_filled(line_span, RGB565::RED).examine();
-                        // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
+                        // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
+                        // render_iter.draw_filled(line_span, RGB565::RED).examine();
+                        render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
                         render_iter.forward();
                     }{
 

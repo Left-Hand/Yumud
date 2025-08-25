@@ -327,6 +327,10 @@ public:
     [[nodiscard]] constexpr Range2<T> get_y_range() const{
         return Range2<T>::from_start_and_length(position.y, size.y);
     }
+
+    [[nodiscard]] constexpr Rect2<T> to_bounding_box() const{
+        return *this;
+    }
 };
 
 using Rect2i = Rect2<int>;
