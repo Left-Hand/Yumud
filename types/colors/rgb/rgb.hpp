@@ -153,8 +153,9 @@ struct RGB565{
     uint16_t g : 6;
     uint16_t r : 5;
 
-
+    using enum ColorEnum;
     __fast_inline constexpr RGB565() = default;
+    __fast_inline constexpr RGB565 & operator =(const RGB565 & other) = default;
 
     constexpr explicit RGB565(const HSV888 & other);
     __fast_inline constexpr RGB565(const ColorEnum color):RGB565(RGB888(color)){;}
@@ -177,11 +178,7 @@ struct RGB565{
 
     __fast_inline static constexpr 
     RGB565 from_u16(const uint16_t raw){
-        return  from_r5g6b5(
-            raw >> 11,
-            raw >> 5,
-            raw
-        );
+        return std::bit_cast<RGB565>(raw);
     }
     __fast_inline constexpr explicit operator RGB888() const {
         return RGB888::from_r8g8b8(r << 3, g << 2, b << 3);
@@ -191,19 +188,19 @@ struct RGB565{
         return uni(r,g,b);
     }
 
-    __fast_inline constexpr RGB565 & operator = (const uint16_t data){
-        uint8_t _r, _g, _b;
-        std::tie(_r, _g, _b) = seprate(data);
-        r = _r;
-        g = _g;
-        b = _b;
-        return *this;
-    }
+    // __fast_inline constexpr RGB565 & operator = (const uint16_t data){
+    //     uint8_t _r, _g, _b;
+    //     std::tie(_r, _g, _b) = seprate(data);
+    //     r = _r;
+    //     g = _g;
+    //     b = _b;
+    //     return *this;
+    // }
 
-    __fast_inline constexpr RGB565 & operator = (const RGB565 & rgb){
-        memcpy(this, &rgb, sizeof(RGB565));
-        return *this;
-    }
+    // __fast_inline constexpr RGB565 & operator = (const RGB565 & rgb){
+    //     *this = std::bit_cast<>
+    //     return *this;
+    // }
 private:
     static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>
     seprate(const uint16_t data){

@@ -132,6 +132,14 @@ public:
     [[nodiscard]] __fast_inline constexpr T & h() { return size.y; }
     [[nodiscard]] __fast_inline constexpr const T & h() const { return size.y; }
 
+    [[nodiscard]] __fast_inline constexpr bool has_x(const T p_x) const{
+        return p_x >= position.x && p_x < position.x + size.x;
+    }
+
+    [[nodiscard]] __fast_inline constexpr bool has_y(const T p_y) const{
+        return p_y >= position.y && p_y < position.y + size.y;
+    }
+
     [[nodiscard]] __fast_inline constexpr T get_area() const {
         return ABS(size.x * size.y);}
     [[nodiscard]] __fast_inline constexpr Vec2<T> center() const {

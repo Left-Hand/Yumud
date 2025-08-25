@@ -181,7 +181,8 @@ int main(){
     // ch9141_tb(logger, uart7);
     // st7789_main();
     // smc2025_main();
-    fft_main();
+    // fft_main();
+    render_main();
     // embd_main();
     // mpu6050_main();
     // gui_main();

@@ -169,10 +169,10 @@ void smc2025_main(){
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
-    while(true){
-        DEBUG_PRINTLN(clock::millis());
-        clock::delay(5ms);
-    }
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(5ms);
+    // }
 
     // bkp.init();edRunStatus();
     auto & spi = spi2;
@@ -304,8 +304,8 @@ void smc2025_main(){
 
     while(true){
         // test_fill();
-        // test_render();
-        test_paint();
+        test_render();
+        // test_paint();
         // test_paint();
         // qmc.update().examine();
         // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});

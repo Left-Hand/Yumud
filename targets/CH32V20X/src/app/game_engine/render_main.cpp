@@ -1,10 +1,6 @@
-#include "types/shapes/bresenham_iter.hpp"
 
 
 #include "src/testbench/tb.h"
-#include "dsp/controller/adrc/leso.hpp"
-#include "dsp/controller/adrc/command_shaper.hpp"
-
 
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
@@ -22,6 +18,29 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+
+
+#include "core/clock/time.hpp"
+
+
+#include "hal/gpio/gpio.hpp"
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
+
+#include "types/vectors/quat.hpp"
+#include "types/image/image.hpp"
+#include "types/image/font/font.hpp"
+
+#include "types/shapes/bresenham_iter.hpp"
+
+#include "types/shapes/rotated_rect.hpp"
+#include "types/shapes/box_rect.hpp"
+
+
+
 using namespace ymd;
 
 struct Infallible{};
@@ -31,11 +50,11 @@ OutputStream & operator << (OutputStream & os, const Infallible){
 }
 
 template<typename Color>
-struct LineSpan{
+struct LineBufferSpan{
 public:
     using Error = Infallible;
 
-    constexpr explicit LineSpan(
+    constexpr explicit LineBufferSpan(
         const std::span<Color> buf,
         size_t y
     ):
@@ -69,6 +88,13 @@ public:
 
     constexpr Rect2u16 to_bounding_box() const {return Rect2u16(0, y_, buf_.size(), 1);}
 
+    constexpr ScanLine to_scanline() const {
+        return ScanLine{
+            .x_range = {0, static_cast<uint16_t>(buf_.size())}, 
+            .y = static_cast<uint16_t>(y_)
+        };
+    }
+
     template<typename PixelsIter>
     constexpr Result<void, Error> draw_iter(PixelsIter && iter){
         for(const auto pixel : StdRange(iter)){
@@ -79,6 +105,30 @@ public:
 
         return Ok();
     };
+
+    template<typename DestColor>
+    constexpr Result<void, Error> fill_scanline(
+        const ScanLine line,
+        const DestColor color
+    ){
+        if(likely(line.y != y_)) return Ok();
+        return fill_x_range(line.x_range, color);
+    }
+
+    template<typename DestColor>
+    constexpr Result<void, Error> fill_x_range(
+        const Range2<uint16_t> x_range,
+        const DestColor color
+    ){
+        if(x_range.stop > buf_.size()) return Ok();
+
+        const auto dest_x = MIN(buf_.size(), x_range.stop);
+
+        for(size_t x = x_range.start; x < dest_x; ++x){
+            buf_[x] = static_cast<Color>(color);
+        }
+        return Ok();
+    }
 
     template<typename ColorsIter>
     constexpr Result<void, Error> fill_contiguous(
@@ -93,6 +143,26 @@ public:
         const Rect2u16 area,
         const DestColor color
     ){
+        if(not area.has_y(y_)) return Ok();
+        if(area.x() > buf_.size()) return Ok();
+
+        const auto dest_x = MIN(buf_.size(), area.x() + area.w());
+
+        for(size_t x = area.x(); x < dest_x; ++x){
+            buf_[x] = static_cast<Color>(color);
+        }
+        return Ok();
+    }
+
+
+
+    template<typename DestColor>
+    constexpr Result<void, Error> fill(
+        const DestColor color
+    ){ 
+        for(size_t i = 0; i < buf_.size(); ++i){
+            buf_[i] = static_cast<Color>(color);
+        }
         return Ok();
     }
 
@@ -101,7 +171,7 @@ private:
     size_t y_;
 };
 
-OutputStream & operator << (OutputStream & os, const LineSpan<Binary> & line){
+OutputStream & operator << (OutputStream & os, const LineBufferSpan<Binary> & line){
     const size_t size = line.size();
 
     static constexpr char BLACK_CHAR = '_';
@@ -116,14 +186,14 @@ OutputStream & operator << (OutputStream & os, const LineSpan<Binary> & line){
 
 
 template<typename Color>
-struct FrameSpan{
+struct FrameBufferSpan{
     using Error = Infallible;
 
-    static constexpr Option<FrameSpan> from_ptr_and_size(
+    static constexpr Option<FrameBufferSpan> from_ptr_and_size(
         Color * ptr, Vec2u size
     ){
         if(ptr == nullptr) return None;
-        FrameSpan ret;
+        FrameBufferSpan ret;
 
         ret.buf_ = std::span<Color>(ptr, size.x * size.y);
         ret.size_ = size;
@@ -131,13 +201,13 @@ struct FrameSpan{
         return Some(ret);
     }
 
-    static constexpr Option<FrameSpan> from_slice_and_width(
+    static constexpr Option<FrameBufferSpan> from_slice_and_width(
         std::span<Color> slice, size_t width
     ){ 
         if(slice.size() % width != 0) return None;
         const size_t height = slice.size() / width;
 
-        FrameSpan ret;
+        FrameBufferSpan ret;
 
         ret.buf_ = slice;
         ret.size_ = Vec2u{width, height};
@@ -163,10 +233,10 @@ struct FrameSpan{
         return ToLineSpanIter(buf_.data(), y_range, size_.x);
     }
 
-    constexpr LineSpan<Color> operator [](const size_t y){
+    constexpr LineBufferSpan<Color> operator [](const size_t y){
         const auto pdata = buf_.data();
         const auto width = size_.x;
-        return LineSpan<Color>(std::span<Color>(pdata + y * width, width), y);
+        return LineBufferSpan<Color>(std::span<Color>(pdata + y * width, width), y);
     }
 
     constexpr Rect2u16 to_bounding_box() const {
@@ -251,9 +321,9 @@ private:
             width_(width)
         {}
 
-        constexpr LineSpan<Color> next(){
+        constexpr LineBufferSpan<Color> next(){
             const auto offset = y_ * width_;
-            const auto ret = LineSpan<Color>(
+            const auto ret = LineBufferSpan<Color>(
                 std::span<Color>(pbuf_ + offset, pbuf_ + offset + width_),
                 y_
             );
@@ -277,8 +347,8 @@ private:
 };
 
 
-template<typename T, typename Iter = LineSpan<T>::ToLineSpanIter>
-requires requires(OutputStream& os, const LineSpan<T>& line_span) {
+template<typename T, typename Iter = LineBufferSpan<T>::ToLineSpanIter>
+requires requires(OutputStream& os, const LineBufferSpan<T>& line_span) {
     os << line_span;
 }
 OutputStream & operator << (OutputStream & os, Iter && iter){
@@ -290,7 +360,7 @@ OutputStream & operator << (OutputStream & os, Iter && iter){
 
 
 template<typename T>
-OutputStream & operator << (OutputStream & os, FrameSpan<T> & frame_span){
+OutputStream & operator << (OutputStream & os, FrameBufferSpan<T> & frame_span){
     return os << frame_span.iter();
 }
 
@@ -314,20 +384,20 @@ static constexpr size_t count_iter(Iter && iter){
 
 static constexpr auto UART_BAUD = 576000u;
 
-// static constexpr auto IMG_WIDTH = 32u;
-// static constexpr auto IMG_HEIGHT = 18u;
+// static constexpr auto LCD_WIDTH = 32u;
+// static constexpr auto LCD_HEIGHT = 18u;
 
-// static constexpr auto IMG_WIDTH = 8u;
-// static constexpr auto IMG_HEIGHT = 6u;
+// static constexpr auto LCD_WIDTH = 8u;
+// static constexpr auto LCD_HEIGHT = 6u;
 
-static constexpr auto IMG_WIDTH = 6u;
-static constexpr auto IMG_HEIGHT = 4u;
+static constexpr auto LCD_WIDTH = 320u;
+static constexpr auto LCD_HEIGHT = 170u;
 
 void render_main(){
 
 
     auto init_debugger = []{
-        auto & DBG_UART = hal::uart2;
+        auto & DBG_UART = DEBUGGER_INST;
 
         DBG_UART.init({
             .baudrate = UART_BAUD
@@ -339,52 +409,127 @@ void render_main(){
         DEBUGGER.no_brackets();
     };
 
+
+
     init_debugger();
 
-    std::array<Binary, IMG_WIDTH * IMG_HEIGHT> buffer;
+    
+    auto & spi = hal::spi2;
 
-    auto frame_span = FrameSpan<Binary>::from_ptr_and_size(
-        buffer.data(), {IMG_WIDTH, IMG_HEIGHT}).unwrap();
+    spi.init({144_MHz});
+    
+    auto & lcd_blk = hal::portD[0];
+    lcd_blk.outpp(HIGH);
 
-    auto draw = [&]{
-        // frame_span[1][1] = Binary::WHITE;
-        // frame_span[2][1] = Binary::WHITE;
-        // frame_span[3][3] = Binary::WHITE;
+    auto & lcd_dc = hal::portD[7];
+    auto & dev_rst = hal::portB[7];
 
-        // frame_span.fill_solid(Rect2u16(1,1,2,2), Binary::WHITE).examine();
-        frame_span.fill_contiguous(Rect2u16(1,1,2,2), RepeatIter(Binary::WHITE, 3)).examine();
+    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
+
+    drivers::ST7789 tft{
+        drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
+        {LCD_WIDTH, LCD_HEIGHT}
     };
 
-    draw();
+    tft.init().examine();
+    drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
+
+
+    // std::array<RGB565, LCD_WIDTH * LCD_HEIGHT> render_buffer;
+    std::array<RGB565, LCD_WIDTH> render_buffer;
+
+    [[maybe_unused]] auto plot_rgb = [&](
+        const std::span<RGB565> & src, 
+        const ScanLine line
+    ){
+        // DEBUG_PRINTLN(line.to_bounding_box());
+        tft.put_texture(
+            line.to_bounding_box(),
+            src.data()
+        ).examine();
+    };
 
     while(true){
-        // DEBUG_PRINTLN(frame_span.iter({0, 2}));
-        // DEBUG_PRINTLN(count_iter(frame_span.iter({0, 2})));
-        // DEBUG_PRINTLN(count_iter(frame_span.iter()));
-        DEBUG_PRINTLN(frame_span.iter());
-        // DEBUG_PRINTLN(frame_span);
-        clock::delay(5ms);
+        const auto ctime = clock::time();
+        [[maybe_unused]] const auto [s,c] = sincospu(ctime);
+        const auto [x,y] = std::make_tuple(uint16_t(50 + 30 * c), uint16_t(50 + 30 * s));
+
+
+        const auto shapes = std::to_array<Rect2u16>({
+            Rect2u16{x,y,5,5},
+            Rect2u16{x,uint16_t(y+ 10),5,5},
+            Rect2u16{uint16_t(x + 10),y,5,5},
+            Rect2u16{x,uint16_t(y- 10),5,5},
+            Rect2u16{uint16_t(x - 10),y,5,5}
+        });
+
+        Microseconds upload_us = 0us;
+        Microseconds render_us = 0us;
+        const auto total_us = measure_total_elapsed_us([&]{
+            for(size_t i = 0; i < LCD_HEIGHT; i++){
+                
+                auto line_span = LineBufferSpan<RGB565>(std::span(render_buffer), i);
+                auto guard = make_scope_guard([&]{
+                    line_span.fill(RGB565::BLACK).examine();
+                });
+
+                render_us += measure_total_elapsed_us([&]{
+                    for(auto shape : shapes){
+                        line_span.fill_solid(shape, RGB565::GREEN).examine();
+                    }
+                });
+
+                upload_us += measure_total_elapsed_us([&]{
+                    plot_rgb(line_span.iter(), line_span.to_scanline());
+                });
+            }
+        });
+
+        DEBUG_PRINTLN(render_us.count(), upload_us.count());
     }
+
 };
 
 
+void a(){
 
+
+
+    [[maybe_unused]] auto test_render = [&]{
+    
+        [[maybe_unused]]const auto t = clock::time();
+
+    };
+
+    while(true){
+        // test_fill();
+        test_render();
+        // test_paint();
+        // test_paint();
+        // qmc.update().examine();
+        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        // painter.draw_pixel(Vec2u(0, 0));
+        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
+
+    }
+
+}
 
 #if 0
 [[maybe_unused]] static void static_test(){
     {
         static constexpr auto len = []{
-            std::array<Binary, IMG_WIDTH * IMG_HEIGHT> buffer;
+            std::array<RGB565, LCD_WIDTH * LCD_HEIGHT> render_buffer;
 
-            auto frame_span = FrameSpan<Binary>::from_ptr_and_size(
-                buffer.data(), {IMG_WIDTH, IMG_HEIGHT}).unwrap();
+            auto frame_span = FrameBufferSpan<RGB565>::from_ptr_and_size(
+                render_buffer.data(), {LCD_WIDTH, LCD_HEIGHT}).unwrap();
 
             auto iter = frame_span.iter();
 
             return count_iter(iter);
         }();
 
-        static_assert(len == IMG_HEIGHT);
+        static_assert(len == LCD_HEIGHT);
     }
 }
 
