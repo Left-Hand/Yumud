@@ -393,6 +393,73 @@ static constexpr auto UART_BAUD = 576000u;
 static constexpr auto LCD_WIDTH = 320u;
 static constexpr auto LCD_HEIGHT = 170u;
 
+
+
+template<typename Shape>
+// auto make_DrawDispatchIterator
+auto make_draw_dispatch_iterator(Shape && shape){
+    return DrawDispatchIterator<std::decay_t<Shape>>(shape);
+}
+
+
+template<typename T>
+requires (std::is_integral_v<T>)
+struct DrawDispatchIterator<Rect2<T>> {
+    using Shape = Rect2<T>;
+    using Self = DrawDispatchIterator<Shape>;
+
+    constexpr DrawDispatchIterator(const Shape& shape) : 
+        x_range_(shape.get_x_range()),
+        y_range_(shape.get_y_range()),
+        y_(y_range_.start) {}  // 修复：使用 y_range_.start
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        if (y_ >= y_range_.stop) return Ok();  // 安全检查
+        
+        auto res = target.fill_x_range(x_range_, color);  // 可能需要传入 y 坐标
+        if (res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        if (y_ >= y_range_.stop) return Ok();  // 安全检查
+        
+        // 如果是顶部或底部边界，绘制整行
+        if (y_ == y_range_.start || y_ == y_range_.stop - 1) {
+            auto res = target.fill_x_range(x_range_, color);
+            if (res.is_err()) return Err(res.unwrap_err());
+        } 
+        // 如果是中间行，只绘制左右两端
+        else {
+            // 绘制左端点
+            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.start, 1), color);
+                res.is_err()) return Err(res.unwrap_err());
+            
+            // 绘制右端点（注意：x_range_.stop 是 exclusive）
+            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.stop - 1, 1), color);
+                res.is_err()) return Err(res.unwrap_err());
+        }
+        return Ok();
+    }
+
+    constexpr bool has_next() const {
+        return y_ < y_range_.stop;
+    }
+
+    constexpr void forward() {
+        if (y_ < y_range_.stop) {
+            y_++;
+        }
+    }
+
+// private:
+    Range2<T> x_range_;
+    Range2<T> y_range_;
+    T y_;
+};
+
 void render_main(){
 
 
@@ -449,19 +516,27 @@ void render_main(){
         ).examine();
     };
 
+
+
     while(true){
         const auto ctime = clock::time();
         [[maybe_unused]] const auto [s,c] = sincospu(ctime);
-        const auto [x,y] = std::make_tuple(uint16_t(50 + 30 * c), uint16_t(50 + 30 * s));
+        const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 50 * c), uint16_t(80 + 50 * s));
 
 
-        const auto shapes = std::to_array<Rect2u16>({
-            Rect2u16{x,y,5,5},
-            Rect2u16{x,uint16_t(y+ 10),5,5},
-            Rect2u16{uint16_t(x + 10),y,5,5},
-            Rect2u16{x,uint16_t(y- 10),5,5},
-            Rect2u16{uint16_t(x - 10),y,5,5}
-        });
+        // const auto shapes = std::to_array<Rect2u16>({
+        //     Rect2u16{shape_x,shape_y,5,5},
+        //     Rect2u16{shape_x,uint16_t(shape_y+ 10),5,5},
+        //     Rect2u16{uint16_t(shape_x + 10),shape_y,5,5},
+        //     Rect2u16{shape_x,uint16_t(shape_y- 10),5,5},
+        //     Rect2u16{uint16_t(shape_x - 10),shape_y,5,5}
+        // });
+
+        auto shape =  Rect2u16{shape_x,shape_y,20,20};
+        using Shape = decltype(shape);
+        auto shape_bb = shape;
+        // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
+        auto render_iter = make_draw_dispatch_iterator(shape);
 
         Microseconds upload_us = 0us;
         Microseconds render_us = 0us;
@@ -474,8 +549,21 @@ void render_main(){
                 });
 
                 render_us += measure_total_elapsed_us([&]{
-                    for(auto shape : shapes){
-                        line_span.fill_solid(shape, RGB565::GREEN).examine();
+                    if(not shape_bb.has_y(i)) return;
+
+                    if(i == shape_bb.y()){
+                        render_iter = make_draw_dispatch_iterator(shape);
+                        // DEBUG_PRINTLN(render_iter.y_, render_iter.y_stop_);
+                        // ASSERT{i > 20, render_iter.y_, render_iter.y_range_, "why"};
+                    }
+
+                    if(render_iter.has_next()){
+                        ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
+                        render_iter.draw_filled(line_span, RGB565::RED).examine();
+                        // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
+                        render_iter.forward();
+                    }{
+
                     }
                 });
 

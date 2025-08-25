@@ -124,12 +124,30 @@ requires(Shape shape, const Shape& const_shape) {
     { shape.next() } -> std::same_as<Option<ScanLine>>;
 };
 
+template<typename T>
+concept DrawTargetConcept = requires {
+    typename T::Error;
+} && requires(T target, const Rect2u16 area) {
+    // 只检查方法存在性，不严格检查参数和返回类型
+    target.fill_contiguous(area, std::declval<int>()); // 用具体类型测试
+    target.fill_solid(area, std::declval<int>());
+    
+    // 单独检查返回类型（如果可能）
+    requires std::same_as<
+        decltype(target.fill_contiguous(area, std::declval<int>())),
+        Result<void, typename T::Error>
+    >;
+    requires std::same_as<
+        decltype(target.fill_solid(area, std::declval<int>())),
+        Result<void, typename T::Error>
+    >;
+};
+
 template<
-    typename Target, 
     typename Shape
 >
 requires (is_placed_t<Shape>::value)
-struct DrawDispatcher final{
+struct DrawDispatchIterator final{
     // template<typename Target>
     // Result<void, Error> draw(Target & target) const{
     //     target.draw(shape_, style_);

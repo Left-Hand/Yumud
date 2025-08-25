@@ -54,18 +54,6 @@ struct is_placed_t<BoxRect<T>>:std::false_type{;};
 template<typename T>
 struct is_placed_t<Rect2<T>>:std::true_type{;};
 
-
-// template<typename T>
-// struct DrawDispatcher<WithStyle<WithPosition<BoxRect<T>>>>{
-//     using Obj = BoxRect<T>;
-//     using ObjWithPosition = WithPosition<Obj>;
-
-//     template<typename Target>
-//     static auto draw(WithPosition<BoxRect<T>> const ){
-//         return draw_rect(obj.to_bounding_box(), offset, color);
-//     }
-// };
-
 template<typename T>
 requires (std::is_integral_v<T>)
 struct ScanLinesIterator<Rect2<T>>{
