@@ -115,7 +115,7 @@ public:
         }
     }
 
-    static constexpr TrigSource map_pinsource_to_trigsource(const PinSource source){
+    static constexpr TrigSource map_PinNth_to_trigsource(const PinNth source){
         return std::bit_cast<TrigSource>(
             uint32_t(uint16_t(source))
         );

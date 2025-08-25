@@ -1,4 +1,5 @@
 #include "m3508.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::robots;
 using namespace ymd::foc;

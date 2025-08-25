@@ -115,12 +115,12 @@ struct Factory{
 static constexpr auto make_cfg(){
     return AppConfig{
         .yaw_cfg = ServoConfig{
-            .min_radian = -0.5_r,
-            .max_radian = 0.5_r
+            .min_angle = -0.5_r,
+            .max_angle = 0.5_r
         },
         .pitch_cfg = ServoConfig{
-            .min_radian = -0.5_r,
-            .max_radian = 0.5_r
+            .min_angle = -0.5_r,
+            .max_angle = 0.5_r
         },
         .gimbal_planner_cfg = {
             .dyna_cfg = {
@@ -185,15 +185,15 @@ void nuedc_2023e_main(){
         rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
         rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
         rpc::make_function("set_rad", [&](const real_t r1, const real_t r2){
-            servo_pitch.set_radian(r1);
-            servo_yaw.set_radian(r2);
+            servo_pitch.set_angle(r1);
+            servo_yaw.set_angle(r2);
             DEBUG_PRINTLN(r1, r2);
         }),
 
         rpc::make_function("get_rad", [&](){
             DEBUG_PRINTLN(
-                servo_pitch.get_radian(),
-                servo_yaw.get_radian()
+                servo_pitch.get_angle(),
+                servo_yaw.get_angle()
             );
         })
     );

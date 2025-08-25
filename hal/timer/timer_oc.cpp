@@ -6,14 +6,14 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-void TimerOut::install_to_pin(const Enable en){
-    Gpio & io = details::get_pin(inst_, nth_);
-    if(en == EN) io.afpp();
-    // else io.inflt();
+void TimerOutBase::install_to_pin(const Enable en){
+    auto may_gpio = details::get_pin(inst_, nth_);
+    if(may_gpio.is_none()) return;
+    if(en == EN) may_gpio.unwrap().afpp();
 }
 
 
-void TimerOut::set_valid_level(const BoolLevel level){
+void TimerOutBase::set_valid_level(const BoolLevel level){
     if(level == LOW) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2 + 1));
     else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2 + 1)));
 }
@@ -81,7 +81,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
     }
 
 }
-void TimerOut::enable_output(const Enable en){
+void TimerOutBase::enable_output(const Enable en){
     if(en == EN) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2));
     else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2)));
 }
@@ -112,10 +112,10 @@ void TimerOC::enable_cvr_sync(const Enable en){
     }
 }
 
-Gpio & TimerOC::io(){
+Option<Gpio &> TimerOC::io(){
     return details::get_pin(inst_, nth_);
 }
 
-Gpio & TimerOCN::io(){
+Option<Gpio &> TimerOCN::io(){
     return details::get_pin(inst_, nth_);
 }

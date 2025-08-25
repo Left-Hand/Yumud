@@ -105,9 +105,9 @@ public:
         // using PosIoTag = OpaGpioMapping<TOpaIndex,  1, PosMap>::IoTag;
         // using OutIoTag = OpaGpioMapping<TOpaIndex,  0, OutMap>::IoTag;
 
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
 
         // Gpio::reflect<NegIoTag::source, NegIoTag::pin>().inana();
         // Gpio::reflect<PosIoTag::source, PosIoTag::pin>().inana();

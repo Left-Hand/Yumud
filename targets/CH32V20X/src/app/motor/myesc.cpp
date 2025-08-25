@@ -11,7 +11,6 @@
 #include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/odometer.hpp"
-#include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
@@ -190,15 +189,15 @@ void myesc_main(){
         u_curr = soa.get_voltage();
         v_curr = sob.get_voltage();
         w_curr = soc.get_voltage();
-        // const auto t = clock::time();
-        // const auto p = t * 80;
-        // const auto p = 60 * sinpu(t/4);
-        // const auto p = 60 * t;
-        // const auto [s,c] = sincos(t * 80);
+        const auto ctime = clock::time();
+        // const auto p = ctime * 80;
+        // const auto p = 60 * sinpu(ctime/4);
+        // const auto p = 60 * ctime;
+        const auto [s,c] = sincos(ctime * 80);
         // const auto [s,c] = sincos(p);
-        // const auto mag = 0.02_r;
-        // const auto [u, v, w] = SVM(s * mag, c * mag);
-        const auto [u, v, w] = ones<3>(0.2_r);
+        const auto mag = 0.02_r;
+        const auto [u, v, w] = SVM(s * mag, c * mag);
+        // const auto [u, v, w] = ones<3>(0.2_r);
         pwm_u.set_dutycycle(u);
         pwm_v.set_dutycycle(v);
         pwm_w.set_dutycycle(w);

@@ -37,7 +37,7 @@ protected:
 
     void write_by_mask(const PinMask mask)  {
         for(uint8_t i = 0; i < 16; i++){
-            write_by_index(i, BoolLevel::from(mask.test(i)));
+            write_nth(i, BoolLevel::from(mask.test(i)));
         }
     }
 
@@ -64,12 +64,12 @@ public:
         p_pins_[size_t(index)] = &gpio;
     }
 
-    __fast_inline void write_by_index(const size_t index, const BoolLevel data) {
+    __fast_inline void write_nth(const size_t index, const BoolLevel data) {
         if(!is_index_valid(size_t(index))) return;
         p_pins_[size_t(index)]->write((data));
     }
 
-    __fast_inline BoolLevel read_by_index(const size_t index) {
+    __fast_inline BoolLevel read_nth(const size_t index) {
         if(!is_index_valid(size_t(index)))return LOW;
         return (p_pins_[size_t(index)])->read();
     }
@@ -122,7 +122,7 @@ public:
 
 //     void write(const uint16_t data)  {
 //         for(size_t i = 0; i < N; i++){
-//             write_by_index(i, bool(data & (1 << i)));
+//             write_nth(i, bool(data & (1 << i)));
 //         }
 //     }
 //     uint16_t read()  {
@@ -149,12 +149,12 @@ public:
 //         p_pins_[size_t(index)] = &(gpio);
 //     }
 
-//     void write_by_index(const size_t index, const bool data) {
+//     void write_nth(const size_t index, const bool data) {
 //         if(!isIndexValid(size_t(index))) return;
 //         p_pins_[size_t(index)]->write(data);
 //     }
 
-//     bool read_by_index(const size_t index) {
+//     bool read_nth(const size_t index) {
 //         if(!isIndexValid(size_t(index)))return false;
 //         return p_pins_[size_t(index)]->read();
 //     }
@@ -170,11 +170,11 @@ public:
 //         }
 //     }
 
-//     void set_pin(const PinSource pin) {
+//     void set_pin(const PinNth pin) {
 //         const auto i = CTZ(uint16_t(pin));
 //         if(isIndexValid(i)) p_pins_[]->set_pin();
 //     }
-//     void clr_pin(const PinSource pin) {
+//     void clr_pin(const PinNth pin) {
 //         const auto i = CTZ(uint16_t(pin));
 //         if(isIndexValid(i)) p_pins_[i]->clr_pin();
 //     }

@@ -45,7 +45,7 @@ IResult<> NCA9555::set_mode(const size_t index, const hal::GpioMode mode){
     auto reg = RegCopy(config_reg);
     const auto new_mask = reg.mask.modify(
         index, 
-        BoolLevel::from(mode.is_in_mode()));
+        BoolLevel::from(mode.is_input()));
 
     if(reg.mask != new_mask){
         reg.mask = new_mask;

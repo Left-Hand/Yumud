@@ -176,7 +176,7 @@ protected:
     SD_Error IsCardProgramming( uint8_t *pstatus );
     SD_Error FindSCR( uint16_t rca, uint32_t *pscr );
 
-    void enableRcc(const Enable en);
+    void enable_rcc(const Enable en);
 public:
     SD_CardInfo cardinfo;
 

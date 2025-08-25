@@ -6,7 +6,7 @@
 namespace ymd::hal{
 
 
-enum class PinSource:uint16_t{
+enum class PinNth:uint16_t{
     None,
     _0 = 1 << 0,
     _1 = 1 << 1,
@@ -34,20 +34,20 @@ public:
     [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
         raw_(raw){;}
 
-    [[nodiscard]] constexpr PinMask(const PinSource source):
-        raw_(std::bit_cast<uint16_t>(raw_)){;}
+    [[nodiscard]] constexpr PinMask(const PinNth nth):
+        raw_(std::bit_cast<uint16_t>(nth)){;}
 
     [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
         return PinMask(raw);
     }
 
-    [[nodiscard]] static constexpr PinMask from_index(const size_t index){
-        return PinMask(uint16_t(1 << index));
+    [[nodiscard]] static constexpr PinMask from_nth(const size_t nth){
+        return PinMask(uint16_t(1 << nth));
     }
     [[nodiscard]] constexpr uint16_t as_u16() const {return raw_;}
-    [[nodiscard]] constexpr PinSource as_source() const {
-        return std::bit_cast<PinSource>(raw_);}
-
+    // [[nodiscard]] constexpr PinNth nth() const {
+    //     return std::bit_cast<PinNth>(raw_);
+    // }
 
     [[nodiscard]] constexpr bool test(size_t idx) const {
         return raw_ & (1 << idx);
@@ -86,16 +86,20 @@ public:
         return raw_;
     }
 
+    [[nodiscard]] constexpr bool any() const {
+        return raw_;
+    }
+
     struct Iterator final{
     public:
         constexpr Iterator(uint16_t mask) : 
             mask_(mask), 
             pos_(next_set_bit(mask_, 0)) {}
         [[nodiscard]] constexpr bool has_next() const {return pos_ < 16;}
-        constexpr hal::PinSource next(){
+        constexpr hal::PinNth next(){
             const uint16_t ret = 1 << pos_;
             pos_ = next_set_bit(mask_, pos_ + 1);
-            return std::bit_cast<hal::PinSource>(ret);
+            return std::bit_cast<hal::PinNth>(ret);
         }
 
         [[nodiscard]] constexpr size_t index() const {
@@ -120,26 +124,6 @@ private:
     uint16_t raw_;
 };
 
-
-// struct PinSource{
-//     static constexpr PinMask None = PinMask(0);
-//     static constexpr PinMask _0 =   PinMask::from_index(0);
-//     static constexpr PinMask _1 =   PinMask::from_index(1);
-//     static constexpr PinMask _2 =   PinMask::from_index(2);
-//     static constexpr PinMask _3 =   PinMask::from_index(3);
-//     static constexpr PinMask _4 =   PinMask::from_index(4);
-//     static constexpr PinMask _5 =   PinMask::from_index(5);
-//     static constexpr PinMask _6 =   PinMask::from_index(6);
-//     static constexpr PinMask _7 =   PinMask::from_index(7);
-//     static constexpr PinMask _8 =   PinMask::from_index(8);
-//     static constexpr PinMask _9 =   PinMask::from_index(9);
-//     static constexpr PinMask _10 =  PinMask::from_index(10);
-//     static constexpr PinMask _11 =  PinMask::from_index(11);
-//     static constexpr PinMask _12 =  PinMask::from_index(12);
-//     static constexpr PinMask _13 =  PinMask::from_index(13);
-//     static constexpr PinMask _14 =  PinMask::from_index(14);
-//     static constexpr PinMask _15 =  PinMask::from_index(15);
-// };
 
 enum class PortSource:uint8_t{
     PA,
@@ -212,31 +196,35 @@ public:
         {return kind_ == kind;}
     constexpr bool operator ==(const GpioMode other) const
         {return kind_ == other.kind_;}
-    constexpr bool is_in_mode() const {
+    constexpr bool is_input() const {
         return (kind_ == InAnalog) 
         || (kind_ == InFloating) 
         || (kind_ == InPullUP) 
         || (kind_ == InPullDN);
     }
 
-    constexpr bool is_out_mode() const {
+    constexpr bool is_output() const {
         return (kind_ == OutPP)
         || (kind_ == OutOD)
         || (kind_ == OutAfPP)
         || (kind_ == OutAfOD);
     }
 
-    constexpr bool is_outpp_mode() const {
+    constexpr bool is_outpp() const {
         return (kind_ == OutPP)
         || (kind_ == OutAfPP);
     }
 
-    constexpr bool is_outod_mode() const {
+    constexpr bool is_outod() const {
         return (kind_ == OutOD)
         || (kind_ == OutAfOD);
     }
 
-    explicit operator uint8_t() const {
+    // explicit operator uint8_t() const {
+    //     return std::bit_cast<uint8_t>(kind_);
+    // }
+
+    constexpr uint8_t as_u8() const {
         return std::bit_cast<uint8_t>(kind_);
     }
 private:

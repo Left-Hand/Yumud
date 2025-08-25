@@ -12,7 +12,7 @@ void Gpio::set_mode(const GpioMode mode){
     uint32_t tempreg = pin_cfg;
     const auto shifts = ((ctz_pin % 8) * 4);
     tempreg &= (~(0xf << shifts));
-    tempreg |= ((uint8_t)mode << shifts);
+    tempreg |= (mode.as_u8() << shifts);
     pin_cfg = tempreg;
 
     if(mode == GpioMode::InPullUP){
@@ -20,13 +20,4 @@ void Gpio::set_mode(const GpioMode mode){
     }else if(mode == GpioMode::InPullDN){
         instance_ -> OUTDR &= ~uint16_t(pin_);
     }
-}
-
-Gpio & Gpio::null(){
-    static Gpio NullGpio = Gpio(GPIOD, PinSource::None);
-    return NullGpio;
-}
-
-namespace ymd::hal{
-Gpio & NullGpio = Gpio::null();
 }

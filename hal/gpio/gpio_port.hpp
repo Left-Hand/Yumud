@@ -6,59 +6,56 @@
 namespace ymd::hal{
 class GpioPort final: public GpioPortIntf{
 protected:
-    GPIO_TypeDef * instance;
+    GPIO_TypeDef * inst_;
     Gpio channels[16];
 
     friend class Gpio;
 public:
     GpioPort(GPIO_TypeDef * _instance):
-        instance(_instance),
+        inst_(_instance),
         channels{
-            Gpio(instance, PinSource::_0),
-            Gpio(instance, PinSource::_1),
-            Gpio(instance, PinSource::_2),
-            Gpio(instance, PinSource::_3),
-            Gpio(instance, PinSource::_4),
-            Gpio(instance, PinSource::_5),
-            Gpio(instance, PinSource::_6),
-            Gpio(instance, PinSource::_7),
-            Gpio(instance, PinSource::_8),
-            Gpio(instance, PinSource::_9),
-            Gpio(instance, PinSource::_10),
-            Gpio(instance, PinSource::_11),
-            Gpio(instance, PinSource::_12),
-            Gpio(instance, PinSource::_13),
-            Gpio(instance, PinSource::_14),
-            Gpio(instance, PinSource::_15),
+            Gpio(inst_, PinNth::_0),
+            Gpio(inst_, PinNth::_1),
+            Gpio(inst_, PinNth::_2),
+            Gpio(inst_, PinNth::_3),
+            Gpio(inst_, PinNth::_4),
+            Gpio(inst_, PinNth::_5),
+            Gpio(inst_, PinNth::_6),
+            Gpio(inst_, PinNth::_7),
+            Gpio(inst_, PinNth::_8),
+            Gpio(inst_, PinNth::_9),
+            Gpio(inst_, PinNth::_10),
+            Gpio(inst_, PinNth::_11),
+            Gpio(inst_, PinNth::_12),
+            Gpio(inst_, PinNth::_13),
+            Gpio(inst_, PinNth::_14),
+            Gpio(inst_, PinNth::_15),
         }{;}
     void init();
-    void enableRcc(const Enable en = EN);
+    void enable_rcc(const Enable en = EN);
 
 
-    __inline void write_by_index(const size_t index, const BoolLevel data) override;
+    __inline void write_nth(const size_t index, const BoolLevel data) override;
     __inline void set_by_mask(const PinMask mask) override;
     __inline void clr_by_mask(const PinMask mask) override;
     __inline void write_by_mask(const PinMask mask){
-        instance->OUTDR = mask.as_u16();}
+        inst_->OUTDR = mask.as_u16();}
     __inline PinMask read_mask(){
-        return PinMask(instance->INDR);}
+        return PinMask(inst_->INDR);}
 
     Gpio & operator [](const size_t index){
         return channels[index & 0b1111];
     };
 
-    Gpio & operator [](const PinSource pin){
-        if(pin != PinSource::None) 
-            return channels[CTZ(uint16_t(pin)) & 0b1111];
-        else 
-            return Gpio::null();
+    Gpio & operator [](const PinNth pin_nth){
+        return channels[CTZ(uint16_t(pin_nth)) & 0b1111];
     };
 
     void set_mode(const size_t index, const GpioMode mode) override;
 };
 
-__inline void GpioPort::write_by_index(const size_t index, const BoolLevel data){
-    const auto mask = PinMask::from_index(index);
+__inline void GpioPort::write_nth(const size_t index, const BoolLevel data){
+    const auto mask = PinMask::from_nth(index);
     if(data == HIGH){
         set_by_mask(mask);
     }else{
@@ -67,11 +64,11 @@ __inline void GpioPort::write_by_index(const size_t index, const BoolLevel data)
 }
 
 __inline void GpioPort::set_by_mask(const PinMask mask){
-    instance->BSHR = mask.as_u16();
+    inst_->BSHR = mask.as_u16();
 }
 
 __inline void GpioPort::clr_by_mask(const PinMask mask){
-    instance->BCR = mask.as_u16();
+    inst_->BCR = mask.as_u16();
 }
 
 

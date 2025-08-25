@@ -46,7 +46,6 @@
 #include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/controller/adrc/leso.hpp"
 
-#include "digipw/SVPWM/svpwm.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
@@ -403,7 +402,7 @@ void nuedc_2025e_main(){
     }).examine();
 
 
-    MP6540 mp6540{
+    MP6540 mp6540_{
         {pwm_u, pwm_v, pwm_w},
         {   
             adc.inj<1>(), 
@@ -412,15 +411,12 @@ void nuedc_2025e_main(){
         }
     };
 
-    mp6540.init();
-    mp6540.set_so_res(10'000);
-    
-    SVPWM3 svpwm_ {mp6540};
-    
+    mp6540_.init();
+    mp6540_.set_so_res(10'000);
 
-    [[maybe_unused]] auto & u_sense = mp6540.ch(1);
-    [[maybe_unused]] auto & v_sense = mp6540.ch(2);
-    [[maybe_unused]] auto & w_sense = mp6540.ch(3);
+    [[maybe_unused]] auto & u_sense = mp6540_.ch(1);
+    [[maybe_unused]] auto & v_sense = mp6540_.ch(2);
+    [[maybe_unused]] auto & w_sense = mp6540_.ch(3);
     
 
     init_adc(adc);
@@ -534,7 +530,7 @@ void nuedc_2025e_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-            svpwm_.set_ab_volt(0, 0);
+            SVPWM3::set_ab_volt(mp6540_, 0, 0);
             leso_.reset();
             return;
         }
@@ -575,7 +571,7 @@ void nuedc_2025e_main(){
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
-        svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
+        SVPWM3::set_ab_volt(mp6540_, ab_volt[0], ab_volt[1]);
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

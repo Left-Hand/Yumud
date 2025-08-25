@@ -56,8 +56,8 @@ IResult<> AW9523::init(const Config & cfg){
         res.is_err()) return res;
     auto clear_output = [this]()-> IResult<>{
         for(size_t i = 0; i < MAX_CHANNELS; i++){
-            if(const auto res = set_led_current(std::bit_cast<hal::PinSource>(
-                hal::PinMask::from_index(i).as_u16()), 
+            if(const auto res = set_led_current(std::bit_cast<hal::PinNth>(
+                hal::PinMask::from_nth(i).as_u16()), 
                 0); res.is_err()) return Err(res.unwrap_err());
             }
         led_mode_reg.mask = hal::PinMask(0xffff);
@@ -70,13 +70,13 @@ IResult<> AW9523::init(const Config & cfg){
 }
 
 
-IResult<> AW9523::write_by_index(const size_t index, const BoolLevel data){
+IResult<> AW9523::write_nth(const size_t index, const BoolLevel data){
     GUARD_INDEX(index);
     buf_mask_ = buf_mask_.modify(index, data);
     return write_by_mask(hal::PinMask(buf_mask_));
 }
 
-IResult<BoolLevel> AW9523::read_by_index(const size_t index){
+IResult<BoolLevel> AW9523::read_nth(const size_t index){
     GUARD_INDEX(index);
     if(const auto res = read_mask();
         res.is_err()) return Err(res.unwrap_err());
@@ -88,7 +88,7 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
 
     {
         auto reg = RegCopy(dir_reg);
-        reg.mask = reg.mask.modify(index, BoolLevel::from(mode.is_in_mode()));
+        reg.mask = reg.mask.modify(index, BoolLevel::from(mode.is_input()));
         
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
@@ -96,7 +96,7 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
 
     if(index < 8){
         auto reg = RegCopy(ctl_reg);
-        reg.p0mod = mode.is_outpp_mode();
+        reg.p0mod = mode.is_outpp();
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

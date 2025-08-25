@@ -7,16 +7,16 @@
 namespace ymd::hal{
 class Gpio;
 
-class TimerOut: public TimerChannel{
+class TimerOutBase: public TimerChannel{
 protected:
-    TimerOut(TIM_TypeDef * inst, const ChannelNth nth):
+    TimerOutBase(TIM_TypeDef * inst, const ChannelNth nth):
         TimerChannel(inst, nth){;}
     void install_to_pin(const Enable en = EN);
 public:
     void set_valid_level(const BoolLevel level);
     void enable_output(const Enable en = EN);
 
-    virtual Gpio & io() = 0;
+
 };
 
 struct TimerOcPwmConfig final{
@@ -32,7 +32,7 @@ struct TimerOcnPwmConfig final{
     Enable install_en = EN;
 };
 
-class TimerOC final:public PwmIntf, public TimerOut{
+class TimerOC final:public PwmIntf, public TimerOutBase{
 public:
     using Mode = TimerOcMode;
 protected:
@@ -40,7 +40,7 @@ protected:
     volatile uint16_t & arr_;
 public:
     TimerOC(TIM_TypeDef * inst, const ChannelNth nth):
-        TimerOut(inst, nth), 
+        TimerOutBase(inst, nth), 
             cvr_(from_channel_to_cvr(inst, nth)), 
             arr_(inst_->ATRLR){;}
 
@@ -49,7 +49,7 @@ public:
     void set_oc_mode(const Mode mode);
     void enable_cvr_sync(const Enable en = EN);
     
-    Gpio & io();
+    Option<Gpio &> io();
 
     __fast_inline volatile uint16_t & cvr() {return cvr_;}
     __fast_inline volatile uint16_t & arr() {return arr_;}
@@ -64,17 +64,17 @@ public:
 
 };
 
-class TimerOCN final:public TimerOut{
+class TimerOCN final:public TimerOutBase{
 public:
     TimerOCN(
         TIM_TypeDef * _base, 
         const ChannelNth nth):
-        TimerOut(_base, nth)
+        TimerOutBase(_base, nth)
         {;}
 
     void init(const TimerOcnPwmConfig & cfg);
 
-    Gpio & io();
+    Option<Gpio &> io();
 };
 
 

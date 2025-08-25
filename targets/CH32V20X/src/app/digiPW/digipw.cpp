@@ -22,8 +22,6 @@
 #include "drivers/Adc/HX711/HX711.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 
-#include "drivers/GateDriver/MP1907/mp1907.hpp"
-
 #include "dsp/controller/pid_ctrl.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -43,6 +41,7 @@ using namespace ymd::drivers;
 using namespace ymd::digipw;
 
 #define UARt DEBUGGER_INST
+
 
 void test_sogi(){
     static constexpr int ac_freq = 50;
@@ -126,12 +125,6 @@ void digipw_main(){
     // // ina226.init(10, 5);
     // ina226.init(100, 5);
 
-
-    
-        // while(true){
-        //     DEBUG_PRINTLN_IDLE(millis());
-        // }
-
     // auto & curr_ch = ina226.get_curr_channel();
     // auto & volt_ch = ina226.get_bus_volt_channel();
     // auto & power_ch = ina226.get_power_channel();
@@ -142,18 +135,19 @@ void digipw_main(){
     timer1.init({CHOPPER_FREQ});
     timer1.init_bdtr(10ns);
 
-    auto & ch = timer1.oc<1>();
-    auto & chn = timer1.ocn<1>();
-    ch.enable_cvr_sync(EN);
+    auto & pwm = timer1.oc<1>();
+    auto & pwmn = timer1.ocn<1>();
+
+    pwm.init({});
+    pwmn.init({});
+
+    pwm.enable_cvr_sync(EN);
     auto & en_gpio = portB[0];
     auto & led = portA[7];
 
     en_gpio.outpp();
     led.outpp();
 
-    MP1907 mp1907{ch, chn, en_gpio};
-
-    mp1907.init();
     // mp1907.enable();
     en_gpio.clr();
 
@@ -172,7 +166,7 @@ void digipw_main(){
         static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
         mt += dt;
         // mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * time());
-        mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt));
+        pwm.set_dutycycle(real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt)));
         // const auto duty = 0.3_r;
         // mp1907 = CLAMP(duty, 0, 0.4_r);
     });
@@ -193,7 +187,7 @@ void digipw_main(){
         // const auto curr_err = curr_targ - curr_meas;
         // const auto delta = (curr_err * 0.007_r);
         // duty = duty + delta;
-        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, ch.cvr());
+        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, pwm.cvr());
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch));
         // DEBUG_PRINTLN_IDLE(real_t(volt_ch), real_t(curr_ch));
 

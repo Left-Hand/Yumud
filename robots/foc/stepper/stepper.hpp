@@ -5,7 +5,6 @@
 
 #include "robots/foc/focmotor.hpp"
 
-#include "digipw/SVPWM/svpwm2.hpp"
 
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"

@@ -1,6 +1,7 @@
 #include "timer_utils.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -141,7 +142,7 @@ IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
 }
 
 
-Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelNth channel){    
+Option<Gpio &> get_pin(const TIM_TypeDef * inst, const TimerChannelNth channel){    
     using enum TimerChannelNth;
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
@@ -149,19 +150,19 @@ Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelNth channel){
         switch(channel){\
             default:\
             case CH1:\
-                return TIM##x##_CH1_GPIO;\
+                return &TIM##x##_CH1_GPIO;\
             case CH1N:\
-                return TIM##x##_CH1N_GPIO;\
+                return &TIM##x##_CH1N_GPIO;\
             case CH2:\
-                return TIM##x##_CH2_GPIO;\
+                return &TIM##x##_CH2_GPIO;\
             case CH2N:\
-                return TIM##x##_CH2N_GPIO;\
+                return &TIM##x##_CH2N_GPIO;\
             case CH3:\
-                return TIM##x##_CH3_GPIO;\
+                return &TIM##x##_CH3_GPIO;\
             case CH3N:\
-                return TIM##x##_CH3N_GPIO;\
+                return &TIM##x##_CH3N_GPIO;\
             case CH4:\
-                return TIM##x##_CH4_GPIO;\
+                return &TIM##x##_CH4_GPIO;\
         }\
         break;\
 
@@ -170,19 +171,19 @@ Gpio & get_pin(const TIM_TypeDef * inst, const TimerChannelNth channel){
         switch(channel){\
             default:\
             case CH1:\
-                return TIM##x##_CH1_GPIO;\
+                return &TIM##x##_CH1_GPIO;\
             case CH2:\
-                return TIM##x##_CH2_GPIO;\
+                return &TIM##x##_CH2_GPIO;\
             case CH3:\
-                return TIM##x##_CH3_GPIO;\
+                return &TIM##x##_CH3_GPIO;\
             case CH4:\
-                return TIM##x##_CH4_GPIO;\
+                return &TIM##x##_CH4_GPIO;\
         }\
         break;\
 
     switch(reinterpret_cast<uint32_t>(inst)){
         default:
-            return NullGpio;
+            return None;
 
         #ifdef ENABLE_TIM1
         ADVANCED_TIMER_GPIO_TEMPLATE(1)

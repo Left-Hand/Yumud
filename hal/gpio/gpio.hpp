@@ -12,14 +12,14 @@ class Exti;
 class Gpio final: public GpioIntf{
 protected:
     GPIO_TypeDef * instance_;
-    const PinSource pin_;
+    const PinNth pin_;
 
 
-    Gpio(GPIO_TypeDef * instance, const PinSource pin):
+    Gpio(GPIO_TypeDef * instance, const PinNth pin):
         instance_(instance)
 
         #if defined(CH32V20X) || defined(CH32V30X)
-        ,pin_(PinSource(
+        ,pin_(PinNth(
             (instance == GPIOC) && 
             (
                 ((* reinterpret_cast<uint32_t *> (0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
@@ -41,9 +41,6 @@ public:
     Gpio(const Gpio & other) = delete;
     Gpio(Gpio && other) = delete;
     ~Gpio(){};
-
-
-    static Gpio & null();
 
     __fast_inline void set(){
         instance_->BSHR = uint16_t(pin_);
@@ -77,17 +74,17 @@ public:
             return CTZ(uint16_t(pin_));
         else return -1;
     }
-    template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinSource pin_source>
+    template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinNth pin_source>
     static constexpr Gpio reflect(){
         GPIO_TypeDef * _instance = GPIOC;
 
         return Gpio(
             _instance, 
-            PinSource(1 << uint8_t(pin_source))
+            PinNth(1 << uint8_t(pin_source))
         );
     }
 
-    constexpr PinSource pin() const {return pin_;}
+    constexpr PinNth pin() const {return pin_;}
 
     constexpr PortSource port() const {
         const auto base = reinterpret_cast<uint32_t>(instance_);
@@ -120,7 +117,4 @@ public:
         }
     }
 };
-
-
-extern Gpio & NullGpio;
 }

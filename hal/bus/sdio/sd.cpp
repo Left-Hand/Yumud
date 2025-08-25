@@ -236,12 +236,12 @@ constexpr uint8_t convert_from_bytes_to_power_of_two( uint16_t NumberOfBytes )
 __attribute__( ( aligned( 4 ) ) ) uint8_t SDIO_DATA_BUFFER[512];
 
 
-void SD::enableRcc(const Enable en){
+void SD::enable_rcc(const Enable en){
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, en);
 }
 
 SD_Error SD::Init( void ){
-    enableRcc(true);
+    enable_rcc(true);
 
     portC[8].afpp();
     portC[9].afpp();

@@ -26,8 +26,8 @@ void pca_tb(OutputStream & logger){
     MG995 servo_right{pca[1]};
 
     while(true){
-        servo_left.set_radian(0);
-        servo_right.set_radian(0);
+        servo_left.set_angle(0);
+        servo_right.set_angle(0);
     }
 }
 

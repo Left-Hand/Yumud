@@ -5,15 +5,15 @@
 
 namespace ymd::hal{
 
+
+enum class I2cError:uint8_t{
+
+};
+
 class I2cHw final: public I2c{
 public:
 
-    I2cHw(I2C_TypeDef * inst):
-        I2c(
-            &get_scl(inst, 0), 
-            &get_sda(inst, 0)),
-        inst_(inst){;}
-    
+    I2cHw(I2C_TypeDef * inst);
 
     hal::HalResult write(const uint32_t data) final;
     hal::HalResult read(uint32_t & data, const Ack ack) final;
@@ -30,8 +30,7 @@ private:
 
 protected:
     I2C_TypeDef * inst_;
-    static hal::Gpio & get_scl(const I2C_TypeDef * inst, const uint8_t remap);
-    static hal::Gpio & get_sda(const I2C_TypeDef * inst, const uint8_t remap);
+
 };
 
 

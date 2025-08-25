@@ -28,7 +28,7 @@ ExtiChannel::ExtiChannel(
     const TrigEdge edge,
     const TrigMode mode
 ):
-    source_(map_pinsource_to_trigsource(gpio.pin())), 
+    source_(map_PinNth_to_trigsource(gpio.pin())), 
     p_gpio_(&gpio),
     gpio_mode_(map_edge_to_gpiomode(edge)),
     priority_(priority), 

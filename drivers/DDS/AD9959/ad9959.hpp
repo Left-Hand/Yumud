@@ -5,6 +5,8 @@
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+#include "core/utils/Option.hpp"
+
 namespace ymd::drivers{
 
 // REG_TEMPLATE(Reg24, uint24_t)
@@ -274,14 +276,14 @@ protected:
     ChannelNth               last_channels;
     static constexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
     hal::SpiDrv spi_drv_;
-    hal::GpioIntf &         reset_gpio;               // Reset pin (active = high)
-    hal::GpioIntf &         update_gpio;              // I/O_UPDATE: Apply config changes
+    Option<hal::GpioIntf &>         reset_gpio;               // Reset pin (active = high)
+    Option<hal::GpioIntf &>         update_gpio;              // I/O_UPDATE: Apply config changes
 
 public:
     AD9959(
         const hal::SpiDrv & spi_drv, 
-        hal::GpioIntf & _reset_gpio = hal::NullGpio, 
-        hal::GpioIntf & _update_gpio = hal::NullGpio
+        Option<hal::GpioIntf &> _reset_gpio = None, 
+        Option<hal::GpioIntf &> _update_gpio = None
     ):
         spi_drv_(spi_drv),
         reset_gpio(_reset_gpio),
@@ -289,8 +291,8 @@ public:
 
     AD9959(
         hal::SpiDrv && spi_drv, 
-        hal::GpioIntf & _reset_gpio = hal::NullGpio, 
-        hal::GpioIntf & _update_gpio = hal::NullGpio
+        Option<hal::GpioIntf &> _reset_gpio = None, 
+        Option<hal::GpioIntf &> _update_gpio = None
     ):
         spi_drv_(std::move(spi_drv)),
         reset_gpio(_reset_gpio),

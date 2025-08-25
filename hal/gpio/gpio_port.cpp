@@ -5,14 +5,14 @@ using namespace ymd::hal;
 
 void GpioPort::set_mode(const size_t index, const GpioMode mode){
     Gpio gpio = Gpio(
-        instance, 
-        std::bit_cast<PinSource>(uint16_t(1 << index))
+        inst_, 
+        std::bit_cast<PinNth>(uint16_t(1 << index))
     );
     gpio.set_mode(mode);
 }
 
-void GpioPort::enableRcc(const Enable en){
-    switch((uint32_t)instance){
+void GpioPort::enable_rcc(const Enable en){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, en == EN);
@@ -44,7 +44,7 @@ void GpioPort::enableRcc(const Enable en){
 }
 
 void GpioPort::init(){
-    enableRcc();
+    enable_rcc();
 }
 
 

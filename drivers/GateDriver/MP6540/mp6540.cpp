@@ -95,7 +95,9 @@ MP6540::MP6540CurrentChannel & MP6540::ch(const size_t index){
     return chs[index - 1];
 }
 
-MP6540 & MP6540::operator= (const UVW_Duty & duty){
-    std::tie(*pwms_[0], *pwms_[1], *pwms_[2]) = duty; 
-    return *this;
+void MP6540::set_dutycycle(const std::span<const real_t, 3> dutycycle){
+    pwms_[0] -> set_dutycycle((dutycycle[0]));
+    pwms_[1] -> set_dutycycle((dutycycle[1]));
+    pwms_[2] -> set_dutycycle((dutycycle[2]));
+
 }

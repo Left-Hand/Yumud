@@ -39,15 +39,15 @@ static constexpr uint SERVO_FREQ = 50;
 #endif
 
 
-class MockRadianServo final:public RadianServoIntf{
+class MockServo{
 protected:
-    real_t current_radian_;
+    real_t curr_angle_;
 public:
-    void set_radian(const real_t radian){
-        current_radian_ = radian;
+    void set_angle(const real_t angle){
+        curr_angle_ = angle;
     }
-    real_t get_radian(){
-        return current_radian_;
+    real_t get_angle(){
+        return curr_angle_;
     }
 };
 
@@ -64,9 +64,9 @@ public:
     MG995 servo_b{pca[1]};
     MG995 servo_c{pca[2]};
     #else
-    MockRadianServo servo_a;
-    MockRadianServo servo_b;
-    MockRadianServo servo_c;
+    MockServo servo_a;
+    MockServo servo_b;
+    MockServo servo_c;
     #endif
 
     void setup(){
@@ -195,9 +195,9 @@ void rrs3_robot_main(){
     auto & servo_c = env.servo_c;
 
     RRS3_RobotActuator actuator_{cfg, [&](real_t r1, real_t r2, real_t r3){
-        servo_a.set_radian(r1);
-        servo_b.set_radian(r2);
-        servo_c.set_radian(r3);
+        servo_a.set_angle(r1);
+        servo_b.set_angle(r2);
+        servo_c.set_angle(r3);
     }};
 
     robots::ReplServer repl_server = {

@@ -31,7 +31,7 @@ void Vport::write_mask(const hal::PinMask mask){
 
 hal::PinMask Vport::read_mask(){
     TODO();
-    return hal::PinMask::from_index(0);
+    return hal::PinMask::from_nth(0);
 }
 
 Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
@@ -179,7 +179,7 @@ void Vport::write_by_mask(const hal::PinMask mask){
     // write(buf);
 }
 
-void Vport::write_by_index(const size_t index, const BoolLevel level){
+void Vport::write_nth(const size_t index, const BoolLevel level){
     TODO();
     // if(!isIndexValid(index))return;
     // if(data) buf |= 1 << index;
@@ -187,7 +187,7 @@ void Vport::write_by_index(const size_t index, const BoolLevel level){
     // write(buf);
 }
 
-BoolLevel Vport::read_by_index(const size_t index){
+BoolLevel Vport::read_nth(const size_t index){
     TODO();
     // if(!isIndexValid(index)) return false;
     // read();

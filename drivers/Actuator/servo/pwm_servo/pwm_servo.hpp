@@ -7,61 +7,62 @@
 namespace ymd::drivers{
 
 class ScaledPwm final:public hal::PwmIntf{
-protected:
-    hal::PwmIntf & instance_;
-    Range2<real_t> duty_range_;
-    bool enabled = true;
+
 public:
     ScaledPwm(
-        hal::PwmIntf & instance, 
+        hal::PwmIntf & pwm, 
         const Range2<real_t> & duty_range
     ):
-        instance_(instance), 
+        pwm_(pwm), 
         duty_range_(duty_range){;}
 
     void enable(const Enable en = EN){
-        enabled = en == EN;
+        enabled_ = en == EN;
         if(en == DISEN) this->set_dutycycle(0);
     }
 
     void set_dutycycle(const real_t duty) override {
-        if(false == enabled){
-            instance_ = 0;
+        if(false == enabled_){
+            pwm_.set_dutycycle(0);
         }else{
-            instance_ = duty_range_.lerp(duty);
+            pwm_.set_dutycycle(duty_range_.lerp(duty));
         }
     }
 
     auto & inst(){
-        return instance_;
+        return pwm_;
     }
+protected:
+    hal::PwmIntf & pwm_;
+    Range2<real_t> duty_range_;
+    bool enabled_ = true;
 };
 
 
-class PwmRadianServo final:public RadianServoBase{
+class PwmServo final:public ServoBase{
 private:
-    ScaledPwm instance_;
-    real_t last_rad;
+    ScaledPwm pwm_;
+    real_t last_angle;
 
-    void set_global_radian(const real_t rad) override{
-        instance_.set_dutycycle((rad) * real_t(1 / PI));
-        last_rad = rad;
+    void set_global_angle(const real_t angle) override{
+        pwm_.set_dutycycle((angle) * real_t(1 / PI));
+        last_angle = angle;
     }
 
-    real_t get_global_radian() override{
-        return last_rad;
+    real_t get_global_angle() override{
+        return last_angle;
     }
     
 public:
-    PwmRadianServo(hal::PwmIntf & instance):
-        instance_(instance, {real_t(0.025), real_t(0.125)})
+    PwmServo(hal::PwmIntf & pwm):
+        pwm_(pwm, {real_t(0.025), real_t(0.125)})
         {;}
 
 };
 
 class PwmSpeedServo:public SpeedServo{
 protected: 
-    ScaledPwm instance_;
+    ScaledPwm pwm_;
     real_t max_turns_per_second_;
     real_t expect_speed_;
 
@@ -75,11 +76,11 @@ protected:
     }
 
     void set_dutycycle(const real_t duty){
-        instance_.set_dutycycle((duty + 1) * real_t(0.5));
+        pwm_.set_dutycycle((duty + 1) * real_t(0.5));
     }
 public:
-    PwmSpeedServo(hal::PwmIntf & instance, const real_t max_turns_per_second = 2):
-            instance_(instance, {real_t(0.025), real_t(0.125)}),
+    PwmSpeedServo(hal::PwmIntf & pwm, const real_t max_turns_per_second = 2):
+            pwm_(pwm, {real_t(0.025), real_t(0.125)}),
             max_turns_per_second_(max_turns_per_second),
             expect_speed_(real_t(0))
             {;}
@@ -87,6 +88,6 @@ public:
 
 };
 
-using MG995 = PwmRadianServo;
-using SG90 = PwmRadianServo;
+using MG995 = PwmServo;
+using SG90 = PwmServo;
 }

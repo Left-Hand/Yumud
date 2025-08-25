@@ -15,7 +15,7 @@ namespace GpioTags{
         PH,
     };
 
-    enum PinSource:uint8_t{
+    enum PinNth:uint8_t{
         _0,
         _1,
         _2,
@@ -47,7 +47,7 @@ namespace PeriphTags{
         PH,
     };
 
-    enum PinSource:uint8_t{
+    enum PinNth:uint8_t{
         _0,
         _1,
         _2,
@@ -74,13 +74,13 @@ namespace PeriphTags{
 }
 
 
-template<GpioTags::PortSource port,GpioTags::PinSource pin>
+template<GpioTags::PortSource port,GpioTags::PinNth pin>
 struct __GpioTag{
     static constexpr auto port_source = port;
     static constexpr auto pin_source = pin;
 };
 
-template<GpioTags::PortSource port,GpioTags::PinSource pin>
+template<GpioTags::PortSource port,GpioTags::PinNth pin>
 struct GpioTag:public __GpioTag<port, pin>{
 };
 
