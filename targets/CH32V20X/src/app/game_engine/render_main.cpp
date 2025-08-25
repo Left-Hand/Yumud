@@ -422,9 +422,16 @@ auto make_draw_dispatch_iterator(Shape && shape){
 
 template<typename T>
 struct RoundedRect2{
-    Rect2<T> rect;
+    Rect2<T> bounding_rect;
     T radius;
+
+    constexpr auto bounding_box() const {
+        return bounding_rect;
+    }
 };
+
+template<typename T>
+struct is_placed_t<RoundedRect2<T>> : std::true_type {};
 
 
 template<typename T>
@@ -596,6 +603,128 @@ private:
 };
 
 
+template<typename T>
+struct RoundedRect2SliceIterator{
+public:
+    constexpr RoundedRect2SliceIterator(const RoundedRect2<T> & shape):
+        // x0_(shape.bounding_rect.position.x + shape.radius),
+        x_range_(shape.bounding_rect.get_x_range()),
+        y_range_(shape.bounding_rect.get_y_range()),
+        y_(y_range_.start),
+        radius_(shape.radius),
+        radius_squ_(square(shape.radius))
+    {
+        replace_x();
+    }
+
+    constexpr void advance(){
+        y_++;
+        replace_x();
+    }
+
+    constexpr bool has_next() const {
+        return y_ < y_range_.stop;
+    }
+
+    constexpr Range2u16 x_range() const{
+        if(get_y_overhit()){
+            return Range2u16{
+                x_range_.start + radius_ + x_offset_,
+                x_range_.stop - radius_ - x_offset_};
+        }else{
+            return x_range_;
+        }
+    }
+
+    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+        const auto [left, right] = x_range();
+
+        return {Range2u16{left, left + 1}, Range2u16{right - 1, right}};
+    }
+
+private:
+    // int16_t x0_;
+
+    
+    // int16_t radius_;
+    Range2<uint16_t> x_range_;
+    Range2<uint16_t> y_range_;
+    uint16_t y_;
+    uint16_t radius_;
+    uint16_t radius_squ_;
+
+    int16_t x_offset_ = 0;
+
+    constexpr void replace_x(){
+        x_offset_ = -radius_;
+        while(x_offset_ * x_offset_ + square(get_y_overhit()) > radius_squ_){
+            x_offset_++;
+        }
+        // x_offset_ = -radius_;
+    }
+
+    constexpr bool is_y_at_edge() const {
+        return y_ == (y_range_.start) || y_ == (y_range_.stop);
+    }
+
+    constexpr uint16_t get_y_overhit() const {
+        if(y_ < y_range_.start + radius_){
+            return y_range_.start + radius_ - y_;
+        }else if(y_ > y_range_.stop - radius_){
+            return y_ - (y_range_.stop - radius_);
+        }else{
+            return 0;
+        }
+        // return MIN(uint16_t(y_range_.start + radius_ - y_), 0) MN(y_ - (y_range_.stop - radius_)));
+    }
+
+};
+
+// DrawDispatchIterator 特化
+template<std::integral T>
+struct DrawDispatchIterator<Triangle2<T>> {
+    using Triangle = Triangle2<T>;
+    using Iterator = TriangleIterator<T>;
+
+    constexpr DrawDispatchIterator(const Triangle & triangle):
+        iter_(triangle.to_sorted_by_y()){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iter_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iter_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto x_range = iter_.current_filled();
+        auto res = target.fill_x_range(x_range, color);
+        if (res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    // 空心绘制（对于线段来说和填充一样）
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto [left_x_range, right_x_range] = iter_.left_and_right();
+        if(const auto res = target.fill_x_range(left_x_range, color);
+            res.is_err()) return res;
+        if(const auto res = target.fill_x_range(right_x_range, color);
+            res.is_err()) return res;
+        return Ok();
+    }
+
+private:
+    TriangleIterator<T> iter_;
+};
+
 template<std::integral T>
 struct DrawDispatchIterator<HorizonOval2<T>> {
     using Shape = HorizonOval2<T>;
@@ -645,20 +774,20 @@ struct DrawDispatchIterator<HorizonOval2<T>> {
 
     }
 
-
 private:
     Iterator iter_;
     T length_;
 };
 
-// DrawDispatchIterator 特化
-template<std::integral T>
-struct DrawDispatchIterator<Triangle2<T>> {
-    using Triangle = Triangle2<T>;
-    using Iterator = TriangleIterator<T>;
 
-    constexpr DrawDispatchIterator(const Triangle & triangle):
-        iter_(triangle.to_sorted_by_y()){;}
+
+template<std::integral T>
+struct DrawDispatchIterator<RoundedRect2<T>> {
+    using Shape = RoundedRect2<T>;
+    using Iterator = RoundedRect2SliceIterator<T>;
+
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : iter_(shape){;}
 
     // 检查是否还有下一行
     constexpr bool has_next() const {
@@ -674,13 +803,13 @@ struct DrawDispatchIterator<Triangle2<T>> {
     template<DrawTargetConcept Target, typename Color>
     Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
         // 绘制当前行的范围
-        const auto x_range = iter_.current_filled();
-        auto res = target.fill_x_range(x_range, color);
-        if (res.is_err()) return Err(res.unwrap_err());
+        const auto x_range = iter_.x_range();
+        if(auto res = target.fill_x_range({x_range.start, x_range.stop}, color);
+            res.is_err()) return res;
+        
         return Ok();
     }
 
-    // 空心绘制（对于线段来说和填充一样）
     template<DrawTargetConcept Target, typename Color>
     Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
         // 绘制当前行的范围
@@ -690,10 +819,12 @@ struct DrawDispatchIterator<Triangle2<T>> {
         if(const auto res = target.fill_x_range(right_x_range, color);
             res.is_err()) return res;
         return Ok();
+
     }
 
+
 private:
-    TriangleIterator<T> iter_;
+    Iterator iter_;
 };
 
 void render_main(){
@@ -772,8 +903,11 @@ void render_main(){
         // auto shape =  Rect2u16{shape_x,shape_y,20,20};
         // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
         // auto shape =  Circle2<uint16_t>{Vec2u16{shape_x,shape_y},30};
-        auto shape =  HorizonOval2<uint16_t>{
-            .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
+        // auto shape =  HorizonOval2<uint16_t>{
+        //     .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
+        
+        auto shape =  RoundedRect2<uint16_t>{
+            .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{120, 60}}, .radius = 15};
         
         // auto shape =  Triangle2<uint16_t>{
         //     .points = {
@@ -810,8 +944,8 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        // for(size_t j = 0; j < 20; j++){
-                        for(size_t j = 0; j < 1; j++){
+                        for(size_t j = 0; j < 20; j++){
+                        // for(size_t j = 0; j < 1; j++){
 
                             render_iter.draw_filled(line_span, RGB565::RED).examine();
                             render_iter.draw_hollow(line_span, RGB565::BLUE).examine();

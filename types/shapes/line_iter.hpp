@@ -268,6 +268,10 @@ public:
     constexpr bool is_y_at_edge() const {
         return y_ == (radius_ - 1) || y_ == (-radius_);
     }
+
+    constexpr bool is_y_at_zero() const {
+        return y_ == 0;
+    }
 private:
     int16_t x0_;
     int16_t err_;
