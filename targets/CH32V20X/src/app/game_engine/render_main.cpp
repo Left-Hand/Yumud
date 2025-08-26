@@ -43,6 +43,7 @@
 #include "types/regions/Segment2.hpp"
 #include "types/shapes/triangle2.hpp"  
 #include "types/shapes/line_iter.hpp"
+#include "types/shapes/annular_sector.hpp"
 
 namespace ymd{
 template<typename T>
@@ -1120,6 +1121,145 @@ private:
     Iterator iter_;
 };
 
+
+
+
+template<typename T, typename D>
+struct DrawDispatchIterator<AnnularSector<T, D>> {
+    using Shape = AnnularSector<T, D>;
+    using Self = DrawDispatchIterator<AnnularSector<T, D>>;
+
+    struct CtorHelper{
+        Range2<T> y_range;
+        Range2<T> x_range;
+        Vec2<q16> v1;
+        Vec2<q16> v2;
+
+        static constexpr CtorHelper from(const Shape & shape){
+            const auto angle_range = shape.angle_range;
+            const auto bb = shape.bounding_box(); 
+            return {                
+                .y_range = bb.y_range(),
+                .x_range = bb.x_range(),
+                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.start.to_turns())),
+                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.stop().to_turns()))
+            };
+        }
+    };
+
+
+    constexpr DrawDispatchIterator(const Shape & shape):
+        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        const auto x_range = x_range_;
+
+        #pragma GCC unroll 4
+        for(T i = x_range.start; i < x_range.stop; i++){
+            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            if(not is_inside) continue;
+            // PANIC(i, y_);
+            if(const auto res = target.draw_x(i, color);
+                res.is_err()) return Err(res.unwrap_err());
+            continue;
+        }
+
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return Ok();
+    }
+
+
+private:
+    // Iterator iter_;
+    T y_;
+    T y_stop_;
+    Range2<T> x_range_;
+    Vec2<T> center_;
+    uint32_t squ_inner_radius_;
+    uint32_t squ_outer_radius_;
+    Vec2<q16> start_norm_vec_;
+    Vec2<q16> stop_norm_vec_;
+    bool is_minor_;
+
+    using ST = std::make_signed_t<T>;
+
+    __fast_inline constexpr bool contains_point(const Vec2<T> p){
+        const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
+        const auto len_squ = square(uint32_t(offset.x)) + square(uint32_t(offset.y));
+
+        //判断半径
+        if (len_squ < squ_inner_radius_) return false;
+        if (len_squ > squ_outer_radius_) return false;
+
+
+        if(is_minor_){
+            return (offset.is_counter_clockwise_to(start_norm_vec_) && 
+            offset.is_clockwise_to(stop_norm_vec_));
+        }else{
+            return (offset.is_counter_clockwise_to(start_norm_vec_) || 
+            offset.is_clockwise_to(stop_norm_vec_));
+        }
+
+        return true;
+    }
+
+    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+        y_(helper.y_range.start),
+        y_stop_(helper.y_range.stop),
+        x_range_(helper.x_range),
+        center_(shape.center),
+        squ_inner_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius_range.start)))),
+        squ_outer_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius_range.stop)))),
+        start_norm_vec_(helper.v1),
+        stop_norm_vec_(helper.v2),
+        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
+        {;}
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+        // return os << os.brackets<'('> ()
+        //     << self.y_ << os.splitter()
+        //     << self.y_stop_ << os.splitter()
+        //     << self.center_ << os.splitter()
+        //     << self.squ_inner_radius_ << os.splitter()
+        //     << self.squ_outer_radius_ << os.splitter()
+        //     << self.start_norm_vec_ << os.splitter()
+        //     << self.stop_norm_vec_ << os.splitter()
+        //     << self.is_minor_ << os.brackets<')'>;
+
+        return os << os.brackets<'('> ()
+            << "y" << self.y_ << os.splitter()
+            << "y_stop" << self.y_stop_ << os.splitter()
+            << "center" << self.center_ << os.splitter()
+            << "squ_inner_radius" << self.squ_inner_radius_ << os.splitter()
+            << "squ_outer_radius" << self.squ_outer_radius_ << os.splitter()
+            << "start_norm_vec" << self.start_norm_vec_ << os.splitter()
+            << "stop_norm_vec" << self.stop_norm_vec_ << os.splitter()
+            << "is_minor" << self.is_minor_ << os.brackets<')'>();
+    }
+};
+
+
+
 void render_main(){
 
 
@@ -1206,7 +1346,8 @@ void render_main(){
         using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,120,60};
         // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
-        // auto shape =  Circle2<uint16_t>{Vec2u16{shape_x,shape_y},30};
+        // auto shape =  Circle2<uint16_t>{
+        //     Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 60};
         // auto shape =  HorizonOval2<uint16_t>{
         //     .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
         
@@ -1220,35 +1361,103 @@ void render_main(){
         //     .sample_range = {-1, 1}
         // };
 
-        auto shape = RoundedRect2<uint16_t>{.bounding_rect = tft.bounding_box().shrink(20).unwrap(), .radius = 10};
+        // auto shape = RoundedRect2<uint16_t>{.bounding_rect = tft.bounding_box().shrink(20).unwrap(), .radius = 10};
 
-        #if 0
-        auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
+        #if 1
+        // auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
         // auto shape = GridMap2<uint16_t>{
-            .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
-            .padding = {2,2},
-            .count = {15,7}
+        //     .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
+        //     .padding = {2,2},
+        //     .count = {15,7}
         // };
-        }.bounding_box(), .radius = 5};
+        // }.bounding_box(), .radius = 5};
         // }.bounding_box();
 
         #endif
 
         // PANIC{shape, shape.bounding_box()};
-        // auto shape =  Triangle2<uint16_t>{
-        //     .points = {
-        //         Vec2u16{shape_x,shape_y},
-        //         Vec2u16{160,130},
-        //         Vec2u16{20,150}
-        //         // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
-        //         // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
-        //     }
+
+        #if 0
+        auto shape =  Triangle2<uint16_t>{
+            .points = {
+                Vec2u16{shape_x,shape_y},
+                Vec2u16{160,130},
+                Vec2u16{20,150}
+                // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
+                // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
+            }
+        };
+        #endif
+
+        #if 1
+        // auto sector_to_bb = []<typename T, typename D>(const AnnularSector<T, D> & shape){
+        //     const auto angle_range = shape.angle_range;
+        //     const bool x_reached_left = angle_range.contains_angle(Angle<D>::HALF_LAP);
+        //     const bool x_reached_right = angle_range.contains_angle(Angle<D>::ZERO);
+        //     const bool y_reached_top = angle_range.contains_angle(Angle<D>::QUARTER_LAP);
+        //     const bool y_reached_bottom = angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
+
+        //     const auto v1 = Vec2<D>::from_angle(shape.angle_range.start);
+        //     const auto v2 = Vec2<D>::from_angle(shape.angle_range.stop());
+
+        //     const auto p1 = Vec2<q16>(v1).flip_y()* shape.radius_range.stop;
+        //     const auto p2 = Vec2<q16>(v2).flip_y() * shape.radius_range.stop;
+
+        //     const auto p3 = Vec2<q16>(v1).flip_y()* shape.radius_range.start;
+        //     const auto p4 = Vec2<q16>(v2).flip_y() * shape.radius_range.start;
+
+        //     const auto x_min = x_reached_left ? (-shape.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x);
+        //     const auto x_max = x_reached_right ? (shape.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x);
+        //     const auto y_min = y_reached_top ? (-shape.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y);
+        //     const auto y_max = y_reached_bottom ? (shape.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y);
+
+        //     return Rect2<T>(
+        //         static_cast<T>(x_min + shape.center.x), 
+        //         static_cast<T>(y_min + shape.center.y), 
+        //         static_cast<T>(x_max - x_min), 
+        //         static_cast<T>(y_max - y_min)
+        //     );
         // };
+
+        const auto shape = AnnularSector<uint16_t, q16>{
+            .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+            .radius_range = {47, 53},
+            .angle_range = {
+                Angle<q16>::from_degrees(60 + ctime * 120), 
+                // Angle<q16>::from_degrees(123)
+                Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
+            }
+        };
+
+        // static constexpr auto _360_deg = Angle<q16>::from_degrees(360);
+        // static constexpr auto _360_deg_turns = Angle<q16>::from_degrees(360).to_turns();
+        // static constexpr auto _360_deg = Angle<q16>::from_degrees(360);
+        // static constexpr auto INV_360 = static_cast<q16>(1.0 / 360.0);
+        // static constexpr auto INV_360_D = 1.0 / 360.0;
+        // static constexpr auto INV_360 = static_cast<q16>(INV_360_D);
+        // static constexpr auto INV_360_I = INV_360_D * static_cast<long double>(1u << 8);
+        // static constexpr auto INV_360_Q = _iq<8>::from_i32(INV_360_I);
+        // PANIC{shape.angle_range, AngleRange<q16>{
+        //         Angle<q16>::from_degrees(30), 
+        //         Angle<q16>::from_degrees(360)
+        //     },
+        //     Angle<q16>::from_degrees(360),
+        //     _360_deg, _360_deg_turns
+        // };
+
+
+        #endif
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
+        // const auto shape_bb = sector_to_bb(shape);
+        // ASSERT(shape_bb.y_range().stop == 140, shape_bb);
+        // DEBUG_PRINTLN(shape_bb);
+
         // PANIC{shape_bb};
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
         auto render_iter = make_draw_dispatch_iterator(shape);
+        
+        // PANIC{render_iter};
 
         Microseconds upload_us = 0us;
         Microseconds render_us = 0us;
@@ -1272,9 +1481,10 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // for(size_t j = 0; j < 200; j++){
+                        // for(size_t j = 0; j < 10; j++){
                         for(size_t j = 0; j < 1; j++){
 
-                            render_iter.draw_filled(line_span, RGB565::GRAY).examine();
+                            render_iter.draw_filled(line_span, RGB565::PINK).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
                         }
                         // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
@@ -1291,7 +1501,14 @@ void render_main(){
             }
         });
 
-        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count(), total_us.count(), 180_deg);
+        DEBUG_PRINTLN(
+            render_us.count(), 
+            clear_us.count(), 
+            upload_us.count(), 
+            total_us.count()
+            // render_iter
+            // shape_bb
+        );
     }
 
 };

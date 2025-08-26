@@ -150,7 +150,7 @@ class EllipseCalibrator:public EllipseCalibrator_Prelude{
 public:
     static constexpr size_t N = 48;
     // using Data = std::array<Vec3<q24>, N>;
-    using Data = InlineVector<Vec3<q24>, N>;
+    using Data = HeaplessVector<Vec3<q24>, N>;
 
     // struct Flag{
         // Empty,

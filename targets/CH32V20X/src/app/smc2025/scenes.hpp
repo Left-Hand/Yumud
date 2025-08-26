@@ -36,9 +36,9 @@ public:
                 (viewpoint_.orientation + orientation - 90_deg)
                 : (viewpoint_.orientation + 90_deg));
 
-        const auto ret = AnnularSector<q16>{
-            .inner_radius = radius - road_width_ / 2,
-            .outer_radius = radius + road_width_ / 2,
+        const auto ret = AnnularSector<q16, q16>{
+            .radius_range = Range2<q16>::from_center_and_half_length(
+                radius, road_width_ / 2),
             
             .angle_range = {start_angle, stop_angle}
         } | Placement{

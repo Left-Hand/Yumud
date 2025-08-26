@@ -18,7 +18,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using TouchPoints = InlineVector<TouchPoint, MAX_NUM_TOUCHPOINTS>;
+    using TouchPoints = HeaplessVector<TouchPoint, MAX_NUM_TOUCHPOINTS>;
 
     //验证设备是否有效
     IResult<> validate();

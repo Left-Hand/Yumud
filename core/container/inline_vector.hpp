@@ -9,18 +9,18 @@
 namespace ymd{
 
 template<typename T, size_t N>
-class InlineVector {
+class HeaplessVector {
 public:
     // 构造函数 - constexpr
-    constexpr InlineVector() noexcept : size_(0) {}
+    constexpr HeaplessVector() noexcept : size_(0) {}
 
     // 析构函数 - constexpr
-    constexpr ~InlineVector() {
+    constexpr ~HeaplessVector() {
         clear();
     }
 
     // 移动构造函数 - constexpr
-    constexpr InlineVector(InlineVector&& other) noexcept {
+    constexpr HeaplessVector(HeaplessVector&& other) noexcept {
         size_ = other.size_;
         for (size_t i = 0; i < size_; ++i) {
             new (&data_[i]) T(std::move(other.data_[i]));
@@ -30,7 +30,7 @@ public:
     }
 
     // 移动赋值 - constexpr
-    constexpr InlineVector& operator=(InlineVector&& other) noexcept {
+    constexpr HeaplessVector& operator=(HeaplessVector&& other) noexcept {
         if (this != &other) {
             clear();
             size_ = other.size_;
@@ -44,7 +44,7 @@ public:
     }
 
     // Safe copy constructor
-    constexpr InlineVector(const InlineVector& other) {
+    constexpr HeaplessVector(const HeaplessVector& other) {
         size_ = 0; // Initialize in case constructor throws
         for (size_t i = 0; i < other.size_; ++i) {
             new (&data_[i]) T(other.data_[i]); // Copy construct each element
@@ -53,7 +53,7 @@ public:
     }
 
     // Safe copy assignment operator
-    constexpr InlineVector& operator=(const InlineVector& other) {
+    constexpr HeaplessVector& operator=(const HeaplessVector& other) {
         if (this != &other) {
             clear(); // Destroy existing elements
             size_ = 0;

@@ -57,11 +57,12 @@ int main(){
     // polar_robot_main();
     // mks_stepper_main();
     // ads7830_main();
+    render_main();
     // math_main();
     // polar_robot_main();
     // nuedc_2025e_main();
     // render_main();
-    bldc_main();
+    // bldc_main();
     // laser_ctl_main();
 
     // bldc_main();
@@ -162,6 +163,7 @@ int main(){
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();
+    render_main();
     // calc_main();
     // dshot_main();
     // usbcdc_tb();

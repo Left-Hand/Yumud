@@ -93,21 +93,31 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle(
-        const Angle<T> angle){
+        const Angle<U> angle
+    ){
+        static_assert(not std::is_integral_v<U>);
+        static_assert(not std::is_integral_v<T>);
+
         const auto [s,c] = angle.sincos();
-        return {c, s};
+        return {static_cast<T>(c), static_cast<T>(s)};
     }
 
+    template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
-        const Angle<T> angle, const T length){
+        const Angle<U> angle, const T length){
         const auto [s,c] = angle.sincos();
-        return {c * length, s * length};
+        return {static_cast<T>(c * length), static_cast<T>(s * length)};
     }
 
-    [[nodiscard]] T & operator [](const size_t index) { return *(&this->x + index);}
+    [[nodiscard]] constexpr T & operator [](const size_t index) { 
+        return *(&this->x + index);
+    }
 
-    [[nodiscard]] const T & operator [](const size_t index) const {return *(&this->x + index);}
+    [[nodiscard]] constexpr const T & operator [](const size_t index) const {
+        return *(&this->x + index);
+    }
 
 
     [[nodiscard]] static constexpr bool sort_by_x(const Vec2 & a, const Vec2 & b){
@@ -129,11 +139,13 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vec2<T> & other) const;
 
-    [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vec2<T> & other) const{
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vec2<U> & other) const{
         return (x*other.y > y*other.x);
     }
-
-    [[nodiscard]] __fast_inline constexpr bool is_count_clockwise_to(const Vec2<T> & other) const{
+    
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr bool is_counter_clockwise_to(const Vec2<U> & other) const{
         return (x*other.y < y*other.x);
     }
 
@@ -237,8 +249,15 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> cw() const {return Vec2<T>(-y, x);}
     [[nodiscard]] __fast_inline constexpr Vec2<T> ccw() const {return Vec2<T>(y, -x);}
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {return {x,-y};}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const {return {-x,y};}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {
+        static_assert(std::is_signed_v<T>);
+        return {x,static_cast<T>(-y)};
+    }
+    
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const {
+        static_assert(std::is_signed_v<T>);
+        return {static_cast<T>(-x),y};
+    }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> swap_xy() const {return {y,x};}
 

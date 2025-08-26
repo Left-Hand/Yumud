@@ -39,7 +39,7 @@ using IResult = Result<T, Error>;
 
 static constexpr size_t MAX_PACKET_BYTES = 16;
 
-using Buf = InlineVector<uint8_t, MAX_PACKET_BYTES>;
+using Buf = HeaplessVector<uint8_t, MAX_PACKET_BYTES>;
 
 enum class VerifyMethod:uint8_t{
     X6B,
@@ -133,7 +133,7 @@ private:
         const std::span<const uint8_t> bytes
     ){
         constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
-        auto buf = InlineVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
+        auto buf = HeaplessVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
