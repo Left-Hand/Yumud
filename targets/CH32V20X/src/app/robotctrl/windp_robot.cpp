@@ -148,7 +148,7 @@ struct TaskCircle:public TaskBase{
         const auto a = input.a; 
         const auto w = input.w;
         const Vec2 vec_norm = p.normalized();
-        const Vec2 vec_tan = vec_norm.rotated(real_t(PI*0.5));
+        const Vec2 vec_tan = vec_norm.rotated(90_deg);
         
         const real_t q = atan2(W, H);
         const real_t theta = acos(cos(p.x)*cos(p.y));
@@ -167,7 +167,7 @@ struct TaskCircle:public TaskBase{
 };
 
 struct TaskLine:public TaskBase{
-    constexpr Output calc(const Input & input, const real_t theta){
+    constexpr Output calc(const Input & input, const Angle<real_t> theta){
         using namespace PhysicalConstants;
 
         const auto p = input.p;

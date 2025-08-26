@@ -4,8 +4,8 @@ using namespace ymd;
 using namespace ymd::foc;
 
 void SimplePll::update(const iq_t<16> lap_pos){
-    scexpr iq_t<16> kp_ = 0.17_r;
-    scexpr iq_t<16> ki_ = 0.0027_r;
+    static constexpr iq_t<16> kp_ = 0.17_r;
+    static constexpr iq_t<16> ki_ = 0.0027_r;
     //  .fc = 10000}
 
     iq_t<16> delta_lap_pos = lap_pos - last_lap_pos;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bmi160_prelude.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd::drivers{
 class BMI160 final:
@@ -74,11 +75,11 @@ private:
     [[nodiscard]] static constexpr 
     q20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return 2 * 125_deg;
-            case GyrFs::_250deg:    return 2 * 250_deg;
-            case GyrFs::_500deg:    return 2 * 500_deg;
-            case GyrFs::_1000deg:   return 2 * 1000_deg;
-            case GyrFs::_2000deg:   return 2 * 2000_deg;
+            case GyrFs::_125deg:    return (2 * 125_deg).to_radians();
+            case GyrFs::_250deg:    return (2 * 250_deg).to_radians();
+            case GyrFs::_500deg:    return (2 * 500_deg).to_radians();
+            case GyrFs::_1000deg:   return (2 * 1000_deg).to_radians();
+            case GyrFs::_2000deg:   return (2 * 2000_deg).to_radians();
             default: __builtin_unreachable();
         }
     }

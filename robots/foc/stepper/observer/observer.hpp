@@ -51,7 +51,7 @@ public:
 };
 
 
-class IntegralableObserverConcept{
+class IntegralableObserverIntf{
 public:
     struct Config{
         size_t error_grade;
@@ -67,7 +67,7 @@ public:
     Config & config;
     size_t grade = 0;
 
-    IntegralableObserverConcept(Config & _config):config(_config){}
+    IntegralableObserverIntf(Config & _config):config(_config){}
 
     virtual void count() = 0;
     void reset(){
@@ -79,20 +79,20 @@ public:
     }
 };
 
-class InverseObserver:public IntegralableObserverConcept{
+class InverseObserver:public IntegralableObserverIntf{
     void count() override;
 };
 
-class OverrunObserver:public IntegralableObserverConcept{
+class OverrunObserver:public IntegralableObserverIntf{
     void count() override;
 };
 
-class OverTempObserver:public IntegralableObserverConcept{
+class OverTempObserver:public IntegralableObserverIntf{
     void count() override;
 
 };
 
-class StallOberserver:public IntegralableObserverConcept{
+class StallOberserver:public IntegralableObserverIntf{
     void count() override;
 
 };

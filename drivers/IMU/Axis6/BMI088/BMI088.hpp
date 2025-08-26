@@ -15,7 +15,7 @@ namespace ymd::drivers{
 
 struct BMI088_Prelude{
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xd0 >> 1);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xd0 >> 1);
 
     using Error = ImuError;
     
@@ -78,7 +78,7 @@ protected:
     REG8_QUICK_DEF(0x01, AccChipId, acc_chipid_reg);
 
     struct R8_AccErr:public Reg8<>{
-        scexpr RegAddress address = 0x02;
+        static constexpr RegAddress address = 0x02;
 
         uint8_t fatal_err:1;
         const uint8_t __resv__:1;
@@ -87,7 +87,7 @@ protected:
     }DEF_R8(acc_err_reg)
 
     struct R8_AccStatus:public Reg8<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
         const uint8_t __resv__:7;
         uint8_t drdy_acc:1 = 0;
     }DEF_R8(acc_stat_reg)
@@ -100,21 +100,21 @@ protected:
     REG8_QUICK_DEF(0x1A,  R8_SensorTime2, sensor_t2_reg);
 
     struct R8_AccIntStatus1:public Reg8<>{
-        scexpr RegAddress address = 0x1D;
+        static constexpr RegAddress address = 0x1D;
         const uint8_t __resv__:7 = 0;
         uint8_t acc_drdy:1 = 0;
     }DEF_R8(acc_intstat1_reg)
 
     REG8_QUICK_DEF(0x22, Temperature, temp_reg);
     struct R8_AccConf:public Reg8<>{
-        scexpr RegAddress address = 0x40;
+        static constexpr RegAddress address = 0x40;
 
         uint8_t acc_odr:4;
         uint8_t acc_bwp:4;
     }DEF_R8(acc_conf_reg)
 
     struct R8_AccFs:public Reg8<>{
-        scexpr RegAddress address = 0x41;
+        static constexpr RegAddress address = 0x41;
         uint8_t acc_range:2;
         const uint8_t __resv__:6 = 0;
     }DEF_R8(acc_range_reg)
@@ -129,15 +129,15 @@ protected:
     };
 
     struct R8_Int1Ctrl:public _R8_IoCtrl{
-        scexpr RegAddress address = 0x53;
+        static constexpr RegAddress address = 0x53;
     }DEF_R8(int1_ctrl_reg)
 
     struct R8_Int2Ctrl:public _R8_IoCtrl{
-        scexpr RegAddress address = 0x54;
+        static constexpr RegAddress address = 0x54;
     }DEF_R8(int2_ctrl_reg)
 
     struct R8_Int1Mapbuf:public Reg8<>{
-        scexpr RegAddress address = 0x56;
+        static constexpr RegAddress address = 0x56;
         uint8_t __resv1__:2;
         uint8_t int1_drdy:1;
         uint8_t __resv2__:3;
@@ -234,7 +234,7 @@ protected:
     REG16I_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
     
     struct R8_GyroIntStatus1:public Reg8<>{
-        scexpr RegAddress address = 0x0A;
+        static constexpr RegAddress address = 0x0A;
         const uint8_t __resv__:7 = 0;
         uint8_t gyro_drdy:1 = 0;
     }DEF_R8(gyro_intstat1_reg)
@@ -246,7 +246,7 @@ protected:
     REG8_QUICK_DEF(0x15, R8_GyroIntCtrl, gyro_intctrl_reg);
 
     struct R8_Int3Int4Conf:public Reg8<>{
-        scexpr RegAddress address = 0x16;
+        static constexpr RegAddress address = 0x16;
         uint8_t int3_lvl:1;
         uint8_t int3_od:1;
         uint8_t int4_lvl:1;
@@ -257,7 +257,7 @@ protected:
     REG8_QUICK_DEF(0x18, R8_Int3Int4IoMap, int34_iomap_reg);
 
     struct R8_GyroSelfTest:public Reg8<>{
-        scexpr RegAddress address = 0x3c;
+        static constexpr RegAddress address = 0x3c;
         uint8_t trig_bist:1;
         uint8_t bist_rdy:1;
         uint8_t bist_fail:1;

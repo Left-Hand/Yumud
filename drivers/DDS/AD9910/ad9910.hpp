@@ -29,9 +29,9 @@ class AD9910{
 protected:
     hal::SpiDrv spi_drv;
     
-    scexpr uint8_t cfr1[4] = {0x00,0x40,0x00,0x00};
-    scexpr uint8_t cfr2[4] = {0x01,0x00,0x00,0x00};
-    scexpr uint8_t ramprofile0[8] = {0};
+    static constexpr uint8_t cfr1[4] = {0x00,0x40,0x00,0x00};
+    static constexpr uint8_t cfr2[4] = {0x01,0x00,0x00,0x00};
+    static constexpr uint8_t ramprofile0[8] = {0};
 
     struct Profile{
     protected:

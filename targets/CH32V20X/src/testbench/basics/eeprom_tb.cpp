@@ -57,7 +57,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     #ifdef MEMORY_TB_FIRSTBYTE
     {
-        scexpr uint8_t before_orignal = 0x37;
+        static constexpr uint8_t before_orignal = 0x37;
         // mem.store(0,before_orignal);
         uint8_t before;
         // mem.load(0,before);

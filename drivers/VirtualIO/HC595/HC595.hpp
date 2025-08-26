@@ -106,11 +106,11 @@ public:
 //     }
 
 
-//     void set(const PinSource pin) override{
+//     void set(const PinNth pin) override{
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ | (uint8_t)pin);
 //     }
-//     void clr(const PinSource pin) override{
+//     void clr(const PinNth pin) override{
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ &= ~(uint8_t)(pin));
 //     }
@@ -122,14 +122,14 @@ public:
 //         write(buf & (~(uint8_t)(data)));
 //     }
 
-//     void write_by_index(const int index, const bool data) override{
+//     void write_nth(const int index, const bool data) override{
 //         if(index < 0 || index >= 8) return;
 //         uint8_t last_buf = buf;
 //         buf &= ~(uint8_t)(1 << index);
 //         buf |= (uint8_t)(data << index);
 //         if(last_buf != buf) write(buf);
 //     }
-//     bool read_by_index(const int index) override{
+//     bool read_nth(const int index) override{
 //         if(index < 0 || index >= 8) return false;
 //         return buf & (1 << index);
 //     }

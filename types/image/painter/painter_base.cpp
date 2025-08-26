@@ -11,8 +11,8 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
     // Rect2u regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;
 
-    // Range2u x_range = regular.get_x_range();
-    // Range2u y_range = regular.get_y_range();
+    // Range2u x_range = regular.x_range();
+    // Range2u y_range = regular.y_range();
 
     // if(y_range.length() > 2){
     //     draw_hri_line(x_range, y_range.from);
@@ -24,13 +24,13 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
     //     drawFilledRect(Rect2u(x_range, y_range));
     // }
 
-    if(const auto res = draw_hri_line(rect.get_x_range(), rect.position.y);
+    if(const auto res = draw_hri_line(rect.x_range(), rect.position.y);
         res.is_err()) return res;
-    if(const auto res = draw_hri_line(rect.get_x_range(), rect.position.y + rect.size.y - 1);
+    if(const auto res = draw_hri_line(rect.x_range(), rect.position.y + rect.size.y - 1);
         res.is_err()) return res;
-    if(const auto res = draw_ver_line(rect.get_y_range(), rect.position.x);
+    if(const auto res = draw_ver_line(rect.y_range(), rect.position.x);
         res.is_err()) return res;
-    if(const auto res = draw_ver_line(rect.get_y_range(), rect.position.x + rect.size.x - 1);
+    if(const auto res = draw_ver_line(rect.y_range(), rect.position.x + rect.size.x - 1);
         res.is_err()) return res;
 
     return Ok();

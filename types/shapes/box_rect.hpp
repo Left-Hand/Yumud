@@ -18,7 +18,7 @@ struct BoxRect final{
     //     };
     // }
 
-    constexpr auto to_bounding_box() const {
+    constexpr auto bounding_box() const {
         return Rect2<T>{-width/2,-height/2, width, height};
     }
 };
@@ -40,16 +40,57 @@ struct BoxRect final{
 // };
 
 template<typename T>
-struct BoundingBoxOf<BoxRect<T>> {
-    using Object = BoxRect<T>;
+struct BoundingBoxOf<Rect2<T>> {
+    using Object = Rect2<T>;
 
-    static constexpr auto to_bounding_box(const Object & obj){
-        return obj.to_bounding_box();
+    static constexpr auto bounding_box(const Object & obj){
+        return obj;
     }
 };
 
 template<typename T>
 struct is_placed_t<BoxRect<T>>:std::false_type{;};
+
+template<typename T>
+struct is_placed_t<Rect2<T>>:std::true_type{;};
+
+template<typename T>
+requires (std::is_integral_v<T>)
+struct ScanLinesIterator<Rect2<T>>{
+    using Shape = Rect2<T>;
+    using Self = ScanLinesIterator<Shape>;
+    static constexpr Self from(const Shape & shape){
+        const auto ret = Self{};
+
+        ret.x_range = shape.x_range();
+        ret.y_stop = shape.y() + shape.h();
+        ret.y_ = shape.y();
+
+        return ret;
+    }
+
+    static constexpr Self from(const Shape & shape, const T y){
+        const auto ret = Self{};
+
+        ret.x_range = shape.x_range();
+        ret.y_stop = shape.y() + shape.h();
+        ret.y_ = y;
+
+        return ret;
+    }
+
+    constexpr bool has_next(){
+        return y_ < y_stop;
+    }
+
+    constexpr ScanLine next(){ 
+        return ScanLine{x_range_, y_++};
+    }
+private:
+    Range2u x_range_;
+    T y_stop;
+    T y_;
+};
 
 
 }

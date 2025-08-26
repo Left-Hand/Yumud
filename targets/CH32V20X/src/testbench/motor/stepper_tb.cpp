@@ -1,4 +1,7 @@
 #include "src/testbench/tb.h"
+
+#if 0
+
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/can/can.hpp"
 
@@ -11,11 +14,8 @@
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 
-#include "drivers/GateDriver/AT8222/at8222.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
-#include "digipw/SVPWM/svpwm2.hpp"
-#include "digipw/SVPWM/svpwm3.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -59,7 +59,7 @@ uint8_t get_default_id(){
     return node_id;
 };
 
-#if 0
+
 void stepper_tb(UartHw & logger_inst){
     logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);

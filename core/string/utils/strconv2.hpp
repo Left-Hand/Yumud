@@ -14,6 +14,7 @@
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "core/stream/ostream.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd::strconv2 {
 
@@ -499,15 +500,44 @@ static constexpr DestringResult<iq_t<Q>> str_to_iq(StringView str){
 	return details::IqFromStringHelper<Q>::conv(str);
 }
 
+template<typename T>
+struct FromStrDispatcher{
+};
+
+template<>
+struct FromStrDispatcher<StringView>{
+	static constexpr DestringResult<StringView> from_str(StringView str){
+		return Ok(str);
+	}
+};
+
+template<size_t Q>
+struct FromStrDispatcher<iq_t<Q>>{
+	static constexpr DestringResult<iq_t<Q>> from_str(StringView str){
+		return str_to_iq<Q>(str);
+	}
+};
+
+template<typename T>
+requires std::is_integral_v<T>	
+struct FromStrDispatcher<T>{
+	static constexpr DestringResult<T> from_str(StringView str){
+		return details::IntFromStringHelper<T>::conv(str);
+	}
+};
+
+template<typename T>
+struct FromStrDispatcher<Angle<T>>{
+	static constexpr DestringResult<Angle<T>> from_str(StringView str){
+		if(const auto res = FromStrDispatcher<T>::from_str(str);
+			res.is_err()) return Err(res.unwrap_err());
+		else return Ok(Angle<T>::from_turns(res.unwrap()));
+	}
+};
 
 template<typename T>
 static constexpr DestringResult<T> from_str(StringView str){
-	if constexpr (std::is_same_v<StringView, T>)
-		return Ok(str);
-	if constexpr (is_fixed_point_v<T>)
-		return str_to_iq<T::q_num>(str);
-	else if constexpr(std::is_integral_v<T>)
-		return details::IntFromStringHelper<T>::conv(str);
+	return FromStrDispatcher<T>::from_str(str);
 }
 
 }

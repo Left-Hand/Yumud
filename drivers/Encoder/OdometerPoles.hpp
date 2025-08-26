@@ -6,8 +6,8 @@ namespace ymd::drivers{
 
 class OdometerPoles:public Odometer{
 protected:
-    scexpr int max_poles = 100;
-    scexpr size_t shift_bits = 12;
+    static constexpr int max_poles = 100;
+    static constexpr size_t shift_bits = 12;
     using Map = sstl::vector<real_t, max_poles>;
     using CompressedMap = sstl::vector<int8_t, max_poles>;
     
@@ -54,7 +54,7 @@ public:
     auto compress(const real_t radfix) const{
         CompressedMap ret;
         for(const auto & item : cali_map){
-            scexpr auto ratio = real_t(1 / TAU);
+            static constexpr auto ratio = real_t(1 / TAU);
             ret.push_back(int8_t(real_t(item - (radfix / poles * ratio)) << int(shift_bits)));
         }
         return ret;

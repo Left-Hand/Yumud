@@ -12,7 +12,7 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-scexpr size_t N = 40;
+static constexpr size_t N = 40;
 static std::array<uint16_t, N> data;
 
 

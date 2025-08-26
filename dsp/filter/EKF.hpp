@@ -82,7 +82,7 @@ struct Predict{
         x1[2] = x0[2];
     }
 
-    scexpr T delta_x = 1;
+    static constexpr T delta_x = 1;
 };
 
 

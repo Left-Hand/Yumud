@@ -28,7 +28,7 @@ struct ADS111X_Prelude{
     // VDD 1001001
     // SDA 1001010
     // SCL 1001011
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1001000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1001000);
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -57,12 +57,12 @@ struct ADS111X_Prelude{
 struct ADS111X_Regs:public ADS111X_Prelude{ 
 
     struct ConversionReg:public Reg16<>{
-        scexpr RegAddress address = 0b00; 
+        static constexpr RegAddress address = 0b00; 
         int16_t data;
     };
 
     struct ConfigReg:public Reg16<>{
-        scexpr RegAddress address = 0b01; 
+        static constexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
         uint16_t comp_pol:1;
@@ -78,12 +78,12 @@ struct ADS111X_Regs:public ADS111X_Prelude{
     };
 
     struct LowThreshReg:public Reg16i<>{
-        scexpr RegAddress address = 0b10;
+        static constexpr RegAddress address = 0b10;
         int16_t data;
     };
 
     struct HighThreshReg:public Reg16i<>{
-        scexpr RegAddress address = 0b11; 
+        static constexpr RegAddress address = 0b11; 
         int16_t data;
     };
 

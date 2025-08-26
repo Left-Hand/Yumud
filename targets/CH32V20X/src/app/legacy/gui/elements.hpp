@@ -53,7 +53,7 @@ struct Theme{
     }
 };
 
-// scexpr auto a = sizeof(Theme);
+// static constexpr auto a = sizeof(Theme);
 
 class CanvasItem{
 public:
@@ -113,15 +113,15 @@ public:
         painter.set_color(theme_.stroke_color);
         painter.draw_hollow_rect(rect).examine();
         
-        scexpr auto sp = 3u;
+        static constexpr auto sp = 3u;
         auto sb = rect.position + Vec2u{sp, rect.size.y/2};
         auto sw = rect.size.x - 2 * sp;
 
         painter.set_color(theme_.stroke_color);
         painter.draw_filled_rect(Rect2u{sb, Vec2u{sw, 2}}).examine();
 
-        scexpr auto h = 6u;
-        scexpr auto w = 6u;
+        static constexpr auto h = 6u;
+        static constexpr auto w = 6u;
         painter.set_color(theme_.text_color);
         painter.draw_filled_rect(Rect2u{sb + Vec2i{5, - h / 2}, Vec2u{w, h}}).examine();
     }

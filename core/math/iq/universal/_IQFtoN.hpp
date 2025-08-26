@@ -7,7 +7,7 @@ namespace __iqdetails{
 
 template<size_t Q>
 requires (Q < 32)
-__fast_inline scexpr _iq<Q> _IQFtoN(const float fv){
+__fast_inline static constexpr _iq<Q> _IQFtoN(const float fv){
     if(std::is_constant_evaluated()){
         return _iq<Q>::from_i32(int32_t(fv * int(1 << Q)));
     }

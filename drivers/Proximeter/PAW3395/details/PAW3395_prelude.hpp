@@ -5,12 +5,8 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-
 #include "hal/bus/spi/spidrv.hpp"
-
-#include "drivers/Proximeter/FlowSensor.hpp"
-
-
+#include "types/vectors/Vector2.hpp"
 
 namespace ymd::drivers{
 

@@ -65,10 +65,10 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    scexpr auto core_radius = 2u;
-    scexpr auto core_sum = 256u;
+    static constexpr auto core_radius = 2u;
+    static constexpr auto core_sum = 256u;
 
-    scexpr uint8_t core[5][5] ={
+    static constexpr uint8_t core[5][5] ={
         {1,     4,      6,      4,      1},
         {4,     16,     24,     16,     4},
         {6,     24,     36,     24,     6},
@@ -822,7 +822,7 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 
     const auto w = roi.w();
     
-    scexpr size_t shift_bits = 9;
+    static constexpr size_t shift_bits = 9;
     
     const uint8_t low_squ = square(low_thresh) >> shift_bits;
     const uint8_t high_squ = square(high_thresh) >> shift_bits;
@@ -943,7 +943,7 @@ void eye(Image<Gray> &dst, const Image<Gray> &src){
 
     using vec_t = Vec2<int8_t>;
     #define square(x) (x * x)
-    scexpr size_t shift_bits = 3;
+    static constexpr size_t shift_bits = 3;
 
     // sizeof(vec_t);
     auto roi = src.size().to_rect();
@@ -990,7 +990,7 @@ void eye(Image<Gray> &dst, const Image<Gray> &src){
 
     clear_corners(dst);
 
-    scexpr size_t WINDOW_HALF_SIZE = 4;
+    static constexpr size_t WINDOW_HALF_SIZE = 4;
 
     using template_t = std::array<std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, WINDOW_HALF_SIZE * 2 + 1>;
 

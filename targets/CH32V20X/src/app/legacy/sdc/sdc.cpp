@@ -25,7 +25,7 @@ void w25qxx_main(){
     clock::delay(20ms);
     arr = {1,1,4,5,1,4};
 
-    scexpr size_t addr = 0;
+    static constexpr size_t addr = 0;
 
     w25.erase(addr, 256);
     w25.store(addr,arr.begin(), arr.size());

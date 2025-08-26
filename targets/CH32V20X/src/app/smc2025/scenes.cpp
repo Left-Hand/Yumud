@@ -1,4 +1,5 @@
 #include "scenes.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd::smc::sim{
 
@@ -6,7 +7,7 @@ static constexpr auto make_scene1(){
     constexpr auto ROAD_WIDTH = 0.45_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Pose2<real_t>{Vec2<real_t>{0, 0}, real_t(PI)}
+        ,Pose2<real_t>{Vec2<real_t>{0, 0}, 180_deg}
     };
 
     return make_static_scene(
@@ -48,7 +49,7 @@ static constexpr auto make_scene2(){
     constexpr auto ROAD_WIDTH = 0.05_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Pose2<real_t>{Vec2<real_t>{0, 0}, real_t(PI)}
+        ,Pose2<real_t>{Vec2<real_t>{0, 0}, 180_deg}
     };
     
     return make_static_scene(

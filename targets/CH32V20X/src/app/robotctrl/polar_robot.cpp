@@ -63,7 +63,7 @@ public:
     struct Config{
         real_t rho_transform_scale;
         real_t theta_transform_scale;
-        real_t center_bias;
+        Angle<real_t> center_bias;
 
         Range2<real_t> rho_range;
         Range2<real_t> theta_range;
@@ -87,8 +87,11 @@ public:
 
     void set_coord(const Polar<q16> p){
 
-        const auto rho_position = p.radius * cfg_.rho_transform_scale;
-        const auto theta_position = p.theta * cfg_.theta_transform_scale;
+        const auto rho_position = Angle<q16>::from_turns(
+            p.radius * cfg_.rho_transform_scale);
+
+        const auto theta_position = 
+            p.angle * cfg_.theta_transform_scale;
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
         joint_theta_.set_position(-theta_position);
@@ -141,7 +144,7 @@ private:
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
         Vec2<q16> position;
-        q16 theta;  // 累积角度
+        Angle<q16> angle;  // 累积角度
     };
 
     Polar<q16> operator()(const Vec2<q16> position) {
@@ -149,7 +152,7 @@ struct Cartesian2ContinuousPolarRegulator final {
             // 第一次调用，初始化状态
             may_last_state_ = Some(State{
                 .position = position,
-                .theta = position.angle()  // 初始角度
+                .angle = position.angle()  // 初始角度
             });
             return Polar<q16>{position.length(), position.angle()};
         }
@@ -158,15 +161,15 @@ struct Cartesian2ContinuousPolarRegulator final {
         const auto last_state = may_last_state_.unwrap();
         
         // 计算角度变化
-        const q16 delta_theta = last_state.position.angle_between(position);
-        const q16 new_theta = last_state.theta + delta_theta;
+        const auto delta_theta = last_state.position.angle_between(position);
+        const auto new_theta = last_state.angle + delta_theta;
 
         // DEBUG_PRINTLN(last_state.position, position, delta_theta);
 
         // 更新状态
         may_last_state_ = Some(State{
             .position = position,
-            .theta = new_theta  // 存储累积角度
+            .angle = new_theta  // 存储累积角度
         });
 
         return Polar<q16>{position.length(), new_theta};
@@ -359,7 +362,7 @@ void polar_robot_main(){
         {
             .rho_transform_scale = 25_r,
             .theta_transform_scale = real_t(9.53 / TAU),
-            .center_bias = 0.0_r,
+            .center_bias = 0.0_deg,
 
             .rho_range = {0.0_r, 0.4_r},
             .theta_range = {-10_r, 10_r}

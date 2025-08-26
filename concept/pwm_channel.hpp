@@ -4,11 +4,7 @@
 namespace ymd::hal{
 class PwmIntf{
 public:
-    virtual void set_dutycycle(const real_t duty) = 0;
-    virtual PwmIntf & operator = (const real_t duty) final{
-        this->set_dutycycle(duty);
-        return *this;
-    }
+    virtual void set_dutycycle(const real_t dutycycle) = 0;
 };
 
 template <typename T>

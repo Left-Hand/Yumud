@@ -132,6 +132,14 @@ public:
     [[nodiscard]] __fast_inline constexpr T & h() { return size.y; }
     [[nodiscard]] __fast_inline constexpr const T & h() const { return size.y; }
 
+    [[nodiscard]] __fast_inline constexpr bool has_x(const T p_x) const{
+        return p_x >= position.x && p_x < position.x + size.x;
+    }
+
+    [[nodiscard]] __fast_inline constexpr bool has_y(const T p_y) const{
+        return p_y >= position.y && p_y < position.y + size.y;
+    }
+
     [[nodiscard]] __fast_inline constexpr T get_area() const {
         return ABS(size.x * size.y);}
     [[nodiscard]] __fast_inline constexpr Vec2<T> center() const {
@@ -160,21 +168,29 @@ private:
         const Tsigned val
     ) const {
         if constexpr(std::is_integral_v<T>){
-            const Tsigned new_size_x = Tsigned(size.x) - 2 * Tsigned(val);
-            const Tsigned new_size_y = Tsigned(size.y) - 2 * Tsigned(val);
-            if(new_size_x < 0 || new_size_y < 0) return None;
+            const Tsigned next_pos_x = Tsigned(position.x) + val;
+            const Tsigned next_pos_y = Tsigned(position.y) + val;
+            const Tsigned next_size_x = Tsigned(size.x) - (val << 1);
+            const Tsigned next_size_y = Tsigned(size.y) - (val << 1);
+            if(next_pos_x < 0 || next_pos_y < 0) return None;
+            if(next_size_x < 0 || next_size_y < 0) return None;
             return Some(Rect2<T>{
-                position + Vec2<T>{val, val}, 
                 Vec2<T>{
-                    static_cast<T>(new_size_x), 
-                    static_cast<T>(new_size_y)}});
+                    static_cast<T>(next_pos_x), 
+                    static_cast<T>(next_pos_y)
+                },
+                Vec2<T>{
+                    static_cast<T>(next_size_x), 
+                    static_cast<T>(next_size_y)
+                }
+            });
         }else{
-            const T new_size_x = size.x - 2 * val;
-            const T new_size_y = size.y - 2 * val;
-            if(new_size_x < 0 || new_size_y < 0) return None;
+            const T next_size_x = size.x - 2 * val;
+            const T next_size_y = size.y - 2 * val;
+            if(next_size_x < 0 || next_size_y < 0) return None;
             return Some(Rect2<T>{
                 position + Vec2<T>{val, val}, 
-                Vec2<T>{new_size_x, new_size_y}});
+                Vec2<T>{next_size_x, next_size_y}});
         }
     }
 public:
@@ -217,9 +233,9 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr bool contains(const Rect2<T> & other) const {
-        bool x_ins = this->get_x_range().contains(other.get_x_range());
+        bool x_ins = this->x_range().contains(other.x_range());
         if(false == x_ins) return false;
-        bool y_ins = this->get_y_range().contains(other.get_y_range());
+        bool y_ins = this->y_range().contains(other.y_range());
         return y_ins;
     }
 
@@ -284,8 +300,8 @@ public:
     }
 
     [[nodiscard]] constexpr Rect2<T> merge(const Rect2<T> & other) const{
-        Range2<T> range_x = this->get_x_range().merge(other.get_x_range());
-        Range2<T> range_y = this->get_y_range().merge(other.get_y_range());
+        Range2<T> range_x = this->x_range().merge(other.x_range());
+        Range2<T> range_y = this->y_range().merge(other.y_range());
         return Rect2<T>(range_x, range_y);
     }
 
@@ -302,8 +318,8 @@ public:
 
     [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const{
         Vec2<T> ret;
-        ret.x() = this->get_x_range().clamp(point.x);
-        ret.y() = this->get_y_range().clamp(point.y);
+        ret.x() = this->x_range().clamp(point.x);
+        ret.y() = this->y_range().clamp(point.y);
         return ret;
     }
 
@@ -312,12 +328,16 @@ public:
             this->get_center(), this->size * amount);
     }
 
-    [[nodiscard]] constexpr Range2<T> get_x_range() const{
+    [[nodiscard]] constexpr Range2<T> x_range() const{
         return Range2<T>::from_start_and_length(position.x, size.x);
     }
 
-    [[nodiscard]] constexpr Range2<T> get_y_range() const{
+    [[nodiscard]] constexpr Range2<T> y_range() const{
         return Range2<T>::from_start_and_length(position.y, size.y);
+    }
+
+    [[nodiscard]] constexpr Rect2<T> bounding_box() const{
+        return *this;
     }
 };
 

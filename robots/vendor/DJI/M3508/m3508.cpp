@@ -1,4 +1,5 @@
 #include "m3508.hpp"
+#include "core/math/realmath.hpp"
 
 using namespace ymd::robots;
 using namespace ymd::foc;
@@ -61,12 +62,12 @@ void M3508::tick(){
         case CtrlMethod::SPD:
             // // expect_curr = spd_pid.update(targ_spd, getSpeed());
             //             // expect_curr = pos_pid.update(targ_pos, getPosition());
-            // scexpr real_t targ_spd = 4;
+            // static constexpr real_t targ_spd = 4;
             // real_t pos_err = targ_pos - getPosition();
             // real_t spd_err = targ_spd - getSpeed();
 
-            // scexpr real_t kp = real_t(30); 
-            // scexpr real_t kd = real_t(7);
+            // static constexpr real_t kp = real_t(30); 
+            // static constexpr real_t kd = real_t(7);
             
             // expect_curr = sqrt(ABS(pos_err)) * sign(pos_err) * kp + spd_err * kd;  
             // // expect_curr = (pos_err) * kp + spd_err * kd;  
@@ -77,41 +78,41 @@ void M3508::tick(){
             real_t pos_err = targ_pos - get_position();
             real_t spd_err = targ_spd - get_speed();
 
-            // scexpr real_t kp = real_t(2.35); 
-            // scexpr real_t kd = real_t(0.85);
+            // static constexpr real_t kp = real_t(2.35); 
+            // static constexpr real_t kd = real_t(0.85);
 
-            scexpr real_t kp = real_t(2.75); 
-            scexpr real_t kd = real_t(1.45);
+            static constexpr real_t kp = real_t(2.75); 
+            static constexpr real_t kd = real_t(1.45);
             
-            // scexpr real_t kd = real_t(1.95);
+            // static constexpr real_t kd = real_t(1.95);
 
-            // scexpr real_t kp = real_t(4); 
-            // scexpr real_t kd = real_t(2.75);
+            // static constexpr real_t kp = real_t(4); 
+            // static constexpr real_t kd = real_t(2.75);
             
-            // scexpr real_t kp = real_t(6); 
-            // scexpr real_t kd = real_t(3.75);
+            // static constexpr real_t kp = real_t(6); 
+            // static constexpr real_t kd = real_t(3.75);
 
-            // scexpr real_t kp = real_t(8); 
-            // scexpr real_t kd = real_t(7.45);
+            // static constexpr real_t kp = real_t(8); 
+            // static constexpr real_t kd = real_t(7.45);
 
-            // scexpr real_t kp = real_t(9); 
-            // scexpr real_t kd = real_t(10.45);
+            // static constexpr real_t kp = real_t(9); 
+            // static constexpr real_t kd = real_t(10.45);
 
-            // scexpr real_t kp = real_t(10); 
-            // scexpr real_t kd = real_t(13.45);
+            // static constexpr real_t kp = real_t(10); 
+            // static constexpr real_t kd = real_t(13.45);
 
-            // scexpr real_t kp = real_t(11); 
-            // scexpr real_t kd = real_t(16.45);
+            // static constexpr real_t kp = real_t(11); 
+            // static constexpr real_t kd = real_t(16.45);
 
-            // scexpr real_t ki = real_t(0.066);
-            // scexpr real_t ki = real_t(0.0);
+            // static constexpr real_t ki = real_t(0.066);
+            // static constexpr real_t ki = real_t(0.0);
             // static real_t ci = 0;
             // ci += (ki * (delta()>>4) * pos_err) >> 12;
             // ci = CLAMP2(ci, curr_limit * 0.1);
 
             // if(SIGN_DIFF(pos_err, spd_err)) ci = SIGN_AS(curr_limit, pos_err);
-            // scexpr real_t kd = real_t(13);
-            // scexpr real_t kd = real_t(-20);
+            // static constexpr real_t kd = real_t(13);
+            // static constexpr real_t kd = real_t(-20);
             
             expect_curr = sqrt(ABS(pos_err)) * sign(pos_err) * kp + spd_err * kd;  
             // expect_curr = (pos_err) * kp + spd_err * kd;  

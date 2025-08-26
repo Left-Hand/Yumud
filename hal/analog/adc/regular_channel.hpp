@@ -17,11 +17,7 @@ public:
     AdcRegularChannel(ADC_TypeDef * _instance,const ChannelNth nth, const uint8_t _rank):
         AdcChannelOnChip(_instance, nth, _rank){;}
 
-
-    real_t uni() override{
-        return u16_to_uni(data_cache);
-    }
-
+    uint16_t read_raw();
     void set_sample_cycles(const SampleCycles cycles) override{
         ADC_RegularChannelConfig(inst_, std::bit_cast<uint8_t>(nth_), rank, (uint8_t)cycles);
     }

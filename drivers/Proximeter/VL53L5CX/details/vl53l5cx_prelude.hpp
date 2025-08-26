@@ -68,8 +68,6 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "../DistanceSensor.hpp"
-
 namespace ymd::drivers::vl53l5cx_details{ 
 
 /**
@@ -77,7 +75,7 @@ namespace ymd::drivers::vl53l5cx_details{
  */
 
 static constexpr auto VL53L5CX_API_REVISION			= "VL53L5CX_1.3.0";
-static constexpr size_t VL53L5CX_NB_TARGET_PER_ZONE		= 1U;
+#define VL53L5CX_NB_TARGET_PER_ZONE 1U
 
 /**
  * @brief Default I2C address of VL53L5CX sensor. Can be changed using function

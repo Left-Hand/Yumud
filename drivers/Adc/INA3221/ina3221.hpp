@@ -384,7 +384,8 @@ public:
 
         INA3221Channel(const INA3221Channel & other) = delete;
         INA3221Channel(INA3221Channel && other) = delete;
-        operator real_t() override{
+
+        real_t get_voltage() {
             return get_volt().unwrap();
         }
 

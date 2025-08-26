@@ -31,7 +31,7 @@ struct AW9523_Prelude{
         Max, High, Medium, Low
     };
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
 
     enum class RegAddress:uint8_t{
@@ -137,7 +137,7 @@ public:
 
     class AW9523Pwm:public hal::PwmIntf{
     protected:
-        AW9523Pwm(AW9523 & aw9523, const hal::PinSource pin):aw9523_(aw9523), pin_(pin){;}
+        AW9523Pwm(AW9523 & aw9523, const hal::PinNth pin):aw9523_(aw9523), pin_(pin){;}
 
         DELETE_COPY_AND_MOVE(AW9523Pwm)
         
@@ -153,7 +153,7 @@ public:
         }
     private:
         AW9523 & aw9523_;
-        hal::PinSource pin_;
+        hal::PinNth pin_;
     };
 
     
@@ -172,11 +172,11 @@ public:
         return write_by_mask(buf_mask_);
     }
 
-    [[nodiscard]] IResult<> write_by_index(
+    [[nodiscard]] IResult<> write_nth(
         const size_t index, 
         const BoolLevel data) ;
     
-    [[nodiscard]] IResult<BoolLevel> read_by_index(const size_t index) ;
+    [[nodiscard]] IResult<BoolLevel> read_nth(const size_t index) ;
 
     [[nodiscard]] IResult<> set_mode(
         const size_t index, 
@@ -197,7 +197,7 @@ public:
     [[nodiscard]] IResult<> validate();
 
     AW9523Pwm operator [](const size_t index){
-        return AW9523Pwm(*this, hal::PinSource(1 << index));
+        return AW9523Pwm(*this, hal::PinNth(1 << index));
     }
 private:
     hal::I2cDrv i2c_drv_;

@@ -25,7 +25,7 @@ protected:
     uint32_t zero_offset;
     bool inversed = false;
 
-    scexpr real_t GRAVITY_G = real_t(9.8);
+    static constexpr real_t GRAVITY_G = real_t(9.8);
 
     uint32_t read_data(void);
 

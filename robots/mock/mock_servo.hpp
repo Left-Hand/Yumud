@@ -16,21 +16,21 @@ class MotorIntf{
 
 class MockServo final:public MotorIntf{
 public:
-    void set_radian(const real_t rad){
-        // DEBUG_PRINTLN("set", radian_);
-        radian_ = rad;
+    void set_angle(const real_t angle){
+        // DEBUG_PRINTLN("set", angle_);
+        angle_ = angle;
     }
 
-    real_t get_radian(){
-        // DEBUG_PRINTLN("get", radian_);
-        return radian_;
+    real_t get_angle(){
+        // DEBUG_PRINTLN("get", angle_);
+        return angle_;
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_radian(cmd.ref_pos * real_t(PI));
+        set_angle(cmd.ref_pos * real_t(PI));
     }
 private:
-    real_t radian_;
+    real_t angle_;
 };
 
 }

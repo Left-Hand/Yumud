@@ -16,7 +16,7 @@ using namespace ymd::drivers;
 void pca_tb(OutputStream & logger){
     I2cSw i2c = {&portD[2], &portC[12]};
 
-    scexpr int servo_freq = 50;
+    static constexpr int servo_freq = 50;
     
     i2c.init(100_KHz);
     PCA9685 pca{&i2c};
@@ -26,8 +26,8 @@ void pca_tb(OutputStream & logger){
     MG995 servo_right{pca[1]};
 
     while(true){
-        servo_left.set_radian(0);
-        servo_right.set_radian(0);
+        servo_left.set_angle(0);
+        servo_right.set_angle(0);
     }
 }
 

@@ -74,7 +74,7 @@ static std::tuple<real_t, real_t> rand01_2(){
 }
 
 [[nodiscard]]
-scexpr RGB get_relect_color(const int8_t i){
+static constexpr RGB get_relect_color(const int8_t i){
     switch(i){
         case 8:
         case 9:

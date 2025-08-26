@@ -9,17 +9,17 @@ namespace ymd::hal::adc_details{
         if(ch_index > 15) return;
 
         GpioPort * gpio_port = nullptr;
-        PinSource pin = PinSource::None;
+        PinNth pin = PinNth::None;
 
         if(ch_index <= 7){
             gpio_port = &portA;
-            pin = (PinSource)(1 << ch_index);
+            pin = std::bit_cast<PinNth>(uint16_t(1 << ch_index));
         }else if(ch_index <= 9){
             gpio_port = &portB;
-            pin = (PinSource)(1 << (ch_index - 8));
+            pin = std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 8)));
         }else if(ch_index <= 15){
             gpio_port = &portC;
-            pin = (PinSource)(1 << (ch_index - 10));
+            pin = std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 10)));
         }
 
         Gpio & io = (*gpio_port)[pin];

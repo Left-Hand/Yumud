@@ -21,20 +21,20 @@ Vec2<real_t> Field::to_pos(const Map & map) const {
     }
 }
 
-real_t Field::to_rot(const Map & map) const {
+Angle<real_t> Field::to_rot(const Map & map) const {
     switch(kind_){
         default:
             HALT;
         case FieldKind::Billboard:
-            return (map.billboard_gest).rad;
+            return (map.billboard_gest).orientation;
         case FieldKind::Garbage:
-            return (map.garbage_gest).rad;
+            return (map.garbage_gest).orientation;
         case FieldKind::RawMaterial:
-            return (map.raw_material_gest).rad;
+            return (map.raw_material_gest).orientation;
         case FieldKind::RoughProcess:
-            return (map.rough_process_gest).rad;
+            return (map.rough_process_gest).orientation;
         case FieldKind::Staging:
-            return (map.staging_gest).rad;
+            return (map.staging_gest).orientation;
     }
 }
 

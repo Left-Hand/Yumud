@@ -16,10 +16,10 @@ struct PackedTrajectoryPoint{
 
 class Trajectory{
 public:
-    scexpr uint RECORD_FPS = 50;
-    scexpr Milliseconds RECORD_DURATION = 1000ms / RECORD_FPS;
-    scexpr uint32_t RECORD_SECONDS = 60;
-    scexpr uint RECORD_LENGTH = (RECORD_FPS * RECORD_SECONDS);
+    static constexpr uint RECORD_FPS = 50;
+    static constexpr Milliseconds RECORD_DURATION = 1000ms / RECORD_FPS;
+    static constexpr uint32_t RECORD_SECONDS = 60;
+    static constexpr uint RECORD_LENGTH = (RECORD_FPS * RECORD_SECONDS);
 
     using E = PackedTrajectoryPoint;
     class TrajectoryIterator{

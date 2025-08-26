@@ -12,22 +12,24 @@ template<typename T>
 requires (std::is_arithmetic_v<T>)
 struct Polar{
     T radius;
-    T theta;
+    Angle<T> angle;
     constexpr Polar(){;}
-    constexpr Polar(const T _radius, const T _theta) : 
-        radius(_radius), theta(_theta) {;}
+    constexpr Polar(const T _radius, const Angle<T> _angle) : 
+        radius(_radius), angle(_angle) {;}
 
     constexpr Polar from_vec2(const Vec2<T> & v){
         return Polar(v.length(), v.angle());
     }
 
     constexpr Vec2<T> to_vec2() const {
-        const auto [s,c] = sincos(theta);
-        return Vec2<T>(radius * c, radius * c);
+        // const auto [s,c] = sincos(angle);
+        // return Vec2<T>(radius * c, radius * c);
+        return Vec2<T>::from_angle_and_length(angle, radius);
     } 
 
     friend OutputStream & operator<<(OutputStream & os, const Polar & p){
-        return os << os.brackets<'('>() << p.radius << os.splitter() << p.theta << os.brackets<')'>();
+        return os << os.brackets<'('>() << p.radius 
+        << os.splitter() << p.angle << os.brackets<')'>();
     }
 };
 

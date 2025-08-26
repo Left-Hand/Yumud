@@ -10,8 +10,8 @@ class JointMotorActuatorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
-    virtual void set_position(real_t position) = 0;
-    virtual real_t get_last_position() = 0;
+    virtual void set_position(Angle<real_t> position) = 0;
+    virtual Angle<real_t> get_last_position() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -35,15 +35,15 @@ class MockJointMotorActuator final:
 public:
     void activate() {}
     void deactivate() {}
-    void set_position(real_t position) {
+    void set_position(Angle<real_t> position) {
         position = position_;
     }
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
-    real_t get_last_position(){return 0;}
+    Angle<real_t> get_last_position(){return 0_deg;}
 private:
-    real_t position_ = 0;
+    Angle<real_t> position_ = 0_deg;
 };
 
 class ZdtJointMotorActuator final
@@ -70,7 +70,7 @@ public:
         stepper_.activate(DISEN).unwrap();;
     }
 
-    void set_position(real_t position){
+    void set_position(Angle<real_t> position){
         last_position_ = position;
         stepper_.set_position({
             .position = position,
@@ -78,7 +78,7 @@ public:
         }).unwrap();
     }
 
-    real_t get_last_position(){
+    Angle<real_t> get_last_position(){
         return last_position_ ;
     }
 
@@ -102,11 +102,12 @@ public:
 
 
 private:
+    static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
+
     Config cfg_;
     ZdtStepper & stepper_;
 
-    real_t last_position_;
-    static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
+    Angle<real_t> last_position_;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 

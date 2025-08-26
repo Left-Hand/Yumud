@@ -26,10 +26,10 @@ using real_t = ymd::iq_t<IQ_DEFAULT_Q>;
 
 namespace ymd{
 
-scexpr real_t pi_4 = real_t(PI/4);
-scexpr real_t pi_2 = real_t(PI/2);
-scexpr real_t pi = real_t(PI);
-scexpr real_t tau = real_t(TAU);
+static constexpr real_t pi_4 = real_t(PI/4);
+static constexpr real_t pi_2 = real_t(PI/2);
+static constexpr real_t pi = real_t(PI);
+static constexpr real_t tau = real_t(TAU);
 
 
 consteval real_t operator"" _r(long double x){
@@ -40,12 +40,6 @@ consteval real_t operator"" _r(unsigned long long x){
     return real_t(x);
 }
 
-consteval real_t operator"" _deg(long double x){
-    return real_t(x * PI / 180);
-}
-consteval real_t operator"" _deg(uint64_t x){
-    return real_t(x * PI / 180);
-}
 
 
 __fast_inline constexpr int mean(const int a, const int b){

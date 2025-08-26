@@ -7,9 +7,6 @@
 #include "core/clock/time.hpp"
 
 
-
-#include "drivers/GateDriver/AT8222/at8222.hpp"
-
 #include "concept/pwm_channel.hpp"
 #include "types/vectors/vector2.hpp"
 #include "types/vectors/vector2.hpp"
@@ -26,8 +23,8 @@ namespace nuedc::_2023E{
 using ymd::robots::mock::MotorCmd;
 
 struct ServoConfig{
-    real_t min_radian;
-    real_t max_radian;
+    real_t min_angle;
+    real_t max_angle;
 };
 // class PwmServo final:public MotorIntf{
 class PwmServo final{
@@ -45,24 +42,24 @@ public:
         }
 
     void reconf(const Config & cfg){
-        min_radian_ = cfg.min_radian;
-        max_radian_ = cfg.max_radian;
+        min_angle_ = cfg.min_angle;
+        max_angle_ = cfg.max_angle;
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_radian(cmd.ref_pos * real_t(PI));
+        set_angle(cmd.ref_pos * real_t(PI));
     }
-    void set_radian(const real_t radian){
-        ASSERT(min_radian_ <= radian, "radian out of range");
-        ASSERT(radian <= max_radian_, "radian out of range");
-        const auto duty = LERP(INVLERP(radian, min_radian_, max_radian_), min_duty_, max_duty_);
-        pwm_ = duty;
+    void set_angle(const real_t angle){
+        ASSERT(min_angle_ <= angle, "angle out of range");
+        ASSERT(angle <= max_angle_, "angle out of range");
+        const auto dutycycle = LERP(INVLERP(angle, min_angle_, max_angle_), min_duty_, max_duty_);
+        pwm_.set_dutycycle(dutycycle);
     }
 private:
     real_t min_duty_;
     real_t max_duty_;
-    real_t min_radian_;
-    real_t max_radian_;
+    real_t min_angle_;
+    real_t max_angle_;
     ymd::hal::PwmIntf & pwm_;
 };
 

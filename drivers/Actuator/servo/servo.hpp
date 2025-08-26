@@ -6,30 +6,25 @@
 namespace ymd::drivers{
 
 
-class RadianServoIntf{
-public:
-    virtual void set_radian(const real_t rad) = 0;
-    virtual real_t get_radian() = 0;
-};
 
-class RadianServoBase:public RadianServoIntf{
+class ServoBase{
 private:
-    Range2<real_t> rad_range_ = {0, real_t(PI)};
+    Range2<real_t> angle_range_ = {0, real_t(PI)};
 protected:
     
-    virtual void set_global_radian(const real_t rad) = 0;
-    virtual real_t get_global_radian() = 0;
+    virtual void set_global_angle(const real_t rad) = 0;
+    virtual real_t get_global_angle() = 0;
 public:
     void set_range(const Range2<real_t> & range){
-        rad_range_ = range;
+        angle_range_ = range;
     }
     
-    void set_radian(const real_t rad){
-        set_global_radian(real_t(PI) - rad_range_.clamp(rad));
+    void set_angle(const real_t rad){
+        set_global_angle(real_t(PI) - angle_range_.clamp(rad));
     }
 
-    real_t get_radian(){
-        return get_global_radian();
+    real_t get_angle(){
+        return get_global_angle();
     }
 
 };

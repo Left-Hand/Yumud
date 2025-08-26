@@ -13,7 +13,6 @@
 #include "hal/bus/uart/uartsw.hpp"
 
 
-#include "drivers/GateDriver/AT8222/at8222.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 
@@ -31,6 +30,8 @@ static constexpr real_t SAMPLE_RES = 0.008_r;
 static constexpr real_t INA240_BETA = 100;
 static constexpr real_t VOLT_BAIS = 1.65_r;
 
+
+
 real_t volt_2_current(real_t volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
     return (volt - VOLT_BAIS) *INV_SCALE;
@@ -41,20 +42,18 @@ using LowpassFilter = dsp::ButterLowpassFilter<q16, 2>;
 using HighpassFilter = dsp::ButterHighpassFilter<q16, 2>;
 using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
-
 [[maybe_unused]] static 
 void at8222_tb(){
-    hal::UartSw uart{portA[5], NullGpio}; 
-    uart.init({19200});
+    // hal::UartSw uart{portA[5], NullGpio}; 
+    // uart.init({19200});
     // DEBUGGER.retarget(&uart);
 
+    
     uart2.init({4000000, CommStrategy::Nil});
-    // uart2.init(921600);
     // while(true){
     //     // uart2.write1(0x55);
     // }
-    // DEBUGGER.retarget(&uart2);
-    DEBUGGER.retarget(&uart);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.no_brackets();
 
     // while(true){
@@ -231,17 +230,12 @@ void at8222_tb(){
 
 
 
-        uart.tick();
     });
 
 
-    drivers::AT8222 motdrv{
-        pwm_pos, pwm_neg, hal::NullGpio
+    TimerOcPair motdrv{
+        pwm_pos, pwm_neg
     };
-
-    motdrv.init();
-
-    
 
 
     while(true){
@@ -254,26 +248,26 @@ void at8222_tb(){
         // spd_targ = 7.0_r + 3 * sin(5 * time());
         // spd_targ = 8.0_r + 1.0_r * ((sin(2.0_r * time())) > 0 ? 1 : -1);
         // spd_targ = 8.0_r + 1.0_r * sinpu(2.0_r * time());
-        const auto t = clock::time();
+        const auto ctime = clock::time();
 
         #define TEST_MODE 1
 
         #if TEST_MODE == 0
         spd_targ = 12;
-        pos_targ = 10.0_r * t + 2*frac(t);
+        pos_targ = 10.0_r * ctime + 2*frac(ctime);
         #elif TEST_MODE == 1
-        spd_targ = 7.0_r + 1.0_r * sinpu(1.3_r * t);
-        pos_targ = 7.0_r * t + real_t(-1.0/6) * cospu(1.3_r * t);
+        spd_targ = 7.0_r + 1.0_r * sinpu(1.3_r * ctime);
+        pos_targ = 7.0_r * ctime + real_t(-1.0/6) * cospu(1.3_r * ctime);
         #endif
         // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
         // spd_targ = 9.0_r + 1.0_r * -1;
         // spd_targ = 16.57_r;
-        // trackin_sig = sign(sin(t * 3));
-        // trackin_sig = real_t(int(sin(t * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * sin(t * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * t * 32)) / 32;
-        // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * t)));
-        trackin_sig = 10 * CLAMP2(sinpu(7 * t), 0.5_r);
+        // trackin_sig = sign(sin(ctime * 3));
+        // trackin_sig = real_t(int(sin(ctime * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * sin(ctime * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * ctime * 32)) / 32;
+        // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * ctime)));
+        trackin_sig = 10 * CLAMP2(sinpu(7 * ctime), 0.5_r);
         // trackin_sig = tpzpu(t);
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);

@@ -7,23 +7,23 @@ namespace ymd::drivers{
 
 class NTC:public TempSensor{
 protected:
-    scexpr real_t R_kOhms = 100;
-    scexpr real_t R0_kOhms = 10;
+    static constexpr real_t R_kOhms = 100;
+    static constexpr real_t R0_kOhms = 10;
 
     uint8_t index;
 
     real_t last_temp = 0;
 
-    hal::AdcChannelIntf & channel_;
+    hal::AnalogInIntf & channel_;
     uint B_ = 3950;
     
     real_t get_uniV(){
-        return real_t(channel_);
+        return channel_.get_voltage();
     }
 
 public:
 
-    NTC(hal::AdcChannelIntf & channel, const uint B = 3950):channel_(channel), B_(B){;}
+    NTC(hal::AnalogInIntf & channel, const uint B = 3950):channel_(channel), B_(B){;}
 
     void update();
 

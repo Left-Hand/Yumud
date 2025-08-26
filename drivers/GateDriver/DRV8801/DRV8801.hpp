@@ -16,10 +16,10 @@ public:
 
     __fast_inline void set_dutycycle(const real_t duty){
         if(duty >= 0){
-            pwm_ = MIN(duty, 1);
+            pwm_.set_dutycycle(MIN(duty, 1));
             dir_.set();
         }else{
-            pwm_ = MAX(-duty, -1);
+            pwm_.set_dutycycle(MAX(-duty, -1));
             dir_.clr();
         }
     }

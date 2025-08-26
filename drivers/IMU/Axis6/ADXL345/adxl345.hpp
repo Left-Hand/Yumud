@@ -9,7 +9,7 @@
 namespace ymd::drivers{
 
 struct ADXL345_Prelude{
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
 
     enum class RegAddress:uint8_t{
         DeviceID = 0x00,

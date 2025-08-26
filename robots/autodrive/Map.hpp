@@ -8,19 +8,19 @@ namespace ymd::robots{
 //描述地图元素分布的位置和朝向
 struct Map{
     static constexpr Ray2<real_t> garbage_gest =              
-        {Vec2{real_t(0),         real_t(0)},          real_t(PI/2)};
+        {Vec2{real_t(0),         real_t(0)},          90_deg};
     static constexpr Ray2<real_t> entry_gest =                
-        {Vec2{real_t(0.3),       real_t(0.3)},        real_t(PI/2)};
+        {Vec2{real_t(0.3),       real_t(0.3)},        90_deg};
     static constexpr Ray2<real_t> exit_gest =                 
-        {Vec2{real_t(0.3),       real_t(0.3)},        real_t(PI)};
+        {Vec2{real_t(0.3),       real_t(0.3)},        180_deg};
     static constexpr Ray2<real_t> billboard_gest =            
-        {Vec2{real_t(0.065),     real_t(0.3)},        real_t(-PI/2)};
+        {Vec2{real_t(0.065),     real_t(0.3)},        -90_deg};
     static constexpr Ray2<real_t> staging_gest =              
-        {Vec2{real_t(1.8),       real_t(1.015)},      real_t(0)};
+        {Vec2{real_t(1.8),       real_t(1.015)},      0_deg};
     static constexpr Ray2<real_t> raw_material_gest =         
-        {Vec2{real_t(1.45),      real_t(0.3)},        real_t(-PI/2)};
+        {Vec2{real_t(1.45),      real_t(0.3)},        -90_deg};
     static constexpr Ray2<real_t> rough_process_gest =        
-        {Vec2{real_t(1.05),      real_t(1.72)},       real_t(PI/2)};
+        {Vec2{real_t(1.05),      real_t(1.72)},       90_deg};
 
     Map & operator =(const Map & other) = default;
     Map & operator =(Map && other) = default;
@@ -50,7 +50,7 @@ public:
     constexpr bool operator ==(const Field other) const {return kind_ == other.kind_;}
 
     Vec2<real_t> to_pos(const Map & map) const;
-    real_t to_rot(const Map & map) const;
+    Angle<real_t> to_rot(const Map & map) const;
     Ray2<real_t> to_ray(const Map & map) const;
 };
 

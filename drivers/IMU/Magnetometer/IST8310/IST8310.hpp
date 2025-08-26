@@ -9,7 +9,7 @@
 namespace ymd::drivers{
 
 struct IST8310_Prelude{
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0E);
     using RegAddress = uint8_t;
 
     using Error = ImuError;
@@ -29,13 +29,13 @@ struct IST8310_Prelude{
 
 struct IST8310_Regs:public IST8310_Prelude{
     struct R8_WhoAmI:public Reg8<>{
-        scexpr RegAddress address = 0x00;
-        scexpr uint8_t expected_value = 0x10;
+        static constexpr RegAddress address = 0x00;
+        static constexpr uint8_t expected_value = 0x10;
         uint8_t data;
     }DEF_R8(whoami_reg)
 
     struct R8_Status1:public Reg8<>{
-        scexpr RegAddress address = 0x02;
+        static constexpr RegAddress address = 0x02;
 
         uint8_t drdy:1;
         uint8_t ovf:1;
@@ -43,25 +43,25 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R8(status1_reg)
 
     struct R16_AxisX:public Reg16i<>{
-        scexpr RegAddress address = 0x03;
+        static constexpr RegAddress address = 0x03;
 
         int16_t data;
     }DEF_R16(axis_x_reg)
 
     struct R16_AxisY:public Reg16i<>{
-        scexpr RegAddress address = 0x05;
+        static constexpr RegAddress address = 0x05;
 
         int16_t data;
     }DEF_R16(axis_y_reg)
 
     struct R16_AxisZ:public Reg16i<>{
-        scexpr RegAddress address = 0x07;
+        static constexpr RegAddress address = 0x07;
 
         int16_t data;
     }DEF_R16(axis_z_reg)
 
     struct R8_Status2:public Reg8<>{
-        scexpr RegAddress address = 0x09;
+        static constexpr RegAddress address = 0x09;
 
         uint8_t :3;
         uint8_t on_int:1;
@@ -69,7 +69,7 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R8(status2_reg)
 
     struct R8_Ctrl1:public Reg8<>{
-        scexpr RegAddress address = 0x0A;
+        static constexpr RegAddress address = 0x0A;
 
         uint8_t awake:1;
         uint8_t cont:1;
@@ -77,7 +77,7 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R8(ctrl1_reg)
 
     struct R8_Ctrl2:public Reg8<>{
-        scexpr RegAddress address = 0x0B;
+        static constexpr RegAddress address = 0x0B;
 
         uint8_t reset:1;
         uint8_t :1;
@@ -87,7 +87,7 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R8(ctrl2_reg)
 
     struct R8_SelfTest:public Reg8<>{
-        scexpr RegAddress address = 0x0C;
+        static constexpr RegAddress address = 0x0C;
 
         uint8_t :6;
         uint8_t st_en:1;
@@ -95,7 +95,7 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R8(self_test_reg)
 
     struct R16_Temp:public Reg8<>{
-        scexpr RegAddress address = 0x1C;
+        static constexpr RegAddress address = 0x1C;
         uint16_t data;
 
         constexpr q16 to_temp() const {
@@ -104,7 +104,7 @@ struct IST8310_Regs:public IST8310_Prelude{
     }DEF_R16(temp_reg)
 
     struct R8_Average:public Reg8<>{
-        scexpr RegAddress address = 0x41;
+        static constexpr RegAddress address = 0x41;
 
         AverageTimes x_times:3;
         AverageTimes y_times:3;

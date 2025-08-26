@@ -11,64 +11,63 @@ template<arithmetic T>
 struct Line2{
 public:
     T d;
-    T rad; 
+    Angle<T> orientation; 
 private:
-    constexpr Line2(const T & _d, const T & _rad): 
-        d(static_cast<T>(_d)),rad(static_cast<T>(_rad)){;}
+    constexpr Line2(const T _d, const Angle<T> angle): 
+        d(static_cast<T>(_d)),orientation((angle)){;}
 
 public:
     [[nodiscard]] constexpr Line2():
         d(0),
-        rad(0){;}
+        orientation(0){;}
 
     [[nodiscard]] constexpr Line2(const Segment2<auto> & seg):
-        d(((seg.from).cross(seg.to)) / (seg.to - seg.from).length()), 
-        rad(seg.angle()){;}
+        d(((seg.start).cross(seg.stop)) / (seg.stop - seg.start).length()), 
+        orientation(seg.angle()){;}
 
     [[nodiscard]] constexpr Line2(const Vec2<auto> & _from, const Vec2<auto> & _to): 
             Line2(Segment2<T>(_from, _to)){;}
             
 
-    // d = p.x * sin(_rad) - p.y * cos(_rad) 
-    [[nodiscard]] static constexpr Line2 from_point_and_angle(const Vec2<auto> & p, const T & _rad){
-        const auto [s,c] = sincos(_rad);
-        return Line2{p.x * s - p.y * c, _rad};
+    // d = p.x * sin(angle) - p.y * cos(angle) 
+    [[nodiscard]] static constexpr Line2 from_point_and_angle(
+        const Vec2<auto> & p, 
+        const Angle<T> angle
+    ){
+        const auto [s,c] = angle.sincos();
+        return Line2{p.x * s - p.y * c, angle};
     }
 
-    [[nodiscard]] static constexpr Line2 from_dist_and_angle(const T & _d, const T & _rad){
-        return Line2{_d, _rad};
+    [[nodiscard]] static constexpr Line2 from_dist_and_angle(const T _d, const Angle<T> angle){
+        return Line2{_d, angle};
     }
 
 
     [[nodiscard]] __fast_inline constexpr
-    T x_at_y(const T & y){
-        auto den = sin(rad);
-        return den ? (y * cos(rad) + d) / den: T{0};
-    }
-
-    [[nodiscard]] __fast_inline constexpr
-    T y_at_x(const T & x){
-        auto den = cos(rad);
-        return den ? (x * sin(rad) - d) / den : T{0};
+    T x_at_y(const T y){
+        const auto [s,c] = orientation.sincos();
+        return s ? (y * c + d) / s: T{0};
     }
 
     [[nodiscard]] __fast_inline constexpr
-    T angle() const {
-        //FIXME rounded in [0, TAU]
-        return this->rad;
+    T y_at_x(const T x){
+        const auto [s,c] = orientation.sincos();
+        auto den = c;
+        return den ? (x * s - d) / den : T{0};
     }
+
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> abs() const {
-        if(T(0) <= rad and rad < T(PI)) return *this; 
+        if(0_deg <= orientation and orientation < 180_deg) return *this; 
 
-        auto m = fposmod(rad, T(TAU));
+        auto m = fposmod(orientation.to_radians(), T(TAU));
 
         if(d < 0){
             m = m > T(PI) ? m - T(PI) : m + T(PI);
-            return {-d, m};
+            return {-d, Angle<T>::from_radians(m)};
         }else{
-            return {d, m};
+            return {d, Angle<T>::from_radians(m)};
         }
     }
 
@@ -77,7 +76,8 @@ public:
     bool operator==(const Line2 & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
-        return is_equal_approx(regular.d, other_regular.d) and is_equal_approx(regular.rad, other_regular.rad);
+        return is_equal_approx(regular.d, other_regular.d) 
+        and is_equal_approx(regular.orientation, other_regular.orientation);
     }
 
 	[[nodiscard]] __fast_inline constexpr
@@ -92,8 +92,8 @@ public:
     
     [[nodiscard]] __fast_inline constexpr
     T signed_distance_to(const Vec2<T> & p) const{
-        // x * -sin(rad) + y * cos(rad) + d = 0
-        const auto [s,c] = sincos(rad);
+        // x * -sin(orientation) + y * cos(orientation) + d = 0
+        const auto [s,c] = orientation.sincos();
         return -s * p.x + c * p.y + d;
     }
 
@@ -102,7 +102,7 @@ public:
         auto regular = this->abs();
         auto other_regular = other.abs();
 
-        return other_regular.rad - regular.rad;
+        return other_regular.orientation - regular.orientation;
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -110,7 +110,7 @@ public:
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (is_equal_approx(regular.d, other_regular.d)) and 
-                is_equal_approx(fposmod(other_regular.rad - regular.rad, T(PI)), T(0));
+                is_equal_approx(fposmod((other_regular.orientation - regular.orientation).to_radians(), T(PI)), T(0));
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -151,31 +151,32 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> rotated(const Vec2<T> & p, const T & delta){
-        if(this->has_point(p)) return Line2::from_point_and_angle(p, this->rad + delta);
+    Line2<T> rotated(const Vec2<T> & p, const Angle<T> angle){
+        if(this->has_point(p)) return Line2::from_point_and_angle(p, this->orientation + angle);
         else{
             //FIXME optimize
             auto rebased = this->rebase(p);
-            rebased.rad += delta;
+            rebased.orientation = rebased.orientation + angle;
             return rebased;
         }
     }
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> normal(const Vec2<T> & p){
-        auto new_rad = this->rad + T(PI/2);
-        return {sin(new_rad) * p.x - cos(new_rad) * p.x, new_rad};
+        const auto next_angle = this->orientation + Angle<T>::QUARTER_LAP;
+        const auto [s,c] = next_angle.sincos();
+        return {s * p.x - c * p.x, next_angle};
     }
 
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> rebase(const Vec2<T> & p){
         auto regular = this->abs();
-        return Line2{regular.distance_to(p), regular.rad};
+        return Line2{regular.distance_to(p), regular.orientation};
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<Vec2<T>> fillet(const Line2<T> & other, const T & radius) const{
+    Option<Vec2<T>> fillet(const Line2<T> & other, const T radius) const{
         if(false == this->intersects(other)) return std::nullopt;
 
 
@@ -190,21 +191,24 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     int sign(const Vec2<T> & p) const{
-        return sign(this->signed_distance_to(Line2(p, this->rad)));
+        return sign(this->signed_distance_to(Line2(p, this->orientation)));
     }
 
     //直线标准方程 ax + by + c = 0的三个系数
     [[nodiscard]] __fast_inline constexpr
     std::tuple<T, T, T> abc() const{
-        return {-sin(rad), cos(rad), d};
+        const auto [s,c] = orientation.sincos();
+        return {-s, c, d};
     }
 
 
     //是否与另一条直线正交
     [[nodiscard]] __fast_inline constexpr
     bool is_orthogonal_with(const Line2<T> & other) const {
-        return is_equal_approx(fposmod(other.rad - this->rad, T(PI)), T(PI/2));
-        // return fposmod(other.rad - this->rad, T(PI));
+        return is_equal_approx(fposmod(
+            (other.orientation - this->orientation).to_radians()
+        , T(PI)), T(PI/2));
+        // return fposmod(other.orientation - this->orientation, T(PI));
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -213,16 +217,16 @@ public:
         auto other_regular = other.abs();
 
         if(regular.is_paraell_with(other_regular)){
-            if(is_equal_approx(regular.rad, other_regular.rad)){
+            if(is_equal_approx(regular.orientation, other_regular.orientation)){
                 return *this;
             }else{
-                return {0, this->rad};
+                return {0, this->orientation};
             }
         }else{
             //FIXME find a simple solve
 
             auto p = this->intersection(other);
-            return Line2<T>(p, this->rad);
+            return Line2<T>(p, this->orientation);
         }
     }
 
@@ -231,7 +235,7 @@ public:
     Vec2<T> foot_of(const Vec2<T> & p) const{
         //https://blog.csdn.net/hjxu2016/article/details/111594359
 
-        // x * -sin(rad) + y * cos(rad) + d = 0
+        // x * -sin(orientation) + y * cos(orientation) + d = 0
 
         // x = + B * B * x0 - A * B * y0 - A * C / (A * A + B * B)
         // y = - A * B * x0 + A * A * y0 - B * C / (A * A + B * B)
@@ -243,7 +247,7 @@ public:
 
         auto [x0, y0] = p;
 
-        auto [s, c] = sincos(rad);
+        auto [s, c] = orientation.sincos();
 
         auto A2 = s * s;
         auto B2 = c * c;
@@ -292,17 +296,11 @@ public:
     Segment2<T> perpendicular(const Vec2<T> & p) const{
         return {p, this->foot_of(p)};
     }
-
-    [[nodiscard]] __fast_inline constexpr
-    Vec2<T> unit() const{
-        return {cos(this->rad), sin(this->rad)};
-    }
-
 };
 
 
 __fast_inline OutputStream & operator <<(OutputStream & os, const Line2<auto> & line){
-    return os << '(' << line.d << os.splitter() << line.rad << ')';
+    return os << '(' << line.d << os.splitter() << line.orientation << ')';
 }
 
 }

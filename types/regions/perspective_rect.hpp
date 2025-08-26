@@ -6,7 +6,7 @@
 
 namespace ymd{
 
-// Concept for types that can be decomposed into two uint8_t values
+// Intf for types that can be decomposed into two uint8_t values
 template<typename U>
 concept StructurableToU8Pair = requires(U u) {
     { std::get<0>(u) } -> std::convertible_to<uint8_t>;

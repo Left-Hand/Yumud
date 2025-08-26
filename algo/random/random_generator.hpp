@@ -13,11 +13,11 @@ public:
     uint32_t update();
 
 private:
-    scexpr int N = 624;
-    scexpr int M = 397;
-    scexpr uint32_t MATRIX_A = 0x9908b0dfUL;
-    scexpr uint32_t UPPER_MASK = 0x80000000UL;
-    scexpr uint32_t LOWER_MASK = 0x7fffffffUL;
+    static constexpr int N = 624;
+    static constexpr int M = 397;
+    static constexpr uint32_t MATRIX_A = 0x9908b0dfUL;
+    static constexpr uint32_t UPPER_MASK = 0x80000000UL;
+    static constexpr uint32_t LOWER_MASK = 0x7fffffffUL;
 
     uint32_t mt[N];
     int mt_index;

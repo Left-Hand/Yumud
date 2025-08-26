@@ -36,7 +36,7 @@
 namespace ymd::drivers{
 class Si5351{
 public:
-    // scexpr uint8_t default_addr = 0x60;
+    // static constexpr uint8_t default_addr = 0x60;
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u8(0x60); 
 
     enum si5351_clock {SI5351_CLK0, SI5351_CLK1, SI5351_CLK2, SI5351_CLK3,

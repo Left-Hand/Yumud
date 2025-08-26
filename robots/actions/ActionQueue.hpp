@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ActionConcept.hpp"
+#include "ActionIntf.hpp"
 #include <memory>
 
 namespace ymd::robots{

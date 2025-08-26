@@ -34,7 +34,7 @@
 //             // AdcChannelConfig{.channel = AdcChannels::CH1, .cycles = AdcSampleCycles::T239_5},
 //         });
 
-//     scexpr int buck_freq = 1000;
+//     static constexpr int buck_freq = 1000;
 //     timer3.init(buck_freq);
 
 //     real_t adc_fl1, adc_fl2, adc_out, duty;

@@ -17,14 +17,6 @@
 #endif
 
 
-#ifndef __no_inline_constexpr
-#ifdef __cplusplus
-    #define __no_inline_constexpr __no_inline constexpr
-#else
-    #define __no_inline_constexpr __no_inline
-#endif
-#endif
-
 
 #ifndef __fast_inline_consteval
 #ifdef __cplusplus
@@ -76,10 +68,6 @@
 #define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
 
-
-#ifdef __cplusplus
-#define scexpr static constexpr
-#endif
 
 #ifndef __nopn
 #define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)

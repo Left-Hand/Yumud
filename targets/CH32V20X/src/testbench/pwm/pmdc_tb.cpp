@@ -95,8 +95,8 @@
 //     }
 
 //     real_t getCurrent(){
-//         scexpr int pga_scale = 16;
-//         scexpr int res_m_ohms = 100;
+//         static constexpr int pga_scale = 16;
+//         static constexpr int res_m_ohms = 100;
 //         return (real_t(ADC1->IDATAR2 * (3300 / res_m_ohms/32)) / pga_scale / 4) / 32;
         
 //     }

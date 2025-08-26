@@ -11,7 +11,7 @@ using namespace ymd;
 
 
 
-scexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40M输入  25倍频  VC0=101   ICP=001;
+static constexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40M输入  25倍频  VC0=101   ICP=001;
   
 
 #define AD9910_PWR 		hal::portB[5] 
@@ -33,8 +33,8 @@ UP_DAT=1;\
 DLY;\
 UP_DAT=0;\
 
-scexpr real_t magic_1 = real_t(4.294967296);//将输入频率因子分为四个字节  4.294967296=(2^32)/1000000000 （1G 是内部时钟速度）
-scexpr real_t magic_2 = real_t(25.20615385);	   //将输入幅度因子分为两个字节  25.20615385=(2^14)/650
+static constexpr real_t magic_1 = real_t(4.294967296);//将输入频率因子分为四个字节  4.294967296=(2^32)/1000000000 （1G 是内部时钟速度）
+static constexpr real_t magic_2 = real_t(25.20615385);	   //将输入幅度因子分为两个字节  25.20615385=(2^14)/650
 
 void AD9910::init(void)
 {	

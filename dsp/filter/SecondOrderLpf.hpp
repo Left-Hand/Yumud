@@ -30,7 +30,7 @@ public:
     }
 
     constexpr void reconf(const Config & config) {
-        scexpr T q_butterworth = T(0.7071);
+        static constexpr T q_butterworth = T(0.7071);
 
         T b0, b1, b2, a0, a1, a2;
      

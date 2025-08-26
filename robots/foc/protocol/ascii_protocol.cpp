@@ -253,7 +253,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const std::span<const StringView> args){
         //     break;
 
         default:
-            AsciiProtocolConcept::parseArgs(args);
+            AsciiProtocolIntf::parseArgs(args);
             break;
     }
 }

@@ -154,6 +154,6 @@ void svpwm3_main(){
         pwm_v.set_dutycycle(v);
         pwm_w.set_dutycycle(w);
 
-        DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
+        DEBUG_PRINTLN_IDLE(st, ct, inj.get_voltage());
     }
 }

@@ -9,7 +9,7 @@
 
 namespace ymd{
 
-class CanProtocolConcept{
+class CanProtocolIntf{
 public:
 
     using E = real_t;
@@ -22,7 +22,7 @@ public:
     hal::Can & can_;
     uint8_t node_id_;
 
-    CanProtocolConcept(
+    CanProtocolIntf(
         hal::Can & _can, const uint8_t node_id):
         can_(_can), node_id_(node_id){;}
 

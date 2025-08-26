@@ -10,7 +10,7 @@ namespace ymd::drivers{
 
 struct FDC2X1X_Prelude{
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x54 >> 1);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x54 >> 1);
 
     enum class Package:uint8_t{
         FDC2112,
@@ -97,7 +97,7 @@ struct FDC2X1X_Prelude{
 struct FDC1X2X_Regs:public FDC2X1X_Prelude{
 
     struct ConversionDataHighReg:public Reg16<>{
-        scexpr RegAddress address =0x00;
+        static constexpr RegAddress address =0x00;
         uint16_t data_msb:12;
         bool err_aw:1;
         bool err_wd:1;
@@ -105,7 +105,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct ConversionDataLowReg:public Reg16<>{
-        scexpr RegAddress address =0x01;
+        static constexpr RegAddress address =0x01;
         uint16_t data_lsb:16;
     };
 
@@ -115,22 +115,22 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct ReferenceCountReg:public Reg16<>{
-        scexpr RegAddress address =0x08;
+        static constexpr RegAddress address =0x08;
         uint8_t count;
     };
 
     struct OffsetReg:public Reg16<>{
-        scexpr RegAddress address =0x0C;
+        static constexpr RegAddress address =0x0C;
         uint8_t offset;
     };
 
     struct SettleCountReg:public Reg16<>{
-        scexpr RegAddress address =0x10;
+        static constexpr RegAddress address =0x10;
         uint8_t settle_count;
     };
 
     struct ClockDividerReg:public Reg16<>{
-        scexpr RegAddress address =0x14;
+        static constexpr RegAddress address =0x14;
         uint16_t fref_divider:10;
         uint16_t __resv1__:2;
         uint16_t fin_sel:2;
@@ -138,7 +138,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct StatusReg:public Reg16<>{
-        scexpr RegAddress address =0x18;
+        static constexpr RegAddress address =0x18;
         bool ch3_unread_conv:1;
         bool ch2_unread_conv:1;
         bool ch1_unread_conv:1;
@@ -153,7 +153,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct StatusConfigReg:public Reg16<>{
-        scexpr RegAddress address =0x19;
+        static constexpr RegAddress address =0x19;
         bool data_ready_to_int:1;
         uint16_t __resv__:4;
         uint16_t wtd_timeout_error_to_int:1;
@@ -164,7 +164,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct ConfigReg:public Reg16<>{
-        scexpr RegAddress address =0x1a;
+        static constexpr RegAddress address =0x1a;
         uint16_t __resv1__:6;
         bool high_current_drive:1;
         bool intb_disen:1;
@@ -177,7 +177,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
 
 
     struct MuxConfigReg:public Reg16<>{
-        scexpr RegAddress address =0x1b;
+        static constexpr RegAddress address =0x1b;
         BandWidth bandwidth:3;
         uint16_t __resv__:10;
         AutoScanConfig auto_scan_config:2;
@@ -186,7 +186,7 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct ResetDevReg:public Reg16<>{
-        scexpr RegAddress address =0x1c;
+        static constexpr RegAddress address =0x1c;
         uint16_t __resv1__:9;
         Gain gain:2;
         uint16_t __resv2__:4; 
@@ -194,20 +194,20 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
     struct DriveCurrentReg:public Reg16<>{
-        scexpr RegAddress address =0x1e;
+        static constexpr RegAddress address =0x1e;
         uint16_t __resv__:11;
         DriveCurrent drive_current:5;
     };
 
     struct ManufacturerIdReg:public Reg16<>{
-        scexpr RegAddress address =0x7E;
-        scexpr uint16_t correct = 0x5449;
+        static constexpr RegAddress address =0x7E;
+        static constexpr uint16_t correct = 0x5449;
         uint16_t id;
     };
 
     struct DeviceIdReg:public Reg16<>{
-        scexpr RegAddress address =0x7F;
-        scexpr uint16_t correct = 03054;
+        static constexpr RegAddress address =0x7F;
+        static constexpr uint16_t correct = 03054;
         uint16_t id;
     };
 

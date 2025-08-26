@@ -6,14 +6,14 @@
 namespace ymd::foc{
 
 namespace MotorUtils{
-    scexpr uint8_t build_version = 10;
-    scexpr uint8_t drv_type = 42;
-    scexpr char drv_branch = 'm';
-    scexpr uint8_t year = YEAR();
-    scexpr uint8_t month = MONTH();
-    scexpr uint8_t day = DAY();
-    scexpr uint8_t hour = HOUR();
-    scexpr uint8_t minute = MINUTE();
+    static constexpr uint8_t build_version = 10;
+    static constexpr uint8_t drv_type = 42;
+    static constexpr char drv_branch = 'm';
+    static constexpr uint8_t year = YEAR();
+    static constexpr uint8_t month = MONTH();
+    static constexpr uint8_t day = DAY();
+    static constexpr uint8_t hour = HOUR();
+    static constexpr uint8_t minute = MINUTE();
 
     struct BoardInfo{
         uint8_t bver ;

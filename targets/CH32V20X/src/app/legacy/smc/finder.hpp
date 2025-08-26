@@ -30,8 +30,8 @@ namespace SMC{
     using Segment = std::pair<const Point & ,const Point &>;
 
 
-    scexpr int max_item_size = 64;
-    scexpr int max_ranges_size = 16;
+    static constexpr int max_item_size = 64;
+    static constexpr int max_ranges_size = 16;
 
     using CoastItem = Vec2<uint8_t>;
     using Points = sstl::vector<Vec2<int16_t>, max_item_size>;
@@ -89,7 +89,7 @@ namespace SMC{
             
             //定义上方的最高点 当回落超过阈值时停止寻找
 
-            scexpr auto fallback_threshold = 3;
+            static constexpr auto fallback_threshold = 3;
             auto min_y = Vec2i(m_seed).y;
 
             while(seed.jounrey() < step_limit && src.has_point(seed)){
@@ -106,7 +106,7 @@ namespace SMC{
                         break;
 
                     case SubStatus::TRACK:{
-                            scexpr uint8_t spin_limit = 7;
+                            static constexpr uint8_t spin_limit = 7;
                             int spins = 0;
                             if(is_edge(seed)){
                                 while(is_edge(seed) && (spins < spin_limit)){
@@ -199,7 +199,7 @@ namespace SMC{
 
         bool is_ccw(const Coast & coast, const bool);
 
-        scexpr real_t default_corner_threshold = -0.4;
+        static constexpr real_t default_corner_threshold = -0.4;
 
         Corners search_corners(const Coast & coast, const CornerType default_ct = CornerType::ALL, const real_t threshold = default_corner_threshold);
 
@@ -278,8 +278,8 @@ namespace SMC{
     Circle calculate_cicular(const Coast &, const int, const int);
 
     namespace WorldUtils{
-        scexpr real_t scale = 0.014;
-        scexpr int blind_rows = 15;
+        static constexpr real_t scale = 0.014;
+        static constexpr int blind_rows = 15;
     
         __fast_inline Vec2 position(const Point & point){
             Vec2i centered = {point.x - 94, (-point.y + 45) + blind_rows};

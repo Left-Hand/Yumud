@@ -16,7 +16,14 @@ public:
         algo_(size){;}
 
 
-    auto size() const {return algo_.size();}
+    Vec2<uint16_t> size() const {return algo_.size();}
+
+    Rect2u16 bounding_box() const {
+        return Rect2u16{
+            Vec2<uint16_t>::ZERO,
+            size()
+        };
+    }
 
     IResult<> init();
     IResult<> fill(const RGB565 color){

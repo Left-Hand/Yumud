@@ -80,9 +80,9 @@ public:
     
         void write_by_mask(const hal::PinMask mask);
         
-        void write_by_index(const size_t index, const BoolLevel data);
+        void write_nth(const size_t index, const BoolLevel data);
     
-        BoolLevel read_by_index(const size_t index);
+        BoolLevel read_nth(const size_t index);
     
         void set_mode(const size_t index, const hal::GpioMode mode);
     };
@@ -118,7 +118,7 @@ public:
         void set_mode(const hal::GpioMode mode){}
     };
 private:
-    scexpr uint8_t VALID_CHIP_ID = 0x23;
+    static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
     hal::I2cDrv i2c_drv_;
 

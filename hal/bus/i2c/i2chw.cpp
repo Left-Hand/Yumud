@@ -4,6 +4,48 @@
 using namespace ymd::hal;
 using namespace ymd;
 
+
+static hal::Gpio * i2c_get_scl(const I2C_TypeDef * inst, const uint8_t remap){
+    switch(reinterpret_cast<uint32_t>(inst)){
+        #ifdef ENABLE_I2C1
+        case I2C1_BASE:
+            return &I2C1_SCL_GPIO;
+        #endif
+
+        #ifdef ENABLE_I2C2
+        case I2C2_BASE:
+            return &I2C2_SCL_GPIO;
+        #endif
+
+        default:
+            return nullptr;
+    }
+}
+
+static hal::Gpio * i2c_get_sda(const I2C_TypeDef * inst, const uint8_t remap){
+    switch(reinterpret_cast<uint32_t>(inst)){
+        #ifdef ENABLE_I2C1
+        case I2C1_BASE:
+            return &I2C1_SDA_GPIO;
+        #endif
+
+        #ifdef ENABLE_I2C2
+        case I2C2_BASE:
+            return &I2C2_SDA_GPIO;
+        #endif
+
+        default:
+            return nullptr;
+    }
+}
+
+
+I2cHw::I2cHw(I2C_TypeDef * inst):
+    I2c(i2c_get_scl(inst, 0), 
+        i2c_get_sda(inst, 0)),
+    inst_(inst){;}
+
+
 void I2cHw::enable_rcc(const Enable en){
     switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef ENABLE_I2C1
@@ -27,39 +69,6 @@ void I2cHw::enable_rcc(const Enable en){
 }
 
 
-hal::Gpio & I2cHw::get_scl(const I2C_TypeDef * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
-        #ifdef ENABLE_I2C1
-        case I2C1_BASE:
-            return I2C1_SCL_GPIO;
-        #endif
-
-        #ifdef ENABLE_I2C2
-        case I2C2_BASE:
-            return I2C2_SCL_GPIO;
-        #endif
-
-        default:
-            return NullGpio;
-    }
-}
-
-hal::Gpio & I2cHw::get_sda(const I2C_TypeDef * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
-        #ifdef ENABLE_I2C1
-        case I2C1_BASE:
-            return I2C1_SDA_GPIO;
-        #endif
-
-        #ifdef ENABLE_I2C2
-        case I2C2_BASE:
-            return I2C2_SDA_GPIO;
-        #endif
-
-        default:
-            return NullGpio;
-    }
-}
 
 bool I2cHw::locked(){
     return bool(inst_->STAR2 & I2C_STAR2_BUSY) 

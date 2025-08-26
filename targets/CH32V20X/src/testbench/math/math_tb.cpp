@@ -69,7 +69,7 @@ void math_main(){
 
     // sdi.init();
 
-    // scexpr auto cnt = 200;
+    // static constexpr auto cnt = 200;
     // sstl::vector<int, cnt> cnts;
     // while(true){
     //     // sdi.println(millis());
@@ -228,25 +228,30 @@ void math_main(){
 
 
     auto line = Line{Vec2<real_t>{1,0}, Vec2<real_t>{0,1}};
-    auto other = Line::from_point_and_angle(Vec2<real_t>{0,0}, real_t(PI/4));
+    auto other = Line::from_point_and_angle(Vec2<real_t>{0,0}, Angle<real_t>::QUARTER_LAP);
     print("line", line);
     print("other",other);
 
     print(line.x_at_y(1));
     print(line.y_at_x(-1));
     print("abc:", line.abc());
-    print("angle:", line.angle());
+    print("angle:", line.orientation);
     print("abs", line.abs());
     print("dist", line.distance_to(Vec2<real_t>{0.5_r, 0.5_r}));
     print("dist", line.distance_to(Vec2<real_t>{0.5_r, 0.4_r}));
-    print("intersection", line.intersection(Line::from_point_and_angle(Vec2<real_t>{0,0}, atan(real_t(0.3333_r)))));
+    print("intersection", line.intersection(
+        Line::from_point_and_angle(
+            Vec2<real_t>{0,0}, 
+            Angle<real_t>::from_radians(atan(real_t(0.3333_r)))
+        )
+    ));
     print("foot", line.foot_of(Vec2<real_t>{0, 0.5_r}));
     print("mirror", line.mirror(Vec2<real_t>{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vec2<real_t>{0, 0.5_r}));
-    print("orthogonal_with", line.is_orthogonal_with(Line::from_point_and_angle(Vec2<real_t>{0,0}, real_t(PI/4))));
-    print("unit", line.unit());
+    print("orthogonal_with", line.is_orthogonal_with(
+        Line::from_point_and_angle(Vec2<real_t>{0,0}, Angle<real_t>::QUARTER_LAP)));
     print("rebase", line.rebase(Vec2<real_t>{-1,0}));
-    print("rotated", line.rotated(Vec2<real_t>{-1,0}, real_t(PI/4)));
+    print("rotated", line.rotated(Vec2<real_t>{-1,0}, Angle<real_t>::QUARTER_LAP));
     print("normal", line.normal(Vec2<real_t>{-1,0}));
     #endif
 

@@ -125,7 +125,7 @@ public:
         set_dutycycle(0.7_r);
     }
 
-    const auto & get_duty() const {
+    const auto & get_dutycycle() const {
         return ctrl_.get();
     }
 
@@ -333,8 +333,8 @@ public:
         reconf(cfg);
     }
 
-    const auto & get_duty() const {
-        return motor_.get_duty();
+    const auto & get_dutycycle() const {
+        return motor_.get_dutycycle();
     }
 
     const auto & get_current() const {
@@ -792,7 +792,7 @@ void app(){
             detect_service.clear();
         });
 
-        DEBUG_PRINTLN(motor_service.get_current(), motor_service.get_duty());
+        DEBUG_PRINTLN(motor_service.get_current(), motor_service.get_dutycycle());
 
         clock::delay(1ms);
     }

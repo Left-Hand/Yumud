@@ -10,10 +10,6 @@ void AdcInjectedChannel::set_sample_cycles(const AdcSampleCycles cycles){
     ADC_InjectedChannelConfig(inst_, mask, rank, (uint8_t)cycles);
 }
 
-uint16_t AdcInjectedChannel::data(){
+uint16_t AdcInjectedChannel::get_raw(){
     return ADC_GetInjectedConversionValue(inst_, mask);
-}
-
-real_t AdcInjectedChannel::uni(){
-    return iq_t<18>(ADC_GetInjectedConversionValue(inst_, mask)) >> 12;
 }

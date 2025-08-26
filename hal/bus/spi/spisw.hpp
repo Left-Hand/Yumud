@@ -66,7 +66,7 @@ public:
 
     hal::HalResult read(uint32_t & data) {
         uint32_t ret;
-        scexpr uint32_t dummy = 0;
+        static constexpr uint32_t dummy = 0;
         transceive(ret, dummy); 
         return hal::HalResult::Ok();
     }

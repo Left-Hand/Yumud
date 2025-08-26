@@ -49,8 +49,8 @@ public:
     }
 
     static constexpr T solve_alpha(const auto fc, const auto fs){
-        // scexpr uint scaler = 100;
-        // scexpr uint tau_sal = uint(TAU * scaler);
+        // static constexpr uint scaler = 100;
+        // static constexpr uint tau_sal = uint(TAU * scaler);
         // return T(tau_sal) * fc / (scaler * fs + tau_sal * fc);
 
         return T(TAU) * fc / (fs + T(TAU) * fc);

@@ -15,9 +15,9 @@ protected:
     using Address = size_t;
     using AddressWindow = Range2<Address>;
 
-    scexpr Page page_size = 256;
-    scexpr Address base_address = 0x08'00'00'00;
-    scexpr uint max_clock = 72000000;
+    static constexpr Page page_size = 256;
+    static constexpr Address base_address = 0x08'00'00'00;
+    static constexpr uint max_clock = 72000000;
 
     const Page page_count;
     uint32_t orginal_clock;

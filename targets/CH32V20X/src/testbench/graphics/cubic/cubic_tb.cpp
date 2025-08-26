@@ -368,7 +368,7 @@ static void drawTriangle(const Rect2u & clip)
 					const auto texcoordV = Vec3(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
 					const auto v = texcoordV.dot(uv_rhw);
 					const auto texcolor = doge[uint(u * 31 + 0.5f)][uint(v * 31 + 0.5f)];
-					colorbuffer[y - clipY0][x - clipX0] = texcolor;
+					colorbuffer[y - clipY0][x - clipX0] = RGB565::from_u16(texcolor);
 				}
 
 				w12 += triangle.I12;
@@ -485,7 +485,7 @@ void cubic_main(void){
 				{
 					for (uint8_t y = 0; y < TILE_H; y++)
 					{
-						colorbuffer[y][x] = 0;
+						colorbuffer[y][x] = RGB565::from_u16(0);
 					}
 				}
 

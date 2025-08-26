@@ -118,7 +118,7 @@ class Plotter{
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
         static constexpr auto X_UNIT = Vec2<real_t>::RIGHT;
-        static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(real_t(PI / 3));
+        static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(60_deg);
         static constexpr auto Z_UNIT = Vec2<real_t>::DOWN;
         
         static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
@@ -169,10 +169,10 @@ void smc2025_main(){
     DEBUGGER.no_brackets();
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
-    while(true){
-        DEBUG_PRINTLN(clock::millis());
-        clock::delay(5ms);
-    }
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(5ms);
+    // }
 
     // bkp.init();edRunStatus();
     auto & spi = spi2;
@@ -244,9 +244,10 @@ void smc2025_main(){
     [[maybe_unused]] auto test_render = [&]{
     
         [[maybe_unused]]const auto t = clock::time();
-        const auto pose = Pose2{
-            Vec2<real_t>(0, -1.5_r) + Vec2<real_t>(-1.9_r, 0)
-            .rotated(t), t + real_t(1 / TAU) * sinpu(t)};
+        const auto pose = Pose2<real_t>{
+            Vec2<real_t>(0, -1.5_r) + Vec2<real_t>(-1.9_r, 0).rotated(Angle<real_t>::from_radians(t)), 
+            Angle<real_t>::from_radians(t + real_t(1 / TAU) * sinpu(t))
+        };
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
             // {0, 0}, 1.57_r};
@@ -254,13 +255,16 @@ void smc2025_main(){
         const auto mbegin = clock::micros();
         // const auto gray_img = Scenes::render_scene2(pose, 0.02_r);
         // const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
-        const auto gray_img = Scenes::render_scene1({pose, 0.02_r});
+        const auto gray_img = Scenes::render_scene1({
+            .pose = pose, 
+            .zoom = 0.02_r
+        });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
         plot_gray(gray_img, {0,6, 240,240});
 
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
-        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().get_x_range());
+        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().x_range());
         const auto rect = gray_img.size().to_rect();
         const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
 
@@ -304,8 +308,8 @@ void smc2025_main(){
 
     while(true){
         // test_fill();
-        // test_render();
-        test_paint();
+        test_render();
+        // test_paint();
         // test_paint();
         // qmc.update().examine();
         // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});

@@ -206,7 +206,7 @@ uint32_t AD9959::read(Register reg){
 uint32_t AD9959::write(Register reg, uint32_t value)
 {
     // The indices of this array match the values of the Register enum:
-    scexpr uint8_t register_length[8] = { 1, 3, 2, 3, 4, 2, 3, 2 };  // And 4 beyond that
+    static constexpr uint8_t register_length[8] = { 1, 3, 2, 3, 4, 2, 3, 2 };  // And 4 beyond that
 
     uint32_t    rval = 0;
     int         len = (uint8_t(reg)&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[uint8_t(reg)&0x07] : 4;

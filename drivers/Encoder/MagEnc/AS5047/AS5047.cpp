@@ -35,7 +35,7 @@ protected:
     };
     uint16_t parity_:1;
 
-    scexpr bool calc_parity(const uint16_t data){
+    static constexpr bool calc_parity(const uint16_t data){
         int count = 0;
         for (int i = 0; i < 16; ++i) {
             if (data & (1 << i)) {

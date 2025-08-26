@@ -41,7 +41,7 @@ namespace ymd{
 struct RotatedZebraRect{
     q16 width;
     q16 height;
-    q16 rotation;
+    Angle<q16> orientation;
 
 
     template<size_t I>
@@ -67,7 +67,7 @@ struct alignas(4) CacheOf<RotatedZebraRect, bool>{
     q16 c;
 
     static constexpr Self from(const RotatedZebraRect & obj){
-        const auto [s,c] = sincos(obj.rotation);
+        const auto [s,c] = obj.orientation.sincos();
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
@@ -102,8 +102,8 @@ template<>
 struct BoundingBoxOf<RotatedZebraRect>{
 
 
-    static constexpr BoundingBox to_bounding_box(const RotatedZebraRect & obj){
-        const auto rot = Vec2<q16>::from_idenity_rotation(obj.rotation);
+    static constexpr BoundingBox bounding_box(const RotatedZebraRect & obj){
+        const auto rot = Vec2<q16>::from_angle(obj.orientation);
         const std::array<Vec2<q16>, 4> points = {
             obj.get_corner<0>().improduct(rot),
             obj.get_corner<1>().improduct(rot),
@@ -152,7 +152,7 @@ private:
 
 template<>
 struct BoundingBoxOf<SpotLight>{
-    static constexpr auto to_bounding_box(const SpotLight & obj){
+    static constexpr auto bounding_box(const SpotLight & obj){
         return BoundingBox{-obj.radius, -obj.radius, 2 * obj.radius, 2 * obj.radius};
     }
 };
@@ -181,7 +181,7 @@ template<typename T>
 constexpr ElementWithPlacement<T> operator | (const T & element, const Placement& placement){
     return ElementWithPlacement<T>{
         .placement = placement,
-        .bounding_box = BoundingBoxOf<T>::to_bounding_box(element),
+        .bounding_box = BoundingBoxOf<T>::bounding_box(element),
         .cache = CacheOf<T, bool>::from(element),
     };
 }
@@ -200,7 +200,7 @@ static constexpr Vec2<q16> project_pixel_to_ground(
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
     const Vec2<q16> camera_offset = Vec2<q16>(pixel_offset) * zoom;
-    const auto rot = pose.orientation - q16(PI/2);
+    const auto rot = pose.orientation - 90_deg;
     return pose.position + camera_offset.rotated(rot);
 }
 
@@ -213,10 +213,10 @@ static constexpr Vec2u project_ground_to_pixel(
     // 1. Remove pose position offset
     const Vec2<q16> relative_pos = ground_pos - pose.position;
     
-    // 2. Calculate inverse rotation (original rotation was pose.orientation - PI/2)
-    const auto [s, c] = sincos(-(pose.orientation - q16(PI/2)));
+    // 2. Calculate inverse orientation (original orientation was pose.orientation - PI/2)
+    const auto [s, c] = (-(pose.orientation - 90_deg)).sincos();
     
-    // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
+    // 3. Apply inverse orientation matrix (transpose of original orientation matrix)
     const Vec2<q16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y

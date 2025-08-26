@@ -30,10 +30,10 @@ void initDisplayer(ST7789 & tftDisplayer){
 
 
 Ray canvas_transform(const Ray & ray){
-    scexpr auto meter = int{2};
-    scexpr auto size = Vec2{100,100};
-    scexpr auto org =  Vec2{12,12};
-    scexpr auto area = Rect2i{org,size};
+    static constexpr auto meter = int{2};
+    static constexpr auto size = Vec2{100,100};
+    static constexpr auto org =  Vec2{12,12};
+    static constexpr auto area = Rect2i{org,size};
     
     auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
     auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
@@ -41,7 +41,7 @@ Ray canvas_transform(const Ray & ray){
 };
 
 
-void draw_curve(PainterConcept & painter, const Curve & curve){
+void draw_curve(PainterIntf & painter, const Curve & curve){
     painter.setColor(ColorEnum::BLUE);
     for(auto it = curve.begin(); it != curve.end(); it++){
         auto pos = canvas_transform(Ray(*it)).org;
@@ -59,8 +59,8 @@ void print_curve(OutputStream & logger, const Curve & curve){
 };
 
 
-void draw_turtle(PainterConcept & painter, const Ray & ray){
-    scexpr real_t len = 7;
+void draw_turtle(PainterIntf & painter, const Ray & ray){
+    static constexpr real_t len = 7;
     auto [org, rad] = canvas_transform(ray);
     rad = -rad;//flipy
     auto pf = org + Vec2::from_angle(len, rad);

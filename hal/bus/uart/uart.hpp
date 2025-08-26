@@ -38,22 +38,6 @@ public:
     using Callback = std::function<void(void)>;
     using Parity = UartParity;
 
-private:
-    Callback post_tx_cb_;
-    Callback post_rx_cb_;
-
-protected:
-    CommStrategy tx_strategy_;
-    CommStrategy rx_strategy_;
-
-
-    RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
-    RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
-
-    Uart(){;}
-
-    __fast_inline void invoke_post_tx_callback(){EXECUTE(post_tx_cb_);}
-    __fast_inline void invoke_post_rx_callback(){EXECUTE(post_rx_cb_);}
 public:
     hal::HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return hal::HalResult::Ok();};
@@ -90,6 +74,24 @@ public:
     virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
     void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
     void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
+
+
+private:
+    Callback post_tx_cb_;
+    Callback post_rx_cb_;
+
+protected:
+    CommStrategy tx_strategy_;
+    CommStrategy rx_strategy_;
+
+
+    RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
+    RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
+
+    Uart(){;}
+
+    __fast_inline void invoke_post_tx_callback(){EXECUTE(post_tx_cb_);}
+    __fast_inline void invoke_post_rx_callback(){EXECUTE(post_rx_cb_);}
 };
 
 

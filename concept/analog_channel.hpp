@@ -7,8 +7,7 @@ namespace ymd::hal{
 
 class AnalogInIntf{
 public:
-    virtual operator real_t() = 0;
-    real_t get_voltage(){return real_t(*this);}
+    virtual real_t get_voltage() = 0;
     virtual ~ AnalogInIntf() = default;
 };
 

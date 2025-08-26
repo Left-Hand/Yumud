@@ -11,8 +11,8 @@ namespace ymd::drivers{
 class OV2640{
 
 public:
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
-    scexpr Vec2i CAMERA_SIZE = {160, 120};
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
+    static constexpr Vec2i CAMERA_SIZE = {160, 120};
     OV2640(hal::SccbDrv & sccb_drv):
         sccb_drv_(sccb_drv){;}
     OV2640(hal::SccbDrv && sccb_drv):

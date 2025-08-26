@@ -23,8 +23,8 @@ public:
         }else{
             auto delta = value - last_value_;
 
-            scexpr auto one = real_t(PI);
-            scexpr auto half_one = real_t(PI/2);
+            static constexpr auto one = real_t(PI);
+            static constexpr auto half_one = real_t(PI/2);
 
             if(delta > half_one){
                 delta -= one;

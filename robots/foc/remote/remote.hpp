@@ -5,7 +5,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd::foc{
-class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
+class RemoteFOCMotor:public FOCMotorIntf, public CanProtocolIntf{
 
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
@@ -22,16 +22,16 @@ protected:
     
     hal::UartHw & logger;
     
-    using CanProtocolConcept::E;
-    using CanProtocolConcept::E_2;
-    using CanProtocolConcept::E_3;
-    using CanProtocolConcept::E_4;
+    using CanProtocolIntf::E;
+    using CanProtocolIntf::E_2;
+    using CanProtocolIntf::E_3;
+    using CanProtocolIntf::E_4;
 public:
     RemoteFOCMotor(const RemoteFOCMotor & other) = delete;
     RemoteFOCMotor(RemoteFOCMotor && other) = delete;
 
     RemoteFOCMotor(hal::UartHw & _logger, Can & _can, NodeId _id):
-            FOCMotorConcept(_id), CanProtocolConcept(_can, _id), logger(_logger){;}
+            FOCMotorIntf(_id), CanProtocolIntf(_can, _id), logger(_logger){;}
 
             
     void setTargetCurrent(const real_t current);

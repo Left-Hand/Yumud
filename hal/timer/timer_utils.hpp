@@ -4,7 +4,7 @@
 #include "core/sdk.hpp"
 
 #include <functional>
-
+#include "core/utils/Option.hpp"
 
 namespace ymd::hal{
     class Gpio;
@@ -115,7 +115,7 @@ namespace ymd::hal{
 
     IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it);
 
-    Gpio & get_pin(const TIM_TypeDef * instance, const TimerChannelNth channel);
+    Option<Gpio &> get_pin(const TIM_TypeDef * instance, const TimerChannelNth channel);
 
     constexpr bool is_aligned_count_mode(const TimerCountMode mode){
         return  (mode == TimerCountMode::CenterAlignedDownTrig) ||

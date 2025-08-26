@@ -57,7 +57,7 @@ public:
     }
 
     void update(const iq_t<16> uin){
-        scexpr iq_t<16> kp = iq_t<16>(1.414_r);
+        static constexpr iq_t<16> kp = iq_t<16>(1.414_r);
         const auto u_alpha = u_alpha_;
         const auto u_beta = u_beta_;
    

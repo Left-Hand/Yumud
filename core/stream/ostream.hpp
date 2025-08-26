@@ -9,7 +9,6 @@
 
 #include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
-#include "core/container/ringbuf.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/iq/iq_t.hpp"
 
@@ -663,7 +662,7 @@ private:
 
     uint8_t sp_len;
 
-    scexpr Config DEFAULT_CONFIG = {
+    static constexpr Config DEFAULT_CONFIG = {
         .splitter = ", ",
         .radix = 10,
         .eps = 3,
@@ -712,14 +711,14 @@ private:
     }
 
     __fast_inline void print_endl(){
-        scexpr const char * enter_str = "\r\n";
-        scexpr size_t enter_str_len = 2;
+        static constexpr const char * enter_str = "\r\n";
+        static constexpr size_t enter_str_len = 2;
         
         write(enter_str, enter_str_len);
         print_end();
     }
 
-    scexpr const char * get_basealpha(const size_t _radix){
+    static constexpr const char * get_basealpha(const size_t _radix){
         switch(_radix){
             default:
             case 10:

@@ -14,7 +14,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    scexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
     enum class AFS:uint8_t{
         _16G,// default

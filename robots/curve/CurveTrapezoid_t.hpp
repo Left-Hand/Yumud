@@ -7,13 +7,19 @@ namespace ymd::curve{
 
     
 template<typename T>
-class CurveTrapezoid_t:public CurveConcept_t<T>{
+class CurveTrapezoid:public CurveIntf<T>{
 protected:
 
-    // struct Config{}
+    struct Config{
+        T from; 
+        T to; 
+        T v;
+        T a;
+    };
+
     const T _norm;
-    real_t a_;
-    real_t v_;
+    real_t abs_acc_;
+    real_t abs_spd_;
     real_t s_;
 
     real_t t1;
@@ -26,32 +32,32 @@ protected:
     real_t s_forward(const real_t t) const{
         if(peaked){
             if(t < t1){
-                return (a_ * square(t)) >> 1;
+                return (abs_acc_ * square(t)) >> 1;
             }else if(t < t2){
-                return s1 + v_ * (t - t1);
+                return s1 + abs_spd_ * (t - t1);
             }else if(t < t_all){
-                return s_ - ((a_ * square(t - t_all)) >> 1);
+                return s_ - ((abs_acc_ * square(t - t_all)) >> 1);
             }
         }else{
             if(t < t1){
-                return a_ * square(t) >> 1;
+                return abs_acc_ * square(t) >> 1;
             }else if(t < t_all){
-                return s_ - ((a_ * square(t - t_all)) >> 1);
+                return s_ - ((abs_acc_ * square(t - t_all)) >> 1);
             }
         }
         return s_;
     }
 public:
-    CurveTrapezoid_t(const CurveTrapezoid_t<T> & other) = default;
-    CurveTrapezoid_t(CurveTrapezoid_t<T> && other) = default;
+    CurveTrapezoid(const CurveTrapezoid<T> & other) = default;
+    CurveTrapezoid(CurveTrapezoid<T> && other) = default;
 
-    CurveTrapezoid_t(const T & from, const T & to, real_t v, real_t a):
-        CurveConcept_t<T>(from, to),
-        _norm(normal(from, to)),
-        a_(ABS(a)), v_(ABS(v)), s_(distance(from, to)){
+    CurveTrapezoid(const Config & cfg):
+        CurveIntf<T>(cfg.from, cfg.to),
+        _norm(normal(cfg.from, cfg.to)),
+        abs_acc_(ABS(cfg.a)), abs_spd_(ABS(cfg.v)), s_(distance(cfg.from, cfg.to)){
 
-        a = a_;
-        v = v_;
+        const auto a = abs_acc_;
+        const auto v = abs_spd_;
         auto s = s_;
 
         const auto accleration_time = v / a;
@@ -102,9 +108,9 @@ public:
 
     T peak(){
         if(peaked){
-            return v_;
+            return abs_spd_;
         }else{
-            return a_ * t1;
+            return abs_acc_ * t1;
         }
     }
 };

@@ -151,8 +151,8 @@ namespace ymd::nvcv2::pixels{
 
     constexpr uint64_t sum(const Image<Gray> & image, const Rect2u & roi){
         uint64_t sum = 0;
-        const Range2u x_range = roi.get_x_range();
-        const Range2u y_range = roi.get_y_range();
+        const Range2u x_range = roi.x_range();
+        const Range2u y_range = roi.y_range();
 
         for(uint j = y_range.start; j < y_range.stop; ++j){
             const auto * ptr = &(image[Vec2u{x_range.start, j}]);

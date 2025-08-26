@@ -12,7 +12,7 @@
 using namespace ymd;
 
 void m2006_main(){
-    // scexpr size_t cb_freq = 200;
+    // static constexpr size_t cb_freq = 200;
 
     auto & led = hal::portC[14];
     led.outpp(HIGH);

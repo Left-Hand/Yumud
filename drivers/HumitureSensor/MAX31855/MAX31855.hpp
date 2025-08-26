@@ -30,18 +30,19 @@ struct MAX31855_Prelude{
 
         real_t ther_temperature() const{
             const real_t uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
-            const bool is_minus = (ther_temp & (1 << 13)) != 0;
-            return is_minus ? (-uns_ther_temp) : uns_ther_temp;
+            const bool is_negative = (ther_temp & (1 << 13)) != 0;
+            return is_negative ? (-uns_ther_temp) : uns_ther_temp;
         }
 
         real_t junc_temperature() const{
             const real_t uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
-            const bool is_minus = (junc_temp & (1 << 11)) != 0;
-            return is_minus ? (-uns_junc_temp) : uns_junc_temp;
+            const bool is_negative = (junc_temp & (1 << 11)) != 0;
+            return is_negative ? (-uns_junc_temp) : uns_junc_temp;
         }
 
-        std::span<uint16_t> to_u16_span(){
-            return std::span<uint16_t>(reinterpret_cast<uint16_t *>(this), 2);
+        std::span<uint16_t, 2> as_u16_slice(){
+            static_assert(sizeof(MAX31855_Payload) == 4);
+            return std::span<uint16_t, 2>(reinterpret_cast<uint16_t *>(this), 2);
         }
     };
 
@@ -58,7 +59,7 @@ public:
     MAX31855_Result read(){
         MAX31855_Payload payload;
         // if(const auto res = spi_drv_.)
-        const auto raw_span = payload.to_u16_span();
+        const auto raw_span = payload.as_u16_slice();
         if(const auto res = spi_drv_.read_burst<uint16_t>(
                 std::span(raw_span)
             );

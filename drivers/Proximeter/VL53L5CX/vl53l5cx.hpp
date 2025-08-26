@@ -24,7 +24,6 @@
 #include "details/vl53l5cx_buffers.hpp"
 
 namespace ymd::drivers{
-using namespace vl53l5cx_details;
 
 class VL53L5CX final{ 
 public:
@@ -41,24 +40,24 @@ public:
 
     IResult<> init();
 
-    static constexpr ErrorKind map_status_to_error(uint8_t status){
-        return std::bit_cast<ErrorKind>(status);
-    }
+
 private:
 	/* Results streamcount, value auto-incremented at each range */
 	uint8_t		        streamcount;
 	/* Size of data read though I2C */
 	uint32_t	        data_read_size;
 	/* Address of default configuration buffer */
-	const uint8_t		        *default_configuration = VL53L5CX_DEFAULT_CONFIGURATION;
+	const uint8_t		        *default_configuration = 
+        vl53l5cx_details::VL53L5CX_DEFAULT_CONFIGURATION;
 	/* Address of default Xtalk buffer */
-	const uint8_t		        *default_xtalk = VL53L5CX_DEFAULT_XTALK;
+	const uint8_t		        *default_xtalk = 
+        vl53l5cx_details::VL53L5CX_DEFAULT_XTALK;
 	/* Offset buffer */
-	uint8_t		        offset_data[VL53L5CX_OFFSET_BUFFER_SIZE];
+	uint8_t		        offset_data[vl53l5cx_details::VL53L5CX_OFFSET_BUFFER_SIZE];
 	/* Xtalk buffer */
-	uint8_t		        xtalk_data[VL53L5CX_XTALK_BUFFER_SIZE];
+	uint8_t		        xtalk_data[vl53l5cx_details::VL53L5CX_XTALK_BUFFER_SIZE];
 	/* Temporary buffer used for internal driver processing */
-    uint8_t	        temp_buffer[VL53L5CX_TEMPORARY_BUFFER_SIZE];
+    uint8_t	        temp_buffer[vl53l5cx_details::VL53L5CX_TEMPORARY_BUFFER_SIZE];
 
     IResult<> read_byte(const uint16_t addr, uint8_t *data){
         return Ok();
@@ -84,5 +83,9 @@ private:
 		uint8_t					expected_value);
 
     IResult<> poll_for_mcu_boot();
+
+    static constexpr ErrorKind map_status_to_error(uint8_t status){
+        return std::bit_cast<ErrorKind>(status);
+    }
 };
 }

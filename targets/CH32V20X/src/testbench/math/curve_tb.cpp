@@ -19,6 +19,7 @@
 #include "robots/tween/Tween.hpp"
 #include "core/math/realmath.hpp"
 
+#if 0
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -153,7 +154,7 @@ void curve_tb() {
     auto pos_setter = make_setter(ball, &Ball::setPosition);
     auto curve = make_curve<Vec2<real_t>>({0,0}, {1,4}, 1, CosineInterpolation());
     auto curve2 = make_curve(-2, 9, 2, CosineInterpolation());
-    auto curve3 = make_curve<CurveTrapezoid_t, Vec2<real_t>>({9,0}, {30, 8}, 20, 90);
+    auto curve3 = make_curve<CurveTrapezoid, Vec2<real_t>>({9,0}, {30, 8}, 20, 90);
 
     auto getter = make_getter(ball, &Ball::getPosition);
     auto getter2 = make_getter(ball, &Ball::operator real_t);
@@ -194,9 +195,9 @@ void curve_tb() {
     // auto a = "??";
     // sizeof(a);
     // sizeof()
-    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>);
-    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::CurveWrapper);
-    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::SetterWrapper);
+    // static constexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>);
+    // static constexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::CurveWrapper);
+    // static constexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::SetterWrapper);
 
     // [[maybe_unused]] auto tw3 = new_tweener<Vec2<real_t>>(
     //     pos_setter,curve3
@@ -277,3 +278,5 @@ void curve_tb() {
     //     clock::delay(10ms);
     // }
 }
+
+#endif
