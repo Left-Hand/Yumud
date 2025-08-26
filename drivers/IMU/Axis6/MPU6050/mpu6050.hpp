@@ -3,9 +3,10 @@
 //这个驱动已经完成了基础使用
 
 #include "core/io/regs.hpp"
+#include "core/utils/angle.hpp"
 #include "core/utils/Errno.hpp"
-#include "drivers/IMU/IMU.hpp"
 
+#include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 
 namespace ymd::drivers{
@@ -119,6 +120,7 @@ public:
 
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
+
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -191,10 +193,10 @@ private:
 
     static constexpr real_t calculate_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return real_t(250_deg);
-            case GyrFs::_500deg: return real_t(500_deg);
-            case GyrFs::_1000deg: return real_t(1000_deg);
-            case GyrFs::_2000deg: return real_t(2000_deg);
+            case GyrFs::_250deg: return (250_deg).to_radians();
+            case GyrFs::_500deg: return (500_deg).to_radians();
+            case GyrFs::_1000deg: return (1000_deg).to_radians();
+            case GyrFs::_2000deg: return (2000_deg).to_radians();
             default: __builtin_unreachable();
         }
     }

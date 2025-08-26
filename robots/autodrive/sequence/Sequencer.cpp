@@ -7,15 +7,15 @@ using namespace ymd::robots;
 
 using TrapezoidSolver = TrapezoidSolver_t<q16>;
 
-void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_rad){
+void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const Angle<q16> end_angle){
 
     const TrapezoidSolver solver{
         limits_.max_agr, 
         limits_.max_gyr, 
-        ABS(end_rad - from.orientation)    
+        (end_angle - from.orientation).abs().to_radians() 
     };
 
-    const bool inv = end_rad < from.orientation;
+    const bool inv = end_angle < from.orientation;
     const auto freq = paras_.freq;
     const auto n = size_t(solver.period() * freq);
     
@@ -23,7 +23,7 @@ void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_ra
     
     for(size_t i = 0; i < n; i++){
         const auto t_val = q16(i) / freq;
-        const auto orientation = solver.forward(t_val);
+        const auto orientation = Angle<q16>::from_radians(solver.forward(t_val));
         curve.emplace_back(from.rotated(inv ? -orientation : orientation));
     }
 }
@@ -54,7 +54,12 @@ void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vec2<q16> & 
 
 
 
-void Sequencer::arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to, const q16 & radius){
+void Sequencer::arc(
+    Curve & curve, 
+    const Ray2<q16> & from, 
+    const Ray2<q16> & to, 
+    const q16 radius
+){
     const auto may_center = calculate_fillet_center(from.normal(), to.normal(), radius);
     if(may_center.is_none()) return;
     // const auto center = may_center.unwrap();
@@ -62,10 +67,10 @@ void Sequencer::arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to,
     // TrapezoidSolver solver{
     //     limits_.max_agr, 
     //     limits_.max_gyr, 
-    //     ABS(end_rad - from.orientation)    
+    //     ABS(end_angle - from.orientation)    
     // };
 
-    // bool inv = end_rad < from.orientation;
+    // bool inv = end_angle < from.orientation;
     // const auto freq = paras_.freq;
     // const auto n = size_t(int(solver.period() * freq));
     
@@ -126,7 +131,7 @@ void Sequencer::spin(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to
     this->rotate(curve, from, to.orientation);
 }
 
-void Sequencer::wait(Curve & curve, const Ray2<q16> & from, const q16 & dur){
+void Sequencer::wait(Curve & curve, const Ray2<q16> & from, const q16 dur){
     const auto freq = paras_.freq;
     const auto n = size_t(dur * freq);
     // const auto n = 22;

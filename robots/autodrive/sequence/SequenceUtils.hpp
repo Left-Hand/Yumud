@@ -28,10 +28,10 @@ protected:
     uint32_t y_:11;
     uint32_t rad_:10;
 public:
-    constexpr CurvePoint(const q16 & x, const q16 & y, const q16 & orientation):
-        x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(orientation * RAD_SCALE){;}
+    constexpr CurvePoint(const q16 x, const q16 y, const Angle<q16> orientation):
+        x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(orientation.to_radians() * RAD_SCALE){;}
 
-    constexpr CurvePoint(const Vec2<q16> & pos, const q16 & orientation):
+    constexpr CurvePoint(const Vec2<q16> & pos, const Angle<q16> orientation):
         CurvePoint(pos.x, pos.y, orientation){;}
         
     constexpr CurvePoint(const Ray2<q16> & ray):
@@ -42,7 +42,7 @@ public:
             Vec2<q16>(
                 q16(x_) >> XY_SHIFT_BITS, 
                 q16(y_) >> XY_SHIFT_BITS), 
-            rad_ * INV_RAD_SCALE
+            Angle<q16>::from_radians(rad_ * INV_RAD_SCALE)
         );
     }
 };

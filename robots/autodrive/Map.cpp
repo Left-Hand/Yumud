@@ -21,7 +21,7 @@ Vec2<real_t> Field::to_pos(const Map & map) const {
     }
 }
 
-real_t Field::to_rot(const Map & map) const {
+Angle<real_t> Field::to_rot(const Map & map) const {
     switch(kind_){
         default:
             HALT;

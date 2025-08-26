@@ -19,7 +19,7 @@ struct AnnularSector final{
     T inner_radius;
     T outer_radius;
     
-    Range2<T> angle_range;
+    Range2<Angle<T>> angle_range;
 
     constexpr bool contains_angle(const T angle) const {
         return angle_range.contains(angle);
@@ -31,8 +31,8 @@ struct AnnularSector final{
         const bool y_reached_top = contains_angle(T(PI/2));
         const bool y_reached_bottom = contains_angle(T(-PI/2));
 
-        const auto p1 = Vec2<T>::from_idenity_rotation(angle_range.start) * outer_radius;
-        const auto p2 = Vec2<T>::from_idenity_rotation(angle_range.stop) * outer_radius;
+        const auto p1 = Vec2<T>::from_angle(angle_range.start) * outer_radius;
+        const auto p2 = Vec2<T>::from_angle(angle_range.stop) * outer_radius;
 
         const auto x_min = x_reached_left ? (-outer_radius) : MIN(p1.x, p2.x);
         const auto x_max = x_reached_right ? (outer_radius) : MAX(p1.x, p2.x);
@@ -54,14 +54,14 @@ struct AnnularSector final{
     __fast_inline constexpr bool has_angle(
         const T angle)
     const {
-        return has_angle(Vec2<T>::from_idenity_rotation(angle));
+        return has_angle(Vec2<T>::from_angle(angle));
     }
 
     __fast_inline constexpr bool has_angle(
         const Vec2<T> offset)
     const {
-        const auto v1 = Vec2<T>::from_idenity_rotation(angle_range.start);
-        const auto v2 = Vec2<T>::from_idenity_rotation(angle_range.stop);
+        const auto v1 = Vec2<T>::from_angle(angle_range.start);
+        const auto v2 = Vec2<T>::from_angle(angle_range.stop);
         return has_angle_helper(
             offset,
             v1, v2, v2.is_count_clockwise_to(v1)
@@ -78,7 +78,7 @@ private:
         const bool is_close
     ){
         return has_angle_helper(
-            Vec2<T>::from_idenity_rotation(angle), 
+            Vec2<T>::from_angle(angle), 
             start_norm_vec, stop_norm_vec, 
             is_close
         );
@@ -109,8 +109,8 @@ struct CacheOf<AnnularSector<T>, bool>{
     bool is_close;
 
     static constexpr Self from(const AnnularSector<T> & obj){
-        const auto v1 = Vec2<T>::from_idenity_rotation(obj.angle_range.start);
-        const auto v2 = Vec2<T>::from_idenity_rotation(obj.angle_range.stop);
+        const auto v1 = Vec2<T>::from_angle(obj.angle_range.start);
+        const auto v2 = Vec2<T>::from_angle(obj.angle_range.stop);
         return Self{
             .squ_inner_radius = square(obj.inner_radius),
             .squ_outer_radius = square(obj.outer_radius),
@@ -144,8 +144,8 @@ private:
 template<typename T>
 struct BoundingBoxOf<AnnularSector<T>> {
     static constexpr Rect2<T> bounding_box(const AnnularSector<T> & obj){
-        const auto v1 = Vec2<T>::from_idenity_rotation(obj.angle_range.start);
-        const auto v2 = Vec2<T>::from_idenity_rotation(obj.angle_range.stop);
+        const auto v1 = Vec2<T>::from_angle(obj.angle_range.start);
+        const auto v2 = Vec2<T>::from_angle(obj.angle_range.stop);
         const bool is_close = v2.is_count_clockwise_to(v1);
     
         Rect2<T> bb = Rect2<T>::from_minimal_bounding_box({

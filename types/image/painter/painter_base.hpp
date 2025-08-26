@@ -149,8 +149,8 @@ public:
     template<typename Fn>
     [[nodiscard]]
     IResult<> draw_fx(const Rect2u rect, Fn && fn) {
-        const auto x_range = rect.get_x_range();
-        const auto y_range = rect.get_y_range();
+        const auto x_range = rect.x_range();
+        const auto y_range = rect.y_range();
         const auto x_step = real_t(1) / x_range.length();
 
         real_t x = 0;

@@ -47,12 +47,44 @@
 namespace ymd{
 template<typename T>
 struct is_placed_t<Segment2<T>>:std::true_type{};
+
+struct Infallible{};
+template<typename T>
+struct [[nodiscard]] Result<T, Infallible>{
+    constexpr Result(Ok<T> && okay):value_(okay.get()){;}
+
+    constexpr T examine() const {return value_;}
+    constexpr T unwrap() const {return value_;}
+
+    consteval Infallible unwrap_err() const {return Infallible{};};
+    consteval bool is_err() const {return false;}
+    consteval bool is_ok() const {return true;}
+private:
+    T value_;
+};
+
+
+template<>
+struct [[nodiscard]] Result<void, Infallible>{
+    consteval Result(Ok<void> && okay){;}
+
+    constexpr void examine() const {}
+    constexpr void unwrap() const {}
+
+    constexpr Infallible unwrap_err() const {return Infallible{};};
+    consteval bool is_err() const {return false;}
+    consteval bool is_ok() const {return true;}
+private:
+
+};
+
 }
 
 
 using namespace ymd;
 
-struct Infallible{};
+
+
 
 OutputStream & operator << (OutputStream & os, const Infallible){
     return os << "Infallible";
@@ -127,17 +159,25 @@ public:
     template<typename DestColor>
     __fast_inline constexpr Result<void, Error> fill_x_range(
         const Range2<uint16_t> x_range,
-        const DestColor color
+        const DestColor dest_color
     ){
         if(x_range.stop > buf_.size()) return Ok();
 
         const auto dest_x = MIN(buf_.size(), x_range.stop);
-
-        std::fill_n(
-            buf_.begin() + x_range.start, 
-            size_t(dest_x - x_range.start), 
-            static_cast<Color>(color)
-        );
+        const auto color = static_cast<Color>(dest_color);
+        // #pragma GCC unroll(8)
+        // #pragma GCC unroll(16)
+        if(dest_x - x_range.start < 16){
+            #pragma GCC unroll(8)
+            for(size_t i = x_range.start; i < dest_x; ++i){
+                buf_[i] = color;
+            }
+        }else{
+            #pragma GCC unroll(32)
+            for(size_t i = x_range.start; i < dest_x; ++i){
+                buf_[i] = color;
+            }
+        }
         return Ok();
     }
 
@@ -159,10 +199,11 @@ public:
 
         const auto dest_x = MIN(buf_.size(), area.x() + area.w());
 
-        for(size_t x = area.x(); x < dest_x; ++x){
-            buf_[x] = static_cast<Color>(color);
-        }
-        return Ok();
+        // for(size_t x = area.x(); x < dest_x; ++x){
+        //     buf_[x] = static_cast<Color>(color);
+        // }
+
+        return fill_x_range({area.x(), dest_x}, color);
     }
 
     template<typename DestColor>
@@ -179,9 +220,14 @@ public:
 
     template<typename DestColor>
     __fast_inline constexpr Result<void, Error> fill(
-        const DestColor color
+        const DestColor dest_color
     ){ 
-        std::fill(buf_.begin(), buf_.end(), static_cast<Color>(color));
+
+        return fill_x_range(
+            Range2u16::from_start_and_stop_unchecked(0u, buf_.size()),
+            dest_color
+        );
+
         return Ok();
     }
 
@@ -282,8 +328,8 @@ struct FrameBufferSpan{
         ColorsIter && iter
     ){
         auto & self = *this;
-        const auto x_range = area.get_x_range();
-        const auto y_range = area.get_y_range();
+        const auto x_range = area.x_range();
+        const auto y_range = area.y_range();
 
         for(size_t y = y_range.start; y < y_range.stop; y++){
             const auto offset_base = y * self.size_.x;
@@ -313,8 +359,8 @@ struct FrameBufferSpan{
         const DestColor color
     ){
         auto & self = *this;
-        const auto x_range = area.get_x_range();
-        const auto y_range = area.get_y_range();
+        const auto x_range = area.x_range();
+        const auto y_range = area.y_range();
 
         for(size_t y = y_range.start; y < y_range.stop; y++){
             const auto offset_base = y * self.size_.x;
@@ -431,6 +477,50 @@ struct RoundedRect2{
     }
 };
 
+template<typename T>
+struct GridMap2{
+    Rect2<T> top_left_cell;
+    Vec2<T> padding;
+    Vec2<uint8_t> count;
+
+    constexpr auto bounding_box() const {
+        const auto top_left = top_left_cell.position;
+        const auto size = Vec2<T>{
+                static_cast<T>(top_left_cell.size.x * (count.x)), 
+                static_cast<T>(top_left_cell.size.y * (count.y))} 
+            + Vec2<T>{
+                static_cast<T>(padding.x * (count.x - 1)), 
+                static_cast<T>(padding.y * (count.y - 1))};
+        return Rect2<T>(top_left, size);
+    }
+
+    constexpr bool contains_point(const Vec2<T> point) const{
+        return contains_impl<0>(point.x) and contains_impl<1>(point.y);
+    }
+
+    constexpr bool contains_x(const T point_x) const{
+        return contains_impl<0>(point_x);
+    }
+    constexpr bool contains_y(const T point_y) const{
+        return contains_impl<1>(point_y);
+    }
+
+private:
+    template<size_t I>
+    constexpr bool contains_impl(const auto p) const {
+        const auto offset = p - std::get<I>(top_left_cell.position);
+        const auto cell_size = std::get<I>(top_left_cell.size);
+        const auto gird_offset = [&]{
+            const auto cell_with_padding_size = std::get<I>(top_left_cell.size) + std::get<I>(padding);
+            return offset % cell_with_padding_size;
+        }();
+
+        return (gird_offset < cell_size);
+    }
+};
+
+template<typename T>
+struct is_placed_t<GridMap2<T>>:std::true_type{;};
 
 template<typename T, typename D>
 struct HorizonSpectrum{
@@ -493,8 +583,8 @@ struct DrawDispatchIterator<Rect2<T>> {
     using Self = DrawDispatchIterator<Shape>;
 
     constexpr DrawDispatchIterator(const Shape& shape) : 
-        x_range_(shape.get_x_range()),
-        y_range_(shape.get_y_range()),
+        x_range_(shape.x_range()),
+        y_range_(shape.y_range()),
         y_(y_range_.start) {}  // 修复：使用 y_range_.start
 
     template<DrawTargetConcept Target, typename Color>
@@ -687,7 +777,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
         : shape_(shape),
             transformer_(Transformer::from_input_and_inverted_output(
                 shape_.sample_range,
-                shape_.bounding_box().get_y_range()
+                shape_.bounding_box().y_range()
             )),
             y_(shape.top_left.y)
         {}
@@ -705,16 +795,13 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     // 绘制当前行的所有点
     template<DrawTargetConcept Target, typename Color>
     Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
-        if (!has_next()) return Ok();
         
         auto x = shape_.top_left.x;
         // const auto stop_x = .stop;
         const T count = MIN(
             shape_.samples.size(),
-            target.bounding_box().get_x_range().length() / shape_.cell_size.x
+            target.bounding_box().x_range().length() / shape_.cell_size.x
         );
-
-        // const auto y_stop = shape_.top_left.y + shape_.cell_size.y;
 
         for(size_t i = 0; i < count; i++){
             const auto next_x = x + shape_.cell_size.x;
@@ -723,9 +810,6 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
 
             const auto data_y = transformer_(shape_.samples[i]);
 
-
-            
-            // if(y_ < (data_y - 10) || (y_ >= data_y + 10)){
             if((y_ >= data_y)){
                 if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
                 res.is_err()) return res;
@@ -739,7 +823,6 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
         return Ok();
     }
 
-    // 空心绘制（对于线段来说和填充一样）
     template<DrawTargetConcept Target, typename Color>
     Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
         return draw_filled(target, color);
@@ -752,13 +835,70 @@ private:
     T y_;
 };
 
+
+
+// DrawDispatchIterator 特化
+template<std::integral T>
+struct DrawDispatchIterator<GridMap2<T>> {
+    using Shape = GridMap2<T>;
+    using Transformer = SampleTransformer<q16>;
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : shape_(shape),
+            y_(shape.top_left_cell.y())
+        {}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < shape_.bounding_box().y_range().stop;
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    // template<typename Color>
+    Result<void, typename Target::Error> draw_filled(Target & target, const Color& color) {
+        if(not shape_.contains_y(y_)) return Ok();
+        T x = shape_.top_left_cell.x();
+        // const auto stop_x = .stop;
+        const auto count = shape_.count;
+        for(size_t i = 0; i < count.x; i++){
+            const T next_x = x + shape_.top_left_cell.w();
+            const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
+            // const auto x_range = Range2u16{x, next_x};
+            x = next_x + shape_.padding.x;
+
+            if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
+                res.is_err()) return res;
+            // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK)).examine();
+            // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
+            continue;
+        }
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return draw_filled(target, color);
+    }
+
+
+private:
+    Shape shape_;
+    T y_;
+};
+
+
 template<typename T>
 struct RoundedRect2SliceIterator{
 public:
     constexpr RoundedRect2SliceIterator(const RoundedRect2<T> & shape):
         // x0_(shape.bounding_rect.position.x + shape.radius),
-        x_range_(shape.bounding_rect.get_x_range()),
-        y_range_(shape.bounding_rect.get_y_range()),
+        x_range_(shape.bounding_rect.x_range()),
+        y_range_(shape.bounding_rect.y_range()),
         y_(y_range_.start),
         radius_(shape.radius),
         radius_squ_(square(shape.radius))
@@ -1037,14 +1177,14 @@ void render_main(){
         const auto ctime = clock::time();
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
         [[maybe_unused]] const auto [s,c] = sincospu(ctime);
-        [[maybe_unused]] const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 20 * c), uint16_t(80 + 20 * s));
+        [[maybe_unused]] const auto [shape_x,shape_y] = std::make_tuple(uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
 
         [[maybe_unused]] const auto samples = [&]{
-            static constexpr auto LEN = 24;
+            static constexpr auto LEN = 20;
             std::array<q16, LEN> ret;
             for(size_t i = 0; i < LEN; i++){
                 // ret[i] = 0.8_q16 * sin(7 * ctime + i * 0.15_r);
-                ret[i] = 0.8_q16 * sin(7 * ctime + i * 0.25_r);
+                ret[i] = 0.8_q16 * sinpu(ctime + i * 0.1_r);
             }
             return ret;
         } ();
@@ -1064,7 +1204,7 @@ void render_main(){
         //     .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
         
         // auto shape =  RoundedRect2<uint16_t>{
-        //     .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{120, 60}}, .radius = 10};
+        //     .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{240, 120}}, .radius = 10};
         
         auto shape = HorizonSpectrum<uint16_t, q16>{
             .top_left = {20, 20},
@@ -1073,7 +1213,12 @@ void render_main(){
             .sample_range = {-1, 1}
         };
 
-        
+        // auto shape = GridMap2<uint16_t>{
+        //     // .top_left_cell = Rect2<uint16_t>{20, 20, 35, 35},
+        //     .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
+        //     .padding = {2,2},
+        //     .count = {15,7}
+        // };
 
 
 
@@ -1102,7 +1247,7 @@ void render_main(){
                 auto line_span = LineBufferSpan<RGB565>(std::span(render_buffer), i);
                 auto guard = make_scope_guard([&]{
                     clear_us += measure_total_elapsed_us([&]{
-                        line_span.fill(RGB565::BLACK).examine();
+                        line_span.fill(static_cast<RGB565>(RGB565::BLACK)).examine();
                     });
                 });
 
@@ -1114,7 +1259,8 @@ void render_main(){
                     }
 
                     if(render_iter.has_next()){
-                        for(size_t j = 0; j < 1; j++){
+                        for(size_t j = 0; j < 20; j++){
+                        // for(size_t j = 0; j < 1; j++){
 
                             render_iter.draw_filled(line_span, RGB565::GRAY).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
@@ -1133,7 +1279,7 @@ void render_main(){
             }
         });
 
-        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count());
+        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count(), total_us.count());
     }
 
 };

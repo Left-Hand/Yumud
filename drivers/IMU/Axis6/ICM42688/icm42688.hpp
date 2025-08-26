@@ -2,6 +2,7 @@
 
 #include "details/ICM42688_Prelude.hpp"
 #include "core/utils/enum_array.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd::drivers{
 
@@ -60,14 +61,14 @@ private:
 
     static constexpr q24 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return 2 * 2000_deg;
-            case GyrFs::_1000deg  :      return 2 * 1000_deg;
-            case GyrFs::_500deg   :      return 2 * 500_deg;
-            case GyrFs::_250deg   :      return 2 * 250_deg;
-            case GyrFs::_125deg   :      return 2 * 125_deg;
-            case GyrFs::_62_5deg  :      return 2 * 62.5_deg;
-            case GyrFs::_31_25deg :      return 2 * 31.25_deg;
-            case GyrFs::_15_625deg:      return 2 * 15.625_deg;
+            case GyrFs::_2000deg  :      return (2 * 2000_deg   ).to_radians()         ;
+            case GyrFs::_1000deg  :      return (2 * 1000_deg   ).to_radians()         ;
+            case GyrFs::_500deg   :      return (2 * 500_deg).to_radians()         ;
+            case GyrFs::_250deg   :      return (2 * 250_deg).to_radians()         ;
+            case GyrFs::_125deg   :      return (2 * 125_deg).to_radians()         ;
+            case GyrFs::_62_5deg  :      return (2 * 62.5_deg   ).to_radians()         ;
+            case GyrFs::_31_25deg :      return (2 * 31.25_deg  ).to_radians()         ;
+            case GyrFs::_15_625deg:      return (2 * 15.625_deg ).to_radians()         ;
             default: __builtin_unreachable();
         }
     }

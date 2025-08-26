@@ -225,9 +225,9 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr bool contains(const Rect2<T> & other) const {
-        bool x_ins = this->get_x_range().contains(other.get_x_range());
+        bool x_ins = this->x_range().contains(other.x_range());
         if(false == x_ins) return false;
-        bool y_ins = this->get_y_range().contains(other.get_y_range());
+        bool y_ins = this->y_range().contains(other.y_range());
         return y_ins;
     }
 
@@ -292,8 +292,8 @@ public:
     }
 
     [[nodiscard]] constexpr Rect2<T> merge(const Rect2<T> & other) const{
-        Range2<T> range_x = this->get_x_range().merge(other.get_x_range());
-        Range2<T> range_y = this->get_y_range().merge(other.get_y_range());
+        Range2<T> range_x = this->x_range().merge(other.x_range());
+        Range2<T> range_y = this->y_range().merge(other.y_range());
         return Rect2<T>(range_x, range_y);
     }
 
@@ -310,8 +310,8 @@ public:
 
     [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const{
         Vec2<T> ret;
-        ret.x() = this->get_x_range().clamp(point.x);
-        ret.y() = this->get_y_range().clamp(point.y);
+        ret.x() = this->x_range().clamp(point.x);
+        ret.y() = this->y_range().clamp(point.y);
         return ret;
     }
 
@@ -320,11 +320,11 @@ public:
             this->get_center(), this->size * amount);
     }
 
-    [[nodiscard]] constexpr Range2<T> get_x_range() const{
+    [[nodiscard]] constexpr Range2<T> x_range() const{
         return Range2<T>::from_start_and_length(position.x, size.x);
     }
 
-    [[nodiscard]] constexpr Range2<T> get_y_range() const{
+    [[nodiscard]] constexpr Range2<T> y_range() const{
         return Range2<T>::from_start_and_length(position.y, size.y);
     }
 

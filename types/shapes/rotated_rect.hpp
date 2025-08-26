@@ -10,7 +10,7 @@ template<typename T>
 struct RotatedRect{
     T width;
     T height;
-    T orientation;
+    Angle<T> orientation;
 
     using Self = RotatedRect<T>;
 
@@ -29,7 +29,7 @@ struct RotatedRect{
 
     constexpr Rect2<T> bounding_box() const {
         auto & self = *this;
-        const auto rot = Vec2<T>::from_idenity_rotation(self.orientation);
+        const auto rot = Vec2<T>::from_angle(self.orientation);
         const std::array<Vec2<T>, 4> points = {
             self.template get_vertice<0>().improduct(rot),
             self.template get_vertice<1>().improduct(rot),
@@ -53,7 +53,7 @@ struct CacheOf<RotatedRect<T>, bool>{
 
 
     static constexpr Self from(const Object & obj){
-        const auto [s,c] = sincos(obj.orientation);
+        const auto [s,c] = obj.orientation.sincos();
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,

@@ -26,14 +26,14 @@ public:
     constexpr void reconf(const Config & cfg){
         road_width_ = cfg.road_width;
     }
-    [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const real_t orientation){
+    [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const Angle<real_t> orientation){
         ASSERT(radius > 0);
-        const auto start_angle = ((orientation > 0) ? 
-                (viewpoint_.orientation - real_t(PI/2))
-                : (viewpoint_.orientation + orientation + real_t(PI/2)));
-        const auto stop_angle = ((orientation > 0) ? 
-                (viewpoint_.orientation + orientation - real_t(PI/2))
-                : (viewpoint_.orientation + real_t(PI/2)));
+        const auto start_angle = ((orientation > 0_deg) ? 
+                (viewpoint_.orientation - 90_deg)
+                : (viewpoint_.orientation + orientation + 90_deg));
+        const auto stop_angle = ((orientation > 0_deg) ? 
+                (viewpoint_.orientation + orientation - 90_deg)
+                : (viewpoint_.orientation + 90_deg));
 
         const auto ret = AnnularSector<q16>{
             .inner_radius = radius - road_width_ / 2,
@@ -41,7 +41,7 @@ public:
             
             .angle_range = {start_angle, stop_angle}
         } | Placement{
-            .position = viewpoint_.side_move((orientation > 0) ? (radius) : (-radius)).position
+            .position = viewpoint_.side_move((orientation > 0_deg) ? (radius) : (-radius)).position
         };
 
         viewpoint_ = viewpoint_.revolve_by_radius_and_rotation(
@@ -56,7 +56,7 @@ public:
         const auto ret = RotatedRect<real_t>{
             .width = road_width_,
             .height = length,
-            .orientation = viewpoint_.orientation - real_t(PI / 2)
+            .orientation = viewpoint_.orientation - 90_deg
         } | Placement{
             .position = viewpoint_.forward_move(length / 2).position,
         };
@@ -71,7 +71,7 @@ public:
         const auto ret = RotatedZebraRect{
             .width = road_width_,
             .height = length,
-            .orientation = viewpoint_.orientation - real_t(PI / 2)
+            .orientation = viewpoint_.orientation - 90_deg
         } | Placement{
             .position = viewpoint_.forward_move(length / 2).position,
         };

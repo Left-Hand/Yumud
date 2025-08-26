@@ -8,7 +8,7 @@
 
 
 namespace ymd{
-template<arithmetic T>
+template<typename T>
 struct Range2{
 public:
     #pragma pack(push, 1)

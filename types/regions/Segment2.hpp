@@ -119,7 +119,7 @@ public:
         return (stop - start).length_squared();
     }
 
-    [[nodiscard]] __fast_inline constexpr T angle() const {
+    [[nodiscard]] __fast_inline constexpr Angle<T> angle() const {
         return (stop - start).angle();
     }
 

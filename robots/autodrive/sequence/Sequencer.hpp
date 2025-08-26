@@ -10,7 +10,7 @@ protected:
     const SequenceLimits & limits_;
     const SequenceParas & paras_;
 
-    void rotate(Curve & curve, const Ray2<q16> & from, const q16 & end_rad);
+    void rotate(Curve & curve, const Ray2<q16> & from, const Angle<q16> end_angle);
 
     void linear(Curve & curve, const Ray2<q16> & from, const Vec2<q16> & end_pos);
 public:
@@ -18,7 +18,7 @@ public:
         limits_(limits), paras_(paras){}
     
     //圆弧插补 未实现
-    void arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to, const q16 & radius);
+    void arc(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to, const q16 radius);
     
     //侧向移动
     void sideways(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to);
@@ -32,6 +32,6 @@ public:
     //旋转
     void spin(Curve & curve, const Ray2<q16> & from, const Ray2<q16> & to);
 
-    void wait(Curve & curve, const Ray2<q16> & from, const q16 & dur);
+    void wait(Curve & curve, const Ray2<q16> & from, const q16 dur);
 };
 }

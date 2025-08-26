@@ -237,16 +237,16 @@ IResult<> PMW3901::update(){
 
 }
 
-IResult<> PMW3901::update(const real_t rad){
-    return read_data()
-    .if_ok([&]{
-        auto delta = Vec2<real_t>(data_.dx.as_val(), data_.dy.as_val())
-            .rotated(rad - real_t(PI/2)) * scale;
-        x_cm += delta.x;
-        y_cm += delta.y;
-    });
+// IResult<> PMW3901::update(const real_t rad){
+//     return read_data()
+//     .if_ok([&]{
+//         auto delta = Vec2<real_t>(data_.dx.as_val(), data_.dy.as_val())
+//             .rotated(rad - 90_deg) * scale;
+//         x_cm += delta.x;
+//         y_cm += delta.y;
+//     });
 
-}
+// }
 
 
 Result<bool, Error> PMW3901::assert_reg(const uint8_t command, const uint8_t data){

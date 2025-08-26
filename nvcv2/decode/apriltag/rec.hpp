@@ -64,8 +64,8 @@ public:
         const Gray & match, 
         const Rect2u & roi
     ){
-        const auto x_range = roi.get_x_range();
-        const auto y_range = roi.get_y_range();
+        const auto x_range = roi.x_range();
+        const auto y_range = roi.y_range();
 
         Vertexs ret;
         auto center = roi.center();

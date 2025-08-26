@@ -62,7 +62,7 @@ struct ScanLinesIterator<Rect2<T>>{
     static constexpr Self from(const Shape & shape){
         const auto ret = Self{};
 
-        ret.x_range = shape.get_x_range();
+        ret.x_range = shape.x_range();
         ret.y_stop = shape.y() + shape.h();
         ret.y_ = shape.y();
 
@@ -72,7 +72,7 @@ struct ScanLinesIterator<Rect2<T>>{
     static constexpr Self from(const Shape & shape, const T y){
         const auto ret = Self{};
 
-        ret.x_range = shape.get_x_range();
+        ret.x_range = shape.x_range();
         ret.y_stop = shape.y() + shape.h();
         ret.y_ = y;
 

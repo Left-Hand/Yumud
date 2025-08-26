@@ -68,8 +68,12 @@ void rrs3_tb(){
         .z = 5,
     };
     
-    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(T(TAU  / 3)));
-    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(T(-TAU / 3)));
+    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(
+        Angle<T>::from_radians(static_cast<T>(TAU / 3))
+    ));
+    DEBUG_PRINTLN(Vec2<T>::RIGHT.rotated(
+        Angle<T>::from_radians(static_cast<T>(-TAU / 3))
+    ));
 
     const auto u = clock::micros();
     const auto may_res = rrs3.inverse(gest);

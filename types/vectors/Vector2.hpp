@@ -34,6 +34,7 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/math/real.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd{
 
@@ -92,14 +93,18 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
-    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_idenity_rotation(
-        const T & rad){
-        const auto [s,c] = sincos(rad);
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle(
+        const Angle<T> angle){
+        const auto [s,c] = angle.sincos();
         return {c, s};
     }
-    
-    // [[nodiscard]] __fast_inline static constexpr Vec2<T> from_splat(const T v):
-    //     x(v), y(v){;}
+
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
+        const Angle<T> angle, const T length){
+        const auto [s,c] = angle.sincos();
+        return {c * length, s * length};
+    }
+
     [[nodiscard]] T & operator [](const size_t index) { return *(&this->x + index);}
 
     [[nodiscard]] const T & operator [](const size_t index) const {return *(&this->x + index);}
@@ -134,7 +139,7 @@ struct Vec2{
 
     [[nodiscard]] constexpr T dot(const Vec2<T> & other) const;
     [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<T> & b) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const T r)const;
+    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angle<T> angle)const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> abs() const;
 
 
@@ -149,9 +154,9 @@ struct Vec2{
         return {x, y + v};
     }
 
-    [[nodiscard]] constexpr T angle() const {
-            return atan2(y, x);}
-	[[nodiscard]] constexpr T angle_between(const Vec2<T> & b) const {
+    [[nodiscard]] constexpr Angle<T> angle() const {
+            return Angle<T>::from_radians(atan2(y, x));}
+	[[nodiscard]] constexpr Angle<T> angle_between(const Vec2<T> & b) const {
         const auto & a = *this;
         // const T cross_z = a.x * b.y - a.y * b.x;
         // // 点积（cosθ）
@@ -169,7 +174,7 @@ struct Vec2{
         while (diff > T(PI)) diff -= T(2 * PI);
         while (diff <= -T(PI)) diff += T(2 * PI);
         
-        return diff;
+        return Angle<T>::from_radians(diff);
     }
 
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
@@ -529,10 +534,9 @@ constexpr __fast_inline Vec2<T> Vec2<T>::improduct(const Vec2<T> & b) const{
 }
 
 template<arithmetic T>
-constexpr __fast_inline Vec2<T> Vec2<T>::rotated(const T r) const{
+constexpr __fast_inline Vec2<T> Vec2<T>::rotated(const Angle<T> angle) const{
     static_assert(not std::is_integral_v<T>);
-    auto [s, c] = sincos(r);
-    return this->improduct(Vec2<T>(c, s));
+    return this->improduct(Vec2<T>::from_angle(angle));
 }
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
@@ -593,4 +597,12 @@ constexpr Vec2<T> operator/(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
 template<arithmetic T>
 Vec2() -> Vec2<T>;
 
+}
+
+namespace std{
+    template<size_t I, typename T>
+    static constexpr T get(const ymd::Vec2<T> &p_vector2){
+        if constexpr(I == 0) return p_vector2.x;
+        else if constexpr(I == 1) return p_vector2.y;
+    }
 }

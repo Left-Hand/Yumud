@@ -41,7 +41,7 @@ namespace ymd{
 struct RotatedZebraRect{
     q16 width;
     q16 height;
-    q16 orientation;
+    Angle<q16> orientation;
 
 
     template<size_t I>
@@ -67,7 +67,7 @@ struct alignas(4) CacheOf<RotatedZebraRect, bool>{
     q16 c;
 
     static constexpr Self from(const RotatedZebraRect & obj){
-        const auto [s,c] = sincos(obj.orientation);
+        const auto [s,c] = obj.orientation.sincos();
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
@@ -103,7 +103,7 @@ struct BoundingBoxOf<RotatedZebraRect>{
 
 
     static constexpr BoundingBox bounding_box(const RotatedZebraRect & obj){
-        const auto rot = Vec2<q16>::from_idenity_rotation(obj.orientation);
+        const auto rot = Vec2<q16>::from_angle(obj.orientation);
         const std::array<Vec2<q16>, 4> points = {
             obj.get_corner<0>().improduct(rot),
             obj.get_corner<1>().improduct(rot),
@@ -200,7 +200,7 @@ static constexpr Vec2<q16> project_pixel_to_ground(
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
     const Vec2<q16> camera_offset = Vec2<q16>(pixel_offset) * zoom;
-    const auto rot = pose.orientation - q16(PI/2);
+    const auto rot = pose.orientation - 90_deg;
     return pose.position + camera_offset.rotated(rot);
 }
 
@@ -214,7 +214,7 @@ static constexpr Vec2u project_ground_to_pixel(
     const Vec2<q16> relative_pos = ground_pos - pose.position;
     
     // 2. Calculate inverse orientation (original orientation was pose.orientation - PI/2)
-    const auto [s, c] = sincos(-(pose.orientation - q16(PI/2)));
+    const auto [s, c] = (-(pose.orientation - 90_deg)).sincos();
     
     // 3. Apply inverse orientation matrix (transpose of original orientation matrix)
     const Vec2<q16> unrotated = {
