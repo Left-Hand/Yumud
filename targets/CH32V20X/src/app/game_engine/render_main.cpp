@@ -1234,28 +1234,114 @@ private:
         stop_norm_vec_(helper.v2),
         is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
         {;}
+};
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){
-        // return os << os.brackets<'('> ()
-        //     << self.y_ << os.splitter()
-        //     << self.y_stop_ << os.splitter()
-        //     << self.center_ << os.splitter()
-        //     << self.squ_inner_radius_ << os.splitter()
-        //     << self.squ_outer_radius_ << os.splitter()
-        //     << self.start_norm_vec_ << os.splitter()
-        //     << self.stop_norm_vec_ << os.splitter()
-        //     << self.is_minor_ << os.brackets<')'>;
 
-        return os << os.brackets<'('> ()
-            << "y" << self.y_ << os.splitter()
-            << "y_stop" << self.y_stop_ << os.splitter()
-            << "center" << self.center_ << os.splitter()
-            << "squ_inner_radius" << self.squ_inner_radius_ << os.splitter()
-            << "squ_outer_radius" << self.squ_outer_radius_ << os.splitter()
-            << "start_norm_vec" << self.start_norm_vec_ << os.splitter()
-            << "stop_norm_vec" << self.stop_norm_vec_ << os.splitter()
-            << "is_minor" << self.is_minor_ << os.brackets<')'>();
+template<typename T, typename D>
+struct DrawDispatchIterator<Sector<T, D>> {
+    using Shape = Sector<T, D>;
+    using Self = DrawDispatchIterator<Sector<T, D>>;
+
+    struct CtorHelper{
+        Range2<T> y_range;
+        Range2<T> x_range;
+        Vec2<q16> v1;
+        Vec2<q16> v2;
+
+        static constexpr CtorHelper from(const Shape & shape){
+            const auto angle_range = shape.angle_range;
+            const auto bb = shape.bounding_box(); 
+            return {                
+                .y_range = bb.y_range(),
+                .x_range = bb.x_range(),
+                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.start.to_turns())),
+                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.stop().to_turns()))
+            };
+        }
+    };
+
+
+    constexpr DrawDispatchIterator(const Shape & shape):
+        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
     }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        const auto x_range = x_range_;
+
+        #pragma GCC unroll 4
+        for(T i = x_range.start; i < x_range.stop; i++){
+            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            if(not is_inside) continue;
+            // PANIC(i, y_);
+            if(const auto res = target.draw_x(i, color);
+                res.is_err()) return Err(res.unwrap_err());
+            continue;
+        }
+
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return Ok();
+    }
+
+
+private:
+    // Iterator iter_;
+    T y_;
+    T y_stop_;
+    Range2<T> x_range_;
+    Vec2<T> center_;
+    uint32_t squ_outer_radius_;
+    Vec2<q16> start_norm_vec_;
+    Vec2<q16> stop_norm_vec_;
+    bool is_minor_;
+
+    using ST = std::make_signed_t<T>;
+
+    __fast_inline constexpr bool contains_point(const Vec2<T> p){
+        const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
+        const auto len_squ = square(uint32_t(offset.x)) + square(uint32_t(offset.y));
+
+        if (len_squ > squ_outer_radius_) return false;
+
+
+        if(is_minor_){
+            return (offset.is_counter_clockwise_to(start_norm_vec_) && 
+            offset.is_clockwise_to(stop_norm_vec_));
+        }else{
+            return (offset.is_counter_clockwise_to(start_norm_vec_) || 
+            offset.is_clockwise_to(stop_norm_vec_));
+        }
+
+        return true;
+    }
+
+    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+        y_(helper.y_range.start),
+        y_stop_(helper.y_range.stop),
+        x_range_(helper.x_range),
+        center_(shape.center),
+        squ_outer_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius)))),
+        start_norm_vec_(helper.v1),
+        stop_norm_vec_(helper.v2),
+        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
+        {;}
 };
 
 
@@ -1419,9 +1505,19 @@ void render_main(){
         //     );
         // };
 
-        const auto shape = AnnularSector<uint16_t, q16>{
+        // const auto shape = AnnularSector<uint16_t, q16>{
+        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+        //     .radius_range = {47, 53},
+        //     .angle_range = {
+        //         Angle<q16>::from_degrees(60 + ctime * 120), 
+        //         // Angle<q16>::from_degrees(123)
+        //         Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
+        //     }
+        // };
+
+        const auto shape = Sector<uint16_t, q16>{
             .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-            .radius_range = {47, 53},
+            .radius = 53,
             .angle_range = {
                 Angle<q16>::from_degrees(60 + ctime * 120), 
                 // Angle<q16>::from_degrees(123)

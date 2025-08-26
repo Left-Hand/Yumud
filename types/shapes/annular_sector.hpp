@@ -12,6 +12,9 @@ struct AnnularSector;
 template<typename T, typename D>
 struct BoundingBoxOf<AnnularSector<T, D>>;
 
+
+
+
 template<typename T, typename D>
 struct AnnularSector final{
     static_assert(not std::is_integral_v<D>);
@@ -107,6 +110,104 @@ private:
 
 template<typename T, typename D>
 struct is_placed_t<AnnularSector<T, D>>:std::true_type{;};
+
+
+
+
+
+template<typename T, typename D>
+struct Sector final{
+    static_assert(not std::is_integral_v<D>);
+
+    Vec2<T> center;
+    T radius;
+    AngleRange<D> angle_range;
+
+    constexpr bool contains_angle(const Angle<D> angle) const {
+        return angle_range.contains_angle(angle);
+    }
+
+    constexpr 
+    Rect2<T> bounding_box() const {
+        auto & self = *this;
+        const bool x_reached_left = self.angle_range.contains_angle(Angle<D>::HALF_LAP);
+        const bool x_reached_right = self.angle_range.contains_angle(Angle<D>::ZERO);
+        const bool y_reached_top = self.angle_range.contains_angle(Angle<D>::QUARTER_LAP);
+        const bool y_reached_bottom = self.angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
+
+        const auto v1 = Vec2<D>::from_angle(self.angle_range.start);
+        const auto v2 = Vec2<D>::from_angle(self.angle_range.stop());
+
+        const auto p1 = Vec2<q16>(v1).flip_y()* self.radius;
+        const auto p2 = Vec2<q16>(v2).flip_y() * self.radius;
+
+        const auto x_min = x_reached_left ? (-self.radius) : MIN(p1.x, p2.x);
+        const auto x_max = x_reached_right ? (self.radius) : MAX(p1.x, p2.x);
+        const auto y_min = y_reached_top ? (-self.radius) : MIN(p1.y, p2.y);
+        const auto y_max = y_reached_bottom ? (self.radius) : MAX(p1.y, p2.y);
+
+        return Rect2<T>(
+            static_cast<T>(x_min + self.center.x), 
+            static_cast<T>(y_min + self.center.y), 
+            static_cast<T>(x_max - x_min), 
+            static_cast<T>(y_max - y_min)
+        ).merge(center);
+    }
+
+    __fast_inline constexpr bool contains_point(
+        const Vec2<T>& p
+    ) const{
+        const auto offset = p - center;
+        const auto p_r_squ = offset.length_squared();
+        if(p_r_squ > square(radius)) return false;
+        return contains_angle(offset.angle());
+    }
+
+    __fast_inline constexpr bool contains_norm_dir(
+        const Vec2<D> norm_dir_vec
+    ) const {
+        const auto v1 = Vec2<D>::from_angle(angle_range.start);
+        const auto v2 = Vec2<D>::from_angle(angle_range.stop());
+        return contains_angle_helper(
+            norm_dir_vec,
+            v1, v2, v2.is_counter_clockwise_to(v1)
+        );
+    }
+
+    friend class BoundingBoxOf<Sector<T, D>>;
+
+private:
+    static constexpr bool contains_angle_helper(
+        const T angle,
+        const Vec2<D> start_norm_vec,
+        const Vec2<D> stop_norm_vec,
+        const bool is_minor
+    ){
+        return contains_angle_helper(
+            Vec2<D>::from_angle(angle), 
+            start_norm_vec, 
+            stop_norm_vec, 
+            is_minor
+        );
+    }
+
+    static constexpr bool contains_angle_helper(
+        const Vec2<T> offset,
+        const Vec2<D> start_norm_vec,
+        const Vec2<D> stop_norm_vec,
+        const bool is_minor
+    ){
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec);
+        if(is_minor) return b1 and b2;
+        else return b1 or b2;
+    }
+};
+
+template<typename T, typename D>
+struct is_placed_t<Sector<T, D>>:std::true_type{;};
+
+
 
 
 template<typename T, typename D>
