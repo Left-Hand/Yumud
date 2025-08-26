@@ -1,9 +1,11 @@
 #pragma once
 
-#include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
-#include "core/container/inline_vector.hpp"
 #include "core/utils/nodeid.hpp"
+#include "core/utils/angle.hpp"
+
+#include "core/math/realmath.hpp"
+#include "core/container/inline_vector.hpp"
 #include "core/magic/enum_traits.hpp"
 
 #include "hal/bus/can/can.hpp"
@@ -301,6 +303,10 @@ struct PulseCnt final{
         const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
         const uint32_t temp = uint32_t(frac_part + int_part);
         return {BSWAP_32(temp)};
+    }
+
+    static constexpr PulseCnt from_position(const Angle<real_t> angle){
+        return from_position(angle.to_turns());
     }
 
     constexpr uint32_t as_u32() const {

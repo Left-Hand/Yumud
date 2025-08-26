@@ -21,20 +21,20 @@ struct RotatedRect{
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
-            case 2: return {-width / 2, -height / 2};
-            case 3: return {width / 2, -height / 2};
+            case 2: return {width / 2, -height / 2};
+            case 3: return {-width / 2, -height / 2};
             default: __builtin_unreachable();
         }
     }
 
     constexpr Rect2<T> bounding_box() const {
         auto & self = *this;
-        const auto rot = Vec2<T>::from_angle(self.orientation);
+        const auto norm_vec = Vec2<T>::from_angle(self.orientation);
         const std::array<Vec2<T>, 4> points = {
-            self.template get_vertice<0>().improduct(rot),
-            self.template get_vertice<1>().improduct(rot),
-            self.template get_vertice<2>().improduct(rot),
-            self.template get_vertice<3>().improduct(rot)
+            self.template get_vertice<0>().improduct(norm_vec),
+            self.template get_vertice<1>().improduct(norm_vec),
+            self.template get_vertice<2>().improduct(norm_vec),
+            self.template get_vertice<3>().improduct(norm_vec)
         };
 
         return Rect2<T>::from_minimal_bounding_box(std::span(points));
@@ -63,7 +63,7 @@ struct CacheOf<RotatedRect<T>, bool>{
     }
 
     __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
-        return contains_point(*this, offset);
+        return contains_point(*this, offset) ? 0xff : 0x00;
     }
 private:
     __fast_inline static constexpr bool contains_point(

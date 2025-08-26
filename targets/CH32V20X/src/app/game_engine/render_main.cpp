@@ -67,6 +67,7 @@ private:
 template<>
 struct [[nodiscard]] Result<void, Infallible>{
     consteval Result(Ok<void> && okay){;}
+    consteval Result(Err<Infallible> && error){;}
 
     constexpr void examine() const {}
     constexpr void unwrap() const {}
@@ -164,6 +165,7 @@ public:
         if(x_range.stop > buf_.size()) return Ok();
 
         const auto dest_x = MIN(buf_.size(), x_range.stop);
+        // const auto dest_x = x_range.stop;
         const auto color = static_cast<Color>(dest_color);
         // #pragma GCC unroll(8)
         // #pragma GCC unroll(16)
@@ -844,12 +846,13 @@ struct DrawDispatchIterator<GridMap2<T>> {
     using Transformer = SampleTransformer<q16>;
     constexpr DrawDispatchIterator(const Shape & shape)
         : shape_(shape),
+            y_stop_(shape_.bounding_box().y_range().stop),
             y_(shape.top_left_cell.y())
         {}
 
     // 检查是否还有下一行
     constexpr bool has_next() const {
-        return y_ < shape_.bounding_box().y_range().stop;
+        return y_ < y_stop_;
     }
 
     // 推进到下一行
@@ -865,10 +868,10 @@ struct DrawDispatchIterator<GridMap2<T>> {
         T x = shape_.top_left_cell.x();
         // const auto stop_x = .stop;
         const auto count = shape_.count;
+
         for(size_t i = 0; i < count.x; i++){
             const T next_x = x + shape_.top_left_cell.w();
             const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
-            // const auto x_range = Range2u16{x, next_x};
             x = next_x + shape_.padding.x;
 
             if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
@@ -888,6 +891,7 @@ struct DrawDispatchIterator<GridMap2<T>> {
 
 private:
     Shape shape_;
+    T y_stop_;
     T y_;
 };
 
@@ -1135,9 +1139,12 @@ void render_main(){
 
 
     init_debugger();
-
     
+    #ifdef CH32V30X
     auto & spi = hal::spi2;
+    #else
+    auto & spi = hal::spi1;
+    #endif
 
     spi.init({144_MHz});
     
@@ -1206,21 +1213,26 @@ void render_main(){
         // auto shape =  RoundedRect2<uint16_t>{
         //     .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{240, 120}}, .radius = 10};
         
-        auto shape = HorizonSpectrum<uint16_t, q16>{
-            .top_left = {20, 20},
-            .cell_size = {8, 70},
-            .samples = std::span(samples),
-            .sample_range = {-1, 1}
-        };
-
-        // auto shape = GridMap2<uint16_t>{
-        //     // .top_left_cell = Rect2<uint16_t>{20, 20, 35, 35},
-        //     .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
-        //     .padding = {2,2},
-        //     .count = {15,7}
+        // auto shape = HorizonSpectrum<uint16_t, q16>{
+        //     .top_left = {20, 20},
+        //     .cell_size = {8, 70},
+        //     .samples = std::span(samples),
+        //     .sample_range = {-1, 1}
         // };
 
+        auto shape = RoundedRect2<uint16_t>{.bounding_rect = tft.bounding_box().shrink(20).unwrap(), .radius = 10};
 
+        #if 0
+        auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
+        // auto shape = GridMap2<uint16_t>{
+            .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
+            .padding = {2,2},
+            .count = {15,7}
+        // };
+        }.bounding_box(), .radius = 5};
+        // }.bounding_box();
+
+        #endif
 
         // PANIC{shape, shape.bounding_box()};
         // auto shape =  Triangle2<uint16_t>{
@@ -1259,8 +1271,8 @@ void render_main(){
                     }
 
                     if(render_iter.has_next()){
-                        for(size_t j = 0; j < 20; j++){
-                        // for(size_t j = 0; j < 1; j++){
+                        // for(size_t j = 0; j < 200; j++){
+                        for(size_t j = 0; j < 1; j++){
 
                             render_iter.draw_filled(line_span, RGB565::GRAY).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
@@ -1279,7 +1291,7 @@ void render_main(){
             }
         });
 
-        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count(), total_us.count());
+        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count(), total_us.count(), 180_deg);
     }
 
 };

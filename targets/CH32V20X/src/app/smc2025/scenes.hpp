@@ -31,6 +31,7 @@ public:
         const auto start_angle = ((orientation > 0_deg) ? 
                 (viewpoint_.orientation - 90_deg)
                 : (viewpoint_.orientation + orientation + 90_deg));
+
         const auto stop_angle = ((orientation > 0_deg) ? 
                 (viewpoint_.orientation + orientation - 90_deg)
                 : (viewpoint_.orientation + 90_deg));
@@ -41,7 +42,8 @@ public:
             
             .angle_range = {start_angle, stop_angle}
         } | Placement{
-            .position = viewpoint_.side_move((orientation > 0_deg) ? (radius) : (-radius)).position
+            .position = viewpoint_.side_move(
+                (orientation > 0_deg) ? (radius) : (-radius)).position
         };
 
         viewpoint_ = viewpoint_.revolve_by_radius_and_rotation(

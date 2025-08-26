@@ -6,10 +6,10 @@ using namespace ymd::robots::zdtmotor::prelude;
 
 IResult<> ZdtStepper::set_position(ZdtStepper::PositionSetpoint targ){
     return write_payload(payloads::SetPosition{
-        .is_ccw = (targ.position < 0),
+        .is_ccw = (targ.position.is_negative()),
         .rpm = Rpm::from_speed(targ.speed),
         .acc_level = AcclerationLevel::from_u8(0),
-        .pulse_cnt = PulseCnt::from_position(ABS(targ.position)),
+        .pulse_cnt = PulseCnt::from_position(targ.position.abs()),
         .is_absolute = true,
         .is_sync = is_sync_
     });

@@ -38,7 +38,7 @@ public:
     }
 
     struct PositionSetpoint{
-        real_t position;
+        Angle<real_t> position;
         real_t speed;
     };
 

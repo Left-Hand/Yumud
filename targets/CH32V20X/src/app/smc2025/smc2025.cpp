@@ -257,7 +257,7 @@ void smc2025_main(){
         // const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
         const auto gray_img = Scenes::render_scene1({
             .pose = pose, 
-            .zoom = 0.2_r
+            .zoom = 0.02_r
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;

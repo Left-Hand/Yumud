@@ -168,21 +168,29 @@ private:
         const Tsigned val
     ) const {
         if constexpr(std::is_integral_v<T>){
-            const Tsigned new_size_x = Tsigned(size.x) - 2 * Tsigned(val);
-            const Tsigned new_size_y = Tsigned(size.y) - 2 * Tsigned(val);
-            if(new_size_x < 0 || new_size_y < 0) return None;
+            const Tsigned next_pos_x = Tsigned(position.x) + val;
+            const Tsigned next_pos_y = Tsigned(position.y) + val;
+            const Tsigned next_size_x = Tsigned(size.x) - (val << 1);
+            const Tsigned next_size_y = Tsigned(size.y) - (val << 1);
+            if(next_pos_x < 0 || next_pos_y < 0) return None;
+            if(next_size_x < 0 || next_size_y < 0) return None;
             return Some(Rect2<T>{
-                position + Vec2<T>{val, val}, 
                 Vec2<T>{
-                    static_cast<T>(new_size_x), 
-                    static_cast<T>(new_size_y)}});
+                    static_cast<T>(next_pos_x), 
+                    static_cast<T>(next_pos_y)
+                },
+                Vec2<T>{
+                    static_cast<T>(next_size_x), 
+                    static_cast<T>(next_size_y)
+                }
+            });
         }else{
-            const T new_size_x = size.x - 2 * val;
-            const T new_size_y = size.y - 2 * val;
-            if(new_size_x < 0 || new_size_y < 0) return None;
+            const T next_size_x = size.x - 2 * val;
+            const T next_size_y = size.y - 2 * val;
+            if(next_size_x < 0 || next_size_y < 0) return None;
             return Some(Rect2<T>{
                 position + Vec2<T>{val, val}, 
-                Vec2<T>{new_size_x, new_size_y}});
+                Vec2<T>{next_size_x, next_size_y}});
         }
     }
 public:
