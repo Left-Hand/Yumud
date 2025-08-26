@@ -10,12 +10,14 @@ template<typename T>
 struct RotatedRect{
     T width;
     T height;
-    T rotation;
+    T orientation;
+
+    using Self = RotatedRect<T>;
 
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vec2<T> get_corner() const {
+    constexpr Vec2<T> get_vertice() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -23,6 +25,19 @@ struct RotatedRect{
             case 3: return {width / 2, -height / 2};
             default: __builtin_unreachable();
         }
+    }
+
+    constexpr Rect2<T> bounding_box() const {
+        auto & self = *this;
+        const auto rot = Vec2<T>::from_idenity_rotation(self.orientation);
+        const std::array<Vec2<T>, 4> points = {
+            self.template get_vertice<0>().improduct(rot),
+            self.template get_vertice<1>().improduct(rot),
+            self.template get_vertice<2>().improduct(rot),
+            self.template get_vertice<3>().improduct(rot)
+        };
+
+        return Rect2<T>::from_minimal_bounding_box(std::span(points));
     }
 };
 
@@ -38,7 +53,7 @@ struct CacheOf<RotatedRect<T>, bool>{
 
 
     static constexpr Self from(const Object & obj){
-        const auto [s,c] = sincos(obj.rotation);
+        const auto [s,c] = sincos(obj.orientation);
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
@@ -48,10 +63,10 @@ struct CacheOf<RotatedRect<T>, bool>{
     }
 
     __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
-        return s_color_from_point(*this, offset);
+        return contains_point(*this, offset);
     }
 private:
-    __fast_inline static constexpr uint8_t s_color_from_point(
+    __fast_inline static constexpr bool contains_point(
         const Self & self, const Vec2<T> offset
     ){
         // -s * p.x + c * p.y;
@@ -60,9 +75,7 @@ private:
             ((abs(-self.s * offset.x + self.c * offset.y)
                 <= self.half_height) and
             (abs(-self.c * offset.x - self.s * offset.y) 
-                <= self.half_width))
-                
-            ? 0xff : 0
+                <= self.half_width));
         ;
     }
 };
@@ -75,15 +88,7 @@ struct BoundingBoxOf<RotatedRect<T>>{
     using Self =  BoundingBoxOf<Object>;
 
     static constexpr Rect2<T> bounding_box(const Object & obj){
-        const auto rot = Vec2<T>::from_idenity_rotation(obj.rotation);
-        const std::array<Vec2<T>, 4> points = {
-            obj.template get_corner<0>().improduct(rot),
-            obj.template get_corner<1>().improduct(rot),
-            obj.template get_corner<2>().improduct(rot),
-            obj.template get_corner<3>().improduct(rot)
-        };
-
-        return Rect2<T>::from_minimal_bounding_box(std::span(points));
+        return obj.bounding_box();
     }
 };
 

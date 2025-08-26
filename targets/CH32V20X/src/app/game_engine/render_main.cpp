@@ -22,6 +22,7 @@
 
 
 #include "core/clock/time.hpp"
+#include "core/utils/nth.hpp"
 
 
 #include "hal/gpio/gpio.hpp"
@@ -115,7 +116,7 @@ public:
     };
 
     template<typename DestColor>
-    constexpr Result<void, Error> fill_scanline(
+    __fast_inline constexpr Result<void, Error> fill_scanline(
         const ScanLine line,
         const DestColor color
     ){
@@ -124,7 +125,7 @@ public:
     }
 
     template<typename DestColor>
-    constexpr Result<void, Error> fill_x_range(
+    __fast_inline constexpr Result<void, Error> fill_x_range(
         const Range2<uint16_t> x_range,
         const DestColor color
     ){
@@ -132,14 +133,16 @@ public:
 
         const auto dest_x = MIN(buf_.size(), x_range.stop);
 
-        for(size_t x = x_range.start; x < dest_x; ++x){
-            buf_[x] = static_cast<Color>(color);
-        }
+        std::fill_n(
+            buf_.begin() + x_range.start, 
+            size_t(dest_x - x_range.start), 
+            static_cast<Color>(color)
+        );
         return Ok();
     }
 
     template<typename ColorsIter>
-    constexpr Result<void, Error> fill_contiguous(
+    __fast_inline constexpr Result<void, Error> fill_contiguous(
         const Rect2u16 area,
         ColorsIter && iter
     ){
@@ -147,7 +150,7 @@ public:
     }
 
     template<typename DestColor>
-    constexpr Result<void, Error> fill_solid(
+    __fast_inline constexpr Result<void, Error> fill_solid(
         const Rect2u16 area,
         const DestColor color
     ){
@@ -163,7 +166,7 @@ public:
     }
 
     template<typename DestColor>
-    constexpr Result<void, Error> draw_x(
+    __fast_inline  constexpr Result<void, Error> draw_x(
         const size_t x,
         const DestColor color
     ){
@@ -175,12 +178,10 @@ public:
 
 
     template<typename DestColor>
-    constexpr Result<void, Error> fill(
+    __fast_inline constexpr Result<void, Error> fill(
         const DestColor color
     ){ 
-        for(size_t i = 0; i < buf_.size(); ++i){
-            buf_[i] = static_cast<Color>(color);
-        }
+        std::fill(buf_.begin(), buf_.end(), static_cast<Color>(color));
         return Ok();
     }
 
@@ -430,6 +431,40 @@ struct RoundedRect2{
     }
 };
 
+
+template<typename T, typename D>
+struct HorizonSpectrum{
+    Vec2<T> top_left;
+    Vec2<T> cell_size;
+
+    std::span<const D> samples;
+    Range2<D> sample_range;
+
+    constexpr Range2<T> y_range(const Nth nth) const {
+        const auto y_stop = top_left.y + cell_size.y;
+        // const auto y_top = top_left.y;
+        const auto data_height = sample_range.invlerp(samples[nth.count()]) * cell_size.y;
+        const auto y_start = y_stop - data_height;
+        return Range2<T>{y_start, y_stop};
+    }
+
+    constexpr Rect2<T> bounding_box() const {
+        return Rect2<T>{top_left, Vec2<T>(cell_size.x * samples.size(), cell_size.y)};
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const HorizonSpectrum & self){
+        return os << os.brackets<'('>() << 
+            self.top_left << os.splitter() << 
+            self.cell_size << os.splitter() <<
+            self.samples << os.splitter() <<
+            self.sample_range << os.brackets<')'>()
+            ;
+    }
+};
+
+template<typename T, typename D>
+struct is_placed_t<HorizonSpectrum<T, D>>:std::true_type {};
+
 template<typename T>
 struct is_placed_t<RoundedRect2<T>> : std::true_type {};
 
@@ -602,6 +637,120 @@ private:
     Iterator iter_;
 };
 
+
+
+template<typename D>
+struct SampleTransformer { 
+    D scale;
+    D offset;
+
+    static constexpr SampleTransformer from_input_and_output(
+        const Range2<auto> input, 
+        const Range2<auto> output
+    ) {
+        const D calculated_scale = (output.stop - output.start) / 
+                                    static_cast<D>(input.stop - input.start);
+        const D calculated_offset = output.start - 
+                                   static_cast<D>(input.start) * calculated_scale;
+        
+        return SampleTransformer{ 
+            .scale = calculated_scale,
+            .offset = calculated_offset
+        };
+    }
+
+    static constexpr SampleTransformer from_input_and_inverted_output(
+        const Range2<auto> input, 
+        const Range2<auto> output
+    ) {
+        return from_input_and_output(input, output.swap());
+        // return from_input_and_output(input, output);
+    }
+    
+    constexpr D operator()(const D& d) const {
+        return scale * d + offset;
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const SampleTransformer & self){
+        return os << os.brackets<'('>()
+            << self.scale << os.splitter() 
+            << self.offset << os.brackets<')'>();
+    }
+};
+
+// DrawDispatchIterator 特化
+template<std::integral T, typename D>
+struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
+    using Shape = HorizonSpectrum<T, D>;
+    using Transformer = SampleTransformer<q16>;
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : shape_(shape),
+            transformer_(Transformer::from_input_and_inverted_output(
+                shape_.sample_range,
+                shape_.bounding_box().get_y_range()
+            )),
+            y_(shape.top_left.y)
+        {}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < shape_.top_left.y + shape_.cell_size.y;
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        if (!has_next()) return Ok();
+        
+        auto x = shape_.top_left.x;
+        // const auto stop_x = .stop;
+        const T count = MIN(
+            shape_.samples.size(),
+            target.bounding_box().get_x_range().length() / shape_.cell_size.x
+        );
+
+        // const auto y_stop = shape_.top_left.y + shape_.cell_size.y;
+
+        for(size_t i = 0; i < count; i++){
+            const auto next_x = x + shape_.cell_size.x;
+            const auto x_range = Range2u16{x, next_x};
+            x = next_x + 2;
+
+            const auto data_y = transformer_(shape_.samples[i]);
+
+
+            
+            // if(y_ < (data_y - 10) || (y_ >= data_y + 10)){
+            if((y_ >= data_y)){
+                if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
+                res.is_err()) return res;
+            }else{
+                // if(const auto res = target.fill_x_range(x_range, color);
+                //     res.is_err()) return res;
+            }
+
+            continue;
+        }
+        return Ok();
+    }
+
+    // 空心绘制（对于线段来说和填充一样）
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return draw_filled(target, color);
+    }
+
+
+private:
+    Shape shape_;
+    Transformer transformer_;
+    T y_;
+};
 
 template<typename T>
 struct RoundedRect2SliceIterator{
@@ -884,13 +1033,21 @@ void render_main(){
     };
 
 
-
     while(true){
         const auto ctime = clock::time();
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
         [[maybe_unused]] const auto [s,c] = sincospu(ctime);
-        const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 20 * c), uint16_t(80 + 20 * s));
+        [[maybe_unused]] const auto [shape_x,shape_y] = std::make_tuple(uint16_t(50 + 20 * c), uint16_t(80 + 20 * s));
 
+        [[maybe_unused]] const auto samples = [&]{
+            static constexpr auto LEN = 24;
+            std::array<q16, LEN> ret;
+            for(size_t i = 0; i < LEN; i++){
+                // ret[i] = 0.8_q16 * sin(7 * ctime + i * 0.15_r);
+                ret[i] = 0.8_q16 * sin(7 * ctime + i * 0.25_r);
+            }
+            return ret;
+        } ();
 
         // const auto shapes = std::to_array<Rect2u16>({
         //     Rect2u16{shape_x,shape_y,5,5},
@@ -900,15 +1057,27 @@ void render_main(){
         //     Rect2u16{uint16_t(shape_x - 10),shape_y,5,5}
         // });
         using Vec2u16 = Vec2<uint16_t>;
-        // auto shape =  Rect2u16{shape_x,shape_y,20,20};
+        // auto shape =  Rect2u16{shape_x,shape_y,120,60};
         // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
         // auto shape =  Circle2<uint16_t>{Vec2u16{shape_x,shape_y},30};
         // auto shape =  HorizonOval2<uint16_t>{
         //     .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
         
-        auto shape =  RoundedRect2<uint16_t>{
-            .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{120, 60}}, .radius = 15};
+        // auto shape =  RoundedRect2<uint16_t>{
+        //     .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{120, 60}}, .radius = 10};
         
+        auto shape = HorizonSpectrum<uint16_t, q16>{
+            .top_left = {20, 20},
+            .cell_size = {8, 70},
+            .samples = std::span(samples),
+            .sample_range = {-1, 1}
+        };
+
+        
+
+
+
+        // PANIC{shape, shape.bounding_box()};
         // auto shape =  Triangle2<uint16_t>{
         //     .points = {
         //         Vec2u16{shape_x,shape_y},
@@ -920,17 +1089,21 @@ void render_main(){
         // };
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
+        // PANIC{shape_bb};
         // Option<DrawDispatchIterator<Rect2u16>> render_iter = None;
         auto render_iter = make_draw_dispatch_iterator(shape);
 
         Microseconds upload_us = 0us;
         Microseconds render_us = 0us;
+        Microseconds clear_us = 0us;
         const auto total_us = measure_total_elapsed_us([&]{
             for(size_t i = 0; i < LCD_HEIGHT; i++){
                 
                 auto line_span = LineBufferSpan<RGB565>(std::span(render_buffer), i);
                 auto guard = make_scope_guard([&]{
-                    line_span.fill(RGB565::BLACK).examine();
+                    clear_us += measure_total_elapsed_us([&]{
+                        line_span.fill(RGB565::BLACK).examine();
+                    });
                 });
 
                 render_us += measure_total_elapsed_us([&]{
@@ -938,17 +1111,13 @@ void render_main(){
 
                     if(i == shape_bb.y()){
                         render_iter = make_draw_dispatch_iterator(shape);
-                        // DEBUG_PRINTLN(render_iter.y_, render_iter.y_stop_);
-                        // ASSERT{i > 20, render_iter.y_, render_iter.y_range_, "why"};
                     }
 
                     if(render_iter.has_next()){
-                        // ASSERT{i > 20, render_iter.y_, render_iter.y_range_};
-                        for(size_t j = 0; j < 20; j++){
-                        // for(size_t j = 0; j < 1; j++){
+                        for(size_t j = 0; j < 1; j++){
 
-                            render_iter.draw_filled(line_span, RGB565::RED).examine();
-                            render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
+                            render_iter.draw_filled(line_span, RGB565::GRAY).examine();
+                            // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
                         }
                         // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
 
@@ -964,7 +1133,7 @@ void render_main(){
             }
         });
 
-        DEBUG_PRINTLN(render_us.count(), upload_us.count());
+        DEBUG_PRINTLN(render_us.count(), clear_us.count(), upload_us.count());
     }
 
 };

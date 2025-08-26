@@ -21,10 +21,7 @@ public:
     static constexpr Range2<T> POS = {T(0), std::numeric_limits<T>::max()};
     static constexpr Range2<T> NEG = {std::numeric_limits<T>::min(), T(0)};
 
-    [[nodiscard]] __fast_inline constexpr Range2():
-        start(static_cast<T>(0)),
-        stop(static_cast<T>(0)){;}
-
+    [[nodiscard]] __fast_inline constexpr Range2(){;}
 
     template<typename U, typename V>
     [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop): 
@@ -53,6 +50,15 @@ public:
         if(stop < start) std::swap(start, stop);
     }
 
+    template<typename U>
+    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop_unchecked(
+        const U _start, const U _stop
+    ){
+        Range2<T> ret;
+        ret.start = static_cast<T>(_start);
+        ret.stop = static_cast<T>(_stop);
+        return ret;
+    };
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
         const U center, const U length)

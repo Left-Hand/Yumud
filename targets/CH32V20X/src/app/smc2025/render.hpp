@@ -41,7 +41,7 @@ namespace ymd{
 struct RotatedZebraRect{
     q16 width;
     q16 height;
-    q16 rotation;
+    q16 orientation;
 
 
     template<size_t I>
@@ -67,7 +67,7 @@ struct alignas(4) CacheOf<RotatedZebraRect, bool>{
     q16 c;
 
     static constexpr Self from(const RotatedZebraRect & obj){
-        const auto [s,c] = sincos(obj.rotation);
+        const auto [s,c] = sincos(obj.orientation);
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
@@ -103,7 +103,7 @@ struct BoundingBoxOf<RotatedZebraRect>{
 
 
     static constexpr BoundingBox bounding_box(const RotatedZebraRect & obj){
-        const auto rot = Vec2<q16>::from_idenity_rotation(obj.rotation);
+        const auto rot = Vec2<q16>::from_idenity_rotation(obj.orientation);
         const std::array<Vec2<q16>, 4> points = {
             obj.get_corner<0>().improduct(rot),
             obj.get_corner<1>().improduct(rot),
@@ -213,10 +213,10 @@ static constexpr Vec2u project_ground_to_pixel(
     // 1. Remove pose position offset
     const Vec2<q16> relative_pos = ground_pos - pose.position;
     
-    // 2. Calculate inverse rotation (original rotation was pose.orientation - PI/2)
+    // 2. Calculate inverse orientation (original orientation was pose.orientation - PI/2)
     const auto [s, c] = sincos(-(pose.orientation - q16(PI/2)));
     
-    // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
+    // 3. Apply inverse orientation matrix (transpose of original orientation matrix)
     const Vec2<q16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y
