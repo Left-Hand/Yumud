@@ -140,12 +140,14 @@ struct Vec2{
     [[nodiscard]] constexpr T cross(const Vec2<T> & other) const;
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vec2<U> & other) const{
+    [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
+    is_clockwise_to(const Vec2<U> & other) const {
         return (x*other.y > y*other.x);
     }
     
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr bool is_counter_clockwise_to(const Vec2<U> & other) const{
+    [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
+    is_counter_clockwise_to(const Vec2<U> & other) const{
         return (x*other.y < y*other.x);
     }
 

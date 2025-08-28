@@ -219,6 +219,15 @@ public:
         return Ok();
     }
 
+    template<typename DestColor>
+    __fast_inline  constexpr Result<void, Error> draw_x_unchecked(
+        const size_t x,
+        const DestColor color
+    ){
+        buf_[x] = static_cast<Color>(color);
+        return Ok();
+    }
+
 
 
     template<typename DestColor>
@@ -760,7 +769,7 @@ struct SampleTransformer {
         // return from_input_and_output(input, output);
     }
     
-    constexpr D operator()(const D& d) const {
+    __fast_inline constexpr D operator()(const D& d) const {
         return scale * d + offset;
     }
 
@@ -796,25 +805,28 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     }
 
     // 绘制当前行的所有点
-    template<DrawTargetConcept Target, typename Color>
-    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor & dest_color) {
         
-        auto x = shape_.top_left.x;
+        T x = shape_.top_left.x;
         // const auto stop_x = .stop;
         const T count = MIN(
             shape_.samples.size(),
             target.bounding_box().x_range().length() / shape_.cell_size.x
         );
 
+        const auto color = static_cast<RGB565>(ColorEnum::PINK);
+        #pragma GCC unroll 4
         for(size_t i = 0; i < count; i++){
-            const auto next_x = x + shape_.cell_size.x;
-            const auto x_range = Range2u16{x, next_x};
+            // const auto old_x = x;
+            const T next_x = x + shape_.cell_size.x;
+            const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + 2;
 
             const auto data_y = transformer_(shape_.samples[i]);
 
             if((y_ >= data_y)){
-                if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
+                if(const auto res = target.fill_x_range(x_range, color);
                 res.is_err()) return res;
             }else{
                 // if(const auto res = target.fill_x_range(x_range, color);
@@ -1164,16 +1176,16 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
     }
 
     // 绘制当前行的所有点
-    template<DrawTargetConcept Target, typename Color>
-    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
         const auto x_range = x_range_;
+        const auto color = static_cast<RGB565>(dest_color);
 
         #pragma GCC unroll 4
         for(T i = x_range.start; i < x_range.stop; i++){
             const bool is_inside = contains_point(Vec2<T>{i, y_});
             if(not is_inside) continue;
-            // PANIC(i, y_);
-            if(const auto res = target.draw_x(i, color);
+            if(const auto res = target.draw_x_unchecked(i, color);
                 res.is_err()) return Err(res.unwrap_err());
             continue;
         }
@@ -1181,8 +1193,8 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
         return Ok();
     }
 
-    template<DrawTargetConcept Target, typename Color>
-    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const DestColor & dest_color) {
         return Ok();
     }
 
@@ -1202,21 +1214,34 @@ private:
     using ST = std::make_signed_t<T>;
 
     __fast_inline constexpr bool contains_point(const Vec2<T> p){
-        const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
-        const auto len_squ = square(uint32_t(offset.x)) + square(uint32_t(offset.y));
+        // const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
+        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
 
         //判断半径
+        // if((len_squ & 0xff) > 0x7f) return false;
+        // if((len_squ & 0x0f) > 7) return false;
+        // if((len_squ & 0x020)) return false;
+        // if((len_squ & 0x020)) return false;
+
+        #if 0
         if (len_squ < squ_inner_radius_) return false;
         if (len_squ > squ_outer_radius_) return false;
+        #else
+        int8_t pass_cnt = 0;
+        if (len_squ < squ_inner_radius_) pass_cnt -= 1;
+        if (len_squ > squ_outer_radius_) pass_cnt -= 1;
 
+        // if (len_squ < squ_inner_radius_/4) pass_cnt -= 1;
+        // if (len_squ > squ_outer_radius_/4) pass_cnt -= 1;
 
-        if(is_minor_){
-            return (offset.is_counter_clockwise_to(start_norm_vec_) && 
-            offset.is_clockwise_to(stop_norm_vec_));
-        }else{
-            return (offset.is_counter_clockwise_to(start_norm_vec_) || 
-            offset.is_clockwise_to(stop_norm_vec_));
-        }
+        if(pass_cnt <= -1) return false;
+        #endif
+
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
+
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
 
         return true;
     }
@@ -1277,16 +1302,15 @@ struct DrawDispatchIterator<Sector<T, D>> {
     }
 
     // 绘制当前行的所有点
-    template<DrawTargetConcept Target, typename Color>
-    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
-        const auto x_range = x_range_;
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor & dest_color) {
+        const auto color = static_cast<RGB565>(dest_color);
 
         #pragma GCC unroll 4
-        for(T i = x_range.start; i < x_range.stop; i++){
+        for(T i = x_range_.start; i < x_range_.stop; i++){
             const bool is_inside = contains_point(Vec2<T>{i, y_});
             if(not is_inside) continue;
-            // PANIC(i, y_);
-            if(const auto res = target.draw_x(i, color);
+            if(const auto res = target.draw_x_unchecked(i, color);
                 res.is_err()) return Err(res.unwrap_err());
             continue;
         }
@@ -1301,7 +1325,6 @@ struct DrawDispatchIterator<Sector<T, D>> {
 
 
 private:
-    // Iterator iter_;
     T y_;
     T y_stop_;
     Range2<T> x_range_;
@@ -1314,19 +1337,15 @@ private:
     using ST = std::make_signed_t<T>;
 
     __fast_inline constexpr bool contains_point(const Vec2<T> p){
-        const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
-        const auto len_squ = square(uint32_t(offset.x)) + square(uint32_t(offset.y));
+        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
 
         if (len_squ > squ_outer_radius_) return false;
 
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
 
-        if(is_minor_){
-            return (offset.is_counter_clockwise_to(start_norm_vec_) && 
-            offset.is_clockwise_to(stop_norm_vec_));
-        }else{
-            return (offset.is_counter_clockwise_to(start_norm_vec_) || 
-            offset.is_clockwise_to(stop_norm_vec_));
-        }
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
 
         return true;
     }
@@ -1447,7 +1466,10 @@ void render_main(){
         //     .sample_range = {-1, 1}
         // };
 
-        // auto shape = RoundedRect2<uint16_t>{.bounding_rect = tft.bounding_box().shrink(20).unwrap(), .radius = 10};
+        // auto shape = RoundedRect2<uint16_t>{
+        //     .bounding_rect = tft.bounding_box().shrink(20).unwrap(), 
+        //     .radius = 10
+        // };
 
         #if 1
         // auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
@@ -1476,48 +1498,11 @@ void render_main(){
         #endif
 
         #if 1
-        // auto sector_to_bb = []<typename T, typename D>(const AnnularSector<T, D> & shape){
-        //     const auto angle_range = shape.angle_range;
-        //     const bool x_reached_left = angle_range.contains_angle(Angle<D>::HALF_LAP);
-        //     const bool x_reached_right = angle_range.contains_angle(Angle<D>::ZERO);
-        //     const bool y_reached_top = angle_range.contains_angle(Angle<D>::QUARTER_LAP);
-        //     const bool y_reached_bottom = angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
-
-        //     const auto v1 = Vec2<D>::from_angle(shape.angle_range.start);
-        //     const auto v2 = Vec2<D>::from_angle(shape.angle_range.stop());
-
-        //     const auto p1 = Vec2<q16>(v1).flip_y()* shape.radius_range.stop;
-        //     const auto p2 = Vec2<q16>(v2).flip_y() * shape.radius_range.stop;
-
-        //     const auto p3 = Vec2<q16>(v1).flip_y()* shape.radius_range.start;
-        //     const auto p4 = Vec2<q16>(v2).flip_y() * shape.radius_range.start;
-
-        //     const auto x_min = x_reached_left ? (-shape.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x);
-        //     const auto x_max = x_reached_right ? (shape.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x);
-        //     const auto y_min = y_reached_top ? (-shape.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y);
-        //     const auto y_max = y_reached_bottom ? (shape.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y);
-
-        //     return Rect2<T>(
-        //         static_cast<T>(x_min + shape.center.x), 
-        //         static_cast<T>(y_min + shape.center.y), 
-        //         static_cast<T>(x_max - x_min), 
-        //         static_cast<T>(y_max - y_min)
-        //     );
-        // };
-
-        // const auto shape = AnnularSector<uint16_t, q16>{
-        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-        //     .radius_range = {47, 53},
-        //     .angle_range = {
-        //         Angle<q16>::from_degrees(60 + ctime * 120), 
-        //         // Angle<q16>::from_degrees(123)
-        //         Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
-        //     }
-        // };
-
-        const auto shape = Sector<uint16_t, q16>{
+        const auto shape = AnnularSector<uint16_t, q16>{
             .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-            .radius = 53,
+            .radius_range = {8, 12},
+            // .radius_range = {47, 53},
+            // .radius_range = {40, 60},
             .angle_range = {
                 Angle<q16>::from_degrees(60 + ctime * 120), 
                 // Angle<q16>::from_degrees(123)
@@ -1525,22 +1510,17 @@ void render_main(){
             }
         };
 
-        // static constexpr auto _360_deg = Angle<q16>::from_degrees(360);
-        // static constexpr auto _360_deg_turns = Angle<q16>::from_degrees(360).to_turns();
-        // static constexpr auto _360_deg = Angle<q16>::from_degrees(360);
-        // static constexpr auto INV_360 = static_cast<q16>(1.0 / 360.0);
-        // static constexpr auto INV_360_D = 1.0 / 360.0;
-        // static constexpr auto INV_360 = static_cast<q16>(INV_360_D);
-        // static constexpr auto INV_360_I = INV_360_D * static_cast<long double>(1u << 8);
-        // static constexpr auto INV_360_Q = _iq<8>::from_i32(INV_360_I);
-        // PANIC{shape.angle_range, AngleRange<q16>{
-        //         Angle<q16>::from_degrees(30), 
-        //         Angle<q16>::from_degrees(360)
-        //     },
-        //     Angle<q16>::from_degrees(360),
-        //     _360_deg, _360_deg_turns
+        // const auto shape = Sector<uint16_t, q16>{
+        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+        //     // .radius = 23,
+        //     // .radius = 13,
+        //     .radius = 53,
+        //     .angle_range = {
+        //         Angle<q16>::from_degrees(60 + ctime * 120), 
+        //         // Angle<q16>::from_degrees(123)
+        //         Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
+        //     }
         // };
-
 
         #endif
         // using Shape = decltype(shape);
@@ -1576,9 +1556,10 @@ void render_main(){
                     }
 
                     if(render_iter.has_next()){
-                        // for(size_t j = 0; j < 200; j++){
+                        for(size_t j = 0; j < 200; j++){
+                        // for(size_t j = 0; j < 30; j++){
                         // for(size_t j = 0; j < 10; j++){
-                        for(size_t j = 0; j < 1; j++){
+                        // for(size_t j = 0; j < 1; j++){
 
                             render_iter.draw_filled(line_span, RGB565::PINK).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
