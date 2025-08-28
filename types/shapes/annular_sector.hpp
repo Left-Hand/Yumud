@@ -30,30 +30,38 @@ struct AnnularSector final{
     constexpr 
     Rect2<T> bounding_box() const {
         auto & self = *this;
-        const bool x_reached_left = self.angle_range.contains_angle(Angle<D>::HALF_LAP);
-        const bool x_reached_right = self.angle_range.contains_angle(Angle<D>::ZERO);
-        const bool y_reached_top = self.angle_range.contains_angle(Angle<D>::QUARTER_LAP);
-        const bool y_reached_bottom = self.angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
+        const bool x_reached_left = self.angle_range.
+            contains_angle(Angle<D>::HALF_LAP);
+        const bool x_reached_right = self.angle_range.
+            contains_angle(Angle<D>::ZERO);
+        const bool y_reached_top = self.angle_range.
+            contains_angle(Angle<D>::QUARTER_LAP);
+        const bool y_reached_bottom = self.angle_range.
+            contains_angle(Angle<D>::NEG_QUARTER_LAP);
 
-        const auto v1 = Vec2<D>::from_angle(self.angle_range.start);
-        const auto v2 = Vec2<D>::from_angle(self.angle_range.stop());
+        const Vec2<q16> v1 = Vec2<q16>::from_angle(self.angle_range.start);
+        const Vec2<q16> v2 = Vec2<q16>::from_angle(self.angle_range.stop());
 
-        const auto p1 = Vec2<q16>(v1).flip_y()* self.radius_range.stop;
-        const auto p2 = Vec2<q16>(v2).flip_y() * self.radius_range.stop;
+        const Vec2<q16> p1 = (v1).flip_y()* self.radius_range.stop;
+        const Vec2<q16> p2 = (v2).flip_y() * self.radius_range.stop;
 
-        const auto p3 = Vec2<q16>(v1).flip_y()* self.radius_range.start;
-        const auto p4 = Vec2<q16>(v2).flip_y() * self.radius_range.start;
+        const Vec2<q16> p3 = (v1).flip_y()* self.radius_range.start;
+        const Vec2<q16> p4 = (v2).flip_y() * self.radius_range.start;
 
-        const auto x_min = x_reached_left ? (-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x);
-        const auto x_max = x_reached_right ? (self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x);
-        const auto y_min = y_reached_top ? (-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y);
-        const auto y_max = y_reached_bottom ? (self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y);
+        const q16 x_min = x_reached_left ?     
+            static_cast<q16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x);
+        const q16 x_max = x_reached_right ?    
+            static_cast<q16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x);
+        const q16 y_min = y_reached_top ?      
+            static_cast<q16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y);
+        const q16 y_max = y_reached_bottom ?   
+            static_cast<q16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y);
 
         return Rect2<T>(
-            static_cast<T>(x_min + self.center.x), 
-            static_cast<T>(y_min + self.center.y), 
-            static_cast<T>(x_max - x_min), 
-            static_cast<T>(y_max - y_min)
+            static_cast<T>(floor_int(x_min + self.center.x)), 
+            static_cast<T>(floor_int(y_min + self.center.y)), 
+            static_cast<T>(ceil_int(x_max - x_min)), 
+            static_cast<T>(ceil_int(y_max - y_min))
         );
     }
 
@@ -130,27 +138,38 @@ struct Sector final{
     constexpr 
     Rect2<T> bounding_box() const {
         auto & self = *this;
-        const bool x_reached_left = self.angle_range.contains_angle(Angle<D>::HALF_LAP);
-        const bool x_reached_right = self.angle_range.contains_angle(Angle<D>::ZERO);
-        const bool y_reached_top = self.angle_range.contains_angle(Angle<D>::QUARTER_LAP);
-        const bool y_reached_bottom = self.angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
 
-        const auto v1 = Vec2<D>::from_angle(self.angle_range.start);
-        const auto v2 = Vec2<D>::from_angle(self.angle_range.stop());
+        const bool x_reached_left = 
+            self.angle_range.contains_angle(Angle<D>::HALF_LAP);
 
-        const auto p1 = Vec2<q16>(v1).flip_y()* self.radius;
-        const auto p2 = Vec2<q16>(v2).flip_y() * self.radius;
+        const bool x_reached_right = 
+            self.angle_range.contains_angle(Angle<D>::ZERO);
 
-        const auto x_min = x_reached_left ? (-self.radius) : MIN(p1.x, p2.x);
-        const auto x_max = x_reached_right ? (self.radius) : MAX(p1.x, p2.x);
-        const auto y_min = y_reached_top ? (-self.radius) : MIN(p1.y, p2.y);
-        const auto y_max = y_reached_bottom ? (self.radius) : MAX(p1.y, p2.y);
+        const bool y_reached_top = 
+            self.angle_range.contains_angle(Angle<D>::QUARTER_LAP);
+
+        const bool y_reached_bottom = 
+            self.angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
+
+        const Vec2<q16> p1 = Vec2<q16>::from_angle(self.angle_range.start)
+            .flip_y() * self.radius;
+        const Vec2<q16> p2 = Vec2<q16>::from_angle(self.angle_range.stop())
+            .flip_y() * self.radius;
+
+        const q16 x_min = x_reached_left ?     static_cast<q16>(-self.radius) 
+            : MIN(p1.x, p2.x);
+        const q16 x_max = x_reached_right ?    static_cast<q16>(self.radius) 
+            : MAX(p1.x, p2.x);
+        const q16 y_min = y_reached_top ?      static_cast<q16>(-self.radius) 
+            : MIN(p1.y, p2.y);
+        const q16 y_max = y_reached_bottom ?   static_cast<q16>(self.radius) 
+            : MAX(p1.y, p2.y);
 
         return Rect2<T>(
-            static_cast<T>(x_min + self.center.x), 
-            static_cast<T>(y_min + self.center.y), 
-            static_cast<T>(x_max - x_min), 
-            static_cast<T>(y_max - y_min)
+            static_cast<T>(floor_int(x_min + self.center.x)), 
+            static_cast<T>(floor_int(y_min + self.center.y)), 
+            static_cast<T>(ceil_int(x_max - x_min)), 
+            static_cast<T>(ceil_int(y_max - y_min))
         ).merge(center);
     }
 

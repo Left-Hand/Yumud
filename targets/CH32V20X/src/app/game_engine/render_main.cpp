@@ -1201,10 +1201,10 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
 
 private:
     // Iterator iter_;
-    T y_;
-    T y_stop_;
-    Range2<T> x_range_;
-    Vec2<T> center_;
+    uint16_t y_;
+    uint16_t y_stop_;
+    Range2<uint16_t> x_range_;
+    Vec2<uint16_t> center_;
     uint32_t squ_inner_radius_;
     uint32_t squ_outer_radius_;
     Vec2<q16> start_norm_vec_;
@@ -1213,7 +1213,7 @@ private:
 
     using ST = std::make_signed_t<T>;
 
-    __fast_inline constexpr bool contains_point(const Vec2<T> p){
+    __fast_inline constexpr bool contains_point(const Vec2<uint32_t> p){
         // const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
         const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
         const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
@@ -1224,7 +1224,7 @@ private:
         // if((len_squ & 0x020)) return false;
         // if((len_squ & 0x020)) return false;
 
-        #if 0
+        #if 1
         if (len_squ < squ_inner_radius_) return false;
         if (len_squ > squ_outer_radius_) return false;
         #else
@@ -1238,10 +1238,23 @@ private:
         if(pass_cnt <= -1) return false;
         #endif
 
+        #if 0
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
         const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
 
         return is_minor_ ? (b1 && b2) : (b1 || b2);
+
+        #else
+        // if(Vec2<q16>(offset).angle()
+        //     .mod(Angle<q16>::from_degrees(10)) > 
+        //     Angle<q16>::from_degrees(2)) return false;
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
+
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
+
+        #endif
+
 
         return true;
     }
@@ -1448,37 +1461,54 @@ void render_main(){
         //     Rect2u16{shape_x,uint16_t(shape_y- 10),5,5},
         //     Rect2u16{uint16_t(shape_x - 10),shape_y,5,5}
         // });
-        using Vec2u16 = Vec2<uint16_t>;
+        // using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,120,60};
-        // auto shape =  Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
+
+        #if 1
+        auto shape = Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
+        #endif 
         // auto shape =  Circle2<uint16_t>{
         //     Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 60};
-        // auto shape =  HorizonOval2<uint16_t>{
-        //     .left_center = Vec2u16{shape_x,shape_y}, .radius = 15, .length = 60};
+
+
+        #if 0
+        auto shape = HorizonOval2<uint16_t>{
+            .left_center = Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 
+            .radius = 15, 
+            .length = 60
+        };
+        #endif
         
-        // auto shape =  RoundedRect2<uint16_t>{
-        //     .bounding_rect = Rect2u{Vec2u16{shape_x,shape_y}, Vec2u16{240, 120}}, .radius = 10};
+        #if 0
+        auto shape =  RoundedRect2<uint16_t>{
+            .bounding_rect = Rect2u{Vec2u16{uint16_t(115 + 80 * sinpu(ctime * 0.2_r)), 
+                80}, Vec2u16{90, 30}}, 
+            .radius = 8
+        };
+        #endif
         
-        // auto shape = HorizonSpectrum<uint16_t, q16>{
-        //     .top_left = {20, 20},
-        //     .cell_size = {8, 70},
-        //     .samples = std::span(samples),
-        //     .sample_range = {-1, 1}
-        // };
+        #if 0
+        auto shape = HorizonSpectrum<uint16_t, q16>{
+            .top_left = {20, 20},
+            .cell_size = {8, 70},
+            .samples = std::span(samples),
+            .sample_range = {-1, 1}
+        };
+        #endif
 
         // auto shape = RoundedRect2<uint16_t>{
         //     .bounding_rect = tft.bounding_box().shrink(20).unwrap(), 
         //     .radius = 10
         // };
 
-        #if 1
-        // auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
+        #if 0
+        auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
         // auto shape = GridMap2<uint16_t>{
-        //     .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
-        //     .padding = {2,2},
-        //     .count = {15,7}
+            .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
+            .padding = {2,2},
+            .count = {15,7}
         // };
-        // }.bounding_box(), .radius = 5};
+        }.bounding_box(), .radius = 5};
         // }.bounding_box();
 
         #endif
@@ -1497,30 +1527,50 @@ void render_main(){
         };
         #endif
 
-        #if 1
+        #if 0
+        // const auto shape = AnnularSector<uint16_t, q16>{
+        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+        //     // .radius_range = {8, 12},
+        //     // .radius_range = {10, 14},
+        //     // .radius_range = {47, 53},
+        //     .radius_range = {40, 60},
+        //     .angle_range = {
+        //         Angle<q16>::from_degrees(60 + ctime * 120), 
+        //         // Angle<q16>::from_degrees(123)
+        //         Angle<q16>::from_degrees(LERP(
+        //             50, 310, 
+        //             sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16
+        //         ))
+        //     }
+        // };
+
         const auto shape = AnnularSector<uint16_t, q16>{
-            .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-            .radius_range = {8, 12},
+            .center = {160, 160},
+            // .radius_range = {8, 12},
+            // .radius_range = {10, 14},
             // .radius_range = {47, 53},
-            // .radius_range = {40, 60},
+            .radius_range = {130, 150},
+            .angle_range = {
+                Angle<q16>::from_degrees(0), 
+                // Angle<q16>::from_degrees(123)
+                Angle<q16>::from_degrees(180)
+            }
+        };
+
+        #endif
+
+        #if 0
+        const auto shape = Sector<uint16_t, q16>{
+            .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+            // .radius = 23,
+            // .radius = 13,
+            .radius = 53,
             .angle_range = {
                 Angle<q16>::from_degrees(60 + ctime * 120), 
                 // Angle<q16>::from_degrees(123)
                 Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
             }
         };
-
-        // const auto shape = Sector<uint16_t, q16>{
-        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-        //     // .radius = 23,
-        //     // .radius = 13,
-        //     .radius = 53,
-        //     .angle_range = {
-        //         Angle<q16>::from_degrees(60 + ctime * 120), 
-        //         // Angle<q16>::from_degrees(123)
-        //         Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
-        //     }
-        // };
 
         #endif
         // using Shape = decltype(shape);

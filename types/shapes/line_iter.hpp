@@ -110,30 +110,36 @@ struct LineDDAIterator{
         self.stop_y_ = fixed_segment.stop.y;
     }
 
-    constexpr bool has_next() const {
-        return current_y_ <= stop_y_;
+    __fast_inline constexpr bool has_next() const {
+        return current_y_ < stop_y_;
     }
 
-    constexpr T x() const {
-        return static_cast<T>(current_x_);
+    __fast_inline constexpr q16 x() const {
+        return current_x_;
     }
 
-    constexpr Range2u16 x_range() const{
-        const auto a = x();
-        const auto b = a + x_step();
+    __fast_inline constexpr Range2u16 x_range() const{
+        const q16 a = x();
+        const q16 b = a + x_step();
         if(a < b){
-            return Range2u16{uint16_t(a - 2_q16), uint16_t(b + 2_q16)};
+            return Range2u16::from_start_and_stop_unchecked(
+                static_cast<uint16_t>(floor_int(a)), 
+                static_cast<uint16_t>(ceil_int(b))
+            );
         }else{
-            return Range2u16{uint16_t(b - 2_q16), uint16_t(a + 2_q16)};
+            return Range2u16::from_start_and_stop_unchecked(
+                static_cast<uint16_t>(floor_int(b)), 
+                static_cast<uint16_t>(ceil_int(a))
+            );
         }
     }
 
-    constexpr void advance(){
+    __fast_inline constexpr void advance(){
         current_y_ += 1;    
         current_x_ += x_step_;
     }
 
-    constexpr q16 x_step() const {
+    __fast_inline constexpr q16 x_step() const {
         return x_step_;
     }
 private:
@@ -153,6 +159,9 @@ public:
     constexpr TriangleIterator(const Triangle2<T>& sorted_tri_)
         :
             is_mid_at_right_(is_point_at_right(sorted_tri_.points[0], sorted_tri_.points[2], sorted_tri_.points[1])),
+            current_y_(sorted_tri_.points[0].y),
+            mid_y_(sorted_tri_.points[1].y),
+            stop_y_(sorted_tri_.points[2].y),
             top_left_iter_(is_mid_at_right_ ? 
                 LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[2]}) : 
                 LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[1]})),
@@ -161,22 +170,22 @@ public:
                 LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[2]})),
             bottom_iter_(is_mid_at_right_ ? 
                 LineIterator(Segment{sorted_tri_.points[1], sorted_tri_.points[2]}) : 
-                LineIterator(Segment{sorted_tri_.points[2], sorted_tri_.points[1]})),
-            current_y_(sorted_tri_.points[0].y),
-            mid_y_(sorted_tri_.points[1].y),
-            stop_y_(sorted_tri_.points[2].y)
+                LineIterator(Segment{sorted_tri_.points[2], sorted_tri_.points[1]}))
     {}
 
-    constexpr bool has_next() const {
+    __fast_inline constexpr bool has_next() const {
         return current_y_ < stop_y_;
     }
 
-    constexpr Range2u16 current_filled() const {
+    __fast_inline constexpr Range2u16 current_filled() const {
         auto & self = *this;
-        return {left_iter(self).x(), right_iter(self).x()};
+        return Range2u16::from_start_and_stop_unchecked(
+            static_cast<uint16_t>(floor_int(left_iter(self).x())), 
+            static_cast<uint16_t>(ceil_int(right_iter(self).x()))
+        );
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    __fast_inline constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
         auto & self = *this;
         return {
             left_iter(self).x_range(),
@@ -184,7 +193,7 @@ public:
         };
     }
 
-    constexpr void advance() {
+    __fast_inline constexpr void advance() {
         auto & self = *this;
         if (current_y_ >= stop_y_) return;
         ++current_y_;
@@ -194,7 +203,11 @@ public:
     }
 
 private:
-    constexpr bool is_point_at_right(const Point& a, const Point& b, const Point& p) const {
+    __fast_inline constexpr bool is_point_at_right(
+        const Point& a, 
+        const Point& b, 
+        const Point& p
+    ) const {
         Vec2<T> ab = b - a;
         Vec2<T> ap = p - a;
         return ab.cross(ap) < 0;
@@ -207,7 +220,8 @@ private:
         if (self.is_mid_at_right_) {
             return self.top_left_iter_;
         } else {
-            return (self.current_y_ <= self.mid_y_) ? self.top_left_iter_: self.bottom_iter_;
+            return (self.current_y_ <= self.mid_y_) ? 
+                self.top_left_iter_: self.bottom_iter_;
         }
     }
 
@@ -216,17 +230,18 @@ private:
         if (not self.is_mid_at_right_) {
             return self.top_right_iter_;
         } else {
-            return (self.current_y_ <= self.mid_y_) ? self.top_right_iter_: self.bottom_iter_;
+            return (self.current_y_ <= self.mid_y_) ? 
+                self.top_right_iter_: self.bottom_iter_;
         }
     }
 
     bool is_mid_at_right_;
+    uint16_t current_y_;
+    uint16_t mid_y_;
+    uint16_t stop_y_;
     LineIterator top_left_iter_;
     LineIterator top_right_iter_;
     LineIterator bottom_iter_;
-    T current_y_;
-    T mid_y_;
-    T stop_y_;
 };
 
 

@@ -189,18 +189,22 @@ struct Angle{
 	}
 
 	template<typename U>
-	requires (std::is_integral_v<U>)
 	constexpr Angle operator*(const U rhs) const{
 		return make_angle(turns_ * rhs);
 	}
 	
 	template<typename U>
-	requires (std::is_integral_v<U>)
 	constexpr Angle operator/(const U rhs) const{
 		return make_angle(turns_ / rhs);
 	}
 
-	friend constexpr Angle operator*(const T lhs, const Angle & rhs) {
+	template<typename U>
+	constexpr Angle mod(const Angle<U> rhs) const{
+		return make_angle(fposmod(turns_, static_cast<T>(rhs.turns_)));
+	}
+
+	template<typename U>
+	friend constexpr Angle operator*(const U lhs, const Angle & rhs) {
 		return make_angle(lhs * rhs.turns_);
 	}
 

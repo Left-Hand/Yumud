@@ -72,13 +72,6 @@ namespace ymd{
         return x * x;
     }
     
-    template<arithmetic T>
-    __fast_inline constexpr T round(const T x) {
-        const size_t i = size_t(floor(x));
-        return T(i) + T(size_t(bool(x - i >= 0.5)));
-    }
-    
-    
     __fast_inline constexpr real_t distance(const real_t & a, const real_t & b){
         return ABS(a-b);
     }

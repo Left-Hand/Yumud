@@ -289,17 +289,17 @@ struct Vec2{
         return ret;
     }
 
-    __fast_inline constexpr Vec2<T> & operator*=(const T & n){
-        // using CommonType = typename std::common_type<T, decltype(n)>::type;/
-        // using CommonType = T;
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator*=(const U n){
         x = static_cast<T>(x * n);
         y = static_cast<T>(y * n);
         return *this;
     }
 
-    __fast_inline constexpr Vec2<T> & operator/=(const T & n){
-        // using CommonType = typename std::common_type<T, decltype(n)>::type;
-        if constexpr(std::is_integral_v<T>){
+
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator/=(const U n){
+        if constexpr(std::is_integral_v<U>){
             x = x / n;
             y = y / n;
         }else{
@@ -310,11 +310,14 @@ struct Vec2{
         return *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const T & n) const{
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const U n) const{
         Vec2<T> ret = *this;
         return ret *= n;
     }
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const T & n) const{
+
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const U n) const{
         Vec2<T> ret = *this;
         return ret /= n;
     }
@@ -388,6 +391,7 @@ using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
 using Vec2u = Vec2<uint>;
 using Vec2u8 = Vec2<uint8_t>;
+using Vec2u16 = Vec2<uint16_t>;
 
 }
 
