@@ -7,24 +7,24 @@ namespace ymd::foc{
 
 class LapPosAccumulator{
 protected:
-    bool first_;
-    iq_t<16> last_lap_pos_;
-    iq_t<16> accu_pos_;
+    bool first_ = true;
+    q16 last_lap_pos_ = 0;
+    q16 accu_pos_ = 0;
 public:
     LapPosAccumulator(){reset();}
-    iq_t<16> update(iq_t<16> lap_pos){
+    q16 update(q16 lap_pos){
         if(unlikely(first_)){
             last_lap_pos_ = lap_pos;
             first_ = false;
             return 0;
         }
 
-        iq_t<16> delta_lap_pos = lap_pos - last_lap_pos_;
+        q16 delta_lap_pos = lap_pos - last_lap_pos_;
         last_lap_pos_ = lap_pos;
 
-        if(delta_lap_pos > iq_t<16>(0.5)){
+        if(delta_lap_pos > q16(0.5)){
             accu_pos_ += (delta_lap_pos - 1);
-        }else if (delta_lap_pos < -iq_t<16>(0.5)){
+        }else if (delta_lap_pos < -q16(0.5)){
             accu_pos_ += (delta_lap_pos + 1);
         }else{
             accu_pos_ += delta_lap_pos;
@@ -42,19 +42,19 @@ public:
 // class PiController{
 // public:
 //     struct Config{
-//         iq_t<16> kp;
-//         iq_t<16> ki;
+//         q16 kp;
+//         q16 ki;
 //         uint fc;
 //     };
 // private:
-//     iq_t<16> kp_;
-//     iq_t<16> ki_;
-//     iq_t<16> inte_;
+//     q16 kp_;
+//     q16 ki_;
+//     q16 inte_;
 // public:
 //     PiController(const Config & config = {})
 //         {reconfig(config); reset();}
 
-//     iq_t<16> update(iq_t<16> x){
+//     q16 update(q16 x){
 //         inte_ += x;
 //         inte_= CLAMP(inte_, -10000, 10000);
 //         const auto res = CLAMP(x * kp_ + inte_ * ki_, -100, 100);
@@ -75,8 +75,8 @@ public:
 class LapPosPll{
 public:
     struct Config{
-        iq_t<16> kp;
-        iq_t<16> ki;
+        q16 kp;
+        q16 ki;
         uint fc;
     };
     
@@ -84,17 +84,17 @@ public:
 public:
     static constexpr int shift_bits = 5;
 
-    iq_t<16> kp_;
-    iq_t<16> ki_;
-    iq_t<16> ko_;
+    q16 kp_ = 0;
+    q16 ki_ = 0;
+    q16 ko_ = 0;
 
     LapPosAccumulator pos_accumulator_;
     // PiController spd_pi_ctrl_;
-    iq_t<16> pos_err_int_;
-    iq_t<16> spd_est_;
+    q16 pos_err_int_ = 0;
+    q16 spd_est_ = 0;
     // PiController pos_i_ctrl_;
-    iq_t<16> pos_int_;
-    iq_t<16> pos_est_;
+    q16 pos_int_ = 0;
+    q16 pos_est_ = 0;
 
 public:
 
@@ -103,10 +103,10 @@ public:
         reset();
     };
 
-    // LapPosPll(const iq_t<16> kp, const iq_t<16> ki, const uint fc):
+    // LapPosPll(const q16 kp, const q16 ki, const uint fc):
     //     LapPosPll(Config{.kp = kp, .ki = ki, .fc = fc}){;}
 
-    iq_t<16> update(const iq_t<16> lap_pos);
+    q16 update(const q16 lap_pos);
 
     void reset(){
         pos_accumulator_.reset();
@@ -120,29 +120,29 @@ public:
     void reconfig(const Config & config){
         kp_ = config.kp;
         ki_ = config.ki;
-        ko_ = iq_t<16>(1 << shift_bits) / config.fc;
+        ko_ = q16(1 << shift_bits) / config.fc;
         // spd_pi_ctrl_.reconfig({.kp = config.kp, .ki = config.ki, .fc = config.fc});
         // pos_i_ctrl_.reconfig({.kp = 0, .ki = (1 << shift_bits), .fc = config.fc});
     }
 
-    iq_t<16> theta() const {return frac(pos_est_) * real_t(TAU);}
+    q16 theta() const {return frac(pos_est_) * real_t(TAU);}
 
-    iq_t<16> accpos() const {return pos_est_;}
-    iq_t<16> speed() const {return spd_est_;}
+    q16 accpos() const {return pos_est_;}
+    q16 speed() const {return spd_est_;}
 
 };
 
 
 class SimplePll{
     protected:
-        iq_t<16> last_lap_pos = 0;
-        iq_t<16> err_int_ = 0;
-        iq_t<16> accu_pos_ = 0;
-        iq_t<16> pll_pos_ = 0;
+        q16 last_lap_pos = 0;
+        q16 err_int_ = 0;
+        q16 accu_pos_ = 0;
+        q16 pll_pos_ = 0;
     
     public:
-        void update(const iq_t<16> lap_pos);
-        iq_t<16> theta() const {return frac(pll_pos_) * real_t(TAU);}
+        void update(const q16 lap_pos);
+        q16 theta() const {return frac(pll_pos_) * real_t(TAU);}
     };
     
 }

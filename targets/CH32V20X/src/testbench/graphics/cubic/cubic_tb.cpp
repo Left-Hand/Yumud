@@ -119,15 +119,15 @@ static constexpr Vec3<float> up = {0,1,0};
 
 #define lookat(view, eye, center, up) \
 { \
-	Vec3<float> zaxis; \
+	Vec3<float> zaxis = Vec3<float>::ZERO; \
 	zaxis = (eye - center); \
 	zaxis.normalize(); \
  \
-	Vec3<float> xaxis; \
+	Vec3<float> xaxis = Vec3<float>::ZERO; \
 	xaxis = up.cross(zaxis); \
 	xaxis.normalize(); \
  \
-	Vec3<float> yaxis; \
+	Vec3<float> yaxis = Vec3<float>::ZERO; \
 	yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
@@ -200,16 +200,17 @@ static buffer_t colorbuffer;
 struct vertex_t
 {
 	float rhw;
-	Vec2<int> point;
+	Vec2<int> point = Vec2<int>::ZERO;
 };
+
 struct triangle_t
 {
 	uint8_t v0;
 	uint8_t v1;
 	uint8_t v2;
-	Vec2<float> texcoord0;
-	Vec2<float> texcoord1;
-	Vec2<float> texcoord2;
+	Vec2<float> texcoord0 = Vec2<float>::ZERO;
+	Vec2<float> texcoord1 = Vec2<float>::ZERO;
+	Vec2<float> texcoord2 = Vec2<float>::ZERO;
 	int16_t W12;
 	int16_t W20;
 	int16_t W01;
@@ -491,10 +492,10 @@ void cubic_main(void){
 
 
 				const auto clip = Rect2u(
-					LCD_W * i / M,
-					LCD_H * j / N,
-					LCD_W / M,
-					LCD_H / N
+					Vec2u{LCD_W * i / M,
+					LCD_H * j / N},
+					Vec2u{LCD_W / M,
+					LCD_H / N}
 				);
 
 				// DEBUG_PRINTLN(clip);

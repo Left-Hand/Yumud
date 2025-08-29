@@ -77,10 +77,6 @@ struct Vec2{
     T x;
     T y;
     
-    
-    [[nodiscard]] constexpr Vec2():
-        x(T(0)),
-        y(T(0)){;}
 
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
@@ -193,7 +189,22 @@ struct Vec2{
 
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
     [[nodiscard]] constexpr Vec2<T> bounce(const Vec2<T> & n) const;
-    [[nodiscard]] constexpr Vec2<T> ceil() const;
+
+    template<typename U = T>
+    [[nodiscard]] constexpr Vec2<U> ceil() const{
+        return Vec2<U>{ceil_cast<U>(x), ceil_cast<U>(y)};
+    }
+
+    template<typename U = T>
+
+    [[nodiscard]] constexpr Vec2<U> floor() const{
+        return Vec2<U>{floor_cast<U>(x), floor_cast<U>(y)};
+    }
+
+    template<typename U = T>
+    [[nodiscard]] constexpr Vec2<U> round() const{
+        return Vec2<U>{round_cast<U>(x), round_cast<U>(y)};
+    }
 
     template<arithmetic U>
     [[nodiscard]] constexpr Vec2<T> clampmin(const U & _length) const{
@@ -214,7 +225,7 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2<T> dir_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_squared_to(const Vec2<T> & b) const;
-    [[nodiscard]] constexpr Vec2<T> floor() const;
+
     [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & v) const;
     [[nodiscard]] constexpr T manhattan_distance()const{
         return ABS(x) + ABS(y);
@@ -243,7 +254,7 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> project(const Vec2<T> & b) const;
     [[nodiscard]] __fast_inline constexpr T project(const T & rad) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> reflect(const Vec2<T> & n) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> round() const;
+
     [[nodiscard]] __fast_inline constexpr Vec2<T> sign() const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slerp(const Vec2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slide(const Vec2<T>  & n) const;
@@ -283,10 +294,7 @@ struct Vec2{
     }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> operator-() const{
-        Vec2<T> ret;
-        ret.x = -x;
-        ret.y = -y;
-        return ret;
+        return Vec2<T> {-x, -y};
     }
 
     template<typename U>
@@ -403,23 +411,7 @@ constexpr Vec2<T> Vec2<T>::abs() const{
     return Vec2<T>(fabs(x), fabs(y));
 }
 
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::ceil() const{
 
-    return Vec2<T>(ceilf(x), ceilf(y));
-}
-
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::floor() const{
-
-    return Vec2<T>(floorf(x), floorf(y));
-}
-
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::round() const{
-
-    return Vec2<T>(roundf(x), roundf(y));
-}
 
 template<arithmetic T>
 constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {

@@ -2,6 +2,7 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/Option.hpp"
+#include "core/math/real.hpp"
 
 #include "type_traits"
 #include <algorithm>
@@ -25,7 +26,7 @@ public:
 
     template<typename U, typename V>
     [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop): 
-    start(static_cast<T>(_start)), stop(static_cast<T>(_stop)) {
+    start(floor_cast<T>(_start)), stop(ceil_cast<T>(_stop)) {
         if(stop < start) std::swap(start, stop);
     }
 
@@ -50,26 +51,38 @@ public:
         if(stop < start) std::swap(start, stop);
     }
 
-    template<typename U>
+    template<typename U, typename V>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop_unchecked(
-        const U _start, const U _stop
+        const U _start, const V _stop
     ){
-        Range2<T> ret;
-        ret.start = static_cast<T>(_start);
-        ret.stop = static_cast<T>(_stop);
-        return ret;
+        return Range2<T>{
+            floor_cast<T>(_start),
+            ceil_cast<T>(_stop)
+        };
     };
+
+
+    template<typename U, typename V>
+    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
+        const U start, const V length)
+    {
+        return {
+            floor_cast<T>(start), 
+            ceil_cast<T>(start + length)
+        };
+    } 
+
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
         const U center, const U length)
     {
         if constexpr(std::is_integral_v<U>){
             const auto half_length = length >> 1;
-            return {center - half_length, center + half_length};
+            return from_start_and_stop_unchecked(center - half_length, center + half_length);
         }else{
             constexpr U HALF_ONE = static_cast<U>(0.5);
             const auto half_length = (length * HALF_ONE);
-            return {center - half_length, center + half_length};
+            return from_start_and_stop_unchecked(center - half_length, center + half_length);
         }
     } 
 
@@ -84,15 +97,6 @@ public:
         return {center, center};
     } 
 
-    template<typename U, typename V>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
-        const U start, const V length)
-    {
-        return {
-            static_cast<T>(start), 
-            static_cast<T>(start + length)
-        };
-    } 
 
     [[nodiscard]] __fast_inline constexpr Range2<T> swap() const {
         return {stop, start};

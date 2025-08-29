@@ -163,7 +163,10 @@ public:
     }
 
     ServoCtrlSystem(hal::AnalogInIntf & ana, hal::PwmIntf & pwm):
-        encoder_(drivers::AnalogEncoder::Config{.volt_range = {}, .pos_range = {}}, ana),
+        encoder_(drivers::AnalogEncoder::Config{
+            .volt_range = {0,0}, 
+            .pos_range = {0,0}
+        }, ana),
         pwm_(pwm){;}
 private:    
     drivers::AnalogEncoder encoder_;

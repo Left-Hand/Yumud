@@ -38,21 +38,21 @@ public:
     q16 theta() const {return Theta;}
 
 private:
-    q16 f_para_;
-    q16 g_para_;
-    q16 Kslide_;
-    q16 Kslf_;
+    q16 f_para_ = 0;
+    q16 g_para_ = 0;
+    q16 Kslide_ = 0;
+    q16 Kslf_ = 0;
 public:
-    q16 Ealpha;
-    q16 Ebeta;
+    q16 Ealpha = 0;
+    q16 Ebeta = 0;
 
-    q16 Zalpha;
-    q16 Zbeta;
+    q16 Zalpha = 0;
+    q16 Zbeta = 0;
     
-    q16 EstIalpha;
-    q16 EstIbeta;
+    q16 EstIalpha = 0;
+    q16 EstIbeta = 0;
 
-    q16 Theta;
+    q16 Theta = 0;
 
     // 滑模阈值
     static constexpr q16 E0 = q16(1.5);

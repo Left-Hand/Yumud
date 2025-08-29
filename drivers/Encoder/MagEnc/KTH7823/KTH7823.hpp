@@ -160,7 +160,7 @@ public:
 private:
 
     Phy phy_;
-    real_t lap_position_ = {};
+    real_t lap_position_ = 0;
 
     [[nodiscard]]
     IResult<> write_reg(const RegAddress addr, uint8_t data);

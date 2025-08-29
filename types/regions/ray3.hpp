@@ -10,8 +10,6 @@ struct Ray3{
     Vec3<T> base;
     Vec3<T> direction;
 
-    [[nodiscard]] constexpr Ray3(){;}
-
     [[nodiscard]] constexpr Ray3(const Ray3<T> & other) = default;
     [[nodiscard]] static constexpr Ray3 
     from_base_and_dir(

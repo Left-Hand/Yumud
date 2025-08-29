@@ -48,20 +48,25 @@ struct AnnularSector final{
         const Vec2<q16> p3 = (v1).flip_y()* self.radius_range.start;
         const Vec2<q16> p4 = (v2).flip_y() * self.radius_range.start;
 
-        const q16 x_min = x_reached_left ?     
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x);
-        const q16 x_max = x_reached_right ?    
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x);
-        const q16 y_min = y_reached_top ?      
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y);
-        const q16 y_max = y_reached_bottom ?   
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y);
+        const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
+            static_cast<q16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
+        const T y_min = floor_cast<T>(self.center.y + (y_reached_top ?      
+            static_cast<q16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y)));
+
+        const T x_max = ceil_cast<T>(self.center.x + (x_reached_right ?    
+            static_cast<q16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x)));
+        const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
+            static_cast<q16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
 
         return Rect2<T>(
-            static_cast<T>(floor_int(x_min + self.center.x)), 
-            static_cast<T>(floor_int(y_min + self.center.y)), 
-            static_cast<T>(ceil_int(x_max - x_min)), 
-            static_cast<T>(ceil_int(y_max - y_min))
+            Vec2<T>{
+                x_min, y_min
+            },
+
+            Vec2<T>{
+                static_cast<T>(x_max - x_min), 
+                static_cast<T>(y_max - y_min)
+            }
         );
     }
 
@@ -156,21 +161,26 @@ struct Sector final{
         const Vec2<q16> p2 = Vec2<q16>::from_angle(self.angle_range.stop())
             .flip_y() * self.radius;
 
-        const q16 x_min = x_reached_left ?     static_cast<q16>(-self.radius) 
-            : MIN(p1.x, p2.x);
-        const q16 x_max = x_reached_right ?    static_cast<q16>(self.radius) 
-            : MAX(p1.x, p2.x);
-        const q16 y_min = y_reached_top ?      static_cast<q16>(-self.radius) 
-            : MIN(p1.y, p2.y);
-        const q16 y_max = y_reached_bottom ?   static_cast<q16>(self.radius) 
-            : MAX(p1.y, p2.y);
+        const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
+            static_cast<q16>(-self.radius) : MIN(p1.x, p2.x, 0)));
+        const T y_min = floor_cast<T>(self.center.y + (y_reached_top ?      
+            static_cast<q16>(-self.radius) : MIN(p1.y, p2.y, 0)));
+
+        const T x_max = ceil_cast<T>(self.center.x + (x_reached_right ?    
+            static_cast<q16>(self.radius) : MAX(p1.x, p2.x, 0)));
+        const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
+            static_cast<q16>(self.radius) : MAX(p1.y, p2.y, 0)));
 
         return Rect2<T>(
-            static_cast<T>(floor_int(x_min + self.center.x)), 
-            static_cast<T>(floor_int(y_min + self.center.y)), 
-            static_cast<T>(ceil_int(x_max - x_min)), 
-            static_cast<T>(ceil_int(y_max - y_min))
-        ).merge(center);
+            Vec2<T>{
+                x_min, y_min
+            },
+
+            Vec2<T>{
+                static_cast<T>(x_max - x_min), 
+                static_cast<T>(y_max - y_min)
+            }
+        );
     }
 
     __fast_inline constexpr bool contains_point(

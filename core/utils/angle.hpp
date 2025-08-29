@@ -58,14 +58,16 @@ struct Angle{
 	static constexpr Angle from_degrees(const U degrees){
 		if constexpr(is_fixed_point_v<T>){
 			constexpr U INV_360 = static_cast<U>(1.0 / 360.0);
-			Angle ret;
-			ret.turns_ = T::from(static_cast<float>(degrees * INV_360));
-			return ret;
+			// Angle ret;
+			return make_angle_from_turns(T::from(static_cast<float>(degrees * INV_360)));
+			// return ret;
 		}else{
 			constexpr U INV_360 = static_cast<U>(1.0 / 360.0);
-			Angle ret;
-			ret.turns_ = static_cast<T>(degrees * INV_360);
-			return ret;
+			// Angle ret;
+			// ret.turns_ = static_cast<T>(degrees * INV_360);
+			// return ret;
+
+			return make_angle_from_turns(static_cast<T>(degrees * INV_360));
 		}
 	}
 
@@ -74,27 +76,19 @@ struct Angle{
 	static constexpr Angle from_degrees(const U degrees){
 		if constexpr(std::is_integral_v<U>){ 
 			constexpr T INV_360 = static_cast<T>(1.0 / 360.0);
-			Angle ret;
-			ret.turns_ = static_cast<T>(degrees * INV_360);
-			return ret;
+			return make_angle_from_turns(degrees * INV_360);
 		}else{
-			Angle ret;
-			ret.turns_ = static_cast<T>(degrees / 360);
-			return ret;
+			return make_angle_from_turns(static_cast<T>(degrees / 360));
 		}
 	}
 
 	static constexpr Angle from_radians(const T radians){
 		constexpr T INV_TAU = static_cast<T>(1.0 / (2.0 * 3.1415926535897932384626433832795));
-		Angle ret;
-		ret.turns_ = radians * INV_TAU;
-		return ret;
+		return make_angle_from_turns(radians * INV_TAU);
 	}
 
 	static constexpr Angle from_turns(const T turns){
-		Angle ret;
-		ret.turns_ = turns;
-		return ret;
+		return make_angle_from_turns(turns);
 	}
 
 	template<typename U>
@@ -143,14 +137,14 @@ struct Angle{
 		// 计算正向（逆时针）到达目标角度需要转动的角度
 		T diff = target.turns_ - turns_;
 		if (diff < 0) diff += 1; // 确保结果在 [0, 1) 范围内
-		return make_angle(diff);
+		return make_angle_from_turns(diff);
 	}
 
 	constexpr Angle backward_angle_to(const Angle& target) const {
 		// 计算反向（顺时针）到达目标角度需要转动的角度
 		T diff = turns_ - target.turns_;
 		if (diff < 0) diff += 1; // 确保结果在 [0, 1) 范围内
-		return make_angle(diff);
+		return make_angle_from_turns(diff);
 	}
 
 	constexpr Angle shortest_angle_to(const Angle& target) const {
@@ -161,51 +155,51 @@ struct Angle{
 		if (diff > 0.5) diff -= 1;
 		else if (diff < -0.5) diff += 1;
 		
-		return make_angle(diff);
+		return make_angle_from_turns(diff);
 	}
 
 	constexpr Angle operator+(const Angle & rhs) const{
-		return make_angle(turns_ + rhs.turns_);
+		return make_angle_from_turns(turns_ + rhs.turns_);
 	}
 
 	constexpr Angle operator-(const Angle & rhs) const{
-		return make_angle(turns_ - rhs.turns_);
+		return make_angle_from_turns(turns_ - rhs.turns_);
 	}
 
 	constexpr Angle operator -() const{
-		return make_angle(-turns_);
+		return make_angle_from_turns(-turns_);
 	} 
 
 	constexpr Angle operator +() const {
-		return make_angle(+turns_);
+		return make_angle_from_turns(+turns_);
 	}
 
 	constexpr Angle operator*(const T rhs) const{
-		return make_angle(turns_ * rhs);
+		return make_angle_from_turns(turns_ * rhs);
 	}
 
 	constexpr Angle operator/(const T rhs) const{
-		return make_angle(turns_ / rhs);
+		return make_angle_from_turns(turns_ / rhs);
 	}
 
 	template<typename U>
 	constexpr Angle operator*(const U rhs) const{
-		return make_angle(turns_ * rhs);
+		return make_angle_from_turns(turns_ * rhs);
 	}
 	
 	template<typename U>
 	constexpr Angle operator/(const U rhs) const{
-		return make_angle(turns_ / rhs);
+		return make_angle_from_turns(turns_ / rhs);
 	}
 
 	template<typename U>
 	constexpr Angle mod(const Angle<U> rhs) const{
-		return make_angle(fposmod(turns_, static_cast<T>(rhs.turns_)));
+		return make_angle_from_turns(fposmod(turns_, static_cast<T>(rhs.turns_)));
 	}
 
 	template<typename U>
 	friend constexpr Angle operator*(const U lhs, const Angle & rhs) {
-		return make_angle(lhs * rhs.turns_);
+		return make_angle_from_turns(lhs * rhs.turns_);
 	}
 
 
@@ -224,11 +218,11 @@ struct Angle{
 	#undef DEF_COMPARISON_OPERATOR
 
 	constexpr Angle<T> abs() const {
-		return make_angle(ABS(turns_));
+		return make_angle_from_turns(ABS(turns_));
 	}
 
 	constexpr Angle<T> normalized() const {
-		return make_angle(frac(turns_));
+		return make_angle_from_turns(frac(turns_));
 	}
 
 	constexpr bool is_equal_approx(const Angle<T> & other) const {
@@ -236,7 +230,7 @@ struct Angle{
 	}
 
 	constexpr Angle<T> lerp(const Angle<T> & other, const T ratio) const {
-		return make_angle(ymd::lerp(turns_, other.turns_, ratio));
+		return make_angle_from_turns(ymd::lerp(turns_, other.turns_, ratio));
 	}
 
 	constexpr bool is_positive() const {
@@ -256,13 +250,12 @@ struct Angle{
 		
 		return os << static_cast<q16>(self.to_turns()) * 360 << '\'';
 	}
-private:
+// private:
+public:
 	T turns_;
 
-	static constexpr Angle make_angle(auto turns){
-		auto ret = Angle{};
-		ret.turns_ = turns;
-		return ret;
+	static constexpr Angle make_angle_from_turns(auto turns){
+		return Angle{.turns_ = turns};
 	}
 };
 

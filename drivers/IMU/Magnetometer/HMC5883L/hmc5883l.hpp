@@ -100,8 +100,10 @@ class HMC5883L final:
     public MagnetometerIntf,
     public HMC5883L_Regs{
 public:
-    HMC5883L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    HMC5883L(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    HMC5883L(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    HMC5883L(hal::I2cDrv && i2c_drv):
+        i2c_drv_(i2c_drv){;}
     HMC5883L(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
@@ -126,7 +128,7 @@ private:
 
     hal::I2cDrv i2c_drv_;
 
-    real_t lsb_;
+    real_t lsb_ = 0;
 
 
     template<typename T>

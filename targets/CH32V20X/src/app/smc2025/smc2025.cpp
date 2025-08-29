@@ -261,7 +261,7 @@ void smc2025_main(){
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
-        plot_gray(gray_img, {0,6, 240,240});
+        plot_gray(gray_img, {Vec2u{0,6}, Vec2u{240,240}});
 
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().x_range());

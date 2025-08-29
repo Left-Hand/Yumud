@@ -53,11 +53,11 @@ int main(){
     // embd_main();
     // gui_main();
     // canopen_main();
-    // bldc_main();
+    bldc_main();
     // polar_robot_main();
     // mks_stepper_main();
     // ads7830_main();
-    render_main();
+    // render_main();
     // math_main();
     // polar_robot_main();
     // nuedc_2025e_main();

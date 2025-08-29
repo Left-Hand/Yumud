@@ -58,8 +58,7 @@ public:
 
     static constexpr Vec3<T> INF = Vec3<T>(INFINITY, INFINITY, INFINITY);
 
-    
-    [[nodiscard]] __fast_inline constexpr Vec3(){;}
+    [[nodiscard]] __fast_inline constexpr Vec3() = delete;
 
     [[nodiscard]] __fast_inline constexpr Vec3(const Vec3<arithmetic auto>& v) :
         x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) {;}

@@ -298,6 +298,8 @@ struct Rpm final{
 
 struct PulseCnt final{
     static constexpr uint32_t SCALE = 3200 * (256/16);
+
+
     static constexpr PulseCnt from_position(const real_t position){
         const uint32_t frac_part = uint32_t(frac<12>(position) * SCALE);
         const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);

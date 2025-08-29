@@ -117,7 +117,7 @@ real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, cons
     
     if(num == 0) return 0;
 
-    real_t ret;
+    real_t ret = 0;
     uint16_t res = num / area;
     return 1 - u16_to_uni(res);
 }

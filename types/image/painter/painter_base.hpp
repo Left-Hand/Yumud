@@ -193,7 +193,7 @@ protected:
     Cursor cursor_ = {0,0};
 
     RGB888 color_;
-    Rect2u crop_rect_;
+    Rect2u crop_rect_ = Rect2u::ZERO;
 
     Option<Font &> may_enfont_ = None;
     Option<Font &> may_chfont_ = None;

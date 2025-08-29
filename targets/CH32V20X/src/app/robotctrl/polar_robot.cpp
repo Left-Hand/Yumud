@@ -232,7 +232,7 @@ struct StepPointIterator{
             (not current_position_.is_equal_approx(may_end_position_.unwrap()));
     }
 private:
-    Vec2<q24> current_position_ = {};
+    Vec2<q24> current_position_ = Vec2<q24>::ZERO;
     Option<Vec2<q24>> may_end_position_ = None;
 };
 
@@ -296,7 +296,7 @@ struct PolarRobotCurveGenerator{
 private:    
     uint32_t fs_;
     q24 delta_dist_;
-    Vec2<q24> position_;
+    Vec2<q24> position_ = Vec2<q24>::ZERO;
     StepPointIterator step_iter_;
 };
 

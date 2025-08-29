@@ -41,9 +41,9 @@ consteval real_t operator"" _r(unsigned long long x){
 }
 
 
-
-__fast_inline constexpr int mean(const int a, const int b){
-    return ((a+b) >> 1);
+template<integral T>
+__fast_inline constexpr T mean(const T a, const T b){
+    return static_cast<T>((a+b) >> 1);
 }
 
 template<floating T>
@@ -62,10 +62,25 @@ __fast_inline constexpr T round(const T x)
     return int(x+0.5f);
 }
 
-template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr int roundi(const iq_t<P> iq){
-    return int(iq + iq_t<Q>(0.5));
+
+
+
+template<typename T, integral From>
+__fast_inline constexpr T floor_cast(From value){
+    return static_cast<T>(value);
 }
+
+template<typename T, integral From>
+__fast_inline constexpr T ceil_cast(From value){
+    return static_cast<T>(value);
+}
+
+template<typename T, integral From>
+__fast_inline constexpr T round_cast(From value){
+    return static_cast<T>(value);
+}
+
+
 template<floating T>
 __fast_inline constexpr bool is_equal_approx(const T a, const T b) {
     // Check for exact equality first, required to handle "infinity" values.

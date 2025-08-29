@@ -50,22 +50,16 @@ struct Quat{
     static_assert(not std::is_integral_v<T>);
 
     static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(0,0,0,1);
-    // static constexpr Quat<T> IDENTITY = Quat<T>(0,0,0,1);
-
-    __fast_inline constexpr Quat() = default;
-
-
 
     [[nodiscard]]
-
     __fast_inline static constexpr Quat from_xyzw(
         const T p_x, const T p_y, const T p_z, const T p_w){
-        Quat<T> ret;
-        ret.x = p_x;
-        ret.y = p_y;
-        ret.z = p_z;
-        ret.w = p_w;
-        return ret;
+        return Quat<T> {
+            .x = p_x,
+            .y = p_y,
+            .z = p_z,
+            .w = p_w
+        };
     }
 
     [[nodiscard]] 
@@ -133,22 +127,6 @@ struct Quat{
         Quat<T> ret;
         ret.set_euler_xyz({euler.x, euler.y, euler.z});
         return ret;
-    }
-
-    [[nodiscard]]
-    constexpr Quat(const Quat &p_q) :
-            x(p_q.x),
-            y(p_q.y),
-            z(p_q.z),
-            w(p_q.w) {
-    }
-
-    __fast_inline constexpr Quat operator=(const Quat &p_q) {
-        x = p_q.x;
-        y = p_q.y;
-        z = p_q.z;
-        w = p_q.w;
-        return *this;
     }
 
     [[nodiscard]]
@@ -403,64 +381,6 @@ constexpr void Quat<T>::set_euler_xyz(const EulerAngle_t<T, EulerAnglePolicy::XY
 			-sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3);
 }
 
-// // get_euler_xyz returns a vector containing the Euler angles in the format
-// // (ax,ay,az), where ax is the angle of rotation around x axis,
-// // and similar for other axes.
-// // This implementation uses XYZ convention (Z is the first rotation).
-// // Vec3<T> Quat<T>::get_euler_xyz() const {
-// // 	Basis m(*this);
-// // 	return m.get_euler_xyz();
-// // }
-
-// // set_euler_yxz expects a vector containing the Euler angles in the format
-// // (ax,ay,az), where ax is the angle of rotation around x axis,
-// // and similar for other axes.
-// // This implementation uses YXZ convention (Z is the first rotation).
-// template<typename T>
-// constexpr void Quat<T>::set_euler_yxz(const Vec3<T> &p_euler) {
-	
-// 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
-// 	// Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)
-// 	// a3 is the angle of the first rotation, following the notation in this reference.
-
-// 	// if constexpr(is_fixed_point_v<T>){	
-// 	// 	auto [sin_a1, cos_a1] = sincos<14>(p_euler.y >> 1);
-// 	// 	auto [sin_a2, cos_a2] = sincos<14>(p_euler.x >> 1);
-// 	// 	auto [sin_a3, cos_a3] = sincos<14>(p_euler.z >> 1);
-
-// 	// 	static auto mul3 = [](q14 a, q14 b, q14 c) -> q14{
-// 	// 		return q14(_iq<14>::from_i32(((a.to_i32() * b.to_i32()) >> 14) * c.to_i32() >> 14));
-// 	// 	};
-	
-// 	// 	set(
-// 	// 		mul3( sin_a1, cos_a2, sin_a3) + mul3(cos_a1, sin_a2, cos_a3),
-// 	// 		mul3( sin_a1, cos_a2, cos_a3) - mul3(cos_a1, sin_a2, sin_a3),
-// 	// 		mul3(-sin_a1, sin_a2, cos_a3) + mul3(cos_a1, cos_a2, sin_a3),
-// 	// 		mul3( sin_a1, sin_a2, sin_a3) + mul3(cos_a1, cos_a2, cos_a3)
-// 	// 	);
-// 	// }else{
-// 	auto [sin_a1, cos_a1] = sincos(p_euler.y / 2);
-// 	auto [sin_a2, cos_a2] = sincos(p_euler.x / 2);
-// 	auto [sin_a3, cos_a3] = sincos(p_euler.z / 2);
-
-// 	set(
-// 		sin_a1  * cos_a2 * sin_a3 + cos_a1 * sin_a2 * cos_a3,
-// 		sin_a1  * cos_a2 * cos_a3 - cos_a1 * sin_a2 * sin_a3,
-// 		-sin_a1 * sin_a2 * cos_a3 + cos_a1 * cos_a2 * sin_a3,
-// 		sin_a1  * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
-// 	);
-// 	// }
-
-// }
-
-// get_euler_yxz returns a vector containing the Euler angles in the format
-// (ax,ay,az), where ax is the angle of rotation around x axis,
-// and similar for other axes.
-// This implementation uses YXZ convention (Z is the first rotation).
-// Vec3<T> Quat<T>::get_euler_yxz() const {
-// 	Basis m(*this);
-// 	return m.get_euler_yxz();
-// }
 template<typename T>
 constexpr void Quat<T>::operator*=(const Quat<T> &p_q) {
 	set(    T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
@@ -520,11 +440,21 @@ constexpr Quat<T> Quat<T>::inverse() const {
 }
 template<typename T>
 constexpr Quat<T> Quat<T>::slerp(const Quat<T> &p_to, const T &p_weight) const {
-	Quat<T> to1;
-	T omega, cosom, sinom, scale0, scale1;
+	// Quat<T> to1 = Quat<T>::ZERO;
+    struct {
+        T x;
+        T y;
+        T z;
+        T w;
+    } to1;
+
+	T omega = 0;
+    T sinom = 0;
+    T scale0 = 0;
+    T scale1 = 0;
 
 	// calc cosine
-	cosom = dot(p_to);
+	T cosom = dot(p_to);
 
 	// adjust signs (if necessary)
 	if (cosom < T(0)) {

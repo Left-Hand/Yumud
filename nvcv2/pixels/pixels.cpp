@@ -121,7 +121,7 @@ namespace ymd::nvcv2::pixels{
         const uint total_sum = sum_map[255];
         const uint total_cnt = cnt_map[255];
         
-        real_t p1 = real_t();
+        real_t p1 = 0;
         
         int max_i = 0;
         real_t max_sep = 0;
@@ -257,7 +257,7 @@ namespace ymd::nvcv2::pixels{
         int First, Last;
         int Threshold = -1;
         real_t BestEntropy = 114514;
-        real_t Entropy;
+        real_t Entropy = 0;
         //   找到第一个和最后一个非0的色阶值
         for (First = 0; First <int(hist.size()) && hist[First] == 0; First++) ;
         for (Last = hist.size() - 1; Last > First && hist[Last] == 0; Last--) ;
@@ -278,7 +278,7 @@ namespace ymd::nvcv2::pixels{
 
         // 建立公式（4）及（6）所用的查找表
         // real_t[] Smu = new real_t[Last + 1 - First];
-        std::array<real_t, 256> Smu;
+        std::array<real_t, 256> Smu = {0};
 
         // DEBUG_VALUE(First);
         // DEBUG_VALUE(Last);

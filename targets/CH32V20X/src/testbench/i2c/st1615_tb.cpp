@@ -59,7 +59,12 @@ void st1615_main(){
     st1615.init().examine();
 
 
-    std::array<Vec2i, ST1615::MAX_POINTS_COUNT> points;
+    std::array<Vec2i, ST1615::MAX_POINTS_COUNT> points = {
+        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO,
+        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO,
+        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO
+    };
+
     while(true){
         led.toggle();
         for(size_t i = 0; i < 1; ++i){

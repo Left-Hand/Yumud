@@ -22,15 +22,10 @@ public:
         Vec2<T>{std::numeric_limits<T>::max(), std::numeric_limits<T>::max()}
     };
 
-    [[nodiscard]] __fast_inline constexpr Rect2():
-        position(Vec2<T>(static_cast<T>(0),static_cast<T>(0))), 
-        size(Vec2<T>(static_cast<T>(0),static_cast<T>(0))){;}
-
-    [[nodiscard]] constexpr Rect2(
-        const T _x,const T _y,const T _width,const T _height
-    ):
-        position(Vec2<T>(_x,_y)),
-        size(Vec2<T>(_width, _height)){;}
+    static constexpr Rect2<T> ZERO = {
+        Vec2<T>{static_cast<T>(0), static_cast<T>(0)},
+        Vec2<T>{static_cast<T>(0), static_cast<T>(0)}
+    };
 
     template<typename U>
     [[nodiscard]] __fast_inline constexpr Rect2(const Rect2<U> & other):
@@ -94,7 +89,7 @@ public:
         auto first = std::ranges::begin(range);
         auto last = std::ranges::end(range);
 
-        if(first == last) return Rect2<T>();
+        if(first == last) return Rect2<T>::ZERO;
 
         const auto & first_point = *first;
 
@@ -219,10 +214,15 @@ public:
         const T y1 = position.y + size.y;
 
         return Rect2<T>{
-            MIN(x0, x1), 
-            MIN(y0, y1), 
-            static_cast<T>(ABS(static_cast<Tsigned>(x0) - static_cast<Tsigned>(x1))), 
-            static_cast<T>(ABS(static_cast<Tsigned>(y0) - static_cast<Tsigned>(y1)))
+            Vec2<T>{
+                static_cast<T>(MIN(x0, x1)), 
+                static_cast<T>(MIN(y0, y1)),
+            },
+            
+            Vec2<T>{
+                static_cast<T>(ABS(static_cast<Tsigned>(x0) - static_cast<Tsigned>(x1))), 
+                static_cast<T>(ABS(static_cast<Tsigned>(y0) - static_cast<Tsigned>(y1)))
+            }
         };
     }
 
@@ -308,12 +308,15 @@ public:
     [[nodiscard]] constexpr Rect2<T> merge(const Vec2<T> & point) const{
         const auto & self = *this;
 
-        auto x_min = MIN(self.x(), point.x);
-        auto x_max = MAX(self.x() + self.w(), point.x);
-        auto y_min = MIN(self.y(), point.y);
-        auto y_max = MAX(self.y() + self.h(), point.y);
+        auto x_min = floor_cast<T>(MIN(self.x(), point.x));
+        auto x_max = ceil_cast<T>(MAX(self.x() + self.w(), point.x));
+        auto y_min = floor_cast<T>(MIN(self.y(), point.y));
+        auto y_max = ceil_cast<T>(MAX(self.y() + self.h(), point.y));
 
-        return Rect2<T>(x_min, y_min, x_max - x_min, y_max - y_min);
+        return Rect2<T>(
+            Vec2<T>{x_min, y_min}, 
+            Vec2<T>{static_cast<T>(x_max - x_min), static_cast<T>(y_max - y_min)}
+        );
     }
 
     [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const{

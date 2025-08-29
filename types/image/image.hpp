@@ -63,8 +63,10 @@ public:
     }
     
     Image(Image && other){
-        *this = std::move(other);
+        this->size_ = other.size_;
+        this->data_ = std::move(other.data_);
     }
+
     Image & operator=(const Image& other) = delete;
 
     bool operator ==(const Image & other) const = delete;
@@ -140,7 +142,7 @@ public:
 private:
 
 
-    Vec2u size_;
+    Vec2u size_ = Vec2u::ZERO;
 
     std::shared_ptr<T[]> data_;
 

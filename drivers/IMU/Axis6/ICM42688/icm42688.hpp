@@ -88,8 +88,8 @@ private:
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     
-    q24 acc_scale_;
-    q24 gyr_scale_;
+    q24 acc_scale_ = 0;
+    q24 gyr_scale_ = 0;
 };
 
 }

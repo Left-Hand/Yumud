@@ -109,7 +109,7 @@ private:
     ST7789_Phy phy_;
     Algo algo_;
 
-    Vec2<uint16_t> offset_;
+    Vec2<uint16_t> offset_ = Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
     [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){

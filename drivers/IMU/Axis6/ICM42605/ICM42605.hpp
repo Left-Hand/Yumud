@@ -153,17 +153,12 @@ public:
         INTF_CONFIG6              = 0x7C
     };
 protected:
-    InvensenseSensor_Phy phy_;
 
-
-    real_t lsb_acc_x64;
-    real_t lsb_gyr_x256;
-
-    
-    Vec3<int16_t> acc_data_;
-    Vec3<int16_t> gyr_data_;
 public:
-    ICM42605(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    ICM42605(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     [[nodiscard]] IResult<> init();
@@ -176,6 +171,17 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
     [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+
+private:
+    InvensenseSensor_Phy phy_;
+
+
+    real_t lsb_acc_x64 = 0;
+    real_t lsb_gyr_x256 = 0;
+
+    
+    Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
+    Vec3<int16_t> gyr_data_ = Vec3<int16_t>::ZERO;
 };
 
 }

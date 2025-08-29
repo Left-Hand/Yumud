@@ -17,7 +17,7 @@ DigitProbability match_numbers(
     auto fault = src.clone(Rect2u(roi.position, tmp_size));
     auto fault_bina = fault.mirror<Gray>();
 
-    DigitProbability digit_p;
+    DigitProbability digit_p = {0};
     for(size_t i = 0; i < MAX_NUMBERS; i++){
         Image<Gray> tmp = Image<Gray>::from_buf(
             reinterpret_cast<const Gray *>(digit_images[i]), 

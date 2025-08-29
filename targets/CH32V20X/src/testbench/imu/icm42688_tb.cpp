@@ -54,8 +54,8 @@ static void icm42688_tb(ICM42688 & imu){
 
     timer1.init({ISR_FREQ});
 
-    Vec3<q24> gyr_;
-    Vec3<q24> acc_;
+    Vec3<q24> gyr_ = Vec3<q24>::ZERO;
+    Vec3<q24> acc_ = Vec3<q24>::ZERO;
     timer1.attach(TimerIT::Update, {0,0},[&]{
         const auto u0 = clock::micros();
         imu.update().examine();

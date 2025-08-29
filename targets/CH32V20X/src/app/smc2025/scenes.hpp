@@ -26,22 +26,27 @@ public:
     constexpr void reconf(const Config & cfg){
         road_width_ = cfg.road_width;
     }
-    [[nodiscard]] constexpr auto spawn_annular_sector(const real_t radius, const Angle<real_t> orientation){
+    [[nodiscard]] constexpr ElementWithPlacement<AnnularSector<q16, q16>> spawn_annular_sector(const real_t radius, const Angle<real_t> orientation){
         ASSERT(radius > 0);
-        const auto start_angle = ((orientation > 0_deg) ? 
+        const Angle<real_t> start_angle = ((orientation > 0_deg) ? 
                 (viewpoint_.orientation - 90_deg)
                 : (viewpoint_.orientation + orientation + 90_deg));
 
-        const auto stop_angle = ((orientation > 0_deg) ? 
+        const Angle<real_t> stop_angle = ((orientation > 0_deg) ? 
                 (viewpoint_.orientation + orientation - 90_deg)
                 : (viewpoint_.orientation + 90_deg));
 
-        const auto ret = AnnularSector<q16, q16>{
+
+
+        const auto shape = AnnularSector<q16, q16>{
+            .center = Vec2<q16>::ZERO,
             .radius_range = Range2<q16>::from_center_and_half_length(
                 radius, road_width_ / 2),
             
-            .angle_range = {start_angle, stop_angle}
-        } | Placement{
+            .angle_range = AngleRange<q16>{start_angle, stop_angle}
+        }; 
+        
+        const auto place = Placement{
             .position = viewpoint_.side_move(
                 (orientation > 0_deg) ? (radius) : (-radius)).position
         };
@@ -50,7 +55,7 @@ public:
             radius, orientation
         );
 
-        return ret;
+        return shape | place;
     }
 
     [[nodiscard]] constexpr auto spawn_stright(const real_t length){

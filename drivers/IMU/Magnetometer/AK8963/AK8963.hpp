@@ -128,12 +128,18 @@ class AK8963:
     public MagnetometerIntf,
     public AK8963_Regs{
 public:
-    AK8963(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    AK8963(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
-    AK8963(Some<hal::I2c *> i2c):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
-    AK8963(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    AK8963(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    AK8963(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv(spi, index)){;}
+    AK8963(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    AK8963(hal::I2cDrv && i2c_drv):
+        phy_(i2c_drv){;}
+    AK8963(Some<hal::I2c *> i2c):
+        phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+    AK8963(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    AK8963(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    AK8963(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -151,7 +157,7 @@ private:
     bool data_valid_ = false;
     bool data_is_16_bits_ = false;
 
-    Vec3<q24> adj_scale_;
+    Vec3<q24> adj_scale_ = Vec3<q24>::ZERO;
 
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);

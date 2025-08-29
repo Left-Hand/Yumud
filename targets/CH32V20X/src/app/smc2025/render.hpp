@@ -153,7 +153,13 @@ private:
 template<>
 struct BoundingBoxOf<SpotLight>{
     static constexpr auto bounding_box(const SpotLight & obj){
-        return BoundingBox{-obj.radius, -obj.radius, 2 * obj.radius, 2 * obj.radius};
+        return Rect2u16{
+            Vec2u16{static_cast<uint16_t>(-obj.radius), 
+                static_cast<uint16_t>(-obj.radius)}, 
+            Vec2u16{
+                static_cast<uint16_t>(2 * obj.radius), 
+                static_cast<uint16_t>(2 * obj.radius)}
+        };
     }
 };
 

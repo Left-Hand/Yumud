@@ -109,7 +109,13 @@ public:
         return self.substr_by_len(start, end - start);
     }
 
-    constexpr operator std::string_view() const { return std::string_view(data_, size_); }
+    constexpr operator std::string_view() const {
+        return std::string_view(data_, size_);
+    }
+
+    std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
+    }
 private:
     const char * data_;
     size_t size_;

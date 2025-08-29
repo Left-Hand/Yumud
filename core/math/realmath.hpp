@@ -18,7 +18,7 @@ namespace ymd{
         }else if(1 == exponent){
             return base;
         }else{
-            T ret;
+            T ret = 0;
             if(1 < exponent){
                 for(size_t i = 1; i < exponent; ++i){
                     ret *= base;

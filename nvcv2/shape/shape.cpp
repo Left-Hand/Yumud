@@ -940,106 +940,109 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 }
 
 void eye(Image<Gray> &dst, const Image<Gray> &src){
+    PANIC("todo");
+    // using vec_t = Vec2<int8_t>;
+    // #define square(x) (x * x)
+    // static constexpr size_t shift_bits = 3;
 
-    using vec_t = Vec2<int8_t>;
-    #define square(x) (x * x)
-    static constexpr size_t shift_bits = 3;
-
-    // sizeof(vec_t);
-    auto roi = src.size().to_rect();
-    auto gm = std::make_unique<vec_t[]>(roi.get_area());
+    // // sizeof(vec_t);
+    // auto roi = src.size().to_rect();
+    // auto gm = std::make_unique<vec_t[]>(roi.get_area());
     
-    const auto w = size_t(roi.w());
+    // const auto w = size_t(roi.w());
 
-    //2. Finding Image Gradients
-    {
-        for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
-            for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
-                int16_t vx = 0, vy = 0;
+    // //2. Finding Image Gradients
+    // {
+    //     for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
+    //         for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
+    //             int16_t vx = 0, vy = 0;
 
-                //  1   0   -1
-                //  2   0   -2
-                //  1   0   -1
+    //             //  1   0   -1
+    //             //  2   0   -2
+    //             //  1   0   -1
 
-                vx = uint8_t(src[(y - 1) * w + x - 1])
-                    - uint8_t(src[(y - 1) * w + x + 1])
-                    + uint8_t(uint8_t(src[(y + 0) * w + x - 1]) << 1)
-                    - uint8_t(uint8_t(src[(y + 0) * w + x + 1]) << 1)
-                    + uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+    //             vx = uint8_t(src[(y - 1) * w + x - 1])
+    //                 - uint8_t(src[(y - 1) * w + x + 1])
+    //                 + uint8_t(uint8_t(src[(y + 0) * w + x - 1]) << 1)
+    //                 - uint8_t(uint8_t(src[(y + 0) * w + x + 1]) << 1)
+    //                 + uint8_t(src[(y + 1) * w + x - 1])
+    //                 - uint8_t(src[(y + 1) * w + x + 1]);
 
-                //  1   2   1
-                //  0   0   0
-                //  -1  2   -1
+    //             //  1   2   1
+    //             //  0   0   0
+    //             //  -1  2   -1
 
-                vy = uint8_t(src[(y - 1) * w + x - 1])
-                    + uint8_t(uint8_t(src[(y - 1) * w + x + 0]) << 1)
-                    + uint8_t(src[(y - 1) * w + x + 1])
-                    - uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(uint8_t(src[(y + 1) * w + x + 0]) << 1)
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+    //             vy = uint8_t(src[(y - 1) * w + x - 1])
+    //                 + uint8_t(uint8_t(src[(y - 1) * w + x + 0]) << 1)
+    //                 + uint8_t(src[(y - 1) * w + x + 1])
+    //                 - uint8_t(src[(y + 1) * w + x - 1])
+    //                 - uint8_t(uint8_t(src[(y + 1) * w + x + 0]) << 1)
+    //                 - uint8_t(src[(y + 1) * w + x + 1]);
 
-                // Find the direction and round angle to 0, 45, 90 or 135
+    //             // Find the direction and round angle to 0, 45, 90 or 135
 
-                gm[w * y + x] = vec_t{
-                    int8_t(vx >> shift_bits), 
-                    int8_t(vy >> shift_bits)};
-            }
-        }
-    }
+    //             gm[w * y + x] = vec_t{
+    //                 int8_t(vx >> shift_bits), 
+    //                 int8_t(vy >> shift_bits)};
+    //         }
+    //     }
+    // }
 
-    clear_corners(dst);
+    // clear_corners(dst);
 
-    static constexpr size_t WINDOW_HALF_SIZE = 4;
+    // [[maybe_unused]] static constexpr size_t WINDOW_HALF_SIZE = 4;
 
-    using template_t = std::array<std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, WINDOW_HALF_SIZE * 2 + 1>;
 
-    auto generate_template = []() -> template_t{
-        template_t ret;
-        for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-            for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-                real_t rad = atan2(real_t(y), real_t(x));
-                const auto [s, c] = sincos(rad);
-                vec_t vec = vec_t{int8_t(s), int8_t(c)};
-                // vec_t vec = vec_t{scale, 0};
-                ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
-            }
-        }
-        return ret;
-    };
+    // using template_t = std::array<
+    //     std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, 
+    // WINDOW_HALF_SIZE * 2 + 1>;
 
-    auto temp = generate_template();
+    // auto generate_template = []() -> template_t{
+    //     template_t ret ;
+    //     for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+    //         for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
+    //             real_t rad = atan2(real_t(y), real_t(x));
+    //             const auto [s, c] = sincos(rad);
+    //             vec_t vec = vec_t{int8_t(s), int8_t(c)};
+    //             // vec_t vec = vec_t{scale, 0};
+    //             ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
+    //         }
+    //     }
+    //     return ret;
+    // };
 
-    for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
-        vec_t * vc = &gm[gy * w];
-        auto * dp = &dst[gy * w];
-        for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
-            vc++;
-            dp++;
+    // auto temp = generate_template();
 
-            // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
+    // for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
+    //     vec_t * vc = &gm[gy * w];
+    //     auto * dp = &dst[gy * w];
+    //     for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
+    //         vc++;
+    //         dp++;
 
-            // size_t x_sum = 0;
-            // size_t y_sum = 0;
-            size_t sum = 0;
-            for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-                for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-                    const auto & vec = gm[(gy + y) * w + (gx + x)];
-                    const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
-                    // x_sum += ABS(vec.x * tvec.x);
-                    // y_sum += ABS(vec.y * tvec.y);
-                    // sum += temp[3][3].length_squared();
-                    // sum += tvec.length_squared();
-                    sum += vec.x * tvec.x + vec.y * tvec.y;
-                }
-            }
-            // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
-            // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
-            // size_t sum = MAX(x_sum, y_sum);
-            // size_t sum =  x_sum * x_sum + y_sum * y_sum;
-            *dp = Gray((ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4); 
-        }
-    }
+    //         // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
+
+    //         // size_t x_sum = 0;
+    //         // size_t y_sum = 0;
+    //         size_t sum = 0;
+    //         for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+    //             for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
+    //                 const auto & vec = gm[(gy + y) * w + (gx + x)];
+    //                 const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
+    //                 // x_sum += ABS(vec.x * tvec.x);
+    //                 // y_sum += ABS(vec.y * tvec.y);
+    //                 // sum += temp[3][3].length_squared();
+    //                 // sum += tvec.length_squared();
+    //                 sum += vec.x * tvec.x + vec.y * tvec.y;
+    //             }
+    //         }
+    //         // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
+    //         // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
+    //         // size_t sum = MAX(x_sum, y_sum);
+    //         // size_t sum =  x_sum * x_sum + y_sum * y_sum;
+    //         *dp = Gray((ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4); 
+    //     }
+    // }
 }
 
 void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {

@@ -18,11 +18,11 @@ public:
 
 public:
 
-    q20 i_alpha_ = {};
-    q20 i_beta_ = {};
-    q20 e_alpha_ = {};
-    q20 e_beta_ = {};
-    q20 theta_ = {};
+    q20 i_alpha_ = 0;
+    q20 i_beta_ = 0;
+    q20 e_alpha_ = 0;
+    q20 e_beta_ = 0;
+    q20 theta_ = 0;
 };
 
 
@@ -52,7 +52,10 @@ private:
 class SpeedLoopCtrl{
 public:
     SpeedLoopCtrl(const uint fc, const q16 b0, const q16 wc):
-        fc_(fc), b0_(b0), wc_(wc), wo_(3 * wc){;}
+        fc_(fc), 
+        b0_(b0), 
+        wc_(wc), 
+        wo_(3 * wc){;}
 
     void update(const q16 w_meas, const q16 qcurr_ref){
         const q16 err = w_meas - w_hat_;
@@ -67,15 +70,15 @@ public:
 
     q16 output() const {return q_curr_;}
 private:
-    uint fc_;
-    q16 b0_;
-    q16 wc_;
-    q16 wo_;
+    uint fc_ = 0;
+    q16 b0_ = 0;
+    q16 wc_ = 0;
+    q16 wo_ = 0;
 
     q16 w_hat_ = 0;
     q16 f_hat_ = 0;
 
-    q16 q_curr_;
+    q16 q_curr_ = 0;
 };
 
 }

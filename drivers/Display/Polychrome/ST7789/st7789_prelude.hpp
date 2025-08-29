@@ -46,7 +46,7 @@ struct ST7789_Prelude{
 
     class ST7789_ReflashAlgo{
     public:
-        ST7789_ReflashAlgo(const Vec2<uint16_t> & size):
+        ST7789_ReflashAlgo(const Vec2<uint16_t> size):
             size_(size){;}
 
         __fast_inline constexpr
@@ -69,7 +69,7 @@ struct ST7789_Prelude{
         auto size() const {return size_;}
     private:
         const Vec2<uint16_t> size_;
-        Rect2<uint16_t> curr_area_ = {0,0,1,1};
+        Rect2<uint16_t> curr_area_ = Rect2<uint16_t>::ZERO;
         uint32_t last_point_ = 0;
     };
 

@@ -80,6 +80,98 @@ private:
 
 };
 
+
+
+struct MonoFont{
+
+};
+
+
+struct MonoFont7x7 final{
+    using font_item_t = font_res::chfont_7x7_item_t;
+
+    constexpr MonoFont7x7(){;}
+    // constexpr MonoFont7x7(const MonoFont7x7 & other) = delete;
+    // constexpr MonoFont7x7(MonoFont7x7 && other) = delete;
+
+    // constexpr MonoFont7x7 & operator =(const MonoFont7x7 & other) = default;
+    // constexpr MonoFont7x7 & operator =(MonoFont7x7 && other) = default;
+
+	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
+        // if(!size.has_point(offset)) return false;
+        // if(row_nth > 6) return false;
+
+		if(token != last_token_){
+            last_token_ = token;
+            p_last_font_item_ = find_font_item(token);
+
+            if(p_last_font_item_){
+                for(uint8_t i = 0; i < 7; i++){
+                    buf[i] = p_last_font_item_->data[i];
+                }
+            }
+		}
+
+		if(p_last_font_item_){
+			return buf[row_nth];
+		}else{
+			return 0u;
+		}
+	}
+
+    // consteval Vec2u16 size() const {
+    constexpr Vec2u16 size() const {
+        return Vec2u16{7,7};
+    }
+// private:
+    wchar_t last_token_ = 0;
+    const font_item_t * p_last_font_item_ = nullptr;
+    uint8_t buf[7] = {0};
+
+
+    const font_item_t * find_font_item(wchar_t code) const{
+        size_t left = 0;
+        const auto & res = font_res::chfont_7x7;
+        size_t right = std::size(res) - 1;
+        
+        while (left <= right) {
+            // size_t mid = left + ((right - left) >> 1);
+            size_t mid = ((right + left) >> 1);
+            
+            if (res[mid].code == code) {
+                return &res[mid];
+            } else if (res[mid].code < code) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        
+        return nullptr;
+    }
+};
+
+
+struct LineText{
+    Vec2u16 left_top;
+    uint16_t spacing;
+    StringView str;
+    // MonoFont7x7 & font;
+    MonoFont7x7 font;
+
+    constexpr Rect2u16 bounding_box() const {
+        const size_t str_len = str.length();
+        const uint16_t width = (str_len * font.size().x) + (str_len - 1) * spacing;
+        const uint16_t height = font.size().y;
+
+        return Rect2u16{left_top, {width, height}};
+    };
+};
+
+template<>
+struct is_placed_t<LineText>:std::true_type{;};
+
+
 }
 
 
@@ -816,7 +908,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
         );
 
         const auto color = static_cast<RGB565>(ColorEnum::PINK);
-        #pragma GCC unroll 4
+        #pragma GCC unroll(4)
         for(size_t i = 0; i < count; i++){
             // const auto old_x = x;
             const T next_x = x + shape_.cell_size.x;
@@ -849,6 +941,71 @@ private:
     Transformer transformer_;
     T y_;
 };
+
+
+
+namespace ymd{
+template<>
+struct DrawDispatchIterator<LineText> {
+    using Shape = LineText;
+    using Self = DrawDispatchIterator<Shape>;
+
+    constexpr DrawDispatchIterator(const Shape& shape) : 
+        shape_(shape),
+        x_range_(shape.bounding_box().x_range()),
+        y_range_(shape.bounding_box().y_range()),
+        y_(shape.bounding_box().y_range().start) {}  // 修复：使用 y_range_.start
+
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
+        auto x_base = x_range_.start;
+        const auto y_offset = y_ - y_range_.start;
+        auto gbk_iter = GBKIterator(shape_.str);
+        // auto gbk_iter = GBKIterator("你");
+        const auto color = static_cast<RGB565>(dest_color);
+
+
+
+        while(gbk_iter.has_next()){
+            const auto token = gbk_iter.next();
+
+            const auto row_pixels = shape_.font.get_row_pixels(token, y_offset);
+
+            if(unlikely(row_pixels == 0)) continue;
+
+            // #pragma GCC unroll(4)
+            // #pragma GCC unroll 4
+            for(size_t i = 0; i < size_t(shape_.font.size().x); i++){
+                if((row_pixels & (1 << i)) == 0) continue;
+                if(const auto res = target.draw_x_unchecked(
+                    x_base + (shape_.font.size().x - i), color); 
+                    // x_base + i, color); 
+                    res.is_err()) return res;
+                continue;
+            }
+
+            x_base += (shape_.font.size().x + shape_.spacing);
+        }
+        return Ok();
+    }
+
+    constexpr bool has_next() const {
+        return y_ < y_range_.stop;
+    }
+
+    constexpr void forward() {
+        if (y_ < y_range_.stop) {
+            y_++;
+        }
+    }
+
+private:
+    Shape shape_;
+    Range2<uint16_t> x_range_;
+    Range2<uint16_t> y_range_;
+    uint16_t y_;
+};
+}
 
 
 
@@ -1181,7 +1338,7 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
         const auto x_range = x_range_;
         const auto color = static_cast<RGB565>(dest_color);
 
-        #pragma GCC unroll 4
+        #pragma GCC unroll(4)
         for(T i = x_range.start; i < x_range.stop; i++){
             const bool is_inside = contains_point(Vec2<T>{i, y_});
             if(not is_inside) continue;
@@ -1319,7 +1476,7 @@ struct DrawDispatchIterator<Sector<T, D>> {
     Result<void, typename Target::Error> draw_filled(Target& target, const DestColor & dest_color) {
         const auto color = static_cast<RGB565>(dest_color);
 
-        #pragma GCC unroll 4
+        #pragma GCC unroll(4)
         for(T i = x_range_.start; i < x_range_.stop; i++){
             const bool is_inside = contains_point(Vec2<T>{i, y_});
             if(not is_inside) continue;
@@ -1437,7 +1594,7 @@ void render_main(){
         ).examine();
     };
 
-
+    auto font = MonoFont7x7{};
     while(true){
         const auto ctime = clock::time();
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
@@ -1464,9 +1621,26 @@ void render_main(){
         // using Vec2u16 = Vec2<uint16_t>;
         // auto shape =  Rect2u16{shape_x,shape_y,120,60};
 
-        #if 1
+        #if 0
         auto shape = Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
         #endif 
+
+        #if 0
+
+        // char str[2] = {
+        //     static_cast<char>('0' + (clock::millis().count() / 200) % 16), '\0'};
+
+        auto shape = LineText{
+            .left_top = {20,20},
+            .spacing = 2,
+            // .str = "A",
+            // .str = "B",
+            // .str = str,
+            .str = "明白了您只需要编码值而不是以下是修复后的代码",
+            // .str = "widget",
+            .font = font
+        };
+        #endif
         // auto shape =  Circle2<uint16_t>{
         //     Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 60};
 
@@ -1528,43 +1702,43 @@ void render_main(){
         #endif
 
         #if 0
-        // const auto shape = AnnularSector<uint16_t, q16>{
-        //     .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
-        //     // .radius_range = {8, 12},
-        //     // .radius_range = {10, 14},
-        //     // .radius_range = {47, 53},
-        //     .radius_range = {40, 60},
-        //     .angle_range = {
-        //         Angle<q16>::from_degrees(60 + ctime * 120), 
-        //         // Angle<q16>::from_degrees(123)
-        //         Angle<q16>::from_degrees(LERP(
-        //             50, 310, 
-        //             sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16
-        //         ))
-        //     }
-        // };
-
         const auto shape = AnnularSector<uint16_t, q16>{
-            .center = {160, 160},
-            // .radius_range = {8, 12},
+            .center = {uint16_t(160 + 79.2_r * sinpu(ctime * 0.2_r)), 80},
+            .radius_range = {8, 12},
             // .radius_range = {10, 14},
             // .radius_range = {47, 53},
-            .radius_range = {130, 150},
+            // .radius_range = {40, 60},
             .angle_range = {
-                Angle<q16>::from_degrees(0), 
+                Angle<q16>::from_degrees(60 + ctime * 120), 
                 // Angle<q16>::from_degrees(123)
-                Angle<q16>::from_degrees(180)
+                Angle<q16>::from_degrees(LERP(
+                    50, 310, 
+                    sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16
+                ))
             }
         };
 
+        // const auto shape = AnnularSector<uint16_t, q16>{
+        //     .center = {160, 160},
+        //     // .radius_range = {8, 12},
+        //     // .radius_range = {10, 14},
+        //     // .radius_range = {47, 53},
+        //     .radius_range = {130, 150},
+        //     .angle_range = {
+        //         Angle<q16>::from_degrees(0), 
+        //         // Angle<q16>::from_degrees(123)
+        //         Angle<q16>::from_degrees(180)
+        //     }
+        // };
+
         #endif
 
-        #if 0
+        #if 1
         const auto shape = Sector<uint16_t, q16>{
             .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
             // .radius = 23,
-            // .radius = 13,
-            .radius = 53,
+            .radius = 12,
+            // .radius = 53,
             .angle_range = {
                 Angle<q16>::from_degrees(60 + ctime * 120), 
                 // Angle<q16>::from_degrees(123)
@@ -1628,11 +1802,14 @@ void render_main(){
             }
         });
 
+
         DEBUG_PRINTLN(
             render_us.count(), 
             clear_us.count(), 
             upload_us.count(), 
             total_us.count()
+
+
             // render_iter
             // shape_bb
         );

@@ -67,12 +67,10 @@ public:
         const auto x_range = roi.x_range();
         const auto y_range = roi.y_range();
 
-        Vertexs ret;
-        auto center = roi.center();
-
-        for(auto & item : ret){
-            item = center;
-        }
+        const auto center = roi.center();
+        Vertexs ret{
+            center, center, center, center
+        };
 
         #define COMP(s1, s2, i)\
         if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\

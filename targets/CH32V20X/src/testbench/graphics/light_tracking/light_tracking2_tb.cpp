@@ -475,7 +475,7 @@ void light_tracking_main(void){
         // const auto u = micros();
         const auto st = sinpu(clock::time() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unchecked({0,0});
-        displayer.setarea_unchecked({0,0, LCD_W, LCD_H}).examine();
+        displayer.setarea_unchecked({Vec2u16{0,0}, Vec2u16{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
             // row.fill(RGB565(Color<real_t>(0,int(y==0),0,0)));
@@ -527,7 +527,7 @@ void light_tracking_main(void){
 
     auto render = [&](){
         const auto u = clock::micros();
-        displayer.setarea_unchecked({0,0, LCD_W, LCD_H}).examine();
+        displayer.setarea_unchecked(Rect2u{Vec2u{0,0}, Vec2u{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){
 
             std::array<RGB565, LCD_W> row;

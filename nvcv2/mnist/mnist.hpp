@@ -23,8 +23,8 @@ public:
         real_t confidence;
     };
 
-    Choices outputs;
-    Result output;
+    Choices outputs = {0};
+    Result output = {0, 0};
 protected:
     tm_mdl_t mdl;
     bool loaded = false;
