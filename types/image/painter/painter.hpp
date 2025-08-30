@@ -111,7 +111,7 @@ public:
         
         for(size_t y = region.y(); y < region.y() + region.h(); y++){
             for(size_t x = region.x(); x < region.x() + region.w(); ++x){
-                src_image.putpixel_unchecked({x,y}, ColorType(color_));
+                src_image.putpixel_unchecked({x,y}, color_cast<ColorType>(color_));
             }
         }
 
@@ -121,7 +121,7 @@ public:
     void putpixel_unchecked(const Vec2<uint16_t> pos){
         auto & src_image = may_src_image_.unwrap();
         if(not src_image.size().has_point(pos)) return;
-        src_image.putpixel_unchecked(pos, ColorType(color_));
+        src_image.putpixel_unchecked(pos, color_cast<ColorType>(color_));
     }
 
     [[nodiscard]]
@@ -186,7 +186,7 @@ public:
                 if(enfont.get_pixel(chr, {uint8_t(x),uint8_t(y)})){
                     src_image.putpixel_unchecked(
                         pos + Vec2u{x, y}, 
-                        ColorType(color_)
+                        color_cast<ColorType>(color_)
                     );
                 }
             }

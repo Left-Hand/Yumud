@@ -121,9 +121,9 @@ class Plotter{
         static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(60_deg);
         static constexpr auto Z_UNIT = Vec2<real_t>::DOWN;
         
-        static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
-        static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
-        static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
+        static constexpr RGB565 X_COLOR = color_cast<RGB565>(ColorEnum::RED);
+        static constexpr RGB565 Y_COLOR = color_cast<RGB565>(ColorEnum::GREEN);
+        static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
         const auto x_axis = Vec3<real_t>::from_x00(arm_length);
@@ -192,8 +192,7 @@ void smc2025_main(){
         {240, 240}
     };
 
-    tft.init().examine();
-    drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
+    tft.init(drivers::st7789_preset::_320X170{}).examine();
 
     I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
     cam_i2c.init(100_KHz);
@@ -282,7 +281,7 @@ void smc2025_main(){
 
 
     [[maybe_unused]] auto test_fill = [&]{
-        tft.fill(ColorEnum::BRRED).examine();
+        tft.fill(color_cast<RGB565>(ColorEnum::BRRED)).examine();
     };
 
     Image<RGB565> rgb_img{{tft.size().x, 20u}};
@@ -292,7 +291,7 @@ void smc2025_main(){
     [[maybe_unused]] auto test_paint = [&]{
         painter.set_color(ColorEnum::WHITE);
         painter.set_en_font(&enfont).examine();
-        painter.fill(ColorEnum::BLACK).examine();
+        painter.fill(color_cast<RGB888>(ColorEnum::BLACK)).examine();
 
         FixedStringStream<64> ss;
         ss.println("helloword", clock::time());

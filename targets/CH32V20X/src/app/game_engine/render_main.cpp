@@ -53,6 +53,7 @@ struct Infallible{};
 template<typename T>
 struct [[nodiscard]] Result<T, Infallible>{
     constexpr Result(Ok<T> && okay):value_(okay.get()){;}
+    consteval Result(Err<Infallible> && error){;}
 
     constexpr T examine() const {return value_;}
     constexpr T unwrap() const {return value_;}
@@ -91,15 +92,7 @@ struct MonoFont7x7 final{
     using font_item_t = font_res::chfont_7x7_item_t;
 
     constexpr MonoFont7x7(){;}
-    // constexpr MonoFont7x7(const MonoFont7x7 & other) = delete;
-    // constexpr MonoFont7x7(MonoFont7x7 && other) = delete;
-
-    // constexpr MonoFont7x7 & operator =(const MonoFont7x7 & other) = default;
-    // constexpr MonoFont7x7 & operator =(MonoFont7x7 && other) = default;
-
 	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
-        // if(!size.has_point(offset)) return false;
-        // if(row_nth > 6) return false;
 
 		if(token != last_token_){
             last_token_ = token;
@@ -119,11 +112,10 @@ struct MonoFont7x7 final{
 		}
 	}
 
-    // consteval Vec2u16 size() const {
     constexpr Vec2u16 size() const {
         return Vec2u16{7,7};
     }
-// private:
+private:
     wchar_t last_token_ = 0;
     const font_item_t * p_last_font_item_ = nullptr;
     uint8_t buf[7] = {0};
@@ -151,13 +143,38 @@ struct MonoFont7x7 final{
     }
 };
 
+struct MonoFont8x5 final{
+    constexpr MonoFont8x5() = default;
+    bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) const {
+        return font_res::enfont_8x5[MAX(token - ' ', 0)][offset.x + 1] & (1 << offset.y);
+    }
+
+	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
+        auto & row_data = font_res::enfont_8x5[MAX(token - ' ', 0)];
+        uint32_t row_mask = 0;
+
+        // #pragma GCC unroll(5)
+        for(uint8_t x = 0; x < 5; x++){
+            row_mask |= uint32_t(bool(uint8_t(row_data[x + 1]) & uint8_t(1 << row_nth))) << (4-x);
+        }
+
+        return row_mask;
+	}
+
+
+    constexpr Vec2u16 size() const {
+        return Vec2u16{5,8};
+    }
+public:
+};
 
 struct LineText{
     Vec2u16 left_top;
     uint16_t spacing;
     StringView str;
     // MonoFont7x7 & font;
-    MonoFont7x7 font;
+    // MonoFont7x7 font;
+    MonoFont8x5 font;
 
     constexpr Rect2u16 bounding_box() const {
         const size_t str_len = str.length();
@@ -907,7 +924,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
             target.bounding_box().x_range().length() / shape_.cell_size.x
         );
 
-        const auto color = static_cast<RGB565>(ColorEnum::PINK);
+        const auto color = color_cast<RGB565>(ColorEnum::PINK);
         #pragma GCC unroll(4)
         for(size_t i = 0; i < count; i++){
             // const auto old_x = x;
@@ -960,16 +977,19 @@ struct DrawDispatchIterator<LineText> {
     Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
         auto x_base = x_range_.start;
         const auto y_offset = y_ - y_range_.start;
-        auto gbk_iter = GBKIterator(shape_.str);
-        // auto gbk_iter = GBKIterator("你");
         const auto color = static_cast<RGB565>(dest_color);
 
 
 
-        while(gbk_iter.has_next()){
-            const auto token = gbk_iter.next();
+        // for(const auto gbk_token : StdRange(GBKIterator(shape_.str))){
+        // for(const auto gbk_token : StdRange(GBKIterator("这个驱动已经完成"))){
+        // for(const auto gbk_token : shape_.str){
+        // for(const auto gbk_token : "123456789abcdABCD"){
+        // for(const auto gbk_token : "abcdefghijklmnopqrstuvwxyz"){
+        // for(const auto gbk_token : "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"){
+        for(const auto gbk_token : "SPINRATE"){
 
-            const auto row_pixels = shape_.font.get_row_pixels(token, y_offset);
+            const auto row_pixels = shape_.font.get_row_pixels(gbk_token, y_offset);
 
             if(unlikely(row_pixels == 0)) continue;
 
@@ -1044,7 +1064,7 @@ struct DrawDispatchIterator<GridMap2<T>> {
             const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + shape_.padding.x;
 
-            if(const auto res = target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
+            if(const auto res = target.fill_x_range(x_range, color_cast<RGB565>(ColorEnum::PINK));
                 res.is_err()) return res;
             // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK)).examine();
             // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));
@@ -1070,8 +1090,9 @@ template<typename T>
 struct RoundedRect2SliceIterator{
 public:
     constexpr RoundedRect2SliceIterator(const RoundedRect2<T> & shape):
-        // x0_(shape.bounding_rect.position.x + shape.radius),
         x_range_(shape.bounding_rect.x_range()),
+        left_and_right_center_x_(shape.bounding_rect.x_range()
+            .shrink(shape.radius).examine()),
         y_range_(shape.bounding_rect.y_range()),
         y_(y_range_.start),
         radius_(shape.radius),
@@ -1091,9 +1112,10 @@ public:
 
     constexpr Range2u16 x_range() const{
         if(get_y_overhit()){
-            return Range2u16{
-                x_range_.start + radius_ + x_offset_,
-                x_range_.stop - radius_ - x_offset_};
+            return Range2u16::from_start_and_stop_unchecked(
+                left_and_right_center_x_.start  + x_offset_,
+                left_and_right_center_x_.stop - x_offset_
+            );
         }else{
             return x_range_;
         }
@@ -1106,13 +1128,88 @@ public:
     }
 
 private:
-    // int16_t x0_;
+    Range2<uint16_t> x_range_;
+    Range2<uint16_t> left_and_right_center_x_;
+    Range2<uint16_t> y_range_;
+    uint16_t y_;
+    uint16_t radius_;
+    uint32_t radius_squ_;
 
-    
-    // int16_t radius_;
+    int16_t x_offset_ = 0;
+
+    constexpr void replace_x(){
+        x_offset_ = -radius_;
+
+        const uint32_t squ_y_offset = static_cast<uint32_t>(square(static_cast<uint32_t>(get_y_overhit())));
+        for(x_offset_ = -radius_; x_offset_ <= 0; x_offset_++){
+            if (static_cast<uint32_t>(square(static_cast<int32_t>(x_offset_))) + squ_y_offset <= radius_squ_)
+                break;
+        }
+        // x_offset_ = -radius_;
+    }
+
+    constexpr bool is_y_at_edge() const {
+        return y_ == (y_range_.start) || y_ == (y_range_.stop);
+    }
+
+    constexpr uint16_t get_y_overhit() const {
+        if(y_ < y_range_.start + radius_){
+            return y_range_.start + radius_ - y_;
+        }else if(y_ > y_range_.stop - radius_){
+            return y_ - (y_range_.stop - radius_);
+        }else{
+            return 0;
+        }
+        // return MIN(uint16_t(left_and_right_center_x_.start) - y_), 0) MN(y_ - (left_and_right_center_x_.stop)));
+    }
+};
+
+
+template<typename T>
+struct VerticalOval2SliceIterator{
+public:
+    constexpr VerticalOval2SliceIterator(const VerticalOval2<T> & shape):
+        x_range_(shape.bounding_box().x_range()),
+        y_range_(shape.bounding_box().y_range()),
+        y_(y_range_.start),
+        x0_(shape.top_center.x),
+        radius_(shape.radius),
+        radius_squ_(square(shape.radius))
+    {
+        replace_x();
+    }
+
+    constexpr void advance(){
+        y_++;
+        replace_x();
+    }
+
+    constexpr bool has_next() const {
+        return y_ < y_range_.stop;
+    }
+
+    constexpr Range2u16 x_range() const{
+        if(get_y_overhit()){
+            return Range2u16::from_start_and_stop_unchecked(
+                static_cast<uint16_t>(x0_ + x_offset_),
+                static_cast<uint16_t>(x0_ - x_offset_)
+            );
+        }else{
+            return x_range_;
+        }
+    }
+
+    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+        const auto [left, right] = x_range();
+
+        return {Range2u16{left, left + 1}, Range2u16{right - 1, right}};
+    }
+
+private:
     Range2<uint16_t> x_range_;
     Range2<uint16_t> y_range_;
     uint16_t y_;
+    uint16_t x0_;
     uint16_t radius_;
     uint16_t radius_squ_;
 
@@ -1120,8 +1217,11 @@ private:
 
     constexpr void replace_x(){
         x_offset_ = -radius_;
-        while(x_offset_ * x_offset_ + square(get_y_overhit()) > radius_squ_){
-            x_offset_++;
+
+        const uint32_t squ_y_offset = static_cast<uint32_t>(square(static_cast<uint32_t>(get_y_overhit())));
+        for(x_offset_ = -radius_; x_offset_ <= 0; x_offset_++){
+            if (static_cast<uint32_t>(square(static_cast<int32_t>(x_offset_))) + squ_y_offset <= radius_squ_)
+                break;
         }
         // x_offset_ = -radius_;
     }
@@ -1140,10 +1240,7 @@ private:
         }
         // return MIN(uint16_t(y_range_.start + radius_ - y_), 0) MN(y_ - (y_range_.stop - radius_)));
     }
-
 };
-
-// DrawDispatchIterator 特化
 template<std::integral T>
 struct DrawDispatchIterator<Triangle2<T>> {
     using Triangle = Triangle2<T>;
@@ -1290,6 +1387,51 @@ private:
     Iterator iter_;
 };
 
+template<std::integral T>
+struct DrawDispatchIterator<VerticalOval2<T>> {
+    using Shape = VerticalOval2<T>;
+    using Iterator = VerticalOval2SliceIterator<T>;
+
+    constexpr DrawDispatchIterator(const Shape & shape)
+        : iter_(shape){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return iter_.has_next();
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        iter_.advance();
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto x_range = iter_.x_range();
+        if(auto res = target.fill_x_range({x_range.start, x_range.stop}, color);
+            res.is_err()) return res;
+        
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        // 绘制当前行的范围
+        const auto [left_x_range, right_x_range] = iter_.left_and_right();
+        if(const auto res = target.fill_x_range(left_x_range, color);
+            res.is_err()) return res;
+        if(const auto res = target.fill_x_range(right_x_range, color);
+            res.is_err()) return res;
+        return Ok();
+
+    }
+
+
+private:
+    Iterator iter_;
+};
 
 
 
@@ -1371,7 +1513,6 @@ private:
     using ST = std::make_signed_t<T>;
 
     __fast_inline constexpr bool contains_point(const Vec2<uint32_t> p){
-        // const auto offset = (Vec2<ST>(p) - Vec2<ST>(center_)).flip_y();
         const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
         const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
 
@@ -1576,8 +1717,7 @@ void render_main(){
         {LCD_WIDTH, LCD_HEIGHT}
     };
 
-    tft.init().examine();
-    drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
+    tft.init(drivers::st7789_preset::_320X170{}).examine();
 
 
     // std::array<RGB565, LCD_WIDTH * LCD_HEIGHT> render_buffer;
@@ -1594,7 +1734,9 @@ void render_main(){
         ).examine();
     };
 
-    auto font = MonoFont7x7{};
+    [[maybe_unused]] auto ch_font = MonoFont7x7{};
+    [[maybe_unused]] auto en_font = MonoFont8x5{};
+
     while(true){
         const auto ctime = clock::time();
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
@@ -1622,7 +1764,26 @@ void render_main(){
         // auto shape =  Rect2u16{shape_x,shape_y,120,60};
 
         #if 0
-        auto shape = Segment2<uint16_t>{Vec2u16{shape_x,shape_y},Vec2u16{50,80}};
+        auto shape = Segment2<uint16_t>{
+            Vec2u16{uint16_t(50 + 20 * c), uint16_t(80 + 20 * s)},
+            Vec2u16{50,80}
+        };
+        #endif 
+
+        #if 1
+        auto shape = VerticalOval2<uint16_t>::from_bounding_box(
+            Rect2u16{
+                Vec2u16{20,20},
+                Vec2u16{50,120},
+                // Vec2u16{14,60},
+                // Vec2u16{12,60},
+            }
+        ).unwrap();
+        // auto shape = Rect2u16{
+        //         Vec2u16{20,20},
+        //         // Vec2u16{14,60},
+        //         Vec2u16{12,60},
+        //     };
         #endif 
 
         #if 0
@@ -1636,21 +1797,30 @@ void render_main(){
             // .str = "A",
             // .str = "B",
             // .str = str,
-            .str = "明白了您只需要编码值而不是以下是修复后的代码",
+            // .str = "明白了您只需要编码值而不是以下是修复后的代码",
+            .str = "123456789abcdef",
             // .str = "widget",
-            .font = font
+            .font = en_font
         };
         #endif
-        // auto shape =  Circle2<uint16_t>{
-        //     Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 60};
 
 
         #if 0
-        auto shape = HorizonOval2<uint16_t>{
-            .left_center = Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 
-            .radius = 15, 
-            .length = 60
-        };
+        auto shape =  Circle2<uint16_t>{
+            Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 6};
+        #endif
+
+        #if 0
+        // auto shape = HorizonOval2<uint16_t>{
+        //     .left_center = Vec2u16{uint16_t(130 + 80 * sinpu(ctime * 0.2_r)), 80}, 
+        //     .radius = 20, 
+        //     .length = 80
+        // };
+        auto shape = HorizonOval2<uint16_t>::from_bounding_box(
+            // Rect2u16{Vec2u16{0,0}, Vec2u16{160, 40}}
+            // Rect2u16{Vec2u16{0,0},tft.bounding_box().size/2}
+            tft.bounding_box()
+        ).unwrap();
         #endif
         
         #if 0
@@ -1670,10 +1840,12 @@ void render_main(){
         };
         #endif
 
-        // auto shape = RoundedRect2<uint16_t>{
-        //     .bounding_rect = tft.bounding_box().shrink(20).unwrap(), 
-        //     .radius = 10
-        // };
+        #if 0
+        auto shape = RoundedRect2<uint16_t>{
+            .bounding_rect = tft.bounding_box().shrink(0).unwrap(), 
+            .radius = 40
+        };
+        #endif
 
         #if 0
         auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
@@ -1733,7 +1905,7 @@ void render_main(){
 
         #endif
 
-        #if 1
+        #if 0
         const auto shape = Sector<uint16_t, q16>{
             .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
             // .radius = 23,
@@ -1768,7 +1940,7 @@ void render_main(){
                 auto line_span = LineBufferSpan<RGB565>(std::span(render_buffer), i);
                 auto guard = make_scope_guard([&]{
                     clear_us += measure_total_elapsed_us([&]{
-                        line_span.fill(static_cast<RGB565>(RGB565::BLACK)).examine();
+                        line_span.fill(color_cast<RGB565>(ColorEnum::BLACK)).examine();
                     });
                 });
 
@@ -1780,12 +1952,16 @@ void render_main(){
                     }
 
                     if(render_iter.has_next()){
-                        for(size_t j = 0; j < 200; j++){
-                        // for(size_t j = 0; j < 30; j++){
+                        // for(size_t j = 0; j < 2000; j++){
+                        // for(size_t j = 0; j < 200; j++){
+                        for(size_t j = 0; j < 30; j++){
                         // for(size_t j = 0; j < 10; j++){
                         // for(size_t j = 0; j < 1; j++){
 
-                            render_iter.draw_filled(line_span, RGB565::PINK).examine();
+                            // static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
+                            static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);
+
+                            render_iter.draw_filled(line_span, color).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
                         }
                         // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
@@ -1808,7 +1984,7 @@ void render_main(){
             clear_us.count(), 
             upload_us.count(), 
             total_us.count()
-
+            // clock::micros().count()
 
             // render_iter
             // shape_bb

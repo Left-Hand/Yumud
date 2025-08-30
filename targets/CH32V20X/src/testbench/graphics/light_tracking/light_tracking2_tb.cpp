@@ -464,10 +464,9 @@ void light_tracking_main(void){
 
     DEBUG_PRINTLN("--------------");
     DEBUG_PRINTLN(spi_fd.as_u8());
-    displayer.init().examine();
-    drivers::st7789_preset::init(displayer, drivers::st7789_preset::_320X170{}).examine();
+    displayer.init(drivers::st7789_preset::_320X170{}).examine();
 
-    displayer.fill(ColorEnum::PINK).examine();
+    displayer.fill(color_cast<RGB565>(ColorEnum::PINK)).examine();
     clock::delay(200ms);
 
     [[maybe_unused]]

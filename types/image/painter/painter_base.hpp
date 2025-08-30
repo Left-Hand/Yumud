@@ -109,7 +109,7 @@ public:
 
     template<typename T>
     void set_color(const T color){
-        color_ = static_cast<RGB888>(color);
+        color_ = color_cast<RGB888>(color);
     }
 
     RGB888 get_color() const{
@@ -192,7 +192,7 @@ public:
 protected:
     Cursor cursor_ = {0,0};
 
-    RGB888 color_;
+    RGB888 color_ = color_cast<RGB888>(ColorEnum::BLACK);
     Rect2u crop_rect_ = Rect2u::ZERO;
 
     Option<Font &> may_enfont_ = None;

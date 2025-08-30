@@ -123,13 +123,13 @@ struct LineDDAIterator{
         const q16 b = a + x_step();
         if(a < b){
             return Range2u16::from_start_and_stop_unchecked(
-                static_cast<uint16_t>(floor_int(a)), 
-                static_cast<uint16_t>(ceil_int(b))
+                floor_cast<uint16_t>(a), 
+                ceil_cast<uint16_t>(b)
             );
         }else{
             return Range2u16::from_start_and_stop_unchecked(
-                static_cast<uint16_t>(floor_int(b)), 
-                static_cast<uint16_t>(ceil_int(a))
+                floor_cast<uint16_t>(b), 
+                ceil_cast<uint16_t>(a)
             );
         }
     }
@@ -180,8 +180,8 @@ public:
     __fast_inline constexpr Range2u16 current_filled() const {
         auto & self = *this;
         return Range2u16::from_start_and_stop_unchecked(
-            static_cast<uint16_t>(floor_int(left_iter(self).x())), 
-            static_cast<uint16_t>(ceil_int(right_iter(self).x()))
+            floor_cast<uint16_t>(left_iter(self).x()), 
+            ceil_cast<uint16_t>(right_iter(self).x())
         );
     }
 

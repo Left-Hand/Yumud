@@ -42,7 +42,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Gray>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = RGB565(src[Vec2u{x, y}]);
+                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
             }
         }
     }
@@ -50,7 +50,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Binary>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = RGB565(src[Vec2u{x, y}]);
+                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
             }
         }
     }

@@ -17,6 +17,8 @@ public:
     T stop;
     #pragma pack(pop)
 
+    using Tsigned = std::make_signed_t<T>;
+
     static constexpr Range2<T> INF = {
         std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
     static constexpr Range2<T> POS = {T(0), std::numeric_limits<T>::max()};
@@ -203,7 +205,7 @@ public:
         return Range2<T>(MAX(T(this->start), T(other.start)), MIN(T(this->stop), T(other.stop)));
     }
 
-    [[nodiscard]] constexpr T get_center()const{
+    [[nodiscard]] constexpr T center()const{
         return (start + stop) / 2;
     }
 
@@ -217,10 +219,21 @@ public:
     }
 
 
-    [[nodiscard]] constexpr Range2<T> expand(const arithmetic auto & value) const{
-        const Range2<T> ret = Range2<T>(this->start - value, this->stop + value);
-        if (ret.is_regular()) return ret;
-        else return Range2<T>();
+    [[nodiscard]] constexpr Option<Range2<T>> expand(const arithmetic auto & value) const{
+        const auto next_start = this->start - value;
+        const auto next_stop = this->stop + value; 
+
+        if(next_start > next_stop) return None;
+        return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
+    }
+
+    [[nodiscard]] constexpr Option<Range2<T>> shrink(const arithmetic auto & value) const{
+        
+        const auto next_start = this->start + value;
+        const auto next_stop = this->stop - value; 
+
+        if(next_start > next_stop) return None;
+        return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
     }
 
     [[nodiscard]] constexpr Range2<T> merge(const Range2<arithmetic auto> & other) const {
