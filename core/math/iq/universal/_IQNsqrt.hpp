@@ -112,10 +112,10 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
         }
 
         /* If the Q gives an odd starting exponent make it even. */
-        if ((32 - Q) % 2 == 1) {
+        if constexpr((32 - Q) % 2 == 1) {
             iqNInputX <<= 1;
             /* Start with positive exponent for sqrt */
-            if (type == TYPE_SQRT) {
+            if constexpr(type == TYPE_SQRT) {
                 i16Exponent = ((32 - Q) - 1) >> 1;
             }
             /* start with negative exponent for isqrt */
@@ -124,7 +124,7 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
             }
         } else {
             /* start with positive exponent for sqrt */
-            if (type == TYPE_SQRT) {
+            if constexpr(type == TYPE_SQRT) {
                 i16Exponent = (32 - Q) >> 1;
             }
             /* start with negative exponent for isqrt */
@@ -140,7 +140,7 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
         while ((uint16_t)(uiq32Input >> 16) < 0x4000) {
             uiq32Input <<= 2;
             /* Decrement exponent for sqrt and mag */
-            if (type) {
+            if constexpr(type) {
                 i16Exponent--;
             }
             /* Increment exponent for isqrt */

@@ -1216,29 +1216,56 @@ private:
     int16_t x_offset_ = 0;
 
     constexpr void replace_x(){
-        x_offset_ = -radius_;
 
         const uint32_t squ_y_offset = static_cast<uint32_t>(square(static_cast<uint32_t>(get_y_overhit())));
-        for(x_offset_ = -radius_; x_offset_ <= 0; x_offset_++){
-            if (static_cast<uint32_t>(square(static_cast<int32_t>(x_offset_))) + squ_y_offset <= radius_squ_)
-                break;
+
+        #if 1
+        for(int32_t x_offset = -radius_; x_offset <= 0; x_offset++){
+            if (static_cast<uint32_t>(square(x_offset)) + squ_y_offset <= radius_squ_){
+                x_offset_ = static_cast<int16_t>(x_offset);
+                return;
+            }
         }
-        // x_offset_ = -radius_;
+        __builtin_unreachable();
+        #else
+        // x_offset_ = static_cast<int16_t>(-ymd::sqrt(iq_t<16>(radius_squ_ - squ_y_offset)));
+        #endif
     }
 
     constexpr bool is_y_at_edge() const {
         return y_ == (y_range_.start) || y_ == (y_range_.stop);
     }
 
+    static constexpr int32_t fast_relu_i32(const int32_t x){
+        return x & (~(x >> 31));
+    }
     constexpr uint16_t get_y_overhit() const {
-        if(y_ < y_range_.start + radius_){
-            return y_range_.start + radius_ - y_;
-        }else if(y_ > y_range_.stop - radius_){
-            return y_ - (y_range_.stop - radius_);
-        }else{
-            return 0;
-        }
-        // return MIN(uint16_t(y_range_.start + radius_ - y_), 0) MN(y_ - (y_range_.stop - radius_)));
+        // const uint16_t y_top    = static_cast<uint16_t>(y_range_.start + radius_);
+        // const uint16_t y_bottom = static_cast<uint16_t>(y_range_.stop - radius_);
+        // const int32_t y_top = static_cast<int32_t>(y_range_.start) + static_cast<int32_t>(radius_);
+        // const int32_t y_bottom = static_cast<int32_t>(y_range_.stop) - static_cast<int32_t>(radius_);
+
+        // if(y_ < y_top){
+        //     return y_top - y_;
+        // }else if(y_ > y_bottom){
+        //     return y_ - (y_bottom);
+        // }else{
+        //     return 0;
+        // }
+
+        const int32_t y_top_over = static_cast<int32_t>(y_range_.start + radius_ - y_);
+        const int32_t y_bottom_over = static_cast<int32_t>(y_ - y_range_.stop + radius_);
+        return MAX(y_top_over, y_bottom_over, 0);
+        // return fast_relu_i32(y_top_over) + fast_relu_i32(y_bottom_over);
+        // 计算上边界超出的距离（如果y_ < y_top则为正，否则为0）
+        // const int32_t over_top = (y_top - y_) & ~(static_cast<int32_t>(y_ - y_top) >> 31);
+        // const int32_t over_top = MAX(y_top - y_, 0);
+        
+        // 计算下边界超出的距离（如果y_ > y_bottom则为正，否则为0）
+        // const int32_t over_bottom = (y_ - y_bottom) & ~(static_cast<int32_t>(y_bottom - y_) >> 31);
+        // const int32_t over_bottom = MAX(y_ - y_bottom, 0);
+        // 合并结果（两个条件互斥，所以可以直接相加）
+        // return over_top + over_bottom;
     }
 };
 template<std::integral T>
@@ -1739,8 +1766,9 @@ void render_main(){
 
     while(true){
         const auto ctime = clock::time();
+        const auto cangle = Angle<q16>::from_turns(ctime * 0.3_r);
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
-        [[maybe_unused]] const auto [s,c] = sincospu(ctime);
+        [[maybe_unused]] const auto [s,c] = cangle.sincos();
         [[maybe_unused]] const auto [shape_x,shape_y] = std::make_tuple(uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
 
         [[maybe_unused]] const auto samples = [&]{
@@ -1770,11 +1798,11 @@ void render_main(){
         };
         #endif 
 
-        #if 1
+        #if 0
         auto shape = VerticalOval2<uint16_t>::from_bounding_box(
             Rect2u16{
-                Vec2u16{20,20},
-                Vec2u16{50,120},
+                Vec2u16{0,0},
+                Vec2u16{120,170},
                 // Vec2u16{14,60},
                 // Vec2u16{12,60},
             }
@@ -1861,12 +1889,12 @@ void render_main(){
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 0
+        #if 1
         auto shape =  Triangle2<uint16_t>{
             .points = {
-                Vec2u16{shape_x,shape_y},
-                Vec2u16{160,130},
-                Vec2u16{20,150}
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle),
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle + 120_deg),
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle + 240_deg),
                 // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
                 // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
             }
@@ -1954,8 +1982,8 @@ void render_main(){
                     if(render_iter.has_next()){
                         // for(size_t j = 0; j < 2000; j++){
                         // for(size_t j = 0; j < 200; j++){
-                        for(size_t j = 0; j < 30; j++){
-                        // for(size_t j = 0; j < 10; j++){
+                        // for(size_t j = 0; j < 30; j++){
+                        for(size_t j = 0; j < 10; j++){
                         // for(size_t j = 0; j < 1; j++){
 
                             // static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);

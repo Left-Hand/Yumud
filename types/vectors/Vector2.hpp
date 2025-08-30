@@ -148,8 +148,25 @@ struct Vec2{
     }
 
     [[nodiscard]] constexpr T dot(const Vec2<T> & other) const;
-    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<T> & b) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angle<T> angle)const;
+
+    template<typename U>
+    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<U> & b) const{
+        return Vec2<T>(
+            static_cast<T>(x*b.x - y*b.y), 
+            static_cast<T>(x*b.y + y*b.x)
+        );
+    }
+
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angle<U> angle)const{
+        static_assert(not std::is_integral_v<U>);
+        // return this->improduct(Vec2<T>::from_angle(angle));
+        const auto [s,c] = angle.sincos();
+        return Vec2<T>(
+            static_cast<T>(x*c - y*s), 
+            static_cast<T>(x*s + y*c)
+        );
+    }
     [[nodiscard]] __fast_inline constexpr Vec2<T> abs() const;
 
 
@@ -545,16 +562,6 @@ constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
 }
 
 
-template<arithmetic T>
-constexpr __fast_inline Vec2<T> Vec2<T>::improduct(const Vec2<T> & b) const{
-    return Vec2<T>(x*b.x - y*b.y, x*b.y + y*b.x);
-}
-
-template<arithmetic T>
-constexpr __fast_inline Vec2<T> Vec2<T>::rotated(const Angle<T> angle) const{
-    static_assert(not std::is_integral_v<T>);
-    return this->improduct(Vec2<T>::from_angle(angle));
-}
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
 \
