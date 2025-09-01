@@ -217,7 +217,7 @@ void smc2025_main(){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.position, src.size()));
+                    Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -232,7 +232,7 @@ void smc2025_main(){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.position, src.size()));
+                    Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -264,13 +264,13 @@ void smc2025_main(){
 
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().x_range());
-        const auto rect = gray_img.size().to_rect();
-        const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        const auto rect = Rect2u::from_size(gray_img.size());
+        const auto range = Range2<uint32_t>::from_start_and_length(rect.top_left.x, rect.size.x);
 
         DEBUG_PRINTLN(
             render_use.count(), 
             gray_img.size(), 
-            rect.position.x, 
+            rect.top_left.x, 
             rect.size.x, 
             range 
         );

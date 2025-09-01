@@ -11,10 +11,10 @@ class PackedBinaryImage{
 public:
 
 protected:
-    PackedBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
+    explicit PackedBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
         data_(std::move(_data)),
         size_(_size){;}
-    PackedBinaryImage(const Vec2u & _size): 
+    explicit PackedBinaryImage(const Vec2u & _size): 
         PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
 protected:
@@ -41,7 +41,7 @@ public:
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
         uint8_t mask = 1 << (point_index % 8);
-        if(color == Binary::WHITE){
+        if(color == Binary::from_white()){
             get_data()[data_index] |= mask;
         }else{
             get_data()[data_index] &= ~mask;
@@ -51,12 +51,12 @@ public:
     void getpixel_unchecked(const Vec2u & pos, Binary & color) const{
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t data_index = point_index / 8;
-        color = Binary(get_data()[data_index] & (1 << (point_index % 8)));
+        color = Binary::from_bool(get_data()[data_index] & (1 << (point_index % 8)));
     }
 public:
-    HorizonBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
+    explicit HorizonBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
         PackedBinaryImage(_data, _size){;}
-    HorizonBinaryImage(const Vec2u & _size): 
+    explicit HorizonBinaryImage(const Vec2u & _size): 
         PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
     void putseg_h8_unchecked(const Vec2u & pos, const uint8_t mask, const Binary color){
@@ -103,12 +103,12 @@ public:
     }
     void getpixel_unchecked(const Vec2u & pos, Binary & color) const{
         uint32_t data_index = pos.x + (pos.y / 8) * size().x; 
-        color = Binary(get_data()[data_index] & (color.is_white() << (pos.y % 8)));
+        color = Binary::from_bool(get_data()[data_index] & (color.is_white() << (pos.y % 8)));
     }
 public:
-    VerticalBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
+    explicit VerticalBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vec2u & _size): 
         PackedBinaryImage(_data, _size){;}
-    VerticalBinaryImage(const Vec2u & _size): 
+    explicit VerticalBinaryImage(const Vec2u & _size): 
         PackedBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
     void putseg_v8_unchecked(const Vec2u & pos, const uint8_t mask, const Binary color){

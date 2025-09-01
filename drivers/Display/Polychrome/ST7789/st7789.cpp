@@ -62,7 +62,7 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     if(!need) return;
     #endif
 
-    const Vec2<uint16_t> p1 = offset_ + rect.top_left();
+    const Vec2<uint16_t> p1 = offset_ + rect.top_left;
     const Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - Vec2<uint16_t>(1,1);
 
     if(const auto res = write_command(0x2a);
@@ -110,7 +110,7 @@ IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 col
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = phy_.write_repeat_pixels(
-            color, rect.get_area());
+            color, rect.area());
         res.is_err()) return res;
     return Ok();
 }
@@ -119,7 +119,7 @@ IResult<> ST7789::puttexture_unchecked(const Rect2<uint16_t> rect, const RGB565 
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = phy_.write_burst_pixels(
-            std::span<const RGB565>(color_ptr, rect.get_area()));
+            std::span<const RGB565>(color_ptr, rect.area()));
         res.is_err()) return res;
     return Ok();
 }

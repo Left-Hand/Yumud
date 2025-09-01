@@ -18,7 +18,7 @@ public:
     template<typename U = void>
     using IResult = Result<U, Error>;
 
-    Image(const Vec2u size):
+    explicit Image(const Vec2u size):
         size_(size),
         data_(std::make_shared<T[]>(size.x * size.y)){
             ASSERT(not size.is_zero());
@@ -35,7 +35,7 @@ public:
     //     );
     // }
 
-    Image(std::shared_ptr<T[]> data, const Vec2u size):
+    explicit Image(std::shared_ptr<T[]> data, const Vec2u size):
         size_(size),
         data_(data){
             ASSERT(not size.is_zero());

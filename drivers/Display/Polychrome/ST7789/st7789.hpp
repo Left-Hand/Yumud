@@ -34,7 +34,7 @@ public:
         return Ok();
     }
     IResult<> fill(const RGB565 color){
-        return putrect_unchecked(size().to_rect(), color);
+        return putrect_unchecked(Rect2u16::from_size(size()), color);
     }
     IResult<> setpos_unchecked(const Vec2<uint16_t> pos);
     IResult<> setarea_unchecked(const Rect2<uint16_t> rect);
@@ -48,7 +48,7 @@ public:
     }
 
     IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
-        return phy_.write_burst_pixels(std::span(pcolor, rect.get_area()));
+        return phy_.write_burst_pixels(std::span(pcolor, rect.area()));
     }
 
     IResult<> set_display_offset(const Vec2<uint16_t> _offset){
@@ -105,7 +105,7 @@ public:
     );
 
     [[nodiscard]] Rect2u get_expose_rect(){
-        return algo_.size().to_rect();
+        return Rect2u::from_size(algo_.size());
     }
 
 private:

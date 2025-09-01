@@ -110,7 +110,6 @@ public:
 
     explicit LAB888(const RGB888 & rgb); 
 
-    explicit operator RGB888() const;
     
     __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
 
@@ -145,11 +144,8 @@ struct RGB332{
         return RGB332(r,g,b);
     } 
 
-    __fast_inline constexpr explicit operator uint8_t() const {return data;}
+    __fast_inline constexpr uint8_t as_u8() const {return data;}
 
-    __fast_inline constexpr uint8_t as_u8() const {
-        return data;
-    }
 private:
     __fast_inline constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
         b(_b), g(_g), r(_r){;}
@@ -250,36 +246,54 @@ struct Binary{
         BLACK   = 0x00   // Black color
     };
 
-    uint8_t data;
 
     __fast_inline constexpr explicit Binary(){;}
-    __fast_inline constexpr explicit Binary(const Kind kind) : data(kind){;}
-    __fast_inline constexpr explicit Binary(const bool _data): data(_data ? 0xff : 0x00){;}
     
-    __fast_inline constexpr Binary(const Binary & other) = default;
-    __fast_inline constexpr Binary(Binary && other) = default;
 
-    __fast_inline constexpr Binary & operator = (const Kind kind) { data = kind; return *this; }
-    __fast_inline constexpr Binary & operator = (const Binary & other) = default;
-    __fast_inline constexpr Binary & operator = (Binary && other) = default;
-    __fast_inline constexpr explicit Binary(const RGB888 & rgb): 
-        data((rgb.r + rgb.g + rgb.b) > 128 * 3 ? 255 : 0){;}
+    [[nodiscard]] __fast_inline static constexpr Binary from_black(){
+        return Binary(static_cast<uint8_t>(BLACK));
+    }
 
-    __fast_inline constexpr bool operator == (const Binary & other) const {return data == other.data;}
-    __fast_inline constexpr bool operator == (const Kind kind) const {return data == kind;}
+    [[nodiscard]] __fast_inline static constexpr Binary from_bool(const bool b){
+        return Binary(b ? 0xff : 0x00);
+    }
 
-    __fast_inline constexpr bool is_white() const {return data == WHITE;}
+    [[nodiscard]] __fast_inline static constexpr Binary from_white(){
+        return Binary(static_cast<uint8_t>(WHITE));
+    }
 
-    __fast_inline constexpr bool is_black() const {return data == BLACK;}
+    [[nodiscard]] __fast_inline constexpr bool operator ==(const Binary& rhs){
+        return data == rhs.data;
+    }
+    [[nodiscard]] __fast_inline constexpr bool operator !=(const Binary& rhs){
+        return data != rhs.data;
+    }
 
-    __fast_inline constexpr Binary flip() const {
+    [[nodiscard]] __fast_inline constexpr Binary operator ~() const {return flip();}
+
+    [[nodiscard]] __fast_inline constexpr Binary or_with(const Binary & other) const { 
+        return Binary(data | other.data);
+    }
+
+    [[nodiscard]] __fast_inline constexpr Binary and_with(const Binary & other) const { 
+        return Binary(data & other.data);
+    }
+    [[nodiscard]] __fast_inline constexpr bool is_white() const {return data == WHITE;}
+
+    [[nodiscard]] __fast_inline constexpr bool is_black() const {return data == BLACK;}
+
+    [[nodiscard]] __fast_inline constexpr Binary flip() const {
         const uint8_t ret = ~data;
         return Binary(uint8_t(ret));
     }
-    __fast_inline constexpr uint8_t to_raw() const {return data;}
-    __fast_inline constexpr explicit operator RGB888() const {
-        return RGB888::from_r8g8b8(data, data, data);
-    }
+
+    [[nodiscard]] __fast_inline constexpr uint8_t as_u8() const {return data;}
+
+
+private:
+    uint8_t data;
+
+    __fast_inline constexpr explicit Binary(const uint8_t cu8) : data(cu8){;}
 };
 
 
@@ -291,14 +305,22 @@ struct Gray{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
-    __fast_inline constexpr explicit Gray() : data(0){;}
-    __fast_inline constexpr explicit Gray(const uint8_t _data): data(_data){;}
 
-    __fast_inline constexpr explicit Gray(const RGB565 & rgb);
-    __fast_inline constexpr explicit operator uint8_t() const {return data;}
-    __fast_inline constexpr explicit operator RGB888() const {
-        return RGB888::from_r8g8b8(data, data, data);}
-    __fast_inline constexpr explicit operator bool() const {return data;}
+    [[nodiscard]] static constexpr Gray from_u8(const uint8_t _data){
+        return Gray{_data};
+    }
+
+    [[nodiscard]] static constexpr Gray from_black(){
+        return Gray{BLACK};
+    }
+
+    [[nodiscard]] static constexpr Gray from_white(){
+        return Gray{WHITE};
+    }
+
+    [[nodiscard]] constexpr RGB888 to_rgb888(){
+        return RGB888::from_r8g8b8(data, data, data);
+    }
 
     __fast_inline constexpr auto operator <=> (const Gray & other) const {
         return data <=> other.data;}
@@ -317,51 +339,51 @@ struct Gray{
         return Gray(uint8_t(ret));
     }
 
-    __fast_inline constexpr Binary to_bina(const Gray & threshold = Gray(128)) const 
-        {return Binary(data > (uint8_t)threshold);}
+    __fast_inline constexpr Binary to_binary(const Gray threshold) const 
+        {return Binary::from_bool(data > threshold.as_u8());}
 };
 
 
 struct IGray{
-    int8_t data;
+
 
     enum{
         WHITE   = 127,  // White color
         BLACK   = 0x00   // Black color
     };
-    __fast_inline constexpr IGray() = default;
 
-    __fast_inline constexpr IGray(const int8_t _data): data(_data){;}
+    [[nodiscard]] static constexpr IGray from_i8(const int8_t value) {
+        return IGray(value);
+    }
 
-    __fast_inline constexpr IGray(const bool bina): data(bina ? 127 : 0x00){;}
+    [[nodiscard]] static constexpr IGray from_white() { return IGray(WHITE); }
+    [[nodiscard]] static constexpr IGray from_black() { return IGray(BLACK); }
 
-    __fast_inline constexpr IGray & operator = (const uint8_t _data){data = _data; return *this;}
+    [[nodiscard]] constexpr int8_t as_i8() const {return data;}
+    __fast_inline constexpr auto operator <=> (const IGray & other) const {
+        return data <=> other.data;}
 
-    __fast_inline constexpr explicit operator int8_t() const {return data;}
+    __fast_inline constexpr Binary to_binary(const Gray threshold){
+        return Binary::from_bool(ABS(data) > threshold.as_u8());}
 
-    __fast_inline constexpr explicit operator bool() const {return data;}
+    __fast_inline constexpr Binary to_binary_signed(const IGray threshold){
+        return Binary::from_bool(data > threshold.as_i8());}
 
-    __fast_inline constexpr bool operator > (const IGray & other){return data > other.data;}
-
-    __fast_inline constexpr bool operator < (const IGray & other){return data < other.data;}
-
-    __fast_inline constexpr bool operator >= (const IGray & other){return data >= other.data;}
-
-    __fast_inline constexpr bool operator <= (const IGray & other){return data <= other.data;}
-
-    __fast_inline constexpr Binary to_bina(const uint8_t threshold){return Binary(ABS(data) > threshold);}
-
-    __fast_inline constexpr Binary to_bina_signed(const int8_t threshold){return Binary(data > threshold);}
+private:
+    constexpr IGray(int8_t _data) : data(_data){}
+    int8_t data;
 };
 
 
 using RGB24 = RGB888;
 
 
-__fast_inline constexpr Gray::Gray(const RGB565 & rgb):
-    data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
-
-
+template<>
+struct ColorCaster<Gray, RGB565>{
+    static constexpr Gray cast(const RGB565 & color){
+        return Gray::from_u8(((color.r*77 + color.g*150 + color.b*29+128) >> 8));
+    }
+};
 
 template<>
 struct ColorCaster<RGB565, RGB888> {

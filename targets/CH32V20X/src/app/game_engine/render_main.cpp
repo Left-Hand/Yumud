@@ -1766,10 +1766,11 @@ void render_main(){
 
     while(true){
         const auto ctime = clock::time();
-        const auto cangle = Angle<q16>::from_turns(ctime * 0.3_r);
+        const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
-        [[maybe_unused]] const auto [s,c] = cangle.sincos();
-        [[maybe_unused]] const auto [shape_x,shape_y] = std::make_tuple(uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
+        [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
+        [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
+            uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
 
         [[maybe_unused]] const auto samples = [&]{
             static constexpr auto LEN = 20;
@@ -1890,11 +1891,11 @@ void render_main(){
         // PANIC{shape, shape.bounding_box()};
 
         #if 1
-        auto shape =  Triangle2<uint16_t>{
+        auto shape = Triangle2<uint16_t>{
             .points = {
-                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle),
-                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle + 120_deg),
-                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(cangle + 240_deg),
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle),
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 120_deg),
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg),
                 // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
                 // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
             }
@@ -1981,13 +1982,13 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // for(size_t j = 0; j < 2000; j++){
-                        // for(size_t j = 0; j < 200; j++){
+                        for(size_t j = 0; j < 200; j++){
                         // for(size_t j = 0; j < 30; j++){
-                        for(size_t j = 0; j < 10; j++){
+                        // for(size_t j = 0; j < 10; j++){
                         // for(size_t j = 0; j < 1; j++){
 
-                            // static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
-                            static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);
+                            static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
+                            // static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);
 
                             render_iter.draw_filled(line_span, color).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
@@ -2011,7 +2012,8 @@ void render_main(){
             render_us.count(), 
             clear_us.count(), 
             upload_us.count(), 
-            total_us.count()
+            total_us.count(),
+            shape_bb
             // clock::micros().count()
 
             // render_iter

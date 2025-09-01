@@ -77,6 +77,9 @@ struct Vec2{
     T x;
     T y;
     
+    [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
+        return Vec2<T>();
+    }
 
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
@@ -360,14 +363,14 @@ struct Vec2{
         return {len, len};
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect_with_another_corner(const Vec2<auto> & other) const {
-        auto rect = Rect2<T>(other, other - *this);
-        return rect.abs();
-    }
+    // [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect_with_another_corner(const Vec2<auto> & other) const {
+    //     auto rect = Rect2<T>(other, other - *this);
+    //     return rect.abs();
+    // }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
-        return Rect2<T>(ZERO, *this);
-    }
+    // [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
+    //     return Rect2<T>(ZERO, *this);
+    // }
 
     [[nodiscard]] __fast_inline constexpr T area() const {
         return x * y;
@@ -386,6 +389,9 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr std::array<T, 2> to_array() const {
         return {x, y};
     }
+
+private:
+    constexpr Vec2(){;}
 };
 
 template<arithmetic T>

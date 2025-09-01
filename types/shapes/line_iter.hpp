@@ -179,7 +179,8 @@ public:
 
     __fast_inline constexpr Range2u16 current_filled() const {
         auto & self = *this;
-        return Range2u16::from_start_and_stop_unchecked(
+        return Range2u16::from_start_and_stop(
+        // return Range2u16::from_start_and_stop_unchecked(
             floor_cast<uint16_t>(left_iter(self).x()), 
             ceil_cast<uint16_t>(right_iter(self).x())
         );
@@ -203,6 +204,16 @@ public:
     }
 
 private:
+    /* 
+    ....A
+    ....|\
+    ....|.\
+    ....|..\
+    ....|...P
+    ....|
+    ....B  
+    */
+
     __fast_inline constexpr bool is_point_at_right(
         const Point& a, 
         const Point& b, 
@@ -210,7 +221,7 @@ private:
     ) const {
         Vec2<T> ab = b - a;
         Vec2<T> ap = p - a;
-        return ab.cross(ap) < 0;
+        return ap.is_counter_clockwise_to(ab);
     }
 
 

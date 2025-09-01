@@ -24,7 +24,7 @@ public:
             for(uint i = 0; i < APRILTAG_SIDE_COUNTS; i++){
                 uint16_t mask = (0x8000) >> (j * 4 + i);
                 Gray val = get_vertex_val(vertexs, {i,j}, src);
-                if((uint8_t)val > 173) code |= mask;
+                if(val.as_u8() > 173) code |= mask;
             }
         }
 
