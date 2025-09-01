@@ -14,8 +14,6 @@ public:
 	T radius;
 	AngleRange<T> angle_range;
 
-
-    // 最佳推荐：清晰且专业
     static constexpr Arc2 from_chord_and_central_angle(
         const Vec2<T>& chord_start,
         const Vec2<T>& chord_stop,

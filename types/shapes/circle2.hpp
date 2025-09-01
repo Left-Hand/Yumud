@@ -49,89 +49,17 @@ struct Circle2{
 };
 
 
-template<arithmetic T>
-struct HorizonOval2{
-	Vec2<T> left_center;
-	T radius;
-	T length;
 
-	static constexpr Option<HorizonOval2<T>> from_bounding_box(const Rect2<T> bb){
-		const auto h = bb.h();
-		const auto w = bb.w();
-		if(w < h) return None;
-		const auto radius = static_cast<T>(h / 2);
-		const auto length = static_cast<T>(w - h);
-		const auto left_center = bb.top_left() + Vec2<T>{radius, radius};
-		return Some(HorizonOval2<T>{
-			.left_center = left_center,
-			.radius = radius,
-			.length = length
-		});
-	}
-	__fast_inline constexpr Rect2<T> bounding_box() const {
-		const auto top_left = left_center + Vec2<T>(-radius, -radius);
-		const auto size = Vec2<T>(radius * 2 + length, radius * 2);
-		return Rect2<T>{top_left, size};
-	}
-};
-
-template<arithmetic T>
-struct VerticalOval2{
-	Vec2<T> top_center;
-	T radius;
-	T length;
-
-	static constexpr Option<VerticalOval2<T>> from_bounding_box(const Rect2<T> bb){
-		const auto h = bb.h();
-		const auto w = bb.w();
-		if(h < w) return None;
-		const auto radius = static_cast<T>(w / 2);
-		const auto length = static_cast<T>(h - w);
-		const auto top_center = bb.top_left() + Vec2<T>{radius, radius};
-		return Some(VerticalOval2<T>{
-			.top_center = top_center,
-			.radius = radius,
-			.length = length
-		});
-	}
-	__fast_inline constexpr Rect2<T> bounding_box() const {
-		const auto top_left = top_center + Vec2<T>(-radius, -radius);
-		const auto size = Vec2<T>(radius * 2, radius * 2 + length);
-		return Rect2<T>{top_left, size};
-	}
-};
 
 template<typename T>
 struct is_placed_t<Circle2<T>> : std::true_type {};
 
-template<typename T>
-struct is_placed_t<HorizonOval2<T>> : std::true_type {};
-
-template<typename T>
-struct is_placed_t<VerticalOval2<T>> : std::true_type {};
 
 template<typename T>
 __inline OutputStream & operator <<(OutputStream & os, const Circle2<T> & circle){
     return os << os.brackets<'('>() 
 		<< circle.center << os.splitter()  
 		<< circle.radius << os.brackets<')'>();
-}
-
-
-template<typename T>
-__inline OutputStream & operator <<(OutputStream & os, const HorizonOval2<T> & oval){
-    return os << os.brackets<'('>() 
-	<< oval.left_center << os.splitter()  
-	<< oval.radius << os.splitter()  
-	<< oval.length << os.brackets<')'>();
-}
-
-template<typename T>
-__inline OutputStream & operator <<(OutputStream & os, const VerticalOval2<T> & oval){
-    return os << os.brackets<'('>() 
-	<< oval.top_center << os.splitter()  
-	<< oval.radius << os.splitter()  
-	<< oval.length << os.brackets<')'>();
 }
 
 }
