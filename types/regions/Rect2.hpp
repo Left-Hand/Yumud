@@ -58,6 +58,19 @@ public:
         return Rect2();
     }
 
+    [[nodiscard]] __fast_inline static constexpr Rect2 from_xywh(
+        const T x,
+        const T y,
+        const T w,
+        const T h
+    ){
+        auto ret = Rect2::from_uninitialized();
+        ret.top_left.x = x;
+        ret.top_left.y = y;
+        ret.size.x = w;
+        ret.size.y = h;
+        return ret;
+    }
     [[nodiscard]] __fast_inline static constexpr Rect2 from_center_and_halfsize(
         const Vec2<T> & center, const Vec2<T> & half_size){
         return Rect2<T>(center - half_size, half_size * 2);

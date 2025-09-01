@@ -12,7 +12,7 @@ struct GridMap2{
     Vec2<uint8_t> count;
 
     constexpr auto bounding_box() const {
-        const auto top_left = top_left_cell.position;
+        const auto top_left = top_left_cell.top_left;
         const auto size = Vec2<T>{
                 static_cast<T>(top_left_cell.size.x * (count.x)), 
                 static_cast<T>(top_left_cell.size.y * (count.y))} 
@@ -36,7 +36,7 @@ struct GridMap2{
 private:
     template<size_t I>
     constexpr bool contains_impl(const auto p) const {
-        const auto offset = p - std::get<I>(top_left_cell.position);
+        const auto offset = p - std::get<I>(top_left_cell.top_left);
         const auto cell_size = std::get<I>(top_left_cell.size);
         const auto gird_offset = [&]{
             const auto cell_with_padding_size = std::get<I>(top_left_cell.size) + std::get<I>(padding);
@@ -54,7 +54,6 @@ struct is_placed_t<GridMap2<T>>:std::true_type{;};
 template<std::integral T>
 struct DrawDispatchIterator<GridMap2<T>> {
     using Shape = GridMap2<T>;
-    using Transformer = SampleTransformer<q16>;
     constexpr DrawDispatchIterator(const Shape & shape)
         : shape_(shape),
             y_stop_(shape_.bounding_box().y_range().stop),

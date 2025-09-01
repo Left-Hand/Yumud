@@ -8,11 +8,12 @@ template<typename T, typename D>
 struct HorizonSpectrum{
     Vec2<T> top_left;
     Vec2<T> cell_size;
-
+    T spacing;
     std::span<const D> samples;
     Range2<D> sample_range;
 
-    constexpr Range2<T> y_range(const Nth nth) const {
+    [[nodiscard]] constexpr 
+    Range2<T> y_range(const Nth nth) const {
         const auto y_stop = top_left.y + cell_size.y;
         // const auto y_top = top_left.y;
         const auto data_height = sample_range.invlerp(samples[nth.count()]) * cell_size.y;
@@ -20,8 +21,17 @@ struct HorizonSpectrum{
         return Range2<T>{y_start, y_stop};
     }
 
-    constexpr Rect2<T> bounding_box() const {
-        return Rect2<T>{top_left, Vec2<T>(cell_size.x * samples.size(), cell_size.y)};
+    [[nodiscard]] constexpr 
+    Rect2<T> bounding_box() const {
+        const size_t cnt = samples.size();
+        return Rect2<T>{top_left, 
+            Vec2<T>(
+                cell_size.x * cnt + 
+                static_cast<T>(spacing - 1) * static_cast<size_t>(cnt - 1), 
+
+                cell_size.y
+            )
+        };
     }
 
     friend OutputStream & operator << (OutputStream & os, const HorizonSpectrum & self){

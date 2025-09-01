@@ -45,6 +45,9 @@
 #include "types/shapes/horizon_spectrum.hpp"
 #include "types/shapes/triangle2.hpp"
 #include "types/shapes/oval2.hpp"
+#include "types/shapes/gridmap2.hpp"
+#include "types/shapes/rounded_rect2.hpp"
+
 #include "frame_buffer.hpp"
 
 
@@ -427,24 +430,28 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
         
         T x = shape_.top_left.x;
         // const auto stop_x = .stop;
+        
         const T count = MIN(
             shape_.samples.size(),
             target.bounding_box().x_range().length() / shape_.cell_size.x
         );
 
-        const auto color = color_cast<RGB565>(ColorEnum::PINK);
+        // const T count = shape_.samples.size();
+
+        const auto color = color_cast<RGB565>(dest_color);
+
         #pragma GCC unroll(4)
         for(size_t i = 0; i < count; i++){
             // const auto old_x = x;
             const T next_x = x + shape_.cell_size.x;
             const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
-            x = next_x + 2;
+            x = next_x + shape_.spacing;
 
             const auto data_y = transformer_(shape_.samples[i]);
 
             if((y_ >= data_y)){
                 if(const auto res = target.fill_x_range(x_range, color);
-                res.is_err()) return res;
+                    res.is_err()) return Err(res.unwrap_err());
             }else{
                 // if(const auto res = target.fill_x_range(x_range, color);
                 //     res.is_err()) return res;
@@ -942,7 +949,8 @@ void render_main(){
         #if 0
         auto shape = HorizonSpectrum<uint16_t, q16>{
             .top_left = {20, 20},
-            .cell_size = {8, 70},
+            .cell_size = {8, 140},
+            .spacing = 3,
             .samples = std::span(samples),
             .sample_range = {-1, 1}
         };
@@ -955,21 +963,21 @@ void render_main(){
         };
         #endif
 
-        #if 0
+        #if 1
         auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
         // auto shape = GridMap2<uint16_t>{
-            .top_left_cell = Rect2<uint16_t>{shape_x, shape_y, 15, 15},
+            .top_left_cell = Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
             .padding = {2,2},
             .count = {15,7}
         // };
-        }.bounding_box(), .radius = 5};
+        }.bounding_box(), .radius = 15};
         // }.bounding_box();
 
         #endif
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 1
+        #if 0
         auto shape = Triangle2<uint16_t>{
             .points = {
                 Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle),
@@ -1061,10 +1069,10 @@ void render_main(){
 
                     if(render_iter.has_next()){
                         // for(size_t j = 0; j < 2000; j++){
-                        for(size_t j = 0; j < 200; j++){
+                        // for(size_t j = 0; j < 200; j++){
                         // for(size_t j = 0; j < 30; j++){
                         // for(size_t j = 0; j < 10; j++){
-                        // for(size_t j = 0; j < 1; j++){
+                        for(size_t j = 0; j < 1; j++){
 
                             static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
                             // static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);

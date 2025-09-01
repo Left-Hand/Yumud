@@ -3,10 +3,9 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/result.hpp"
+#include "types/regions/Rect2.hpp"
 
 namespace ymd{
-
-
 
 
 template<typename Color>
@@ -46,7 +45,7 @@ public:
 
     constexpr Color & operator[](const size_t index) {return buf_[index];}
 
-    constexpr Rect2u16 bounding_box() const {return Rect2u16(0, y_, buf_.size(), 1);}
+    constexpr Rect2u16 bounding_box() const {return Rect2u16::from_xywh(0, y_, buf_.size(), 1);}
 
     constexpr ScanLine to_scanline() const {
         return ScanLine{

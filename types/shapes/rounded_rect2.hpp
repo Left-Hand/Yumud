@@ -17,6 +17,9 @@ struct RoundedRect2{
 
 template<typename T>
 struct is_placed_t<RoundedRect2<T>> : std::true_type {};
+
+
+
 template<typename T>
 struct RoundedRect2SliceIterator{
 public:
@@ -91,13 +94,15 @@ private:
         }else{
             return 0;
         }
-        // return MIN(uint16_t(left_and_right_center_x_.start) - y_), 0) MN(y_ - (left_and_right_center_x_.stop)));
+
+        // const int32_t y_top_over = static_cast<int32_t>(y_range_.start + radius_ - y_);
+        // const int32_t y_bottom_over = static_cast<int32_t>(y_ - y_range_.stop + radius_);
+        // if(y_top_over >= 0) return y_top_over;
+        // if(y_bottom_over >= 0) return y_bottom_over;
+        // return 0;
+        // return MAX(y_top_over, y_bottom_over, 0);
     }
 };
-
-
-
-
 
 
 
