@@ -30,6 +30,6 @@ void ma730_main(){
 
     while(true){
         ma730.update().examine();
-        DEBUG_PRINTLN(ma730.read_lap_position().examine());
+        DEBUG_PRINTLN(ma730.read_lap_angle().examine());
     }
 }

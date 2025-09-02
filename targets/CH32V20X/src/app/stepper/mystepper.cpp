@@ -50,7 +50,7 @@ using namespace ymd;
 
 #define UART hal::uart1
 
-using digipw::AlphaBetaDuty;
+using digipw::AlphaBeta;
 
 
 
@@ -93,10 +93,10 @@ public:
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            const auto either_lap_position = encoder_.read_lap_position();
+            const auto either_lap_position = encoder_.read_lap_angle();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
-            1 - either_lap_position.unwrap();
+            Angle<q31>::from_turns(1 - either_lap_position.unwrap().to_turns());
         });
 
         auto & subprogress = calibrate_tasks_;
@@ -153,7 +153,9 @@ public:
         is_subprogress_finished_ = false;
 
 
-        const auto [a,b] = subprogress.resume(meas_lap_position);
+        const auto [a,b] = subprogress.resume(
+            Angle<q16>::from_turns(meas_lap_position.to_turns()));
+
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
@@ -163,7 +165,7 @@ public:
     }
 
 
-    void ctrl(q16 meas_lap_position){
+    void ctrl(Angle<q31> meas_lap_position){
 
         pos_filter_.update(meas_lap_position);
         // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);

@@ -4,6 +4,7 @@
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/angle.hpp"
 
 #include "hal/hal_result.hpp"
 
@@ -39,7 +40,7 @@ DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
 
 class EncoderIntf{
 public:
-    virtual Result<real_t, EncoderError> read_lap_position() = 0;
+    virtual Result<Angle<q31>, EncoderError> read_lap_angle() = 0;
     virtual Result<void, EncoderError> update() = 0;
 
     // DEF_FRIEND_DERIVE_DEBUG(details::EncoderError_Kind);

@@ -19,6 +19,8 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+#if CH32V30X
+
 static constexpr size_t UART_BAUD = 576000;
 static constexpr auto MLX90640_I2CADDR = 0x33;
 
@@ -196,3 +198,5 @@ void mlx90640_main(){
 
     }
 }
+
+#endif

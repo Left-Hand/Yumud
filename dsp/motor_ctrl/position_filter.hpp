@@ -27,7 +27,8 @@ struct PositionFilter{
         });
     }
 
-    constexpr void update(const q16 next_lap_position){
+    constexpr void update(const Angle<q31> next_lap_angle){
+        const q16 next_lap_position = next_lap_angle.to_turns();
         if(unlikely(inited_ == false)){
             position_offset_ = map_lap_to_nearest(
                 frac(next_lap_position - base_lap_position_));

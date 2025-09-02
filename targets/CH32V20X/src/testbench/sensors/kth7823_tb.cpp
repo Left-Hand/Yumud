@@ -30,7 +30,7 @@ void kth7823_main(){
 
     while(true){
         kth7823.update().examine();
-        DEBUG_PRINTLN(kth7823.read_lap_position().examine());
+        DEBUG_PRINTLN(kth7823.read_lap_angle().examine());
         clock::delay(10ms);
     }
 }

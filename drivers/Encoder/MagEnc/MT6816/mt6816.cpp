@@ -59,7 +59,7 @@ IResult<> MT6816::init(const Config & cfg) {
         if(const auto res = this->update();
             res.is_err()) return res;
 
-        if(const auto res = this->read_lap_position();
+        if(const auto res = this->read_lap_angle();
             res.is_ok()) return Ok();
         else if(i == MAX_INIT_RETRY_TIMES)
             return CHECK_ERR(Err(res.unwrap_err()));

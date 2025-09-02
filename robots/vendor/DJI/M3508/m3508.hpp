@@ -10,6 +10,8 @@
 
 #include <bitset>
 
+#include "drivers/Encoder/Encoder.hpp"
+
 namespace ymd::robots{
 using namespace ymd::foc;
 
@@ -25,13 +27,12 @@ public:
         using Error = drivers::EncoderError;
 
         M3508Encoder(M3508 & owner):owner_(owner){;}
-        void init() {}
         Result<void, Error> update(){
             //pass
             return Ok();
         }
-        Result<real_t, Error> read_lap_position() {
-            return Ok(owner_.lap_position);
+        Result<Angle<q31>, Error> read_lap_angle() {
+            return Ok(Angle<q31>::from_turns(owner_.lap_position));
         }
 
     private:

@@ -12,13 +12,6 @@
 
 namespace ymd{
 
-struct LapPosition{
-    real_t position;
-};
-
-struct RawLapPosition{
-    real_t position;
-};
 
 struct Elecrad{
     real_t elecrad;

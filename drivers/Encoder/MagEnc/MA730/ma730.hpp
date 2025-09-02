@@ -1,11 +1,14 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-
 #include "core/utils/Result.hpp"
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "core/utils/angle.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
+
+
+#include "drivers/Encoder/MagEncoder.hpp"
+
 
 namespace ymd::drivers{
 
@@ -132,8 +135,8 @@ public:
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<> set_zero_position(const real_t position);
-    [[nodiscard]] IResult<real_t> read_lap_position(){
-        return Ok(lap_position_);
+    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
+        return Ok(Angle<q31>::from_turns(lap_position_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
@@ -155,7 +158,7 @@ public:
     IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
-    real_t lap_position_ = 0;
+    q31 lap_position_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

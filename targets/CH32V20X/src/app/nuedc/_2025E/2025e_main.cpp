@@ -427,7 +427,7 @@ void nuedc_2025e_main(){
     mp6540_nslp_gpio_.outpp(HIGH);
 
 
-    AbVoltage ab_volt_;
+    AlphaBeta ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -505,7 +505,7 @@ void nuedc_2025e_main(){
 
 
     q20 q_volt_ = 0;
-    q20 meas_elecrad_ = 0;
+    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
 
     q20 axis_target_position_ = 0;
     q20 axis_target_speed_ = 0;
@@ -522,7 +522,7 @@ void nuedc_2025e_main(){
             bmi160_.update().examine();
         }
 
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
         pos_filter_.update(meas_lap_position);
     };
 
@@ -535,8 +535,8 @@ void nuedc_2025e_main(){
             return;
         }
 
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
-        const q20 meas_elecrad = elecrad_comp_(meas_lap_position);
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
+        const auto meas_elecrad = elecrad_comp_(meas_lap_position);
 
         const auto meas_position = pos_filter_.position();
         const auto meas_speed = pos_filter_.speed();
@@ -565,9 +565,9 @@ void nuedc_2025e_main(){
         , SVPWM_MAX_VOLT);
         #endif
 
-        [[maybe_unused]] const auto ab_volt = DqVoltage{
-            0, 
-            CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
+        [[maybe_unused]] const auto ab_volt = Dq{
+            .d = 0, 
+            .q = CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 

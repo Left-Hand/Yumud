@@ -233,7 +233,7 @@ void bldc_main(){
 
     hal::portA[7].inana();
 
-    AbVoltage ab_volt_;
+    AlphaBeta ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -262,7 +262,7 @@ void bldc_main(){
     auto pd_ctrl_law_ = PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
 
     q20 q_volt_ = 0;
-    q20 meas_elecrad_ = 0;
+    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
 
     [[maybe_unused]] q20 axis_target_position_ = 0;
     [[maybe_unused]] q20 axis_target_speed_ = 0;
@@ -277,7 +277,7 @@ void bldc_main(){
     auto update_sensors = [&]{ 
         ma730_.update().examine();
 
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
         pos_filter_.update(meas_lap_position);
     };
 
@@ -290,8 +290,8 @@ void bldc_main(){
         //     return;
         // }
 
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
-        const q20 meas_elecrad = elecrad_comp_(meas_lap_position);
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
+        const auto meas_elecrad = elecrad_comp_(meas_lap_position);
 
         [[maybe_unused]] const auto meas_position = pos_filter_.position();
         [[maybe_unused]] const auto meas_speed = pos_filter_.speed();
@@ -315,10 +315,10 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto ab_volt = DqVoltage{
-            0, 
-            q_volt
-        }.to_alpha_beta(ctime);
+        [[maybe_unused]] const auto ab_volt = Dq{
+            .d = 0, 
+            .q = q_volt
+        }.to_alpha_beta(Angle<q16>::from_turns(ctime));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)

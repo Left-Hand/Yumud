@@ -23,7 +23,7 @@ using IResult = typename MA730::IResult<T>;
 IResult<> MA730::init(const Config & cfg){
     if(const auto res = set_direction(cfg.direction);
         unlikely(res.is_err())) return Err(res.unwrap_err());
-    if(const auto res = read_lap_position();
+    if(const auto res = read_lap_angle();
         unlikely(res.is_err())) return Err(res.unwrap_err());
     return Ok();
 }

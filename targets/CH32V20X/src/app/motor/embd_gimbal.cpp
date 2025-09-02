@@ -431,7 +431,7 @@ void embd_main(){
         ma730_.update().examine();
         bmi160_.update().examine();
 
-        const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
+        const auto meas_lap = 1 - ma730_.read_lap_angle().examine(); 
         pos_filter_.update(meas_lap);
 
 

@@ -2,9 +2,8 @@
 
 // https://blog.csdn.net/lijialin_bit/article/details/104263194
 
-
-
 #include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::foc{
 
@@ -20,19 +19,66 @@ public:
         q16 kslf;   
     };
 
-    SmoObserver(const Config & cfg);
+    constexpr SmoObserver(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
 
-    void reconf(const Config & cfg){
+    constexpr void reset(){
+        Ealpha = 0;
+        Zalpha = 0;
+        EstIalpha = 0;
+        Ebeta = 0;
+        Zbeta = 0;
+        EstIbeta = 0;
+        Theta = 0;
+    }
+
+
+
+    // 更新函数
+    constexpr void update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta) {
+
+        // 滑模电流观测器
+        EstIalpha = (f_para_ * EstIalpha) + (g_para_ * (Valpha - Ealpha - Zalpha));
+        EstIbeta = (f_para_ * EstIbeta) + (g_para_ * (Vbeta - Ebeta - Zbeta));
+
+        // 当前电流误差
+        auto IalphaError = EstIalpha - Ialpha;
+        auto IbetaError = EstIbeta - Ibeta;
+
+        // 滑模控制计算器
+        if (abs(IalphaError) < E0) {
+            Zalpha = (Kslide_ * IalphaError * invE0);  // (Kslide_ * (IalphaError) / E0)
+        } else if (IalphaError >= E0) {
+            Zalpha = Kslide_;
+        } else if (IalphaError <= -E0) {
+            Zalpha = -Kslide_;
+        }
+
+        if (abs(IbetaError) < E0) {
+            Zbeta = (Kslide_ * IbetaError * invE0);  // (Kslide_ * (IbetaError) / E0)
+        } else if (IbetaError >= E0) {
+            Zbeta = Kslide_;
+        } else if (IbetaError <= -E0) {
+            Zbeta = -Kslide_;
+        }
+
+        // 滑模控制滤波器 -> 反电动势计算器
+        Ealpha = Ealpha + (Kslf_ * (Zalpha - Ealpha));
+        Ebeta = Ebeta + (Kslf_ * (Zbeta - Ebeta));
+
+        // 转子角度计算器 -> Theta = atan(-Ealpha, Ebeta)
+        Theta = atan2(-Ealpha, Ebeta);
+    }
+
+    constexpr void reconf(const Config & cfg){
         f_para_ = cfg.f_para;
         g_para_ = cfg.g_para;
         Kslide_ = cfg.kslide;
         Kslf_ = cfg.kslf;
     }
 
-    void reset();
-
-    // 更新函数
-    void update(q16 Valpha, q16 Vbeta, q16 Ialpha, q16 Ibeta);
 
     // 获取估计的转子角度
     q16 theta() const {return Theta;}

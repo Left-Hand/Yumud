@@ -140,8 +140,9 @@ struct PwmAndDirPhy_WithFg final{
         }
     }
 
-    constexpr q16 get_position() const {
-        return q16::from_i32((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
+    constexpr Angle<q31> get_position() const {
+        const auto turns = q16::from_i32((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
+        return Angle<q31>::from_turns(turns);
         // return q16(counter_.count()) >> 6;
     }
 
@@ -182,8 +183,9 @@ struct DualPwmMotorPhy_WithAbEnc final{
         encoder_.tick();
     }
 
-    constexpr q16 get_position() const {
-        return q16::from_i32((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
+    constexpr Angle<q31> get_position() const {
+        const auto turns = q16::from_i32((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
+        return Angle<q31>::from_turns(turns);
         // return q16(encoder_.count()) >> 6;
     }
 

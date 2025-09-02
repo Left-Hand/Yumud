@@ -243,6 +243,7 @@ public:
     IResult<DevId> devid() const {
         return Ok(dev_id_);
     }
+
     IResult<RxPayload> read_info() const;
 private:
     hal::SpiDrv spi_drv_;
