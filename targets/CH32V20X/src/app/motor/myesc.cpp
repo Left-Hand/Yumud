@@ -10,7 +10,6 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/analog/opa/opa.hpp"
 
-#include "drivers/Encoder/odometer.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
