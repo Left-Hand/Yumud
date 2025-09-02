@@ -133,8 +133,8 @@ void mlx90640_main(){
 
     i2c_sw_.init(190'000);
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
-    MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
-    MLX90640_SetRefreshRate(MLX90640_I2CADDR, 7).examine();
+    // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
+    MLX90640_SetRefreshRate(MLX90640_I2CADDR, MLX90640_DataRate::_64Hz).examine();
     MLX90640_I2CRead(MLX90640_I2CADDR, 0x2400, 832, EE).examine();                     //读取像素校正参数
     MLX90640_ExtractParameters(EE, &MLXPars).examine();    //解析校正参数（计算温度时需要）
     // Ta=MLX90640_GetTa(Frame, &MLXPars);                  //计算实时外壳温度
