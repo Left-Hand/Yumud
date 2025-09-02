@@ -22,6 +22,7 @@ namespace ymd::hal::adc_details{
             pin = std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 10)));
         }
 
+        if(gpio_port == nullptr) return;
         Gpio & io = (*gpio_port)[pin];
         if(en == EN)io.inana();
         else io.inflt();
