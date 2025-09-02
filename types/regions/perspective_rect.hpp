@@ -1,7 +1,8 @@
 #pragma once
 
+#include "core/math/matrix/static_matrix.hpp"
+
 #include "types/vectors/vector2.hpp"
-#include "types/matrix/matrix_static.hpp"
 #include "types/vectors/vectorx.hpp"
 
 namespace ymd{

@@ -5,11 +5,11 @@
 #include "core/debug/debug.hpp"
 #include "core/math/int/int_t.hpp"
 #include "core/math/realmath.hpp"
+#include "core/math/matrix/static_matrix.hpp"
+#include "core/math/matrix/ceres/ceres.hpp"
 
 #include "hal/bus/sdi/sdi.hpp"
 
-#include "types/matrix/matrix.hpp"
-#include "types/matrix/ceres/ceres.hpp"
 #include "types/regions/plane.hpp"
 #include "types/regions/aabb.hpp"
 #include "types/regions/segment2.hpp"

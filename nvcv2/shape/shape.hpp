@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../nvcv2/nvcv2.hpp"
-#include "types/matrix/matrix_static.hpp"
+#include "core/math/matrix/static_matrix.hpp"
 
 #include <algorithm>
 #include <bits/stl_numeric.h>

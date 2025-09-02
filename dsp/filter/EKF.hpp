@@ -1,9 +1,8 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "types/matrix/matrix.hpp"
-#include "types/matrix/matrix_static.hpp"
-#include "types/matrix/ceres/ceres.hpp"
+#include "core/math/matrix/static_matrix.hpp"
+#include "core/math/matrix/ceres/ceres.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
