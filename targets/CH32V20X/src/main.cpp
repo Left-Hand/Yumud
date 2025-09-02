@@ -163,7 +163,7 @@ int main(){
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();
-    render_main();
+    // render_main();
     // calc_main();
     // dshot_main();
     // usbcdc_tb();
@@ -185,7 +185,8 @@ int main(){
     // smc2025_main();
     // fft_main();
 
-    render_main();
+    // render_main();
+    mlx90640_main();
 
     // embd_main();
     // mpu6050_main();

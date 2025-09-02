@@ -181,3 +181,4 @@ void laser_ctl_main();
 void nuedc_2025e_main();
 
 void render_main();
+void mlx90640_main();

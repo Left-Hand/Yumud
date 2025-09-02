@@ -461,10 +461,27 @@ public:
     //     }
     //     return *this;
     // }
-    template <typename T>
-    requires std::ranges::contiguous_range<T>
-    OutputStream & operator<<(const T& range) {
-        print_span(std::ranges::data(range), std::ranges::size(range));
+
+
+    template <std::ranges::range R>
+    OutputStream& operator<<(R&& range) {  // 改为万能引用
+        *this << brackets<'['>();
+        
+        auto it = std::ranges::begin(range);
+        auto end = std::ranges::end(range);
+        
+        if (it != end) {
+            *this << *it;
+            ++it;
+            
+            for (; it != end; ++it) {
+                *this << ',' << *it;
+            }
+        } else {
+            *this << '\\';
+        }
+        
+        *this << brackets<']'>();
         return *this;
     }
 
