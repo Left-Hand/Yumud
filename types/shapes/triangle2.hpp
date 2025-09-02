@@ -1,7 +1,6 @@
 #pragma once
 
 #include "prelude.hpp"
-#include "line_iter.hpp"
 
 namespace ymd{
 
@@ -124,16 +123,18 @@ struct Triangle2{
     }
 
 private:
-    static constexpr bool is_points_clockwise(const std::span<const Vec2<T>> points) {
+    static constexpr bool is_points_clockwise(const std::span<const Vec2<T>, 3> points) {
         if (points.size() < 3) return false;
         
         T cross_sum = T{0};
-        for (size_t i = 0; i < points.size(); ++i) {
-            const size_t j = (i + 1) % points.size();
-            cross_sum += (points[j].x - points[i].x) * (points[j].y + points[i].y);
-            // 或者如果 Vec2<T> 有 cross() 方法：cross_sum += points[i].cross(points[j]);
-        }
+
         
+        const auto v1 = points[1] - points[0];
+        const auto v2 = points[2] - points[1];
+        const auto v3 = points[0] - points[2];
+
+        return v1.cross(v2) + v2.cross(v3) + v3.cross(v1);
+
         // 正和：逆时针，负和：顺时针
         return cross_sum > 0;  // 修正符号
     }
@@ -144,30 +145,69 @@ private:
 template <typename T>
 struct is_placed_t<Triangle2<T>>: std::true_type {};
 
-
+//TODO 修复三角形迭代器奇怪的逻辑
 
 template<typename T>
 struct TriangleIterator {
 public:
     using Point = Vec2<T>;
-    using Segment = Segment2<T>;
-    using LineIterator = LineDDAIterator<T>;
 
-    constexpr TriangleIterator(const Triangle2<T>& sorted_tri_)
+    struct LineIterator{
+        using Point = Vec2<uint16_t>;
+
+        constexpr LineIterator(const Vec2<auto> p1, const Vec2<auto> p2):
+            x_step_((p1.y == p2.y) ? 0 : q16(p2.x - p1.x) / (p2.y - p1.y)),
+            current_x_(p1.x){;}
+
+        __fast_inline constexpr q16 x() const {
+            return current_x_;
+        }
+
+        __fast_inline constexpr Range2u16 x_range() const{
+            const q16 a = x();
+            const q16 b = a + x_step();
+            if(a < b){
+                return Range2u16::from_start_and_stop_unchecked(
+                    floor_cast<uint16_t>(a), 
+                    ceil_cast<uint16_t>(b)
+                );
+            }else{
+                return Range2u16::from_start_and_stop_unchecked(
+                    floor_cast<uint16_t>(b), 
+                    ceil_cast<uint16_t>(a)
+                );
+            }
+        }
+
+        __fast_inline constexpr void advance(){
+            current_x_ += x_step_;
+        }
+
+        __fast_inline constexpr q16 x_step() const {
+            return x_step_;
+        }
+    private:
+        q16 x_step_;
+        q16 current_x_;
+    };
+
+
+    constexpr TriangleIterator(const Triangle2<T>& sorted_triangle_)
         :
-            is_mid_at_right_(is_point_at_right(sorted_tri_.points[0], sorted_tri_.points[2], sorted_tri_.points[1])),
-            current_y_(sorted_tri_.points[0].y),
-            mid_y_(sorted_tri_.points[1].y),
-            stop_y_(sorted_tri_.points[2].y),
+            // is_mid_at_right_(is_point_at_right(sorted_triangle_)),
+            is_mid_at_right_(true),
+            current_y_(sorted_triangle_.points[0].y),
+            mid_y_(sorted_triangle_.points[1].y),
+            stop_y_(sorted_triangle_.points[2].y),
             top_left_iter_(is_mid_at_right_ ? 
-                LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[2]}) : 
-                LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[1]})),
+                LineIterator(sorted_triangle_.points[0], sorted_triangle_.points[2]) : 
+                LineIterator(sorted_triangle_.points[0], sorted_triangle_.points[1])),
             top_right_iter_(is_mid_at_right_ ? 
-                LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[1]}) : 
-                LineIterator(Segment{sorted_tri_.points[0], sorted_tri_.points[2]})),
+                LineIterator(sorted_triangle_.points[0], sorted_triangle_.points[1]) : 
+                LineIterator(sorted_triangle_.points[0], sorted_triangle_.points[2])),
             bottom_iter_(is_mid_at_right_ ? 
-                LineIterator(Segment{sorted_tri_.points[1], sorted_tri_.points[2]}) : 
-                LineIterator(Segment{sorted_tri_.points[2], sorted_tri_.points[1]}))
+                LineIterator(sorted_triangle_.points[1], sorted_triangle_.points[2]) : 
+                LineIterator(sorted_triangle_.points[2], sorted_triangle_.points[1]))
     {}
 
     __fast_inline constexpr bool has_next() const {
@@ -200,25 +240,29 @@ public:
         right_iter(self).advance();
     }
 
-private:
-    /* 
-    ....A
-    ....|\
-    ....|.\
-    ....|..\
-    ....|...P
-    ....|
-    ....B  
-    */
+    constexpr bool is_mid_at_right() const{
+        return is_mid_at_right_;
+    }
 
-    __fast_inline constexpr bool is_point_at_right(
-        const Point& a, 
-        const Point& b, 
-        const Point& p
-    ) const {
-        Vec2<T> ab = b - a;
-        Vec2<T> ap = p - a;
-        return ap.is_counter_clockwise_to(ab);
+private:
+
+
+    __fast_inline static constexpr bool is_point_at_right(
+        const Triangle2<T> & sorted_triangle_
+    ) {
+        /* 
+        ....A
+        ....|\
+        ....|.\
+        ....|..\
+        ....|...P
+        ....|
+        ....B  
+        */
+
+        const Vec2<T> ab = sorted_triangle_.points[2] - sorted_triangle_.points[0];
+        const Vec2<T> ap = sorted_triangle_.points[1] - sorted_triangle_.points[0];
+        return ap.is_clockwise_to(ab);
     }
 
 
@@ -293,6 +337,9 @@ struct DrawDispatchIterator<Triangle2<T>> {
         return Ok();
     }
 
+    constexpr bool is_mid_at_right() const{
+        return iter_.is_mid_at_right();
+    }
 private:
     TriangleIterator<T> iter_;
 };

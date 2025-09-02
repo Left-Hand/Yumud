@@ -853,7 +853,8 @@ void render_main(){
 
     while(true){
         const auto ctime = clock::time();
-        const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
+        // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
+        const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
         [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
         [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
@@ -993,7 +994,7 @@ void render_main(){
                 Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 120_deg),
                 Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg)
             }
-        };
+        }.to_sorted_by_y();
         #endif
 
         #if 0
@@ -1081,12 +1082,15 @@ void render_main(){
                         // for(size_t j = 0; j < 10; j++){
                         for(size_t j = 0; j < 1; j++){
 
-                            static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
+                            const auto color = color_cast<RGB565>(
+                                render_iter.is_mid_at_right() ? ColorEnum::PINK : ColorEnum::BLUE);
                             // static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);
 
                             render_iter.draw_filled(line_span, color).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
                         }
+
+                        // DEBUG_PRINTLN(
                         // render_iter.draw_hollow(line_span, RGB565::BRRED).examine();
 
                         render_iter.forward();
@@ -1103,11 +1107,15 @@ void render_main(){
 
 
         DEBUG_PRINTLN(
-            render_us.count(), 
-            clear_us.count(), 
-            upload_us.count(), 
-            total_us.count(),
-            shape_bb
+            render_us.count()
+            
+            // ,shape.points
+            ,render_iter.is_mid_at_right()
+            // clear_us.count(), 
+            // upload_us.count(), 
+            // total_us.count(),
+            // shape_bb
+            
             // clock::micros().count()
 
             // render_iter
