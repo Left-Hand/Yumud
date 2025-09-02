@@ -21,13 +21,12 @@ static constexpr real_t currdata_to_curr(const uint16_t currdata_msb){
 
 
 void M3508::init(){
-    odo_.init();
+
     port.connected_flags_.set(index - 1, 1);
 }
 
 void M3508::reset(){
-    odo_.reset();
-
+    position_filter_.reset();
     lap_position = 0;
     curr = 0;
     speed = 0;
@@ -143,12 +142,15 @@ void M3508::set_target_position(const real_t _pos){
     targ_pos = _pos;
 }
 
-void M3508::update_measurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t temp){
-    odo_.update();
+void M3508::update_measurements(
+    const real_t _lap_position, 
+    const real_t _curr, 
+    const real_t _spd, 
+    const real_t temp
+){
     lap_position = _lap_position;
     curr = _curr;
-    // speed = _spd;
-    speed = (speed * 15 + spd_ester.update(odo_.getPosition())) >> 4;
+    speed = _spd; 
     temperature = temp;
 }
         
