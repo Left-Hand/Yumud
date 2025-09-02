@@ -217,9 +217,9 @@ OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, 
 #undef OS_XXX
 
 
-LAB888::LAB888(const RGB888 & rgb){
-    *this = xyz_to_lab888(rgb888_to_xyz(rgb));
-}
+// LAB888::LAB888(const RGB888 & rgb){
+//     *this = xyz_to_lab888(rgb888_to_xyz(rgb));
+// }
 
 // LAB888::operator RGB888() const {
 //     const auto [x,y,z] = lab888_to_xyz(*this);

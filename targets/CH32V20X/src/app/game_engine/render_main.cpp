@@ -142,13 +142,14 @@ struct MonoFont8x5 final{
 public:
 };
 
+template<typename Encoding, typename Font>
 struct LineText{
     Vec2u16 left_top;
     uint16_t spacing;
     StringView str;
     // MonoFont7x7 & font;
     // MonoFont7x7 font;
-    MonoFont8x5 font;
+    Font font;
 
     constexpr Rect2u16 bounding_box() const {
         const size_t str_len = str.length();
@@ -159,8 +160,8 @@ struct LineText{
     };
 };
 
-template<>
-struct is_placed_t<LineText>:std::true_type{;};
+template<typename Encoding, typename Font>
+struct is_placed_t<LineText<Encoding, Font>>:std::true_type{;};
 
 
 }
@@ -477,9 +478,9 @@ private:
 
 
 namespace ymd{
-template<>
-struct DrawDispatchIterator<LineText> {
-    using Shape = LineText;
+template<typename Encoding, typename Font>
+struct DrawDispatchIterator<LineText<Encoding, Font>> {
+    using Shape = LineText<Encoding, Font>;
     using Self = DrawDispatchIterator<Shape>;
 
     constexpr DrawDispatchIterator(const Shape& shape) : 
@@ -963,7 +964,7 @@ void render_main(){
         };
         #endif
 
-        #if 1
+        #if 0
         auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
         // auto shape = GridMap2<uint16_t>{
             .top_left_cell = Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
@@ -977,14 +978,20 @@ void render_main(){
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 0
+        #if 1
         auto shape = Triangle2<uint16_t>{
             .points = {
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle),
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle + 120_deg),
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle + 240_deg),
+
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(70).rotated(dest_angle),
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(70).rotated(dest_angle + 120_deg),
+                // Vec2u16{85,85} + Vec2u16::from_x_axis(70).rotated(dest_angle + 240_deg),
+
                 Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle),
                 Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 120_deg),
-                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg),
-                // Vec2u16{static_cast<uint16_t>(shape_x + 20),static_cast<uint16_t>(shape_y + 29)},
-                // Vec2u16{static_cast<uint16_t>(shape_x - 20),static_cast<uint16_t>(shape_y + 50)}
+                Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg)
             }
         };
         #endif
@@ -1109,31 +1116,6 @@ void render_main(){
     }
 
 };
-
-
-void a(){
-
-
-
-    [[maybe_unused]] auto test_render = [&]{
-    
-        [[maybe_unused]]const auto t = clock::time();
-
-    };
-
-    while(true){
-        // test_fill();
-        test_render();
-        // test_paint();
-        // test_paint();
-        // qmc.update().examine();
-        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
-        // painter.draw_pixel(Vec2u(0, 0));
-        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
-
-    }
-
-}
 
 #if 0
 [[maybe_unused]] static void static_test(){

@@ -145,6 +145,14 @@ public:
         return ABS(stop - start);
     }
 
+    [[nodiscard]] __fast_inline constexpr T length_unchecked() const{
+        return stop - start;
+    }
+
+    [[nodiscard]] __fast_inline constexpr T half_length_unchecked() const{
+        return (stop - start) >> 1;
+    }
+
     [[nodiscard]] __fast_inline constexpr T length_signed() const{
         return (stop - start);
     }

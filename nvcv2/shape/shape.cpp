@@ -49,7 +49,7 @@ void convolution(
             
             if(div != 1) pixel /= div;
 
-            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -89,7 +89,7 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
                 }
             }
             
-            dst[{x,y}] = Gray(CLAMP(sum / core_sum, 0, 255));
+            dst[{x,y}] = Gray::from_u8(CLAMP(sum / core_sum, 0, 255));
         }
     }
 }
@@ -177,7 +177,7 @@ void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
                 pixel += (src[x +  (y + 1) * w]		).as_u8() * core[2][1];
                 pixel += (src[x + 1 + (y + 1) * w]	).as_u8() * core[2][2];
                 
-                dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+                dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
@@ -221,7 +221,7 @@ void convolution(Image<Gray> & dst, const Image<Gray> & src, const size_t core[2
             pixel += (src[x - 1 + (y) * w]		).as_u8() * core[1][0];
             pixel += (src[x +  (y) * w]			).as_u8() * core[1][1];
             
-            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -496,7 +496,7 @@ Image<Gray> x2(const Image<Gray> & src){
                 }
             }
 
-            dst[{x,y}] = Gray(sum >> 2);
+            dst[{x,y}] = Gray::from_u8(sum >> 2);
 
             // dst[{x,y}] = src[{x << 1,y << 1}];
         }
@@ -740,7 +740,7 @@ void convo_roberts_x(Image<Gray> & dst, const Image<Gray> & src){
         const auto * p_src = &src[y * w];
         auto * p_dst = &dst[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
+            *p_dst = Gray::from_u8(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
             p_src++;
             p_dst++; 
         }
@@ -764,7 +764,7 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
         const auto * p_src2 = &src[(y + 1) * w];
         auto * p_dst = &dst[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(MAX(
+            *p_dst = Gray::from_u8(MAX(
                 ABS(p_src->as_u8() - (p_src + 1)->as_u8()), 
                 ABS(p_src->as_u8() - (p_src2)->as_u8())
             ));
@@ -779,7 +779,7 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
         auto * p_src = &src[y * w];
         auto * p_dst = &dst[y * w];
         for(size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
+            *p_dst = Gray::from_u8(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
             p_src++;
             p_dst++; 
         }
@@ -1082,7 +1082,8 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
             const auto raw = src[{x,y}];
 
             auto RELU = [](uint8_t _x) -> uint8_t {return (_x) > 0 ? (_x) : (0);};
-            dst[{x,y}] = Gray(CLAMP(RELU(raw.as_u8() - uint8_t(ave) - 30) * 8, 0, 255));
+            dst[{x,y}] = Gray::from_u8(CLAMP(RELU(
+                raw.as_u8() - uint8_t(ave) - 30) * 8, 0, 255));
         }
     }
 }

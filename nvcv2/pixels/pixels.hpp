@@ -42,7 +42,7 @@ namespace ymd::nvcv2::pixels{
                 const uint8_t a = src[Vec2u{x,y}].as_u8();
                 const uint8_t b = src[Vec2u{x+1,y}].as_u8();
                 const uint8_t c = src[Vec2u{x,y+1}].as_u8();
-                dst[{x,y}] = Gray(uint8_t(CLAMP(std::max(
+                dst[{x,y}] = Gray::from_u8(uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
                 ), 0, 255)));
@@ -60,7 +60,7 @@ namespace ymd::nvcv2::pixels{
         const auto area = Vec2<size_t>{
             MIN(em.size().x, dm.size().x), 
             MIN(em.size().y, dm.size().y)
-        }.area();
+        }.x_mul_y();
 
         for (size_t i = 0u; i < area; i++) {
             const auto o = Binary(em[i].to_binary(et)).and_with(Binary(dm[i].to_binary(dt)));
@@ -169,7 +169,7 @@ namespace ymd::nvcv2::pixels{
 
 
     constexpr Gray mean(const Image<Gray> & image, const Rect2u & roi){
-        return Gray(sum(image, roi) / (roi.area()));
+        return Gray::from_u8(sum(image, roi) / (roi.area()));
     }
 
     constexpr Gray mean(const Image<Gray> & image){
@@ -177,7 +177,7 @@ namespace ymd::nvcv2::pixels{
     }
 
     __inline Gray average(const Image<Gray>& src){
-        return Gray(pixels::sum(src) / src.size().area());
+        return Gray::from_u8(pixels::sum(src) / src.size().x_mul_y());
     }
 
 

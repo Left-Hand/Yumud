@@ -93,12 +93,6 @@ struct RGB888 {
     __fast_inline constexpr uint24_t as_u24() const {return uint24_t(r | (g << 8) | (b << 16));}
 };
 
-template<>
-struct ColorCaster<RGB888, ColorEnum>{
-    __fast_inline static constexpr RGB888 cast(const ColorEnum from){
-        return RGB888::from_u32(std::bit_cast<uint32_t>(from));
-    }
-};
 
 struct LAB888 {
 
@@ -108,16 +102,14 @@ struct LAB888 {
 
 public:
 
-    explicit LAB888(const RGB888 & rgb); 
-
-    
     __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
 
     __fast_inline static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
         return LAB888(l, a, b);
     } 
 private:
-    __fast_inline constexpr explicit LAB888(const uint8_t _l, const int8_t _a, const int8_t _b):l(_l), a(_a), b(_b){;}
+    __fast_inline constexpr explicit LAB888(const uint8_t _l, const int8_t _a, const int8_t _b):
+        l(_l), a(_a), b(_b){;}
 
 
 };
@@ -299,12 +291,13 @@ private:
 
 
 struct Gray{
-    uint8_t data;
 
     enum{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
+
+    __fast_inline constexpr explicit Gray(){;}
 
     [[nodiscard]] static constexpr Gray from_u8(const uint8_t _data){
         return Gray{_data};
@@ -341,6 +334,9 @@ struct Gray{
 
     __fast_inline constexpr Binary to_binary(const Gray threshold) const 
         {return Binary::from_bool(data > threshold.as_u8());}
+private:
+    uint8_t data;
+    __fast_inline constexpr explicit Gray(const uint8_t cu8) : data(cu8){;}
 };
 
 
@@ -636,6 +632,13 @@ struct ColorCaster<HSV888, RGB888> {
         h += 1;
 
         return HSV888::from_h8s8v8(h,s,v);
+    }
+};
+
+template<>
+struct ColorCaster<RGB888, ColorEnum>{
+    __fast_inline static constexpr RGB888 cast(const ColorEnum from){
+        return RGB888::from_u32(std::bit_cast<uint32_t>(from));
     }
 };
 

@@ -43,7 +43,7 @@ public:
             .radius_range = Range2<q16>::from_center_and_half_length(
                 radius, road_width_ / 2),
             
-            .angle_range = AngleRange<q16>{start_angle, stop_angle}
+            .angle_range = AngleRange<q16>::from_start_and_stop(start_angle, stop_angle)
         }; 
         
         const auto place = Placement{

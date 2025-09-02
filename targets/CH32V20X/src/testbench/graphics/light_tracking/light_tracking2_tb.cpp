@@ -74,16 +74,16 @@ static std::tuple<real_t, real_t> rand01_2(){
 }
 
 [[nodiscard]]
-static constexpr RGB get_relect_color(const int8_t i){
+static constexpr RGB<q16> get_relect_color(const int8_t i){
     switch(i){
         case 8:
         case 9:
-            return RGB(0.05_r, 0.65_r, 0.05_r);
+            return RGB<q16>(0.05_r, 0.65_r, 0.05_r);
         case 10:
         case 11:
-            return RGB(0.65_r, 0.05_r, 0.05_r);
+            return RGB<q16>(0.65_r, 0.05_r, 0.05_r);
         default:
-            return RGB{0.65_r, 0.65_r, 0.65_r};
+            return RGB<q16>{0.65_r, 0.65_r, 0.65_r};
     }
 }
 
@@ -174,23 +174,23 @@ static Intersection_t<real_t> intersect(
 
 [[nodiscard]] __pure
 __fast_inline
-static std::optional<std::pair<RGB, real_t>> sample_bsdf(
+static Option<std::pair<RGB<q16>, real_t>> sample_bsdf(
     const Interaction_t<real_t> & interaction, 
     const Ray3<real_t> & ray, 
     const Quat<real_t> & rotation
 ){
     const auto wi_z = rotation.xform_up().dot(ray.direction);
 
-    if (wi_z <= 0) return std::nullopt;
+    if (wi_z <= 0) return None;
 
     static constexpr auto inv_pi = real_t(INV_PI);
     const auto bsdf_pdf = wi_z * inv_pi;
-    if(bsdf_pdf == 0) return std::nullopt;
+    if(bsdf_pdf == 0) return None;
 
-    return std::make_pair(
+    return Some(std::make_pair(
         get_relect_color(interaction.i) * (INV_PI * std::abs(wi_z)),
         bsdf_pdf
-    );
+    ));
 }
 
 [[nodiscard]] __pure
@@ -217,7 +217,7 @@ static Ray3<real_t> cos_weighted_hemi(
 }
 
 [[nodiscard]]
-static std::optional<RGB> sample_light(
+static Option<RGB<q16>> sample_light(
     const __restrict Interaction_t<real_t> & interaction, 
     const __restrict Quat<real_t> & rotation, 
     std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
@@ -248,21 +248,21 @@ static std::optional<RGB> sample_light(
     );
 
     const real_t cos_light_theta = -ray.direction.dot(light.normal);
-    if (cos_light_theta <= 0) return std::nullopt;
+    if (cos_light_theta <= 0) return None;
 
     const real_t cos_theta = ray.direction.dot(interaction.normal);
-    if (cos_theta <= 0) return std::nullopt;
+    if (cos_theta <= 0) return None;
 
     const auto intersection = intersect(ray, co_triangles);
-    if (intersection.i < 0 || intersection.i != light_idx) return std::nullopt;
+    if (intersection.i < 0 || intersection.i != light_idx) return None;
 
     const auto sample_opt = sample_bsdf(interaction, ray, rotation);
-    if (!sample_opt) return std::nullopt;
-    const auto & [sample, bsdf_pdf] = sample_opt.value();
+    if (sample_opt.is_none()) return None;
+    const auto & [sample, bsdf_pdf] = sample_opt.unwrap();
 
     const real_t light_pdf = (intersection.t * intersection.t) / (real_t(light_area) * cos_light_theta);
     const real_t mis_weight = light_pdf / (light_pdf + bsdf_pdf);
-    return (sample * lightColor * mis_weight * 2) / light_pdf;
+    return Some((sample * lightColor * mis_weight * 2) / light_pdf);
 }
 
 // ���ɴ�Ĭ��Z��(0,0,1)��ת�����߷������Ԫ��
@@ -278,12 +278,12 @@ static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
 }
 
 [[maybe_unused]]
-static RGB sampleRay(
-    RGB sample, 
+static RGB<q16> sampleRay(
+    RGB<q16> sample, 
     Ray3<real_t> ray, 
     std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
 ){
-    auto throughput = RGB{1,1,1};
+    auto throughput = RGB<q16>{1,1,1};
     uint16_t depth = 0;
     while (1){
         const auto intersection = intersect(ray, co_triangles);
@@ -302,15 +302,15 @@ static RGB sampleRay(
         const auto rotation = quat_from_normal(interaction.normal);
 
         const auto light_opt = sample_light(interaction, rotation, co_triangles);
-        if(light_opt) sample += light_opt.value() * throughput;
+        if(light_opt.is_some()) sample += light_opt.unwrap() * throughput;
 
         depth++;
         ray = cos_weighted_hemi(interaction, rotation);
 
         const auto sample_opt = sample_bsdf(interaction, ray, rotation);
-        if (!sample_opt) return sample;
+        if (sample_opt.is_none()) return sample;
 
-        const auto & [bsdf, bsdf_pdf] = sample_opt.value();
+        const auto & [bsdf, bsdf_pdf] = sample_opt.unwrap();
         throughput *= (bsdf / bsdf_pdf);
 
         if (depth == max_depth) return sample;
@@ -319,14 +319,15 @@ static RGB sampleRay(
 
 
 [[maybe_unused]]
-static RGB samplePixel(
+static RGB<q16> samplePixel(
     const uint x, 
     const uint y,
     std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
 ){
-    auto sample = RGB();
+    auto sample = RGB<q16>();
 
-    [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / tanf(real_t((alpha * TAU / 360) * 0.5f));
+    [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / 
+        tanf(real_t((alpha * TAU / 360) * 0.5f));
 
     for (size_t i = 0; i < spp; i++){
 
@@ -345,7 +346,7 @@ static RGB samplePixel(
     }
 
     return sample;
-    return RGB{
+    return RGB<q16>{
         real_t(sample.r / (1 + sample.r)),
         real_t(sample.g / (1 + sample.g)),
         real_t(sample.b / (1 + sample.b))

@@ -30,6 +30,10 @@ struct AngleRange{
     Angle<T> start;
     Angle<T> interval;
 
+    static constexpr AngleRange from_uninitialized(){
+        return AngleRange();
+    }
+
     static constexpr AngleRange from_start_and_stop(
         Angle<T> _start, Angle<T> _stop
     ){
@@ -185,9 +189,9 @@ struct AngleRange{
     }
 
     // 获取重叠部分（返回逆时针方向的范围）
-    constexpr AngleRange intersection_with(const AngleRange& other) const {
+    constexpr Option<AngleRange> intersection_with(const AngleRange& other) const {
         if (!overlaps(other)) {
-            return {Angle<T>::zero(), Angle<T>::zero()};
+            return None;
         }
         
         auto norm_this = normalize_counter_clockwised();
@@ -201,7 +205,7 @@ struct AngleRange{
             overlap_stop = overlap_stop + Angle<T>::FULL_LAP;
         }
         
-        return from_start_and_stop(overlap_start, overlap_stop);
+        return Some(from_start_and_stop(overlap_start, overlap_stop));
     }
 
     // 将角度限制在此范围内（保持原始方向）
@@ -233,6 +237,12 @@ struct AngleRange{
         return os << os.brackets<'('>() << self.start << "->" 
             << self.stop() << os.brackets<')'>(); 
     }
+
+private:
+    constexpr AngleRange() = default;
+
+    constexpr AngleRange(const Angle<T> _start, const Angle<T> _interval):
+        start(_start), interval(_interval){;}
 };
 
 }

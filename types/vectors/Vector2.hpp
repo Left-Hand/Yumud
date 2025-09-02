@@ -77,9 +77,7 @@ struct Vec2{
     T x;
     T y;
     
-    [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
-        return Vec2<T>();
-    }
+
 
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
@@ -92,6 +90,10 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
+        return Vec2<T>();
+    }
+
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle(
         const Angle<U> angle
@@ -101,6 +103,14 @@ struct Vec2{
 
         const auto [s,c] = angle.sincos();
         return {static_cast<T>(c), static_cast<T>(s)};
+    }
+
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_ones(const T & len){
+        return Vec2<T>{len, len};
+    }
+
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_x_axis(const T & len){
+        return Vec2<T>{len, 0};
     }
 
     template<typename U>
@@ -359,20 +369,10 @@ struct Vec2{
     }
 
 
-    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_ones(const T & len){
-        return {len, len};
-    }
 
-    // [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect_with_another_corner(const Vec2<auto> & other) const {
-    //     auto rect = Rect2<T>(other, other - *this);
-    //     return rect.abs();
-    // }
 
-    // [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
-    //     return Rect2<T>(ZERO, *this);
-    // }
 
-    [[nodiscard]] __fast_inline constexpr T area() const {
+    [[nodiscard]] __fast_inline constexpr T x_mul_y() const {
         return x * y;
     }
 
