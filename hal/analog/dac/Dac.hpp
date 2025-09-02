@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DacUtils.hpp"
+#include "dac_utils.hpp"
 #include "core/math/real.hpp"
 
 #ifdef ENABLE_DAC

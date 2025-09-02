@@ -1,5 +1,4 @@
 
-#pragma once
 
 // void osc_test(){
 //     uart2.init(115200 * 8, Uart::Mode::TxRx);

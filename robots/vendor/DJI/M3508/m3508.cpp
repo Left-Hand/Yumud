@@ -73,7 +73,7 @@ void M3508::tick(){
             // break;
             break;
         case CtrlMethod::POS:{
-            targ_spd = (targ_spd * 15 + targ_spd_ester.update(targ_pos)) >> 4;
+            targ_spd = position_filter_.speed();
             real_t pos_err = targ_pos - get_position();
             real_t spd_err = targ_spd - get_speed();
 

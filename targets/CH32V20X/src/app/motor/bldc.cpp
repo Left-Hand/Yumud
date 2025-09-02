@@ -40,7 +40,6 @@
 #include "types/regions/perspective_rect.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
 #include "dsp/controller/pi_ctrl.hpp"

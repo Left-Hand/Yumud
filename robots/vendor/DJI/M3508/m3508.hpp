@@ -89,10 +89,9 @@ private:
     real_t temperature = 0;
     real_t curr_limit = 10;
 
-    using PID = PID_t<real_t>;
 
-    PID spd_pid = {3, 0, 0};
-    PID pos_pid = {3, 0, 0};
+    PID<real_t> spd_pid = {3, 0, 0};
+    PID<real_t> pos_pid = {3, 0, 0};
 
     enum class CtrlMethod:uint8_t{
         NONE,
@@ -112,15 +111,6 @@ private:
     real_t curr_setpoint = 0;
 
     real_t last_t = 0;
-
-    SpeedEstimator::Config spe_config{
-        .err_threshold = real_t(0.02),
-        .est_freq = 200,
-        .max_cycles = 10,
-    };
-    
-    SpeedEstimator spd_ester{spe_config};
-    SpeedEstimator targ_spd_ester{spe_config};
 
     Microseconds last_micros;
     Microseconds micros_delta;

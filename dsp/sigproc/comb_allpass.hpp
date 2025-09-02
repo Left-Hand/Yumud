@@ -1,7 +1,6 @@
 #pragma once
 
 #include "delay.hpp"
-// #include :
 
 //可实现整数群延迟和小数群延迟的全通滤波器
 
