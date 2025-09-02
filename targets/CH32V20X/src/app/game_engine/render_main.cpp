@@ -56,12 +56,6 @@ template<typename T>
 struct is_placed_t<Segment2<T>>:std::true_type{};
 
 
-
-struct MonoFont{
-
-};
-
-
 struct MonoFont7x7 final{
     using font_item_t = font_res::chfont_7x7_item_t;
 
@@ -119,17 +113,13 @@ private:
 
 struct MonoFont8x5 final{
     constexpr MonoFont8x5() = default;
-    bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) const {
-        return font_res::enfont_8x5[MAX(token - ' ', 0)][offset.x + 1] & (1 << offset.y);
-    }
-
 	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
         auto & row_data = font_res::enfont_8x5[MAX(token - ' ', 0)];
         uint32_t row_mask = 0;
 
         // #pragma GCC unroll(5)
         for(uint8_t x = 0; x < 5; x++){
-            row_mask |= uint32_t(bool(uint8_t(row_data[x + 1]) & uint8_t(1 << row_nth))) << (4-x);
+            row_mask |= uint32_t(bool(uint8_t(row_data[x]) & uint8_t(1 << row_nth))) << (x);
         }
 
         return row_mask;
@@ -138,6 +128,24 @@ struct MonoFont8x5 final{
 
     constexpr Vec2u16 size() const {
         return Vec2u16{5,8};
+    }
+public:
+};
+
+struct MonoFont16x8 final{
+    constexpr MonoFont16x8() = default;
+	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
+        auto & col_data = font_res::enfont_16x8[MAX(token - ' ', 0)];
+        uint32_t row_mask = 0;
+
+        row_mask = col_data[row_nth];
+
+        return row_mask;
+	}
+
+
+    constexpr Vec2u16 size() const {
+        return Vec2u16{8,16};
     }
 public:
 };
@@ -499,11 +507,11 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
 
         // for(const auto gbk_token : StdRange(GBKIterator(shape_.str))){
         // for(const auto gbk_token : StdRange(GBKIterator("这个驱动已经完成"))){
-        // for(const auto gbk_token : shape_.str){
+        for(const auto gbk_token : shape_.str){
         // for(const auto gbk_token : "123456789abcdABCD"){
         // for(const auto gbk_token : "abcdefghijklmnopqrstuvwxyz"){
         // for(const auto gbk_token : "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"){
-        for(const auto gbk_token : "SPINRATE"){
+        // for(const auto gbk_token : "SPINRATE"){
 
             const auto row_pixels = shape_.font.get_row_pixels(gbk_token, y_offset);
 
@@ -514,7 +522,8 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
             for(size_t i = 0; i < size_t(shape_.font.size().x); i++){
                 if((row_pixels & (1 << i)) == 0) continue;
                 if(const auto res = target.draw_x_unchecked(
-                    x_base + (shape_.font.size().x - i), color); 
+                    // x_base + (shape_.font.size().x - i), color); 
+                    x_base + (i), color); 
                     // x_base + i, color); 
                     res.is_err()) return res;
                 continue;
@@ -850,6 +859,7 @@ void render_main(){
 
     [[maybe_unused]] auto ch_font = MonoFont7x7{};
     [[maybe_unused]] auto en_font = MonoFont8x5{};
+    [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
     while(true){
         const auto ctime = clock::time();
@@ -903,19 +913,21 @@ void render_main(){
         //     };
         #endif 
 
-        #if 0
+        #if 1
 
         // char str[2] = {
         //     static_cast<char>('0' + (clock::millis().count() / 200) % 16), '\0'};
 
-        auto shape = LineText{
+        // auto shape = LineText<void, MonoFont16x8>{
+        auto shape = LineText<void, MonoFont8x5>{
             .left_top = {20,20},
             .spacing = 2,
             // .str = "A",
             // .str = "B",
             // .str = str,
             // .str = "明白了您只需要编码值而不是以下是修复后的代码",
-            .str = "123456789abcdef",
+            // .str = "123456789abcdef",
+            .str = "123456789ABCDEFGHIJKLMN",
             // .str = "widget",
             .font = en_font
         };
@@ -979,7 +991,7 @@ void render_main(){
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 1
+        #if 0
         auto shape = Triangle2<uint16_t>{
             .points = {
                 // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle),
@@ -1082,9 +1094,9 @@ void render_main(){
                         // for(size_t j = 0; j < 10; j++){
                         for(size_t j = 0; j < 1; j++){
 
-                            const auto color = color_cast<RGB565>(
-                                render_iter.is_mid_at_right() ? ColorEnum::PINK : ColorEnum::BLUE);
-                            // static constexpr auto color = color_cast<RGB565>(ColorEnum::GRAY);
+                            // const auto color = color_cast<RGB565>(
+                            //     render_iter.is_mid_at_right() ? ColorEnum::PINK : ColorEnum::BLUE);
+                            static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
 
                             render_iter.draw_filled(line_span, color).examine();
                             // render_iter.draw_hollow(line_span, RGB565::BLUE).examine();
@@ -1110,7 +1122,7 @@ void render_main(){
             render_us.count()
             
             // ,shape.points
-            ,render_iter.is_mid_at_right()
+            // ,render_iter.is_mid_at_right()
             // clear_us.count(), 
             // upload_us.count(), 
             // total_us.count(),
