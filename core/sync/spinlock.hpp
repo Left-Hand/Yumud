@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "atomic.hpp"
+#include <atomic>
 
 
 namespace ymd::sync{
