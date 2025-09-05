@@ -88,6 +88,10 @@ using Vector2u8 = Vec2<uint8_t>;
 using Vector2q20 = Vec2<q20>;
 
 
+
+//CTAD
+
+
 enum class RunState:uint8_t{
     Idle,
     Seeking,
@@ -402,22 +406,14 @@ void nuedc_2025e_main(){
     }).examine();
 
 
-    MP6540 mp6540_{
-        {pwm_u, pwm_v, pwm_w},
-        {   
-            adc.inj<1>(), 
-            adc.inj<2>(), 
-            adc.inj<3>()
-        }
-    };
 
-    mp6540_.init();
-    mp6540_.set_so_res(10'000);
+    static constexpr auto mp6540_scaler = MP6540::make_adc_scaler(10'000);
 
-    [[maybe_unused]] auto & u_sense = mp6540_.ch(1);
-    [[maybe_unused]] auto & v_sense = mp6540_.ch(2);
-    [[maybe_unused]] auto & w_sense = mp6540_.ch(3);
+    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
     
+    auto uvw_pwmgen = UvwPwmgen(&pwm_u, &pwm_v, &pwm_w);
 
     init_adc(adc);
 
@@ -427,7 +423,7 @@ void nuedc_2025e_main(){
     mp6540_nslp_gpio_.outpp(HIGH);
 
 
-    AlphaBeta ab_volt_;
+    AlphaBetaCoord ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -530,7 +526,7 @@ void nuedc_2025e_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-            SVPWM3::set_ab_volt(mp6540_, 0, 0);
+            SVPWM3::set_ab_volt(uvw_pwmgen, 0, 0);
             leso_.reset();
             return;
         }
@@ -565,13 +561,13 @@ void nuedc_2025e_main(){
         , SVPWM_MAX_VOLT);
         #endif
 
-        [[maybe_unused]] const auto ab_volt = Dq{
+        [[maybe_unused]] const auto ab_volt = DqCoord{
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
-        SVPWM3::set_ab_volt(mp6540_, ab_volt[0], ab_volt[1]);
+        SVPWM3::set_ab_volt(uvw_pwmgen, ab_volt[0], ab_volt[1]);
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
@@ -988,7 +984,7 @@ void nuedc_2025e_main(){
         if(may_advanced_start_tick_.is_some()){
             const auto delta_ms = clock::millis() - may_advanced_start_tick_.unwrap();
             if(delta_ms < ADVANCED_BLINK_PERIOD_MS){
-                publish_laser_en(delta_ms.count() % 100 <= 6);
+                publish_laser_en(uint32_t(delta_ms.count()) % 100 <= 6);
             }else{
                 publish_laser_en(true);
             }

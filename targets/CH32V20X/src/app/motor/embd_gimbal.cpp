@@ -468,7 +468,7 @@ void embd_main(){
         , MAX_VOLT);
 
 
-        const auto ab_volt = DqVoltage{
+        const auto ab_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);

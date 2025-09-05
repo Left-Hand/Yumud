@@ -2,13 +2,13 @@
 
 #include "core/math/real.hpp"
 #include "concept/analog_channel.hpp"
-#include "drivers/GateDriver/GateDriverIntf.hpp"
 #include <bit>
 
 #include "../ctrl/current_ctrl.hpp"
 #include "../ctrl/power_ctrl.hpp"
 #include "../ctrl/voltage_ctrl.hpp"
 
+#if 0
 namespace ymd::digipw{
 
 class BuckController {
@@ -53,3 +53,5 @@ public:
 
 
 }
+
+#endif

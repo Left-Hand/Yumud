@@ -21,12 +21,12 @@ static constexpr __fast_inline void dq_to_ab(To & ab, const From & dq, const Ang
 };
 }
 
-struct AlphaBeta final{
-    q20 alpha = {};
-    q20 beta = {};
+struct AlphaBetaCoord final{
+    q20 alpha;
+    q20 beta;
 
 
-    static constexpr AlphaBeta from_uvw(const UvwCoord & uvw){
+    static constexpr AlphaBetaCoord from_uvw(const UvwCoord & uvw){
         constexpr auto _2_by_3 = q20(2.0/3);
         constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
         return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
@@ -41,10 +41,10 @@ struct AlphaBeta final{
     }
 
     constexpr q20 length() const {
-        return sqrt(alpha*alpha + beta*beta);
+        return sqrt(square(alpha) + square(beta));
     }
 
-    friend OutputStream & operator << (OutputStream & os, const AlphaBeta & self){
+    friend OutputStream & operator << (OutputStream & os, const AlphaBetaCoord & self){
         return os << os.brackets<'('>() << 
             self.alpha << os.splitter() << 
             self.beta << os.brackets<')'>();
@@ -52,9 +52,10 @@ struct AlphaBeta final{
 };
 
 
-struct Dq final{
+struct DqCoord final{
 
-    q20 d, q;
+    q20 d;
+    q20 q;
 
     constexpr q20 operator [](const size_t idx) const {
         return *(&d + idx);
@@ -69,20 +70,20 @@ struct Dq final{
     }
 
 
-    static constexpr Dq from_alpha_beta(const AlphaBeta & ab, const Angle<auto> angle){
-        Dq self;
+    static constexpr DqCoord from_alpha_beta(const AlphaBetaCoord & ab, const Angle<auto> angle){
+        DqCoord self;
         details::ab_to_dq(self, ab, angle);
         return self;
     }
 
     template<typename T>
-    constexpr AlphaBeta to_alpha_beta(const Angle<T> angle) const {
+    constexpr AlphaBetaCoord to_alpha_beta(const Angle<T> angle) const {
         auto [s,c] = angle.sincos();
         auto & self = *this;
         return {c * self.d - s * self.q, c * self.q + s * self.d};
     }
 
-    friend OutputStream & operator << (OutputStream & os, const Dq & self){
+    friend OutputStream & operator << (OutputStream & os, const DqCoord & self){
         return os << os.brackets<'('>() << 
             self.d << os.splitter() << 
             self.q << os.brackets<')'>();

@@ -114,9 +114,9 @@
         // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
 
         // ab_volt = {4 * cos(rad), 4 * sin(rad)};
-        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
-        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
-        ab_volt = DqVoltage{d_volt, q_volt}.to_ab(sl_meas_rad + 2.0_r);
+        // ab_volt = dq_to_ab(DqCoordVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
+        // ab_volt = dq_to_ab(DqCoordVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
+        ab_volt = DqCoordVoltage{d_volt, q_volt}.to_ab(sl_meas_rad + 2.0_r);
         svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
     };
 
@@ -480,7 +480,7 @@ class BldcMotor{
 //     using Position = real_t;
 
 //     struct CurrentCtrl{
-//         DqVoltage update(const DqCurrent targ_curr, const DqCurrent meas_curr){
+//         DqCoordVoltage update(const DqCoordCurrent targ_curr, const DqCoordCurrent meas_curr){
 //             return {
 //                 d_pi_ctrl.update(targ_curr.d, meas_curr.d),
 //                 q_pi_ctrl.update(targ_curr.q, meas_curr.q)
@@ -505,7 +505,7 @@ class BldcMotor{
 //     };
 
 //     struct TorqueCtrl{
-//         DqCurrent update(const Torque targ_torque){
+//         DqCoordCurrent update(const Torque targ_torque){
 //             return {0, targ_torque};
 //         }
 //     };

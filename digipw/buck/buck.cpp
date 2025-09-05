@@ -1,5 +1,7 @@
 #include "buck.hpp"
 
+#if 0
+
 using namespace ymd::digipw;
 
 void BuckConverter::init(){}
@@ -16,3 +18,5 @@ void BuckConverter::tick(){
     //         break;
     // }
 }
+
+#endif

@@ -444,19 +444,6 @@ public:
         idrive_gpio_.inflt();
     }
 
-
-
-    // void set_gain(const Gain gain){
-    // // 4-level	MODE	GAIN
-    // // 直连DVDD	Independent	放大40倍
-    // // 高阻态/接>500kΩ电阻到AGND	单路PWM	放大20倍
-    // // 接47kΩ电阻到AGND	3路PWM	放大10倍
-    // // 直连AGND	6路PWM	放大5倍
-
-    //     switch(gain){
-
-    //     }
-    // }
 private:
     hal::Gpio & gain_gpio_;
     hal::Gpio & vds_gpio_;

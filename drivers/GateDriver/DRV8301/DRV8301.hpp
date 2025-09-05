@@ -6,7 +6,6 @@
 #include "concept/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "../GateDriverIntf.hpp"
 #include "types/regions/range2.hpp"
 
 
@@ -150,7 +149,6 @@ struct DRV8301_Regs:public DRV8301_Prelude{
 };
 
 class DRV8301 final:
-    public GateDriver3Intf,
     public DRV8301_Regs{
 public:
 

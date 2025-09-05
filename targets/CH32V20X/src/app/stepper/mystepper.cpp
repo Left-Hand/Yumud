@@ -49,7 +49,7 @@ using namespace ymd;
 
 #define UART hal::uart1
 
-using digipw::AlphaBeta;
+using digipw::AlphaBetaCoord;
 
 
 
