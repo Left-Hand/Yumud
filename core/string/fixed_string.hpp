@@ -23,7 +23,7 @@ struct FixedString{
     }
 
 
-    [[nodiscard]] constexpr StringView as_view() const {
+    [[nodiscard]] constexpr StringView to_stringview() const {
         return StringView(buf_, len_);
     }
 
@@ -102,7 +102,7 @@ struct FixedString{
     }
 
     [[nodiscard]]constexpr bool operator==(const StringView & other) const {
-        return len_ == other.length() && std::memcmp(buf_, other.data(), len_) == 0;
+        return this->str() == other;
     } 
 
     friend OutputStream & operator<<(OutputStream & os, const FixedString<N> self) {

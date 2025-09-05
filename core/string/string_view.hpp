@@ -38,7 +38,16 @@ public:
     }
 
     constexpr bool operator==(const StringView & other) const { 
-        return size_ == other.size_ && memcmp(data_, other.data_, size_) == 0; }
+
+        if(size_ != other.size_) return false;
+
+        #pragma GCC unroll 4
+        for(size_t i = 0; i < size_; i++){
+            if(data_[i] != other.data_[i]) return false;
+        }
+
+        return true;
+    }
 
     constexpr const char * begin() const {return data_;}
     constexpr const char * c_str() const {return data_;}

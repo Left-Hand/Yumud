@@ -341,6 +341,246 @@ struct is_placed_t<Sector<T, D>>:std::true_type{;};
 
 
 
+template<typename T, typename D>
+struct DrawDispatchIterator<Sector<T, D>> {
+    using Shape = Sector<T, D>;
+    using Self = DrawDispatchIterator<Sector<T, D>>;
+
+    struct CtorHelper{
+        Range2<T> y_range;
+        Range2<T> x_range;
+        Vec2<q16> v1;
+        Vec2<q16> v2;
+
+        static constexpr CtorHelper from(const Shape & shape){
+            const auto angle_range = shape.angle_range;
+            const auto bb = shape.bounding_box(); 
+            return {                
+                .y_range = bb.y_range(),
+                .x_range = bb.x_range(),
+                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.start.to_turns())),
+                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.stop().to_turns()))
+            };
+        }
+    };
+
+
+    constexpr DrawDispatchIterator(const Shape & shape):
+        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor & dest_color) {
+        const auto color = static_cast<RGB565>(dest_color);
+
+        #pragma GCC unroll(4)
+        for(T i = x_range_.start; i < x_range_.stop; i++){
+            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            if(not is_inside) continue;
+            if(const auto res = target.draw_x_unchecked(i, color);
+                res.is_err()) return Err(res.unwrap_err());
+            continue;
+        }
+
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename Color>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
+        return Ok();
+    }
+
+
+private:
+    T y_;
+    T y_stop_;
+    Range2<T> x_range_;
+    Vec2<T> center_;
+    uint32_t squ_outer_radius_;
+    Vec2<q16> start_norm_vec_;
+    Vec2<q16> stop_norm_vec_;
+    bool is_minor_;
+
+    using ST = std::make_signed_t<T>;
+
+    __fast_inline constexpr bool contains_point(const Vec2<T> p){
+        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
+
+        if (len_squ > squ_outer_radius_) return false;
+
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
+
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
+
+        return true;
+    }
+
+    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+        y_(helper.y_range.start),
+        y_stop_(helper.y_range.stop),
+        x_range_(helper.x_range),
+        center_(shape.center),
+        squ_outer_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius)))),
+        start_norm_vec_(helper.v1),
+        stop_norm_vec_(helper.v2),
+        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
+        {;}
+};
+
+
+
+template<typename T, typename D>
+struct DrawDispatchIterator<AnnularSector<T, D>> {
+    using Shape = AnnularSector<T, D>;
+    using Self = DrawDispatchIterator<AnnularSector<T, D>>;
+
+    struct CtorHelper{
+        Range2<T> y_range;
+        Range2<T> x_range;
+        Vec2<q16> v1;
+        Vec2<q16> v2;
+
+        static constexpr CtorHelper from(const Shape & shape){
+            const auto angle_range = shape.angle_range;
+            const auto bb = shape.bounding_box(); 
+            return {                
+                .y_range = bb.y_range(),
+                .x_range = bb.x_range(),
+                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.start.to_turns())),
+                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                    angle_range.stop().to_turns()))
+            };
+        }
+    };
+
+
+    constexpr DrawDispatchIterator(const Shape & shape):
+        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
+    }
+
+    // 推进到下一行
+    constexpr void forward() {
+        y_++;
+    }
+
+    // 绘制当前行的所有点
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
+        const auto x_range = x_range_;
+        const auto color = static_cast<RGB565>(dest_color);
+
+        #pragma GCC unroll(4)
+        for(T i = x_range.start; i < x_range.stop; i++){
+            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            if(not is_inside) continue;
+            if(const auto res = target.draw_x_unchecked(i, color);
+                res.is_err()) return Err(res.unwrap_err());
+            continue;
+        }
+
+        return Ok();
+    }
+
+    template<DrawTargetConcept Target, typename DestColor>
+    Result<void, typename Target::Error> draw_hollow(Target& target, const DestColor & dest_color) {
+        return Ok();
+    }
+
+
+private:
+    // Iterator iter_;
+    uint16_t y_;
+    uint16_t y_stop_;
+    Range2<uint16_t> x_range_;
+    Vec2<uint16_t> center_;
+    uint32_t squ_inner_radius_;
+    uint32_t squ_outer_radius_;
+    Vec2<q16> start_norm_vec_;
+    Vec2<q16> stop_norm_vec_;
+    bool is_minor_;
+
+    using ST = std::make_signed_t<T>;
+
+    __fast_inline constexpr bool contains_point(const Vec2<uint32_t> p){
+        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
+
+        //判断半径
+        // if((len_squ & 0xff) > 0x7f) return false;
+        // if((len_squ & 0x0f) > 7) return false;
+        // if((len_squ & 0x020)) return false;
+        // if((len_squ & 0x020)) return false;
+
+        #if 1
+        if (len_squ < squ_inner_radius_) return false;
+        if (len_squ > squ_outer_radius_) return false;
+        #else
+        int8_t pass_cnt = 0;
+        if (len_squ < squ_inner_radius_) pass_cnt -= 1;
+        if (len_squ > squ_outer_radius_) pass_cnt -= 1;
+
+        // if (len_squ < squ_inner_radius_/4) pass_cnt -= 1;
+        // if (len_squ > squ_outer_radius_/4) pass_cnt -= 1;
+
+        if(pass_cnt <= -1) return false;
+        #endif
+
+        #if 0
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
+
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
+
+        #else
+        // if(Vec2<q16>(offset).angle()
+        //     .mod(Angle<q16>::from_degrees(10)) > 
+        //     Angle<q16>::from_degrees(2)) return false;
+        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
+        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
+
+        return is_minor_ ? (b1 && b2) : (b1 || b2);
+
+        #endif
+
+
+        return true;
+    }
+
+    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+        y_(helper.y_range.start),
+        y_stop_(helper.y_range.stop),
+        x_range_(helper.x_range),
+        center_(shape.center),
+        squ_inner_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius_range.start)))),
+        squ_outer_radius_(static_cast<uint32_t>(
+            square(static_cast<q12>(shape.radius_range.stop)))),
+        start_norm_vec_(helper.v1),
+        stop_norm_vec_(helper.v2),
+        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
+        {;}
+};
+
 
 template<typename T, typename D>
 struct CacheOf<AnnularSector<T, D>, bool>{

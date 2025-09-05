@@ -15,7 +15,7 @@ public:
         if(pbuf.size() > writable_capacity()){
             while(true);
         }else{
-            std::memcpy(buf_, pbuf.data(), pbuf.size());
+            std::copy(pbuf.data(), pbuf.data() + pbuf.size(), buf_);
         }
     }
 

@@ -3,8 +3,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "core/stream/stream.hpp"
-
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 

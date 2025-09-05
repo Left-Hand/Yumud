@@ -33,16 +33,16 @@ struct R32_OPA_CTLR{
 struct OPA_Def{
     volatile R32_OPA_CTLR CTLR;
 
-    constexpr void enable(const uint8_t index, const Enable en){
-        switch(index){
+    constexpr void enable(const uint8_t nth, const Enable en){
+        switch(nth){
             case 1: this->CTLR.EN1 = en == EN; return;
             case 2: this->CTLR.EN2 = en == EN; return;
             case 3: this->CTLR.EN3 = en == EN; return;
             case 4: this->CTLR.EN4 = en == EN; return;
         }
     }
-    constexpr void select_out(const uint8_t index, const bool sel){
-        switch(index){
+    constexpr void select_out(const uint8_t nth, const uint8_t sel){
+        switch(nth){
             case 1: this->CTLR.MODE1 = sel; return;
             case 2: this->CTLR.MODE2 = sel; return;
             case 3: this->CTLR.MODE3 = sel; return;
@@ -50,8 +50,8 @@ struct OPA_Def{
         }
     }
 
-    constexpr void select_pos(const uint8_t index, const bool sel){
-        switch(index){
+    constexpr void select_pos(const uint8_t nth, const uint8_t sel){
+        switch(nth){
             case 1: this->CTLR.PSEL1 = sel; return;
             case 2: this->CTLR.PSEL2 = sel; return;
             case 3: this->CTLR.PSEL3 = sel; return;
@@ -59,8 +59,8 @@ struct OPA_Def{
         }
     }
 
-    constexpr void select_neg(const uint8_t index, const bool sel){
-        switch(index){
+    constexpr void select_neg(const uint8_t nth, const uint8_t sel){
+        switch(nth){
             case 1: this->CTLR.NSEL1 = sel; return;
             case 2: this->CTLR.NSEL2 = sel; return;
             case 3: this->CTLR.NSEL3 = sel; return;

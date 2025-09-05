@@ -185,8 +185,8 @@ int main(){
     // smc2025_main();
     // fft_main();
 
-    // render_main();
-    mlx90640_main();
+    render_main();
+    // mlx90640_main();
 
     // embd_main();
     // mpu6050_main();

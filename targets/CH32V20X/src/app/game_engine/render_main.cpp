@@ -2,34 +2,29 @@
 
 #include "src/testbench/tb.h"
 
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
-#include "robots/mock/mock_burshed_motor.hpp"
+#include "core/clock/time.hpp"
+#include "core/utils/nth.hpp"
+#include "core/utils/stdrange.hpp"
+#include "core/utils/data_iter.hpp"
+#include "core/utils/rescaler.hpp"
+#include "core/stream/fixed_string_stream.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
-
-#include "types/image/painter/painter.hpp"
-#include "types/colors/rgb/rgb.hpp"
-#include "types/regions/rect2.hpp"
-#include "core/utils/stdrange.hpp"
-#include "core/utils/data_iter.hpp"
-
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-
-
-#include "core/clock/time.hpp"
-#include "core/utils/nth.hpp"
-
-
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
+
+
+
+#include "types/image/painter/painter.hpp"
+#include "types/colors/rgb/rgb.hpp"
+#include "types/regions/rect2.hpp"
 
 #include "types/vectors/quat.hpp"
 #include "types/image/image.hpp"
@@ -47,6 +42,14 @@
 #include "types/shapes/oval2.hpp"
 #include "types/shapes/gridmap2.hpp"
 #include "types/shapes/rounded_rect2.hpp"
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+#include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
+
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
 
@@ -113,11 +116,10 @@ private:
 
 struct MonoFont8x5 final{
     constexpr MonoFont8x5() = default;
-	uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
+	static uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
         auto & row_data = font_res::enfont_8x5[MAX(token - ' ', 0)];
         uint32_t row_mask = 0;
 
-        // #pragma GCC unroll(5)
         for(uint8_t x = 0; x < 5; x++){
             row_mask |= uint32_t(bool(uint8_t(row_data[x]) & uint8_t(1 << row_nth))) << (x);
         }
@@ -126,7 +128,7 @@ struct MonoFont8x5 final{
 	}
 
 
-    constexpr Vec2u16 size() const {
+    static constexpr Vec2u16 size() {
         return Vec2u16{5,8};
     }
 public:
@@ -370,50 +372,12 @@ private:
 
 
 
-template<typename D>
-struct SampleTransformer { 
-    D scale;
-    D offset;
-
-    static constexpr SampleTransformer from_input_and_output(
-        const Range2<auto> input, 
-        const Range2<auto> output
-    ) {
-        const D calculated_scale = (output.stop - output.start) / 
-                                    static_cast<D>(input.stop - input.start);
-        const D calculated_offset = output.start - 
-                                   static_cast<D>(input.start) * calculated_scale;
-        
-        return SampleTransformer{ 
-            .scale = calculated_scale,
-            .offset = calculated_offset
-        };
-    }
-
-    static constexpr SampleTransformer from_input_and_inverted_output(
-        const Range2<auto> input, 
-        const Range2<auto> output
-    ) {
-        return from_input_and_output(input, output.swap());
-        // return from_input_and_output(input, output);
-    }
-    
-    __fast_inline constexpr D operator()(const D& d) const {
-        return scale * d + offset;
-    }
-
-    friend OutputStream & operator <<(OutputStream & os, const SampleTransformer & self){
-        return os << os.brackets<'('>()
-            << self.scale << os.splitter() 
-            << self.offset << os.brackets<')'>();
-    }
-};
 
 // DrawDispatchIterator 特化
 template<std::integral T, typename D>
 struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     using Shape = HorizonSpectrum<T, D>;
-    using Transformer = SampleTransformer<q16>;
+    using Transformer = Rescaler<q16>;
     constexpr DrawDispatchIterator(const Shape & shape)
         : shape_(shape),
             transformer_(Transformer::from_input_and_inverted_output(
@@ -499,15 +463,20 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
 
     template<DrawTargetConcept Target, typename DestColor>
     Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
-        auto x_base = x_range_.start;
+        size_t x_base = x_range_.start;
+        const size_t font_w = shape_.font.size().x;
+
         const auto y_offset = y_ - y_range_.start;
         const auto color = static_cast<RGB565>(dest_color);
 
 
-
         // for(const auto gbk_token : StdRange(GBKIterator(shape_.str))){
         // for(const auto gbk_token : StdRange(GBKIterator("这个驱动已经完成"))){
-        for(const auto gbk_token : shape_.str){
+        // for(const auto gbk_token : shape_.str){
+        const auto str = shape_.str;
+        // for(size_t i = 0; i < str.length() -5; i++){
+        for(size_t i = 0; i < str.length(); i++){
+            const auto gbk_token = str[i];
         // for(const auto gbk_token : "123456789abcdABCD"){
         // for(const auto gbk_token : "abcdefghijklmnopqrstuvwxyz"){
         // for(const auto gbk_token : "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"){
@@ -519,17 +488,16 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
 
             // #pragma GCC unroll(4)
             // #pragma GCC unroll 4
-            for(size_t i = 0; i < size_t(shape_.font.size().x); i++){
-                if((row_pixels & (1 << i)) == 0) continue;
-                if(const auto res = target.draw_x_unchecked(
-                    // x_base + (shape_.font.size().x - i), color); 
-                    x_base + (i), color); 
-                    // x_base + i, color); 
-                    res.is_err()) return res;
+            for(size_t j = 0; j < font_w; j++){
+                if((row_pixels & (1 << j)) == 0) continue;
+                // if(const auto res = target.draw_x_unchecked(
+                if(const auto res = target.draw_x(
+                    // x_base + (font_w - j), color); 
+                    x_base + j, color); res.is_err()) return res;
                 continue;
             }
 
-            x_base += (shape_.font.size().x + shape_.spacing);
+            x_base += (font_w + shape_.spacing);
         }
         return Ok();
     }
@@ -551,252 +519,6 @@ private:
     uint16_t y_;
 };
 }
-
-
-
-
-
-
-
-template<typename T, typename D>
-struct DrawDispatchIterator<AnnularSector<T, D>> {
-    using Shape = AnnularSector<T, D>;
-    using Self = DrawDispatchIterator<AnnularSector<T, D>>;
-
-    struct CtorHelper{
-        Range2<T> y_range;
-        Range2<T> x_range;
-        Vec2<q16> v1;
-        Vec2<q16> v2;
-
-        static constexpr CtorHelper from(const Shape & shape){
-            const auto angle_range = shape.angle_range;
-            const auto bb = shape.bounding_box(); 
-            return {                
-                .y_range = bb.y_range(),
-                .x_range = bb.x_range(),
-                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
-                    angle_range.start.to_turns())),
-                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
-                    angle_range.stop().to_turns()))
-            };
-        }
-    };
-
-
-    constexpr DrawDispatchIterator(const Shape & shape):
-        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
-
-    // 检查是否还有下一行
-    constexpr bool has_next() const {
-        return y_ < y_stop_;
-    }
-
-    // 推进到下一行
-    constexpr void forward() {
-        y_++;
-    }
-
-    // 绘制当前行的所有点
-    template<DrawTargetConcept Target, typename DestColor>
-    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor& dest_color) {
-        const auto x_range = x_range_;
-        const auto color = static_cast<RGB565>(dest_color);
-
-        #pragma GCC unroll(4)
-        for(T i = x_range.start; i < x_range.stop; i++){
-            const bool is_inside = contains_point(Vec2<T>{i, y_});
-            if(not is_inside) continue;
-            if(const auto res = target.draw_x_unchecked(i, color);
-                res.is_err()) return Err(res.unwrap_err());
-            continue;
-        }
-
-        return Ok();
-    }
-
-    template<DrawTargetConcept Target, typename DestColor>
-    Result<void, typename Target::Error> draw_hollow(Target& target, const DestColor & dest_color) {
-        return Ok();
-    }
-
-
-private:
-    // Iterator iter_;
-    uint16_t y_;
-    uint16_t y_stop_;
-    Range2<uint16_t> x_range_;
-    Vec2<uint16_t> center_;
-    uint32_t squ_inner_radius_;
-    uint32_t squ_outer_radius_;
-    Vec2<q16> start_norm_vec_;
-    Vec2<q16> stop_norm_vec_;
-    bool is_minor_;
-
-    using ST = std::make_signed_t<T>;
-
-    __fast_inline constexpr bool contains_point(const Vec2<uint32_t> p){
-        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
-        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
-
-        //判断半径
-        // if((len_squ & 0xff) > 0x7f) return false;
-        // if((len_squ & 0x0f) > 7) return false;
-        // if((len_squ & 0x020)) return false;
-        // if((len_squ & 0x020)) return false;
-
-        #if 1
-        if (len_squ < squ_inner_radius_) return false;
-        if (len_squ > squ_outer_radius_) return false;
-        #else
-        int8_t pass_cnt = 0;
-        if (len_squ < squ_inner_radius_) pass_cnt -= 1;
-        if (len_squ > squ_outer_radius_) pass_cnt -= 1;
-
-        // if (len_squ < squ_inner_radius_/4) pass_cnt -= 1;
-        // if (len_squ > squ_outer_radius_/4) pass_cnt -= 1;
-
-        if(pass_cnt <= -1) return false;
-        #endif
-
-        #if 0
-        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
-        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
-
-        return is_minor_ ? (b1 && b2) : (b1 || b2);
-
-        #else
-        // if(Vec2<q16>(offset).angle()
-        //     .mod(Angle<q16>::from_degrees(10)) > 
-        //     Angle<q16>::from_degrees(2)) return false;
-        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
-        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
-
-        return is_minor_ ? (b1 && b2) : (b1 || b2);
-
-        #endif
-
-
-        return true;
-    }
-
-    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
-        y_(helper.y_range.start),
-        y_stop_(helper.y_range.stop),
-        x_range_(helper.x_range),
-        center_(shape.center),
-        squ_inner_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius_range.start)))),
-        squ_outer_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius_range.stop)))),
-        start_norm_vec_(helper.v1),
-        stop_norm_vec_(helper.v2),
-        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
-        {;}
-};
-
-
-template<typename T, typename D>
-struct DrawDispatchIterator<Sector<T, D>> {
-    using Shape = Sector<T, D>;
-    using Self = DrawDispatchIterator<Sector<T, D>>;
-
-    struct CtorHelper{
-        Range2<T> y_range;
-        Range2<T> x_range;
-        Vec2<q16> v1;
-        Vec2<q16> v2;
-
-        static constexpr CtorHelper from(const Shape & shape){
-            const auto angle_range = shape.angle_range;
-            const auto bb = shape.bounding_box(); 
-            return {                
-                .y_range = bb.y_range(),
-                .x_range = bb.x_range(),
-                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
-                    angle_range.start.to_turns())),
-                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
-                    angle_range.stop().to_turns()))
-            };
-        }
-    };
-
-
-    constexpr DrawDispatchIterator(const Shape & shape):
-        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
-
-    // 检查是否还有下一行
-    constexpr bool has_next() const {
-        return y_ < y_stop_;
-    }
-
-    // 推进到下一行
-    constexpr void forward() {
-        y_++;
-    }
-
-    // 绘制当前行的所有点
-    template<DrawTargetConcept Target, typename DestColor>
-    Result<void, typename Target::Error> draw_filled(Target& target, const DestColor & dest_color) {
-        const auto color = static_cast<RGB565>(dest_color);
-
-        #pragma GCC unroll(4)
-        for(T i = x_range_.start; i < x_range_.stop; i++){
-            const bool is_inside = contains_point(Vec2<T>{i, y_});
-            if(not is_inside) continue;
-            if(const auto res = target.draw_x_unchecked(i, color);
-                res.is_err()) return Err(res.unwrap_err());
-            continue;
-        }
-
-        return Ok();
-    }
-
-    template<DrawTargetConcept Target, typename Color>
-    Result<void, typename Target::Error> draw_hollow(Target& target, const Color& color) {
-        return Ok();
-    }
-
-
-private:
-    T y_;
-    T y_stop_;
-    Range2<T> x_range_;
-    Vec2<T> center_;
-    uint32_t squ_outer_radius_;
-    Vec2<q16> start_norm_vec_;
-    Vec2<q16> stop_norm_vec_;
-    bool is_minor_;
-
-    using ST = std::make_signed_t<T>;
-
-    __fast_inline constexpr bool contains_point(const Vec2<T> p){
-        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
-        const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
-
-        if (len_squ > squ_outer_radius_) return false;
-
-        const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
-        const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
-
-        return is_minor_ ? (b1 && b2) : (b1 || b2);
-
-        return true;
-    }
-
-    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
-        y_(helper.y_range.start),
-        y_stop_(helper.y_range.stop),
-        x_range_(helper.x_range),
-        center_(shape.center),
-        squ_outer_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius)))),
-        start_norm_vec_(helper.v1),
-        stop_norm_vec_(helper.v2),
-        is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
-        {;}
-};
-
 
 
 void render_main(){
@@ -827,6 +549,13 @@ void render_main(){
 
     spi.init({144_MHz});
     
+
+    hal::I2cSw i2c{&hal::portB[3], &hal::portB[5]};
+    i2c.init(400_KHz);
+
+    drivers::QMC5883L qmc{&i2c};
+    retry(2, [&]{return qmc.init();}).examine();
+
     auto & lcd_blk = hal::portD[0];
     lcd_blk.outpp(HIGH);
 
@@ -919,6 +648,13 @@ void render_main(){
         //     static_cast<char>('0' + (clock::millis().count() / 200) % 16), '\0'};
 
         // auto shape = LineText<void, MonoFont16x8>{
+
+        // FixedString<32> str;
+        FixedStringStream<32> ss;
+        qmc.update().examine();
+        ss.print(qmc.read_mag().examine());
+        ss.flush();
+        DEBUG_PRINTLN(ss.c_str());
         auto shape = LineText<void, MonoFont8x5>{
             .left_top = {20,20},
             .spacing = 2,
@@ -926,8 +662,10 @@ void render_main(){
             // .str = "B",
             // .str = str,
             // .str = "明白了您只需要编码值而不是以下是修复后的代码",
-            // .str = "123456789abcdef",
-            .str = "123456789ABCDEFGHIJKLMN",
+            .str = "123456789abcdef",
+            // .str = "a",
+            // .str = ss.c_str(),
+            // .str = "(0.001, 0.040, -0.367)",
             // .str = "widget",
             .font = en_font
         };

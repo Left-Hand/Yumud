@@ -4,7 +4,6 @@
 #include "types/image/image.hpp"
 
 #include "core/string/string_view.hpp"
-#include "core/stream/stream.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"

@@ -72,4 +72,5 @@ __inline OutputStream & operator <<(OutputStream & os, const Arc2<auto> & arc){
 template<typename T>
 struct is_placed_t<Arc2<T>>:std::true_type{};
 
+
 }
