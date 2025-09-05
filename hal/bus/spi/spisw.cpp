@@ -10,8 +10,9 @@ void SpiSw::init(const Config & cfg){
     sclk_gpio_.outpp(HIGH);
 
     for(size_t i = 0; i < cs_port_.size(); i++){
-        if(cs_port_.is_index_valid(i)){
-            cs_port_[i].outpp(HIGH);
+        const auto nth = Nth(i);
+        if(cs_port_.is_nth_valid(nth)){
+            cs_port_[nth].outpp(HIGH);
         }
     }
 

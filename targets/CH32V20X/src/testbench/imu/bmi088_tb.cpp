@@ -20,8 +20,8 @@ using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
 #define UART uart2
-#define ACC_CS_GPIO portB[0]
-#define GYR_CS_GPIO portB[1]
+#define ACC_CS_GPIO hal::PB<0>()
+#define GYR_CS_GPIO hal::PB<1>()
 
 static constexpr size_t CALC_FREQ_HZ = 200;
 

@@ -230,7 +230,7 @@
 //         // filt_current = follower.update(feed_current);
 //         // clock::delay(1ms);
 //         if(!logger.pending())logger.println(targ_current, feed_current, filt_current);
-//         // , bool(portA[8]), bool(portA[9]), pwmRef.arr()
-//         // , filt_current, TIM1->CH1CVR, TIM1->CH2CVR, bool(portA[8]), bool(portA[9]));
+//         // , bool(hal::PA<8>()), bool(hal::PA<9>()), pwmRef.arr()
+//         // , filt_current, TIM1->CH1CVR, TIM1->CH2CVR, bool(hal::PA<8>()), bool(hal::PA<9>()));
 //     }
 // }

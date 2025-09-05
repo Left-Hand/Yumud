@@ -353,16 +353,16 @@ protected:
     SideVelocityObserver side_velocity_observer;
     CentripetalCtrl centripetal_ctrl;
 
-    DisplayerPhySpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
+    DisplayerPhySpi SpiInterfaceLcd {{spi2, 0}, hal::PD<7>(), hal::PB<7>()};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vec2i(240, 240)};
     Painter<RGB565> painter = Painter<RGB565>{};
 
-    I2cSw sccb      {portD[2], portC[12]};
-    I2cSw i2c       {portB[3], portB[5]};
+    I2cSw sccb      {hal::PD<2>(), hal::PC<12>()};
+    I2cSw i2c       {hal::PB<3>(), hal::PB<5>()};
 
     MT9V034 camera  {sccb};
-    Key start_key   {portE[3], false};
-    Key stop_key    {portE[2], false};
+    Key start_key   {hal::PE<3>(), false};
+    Key stop_key    {hal::PE<2>(), false};
     ElementHolder element_holder{*this};
 
     bool started = false;

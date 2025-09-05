@@ -70,19 +70,19 @@ struct AW9523_Regs:public AW9523_Prelude{
     struct InputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::In;
 
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(input_reg)
 
     struct OutputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::Out;
 
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(output_reg)
 
     struct DirReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::Dir;
 
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(dir_reg)
 
     struct CtlReg:Reg8<>{
@@ -96,14 +96,14 @@ struct AW9523_Regs:public AW9523_Prelude{
     struct IntEnReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::Inten;
 
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(inten_reg)
 
 
     struct LedModeReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddress::LedMode;
 
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(led_mode_reg);
 
 
@@ -173,17 +173,17 @@ public:
     }
 
     [[nodiscard]] IResult<> write_nth(
-        const size_t index, 
+        const Nth nth, 
         const BoolLevel data) ;
     
-    [[nodiscard]] IResult<BoolLevel> read_nth(const size_t index) ;
+    [[nodiscard]] IResult<BoolLevel> read_nth(const Nth nth) ;
 
     [[nodiscard]] IResult<> set_mode(
-        const size_t index, 
+        const Nth nth, 
         const hal::GpioMode mode) ;
 
     [[nodiscard]] IResult<> enable_irq_by_index(
-        const size_t index, 
+        const Nth nth, 
         const Enable en = EN);
 
     [[nodiscard]] IResult<> enable_led_mode(const hal::PinMask pin);
@@ -196,12 +196,12 @@ public:
     
     [[nodiscard]] IResult<> validate();
 
-    AW9523Pwm operator [](const size_t index){
-        return AW9523Pwm(*this, hal::PinNth(1 << index));
+    AW9523Pwm operator [](const Nth nth){
+        return AW9523Pwm(*this, static_cast<hal::PinNth>(1 << nth.count()));
     }
 private:
     hal::I2cDrv i2c_drv_;
-    hal::PinMask buf_mask_ = hal::PinMask(0);
+    hal::PinMask buf_mask_ = hal::PinMask::from_zero();
 
     static constexpr RegAddress get_dim_addr(const size_t idx){
         switch(idx){

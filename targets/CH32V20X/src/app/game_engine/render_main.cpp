@@ -540,7 +540,7 @@ void render_main(){
 
 
     init_debugger();
-    
+
     #ifdef CH32V30X
     auto & spi = hal::spi2;
     #else
@@ -550,19 +550,28 @@ void render_main(){
     spi.init({144_MHz});
     
 
-    hal::I2cSw i2c{&hal::portB[3], &hal::portB[5]};
+    
+    hal::I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
     i2c.init(400_KHz);
 
     drivers::QMC5883L qmc{&i2c};
     retry(2, [&]{return qmc.init();}).examine();
 
-    auto & lcd_blk = hal::portD[0];
+    
+
+
+    auto & lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = hal::portD[7];
-    auto & dev_rst = hal::portB[7];
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
     const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
+    // while(true){
+    //     DEBUG_PRINTLN(clock::millis());
+    //     clock::delay(2ms);
+    // }
+
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 

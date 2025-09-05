@@ -28,7 +28,7 @@ ExtiChannel::ExtiChannel(
     const TrigEdge edge,
     const TrigMode mode
 ):
-    source_(map_PinNth_to_trigsource(gpio.pin())), 
+    source_(map_PinNth_to_trigsource(gpio.pin_nth())), 
     p_gpio_(&gpio),
     gpio_mode_(map_edge_to_gpiomode(edge)),
     priority_(priority), 
@@ -39,12 +39,10 @@ ExtiChannel::ExtiChannel(
 void ExtiChannel::init(){
     if(p_gpio_){
         p_gpio_->set_mode(gpio_mode_);
-        if(p_gpio_->is_valid()){
-            GPIO_EXTILineConfig(
-                std::bit_cast<uint8_t>(p_gpio_->port()), 
-                std::bit_cast<uint8_t>(p_gpio_->index())
-            );
-        }
+        GPIO_EXTILineConfig(
+            std::bit_cast<uint8_t>(p_gpio_->port()), 
+            static_cast<uint8_t>(p_gpio_->nth().count())
+        );
     }
 
     EXTI_InitTypeDef EXTI_InitStructure{

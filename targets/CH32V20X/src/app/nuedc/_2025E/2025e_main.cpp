@@ -373,13 +373,13 @@ void nuedc_2025e_main(){
 
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[15])
+        spi.allocate_cs_gpio(&hal::PA<15>())
             .unwrap()
     };
 
     BMI160 bmi160_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[0])
+        spi.allocate_cs_gpio(&hal::PA<0>())
             .unwrap()
     };
 
@@ -421,7 +421,7 @@ void nuedc_2025e_main(){
 
     init_adc(adc);
 
-    hal::portA[7].inana();
+    hal::PA<7>().inana();
 
     mp6540_en_gpio_.outpp(HIGH);
     mp6540_nslp_gpio_.outpp(HIGH);

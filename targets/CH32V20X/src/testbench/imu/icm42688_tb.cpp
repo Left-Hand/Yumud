@@ -17,8 +17,8 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 
 #define DBG_UART uart2
-#define SCL_GPIO hal::portB[3]
-#define SDA_GPIO hal::portB[5]
+#define SCL_GPIO hal::PB<3>()
+#define SDA_GPIO hal::PB<5>()
 static constexpr uint ISR_FREQ = 500;
 static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 
@@ -115,7 +115,7 @@ void icm42688_main(){
     clock::delay(200ms);
 
     #if PHY_SEL == PHY_SEL_I2C
-    // I2cSw i2c{portA[12], portA[15]};
+    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(2000_KHz);
@@ -132,7 +132,7 @@ void icm42688_main(){
     ICM42688 imu = {
         SpiDrv(
             &spi, 
-            spi.allocate_cs_gpio(&portA[15]).unwrap()
+            spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
         )
     };
 

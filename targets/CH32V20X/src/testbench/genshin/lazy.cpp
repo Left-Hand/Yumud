@@ -560,8 +560,8 @@ void lazy_main() {
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync();
 
-    // auto & led = portD[0];
-    auto & led = portB[8];
+    // auto & led = hal::PD<0>();
+    auto & led = hal::PB<8>();
     led.outpp();
     while(true){
         led = HIGH;
@@ -578,8 +578,8 @@ void lazy_main() {
     }
 
 
-    portC[13].outpp();
-    portC[13].write(HIGH);  
+    hal::PC<13>().outpp();
+    hal::PC<13>().write(HIGH);  
 
     // while(true){
     //     DEBUG_PRINTS(clock::millis());
@@ -597,12 +597,12 @@ void lazy_main() {
     auto blink = [] -> Deferred<int> {
         // auto sleep_task = sleep(200);
         while(true){
-            portC[13].write(HIGH);
+            hal::PC<13>().write(HIGH);
             co_await (sleep(200));
             // co_await sleep_task;
             // sleep_task.reset();
             // clock::delay(200ms);
-            portC[13].write(LOW);
+            hal::PC<13>().write(LOW);
             // co_await sleep_task;
             // sleep_task.reset();
             co_await (sleep(200));

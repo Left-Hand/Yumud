@@ -27,13 +27,13 @@ void lt8920_main(){
     spi.init({2_MHz});
     
 
-    LT8920 lt{&spi, spi.allocate_cs_gpio(&portA[0]).unwrap()};
+    LT8920 lt{&spi, spi.allocate_cs_gpio(&hal::PA<0>()).unwrap()};
     bindSystickCb([&](){
         lt.tick().examine();
     });
 
 
-    lt.bind_nrst_gpio(portB[0]).examine();
+    lt.bind_nrst_gpio(hal::PB<0>()).examine();
     lt.init().examine();
     lt.set_data_rate(1_MHz).examine();
 

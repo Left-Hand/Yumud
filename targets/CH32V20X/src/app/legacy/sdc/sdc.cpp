@@ -16,7 +16,7 @@ void w25qxx_main(){
     hal::uart2.init({576000});
 
     auto & spi = spi1;
-    auto & w25_cs = portD[5];
+    auto & w25_cs = hal::PD<5>();
 
     const auto spi_fd = spi.allocate_cs_gpio(w25_cs).value();
     spi.init(36_MHz);

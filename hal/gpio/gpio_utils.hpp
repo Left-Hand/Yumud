@@ -2,12 +2,12 @@
 
 #include <cstdint>
 #include "core/platform.hpp"
+#include "core/utils/nth.hpp"
 
 namespace ymd::hal{
 
 
 enum class PinNth:uint16_t{
-    None,
     _0 = 1 << 0,
     _1 = 1 << 1,
     _2 = 1 << 2,
@@ -28,42 +28,36 @@ enum class PinNth:uint16_t{
 
 class PinMask{
 public:
-    [[nodiscard]] constexpr PinMask():
-        raw_(0){;}
-
-    [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
-        raw_(raw){;}
-
     [[nodiscard]] constexpr PinMask(const PinNth nth):
         raw_(std::bit_cast<uint16_t>(nth)){;}
 
+    [[nodiscard]] static constexpr PinMask from_zero(){
+        return PinMask(0);
+    }
     [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
         return PinMask(raw);
     }
 
-    [[nodiscard]] static constexpr PinMask from_nth(const size_t nth){
-        return PinMask(uint16_t(1 << nth));
+    [[nodiscard]] static constexpr PinMask from_nth(const Nth nth){
+        return PinMask::from_u16(uint16_t(1 << nth.count()));
     }
     [[nodiscard]] constexpr uint16_t as_u16() const {return raw_;}
-    // [[nodiscard]] constexpr PinNth nth() const {
-    //     return std::bit_cast<PinNth>(raw_);
-    // }
 
-    [[nodiscard]] constexpr bool test(size_t idx) const {
-        return raw_ & (1 << idx);
+    [[nodiscard]] constexpr bool test(Nth nth) const {
+        return raw_ & (1 << nth.count());
     }
 
-    [[nodiscard]] constexpr PinMask modify(size_t idx, const BoolLevel level) const {
-        if(level == HIGH) return PinMask(raw_ | (1 << idx));
-        else return PinMask(raw_ & (~(1 << idx)));
+    [[nodiscard]] constexpr PinMask modify(Nth nth, const BoolLevel level) const {
+        if(level == HIGH) return PinMask(raw_ | (1 << nth.count()));
+        else return PinMask(raw_ & (~(1 << nth.count())));
     }
 
-    [[nodiscard]] constexpr PinMask set_bit(size_t idx) const {
-        return PinMask(raw_ | (1 << idx));
+    [[nodiscard]] constexpr PinMask set_bit(Nth nth) const {
+        return PinMask(raw_ | (1 << nth.count()));
     }
 
-    [[nodiscard]] constexpr PinMask clr_bit(size_t idx) const {
-        return PinMask(raw_ & (~(1 << idx)));
+    [[nodiscard]] constexpr PinMask clr_bit(Nth nth) const {
+        return PinMask(raw_ & (~(1 << nth.count())));
     }
 
     [[nodiscard]] constexpr PinMask operator | (const PinMask other) const {
@@ -122,6 +116,10 @@ public:
     }
 private:
     uint16_t raw_;
+
+    [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
+        raw_(raw){;}
+
 };
 
 

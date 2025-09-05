@@ -179,13 +179,13 @@ void smc2025_main(){
 
     spi2.init({144_MHz});
     
-    auto & lcd_blk = portD[0];
+    auto & lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(&portD[4]).unwrap();
+    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
@@ -194,10 +194,10 @@ void smc2025_main(){
 
     tft.init(drivers::st7789_preset::_320X170{}).examine();
 
-    I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
+    I2cSw cam_i2c{&hal::PD<2>(), &hal::PC<12>()};
     cam_i2c.init(100_KHz);
 
-    I2cSw i2c{&hal::portB[3], &hal::portB[5]};
+    I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
     i2c.init(400_KHz);
     
     // drivers::MT9V034 camera{&cam_i2c};

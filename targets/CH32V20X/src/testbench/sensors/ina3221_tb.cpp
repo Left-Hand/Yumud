@@ -15,8 +15,8 @@ using namespace ymd::hal;
 using drivers::INA3221;
 
 #define UART uart2
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
 
 static constexpr double SHUNT_RES = 0.1;
 static constexpr double INV_SHUNT_RES = 1 / SHUNT_RES;

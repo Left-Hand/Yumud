@@ -351,7 +351,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
 }
 
 [[maybe_unused]] static void eeprom_tb(){
-    hal::I2cSw i2c_sw{&hal::portD[1], &hal::portD[0]};
+    hal::I2cSw i2c_sw{&hal::PD<1>(), &hal::PD<0>()};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
@@ -385,8 +385,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     clock::delay(400ms);
 
     {
-        hal::Gpio & ena_gpio = hal::portB[0];
-        hal::Gpio & enb_gpio = hal::portA[7];
+        hal::Gpio & ena_gpio = hal::PB<0>();
+        hal::Gpio & enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -499,8 +499,8 @@ void mystepper_main(){
     // currentloop_tb();
 
     {
-        hal::Gpio & ena_gpio = hal::portB[0];
-        hal::Gpio & enb_gpio = hal::portA[7];
+        hal::Gpio & ena_gpio = hal::PB<0>();
+        hal::Gpio & enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -565,7 +565,7 @@ void mystepper_main(){
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.allocate_cs_gpio(&hal::portA[15]).unwrap()
+        spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
     };
 
 

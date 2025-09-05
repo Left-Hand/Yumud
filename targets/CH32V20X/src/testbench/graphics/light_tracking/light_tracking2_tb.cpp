@@ -406,19 +406,19 @@ void light_tracking_main(void){
 
     #ifdef CH32V30X
     auto & spi = spi2;
-    auto & lcd_blk = portC[7];
+    auto & lcd_blk = hal::PC<7>();
     
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_cs = portD[6];
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_cs = hal::PD<6>();
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
     #else
     auto & spi = spi1;
-    auto & lcd_blk = portA[10];
-    auto & lcd_cs = portA[15];
-    auto & lcd_dc = portA[11];
-    auto & dev_rst = portA[12];
+    auto & lcd_blk = hal::PA<10>();
+    auto & lcd_cs = hal::PA<15>();
+    auto & lcd_dc = hal::PA<11>();
+    auto & dev_rst = hal::PA<12>();
     
 
     lcd_blk.outpp(HIGH);

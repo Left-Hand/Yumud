@@ -31,18 +31,18 @@ void bmi160_main(){
     
     BMI160 bmi{{
         &spi1, 
-        spi1.allocate_cs_gpio(&portA[0]).unwrap()
+        spi1.allocate_cs_gpio(&hal::PA<0>()).unwrap()
     }};
 
 
-    auto & ledr = portC[13];
-    auto & ledb = portC[14];
-    auto & ledg = portC[15];
+    auto & ledr = hal::PC<13>();
+    auto & ledb = hal::PC<14>();
+    auto & ledg = hal::PC<15>();
 
     ledr.outpp(); 
     ledb.outpp(); 
     ledg.outpp();
-    portA[7].inana();
+    hal::PA<7>().inana();
 
     bmi.init({}).examine();
     while(true){

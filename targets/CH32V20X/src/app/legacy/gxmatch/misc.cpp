@@ -99,7 +99,7 @@ PMW3901 create_pmw(){
     auto & pmw_spi = spi1;
 
     pmw_spi.init(9_MHz);
-    pmw_spi.bindCsPin(portD[5], 0);
+    pmw_spi.bindCsPin(hal::PD<5>(), 0);
     return {pmw_spi, 0};
 }
 
@@ -109,9 +109,9 @@ void init_pmw(PMW3901 & pmw){
 
 
 ST7789 create_displayer(){
-    auto & lcd_cs = portD[6];
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_cs = hal::PD<6>();
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
 
     #ifdef CH32V30X

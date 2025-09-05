@@ -19,8 +19,8 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART uart2
-#define SCL_GPIO hal::portB[3]
-#define SDA_GPIO hal::portB[5]
+#define SCL_GPIO hal::PB<3>()
+#define SDA_GPIO hal::PB<5>()
 static constexpr uint ISR_FREQ = 100;
 static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
 
@@ -56,7 +56,7 @@ void ak09911c_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{portA[12], portA[15]};
+    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(200_KHz);
@@ -69,7 +69,7 @@ void ak09911c_main(){
 
     // auto & spi = spi1;
     // spi.init(18_MHz);
-    // AK09911C aku = {SpiDrv(spi, spi.allocate_cs_gpio(portA[15]).value())};
+    // AK09911C aku = {SpiDrv(spi, spi.allocate_cs_gpio(hal::PA<15>()).value())};
 
     ak09911c_test(aku);
 }

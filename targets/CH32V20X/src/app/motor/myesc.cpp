@@ -90,8 +90,8 @@ void myesc_main(){
 
 
 
-    auto & en_gpio = portA[11];
-    auto & slp_gpio = portA[12];
+    auto & en_gpio = hal::PA<11>();
+    auto & slp_gpio = hal::PA<12>();
 
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
@@ -112,19 +112,19 @@ void myesc_main(){
     pwm_v.init({.install_en = DISEN}); 
     pwm_w.init({.install_en = DISEN}); 
     
-    portA[7].afpp();
-    portB[0].afpp();
-    portB[1].afpp();
-        //     #define TIM1_CH1_GPIO portA[8]
-        // #define TIM1_CH1N_GPIO portA[7]
+    hal::PA<7>().afpp();
+    hal::PB<0>().afpp();
+    hal::PB<1>().afpp();
+        //     #define TIM1_CH1_GPIO hal::PA<8>()
+        // #define TIM1_CH1N_GPIO hal::PA<7>()
 
-        // #define TIM1_CH2_GPIO portA[9]
-        // #define TIM1_CH2N_GPIO portB[0]
+        // #define TIM1_CH2_GPIO hal::PA<9>()
+        // #define TIM1_CH2N_GPIO hal::PB<0>()
 
-        // #define TIM1_CH3_GPIO portA[10]
-        // #define TIM1_CH3N_GPIO portB[1]
+        // #define TIM1_CH3_GPIO hal::PA<10>()
+        // #define TIM1_CH3N_GPIO hal::PB<1>()
 
-        // #define TIM1_CH4_GPIO portA[11]
+        // #define TIM1_CH4_GPIO hal::PA<11>()
     timer1.oc<4>().cvr() = timer1.arr() - 1;
     
     pwm_u.init({});
@@ -139,13 +139,13 @@ void myesc_main(){
 
     // drivers::DRV8323H  mosdrv{hal::SpiDrv{
     //     spi1, 
-    //     spi1.allocate_cs_gpio(portA[15]).value()
+    //     spi1.allocate_cs_gpio(hal::PA<15>()).value()
     // }};
 
-    auto & mode_gpio = hal::portB[4];
-    auto & vds_gpio = hal::portB[3];
-    auto & idrive_gpio = hal::portB[5];
-    auto & gain_gpio = hal::portA[15];
+    auto & mode_gpio = hal::PB<4>();
+    auto & vds_gpio = hal::PB<3>();
+    auto & idrive_gpio = hal::PB<5>();
+    auto & gain_gpio = hal::PA<15>();
 
     //6xpwm
     // mode_gpio.outpp(LOW);

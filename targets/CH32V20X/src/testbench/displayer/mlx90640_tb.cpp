@@ -24,8 +24,8 @@ using namespace ymd::drivers;
 static constexpr size_t UART_BAUD = 576000;
 static constexpr auto MLX90640_I2CADDR = 0x33;
 
-#define SCL_GPIO hal::portE[9]
-#define SDA_GPIO hal::portE[11]
+#define SCL_GPIO hal::PE<9>()
+#define SDA_GPIO hal::PE<11>()
 
 hal::I2cSw i2c_sw_ = {&SCL_GPIO, &SDA_GPIO};
 hal::I2cDrv i2c_drv_ = hal::I2cDrv{&i2c_sw_, hal::I2cSlaveAddr<7>::from_u7(MLX90640_I2CADDR)};
@@ -100,14 +100,14 @@ void mlx90640_main(){
 
     spi.init({144_MHz});
     
-    auto & lcd_blk = hal::portD[0];
+    auto & lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
     static constexpr auto LCD_WIDTH = 320;
     static constexpr auto LCD_HEIGHT = 170;
 
-    auto & lcd_dc = hal::portD[7];
-    auto & dev_rst = hal::portB[7];
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
     const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
 

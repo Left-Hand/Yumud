@@ -56,9 +56,9 @@ void DacChannel::settle(){
         switch(idx_){
             default:
             case ChannelNth::_1:
-                return portA[4];
+                return hal::PA<4>();
             case ChannelNth::_2:
-                return portA[5];
+                return hal::PA<5>();
         }
     }();
 

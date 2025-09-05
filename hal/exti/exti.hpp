@@ -22,7 +22,6 @@ enum class ExtiTrigMode:uint8_t{
 };
 
 enum class ExtiTrigSource:uint32_t{
-    _None = 0,
     _0 = EXTI_Line0,
     _1 = EXTI_Line1,
     _2 = EXTI_Line2,

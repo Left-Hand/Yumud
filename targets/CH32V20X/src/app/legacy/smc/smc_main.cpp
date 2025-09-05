@@ -98,13 +98,13 @@ void SmartCar::init_periphs(){
     bkp.init();
     
     {
-        portD[4].outpp(1);
+        hal::PD<4>().outpp(1);
     }
 
     printRecordedRunStatus();
 
     spi2.init(72000000);
-    spi2.bindCsPin(portD[0], 0);
+    spi2.bindCsPin(hal::PD<0>(), 0);
 
     timer4.init(24000);
     timer5.init(24000);

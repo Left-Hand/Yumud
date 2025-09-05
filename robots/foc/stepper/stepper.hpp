@@ -24,9 +24,9 @@ class FOCStepper:public FOCMotor{
 
     volatile CtrlType ctrl_type = CtrlType::POSITION;
 
-    GpioPwm red_pwm{portC[14]};
-    GpioPwm green_pwm{portC[15]};
-    GpioPwm blue_pwm{portC[13]};
+    GpioPwm red_pwm{hal::PC<14>()};
+    GpioPwm green_pwm{hal::PC<15>()};
+    GpioPwm blue_pwm{hal::PC<13>()};
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 

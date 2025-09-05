@@ -3,27 +3,26 @@
 
 namespace ymd::hal::adc_details{
 
-    void install_pin(const AdcChannelNth channel, const Enable en){
-        uint8_t ch_index = (uint8_t)channel;
+    void install_pin(const AdcChannelNth channel_nth, const Enable en){
+        uint8_t ch_index = (uint8_t)channel_nth;
 
         if(ch_index > 15) return;
 
-        GpioPort * gpio_port = nullptr;
-        PinNth pin = PinNth::None;
+        const auto [gpio_port, pin_nth] = [&] -> std::tuple<GpioPort *, PinNth>{
+            if(ch_index <= 7){
+                return {&portA, std::bit_cast<PinNth>(uint16_t(1 << ch_index))};
+            }else if(ch_index <= 9){
+                return {&portB, std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 8)))};
+            }else if(ch_index <= 15){
+                return {&portC, std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 10)))};
+            }else{
+                return {nullptr, std::bit_cast<PinNth>(uint16_t(0))};
+            }
+        }();
 
-        if(ch_index <= 7){
-            gpio_port = &portA;
-            pin = std::bit_cast<PinNth>(uint16_t(1 << ch_index));
-        }else if(ch_index <= 9){
-            gpio_port = &portB;
-            pin = std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 8)));
-        }else if(ch_index <= 15){
-            gpio_port = &portC;
-            pin = std::bit_cast<PinNth>(uint16_t(1 << (ch_index - 10)));
-        }
 
         if(gpio_port == nullptr) return;
-        Gpio & io = (*gpio_port)[pin];
+        Gpio & io = (*gpio_port)[pin_nth];
         if(en == EN)io.inana();
         else io.inflt();
     }

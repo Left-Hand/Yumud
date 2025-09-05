@@ -37,8 +37,7 @@ public:
     hal::GpioIntf & inpu(){set_mode(GpioMode::InPullUP);return *this;}
     hal::GpioIntf & inpd(){set_mode(GpioMode::InPullDN);return *this;}
 
-    bool is_valid() const{return (index() >= 0);}
-    virtual int8_t index() const = 0;
+    virtual Nth nth() const = 0;
     virtual void set_mode(const GpioMode mode) = 0;
     hal::GpioIntf & operator = (const BoolLevel level){
         write(level);

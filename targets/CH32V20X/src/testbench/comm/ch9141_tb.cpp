@@ -10,10 +10,10 @@ using namespace ymd::drivers;
 
 void ch9141_tb(IOStream & logger, Uart & uart){
 
-    CH9141 commer{uart, portC[1], portD[3]};
+    CH9141 commer{uart, hal::PC<1>(), hal::PD<3>()};
     commer.init();
 
-    portC[13].outpp();
+    hal::PC<13>().outpp();
     while(true){
         // if(commer.available()){
         //     logger.print(commer.read());
@@ -37,7 +37,7 @@ void ch9141_tb(IOStream & logger, Uart & uart){
         //     commer.println("from l:", logger.readString());
         // }
 
-        // portC[13] = (millis() / 200) % 2;
+        // hal::PC<13>() = (millis() / 200) % 2;
         
     }
 }

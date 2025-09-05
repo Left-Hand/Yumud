@@ -31,7 +31,7 @@ void Vport::write_mask(const hal::PinMask mask){
 
 hal::PinMask Vport::read_mask(){
     TODO();
-    return hal::PinMask::from_nth(0);
+    return hal::PinMask::from_nth(0_nth);
 }
 
 Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
@@ -61,33 +61,32 @@ Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
     return write_reg(mode1_reg_copy);
 }
 
-Result<void, Error> PCA9685::set_pwm(uint8_t channel, uint16_t on, uint16_t off){
-    if(channel > 15) return Err(Error::IndexOutOfRange);
-    
+Result<void, Error> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
+    if(nth.count()) return Err(Error::IndexOutOfRange);
     if(
         #ifdef PCA9685_FORCEWRITE
         true
         #else
-        sub_channels[channel].on.cvr != on
+        sub_channels[nth.count()].on.cvr != on
         #endif
     ){
-        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on); 
+        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * nth.count()), on); 
             res.is_err()) return res;
-        sub_channels[channel].on.cvr = on;
+        sub_channels[nth.count()].on.cvr = on;
     }
 
     if(
         #ifdef PCA9685_FORCEWRITE
         true
         #else
-        sub_channels[channel].off.cvr != off
+        sub_channels[nth.count()].off.cvr != off
         #endif
     ){
-        auto & reg = sub_channels[channel].off;
+        auto & reg = sub_channels[nth.count()].off;
 
         reg.full = false;
         reg.cvr = off;
-        const auto address = RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel);
+        const auto address = RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * nth.count());
         if(const auto res = write_reg(address, reg.as_val());
             res.is_err()) return res;
     }
@@ -112,7 +111,7 @@ Result<void, Error> PCA9685::init(){
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
     for(size_t i = 0; i < 16; i++){
-        if(const auto res = set_pwm(i, 0, 0);
+        if(const auto res = set_pwm(Nth(i), 0, 0);
             res.is_err()) return res;
     }
     clock::delay(1ms);

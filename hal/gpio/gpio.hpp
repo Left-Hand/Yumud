@@ -12,21 +12,21 @@ class Exti;
 class Gpio final: public GpioIntf{
 protected:
     GPIO_TypeDef * instance_;
-    const PinNth pin_;
+    const PinNth pin_nth_;
 
 
     Gpio(GPIO_TypeDef * instance, const PinNth pin):
         instance_(instance)
 
         #if defined(CH32V20X) || defined(CH32V30X)
-        ,pin_(PinNth(
+        ,pin_nth_(PinNth(
             (instance == GPIOC) && 
             (
                 ((* reinterpret_cast<uint32_t *> (0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
             ) ? uint16_t(uint16_t(pin) >> 13) : uint16_t(pin)
         ))
         #elif defined(USE_STM32_HAL_LIB)
-        ,pin_(pin)
+        ,pin_nth_(pin)
         #endif
         {}
 
@@ -43,18 +43,18 @@ public:
     ~Gpio(){};
 
     __fast_inline void set(){
-        instance_->BSHR = uint16_t(pin_);
+        instance_->BSHR = static_cast<uint16_t>(pin_nth_);
     }
     __fast_inline void clr(){
-        instance_->BCR = uint16_t(pin_);
+        instance_->BCR = static_cast<uint16_t>(pin_nth_);
     }
 
     //BSHR的寄存器在BCR前 {1->BSHR; 0->BCR} 使用逻辑操作而非判断以提高速度
     __fast_inline void write(const BoolLevel val){
-        *(&instance_->BCR - int(val.to_bool())) = uint16_t(pin_);}
+        *(&instance_->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);}
 
     __fast_inline BoolLevel read() const {
-        return BoolLevel::from(instance_->INDR & uint16_t(pin_));}
+        return BoolLevel::from(instance_->INDR & static_cast<uint16_t>(pin_nth_));}
 
     hal::Gpio & operator = (const BoolLevel level){
         write(level);
@@ -69,22 +69,22 @@ public:
 
     void set_mode(const GpioMode mode) ;
     __fast_inline GPIO_TypeDef * inst() const {return instance_;} 
-    __fast_inline int8_t index() const {
-        if(likely(uint16_t(pin_)))
-            return CTZ(uint16_t(pin_));
-        else return -1;
-    }
-    template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinNth pin_source>
-    static constexpr Gpio reflect(){
-        GPIO_TypeDef * _instance = GPIOC;
-
-        return Gpio(
-            _instance, 
-            PinNth(1 << uint8_t(pin_source))
-        );
+    __fast_inline Nth nth() const {
+        return Nth(CTZ(static_cast<uint16_t>(pin_nth_)));
     }
 
-    constexpr PinNth pin() const {return pin_;}
+
+    // template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinNth pin_source>
+    // static constexpr Gpio reflect(){
+    //     GPIO_TypeDef * _instance = GPIOC;
+
+    //     return Gpio(
+    //         _instance, 
+    //         PinNth(1 << uint8_t(pin_source))
+    //     );
+    // }
+
+    constexpr PinNth pin_nth() const {return pin_nth_;}
 
     constexpr PortSource port() const {
         const auto base = reinterpret_cast<uint32_t>(instance_);

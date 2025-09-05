@@ -35,27 +35,27 @@ public:
     void enable_rcc(const Enable en = EN);
 
 
-    __inline void write_nth(const size_t index, const BoolLevel data) override;
-    __inline void set_by_mask(const PinMask mask) override;
-    __inline void clr_by_mask(const PinMask mask) override;
+    __inline void write_nth(const Nth nth, const BoolLevel data);
+    __inline void set_by_mask(const PinMask mask);
+    __inline void clr_by_mask(const PinMask mask);
     __inline void write_by_mask(const PinMask mask){
         inst_->OUTDR = mask.as_u16();}
     __inline PinMask read_mask(){
-        return PinMask(inst_->INDR);}
+        return PinMask::from_u16(inst_->INDR);}
 
-    Gpio & operator [](const size_t index){
-        return channels[index & 0b1111];
+    Gpio & operator [](const Nth nth){
+        return channels[nth.count() & 0b1111];
     };
 
     Gpio & operator [](const PinNth pin_nth){
         return channels[CTZ(uint16_t(pin_nth)) & 0b1111];
     };
 
-    void set_mode(const size_t index, const GpioMode mode) override;
+    void set_mode(const Nth nth, const GpioMode mode);
 };
 
-__inline void GpioPort::write_nth(const size_t index, const BoolLevel data){
-    const auto mask = PinMask::from_nth(index);
+__inline void GpioPort::write_nth(const Nth nth, const BoolLevel data){
+    const auto mask = PinMask::from_nth(nth);
     if(data == HIGH){
         set_by_mask(mask);
     }else{
@@ -78,7 +78,7 @@ extern GpioPort portA;
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio & PA(){
-    return portA[I];
+    return portA[Nth(I)];
 }
 #endif
 
@@ -87,7 +87,7 @@ extern GpioPort portB;
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio & PB(){
-    return portB[I];
+    return portB[Nth(I)];
 }
 #endif
 
@@ -96,7 +96,7 @@ extern GpioPort portC;
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio & PC(){
-    return portC[I];
+    return portC[Nth(I)];
 }
 #endif
 
@@ -105,7 +105,7 @@ extern GpioPort portD;
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio & PD(){
-    return portD[I];
+    return portD[Nth(I)];
 }
 #endif
 
@@ -114,7 +114,7 @@ extern GpioPort portE;
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio & PE(){
-    return portE[I];
+    return portE[Nth(I)];
 }
 #endif
 

@@ -48,13 +48,13 @@ using namespace etk;
 //     #endif
 
 //     logger.init(115200);
-//     auto & lcd_blk = portC[7];
+//     auto & lcd_blk = hal::PC<7>();
     
 //     lcd_blk.outpp(HIGH);
 
-//     auto & lcd_cs = portD[6];
-//     auto & lcd_dc = portD[7];
-//     auto & dev_rst = portB[7];
+//     auto & lcd_cs = hal::PD<6>();
+//     auto & lcd_dc = hal::PD<7>();
+//     auto & dev_rst = hal::PB<7>();
 
 //     spi.bind_cs_pin(lcd_cs, 0);
 //     spi.init(144_MHz, CommStrategy::Blocking);
@@ -87,7 +87,7 @@ using namespace etk;
 //     painter.setEnFont(ymd::font8x5).unwrap();
 
     
-//     I2cSw       i2c{portD[2], portC[12]};
+//     I2cSw       i2c{hal::PD<2>(), hal::PC<12>()};
 //     i2c.init(125_KHz);
 
 

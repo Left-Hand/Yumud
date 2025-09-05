@@ -53,19 +53,19 @@ void st7789_main(void){
 
     #ifdef CH32V30X
     auto & spi = hal::spi2;
-    auto & lcd_blk = hal::portC[7];
+    auto & lcd_blk = hal::PC<7>();
     
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_cs = hal::portD[6];
-    auto & lcd_dc = hal::portD[7];
-    auto & dev_rst = hal::portB[7];
+    auto & lcd_cs = hal::PD<6>();
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
     #else
     auto & spi = hal::spi1;
-    auto & lcd_blk = hal::portA[10];
-    auto & lcd_cs = hal::portA[15];
-    auto & lcd_dc = hal::portA[11];
-    auto & dev_rst = hal::portA[12];
+    auto & lcd_blk = hal::PA<10>();
+    auto & lcd_cs = hal::PA<15>();
+    auto & lcd_dc = hal::PA<11>();
+    auto & dev_rst = hal::PA<12>();
 
 
     lcd_blk.outpp(HIGH);

@@ -17,8 +17,8 @@ using namespace ymd;
 [[maybe_unused]] static void uart_tb(Uart & uart){
     #ifdef UART_TB_ECHO
 
-    auto & tx_led = portC[13];
-    auto & rx_led = portC[14];
+    auto & tx_led = hal::PC<13>();
+    auto & rx_led = hal::PC<14>();
     tx_led.outpp();
     rx_led.outpp();
 

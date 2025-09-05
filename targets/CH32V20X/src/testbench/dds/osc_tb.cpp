@@ -5,9 +5,9 @@
 //     IOStream & logger = uart2;
 //     logger.setSpace(",");
 //     logger.set_eps(4);
-//     Gpio & i2sSck = portA[1];
-//     Gpio & i2sSda = portA[0];
-//     Gpio & i2sWs = portA[4];
+//     Gpio & i2sSck = hal::PA<1>();
+//     Gpio & i2sSda = hal::PA<0>();
+//     Gpio & i2sWs = hal::PA<4>();
 //     i2sSck.outpp();
 //     i2sSda.outpp();
 //     i2sWs.outpp();

@@ -15,8 +15,8 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 #define DBG_UART hal::uart2
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
 
 using drivers::AW9523;
 

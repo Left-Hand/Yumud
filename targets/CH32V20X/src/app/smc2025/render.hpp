@@ -360,7 +360,7 @@ public:
                 }), ...);
         }, objects_);
 
-        if(!dirty) std::memset(pbuf.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
+        if(!dirty) std::fill_n(pbuf.get(), CAMERA_SIZE.x * CAMERA_SIZE.y, 0);
         return Image<Gray>(std::move(
             std::reinterpret_pointer_cast<Gray[]>(pbuf)), CAMERA_SIZE);
     }

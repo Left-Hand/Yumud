@@ -48,6 +48,7 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
+#include "dsp/motor_ctrl/sensorless/nonlinear/NonlinearObserver.hpp"
 
 
 using namespace ymd;
@@ -195,7 +196,7 @@ void bldc_main(){
 
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[15])
+        spi.allocate_cs_gpio(&hal::PA<15>())
             .unwrap()
     };
 
@@ -230,7 +231,7 @@ void bldc_main(){
 
     init_adc(adc);
 
-    hal::portA[7].inana();
+    hal::PA<7>().inana();
 
     AlphaBeta ab_volt_;
     
@@ -282,12 +283,6 @@ void bldc_main(){
 
     auto sensored_foc_cb = [&]{
         update_sensors();
-
-        // if(run_status_.state == RunState::Idle){
-        //     svpwm_.set_ab_volt(0, 0);
-        //     leso_.reset();
-        //     return;
-        // }
 
         const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
         const auto meas_elecrad = elecrad_comp_(meas_lap_position);

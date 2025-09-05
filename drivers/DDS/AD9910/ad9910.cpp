@@ -14,18 +14,18 @@ using namespace ymd;
 static constexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40M输入  25倍频  VC0=101   ICP=001;
   
 
-#define AD9910_PWR 		hal::portB[5] 
-#define DRHOLD 			hal::portB[7]   
-#define DROVER 			hal::portB[8]   
-#define UP_DAT 			hal::portB[9]    
+#define AD9910_PWR 		hal::PB<5>() 
+#define DRHOLD 			hal::PB<7>()   
+#define DROVER 			hal::PB<8>()   
+#define UP_DAT 			hal::PB<9>()    
 
-#define MAS_REST 		hal::portA[2]   
-#define DRCTL  			hal::portA[4]   
-#define OSK 			hal::portA[5]  
+#define MAS_REST 		hal::PA<2>()   
+#define DRCTL  			hal::PA<4>()   
+#define OSK 			hal::PA<5>()  
      
-#define PROFILE0 		hal::portA[6]  
-#define PROFILE1 		hal::portB[12] 
-#define PROFILE2 		hal::portA[7]  
+#define PROFILE0 		hal::PA<6>()  
+#define PROFILE1 		hal::PB<12>() 
+#define PROFILE2 		hal::PA<7>()  
 
 #define DLY __nopn(10);
 #define UDT()\

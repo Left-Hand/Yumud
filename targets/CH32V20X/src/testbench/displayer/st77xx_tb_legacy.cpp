@@ -136,13 +136,13 @@ constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p
 void st77xx_tb(hal::Spi & spi){
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
 
-    auto & led = portC[14];
-    auto & lcd_blk = portC[7];
-    auto & light = portC[6];
+    auto & led = hal::PC<14>();
+    auto & lcd_blk = hal::PC<7>();
+    auto & light = hal::PC<6>();
 
-    auto & lcd_cs = portD[6];
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_cs = hal::PD<6>();
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
     led.outpp();
     lcd_blk.outpp(1);
@@ -172,7 +172,7 @@ void st77xx_tb(hal::Spi & spi){
     painter.bindImage(tftDisplayer);
     tftDisplayer.fill(RGB565::BLACK);
 
-    I2cSw SccbSw(portD[2], portC[12]);
+    I2cSw SccbSw(hal::PD<2>(), hal::PC<12>());
     SccbSw.init(400000);
     MT9V034 camera(SccbSw);
 
@@ -202,7 +202,7 @@ void st77xx_tb(hal::Spi & spi){
     // mnist_tb();
     uart7.init(1000000, CommStrategy::Blocking);
 
-    CH9141 ch9141{uart7, portC[1], portD[3]};
+    CH9141 ch9141{uart7, hal::PC<1>(), hal::PD<3>()};
     ch9141.init();
 
     // Transmitter trans{ch9141};

@@ -130,22 +130,26 @@ void SpiHw::install_gpios(){
     }
 
 
-    if(false == cs_port_.is_index_valid(0)){
-        Gpio & cs_gpio = get_hw_cs_gpio();
-        cs_gpio.set();
-        if(hw_cs_enabled_){
-            cs_gpio.afpp();
-        }else{
-            cs_gpio.outpp();
-        }
-        bind_cs_gpio(&cs_gpio, 0);
-    }
+    // if(cs_port_.is_nth_available(0_nth) == true){
+    //     Gpio & cs_gpio = get_hw_cs_gpio();
+    //     cs_gpio.set();
+    //     if(hw_cs_enabled_){
+    //         cs_gpio.afpp();
+    //     }else{
+    //         cs_gpio.outpp();
+    //     }
+    //     bind_cs_gpio(&cs_gpio, 0);
+    // }
 
-    for(size_t i = 0; i < cs_port_.size(); i++){
-        if(cs_port_.is_index_valid(i)){
-            cs_port_[i].outpp();
-        }
-    }
+    // DEBUG_PRINTLN(std::span(cs_port_.begin(), 4));
+    // for(auto p_io = cs_port_.begin(); p_io != cs_port_.end(); p_io = std::next(p_io)){
+        // if(p_io != nullptr){
+            // p_io -> outpp();
+            // DEBUG_PRINTLN(reinterpret_cast<size_t>(p_io));
+        // }
+    // }
+
+    // while(true);
 }
 
 void SpiHw::enable_hw_cs(const Enable en){
@@ -197,8 +201,6 @@ void SpiHw::init(const Config & cfg){
 	enable_rcc();
     install_gpios();
 
-
-
     const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
         .SPI_Mode = SPI_Mode_Master,
@@ -215,16 +217,7 @@ void SpiHw::init(const Config & cfg){
 	SPI_Init((SPI_TypeDef *)inst_, &SPI_InitStructure);
 
     inst_->enable_spi(EN);
-    // uint16_t tmpreg = std::bit_cast<uint16_t>(inst_->CTLR1);
-    // tmpreg &= 0x3040;
-    // tmpreg |= (uint16_t)((uint32_t)SPI_InitStructure.SPI_Direction | SPI_InitStructure.SPI_Mode |
-    //                     SPI_InitStructure.SPI_DataSize | SPI_InitStructure.SPI_CPOL |
-    //                     SPI_InitStructure.SPI_CPHA | SPI_InitStructure.SPI_NSS |
-    //                     SPI_InitStructure.SPI_BaudRatePrescaler | SPI_InitStructure.SPI_FirstBit);
 
-    // inst_->CTLR1 = std::bit_cast<decltype(inst_->CTLR1)>(tmpreg);
-    // inst_->CFGR &= 0xF7FF;
-    // inst_->CRCR = SPI_InitStructure.SPI_CRCPolynomial;
 
     while ((inst_->STATR.TXE) == RESET);
     inst_->DATAR.DR = 0;

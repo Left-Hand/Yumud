@@ -696,9 +696,9 @@ private:
 
 [[maybe_unused]] static
 void app(){
-    auto & DBG_UARTSW_GPIO = portA[5];
-    auto & TTS_UARTSW_GPIO = portB[1];
-    auto & LED_GPIO = portB[8];
+    auto & DBG_UARTSW_GPIO = hal::PA<5>();
+    auto & TTS_UARTSW_GPIO = hal::PB<1>();
+    auto & LED_GPIO = hal::PB<8>();
     auto & UARTHW = uart2;
 
     hal::UartSw dbg_uart{DBG_UARTSW_GPIO, NullGpio}; 
@@ -715,7 +715,7 @@ void app(){
     DEBUGGER.force_sync();
     DEBUGGER.set_splitter(',');
 
-    drivers::AbEncoderByGpio ab_enc{portA[0], portA[1]};
+    drivers::AbEncoderByGpio ab_enc{hal::PA<0>(), hal::PA<1>()};
 
     
     gxm::MotorService motor_service{{
